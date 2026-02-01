@@ -7,10 +7,10 @@ This repository documents the current, implemented architecture of the Helianthu
 ```mermaid
 flowchart TB
   subgraph Gateway
-    G1[GraphQL (stub)]
-    G2[MCP (stub)]
-    G3[mDNS (stub)]
-    G4[Matter (stub)]
+    G1[GraphQL stub]
+    G2[MCP stub]
+    G3[mDNS stub]
+    G4[Matter stub]
   end
 
   subgraph Registry
