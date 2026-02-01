@@ -1,0 +1,58 @@
+# Vaillant Message Identifiers (Observed)
+
+This document lists Vaillant-family message identifiers and payload layouts that are currently supported. The same identifier may decode differently depending on target address or device class.
+
+## Primary/Secondary Identifiers
+
+```text
+0xB5 0x04  Status / Parameters (context-dependent)
+0xB5 0x05  Set target temperature (context-dependent request payload)
+0xB5 0x16  Energy statistics (request parameters: period/source/usage)
+0xFE 0x01  System-level broadcast (payload unspecified here)
+```
+
+## Status/Parameters Payloads (Examples)
+
+The `0xB5 0x04` identifier is used for multiple payload layouts. Examples of layouts:
+
+```text
+Boiler parameters (3 bytes):
+  flow_temp     : DATA2b
+  return_temp   : DATA2b
+  pump_status   : DATA1b
+
+Controller parameters (3 bytes):
+  room_temp     : DATA2b
+  target_temp   : DATA2b
+  mode          : DATA1b
+```
+
+```text
+Solar status (4 bytes):
+  collector_temp : DATA2b
+  tank_temp      : DATA2b
+```
+
+```text
+Solar parameters (3 bytes):
+  pump_speed : DATA1b
+  delta_temp : DATA2b
+```
+
+```text
+Simple status (1 byte):
+  status : DATA1b
+```
+
+## Energy Statistics
+
+Energy statistics use primary/secondary `0xB5 0x16` and a 3-byte request payload:
+
+```text
+Request payload:
+  period : byte
+  source : byte
+  usage  : byte
+```
+
+Responses are a single `WORD` (2 bytes, little-endian).
