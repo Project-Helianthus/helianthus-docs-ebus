@@ -39,6 +39,8 @@ NACK = 0xFF
 
 Broadcast frames do not receive ACK/NACK or responses.
 
+Idle periods may include `SYN` (`0xAA`) bytes on the bus; receivers typically ignore these while waiting for an `ACK`/`NACK`.
+
 ## CRC8 and Escaping
 
 CRC8 is computed over the frame data with special handling for control symbols:
