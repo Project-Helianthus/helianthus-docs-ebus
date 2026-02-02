@@ -2,7 +2,7 @@
 
 ## Current Status
 
-The GraphQL API does not yet include mutations or subscriptions, and there is no HTTP server wiring. However, **read-only queries** and a **dynamic schema builder** are implemented and can be exposed via an HTTP handler.
+The GraphQL API does not yet include subscriptions, and there is no HTTP server wiring. However, **read-only queries**, **invoke mutation**, and a **dynamic schema builder** are implemented and can be exposed via an HTTP handler.
 
 ## Dynamic Schema Builder (Implemented)
 
@@ -66,7 +66,38 @@ type Field {
 
 `NewHandler(builder)` returns an `http.Handler` backed by the query schema. It is ready to mount in an HTTP server but the gateway does not yet expose a server by default.
 
+## Mutation Surface (Implemented)
+
+The `invoke` mutation validates parameters against the method signature and routes the request through the Router/Bus stack.
+
+```graphql
+type Mutation {
+  invoke(address: Int!, plane: String!, method: String!, params: JSON): InvokeResult!
+}
+
+type InvokeResult {
+  ok: Boolean!
+  error: InvokeError
+  result: JSON
+}
+
+type InvokeError {
+  message: String!
+  code: String!
+  category: String!
+}
+```
+
+### Behavior
+
+- **Parameter validation**: params are checked against either the template schema (`ParamSchema`) or a template builder (`Build`). Values are coerced from GraphQL floats to ints when safe.
+- **Error mapping**: typed errors are mapped to `code`/`category` (e.g., `TIMEOUT` → `TRANSIENT`, `NO_SUCH_DEVICE` → `DEFINITIVE`).
+- **Result normalization**: `types.Value{Valid:false}` fields are returned as `null` in the JSON result map.
+
+### Handler Construction
+
+`NewInvokeHandler(builder, registry, invoker)` returns an `http.Handler` backed by query + mutation schema.
+
 ## Not Yet Implemented
 
-- No mutations.
 - No subscriptions.
