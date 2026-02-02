@@ -138,6 +138,8 @@ flowchart LR
 
 Planes initiate work (method invocation) or receive broadcast updates, but they do not manage protocol states. The Bus is responsible for the eBUS-level state machine: send, ACK/NACK handling, response read, CRC validation, and retries. The Router sits between the two, translating Plane operations into Bus sends and routing Bus broadcasts back to subscribed Planes.
 
+While waiting for ACK/NACK, the Bus tolerates idle/noise bytes (e.g., repeated `SYN`) and continues until a definitive ACK/NACK or timeout is reached.
+
 ### eBUS Send/Receive State Machine (Mermaid)
 
 ```mermaid
