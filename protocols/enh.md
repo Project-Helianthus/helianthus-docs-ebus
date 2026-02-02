@@ -48,6 +48,10 @@ When parsing a byte stream:
 
 Invalid header combinations are rejected.
 
+## Short-Form Receive Notifications
+
+For bytes `< 0x80`, the enhanced protocol allows receive notifications to be sent without an ENH frame prefix. These unframed bytes are semantically equivalent to a `RECEIVED` response carrying the same data byte.
+
 ## Example (Hex)
 
 ```text
