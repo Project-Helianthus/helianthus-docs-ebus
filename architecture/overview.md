@@ -7,7 +7,7 @@ This repository documents the current, implemented architecture of the Helianthu
 ```mermaid
 flowchart TB
   subgraph Gateway
-    G0[Gateway runtime (wired)]
+    G0[Gateway runtime wired]
     G1[GraphQL schema builder]
     G2[MCP stub]
     G3[mDNS stub]
