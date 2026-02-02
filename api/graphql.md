@@ -2,7 +2,7 @@
 
 ## Current Status
 
-The GraphQL API does not yet include subscriptions, and there is no HTTP server wiring. However, **read-only queries**, **invoke mutation**, and a **dynamic schema builder** are implemented and can be exposed via an HTTP handler.
+The GraphQL API does not yet include a built-in HTTP server, but **read-only queries**, **invoke mutation**, **broadcast subscriptions**, and a **dynamic schema builder** are implemented and can be exposed via handlers.
 
 ## Dynamic Schema Builder (Implemented)
 
@@ -98,6 +98,33 @@ type InvokeError {
 
 `NewInvokeHandler(builder, registry, invoker)` returns an `http.Handler` backed by query + mutation schema.
 
+## Subscription Surface (Implemented)
+
+Broadcast subscriptions deliver raw eBUS broadcast frames filtered by primary/secondary bytes.
+
+```graphql
+type Subscription {
+  broadcast(primary: Int!, secondary: Int!): BroadcastEvent!
+}
+
+type BroadcastEvent {
+  source: Int!
+  target: Int!
+  primary: Int!
+  secondary: Int!
+  data: [Int!]!
+}
+```
+
+### Transports
+
+- **WebSocket**: supports `graphql-transport-ws` and legacy `graphql-ws` subprotocols.
+- **SSE fallback**: request with `Accept: text/event-stream` or `?sse=1`. Supports GET query params or POST JSON body.
+
+### Handler Construction
+
+`NewSubscriptionHandler(builder, registry, invoker, hub)` returns an `http.Handler` that serves both WebSocket and SSE.
+
 ## Not Yet Implemented
 
-- No subscriptions.
+- No additional subscription fields beyond `broadcast`.
