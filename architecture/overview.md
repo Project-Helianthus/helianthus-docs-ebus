@@ -1,6 +1,6 @@
 # Architecture Overview
 
-This repository documents the current, implemented architecture of the Helianthus eBUS ecosystem. As of now, `helianthus-ebusgo` and `helianthus-ebusreg` contain the working transport, protocol, type system, registry, and vendor providers. `helianthus-ebusgateway` now wires transport, bus, registry, and router into a runnable gateway process; GraphQL/MCP/mDNS/Matter remain stubs (no API surface yet).
+This repository documents the current, implemented architecture of the Helianthus eBUS ecosystem. As of now, `helianthus-ebusgo` and `helianthus-ebusreg` contain the working transport, protocol, type system, registry, and vendor providers. `helianthus-ebusgateway` now wires transport, bus, registry, and router into a runnable gateway process; the GraphQL **schema builder** is implemented (no API surface yet), while MCP/mDNS/Matter remain stubs.
 
 ## Layered Architecture (Mermaid)
 
@@ -8,7 +8,7 @@ This repository documents the current, implemented architecture of the Helianthu
 flowchart TB
   subgraph Gateway
     G0[Gateway runtime (wired)]
-    G1[GraphQL stub]
+    G1[GraphQL schema builder]
     G2[MCP stub]
     G3[mDNS stub]
     G4[Matter stub]
@@ -56,6 +56,7 @@ The gateway now provides a runtime wiring layer that instantiates the bus, regis
 - **Startup**: `Start(ctx)` runs the Bus loop; cancellation stops the bus.
 - **Shutdown**: `Close()` closes the underlying transport connection (or the provided transport).
 - **Router refresh**: `RefreshRouterPlanes()` extracts `router.Plane` implementations from the registry and updates the router’s subscription table.
+- **GraphQL schema rebuild**: the schema builder consumes registry entries and rebuilds schema snapshots whenever a registry change signal is emitted.
 
 ## Plane/Provider Model
 
