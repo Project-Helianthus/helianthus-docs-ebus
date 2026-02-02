@@ -52,6 +52,10 @@ Invalid header combinations are rejected.
 
 For bytes `< 0x80`, the enhanced protocol allows receive notifications to be sent without an ENH frame prefix. These unframed bytes are semantically equivalent to a `RECEIVED` response carrying the same data byte.
 
+## Arbitration Bytes
+
+Receive data notifications are **not** sent for bytes that are part of an arbitration request initiated by the host. Implementations should not expect echo notifications for those arbitration bytes (typically the address bytes at the start of a master frame).
+
 ## Example (Hex)
 
 ```text

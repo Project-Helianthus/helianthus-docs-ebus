@@ -31,7 +31,7 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Decision:** Encode ENH as two bytes where the first carries the command and the high two data bits, and the second carries the remaining six data bits. Short-form receive notifications for bytes `< 0x80` are normalized into `ENHResReceived` frames by the parser.
 
-**Consequences:** Transport decodes ENH frames and only forwards receive data bytes (`ENHResReceived`, including short-form) to the Bus, suppressing echoed bytes that match the outbound payload.
+**Consequences:** Transport decodes ENH frames and only forwards receive data bytes (`ENHResReceived`, including short-form) to the Bus, suppressing echoed bytes that match the outbound payload. Arbitration bytes (address bytes) are not expected to be echoed and are excluded from echo suppression.
 
 ## ADR-004: ENS uses explicit escaping for control symbols
 
