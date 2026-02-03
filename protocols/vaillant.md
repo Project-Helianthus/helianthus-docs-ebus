@@ -8,6 +8,7 @@ This document lists Vaillant-family message identifiers and payload layouts that
 0xB5 0x04  GetOperationalData (request parameter op; response is op-dependent)
 0xB5 0x05  SetOperationalData (request parameter op + optional payload; response is op-dependent)
 0xB5 0x09  Register access (read/write selector + 16-bit address)
+0xB5 0x24  Extended register access (prefix + 16-bit address)
 0xB5 0x16  Energy statistics (selector-encoded request; EXP Wh response)
 0xFE 0x01  System-level broadcast (payload unspecified here)
 ```
@@ -97,6 +98,31 @@ Write request payload (3+ bytes):
 ```
 
 Response payload layout is device/register-specific. In some cases, a single `0x00` byte is observed instead of a typed value (commonly reported as “invalid position” by ebusd).
+
+## Extended Register Access (0xB5 0x24)
+
+`0xB5 0x24` is used by Vaillant regulators (e.g., `ctlv2`) as an extended register-like access mechanism. Requests start with a 4-byte prefix and a 16-bit address.
+
+```text
+Read request payload (6 bytes):
+  0: 0x02          constant prefix
+  1: 0x00          read selector
+  2: group         byte
+  3: instance      byte
+  4: addr_hi       byte
+  5: addr_lo       byte
+
+Write request payload (6+ bytes):
+  0: 0x02          constant prefix
+  1: 0x01          write selector
+  2: group         byte
+  3: instance      byte
+  4: addr_hi       byte
+  5: addr_lo       byte
+  6..: data        bytes (0+)
+```
+
+Read responses are commonly observed with the first 4 bytes matching the prefix (`0x02 0x00 group instance`) followed by value bytes (many ebusd CSV definitions use `IGN:4` before decoding the value).
 
 ## Energy Statistics (0xB5 0x16)
 
