@@ -56,6 +56,14 @@ For bytes `< 0x80`, the enhanced protocol allows receive notifications to be sen
 
 Receive data notifications are **not** sent for bytes that are part of an arbitration request initiated by the host. Implementations should not expect echo notifications for those arbitration bytes (typically the address bytes at the start of a master frame).
 
+## START/STARTED and the Source Byte
+
+When using `START`/`STARTED` to acquire the bus (arbitration), the adapter emits the **master source address** on the physical bus as part of that arbitration sequence.
+
+As a consequence, the first command telegram sent immediately after a successful `STARTED` does not need to re-send the `SRC` byte; it can begin at `DST`.
+
+This matches ebusd-style “direct” operation over ENH and explains why `SRC` echo notifications are typically absent right after arbitration.
+
 ## Example (Hex)
 
 ```text
