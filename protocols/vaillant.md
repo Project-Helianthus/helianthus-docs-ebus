@@ -39,6 +39,13 @@ DateTime (10 bytes):
   temp          : DATA2b (temp2)
 ```
 
+### Common op selectors (observed)
+
+```text
+0x09  Parameters (5 bytes; layout depends on target class)
+0x0D  Status (1 byte)
+```
+
 ### Other observed payload layouts (examples)
 
 ```text

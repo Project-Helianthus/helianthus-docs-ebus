@@ -20,6 +20,11 @@
 - Bus serialization is centralized via a priority queue.
 - Retry logic lives in Bus and is applied per frame type.
 
+## Provider Packages
+
+- Vendor plane providers are public packages (e.g., `vaillant/system`, `vaillant/heating`, `vaillant/dhw`, `vaillant/solar`).
+- For convenience, `providers/vaillant` exposes constructors and a default provider list.
+
 ## Testing
 
 - Transport, protocol, and type logic are covered by unit tests in `helianthus-ebusgo`.

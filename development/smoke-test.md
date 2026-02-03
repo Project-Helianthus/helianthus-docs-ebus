@@ -47,10 +47,13 @@ EBUS_SMOKE=1 go run ./cmd/smoke
 2. Scan the bus with a per-device timeout.
 3. Log discovered devices and compare against `expected_devices`.
 4. Invoke **read-only** methods for each discovered plane.
+5. Start a **passive broadcast listener** on a separate ENH/ENS connection after the scan.
+6. Log **semantic energy totals** as B516 broadcasts arrive (if present on the bus).
 
 Notes:
 
 - If `expected_devices` is empty/omitted, the harness performs a full scan over the default address range.
 - On a multi-master bus, arbitration collisions can occur during scan. The scan logic retries collided targets in later passes (bounded) instead of aborting the entire scan.
+- Default providers include Vaillant **system**, **heating**, and **DHW** planes; solar is opt-in.
 
 The smoke test never writes to the bus.
