@@ -70,7 +70,7 @@ Each Plane publishes:
 
 This keeps protocol mechanics (bus arbitration, ACK/NACK, retries) inside the Bus, while Planes focus purely on domain semantics.
 
-`DecodeResponse` receives the original `params` because some responses are **param-dependent** and cannot be decoded from the frame alone (e.g., op-coded request/response pairs). In Helianthus, this is commonly exposed as a result map containing the request selectors (e.g., `op`) plus the raw `payload`, with optional higher-level fields decoded for known op values (e.g., `0xB5 0x04` GetOperationalData decodes `op=0x00` as DateTime when present).
+`DecodeResponse` receives the original `params` because some responses are **param-dependent** and cannot be decoded from the frame alone (e.g., op-coded request/response pairs). In Helianthus, this is commonly exposed as a result map containing the request selectors (e.g., `op`) plus the raw `payload`, with optional higher-level fields decoded for known op values (e.g., Vaillant `0xB5 0x04` GetOperationalData and `0xB5 0x05` SetOperationalData use an `op` selector; GetOperationalData decodes `op=0x00` as DateTime when present).
 
 ### IOKit / IORegistry Parallels (Inspiration)
 
