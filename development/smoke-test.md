@@ -47,6 +47,8 @@ EBUS_SMOKE=1 go run ./cmd/smoke
 2. Scan the bus with a per-device timeout.
 3. Log discovered devices and compare against `expected_devices`.
 4. Invoke **read-only** methods for each discovered plane.
+5. Start a **passive broadcast listener** on a separate ENH/ENS connection after the scan.
+6. Log **semantic energy totals** as B516 broadcasts arrive (if present on the bus).
 
 Notes:
 
