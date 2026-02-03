@@ -124,6 +124,11 @@ flowchart LR
   R --> P3[Plane C]
 ```
 
+The router routes bus frames to subscribed planes via `Plane.OnBroadcast(frame)`. For frames that can be decoded into structured values, the router also exposes a typed event stream:
+
+- `BusEventRouter.Events()` is a buffered channel of `router.BroadcastEvent`.
+- If a plane implements the optional `router.BroadcastDecoder` interface, `HandleBroadcast(frame)` decodes and publishes a `BroadcastEvent` (non-blocking) alongside calling `OnBroadcast`.
+
 ### Request/Response (plane → bus → plane)
 
 ```mermaid
