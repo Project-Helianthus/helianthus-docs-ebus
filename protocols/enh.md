@@ -38,6 +38,12 @@ Responses:
   0xC = ERROR_HOST
 ```
 
+## INIT Handshake (Observed)
+
+Hosts typically send `INIT` once with a feature byte (often `0x00`). Some adapters respond with `RESETTED`, but others immediately start streaming bus data or `INFO` without ever sending `RESETTED`.
+
+Practical, ebusd-compatible behavior is to treat `INIT` as **best-effort**: send it, then proceed if a `RESETTED` arrives *or* if no `RESETTED` appears within a short timeout while valid data continues to flow.
+
 ## Stream Parsing
 
 When parsing a byte stream:
