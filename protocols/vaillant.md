@@ -6,7 +6,7 @@ This document lists Vaillant-family message identifiers and payload layouts that
 
 ```text
 0xB5 0x04  GetOperationalData (request parameter op; response is op-dependent)
-0xB5 0x05  Set target temperature (context-dependent request payload)
+0xB5 0x05  SetOperationalData (request parameter op + optional payload; response is op-dependent)
 0xB5 0x16  Energy statistics (request parameters: period/source/usage)
 0xFE 0x01  System-level broadcast (payload unspecified here)
 ```
@@ -65,6 +65,18 @@ Solar parameters (3 bytes):
 Simple status (1 byte):
   status : DATA1b
 ```
+
+## SetOperationalData (0xB5 0x05)
+
+The `0xB5 0x05` identifier is used for op-coded writes. The request payload starts with a 1-byte `op` selector, followed by an optional payload.
+
+```text
+Request payload (1+ bytes):
+  op      : byte
+  payload : bytes (optional)
+```
+
+Response payload is device/op-specific and may be empty (ack-only).
 
 ## Energy Statistics
 
