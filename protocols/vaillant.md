@@ -7,6 +7,7 @@ This document lists Vaillant-family message identifiers and payload layouts that
 ```text
 0xB5 0x04  GetOperationalData (request parameter op; response is op-dependent)
 0xB5 0x05  SetOperationalData (request parameter op + optional payload; response is op-dependent)
+0xB5 0x09  Register access (read/write selector + 16-bit address)
 0xB5 0x16  Energy statistics (selector-encoded request; EXP Wh response)
 0xFE 0x01  System-level broadcast (payload unspecified here)
 ```
@@ -77,6 +78,25 @@ Request payload (1+ bytes):
 ```
 
 Response payload is device/op-specific and may be empty (ack-only).
+
+## Register Access (0xB5 0x09)
+
+`0xB5 0x09` is used for register-like access using a selector byte plus a 16-bit address. The same primary/secondary is used for both reads and writes; the selector byte indicates the operation.
+
+```text
+Read request payload (3 bytes):
+  op      : 0x0D
+  addr_hi : byte
+  addr_lo : byte
+
+Write request payload (3+ bytes):
+  op      : 0x0E
+  addr_hi : byte
+  addr_lo : byte
+  data    : bytes (0+)
+```
+
+Response payload layout is device/register-specific. In some cases, a single `0x00` byte is observed instead of a typed value (commonly reported as “invalid position” by ebusd).
 
 ## Energy Statistics (0xB5 0x16)
 

@@ -72,6 +72,8 @@ This keeps protocol mechanics (bus arbitration, ACK/NACK, retries) inside the Bu
 
 `DecodeResponse` receives the original `params` because some responses are **param-dependent** and cannot be decoded from the frame alone (e.g., op-coded request/response pairs). In Helianthus, this is commonly exposed as a result map containing the request selectors (e.g., `op`) plus the raw `payload`, with optional higher-level fields decoded for known op values (e.g., Vaillant `0xB5 0x04` GetOperationalData and `0xB5 0x05` SetOperationalData use an `op` selector; GetOperationalData decodes `op=0x00` as DateTime when present).
 
+Similarly, Vaillant `0xB5 0x09` register access uses a selector byte (`0x0D` read / `0x0E` write) plus a 16-bit address, so the original request parameters remain important context for decoding and labeling responses.
+
 ### IOKit / IORegistry Parallels (Inspiration)
 
 This model is inspired by how IOKit organizes devices and drivers in macOS:
