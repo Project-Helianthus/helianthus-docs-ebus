@@ -2,7 +2,10 @@
 
 ## Current Status
 
-The GraphQL API does not yet include a built-in HTTP server, but **read-only queries**, **invoke mutation**, **broadcast subscriptions**, and a **dynamic schema builder** are implemented and can be exposed via handlers.
+The GraphQL API is implemented and served by `cmd/gateway`. The gateway exposes:
+
+- `/graphql` for queries + mutations
+- `/graphql/subscriptions` for subscriptions over WebSocket or SSE
 
 ## Dynamic Schema Builder (Implemented)
 
@@ -64,7 +67,7 @@ type Field {
 
 ### Handler Construction
 
-`NewHandler(builder)` returns an `http.Handler` backed by the query schema. It is ready to mount in an HTTP server but the gateway does not yet expose a server by default.
+`NewHandler(builder)` returns an `http.Handler` backed by the query schema. `cmd/gateway` uses `NewInvokeHandler(builder, registry, invoker)` for `/graphql` and `NewSubscriptionHandler(builder, registry, invoker, hub)` for `/graphql/subscriptions`.
 
 ## Mutation Surface (Implemented)
 
