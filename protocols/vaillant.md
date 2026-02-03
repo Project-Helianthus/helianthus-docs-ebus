@@ -5,23 +5,45 @@ This document lists Vaillant-family message identifiers and payload layouts that
 ## Primary/Secondary Identifiers
 
 ```text
-0xB5 0x04  Status / Parameters (context-dependent)
+0xB5 0x04  GetOperationalData (request parameter op; response is op-dependent)
 0xB5 0x05  Set target temperature (context-dependent request payload)
 0xB5 0x16  Energy statistics (request parameters: period/source/usage)
 0xFE 0x01  System-level broadcast (payload unspecified here)
 ```
 
-## Status/Parameters Payloads (Examples)
+## GetOperationalData (0xB5 0x04)
 
-The `0xB5 0x04` identifier is used for multiple payload layouts. Examples of layouts:
+The `0xB5 0x04` identifier is used for multiple payload layouts. The request payload is a single 1-byte `op` selector; the response payload layout depends on `op` (and potentially device class/target).
 
 ```text
-Boiler parameters (3 bytes):
+Request payload (1 byte):
+  op : byte
+```
+
+### op = 0x00 (DateTime)
+
+If present, the response payload can be decoded as:
+
+```text
+DateTime (8 bytes):
+  dcfstate    : byte
+  time_hour   : BCD
+  time_minute : BCD
+  date_day    : BCD
+  date_month  : BCD
+  date_year   : BCD
+  temp        : DATA2b
+```
+
+### Other observed payload layouts (examples)
+
+```text
+Boiler parameters (5 bytes):
   flow_temp     : DATA2b
   return_temp   : DATA2b
   pump_status   : DATA1b
 
-Controller parameters (3 bytes):
+Controller parameters (5 bytes):
   room_temp     : DATA2b
   target_temp   : DATA2b
   mode          : DATA1b
