@@ -27,14 +27,16 @@ Request payload (1 byte):
 If present, the response payload can be decoded as:
 
 ```text
-DateTime (8 bytes):
-  dcfstate    : byte
-  time_hour   : BCD
-  time_minute : BCD
-  date_day    : BCD
-  date_month  : BCD
-  date_year   : BCD
-  temp        : DATA2b
+DateTime (10 bytes):
+  dcfstate      : byte
+  time_second   : BCD  (BTI[0] on wire, SS,MM,HH)
+  time_minute   : BCD  (BTI[1])
+  time_hour     : BCD  (BTI[2])
+  date_day      : BCD  (BDA[0] on wire, DD,MM,<weekday>,YY)
+  date_month    : BCD  (BDA[1])
+  date_weekday  : byte (BDA[2], typically ignored)
+  date_year     : BCD  (BDA[3])
+  temp          : DATA2b (temp2)
 ```
 
 ### Other observed payload layouts (examples)
