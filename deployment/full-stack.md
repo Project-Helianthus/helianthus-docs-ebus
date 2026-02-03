@@ -2,12 +2,17 @@
 
 ## Current Status
 
-There is no runnable full-stack server yet. The gateway packages (`graphql`, `mcp`, `mdns`, `matter`) exist, but `cmd/gateway` currently only starts the bus stack and does not serve HTTP endpoints.
+`cmd/gateway` runs the bus stack and serves HTTP endpoints for GraphQL, GraphQL subscriptions, and MCP. It can optionally enable a passive broadcast listener and advertise the GraphQL endpoint over mDNS.
 
 ## What Exists
 
 - `helianthus-ebusgo` and `helianthus-ebusreg` build and include unit tests.
-- `helianthus-ebusgateway` builds as a Go module; `cmd/gateway` can optionally enable a **passive broadcast listener** (separate connection) for energy broadcasts.
+- `helianthus-ebusgateway` builds as a Go module and serves:
+  - GraphQL queries/mutations: `/graphql`
+  - GraphQL subscriptions (SSE/WS): `/graphql/subscriptions`
+  - MCP endpoint: `/mcp`
+- mDNS advertisement: `_helianthus-graphql._tcp` with TXT `path=/graphql`
+- `cmd/gateway` can optionally enable a **passive broadcast listener** (separate connection) for energy broadcasts.
 
 ## Build/Verify (Libraries Only)
 

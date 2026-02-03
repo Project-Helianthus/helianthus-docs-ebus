@@ -2,8 +2,9 @@
 
 ## Current Status
 
-The MCP package exists as a stub only. No MCP server, tools, or schemas are implemented yet.
+The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
 
 ## Implemented Surface
 
-- None.
+- `ebus.devices`: list devices, planes, and methods
+- `ebus.invoke`: invoke a plane method with params
