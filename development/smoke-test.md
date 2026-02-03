@@ -48,4 +48,9 @@ EBUS_SMOKE=1 go run ./cmd/smoke
 3. Log discovered devices and compare against `expected_devices`.
 4. Invoke **read-only** methods for each discovered plane.
 
+Notes:
+
+- If `expected_devices` is empty/omitted, the harness performs a full scan over the default address range.
+- On a multi-master bus, arbitration collisions can occur during scan. The scan logic retries collided targets in later passes (bounded) instead of aborting the entire scan.
+
 The smoke test never writes to the bus.
