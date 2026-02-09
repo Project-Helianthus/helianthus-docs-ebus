@@ -12,6 +12,8 @@ The GraphQL API is implemented and served by `cmd/gateway`. The gateway exposes:
 The builder assembles a GraphQL-oriented schema model directly from the registry:
 
 - **Registry-driven types**: devices, planes, and methods are enumerated from the registry; each method includes frame primary/secondary bytes and a **response schema** (fields + data types) selected via the schema selector for the device’s address/hardware version.
+- **Projections in snapshots**: projection graphs are included in each schema snapshot (`Device.projections`) alongside planes and methods.
+- **Projection validation**: projections are validated during schema build; invalid projection graphs fail the build and surface a schema error.
 - **Rebuild on registry change**: `Start(ctx)` performs an initial build and listens on a `changes` channel; each signal triggers a rebuild. If no channel is provided, callers can trigger rebuilds via `Rebuild()`.
 - **Graceful channel close**: if the `changes` channel is closed, the builder stops listening instead of spinning rebuilds.
 - **Revisioned snapshots**: each successful rebuild increments a revision counter; `Schema()` returns a deep-copied snapshot to keep callers insulated from concurrent rebuilds.
@@ -39,6 +41,7 @@ type Device {
   softwareVersion: String!
   hardwareVersion: String!
   planes: [Plane!]!
+  projections: [Projection!]!
 }
 
 type Plane {
@@ -63,7 +66,31 @@ type Field {
   type: String!
   size: Int!
 }
+
+type Projection {
+  plane: String!
+  nodes: [ProjectionNode!]!
+  edges: [ProjectionEdge!]!
+}
+
+type ProjectionNode {
+  id: String!
+  path: String!
+  canonicalPath: String!
+}
+
+type ProjectionEdge {
+  id: String!
+  from: String!
+  to: String!
+}
 ```
+
+### Projection Notes
+
+- **ProjectionNode.id** derives from the canonical Service path for the node (stable across projections).
+- **ProjectionEdge.from/to** refer to node IDs within the same projection.
+- **path / canonicalPath format**: `Plane:/segment@value/segment@value/...` where `Plane` is the projection plane name and each path segment may include an `@`-qualified locator.
 
 ### Handler Construction
 
