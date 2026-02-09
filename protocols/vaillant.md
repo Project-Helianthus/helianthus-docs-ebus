@@ -8,7 +8,7 @@ This document lists Vaillant-family message identifiers and payload layouts that
 0xB5 0x04  GetOperationalData (request parameter op; response is op-dependent)
 0xB5 0x05  SetOperationalData (request parameter op + optional payload; response is op-dependent)
 0xB5 0x09  Register access (read/write selector + 16-bit address)
-0xB5 0x24  Extended register access (prefix + 16-bit address)
+0xB5 0x24  Extended register access (selector + 16-bit register id)
 0xB5 0x16  Energy statistics (selector-encoded request; EXP Wh response)
 0xFE 0x01  System-level broadcast (payload unspecified here)
 ```
@@ -110,28 +110,108 @@ Response payload layout is device/register-specific. In some cases, a single `0x
 
 ## Extended Register Access (0xB5 0x24)
 
-`0xB5 0x24` is used by Vaillant regulators (e.g., `ctlv2`) as an extended register-like access mechanism. Requests start with a 4-byte prefix and a 16-bit address.
+`0xB5 0x24` (often referred to as “B524”) is used by Vaillant regulators as a selector-based extended register mechanism. The request/response format is multiplexed by the first payload byte (`opcode`).
+
+This section documents the **payload bytes** inside an eBUS frame (not including eBUS CRC/escaping). When interacting via ebusd’s TCP `hex` command, note that ebusd typically prefixes the slave response with a 1-byte eBUS response length; see `protocols/ebusd-tcp.md`.
+
+### Directory Probe (opcode 0x00)
+
+The directory probe is used to enumerate groups (GG). Each request probes one group id and returns a float descriptor.
 
 ```text
-Read request payload (6 bytes):
-  0: 0x02          constant prefix
-  1: 0x00          read selector
-  2: group         byte
-  3: instance      byte
-  4: addr_hi       byte
-  5: addr_lo       byte
+Request payload (3 bytes):
+  0: 0x00          opcode (directory probe)
+  1: GG            group id
+  2: 0x00          padding
 
-Write request payload (6+ bytes):
-  0: 0x02          constant prefix
-  1: 0x01          write selector
-  2: group         byte
-  3: instance      byte
-  4: addr_hi       byte
-  5: addr_lo       byte
-  6..: data        bytes (0+)
+Response payload (4 bytes):
+  0..3: descriptor float32le
 ```
 
-Read responses are commonly observed with the first 4 bytes matching the prefix (`0x02 0x00 group instance`) followed by value bytes (many ebusd CSV definitions use `IGN:4` before decoding the value).
+Notes (observed):
+- The descriptor is an IEEE 754 `float32` (little-endian).
+- `NaN` is used as an end-of-directory marker.
+- `0.0` may appear for “holes” (unassigned group ids).
+
+### Register Read/Write (opcode 0x02 / 0x06)
+
+Register access uses two opcode families that share the same selector layout:
+
+- `0x02`: “local” register space (common for regulator-internal groups)
+- `0x06`: “remote” register space (commonly used for room sensor/remote groups)
+
+```text
+Request payload (read, 6 bytes; RR is little-endian u16):
+  0: opcode        0x02 (local) or 0x06 (remote)
+  1: optype        0x00 (read)
+  2: GG            group id
+  3: II            instance id
+  4: RR_LO         register id low byte
+  5: RR_HI         register id high byte
+
+Request payload (write, 6+ bytes):
+  0: opcode        0x02 (local) or 0x06 (remote)
+  1: optype        0x01 (write)
+  2: GG            group id
+  3: II            instance id
+  4: RR_LO
+  5: RR_HI
+  6..: value bytes
+
+Response payload (read, observed):
+  0: TT            reply kind / status
+  1: GG            group id (echo)
+  2: RR_LO         register id low byte (echo)
+  3: RR_HI         register id high byte (echo)
+  4..: value bytes (optional)
+```
+
+Notes (observed):
+- The response does **not** include `II` (instance) and does **not** echo the request opcode/optype.
+- Some replies are status-only and contain only `TT` (1 byte, no GG/RR/value bytes).
+- `TT` semantics (empirical):
+  - `0x00`: no data / not present / invalid
+  - `0x01`: live / operational value
+  - `0x02`: parameter / limit
+  - `0x03`: parameter / config
+
+### Timer Read/Write (opcode 0x03 / 0x04)
+
+Some Vaillant regulators expose timer schedules via B524 selector opcodes `0x03` and `0x04`.
+
+```text
+Request payload (read timer, 5 bytes):
+  0: 0x03          opcode (timer read)
+  1: SEL1          selector tuple byte 1
+  2: SEL2          selector tuple byte 2
+  3: SEL3          selector tuple byte 3
+  4: WD            weekday (0x00..0x06)
+
+Request payload (write timer, 5+ bytes):
+  0: 0x04          opcode (timer write)
+  1: SEL1
+  2: SEL2
+  3: SEL3
+  4: WD
+  5..: blocks      timer blocks (format device-/model-specific)
+```
+
+### Known Groups (Observed on VRC720-class Regulators)
+
+The directory probe descriptor (`float32le`) appears stable per group and can be used as a coarse group “type”. The table below lists observed groups and typical scan defaults used by Helianthus tooling.
+
+```text
+GG   Name                  Descriptor  Instanced  Typical opcode  Notes
+0x00 Regulator Parameters  3.0         no         0x02           RR extends beyond 0x00FF (seen up to 0x01FF)
+0x01 Hot Water Circuit     3.0         no         0x02
+0x02 Heating Circuits      1.0         yes        0x02
+0x03 Zones                 1.0         yes        0x02
+0x04 Solar Circuit         6.0         no         0x02
+0x05 Hot Water Cylinder    1.0         yes/varies 0x02           (instancing varies by model)
+0x09 Room Sensors          1.0         yes        0x06
+0x0A Room State            1.0         yes        0x06
+0x0C Unknown               1.0         yes        0x06
+```
 
 ## Energy Statistics (0xB5 0x16)
 

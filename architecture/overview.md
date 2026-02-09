@@ -74,7 +74,7 @@ This keeps protocol mechanics (bus arbitration, ACK/NACK, retries) inside the Bu
 
 Similarly, Vaillant `0xB5 0x09` register access uses a selector byte (`0x0D` read / `0x0E` write) plus a 16-bit address, so the original request parameters remain important context for decoding and labeling responses.
 
-Vaillant `0xB5 0x24` extended register access follows the same pattern: requests include a fixed prefix (`0x02`), a read/write selector, a group/instance pair, and a 16-bit address. Responses are commonly interpreted by skipping the echoed 4-byte prefix before decoding the value bytes.
+Vaillant `0xB5 0x24` (“B524”) extended register access follows the same pattern: requests include an opcode family (`0x02`/`0x06`), a read/write selector, a group/instance pair, and a 16-bit register id. Responses do **not** echo the request selector; instead they begin with a 4-byte response header (`TT GG RR_LO RR_HI`) followed by optional value bytes. The instance id is not present in the response, so the original request parameters remain important context for correlating replies.
 
 ### IOKit / IORegistry Parallels (Inspiration)
 
