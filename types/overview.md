@@ -40,3 +40,7 @@ When encoding:
 - Inputs outside the valid range are rejected.
 
 This keeps “unknown” distinct from legitimate numeric values without using sentinel numbers in application code.
+
+## See Also
+
+- `types/ebusd-csv.md` – common ebusd CSV type spec strings and selector conventions (observed).

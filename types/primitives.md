@@ -26,6 +26,9 @@ _ = err
 - **Encoding:** signed 16-bit, little-endian, divided by 256
 - **Range:** -32767/256 .. 32767/256
 - **Replacement value:** `0x00 0x80` (0x8000 little-endian)
+- **Encoding notes (when writing):**
+  - Scale by 256, round to nearest integer (ties away from zero), and require an exact fit.
+  - Reject NaN/Inf, out-of-range values, and any value that would encode to the replacement value.
 
 ```text
 byte0: low byte
@@ -46,6 +49,9 @@ _ = err
 - **Encoding:** signed 16-bit, little-endian, divided by 16
 - **Range:** -32767/16 .. 32767/16
 - **Replacement value:** `0x00 0x80` (0x8000 little-endian)
+- **Encoding notes (when writing):**
+  - Scale by 16, round to nearest integer (ties away from zero), and require an exact fit.
+  - Reject NaN/Inf, out-of-range values, and any value that would encode to the replacement value.
 
 ```text
 byte0: low byte
