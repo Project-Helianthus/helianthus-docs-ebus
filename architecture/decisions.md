@@ -142,14 +142,14 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Status:** Accepted
 
-**Context:** We need to represent device semantics as a graph that can be viewed through multiple planes (e.g., observability vs. automation) while preserving stable identity across those views.
+**Context:** We need to represent device semantics as a graph that can be viewed through multiple planes (e.g., observability vs. automation) while preserving stable identity across those views within a registration/snapshot.
 
-**Decision:** Introduce a projection-graph core in `ebusreg` where:
+**Decision:** Introduce a projection-graph core in `ebusreg` where, in Helianthus:
 
 - A projection is a plane-scoped graph (nodes + edges).
 - Each node has a plane-specific path and a canonical path in the `Service` plane.
-- Node IDs are stable and derived from the canonical Service-plane path.
+- Node IDs are derived from the canonical Service-plane path and are stable within a registration/snapshot.
 - Path format is `Plane:/segment/...` with `@name` marking location segments; plane and segment names disallow `/` and `:`, and segment names must be non-empty and not start with `@`.
 - Edges are validated to reference existing node IDs and have stable IDs (`Plane:from->to`).
 
-**Consequences:** Planes become explicit projections of the canonical Service graph, enabling deterministic identity across planes, consistent path validation, and safe graph composition for higher-level APIs.
+**Consequences:** Planes become explicit projections of the canonical Service graph (Helianthus-specific), enabling deterministic identity across planes within a snapshot, consistent path validation, and safe graph composition for higher-level APIs.

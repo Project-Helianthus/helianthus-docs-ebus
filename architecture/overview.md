@@ -80,13 +80,13 @@ See also: `architecture/vaillant.md` for higher-level notes on how Vaillant’s 
 
 ## Projection Graph Core
 
-The registry also supports **projection graphs** attached to a DeviceEntry. A `PlaneProvider` may additionally implement `ProjectionProvider` to emit one or more `Projection` objects alongside its planes. Each projection is a plane-scoped graph (nodes + edges) that represents a **projection** of the canonical Service plane.
+The registry also supports **projection graphs** attached to a DeviceEntry. A `PlaneProvider` may additionally implement `ProjectionProvider` to emit one or more `Projection` objects alongside its planes. In Helianthus, each projection is a plane-scoped graph (nodes + edges) that represents a **projection** of the canonical Service plane.
 
 ### Planes as Projections
 
-- The **Service** plane is canonical. Every node has a canonical Service-plane path that defines its stable identity.
+- The **Service** plane is canonical. Every node has a canonical Service-plane path that defines its identity.
 - Other planes (e.g., `Observability`, `Automation`) are **projections** of the same nodes into plane-specific paths.
-- Node IDs are **stable** and derived from the canonical Service path, so the same node can be recognized across multiple planes.
+- Node IDs are derived from the canonical Service path and are stable **within a registration/snapshot**, so the same node can be recognized across multiple planes in that snapshot.
 
 ### Path Semantics
 
@@ -110,8 +110,8 @@ This model is inspired by how IOKit organizes devices and drivers in macOS:
 
 - **DeviceRegistry ≈ IORegistry**: a central registry of discovered devices and their properties.
 - **PlaneProvider ≈ driver matching/attachment**: a provider matches a device and attaches logical functionality.
-- **Plane ≈ IOService instance**: a plane is a semantic service view derived from the same hardware device.
-- **Multiple Planes per device ≈ multiple IORegistry planes**: a single device can appear in multiple logical planes (heating, DHW, system) without duplicating the underlying physical identity.
+- **Plane (Helianthus) ≠ IORegistry plane**: Helianthus planes are **global relationship views**; every entry exists in all planes (with different paths), whereas IORegistry planes are separate organizational views over the same registry.
+- **Multiple Planes per device ≈ multiple IORegistry planes (conceptual)**: a single device can appear in multiple logical views without duplicating the underlying physical identity.
 
 The mapping is conceptual (not API-identical), used to keep a clean separation between discovery, matching, and the semantic surface.
 
