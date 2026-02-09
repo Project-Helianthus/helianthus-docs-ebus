@@ -39,6 +39,7 @@ type Device {
   softwareVersion: String!
   hardwareVersion: String!
   planes: [Plane!]!
+  projections: [Projection!]!
 }
 
 type Plane {
@@ -62,6 +63,24 @@ type Field {
   name: String!
   type: String!
   size: Int!
+}
+
+type Projection {
+  plane: String!
+  nodes: [ProjectionNode!]!
+  edges: [ProjectionEdge!]!
+}
+
+type ProjectionNode {
+  id: String!
+  path: String!
+  canonicalPath: String!
+}
+
+type ProjectionEdge {
+  id: String!
+  from: String!
+  to: String!
 }
 ```
 
