@@ -78,14 +78,40 @@ Vaillant `0xB5 0x24` (“B524”) extended register access follows the same patt
 
 See also: `architecture/vaillant.md` for higher-level notes on how Vaillant’s regulator-centric selector space differs from classic eBUS “one device ↔ one address” expectations.
 
+## Projection Graph Core
+
+The registry also supports **projection graphs** attached to a DeviceEntry. A `PlaneProvider` may additionally implement `ProjectionProvider` to emit one or more `Projection` objects alongside its planes. In Helianthus, each projection is a plane-scoped graph (nodes + edges) that represents a **projection** of the canonical Service plane.
+
+### Planes as Projections
+
+- The **Service** plane is canonical. Every node has a canonical Service-plane path that defines its identity.
+- Other planes (e.g., `Observability`, `Automation`) are **projections** of the same nodes into plane-specific paths.
+- Node IDs are derived from the canonical Service path and are stable **within a registration/snapshot**, so the same node can be recognized across multiple planes in that snapshot.
+
+### Path Semantics
+
+- Path format: `Plane:/segment/segment/@location`
+- `@` marks a **location segment** (the `@` is a flag; it is not part of the segment name).
+- Plane names and segment names **must not** contain `/` or `:`.
+- Segment names must be non-empty and **must not** start with `@`.
+
+### Invariants (Validated in Registry Core)
+
+- `Projection.Plane` is non-empty and contains no `/` or `:`.
+- `Node.Path.Plane` matches `Projection.Plane`.
+- `Node.CanonicalPath.Plane` is always `Service`.
+- If `Node.Path.Plane` is `Service`, the node path must equal the canonical path exactly.
+- Node paths are unique within a projection; node IDs may repeat only when they map to the **same** canonical path.
+- Edge IDs are stable (`Plane:from->to`) and edges must reference existing node IDs.
+
 ### IOKit / IORegistry Parallels (Inspiration)
 
 This model is inspired by how IOKit organizes devices and drivers in macOS:
 
 - **DeviceRegistry ≈ IORegistry**: a central registry of discovered devices and their properties.
 - **PlaneProvider ≈ driver matching/attachment**: a provider matches a device and attaches logical functionality.
-- **Plane ≈ IOService instance**: a plane is a semantic service view derived from the same hardware device.
-- **Multiple Planes per device ≈ multiple IORegistry planes**: a single device can appear in multiple logical planes (heating, DHW, system) without duplicating the underlying physical identity.
+- **Plane (Helianthus) ≠ IORegistry plane**: Helianthus planes are **global relationship views**; every entry exists in all planes (with different paths), whereas IORegistry planes are separate organizational views over the same registry.
+- **Multiple Planes per device ≈ multiple IORegistry planes (conceptual)**: a single device can appear in multiple logical views without duplicating the underlying physical identity.
 
 The mapping is conceptual (not API-identical), used to keep a clean separation between discovery, matching, and the semantic surface.
 
