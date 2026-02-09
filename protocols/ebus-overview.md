@@ -92,3 +92,7 @@ SRC=0x10 DST=0x08 PB=0xB5 SB=0x04 LEN=0x01 DATA=0x7F CRC=0x??
 ```
 
 The CRC byte depends on the exact CRC8 implementation and the escape-aware substitution described above.
+
+## See Also
+
+- `protocols/ebusd-tcp.md` – ebusd daemon TCP command protocol (for tooling that sends direct-mode telegrams via ebusd).
