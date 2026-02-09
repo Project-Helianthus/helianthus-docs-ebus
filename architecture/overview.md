@@ -76,6 +76,8 @@ Similarly, Vaillant `0xB5 0x09` register access uses a selector byte (`0x0D` rea
 
 Vaillant `0xB5 0x24` (“B524”) extended register access follows the same pattern: requests include an opcode family (`0x02`/`0x06`), a read/write selector, a group/instance pair, and a 16-bit register id. Responses do **not** echo the request selector; instead they begin with a 4-byte response header (`TT GG RR_LO RR_HI`) followed by optional value bytes. The instance id is not present in the response, so the original request parameters remain important context for correlating replies.
 
+See also: `architecture/vaillant.md` for higher-level notes on how Vaillant’s regulator-centric selector space differs from classic eBUS “one device ↔ one address” expectations.
+
 ### IOKit / IORegistry Parallels (Inspiration)
 
 This model is inspired by how IOKit organizes devices and drivers in macOS:

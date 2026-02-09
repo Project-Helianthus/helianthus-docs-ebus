@@ -7,6 +7,11 @@ BITFIELD represents a fixed-width bitmask across N bytes.
 - **Size:** `N` bytes (configured by the user)
 - **Replacement value:** all bytes `0xFF`
 - **Decode output:** a boolean slice of length `N * 8`
+- **Encode input (common forms):**
+  - `[]bool` of length `N * 8` (bit0 of byte0 is index 0)
+  - `[]byte` of length `N` (raw bytes)
+  - integer value (packed little-endian across `N` bytes)
+- **Encode rules:** values that would encode to the replacement value (all `0xFF`) are rejected.
 
 ```text
 byte0 bit0 -> index 0
