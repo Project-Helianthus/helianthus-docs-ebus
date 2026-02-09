@@ -24,18 +24,29 @@ Request payload (1 byte):
 
 ### op = 0x00 (DateTime)
 
-If present, the response payload can be decoded as:
+Two response layouts are currently observed and supported. The decoder uses `dcfstate`, `time_hour`, `time_minute`, `date_day`, `date_month`, `date_year`, and `temp` in both cases. Seconds (layout A) and weekday (layout A) are present on the wire but currently ignored by the decoder.
 
 ```text
-DateTime (10 bytes):
+DateTime layout A (BTI/BDA + temp2, 10 bytes):
   dcfstate      : byte
-  time_second   : BCD  (BTI[0] on wire, SS,MM,HH)
+  time_second   : BCD  (BTI[0] on wire, SS,MM,HH) [ignored]
   time_minute   : BCD  (BTI[1])
   time_hour     : BCD  (BTI[2])
   date_day      : BCD  (BDA[0] on wire, DD,MM,<weekday>,YY)
   date_month    : BCD  (BDA[1])
-  date_weekday  : byte (BDA[2], typically ignored)
+  date_weekday  : byte (BDA[2]) [ignored]
   date_year     : BCD  (BDA[3])
+  temp          : DATA2b (temp2)
+```
+
+```text
+DateTime layout B (legacy, 8 bytes):
+  dcfstate      : byte
+  time_hour     : BCD
+  time_minute   : BCD
+  date_day      : BCD
+  date_month    : BCD
+  date_year     : BCD
   temp          : DATA2b (temp2)
 ```
 
