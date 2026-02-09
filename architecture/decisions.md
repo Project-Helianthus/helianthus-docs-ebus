@@ -137,3 +137,19 @@ This document records the architectural decisions implemented in the codebase. E
 **Decision:** Scan by sending primary `0x07` and secondary `0x04` to each target and parse the 8-byte device info payload (manufacturer, device ID, SW, HW).
 
 **Consequences:** Discovery returns a consistent `DeviceInfo` structure for providers to match against.
+
+## ADR-014: Projection graph core with Service-plane canonical paths
+
+**Status:** Accepted
+
+**Context:** We need to represent device semantics as a graph that can be viewed through multiple planes (e.g., observability vs. automation) while preserving stable identity across those views.
+
+**Decision:** Introduce a projection-graph core in `ebusreg` where:
+
+- A projection is a plane-scoped graph (nodes + edges).
+- Each node has a plane-specific path and a canonical path in the `Service` plane.
+- Node IDs are stable and derived from the canonical Service-plane path.
+- Path format is `Plane:/segment/...` with `@name` marking location segments; plane and segment names disallow `/` and `:`, and segment names must be non-empty and not start with `@`.
+- Edges are validated to reference existing node IDs and have stable IDs (`Plane:from->to`).
+
+**Consequences:** Planes become explicit projections of the canonical Service graph, enabling deterministic identity across planes, consistent path validation, and safe graph composition for higher-level APIs.
