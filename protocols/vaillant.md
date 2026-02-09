@@ -219,6 +219,19 @@ GG   Name                  Descriptor  Instanced  Typical opcode  Notes
 0x0C Unknown               1.0         yes        0x06
 ```
 
+### B524 Discovery Profile (Helianthus)
+
+Helianthus uses a static discovery profile to bound B524 group scans. Each entry specifies the opcode family and the **inclusive** upper limits for instance id and register id when probing a group. The directory probe should still be used to verify group presence; these are defaults based on observed VRC720-class regulators.
+
+```text
+GG   Opcode  InstanceMax  RegisterMax  Notes
+0x02 0x02    0x0A         0x0021       Heating circuits (local)
+0x03 0x02    0x0A         0x002F       Zones (local)
+0x09 0x06    0x0A         0x002F       Room sensors (remote)
+0x0A 0x06    0x0A         0x003F       Room state (remote)
+0x0C 0x06    0x0A         0x003F       Unknown (remote)
+```
+
 ## Energy Statistics (0xB5 0x16)
 
 Energy statistics use primary/secondary `0xB5 0x16` and a selector-encoded payload. This format is reverse engineered from observed traffic (see `john30/ebusd-configuration` issue `#490`).
