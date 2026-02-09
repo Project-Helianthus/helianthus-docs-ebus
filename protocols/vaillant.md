@@ -108,6 +108,12 @@ Write request payload (3+ bytes):
 
 Response payload layout is device/register-specific. In some cases, a single `0x00` byte is observed instead of a typed value (commonly reported as “invalid position” by ebusd).
 
+### Vaillant scan.id chunks (QQ=0x24..0x27)
+
+In addition to the `0x0D`/`0x0E` register access sub-format above, Vaillant devices are also observed to use `0xB5 0x09` with a **1-byte selector** (`QQ`) to return fixed-size ASCII chunks that can be assembled into a “scan id” string.
+
+See `protocols/basv.md` for the observed request/response layout and assembly rules.
+
 ## Extended Register Access (0xB5 0x24)
 
 `0xB5 0x24` (often referred to as “B524”) is used by Vaillant regulators as a selector-based extended register mechanism. The request/response format is multiplexed by the first payload byte (`opcode`).

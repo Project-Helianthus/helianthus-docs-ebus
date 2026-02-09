@@ -28,6 +28,15 @@ Frame type is derived from the destination address:
 
 This inference determines whether an ACK-only exchange is expected (master/master) or a full response frame (master/slave).
 
+### Master Address Pattern
+
+In direct-mode eBUS implementations (including Helianthus), “master” addresses are typically recognized by a nibble pattern:
+
+- A destination is treated as a **master address** if **both** the high and low nibbles are one of: `0x0`, `0x1`, `0x3`, `0x7`, `0xF`.
+- Examples: `0x10`, `0x31`, `0xF1`, `0x33`.
+
+Addresses equal to `0xA9` (escape) or `0xAA` (SYN) are invalid in address positions.
+
 ## ACK/NACK Symbols
 
 The bus uses one-byte symbols:
@@ -75,10 +84,16 @@ Key points:
 
 CRC8 is computed over the frame data with special handling for control symbols:
 
+- **CRC8 polynomial:** `0x9B` (init `0x00`).
 - `0xA9` (escape) is treated as `0xA9 0x00`
 - `0xAA` (SYN) is treated as `0xA9 0x01`
 
 This substitution is applied before CRC8 updates so that control symbols do not break framing.
+
+CRC8 coverage depends on the direct-mode phase:
+
+- **Master telegram CRC** is computed over: `SRC DST PB SB LEN DATA...`
+- **Slave response CRC** is computed over: `LEN DATA...` (responses do not repeat addresses in direct mode)
 
 On the wire, the same escape mechanism is used when sending these control bytes:
 
@@ -96,3 +111,4 @@ The CRC byte depends on the exact CRC8 implementation and the escape-aware subst
 ## See Also
 
 - `protocols/ebusd-tcp.md` – ebusd daemon TCP command protocol (for tooling that sends direct-mode telegrams via ebusd).
+- `protocols/basv.md` – device discovery messages (QueryExistence + Identification).

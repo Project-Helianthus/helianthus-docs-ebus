@@ -49,6 +49,9 @@ LEN DATA...
 
 Where the leading `LEN` is the eBUS response data length (not a B524 field). ebusd does not include the slave CRC byte in this output.
 
+Broadcast notes:
+- For broadcast telegrams (`DST=0xFE`), there is no slave response. ebusd commonly returns a textual status line (e.g. “done broadcast”) instead of a hex payload.
+
 Many B524 responses are easiest to parse by stripping this length prefix:
 
 - If the response bytes are `b0 b1 ... bn` and `b0 == n`, treat `b0` as a length prefix and strip it.
@@ -70,3 +73,14 @@ Some ebusd versions may emit extra trailing lines after a valid hex payload line
 
 `info` is a lightweight health/status command used by tooling to check daemon connectivity. Like `hex`, it may return `ERR:` lines on failure.
 
+Many ebusd builds include an address summary in the `info` output, for example:
+
+```text
+address 08: slave, scanned ...
+address 15: slave, scanned ...
+address 31: self ...
+```
+
+Tooling can enumerate slave addresses by:
+- matching lines starting with `address XX:` (hex), and
+- keeping entries that contain `slave` but not `self`.
