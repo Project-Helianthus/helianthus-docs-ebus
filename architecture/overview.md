@@ -104,6 +104,31 @@ The registry also supports **projection graphs** attached to a DeviceEntry. A `P
 - Node paths are unique within a projection; node IDs may repeat only when they map to the **same** canonical path.
 - Edge IDs are stable (`Plane:from->to`) and edges must reference existing node IDs.
 
+### Vaillant Projection Mapping (System Provider)
+
+The Vaillant system provider in `ebusreg` emits projections for a small set of known device IDs and maps Vaillant-specific operations into standardized projection paths.
+
+- **Eligible devices:** normalized `DeviceID` values `BASV2`, `BAI00`, `VR71` (case/spacing/`_`/`-` normalized).
+- **Base path:** `Service:/ebus/addr@XX/device@<DeviceID>` where `XX` is the hex bus address; if the device ID is missing, the address is used as the device segment.
+- **Always-emitted planes:** `Service`, `Observability`, `Debug`.
+- **Conditional root planes:** `System`, `Heating`, `DHW`, `Solar` (only if the corresponding plane exists for that device).
+
+Nodes and edges are created as follows:
+
+- **Service plane:** root node + `method@get_operational_data` node, edge `root → method`.
+- **Observability plane:** root node + `method@get_operational_data` node, edge `root → method`.
+- **Debug plane:** root node + `register@b509` and `register@b524` nodes, edges `root → register@b509` and `root → register@b524`.
+  - `register@b509` maps to canonical `Service:/.../method@get_register` (B5/09).
+  - `register@b524` maps to canonical `Service:/.../method@get_ext_register` (B5/24).
+
+Example paths:
+
+```text
+Service:/ebus/addr@10/device@BASV2/method@get_operational_data
+Observability:/ebus/addr@10/device@BASV2/method@get_operational_data
+Debug:/ebus/addr@10/device@BASV2/register@b524
+```
+
 ### IOKit / IORegistry Parallels (Inspiration)
 
 This model is inspired by how IOKit organizes devices and drivers in macOS:
