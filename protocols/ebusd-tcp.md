@@ -49,6 +49,12 @@ LEN DATA...
 
 Where the leading `LEN` is the eBUS response data length (not a B524 field). ebusd does not include the slave CRC byte in this output.
 
+Note on streaming vs request/response:
+
+- `hex` is **not** a live bus capture; it returns only the response associated with the command you sent.
+- The output does **not** include the master telegram, per-byte echo, addresses, or CRC.
+- Unrelated bus traffic is **not** streamed through `hex`; monitoring/sniffing is a separate mode.
+
 Broadcast notes:
 - For broadcast telegrams (`DST=0xFE`), there is no slave response. ebusd commonly returns a textual status line (e.g. “done broadcast”) instead of a hex payload.
 
