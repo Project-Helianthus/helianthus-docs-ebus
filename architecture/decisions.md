@@ -151,5 +151,19 @@ This document records the architectural decisions implemented in the codebase. E
 - Node IDs are derived from the canonical Service-plane path and are stable within a registration/snapshot.
 - Path format is `Plane:/segment/...` with `@name` marking location segments; plane and segment names disallow `/` and `:`, and segment names must be non-empty and not start with `@`.
 - Edges are validated to reference existing node IDs and have stable IDs (`Plane:from->to`).
+- Projections are multi-dimensional views: the **plane** dimension defines the view, while the **canonical** dimension anchors identity; nodes in different planes with the same canonical path represent the same entity and therefore share the same node ID.
+- Edges are always plane-local and never connect nodes across planes.
+
+**Examples (canonical paths across planes):**
+
+- `Service:/ebus/addr@10/device@BASV2/method@get_operational_data`
+- `Observability:/ebus/addr@10/device@BASV2/method@get_operational_data` (same canonical node, plane-specific path)
+- `Debug:/ebus/addr@10/device@BASV2/register@b524` (canonical path is `Service:/ebus/addr@10/device@BASV2/method@get_ext_register`)
+
+**Portal query expectations:**
+
+- GraphQL consumers (Portal UI) query projection graphs via:
+  `devices { projections { plane nodes { id path canonicalPath } edges { id from to } } }`
+- `ProjectionNode.id` is derived from the canonical Service path so nodes can be correlated across planes; `path` is used for plane-local display.
 
 **Consequences:** Planes become explicit projections of the canonical Service graph (Helianthus-specific), enabling deterministic identity across planes within a snapshot, consistent path validation, and safe graph composition for higher-level APIs.
