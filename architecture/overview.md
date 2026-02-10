@@ -88,12 +88,21 @@ The registry also supports **projection graphs** attached to a DeviceEntry. A `P
 - Other planes (e.g., `Observability`, `Automation`) are **projections** of the same nodes into plane-specific paths.
 - Node IDs are derived from the canonical Service path and are stable **within a registration/snapshot**, so the same node can be recognized across multiple planes in that snapshot.
 
+### Multi-dimensional Semantics
+
+Projections are **multi-dimensional** views of the same canonical graph:
+
+- **Plane dimension**: each projection is a single plane (e.g., `Service`, `Observability`, `Debug`). A node may appear in some planes and be absent in others.
+- **Canonical dimension**: each node carries a `CanonicalPath` in the `Service` plane, and the node ID is derived from that canonical path.
+- **Cross-plane correlation**: nodes in different planes with the same `CanonicalPath` (and thus the same node ID) represent the same canonical entity; edges are plane-local and never connect nodes across planes.
+
 ### Path Semantics
 
 - Path format: `Plane:/segment/segment/@location`
 - `@` marks a **location segment** (the `@` is a flag; it is not part of the segment name).
 - Plane names and segment names **must not** contain `/` or `:`.
 - Segment names must be non-empty and **must not** start with `@`.
+- `CanonicalPath` uses the same grammar, but the plane is always `Service`. `Path` is the plane-specific view of the same canonical node.
 
 ### Invariants (Validated in Registry Core)
 
@@ -103,6 +112,14 @@ The registry also supports **projection graphs** attached to a DeviceEntry. A `P
 - If `Node.Path.Plane` is `Service`, the node path must equal the canonical path exactly.
 - Node paths are unique within a projection; node IDs may repeat only when they map to the **same** canonical path.
 - Edge IDs are stable (`Plane:from->to`) and edges must reference existing node IDs.
+
+### Portal Query Expectations
+
+The Helianthus Portal UI renders projection graphs and cross-plane views using a single GraphQL query and expects specific fields to be present and stable:
+
+- **Query shape** (example name: `PortalProjections`): `devices { address manufacturer deviceId projections { plane nodes { id path canonicalPath } edges { id from to } } }`
+- **Identity**: `ProjectionNode.id` is derived from the `Service`-plane canonical path, so the same node ID appears across planes when they represent the same canonical entity.
+- **Display vs. join**: `path` is used for plane-local display; `canonicalPath` is used to align nodes across planes and to compute diffs between snapshots.
 
 ### Vaillant Projection Mapping (System Provider)
 
