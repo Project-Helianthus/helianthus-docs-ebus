@@ -92,6 +92,52 @@ type ProjectionEdge {
 - **ProjectionEdge.from/to** refer to node IDs within the same projection.
 - **path / canonicalPath format**: `Plane:/segment@value/segment@value/...` where `Plane` is the projection plane name and each path segment may include an `@`-qualified locator.
 
+### Projection Snapshot Endpoint
+
+The gateway exposes a lightweight HTTP endpoint to fetch a single projection graph from the latest schema snapshot (outside GraphQL). The default path is `/snapshot` and can be configured via `-snapshot-path`.
+
+**Request**
+
+- Method: `GET`
+- Query params:
+  - `address` (required): device address as decimal or hex (e.g., `16` or `0x10`)
+  - `plane` (required): projection plane name (e.g., `Service`, `Observability`, `Debug`)
+
+#### Example request
+
+```
+GET /snapshot?address=0x10&plane=Observability
+Accept: application/json
+```
+
+#### Example response
+
+```json
+{
+  "address": 16,
+  "plane": "Observability",
+  "nodes": [
+    {
+      "id": "Service:/ebus/addr@16/device@BASV2",
+      "path": "Observability:/ebus/addr@16/device@BASV2",
+      "canonicalPath": "Service:/ebus/addr@16/device@BASV2"
+    },
+    {
+      "id": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
+      "path": "Observability:/ebus/addr@16/device@BASV2/method@get_operational_data",
+      "canonicalPath": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+    }
+  ],
+  "edges": [
+    {
+      "id": "Observability:Service:/ebus/addr@16/device@BASV2->Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
+      "from": "Service:/ebus/addr@16/device@BASV2",
+      "to": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+    }
+  ]
+}
+```
+
 ### Handler Construction
 
 `NewHandler(builder)` returns an `http.Handler` backed by the query schema. `cmd/gateway` uses `NewInvokeHandler(builder, registry, invoker)` for `/graphql` and `NewSubscriptionHandler(builder, registry, invoker, hub)` for `/graphql/subscriptions`.
