@@ -23,7 +23,7 @@ type DataType interface {
 ## Value / Valid Model
 
 - `Value.Valid == true` means the payload represented a concrete value.
-- `Value.Valid == false` means the payload matched the **replacement value** for the type.
+- `Value.Valid == false` means the payload is **not a usable value** for the type, either because it matched the replacement value *or* because the type-specific decoder rejected it (e.g., NaN/Inf or out-of-range for `EXP`).
 
 Replacement values are defined per type and are used by devices to indicate “unknown” or “not available.”
 
@@ -32,7 +32,8 @@ Replacement values are defined per type and are used by devices to indicate “u
 Each type defines a byte sequence returned by `ReplacementValue()`. When decoding:
 
 - If the payload equals the replacement value, `Valid` is false and `Value` is unset.
-- Otherwise, `Valid` is true and `Value` contains the decoded value.
+- Otherwise, the decoder may still set `Valid` to false if the decoded value is invalid for that type (for example, `EXP` treats NaN/Inf as invalid).
+- If the value is acceptable, `Valid` is true and `Value` contains the decoded value.
 
 When encoding:
 
