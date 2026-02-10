@@ -90,7 +90,101 @@ type ProjectionEdge {
 
 - **ProjectionNode.id** derives from the canonical Service path for the node (stable across projections).
 - **ProjectionEdge.from/to** refer to node IDs within the same projection.
-- **path / canonicalPath format**: `Plane:/segment@value/segment@value/...` where `Plane` is the projection plane name and each path segment may include an `@`-qualified locator.
+- **path / canonicalPath format**: `Plane:/segment@value/segment@value/...` where `Plane` is the projection plane name and each segment may include an `@`-qualified locator. `canonicalPath` always uses `Service` as the plane.
+
+### Projections API
+
+Projections are plane-scoped graphs attached to each device. The API exposes:
+
+- **planes**: `Projection.plane` identifies the view (e.g., `Service`, `Observability`, `Debug`).
+- **nodes**: `Projection.nodes` is the list of graph nodes; `path` is plane-local for display, while `canonicalPath` anchors identity in the `Service` plane.
+- **edges**: `Projection.edges` connects nodes within the same plane; `from` and `to` are node IDs.
+- **canonical paths**: `ProjectionNode.id` is derived from the `canonicalPath`, so the same node ID appears across planes when they represent the same canonical entity in a snapshot.
+
+#### Example query
+
+```graphql
+query PortalProjections($address: Int!) {
+  device(address: $address) {
+    address
+    manufacturer
+    deviceId
+    projections {
+      plane
+      nodes {
+        id
+        path
+        canonicalPath
+      }
+      edges {
+        id
+        from
+        to
+      }
+    }
+  }
+}
+```
+
+#### Example response
+
+```json
+{
+  "data": {
+    "device": {
+      "address": 50,
+      "manufacturer": "Vaillant",
+      "deviceId": "BASV2",
+      "projections": [
+        {
+          "plane": "Service",
+          "nodes": [
+            {
+              "id": "Service:/ebus/addr@50/device@BASV2",
+              "path": "Service:/ebus/addr@50/device@BASV2",
+              "canonicalPath": "Service:/ebus/addr@50/device@BASV2"
+            },
+            {
+              "id": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
+              "path": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
+              "canonicalPath": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+            }
+          ],
+          "edges": [
+            {
+              "id": "Service:Service:/ebus/addr@50/device@BASV2->Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
+              "from": "Service:/ebus/addr@50/device@BASV2",
+              "to": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+            }
+          ]
+        },
+        {
+          "plane": "Observability",
+          "nodes": [
+            {
+              "id": "Service:/ebus/addr@50/device@BASV2",
+              "path": "Observability:/ebus/addr@50/device@BASV2",
+              "canonicalPath": "Service:/ebus/addr@50/device@BASV2"
+            },
+            {
+              "id": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
+              "path": "Observability:/ebus/addr@50/device@BASV2/method@get_operational_data",
+              "canonicalPath": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+            }
+          ],
+          "edges": [
+            {
+              "id": "Observability:Service:/ebus/addr@50/device@BASV2->Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
+              "from": "Service:/ebus/addr@50/device@BASV2",
+              "to": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
 
 ### Handler Construction
 
