@@ -33,6 +33,18 @@ In Vaillant’s regulator-centric approach, a single logical endpoint (the regul
 - “Groups” (`GG`) and “instances” (`II`) multiplex internal circuits/zones/DHW/sensors behind that address.
 - The bus topology does not directly reveal how many circuits/zones exist; that information is recovered by understanding and probing the vendor selector space.
 
+### Native eBUS addressing vs Vaillant selectors (GG/II)
+
+It helps to be explicit about the “two addressing layers” involved:
+
+- **Native eBUS addressing** is the 1‑byte bus address used for arbitration/ACKs and for basic discovery (bus scans).
+- Vaillant’s `GG/II` (and related selectors like `RR`) live **inside the application payload** (e.g., B524) and are not visible to the bus.
+
+Practical implication:
+
+- Multiple internal subsystems can share the same bus destination address and cannot be distinguished via a bus scan alone.
+- For decoding/UI, you often need to treat `(DST address, PB/SB, GG, II, RR, opcode family)` as a *logical* address.
+
 ## Why This Is Operationally Problematic
 
 ### Reduced bus transparency
@@ -61,6 +73,16 @@ Vaillant regulator style (selector-multiplexed):
   master -> <regulator address> group=3 (DHW)
 ```
 
+## Why This Diverges From the “Spirit” of eBUS (Notes)
+
+This is a value judgement, but it is useful for setting expectations: **many integrators approach eBUS as a “transparent bus”** where the device graph is discoverable at the address level.
+
+With selector-multiplexing:
+
+- The regulator becomes a *black box* that hides internal topology behind vendor selectors.
+- Discovery, debugging, and interoperability require proprietary application knowledge (e.g., B524 group/instance semantics).
+- You cannot reliably isolate subsystems by bus address alone, because many logical components share the same bus node.
+
 ## Possible Motivations (Speculative)
 
 These are hypotheses; the intent cannot be proven from bus traffic alone.
@@ -69,6 +91,32 @@ These are hypotheses; the intent cannot be proven from bus traffic alone.
 - **Backward compatibility:** preserving an existing internal architecture avoids redesigning an installed ecosystem.
 - **Centralized control:** the regulator remains the “brain” coordinating zones/circuits, rather than distributing autonomy to multiple independent nodes.
 - **Ecosystem control / lock-in effects:** proprietary selector spaces increase the cost of third‑party integrations and replacements.
+
+## What It Could Have Looked Like (Illustrative)
+
+If internal subsystems were exposed as separate native bus nodes (still illustrative):
+
+```text
+Address  Device
+-------  ----------------------
+0x10     Room controller (master)
+0x25     DHW circuit (native slave)
+0x26     Heating circuit 1 (native slave)
+0x27     Heating circuit 2 (native slave)
+0x28     Heating circuit 3 (native slave)
+0x30     Zone controller 1 (native slave)
+0x31     Zone controller 2 (native slave)
+...
+```
+
+This style would make bus scans reflect topology and would reduce the amount of vendor-specific selector probing needed for basic discovery.
+
+## Comparison Notes (Non-Normative)
+
+Different vendors implement eBUS-like systems differently:
+
+- Some ecosystems expose more “physical topology” at the bus-address layer (circuits as distinct nodes).
+- Others, like Vaillant regulators using selector spaces, centralize control and expose topology only via vendor payload selectors.
 
 ## Consequences for Users and Integrators
 
@@ -85,4 +133,3 @@ Helianthus should model Vaillant regulator subsystems as **logical components** 
 - Treat `(address, GG, II, RR)` (and opcode family) as the effective “address” for many values.
 - Ensure traces/logs are annotated with the operation name and selector context (e.g., “Reading GG=0x03 II=0x01 RR=0x0016”).
 - Prefer surfacing group/instance semantics in UI and artifacts (e.g., group names + instance counts), because the bus topology alone is insufficient.
-
