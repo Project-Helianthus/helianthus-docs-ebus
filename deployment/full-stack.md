@@ -10,9 +10,23 @@
 - `helianthus-ebusgateway` builds as a Go module and serves:
   - GraphQL queries/mutations: `/graphql`
   - GraphQL subscriptions (SSE/WS): `/graphql/subscriptions`
+  - Projection snapshot endpoint: `/snapshot`
   - MCP endpoint: `/mcp`
-- mDNS advertisement: `_helianthus-graphql._tcp` with TXT `path=/graphql`
+  - Portal UI (read-only projection explorer): `/ui`
+- mDNS advertisement for the GraphQL endpoint (see mDNS Discovery below).
 - `cmd/gateway` can optionally enable a **passive broadcast listener** (separate connection) for energy broadcasts.
+
+## mDNS Discovery
+
+When `-mdns` is enabled (default), the gateway advertises its GraphQL endpoint via DNS-SD:
+
+- **Service type:** `_helianthus-graphql._tcp` (domain `local.`)
+- **Instance name:** `-mdns-instance` (default `helianthus`)
+- **Port:** the HTTP listener port
+- **TXT records:**
+  - `path`: HTTP path for GraphQL (default `-mdns-path` or `-graphql-path`, e.g. `/graphql`)
+  - `version`: discovery schema version (default `1`)
+  - `transport`: endpoint transport (default `http`)
 
 ## Build/Verify (Libraries Only)
 
