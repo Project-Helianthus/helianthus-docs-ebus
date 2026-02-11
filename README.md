@@ -9,6 +9,7 @@ This repository documents the current, implemented behavior of the Helianthus eB
 Implementation-neutral references for the eBUS wire protocol and data types live under `protocols/` and `types/`. Helianthus-specific architecture, APIs, and deployment notes live elsewhere in the tree.
 
 For Home Assistant onboarding and GraphQL capability expectations, see `development/ha-integration.md`.
+For ebusd command-backend usage (gateway transport selection + protocol behavior), see `deployment/full-stack.md` and `protocols/ebusd-tcp.md`.
 
 ## Documentation Gate
 
