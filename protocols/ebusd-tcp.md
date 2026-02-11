@@ -2,6 +2,8 @@
 
 This document describes the ASCII command protocol exposed by the `ebusd` daemon over TCP (often on port `8888`). It is intended for tooling that drives eBUS transactions through ebusd rather than talking to an adapter directly.
 
+For gateway transport selection examples using this backend, see `deployment/full-stack.md`.
+
 ## Transport
 
 - Connection: plain TCP.
@@ -90,3 +92,13 @@ address 31: self ...
 Tooling can enumerate slave addresses by:
 - matching lines starting with `address XX:` (hex), and
 - keeping entries that contain `slave` but not `self`.
+
+## Backend Integration Checklist
+
+For deterministic request/response behavior when integrating ebusd TCP:
+
+- Send `hex` requests with `DST PB SB LEN DATA...` (CRC omitted; ebusd computes it).
+- Treat the first valid hex payload line as authoritative if trailing lines are present.
+- Strip the leading eBUS response length byte (`LEN`) before higher-layer payload parsing when applicable.
+- Treat `done...` responses as successful no-payload outcomes (commonly broadcast sends).
+- Treat timeout/no-answer `ERR:` responses as timeout conditions; map other `ERR:` responses to invalid payload or command failure.
