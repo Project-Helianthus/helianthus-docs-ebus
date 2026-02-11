@@ -232,7 +232,35 @@ Accept: application/json
 }
 ```
 
-### Projection Snapshot Endpoint
+## Portal API (Projection UI)
+
+The portal UI consumes projection graphs to render plane-scoped views. It can either fetch **all projections** via GraphQL or request a **single plane** via the snapshot endpoint.
+
+### GraphQL projection query
+
+```graphql
+query PortalProjections {
+  devices {
+    address
+    manufacturer
+    deviceId
+    projections {
+      plane
+      nodes { id path canonicalPath }
+      edges { id from to }
+    }
+  }
+}
+```
+
+**Notes**
+
+- `Projection.plane` is the plane label shown in the portal plane picker.
+- `ProjectionNode.id` is the canonical Service path for the node, so it is stable across planes within a snapshot.
+- `ProjectionNode.path` is the plane-specific path shown in the UI.
+- `ProjectionNode.canonicalPath` is the Service-plane path used to correlate nodes across planes.
+
+### Projection snapshot endpoint
 
 The gateway exposes a lightweight HTTP endpoint to fetch a single projection graph from the latest schema snapshot (outside GraphQL). The default path is `/snapshot` and can be configured via `-snapshot-path`.
 

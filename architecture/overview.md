@@ -121,6 +121,31 @@ The Helianthus Portal UI renders projection graphs and cross-plane views using a
 - **Identity**: `ProjectionNode.id` is derived from the `Service`-plane canonical path, so the same node ID appears across planes when they represent the same canonical entity.
 - **Display vs. join**: `path` is used for plane-local display; `canonicalPath` is used to align nodes across planes and to compute diffs between snapshots.
 
+### Portal UI (Projection Browser)
+
+The gateway serves a read-only portal UI at `cfg.UIPath` (default `/ui`). The portal polls the GraphQL endpoint for devices and their projection graphs, then renders:
+
+- A device list (address + manufacturer + device ID).
+- A plane selector (canonical planes plus any device-specific planes).
+- A graph view for the current plane, plus a node detail card (ID, plane path, canonical path).
+
+Node identity is derived from the canonical Service path, so the same logical node can be correlated across planes within a snapshot. This is what enables **plane switching** without losing identity when a node exists in multiple plane projections.
+
+#### Plane Switching (Mermaid)
+
+```mermaid
+sequenceDiagram
+  participant UI as Portal UI
+  participant P1 as Projection (Observability)
+  participant P2 as Projection (Service)
+  UI->>P1: select node
+  P1-->>UI: node.id + canonicalPath
+  UI->>P2: switch plane (Service)
+  UI->>P2: find node by canonicalPath
+  P2-->>UI: node or not found
+  UI-->>UI: highlight node or clear selection
+```
+
 ### Vaillant Projection Mapping (System Provider)
 
 The Vaillant system provider in `ebusreg` emits projections for a small set of known device IDs and maps Vaillant-specific operations into standardized projection paths.
