@@ -232,6 +232,80 @@ Accept: application/json
 }
 ```
 
+## Portal API (Projection UI)
+
+The portal UI consumes projection graphs to render plane-scoped views. It can either fetch **all projections** via GraphQL or request a **single plane** via the snapshot endpoint.
+
+### GraphQL projection query
+
+```graphql
+query PortalProjections {
+  devices {
+    address
+    manufacturer
+    deviceId
+    projections {
+      plane
+      nodes { id path canonicalPath }
+      edges { id from to }
+    }
+  }
+}
+```
+
+**Notes**
+
+- `Projection.plane` is the plane label shown in the portal plane picker.
+- `ProjectionNode.id` is the canonical Service path for the node, so it is stable across planes within a snapshot.
+- `ProjectionNode.path` is the plane-specific path shown in the UI.
+- `ProjectionNode.canonicalPath` is the Service-plane path used to correlate nodes across planes.
+
+### Projection snapshot endpoint
+
+The gateway exposes a lightweight HTTP endpoint to fetch a single projection graph from the latest schema snapshot (outside GraphQL). The default path is `/snapshot` and can be configured via `-snapshot-path`.
+
+**Request**
+
+- Method: `GET`
+- Query params:
+  - `address` (required): device address as decimal or hex (e.g., `16` or `0x10`)
+  - `plane` (required): projection plane name (e.g., `Service`, `Observability`, `Debug`)
+
+#### Example request
+
+```
+GET /snapshot?address=0x10&plane=Observability
+Accept: application/json
+```
+
+#### Example response
+
+```json
+{
+  "address": 16,
+  "plane": "Observability",
+  "nodes": [
+    {
+      "id": "Service:/ebus/addr@16/device@BASV2",
+      "path": "Observability:/ebus/addr@16/device@BASV2",
+      "canonicalPath": "Service:/ebus/addr@16/device@BASV2"
+    },
+    {
+      "id": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
+      "path": "Observability:/ebus/addr@16/device@BASV2/method@get_operational_data",
+      "canonicalPath": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+    }
+  ],
+  "edges": [
+    {
+      "id": "Observability:Service:/ebus/addr@16/device@BASV2->Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
+      "from": "Service:/ebus/addr@16/device@BASV2",
+      "to": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+    }
+  ]
+}
+```
+
 ### Handler Construction
 
 `NewHandler(builder)` returns an `http.Handler` backed by the query schema. `cmd/gateway` uses `NewInvokeHandler(builder, registry, invoker)` for `/graphql` and `NewSubscriptionHandler(builder, registry, invoker, hub)` for `/graphql/subscriptions`.
