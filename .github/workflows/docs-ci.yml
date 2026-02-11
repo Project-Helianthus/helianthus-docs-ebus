@@ -1,0 +1,52 @@
+name: Docs CI
+
+on:
+  pull_request:
+    paths:
+      - "**/*.md"
+      - ".github/workflows/docs-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.md"
+      - ".github/workflows/docs-ci.yml"
+
+jobs:
+  markdown-checks:
+    name: Markdown Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify markdown files are present
+        run: |
+          set -euo pipefail
+          count="$(git ls-files "*.md" | wc -l | tr -d " ")"
+          if [ "${count}" -eq 0 ]; then
+            echo "No markdown files found."
+            exit 1
+          fi
+          echo "Found ${count} markdown files."
+
+      - name: Check markdown for tabs and trailing spaces
+        run: |
+          set -euo pipefail
+          failed=0
+
+          if git grep -nI $'\t' -- "*.md"; then
+            echo "Tab characters are not allowed in markdown files."
+            failed=1
+          fi
+
+          if git grep -nI -E ' +$' -- "*.md"; then
+            echo "Trailing spaces are not allowed in markdown files."
+            failed=1
+          fi
+
+          if [ "${failed}" -ne 0 ]; then
+            exit 1
+          fi
+
+          echo "Markdown checks passed."
