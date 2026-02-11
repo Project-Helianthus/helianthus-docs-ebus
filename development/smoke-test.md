@@ -23,6 +23,8 @@ smoke:
   verbose_frames: false
   scan_timeout_sec: 5
   method_timeout_sec: 10
+  register_dump_tsp: ""         # optional; enables device dump
+  register_dump_target: 0x00    # optional; target address override
 
 expected_devices:
   - address: 0x08
@@ -46,9 +48,10 @@ EBUS_SMOKE=1 go run ./cmd/smoke
 1. Build gateway stack (transport → bus → registry → router).
 2. Scan the bus with a per-device timeout.
 3. Log discovered devices and compare against `expected_devices`.
-4. Invoke **read-only** methods for each discovered plane.
-5. Start a **passive broadcast listener** on a separate ENH/ENS connection after the scan.
-6. Log **semantic energy totals** as B516 broadcasts arrive (if present on the bus).
+4. Start a **passive broadcast listener** on a separate ENH/ENS connection after the scan.
+5. Run the optional **register dump** when configured.
+6. Invoke **read-only** methods for each discovered plane.
+7. Log **semantic energy totals** as B516 broadcasts arrive (if present on the bus).
 
 Notes:
 
@@ -57,3 +60,7 @@ Notes:
 - Default providers include Vaillant **system**, **heating**, and **DHW** planes; solar is opt-in.
 
 The smoke test never writes to the bus.
+
+## Register Dump (Optional)
+
+If `smoke.register_dump_tsp` is set, the smoke harness runs a **device dump** after the scan and writes both a log and a JSON artifact. See `development/device-dump.md` for the full pipeline, schema, and output path rules.
