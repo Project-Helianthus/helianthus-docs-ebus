@@ -96,6 +96,14 @@ Projections are **multi-dimensional** views of the same canonical graph:
 - **Canonical dimension**: each node carries a `CanonicalPath` in the `Service` plane, and the node ID is derived from that canonical path.
 - **Cross-plane correlation**: nodes in different planes with the same `CanonicalPath` (and thus the same node ID) represent the same canonical entity; edges are plane-local and never connect nodes across planes.
 
+### Canonical Path Examples Across Planes
+
+| Plane | Path | CanonicalPath | Correlation rule |
+|---|---|---|---|
+| `Service` | `Service:/ebus/addr@10/device@BASV2/method@get_operational_data` | `Service:/ebus/addr@10/device@BASV2/method@get_operational_data` | Canonical node definition |
+| `Observability` | `Observability:/ebus/addr@10/device@BASV2/method@get_operational_data` | `Service:/ebus/addr@10/device@BASV2/method@get_operational_data` | Same canonical path ⇒ same node ID as `Service` |
+| `Debug` | `Debug:/ebus/addr@10/device@BASV2/register@b524` | `Service:/ebus/addr@10/device@BASV2/method@get_ext_register` | Debug-specific path mapped to canonical service method |
+
 ### Path Semantics
 
 - Path format: `Plane:/segment/segment/@location`
@@ -118,8 +126,10 @@ Projections are **multi-dimensional** views of the same canonical graph:
 The Helianthus Portal UI renders projection graphs and cross-plane views using a single GraphQL query and expects specific fields to be present and stable:
 
 - **Query shape** (example name: `PortalProjections`): `devices { address manufacturer deviceId projections { plane nodes { id path canonicalPath } edges { id from to } } }`
+- **Plane graph contract**: each `projections[]` entry is one plane-scoped graph where `plane -> nodes/edges`; clients render exactly one selected plane at a time.
 - **Identity**: `ProjectionNode.id` is derived from the `Service`-plane canonical path, so the same node ID appears across planes when they represent the same canonical entity.
-- **Display vs. join**: `path` is used for plane-local display; `canonicalPath` is used to align nodes across planes and to compute diffs between snapshots.
+- **Display vs. join**: `path` is plane-local display data; `canonicalPath` is the join key used for cross-plane correlation and snapshot diffs.
+- **Plane switching**: preserve the selected node’s `canonicalPath`, switch plane, then resolve the target node by canonical path (or clear selection when absent in that plane).
 
 ### Portal UI (Projection Browser)
 
@@ -177,7 +187,7 @@ This model is inspired by how IOKit organizes devices and drivers in macOS:
 
 - **DeviceRegistry ≈ IORegistry**: a central registry of discovered devices and their properties.
 - **PlaneProvider ≈ driver matching/attachment**: a provider matches a device and attaches logical functionality.
-- **Plane (Helianthus) ≠ IORegistry plane**: Helianthus planes are **global relationship views**; every entry exists in all planes (with different paths), whereas IORegistry planes are separate organizational views over the same registry.
+- **Plane (Helianthus) ≈ IORegistry-style view**: each plane is a view over the same canonical entities, but node membership is plane-specific (a node may exist in one plane and be absent in another).
 - **Multiple Planes per device ≈ multiple IORegistry planes (conceptual)**: a single device can appear in multiple logical views without duplicating the underlying physical identity.
 
 The mapping is conceptual (not API-identical), used to keep a clean separation between discovery, matching, and the semantic surface.
