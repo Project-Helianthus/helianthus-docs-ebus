@@ -10,6 +10,12 @@ Implementation-neutral references for the eBUS wire protocol and data types live
 
 For Home Assistant onboarding and GraphQL capability expectations, see `development/ha-integration.md`.
 
+## Documentation Gate
+
+Changes that alter **architecture**, **API surface**, or **runtime behavior** are merge-gated on documentation updates.
+
+- Policy, trigger matrix, and PR checklists: `development/contributing.md#documentation-gate-doc-gate`
+
 ## Licensing
 
 This repository contains documentation under two licenses:
