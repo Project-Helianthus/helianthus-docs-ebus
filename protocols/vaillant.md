@@ -131,6 +131,14 @@ See `protocols/basv.md` for the observed request/response layout and assembly ru
 
 This section documents the **payload bytes** inside an eBUS frame (not including eBUS CRC/escaping). When interacting via ebusd’s TCP `hex` command, note that ebusd typically prefixes the slave response with a 1-byte eBUS response length; see `protocols/ebusd-tcp.md`.
 
+Opcode family (observed):
+
+- `0x00`: directory probe (group descriptor scan)
+- `0x02`: local register read/write
+- `0x06`: remote register read/write (commonly groups `0x09`, `0x0A`, `0x0C`)
+- `0x03`: timer read
+- `0x04`: timer write
+
 ### Directory Probe (opcode 0x00)
 
 The directory probe is used to enumerate groups (GG). Each request probes one group id and returns a float descriptor.
@@ -184,6 +192,8 @@ Response payload (read, observed):
 ```
 
 Notes (observed):
+- `RR` is encoded little-endian: `RR = RR_LO + (RR_HI << 8)`.
+- The response header is `TT GG RR_LO RR_HI`.
 - The response does **not** include `II` (instance) and does **not** echo the request opcode/optype.
 - Some replies are status-only and contain only `TT` (1 byte, no GG/RR/value bytes).
 - `TT` semantics (empirical):
