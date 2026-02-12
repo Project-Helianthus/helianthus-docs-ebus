@@ -2,6 +2,8 @@
 
 The gateway includes a **smoke test harness** that connects to a real ENH socket, performs a bus scan, and executes **read-only** method invocations for each discovered plane.
 
+For the canonical cross-repo smoke order (gateway + add-on + HA integration), see `development/end-to-end-smoke.md`.
+
 ## Entry Point
 
 - Binary: `cmd/smoke`
