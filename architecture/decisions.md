@@ -43,13 +43,13 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Consequences:** ENS framing is deterministic and reversible; invalid sequences are detected at decode time.
 
-## ADR-005: Frame type is inferred from target address
+## ADR-005: Frame type is inferred from destination address
 
 **Status:** Accepted
 
-**Context:** eBUS distinguishes broadcast, master-master, and master-slave frames.
+**Context:** eBUS distinguishes broadcast, initiator-initiator, and initiator-target frames.
 
-**Decision:** Infer `FrameType` from the target address. `0xFE` is broadcast; master/master is detected by valid master-address bit patterns; otherwise master/slave.
+**Decision:** Infer `FrameType` from the destination address. `0xFE` is broadcast; initiator/initiator is detected by valid initiator-address bit patterns; otherwise initiator/target.
 
 **Consequences:** Callers do not set frame type explicitly; it is derived from addressing rules.
 
@@ -69,7 +69,7 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Context:** Frame retries depend on frame type, and ACK/NACK handling must be consistent.
 
-**Decision:** The Bus enforces the send/ACK/response flow and retry policy per frame type (broadcast has no response; master-master only ACK; master-slave ACK + response).
+**Decision:** The Bus enforces the send/ACK/response flow and retry policy per frame type (broadcast has no response; initiator-initiator only ACK; initiator-target ACK + response).
 
 **Consequences:** Callers use a single `Send` call and receive typed errors after retries are exhausted.
 
@@ -77,7 +77,7 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Status:** Accepted
 
-**Context:** eBUS arbitration favors lower master addresses.
+**Context:** eBUS arbitration favors lower initiator addresses.
 
 **Decision:** Outgoing frames are queued in a priority queue keyed by the source address, with FIFO ordering for equal priority.
 

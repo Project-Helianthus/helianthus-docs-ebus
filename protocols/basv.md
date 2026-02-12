@@ -7,7 +7,7 @@ It intentionally does not duplicate the wire-level layouts for generic eBUS disc
 ## Discovery Flow (Observed)
 
 1. Trigger presence refresh via `QueryExistence` broadcast (`0x07 0xFE`).
-2. Probe candidate slave addresses with `Identification Scan` (`0x07 0x04`) to obtain:
+2. Probe candidate target addresses with `Identification Scan` (`0x07 0x04`) to obtain:
    - manufacturer byte
    - device id string
    - software / hardware version bytes

@@ -43,22 +43,22 @@ hex 15B52406 020003001600
 
 ### Response
 
-On success, ebusd typically returns a single hex line representing the **slave response bytes** as:
+On success, ebusd typically returns a single hex line representing the **target response bytes** as:
 
 ```text
 LEN DATA...
 ```
 
-Where the leading `LEN` is the eBUS response data length (not a B524 field). ebusd does not include the slave CRC byte in this output.
+Where the leading `LEN` is the eBUS response data length (not a B524 field). ebusd does not include the target CRC byte in this output.
 
 Note on streaming vs request/response:
 
 - `hex` is **not** a live bus capture; it returns only the response associated with the command you sent.
-- The output does **not** include the master telegram, per-byte echo, addresses, or CRC.
+- The output does **not** include the initiator telegram, per-byte echo, addresses, or CRC.
 - Unrelated bus traffic is **not** streamed through `hex`; monitoring/sniffing is a separate mode.
 
 Broadcast notes:
-- For broadcast telegrams (`DST=0xFE`), there is no slave response. ebusd commonly returns a textual status line (e.g. “done broadcast”) instead of a hex payload.
+- For broadcast telegrams (`DST=0xFE`), there is no target response. ebusd commonly returns a textual status line (e.g. “done broadcast”) instead of a hex payload.
 
 Many B524 responses are easiest to parse by stripping this length prefix:
 
@@ -84,14 +84,14 @@ Some ebusd versions may emit extra trailing lines after a valid hex payload line
 Many ebusd builds include an address summary in the `info` output, for example:
 
 ```text
-address 08: slave, scanned ...
-address 15: slave, scanned ...
+address 08: scanned ...
+address 15: scanned ...
 address 31: self ...
 ```
 
-Tooling can enumerate slave addresses by:
+Tooling can enumerate discovered target addresses by:
 - matching lines starting with `address XX:` (hex), and
-- keeping entries that contain `slave` but not `self`.
+- excluding the `self` entry.
 
 ## Backend Integration Checklist
 

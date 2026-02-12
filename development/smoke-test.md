@@ -56,7 +56,7 @@ EBUS_SMOKE=1 go run ./cmd/smoke
 Notes:
 
 - If `expected_devices` is empty/omitted, the harness performs a full scan over the default address range.
-- On a multi-master bus, arbitration collisions can occur during scan. The scan logic retries collided targets in later passes (bounded) instead of aborting the entire scan.
+- On a multi-initiator bus, arbitration collisions can occur during scan. The scan logic retries collided targets in later passes (bounded) instead of aborting the entire scan.
 - Default providers include Vaillant **system**, **heating**, and **DHW** planes; solar is opt-in.
 
 The smoke test never writes to the bus.
