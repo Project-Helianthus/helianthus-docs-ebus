@@ -102,3 +102,9 @@ For deterministic request/response behavior when integrating ebusd TCP:
 - Strip the leading eBUS response length byte (`LEN`) before higher-layer payload parsing when applicable.
 - Treat `done...` responses as successful no-payload outcomes (commonly broadcast sends).
 - Treat timeout/no-answer `ERR:` responses as timeout conditions; map other `ERR:` responses to invalid payload or command failure.
+
+## Timing Caveat for Target Emulation
+
+`ebusd` TCP is a host-side command relay and is useful for functional request/response validation. For strict response-timing emulation, it is usually insufficient because host scheduling and network jitter can shift response timing outside tight target windows.
+
+For cycle-accurate target emulation behavior, place emulation logic near the adapter/firmware side where timing control is deterministic.
