@@ -166,6 +166,26 @@ Notes:
 - The response length varies by device because the device id field is variable-length.
 - Many tools treat `sw`/`hw` as opaque hex.
 
+### Minimal VR90 Recognition Query Set (Observed)
+
+For basic recognition of a wired VR90-style target in controlled setups, the smallest observed query set is:
+
+1. Send one identification query to the candidate target address (`PB=0x07`, `SB=0x04`, empty payload).
+2. Accept a valid target response payload with manufacturer + identity fields.
+
+Minimal response payload shape used in practice:
+
+```text
+  0: manufacturer   byte
+  1..5: device_id   5 bytes ASCII
+  6..7: sw_version  2 bytes (opaque)
+  8..9: hw_version  2 bytes (opaque)
+```
+
+Notes:
+- This is a practical minimum profile for VR90 recognition behavior; it is not a full thermostat command set.
+- Other targets may return longer device identifiers and therefore a different overall response length.
+
 ## See Also
 
 - `protocols/ebusd-tcp.md` – ebusd daemon TCP command protocol (for tooling that sends direct-mode telegrams via ebusd).
