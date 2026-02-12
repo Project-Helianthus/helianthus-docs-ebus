@@ -2,6 +2,17 @@
 
 This document describes the wire-level framing and rules that are implemented. It focuses on the minimum required to interpret bytes on the bus.
 
+## Terminology
+
+This documentation uses role terms that align with modern, inclusive terminology:
+
+- **Initiator**: the node that begins a transaction by sending a command telegram onto the bus.
+- **Target**: the addressed node that ACK/NACKs the command and (for initiator/target transactions) may return a response payload.
+
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
+<!-- legacy-role-mapping:end -->
+
 ## Frame Layout
 
 An eBUS frame on the wire is represented as:
@@ -23,16 +34,16 @@ An eBUS frame on the wire is represented as:
 Frame type is derived from the destination address:
 
 - **Broadcast**: `DST = 0xFE`
-- **Master/Master**: `DST` has a valid master address pattern
-- **Master/Slave**: any other valid destination address
+- **Initiator/Initiator**: `DST` has a valid initiator address pattern
+- **Initiator/Target**: any other valid destination address
 
-This inference determines whether an ACK-only exchange is expected (master/master) or a full response frame (master/slave).
+This inference determines whether an ACK-only exchange is expected (initiator/initiator) or a full response frame (initiator/target).
 
-### Master Address Pattern
+### Initiator Address Pattern
 
-In direct-mode eBUS implementations (including Helianthus), “master” addresses are typically recognized by a nibble pattern:
+In direct-mode eBUS implementations (including Helianthus), initiator addresses are typically recognized by a nibble pattern:
 
-- A destination is treated as a **master address** if **both** the high and low nibbles are one of: `0x0`, `0x1`, `0x3`, `0x7`, `0xF`.
+- A destination is treated as an **initiator address** if **both** the high and low nibbles are one of: `0x0`, `0x1`, `0x3`, `0x7`, `0xF`.
 - Examples: `0x10`, `0x31`, `0xF1`, `0x33`.
 
 Addresses equal to `0xA9` (escape) or `0xAA` (SYN) are invalid in address positions.
@@ -56,28 +67,28 @@ The eBUS “direct” transaction flow used by ebusd-style implementations is:
 
 ```mermaid
 sequenceDiagram
-  participant M as Master
-  participant S as Slave
+  participant I as Initiator
+  participant T as Target
 
-  Note over M,S: Master telegram (unescaped): SRC DST PB SB LEN DATA... CRC
-  M->>S: Send bytes (each byte is echoed on the bus)
-  S-->>M: ACK (0x00) or NACK (0xFF) after command CRC
+  Note over I,T: Initiator telegram (unescaped): SRC DST PB SB LEN DATA... CRC
+  I->>T: Send bytes (each byte is echoed on the bus)
+  T-->>I: ACK (0x00) or NACK (0xFF) after command CRC
 
-  alt Master/Slave + ACK
-    Note over M,S: Slave response: LEN DATA... CRC
-    S-->>M: Response payload
-    M-->>S: ACK (0x00) if CRC ok, else NACK (0xFF)
+  alt Initiator/Target + ACK
+    Note over I,T: Target response: LEN DATA... CRC
+    T-->>I: Response payload
+    I-->>T: ACK (0x00) if CRC ok, else NACK (0xFF)
   end
 
-  Note over M,S: End-of-message
-  M->>S: SYN (0xAA)
+  Note over I,T: End-of-message
+  I->>T: SYN (0xAA)
 ```
 
 Key points:
 
-- **Per-byte echo**: When a master drives a symbol onto the bus it will also observe the same symbol (“echo”). An echo mismatch indicates arbitration loss or a collision.
-- **ACK/NAK timing**: `ACK`/`NACK` is exchanged **once per command**, after the master sends the command CRC (not after each byte).
-- **Response shape**: In master/slave transactions the slave response begins with a **length byte** and does not repeat source/target addresses.
+- **Per-byte echo**: When an initiator drives a symbol onto the bus it will also observe the same symbol (“echo”). An echo mismatch indicates arbitration loss or a collision.
+- **ACK/NAK timing**: `ACK`/`NACK` is exchanged **once per command**, after the initiator sends the command CRC (not after each byte).
+- **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses.
 - **SYN** (`0xAA`) is used as an **end-of-message** delimiter and may also appear during idle.
 
 ## CRC8 and Escaping
@@ -92,8 +103,8 @@ This substitution is applied before CRC8 updates so that control symbols do not 
 
 CRC8 coverage depends on the direct-mode phase:
 
-- **Master telegram CRC** is computed over: `SRC DST PB SB LEN DATA...`
-- **Slave response CRC** is computed over: `LEN DATA...` (responses do not repeat addresses in direct mode)
+- **Initiator telegram CRC** is computed over: `SRC DST PB SB LEN DATA...`
+- **Target response CRC** is computed over: `LEN DATA...` (responses do not repeat addresses in direct mode)
 
 On the wire, the same escape mechanism is used when sending these control bytes:
 
@@ -117,7 +128,7 @@ This section documents common discovery-style requests used to enumerate devices
 QueryExistence is commonly used as a best-effort “who is present?” broadcast.
 
 ```text
-Master telegram:
+Initiator telegram:
   DST = 0xFE (broadcast)
   PB  = 0x07
   SB  = 0xFE
@@ -134,15 +145,15 @@ Notes:
 Identification (often “scan” in ebusd terminology) reads a device’s manufacturer, device id, and software/hardware versions.
 
 ```text
-Master telegram:
-  DST = <candidate slave address>
+Initiator telegram:
+  DST = <candidate target address>
   PB  = 0x07
   SB  = 0x04
   LEN = 0x00
   DATA = (empty)
 ```
 
-Observed slave response payload layout:
+Observed target response payload layout:
 
 ```text
   0: manufacturer   byte

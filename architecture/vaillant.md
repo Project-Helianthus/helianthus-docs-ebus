@@ -1,6 +1,6 @@
 # Vaillant Regulator Architecture Notes (eBUS Context)
 
-Modern Vaillant systems often use an architectural approach that differs from the “classic” eBUS expectation of **one physical device ↔ one slave address**.
+Modern Vaillant systems often use an architectural approach that differs from the “classic” eBUS expectation of **one physical device ↔ one target address**.
 
 This document captures the implications for discovery, debugging, and third‑party integrations. It is intentionally **high-level**; for wire formats, see `protocols/ebus-vaillant.md`.
 
@@ -8,7 +8,7 @@ This document captures the implications for discovery, debugging, and third‑pa
 
 ### Classic eBUS mental model (illustrative)
 
-- Each physical device appears as its own slave address on the bus.
+- Each physical device appears as its own target address on the bus.
 - Distinct subsystems (heating circuit, DHW, mixer modules, zone controllers) are typically represented as separate nodes.
 - Bus scans show the “shape” of the system without vendor-specific application protocols.
 
@@ -17,7 +17,7 @@ Example (illustrative):
 ```text
 Address  Device
 -------  ----------------------
-0x10     Room controller (master)
+0x10     Room controller (initiator)
 0x25     DHW circuit module
 0x26     Heating circuit 1 module
 0x27     Heating circuit 2 module
@@ -49,7 +49,8 @@ Practical implication:
 
 ### Reduced bus transparency
 
-- In classic eBUS setups, a scan of slave addresses approximates the physical topology.
+- In classic eBUS setups, a scan of target addresses approximates the physical topology.
+- In classic eBUS setups, a scan of target addresses approximates the physical topology.
 - In Vaillant’s regulator model, a bus scan can look like a small system even when the internal topology is large, because many subsystems are “hidden” behind selectors.
 
 ### More difficult debugging
@@ -63,14 +64,14 @@ Illustrative comparison:
 
 ```text
 Classic eBUS style:
-  master -> 0x26 (HK1)
-  master -> 0x27 (HK2)
-  master -> 0x25 (DHW)
+  initiator -> 0x26 (HK1)
+  initiator -> 0x27 (HK2)
+  initiator -> 0x25 (DHW)
 
 Vaillant regulator style (selector-multiplexed):
-  master -> <regulator address> group=0 (HK1)
-  master -> <regulator address> group=1 (HK2)
-  master -> <regulator address> group=3 (DHW)
+  initiator -> <regulator address> group=0 (HK1)
+  initiator -> <regulator address> group=1 (HK2)
+  initiator -> <regulator address> group=3 (DHW)
 ```
 
 ## Why This Diverges From the “Spirit” of eBUS (Notes)
@@ -99,13 +100,13 @@ If internal subsystems were exposed as separate native bus nodes (still illustra
 ```text
 Address  Device
 -------  ----------------------
-0x10     Room controller (master)
-0x25     DHW circuit (native slave)
-0x26     Heating circuit 1 (native slave)
-0x27     Heating circuit 2 (native slave)
-0x28     Heating circuit 3 (native slave)
-0x30     Zone controller 1 (native slave)
-0x31     Zone controller 2 (native slave)
+0x10     Room controller (initiator)
+0x25     DHW circuit (native target)
+0x26     Heating circuit 1 (native target)
+0x27     Heating circuit 2 (native target)
+0x28     Heating circuit 3 (native target)
+0x30     Zone controller 1 (native target)
+0x31     Zone controller 2 (native target)
 ...
 ```
 
