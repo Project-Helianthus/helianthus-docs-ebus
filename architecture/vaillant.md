@@ -2,7 +2,7 @@
 
 Modern Vaillant systems often use an architectural approach that differs from the “classic” eBUS expectation of **one physical device ↔ one slave address**.
 
-This document captures the implications for discovery, debugging, and third‑party integrations. It is intentionally **high-level**; for wire formats, see `protocols/vaillant.md`.
+This document captures the implications for discovery, debugging, and third‑party integrations. It is intentionally **high-level**; for wire formats, see `protocols/ebus-vaillant.md`.
 
 ## The Architectural Difference (Classic eBUS vs Vaillant)
 

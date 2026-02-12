@@ -108,7 +108,54 @@ SRC=0x10 DST=0x08 PB=0xB5 SB=0x04 LEN=0x01 DATA=0x7F CRC=0x??
 
 The CRC byte depends on the exact CRC8 implementation and the escape-aware substitution described above.
 
+## Common Discovery Functions
+
+This section documents common discovery-style requests used to enumerate devices and read basic identity metadata. The layouts describe the **payload bytes** inside an eBUS frame (not including CRC/escaping).
+
+### QueryExistence (0x07 0xFE)
+
+QueryExistence is commonly used as a best-effort “who is present?” broadcast.
+
+```text
+Master telegram:
+  DST = 0xFE (broadcast)
+  PB  = 0x07
+  SB  = 0xFE
+  LEN = 0x00
+  DATA = (empty)
+```
+
+Notes:
+- Broadcast messages do not have a response telegram.
+- Some stacks (including ebusd) use QueryExistence as a trigger to refresh internal address state that can later be queried (e.g. via the ebusd TCP `info` command).
+
+### Identification Scan (0x07 0x04)
+
+Identification (often “scan” in ebusd terminology) reads a device’s manufacturer, device id, and software/hardware versions.
+
+```text
+Master telegram:
+  DST = <candidate slave address>
+  PB  = 0x07
+  SB  = 0x04
+  LEN = 0x00
+  DATA = (empty)
+```
+
+Observed slave response payload layout:
+
+```text
+  0: manufacturer   byte
+  1..(N-5): device_id ASCII (NUL-padded; length varies)
+  (N-4)..(N-3): sw   2 bytes (opaque)
+  (N-2)..(N-1): hw   2 bytes (opaque)
+```
+
+Notes:
+- The response length varies by device because the device id field is variable-length.
+- Many tools treat `sw`/`hw` as opaque hex.
+
 ## See Also
 
 - `protocols/ebusd-tcp.md` – ebusd daemon TCP command protocol (for tooling that sends direct-mode telegrams via ebusd).
-- `protocols/basv.md` – device discovery messages (QueryExistence + Identification).
+- `protocols/basv.md` – BASV discovery flow (observed).
