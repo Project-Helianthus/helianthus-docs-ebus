@@ -1,73 +1,20 @@
 # Device Discovery (BASV) (Observed)
 
-This document describes common eBUS discovery messages used to enumerate devices on the bus and read basic identity metadata. The layouts here describe the **payload bytes** inside an eBUS frame (not including CRC/escaping).
+This document describes the **BASV discovery flow** used to enumerate devices on the eBUS and collect identity metadata.
 
-## QueryExistence (0x07 0xFE)
+It intentionally does not duplicate the wire-level layouts for generic eBUS discovery or vendor extensions; those are documented in the protocol overview pages linked below.
 
-QueryExistence is commonly used as a best-effort “who is present?” broadcast.
+## Discovery Flow (Observed)
 
-```text
-Master telegram:
-  DST = 0xFE (broadcast)
-  PB  = 0x07
-  SB  = 0xFE
-  LEN = 0x00
-  DATA = (empty)
-```
+1. Trigger presence refresh via `QueryExistence` broadcast (`0x07 0xFE`).
+2. Probe candidate slave addresses with `Identification Scan` (`0x07 0x04`) to obtain:
+   - manufacturer byte
+   - device id string
+   - software / hardware version bytes
+3. If the device manufacturer is Vaillant (`0xB5`), optionally enrich identity by reading the Vaillant `scan.id` chunks via B509 (`0xB5 0x09`, `QQ=0x24..0x27`) and assembling the 32-byte ASCII string.
 
-Notes:
-- Broadcast messages do not have a response telegram.
-- Some stacks (including ebusd) use QueryExistence as a trigger to refresh internal address state that can later be queried (e.g. via the ebusd TCP `info` command).
+## References
 
-## Identification Scan (0x07 0x04)
-
-Identification (often “scan” in ebusd terminology) reads a device’s manufacturer, device id, and software/hardware versions.
-
-```text
-Master telegram:
-  DST = <candidate slave address>
-  PB  = 0x07
-  SB  = 0x04
-  LEN = 0x00
-  DATA = (empty)
-```
-
-Observed slave response payload layout:
-
-```text
-  0: manufacturer   byte
-  1..(N-5): device_id ASCII (NUL-padded; length varies)
-  (N-4)..(N-3): sw   2 bytes (opaque)
-  (N-2)..(N-1): hw   2 bytes (opaque)
-```
-
-Notes:
-- The response length varies by device because the device id field is variable-length.
-- Many tools treat `sw`/`hw` as opaque hex.
-
-## Vendor Extension: Vaillant scan.id via 0xB5 0x09
-
-Some Vaillant devices (manufacturer byte `0xB5`) expose a “scan id” string via `0xB5 0x09` requests with a 1-byte selector (`QQ`).
-
-```text
-Request payload (1 byte):
-  QQ : byte
-
-Where QQ is typically one of: 0x24, 0x25, 0x26, 0x27
-```
-
-Each response returns one chunk:
-
-```text
-Response payload (9 bytes):
-  0: status   byte (0x00 indicates success)
-  1..8: ascii 8 bytes (NUL/space padded)
-```
-
-To assemble the full scan id:
-1. Request chunks for `QQ=0x24..0x27` (4 chunks).
-2. Concatenate the 8-byte ASCII segments (total 32 bytes).
-3. Strip trailing NULs and whitespace.
-
-The resulting string is often parsed into fields such as product/model number and a serial-like suffix; the exact format may vary across Vaillant device generations.
-
+- `protocols/ebus-overview.md#queryexistence-0x07-0xfe`
+- `protocols/ebus-overview.md#identification-scan-0x07-0x04`
+- `protocols/ebus-vaillant.md#vaillant-scanid-chunks-qq0x240x27`
