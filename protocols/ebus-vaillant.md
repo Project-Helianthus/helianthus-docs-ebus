@@ -149,7 +149,7 @@ The resulting string is often parsed into fields such as product/model number an
 
 `0xB5 0x24` (often referred to as “B524”) is used by Vaillant regulators as a selector-based extended register mechanism. The request/response format is multiplexed by the first payload byte (`opcode`).
 
-This section documents the **payload bytes** inside an eBUS frame (not including eBUS CRC/escaping). When interacting via ebusd’s TCP `hex` command, note that ebusd typically prefixes the slave response with a 1-byte eBUS response length; see `protocols/ebusd-tcp.md`.
+This section documents the **payload bytes** inside an eBUS frame (not including eBUS CRC/escaping). When interacting via ebusd’s TCP `hex` command, note that ebusd typically prefixes the target response with a 1-byte eBUS response length; see `protocols/ebusd-tcp.md`.
 
 Opcode family (observed):
 
