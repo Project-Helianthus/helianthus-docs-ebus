@@ -121,9 +121,29 @@ Response payload layout is device/register-specific. In some cases, a single `0x
 
 ### Vaillant scan.id chunks (QQ=0x24..0x27)
 
-In addition to the `0x0D`/`0x0E` register access sub-format above, Vaillant devices are also observed to use `0xB5 0x09` with a **1-byte selector** (`QQ`) to return fixed-size ASCII chunks that can be assembled into a “scan id” string.
+In addition to the `0x0D`/`0x0E` register access sub-format above, some Vaillant devices (manufacturer byte `0xB5`) are also observed to use `0xB5 0x09` with a **1-byte selector** (`QQ`) to return fixed-size ASCII chunks that can be assembled into a “scan id” string.
 
-See `protocols/basv.md` for the observed request/response layout and assembly rules.
+```text
+Request payload (1 byte):
+  QQ : byte
+
+Where QQ is typically one of: 0x24, 0x25, 0x26, 0x27
+```
+
+Each response returns one chunk:
+
+```text
+Response payload (9 bytes):
+  0: status   byte (0x00 indicates success)
+  1..8: ascii 8 bytes (NUL/space padded)
+```
+
+To assemble the full scan id:
+1. Request chunks for `QQ=0x24..0x27` (4 chunks).
+2. Concatenate the 8-byte ASCII segments (total 32 bytes).
+3. Strip trailing NULs and whitespace.
+
+The resulting string is often parsed into fields such as product/model number and a serial-like suffix; the exact format may vary across Vaillant device generations.
 
 ## Extended Register Access (0xB5 0x24)
 
