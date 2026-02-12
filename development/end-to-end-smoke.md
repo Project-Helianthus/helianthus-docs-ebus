@@ -37,11 +37,11 @@ Run in order and stop on first failure:
 
 ## Repo-specific runbooks
 
-- Gateway smoke runbook: `helianthus-ebusgateway` README smoke section  
+- Gateway smoke runbook: `helianthus-ebusgateway` README smoke section
   https://github.com/d3vi1/helianthus-ebusgateway/blob/main/README.md#smoke-test-context-and-limits
-- Add-on smoke runbook: `helianthus-ha-addon/SMOKE_RUNBOOK.md`  
+- Add-on smoke runbook: `helianthus-ha-addon/SMOKE_RUNBOOK.md`
   https://github.com/d3vi1/helianthus-ha-addon/blob/main/SMOKE_RUNBOOK.md
-- Integration smoke runbook: `helianthus-ha-integration` README smoke section  
+- Integration smoke runbook: `helianthus-ha-integration` README smoke section
   https://github.com/d3vi1/helianthus-ha-integration/blob/main/README.md#smoke-profile-local-gateway-graphql
 
 ## Operational rule
