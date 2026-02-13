@@ -121,6 +121,8 @@ Response payload layout is device/register-specific. In some cases, a single `0x
 
 ### Vaillant scan.id chunks (QQ=0x24..0x27)
 
+This subsection is the Vaillant extended discovery function used by BASV-style discovery enrichment (`0xB5 0x09` with well-known selector values).
+
 In addition to the `0x0D`/`0x0E` register access sub-format above, some Vaillant devices (manufacturer byte `0xB5`) are also observed to use `0xB5 0x09` with a **1-byte selector** (`QQ`) to return fixed-size ASCII chunks that can be assembled into a “scan id” string.
 
 ```text
