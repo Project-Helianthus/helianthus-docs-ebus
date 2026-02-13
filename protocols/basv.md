@@ -1,17 +1,27 @@
 # Device Discovery (BASV) (Observed)
 
-This document describes the **BASV discovery flow** used to enumerate devices on the eBUS and collect identity metadata.
+This document describes the **BASV orchestration flow** used to enumerate devices and build one coherent identity view.
 
-It intentionally does not duplicate the wire-level layouts for generic eBUS discovery or vendor extensions; those are documented in the protocol overview pages linked below.
+Wire-level message layouts are intentionally documented in protocol-centric docs:
+- standard eBUS discovery functions in `protocols/ebus-overview.md`,
+- Vaillant extended discovery in `protocols/ebus-vaillant.md`.
 
-## Discovery Flow (Observed)
+## BASV Orchestration Flow (Observed)
 
-1. Trigger presence refresh via `QueryExistence` broadcast (`0x07 0xFE`).
-2. Probe candidate target addresses with `Identification Scan` (`0x07 0x04`) to obtain:
-   - manufacturer byte
-   - device id string
-   - software / hardware version bytes
-3. If the device manufacturer is Vaillant (`0xB5`), optionally enrich identity by reading the Vaillant `scan.id` chunks via B509 (`0xB5 0x09`, `QQ=0x24..0x27`) and assembling the 32-byte ASCII string.
+1. Run a presence-refresh phase.
+2. Run an identity-probe phase against candidate target addresses.
+3. For Vaillant-class identities, optionally run vendor enrichment.
+4. Merge results into one device identity record per discovered target.
+
+## BASV Output Shape (Observed)
+
+Each BASV discovery record is expected to include:
+- target address,
+- manufacturer,
+- device id,
+- software version,
+- hardware version,
+- optional vendor-enriched metadata (for example Vaillant `scan.id`).
 
 ## References
 
