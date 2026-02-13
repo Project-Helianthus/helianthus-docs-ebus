@@ -166,6 +166,38 @@ Notes:
 - The response length varies by device because the device id field is variable-length.
 - Many tools treat `sw`/`hw` as opaque hex.
 
+### Identify-Only Profile Fields (Generic)
+
+For deterministic “identify-only” target emulation, a practical profile can be represented with:
+
+- `address` (target address that receives the `0x07 0x04` query),
+- `manufacturer` (1 byte),
+- `device_id` (ASCII token),
+- `software_version` (2 bytes, opaque),
+- `hardware_version` (2 bytes, opaque),
+- response-delay bounds (timing envelope; transport/runtime dependent).
+
+For minimal compatibility, many emulators normalize `device_id` to a 5-byte ASCII field before generating the payload:
+
+1. trim surrounding whitespace,
+2. truncate to 5 bytes if longer,
+3. right-pad with ASCII space (`0x20`) if shorter.
+
+Given this normalization, the generated identify payload layout is:
+
+```text
+  0: manufacturer         (1 byte)
+  1..5: device_id_5       (5 bytes ASCII)
+  6: sw_hi                (1 byte)
+  7: sw_lo                (1 byte)
+  8: hw_hi                (1 byte)
+  9: hw_lo                (1 byte)
+```
+
+Notes:
+- This 10-byte shape is a minimal interoperability layout for identify-only emulation.
+- Real devices may still return longer `device_id` fields and therefore larger identify payloads.
+
 ### Minimal VR90 Recognition Query Set (Observed)
 
 For basic recognition of a wired VR90-style target in controlled setups, the smallest observed query set is:
