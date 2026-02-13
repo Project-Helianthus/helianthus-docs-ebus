@@ -130,6 +130,8 @@ Request payload (1 byte):
 Where QQ is typically one of: 0x24, 0x25, 0x26, 0x27
 ```
 
+For deterministic target emulation, keep matching strict: this chunk format is only applicable when the payload is exactly one selector byte and that selector is explicitly supported by the emulated profile.
+
 Each response returns one chunk:
 
 ```text
@@ -144,6 +146,8 @@ To assemble the full scan id:
 3. Strip trailing NULs and whitespace.
 
 The resulting string is often parsed into fields such as product/model number and a serial-like suffix; the exact format may vary across Vaillant device generations.
+
+Helianthus implementation APIs and smoke verification commands for this discovery path are documented in `development/target-emulation.md` (AGPL scope).
 
 ## Extended Register Access (0xB5 0x24)
 
