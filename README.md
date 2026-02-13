@@ -11,7 +11,7 @@ Implementation-neutral references for the eBUS wire protocol and data types live
 For Home Assistant onboarding and GraphQL capability expectations, see `development/ha-integration.md`.
 For ebusd command-backend usage (gateway transport selection + protocol behavior), see `deployment/full-stack.md` and `protocols/ebusd-tcp.md`.
 For cross-repo smoke execution order (gateway → add-on → integration), see `development/end-to-end-smoke.md`.
-For target emulation framework and VR90 minimal behavior, see `development/target-emulation.md` and `protocols/ebus-overview.md`.
+For target emulation framework and identify-only profile behavior (VR90/VR_71 presets), see `development/target-emulation.md` and `protocols/ebus-overview.md`.
 
 ## Documentation Gate
 
