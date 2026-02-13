@@ -132,6 +132,8 @@ Where QQ is typically one of: 0x24, 0x25, 0x26, 0x27
 
 For deterministic target emulation, keep matching strict: this chunk format is only applicable when the payload is exactly one selector byte and that selector is explicitly supported by the emulated profile.
 
+When multiple `0xB5 0x09` payload sub-formats are modeled together, evaluate this strict one-byte `QQ=0x24..0x27` form before broader selector maps so scan.id chunk discovery is not shadowed by generic matches.
+
 Each response returns one chunk:
 
 ```text
