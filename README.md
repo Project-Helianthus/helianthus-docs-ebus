@@ -8,16 +8,30 @@ This repository documents the current, implemented behavior of the Helianthus eB
 
 Implementation-neutral references for the eBUS wire protocol and data types live under `protocols/` and `types/`. Helianthus-specific architecture, APIs, and deployment notes live elsewhere in the tree.
 
-For Home Assistant onboarding and GraphQL capability expectations, see `development/ha-integration.md`.
-For ebusd command-backend usage (gateway transport selection + protocol behavior), see `deployment/full-stack.md` and `protocols/ebusd-tcp.md`.
-For cross-repo smoke execution order (gateway → add-on → integration), see `development/end-to-end-smoke.md`.
-For target emulation framework and identify-only profile behavior (VR90/VR_71 presets), see `development/target-emulation.md` and `protocols/ebus-overview.md`.
+## Start Here by Role
 
-## Documentation Gate
+- **Developer path:** [architecture/overview.md](architecture/overview.md) → [api/graphql.md](api/graphql.md) → [development/contributing.md](development/contributing.md)
+- **Operator path:** [deployment/full-stack.md](deployment/full-stack.md) → [development/end-to-end-smoke.md](development/end-to-end-smoke.md) → [development/smoke-test.md](development/smoke-test.md)
+- **Researcher path:** [protocols/ebus-overview.md](protocols/ebus-overview.md) → [types/overview.md](types/overview.md) → [architecture/vaillant.md](architecture/vaillant.md)
 
-Changes that alter **architecture**, **API surface**, or **runtime behavior** are merge-gated on documentation updates.
+## Documentation Map
 
-- Policy, trigger matrix, and PR checklists: `development/contributing.md#documentation-gate-doc-gate`
+| Area | Start docs |
+|---|---|
+| Architecture | [architecture/overview.md](architecture/overview.md), [architecture/decisions.md](architecture/decisions.md) |
+| Protocols | [protocols/ebus-overview.md](protocols/ebus-overview.md), [protocols/ebusd-tcp.md](protocols/ebusd-tcp.md), [protocols/ebus-vaillant.md](protocols/ebus-vaillant.md) |
+| Types | [types/overview.md](types/overview.md), [types/primitives.md](types/primitives.md), [types/composite.md](types/composite.md) |
+| API | [api/graphql.md](api/graphql.md), [api/mcp.md](api/mcp.md) |
+| Deployment | [deployment/full-stack.md](deployment/full-stack.md), [deployment/tinygo-esp32.md](deployment/tinygo-esp32.md) |
+| Development | [development/contributing.md](development/contributing.md), [development/conventions.md](development/conventions.md), [development/ha-integration.md](development/ha-integration.md) |
+
+## Contribution Workflow (Doc-Gate)
+
+- **Tier 1 (merge-blocking):** changes to architecture, API surface, or runtime behavior must update docs in the same PR; see [Trigger Matrix](development/contributing.md#trigger-matrix).
+- **Tier 2 (non-blocking):** internal-only refactors with no external behavior change may skip doc edits, but must include a short rationale in the PR description; see [Trigger Matrix](development/contributing.md#trigger-matrix).
+- **Author flow:** classify the change, update required docs, and complete the [PR Author Checklist](development/contributing.md#pr-author-checklist).
+- **Reviewer flow:** verify classification and documentation coverage using the [Mandatory Gate Flow](development/contributing.md#mandatory-gate-flow).
+- **Canonical policy:** [development/contributing.md#documentation-gate-doc-gate](development/contributing.md#documentation-gate-doc-gate)
 
 ## Licensing
 
