@@ -10,7 +10,7 @@ This documentation uses role terms that align with modern, inclusive terminology
 - **Target**: the addressed node that ACK/NACKs the command and (for initiator/target transactions) may return a response payload.
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 ## Frame Layout
@@ -123,6 +123,8 @@ The CRC byte depends on the exact CRC8 implementation and the escape-aware subst
 
 This section documents common discovery-style requests used to enumerate devices and read basic identity metadata. The layouts describe the **payload bytes** inside an eBUS frame (not including CRC/escaping).
 
+In BASV-style discovery orchestration, these standard functions are the protocol-level building blocks for presence refresh and identity probing.
+
 ### QueryExistence (0x07 0xFE)
 
 QueryExistence is commonly used as a best-effort “who is present?” broadcast.
@@ -221,4 +223,5 @@ Notes:
 ## See Also
 
 - `protocols/ebusd-tcp.md` – ebusd daemon TCP command protocol (for tooling that sends direct-mode telegrams via ebusd).
-- `protocols/basv.md` – BASV discovery flow (observed).
+- `protocols/ebus-vaillant.md#vaillant-scanid-chunks-qq0x240x27` – Vaillant extended discovery (`0xB5 0x09`) details.
+- `protocols/basv.md` – BASV discovery orchestration flow (observed).
