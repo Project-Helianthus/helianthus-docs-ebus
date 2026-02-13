@@ -1,64 +1,93 @@
-# Target Emulation (VR90 Minimal)
+# Target Emulation (Identify-Only Profiles)
 
 This document tracks implemented Helianthus target-emulation behavior merged in:
 
-- `helianthus-ebusgo` PR [#61](https://github.com/d3vi1/helianthus-ebusgo/pull/61)
-- `helianthus-tinyebus` PR [#10](https://github.com/d3vi1/helianthus-tinyebus/pull/10)
+- `helianthus-ebusgo` PR [#61](https://github.com/d3vi1/helianthus-ebusgo/pull/61) and PR [#65](https://github.com/d3vi1/helianthus-ebusgo/pull/65)
+- `helianthus-tinyebus` PR [#10](https://github.com/d3vi1/helianthus-tinyebus/pull/10) and PR [#14](https://github.com/d3vi1/helianthus-tinyebus/pull/14)
 
 ## Licensing Boundary
 
-- Protocol-generic wire behavior and query layouts stay in **CC0** docs under `protocols/`.
-- This page is **AGPL** and documents Helianthus implementation details (package structure, harness behavior, and project smoke commands).
+- Protocol-generic field/layout docs stay in **CC0** under `protocols/`.
+- Helianthus API names, presets, smoke commands, and package mapping stay in this **AGPL** page.
 
-## Framework Shape (Generic Concepts)
-
-Both implementations use the same logical model:
-
-- request matcher (`PB/SB` and optional payload prefix matching),
-- response builder (returns delay + response payload),
-- timing constraints (min/max response delay validation),
-- deterministic harness (virtual time sequence runner for tests).
-
-## Minimal VR90 Behavior (Current Scope)
-
-Current behavior is intentionally minimal and limited to recognition:
-
-- responds to identification query `0x07 0x04`,
-- configurable target address,
-- configurable identity fields: manufacturer, device id, software version, hardware version,
-- no extended thermostat command coverage in this phase.
-
-For the protocol-level query layout, see:
+CC0 references for wire-level model:
 - `protocols/ebus-overview.md#identification-scan-0x07-0x04`
-- `protocols/ebus-overview.md#minimal-vr90-recognition-query-set-observed`
+- `protocols/ebus-overview.md#identify-only-profile-fields-generic`
+
+## Identify-Only Model (Helianthus API Surface)
+
+Both implementations expose the same logical identify-only constructor profile:
+
+- target identity: `address`, `manufacturer`, `device_id`, `software`, `hardware`
+- response behavior: fixed response delay + timing envelope validation
+- single recognition rule: match identification query `PB=0x07`, `SB=0x04`
+
+Current implementation constraints:
+
+- identify-only behavior responds only to `0x07 0x04`
+- no thermostat/write/register emulation in this profile
+- `device_id` is normalized to a 5-byte ASCII slot (trim + truncate/pad)
+
+## Supported Presets (Current Coverage)
+
+| Preset | Address | Manufacturer | Device ID | Software | Hardware | Scope |
+|---|---:|---:|---|---:|---:|---|
+| VR90 | `0x15` | `0xB5` | `B7V00` | `0x0422` | `0x5503` | identify-only recognition |
+| VR_71 | `0x26` | `0xB5` | `VR_71` | `0x0100` | `0x5904` | identify-only recognition |
+
+Known limits:
+
+- Presets are fixed defaults for recognition tests, not full device models.
+- Additional profiles can be created through the generic constructor, but only identify behavior is implemented.
+- Timing accuracy expectations remain firmware-first for strict response windows.
 
 ## Implementation Mapping
 
 ### `helianthus-ebusgo`
 
 - Package: `emulation`
-- Entry point: `NewVR90Target(profile VR90Profile)`
-- Deterministic harness: `Harness` with virtual `time.Duration`
+- Generic API:
+  - `NewIdentifyOnlyTarget(profile IdentifyOnlyProfile)`
+  - `PresetVR90IdentifyOnlyProfile()`
+  - `PresetVR71IdentifyOnlyProfile()`
+- Compatibility API:
+  - `NewVR90Target(profile VR90Profile)` (kept for backward compatibility)
 
-Minimal smoke command:
+Smoke commands:
 
 ```bash
 cd /path/to/helianthus-ebusgo
+./scripts/smoke-identify-only.sh
 ./scripts/smoke-vr90-minimal.sh
 ```
+
+Repository links:
+
+- https://github.com/d3vi1/helianthus-ebusgo/blob/main/scripts/smoke-identify-only.sh
+- https://github.com/d3vi1/helianthus-ebusgo/blob/main/scripts/smoke-vr90-minimal.sh
 
 ### `helianthus-tinyebus`
 
 - Package: `firmware/emulation`
-- Entry point: `NewVR90Target(profile VR90Profile)`
-- Deterministic harness: `Harness` with millisecond virtual time (`uint32`)
+- Generic API:
+  - `NewIdentifyOnlyTarget(profile IdentifyOnlyProfile)`
+  - `PresetVR90IdentifyOnlyProfile()`
+  - `PresetVR71IdentifyOnlyProfile()`
+- Compatibility API:
+  - `NewVR90Target(profile VR90Profile)` (kept for backward compatibility)
 
-Minimal smoke command:
+Smoke commands:
 
 ```bash
 cd /path/to/helianthus-tinyebus
-./scripts/smoke-vr90-minimal.sh
+./scripts/smoke-vr90-minimal.sh vr90
+./scripts/smoke-vr90-minimal.sh vr71
+./scripts/smoke-vr90-minimal.sh all
 ```
+
+Repository link:
+
+- https://github.com/d3vi1/helianthus-tinyebus/blob/main/scripts/smoke-vr90-minimal.sh
 
 ## Timing Rationale
 
@@ -70,9 +99,8 @@ See also: `protocols/ebusd-tcp.md#timing-caveat-for-target-emulation`.
 
 ## Out of Scope (Current Phase)
 
-The following devices/behaviors are not included in this minimal phase:
+The following remain out of scope for the identify-only profile abstraction:
 
-- VR92
-- VR70 / VR71
-- recoVAIR
-- VR50
+- full VR90 thermostat command coverage beyond identify
+- full VR_71 command/register behavior beyond identify
+- VR92, VR70, recoVAIR, VR50 full emulation
