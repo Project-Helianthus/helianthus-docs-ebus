@@ -107,6 +107,9 @@ Write request payload (3+ bytes):
 
 Response is device/register-specific. In some cases, only a single `0x00` status byte is observed.
 
+This subsection is the Vaillant extended discovery function used by BASV-style discovery enrichment (`0xB5 0x09` with well-known selector values).
+
+<a id="vaillant-scanid-chunks-qq0x240x27"></a>
 ### Form B: scan.id chunk discovery (QQ=0x24..0x27)
 
 Some Vaillant devices (manufacturer byte `0xB5`) use one-byte selectors to return fixed-size ASCII chunks.
