@@ -40,11 +40,24 @@ b524,<PAYLOAD_HEX>
 
 Where `<PAYLOAD_HEX>` is the raw B524 request payload bytes (no eBUS framing, no CRC).
 
+Detailed semantics and response layouts are documented in:
+- [`protocols/ebus-vaillant-GetExtendedRegisters.md`](../protocols/ebus-vaillant-GetExtendedRegisters.md)
+
 ### Directory Probe (opcode 0x00)
 
 ```text
 00 GG 00
 ```
+
+### Group Metadata Probe (opcode 0x01)
+
+```text
+01 GG II
+```
+
+Notes:
+- Canonical short form observed in current Helianthus tooling.
+- Some devices may accept longer forms, but CSV selectors should prefer the short shape.
 
 ### Register Read/Write (opcode 0x02 / 0x06)
 
@@ -73,3 +86,9 @@ opcode: 0x03 (read timer) or 0x04 (write timer)
 WD    : weekday 0x00..0x06 (Monday..Sunday)
 ```
 
+### Array/Table Read (opcode 0x0B)
+
+`0x0B` has been observed on B524 schedule/program domains (notably groups `0x06`/`0x07`), but a stable selector schema for CSV use is still under consolidation.
+
+Current recommendation:
+- keep `0x0B` mappings in dedicated experimental CSVs until selector/index semantics are finalized.
