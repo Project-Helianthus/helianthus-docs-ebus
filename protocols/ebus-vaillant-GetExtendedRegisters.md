@@ -67,7 +67,7 @@ other float values -> class marker (treated as enum-like class tags)
 ```text
 Opcode  Name                 Request shape                     Status
 0x00    Directory probe      00 <GG> 00                        Confirmed
-0x01    Group metadata       01 <GG> <II>                      Confirmed (short form)
+0x01    Constraint dictionary 01 <GG> <RR>                     Confirmed
 0x02    Local register I/O   02 <RW> <GG> <II> <RR_LO> <RR_HI> Confirmed
 0x03    Timer read           03 <SEL1> <SEL2> <SEL3> <WD>      Confirmed
 0x04    Timer write          04 <SEL1> <SEL2> <SEL3> <WD> ...  Confirmed
@@ -97,40 +97,113 @@ Discovery rules:
 - Skip `0.0` holes.
 - Treat transport/timeouts as non-terminating errors.
 
-### 4.2 `0x01` Group Metadata
+### 4.2 `0x01` Constraint Dictionary (min/max/step)
 
-Canonical short request form:
+This family exposes an undocumented constraint dictionary for configuration parameters.
+
+Canonical request form:
 
 ```text
 Request payload (3 bytes):
   0: 0x01
   1: GG
-  2: II
+  2: RR
 ```
 
-Example ebusd `hex` command for `GG=0x03`, `II=0x01`:
+Example ebusd `hex` command for `GG=0x03`, `RR=0x01`:
 
 ```text
 hex 15B52403010301
 ```
 
-Observed usage in Helianthus:
-- probe with `II=0x01` to derive bounds
-- parse returned bytes as metadata payload
+#### 4.2.1 Type tags and decoding
 
-Observed response handling:
-- Some targets return a headered form that can be interpreted like:
-  `TT GG RR_LO RR_HI <meta...>`
-- Some targets return short/bare payloads.
+`TT` is the first byte in the returned payload and defines the constraint value encoding:
 
-Current practical interpretation used for scan planning:
-- first 2 metadata bytes: `RR_max` (u16 little-endian), if present
-- next 2 metadata bytes: `II_max` (u16 little-endian), if present
-- on parse/transport failure: fallback to static defaults
+```text
+TT=0x06: u8 range
+  06 GG RR 00 MIN MAX STEP
 
-Important:
-- The short `01 <GG> <II>` form is the canonical form for Helianthus scanners.
-- Longer variants may be accepted by some targets but are not required.
+TT=0x09: u16le range
+  09 GG RR 00 MIN MAX STEP
+  where MIN/MAX/STEP are u16 little-endian
+
+TT=0x0F: float32le range
+  0F GG RR 00 MIN MAX STEP
+  where MIN/MAX/STEP are IEEE754 float32 little-endian
+
+TT=0x0C: date range (HDA3-like)
+  0C GG RR 00 MIN(d,m,y) MAX(d,m,y) STEP(u16le) 00
+  year is interpreted as 2000 + y
+```
+
+#### 4.2.2 Discovery method (practical)
+
+1. Iterate candidate `(GG,RR)` ranges.
+2. Send `15 b5 24 03 01 GG RR`.
+3. Keep first valid response where:
+   - `TT in {0x06,0x09,0x0C,0x0F}`
+   - response echoes request `GG RR`.
+4. Track unique payloads; stop after stable no-new window.
+5. Filter stdout noise/non-hex lines before decode.
+
+#### 4.2.3 Observed constraints (decoded, with eBUSd cross-reference)
+
+Cross-reference sources:
+- `15.720.tsp` for `@base(... group=GG ...)` and `@ext(RR,0)` mapping.
+- `vaillant/_templates.tsp` for enum labels (`@values(Values_*)`).
+
+| GG | RR | MIN | MAX | STEP | Type | Notes | eBUSd register(s) | Enum values (eBUSd) | HEX |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 00 | 01 | -20 | 50 | 1 | f32_range |  | HwcBivalencePoint |  | 0f0001000000a0c1000048420000803f |
+| 00 | 02 | -26 | 10 | 1 | f32_range |  | ContinuosHeating |  | 0f0002000000d0c1000020410000803f |
+| 00 | 03 | 0 | 12 | 1 | u16_range |  | FrostOverrideTime |  | 0900030000000c000100 |
+| 00 | 04 | 0 | 300 | 10 | u16_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)` |  |  | 0900040000002c010a00 |
+| 00 | 80 | -10 | 10 | 1 | f32_range | Shared constraint-id (not an `@ext` index) | DewPointOffset, Hc{1..3}DewPointOffset |  | 0f008000000020c1000020410000803f |
+| 01 | 01 | 0 | 1 | 1 | u16_range |  | HwcEnabled | 0=no, 1=yes | 09010100000001000100 |
+| 01 | 02 | 0 | 1 | 1 | u8_range |  | HwcCircPumpStatus |  | 06010200000101 |
+| 01 | 03 | 0 | 2 | 1 | u16_range |  | HwcOpMode | 0=off, 1=auto, 2=manual | 09010300000002000100 |
+| 01 | 04 | 35 | 70 | 1 | f32_range |  | HwcTempDesired |  | 0f01040000000c4200008c420000803f |
+| 01 | 05 | 0 | 99 | 1 | f32_range |  | HwcStorageTemp |  | 0f010500000000000000c6420000803f |
+| 01 | 06 | 0 | 1 | 1 | u8_range |  | HwcReheatingActive |  | 06010600000101 |
+| 02 | 01 | 1 | 2 | 1 | u16_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)` |  |  | 09020100010002000100 |
+| 02 | 02 | 0 | 4 | 1 | u16_range |  | Hc{1..3}CircuitType | 0=inactive, 1=heat, 2=fixed, 3=water, 4=returnincr | 09020200000004000100 |
+| 02 | 04 | 15 | 80 | 1 | f32_range |  | Hc{1..3}DesiredReturnTemp |  | 0f020400000070410000a0420000803f |
+| 02 | 05 | 0 | 1 | 1 | u8_range |  | Hc{1..3}DewPointMonitoring |  | 06020500000101 |
+| 02 | 06 | 0 | 1 | 1 | u8_range |  | Hc{1..3}CoolingEnabled |  | 06020600000101 |
+| 03 | 01 | 0 | 2 | 1 | u16_range |  | Z{1..3}CoolingOpMode | 0=off, 1=auto, 2=manual | 09030100000002000100 |
+| 03 | 02 | 15 | 30 | 0.5 | f32_range |  | Z{1..3}CoolingSetbackTemp |  | 0f030200000070410000f0410000003f |
+| 03 | 03 | 2001-01-01 | 2099-12-31 | 1 | date_range |  | Z{1..3}HolidayStartPeriod |  | 0c0303000101011f0c63010000 |
+| 03 | 04 | 2001-01-01 | 2099-12-31 | 1 | date_range |  | Z{1..3}HolidayEndPeriod |  | 0c0304000101011f0c63010000 |
+| 03 | 05 | 5 | 30 | 1 | f32_range | TSP mismatch: `15.720.tsp` commonly shows step `0.5` | Z{1..3}HolidayTemp |  | 0f0305000000a0400000f0410000803f |
+| 03 | 06 | 0 | 2 | 1 | u16_range |  | Z{1..3}HeatingOpMode | 0=off, 1=auto, 2=manual | 09030600000002000100 |
+| 04 | 01 | 0 | 1 | 1 | u8_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)`; closest match: `SolarPump` (`@ext=0x08`) |  |  | 06040100000101 |
+| 04 | 02 | 0 | 1 | 1 | u8_range |  | SolarPumpKick |  | 06040200000101 |
+| 04 | 03 | -40 | 155 | 1 | f32_range |  | SolarCollectorTemp |  | 0f040300000020c200001b430000803f |
+| 04 | 04 | 0 | 99 | 1 | f32_range |  | SolarCollectorTempMin |  | 0f040400000000000000c6420000803f |
+| 04 | 05 | 110 | 150 | 1 | f32_range |  | SolarCollectorTempMax |  | 0f0405000000dc42000016430000803f |
+| 04 | 06 | 75 | 115 | 1 | f32_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)`; closest match: `SolarYieldTemp` (`@ext=0x07`) |  |  | 0f040600000096420000e6420000803f |
+| 05 | 01 | 0 | 99 | 1 | f32_range |  | SolarCylinder1TempMax |  | 0f050100000000000000c6420000803f |
+| 05 | 02 | 2 | 25 | 1 | f32_range |  | SolarCylinder1SwitchOnDifferential |  | 0f050200000000400000c8410000803f |
+| 05 | 03 | 1 | 20 | 1 | f32_range |  | SolarCylinder1SwitchOffDifferential |  | 0f0503000000803f0000a0410000803f |
+| 05 | 04 | -10 | 110 | 1 | f32_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)` |  |  | 0f050400000020c10000dc420000803f |
+| 08 | 01 | 0 | 99 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080100000000000000c6420000803f |
+| 08 | 02 | 0 | 99 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080200000000000000c6420000803f |
+| 08 | 03 | 2 | 25 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080300000000400000c8410000803f |
+| 08 | 04 | 1 | 20 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f0804000000803f0000a0410000803f |
+| 08 | 05 | -10 | 110 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080500000020c10000dc420000803f |
+| 08 | 06 | -10 | 110 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080600000020c10000dc420000803f |
+| 09 | 01 | 0 | 255 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 090901000000ff000100 |
+| 09 | 02 | 1 | 3 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 09090200010003000100 |
+| 09 | 03 | 0 | 1 | 1 | u8_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 06090300000101 |
+| 09 | 04 | 0 | 10 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 0909040000000a000100 |
+| 09 | 05 | 0 | 32768 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 09090500000000800100 |
+| 09 | 06 | 0 | 32768 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 09090600000000800100 |
+| 0A | 01 | 0 | 3 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0100000301 |
+| 0A | 02 | 1 | 2 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0200010201 |
+| 0A | 03 | 1 | 2 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0300010201 |
+| 0A | 05 | 0 | 3 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0500000301 |
+| 0A | 06 | 0 | 1 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0600000101 |
 
 ### 4.3 `0x02` / `0x06` Register Read/Write
 
@@ -192,7 +265,7 @@ Current status:
 - practical recommendation: treat as array/table transport, not scalar RR scan
 
 Implication:
-- `RR_max` from metadata (`0x01`) for schedule groups may be small and does not imply scalar register coverage.
+- sparse `0x01` constraints do not imply scalar coverage for schedule groups.
 
 ## 5. Group Taxonomy and Descriptor Classes
 
@@ -200,17 +273,18 @@ Observed groups on VRC720-class targets:
 
 ```text
 GG   Name                  Descriptor(s)  Typical opcode  Notes
-0x00 Regulator Parameters  3.0            0x02            RR extends beyond 0x00FF (seen up to 0x01FF)
-0x01 Hot Water Circuit     3.0            0x02            singleton
-0x02 Heating Circuits      1.0            0x02            instanced
-0x03 Zones                 1.0            0x02            instanced
-0x04 Solar Circuit         6.0 / 5.0      0x02            descriptor may vary by system state
-0x05 Hot Water Cylinder    1.0 / absent   0x02            model-/system-dependent
+0x00 Regulator Parameters  3.0            0x02            `0x01` limits observed for RR {0x01,0x02,0x03,0x04,0x80}
+0x01 Hot Water Circuit     3.0            0x02            singleton; `0x01` limits observed for RR 0x01..0x06
+0x02 Heating Circuits      1.0            0x02            instanced; `0x01` limits observed for RR {0x01,0x02,0x04,0x05,0x06}
+0x03 Zones                 1.0            0x02            instanced; `0x01` limits observed for RR 0x01..0x06 (includes date ranges)
+0x04 Solar Circuit         6.0 / 5.0      0x02            `0x01` limits observed for RR 0x01..0x06
+0x05 Hot Water Cylinder    1.0 / absent   0x02            model-/system-dependent; `0x01` limits observed for RR 0x01..0x04
 0x06 Heating schedule      (varies)       0x0B            program/timetable domain
 0x07 DHW schedule          (varies)       0x0B            program/timetable domain
-0x09 Room Sensors          1.0            0x06            instanced
-0x0A Room State            1.0            0x06            instanced
-0x0C Unknown               1.0 / absent   0x06            model-/system-dependent
+0x08 Solar Aux/unknown     1.0 / absent   0x06            `0x01` limits observed for RR 0x01..0x06; not mapped in `15.720.tsp`
+0x09 Room Sensors          1.0            0x06            instanced; `0x01` limits observed for RR 0x01..0x06
+0x0A Room State            1.0            0x06            instanced; `0x01` limits observed for RR {0x01,0x02,0x03,0x05,0x06}
+0x0C Unknown               1.0 / absent   0x06            model-/system-dependent; no confirmed `0x01` limit rows yet
 ```
 
 Descriptor class values behave like coarse enum tags, not physical numeric quantities.
@@ -223,15 +297,17 @@ Descriptor class values behave like coarse enum tags, not physical numeric quant
 - stop on first `NaN`
 - record unknown groups and unknown descriptor classes for follow-up
 
-### 6.2 Phase B: metadata bounds
+### 6.2 Phase B: constraint dictionary sampling (`0x01`)
 
-- probe each discovered group with `0x01` short metadata form
-- derive planning bounds (`RR_max`, `II_max`) when present
-- fallback to static defaults when metadata is unavailable
+- probe known `0x01 GG RR` pairs per group
+- decode and persist `min/max/step` domains (`u8`, `u16le`, `f32le`, `date`)
+- use domains for validation/planner hints, not as hard discovery bounds
+- keep static/fallback profile when constraint data is unavailable
 
 ### 6.3 Phase C: instance detection (instanced groups)
 
 - evaluate all `II=0x00..II_max` (no early stop on holes)
+- `II_max` comes from planner/static profile and observed valid instances, not from `0x01`.
 - mark present slots based on group-specific heuristics
 
 ### 6.4 Phase D: register scan
@@ -239,7 +315,7 @@ Descriptor class values behave like coarse enum tags, not physical numeric quant
 - scan selected groups/instances/ranges from planner
 - for unknown groups, scanners may probe both `0x02` and `0x06` and keep best response
 
-### 6.5 Static fallback profile (when metadata is missing)
+### 6.5 Static fallback profile (when dynamic evidence is missing)
 
 ```text
 GG   Opcode  InstanceMax  RegisterMax
@@ -250,7 +326,7 @@ GG   Opcode  InstanceMax  RegisterMax
 0x0C 0x06    0x0A         0x003F
 ```
 
-This profile is fallback behavior, not the primary source of truth when `0x01` metadata is available.
+This profile is fallback behavior, not the primary source of truth when dynamic evidence (`0x00` directory, `0x01` constraints, and successful read probes) is available.
 
 ## 7. ebusd TCP Interop Notes
 
