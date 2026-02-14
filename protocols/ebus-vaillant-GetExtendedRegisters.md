@@ -272,35 +272,35 @@ Operational notes:
 
 | RR | Canonical name | eBUSd alias | Class |
 | --- | --- | --- | --- |
-| `0x0001` | `cooling_operation_mode` | `Zone{zone}CoolingOpMode` | `config` |
-| `0x0002` | `cooling_set_back_temperature` | `Zone{zone}CoolingSetbackTemp` | `config` |
-| `0x0003` | `holiday_start_date` | `Zone{zone}HolidayStartPeriod` | `config` |
-| `0x0004` | `holiday_end_date` | `Zone{zone}HolidayEndPeriod` | `config` |
-| `0x0005` | `holiday_setpoint` | `Zone{zone}HolidayTemp` | `config` |
-| `0x0006` | `heating_operation_mode` | `Zone{zone}HeatingOpMode` | `config` |
-| `0x0008` | `quick_veto_temperature` | `Zone{zone}QuickVetoTemp` | `config` |
-| `0x0009` | `heating_set_back_temperature` | `Zone{zone}HeatingSetbackTemp` | `config` |
-| `0x000E` | `current_special_function` | `Zone{zone}SpecialFunction` | `state` |
-| `0x000F` | `current_room_temperature` | `Zone{zone}RoomTemp` | `state` |
-| `0x0012` | `valve_status` | `Zone{zone}ValveStatus` | `state` |
-| `0x0013` | `associated_circuit_index_raw` | `Zone{zone}AssociatedCircuitIndex` | `config` |
-| `0x0014` | `heating_manual_mode_setpoint` | `Zone{zone}HeatingManualSetpoint` | `config` |
-| `0x0015` | `cooling_manual_mode_setpoint` | `Zone{zone}CoolingManualSetpoint` | `config` |
-| `0x0016` | `name` | `Zone{zone}Name` | `config` |
-| `0x0017` | `name_prefix` | `Zone{zone}NamePrefix` | `config` |
-| `0x0018` | `name_suffix` | `Zone{zone}NameSuffix` | `config` |
-| `0x0019` | `heating_time_slot_active` | `Zone{zone}HeatingTimeSlotActive` | `config` |
-| `0x001A` | `cooling_time_slot_active` | `Zone{zone}CoolingTimeSlotActive` | `config` |
-| `0x001B` | `status` | `Zone{zone}Status` | `state` |
-| `0x001C` | `index` | `Zone{zone}Index` | `config` |
-| `0x001E` | `quick_veto_end_time` | `Zone{zone}QuickVetoEndTime` | `config` |
-| `0x0020` | `holiday_end_time` | `Zone{zone}HolidayEndTime` | `config` |
-| `0x0021` | `holiday_start_time` | `Zone{zone}HolidayStartTime` | `config` |
-| `0x0022` | `heating_desired_setpoint` | `Zone{zone}RoomTempDesired` | `config` |
-| `0x0023` | `cooling_desired_setpoint` | `Zone{zone}CoolingDesiredSetpoint` | `config` |
-| `0x0024` | `quick_veto_end_date` | `Zone{zone}QuickVetoEndDate` | `config` |
-| `0x0026` | `quick_veto_duration` | `Zone{zone}QuickVetoDuration` | `config` |
-| `0x0028` | `current_room_humidity` | `Zone{zone}Humid` | `state` |
+| `0x0001` | `cooling_operation_mode` | `Z{zone}CoolingOpMode` | `config` |
+| `0x0002` | `cooling_set_back_temperature` | `Z{zone}CoolingSetbackTemp` | `config` |
+| `0x0003` | `holiday_start_date` | `Z{zone}HolidayStartPeriod` | `config` |
+| `0x0004` | `holiday_end_date` | `Z{zone}HolidayEndPeriod` | `config` |
+| `0x0005` | `holiday_setpoint` | `Z{zone}HolidayTemp` | `config` |
+| `0x0006` | `heating_operation_mode` | `Z{zone}HeatingOpMode` | `config` |
+| `0x0008` | `quick_veto_temperature` | `Z{zone}QuickVetoTemp` | `config` |
+| `0x0009` | `heating_set_back_temperature` | `Z{zone}HeatingSetbackTemp` | `config` |
+| `0x000E` | `current_special_function` | `Z{zone}SpecialFunction` | `state` |
+| `0x000F` | `current_room_temperature` | `Z{zone}RoomTemp` | `state` |
+| `0x0012` | `valve_status` | `Z{zone}ValveStatus` | `state` |
+| `0x0013` | `associated_circuit_index_raw` | `Z{zone}AssociatedCircuitIndex` | `config` |
+| `0x0014` | `heating_manual_mode_setpoint` | `Z{zone}HeatingManualSetpoint` | `config` |
+| `0x0015` | `cooling_manual_mode_setpoint` | `Z{zone}CoolingManualSetpoint` | `config` |
+| `0x0016` | `name` | `Z{zone}Name` | `config` |
+| `0x0017` | `name_prefix` | `Z{zone}NamePrefix` | `config` |
+| `0x0018` | `name_suffix` | `Z{zone}NameSuffix` | `config` |
+| `0x0019` | `heating_time_slot_active` | `Z{zone}HeatingTimeSlotActive` | `config` |
+| `0x001A` | `cooling_time_slot_active` | `Z{zone}CoolingTimeSlotActive` | `config` |
+| `0x001B` | `status` | `Z{zone}Status` | `state` |
+| `0x001C` | `index` | `Z{zone}Index` | `config` |
+| `0x001E` | `quick_veto_end_time` | `Z{zone}QuickVetoEndTime` | `config` |
+| `0x0020` | `holiday_end_time` | `Z{zone}HolidayEndTime` | `config` |
+| `0x0021` | `holiday_start_time` | `Z{zone}HolidayStartTime` | `config` |
+| `0x0022` | `heating_desired_setpoint` | `Z{zone}RoomTempDesired` | `config` |
+| `0x0023` | `cooling_desired_setpoint` | `Z{zone}CoolingDesiredSetpoint` | `config` |
+| `0x0024` | `quick_veto_end_date` | `Z{zone}QuickVetoEndDate` | `config` |
+| `0x0026` | `quick_veto_duration` | `Z{zone}QuickVetoDuration` | `config` |
+| `0x0028` | `current_room_humidity` | `Z{zone}Humid` | `state` |
 
 ### 4.3 `0x02` / `0x06` Register Read/Write
 
