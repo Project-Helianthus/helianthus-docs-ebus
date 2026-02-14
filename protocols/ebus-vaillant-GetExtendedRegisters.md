@@ -51,6 +51,7 @@ Notes:
 - `II` is not echoed in the response.
 - Some replies are status-only: a single-byte `TT` with no `GG/RR/value`.
 - Correlation must retain request context (`GG/II/RR/opcode`).
+- Exception: the `0x01` constraint dictionary request is `01 GG RR` (no `II`), so correlation there is `GG/RR`.
 
 ### 2.3 Directory descriptor semantics
 
@@ -139,12 +140,14 @@ TT=0x0C: date range (HDA3-like)
 
 #### 4.2.2 Discovery method (practical)
 
-1. Iterate candidate `(GG,RR)` ranges.
-2. Send `15 b5 24 03 01 GG RR`.
-3. Keep first valid response where:
+Current Helianthus runtime behavior:
+
+1. For each discovered group, iterate `RR=0x00..min(rr_max,0xFF)`.
+2. Probe optional shared IDs above the window (currently `RR=0x80`).
+3. Send `15 b5 24 03 01 GG RR`.
+4. Keep responses where:
    - `TT in {0x06,0x09,0x0C,0x0F}`
    - response echoes request `GG RR`.
-4. Track unique payloads; stop after stable no-new window.
 5. Filter stdout noise/non-hex lines before decode.
 
 #### 4.2.3 Observed constraints (decoded, with eBUSd cross-reference)
@@ -263,6 +266,7 @@ Current status:
 - family observed on wire
 - full selector/body schema still under consolidation
 - practical recommendation: treat as array/table transport, not scalar RR scan
+- current Helianthus scanner does not parse `0x0B` payload bodies yet
 
 Implication:
 - sparse `0x01` constraints do not imply scalar coverage for schedule groups.
@@ -299,10 +303,10 @@ Descriptor class values behave like coarse enum tags, not physical numeric quant
 
 ### 6.2 Phase B: constraint dictionary sampling (`0x01`)
 
-- probe known `0x01 GG RR` pairs per group
+- probe `0x01 GG RR` over bounded per-group RR windows
 - decode and persist `min/max/step` domains (`u8`, `u16le`, `f32le`, `date`)
-- use domains for validation/planner hints, not as hard discovery bounds
-- keep static/fallback profile when constraint data is unavailable
+- persist decoded entries under artifact metadata (`meta.constraint_dictionary`)
+- current implementation keeps constraints advisory (they do not resize planner ranges yet)
 
 ### 6.3 Phase C: instance detection (instanced groups)
 
@@ -326,7 +330,7 @@ GG   Opcode  InstanceMax  RegisterMax
 0x0C 0x06    0x0A         0x003F
 ```
 
-This profile is fallback behavior, not the primary source of truth when dynamic evidence (`0x00` directory, `0x01` constraints, and successful read probes) is available.
+This profile is currently the primary planner bound source; dynamic evidence (`0x01` constraints and successful read probes) is persisted as advisory metadata.
 
 ## 7. ebusd TCP Interop Notes
 

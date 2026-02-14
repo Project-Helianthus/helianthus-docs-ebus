@@ -49,15 +49,15 @@ Detailed semantics and response layouts are documented in:
 00 GG 00
 ```
 
-### Group Metadata Probe (opcode 0x01)
+### Constraint Dictionary (opcode 0x01)
 
 ```text
-01 GG II
+01 GG RR
 ```
 
 Notes:
-- Canonical short form observed in current Helianthus tooling.
-- Some devices may accept longer forms, but CSV selectors should prefer the short shape.
+- `RR` is the constraint-record selector byte for the `(GG, RR)` dictionary entry.
+- Instance-selector form is not supported/documented in Helianthus (no programmatic evidence on observed buses).
 
 ### Register Read/Write (opcode 0x02 / 0x06)
 
