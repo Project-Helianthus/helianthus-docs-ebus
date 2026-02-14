@@ -268,6 +268,40 @@ Operational notes:
 - `RR=0x001F`: practical thermostat linkage register; typically reflects the room setpoint shown on VRC UI (for example `21.0°C`).
 - `RR=0x0020`: useful for diagnostics; it can show curve-requested flow temperature even when `RR=0x0007` (`FlowTempDesired`) is clamped by limits such as `RR=0x0010` (`MaxFlow`).
 
+#### 4.2.6 Zone register catalog updates (`GG=0x03`, `II=*`)
+
+| RR | Canonical name | eBUSd alias | Class |
+| --- | --- | --- | --- |
+| `0x0001` | `cooling_operation_mode` | `Z{zone}CoolingOpMode` | `config` |
+| `0x0002` | `cooling_set_back_temperature` | `Z{zone}CoolingSetbackTemp` | `config` |
+| `0x0003` | `holiday_start_date` | `Z{zone}HolidayStartPeriod` | `config` |
+| `0x0004` | `holiday_end_date` | `Z{zone}HolidayEndPeriod` | `config` |
+| `0x0005` | `holiday_setpoint` | `Z{zone}HolidayTemp` | `config` |
+| `0x0006` | `heating_operation_mode` | `Z{zone}HeatingOpMode` | `config` |
+| `0x0008` | `quick_veto_temperature` | `Z{zone}QuickVetoTemp` | `config` |
+| `0x0009` | `heating_set_back_temperature` | `Z{zone}HeatingSetbackTemp` | `config` |
+| `0x000E` | `current_special_function` | `Z{zone}SpecialFunction` | `state` |
+| `0x000F` | `current_room_temperature` | `Z{zone}RoomTemp` | `state` |
+| `0x0012` | `valve_status` | `Z{zone}ValveStatus` | `state` |
+| `0x0013` | `associated_circuit_index_raw` | `Z{zone}AssociatedCircuitIndex` | `config` |
+| `0x0014` | `heating_manual_mode_setpoint` | `Z{zone}HeatingManualSetpoint` | `config` |
+| `0x0015` | `cooling_manual_mode_setpoint` | `Z{zone}CoolingManualSetpoint` | `config` |
+| `0x0016` | `name` | `Z{zone}Name` | `config` |
+| `0x0017` | `name_prefix` | `Z{zone}NamePrefix` | `config` |
+| `0x0018` | `name_suffix` | `Z{zone}NameSuffix` | `config` |
+| `0x0019` | `heating_time_slot_active` | `Z{zone}HeatingTimeSlotActive` | `config` |
+| `0x001A` | `cooling_time_slot_active` | `Z{zone}CoolingTimeSlotActive` | `config` |
+| `0x001B` | `status` | `Z{zone}Status` | `state` |
+| `0x001C` | `index` | `Z{zone}Index` | `config` |
+| `0x001E` | `quick_veto_end_time` | `Z{zone}QuickVetoEndTime` | `config` |
+| `0x0020` | `holiday_end_time` | `Z{zone}HolidayEndTime` | `config` |
+| `0x0021` | `holiday_start_time` | `Z{zone}HolidayStartTime` | `config` |
+| `0x0022` | `heating_desired_setpoint` | `Z{zone}RoomTempDesired` | `config` |
+| `0x0023` | `cooling_desired_setpoint` | `Z{zone}CoolingDesiredSetpoint` | `config` |
+| `0x0024` | `quick_veto_end_date` | `Z{zone}QuickVetoEndDate` | `config` |
+| `0x0026` | `quick_veto_duration` | `Z{zone}QuickVetoDuration` | `config` |
+| `0x0028` | `current_room_humidity` | `Z{zone}Humid` | `state` |
+
 ### 4.3 `0x02` / `0x06` Register Read/Write
 
 ```text
