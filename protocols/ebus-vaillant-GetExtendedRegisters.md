@@ -169,8 +169,8 @@ Cross-reference sources:
 | 01 | 04 | 35 | 70 | 1 | f32_range |  | HwcTempDesired |  | 0f01040000000c4200008c420000803f |
 | 01 | 05 | 0 | 99 | 1 | f32_range |  | HwcStorageTemp |  | 0f010500000000000000c6420000803f |
 | 01 | 06 | 0 | 1 | 1 | u8_range |  | HwcReheatingActive |  | 06010600000101 |
-| 02 | 01 | 1 | 2 | 1 | u16_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)` |  |  | 09020100010002000100 |
-| 02 | 02 | 0 | 4 | 1 | u16_range |  | Hc{1..3}CircuitType | 0=inactive, 1=heat, 2=fixed, 3=water, 4=returnincr | 09020200000004000100 |
+| 02 | 01 | 1 | 2 | 1 | u16_range | `heating_circuit_type` |  | 1=direct_heating_circuit, 2=mixer_circuit_external | 09020100010002000100 |
+| 02 | 02 | 0 | 4 | 1 | u16_range | `mixer_circuit_type_external` (contextual enum) | Hc{1..3}CircuitType | 0=inactive, 1=heating_or_cooling, 2=fixed_value_or_pool, 3=dhw_or_cylinder_charging, 4=return_increase | 09020200000004000100 |
 | 02 | 04 | 15 | 80 | 1 | f32_range |  | Hc{1..3}DesiredReturnTemp |  | 0f020400000070410000a0420000803f |
 | 02 | 05 | 0 | 1 | 1 | u8_range |  | Hc{1..3}DewPointMonitoring |  | 06020500000101 |
 | 02 | 06 | 0 | 1 | 1 | u8_range |  | Hc{1..3}CoolingEnabled |  | 06020600000101 |
@@ -207,6 +207,45 @@ Cross-reference sources:
 | 0A | 03 | 1 | 2 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0300010201 |
 | 0A | 05 | 0 | 3 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0500000301 |
 | 0A | 06 | 0 | 1 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0600000101 |
+
+#### 4.2.4 Heating-circuit enum interpretation (`GG=0x02`, `RR=0x01/0x02`)
+
+`GG=0x02 RR=0x01` (`heating_circuit_type`) is stable:
+
+- `1` = `DIRECT_HEATING_CIRCUIT`
+- `2` = `MIXER_CIRCUIT_EXTERNAL`
+
+`GG=0x02 RR=0x02` (`mixer_circuit_type_external`) is **contextual**:
+
+- `0` = `INACTIVE`
+- `1` = `HEATING_OR_COOLING`
+  - resolves to `COOLING` when `GG=0x02 RR=0x06 (cooling_enabled) == 1`
+  - resolves to `HEATING` otherwise
+- `2` = `FIXED_VALUE_OR_POOL`
+  - resolves to `POOL` when system schema is in `{8,9,12,13}` and an external pool sensor path is present (typically via VR70/VR71 S1/S2 mapping)
+  - resolves to `FIXED_VALUE` otherwise
+- `3` = `DHW_OR_CYLINDER_CHARGING`
+  - resolves to `CYLINDER_CHARGING` when a cylinder group (`GG=0x05`) is present
+  - resolves to `DHW` otherwise
+- `4` = `RETURN_INCREASE`
+
+Resolution helper:
+
+```text
+if raw == 1:
+  resolved = (cooling_enabled == 1) ? COOLING : HEATING
+if raw == 2:
+  resolved = (schema in {8,9,12,13} && pool_sensor_present) ? POOL : FIXED_VALUE
+if raw == 3:
+  resolved = (gg05_present) ? CYLINDER_CHARGING : DHW
+```
+
+Context inputs used for interpretation:
+
+- `cooling_enabled`: `GG=0x02 RR=0x06`
+- `system_schema`: `GG=0x00 RR=0x01` (or equivalent system-schema source)
+- `pool_sensor_present`: VR70/VR71 external sensor mapping (S1/S2)
+- `gg05_present`: group-presence check for `GG=0x05`
 
 ### 4.3 `0x02` / `0x06` Register Read/Write
 
