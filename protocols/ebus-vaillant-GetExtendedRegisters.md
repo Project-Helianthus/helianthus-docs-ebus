@@ -247,6 +247,27 @@ Context inputs used for interpretation:
 - `pool_sensor_present`: VR70/VR71 external sensor mapping (S1/S2)
 - `gg05_present`: group-presence check for `GG=0x05`
 
+#### 4.2.5 Additional heating-circuit registers (`GG=0x02`, `II=*`)
+
+The following register aliases are now part of the documented `GG=0x02` catalog:
+
+| RR | Canonical name | eBUSd alias | Class |
+| --- | --- | --- | --- |
+| `0x001D` | `frost_protection_threshold` | `Hc{hc}FrostProtThreshold` | `config_limits` |
+| `0x001F` | `room_temperature_setpoint` | `Hc{hc}RoomSetpoint` | `config_limits` |
+| `0x0020` | `calculated_flow_temperature` | `Hc{hc}FlowTempCalc` | `state` |
+| `0x0021` | `mixer_position_percentage` | `Hc{hc}MixerPosition` | `state` |
+| `0x0022` | `current_room_humidity` | `Hc{hc}Humidity` | `state` |
+| `0x0023` | `dew_point_temperature` | `Hc{hc}DewPointTemp` | `state` |
+| `0x0024` | `pump_operating_hours` | `Hc{hc}PumpHours` | `state` |
+| `0x0025` | `pump_starts_count` | `Hc{hc}PumpStarts` | `state` |
+
+Operational notes:
+
+- `RR=0x0003`: controls room-sensor influence mode (`0=inactive`, `1=modulation/adjustment`, `2=thermostat on-off`).
+- `RR=0x001F`: practical thermostat linkage register; typically reflects the room setpoint shown on VRC UI (for example `21.0°C`).
+- `RR=0x0020`: useful for diagnostics; it can show curve-requested flow temperature even when `RR=0x0007` (`FlowTempDesired`) is clamped by limits such as `RR=0x0010` (`MaxFlow`).
+
 ### 4.3 `0x02` / `0x06` Register Read/Write
 
 ```text
@@ -362,7 +383,7 @@ Descriptor class values behave like coarse enum tags, not physical numeric quant
 
 ```text
 GG   Opcode  InstanceMax  RegisterMax
-0x02 0x02    0x0A         0x0021
+0x02 0x02    0x0A         0x0025
 0x03 0x02    0x0A         0x002F
 0x09 0x06    0x0A         0x002F
 0x0A 0x06    0x0A         0x003F
