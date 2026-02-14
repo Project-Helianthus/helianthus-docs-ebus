@@ -69,7 +69,7 @@ Many B524 responses are easiest to parse by stripping this length prefix:
 
 Notes:
 - Some replies contain only a 1-byte payload (e.g. `01TT`), which becomes a single `TT` byte after stripping.
-- A response of `00` indicates an empty payload (length 0).
+- A lone response `00` is ambiguous; current Helianthus transport keeps it as a one-byte payload unless a valid length-prefix pattern is present.
 
 ### Errors and Multiline Responses
 
