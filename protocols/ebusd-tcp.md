@@ -62,14 +62,14 @@ Broadcast notes:
 
 Many B524 responses are easiest to parse by stripping this length prefix:
 
-- If the response bytes are `b0 b1 ... bn` and `b0 == n`, treat `b0` as a length prefix and strip it.
+- If the response has at least 2 bytes and `b0 == (len(response)-1)`, treat `b0` as a length prefix and strip it.
 - Example: response line `09030316004574616a00` parses to bytes:
   - `0x09` length prefix (9 bytes of remaining data)
   - B524 payload: `03 03 16 00 45 74 61 6a 00`
 
 Notes:
 - Some replies contain only a 1-byte payload (e.g. `01TT`), which becomes a single `TT` byte after stripping.
-- A response of `00` indicates an empty payload (length 0).
+- A lone response `00` is kept as a one-byte payload (no stripping on single-byte responses).
 
 ### Errors and Multiline Responses
 
