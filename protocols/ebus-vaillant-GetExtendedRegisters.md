@@ -253,6 +253,7 @@ The following register aliases are now part of the documented `GG=0x02` catalog:
 
 | RR | Canonical name | eBUSd alias | Class |
 | --- | --- | --- | --- |
+| `0x0003` | `room_influence_type` | `Hc{hc}RoomInfluenceType` | `config` |
 | `0x001D` | `frost_protection_threshold` | `Hc{hc}FrostProtThreshold` | `config_limits` |
 | `0x001F` | `room_temperature_setpoint` | `Hc{hc}RoomSetpoint` | `config_limits` |
 | `0x0020` | `calculated_flow_temperature` | `Hc{hc}FlowTempCalc` | `state` |
@@ -264,9 +265,40 @@ The following register aliases are now part of the documented `GG=0x02` catalog:
 
 Operational notes:
 
-- `RR=0x0003`: controls room-sensor influence mode (`0=inactive`, `1=modulation/adjustment`, `2=thermostat on-off`).
 - `RR=0x001F`: practical thermostat linkage register; typically reflects the room setpoint shown on VRC UI (for example `21.0°C`).
 - `RR=0x0020`: useful for diagnostics; it can show curve-requested flow temperature even when `RR=0x0007` (`FlowTempDesired`) is clamped by limits such as `RR=0x0010` (`MaxFlow`).
+
+Room influence type (`GG=0x02 RR=0x0003`, `enum_u8`, default `0`):
+
+- `0 = INACTIVE` (`Inaktiv`)
+  - pure weather compensation
+  - room controller acts as display/setpoint input only
+  - flow temperature is derived from outdoor temperature + heating curve
+  - controller placement in technical room is acceptable
+- `1 = ACTIVE` (`Aktiv`)
+  - weather compensation + room-temperature modulation
+  - flow temperature is adjusted from room deviation vs setpoint
+  - heating may continue outside time windows at reduced temperature
+  - controller should be in representative living space (not technical room)
+  - practical behavior: if room is `0.5°C` below setpoint, flow setpoint is increased proportionally
+- `2 = EXTENDED` (`Erweitert`)
+  - weather compensation + modulation + thermostat-like on/off gating
+  - zone deactivates when `room_temp > setpoint + 0.125°C` (`2/16 K`)
+  - zone activates when `room_temp < setpoint - 0.1875°C` (`3/16 K`)
+  - hysteresis bandwidth is `0.3125°C` (`5/16 K`)
+  - controller should be in representative living space
+  - caution: tight hysteresis can increase heat-pump cycling risk
+
+Dependencies and behavior notes:
+
+- valid zone assignment (`Zonenzuordnung`) is required
+- `ACTIVE`/`EXTENDED` assume representative room placement of VRC
+- `EXTENDED` may trigger frost-protection-related behavior at lower outdoor temperatures
+- practical guidance:
+  - `INACTIVE`: useful with external room controllers or radiator valves
+  - `ACTIVE`: commonly preferred for slower floor-heating systems
+  - `EXTENDED`: commonly preferred for faster radiator systems
+  - `EXTENDED` behavior is disabled during absence mode (`Abwesenheit`)
 
 #### 4.2.6 Zone register catalog updates (`GG=0x03`, `II=*`)
 
