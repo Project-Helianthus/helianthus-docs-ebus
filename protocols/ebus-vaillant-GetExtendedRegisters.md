@@ -243,7 +243,7 @@ if raw == 3:
 Context inputs used for interpretation:
 
 - `cooling_enabled`: `GG=0x02 RR=0x06`
-- `system_schema`: `GG=0x00 RR=0x01` (or equivalent system-schema source)
+- `system_schema`: installation/hydraulic-schema metadata source (not `GG=0x00 RR=0x01`, which maps to `HwcBivalencePoint`)
 - `pool_sensor_present`: VR70/VR71 external sensor mapping (S1/S2)
 - `gg05_present`: group-presence check for `GG=0x05`
 
