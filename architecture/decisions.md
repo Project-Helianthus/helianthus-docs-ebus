@@ -21,27 +21,29 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Decision:** Define a `RawTransport` interface with `ReadByte()`, `Write([]byte)`, and `Close()` to represent the minimal byte-level contract.
 
-**Consequences:** ENH and ENS can share a common Bus implementation. Future transports can implement the same interface without touching protocol logic.
+**Consequences:** ENH (enhanced adapter protocol) and plain eBUS byte streams (with ESC/SYN escaping) can share a common Bus implementation. Future transports can implement the same interface without touching protocol logic.
 
 ## ADR-003: ENH framing uses 2-byte command/data sequences
 
 **Status:** Accepted
 
-**Context:** The enhanced protocol wraps each data byte in a 2-byte frame with command bits and a 6-bit data payload.
+**Context:** The enhanced adapter protocol uses either short-form bytes (`< 0x80`) or 2-byte encoded command/data sequences (for `>= 0x80` and all command symbols).
 
-**Decision:** Encode ENH as two bytes where the first carries the command and the high two data bits, and the second carries the remaining six data bits. Short-form receive notifications for bytes `< 0x80` are normalized into `ENHResReceived` frames by the parser.
+**Decision:** Encode ENH command/data sequences as two bytes where the first carries the command and the high two data bits, and the second carries the remaining six data bits. Short-form receive notifications for bytes `< 0x80` are normalized into `ENHResReceived` frames by the parser.
 
 **Consequences:** Transport decodes ENH frames and only forwards receive data bytes (`ENHResReceived`, including short-form) to the Bus, suppressing echoed bytes that match the outbound payload. Echo suppression tolerates missing address echoes by allowing a small leading skip when the adapter does not report arbitration bytes.
 
-## ADR-004: ENS uses explicit escaping for control symbols
+## ADR-004: Plain eBUS streams escape control symbols (ESC/SYN)
 
 **Status:** Accepted
 
-**Context:** ENS streams reserve specific control bytes and require escaping.
+**Context:** Plain eBUS byte streams reserve specific control bytes and require escaping.
 
 **Decision:** Use escape byte `0xA9` with `0x00` and `0x01` suffixes to represent `0xA9` and `0xAA` respectively; reject unescaped `0xAA`.
 
-**Consequences:** ENS framing is deterministic and reversible; invalid sequences are detected at decode time.
+**Consequences:** ESC/SYN escaping is deterministic and reversible; invalid sequences are detected at decode time.
+
+**Naming note:** ebusd uses `ens:` to mean “enhanced protocol at high serial speed” (see `protocols/ens.md`). To avoid confusion, this ADR refers to the plain wire-level escaping as “ESC/SYN escaping”.
 
 ## ADR-005: Frame type is inferred from destination address
 

@@ -28,8 +28,8 @@ flowchart TB
 
   subgraph Transport
     T1[RawTransport]
-    T2[ENH]
-    T3[ENS]
+    T2[ENH (enhanced adapter protocol)]
+    T3[ESC (plain eBUS escaping)]
   end
 
   G1 --> G0
@@ -47,6 +47,11 @@ flowchart TB
   T1 --> T2
   T1 --> T3
 ```
+
+Naming note:
+
+- `protocols/enh.md` / `protocols/ens.md` document ebusd’s ENH/ENS adapter protocol semantics.
+- In Helianthus code, the transport currently named `ens` is the plain eBUS escape encoding (`ESC=0xA9`, `SYN=0xAA`) described in `protocols/ebus-overview.md`. Treat it as “ESC” in prose to avoid ambiguity with ebusd’s `ens:` prefix.
 
 ## Gateway Runtime (Implemented)
 
