@@ -1,8 +1,8 @@
-# Target Emulation (Identify Profiles + VR90 B509 + Mapped Commands)
+# Target Emulation (Identify Profiles + VR90/VR92 B509 + Mapped Commands)
 
 This document tracks implemented Helianthus target-emulation behavior merged in:
 
-- `helianthus-ebusgo` PR [#61](https://github.com/d3vi1/helianthus-ebusgo/pull/61), PR [#65](https://github.com/d3vi1/helianthus-ebusgo/pull/65), PR [#69](https://github.com/d3vi1/helianthus-ebusgo/pull/69), and PR [#71](https://github.com/d3vi1/helianthus-ebusgo/pull/71)
+- `helianthus-ebusgo` PR [#61](https://github.com/d3vi1/helianthus-ebusgo/pull/61), PR [#65](https://github.com/d3vi1/helianthus-ebusgo/pull/65), PR [#69](https://github.com/d3vi1/helianthus-ebusgo/pull/69), PR [#71](https://github.com/d3vi1/helianthus-ebusgo/pull/71), and PR [#78](https://github.com/d3vi1/helianthus-ebusgo/pull/78)
 - `helianthus-tinyebus` PR [#10](https://github.com/d3vi1/helianthus-tinyebus/pull/10), PR [#14](https://github.com/d3vi1/helianthus-tinyebus/pull/14), PR [#18](https://github.com/d3vi1/helianthus-tinyebus/pull/18), and PR [#20](https://github.com/d3vi1/helianthus-tinyebus/pull/20)
 
 ## Licensing Boundary
@@ -23,14 +23,14 @@ Both implementations expose the same identify-only constructor profile:
 - target identity: `address`, `manufacturer`, `device_id`, `software`, `hardware`
 - response behavior: fixed response delay + timing envelope validation
 - identify recognition rule: match identification query `PB=0x07`, `SB=0x04`
-- VR90 optional discovery rule: match `PB=0xB5`, `SB=0x09`, `len(data)==1`, selector `0x24..0x27`
-- VR90 optional mapped-command rules: match `PB/SB` plus optional payload matcher (exact or prefix), then return deterministic response bytes
+- VR90/VR92 optional discovery rule: match `PB=0xB5`, `SB=0x09`, `len(data)==1`, selector `0x24..0x27`
+- VR90/VR92 optional mapped-command rules: match `PB/SB` plus optional payload matcher (exact or prefix), then return deterministic response bytes
 
 Current implementation constraints:
 
 - identify-only behavior remains unchanged for all presets
-- VR90 B509 discovery is opt-in via profile flag (`EnableB509Discovery`)
-- VR90 mapped-command behavior is opt-in via profile map entries (`MappedCommands`)
+- VR90/VR92 B509 discovery is opt-in via profile flag (`EnableB509Discovery`)
+- VR90/VR92 mapped-command behavior is opt-in via profile map entries (`MappedCommands`)
 - unknown B509 selectors remain unmatched (no broad fallback)
 - unknown mapped commands remain unmatched (`ErrNoMatchingRule`)
 - no thermostat/write/register/timer state machine emulation in this profile
@@ -42,17 +42,19 @@ Current implementation constraints:
 | Preset | Address | Manufacturer | Device ID | Software | Hardware | Scope |
 |---|---:|---:|---|---:|---:|---|
 | VR90 | `0x15` | `0xB5` | `B7V00` | `0x0422` | `0x5503` | identify recognition + optional B509 scan.id chunk discovery + optional mapped commands |
+| VR92 | `0x30` | `0xB5` | `VR_92` | `0x0514` | `0x1204` | identify recognition + optional B509 scan.id chunk discovery + optional mapped commands |
 | VR_71 | `0x26` | `0xB5` | `VR_71` | `0x0100` | `0x5904` | identify-only recognition |
 
 Known limits:
 
 - Presets are fixed defaults for recognition tests, not full device models.
 - Additional profiles can be created through the generic constructor.
-- B509 discovery and mapped-command coverage are currently only implemented for VR90 compatibility targets.
+- B509 discovery and mapped-command coverage are implemented for VR90 and VR92 compatibility targets.
+- For VR92, enabling B509 discovery requires an explicit `ScanID` value in profile configuration.
 - Mapped responses are deterministic byte payloads and do not model register-side effects.
 - Timing accuracy expectations remain firmware-first for strict response windows.
 
-## Mapped-Command Model (VR90 Compatibility)
+## Mapped-Command Model (VR90/VR92 Compatibility)
 
 Each mapped-command entry adds one deterministic match/response rule inside the VR90 profile:
 
@@ -111,6 +113,7 @@ Canonical VR90 mapped-command smoke sequence:
 - Generic API:
   - `NewIdentifyOnlyTarget(profile IdentifyOnlyProfile)`
   - `PresetVR90IdentifyOnlyProfile()`
+  - `PresetVR92IdentifyOnlyProfile()`
   - `PresetVR71IdentifyOnlyProfile()`
 - VR90 compatibility API:
   - `DefaultVR90Profile()`
@@ -119,6 +122,13 @@ Canonical VR90 mapped-command smoke sequence:
   - `VR90Profile.ScanID` (scan.id source, normalized to 32-byte chunk space)
   - `VR90Profile.MappedCommands` (optional deterministic command map)
   - `VR90MappedCommand` (`Name`, `Primary`, `Secondary`, `PayloadExact`, `PayloadPrefix`, `ResponseData`)
+- VR92 compatibility API:
+  - `DefaultVR92Profile()`
+  - `NewVR92Target(profile VR92Profile)`
+  - `VR92Profile.EnableB509Discovery` (opt-in selector handling for `0x24..0x27`)
+  - `VR92Profile.ScanID` (required when B509 discovery is enabled)
+  - `VR92Profile.MappedCommands` (optional deterministic command map)
+  - `VR92MappedCommand` (`Name`, `Primary`, `Secondary`, `PayloadExact`, `PayloadPrefix`, `ResponseData`)
 
 Smoke commands:
 
@@ -177,4 +187,4 @@ The following remain out of scope for the current identify + B509 + mapped-comma
 
 - full VR90 thermostat/register coverage beyond identify + B509 scan.id chunk discovery + deterministic mapped responses
 - full VR_71 command/register behavior beyond identify
-- VR92, VR70, recoVAIR, VR50 full emulation
+- VR70, recoVAIR, VR50 full emulation
