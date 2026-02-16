@@ -38,8 +38,15 @@ type Device {
   address: Int!
   manufacturer: String!
   deviceId: String!
+  serialNumber: String
+  macAddress: String
   softwareVersion: String!
   hardwareVersion: String!
+  displayName: String
+  productFamily: String
+  productModel: String
+  partNumber: String
+  role: String
   planes: [Plane!]!
   projections: [Projection!]!
 }
