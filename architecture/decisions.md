@@ -23,13 +23,13 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Consequences:** ENH (enhanced adapter protocol) and plain eBUS byte streams (with ESC/SYN escaping) can share a common Bus implementation. Future transports can implement the same interface without touching protocol logic.
 
-## ADR-003: ENH framing uses 2-byte command/data sequences
+## ADR-003: ENH framing uses raw bytes and 2-byte command/data sequences
 
 **Status:** Accepted
 
 **Context:** The enhanced adapter protocol uses either short-form bytes (`< 0x80`) or 2-byte encoded command/data sequences (for `>= 0x80` and all command symbols).
 
-**Decision:** Encode ENH command/data sequences as two bytes where the first carries the command and the high two data bits, and the second carries the remaining six data bits. Short-form receive notifications for bytes `< 0x80` are normalized into `ENHResReceived` frames by the parser.
+**Decision:** Encode ENH command/data sequences as two bytes where the first carries the command and the high two data bits, and the second carries the remaining six data bits. For data bytes `< 0x80`, accept the ENH short form (raw byte without header) and normalize it into a `RECEIVED(data)` notification in the parser.
 
 **Consequences:** Transport decodes ENH frames and only forwards receive data bytes (`ENHResReceived`, including short-form) to the Bus, suppressing echoed bytes that match the outbound payload. Echo suppression tolerates missing address echoes by allowing a small leading skip when the adapter does not report arbitration bytes.
 
@@ -39,7 +39,7 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Context:** Plain eBUS byte streams reserve specific control bytes and require escaping.
 
-**Decision:** Use escape byte `0xA9` with `0x00` and `0x01` suffixes to represent `0xA9` and `0xAA` respectively; reject unescaped `0xAA`.
+**Decision:** Use escape byte `0xA9` with suffixes `0x00` and `0x01` to represent literal `0xA9` and `0xAA` respectively; reject unescaped `0xAA` inside escaped payload streams.
 
 **Consequences:** ESC/SYN escaping is deterministic and reversible; invalid sequences are detected at decode time.
 
@@ -195,3 +195,42 @@ This document records the architectural decisions implemented in the codebase. E
 - `devices { projections { plane nodes { id path canonicalPath } edges { id from to } } }`
 
 **Consequences:** API and UI consumers get a stable, IORegistry-style multi-plane browsing model with canonical identity joins, explicit plane-local edges, and predictable plane-switch behavior.
+
+## ADR-016: Coalesced semantic reads (timer fan-in) for bus efficiency
+
+**Status:** Accepted
+
+**Context:** Multiple consumers (for example GraphQL resolvers/subscriptions, a portal UI, and Home Assistant) need periodic reads of the same semantic registers. A naive model multiplies reads per consumer and can saturate the bus.
+
+**Decision:** Implement a semantic read scheduler that:
+
+- de-duplicates reads by a stable key (target + selector/register),
+- coalesces “same tick” requests into one bus request,
+- publishes the resulting value to all waiting callers/subscribers, and
+- enforces default polling cadences by semantic class:
+  - `state`: 1 minute
+  - `config`: 5 minutes
+  - `discovery`: 10 minutes
+
+For write confirmation (when a write API exists), perform targeted confirm reads:
+- start at 5 seconds after the write,
+- stop early after two consecutive reads match the expected written value,
+- hard-stop at 60 seconds,
+- and only poll the registers touched by the write.
+
+**Consequences:** Bus traffic remains bounded under multiple consumers, values become cacheable with explicit staleness, and “UI opened” does not automatically cause high-frequency polling (unless explicitly configured).
+
+## ADR-017: Physical vs Virtual devices and connected-device trees
+
+**Status:** Accepted
+
+**Context:** Helianthus must represent both real devices discovered on the eBUS and derived semantic entities (zones, DHW, energy totals). Some devices may exist physically behind a controller (e.g., RF thermostats behind a regulator) but are not directly addressable or identifiable yet.
+
+**Decision:**
+
+- A **physical device** is a real-world entity for which Helianthus can communicate deterministically (directly or via a controller proxy) and can read identity/capabilities deterministically.
+- A **virtual device** is a modeled entity that does not (yet) have deterministic communication and/or identity/capability extraction. This includes projections such as “Zone 1”, “DHW”, or “Energy totals”.
+- Communication topology is represented explicitly as a **connected device tree** (e.g., daemon → adapter → bus device → virtual children) using `via_device` relationships, not by “levels”.
+- Promotion rule: a behind-controller device becomes **physical** once Helianthus implements a stable, deterministic protocol via the controller to read its identity/capabilities.
+
+**Consequences:** Device identity remains stable and explainable, UIs can render correct parent/child topology, and derived semantic devices do not pretend to be independently addressable hardware.
