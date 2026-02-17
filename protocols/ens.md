@@ -1,35 +1,34 @@
-# ENS (Escaped) Stream Encoding
+# ENS (Enhanced, High-Speed Serial)
 
-ENS is a byte-stuffing scheme that reserves control symbols and escapes them in a byte stream.
+In ebusd-style device naming, `ens:` selects the **enhanced adapter protocol** (see `protocols/enh.md`) and uses the **high-speed serial** variant (typically `115200` Baud).
 
-## Reserved Bytes
+This is distinct from the eBUS wire-level escaping of `ESC=0xA9` / `SYN=0xAA`, which is documented in `protocols/ebus-overview.md`.
+
+## Device Prefix Semantics (ebusd)
+
+ebusd recognizes two “enhanced” prefixes:
+
+- `enh:` → enhanced protocol over serial at `9600` Baud
+- `ens:` → enhanced protocol over serial at `115200` Baud
+
+Both prefixes enable the same ENH framing; only the serial transfer speed differs.
+
+### Network transports
+
+When the underlying transport is TCP/UDP (for example `host:9999`), there is no serial baud rate. In that case, `enh:` and `ens:` are effectively equivalent and simply indicate “use ENH framing”.
+
+## Examples
+
+Serial:
 
 ```text
-ESC = 0xA9
-SYN = 0xAA
+enh:/dev/ttyUSB0
+ens:/dev/ttyUSB0
 ```
 
-## Encoding Rules
+Network:
 
 ```text
-0xA9 -> 0xA9 0x00
-0xAA -> 0xA9 0x01
-```
-
-All other bytes are transmitted unchanged.
-
-## Decoding Rules
-
-```text
-0xA9 0x00 -> 0xA9
-0xA9 0x01 -> 0xAA
-```
-
-Unescaped `0xAA` is invalid. An escape at end-of-stream is invalid.
-
-## Example
-
-```text
-Input:  0x10 0xA9 0xAA 0x20
-Output: 0x10 0xA9 0x00 0xA9 0x01 0x20
+enh:tcp:203.0.113.10:9999
+ens:203.0.113.10:9999
 ```

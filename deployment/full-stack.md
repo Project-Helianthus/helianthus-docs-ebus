@@ -32,26 +32,31 @@
 ### Example Transport Configurations
 
 ```bash
-# ENH over unix socket (default-style setup)
+# ENH over TCP adapter (enhanced adapter protocol, ebusd-style port 9999)
 go run ./cmd/gateway \
   -transport enh \
-  -network unix \
-  -address /var/run/ebusd/ebusd.socket
+  -network tcp \
+  -address 203.0.113.10:9999
 
-# ENS over TCP adapter
+# Plain escaped byte stream over TCP (ESC/SYN escaping; only for raw bridge devices)
 go run ./cmd/gateway \
   -transport ens \
   -network tcp \
-  -address 127.0.0.1:9999
+  -address 203.0.113.10:12345
 
-# ebusd command backend over TCP
+# ebusd command backend over unix socket
 go run ./cmd/gateway \
   -transport ebusd-tcp \
-  -network tcp \
-  -address 127.0.0.1:8888
+  -network unix \
+  -address /var/run/ebusd/ebusd.socket
 ```
 
 For ebusd command syntax and response framing details, see `protocols/ebusd-tcp.md`.
+
+Terminology note:
+
+- `protocols/enh.md` / `protocols/ens.md` describe ebusd’s enhanced adapter protocol and the meaning of the `enh:`/`ens:` prefixes.
+- In Helianthus gateway CLI, `-transport ens` currently refers to the plain ESC/SYN escaping transport (wire-level), not ebusd’s `ens:` prefix name.
 
 ## ebusd-tcp Backend Notes (Gateway)
 

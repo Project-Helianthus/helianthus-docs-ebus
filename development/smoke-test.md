@@ -50,7 +50,7 @@ EBUS_SMOKE=1 go run ./cmd/smoke
 1. Build gateway stack (transport → bus → registry → router).
 2. Scan the bus with a per-device timeout.
 3. Log discovered devices and compare against `expected_devices`.
-4. Start a **passive broadcast listener** on a separate ENH/ENS connection after the scan.
+4. Start a **passive broadcast listener** on a separate ENH connection after the scan.
 5. Run the optional **register dump** when configured.
 6. Invoke **read-only** methods for each discovered plane.
 7. Log **semantic energy totals** as B516 broadcasts arrive (if present on the bus).
