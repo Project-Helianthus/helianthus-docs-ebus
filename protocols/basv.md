@@ -55,6 +55,17 @@ Naming scheme:
 Notes:
 - Some UIs may render `*...*` segments as bold for readability; the underlying `device_id` remains unchanged.
 
+## Known Device ID Codes (Legacy Regulators)
+
+These legacy `device_id` codes have been observed/verified for older Vaillant-group regulators:
+
+| device_id | friendly_name (tool/UI) |
+| --- | --- |
+| `43000` | `VRC 430/430f calorMATIC Regulator` |
+| `47000` | `VRC 470/470f calorMATIC Regulator` |
+| `62000` | `VRC 620 auroMATIC Cascade Regulator` |
+| `63000` | `VRC 630 calorMATIC Cascade Regulator` |
+
 ## References
 
 - `protocols/ebus-overview.md#queryexistence-0x07-0xfe`
