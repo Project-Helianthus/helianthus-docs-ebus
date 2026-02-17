@@ -56,13 +56,12 @@ The integration materializes this hierarchy in HA device registry:
 1. `Helianthus Daemon` (root)
 2. `eBUS Adapter` (via daemon)
 3. Physical eBUS devices (via adapter)
-4. Virtual device node for each physical device (via physical device)
+4. Virtual semantic devices (derived) attached to their semantic parent (for example zones/DHW via the regulator)
 
 Device IDs are generated with deterministic fallback:
 
-1. `model + serialNumber`
-2. `model + macAddress + address + hw + sw`
-3. `model + address + hw + sw`
+1. Prefer stable, addressable identity: `deviceId + address + hw + sw`
+2. If present, include `serialNumber` and/or `macAddress` as *additional* identifiers (enrichment), but do not create a new device when those fields are temporarily missing.
 
 ## Troubleshooting
 
