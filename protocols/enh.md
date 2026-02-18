@@ -2,6 +2,11 @@
 
 ENH is the “enhanced” host↔adapter protocol used by ebusd-style interfaces (commonly on TCP port `9999`).
 
+See also:
+
+- `protocols/ens.md` for ebusd’s `ens:` prefix semantics (serial speed selector; equivalent to `enh:` on network transports).
+- `protocols/udp-plain.md` for raw eBUS bytes over UDP without ENH framing.
+
 It is a byte-stream protocol where:
 
 - bytes `< 0x80` **may be transferred as-is** (short form),
