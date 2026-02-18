@@ -33,6 +33,14 @@ Implementation-neutral references for the eBUS wire protocol and data types live
 - **Reviewer flow:** verify classification and documentation coverage using the [Mandatory Gate Flow](development/contributing.md#mandatory-gate-flow).
 - **Canonical policy:** [development/contributing.md#documentation-gate-doc-gate](development/contributing.md#documentation-gate-doc-gate)
 
+## Local CI (no GitHub Actions required)
+
+Run:
+
+```bash
+./scripts/ci_local.sh
+```
+
 ## Licensing
 
 This repository contains documentation under two licenses:
