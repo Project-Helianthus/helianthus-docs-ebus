@@ -159,7 +159,7 @@ Request payload (8 bytes):
   4: 0x0Y          source selector (Y in low nibble)
   5: 0x0Z          usage selector (Z in low nibble)
   6: 0xWV          month/day selector (W high nibble, V low nibble)
-  7: 0x3Q          Q selector (Q in low nibble; high nibble observed as 0x3)
+  7: 0xQQ          year selector byte
 ```
 
 ```text
@@ -192,12 +192,14 @@ Response payload (11 bytes):
   3: 0x0Y          source selector (Y in low nibble)
   4: 0x0Z          usage selector (Z in low nibble)
   5: 0xWV          month/day selector (W high nibble, V low nibble)
-  6: 0x3Q          Q selector (Q in low nibble; high nibble observed as 0x3)
+  6: 0xQQ          year selector byte
   7..10: EXP       Wh value (IEEE 754 float32, little-endian)
 ```
 
-Encoding of `W/V/Q` is regulator-dependent; observations indicate:
-- For X=0 (all): `W/V/Q` ignored.
-- For X=3 (year): `Q` selects previous/current.
-- For X=2 (month): `W` selects month; `Q` selects previous/current year variant (encoding differs for months 1-7 vs 8-12).
-- For X=1 (day): only the last 16 days are available; `W` parity selects first/second half of month, `V` selects day within half, and `Q+W` determine year/month.
+Encoding of `W/V/QQ` is regulator-dependent; observations indicate:
+- For X=0 (all): `W/V/QQ` ignored.
+- For X=3 (year): `QQ` is the number of half-years since year 2000.
+  - `QQ = 0x34` (52) → first half of 2026 (`2000 + floor(52/2)`).
+  - `QQ = 0x35` (53) → second half of 2026.
+- For X=2 (month): month is still selected via `W`, while `QQ` provides the year context using the same half-year timeline.
+- For X=1 (day): only the last 16 days are available; `W` parity selects first/second half of month, `V` selects day within half, and `QQ+W` determine year/month context.
