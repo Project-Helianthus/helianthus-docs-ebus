@@ -23,7 +23,7 @@
 | Flag | Purpose | Notes |
 |---|---|---|
 | `-transport` | Backend protocol | `enh`, `ens` (alias of `enh`), `udp-plain`, or `ebusd-tcp` |
-| `-network` | Dial network | `unix` or `tcp` |
+| `-network` | Dial network | `unix`, `tcp`, or `udp` |
 | `-address` | Socket path or host:port | Example: `/var/run/ebusd/ebusd.socket` or `127.0.0.1:8888` |
 | `-read-timeout` | Read timeout | Default `5s` |
 | `-write-timeout` | Write timeout | Default `5s` |
