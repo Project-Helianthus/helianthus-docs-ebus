@@ -17,6 +17,8 @@ Both prefixes enable the same ENH framing; only the serial transfer speed differ
 
 When the underlying transport is TCP/UDP (for example `host:9999`), there is no serial baud rate. In that case, `enh:` and `ens:` are effectively equivalent and simply indicate “use ENH framing”.
 
+If an adapter exposes raw eBUS bytes over UDP without ENH framing, use UDP-PLAIN instead (`protocols/udp-plain.md`).
+
 ## Examples
 
 Serial:
