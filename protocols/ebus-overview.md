@@ -48,6 +48,18 @@ In direct-mode eBUS implementations (including Helianthus), initiator addresses 
 
 Addresses equal to `0xA9` (escape) or `0xAA` (SYN) are invalid in address positions.
 
+### Helianthus Initiator Join Strategy
+
+When Helianthus must choose an initiator address on a live bus, it follows a low-disturbance join sequence:
+
+1. Passive listen warmup (default `5s`), collecting observed source and destination activity.
+2. Candidate selection from the valid 25-address initiator set.
+3. Default preference for higher addresses first (`FF, F7, ...`) to keep lower-priority arbitration behavior.
+4. Companion-target heuristic: reject a candidate if `(initiator + 0x05)` appears active as a probable target source or is frequently addressed as destination traffic.
+5. Optional active discovery (`0x07 0xFE`) is disabled by default and bounded/rate-limited when enabled.
+
+If all 25 initiator addresses are observed as occupied, join fails by default with an explicit error. Force selection is opt-in.
+
 ## ACK/NACK Symbols
 
 The bus uses one-byte symbols:

@@ -234,3 +234,21 @@ For write confirmation (when a write API exists), perform targeted confirm reads
 - Promotion rule: a behind-controller device becomes **physical** once Helianthus implements a stable, deterministic protocol via the controller to read its identity/capabilities.
 
 **Consequences:** Device identity remains stable and explainable, UIs can render correct parent/child topology, and derived semantic devices do not pretend to be independently addressable hardware.
+
+## ADR-018: Initiator join uses passive warmup with bounded active inquiry
+
+**Status:** Accepted
+
+**Context:** On live buses, Helianthus may join while other initiators are already active. Joining should minimize additional traffic and avoid known address collisions.
+
+**Decision:**
+
+- Join starts with a passive listen warmup (default 5s) and builds source/target activity statistics.
+- Candidate initiator addresses are selected from the valid 25-address set.
+- Selection prefers highest addresses by default (lower arbitration priority) unless explicitly configured otherwise.
+- Companion target (`initiator + 0x05`) activity heuristics reject risky candidates when the companion target looks active.
+- Active `0x07 0xFE` inquiry is optional, rate-limited, and bounded per process session.
+- Last-good initiator persistence is best-effort and only reused when still safe.
+- If all initiator addresses are occupied, join fails explicitly by default; force mode is opt-in.
+
+**Consequences:** Default join behavior keeps bus chatter low, produces deterministic telemetry for selection rationale, and avoids unsafe address reuse while preserving an explicit operator override path.
