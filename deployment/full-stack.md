@@ -22,8 +22,8 @@
 
 | Flag | Purpose | Notes |
 |---|---|---|
-| `-transport` | Backend protocol | `enh`, `ens`, or `ebusd-tcp` |
-| `-network` | Dial network | `unix` or `tcp` |
+| `-transport` | Backend protocol | `enh`, `ens` (alias of `enh`), `udp-plain`, or `ebusd-tcp` |
+| `-network` | Dial network | `unix`, `tcp`, or `udp` |
 | `-address` | Socket path or host:port | Example: `/var/run/ebusd/ebusd.socket` or `127.0.0.1:8888` |
 | `-read-timeout` | Read timeout | Default `5s` |
 | `-write-timeout` | Write timeout | Default `5s` |
@@ -38,11 +38,17 @@ go run ./cmd/gateway \
   -network tcp \
   -address 203.0.113.10:9999
 
-# Plain escaped byte stream over TCP (ESC/SYN escaping; only for raw bridge devices)
+# ENS alias over TCP (same framing as ENH for network endpoints)
 go run ./cmd/gateway \
   -transport ens \
   -network tcp \
-  -address 203.0.113.10:12345
+  -address 203.0.113.10:9999
+
+# Raw UDP byte stream (software arbitration required above transport)
+go run ./cmd/gateway \
+  -transport udp-plain \
+  -network udp \
+  -address 203.0.113.10:9999
 
 # ebusd command backend over unix socket
 go run ./cmd/gateway \
@@ -56,7 +62,24 @@ For ebusd command syntax and response framing details, see `protocols/ebusd-tcp.
 Terminology note:
 
 - `protocols/enh.md` / `protocols/ens.md` describe ebusd’s enhanced adapter protocol and the meaning of the `enh:`/`ens:` prefixes.
-- In Helianthus gateway CLI, `-transport ens` currently refers to the plain ESC/SYN escaping transport (wire-level), not ebusd’s `ens:` prefix name.
+- In Helianthus gateway CLI, `-transport ens` is accepted as a compatibility alias for `-transport enh`.
+- Raw ESC/SYN wire symbols (`0xA9`/`0xAA`) are decoded in the bus/protocol layer.
+
+### UDP-PLAIN operational guidance
+
+For UDP-PLAIN adapters, run Helianthus behind a proxy with a **single southbound owner**. Do not connect multiple independent clients directly to the adapter endpoint.
+
+Recommended topology:
+
+```text
+adapter (udp-plain) <-single southbound-> helianthus-ebus-adapter-proxy <-northbound-> gateway / ebusd / tools
+```
+
+Rationale:
+
+- prevents cross-client request/response mismatch on raw byte streams,
+- centralizes bounded retry/backoff and collision signaling,
+- keeps a consistent bus view for all northbound consumers.
 
 ## ebusd-tcp Backend Notes (Gateway)
 

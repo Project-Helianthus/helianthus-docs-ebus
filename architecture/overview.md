@@ -29,7 +29,7 @@ flowchart TB
   subgraph Transport
     T1[RawTransport]
     T2[ENH (enhanced adapter protocol)]
-    T3[ESC (plain eBUS escaping)]
+    T3[UDP-PLAIN (raw UDP eBUS bytes)]
   end
 
   G1 --> G0
@@ -51,7 +51,8 @@ flowchart TB
 Naming note:
 
 - `protocols/enh.md` / `protocols/ens.md` document ebusd’s ENH/ENS adapter protocol semantics.
-- In Helianthus code, the transport currently named `ens` is the plain eBUS escape encoding (`ESC=0xA9`, `SYN=0xAA`) described in `protocols/ebus-overview.md`. Treat it as “ESC” in prose to avoid ambiguity with ebusd’s `ens:` prefix.
+- The eBUS wire-level escape sequences (`ESC=0xA9`, `SYN=0xAA`) are documented in `protocols/ebus-overview.md` and decoded in the protocol layer (Bus decoder), not as a separate transport.
+- `protocols/udp-plain.md` documents raw UDP byte-stream adapters that do not implement ENH framing.
 
 ## Gateway Runtime (Implemented)
 
