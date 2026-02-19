@@ -70,9 +70,26 @@ Current proxy behavior for UDP-PLAIN arbitration:
 - collision is surfaced when arbitration byte differs from requested initiator,
 - retries are bounded (`4` attempts),
 - exponential backoff is applied (`25ms`, `50ms`, `100ms`, `200ms`, capped by config constants),
+- bounded jitter is applied on retry backoff (`udp-retry-jitter`, default `0.2`) to avoid synchronized retry storms,
 - timeout paths return host-side error to the northbound client.
 
 This keeps retry behavior finite and prevents uncontrolled retry loops on busy buses.
+
+### Auto initiator selection (`START` with `initiator=0x00`)
+
+Proxy startup performs a passive warmup window (`auto-join-warmup`, default `5s`) and records observed initiator activity.
+
+When a northbound client sends `START` with `initiator=0x00`, proxy selects an initiator automatically using:
+
+- highest-priority-safe preference (`FF`, `F7`, `F3`, ...),
+- recently observed initiator activity (window: `auto-join-activity-window`),
+- currently leased initiators in proxy.
+
+If no safe initiator is available, proxy returns a host-side error for the `START`.
+
+### Fail-fast send behavior after collision
+
+If arbitration reaches terminal failure for a session, the next send attempt for that session is short-circuited with `FAILED` (`ENHResFailed`) and the winning initiator byte in payload (when available), instead of generic host error.
 
 ## Examples
 
