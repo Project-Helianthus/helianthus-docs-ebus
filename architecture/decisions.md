@@ -252,3 +252,21 @@ For write confirmation (when a write API exists), perform targeted confirm reads
 - If all initiator addresses are occupied, join fails explicitly by default; force mode is opt-in.
 
 **Consequences:** Default join behavior keeps bus chatter low, produces deterministic telemetry for selection rationale, and avoids unsafe address reuse while preserving an explicit operator override path.
+
+## ADR-019: Collision monitor enforces fail-fast writes on foreign same-source traffic
+
+**Status:** Accepted
+
+**Context:** In shared-bus or proxied deployments, another participant can emit frames with the same initiator address Helianthus currently uses. Without explicit detection, request/response ordering and arbitration assumptions become unsafe.
+
+**Decision:**
+
+- Track recently transmitted frames in a bounded history with timestamps.
+- For each received frame with `SRC == active initiator`, compare against recent local transmit history inside an echo window (default `200ms`):
+  - matching frame: treat as local echo, no collision event,
+  - non-matching frame: mark collision as foreign same-source.
+- If runtime is in muted/listen-only mode, any `SRC == active initiator` frame is treated as collision.
+- After rejoin (initiator change), ignore frames from the previous initiator during a grace window (default `750ms`) to avoid delayed-echo false positives.
+- While collision state is active, new writes fail fast with an explicit arbitration-failed error classification.
+
+**Consequences:** Collision state becomes deterministic and observable, upper layers can immediately stop unsafe writes, and rejoin transitions remain stable under delayed bus echoes.

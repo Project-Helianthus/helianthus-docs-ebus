@@ -103,6 +103,18 @@ Key points:
 - **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses.
 - **SYN** (`0xAA`) is used as an **end-of-message** delimiter and may also appear during idle.
 
+### Collision Detection Model (Helianthus)
+
+For multi-client/proxy setups, Helianthus collision handling uses a receive-vs-transmit check:
+
+- Maintain a bounded history of locally transmitted frames with timestamps.
+- On receive, when `SRC == active initiator`:
+  - if frame matches a recent local transmit inside the echo window (`200ms` default), treat as local echo,
+  - otherwise classify as foreign same-source collision.
+- In muted/listen-only mode, any `SRC == active initiator` receive frame is classified as collision.
+- After initiator rejoin, frames with the previous initiator source are ignored during a grace window (`750ms` default).
+- While collision is active, write attempts fail fast with an arbitration-failed classification.
+
 ## CRC8 and Escaping
 
 CRC8 is computed over the frame data with special handling for control symbols:
