@@ -270,3 +270,22 @@ For write confirmation (when a write API exists), perform targeted confirm reads
 - While collision state is active, new writes fail fast with an explicit arbitration-failed error classification.
 
 **Consequences:** Collision state becomes deterministic and observable, upper layers can immediately stop unsafe writes, and rejoin transitions remain stable under delayed bus echoes.
+
+## ADR-020: Read scheduler coalescing with state/config refresh windows
+
+**Status:** Accepted
+
+**Context:** Multiple consumers (GraphQL, HA integration, internal pollers) can request the same read-only register concurrently. Naive forwarding multiplies bus reads, increases contention, and raises the probability of response mismatch under shared-bus traffic.
+
+**Decision:**
+
+- Coalesce read-only invocations by deterministic key: `(plane, method, params)`.
+- If the same key is already in-flight, subsequent callers wait for the same result instead of issuing another bus read.
+- Cache successful responses per key and apply policy windows:
+  - **state** refresh window defaults to `1m`,
+  - **config** refresh window defaults to `5m`.
+- Policy is tunable in router options (`state`/`config` intervals), and invocation class can be overridden per call via params (`cache_class` / `refresh_class`).
+- Write methods (`ReadOnly=false`) bypass cache/coalescing and always go to bus.
+- Cached representation stores raw decoded response frame copy, and each caller re-decodes from that frame to avoid shared mutable decoded state.
+
+**Consequences:** Bus load drops under concurrent subscriptions, duplicate register reads are eliminated during active refresh windows, and response ordering risk is reduced because a single bus read serves concurrent callers for the same key.
