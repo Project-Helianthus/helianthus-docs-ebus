@@ -65,6 +65,22 @@ Terminology note:
 - In Helianthus gateway CLI, `-transport ens` is accepted as a compatibility alias for `-transport enh`.
 - Raw ESC/SYN wire symbols (`0xA9`/`0xAA`) are decoded in the bus/protocol layer.
 
+### UDP-PLAIN operational guidance
+
+For UDP-PLAIN adapters, run Helianthus behind a proxy with a **single southbound owner**. Do not connect multiple independent clients directly to the adapter endpoint.
+
+Recommended topology:
+
+```text
+adapter (udp-plain) <-single southbound-> helianthus-ebus-adapter-proxy <-northbound-> gateway / ebusd / tools
+```
+
+Rationale:
+
+- prevents cross-client request/response mismatch on raw byte streams,
+- centralizes bounded retry/backoff and collision signaling,
+- keeps a consistent bus view for all northbound consumers.
+
 ## ebusd-tcp Backend Notes (Gateway)
 
 When `-transport ebusd-tcp` is selected, the gateway uses ebusd's text command channel (typically port `8888`) and executes request/response traffic via `hex` commands.
