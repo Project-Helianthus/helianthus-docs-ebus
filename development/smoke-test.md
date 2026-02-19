@@ -22,6 +22,7 @@ enh:
   timeout_sec: 10
 
 smoke:
+  profile: enh|ens|ebusd-tcp
   verbose_frames: false
   scan_timeout_sec: 5
   method_timeout_sec: 10
@@ -36,6 +37,13 @@ expected_devices:
     sw_version: ""
     hw_version: ""
 ```
+
+`smoke.profile` notes:
+
+- `enh` and `ens` use enhanced adapter framing (`ens` is accepted as compatibility alias of ENH).
+- `ebusd-tcp` routes requests through ebusd command mode (`hex` on port `8888` by default).
+- `ebusd` is accepted as alias of `ebusd-tcp` in smoke config normalization.
+- For `ebusd-tcp`, `enh.type` must be `tcp` (host/port), not `unix`.
 
 If `EBUS_SMOKE=1` is set and `AGENT-local.md` is missing or invalid, the test **fails** with an error.
 

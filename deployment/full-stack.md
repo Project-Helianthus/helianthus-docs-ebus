@@ -95,8 +95,11 @@ When `-transport ebusd-tcp` is selected, the gateway uses ebusd's text command c
 
 - `ERR:` lines with timeout/no-answer wording are treated as timeouts.
 - Other `ERR:` lines (or malformed hex/usage responses) are treated as invalid payload errors.
+- `dump enabled` / `dump disabled` banners are treated as non-semantic noise and ignored.
 - If multiple lines are returned, parsers should use the first valid hex payload line and ignore later trailing noise.
+- If an `ERR:` line appears before the actual hex payload in the same command response burst, parsers keep a short follow-up window to catch the valid hex line.
 - Empty/no non-empty response lines are treated as timeout conditions.
+- Runtime transport setup clamps `ebusd-tcp` read/write deadlines to at least `scan-request-timeout` (default floor `400ms`) to reduce cross-command stream desynchronization.
 
 ## mDNS Discovery
 
