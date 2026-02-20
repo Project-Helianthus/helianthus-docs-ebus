@@ -63,6 +63,26 @@ Device IDs are generated with deterministic fallback:
 1. Prefer stable, addressable identity: `deviceId + address + hw + sw`
 2. If present, include `serialNumber` and/or `macAddress` as *additional* identifiers (enrichment), but do not create a new device when those fields are temporarily missing.
 
+### Canonical naming/model mapping
+
+For known Vaillant devices, integration-level names/models are normalized to stable marketing values:
+
+- `deviceId=BASV*`
+  - Name: `sensoCOMFORT RF`
+  - Model: `VRC 720f/2 (eBUS: BASV)` (when product model is available)
+- `deviceId=VR_71`
+  - Name: `FM5 Control Centre`
+  - Model: `VR 71 (eBUS: VR_71)` (when product model is available)
+
+Other devices keep gateway-provided display/model fields, with `model` augmented as `(<eBUS id>)` for stable troubleshooting context.
+
+### Stale Helianthus artifacts cleanup
+
+At setup, integration performs best-effort cleanup of stale `helianthus/*` registry artifacts that are not tied to any active Helianthus config entry.
+
+- Scope: **only** Helianthus-owned identifiers.
+- Non-scope: devices from `ebusd_http` / MQTT / other integrations are untouched.
+
 ## Troubleshooting
 
 ### `cannot_connect`
