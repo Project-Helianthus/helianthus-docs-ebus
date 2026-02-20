@@ -101,6 +101,16 @@ When `-transport ebusd-tcp` is selected, the gateway uses ebusd's text command c
 - Empty/no non-empty response lines are treated as timeout conditions.
 - Runtime transport setup clamps `ebusd-tcp` read/write deadlines to at least `scan-request-timeout` (default floor `400ms`) to reduce cross-command stream desynchronization.
 
+### Startup Scan Target Narrowing (all transports)
+
+Gateway startup scan tries to reduce bus load by using ebusd's known target list when available:
+
+1. If gateway itself runs with `-transport ebusd-tcp` over `tcp`, it asks that endpoint for `scan result`.
+2. Otherwise it also tries a local fallback ebusd endpoint at `127.0.0.1:8888`.
+3. If neither returns targets, gateway falls back to the full default address scan.
+
+This optimization only narrows *scan targets*. Runtime read/write traffic still uses the configured gateway transport.
+
 ## mDNS Discovery
 
 When `-mdns` is enabled (default), the gateway advertises its GraphQL endpoint via DNS-SD:
