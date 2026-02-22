@@ -30,6 +30,7 @@ flowchart TB
     T1[RawTransport]
     T2[ENH (enhanced adapter protocol)]
     T3[UDP-PLAIN (raw UDP eBUS bytes)]
+    T4[TCP-PLAIN (raw TCP eBUS bytes)]
   end
 
   G1 --> G0
@@ -46,6 +47,7 @@ flowchart TB
   P1 --> T1
   T1 --> T2
   T1 --> T3
+  T1 --> T4
 ```
 
 Naming note:
@@ -53,6 +55,7 @@ Naming note:
 - `protocols/enh.md` / `protocols/ens.md` document ebusd’s ENH/ENS adapter protocol semantics.
 - The eBUS wire-level escape sequences (`ESC=0xA9`, `SYN=0xAA`) are documented in `protocols/ebus-overview.md` and decoded in the protocol layer (Bus decoder), not as a separate transport.
 - `protocols/udp-plain.md` documents raw UDP byte-stream adapters that do not implement ENH framing.
+- `tcp-plain` in gateway and proxy uses the same raw-byte semantics as UDP-plain over TCP stream sockets.
 
 ## Gateway Runtime (Implemented)
 
