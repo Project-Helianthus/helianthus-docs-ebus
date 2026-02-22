@@ -53,7 +53,7 @@ If `EBUS_SMOKE=1` is set and `AGENT-local.md` is missing or invalid, the test **
 EBUS_SMOKE=1 go run ./cmd/smoke
 ```
 
-For the full 42-topology matrix runner (`T01..T42`), see `development/smoke-matrix.md`.
+For the full 88-topology matrix runner (`T01..T88`), see `development/smoke-matrix.md`.
 
 ## Behavior
 

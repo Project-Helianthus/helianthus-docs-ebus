@@ -56,3 +56,14 @@ Doc-gate is mandatory for changes that affect implemented architecture, APIs, or
 - [ ] Wire formats / API fields / behavior notes include concrete, testable details where needed.
 - [ ] PR description includes clear evidence of doc updates (or valid non-trigger rationale).
 - [ ] I will withhold approval if doc-gate requirements are incomplete.
+
+## Transport Runtime Gate (Merge Blocking)
+
+For eBUS transport/protocol changes, merge readiness requires an additional runtime gate:
+
+- **Scope:** changes in transport/protocol code paths (gateway transport selection, proxy upstream/downstream transport behavior, ebusgo transport implementations, arbitration behavior tied to wire protocol).
+- **Required artifact:** full matrix result (`T01..T88`) with no unexpected failures (`fail`) and no unexpected passes (`xpass`) against the active expected-failure inventory.
+- **Required reference:** PR description must include the `results/index.json` path or attachment reference.
+- **Expected-failure inventory:** any `xfail` must map to a documented transport limitation (case IDs + reason), and that inventory must be attached in the PR description.
+- **Default policy:** if runtime gate is not satisfied, merge is blocked.
+- **Owner override:** only explicit owner approval may bypass this gate, with a written reason.

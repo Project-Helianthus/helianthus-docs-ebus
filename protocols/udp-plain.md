@@ -71,6 +71,8 @@ Current proxy behavior for UDP-PLAIN arbitration:
 - retries are bounded (`4` attempts),
 - exponential backoff is applied (`25ms`, `50ms`, `100ms`, `200ms`, capped by config constants),
 - bounded jitter is applied on retry backoff (`udp-retry-jitter`, default `0.2`) to avoid synchronized retry storms,
+- START arbitration timeout is configurable (`udp-plain-start-wait`, default `5s`),
+- timeout fallback to `STARTED` is enabled by default for plain-wire interoperability and can be disabled with `udp-plain-disable-start-fallback=true`,
 - ownership is released on upstream idle boundary (`SYN`/`0xAA`) and terminal upstream errors (`ERROR_EBUS`, `ERROR_HOST`),
 - timeout paths return host-side error to the northbound client.
 

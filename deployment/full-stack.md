@@ -22,7 +22,7 @@
 
 | Flag | Purpose | Notes |
 |---|---|---|
-| `-transport` | Backend protocol | `enh`, `ens` (alias of `enh`), `udp-plain`, or `ebusd-tcp` |
+| `-transport` | Backend protocol | `enh`, `ens` (alias of `enh`), `udp-plain`, `tcp-plain`, or `ebusd-tcp` |
 | `-network` | Dial network | `unix`, `tcp`, or `udp` |
 | `-address` | Socket path or host:port | Example: `/var/run/ebusd/ebusd.socket` or `127.0.0.1:8888` |
 | `-source-addr` | Initiator/source address used by scan + semantic reads | Hex (`0xF0`), decimal, `0x00`, or `auto` |
@@ -53,6 +53,13 @@ go run ./cmd/gateway \
   -address 203.0.113.10:9999 \
   -source-addr auto
 
+# Raw TCP byte stream (software arbitration required above transport)
+go run ./cmd/gateway \
+  -transport tcp-plain \
+  -network tcp \
+  -address 203.0.113.10:9999 \
+  -source-addr auto
+
 # ebusd command backend over unix socket
 go run ./cmd/gateway \
   -transport ebusd-tcp \
@@ -64,7 +71,7 @@ For ebusd command syntax and response framing details, see `protocols/ebusd-tcp.
 
 ### Source-address behavior
 
-- `-source-addr auto` (or `-source-addr 0x00`) enables **gentle-join** behavior with proxy-mediated ENS/ENH/UDP-plain flows.
+- `-source-addr auto` (or `-source-addr 0x00`) enables **gentle-join** behavior with proxy-mediated ENS/ENH/UDP-plain/TCP-plain flows.
 - In gentle-join mode, Helianthus asks the proxy to select a free initiator dynamically instead of pinning a fixed address.
 - `-source-addr 0x31` should be avoided when `ebusd` is also active, because `0x31` is `ebusd`'s common default initiator.
 - With `-transport ebusd-tcp`, source selection only affects ebusd command parameters; the on-wire initiator is still ebusd's own bus identity.
