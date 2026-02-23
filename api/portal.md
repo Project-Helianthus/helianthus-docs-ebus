@@ -61,6 +61,55 @@ Example response:
 }
 ```
 
+## M1 Endpoints
+
+### `GET /portal/api/v1/registry/devices`
+
+Returns a read-only snapshot list of discovered registry devices.
+
+Query parameters:
+
+- `q` (optional): case-insensitive filter across manufacturer, device id, serial, plane names, method names
+- `limit` (optional): max returned items (`default=200`, `max=1000`)
+
+Example response:
+
+```json
+{
+  "count": 2,
+  "items": [
+    {
+      "address": 8,
+      "addresses": [8],
+      "manufacturer": "Vaillant",
+      "device_id": "BAI",
+      "software_version": "08.06",
+      "hardware_version": "01.00",
+      "planes": [
+        {
+          "name": "heating",
+          "methods": ["get_operational_data"]
+        }
+      ]
+    },
+    {
+      "address": 16,
+      "addresses": [16],
+      "manufacturer": "Vaillant",
+      "device_id": "VRC720",
+      "software_version": "08.05",
+      "hardware_version": "01.00",
+      "planes": [
+        {
+          "name": "system",
+          "methods": ["get_status"]
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## Security Defaults
 
 - Portal API accepts `GET` only in M0.
