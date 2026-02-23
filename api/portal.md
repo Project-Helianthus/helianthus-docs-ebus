@@ -49,7 +49,8 @@ Example response:
     "stream": true,
     "timeline": true,
     "provenance": true,
-    "snapshots": true
+    "snapshots": true,
+    "snapshot_diff": true
   },
   "endpoints": {
     "graphql": "/graphql",
@@ -62,7 +63,8 @@ Example response:
     "provenance": "/portal/api/v1/provenance/events",
     "snapshots": "/portal/api/v1/snapshots",
     "capture": "/portal/api/v1/snapshots/capture",
-    "retention": "/portal/api/v1/snapshots/retention"
+    "retention": "/portal/api/v1/snapshots/retention",
+    "snapshot_diff": "/portal/api/v1/snapshots/diff"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -426,6 +428,49 @@ Example response:
 }
 ```
 
+### `GET /portal/api/v1/snapshots/diff`
+
+Computes a structural diff between two snapshots.
+
+Query parameters:
+
+- `from_id` (optional): source snapshot id
+- `to_id` (optional): target snapshot id
+- `limit` (optional): max returned diff entries (`default=200`, `max=1000`)
+
+Behavior:
+
+- If both ids are omitted, the endpoint compares the latest two snapshots.
+- If only one id is provided, the endpoint returns `400`.
+- If referenced snapshots are missing, the endpoint returns `404`.
+
+Example response:
+
+```json
+{
+  "from_snapshot": {
+    "id": "snap-4",
+    "label": "before-change",
+    "captured_at": "2026-02-24T02:15:00.123456Z"
+  },
+  "to_snapshot": {
+    "id": "snap-5",
+    "label": "after-change",
+    "captured_at": "2026-02-24T02:16:00.123456Z"
+  },
+  "change_count": 2,
+  "count": 2,
+  "items": [
+    {
+      "path": "$.registry.items[0].device_id",
+      "change": "changed",
+      "from": "\"VRC720\"",
+      "to": "\"VRC720B\""
+    }
+  ]
+}
+```
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -444,6 +489,7 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/provenance/events?layer=registry&
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots/capture?label=manual'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots?limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots/retention?max_snapshots=25'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots/diff'
 ```
 
 ## Portal Asset Build and Drift Check
