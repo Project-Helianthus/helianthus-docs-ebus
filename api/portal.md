@@ -110,6 +110,52 @@ Example response:
 }
 ```
 
+### `GET /portal/api/v1/semantic/snapshot`
+
+Returns a read-only semantic snapshot for portal list views.
+
+Response fields:
+
+- `zones`: semantic zone list
+- `dhw`: optional DHW semantic object
+- `energy_totals`: optional aggregated energy object
+- `captured_utc`: RFC3339 UTC timestamp
+
+Example response:
+
+```json
+{
+  "zones": [
+    {
+      "id": "zone_1",
+      "name": "Living",
+      "operating_mode": "auto",
+      "current_temp_c": 21.3,
+      "target_temp_c": 22.0
+    }
+  ],
+  "dhw": {
+    "operating_mode": "auto",
+    "target_temp_c": 49.0
+  },
+  "energy_totals": {
+    "gas": {
+      "dhw": { "today": 1.2 },
+      "climate": { "today": 4.8 }
+    },
+    "electric": {
+      "dhw": { "today": 0.1 },
+      "climate": { "today": 0.7 }
+    },
+    "solar": {
+      "dhw": { "today": 0.0 },
+      "climate": { "today": 0.0 }
+    }
+  },
+  "captured_utc": "2026-02-23T22:45:00Z"
+}
+```
+
 ## Security Defaults
 
 - Portal API accepts `GET` only in M0.
