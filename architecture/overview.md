@@ -69,7 +69,12 @@ The gateway now provides a runtime wiring layer that instantiates the bus, regis
 
 ## Plane/Provider Model
 
-The registry layer treats each physical eBUS device as a **DeviceEntry** discovered via a 0x07/0x04 identification scan. A DeviceEntry does not directly expose behavior; instead, **PlaneProviders** match against the DeviceInfo (address, manufacturer, device ID, HW/SW versions) and **create one or more Planes** that represent distinct semantic views of that same device (e.g., heating, DHW, system).
+The registry layer treats each physical eBUS device as a **DeviceEntry** discovered via a 0x07/0x04 identification scan. A single physical device may be observed on multiple eBUS addresses (alias faces). The registry resolves these to one canonical DeviceEntry with:
+
+- a deterministic primary `Address()` (first/canonical address used in projection paths),
+- an alias list `Addresses()` (all observed addresses for that same physical identity).
+
+A DeviceEntry does not directly expose behavior; instead, **PlaneProviders** match against the DeviceInfo (manufacturer, device ID, HW/SW versions, and stable identifiers when available) and **create one or more Planes** that represent distinct semantic views of that same device (e.g., heating, DHW, system).
 
 Each Plane publishes:
 
@@ -170,7 +175,7 @@ sequenceDiagram
 The Vaillant system provider in `ebusreg` emits projections for a small set of known device IDs and maps Vaillant-specific operations into standardized projection paths.
 
 - **Eligible devices:** normalized `DeviceID` values `BASV2`, `BAI00`, `VR71` (case/spacing/`_`/`-` normalized).
-- **Base path:** `Service:/ebus/addr@XX/device@<DeviceID>` where `XX` is the hex bus address; if the device ID is missing, the address is used as the device segment.
+- **Base path:** `Service:/ebus/addr@XX/device@<DeviceID>` where `XX` is the canonical primary address of the device entry; aliases remain available via registry metadata.
 - **Always-emitted planes:** `Service`, `Observability`, `Debug`.
 - **Conditional root planes:** `System`, `Heating`, `DHW`, `Solar` (only if the corresponding plane exists for that device).
 
