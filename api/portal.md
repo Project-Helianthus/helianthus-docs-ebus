@@ -50,7 +50,8 @@ Example response:
     "timeline": true,
     "provenance": true,
     "snapshots": true,
-    "snapshot_diff": true
+    "snapshot_diff": true,
+    "sessions": true
   },
   "endpoints": {
     "graphql": "/graphql",
@@ -64,7 +65,10 @@ Example response:
     "snapshots": "/portal/api/v1/snapshots",
     "capture": "/portal/api/v1/snapshots/capture",
     "retention": "/portal/api/v1/snapshots/retention",
-    "snapshot_diff": "/portal/api/v1/snapshots/diff"
+    "snapshot_diff": "/portal/api/v1/snapshots/diff",
+    "sessions": "/portal/api/v1/sessions",
+    "session_save": "/portal/api/v1/sessions/save",
+    "session_load": "/portal/api/v1/sessions/load"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -471,6 +475,38 @@ Example response:
 }
 ```
 
+### `GET /portal/api/v1/sessions`
+
+Lists saved investigation sessions (newest first).
+
+Query parameters:
+
+- `limit` (optional): max returned sessions (`default=30`, `max=1000`)
+
+### `GET /portal/api/v1/sessions/save`
+
+Saves an investigation session/bookmark in the in-memory session store.
+
+Query parameters (all optional):
+
+- `name`
+- `search_query`
+- `timeline_correlation`
+- `provenance_correlation`
+- `snapshot_from_id`
+- `snapshot_to_id`
+- `selected_layer`
+
+### `GET /portal/api/v1/sessions/load`
+
+Loads one saved session by id.
+
+Query parameters:
+
+- `id` (required): session id (e.g. `sess-3`)
+
+Returns `400` when id is missing and `404` when not found.
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -490,6 +526,9 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots/capture?label=manual'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots?limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots/retention?max_snapshots=25'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots/diff'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions?limit=5'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/save?name=investigation-a&search_query=service'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/load?id=sess-1'
 ```
 
 ## Portal Asset Build and Drift Check
@@ -512,6 +551,7 @@ Production runtime does not require Node.js. Node is only required when regenera
 - CORS remains same-origin by default.
 - No mutating/invoke actions are exposed by portal routes in M0.
 - Snapshot capture/retention mutate only internal portal memory, not bus/device state.
+- Session save/load mutate only internal portal memory, not bus/device state.
 
 ## Observability and Performance
 
