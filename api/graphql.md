@@ -41,6 +41,7 @@ type Query {
 ```graphql
 type Device {
   address: Int!
+  addresses: [Int!]!
   manufacturer: String!
   deviceId: String!
   serialNumber: String
@@ -105,6 +106,12 @@ type ProjectionEdge {
 }
 ```
 
+Address semantics:
+
+- `address` is the canonical primary eBUS address for the physical device node.
+- `addresses` contains canonical + alias faces observed for that same device.
+- `device(address:)`, `planes(address:)`, and `methods(address:, plane:)` accept either the canonical address or any alias address from `addresses`.
+
 ### Service Status Notes
 
 - `daemonStatus.initiatorAddress` reports the configured eBUS initiator source used by gateway reads/scans.
@@ -132,6 +139,7 @@ Projections are plane-scoped graphs attached to each device. The API exposes:
 query PortalProjections($address: Int!) {
   device(address: $address) {
     address
+    addresses
     manufacturer
     deviceId
     projections {
@@ -158,6 +166,7 @@ query PortalProjections($address: Int!) {
   "data": {
     "device": {
       "address": 50,
+      "addresses": [50, 236],
       "manufacturer": "Vaillant",
       "deviceId": "BASV2",
       "projections": [
@@ -267,6 +276,7 @@ The portal UI is a read-only projection explorer (default path: `/ui`). It uses 
 query PortalProjections {
   devices {
     address
+    addresses
     manufacturer
     deviceId
     projections {
