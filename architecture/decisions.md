@@ -312,3 +312,18 @@ See [MCP-first Development Model](mcp-first-development.md).
 **Decision:** Keep MCP architecture decisions centralized in `helianthus-docs-ebus` and remove duplicated local ADR files from runtime repos.
 
 **Consequences:** Documentation has a single canonical source and repository-level doc-gates remain auditable.
+## ADR-023: Gateway-hosted Portal API for evidence-first reverse engineering
+
+**Status:** Accepted
+
+**Context:** `helianthus-vrc-explorer` (Python) provided useful reverse-engineering workflows, but Helianthus runtime is Go-first. We need a dynamic portal that exposes multiple runtime views (functional planes, projections, semantic contract, and raw traces) without moving semantic logic into Home Assistant.
+
+**Decision:**
+
+- Add a dedicated gateway-hosted portal surface under `/portal`, with versioned read APIs under `/portal/api/v1/*`.
+- Keep portal API **read-only by default**. Any future mutating controls must be explicit, separately flagged, rate-limited, and audited.
+- Treat the gateway as the sole semantic authority; Home Assistant remains a consumer of GraphQL semantic contract only.
+- Use evidence-first workflow in the portal: investigation context, provenance, and exportable issue bundles are first-class outcomes.
+- Keep runtime Node-free: frontend assets are built at build-time and embedded in gateway binaries via Go `embed`.
+
+**Consequences:** Helianthus gains a native, production-aligned portal that can replace VRC-Explorer incrementally, while preserving architectural layering and minimizing operational complexity.
