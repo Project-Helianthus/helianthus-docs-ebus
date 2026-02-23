@@ -47,7 +47,8 @@ Example response:
     "projection": true,
     "search": true,
     "stream": true,
-    "timeline": true
+    "timeline": true,
+    "provenance": true
   },
   "endpoints": {
     "graphql": "/graphql",
@@ -56,7 +57,8 @@ Example response:
     "mcp": "/mcp",
     "search": "/portal/api/v1/search",
     "stream": "/portal/api/v1/stream",
-    "timeline": "/portal/api/v1/timeline/events"
+    "timeline": "/portal/api/v1/timeline/events",
+    "provenance": "/portal/api/v1/provenance/events"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -327,6 +329,42 @@ Example response:
 }
 ```
 
+### `GET /portal/api/v1/provenance/events`
+
+Returns provenance projections derived from timeline events (newest first).
+
+Query parameters:
+
+- `limit` (optional): max returned records (`default=50`, `max=1000`)
+- `layer` (optional): filter by layer (`registry`, `semantic`, `projection`)
+- `correlation_id` (optional): substring match on correlation id
+
+Example response:
+
+```json
+{
+  "count": 1,
+  "items": [
+    {
+      "correlation_id": "reg-1740356625123456000",
+      "layer": "registry",
+      "at": "2026-02-24T01:23:45.123456Z",
+      "source": "poll:registry",
+      "dropped": 0,
+      "interval_ms": 1000,
+      "decode_path": [
+        "source:poll:registry",
+        "layer:registry",
+        "gateway.portal.stream",
+        "gateway.portal.timeline"
+      ],
+      "payload_keys": ["device_count"],
+      "confidence": 0.7
+    }
+  ]
+}
+```
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -341,6 +379,7 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/graph?address=0x10&pla
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/search?q=service&limit=10'
 curl -N -fsS 'http://127.0.0.1:8080/portal/api/v1/stream?layers=registry&max_events=3'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/timeline/events?layer=registry&limit=5'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/provenance/events?layer=registry&limit=5'
 ```
 
 ## Portal Asset Build and Drift Check
