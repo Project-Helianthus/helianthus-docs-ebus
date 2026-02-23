@@ -225,6 +225,33 @@ Example response:
 }
 ```
 
+## Portal Quick Probes
+
+Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
+
+```bash
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/health'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/bootstrap'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/registry/devices?limit=5'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/semantic/snapshot'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/devices?limit=5'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/graph?address=0x10&plane=Service'
+```
+
+## Portal Asset Build and Drift Check
+
+Portal static assets are generated from `portal/web/src` and embedded into the gateway binary under
+`portal/static/assets`.
+
+Use the gateway helper scripts:
+
+```bash
+./scripts/build_portal_assets.sh
+./scripts/check_portal_assets.sh
+```
+
+Production runtime does not require Node.js. Node is only required when regenerating embedded assets.
+
 ## Security Defaults
 
 - Portal API accepts `GET` only in M0.
@@ -237,3 +264,7 @@ Example response:
   - portal list/read endpoints p95 < 200ms
 - Static assets should include caching headers where possible.
 - Portal-specific request metrics and logs should be tagged by route.
+
+Baseline portal observability in gateway runtime:
+- Request log fields: `method`, `path`, `route`, `status`, `duration_ms`
+- `expvar` counters/maps: `portal_requests_total`, `portal_route_duration_ms_total`
