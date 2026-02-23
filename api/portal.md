@@ -48,7 +48,8 @@ Example response:
     "search": true,
     "stream": true,
     "timeline": true,
-    "provenance": true
+    "provenance": true,
+    "snapshots": true
   },
   "endpoints": {
     "graphql": "/graphql",
@@ -58,7 +59,10 @@ Example response:
     "search": "/portal/api/v1/search",
     "stream": "/portal/api/v1/stream",
     "timeline": "/portal/api/v1/timeline/events",
-    "provenance": "/portal/api/v1/provenance/events"
+    "provenance": "/portal/api/v1/provenance/events",
+    "snapshots": "/portal/api/v1/snapshots",
+    "capture": "/portal/api/v1/snapshots/capture",
+    "retention": "/portal/api/v1/snapshots/retention"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -365,6 +369,63 @@ Example response:
 }
 ```
 
+### `GET /portal/api/v1/snapshots`
+
+Lists retained snapshots from the in-memory snapshot store (newest first).
+
+Query parameters:
+
+- `limit` (optional): max returned snapshots (`default=20`, `max=1000`)
+
+Example response:
+
+```json
+{
+  "count": 2,
+  "stored_count": 2,
+  "max_snapshots": 50,
+  "items": [
+    {
+      "id": "snap-3",
+      "label": "after-system-change",
+      "captured_at": "2026-02-24T02:12:00.123456Z",
+      "payload": {
+        "captured_at": "2026-02-24T02:12:00.123456Z",
+        "registry": { "count": 2 },
+        "timeline": { "count": 6 }
+      }
+    }
+  ]
+}
+```
+
+### `GET /portal/api/v1/snapshots/capture`
+
+Captures a new snapshot from current portal read models and returns capture metadata.
+
+Query parameters:
+
+- `label` (optional): free text label stored with the snapshot
+
+If no readable providers are available, returns `503`.
+
+### `GET /portal/api/v1/snapshots/retention`
+
+Reads or updates snapshot retention limits.
+
+Query parameters:
+
+- `max_snapshots` (optional): set retention bound (`1..500`)
+
+Example response:
+
+```json
+{
+  "max_snapshots": 50,
+  "stored_count": 3
+}
+```
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -380,6 +441,9 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/search?q=service&limit=10'
 curl -N -fsS 'http://127.0.0.1:8080/portal/api/v1/stream?layers=registry&max_events=3'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/timeline/events?layer=registry&limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/provenance/events?layer=registry&limit=5'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots/capture?label=manual'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots?limit=5'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots/retention?max_snapshots=25'
 ```
 
 ## Portal Asset Build and Drift Check
@@ -401,6 +465,7 @@ Production runtime does not require Node.js. Node is only required when regenera
 - Portal API accepts `GET` only in M0.
 - CORS remains same-origin by default.
 - No mutating/invoke actions are exposed by portal routes in M0.
+- Snapshot capture/retention mutate only internal portal memory, not bus/device state.
 
 ## Observability and Performance
 
