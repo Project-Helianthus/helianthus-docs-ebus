@@ -156,6 +156,75 @@ Example response:
 }
 ```
 
+### `GET /portal/api/v1/projection/devices`
+
+Returns projection summary per discovered device.
+
+Query parameters:
+
+- `q` (optional): case-insensitive filter over manufacturer/device/display name/plane
+- `limit` (optional): max returned items (`default=200`, `max=1000`)
+
+Example response:
+
+```json
+{
+  "count": 1,
+  "items": [
+    {
+      "address": 16,
+      "manufacturer": "Vaillant",
+      "device_id": "VRC720",
+      "display_name": "sensoCOMFORT",
+      "projections": [
+        {
+          "plane": "Service",
+          "node_count": 18,
+          "edge_count": 20
+        },
+        {
+          "plane": "Observability",
+          "node_count": 18,
+          "edge_count": 20
+        }
+      ]
+    }
+  ]
+}
+```
+
+### `GET /portal/api/v1/projection/graph`
+
+Returns one projection graph for a selected device and plane.
+
+Query parameters:
+
+- `address` (required): device address (decimal or hex, e.g. `16` or `0x10`)
+- `plane` (required): projection plane name (e.g. `Service`)
+
+Example response:
+
+```json
+{
+  "address": 16,
+  "plane": "Service",
+  "nodes": [
+    {
+      "id": "Service:/ebus/addr@16/device@BASV2",
+      "path": "Service:/ebus/addr@16/device@BASV2",
+      "canonical_path": "Service:/ebus/addr@16/device@BASV2"
+    }
+  ],
+  "edges": [
+    {
+      "id": "Service:Service:/ebus/addr@16/device@BASV2->Service:/ebus/addr@16/device@BASV2/method@get_status",
+      "from": "Service:/ebus/addr@16/device@BASV2",
+      "to": "Service:/ebus/addr@16/device@BASV2/method@get_status"
+    }
+  ]
+}
+```
+
 ## Security Defaults
 
 - Portal API accepts `GET` only in M0.
