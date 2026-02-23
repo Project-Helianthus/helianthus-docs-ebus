@@ -71,7 +71,8 @@ Example response:
     "session_save": "/portal/api/v1/sessions/save",
     "session_load": "/portal/api/v1/sessions/load",
     "issue_draft": "/portal/api/v1/issues/draft",
-    "issue_export": "/portal/api/v1/issues/export"
+    "issue_export": "/portal/api/v1/issues/export",
+    "vrc_migration": "/portal/api/v1/deprecation/vrc-explorer"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -545,6 +546,17 @@ Response includes:
 - `evidence`
 - `filename_hint`
 
+### `GET /portal/api/v1/deprecation/vrc-explorer`
+
+Returns deprecation and migration metadata for VRC-Explorer transition.
+
+Response includes:
+- `status` (`deprecated`)
+- replacement metadata (`Helianthus Portal`)
+- migration doc URL
+- feature mapping summary
+- deprecation gates list
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -569,6 +581,7 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/save?name=investigation-
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/load?id=sess-1'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/issues/draft?title=Mapping+Candidate'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/issues/export?title=Mapping+Candidate'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/deprecation/vrc-explorer'
 ```
 
 ## Portal Asset Build and Drift Check
