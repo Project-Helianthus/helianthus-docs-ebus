@@ -45,13 +45,15 @@ Example response:
     "registry": true,
     "semantic": true,
     "projection": true,
+    "search": true,
     "stream": false
   },
   "endpoints": {
     "graphql": "/graphql",
     "snapshot": "/snapshot",
     "subscriptions": "/graphql/subscriptions",
-    "mcp": "/mcp"
+    "mcp": "/mcp",
+    "search": "/portal/api/v1/search"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -225,6 +227,43 @@ Example response:
 }
 ```
 
+### `GET /portal/api/v1/search`
+
+Returns unified, read-only search matches across currently available portal layers
+(registry, semantic snapshot, projection summary).
+
+Query parameters:
+
+- `q` (required): search string (case-insensitive)
+- `limit` (optional): max returned items (`default=25`, `max=1000`)
+
+Example response:
+
+```json
+{
+  "query": "service",
+  "count": 2,
+  "items": [
+    {
+      "layer": "registry",
+      "kind": "method",
+      "id": "reg:10:system:get_status",
+      "title": "get_status",
+      "subtitle": "system plane addr=0x10",
+      "address": 16
+    },
+    {
+      "layer": "projection",
+      "kind": "plane",
+      "id": "proj:10:service",
+      "title": "Service",
+      "subtitle": "addr=0x10 nodes=18 edges=20",
+      "address": 16
+    }
+  ]
+}
+```
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -236,6 +275,7 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/registry/devices?limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/semantic/snapshot'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/devices?limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/graph?address=0x10&plane=Service'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/search?q=service&limit=10'
 ```
 
 ## Portal Asset Build and Drift Check
