@@ -24,6 +24,11 @@ The following query entry points are available:
 
 ```graphql
 type Query {
+  daemonStatus: ServiceStatus!
+  adapterStatus: ServiceStatus!
+  zones: [Zone!]!
+  dhw: Dhw
+  energyTotals: EnergyTotals
   devices: [Device!]!
   device(address: Int!): Device
   planes(address: Int!): [Plane!]!
@@ -74,6 +79,13 @@ type Field {
   size: Int!
 }
 
+type ServiceStatus {
+  status: String!
+  firmwareVersion: String
+  updatesAvailable: Boolean!
+  initiatorAddress: String
+}
+
 type Projection {
   plane: String!
   nodes: [ProjectionNode!]!
@@ -92,6 +104,12 @@ type ProjectionEdge {
   to: String!
 }
 ```
+
+### Service Status Notes
+
+- `daemonStatus.initiatorAddress` reports the configured eBUS initiator source used by gateway reads/scans.
+- Value format is `0xNN` when resolved from runtime configuration.
+- In auto-leased proxy mode where the initiator is negotiated downstream, the field may return `auto`.
 
 ### Projection Notes
 
