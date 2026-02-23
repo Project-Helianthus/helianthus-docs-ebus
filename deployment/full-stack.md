@@ -123,10 +123,16 @@ When `-transport ebusd-tcp` is selected, the gateway uses ebusd's text command c
 Gateway startup scan tries to reduce bus load by using ebusd's known target list when available:
 
 1. If gateway itself runs with `-transport ebusd-tcp` over `tcp`, it asks that endpoint for `scan result`.
-2. Otherwise it also tries a local fallback ebusd endpoint at `127.0.0.1:8888`.
-3. If neither returns targets, gateway falls back to the full default address scan.
-4. If direct scan requests time out for all narrowed targets, gateway imports device metadata
-   (address/manufacturer/device ID/HW/SW/SN) from the same ebusd `scan result` output as a discovery fallback.
+2. In `ebusd-tcp` mode, gateway preloads registry devices directly from that `scan result`
+   (address/manufacturer/device ID/HW/SW/SN) before active probing.
+3. For non-`ebusd-tcp` transports, it also tries a local fallback ebusd endpoint at `127.0.0.1:8888`.
+4. If neither returns targets, gateway falls back to the full default address scan.
+5. If direct scan requests time out for all narrowed targets, gateway imports device metadata
+   from the same ebusd `scan result` output as a discovery fallback.
+
+When semantic B524 reads time out in `ebusd-tcp` mode, zone inventory/name/state can be recovered
+from ebusd's `grab result all` cache (passive snapshot), so climate entities can still appear without
+forcing additional bus traffic.
 
 Runtime read/write traffic still uses the configured gateway transport.
 
