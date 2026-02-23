@@ -46,14 +46,17 @@ Example response:
     "semantic": true,
     "projection": true,
     "search": true,
-    "stream": true
+    "stream": true,
+    "timeline": true
   },
   "endpoints": {
     "graphql": "/graphql",
     "snapshot": "/snapshot",
     "subscriptions": "/graphql/subscriptions",
     "mcp": "/mcp",
-    "search": "/portal/api/v1/search"
+    "search": "/portal/api/v1/search",
+    "stream": "/portal/api/v1/stream",
+    "timeline": "/portal/api/v1/timeline/events"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -289,6 +292,41 @@ Notes:
 - Keep-alive comments (`: keep-alive`) are emitted periodically to keep the connection open.
 - If no readable data providers are available, the endpoint returns `503`.
 
+### `GET /portal/api/v1/timeline/events`
+
+Returns recent stream events from the in-memory timeline store (newest first).
+
+Query parameters:
+
+- `limit` (optional): max returned events (`default=100`, `max=1000`)
+- `layer` (optional): filter by layer (`registry`, `semantic`, `projection`)
+- `correlation_id` (optional): substring match on correlation id
+- `since` (optional): RFC3339/RFC3339Nano lower-bound timestamp (UTC recommended)
+
+Example response:
+
+```json
+{
+  "count": 2,
+  "items": [
+    {
+      "at": "2026-02-24T01:23:45.123456Z",
+      "type": "snapshot",
+      "layer": "registry",
+      "correlation_id": "reg-1740356625123456000",
+      "payload": {
+        "device_count": 2
+      },
+      "provenance": {
+        "source": "poll:registry",
+        "dropped": 0,
+        "interval_ms": 1000
+      }
+    }
+  ]
+}
+```
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -302,6 +340,7 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/devices?limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/graph?address=0x10&plane=Service'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/search?q=service&limit=10'
 curl -N -fsS 'http://127.0.0.1:8080/portal/api/v1/stream?layers=registry&max_events=3'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/timeline/events?layer=registry&limit=5'
 ```
 
 ## Portal Asset Build and Drift Check
