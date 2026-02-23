@@ -289,3 +289,26 @@ For write confirmation (when a write API exists), perform targeted confirm reads
 - Cached representation stores raw decoded response frame copy, and each caller re-decodes from that frame to avoid shared mutable decoded state.
 
 **Consequences:** Bus load drops under concurrent subscriptions, duplicate register reads are eliminated during active refresh windows, and response ordering risk is reduced because a single bus read serves concurrent callers for the same key.
+
+## ADR-021: MCP-first delivery order and parity gates
+
+**Status:** Accepted
+
+**Context:** Feature development needs a deterministic integration path that avoids drift between internal prototyping and external consumers.
+
+**Decision:** Use MCP as the primary development surface, then implement GraphQL parity, and only then enable consumer-facing integrations.
+Graduation requires deterministic MCP contracts, golden snapshots, and MCP <-> GraphQL parity tests.
+
+**Consequences:** New capabilities are stabilized earlier in a tool-oriented interface and cross-surface drift is detected before consumer rollout.
+
+See [MCP-first Development Model](mcp-first-development.md).
+
+## ADR-022: Centralized MCP architecture documentation in docs repository
+
+**Status:** Accepted
+
+**Context:** ADR content duplicated across runtime repositories creates drift and weakens doc-gate enforcement.
+
+**Decision:** Keep MCP architecture decisions centralized in `helianthus-docs-ebus` and remove duplicated local ADR files from runtime repos.
+
+**Consequences:** Documentation has a single canonical source and repository-level doc-gates remain auditable.
