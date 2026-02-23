@@ -312,6 +312,7 @@ See [MCP-first Development Model](mcp-first-development.md).
 **Decision:** Keep MCP architecture decisions centralized in `helianthus-docs-ebus` and remove duplicated local ADR files from runtime repos.
 
 **Consequences:** Documentation has a single canonical source and repository-level doc-gates remain auditable.
+
 ## ADR-023: Gateway-hosted Portal API for evidence-first reverse engineering
 
 **Status:** Accepted
@@ -327,3 +328,19 @@ See [MCP-first Development Model](mcp-first-development.md).
 - Keep runtime Node-free: frontend assets are built at build-time and embedded in gateway binaries via Go `embed`.
 
 **Consequences:** Helianthus gains a native, production-aligned portal that can replace VRC-Explorer incrementally, while preserving architectural layering and minimizing operational complexity.
+
+## ADR-024: Shared deterministic primitives for MCP invoke and hashing workflows
+
+**Status:** Accepted
+
+**Context:** MCP-first rollout requires deterministic invoke semantics and stable `data_hash` behavior. Previously, idempotency and canonicalization logic risked diverging when implemented ad-hoc at gateway level.
+
+**Decision:** Standardize these capabilities as shared low-level primitives in `helianthus-ebusgo/determinism`:
+
+- idempotency cache primitives with TTL eviction, payload fingerprint conflict detection, and immutable cached payload copies;
+- deterministic retry schedule primitives (fixed/custom/exponential) paired with normalized retriable-error classification;
+- canonicalization primitives (`CanonicalClone`, `CanonicalJSON`, `CanonicalHash`) for stable hash input generation.
+
+These primitives are part of MCP-first foundation work and are consumed before GraphQL parity rollout.
+
+**Consequences:** Determinism behavior is reusable and testable across layers, invoke safety logic is less error-prone, and parity checks rely on a single canonical normalization path. No eBUS wire/protocol semantics are changed by this decision.

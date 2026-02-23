@@ -34,6 +34,8 @@ Breaking contract changes require a new major namespace (`ebus.v2.*`).
 - Snapshot mode must produce stable `data_hash` for identical input
 - Golden snapshots are required for schemas and representative outputs
 
+Low-level deterministic helpers are implemented first in shared libraries (`helianthus-ebusgo/determinism`) and then consumed by gateway MCP features. This keeps idempotency, retry behavior, and canonical hashing semantics consistent before GraphQL parity.
+
 ## Invoke Safety Model
 
 `ebus.v1.rpc.invoke` must enforce explicit intent and guardrails:
