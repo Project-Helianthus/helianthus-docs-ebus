@@ -74,6 +74,8 @@ The registry layer treats each physical eBUS device as a **DeviceEntry** discove
 - a deterministic primary `Address()` (first/canonical address used in projection paths),
 - an alias list `Addresses()` (all observed addresses for that same physical identity).
 
+During scan, Helianthus treats the response source as canonical when available, but still retains the queried target as an alias face when source and target differ. This avoids losing valid faces (for example, a SOL00-style `0xEC` target) when multiple targets answer with the same source identity.
+
 A DeviceEntry does not directly expose behavior; instead, **PlaneProviders** match against the DeviceInfo (manufacturer, device ID, HW/SW versions, and stable identifiers when available) and **create one or more Planes** that represent distinct semantic views of that same device (e.g., heating, DHW, system).
 
 Each Plane publishes:
