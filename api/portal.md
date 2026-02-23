@@ -46,7 +46,7 @@ Example response:
     "semantic": true,
     "projection": true,
     "search": true,
-    "stream": false
+    "stream": true
   },
   "endpoints": {
     "graphql": "/graphql",
@@ -264,6 +264,31 @@ Example response:
 }
 ```
 
+### `GET /portal/api/v1/stream`
+
+Server-Sent Events (SSE) stream for lightweight live updates with server-side throttling and coalescing.
+
+Query parameters:
+
+- `layers` (optional): comma-separated layer filter (`registry`, `semantic`, `projection`)
+- `interval_ms` (optional): producer interval (`default=1000`, bounded `200..5000`)
+- `max_events_per_second` (optional): flush limit (`default=3`, bounded `1..30`)
+- `max_events` (optional): stop stream after N emitted events (useful for tests)
+
+SSE event format:
+
+```text
+event: update
+data: {"at":"2026-02-24T01:00:00.123456Z","type":"snapshot","layer":"registry","correlation_id":"reg-...","payload":{"device_count":2},"provenance":{"source":"poll:registry","dropped":0,"interval_ms":1000}}
+```
+
+Notes:
+
+- The server coalesces pending updates and reports dropped intermediate updates in
+  `provenance.dropped`.
+- Keep-alive comments (`: keep-alive`) are emitted periodically to keep the connection open.
+- If no readable data providers are available, the endpoint returns `503`.
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -276,6 +301,7 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/semantic/snapshot'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/devices?limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/graph?address=0x10&plane=Service'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/search?q=service&limit=10'
+curl -N -fsS 'http://127.0.0.1:8080/portal/api/v1/stream?layers=registry&max_events=3'
 ```
 
 ## Portal Asset Build and Drift Check
@@ -308,3 +334,4 @@ Production runtime does not require Node.js. Node is only required when regenera
 Baseline portal observability in gateway runtime:
 - Request log fields: `method`, `path`, `route`, `status`, `duration_ms`
 - `expvar` counters/maps: `portal_requests_total`, `portal_route_duration_ms_total`
+- Stream counters/maps: `portal_stream_events_total`, `portal_stream_dropped_total`
