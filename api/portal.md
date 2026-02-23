@@ -51,7 +51,8 @@ Example response:
     "provenance": true,
     "snapshots": true,
     "snapshot_diff": true,
-    "sessions": true
+    "sessions": true,
+    "issue_builder": true
   },
   "endpoints": {
     "graphql": "/graphql",
@@ -68,7 +69,9 @@ Example response:
     "snapshot_diff": "/portal/api/v1/snapshots/diff",
     "sessions": "/portal/api/v1/sessions",
     "session_save": "/portal/api/v1/sessions/save",
-    "session_load": "/portal/api/v1/sessions/load"
+    "session_load": "/portal/api/v1/sessions/load",
+    "issue_draft": "/portal/api/v1/issues/draft",
+    "issue_export": "/portal/api/v1/issues/export"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -507,6 +510,41 @@ Query parameters:
 
 Returns `400` when id is missing and `404` when not found.
 
+### `GET /portal/api/v1/issues/draft`
+
+Generates a Markdown issue draft using live portal evidence.
+
+Query parameters (optional):
+
+- `title`
+- `observation`
+- `reproduction_steps`
+- `hypothesis`
+- `impact`
+- `proposal`
+- `acceptance_criteria`
+- `controller`
+- `device`
+
+Response includes:
+
+- `title`
+- `markdown` (full issue body)
+- `evidence` (snapshot/timeline/provenance context)
+
+### `GET /portal/api/v1/issues/export`
+
+Builds an export bundle for issue filing workflows.
+
+Response includes:
+
+- `format_version` (`helianthus-issue-bundle/v1`)
+- `generated_at`
+- `title`
+- `markdown`
+- `evidence`
+- `filename_hint`
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -529,6 +567,8 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/snapshots/diff'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions?limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/save?name=investigation-a&search_query=service'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/load?id=sess-1'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/issues/draft?title=Mapping+Candidate'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/issues/export?title=Mapping+Candidate'
 ```
 
 ## Portal Asset Build and Drift Check
@@ -552,6 +592,7 @@ Production runtime does not require Node.js. Node is only required when regenera
 - No mutating/invoke actions are exposed by portal routes in M0.
 - Snapshot capture/retention mutate only internal portal memory, not bus/device state.
 - Session save/load mutate only internal portal memory, not bus/device state.
+- Issue draft/export endpoints are read-only generators over in-memory evidence.
 
 ## Observability and Performance
 
