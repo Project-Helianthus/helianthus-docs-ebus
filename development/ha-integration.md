@@ -184,8 +184,10 @@ At setup, integration performs best-effort cleanup of stale `helianthus/*` regis
 
 ### Missing optional data
 
-- If `zones`/`dhw` are absent, climate and DHW semantic entities remain empty.
+- If `zones` are absent, zone climate entities remain empty.
+- DHW entity is created even when `dhw` is initially absent; it stays unavailable until semantic DHW payload appears.
 - If `energyTotals` is absent, energy entities remain unavailable.
 - In `ebusd-tcp` deployments, zone entities can appear after the first semantic refresh cycle
   (default up to ~1 minute), because fallback discovery may hydrate zones from ebusd `grab result all`.
+- In `ebusd-tcp` fallback parsing, both B524 selector opcode families (`0x02` and `0x06`) are accepted from `grab result all` lines.
 - If `allowedModes` is absent, zone climate falls back to `off/auto/heat`.

@@ -369,7 +369,9 @@ type InvokeError {
 
 ### Behavior
 
-- **Parameter validation**: params are checked against either the template schema (`ParamSchema`) or a template builder (`Build`). Values are coerced from GraphQL floats to ints when safe.
+- **Parameter validation**: params are checked against either the template schema (`ParamSchema`) or a template builder (`Build`).
+  - Whole-number JSON numerics are accepted for integer fields (for example GraphQL-decoded `float64(2.0)` and `json.Number("2")`).
+  - Fractional values for integer fields are rejected (`INVALID_PAYLOAD`).
 - **Error mapping**: typed errors are mapped to `code`/`category` (e.g., `TIMEOUT` → `TRANSIENT`, `NO_SUCH_DEVICE` → `DEFINITIVE`).
 - **Result normalization**: `types.Value{Valid:false}` fields are returned as `null` in the JSON result map.
 
