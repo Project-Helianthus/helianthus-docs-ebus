@@ -6,8 +6,7 @@ Portal API is exposed by `helianthus-ebusgateway` as an additive HTTP surface.
 
 - UI shell: `/portal`
 - Versioned API base: `/portal/api/v1`
-
-M0 provides the read-only skeleton only. Data exploration APIs are added in later milestones.
+- Current UX is capability-driven (status cards + enabled sections) and does not expose milestone placeholder labels.
 
 ## Design Constraints
 
@@ -16,7 +15,7 @@ M0 provides the read-only skeleton only. Data exploration APIs are added in late
 - Versioned endpoint paths (`/api/v1`) for forward evolution.
 - Runtime is Go-only; frontend assets are embedded in the gateway binary.
 
-## M0 Endpoints
+## Core Endpoints
 
 ### `GET /portal/api/v1/health`
 
@@ -82,7 +81,7 @@ Example response:
 }
 ```
 
-## M1 Endpoints
+## Data Endpoints
 
 ### `GET /portal/api/v1/registry/devices`
 
@@ -134,6 +133,7 @@ Example response:
 ### `GET /portal/api/v1/semantic/snapshot`
 
 Returns a read-only semantic snapshot for portal list views.
+Portal overview renders all zones from this payload (not only the first zone), plus DHW and energy summary.
 
 Response fields:
 
@@ -180,6 +180,7 @@ Example response:
 ### `GET /portal/api/v1/projection/devices`
 
 Returns projection summary per discovered device.
+Portal overview uses this endpoint to populate projection device/plane selectors.
 
 Query parameters:
 
@@ -217,6 +218,7 @@ Example response:
 ### `GET /portal/api/v1/projection/graph`
 
 Returns one projection graph for a selected device and plane.
+Portal overview uses this endpoint for the live projection graph canvas.
 
 Query parameters:
 
@@ -600,16 +602,16 @@ Production runtime does not require Node.js. Node is only required when regenera
 
 ## Security Defaults
 
-- Portal API accepts `GET` only in M0.
+- Portal API accepts `GET` only.
 - CORS remains same-origin by default.
-- No mutating/invoke actions are exposed by portal routes in M0.
+- No mutating/invoke actions are exposed by portal routes.
 - Snapshot capture/retention mutate only internal portal memory, not bus/device state.
 - Session save/load mutate only internal portal memory, not bus/device state.
 - Issue draft/export endpoints are read-only generators over in-memory evidence.
 
 ## Observability and Performance
 
-- M0 target latency:
+- Target latency:
   - portal list/read endpoints p95 < 200ms
 - Static assets should include caching headers where possible.
 - Portal-specific request metrics and logs should be tagged by route.
