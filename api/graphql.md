@@ -129,8 +129,11 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
 - Energy broadcast updates do not advance startup live epochs and cannot promote phase readiness by themselves.
 - `LIVE_READY` requires live-backed updates for each published semantic stream (zones and/or DHW), not just `live_epoch >= 2`.
 - Persistent semantic preload is read from `-semantic-cache-path` and loaded as stale (`CACHE_LOADED_STALE`) when valid.
+- Zone visibility is hysteresis-based: `N_miss` consecutive misses before removal and `N_hit` consecutive hits before re-introduction (`-semantic-zone-presence-miss-threshold`, `-semantic-zone-presence-hit-threshold`).
+- Transient single-miss/single-hit alternation keeps zones stable and avoids entity flapping.
 
 Authoritative startup FSM and transition details are documented in [`architecture/startup-semantic-fsm.md`](../architecture/startup-semantic-fsm.md).
+Zone lifecycle details are documented in [`architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md).
 
 ### Projection Notes
 

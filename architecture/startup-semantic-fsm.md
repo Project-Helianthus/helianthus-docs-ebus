@@ -78,4 +78,5 @@ stateDiagram-v2
 - GraphQL runtime notes: [`api/graphql.md`](../api/graphql.md#semantic-startup-runtime-contract)
 - Runtime and wiring context: [`architecture/overview.md`](./overview.md#semantic-startup-runtime)
 - Semantic read breaker behavior for B524 polling: [`architecture/semantic-read-circuit-breaker.md`](./semantic-read-circuit-breaker.md)
+- Zone presence hysteresis state machine: [`architecture/zone-presence-fsm.md`](./zone-presence-fsm.md)
 - HA consumer behavior: [`development/ha-integration.md`](../development/ha-integration.md)
