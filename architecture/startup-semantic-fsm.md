@@ -71,6 +71,7 @@ Operational consequences:
 - Partial read failures do not wipe previously valid semantic values.
 - Empty/nil partial snapshots do not remove zone or DHW entities by themselves.
 - Zone visibility/removal remains controlled by zone presence hysteresis FSM.
+- DHW is durable under transient cache-only cycles and expires after `-semantic-dhw-stale-ttl`.
 - Startup phase progression remains driven by stream-level live/cache epochs.
 
 Implementation note:
@@ -101,4 +102,5 @@ Implementation note:
 - Runtime and wiring context: [`architecture/overview.md`](./overview.md#semantic-startup-runtime)
 - Semantic read breaker behavior for B524 polling: [`architecture/semantic-read-circuit-breaker.md`](./semantic-read-circuit-breaker.md)
 - Zone presence hysteresis state machine: [`architecture/zone-presence-fsm.md`](./zone-presence-fsm.md)
+- DHW durability and expiry lifecycle: [`architecture/dhw-freshness-fsm.md`](./dhw-freshness-fsm.md)
 - HA consumer behavior: [`development/ha-integration.md`](../development/ha-integration.md)
