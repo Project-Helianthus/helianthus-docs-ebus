@@ -344,3 +344,33 @@ See [MCP-first Development Model](mcp-first-development.md).
 These primitives are part of MCP-first foundation work and are consumed before GraphQL parity rollout.
 
 **Consequences:** Determinism behavior is reusable and testable across layers, invoke safety logic is less error-prone, and parity checks rely on a single canonical normalization path. No eBUS wire/protocol semantics are changed by this decision.
+
+## ADR-025: BAI heat-source modeling boundary and VWZ-equivalent design contract
+
+**Status:** Accepted
+
+**Context:** Helianthus needs deterministic heat-source modeling for Vaillant BAI while preventing domain leakage from controller/regulator semantics. The same design must be reusable for future heat-source classes (for example VWZ heat pumps) without re-inventing contracts each time.
+
+**Decision:**
+
+- BAI modeling is **BAI-only** and excludes EMM/controller semantics.
+- `scan` is a **cross-device discovery layer**, not a BAI plane. BAI planes are:
+  - `registers` (with groups such as `dia1`, `dia2`, `maintenance`, `expert`)
+  - `hcmode`
+  - `errors`
+  - `service`
+- Runtime enforcement must deny cross-domain lookups (`HEAT_SOURCE` cannot read `REGULATOR` registers, and vice versa).
+- Snapshot reads across multiple planes use explicit timeout policy:
+  - total timeout is caller-configurable (default `10s`)
+  - per-plane budget derives from total timeout and selected plane count
+  - default behavior is atomic (`allow_partial=false`)
+  - partial mode is opt-in (`allow_partial=true`) and must return `error_planes`.
+- Poll/read scheduling must include starvation prevention:
+  - queue depth limit (`100`)
+  - aging-based promotion (`15s`)
+  - emergency promotion (`30s`)
+  - FIFO preserved within the same effective priority band.
+- `common_core` must be versioned (`common_core_vN`) and must not regress in-place for stable API contracts.
+- Architecture docs are part of the runtime contract: every heat-source design change must be documented here in a way that enables an equivalent implementation for another heat-source class (VWZ).
+
+**Consequences:** BAI behavior stays deterministic and isolated from regulator behavior, multi-plane reads get explicit and testable timeout semantics, queue starvation is bounded under load, and future VWZ support can reuse the same contract surface with class-specific register catalogs.
