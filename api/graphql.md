@@ -131,6 +131,8 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
 - Persistent semantic preload is read from `-semantic-cache-path` and loaded as stale (`CACHE_LOADED_STALE`) when valid.
 - Zone visibility is hysteresis-based: `N_miss` consecutive misses before removal and `N_hit` consecutive hits before re-introduction (`-semantic-zone-presence-miss-threshold`, `-semantic-zone-presence-hit-threshold`).
 - Transient single-miss/single-hit alternation keeps zones stable and avoids entity flapping.
+- Zone/DHW semantic publication uses non-destructive incremental merge: failed attempted fields retain last-known values instead of being wiped by partial snapshots.
+- Freshness is tracked per merged field in runtime state; GraphQL currently exposes merged values and startup phase/state contracts.
 
 Authoritative startup FSM and transition details are documented in [`architecture/startup-semantic-fsm.md`](../architecture/startup-semantic-fsm.md).
 Zone lifecycle details are documented in [`architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md).
