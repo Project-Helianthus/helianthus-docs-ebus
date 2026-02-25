@@ -14,14 +14,14 @@ stateDiagram-v2
   BOOT_INIT --> LIVE_WARMUP: first live epoch
 
   CACHE_LOADED_STALE --> LIVE_WARMUP: first live epoch
-  LIVE_WARMUP --> LIVE_READY: second+ live epoch
+  LIVE_WARMUP --> LIVE_READY: live_ready_criteria met
 
   BOOT_INIT --> DEGRADED: boot_live_timeout
   CACHE_LOADED_STALE --> DEGRADED: boot_live_timeout
   LIVE_WARMUP --> DEGRADED: boot_live_timeout
 
   DEGRADED --> LIVE_WARMUP: first live epoch after degraded
-  DEGRADED --> LIVE_READY: second+ live epoch after degraded
+  DEGRADED --> LIVE_READY: live_ready_criteria met after degraded
 ```
 
 ## Transition Table
@@ -31,10 +31,10 @@ stateDiagram-v2
 | `BOOT_INIT` | `CACHE_LOADED_STALE` | first cache snapshot applied | cache is exposed as stale bootstrap data |
 | `BOOT_INIT` | `LIVE_WARMUP` | first live semantic update | first confirmed live signal |
 | `CACHE_LOADED_STALE` | `LIVE_WARMUP` | first live semantic update | stale cache begins replacement by live stream |
-| `LIVE_WARMUP` | `LIVE_READY` | second live semantic update | stable live runtime reached |
+| `LIVE_WARMUP` | `LIVE_READY` | `live_ready_criteria` satisfied | requires `live_epoch >= 2` and live-backed updates for every published stream |
 | `BOOT_INIT`/`CACHE_LOADED_STALE`/`LIVE_WARMUP` | `DEGRADED` | `boot_live_timeout` elapsed | startup did not reach live-ready in time |
 | `DEGRADED` | `LIVE_WARMUP` | first live semantic update after degraded | recovery started |
-| `DEGRADED` | `LIVE_READY` | second live semantic update after degraded | recovery complete |
+| `DEGRADED` | `LIVE_READY` | `live_ready_criteria` satisfied after degraded | same stream-aware readiness criteria used during normal startup |
 
 ## Epoch Semantics
 
@@ -44,7 +44,7 @@ stateDiagram-v2
 - `live_epoch` is authoritative for startup readiness:
   - `live_epoch = 0`: no live signal yet.
   - `live_epoch = 1`: warmup only.
-  - `live_epoch >= 2`: candidate for live-ready.
+  - `live_epoch >= 2`: candidate for live-ready; stream criteria still apply.
 - `LIVE_READY` additionally requires live updates for all published semantic streams:
   - if zones were published, at least one zones update must be live-backed;
   - if DHW was published, at least one DHW update must be live-backed.
