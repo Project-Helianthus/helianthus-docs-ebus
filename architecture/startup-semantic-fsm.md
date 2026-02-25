@@ -39,12 +39,18 @@ stateDiagram-v2
 ## Epoch Semantics
 
 - `cache_epoch` increments when cache-backed semantic payload is applied.
-- `live_epoch` increments when live semantic payload is applied (including live broadcast-derived updates).
+- `live_epoch` increments when live semantic payload is applied from zone/DHW refresh paths.
 - `cache_epoch` and `live_epoch` are tracked independently.
 - `live_epoch` is authoritative for startup readiness:
   - `live_epoch = 0`: no live signal yet.
   - `live_epoch = 1`: warmup only.
   - `live_epoch >= 2`: live-ready.
+
+### Source classification notes
+
+- Persistent semantic snapshot preload (`semantic_cache.json`) is cache-backed and only advances `cache_epoch`.
+- In `ebusd-tcp` fallback mode, successful `grab result all` hydration for zones/DHW is classified as **live** and can advance `live_epoch`.
+- Energy broadcast ingestion updates `energyTotals` but does **not** advance startup `live_epoch` and does not trigger startup phase transitions.
 
 ## Timeout Semantics
 

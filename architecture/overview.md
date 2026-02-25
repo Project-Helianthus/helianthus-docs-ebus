@@ -74,6 +74,7 @@ Gateway semantic publication uses an explicit startup FSM to distinguish cache b
 - startup phases: `BOOT_INIT`, `CACHE_LOADED_STALE`, `LIVE_WARMUP`, `LIVE_READY`, `DEGRADED`
 - readiness criteria: live-ready is reached after at least two live semantic epochs
 - timeout control: `-boot-live-timeout` (default `2m`)
+- source rules: persistent cache preload advances `cache_epoch`; zone/DHW live updates (including successful `ebusd-tcp` grab hydration) advance `live_epoch`; energy broadcasts do not drive startup phase transitions
 
 See full state machine and transition table in [`architecture/startup-semantic-fsm.md`](./startup-semantic-fsm.md).
 
