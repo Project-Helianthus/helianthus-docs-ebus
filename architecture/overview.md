@@ -67,6 +67,16 @@ The gateway now provides a runtime wiring layer that instantiates the bus, regis
 - **Router refresh**: `RefreshRouterPlanes()` extracts `router.Plane` implementations from the registry and updates the router’s subscription table.
 - **GraphQL schema rebuild**: the schema builder consumes registry entries and rebuilds schema snapshots whenever a registry change signal is emitted.
 
+## Semantic Startup Runtime
+
+Gateway semantic publication uses an explicit startup FSM to distinguish cache bootstrap from live runtime updates.
+
+- startup phases: `BOOT_INIT`, `CACHE_LOADED_STALE`, `LIVE_WARMUP`, `LIVE_READY`, `DEGRADED`
+- readiness criteria: live-ready is reached after at least two live semantic epochs
+- timeout control: `-boot-live-timeout` (default `2m`)
+
+See full state machine and transition table in [`architecture/startup-semantic-fsm.md`](./startup-semantic-fsm.md).
+
 ## Plane/Provider Model
 
 The registry layer treats each physical eBUS device as a **DeviceEntry** discovered via a 0x07/0x04 identification scan. A single physical device may be observed on multiple eBUS addresses (alias faces). The registry resolves these to one canonical DeviceEntry with:
