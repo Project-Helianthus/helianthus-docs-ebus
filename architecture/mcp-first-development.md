@@ -74,3 +74,30 @@ Canonical decisions are:
 2. MCP v1 contract envelope
 3. Parity gates and cleanup policy
 4. Invoke safety and idempotency
+
+## Heat-Source Class Extension Contract (BAI -> VWZ)
+
+To keep implementations equivalent across heat-source classes, each class design MUST document:
+
+1. Domain boundary:
+- source-class ownership (`HEAT_SOURCE` vs `REGULATOR`)
+- explicit deny rules for cross-domain registers.
+
+2. Plane model:
+- cross-device discovery planes vs class-specific planes
+- stable plane/group naming and ordering.
+
+3. Snapshot policy:
+- total timeout, per-plane budget, and partial mode semantics
+- required response fields for partial failures (`error_planes`, `completed_planes`).
+
+4. Scheduling policy:
+- queue depth limit
+- starvation prevention thresholds
+- FIFO behavior within equal effective priority.
+
+5. Common-core governance:
+- versioned common-core contract (`common_core_vN`)
+- non-regression rule for stable APIs.
+
+No new heat-source class (including VWZ) is considered ready for implementation until these sections are specified in docs with normative behavior (`MUST/SHOULD/MUST NOT`).
