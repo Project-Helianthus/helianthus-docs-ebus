@@ -133,9 +133,11 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
 - Transient single-miss/single-hit alternation keeps zones stable and avoids entity flapping.
 - Zone/DHW semantic publication uses non-destructive incremental merge: failed attempted fields retain last-known values instead of being wiped by partial snapshots.
 - Freshness is tracked per merged field in runtime state; GraphQL currently exposes merged values and startup phase/state contracts.
+- DHW retains last-known values during cache-only/transient gaps until `-semantic-dhw-stale-ttl` is exceeded, then `dhw` is explicitly cleared.
 
 Authoritative startup FSM and transition details are documented in [`architecture/startup-semantic-fsm.md`](../architecture/startup-semantic-fsm.md).
 Zone lifecycle details are documented in [`architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md).
+DHW lifecycle details are documented in [`architecture/dhw-freshness-fsm.md`](../architecture/dhw-freshness-fsm.md).
 
 ### Projection Notes
 

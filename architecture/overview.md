@@ -78,10 +78,12 @@ Gateway semantic publication uses an explicit startup FSM to distinguish cache b
 - per-key B524 semantic reads are guarded by a circuit breaker (`closed`/`open`/`half-open`) with suppression and transition telemetry
 - zone publication uses an anti-flapping presence FSM (`ABSENT`, `SUSPECT_RESURRECT`, `PRESENT`, `SUSPECT_MISSING`) with configurable hit/miss hysteresis
 - zone/DHW semantic refresh uses non-destructive field-level merge so partial failures keep last-known values and mark freshness internally
+- DHW publication uses a stale TTL durability window (`-semantic-dhw-stale-ttl`) and expires to absent when cache-only age exceeds TTL
 
 See full state machine and transition table in [`architecture/startup-semantic-fsm.md`](./startup-semantic-fsm.md).
 See breaker details in [`architecture/semantic-read-circuit-breaker.md`](./semantic-read-circuit-breaker.md).
 See zone presence details in [`architecture/zone-presence-fsm.md`](./zone-presence-fsm.md).
+See DHW lifecycle details in [`architecture/dhw-freshness-fsm.md`](./dhw-freshness-fsm.md).
 
 ## Plane/Provider Model
 
