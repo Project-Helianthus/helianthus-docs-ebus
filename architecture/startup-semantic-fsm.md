@@ -44,13 +44,28 @@ stateDiagram-v2
 - `live_epoch` is authoritative for startup readiness:
   - `live_epoch = 0`: no live signal yet.
   - `live_epoch = 1`: warmup only.
-  - `live_epoch >= 2`: live-ready.
+  - `live_epoch >= 2`: candidate for live-ready.
+- `LIVE_READY` additionally requires live updates for all published semantic streams:
+  - if zones were published, at least one zones update must be live-backed;
+  - if DHW was published, at least one DHW update must be live-backed.
+  - repeated live updates on only one stream keep runtime in `LIVE_WARMUP`.
 
 ### Source classification notes
 
 - Persistent semantic snapshot preload (`semantic_cache.json`) is cache-backed and only advances `cache_epoch`.
 - In `ebusd-tcp` fallback mode, successful `grab result all` hydration for zones/DHW is classified as **live** and can advance `live_epoch`.
 - Energy broadcast ingestion updates `energyTotals` but does **not** advance startup `live_epoch` and does not trigger startup phase transitions.
+
+## Persistent Cache Schema
+
+- Runtime cache file path is configurable via `-semantic-cache-path` (default `./semantic_cache.json`).
+- Current schema is **v2**:
+  - top-level `schema_version: 2`
+  - `metadata.persisted_at`
+  - semantic payload: `zones[]` and optional `dhw`
+- Legacy **v1** cache payloads (no `schema_version`) are migrated on load:
+  - load as v1, convert to v2, rewrite atomically, continue startup using migrated data.
+- Unknown schema versions are rejected as invalid cache (runtime continues without preload).
 
 ## Timeout Semantics
 
