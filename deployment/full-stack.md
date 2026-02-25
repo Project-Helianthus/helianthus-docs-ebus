@@ -138,6 +138,24 @@ Successful hydration from this path is classified as **live semantic source** fo
 
 Runtime read/write traffic still uses the configured gateway transport.
 
+### Semantic Cache Persistence
+
+- Gateway reads/writes semantic startup cache at `-semantic-cache-path` (default `./semantic_cache.json`).
+- Writes are atomic (temp file + rename).
+- Runtime semantic cache persistence writes happen for live semantic publications.
+- Legacy v1 -> v2 migration can also rewrite the cache during startup load (`semantic_cache_migrated`), before any live publish.
+- Cache load failures are fail-safe:
+  - missing file → `semantic_cache_miss`
+  - malformed/unknown schema/read error → `semantic_cache_invalid`
+  - runtime continues with live polling and no crash.
+- Legacy v1 cache payloads are migrated to v2 at load time (`semantic_cache_migrated`).
+
+Operator recovery for corrupted cache:
+
+1. Stop gateway/add-on.
+2. Move or delete the cache file at `-semantic-cache-path`.
+3. Restart gateway; runtime should log `semantic_cache_miss` and rebuild cache from live data.
+
 ## mDNS Discovery
 
 When `-mdns` is enabled (default), the gateway advertises its GraphQL endpoint via DNS-SD:
