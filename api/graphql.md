@@ -118,6 +118,16 @@ Address semantics:
 - Value format is `0xNN` when resolved from runtime configuration.
 - In auto-leased proxy mode where the initiator is negotiated downstream, the field may return `auto`.
 
+## Semantic Startup Runtime Contract
+
+The semantic runtime distinguishes cache bootstrap from live updates during startup.
+
+- Cache-backed semantic payload may be published first and treated as stale bootstrap data.
+- Runtime transitions through startup phases (`BOOT_INIT` → `CACHE_LOADED_STALE` → `LIVE_WARMUP` → `LIVE_READY`, with `DEGRADED` timeout fallback).
+- If `-boot-live-timeout` elapses before `LIVE_READY`, runtime enters `DEGRADED` until live epochs recover.
+
+Authoritative startup FSM and transition details are documented in [`architecture/startup-semantic-fsm.md`](../architecture/startup-semantic-fsm.md).
+
 ### Projection Notes
 
 - **ProjectionNode.id** derives from the canonical Service path for the node (stable across projections).
