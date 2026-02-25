@@ -189,5 +189,7 @@ At setup, integration performs best-effort cleanup of stale `helianthus/*` regis
 - If `energyTotals` is absent, energy entities remain unavailable.
 - In `ebusd-tcp` deployments, zone entities can appear after the first semantic refresh cycle
   (default up to ~1 minute), because fallback discovery may hydrate zones from ebusd `grab result all`.
+- This fallback hydration is treated as live runtime semantic data (not stale cache preload), so startup
+  phase progression can continue when direct B524 reads are unavailable.
 - In `ebusd-tcp` fallback parsing, both B524 selector opcode families (`0x02` and `0x06`) are accepted from `grab result all` lines.
 - If `allowedModes` is absent, zone climate falls back to `off/auto/heat`.
