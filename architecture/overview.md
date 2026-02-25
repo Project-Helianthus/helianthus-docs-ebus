@@ -77,6 +77,7 @@ Gateway semantic publication uses an explicit startup FSM to distinguish cache b
 - source rules: persistent cache preload advances `cache_epoch`; zone/DHW live updates (including successful `ebusd-tcp` grab hydration) advance `live_epoch`; energy broadcasts do not drive startup phase transitions
 - per-key B524 semantic reads are guarded by a circuit breaker (`closed`/`open`/`half-open`) with suppression and transition telemetry
 - zone publication uses an anti-flapping presence FSM (`ABSENT`, `SUSPECT_RESURRECT`, `PRESENT`, `SUSPECT_MISSING`) with configurable hit/miss hysteresis
+- zone/DHW semantic refresh uses non-destructive field-level merge so partial failures keep last-known values and mark freshness internally
 
 See full state machine and transition table in [`architecture/startup-semantic-fsm.md`](./startup-semantic-fsm.md).
 See breaker details in [`architecture/semantic-read-circuit-breaker.md`](./semantic-read-circuit-breaker.md).

@@ -56,6 +56,28 @@ stateDiagram-v2
 - In `ebusd-tcp` fallback mode, successful `grab result all` hydration for zones/DHW is classified as **live** and can advance `live_epoch`.
 - Energy broadcast ingestion updates `energyTotals` but does **not** advance startup `live_epoch` and does not trigger startup phase transitions.
 
+## Incremental Merge and Freshness Semantics
+
+Zone and DHW updates are merged incrementally, not replaced wholesale.
+
+- Merge is field-granular for zone config/state and DHW state/config slices.
+- For each polling slice, only attempted fields participate in merge decisions.
+- Attempted fields with valid values overwrite previous values and are marked fresh.
+- Attempted fields without valid values keep last-known values and are marked stale.
+- Unattempted fields are left unchanged (no implicit stale transition).
+
+Operational consequences:
+
+- Partial read failures do not wipe previously valid semantic values.
+- Empty/nil partial snapshots do not remove zone or DHW entities by themselves.
+- Zone visibility/removal remains controlled by zone presence hysteresis FSM.
+- Startup phase progression remains driven by stream-level live/cache epochs.
+
+Implementation note:
+
+- Field freshness is currently tracked in runtime semantic state and used for merge/lifecycle decisions.
+- GraphQL currently exposes the merged semantic values; field-level stale flags are not yet separately exposed as API fields.
+
 ## Persistent Cache Schema
 
 - Runtime cache file path is configurable via `-semantic-cache-path` (default `./semantic_cache.json`).
