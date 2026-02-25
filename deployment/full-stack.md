@@ -133,6 +133,8 @@ Gateway startup scan tries to reduce bus load by using ebusd's known target list
 When semantic B524 reads time out in `ebusd-tcp` mode, zone inventory/name/state can be recovered
 from ebusd's `grab result all` cache (passive snapshot), so climate entities can still appear without
 forcing additional bus traffic.
+Successful hydration from this path is classified as **live semantic source** for startup phase accounting
+(it is not treated as persistent stale cache preload).
 
 Runtime read/write traffic still uses the configured gateway transport.
 

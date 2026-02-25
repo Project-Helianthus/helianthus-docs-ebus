@@ -125,6 +125,8 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
 - Cache-backed semantic payload may be published first and treated as stale bootstrap data.
 - Runtime transitions through startup phases (`BOOT_INIT` → `CACHE_LOADED_STALE` → `LIVE_WARMUP` → `LIVE_READY`, with `DEGRADED` timeout fallback).
 - If `-boot-live-timeout` elapses before `LIVE_READY`, runtime enters `DEGRADED` until live epochs recover.
+- Successful `ebusd-tcp` fallback hydration from `grab result all` (zones/DHW) is classified as live runtime data.
+- Energy broadcast updates do not advance startup live epochs and cannot promote phase readiness by themselves.
 
 Authoritative startup FSM and transition details are documented in [`architecture/startup-semantic-fsm.md`](../architecture/startup-semantic-fsm.md).
 
