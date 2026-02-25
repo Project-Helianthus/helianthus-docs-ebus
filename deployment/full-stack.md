@@ -141,7 +141,9 @@ Runtime read/write traffic still uses the configured gateway transport.
 ### Semantic Cache Persistence
 
 - Gateway reads/writes semantic startup cache at `-semantic-cache-path` (default `./semantic_cache.json`).
-- Writes are atomic (temp file + rename) and only happen for live semantic publications.
+- Writes are atomic (temp file + rename).
+- Runtime semantic cache persistence writes happen for live semantic publications.
+- Legacy v1 -> v2 migration can also rewrite the cache during startup load (`semantic_cache_migrated`), before any live publish.
 - Cache load failures are fail-safe:
   - missing file → `semantic_cache_miss`
   - malformed/unknown schema/read error → `semantic_cache_invalid`
