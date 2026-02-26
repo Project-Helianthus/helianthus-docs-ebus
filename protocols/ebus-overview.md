@@ -100,7 +100,7 @@ Key points:
 
 - **Per-byte echo**: When an initiator drives a symbol onto the bus it will also observe the same symbol (“echo”). An echo mismatch indicates arbitration loss or a collision.
 - **ACK/NAK timing**: `ACK`/`NACK` is exchanged **once per command**, after the initiator sends the command CRC (not after each byte).
-- **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses.
+- **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses. CRC is computed over `LEN DATA...` only (not including any address bytes). Implementors must **not** attempt to read header bytes (SRC/DST/PB/SB) from the slave response — they are inferred from the initiator telegram. See ebusgo#104 for a regression where phantom header reads caused all master-slave transactions to fail.
 - **SYN** (`0xAA`) is used as an **end-of-message** delimiter and may also appear during idle.
 
 ### Collision Detection Model (Helianthus)
