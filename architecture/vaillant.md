@@ -129,7 +129,11 @@ In practice, Vaillant’s approach often implies:
 
 ## What This Means for Helianthus Tooling
 
-Helianthus should model Vaillant regulator subsystems as **logical components** rather than pretending they are separate eBUS addresses:
+Helianthus should model Vaillant regulator subsystems as **logical components** rather than pretending they are separate eBUS addresses.
+
+For how the gateway detects whether a regulator is present, see [`architecture/regulator-detection.md`](./regulator-detection.md).
+
+Tooling guidelines:
 
 - Treat `(address, GG, II, RR)` (and opcode family) as the effective “address” for many values.
 - Ensure traces/logs are annotated with the operation name and selector context (e.g., “Reading GG=0x03 II=0x01 RR=0x0016”).
