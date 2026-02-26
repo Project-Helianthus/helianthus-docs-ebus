@@ -2,8 +2,9 @@
 
 This document is the top-level reference for Vaillant message identifiers (`PB/SB`) observed by Helianthus tooling.
 
-For detailed `0xB5 0x24` (B524, GetExtendedRegisters) coverage, see:
-- [`protocols/ebus-vaillant-GetExtendedRegisters.md`](ebus-vaillant-GetExtendedRegisters.md)
+For detailed coverage of selector-heavy identifiers, see:
+- `0xB5 0x16` (B516, Energy statistics): [`protocols/ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
+- `0xB5 0x24` (B524, GetExtendedRegisters): [`protocols/ebus-vaillant-GetExtendedRegisters.md`](ebus-vaillant-GetExtendedRegisters.md)
 
 ## Scope
 
