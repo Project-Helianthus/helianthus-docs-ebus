@@ -71,29 +71,38 @@ The selector nibble values (`W`, `V`, `Q`) are encoded differently per period an
 Day-level reads require packing the month, half-month, and day within half-month into `W`, `V`, and `Q`:
 
 ```text
-Month 1–7:   w_base = month × 2,       q_base = 2
-Month 8–12:  w_base = (month − 8) × 2, q_base = 3
+Month 1–7:   w_base = month × 2,       q_base_current = 2,  q_base_previous = 0
+Month 8–12:  w_base = (month − 8) × 2, q_base_current = 3,  q_base_previous = 1
 Day 1–15:    v = day,      d_offset = 0
 Day 16–31:   v = day − 16, d_offset = 1
 W = w_base + d_offset
 V = v
-Q = q_base
+Q = q_base_current   (for current-year daily data)
+Q = q_base_previous  (for previous-year daily data — see note below)
 ```
 
 Finally:
 - byte 6 = `(W << 4) | V`
 - byte 7 = `0x30 | Q`
 
-Example encodings (gas heating shown for brevity):
+The `Q` low nibble selects between current and previous year windows within each bank:
+- **Bank 1 (months 1–7):** `Q=2` → current year, `Q=0` → previous year
+- **Bank 2 (months 8–12):** `Q=3` → current year, `Q=1` → previous year
+
+> **Note:** Helianthus currently queries only current-year daily totals. Previous-year daily queries (Q=0/Q=1) are structurally supported by the protocol but have not yet been validated on real hardware.
+
+Example encodings (gas heating, current year, shown for brevity):
 
 | Date | Byte 6 | Byte 7 | Request tail |
 | --- | --- | --- | --- |
-| 1 January | `0x21` | `0x32` | `... 0x21 0x32` |
-| 31 December | `0x9F` | `0x33` | `... 0x9F 0x33` |
+| 1 January (current year) | `0x21` | `0x32` | `... 0x21 0x32` |
+| 1 January (previous year) | `0x21` | `0x30` | `... 0x21 0x30` |
+| 31 December (current year) | `0x9F` | `0x33` | `... 0x9F 0x33` |
+| 31 December (previous year) | `0x9F` | `0x31` | `... 0x9F 0x31` |
 
 ### 4.5 Monthly Windows (`X=2`)
 
-Regulators encode months using the same `W/Q` banking concept as the daily variant (two banks of seven months). Detailed month-level validation is pending; Helianthus currently treats month queries as experimental.
+Regulators encode months using the same `W/Q` banking concept as the daily variant (two banks of seven months). The `Q` nibble toggles between current and previous year within each bank, following the same pattern as §4.4. Detailed month-level validation is pending; Helianthus currently treats month queries as experimental.
 
 ## 5. Source and Usage Selectors
 
