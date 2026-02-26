@@ -116,6 +116,12 @@ During arbitration initiated by the host, adapters **must not** emit `RECEIVED` 
 
 In ebusd “direct” mode, the initiator address byte is emitted as part of arbitration. After a successful `STARTED`, the host continues the telegram by sending `DST`, then `PB SB LEN ...` (i.e., it does not re-send `SRC`).
 
+> **Implementation note — ENS and ENH share arbitration semantics.** Both ENS and ENH adapters transmit the source byte on the wire during START arbitration. Callers must NOT include the source byte in the outgoing telegram payload for either mode. Setting `arbitrationSendsSource=false` for ENS is incorrect and causes a double source byte on the wire. See ebusgo#113.
+
+### Parser state after arbitration
+
+Implementations that use a stateful parser for ENH framing (e.g., two-byte command decoding) **must reset parser state** after arbitration completes (STARTED or FAILED). TCP fragmentation can deliver extra bytes alongside the arbitration response, leaving the parser with a partially-decoded frame. Without a reset, the stale parser state corrupts subsequent echo matching. See ebusgo#113, adapter-proxy#78.
+
 ## INFO
 
 `INFO` requests additional adapter metadata:
