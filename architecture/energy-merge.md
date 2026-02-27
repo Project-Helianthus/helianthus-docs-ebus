@@ -9,7 +9,7 @@ Energy data arrives via two paths:
 | Source | Confidence | Origin |
 | --- | --- | --- |
 | **Broadcast** | Low | eBUS bus broadcast events (passive listening) |
-| **Register** | High | Direct B5/16 register reads from the regulator (active polling, 5-minute interval) |
+| **Register** | High | Direct B5/16 register reads from the boiler (BAI device, active polling, 5-minute interval) |
 
 ## Merge Key
 
@@ -61,11 +61,11 @@ These locks are never held simultaneously — `Apply` and `Snapshot` complete be
 
 ## Register-Primary Ingestion (B5/16)
 
-The register-primary path reads energy statistics directly from the regulator using the B5/16 protocol:
+The register-primary path reads energy statistics directly from the boiler (BAI device) using the B5/16 protocol:
 
 ```text
 Request:  [period, source, usage]
-Response: WORD (little-endian uint16, value in Wh)
+Response: IEEE 754 float32 LE (value in Wh, converted to kWh)
 ```
 
 ### Parameters
@@ -80,12 +80,12 @@ Total: 3 × 3 × 2 = **18 register reads** per refresh cycle.
 
 ### Hardware Gating
 
-B5/16 energy stats are only available on devices with hardware version >= 7603. The gateway checks for the `get_energy_stats` method in the controller's registry planes before attempting reads.
+B5/16 energy stats are only available on devices with hardware version >= 7603. The gateway checks for the `get_energy_stats` method in the target device's (BAI) registry planes before attempting reads.
 
 ### Lifecycle
 
 - Energy register reads are scheduled every 5 minutes (configurable via `-semantic-energy-interval`).
-- The refresh is gated on: controller address known (`controller != 0`) AND regulator capability is `ControllerPresent`.
+- The refresh is gated on: BAI device discovered (via `findDeviceAddressByPrefix`) AND regulator capability is `ControllerPresent`.
 - Each successful read calls `ApplyEnergyFromRegister()` with `EnergySourceRegister`, feeding through the merge truth table.
 - Failed reads are logged with a failure count but do not block other reads.
 
