@@ -115,5 +115,5 @@ stateDiagram-v2
 
 - Vaillant regulator architecture: [`architecture/vaillant.md`](./vaillant.md)
 - Startup FSM (uses regulator detection for readiness): [`architecture/startup-semantic-fsm.md`](./startup-semantic-fsm.md)
-- Product IDs catalog: [`helianthus-ebus-vaillant-productids`](https://github.com/d3vi1/helianthus-ebus-vaillant-productids)
-- ControllerCapability contract: [`helianthus-ebusreg/vaillant/productids`](https://github.com/d3vi1/helianthus-ebusreg)
+- Product IDs catalog: [`helianthus-ebus-vaillant-productids`](https://github.com/Project-Helianthus/helianthus-ebus-vaillant-productids)
+- ControllerCapability contract: [`helianthus-ebusreg/vaillant/productids`](https://github.com/Project-Helianthus/helianthus-ebusreg)

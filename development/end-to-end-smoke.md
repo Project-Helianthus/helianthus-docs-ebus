@@ -23,9 +23,9 @@ flowchart LR
 
 Run in order and stop on first failure:
 
-1. **Gateway smoke** (`helianthus-ebusgateway`, issue [#85](https://github.com/d3vi1/helianthus-ebusgateway/issues/85)).
-2. **Add-on smoke** (`helianthus-ha-addon`, issue [#24](https://github.com/d3vi1/helianthus-ha-addon/issues/24)).
-3. **HA integration smoke** (`helianthus-ha-integration`, issue [#52](https://github.com/d3vi1/helianthus-ha-integration/issues/52)).
+1. **Gateway smoke** (`helianthus-ebusgateway`, issue [#85](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/85)).
+2. **Add-on smoke** (`helianthus-ha-addon`, issue [#24](https://github.com/Project-Helianthus/helianthus-ha-addon/issues/24)).
+3. **HA integration smoke** (`helianthus-ha-integration`, issue [#52](https://github.com/Project-Helianthus/helianthus-ha-integration/issues/52)).
 
 ## Artifacts, logs, pass/fail
 
@@ -38,11 +38,11 @@ Run in order and stop on first failure:
 ## Repo-specific runbooks
 
 - Gateway smoke runbook: `helianthus-ebusgateway` README smoke section
-  https://github.com/d3vi1/helianthus-ebusgateway/blob/main/README.md#smoke-test-context-and-limits
+  https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/README.md#smoke-test-context-and-limits
 - Add-on smoke runbook: `helianthus-ha-addon/SMOKE_RUNBOOK.md`
-  https://github.com/d3vi1/helianthus-ha-addon/blob/main/SMOKE_RUNBOOK.md
+  https://github.com/Project-Helianthus/helianthus-ha-addon/blob/main/SMOKE_RUNBOOK.md
 - Integration smoke runbook: `helianthus-ha-integration` README smoke section
-  https://github.com/d3vi1/helianthus-ha-integration/blob/main/README.md#smoke-profile-local-gateway-graphql
+  https://github.com/Project-Helianthus/helianthus-ha-integration/blob/main/README.md#smoke-profile-local-gateway-graphql
 
 ## Operational rule
 
