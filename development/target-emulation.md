@@ -2,8 +2,8 @@
 
 This document tracks implemented Helianthus target-emulation behavior merged in:
 
-- `helianthus-ebusgo` PR [#61](https://github.com/d3vi1/helianthus-ebusgo/pull/61), PR [#65](https://github.com/d3vi1/helianthus-ebusgo/pull/65), PR [#69](https://github.com/d3vi1/helianthus-ebusgo/pull/69), PR [#71](https://github.com/d3vi1/helianthus-ebusgo/pull/71), and PR [#78](https://github.com/d3vi1/helianthus-ebusgo/pull/78)
-- `helianthus-tinyebus` PR [#10](https://github.com/d3vi1/helianthus-tinyebus/pull/10), PR [#14](https://github.com/d3vi1/helianthus-tinyebus/pull/14), PR [#18](https://github.com/d3vi1/helianthus-tinyebus/pull/18), and PR [#20](https://github.com/d3vi1/helianthus-tinyebus/pull/20)
+- `helianthus-ebusgo` PR [#61](https://github.com/Project-Helianthus/helianthus-ebusgo/pull/61), PR [#65](https://github.com/Project-Helianthus/helianthus-ebusgo/pull/65), PR [#69](https://github.com/Project-Helianthus/helianthus-ebusgo/pull/69), PR [#71](https://github.com/Project-Helianthus/helianthus-ebusgo/pull/71), and PR [#78](https://github.com/Project-Helianthus/helianthus-ebusgo/pull/78)
+- `helianthus-tinyebus` PR [#10](https://github.com/Project-Helianthus/helianthus-tinyebus/pull/10), PR [#14](https://github.com/Project-Helianthus/helianthus-tinyebus/pull/14), PR [#18](https://github.com/Project-Helianthus/helianthus-tinyebus/pull/18), and PR [#20](https://github.com/Project-Helianthus/helianthus-tinyebus/pull/20)
 
 ## Licensing Boundary
 
@@ -141,8 +141,8 @@ go test ./emulation -run '^TestSmokeVR90MappedCommandQuerySet$' -count=1 -v
 
 Repository links:
 
-- https://github.com/d3vi1/helianthus-ebusgo/blob/main/scripts/smoke-identify-only.sh
-- https://github.com/d3vi1/helianthus-ebusgo/blob/main/scripts/smoke-vr90-minimal.sh
+- https://github.com/Project-Helianthus/helianthus-ebusgo/blob/main/scripts/smoke-identify-only.sh
+- https://github.com/Project-Helianthus/helianthus-ebusgo/blob/main/scripts/smoke-vr90-minimal.sh
 
 ### `helianthus-tinyebus`
 
@@ -171,7 +171,7 @@ GOWORK=off go test ./firmware/emulation -run '^TestSmokeVR90MappedCommandQuerySe
 
 Repository link:
 
-- https://github.com/d3vi1/helianthus-tinyebus/blob/main/scripts/smoke-vr90-minimal.sh
+- https://github.com/Project-Helianthus/helianthus-tinyebus/blob/main/scripts/smoke-vr90-minimal.sh
 
 ## Timing Rationale
 
