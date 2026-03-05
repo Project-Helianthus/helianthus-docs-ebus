@@ -159,27 +159,31 @@ Current Helianthus runtime behavior:
 
 For the full decoded constraint catalog with register names, types, enum values, and eBUSd cross-references, see [`ebus-vaillant-B524-register-map.md` § Constraint Catalog](./ebus-vaillant-B524-register-map.md#constraint-catalog-ebusreg).
 
-#### 4.2.4 Circuit type contextual resolution (`GG=0x02 RR=0x02`)
+#### 4.2.4 Circuit type interpretation (`GG=0x02 RR=0x02`)
 
-`GG=0x02 RR=0x02` (`heating_circuit_type` / `mctype`) has **contextual** interpretation — the raw enum value resolves to a more specific type based on other register values. See [`ebus-vaillant-B524-register-map.md` § mctype](./ebus-vaillant-B524-register-map.md#mctype--mixercircuit-type) for the authoritative enum definition.
+`GG=0x02 RR=0x02` (`heating_circuit_type` / `mctype`) is a configuration register with raw values 0..4. See [`ebus-vaillant-B524-register-map.md` § mctype](./ebus-vaillant-B524-register-map.md#mctype--circuit-type) for the authoritative enum definition.
 
-Resolution algorithm:
+**Layer A — Raw register meaning (Vaillant VRC720 manual):**
 
 ```text
-if raw == 1:
-  resolved = (cooling_enabled == 1) ? COOLING : HEATING
-if raw == 2:
-  resolved = (schema in {8,9,12,13} && pool_sensor_present) ? FIXED_VALUE : FIXED_VALUE
-if raw == 3:
-  resolved = (gg05_present) ? CYLINDER_CHARGING : DHW
+0 = Inactive       Circuit unused
+1 = Heating         Weather-compensated heating (mixing or direct)
+2 = Fixed value     Circuit held at fixed target flow temperature
+3 = DHW             Heating circuit used as DHW for additional cylinder
+4 = Increase in return   Return temperature raise circuit
 ```
 
-Context inputs:
+These raw values are the complete Layer A meaning. No resolution or context inputs are needed to interpret them.
 
-- `cooling_enabled`: `GG=0x02 RR=0x06`
-- `system_schema`: `GG=0x00 RR=0x0036` (hydraulic scheme)
-- `pool_sensor_present`: VR70/VR71 external sensor mapping (S1/S2)
-- `gg05_present`: group-presence check for `GG=0x05`
+**Layer B — Derived projections (Helianthus semantic layer):**
+
+Higher-level semantic projections may combine the raw circuit type with other registers:
+
+- **Cooling capability**: derived from `cooling_enabled` (GG=0x02 RR=0x0006), NOT from circuit type. A heating circuit (type=1) with `cooling_enabled=1` supports both heating and cooling modes.
+- **Pool heating**: an APPLICATION of `fixed_value` (type=2) when the system topology includes pool hydraulics (sensor, circulation pump). NOT a separate raw enum value on VRC720/BASV2.
+- **Cylinder charging**: `type=3` (DHW) combined with GG=0x05 group presence indicates a cylinder-charging circuit.
+
+These projections are Helianthus runtime logic and are NOT part of the B524 wire protocol.
 
 #### 4.2.5 Room influence type behavior (`GG=0x02 RR=0x0003`)
 

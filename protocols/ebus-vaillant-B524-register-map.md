@@ -153,7 +153,7 @@ Several registers are conditionally available based on system configuration. Gat
 |------|----------------|----------|
 | `hwc_enabled` | GG=0x01 RR=0x0001 | DHW registers in GG=0x01, HWC-related config in GG=0x00 |
 | `fm5_config` | GG=0x00 RR=0x002F | Solar registers (GG=0x04, GG=0x05), `solar_flow_rate_quantity` |
-| `circuit_type` | GG=0x02 RR=0x0002 | Per-circuit: mixer regs (type=1), fixed regs (type=2) |
+| `circuit_type` | GG=0x02 RR=0x0002 | Per-circuit: heating regs (type=1), fixed_value regs (type=2), return_increase regs (type=4) |
 | `cooling_enabled` | GG=0x02 RR=0x0006 | Cooling-related config in circuits and zones |
 | `room_temp_control_mode` | GG=0x02 RR=0x0015 | Dew point monitoring/offset |
 | `ext_hwc_active` | GG=0x02 RR=0x0018 | External HWC temp/mode |
@@ -278,24 +278,24 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_stat
 
 ## GG=0x02 — Heating Circuits (multi-instance)
 
-All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered by probing `heating_circuit_type` (RR=0x0002) — value `0` (`mctype=inactive`) indicates unused circuit slot. Absent instances (beyond the highest configured slot) return empty/null response (no valid payload from bus). Verified via MCP: II=0,1 return mctype=1 (mixer), II=2-9 return mctype=0 (inactive), II=10 returns null (absent).
+All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered by probing `heating_circuit_type` (RR=0x0002) — value `0` (`mctype=inactive`) indicates unused circuit slot. Absent instances (beyond the highest configured slot) return empty/null response (no valid payload from bus). Verified via MCP: II=0,1 return mctype=1 (heating), II=2-9 return mctype=0 (inactive), II=10 returns null (absent).
 
 | RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|-------|------------|--------|-------|----------|-------|
 | 0x0001 | (unknown) | — | u16 | — | 1..2 | — | — | | CSV says `heating_circuit_type` but gateway uses 0x0002. Purpose unverified. † |
 | 0x0002 | heating_circuit_type | P | u16 | Hc{hc}CircuitType | 0..4 | →mctype | — | **S** `circuits[].properties.heating_circuit_type` | Discovery probe. Also `mixer_circuit_type_external` |
 | 0x0003 | room_influence_type | C | u8 | Hc{hc}RoomInfluenceType | — | `0=inactive 1=active 2=extended` | — | | Controls room sensor influence on heating curve. Not responsive on II=0x00 in VRC Explorer scan. See GetExtendedRegisters §4.2.5 for behavioral semantics |
-| 0x0004 | desired_return_temperature_setpoint | C | f32 | — | 15..80 | — | — | | ebusd: `(commented) Unknown04, constant 30°C`. † |
+| 0x0004 | target_return_temperature | C | f32 | Hc{hc}ReturnTempDesired | 15..80 | — | circuit_type=4 (return_increase) | | Factory setting 30°C. jonesPD CTLV2 confirmed. Only meaningful for "Increase in return" circuits |
 | 0x0005 | dew_point_monitoring_enabled | C | u16 | — | 0..1 | `0=off 1=on` | cooling_enabled | | † |
 | 0x0006 | cooling_enabled | C | u16 | Hc{hc}CoolingEnabled | 0..1 | `0=off 1=on` | — | **S** `circuits[].config.cooling_enabled` | Gate register |
 | 0x0007 | heating_circuit_flow_setpoint | S | f32 | Hc{hc}FlowTempDesired | — | — | — | **S** `circuits[].state.heating_circuit_flow_setpoint` | °C. Read-only |
 | 0x0008 | current_circuit_flow_temperature | S | f32 | Hc{hc}FlowTemp | — | — | — | **S** `circuits[].state.current_circuit_flow_temperature` | °C. Read-only. Also `boiler_status.state.return_temperature` (II=0) |
 | 0x0009 | ext_hwc_temperature_setpoint | C | f32 | — | — | — | ext_hwc_active | | ebusd: `(commented) Unknown09, constant 60°C`. † |
 | 0x000A | dew_point_offset | C | f32 | — | — | — | cooling_enabled | | † |
-| 0x000B | flow_setpoint_excess_offset | C | f32 | Hc{hc}ExcessTemp | — | — | circuit_type=1 (mixer) | | K. Flow temp increased by this value to keep mixer in control range |
-| 0x000C | fixed_desired_temperature | C | f32 | — | — | — | circuit_type=2 (fixed) | | ebusd: `(commented) Unknown0c, constant 65°C`. † |
-| 0x000D | fixed_setback_temperature | C | f32 | — | — | — | circuit_type=2 (fixed) | | ebusd: `(commented) Unknown0d, constant 65°C`. † |
-| 0x000E | set_back_mode_enabled | C | u16 | Hc{hc}SetbackMode | — | →offmode | circuit_type=1 (mixer) | | |
+| 0x000B | flow_setpoint_excess_offset | C | f32 | Hc{hc}ExcessTemp | — | — | circuit_type=1 (heating) | | K. Flow temp increased by this value to keep mixing valve in control range |
+| 0x000C | fixed_desired_temperature | C | f32 | — | — | — | circuit_type=2 (fixed_value) | | ebusd: `(commented) Unknown0c, constant 65°C`. Fixed-value circuit target flow temp. † |
+| 0x000D | fixed_setback_temperature | C | f32 | — | — | — | circuit_type=2 (fixed_value) | | ebusd: `(commented) Unknown0d, constant 65°C`. Fixed-value circuit setback temp. † |
+| 0x000E | set_back_mode_enabled | C | u16 | Hc{hc}SetbackMode | — | →offmode | circuit_type=1 (heating) | | |
 | 0x000F | heating_curve | C | f32 | Hc{hc}HeatCurve | — | — | — | **S** `circuits[].config.heating_curve` | |
 | 0x0010 | heating_flow_temp_max_setpoint | C | f32 | Hc{hc}MaxFlowTempDesired | — | — | — | **S** `circuits[].config.heating_flow_temperature_maximum_setpoint` | °C. 15..80 per ebusd |
 | 0x0011 | cooling_flow_temp_min_setpoint | C | f32 | Hc{hc}MinCoolingTempDesired | — | — | cooling_enabled | | °C |
@@ -374,7 +374,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 The `operating_mode` and `preset` exposed in the zones semantic plane are derived from:
 - `heating_operation_mode` (0x0006): →opmode (Helianthus: 0=off, 1=auto, 2=manual)
 - `current_special_function` (0x000E): →sfmode (Helianthus: 2=quickveto, 3/4=away)
-- Associated circuit's `heating_circuit_type` (GG=0x02 RR=0x0002): determines heat vs cool for mode=2
+- Associated circuit's `cooling_enabled` (GG=0x02 RR=0x0006): determines heat vs cool capability for the zone
 
 ---
 
@@ -635,7 +635,7 @@ Used by: GG=0x03 RR=0x0006, GG=0x01 RR=0x0003
 |-------|-------|-------------------|------------------|
 | 0 | off | off | off |
 | 1 | auto | auto | auto |
-| 2 | day | manual (→heat or →cool by circuit_type) | heat |
+| 2 | day | manual | heat |
 | 3 | night | night *(not implemented)* | night *(not implemented)* |
 
 Note: ebusd defines this as `UIN` with 4 values. Helianthus uses only 0-2; value 3 is not observed in practice on VRC720. Proposed: expose as "night" to distinguish from manual mode 2.
@@ -656,19 +656,27 @@ Used by: GG=0x03 RR=0x000E, GG=0x01 RR=0x000D
 
 Note: Helianthus collapses 3+4 into "away" preset. ebusd also defines `sfmodezone` (0=auto, 1=ventilation, 3=veto) and `sfmodehwc` (0=auto, 6=load) as restricted subsets. Proposed additions: "ventilation" for party-like fan override, "home" for one-day-at-home schedule override, "load" for forced DHW charge.
 
-### mctype — Mixer/circuit type
+### mctype — Circuit type
 
 Used by: GG=0x02 RR=0x0002
 
-| Value | ebusd | Helianthus | Notes |
-|-------|-------|-----------|-------|
-| 0 | inactive | inactive | Zone allowed modes: `[off]` only |
-| 1 | mixer | mixer | Zone allowed modes: `[off, auto, heat]` |
-| 2 | fixed | fixed | Zone allowed modes: `[off, auto, cool]` |
-| 3 | hwc | hwc *(not implemented)* | Hot water circuit (not a heating circuit) |
-| 4 | returnincr | return_increase *(not implemented)* | Return temperature increase |
+| Value | ebusd | Helianthus | Vaillant manual name | Description |
+|-------|-------|-----------|---------------------|-------------|
+| 0 | inactive | inactive | Inactive | Circuit unused |
+| 1 | mixer | heating | Heating | Weather-compensated heating. Mixing or direct depending on basic system diagram. |
+| 2 | fixed | fixed_value | Fixed value | Circuit held at a fixed target flow temperature. Applications: swimming pool heating, door air curtain heating. |
+| 3 | hwc | dhw *(not implemented)* | DHW | Heating circuit used as DHW circuit for an additional cylinder. |
+| 4 | returnincr | return_increase *(not implemented)* | Increase in return | Return temperature raise circuit. Target return temperature at RR=0x0004 (factory setting 30°C). |
 
-Note: Constraint catalog allows 0..4 for this register — value 5 (`pool` in ebusd `mctype7`) exceeds the BASV2 constraint range and is not valid on VRC720 systems. ebusd `mctype7` extends to value 6 (`circulation`) but neither 5 nor 6 are within the authoritative constraint. Types 3-4 are not present on the test system; Helianthus currently treats them as inactive.
+**Naming note:** ebusd templates label value 1 as "mixer" — this is a community naming convention; the Vaillant VRC720 operating & installation manual calls it "Heating" (Heizen). The mixing valve is an implementation detail of the hydraulic system, not the circuit type itself.
+
+**Pool is a derived application, not a raw enum value.** The Vaillant manual describes "fixed value control" as suitable for "swimming pool heating" — so pool heating is an _application_ of `fixed_value` (mctype=2) when the system topology includes swimming pool hydraulics (sensor, circulation pump). It is NOT a separate enum value on VRC720/CTLV2/BASV2 systems. Constraint catalog confirms range 0..4.
+
+**ebusd extended enums:** ebusd `mctype` defines 0-5 (adding `pool=5`), and `mctype7` defines 0-6 (adding `circulation=6`; see ebusd-config issue #182 and PR #174). Neither value 5 nor 6 is within the BASV2 constraint range (0..4). These values may be valid on other Vaillant controller platforms.
+
+**Zone capabilities** depend on (a) circuit type supporting heating, and (b) `cooling_enabled` flag (RR=0x0006) for cooling capability. Cooling is a separate function/mode, not derived from circuit type.
+
+Sources: VRC720 operating & installation instructions (circuit type table, fixed value control description, abbreviations list for swimming pool); ebusd `_templates.tsp` mctype/mctype7 definitions; ebusd-config issue #182, PR #174 (translations: Heizen/Festwert/WW/Rückl.anh.).
 
 ### offmode — Auto-off behavior
 
