@@ -53,7 +53,7 @@ The FLAGS byte in the response header encodes register access mode. Discovered v
 
 **Opcode-specific behavior:** Opcode 0x06 remote read (`OC=0x06, OT=0x00`) is heavily RO — across all groups, remote access exposes far fewer writable registers. When it does allow writes, they are always FLAGS=0x02 (technical), never 0x03 (user-facing). All user-configurable settings are exclusively on the opcode 0x02 local path.
 
-**Coverage:** FLAGS data available for GG=0x02, 0x03, 0x09, 0x0A, 0x0C (from VRC Explorer scans). **No FLAGS data for GG=0x00 and GG=0x01** — these groups were not scanned with `b524_grab_op.py`; a future scan is needed.
+**Coverage:** FLAGS data available for GG=0x00, 0x01 (partial, from MCP validation 2026-03-05), GG=0x02, 0x03, 0x09, 0x0A, 0x0C (from VRC Explorer scans). Full FLAGS scan for GG=0x00 and GG=0x01 still pending.
 
 ### Wire Type Encoding
 
@@ -141,8 +141,12 @@ Source: `helianthus-ebusreg/vaillant/system/b524_profile.go`
 
 | Group | Opcode | Instance Max | Register Max | Notes |
 |-------|--------|-------------|-------------|-------|
+| 0x00 | 0x02 (local) | 0x00 | 0x00A2 | System/Regulator. Singleton, no instance scan |
+| 0x01 | 0x02 (local) | 0x00 | 0x0011 | DHW. Singleton, no instance scan |
 | 0x02 | 0x02 (local) | 0x0A | 0x0025 | Heating circuits. **Code is stale** (`b524_profile.go` says 0x0021, should be 0x0025). Registers 0x0022-0x0025 (room humidity, dew point, pump hours/starts) are outside scanner range. TODO: fix in ebusreg |
 | 0x03 | 0x02 (local) | 0x0A | 0x002F | Zones |
+| 0x04 | 0x02 (local) | 0x00 | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
+| 0x05 | 0x02 (local) | 0x0A | 0x0004 | Cylinders. Gated by fm5_config≤2 |
 | 0x09 | 0x06 (remote) | 0x0A | 0x002F | Room sensors (regulator) |
 | 0x0A | 0x06 (remote) | 0x0A | 0x003F | Room sensors (VR92) |
 | 0x0C | 0x06 (remote) | 0x0A | 0x003F | Unknown remote |
@@ -158,8 +162,8 @@ Several registers are conditionally available based on system configuration. Gat
 | `hwc_enabled` | GG=0x01 RR=0x0001 | DHW registers in GG=0x01, HWC-related config in GG=0x00 |
 | `fm5_config` | GG=0x00 RR=0x002F | Solar registers (GG=0x04, GG=0x05), `solar_flow_rate_quantity` |
 | `circuit_type` | GG=0x02 RR=0x0002 | Per-circuit: heating regs (type=1), fixed_value regs (type=2), return_increase regs (type=4) |
-| `cooling_enabled` | GG=0x02 RR=0x0006 | Cooling-related config in circuits and zones |
-| `room_temp_control_mode` | GG=0x02 RR=0x0015 | Dew point monitoring/offset |
+| `cooling_enabled` | GG=0x02 RR=0x0006 | Cooling-related config in circuits and zones. Required for dew point functions (see below) |
+| `room_temp_control_mode` | GG=0x02 RR=0x0015 | Dew point monitoring requires `cooling_enabled=true` AND `room_temp_control_mode != off` |
 | `ext_hwc_active` | GG=0x02 RR=0x0018 | External HWC temp/mode |
 
 **Rule:** Gated-off registers are omitted from semantic plane responses. Explicit queries to gated-off registers return an error with gate status explanation.
@@ -176,9 +180,9 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0002 | continuous_heating_start_setpoint | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | | ebusd: `-26=off` disables function |
 | 0x0003 | frost_override_time | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | | |
 | 0x0004 | maximum_preheating_time | C | u16 | min | — | 0..300 step 10 | — | — | | † |
-| 0x0007 | system_off | S | u16 | bool | — | — | `0=false 1=true` | — | **S** `system.state.system_off` | |
+| 0x0007 | system_off | C | u8 | bool | — | — | `0=off 1=on` | — | **S** `system.state.system_off` | FLAGS=0x03 (user RW). System on/off switch, not a sensor reading |
 | 0x0008 | temporary_allow_backup_heater | C | u8 | bool | — | — | — | — | | † |
-| 0x0009 | external_energy_management_activation | P | u16 | bool | — | — | `0=false 1=true` | — | | † |
+| 0x0009 | external_energy_management_activation | P | u16 | bool | — | — | `0=off 1=on` | — | | † |
 | 0x000A | parallel_tank_loading_allowed | C | u16 | bool | HwcParallelLoading | — | →onoff | — | | ebusd confirmed at `@ext(0xa,0)` |
 | 0x000B | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 0. Near boolean cluster |
 | 0x000E | max_room_humidity | C | u16 | % | MaxRoomHumidity | — | — | — | **S** `system.config.max_room_humidity` | |
@@ -186,7 +190,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0010 | (unknown) | — | u16 | — | — | — | — | — | | Near config cluster |
 | 0x0011 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 16. Possible temp threshold |
 | 0x0012 | continuous_heating_room_setpoint | C | u16 | °C | — | — | — | — | | Confirmed exact, value=20 |
-| 0x0014 | adaptive_heating_curve | C | u16 | bool | AdaptHeatCurve | — | →yesno | — | **S** `system.config.adaptive_heating_curve` | |
+| 0x0014 | adaptive_heating_curve | C | u8 | bool | AdaptHeatCurve | — | →yesno | — | **S** `system.config.adaptive_heating_curve` | FLAGS=0x03 (user RW). MCP validated 1-byte |
 | 0x0015 | (unknown) | — | u16 | — | — | — | — | — | | False positive in CSV (was `parallel_tank_loading`; actual is at 0x000A) |
 | 0x0017 | dhw_maximum_loading_time | C | u16 | min | MaxCylinderChargeTime | — | — | hwc_enabled | | |
 | 0x0018 | hwc_lock_time | C | u16 | min | HwcLockTime | — | — | hwc_enabled | | |
@@ -196,7 +200,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x001E | (unknown) | — | u8 | — | — | — | — | — | | Scan value: 1. Possible pump/flag |
 | 0x0022 | alternative_point | C | f32 | °C | — | — | — | — | **S** `system.config.alternative_point` | -21..40 per TSP |
 | 0x0023 | heating_circuit_bivalence_point | C | f32 | °C | — | — | — | — | **S** `system.config.heating_circuit_bivalence_point` | -20..30 per TSP |
-| 0x0024 | backup_heater_mode | C | u16 | enum | — | — | — | — | | See [Mapping Conflicts](#mapping-conflicts) |
+| 0x0024 | backup_heater_mode | C | u16 | enum | — | — | values unknown | — | | See [Mapping Conflicts](#mapping-conflicts) |
 | 0x0025 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 0 |
 | 0x0026 | hc_emergency_temperature | C | f32 | °C | — | — | — | — | **S** `system.config.hc_emergency_temperature` | 20..80 per TSP |
 | 0x0027 | dhw_hysteresis | C | f32 | K | CylinderChargeHyst | — | — | hwc_enabled | | 3..20 step 0.5 per TSP |
@@ -215,7 +219,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x003A | dew_point_offset | C | f32 | K | — | — | — | — | | -10..10 per TSP |
 | 0x003D | solar_yield_total | E | u32 | kWh | SolarYieldTotal | — | — | fm5_config≤2 | | |
 | 0x003E | environmental_yield_total | E | u32 | kWh | YieldTotal | — | — | — | | |
-| 0x0045 | esco_block_function | C | u16 | enum | — | — | — | — | | |
+| 0x0045 | esco_block_function | C | u16 | enum | — | — | values unknown | — | | |
 | 0x0046 | hwc_max_flow_temp_desired | C | f32 | °C | HwcMaxFlowTempDesired | — | — | — | **S** `system.config.hwc_max_flow_temp_desired` | 15..80 per TSP |
 | 0x0048 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 1 |
 | 0x004B | system_flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | **S** `system.state.system_flow_temperature`, `boiler_status.state.flow_temperature` | Read-only |
@@ -246,7 +250,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x008A | (unknown) | — | f32 | — | — | — | — | — | | Scan value: 1.0. PV/smart cluster |
 | 0x008B | (unknown) | — | f32 | — | — | — | — | — | | Scan value: 90.0. PV/smart cluster, possible max flow temp |
 | 0x0095 | outdoor_temperature_average24h | S | f32 | °C | OutsideTempAvg | — | — | — | **S** `system.state.outdoor_temperature_avg24h` | Rounded avg updated every 3h |
-| 0x0096 | maintenance_due | S | u16 | bool | MaintenanceDue | — | →yesno | — | **S** `system.state.maintenance_due` | Read-only |
+| 0x0096 | maintenance_due | S | u8 | bool | MaintenanceDue | — | →yesno | — | **S** `system.state.maintenance_due` | FLAGS=0x01 (stable RO). MCP validated 1-byte |
 | 0x009A | green_iq | S | u16 | bool | — | — | — | — | | |
 | 0x009D | hwc_cylinder_temperature_top | S | f32 | °C | HwcStorageTempTop | — | — | — | **S** `system.state.hwc_cylinder_temperature_top` | Read-only |
 | 0x009E | hwc_cylinder_temperature_bottom | S | f32 | °C | HwcStorageTempBottom | — | — | — | **S** `system.state.hwc_cylinder_temperature_bottom` | Read-only |
@@ -273,7 +277,7 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_stat
 | 0x000A | hwc_holiday_end_date | C | date | date | HwcHolidayEndPeriod | — | — | hwc_enabled | | |
 | 0x000B | hwc_bank_holiday_start | C | date | date | HwcBankHolidayStartPeriod | — | — | hwc_enabled | | ebusd confirmed |
 | 0x000C | hwc_bank_holiday_end | C | date | date | HwcBankHolidayEndPeriod | — | — | hwc_enabled | | ebusd confirmed |
-| 0x000D | hwc_special_function_mode | C | u16 | enum | HwcSFMode | — | →sfmode | hwc_enabled | **S** `dhw.state` | Special function |
+| 0x000D | hwc_special_function_mode | C | u8 | enum | HwcSFMode | — | →sfmode | hwc_enabled | **S** `dhw.state` | FLAGS=0x03 (user RW). MCP validated 1-byte |
 | 0x000F | hwc_status | S | u16 | state | — | — | — | — | | Not gated |
 | 0x0010 | hwc_holiday_start_time | C | time | time | — | — | — | hwc_enabled | | |
 | 0x0011 | hwc_holiday_end_time | C | time | time | — | — | — | hwc_enabled | | |
@@ -304,7 +308,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered
 | 0x0010 | heating_flow_temp_max_setpoint | C | f32 | °C | Hc{hc}MaxFlowTempDesired | — | — | — | **S** `circuits[].config.heating_flow_temperature_maximum_setpoint` | 15..80 per ebusd |
 | 0x0011 | cooling_flow_temp_min_setpoint | C | f32 | °C | Hc{hc}MinCoolingTempDesired | — | — | cooling_enabled | | |
 | 0x0012 | heating_flow_temp_min_setpoint | C | f32 | °C | Hc{hc}MinFlowTempDesired | — | — | — | **S** `circuits[].config.heating_flow_temperature_minimum_setpoint` | |
-| 0x0013 | ext_hwc_operation_mode | C | u16 | enum | — | — | — | ext_hwc_active | | |
+| 0x0013 | ext_hwc_operation_mode | C | u16 | enum | — | — | values unknown | ext_hwc_active | | |
 | 0x0014 | heat_demand_limited_by_outside_temp | C | f32 | °C | Hc{hc}SummerTempLimit | — | — | — | **S** `circuits[].config.heat_demand_limited_by_outside_temp` | Summer cutoff |
 | 0x0015 | room_temperature_control_mode | C | u16 | enum | Hc{hc}RoomTempSwitchOn | — | →rcmode | — | **S** `circuits[].config.room_temperature_control_mode` | Gate for dew point |
 | 0x0016 | screed_drying_day | C | u16 | count | Hc{hc}ScreedDryingDay | — | — | — | | Screed drying program |
@@ -342,7 +346,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 | 0x0009 | heating_set_back_temperature | C | f32 | °C | Zone{z}NightTemp | — | — | — | | Night setpoint |
 | 0x000C | bank_holiday_start | C | date | date | Zone{z}BankHolidayStartPeriod | — | — | — | | ebusd confirmed |
 | 0x000D | bank_holiday_end | C | date | date | Zone{z}BankHolidayEndPeriod | — | — | — | | ebusd confirmed |
-| 0x000E | current_special_function | C | u16 | enum | Zone{z}SFMode | — | →sfmode | — | **S** (derived) `zones[].state.operating_mode` | FLAGS=0x03 (user RW) — writable to set quickveto/away |
+| 0x000E | current_special_function | C | u8 | enum | Zone{z}SFMode | — | →sfmode | — | **S** (derived) `zones[].state.operating_mode` | FLAGS=0x03 (user RW). MCP validated 1-byte. Writable to set quickveto/away |
 | 0x000F | current_room_temperature | S | f32 | °C | Zone{z}RoomTemp | — | — | — | **S** `zones[].state.current_temperature` | FLAGS=0x01 (stable RO). From room sensor |
 | 0x0010 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
 | 0x0011 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
@@ -458,6 +462,22 @@ Notable scan observations:
 
 ---
 
+## GG=0x06 — Programs/Timetables
+
+Uses opcode `0x0B` (array/table transport). Scalar register scanning is not applicable — this group uses a different selector schema than `0x02`/`0x06` register reads. See [GetExtendedRegisters §4.5](./ebus-vaillant-GetExtendedRegisters.md#45-0x0b-arraytable-read-schedules) for wire protocol details.
+
+No register table. Schema under investigation.
+
+---
+
+## GG=0x07 — Programs/Timetables
+
+Uses opcode `0x0B` (array/table transport). Same transport as GG=0x06.
+
+No register table. Schema under investigation.
+
+---
+
 ## GG=0x0C — Unknown Remote (multi-instance, remote)
 
 Uses opcode `0x06` (remote). Instances 0x00-0x0A. VRC Explorer scan returned `0x00` (empty) for all registers across all instances on the test system. No active data.
@@ -565,6 +585,14 @@ Source: `refreshEnergy()` in `semantic_vaillant.go`
 | `electric.climate` | GG=0x00, RR=0x0057 | u32 (kWh) |
 | `electric.dhw` | GG=0x00, RR=0x0058 | u32 (kWh) |
 | `gas.dhw` | GG=0x00, RR=0x0059 | u32 (kWh) |
+
+### `ebus.v1.semantic.solar.get`
+
+Not implemented. Gated by `fm5_config≤2`. Source registers would come from GG=0x04 (solar circuit).
+
+### `ebus.v1.semantic.cylinders.get`
+
+Not implemented. Gated by `fm5_config≤2`. Source registers would come from GG=0x05 (cylinders).
 
 ---
 
@@ -794,7 +822,7 @@ One pending:
 
 ### FLAGS Verification Summary
 
-Category corrections applied from VRC Explorer FLAGS analysis (GG=0x02, 0x03):
+Category corrections applied from VRC Explorer FLAGS analysis (GG=0x02, 0x03) and MCP validation (GG=0x00, 0x01):
 
 | Group | RR | Name | Old Cat | New Cat | FLAGS | Rationale |
 |-------|-----|------|---------|---------|-------|-----------|
@@ -807,12 +835,28 @@ Category corrections applied from VRC Explorer FLAGS analysis (GG=0x02, 0x03):
 | 0x03 | 0x0015 | cooling_manual_mode_setpoint | C | S | 0x01 | Computed output, read-only |
 | 0x03 | 0x001E | quick_veto_end_time | S | C | 0x03 | Writable (extend/set veto) |
 | 0x03 | 0x0024 | quick_veto_end_date | S | C | 0x03 | Writable (extend/set veto) |
+| 0x00 | 0x0007 | system_off | S | C | 0x03 | User-writable on/off switch, not a sensor reading (MCP validated) |
+
+Wire type corrections from MCP validation (2026-03-05):
+
+| Group | RR | Name | Old Wire | New Wire | Evidence |
+|-------|-----|------|----------|----------|----------|
+| 0x00 | 0x0007 | system_off | u16 | u8 | 1-byte response, FLAGS=0x03 |
+| 0x00 | 0x0014 | adaptive_heating_curve | u16 | u8 | 1-byte response, FLAGS=0x03 |
+| 0x00 | 0x0096 | maintenance_due | u16 | u8 | 1-byte response, FLAGS=0x01 |
+| 0x01 | 0x000D | hwc_special_function_mode | u16 | u8 | 1-byte response, FLAGS=0x03 |
+| 0x03 | 0x000E | current_special_function | u16 | u8 | 1-byte response, FLAGS=0x03 |
 
 Notable FLAGS-confirmed assignments (no change needed):
 - GG=0x02 0x0002 (heating_circuit_type): FLAGS=0x03 (user RW), kept as P — writable but used as immutable discovery probe in Helianthus
 - GG=0x03 0x001C (zone_index): FLAGS=0x01 (stable RO), kept as P — presence marker
+- GG=0x00 0x0036 (system_scheme): FLAGS=0x03 (user RW), kept as P — stable property rarely changed
 
-Registers without FLAGS data: all of GG=0x00 and GG=0x01 (not yet scanned by `b524_grab_op.py`).
+Partial FLAGS data from MCP spot-checks (GG=0x00, 0x01):
+- GG=0x00: 0x0007(0x03), 0x0014(0x03), 0x0036(0x03), 0x0039(0x01), 0x004B(0x01), 0x0056(0x01), 0x0073(0x01), 0x0095(0x00), 0x0096(0x01)
+- GG=0x01: 0x0001(0x03), 0x0003(0x03), 0x0004(0x03), 0x0005(0x01), 0x000D(0x03)
+
+Full FLAGS scan for GG=0x00 and GG=0x01 still pending (`b524_grab_op.py`).
 
 ## Related Files
 

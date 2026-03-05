@@ -227,8 +227,8 @@ Write request payload (6+ bytes):
 ```
 
 Read response:
-- headered: `FLAGS GG RR_LO RR_HI [value...]`
-- or status-only short form: `FLAGS`
+- Successful: `FLAGS GG RR_LO RR_HI [value...]`
+- Short responses (< 4 bytes) are not successful reads. See §2.2.
 
 Addressing notes:
 - `0x02` is typically local regulator space.
@@ -284,7 +284,7 @@ GG   Descriptor(s)  Typical opcode  Notes
 0x05 1.0 / absent   0x02            model-/system-dependent
 0x06 (varies)       0x0B            program/timetable domain
 0x07 (varies)       0x0B            program/timetable domain
-0x08 1.0 / absent   unknown         constraint-only, no responsive registers observed
+0x08 1.0 / absent   unknown (likely 0x02)  constraint-only, no responsive registers observed
 0x09 1.0            0x06            instanced
 0x0A 1.0            0x06            instanced
 0x0C 1.0 / absent   0x06            model-/system-dependent
