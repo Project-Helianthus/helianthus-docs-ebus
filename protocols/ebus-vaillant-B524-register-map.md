@@ -2,7 +2,7 @@
 
 > **Status:** Authoritative reference. Single source of truth for B524 register semantics in Helianthus.
 >
-> **Last updated:** 2026-03-05 (v3 — FLAGS verification from VRC Explorer scans, category corrections)
+> **Last updated:** 2026-03-05 (v4 — MCP proof scan: 5500 probes, 2751 valid registers, dual-namespace discovery, 100+ new registers, radio device identification)
 >
 > **Device:** BASV2 (VRC720-compatible, HW 1704)
 
@@ -53,7 +53,7 @@ The FLAGS byte in the response header encodes register access mode. Discovered v
 
 **Opcode-specific behavior:** Opcode 0x06 remote read (`OC=0x06, OT=0x00`) is heavily RO — across all groups, remote access exposes far fewer writable registers. When it does allow writes, they are always FLAGS=0x02 (technical), never 0x03 (user-facing). All user-configurable settings are exclusively on the opcode 0x02 local path.
 
-**Coverage:** FLAGS data available for GG=0x00, 0x01 (partial, from MCP validation 2026-03-05), GG=0x02, 0x03, 0x09, 0x0A, 0x0C (from VRC Explorer scans). Full FLAGS scan for GG=0x00 and GG=0x01 still pending.
+**Coverage:** FLAGS data complete for all groups from MCP proof scan 2026-03-05 (5500 probes). FLAGS column populated for every responsive register across GG=0x00-0x05, 0x08, 0x09, 0x0A, 0x0C.
 
 ### Wire Type Encoding
 
@@ -70,10 +70,14 @@ The FLAGS byte in the response header encodes register access mode. Discovered v
 
 ### Opcode Routing
 
+> **Verified 2026-03-05** via MCP proof scan (5500 calls, 2751 valid). See `_work_register_mapping/B524/proof_2026-03-05/`.
+
 | Opcode | Name | Groups | Notes |
 |--------|------|--------|-------|
-| `0x02` | Local | 0x00-0x05 | Controller-local registers |
-| `0x06` | Remote | 0x09, 0x0A, 0x0C | Room sensor / remote device registers |
+| `0x02` | Local | 0x00-0x05, 0x08 | Controller-local registers |
+| `0x06` | Remote | 0x08, 0x09, 0x0A, 0x0C | Room sensor / remote device registers |
+
+**Dual-namespace groups:** GG=0x08, 0x09, 0x0A respond to **both** opcodes with **different data**. Opcode 0x02 returns local configuration (sensor slots, schedules, serial numbers). Opcode 0x06 returns live remote data (temperatures, humidity, device status). The two namespaces share no register addresses — they are independent address spaces selected by opcode. GG=0x0C responds only to 0x06 (no local config namespace).
 
 ### Selector Subtypes (VRC Explorer Reference)
 
@@ -114,24 +118,26 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 
 ## Group Topology
 
-| GG | Name | Instanced | II Range | Opcode | Semantic Planes |
-|----|------|-----------|----------|--------|-----------------|
-| 0x00 | System/Regulator | No | 0x00 | 0x02 | system, energy_totals, boiler_status (partial) |
-| 0x01 | DHW | No | 0x00 | 0x02 | dhw |
-| 0x02 | Heating Circuits | Yes | 0x00-0x0A | 0x02 | circuits, boiler_status (partial) |
-| 0x03 | Zones | Yes | 0x00-0x0A | 0x02 | zones |
-| 0x04 | Solar Circuit | No | 0x00 | 0x02 | solar (gated) |
-| 0x05 | Cylinders | Yes | 0x00-0x0A | 0x02 | cylinders (gated) |
-| 0x08 | Unknown (constraint-only) | Yes | — | unknown (likely 0x02) | — |
-| 0x09 | Room Sensors (regulator) | Yes | 0x00-0x0A | 0x06 | — |
-| 0x0A | Room Sensors (VR92) | Yes | 0x00-0x0A | 0x06 | — |
-| 0x06 | Programs/Timetables | — | — | 0x0B | — |
-| 0x07 | Programs/Timetables | — | — | 0x0B | — |
-| 0x0C | Unknown remote | Yes | 0x00-0x0A | 0x06 | — |
+| GG | Name | Instanced | II Range | Opcode | Regs (scan) | Semantic Planes |
+|----|------|-----------|----------|--------|-------------|-----------------|
+| 0x00 | System/Regulator | No | 0x00 | 0x02 | 179 (0x0001-0x00FF) | system, energy_totals, boiler_status (partial) |
+| 0x01 | DHW | No | 0x00 | 0x02 | 17 (0x0001-0x0013) | dhw |
+| 0x02 | Heating Circuits | Yes | 0x00-0x0A | 0x02 | 291 (26/inst, 11 inst) | circuits, boiler_status (partial) |
+| 0x03 | Zones | Yes | 0x00-0x0A | 0x02 | 416 (38/inst, 11 inst) | zones |
+| 0x04 | Solar Circuit | No | 0x00 | 0x02 | 10 (0x0001-0x000B) | solar (gated) |
+| 0x05 | Cylinders | Yes | 0x00-0x01 | 0x02 | 8 (4/inst, 2 inst) | cylinders (gated) |
+| 0x08 | Buffer/Solar Cylinder 2 | Yes | 0x00 (local), 0x00-0x0A (remote) | **0x02 + 0x06** | 7 local + 44 remote | — |
+| 0x09 | Radio Sensors (VRC7xx) | Yes | 0x00-0x0A | **0x02 + 0x06** | 165 local + 352 remote | — |
+| 0x0A | Radio Sensors (VR92) | Yes | 0x00-0x0A | **0x02 + 0x06** | 759 local + 338 remote | — |
+| 0x06 | Programs/Timetables | — | — | 0x0B | — | — |
+| 0x07 | Programs/Timetables | — | — | 0x0B | — | — |
+| 0x0C | Remote Misc | Yes | 0x00-0x0A | 0x06 only | 165 (15/inst) | — |
 
-Group 0x08 has 6 constraint entries in `b524_constraints.go` (similar structure to GG=0x05 cylinders) but no responsive registers observed in VRC Explorer scans. Discovery probe returned 0 pages. Hypothesis: Solar Cylinder 2 / buffer-tank group — Vaillant manuals explicitly support two solar cylinders (`DHWBt2` sensor) and GG=0x05 (Solar Cylinder 1) uses local opcode 0x02. ebusd-configuration does not define GG=0x08 in `15.ctlv2.csv`. For unknown groups, probe both opcodes and accept the one yielding a standard header response (payload ≥4 with echoed GG/RR).
+**GG=0x08 — Buffer/Solar Cylinder 2:** Dual-opcode confirmed by scan. Local (0x02): 7 singleton registers — cylinder max setpoint, charge hysteresis/offset, two NaN temperatures, pump status. Remote (0x06): 4 registers per instance across all 11 instances — likely buffer-tank sensor data. Constraint catalog has 6 entries matching GG=0x05 (cylinders) structure. ebusd does not define GG=0x08.
 
-Room sensors use groups GG=0x09 (regulator-side) and GG=0x0A (VR92-side), both via opcode `0x06` (remote). The instance II selects which sensor within that group (II=0x00 for the first, up to 0x0A).
+**Radio sensor groups (0x09, 0x0A):** Both support dual-namespace. The local namespace (0x02) stores per-slot configuration (sensor enable flags, temperature schedules, BASV2 serial number fragments). The remote namespace (0x06) stores live data from paired radio devices (temperature, humidity, device type, firmware version). Instance II selects the sensor slot (II=0x00 = slot 0, up to II=0x0A = slot 10).
+
+**GG=0x0C:** Responds only to opcode 0x06 (remote data). No local config namespace. 15 registers per instance. Purpose unclear — possibly reserved for future remote device types.
 
 **Discovery:** Directory probe (`opcode=0x00`) is unreliable for GG=0x05 (terminator quirk). Use static topology. Multi-instance groups: scan all instances up to II=0x0A, expose only active ones.
 
@@ -139,17 +145,21 @@ Room sensors use groups GG=0x09 (regulator-side) and GG=0x0A (VR92-side), both v
 
 Source: `helianthus-ebusreg/vaillant/system/b524_profile.go`
 
-| Group | Opcode | Instance Max | Register Max | Notes |
-|-------|--------|-------------|-------------|-------|
-| 0x00 | 0x02 (local) | 0x00 | 0x00A2 | System/Regulator. Singleton, no instance scan |
-| 0x01 | 0x02 (local) | 0x00 | 0x0011 | DHW. Singleton, no instance scan |
-| 0x02 | 0x02 (local) | 0x0A | 0x0025 | Heating circuits. **Code is stale** (`b524_profile.go` says 0x0021, should be 0x0025). Registers 0x0022-0x0025 (room humidity, dew point, pump hours/starts) are outside scanner range. TODO: fix in ebusreg |
-| 0x03 | 0x02 (local) | 0x0A | 0x002F | Zones |
-| 0x04 | 0x02 (local) | 0x00 | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
-| 0x05 | 0x02 (local) | 0x0A | 0x0004 | Cylinders. Gated by fm5_config≤2 |
-| 0x09 | 0x06 (remote) | 0x0A | 0x002F | Room sensors (regulator) |
-| 0x0A | 0x06 (remote) | 0x0A | 0x003F | Room sensors (VR92) |
-| 0x0C | 0x06 (remote) | 0x0A | 0x003F | Unknown remote |
+| Group | Opcode | Instance Max | Register Max | Scan Observed Max | Notes |
+|-------|--------|-------------|-------------|-------------------|-------|
+| 0x00 | 0x02 (local) | 0x00 | 0x00A2 | **0x00FF** | System/Regulator. Singleton. **Code stale**: profile says 0x00A2 but 179 registers extend to 0x00FF. TODO: fix in ebusreg |
+| 0x01 | 0x02 (local) | 0x00 | 0x0011 | **0x0013** | DHW. Singleton. 4 undocumented registers 0x0007-0x0013. TODO: fix in ebusreg |
+| 0x02 | 0x02 (local) | 0x0A | 0x0025 | 0x0025 | Heating circuits. **Code is stale** (`b524_profile.go` says 0x0021, should be 0x0025). TODO: fix in ebusreg |
+| 0x03 | 0x02 (local) | 0x0A | 0x002F | **0x002E** | Zones. Scan confirms 38 regs/instance. Profile accurate |
+| 0x04 | 0x02 (local) | 0x00 | 0x000B | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
+| 0x05 | 0x02 (local) | 0x01 | 0x0004 | 0x0004 | Cylinders. **Only 2 instances** (0x00-0x01), not 0x0A. Gated by fm5_config≤2 |
+| 0x08 | 0x02 (local) | 0x00 | — | **0x0007** | Buffer/Solar Cylinder 2. Singleton config. **NEW** |
+| 0x08 | 0x06 (remote) | 0x0A | — | **0x0004** | Buffer/Solar Cylinder 2. 4 regs/instance. **NEW** |
+| 0x09 | 0x02 (local) | 0x0A | — | **0x000F** | Radio sensors VRC7xx. 15 regs/instance. **NEW** (dual-namespace) |
+| 0x09 | 0x06 (remote) | 0x0A | 0x002F | **0x0030** | Radio sensors VRC7xx. 32 regs/instance |
+| 0x0A | 0x02 (local) | 0x0A | — | **0x004D** | Radio sensors VR92. 69 regs/instance. **NEW** (dual-namespace) |
+| 0x0A | 0x06 (remote) | 0x0A | 0x003F | **0x0035** | Radio sensors VR92. 32 regs/instance |
+| 0x0C | 0x06 (remote) | 0x0A | 0x003F | **0x002F** | Remote misc. 15 regs/instance. No local namespace |
 
 ---
 
@@ -176,13 +186,13 @@ All registers use opcode `0x02`, instance `0x00`.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | dhw_bivalence_point | C | f32 | °C | — | -20..50 step 1 | — | — | **S** `system.config.dhw_bivalence_point` | |
-| 0x0002 | continuous_heating_start_setpoint | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | | ebusd: `-26=off` disables function |
-| 0x0003 | frost_override_time | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | | |
-| 0x0004 | maximum_preheating_time | C | u16 | min | — | 0..300 step 10 | — | — | | † |
+| 0x0001 | dhw_bivalence_point | C | f32 | °C | — | -20..50 step 1 | — | — | **S** `system.config.dhw_bivalence_point` | FLAGS=0x02 |
+| 0x0002 | continuous_heating_start_setpoint | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | | FLAGS=0x03. ebusd: `-26=off` disables function |
+| 0x0003 | frost_override_time | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | | FLAGS=0x03 |
+| 0x0004 | maximum_preheating_time | C | u16 | min | — | 0..300 step 10 | — | — | | FLAGS=0x03. † |
 | 0x0007 | system_off | C | u8 | bool | — | — | `0=off 1=on` | — | **S** `system.state.system_off` | FLAGS=0x03 (user RW). System on/off switch, not a sensor reading |
 | 0x0008 | temporary_allow_backup_heater | C | u8 | bool | — | — | — | — | | † |
-| 0x0009 | external_energy_management_activation | P | u16 | bool | — | — | `0=off 1=on` | — | | † |
+| 0x0009 | external_energy_management_activation | C | u8 | bool | — | — | `0=off 1=on` | — | | FLAGS=0x02 (technical RW). MCP scan: 1 byte. † |
 | 0x000A | parallel_tank_loading_allowed | C | u16 | bool | HwcParallelLoading | — | →onoff | — | | ebusd confirmed at `@ext(0xa,0)` |
 | 0x000B | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 0. Near boolean cluster |
 | 0x000E | max_room_humidity | C | u16 | % | MaxRoomHumidity | — | — | — | **S** `system.config.max_room_humidity` | |
@@ -257,6 +267,108 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x009F | hc_cylinder_temperature_top | S | f32 | °C | HcStorageTempTop | — | — | — | | Read-only |
 | 0x00A0 | hc_cylinder_temperature_bottom | S | f32 | °C | HcStorageTempBottom | — | — | — | | Read-only |
 | 0x00A2 | buffer_charge_offset | C | f32 | K | — | — | — | — | | 0..15 per TSP |
+| 0x003C | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x0047 | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0 |
+| 0x004A | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x005E | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0. Near energy counters |
+| 0x005F | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x0060 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. Scan value: 2 |
+| 0x0061 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x0065 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. Scan value: 0 |
+| 0x0067 | vr70_module_status_1 | S | f32 | — | — | — | — | — | | FLAGS=0x00. NaN = no VR70 module. ebusd TSP: "VR70 Konfig 1" |
+| 0x0068 | vr70_module_status_2 | S | f32 | — | — | — | — | — | | FLAGS=0x00. NaN = no VR70 module. ebusd TSP: "VR70 Konfig 2" |
+| 0x006A | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. Scan value: 1 |
+| 0x0075 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0. Near installer_menu_code cluster |
+| 0x0077 | (unknown) | C | u8 | bool | — | — | — | — | | FLAGS=0x03. Scan value: 1 |
+| 0x007E | (unknown) | C | f32 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0.0 |
+| 0x0080 | (unknown) | C | f32 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0.0. Constraint: -10..10 step 1. Possibly PV offset |
+| 0x0085 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. NaN |
+| 0x008C | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0. Near PV/smart cluster |
+| 0x008D | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x008E | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x008F | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x0097 | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0. Near maintenance cluster |
+| 0x0098 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x009B | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0. Near green_iq |
+| 0x00A1 | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0. Between cylinder temps and buffer_charge_offset |
+| 0x00A5 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00AB | (unknown) | C | u8 | bool | — | — | — | — | | FLAGS=0x02. Scan value: 1 |
+| 0x00AF | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00B0 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00B1 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00B2 | (unknown) | C | u16 | raw | — | — | — | — | | FLAGS=0x02. Scan value: 0xBDA9 (48553). Possibly firmware hash |
+| 0x00B3 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x02. Scan value: 0 |
+| 0x00B5 | (unknown) | P | u8 | bool | — | — | — | — | | FLAGS=0x01. Scan value: 1 |
+| 0x00B6 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x00B8 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x00B9 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0. Energy/counter region start |
+| 0x00BA | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00BB | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00BC | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00BD | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00BF | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00C0 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00C1 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=6. Energy sub-counter cluster start |
+| 0x00C2 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=1 |
+| 0x00C3 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=2 |
+| 0x00C4 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=6 |
+| 0x00C5 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=0 |
+| 0x00C6 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=122. Matches energy_heating_total (0x0057)=122 |
+| 0x00C7 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=1 |
+| 0x00C8 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=470. Matches fuel_heating_total (0x0056)=470 |
+| 0x00C9 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=203 |
+| 0x00CA | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=267. Close to PrFuelSumHcLastMonth=266 |
+| 0x00CB | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=471 |
+| 0x00CC | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=0 |
+| 0x00CD | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=471. Same as 0x00CB — total? |
+| 0x00CE | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00CF | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D0 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D1 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D2 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00D3 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00D4 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00D5 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00D6 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D7 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D8 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D9 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. Scan value: 0 |
+| 0x00DA | (unknown) | C | date | date | — | — | — | — | | FLAGS=0x02. Scan: 01.01.2013 (BCD default) |
+| 0x00DB | (unknown) | C | date | date | — | — | — | — | | FLAGS=0x02. Scan: 01.01.2013 (BCD default) |
+| 0x00DD | heating_curve_day_1 | C | bytes | schedule | — | — | — | — | | FLAGS=0x03. 10 bytes: [25,30,35,40,45,45,45,45,45,45] — hourly temp profile (°C/2) |
+| 0x00DE | heating_curve_day_2 | C | bytes | schedule | — | — | — | — | | FLAGS=0x03. 10 bytes: [45,45,40,35,30,25,10,10,10,10] — hourly temp profile continued |
+| 0x00DF | heating_curve_day_3 | C | bytes | schedule | — | — | — | — | | FLAGS=0x03. 9 bytes: [10,10,10,30,35,40,45,35,25] — hourly temp profile end. 29 values total across DD-DF |
+| 0x00E0 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
+| 0x00E3 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E4 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E5 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E6 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E7 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E8 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E9 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EA | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EB | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EC | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00ED | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EE | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EF | (unknown_temp_config) | C | f32 | °C | — | — | — | — | | FLAGS=0x03. Scan value: 20.0. Temperature setpoint |
+| 0x00F0 | (unknown) | P | u16 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0xFFFF (65535) — sentinel/unset |
+| 0x00F1 | (unknown) | P | u16 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0xFFFF (65535) — sentinel/unset |
+| 0x00F2 | (unknown_holiday_start_1) | C | date | date | — | — | — | — | | FLAGS=0x03. Scan: 01.01.2015 (BCD) |
+| 0x00F3 | (unknown_holiday_end_1) | C | date | date | — | — | — | — | | FLAGS=0x03. Scan: 01.01.2015 (BCD) |
+| 0x00F4 | (unknown_holiday_start_2) | C | date | date | — | — | — | — | | FLAGS=0x03. Scan: 00.00.2000 (BCD reset) |
+| 0x00F5 | (unknown_holiday_end_2) | C | date | date | — | — | — | — | | FLAGS=0x03. Scan: 00.00.2000 (BCD reset) |
+| 0x00F6 | (unknown_temp_config) | C | f32 | °C | — | — | — | — | | FLAGS=0x03. Scan value: 10.0 |
+| 0x00F7 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x00F8 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0. ebusd TSP hinted 5-byte — scan sees 1 byte |
+| 0x00F9 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. Scan value: 0 |
+| 0x00FA | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x02. Scan value: 0 |
+| 0x00FB | (unknown_temp_config) | C | f32 | °C | — | — | — | — | | FLAGS=0x03. Scan value: 10.0 |
+| 0x00FC | (unknown_max_flow_temp) | P | f32 | °C | — | — | — | — | | FLAGS=0x01. Scan value: 90.0. Likely max flow temperature |
+| 0x00FE | (unknown_temp_config) | C | f32 | °C | — | — | — | — | | FLAGS=0x03. Scan value: 13.0 |
+| 0x00FF | (unknown_temp_config) | C | f32 | °C | — | — | — | — | | FLAGS=0x03. Scan value: 25.0 |
+
+**Note:** 100 new registers discovered in the 0x003C-0x00FF range by MCP proof scan 2026-03-05. The 0x00C1-0x00CD cluster contains u32 energy counters (decode as u32, NOT f32 — the tiny float values like 6.586e-43 are mis-decoded u32 integers). The 0x00DD-0x00DF cluster contains packed hourly temperature schedule bytes. The 0x00E3-0x00EE cluster (13 consecutive f32=0.0 with FLAGS=0x01) may be per-month energy statistics. The 0x00F2-0x00F5 cluster contains holiday date pairs.
 
 ---
 
@@ -281,6 +393,10 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_stat
 | 0x000F | hwc_status | S | u16 | state | — | — | — | — | | Not gated |
 | 0x0010 | hwc_holiday_start_time | C | time | time | — | — | — | hwc_enabled | | |
 | 0x0011 | hwc_holiday_end_time | C | time | time | — | — | — | hwc_enabled | | |
+| 0x0007 | (unknown) | C | u8 | — | — | — | — | hwc_enabled | | FLAGS=0x03. Scan value: 0 |
+| 0x000E | (unknown) | P | u8 | bool | — | — | — | — | | FLAGS=0x01. Scan value: 1. Near hwc_status, possibly active flag |
+| 0x0012 | (unknown) | C | u8 | — | — | — | — | hwc_enabled | | FLAGS=0x03. Scan value: 0 |
+| 0x0013 | (unknown) | C | u8 | — | — | — | — | hwc_enabled | | FLAGS=0x03. Scan value: 0 |
 
 ---
 
@@ -422,43 +538,179 @@ Entire group gated by `fm5_config ≤ 2`. These are solar charging parameters pe
 
 ---
 
-## GG=0x09 — Room Sensors, Regulator (multi-instance, remote)
+## GG=0x08 — Buffer/Solar Cylinder 2 (dual-opcode)
 
-Uses opcode `0x06` (remote). Instances 0x00-0x0A. Register range 0x0001-0x000F observed in VRC Explorer scans; only registers with constraint catalog entries (0x0001-0x0006) are documented below. No myVaillant CSV mapping exists for this group.
+> **Verified 2026-03-05:** Responds to BOTH opcodes with different data.
+
+### GG=0x08 Local Config (opcode 0x02)
+
+Singleton (II=0x00 only). 7 registers. Structure mirrors GG=0x05 (Solar Cylinder 1) — same constraint catalog layout.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | (unknown) | — | u16 | — | — | 0..255 | — | — | | Sensor ID / address |
-| 0x0002 | (unknown) | — | u16 | — | — | 1..3 | — | — | | Sensor type / protocol |
-| 0x0003 | (unknown) | — | u8 | bool | — | 0..1 | `0=off 1=on` | — | | Enable flag |
-| 0x0004 | (unknown) | — | u16 | — | — | 0..10 | — | — | | Zone association |
-| 0x0005 | (unknown) | — | u16 | — | — | 0..32768 | — | — | | Timer/counter |
-| 0x0006 | (unknown) | — | u16 | — | — | 0..32768 | — | — | | Timer/counter |
+| 0x0001 | cylinder2_max_setpoint | C | f32 | °C | — | 0..99 | — | fm5_config≤2? | | FLAGS=0x03. Scan value: 99.0 |
+| 0x0002 | cylinder2_switch_off_diff | C | f32 | K | — | 0..99 | — | fm5_config≤2? | | FLAGS=0x03. Scan value: 0.0 |
+| 0x0003 | cylinder2_charge_hysteresis | C | f32 | K | — | 2..25 | — | fm5_config≤2? | | FLAGS=0x03. Scan value: 12.0 |
+| 0x0004 | cylinder2_charge_offset | C | f32 | K | — | 1..20 | — | fm5_config≤2? | | FLAGS=0x03. Scan value: 5.0 |
+| 0x0005 | cylinder2_temperature | S | f32 | °C | — | -10..110 | — | fm5_config≤2? | | FLAGS=0x01. NaN (no sensor) |
+| 0x0006 | cylinder2_bottom_temperature | S | f32 | °C | — | -10..110 | — | fm5_config≤2? | | FLAGS=0x01. NaN (no sensor) |
+| 0x0007 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0. Possibly pump status |
 
-Further register identification requires controlled testing with paired room sensors.
+### GG=0x08 Remote Data (opcode 0x06)
+
+Instanced (II=0x00-0x0A). 4 registers per instance. All 11 instances respond.
+
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0. Status byte |
+| 0x0002 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0 |
+| 0x0003 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. NaN on all instances |
+| 0x0004 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. NaN on all instances |
 
 ---
 
-## GG=0x0A — Room Sensors, VR92 (multi-instance, remote)
+## GG=0x09 — Radio Sensors, VRC7xx (multi-instance, dual-opcode)
 
-Uses opcode `0x06` (remote). Instances 0x00-0x0A. Instance 0 has 78+ responsive registers in VRC Explorer scan, including serial numbers (ASCII strings) and temperature profile schedules.
+> **Verified 2026-03-05:** Dual-namespace. Opcode 0x02 = local configuration (15 regs/inst). Opcode 0x06 = live sensor data (32 regs/inst).
+>
+> Your **VRC720f/2** appears at **II=0x01 OP=0x06** (software version 08.05, room humidity 40%, room temp 12.5°C).
+
+### GG=0x09 Local Config (opcode 0x02)
+
+Instanced (II=0x00-0x0A). 15 registers per instance. All identical — template config.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | (unknown) | — | u8 | — | — | 0..3 | — | — | | Sensor mode |
-| 0x0002 | (unknown) | — | u8 | — | — | 1..2 | — | — | | Protocol type |
-| 0x0003 | (unknown) | — | u8 | — | — | 1..2 | — | — | | Communication mode |
-| 0x0005 | (unknown) | — | u8 | — | — | 0..3 | — | — | | Status flags |
-| 0x0006 | (unknown) | — | u8 | bool | — | 0..1 | `0=off 1=on` | — | | Enable flag |
-| 0x0007 | room_humidity | S | f32 | % | RoomHumidity | — | — | — | | ebusd confirmed (`15.ctlv2.csv` VR92 sections, EXP decode) |
-| 0x000F | room_temperature | S | f32 | °C | RoomTemp | — | — | — | | ebusd confirmed (`15.ctlv2.csv` VR92 sections, EXP decode) |
+| 0x0001 | sensor_address | C | u16 | — | — | 0..255 | — | — | | FLAGS=0x02. All instances: 0 |
+| 0x0002 | sensor_type | C | u16 | enum | — | 1..3 | — | — | | FLAGS=0x02. All instances: 1 |
+| 0x0003 | sensor_enabled | S | u8 | bool | — | 0..1 | `0=off 1=on` | — | | FLAGS=0x00. All instances: 1 |
+| 0x0004 | (unknown) | S | u16 | — | — | 0..10 | — | — | | FLAGS=0x00. All instances: 0 |
+| 0x0005 | (unknown) | S | u16 | — | — | 0..32768 | — | — | | FLAGS=0x00. All instances: 0x8000 (32768) |
+| 0x0006 | (unknown) | S | u16 | — | — | 0..32768 | — | — | | FLAGS=0x00. All instances: 0x8000 (32768) |
+| 0x0007 | holiday_start_date | C | date | date | — | — | — | — | | FLAGS=0x02. 01.01.2015 (BCD default) |
+| 0x0008 | holiday_start_time | C | time | time | — | — | — | — | | FLAGS=0x02. 00:00:00 |
+| 0x0009 | holiday_end_date | C | date | date | — | — | — | — | | FLAGS=0x02. 01.01.2015 (BCD default) |
+| 0x000A | holiday_end_time | C | time | time | — | — | — | — | | FLAGS=0x02. 00:00:00 |
+| 0x000B | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. All instances: 0 |
+| 0x000C | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. All instances: 0 |
+| 0x000D | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. All instances: 0 |
+| 0x000E | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. All instances: 0 |
+| 0x000F | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x02. All instances: 0 |
 
-**ebusd-defined baseline:** ebusd `15.ctlv2.csv` defines only RR=0x0007 (RoomHumidity) and RR=0x000F (RoomTemp) for VR92 addresses 1-8, routed via `B524,06000a..`. Additional registers (78+ per scan) require reverse engineering from scan corpus; the constraint catalog does not enumerate all read-only registers.
+### GG=0x09 Remote Data (opcode 0x06)
 
-Notable scan observations:
-- RR=0x001D: ASCII string "212134" (possibly serial/version)
-- RR=0x001E: ASCII string "002026" (possibly date component)
-- RR=0x0022-0x0039: Incrementing/decrementing byte sequences (25→45→45→25→10→30) — likely a temperature profile or weekly schedule
+Instanced (II=0x00-0x0A). 32 registers per instance. **Active devices are identified by non-default values.** Empty slots have all NaN/0xFF/0x8000.
+
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | | FLAGS=0x01. II=1: 1 (VRC720f/2 paired) |
+| 0x0002 | device_type_code | P | u8 | enum | — | — | `0x15=VRC720` | — | | FLAGS=0x01. II=1: 0x15 (21). Identifies radio device type |
+| 0x0003 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 0xFF=not-present (empty: 0xFF) |
+| 0x0004 | device_firmware_version | P | time | version | — | — | — | — | | FLAGS=0x01. 3 bytes: major.minor.patch. II=1: 08.05.00 → VRC720f/2 sw 08.05 |
+| 0x0005 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0x8000, II=1: 0 |
+| 0x0006 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0x8000, II=1: 0 |
+| 0x0007 | room_humidity | S | f32 | % | — | — | — | — | | FLAGS=0x01. II=1: 40.0%. NaN if no sensor |
+| 0x0008 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x0009 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x000A | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x000B | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 0xFF=not-present |
+| 0x000C | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x000D | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. All: 1 |
+| 0x000E | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. II=1: NaN |
+| 0x000F | room_temperature | S | f32 | °C | — | — | — | — | | FLAGS=0x01. II=1: 12.5°C. NaN if no sensor |
+| 0x0010 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x0011 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x0012 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 0xFF=not-present |
+| 0x0013 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x0014 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x0015 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x0016 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x0017 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 0xFF=not-present |
+| 0x0019 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 1 |
+| 0x001B | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
+| 0x001E | device_paired | P | u8 | bool | — | — | `0=no 1=yes` | — | | FLAGS=0x01. II=1: 1. Confirms active pairing |
+| 0x001F | radio_signal_quality | P | u8 | count | — | — | — | — | | FLAGS=0x01. II=1: 7 |
+| 0x0020 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 3 |
+| 0x0023 | hardware_identifier | P | u16 | raw | — | — | — | — | | FLAGS=0x01. II=1: 0x0415=1045 |
+| 0x0025 | zone_assignment | P | u8 | count | — | — | — | — | | FLAGS=0x01. II=1: 2 (assigned to zone 2?) |
+| 0x0026 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. II=1: 10 |
+| 0x002F | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. All: 5 |
+| 0x0030 | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. All: 12 |
+
+---
+
+## GG=0x0A — Radio Sensors, VR92 (multi-instance, dual-opcode)
+
+> **Verified 2026-03-05:** Dual-namespace. Opcode 0x02 = local configuration (69 regs/inst, all instances identical). Opcode 0x06 = live sensor data (32 regs/inst, per-device variation).
+>
+> Your **VR92f** appears at **II=0x01 OP=0x06** (firmware 02.17, room humidity 39%, room temp 13.625°C).
+
+### GG=0x0A Local Config (opcode 0x02)
+
+Instanced (II=0x00-0x0A). 69 registers per instance. **All 11 instances are byte-for-byte identical** — this is a template/default configuration from the BASV2, not per-VR92 data. Constraint catalog entries (0x0001-0x0006) define the writable config subset.
+
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | sensor_mode | C | u8 | enum | — | 0..3 | — | — | | FLAGS=0x03. All: 0 |
+| 0x0002 | protocol_type | C | u8 | enum | — | 1..2 | — | — | | FLAGS=0x03. All: 1 |
+| 0x0003 | communication_mode | C | u8 | enum | — | 1..2 | — | — | | FLAGS=0x03. All: 1 |
+| 0x0005 | (unknown) | C | u8 | — | — | 0..3 | — | — | | FLAGS=0x03. All: 1 |
+| 0x0006 | sensor_enabled | C | u8 | bool | — | 0..1 | `0=off 1=on` | — | | FLAGS=0x03. All: 0 |
+| 0x0007 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 1 |
+| 0x0008 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 1 |
+| 0x000C | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 0 |
+| 0x000D | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 0 |
+| 0x000E | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. All: NaN |
+| 0x000F | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. All: NaN |
+| 0x0010-0x001A | (unknown, 8 regs) | P | f32 | — | — | — | — | — | | FLAGS=0x01. All: NaN. Large NaN block |
+| 0x001B | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. All: 0 |
+| 0x001D | basv2_serial_part1 | P | string | text | — | — | — | — | | FLAGS=0x01. "212134" — first 6 chars of BASV2 SN |
+| 0x001E | basv2_serial_part2 | P | string | text | — | — | — | — | | FLAGS=0x01. "002026" — chars 7-12 of BASV2 SN |
+| 0x0020 | (unknown) | C | f32 | — | — | — | — | — | | FLAGS=0x03. All: 0.0 |
+| 0x0021 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 0 |
+| 0x0022-0x003E | temperature_schedule | C | u8 | °C/2 | — | — | — | — | | FLAGS=0x03. 29 u8 values: hourly temperature profile. Pattern: 25→45 day, 45→10 night, 10→45→25 evening. Values are degrees × 2 (e.g. 45 = 22.5°C, 10 = 5°C) |
+| 0x003F | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. All: 0 |
+| 0x0040 | (unknown) | P | time | time | — | — | — | — | | FLAGS=0x01. All: 00:00:00 |
+| 0x0042-0x004A | (unknown, 9 regs) | C | u16 | — | — | — | — | — | | FLAGS=0x03. All: 0. Config block |
+| 0x004B | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 0 |
+| 0x004D | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. All: 0 |
+
+### GG=0x0A Remote Data (opcode 0x06)
+
+Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are identified by non-default values.** Empty slots have NaN/0xFF.
+
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | | FLAGS=0x01. II=1: 1 (VR92f paired) |
+| 0x0002 | device_type_code | S | u8 | enum | — | — | `0x35=VR92` | — | | FLAGS=0x00. II=1: 0x35 (53) |
+| 0x0003 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
+| 0x0004 | device_firmware_version | S | time | version | — | — | — | — | | FLAGS=0x00. 3 bytes: major.minor.patch. II=1: 02.11(17).00 → VR92f sw 02.17 |
+| 0x0006 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. II=1: 0.0, empty: NaN |
+| 0x0007 | room_humidity | S | f32 | % | RoomHumidity | — | — | — | | FLAGS=0x00. II=1: 39.0%. ebusd confirmed. NaN if no sensor |
+| 0x000B | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
+| 0x000D | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. All: 1 |
+| 0x000E | (unknown) | C | f32 | — | — | — | — | — | | FLAGS=0x02. II=1: 0.0, empty: NaN |
+| 0x000F | room_temperature | S | f32 | °C | RoomTemp | — | — | — | | FLAGS=0x00. II=1: 13.625°C. ebusd confirmed. NaN if no sensor |
+| 0x0012 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
+| 0x0017 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
+| 0x0019 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 1 |
+| 0x001B | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. All: NaN |
+| 0x001E | device_paired | S | u8 | bool | — | — | `0=no 1=yes` | — | | FLAGS=0x00. II=1: 1 |
+| 0x001F | radio_signal_quality | P | u8 | count | — | — | — | — | | FLAGS=0x01. II=1: 10 |
+| 0x0020 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 3 |
+| 0x0023 | hardware_identifier | S | u16 | raw | — | — | — | — | | FLAGS=0x00. II=1: 0x0182=386 |
+| 0x0025 | zone_assignment | S | u8 | count | — | — | — | — | | FLAGS=0x00. II=1: 2 (assigned to zone 2?) |
+| 0x0026 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x02. II=1: 10 |
+| 0x0028-0x002E | (unknown, 7 regs) | C | u8 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
+| 0x002F | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All: 5 |
+| 0x0030 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All: 12 |
+| 0x0032 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
+| 0x0033 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All: 0 |
+| 0x0035 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
+
+**Radio device enumeration:** To enumerate paired VR92 devices, scan II=0x00 through II=0x0A with opcode 0x06 and read `device_connected` (RR=0x0001). For each paired device, `device_type_code` (0x0002), `device_firmware_version` (0x0004), `room_humidity` (0x0007), and `room_temperature` (0x000F) provide identification and live data.
+
+**ebusd baseline:** ebusd `15.ctlv2.csv` defines only RR=0x0007 (RoomHumidity, EXP decode) and RR=0x000F (RoomTemp, EXP decode) for VR92 addresses 1-8, routed via `B524,06000a..`.
 
 ---
 
@@ -478,9 +730,27 @@ No register table. Schema under investigation.
 
 ---
 
-## GG=0x0C — Unknown Remote (multi-instance, remote)
+## GG=0x0C — Remote Misc (multi-instance, remote only)
 
-Uses opcode `0x06` (remote). Instances 0x00-0x0A. VRC Explorer scan returned `0x00` (empty) for all registers across all instances on the test system. No active data.
+> **Verified 2026-03-05:** Responds only to opcode 0x06 (no local config namespace — opcode 0x02 returns 0 valid registers). 15 registers per instance, 165 total valid. Same FLAGS/layout pattern as GG=0x09/0x0A remote data.
+
+### GG=0x0C Remote Data (opcode 0x06)
+
+Instanced (II=0x00-0x0A). 15 registers per instance. **No paired device on any slot** (RR=0x0001=0 for all). Register layout mirrors GG=0x09/0x0A remote data — likely reserved for a third radio device class.
+
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | | FLAGS=0x01. All: 0 (no device) |
+| 0x0002 | device_type_code | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0, II=1: 0x26 (38) when paired |
+| 0x0003 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF |
+| 0x0004 | device_firmware_version | S | time | version | — | — | — | — | | FLAGS=0x00. All empty: FF/FF/FF, II=1: 01/00/00 |
+| 0x000A | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
+| 0x0012 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF |
+| 0x0017 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF, II=1: 1 when paired |
+| 0x0028-0x002E | (unknown, 7 regs) | C | u8 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
+| 0x002F | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All: 5 |
+
+**Device type note:** II=0x01 in GG=0x0C shows device_type_code=0x26 (38) and firmware 01.00.00 with device_firmware_version date=01/00/00. This instance has `device_connected=0` but non-default type code, suggesting a previously paired device that was removed, or a reserved slot for wired accessories (VR61, VR71, etc.).
 
 ---
 
@@ -654,7 +924,7 @@ The constraint catalog was **downloaded from the BASV2 hardware** and is authori
 
 **Notes:**
 - TSP-style registers (`0x0100+`) are listed in the constraint catalog but are NOT accessible via standard B524 read operations — only standard registers (`0x0001-0x00FF`) work through gateway RPC.
-- GG=0x00 Record 0x8000 → RR=0x0080 is orphaned — no known register at that address. Possibly related to `smart_photovoltaic_buffer_offset` (0x0081) or an undiscovered register.
+- GG=0x00 Record 0x8000 → RR=0x0080 is now confirmed responsive (FLAGS=0x03, f32=0.0, constraint: -10..10 step 1). Adjacent to `smart_photovoltaic_buffer_offset` (0x0081). Possibly PV-related offset config.
 
 ---
 
