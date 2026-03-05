@@ -51,7 +51,7 @@ The FLAGS byte in the response header encodes register access mode. Discovered v
 | `0x02` | 1 | 0 | RW | Config (technical) | Offsets, thresholds, numeric ranges |
 | `0x03` | 1 | 1 | RW | Config (user-facing) | Modes, schedules, names, setpoints |
 
-**Opcode-specific behavior:** Opcode `0x0600` (remote) is heavily RO — across all groups, 0x0600 exposes far fewer writable registers. When it does allow writes, they are always FLAGS=0x02 (technical), never 0x03 (user-facing). All user-configurable settings are exclusively on the 0x0200 (local) path.
+**Opcode-specific behavior:** Opcode 0x06 remote read (`OC=0x06, OT=0x00`) is heavily RO — across all groups, remote access exposes far fewer writable registers. When it does allow writes, they are always FLAGS=0x02 (technical), never 0x03 (user-facing). All user-configurable settings are exclusively on the opcode 0x02 local path.
 
 **Coverage:** FLAGS data available for GG=0x02, 0x03, 0x09, 0x0A, 0x0C (from VRC Explorer scans). **No FLAGS data for GG=0x00 and GG=0x01** — these groups were not scanned with `b524_grab_op.py`; a future scan is needed.
 
@@ -96,7 +96,7 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 |--------|---------|
 | **RR** | Register address (hex) |
 | **Name** | Our leaf name (from myVaillant/myPyllant API path) |
-| **Cat** | **S**=state (RO), **C**=config (RW), **P**=property (RO, stable), **E**=energy (RO, counter). Verified against observed FLAGS where scan data exists |
+| **Cat** | **S**=state (RO), **C**=config (RW), **P**=property (RO, stable), **E**=energy (RO, counter), **—**=unknown/unclassified. Verified against observed FLAGS where scan data exists |
 | **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian |
 | **Decode** | Semantic interpretation: `bool`, `°C`, `K`, `bar`, `%`, `kWh`, `hrs`, `min`, `count`, `enum`, `text`, `date`, `time`, `state`, `raw`, `—` (unknown) |
 | **ebusd** | ebusd community TSP name. `—` = not in TSP |
@@ -420,7 +420,7 @@ Entire group gated by `fm5_config ≤ 2`. These are solar charging parameters pe
 
 ## GG=0x09 — Room Sensors, Regulator (multi-instance, remote)
 
-Uses opcode `0x06` (remote). Instances 0x00-0x0A. Register range 0x0001-0x000F observed in VRC Explorer scans. No myVaillant CSV mapping exists for this group.
+Uses opcode `0x06` (remote). Instances 0x00-0x0A. Register range 0x0001-0x000F observed in VRC Explorer scans; only registers with constraint catalog entries (0x0001-0x0006) are documented below. No myVaillant CSV mapping exists for this group.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
@@ -513,7 +513,7 @@ Source: `refreshCircuits()` in `semantic_vaillant.go`
 | `[].config.heating_flow_temperature_minimum_setpoint` | GG=0x02, RR=0x0012 | f32 |
 | `[].config.heat_demand_limited_by_outside_temp` | GG=0x02, RR=0x0014 | f32 |
 | `[].config.room_temperature_control_mode` | GG=0x02, RR=0x0015 | u16 |
-| `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u16) |
+| `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u8) |
 | `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 |
 | `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 |
 | `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 | **Stale path**: FLAGS=0x02 (RW) — should be `config.*`. Pending gateway migration |
@@ -550,7 +550,7 @@ The boiler status plane is a **cross-group composite** — it reads from both GG
 | Semantic Path | B524 | Type | Notes |
 |---------------|------|------|-------|
 | `state.flow_temperature` | GG=0x00, RR=0x004B | f32 | System flow temp from regulator |
-| `state.pump_running` | GG=0x02, II=0x00, RR=0x001E | bool | Circuit 0 pump status |
+| `state.pump_running` | GG=0x02, II=0x00, RR=0x001E | bool (u16) | Circuit 0 pump status |
 | `state.circuit_state` (raw) | GG=0x02, II=0x00, RR=0x001B | u16 | Circuit 0 state |
 
 Note: `return_temperature` is **not populated** from B524. GG=0x02 RR=0x0008 (`Hc{hc}FlowTemp`) is the circuit flow sensor VF[x], not the boiler return sensor. True return temperature would require direct BAI access (B504) which is not available from third-party sources. Similarly, `dhw_storage_temperature`, `dhw_outlet_temperature`, `flame_on`, `current_power_percent`, `starts_count`, `operating_hours`, `dhw_operating_hours` are not populated from B524.
@@ -636,7 +636,7 @@ Enum definitions used by B524 registers. Where Helianthus interprets values diff
 
 ### opmode — Operation mode
 
-Used by: GG=0x03 RR=0x0006, GG=0x01 RR=0x0003
+Used by: GG=0x03 RR=0x0001, GG=0x03 RR=0x0006, GG=0x01 RR=0x0003
 
 | Value | ebusd | Helianthus (zones) | Helianthus (DHW) |
 |-------|-------|-------------------|------------------|
