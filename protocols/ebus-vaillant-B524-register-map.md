@@ -155,10 +155,10 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0003 | frost_override_time | u16 | hours | - | - | - | mypyllant + TSP |
 | 0x0004 | maximum_preheating_time | u16 | min | - | - | - | mypyllant only |
 | 0x0008 | temporary_allow_backup_heater | u8 | enum | - | - | - | mypyllant dump |
+| 0x000A | parallel_tank_loading_allowed | bool | - | - | - | - | ebusd TSP (HwcParallelLoading @ext(0xa,0)) |
 | 0x000E | max_room_humidity | u16 | % | - | `system.config.max_room_humidity` | - | mypyllant + TSP |
 | 0x0012 | continuous_heating_room_setpoint | u16 | °C | - | - | - | mypyllant (confirmed exact, value=20) |
 | 0x0014 | adaptive_heating_curve | bool | - | - | `system.config.adaptive_heating_curve` | - | mypyllant + TSP |
-| 0x0015 | parallel_tank_loading_allowed | bool | - | - | - | - | mypyllant only |
 | 0x0017 | dhw_maximum_loading_time | u16 | min | - | - | hwc_enabled | mypyllant + TSP |
 | 0x0018 | hwc_lock_time | u16 | min | - | - | hwc_enabled | mypyllant + TSP |
 | 0x0019 | solar_flow_rate_quantity | f32 | l/min | min 0 | - | fm5_config<=2 | TSP (see conflicts) |
@@ -219,11 +219,11 @@ Registers that responded to live B524 scans but have no confirmed name from myVa
 
 | RR | Type | Live Value | Notes |
 |----|------|------------|-------|
-| 0x000A | u16 | - | Near boolean/config cluster |
 | 0x000B | u16 | 0 | Near boolean cluster |
 | 0x000F | u16 | - | Possibly HybridManager (TSP places it here; see conflicts) |
 | 0x0010 | u16 | - | Near config cluster |
 | 0x0011 | u16 | 16 | Possible temp threshold |
+| 0x0015 | bool | 0 | CSV had this as parallel_tank_loading — ebusd places that at 0x000A instead. Value-matching false positive. |
 | 0x001E | u8 | 1 | Possible pump/flag |
 | 0x0025 | u16 | 0 | Unknown |
 | 0x0031 | u16 | 0 | Unknown |
@@ -263,7 +263,7 @@ All registers except `hwc_status` (0x000F) are gated by `hwc_enabled` (0x0001).
 
 All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered by probing `heating_circuit_type` (0x0001) — values `0xFF`/`0xFFFF` indicate inactive.
 
-> **Reconciliation note (2026-03-05):** Previous version had 8 address mismatches in the Additional Config section (wrong register↔name pairs inherited from early mapping). This version uses the myVaillant CSV as authoritative source for all register addresses and names.
+> **Reconciliation note (2026-03-05):** Previous version had 8 address mismatches in the Additional Config section (wrong register↔name pairs). This version cross-references three sources: ebusd community TSP (`15.ctlv2.tsp`) confirms 14 of 35 registers independently; the CSV provides value-matched names for the remainder. Registers confirmed only by CSV are marked with `†` — these carry false-positive risk from value-matching.
 
 ### Complete Register Map
 
@@ -275,17 +275,17 @@ Legend: **S** = actively polled by semantic layer | ebusd name in parentheses.
 |----|------|------------|------|----------|----------------|-------|
 | 0x0001 | heating_circuit_type | Hc{hc}CircuitType | u16 | properties | `circuits[].properties.heating_circuit_type` | **S** Discovery probe; 1=mixer, 2=fixed |
 | 0x0002 | mixer_circuit_type_external | Hc{hc}CircuitType | u16 | properties | `circuits[].properties.mixer_circuit_type_external` | **S** Same ebusd name, re-read for external type |
-| 0x0003 | room_influence_type | Hc{hc}RoomInfluenceType | u16 | config | - | |
-| 0x0004 | desired_return_temperature_setpoint | Hc{hc}ReturnTempDesired | f32 | config | - | For return-type circuits |
-| 0x0005 | dew_point_monitoring_enabled | Hc{hc}DewPointMonitoring | u16 | config | - | Gates: cooling_enabled |
+| 0x0003 | room_influence_type † | Hc{hc}RoomInfluenceType | u16 | config | - | CSV only, no ebusd entry |
+| 0x0004 | desired_return_temperature_setpoint † | Hc{hc}ReturnTempDesired | f32 | config | - | CSV only; ebusd: "Unknown04, constant 30°C" |
+| 0x0005 | dew_point_monitoring_enabled † | Hc{hc}DewPointMonitoring | u16 | config | - | CSV only, no ebusd entry. Gates: cooling_enabled |
 | 0x0006 | cooling_enabled | Hc{hc}CoolingEnabled | u16 | config | `circuits[].config.cooling_enabled` | **S** Gate for cooling registers |
 | 0x0007 | heating_circuit_flow_setpoint | Hc{hc}FlowTempDesired | f32 | state | `circuits[].state.heating_circuit_flow_setpoint` | **S** |
 | 0x0008 | current_circuit_flow_temperature | Hc{hc}FlowTemp | f32 | state | `circuits[].state.current_circuit_flow_temperature` | **S** Also `boiler_status.state.return_temperature` (II=0) |
-| 0x0009 | ext_hwc_temperature_setpoint | Hc{hc}ExternalHWCTempDesired | f32 | config | - | Gates: ext_hwc_active |
-| 0x000A | dew_point_offset | Hc{hc}DewPointOffset | f32 | config | - | Gates: cooling_enabled |
+| 0x0009 | ext_hwc_temperature_setpoint † | Hc{hc}ExternalHWCTempDesired | f32 | config | - | CSV only; ebusd: "Unknown09, constant 60°C". Gates: ext_hwc_active |
+| 0x000A | dew_point_offset † | Hc{hc}DewPointOffset | f32 | config | - | CSV only, no ebusd entry. Gates: cooling_enabled |
 | 0x000B | flow_setpoint_excess_offset | Hc{hc}ExcessTemp | f32 | config | - | Mixer circuit excess |
-| 0x000C | fixed_desired_temperature | Hc{hc}FixedDesiredTemp | f32 | config | - | For fixed-type circuits |
-| 0x000D | fixed_setback_temperature | Hc{hc}SetbackModeTemp | f32 | config | - | For fixed-type circuits |
+| 0x000C | fixed_desired_temperature † | Hc{hc}FixedDesiredTemp | f32 | config | - | CSV only; ebusd: "Unknown0c, constant 65°C" |
+| 0x000D | fixed_setback_temperature † | Hc{hc}SetbackModeTemp | f32 | config | - | CSV only; ebusd: "Unknown0d, constant 65°C" |
 | 0x000E | set_back_mode_enabled | Hc{hc}SetbackMode | u16 | config | - | For mixer circuits |
 | 0x000F | heating_curve | Hc{hc}HeatCurve | f32 | config | `circuits[].config.heating_curve` | **S** |
 | 0x0010 | heating_flow_temp_max_setpoint | Hc{hc}HeatingFlowTempMax | f32 | config | `circuits[].config.heating_flow_temperature_maximum_setpoint` | **S** Constraint 15..80 |
@@ -370,7 +370,7 @@ The `operating_mode` and `preset` exposed in the zones semantic plane are derive
 
 Entire group gated by `fm5_config <= 2`. All registers use opcode `0x02`, instance `0x00`.
 
-> **Reconciliation note (2026-03-05):** Previous version had wrong names for 0x0002, 0x0004, 0x0006 and was missing 4 registers. This version uses the myVaillant CSV as authoritative source.
+> **Reconciliation note (2026-03-05):** Previous version had wrong names for 0x0002, 0x0004, 0x0006 and was missing 4 registers. This version uses the CSV. **No ebusd coverage exists for GG=0x04** — all names are from value-matched CSV only (†) and carry false-positive risk.
 
 | RR | Leaf | ebusd Name | Type | Category | Notes |
 |----|------|------------|------|----------|-------|
@@ -391,7 +391,7 @@ Entire group gated by `fm5_config <= 2`. All registers use opcode `0x02`, instan
 
 Entire group gated by `fm5_config <= 2`. These are solar charging parameters per cylinder (TSP: "Solar Cylinder"). General cylinder config (max temp, charge hysteresis) is in GG=0x00 system config.
 
-> **Reconciliation note (2026-03-05):** Previous version had wrong name↔address assignments for 3 of 4 registers. This version uses the myVaillant CSV as authoritative source.
+> **Reconciliation note (2026-03-05):** Previous version had wrong name↔address assignments for 3 of 4 registers. This version uses the CSV. **No ebusd coverage exists for GG=0x05** — all names are from value-matched CSV only (†) and carry false-positive risk.
 
 | RR | Leaf | ebusd Name | Type | Category | Notes |
 |----|------|------------|------|----------|-------|
@@ -623,6 +623,12 @@ Three register mappings from the original myPyllant value-matching had errors, r
 | 0x0026 | dhw_flow_setpoint_offset | HcEmergencyTemperature | 25.0 fits both semantics, TSP authoritative. |
 | 0x0029 | max_flow_setpoint_hp_error | HwcStorageChargeOffset | 25.0 fits range, TSP authoritative. |
 
+One resolved by ebusd verification:
+
+| RR | CSV leaf | ebusd TSP | Resolution |
+|----|----------|-----------|------------|
+| 0x0015 | paralell_tank_loading_allowed | (not at this address) | CSV value-matching false positive. ebusd places HwcParallelLoading at 0x000A (`@ext(0xa,0)`). 0x0015 purpose unknown. |
+
 One conflict is still pending:
 
 | RR | myPyllant CSV leaf | TSP name | Status |
@@ -633,8 +639,8 @@ One conflict is still pending:
 
 ## Sources
 
-- **myVaillant register map CSV** (`helianthus-vrc-explorer/data/myvaillant_register_map.csv`) — Vaillant's official register-to-leaf mapping from cloud API analysis. **Authoritative for register↔name mapping in GG=0x02-0x05.** 115 entries across groups 0x00-0x05.
-- **burmistrzak ebusd TSP** (`15.720.tsp`) — Community ebusd TypeSpec definitions with gate conditions and constraints. **Authoritative for GG=0x00 where CSV value-matching produced false positives** (see Mapping Conflicts).
+- **ebusd community TSP** (`15.ctlv2.tsp` in `helianthus-ebus-vaillant-productids/repos/john30-ebusd-configuration/src/vaillant/`) — Community-maintained register definitions using `@ext(RR, 0)` addressing (same as B524 RR). **Highest authority** for register↔name mapping where coverage exists. Covers GG=0x00, 0x01, 0x02 (partial), 0x03. No coverage for GG=0x04, 0x05.
+- **myVaillant register map CSV** (`helianthus-vrc-explorer/data/myvaillant_register_map.csv`) — Helianthus-curated mapping built by value-matching live B524 reads against myPyllant cloud API field values. 115 entries across groups 0x00-0x05. **NOT a Vaillant-published source** — carries false-positive risk where multiple registers share the same value (see Mapping Conflicts). Leaf names come from myPyllant API; ebusd_name column from ebusd community definitions.
 - **Live B524 scan** (2026-03-04) — MCP RPC reads from BASV2 via Helianthus gateway, 81 registers in GG=0x00
 - **VRC Explorer full group scan** — Raw register data for GG=0x02-0x0C across all instances (`_work_register_mapping/B524/` directory), used for cross-verification
 - **myPyllant system dump** (2026-03-04T17:43Z) — Cloud API snapshot for value cross-reference
