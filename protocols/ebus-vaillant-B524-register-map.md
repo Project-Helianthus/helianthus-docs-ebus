@@ -2,7 +2,7 @@
 
 > **Status:** Authoritative reference. Single source of truth for B524 register semantics in Helianthus.
 >
-> **Last updated:** 2026-03-05 (v2 — unified tables with enums, constraints, gates)
+> **Last updated:** 2026-03-05 (v3 — FLAGS verification from VRC Explorer scans, category corrections)
 >
 > **Device:** BASV2 (VRC720-compatible, HW 1704)
 
@@ -25,18 +25,34 @@ QQ ZZ PB SB NN OC OT GG II RR_lo RR_hi
 
 ### Response Format
 
-Responses do **not** echo the full request selector. The response payload format:
+Responses do **not** echo the full request selector. The slave response payload (after eBUS NN byte):
 
 ```
-TT GG RR_lo RR_hi [VALUE_BYTES...]
+NN FLAGS GG RR_lo RR_hi [VALUE_BYTES...]
 ```
 
-- `TT` = reply kind byte (type marker)
+- `NN` = data length (number of bytes following)
+- `FLAGS` = access/writability byte (see below)
 - `GG` = group echo
 - `RR` = register echo (16-bit LE)
 - Value bytes: variable length depending on data type
 
 The instance is **not** echoed in the response — the gateway correlates replies using the original request parameters. When the reply payload is a single `0x00` byte, the register exists but has no data (empty/unsupported).
+
+### FLAGS Byte (Response Header)
+
+The FLAGS byte in the response header encodes register access mode. Discovered via VRC Explorer full-group B524 scans (`_work_register_mapping/B524/`), verified against ebusd TSP r/rw annotations (89% agreement, 48/54 match).
+
+| FLAGS | Bit 1 (writable) | Bit 0 (sub-cat) | Access | Category | Description |
+|-------|-------------------|------------------|--------|----------|-------------|
+| `0x00` | 0 | 0 | RO | State (volatile) | Changes frequently — external pushes, counters |
+| `0x01` | 0 | 1 | RO | State (stable) | Computed outputs, sensor readings, properties |
+| `0x02` | 1 | 0 | RW | Config (technical) | Offsets, thresholds, numeric ranges |
+| `0x03` | 1 | 1 | RW | Config (user-facing) | Modes, schedules, names, setpoints |
+
+**Opcode-specific behavior:** Opcode `0x0600` (remote) is heavily RO — across all groups, 0x0600 exposes far fewer writable registers. When it does allow writes, they are always FLAGS=0x02 (technical), never 0x03 (user-facing). All user-configurable settings are exclusively on the 0x0200 (local) path.
+
+**Coverage:** FLAGS data available for GG=0x02, 0x03, 0x09, 0x0A, 0x0C (from VRC Explorer scans). **No FLAGS data for GG=0x00 and GG=0x01** — these groups were not scanned with `b524_grab_op.py`; a future scan is needed.
 
 ### Data Type Encoding
 
@@ -80,7 +96,7 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 |--------|---------|
 | **RR** | Register address (hex) |
 | **Name** | Our leaf name (from myVaillant/myPyllant API path) |
-| **Cat** | **S**=state, **C**=config, **P**=property, **E**=energy |
+| **Cat** | **S**=state (RO), **C**=config (RW), **P**=property (RO, stable), **E**=energy (RO, counter). Verified against observed FLAGS where scan data exists |
 | **Type** | Wire type (`bool`, `u16`, `f32`, `string`, `date`, `time`, `energy4`) |
 | **ebusd** | ebusd community TSP name. `—` = not in TSP. `(commented)` = present but commented out |
 | **Constraint** | From BASV2 constraint catalog (authoritative, downloaded from hardware). `—` = no catalog entry |
@@ -289,13 +305,13 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered
 | 0x0014 | heat_demand_limited_by_outside_temp | C | f32 | Hc{hc}SummerTempLimit | — | — | — | **S** `circuits[].config.heat_demand_limited_by_outside_temp` | °C. Summer cutoff |
 | 0x0015 | room_temperature_control_mode | C | u16 | Hc{hc}RoomTempSwitchOn | — | →rcmode | — | **S** `circuits[].config.room_temperature_control_mode` | Gate for dew point |
 | 0x0016 | screed_drying_day | C | u16 | Hc{hc}ScreedDryingDay | — | — | — | | Screed drying program |
-| 0x0017 | screed_drying_desired_temperature | C | f32 | Hc{hc}ScreedDryingTempDesired | — | — | — | | °C. Screed drying program |
-| 0x0018 | ext_hwc_active | C | u16 | Hc{hc}ExternalHWCActive | — | — | — | | Gate register for ext HWC |
-| 0x0019 | external_heat_demand | C | u16 | Hc{hc}ExternalHeatDemand | — | — | — | | External heat source |
+| 0x0017 | screed_drying_desired_temperature | S | f32 | Hc{hc}ScreedDryingTempDesired | — | — | — | | °C. Screed drying program. FLAGS=0x01 (stable RO) — computed setpoint, not user-configurable |
+| 0x0018 | ext_hwc_active | S | u16 | Hc{hc}ExternalHWCActive | — | — | — | | Gate register for ext HWC. FLAGS=0x00 (volatile RO) — status, not config |
+| 0x0019 | external_heat_demand | S | u16 | Hc{hc}ExternalHeatDemand | — | — | — | | External heat source. FLAGS=0x00 (volatile RO) — status, not config |
 | 0x001A | mixer_movement | S | u16 | Hc{hc}MixerMovement | — | — | — | | `<0`=closing, `>0`=opening. Read-only |
 | 0x001B | circuit_state | S | u16 | Hc{hc}Status | — | — | — | **S** `circuits[].state.circuit_state` | Raw state code |
 | 0x001C | epsilon | S | f32 | Hc{hc}HeatCurveAdaption | — | — | — | | Heat curve adaption factor. Read-only |
-| 0x001D | frost_protection_threshold | P | f32 | Hc{hc}FrostProtThreshold | — | — | — | **S** `circuits[].properties.frost_protection_threshold` | °C |
+| 0x001D | frost_protection_threshold | C | f32 | Hc{hc}FrostProtThreshold | — | — | — | **S** `circuits[].properties.frost_protection_threshold` | °C. FLAGS=0x02 (technical RW) — writable config, not property. Semantic path needs migration to `config.*` |
 | 0x001E | pump_status | S | u16 | Hc{hc}PumpStatus | — | — | — | **S** `circuits[].state.pump_status` | Also `boiler_status.state.pump_running` (II=0) |
 | 0x001F | room_temperature_setpoint | C | f32 | Hc{hc}RoomSetpoint | — | — | — | | °C |
 | 0x0020 | calculated_flow_temperature | S | f32 | Hc{hc}FlowTempCalc | — | — | — | **S** `circuits[].state.calculated_flow_temperature` | °C |
@@ -323,12 +339,14 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 | 0x0009 | heating_set_back_temperature | C | f32 | Zone{z}NightTemp | — | — | — | | °C. Night setpoint |
 | 0x000C | bank_holiday_start | C | date | Zone{z}BankHolidayStartPeriod | — | — | — | | ebusd confirmed |
 | 0x000D | bank_holiday_end | C | date | Zone{z}BankHolidayEndPeriod | — | — | — | | ebusd confirmed |
-| 0x000E | current_special_function | S | u16 | Zone{z}SFMode | — | →sfmode | — | **S** (derived) `zones[].state.operating_mode` | |
-| 0x000F | current_room_temperature | S | f32 | Zone{z}RoomTemp | — | — | — | **S** `zones[].state.current_temperature` | °C. Read-only. From room sensor |
-| 0x0012 | valve_status | S | u16 | Zone{z}ValveStatus | — | `0=closed 1=open` | — | | Used for hvac_action derivation |
+| 0x000E | current_special_function | C | u16 | Zone{z}SFMode | — | →sfmode | — | **S** (derived) `zones[].state.operating_mode` | FLAGS=0x03 (user RW) — writable to set quickveto/away |
+| 0x000F | current_room_temperature | S | f32 | Zone{z}RoomTemp | — | — | — | **S** `zones[].state.current_temperature` | °C. FLAGS=0x01 (stable RO). From room sensor |
+| 0x0010 | (unknown) | C | u16 | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
+| 0x0011 | (unknown) | C | u16 | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
+| 0x0012 | valve_status | S | u16 | Zone{z}ValveStatus | — | `0=closed 1=open` | — | | FLAGS=0x01 (stable RO). Used for hvac_action derivation |
 | 0x0013 | associated_circuit_index | C | u16 | Zone{z}RoomZoneMapping | — | →zmapping | — | **S** (internal: circuit type lookup) | |
-| 0x0014 | heating_manual_mode_setpoint | C | f32 | Zone{z}ActualRoomTempDesired | — | — | — | **S** `zones[].state.desired_temperature` (fallback) | °C. Current setpoint considering all conditions |
-| 0x0015 | cooling_manual_mode_setpoint | C | f32 | — | — | — | cooling_enabled | | °C. ebusd: `(commented) Unknown15Temp, in FlusterBetrieb 24 sonst 99` |
+| 0x0014 | heating_manual_mode_setpoint | S | f32 | Zone{z}ActualRoomTempDesired | — | — | — | **S** `zones[].state.desired_temperature` (fallback) | °C. FLAGS=0x01 (stable RO) — computed output, not user-settable. Current setpoint considering all conditions |
+| 0x0015 | cooling_manual_mode_setpoint | S | f32 | — | — | — | cooling_enabled | | °C. FLAGS=0x01 (stable RO) — computed output, not user-settable. ebusd: `(commented) Unknown15Temp, in FlusterBetrieb 24 sonst 99` |
 | 0x0016 | zone_name | C | string | Zone{z}Shortname | — | — | — | **S** `zones[].name` | maxLength 6 |
 | 0x0017 | zone_name_prefix | C | string | Zone{z}Name1 | — | — | — | | maxLength 5. Part 1 |
 | 0x0018 | zone_name_suffix | C | string | Zone{z}Name2 | — | — | — | | maxLength 5. Part 2 |
@@ -336,14 +354,21 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 | 0x001A | cooling_time_slot_active | S | u16 | — | — | `0=off 1=on` | cooling_enabled | | Timer schedule flag |
 | 0x001B | zone_status | S | u16 | — | — | — | — | | Raw zone status code |
 | 0x001C | zone_index | P | bytes | Zone{z}Index | — | — | — | **S** (discovery) | Presence marker |
-| 0x001E | quick_veto_end_time | S | time | Zone{z}QuickVetoEndTime | — | — | — | | Read-only |
+| 0x001E | quick_veto_end_time | C | time | Zone{z}QuickVetoEndTime | — | — | — | | FLAGS=0x03 (user RW) — writable, can extend/set veto end time |
 | 0x0020 | holiday_end_time | C | time | — | — | — | — | | |
 | 0x0021 | holiday_start_time | C | time | — | — | — | — | | |
 | 0x0022 | heating_desired_setpoint | C | f32 | Zone{z}DayTemp | — | — | — | **S** `zones[].state.desired_temperature` (primary) | °C. 15..30 step 0.5 per ebusd |
 | 0x0023 | cooling_desired_setpoint | C | f32 | — | — | — | cooling_enabled | | °C |
-| 0x0024 | quick_veto_end_date | S | date | Zone{z}QuickVetoEndDate | — | — | — | | Read-only |
+| 0x0024 | quick_veto_end_date | C | date | Zone{z}QuickVetoEndDate | — | — | — | | FLAGS=0x03 (user RW) — writable, can extend/set veto end date |
 | 0x0026 | quick_veto_duration | C | f32 | Zone{z}QuickVetoDuration | — | — | — | | Hours. 0.5..12 step 0.5. Writing enables quick veto mode. |
-| 0x0028 | current_room_humidity | S | f32 | — | — | — | — | **S** `zones[].state.current_room_humidity` | %. From room sensor |
+| 0x0027 | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x00 (volatile RO). Discovered in VRC Explorer scan |
+| 0x0028 | current_room_humidity | S | f32 | — | — | — | — | **S** `zones[].state.current_room_humidity` | %. FLAGS=0x01 (stable RO). From room sensor |
+| 0x0029 | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002A | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002B | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002C | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002D | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002E | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
 
 ### Zone Mode Derivation
 
@@ -484,7 +509,7 @@ Source: `refreshCircuits()` in `semantic_vaillant.go`
 | `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u16) |
 | `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 |
 | `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 |
-| `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 |
+| `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 (FLAGS=RW, migrate to `config.*`) |
 
 ### `ebus.v1.semantic.zones.get`
 
@@ -643,9 +668,8 @@ Used by: GG=0x02 RR=0x0002
 | 2 | fixed | fixed | Zone allowed modes: `[off, auto, cool]` |
 | 3 | hwc | hwc *(not implemented)* | Hot water circuit (not a heating circuit) |
 | 4 | returnincr | return_increase *(not implemented)* | Return temperature increase |
-| 5 | pool | pool *(not implemented)* | Swimming pool circuit |
 
-Note: ebusd also defines `mctype7` which adds value 6=circulation. Constraint catalog allows 0..4 for this register. Types 3-5 are not present on the test system; Helianthus currently treats them as inactive.
+Note: Constraint catalog allows 0..4 for this register — value 5 (`pool` in ebusd `mctype7`) exceeds the BASV2 constraint range and is not valid on VRC720 systems. ebusd `mctype7` extends to value 6 (`circulation`) but neither 5 nor 6 are within the authoritative constraint. Types 3-4 are not present on the test system; Helianthus currently treats them as inactive.
 
 ### offmode — Auto-off behavior
 
@@ -692,19 +716,19 @@ Used by: GG=0x00 RR=0x0014 (AdaptHeatCurve), RR=0x0096 (MaintenanceDue)
 
 Note: Helianthus decodes `yesno` registers as `bool`. Already implemented for `adaptive_heating_curve` and `maintenance_due`.
 
-### zmapping — Zone-to-room-sensor mapping
+### zmapping — Zone room temperature sensor mapping
 
 Used by: GG=0x03 RR=0x0013
 
-| Value | ebusd | Helianthus |
-|-------|-------|-----------|
-| 0 | none | none *(not implemented)* |
-| 1 | VRC700 | vrc700 *(not implemented)* |
-| 2 | VR91_1 | vr91_1 *(not implemented)* |
-| 3 | VR91_2 | vr91_2 *(not implemented)* |
-| 4 | VR91_3 | vr91_3 *(not implemented)* |
+| Value | ebusd | Helianthus | Notes |
+|-------|-------|-----------|-------|
+| 0 | none | none *(not implemented)* | No room sensor assigned |
+| 1 | VRC700 | regulator *(not implemented)* | Built-in sensor of the /f split regulator (wireless UI + base station). Same hardware class as VR91 with added UI firmware |
+| 2 | VR91_1 | thermostat_1 *(not implemented)* | External RF temperature/humidity sensor + UI endpoint |
+| 3 | VR91_2 | thermostat_2 *(not implemented)* | Second VR91 sensor |
+| 4 | VR91_3 | thermostat_3 *(not implemented)* | Third VR91 sensor |
 
-Note: Currently used internally to resolve associated circuit index, not exposed in semantic output. Proposed: expose as `zones[].config.room_sensor_mapping` string enum.
+Note: ebusd uses hardware model names (VRC700, VR91). Helianthus uses user-facing names since VRC700 and VR91 are functionally the same (RF temperature/humidity sensor + UI) — the VRC700 is the /f regulator's wireless display unit which IS a VR91 with extra UI firmware. Currently used internally to resolve associated circuit, not exposed in semantic output. Proposed: expose as `zones[].config.room_sensor_mapping` string enum.
 
 ### mamode — Multi-relay setting
 
@@ -752,7 +776,29 @@ One pending:
 - **myVaillant register map CSV** (`myvaillant_register_map.csv`) — Helianthus-curated mapping built by value-matching live B524 reads against myPyllant cloud API field values. 115 entries across groups 0x00-0x05. **NOT a Vaillant-published source** — carries false-positive risk where multiple registers share the same value (see Mapping Conflicts).
 - **Gateway production code** (`semantic_vaillant.go`) — Authoritative for which registers are actively polled and how they map to semantic planes.
 - **Live B524 scan** (2026-03-04) — MCP RPC reads from BASV2 via Helianthus gateway.
-- **VRC Explorer full group scan** — Raw register data for GG=0x02-0x0C across all instances.
+- **VRC Explorer full group scan** — Raw register data for GG=0x02-0x0C across all instances. FLAGS byte (response byte[1]) used for access/writability verification of Cat column.
+
+### FLAGS Verification Summary
+
+Category corrections applied from VRC Explorer FLAGS analysis (GG=0x02, 0x03):
+
+| Group | RR | Name | Old Cat | New Cat | FLAGS | Rationale |
+|-------|-----|------|---------|---------|-------|-----------|
+| 0x02 | 0x0017 | screed_drying_desired_temperature | C | S | 0x01 | Computed setpoint, read-only |
+| 0x02 | 0x0018 | ext_hwc_active | C | S | 0x00 | Status register, not config |
+| 0x02 | 0x0019 | external_heat_demand | C | S | 0x00 | External demand status |
+| 0x02 | 0x001D | frost_protection_threshold | P | C | 0x02 | Technical config, writable |
+| 0x03 | 0x000E | current_special_function | S | C | 0x03 | User-writable (set quickveto/away) |
+| 0x03 | 0x0014 | heating_manual_mode_setpoint | C | S | 0x01 | Computed output, read-only |
+| 0x03 | 0x0015 | cooling_manual_mode_setpoint | C | S | 0x01 | Computed output, read-only |
+| 0x03 | 0x001E | quick_veto_end_time | S | C | 0x03 | Writable (extend/set veto) |
+| 0x03 | 0x0024 | quick_veto_end_date | S | C | 0x03 | Writable (extend/set veto) |
+
+Notable FLAGS-confirmed assignments (no change needed):
+- GG=0x02 0x0002 (heating_circuit_type): FLAGS=0x03 (user RW), kept as P — writable but used as immutable discovery probe in Helianthus
+- GG=0x03 0x001C (zone_index): FLAGS=0x01 (stable RO), kept as P — presence marker
+
+Registers without FLAGS data: all of GG=0x00 and GG=0x01 (not yet scanned by `b524_grab_op.py`).
 
 ## Related Files
 
