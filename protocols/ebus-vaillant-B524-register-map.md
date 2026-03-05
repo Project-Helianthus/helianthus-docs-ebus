@@ -131,13 +131,13 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 | 0x0A | Radio Sensors (VR92) | Yes | 0x00-0x0A | **0x02 + 0x06** | 759 local + 338 remote | — |
 | 0x06 | Programs/Timetables | — | — | 0x0B | — | — |
 | 0x07 | Programs/Timetables | — | — | 0x0B | — | — |
-| 0x0C | Remote Misc | Yes | 0x00-0x0A | 0x06 only | 165 (15/inst) | — |
+| 0x0C | Remote Accessories (VR71/FM5) | Yes | 0x00-0x0A | 0x06 only | 165 (15/inst) | — |
 
 **GG=0x08 — Buffer/Solar Cylinder 2:** Dual-opcode confirmed by scan. Local (0x02): 7 singleton registers — cylinder max setpoint, charge hysteresis/offset, two NaN temperatures, pump status. Remote (0x06): 4 registers per instance across all 11 instances — likely buffer-tank sensor data. Constraint catalog has 6 entries matching GG=0x05 (cylinders) structure. ebusd does not define GG=0x08.
 
 **Radio sensor groups (0x09, 0x0A):** Both support dual-namespace. The local namespace (0x02) stores per-slot configuration (sensor enable flags, temperature schedules, BASV2 serial number fragments). The remote namespace (0x06) stores live data from paired radio devices (temperature, humidity, device type, firmware version). Instance II selects the sensor slot (II=0x00 = slot 0, up to II=0x0A = slot 10).
 
-**GG=0x0C:** Responds only to opcode 0x06 (remote data). No local config namespace. 15 registers per instance. Purpose unclear — possibly reserved for future remote device types.
+**GG=0x0C — Remote Accessories (VR71/FM5):** Responds only to opcode 0x06 (remote data). No local config namespace. 15 registers per instance. Uses the same remote-device slot schema as GG=0x09/0x0A. `device_class_address` 0x26 maps to VR71 (FM5 functional module) per ebusd scan evidence and Vaillant documentation ("FM5 functional module: instead of VR 71").
 
 **Discovery:** Directory probe (`opcode=0x00`) is unreliable for GG=0x05 (terminator quirk). Use static topology. Multi-instance groups: scan all instances up to II=0x0A, expose only active ones.
 
@@ -604,38 +604,38 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active devices are identi
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
 | 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | | FLAGS=0x01. II=1: 1 (VRC720f/2 paired) |
-| 0x0002 | device_type_code | P | u8 | enum | — | — | `0x15=VRC720` | — | | FLAGS=0x01. II=1: 0x15 (21). Identifies radio device type |
-| 0x0003 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 0xFF=not-present (empty: 0xFF) |
-| 0x0004 | device_firmware_version | P | time | version | — | — | — | — | | FLAGS=0x01. 3 bytes: major.minor.patch. II=1: 08.05.00 → VRC720f/2 sw 08.05 |
+| 0x0002 | device_class_address | P | u8 | enum | — | — | `0x15=VRC720 0x35=VR92 0x26=VR71` | — | | FLAGS=0x01. Canonical Vaillant eBUS address for device family (ebusd: 0x15→CTLV2, 0x35→VR_92, 0x26→VR_71) |
+| 0x0003 | device_error_code | S | u8 | — | — | — | — | — | | FLAGS=0x01. II=1: 0 (OK). Empty: 0xFF. 0=no error |
+| 0x0004 | device_firmware_version | P | time | version | — | — | — | — | | FLAGS=0x01. 3 bytes: major.minor.patch (byte-decimal, NOT BCD). II=1: 08.05.00 → VRC720f/2 sw 08.05 |
 | 0x0005 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0x8000, II=1: 0 |
 | 0x0006 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0x8000, II=1: 0 |
-| 0x0007 | room_humidity | S | f32 | % | — | — | — | — | | FLAGS=0x01. II=1: 40.0%. NaN if no sensor |
+| 0x0007 | current_room_air_humidity | S | f32 | % | — | — | — | — | | FLAGS=0x01. II=1: 40.0%. VR92f/3 manual: "Current room air humidity, measured using the installed humidity sensor". NaN if no sensor |
 | 0x0008 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
 | 0x0009 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
 | 0x000A | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
-| 0x000B | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 0xFF=not-present |
+| 0x000B | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. Empty: 0xFF, II=1: 0 |
 | 0x000C | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
 | 0x000D | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. All: 1 |
-| 0x000E | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. II=1: NaN |
-| 0x000F | room_temperature | S | f32 | °C | — | — | — | — | | FLAGS=0x01. II=1: 12.5°C. NaN if no sensor |
+| 0x000E | room_temp_offset | C | f32 | °C | — | — | — | — | | FLAGS=0x03 (user RW). II=1: 0.0. Calibration offset for measured temperature |
+| 0x000F | current_room_temperature | S | f32 | °C | — | — | — | — | | FLAGS=0x01. II=1: 12.5°C. VR92f/3 manual: "Current room temperature in the zone". NaN if no sensor |
 | 0x0010 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
 | 0x0011 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
-| 0x0012 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 0xFF=not-present |
+| 0x0012 | device_status | S | u8 | — | — | — | — | — | | FLAGS=0x01. Empty: 0xFF, II=1: 0 (OK) |
 | 0x0013 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00 |
 | 0x0014 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
 | 0x0015 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x00 |
 | 0x0016 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x00 |
-| 0x0017 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 0xFF=not-present |
-| 0x0019 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 1 |
+| 0x0017 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x01. Empty: 0xFF, II=1: 0 |
+| 0x0019 | remote_control_address | S | u8 | count | — | — | — | — | | FLAGS=0x01. VR92f/3 manual: "each remote control has a unique address starting at 1". VRC720=0 (master), VR92=1. Installer-settable per zone assignment |
 | 0x001B | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00 |
-| 0x001E | device_paired | P | u8 | bool | — | — | `0=no 1=yes` | — | | FLAGS=0x01. II=1: 1. Confirms active pairing |
-| 0x001F | radio_signal_quality | P | u8 | count | — | — | — | — | | FLAGS=0x01. II=1: 7 |
+| 0x001E | device_paired | P | u8 | bool | — | — | `0=no 1=yes` | — | | FLAGS=0x01. II=1: 1. Confirms active pairing. Empty: 0xFF |
+| 0x001F | reception_strength | P | u8 | count | — | — | `4=acceptable <4=unstable 10=max` | — | | FLAGS=0x01. VR92f/3 manual: "System control reception strength". Scale 0-10: 4=acceptable, <4=not stable, 10=highly stable. II=1: 7 |
 | 0x0020 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 3 |
-| 0x0023 | hardware_identifier | P | u16 | raw | — | — | — | — | | FLAGS=0x01. II=1: 0x0415=1045 |
-| 0x0025 | zone_assignment | P | u8 | count | — | — | — | — | | FLAGS=0x01. II=1: 2 (assigned to zone 2?) |
-| 0x0026 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. II=1: 10 |
+| 0x0023 | hardware_identifier | P | u16 | raw | — | — | — | — | | FLAGS=0x01. II=1: 0x1504. Byte 0 = device_class_address on VRC720 (0x15) |
+| 0x0025 | zone_assignment | P | u8 | count | — | — | — | — | | FLAGS=0x01. II=1: 2 |
+| 0x0026 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. II=1: 10. May be reception strength ceiling (constant) |
 | 0x002F | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. All: 5 |
-| 0x0030 | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. All: 12 |
+| 0x0030 | max_time_periods_per_day | P | u8 | count | — | — | — | — | | FLAGS=0x01. All: 12 (constant). VR92f/3 manual: "Up to 12 time periods can be set per day". Schema capability constant |
 
 ---
 
@@ -682,35 +682,49 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are i
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
 | 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | | FLAGS=0x01. II=1: 1 (VR92f paired) |
-| 0x0002 | device_type_code | S | u8 | enum | — | — | `0x35=VR92` | — | | FLAGS=0x00. II=1: 0x35 (53) |
-| 0x0003 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
-| 0x0004 | device_firmware_version | S | time | version | — | — | — | — | | FLAGS=0x00. 3 bytes: major.minor.patch. II=1: 02.11(17).00 → VR92f sw 02.17 |
-| 0x0006 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. II=1: 0.0, empty: NaN |
-| 0x0007 | room_humidity | S | f32 | % | RoomHumidity | — | — | — | | FLAGS=0x00. II=1: 39.0%. ebusd confirmed. NaN if no sensor |
+| 0x0002 | device_class_address | S | u8 | enum | — | — | `0x15=VRC720 0x35=VR92 0x26=VR71` | — | | FLAGS=0x01. Canonical Vaillant eBUS address for device family. II=1: 0x35 (53) |
+| 0x0003 | device_error_code | S | u8 | — | — | — | — | — | | FLAGS=0x01. II=empty: 0xFF, II=1: 0 (OK) |
+| 0x0004 | device_firmware_version | S | time | version | — | — | — | — | | FLAGS=0x01. 3 bytes: major.minor.patch (byte-decimal, NOT BCD). II=1: 02.17.00 → VR92f sw 02.17 |
+| 0x0006 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x01. II=1: 0.0, empty: NaN |
+| 0x0007 | current_room_air_humidity | S | f32 | % | RoomHumidity | — | — | — | | FLAGS=0x01. II=1: 39.0%. VR92f/3 manual: "Current room air humidity, measured using the installed humidity sensor". ebusd confirmed. NaN if no sensor |
 | 0x000B | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
-| 0x000D | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. All: 1 |
-| 0x000E | (unknown) | C | f32 | — | — | — | — | — | | FLAGS=0x02. II=1: 0.0, empty: NaN |
-| 0x000F | room_temperature | S | f32 | °C | RoomTemp | — | — | — | | FLAGS=0x00. II=1: 13.625°C. ebusd confirmed. NaN if no sensor |
-| 0x0012 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
-| 0x0017 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
-| 0x0019 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=1: 1 |
+| 0x000D | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03. All: 1 |
+| 0x000E | room_temp_offset | C | f32 | °C | — | — | — | — | | FLAGS=0x03 (user RW). II=1: 0.0, empty: NaN. Calibration offset for measured temperature |
+| 0x000F | current_room_temperature | S | f32 | °C | RoomTemp | — | — | — | | FLAGS=0x01. II=1: 13.625°C. VR92f/3 manual: "Current room temperature in the zone". ebusd confirmed. NaN if no sensor |
+| 0x0012 | device_status | S | u8 | — | — | — | — | — | | FLAGS=0x01. II=empty: 0xFF, II=1: 0 (OK) |
+| 0x0017 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x01. II=empty: 0xFF, II=1: 0 |
+| 0x0019 | remote_control_address | S | u8 | count | — | — | — | — | | FLAGS=0x01. VR92f/3 manual: "each remote control has a unique address starting at 1". II=1: 1. Installer-settable per zone assignment |
 | 0x001B | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. All: NaN |
-| 0x001E | device_paired | S | u8 | bool | — | — | `0=no 1=yes` | — | | FLAGS=0x00. II=1: 1 |
-| 0x001F | radio_signal_quality | P | u8 | count | — | — | — | — | | FLAGS=0x01. II=1: 10 |
+| 0x001E | device_paired | S | u8 | bool | — | — | `0=no 1=yes` | — | | FLAGS=0x01. II=1: 1. Empty: 0xFF |
+| 0x001F | reception_strength | P | u8 | count | — | — | `4=acceptable <4=unstable 10=max` | — | | FLAGS=0x01. VR92f/3 manual: "System control reception strength". Scale 0-10: 4=acceptable, <4=not stable, 10=highly stable. II=1: 10 |
 | 0x0020 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 3 |
-| 0x0023 | hardware_identifier | S | u16 | raw | — | — | — | — | | FLAGS=0x00. II=1: 0x0182=386 |
-| 0x0025 | zone_assignment | S | u8 | count | — | — | — | — | | FLAGS=0x00. II=1: 2 (assigned to zone 2?) |
-| 0x0026 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x02. II=1: 10 |
-| 0x0028-0x002E | (unknown, 7 regs) | C | u8 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
-| 0x002F | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All: 5 |
-| 0x0030 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All: 12 |
-| 0x0032 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
-| 0x0033 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All: 0 |
+| 0x0023 | hardware_identifier | S | u16 | raw | — | — | — | — | | FLAGS=0x01. II=1: 0x8201. Byte 0 = 0x82 (purpose unclear, does NOT match device_class_address 0x35) |
+| 0x0025 | zone_assignment | S | u8 | count | — | — | — | — | | FLAGS=0x01. II=1: 2 |
+| 0x0026 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. II=1: 10. May be reception strength ceiling (constant) |
+| 0x0028-0x002E | (unknown, 7 regs) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 0. User RW config block |
+| 0x002F | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x01. All: 5 |
+| 0x0030 | max_time_periods_per_day | S | u8 | count | — | — | — | — | | FLAGS=0x01. All: 12 (constant). VR92f/3 manual: "Up to 12 time periods can be set per day". Schema capability constant |
+| 0x0032 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x01. II=empty: 0xFF, II=1: 0 |
+| 0x0033 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x01. All: 0 |
 | 0x0035 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
 
-**Radio device enumeration:** To enumerate paired VR92 devices, scan II=0x00 through II=0x0A with opcode 0x06 and read `device_connected` (RR=0x0001). For each paired device, `device_type_code` (0x0002), `device_firmware_version` (0x0004), `room_humidity` (0x0007), and `room_temperature` (0x000F) provide identification and live data.
+**Radio device enumeration:** To enumerate all paired remote devices, scan **three groups** with opcode 0x06:
+
+1. **GG=0x09** (VRC7xx / system controls) — II=0x00 through II=0x0A
+2. **GG=0x0A** (VR92 / remote controls) — II=0x00 through II=0x0A
+3. **GG=0x0C** (VR71/FM5 / wired accessories) — II=0x00 through II=0x0A
+
+For each slot, read `device_connected` (0x0001). If =1, read:
+- `device_class_address` (0x0002) — resolve to device family: 0x15→VRC720, 0x35→VR92, 0x26→VR71/FM5
+- `device_firmware_version` (0x0004) — byte-decimal triplet
+- `reception_strength` (0x001F) — 0-10 scale (4=acceptable, <4=unstable)
+- `remote_control_address` (0x0019) — unique per remote (1..N), 0 for master
+- `current_room_air_humidity` (0x0007) — f32 %, NaN if no sensor
+- `current_room_temperature` (0x000F) — f32 °C, NaN if no sensor
 
 **ebusd baseline:** ebusd `15.ctlv2.csv` defines only RR=0x0007 (RoomHumidity, EXP decode) and RR=0x000F (RoomTemp, EXP decode) for VR92 addresses 1-8, routed via `B524,06000a..`.
+
+**ebusd decode note:** B524 remote responses carry a 4-byte header before the register value. When defining ebusd message templates, skip 4 bytes then decode the payload (e.g., for humidity: `B524,060009010700` → skip 4B → IEEE-754 LE float).
 
 ---
 
@@ -730,27 +744,29 @@ No register table. Schema under investigation.
 
 ---
 
-## GG=0x0C — Remote Misc (multi-instance, remote only)
+## GG=0x0C — Remote Accessories, VR71/FM5 (multi-instance, remote only)
 
-> **Verified 2026-03-05:** Responds only to opcode 0x06 (no local config namespace — opcode 0x02 returns 0 valid registers). 15 registers per instance, 165 total valid. Same FLAGS/layout pattern as GG=0x09/0x0A remote data.
+> **Verified 2026-03-05:** Responds only to opcode 0x06 (no local config namespace — opcode 0x02 returns 0 valid registers). 15 registers per instance, 165 total valid. Uses the same remote-device slot schema as GG=0x09/0x0A.
+>
+> Your **VR71 (FM5 functional module)** appears at **II=0x01** with `device_class_address=0x26` and firmware 01.00.00. The VRC720f manual explicitly defines: "FM5 functional module: instead of VR 71."
 
 ### GG=0x0C Remote Data (opcode 0x06)
 
-Instanced (II=0x00-0x0A). 15 registers per instance. **No paired device on any slot** (RR=0x0001=0 for all). Register layout mirrors GG=0x09/0x0A remote data — likely reserved for a third radio device class.
+Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. **II=0x01 has `device_class_address=0x26` (VR71/FM5)** but `device_connected=0` — the device is recognized but currently not reporting as "live" (wired module, not radio — may use a different liveness mechanism).
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | | FLAGS=0x01. All: 0 (no device) |
-| 0x0002 | device_type_code | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0, II=1: 0x26 (38) when paired |
-| 0x0003 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF |
-| 0x0004 | device_firmware_version | S | time | version | — | — | — | — | | FLAGS=0x00. All empty: FF/FF/FF, II=1: 01/00/00 |
+| 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | | FLAGS=0x01. All: 0 |
+| 0x0002 | device_class_address | S | u8 | enum | — | — | `0x26=VR71/FM5` | — | | FLAGS=0x00. II=1: 0x26 (38). Canonical eBUS address for VR71 (ebusd: 0x26→VR_71) |
+| 0x0003 | device_error_code | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF |
+| 0x0004 | device_firmware_version | S | time | version | — | — | — | — | | FLAGS=0x00. II=1: 01.00.00 (byte-decimal). Empty: FF/FF/FF |
 | 0x000A | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
-| 0x0012 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF |
-| 0x0017 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF, II=1: 1 when paired |
+| 0x0012 | device_status | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF |
+| 0x0017 | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF, II=1: 1 when type code present |
 | 0x0028-0x002E | (unknown, 7 regs) | C | u8 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
 | 0x002F | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All: 5 |
 
-**Device type note:** II=0x01 in GG=0x0C shows device_type_code=0x26 (38) and firmware 01.00.00 with device_firmware_version date=01/00/00. This instance has `device_connected=0` but non-default type code, suggesting a previously paired device that was removed, or a reserved slot for wired accessories (VR61, VR71, etc.).
+**VR71/FM5 identification:** `device_class_address=0x26` maps to VR71 based on two independent sources: (1) ebusd scan logs show address 0x26 → ID=VR_71, (2) Vaillant VRC720f manual defines "FM5 functional module: instead of VR 71" and shows systems with FM5 (VR71) alongside VR92f and VRC720f. Validation: power-cycle the VR71/FM5 and observe whether II=0x01 state changes.
 
 ---
 
