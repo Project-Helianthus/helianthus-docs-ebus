@@ -261,34 +261,34 @@ All registers except `hwc_status` (0x000F) are gated by `hwc_enabled` (0x0001).
 
 ## GG=0x02 — Heating Circuits (multi-instance)
 
-All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered by probing `heating_circuit_type` (0x0001) — values `0xFF`/`0xFFFF` indicate inactive.
+All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered by probing `heating_circuit_type` (0x0002) — values `0xFF`/`0xFFFF` indicate inactive.
 
 > **Reconciliation note (2026-03-05):** Previous version had 8 address mismatches in the Additional Config section (wrong register↔name pairs). This version cross-references three sources: ebusd community TSP (`15.ctlv2.tsp`) confirms 14 of 35 registers independently; the CSV provides value-matched names for the remainder. Registers confirmed only by CSV are marked with `†` — these carry false-positive risk from value-matching.
 
 ### Complete Register Map
 
-Source: `helianthus-vrc-explorer/data/myvaillant_register_map.csv` (authoritative), cross-referenced with gateway production code and ebusd TSP.
+Source: ebusd community TSP + `helianthus-vrc-explorer/data/myvaillant_register_map.csv`, cross-referenced with gateway production code.
 
 Legend: **S** = actively polled by semantic layer | ebusd name in parentheses.
 
 | RR | Leaf | ebusd Name | Type | Category | Semantic Field | Notes |
 |----|------|------------|------|----------|----------------|-------|
-| 0x0001 | heating_circuit_type | Hc{hc}CircuitType | u16 | properties | `circuits[].properties.heating_circuit_type` | **S** Discovery probe; 1=mixer, 2=fixed |
-| 0x0002 | mixer_circuit_type_external | Hc{hc}CircuitType | u16 | properties | `circuits[].properties.mixer_circuit_type_external` | **S** Same ebusd name, re-read for external type |
+| 0x0001 | unknown † | - | u16 | - | - | CSV says heating_circuit_type, but gateway uses 0x0002. Catalog constraint 1..2 (Record 0x0100). Purpose unverified. |
+| 0x0002 | heating_circuit_type | Hc{hc}CircuitType | u16 | properties | `circuits[].properties.heating_circuit_type`, `mixer_circuit_type_external` | **S** ebusd + gateway confirmed. Discovery probe; 1=mixer, 2=fixed. Catalog constraint 0..4 (Record 0x0200). |
 | 0x0003 | room_influence_type † | Hc{hc}RoomInfluenceType | u16 | config | - | CSV only, no ebusd entry |
-| 0x0004 | desired_return_temperature_setpoint † | Hc{hc}ReturnTempDesired | f32 | config | - | CSV only; ebusd: "Unknown04, constant 30°C" |
-| 0x0005 | dew_point_monitoring_enabled † | Hc{hc}DewPointMonitoring | u16 | config | - | CSV only, no ebusd entry. Gates: cooling_enabled |
-| 0x0006 | cooling_enabled | Hc{hc}CoolingEnabled | u16 | config | `circuits[].config.cooling_enabled` | **S** Gate for cooling registers |
+| 0x0004 | desired_return_temperature_setpoint † | Hc{hc}ReturnTempDesired | f32 | config | - | CSV only; ebusd: "Unknown04, constant 30°C". Catalog constraint 15..80 (Record 0x0400) |
+| 0x0005 | dew_point_monitoring_enabled † | Hc{hc}DewPointMonitoring | u16 | config | - | CSV only, no ebusd entry. Gates: cooling_enabled. Catalog constraint 0..1 (Record 0x0500) |
+| 0x0006 | cooling_enabled | Hc{hc}CoolingEnabled | u16 | config | `circuits[].config.cooling_enabled` | **S** Gate for cooling registers. Catalog constraint 0..1 (Record 0x0600) |
 | 0x0007 | heating_circuit_flow_setpoint | Hc{hc}FlowTempDesired | f32 | state | `circuits[].state.heating_circuit_flow_setpoint` | **S** |
 | 0x0008 | current_circuit_flow_temperature | Hc{hc}FlowTemp | f32 | state | `circuits[].state.current_circuit_flow_temperature` | **S** Also `boiler_status.state.return_temperature` (II=0) |
 | 0x0009 | ext_hwc_temperature_setpoint † | Hc{hc}ExternalHWCTempDesired | f32 | config | - | CSV only; ebusd: "Unknown09, constant 60°C". Gates: ext_hwc_active |
 | 0x000A | dew_point_offset † | Hc{hc}DewPointOffset | f32 | config | - | CSV only, no ebusd entry. Gates: cooling_enabled |
-| 0x000B | flow_setpoint_excess_offset | Hc{hc}ExcessTemp | f32 | config | - | Mixer circuit excess |
-| 0x000C | fixed_desired_temperature † | Hc{hc}FixedDesiredTemp | f32 | config | - | CSV only; ebusd: "Unknown0c, constant 65°C" |
-| 0x000D | fixed_setback_temperature † | Hc{hc}SetbackModeTemp | f32 | config | - | CSV only; ebusd: "Unknown0d, constant 65°C" |
-| 0x000E | set_back_mode_enabled | Hc{hc}SetbackMode | u16 | config | - | For mixer circuits |
+| 0x000B | flow_setpoint_excess_offset | Hc{hc}ExcessTemp | f32 | config | - | Mixer circuit excess. Gates: circuit_type=1 (mixer) |
+| 0x000C | fixed_desired_temperature † | Hc{hc}FixedDesiredTemp | f32 | config | - | CSV only; ebusd: "Unknown0c, constant 65°C". Gates: circuit_type=2 (fixed) |
+| 0x000D | fixed_setback_temperature † | Hc{hc}SetbackModeTemp | f32 | config | - | CSV only; ebusd: "Unknown0d, constant 65°C". Gates: circuit_type=2 (fixed) |
+| 0x000E | set_back_mode_enabled | Hc{hc}SetbackMode | u16 | config | - | Gates: circuit_type=1 (mixer) |
 | 0x000F | heating_curve | Hc{hc}HeatCurve | f32 | config | `circuits[].config.heating_curve` | **S** |
-| 0x0010 | heating_flow_temp_max_setpoint | Hc{hc}HeatingFlowTempMax | f32 | config | `circuits[].config.heating_flow_temperature_maximum_setpoint` | **S** Constraint 15..80 |
+| 0x0010 | heating_flow_temp_max_setpoint | Hc{hc}HeatingFlowTempMax | f32 | config | `circuits[].config.heating_flow_temperature_maximum_setpoint` | **S** Constraint 15..80 (ebusd empirical) |
 | 0x0011 | cooling_flow_temp_min_setpoint | Hc{hc}CoolingFlowTempMin | f32 | config | - | Gates: cooling_enabled |
 | 0x0012 | heating_flow_temp_min_setpoint | Hc{hc}HeatingFlowTempMin | f32 | config | `circuits[].config.heating_flow_temperature_minimum_setpoint` | **S** |
 | 0x0013 | ext_hwc_operation_mode | Hc{hc}ExternalHWCOpMode | u16 | config | - | Gates: ext_hwc_active |
@@ -319,7 +319,7 @@ Legend: **S** = actively polled by semantic layer | ebusd name in parentheses.
 
 All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by probing `zone_index` (0x001C).
 
-> **Reconciliation note (2026-03-05):** Previous version had wrong names for 0x0001, 0x0002, 0x0005 and was missing 14 registers. This version uses the myVaillant CSV as authoritative source.
+> **Reconciliation note (2026-03-05):** Previous version had wrong names for 0x0001, 0x0002, 0x0005 and was missing 16 registers. This version cross-references ebusd community TSP (all registers confirmed independently) and the myVaillant CSV for leaf names.
 
 ### Complete Register Map
 
@@ -327,14 +327,16 @@ Legend: **S** = actively polled by semantic layer | ebusd name in parentheses.
 
 | RR | Leaf | ebusd Name | Type | Category | Semantic Field | Notes |
 |----|------|------------|------|----------|----------------|-------|
-| 0x0001 | cooling_operation_mode | Zone{z}CoolingOpMode | u16 | config | - | Gates: cooling_enabled |
-| 0x0002 | cooling_set_back_temperature | Zone{z}CoolingSetbackTemp | f32 | config | - | Constraint 15..30, step 0.5 |
+| 0x0001 | cooling_operation_mode | Zone{z}CoolingOpMode | u16 | config | - | Gates: cooling_enabled. Catalog constraint 0..2 (Record 0x0100) |
+| 0x0002 | cooling_set_back_temperature | Zone{z}CoolingSetbackTemp | f32 | config | - | Catalog constraint 15..30, step 0.5 (Record 0x0200). Gates: cooling_enabled |
 | 0x0003 | holiday_start_date | Zone{z}HolidayStartPeriod | date | config | - | |
 | 0x0004 | holiday_end_date | Zone{z}HolidayEndPeriod | date | config | - | |
-| 0x0005 | holiday_setpoint | Zone{z}HolidayTemp | f32 | config | - | Constraint 5..30 |
-| 0x0006 | heating_operation_mode | Zone{z}HeatingOpMode | u16 | config | (derived) `zones[].state.operating_mode` | **S** 0=off, 1=manual, 2=auto |
+| 0x0005 | holiday_setpoint | Zone{z}HolidayTemp | f32 | config | - | Catalog constraint 5..30 (Record 0x0500) |
+| 0x0006 | heating_operation_mode | Zone{z}HeatingOpMode | u16 | config | (derived) `zones[].state.operating_mode` | **S** 0=off, 1=manual, 2=auto. Catalog constraint 0..2 (Record 0x0600) |
 | 0x0008 | quick_veto_temperature | Zone{z}QuickVetoTemp | f32 | config | - | Veto override target |
 | 0x0009 | heating_set_back_temperature | Zone{z}HeatingSetbackTemp | f32 | config | - | Setback/night temp |
+| 0x000C | bank_holiday_start | Zone{z}BankHolidayStartDate | date | config | - | ebusd TSP confirmed |
+| 0x000D | bank_holiday_end | Zone{z}BankHolidayEndDate | date | config | - | ebusd TSP confirmed |
 | 0x000E | current_special_function | Zone{z}SpecialFunction | u16 | state | (derived) `zones[].state.operating_mode` | **S** 0=none, 1=holiday, 2=quick_veto |
 | 0x000F | current_room_temperature | Zone{z}RoomTemp | f32 | state | `zones[].state.current_temperature` | **S** From room sensor |
 | 0x0012 | valve_status | Zone{z}ValveStatus | u16 | state | - | Used for hvac_action derivation |
@@ -345,13 +347,13 @@ Legend: **S** = actively polled by semantic layer | ebusd name in parentheses.
 | 0x0017 | zone_name_prefix | Zone{z}NamePrefix | string | config | - | Used in name assembly |
 | 0x0018 | zone_name_suffix | Zone{z}NameSuffix | string | config | - | Used in name assembly |
 | 0x0019 | heating_time_slot_active | Zone{z}HeatingTimeSlotActive | u16 | state | - | Timer schedule flag |
-| 0x001A | cooling_time_slot_active | Zone{z}CoolingTimeSlotActive | u16 | state | - | Timer schedule flag |
+| 0x001A | cooling_time_slot_active | Zone{z}CoolingTimeSlotActive | u16 | state | - | Timer schedule flag. Gates: cooling_enabled |
 | 0x001B | zone_status | Zone{z}Status | u16 | state | - | Raw zone status code |
 | 0x001C | zone_index | Zone{z}Index | bytes | config | - | **S** Presence marker for discovery |
 | 0x001E | quick_veto_end_time | Zone{z}QuickVetoEndTime | time | config | - | When active veto expires |
 | 0x0020 | holiday_end_time | Zone{z}HolidayEndTime | time | config | - | |
 | 0x0021 | holiday_start_time | Zone{z}HolidayStartTime | time | config | - | |
-| 0x0022 | heating_desired_setpoint | Zone{z}RoomTempDesired | f32 | config | `zones[].state.desired_temperature` (primary) | **S** Constraint 15..30, step 0.5 |
+| 0x0022 | heating_desired_setpoint | Zone{z}RoomTempDesired | f32 | config | `zones[].state.desired_temperature` (primary) | **S** Constraint 15..30, step 0.5 (ebusd empirical) |
 | 0x0023 | cooling_desired_setpoint | Zone{z}CoolingDesiredSetpoint | f32 | config | - | Gates: cooling_enabled |
 | 0x0024 | quick_veto_end_date | Zone{z}QuickVetoEndDate | date | config | - | |
 | 0x0026 | quick_veto_duration | Zone{z}QuickVetoDuration | u16 | config | - | Minutes |
@@ -362,7 +364,7 @@ Legend: **S** = actively polled by semantic layer | ebusd name in parentheses.
 The `operating_mode` and `preset` exposed in the zones semantic plane are derived from a combination of:
 - `heating_operation_mode` (0x0006): 0=off, 1=manual, 2=auto
 - `current_special_function` (0x000E): 0=none, 1=bank_holiday, 2=quick_veto, etc.
-- Associated circuit's `heating_circuit_type` (GG=0x02, 0x0001)
+- Associated circuit's `heating_circuit_type` (GG=0x02, 0x0002)
 
 ---
 
@@ -609,7 +611,9 @@ The constraint catalog uses a `(Group, Record)` selector where `Record` is a **T
 | 0x0A | 0x0500 | u8_range | 0 | 3 | 1 |
 | 0x0A | 0x0600 | u8_range | 0 | 1 | 1 |
 
-**Note:** TSP-style registers (`0x0100+`) are listed in the constraint catalog but are NOT accessible via standard B524 read operations — only standard registers (`0x0001-0x00FF`) work through gateway RPC.
+**Notes:**
+- TSP-style registers (`0x0100+`) are listed in the constraint catalog but are NOT accessible via standard B524 read operations — only standard registers (`0x0001-0x00FF`) work through gateway RPC.
+- GG=0x00 Record 0x8000 (f32_range -10..10) is orphaned — its standard-address equivalent would be 0x0080 which is not a known register. Possibly a constraint for `smart_photovoltaic_buffer_offset` (0x0081) with an off-by-one, or a high-address register not yet identified.
 
 ---
 
