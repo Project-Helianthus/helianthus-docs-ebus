@@ -140,6 +140,8 @@ Response fields:
 - `zones`: semantic zone list
 - `dhw`: optional DHW semantic object
 - `energy_totals`: optional aggregated energy object
+- `system`: optional system status (state, config, properties)
+- `circuits`: optional circuit list (per-circuit state, config, properties)
 - `captured_utc`: RFC3339 UTC timestamp
 
 Example response:
@@ -173,6 +175,53 @@ Example response:
       "climate": { "today": 0.0 }
     }
   },
+  "system": {
+    "state": {
+      "system_off": false,
+      "system_water_pressure": 1.5,
+      "system_flow_temperature": 31.4,
+      "outdoor_temperature": 5.0,
+      "outdoor_temperature_avg24h": 4.8,
+      "maintenance_due": false,
+      "hwc_cylinder_temperature_top": 58.0,
+      "hwc_cylinder_temperature_bottom": 42.5
+    },
+    "config": {
+      "adaptive_heating_curve": true,
+      "heating_circuit_bivalence_point": -3.0,
+      "dhw_bivalence_point": -7.0,
+      "hc_emergency_temperature": 30.0,
+      "hwc_max_flow_temp_desired": 60.0,
+      "max_room_humidity": 70
+    },
+    "properties": {
+      "system_scheme": 8,
+      "module_configuration_vr71": 2
+    }
+  },
+  "circuits": [
+    {
+      "id": "circuit-0",
+      "instance": 0,
+      "state": {
+        "heating_circuit_flow_setpoint": 35.0,
+        "current_circuit_flow_temperature": 31.2,
+        "circuit_state": 8,
+        "pump_status": true,
+        "calculated_flow_temperature": 35.0
+      },
+      "config": {
+        "heating_curve": 0.8,
+        "heating_flow_temperature_maximum_setpoint": 75.0,
+        "heating_flow_temperature_minimum_setpoint": 20.0,
+        "cooling_enabled": false
+      },
+      "properties": {
+        "heating_circuit_type": 0,
+        "frost_protection_threshold": 4.0
+      }
+    }
+  ],
   "captured_utc": "2026-02-23T22:45:00Z"
 }
 ```

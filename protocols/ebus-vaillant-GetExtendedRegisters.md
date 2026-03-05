@@ -38,18 +38,23 @@ WD      Weekday (u8, 0x00..0x06)
 ### 2.2 Common read-response header (`0x02` / `0x06`)
 
 ```text
-TT GG RR_LO RR_HI [value...]
-
-TT = reply kind / status (empirical):
-  0x00  no data / not present / invalid
-  0x01  live / operational value
-  0x02  parameter / limit
-  0x03  parameter / config
+FLAGS GG RR_LO RR_HI [value...]
 ```
+
+`FLAGS` is an access/writability byte:
+
+```text
+FLAGS = 0x00  volatile read-only state (changes frequently)
+FLAGS = 0x01  stable read-only state (computed outputs, sensor readings)
+FLAGS = 0x02  technical read-write config (offsets, thresholds)
+FLAGS = 0x03  user-facing read-write config (modes, schedules, names)
+```
+
+See [`ebus-vaillant-B524-register-map.md` § FLAGS Byte](./ebus-vaillant-B524-register-map.md#flags-byte-response-header) for full documentation including opcode-specific behavior and verification methodology.
 
 Notes:
 - `II` is not echoed in the response.
-- Some replies are status-only: a single-byte `TT` with no `GG/RR/value`.
+- **Short responses** (payload < 4 bytes) are **not** successful register reads. A single-byte `0x00` indicates wrong route, unsupported opcode, or group default — ebusd reports `invalid position … / 00`. Write operations may return short acknowledgements. Treat as not-a-register-value.
 - Correlation must retain request context (`GG/II/RR/opcode`).
 - Exception: the `0x01` constraint dictionary request is `01 GG RR` (no `II`), so correlation there is `GG/RR`.
 
@@ -119,21 +124,21 @@ hex 15B52403010301
 
 #### 4.2.1 Type tags and decoding
 
-`TT` is the first byte in the returned payload and defines the constraint value encoding:
+The first byte of the constraint response is a **type tag** (distinct from the FLAGS byte in register read responses) that defines the constraint value encoding:
 
 ```text
-TT=0x06: u8 range
+0x06: u8 range
   06 GG RR 00 MIN MAX STEP
 
-TT=0x09: u16le range
+0x09: u16le range
   09 GG RR 00 MIN MAX STEP
   where MIN/MAX/STEP are u16 little-endian
 
-TT=0x0F: float32le range
+0x0F: float32le range
   0F GG RR 00 MIN MAX STEP
   where MIN/MAX/STEP are IEEE754 float32 little-endian
 
-TT=0x0C: date range (HDA3-like)
+0x0C: date range (HDA3-like)
   0C GG RR 00 MIN(d,m,y) MAX(d,m,y) STEP(u16le) 00
   year is interpreted as 2000 + y
 ```
@@ -146,193 +151,59 @@ Current Helianthus runtime behavior:
 2. Probe optional shared IDs above the window (currently `RR=0x80`).
 3. Send `15 b5 24 03 01 GG RR`.
 4. Keep responses where:
-   - `TT in {0x06,0x09,0x0C,0x0F}`
+   - type tag `in {0x06,0x09,0x0C,0x0F}`
    - response echoes request `GG RR`.
 5. Filter stdout noise/non-hex lines before decode.
 
-#### 4.2.3 Observed constraints (decoded, with eBUSd cross-reference)
+#### 4.2.3 Constraint catalog
 
-Cross-reference sources:
-- `15.720.tsp` for `@base(... group=GG ...)` and `@ext(RR,0)` mapping.
-- `vaillant/_templates.tsp` for enum labels (`@values(Values_*)`).
+For the full decoded constraint catalog with register names, types, enum values, and eBUSd cross-references, see [`ebus-vaillant-B524-register-map.md` § Constraint Catalog](./ebus-vaillant-B524-register-map.md#constraint-catalog-ebusreg).
 
-| GG | RR | MIN | MAX | STEP | Type | Notes | eBUSd register(s) | Enum values (eBUSd) | HEX |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 00 | 01 | -20 | 50 | 1 | f32_range |  | HwcBivalencePoint |  | 0f0001000000a0c1000048420000803f |
-| 00 | 02 | -26 | 10 | 1 | f32_range |  | ContinuosHeating |  | 0f0002000000d0c1000020410000803f |
-| 00 | 03 | 0 | 12 | 1 | u16_range |  | FrostOverrideTime |  | 0900030000000c000100 |
-| 00 | 04 | 0 | 300 | 10 | u16_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)` |  |  | 0900040000002c010a00 |
-| 00 | 80 | -10 | 10 | 1 | f32_range | Shared constraint-id (not an `@ext` index) | DewPointOffset, Hc{1..3}DewPointOffset |  | 0f008000000020c1000020410000803f |
-| 01 | 01 | 0 | 1 | 1 | u16_range |  | HwcEnabled | 0=no, 1=yes | 09010100000001000100 |
-| 01 | 02 | 0 | 1 | 1 | u8_range |  | HwcCircPumpStatus |  | 06010200000101 |
-| 01 | 03 | 0 | 2 | 1 | u16_range |  | HwcOpMode | 0=off, 1=auto, 2=manual | 09010300000002000100 |
-| 01 | 04 | 35 | 70 | 1 | f32_range |  | HwcTempDesired |  | 0f01040000000c4200008c420000803f |
-| 01 | 05 | 0 | 99 | 1 | f32_range |  | HwcStorageTemp |  | 0f010500000000000000c6420000803f |
-| 01 | 06 | 0 | 1 | 1 | u8_range |  | HwcReheatingActive |  | 06010600000101 |
-| 02 | 01 | 1 | 2 | 1 | u16_range | `heating_circuit_type` |  | 1=direct_heating_circuit, 2=mixer_circuit_external | 09020100010002000100 |
-| 02 | 02 | 0 | 4 | 1 | u16_range | `mixer_circuit_type_external` (contextual enum) | Hc{1..3}CircuitType | 0=inactive, 1=heating_or_cooling, 2=fixed_value_or_pool, 3=dhw_or_cylinder_charging, 4=return_increase | 09020200000004000100 |
-| 02 | 04 | 15 | 80 | 1 | f32_range |  | Hc{1..3}DesiredReturnTemp |  | 0f020400000070410000a0420000803f |
-| 02 | 05 | 0 | 1 | 1 | u8_range |  | Hc{1..3}DewPointMonitoring |  | 06020500000101 |
-| 02 | 06 | 0 | 1 | 1 | u8_range |  | Hc{1..3}CoolingEnabled |  | 06020600000101 |
-| 03 | 01 | 0 | 2 | 1 | u16_range |  | Z{1..3}CoolingOpMode | 0=off, 1=auto, 2=manual | 09030100000002000100 |
-| 03 | 02 | 15 | 30 | 0.5 | f32_range |  | Z{1..3}CoolingSetbackTemp |  | 0f030200000070410000f0410000003f |
-| 03 | 03 | 2001-01-01 | 2099-12-31 | 1 | date_range |  | Z{1..3}HolidayStartPeriod |  | 0c0303000101011f0c63010000 |
-| 03 | 04 | 2001-01-01 | 2099-12-31 | 1 | date_range |  | Z{1..3}HolidayEndPeriod |  | 0c0304000101011f0c63010000 |
-| 03 | 05 | 5 | 30 | 1 | f32_range | TSP mismatch: `15.720.tsp` commonly shows step `0.5` | Z{1..3}HolidayTemp |  | 0f0305000000a0400000f0410000803f |
-| 03 | 06 | 0 | 2 | 1 | u16_range |  | Z{1..3}HeatingOpMode | 0=off, 1=auto, 2=manual | 09030600000002000100 |
-| 04 | 01 | 0 | 1 | 1 | u8_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)`; closest match: `SolarPump` (`@ext=0x08`) |  |  | 06040100000101 |
-| 04 | 02 | 0 | 1 | 1 | u8_range |  | SolarPumpKick |  | 06040200000101 |
-| 04 | 03 | -40 | 155 | 1 | f32_range |  | SolarCollectorTemp |  | 0f040300000020c200001b430000803f |
-| 04 | 04 | 0 | 99 | 1 | f32_range |  | SolarCollectorTempMin |  | 0f040400000000000000c6420000803f |
-| 04 | 05 | 110 | 150 | 1 | f32_range |  | SolarCollectorTempMax |  | 0f0405000000dc42000016430000803f |
-| 04 | 06 | 75 | 115 | 1 | f32_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)`; closest match: `SolarYieldTemp` (`@ext=0x07`) |  |  | 0f040600000096420000e6420000803f |
-| 05 | 01 | 0 | 99 | 1 | f32_range |  | SolarCylinder1TempMax |  | 0f050100000000000000c6420000803f |
-| 05 | 02 | 2 | 25 | 1 | f32_range |  | SolarCylinder1SwitchOnDifferential |  | 0f050200000000400000c8410000803f |
-| 05 | 03 | 1 | 20 | 1 | f32_range |  | SolarCylinder1SwitchOffDifferential |  | 0f0503000000803f0000a0410000803f |
-| 05 | 04 | -10 | 110 | 1 | f32_range | No matching `@ext()` in `15.720.tsp` for this `(GG,RR)` |  |  | 0f050400000020c10000dc420000803f |
-| 08 | 01 | 0 | 99 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080100000000000000c6420000803f |
-| 08 | 02 | 0 | 99 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080200000000000000c6420000803f |
-| 08 | 03 | 2 | 25 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080300000000400000c8410000803f |
-| 08 | 04 | 1 | 20 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f0804000000803f0000a0410000803f |
-| 08 | 05 | -10 | 110 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080500000020c10000dc420000803f |
-| 08 | 06 | -10 | 110 | 1 | f32_range | No `GG=0x08` blocks found in `15.720.tsp` |  |  | 0f080600000020c10000dc420000803f |
-| 09 | 01 | 0 | 255 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 090901000000ff000100 |
-| 09 | 02 | 1 | 3 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 09090200010003000100 |
-| 09 | 03 | 0 | 1 | 1 | u8_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 06090300000101 |
-| 09 | 04 | 0 | 10 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 0909040000000a000100 |
-| 09 | 05 | 0 | 32768 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 09090500000000800100 |
-| 09 | 06 | 0 | 32768 | 1 | u16_range | No `GG=0x09` blocks found in `15.720.tsp` |  |  | 09090600000000800100 |
-| 0A | 01 | 0 | 3 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0100000301 |
-| 0A | 02 | 1 | 2 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0200010201 |
-| 0A | 03 | 1 | 2 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0300010201 |
-| 0A | 05 | 0 | 3 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0500000301 |
-| 0A | 06 | 0 | 1 | 1 | u8_range | No `GG=0x0A` blocks found in `15.720.tsp` |  |  | 060a0600000101 |
+#### 4.2.4 Circuit type interpretation (`GG=0x02 RR=0x02`)
 
-#### 4.2.4 Heating-circuit enum interpretation (`GG=0x02`, `RR=0x01/0x02`)
+`GG=0x02 RR=0x02` (`heating_circuit_type` / `mctype`) is a configuration register with raw values 0..4. See [`ebus-vaillant-B524-register-map.md` § mctype](./ebus-vaillant-B524-register-map.md#mctype--circuit-type) for the authoritative enum definition.
 
-`GG=0x02 RR=0x01` (`heating_circuit_type`) is stable:
-
-- `1` = `DIRECT_HEATING_CIRCUIT`
-- `2` = `MIXER_CIRCUIT_EXTERNAL`
-
-`GG=0x02 RR=0x02` (`mixer_circuit_type_external`) is **contextual**:
-
-- `0` = `INACTIVE`
-- `1` = `HEATING_OR_COOLING`
-  - resolves to `COOLING` when `GG=0x02 RR=0x06 (cooling_enabled) == 1`
-  - resolves to `HEATING` otherwise
-- `2` = `FIXED_VALUE_OR_POOL`
-  - resolves to `POOL` when system schema is in `{8,9,12,13}` and an external pool sensor path is present (typically via VR70/VR71 S1/S2 mapping)
-  - resolves to `FIXED_VALUE` otherwise
-- `3` = `DHW_OR_CYLINDER_CHARGING`
-  - resolves to `CYLINDER_CHARGING` when a cylinder group (`GG=0x05`) is present
-  - resolves to `DHW` otherwise
-- `4` = `RETURN_INCREASE`
-
-Resolution helper:
+**Layer A — Raw register meaning (Vaillant VRC720 manual):**
 
 ```text
-if raw == 1:
-  resolved = (cooling_enabled == 1) ? COOLING : HEATING
-if raw == 2:
-  resolved = (schema in {8,9,12,13} && pool_sensor_present) ? POOL : FIXED_VALUE
-if raw == 3:
-  resolved = (gg05_present) ? CYLINDER_CHARGING : DHW
+0 = Inactive       Circuit unused
+1 = Heating         Weather-compensated heating (mixing or direct)
+2 = Fixed value     Circuit held at fixed target flow temperature
+3 = DHW             Heating circuit used as DHW for additional cylinder
+4 = Increase in return   Return temperature raise circuit
 ```
 
-Context inputs used for interpretation:
+These raw values are the complete Layer A meaning. No resolution or context inputs are needed to interpret them.
 
-- `cooling_enabled`: `GG=0x02 RR=0x06`
-- `system_schema`: installation/hydraulic-schema metadata source (not `GG=0x00 RR=0x01`, which maps to `HwcBivalencePoint`)
-- `pool_sensor_present`: VR70/VR71 external sensor mapping (S1/S2)
-- `gg05_present`: group-presence check for `GG=0x05`
+**Layer B — Derived projections (Helianthus semantic layer):**
 
-#### 4.2.5 Additional heating-circuit registers (`GG=0x02`, `II=*`)
+Higher-level semantic projections may combine the raw circuit type with other registers:
 
-The following register aliases are now part of the documented `GG=0x02` catalog:
+- **Cooling capability**: derived from `cooling_enabled` (GG=0x02 RR=0x0006), NOT from circuit type. A heating circuit (type=1) with `cooling_enabled=1` supports both heating and cooling modes.
+- **Pool heating**: an APPLICATION of `fixed_value` (type=2) when the system topology includes pool hydraulics (sensor, circulation pump). NOT a separate raw enum value on VRC720/BASV2.
+- **Cylinder charging**: `type=3` (DHW) combined with GG=0x05 group presence indicates a cylinder-charging circuit.
 
-| RR | Canonical name | eBUSd alias | Class |
-| --- | --- | --- | --- |
-| `0x0003` | `room_influence_type` | `Hc{hc}RoomInfluenceType` | `config` |
-| `0x001D` | `frost_protection_threshold` | `Hc{hc}FrostProtThreshold` | `config_limits` |
-| `0x001F` | `room_temperature_setpoint` | `Hc{hc}RoomSetpoint` | `config_limits` |
-| `0x0020` | `calculated_flow_temperature` | `Hc{hc}FlowTempCalc` | `state` |
-| `0x0021` | `mixer_position_percentage` | `Hc{hc}MixerPosition` | `state` |
-| `0x0022` | `current_room_humidity` | `Hc{hc}Humidity` | `state` |
-| `0x0023` | `dew_point_temperature` | `Hc{hc}DewPointTemp` | `state` |
-| `0x0024` | `pump_operating_hours` | `Hc{hc}PumpHours` | `state` |
-| `0x0025` | `pump_starts_count` | `Hc{hc}PumpStarts` | `state` |
+These projections are Helianthus runtime logic and are NOT part of the B524 wire protocol.
 
-Operational notes:
+#### 4.2.5 Room influence type behavior (`GG=0x02 RR=0x0003`)
 
-- `RR=0x001F`: practical thermostat linkage register; typically reflects the room setpoint shown on VRC UI (for example `21.0°C`).
-- `RR=0x0020`: useful for diagnostics; it can show curve-requested flow temperature even when `RR=0x0007` (`FlowTempDesired`) is clamped by limits such as `RR=0x0010` (`MaxFlow`).
+This register controls how the room temperature sensor influences the heating curve. See [`ebus-vaillant-B524-register-map.md` § GG=0x02](./ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance) for the register definition.
 
-Room influence type (`GG=0x02 RR=0x0003`, `enum_u8`, default `0`):
+Behavioral semantics (`enum_u8`, default `0`):
 
-- `0 = INACTIVE` (`Inaktiv`)
-  - pure weather compensation
-  - room controller acts as display/setpoint input only
-  - flow temperature is derived from outdoor temperature + heating curve
-  - controller placement in technical room is acceptable
-- `1 = ACTIVE` (`Aktiv`)
-  - weather compensation + room-temperature modulation
-  - flow temperature is adjusted from room deviation vs setpoint
-  - heating may continue outside time windows at reduced temperature
-  - controller should be in representative living space (not technical room)
-  - practical behavior: if room is `0.5°C` below setpoint, flow setpoint is increased proportionally
-- `2 = EXTENDED` (`Erweitert`)
-  - weather compensation + modulation + thermostat-like on/off gating
-  - zone deactivates when `room_temp > setpoint + 0.125°C` (`2/16 K`)
-  - zone activates when `room_temp < setpoint - 0.1875°C` (`3/16 K`)
-  - hysteresis bandwidth is `0.3125°C` (`5/16 K`)
-  - controller should be in representative living space
-  - caution: tight hysteresis can increase heat-pump cycling risk
+- `0 = INACTIVE` — pure weather compensation. Flow temperature derived from outdoor temp + heating curve. Room controller acts as display/setpoint input only. Controller placement in technical room is acceptable.
+- `1 = ACTIVE` — weather compensation + room-temperature modulation. Flow temperature adjusted from room deviation vs setpoint. Heating may continue outside time windows at reduced temperature. Controller should be in representative living space. Practical: if room is `0.5°C` below setpoint, flow setpoint is increased proportionally.
+- `2 = EXTENDED` — weather compensation + modulation + thermostat-like on/off gating. Zone deactivates when `room_temp > setpoint + 0.125°C` (`2/16 K`), activates when `room_temp < setpoint - 0.1875°C` (`3/16 K`). Hysteresis bandwidth is `0.3125°C` (`5/16 K`). Caution: tight hysteresis can increase heat-pump cycling risk.
 
-Dependencies and behavior notes:
+Practical guidance:
 
-- valid zone assignment (`Zonenzuordnung`) is required
-- `ACTIVE`/`EXTENDED` assume representative room placement of VRC
-- `EXTENDED` may trigger frost-protection-related behavior at lower outdoor temperatures
-- practical guidance:
-  - `INACTIVE`: useful with external room controllers or radiator valves
-  - `ACTIVE`: commonly preferred for slower floor-heating systems
-  - `EXTENDED`: commonly preferred for faster radiator systems
-  - `EXTENDED` behavior is disabled during absence mode (`Abwesenheit`)
+- `INACTIVE`: useful with external room controllers or radiator valves
+- `ACTIVE`: commonly preferred for slower floor-heating systems
+- `EXTENDED`: commonly preferred for faster radiator systems; disabled during absence mode
 
-#### 4.2.6 Zone register catalog updates (`GG=0x03`, `II=*`)
+#### 4.2.6 Register catalogs
 
-| RR | Canonical name | eBUSd alias | Class |
-| --- | --- | --- | --- |
-| `0x0001` | `cooling_operation_mode` | `Z{zone}CoolingOpMode` | `config` |
-| `0x0002` | `cooling_set_back_temperature` | `Z{zone}CoolingSetbackTemp` | `config` |
-| `0x0003` | `holiday_start_date` | `Z{zone}HolidayStartPeriod` | `config` |
-| `0x0004` | `holiday_end_date` | `Z{zone}HolidayEndPeriod` | `config` |
-| `0x0005` | `holiday_setpoint` | `Z{zone}HolidayTemp` | `config` |
-| `0x0006` | `heating_operation_mode` | `Z{zone}HeatingOpMode` | `config` |
-| `0x0008` | `quick_veto_temperature` | `Z{zone}QuickVetoTemp` | `config` |
-| `0x0009` | `heating_set_back_temperature` | `Z{zone}HeatingSetbackTemp` | `config` |
-| `0x000E` | `current_special_function` | `Z{zone}SpecialFunction` | `state` |
-| `0x000F` | `current_room_temperature` | `Z{zone}RoomTemp` | `state` |
-| `0x0012` | `valve_status` | `Z{zone}ValveStatus` | `state` |
-| `0x0013` | `associated_circuit_index_raw` | `Z{zone}AssociatedCircuitIndex` | `config` |
-| `0x0014` | `heating_manual_mode_setpoint` | `Z{zone}HeatingManualSetpoint` | `config` |
-| `0x0015` | `cooling_manual_mode_setpoint` | `Z{zone}CoolingManualSetpoint` | `config` |
-| `0x0016` | `name` | `Z{zone}Name` | `config` |
-| `0x0017` | `name_prefix` | `Z{zone}NamePrefix` | `config` |
-| `0x0018` | `name_suffix` | `Z{zone}NameSuffix` | `config` |
-| `0x0019` | `heating_time_slot_active` | `Z{zone}HeatingTimeSlotActive` | `config` |
-| `0x001A` | `cooling_time_slot_active` | `Z{zone}CoolingTimeSlotActive` | `config` |
-| `0x001B` | `status` | `Z{zone}Status` | `state` |
-| `0x001C` | `index` | `Z{zone}Index` | `config` |
-| `0x001E` | `quick_veto_end_time` | `Z{zone}QuickVetoEndTime` | `config` |
-| `0x0020` | `holiday_end_time` | `Z{zone}HolidayEndTime` | `config` |
-| `0x0021` | `holiday_start_time` | `Z{zone}HolidayStartTime` | `config` |
-| `0x0022` | `heating_desired_setpoint` | `Z{zone}RoomTempDesired` | `config` |
-| `0x0023` | `cooling_desired_setpoint` | `Z{zone}CoolingDesiredSetpoint` | `config` |
-| `0x0024` | `quick_veto_end_date` | `Z{zone}QuickVetoEndDate` | `config` |
-| `0x0026` | `quick_veto_duration` | `Z{zone}QuickVetoDuration` | `config` |
-| `0x0028` | `current_room_humidity` | `Z{zone}Humid` | `state` |
+All register definitions (names, categories, types, constraints, enum values, gates, semantic mapping) are maintained exclusively in [`ebus-vaillant-B524-register-map.md`](./ebus-vaillant-B524-register-map.md). This document covers only B524 wire protocol methods and their logic.
 
 ### 4.3 `0x02` / `0x06` Register Read/Write
 
@@ -356,8 +227,8 @@ Write request payload (6+ bytes):
 ```
 
 Read response:
-- headered: `TT GG RR_LO RR_HI [value...]`
-- or status-only short form: `TT`
+- Successful: `FLAGS GG RR_LO RR_HI [value...]`
+- Short responses (< 4 bytes) are not successful reads. See §2.2.
 
 Addressing notes:
 - `0x02` is typically local regulator space.
@@ -399,22 +270,24 @@ Implication:
 
 ## 5. Group Taxonomy and Descriptor Classes
 
-Observed groups on VRC720-class targets:
+For the authoritative group topology (names, instance ranges, opcodes, semantic plane mapping), see [`ebus-vaillant-B524-register-map.md` § Group Topology](./ebus-vaillant-B524-register-map.md#group-topology).
+
+Directory probe descriptor values observed on VRC720-class targets:
 
 ```text
-GG   Name                  Descriptor(s)  Typical opcode  Notes
-0x00 Regulator Parameters  3.0            0x02            `0x01` limits observed for RR {0x01,0x02,0x03,0x04,0x80}
-0x01 Hot Water Circuit     3.0            0x02            singleton; `0x01` limits observed for RR 0x01..0x06
-0x02 Heating Circuits      1.0            0x02            instanced; `0x01` limits observed for RR {0x01,0x02,0x04,0x05,0x06}
-0x03 Zones                 1.0            0x02            instanced; `0x01` limits observed for RR 0x01..0x06 (includes date ranges)
-0x04 Solar Circuit         6.0 / 5.0      0x02            `0x01` limits observed for RR 0x01..0x06
-0x05 Hot Water Cylinder    1.0 / absent   0x02            model-/system-dependent; `0x01` limits observed for RR 0x01..0x04
-0x06 Heating schedule      (varies)       0x0B            program/timetable domain
-0x07 DHW schedule          (varies)       0x0B            program/timetable domain
-0x08 Solar Aux/unknown     1.0 / absent   0x06            `0x01` limits observed for RR 0x01..0x06; not mapped in `15.720.tsp`
-0x09 Room Sensors          1.0            0x06            instanced; `0x01` limits observed for RR 0x01..0x06
-0x0A Room State            1.0            0x06            instanced; `0x01` limits observed for RR {0x01,0x02,0x03,0x05,0x06}
-0x0C Unknown               1.0 / absent   0x06            model-/system-dependent; no confirmed `0x01` limit rows yet
+GG   Descriptor(s)  Typical opcode  Notes
+0x00 3.0            0x02            singleton
+0x01 3.0            0x02            singleton
+0x02 1.0            0x02            instanced
+0x03 1.0            0x02            instanced
+0x04 6.0 / 5.0      0x02            model-dependent
+0x05 1.0 / absent   0x02            model-/system-dependent
+0x06 (varies)       0x0B            program/timetable domain
+0x07 (varies)       0x0B            program/timetable domain
+0x08 1.0 / absent   unknown (likely 0x02)  constraint-only, no responsive registers observed
+0x09 1.0            0x06            instanced
+0x0A 1.0            0x06            instanced
+0x0C 1.0 / absent   0x06            model-/system-dependent
 ```
 
 Descriptor class values behave like coarse enum tags, not physical numeric quantities.
