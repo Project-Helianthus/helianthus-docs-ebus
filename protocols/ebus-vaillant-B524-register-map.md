@@ -664,8 +664,8 @@ Instanced (II=0x00-0x0A). 69 registers per instance. **All 11 instances are byte
 | 0x000F | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. All: NaN |
 | 0x0010-0x001A | (unknown, 8 regs) | P | f32 | — | — | — | — | — | | FLAGS=0x01. All: NaN. Large NaN block |
 | 0x001B | (unknown) | P | u8 | — | — | — | — | — | | FLAGS=0x01. All: 0 |
-| 0x001D | basv2_serial_part1 | P | string | text | — | — | — | — | | FLAGS=0x01. "212134" — first 6 chars of BASV2 SN |
-| 0x001E | basv2_serial_part2 | P | string | text | — | — | — | — | | FLAGS=0x01. "002026" — chars 7-12 of BASV2 SN |
+| 0x001D | basv2_serial_part1 | P | string | text | — | — | — | — | | FLAGS=0x01. First 6 chars of BASV2 serial number (redacted in public docs) |
+| 0x001E | basv2_serial_part2 | P | string | text | — | — | — | — | | FLAGS=0x01. Chars 7-12 of BASV2 serial number (redacted in public docs) |
 | 0x0020 | (unknown) | C | f32 | — | — | — | — | — | | FLAGS=0x03. All: 0.0 |
 | 0x0021 | (unknown) | C | u8 | — | — | — | — | — | | FLAGS=0x03. All: 0 |
 | 0x0022-0x003E | temperature_schedule | C | u8 | °C/2 | — | — | — | — | | FLAGS=0x03. 29 u8 values: hourly temperature profile. Pattern: 25→45 day, 45→10 night, 10→45→25 evening. Values are degrees × 2 (e.g. 45 = 22.5°C, 10 = 5°C) |
