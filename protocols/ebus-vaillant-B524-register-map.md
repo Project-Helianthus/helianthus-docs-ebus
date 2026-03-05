@@ -28,10 +28,9 @@ QQ ZZ PB SB NN OC OT GG II RR_lo RR_hi
 Responses do **not** echo the full request selector. The slave response payload (after eBUS NN byte):
 
 ```
-NN FLAGS GG RR_lo RR_hi [VALUE_BYTES...]
+FLAGS GG RR_lo RR_hi [VALUE_BYTES...]
 ```
 
-- `NN` = data length (number of bytes following)
 - `FLAGS` = access/writability byte (see below)
 - `GG` = group echo
 - `RR` = register echo (16-bit LE)
@@ -83,7 +82,7 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 | Opcode | Name | Payload | Purpose |
 |--------|------|---------|---------|
 | `0x00` | Directory | `[0x00, GG, 0x00]` | Probe group existence (unreliable for GG=0x05) |
-| `0x01` | Constraint | `[0x01, GG, RR_lo, RR_hi]` | Query value constraints for a register |
+| `0x01` | Constraint | `[0x01, GG, RR]` | Query value constraints for a register (3 bytes, RR is single byte) |
 | `0x02` | Local read/write | `[0x02, OT, GG, II, RR_lo, RR_hi]` | Standard local register access |
 | `0x03` | Timer (daily) | `[0x03, SEL1, SEL2, SEL3, weekday]` | Timer schedule access |
 | `0x04` | Timer (weekly) | `[0x04, SEL1, SEL2, SEL3, weekday]` | Timer schedule access |
