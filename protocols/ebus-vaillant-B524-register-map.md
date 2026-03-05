@@ -36,7 +36,9 @@ FLAGS GG RR_lo RR_hi [VALUE_BYTES...]
 - `RR` = register echo (16-bit LE)
 - Value bytes: variable length depending on data type
 
-The instance is **not** echoed in the response — the gateway correlates replies using the original request parameters. When the reply payload is a single `0x00` byte, the register exists but has no data (empty/unsupported).
+The instance is **not** echoed in the response — the gateway correlates replies using the original request parameters.
+
+**Short responses:** A response payload shorter than 4 bytes is **not** a successful register read. Treat as unsupported/wrong-route/write-ack. A single-byte `0x00` has been observed for incorrect telegram routing (wrong opcode or group defaults — ebusd reports `invalid position … / 00`). Write operations may return short acknowledgements rather than value-bearing replies.
 
 ### FLAGS Byte (Response Header)
 
@@ -53,20 +55,18 @@ The FLAGS byte in the response header encodes register access mode. Discovered v
 
 **Coverage:** FLAGS data available for GG=0x02, 0x03, 0x09, 0x0A, 0x0C (from VRC Explorer scans). **No FLAGS data for GG=0x00 and GG=0x01** — these groups were not scanned with `b524_grab_op.py`; a future scan is needed.
 
-### Data Type Encoding
+### Wire Type Encoding
 
-| Type | Encoding | Size | Notes |
+| Wire | Encoding | Size | Notes |
 |------|----------|------|-------|
-| `bool` | `0` = false, `!0` = true | 1 or 2 bytes | Wire width varies: some registers use u8 (1 byte), others u16 LE (2 bytes). See per-register Type column and constraint catalog for actual width |
-| `u8` | Single byte | 1 byte | |
-| `u16` | Little-endian uint16 | 2 bytes | Some constraint entries use u8 (1-byte) for boolean-range u16 registers; wire always returns 2 bytes |
-| `u32` | Little-endian uint32 | 4 bytes | |
-| `f32` | Little-endian IEEE 754 float32 | 4 bytes | Primary numeric type for temps, pressures |
-| `string` | Null-terminated C string | Variable | Used for zone names, installer info |
+| `u8` | Unsigned byte | 1 byte | Boolean-range values and small enums. ebusd `onoff`/`yesno` (UCH) |
+| `u16` | Little-endian uint16 | 2 bytes | Primary integer type. ebusd may decode only low byte for some enums (e.g. `mctype;IGN:1`) |
+| `u32` | Little-endian uint32 | 4 bytes | Energy counters, pump hours/starts |
+| `f32` | Little-endian IEEE 754 float32 | 4 bytes | Primary numeric type for temperatures, pressures, percentages |
+| `string` | Null-terminated C string | Variable | Zone names, installer info |
 | `bytes` | Raw byte sequence | Variable | Opaque payload, not decoded as numeric |
 | `date` | BCD-encoded `DD MM YY` | 3 bytes | Year = 2000 + YY. See constraint type `0x0C` in GetExtendedRegisters |
 | `time` | BCD-encoded `HH MM [SS]` | 2-3 bytes | 2 bytes (HH:MM) for timers, 3 bytes (HH:MM:SS) for system clock |
-| `energy4` | Unsigned 32-bit LE (kWh) | 4 bytes | Alias for u32, energy counters only |
 
 ### Opcode Routing
 
@@ -97,8 +97,9 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 | **RR** | Register address (hex) |
 | **Name** | Our leaf name (from myVaillant/myPyllant API path) |
 | **Cat** | **S**=state (RO), **C**=config (RW), **P**=property (RO, stable), **E**=energy (RO, counter). Verified against observed FLAGS where scan data exists |
-| **Type** | Wire type (`bool`, `u16`, `f32`, `string`, `date`, `time`, `energy4`) |
-| **ebusd** | ebusd community TSP name. `—` = not in TSP. `(commented)` = present but commented out |
+| **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian |
+| **Decode** | Semantic interpretation: `bool`, `°C`, `K`, `bar`, `%`, `kWh`, `hrs`, `min`, `count`, `enum`, `text`, `date`, `time`, `state`, `raw`, `—` (unknown) |
+| **ebusd** | ebusd community TSP name. `—` = not in TSP |
 | **Constraint** | From BASV2 constraint catalog (authoritative, downloaded from hardware). `—` = no catalog entry |
 | **Values** | Enum mapping. Inline for ≤3 values, otherwise `→enum_name` referencing [Enum Reference](#enum-reference) |
 | **Gates** | Condition for register to be present/meaningful. `—` = always available |
@@ -107,7 +108,7 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 **Source annotations** (in Notes):
 - No annotation = confirmed by multiple independent sources (ebusd + gateway + scan)
 - `†` = CSV value-matched only, not independently confirmed (false-positive risk)
-- `ebusd: "..."` = ebusd has this as unknown/commented-out with the quoted observation
+- `ebusd: "..."` = ebusd community note about this register (e.g., special value meanings)
 
 ---
 
@@ -121,14 +122,14 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 | 0x03 | Zones | Yes | 0x00-0x0A | 0x02 | zones |
 | 0x04 | Solar Circuit | No | 0x00 | 0x02 | solar (gated) |
 | 0x05 | Cylinders | Yes | 0x00-0x0A | 0x02 | cylinders (gated) |
-| 0x08 | Unknown (constraint-only) | Yes | — | 0x02 | — |
+| 0x08 | Unknown (constraint-only) | Yes | — | unknown (likely 0x02) | — |
 | 0x09 | Room Sensors (regulator) | Yes | 0x00-0x0A | 0x06 | — |
 | 0x0A | Room Sensors (VR92) | Yes | 0x00-0x0A | 0x06 | — |
 | 0x06 | Programs/Timetables | — | — | 0x0B | — |
 | 0x07 | Programs/Timetables | — | — | 0x0B | — |
 | 0x0C | Unknown remote | Yes | 0x00-0x0A | 0x06 | — |
 
-Group 0x08 has 6 constraint entries in `b524_constraints.go` (similar structure to GG=0x05 cylinders) but no responsive registers observed in VRC Explorer scans. Discovery probe returned 0 pages. Possibly a second cylinder bank or buffer tank group on systems with FM5 module.
+Group 0x08 has 6 constraint entries in `b524_constraints.go` (similar structure to GG=0x05 cylinders) but no responsive registers observed in VRC Explorer scans. Discovery probe returned 0 pages. Hypothesis: Solar Cylinder 2 / buffer-tank group — Vaillant manuals explicitly support two solar cylinders (`DHWBt2` sensor) and GG=0x05 (Solar Cylinder 1) uses local opcode 0x02. ebusd-configuration does not define GG=0x08 in `15.ctlv2.csv`. For unknown groups, probe both opcodes and accept the one yielding a standard header response (payload ≥4 with echoed GG/RR).
 
 Room sensors use groups GG=0x09 (regulator-side) and GG=0x0A (VR92-side), both via opcode `0x06` (remote). The instance II selects which sensor within that group (II=0x00 for the first, up to 0x0A).
 
@@ -140,7 +141,7 @@ Source: `helianthus-ebusreg/vaillant/system/b524_profile.go`
 
 | Group | Opcode | Instance Max | Register Max | Notes |
 |-------|--------|-------------|-------------|-------|
-| 0x02 | 0x02 (local) | 0x0A | 0x0025 | Heating circuits. Profile says 0x0021 — stale, should be 0x0025 |
+| 0x02 | 0x02 (local) | 0x0A | 0x0025 | Heating circuits. **Code is stale** (`b524_profile.go` says 0x0021, should be 0x0025). Registers 0x0022-0x0025 (room humidity, dew point, pump hours/starts) are outside scanner range. TODO: fix in ebusreg |
 | 0x03 | 0x02 (local) | 0x0A | 0x002F | Zones |
 | 0x09 | 0x06 (remote) | 0x0A | 0x002F | Room sensors (regulator) |
 | 0x0A | 0x06 (remote) | 0x0A | 0x003F | Room sensors (VR92) |
@@ -169,89 +170,89 @@ Several registers are conditionally available based on system configuration. Gat
 
 All registers use opcode `0x02`, instance `0x00`.
 
-| RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
-|----|------|-----|------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | dhw_bivalence_point | C | f32 | — | -20..50 step 1 | — | — | **S** `system.config.dhw_bivalence_point` | |
-| 0x0002 | continuous_heating_start_setpoint | C | f32 | ContinuousHeating | -26..10 step 1 | — | — | | ebusd: `-26=off` disables function |
-| 0x0003 | frost_override_time | C | u16 | FrostOverRideTime | 0..12 step 1 | — | — | | Hours |
-| 0x0004 | maximum_preheating_time | C | u16 | — | 0..300 step 10 | — | — | | Minutes. † |
-| 0x0007 | system_off | S | bool | — | — | `0=false 1=true` | — | **S** `system.state.system_off` | |
-| 0x0008 | temporary_allow_backup_heater | C | u8 | — | — | — | — | | † |
-| 0x0009 | external_energy_management_activation | P | bool | — | — | `0=false 1=true` | — | | † |
-| 0x000A | parallel_tank_loading_allowed | C | bool | HwcParallelLoading | — | →onoff | — | | ebusd confirmed at `@ext(0xa,0)` |
-| 0x000B | (unknown) | — | u16 | — | — | — | — | | Scan value: 0. Near boolean cluster |
-| 0x000E | max_room_humidity | C | u16 | MaxRoomHumidity | — | — | — | **S** `system.config.max_room_humidity` | Percent |
-| 0x000F | (unknown) | — | u16 | — | — | — | — | | Possibly HybridManager per TSP |
-| 0x0010 | (unknown) | — | u16 | — | — | — | — | | Near config cluster |
-| 0x0011 | (unknown) | — | u16 | — | — | — | — | | Scan value: 16. Possible temp threshold |
-| 0x0012 | continuous_heating_room_setpoint | C | u16 | — | — | — | — | | Confirmed exact, value=20. °C |
-| 0x0014 | adaptive_heating_curve | C | bool | AdaptHeatCurve | — | →yesno | — | **S** `system.config.adaptive_heating_curve` | |
-| 0x0015 | (unknown) | — | bool | — | — | — | — | | False positive in CSV (was `parallel_tank_loading`; actual is at 0x000A) |
-| 0x0017 | dhw_maximum_loading_time | C | u16 | MaxCylinderChargeTime | — | — | hwc_enabled | | Minutes |
-| 0x0018 | hwc_lock_time | C | u16 | HwcLockTime | — | — | hwc_enabled | | Minutes |
-| 0x0019 | solar_flow_rate_quantity | C | f32 | — | — | — | fm5_config≤2 | | See [Mapping Conflicts](#mapping-conflicts) |
-| 0x001B | pump_additional_time | C | u16 | PumpAdditionalTime | — | — | — | | Minutes |
-| 0x001C | dhw_maximum_temperature | C | f32 | — | — | — | — | | °C. † |
-| 0x001E | (unknown) | — | u8 | — | — | — | — | | Scan value: 1. Possible pump/flag |
-| 0x0022 | alternative_point | C | f32 | — | — | — | — | **S** `system.config.alternative_point` | °C. -21..40 per TSP |
-| 0x0023 | heating_circuit_bivalence_point | C | f32 | — | — | — | — | **S** `system.config.heating_circuit_bivalence_point` | °C. -20..30 per TSP |
-| 0x0024 | backup_heater_mode | C | u16 | — | — | — | — | | See [Mapping Conflicts](#mapping-conflicts) |
-| 0x0025 | (unknown) | — | u16 | — | — | — | — | | Scan value: 0 |
-| 0x0026 | hc_emergency_temperature | C | f32 | — | — | — | — | **S** `system.config.hc_emergency_temperature` | °C. 20..80 per TSP |
-| 0x0027 | dhw_hysteresis | C | f32 | CylinderChargeHyst | — | — | hwc_enabled | | K. 3..20 step 0.5 per TSP |
-| 0x0029 | hwc_storage_charge_offset | C | f32 | CylinderChargeOffset | — | — | hwc_enabled | | K. 0..40 per TSP |
-| 0x002A | hwc_legionella_time | C | time | — | — | — | hwc_enabled | | HH:MM |
-| 0x002B | is_legionella_protection_activated | C | u16 | — | — | `0=off 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat 7=Sun` | hwc_enabled | | Day-of-week selector. 0=disabled |
-| 0x002C | maintenance_date | P | date | MaintenanceDate | — | — | — | | |
-| 0x002D | offset_outside_temperature | C | f32 | — | — | — | — | | K. -3..3 step 0.5 per TSP |
-| 0x002F | module_configuration_vr71 | P | u16 | — | — | — | — | **S** `system.properties.module_configuration_vr71` | 1..11 |
-| 0x0031 | (unknown) | — | u16 | — | — | — | — | | Scan value: 0 |
-| 0x0034 | system_date | S | date | Date | — | — | — | | BCD |
-| 0x0035 | system_time | S | time | Time | — | — | — | | HH:MM:SS |
-| 0x0036 | system_scheme | P | u16 | HydraulicScheme | — | — | — | **S** `system.properties.system_scheme` | 1..16 |
-| 0x0038 | cooling_outside_temperature_threshold | C | f32 | — | — | — | — | | °C. 10..30 per TSP. ebusd: `(commented) Unknown38 constant 21` |
-| 0x0039 | system_water_pressure | S | f32 | WaterPressure | — | — | — | **S** `system.state.system_water_pressure` | bar. Read-only |
-| 0x003A | dew_point_offset | C | f32 | — | — | — | — | | K. -10..10 per TSP |
-| 0x003D | solar_yield_total | E | energy4 | SolarYieldTotal | — | — | fm5_config≤2 | | kWh |
-| 0x003E | environmental_yield_total | E | energy4 | YieldTotal | — | — | — | | kWh |
-| 0x0045 | esco_block_function | C | u16 | — | — | — | — | | Enum |
-| 0x0046 | hwc_max_flow_temp_desired | C | f32 | HwcMaxFlowTempDesired | — | — | — | **S** `system.config.hwc_max_flow_temp_desired` | °C. 15..80 per TSP |
-| 0x0048 | (unknown) | — | u16 | — | — | — | — | | Scan value: 1 |
-| 0x004B | system_flow_temperature | S | f32 | SystemFlowTemp | — | — | — | **S** `system.state.system_flow_temperature`, `boiler_status.state.flow_temperature` | °C. Read-only |
-| 0x004D | multi_relay_setting | C | u16 | MultiRelaySetting | — | →mamode | — | | |
-| 0x004E | fuel_consumption_heating_this_month | E | energy4 | PrFuelSumHcThisMonth | — | — | — | | kWh |
-| 0x004F | energy_consumption_heating_this_month | E | energy4 | PrEnergySumHcThisMonth | — | — | — | | kWh |
-| 0x0050 | energy_consumption_dhw_this_month | E | energy4 | PrEnergySumHwcThisMonth | — | — | — | | kWh |
-| 0x0051 | fuel_consumption_dhw_this_month | E | energy4 | PrFuelSumHwcThisMonth | — | — | — | | kWh |
-| 0x0052 | fuel_consumption_heating_last_month | E | energy4 | PrFuelSumHcLastMonth | — | — | — | | kWh |
-| 0x0053 | energy_consumption_heating_last_month | E | energy4 | PrEnergySumHcLastMonth | — | — | — | | kWh |
-| 0x0054 | energy_consumption_dhw_last_month | E | energy4 | PrEnergySumHwcLastMonth | — | — | — | | kWh |
-| 0x0055 | fuel_consumption_dhw_last_month | E | energy4 | PrFuelSumHwcLastMonth | — | — | — | | kWh |
-| 0x0056 | fuel_consumption_heating_total | E | energy4 | PrFuelSumHc | — | — | — | **S** `energy_totals.gas.climate` | kWh |
-| 0x0057 | energy_consumption_heating_total | E | energy4 | PrEnergySumHc | — | — | — | **S** `energy_totals.electric.climate` | kWh |
-| 0x0058 | energy_consumption_dhw_total | E | energy4 | PrEnergySumHwc | — | — | — | **S** `energy_totals.electric.dhw` | kWh |
-| 0x0059 | fuel_consumption_dhw_total | E | energy4 | PrFuelSumHwc | — | — | — | **S** `energy_totals.gas.dhw` | kWh |
-| 0x005C | energy_consumption_total | E | energy4 | PrEnergySum | — | — | — | | kWh |
-| 0x005D | fuel_consumption_total | E | energy4 | PrFuelSum | — | — | — | | kWh |
-| 0x006C | installer_name_1 | P | string | Installer1 | — | — | — | | maxLength 6 |
-| 0x006D | installer_name_2 | P | string | Installer2 | — | — | — | | maxLength 6 |
-| 0x006F | installer_phone_1 | P | string | PhoneNumber1 | — | — | — | | maxLength 6 |
-| 0x0070 | installer_phone_2 | P | string | PhoneNumber2 | — | — | — | | maxLength 6 |
-| 0x0073 | outdoor_temperature | S | f32 | DisplayedOutsideTemp | — | — | — | **S** `system.state.outdoor_temperature` | °C. Read-only |
-| 0x0076 | installer_menu_code | P | u16 | KeyCodeforConfigMenu | — | — | — | | 0..999 |
-| 0x0081 | smart_photovoltaic_buffer_offset | P | f32 | — | — | — | — | | K. † |
-| 0x0086 | (unknown) | — | u16 | — | — | — | — | | Scan value: 60. PV/smart cluster |
-| 0x0089 | (unknown) | — | u16 | — | — | — | — | | Scan value: 15. PV/smart cluster |
-| 0x008A | (unknown) | — | f32 | — | — | — | — | | Scan value: 1.0. PV/smart cluster |
-| 0x008B | (unknown) | — | f32 | — | — | — | — | | Scan value: 90.0. PV/smart cluster, possible max flow temp |
-| 0x0095 | outdoor_temperature_average24h | S | f32 | OutsideTempAvg | — | — | — | **S** `system.state.outdoor_temperature_avg24h` | °C. Rounded avg updated every 3h |
-| 0x0096 | maintenance_due | S | bool | MaintenanceDue | — | →yesno | — | **S** `system.state.maintenance_due` | Read-only |
-| 0x009A | green_iq | S | bool | — | — | — | — | | |
-| 0x009D | hwc_cylinder_temperature_top | S | f32 | HwcStorageTempTop | — | — | — | **S** `system.state.hwc_cylinder_temperature_top` | °C. Read-only |
-| 0x009E | hwc_cylinder_temperature_bottom | S | f32 | HwcStorageTempBottom | — | — | — | **S** `system.state.hwc_cylinder_temperature_bottom` | °C. Read-only |
-| 0x009F | hc_cylinder_temperature_top | S | f32 | HcStorageTempTop | — | — | — | | °C. Read-only |
-| 0x00A0 | hc_cylinder_temperature_bottom | S | f32 | HcStorageTempBottom | — | — | — | | °C. Read-only |
-| 0x00A2 | buffer_charge_offset | C | f32 | — | — | — | — | | K. 0..15 per TSP |
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | dhw_bivalence_point | C | f32 | °C | — | -20..50 step 1 | — | — | **S** `system.config.dhw_bivalence_point` | |
+| 0x0002 | continuous_heating_start_setpoint | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | | ebusd: `-26=off` disables function |
+| 0x0003 | frost_override_time | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | | |
+| 0x0004 | maximum_preheating_time | C | u16 | min | — | 0..300 step 10 | — | — | | † |
+| 0x0007 | system_off | S | u16 | bool | — | — | `0=false 1=true` | — | **S** `system.state.system_off` | |
+| 0x0008 | temporary_allow_backup_heater | C | u8 | bool | — | — | — | — | | † |
+| 0x0009 | external_energy_management_activation | P | u16 | bool | — | — | `0=false 1=true` | — | | † |
+| 0x000A | parallel_tank_loading_allowed | C | u16 | bool | HwcParallelLoading | — | →onoff | — | | ebusd confirmed at `@ext(0xa,0)` |
+| 0x000B | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 0. Near boolean cluster |
+| 0x000E | max_room_humidity | C | u16 | % | MaxRoomHumidity | — | — | — | **S** `system.config.max_room_humidity` | |
+| 0x000F | (unknown) | — | u16 | — | — | — | — | — | | Possibly HybridManager per TSP |
+| 0x0010 | (unknown) | — | u16 | — | — | — | — | — | | Near config cluster |
+| 0x0011 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 16. Possible temp threshold |
+| 0x0012 | continuous_heating_room_setpoint | C | u16 | °C | — | — | — | — | | Confirmed exact, value=20 |
+| 0x0014 | adaptive_heating_curve | C | u16 | bool | AdaptHeatCurve | — | →yesno | — | **S** `system.config.adaptive_heating_curve` | |
+| 0x0015 | (unknown) | — | u16 | — | — | — | — | — | | False positive in CSV (was `parallel_tank_loading`; actual is at 0x000A) |
+| 0x0017 | dhw_maximum_loading_time | C | u16 | min | MaxCylinderChargeTime | — | — | hwc_enabled | | |
+| 0x0018 | hwc_lock_time | C | u16 | min | HwcLockTime | — | — | hwc_enabled | | |
+| 0x0019 | solar_flow_rate_quantity | C | f32 | — | — | — | — | fm5_config≤2 | | See [Mapping Conflicts](#mapping-conflicts) |
+| 0x001B | pump_additional_time | C | u16 | min | PumpAdditionalTime | — | — | — | | |
+| 0x001C | dhw_maximum_temperature | C | f32 | °C | — | — | — | — | | † |
+| 0x001E | (unknown) | — | u8 | — | — | — | — | — | | Scan value: 1. Possible pump/flag |
+| 0x0022 | alternative_point | C | f32 | °C | — | — | — | — | **S** `system.config.alternative_point` | -21..40 per TSP |
+| 0x0023 | heating_circuit_bivalence_point | C | f32 | °C | — | — | — | — | **S** `system.config.heating_circuit_bivalence_point` | -20..30 per TSP |
+| 0x0024 | backup_heater_mode | C | u16 | enum | — | — | — | — | | See [Mapping Conflicts](#mapping-conflicts) |
+| 0x0025 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 0 |
+| 0x0026 | hc_emergency_temperature | C | f32 | °C | — | — | — | — | **S** `system.config.hc_emergency_temperature` | 20..80 per TSP |
+| 0x0027 | dhw_hysteresis | C | f32 | K | CylinderChargeHyst | — | — | hwc_enabled | | 3..20 step 0.5 per TSP |
+| 0x0029 | hwc_storage_charge_offset | C | f32 | K | CylinderChargeOffset | — | — | hwc_enabled | | 0..40 per TSP |
+| 0x002A | hwc_legionella_time | C | time | time | — | — | — | hwc_enabled | | HH:MM |
+| 0x002B | is_legionella_protection_activated | C | u16 | enum | — | — | `0=off 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat 7=Sun` | hwc_enabled | | Day-of-week selector. 0=disabled |
+| 0x002C | maintenance_date | P | date | date | MaintenanceDate | — | — | — | | |
+| 0x002D | offset_outside_temperature | C | f32 | K | — | — | — | — | | -3..3 step 0.5 per TSP |
+| 0x002F | module_configuration_vr71 | P | u16 | count | — | — | — | — | **S** `system.properties.module_configuration_vr71` | 1..11 |
+| 0x0031 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 0 |
+| 0x0034 | system_date | S | date | date | Date | — | — | — | | BCD |
+| 0x0035 | system_time | S | time | time | Time | — | — | — | | HH:MM:SS |
+| 0x0036 | system_scheme | P | u16 | count | HydraulicScheme | — | — | — | **S** `system.properties.system_scheme` | 1..16 |
+| 0x0038 | cooling_outside_temperature_threshold | C | f32 | °C | — | — | — | — | | 10..30 per TSP |
+| 0x0039 | system_water_pressure | S | f32 | bar | WaterPressure | — | — | — | **S** `system.state.system_water_pressure` | Read-only |
+| 0x003A | dew_point_offset | C | f32 | K | — | — | — | — | | -10..10 per TSP |
+| 0x003D | solar_yield_total | E | u32 | kWh | SolarYieldTotal | — | — | fm5_config≤2 | | |
+| 0x003E | environmental_yield_total | E | u32 | kWh | YieldTotal | — | — | — | | |
+| 0x0045 | esco_block_function | C | u16 | enum | — | — | — | — | | |
+| 0x0046 | hwc_max_flow_temp_desired | C | f32 | °C | HwcMaxFlowTempDesired | — | — | — | **S** `system.config.hwc_max_flow_temp_desired` | 15..80 per TSP |
+| 0x0048 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 1 |
+| 0x004B | system_flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | **S** `system.state.system_flow_temperature`, `boiler_status.state.flow_temperature` | Read-only |
+| 0x004D | multi_relay_setting | C | u16 | enum | MultiRelaySetting | — | →mamode | — | | |
+| 0x004E | fuel_consumption_heating_this_month | E | u32 | kWh | PrFuelSumHcThisMonth | — | — | — | | |
+| 0x004F | energy_consumption_heating_this_month | E | u32 | kWh | PrEnergySumHcThisMonth | — | — | — | | |
+| 0x0050 | energy_consumption_dhw_this_month | E | u32 | kWh | PrEnergySumHwcThisMonth | — | — | — | | |
+| 0x0051 | fuel_consumption_dhw_this_month | E | u32 | kWh | PrFuelSumHwcThisMonth | — | — | — | | |
+| 0x0052 | fuel_consumption_heating_last_month | E | u32 | kWh | PrFuelSumHcLastMonth | — | — | — | | |
+| 0x0053 | energy_consumption_heating_last_month | E | u32 | kWh | PrEnergySumHcLastMonth | — | — | — | | |
+| 0x0054 | energy_consumption_dhw_last_month | E | u32 | kWh | PrEnergySumHwcLastMonth | — | — | — | | |
+| 0x0055 | fuel_consumption_dhw_last_month | E | u32 | kWh | PrFuelSumHwcLastMonth | — | — | — | | |
+| 0x0056 | fuel_consumption_heating_total | E | u32 | kWh | PrFuelSumHc | — | — | — | **S** `energy_totals.gas.climate` | |
+| 0x0057 | energy_consumption_heating_total | E | u32 | kWh | PrEnergySumHc | — | — | — | **S** `energy_totals.electric.climate` | |
+| 0x0058 | energy_consumption_dhw_total | E | u32 | kWh | PrEnergySumHwc | — | — | — | **S** `energy_totals.electric.dhw` | |
+| 0x0059 | fuel_consumption_dhw_total | E | u32 | kWh | PrFuelSumHwc | — | — | — | **S** `energy_totals.gas.dhw` | |
+| 0x005C | energy_consumption_total | E | u32 | kWh | PrEnergySum | — | — | — | | |
+| 0x005D | fuel_consumption_total | E | u32 | kWh | PrFuelSum | — | — | — | | |
+| 0x006C | installer_name_1 | P | string | text | Installer1 | — | — | — | | maxLength 6 |
+| 0x006D | installer_name_2 | P | string | text | Installer2 | — | — | — | | maxLength 6 |
+| 0x006F | installer_phone_1 | P | string | text | PhoneNumber1 | — | — | — | | maxLength 6 |
+| 0x0070 | installer_phone_2 | P | string | text | PhoneNumber2 | — | — | — | | maxLength 6 |
+| 0x0073 | outdoor_temperature | S | f32 | °C | DisplayedOutsideTemp | — | — | — | **S** `system.state.outdoor_temperature` | Read-only |
+| 0x0076 | installer_menu_code | P | u16 | count | KeyCodeforConfigMenu | — | — | — | | 0..999 |
+| 0x0081 | smart_photovoltaic_buffer_offset | P | f32 | K | — | — | — | — | | † |
+| 0x0086 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 60. PV/smart cluster |
+| 0x0089 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 15. PV/smart cluster |
+| 0x008A | (unknown) | — | f32 | — | — | — | — | — | | Scan value: 1.0. PV/smart cluster |
+| 0x008B | (unknown) | — | f32 | — | — | — | — | — | | Scan value: 90.0. PV/smart cluster, possible max flow temp |
+| 0x0095 | outdoor_temperature_average24h | S | f32 | °C | OutsideTempAvg | — | — | — | **S** `system.state.outdoor_temperature_avg24h` | Rounded avg updated every 3h |
+| 0x0096 | maintenance_due | S | u16 | bool | MaintenanceDue | — | →yesno | — | **S** `system.state.maintenance_due` | Read-only |
+| 0x009A | green_iq | S | u16 | bool | — | — | — | — | | |
+| 0x009D | hwc_cylinder_temperature_top | S | f32 | °C | HwcStorageTempTop | — | — | — | **S** `system.state.hwc_cylinder_temperature_top` | Read-only |
+| 0x009E | hwc_cylinder_temperature_bottom | S | f32 | °C | HwcStorageTempBottom | — | — | — | **S** `system.state.hwc_cylinder_temperature_bottom` | Read-only |
+| 0x009F | hc_cylinder_temperature_top | S | f32 | °C | HcStorageTempTop | — | — | — | | Read-only |
+| 0x00A0 | hc_cylinder_temperature_bottom | S | f32 | °C | HcStorageTempBottom | — | — | — | | Read-only |
+| 0x00A2 | buffer_charge_offset | C | f32 | K | — | — | — | — | | 0..15 per TSP |
 
 ---
 
@@ -259,23 +260,23 @@ All registers use opcode `0x02`, instance `0x00`.
 
 All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_status` (0x000F) are gated by `hwc_enabled` (0x0001).
 
-| RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
-|----|------|-----|------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | hwc_enabled | C | bool | — | 0..1 | `0=off 1=on` | — | | Gate register for GG=0x01 |
-| 0x0002 | hwc_circulation_pump_status | S | bool | — | 0..1 | `0=off 1=on` | hwc_enabled | | |
-| 0x0003 | operation_mode_dhw | C | u16 | HwcOpMode | 0..2 | →opmode | hwc_enabled | **S** `dhw.operating_mode` | |
-| 0x0004 | dhw_target_temperature | C | f32 | HwcTempDesired | 35..70 | — | hwc_enabled | **S** `dhw.desired_temperature` | °C |
-| 0x0005 | current_dhw_temperature | S | f32 | HwcStorageTemp | 0..99 | — | hwc_enabled | **S** `dhw.current_temperature` | °C. Read-only |
-| 0x0006 | hwc_reheating_active | S | bool | — | 0..1 | `0=off 1=on` | hwc_enabled | | |
-| 0x0008 | hwc_flow_temperature_desired | S | f32 | HwcFlowTemp | — | — | hwc_enabled | | °C. Read-only |
-| 0x0009 | hwc_holiday_start_date | C | date | HwcHolidayStartPeriod | — | — | hwc_enabled | | |
-| 0x000A | hwc_holiday_end_date | C | date | HwcHolidayEndPeriod | — | — | hwc_enabled | | |
-| 0x000B | hwc_bank_holiday_start | C | date | HwcBankHolidayStartPeriod | — | — | hwc_enabled | | ebusd confirmed |
-| 0x000C | hwc_bank_holiday_end | C | date | HwcBankHolidayEndPeriod | — | — | hwc_enabled | | ebusd confirmed |
-| 0x000D | hwc_special_function_mode | C | u16 | HwcSFMode | — | →sfmode | hwc_enabled | **S** `dhw.state` | Special function |
-| 0x000F | hwc_status | S | u16 | — | — | — | — | | Not gated. ebusd: `(commented) UnknownValue0f HEX:6` |
-| 0x0010 | hwc_holiday_start_time | C | time | — | — | — | hwc_enabled | | |
-| 0x0011 | hwc_holiday_end_time | C | time | — | — | — | hwc_enabled | | |
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | hwc_enabled | C | u16 | bool | — | 0..1 | `0=off 1=on` | — | | Gate register for GG=0x01. Constraint tag u16, MCP verified 2-byte |
+| 0x0002 | hwc_circulation_pump_status | S | u8 | bool | — | 0..1 | `0=off 1=on` | hwc_enabled | | Constraint tag u8 |
+| 0x0003 | operation_mode_dhw | C | u16 | enum | HwcOpMode | 0..2 | →opmode | hwc_enabled | **S** `dhw.operating_mode` | |
+| 0x0004 | dhw_target_temperature | C | f32 | °C | HwcTempDesired | 35..70 | — | hwc_enabled | **S** `dhw.desired_temperature` | |
+| 0x0005 | current_dhw_temperature | S | f32 | °C | HwcStorageTemp | 0..99 | — | hwc_enabled | **S** `dhw.current_temperature` | Read-only |
+| 0x0006 | hwc_reheating_active | S | u8 | bool | — | 0..1 | `0=off 1=on` | hwc_enabled | | Constraint tag u8 |
+| 0x0008 | hwc_flow_temperature_desired | S | f32 | °C | HwcFlowTemp | — | — | hwc_enabled | | Read-only |
+| 0x0009 | hwc_holiday_start_date | C | date | date | HwcHolidayStartPeriod | — | — | hwc_enabled | | |
+| 0x000A | hwc_holiday_end_date | C | date | date | HwcHolidayEndPeriod | — | — | hwc_enabled | | |
+| 0x000B | hwc_bank_holiday_start | C | date | date | HwcBankHolidayStartPeriod | — | — | hwc_enabled | | ebusd confirmed |
+| 0x000C | hwc_bank_holiday_end | C | date | date | HwcBankHolidayEndPeriod | — | — | hwc_enabled | | ebusd confirmed |
+| 0x000D | hwc_special_function_mode | C | u16 | enum | HwcSFMode | — | →sfmode | hwc_enabled | **S** `dhw.state` | Special function |
+| 0x000F | hwc_status | S | u16 | state | — | — | — | — | | Not gated |
+| 0x0010 | hwc_holiday_start_time | C | time | time | — | — | — | hwc_enabled | | |
+| 0x0011 | hwc_holiday_end_time | C | time | time | — | — | — | hwc_enabled | | |
 
 ---
 
@@ -283,45 +284,45 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_stat
 
 All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered by probing `heating_circuit_type` (RR=0x0002) — value `0` (`mctype=inactive`) indicates unused circuit slot. Absent instances (beyond the highest configured slot) return empty/null response (no valid payload from bus). Verified via MCP: II=0,1 return mctype=1 (heating), II=2-9 return mctype=0 (inactive), II=10 returns null (absent).
 
-| RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
-|----|------|-----|------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | (unknown) | — | u16 | — | 1..2 | — | — | | CSV says `heating_circuit_type` but gateway uses 0x0002. Purpose unverified. † |
-| 0x0002 | heating_circuit_type | P | u16 | Hc{hc}CircuitType | 0..4 | →mctype | — | **S** `circuits[].properties.heating_circuit_type` | Discovery probe. Also `mixer_circuit_type_external` |
-| 0x0003 | room_influence_type | C | u8 | Hc{hc}RoomInfluenceType | — | `0=inactive 1=active 2=extended` | — | | Controls room sensor influence on heating curve. Not responsive on II=0x00 in VRC Explorer scan. See GetExtendedRegisters §4.2.5 for behavioral semantics |
-| 0x0004 | target_return_temperature | C | f32 | Hc{hc}ReturnTempDesired | 15..80 | — | circuit_type=4 (return_increase) | | Factory setting 30°C. jonesPD CTLV2 confirmed. Only meaningful for "Increase in return" circuits |
-| 0x0005 | dew_point_monitoring_enabled | C | u16 | — | 0..1 | `0=off 1=on` | cooling_enabled | | † |
-| 0x0006 | cooling_enabled | C | u16 | Hc{hc}CoolingEnabled | 0..1 | `0=off 1=on` | — | **S** `circuits[].config.cooling_enabled` | Gate register |
-| 0x0007 | heating_circuit_flow_setpoint | S | f32 | Hc{hc}FlowTempDesired | — | — | — | **S** `circuits[].state.heating_circuit_flow_setpoint` | °C. Read-only |
-| 0x0008 | current_circuit_flow_temperature | S | f32 | Hc{hc}FlowTemp | — | — | — | **S** `circuits[].state.current_circuit_flow_temperature` | °C. Read-only. Also `boiler_status.state.return_temperature` (II=0) |
-| 0x0009 | ext_hwc_temperature_setpoint | C | f32 | — | — | — | ext_hwc_active | | ebusd: `(commented) Unknown09, constant 60°C`. † |
-| 0x000A | dew_point_offset | C | f32 | — | — | — | cooling_enabled | | † |
-| 0x000B | flow_setpoint_excess_offset | C | f32 | Hc{hc}ExcessTemp | — | — | circuit_type=1 (heating) | | K. Flow temp increased by this value to keep mixing valve in control range |
-| 0x000C | fixed_desired_temperature | C | f32 | — | — | — | circuit_type=2 (fixed_value) | | ebusd: `(commented) Unknown0c, constant 65°C`. Fixed-value circuit target flow temp. † |
-| 0x000D | fixed_setback_temperature | C | f32 | — | — | — | circuit_type=2 (fixed_value) | | ebusd: `(commented) Unknown0d, constant 65°C`. Fixed-value circuit setback temp. † |
-| 0x000E | set_back_mode_enabled | C | u16 | Hc{hc}SetbackMode | — | →offmode | circuit_type=1 (heating) | | |
-| 0x000F | heating_curve | C | f32 | Hc{hc}HeatCurve | — | — | — | **S** `circuits[].config.heating_curve` | |
-| 0x0010 | heating_flow_temp_max_setpoint | C | f32 | Hc{hc}MaxFlowTempDesired | — | — | — | **S** `circuits[].config.heating_flow_temperature_maximum_setpoint` | °C. 15..80 per ebusd |
-| 0x0011 | cooling_flow_temp_min_setpoint | C | f32 | Hc{hc}MinCoolingTempDesired | — | — | cooling_enabled | | °C |
-| 0x0012 | heating_flow_temp_min_setpoint | C | f32 | Hc{hc}MinFlowTempDesired | — | — | — | **S** `circuits[].config.heating_flow_temperature_minimum_setpoint` | °C |
-| 0x0013 | ext_hwc_operation_mode | C | u16 | — | — | — | ext_hwc_active | | |
-| 0x0014 | heat_demand_limited_by_outside_temp | C | f32 | Hc{hc}SummerTempLimit | — | — | — | **S** `circuits[].config.heat_demand_limited_by_outside_temp` | °C. Summer cutoff |
-| 0x0015 | room_temperature_control_mode | C | u16 | Hc{hc}RoomTempSwitchOn | — | →rcmode | — | **S** `circuits[].config.room_temperature_control_mode` | Gate for dew point |
-| 0x0016 | screed_drying_day | C | u16 | Hc{hc}ScreedDryingDay | — | — | — | | Screed drying program |
-| 0x0017 | screed_drying_desired_temperature | S | f32 | Hc{hc}ScreedDryingTempDesired | — | — | — | | °C. Screed drying program. FLAGS=0x01 (stable RO) — computed setpoint, not user-configurable |
-| 0x0018 | ext_hwc_active | S | u16 | Hc{hc}ExternalHWCActive | — | — | — | | Gate register for ext HWC. FLAGS=0x00 (volatile RO) — status, not config |
-| 0x0019 | external_heat_demand | S | u16 | Hc{hc}ExternalHeatDemand | — | — | — | | External heat source. FLAGS=0x00 (volatile RO) — status, not config |
-| 0x001A | mixer_movement | S | f32 | Hc{hc}MixerMovement | — | — | — | | Signed float: `<0`=closing, `>0`=opening. MCP verified: -100.0 when fully closing. Read-only |
-| 0x001B | circuit_state | S | u16 | Hc{hc}Status | — | — | — | **S** `circuits[].state.circuit_state` | Raw state code |
-| 0x001C | epsilon | S | f32 | Hc{hc}HeatCurveAdaption | — | — | — | | Heat curve adaption factor. Read-only |
-| 0x001D | frost_protection_threshold | C | f32 | Hc{hc}FrostProtThreshold | — | — | — | **S** `circuits[].properties.frost_protection_threshold` | °C. FLAGS=0x02 (technical RW) — writable config, not property. Semantic path needs migration to `config.*` |
-| 0x001E | pump_status | S | u16 | Hc{hc}PumpStatus | — | — | — | **S** `circuits[].state.pump_status` | Also `boiler_status.state.pump_running` (II=0) |
-| 0x001F | room_temperature_setpoint | C | f32 | Hc{hc}RoomSetpoint | — | — | — | | °C |
-| 0x0020 | calculated_flow_temperature | S | f32 | Hc{hc}FlowTempCalc | — | — | — | **S** `circuits[].state.calculated_flow_temperature` | °C |
-| 0x0021 | mixer_position_percentage | S | f32 | Hc{hc}MixerPosition | — | — | — | **S** `circuits[].state.mixer_position_percentage` | % |
-| 0x0022 | current_room_humidity | S | f32 | Hc{hc}Humidity | — | — | — | **S** `circuits[].state.current_room_humidity` | %. From room sensor |
-| 0x0023 | dew_point_temperature | S | f32 | Hc{hc}DewPointTemp | — | — | — | **S** `circuits[].state.dew_point_temperature` | °C |
-| 0x0024 | pump_operating_hours | S | u32 | Hc{hc}PumpHours | — | — | — | **S** `circuits[].state.pump_operating_hours` | |
-| 0x0025 | pump_starts_count | S | u32 | Hc{hc}PumpStarts | — | — | — | **S** `circuits[].state.pump_starts_count` | |
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | (unknown) | — | u16 | — | — | 1..2 | — | — | | CSV says `heating_circuit_type` but gateway uses 0x0002. Purpose unverified. † |
+| 0x0002 | heating_circuit_type | P | u16 | enum | Hc{hc}CircuitType | 0..4 | →mctype | — | **S** `circuits[].properties.heating_circuit_type` | Discovery probe. Also `mixer_circuit_type_external` |
+| 0x0003 | room_influence_type | C | u8 | enum | Hc{hc}RoomInfluenceType | — | `0=inactive 1=active 2=extended` | — | | Controls room sensor influence on heating curve. Not responsive on II=0x00 in VRC Explorer scan. See GetExtendedRegisters §4.2.5 for behavioral semantics |
+| 0x0004 | target_return_temperature | C | f32 | °C | Hc{hc}ReturnTempDesired | 15..80 | — | circuit_type=4 (return_increase) | | Factory setting 30°C. jonesPD CTLV2 confirmed. Only meaningful for "Increase in return" circuits |
+| 0x0005 | dew_point_monitoring_enabled | C | u8 | bool | — | 0..1 | `0=off 1=on` | cooling_enabled | | Constraint tag u8. ebusd onoff=UCH. † |
+| 0x0006 | cooling_enabled | C | u8 | bool | Hc{hc}CoolingEnabled | 0..1 | `0=off 1=on` | — | **S** `circuits[].config.cooling_enabled` | Gate register. Constraint tag u8. ebusd onoff=UCH |
+| 0x0007 | heating_circuit_flow_setpoint | S | f32 | °C | Hc{hc}FlowTempDesired | — | — | — | **S** `circuits[].state.heating_circuit_flow_setpoint` | Read-only |
+| 0x0008 | current_circuit_flow_temperature | S | f32 | °C | Hc{hc}FlowTemp | — | — | — | **S** `circuits[].state.current_circuit_flow_temperature` | Read-only. Circuit flow sensor VF[x], NOT boiler return temperature |
+| 0x0009 | ext_hwc_temperature_setpoint | C | f32 | °C | — | — | — | ext_hwc_active | | † |
+| 0x000A | dew_point_offset | C | f32 | K | — | — | — | cooling_enabled | | † |
+| 0x000B | flow_setpoint_excess_offset | C | f32 | K | Hc{hc}ExcessTemp | — | — | circuit_type=1 (heating) | | Flow temp increased by this value to keep mixing valve in control range |
+| 0x000C | fixed_desired_temperature | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | | Fixed-value circuit target flow temp. † |
+| 0x000D | fixed_setback_temperature | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | | Fixed-value circuit setback temp. † |
+| 0x000E | set_back_mode_enabled | C | u16 | enum | Hc{hc}SetbackMode | — | →offmode | circuit_type=1 (heating) | | |
+| 0x000F | heating_curve | C | f32 | — | Hc{hc}HeatCurve | — | — | — | **S** `circuits[].config.heating_curve` | Dimensionless ratio |
+| 0x0010 | heating_flow_temp_max_setpoint | C | f32 | °C | Hc{hc}MaxFlowTempDesired | — | — | — | **S** `circuits[].config.heating_flow_temperature_maximum_setpoint` | 15..80 per ebusd |
+| 0x0011 | cooling_flow_temp_min_setpoint | C | f32 | °C | Hc{hc}MinCoolingTempDesired | — | — | cooling_enabled | | |
+| 0x0012 | heating_flow_temp_min_setpoint | C | f32 | °C | Hc{hc}MinFlowTempDesired | — | — | — | **S** `circuits[].config.heating_flow_temperature_minimum_setpoint` | |
+| 0x0013 | ext_hwc_operation_mode | C | u16 | enum | — | — | — | ext_hwc_active | | |
+| 0x0014 | heat_demand_limited_by_outside_temp | C | f32 | °C | Hc{hc}SummerTempLimit | — | — | — | **S** `circuits[].config.heat_demand_limited_by_outside_temp` | Summer cutoff |
+| 0x0015 | room_temperature_control_mode | C | u16 | enum | Hc{hc}RoomTempSwitchOn | — | →rcmode | — | **S** `circuits[].config.room_temperature_control_mode` | Gate for dew point |
+| 0x0016 | screed_drying_day | C | u16 | count | Hc{hc}ScreedDryingDay | — | — | — | | Screed drying program |
+| 0x0017 | screed_drying_desired_temperature | S | f32 | °C | Hc{hc}ScreedDryingTempDesired | — | — | — | | FLAGS=0x01 (stable RO) — computed setpoint, not user-configurable |
+| 0x0018 | ext_hwc_active | S | u16 | bool | Hc{hc}ExternalHWCActive | — | — | — | | Gate register for ext HWC. FLAGS=0x00 (volatile RO) — status, not config |
+| 0x0019 | external_heat_demand | S | u16 | state | Hc{hc}ExternalHeatDemand | — | — | — | | External heat source. FLAGS=0x00 (volatile RO) — status, not config |
+| 0x001A | mixer_movement | S | f32 | % | Hc{hc}MixerMovement | — | — | — | | Signed float: `<0`=closing, `>0`=opening. MCP verified: -100.0 when fully closing. Read-only |
+| 0x001B | circuit_state | S | u16 | state | Hc{hc}Status | — | — | — | **S** `circuits[].state.circuit_state` | Raw state code |
+| 0x001C | epsilon | S | f32 | — | Hc{hc}HeatCurveAdaption | — | — | — | | Heat curve adaption factor. Dimensionless. Read-only |
+| 0x001D | frost_protection_threshold | C | f32 | °C | Hc{hc}FrostProtThreshold | — | — | — | **S** `circuits[].properties.frost_protection_threshold` | FLAGS=0x02 (technical RW) — writable config, not property. Semantic path needs migration to `config.*` |
+| 0x001E | pump_status | S | u16 | bool | Hc{hc}PumpStatus | — | — | — | **S** `circuits[].state.pump_status` | Also `boiler_status.state.pump_running` (II=0) |
+| 0x001F | room_temperature_setpoint | C | f32 | °C | Hc{hc}RoomSetpoint | — | — | — | | |
+| 0x0020 | calculated_flow_temperature | S | f32 | °C | Hc{hc}FlowTempCalc | — | — | — | **S** `circuits[].state.calculated_flow_temperature` | |
+| 0x0021 | mixer_position_percentage | S | f32 | % | Hc{hc}MixerPosition | — | — | — | **S** `circuits[].state.mixer_position_percentage` | |
+| 0x0022 | current_room_humidity | S | f32 | % | Hc{hc}Humidity | — | — | — | **S** `circuits[].state.current_room_humidity` | From room sensor |
+| 0x0023 | dew_point_temperature | S | f32 | °C | Hc{hc}DewPointTemp | — | — | — | **S** `circuits[].state.dew_point_temperature` | |
+| 0x0024 | pump_operating_hours | S | u32 | hrs | Hc{hc}PumpHours | — | — | — | **S** `circuits[].state.pump_operating_hours` | |
+| 0x0025 | pump_starts_count | S | u32 | count | Hc{hc}PumpStarts | — | — | — | **S** `circuits[].state.pump_starts_count` | |
 
 ---
 
@@ -329,48 +330,48 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered
 
 All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by probing `zone_index` (RR=0x001C).
 
-| RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
-|----|------|-----|------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | cooling_operation_mode | C | u16 | — | 0..2 | →opmode | cooling_enabled | | Same enum as heating_operation_mode |
-| 0x0002 | cooling_set_back_temperature | C | f32 | Zone{z}CoolingTemp | 15..30 step 0.5 | — | cooling_enabled | | °C |
-| 0x0003 | holiday_start_date | C | date | Zone{z}HolidayStartPeriod | — | — | — | | |
-| 0x0004 | holiday_end_date | C | date | Zone{z}HolidayEndPeriod | — | — | — | | |
-| 0x0005 | holiday_setpoint | C | f32 | Zone{z}HolidayTemp | 5..30 | — | — | | °C |
-| 0x0006 | heating_operation_mode | C | u16 | Zone{z}OpMode | 0..2 | →opmode | — | **S** (derived) `zones[].state.operating_mode` | |
-| 0x0008 | quick_veto_temperature | C | f32 | Zone{z}QuickVetoTemp | — | — | — | | °C. Veto override target |
-| 0x0009 | heating_set_back_temperature | C | f32 | Zone{z}NightTemp | — | — | — | | °C. Night setpoint |
-| 0x000C | bank_holiday_start | C | date | Zone{z}BankHolidayStartPeriod | — | — | — | | ebusd confirmed |
-| 0x000D | bank_holiday_end | C | date | Zone{z}BankHolidayEndPeriod | — | — | — | | ebusd confirmed |
-| 0x000E | current_special_function | C | u16 | Zone{z}SFMode | — | →sfmode | — | **S** (derived) `zones[].state.operating_mode` | FLAGS=0x03 (user RW) — writable to set quickveto/away |
-| 0x000F | current_room_temperature | S | f32 | Zone{z}RoomTemp | — | — | — | **S** `zones[].state.current_temperature` | °C. FLAGS=0x01 (stable RO). From room sensor |
-| 0x0010 | (unknown) | C | u16 | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
-| 0x0011 | (unknown) | C | u16 | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
-| 0x0012 | valve_status | S | u16 | Zone{z}ValveStatus | — | `0=closed 1=open` | — | | FLAGS=0x01 (stable RO). Used for hvac_action derivation |
-| 0x0013 | room_temperature_zone_mapping | C | u16 | Zone{z}RoomZoneMapping | — | →zmapping | — | **S** (internal: circuit type lookup) | Maps zone to room temperature sensor source. ebusd name confirms semantics |
-| 0x0014 | heating_manual_mode_setpoint | S | f32 | Zone{z}ActualRoomTempDesired | — | — | — | **S** `zones[].state.desired_temperature` (fallback) | °C. FLAGS=0x01 (stable RO) — computed output, not user-settable. Current setpoint considering all conditions |
-| 0x0015 | cooling_manual_mode_setpoint | S | f32 | — | — | — | cooling_enabled | | °C. FLAGS=0x01 (stable RO) — computed output, not user-settable. ebusd: `(commented) Unknown15Temp, in FlusterBetrieb 24 sonst 99` |
-| 0x0016 | zone_name | C | string | Zone{z}Shortname | — | — | — | **S** `zones[].name` | maxLength 6 |
-| 0x0017 | zone_name_prefix | C | string | Zone{z}Name1 | — | — | — | | maxLength 5. Part 1 |
-| 0x0018 | zone_name_suffix | C | string | Zone{z}Name2 | — | — | — | | maxLength 5. Part 2 |
-| 0x0019 | heating_time_slot_active | S | u16 | — | — | `0=off 1=on` | — | | Timer schedule flag |
-| 0x001A | cooling_time_slot_active | S | u16 | — | — | `0=off 1=on` | cooling_enabled | | Timer schedule flag |
-| 0x001B | zone_status | S | u16 | — | — | — | — | | Raw zone status code |
-| 0x001C | zone_index | P | bytes | Zone{z}Index | — | — | — | **S** (discovery) | Presence marker |
-| 0x001E | quick_veto_end_time | C | time | Zone{z}QuickVetoEndTime | — | — | — | | FLAGS=0x03 (user RW) — writable, can extend/set veto end time |
-| 0x0020 | holiday_end_time | C | time | — | — | — | — | | |
-| 0x0021 | holiday_start_time | C | time | — | — | — | — | | |
-| 0x0022 | heating_desired_setpoint | C | f32 | Zone{z}DayTemp | — | — | — | **S** `zones[].state.desired_temperature` (primary) | °C. 15..30 step 0.5 per ebusd |
-| 0x0023 | cooling_desired_setpoint | C | f32 | — | — | — | cooling_enabled | | °C |
-| 0x0024 | quick_veto_end_date | C | date | Zone{z}QuickVetoEndDate | — | — | — | | FLAGS=0x03 (user RW) — writable, can extend/set veto end date |
-| 0x0026 | quick_veto_duration | C | f32 | Zone{z}QuickVetoDuration | — | — | — | | Hours. 0.5..12 step 0.5. Writing enables quick veto mode. |
-| 0x0027 | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x00 (volatile RO). Discovered in VRC Explorer scan |
-| 0x0028 | current_room_humidity | S | f32 | — | — | — | — | **S** `zones[].state.current_room_humidity` | %. FLAGS=0x01 (stable RO). From room sensor |
-| 0x0029 | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002A | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002B | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002C | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002D | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002E | (unknown) | S | u16 | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | cooling_operation_mode | C | u16 | enum | — | 0..2 | →opmode | cooling_enabled | | Same enum as heating_operation_mode |
+| 0x0002 | cooling_set_back_temperature | C | f32 | °C | Zone{z}CoolingTemp | 15..30 step 0.5 | — | cooling_enabled | | |
+| 0x0003 | holiday_start_date | C | date | date | Zone{z}HolidayStartPeriod | — | — | — | | |
+| 0x0004 | holiday_end_date | C | date | date | Zone{z}HolidayEndPeriod | — | — | — | | |
+| 0x0005 | holiday_setpoint | C | f32 | °C | Zone{z}HolidayTemp | 5..30 | — | — | | |
+| 0x0006 | heating_operation_mode | C | u16 | enum | Zone{z}OpMode | 0..2 | →opmode | — | **S** (derived) `zones[].state.operating_mode` | |
+| 0x0008 | quick_veto_temperature | C | f32 | °C | Zone{z}QuickVetoTemp | — | — | — | | Veto override target |
+| 0x0009 | heating_set_back_temperature | C | f32 | °C | Zone{z}NightTemp | — | — | — | | Night setpoint |
+| 0x000C | bank_holiday_start | C | date | date | Zone{z}BankHolidayStartPeriod | — | — | — | | ebusd confirmed |
+| 0x000D | bank_holiday_end | C | date | date | Zone{z}BankHolidayEndPeriod | — | — | — | | ebusd confirmed |
+| 0x000E | current_special_function | C | u16 | enum | Zone{z}SFMode | — | →sfmode | — | **S** (derived) `zones[].state.operating_mode` | FLAGS=0x03 (user RW) — writable to set quickveto/away |
+| 0x000F | current_room_temperature | S | f32 | °C | Zone{z}RoomTemp | — | — | — | **S** `zones[].state.current_temperature` | FLAGS=0x01 (stable RO). From room sensor |
+| 0x0010 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
+| 0x0011 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
+| 0x0012 | valve_status | S | u16 | bool | Zone{z}ValveStatus | — | `0=closed 1=open` | — | | FLAGS=0x01 (stable RO). Used for hvac_action derivation |
+| 0x0013 | room_temperature_zone_mapping | C | u16 | enum | Zone{z}RoomZoneMapping | — | →zmapping | — | **S** (internal: circuit type lookup) | Maps zone to room temperature sensor source. ebusd name confirms semantics |
+| 0x0014 | heating_manual_mode_setpoint | S | f32 | °C | Zone{z}ActualRoomTempDesired | — | — | — | **S** `zones[].state.desired_temperature` (fallback) | FLAGS=0x01 (stable RO) — computed output, not user-settable. Current setpoint considering all conditions |
+| 0x0015 | cooling_manual_mode_setpoint | S | f32 | °C | — | — | — | cooling_enabled | | FLAGS=0x01 (stable RO) — computed output, not user-settable |
+| 0x0016 | zone_name | C | string | text | Zone{z}Shortname | — | — | — | **S** `zones[].name` | maxLength 6 |
+| 0x0017 | zone_name_prefix | C | string | text | Zone{z}Name1 | — | — | — | | maxLength 5. Part 1 |
+| 0x0018 | zone_name_suffix | C | string | text | Zone{z}Name2 | — | — | — | | maxLength 5. Part 2 |
+| 0x0019 | heating_time_slot_active | S | u16 | bool | — | — | `0=off 1=on` | — | | Timer schedule flag |
+| 0x001A | cooling_time_slot_active | S | u16 | bool | — | — | `0=off 1=on` | cooling_enabled | | Timer schedule flag |
+| 0x001B | zone_status | S | u16 | state | — | — | — | — | | Raw zone status code |
+| 0x001C | zone_index | P | bytes | raw | Zone{z}Index | — | — | — | **S** (discovery) | Presence marker |
+| 0x001E | quick_veto_end_time | C | time | time | Zone{z}QuickVetoEndTime | — | — | — | | FLAGS=0x03 (user RW) — writable, can extend/set veto end time |
+| 0x0020 | holiday_end_time | C | time | time | — | — | — | — | | |
+| 0x0021 | holiday_start_time | C | time | time | — | — | — | — | | |
+| 0x0022 | heating_desired_setpoint | C | f32 | °C | Zone{z}DayTemp | — | — | — | **S** `zones[].state.desired_temperature` (primary) | 15..30 step 0.5 per ebusd |
+| 0x0023 | cooling_desired_setpoint | C | f32 | °C | — | — | — | cooling_enabled | | |
+| 0x0024 | quick_veto_end_date | C | date | date | Zone{z}QuickVetoEndDate | — | — | — | | FLAGS=0x03 (user RW) — writable, can extend/set veto end date |
+| 0x0026 | quick_veto_duration | C | f32 | hrs | Zone{z}QuickVetoDuration | — | — | — | | 0.5..12 step 0.5. Writing enables quick veto mode. |
+| 0x0027 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x00 (volatile RO). Discovered in VRC Explorer scan |
+| 0x0028 | current_room_humidity | S | f32 | % | — | — | — | — | **S** `zones[].state.current_room_humidity` | FLAGS=0x01 (stable RO). From room sensor |
+| 0x0029 | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002A | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002B | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002C | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002D | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x002E | (unknown) | S | u16 | — | — | — | — | — | | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
 
 ### Zone Mode Derivation
 
@@ -387,18 +388,18 @@ Entire group gated by `fm5_config ≤ 2`. All registers use opcode `0x02`, insta
 
 **No ebusd coverage exists for GG=0x04** — all names are from value-matched CSV only (†) and carry false-positive risk.
 
-| RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
-|----|------|-----|------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | solar_enabled | C | u8 | — | 0..1 | `0=off 1=on` | fm5_config≤2 | | † |
-| 0x0002 | solar_function_mode | C | u8 | — | 0..1 | `0=off 1=on` | fm5_config≤2 | | Not pump status (pump is at 0x0008). † |
-| 0x0003 | collector_temperature | S | f32 | — | -40..155 | — | fm5_config≤2 | | °C. † |
-| 0x0004 | delta_t_on_threshold | C | f32 | — | 0..99 | — | fm5_config≤2 | | °C. Not storage temp. † |
-| 0x0005 | max_collector_temperature | C | f32 | — | 110..150 | — | fm5_config≤2 | | °C. † |
-| 0x0006 | max_cylinder_temperature_solar | C | f32 | — | 75..115 | — | fm5_config≤2 | | °C. Not collector shutdown. † |
-| 0x0007 | solar_return_temperature | S | f32 | — | — | — | fm5_config≤2 | | °C. † |
-| 0x0008 | solar_pump_active | S | u8 | — | — | `0=off 1=on` | fm5_config≤2 | | † |
-| 0x0009 | solar_yield_current | S | f32 | — | — | — | fm5_config≤2 | | Current yield. † |
-| 0x000B | solar_pump_hours | S | u32 | — | — | — | fm5_config≤2 | | Cumulative runtime. † |
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | solar_enabled | C | u8 | bool | — | 0..1 | `0=off 1=on` | fm5_config≤2 | | † |
+| 0x0002 | solar_function_mode | C | u8 | bool | — | 0..1 | `0=off 1=on` | fm5_config≤2 | | Not pump status (pump is at 0x0008). † |
+| 0x0003 | collector_temperature | S | f32 | °C | — | -40..155 | — | fm5_config≤2 | | † |
+| 0x0004 | delta_t_on_threshold | C | f32 | K | — | 0..99 | — | fm5_config≤2 | | Not storage temp. † |
+| 0x0005 | max_collector_temperature | C | f32 | °C | — | 110..150 | — | fm5_config≤2 | | † |
+| 0x0006 | max_cylinder_temperature_solar | C | f32 | °C | — | 75..115 | — | fm5_config≤2 | | Not collector shutdown. † |
+| 0x0007 | solar_return_temperature | S | f32 | °C | — | — | — | fm5_config≤2 | | † |
+| 0x0008 | solar_pump_active | S | u8 | bool | — | — | `0=off 1=on` | fm5_config≤2 | | † |
+| 0x0009 | solar_yield_current | S | f32 | raw | — | — | — | fm5_config≤2 | | Current yield. † |
+| 0x000B | solar_pump_hours | S | u32 | hrs | — | — | — | fm5_config≤2 | | Cumulative runtime. † |
 
 ---
 
@@ -408,12 +409,12 @@ Entire group gated by `fm5_config ≤ 2`. These are solar charging parameters pe
 
 **No ebusd coverage exists for GG=0x05** — all names are from value-matched CSV only (†) and carry false-positive risk.
 
-| RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
-|----|------|-----|------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | cylinder_max_setpoint | C | f32 | — | 0..99 | — | fm5_config≤2 | | °C. † |
-| 0x0002 | cylinder_charge_hysteresis | C | f32 | — | 2..25 | — | fm5_config≤2 | | K. † |
-| 0x0003 | cylinder_charge_offset | C | f32 | — | 1..20 | — | fm5_config≤2 | | K. † |
-| 0x0004 | cylinder_temperature | S | f32 | — | -10..110 | — | fm5_config≤2 | | °C. † |
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | cylinder_max_setpoint | C | f32 | °C | — | 0..99 | — | fm5_config≤2 | | † |
+| 0x0002 | cylinder_charge_hysteresis | C | f32 | K | — | 2..25 | — | fm5_config≤2 | | † |
+| 0x0003 | cylinder_charge_offset | C | f32 | K | — | 1..20 | — | fm5_config≤2 | | † |
+| 0x0004 | cylinder_temperature | S | f32 | °C | — | -10..110 | — | fm5_config≤2 | | † |
 
 ---
 
@@ -421,14 +422,14 @@ Entire group gated by `fm5_config ≤ 2`. These are solar charging parameters pe
 
 Uses opcode `0x06` (remote). Instances 0x00-0x0A. Register range 0x0001-0x000F observed in VRC Explorer scans. No myVaillant CSV mapping exists for this group.
 
-| RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
-|----|------|-----|------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | (unknown) | — | u16 | — | 0..255 | — | — | | Sensor ID / address |
-| 0x0002 | (unknown) | — | u16 | — | 1..3 | — | — | | Sensor type / protocol |
-| 0x0003 | (unknown) | — | u8 | — | 0..1 | `0=off 1=on` | — | | Enable flag |
-| 0x0004 | (unknown) | — | u16 | — | 0..10 | — | — | | Zone association |
-| 0x0005 | (unknown) | — | u16 | — | 0..32768 | — | — | | Timer/counter |
-| 0x0006 | (unknown) | — | u16 | — | 0..32768 | — | — | | Timer/counter |
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | (unknown) | — | u16 | — | — | 0..255 | — | — | | Sensor ID / address |
+| 0x0002 | (unknown) | — | u16 | — | — | 1..3 | — | — | | Sensor type / protocol |
+| 0x0003 | (unknown) | — | u8 | bool | — | 0..1 | `0=off 1=on` | — | | Enable flag |
+| 0x0004 | (unknown) | — | u16 | — | — | 0..10 | — | — | | Zone association |
+| 0x0005 | (unknown) | — | u16 | — | — | 0..32768 | — | — | | Timer/counter |
+| 0x0006 | (unknown) | — | u16 | — | — | 0..32768 | — | — | | Timer/counter |
 
 Further register identification requires controlled testing with paired room sensors.
 
@@ -438,13 +439,17 @@ Further register identification requires controlled testing with paired room sen
 
 Uses opcode `0x06` (remote). Instances 0x00-0x0A. Instance 0 has 78+ responsive registers in VRC Explorer scan, including serial numbers (ASCII strings) and temperature profile schedules.
 
-| RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
-|----|------|-----|------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | (unknown) | — | u8 | — | 0..3 | — | — | | Sensor mode |
-| 0x0002 | (unknown) | — | u8 | — | 1..2 | — | — | | Protocol type |
-| 0x0003 | (unknown) | — | u8 | — | 1..2 | — | — | | Communication mode |
-| 0x0005 | (unknown) | — | u8 | — | 0..3 | — | — | | Status flags |
-| 0x0006 | (unknown) | — | u8 | — | 0..1 | `0=off 1=on` | — | | Enable flag |
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
+| 0x0001 | (unknown) | — | u8 | — | — | 0..3 | — | — | | Sensor mode |
+| 0x0002 | (unknown) | — | u8 | — | — | 1..2 | — | — | | Protocol type |
+| 0x0003 | (unknown) | — | u8 | — | — | 1..2 | — | — | | Communication mode |
+| 0x0005 | (unknown) | — | u8 | — | — | 0..3 | — | — | | Status flags |
+| 0x0006 | (unknown) | — | u8 | bool | — | 0..1 | `0=off 1=on` | — | | Enable flag |
+| 0x0007 | room_humidity | S | f32 | % | RoomHumidity | — | — | — | | ebusd confirmed (`15.ctlv2.csv` VR92 sections, EXP decode) |
+| 0x000F | room_temperature | S | f32 | °C | RoomTemp | — | — | — | | ebusd confirmed (`15.ctlv2.csv` VR92 sections, EXP decode) |
+
+**ebusd-defined baseline:** ebusd `15.ctlv2.csv` defines only RR=0x0007 (RoomHumidity) and RR=0x000F (RoomTemp) for VR92 addresses 1-8, routed via `B524,06000a..`. Additional registers (78+ per scan) require reverse engineering from scan corpus; the constraint catalog does not enumerate all read-only registers.
 
 Notable scan observations:
 - RR=0x001D: ASCII string "212134" (possibly serial/version)
@@ -545,11 +550,10 @@ The boiler status plane is a **cross-group composite** — it reads from both GG
 | Semantic Path | B524 | Type | Notes |
 |---------------|------|------|-------|
 | `state.flow_temperature` | GG=0x00, RR=0x004B | f32 | System flow temp from regulator |
-| `state.return_temperature` | GG=0x02, II=0x00, RR=0x0008 | f32 | Circuit 0 flow temp as return proxy |
 | `state.pump_running` | GG=0x02, II=0x00, RR=0x001E | bool | Circuit 0 pump status |
 | `state.circuit_state` (raw) | GG=0x02, II=0x00, RR=0x001B | u16 | Circuit 0 state |
 
-Note: `dhw_storage_temperature`, `dhw_outlet_temperature`, `flame_on`, `current_power_percent`, `starts_count`, `operating_hours`, `dhw_operating_hours` are not populated from B524 — these would require direct BAI access (B504) which is not available from third-party sources.
+Note: `return_temperature` is **not populated** from B524. GG=0x02 RR=0x0008 (`Hc{hc}FlowTemp`) is the circuit flow sensor VF[x], not the boiler return sensor. True return temperature would require direct BAI access (B504) which is not available from third-party sources. Similarly, `dhw_storage_temperature`, `dhw_outlet_temperature`, `flame_on`, `current_power_percent`, `starts_count`, `operating_hours`, `dhw_operating_hours` are not populated from B524.
 
 ### `ebus.v1.semantic.energy_totals.get`
 
@@ -557,10 +561,10 @@ Source: `refreshEnergy()` in `semantic_vaillant.go`
 
 | Semantic Path | B524 | Type |
 |---------------|------|------|
-| `gas.climate` | GG=0x00, RR=0x0056 | energy4 (u32 LE, kWh) |
-| `electric.climate` | GG=0x00, RR=0x0057 | energy4 |
-| `electric.dhw` | GG=0x00, RR=0x0058 | energy4 |
-| `gas.dhw` | GG=0x00, RR=0x0059 | energy4 |
+| `gas.climate` | GG=0x00, RR=0x0056 | u32 (kWh) |
+| `electric.climate` | GG=0x00, RR=0x0057 | u32 (kWh) |
+| `electric.dhw` | GG=0x00, RR=0x0058 | u32 (kWh) |
+| `gas.dhw` | GG=0x00, RR=0x0059 | u32 (kWh) |
 
 ---
 

@@ -54,7 +54,7 @@ See [`ebus-vaillant-B524-register-map.md` § FLAGS Byte](./ebus-vaillant-B524-re
 
 Notes:
 - `II` is not echoed in the response.
-- Some replies are status-only: a single-byte `FLAGS` with no `GG/RR/value`.
+- **Short responses** (payload < 4 bytes) are **not** successful register reads. A single-byte `0x00` indicates wrong route, unsupported opcode, or group default — ebusd reports `invalid position … / 00`. Write operations may return short acknowledgements. Treat as not-a-register-value.
 - Correlation must retain request context (`GG/II/RR/opcode`).
 - Exception: the `0x01` constraint dictionary request is `01 GG RR` (no `II`), so correlation there is `GG/RR`.
 
@@ -284,7 +284,7 @@ GG   Descriptor(s)  Typical opcode  Notes
 0x05 1.0 / absent   0x02            model-/system-dependent
 0x06 (varies)       0x0B            program/timetable domain
 0x07 (varies)       0x0B            program/timetable domain
-0x08 1.0 / absent   0x06            model-/system-dependent
+0x08 1.0 / absent   unknown         constraint-only, no responsive registers observed
 0x09 1.0            0x06            instanced
 0x0A 1.0            0x06            instanced
 0x0C 1.0 / absent   0x06            model-/system-dependent
