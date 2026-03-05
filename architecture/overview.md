@@ -72,7 +72,7 @@ The gateway now provides a runtime wiring layer that instantiates the bus, regis
 Gateway semantic publication uses an explicit startup FSM to distinguish cache bootstrap from live runtime updates.
 
 - startup phases: `BOOT_INIT`, `CACHE_LOADED_STALE`, `LIVE_WARMUP`, `LIVE_READY`, `DEGRADED`
-- readiness criteria: live-ready requires `live_epoch >= 2` plus live-backed updates for each published semantic stream (zones and/or DHW)
+- readiness criteria: live-ready requires `live_epoch >= 2` plus live-backed updates for each published semantic stream (zones and/or DHW). System, circuits, boiler_status, and energy are independent streams that do not gate startup phase transitions.
 - timeout control: `-boot-live-timeout` (default `2m`)
 - source rules: persistent cache preload advances `cache_epoch`; zone/DHW live updates (including successful `ebusd-tcp` grab hydration) advance `live_epoch`; energy broadcasts do not drive startup phase transitions
 - per-key B524 semantic reads are guarded by a circuit breaker (`closed`/`open`/`half-open`) with suppression and transition telemetry

@@ -29,6 +29,9 @@ type Query {
   zones: [Zone!]!
   dhw: Dhw
   energyTotals: EnergyTotals
+  boilerStatus: BoilerStatus
+  system: SystemStatus
+  circuits: [CircuitStatus!]!
   devices: [Device!]!
   device(address: Int!): Device
   planes(address: Int!): [Plane!]!
@@ -103,6 +106,131 @@ type ProjectionEdge {
   id: String!
   from: String!
   to: String!
+}
+
+type Zone {
+  id: String!
+  name: String!
+  instance: Int!
+  state: ZoneState
+  config: ZoneConfig
+}
+type ZoneState {
+  operatingMode: String
+  currentTemperature: Float
+  desiredTemperature: Float
+  currentRoomHumidity: Float
+}
+type ZoneConfig {
+  desiredTemperature: Float
+  heatingMode: String
+  quickVeto: Boolean
+  quickVetoSetpoint: Float
+  quickVetoExpiry: String
+}
+
+type Dhw {
+  operatingMode: String
+  currentTemperature: Float
+  desiredTemperature: Float
+  state: String
+  config: String
+}
+
+type EnergyTotals {
+  gas: EnergyCategory
+  electric: EnergyCategory
+  solar: EnergyCategory
+}
+type EnergyCategory {
+  dhw: EnergyBucket
+  climate: EnergyBucket
+}
+type EnergyBucket {
+  today: Float
+  thisMonth: Float
+  thisYear: Float
+}
+
+type BoilerStatus {
+  state: BoilerState
+  diagnostics: BoilerDiagnostics
+}
+type BoilerState {
+  flowTemperature: Float
+  returnTemperature: Float
+  pumpRunning: Boolean
+  dhwStorageTemperature: Float
+  dhwOutletTemperature: Float
+  flameOn: Boolean
+  currentPowerPercent: Float
+}
+type BoilerDiagnostics {
+  startsCount: Int
+  operatingHours: Int
+  dhwOperatingHours: Int
+}
+
+type SystemStatus {
+  state: SystemState
+  config: SystemConfig
+  properties: SystemProperties
+}
+type SystemState {
+  systemOff: Boolean
+  systemWaterPressure: Float
+  systemFlowTemperature: Float
+  outdoorTemperature: Float
+  outdoorTemperatureAvg24h: Float
+  maintenanceDue: Boolean
+  hwcCylinderTemperatureTop: Float
+  hwcCylinderTemperatureBottom: Float
+}
+type SystemConfig {
+  adaptiveHeatingCurve: Boolean
+  alternativePoint: Float
+  heatingCircuitBivalencePoint: Float
+  dhwBivalencePoint: Float
+  hcEmergencyTemperature: Float
+  hwcMaxFlowTempDesired: Float
+  maxRoomHumidity: Int
+}
+type SystemProperties {
+  systemScheme: Int
+  moduleConfigurationVR71: Int
+}
+
+type CircuitStatus {
+  id: String!
+  instance: Int!
+  state: CircuitState
+  config: CircuitConfig
+  properties: CircuitProperties
+}
+type CircuitState {
+  heatingCircuitFlowSetpoint: Float
+  currentCircuitFlowTemperature: Float
+  circuitState: Int
+  pumpStatus: Boolean
+  calculatedFlowTemperature: Float
+  mixerPositionPercentage: Float
+  currentRoomHumidity: Float
+  dewPointTemperature: Float
+  pumpOperatingHours: Int
+  pumpStartsCount: Int
+}
+type CircuitConfig {
+  heatingCurve: Float
+  heatingFlowTemperatureMaximumSetpoint: Float
+  heatingFlowTemperatureMinimumSetpoint: Float
+  heatDemandLimitedByOutsideTemp: Float
+  coolingEnabled: Boolean
+  roomTemperatureControlMode: Int
+}
+type CircuitProperties {
+  heatingCircuitType: Int
+  mixerCircuitTypeExternal: Int
+  frostProtectionThreshold: Float
 }
 ```
 
@@ -402,11 +530,17 @@ type InvokeError {
 
 ## Subscription Surface (Implemented)
 
-Broadcast subscriptions deliver raw eBUS broadcast frames filtered by primary/secondary bytes.
+Subscriptions deliver real-time updates over WebSocket or SSE.
 
 ```graphql
 type Subscription {
   broadcast(primary: Int!, secondary: Int!): BroadcastEvent!
+  zonesUpdate: [Zone!]!
+  dhwUpdate: Dhw
+  energyTotalsUpdate: EnergyTotals
+  boilerStatusUpdate: BoilerStatus
+  systemUpdate: SystemStatus
+  circuitsUpdate: [CircuitStatus!]!
 }
 
 type BroadcastEvent {
@@ -426,7 +560,3 @@ type BroadcastEvent {
 ### Handler Construction
 
 `NewSubscriptionHandler(builder, registry, invoker, hub)` returns an `http.Handler` that serves both WebSocket and SSE.
-
-## Not Yet Implemented
-
-- No additional subscription fields beyond `broadcast`.
