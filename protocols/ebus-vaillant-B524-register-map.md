@@ -58,9 +58,10 @@ The FLAGS byte in the response header encodes register access mode. Discovered v
 
 | Type | Encoding | Size | Notes |
 |------|----------|------|-------|
-| `bool` | uint16 LE, `0` = false, `!0` = true | 2 bytes | Decoded from value bytes after header |
+| `bool` | `0` = false, `!0` = true | 1 or 2 bytes | Wire width varies: some registers use u8 (1 byte), others u16 LE (2 bytes). See per-register Type column and constraint catalog for actual width |
 | `u8` | Single byte | 1 byte | |
 | `u16` | Little-endian uint16 | 1-2 bytes | Single byte treated as u16 |
+| `s16` | Little-endian int16 (signed) | 2 bytes | For signed values (e.g., mixer movement direction) |
 | `u32` | Little-endian uint32 | 4 bytes | Used for energy counters |
 | `f32` | Little-endian IEEE 754 float32 | 4 bytes | Primary numeric type for temps, pressures |
 | `string` | Null-terminated C string | Variable | Used for zone names, installer info |
@@ -279,13 +280,13 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_stat
 
 ## GG=0x02 — Heating Circuits (multi-instance)
 
-All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered by probing `heating_circuit_type` (RR=0x0002) — values `0xFF`/`0xFFFF` indicate inactive.
+All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered by probing `heating_circuit_type` (RR=0x0002) — value `0` (`mctype=inactive`) indicates unused circuit slot. Values `0xFF`/`0xFFFF` indicate unresponsive/absent instance (no reply from bus).
 
 | RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|-------|------------|--------|-------|----------|-------|
 | 0x0001 | (unknown) | — | u16 | — | 1..2 | — | — | | CSV says `heating_circuit_type` but gateway uses 0x0002. Purpose unverified. † |
 | 0x0002 | heating_circuit_type | P | u16 | Hc{hc}CircuitType | 0..4 | →mctype | — | **S** `circuits[].properties.heating_circuit_type` | Discovery probe. Also `mixer_circuit_type_external` |
-| 0x0003 | room_influence_type | C | u16 | — | — | — | — | | † |
+| 0x0003 | room_influence_type | C | u8 | Hc{hc}RoomInfluenceType | — | `0=inactive 1=active 2=extended` | — | | Controls room sensor influence on heating curve. Not responsive on II=0x00 in VRC Explorer scan. See GetExtendedRegisters §4.2.5 for behavioral semantics |
 | 0x0004 | desired_return_temperature_setpoint | C | f32 | — | 15..80 | — | — | | ebusd: `(commented) Unknown04, constant 30°C`. † |
 | 0x0005 | dew_point_monitoring_enabled | C | u16 | — | 0..1 | `0=off 1=on` | cooling_enabled | | † |
 | 0x0006 | cooling_enabled | C | u16 | Hc{hc}CoolingEnabled | 0..1 | `0=off 1=on` | — | **S** `circuits[].config.cooling_enabled` | Gate register |
@@ -308,7 +309,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered
 | 0x0017 | screed_drying_desired_temperature | S | f32 | Hc{hc}ScreedDryingTempDesired | — | — | — | | °C. Screed drying program. FLAGS=0x01 (stable RO) — computed setpoint, not user-configurable |
 | 0x0018 | ext_hwc_active | S | u16 | Hc{hc}ExternalHWCActive | — | — | — | | Gate register for ext HWC. FLAGS=0x00 (volatile RO) — status, not config |
 | 0x0019 | external_heat_demand | S | u16 | Hc{hc}ExternalHeatDemand | — | — | — | | External heat source. FLAGS=0x00 (volatile RO) — status, not config |
-| 0x001A | mixer_movement | S | u16 | Hc{hc}MixerMovement | — | — | — | | `<0`=closing, `>0`=opening. Read-only |
+| 0x001A | mixer_movement | S | s16 | Hc{hc}MixerMovement | — | — | — | | Signed: `<0`=closing, `>0`=opening. Read-only |
 | 0x001B | circuit_state | S | u16 | Hc{hc}Status | — | — | — | **S** `circuits[].state.circuit_state` | Raw state code |
 | 0x001C | epsilon | S | f32 | Hc{hc}HeatCurveAdaption | — | — | — | | Heat curve adaption factor. Read-only |
 | 0x001D | frost_protection_threshold | C | f32 | Hc{hc}FrostProtThreshold | — | — | — | **S** `circuits[].properties.frost_protection_threshold` | °C. FLAGS=0x02 (technical RW) — writable config, not property. Semantic path needs migration to `config.*` |
