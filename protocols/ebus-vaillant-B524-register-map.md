@@ -59,13 +59,14 @@ The FLAGS byte in the response header encodes register access mode. Discovered v
 |------|----------|------|-------|
 | `bool` | `0` = false, `!0` = true | 1 or 2 bytes | Wire width varies: some registers use u8 (1 byte), others u16 LE (2 bytes). See per-register Type column and constraint catalog for actual width |
 | `u8` | Single byte | 1 byte | |
-| `u16` | Little-endian uint16 | 1-2 bytes | Single byte treated as u16 |
-| `u32` | Little-endian uint32 | 4 bytes | Used for energy counters |
+| `u16` | Little-endian uint16 | 2 bytes | Some constraint entries use u8 (1-byte) for boolean-range u16 registers; wire always returns 2 bytes |
+| `u32` | Little-endian uint32 | 4 bytes | |
 | `f32` | Little-endian IEEE 754 float32 | 4 bytes | Primary numeric type for temps, pressures |
 | `string` | Null-terminated C string | Variable | Used for zone names, installer info |
-| `date` | BCD-encoded | Variable | System date |
-| `time` | HH:MM format | Variable | System time, legionella time |
-| `energy4` | Unsigned 32-bit LE (kWh) | 4 bytes | Alias for u32, energy-specific |
+| `bytes` | Raw byte sequence | Variable | Opaque payload, not decoded as numeric |
+| `date` | BCD-encoded `DD MM YY` | 3 bytes | Year = 2000 + YY. See constraint type `0x0C` in GetExtendedRegisters |
+| `time` | BCD-encoded `HH MM [SS]` | 2-3 bytes | 2 bytes (HH:MM) for timers, 3 bytes (HH:MM:SS) for system clock |
+| `energy4` | Unsigned 32-bit LE (kWh) | 4 bytes | Alias for u32, energy counters only |
 
 ### Opcode Routing
 
@@ -81,10 +82,10 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 | Opcode | Name | Payload | Purpose |
 |--------|------|---------|---------|
 | `0x00` | Directory | `[0x00, GG, 0x00]` | Probe group existence (unreliable for GG=0x05) |
-| `0x01` | Constraint | `[0x01, GG, RR]` | Query value constraints for a register (3 bytes, RR is single byte) |
+| `0x01` | Constraint | `[0x01, GG, RR]` | Query value constraints (3 bytes). **Note:** RR is u8 here (low byte only), unlike register read where RR is u16 LE |
 | `0x02` | Local read/write | `[0x02, OT, GG, II, RR_lo, RR_hi]` | Standard local register access |
-| `0x03` | Timer (daily) | `[0x03, SEL1, SEL2, SEL3, weekday]` | Timer schedule access |
-| `0x04` | Timer (weekly) | `[0x04, SEL1, SEL2, SEL3, weekday]` | Timer schedule access |
+| `0x03` | Timer read | `[0x03, SEL1, SEL2, SEL3, weekday]` | Read timer schedule |
+| `0x04` | Timer write | `[0x04, SEL1, SEL2, SEL3, weekday, ...]` | Write timer schedule (data bytes follow weekday) |
 | `0x06` | Remote read/write | `[0x06, OT, GG, II, RR_lo, RR_hi]` | Remote register access |
 
 ---
@@ -123,6 +124,8 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 | 0x08 | Unknown (constraint-only) | Yes | — | 0x02 | — |
 | 0x09 | Room Sensors (regulator) | Yes | 0x00-0x0A | 0x06 | — |
 | 0x0A | Room Sensors (VR92) | Yes | 0x00-0x0A | 0x06 | — |
+| 0x06 | Programs/Timetables | — | — | 0x0B | — |
+| 0x07 | Programs/Timetables | — | — | 0x0B | — |
 | 0x0C | Unknown remote | Yes | 0x00-0x0A | 0x06 | — |
 
 Group 0x08 has 6 constraint entries in `b524_constraints.go` (similar structure to GG=0x05 cylinders) but no responsive registers observed in VRC Explorer scans. Discovery probe returned 0 pages. Possibly a second cylinder bank or buffer tank group on systems with FM5 module.
@@ -198,7 +201,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0027 | dhw_hysteresis | C | f32 | CylinderChargeHyst | — | — | hwc_enabled | | K. 3..20 step 0.5 per TSP |
 | 0x0029 | hwc_storage_charge_offset | C | f32 | CylinderChargeOffset | — | — | hwc_enabled | | K. 0..40 per TSP |
 | 0x002A | hwc_legionella_time | C | time | — | — | — | hwc_enabled | | HH:MM |
-| 0x002B | is_legionella_protection_activated | C | u16 | — | — | — | hwc_enabled | | Day enum |
+| 0x002B | is_legionella_protection_activated | C | u16 | — | — | `0=off 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat 7=Sun` | hwc_enabled | | Day-of-week selector. 0=disabled |
 | 0x002C | maintenance_date | P | date | MaintenanceDate | — | — | — | | |
 | 0x002D | offset_outside_temperature | C | f32 | — | — | — | — | | K. -3..3 step 0.5 per TSP |
 | 0x002F | module_configuration_vr71 | P | u16 | — | — | — | — | **S** `system.properties.module_configuration_vr71` | 1..11 |
@@ -328,7 +331,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 
 | RR | Name | Cat | Type | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|-------|------------|--------|-------|----------|-------|
-| 0x0001 | cooling_operation_mode | C | u16 | — | 0..2 | — | cooling_enabled | | |
+| 0x0001 | cooling_operation_mode | C | u16 | — | 0..2 | →opmode | cooling_enabled | | Same enum as heating_operation_mode |
 | 0x0002 | cooling_set_back_temperature | C | f32 | Zone{z}CoolingTemp | 15..30 step 0.5 | — | cooling_enabled | | °C |
 | 0x0003 | holiday_start_date | C | date | Zone{z}HolidayStartPeriod | — | — | — | | |
 | 0x0004 | holiday_end_date | C | date | Zone{z}HolidayEndPeriod | — | — | — | | |
@@ -343,7 +346,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 | 0x0010 | (unknown) | C | u16 | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
 | 0x0011 | (unknown) | C | u16 | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
 | 0x0012 | valve_status | S | u16 | Zone{z}ValveStatus | — | `0=closed 1=open` | — | | FLAGS=0x01 (stable RO). Used for hvac_action derivation |
-| 0x0013 | associated_circuit_index | C | u16 | Zone{z}RoomZoneMapping | — | →zmapping | — | **S** (internal: circuit type lookup) | |
+| 0x0013 | room_temperature_zone_mapping | C | u16 | Zone{z}RoomZoneMapping | — | →zmapping | — | **S** (internal: circuit type lookup) | Maps zone to room temperature sensor source. ebusd name confirms semantics |
 | 0x0014 | heating_manual_mode_setpoint | S | f32 | Zone{z}ActualRoomTempDesired | — | — | — | **S** `zones[].state.desired_temperature` (fallback) | °C. FLAGS=0x01 (stable RO) — computed output, not user-settable. Current setpoint considering all conditions |
 | 0x0015 | cooling_manual_mode_setpoint | S | f32 | — | — | — | cooling_enabled | | °C. FLAGS=0x01 (stable RO) — computed output, not user-settable. ebusd: `(commented) Unknown15Temp, in FlusterBetrieb 24 sonst 99` |
 | 0x0016 | zone_name | C | string | Zone{z}Shortname | — | — | — | **S** `zones[].name` | maxLength 6 |
@@ -508,7 +511,7 @@ Source: `refreshCircuits()` in `semantic_vaillant.go`
 | `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u16) |
 | `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 |
 | `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 |
-| `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 (FLAGS=RW, migrate to `config.*`) |
+| `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 | **Stale path**: FLAGS=0x02 (RW) — should be `config.*`. Pending gateway migration |
 
 ### `ebus.v1.semantic.zones.get`
 
@@ -725,7 +728,7 @@ Note: Helianthus decodes `yesno` registers as `bool`. Already implemented for `a
 
 ### zmapping — Zone room temperature sensor mapping
 
-Used by: GG=0x03 RR=0x0013
+Used by: GG=0x03 RR=0x0013 (`room_temperature_zone_mapping`)
 
 | Value | ebusd | Helianthus | Notes |
 |-------|-------|-----------|-------|
@@ -783,7 +786,7 @@ One pending:
 - **myVaillant register map CSV** (`myvaillant_register_map.csv`) — Helianthus-curated mapping built by value-matching live B524 reads against myPyllant cloud API field values. 115 entries across groups 0x00-0x05. **NOT a Vaillant-published source** — carries false-positive risk where multiple registers share the same value (see Mapping Conflicts).
 - **Gateway production code** (`semantic_vaillant.go`) — Authoritative for which registers are actively polled and how they map to semantic planes.
 - **Live B524 scan** (2026-03-04) — MCP RPC reads from BASV2 via Helianthus gateway.
-- **VRC Explorer full group scan** — Raw register data for GG=0x02-0x0C across all instances. FLAGS byte (response byte[1]) used for access/writability verification of Cat column.
+- **VRC Explorer full group scan** — Raw register data for GG=0x02-0x0C across all instances. FLAGS byte (response payload byte[0]) used for access/writability verification of Cat column.
 
 ### FLAGS Verification Summary
 
