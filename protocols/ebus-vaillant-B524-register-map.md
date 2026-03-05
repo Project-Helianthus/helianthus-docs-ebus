@@ -612,25 +612,25 @@ Used by: GG=0x03 RR=0x0006, GG=0x01 RR=0x0003
 | 0 | off | off | off |
 | 1 | auto | auto | auto |
 | 2 | day | manual (→heat or →cool by circuit_type) | heat |
-| 3 | night | — | — |
+| 3 | night | night *(not implemented)* | night *(not implemented)* |
 
-Note: ebusd defines this as `UIN` with 4 values. Helianthus uses only 0-2; value 3 is not observed in practice on VRC720.
+Note: ebusd defines this as `UIN` with 4 values. Helianthus uses only 0-2; value 3 is not observed in practice on VRC720. Proposed: expose as "night" to distinguish from manual mode 2.
 
 ### sfmode — Special function
 
 Used by: GG=0x03 RR=0x000E, GG=0x01 RR=0x000D
 
-| Value | ebusd | Helianthus |
-|-------|-------|-----------|
-| 0 | auto | (none — normal operation) |
-| 1 | ventilation | — |
-| 2 | party | quickveto |
-| 3 | veto | away |
-| 4 | onedayaway | away |
-| 5 | onedayathome | — |
-| 6 | load | — |
+| Value | ebusd | Helianthus (zones) | Helianthus (DHW) |
+|-------|-------|-------------------|------------------|
+| 0 | auto | (none — normal operation) | (none — normal operation) |
+| 1 | ventilation | ventilation *(not implemented)* | — |
+| 2 | party | quickveto | — |
+| 3 | veto | away | — |
+| 4 | onedayaway | away | — |
+| 5 | onedayathome | home *(not implemented)* | — |
+| 6 | load | — | load *(not implemented)* |
 
-Note: Helianthus collapses 3+4 into "away" preset. ebusd also defines `sfmodezone` (0=auto, 1=ventilation, 3=veto) and `sfmodehwc` (0=auto, 6=load) as restricted subsets.
+Note: Helianthus collapses 3+4 into "away" preset. ebusd also defines `sfmodezone` (0=auto, 1=ventilation, 3=veto) and `sfmodehwc` (0=auto, 6=load) as restricted subsets. Proposed additions: "ventilation" for party-like fan override, "home" for one-day-at-home schedule override, "load" for forced DHW charge.
 
 ### mctype — Mixer/circuit type
 
@@ -641,73 +641,83 @@ Used by: GG=0x02 RR=0x0002
 | 0 | inactive | inactive | Zone allowed modes: `[off]` only |
 | 1 | mixer | mixer | Zone allowed modes: `[off, auto, heat]` |
 | 2 | fixed | fixed | Zone allowed modes: `[off, auto, cool]` |
-| 3 | hwc | — | Hot water circuit (not a heating circuit) |
-| 4 | returnincr | — | Return temperature increase |
-| 5 | pool | — | Swimming pool circuit |
+| 3 | hwc | hwc *(not implemented)* | Hot water circuit (not a heating circuit) |
+| 4 | returnincr | return_increase *(not implemented)* | Return temperature increase |
+| 5 | pool | pool *(not implemented)* | Swimming pool circuit |
 
-Note: ebusd also defines `mctype7` which adds value 6=circulation. Constraint catalog allows 0..4 for this register.
+Note: ebusd also defines `mctype7` which adds value 6=circulation. Constraint catalog allows 0..4 for this register. Types 3-5 are not present on the test system; Helianthus currently treats them as inactive.
 
 ### offmode — Auto-off behavior
 
 Used by: GG=0x02 RR=0x000E
 
-| Value | ebusd |
-|-------|-------|
-| 0 | eco |
-| 1 | night |
+| Value | ebusd | Helianthus |
+|-------|-------|-----------|
+| 0 | eco | eco *(not implemented)* |
+| 1 | night | night *(not implemented)* |
 
-Note: Controls operation during lowering time. No influence if room temp modulation set to thermostat.
+Note: Controls operation during lowering time. No influence if room temp modulation set to thermostat. Not yet exposed in semantic layer — propose as `circuits[].config.setback_mode`.
 
 ### rcmode — Room temperature control mode
 
 Used by: GG=0x02 RR=0x0015
 
-| Value | ebusd |
-|-------|-------|
-| 0 | off |
-| 1 | modulating |
-| 2 | thermostat |
+| Value | ebusd | Helianthus |
+|-------|-------|-----------|
+| 0 | off | off |
+| 1 | modulating | modulating |
+| 2 | thermostat | thermostat |
+
+Note: Currently exposed as raw u16 in `circuits[].config.room_temperature_control_mode`. Proposed: expose as string enum with these values.
 
 ### onoff
 
-Used by: GG=0x00 RR=0x000A (HwcParallelLoading)
+Used by: GG=0x00 RR=0x000A (HwcParallelLoading), and various bool registers
 
-| Value | ebusd |
-|-------|-------|
-| 0 | off |
-| 1 | on |
+| Value | ebusd | Helianthus |
+|-------|-------|-----------|
+| 0 | off | false |
+| 1 | on | true |
+
+Note: Helianthus decodes `onoff` registers as `bool`. Already implemented for registers exposed via semantic layer.
 
 ### yesno
 
 Used by: GG=0x00 RR=0x0014 (AdaptHeatCurve), RR=0x0096 (MaintenanceDue)
 
-| Value | ebusd |
-|-------|-------|
-| 0 | no |
-| 1 | yes |
+| Value | ebusd | Helianthus |
+|-------|-------|-----------|
+| 0 | no | false |
+| 1 | yes | true |
+
+Note: Helianthus decodes `yesno` registers as `bool`. Already implemented for `adaptive_heating_curve` and `maintenance_due`.
 
 ### zmapping — Zone-to-room-sensor mapping
 
 Used by: GG=0x03 RR=0x0013
 
-| Value | ebusd |
-|-------|-------|
-| 0 | none |
-| 1 | VRC700 |
-| 2 | VR91_1 |
-| 3 | VR91_2 |
-| 4 | VR91_3 |
+| Value | ebusd | Helianthus |
+|-------|-------|-----------|
+| 0 | none | none *(not implemented)* |
+| 1 | VRC700 | vrc700 *(not implemented)* |
+| 2 | VR91_1 | vr91_1 *(not implemented)* |
+| 3 | VR91_2 | vr91_2 *(not implemented)* |
+| 4 | VR91_3 | vr91_3 *(not implemented)* |
+
+Note: Currently used internally to resolve associated circuit index, not exposed in semantic output. Proposed: expose as `zones[].config.room_sensor_mapping` string enum.
 
 ### mamode — Multi-relay setting
 
 Used by: GG=0x00 RR=0x004D
 
-| Value | ebusd |
-|-------|-------|
-| 0 | circulation |
-| 1 | dryer |
-| 2 | zone |
-| 3 | legiopump |
+| Value | ebusd | Helianthus |
+|-------|-------|-----------|
+| 0 | circulation | circulation *(not implemented)* |
+| 1 | dryer | dryer *(not implemented)* |
+| 2 | zone | zone *(not implemented)* |
+| 3 | legiopump | legionella_pump *(not implemented)* |
+
+Note: Not yet exposed in semantic layer. Proposed: expose as `system.config.multi_relay_mode` string enum.
 
 ---
 
