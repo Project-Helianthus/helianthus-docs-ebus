@@ -148,8 +148,7 @@ type EnergyCategory {
 }
 type EnergyBucket {
   today: Float
-  thisMonth: Float
-  thisYear: Float
+  yearly: [Float!]!
 }
 
 type BoilerStatus {
@@ -264,6 +263,31 @@ type CircuitProperties {
   heatingCircuitType: Int
   mixerCircuitTypeExternal: Int
   frostProtectionThreshold: Float
+}
+```
+
+### `energyTotals` Root Query
+
+`energyTotals` is available directly on `Query` and returns the same canonical energy aggregate exposed to MCP.
+
+Example:
+
+```graphql
+query {
+  energyTotals {
+    gas {
+      dhw { today yearly }
+      climate { today yearly }
+    }
+    electric {
+      dhw { today yearly }
+      climate { today yearly }
+    }
+    solar {
+      dhw { today yearly }
+      climate { today yearly }
+    }
+  }
 }
 ```
 
