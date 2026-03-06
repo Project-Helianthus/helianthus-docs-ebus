@@ -851,15 +851,23 @@ Source: `refreshDHW()` in `semantic_vaillant.go`
 
 Source: `refreshBoilerStatus()` in `semantic_vaillant.go`
 
-The boiler status plane is a **cross-group composite** — it reads from both GG=0x00 (regulator) and GG=0x02 (heating circuit 0). The BAI boiler does not respond to direct B504 reads from third-party sources — only from its paired controller. The controller mirrors boiler data in its own B524 register space.
+The current PASS-profile boiler status plane is no longer a B524-only composite. Helianthus now prefers direct BAI00 B509 reads for the boiler semantic surface and keeps only a small B524 fallback/mirror set in the controller path.
+
+Authoritative direct-boiler mapping:
+- see [`ebus-vaillant-B509-boiler-register-map.md`](./ebus-vaillant-B509-boiler-register-map.md)
+
+The B524 contribution that still feeds the current boiler semantic contract is:
 
 | Semantic Path | B524 | Type | Notes |
 |---------------|------|------|-------|
-| `state.flow_temperature` | GG=0x00, RR=0x004B | f32 | System flow temp from regulator |
-| `state.pump_running` | GG=0x02, II=0x00, RR=0x001E | bool (u16) | Circuit 0 pump status |
-| `state.circuit_state` (raw) | GG=0x02, II=0x00, RR=0x001B | u16 | Circuit 0 state |
+| `state.dhwTemperatureC` | GG=0x01, RR=0x0005 | f32 | Controller mirror from DHW group |
+| `state.dhwTargetTemperatureC` | GG=0x01, RR=0x0004 | f32 | Controller mirror from DHW group |
+| `config.dhwOperatingMode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
+| `diagnostics.heatingStatusRaw` | GG=0x02, II=0x00, RR=0x001B | u16 | Controller-side raw heating status |
 
-Note: `return_temperature` is **not populated** from B524. GG=0x02 RR=0x0008 (`Hc{hc}FlowTemp`) is the circuit flow sensor VF[x], not the boiler return sensor. True return temperature would require direct BAI access (B504) which is not available from third-party sources. Similarly, `dhw_storage_temperature`, `dhw_outlet_temperature`, `flame_on`, `current_power_percent`, `starts_count`, `operating_hours`, `dhw_operating_hours` are not populated from B524.
+Fields currently present in the schema but not populated from a validated source:
+- `state.returnTemperatureC`
+- `diagnostics.dhwStatusRaw`
 
 ### `ebus.v1.semantic.energy_totals.get`
 
