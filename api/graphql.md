@@ -154,22 +154,55 @@ type EnergyBucket {
 
 type BoilerStatus {
   state: BoilerState
+  config: BoilerConfig
   diagnostics: BoilerDiagnostics
 }
 type BoilerState {
-  flowTemperature: Float
-  returnTemperature: Float
-  pumpRunning: Boolean
-  dhwStorageTemperature: Float
-  dhwOutletTemperature: Float
-  flameOn: Boolean
-  currentPowerPercent: Float
+  flowTemperatureC: Float
+  returnTemperatureC: Float
+  centralHeatingPumpActive: Boolean
+  waterPressureBar: Float
+  externalPumpActive: Boolean
+  circulationPumpActive: Boolean
+  gasValveActive: Boolean
+  flameActive: Boolean
+  diverterValvePositionPct: Float
+  fanSpeedRpm: Int
+  targetFanSpeedRpm: Int
+  ionisationVoltageUa: Float
+  dhwWaterFlowLpm: Float
+  dhwDemandActive: Boolean
+  heatingSwitchActive: Boolean
+  storageLoadPumpPct: Float
+  modulationPct: Float
+  primaryCircuitFlowLpm: Float
+  flowTempDesiredC: Float
+  dhwTempDesiredC: Float
+  stateNumber: Int
+  dhwTemperatureC: Float
+  dhwTargetTemperatureC: Float
+}
+type BoilerConfig {
+  dhwOperatingMode: String
+  flowsetHcMaxC: Float
+  flowsetHwcMaxC: Float
+  partloadHcKW: Float
+  partloadHwcKW: Float
 }
 type BoilerDiagnostics {
-  startsCount: Int
-  operatingHours: Int
-  dhwOperatingHours: Int
+  heatingStatusRaw: Int
+  dhwStatusRaw: Int
+  centralHeatingHours: Float
+  dhwHours: Float
+  centralHeatingStarts: Int
+  dhwStarts: Int
+  pumpHours: Float
+  fanHours: Float
+  deactivationsIFC: Int
+  deactivationsTemplimiter: Int
 }
+
+Boiler field provenance is documented in [`protocols/ebus-vaillant-B509-boiler-register-map.md`](../protocols/ebus-vaillant-B509-boiler-register-map.md). The current contract is hybrid: direct BAI00 B509 is authoritative for most boiler fields, while a small set of controller-mirrored B524 values still feed `dhwTemperatureC`, `dhwTargetTemperatureC`, `dhwOperatingMode`, and `heatingStatusRaw`.
 
 type SystemStatus {
   state: SystemState
@@ -501,6 +534,7 @@ The `invoke` mutation validates parameters against the method signature and rout
 ```graphql
 type Mutation {
   invoke(address: Int!, plane: String!, method: String!, params: JSON): InvokeResult!
+  setBoilerConfig(field: String!, value: String!): BoilerConfigMutationResult!
 }
 
 type InvokeResult {
@@ -514,6 +548,11 @@ type InvokeError {
   code: String!
   category: String!
 }
+
+type BoilerConfigMutationResult {
+  success: Boolean!
+  error: String
+}
 ```
 
 ### Behavior
@@ -523,6 +562,8 @@ type InvokeError {
   - Fractional values for integer fields are rejected (`INVALID_PAYLOAD`).
 - **Error mapping**: typed errors are mapped to `code`/`category` (e.g., `TIMEOUT` → `TRANSIENT`, `NO_SUCH_DEVICE` → `DEFINITIVE`).
 - **Result normalization**: `types.Value{Valid:false}` fields are returned as `null` in the JSON result map.
+- **Boiler writes**: `setBoilerConfig` supports `flowsetHcMaxC`, `flowsetHwcMaxC`, `partloadHcKW`, and `partloadHwcKW`. The mutation accepts the value as a string, rejects non-finite input, enforces server-side ranges, and only reports success after B509 ack + read-back confirmation.
+- **Boiler write normalization**: `DATA2c` boiler temperature writes publish the normalized wire value, not the raw input string. `UCH` power-limit writes require whole-number kW.
 
 ### Handler Construction
 
