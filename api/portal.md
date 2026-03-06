@@ -143,6 +143,10 @@ Response fields:
 - `boiler_status`: optional boiler semantic object (`state`, `config`, `diagnostics`)
 - `system`: optional system status (state, config, properties)
 - `circuits`: optional circuit list (`index`, `circuit_type`, `has_mixer`, `state`, `config`)
+- `radio_devices`: optional radio-device list (per-slot semantic RF data)
+- `fm5_semantic_mode`: optional FM5 semantic mode string
+- `solar`: optional solar semantic object
+- `cylinders`: optional cylinder list
 - `captured_utc`: RFC3339 UTC timestamp
 
 Example response:
@@ -245,6 +249,38 @@ Example response:
         "room_temp_control": "modulating",
         "cooling_enabled": false
       }
+    }
+  ],
+  "radio_devices": [
+    {
+      "group": 0,
+      "instance": 1,
+      "slot_mode": "THERMOSTAT",
+      "device_connected": true,
+      "device_model": "VR92",
+      "firmware_version": "09.03",
+      "zone_assignment": 2,
+      "room_temperature_c": 22.5,
+      "room_humidity_pct": 44.0
+    }
+  ],
+  "fm5_semantic_mode": "INTERPRETED",
+  "solar": {
+    "collector_temperature_c": 62.5,
+    "return_temperature_c": 45.1,
+    "pump_active": true,
+    "current_yield": 3.4,
+    "pump_hours": 104.0,
+    "solar_enabled": true,
+    "function_mode": false
+  },
+  "cylinders": [
+    {
+      "index": 1,
+      "temperature_c": 49.5,
+      "max_setpoint_c": 59.0,
+      "charge_hysteresis_c": 5.0,
+      "charge_offset_c": 2.0
     }
   ],
   "captured_utc": "2026-02-23T22:45:00Z"
