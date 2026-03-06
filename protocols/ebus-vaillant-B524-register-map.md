@@ -467,7 +467,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 | 0x0010 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
 | 0x0011 | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
 | 0x0012 | valve_status | S | u16 | bool | Zone{z}ValveStatus | — | `0=closed 1=open` | — | | FLAGS=0x01 (stable RO). Used for hvac_action derivation |
-| 0x0013 | room_temperature_zone_mapping | C | u16 | enum | Zone{z}RoomZoneMapping | — | →zmapping | — | **S** `zones[].config.roomTemperatureZoneMapping` | Maps zone to room temperature sensor source. Raw B524 enum is exposed directly; `associatedCircuit` is resolved separately and is not an alias of this register |
+| 0x0013 | room_temperature_zone_mapping | C | u16 | enum | Zone{z}RoomZoneMapping | — | →zmapping | — | **S** `zones[].config.roomTemperatureZoneMapping` | Maps zone to room temperature sensor source. GraphQL exposes the raw numeric B524 enum directly (`0`, `1`, `2`, ...); `associatedCircuit` is resolved separately and is not an alias of this register |
 | 0x0014 | heating_manual_mode_setpoint | S | f32 | °C | Zone{z}ActualRoomTempDesired | — | — | — | **S** `zones[].state.desired_temperature` (fallback) | FLAGS=0x01 (stable RO) — computed output, not user-settable. Current setpoint considering all conditions |
 | 0x0015 | cooling_manual_mode_setpoint | S | f32 | °C | — | — | — | cooling_enabled | | FLAGS=0x01 (stable RO) — computed output, not user-settable |
 | 0x0016 | zone_name | C | string | text | Zone{z}Shortname | — | — | — | **S** `zones[].name` | maxLength 6 |
@@ -1048,15 +1048,15 @@ Note: Helianthus decodes `yesno` registers as `bool`. Already implemented for `a
 
 Used by: GG=0x03 RR=0x0013 (`room_temperature_zone_mapping`)
 
-| Value | ebusd | Helianthus | Notes |
-|-------|-------|-----------|-------|
+| Numeric value (gateway payload) | ebusd | Human alias only | Notes |
+|-------------------------------|-------|------------------|-------|
 | 0 | none | none | No room sensor assigned |
 | 1 | VRC700 | regulator | Built-in sensor of the /f split regulator (wireless UI + base station). Same hardware class as VR91 with added UI firmware |
 | 2 | VR91_1 | thermostat_1 | External RF temperature/humidity sensor + UI endpoint |
 | 3 | VR91_2 | thermostat_2 | Second VR91 sensor |
 | 4 | VR91_3 | thermostat_3 | Third VR91 sensor |
 
-Note: ebusd uses hardware model names (VRC700, VR91). Helianthus uses user-facing names since VRC700 and VR91 are functionally the same (RF temperature/humidity sensor + UI) — the VRC700 is the /f regulator's wireless display unit which IS a VR91 with extra UI firmware. Gateway semantics expose the raw integer enum as `zones[].config.roomTemperatureZoneMapping`. The separate `zones[].config.associatedCircuit` field is a resolved 0-based circuit index used for circuit type lookup and must not be treated as the raw `RR=0x0013` value.
+Note: ebusd uses hardware model names (VRC700, VR91). Helianthus may use user-facing labels such as `regulator` and `thermostat_*`, but those labels are aliases for documentation/UI only. The authoritative GraphQL payload is the raw integer enum in `zones[].config.roomTemperatureZoneMapping`. The separate `zones[].config.associatedCircuit` field is a resolved 0-based circuit index used for circuit type lookup and must not be treated as the raw `RR=0x0013` value.
 
 ### mamode — Multi-relay setting
 
