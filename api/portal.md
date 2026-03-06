@@ -140,8 +140,9 @@ Response fields:
 - `zones`: semantic zone list
 - `dhw`: optional DHW semantic object
 - `energy_totals`: optional aggregated energy object
+- `boiler_status`: optional boiler semantic object (`state`, `config`, `diagnostics`)
 - `system`: optional system status (state, config, properties)
-- `circuits`: optional circuit list (per-circuit state, config, properties)
+- `circuits`: optional circuit list (`index`, `circuit_type`, `has_mixer`, `state`, `config`)
 - `captured_utc`: RFC3339 UTC timestamp
 
 Example response:
@@ -152,27 +153,53 @@ Example response:
     {
       "id": "zone_1",
       "name": "Living",
-      "operating_mode": "auto",
-      "current_temp_c": 21.3,
-      "target_temp_c": 22.0
+      "state": {
+        "current_temp_c": 21.3,
+        "hvac_action": "HEATING"
+      },
+      "config": {
+        "operating_mode": "auto",
+        "target_temp_c": 22.0,
+        "allowed_modes": ["auto", "day", "night"]
+      }
     }
   ],
   "dhw": {
-    "operating_mode": "auto",
-    "target_temp_c": 49.0
+    "state": {
+      "current_temp_c": 47.2
+    },
+    "config": {
+      "operating_mode": "auto",
+      "target_temp_c": 49.0
+    }
   },
   "energy_totals": {
     "gas": {
-      "dhw": { "today": 1.2 },
-      "climate": { "today": 4.8 }
+      "dhw": { "today": 1.2, "yearly": [1.0, 1.1, 1.2] },
+      "climate": { "today": 4.8, "yearly": [4.2, 4.5, 4.8] }
     },
     "electric": {
-      "dhw": { "today": 0.1 },
-      "climate": { "today": 0.7 }
+      "dhw": { "today": 0.1, "yearly": [0.0, 0.1, 0.1] },
+      "climate": { "today": 0.7, "yearly": [0.5, 0.6, 0.7] }
     },
     "solar": {
-      "dhw": { "today": 0.0 },
-      "climate": { "today": 0.0 }
+      "dhw": { "today": 0.0, "yearly": [0.0, 0.0, 0.0] },
+      "climate": { "today": 0.0, "yearly": [0.0, 0.0, 0.0] }
+    }
+  },
+  "boiler_status": {
+    "state": {
+      "flow_temperature_c": 54.2,
+      "water_pressure_bar": 1.5,
+      "flame_active": true
+    },
+    "config": {
+      "dhw_operating_mode": "auto",
+      "flowset_hc_max_c": 75.0
+    },
+    "diagnostics": {
+      "heating_status_raw": 3,
+      "central_heating_hours": 1042.0
     }
   },
   "system": {
@@ -201,24 +228,22 @@ Example response:
   },
   "circuits": [
     {
-      "id": "circuit-0",
-      "instance": 0,
+      "index": 0,
+      "circuit_type": "HC",
+      "has_mixer": false,
       "state": {
-        "heating_circuit_flow_setpoint": 35.0,
-        "current_circuit_flow_temperature": 31.2,
-        "circuit_state": 8,
-        "pump_status": true,
-        "calculated_flow_temperature": 35.0
+        "flow_setpoint_c": 35.0,
+        "flow_temperature_c": 31.2,
+        "circuit_state": "active",
+        "pump_active": true,
+        "calc_flow_temp_c": 35.0
       },
       "config": {
         "heating_curve": 0.8,
-        "heating_flow_temperature_maximum_setpoint": 75.0,
-        "heating_flow_temperature_minimum_setpoint": 20.0,
+        "flow_temp_max_c": 75.0,
+        "flow_temp_min_c": 20.0,
+        "room_temp_control": "modulating",
         "cooling_enabled": false
-      },
-      "properties": {
-        "heating_circuit_type": 0,
-        "frost_protection_threshold": 4.0
       }
     }
   ],
