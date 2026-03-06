@@ -529,6 +529,11 @@ Entire group gated by `fm5_config ≤ 2`. These are solar charging parameters pe
 
 **No ebusd coverage exists for GG=0x05** — all names are from value-matched CSV only (†) and carry false-positive risk.
 
+Helianthus semantic publication rule:
+- Raw config registers alone do **not** imply cylinder presence.
+- A cylinder instance is published only when `RR=0x0004` (`cylinder_temperature`) yields a live decodable value for that instance.
+- Config-only responses (`RR=0x0001..0x0003`) without temperature evidence must not create a semantic `cylinders[]` entry.
+
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
 | 0x0001 | cylinder_max_setpoint | C | f32 | °C | — | 0..99 | — | fm5_config≤2 | | † |
@@ -824,6 +829,10 @@ Source: `refreshCircuits()` in `semantic_vaillant.go`
 | `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 |
 | `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 | **Stale path**: FLAGS=0x02 (RW) — should be `config.*`. Pending gateway migration |
 
+Consumer note:
+- `[].config.cooling_enabled` remains a gateway-level raw semantic field derived from `GG=0x02 RR=0x0006`.
+- It is **not** yet a validated Home Assistant-facing configuration contract and should not be materialized as an HA control entity until the register semantics are confirmed end-to-end.
+
 ### `ebus.v1.semantic.zones.get`
 
 Source: `refreshState()` / `refreshDiscovery()` in `semantic_vaillant.go`
@@ -873,6 +882,10 @@ Fields currently present in the schema but not populated from a validated source
 
 Source: `refreshEnergy()` in `semantic_vaillant.go`
 
+Semantics:
+- After the first valid sample, Helianthus keeps the last known `energyTotals` snapshot across temporary B524 read gaps.
+- A refresh cycle with no accepted energy points does **not** clear the semantic snapshot and does **not** reset any series to `0` or `null`.
+
 | Semantic Path | B524 | Type |
 |---------------|------|------|
 | `gas.climate` | GG=0x00, RR=0x0056 | u32 (kWh) |
@@ -886,7 +899,20 @@ Not implemented. Gated by `fm5_config≤2`. Source registers would come from GG=
 
 ### `ebus.v1.semantic.cylinders.get`
 
-Not implemented. Gated by `fm5_config≤2`. Source registers would come from GG=0x05 (cylinders).
+Source: `readCylinderSnapshots()` / `publishFM5Semantic()` in `semantic_vaillant.go`
+
+Publication gate:
+- Entire family is gated by `fm5_config≤2`.
+- Individual instances are published only when `GG=0x05 RR=0x0004` (`cylinder_temperature`) is live and decodable for that instance.
+- Config-only responses from `GG=0x05 RR=0x0001..0x0003` do not imply a real cylinder and must not create `cylinders[]` entries.
+
+| Semantic Path | B524 | Type |
+|---------------|------|------|
+| `[].index` | GG=0x05, II=* | derived |
+| `[].temperatureC` | GG=0x05, RR=0x0004 | f32 |
+| `[].maxSetpointC` | GG=0x05, RR=0x0001 | f32 |
+| `[].chargeHysteresisC` | GG=0x05, RR=0x0002 | f32 |
+| `[].chargeOffsetC` | GG=0x05, RR=0x0003 | f32 |
 
 ---
 
