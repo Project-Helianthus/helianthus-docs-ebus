@@ -198,7 +198,6 @@ functionalModules[]:
   - key
   - family
   - productCode
-  - instance
   - profileAddressIndex
   - busAddress
   - configurationSetValue
@@ -216,9 +215,6 @@ Suggested field semantics:
   - generic semantic bucket such as `FUNCTION_MODULE`, `CONTROL_CENTRE`, `SOLAR_MODULE`, `MIXER_MODULE`, `LEGACY_MODULE`, `UNKNOWN`
 - `productCode`
   - concrete product or product-family label such as `VR70`, `VR71`, `VR66`, `VR61`, `VR68`
-- `instance`
-  - optional Helianthus inventory instance within the generic family/product grouping
-  - especially relevant for multi-instance families such as `VR70`
 - `profileAddressIndex`
   - optional controller/profile address index when the documented ecosystem exposes per-module addressing
   - example: `VR70 addr. 1..3`
@@ -235,7 +231,6 @@ Suggested field semantics:
   - at minimum the contract should be able to express separate provenance for:
     - `family`
     - `productCode`
-    - `instance`
     - `profileAddressIndex`
     - `busAddress`
     - `configurationSetValue`
@@ -251,6 +246,15 @@ It also deliberately separates:
 - concrete product code
 - profile/controller address indexing
 - physical bus addressing
+
+It deliberately does **not** introduce a generic `instance` field in the minimal target, because that would blur:
+
+- internal inventory ordinal
+- protocol/group instance index
+- profile/controller address index
+- physical bus address
+
+If a future family needs an explicit instance concept, that should be added in a family-specific detail layer with a precise meaning.
 
 ## Design Rules for the Target
 
