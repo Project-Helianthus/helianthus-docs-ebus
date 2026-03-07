@@ -123,6 +123,15 @@ This page does not restate the root-discovery or identity-enrichment rationale. 
 
 This is the bridge gate between raw controller/module evidence and higher-level family publication.
 
+Important architectural note:
+
+- this is the **current implemented FM5-specific gate**
+- it is not yet the final generic architecture for all functional-module families
+
+See:
+
+- [`functional-modules.md`](./functional-modules.md)
+
 ## Solar Gate
 
 - Primary inputs:

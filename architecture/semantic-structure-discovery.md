@@ -22,6 +22,7 @@ Companion references:
 
 - configuration gates: [`semantic-configuration-gates.md`](./semantic-configuration-gates.md)
 - mechanism/FSM map: [`semantic-structure-fsm-map.md`](./semantic-structure-fsm-map.md)
+- functional-module semantics: [`functional-modules.md`](./functional-modules.md)
 
 ## What Counts as a Structural Decision
 
@@ -38,6 +39,7 @@ Examples:
 - how many zones are published;
 - whether a cylinder instance is real or only config-shaped noise;
 - whether circuits belong to the regulator or the FM5 module;
+- how current FM5-specific semantics fit into the broader functional-module model;
 - whether the gateway is allowed to expose `solar` and `cylinders` at all.
 
 ## Flow Overview
@@ -131,6 +133,8 @@ These decide whether a whole semantic family may be published.
 - `fm5SemanticMode`
 - `solar`
 - `cylinders`
+
+The current functional-module architecture and deferred generic target are documented separately in [`functional-modules.md`](./functional-modules.md).
 
 ## Current Anti-Pattern Removed
 

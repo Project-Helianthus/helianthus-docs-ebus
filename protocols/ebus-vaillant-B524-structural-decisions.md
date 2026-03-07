@@ -15,6 +15,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 
 - raw register catalog: [`ebus-vaillant-B524-register-map.md`](./ebus-vaillant-B524-register-map.md)
 - architecture flow: [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md)
+- current vs deferred functional-module architecture: [`../architecture/functional-modules.md`](../architecture/functional-modules.md)
 
 ## Evidence Status Meanings
 

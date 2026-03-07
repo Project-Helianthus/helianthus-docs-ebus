@@ -773,6 +773,11 @@ Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-devi
 
 **VR71/FM5 identification:** `device_class_address=0x26` maps to VR71 based on two independent sources: (1) ebusd scan logs show address 0x26 → ID=VR_71, (2) Vaillant VRC720f manual defines "FM5 functional module: instead of VR 71" and shows systems with FM5 (VR71) alongside VR92f and VRC720f. Validation: power-cycle the VR71/FM5 and observe whether II=0x01 state changes.
 
+Architectural note:
+
+- current Helianthus functional-module semantics are documented in [`../architecture/functional-modules.md`](../architecture/functional-modules.md)
+- the current implemented semantic surface is FM5-centered; the generic `functionalModules[]` target is deferred
+
 ---
 
 ## Semantic Plane Mapping
@@ -819,6 +824,7 @@ Ownership note:
 - The gateway now emits explicit ownership only for proven topologies.
 - For the currently proven live topology (`system_scheme=1`, `module_configuration_vr71=2`, FM5 interpreted), all discovered circuits are marked as managed by `VR_71` (`FUNCTION_MODULE`, address `0x26`).
 - Unproven topologies are emitted as `UNKNOWN`; the gateway does not synthesize a replacement threshold heuristic.
+- Broader architectural treatment of FM3/FM5/VR66 as functional-module families is documented in [`../architecture/functional-modules.md`](../architecture/functional-modules.md).
 
 | Semantic Path | B524 | Type |
 |---------------|------|------|

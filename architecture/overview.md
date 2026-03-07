@@ -92,6 +92,7 @@ The startup/runtime FSMs above explain **when** semantic payload becomes visible
 - authoritative flow: [`architecture/semantic-structure-discovery.md`](./semantic-structure-discovery.md)
 - B524 semantic root discovery: [`architecture/b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
 - regulator identity enrichment: [`architecture/regulator-identity-enrichment.md`](./regulator-identity-enrichment.md)
+- functional-module semantics: [`architecture/functional-modules.md`](./functional-modules.md)
 - structural configuration gates: [`architecture/semantic-configuration-gates.md`](./semantic-configuration-gates.md)
 - structure/publication/freshness mechanism map: [`architecture/semantic-structure-fsm-map.md`](./semantic-structure-fsm-map.md)
 - authoritative B524 decision catalog: [`protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md)
