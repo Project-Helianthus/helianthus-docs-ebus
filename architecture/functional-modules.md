@@ -60,6 +60,7 @@ For functional modules, the most important distinction is:
 
 - **protocol truth** for B524 register existence and encoding
 - **profile truth** for controller-family concepts such as `VR71 config`, `VR70 addr. 1..3`, or legacy module support
+- **generic family buckets** vs **product/profile labels**
 
 The target contract must preserve that distinction rather than flatten it.
 
@@ -112,6 +113,7 @@ Current architectural interpretation:
 - `VR71/FM5` is the only functional-module family with explicit semantic gating and ownership effects in the implemented contract.
 - `VR71/FM5` role semantics must remain **profile-scoped** unless separately proven at protocol level.
 - `GG=0x0C` is protocol truth as a group namespace, but its interpretation as a `VR71/FM5` family signal remains profile/lab-scoped.
+- In a generic target, `FM5` is better treated as a profile label around the concrete product/family pair than as the primary family enum value.
 
 ### `VR70 / FM3`
 
@@ -146,6 +148,7 @@ Important architectural consequence:
 - multiple `FM3` modules may exist
 - it has explicit per-module addressing in the documented controller ecosystem
 - it has explicit per-address configuration in the documented controller ecosystem
+- In a generic target, `FM3` is better treated as a profile label around `VR70` rather than as the only family classification.
 
 ### `VR66`
 
@@ -194,7 +197,9 @@ Illustrative minimal shape only; not current API:
 functionalModules[]:
   - key
   - family
+  - productCode
   - instance
+  - profileAddressIndex
   - busAddress
   - configurationSetValue
   - inventoryPresence
@@ -208,12 +213,18 @@ Suggested field semantics:
   - stable identifier for the module entry
   - not necessarily identical to eBUS address
 - `family`
-  - best-effort family classification such as `FM3`, `FM5`, `VR66`, `LEGACY`, `UNKNOWN`
+  - generic semantic bucket such as `FUNCTION_MODULE`, `CONTROL_CENTRE`, `SOLAR_MODULE`, `MIXER_MODULE`, `LEGACY_MODULE`, `UNKNOWN`
+- `productCode`
+  - concrete product or product-family label such as `VR70`, `VR71`, `VR66`, `VR61`, `VR68`
 - `instance`
-  - optional per-family instance index when documented/proven
-  - especially relevant for multi-instance families such as `FM3`
+  - optional Helianthus inventory instance within the generic family/product grouping
+  - especially relevant for multi-instance families such as `VR70`
+- `profileAddressIndex`
+  - optional controller/profile address index when the documented ecosystem exposes per-module addressing
+  - example: `VR70 addr. 1..3`
 - `busAddress`
-  - optional physical bus address when proven
+  - optional physical eBUS slave address when proven
+  - not interchangeable with `profileAddressIndex`
 - `configurationSetValue`
   - optional profile-scoped configuration value when proven
 - `inventoryPresence`
@@ -223,7 +234,9 @@ Suggested field semantics:
   - structured provenance per populated claim, not a single flat label
   - at minimum the contract should be able to express separate provenance for:
     - `family`
+    - `productCode`
     - `instance`
+    - `profileAddressIndex`
     - `busAddress`
     - `configurationSetValue`
     - `inventoryPresence`
@@ -231,6 +244,13 @@ Suggested field semantics:
   - compact rationale for unknowns, scope limits, or profile constraints
 
 This target is deliberately narrower than a capability-rich or policy-rich module contract.
+
+It also deliberately separates:
+
+- generic family classification
+- concrete product code
+- profile/controller address indexing
+- physical bus addressing
 
 ## Design Rules for the Target
 
@@ -240,6 +260,14 @@ The target should be per-module/per-instance, not a single global scalar such as
 
 - `fm3SemanticMode`
 - `fm5SemanticMode`
+
+It should also avoid collapsing:
+
+- generic family buckets
+- concrete product identities
+- profile labels such as `FM3` / `FM5`
+
+into one unstable enum.
 
 ### 2. Inventory-first and provenance-first
 
