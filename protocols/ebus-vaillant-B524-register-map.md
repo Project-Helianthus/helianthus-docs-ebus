@@ -777,6 +777,13 @@ Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-devi
 
 ## Semantic Plane Mapping
 
+The raw register tables below document what exists on the wire. The separate structural decision catalog documents how gateway code turns those raw values into semantic families, instance counts, gates, and ownership fields:
+
+- architecture flow: [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md)
+- structural decision catalog: [`./ebus-vaillant-B524-structural-decisions.md`](./ebus-vaillant-B524-structural-decisions.md)
+
+This is where decisions such as zone publication, `associatedCircuit`, FM5 gating, and circuit `managingDevice` are documented as contract rather than left implicit in code.
+
 This section maps B524 registers to Helianthus MCP semantic plane fields. Only registers actively read by the gateway's semantic poller are listed.
 
 ### `ebus.v1.semantic.system.get`

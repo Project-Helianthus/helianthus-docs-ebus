@@ -85,6 +85,18 @@ See breaker details in [`architecture/semantic-read-circuit-breaker.md`](./seman
 See zone presence details in [`architecture/zone-presence-fsm.md`](./zone-presence-fsm.md).
 See DHW lifecycle details in [`architecture/dhw-freshness-fsm.md`](./dhw-freshness-fsm.md).
 
+## Semantic Structure Discovery
+
+The startup/runtime FSMs above explain **when** semantic payload becomes visible. The separate structural decision graph explains **why a family or instance exists at all**.
+
+- authoritative flow: [`architecture/semantic-structure-discovery.md`](./semantic-structure-discovery.md)
+- authoritative B524 decision catalog: [`protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md)
+
+This split is intentional:
+
+- FSM docs cover publication timing, cache/live transitions, and anti-flapping behavior;
+- the structural decision catalog covers source registers, evaluation rules, gates, and ownership/subordination fields.
+
 ## Plane/Provider Model
 
 The registry layer treats each physical eBUS device as a **DeviceEntry** discovered via a 0x07/0x04 identification scan. A single physical device may be observed on multiple eBUS addresses (alias faces). The registry resolves these to one canonical DeviceEntry with:
