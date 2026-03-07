@@ -141,6 +141,17 @@ Rationale:
   as equivalent to "group absent".
 - Single-circuit/no-functional-module installations are a known counterexample.
 
+Scanner contract implications:
+
+- Directory descriptors are hints, not structural authority.
+- Planner/scanner logic must treat known core groups as policy-driven scan
+  candidates even when the descriptor is `0.0`.
+- Register evidence from B524 remains the primary confirmation path for
+  structural presence.
+- Functional-module inventory and hydraulic topology may corroborate or
+  challenge a scan plan, but must not override B524 as the primary
+  structural source.
+
 ### 4.2 `0x01` Constraint Dictionary (min/max/step)
 
 This family exposes an undocumented constraint dictionary for configuration parameters.
