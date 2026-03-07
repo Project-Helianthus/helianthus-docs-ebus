@@ -75,7 +75,7 @@ descriptor == 0.0
      "group absent" or "hole" marker
 
 other numeric values
-  -> descriptor class tags observed in the field; often appear as
+  -> discrete observed descriptor values; often appear as
      discrete integer-like floats (for example 1.0, 3.0, 5.0, 6.0),
      but their semantic meaning is not yet established
 ```
@@ -125,8 +125,8 @@ Discovery rules:
 - Treat `NaN` as the current Helianthus termination policy, backed by lab
   evidence, but not yet as protocol-wide truth.
 - Do not suppress known groups solely because `descriptor == 0.0`.
-- At minimum, core structural groups such as `GG=0x02` (circuits) and
-  `GG=0x03` (zones) remain scan candidates even when the descriptor is `0.0`.
+- Core structural groups `GG=0x02` (circuits) and `GG=0x03` (zones)
+  remain scan candidates even when the descriptor is `0.0`.
 - For unknown groups, the descriptor may be used only as a conservative hint,
   never as a universal proof of absence.
 - Functional-module inventory and hydraulic scheme may be used for
