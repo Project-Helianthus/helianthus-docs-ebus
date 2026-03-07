@@ -21,7 +21,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 
 | Status | Meaning |
 | --- | --- |
-| `PROVEN` | Backed directly by current registers and implemented behavior |
+| `PROVEN` | Backed directly by current registers, or by an explicitly implemented gateway mechanism whose structural inputs are themselves documented and evidence-backed in this catalog |
 | `HEURISTIC` | Implemented rule is not directly proven by registers; gateway currently uses a convenience or naming rule |
 | `UNKNOWN` | Gateway intentionally avoids inventing a stronger claim |
 
@@ -90,10 +90,10 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance), [`../architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md) |
 | Source document title | `Vaillant VRC 700/6 -- Operating Instructions` |
 | Source section | `3.3 Zones` |
-| Supporting statement | In `3.3 Zones`, the operating instructions describe zones as installation-level structure that the control manages when available, but they do not document hit/miss hysteresis. The FSM itself remains gateway behavior rather than a regulator-documented rule. |
+| Supporting statement | In `3.3 Zones`, the operating instructions describe zones as installation-level structure that the control manages when available, but they do not document hit/miss hysteresis. The structural input for this FSM is the zone-presence evidence described in SD-02; the hysteresis behavior itself remains an explicit gateway mechanism rather than a regulator-documented rule. |
 | Constraint strength | `DESCRIPTIVE` |
 | Scope of validity | `GATEWAY_POLICY` |
-| Evaluation rule | `markZonePresentLocked()` and `markZoneMissingLocked()` apply hit/miss hysteresis before creating or deleting `p.zones[instance]` |
+| Evaluation rule | `markZonePresentLocked()` and `markZoneMissingLocked()` apply hit/miss hysteresis to the zone-presence evidence established by SD-02 before creating or deleting `p.zones[instance]` |
 | Fallback / unknown behavior | Thresholds are runtime configuration, not protocol data |
 | Published effect | `zones[]` reflects stable semantic presence, not one-shot probe results |
 | Evidence status | `PROVEN` for the implemented FSM behavior |
@@ -294,7 +294,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Evaluation rule | Gateway publishes structure-bearing fields instead of hidden thresholds: `roomTemperatureZoneMapping`, `associatedCircuit`, `radioDevices[]`, `fm5SemanticMode`, `circuits[].managingDevice`, and gated `solar`/`cylinders` |
 | Fallback / unknown behavior | Consumer-specific parent trees remain consumer behavior; this catalog documents the semantic contract they must consume |
 | Published effect | GraphQL/MCP/Portal expose enough structure for consumers such as HA to build explainable parent-child hierarchy without inventing local thresholds |
-| Evidence status | `PROVEN` as a contract statement built from the decisions above |
+| Evidence status | inherited from constituent decisions; no independent evidence claim |
 | Code anchors | `publishZones()`, `publishCircuits()`, `publishRadioDevices()`, `publishFM5Semantic()` |
 
 ## Explicit Out of Scope
