@@ -210,8 +210,9 @@ Suggested field semantics:
   - stable identifier for the module entry
   - not necessarily identical to eBUS address
 - `productCode`
-  - concrete product identifier or product-family code used for interpretation, such as `VR70`, `VR71`, `VR66`, `VR61`, `VR68`
+  - concrete normalized product identifier derived from identity enrichment, such as `VR70`, `VR71`, `VR66`, `VR61`, `VR68`
   - this is the field that actually matters for per-product semantic implementation
+  - it is not a generic family taxonomy
 - `profileAddressIndex`
   - optional controller/profile address index when the documented ecosystem exposes per-module addressing
   - example: `VR70 addr. 1..3`
@@ -252,9 +253,9 @@ If a future family needs an explicit instance concept, that should be added in a
 
 ## Design Rules for the Target
 
-### 1. Per module, not per-family scalar or taxonomy
+### 1. Per module entry, not per-family scalar or taxonomy
 
-The target should be per-module/per-instance, not a single global scalar such as:
+The target should be per discovered module entry, not a single global scalar such as:
 
 - `fm3SemanticMode`
 - `fm5SemanticMode`
@@ -309,12 +310,12 @@ If they are ever exposed in a generic module inventory, they must remain:
 
 If the generic target is implemented later:
 
-- `fm5SemanticMode` should be treated as a transitional family-specific convenience surface
-- the more fundamental source of truth for module inventory, identity, and provenance should become the corresponding `functionalModules[]` entries
-- `fm5SemanticMode` may still remain the family-specific semantic verdict until a richer family-specific layer exists
+- `functionalModules[]` should become the inventory/identity/provenance substrate for functional modules
+- `fm5SemanticMode` should be treated as a transitional family-specific convenience surface derived from that substrate plus FM5-specific evaluation
+- `fm5SemanticMode` may still remain the family-specific semantic verdict until a richer FM5-specific detail layer exists
 - consumers should gradually move from singleton FM5-centric interpretation toward generic module inventory plus explicit ownership semantics
 
-This does **not** mean `fm5SemanticMode` must disappear immediately. It means the architectural center should stop being one family-specific scalar.
+This does **not** mean `fm5SemanticMode` must disappear immediately. It means the architectural center should stop being one family-specific scalar, while family-specific semantic verdicts may continue to exist above the generic inventory layer.
 
 ## Deferred / Premature Fields
 
@@ -335,7 +336,7 @@ A safer long-term model is:
 
 - Layer 1: generic inventory
   - `functionalModules[]`
-  - identity, instance/address, configuration, presence, provenance
+  - identity, profile addressing, bus addressing, configuration, inventory presence, provenance
 - Layer 2: family-specific detail
   - optional and only when enough evidence exists to define stable semantics
 
