@@ -87,14 +87,15 @@ This is already visible in the existing evidence:
 
 Current evidence level:
 
-- `PROVEN_PROTOCOL` for B524-facing configuration/register evidence already present in Helianthus docs
-- `PROVEN_PROFILE` for the role model documented by Vaillant controller manuals
+- `PROVEN_PROTOCOL` for the existence and encoding of B524-facing registers and groups currently used in the FM5 path
+- `PROVEN_PROFILE` for interpreting those registers as `VR71/FM5` role/configuration semantics in the documented controller ecosystems
+- `PROVEN_LAB` for the currently validated live tuple and slot correlation used by Helianthus today
 
 What we already have:
 
 - B524 raw/system evidence:
   - `GG=0x00 RR=0x002F` (`module_configuration_vr71`)
-  - `GG=0x0C` remote-accessory/VR71-facing slot evidence
+  - `GG=0x0C` remote-accessory slot evidence currently correlated with `VR71/FM5`
 - semantic contract:
   - `fm5SemanticMode`
   - `circuits[].managingDevice`
@@ -110,6 +111,7 @@ Current architectural interpretation:
 
 - `VR71/FM5` is the only functional-module family with explicit semantic gating and ownership effects in the implemented contract.
 - `VR71/FM5` role semantics must remain **profile-scoped** unless separately proven at protocol level.
+- `GG=0x0C` is protocol truth as a group namespace, but its interpretation as a `VR71/FM5` family signal remains profile/lab-scoped.
 
 ### `VR70 / FM3`
 
@@ -195,7 +197,7 @@ functionalModules[]:
   - instance
   - busAddress
   - configurationSetValue
-  - presence
+  - inventoryPresence
   - provenance
   - notes
 ```
@@ -214,10 +216,17 @@ Suggested field semantics:
   - optional physical bus address when proven
 - `configurationSetValue`
   - optional profile-scoped configuration value when proven
-- `presence`
-  - current presence claim and the evidence basis behind it
+- `inventoryPresence`
+  - inventory-level presence claim for the module entry
+  - not a publication/freshness/runtime-health state
 - `provenance`
-  - one of `PROVEN_PROTOCOL`, `PROVEN_PROFILE`, `PROVEN_LAB`, `HEURISTIC`, `UNKNOWN`
+  - structured provenance per populated claim, not a single flat label
+  - at minimum the contract should be able to express separate provenance for:
+    - `family`
+    - `instance`
+    - `busAddress`
+    - `configurationSetValue`
+    - `inventoryPresence`
 - `notes`
   - compact rationale for unknowns, scope limits, or profile constraints
 
@@ -264,6 +273,8 @@ That means it is better to publish:
 
 than to over-claim structural meaning from weak evidence.
 
+This is also why provenance cannot be modeled as a single coarse label on the whole module entry. Different populated fields may be supported by different evidence classes.
+
 ### 5. Profile-scoped configuration must stay profile-scoped
 
 Configuration set values such as `VR71 config` or per-address `VR70 config` are useful data, but they are not protocol-wide truth by themselves.
@@ -279,8 +290,9 @@ If they are ever exposed in a generic module inventory, they must remain:
 If the generic target is implemented later:
 
 - `fm5SemanticMode` should be treated as a transitional family-specific convenience surface
-- the more fundamental source of truth should become the corresponding `functionalModules[]` entries
-- consumers should gradually move from singleton FM5-centric interpretation toward generic module inventory + explicit ownership semantics
+- the more fundamental source of truth for module inventory, identity, and provenance should become the corresponding `functionalModules[]` entries
+- `fm5SemanticMode` may still remain the family-specific semantic verdict until a richer family-specific layer exists
+- consumers should gradually move from singleton FM5-centric interpretation toward generic module inventory plus explicit ownership semantics
 
 This does **not** mean `fm5SemanticMode` must disappear immediately. It means the architectural center should stop being one family-specific scalar.
 
