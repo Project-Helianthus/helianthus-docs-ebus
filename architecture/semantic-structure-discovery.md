@@ -16,6 +16,8 @@ Phase 1 scope is **B524 structure discovery only** and is documented in **proven
 
 The authoritative decision catalog is [`protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md).
 
+Each catalog entry records both the primary B524/register evidence and, where available, a supporting regulator-document statement identified by the source document's own title rather than by file name.
+
 ## What Counts as a Structural Decision
 
 A structural decision answers one of these questions:
