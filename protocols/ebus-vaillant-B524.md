@@ -60,13 +60,35 @@ Notes:
 
 ### 2.3 Directory descriptor semantics
 
-Directory probe returns `float32le` descriptor values.
+Directory probe returns a 4-byte `float32le` descriptor value.
 
 ```text
-descriptor == NaN  -> end-of-directory marker (terminator)
-descriptor == 0.0  -> hole / unassigned group id
-other float values -> class marker (treated as enum-like class tags)
+descriptor payload length < 4 bytes
+  -> not a valid directory descriptor
+
+descriptor == NaN
+  -> current Helianthus termination policy, backed by lab observation
+     and explorer behavior, but not yet established as protocol-wide truth
+
+descriptor == 0.0
+  -> weak negative hint only; must not be treated as a universal
+     "group absent" or "hole" marker
+
+other numeric values
+  -> descriptor class tags observed in the field; often appear as
+     discrete integer-like floats (for example 1.0, 3.0, 5.0, 6.0),
+     but their semantic meaning is not yet established
 ```
+
+Important:
+
+- The descriptor is currently treated as an opaque class tag, not as a hard presence boolean.
+- In particular, `0.0` is known to be insufficient as an absence marker:
+  single-circuit installations without functional modules may still expose
+  valid `GG=0x02` and `GG=0x03` registers while the directory descriptor is `0.0`.
+- Functional-module inventory and hydraulic topology may help corroborate
+  discovery decisions, but they do not replace B524 as the primary
+  structural source.
 
 ## 3. Opcode Family Map
 
@@ -99,9 +121,25 @@ Response payload (4 bytes):
 
 Discovery rules:
 - Iterate GG upward.
-- Stop on first `NaN` descriptor.
-- Skip `0.0` holes.
+- Treat only 4-byte responses as candidate directory descriptors.
+- Treat `NaN` as the current Helianthus termination policy, backed by lab
+  evidence, but not yet as protocol-wide truth.
+- Do not suppress known groups solely because `descriptor == 0.0`.
+- At minimum, core structural groups such as `GG=0x02` (circuits) and
+  `GG=0x03` (zones) remain scan candidates even when the descriptor is `0.0`.
+- For unknown groups, the descriptor may be used only as a conservative hint,
+  never as a universal proof of absence.
+- Functional-module inventory and hydraulic scheme may be used for
+  corroboration or conflict detection, not as the primary structure source
+  when B524 already exposes the relevant group.
 - Treat transport/timeouts as non-terminating errors.
+
+Rationale:
+
+- B524 is the controller-side aggregation surface for system structure.
+- The current evidence does not justify treating descriptor class `0.0`
+  as equivalent to "group absent".
+- Single-circuit/no-functional-module installations are a known counterexample.
 
 ### 4.2 `0x01` Constraint Dictionary (min/max/step)
 
