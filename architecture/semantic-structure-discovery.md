@@ -172,8 +172,11 @@ Each structural rule in `semantic_vaillant.go` must end up in one of these bucke
 
 - cataloged as `PROVEN`
 - cataloged as `HEURISTIC`
+- cataloged as `COMPOSITE`
 - cataloged as `UNKNOWN`
 - explicitly declared out of scope for Phase 1
+
+The structural decision catalog is authoritative for `Evidence status`, `Scope of validity`, and regulator-document `Constraint strength`.
 
 The decision catalog is the authoritative reference for the rule-by-rule contract:
 

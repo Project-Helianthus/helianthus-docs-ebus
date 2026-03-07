@@ -9,7 +9,7 @@ Each entry records:
 - the scope in which the rule is considered valid;
 - how the gateway evaluates that evidence;
 - what public semantic effect the decision has;
-- whether the rule is `PROVEN`, `HEURISTIC`, or `UNKNOWN`.
+- whether the rule is `PROVEN`, `HEURISTIC`, `COMPOSITE`, or `UNKNOWN`.
 
 This document is authoritative for Phase 1 structural discovery and complements, rather than replaces, the raw register map:
 
@@ -21,8 +21,9 @@ This document is authoritative for Phase 1 structural discovery and complements,
 
 | Status | Meaning |
 | --- | --- |
-| `PROVEN` | Backed directly by current registers, or by an explicitly implemented gateway mechanism whose structural inputs are themselves documented and evidence-backed in this catalog |
+| `PROVEN` | Backed directly by current registers, or by an explicitly implemented gateway mechanism whose chain of structural inputs is documented in this catalog and terminates at direct register evidence |
 | `HEURISTIC` | Implemented rule is not directly proven by registers; gateway currently uses a convenience or naming rule |
+| `COMPOSITE` | Aggregates evidence from constituent decisions; no independent register or mechanism evidence of its own |
 | `UNKNOWN` | Gateway intentionally avoids inventing a stronger claim |
 
 ## Scope of Validity Meanings
@@ -86,7 +87,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Field | Value |
 | --- | --- |
 | Semantic effect | Prevents transient probe misses from adding/removing zone instances immediately |
-| Source registers | Primary source remains `GG=0x03 RR=0x001C` |
+| Source registers | Inherited structural input from SD-02, whose primary register is `GG=0x03 RR=0x001C` |
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance), [`../architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md) |
 | Source document title | `Vaillant VRC 700/6 -- Operating Instructions` |
 | Source section | `3.3 Zones` |
@@ -135,25 +136,43 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Evidence status | `PROVEN` |
 | Code anchors | `refreshState()`, `decodeRoomTemperatureZoneMapping()`, `publishZones()` |
 
-## B524-SD-06 — Associated Circuit Derivation for Zones
+## B524-SD-06 — Zone-to-Circuit Index Derivation
 
 | Field | Value |
 | --- | --- |
-| Semantic effect | Defines `zones[].config.associatedCircuit` |
-| Source registers | Primary source `GG=0x03 RR=0x0013`; supporting lookup `GG=0x02 RR=0x0002` for circuit type on the resolved circuit instance |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance), [`ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance) |
+| Semantic effect | Derives `zones[].config.associatedCircuit` from the raw zone mapping value when the current lab-backed conversion applies |
+| Source registers | Primary source `GG=0x03 RR=0x0013` |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
 | Source document title | `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica`; `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `Zonas 1 a 9`; `Installer Level -- Zones 1 to 9` |
-| Supporting statement | In `Zonas 1 a 9`, the multiMATIC training exposes `Asignacion de zona` for each zone. In `Installer Level -- Zones 1 to 9`, the VRC 720 training also exposes `Zone assignment`. These statements corroborate the existence of explicit zone-to-circuit assignment, but they do not prove that the gateway fallback-to-zone-instance branch is universally correct. |
+| Supporting statement | In `Zonas 1 a 9`, the multiMATIC training exposes `Asignacion de zona` for each zone. In `Installer Level -- Zones 1 to 9`, the VRC 720 training also exposes `Zone assignment`. These statements corroborate the existence of explicit zone-to-circuit assignment, but they do not prove the current `value - 1` zero-based circuit-index derivation formula. |
 | Constraint strength | `CORROBORATING` |
-| Scope of validity | `PROTOCOL` for the raw register value at `GG=0x03 RR=0x0013`; `LAB` for the current `value - 1` zero-based circuit-index derivation; `GATEWAY_POLICY` for the fallback-to-zone-instance branch |
-| Evaluation rule | `resolveAssociatedCircuitInstance()` reuses the same `GG=0x03 RR=0x0013` value documented in SD-05 and currently interprets values `1..0x20` as one-based circuit assignments, mapped to zero-based circuit instances via `value - 1`. For `nil`, `0`, `0xFF`, or out-of-range values it falls back to the zone instance. |
-| Fallback / unknown behavior | The raw register value is authoritative input, but the current `value - 1` conversion is validated on the live lab topology rather than defined by regulator documentation. Falling back to the zone instance is a local convenience rule and may not reflect physical topology on every installation. |
-| Published effect | `associatedCircuit` is explicit in the semantic contract and is available to consumers without re-derivation |
-| Evidence status | `PROVEN` for the mapping value, `HEURISTIC` for the fallback-to-zone-instance branch |
+| Scope of validity | `LAB` |
+| Evaluation rule | `resolveAssociatedCircuitInstance()` reuses the same `GG=0x03 RR=0x0013` value documented in SD-05 and currently interprets values `1..0x20` as one-based circuit assignments, mapped to zero-based circuit instances via `value - 1`. |
+| Fallback / unknown behavior | If the current derivation does not yield a usable circuit instance, control passes to SD-07. |
+| Published effect | `associatedCircuit` becomes explicit without consumer-side re-derivation when the current lab-backed formula applies |
+| Evidence status | `PROVEN` |
 | Code anchors | `refreshState()`, `resolveAssociatedCircuitInstance()`, `publishZones()` |
 
-## B524-SD-07 — Circuit Instance Discovery
+## B524-SD-07 — Zone-to-Circuit Fallback
+
+| Field | Value |
+| --- | --- |
+| Semantic effect | Provides `zones[].config.associatedCircuit` when SD-06 does not yield a usable circuit instance |
+| Source registers | No independent register. This decision consumes the outcome of SD-06. |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
+| Source document title | `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica`; `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
+| Source section | `Zonas 1 a 9`; `Installer Level -- Zones 1 to 9` |
+| Supporting statement | The regulator documents corroborate explicit zone assignment, but they do not define a universal default when the gateway cannot confidently resolve a circuit instance from the raw mapping value. The fallback-to-zone-instance branch is therefore an explicit gateway policy. |
+| Constraint strength | `NON_AUTHORITATIVE` |
+| Scope of validity | `GATEWAY_POLICY` |
+| Evaluation rule | For `nil`, `0`, `0xFF`, or out-of-range mapping values, `resolveAssociatedCircuitInstance()` falls back to the zone instance. |
+| Fallback / unknown behavior | Falling back to the zone instance is a local convenience rule and may not reflect physical topology on every installation. |
+| Published effect | `associatedCircuit` remains populated even when the current lab-backed derivation does not apply |
+| Evidence status | `HEURISTIC` |
+| Code anchors | `resolveAssociatedCircuitInstance()`, `publishZones()` |
+
+## B524-SD-08 — Circuit Instance Discovery
 
 | Field | Value |
 | --- | --- |
@@ -171,7 +190,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Evidence status | `PROVEN` |
 | Code anchors | `refreshCircuits()`, `mergeCircuitSnapshotNonDestructive()`, `publishCircuits()` |
 
-## B524-SD-08 — Circuit Ownership via `managingDevice`
+## B524-SD-09 — Circuit Ownership via `managingDevice`
 
 | Field | Value |
 | --- | --- |
@@ -189,7 +208,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Evidence status | `PROVEN` for the current live tuple, `UNKNOWN` for all other tuples |
 | Code anchors | `refreshSystem()`, `deriveCircuitManagingDevice()`, `publishCircuits()` |
 
-## B524-SD-09 — Radio Device Inclusion and `slot_mode`
+## B524-SD-10 — Radio Device Inclusion and `slot_mode`
 
 | Field | Value |
 | --- | --- |
@@ -207,7 +226,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Evidence status | `PROVEN` for connected slots, `HEURISTIC` for inventory inclusion |
 | Code anchors | `refreshRadioDevices()`, `hasRemoteIdentityEvidence()`, `publishRadioDevices()` |
 
-## B524-SD-10 — FM5 Semantic Mode
+## B524-SD-11 — FM5 Semantic Mode
 
 | Field | Value |
 | --- | --- |
@@ -225,7 +244,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Evidence status | `PROVEN` for the implemented decision tree, `UNKNOWN` for unvalidated controller tuples |
 | Code anchors | `refreshFM5Semantic()`, `deriveFM5SemanticMode()`, `publishFM5Semantic()` |
 
-## B524-SD-11 — Solar Family Publication Gate
+## B524-SD-12 — Solar Family Publication Gate
 
 | Field | Value |
 | --- | --- |
@@ -243,7 +262,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Evidence status | `PROVEN` |
 | Code anchors | `readSolarSnapshot()`, `publishFM5Semantic()` |
 
-## B524-SD-12 — Cylinder Family Gate
+## B524-SD-13 — Cylinder Family Gate
 
 | Field | Value |
 | --- | --- |
@@ -261,7 +280,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Evidence status | `PROVEN` |
 | Code anchors | `refreshFM5Semantic()`, `publishFM5Semantic()` |
 
-## B524-SD-13 — Individual Cylinder Instance Publication
+## B524-SD-14 — Individual Cylinder Instance Publication
 
 | Field | Value |
 | --- | --- |
@@ -279,22 +298,22 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Evidence status | `PROVEN` |
 | Code anchors | `readCylinderSnapshots()`, `hasLiveCylinderEvidence()`, `publishFM5Semantic()` |
 
-## B524-SD-14 — Structural Subordination Contract
+## B524-SD-15 — Structural Subordination Contract
 
 | Field | Value |
 | --- | --- |
 | Semantic effect | Defines the public fields that consumers should use for hierarchy/parenting decisions |
-| Source registers | Composite of SD-05, SD-08, SD-09, SD-10, SD-11, and SD-13 |
+| Source registers | Composite of SD-05, SD-06, SD-07, SD-09, SD-10, SD-11, SD-12, SD-13, and SD-14 |
 | Reference | See the source decision entries above |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document`; `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica` |
-| Source section | `4.2.1 VR 92 Remote Control Unit`; `4.3.1 VR 71 Main Connection Center`; `Installer Level -- Zones 1 to 9`; `Installer Level -- Solar Circuit`; `Distribucion de zonas y circuitos de calefaccion`; `Zonas 1 a 9`; `Circuito solar 1` |
-| Supporting statement | Across `4.2.1 VR 92 Remote Control Unit`, `4.3.1 VR 71 Main Connection Center`, `Installer Level -- Zones 1 to 9`, `Installer Level -- Solar Circuit`, and the multiMATIC sections `Distribucion de zonas y circuitos de calefaccion`, `Zonas 1 a 9`, and `Circuito solar 1`, the regulator documents consistently present structure as explicit relationships: zones have room controls and circuit assignments, circuits have types and actuator state, VR 71 owns relay-backed functions, and solar/cylinder screens appear only for certain configurations. This matches the gateway design choice to publish explicit structural fields instead of hidden thresholds, but it does not widen the scope beyond the underlying decisions. |
+| Source section | `4.2.1 VR 92 Remote Control Unit`; `4.3.1 VR 71 Main Connection Center`; `Installer Level -- Zones 1 to 9`; `Installer Level -- Solar Circuit`; `Distribucion de zonas y circuitos de calefaccion`; `Zonas 1 a 9`; `Circuito solar 1`; `Deposito solar 1` |
+| Supporting statement | Across `4.2.1 VR 92 Remote Control Unit`, `4.3.1 VR 71 Main Connection Center`, `Installer Level -- Zones 1 to 9`, `Installer Level -- Solar Circuit`, and the multiMATIC sections `Distribucion de zonas y circuitos de calefaccion`, `Zonas 1 a 9`, `Circuito solar 1`, and `Deposito solar 1`, the regulator documents consistently present structure as explicit relationships: zones have room controls and circuit assignments, circuits have types and actuator state, VR 71 owns relay-backed functions, and solar/cylinder screens appear only for certain configurations. This matches the gateway design choice to publish explicit structural fields instead of hidden thresholds, but it does not widen the scope beyond the underlying decisions. This entry is exhaustive only for the currently published structure-bearing fields named below. |
 | Constraint strength | `CORROBORATING` |
 | Scope of validity | `GATEWAY_POLICY`; each constituent field inherits the narrower scope of its underlying decision |
-| Evaluation rule | Gateway publishes structure-bearing fields instead of hidden thresholds: `roomTemperatureZoneMapping`, `associatedCircuit`, `radioDevices[]`, `fm5SemanticMode`, `circuits[].managingDevice`, and gated `solar`/`cylinders` |
+| Evaluation rule | Gateway publishes structure-bearing fields instead of hidden thresholds: `roomTemperatureZoneMapping`, `associatedCircuit`, `radioDevices[]`, `fm5SemanticMode`, `circuits[].managingDevice`, and gated `solar`/`cylinders` (including per-instance cylinder evidence from SD-14) |
 | Fallback / unknown behavior | Consumer-specific parent trees remain consumer behavior; this catalog documents the semantic contract they must consume |
 | Published effect | GraphQL/MCP/Portal expose enough structure for consumers such as HA to build explainable parent-child hierarchy without inventing local thresholds |
-| Evidence status | inherited from constituent decisions; no independent evidence claim |
+| Evidence status | `COMPOSITE` |
 | Code anchors | `publishZones()`, `publishCircuits()`, `publishRadioDevices()`, `publishFM5Semantic()` |
 
 ## Explicit Out of Scope

@@ -35,14 +35,15 @@ The authoritative rule-by-rule source remains the decision catalog:
 | Zone instance gate | `SD-02`, `SD-03` | `GG=0x03 RR=0x001C` + zone presence FSM | Zone instance becomes present/absent | `PROTOCOL` for direct probe path; `GATEWAY_POLICY` for hysteresis/fallback |
 | Zone naming gate | `SD-04` | `GG=0x03 RR=0x0016/0x0017/0x0018` | Zone name becomes explicit or falls back | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
 | Zone room-sensor mapping gate | `SD-05` | `GG=0x03 RR=0x0013` | `roomTemperatureZoneMapping` becomes available | `PROTOCOL` |
-| Zone-to-circuit attachment gate | `SD-06` | `GG=0x03 RR=0x0013` + circuit lookup | `associatedCircuit` becomes available | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
-| Circuit instance gate | `SD-07` | `GG=0x02 RR=0x0002` | Circuit active/inactive | `PROTOCOL` |
-| Circuit ownership gate | `SD-08` | `systemScheme`, `moduleConfigurationVR71`, `fm5SemanticMode` | `managingDevice` explicit or `UNKNOWN` | Mixed `LAB` / `PROFILE` / `UNKNOWN` |
-| Radio inclusion gate | `SD-09` | `GG=0x09/0x0A/0x0C` slot evidence | Remote/radio device published | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
-| FM5 interpretation gate | `SD-10` | VR71 config + radio/FM5 evidence + solar/cylinder readability | `fm5SemanticMode` | Mixed `GATEWAY_POLICY` + `PROFILE` |
-| Solar family gate | `SD-11` | `fm5SemanticMode` + `GG=0x04` readability | `solar` family published/cleared | Mixed `GATEWAY_POLICY` + `PROFILE` |
-| Cylinder family gate | `SD-12` | `fm5SemanticMode` + `GG=0x05` readability | `cylinders[]` family published/cleared | Mixed `GATEWAY_POLICY` + `PROFILE` |
-| Individual cylinder gate | `SD-13` | `GG=0x05 RR=0x0004` (`temperatureC`) | Individual cylinder instance published/omitted | `GATEWAY_POLICY` |
+| Zone-to-circuit derivation gate | `SD-06` | `GG=0x03 RR=0x0013` + current lab-backed `value - 1` derivation | `associatedCircuit` becomes explicit from raw mapping value | `LAB` |
+| Zone-to-circuit fallback gate | `SD-07` | outcome of `SD-06` | `associatedCircuit` remains populated via fallback-to-zone-instance | `GATEWAY_POLICY` |
+| Circuit instance gate | `SD-08` | `GG=0x02 RR=0x0002` | Circuit active/inactive | `PROTOCOL` |
+| Circuit ownership gate | `SD-09` | `systemScheme`, `moduleConfigurationVR71`, `fm5SemanticMode` | `managingDevice` explicit or `UNKNOWN` | Mixed `LAB` / `PROFILE` / `UNKNOWN` |
+| Radio inclusion gate | `SD-10` | `GG=0x09/0x0A/0x0C` slot evidence | Remote/radio device published | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
+| FM5 interpretation gate | `SD-11` | VR71 config + radio/FM5 evidence + solar/cylinder readability | `fm5SemanticMode` | Mixed `GATEWAY_POLICY` + `PROFILE` |
+| Solar family gate | `SD-12` | `fm5SemanticMode` + `GG=0x04` readability | `solar` family published/cleared | Mixed `GATEWAY_POLICY` + `PROFILE` |
+| Cylinder family gate | `SD-13` | `fm5SemanticMode` + `GG=0x05` readability | `cylinders[]` family published/cleared | Mixed `GATEWAY_POLICY` + `PROFILE` |
+| Individual cylinder gate | `SD-14` | `GG=0x05 RR=0x0004` (`temperatureC`) | Individual cylinder instance published/omitted | `GATEWAY_POLICY` |
 
 ## B524 Semantic Root Gate
 
@@ -75,11 +76,18 @@ This page does not restate the root-discovery or identity-enrichment rationale. 
 - Structural effect: publishes `roomTemperatureZoneMapping`
 - Cross-check path: remote-side `zone_assignment` from `GG=0x09/0x0A RR=0x0025`
 
-### Zone-to-circuit attachment gate
+### Zone-to-circuit derivation gate
 
 - Primary evidence: `GG=0x03 RR=0x0013`
-- Supporting lookup: `GG=0x02 RR=0x0002`
-- Structural effect: publishes `associatedCircuit`
+- Structural effect: publishes `associatedCircuit` from the current lab-backed `value - 1` derivation
+- Scope: `LAB`
+- Important: the derivation is intentionally documented as a lab-validated formula rather than protocol truth
+
+### Zone-to-circuit fallback gate
+
+- Primary evidence: none independent; this gate consumes the outcome of the derivation gate
+- Structural effect: keeps `associatedCircuit` populated through fallback-to-zone-instance
+- Scope: `GATEWAY_POLICY`
 - Important: the existence of the resolved field is part of the semantic contract, but fallback behavior remains gateway policy rather than protocol truth
 
 ## Circuit Gates
