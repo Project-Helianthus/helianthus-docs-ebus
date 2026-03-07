@@ -126,7 +126,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance), [`ebus-vaillant-B524-register-map.md#zmapping--zone-room-temperature-sensor-mapping`](./ebus-vaillant-B524-register-map.md#zmapping--zone-room-temperature-sensor-mapping) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `4.2.1 VR 92 Remote Control Unit` |
-| Supporting statement | In `4.2.1 VR 92 Remote Control Unit`, the VRC 720 training says "Each VR 92 is assigned to a specific zone". This corroborates the existence of explicit zone-to-room-sensor attachment semantics, but the authoritative proof path remains the B524 register `GG=0x03 RR=0x0013`, cross-checkable against remote-side `zone_assignment` on `GG=0x09/0x0A RR=0x0025`. |
+| Supporting statement | In `4.2.1 VR 92 Remote Control Unit`, the VRC 720 training says "Each VR 92 is assigned to a specific zone". This corroborates the existence of explicit zone-to-room-sensor attachment semantics, but the authoritative proof path remains the B524 register `GG=0x03 RR=0x0013`. The remote-side `zone_assignment` on `GG=0x09/0x0A RR=0x0025` is documented as a corroboration opportunity, not as a formal validation gate. |
 | Constraint strength | `CORROBORATING` |
 | Scope of validity | `PROTOCOL` |
 | Evaluation rule | `refreshState()` reads the raw value; `publishZones()` exposes the decoded integer via `decodeRoomTemperatureZoneMapping()` |
@@ -146,9 +146,9 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Source section | `Zonas 1 a 9`; `Installer Level -- Zones 1 to 9` |
 | Supporting statement | In `Zonas 1 a 9`, the multiMATIC training exposes `Asignacion de zona` for each zone. In `Installer Level -- Zones 1 to 9`, the VRC 720 training also exposes `Zone assignment`. These statements corroborate the existence of explicit zone-to-circuit assignment, but they do not prove that the gateway fallback-to-zone-instance branch is universally correct. |
 | Constraint strength | `CORROBORATING` |
-| Scope of validity | `PROTOCOL` for the register-backed resolved field input; `GATEWAY_POLICY` for the fallback-to-zone-instance branch |
-| Evaluation rule | `resolveAssociatedCircuitInstance()` maps `roomTemperatureZoneMapping` values `1..0x20` to zero-based circuit instances and falls back to the zone instance for `nil`, `0`, `0xFF`, or out-of-range values |
-| Fallback / unknown behavior | Falling back to the zone instance is a local convenience rule and may not reflect physical topology on every installation |
+| Scope of validity | `PROTOCOL` for the raw register value at `GG=0x03 RR=0x0013`; `LAB` for the current `value - 1` zero-based circuit-index derivation; `GATEWAY_POLICY` for the fallback-to-zone-instance branch |
+| Evaluation rule | `resolveAssociatedCircuitInstance()` reuses the same `GG=0x03 RR=0x0013` value documented in SD-05 and currently interprets values `1..0x20` as one-based circuit assignments, mapped to zero-based circuit instances via `value - 1`. For `nil`, `0`, `0xFF`, or out-of-range values it falls back to the zone instance. |
+| Fallback / unknown behavior | The raw register value is authoritative input, but the current `value - 1` conversion is validated on the live lab topology rather than defined by regulator documentation. Falling back to the zone instance is a local convenience rule and may not reflect physical topology on every installation. |
 | Published effect | `associatedCircuit` is explicit in the semantic contract and is available to consumers without re-derivation |
 | Evidence status | `PROVEN` for the mapping value, `HEURISTIC` for the fallback-to-zone-instance branch |
 | Code anchors | `refreshState()`, `resolveAssociatedCircuitInstance()`, `publishZones()` |
@@ -166,7 +166,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `PROTOCOL` |
 | Evaluation rule | `refreshCircuits()` probes instances `0x00..0x0A`; readable `0x0000`, `0x00FF`, and `0xFFFF` are treated as inactive, any other value creates/keeps an active circuit snapshot |
-| Fallback / unknown behavior | No synthetic circuit count is invented if type reads never succeed |
+| Fallback / unknown behavior | No synthetic circuit count is invented if type reads never succeed. Helianthus intentionally does **not** derive primary circuit inventory from functional-module topology or hydraulic-scheme inference, because B524 is treated as the authoritative aggregation surface for this structure. The inactive markers `0x00FF` and `0xFFFF` align with common invalid/uninitialized conventions, while `0x0000` is treated as inactive based on current lab observation rather than protocol specification. |
 | Published effect | `circuits[]` contains only active discovered instances |
 | Evidence status | `PROVEN` |
 | Code anchors | `refreshCircuits()`, `mergeCircuitSnapshotNonDestructive()`, `publishCircuits()` |
@@ -184,7 +184,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `LAB` for the currently validated live tuple; `PROFILE` for the documented VR71 role model; broader tuples remain `UNKNOWN` |
 | Evaluation rule | `deriveCircuitManagingDevice()` emits `FUNCTION_MODULE / VR_71 / 0x26` only when `systemScheme == 1`, `moduleConfigurationVR71 == 2`, and `fm5SemanticMode == INTERPRETED`; otherwise it emits `UNKNOWN` |
-| Fallback / unknown behavior | Gateway intentionally does not guess another owner for unproven topologies |
+| Fallback / unknown behavior | Gateway intentionally does not guess another owner for unproven topologies. A documented profile such as `moduleConfigurationVR71 = 3` ("3x mixer circuit") still implies VR 71 circuit ownership in regulator documentation, but the current implementation emits `UNKNOWN` because ownership is presently coupled to `fm5SemanticMode == INTERPRETED`. This is a known implementation gap, not an evidence-free topology. |
 | Published effect | GraphQL/MCP/Portal expose explicit per-circuit ownership; HA can parent circuits without global threshold heuristics |
 | Evidence status | `PROVEN` for the current live tuple, `UNKNOWN` for all other tuples |
 | Code anchors | `refreshSystem()`, `deriveCircuitManagingDevice()`, `publishCircuits()` |
@@ -202,7 +202,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Constraint strength | `CORROBORATING` for connected remote roles; `NON_AUTHORITATIVE` for disconnected inventory inference |
 | Scope of validity | `PROTOCOL` for connected-slot publication; `GATEWAY_POLICY` for disconnected inventory inclusion |
 | Evaluation rule | `refreshRadioDevices()` always includes connected `0x09/0x0A` slots; for `0x0C` it also includes disconnected entries when `hasRemoteIdentityEvidence()` succeeds; disconnected `0x0C` entries become `slot_mode = "inventory"` |
-| Fallback / unknown behavior | `hasRemoteIdentityEvidence()` accepts non-empty firmware or non-zero/non-`0xFFFF` hardware as identity evidence, which is stronger than pure connection state but still heuristic as a “real device” proof |
+| Fallback / unknown behavior | `hasRemoteIdentityEvidence()` accepts non-empty firmware or non-zero/non-`0xFFFF` hardware as identity evidence, which is stronger than pure connection state but still heuristic as a “real device” proof. Group-to-device-type assignments used by consumers should be read through the B524 register map, where those mappings are explicitly qualified as current-lab correlations rather than standalone protocol specification. |
 | Published effect | `radioDevices[]` contains both active remotes and inventory-evidenced FM5-related accessories, with enough metadata for consumer-side parent resolution |
 | Evidence status | `PROVEN` for connected slots, `HEURISTIC` for inventory inclusion |
 | Code anchors | `refreshRadioDevices()`, `hasRemoteIdentityEvidence()`, `publishRadioDevices()` |
