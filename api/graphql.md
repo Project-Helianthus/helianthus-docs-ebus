@@ -275,6 +275,11 @@ type CircuitConfig {
 
 `vr71CircuitStartIndex` is intentionally absent from the canonical GraphQL contract. Circuit ownership is modeled explicitly on each `circuits[]` item via `managingDevice`, not through a global FM5 threshold.
 
+The architectural rationale and the full B524 evidence trail for structure/ownership decisions are documented in:
+
+- [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md)
+- [`../protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md)
+
 ### `energyTotals` Root Query
 
 `energyTotals` is available directly on `Query` and returns the same canonical energy aggregate exposed to MCP.
@@ -332,6 +337,7 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
 Authoritative startup FSM and transition details are documented in [`architecture/startup-semantic-fsm.md`](../architecture/startup-semantic-fsm.md).
 Zone lifecycle details are documented in [`architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md).
 DHW lifecycle details are documented in [`architecture/dhw-freshness-fsm.md`](../architecture/dhw-freshness-fsm.md).
+Structural family/instance discovery rules are documented in [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md) and [`../protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md).
 
 ### Projection Notes
 
