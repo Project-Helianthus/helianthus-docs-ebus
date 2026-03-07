@@ -22,6 +22,7 @@ Companion references:
 
 - configuration gates: [`semantic-configuration-gates.md`](./semantic-configuration-gates.md)
 - mechanism/FSM map: [`semantic-structure-fsm-map.md`](./semantic-structure-fsm-map.md)
+- functional-module semantics: [`functional-modules.md`](./functional-modules.md)
 
 ## What Counts as a Structural Decision
 
@@ -38,6 +39,7 @@ Examples:
 - how many zones are published;
 - whether a cylinder instance is real or only config-shaped noise;
 - whether circuits belong to the regulator or the FM5 module;
+- how current FM5-specific semantics fit into the broader functional-module model;
 - whether the gateway is allowed to expose `solar` and `cylinders` at all.
 
 ## Flow Overview
@@ -132,6 +134,8 @@ These decide whether a whole semantic family may be published.
 - `solar`
 - `cylinders`
 
+The current functional-module architecture and deferred generic target are documented separately in [`functional-modules.md`](./functional-modules.md).
+
 ## Current Anti-Pattern Removed
 
 `vr71CircuitStartIndex` was a synthetic threshold that compressed circuit ownership into a single global number. It did not come from a direct bus truth and could mis-model real topologies.
@@ -168,8 +172,11 @@ Each structural rule in `semantic_vaillant.go` must end up in one of these bucke
 
 - cataloged as `PROVEN`
 - cataloged as `HEURISTIC`
+- cataloged as `COMPOSITE`
 - cataloged as `UNKNOWN`
 - explicitly declared out of scope for Phase 1
+
+The structural decision catalog is authoritative for `Evidence status`, `Scope of validity`, and regulator-document `Constraint strength`.
 
 The decision catalog is the authoritative reference for the rule-by-rule contract:
 

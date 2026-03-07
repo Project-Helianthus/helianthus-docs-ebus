@@ -131,13 +131,13 @@ Beyond read/write, B524 supports additional selector types (documented in `helia
 | 0x0A | Radio Sensors (VR92) | Yes | 0x00-0x0A | **0x02 + 0x06** | 759 local + 338 remote | — |
 | 0x06 | Programs/Timetables | — | — | 0x0B | — | — |
 | 0x07 | Programs/Timetables | — | — | 0x0B | — | — |
-| 0x0C | Remote Accessories (VR71/FM5) | Yes | 0x00-0x0A | 0x06 only | 165 (15/inst) | — |
+| 0x0C | Remote Accessories / functional-module slots | Yes | 0x00-0x0A | 0x06 only | 165 (15/inst) | — |
 
 **GG=0x08 — Buffer/Solar Cylinder 2:** Dual-opcode confirmed by scan. Local (0x02): 7 singleton registers — cylinder max setpoint, charge hysteresis/offset, two NaN temperatures, pump status. Remote (0x06): 4 registers per instance across all 11 instances — likely buffer-tank sensor data. Constraint catalog has 6 entries matching GG=0x05 (cylinders) structure. ebusd does not define GG=0x08.
 
 **Radio sensor groups (0x09, 0x0A):** Both support dual-namespace. The local namespace (0x02) stores per-slot configuration (sensor enable flags, temperature schedules, BASV2 serial number fragments). The remote namespace (0x06) stores live data from paired radio devices (temperature, humidity, device type, firmware version). Instance II selects the sensor slot (II=0x00 = slot 0, up to II=0x0A = slot 10).
 
-**GG=0x0C — Remote Accessories (VR71/FM5):** Responds only to opcode 0x06 (remote data). No local config namespace. 15 registers per instance. Uses the same remote-device slot schema as GG=0x09/0x0A. `device_class_address` 0x26 maps to VR71 (FM5 functional module) per ebusd scan evidence and Vaillant documentation ("FM5 functional module: instead of VR 71").
+**GG=0x0C — Remote Accessories / functional-module slots:** Responds only to opcode 0x06 (remote data). No local config namespace. 15 registers per instance. Uses the same remote-device slot schema as GG=0x09/0x0A. In the current lab, `II=0x01` with `device_class_address=0x26` correlates to the eBUS-identified `VR_71` hardware at slave address `0x26`, but that family identification comes from eBUS identity correlation rather than from B524 alone.
 
 **Discovery:** Directory probe (`opcode=0x00`) is unreliable for GG=0x05 (terminator quirk). Use static topology. Multi-instance groups: scan all instances up to II=0x0A, expose only active ones.
 
@@ -717,10 +717,10 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are i
 
 1. **GG=0x09** (VRC7xx / system controls) — II=0x00 through II=0x0A
 2. **GG=0x0A** (VR92 / remote controls) — II=0x00 through II=0x0A
-3. **GG=0x0C** (VR71/FM5 / wired accessories) — II=0x00 through II=0x0A
+3. **GG=0x0C** (remote accessories / functional-module slots) — II=0x00 through II=0x0A
 
 For each slot, read `device_connected` (0x0001). If =1, read:
-- `device_class_address` (0x0002) — resolve to device family: 0x15→VRC720, 0x35→VR92, 0x26→VR71/FM5
+- `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in the current lab, `0x26` correlates with the eBUS-identified `VR_71`
 - `device_firmware_version` (0x0004) — byte-decimal triplet
 - `reception_strength` (0x001F) — 0-10 scale (4=acceptable, <4=unstable)
 - `remote_control_address` (0x0019) — unique per remote (1..N), 0 for master
@@ -735,7 +735,7 @@ For each slot, read `device_connected` (0x0001). If =1, read:
 
 ## GG=0x06 — Programs/Timetables
 
-Uses opcode `0x0B` (array/table transport). Scalar register scanning is not applicable — this group uses a different selector schema than `0x02`/`0x06` register reads. See [GetExtendedRegisters §4.5](./ebus-vaillant-GetExtendedRegisters.md#45-0x0b-arraytable-read-schedules) for wire protocol details.
+Uses opcode `0x0B` (array/table transport). Scalar register scanning is not applicable — this group uses a different selector schema than `0x02`/`0x06` register reads. See [GetExtendedRegisters §4.5](./ebus-vaillant-B524.md#45-0x0b-arraytable-read-schedules) for wire protocol details.
 
 No register table. Schema under investigation.
 
@@ -749,20 +749,20 @@ No register table. Schema under investigation.
 
 ---
 
-## GG=0x0C — Remote Accessories, VR71/FM5 (multi-instance, remote only)
+## GG=0x0C — Remote Accessories / functional-module slots (multi-instance, remote only)
 
 > **Verified 2026-03-05:** Responds only to opcode 0x06 (no local config namespace — opcode 0x02 returns 0 valid registers). 15 registers per instance, 165 total valid. Uses the same remote-device slot schema as GG=0x09/0x0A.
 >
-> Your **VR71 (FM5 functional module)** appears at **II=0x01** with `device_class_address=0x26` and firmware 01.00.00. The VRC720f manual explicitly defines: "FM5 functional module: instead of VR 71."
+> In the current lab, the slot at **II=0x01** has `device_class_address=0x26` and firmware 01.00.00. This correlates with the eBUS-identified `VR_71` hardware at slave address `0x26`. The family/product identification comes from eBUS identity, not from B524 alone.
 
 ### GG=0x0C Remote Data (opcode 0x06)
 
-Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. **II=0x01 has `device_class_address=0x26` (VR71/FM5)** but `device_connected=0` — the device is recognized but currently not reporting as "live" (wired module, not radio — may use a different liveness mechanism).
+Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. In the current lab, **II=0x01 has `device_class_address=0x26`**, matching the eBUS-identified hardware at slave address `0x26`, but `device_connected=0` — the slot is recognized but currently not reporting as "live" (wired module, not radio — may use a different liveness mechanism).
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Semantic | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|----------|-------|
 | 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | | FLAGS=0x01. All: 0 |
-| 0x0002 | device_class_address | S | u8 | enum | — | — | `0x26=VR71/FM5` | — | | FLAGS=0x00. II=1: 0x26 (38). Canonical eBUS address for VR71 (ebusd: 0x26→VR_71) |
+| 0x0002 | device_class_address | S | u8 | enum | — | — | `0x26` in current lab | — | | FLAGS=0x00. II=1: 0x26 (38). In the current lab, this matches the eBUS-identified `VR_71` hardware at slave address `0x26`; treat as correlation, not standalone B524 proof. |
 | 0x0003 | device_error_code | S | u8 | — | — | — | — | — | | FLAGS=0x00. All empty: 0xFF |
 | 0x0004 | device_firmware_version | S | time | version | — | — | — | — | | FLAGS=0x00. II=1: 01.00.00 (byte-decimal). Empty: FF/FF/FF |
 | 0x000A | (unknown) | C | u16 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
@@ -771,7 +771,12 @@ Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-devi
 | 0x0028-0x002E | (unknown, 7 regs) | C | u8 | — | — | — | — | — | | FLAGS=0x02. All: 0 |
 | 0x002F | (unknown) | S | u8 | — | — | — | — | — | | FLAGS=0x00. All: 5 |
 
-**VR71/FM5 identification:** `device_class_address=0x26` maps to VR71 based on two independent sources: (1) ebusd scan logs show address 0x26 → ID=VR_71, (2) Vaillant VRC720f manual defines "FM5 functional module: instead of VR 71" and shows systems with FM5 (VR71) alongside VR92f and VRC720f. Validation: power-cycle the VR71/FM5 and observe whether II=0x01 state changes.
+**Current-lab VR_71 correlation:** B524 yields `device_class_address=0x26` at `II=0x01`. The conclusion that this slot corresponds to `VR_71` comes from correlating that hint with eBUS identity data, where slave address `0x26` identifies itself as `VR_71`. Vaillant controller documentation then constrains the profile interpretation by describing `FM5` as "instead of VR 71". This is useful and strong for the current lab/profile, but it is not standalone protocol proof that `GG=0x0C` universally means `VR71/FM5`.
+
+Architectural note:
+
+- current Helianthus functional-module semantics are documented in [`../architecture/functional-modules.md`](../architecture/functional-modules.md)
+- the current implemented semantic surface is FM5-centered; the generic `functionalModules[]` target is deferred
 
 ---
 
@@ -819,6 +824,7 @@ Ownership note:
 - The gateway now emits explicit ownership only for proven topologies.
 - For the currently proven live topology (`system_scheme=1`, `module_configuration_vr71=2`, FM5 interpreted), all discovered circuits are marked as managed by `VR_71` (`FUNCTION_MODULE`, address `0x26`).
 - Unproven topologies are emitted as `UNKNOWN`; the gateway does not synthesize a replacement threshold heuristic.
+- Broader architectural treatment of FM3/FM5/VR66 as functional-module families is documented in [`../architecture/functional-modules.md`](../architecture/functional-modules.md).
 
 | Semantic Path | B524 | Type |
 |---------------|------|------|

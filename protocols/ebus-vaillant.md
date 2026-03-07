@@ -4,7 +4,7 @@ This document is the top-level reference for Vaillant message identifiers (`PB/S
 
 For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x16` (B516, Energy statistics): [`protocols/ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
-- `0xB5 0x24` (B524, GetExtendedRegisters): [`protocols/ebus-vaillant-GetExtendedRegisters.md`](ebus-vaillant-GetExtendedRegisters.md)
+- `0xB5 0x24` (B524, GetExtendedRegisters): [`protocols/ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 
 ## Scope
 
@@ -143,7 +143,7 @@ See `development/target-emulation.md` for Helianthus implementation details.
 `0xB5 0x24` is a selector-opcode multiplexed protocol used heavily by Vaillant regulators.
 
 - Dedicated reference:
-  [`protocols/ebus-vaillant-GetExtendedRegisters.md`](ebus-vaillant-GetExtendedRegisters.md)
+  [`protocols/ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - This includes opcode families, selector structures (`GG/II/RR`), response headers (`TT/GG/RR`), discovery rules, and schedule/table read notes.
 
 ## Energy Statistics (0xB5 0x16)

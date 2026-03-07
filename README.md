@@ -19,7 +19,7 @@ Implementation-neutral references for the eBUS wire protocol and data types live
 | Area | Start docs |
 |---|---|
 | Architecture | [architecture/overview.md](architecture/overview.md), [architecture/decisions.md](architecture/decisions.md), [architecture/mcp-first-development.md](architecture/mcp-first-development.md) |
-| Protocols | [protocols/ebus-overview.md](protocols/ebus-overview.md), [protocols/ebusd-tcp.md](protocols/ebusd-tcp.md), [protocols/ebus-vaillant.md](protocols/ebus-vaillant.md), [protocols/ebus-vaillant-GetExtendedRegisters.md](protocols/ebus-vaillant-GetExtendedRegisters.md) |
+| Protocols | [protocols/ebus-overview.md](protocols/ebus-overview.md), [protocols/ebusd-tcp.md](protocols/ebusd-tcp.md), [protocols/ebus-vaillant.md](protocols/ebus-vaillant.md), [protocols/ebus-vaillant-B524.md](protocols/ebus-vaillant-B524.md) |
 | Types | [types/overview.md](types/overview.md), [types/primitives.md](types/primitives.md), [types/composite.md](types/composite.md) |
 | API | [api/graphql.md](api/graphql.md), [api/mcp.md](api/mcp.md), [api/portal.md](api/portal.md) |
 | Deployment | [deployment/full-stack.md](deployment/full-stack.md), [deployment/tinygo-esp32.md](deployment/tinygo-esp32.md) |

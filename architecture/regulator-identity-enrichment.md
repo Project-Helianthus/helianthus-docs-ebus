@@ -58,6 +58,27 @@ But catalog knowledge is **not authoritative for B524 capability**:
 - an unknown product can still be a valid B524 semantic root;
 - a known regulator-family product does not by itself prove B524 capability without protocol evidence.
 
+## Normalized Product Identity
+
+One useful output of identity enrichment is a normalized `productCode`.
+
+This is the concrete product identifier used by higher-level contracts when Helianthus needs per-product interpretation, for example:
+
+- `VR70`
+- `VR71`
+- `VR66`
+- `VR61`
+- `VR68`
+
+Important constraints:
+
+- `productCode` is derived from identity enrichment, not from B524 alone;
+- `productCode` may combine eBUS identity strings, product-catalog matches, and documented naming conventions;
+- `productCode` may remain unknown without blocking B524 semantic discovery;
+- `productCode` is useful for per-product semantic interpretation, but it is not itself proof of B524 capability.
+
+This distinction matters for deferred contracts such as [`functional-modules.md`](./functional-modules.md), where concrete product identity is a better discriminator than a synthetic family taxonomy.
+
 ## Separation of Concerns
 
 The correct layering is:
@@ -109,5 +130,6 @@ These may still be useful as enrichment or hints, but they must not remain the s
 
 - Semantic root discovery: [`b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
 - Vaillant regulator model: [`vaillant.md`](./vaillant.md)
+- Functional-module target: [`functional-modules.md`](./functional-modules.md)
 - Family naming reference: [`../protocols/basv.md`](../protocols/basv.md)
 - Product IDs catalog: [`helianthus-ebus-vaillant-productids`](https://github.com/Project-Helianthus/helianthus-ebus-vaillant-productids)
