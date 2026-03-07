@@ -142,7 +142,7 @@ Response fields:
 - `energy_totals`: optional aggregated energy object
 - `boiler_status`: optional boiler semantic object (`state`, `config`, `diagnostics`)
 - `system`: optional system status (state, config, properties)
-- `circuits`: optional circuit list (`index`, `circuit_type`, `has_mixer`, `state`, `config`)
+- `circuits`: optional circuit list (`index`, `circuit_type`, `has_mixer`, `state`, `config`, `managing_device`)
 - `radio_devices`: optional radio-device list (per-slot semantic RF data)
 - `fm5_semantic_mode`: optional FM5 semantic mode string
 - `solar`: optional solar semantic object
@@ -248,6 +248,11 @@ Example response:
         "flow_temp_min_c": 20.0,
         "room_temp_control": "modulating",
         "cooling_enabled": false
+      },
+      "managing_device": {
+        "role": "FUNCTION_MODULE",
+        "device_id": "VR_71",
+        "address": 38
       }
     }
   ],

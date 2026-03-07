@@ -26,6 +26,13 @@ The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
   - `ebus.devices`
   - `ebus.invoke`
 
+## Semantic Payload Notes
+
+- `ebus.v1.semantic.circuits.get` exposes explicit per-circuit ownership as `managing_device`.
+- `managing_device.role` is always present and is one of `REGULATOR`, `FUNCTION_MODULE`, or `UNKNOWN`.
+- `managing_device.device_id` and `managing_device.address` are populated only when the gateway has proven ownership evidence for the current topology.
+- `ebus.v1.semantic.system.get` no longer exposes `vr71_circuit_start_index`; that threshold was a gateway heuristic and is not part of the canonical contract.
+
 ## Plane Boundary Note
 
 - `scan` is treated as a cross-device discovery layer and is not modeled as a heat-source class plane.

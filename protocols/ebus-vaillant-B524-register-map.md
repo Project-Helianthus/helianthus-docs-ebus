@@ -807,6 +807,12 @@ Source: `refreshSystem()` in `semantic_vaillant.go`
 
 Source: `refreshCircuits()` in `semantic_vaillant.go`
 
+Ownership note:
+- `circuits[].managing_device` is a semantic contract, not a direct single-register read.
+- The gateway now emits explicit ownership only for proven topologies.
+- For the currently proven live topology (`system_scheme=1`, `module_configuration_vr71=2`, FM5 interpreted), all discovered circuits are marked as managed by `VR_71` (`FUNCTION_MODULE`, address `0x26`).
+- Unproven topologies are emitted as `UNKNOWN`; the gateway does not synthesize a replacement threshold heuristic.
+
 | Semantic Path | B524 | Type |
 |---------------|------|------|
 | `[].state.heating_circuit_flow_setpoint` | GG=0x02, RR=0x0007 | f32 |
@@ -824,6 +830,7 @@ Source: `refreshCircuits()` in `semantic_vaillant.go`
 | `[].config.heating_flow_temperature_minimum_setpoint` | GG=0x02, RR=0x0012 | f32 |
 | `[].config.heat_demand_limited_by_outside_temp` | GG=0x02, RR=0x0014 | f32 |
 | `[].config.room_temperature_control_mode` | GG=0x02, RR=0x0015 | u16 |
+| `[].managing_device` | derived semantic ownership | object |
 | `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u8) |
 | `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 |
 | `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 |
