@@ -131,7 +131,10 @@ In practice, Vaillant’s approach often implies:
 
 Helianthus should model Vaillant regulator subsystems as **logical components** rather than pretending they are separate eBUS addresses.
 
-For how the gateway detects whether a regulator is present, see [`architecture/regulator-detection.md`](./regulator-detection.md).
+For how the gateway discovers the B524 semantic root and then enriches its identity, see:
+
+- [`architecture/b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
+- [`architecture/regulator-identity-enrichment.md`](./regulator-identity-enrichment.md)
 
 Tooling guidelines:
 

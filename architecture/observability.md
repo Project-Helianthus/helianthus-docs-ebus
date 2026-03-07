@@ -72,7 +72,8 @@ All metrics are exposed via Go's `expvar` package at `/debug/vars` (JSON format)
 ## Cross-Links
 
 - Startup FSM: [`architecture/startup-semantic-fsm.md`](./startup-semantic-fsm.md)
-- Regulator detection: [`architecture/regulator-detection.md`](./regulator-detection.md)
+- B524 semantic root discovery: [`architecture/b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
+- Regulator identity enrichment: [`architecture/regulator-identity-enrichment.md`](./regulator-identity-enrichment.md)
 - Energy merge: [`architecture/energy-merge.md`](./energy-merge.md)
 - Zone presence FSM: [`architecture/zone-presence-fsm.md`](./zone-presence-fsm.md)
 - DHW freshness: [`architecture/dhw-freshness-fsm.md`](./dhw-freshness-fsm.md)
