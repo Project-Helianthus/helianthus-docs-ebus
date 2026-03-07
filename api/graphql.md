@@ -233,38 +233,47 @@ type SystemProperties {
 }
 
 type CircuitStatus {
-  id: String!
-  instance: Int!
-  state: CircuitState
-  config: CircuitConfig
-  properties: CircuitProperties
+  index: Int!
+  circuitType: String!
+  hasMixer: Boolean!
+  state: CircuitState!
+  config: CircuitConfig!
+  managingDevice: CircuitManagingDevice!
+}
+type CircuitManagingDevice {
+  role: ManagingDeviceRole!
+  deviceId: String
+  address: Int
+}
+enum ManagingDeviceRole {
+  REGULATOR
+  FUNCTION_MODULE
+  UNKNOWN
 }
 type CircuitState {
-  heatingCircuitFlowSetpoint: Float
-  currentCircuitFlowTemperature: Float
-  circuitState: Int
-  pumpStatus: Boolean
-  calculatedFlowTemperature: Float
-  mixerPositionPercentage: Float
-  currentRoomHumidity: Float
-  dewPointTemperature: Float
-  pumpOperatingHours: Int
-  pumpStartsCount: Int
+  pumpActive: Boolean
+  mixerPositionPct: Float
+  flowTemperatureC: Float
+  flowSetpointC: Float
+  calcFlowTempC: Float
+  circuitState: String
+  humidity: Float
+  dewPoint: Float
+  pumpHours: Float
+  pumpStarts: Int
 }
 type CircuitConfig {
   heatingCurve: Float
-  heatingFlowTemperatureMaximumSetpoint: Float
-  heatingFlowTemperatureMinimumSetpoint: Float
-  heatDemandLimitedByOutsideTemp: Float
+  flowTempMaxC: Float
+  flowTempMinC: Float
+  summerLimitC: Float
+  frostProtC: Float
   coolingEnabled: Boolean
-  roomTemperatureControlMode: Int
-}
-type CircuitProperties {
-  heatingCircuitType: Int
-  mixerCircuitTypeExternal: Int
-  frostProtectionThreshold: Float
+  roomTempControl: String
 }
 ```
+
+`vr71CircuitStartIndex` is intentionally absent from the canonical GraphQL contract. Circuit ownership is modeled explicitly on each `circuits[]` item via `managingDevice`, not through a global FM5 threshold.
 
 ### `energyTotals` Root Query
 
