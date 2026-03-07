@@ -18,6 +18,11 @@ The authoritative decision catalog is [`protocols/ebus-vaillant-B524-structural-
 
 Each catalog entry records both the primary B524/register evidence and, where available, a supporting regulator-document statement identified by the source document's own title rather than by file name.
 
+Companion references:
+
+- configuration gates: [`semantic-configuration-gates.md`](./semantic-configuration-gates.md)
+- mechanism/FSM map: [`semantic-structure-fsm-map.md`](./semantic-structure-fsm-map.md)
+
 ## What Counts as a Structural Decision
 
 A structural decision answers one of these questions:
@@ -82,6 +87,8 @@ These FSMs control whether structural decisions become visible or stay suppresse
 - Startup publication FSM: [`startup-semantic-fsm.md`](./startup-semantic-fsm.md)
 - Zone presence hysteresis FSM: [`zone-presence-fsm.md`](./zone-presence-fsm.md)
 - Per-register read breaker: [`semantic-read-circuit-breaker.md`](./semantic-read-circuit-breaker.md)
+
+The higher-level classification of which mechanisms affect structure vs. publication vs. freshness is documented in [`semantic-structure-fsm-map.md`](./semantic-structure-fsm-map.md).
 
 Their roles are different:
 
