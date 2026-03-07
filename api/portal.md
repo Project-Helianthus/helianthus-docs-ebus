@@ -226,7 +226,7 @@ Example response:
       "max_room_humidity": 70
     },
     "properties": {
-      "system_scheme": 8,
+      "system_scheme": 1,
       "module_configuration_vr71": 2
     }
   },
