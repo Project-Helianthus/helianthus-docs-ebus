@@ -60,7 +60,7 @@ For functional modules, the most important distinction is:
 
 - **protocol truth** for B524 register existence and encoding
 - **profile truth** for controller-family concepts such as `VR71 config`, `VR70 addr. 1..3`, or legacy module support
-- **generic family buckets** vs **product/profile labels**
+- **product identification** vs **B524-observed semantics**
 
 The target contract must preserve that distinction rather than flatten it.
 
@@ -113,7 +113,7 @@ Current architectural interpretation:
 - `VR71/FM5` is the only functional-module family with explicit semantic gating and ownership effects in the implemented contract.
 - `VR71/FM5` role semantics must remain **profile-scoped** unless separately proven at protocol level.
 - `GG=0x0C` is protocol truth as a group namespace, but its interpretation as a `VR71/FM5` family signal remains profile/lab-scoped.
-- In a generic target, `FM5` is better treated as a profile label around the concrete product/family pair than as the primary family enum value.
+- In a generic target, `FM5` is better treated as a profile label around the concrete product code rather than as a primary contract field.
 
 ### `VR70 / FM3`
 
@@ -148,7 +148,7 @@ Important architectural consequence:
 - multiple `FM3` modules may exist
 - it has explicit per-module addressing in the documented controller ecosystem
 - it has explicit per-address configuration in the documented controller ecosystem
-- In a generic target, `FM3` is better treated as a profile label around `VR70` rather than as the only family classification.
+- In a generic target, `FM3` is better treated as a profile label around `VR70` rather than as a primary contract field.
 
 ### `VR66`
 
@@ -196,7 +196,6 @@ Illustrative minimal shape only; not current API:
 ```text
 functionalModules[]:
   - key
-  - family
   - productCode
   - profileAddressIndex
   - busAddress
@@ -211,10 +210,9 @@ Suggested field semantics:
 - `key`
   - stable identifier for the module entry
   - not necessarily identical to eBUS address
-- `family`
-  - generic semantic bucket such as `FUNCTION_MODULE`, `CONTROL_CENTRE`, `SOLAR_MODULE`, `MIXER_MODULE`, `LEGACY_MODULE`, `UNKNOWN`
 - `productCode`
-  - concrete product or product-family label such as `VR70`, `VR71`, `VR66`, `VR61`, `VR68`
+  - concrete product identifier or product-family code used for interpretation, such as `VR70`, `VR71`, `VR66`, `VR61`, `VR68`
+  - this is the field that actually matters for per-product semantic implementation
 - `profileAddressIndex`
   - optional controller/profile address index when the documented ecosystem exposes per-module addressing
   - example: `VR70 addr. 1..3`
@@ -229,7 +227,6 @@ Suggested field semantics:
 - `provenance`
   - structured provenance per populated claim, not a single flat label
   - at minimum the contract should be able to express separate provenance for:
-    - `family`
     - `productCode`
     - `profileAddressIndex`
     - `busAddress`
@@ -242,10 +239,10 @@ This target is deliberately narrower than a capability-rich or policy-rich modul
 
 It also deliberately separates:
 
-- generic family classification
-- concrete product code
+- concrete product identification
 - profile/controller address indexing
 - physical bus addressing
+- B524-observed semantics
 
 It deliberately does **not** introduce a generic `instance` field in the minimal target, because that would blur:
 
@@ -258,20 +255,14 @@ If a future family needs an explicit instance concept, that should be added in a
 
 ## Design Rules for the Target
 
-### 1. Per module, not per family scalar
+### 1. Per module, not per-family scalar or taxonomy
 
 The target should be per-module/per-instance, not a single global scalar such as:
 
 - `fm3SemanticMode`
 - `fm5SemanticMode`
 
-It should also avoid collapsing:
-
-- generic family buckets
-- concrete product identities
-- profile labels such as `FM3` / `FM5`
-
-into one unstable enum.
+It should also avoid inventing a generic family taxonomy when the actual discriminator for interpretation is the concrete product identity plus the observed B524 surface.
 
 ### 2. Inventory-first and provenance-first
 
