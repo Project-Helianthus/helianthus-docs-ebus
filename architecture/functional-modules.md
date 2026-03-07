@@ -202,7 +202,6 @@ functionalModules[]:
   - configurationSetValue
   - inventoryPresence
   - provenance
-  - notes
 ```
 
 Suggested field semantics:
@@ -232,8 +231,6 @@ Suggested field semantics:
     - `busAddress`
     - `configurationSetValue`
     - `inventoryPresence`
-- `notes`
-  - compact rationale for unknowns, scope limits, or profile constraints
 
 This target is deliberately narrower than a capability-rich or policy-rich module contract.
 
