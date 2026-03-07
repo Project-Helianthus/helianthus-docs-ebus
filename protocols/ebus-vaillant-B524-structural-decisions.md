@@ -42,23 +42,25 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | `CONSTRAINING` | Narrows the plausible interpretation space for a profile/configuration |
 | `NON_AUTHORITATIVE` | Useful context, but must not be treated as hard proof for the semantic rule |
 
-## B524-SD-01 — Controller Presence Gates B524 Structure Discovery
+## B524-SD-01 — B524 Semantic Root Availability
 
 | Field | Value |
 | --- | --- |
 | Semantic effect | Enables or disables B524-backed structure discovery for zones, circuits, radio devices, FM5, solar, and cylinders |
-| Source registers | None |
-| Reference | Not a B524 register rule; source is registry discovery |
-| Source document title | None. No regulator document currently proves controller-role discovery from product identity strings. |
+| Source registers | No single register. This is a capability-discovery rule over B524 request/response behavior on candidate slave addresses. |
+| Reference | [`ebus-vaillant-B524-register-map.md`](./ebus-vaillant-B524-register-map.md), [`../architecture/b524-semantic-root-discovery.md`](../architecture/b524-semantic-root-discovery.md) |
+| Source document title | None. Product identity and regulator branding are not required to prove B524 semantic-root availability. |
 | Source section | None |
-| Supporting statement | None. The implemented `BASV` prefix lookup remains a gateway-local controller-identification heuristic. |
+| Supporting statement | None. Identity enrichment and branding classification are separate from the structural precondition that a slave endpoint responds coherently as a B524 semantic root. |
 | Constraint strength | None |
-| Scope of validity | `GATEWAY_POLICY` |
-| Evaluation rule | `refreshDiscovery()` uses `findDeviceAddressByPrefix(p.reg, "BASV")`; when not found, controller becomes `0`, B524-backed families are cleared/reset, and FM5 mode becomes `ABSENT` |
-| Fallback / unknown behavior | Prefix match on `BASV` is a naming heuristic, not a protocol proof of controller role |
-| Published effect | `zones`, `circuits`, and `radioDevices` publish as empty/cache-backed; `fm5SemanticMode` becomes `ABSENT`; `solar` and `cylinders` are cleared |
-| Evidence status | `HEURISTIC` |
-| Code anchors | `refreshDiscovery()`, `findDeviceAddressByPrefix()` |
+| Scope of validity | `PROTOCOL` for the capability gate; `GATEWAY_POLICY` for candidate ordering and multi-root selection policy |
+| Evaluation rule | B524-backed structure discovery is allowed once at least one candidate slave address responds coherently to B524 discovery probes. Scan may start at `0x15` for convenience, but it must not be limited to `0x15` and must not require known product identity. |
+| Fallback / unknown behavior | If no candidate slave proves B524 capability, B524-backed families remain unavailable. Unknown identity does not block discovery once capability is proven. |
+| Published effect | `zones`, `circuits`, `radioDevices`, `fm5SemanticMode`, `solar`, and `cylinders` are eligible for structural evaluation once a B524 semantic root is available. |
+| Evidence status | `PROVEN` for the capability gate; candidate ordering remains `GATEWAY_POLICY` |
+| Code anchors | Canonical contract: `refreshDiscovery()` root-discovery phase. Current implementation still uses `findDeviceAddressByPrefix()` and therefore diverges from this contract. |
+
+Current implementation note: the gateway still uses `findDeviceAddressByPrefix("BASV")` in `refreshDiscovery()`. This is documented as code debt and must not be read as the semantic contract.
 
 ## B524-SD-02 — Zone Instance Discovery
 

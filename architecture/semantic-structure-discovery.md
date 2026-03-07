@@ -44,7 +44,7 @@ Examples:
 
 ```mermaid
 flowchart TD
-  A["Registry discovery / controller precondition"] --> B["refreshDiscovery()"]
+  A["B524 semantic root discovery"] --> B["refreshDiscovery()"]
   B --> C["Zone presence FSM"]
   C --> D["publishZones()"]
 
@@ -71,7 +71,7 @@ flowchart TD
 
 Operational reading:
 
-1. Gateway first needs a controller candidate.
+1. Gateway first needs a B524-capable semantic root endpoint.
 2. `refreshDiscovery()` probes zone presence and drives the zone presence FSM.
 3. `refreshConfig()` and `refreshState()` enrich already-present zone entries with names and structural config.
 4. `refreshSystem()` provides the system properties needed by later structural rules.
@@ -102,7 +102,8 @@ Their roles are different:
 
 These decide whether B524 structure discovery can run at all.
 
-- controller present
+- B524-capable semantic root
+- optional identity enrichment after root discovery
 - registry evidence for FM5 hardware
 
 ### 2. Family/Instance Discovery
@@ -143,6 +144,11 @@ That change is the model for future cleanup:
 
 - structure should be documented as explicit evidence-backed contract;
 - synthetic convenience thresholds should either be marked `HEURISTIC` or removed.
+
+The semantic-root precondition is documented separately from controller identity labeling:
+
+- root discovery: [`b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
+- identity enrichment: [`regulator-identity-enrichment.md`](./regulator-identity-enrichment.md)
 
 ## Out of Scope for Phase 1
 

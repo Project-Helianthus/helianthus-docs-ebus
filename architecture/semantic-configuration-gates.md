@@ -31,7 +31,7 @@ The authoritative rule-by-rule source remains the decision catalog:
 
 | Gate | Decision IDs | Inputs | Output | Scope |
 | --- | --- | --- | --- | --- |
-| Controller precondition | `SD-01` | Controller/regulator discovery result | Enables or suppresses B524 structure discovery families | `GATEWAY_POLICY` in current implementation |
+| B524 semantic root precondition | `SD-01` | B524 capability probes on candidate slave addresses | Enables or suppresses B524 structure discovery families | `PROTOCOL` for capability; `GATEWAY_POLICY` for candidate ordering |
 | Zone instance gate | `SD-02`, `SD-03` | `GG=0x03 RR=0x001C` + zone presence FSM | Zone instance becomes present/absent | `PROTOCOL` for direct probe path; `GATEWAY_POLICY` for hysteresis/fallback |
 | Zone naming gate | `SD-04` | `GG=0x03 RR=0x0016/0x0017/0x0018` | Zone name becomes explicit or falls back | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
 | Zone room-sensor mapping gate | `SD-05` | `GG=0x03 RR=0x0013` | `roomTemperatureZoneMapping` becomes available | `PROTOCOL` |
@@ -44,13 +44,14 @@ The authoritative rule-by-rule source remains the decision catalog:
 | Cylinder family gate | `SD-12` | `fm5SemanticMode` + `GG=0x05` readability | `cylinders[]` family published/cleared | Mixed `GATEWAY_POLICY` + `PROFILE` |
 | Individual cylinder gate | `SD-13` | `GG=0x05 RR=0x0004` (`temperatureC`) | Individual cylinder instance published/omitted | `GATEWAY_POLICY` |
 
-## Controller Precondition Gate
+## B524 Semantic Root Gate
 
 - Structural role: enables or suppresses the entire B524 structure-discovery pipeline.
-- Current rule source: [`SD-01`](../protocols/ebus-vaillant-B524-structural-decisions.md#b524-sd-01--controller-presence-gates-b524-structure-discovery)
-- Detailed controller-detection contract: [`regulator-detection.md`](./regulator-detection.md)
+- Current rule source: [`SD-01`](../protocols/ebus-vaillant-B524-structural-decisions.md#b524-sd-01--b524-semantic-root-availability)
+- Root-discovery contract: [`b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
+- Identity enrichment contract: [`regulator-identity-enrichment.md`](./regulator-identity-enrichment.md)
 
-This page does not restate the controller-detection rationale. It only treats controller presence as the precondition gate that decides whether B524-backed families can be evaluated.
+This page does not restate the root-discovery or identity-enrichment rationale. It only treats B524 semantic-root availability as the precondition that decides whether B524-backed families can be evaluated at all.
 
 ## Zone Gates
 
