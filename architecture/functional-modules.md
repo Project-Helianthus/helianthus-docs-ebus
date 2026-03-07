@@ -211,6 +211,7 @@ Suggested field semantics:
   - not necessarily identical to eBUS address
 - `productCode`
   - concrete normalized product identifier derived from identity enrichment, such as `VR70`, `VR71`, `VR66`, `VR61`, `VR68`
+  - see [`regulator-identity-enrichment.md`](./regulator-identity-enrichment.md) for the identity-layer rules behind this field
   - this is the field that actually matters for per-product semantic implementation
   - it is not a generic family taxonomy
 - `profileAddressIndex`
