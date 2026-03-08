@@ -73,6 +73,9 @@ descriptor == NaN
 descriptor == 0.0
   -> weak negative hint only; must not be treated as a universal
      "group absent" or "hole" marker
+  -> still a valid 4-byte directory reply and therefore sufficient
+     transport-level evidence that B524 directory probing is supported
+     at this address
 
 other numeric values
   -> discrete observed descriptor values; often appear as
@@ -86,6 +89,9 @@ Important:
 - In particular, `0.0` is known to be insufficient as an absence marker:
   single-circuit installations without functional modules may still expose
   valid `GG=0x02` and `GG=0x03` registers while the directory descriptor is `0.0`.
+- Autodetection / transport compatibility is a separate question from
+  group-level scan policy: any valid 4-byte directory response counts as
+  evidence that the target speaks B524, even when the descriptor value is `0.0`.
 - Functional-module inventory and hydraulic topology may help corroborate
   discovery decisions, but they do not replace B524 as the primary
   structural source.
@@ -122,6 +128,9 @@ Response payload (4 bytes):
 Discovery rules:
 - Iterate GG upward.
 - Treat only 4-byte responses as candidate directory descriptors.
+- For transport-level compatibility detection / autodetection, any valid
+  4-byte directory response is sufficient evidence that B524 directory
+  probing is supported on that address, even if the descriptor value is `0.0`.
 - Treat `NaN` as the current Helianthus termination policy, backed by lab
   evidence, but not yet as protocol-wide truth.
 - Do not suppress known groups solely because `descriptor == 0.0`.
