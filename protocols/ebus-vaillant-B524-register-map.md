@@ -234,14 +234,14 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0048 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 1 |
 | 0x004B | system_flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | **S** `system.state.system_flow_temperature`, `boiler_status.state.flow_temperature` | Read-only |
 | 0x004D | multi_relay_setting | C | u16 | enum | MultiRelaySetting | — | →mamode | — | | |
-| 0x004E | fuel_consumption_heating_this_month | E | u32 | kWh | PrFuelSumHcThisMonth | — | — | — | | |
-| 0x004F | energy_consumption_heating_this_month | E | u32 | kWh | PrEnergySumHcThisMonth | — | — | — | | |
-| 0x0050 | energy_consumption_dhw_this_month | E | u32 | kWh | PrEnergySumHwcThisMonth | — | — | — | | |
-| 0x0051 | fuel_consumption_dhw_this_month | E | u32 | kWh | PrFuelSumHwcThisMonth | — | — | — | | |
-| 0x0052 | fuel_consumption_heating_last_month | E | u32 | kWh | PrFuelSumHcLastMonth | — | — | — | | |
-| 0x0053 | energy_consumption_heating_last_month | E | u32 | kWh | PrEnergySumHcLastMonth | — | — | — | | |
-| 0x0054 | energy_consumption_dhw_last_month | E | u32 | kWh | PrEnergySumHwcLastMonth | — | — | — | | |
-| 0x0055 | fuel_consumption_dhw_last_month | E | u32 | kWh | PrFuelSumHwcLastMonth | — | — | — | | |
+| 0x004E | fuel_consumption_heating_this_month | E | u32 | kWh | PrFuelSumHcThisMonth | — | — | — | **S** `energy_totals.gas.climate.monthly[1]` | |
+| 0x004F | energy_consumption_heating_this_month | E | u32 | kWh | PrEnergySumHcThisMonth | — | — | — | **S** `energy_totals.electric.climate.monthly[1]` | |
+| 0x0050 | energy_consumption_dhw_this_month | E | u32 | kWh | PrEnergySumHwcThisMonth | — | — | — | **S** `energy_totals.electric.dhw.monthly[1]` | |
+| 0x0051 | fuel_consumption_dhw_this_month | E | u32 | kWh | PrFuelSumHwcThisMonth | — | — | — | **S** `energy_totals.gas.dhw.monthly[1]` | |
+| 0x0052 | fuel_consumption_heating_last_month | E | u32 | kWh | PrFuelSumHcLastMonth | — | — | — | **S** `energy_totals.gas.climate.monthly[0]` | |
+| 0x0053 | energy_consumption_heating_last_month | E | u32 | kWh | PrEnergySumHcLastMonth | — | — | — | **S** `energy_totals.electric.climate.monthly[0]` | |
+| 0x0054 | energy_consumption_dhw_last_month | E | u32 | kWh | PrEnergySumHwcLastMonth | — | — | — | **S** `energy_totals.electric.dhw.monthly[0]` | |
+| 0x0055 | fuel_consumption_dhw_last_month | E | u32 | kWh | PrFuelSumHwcLastMonth | — | — | — | **S** `energy_totals.gas.dhw.monthly[0]` | |
 | 0x0056 | fuel_consumption_heating_total | E | u32 | kWh | PrFuelSumHc | — | — | — | **S** `energy_totals.gas.climate` | |
 | 0x0057 | energy_consumption_heating_total | E | u32 | kWh | PrEnergySumHc | — | — | — | **S** `energy_totals.electric.climate` | |
 | 0x0058 | energy_consumption_dhw_total | E | u32 | kWh | PrEnergySumHwc | — | — | — | **S** `energy_totals.electric.dhw` | |
@@ -308,19 +308,19 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x00BD | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
 | 0x00BF | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
 | 0x00C0 | (unknown) | P | f32 | — | — | — | — | — | | FLAGS=0x01. Scan value: 0.0 |
-| 0x00C1 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=6. Energy sub-counter cluster start |
-| 0x00C2 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=1 |
-| 0x00C3 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=2 |
-| 0x00C4 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=6 |
-| 0x00C5 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=0 |
-| 0x00C6 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=122. Matches energy_heating_total (0x0057)=122 |
-| 0x00C7 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=1 |
-| 0x00C8 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=470. Matches fuel_heating_total (0x0056)=470 |
-| 0x00C9 | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=203 |
-| 0x00CA | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=267. Close to PrFuelSumHcLastMonth=266 |
-| 0x00CB | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=471 |
-| 0x00CC | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=0 |
-| 0x00CD | (unknown_energy_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Scan u32=471. Same as 0x00CB — total? |
+| 0x00C1 | (unknown_sub_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Unknown sub-counter (slowly incrementing, value=7). No standard register equivalent |
+| 0x00C2 | energy_heating_this_month_mirror | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. **Mirror of 0x004F** (PrEnergySumHcThisMonth). Verified 2026-03-08 |
+| 0x00C3 | energy_heating_last_month_mirror | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. **Mirror of 0x0053** (PrEnergySumHcLastMonth). Verified 2026-03-08 |
+| 0x00C4 | (unknown_sub_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Unknown sub-counter (slowly incrementing, value=7). Same as 0x00C1 |
+| 0x00C5 | energy_dhw_total_mirror | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. **Mirror of 0x0058** (PrEnergySumHwc). Verified 2026-03-08 |
+| 0x00C6 | energy_heating_total_mirror | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. **Mirror of 0x0057** (PrEnergySumHc). Verified 2026-03-08 |
+| 0x00C7 | fuel_dhw_total_mirror | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. **Mirror of 0x0059** (PrFuelSumHwc). Verified 2026-03-08 |
+| 0x00C8 | fuel_heating_total_mirror | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. **Mirror of 0x0056** (PrFuelSumHc). Verified 2026-03-08 |
+| 0x00C9 | fuel_heating_this_month_mirror | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. **Near-mirror of 0x004E** (PrFuelSumHcThisMonth). Off-by-1 delta |
+| 0x00CA | fuel_heating_last_month_mirror | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. **Near-mirror of 0x0052** (PrFuelSumHcLastMonth). Off-by-1 delta |
+| 0x00CB | gas_total_combined | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. gas.climate + gas.dhw (all-time). Verified 2026-03-08 |
+| 0x00CC | (zero_counter) | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Always 0 |
+| 0x00CD | gas_total_combined_dup | P | u32 | kWh | — | — | — | — | | FLAGS=0x01. Duplicate of 0x00CB. Verified 2026-03-08 |
 | 0x00CE | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
 | 0x00CF | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
 | 0x00D0 | (unknown) | S | f32 | — | — | — | — | — | | FLAGS=0x00. Scan value: 0.0 |
@@ -906,12 +906,20 @@ Semantics:
 - After the first valid sample, Helianthus keeps the last known `energyTotals` snapshot across temporary B524 read gaps.
 - A refresh cycle with no accepted energy points does **not** clear the semantic snapshot and does **not** reset any series to `0` or `null`.
 
-| Semantic Path | B524 | Type |
-|---------------|------|------|
-| `gas.climate` | GG=0x00, RR=0x0056 | u32 (kWh) |
-| `electric.climate` | GG=0x00, RR=0x0057 | u32 (kWh) |
-| `electric.dhw` | GG=0x00, RR=0x0058 | u32 (kWh) |
-| `gas.dhw` | GG=0x00, RR=0x0059 | u32 (kWh) |
+| Semantic Path | B524 | Type | Period |
+|---------------|------|------|--------|
+| `gas.climate.yearly[1]` | GG=0x00, RR=0x0056 | u32 (kWh) | all-time |
+| `electric.climate.yearly[1]` | GG=0x00, RR=0x0057 | u32 (kWh) | all-time |
+| `electric.dhw.yearly[1]` | GG=0x00, RR=0x0058 | u32 (kWh) | all-time |
+| `gas.dhw.yearly[1]` | GG=0x00, RR=0x0059 | u32 (kWh) | all-time |
+| `gas.climate.monthly[1]` | GG=0x00, RR=0x004E | u32 (kWh) | this month |
+| `electric.climate.monthly[1]` | GG=0x00, RR=0x004F | u32 (kWh) | this month |
+| `electric.dhw.monthly[1]` | GG=0x00, RR=0x0050 | u32 (kWh) | this month |
+| `gas.dhw.monthly[1]` | GG=0x00, RR=0x0051 | u32 (kWh) | this month |
+| `gas.climate.monthly[0]` | GG=0x00, RR=0x0052 | u32 (kWh) | last month |
+| `electric.climate.monthly[0]` | GG=0x00, RR=0x0053 | u32 (kWh) | last month |
+| `electric.dhw.monthly[0]` | GG=0x00, RR=0x0054 | u32 (kWh) | last month |
+| `gas.dhw.monthly[0]` | GG=0x00, RR=0x0055 | u32 (kWh) | last month |
 
 ### `ebus.v1.semantic.solar.get`
 
