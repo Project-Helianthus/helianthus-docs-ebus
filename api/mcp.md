@@ -18,6 +18,10 @@ The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
   - `ebus.v1.semantic.boiler_status.get`
   - `ebus.v1.semantic.system.get`
   - `ebus.v1.semantic.circuits.get`
+  - `ebus.v1.semantic.radio_devices.get`
+  - `ebus.v1.semantic.fm5_mode.get`
+  - `ebus.v1.semantic.solar.get`
+  - `ebus.v1.semantic.cylinders.get`
   - `ebus.v1.semantic.snapshot.get`
   - `ebus.v1.snapshot.capture`
   - `ebus.v1.snapshot.drop`
