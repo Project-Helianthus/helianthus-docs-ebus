@@ -149,6 +149,7 @@ type EnergyCategory {
 type EnergyBucket {
   today: Float
   yearly: [Float!]!
+  monthly: [Float!]!
 }
 
 type BoilerStatus {
@@ -290,16 +291,16 @@ Example:
 query {
   energyTotals {
     gas {
-      dhw { today yearly }
-      climate { today yearly }
+      dhw { today yearly monthly }
+      climate { today yearly monthly }
     }
     electric {
-      dhw { today yearly }
-      climate { today yearly }
+      dhw { today yearly monthly }
+      climate { today yearly monthly }
     }
     solar {
-      dhw { today yearly }
-      climate { today yearly }
+      dhw { today yearly monthly }
+      climate { today yearly monthly }
     }
   }
 }
