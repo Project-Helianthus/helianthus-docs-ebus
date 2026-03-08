@@ -1059,10 +1059,10 @@ Used by: GG=0x02 RR=0x001B (`circuit_state`, ebusd `Hc{hc}Status`)
 
 | Value | Helianthus | myPyllant | Evidence |
 |-------|-----------|-----------|----------|
-| 0 | STANDBY | STANDBY | Live MCP confirmed: 3 circuits idle, pumps off, flow setpoint=0 |
-| 1 | HEATING | HEATING | Inferred from pump status analogy (`Values_hcpumpmode` heat=1) + myPyllant `CircuitState` enum |
-| 2 | COOLING | COOLING | Inferred from pump status analogy (`Values_hcpumpmode` cool=2) + myPyllant `CircuitState` enum |
-| N | UNKNOWN(N) | — | Safety fallback for unmapped values |
+| 0 | standby | STANDBY | Live MCP confirmed: 3 circuits idle, pumps off, flow setpoint=0 |
+| 1 | heating | HEATING | Inferred from pump status analogy (`Values_hcpumpmode` heat=1) + myPyllant `CircuitState` enum |
+| 2 | cooling | COOLING | Inferred from pump status analogy (`Values_hcpumpmode` cool=2) + myPyllant `CircuitState` enum |
+| N | unknown_N | — | Safety fallback for unmapped values |
 
 **ebusd type:** Plain `UCH` — no enum type annotation in ebusd `Hc1Status` model (`15.700.tsp`).
 
