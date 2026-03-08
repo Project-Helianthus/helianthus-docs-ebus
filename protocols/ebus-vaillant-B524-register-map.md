@@ -432,7 +432,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered
 | 0x0018 | ext_hwc_active | S | u16 | bool | Hc{hc}ExternalHWCActive | — | — | — | | Gate register for ext HWC. FLAGS=0x00 (volatile RO) — status, not config |
 | 0x0019 | external_heat_demand | S | u16 | state | Hc{hc}ExternalHeatDemand | — | — | — | | External heat source. FLAGS=0x00 (volatile RO) — status, not config |
 | 0x001A | mixer_movement | S | f32 | % | Hc{hc}MixerMovement | — | — | — | | Signed float: `<0`=closing, `>0`=opening. MCP verified: -100.0 when fully closing. Read-only |
-| 0x001B | circuit_state | S | u16 | state | Hc{hc}Status | — | — | — | **S** `circuits[].state.circuit_state` | Raw state code |
+| 0x001B | circuit_state | S | u16 | enum | Hc{hc}Status | — | — | — | **S** `circuits[].state.circuit_state` | Enum: 0=STANDBY, 1=HEATING, 2=COOLING. See [Circuit State Enum](#circuit-state-enum) |
 | 0x001C | epsilon | S | f32 | — | Hc{hc}HeatCurveAdaption | — | — | — | | Heat curve adaption factor. Dimensionless. Read-only |
 | 0x001D | frost_protection_threshold | C | f32 | °C | Hc{hc}FrostProtThreshold | — | — | — | **S** `circuits[].properties.frost_protection_threshold` | FLAGS=0x02 (technical RW) — writable config, not property. Semantic path needs migration to `config.*` |
 | 0x001E | pump_status | S | u16 | bool | Hc{hc}PumpStatus | — | — | — | **S** `circuits[].state.pump_status` | Also `boiler_status.state.pump_running` (II=0) |
@@ -830,7 +830,7 @@ Ownership note:
 |---------------|------|------|
 | `[].state.heating_circuit_flow_setpoint` | GG=0x02, RR=0x0007 | f32 |
 | `[].state.current_circuit_flow_temperature` | GG=0x02, RR=0x0008 | f32 |
-| `[].state.circuit_state` | GG=0x02, RR=0x001B | u16 |
+| `[].state.circuit_state` | GG=0x02, RR=0x001B | enum (u16): STANDBY/HEATING/COOLING |
 | `[].state.pump_status` | GG=0x02, RR=0x001E | bool (u16) |
 | `[].state.calculated_flow_temperature` | GG=0x02, RR=0x0020 | f32 |
 | `[].state.mixer_position_percentage` | GG=0x02, RR=0x0021 | f32 |
@@ -1052,6 +1052,25 @@ Used by: GG=0x02 RR=0x0002
 **Zone capabilities** depend on (a) circuit type supporting heating, and (b) `cooling_enabled` flag (RR=0x0006) for cooling capability. Cooling is a separate function/mode, not derived from circuit type.
 
 Sources: VRC720 operating & installation instructions (circuit type table, fixed value control description, abbreviations list for swimming pool); ebusd `_templates.tsp` mctype/mctype7 definitions; ebusd-config issue #182, PR #174 (translations: Heizen/Festwert/WW/Rückl.anh.).
+
+### Circuit State Enum
+
+Used by: GG=0x02 RR=0x001B (`circuit_state`, ebusd `Hc{hc}Status`)
+
+| Value | Helianthus | myPyllant | Evidence |
+|-------|-----------|-----------|----------|
+| 0 | standby | STANDBY | Live MCP confirmed: 3 circuits idle, pumps off, flow setpoint=0 |
+| 1 | heating | HEATING | Inferred from pump status analogy (`Values_hcpumpmode` heat=1) + myPyllant `CircuitState` enum |
+| 2 | cooling | COOLING | Inferred from pump status analogy (`Values_hcpumpmode` cool=2) + myPyllant `CircuitState` enum |
+| N | unknown_N | — | Safety fallback for unmapped values |
+
+**ebusd type:** Plain `UCH` — no enum type annotation in ebusd `Hc1Status` model (`15.700.tsp`).
+
+**Pump status analogy:** The pump status register (GG=0x02 RR=0x001E) uses `Values_hcpumpmode` with `off=0, heat=1, cool=2, exthwc=3`. The circuit state enum follows the same numeric ordering for the first three values.
+
+**myPyllant:** `CircuitState` enum in `myPyllant/enums.py` defines `HEATING`, `COOLING`, `STANDBY` as string values. The cloud API performs the numeric-to-string conversion server-side. Test fixtures contain only HEATING and STANDBY observations.
+
+Sources: Live MCP observation (2026-03-08), ebusd `_templates.tsp` `Values_hcpumpmode`, myPyllant `enums.py` `CircuitState`, VRC720 register mapping (`vrc720_register_mapping.json`).
 
 ### offmode — Auto-off behavior
 
