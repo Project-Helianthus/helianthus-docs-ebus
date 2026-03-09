@@ -374,3 +374,20 @@ These primitives are part of MCP-first foundation work and are consumed before G
 - Architecture docs are part of the runtime contract: every heat-source design change must be documented here in a way that enables an equivalent implementation for another heat-source class (VWZ).
 
 **Consequences:** BAI behavior stays deterministic and isolated from regulator behavior, multi-plane reads get explicit and testable timeout semantics, queue starvation is bounded under load, and future VWZ support can reuse the same contract surface with class-specific register catalogs.
+
+## ADR-026: Semantic icon policy for Home Assistant entities
+
+**Status:** Accepted
+
+**Context:** The Helianthus HA integration creates 141 entities. Only 7 have explicit icons (3 valve entities with `mdi:valve`, 1 burner fan with `mdi:fire`, 3 pump fans with `mdi:pump`). Counter sensors (pump starts, CH/DHW starts, deactivation counters) and valve entities in different states have no semantic icon differentiation. HA defaults to generic icons when none are specified, reducing dashboard clarity.
+
+**Decision:**
+
+- **Valve entities** use dynamic icons based on reported position: `mdi:valve-closed` at 0%, `mdi:valve-open` at 100%, `mdi:valve` at intermediate positions or when position is unavailable.
+- **Counter sensors** (state class `TOTAL_INCREASING` without a `device_class`) use `mdi:counter`.
+- **Duration counters** (state class `TOTAL_INCREASING` with device class `DURATION`) keep the HA default duration icon (no override needed).
+- **Fan entities** retain existing icons: `mdi:fire` for burner, `mdi:pump` for pumps.
+- A CI gate (`test_entity_icon_gate.py`) enforces that entity types known to need semantic icons have them, preventing regression.
+- Icon assignments are part of the entity contract; changes require a PR with test coverage.
+
+**Consequences:** Dashboard entities are visually distinguishable without user customization. Dynamic valve icons provide at-a-glance position awareness. The CI gate prevents regression as new entity types are added.
