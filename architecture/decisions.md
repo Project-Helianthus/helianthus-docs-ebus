@@ -379,18 +379,38 @@ These primitives are part of MCP-first foundation work and are consumed before G
 
 **Status:** Accepted
 
-**Context:** The Helianthus HA integration creates 141 entities. Only 7 have explicit icons (3 valve entities with `mdi:valve`, 1 burner fan with `mdi:fire`, 3 pump fans with `mdi:pump`). Counter sensors (pump starts, CH/DHW starts, deactivation counters) and valve entities in different states have no semantic icon differentiation. HA defaults to generic icons when none are specified, reducing dashboard clarity.
+**Context:** The Helianthus HA integration creates 141 entities across 10 platforms (sensor, binary_sensor, number, fan, valve, climate, water_heater, calendar, select, switch). Without explicit icon assignments, HA falls back to generic platform icons for entities that lack a `device_class`. Entities with `device_class` (TEMPERATURE, HUMIDITY, PRESSURE, ENERGY, DURATION) receive appropriate auto-icons from HA. The remaining entities — counters, schedule states, radio signal quality, boiler operational sensors, configuration numbers, and calendar schedules — need explicit semantic MDI icons for dashboard clarity.
 
 **Decision:**
 
-- **Valve entities** use dynamic icons based on reported position: `mdi:valve-closed` at 0%, `mdi:valve-open` at 100%, `mdi:valve` at intermediate positions or when position is unavailable.
-- **Counter sensors** (state class `TOTAL_INCREASING` without a `device_class`) use `mdi:counter`.
-- **Duration counters** (state class `TOTAL_INCREASING` with device class `DURATION`) keep the HA default duration icon (no override needed).
-- **Fan entities** retain existing icons: `mdi:fire` for burner, `mdi:pump` for pumps.
-- A CI gate (`test_entity_icon_gate.py`) enforces that entity types known to need semantic icons have them, preventing regression.
-- Icon assignments are part of the entity contract; changes require a PR with test coverage.
+Every entity in the integration follows one of three icon strategies:
 
-**Consequences:** Dashboard entities are visually distinguishable without user customization. Dynamic valve icons provide at-a-glance position awareness. The CI gate prevents regression as new entity types are added.
+1. **HA device_class auto-icon** — entities with `device_class` (TEMPERATURE, HUMIDITY, PRESSURE, DURATION, ENERGY, OPENING, PROBLEM, RUNNING) rely on HA's built-in icon mapping. No `_attr_icon` override.
+
+2. **Static explicit icon** — entities without `device_class` receive a fixed `_attr_icon` or `icon` field value:
+   - **Counter sensors** (`TOTAL_INCREASING` without `device_class`): `mdi:counter`
+   - **Fan entities**: `mdi:fire` (burner), `mdi:pump` (pumps)
+   - **Boiler state sensors**: `mdi:gas-burner` (modulation), `mdi:fan` (fan speed), `mdi:flash-triangle-outline` (ionisation), `mdi:pump` (storage load pump), `mdi:valve` (diverter position)
+   - **Schedule binary sensors**: `mdi:calendar-clock` (daily), `mdi:timer-alert-outline` (quick veto), `mdi:airplane` (away)
+   - **Boiler binary sensors**: `mdi:fire` (flame), `mdi:gas-cylinder` (gas valve), `mdi:pump` (pumps)
+   - **Solar binary sensors**: `mdi:pump` (pump active), `mdi:solar-power` (enabled), `mdi:solar-panel` (function mode)
+   - **Radio connectivity**: `mdi:radio-tower`
+   - **Status/inventory sensors**: `mdi:information-outline` (status), `mdi:tag-text-outline` (firmware), `mdi:update` (updates available), `mdi:chip` (bus address, FM5 mode)
+   - **Demand sensors**: `mdi:heat-wave`
+   - **DHW status**: `mdi:water-boiler`
+   - **Number entities**: thermometer variants for temperature params, `mdi:chart-bell-curve-cumulative` (heating curve), `mdi:weather-sunny` (summer limit), `mdi:snowflake-thermometer` (frost protection), `mdi:water-percent` (humidity), `mdi:lightning-bolt` (power params)
+   - **Calendar**: `mdi:calendar-clock`
+   - **Select**: `mdi:thermostat`
+   - **Switch**: `mdi:snowflake` (cooling), `mdi:solar-power` (solar)
+   - **Water heater**: `mdi:water-boiler`
+
+3. **Dynamic icon property** — entities where the icon should reflect live state:
+   - **Valve entities**: `mdi:valve-closed` (0%), `mdi:valve-open` (100%), `mdi:valve` (intermediate/unknown)
+   - **Radio signal quality**: `mdi:signal-cellular-1` (<33%), `mdi:signal-cellular-2` (33–66%), `mdi:signal-cellular-3` (≥67%), `mdi:signal-cellular-outline` (unavailable)
+
+A CI gate (`test_entity_icon_gate.py`) enforces that all entity types have their assigned icons, preventing regression. Icon assignments are part of the entity contract; changes require a PR with test coverage.
+
+**Consequences:** All 141 entities are visually distinguishable without user customization. Dynamic icons provide at-a-glance state awareness for valves and signal quality. The CI gate prevents regression as new entity types are added.
 
 ## ADR-027: B524 function-module enrichment merged into physical bus device
 
