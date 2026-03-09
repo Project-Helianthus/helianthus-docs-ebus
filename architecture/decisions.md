@@ -391,3 +391,38 @@ These primitives are part of MCP-first foundation work and are consumed before G
 - Icon assignments are part of the entity contract; changes require a PR with test coverage.
 
 **Consequences:** Dashboard entities are visually distinguishable without user customization. Dynamic valve icons provide at-a-glance position awareness. The CI gate prevents regression as new entity types are added.
+
+## ADR-027: B524 function-module enrichment merged into physical bus device
+
+**Status:** Accepted
+
+**Context:** B524 registers on the regulator (BASV2) track remote devices across three groups organized by device class: group 0x09 (room controllers), group 0x0A (thermostats/relays), and group 0x0C (function modules). Groups 0x09 and 0x0A represent wireless peripherals whose `deviceClassAddress` is a protocol class identifier. Group 0x0C represents wired function modules whose `deviceClassAddress` is the actual eBUS bus address — these devices are independently discoverable via the 07 04 bus scan and already exist as physical bus devices in the HA device registry.
+
+Without merging, the HA integration creates a shadow "radio" device for each group 0x0C entry, duplicating the physical bus device (e.g., "VR71/FM5" alongside "FM5 Control Centre"). The shadow device carries redundant metadata sensors (deviceClassAddress, hardwareIdentifier) and a Device Connected binary sensor that semantically belongs on the physical device.
+
+**Decision:**
+
+Merge B524 group 0x0C enrichment into the matched physical bus device using a formal 4-predicate rule:
+
+- **P1:** `group == 0x0C` (function-module device class)
+- **P2:** `deviceClassAddress != None` (address field present)
+- **P3:** A bus device exists at that address (discovered via 07 04 scan)
+- **P4:** `deviceClassAddress == busAddress` (identity match)
+
+All four predicates must hold (`MERGE(R, B) iff P1 ∧ P2 ∧ P3 ∧ P4`). When merged:
+
+- **Device Connected** binary sensor is re-parented to the physical bus device and relabelled "B524 Connected".
+- **All group 0x0C sensors** (deviceClassAddress, hardwareIdentifier, receptionStrength, etc.) are suppressed — the entire radio slot is skipped.
+- **Shadow radio device** is removed by `cleanup_obsolete_devices()`.
+- Groups 0x09 and 0x0A are never merged (P1 rejects them).
+
+The merge is idempotent: repeated runs produce identical device/entity sets.
+
+**Falsifiability criteria:**
+
+- F1: Remove a bus device from the scan → P3 fails → shadow device reappears.
+- F2: Set `deviceClassAddress` to an address not on the bus → P4 fails → no merge.
+- F3: Change group from 0x0C to 0x0A → P1 fails → radio device created normally.
+- F4: Set `deviceClassAddress` to None → P2 fails → no merge.
+
+**Consequences:** The HA device registry accurately reflects physical topology — one device per physical entity. B524 connectivity status is surfaced on the physical device without creating duplicate shadow devices. The rule is safe by construction: it can only merge when all four predicates independently confirm the identity match.
