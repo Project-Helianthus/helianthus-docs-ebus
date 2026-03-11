@@ -130,6 +130,18 @@ Gateway startup scan tries to reduce bus load by using ebusd's known target list
 5. If direct scan requests time out for all narrowed targets, gateway imports device metadata
    from the same ebusd `scan result` output as a discovery fallback.
 
+Important startup contract:
+
+- `scan result` preload/narrowing is opportunistic bus-load reduction, not proof that
+  semantic startup is ready to close.
+- Preloaded inventory, product identity, and imported metadata are useful hints, but
+  they do not by themselves prove that startup already has a coherent Vaillant/B524
+  controller root.
+- If narrowed/preloaded inventory does not yield a coherent B524/controller root,
+  gateway must perform one bounded full-range discovery retry before concluding startup
+  scan.
+- If preload already yields a coherent root, no broadened retry is required.
+
 When semantic B524 reads time out in `ebusd-tcp` mode, zone inventory/name/state can be recovered
 from ebusd's `grab result all` cache (passive snapshot), so climate entities can still appear without
 forcing additional bus traffic.
