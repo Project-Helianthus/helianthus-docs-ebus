@@ -78,6 +78,13 @@ This keeps startup behavior aligned with the semantic contract:
 - prove coherent B524 capability first;
 - then keep or enrich identity around the proven root.
 
+Important scope note:
+
+- proving a coherent B524 root does not by itself prove that passive
+  observe-first is supported on the configured transport topology;
+- passive observe-first support remains transport-dependent runtime contract
+  surface, documented in [`deployment/full-stack.md`](../deployment/full-stack.md).
+
 ## Relationship to Identity Enrichment
 
 Identity enrichment happens after, or alongside, semantic-root discovery:

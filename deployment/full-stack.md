@@ -150,6 +150,26 @@ Successful hydration from this path is classified as **live semantic source** fo
 
 Runtime read/write traffic still uses the configured gateway transport.
 
+### Passive observe-first transport contract
+
+Passive observe-first support is narrower than active startup support.
+
+- `ebusd-tcp` remains `unsupported_or_misconfigured` for passive observe-first.
+- `enh` / `ens` remain passive-capable when the gateway connects to a **local loopback**
+  northbound endpoint (for example `127.0.0.1:<port>` or `localhost:<port>` behind a
+  local proxy).
+- Direct remote `enh` / `ens` endpoints are treated as
+  `unsupported_or_misconfigured` for passive observe-first, even though active startup,
+  startup scan, and semantic recovery remain supported on those transports.
+
+Operational meaning:
+
+- a coherent B524/controller root still proves active semantic startup readiness;
+- it does **not** by itself prove that passive observe-first is supported for the
+  chosen transport topology;
+- validation cases that use direct remote `enh` / `ens` should expect explicit
+  passive unavailability, not endless `warming_up` / `socket_loss` states.
+
 ### Semantic Cache Persistence
 
 - Gateway reads/writes semantic startup cache at `-semantic-cache-path` (default `./semantic_cache.json`).
