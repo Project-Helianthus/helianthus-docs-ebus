@@ -1,6 +1,8 @@
 # Architecture Overview
 
-This repository documents the current, implemented architecture of the Helianthus eBUS ecosystem. As of now, `helianthus-ebusgo` and `helianthus-ebusreg` contain the working transport, protocol, type system, registry, and vendor providers. `helianthus-ebusgateway` now wires transport, bus, registry, and router into a runnable gateway process; the GraphQL **schema builder** is implemented (no API surface yet), while MCP/mDNS/Matter remain stubs.
+This repository documents the current, implemented architecture of the Helianthus eBUS ecosystem. `helianthus-ebusgo` and `helianthus-ebusreg` provide the transport, protocol, type system, registry, and vendor providers. `helianthus-ebusgateway` is the runnable runtime/API edge: it wires transport, bus, registry, router, and semantic providers into a gateway process and serves GraphQL (`/graphql`, `/graphql/subscriptions`), MCP (`/mcp`), the projection UI (`/ui`), and the Portal surface (`/portal`, `/portal/api/v1`).
+
+Detailed API contracts live in [`api/graphql.md`](../api/graphql.md), [`api/mcp.md`](../api/mcp.md), and [`api/portal.md`](../api/portal.md).
 
 ## Layered Architecture (Mermaid)
 
@@ -8,10 +10,10 @@ This repository documents the current, implemented architecture of the Helianthu
 flowchart TB
   subgraph Gateway
     G0[Gateway runtime wired]
-    G1[GraphQL schema builder]
-    G2[MCP stub]
-    G3[mDNS stub]
-    G4[Matter stub]
+    G1[GraphQL API + schema]
+    G2[MCP endpoint]
+    G3[Projection UI]
+    G4[Portal API + UI]
   end
 
   subgraph Registry
@@ -59,13 +61,14 @@ Naming note:
 
 ## Gateway Runtime (Implemented)
 
-The gateway now provides a runtime wiring layer that instantiates the bus, registry, and router from a single config. It does not expose GraphQL/MCP/mDNS/Matter endpoints yet.
+The gateway now provides a runtime wiring layer that instantiates the bus, registry, router, schema builder, and HTTP surfaces from a single config.
 
 - **Construction**: `New(ctx, cfg)` resolves a transport (provided or dialed), then builds a Bus, DeviceRegistry, and BusEventRouter.
 - **Startup**: `Start(ctx)` runs the Bus loop; cancellation stops the bus.
 - **Shutdown**: `Close()` closes the underlying transport connection (or the provided transport).
 - **Router refresh**: `RefreshRouterPlanes()` extracts `router.Plane` implementations from the registry and updates the router’s subscription table.
 - **GraphQL schema rebuild**: the schema builder consumes registry entries and rebuilds schema snapshots whenever a registry change signal is emitted.
+- **External surfaces**: GraphQL is served at `/graphql` with subscriptions at `/graphql/subscriptions`; MCP is served at `/mcp`; the projection UI is mounted at `cfg.UIPath` (default `/ui`); the Portal surface is mounted at `cfg.PortalPath` (default `/portal`) with its versioned API under `/portal/api/v1`.
 
 ## Semantic Startup Runtime
 

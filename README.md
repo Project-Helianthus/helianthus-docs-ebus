@@ -4,13 +4,13 @@ This repository documents the current, implemented behavior of the Helianthus eB
 
 - `helianthus-ebusgo` (transport + protocol + data types)
 - `helianthus-ebusreg` (registry + schema + vendor providers)
-- `helianthus-ebusgateway` (API surface; currently package stubs only)
+- `helianthus-ebusgateway` (runtime + GraphQL/MCP/UI surfaces)
 
 Implementation-neutral references for the eBUS wire protocol and data types live under `protocols/` and `types/`. Helianthus-specific architecture, APIs, and deployment notes live elsewhere in the tree.
 
 ## Start Here by Role
 
-- **Developer path:** [architecture/overview.md](architecture/overview.md) → [api/graphql.md](api/graphql.md) → [api/portal.md](api/portal.md) → [development/contributing.md](development/contributing.md)
+- **Developer path:** [architecture/overview.md](architecture/overview.md) → [api/graphql.md](api/graphql.md) → [api/mcp.md](api/mcp.md) → [api/portal.md](api/portal.md) → [development/contributing.md](development/contributing.md)
 - **Operator path:** [deployment/full-stack.md](deployment/full-stack.md) → [development/end-to-end-smoke.md](development/end-to-end-smoke.md) → [development/smoke-test.md](development/smoke-test.md)
 - **Researcher path:** [protocols/ebus-overview.md](protocols/ebus-overview.md) → [types/overview.md](types/overview.md) → [architecture/vaillant.md](architecture/vaillant.md)
 
