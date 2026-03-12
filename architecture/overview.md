@@ -85,18 +85,6 @@ See breaker details in [`architecture/semantic-read-circuit-breaker.md`](./seman
 See zone presence details in [`architecture/zone-presence-fsm.md`](./zone-presence-fsm.md).
 See DHW lifecycle details in [`architecture/dhw-freshness-fsm.md`](./dhw-freshness-fsm.md).
 
-## Observe-First Documentation Surfaces
-
-The observe-first documentation lane is split deliberately so bus-level
-observability and generic watch/shadow behavior do not collapse into one page.
-
-- Watch catalog and query-on-gap read path skeleton:
-  [`architecture/observe-first-watch-registry.md`](./observe-first-watch-registry.md)
-- Bus-level observability skeleton:
-  [`architecture/bus-observability-v2.md`](./bus-observability-v2.md)
-- Current transport/runtime caveats that already exist remain in
-  [`deployment/full-stack.md`](../deployment/full-stack.md)
-
 ## Semantic Structure Discovery
 
 The startup/runtime FSMs above explain **when** semantic payload becomes visible. The separate structural decision graph explains **why a family or instance exists at all**.
