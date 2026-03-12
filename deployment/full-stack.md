@@ -156,9 +156,12 @@ Runtime read/write traffic still uses the configured gateway transport.
 Passive observe-first support is narrower than active startup support.
 
 - `ebusd-tcp` remains `unsupported_or_misconfigured` for passive observe-first.
+  See [`protocols/ebusd-tcp.md`](../protocols/ebusd-tcp.md).
 - Direct adapter-class `enh` / `ens` endpoints over `tcp/:9999` remain
   `unsupported_or_misconfigured` for passive observe-first, including equivalent
   hostname forms that resolve to the same adapter listener.
+  See [`protocols/enh.md`](../protocols/enh.md) and
+  [`protocols/ens.md`](../protocols/ens.md).
 - Proxy-like `enh` / `ens` endpoints on other ports remain passive-capable for
   observe-first, whether they are reached over local loopback or remote northbound
   addresses.
