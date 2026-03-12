@@ -61,6 +61,30 @@ If no candidate slave proves B524 capability:
 - B524 structural discovery does not run;
 - identity enrichment alone does not revive the semantic root.
 
+## Startup Recovery Rule
+
+Startup recovery follows the same capability-first contract.
+
+- Partial inventory from startup preload does not prove that semantic discovery is ready.
+- Product identity, regulator branding, and metadata imported from `ebusd scan result`
+  are enrichment inputs, not root-discovery proof.
+- If narrowed/preloaded startup inventory still does not yield a coherent B524 root,
+  gateway must perform one bounded full-range discovery retry before closing startup
+  scan.
+- If startup preload already yields a coherent B524 root, no broadened retry is needed.
+
+This keeps startup behavior aligned with the semantic contract:
+
+- prove coherent B524 capability first;
+- then keep or enrich identity around the proven root.
+
+Important scope note:
+
+- proving a coherent B524 root does not by itself prove that passive
+  observe-first is supported on the configured transport topology;
+- passive observe-first support remains transport-dependent runtime contract
+  surface, documented in [`deployment/full-stack.md`](../deployment/full-stack.md).
+
 ## Relationship to Identity Enrichment
 
 Identity enrichment happens after, or alongside, semantic-root discovery:
