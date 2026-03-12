@@ -4,6 +4,23 @@
 
 The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
 
+## Observe-First Contract Ownership
+
+This page remains the owner for MCP-specific observe-first contracts when the
+gateway exposes them in later milestones.
+
+- Current `main` documents only implemented MCP tools. Deferred observe-first
+  tools are intentionally absent from the implemented surface list below.
+- `ISSUE-GW-04` is the runtime-owning lane for observe-first MCP tools. Until
+  that lands, this page must not publish speculative request/response schemas
+  or examples for those tools.
+- [`watch-summary.md`](./watch-summary.md) owns the shared watch-summary
+  contract. The reserved tool name `ebus.v1.watch.summary.get` is deferred and
+  non-frozen on `main`.
+- `ISSUE-DOC-06` is the freeze lane for the broader observe-first MCP
+  contract. Before that freeze, this page may reserve ownership and milestone
+  links but may not claim completeness for deferred tools.
+
 ## Implemented Surface
 
 - Core stable (`ebus.v1.*`)

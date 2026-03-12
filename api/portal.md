@@ -8,6 +8,22 @@ Portal API is exposed by `helianthus-ebusgateway` as an additive HTTP surface.
 - Versioned API base: `/portal/api/v1`
 - Current UX is capability-driven (status cards + enabled sections) and does not expose milestone placeholder labels.
 
+## Observe-First Contract Ownership
+
+This page remains the owner for Portal-specific rollout of observe-first
+evidence surfaces.
+
+- Current `main` documents only implemented Portal HTTP endpoints and current
+  UI shell behavior.
+- `ISSUE-GW-11` adds the core watch-summary runtime surfaces, and `ISSUE-GW-14`
+  later rolls them into Portal-specific UX and API behavior.
+- [`watch-summary.md`](./watch-summary.md) owns the shared watch-summary
+  contract. Portal endpoint names, bootstrap flags, SSE payloads, and UI panels
+  for that feature are intentionally non-frozen on `main`.
+- `ISSUE-DOC-10` is the later Portal freeze lane. Until then, this page may
+  reserve ownership but may not invent dedicated observe-first endpoints or
+  presentation details.
+
 ## Design Constraints
 
 - Gateway-first: semantic logic stays in gateway runtime.
