@@ -47,3 +47,28 @@ Run in order and stop on first failure:
 ## Operational rule
 
 End-to-end smoke is **PASS** only when all three stages pass in sequence with no skipped stage.
+
+## Observe-First Validation Note
+
+This runbook documents only the current end-to-end smoke chain on `main`. It
+does not yet define dedicated observe-first proof artifacts beyond the
+gateway/add-on/integration stages above.
+
+The `helianthus-tinyebus` target-emulation path is a parallel
+timing/observability validation track, not a substitute for the canonical
+gateway/add-on/integration smoke chain.
+
+Current factual references:
+
+- bus observability and passive-capability signals:
+  [`../architecture/observability.md`](../architecture/observability.md)
+- transport caveats that decide passive-capable vs unavailable topologies:
+  [`../deployment/full-stack.md#passive-observe-first-transport-contract`](../deployment/full-stack.md#passive-observe-first-transport-contract)
+- parallel firmware-side target-emulation track:
+  [`target-emulation.md#helianthus-tinyebus`](./target-emulation.md#helianthus-tinyebus)
+
+Related validation surfaces:
+
+- topology matrix runner: [`smoke-matrix.md`](./smoke-matrix.md)
+- runtime adversarial scenarios:
+  [`../architecture/adversarial-matrix.md`](../architecture/adversarial-matrix.md)

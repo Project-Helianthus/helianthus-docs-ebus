@@ -130,6 +130,23 @@ Each command step is logged with command string, timestamps, status, and exit co
 - `blocked-infra`: run blocked by infrastructure precondition (see `infra_reason`).
 - `planned`: dry-run outcome.
 
+## Observe-First Validation Note
+
+This runbook documents the current `T01..T88` transport gate only. It does not
+yet define dedicated observe-first proof artifacts beyond the matrix verdicts
+and expected-failure inventory that already exist on `main`.
+
+Current factual references:
+
+- passive-capability signals and troubleshooting:
+  [`../architecture/observability.md`](../architecture/observability.md)
+- transport caveats that decide passive-capable vs unavailable topologies:
+  [`../deployment/full-stack.md#passive-observe-first-transport-contract`](../deployment/full-stack.md#passive-observe-first-transport-contract)
+- canonical end-to-end smoke order for the matrix `--smoke-command`:
+  [`end-to-end-smoke.md`](./end-to-end-smoke.md)
+- runtime adversarial scenarios that remain outside the transport gate:
+  [`../architecture/adversarial-matrix.md`](../architecture/adversarial-matrix.md)
+
 ## Privacy and secrets
 
 No adapter IPs or credentials are stored in repo artifacts by default. Config files reference environment placeholders (`MATRIX_*`), and command strings must be provided at runtime via local operator context.

@@ -7,6 +7,13 @@ See also:
 - `protocols/ens.md` for ebusd’s `ens:` prefix semantics (serial speed selector; equivalent to `enh:` on network transports).
 - `protocols/udp-plain.md` for raw eBUS bytes over UDP without ENH framing.
 
+Observe-first caveat: direct adapter-class ENH/ENS listeners on the adapter port
+(for example `tcp/:9999`) are not the passive-capable observe-first path. The
+current transport contract and troubleshooting signals are documented in
+[`deployment/full-stack.md#passive-observe-first-transport-contract`](../deployment/full-stack.md#passive-observe-first-transport-contract)
+and
+[`architecture/observability.md#troubleshooting-mapping`](../architecture/observability.md#troubleshooting-mapping).
+
 It is a byte-stream protocol where:
 
 - bytes `< 0x80` **may be transferred as-is** (short form),

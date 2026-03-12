@@ -92,6 +92,23 @@ The adversarial report is a JSON artifact consumed by the tester gate:
 
 The summary maintains the invariant: `total == passed + failed + xfailed + blocked + unknown`.
 
+## Observe-First Validation Note
+
+This page documents the current adversarial runtime scenarios only. It does not
+yet freeze dedicated observe-first scenarios, report fields, or proof artifacts
+beyond the thresholds and report format above.
+
+Current factual references:
+
+- bus observability and passive-capability signals:
+  [`observability.md`](./observability.md)
+- transport caveats that decide passive-capable vs unavailable topologies:
+  [`../deployment/full-stack.md#passive-observe-first-transport-contract`](../deployment/full-stack.md#passive-observe-first-transport-contract)
+- canonical end-to-end smoke order:
+  [`../development/end-to-end-smoke.md`](../development/end-to-end-smoke.md)
+- topology matrix runner:
+  [`../development/smoke-matrix.md`](../development/smoke-matrix.md)
+
 ## Cross-Links
 
 - Scenario definitions: `internal/adversarial/scenarios.go`
