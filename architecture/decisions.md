@@ -162,9 +162,9 @@ This document records the architectural decisions implemented in the codebase. E
 - `Observability:/ebus/addr@10/device@BASV2/method@get_operational_data` (same canonical node, plane-specific path)
 - `Debug:/ebus/addr@10/device@BASV2/register@b524` (canonical path is `Service:/ebus/addr@10/device@BASV2/method@get_ext_register`)
 
-**Portal query expectations:**
+**Projection browser query expectations:**
 
-- GraphQL consumers (Portal UI) query projection graphs via:
+- GraphQL consumers (projection browser at `/ui`) query projection graphs via:
   `devices { projections { plane nodes { id path canonicalPath } edges { id from to } } }`
 - `ProjectionNode.id` is derived from the canonical Service path so nodes can be correlated across planes; `path` is used for plane-local display.
 
@@ -200,7 +200,7 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Status:** Accepted
 
-**Context:** Multiple consumers (for example GraphQL resolvers/subscriptions, a portal UI, and Home Assistant) need periodic reads of the same semantic registers. A naive model multiplies reads per consumer and can saturate the bus.
+**Context:** Multiple consumers (for example GraphQL resolvers/subscriptions, the projection browser at `/ui`, Portal API clients under `/portal`, and Home Assistant) need periodic reads of the same semantic registers. A naive model multiplies reads per consumer and can saturate the bus.
 
 **Decision:** Implement a semantic read scheduler that:
 

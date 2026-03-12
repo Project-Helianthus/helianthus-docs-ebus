@@ -4,9 +4,11 @@ This repository documents the current, implemented behavior of the Helianthus eB
 
 - `helianthus-ebusgo` (transport + protocol + data types)
 - `helianthus-ebusreg` (registry + schema + vendor providers)
-- `helianthus-ebusgateway` (runtime + GraphQL/MCP + projection UI/Portal surfaces)
+- `helianthus-ebusgateway` (runtime + GraphQL/MCP + projection browser/Portal surfaces)
 
 Implementation-neutral references for the eBUS wire protocol and data types live under `protocols/` and `types/`. Helianthus-specific architecture, APIs, and deployment notes live elsewhere in the tree.
+
+Gateway HTTP entrypoints are split by role: `/ui` is the read-only projection browser, while `/portal` is the Portal shell and `/portal/api/v1` is its versioned API surface.
 
 ## Start Here by Role
 
