@@ -446,3 +446,43 @@ The merge is idempotent: repeated runs produce identical device/entity sets.
 - F4: Set `deviceClassAddress` to None → P2 fails → no merge.
 
 **Consequences:** The HA device registry accurately reflects physical topology — one device per physical entity. B524 connectivity status is surfaced on the physical device without creating duplicate shadow devices. The rule is safe by construction: it can only merge when all four predicates independently confirm the identity match.
+
+## ADR-028: Observe-first semantic reads use WatchCatalog plus ShadowCache upstream of the scheduler
+
+**Status:** Accepted
+
+**Context:** The observe-first architecture needs to reduce active bus reads without replacing the existing `SemanticReadScheduler` responsibilities. The system still needs bounded coalescing, circuit-breaker behavior, explicit freshness, and a fail-closed answer when passive evidence becomes stale or invalidated.
+
+**Decision:** Use an immutable `WatchCatalog` plus bounded runtime activation to define which keys are eligible for observe-first, and place a bounded memory-only `ShadowCache` upstream of `SemanticReadScheduler`. The scheduler consults shadow eligibility before starting an active fetch, then revalidates the candidate against a shared per-key generation domain before committing the hit. Active fetches remain the gap path, and the existing poller/provider path stays the only generic semantic publish path.
+
+**Consequences:** Helianthus gets `observe-first, query-on-gap` behavior without turning passive evidence into an uncontrolled second publish pipeline. Cold start still begins effectively active-only until passive warmup and eligible shadow values exist, and stale or invalidated evidence fails closed instead of being served optimistically.
+
+## ADR-029: Whole-bus observability is pre-dedup while shadow and efficiency logic consume post-dedup evidence
+
+**Status:** Accepted
+
+**Context:** Bus telemetry and watch-efficiency do not have the same correctness rules. Whole-bus observability must count actual traffic on the wire, including Helianthus-originated traffic, while shadow correlation and reads-avoided metrics must suppress active/passive duplicates to avoid false savings.
+
+**Decision:** Keep `BusObservabilityStore` and other whole-bus consumers on the pre-dedup classified passive stream. Dedup owns the downstream adjudicated passive-output stream used for shadow correlation, external-write invalidation, and watch-efficiency accounting. Helianthus-originated traffic remains part of busy ratio, frame totals, and source/destination distribution.
+
+**Consequences:** Whole-bus observability stays faithful to the observed bus instead of the optimized read path. At the same time, shadow hits and reads-avoided counters avoid double counting and do not misclassify Helianthus-originated traffic as third-party passive wins.
+
+## ADR-030: PassiveBusTap replaces standalone broadcast connection ownership
+
+**Status:** Accepted
+
+**Context:** The older broadcast-listener ownership model would leave passive observation, broadcast handling, and future shadow correlation on separate connection/lifecycle paths. That increases transport complexity and makes resets or discontinuities harder to reason about consistently.
+
+**Decision:** In passive-capable mode, gateway owns exactly two bus connections: one active primary connection and one passive connection owned by `PassiveBusTap`. `PassiveTransactionReconstructor` is the single raw passive-stream consumer. `BroadcastListener` becomes a consumer over the classified passive-event bus instead of owning a separate broadcast connection.
+
+**Consequences:** Broadcast routing, bus observability, and passive shadow correlation share the same passive evidence stream and reset boundaries. No third broadcast-only connection is introduced, and passive lifecycle handling stays centralized.
+
+## ADR-031: GraphQL carries reusable domain data while Portal-native evidence surfaces may remain portal-specific
+
+**Status:** Accepted
+
+**Context:** The observe-first lane adds bounded domain data such as bus summaries and message/periodicity views, but it also needs portal-specific evidence tooling such as timeline/bootstrap behavior that should not automatically shape the reusable public domain schema.
+
+**Decision:** Follow MCP-first delivery and then expose reusable domain data through GraphQL parity, while keeping portal-native bootstrap, stream, and timeline behavior in portal-specific surfaces. GraphQL carries the bounded reusable domain contract; Portal-specific UI transport does not back-drive GraphQL field design.
+
+**Consequences:** The reusable domain schema stays bounded and stable for consumers beyond the Portal. The Portal can still ship evidence-first reverse-engineering workflows without forcing those UX-specific mechanics into the shared GraphQL contract.
