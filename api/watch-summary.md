@@ -4,46 +4,36 @@
 
 No watch-summary API surface is implemented on `main`.
 
-This page exists because `ISSUE-DOC-02` must reserve the cross-surface
-watch-summary contract before M5 without pretending the contract is already
-frozen.
+This page exists only to reserve ownership and identifiers before the M5
+runtime lands. It does not pre-freeze behavior, payload shape, query semantics,
+or Portal transport details.
 
 ## Reserved Ownership
 
-| Surface | Reserved name | Runtime lane | Freeze lane | State |
+| Surface | Reserved name | Runtime lane | Freeze lane | Reservation state |
 | --- | --- | --- | --- | --- |
-| MCP | `ebus.v1.watch.summary.get` | `ISSUE-GW-11` | `ISSUE-DOC-09` | deferred, non-frozen |
-| GraphQL | `watchSummary` | `ISSUE-GW-11` | `ISSUE-DOC-09` | deferred, non-frozen |
-| Portal | none yet | `ISSUE-GW-11`, `ISSUE-GW-14` | `ISSUE-DOC-10` | deferred, non-frozen |
+| MCP | `ebus.v1.watch.summary.get` | `ISSUE-GW-11` | `ISSUE-DOC-09` | identifier reserved now; behavior deferred, non-frozen |
+| GraphQL | `watchSummary` | `ISSUE-GW-11` | `ISSUE-DOC-09` | identifier reserved now; behavior deferred, non-frozen |
+| Portal | none yet | `ISSUE-GW-11`, `ISSUE-GW-14` | `ISSUE-DOC-10` | no Portal-specific identifier reserved here; behavior deferred, non-frozen |
 
 ## Deferred v1 Scope
 
-When the M5 runtime exists, the shared watch-summary contract is expected to
-cover:
-
-- activation counts
-- freshness classes
-- direct-apply eligibility classes
-- degraded capability markers
-
-Those topic names come from
-`observe-first-bus-observability.implementing/15-execution-m2-m5.md`. They
-reserve the topic area only; they do not freeze field names, output shape,
-query filters, or delivery semantics on `main`.
+The shared watch-summary lane reserves only the high-level topic area already
+named in `observe-first-bus-observability.implementing/15-execution-m2-m5.md`:
+activation counts, freshness classes, direct-apply eligibility classes, and
+degraded capability markers.
 
 ## Not Frozen Yet
 
-The following details are intentionally deferred to `ISSUE-DOC-09` after
-`ISSUE-GW-10`, `ISSUE-GW-11`, and `ISSUE-GW-12` land:
+Until the runtime exists, `ISSUE-DOC-09` owns only the later freeze of the
+shared MCP/GraphQL watch-summary contract after the M5 implementation lands.
+That later freeze may define names, shape, and semantics for the shared
+MCP/GraphQL contract.
 
-- query-on-gap truth table
-- scheduler and shadow-cache interaction
-- observe-first freshness profiles
-- snapshot skew and notification latency budgets across GraphQL subscriptions,
-  Portal SSE, and query reads
-- shadow write-order and invalidation-epoch semantics
-- breaker-contention limits and feature-flag validity rules
-- cold-start observe-first behavior and invalidation semantics
+Portal-specific watch-summary behavior stays entirely with `ISSUE-DOC-10`.
+That later Portal lane owns any dedicated endpoint names, bootstrap flags, SSE
+payloads, refresh cadence, and UI-facing semantics. This page does not assign
+or freeze any of those Portal details.
 
 ## Current Discovery Rule
 
