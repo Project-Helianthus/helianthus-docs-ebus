@@ -2,10 +2,12 @@
 
 ## Status
 
-- State: partially frozen for the M2 MCP slice on docs `main`
-- Active freeze owner: `ISSUE-DOC-06`
-- Later owners:
+- State: partially frozen for the M2 MCP slice and the M3 GraphQL parity slice
+  on docs `main`
+- Frozen owners:
+  - `ISSUE-DOC-06` for MCP
   - `ISSUE-DOC-07` for GraphQL parity wording
+- Later owner:
   - `ISSUE-DOC-08` for family-policy, freshness, and later observe-first
     architecture updates
 
@@ -14,20 +16,25 @@
 This document is the architecture anchor for whole-bus observability in the
 observe-first rollout.
 
-This lane freezes only the MCP-owned sections:
+This document now freezes the MCP-owned sections plus the minimal GraphQL
+parity invariants required by merged `ISSUE-GW-05`:
 
 - busy-time and timing model wording needed by the M2 MCP surface
 - periodicity model wording needed by the M2 MCP surface
 - public-surface wording for the `ebus.v1.bus.*` MCP namespace
+- GraphQL parity wording for `busSummary`, `busMessages`, and `busPeriodicity`
+  as bounded bus-observability surfaces rather than semantic state
 
-This lane does not freeze GraphQL, Portal/watch-summary, scheduler/shadow
-behavior, or docs-stage1 cleanup work.
+This document still does not freeze Portal/watch-summary, scheduler/shadow
+behavior, or docs-stage1 cleanup work. The detailed GraphQL schema and
+nullability contract live in [`../api/graphql.md`](../api/graphql.md).
 
 ## Invariants
 
 - `ebus.v1.bus.*` remains a bus-observability namespace, not a semantic
   namespace.
-- M2 exposes bounded summaries and bounded retained lists only.
+- M2 MCP and M3 GraphQL both expose bounded summaries and bounded retained lists
+  only.
 - Busy-time and periodicity timing quality must remain explicit whenever the
   runtime lacks true wire timestamps.
 - Whole-bus passive capability state remains explicit even when bounded
@@ -37,6 +44,9 @@ behavior, or docs-stage1 cleanup work.
 
 - When passive support is unavailable or still warming up, MCP surfaces keep
   publishing explicit capability, warmup, degraded, and timing-quality state.
+- The same explicit-state rule applies to GraphQL `busSummary`, `busMessages`,
+  and `busPeriodicity`; retained list items do not imply current passive
+  availability.
 - Busy-time and periodicity are unavailable, not synthetic zeroes, when passive
   timing is unavailable.
 - Retained recent-message and periodicity history may still be visible during
@@ -66,6 +76,27 @@ Current registration rule:
 - the bus tools are advertised only when the runtime wires a real bus
   observability provider into the MCP server
 - a semantic-only MCP server does not list `ebus.v1.bus.*`
+
+## GraphQL Public Surface
+
+The merged M3 GraphQL parity surface mirrors the same bounded store model
+through:
+
+- `busSummary`
+- `busMessages(limit: Int)`
+- `busPeriodicity(limit: Int)`
+
+GraphQL-specific invariants:
+
+- the list roots preserve the same bounded-store semantics as MCP: `count` and
+  `capacity` describe the retained store, while `limit` truncates only the
+  returned newest suffix
+- top-level `status` remains the source of truth for availability, warmup,
+  degraded, and timing-quality state even when retained items remain visible
+- the current unwired runtime returns zero-value wrappers with `status: null`
+  rather than treating these roots as missing semantic fields
+- detailed schema shape, field nullability, and encoding rules are frozen in
+  [`../api/graphql.md`](../api/graphql.md)
 
 ## Busy-Time and Timing Model
 
@@ -131,7 +162,8 @@ Current registration rule:
 
 ## Unsupported or Unproven Cases
 
-- No GraphQL contract is frozen in this file.
+- This file does not own the detailed GraphQL schema; it owns only the shared
+  architecture invariants behind the MCP + GraphQL parity surfaces.
 - No Portal/watch-summary naming or behavior is frozen in this file.
 - No scheduler/shadow/query-on-gap behavior is frozen in this file.
 - No exact wire-timestamp guarantee is frozen for current transports.
@@ -142,6 +174,9 @@ Current registration rule:
 - Runtime implementation: [Project-Helianthus/helianthus-ebusgateway#376](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/376)
 - Merged PR: [Project-Helianthus/helianthus-ebusgateway#377](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/377)
 - Merge commit: `3daf4beed9d6406f7af52869eea1c53ef14f2f62`
+- GraphQL runtime implementation: [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
+- Merged GraphQL PR: [Project-Helianthus/helianthus-ebusgateway#379](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/379)
+- GraphQL merge commit: `83e9c7b1ba927a282d87599269e91be817ff3582`
 - Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
   `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
   with `P01..P06 = pass`
@@ -153,8 +188,15 @@ Current registration rule:
   - [Project-Helianthus/helianthus-ebusgateway/mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/server.go)
   - [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/server_test.go)
   - [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/cmd/gateway/mcp_bus_observability_integration_test.go)
+- Gateway repo GraphQL proof references (external to this docs repo, at merge commit `83e9c7b1ba927a282d87599269e91be817ff3582`):
+  - [Project-Helianthus/helianthus-ebusgateway/graphql/bus_observability.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/graphql/bus_observability.go)
+  - [Project-Helianthus/helianthus-ebusgateway/graphql/queries.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/graphql/queries.go)
+  - [Project-Helianthus/helianthus-ebusgateway/graphql/queries_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/graphql/queries_test.go)
+  - [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/bus_observability_provider.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/cmd/gateway/bus_observability_provider.go)
+  - [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/graphql_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/cmd/gateway/graphql_bus_observability_integration_test.go)
 - Current-state docs references:
   - [api/mcp.md](../api/mcp.md)
+  - [api/graphql.md](../api/graphql.md)
   - [architecture/observability.md](./observability.md)
   - [development/smoke-matrix.md](../development/smoke-matrix.md)
 
