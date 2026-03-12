@@ -5,6 +5,7 @@ This document is the top-level reference for Vaillant message identifiers (`PB/S
 For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x16` (B516, Energy statistics): [`protocols/ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`protocols/ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
+- `0xB5 0x55` (B555, timer/schedule protocol): [`protocols/ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 
 ## Scope
 
@@ -20,6 +21,7 @@ For detailed coverage of selector-heavy identifiers, see:
 0xB5 0x09  Register access / scan-id chunk discovery (selector-dependent payload forms)
 0xB5 0x16  Energy statistics (selector-encoded request; EXP Wh response)
 0xB5 0x24  GetExtendedRegisters (B524; selector-opcode multiplexed)
+0xB5 0x55  Timer/schedule protocol (B555; per-day weekly schedule access)
 0xFE 0x01  System-level broadcast (payload unspecified here)
 ```
 
@@ -145,6 +147,16 @@ See `development/target-emulation.md` for Helianthus implementation details.
 - Dedicated reference:
   [`protocols/ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - This includes opcode families, selector structures (`GG/II/RR`), response headers (`TT/GG/RR`), discovery rules, and schedule/table read notes.
+
+## Timer/Schedule Protocol (0xB5 0x55, B555)
+
+`0xB5 0x55` is the dedicated Vaillant timer/schedule protocol for weekly
+heating, DHW, and circulation programs.
+
+- Dedicated reference:
+  [`protocols/ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
+- This includes config/read/write opcode families (`0xA3`..`0xA6`), `ZONE`
+  semantics, day/slot layout, and the documented B524 interaction caveats.
 
 ## Energy Statistics (0xB5 0x16)
 
