@@ -18,10 +18,9 @@ or Portal transport details.
 
 ## Deferred v1 Scope
 
-The shared watch-summary lane reserves only the high-level topic area already
-named in `observe-first-bus-observability.implementing/15-execution-m2-m5.md`:
-activation counts, freshness classes, direct-apply eligibility classes, and
-degraded capability markers.
+The shared watch-summary lane reserves only the high-level topic area for the
+future summary surface: activation counts, freshness classes, direct-apply
+eligibility classes, and degraded capability markers.
 
 ## Not Frozen Yet
 
