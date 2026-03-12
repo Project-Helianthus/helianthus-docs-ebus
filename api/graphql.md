@@ -36,24 +36,13 @@ The builder assembles a GraphQL-oriented schema model directly from the registry
 - **Graceful channel close**: if the `changes` channel is closed, the builder stops listening instead of spinning rebuilds.
 - **Revisioned snapshots**: each successful rebuild increments a revision counter; `Schema()` returns a deep-copied snapshot to keep callers insulated from concurrent rebuilds.
 
-## Query Surface (Implemented)
+## Observe-First Query Roots (Implemented)
 
-The following query entry points are available:
+This excerpt freezes only the `ISSUE-DOC-07` observe-first subset of the
+current merged `Query` surface. It is not a complete `Query` definition.
 
 ```graphql
 type Query {
-  daemonStatus: ServiceStatus!
-  adapterStatus: ServiceStatus!
-  zones: [Zone!]!
-  dhw: Dhw
-  energyTotals: EnergyTotals
-  boilerStatus: BoilerStatus
-  system: SystemStatus
-  circuits: [CircuitStatus!]!
-  devices: [Device!]!
-  device(address: Int!): Device
-  planes(address: Int!): [Plane!]!
-  methods(address: Int!, plane: String!): [Method!]!
   busSummary: BusSummary
   busMessages(limit: Int): BusMessagesList
   busPeriodicity(limit: Int): BusPeriodicityList
