@@ -4,11 +4,11 @@
 
 The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
 
-## Observe-First Bus MCP Contract (`DOC-04`)
+## Observe-First Bus MCP Contract (`DOC-06`)
 
 ### Scope
 
-This section freezes only the narrow M2 MCP slice shipped by
+This `DOC-06` section freezes only the narrow M2 MCP slice shipped by
 `ISSUE-GW-04`:
 
 - `ebus.v1.bus.summary.get`
@@ -213,17 +213,19 @@ Periodicity semantics:
 - Runtime lane: [Project-Helianthus/helianthus-ebusgateway#376](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/376)
 - Merged implementation PR: [Project-Helianthus/helianthus-ebusgateway#377](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/377)
 - Merge commit: `3daf4beed9d6406f7af52869eea1c53ef14f2f62`
-- Fresh passive proof artifact:
-  `results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
+- Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
   with `P01..P06 = pass`
-- Fresh standard recovery probe reference:
-  `results-matrix-ha/20260312T175250Z-pr377-gw04-26ee758-recovery/full88-probe-t01-after-adapter-reboot/index.json`
+- Gateway workspace recovery probe reference (outside this docs repo; from the same `helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260312T175250Z-pr377-gw04-26ee758-recovery/full88-probe-t01-after-adapter-reboot/index.json`
   remained `blocked-infra` with `infra_reason=adapter_no_signal`, and the PR
   merged under explicit owner override after the official addon/runtime restore
   was re-verified cleanly
-- Gateway proof points used for this freeze:
-  - MCP tool inventory and provider wiring: `cmd/gateway/mcp_bus_observability_integration_test.go`
-  - MCP payload shape and limit/snapshot behavior: `mcp/server_test.go`
+- Gateway repo code/test proof references (external to this docs repo, at merge commit `3daf4beed9d6406f7af52869eea1c53ef14f2f62`):
+  - MCP tool inventory and provider wiring:
+    [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/cmd/gateway/mcp_bus_observability_integration_test.go)
+  - MCP payload shape and limit/snapshot behavior:
+    [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/server_test.go)
 
 ### Falsification Cases
 

@@ -75,7 +75,7 @@ Current registration rule:
   exposure.
 - M2 does not publish a dedicated numeric busy-ratio MCP payload. The frozen
   public contract is the summary status plus explicit timing-quality markers.
-- `status.timing_quality.bus` and `status.timing_quality.periodicity` track the
+- `status.timing_quality.busy` and `status.timing_quality.periodicity` track the
   passive timing-quality class used by current whole-bus observe-first
   accounting.
 
@@ -142,17 +142,17 @@ Current registration rule:
 - Runtime implementation: [Project-Helianthus/helianthus-ebusgateway#376](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/376)
 - Merged PR: [Project-Helianthus/helianthus-ebusgateway#377](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/377)
 - Merge commit: `3daf4beed9d6406f7af52869eea1c53ef14f2f62`
-- Fresh passive proof artifact:
-  `results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
+- Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
   with `P01..P06 = pass`
-- Fresh standard recovery probe reference:
-  `results-matrix-ha/20260312T175250Z-pr377-gw04-26ee758-recovery/full88-probe-t01-after-adapter-reboot/index.json`
+- Gateway workspace recovery probe reference (outside this docs repo; from the same `helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260312T175250Z-pr377-gw04-26ee758-recovery/full88-probe-t01-after-adapter-reboot/index.json`
   with `blocked-infra` / `infra_reason=adapter_no_signal`
-- Runtime code/tests used for this freeze:
-  - `mcp/bus.go`
-  - `mcp/server.go`
-  - `mcp/server_test.go`
-  - `cmd/gateway/mcp_bus_observability_integration_test.go`
+- Gateway repo code/test proof references (external to this docs repo, at merge commit `3daf4beed9d6406f7af52869eea1c53ef14f2f62`):
+  - [Project-Helianthus/helianthus-ebusgateway/mcp/bus.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/bus.go)
+  - [Project-Helianthus/helianthus-ebusgateway/mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/server.go)
+  - [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/server_test.go)
+  - [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/cmd/gateway/mcp_bus_observability_integration_test.go)
 - Current-state docs references:
   - [api/mcp.md](../api/mcp.md)
   - [architecture/observability.md](./observability.md)
@@ -176,7 +176,7 @@ This architecture freeze is wrong if later review proves any of the following:
 On `ebusd-tcp`, the MCP summary may still expose active-path bounded data, but
 `status.capability.passive_state` is `unavailable` with reason
 `unsupported_or_misconfigured`, while `status.timing_quality.passive`,
-`status.timing_quality.bus`, and `status.timing_quality.periodicity` remain
+`status.timing_quality.busy`, and `status.timing_quality.periodicity` remain
 `unavailable`.
 
 ### Example: retained periodicity history does not prove current health
