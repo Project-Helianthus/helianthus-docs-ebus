@@ -9,20 +9,21 @@ The GraphQL API is implemented and served by `cmd/gateway`. The gateway exposes:
 
 ## Observe-First Contract Ownership
 
-This page remains the owner for GraphQL-specific observe-first parity once the
-gateway publishes it.
+This page owns the GraphQL-specific observe-first parity contract that is
+currently merged on `main`.
 
-- Current `main` documents only implemented root fields, mutations, and
-  subscriptions. Deferred observe-first fields are intentionally absent from
-  the schema blocks below.
-- `ISSUE-GW-05` is the runtime-owning lane for generic observe-first GraphQL
-  parity.
+- The merged M3 bus-observability fields `busSummary`, `busMessages`, and
+  `busPeriodicity` are frozen below against gateway `main` at merge commit
+  `83e9c7b1ba927a282d87599269e91be817ff3582`
+  ([Project-Helianthus/helianthus-ebusgateway#379](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/379)).
+- `ISSUE-GW-05` / [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
+  is the runtime-owning lane for this GraphQL parity surface.
 - [`watch-summary.md`](./watch-summary.md) owns the shared watch-summary
   contract. The reserved root field `watchSummary` is deferred and non-frozen
   on `main`.
-- `ISSUE-DOC-07` freezes the broader observe-first GraphQL contract, while
-  `ISSUE-DOC-09` freezes watch-summary-specific behavior after the M5 runtime
-  exists.
+- `ISSUE-DOC-07` freezes the current bus-observability GraphQL contract, while
+  `ISSUE-DOC-09` still owns watch-summary-specific behavior after the M5
+  runtime exists.
 
 ## Dynamic Schema Builder (Implemented)
 
@@ -53,6 +54,158 @@ type Query {
   device(address: Int!): Device
   planes(address: Int!): [Plane!]!
   methods(address: Int!, plane: String!): [Method!]!
+  busSummary: BusSummary
+  busMessages(limit: Int): BusMessagesList
+  busPeriodicity(limit: Int): BusPeriodicityList
+}
+```
+
+### Observe-First Bus Queries (`DOC-07`)
+
+This `DOC-07` section freezes only the narrow M3 GraphQL slice shipped by the
+merged gateway runtime:
+
+- `busSummary`
+- `busMessages(limit: Int)`
+- `busPeriodicity(limit: Int)`
+
+Behavioral invariants:
+
+- The two list roots keep bounded-list parity with MCP. `count` and `capacity`
+  describe the whole retained store, not just the returned slice.
+- When `limit` is present it must be a positive integer; the gateway returns the
+  newest retained `limit` items in retained order. Omitting `limit` returns all
+  currently retained items and nothing more.
+- Current passive capability, warmup, degraded, and timing-quality state stay
+  explicit through the top-level `status` object on all three roots. Retained
+  message/periodicity history does not imply current passive health.
+- When no real bus-observability provider is wired, the current runtime still
+  returns zero-value wrapper objects for all three roots; `status` is `null`,
+  `count`/`capacity` stay `0`, `items` is `[]`, and `busSummary.counters`
+  remains `"0"` / `"0"`.
+- Within one GraphQL operation, all three roots resolve from one shared
+  bus-observability snapshot, so `busSummary`, `busMessages`, and
+  `busPeriodicity` stay internally consistent for that request.
+- GraphQL preserves the same timing-quality semantics as the real
+  bus-observability store and MCP adapter. The merged runtime proves
+  `estimated` and `unavailable`; these fields must not imply exact wire-time
+  precision.
+
+Current value/encoding rules:
+
+- `status.capability.passiveState` and `status.warmup.state` use the bounded
+  state set `unavailable | warming_up | available`.
+- Current passive-unavailability reasons match the MCP freeze:
+  `startup_timeout`, `reconnect_timeout`, `socket_loss`, `flap_dampened`,
+  `unsupported_or_misconfigured`, and `capability_withdrawn`.
+- `status.degraded.reasons` may include those passive-unavailability reasons and
+  `dedup_degraded`.
+- `seriesBudgetOverflowTotal` and `periodicityBudgetOverflowTotal` are decimal
+  strings, not GraphQL integers.
+- `observedAt` and `lastSeen` are UTC RFC3339 strings; the runtime uses
+  RFC3339Nano formatting, so fractional seconds appear only when present.
+- `lastInterval`, `meanInterval`, `minInterval`, and `maxInterval` are duration
+  strings (for example `5s`) and remain omitted until the runtime has a value.
+
+### Observe-First Bus Types (`DOC-07`)
+
+```graphql
+type BusSummary {
+  status: BusObservabilityStatus
+  messages: BusBoundedListSummary!
+  periodicity: BusBoundedListSummary!
+  counters: BusObservabilityCounters!
+}
+
+type BusObservabilityStatus {
+  transportClass: String!
+  capability: BusObservabilityCapability!
+  warmup: BusObservabilityWarmup!
+  timingQuality: BusObservabilityTimingQuality!
+  degraded: BusObservabilityDegraded!
+}
+
+type BusObservabilityCapability {
+  activeSupported: Boolean!
+  passiveSupported: Boolean!
+  broadcastSupported: Boolean!
+  passiveAvailable: Boolean!
+  passiveState: String!
+  passiveReason: String
+  endpointState: String!
+  tapConnected: Boolean!
+}
+
+type BusObservabilityWarmup {
+  state: String!
+  blocker: String
+  elapsedSeconds: Float
+  completedTransactions: Int!
+  requiredTransactions: Int!
+  completionMode: String
+}
+
+type BusObservabilityTimingQuality {
+  active: String!
+  passive: String!
+  busy: String!
+  periodicity: String!
+}
+
+type BusObservabilityDegraded {
+  active: Boolean!
+  reasons: [String!]!
+}
+
+type BusBoundedListSummary {
+  count: Int!
+  capacity: Int!
+}
+
+type BusObservabilityCounters {
+  seriesBudgetOverflowTotal: String!
+  periodicityBudgetOverflowTotal: String!
+}
+
+type BusMessagesList {
+  status: BusObservabilityStatus
+  count: Int!
+  capacity: Int!
+  items: [BusMessage!]!
+}
+
+type BusMessage {
+  scope: String!
+  family: String!
+  frameType: String!
+  outcome: String!
+  observedAt: String
+  sourceAddress: Int!
+  targetAddress: Int!
+  requestLen: Int!
+  responseLen: Int!
+}
+
+type BusPeriodicityList {
+  status: BusObservabilityStatus
+  count: Int!
+  capacity: Int!
+  items: [BusPeriodicityEntry!]!
+}
+
+type BusPeriodicityEntry {
+  sourceBucket: String!
+  targetBucket: String!
+  primary: Int!
+  secondary: Int!
+  family: String!
+  state: String!
+  lastSeen: String
+  sampleCount: Int!
+  lastInterval: String
+  meanInterval: String
+  minInterval: String
+  maxInterval: String
 }
 ```
 
