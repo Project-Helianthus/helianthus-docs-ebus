@@ -200,7 +200,7 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Status:** Accepted
 
-**Context:** Multiple consumers (for example GraphQL resolvers/subscriptions, the projection browser at `/ui`, Portal API clients under `/portal`, and Home Assistant) need periodic reads of the same semantic registers. A naive model multiplies reads per consumer and can saturate the bus.
+**Context:** Multiple consumers (for example GraphQL resolvers/subscriptions, the projection browser at `/ui`, Portal API clients under `/portal/api/v1`, and Home Assistant) need periodic reads of the same semantic registers. A naive model multiplies reads per consumer and can saturate the bus.
 
 **Decision:** Implement a semantic read scheduler that:
 
