@@ -170,11 +170,11 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Consequences:** Planes become explicit projections of the canonical Service graph (Helianthus-specific), enabling deterministic identity across planes within a snapshot, consistent path validation, and safe graph composition for higher-level APIs.
 
-## ADR-015: Portal consumes projections as plane-scoped graphs (IORegistry-style semantics)
+## ADR-015: Projection browser consumes projections as plane-scoped graphs (IORegistry-style semantics)
 
 **Status:** Accepted
 
-**Context:** The portal needs deterministic behavior when switching planes (for example `Service` → `Observability` → `Debug`) without losing canonical node identity. Plane-level rendering and cross-plane correlation must remain explicit for API consumers.
+**Context:** The projection browser at `/ui` needs deterministic behavior when switching planes (for example `Service` → `Observability` → `Debug`) without losing canonical node identity. Plane-level rendering and cross-plane correlation must remain explicit for API consumers.
 
 **Decision:**
 
@@ -190,7 +190,7 @@ This document records the architectural decisions implemented in the codebase. E
 - `Observability:/ebus/addr@10/device@BASV2/method@get_operational_data`
 - `Debug:/ebus/addr@10/device@BASV2/register@b524` → canonical `Service:/ebus/addr@10/device@BASV2/method@get_ext_register`
 
-**Portal query expectation:**
+**Projection browser query expectation:**
 
 - `devices { projections { plane nodes { id path canonicalPath } edges { id from to } } }`
 
