@@ -7,6 +7,23 @@ The GraphQL API is implemented and served by `cmd/gateway`. The gateway exposes:
 - `/graphql` for queries + mutations
 - `/graphql/subscriptions` for subscriptions over WebSocket or SSE
 
+## Observe-First Contract Ownership
+
+This page remains the owner for GraphQL-specific observe-first parity once the
+gateway publishes it.
+
+- Current `main` documents only implemented root fields, mutations, and
+  subscriptions. Deferred observe-first fields are intentionally absent from
+  the schema blocks below.
+- `ISSUE-GW-05` is the runtime-owning lane for generic observe-first GraphQL
+  parity.
+- [`watch-summary.md`](./watch-summary.md) owns the shared watch-summary
+  contract. The reserved root field `watchSummary` is deferred and non-frozen
+  on `main`.
+- `ISSUE-DOC-07` freezes the broader observe-first GraphQL contract, while
+  `ISSUE-DOC-09` freezes watch-summary-specific behavior after the M5 runtime
+  exists.
+
 ## Dynamic Schema Builder (Implemented)
 
 The builder assembles a GraphQL-oriented schema model directly from the registry:
