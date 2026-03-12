@@ -12,7 +12,8 @@
   - GraphQL subscriptions (SSE/WS): `/graphql/subscriptions`
   - Projection snapshot endpoint: `/snapshot`
   - MCP endpoint: `/mcp`
-  - Portal UI (read-only projection explorer): `/ui`
+  - Projection browser (read-only projection explorer): `/ui`
+  - Portal shell + versioned API: `/portal` and `/portal/api/v1`
 - mDNS advertisement for the GraphQL endpoint (see mDNS Discovery below).
 - `cmd/gateway` can optionally enable a **passive broadcast listener** (separate connection) for energy broadcasts.
 

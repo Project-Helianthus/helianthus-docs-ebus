@@ -358,7 +358,7 @@ Projections are plane-scoped graphs attached to each device. The API exposes:
 #### Example query
 
 ```graphql
-query PortalProjections($address: Int!) {
+query ProjectionBrowserProjections($address: Int!) {
   device(address: $address) {
     address
     addresses
@@ -488,14 +488,14 @@ Accept: application/json
 }
 ```
 
-## Portal UI (Projection Explorer)
+## Projection Browser (`/ui`)
 
-The portal UI is a read-only projection explorer (default path: `/ui`). It uses a single GraphQL query to fetch projections for all devices, then renders the device list, plane picker, projection graph, and node details. The UI auto-refreshes on an interval (default 5s) and exposes manual refresh + pause/resume controls.
+The projection browser is a read-only projection explorer served at `/ui` by default. It uses a single GraphQL query to fetch projections for all devices, then renders the device list, plane picker, projection graph, and node details. The browser auto-refreshes on an interval (default 5s) and exposes manual refresh + pause/resume controls. This surface is separate from the Portal shell/API served under `/portal` and `/portal/api/v1`.
 
 ### GraphQL projection query
 
 ```graphql
-query PortalProjections {
+query ProjectionBrowserProjections {
   devices {
     address
     addresses
@@ -512,14 +512,14 @@ query PortalProjections {
 
 **Notes**
 
-- `Projection.plane` is the plane label shown in the portal plane picker (ordered with defaults `Service`, `Observability`, `Debug`, `Virtual`, then any device-specific planes).
+- `Projection.plane` is the plane label shown in the projection browser plane picker (ordered with defaults `Service`, `Observability`, `Debug`, `Virtual`, then any device-specific planes).
 - `ProjectionNode.id` is the canonical Service path for the node, so it is stable across planes within a snapshot.
-- `ProjectionNode.path` is the plane-specific path shown in the UI.
+- `ProjectionNode.path` is the plane-specific path shown in the projection browser.
 - `ProjectionNode.canonicalPath` is the Service-plane path used to correlate nodes across planes.
 
 ### Projection snapshot endpoint
 
-The gateway exposes a lightweight HTTP endpoint to fetch a single projection graph from the latest schema snapshot (outside GraphQL). The portal UI uses GraphQL; the snapshot endpoint is intended for lightweight or plane-specific clients. The default path is `/snapshot` and can be configured via `-snapshot-path`.
+The gateway exposes a lightweight HTTP endpoint to fetch a single projection graph from the latest schema snapshot (outside GraphQL). The projection browser uses GraphQL; the snapshot endpoint is intended for lightweight or plane-specific clients. The default path is `/snapshot` and can be configured via `-snapshot-path`.
 
 **Request**
 
