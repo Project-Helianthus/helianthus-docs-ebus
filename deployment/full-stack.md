@@ -130,6 +130,18 @@ Gateway startup scan tries to reduce bus load by using ebusd's known target list
 5. If direct scan requests time out for all narrowed targets, gateway imports device metadata
    from the same ebusd `scan result` output as a discovery fallback.
 
+Important startup contract:
+
+- `scan result` preload/narrowing is opportunistic bus-load reduction, not proof that
+  semantic startup is ready to close.
+- Preloaded inventory, product identity, and imported metadata are useful hints, but
+  they do not by themselves prove that startup already has a coherent Vaillant/B524
+  controller root.
+- If narrowed/preloaded inventory does not yield a coherent B524/controller root,
+  gateway must perform one bounded full-range discovery retry before concluding startup
+  scan.
+- If preload already yields a coherent root, no broadened retry is required.
+
 When semantic B524 reads time out in `ebusd-tcp` mode, zone inventory/name/state can be recovered
 from ebusd's `grab result all` cache (passive snapshot), so climate entities can still appear without
 forcing additional bus traffic.
@@ -137,6 +149,29 @@ Successful hydration from this path is classified as **live semantic source** fo
 (it is not treated as persistent stale cache preload).
 
 Runtime read/write traffic still uses the configured gateway transport.
+
+### Passive observe-first transport contract
+
+Passive observe-first support is narrower than active startup support.
+
+- `ebusd-tcp` remains `unsupported_or_misconfigured` for passive observe-first.
+- Direct adapter-class `enh` / `ens` endpoints over `tcp/:9999` remain
+  `unsupported_or_misconfigured` for passive observe-first, including equivalent
+  hostname forms that resolve to the same adapter listener.
+- Proxy-like `enh` / `ens` endpoints on other ports remain passive-capable for
+  observe-first, whether they are reached over local loopback or remote northbound
+  addresses.
+
+Operational meaning:
+
+- a coherent B524/controller root still proves active semantic startup readiness;
+- it does **not** by itself prove that passive observe-first is supported for the
+  chosen transport topology;
+- validation cases that use direct adapter-class `enh` / `ens` endpoints should
+  expect explicit passive unavailability, not endless `warming_up` / `socket_loss`
+  states;
+- validation cases that use proxy-like `enh` / `ens` endpoints on non-adapter ports
+  should continue to expect passive-capable behavior.
 
 ### Semantic Cache Persistence
 
