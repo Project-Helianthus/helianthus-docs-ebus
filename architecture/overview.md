@@ -1,6 +1,8 @@
 # Architecture Overview
 
-This repository documents the current, implemented architecture of the Helianthus eBUS ecosystem. As of now, `helianthus-ebusgo` and `helianthus-ebusreg` contain the working transport, protocol, type system, registry, and vendor providers. `helianthus-ebusgateway` now wires transport, bus, registry, and router into a runnable gateway process; the GraphQL **schema builder** is implemented (no API surface yet), while MCP/mDNS/Matter remain stubs.
+This repository documents the current, implemented architecture of the Helianthus eBUS ecosystem. `helianthus-ebusgo` and `helianthus-ebusreg` provide the transport, protocol, type system, registry, and vendor providers. `helianthus-ebusgateway` is the runnable runtime/API edge: it wires transport, bus, registry, router, and semantic providers into a gateway process and serves GraphQL (`/graphql`, `/graphql/subscriptions`), MCP (`/mcp`), the projection browser (`cfg.UIPath`, default `/ui`), and the Portal shell/API surface (`cfg.PortalPath`, default `/portal`, with versioned API under `cfg.PortalPath + "/api/v1"`, default `/portal/api/v1`).
+
+Detailed API contracts live in [`api/graphql.md`](../api/graphql.md), [`api/mcp.md`](../api/mcp.md), and [`api/portal.md`](../api/portal.md).
 
 ## Layered Architecture (Mermaid)
 
@@ -8,10 +10,10 @@ This repository documents the current, implemented architecture of the Helianthu
 flowchart TB
   subgraph Gateway
     G0[Gateway runtime wired]
-    G1[GraphQL schema builder]
-    G2[MCP stub]
-    G3[mDNS stub]
-    G4[Matter stub]
+    G1[GraphQL API + schema]
+    G2[MCP endpoint]
+    G3[Projection browser (/ui)]
+    G4[Portal shell + API (/portal)]
   end
 
   subgraph Registry
@@ -59,13 +61,14 @@ Naming note:
 
 ## Gateway Runtime (Implemented)
 
-The gateway now provides a runtime wiring layer that instantiates the bus, registry, and router from a single config. It does not expose GraphQL/MCP/mDNS/Matter endpoints yet.
+The gateway now provides a runtime wiring layer that instantiates the bus, registry, router, schema builder, and HTTP surfaces from a single config.
 
 - **Construction**: `New(ctx, cfg)` resolves a transport (provided or dialed), then builds a Bus, DeviceRegistry, and BusEventRouter.
 - **Startup**: `Start(ctx)` runs the Bus loop; cancellation stops the bus.
 - **Shutdown**: `Close()` closes the underlying transport connection (or the provided transport).
 - **Router refresh**: `RefreshRouterPlanes()` extracts `router.Plane` implementations from the registry and updates the router’s subscription table.
 - **GraphQL schema rebuild**: the schema builder consumes registry entries and rebuilds schema snapshots whenever a registry change signal is emitted.
+- **External surfaces**: GraphQL is served at `/graphql` with subscriptions at `/graphql/subscriptions`; MCP is served at `/mcp`; the projection browser is mounted at `cfg.UIPath` (default `/ui`); the Portal shell/API surface is mounted at `cfg.PortalPath` (default `/portal`) with its versioned API under `cfg.PortalPath + "/api/v1"` (default `/portal/api/v1`).
 
 ## Semantic Startup Runtime
 
@@ -172,19 +175,19 @@ Projections are **multi-dimensional** views of the same canonical graph:
 - Node paths are unique within a projection; node IDs may repeat only when they map to the **same** canonical path.
 - Edge IDs are stable (`Plane:from->to`) and edges must reference existing node IDs.
 
-### Portal Query Expectations
+### Projection Browser Query Expectations
 
-The Helianthus Portal UI renders projection graphs and cross-plane views using a single GraphQL query and expects specific fields to be present and stable:
+The read-only projection browser at `cfg.UIPath` (default `/ui`) renders projection graphs and cross-plane views using a single GraphQL query and expects specific fields to be present and stable:
 
-- **Query shape** (example name: `PortalProjections`): `devices { address manufacturer deviceId projections { plane nodes { id path canonicalPath } edges { id from to } } }`
+- **Query shape** (example name: `ProjectionBrowserProjections`): `devices { address manufacturer deviceId projections { plane nodes { id path canonicalPath } edges { id from to } } }`
 - **Plane graph contract**: each `projections[]` entry is one plane-scoped graph where `plane -> nodes/edges`; clients render exactly one selected plane at a time.
 - **Identity**: `ProjectionNode.id` is derived from the `Service`-plane canonical path, so the same node ID appears across planes when they represent the same canonical entity.
 - **Display vs. join**: `path` is plane-local display data; `canonicalPath` is the join key used for cross-plane correlation and snapshot diffs.
 - **Plane switching**: preserve the selected node’s `canonicalPath`, switch plane, then resolve the target node by canonical path (or clear selection when absent in that plane).
 
-### Portal UI (Projection Browser)
+### Projection Browser (`/ui`)
 
-The gateway serves a read-only portal UI at `cfg.UIPath` (default `/ui`). The portal polls the GraphQL endpoint for devices and their projection graphs, then renders:
+The gateway serves a read-only projection browser at `cfg.UIPath` (default `/ui`). This UI is separate from the Portal shell served at `cfg.PortalPath` (default `/portal`). The projection browser polls the GraphQL endpoint for devices and their projection graphs, then renders:
 
 - A device list (address + manufacturer + device ID).
 - A plane selector (canonical planes plus any device-specific planes).
@@ -196,7 +199,7 @@ Node identity is derived from the canonical Service path, so the same logical no
 
 ```mermaid
 sequenceDiagram
-  participant UI as Portal UI
+  participant UI as Projection browser
   participant P1 as Projection (Observability)
   participant P2 as Projection (Service)
   UI->>P1: select node

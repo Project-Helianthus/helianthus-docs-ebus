@@ -162,19 +162,19 @@ This document records the architectural decisions implemented in the codebase. E
 - `Observability:/ebus/addr@10/device@BASV2/method@get_operational_data` (same canonical node, plane-specific path)
 - `Debug:/ebus/addr@10/device@BASV2/register@b524` (canonical path is `Service:/ebus/addr@10/device@BASV2/method@get_ext_register`)
 
-**Portal query expectations:**
+**Projection browser query expectations:**
 
-- GraphQL consumers (Portal UI) query projection graphs via:
+- GraphQL consumers (projection browser at `/ui`) query projection graphs via:
   `devices { projections { plane nodes { id path canonicalPath } edges { id from to } } }`
 - `ProjectionNode.id` is derived from the canonical Service path so nodes can be correlated across planes; `path` is used for plane-local display.
 
 **Consequences:** Planes become explicit projections of the canonical Service graph (Helianthus-specific), enabling deterministic identity across planes within a snapshot, consistent path validation, and safe graph composition for higher-level APIs.
 
-## ADR-015: Portal consumes projections as plane-scoped graphs (IORegistry-style semantics)
+## ADR-015: Projection browser consumes projections as plane-scoped graphs (IORegistry-style semantics)
 
 **Status:** Accepted
 
-**Context:** The portal needs deterministic behavior when switching planes (for example `Service` → `Observability` → `Debug`) without losing canonical node identity. Plane-level rendering and cross-plane correlation must remain explicit for API consumers.
+**Context:** The projection browser at `/ui` needs deterministic behavior when switching planes (for example `Service` → `Observability` → `Debug`) without losing canonical node identity. Plane-level rendering and cross-plane correlation must remain explicit for API consumers.
 
 **Decision:**
 
@@ -190,7 +190,7 @@ This document records the architectural decisions implemented in the codebase. E
 - `Observability:/ebus/addr@10/device@BASV2/method@get_operational_data`
 - `Debug:/ebus/addr@10/device@BASV2/register@b524` → canonical `Service:/ebus/addr@10/device@BASV2/method@get_ext_register`
 
-**Portal query expectation:**
+**Projection browser query expectation:**
 
 - `devices { projections { plane nodes { id path canonicalPath } edges { id from to } } }`
 
@@ -200,7 +200,7 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Status:** Accepted
 
-**Context:** Multiple consumers (for example GraphQL resolvers/subscriptions, a portal UI, and Home Assistant) need periodic reads of the same semantic registers. A naive model multiplies reads per consumer and can saturate the bus.
+**Context:** Multiple consumers (for example GraphQL resolvers/subscriptions, the projection browser at `/ui`, Portal API clients under `/portal/api/v1`, and Home Assistant) need periodic reads of the same semantic registers. A naive model multiplies reads per consumer and can saturate the bus.
 
 **Decision:** Implement a semantic read scheduler that:
 
