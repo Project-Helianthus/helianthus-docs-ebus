@@ -2,28 +2,31 @@
 
 ## Status
 
-- State: partially frozen for the M2 MCP slice and the M3 GraphQL parity slice
-  on docs `main`
+- State: frozen through the M4 observe-first watch architecture closure on
+  docs `main`
 - Frozen owners:
   - `ISSUE-DOC-06` for MCP
   - `ISSUE-DOC-07` for GraphQL parity wording
+  - `ISSUE-DOC-08` for M4 watch-layer architecture wording
 - Later owner:
-  - `ISSUE-DOC-08` for family-policy, freshness, and later observe-first
-    architecture updates
+  - `ISSUE-DOC-09` for M5 watch-summary and scheduler/shadow public-surface
+    freeze
 
 ## Scope
 
 This document is the architecture anchor for whole-bus observability in the
 observe-first rollout.
 
-This document now freezes the MCP-owned sections plus the minimal GraphQL
-parity invariants required by merged `ISSUE-GW-05`:
+This document now freezes:
 
-- busy-time and timing model wording needed by the M2 MCP surface
-- periodicity model wording needed by the M2 MCP surface
-- public-surface wording for the `ebus.v1.bus.*` MCP namespace
-- GraphQL parity wording for `busSummary`, `busMessages`, and `busPeriodicity`
-  as bounded bus-observability surfaces rather than semantic state
+- M2 MCP wording needed by merged `ISSUE-GW-04`
+- M3 GraphQL parity wording needed by merged `ISSUE-GW-05`
+- M4 observe-first watch-layer architecture wording needed by merged
+  `ISSUE-GW-06` through `ISSUE-GW-09`, including:
+  - `WatchCatalog`/watch-observation evidence model
+  - bounded `ShadowCache` architecture baseline and feature-flag normalization
+  - family-policy routing and runtime outcomes
+  - retained-active fallback wording constrained to policy/watch evidence
 
 This document still does not freeze Portal/watch-summary, scheduler/shadow
 behavior, or docs-stage1 cleanup work. The detailed GraphQL schema and
@@ -39,6 +42,46 @@ nullability contract live in [`../api/graphql.md`](../api/graphql.md).
   runtime lacks true wire timestamps.
 - Whole-bus passive capability state remains explicit even when bounded
   retained history still exists.
+- B524 `state_default` behavior remains descriptor-backed/policy-backed; this
+  document does not permit request-shape-only promotion semantics.
+- Retained-active fallback is architectural evidence reuse, not a standalone
+  selector heuristic.
+
+## M4 Observe-First Watch Baseline
+
+Merged `ISSUE-GW-06` through `ISSUE-GW-09` establish the M4 architecture
+baseline for observe-first watch behavior:
+
+- `WatchCatalog` provides descriptor-backed key semantics (`state`, `config`,
+  correlation policy, direct-apply policy) for canonical watch keys.
+- `ShadowCache` is bounded and policy-gated; it is not an unbounded write
+  journal.
+- Observe-first feature flags are normalized into a coherent runtime
+  configuration before policy evaluation.
+- Family-policy routing is evaluated per transaction and carried into runtime
+  adjudication paths.
+
+### Runtime Outcome Classes
+
+At architecture level, passive adjudication outcomes are distinct:
+
+- direct-apply-eligible paths (`state_default`, `config_opt_in`,
+  `energy_merge_only`) are runtime third-party eligible under the family-policy
+  verdict
+- `record/invalidate` paths are runtime third-party eligible without implying
+  direct state application
+- observability-only paths are retained for evidence and diagnostics but do not
+  imply runtime application
+
+### B524 Descriptor-Backed Rule
+
+For B524, `state_default` eligibility is descriptor-backed and policy-backed.
+`catalog_miss`, inactive keys, config keys, write/timer forms, or mismatched
+policy evidence do not become `state_default` eligible.
+
+Retained-active fallback wording in this document is bounded to retained active
+fingerprints that already carry compatible policy evidence; it is not a
+request-shape override.
 
 ## Degraded Behavior
 
@@ -165,7 +208,8 @@ GraphQL-specific invariants:
 - This file does not own the detailed GraphQL schema; it owns only the shared
   architecture invariants behind the MCP + GraphQL parity surfaces.
 - No Portal/watch-summary naming or behavior is frozen in this file.
-- No scheduler/shadow/query-on-gap behavior is frozen in this file.
+- No M5 watch-summary contract or scheduler/shadow/query-on-gap public contract
+  is frozen in this file.
 - No exact wire-timestamp guarantee is frozen for current transports.
 - No dedicated numeric busy-time MCP payload is frozen in M2.
 
@@ -177,6 +221,18 @@ GraphQL-specific invariants:
 - GraphQL runtime implementation: [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
 - Merged GraphQL PR: [Project-Helianthus/helianthus-ebusgateway#379](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/379)
 - GraphQL merge commit: `83e9c7b1ba927a282d87599269e91be817ff3582`
+- Watch-catalog architecture implementation: [Project-Helianthus/helianthus-ebusgateway#380](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/380)
+- Merged watch-catalog PR: [Project-Helianthus/helianthus-ebusgateway#381](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/381)
+- Watch-catalog merge commit: `873c970459d1933ba50638df5e6fb349a6a9a3a2`
+- Shadow-cache architecture implementation: [Project-Helianthus/helianthus-ebusgateway#382](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/382)
+- Merged shadow-cache PR: [Project-Helianthus/helianthus-ebusgateway#385](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/385)
+- Shadow-cache merge commit: `9e9e6904e0337812ffa87591a83ad6f4a5c0ea44`
+- Feature-flag architecture implementation: [Project-Helianthus/helianthus-ebusgateway#386](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/386)
+- Merged feature-flag PR: [Project-Helianthus/helianthus-ebusgateway#387](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/387)
+- Feature-flag merge commit: `23e46011f3c57d08148cf3cdd51acd6958303f90`
+- Family-policy architecture implementation: [Project-Helianthus/helianthus-ebusgateway#388](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/388)
+- Merged family-policy PR: [Project-Helianthus/helianthus-ebusgateway#389](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/389)
+- Family-policy merge commit: `db09bbae687912a16fbc9f0a2f3a5616b84931e8`
 - Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
   `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
   with `P01..P06 = pass`

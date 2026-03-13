@@ -55,6 +55,31 @@ This page documents the runtime observability signals currently emitted by `heli
 | `ebus_passive_fanout_overflow_total` | counter | Passive classified fan-out overflows labelled by `consumer` and `criticality`. |
 | `ebus_passive_reconstructor_recoveries_total` | counter | Passive reconstructor recoveries labelled by `reason=unexpected_syn|transport_reset|decode_fault`. |
 
+## M4 Observe-First Watch Notes
+
+The merged M4 watch stack (`GW-06..GW-09`) introduces policy-carried passive
+adjudication behavior. At architecture level:
+
+- family-policy verdicts flow into runtime adjudication, not only into
+  fingerprint hashing
+- direct-apply-eligible policies and record/invalidate policies are both
+  runtime third-party eligible, but with different runtime semantics
+- observability-only adjudication remains explicit and does not imply runtime
+  application
+
+### B524 Policy Guardrails
+
+- `state_default` wording is descriptor-backed and policy-backed
+- retained-active fallback is conservative and depends on retained active
+  fingerprint policy evidence (`request_response + state_default`)
+- request-shape heuristics alone are not sufficient to promote B524 entries to
+  `state_default`
+
+### M5 Deferral
+
+This reference does not freeze watch-summary or scheduler/shadow public
+contracts. Those remain an M5 docs-owner concern.
+
 ## Internal `expvar` State
 
 These variables exist in-process today but are not mounted as a public HTTP endpoint.
