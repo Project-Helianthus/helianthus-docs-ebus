@@ -3,14 +3,13 @@
 ## Status
 
 - State: frozen through the M4 observe-first watch architecture closure on
-  docs `main`
+  docs `main`, plus M5 shared watch-summary/scheduler semantics
 - Frozen owners:
   - `ISSUE-DOC-06` for MCP
   - `ISSUE-DOC-07` for GraphQL parity wording
   - `ISSUE-DOC-08` for M4 watch-layer architecture wording
-- Later owner:
   - `ISSUE-DOC-09` for M5 watch-summary and scheduler/shadow public-surface
-    freeze
+    wording
 
 ## Scope
 
@@ -27,10 +26,17 @@ This document now freezes:
   - bounded `ShadowCache` architecture baseline and feature-flag normalization
   - family-policy routing and runtime outcomes
   - retained-active fallback wording constrained to policy/watch evidence
+- M5 shared watch-summary public semantics needed by merged `ISSUE-GW-10` and
+  `ISSUE-GW-11`, including:
+  - `ebus.v1.watch.summary.get` / GraphQL `watchSummary` parity ownership
+  - query-on-gap runtime outcome classes
+  - freshness-profile/max-age scheduler contract
+  - generation/invalidation and degraded-shadow behavior
 
-This document still does not freeze Portal/watch-summary, scheduler/shadow
-behavior, or docs-stage1 cleanup work. The detailed GraphQL schema and
-nullability contract live in [`../api/graphql.md`](../api/graphql.md).
+Portal-specific watch-summary behavior remains outside this file and is owned by
+`ISSUE-DOC-10`. The detailed GraphQL schema and nullability contract live in
+[`../api/graphql.md`](../api/graphql.md). The detailed shared watch-summary
+contract lives in [`../api/watch-summary.md`](../api/watch-summary.md).
 
 ## Invariants
 
@@ -141,6 +147,26 @@ GraphQL-specific invariants:
 - detailed schema shape, field nullability, and encoding rules are frozen in
   [`../api/graphql.md`](../api/graphql.md)
 
+## M5 Watch-Summary Public Surface
+
+Shared M5 surfaces are now part of the frozen architecture stack:
+
+- MCP: `ebus.v1.watch.summary.get`
+- GraphQL: `watchSummary`
+
+Shared architecture invariants:
+
+- both surfaces are snapshots of the same shadow projection model
+- query-on-gap behavior is deterministic across `shadow-hit`,
+  `coalesced-fetch`, `active-fetch`, and breaker-blocked fail-closed outcomes
+- descriptor freshness profiles (`state_fast`, `state_slow`, `config`,
+  `discovery`, `debug`) govern scheduler max-age policy; legacy `500ms`
+  windows are not the policy contract
+- generation fencing prevents stale active completions from overriding newer
+  invalidation/write epochs
+- feature-flag normalization remains authoritative for direct-apply eligibility
+  and shadow enablement semantics
+
 ## Busy-Time and Timing Model
 
 ### Current M2 Freeze
@@ -208,8 +234,6 @@ GraphQL-specific invariants:
 - This file does not own the detailed GraphQL schema; it owns only the shared
   architecture invariants behind the MCP + GraphQL parity surfaces.
 - No Portal/watch-summary naming or behavior is frozen in this file.
-- No M5 watch-summary contract or scheduler/shadow/query-on-gap public contract
-  is frozen in this file.
 - No exact wire-timestamp guarantee is frozen for current transports.
 - No dedicated numeric busy-time MCP payload is frozen in M2.
 
@@ -233,6 +257,10 @@ GraphQL-specific invariants:
 - Family-policy architecture implementation: [Project-Helianthus/helianthus-ebusgateway#388](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/388)
 - Merged family-policy PR: [Project-Helianthus/helianthus-ebusgateway#389](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/389)
 - Family-policy merge commit: `db09bbae687912a16fbc9f0a2f3a5616b84931e8`
+- Scheduler/shadow integration implementation: [Project-Helianthus/helianthus-ebusgateway#391](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/391)
+- Scheduler/shadow merge commit: `75ee6aa8b9ef5bbefcb8f0415df6199fca066508`
+- Watch-summary surface implementation: [Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)
+- Watch-summary merge commit: `92b3576bf194f8ef6407904db4bc0a5cce6bd385`
 - Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
   `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
   with `P01..P06 = pass`
@@ -253,6 +281,7 @@ GraphQL-specific invariants:
 - Current-state docs references:
   - [api/mcp.md](../api/mcp.md)
   - [api/graphql.md](../api/graphql.md)
+  - [api/watch-summary.md](../api/watch-summary.md)
   - [architecture/observability.md](./observability.md)
   - [development/smoke-matrix.md](../development/smoke-matrix.md)
 

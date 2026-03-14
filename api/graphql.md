@@ -16,14 +16,15 @@ currently merged on `main`.
   `busPeriodicity` are frozen below against gateway `main` at merge commit
   `83e9c7b1ba927a282d87599269e91be817ff3582`
   ([Project-Helianthus/helianthus-ebusgateway#379](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/379)).
+- The merged M5 watch-summary root field `watchSummary` is frozen below against
+  gateway `main` at merge commit `92b3576bf194f8ef6407904db4bc0a5cce6bd385`
+  ([Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)).
 - `ISSUE-GW-05` / [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
   is the runtime-owning lane for this GraphQL parity surface.
 - [`watch-summary.md`](./watch-summary.md) owns the shared watch-summary
-  contract. The reserved root field `watchSummary` is deferred and non-frozen
-  on `main`.
-- `ISSUE-DOC-07` freezes the current bus-observability GraphQL contract, while
-  `ISSUE-DOC-09` still owns watch-summary-specific behavior after the M5
-  runtime exists.
+  contract.
+- `ISSUE-DOC-07` freezes the current bus-observability GraphQL contract, and
+  `ISSUE-DOC-09` freezes watch-summary GraphQL behavior.
 
 ## Dynamic Schema Builder (Implemented)
 
@@ -38,14 +39,16 @@ The builder assembles a GraphQL-oriented schema model directly from the registry
 
 ## Observe-First Query Roots (Implemented)
 
-This excerpt freezes only the `ISSUE-DOC-07` observe-first subset of the
-current merged `Query` surface. It is not a complete `Query` definition.
+This excerpt freezes the `ISSUE-DOC-07` + `ISSUE-DOC-09` observe-first subset
+of the current merged `Query` surface. It is not a complete `Query`
+definition.
 
 ```graphql
 type Query {
   busSummary: BusSummary
   busMessages(limit: Int): BusMessagesList
   busPeriodicity(limit: Int): BusPeriodicityList
+  watchSummary: WatchSummary!
 }
 ```
 
@@ -95,6 +98,72 @@ Current value/encoding rules:
   RFC3339Nano formatting, so fractional seconds appear only when present.
 - `lastInterval`, `meanInterval`, `minInterval`, and `maxInterval` are duration
   strings (for example `5s`) and remain omitted until the runtime has a value.
+
+### Watch Summary Query (`DOC-09`)
+
+This `DOC-09` section freezes the merged M5 GraphQL watch-summary root:
+
+- `watchSummary`
+
+Behavioral invariants:
+
+- `watchSummary` is always present as a non-null GraphQL root field.
+- If the runtime watch provider is unwired, `watchSummary` resolves to zero
+  values and empty lists (not `null`).
+- Within one GraphQL operation, multiple `watchSummary` selections resolve from
+  one shared snapshot; duplicated aliases do not observe intra-operation skew.
+- Portal-specific query cadence/bootstrap behavior is out of scope in this
+  file and remains owned by `DOC-10`.
+
+Current value/encoding rules:
+
+- GraphQL names are camelCase (`activationCounts`, `freshnessClasses`,
+  `directApplyEligibilityClasses`, `shadowingEnabled`).
+- `freshnessClasses`, `directApplyEligibilityClasses`, `inventory.stateClasses`,
+  `inventory.pinClasses`, `activationCounts.sourceClasses`, and
+  `degraded.reasons` are non-null lists.
+- Class labels and semantics are frozen in [`watch-summary.md`](./watch-summary.md).
+
+### Watch Summary Types (`DOC-09`)
+
+```graphql
+type WatchSummary {
+  inventory: WatchSummaryInventory!
+  activationCounts: WatchSummaryActivationCounts!
+  freshnessClasses: [WatchSummaryClassCount!]!
+  directApplyEligibilityClasses: [WatchSummaryClassCount!]!
+  degraded: WatchSummaryDegraded!
+}
+
+type WatchSummaryClassCount {
+  class: String!
+  count: Int!
+}
+
+type WatchSummaryInventory {
+  totalEntries: Int!
+  pinnedEntries: Int!
+  evictableEntries: Int!
+  staticPinnedFootprint: Int!
+  writeConfirmPinnedActive: Int!
+  stateClasses: [WatchSummaryClassCount!]!
+  pinClasses: [WatchSummaryClassCount!]!
+}
+
+type WatchSummaryActivationCounts {
+  catalogDescriptors: Int!
+  activeKeys: Int!
+  sourceClasses: [WatchSummaryClassCount!]!
+}
+
+type WatchSummaryDegraded {
+  active: Boolean!
+  shadowingEnabled: Boolean!
+  pinnedBudgetDegraded: Boolean!
+  compactorDegraded: Boolean!
+  reasons: [String!]!
+}
+```
 
 ### Observe-First Bus Types (`DOC-07`)
 
