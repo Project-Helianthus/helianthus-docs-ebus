@@ -151,9 +151,9 @@ value/error is returned.
 | Outcome | Preconditions | Scheduler action | Result |
 | --- | --- | --- | --- |
 | `shadow-hit` | Present + eligible shadow entry under effective max-age | Return shadow value immediately | No active fetch |
-| `scheduler-cache-hit` | No eligible shadow value; scheduler has `entry.lastOK` that still satisfies caller max-age and generation checks | Return cached active result directly | No active fetch |
-| `coalesced-fetch` | No eligible shadow value and no valid `entry.lastOK`; identical read already running | Wait for in-flight read completion, then re-enter scheduler evaluation | Post-wake path is not fixed: it may return a now-eligible value, return a now-valid `entry.lastOK`, start a new active fetch, or fail due to breaker suppression |
-| `active-fetch` | No eligible shadow value; no running fetch; breaker allows execution | Run one active read; then apply active-completion validity checks (shadow write/generation revalidation) | Terminal result is branch-dependent: fetched value when completion remains valid, otherwise underlying fetch error or superseded/revalidation failure |
+| `scheduler-cache-hit` | Scheduler evaluation reaches `entry.lastOK`, and the cached value still satisfies caller max-age and generation checks | Return cached active result directly | No active fetch |
+| `coalesced-fetch` | Identical read is already running when this caller enters scheduler evaluation (runtime checks `entry.running` before `entry.lastOK`) | Wait for in-flight read completion, then re-enter scheduler evaluation | Post-wake path is not fixed: it may return a now-eligible value, return a now-valid `entry.lastOK`, start a new active fetch, or fail due to breaker suppression |
+| `active-fetch` | Scheduler evaluation reaches fetch start with no in-flight read for the key and breaker allowing execution | Run one active read; then apply active-completion validity checks (shadow write/generation revalidation) | Terminal result is branch-dependent: fetched value when completion remains valid, otherwise underlying fetch error or superseded/revalidation failure |
 | `breaker-blocked fail-closed` | No eligible shadow value; breaker is open (or half-open probes exhausted) | Suppress fetch and return breaker error | Immediate failure (`semantic read circuit breaker open`) |
 
 ## Explicit Scheduler/Shadow Semantics
@@ -180,7 +180,10 @@ value/error is returned.
   normalized state.
 - Cold-start: GraphQL `watchSummary` remains available and returns zero-value
   data when unwired; MCP omits `ebus.v1.watch.summary.get` until the watch
-  provider is wired.
+  provider is wired
+  ([graphql/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/graphql/watch_summary.go),
+  [mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server.go),
+  [mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server_test.go)).
 
 ## Explicit Non-Scope (DOC-09)
 

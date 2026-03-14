@@ -156,8 +156,12 @@ Shared M5 surfaces are now part of the frozen architecture stack:
 
 Shared architecture invariants:
 
-- both surfaces expose the same logical watch-summary shape/categories; this
-  does not guarantee one shared cross-surface snapshot instance
+- both surfaces expose the same logical watch-summary shape/categories via the
+  shared watch-summary builder and per-surface adapters
+  ([watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/watch_summary.go),
+  [mcp/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/watch_summary.go),
+  [graphql/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/graphql/watch_summary.go));
+  this does not guarantee one shared cross-surface snapshot instance
 - query-on-gap behavior is deterministic across `shadow-hit`,
   `scheduler-cache-hit` (`entry.lastOK`), `coalesced-fetch`, `active-fetch`,
   and breaker-blocked fail-closed outcomes
