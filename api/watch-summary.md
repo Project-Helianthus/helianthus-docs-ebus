@@ -142,13 +142,14 @@ breaker suppression failure, or active read error).
 ## Query-on-Gap Truth Table (v1)
 
 Once shadow serving is ineligible, the runtime outcome is branch-dependent and
-does not guarantee a fetched value or recompute fallback.
+may include post-wake or post-fetch re-evaluation cycles before a terminal
+value/error is returned.
 
 | Outcome | Preconditions | Scheduler action | Result |
 | --- | --- | --- | --- |
 | `shadow-hit` | Present + eligible shadow entry under effective max-age | Return shadow value immediately | No active fetch |
-| `coalesced-fetch` | No eligible shadow value; identical read already running | Wait for in-flight read completion and share outcome | Returns the in-flight outcome (value or error) without starting another fetch |
-| `active-fetch` | No eligible shadow value; no running fetch; breaker allows execution | Run one active read; on success attempt `active_confirmed` shadow write with generation fence | Returns the active read outcome: fetched value on success, underlying fetch error on failure |
+| `coalesced-fetch` | No eligible shadow value; identical read already running | Wait for in-flight read completion, then re-enter scheduler evaluation | Post-wake path is not fixed: it may return a now-eligible value, start a new active fetch, or fail due to breaker suppression |
+| `active-fetch` | No eligible shadow value; no running fetch; breaker allows execution | Run one active read; then apply active-completion validity checks (shadow write/generation revalidation) | Terminal result is branch-dependent: fetched value when completion remains valid, otherwise underlying fetch error or superseded/revalidation failure |
 | `breaker-blocked fail-closed` | No eligible shadow value; breaker is open (or half-open probes exhausted) | Suppress fetch and return breaker error | Immediate failure (`semantic read circuit breaker open`) |
 
 ## Explicit Scheduler/Shadow Semantics
