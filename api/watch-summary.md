@@ -7,9 +7,9 @@ this `DOC-09` lane against merged M5 behavior.
 
 Freeze anchors:
 
-- Scheduler/shadow runtime semantics: merge commit `75ee6aa8b9ef5bbefcb8f0415df6199fca066508`
+- Scheduler/shadow runtime semantics: merge commit `75ee6aa639bb44e8e859835293ae3912dc4d7b48`
   ([Project-Helianthus/helianthus-ebusgateway#391](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/391))
-- Watch-summary MCP/GraphQL surfaces: merge commit `92b3576bf194f8ef6407904db4bc0a5cce6bd385`
+- Watch-summary MCP/GraphQL surfaces: merge commit `92b3576c9203bf5a02a45494e935041961044600`
   ([Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393))
 
 ## Frozen Ownership
@@ -189,20 +189,20 @@ value/error is returned.
 - Runtime scheduler/shadow integration PR: [Project-Helianthus/helianthus-ebusgateway#391](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/391)
 - Watch-summary surface PR: [Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)
 - Scheduler behavior + breaker/coalescing tests:
-  [Project-Helianthus/helianthus-ebusgateway/semantic_read_scheduler.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/semantic_read_scheduler.go),
-  [Project-Helianthus/helianthus-ebusgateway/semantic_read_scheduler_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/semantic_read_scheduler_test.go)
+  [Project-Helianthus/helianthus-ebusgateway/semantic_read_scheduler.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/semantic_read_scheduler.go),
+  [Project-Helianthus/helianthus-ebusgateway/semantic_read_scheduler_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/semantic_read_scheduler_test.go)
 - Shadow-cache TTL/order/generation semantics:
-  [Project-Helianthus/helianthus-ebusgateway/shadow_cache.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/shadow_cache.go),
-  [Project-Helianthus/helianthus-ebusgateway/shadow_cache_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/shadow_cache_test.go)
+  [Project-Helianthus/helianthus-ebusgateway/shadow_cache.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/shadow_cache.go),
+  [Project-Helianthus/helianthus-ebusgateway/shadow_cache_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/shadow_cache_test.go)
 - Watch-summary computation + classes:
-  [Project-Helianthus/helianthus-ebusgateway/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/watch_summary.go),
-  [Project-Helianthus/helianthus-ebusgateway/watch_summary_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/watch_summary_test.go)
+  [Project-Helianthus/helianthus-ebusgateway/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/watch_summary.go),
+  [Project-Helianthus/helianthus-ebusgateway/watch_summary_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/watch_summary_test.go)
 - GraphQL watch-summary contract and operation snapshot cache:
-  [Project-Helianthus/helianthus-ebusgateway/graphql/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/graphql/watch_summary.go),
-  [Project-Helianthus/helianthus-ebusgateway/graphql/watch_summary_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/graphql/watch_summary_test.go)
+  [Project-Helianthus/helianthus-ebusgateway/graphql/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/graphql/watch_summary.go),
+  [Project-Helianthus/helianthus-ebusgateway/graphql/watch_summary_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/graphql/watch_summary_test.go)
 - MCP tool registration/shape/snapshot consistency:
-  [Project-Helianthus/helianthus-ebusgateway/mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/mcp/server.go),
-  [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576bf194f8ef6407904db4bc0a5cce6bd385/mcp/server_test.go)
+  [Project-Helianthus/helianthus-ebusgateway/mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server.go),
+  [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server_test.go)
 
 ## Current Discovery Rule
 

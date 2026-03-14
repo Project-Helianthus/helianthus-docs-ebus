@@ -258,9 +258,9 @@ Shared architecture invariants:
 - Merged family-policy PR: [Project-Helianthus/helianthus-ebusgateway#389](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/389)
 - Family-policy merge commit: `db09bbae687912a16fbc9f0a2f3a5616b84931e8`
 - Scheduler/shadow integration implementation: [Project-Helianthus/helianthus-ebusgateway#391](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/391)
-- Scheduler/shadow merge commit: `75ee6aa8b9ef5bbefcb8f0415df6199fca066508`
+- Scheduler/shadow merge commit: `75ee6aa639bb44e8e859835293ae3912dc4d7b48`
 - Watch-summary surface implementation: [Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)
-- Watch-summary merge commit: `92b3576bf194f8ef6407904db4bc0a5cce6bd385`
+- Watch-summary merge commit: `92b3576c9203bf5a02a45494e935041961044600`
 - Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
   `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
   with `P01..P06 = pass`

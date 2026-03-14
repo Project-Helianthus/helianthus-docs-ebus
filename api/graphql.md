@@ -17,7 +17,7 @@ currently merged on `main`.
   `83e9c7b1ba927a282d87599269e91be817ff3582`
   ([Project-Helianthus/helianthus-ebusgateway#379](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/379)).
 - The merged M5 watch-summary root field `watchSummary` is frozen below against
-  gateway `main` at merge commit `92b3576bf194f8ef6407904db4bc0a5cce6bd385`
+  gateway `main` at merge commit `92b3576c9203bf5a02a45494e935041961044600`
   ([Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)).
 - `ISSUE-GW-05` / [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
   is the runtime-owning lane for the M3 bus-observability GraphQL parity
