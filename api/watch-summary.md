@@ -22,8 +22,10 @@ Freeze anchors:
 
 ## Shared v1 Shape
 
-Both surfaces are projections of the same runtime `ShadowCache.WatchSummary()`
-snapshot.
+When the runtime watch provider is wired, both surfaces project the same
+`ShadowCache.WatchSummary()` snapshot. In unwired mode, GraphQL returns
+zero-value `watchSummary` data while MCP omits
+`ebus.v1.watch.summary.get`.
 
 Top-level sections:
 
@@ -134,15 +136,19 @@ Effective shadow-hit limit is:
 `min(caller maxAge, descriptor EffectiveFreshnessTTL())`
 
 If the effective limit is `<= 0`, the scheduler does not serve from shadow and
-goes to active-fetch path.
+takes the non-shadow decision path (coalesced in-flight read, active fetch,
+breaker suppression failure, or active read error).
 
 ## Query-on-Gap Truth Table (v1)
+
+Once shadow serving is ineligible, the runtime outcome is branch-dependent and
+does not guarantee a fetched value or recompute fallback.
 
 | Outcome | Preconditions | Scheduler action | Result |
 | --- | --- | --- | --- |
 | `shadow-hit` | Present + eligible shadow entry under effective max-age | Return shadow value immediately | No active fetch |
-| `coalesced-fetch` | No eligible shadow value; identical read already running | Wait for in-flight read completion and share outcome | Single upstream fetch for all concurrent callers |
-| `active-fetch` | No eligible shadow value; no running fetch; breaker allows execution | Run one active read; on success attempt `active_confirmed` shadow write with generation fence | Returns fetched value, or one bounded recompute when superseded in flight |
+| `coalesced-fetch` | No eligible shadow value; identical read already running | Wait for in-flight read completion and share outcome | Returns the in-flight outcome (value or error) without starting another fetch |
+| `active-fetch` | No eligible shadow value; no running fetch; breaker allows execution | Run one active read; on success attempt `active_confirmed` shadow write with generation fence | Returns the active read outcome: fetched value on success, underlying fetch error on failure |
 | `breaker-blocked fail-closed` | No eligible shadow value; breaker is open (or half-open probes exhausted) | Suppress fetch and return breaker error | Immediate failure (`semantic read circuit breaker open`) |
 
 ## Explicit Scheduler/Shadow Semantics

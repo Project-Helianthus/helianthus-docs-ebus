@@ -20,7 +20,10 @@ currently merged on `main`.
   gateway `main` at merge commit `92b3576bf194f8ef6407904db4bc0a5cce6bd385`
   ([Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)).
 - `ISSUE-GW-05` / [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
-  is the runtime-owning lane for this GraphQL parity surface.
+  is the runtime-owning lane for the M3 bus-observability GraphQL parity
+  surface (`busSummary`, `busMessages`, `busPeriodicity`).
+- `ISSUE-GW-11` is the runtime-owning lane for the M5 watch-summary GraphQL
+  parity surface (`watchSummary`).
 - [`watch-summary.md`](./watch-summary.md) owns the shared watch-summary
   contract.
 - `ISSUE-DOC-07` freezes the current bus-observability GraphQL contract, and
