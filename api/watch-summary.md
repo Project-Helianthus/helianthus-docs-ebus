@@ -18,7 +18,7 @@ Freeze anchors:
 | --- | --- | --- | --- | --- |
 | MCP | `ebus.v1.watch.summary.get` | `ISSUE-GW-11` | `ISSUE-DOC-09` | frozen |
 | GraphQL | `watchSummary` | `ISSUE-GW-11` | `ISSUE-DOC-09` | frozen |
-| Portal | none in this doc | `ISSUE-GW-14` | `ISSUE-DOC-10` | not frozen here |
+| Portal | see [`portal.md`](./portal.md) | `ISSUE-GW-14` | `ISSUE-DOC-10` | frozen in `portal.md` |
 
 ## Shared v1 Shape
 
@@ -190,7 +190,7 @@ value/error is returned.
 
 - Portal-specific watch-summary transport/endpoint/SSE semantics
 - UI bootstrap cadence and presentation-specific behavior
-- Any Portal-only contract wording (owned by `ISSUE-DOC-10`)
+- Any Portal-only contract wording (frozen in [`portal.md`](./portal.md))
 
 ## Evidence
 
@@ -223,5 +223,5 @@ value/error is returned.
 - [`mcp.md`](./mcp.md) documents only implemented MCP tools
 - [`graphql.md`](./graphql.md) documents only implemented GraphQL schema
 - [`portal.md`](./portal.md) documents only implemented Portal endpoints
-- [`portal.md`](./portal.md) and `ISSUE-DOC-10` continue to own Portal-specific
-  watch-summary behavior
+- [`portal.md`](./portal.md) owns the frozen Portal-specific watch-summary
+  behavior

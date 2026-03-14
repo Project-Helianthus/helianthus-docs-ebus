@@ -33,8 +33,9 @@ This document now freezes:
   - freshness-profile/max-age scheduler contract
   - generation/invalidation and degraded-shadow behavior
 
-Portal-specific watch-summary behavior remains outside this file and is owned by
-`ISSUE-DOC-10`. The detailed GraphQL schema and nullability contract live in
+Portal-specific watch-summary behavior remains outside this file and is frozen
+in [`../api/portal.md`](../api/portal.md) (`ISSUE-DOC-10`). The detailed
+GraphQL schema and nullability contract live in
 [`../api/graphql.md`](../api/graphql.md). The detailed shared watch-summary
 contract lives in [`../api/watch-summary.md`](../api/watch-summary.md).
 
