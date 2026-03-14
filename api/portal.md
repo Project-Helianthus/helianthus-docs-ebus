@@ -14,7 +14,8 @@ This page owns the frozen Portal-specific observe-first contract after merged
 `ISSUE-GW-14`.
 
 - GraphQL owns domain aggregate contracts (`zones`, `dhw`, `energyTotals`,
-  `watchSummary`, `busObservability`) and cross-surface schema semantics.
+  `watchSummary`, `busSummary`, `busMessages`, `busPeriodicity`) and
+  cross-surface schema semantics.
 - Portal API/SSE own Portal-specific transport/bootstrap/presentation behavior:
   endpoint names under `/portal/api/v1/*`, capability flags, stream/timeline/
   provenance/snapshots/session flows, and bus-panel state mapping.
