@@ -10,19 +10,16 @@ Portal API is exposed by `helianthus-ebusgateway` as an additive HTTP surface.
 
 ## Observe-First Contract Ownership
 
-This page remains the owner for Portal-specific rollout of observe-first
-evidence surfaces.
+This page owns the frozen Portal-specific observe-first contract after merged
+`ISSUE-GW-14`.
 
-- Current `main` documents only implemented Portal HTTP endpoints and current
-  UI shell behavior.
-- `ISSUE-GW-11` adds the core watch-summary runtime surfaces, and `ISSUE-GW-14`
-  later rolls them into Portal-specific UX and API behavior.
-- [`watch-summary.md`](./watch-summary.md) owns the shared watch-summary
-  contract. Portal endpoint names, bootstrap flags, SSE payloads, and UI panels
-  for that feature are intentionally non-frozen on `main`.
-- `ISSUE-DOC-10` is the later Portal freeze lane. Until then, this page may
-  reserve ownership but may not invent dedicated observe-first endpoints or
-  presentation details.
+- GraphQL owns domain aggregate contracts (`zones`, `dhw`, `energyTotals`,
+  `watchSummary`, `busObservability`) and cross-surface schema semantics.
+- Portal API/SSE own Portal-specific transport/bootstrap/presentation behavior:
+  endpoint names under `/portal/api/v1/*`, capability flags, stream/timeline/
+  provenance/snapshots/session flows, and bus-panel state mapping.
+- [`watch-summary.md`](./watch-summary.md) remains the shared watch-summary
+  schema/semantics authority. This page freezes only the Portal-facing behavior.
 
 ## Design Constraints
 
@@ -59,6 +56,7 @@ Example response:
   "capabilities": {
     "registry": true,
     "semantic": true,
+    "bus_observability": true,
     "projection": true,
     "search": true,
     "stream": true,
@@ -74,6 +72,7 @@ Example response:
     "snapshot": "/snapshot",
     "subscriptions": "/graphql/subscriptions",
     "mcp": "/mcp",
+    "bus_observability": "/portal/api/v1/bus/observability",
     "search": "/portal/api/v1/search",
     "stream": "/portal/api/v1/stream",
     "timeline": "/portal/api/v1/timeline/events",
@@ -155,7 +154,7 @@ Response fields:
 
 - `zones`: semantic zone list
 - `dhw`: optional DHW semantic object
-- `energy_totals`: optional aggregated energy object
+- `energy_totals`: optional aggregated energy object (numeric values + freshness/provenance metadata)
 - `boiler_status`: optional boiler semantic object (`state`, `config`, `diagnostics`)
 - `system`: optional system status (state, config, properties)
 - `circuits`: optional circuit list (`index`, `circuit_type`, `has_mixer`, `state`, `config`, `managing_device`)
@@ -164,6 +163,18 @@ Response fields:
 - `solar`: optional solar semantic object
 - `cylinders`: optional cylinder list
 - `captured_utc`: RFC3339 UTC timestamp
+
+Energy freshness/provenance metadata (`GW-13` freeze):
+
+- Each series (`gas/electric/solar` × `dhw/climate`) includes `today_meta` and
+  may include `yearly_meta[]` / `monthly_meta[]`.
+- Metadata fields are: `freshness_state`, `provenance`, `last_observed_utc`,
+  `age_seconds`, `stale`.
+- `freshness_state` values are `never_seen`, `fresh`, `warming_up`, `stale`,
+  `unavailable`.
+- `provenance` values are `none`, `register`, `broadcast`.
+- Values are non-destructive: stale/unavailable points may keep last numeric
+  value; consumers must use metadata for freshness/availability truth.
 
 Example response:
 
@@ -195,16 +206,16 @@ Example response:
   },
   "energy_totals": {
     "gas": {
-      "dhw": { "today": 1.2, "yearly": [1.0, 1.1, 1.2] },
-      "climate": { "today": 4.8, "yearly": [4.2, 4.5, 4.8] }
+      "dhw": { "today": 1.2, "yearly": [1.0, 1.1, 1.2], "today_meta": { "freshness_state": "fresh", "provenance": "register", "last_observed_utc": "2026-02-23T22:44:55Z", "age_seconds": 5, "stale": false } },
+      "climate": { "today": 4.8, "yearly": [4.2, 4.5, 4.8], "today_meta": { "freshness_state": "fresh", "provenance": "register", "last_observed_utc": "2026-02-23T22:44:55Z", "age_seconds": 5, "stale": false } }
     },
     "electric": {
-      "dhw": { "today": 0.1, "yearly": [0.0, 0.1, 0.1] },
-      "climate": { "today": 0.7, "yearly": [0.5, 0.6, 0.7] }
+      "dhw": { "today": 0.1, "yearly": [0.0, 0.1, 0.1], "today_meta": { "freshness_state": "fresh", "provenance": "register", "last_observed_utc": "2026-02-23T22:44:55Z", "age_seconds": 5, "stale": false } },
+      "climate": { "today": 0.7, "yearly": [0.5, 0.6, 0.7], "today_meta": { "freshness_state": "fresh", "provenance": "register", "last_observed_utc": "2026-02-23T22:44:55Z", "age_seconds": 5, "stale": false } }
     },
     "solar": {
-      "dhw": { "today": 0.0, "yearly": [0.0, 0.0, 0.0] },
-      "climate": { "today": 0.0, "yearly": [0.0, 0.0, 0.0] }
+      "dhw": { "today": 0.0, "yearly": [0.0, 0.0, 0.0], "today_meta": { "freshness_state": "never_seen", "provenance": "none", "stale": false } },
+      "climate": { "today": 0.0, "yearly": [0.0, 0.0, 0.0], "today_meta": { "freshness_state": "never_seen", "provenance": "none", "stale": false } }
     }
   },
   "boiler_status": {
@@ -305,6 +316,103 @@ Example response:
     }
   ],
   "captured_utc": "2026-02-23T22:45:00Z"
+}
+```
+
+### `GET /portal/api/v1/bus/observability`
+
+Returns Portal bus-observability summary (bus panel + bootstrap capability
+surface).
+
+Behavior:
+
+- Returns `200` with JSON when bus observability provider is wired.
+- Returns `503` with `bus observability unavailable` when provider is absent or
+  nil.
+
+Response fields:
+
+- `status.transport_class`: runtime transport class (`enh`, `ens`, `udp-plain`,
+  `tcp-plain`, `ebusd-tcp`).
+- `status.capability`: capability booleans plus passive state:
+  `passive_state` uses `unavailable | warming_up | available`.
+- `status.capability.passive_reason`: when unavailable, one of
+  `startup_timeout`, `reconnect_timeout`, `socket_loss`, `flap_dampened`,
+  `unsupported_or_misconfigured`, `capability_withdrawn`.
+- `status.capability.endpoint_state`: passive endpoint state
+  (`unknown`, `connected`, `temporarily_disconnected`,
+  `unsupported_or_misconfigured`, `closed`).
+- `status.warmup`: warmup counters and blocker/completion fields.
+- `status.degraded`: `active` + `reasons`; reasons may include passive
+  unavailability reason and/or `dedup_degraded`.
+- `status.feature_flags`: observe-first feature-flag state and normalizations.
+- `messages`, `periodicity`, `counters`: bounded summary counters used by Portal
+  observability views.
+
+Portal-facing bus state mapping (frozen):
+
+1. `warming_up` when `status.warmup.state` is `warming_up` (fallback:
+   `status.capability.passive_state`).
+2. `degraded` when not warming-up and `status.degraded.active == true`.
+3. `unavailable` when neither above matches and (`passive_state == unavailable`
+   or `passive_supported == false`).
+4. `available` otherwise.
+
+For `transport_class == ebusd-tcp`, when Portal view-state is `degraded` or
+`unavailable`, the banner appends:
+`ebusd-tcp transport limits passive observe-first coverage.`
+
+Example response:
+
+```json
+{
+  "status": {
+    "transport_class": "ebusd-tcp",
+    "capability": {
+      "active_supported": true,
+      "passive_supported": false,
+      "broadcast_supported": false,
+      "passive_available": false,
+      "passive_state": "unavailable",
+      "passive_reason": "unsupported_or_misconfigured",
+      "endpoint_state": "unsupported_or_misconfigured",
+      "tap_connected": false
+    },
+    "warmup": {
+      "state": "unavailable",
+      "completed_transactions": 0,
+      "required_transactions": 20
+    },
+    "timing_quality": {
+      "active": "unavailable",
+      "passive": "unavailable",
+      "busy": "unavailable",
+      "periodicity": "unavailable"
+    },
+    "degraded": {
+      "active": true,
+      "reasons": ["unsupported_or_misconfigured"]
+    },
+    "feature_flags": {
+      "observe_first_enabled": false,
+      "passive_state_direct_apply": false,
+      "passive_config_direct_apply": false,
+      "external_write_policy": "record_only",
+      "normalizations": []
+    }
+  },
+  "messages": {
+    "count": 0,
+    "capacity": 384
+  },
+  "periodicity": {
+    "count": 0,
+    "capacity": 256
+  },
+  "counters": {
+    "series_budget_overflow_total": 0,
+    "periodicity_budget_overflow_total": 0
+  }
 }
 ```
 
@@ -699,6 +807,7 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/health'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/bootstrap'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/registry/devices?limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/semantic/snapshot'
+curl -fsS 'http://127.0.0.1:8080/portal/api/v1/bus/observability'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/devices?limit=5'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/projection/graph?address=0x10&plane=Service'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/search?q=service&limit=10'
