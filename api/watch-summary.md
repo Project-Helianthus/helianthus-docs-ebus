@@ -7,9 +7,9 @@ this `DOC-09` lane against merged M5 behavior.
 
 Freeze anchors:
 
-- Scheduler/shadow runtime semantics: merge commit `75ee6aa639bb44e8e859835293ae3912dc4d7b48`
+- Scheduler/shadow runtime semantics: mainline commit on `main` `75ee6aa639bb44e8e859835293ae3912dc4d7b48`
   ([Project-Helianthus/helianthus-ebusgateway#391](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/391))
-- Watch-summary MCP/GraphQL surfaces: merge commit `92b3576c9203bf5a02a45494e935041961044600`
+- Watch-summary MCP/GraphQL surfaces: mainline commit on `main` `92b3576c9203bf5a02a45494e935041961044600`
   ([Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393))
 
 ## Frozen Ownership
@@ -22,10 +22,12 @@ Freeze anchors:
 
 ## Shared v1 Shape
 
-When the runtime watch provider is wired, both surfaces project the same
-`ShadowCache.WatchSummary()` snapshot. In unwired mode, GraphQL returns
-zero-value `watchSummary` data while MCP omits
-`ebus.v1.watch.summary.get`.
+When the runtime watch provider is wired, both surfaces expose the same logical
+watch-summary shape/categories derived from `ShadowCache.WatchSummary()`.
+Cross-surface reads are not guaranteed to share one snapshot instance: GraphQL
+has request-level snapshot guarantees, while MCP uses its own `LIVE`/`SNAPSHOT`
+consistency path. In unwired mode, GraphQL returns zero-value `watchSummary`
+data while MCP omits `ebus.v1.watch.summary.get`.
 
 Top-level sections:
 
@@ -136,8 +138,9 @@ Effective shadow-hit limit is:
 `min(caller maxAge, descriptor EffectiveFreshnessTTL())`
 
 If the effective limit is `<= 0`, the scheduler does not serve from shadow and
-takes the non-shadow decision path (coalesced in-flight read, active fetch,
-breaker suppression failure, or active read error).
+takes the non-shadow decision path (`entry.lastOK` scheduler-cache hit when
+valid for max-age+generation, coalesced in-flight read, active fetch, breaker
+suppression failure, or active read error).
 
 ## Query-on-Gap Truth Table (v1)
 
@@ -148,7 +151,8 @@ value/error is returned.
 | Outcome | Preconditions | Scheduler action | Result |
 | --- | --- | --- | --- |
 | `shadow-hit` | Present + eligible shadow entry under effective max-age | Return shadow value immediately | No active fetch |
-| `coalesced-fetch` | No eligible shadow value; identical read already running | Wait for in-flight read completion, then re-enter scheduler evaluation | Post-wake path is not fixed: it may return a now-eligible value, start a new active fetch, or fail due to breaker suppression |
+| `scheduler-cache-hit` | No eligible shadow value; scheduler has `entry.lastOK` that still satisfies caller max-age and generation checks | Return cached active result directly | No active fetch |
+| `coalesced-fetch` | No eligible shadow value and no valid `entry.lastOK`; identical read already running | Wait for in-flight read completion, then re-enter scheduler evaluation | Post-wake path is not fixed: it may return a now-eligible value, return a now-valid `entry.lastOK`, start a new active fetch, or fail due to breaker suppression |
 | `active-fetch` | No eligible shadow value; no running fetch; breaker allows execution | Run one active read; then apply active-completion validity checks (shadow write/generation revalidation) | Terminal result is branch-dependent: fetched value when completion remains valid, otherwise underlying fetch error or superseded/revalidation failure |
 | `breaker-blocked fail-closed` | No eligible shadow value; breaker is open (or half-open probes exhausted) | Suppress fetch and return breaker error | Immediate failure (`semantic read circuit breaker open`) |
 

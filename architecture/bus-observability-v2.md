@@ -156,9 +156,11 @@ Shared M5 surfaces are now part of the frozen architecture stack:
 
 Shared architecture invariants:
 
-- both surfaces are snapshots of the same shadow projection model
+- both surfaces expose the same logical watch-summary shape/categories; this
+  does not guarantee one shared cross-surface snapshot instance
 - query-on-gap behavior is deterministic across `shadow-hit`,
-  `coalesced-fetch`, `active-fetch`, and breaker-blocked fail-closed outcomes
+  `scheduler-cache-hit` (`entry.lastOK`), `coalesced-fetch`, `active-fetch`,
+  and breaker-blocked fail-closed outcomes
 - descriptor freshness profiles (`state_fast`, `state_slow`, `config`,
   `discovery`, `debug`) govern scheduler max-age policy; legacy `500ms`
   windows are not the policy contract
@@ -241,38 +243,38 @@ Shared architecture invariants:
 
 - Runtime implementation: [Project-Helianthus/helianthus-ebusgateway#376](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/376)
 - Merged PR: [Project-Helianthus/helianthus-ebusgateway#377](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/377)
-- Merge commit: `3daf4beed9d6406f7af52869eea1c53ef14f2f62`
+- Mainline commit on `main`: `3daf4beed9d6406f7af52869eea1c53ef14f2f62`
 - GraphQL runtime implementation: [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
 - Merged GraphQL PR: [Project-Helianthus/helianthus-ebusgateway#379](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/379)
-- GraphQL merge commit: `83e9c7b1ba927a282d87599269e91be817ff3582`
+- GraphQL mainline commit on `main`: `83e9c7b1ba927a282d87599269e91be817ff3582`
 - Watch-catalog architecture implementation: [Project-Helianthus/helianthus-ebusgateway#380](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/380)
 - Merged watch-catalog PR: [Project-Helianthus/helianthus-ebusgateway#381](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/381)
-- Watch-catalog merge commit: `873c970459d1933ba50638df5e6fb349a6a9a3a2`
+- Watch-catalog mainline commit on `main`: `873c970459d1933ba50638df5e6fb349a6a9a3a2`
 - Shadow-cache architecture implementation: [Project-Helianthus/helianthus-ebusgateway#382](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/382)
 - Merged shadow-cache PR: [Project-Helianthus/helianthus-ebusgateway#385](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/385)
-- Shadow-cache merge commit: `9e9e6904e0337812ffa87591a83ad6f4a5c0ea44`
+- Shadow-cache mainline commit on `main`: `9e9e6904e0337812ffa87591a83ad6f4a5c0ea44`
 - Feature-flag architecture implementation: [Project-Helianthus/helianthus-ebusgateway#386](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/386)
 - Merged feature-flag PR: [Project-Helianthus/helianthus-ebusgateway#387](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/387)
-- Feature-flag merge commit: `23e46011f3c57d08148cf3cdd51acd6958303f90`
+- Feature-flag mainline commit on `main`: `23e46011f3c57d08148cf3cdd51acd6958303f90`
 - Family-policy architecture implementation: [Project-Helianthus/helianthus-ebusgateway#388](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/388)
 - Merged family-policy PR: [Project-Helianthus/helianthus-ebusgateway#389](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/389)
-- Family-policy merge commit: `db09bbae687912a16fbc9f0a2f3a5616b84931e8`
+- Family-policy mainline commit on `main`: `db09bbae687912a16fbc9f0a2f3a5616b84931e8`
 - Scheduler/shadow integration implementation: [Project-Helianthus/helianthus-ebusgateway#391](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/391)
-- Scheduler/shadow merge commit: `75ee6aa639bb44e8e859835293ae3912dc4d7b48`
+- Scheduler/shadow mainline commit on `main`: `75ee6aa639bb44e8e859835293ae3912dc4d7b48`
 - Watch-summary surface implementation: [Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)
-- Watch-summary merge commit: `92b3576c9203bf5a02a45494e935041961044600`
+- Watch-summary mainline commit on `main`: `92b3576c9203bf5a02a45494e935041961044600`
 - Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
   `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
   with `P01..P06 = pass`
 - Gateway workspace recovery probe reference (outside this docs repo; from the same `helianthus-ebusgateway` checkout):
   `helianthus-ebusgateway/results-matrix-ha/20260312T175250Z-pr377-gw04-26ee758-recovery/full88-probe-t01-after-adapter-reboot/index.json`
   with `blocked-infra` / `infra_reason=adapter_no_signal`
-- Gateway repo code/test proof references (external to this docs repo, at merge commit `3daf4beed9d6406f7af52869eea1c53ef14f2f62`):
+- Gateway repo code/test proof references (external to this docs repo, at mainline commit `3daf4beed9d6406f7af52869eea1c53ef14f2f62` on `main`):
   - [Project-Helianthus/helianthus-ebusgateway/mcp/bus.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/bus.go)
   - [Project-Helianthus/helianthus-ebusgateway/mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/server.go)
   - [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/server_test.go)
   - [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/cmd/gateway/mcp_bus_observability_integration_test.go)
-- Gateway repo GraphQL proof references (external to this docs repo, at merge commit `83e9c7b1ba927a282d87599269e91be817ff3582`):
+- Gateway repo GraphQL proof references (external to this docs repo, at mainline commit `83e9c7b1ba927a282d87599269e91be817ff3582` on `main`):
   - [Project-Helianthus/helianthus-ebusgateway/graphql/bus_observability.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/graphql/bus_observability.go)
   - [Project-Helianthus/helianthus-ebusgateway/graphql/queries.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/graphql/queries.go)
   - [Project-Helianthus/helianthus-ebusgateway/graphql/queries_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/graphql/queries_test.go)
