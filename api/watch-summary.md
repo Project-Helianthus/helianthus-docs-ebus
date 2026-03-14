@@ -151,9 +151,9 @@ value/error is returned.
 
 | Outcome | Preconditions | Scheduler action | Result |
 | --- | --- | --- | --- |
-| `shadow-hit` | Present + eligible shadow entry under effective max-age | Return shadow value immediately | No active fetch |
+| `shadow-hit` | No identical read is currently running (`entry.running == false`), and scheduler evaluation reaches an eligible shadow entry under effective max-age (including post-wake re-evaluation after an earlier coalesced wait) | Return shadow value immediately | No active fetch |
 | `coalesced-fetch` | Identical read is already running when this caller enters scheduler evaluation (runtime checks `entry.running` before `entry.lastOK`) | Wait for in-flight read completion, then re-enter scheduler evaluation | Post-wake path is not fixed: it may return a now-eligible value, return a now-valid `entry.lastOK`, start a new active fetch, or fail due to breaker suppression |
-| `scheduler-cache-hit` | Scheduler evaluation reaches `entry.lastOK`, and the cached value still satisfies caller max-age and generation checks | Return cached active result directly | No active fetch |
+| `scheduler-cache-hit` | Scheduler evaluation reaches `entry.lastOK`, and the cached value still satisfies caller max-age and generation checks | Return cached result directly | No active fetch |
 | `active-fetch` | Scheduler evaluation reaches fetch start with no in-flight read for the key and breaker allowing execution | Run one active read; then apply active-completion validity checks (shadow write/generation revalidation) | Terminal result is branch-dependent: it may return the fetched value directly, return a value after re-entered scheduler evaluation, or fail due to fetch error/superseded revalidation paths |
 | `breaker-blocked fail-closed` | No eligible shadow value; breaker is open (or half-open probes exhausted) | Suppress fetch and return breaker error | Immediate failure (`semantic read circuit breaker open`) |
 
@@ -205,12 +205,18 @@ value/error is returned.
 - Watch-summary computation + classes:
   [Project-Helianthus/helianthus-ebusgateway/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/watch_summary.go),
   [Project-Helianthus/helianthus-ebusgateway/watch_summary_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/watch_summary_test.go)
+- Public watch-summary provider and mainline wiring:
+  [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/watch_summary_provider.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/cmd/gateway/watch_summary_provider.go),
+  [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/main.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/cmd/gateway/main.go)
 - GraphQL watch-summary contract and operation snapshot cache:
   [Project-Helianthus/helianthus-ebusgateway/graphql/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/graphql/watch_summary.go),
   [Project-Helianthus/helianthus-ebusgateway/graphql/watch_summary_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/graphql/watch_summary_test.go)
 - MCP tool registration/shape/snapshot consistency:
   [Project-Helianthus/helianthus-ebusgateway/mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server.go),
   [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server_test.go)
+- GraphQL/MCP watch-summary parity integration tests:
+  [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/graphql_watch_summary_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/cmd/gateway/graphql_watch_summary_integration_test.go),
+  [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_watch_summary_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/cmd/gateway/mcp_watch_summary_integration_test.go)
 
 ## Current Discovery Rule
 

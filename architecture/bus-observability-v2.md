@@ -162,9 +162,10 @@ Shared architecture invariants:
   [mcp/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/watch_summary.go),
   [graphql/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/graphql/watch_summary.go));
   this does not guarantee one shared cross-surface snapshot instance
-- query-on-gap behavior is deterministic across `shadow-hit`,
-  `coalesced-fetch`, `scheduler-cache-hit` (`entry.lastOK`), `active-fetch`,
-  and breaker-blocked fail-closed outcomes
+- query-on-gap behavior is bounded to documented outcome classes
+  (`shadow-hit`, `coalesced-fetch`, `scheduler-cache-hit` via `entry.lastOK`,
+  `active-fetch`, and breaker-blocked fail-closed), with branch-dependent
+  post-wake/post-fetch re-evaluation before terminal return
 - descriptor freshness profiles (`state_fast`, `state_slow`, `config`,
   `discovery`, `debug`) govern scheduler max-age policy; legacy `500ms`
   windows are not the policy contract
