@@ -15,9 +15,8 @@ This `DOC-06` section freezes only the narrow M2 MCP slice shipped by
 - `ebus.v1.bus.messages.list`
 - `ebus.v1.bus.periodicity.list`
 
-This freeze does not cover GraphQL parity, Portal/watch-summary surfaces, or
-later observe-first scheduler/shadow behavior. Those remain owned by later
-lanes.
+This `DOC-06` freeze covers the M2 `ebus.v1.bus.*` tools only. Shared
+watch-summary MCP behavior is frozen separately in `DOC-09`.
 
 ### Invariants
 
@@ -115,7 +114,7 @@ Returns the current bus-observability summary snapshot.
 | `busy` | Current timing quality for busy-time accounting. |
 | `periodicity` | Current timing quality for periodicity accounting. |
 
-Current proven timing-quality values on the merged `GW-04` runtime are
+Current timing-quality values evidenced on the merged `GW-04` runtime are
 `estimated` and `unavailable`.
 
 `status.degraded` fields:
@@ -197,13 +196,31 @@ Periodicity semantics:
 - Interval fields are optional. The surface omits them when the runtime does
   not yet have a value to publish.
 
+## Watch Summary MCP Contract (`DOC-09`)
+
+Shared watch-summary details are frozen in [`watch-summary.md`](./watch-summary.md).
+This section captures the MCP-specific surface only.
+
+Tool inventory:
+
+- `ebus.v1.watch.summary.get`
+  - arguments: optional `consistency`
+
+MCP-specific invariants:
+
+- Tool registration is provider-gated: the tool appears in `tools/list` only
+  when the runtime wires a watch-summary provider (shadow cache lane).
+- Without provider wiring, tool calls fail as unknown tool.
+- `consistency.mode` follows the standard MCP rules (`LIVE` by default;
+  `SNAPSHOT` with required `snapshot_id`).
+- Payload fields use snake_case and mirror the shared watch-summary schema.
+
 ### Unsupported or Unproven Cases
 
 - No GraphQL `busSummary`, `busMessages`, or `busPeriodicity` freeze exists in
   this lane.
-- No Portal/watch-summary surface is frozen here.
-- No unbounded traffic dump, timeline stream, or query-on-gap behavior is part
-  of this M2 contract.
+- No Portal-specific watch-summary surface is frozen here.
+- No unbounded traffic dump or timeline stream is part of this M2 bus contract.
 - No exact wire-timestamp guarantee is frozen for current transports.
 - No numeric busy-ratio MCP payload is frozen here; in M2 the MCP surface
   freezes summary/list semantics and explicit timing-quality state only.
@@ -330,6 +347,9 @@ Periodicity response fragment:
   - `ebus.v1.bus.summary.get`
   - `ebus.v1.bus.messages.list`
   - `ebus.v1.bus.periodicity.list`
+- Observe-first watch-summary surface (registered only when the runtime wires
+  watch-summary provider)
+  - `ebus.v1.watch.summary.get`
 - Legacy aliases
   - `ebus.devices`
   - `ebus.invoke`
@@ -338,7 +358,7 @@ Periodicity response fragment:
 
 - `ebus.v1.semantic.circuits.get` exposes explicit per-circuit ownership as `managing_device`.
 - `managing_device.role` is always present and is one of `REGULATOR`, `FUNCTION_MODULE`, or `UNKNOWN`.
-- `managing_device.device_id` and `managing_device.address` are populated only when the gateway has proven ownership evidence for the current topology.
+- `managing_device.device_id` and `managing_device.address` are populated only when the gateway has ownership evidence for the current topology.
 - `ebus.v1.semantic.system.get` no longer exposes `vr71_circuit_start_index`; that threshold was a gateway heuristic and is not part of the canonical contract.
 
 ## RPC Method Reference - Vaillant System Plane
