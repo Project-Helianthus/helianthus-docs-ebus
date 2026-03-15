@@ -130,11 +130,37 @@ Each command step is logged with command string, timestamps, status, and exit co
 - `blocked-infra`: run blocked by infrastructure precondition (see `infra_reason`).
 - `planned`: dry-run outcome.
 
-## Observe-First Validation Note
+## Observe-First Proof Note
 
-This runbook documents the current `T01..T88` transport gate only. It does not
-yet define dedicated observe-first proof artifacts beyond the matrix verdicts
-and expected-failure inventory that already exist on `main`.
+This runbook documents the current `T01..T88` transport gate and the bounded
+observe-first proof shape used by `P03` on the passive suite.
+
+Canonical `P03` bounded proof contract:
+
+- topology: gateway `ENS` → proxy `ENS` → adapter (`proxy-single-client`)
+- passive mode: `required`
+- proof mode captures the usual `start_*` observability snapshots first
+- the canary `start` phase is deferred until the runtime is both smoke-healthy
+  and `status.startup.phase == LIVE_READY`
+- only the `start` phase may seed `canary_baseline.json`
+- later `sample_####` and `end` phases are fail-closed if the seeded baseline is
+  missing
+- the canonical P03 canary manifest is topology-specific to the proxy-backed
+  ENS path and uses a stable mixed B524/B509 set
+
+Canonical proof artifacts for a successful bounded `P03` run:
+
+- `index.json`
+- `P03/verdict.json`
+- `P03/logs/runner.log`
+- `matrix-runner.stdout.log`
+- `P03/logs/proof_artifacts/canary_manifest_validation.json`
+- `P03/logs/proof_artifacts/canary_baseline.json`
+- `P03/logs/proof_artifacts/canary_phase_start.json`
+- `P03/logs/proof_artifacts/canary_phase_sample_0001.json`
+- `P03/logs/proof_artifacts/canary_phase_end.json`
+- `P03/logs/proof_artifacts/canary_summary.json`
+- `P03/logs/proof_artifacts/canary_verdict.json`
 
 Current factual references:
 
