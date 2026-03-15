@@ -346,6 +346,8 @@ Response fields:
 - `status.warmup`: warmup counters and blocker/completion fields.
 - `status.degraded`: `active` + `reasons`; reasons may include passive
   unavailability reason and/or `dedup_degraded`.
+- `status.startup`: machine-readable semantic startup readiness surface:
+  `phase` plus monotonic `cache_epoch` / `live_epoch`.
 - `status.feature_flags`: observe-first feature-flag state and normalizations.
 - `messages`, `periodicity`, `counters`: bounded summary counters used by Portal
   observability views.
@@ -393,6 +395,11 @@ Example response:
     "degraded": {
       "active": true,
       "reasons": ["unsupported_or_misconfigured"]
+    },
+    "startup": {
+      "phase": "BOOT_INIT",
+      "cache_epoch": 0,
+      "live_epoch": 0
     },
     "feature_flags": {
       "observe_first_enabled": false,

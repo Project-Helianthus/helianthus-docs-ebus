@@ -553,6 +553,9 @@ Address semantics:
 
 The semantic runtime distinguishes cache bootstrap from live updates during startup.
 
+- `busSummary.status.startup { phase cacheEpoch liveEpoch }` exposes the
+  machine-readable startup readiness surface used by proof-mode orchestration
+  and Portal parity.
 - Cache-backed semantic payload may be published first and treated as stale bootstrap data.
 - Runtime transitions through startup phases (`BOOT_INIT` → `CACHE_LOADED_STALE` → `LIVE_WARMUP` → `LIVE_READY`, with `DEGRADED` timeout fallback).
 - If `-boot-live-timeout` elapses before `LIVE_READY`, runtime enters `DEGRADED` until live epochs recover.
@@ -565,6 +568,22 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
 - Zone/DHW semantic publication uses non-destructive incremental merge: failed attempted fields retain last-known values instead of being wiped by partial snapshots.
 - Freshness is tracked per merged field in runtime state; GraphQL currently exposes merged values and startup phase/state contracts.
 - DHW retains last-known values during cache-only/transient gaps until `-semantic-dhw-stale-ttl` is exceeded, then `dhw` is explicitly cleared.
+
+Example startup-readiness query:
+
+```graphql
+query {
+  busSummary {
+    status {
+      startup {
+        phase
+        cacheEpoch
+        liveEpoch
+      }
+    }
+  }
+}
+```
 
 Authoritative startup FSM and transition details are documented in [`architecture/startup-semantic-fsm.md`](../architecture/startup-semantic-fsm.md).
 Zone lifecycle details are documented in [`architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md).
