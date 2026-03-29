@@ -60,6 +60,8 @@ Those bounded proof artifacts remain family-scoped evidence. They do not by
 themselves justify a universal default flip; the canonical non-promotion
 decision for broader or deployment-ambiguous families remains
 [`Project-Helianthus/helianthus-ebusgateway#439`](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/439).
+The current canonical bounded proof artifact is
+`results-matrix-ha/20260315T070147Z-gw15-proof-p03-canonical-rerun/index.json`.
 
 The `helianthus-tinyebus` target-emulation path is a parallel
 timing/observability validation track, not a substitute for the canonical
@@ -67,6 +69,9 @@ gateway/add-on/integration smoke chain.
 
 Current factual references:
 
+- canonical bounded proof artifact (outside this docs repo; from a
+  `Project-Helianthus/helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260315T070147Z-gw15-proof-p03-canonical-rerun/index.json`
 - bus observability and passive-capability signals:
   [`../architecture/observability.md`](../architecture/observability.md)
 - transport caveats that decide passive-capable vs unavailable topologies:

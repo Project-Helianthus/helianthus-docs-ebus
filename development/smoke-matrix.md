@@ -162,7 +162,8 @@ Canonical proof artifacts for a successful bounded `P03` run:
 - `P03/logs/proof_artifacts/canary_summary.json`
 - `P03/logs/proof_artifacts/canary_verdict.json`
 
-These artifacts are evidence for the bounded proxy-backed `ENS` family only.
+These artifacts are evidence for the bounded
+`proxy-single-client / passive_mode=required / ens / no-ebusd` family only.
 They do not imply a universal default flip; the canonical non-promotion
 decision for unproven or deployment-ambiguous families lives in
 [`Project-Helianthus/helianthus-ebusgateway#439`](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/439).
@@ -174,6 +175,12 @@ Current factual references:
 - bounded proof gate and rollout decision:
   [`Project-Helianthus/helianthus-ebusgateway#400`](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/400),
   [`Project-Helianthus/helianthus-ebusgateway#439`](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/439)
+- canonical bounded proof artifact (outside this docs repo; from a
+  `Project-Helianthus/helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260315T070147Z-gw15-proof-p03-canonical-rerun/index.json`
+- bounded passive follow-up artifact (outside this docs repo; from the same
+  `helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260315T073335Z-passive-suite-followup-gate/index.json`
 - transport caveats that decide passive-capable vs unavailable topologies:
   [`../deployment/full-stack.md#passive-observe-first-transport-contract`](../deployment/full-stack.md#passive-observe-first-transport-contract)
 - canonical end-to-end smoke order for the matrix `--smoke-command`:
