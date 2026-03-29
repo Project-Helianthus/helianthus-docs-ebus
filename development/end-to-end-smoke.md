@@ -50,9 +50,16 @@ End-to-end smoke is **PASS** only when all three stages pass in sequence with no
 
 ## Observe-First Validation Note
 
-This runbook documents only the current end-to-end smoke chain on `main`. It
-does not yet define dedicated observe-first proof artifacts beyond the
-gateway/add-on/integration stages above.
+This runbook documents only the current end-to-end smoke chain on `main`.
+Dedicated bounded observe-first proof artifacts now exist for the gateway
+passive `P03` proof path, but they live in the topology-matrix proof flow
+documented in [`smoke-matrix.md`](./smoke-matrix.md), not in this end-to-end
+smoke chain.
+
+Those bounded proof artifacts remain family-scoped evidence. They do not by
+themselves justify a universal default flip; the canonical non-promotion
+decision for broader or deployment-ambiguous families remains
+[`Project-Helianthus/helianthus-ebusgateway#439`](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/439).
 
 The `helianthus-tinyebus` target-emulation path is a parallel
 timing/observability validation track, not a substitute for the canonical
