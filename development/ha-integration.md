@@ -13,7 +13,10 @@ This guide documents how `helianthus-ha-integration` discovers a Helianthus gate
   - `path` (default: `/graphql`)
   - `transport` (`http` or `https`, default: `http`)
   - `version` (optional, informational)
+  - `instance_guid` (required stable installation identity)
 - TXT key matching is case-insensitive.
+
+Discovery is only a hint. The integration must verify the discovered endpoint over GraphQL before it creates or rebinds a config entry.
 
 ### 2. Manual configuration
 
@@ -25,23 +28,24 @@ The config flow supports manual fields:
 - `transport` (`http` or `https`)
 - `version` (optional metadata)
 
-Before creating the config entry, the integration validates connectivity by running a schema probe query:
+Before creating the config entry, the integration validates connectivity and stable identity by querying:
 
 ```graphql
-query HelianthusSchema {
-  __schema {
-    queryType { name }
+query GatewayIdentity {
+  gatewayIdentity {
+    instanceGuid
   }
 }
 ```
 
-Duplicate endpoint detection (`host:port`) is checked before network validation.
+The config entry `unique_id` is the verified `instanceGuid`, not `host:port`.
+`host`, `port`, `path`, and `transport` are mutable transport coordinates and may be rewritten after verified rediscovery.
 
 ## GraphQL Capability Matrix
 
 | Capability | Query/Field | Required | Behavior if Missing |
 |---|---|---|---|
-| Config-flow probe | `__schema.queryType.name` | Yes | Setup blocked (`invalid_response` / `cannot_connect`) |
+| Config-flow identity probe | `gatewayIdentity.instanceGuid` | Yes | Setup blocked (`invalid_response` / `cannot_connect` / `requires_gateway_upgrade`) |
 | Device inventory (base) | `devices { address manufacturer deviceId softwareVersion hardwareVersion }` | Yes | Setup cannot build device tree |
 | Device identity enrichment | `devices { serialNumber macAddress }` | Optional | Integration falls back to base query and fallback ID scheme |
 | Service status | `daemonStatus`, `adapterStatus` | Yes (current implementation) | Setup refresh fails |
@@ -180,7 +184,17 @@ At setup, integration performs best-effort cleanup of stale `helianthus/*` regis
 
 ### `already_configured`
 
-- Another config entry already uses the same `host:port`.
+- Another config entry already uses the same verified `instanceGuid`.
+
+### `requires_gateway_upgrade`
+
+- The gateway does not yet expose `gatewayIdentity.instanceGuid`.
+- New GUID-native setup is blocked until the gateway is upgraded.
+
+### `identity_mismatch`
+
+- Zeroconf TXT `instance_guid` did not match the GraphQL-verified `gatewayIdentity.instanceGuid`.
+- Automatic rebind is refused.
 
 ### Missing optional data
 

@@ -229,6 +229,10 @@ When `-mdns` is enabled (default), the gateway advertises its GraphQL endpoint v
   - `path`: HTTP path for GraphQL (default `-mdns-path` or `-graphql-path`, e.g. `/graphql`)
   - `version`: discovery schema version (default `1`)
   - `transport`: endpoint transport (default `http`)
+  - `instance_guid`: stable installation GUID published when `-instance-guid` is configured
+
+When Home Assistant consumes this advertisement, it must verify the same GUID through GraphQL
+`gatewayIdentity.instanceGuid` before treating the discovered endpoint as the same installation.
 
 ## Build/Verify (Libraries Only)
 
