@@ -349,6 +349,9 @@ Response fields:
 - `status.startup`: machine-readable semantic startup readiness surface:
   `phase` plus monotonic `cache_epoch` / `live_epoch`.
 - `status.feature_flags`: observe-first feature-flag state and normalizations.
+  Current rollout wording remains conservative: until a later family-specific
+  proof lane plus docs freeze says otherwise, the canonical default state is the
+  non-promotion path with `external_write_policy=record_only`.
 - `messages`, `periodicity`, `counters`: bounded summary counters used by Portal
   observability views.
 
@@ -423,6 +426,19 @@ Example response:
   }
 }
 ```
+
+Current rollout note:
+
+- this example intentionally shows the canonical non-promotion default state:
+  `observe_first_enabled=false`,
+  `passive_state_direct_apply=false`,
+  `passive_config_direct_apply=false`,
+  `external_write_policy=record_only`;
+- that wording is frozen by gateway issue
+  [`Project-Helianthus/helianthus-ebusgateway#439`](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/439); and
+- the merged proof artifacts behind the decision prove only the bounded
+  `proxy-single-client / passive_mode=required / ens / no-ebusd` family, not a
+  broader automatic default flip.
 
 ### `GET /portal/api/v1/projection/devices`
 

@@ -177,6 +177,29 @@ Operational meaning:
 - validation cases that use proxy-like `enh` / `ens` endpoints on non-adapter ports
   should continue to expect passive-capable behavior.
 
+### GW-16 Rollout Decision
+
+The bounded P03 proof contract and the rollout decision remain intentionally
+family-scoped. The proof evidence proves only the bounded
+`proxy-single-client / passive_mode=required / ens / no-ebusd` family used by
+canonical `P03`; it does not justify a broad default flip.
+
+- Bounded proof evidence: [`Project-Helianthus/helianthus-ebusgateway#400`](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/400)
+- Canonical bounded proof artifact (outside this docs repo; from a
+  `Project-Helianthus/helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260315T070147Z-gw15-proof-p03-canonical-rerun/index.json`
+- Canonical non-promotion decision: [`Project-Helianthus/helianthus-ebusgateway#439`](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/439)
+
+Operational meaning:
+
+- record-only remains the canonical default for any family or deployment
+  topology that is not individually proven in the bounded passive proof scope;
+- the proven bounded `P03` family may continue to serve proof artifacts, but
+  that does not widen default promotion to direct adapter-class `enh` / `ens`,
+  `ebusd-tcp`, or any broader deployment family; and
+- any later default-flip claim must be backed by a separate proven deployment
+  family.
+
 ### Semantic Cache Persistence
 
 - Gateway reads/writes semantic startup cache at `-semantic-cache-path` (default `./semantic_cache.json`).
