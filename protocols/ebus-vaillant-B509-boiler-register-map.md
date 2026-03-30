@@ -63,6 +63,14 @@ Source: `refreshBoilerStatusTier()` in `cmd/gateway/semantic_vaillant.go`
 | `diagnostics.deactivationsIFC` | `0x1F00` | `UCH` | IFC deactivations |
 | `diagnostics.deactivationsTemplimiter` | `0x2000` | `UCH` | Temperature limiter deactivations |
 
+### Slow-config tier (installer/maintenance)
+
+| Semantic Path | B509 register | Codec / scale | Access | Notes |
+|---------------|---------------|---------------|--------|-------|
+| `config.installerMenuCode` | `0x4904` | `UCH` (1 byte) | r;ws | Boiler installer menu access code. Range 0..255. Write via `setBoilerConfig(field: "installerMenuCode")` |
+| `config.phoneNumber` | `0x8104` | `HEX:8` (8 bytes) | r;wi | Installer phone number as raw hex string (16 hex chars). Write via `setBoilerConfig(field: "phoneNumber")` |
+| `config.hoursTillService` | `0x2004` | `Hoursum2` (2 bytes) | r | Service countdown in hours. **Read-only by design** — service counter must not be written |
+
 ## B524 Provenance Still Used By `boilerStatus`
 
 The PASS-profile boiler contract still merges a small set of controller-side mirrored values from B524:
@@ -88,6 +96,8 @@ Supported writable fields:
 | `flowsetHwcMaxC` | `0x0F04` | `DATA2c` | `30..65` C | Read-back must match encoded payload |
 | `partloadHcKW` | `0x0704` | `UCH` | `0..40` kW | Whole-number kW only |
 | `partloadHwcKW` | `0x0804` | `UCH` | `0..40` kW | Whole-number kW only |
+| `installerMenuCode` | `0x4904` | `UCH` | `0..255` | Boiler installer access code |
+| `phoneNumber` | `0x8104` | `HEX:8` | 16 hex chars | Raw 8-byte hex string |
 
 Write semantics:
 - GraphQL accepts the `value` argument as a string and validates it server-side.

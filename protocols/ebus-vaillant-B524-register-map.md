@@ -217,7 +217,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0029 | hwc_storage_charge_offset | C | f32 | K | CylinderChargeOffset | — | — | hwc_enabled | | 0..40 per TSP |
 | 0x002A | hwc_legionella_time | C | time | time | — | — | — | hwc_enabled | | HH:MM |
 | 0x002B | is_legionella_protection_activated | C | u16 | enum | — | — | `0=off 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat 7=Sun` | hwc_enabled | | Day-of-week selector. 0=disabled |
-| 0x002C | maintenance_date | P | date | date | MaintenanceDate | — | — | — | | |
+| 0x002C | maintenance_date | C | date | date | MaintenanceDate | — | — | — | **S** `system.config.maintenance_date` | FLAGS=0x03 (user-facing RW). HDA:3 encoding [DD,MM,YY]. Sentinel 2015-01-01 = factory default. Write via `setSystemConfig(field: "maintenanceDate")` |
 | 0x002D | offset_outside_temperature | C | f32 | K | — | — | — | — | | -3..3 step 0.5 per TSP |
 | 0x002F | module_configuration_vr71 | P | u16 | count | — | — | — | — | **S** `system.properties.module_configuration_vr71` | 1..11 |
 | 0x0031 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 0 |
@@ -248,12 +248,12 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0059 | fuel_consumption_dhw_total | E | u32 | kWh | PrFuelSumHwc | — | — | — | **S** `energy_totals.gas.dhw` | |
 | 0x005C | energy_consumption_total | E | u32 | kWh | PrEnergySum | — | — | — | | |
 | 0x005D | fuel_consumption_total | E | u32 | kWh | PrFuelSum | — | — | — | | |
-| 0x006C | installer_name_1 | P | string | text | Installer1 | — | — | — | | maxLength 6 |
-| 0x006D | installer_name_2 | P | string | text | Installer2 | — | — | — | | maxLength 6 |
-| 0x006F | installer_phone_1 | P | string | text | PhoneNumber1 | — | — | — | | maxLength 6 |
-| 0x0070 | installer_phone_2 | P | string | text | PhoneNumber2 | — | — | — | | maxLength 6 |
+| 0x006C | installer_name_1 | C | string | text | Installer1 | — | — | — | **S** `system.config.installer_name_1` | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Write via `setSystemConfig(field: "installerName1")` |
+| 0x006D | installer_name_2 | C | string | text | Installer2 | — | — | — | **S** `system.config.installer_name_2` | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Write via `setSystemConfig(field: "installerName2")` |
+| 0x006F | installer_phone_1 | C | string | text | PhoneNumber1 | — | — | — | **S** `system.config.installer_phone_1` | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Write via `setSystemConfig(field: "installerPhone1")` |
+| 0x0070 | installer_phone_2 | C | string | text | PhoneNumber2 | — | — | — | **S** `system.config.installer_phone_2` | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Write via `setSystemConfig(field: "installerPhone2")` |
 | 0x0073 | outdoor_temperature | S | f32 | °C | DisplayedOutsideTemp | — | — | — | **S** `system.state.outdoor_temperature` | Read-only |
-| 0x0076 | installer_menu_code | P | u16 | count | KeyCodeforConfigMenu | — | — | — | | 0..999 |
+| 0x0076 | installer_menu_code | C | u16 | count | KeyCodeforConfigMenu | — | — | — | **S** `system.config.installer_menu_code` | FLAGS=0x02 (technical RW). Range 0..999. Write via `setSystemConfig(field: "installerMenuCode")` |
 | 0x0081 | smart_photovoltaic_buffer_offset | P | f32 | K | — | — | — | — | | † |
 | 0x0086 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 60. PV/smart cluster |
 | 0x0089 | (unknown) | — | u16 | — | — | — | — | — | | Scan value: 15. PV/smart cluster |
