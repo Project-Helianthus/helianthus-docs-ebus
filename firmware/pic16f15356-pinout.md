@@ -14,23 +14,25 @@ Complete 28-pin SOIC assignment from the v3 schematic (IC5):
 
 | Pin | Port | Function | Direction | Notes |
 |---|---|---|---|---|
-| 1 | MCLR | Reset | Input | Master clear (active low) |
-| 3 | RA0 | GPIO | Input | J12 strap (variant decode) |
-| 4 | RA1 | GPIO | Input | J12 strap (variant decode) |
-| 5 | RA2 | C1IN0+ | Input | Comparator 1 input (analog) |
-| 6 | RA3 | C1OUT | Output | Comparator 1 output |
+| 1 | VPP/MCLR/RE3 | Reset | Input | Master clear (active low) |
+| 2 | RA0 | GPIO | Input | J12 strap (variant decode) |
+| 3 | RA1 | GPIO | Input | J12 strap (variant decode) |
+| 4 | RA2 | C1IN0+ | Input | Comparator 1 input (analog) |
+| 5 | RA3 | C1OUT | Output | Comparator 1 output |
+| 6 | RA4 | GPIO | Input | J12 strap (protocol select) |
 | 7 | RA5 | GPIO | Input | J12 strap (speed select) |
-| 8 | RA4 | GPIO | Input | J12 strap (protocol select) |
-| 9 | VSS_2 | Ground | -- | |
-| 10 | RC0 | RX2 | Input | EUSART2 RX (host from ESP) |
-| 11 | RC1 | TX2 | Output | EUSART2 TX (host to ESP) |
-| 12 | RC2 | SCK2 | Output | SPI2 clock |
-| 13 | RC3 | SDI2 | Input | SPI2 data in |
-| 14 | RC4 | SDO2 | Output | SPI2 data out |
-| 15 | RC5 | SEL2 | Output | SPI2 chip select |
-| 16 | RC6 | RES2 | I/O | Reserved / Ethernet reset |
+| 8 | VSS | Ground | -- | |
+| 9 | RA7 | -- | -- | Not used (oscillator pin, HFINTOSC mode) |
+| 10 | RA6 | -- | -- | Not used (oscillator pin, HFINTOSC mode) |
+| 11 | RC0 | RX2 | Input | EUSART2 RX (host from ESP) |
+| 12 | RC1 | TX2 | Output | EUSART2 TX (host to ESP) |
+| 13 | RC2 | SCK2 | Output | SPI2 clock |
+| 14 | RC3 | SDI2 | Input | SPI2 data in |
+| 15 | RC4 | SDO2 | Output | SPI2 data out |
+| 16 | RC5 | SEL2 | Output | SPI2 chip select |
+| 17 | RC6 | RES2 | I/O | Reserved / Ethernet reset |
 | 18 | RC7 | -- | I/O | General / LED control |
-| 19 | VSS_1 | Ground | -- | |
+| 19 | VSS | Ground | -- | |
 | 20 | VDD | Power | -- | 3.3 V |
 | 21 | RB0 | GPIO | I/O | General purpose |
 | 22 | RB1 | INT | Input | Signal detect (eBUS transceiver presence, external interrupt) |
@@ -41,7 +43,7 @@ Complete 28-pin SOIC assignment from the v3 schematic (IC5):
 | 27 | RB6 | SPCLK | Output | SPI1 secondary clock |
 | 28 | RB7 | SPDAT | I/O | SPI1 data |
 
-Pins 2 and 17 are not listed because they are the RA7 and VDD_2 pins respectively and are internally connected on this package variant.
+Pin numbering follows the PIC16(L)F15356 28-pin PDIP/SOIC/SSOP package diagram from the Microchip datasheet (DS40001866B, page 5). Pins 9 (RA7) and 10 (RA6) are the external oscillator pins; they are unused because the firmware selects HFINTOSC as the clock source (OSCCON1 = 0x60, FEXTOSC = OFF).
 
 ## EUSART Configuration
 
@@ -61,8 +63,8 @@ Two independent EUSARTs provide the bus-side and host-side serial channels.
 
 | Parameter | Value |
 |---|---|
-| RX pin | RC0 (pin 10) |
-| TX pin | RC1 (pin 11) |
+| RX pin | RC0 (pin 11) |
+| TX pin | RC1 (pin 12) |
 | Connected to | ESP8266 / USB-UART / RPi header |
 | Host-side baud | 9600 or 115200 baud (switchable via J12 speed strap) |
 | PPS routing | `RX2PPS` <- RC0, `RC1PPS` -> TX2 |
@@ -96,10 +98,10 @@ Connected to the W5500 Ethernet module (USR-ES1). This bus is **only active in t
 
 | Signal | Pin | Port |
 |---|---|---|
-| SCK2 | 12 | RC2 |
-| SDI2 | 13 | RC3 |
-| SDO2 | 14 | RC4 |
-| SEL2 (CS) | 15 | RC5 |
+| SCK2 | 13 | RC2 |
+| SDI2 | 14 | RC3 |
+| SDO2 | 15 | RC4 |
+| SEL2 (CS) | 16 | RC5 |
 
 Secondary SPI bus. Active for expansion peripherals depending on board variant.
 
@@ -172,15 +174,13 @@ The RA0/RA1 combination selects the hardware variant:
 
 ## ISR Dispatcher
 
-The interrupt service routine checks five interrupt sources in fixed priority order. Each source has a corresponding PIE (enable) and PIR (flag) register bit.
+The interrupt service routine checks three interrupt sources in fixed priority order. Each source has a corresponding PIE (enable) and PIR (flag) register bit. Transmit is polled from the mainline superloop -- no TX interrupt handlers exist.
 
 | Priority | Flag | PIE/PIR | Handler | Description |
 |---|---|---|---|---|
-| 1 | TMR0IF | PIE0/PIR0 | Timer tick | 500 us period, drives all firmware timing |
-| 2 | RC2IF | PIE3/PIR3 | EUSART2 RX | Host byte received from ESP |
-| 3 | TX2IF | PIE3/PIR3 | EUSART2 TX | Host TX register empty, ready for next byte |
-| 4 | RC1IF | PIE3/PIR3 | EUSART1 RX | Bus byte received from eBUS transceiver |
-| 5 | TX1IF | PIE3/PIR3 | EUSART1 TX | Bus TX register empty, ready for next byte |
+| 1 | TMR0IF | PIE0/PIR0 | isr_latch_tmr0 | 500 us period, drives all firmware timing |
+| 2 | RC1IF | PIE3/PIR3 | isr_latch_bus_rx | Bus byte received from eBUS transceiver |
+| 3 | Host RX | PIE3/PIR3 | isr_latch_host_rx | Host byte received (EUSART2 or SPI depending on variant) |
 
 ### Original Firmware Dispatch
 
