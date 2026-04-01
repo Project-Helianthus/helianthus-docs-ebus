@@ -61,7 +61,9 @@ Scheduler tick = ISR period * divider
 | Software divider | 200 subticks |
 | Scheduler tick | 100 ms |
 
-The scheduler tick (100 ms) drives periodic status emission and coarse scan phase delays (`SCAN_PASS_DELAY` = 200 ms = 2 ticks, `SCAN_RETRY_DELAY` = 100 ms = 1 tick, `SCAN_PROBE_DELAY` = 400 ms = 4 ticks). However, fine-grained scan timing -- window limits, merged thresholds, seed-derived delays -- operates in milliseconds, not tick multiples. These values (e.g., 60 ms floor, 342 ms window limit, 46 ms delta) are compared against `now_ms` timestamps, which accumulate from the scheduler tick but are not quantized to it.
+The runtime clock (`now_ms`) advances by exactly 100 ms on each scheduler tick (`runtime_now_ms += SCHEDULER_PERIOD_MS`). All deadline comparisons use this 100 ms-stepped counter, so the effective timing resolution is 100 ms regardless of the constant's precision.
+
+Coarse phase delays are exact tick multiples: `SCAN_PASS_DELAY` = 200 ms = 2 ticks, `SCAN_RETRY_DELAY` = 100 ms = 1 tick, `SCAN_PROBE_DELAY` = 400 ms = 4 ticks. Fine-grained constants like `SCAN_MIN_DELAY` (60 ms), `SCAN_WINDOW_LIMIT_FLOOR` (240 ms), and `SCAN_WINDOW_DELTA_DEFAULT` (46 ms) represent target thresholds defined with sub-tick precision, but they are resolved at 100 ms granularity when compared against `now_ms`. For example, a 60 ms floor effectively triggers at the next 100 ms boundary.
 
 ## EUSART1 Configuration
 
