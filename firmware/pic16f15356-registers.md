@@ -74,7 +74,7 @@ All ring buffers use power-of-2 capacities with bitmask indexing (`& (CAP - 1u)`
 |---|---|---|
 | SP1BRGL | `0x40` | Low byte of SPBRG |
 | SP1BRGH | `0x03` | High byte of SPBRG |
-| Combined SPBRG | `0x0340` (832) | Baud = 32 MHz / (4 * 833) = ~9615 |
+| Combined SPBRG | `0x0340` (832) | Baud = 32 MHz / (4 * 833) = ~9604 |
 
 ### High-Speed Baud (115200)
 
@@ -113,19 +113,17 @@ The ISR entry point at `CODE:0412` checks up to 4 peripheral interrupt pending/e
 flowchart TD
     ISR["ISR Entry<br/><code>CODE:0412</code>"] --> TMR{"PIR0.TMR0IF<br/>&&<br/>PIE0.TMR0IE?"}
     TMR -->|Yes| TMR_H["isr_latch_tmr0<br/>~24 cycles"]
-    TMR -->|No| RX{"PIR3.RC1IF<br/>&&<br/>PIE3.RC1IE?"}
-    RX -->|Yes| RX_H["isr_latch_bus_rx<br/>~36 cycles"]
-    RX -->|No| TX{"PIR3.TX1IF<br/>&&<br/>PIE3.TX1IE?"}
-    TX -->|Yes| TX_H["isr_latch_host_rx<br/>~36 cycles"]
-    TX -->|No| OTHER{"Additional<br/>peripheral pairs?"}
-    OTHER -->|No| RET["RETFIE"]
+    TMR -->|No| BUS{"PIR3.RC1IF<br/>&&<br/>PIE3.RC1IE?"}
+    BUS -->|Yes| BUS_H["isr_latch_bus_rx<br/>~36 cycles"]
+    BUS -->|No| HOST{"Host RX<br/>peripheral?"}
+    HOST -->|Yes| HOST_H["isr_latch_host_rx<br/>~36 cycles"]
+    HOST -->|No| RET["RETFIE"]
     TMR_H --> RET
-    RX_H --> RET
-    TX_H --> RET
-    OTHER -->|Yes| OTH_H["implementation-<br/>specific handler"] --> RET
+    BUS_H --> RET
+    HOST_H --> RET
 ```
 
-Each handler clears the interrupt flag and latches received data into the appropriate ring buffer FIFO.
+The first two checks are confirmed from the binary (TMR0 timer and EUSART1 receive for bus bytes). The host RX interrupt source depends on the hardware configuration -- the PIC may use a second EUSART, MSSP SPI, or another peripheral for host communication. The exact PIR/PIE pair for the host channel has not been fully recovered from the original binary. No TX interrupt handler exists; transmit is polled.
 
 ## Descriptor Address Computation
 
@@ -159,13 +157,15 @@ The final descriptor cursor is: `(addr_hi << 8) | addr_lo`.
 
 ### Known Descriptor Bases
 
-| Slot | addr_lo | addr_hi | Cursor |
-|---|---|---|---|
-| `0x01` | `0x28` | `0x24` | `0x0264` |
-| `0x03` | `0x68` | `0x24` | `0x0260` |
-| `0x06` | `0xC8` | `0x24` | `0x0268` |
+The firmware uses a pre-computed lookup table (`scan_descriptor_base_for_slot()`) rather than the general formula above. The lookup values were extracted from the original binary:
 
-Note: the bases in the table above are the values returned by `scan_descriptor_base_for_slot()`, which uses a lookup table rather than the computed formula. For the default slot (`0x06`), the lookup returns `0x0268`.
+| Slot | Cursor | High Byte | Low Byte |
+|---|---|---|---|
+| `0x01` | `0x0264` | `0x02` | `0x64` |
+| `0x03` | `0x0260` | `0x02` | `0x60` |
+| `0x06` | `0x0268` | `0x02` | `0x68` |
+
+The general formula (addr_lo / addr_hi computation above) describes the algorithm recovered from `initialize_scan_slot_full()` in Ghidra. The lookup table entries may have been pre-computed from a different revision of that algorithm or hand-tuned in the original firmware.
 
 ### Cursor Advancement
 

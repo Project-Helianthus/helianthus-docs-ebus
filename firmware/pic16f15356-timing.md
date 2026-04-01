@@ -69,7 +69,7 @@ The firmware supports two UART baud rates for host communication:
 
 | Mode | SPBRG | BRGH | BRG16 | Actual Baud | Target Baud | Error |
 |---|---|---|---|---|---|---|
-| Default | `0x0340` (832) | 1 | 1 | ~9615 | 9600 | +0.16% |
+| Default | `0x0340` (832) | 1 | 1 | ~9604 | 9600 | +0.04% |
 | High-speed | `0x0044` (68) | 1 | 1 | ~115,942 | 115200 | +0.64% |
 
 Baud rate formula (async, BRGH=1, BRG16=1):
