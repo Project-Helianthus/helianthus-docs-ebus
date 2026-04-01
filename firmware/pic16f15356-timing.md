@@ -110,22 +110,14 @@ All scan timing constants are defined in `runtime.h` and `runtime.c`. Values are
 ### Scan Timing Diagram
 
 ```mermaid
-sequenceDiagram
-    participant SE as Scan Engine
-
-    Note over SE: run_scan_pass<br/>(IDLE → PRIMED)
-    SE->>SE: SCAN_PASS_DELAY (200 ms)
-    Note over SE: finalize_scan_pass<br/>(PRIMED → PASS)
-    SE->>SE: Descriptor processing<br/>(shift + load + merge)
-
-    loop 7 variant codes (0x01, 0x33, 0x35, 0x36, 0x3A, 0x3B, 0x03)
-        SE->>SE: dispatch_scan_code
-        SE->>SE: SCAN_PROBE_DELAY (400 ms)
-    end
-
-    Note over SE: Cursor wraps to 0<br/>(PASS → RETRY)
-    SE->>SE: SCAN_RETRY_DELAY (100 ms)
-    Note over SE: protocol_state_dispatch<br/>(RETRY → IDLE)
+flowchart LR
+    A["run_scan_pass<br/>IDLE → PRIMED"] -->|"200 ms<br/>PASS_DELAY"| B["finalize_scan_pass<br/>PRIMED → PASS"]
+    B --> C["Descriptor<br/>shift + load + merge"]
+    C --> D["Variant 1<br/><code>0x01</code>"]
+    D -->|"400 ms<br/>PROBE_DELAY"| E["Variant 2..7<br/><code>0x33 0x35 0x36<br/>0x3A 0x3B 0x03</code>"]
+    E -->|"cursor wraps"| F["RETRY<br/>PASS → RETRY"]
+    F -->|"100 ms<br/>RETRY_DELAY"| G["dispatch<br/>RETRY → IDLE"]
+    G -.->|"next cycle"| A
 ```
 
 ### Delay Floor Enforcement
