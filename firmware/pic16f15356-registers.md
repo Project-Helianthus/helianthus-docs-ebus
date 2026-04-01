@@ -51,7 +51,20 @@ The ISR dispatcher at `CODE:0412` checks up to 4 pending/enable bit pairs in seq
 
 ### ISR Latch Model
 
-The ISR only latches received bytes into ring buffer FIFOs. All protocol processing (ENH decoding, scan FSM, status emission) happens in the mainline superloop. This ensures the ISR has bounded, minimal execution time.
+The ISR only latches received bytes into ring buffer FIFOs. All protocol processing (ENH decoding, scan FSM, status emission) happens in the mainline superloop. This ensures the ISR has bounded, minimal execution time (peak: 51 cycles, budget: 60).
+
+### Ring Buffer Capacities
+
+All ring buffers use power-of-2 capacities with bitmask indexing (`& (CAP - 1u)`) instead of modulo. This eliminates software division on PIC16F (no hardware divider) and is enforced by `_Static_assert` at compile time.
+
+| Buffer | Capacity | Type | Use |
+|--------|----------|------|-----|
+| `ISR_LATCH_CAP` | 16 | Ring (FIFO) | ISR byte FIFOs (`host_rx`, `bus_rx`, `host_tx`) |
+| `EVENT_QUEUE_CAP` | 32 | Ring (queue) | Runtime event queue |
+| `HOST_TX_CAP` | 128 | Ring (queue) | Host TX byte queue |
+| `DESCRIPTOR_DATA_CAP` | 64 | Linear | Descriptor data buffer (sequential, not ring) |
+
+`HOST_TX_CAP` was 96 in the original firmware binary. Changed to 128 (nearest power-of-2 up) to enable correct bitmask indexing -- `& 95` (0x5F) is not a valid ring buffer mask, while `& 127` (0x7F) is. `DESCRIPTOR_DATA_CAP` was 48; changed to 64 for power-of-2 alignment (this is a linear buffer, but consistency avoids false positives from the R10 checker).
 
 ## EUSART1 Registers
 

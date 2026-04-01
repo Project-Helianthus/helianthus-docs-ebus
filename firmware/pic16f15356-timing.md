@@ -128,6 +128,29 @@ All scan delays are clamped to a minimum of `SCAN_MIN_DELAY` (60 ms) by `normali
 
 If the ENH parser receives `byte1` of an encoded pair but `byte2` does not arrive within 64 ms, the parser resets and emits `ERROR_HOST`. This prevents stale partial frames from corrupting subsequent decoding.
 
+## ISR WCET Budget
+
+All ISR-context functions must complete within 60 instruction cycles (7.5 us at 8 MHz instruction clock). This budget is enforced by `check_wcet_isr.py`, which identifies ISR-context functions by naming pattern (`*_isr_*`) and transitively marks their callees.
+
+| Function | Own Cost | Callee Cost | ISR Overhead | Total |
+|----------|----------|-------------|--------------|-------|
+| `byte_fifo_push` | ~15 | -- | -- | ~15 (transitive callee) |
+| `event_queue_push` | ~18 | -- | -- | ~18 (transitive callee) |
+| `isr_latch_tmr0` | ~16 | -- | +8 | ~24 |
+| `isr_latch_host_rx` | ~13 | fifo_push ~15 | +8 | ~36 |
+| `isr_latch_bus_rx` | ~13 | fifo_push ~15 | +8 | ~36 |
+| `isr_enqueue_host_byte` | ~14 | queue_push ~18 | +8 | ~40 |
+| `isr_enqueue_bus_byte` | ~14 | queue_push ~18 | +8 | ~40 |
+| `app_isr_tmr0` | ~9 | latch_tmr0 ~24 | +8 | ~41 |
+| **`app_isr_host_rx`** | ~7 | latch_host_rx ~36 | +8 | **~51 (peak)** |
+| **`app_isr_bus_rx`** | ~7 | latch_bus_rx ~36 | +8 | **~51 (peak)** |
+
+ISR overhead (+8 cycles) accounts for the PIC16 interrupt context save and restore (CALL + RETFIE). Estimates use a source-level heuristic: `if` = 3 cycles, assignment = 2, function call = 4, etc. Actual XC8-compiled cycle counts will differ but the relative ordering is preserved.
+
+### Ring Buffer Optimization
+
+All ring buffer index operations use bitmask arithmetic (`& (CAP - 1u)`) instead of modulo (`% CAP`). On PIC16F15356 (no hardware divider), this saves ~40 instruction cycles per push/pop operation -- critical for ISR-context functions where every cycle counts toward the 60-cycle budget.
+
 ## Bootloader Baud Rates
 
 The bootloader (separate from the application runtime) supports two transfer speeds:
