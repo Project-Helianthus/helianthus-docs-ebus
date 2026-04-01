@@ -130,9 +130,10 @@ All scan delays are clamped to a minimum of `SCAN_MIN_DELAY` (60 ms) by `normali
 
 | Parameter | Value |
 |---|---|
-| Timeout | 64 ms (`PICFW_RUNTIME_HOST_RX_TIMEOUT_MS`) |
+| Configured timeout | 64 ms (`PICFW_RUNTIME_HOST_RX_TIMEOUT_MS`) |
+| Effective timeout | 100 ms (next scheduler tick) |
 
-If the ENH parser receives `byte1` of an encoded pair but `byte2` does not arrive within 64 ms, the parser resets and emits `ERROR_HOST`. This prevents stale partial frames from corrupting subsequent decoding.
+If the ENH parser receives `byte1` of an encoded pair but `byte2` does not arrive in time, the parser resets and emits `ERROR_HOST`. The deadline is set as `now_ms + 64`, but since `now_ms` advances in 100 ms steps, the timeout effectively fires on the next scheduler tick after the deadline passes -- between 100 ms and 200 ms after `byte1`, depending on where in the tick cycle the first byte arrived. The 64 ms constant is inherited from the original firmware binary; on the 100 ms timebase it acts as a "fire on next tick" sentinel rather than a precise 64 ms window.
 
 ## ISR WCET Budget
 
