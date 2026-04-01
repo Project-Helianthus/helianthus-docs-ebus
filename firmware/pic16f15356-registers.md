@@ -107,16 +107,25 @@ SP1BRGL is located at SFR address `0x11B` in bank `0x02`.
 
 ### ISR Dispatcher
 
-The ISR entry point at `CODE:0412` checks up to 4 peripheral interrupt pending/enable bit pairs. The dispatcher structure:
+The ISR entry point at `CODE:0412` checks up to 4 peripheral interrupt pending/enable bit pairs in priority order:
 
-```text
-1. Check PIR0.TMR0IF && PIE0.TMR0IE  (Timer 0)
-2. Check PIR3.RC1IF && PIE3.RC1IE    (EUSART1 receive)
-3. Check PIR3.TX1IF && PIE3.TX1IE    (EUSART1 transmit)
-4. Check additional peripheral pairs  (implementation-specific)
+```mermaid
+flowchart TD
+    ISR["ISR Entry<br/><code>CODE:0412</code>"] --> TMR{"PIR0.TMR0IF<br/>&&<br/>PIE0.TMR0IE?"}
+    TMR -->|Yes| TMR_H["isr_latch_tmr0<br/>~24 cycles"]
+    TMR -->|No| RX{"PIR3.RC1IF<br/>&&<br/>PIE3.RC1IE?"}
+    RX -->|Yes| RX_H["isr_latch_bus_rx<br/>~36 cycles"]
+    RX -->|No| TX{"PIR3.TX1IF<br/>&&<br/>PIE3.TX1IE?"}
+    TX -->|Yes| TX_H["isr_latch_host_rx<br/>~36 cycles"]
+    TX -->|No| OTHER{"Additional<br/>peripheral pairs?"}
+    OTHER -->|No| RET["RETFIE"]
+    TMR_H --> RET
+    RX_H --> RET
+    TX_H --> RET
+    OTHER -->|Yes| OTH_H["implementation-<br/>specific handler"] --> RET
 ```
 
-Each check is a conditional branch: if both the interrupt flag and its enable bit are set, the corresponding handler runs. The handler clears the flag and latches any received data into the appropriate FIFO.
+Each handler clears the interrupt flag and latches received data into the appropriate ring buffer FIFO.
 
 ## Descriptor Address Computation
 
