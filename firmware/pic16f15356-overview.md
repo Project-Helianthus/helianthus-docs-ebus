@@ -83,6 +83,32 @@ The combined static footprint (`picfw_runtime_t` + `picfw_pic16f15356_hal_t`) is
 
 All code paths have bounded, predictable execution time. 15 determinism rules are enforced automatically by 12 mandatory CI checks (`make check-all`) and a pre-commit hook. See [DETERMINISM.md](https://github.com/Project-Helianthus/helianthus-ebus-adapter-pic/blob/main/DETERMINISM.md) for the full rule set and check commands.
 
+### Why Determinism
+
+The eBUS adapter firmware must behave as a transparent, jitter-free UART bridge. eBUS master-master arbitration is bit-level at 2400 baud: if the adapter introduces more than ~10 us of jitter in byte forwarding, it loses arbitration and corrupts the bus. There is no retry mechanism -- a missed window means dropped frames and broken heating control.
+
+This constraint drives every architectural decision:
+
+- **No recursion, no dynamic allocation, no VLAs** (R1, R2, R7) -- stack depth and RAM usage must be statically provable. On PIC16F15356 with 2 KB RAM and a 16-level hardware call stack, any unpredictable growth is fatal.
+- **All loops bounded by constants** (R3) -- unbounded iteration produces unbounded execution time. Every loop has a compile-time-visible upper bound or a provably-decreasing guard.
+- **No floating point** (R6) -- PIC16F has no FPU. Software float emulation is non-deterministic in cycle count and consumes ~1 KB of ROM.
+- **Cyclomatic complexity < 10** (R8) -- high-CC functions have deep nesting and many execution paths, making WCET analysis intractable. The threshold ensures every function is small enough to reason about exhaustively. Monolithic dispatchers were replaced with `const` lookup tables (O(1) dispatch, constant WCET).
+- **ISR WCET < 60 cycles** (R4/WCET) -- the ISR fires every 500 us (TMR0 period). At 8 MHz instruction clock, 60 cycles = 7.5 us -- well under the 500 us period and the 10 us jitter budget. ISR functions only latch bytes into ring buffer FIFOs; all protocol processing happens in the mainline superloop. This separation guarantees the ISR never blocks.
+- **Call depth < 13** (STACK) -- PIC16F15356 has a 16-level hardware call stack (not software, not growable). 3 levels are reserved for the deepest ISR chain (`app_isr_host_rx -> isr_latch_host_rx -> byte_fifo_push`), leaving 13 for mainline. The deepest mainline chain (scan FSM retry path) uses exactly 13 -- zero margin. This is a frozen path: new function extractions here are prohibited.
+- **Power-of-2 ring buffers with bitmask indexing** (R10) -- the PIC16F has no hardware divider. Modulo (`%`) on a non-power-of-2 value compiles to a software division routine (~30 cycles). Bitmask (`& (CAP - 1)`) is a single AND instruction (~1 cycle). For ISR-context FIFO push/pop, this 30x speedup is the difference between meeting and missing the WCET budget.
+- **RAM budget < 75%** (RAM) -- the combined static footprint of `picfw_runtime_t` + `picfw_pic16f15356_hal_t` is tracked by a compiled C program using `sizeof`. Host compiler alignment differs from XC8, but relative growth is tracked: if a struct grows 32 bytes on the host, it grew similarly on PIC. The 25% headroom covers the hardware call stack, local variables, and compiler temporaries.
+- **Const dispatch enforcement** (CONST) -- function pointer arrays must be `const` (placed in ROM by XC8). Mutable function pointer dispatch is prohibited because it introduces runtime-dependent branching that defeats WCET analysis. The `const` qualifier is both a correctness guarantee (table cannot be corrupted) and a ROM/RAM optimization.
+
+### Self-Testing
+
+Every determinism rule has an automated check script (pure Python 3, zero pip dependencies) that produces a `PASS`/`FAIL` verdict. The checks are validated in both directions:
+
+- **Good code must pass** -- all 12 checks are run against `runtime/src` and `bootloader/src` (22 positive tests).
+- **Bad code must fail** -- synthetic violations in `tests/fixtures/bad_example.c` trigger each check (10 negative tests).
+- **Total: 31 self-tests** via `bash tests/test_checks.sh`, ensuring the checks themselves do not silently regress.
+
+The `NOLINT(determinism)` comment suppression mechanism allows intentional exceptions (e.g., a loop with a provably-constant bound that the checker cannot statically verify), documented inline at the suppression site.
+
 ### Rule Summary
 
 | ID | Rule | Threshold | Enforcement |

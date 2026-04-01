@@ -61,7 +61,7 @@ Scheduler tick = ISR period * divider
 | Software divider | 200 subticks |
 | Scheduler tick | 100 ms |
 
-All scan delays, deadlines, and status emission periods are expressed in terms of this 100 ms scheduler tick.
+The scheduler tick (100 ms) drives periodic status emission and coarse scan phase delays (`SCAN_PASS_DELAY` = 200 ms = 2 ticks, `SCAN_RETRY_DELAY` = 100 ms = 1 tick, `SCAN_PROBE_DELAY` = 400 ms = 4 ticks). However, fine-grained scan timing -- window limits, merged thresholds, seed-derived delays -- operates in milliseconds, not tick multiples. These values (e.g., 60 ms floor, 342 ms window limit, 46 ms delta) are compared against `now_ms` timestamps, which accumulate from the scheduler tick but are not quantized to it.
 
 ## EUSART1 Configuration
 
