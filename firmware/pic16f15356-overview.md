@@ -156,6 +156,52 @@ This pattern is explicitly permitted by R8 (DETERMINISM.md). Mutable function po
 
 All register values and code paths were recovered from Ghidra decompilation of the original production `combined.hex` image (76 functions, 10K decompiled lines). The firmware was then re-implemented as a clean-room C codebase, cross-validated against a Go reference oracle (`helianthus-tinyebus`) for bit-exact parity.
 
+## Original Firmware Issues
+
+Ghidra decompilation of the production `combined.hex` revealed systemic issues in the original PIC firmware. These findings motivated the clean-room reimplementation and the determinism rules enforced by this project. Issues are classified by severity: P0 (critical, data loss or corruption), P1 (significant, degraded operation), P2 (latent, long-term instability).
+
+### P0 -- Critical
+
+**FAILED-to-START race bypasses minimum inter-scan delay.** When a new START command arrives before a FAILED response is fully consumed, one code path transitions directly to READY, bypassing the mandatory 0x3C (60 ms) minimum delay. The scan engine then samples the transceiver in a transient window, producing false "no signal" reports. Under START flooding, this cascades into lost SYNs and violent degradation. *Addressed by: bounded deadline enforcement in `normalize_scan_delay()` with `SCAN_MIN_DELAY` floor clamping.*
+
+**ISR and mainline reentrancy on shared FSMs.** The low-priority ISR enters protocol and scan logic directly (`continue_scan_fsm`, flush path) instead of only latching bytes into FIFOs. Mainline simultaneously processes the same state and cursors. The ISR observes partially updated state and makes decisions on incoherent data -- classic torn-state reentrancy. *Addressed by: strict ISR/mainline separation. ISR only latches into ring buffer FIFOs (R4/WCET < 60 cycles). All protocol processing runs in the mainline superloop.*
+
+**Fail-open on invalid protocol codes.** Protocol codes that should be rejected are routed to READY instead of a reject/fault path. A corrupted or malicious response can artificially validate the FSM. *Addressed by: explicit state validation inlined into `set_protocol_state()` (switch on valid enum values, default rejects). XOR-encoded diagnostic return codes on every rejection path.*
+
+**Deadline comparison is wrap-unsafe.** Absolute tick values are compared byte-by-byte (lexicographic) rather than modularly. On counter wrap-around, a deadline can appear expired too early or not at all. *Addressed by: `picfw_deadline_reached_u32()` using modular subtraction (`(int32_t)(now - deadline) >= 0`), which is wrap-safe for intervals < 2^31.*
+
+### P1 -- Significant
+
+**Incomplete state reset in `set_protocol_state_pending()`.** Only a subset of protocol state is reset. Saved deadlines, merged windows, and latches remain stale, explaining paths that reuse old timing state after a rapid FAILED-to-START transition. *Addressed by: `picfw_runtime_seed_scan_state()` performs a full reset of all scan-related fields on INIT.*
+
+**Backoff timing collapses under noise.** On some deadline expirations, the firmware halves timing windows instead of stabilizing, becoming more aggressive under stress. *Addressed by: `post_merge_validate()` enforces floor and ceiling on all scan window parameters. Window limit, delay, and merged values are clamped to validated ranges on every merge cycle.*
+
+**"No signal" detection lacks debounce.** A single LOW sample on the signal-detect pin immediately triggers a "no signal" path, producing false negatives during frame transitions. *Addressed by: the reimplementation delegates signal detection entirely to the Go gateway, which has proper debounce and hysteresis.*
+
+**Self-DoS via busy-wait loops.** `service_timed_loop()` and related paths use spin loops. Under command flooding, CPU time is consumed by polling instead of UART servicing, causing the firmware to lose determinism at peak stress. *Addressed by: R3 (all loops bounded by constants), no spin-wait patterns. The mainline superloop processes a fixed event budget per step (`STEP_EVENT_BUDGET = 8`).*
+
+**Critical sections too narrow and inconsistent.** Interrupt masking covers small fragments, not full atomic updates of shared state. Shared state is mutated outside the protected window. *Addressed by: eliminating shared mutable state between ISR and mainline. ISR writes to FIFO tail (atomic push); mainline reads from FIFO head (atomic pop). No shared cursor or state variable.*
+
+**Non-atomic multi-byte updates.** 16/32-bit values are written and read byte-by-byte on the 8-bit MCU without coherent protection, allowing readers to observe mixed old/new bytes. *Addressed by: all multi-byte deadline/timestamp writes happen in mainline only (never ISR). The ISR only increments single-byte counters and pushes single bytes to FIFOs.*
+
+**Buffer cursors lack hard bounds.** Some cursors grow with only soft thresholds, risking wrap or RAM overwrite if producers outrun consumers. *Addressed by: R10 (power-of-2 ring buffers with bitmask indexing). All buffer capacities have `_Static_assert` enforcement. Overflow increments a diagnostic counter and transitions to DEGRADED -- no silent corruption.*
+
+**Flush path is reentrant.** The message output path runs in both ISR and mainline with incomplete serialization, causing frame interleaving and dropped output. *Addressed by: output drain is mainline-only (`hal_drain_host_tx`). ISR never touches the TX queue. The TX queue is a single-producer (mainline enqueue) / single-consumer (mainline drain) ring buffer.*
+
+**Weak descriptor validation.** The firmware accepts "plausible" descriptor blocks and derives seeds, masks, and deadlines from them. A malicious peer can inject values that pass superficial validation but poison the scheduler. *Addressed by: `post_merge_validate()` clamps all derived values to validated ranges. `SCAN_WINDOW_LIMIT_FLOOR` (240 ms), `SCAN_DELAY_THRESHOLD` (120 ms), and `SCAN_MERGED_THRESHOLD` (210 ms) enforce hard bounds on descriptor-derived timing.*
+
+### P2 -- Latent
+
+**State leak (sticky latches).** There is no dynamic allocation (`malloc/free`), but sticky flags/latches are set and not cleared on all paths, causing cumulative degradation over long uptime. *Addressed by: `picfw_runtime_init()` performs a full zero-init of all runtime state. INIT command triggers a complete re-initialization cycle.*
+
+**Multiple READY encodings.** Several `state + flags` combinations represent effectively the same READY condition, creating "weird machine" behavior where logically equivalent transitions have different side effects. *Addressed by: the reimplementation uses a single canonical `set_protocol_state(READY, FLAGS_IDLE)` path. State validation rejects any state value not in the defined enum.*
+
+**Weak recovery after malicious input.** Parsers and FSMs do not perform hard resets after errors or partial sequences, allowing residual state to poison subsequent frames. *Addressed by: the ENH parser resets to IDLE after every complete frame and on every error (conservative reset policy). The scan FSM transitions to DEGRADED on any unrecoverable error, requiring a full INIT to resume.*
+
+### Assessment
+
+The original firmware was not designed for strict real-time determinism. The dominant failure modes are not memory leaks but state leaks, ISR/mainline races, wrap-unsafe comparisons, fail-open logic, busy-wait self-DoS, and cursor drift. Under normal traffic it may appear acceptable; under flood, jitter, line noise, or long uptime, it becomes fragile and amplifies its own failures. Every determinism rule in this project traces back to at least one of these findings.
+
 ## Related Firmware Documents
 
 - [State Machines](pic16f15356-fsm.md) -- protocol FSM, scan phase FSM, ENH parser, startup states
