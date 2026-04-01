@@ -30,7 +30,7 @@ graph TD
         APP["Application<br/><i>pic16f15356_app</i><br/>ISR + mainline wrapper"]
         RT["Runtime<br/>Protocol FSM + ENH/ENS codec<br/>Scan engine + Descriptor merge<br/>Status emission + Diagnostics"]
         HAL["HAL<br/><i>pic16f15356_hal</i><br/>ISR latch FIFOs + TMR0 tick<br/>UART mode switching"]
-        BOOT["Bootloader<br/><i>picboot</i><br/>STX frames + Flash/EEPROM<br/>10 commands + CRC16-CCITT"]
+        BOOT["Bootloader<br/><i>picboot</i><br/>STX frames + Flash/EEPROM<br/>11 commands + CRC16-CCITT"]
         APP --> RT
         RT --> HAL
         BOOT -.->|reset handoff| APP
@@ -55,9 +55,9 @@ graph TD
 | Layer | Role | Implementation |
 |---|---|---|
 | **Application** | ISR dispatcher, mainline superloop, clock switch | `pic16f15356_app` |
-| **Runtime** | Protocol FSM, ENH/ENS codec, scan engine, descriptor merge, status emission, diagnostics | `runtime.c` (~1920 lines) |
+| **Runtime** | Protocol FSM, ENH/ENS codec, scan engine, descriptor merge, status emission, diagnostics | `runtime.c` (~1935 lines) |
 | **HAL** | ISR byte latch into FIFOs, TMR0 tick management, UART baud rate switching | `pic16f15356_hal` |
-| **Bootloader** | STX-framed protocol, flash write, EEPROM read/write, 10 commands, CRC16-CCITT verification | `picboot` |
+| **Bootloader** | STX-framed protocol, flash write, EEPROM read/write, 11 commands, CRC16-CCITT verification | `picboot` |
 
 ## Protocol Layers
 
@@ -81,7 +81,7 @@ The combined static footprint (`picfw_runtime_t` + `picfw_pic16f15356_hal_t`) is
 
 ## Determinism
 
-All code paths have bounded, predictable execution time. 15 determinism rules are enforced automatically by 12 mandatory CI checks (`make check-all`) and a pre-commit hook. See [DETERMINISM.md](https://github.com/Project-Helianthus/helianthus-ebus-adapter-pic/blob/main/DETERMINISM.md) for the full rule set and check commands.
+All code paths have bounded, predictable execution time. 15 determinism rules are defined; 13 are enforced automatically by 12 mandatory CI checks (`make check-all`) and a pre-commit hook. R5 is skipped (HAL simulation model uses no `__delay_ms`), and R9 (hardware timers) requires manual code review. See [DETERMINISM.md](https://github.com/Project-Helianthus/helianthus-ebus-adapter-pic/blob/main/DETERMINISM.md) for the full rule set and check commands.
 
 ### Why Determinism
 

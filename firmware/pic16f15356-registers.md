@@ -47,7 +47,7 @@ The TMR0 ISR is triggered when:
 1. `PIE0.TMR0IE` (Timer 0 interrupt enable) is set, **and**
 2. `PIR0.TMR0IF` (Timer 0 interrupt flag) is set
 
-The ISR dispatcher at `CODE:0412` checks up to 4 pending/enable bit pairs in sequence to determine which peripheral triggered the interrupt.
+The ISR dispatcher at `CODE:0412` checks up to 3 pending/enable bit pairs in sequence to determine which peripheral triggered the interrupt.
 
 ### ISR Latch Model
 
@@ -107,7 +107,7 @@ SP1BRGL is located at SFR address `0x11B` in bank `0x02`.
 
 ### ISR Dispatcher
 
-The ISR entry point at `CODE:0412` checks up to 4 peripheral interrupt pending/enable bit pairs in priority order:
+The ISR entry point at `CODE:0412` checks 3 peripheral interrupt pending/enable bit pairs in priority order:
 
 ```mermaid
 flowchart TD
