@@ -79,7 +79,7 @@ Both EUSARTs are configured identically at the register level:
 | RCxSTA | `0x90` | SPEN = 1, CREN = 1 (serial port enabled, continuous receive) |
 | TXxSTA | `0x24` | TXEN = 1, BRGH = 1 (transmit enabled, high-speed baud) |
 
-See [`firmware/pic16f15356-registers.md`](pic16f15356-registers.md) for the full baud rate generator divisor values (SP1BRG/SP2BRG).
+See [`firmware/pic16f15356-registers.md`](pic16f15356-registers.md) for the full EUSART1 baud rate generator divisor values (SP1BRG). EUSART2 uses identical control register values; its SP2BRG mirrors SP1BRG (same baud rate for both channels).
 
 ## SPI Buses
 
@@ -180,7 +180,7 @@ The interrupt service routine checks three interrupt sources in fixed priority o
 |---|---|---|---|---|
 | 1 | TMR0IF | PIE0/PIR0 | isr_latch_tmr0 | 500 us period, drives all firmware timing |
 | 2 | RC1IF | PIE3/PIR3 | isr_latch_bus_rx | Bus byte received from eBUS transceiver |
-| 3 | Host RX | PIE3/PIR3 | isr_latch_host_rx | Host byte received (EUSART2 or SPI depending on variant) |
+| 3 | Host RX | variant-dependent | isr_latch_host_rx | Host byte received; exact PIE/PIR pair depends on the active host peripheral (EUSART2 or SPI) and has not been fully recovered from the binary |
 
 ### Original Firmware Dispatch
 
