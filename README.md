@@ -26,6 +26,7 @@ Gateway HTTP entrypoints are split by role: `/ui` is the read-only projection br
 | API | [api/graphql.md](api/graphql.md), [api/mcp.md](api/mcp.md), [api/portal.md](api/portal.md) |
 | Deployment | [deployment/full-stack.md](deployment/full-stack.md), [deployment/tinygo-esp32.md](deployment/tinygo-esp32.md) |
 | Development | [development/contributing.md](development/contributing.md), [development/conventions.md](development/conventions.md), [development/ha-integration.md](development/ha-integration.md) |
+| Firmware | [firmware/pic16f15356-overview.md](firmware/pic16f15356-overview.md), [firmware/pic16f15356-fsm.md](firmware/pic16f15356-fsm.md), [firmware/pic16f15356-timing.md](firmware/pic16f15356-timing.md), [firmware/pic16f15356-registers.md](firmware/pic16f15356-registers.md) |
 
 ## Contribution Workflow (Doc-Gate)
 
