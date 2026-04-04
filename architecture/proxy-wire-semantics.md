@@ -50,6 +50,8 @@ Policy:
 - treat strict local target behavior as a separately proven capability,
 - keep this capability behind explicit validation before upgrading fidelity claims.
 
+The detailed local target contract is defined in [`architecture/local-target-emulation-timing-contract.md`](./local-target-emulation-timing-contract.md).
+
 ## Operational implications
 
 - Proxy behavior changes that affect scheduling boundaries require doc-gate updates before merge.
@@ -60,4 +62,5 @@ Policy:
 
 - EPIC: [Project-Helianthus/helianthus-execution-plans#5](https://github.com/Project-Helianthus/helianthus-execution-plans/issues/5)
 - Execution plan package: [Project-Helianthus/helianthus-execution-plans#6](https://github.com/Project-Helianthus/helianthus-execution-plans/issues/6)
+- Local target timing contract: [`./local-target-emulation-timing-contract.md`](./local-target-emulation-timing-contract.md)
 - Matrix runbook: [`../development/smoke-matrix.md`](../development/smoke-matrix.md)
