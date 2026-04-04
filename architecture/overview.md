@@ -4,6 +4,8 @@ This repository documents the current, implemented architecture of the Helianthu
 
 Detailed API contracts live in [`api/graphql.md`](../api/graphql.md), [`api/mcp.md`](../api/mcp.md), and [`api/portal.md`](../api/portal.md).
 
+Canonical proxy wire-semantics scheduling decisions live in [`architecture/proxy-wire-semantics.md`](./proxy-wire-semantics.md).
+
 ## Layered Architecture (Mermaid)
 
 ```mermaid
@@ -309,6 +311,7 @@ flowchart LR
 Planes initiate work (method invocation) or receive broadcast updates, but they do not manage protocol states. The Bus is responsible for the eBUS-level state machine: send, ACK/NACK handling, response read, CRC validation, and retries. The Router sits between the two, translating Plane operations into Bus sends and routing Bus broadcasts back to subscribed Planes.
 
 While waiting for ACK/NACK, the Bus tolerates idle/noise bytes (e.g., repeated `SYN`) and continues until a definitive ACK/NACK or timeout is reached.
+This Bus-layer wording describes generic protocol FSM behavior and must not be read as a proxy handoff rule, where `SYN-while-waiting` is treated as an immediate scheduling timeout boundary (see [`proxy-wire-semantics.md`](./proxy-wire-semantics.md)).
 
 ### eBUS Send/Receive State Machine (Mermaid)
 
