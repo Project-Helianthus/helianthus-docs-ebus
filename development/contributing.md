@@ -62,8 +62,13 @@ Doc-gate is mandatory for changes that affect implemented architecture, APIs, or
 For eBUS transport/protocol changes, merge readiness requires an additional runtime gate:
 
 - **Scope:** changes in transport/protocol code paths (gateway transport selection, proxy upstream/downstream transport behavior, ebusgo transport implementations, arbitration behavior tied to wire protocol).
-- **Required artifact:** full matrix result (`T01..T88`) with no unexpected failures (`fail`) and no unexpected passes (`xpass`) against the active expected-failure inventory.
-- **Required reference:** PR description must include the `results/index.json` path or attachment reference.
+- **Primary required artifact:** full matrix result (`T01..T88`) with no unexpected failures (`fail`) and no unexpected passes (`xpass`) against the active expected-failure inventory.
+- **Proxy adjunct artifact (when proxy wire-semantics scope applies):** proxy-semantics subset (`PX01..PX12`) with the same no-unexpected-`fail`/`xpass` policy.
+- **Required reference:** PR description must include the primary `results/index.json` path or attachment reference, and for proxy wire-semantics scope it must also include the proxy-semantics artifact index reference.
 - **Expected-failure inventory:** any `xfail` must map to a documented transport limitation (case IDs + reason), and that inventory must be attached in the PR description.
 - **Default policy:** if runtime gate is not satisfied, merge is blocked.
 - **Owner override:** only explicit owner approval may bypass this gate, with a written reason.
+
+Hardware-backed ESERA passive validation remains a deferred follow-up for the
+proxy wire-semantics lane and is not a merge blocker for the current milestone
+set (tracked in [Project-Helianthus/helianthus-docs-ebus#241](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/241)).

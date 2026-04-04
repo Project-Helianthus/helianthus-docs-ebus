@@ -188,6 +188,66 @@ Current factual references:
 - runtime adversarial scenarios that remain outside the transport gate:
   [`../architecture/adversarial-matrix.md`](../architecture/adversarial-matrix.md)
 
+## Proxy-Semantics Adjunct Gate (`PX01..PX12`)
+
+`T01..T88` remains the primary transport gate. For proxy transport/protocol
+merges, a required adjunct proof subset is evaluated in addition to `T01..T88`:
+
+- `PX01`: stale `STARTED` absorb with matching result inside absorb window
+- `PX02`: stale `STARTED` absorb expiry with bounded fail path
+- `PX03`: `SYN` while waiting for command `ACK` reopens arbitration immediately
+- `PX04`: `SYN` while waiting for target response reopens arbitration immediately
+- `PX05`: lower initiator wins same-boundary competition
+- `PX06`: lower initiator arriving before next round closes beats queued higher
+- `PX07`: requeue-after-timeout by former owner still wins over higher
+- `PX08`: equal-initiator FIFO ordering is preserved
+- `PX09`: local target sees request only from echoed `RECEIVED`, never `SEND`
+- `PX10`: local emulated target response inside responder window remains coherent
+- `PX11`: late local target response is rejected and counted
+- `PX12`: non-owner and non-responder send is rejected during active transaction
+
+### Gate policy with `PX` adjunct
+
+- `T01..T88` verdict remains the primary merge gate for transport/protocol work.
+- `PX01..PX12` is a required adjunct for proxy wire-semantics scope.
+- Merge requires no unexpected `fail` and no unexpected `xpass` across both
+  gate sets.
+- `xfail` must stay bound to a documented expected-failure inventory with case
+  IDs and reasons.
+
+### Expected artifact shape for proxy-semantics proof runs
+
+Proof runs must include an attached artifact bundle shaped as:
+
+```text
+results/
+  index.json
+  proxy-semantics/
+    index.json
+    PX01/
+      verdict.json
+      logs/runner.log
+    PX02/
+      verdict.json
+      logs/runner.log
+    ...
+    PX12/
+      verdict.json
+      logs/runner.log
+```
+
+`proxy-semantics/index.json` must summarize `PX01..PX12` outcomes and expected
+failure annotations used for that run.
+
+### Deferred ESERA passive validation note
+
+The current matrix gate does not require hardware-backed ESERA passive proof
+before merge for this workstream. That validation remains tracked as a deferred
+follow-up in:
+
+- `FOLLOWUP-01` docs lane: [Project-Helianthus/helianthus-docs-ebus#241](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/241)
+- execution-plan lane: [Project-Helianthus/helianthus-execution-plans#7](https://github.com/Project-Helianthus/helianthus-execution-plans/issues/7)
+
 ## Privacy and secrets
 
 No adapter IPs or credentials are stored in repo artifacts by default. Config files reference environment placeholders (`MATRIX_*`), and command strings must be provided at runtime via local operator context.
