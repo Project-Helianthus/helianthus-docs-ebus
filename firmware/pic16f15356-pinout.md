@@ -30,18 +30,18 @@ Complete 28-pin SOIC assignment from the v3 schematic (IC5):
 | 14 | RC3 | SDI2 | Input | SPI2 data in |
 | 15 | RC4 | SDO2 | Output | SPI2 data out |
 | 16 | RC5 | SEL2 | Output | SPI2 chip select |
-| 17 | RC6 | RES2 | I/O | Reserved / Ethernet reset |
-| 18 | RC7 | -- | I/O | General / LED control |
+| 17 | RC6 | GPIO | Output | LED2 in the current firmware model |
+| 18 | RC7 | -- | I/O | Unmodeled / reserved in the current firmware tree |
 | 19 | VSS | Ground | -- | |
 | 20 | VDD | Power | -- | 3.3 V |
-| 21 | RB0 | GPIO | I/O | General purpose |
+| 21 | RB0 | GPIO | Input | WiFi readiness gate in the current firmware tree |
 | 22 | RB1 | INT | Input | Signal detect (eBUS transceiver presence, external interrupt) |
 | 23 | RB2 | RX1 | Input | EUSART1 RX (bus from eBUS transceiver) |
 | 24 | RB3 | TX1 | Output | EUSART1 TX (bus to eBUS transceiver) |
 | 25 | RB4 | SCK1 | Output | SPI1 clock (W5500 Ethernet) |
 | 26 | RB5 | SEL1 | Output | SPI1 chip select (W5500) |
-| 27 | RB6 | SPCLK | Output | SPI1 secondary clock |
-| 28 | RB7 | SPDAT | I/O | SPI1 data |
+| 27 | RB6 | SPCLK / PGC | I/O | SPI1 secondary clock, also sampled for J11 boot entry |
+| 28 | RB7 | SPDAT / PGD | I/O | SPI1 data, also sampled for J11 boot entry |
 
 Pin numbering follows the PIC16(L)F15356 28-pin PDIP/SOIC/SSOP package diagram from the Microchip datasheet (DS40001866B, page 5). Pins 9 (RA7) and 10 (RA6) are the external oscillator pins; they are unused because the firmware selects HFINTOSC as the clock source (OSCCON1 = 0x60, FEXTOSC = OFF).
 
@@ -49,14 +49,14 @@ Pin numbering follows the PIC16(L)F15356 28-pin PDIP/SOIC/SSOP package diagram f
 
 Two independent EUSARTs provide the bus-side and host-side serial channels.
 
-### EUSART1 (Bus)
+### EUSART1 (Bus Model)
 
 | Parameter | Value |
 |---|---|
 | RX pin | RB2 (pin 23) |
 | TX pin | RB3 (pin 24) |
 | Connected to | eBUS transceiver IC |
-| Bus-side baud | 2400 baud (eBUS wire standard) |
+| Bus-side baud | 2400 baud in the current host model |
 | PPS routing | `RX1PPS` <- RB2, `RB3PPS` -> TX1 |
 
 ### EUSART2 (Host)
@@ -69,9 +69,9 @@ Two independent EUSARTs provide the bus-side and host-side serial channels.
 | Host-side baud | 9600 or 115200 baud (switchable via J12 speed strap) |
 | PPS routing | `RX2PPS` <- RC0, `RC1PPS` -> TX2 |
 
-### Shared Register Settings
+### Register Settings
 
-Both EUSARTs are configured identically at the register level:
+Control bits match, but the current firmware model uses different divisors for bus and host roles:
 
 | Register | Value | Meaning |
 |---|---|---|
@@ -79,7 +79,7 @@ Both EUSARTs are configured identically at the register level:
 | RCxSTA | `0x90` | SPEN = 1, CREN = 1 (serial port enabled, continuous receive) |
 | TXxSTA | `0x24` | TXEN = 1, BRGH = 1 (transmit enabled, high-speed baud) |
 
-See [`firmware/pic16f15356-registers.md`](pic16f15356-registers.md) for the full EUSART1 baud rate generator divisor values (SP1BRG). EUSART2 uses identical control register values; its SP2BRG mirrors SP1BRG (same baud rate for both channels).
+The current tree models `SP1BRG = 0x0D04` for the bus side and `SP2BRG = 0x0340/0x0044` for the host side. Earlier docs that claimed the two UARTs mirror each other were incorrect for the current codebase.
 
 ## SPI Buses
 
@@ -118,20 +118,17 @@ RB1/INT is connected to the signal-detect output of the eBUS transceiver. It ind
 
 **Original firmware behavior:** Sampled single-shot during startup. This was a P1-class bug -- no debounce, no periodic re-check. A transient glitch at power-on could latch an incorrect signal-detect state for the entire session.
 
-**Reimplementation:** The Go gateway handles signal detect directly via the ENH status frame. The PIC firmware reports the raw RB1 state in its periodic snapshot frame; all debounce and policy decisions are delegated to the gateway.
+**Current tree:** The HAL samples RB1 into `runtime->bus_busy`, but the periodic snapshot frame does not currently export a dedicated raw RB1 field. Any consumer that needs raw signal-detect semantics must treat this as not yet implemented.
 
 ## LEDs
 
-Four indicator LEDs are directly driven from the PIC (accent color from schematic silkscreen):
+The current firmware tree implements exactly one PIC-driven LED state machine:
 
 | LED | Color | Function |
 |---|---|---|
-| LED1 | Green | eBUS RX activity |
 | LED2 | Blue | Firmware status / info (fade, blink patterns) |
-| LED3 | Red | eBUS TX activity |
-| LED4 | Yellow | Power indicator |
 
-LED2 encodes firmware state through blink patterns: slow fade = idle/healthy, fast blink = active transfer, solid = error/degraded. The exact patterns are defined in the runtime FSM (see [`firmware/pic16f15356-fsm.md`](pic16f15356-fsm.md)).
+LED2 is currently modeled on RC6. The repo does not implement separate PIC-side state machines for LED1/LED3/LED4.
 
 ## J12 AUX Strap Configuration
 
@@ -140,12 +137,12 @@ The J12 header is an 8-pin auxiliary connector that configures the firmware vari
 | J12 Pin | PIC Pin | Function | Open (pull-up) | Grounded |
 |---|---|---|---|---|
 | 1 | VDD | Power | -- | -- |
-| 2 | RA4 | Protocol | Enhanced (ebusd) | Standard (direct eBUS) |
+| 2 | RA4 | Protocol | Enhanced (ebusd) | Standard / raw mode requested |
 | 3 | GND | Ground | -- | -- |
-| 4 | -- | WIFI-Check | (schematic v3.0 only) | -- |
+| 4 | RB0 | WIFI-Check | Wemos not ready | Wemos ready signal asserted |
 | 5 | RA0/RA1 | Variant | RPi/USB | Ethernet (to GND) or WIFI (to Pin 4) |
 | 6 | GND | Ground | -- | -- |
-| 7 | RA5 | Speed | Normal-speed | High-speed serial |
+| 7 | RA5 | Speed | Normal-speed host UART | High-speed host UART |
 | 8 | -- | Reset | -- | Pulse low to reset |
 
 ### Variant Decode Logic
@@ -163,7 +160,7 @@ The RA0/RA1 combination selects the hardware variant:
 | RA4 | Mode | Description |
 |---|---|---|
 | 1 (open) | Enhanced | ENH/ENS encoding between PIC and host (ebusd-compatible) |
-| 0 (grounded) | Standard | Raw byte passthrough (direct eBUS framing) |
+| 0 (grounded) | Standard | Requested raw mode; currently decoded but not implemented in the runtime |
 
 ### Speed Select (RA5)
 
@@ -174,7 +171,7 @@ The RA0/RA1 combination selects the hardware variant:
 
 ## ISR Dispatcher
 
-The interrupt service routine checks three interrupt sources in fixed priority order. Each source has a corresponding PIE (enable) and PIR (flag) register bit. Transmit is polled from the mainline superloop -- no TX interrupt handlers exist.
+The documentation recovered from the legacy binary describes a fixed-priority dispatcher. The current firmware tree exposes separate ISR entry points. Host TX now uses a staged HAL queue plus one-byte TX-ready service; the simulation profile appends transmitted bytes to an outbox, while the silicon profile currently remains a compile-only register-mirror scaffold rather than a proven XC8 TXREG binding.
 
 | Priority | Flag | PIE/PIR | Handler | Description |
 |---|---|---|---|---|
@@ -192,7 +189,7 @@ The reimplementation uses **direct static function calls** for all ISR handlers.
 
 ## GPIO Register Defaults
 
-Initial register values derived from the schematic pin assignment. These are written during `picfw_runtime_init()` before any peripheral is activated.
+Initial register values derived from the schematic pin assignment. In the current tree they are applied from `picfw_pic16f15356_hal_runtime_init()` after oscillator / timer setup and after early strap sampling for J11 and J12.
 
 ### TRISA/TRISB/TRISC (Data Direction)
 
@@ -201,8 +198,8 @@ Initial register values derived from the schematic pin assignment. These are wri
 | Register | Value | Bit 7 | Bit 6 | Bit 5 | Bit 4 | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
 |---|---|---|---|---|---|---|---|---|---|
 | TRISA | `0x37` | 0 | 0 | 1 (RA5 in) | 1 (RA4 in) | 0 | 1 (RA2 in) | 1 (RA1 in) | 1 (RA0 in) |
-| TRISB | `0x06` | 0 | 0 | 0 | 0 | 0 | 1 (RB2 in) | 1 (RB1 in) | 0 |
-| TRISC | `0xC1` | 1 (RC7 in) | 1 (RC6 in) | 0 | 0 | 0 | 0 | 0 | 1 (RC0 in) |
+| TRISB | `0x07` | 0 | 0 | 0 | 0 | 0 | 1 (RB2 in) | 1 (RB1 in) | 1 (RB0 in) |
+| TRISC | `0x09` | 0 | 0 | 0 | 0 | 1 (RC3 in) | 0 | 0 | 1 (RC0 in) |
 
 ### ANSELA/ANSELB/ANSELC (Analog Select)
 

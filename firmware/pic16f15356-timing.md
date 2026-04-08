@@ -65,14 +65,15 @@ The runtime clock (`now_ms`) advances by exactly 100 ms on each scheduler tick (
 
 Coarse phase delays are exact tick multiples: `SCAN_PASS_DELAY` = 200 ms = 2 ticks, `SCAN_RETRY_DELAY` = 100 ms = 1 tick, `SCAN_PROBE_DELAY` = 400 ms = 4 ticks. Fine-grained constants like `SCAN_MIN_DELAY` (60 ms), `SCAN_WINDOW_LIMIT_FLOOR` (240 ms), and `SCAN_WINDOW_DELTA_DEFAULT` (46 ms) represent target thresholds defined with sub-tick precision, but they are resolved at 100 ms granularity when compared against `now_ms`. For example, a 60 ms floor effectively triggers at the next 100 ms boundary.
 
-## EUSART1 Configuration
+## UART Configuration
 
-The firmware supports two UART baud rates for host communication:
+The current firmware tree models the two UART roles separately:
 
-| Mode | SPBRG | BRGH | BRG16 | Actual Baud | Target Baud | Error |
-|---|---|---|---|---|---|---|
-| Default | `0x0340` (832) | 1 | 1 | ~9604 | 9600 | +0.04% |
-| High-speed | `0x0044` (68) | 1 | 1 | ~115,942 | 115200 | +0.64% |
+| UART | Role | SPBRG | Actual Baud | Target Baud |
+|---|---|---|---|---|
+| EUSART1 | Bus-side UART model | `0x0D04` (3332) | ~2400 | 2400 |
+| EUSART2 | Host default | `0x0340` (832) | ~9604 | 9600 |
+| EUSART2 | Host high-speed | `0x0044` (68) | ~115,942 | 115200 |
 
 Baud rate formula (async, BRGH=1, BRG16=1):
 
@@ -80,14 +81,15 @@ Baud rate formula (async, BRGH=1, BRG16=1):
 Baud = Fosc / (4 * (SPBRG + 1))
 ```
 
-### EUSART1 Register Values
+### Register Values
 
 | Register | Value | Meaning |
 |---|---|---|
-| BAUD1CON | `0x08` | BRG16 = 1 (16-bit baud rate generator) |
-| RC1STA | `0x90` | Serial port enabled (SPEN=1), continuous receive (CREN=1) |
-| TX1STA | `0x24` | Transmit enabled (TXEN=1), BRGH=1, asynchronous mode |
-| SP1BRGL/SP1BRGH | `0x0340` or `0x0044` | Baud rate generator value |
+| BAUD1CON / BAUD2CON | `0x08` | BRG16 = 1 (16-bit baud rate generator) |
+| RC1STA / RC2STA | `0x90` | Serial port enabled (SPEN=1), continuous receive (CREN=1) |
+| TX1STA / TX2STA | `0x24` | Transmit enabled (TXEN=1), BRGH=1, asynchronous mode |
+| SP1BRGL/SP1BRGH | `0x0D04` | Current bus-side divider in the host model |
+| SP2BRGL/SP2BRGH | `0x0340` or `0x0044` | Current host-side divider in the host model |
 
 ## Scan Timing
 
@@ -146,6 +148,7 @@ All ISR-context functions must complete within 60 instruction cycles (7.5 us at 
 | `isr_latch_tmr0` | ~16 | -- | +8 | ~24 |
 | `isr_latch_host_rx` | ~13 | fifo_push ~15 | +8 | ~36 |
 | `isr_latch_bus_rx` | ~13 | fifo_push ~15 | +8 | ~36 |
+| `isr_latch_host_tx_ready` | ~51 | -- | +8 | ~59 |
 | `isr_enqueue_host_byte` | ~14 | queue_push ~18 | +8 | ~40 |
 | `isr_enqueue_bus_byte` | ~14 | queue_push ~18 | +8 | ~40 |
 | `app_isr_tmr0` | ~9 | latch_tmr0 ~24 | +8 | ~41 |
@@ -160,14 +163,25 @@ All ring buffer index operations use bitmask arithmetic (`& (CAP - 1u)`) instead
 
 ## Bootloader Baud Rates
 
-The bootloader (separate from the application runtime) supports two transfer speeds:
+The bootloader (separate from the application runtime) now exists in two code
+profiles inside the firmware tree:
+
+- `picboot_bootloader_t`: host validation model with RAM mirrors
+- `picboot_target_t`: target-facing profile backed by storage/reset callbacks
+
+Both profiles share the same parser and frame engine. The target profile is the
+one intended for future XC8/silicon binding. The runtime HAL follows the same
+split pattern now: a simulation profile with an observable TX outbox and a
+silicon profile with compile-only register mirrors.
+
+The host-side bootloader contract supports two transfer speeds:
 
 | Mode | Baud Rate | Status |
 |---|---|---|
 | Slow / legacy | 115,200 | Documented in host-side contract |
-| Fast | 921,600 | Documented in host-side contract |
+| Fast | 921,600 | Documented in host-side contract only |
 
-Note: the 921,600 baud register values have not yet been recovered from the bootloader binary. The bootloader uses the same HFINTOSC 32 MHz clock after its own clock-switch helper runs.
+Note: the 921,600 baud register values have not yet been recovered from the bootloader binary, and this repository does not yet contain a PIC-resident fast bootloader path that proves first-provisioning success at that speed.
 
 ## eBUS Timing Reference
 
