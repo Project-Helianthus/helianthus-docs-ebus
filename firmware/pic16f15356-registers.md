@@ -68,6 +68,8 @@ All ring buffers use power-of-2 capacities with bitmask indexing (`& (CAP - 1u)`
 
 ## EUSART1 Registers
 
+This section records values recovered from the legacy application image. The current host-buildable firmware tree models the bus side and host side separately and does not reuse these exact divisors one-to-one.
+
 ### Default Baud (9600)
 
 | Register | Value | Meaning |
@@ -107,7 +109,7 @@ SP1BRGL is located at SFR address `0x11B` in bank `0x02`.
 
 ### ISR Dispatcher
 
-The ISR entry point at `CODE:0412` checks 3 peripheral interrupt pending/enable bit pairs in priority order:
+The legacy ISR entry point at `CODE:0412` checks 3 peripheral interrupt pending/enable bit pairs in priority order. The current host-buildable tree exposes separate ISR entry points and a split HAL profile model instead of a recovered monolithic dispatcher.
 
 ```mermaid
 flowchart TD
@@ -123,7 +125,19 @@ flowchart TD
     HOST_H --> RET
 ```
 
-The first two checks are confirmed from the binary (TMR0 timer and EUSART1 receive for bus bytes). The host RX interrupt source depends on the hardware configuration -- the PIC may use a second EUSART, MSSP SPI, or another peripheral for host communication. The exact PIR/PIE pair for the host channel has not been fully recovered from the original binary. No TX interrupt handler exists; transmit is polled.
+The first two checks are confirmed from the binary (TMR0 timer and EUSART1 receive for bus bytes). The host RX interrupt source depends on the hardware configuration -- the PIC may use a second EUSART, MSSP SPI, or another peripheral for host communication. The exact PIR/PIE pair for the host channel has not been fully recovered from the original binary. No TX interrupt handler exists in the recovered legacy image; the current tree now models a staged host TX queue plus one-byte TX-ready service, but the silicon profile is still a compile-only scaffold rather than a proven SFR-level pacing path.
+
+## Bootloader Backend Split
+
+The bootloader implementation in the current tree is split into:
+
+- a host validation model with flash / EEPROM / config RAM mirrors
+- a target-facing profile that delegates storage access and reset handoff
+  through backend callbacks
+
+This preserves the recovered wire format and parser semantics while making room
+for XC8-backed NVM register access without carrying the 33KB host model into a
+PIC RAM image.
 
 ## Descriptor Address Computation
 
@@ -171,9 +185,9 @@ The general formula (addr_lo / addr_hi computation above) describes the algorith
 
 The descriptor cursor advances by `0x2C` (44 bytes) per recompute cycle in `recompute_scan_masks_tail()`. This stride covers one complete descriptor block (8 bytes data + mask) plus alignment padding.
 
-## Scan Mask Seed
+## Scan Seeds
 
-The scan mask seed is a fixed 32-bit constant used to initialize the scan mask at each slot initialization:
+The legacy scan mask seed is a fixed 32-bit constant used to initialize the scan mask at each slot initialization:
 
 ```text
 SCAN_MASK_SEED_DEFAULT = 0x00060101
@@ -187,6 +201,8 @@ Byte breakdown:
 | b1 | `[15:8]` | `0x01` |
 | b2 | `[23:16]` | `0x06` |
 | hi | `[31:24]` | `0x00` |
+
+The current runtime tree also carries a separate `PICFW_RUNTIME_SCAN_DEFAULT_SEED = 0x000002A4` for its host-buildable scaffold state. Those two constants are not interchangeable.
 
 ## Determinism Notes
 

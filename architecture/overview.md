@@ -100,7 +100,7 @@ The startup/runtime FSMs above explain **when** semantic payload becomes visible
 - functional-module semantics: [`architecture/functional-modules.md`](./functional-modules.md)
 - structural configuration gates: [`architecture/semantic-configuration-gates.md`](./semantic-configuration-gates.md)
 - structure/publication/freshness mechanism map: [`architecture/semantic-structure-fsm-map.md`](./semantic-structure-fsm-map.md)
-- authoritative B524 decision catalog: [`protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md)
+- authoritative B524 decision catalog: [`architecture/b524-structural-decisions.md`](./b524-structural-decisions.md)
 
 This split is intentional:
 

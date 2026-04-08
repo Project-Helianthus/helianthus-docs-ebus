@@ -73,13 +73,21 @@ Source: `refreshBoilerStatusTier()` in `cmd/gateway/semantic_vaillant.go`
 
 ## B524 Provenance Still Used By `boilerStatus`
 
-The PASS-profile boiler contract still merges a small set of controller-side mirrored values from B524:
+The PASS-profile boiler contract still merges a small set of controller-side
+mirrored values from B524.
+
+`state.flowTemperatureC` remains authoritative on direct B509 register `0x1800`.
+The B524 entries below are documented only as controller-side provenance,
+mirror, or fallback candidates. They do **not** move the authoritative source
+away from B509.
 
 | Semantic Path | B524 register | Type | Notes |
 |---------------|---------------|------|-------|
 | `state.dhwTemperatureC` | `GG=0x01, RR=0x0005` | `f32` | Mirrored from DHW group on BASV2 |
 | `state.dhwTargetTemperatureC` | `GG=0x01, RR=0x0004` | `f32` | Mirrored from DHW group on BASV2 |
 | `config.dhwOperatingMode` | `GG=0x01, RR=0x0003` | `u16 -> enum string` | Published as decoded GraphQL string |
+| `state.flowTemperatureC` | `OP=0x06, GG=0x00, RR=0x0015` | `f32` | Controller-side primary heat-source mirror / fallback candidate, corroborated by analiza ISC Smartconnect KNX. B509 `0x1800` remains authoritative |
+| `diagnostics.activeErrors` | `OP=0x06, GG=0x00, RR=0x0012` | `u8 raw` | Controller-side primary heat-source provenance. `0=no active error`; non-zero semantics remain pending validation. Corroborated by analiza ISC Smartconnect KNX |
 | `diagnostics.heatingStatusRaw` | `GG=0x02, II=0x00, RR=0x001B` | `u16` | Controller mirror of circuit/heating status |
 
 Fields currently present in the GraphQL/MCP schema but not populated from a validated direct B509 mapping:

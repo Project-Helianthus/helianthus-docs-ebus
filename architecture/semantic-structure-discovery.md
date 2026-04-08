@@ -14,7 +14,7 @@ Phase 1 scope is **B524 structure discovery only** and is documented in **proven
 - naming-prefix or synthetic rules are documented as `HEURISTIC`;
 - anything without enough evidence is documented as `UNKNOWN`.
 
-The authoritative decision catalog is [`protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md).
+The authoritative decision catalog is [`architecture/b524-structural-decisions.md`](./b524-structural-decisions.md).
 
 Each catalog entry records both the primary B524/register evidence and, where available, a supporting regulator-document statement identified by the source document's own title rather than by file name.
 
@@ -180,4 +180,4 @@ The structural decision catalog is authoritative for `Evidence status`, `Scope o
 
 The decision catalog is the authoritative reference for the rule-by-rule contract:
 
-- [`protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md)
+- [`architecture/b524-structural-decisions.md`](./b524-structural-decisions.md)

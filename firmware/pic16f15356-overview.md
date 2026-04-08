@@ -10,7 +10,7 @@ See also:
 
 ## Scope
 
-The PIC16F15356 firmware is a **transparent UART bridge** between an ESP host (running the Go gateway) and the eBUS wire. It is **not** an eBUS node. All eBUS protocol responsibilities (CRC-8, frame escaping, arbitration decisions, retransmission) are delegated to the Go gateway running on the ESP host.
+The current PIC16F15356 firmware tree is a **host-buildable adapter/runtime scaffold** between an ESP host and the eBUS adapter hardware model. It is **not** yet a silicon-complete production image, and all eBUS protocol responsibilities above the adapter framing layer remain delegated to host software.
 
 The firmware handles:
 
@@ -20,7 +20,8 @@ The firmware handles:
 - Scan window management and descriptor processing
 - Periodic status emission (snapshot and variant frames)
 - Host parser timeout enforcement (64 ms)
-- Bootloader for flash and EEPROM updates via STX-framed commands
+- Bootloader framing engine for flash / EEPROM / config commands
+- Runtime normalization from legacy loader config windows (`WRITE_CONFIG`, MUI)
 
 ## Architecture
 
@@ -55,9 +56,9 @@ graph TD
 | Layer | Role | Implementation |
 |---|---|---|
 | **Application** | ISR dispatcher, mainline superloop, clock switch | `pic16f15356_app` |
-| **Runtime** | Protocol FSM, ENH/ENS codec, scan engine, descriptor merge, status emission, diagnostics | `runtime.c` (~1935 lines) |
+| **Runtime** | Protocol FSM, ENH/ENS codec, scan/status scaffolding, diagnostics | `runtime.c` |
 | **HAL** | ISR byte latch into FIFOs, TMR0 tick management, UART baud rate switching | `pic16f15356_hal` |
-| **Bootloader** | STX-framed protocol, flash write, EEPROM read/write, 11 commands, CRC16-CCITT verification | `picboot` |
+| **Bootloader** | STX-framed protocol, host validation model, target backend profile | `picboot` |
 
 ## Protocol Layers
 
@@ -75,13 +76,24 @@ graph TD
 | Boot | `0x0000`--`0x03FF` | 1 KB | Bootloader image, reset vector, clock-switch helper |
 | App | `0x0400`--`0x3FFF` | 15 KB | Application image, ISR dispatcher, runtime, HAL |
 | EEPROM | 256 bytes | 256 B | Persistent configuration |
-| RAM | 2048 bytes | 2 KB | Runtime state (612 bytes combined static footprint), stack, FIFOs |
+| RAM | 2048 bytes | 2 KB | Runtime state, stack, FIFOs |
 
-The combined static footprint (`picfw_runtime_t` + `picfw_pic16f15356_hal_t`) is 612 bytes (39.8% of the 1536-byte budget -- 75% of 2048). `_Static_assert` guards enforce the struct size limit and power-of-2 ring buffer capacities at compile time.
+## Provisioning Model
+
+Provisioning is loader-canonical. The firmware consumes the legacy config space
+written by `ebuspicloader` and derives runtime state from it at boot:
+
+- settings window `0x0000..0x0007`
+- MUI window `0x0106..0x010D`
+- derived cache for IP, MAC, arbitration delay, and variant policy
+
+The runtime cache is derivative only. It is not a second persistent format.
+
+The current combined static footprint (`picfw_runtime_t` + `picfw_pic16f15356_hal_t`) is tracked by `make check-all`. At the time of this review it is 1056 bytes (68.8% of the 1536-byte host-side RAM budget used for tracking), not 612 bytes.
 
 ## Determinism
 
-All code paths have bounded, predictable execution time. 15 determinism rules are defined; 13 are enforced automatically by 12 mandatory CI checks (`make check-all`) and a pre-commit hook. R5 is skipped (HAL simulation model uses no `__delay_ms`), and R9 (hardware timers) requires manual code review. See [DETERMINISM.md](https://github.com/Project-Helianthus/helianthus-ebus-adapter-pic/blob/main/DETERMINISM.md) for the full rule set and check commands.
+The codebase is structured for bounded execution, but the deterministic guarantees are only as strong as the current host-side model. `make check-all` enforces the enabled static checks; hardware-specific ISR/delay checks remain optional and real UART/NVM timing is not yet proven on silicon.
 
 ### Why Determinism
 
@@ -103,7 +115,7 @@ This constraint drives every architectural decision:
 
 Every determinism rule has an automated check script (pure Python 3, zero pip dependencies) that produces a `PASS`/`FAIL` verdict. The checks are validated in both directions:
 
-- **Good code must pass** -- all 12 checks are run against `runtime/src` and `bootloader/src` (22 positive tests).
+- **Good code must pass** -- the enabled checks are run against `runtime/src` and `bootloader/src`.
 - **Bad code must fail** -- synthetic violations in `tests/fixtures/bad_example.c` trigger each check (10 negative tests).
 - **Total: 31 self-tests** via `bash tests/test_checks.sh`, ensuring the checks themselves do not silently regress.
 
@@ -154,7 +166,7 @@ This pattern is explicitly permitted by R8 (DETERMINISM.md). Mutable function po
 
 ## Provenance
 
-All register values and code paths were recovered from Ghidra decompilation of the original production `combined.hex` image (76 functions, 10K decompiled lines). The firmware was then re-implemented as a clean-room C codebase, cross-validated against a Go reference oracle (`helianthus-tinyebus`) for bit-exact parity.
+All register values and code paths were recovered from Ghidra decompilation of the original production `combined.hex` image (76 functions, 10K decompiled lines). The firmware was then re-implemented as a clean-room C codebase and cross-validated against a Go reference oracle (`helianthus-tinyebus`) for the currently modeled northbound behavior. That does not by itself prove silicon-complete feature parity.
 
 ## Original Firmware Issues
 
@@ -186,7 +198,7 @@ Ghidra decompilation of the production `combined.hex` revealed systemic issues i
 
 **Buffer cursors lack hard bounds.** Some cursors grow with only soft thresholds, risking wrap or RAM overwrite if producers outrun consumers. *Addressed by: R10 (power-of-2 ring buffers with bitmask indexing). All buffer capacities have `_Static_assert` enforcement. Overflow increments a diagnostic counter and transitions to DEGRADED -- no silent corruption.*
 
-**Flush path is reentrant.** The message output path runs in both ISR and mainline with incomplete serialization, causing frame interleaving and dropped output. *Addressed by: output drain is mainline-only (`hal_drain_host_tx`). ISR never touches the TX queue. The TX queue is a single-producer (mainline enqueue) / single-consumer (mainline drain) ring buffer.*
+**Flush path is reentrant.** The message output path runs in both ISR and mainline with incomplete serialization, causing frame interleaving and dropped output. *Addressed by: the HAL now owns a bounded staged TX queue. Mainline fills `host_tx_stage`; TX-ready service may consume exactly one staged byte per event. On simulation builds, `hal_drain_host_tx()` exposes only bytes already transmitted into the simulation outbox, never merely staged bytes. The silicon profile keeps the same public HAL API but has no outbox observer.*
 
 **Weak descriptor validation.** The firmware accepts "plausible" descriptor blocks and derives seeds, masks, and deadlines from them. A malicious peer can inject values that pass superficial validation but poison the scheduler. *Addressed by: `post_merge_validate()` clamps all derived values to validated ranges. `SCAN_WINDOW_LIMIT_FLOOR` (240 ms), `SCAN_DELAY_THRESHOLD` (120 ms), and `SCAN_MERGED_THRESHOLD` (210 ms) enforce hard bounds on descriptor-derived timing.*
 

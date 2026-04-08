@@ -135,7 +135,7 @@ Likely cause:
 - [`startup-semantic-fsm.md`](./startup-semantic-fsm.md): publication FSM
 - [`dhw-freshness-fsm.md`](./dhw-freshness-fsm.md): freshness lifecycle FSM
 - [`semantic-read-circuit-breaker.md`](./semantic-read-circuit-breaker.md): protection FSM
-- [`../protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md): rule-by-rule decision catalog
+- [`./b524-structural-decisions.md`](./b524-structural-decisions.md): rule-by-rule decision catalog
 
 ## Non-Goals
 

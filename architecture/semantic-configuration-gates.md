@@ -16,7 +16,7 @@ Use this page to answer questions of the form:
 
 The authoritative rule-by-rule source remains the decision catalog:
 
-- [`../protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md)
+- [`./b524-structural-decisions.md`](./b524-structural-decisions.md)
 
 ## Gate Classes
 
@@ -48,7 +48,7 @@ The authoritative rule-by-rule source remains the decision catalog:
 ## B524 Semantic Root Gate
 
 - Structural role: enables or suppresses the entire B524 structure-discovery pipeline.
-- Current rule source: [`SD-01`](../protocols/ebus-vaillant-B524-structural-decisions.md#b524-sd-01--b524-semantic-root-availability)
+- Current rule source: [`SD-01`](./b524-structural-decisions.md#b524-sd-01--b524-semantic-root-availability)
 - Root-discovery contract: [`b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
 - Identity enrichment contract: [`regulator-identity-enrichment.md`](./regulator-identity-enrichment.md)
 
@@ -183,4 +183,4 @@ These do not create families by themselves, but they are the outputs consumers m
 
 - Structure discovery flow: [`semantic-structure-discovery.md`](./semantic-structure-discovery.md)
 - Structure mechanism map: [`semantic-structure-fsm-map.md`](./semantic-structure-fsm-map.md)
-- Decision catalog: [`../protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md)
+- Decision catalog: [`./b524-structural-decisions.md`](./b524-structural-decisions.md)

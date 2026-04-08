@@ -126,7 +126,7 @@ The contract is capability-first:
 
 ## Cross-Links
 
-- Structural decision catalog: [`../protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md)
+- Structural decision catalog: [`./b524-structural-decisions.md`](./b524-structural-decisions.md)
 - Structure discovery flow: [`semantic-structure-discovery.md`](./semantic-structure-discovery.md)
 - Configuration gates: [`semantic-configuration-gates.md`](./semantic-configuration-gates.md)
 - Identity enrichment: [`regulator-identity-enrichment.md`](./regulator-identity-enrichment.md)

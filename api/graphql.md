@@ -510,7 +510,7 @@ type CircuitConfig {
 The architectural rationale and the full B524 evidence trail for structure/ownership decisions are documented in:
 
 - [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md)
-- [`../protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md)
+- [`../architecture/b524-structural-decisions.md`](../architecture/b524-structural-decisions.md)
 
 ### `energyTotals` Root Query
 
@@ -588,7 +588,7 @@ query {
 Authoritative startup FSM and transition details are documented in [`architecture/startup-semantic-fsm.md`](../architecture/startup-semantic-fsm.md).
 Zone lifecycle details are documented in [`architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md).
 DHW lifecycle details are documented in [`architecture/dhw-freshness-fsm.md`](../architecture/dhw-freshness-fsm.md).
-Structural family/instance discovery rules are documented in [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md) and [`../protocols/ebus-vaillant-B524-structural-decisions.md`](../protocols/ebus-vaillant-B524-structural-decisions.md).
+Structural family/instance discovery rules are documented in [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md) and [`../architecture/b524-structural-decisions.md`](../architecture/b524-structural-decisions.md).
 
 ### Projection Notes
 
