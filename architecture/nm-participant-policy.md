@@ -41,7 +41,7 @@ the canonical source is operator configuration:
 
 - **Initiator:** configured local initiator address
 - **Companion target:** derived from the initiator per the eBUS
-  address-pair derivation rule (XOR with `0xFF`)
+  companion-address derivation rule (initiator + `0x05`)
 
 This path carries lower confidence because the configured address is not
 validated against the live bus before use.
