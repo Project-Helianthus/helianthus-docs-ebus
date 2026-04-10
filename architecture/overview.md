@@ -90,6 +90,15 @@ See breaker details in [`architecture/semantic-read-circuit-breaker.md`](./seman
 See zone presence details in [`architecture/zone-presence-fsm.md`](./zone-presence-fsm.md).
 See DHW lifecycle details in [`architecture/dhw-freshness-fsm.md`](./dhw-freshness-fsm.md).
 
+## Network Management
+
+The Helianthus NM model implements optional, passive, indirect network
+management aligned with the eBUS specification. The gateway owns the NM
+runtime: target configuration, cycle-time monitoring, status chart, net
+status, and the `NMInit -> NMReset -> NMNormal` state machine.
+
+Full normative interpretation: [architecture/nm-model.md](./nm-model.md).
+
 ## Semantic Structure Discovery
 
 The startup/runtime FSMs above explain **when** semantic payload becomes visible. The separate structural decision graph explains **why a family or instance exists at all**.
