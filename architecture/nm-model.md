@@ -209,7 +209,7 @@ by its OSI Layer 7 role within the eBUS application layer.
 | `FF 05` | QueryNMState | Network management | Targeted |
 | `FF 06` | ReportNMState | Network management | Targeted |
 | `07 04` | Identification | Identification | Targeted |
-| `07 FE` | QueryExistence | Existence/presence | Targeted |
+| `07 FE` | QueryExistence | Existence/presence | Broadcast |
 | `07 FF` | QueryExistence (broadcast) | Existence/presence | Broadcast |
 
 These services form a subset of the eBUS OSI Layer 7 application
@@ -263,5 +263,5 @@ decisions.
 
 - [protocols/ebus-overview.md](../protocols/ebus-overview.md) -- wire-level frame formats, QueryExistence, Identification
 - [architecture/overview.md](./overview.md) -- layered architecture context
-- [architecture/nm-discovery.md](./nm-discovery.md) -- discovery realignment (ISSUE-DOC-01, planned)
-- [architecture/nm-participant-policy.md](./nm-participant-policy.md) -- local participant behavior and bus-load policy (ISSUE-DOC-02, planned)
+- `architecture/nm-discovery.md` -- discovery realignment and indirect NM (ISSUE-DOC-01, planned)
+- `architecture/nm-participant-policy.md` -- local participant behavior and bus-load policy (ISSUE-DOC-02, planned)
