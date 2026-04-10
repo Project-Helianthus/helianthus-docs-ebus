@@ -20,7 +20,7 @@ Gateway HTTP entrypoints are split by role: `/ui` is the read-only projection br
 
 | Area | Start docs |
 |---|---|
-| Architecture | [architecture/overview.md](architecture/overview.md), [architecture/decisions.md](architecture/decisions.md), [architecture/mcp-first-development.md](architecture/mcp-first-development.md), [architecture/nm-model.md](architecture/nm-model.md) |
+| Architecture | [architecture/overview.md](architecture/overview.md), [architecture/decisions.md](architecture/decisions.md), [architecture/mcp-first-development.md](architecture/mcp-first-development.md), [architecture/nm-model.md](architecture/nm-model.md), [architecture/nm-discovery.md](architecture/nm-discovery.md) |
 | Protocols | [protocols/ebus-overview.md](protocols/ebus-overview.md), [protocols/ebusd-tcp.md](protocols/ebusd-tcp.md), [protocols/ebus-vaillant.md](protocols/ebus-vaillant.md), [protocols/ebus-vaillant-B524.md](protocols/ebus-vaillant-B524.md), [protocols/ebus-vaillant-b524-register-map.md](protocols/ebus-vaillant-B524-register-map.md), [protocols/ebus-vaillant-b524-research.md](protocols/ebus-vaillant-b524-research.md), [protocols/ebus-vaillant-b555-timer-protocol.md](protocols/ebus-vaillant-b555-timer-protocol.md) |
 | Types | [types/overview.md](types/overview.md), [types/primitives.md](types/primitives.md), [types/composite.md](types/composite.md) |
 | API | [api/graphql.md](api/graphql.md), [api/mcp.md](api/mcp.md), [api/portal.md](api/portal.md) |

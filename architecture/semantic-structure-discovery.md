@@ -4,9 +4,17 @@ This page documents how `helianthus-ebusgateway` discovers **semantic structure*
 
 This is intentionally different from:
 
+- NM-aligned topology and device-presence discovery as defined in [`architecture/nm-discovery.md`](./nm-discovery.md);
 - runtime freshness/publication FSMs such as startup, zone presence, and read breaker behavior;
 - state derivation such as zone operating mode, HVAC action, or DHW preset;
 - direct-boiler B509 semantics.
+
+> **Separation of concerns.** This document covers B524 register-backed
+> structural discovery -- which semantic families, instances, and
+> attachments exist within a discovered device. NM-aligned device-presence
+> discovery (which devices exist on the bus at the address/wire layer)
+> is a separate concern documented in
+> [`architecture/nm-discovery.md`](./nm-discovery.md).
 
 Phase 1 scope is **B524 structure discovery only** and is documented in **proven-only** style:
 
