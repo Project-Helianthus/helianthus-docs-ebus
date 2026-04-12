@@ -38,7 +38,7 @@ This is the register catalog for B524. For the protocol specification (wire form
 | 0x02 | 0x00 | Regulator Parameters | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
 | 0x02 | 0x01 | Hot Water Circuit | No | 0x00 | 0x13 | SystemScheme + VR_71 config | 17 (0x0001–0x0013) |
 | 0x02 | 0x02 | Heating Circuits | Yes | 0x0A | 0x20 | `mixer_circuit_type_external != 0` (RR=0x0002) | 291 (26/inst, 11 inst) |
-| 0x02 | 0x03 | Zones | Yes | 0x08 | 0x2E | `index != 0xFF` (RR=0x001C) | 416 (38/inst, 9 inst max) |
+| 0x02 | 0x03 | Zones | Yes | 0x08 | 0x2E | `index != 0xFF` (RR=0x001C) | 342 (38/inst, 9 inst max) |
 | 0x02 | 0x04 | Solar Circuit | Yes (spec) | 0x02 | 0x0B | hydraulic scheme + VR_71 config; current lab: singleton (II=0x00) | 10 (0x0001–0x000B) |
 | 0x02 | 0x05 | Hot Water Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
 | 0x02 | 0x08 | Buffer/Solar Cylinder 2 (local) | No | 0x00 | — | — | 7 local |
@@ -698,11 +698,15 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are i
 | 0x0033 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. All: 0 |
 | 0x0035 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x02. All: 0 |
 
-**Radio device enumeration:** To enumerate all paired remote devices, scan **three groups** with opcode 0x06:
+**Device slot enumeration:** To enumerate all OP=0x06 device slots, scan **seven groups** with opcode 0x06:
 
-1. **GG=0x09** (VRC7xx / system controls) — II=0x00 through II=0x0A
-2. **GG=0x0A** (VR92 / remote controls) — II=0x00 through II=0x0A
-3. **GG=0x0C** (remote accessories / functional-module slots) — II=0x00 through II=0x0A
+1. **GG=0x01** (Primary Heating Sources) — II=0x00 through II max (model-dependent)
+2. **GG=0x02** (Secondary Heating Sources) — II=0x00 through II max (model-dependent)
+3. **GG=0x09** (Regulators) — II=0x00 through II=0x0A
+4. **GG=0x0A** (Thermostats) — II=0x00 through II=0x0A
+5. **GG=0x0C** (Functional Modules) — II=0x00 through II=0x0A
+6. **GG=0x0E** (Clock) — II=0x00 through II=0x0A
+7. **GG=0x0F** (Base Stations) — II=0x00 through II=0x0A
 
 For each slot, read `device_connected` (0x0001). If =1, read:
 - `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in the current lab, `0x26` correlates with the eBUS-identified `VR_71`
