@@ -212,19 +212,19 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 
 | Field | Value |
 | --- | --- |
-| Semantic effect | Determines which remote/radio devices appear in `radioDevices[]` and how they are classified |
-| Source registers | `GG=0x09/0x0A/0x0C RR=0x0001`, `0x0002`, `0x0004`, `0x0023`, with supporting telemetry reads such as `0x0019`, `0x0025`, `0x000F`, `0x0007` |
+| Semantic effect | Determines which OP=0x06 device slots appear in the published device slot list and how they are classified |
+| Source registers | `GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F RR=0x0001` (`device_connected`), with identity reads `0x0002`, `0x0004`, `0x0023`, and telemetry `0x0019`, `0x0025`, `0x000F`, `0x0007` |
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode`](./ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode), [`ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode`](./ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode), [`ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only`](./ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document`; `Vaillant VRC 430f -- Operating and Installation Manual` |
 | Source section | `4.2.1 VR 92 Remote Control Unit`; `Learn` screen note in expert-technician material |
 | Supporting statement | In `4.2.1 VR 92 Remote Control Unit`, the VRC 720 training documents the VR 92 as a zone-assigned remote control with room temperature and humidity measurement. In the VRC 430f expert-technician material, the note for the `Learn` screen says it is used for training replacement components in the wireless network. This supports the existence of connected remote inventory, but not the gateway-specific heuristic that disconnected `0x0C` entries with identity evidence should be published as inventory. |
 | Constraint strength | `CORROBORATING` for connected remote roles; `NON_AUTHORITATIVE` for disconnected inventory inference |
 | Scope of validity | `PROTOCOL` for connected-slot publication; `GATEWAY_POLICY` for disconnected inventory inclusion |
-| Evaluation rule | `refreshRadioDevices()` always includes connected `0x09/0x0A` slots; for `0x0C` it also includes disconnected entries when `hasRemoteIdentityEvidence()` succeeds; disconnected `0x0C` entries become `slot_mode = "inventory"` |
+| Evaluation rule | `refreshDeviceSlots()` includes all connected OP=0x06 slots across `GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F`; for `0x0C` (Functional Modules) it also includes disconnected entries when `hasRemoteIdentityEvidence()` succeeds; disconnected `0x0C` entries become `slot_mode = "inventory"` |
 | Fallback / unknown behavior | `hasRemoteIdentityEvidence()` accepts non-empty firmware or non-zero/non-`0xFFFF` hardware as identity evidence, which is stronger than pure connection state but still heuristic as a “real device” proof. Group-to-device-type assignments used by consumers should be read through the B524 register map, where those mappings are explicitly qualified as current-lab correlations rather than standalone protocol specification. |
 | Published effect | `radioDevices[]` contains both active remotes and inventory-evidenced FM5-related accessories, with enough metadata for consumer-side parent resolution |
 | Evidence status | `PROVEN` for connected slots, `HEURISTIC` for inventory inclusion |
-| Code anchors | `refreshRadioDevices()`, `hasRemoteIdentityEvidence()`, `publishRadioDevices()` |
+| Code anchors | `refreshDeviceSlots()`, `discoverDeviceSlots()`, `hasRemoteIdentityEvidence()`, `publishRadioDevices()` |
 
 ## B524-SD-11 — FM5 Semantic Mode
 

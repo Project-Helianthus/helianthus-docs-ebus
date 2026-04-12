@@ -33,45 +33,48 @@ This is the register catalog for B524. For the protocol specification (wire form
 
 ## Group Topology
 
-| Opcode | GG | Group label | Instanced | II Range | Regs (scan/doc) |
-|--------|----|-----------------|-----------|----------|-----------------|
-| 0x02 | 0x00 | System/Regulator (local) | No | 0x00 | 179 (0x0001-0x00FF) |
-| 0x06 | 0x00 | Primary Heat Sources | Yes | slot-scoped (`II`, model-dependent max) | documented `RR=0x0012`, `0x0015`; broader selector set pending live validation |
-| 0x02 | 0x01 | Local DHW | No | 0x00 | 17 (0x0001-0x0013) |
-| 0x06 | 0x01 | Secondary Heat Sources | Yes | slot-scoped (`II`, model-dependent max) | selector set documented; detailed register canon still pending live validation |
-| 0x02 | 0x02 | Heating Circuits | Yes | 0x00-0x0A | 291 (26/inst, 11 inst) |
-| 0x02 | 0x03 | Zones | Yes | 0x00-0x0A | 416 (38/inst, 11 inst) |
-| 0x02 | 0x04 | Solar Circuit | No | 0x00 | 10 (0x0001-0x000B) |
-| 0x02 | 0x05 | Cylinders | Yes | 0x00-0x01 | 8 (4/inst, 2 inst) |
-| 0x02 | 0x08 | Buffer/Solar Cylinder 2 (local) | No | 0x00 | 7 local |
-| 0x06 | 0x08 | Buffer/Solar Cylinder 2 (remote) | Yes | 0x00-0x0A | 44 remote |
-| 0x02 | 0x09 | Radio Sensors (VRC7xx local config) | Yes | 0x00-0x0A | 165 local |
-| 0x06 | 0x09 | Radio Sensors (VRC7xx live data) | Yes | 0x00-0x0A | 352 remote |
-| 0x02 | 0x0A | Radio Sensors (VR92 local config) | Yes | 0x00-0x0A | 759 local |
-| 0x06 | 0x0A | Radio Sensors (VR92 live data) | Yes | 0x00-0x0A | 338 remote |
-| 0x0B | 0x06 | Programs/Timetables | — | — | — |
-| 0x0B | 0x07 | Programs/Timetables | — | — | — |
-| 0x06 | 0x0C | Remote Accessories / functional-module slots | Yes | 0x00-0x0A | 165 (15/inst) |
+| Opcode | GG | Group label | Instanced | II_MAX | RR_MAX | Instance gate | Regs (scan/doc) |
+|--------|----|-------------|-----------|--------|--------|---------------|-----------------|
+| 0x02 | 0x00 | Regulator Parameters | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
+| 0x02 | 0x01 | Hot Water Circuit | No | 0x00 | 0x13 | SystemScheme + VR_71 config | 17 (0x0001–0x0013) |
+| 0x02 | 0x02 | Heating Circuits | Yes | 0x0A | 0x20 | `mixer_circuit_type_external != 0` (RR=0x0002) | 291 (26/inst, 11 inst) |
+| 0x02 | 0x03 | Zones | Yes | 0x08 | 0x2E | `index != 0xFF` (RR=0x001C) | 342 (38/inst, 9 inst max) |
+| 0x02 | 0x04 | Solar Circuit | Yes (spec) | 0x02 | 0x0B | hydraulic scheme + VR_71 config; current lab: singleton (II=0x00) | 10 (0x0001–0x000B) |
+| 0x02 | 0x05 | Hot Water Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
+| 0x02 | 0x08 | Buffer/Solar Cylinder 2 (local) | No | 0x00 | — | — | 7 local |
+| 0x06 | 0x01 | Primary Heating Sources | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
+| 0x06 | 0x02 | Secondary Heating Sources | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
+| 0x06 | 0x08 | Buffer/Solar Cylinder 2 (remote) | Yes | 0x0A | — | `device_connected` (RR=0x0001) | 44 remote |
+| 0x06 | 0x09 | Regulators | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 352 remote |
+| 0x06 | 0x0A | Thermostats | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 338 remote |
+| 0x06 | 0x0C | Functional Modules | Yes | 0x0A | 0x2F | `device_connected` (RR=0x0001) | 165 (15/inst) |
+| 0x06 | 0x0E | Clock | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
+| 0x06 | 0x0F | Base Stations | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
+| 0x0B | 0x06 | Programs/Timetables | — | — | — | — | — |
+| 0x0B | 0x07 | Programs/Timetables | — | — | — | — | — |
 
-**GG=0x00/0x01 are opcode-scoped, not global:** `OP=0x02, GG=0x00` and
+**GG values are opcode-scoped, not global:** `OP=0x02, GG=0x00` and
 `OP=0x02, GG=0x01` are the singleton local selector sets for system/settings
-and DHW. Separately, `OP=0x06, GG=0x00` and `OP=0x06, GG=0x01` are documented
-as instanced controller-side selector sets for primary and secondary heat
-sources. Slot count is controller-model dependent: some systems cap at 2, newer
-ones at 8, corroborated by analiza ISC Smartconnect KNX.
+and DHW. Separately, `OP=0x06, GG=0x01` and `OP=0x06, GG=0x02` are instanced
+controller-side selector sets for primary and secondary heating sources
+respectively. `OP=0x06, GG=0x00` does not exist. Slot count is
+controller-model dependent: some systems cap at 2, newer ones at 8,
+corroborated by analiza ISC Smartconnect KNX.
 
 **GG=0x08 — Buffer/Solar Cylinder 2:** The documented selector spaces are
 `OP=0x02, GG=0x08` for 7 local singleton registers and `OP=0x06, GG=0x08` for
 4 remote registers per instance across all 11 instances. These are documented
 separately and must not be merged by `GG` alone.
 
-**Radio sensor groups (0x09, 0x0A):** `OP=0x02, GG=0x09/0x0A` stores per-slot
-configuration. `OP=0x06, GG=0x09/0x0A` stores live data from paired radio
-devices. Instance `II` selects the sensor slot.
+**OP=0x06 device slot categories (0x09, 0x0A, 0x0C, 0x0E, 0x0F):** All OP=0x06
+groups are device slot namespaces. `GG=0x09` = Regulators, `GG=0x0A` = Thermostats,
+`GG=0x0C` = Functional Modules, `GG=0x0E` = Clock, `GG=0x0F` = Base Stations.
+All MUST gate on `device_connected` (RR=0x0001). Instance `II` selects the slot.
+`OP=0x02, GG=0x09/0x0A` stores per-slot local configuration (separate namespace).
 
-**GG=0x0C — Remote Accessories / functional-module slots:** Responds only to
-opcode `0x06`. No local config selector set is documented. Uses the same remote-device slot
-schema as `GG=0x09/0x0A`. In the current lab, `II=0x01` with
+**GG=0x0C — Functional Modules:** Responds only to opcode `0x06`. No local config
+selector set is documented. Uses the same remote-device slot schema as `GG=0x09/0x0A`.
+In the current lab, `II=0x01` with
 `device_class_address=0x26` correlates to the eBUS-identified `VR_71` hardware
 at slave address `0x26`, but that family identification comes from eBUS
 identity correlation rather than from B524 alone.
@@ -695,11 +698,15 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are i
 | 0x0033 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. All: 0 |
 | 0x0035 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x02. All: 0 |
 
-**Radio device enumeration:** To enumerate all paired remote devices, scan **three groups** with opcode 0x06:
+**Device slot enumeration:** To enumerate all OP=0x06 device slots, scan **seven groups** with opcode 0x06:
 
-1. **GG=0x09** (VRC7xx / system controls) — II=0x00 through II=0x0A
-2. **GG=0x0A** (VR92 / remote controls) — II=0x00 through II=0x0A
-3. **GG=0x0C** (remote accessories / functional-module slots) — II=0x00 through II=0x0A
+1. **GG=0x01** (Primary Heating Sources) — II=0x00 through II max (model-dependent)
+2. **GG=0x02** (Secondary Heating Sources) — II=0x00 through II max (model-dependent)
+3. **GG=0x09** (Regulators) — II=0x00 through II=0x0A
+4. **GG=0x0A** (Thermostats) — II=0x00 through II=0x0A
+5. **GG=0x0C** (Functional Modules) — II=0x00 through II=0x0A
+6. **GG=0x0E** (Clock) — II=0x00 through II=0x0A
+7. **GG=0x0F** (Base Stations) — II=0x00 through II=0x0A
 
 For each slot, read `device_connected` (0x0001). If =1, read:
 - `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in the current lab, `0x26` correlates with the eBUS-identified `VR_71`
