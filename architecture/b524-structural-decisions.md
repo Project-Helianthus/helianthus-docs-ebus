@@ -212,8 +212,8 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 
 | Field | Value |
 | --- | --- |
-| Semantic effect | Determines which remote/radio devices appear in `radioDevices[]` and how they are classified |
-| Source registers | `GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F RR=0x0001` (`device_connected`), with identity reads `0x0002`, `0x0004`, `0x0023`, and telemetry `0x0019`, `0x0025`, `0x000F`, `0x0007` |
+| Semantic effect | Determines which OP=0x06 device slots appear in the published device slot list and how they are classified |
+| Source registers | Currently polled: `GG=0x09/0x0A/0x0C RR=0x0001` (`device_connected`), with identity reads `0x0002`, `0x0004`, `0x0023`, and telemetry `0x0019`, `0x0025`, `0x000F`, `0x0007`. Topology contract also defines `GG=0x01/0x02/0x0E/0x0F` as device slot groups — these are not yet polled by the gateway but share the same `device_connected` gating contract |
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode`](./ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode), [`ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode`](./ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode), [`ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only`](./ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document`; `Vaillant VRC 430f -- Operating and Installation Manual` |
 | Source section | `4.2.1 VR 92 Remote Control Unit`; `Learn` screen note in expert-technician material |
