@@ -39,10 +39,9 @@ This is the register catalog for B524. For the protocol specification (wire form
 | 0x02 | 0x01 | Hot Water Circuit | No | 0x00 | 0x13 | SystemScheme + VR_71 config | 17 (0x0001–0x0013) |
 | 0x02 | 0x02 | Heating Circuits | Yes | 0x0A | 0x20 | `mixer_circuit_type_external != 0` (RR=0x0002) | 291 (26/inst, 11 inst) |
 | 0x02 | 0x03 | Zones | Yes | 0x08 | 0x2E | `index != 0xFF` (RR=0x001C) | 416 (38/inst, 9 inst max) |
-| 0x02 | 0x04 | Solar Circuit | Yes | 0x02 | 0x0B | hydraulic scheme + VR_71 config | 10 (0x0001–0x000B) |
+| 0x02 | 0x04 | Solar Circuit | Yes (spec) | 0x02 | 0x0B | hydraulic scheme + VR_71 config; current lab: singleton (II=0x00) | 10 (0x0001–0x000B) |
 | 0x02 | 0x05 | Hot Water Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
 | 0x02 | 0x08 | Buffer/Solar Cylinder 2 (local) | No | 0x00 | — | — | 7 local |
-| 0x06 | 0x00 | Primary Heat Sources | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
 | 0x06 | 0x01 | Primary Heating Sources | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
 | 0x06 | 0x02 | Secondary Heating Sources | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
 | 0x06 | 0x08 | Buffer/Solar Cylinder 2 (remote) | Yes | 0x0A | — | `device_connected` (RR=0x0001) | 44 remote |
@@ -54,12 +53,13 @@ This is the register catalog for B524. For the protocol specification (wire form
 | 0x0B | 0x06 | Programs/Timetables | — | — | — | — | — |
 | 0x0B | 0x07 | Programs/Timetables | — | — | — | — | — |
 
-**GG=0x00/0x01 are opcode-scoped, not global:** `OP=0x02, GG=0x00` and
+**GG values are opcode-scoped, not global:** `OP=0x02, GG=0x00` and
 `OP=0x02, GG=0x01` are the singleton local selector sets for system/settings
-and DHW. Separately, `OP=0x06, GG=0x00` and `OP=0x06, GG=0x01` are documented
-as instanced controller-side selector sets for primary and secondary heat
-sources. Slot count is controller-model dependent: some systems cap at 2, newer
-ones at 8, corroborated by analiza ISC Smartconnect KNX.
+and DHW. Separately, `OP=0x06, GG=0x01` and `OP=0x06, GG=0x02` are instanced
+controller-side selector sets for primary and secondary heating sources
+respectively. `OP=0x06, GG=0x00` does not exist. Slot count is
+controller-model dependent: some systems cap at 2, newer ones at 8,
+corroborated by analiza ISC Smartconnect KNX.
 
 **GG=0x08 — Buffer/Solar Cylinder 2:** The documented selector spaces are
 `OP=0x02, GG=0x08` for 7 local singleton registers and `OP=0x06, GG=0x08` for
