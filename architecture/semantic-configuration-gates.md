@@ -39,7 +39,7 @@ The authoritative rule-by-rule source remains the decision catalog:
 | Zone-to-circuit fallback gate | `SD-07` | outcome of `SD-06` | `associatedCircuit` remains populated via fallback-to-zone-instance | `GATEWAY_POLICY` |
 | Circuit instance gate | `SD-08` | `GG=0x02 RR=0x0002` | Circuit active/inactive | `PROTOCOL` |
 | Circuit ownership gate | `SD-09` | `systemScheme`, `moduleConfigurationVR71`, `fm5SemanticMode` | `managingDevice` explicit or `UNKNOWN` | Mixed `LAB` / `PROFILE` / `UNKNOWN` |
-| Radio inclusion gate | `SD-10` | `GG=0x09/0x0A/0x0C` slot evidence | Remote/radio device published | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
+| Device slot inclusion gate | `SD-10` | `GG=0x09/0x0A/0x0C/0x0E/0x0F` OP=0x06 `device_connected` (RR=0x0001) | Remote device slot published | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
 | FM5 interpretation gate | `SD-11` | VR71 config + radio/FM5 evidence + solar/cylinder readability | `fm5SemanticMode` | Mixed `GATEWAY_POLICY` + `PROFILE` |
 | Solar family gate | `SD-12` | `fm5SemanticMode` + `GG=0x04` readability | `solar` family published/cleared | Mixed `GATEWAY_POLICY` + `PROFILE` |
 | Cylinder family gate | `SD-13` | `fm5SemanticMode` + `GG=0x05` readability | `cylinders[]` family published/cleared | Mixed `GATEWAY_POLICY` + `PROFILE` |
