@@ -4,6 +4,12 @@ This document is the top-level reference for Vaillant message identifiers (`PB/S
 
 For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x16` (B516, Energy statistics): [`protocols/ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
+- `0xB5 0x13` (B513, value-range query): [`protocols/ebus-vaillant-B513.md`](ebus-vaillant-B513.md)
+- `0xB5 0x14` (B514, service test-menu values): [`protocols/ebus-vaillant-B514.md`](ebus-vaillant-B514.md)
+- `0xB5 0x15` (B515, legacy timer template): [`protocols/ebus-vaillant-B515.md`](ebus-vaillant-B515.md)
+- `0xB5 0x21` (B521, OMU service registers): [`protocols/ebus-vaillant-B521.md`](ebus-vaillant-B521.md)
+- `0xB5 0x22` (B522, recoVAIR ventilation commands): [`protocols/ebus-vaillant-B522.md`](ebus-vaillant-B522.md)
+- `0xB5 0x23` (B523, functional-module actor/sensor data): [`protocols/ebus-vaillant-B523.md`](ebus-vaillant-B523.md)
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`protocols/ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`protocols/ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 
@@ -19,7 +25,14 @@ For detailed coverage of selector-heavy identifiers, see:
 0xB5 0x04  GetOperationalData (request parameter op; response is op-dependent)
 0xB5 0x05  SetOperationalData (request parameter op + optional payload; response is op-dependent)
 0xB5 0x09  Register access / scan-id chunk discovery (selector-dependent payload forms)
+0xB5 0x13  Value-range query
+0xB5 0x14  Service test-menu values
+0xB5 0x15  Legacy timer template
 0xB5 0x16  Energy statistics (selector-encoded request; EXP Wh response)
+0xB5 0x1A  Heat-pump statistics and live-monitor values
+0xB5 0x21  OMU service register family
+0xB5 0x22  recoVAIR ventilation commands
+0xB5 0x23  Functional-module actor and sensor data for VR70/VR71-like targets
 0xB5 0x24  GetExtendedRegisters (B524; selector-opcode multiplexed)
 0xB5 0x55  Timer/schedule protocol (B555; per-day weekly schedule access)
 0xFE 0x01  System-level broadcast (payload unspecified here)

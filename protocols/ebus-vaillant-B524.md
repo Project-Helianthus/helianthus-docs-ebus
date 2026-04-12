@@ -197,7 +197,7 @@ Rules:
 | Opcode | Selector family | Documented selector sets | Notes |
 |--------|-----------------|-------------------------------|-------|
 | `0x02` | Local controller selector family | `GG=0x00..0x05`, `GG=0x08`, `GG=0x09`, `GG=0x0A` | Controller-local registers and per-slot configuration |
-| `0x06` | Controller-mediated selector family | `GG=0x00`, `GG=0x01`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C` | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | **Hypothesis:** independent protocol evidence is required for this interpretation. |
 
 **Selector rule:** `GG` labels are local to the opcode-selected selector set. A
 shared `GG` byte value across different opcodes has no standalone semantic
@@ -433,7 +433,7 @@ Directory probe descriptor values observed on VRC720-class targets:
 
 ```text
 GG   Descriptor(s)  Typical opcode  Notes
-0x00 3.0            0x02            singleton local system selector set ; unqualified interpretation
+0x00 3.0            0x02            singleton local system selector set; OP=0x06 GG=0x00 does NOT exist
 0x01 3.0            0x02            singleton local DHW selector set ; unqualified interpretation
 0x02 1.0            0x02            instanced
 0x03 1.0            0x02            instanced
