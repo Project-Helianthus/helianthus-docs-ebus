@@ -6,6 +6,8 @@ Detailed API contracts live in [`api/graphql.md`](../api/graphql.md), [`api/mcp.
 
 Canonical proxy wire-semantics scheduling decisions live in [`architecture/proxy-wire-semantics.md`](./proxy-wire-semantics.md).
 
+Adapter-direct multiplexer architecture (v0.4.0) lives in [`architecture/adapter-direct-multiplexer.md`](./adapter-direct-multiplexer.md).
+
 ## Layered Architecture (Mermaid)
 
 ```mermaid
@@ -37,6 +39,13 @@ flowchart TB
     T4[TCP-PLAIN (raw TCP eBUS bytes)]
   end
 
+  subgraph AdapterDirect["Adapter-Direct (v0.4.0)"]
+    AD1[Adapter Multiplexer]
+    AD2[Active Path]
+    AD3[Passive Path]
+    AD4[Proxy Listener]
+  end
+
   G1 --> G0
   G2 --> G0
   G3 --> G0
@@ -52,6 +61,10 @@ flowchart TB
   T1 --> T2
   T1 --> T3
   T1 --> T4
+  T1 --> AD1
+  AD1 --> AD2
+  AD1 --> AD3
+  AD1 --> AD4
 ```
 
 Naming note:
@@ -60,6 +73,24 @@ Naming note:
 - The eBUS wire-level escape sequences (`ESC=0xA9`, `SYN=0xAA`) are documented in `protocols/ebus-overview.md` and decoded in the protocol layer (Bus decoder), not as a separate transport.
 - `protocols/udp-plain.md` documents raw UDP byte-stream adapters that do not implement ENH framing.
 - `tcp-plain` in gateway and proxy uses the same raw-byte semantics as UDP-plain over TCP stream sockets.
+
+## Transport Modes
+
+The gateway supports two mutually exclusive transport topologies:
+
+- **Proxy-based** (legacy): Gateway connects to a standalone proxy via TCP.
+  The proxy multiplexes one upstream adapter connection. Gateway opens two
+  connections (active + passive) to the same proxy endpoint.
+- **Adapter-direct** (v0.4.0): Gateway embeds an adapter multiplexer and
+  connects directly to the adapter hardware via ENH/ENS. An optional proxy
+  listener provides backward compatibility for external ENH clients.
+
+The adapter-direct mode replaces the separate proxy for gateway deployments,
+eliminating self-echo noise on the passive path and the proxy's escape encoding
+bug. The standalone proxy remains available for non-gateway deployments.
+
+See [`adapter-direct-multiplexer.md`](./adapter-direct-multiplexer.md) for
+the full architectural specification.
 
 ## Gateway Runtime (Implemented)
 
