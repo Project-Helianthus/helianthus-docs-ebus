@@ -139,7 +139,7 @@ verified results:
 
 - Device scan: 4 devices discovered (BAI00, BASV2, VR_71, SOL00)
 - B524 register access: coherent responses across all groups
-- Semantic planes: zones=2, dhw=true, INFO=7 (all 7 non-reserved IDs cached)
+- Semantic planes: zones=2, dhw=true, INFO=7 of 8 IDs cached (BusSpeed unsupported by adapter)
 - Passive path: third-party traffic delivered without self-echo corruption
 
 ## References
