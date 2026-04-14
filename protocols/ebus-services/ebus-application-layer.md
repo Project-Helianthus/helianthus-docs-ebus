@@ -4,7 +4,7 @@
 
 This document is the index for all standard (non-proprietary) eBUS Application Layer services. Each service is documented in its own file with wire formats, payload tables, and communication flow diagrams.
 
-For wire-level framing (SRC/DST, CRC8, escaping, ACK/NACK, transaction flow), see [`ebus-overview.md`](./ebus-overview.md). For Vaillant proprietary messages (`PB=0xB5`), see [`ebus-vaillant.md`](./ebus-vaillant.md).
+For wire-level framing (SRC/DST, CRC8, escaping, ACK/NACK, transaction flow), see [`ebus-overview.md`](./ebus-overview.md). For Vaillant proprietary messages (`PB=0xB5`), see [`ebus-vaillant.md`](../vaillant/ebus-vaillant.md).
 
 ## Terminology
 
@@ -39,7 +39,7 @@ These secondary data types are used across all Application Layer services.
 
 All 16-bit types are transmitted **low-byte first**.
 
-For detailed type definitions including encoding formulas and Go codec implementations, see [`../types/primitives.md`](../types/primitives.md).
+For detailed type definitions including encoding formulas and Go codec implementations, see [`../../types/primitives.md`](../../types/primitives.md).
 
 ## Communication Rules
 
@@ -54,11 +54,11 @@ Bus load (%) = byte_count × (1 / cycle_period) × 4.16 × 10⁻³ s × 100%
 
 The official spec expresses cycle rates as `1/x[unit]` (e.g., `1/10s`, `1/15min`). Commands marked `unique` are listed as `0.0%` bus load. Commands described as "one-time" may still carry nonzero bus load when the spec assigns a cycle-rate window (e.g., `0x05 0x03` block 2 at `0.66%`).
 
-Manufacturer-specific PB families (e.g., Vaillant `0xB5`) are not part of the standard Application Layer and are documented separately in [`ebus-vaillant.md`](./ebus-vaillant.md).
+Manufacturer-specific PB families (e.g., Vaillant `0xB5`) are not part of the standard Application Layer and are documented separately in [`ebus-vaillant.md`](../vaillant/ebus-vaillant.md).
 
 ## See Also
 
 - [`ebus-overview.md`](./ebus-overview.md) — wire-level framing, CRC8, ACK/NACK, transaction flow
-- [`ebus-vaillant.md`](./ebus-vaillant.md) — Vaillant proprietary (`0xB5`) message index
-- [`../types/overview.md`](../types/overview.md) — type system model
-- [`../architecture/nm-model.md`](../architecture/nm-model.md) — Helianthus NM implementation model
+- [`ebus-vaillant.md`](../vaillant/ebus-vaillant.md) — Vaillant proprietary (`0xB5`) message index
+- [`../../types/overview.md`](../../types/overview.md) — type system model
+- [`../../architecture/nm-model.md`](../../architecture/nm-model.md) — Helianthus NM implementation model

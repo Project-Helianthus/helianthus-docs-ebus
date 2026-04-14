@@ -2,8 +2,8 @@
 
 > **License:** AGPL-3.0. This file documents Helianthus-specific semantic mapping, not protocol-level specifications.
 >
-> For the B524 wire protocol, see [`../protocols/ebus-vaillant-b524.md`](../protocols/ebus-vaillant-b524.md).
-> For the register catalog, see [`../protocols/ebus-vaillant-b524-register-map.md`](../protocols/ebus-vaillant-b524-register-map.md).
+> For the B524 wire protocol, see [`../protocols/vaillant/ebus-vaillant-b524.md`](../protocols/vaillant/ebus-vaillant-b524.md).
+> For the register catalog, see [`../protocols/vaillant/ebus-vaillant-b524-register-map.md`](../protocols/vaillant/ebus-vaillant-b524-register-map.md).
 
 This document maps B524 registers to Helianthus MCP semantic plane fields. Only registers actively read by the gateway's semantic poller are listed. The **S** prefix in the register map's Notes column marks these registers.
 
@@ -114,7 +114,7 @@ Source: `refreshBoilerStatus()` in `semantic_vaillant.go`
 The current PASS-profile boiler status plane is no longer a B524-only composite. Helianthus now prefers direct BAI00 B509 reads for the boiler semantic surface and keeps only a small B524 fallback/mirror set in the controller path.
 
 Authoritative direct-boiler mapping:
-- see [`../protocols/ebus-vaillant-B509-boiler-register-map.md`](../protocols/ebus-vaillant-B509-boiler-register-map.md)
+- see [`../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md)
 
 The B524 contribution that still feeds the current boiler semantic contract is:
 

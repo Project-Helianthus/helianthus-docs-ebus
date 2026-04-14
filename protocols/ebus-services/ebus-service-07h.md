@@ -207,4 +207,4 @@ sequenceDiagram
 
 - [`ebus-application-layer.md`](./ebus-application-layer.md) — service index
 - [`ebus-overview.md`](./ebus-overview.md) — wire-level framing, QueryExistence and Identification Scan from the implementation perspective
-- [`basv.md`](./basv.md) — BASV discovery orchestration (uses `0x07 0x04` and `0x07 0xFE` as building blocks)
+- [`basv.md`](../vaillant/basv.md) — BASV discovery orchestration (uses `0x07 0x04` and `0x07 0xFE` as building blocks)

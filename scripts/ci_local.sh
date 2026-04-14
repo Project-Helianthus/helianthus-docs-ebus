@@ -35,7 +35,7 @@ import re
 import subprocess
 import sys
 
-allowed_file = pathlib.Path("protocols/ebus-overview.md")
+allowed_file = pathlib.Path("protocols/ebus-services/ebus-overview.md")
 begin_marker = "<!-- legacy-role-mapping:begin -->"
 end_marker = "<!-- legacy-role-mapping:end -->"
 
@@ -60,7 +60,7 @@ begin_index = allowed_text.find(begin_marker)
 end_index = allowed_text.find(end_marker)
 if begin_index == -1 or end_index == -1 or end_index <= begin_index:
     print(
-        "Missing or malformed legacy-role-mapping markers in protocols/ebus-overview.md.",
+        "Missing or malformed legacy-role-mapping markers in protocols/ebus-services/ebus-overview.md.",
         file=sys.stderr,
     )
     sys.exit(1)
@@ -77,7 +77,7 @@ for file_path in md_files:
         if path != allowed_file:
             if not failed:
                 print(
-                    "Legacy role terms must not appear outside protocols/ebus-overview.md.",
+                    "Legacy role terms must not appear outside protocols/ebus-services/ebus-overview.md.",
                     file=sys.stderr,
                 )
             failed = True

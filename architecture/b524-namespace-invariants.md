@@ -12,7 +12,7 @@ This document is the implementation-facing contract for B524 artifact structure 
 - Covers register operations (`0x02`, `0x06`) and the `0x01` constraint probe scope decision.
 - Uses `operation` (opcode) as the top-level structural axis; groups are nested within operations.
 
-For the B524 wire protocol (independent of Helianthus implementation), see [`../protocols/ebus-vaillant-B524.md`](../protocols/ebus-vaillant-B524.md).
+For the B524 wire protocol (independent of Helianthus implementation), see [`../protocols/vaillant/ebus-vaillant-B524.md`](../protocols/vaillant/ebus-vaillant-B524.md).
 
 ## Terminology Change (v0.2.1)
 

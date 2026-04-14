@@ -433,7 +433,7 @@ type BoilerDiagnostics {
   deactivationsTemplimiter: Int
 }
 
-Boiler field provenance is documented in [`protocols/ebus-vaillant-B509-boiler-register-map.md`](../protocols/ebus-vaillant-B509-boiler-register-map.md). The current contract is hybrid: direct BAI00 B509 is authoritative for most boiler fields, while a small set of controller-mirrored B524 values still feed `dhwTemperatureC`, `dhwTargetTemperatureC`, `dhwOperatingMode`, and `heatingStatusRaw`.
+Boiler field provenance is documented in [`protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md). The current contract is hybrid: direct BAI00 B509 is authoritative for most boiler fields, while a small set of controller-mirrored B524 values still feed `dhwTemperatureC`, `dhwTargetTemperatureC`, `dhwOperatingMode`, and `heatingStatusRaw`.
 
 type SystemStatus {
   state: SystemState

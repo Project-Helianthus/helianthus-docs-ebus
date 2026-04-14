@@ -13,7 +13,7 @@ Service `0xFF` carries all Network Management (NM) messages. NM enables safe ope
 
 NM is based on **indirect network management** (OSEK/VDX concept): it monitors the bus by observing cyclic application messages, adding **no extra bus load** for monitoring. NM implementation is optional. Target devices have no network management — each target is monitored by the initiator nodes that need it.
 
-> **Helianthus implementation:** For the Helianthus-specific NM model, see [`../architecture/nm-model.md`](../architecture/nm-model.md). **Caveat:** the architecture doc remaps official service IDs to different names and directions (e.g., `FF03`/`FF04` as resolution messages, `07FF` as QueryExistence). For wire-level service IDs, semantics, and payload formats, this document is authoritative; the architecture doc describes the Helianthus behavioral interpretation layered on top.
+> **Helianthus implementation:** For the Helianthus-specific NM model, see [`../../architecture/nm-model.md`](../../architecture/nm-model.md). **Caveat:** the architecture doc remaps official service IDs to different names and directions (e.g., `FF03`/`FF04` as resolution messages, `07FF` as QueryExistence). For wire-level service IDs, semantics, and payload formats, this document is authoritative; the architecture doc describes the Helianthus behavioral interpretation layered on top.
 
 ## Terminology
 
@@ -340,7 +340,7 @@ Formula: `19 + (monitored_nodes × 17)` bits.
 
 - [`ebus-application-layer.md`](./ebus-application-layer.md) — service index
 - [`ebus-overview.md`](./ebus-overview.md) — wire-level framing, QueryExistence (`0x07 0xFE`)
-- [`../architecture/nm-model.md`](../architecture/nm-model.md) — Helianthus NM implementation (passive/indirect)
-- [`../architecture/nm-discovery.md`](../architecture/nm-discovery.md) — Helianthus NM discovery mechanisms
-- [`../architecture/nm-participant-policy.md`](../architecture/nm-participant-policy.md) — Helianthus NM participant policies
+- [`../../architecture/nm-model.md`](../../architecture/nm-model.md) — Helianthus NM implementation (passive/indirect)
+- [`../../architecture/nm-discovery.md`](../../architecture/nm-discovery.md) — Helianthus NM discovery mechanisms
+- [`../../architecture/nm-participant-policy.md`](../../architecture/nm-participant-policy.md) — Helianthus NM participant policies
 - [`ebus-service-FEh.md`](./ebus-service-FEh.md) — general broadcast error message (related but distinct from NM failure)

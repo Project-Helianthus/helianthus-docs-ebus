@@ -762,7 +762,7 @@ Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-devi
 
 **Current-lab VR_71 correlation:** B524 yields `device_class_address=0x26` at `II=0x01`. The conclusion that this slot corresponds to `VR_71` comes from correlating that hint with eBUS identity data, where slave address `0x26` identifies itself as `VR_71`. Vaillant controller documentation then constrains the profile interpretation by describing `FM5` as "instead of VR 71". This is useful and strong for the current lab/profile, but it is not standalone protocol proof that `GG=0x0C` universally means `VR71/FM5`.
 
-Architectural note: Functional-module semantics (FM3/FM5/VR66 families) are documented separately in [`../architecture/functional-modules.md`](../architecture/functional-modules.md).
+Architectural note: Functional-module semantics (FM3/FM5/VR66 families) are documented separately in [`../../architecture/functional-modules.md`](../../architecture/functional-modules.md).
 
 ---
 

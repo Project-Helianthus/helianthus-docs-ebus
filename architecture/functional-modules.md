@@ -362,4 +362,4 @@ This page does not currently define:
 - Current structural flow: [`semantic-structure-discovery.md`](./semantic-structure-discovery.md)
 - Current configuration gates: [`semantic-configuration-gates.md`](./semantic-configuration-gates.md)
 - B524 decision catalog: [`./b524-structural-decisions.md`](./b524-structural-decisions.md)
-- B524 register map: [`../protocols/ebus-vaillant-B524-register-map.md`](../protocols/ebus-vaillant-B524-register-map.md)
+- B524 register map: [`../protocols/vaillant/ebus-vaillant-B524-register-map.md`](../protocols/vaillant/ebus-vaillant-B524-register-map.md)

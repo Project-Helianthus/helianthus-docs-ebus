@@ -13,7 +13,7 @@ Each entry records:
 
 This document is authoritative for Phase 1 structural discovery and complements, rather than replaces, the raw register map:
 
-- raw register catalog: [`ebus-vaillant-B524-register-map.md`](./ebus-vaillant-B524-register-map.md)
+- raw register catalog: [`ebus-vaillant-B524-register-map.md`](../protocols/vaillant/ebus-vaillant-B524-register-map.md)
 - architecture flow: [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md)
 - current vs deferred functional-module architecture: [`../architecture/functional-modules.md`](../architecture/functional-modules.md)
 
@@ -50,7 +50,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | --- | --- |
 | Semantic effect | Enables or disables B524-backed structure discovery for zones, circuits, radio devices, FM5, solar, and cylinders |
 | Source registers | No single register. This is a capability-discovery rule over B524 request/response behavior on candidate slave addresses. |
-| Reference | [`ebus-vaillant-B524-register-map.md`](./ebus-vaillant-B524-register-map.md), [`../architecture/b524-semantic-root-discovery.md`](../architecture/b524-semantic-root-discovery.md) |
+| Reference | [`ebus-vaillant-B524-register-map.md`](../protocols/vaillant/ebus-vaillant-B524-register-map.md), [`../architecture/b524-semantic-root-discovery.md`](../architecture/b524-semantic-root-discovery.md) |
 | Source document title | None. Product identity and regulator branding are not required to prove B524 semantic-root availability. |
 | Source section | None |
 | Supporting statement | None. Identity enrichment and branding classification are separate from the structural precondition that a slave endpoint responds coherently as a B524 semantic root. |
@@ -70,7 +70,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Determines which zone instances exist and are eligible for publication |
 | Source registers | `GG=0x03 RR=0x001C` (`zone_index`) |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
 | Source document title | `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica`; `Vaillant VRC 700/6 -- Operating Instructions` |
 | Source section | `Distribucion de zonas y circuitos de calefaccion`; `3.3 Zones` |
 | Supporting statement | In the section `Distribucion de zonas y circuitos de calefaccion`, the multiMATIC training states "Con un VR 71: Hasta 3 zonas" and "Con un VR 71 + VR 70 (hasta 3): Hasta 9 circuitos de calefaccion de mezcla y 9 zonas". In `3.3 Zones`, the VRC 700 operating instructions state "If more than one zone is available, the system control controls the available zones". These statements constrain plausible zone cardinality but do not replace the direct B524 presence probe. |
@@ -88,7 +88,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Prevents transient probe misses from adding/removing zone instances immediately |
 | Source registers | Inherited structural input from SD-02, whose primary register is `GG=0x03 RR=0x001C` |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance), [`../architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance), [`../architecture/zone-presence-fsm.md`](../architecture/zone-presence-fsm.md) |
 | Source document title | `Vaillant VRC 700/6 -- Operating Instructions` |
 | Source section | `3.3 Zones` |
 | Supporting statement | In `3.3 Zones`, the operating instructions describe zones as installation-level structure that the control manages when available, but they do not document hit/miss hysteresis. The structural input for this FSM is the zone-presence evidence described in SD-02; the hysteresis behavior itself remains an explicit gateway mechanism rather than a regulator-documented rule. |
@@ -106,7 +106,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Determines `zones[].name` |
 | Source registers | `GG=0x03 RR=0x0016` (`name`), `RR=0x0017` (`name_prefix`), `RR=0x0018` (`name_suffix`) |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
 | Source document title | `Vaillant VRC 700/6 -- Operating Instructions`; `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica` |
 | Source section | `5.2.15 Changing a zone name`; `Menu Ajustes basicos` |
 | Supporting statement | In `5.2.15 Changing a zone name`, the VRC 700 operating instructions say "You can now modify the factory-set zone names as you wish". In `Menu Ajustes basicos`, the multiMATIC training lists "Introducir nombre de zona (por zona)". This supports the existence of user-configurable zone names, but the fallback label `Zone N` remains a local publication convenience. |
@@ -124,7 +124,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Defines `zones[].config.roomTemperatureZoneMapping` and feeds later attachment decisions |
 | Source registers | `GG=0x03 RR=0x0013` |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance), [`ebus-vaillant-B524-register-map.md#zmapping--zone-room-temperature-sensor-mapping`](./ebus-vaillant-B524-register-map.md#zmapping--zone-room-temperature-sensor-mapping) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance), [`ebus-vaillant-B524-register-map.md#zmapping--zone-room-temperature-sensor-mapping`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#zmapping--zone-room-temperature-sensor-mapping) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `4.2.1 VR 92 Remote Control Unit` |
 | Supporting statement | In `4.2.1 VR 92 Remote Control Unit`, the VRC 720 training says "Each VR 92 is assigned to a specific zone". This corroborates the existence of explicit zone-to-room-sensor attachment semantics, but the authoritative proof path remains the B524 register `GG=0x03 RR=0x0013`. The remote-side `zone_assignment` on `GG=0x09/0x0A RR=0x0025` is documented as a corroboration opportunity, not as a formal validation gate. |
@@ -142,7 +142,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Derives `zones[].config.associatedCircuit` from the raw zone mapping value when the current lab-backed conversion applies |
 | Source registers | Primary source `GG=0x03 RR=0x0013` |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
 | Source document title | `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica`; `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `Zonas 1 a 9`; `Installer Level -- Zones 1 to 9` |
 | Supporting statement | In `Zonas 1 a 9`, the multiMATIC training exposes `Asignacion de zona` for each zone. In `Installer Level -- Zones 1 to 9`, the VRC 720 training also exposes `Zone assignment`. These statements corroborate the existence of explicit zone-to-circuit assignment, but they do not prove the current `value - 1` zero-based circuit-index derivation formula. |
@@ -160,7 +160,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Provides `zones[].config.associatedCircuit` when SD-06 does not yield a usable circuit instance |
 | Source registers | No independent register. This decision consumes the outcome of SD-06. |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance) |
 | Source document title | `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica`; `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `Zonas 1 a 9`; `Installer Level -- Zones 1 to 9` |
 | Supporting statement | The regulator documents corroborate explicit zone assignment, but they do not define a universal default when the gateway cannot confidently resolve a circuit instance from the raw mapping value. The fallback-to-zone-instance branch is therefore an explicit gateway policy. |
@@ -178,7 +178,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Determines which heating circuit instances exist and whether they are active or inactive |
 | Source registers | `GG=0x02 RR=0x0002` (`circuit_type`) |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance), [`ebus-vaillant-B524-register-map.md#mctype--circuit-type`](./ebus-vaillant-B524-register-map.md#mctype--circuit-type) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance), [`ebus-vaillant-B524-register-map.md#mctype--circuit-type`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#mctype--circuit-type) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document`; `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica` |
 | Source section | `6.2.2 Settings in the Installation Wizard`; `Distribucion de zonas y circuitos de calefaccion` |
 | Supporting statement | In `6.2.2 Settings in the Installation Wizard`, the VRC 720 training documents "Enter the number of heating circuits" as `0-3` with VR 71 and up to `0-9` with VR 71 plus VR 70 expansion. In `Distribucion de zonas y circuitos de calefaccion`, the multiMATIC training states "Hasta 9 circuitos de calefaccion de mezcla y 9 zonas". This constrains expected circuit cardinality, while the gateway still relies on direct `circuit_type` probes for actual publication. |
@@ -196,7 +196,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Defines `circuits[].managingDevice` instead of using a global FM5 threshold |
 | Source registers | `GG=0x00 RR=0x0036` (`system_scheme`), `GG=0x00 RR=0x002F` (`module_configuration_vr71`) plus the evaluated `fm5SemanticMode` |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x00--systemregulator`](./ebus-vaillant-B524-register-map.md#gg0x00--systemregulator), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcircuitsget`](./ebus-vaillant-B524-register-map.md#ebusv1semanticcircuitsget) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x00--systemregulator`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x00--systemregulator), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcircuitsget`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#ebusv1semanticcircuitsget) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `4.3.1 VR 71 Main Connection Center`; `5.2 System Requirements` |
 | Supporting statement | In `4.3.1 VR 71 Main Connection Center`, the VRC 720 training says the VR 71 is the "main wiring center" that provides relay outputs for pumps and mixing valves. In `5.2 System Requirements`, the same document says VR 71 is required for systems with more than one heating circuit. This supports the architectural role of VR 71 as a circuit-managing function module, but it does not prove ownership for every controller tuple; unvalidated tuples therefore remain `UNKNOWN`. |
@@ -214,7 +214,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Determines which OP=0x06 device slots appear in the published device slot list and how they are classified |
 | Source registers | `GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F RR=0x0001` (`device_connected`), with identity reads `0x0002`, `0x0004`, `0x0023`, and telemetry `0x0019`, `0x0025`, `0x000F`, `0x0007` |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode`](./ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode), [`ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode`](./ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode), [`ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only`](./ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode), [`ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode), [`ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document`; `Vaillant VRC 430f -- Operating and Installation Manual` |
 | Source section | `4.2.1 VR 92 Remote Control Unit`; `Learn` screen note in expert-technician material |
 | Supporting statement | In `4.2.1 VR 92 Remote Control Unit`, the VRC 720 training documents the VR 92 as a zone-assigned remote control with room temperature and humidity measurement. In the VRC 430f expert-technician material, the note for the `Learn` screen says it is used for training replacement components in the wireless network. This supports the existence of connected remote inventory, but not the gateway-specific heuristic that disconnected `0x0C` entries with identity evidence should be published as inventory. |
@@ -232,7 +232,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Determines whether FM5-backed families are absent, partially evidenced, or fully interpretable |
 | Source registers | `GG=0x00 RR=0x002F` (`module_configuration_vr71`), radio inventory/evidence from `GG=0x09/0x0A/0x0C`, plus solar/cylinder readability checks in `GG=0x04` and `GG=0x05` |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x00--systemregulator`](./ebus-vaillant-B524-register-map.md#gg0x00--systemregulator), [`ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit`](./ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit), [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x00--systemregulator`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x00--systemregulator), [`ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit), [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `4.3.1 VR 71 Main Connection Center`; `Installer Level -- Solar Circuit` |
 | Supporting statement | In `4.3.1 VR 71 Main Connection Center`, the VRC 720 training gives explicit VR 71 configuration meanings: `1` and `2` are solar-related, `3` is "3x mixer circuit", and `6` is `allSTOR exclusive`. In `Installer Level -- Solar Circuit`, it also documents that the solar circuit is shown only for `VR 71 = 1, 2`. This materially strengthens the semantic interpretation of the FM5 tuple, but does not prove all possible controller/profile combinations beyond the documented configurations. |
@@ -250,7 +250,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Determines whether the `solar` family is published at all |
 | Source registers | `GG=0x04 RR=0x0001`, `0x0002`, `0x0003`, `0x0007`, `0x0008`, `0x0009`, `0x000B`, gated by FM5 mode |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit`](./ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit), [`ebus-vaillant-B524-register-map.md#ebusv1semanticsolarget`](./ebus-vaillant-B524-register-map.md#ebusv1semanticsolarget) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit), [`ebus-vaillant-B524-register-map.md#ebusv1semanticsolarget`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#ebusv1semanticsolarget) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document`; `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica` |
 | Source section | `Installer Level -- Solar Circuit`; `Circuito solar 1` |
 | Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training says the `Solar circuit` screen is shown only for `VR 71 = 1, 2`. In `Circuito solar 1`, the multiMATIC training documents solar pump, collector, and solar tank parameters under VR 71-based systems. This strongly supports the family gate for solar-capable VR 71 configurations. |
@@ -268,7 +268,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Determines whether `cylinders[]` may be published at all |
 | Source registers | Cylinder family reads come from `GG=0x05`, but family publication is gated by `fm5SemanticMode` |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget`](./ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document`; `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica` |
 | Source section | `Installer Level -- Solar Circuit`; `Deposito solar 1`; ACS/accumulator sections in multiMATIC training |
 | Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training states `Solar accumulator 1 if VR 71 = 2, solar accumulator 1 and solar accumulator 2 if VR 71 = 1`. In `Deposito solar 1` and the ACS/accumulator sections, the multiMATIC training documents solar tank and accumulator parameters under VR 71-based solar configurations. This supports using the FM5/VR71 tuple as the family gate for cylinder-related solar storage semantics. |
@@ -286,7 +286,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | --- | --- |
 | Semantic effect | Determines whether a specific cylinder instance is real enough to appear in `cylinders[]` |
 | Source registers | `GG=0x05 RR=0x0004` (`temperatureC`), with optional config from `RR=0x0001..0x0003` |
-| Reference | [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](./ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget`](./ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget) |
+| Reference | [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `Installer Level -- Solar Circuit` |
 | Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training constrains cardinality at configuration level (`solar accumulator 1` vs `1 and 2` depending on VR 71 config), but it does not document a "config-only cylinder" publication concept. The gateway's stronger rule that a cylinder must have live `temperatureC` evidence remains the actual semantic proof path. |
