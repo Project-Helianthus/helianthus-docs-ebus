@@ -22,8 +22,8 @@ Source: `refreshBoilerStatusTier()` in `cmd/gateway/semantic_vaillant.go`
 | `state.flowTemperatureC` | `0x1800` | `DATA2c` | Live boiler flow temperature |
 | `state.centralHeatingPumpActive` | `0x4400` | `on/off` | CH pump state |
 | `state.waterPressureBar` | `0x0200` | `DATA2b` | Boiler water pressure |
-| `state.flameActive` | `0x0500` | `on/off` | Burner flame status |
-| `state.gasValveActive` | `0xBB00` | `on/off` | Gas valve state |
+| `state.flameActive` | `0x0500` | `UCH (0x0F=on, 0xF0=off)` | Burner flame status. Wire encoding uses UCH sentinel, not simple 0/1 boolean |
+| `state.gasValveActive` | `0xBB00` | `UCH (0x0F=on, 0xF0=off)` | Gas valve state. Wire encoding uses UCH sentinel, not simple 0/1 boolean |
 | `state.fanSpeedRpm` | `0x8300` | `UIN` | Fan speed in RPM |
 | `state.modulationPct` | `0x2E00` | `SIN / 10` | Boiler modulation percent |
 | `state.stateNumber` | `0xAB00` | `UCH` | Raw boiler state number |
@@ -70,6 +70,50 @@ Source: `refreshBoilerStatusTier()` in `cmd/gateway/semantic_vaillant.go`
 | `config.installerMenuCode` | `0x4904` | `UCH` (1 byte) | r;ws | Boiler installer menu access code. Range 0..255. Write via `setBoilerConfig(field: "installerMenuCode")` |
 | `config.phoneNumber` | `0x8104` | `HEX:8` (8 bytes) | r;wi | Installer phone number as raw hex string (16 hex chars). Write via `setBoilerConfig(field: "phoneNumber")` |
 | `config.hoursTillService` | `0x2004` | `Hoursum2` (2 bytes) | r | Service countdown in hours. **Read-only by design** — service counter must not be written |
+
+### Enrichment: additional BAI00 registers (not yet in semantic plane)
+
+The following registers were identified through enrichment analysis of public
+ebusd-configuration forks (john30/master, bumaas/xerion3800). They are not yet
+mapped into the Helianthus semantic plane but are documented here for
+completeness and future integration.
+
+Evidence labels: `ENRICHMENT_D1` = D1-B509-deep.md analysis, `ENRICHMENT_D11` =
+D11-fork-B509-B51A-enrichment.md cross-fork delta.
+
+**Diagnostics and hardware feedback:**
+
+| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|---------------------------|---------------|---------------|-----|------------|----------|-------|
+| `diagnostics.airControlOk` | `0x0300` | `UCH (0x0F=ok, 0xF0=fault)` | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Air control system status |
+| `diagnostics.flameSensingAsic` | `0x2F00` | `UIN` (raw ADC count) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Raw ADC output of flame sensing ASIC |
+| `state.flueGasValve` | `0x3C00` | `on/off` | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Flue gas valve state |
+| `diagnostics.gasValveAsicFeedback` | `0x4700` | `UCH` (state enum) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Gas valve ASIC feedback signal |
+| `diagnostics.gasValveUcFeedback` | `0x4800` | `UCH` (state enum) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Gas valve microcontroller feedback; distinct from `0x4700` (ASIC vs UC path) |
+| `state.externGasValve` | `0xE400` | `on/off` | R | MEDIUM | ENRICHMENT_D1 → Phase 1 BAI analysis | External gas valve state. **Address collision**: same ID means `compressorState` on EHP00/HMU |
+| `diagnostics.prApsCounter` | `0xF200` | `UCH` (count) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | APS (anti-pollution/burner start) event counter |
+| `diagnostics.prApsSum` | `0xF300` | `seconds2` (seconds) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | APS accumulated time in seconds |
+
+**Configuration and identity:**
+
+| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|---------------------------|---------------|---------------|-----|------------|----------|-------|
+| `identity.dsn` | `0x9A00` | `UIN` (device serial/product ID) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Device serial number. Use as product-type gate for register collision resolution |
+| `config.displayMode` | `0xDA00` | `UCH` (enum) | R | MEDIUM | ENRICHMENT_D1 → Phase 1 BAI analysis (single source) | Current display state on boiler PCB |
+| `config.fanMinSpeedOperation` | `0xDF00` | `UIN` (RPM) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Configured minimum fan speed during operation |
+| `config.fanMaxSpeedOperation` | `0xE000` | `UIN` (RPM) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Configured maximum fan speed during operation |
+| `state.dcfTimeDate` | `0xE500` | `HEX:8` (time struct) | R | MEDIUM | ENRICHMENT_D1 → Phase 1 BAI analysis | DCF77-style 8-byte time/date sync state. Format not live-confirmed |
+
+**Energy yield (product-specific):**
+
+| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|---------------------------|---------------|---------------|-----|------------|----------|-------|
+| `energy.yieldRead` | `0x0D` | `*r` stub (raw) | R | MEDIUM | ENRICHMENT_D1, ENRICHMENT_D11 §1.3/§3.4 → bumaas `bai.0010005400.inc`, xerion3800 `yield3f40.inc` | Energy/yield data access. Product-specific: confirmed for BAI00 product IDs `0010005400`, `0010015600`, `3f40` variants only |
+| `energy.yieldWrite` | `0x0E` | `*w` / `*wi` / `*ws` (raw) | W | MEDIUM | ENRICHMENT_D11 §1.3 → bumaas `bai.0010005400.inc`, `bai.0010015600.inc` | Only confirmed writable B509 register on BAI00. `*ws` = persistent store (survives power cycle). Product-specific |
+
+**Unenumerated clusters (existence confirmed, individual registers not mapped):**
+- `0xC500–0xFA00`: `PrEnergy*` cluster — approximately 20 energy accounting registers (ULG type). Access controlled by `0x0D`/`0x0E` pair.
+- `0x3501–0x4801`: `Pred*` analytics cluster — approximately 20 predictive/diagnostic registers (UCH/UIN).
 
 ## B524 Provenance Still Used By `boilerStatus`
 

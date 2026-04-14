@@ -134,7 +134,9 @@ The GG=0x09 local namespace shows zero instances on passive scan because these a
 | `u8` | Unsigned byte | 1 byte | Boolean-range values and small enums. ebusd `onoff`/`yesno` (UCH) |
 | `u16` | Little-endian uint16 | 2 bytes | Primary integer type. ebusd may decode only low byte for some enums |
 | `u32` | Little-endian uint32 | 4 bytes | Energy counters, pump hours/starts |
-| `f32` | Little-endian IEEE 754 float32 | 4 bytes | Primary numeric type for temperatures, pressures, percentages |
+| `f32` | IEEE 754 float32 (see note below) | 4 bytes | Primary numeric type for temperatures, pressures, percentages |
+
+> **Device-dependent f32 byte order:** Controllers at address `0x15` (BASV2, CTLV2, VRC720 family) use **little-endian** f32 encoding. The HMU (Heat Management Unit) at address `0x08` on heat pump systems uses **big-endian** f32 encoding -- implementations reading f32 from HMU via B524 must reverse the 4 bytes before IEEE 754 decoding. This is confirmed by the OpenHAB community's use of the `reverseByteOrder` ebusd configuration flag for HMU B524 reads. All Helianthus scan data is from BASV2 (`0x15`) and is internally consistent little-endian. (Source: FINAL-B524-B555-B507-B508.md A1; confidence HIGH.)
 | `string` | Null-terminated C string | Variable | Zone names, installer info |
 | `bytes` | Raw byte sequence | Variable | Opaque payload, not decoded as numeric |
 | `date` | BCD-encoded `DD MM YY` | 3 bytes | Year = 2000 + YY. See constraint type `0x0C` |
@@ -158,11 +160,13 @@ Opcode  Name                 Request shape                     Status
 0x00    Directory probe      00 <GG> 00                        Confirmed
 0x01    Constraint dictionary 01 <GG> <RR>                     Confirmed
 0x02    Local register I/O   02 <RW> <GG> <II> <RR_LO> <RR_HI> Confirmed
-0x03    Timer read           03 <SEL1> <SEL2> <SEL3> <WD>      Confirmed
-0x04    Timer write          04 <SEL1> <SEL2> <SEL3> <WD> ...  Confirmed
+0x03    Timer read           03 <SEL1> <SEL2> <SEL3> <WD>      Confirmed (VRC700 only)
+0x04    Timer write          04 <SEL1> <SEL2> <SEL3> <WD> ...  Confirmed (VRC700 only)
 0x06    Remote register I/O  06 <RW> <GG> <II> <RR_LO> <RR_HI> Confirmed
 0x0B    Array/table read     Shape unresolved (non-scalar)     Observed/partial
 ```
+
+> **Note on opcodes 0x03/0x04:** These timer opcodes are functional on **VRC700 (device ID 70000) only**. VRC720-family controllers (BASV2/BASV3/CTLV2/CTLV3/CTLS2) return empty responses to these opcodes and use B555 for timer operations instead. See [Section 4.4](#44-0x03--0x04-timer-schedules) for the full device-binding note and channel map.
 
 `RW` is `0x00` for read and `0x01` for write.
 
@@ -388,6 +392,8 @@ Addressing notes:
 
 ### 4.4 `0x03` / `0x04` Timer Schedules
 
+> **Device binding:** Opcodes 0x03/0x04 are available on **VRC700 (device ID 70000, including Saunier Duval B7S00) only**. VRC720-family controllers (BASV2, BASV3, CTLV2, CTLV3, CTLS2, CTLV0, BASV0) do NOT respond to B524 timer opcodes -- they use the [B555 protocol](./ebus-vaillant-b555-timer-protocol.md) for all timer/schedule operations. Both device families share eBUS slave address `0x15` but are different device classes. A scanner or schedule writer that does not check device identity before choosing transport will send the wrong protocol. (Source: FINAL-B524-B555-B507-B508.md A2/A3; confidence HIGH.)
+
 ```text
 Timer read request (5 bytes):
   0: 0x03
@@ -406,6 +412,28 @@ Timer write request (5+ bytes):
 ```
 
 These families do not use `RW` byte.
+
+#### 4.4.1 Timer channel map (SEL1/SEL2/SEL3)
+
+The three selector bytes address a specific timer channel. The complete channel map from VRC700 ebusd CSV (`15.700.csv`):
+
+| SEL1 | SEL2 | SEL3 | Channel |
+|------|------|------|---------|
+| `0x00` | `0x00` | `0x01` | Ventilation timer |
+| `0x00` | `0x00` | `0x02` | Noise reduction timer |
+| `0x00` | `0x00` | `0x03` | Tariff timer |
+| `0x01` | `0x00` | `0x01` | DHW (HWC) timer |
+| `0x01` | `0x00` | `0x02` | Circulation pump timer |
+| `0x03` | `0x00` | `0x01` | Zone cooling timer |
+| `0x03` | `0x00` | `0x02` | Zone heating timer |
+
+The WD byte (0x00-0x06 = Monday-Sunday) selects the weekday within the addressed channel.
+
+**Response format:** ebusd reports `slotCountWeek` / `slotCountDay` time-pair sequences. Full per-opcode wire layout is pending complete documentation from community sources.
+
+**Channel mapping correspondence:** The SEL-addressed channels correspond to the B555 HC-addressed channels on VRC720-family devices. For example, B524 SEL1=`0x01`/SEL2=`0x00`/SEL3=`0x01` (DHW timer) on VRC700 is functionally equivalent to B555 HC=`0x02` (HWC) on BASV2.
+
+(Source: FINAL-B524-B555-B507-B508.md A2; confidence HIGH.)
 
 ### 4.5 `0x0B` Array/Table Read (Schedules)
 

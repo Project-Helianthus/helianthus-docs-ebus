@@ -17,7 +17,7 @@ This is the register catalog for B524. For the protocol specification (wire form
 | **RR** | Register address (hex) |
 | **Name** | Our leaf name (from myVaillant/myPyllant API path) |
 | **Cat** | **S**=state (RO), **C**=config (RW), **P**=property (RO, stable), **E**=energy (RO, counter), **—**=unknown/unclassified. Verified against observed FLAGS where scan data exists |
-| **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian |
+| **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian. **f32 byte order is device-dependent:** all values in this map assume address `0x15` (BASV2/VRC720) = little-endian. HMU at `0x08` (heat pump systems) uses big-endian f32 -- see [B524 protocol doc section 2.6](./ebus-vaillant-B524.md#26-wire-type-encoding) |
 | **Decode** | Semantic interpretation: `bool`, `°C`, `K`, `bar`, `%`, `kWh`, `hrs`, `min`, `count`, `enum`, `text`, `date`, `time`, `state`, `raw`, `—` (unknown) |
 | **ebusd** | ebusd community TSP name. `—` = not in TSP |
 | **Constraint** | From BASV2 constraint catalog (authoritative, downloaded from hardware). `—` = no catalog entry |
@@ -139,8 +139,8 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x000A | parallel_tank_loading_allowed | C | u16 | bool | HwcParallelLoading | — | →onoff | — | ebusd confirmed at `@ext(0xa,0)` |
 | 0x000B | (unknown) | — | u16 | — | — | — | — | — | Scan value: 0. Near boolean cluster |
 | 0x000E | max_room_humidity | C | u16 | % | MaxRoomHumidity | — | — | — | |
-| 0x000F | (unknown) | — | u16 | — | — | — | — | — | Possibly HybridManager per TSP |
-| 0x0010 | (unknown) | — | u16 | — | — | — | — | — | Near config cluster |
+| 0x000F | hybrid_manager | — | u16 | — | HybridManager | — | — | — | Name confirmed by BASV3 TypeSpec (`burmistrzak/ebusd-configuration 15.basv3.tsp`). Access: `ri/wi` (installer). Hybrid system manager (HP + boiler). Wire semantics pending live validation |
+| 0x0010 | tariff_aux_heater | — | u16 | — | TariffAuxHeater | — | — | — | Name confirmed by BASV3 TypeSpec (`burmistrzak/ebusd-configuration 15.basv3.tsp`). Access: `ri` (installer read). Tariff for auxiliary heater |
 | 0x0011 | (unknown) | — | u16 | — | — | — | — | — | Scan value: 16. Possible temp threshold |
 | 0x0012 | continuous_heating_room_setpoint | C | u16 | °C | — | — | — | — | Confirmed exact, value=20 |
 | 0x0014 | adaptive_heating_curve | C | u8 | bool | AdaptHeatCurve | — | →yesno | — | FLAGS=0x03 (user RW). Scan validated 1-byte |
@@ -992,7 +992,7 @@ One pending:
 
 | RR | myPyllant CSV leaf | TSP name | Status |
 |----|-------------------|----------|--------|
-| 0x0024 | hybrid_control_strategy (BIVALENCE_POINT) | BackupBoiler | Pending. TSP puts HybridManager at 0x000F. |
+| 0x0024 | hybrid_control_strategy (BIVALENCE_POINT) | BackupBoiler | Pending. TSP puts HybridManager at 0x000F (now named in GG=0x00 table). |
 
 ---
 

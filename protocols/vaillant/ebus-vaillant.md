@@ -10,6 +10,8 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x21` (B521, OMU service registers): [`protocols/ebus-vaillant-B521.md`](ebus-vaillant-B521.md)
 - `0xB5 0x22` (B522, recoVAIR ventilation commands): [`protocols/ebus-vaillant-B522.md`](ebus-vaillant-B522.md)
 - `0xB5 0x23` (B523, functional-module actor/sensor data): [`protocols/ebus-vaillant-B523.md`](ebus-vaillant-B523.md)
+- `0xB5 0x07` (B507, heat pump load/poll): [`protocols/ebus-vaillant-B507.md`](ebus-vaillant-B507.md)
+- `0xB5 0x08` (B508, NoiseReduction broadcast): [`protocols/ebus-vaillant-B508.md`](ebus-vaillant-B508.md)
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`protocols/ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`protocols/ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 
@@ -24,6 +26,8 @@ For detailed coverage of selector-heavy identifiers, see:
 ```text
 0xB5 0x04  GetOperationalData (request parameter op; response is op-dependent)
 0xB5 0x05  SetOperationalData (request parameter op + optional payload; response is op-dependent)
+0xB5 0x07  Heat pump load/poll (B507; CTLV2→HMU, heat-pump-only — enrichment research, not live-validated)
+0xB5 0x08  NoiseReduction broadcast (B508; ZZ=FE broadcast — enrichment research, not live-validated)
 0xB5 0x09  Register access / scan-id chunk discovery (selector-dependent payload forms)
 0xB5 0x13  Value-range query
 0xB5 0x14  Service test-menu values

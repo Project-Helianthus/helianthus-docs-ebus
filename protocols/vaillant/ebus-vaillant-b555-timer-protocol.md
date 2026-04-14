@@ -3,14 +3,23 @@
 **Protocol:** eBUS B555 (PB=0xB5, SB=0x55)
 **Status:** Reverse-engineered, validated on live hardware
 **Date:** 2026-03-08
-**Revision:** 2.14
+**Revision:** 2.15
 **Author:** Helianthus Project (Claude Code + operator)
 
 ## 1. Scope
 
-This document specifies the eBUS B555 protocol used by Vaillant controllers
-(VRC700/VRC720 series, device ID BASV2) for reading and writing weekly
-heating, DHW, and other timer/schedule programs.
+This document specifies the eBUS B555 protocol used by **VRC720-family controllers only** for reading and writing weekly heating, DHW, and other timer/schedule programs.
+
+> **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID 70000, including Saunier Duval B7S00) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for all timer operations. Both device families share eBUS slave address `0x15` but are different device classes with different timer transports. (Source: FINAL-B524-B555-B507-B508.md B1, CROSSCHECK-B555-misc.md; confidence HIGH.)
+
+### 1.0 Timer Transport Device Binding
+
+| Device class | Device IDs | Timer transport | Reference |
+|---|---|---|---|
+| VRC720 family | BASV0, BASV2, BASV3, CTLV0, CTLV2, CTLV3, CTLS2 | **B555** (this document) | Validated on BASV2 |
+| VRC700 | 70000 (including Saunier Duval B7S00) | **B524 opcodes 0x03/0x04** | [B524 section 4.4](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) |
+
+A scanner or schedule writer that does not check device identity before choosing transport will send B555 to a VRC700 (no response or error) or send B524 timer frames to a BASV2 (empty response). Device identity can be determined from the eBUS device ID returned during identification.
 
 ### 1.1 Validation Environment
 
@@ -121,7 +130,7 @@ DHW writes carry ZONE=0xFF, Z1 Heating writes carry ZONE=0x00.
 | 0x01 | Cooling | Not observed (unavailable on test system) |
 | 0x02 | HWC (Domestic Hot Water) | Yes (DHW target temp) |
 | 0x03 | CC (DHW recirculation pump schedule) | No — time-only schedule, temp field carries 0xFFFF |
-| 0x04 | Silent | Not observed (unavailable on test system) |
+| 0x04 | NoiseReduction (Silent) | Not observed (unavailable on test system). VRC720 CSV uses `Silent`; BASV2 CSV uses `NoiseReduction`. Both describe the same function: a quiet-hours schedule. Name aligns with B508 broadcast field `NoiseReduction`. See also [B524 section 4.4.1](./ebus-vaillant-B524.md#441-timer-channel-map-sel1sel2sel3) SEL=0x00/0x00/0x02 (VRC700 equivalent). |
 
 ### 4.3 DD (Day of Week)
 
@@ -633,16 +642,21 @@ value). For Heating (`has_temp=1`, `temp_slots=12`): **rejected** with error
 
 Single byte, 0x00-0xFF. Used for slot counts, indices, hours, minutes.
 
-## 9. B524 Timer Read (Opcode 0x03) — Not Functional
+## 9. B524 Timer Read (Opcode 0x03) — VRC700 Only, Not Functional on VRC720 Family
 
 The gateway's existing `read_timer` RPC method uses B524 (PB=0xB5, SB=0x24)
 with opcode 0x03. Testing confirmed this returns **empty responses** on
-BASV2/VRC720. The B524 timer opcode and B555 protocol access different
-subsystems.
+BASV2/VRC720-family controllers. This is expected behavior: B524 timer opcodes
+0x03/0x04 are a **VRC700-only** feature. VRC720-family controllers (BASV2,
+BASV3, CTLV2, CTLV3, CTLS2) use B555 (this protocol) for all timer operations.
 
-**Validated:** `ebus.v1.rpc.invoke(address=21, plane=system, method=read_timer,
+**Validated on BASV2:** `ebus.v1.rpc.invoke(address=21, plane=system, method=read_timer,
 params={source:113, sel1:0, sel2:0, sel3:0, weekday:0})` returns
 `value: null, valid: false`.
+
+**On a VRC700 system**, the same B524 opcode 0x03 query would return a valid
+time-slot sequence. See [B524 section 4.4](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for the VRC700 timer channel map
+and device-binding details.
 
 ## 10. Observed Timer State (Test System, 2026-03-08)
 
@@ -1262,3 +1276,4 @@ the wire response includes it (see Section 5.3 examples).
 | 2.12 | 2026-03-08 | **P1 hex command audit + error code correction.** Mechanical scrub of every `hex -n` example against declared opcode byte counts. (1) Three A6 commands (Sections 12.7, 12.14) had 16 bytes instead of 15 — extra `00` byte shifted field positions within the A6 frame (distinct from the 2.5 NN-inclusion bug which shifted the opcode itself). Fixed to 30 hex chars (15 bytes). (2) Eighteen A5 commands (Sections 7, 12.13, 12.14, 12.15) had trailing `00` byte(s) — controller ignored extra for reads but format was inconsistent. Fixed to 16 hex chars (8 bytes). (3) **Section 12.14 error code changed from 0x06 to 0x01**: re-running the Heating 0xFFFF test with correctly-formatted hex revealed the controller returns error 0x01 (parameter out of range), not 0x06. The conclusion (0xFFFF rejected) remains valid but the classification differs — 0x01 indicates the controller treats 0xFFFF as an invalid parameter, not a temperature range violation. Updated in Sections 5.3, 5.4, 8.2, 12.14. (4) Canonical filename normalized to `ebus-vaillant-b555-timer-protocol.md` for naming consistency. |
 | 2.13 | 2026-03-08 | **Final wording pass (P2×1, P3×1).** (1) Section 5.1 min/max enforcement rule narrowed: numeric temp violations yield 0x06, but not all temp-field rejections use 0x06 — Heating 0xFFFF is rejected with 0x01 (Section 12.14). (2) Rev 2.12 changelog clarified: A6 field-shift bug described as "shifted field positions within the A6 frame" with explicit note distinguishing it from the 2.5 NN-inclusion bug that shifted the opcode itself. |
 | 2.14 | 2026-03-08 | **Straggler hex audit (P2×1).** Two `hex` (with-NN) A5 commands in Section 12.5 had 6 data bytes after NN=0x05 (trailing `00`). ebusd used NN to bound the read so results were correct, but format was inconsistent. Fixed to 9 bytes (ZZ+PB+SB+NN+5 data). Full audit of all 19 `hex` commands now passes alongside the 76 `hex -n` commands. |
+| 2.15 | 2026-04-14 | **Scope correction + enrichment integration.** (1) VRC700 removed from §1 scope -- B555 is VRC720-family only (BASV0/BASV2/BASV3/CTLV0/CTLV2/CTLV3/CTLS2). VRC700 uses B524 opcodes 0x03/0x04 for timers. New §1.0 device-binding table added. (2) HC=0x04 renamed from "Silent" to "NoiseReduction (Silent)" with dual-name note and B508 cross-reference. (3) §9 rewritten to explain B524 timer opcodes are VRC700-only (not "different subsystem"), with cross-reference to B524 §4.4 channel map. Source: FINAL-B524-B555-B507-B508.md, CROSSCHECK-B555-misc.md. |
