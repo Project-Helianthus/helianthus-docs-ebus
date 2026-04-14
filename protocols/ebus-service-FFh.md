@@ -247,7 +247,7 @@ flowchart TD
 | Byte | Field | Type | Description |
 |---:|---|---|---|
 | 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
-| 1..NN-1 | addresses | CHAR | eBUS addresses of failed nodes. Count of failed nodes: `NN - 2` (per official spec; byte 0 is `follow_block`) |
+| 1..NN-1 | addresses | CHAR | eBUS addresses of failed nodes. Count: `NN - 1` (byte 0 is `follow_block`). **Source note:** the official spec states `NN - 2`, but this conflicts with the byte layout (only 1 overhead byte) and with the request's "max first 9" wording (which requires `NN_max - 1 = 9`); treated as spec erratum |
 
 ---
 
@@ -268,7 +268,7 @@ flowchart TD
 | 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
 | 1 | pb_1 | CHAR | PB of first required service |
 | 2 | sb_1 | CHAR | SB of first required service |
-| ... | ... | ... | Additional PB/SB pairs. Count of services: `(NN - 2) / 2` (per official spec) |
+| ... | ... | ... | Additional PB/SB pairs. Count of services: `(NN - 1) / 2` (byte 0 is `follow_block`, remainder is PB/SB pairs). **Source note:** the official spec states `(NN - 2) / 2`, but this yields non-integer results for valid NN values and conflicts with the request's "max first 4" wording; treated as spec erratum |
 
 ## Dynamic Target Configuration
 

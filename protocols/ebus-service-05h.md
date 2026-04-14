@@ -213,7 +213,7 @@ This secondary command is barred for compatibility reasons.
 | 5–6 | boiler_actual | DATA2c | 0–2000 degC/0–100 bar | — | Boiler temp or pressure actual (per Bit3 of byte 3) |
 | 7–8 | boiler_target | DATA2c | 0–2000 degC/0–100 bar | — | Boiler temp or pressure target (per Bit3 of byte 3) |
 
-**Bus load:** 7.0% at 1/1s (default 1/10s).
+**Bus load:** 7.0% at 1/1s. The official spec states `Cycle rate: 1/1s (Tolerance: -, Default: 1/10s) to 1/1min`, indicating 1/10s as the expected default period within the 1/1s–1/1min range.
 
 ---
 
