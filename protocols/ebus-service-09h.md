@@ -53,7 +53,7 @@ Service `0x09` provides direct RAM and EEPROM read/write access to eBUS modules.
 |---:|---|---|---|---|
 | 0 | addr_lo | BYTE | — | Low byte of memory address |
 | 1 | addr_hi | BYTE | — | High byte of memory address |
-| 2.. | data | BYTE | — | 1–8 data bytes to write. **NN note:** the official spec defines `NN` as "No. of bytes as of M7" (range 1–8), counting the high address byte plus data. The frame-level length byte (M5) adds M6 (low address byte), so M5 = `NN + 1`. Data byte count = `NN - 1` |
+| 2.. | data | BYTE | — | Data bytes to write (1–8 bytes). **NN note:** the official spec constrains `1 ≤ NN ≤ 8` where `NN` counts "bytes as of M7" (high address byte + data). Data byte count = `NN - 1`, so `NN=1` means address-only (no data) while `NN=8` means 7 data bytes. The spec's data table indexes `Data Byte 0` through `Data Byte NN-1`, suggesting `NN` may alternatively count data bytes directly (giving 1–8 data bytes). This source ambiguity is unresolved; implementations should accept 1–8 data bytes |
 
 **Response payload:** Empty (`NN=0x00`). ACK confirms write.
 

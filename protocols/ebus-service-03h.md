@@ -98,7 +98,7 @@ Secondary commands `0x00`–`0x03` are barred for historical reasons.
 | 1 | qty_1s | CHAR | 0–99 | 1s digits |
 | 2 | qty_100s | CHAR | 0–99 | 100s digits |
 | 3 | qty_10000s | CHAR | 0–99 | 10000s digits |
-| 4 | qty_100000s | CHAR | 0–9 | 100000s digit |
+| 4 | qty_1000000s | CHAR | 0–9 | 1000000s digit (10⁶ position). **Source note:** the official spec labels this "100000s digit", but the base-100 chunking pattern (×1, ×100, ×10000) places byte 4 at the 10⁶ position |
 
 ---
 
