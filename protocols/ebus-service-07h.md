@@ -25,7 +25,7 @@ Several commands in this service are also documented (from the implementation pe
 | `0x07` | `0x04` | Identification | Any → target or broadcast | Initiator/Target or Broadcast | One-time |
 | `0x07` | `0x05` | Query Supported Commands (extended) | Any → target | Initiator/Target | One-time |
 | `0x07` | `0xFE` | Inquiry of Existence | Any → all | Broadcast (typically) | One-time (infrequent) |
-| `0x07` | `0xFF` | Sign of Life | Any → all | Broadcast | One-time (response to 0xFE) |
+| `0x07` | `0xFF` | Sign of Life | Any → all | Broadcast (typically) | One-time (response to 0xFE) |
 
 ## Commands
 
@@ -78,7 +78,7 @@ Several commands in this service are also documented (from the implementation pe
 | Byte | Field | Type | Range | Description |
 |---:|---|---|---|---|
 | 0–1 | outside_temp | DATA2b | -50.0 to +50.0 degC | Temperature override |
-| 2 | validity | BYTE | 0–255 | `0x00` = permanent (until further notice), `0x01`–`0xFF` = override duration in minutes |
+| 2 | validity | BYTE | 0–255 | `0x00` = permanent (until further notice); nonzero = override duration in minutes. **Source note:** the official spec row names only `0x00` and `0x9B` (155) as example values, but the range column shows `0..255` and the unit is minutes, indicating the full byte range is valid |
 
 ---
 
@@ -125,7 +125,7 @@ Request payload: Empty (`NN=0x00`).
 
 | Byte | Field | Type | Range | Description |
 |---:|---|---|---|---|
-| 0 | manufacturer | BYTE | 0–99 | Manufacturer code |
+| 0 | manufacturer | BYTE | 0x00–0xFF | Manufacturer code. The official spec states 0–99, but observed values exceed this range (e.g., Vaillant uses `0xB5`) |
 | 1–5 | unit_id | ASCII×5 | — | Unit/device identifier (5 bytes) |
 | 6 | sw_version | BCD | 0–99 | Software version |
 | 7 | sw_revision | BCD | 0–99 | Software revision |
@@ -197,10 +197,10 @@ sequenceDiagram
     PC->>Dev: 0x07 0x04 (Identification)
     Dev-->>PC: manufacturer, unit_id, sw/hw version
 
-    PC->>All: 0x07 0xFE (Inquiry of Existence, broadcast)
-    Note over All: All ready initiators respond
-    C0->>All: 0x07 0xFF (Sign of Life, broadcast)
-    Dev->>All: 0x07 0xFF (Sign of Life, broadcast)
+    PC->>All: 0x07 0xFE (Inquiry of Existence, typically broadcast)
+    Note over All: All ready initiators respond (broadcast or directed)
+    C0->>All: 0x07 0xFF (Sign of Life)
+    Dev->>All: 0x07 0xFF (Sign of Life or other pending telegram)
 ```
 
 ## See Also

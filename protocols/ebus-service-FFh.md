@@ -13,7 +13,7 @@ Service `0xFF` carries all Network Management (NM) messages. NM enables safe ope
 
 NM is based on **indirect network management** (OSEK/VDX concept): it monitors the bus by observing cyclic application messages, adding **no extra bus load** for monitoring. NM implementation is optional. Target devices have no network management — each target is monitored by the initiator nodes that need it.
 
-> **Helianthus implementation:** For the Helianthus-specific NM model, see [`../architecture/nm-model.md`](../architecture/nm-model.md).
+> **Helianthus implementation:** For the Helianthus-specific NM model, see [`../architecture/nm-model.md`](../architecture/nm-model.md). Note: the architecture doc uses different naming conventions for some NM services; the wire-level service IDs and semantics in this document are authoritative.
 
 ## Terminology
 
@@ -227,8 +227,8 @@ flowchart TD
 | Byte | Field | Type | Description |
 |---:|---|---|---|
 | 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
-| 1 | nm_status | BIT | Bit0–7: status of addresses in bytes 2–9 (up to 8 bits used). 0=NOK, 1=OK. Bit0 = status of address in byte 2 |
-| 2..NN-1 | addresses | CHAR×(NN-2) | eBUS addresses of monitored nodes |
+| 1 | nm_status | BIT | Bit0–7: status of addresses in bytes 2–9 (up to 8 bits used). 0=NOK, 1=OK. Bit0 = status of address in byte 2. **Source note:** the official spec says `Bit0..8` for an 8-bit field; this is treated as a spec typo for `Bit0..7` |
+| 2..NN-1 | addresses | CHAR×(NN-2) | eBUS addresses of monitored nodes. Count of monitored nodes: `NN - 2` (per official spec) |
 
 ---
 
@@ -247,7 +247,7 @@ flowchart TD
 | Byte | Field | Type | Description |
 |---:|---|---|---|
 | 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
-| 1..NN-1 | addresses | CHAR×(NN-1) | eBUS addresses of failed nodes |
+| 1..NN-1 | addresses | CHAR | eBUS addresses of failed nodes. Count of failed nodes: `NN - 2` (per official spec; byte 0 is `follow_block`) |
 
 ---
 
@@ -268,7 +268,7 @@ flowchart TD
 | 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
 | 1 | pb_1 | CHAR | PB of first required service |
 | 2 | sb_1 | CHAR | SB of first required service |
-| ... | ... | ... | Additional PB/SB pairs |
+| ... | ... | ... | Additional PB/SB pairs. Count of services: `(NN - 2) / 2` (per official spec) |
 
 ## Dynamic Target Configuration
 

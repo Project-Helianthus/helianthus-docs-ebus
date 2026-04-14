@@ -54,7 +54,7 @@ stateDiagram-v2
 | 0 | test_device_type | BYTE | 1–2 | `0x01` = initiator device, `0x02` = target device |
 | 1 | function_number | BYTE | — | Test sequence number (see [Test Sequence Table](#test-sequence-table)) |
 
-**Response (target device):** `NN=0x01`, data = `0x52` (SOT confirmed).
+**Response:** When the target is an initiator address: ACK/SYN only (no data response). When the target is a target address: `NN=0x01`, data = `0x52` (SOT received and confirmed).
 
 ---
 
@@ -95,7 +95,7 @@ stateDiagram-v2
 | Function | Test Device | Test System | Description |
 |---:|---|---|---|
 | `0x01` | Initiator | Initiator | Copy next received telegram and return to test system |
-| `0x02` | Initiator | Initiator | Copy next received telegram and broadcast (`DST=0xFE`) |
+| `0x02` | Initiator | Initiator | Copy next received telegram (commands PB/SB and data), broadcast it (`DST=0xFE`), and return to test system |
 | `0x03` | Initiator | Initiator | Sum all data bytes of next telegram, return via `0x0F 0x02` |
 | `0x07` | Initiator | Initiator | Copy next 2 received telegrams and return each |
 | `0x08` | Initiator | Initiator | Copy next 24 received telegrams and return each |

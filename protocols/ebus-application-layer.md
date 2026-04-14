@@ -50,10 +50,10 @@ For detailed type definitions including encoding formulas and Go codec implement
 ## Bus Load Calculation
 
 ```
-Bus load (%) = byte_count × cycle_rate × 4.16 × 10⁻³ s × 100%
+Bus load (%) = byte_count × (1 / cycle_period) × 4.16 × 10⁻³ s × 100%
 ```
 
-Where `cycle_rate` is in Hz (1/period). One-time or event-driven commands have a bus load of `0.0%`.
+The official spec expresses cycle rates as `1/x[unit]` (e.g., `1/10s`, `1/15min`). Commands marked `unique` or `one-time` are sent once (event-triggered) and are listed as `0.0%` bus load. Some event-driven commands with nonzero cycle rates carry nonzero bus load when actively cycling.
 
 ## See Also
 

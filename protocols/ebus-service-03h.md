@@ -86,7 +86,7 @@ Secondary commands `0x00`–`0x03` are barred for historical reasons.
 
 ### Service 0x03 0x08 — Complete Reading of Fuel Quantity Counter
 
-**Description:** Reads the fuel quantity counter. The first byte indicates the fuel unit, followed by four CHAR-encoded quantity digits (decimal 0–99 each).
+**Description:** Reads the fuel quantity counter. The first byte indicates the fuel unit, followed by four CHAR-encoded quantity digits (ranges: three bytes 0–99, high byte 0–9).
 
 **Request payload:** Empty (`NN=0x00`).
 

@@ -177,7 +177,7 @@ This secondary command is barred for compatibility reasons.
 | 1 | pump_control | BYTE | — | — | `0x00`=no action, `0x01`=pump off, `0x02`=pump on, `0x03`=variable user off, `0x04`=variable user on |
 | 2–3 | boiler_target | DATA2c | 0–2000 degC | — | Boiler target temperature |
 | 4–5 | boiler_press | DATA2b | 0–100 bar | — | Boiler target pressure |
-| 6 | setting_degree | DATA1c | 0–100% | `0xFF` | If heat_request=`0x44` (stepped): 0=off, 1=step1, ..., 4=step4. Otherwise (modulating): min–max boiler performance at controller-stop or for automats without integrated power control |
+| 6 | setting_degree | DATA1c | 0–100% | `0xFF` | Stepped operation (0=off, 1–4=step 1–4) or modulating (min–max boiler performance). **Source note:** the official spec references stepped mode via `M6=44h`, but `0x44` does not appear in the `heat_request` enum; this is treated as a source erratum. The `heat_request` byte determines which interpretation applies |
 | 7 | dhw_target | DATA1c | 0–100 degC | `0xFF` | Service water target |
 | 8 | fuel_select | BYTE | — | `0xFF` | Bit1/Bit0: `00`/`11`=don't care, `01`=gas, `10`=oil |
 
@@ -208,7 +208,7 @@ This secondary command is barred for compatibility reasons.
 | 0 | block_number | BYTE | — | — | `0x01` |
 | 1 | phase_or_error | BYTE | — | — | Effective phase number or error code (if Bit5 in byte 3 = alarm). If Bit6 = 1: start prevention reason |
 | 2 | signals_1 | BIT | — | — | Bit0:fuel(0=gas,1=oil), Bit1:ODW_min/GDW_min, Bit2:ODW_max/GDW_max, Bit3:LDW, Bit4:flame, Bit5:valve1, Bit6:valve2, Bit7:valve3 |
-| 3 | signals_2 | BIT | — | — | Bit0:blower, Bit1:ignition, Bit2:oil pump, Bit3:value mode(0=temp,1=pressure), Bit4:fuel source(0=local,1=GLT), Bit5:alarm, Bit6:start prevention, Bit7:error reset |
+| 3 | signals_2 | BIT | — | — | Bit0:blower, Bit1:ignition, Bit2:magn. clutch/oil pump, Bit3:value mode(0=temp,1=pressure), Bit4:fuel source(0=local,1=GLT), Bit5:alarm, Bit6:start prevention, Bit7:error reset |
 | 4 | eff_performance | CHAR | 0–100% | — | Effective performance (setting degree) |
 | 5–6 | boiler_actual | DATA2c | 0–2000 degC/0–100 bar | — | Boiler temp or pressure actual (per Bit3 of byte 3) |
 | 7–8 | boiler_target | DATA2c | 0–2000 degC/0–100 bar | — | Boiler temp or pressure target (per Bit3 of byte 3) |

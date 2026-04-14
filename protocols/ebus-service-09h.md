@@ -33,7 +33,7 @@ Service `0x09` provides direct RAM and EEPROM read/write access to eBUS modules.
 |---:|---|---|---|---|
 | 0 | addr_lo | BYTE | — | Low byte of start address |
 | 1 | addr_hi | BYTE | — | High byte of start address |
-| 2 | count | BYTE | 0–10 | Number of bytes to read. The spec notes service mode enables `DN > 10` |
+| 2 | count (DN) | BYTE | [0..10] | Number of data bytes to read. **Service mode note:** the spec explicitly permits `DN > 10` in service mode |
 
 **Response payload:**
 
@@ -53,7 +53,7 @@ Service `0x09` provides direct RAM and EEPROM read/write access to eBUS modules.
 |---:|---|---|---|---|
 | 0 | addr_lo | BYTE | — | Low byte of memory address |
 | 1 | addr_hi | BYTE | — | High byte of memory address |
-| 2..NN-1 | data | BYTE×(NN-2) | — | Data bytes to write (1–8 bytes) |
+| 2..NN-1 | data | BYTE | — | Data bytes to write. `NN` includes the 2 address bytes, so the number of data bytes is `NN - 2` (range: 1–8 per the standard payload limit) |
 
 **Response payload:** Empty (`NN=0x00`). ACK confirms write.
 
