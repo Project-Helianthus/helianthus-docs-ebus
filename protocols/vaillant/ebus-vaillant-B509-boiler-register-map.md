@@ -158,6 +158,43 @@ Write semantics:
 - Success requires both a valid B509 write acknowledgement and a matching read-back payload.
 - After a confirmed write, the in-memory boiler snapshot is updated with copy-on-write semantics before the live semantic publish.
 
+## Appendix: Semantic FSMs (Boiler)
+
+> Source: `GATES-semantic-fsms.md` Sections 2.1-2.3. These FSMs document the state machines implicit in BAI00 registers.
+
+### `burner_state` (0xAB00)
+
+Register `0xAB00` (`stateNumber`) encodes the burner's operational state as a UCH value. The full numeric encoding is not enumerated in the enrichment corpus; ranges below are best-effort reconstructions.
+
+| Value range | State | Description |
+|-------------|-------|-------------|
+| 0 | `standby` | Boiler idle, no demand |
+| 1-5 | `pre_purge` | Pre-ignition fan purge sequence |
+| 6 | `ignition` | Spark/glow ignition active |
+| 7 | `flame_on` | Flame established, burner operating |
+| 8-10 | `modulating` | Modulating output per demand signal |
+| 11-15 | `post_purge` | Post-burner fan purge |
+| 16+ | `lockout_or_error` | Safety lockout or error condition |
+
+**Transitions:** standby -> pre_purge (demand) -> ignition (fan speed confirmed) -> flame_on (FlameActive=0x0F) -> modulating (steady state) -> post_purge (demand satisfied) -> standby. Any state -> lockout_or_error on safety trip.
+
+**Related registers:** `0x0500` FlameActive, `0xBB00` GasValveActive, `0x8300` FanSpeedRpm, `0x2E00` ModulationPct.
+
+### `flame_state` (0x0500) and `gas_valve_state` (0xBB00)
+
+Both use **UCH sentinel encoding** (NOT simple boolean 0/1):
+
+| Register | `0x0F` | `0xF0` |
+|----------|--------|--------|
+| `0x0500` FlameActive | Flame on (combustion) | No flame |
+| `0xBB00` GasValveActive | Gas valve open | Gas valve closed |
+
+**COLLISION WARNING:** Address `0xBB00` at device `0x08` maps to `GasValveActive` (UCH sentinel) on BAI00 but maps to `ActualEnvPowerPercentage` (percent, %) on EHP00/HMU. Product-type gating via DSN (`0x9A00`) is mandatory.
+
+**Encoding confidence:** HIGH (confirmed by CROSSCHECK-B509.md CORR-1/CORR-2; FINAL-B509.md; GATES-semantic-fsms.md).
+
+---
+
 ## Model-Specific Note
 
 Runtime validation on BAI00 model `0010024604` showed:

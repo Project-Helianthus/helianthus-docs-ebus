@@ -18,7 +18,7 @@ and solar energy figures.
 | Primary byte (`PB`) | `0xB5` |
 | Secondary byte (`SB`) | `0x16` |
 | Purpose | Energy statistics selector read (gas/electric/solar, heating/DHW, various periods) |
-| Observed targets | Vaillant sensoCOMFORT / VRC 720 regulators (others pending validation) |
+| Observed targets | Vaillant sensoCOMFORT / VRC 720 regulators; VWZ/VWZIO at `0x76` on heat pump systems (see Section 8) |
 
 ## 3. Request Payload Layout
 
@@ -149,7 +149,32 @@ Observed responses are typically 11 bytes (some regulators append padding). The 
 | Gas heating, 1 January | `10 01 FF FF 04 03 21 32` |
 | Gas heating, 31 December | `10 01 FF FF 04 03 9F 33` |
 
-## 8. References
+## 8. VWZ/VWZIO Access Path (Heat Pump Systems)
+
+> Source: `CROSSCHECK-B555-misc.md` B516 section; P4 (john30/ebusd issue #335). NOT live-validated on Helianthus bus.
+
+On heat pump systems with a VWZ/VWZIO indoor hydraulic station at address `0x76`, B516 supports an alternative, simpler access path distinct from the 8-byte selector described in Sections 3-7:
+
+| Field | Value |
+|-------|-------|
+| Target device | VWZ/VWZIO at `0x76` |
+| Sub-ID | `0x18` |
+| Prefix | `IGN:1` (1 ignored byte before the value) |
+| Register name | `ConsumptionTotal` |
+| Data type | energy (kWh) |
+| Offset in response | `0x02` |
+
+**ebusd framing:**
+```
+Request:   *r,,,,,,\"B516\",\"18\"    (target: VWZ at 0x76)
+Prefix:    IGN:1                       (1 ignored byte before value)
+```
+
+This is a distinct access path from the VRC720 8-byte selector. The `18` sub-ID with `IGN:1` prefix appears to be a simpler, device-specific query form used on the hydraulic station module. It does NOT use the period/source/usage nibble encoding of the VRC720 path described above.
+
+**Confidence:** HIGH for observed access path existence; MEDIUM for complete decoder shape (original issue does not show full response bytes in the enrichment corpus).
+
+## 9. References
 
 - `john30/ebusd-configuration` issue `#490` (public reverse-engineering notes)
 - Operator RE sessions with Vaillant sensoCOMFORT VRC 720

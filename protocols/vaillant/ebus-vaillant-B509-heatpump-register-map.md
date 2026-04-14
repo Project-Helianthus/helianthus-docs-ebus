@@ -248,6 +248,54 @@ above preserve the ebusd-style `Hwc` names as extracted from the TypeSpec source
 4. **DSN availability on EHP:** Can B509 `0x9A00` (DSN) reliably identify
    EHP00/HMU before attempting any other register, or must B514 be used?
 
+## Appendix: Semantic FSMs (Heat Pump)
+
+> Source: `GATES-semantic-fsms.md` Sections 1.1-1.3, 1.6. These FSMs document the state machines implicit in EHP00/HMU registers.
+
+### `heat_pump_status` (0xD000)
+
+Register `0xD000` encodes the top-level heat pump operating mode as a `hpstatus` UCH enum. The register is confirmed on EHP00 and HMU at address `0x08`.
+
+| Value | State | Description |
+|-------|-------|-------------|
+| 0x00 | `standby` | Heat pump idle, no demand |
+| 0x01 | `heating` | Active heating cycle |
+| 0x02 | `cooling` | Active cooling cycle (reversible HP only) |
+| 0x03 | `dhw` | DHW heating cycle |
+| 0x04 | `defrost` | Defrost/de-icing cycle |
+
+> WARNING: Exact numeric values are NOT fully confirmed. Encoding confidence: LOW. Register existence confidence: HIGH.
+
+**Transitions:** standby -> heating/dhw/cooling (demand). heating -> defrost (evaporator icing). defrost -> heating (DeicingActive 0xCE01 drops to `no`). All active states -> standby (demand satisfied).
+
+**Related registers:** `0xCE01` DeicingActive, `0xE400` CompState, `0xE900` CompControlState, B511 selector `0x07`, B51A `0x23` CurrentYieldPower.
+
+### `compressor_state` (0xE400)
+
+Register `0xE400` encodes the compressor sub-state as a UCH enum. Runs in parallel with `heat_pump_status`.
+
+| Value | State | Description |
+|-------|-------|-------------|
+| 0x00 | `off` | Compressor not running |
+| 0x01 | `starting` | Start sequence in progress |
+| 0x02 | `running` | Operating normally |
+| 0x03 | `stopping` | Stop sequence (anti-short-cycle lockout) |
+| 0x04 | `blocked` | Blocked by high-pressure cut-out or timing constraint |
+
+> WARNING: Exact numeric values are NOT confirmed. Encoding confidence: LOW. Register existence confidence: HIGH.
+
+**Timing gates:** `0xE600` TimeCompOnMin (minimum on-time), `0xE700` TimeCompOffMin (minimum off-time), `0xE800` TimeBetweenTwoCompStartsMin (inter-start delay). The compressor cannot transition off->starting until both TimeCompOffMin and inter-start intervals have elapsed.
+
+### `deicing_active` (0xCE01)
+
+Register `0xCE01` is a `yesno` bool: `0x00` = normal, `0x01` = defrost cycle active.
+
+Transitions: normal -> defrost_active when evaporator icing sensor threshold exceeded. defrost_active -> normal when defrost cycle completes. Related: B514 REG `0x14` (four-way valve switches to defrost position), B51A `0x23` CurrentYieldPower (goes negative during defrost).
+
+**Confidence:** HIGH.
+
+---
+
 ## References
 
 - Protocol spec: [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md)

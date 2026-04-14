@@ -264,6 +264,23 @@ is unknown (NAK, zero, or stale value).
 - Public TypeSpec: [76.vwz.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/76.vwz.tsp)
 - Public TypeSpec: [76.vwzio.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/76.vwzio.tsp)
 
+## Appendix: Semantic FSM — `four_way_valve_position` (REG 0x14)
+
+> Source: `GATES-semantic-fsms.md` Section 1.5.
+
+B514 REG `0x14` (T.0.20, wire: `05 14 03 FF FF`) on HMU at `0x08` encodes the four-way valve position as a `uchar` with `onoff` encoding.
+
+| Value | State | Description |
+|-------|-------|-------------|
+| 0x00 | `heating` | Valve in heating position (compressor -> condenser -> expansion valve -> evaporator) |
+| 0x01 | `defrost` | Valve switched to defrost/reverse-cycle position (also cooling position on dual-mode units) |
+
+**Transitions:** heating -> defrost when `DeicingActive` (B509 `0xCE01`) becomes `yes` or cooling mode requested on reversible HP. defrost -> heating when defrost cycle completes.
+
+**Related registers:** B509 `0xCE01` DeicingActive, B509 `0xD000` HeatPumpStatus, B51A `0x23` CurrentYieldPower (goes negative during defrost), B51A `05FF34` REG `0x06`/`0x07` FourWayValveHours/Switches.
+
+**Confidence:** HIGH (P1 cyberthom42 + P5 OpenHAB both confirm live read).
+
 ### Enrichment sources
 
 - Enrichment report: `_work_enrichment/final/FINAL-B514.md`

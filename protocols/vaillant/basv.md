@@ -82,6 +82,38 @@ These legacy `device_id` codes have been observed/verified for older Vaillant-gr
 | `NETX2` | `sensoNET VR 920/921 WiFi/LAN Gateway (Generation 2) - Optional Regulator` |
 | `NETX3` | `myVAILLANT VR 940 WiFi Gateway (Generation 3) - Optional Regulator` |
 
+## VRC720 Controller Family Classification
+
+> Source: `FINAL-corrections-and-devices.md` Part B, `GATES-protocol-level.md` Section 1.
+
+All 720-series device IDs listed in the table above are firmware/hardware variants of the **VRC720 controller family**. They are NOT separate device types. The family splits into two form factors:
+
+- **Wireless base stations (BASV\*):** BASV0, BASV2, BASV3 — the RF bridge unit mounted near the boiler/heat pump. Communicates wirelessly with the wall-mounted controller.
+- **Wired controllers (CTLV\*/CTLS\*):** CTLV0, CTLV2, CTLV3, CTLS2 — wall-mounted wired controllers connected directly via eBUS.
+
+All VRC720-family devices share:
+- eBUS slave address `0x15`
+- B524 extended register protocol (opcodes `0x02`/`0x06`)
+- B555 timer/schedule protocol
+- Config-compatible register map (john30 `15.700.csv` symlinked for CTLV2/CTLV3)
+
+### Known HW/SW Versions
+
+| device_id | HW version | SW version | Source |
+|-----------|-----------|-----------|--------|
+| BASV2 | 1704 | 0507 | Helianthus live hardware |
+| CTLV2 | 1104 | 0514 | john30/ebusd issue #487 (live hardware) |
+| CTLV3 | 3704 | 0709 | john30/ebusd issue #487 (live hardware) |
+
+### VRC700 Is a Separate Family
+
+The **VRC700** (device ID `70000`, including Saunier Duval alias `B7S00`) is a different, older controller family. It shares eBUS address `0x15` but differs in protocol support:
+- Uses B524 opcodes `0x03`/`0x04` for timer operations (NOT B555)
+- Does NOT respond to B555 frames
+- Separate register namespace in some B524 groups
+
+B7S00 is a Saunier Duval branding alias of the VRC700 — do NOT include it in VRC720-family classifications.
+
 ## References
 
 - `protocols/ebus-overview.md#queryexistence-0x07-0xfe`

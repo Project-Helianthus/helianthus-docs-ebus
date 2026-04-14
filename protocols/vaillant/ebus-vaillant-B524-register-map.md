@@ -996,6 +996,66 @@ One pending:
 
 ---
 
+## Appendix: Semantic FSMs (Controller)
+
+> Source: `GATES-semantic-fsms.md` Sections 3.1-3.3.
+
+### `energy_manager_state` (GG=0x00 RR=0x0048)
+
+Register `OP=0x01/0x02, GG=0x00, RR=0x0048` — system-level energy manager state. Wire type: `u16` enum.
+
+| Value | State | myPyllant | Description |
+|-------|-------|-----------|-------------|
+| 0 | `standby` | `STANDBY` | No active demand; all circuits idle (live scan confirmed) |
+| 1 | `heating` | `HEATING` | Heating demand active |
+| 2 | `cooling` | `COOLING` | Cooling demand active (reversible HP only) |
+| 3 | `dhw` | -- | DHW heating cycle (inferred from B524 architecture) |
+
+**Transitions:** standby -> heating/dhw/cooling (demand). Active states -> standby (demand satisfied). heating <-> dhw (DHW priority override / DHW complete with pending heating demand).
+
+**Related registers:** GG=0x02 RR=0x001B `circuit_state` (per-circuit sub-state aggregated here), GG=0x02 RR=0x001E `pump_status`, GG=0x00 RR=0x004B `system_flow_temperature`.
+
+**Confidence:** HIGH for states 0-3 (live scan + ISC KNX + myPyllant enum correlation).
+
+### `circuit_state` (GG=0x02 RR=0x001B)
+
+Register `OP=0x01, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit state. Wire type: `u16` enum.
+
+| Value | State | myPyllant | Description |
+|-------|-------|-----------|-------------|
+| 0 | `standby` | `STANDBY` | Circuit idle (live confirmed: 3 circuits simultaneously standby) |
+| 1 | `heating` | `HEATING` | Circuit active in heating mode |
+| 2 | `cooling` | `COOLING` | Circuit active in cooling mode |
+
+**Transitions:** standby -> heating (room temp below setpoint AND schedule slot active). heating -> standby (setpoint reached OR schedule inactive). standby -> cooling (room temp above cooling setpoint AND cooling enabled).
+
+**Related registers:** GG=0x02 RR=0x001E `pump_status` (tracks circuit_state: 0->off, 1->heat, 2->cool), GG=0x02 RR=0x001A `mixer_movement`, GG=0x02 RR=0x0020 `calculated_flow_temperature`.
+
+**Confidence:** HIGH for 0/1 (live confirmed + myPyllant); MEDIUM for 2 (no cooling hardware in lab).
+
+### `system_quick_mode` (GG=0x00 RR=0x0016 + 0x0074)
+
+Asymmetric read/write paths:
+- **Read active flag:** `OP=0x01, GG=0x00, RR=0x0016` (u8 bool)
+- **Read mode value:** `OP=0x01, GG=0x00, RR=0x0074` (u8 enum)
+- **Write:** `OP=0x02, GG=0x09, RR=0x0001` (value) + `RR=0x0002` (active flag) -- asymmetric path
+
+| Value (RR=0x0074) | State | Description |
+|--------------------|-------|-------------|
+| 0x00 | `dormant` | No quick mode active; RR=0x0016 returns `off` or dormant |
+| 0x01 | `ventilation` | Ventilation-only mode |
+| 0x02 | `party` | Party mode -- enhanced heating |
+| 0x03 | `away` | Away mode -- reduced heating |
+| 0x04 | `one_day_at_home` | Single-day manual override |
+
+**Transitions:** dormant -> any active (B524 write to GG=0x09). Active -> dormant (duration expires or explicit deactivation write).
+
+**Related registers:** GG=0x09 RR=0x0001/0x0002 (write targets), GG=0x00 RR=0x0048 `energy_manager_state` (downstream effect: quick mode changes demand), B524 GG=0x03 zone schedules (quick mode overrides scheduled time programs).
+
+**Confidence:** HIGH for register addresses and asymmetric path; MEDIUM for exact enum labels (KNX firmware RE, single decompilation source).
+
+---
+
 ## Sources
 
 - **BASV2 constraint catalog** — Downloaded from hardware via `0x01` constraint probe. Authoritative for value ranges.

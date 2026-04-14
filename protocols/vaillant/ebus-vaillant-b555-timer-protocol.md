@@ -1277,3 +1277,43 @@ the wire response includes it (see Section 5.3 examples).
 | 2.13 | 2026-03-08 | **Final wording pass (P2×1, P3×1).** (1) Section 5.1 min/max enforcement rule narrowed: numeric temp violations yield 0x06, but not all temp-field rejections use 0x06 — Heating 0xFFFF is rejected with 0x01 (Section 12.14). (2) Rev 2.12 changelog clarified: A6 field-shift bug described as "shifted field positions within the A6 frame" with explicit note distinguishing it from the 2.5 NN-inclusion bug that shifted the opcode itself. |
 | 2.14 | 2026-03-08 | **Straggler hex audit (P2×1).** Two `hex` (with-NN) A5 commands in Section 12.5 had 6 data bytes after NN=0x05 (trailing `00`). ebusd used NN to bound the read so results were correct, but format was inconsistent. Fixed to 9 bytes (ZZ+PB+SB+NN+5 data). Full audit of all 19 `hex` commands now passes alongside the 76 `hex -n` commands. |
 | 2.15 | 2026-04-14 | **Scope correction + enrichment integration.** (1) VRC700 removed from §1 scope -- B555 is VRC720-family only (BASV0/BASV2/BASV3/CTLV0/CTLV2/CTLV3/CTLS2). VRC700 uses B524 opcodes 0x03/0x04 for timers. New §1.0 device-binding table added. (2) HC=0x04 renamed from "Silent" to "NoiseReduction (Silent)" with dual-name note and B508 cross-reference. (3) §9 rewritten to explain B524 timer opcodes are VRC700-only (not "different subsystem"), with cross-reference to B524 §4.4 channel map. Source: FINAL-B524-B555-B507-B508.md, CROSSCHECK-B555-misc.md. |
+| 2.16 | 2026-04-14 | **FSM appendix + cross-protocol gate.** Added Appendix A: noise_reduction FSM (B555 HC=0x04 -> B508 broadcast -> B509 EHP 0xA901) and B555<->B524 DHW temperature coupling gate. Source: GATES-semantic-fsms.md, GATES-protocol-level.md. |
+
+---
+
+## Appendix A: Semantic FSMs and Cross-Protocol Gates
+
+> Source: `GATES-semantic-fsms.md` Section 1.7, `GATES-protocol-level.md` Sections 5-6.
+
+### A.1 `noise_reduction` FSM (HC=0x04 -> B508 -> B509)
+
+B555 schedule type HC=0x04 (NoiseReduction/Silent) triggers a cross-protocol broadcast chain:
+
+1. B555 HC=0x04 timer slot starts on BASV2/VRC720
+2. B508 broadcast emitted (ZZ=0xFE, ID=0x02, State1/State2 = on/off)
+3. EHP00 (0x08) updates B509 registers: `0xA901` NoiseReduction (yesno) + `0x2401` NoiseReductionFactor (%)
+
+**B509 register `0xA901` state table:**
+
+| Value | State | Description |
+|-------|-------|-------------|
+| 0x00 | `off` | Noise reduction inactive; full-rated compressor/fan operation |
+| 0x01 | `on` | Noise reduction active; compressor and fan speed capped per `NoiseReductionFactor` |
+
+**Transitions:** off -> on (B508 broadcast State1=0x01, triggered by B555 HC=0x04 slot start). on -> off (B508 broadcast State1=0x00, slot end).
+
+**Gate condition:** B509 registers `0xA901` and `0x2401` on EHP00 are only meaningful when HC=0x04 is configured and the timer is active.
+
+**Confidence:** HIGH for register; MEDIUM-HIGH for B508 broadcast chain (wire format clear, no Helianthus live capture confirmation).
+
+### A.2 B555 <-> B524 DHW Temperature Coupling
+
+B555 timer temperature writes and B524 DHW setpoint share state. This creates a bidirectional gate:
+
+| Write path | Effect |
+|-----------|--------|
+| B555 TIMER_WRITE with explicit temp (e.g., 52.0C to DHW Monday) | B524 `OP=0x02, GG=0x01, RR=0x0006` DHW target_temp_c changes immediately |
+| B524 write to DHW setpoint register | All B555 DHW timer slots reflect the new value on read-back |
+| B555 TIMER_WRITE with 0xFFFF (temp no-op) | B524 setpoint unchanged; slots read back current B524 value |
+
+B555 DHW schedule reads are lossy -- no way to distinguish a slot written with an explicit temperature from one written with 0xFFFF. Both read back the current B524 setpoint.
