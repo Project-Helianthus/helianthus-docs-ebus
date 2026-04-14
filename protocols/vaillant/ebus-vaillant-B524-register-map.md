@@ -17,7 +17,7 @@ This is the register catalog for B524. For the protocol specification (wire form
 | **RR** | Register address (hex) |
 | **Name** | Our leaf name (from myVaillant/myPyllant API path) |
 | **Cat** | **S**=state (RO), **C**=config (RW), **P**=property (RO, stable), **E**=energy (RO, counter), **—**=unknown/unclassified. Verified against observed FLAGS where scan data exists |
-| **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian |
+| **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian. **f32 byte order is device-dependent:** all values in this map assume address `0x15` (BASV2/VRC720) = little-endian. HMU at `0x08` (heat pump systems) uses big-endian f32 -- see [B524 protocol doc section 2.6](./ebus-vaillant-B524.md#26-wire-type-encoding) |
 | **Decode** | Semantic interpretation: `bool`, `°C`, `K`, `bar`, `%`, `kWh`, `hrs`, `min`, `count`, `enum`, `text`, `date`, `time`, `state`, `raw`, `—` (unknown) |
 | **ebusd** | ebusd community TSP name. `—` = not in TSP |
 | **Constraint** | From BASV2 constraint catalog (authoritative, downloaded from hardware). `—` = no catalog entry |
@@ -139,8 +139,8 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x000A | parallel_tank_loading_allowed | C | u16 | bool | HwcParallelLoading | — | →onoff | — | ebusd confirmed at `@ext(0xa,0)` |
 | 0x000B | (unknown) | — | u16 | — | — | — | — | — | Scan value: 0. Near boolean cluster |
 | 0x000E | max_room_humidity | C | u16 | % | MaxRoomHumidity | — | — | — | |
-| 0x000F | (unknown) | — | u16 | — | — | — | — | — | Possibly HybridManager per TSP |
-| 0x0010 | (unknown) | — | u16 | — | — | — | — | — | Near config cluster |
+| 0x000F | hybrid_manager | — | u16 | — | HybridManager | — | — | — | Name confirmed by BASV3 TypeSpec (`burmistrzak/ebusd-configuration 15.basv3.tsp`). Access: `ri/wi` (installer). Hybrid system manager (HP + boiler). Wire semantics pending live validation |
+| 0x0010 | tariff_aux_heater | — | u16 | — | TariffAuxHeater | — | — | — | Name confirmed by BASV3 TypeSpec (`burmistrzak/ebusd-configuration 15.basv3.tsp`). Access: `ri` (installer read). Tariff for auxiliary heater |
 | 0x0011 | (unknown) | — | u16 | — | — | — | — | — | Scan value: 16. Possible temp threshold |
 | 0x0012 | continuous_heating_room_setpoint | C | u16 | °C | — | — | — | — | Confirmed exact, value=20 |
 | 0x0014 | adaptive_heating_curve | C | u8 | bool | AdaptHeatCurve | — | →yesno | — | FLAGS=0x03 (user RW). Scan validated 1-byte |
@@ -762,7 +762,7 @@ Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-devi
 
 **Current-lab VR_71 correlation:** B524 yields `device_class_address=0x26` at `II=0x01`. The conclusion that this slot corresponds to `VR_71` comes from correlating that hint with eBUS identity data, where slave address `0x26` identifies itself as `VR_71`. Vaillant controller documentation then constrains the profile interpretation by describing `FM5` as "instead of VR 71". This is useful and strong for the current lab/profile, but it is not standalone protocol proof that `GG=0x0C` universally means `VR71/FM5`.
 
-Architectural note: Functional-module semantics (FM3/FM5/VR66 families) are documented separately in [`../architecture/functional-modules.md`](../architecture/functional-modules.md).
+Architectural note: Functional-module semantics (FM3/FM5/VR66 families) are documented separately in [`../../architecture/functional-modules.md`](../../architecture/functional-modules.md).
 
 ---
 
@@ -992,7 +992,67 @@ One pending:
 
 | RR | myPyllant CSV leaf | TSP name | Status |
 |----|-------------------|----------|--------|
-| 0x0024 | hybrid_control_strategy (BIVALENCE_POINT) | BackupBoiler | Pending. TSP puts HybridManager at 0x000F. |
+| 0x0024 | hybrid_control_strategy (BIVALENCE_POINT) | BackupBoiler | Pending. TSP puts HybridManager at 0x000F (now named in GG=0x00 table). |
+
+---
+
+## Appendix: Semantic FSMs (Controller)
+
+> Source: `GATES-semantic-fsms.md` Sections 3.1-3.3.
+
+### `energy_manager_state` (GG=0x00 RR=0x0048)
+
+Register `OP=0x01/0x02, GG=0x00, RR=0x0048` — system-level energy manager state. Wire type: `u16` enum.
+
+| Value | State | myPyllant | Description |
+|-------|-------|-----------|-------------|
+| 0 | `standby` | `STANDBY` | No active demand; all circuits idle (live scan confirmed) |
+| 1 | `heating` | `HEATING` | Heating demand active |
+| 2 | `cooling` | `COOLING` | Cooling demand active (reversible HP only) |
+| 3 | `dhw` | -- | DHW heating cycle (inferred from B524 architecture) |
+
+**Transitions:** standby -> heating/dhw/cooling (demand). Active states -> standby (demand satisfied). heating <-> dhw (DHW priority override / DHW complete with pending heating demand).
+
+**Related registers:** GG=0x02 RR=0x001B `circuit_state` (per-circuit sub-state aggregated here), GG=0x02 RR=0x001E `pump_status`, GG=0x00 RR=0x004B `system_flow_temperature`.
+
+**Confidence:** HIGH for states 0-3 (live scan + ISC KNX + myPyllant enum correlation).
+
+### `circuit_state` (GG=0x02 RR=0x001B)
+
+Register `OP=0x01, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit state. Wire type: `u16` enum.
+
+| Value | State | myPyllant | Description |
+|-------|-------|-----------|-------------|
+| 0 | `standby` | `STANDBY` | Circuit idle (live confirmed: 3 circuits simultaneously standby) |
+| 1 | `heating` | `HEATING` | Circuit active in heating mode |
+| 2 | `cooling` | `COOLING` | Circuit active in cooling mode |
+
+**Transitions:** standby -> heating (room temp below setpoint AND schedule slot active). heating -> standby (setpoint reached OR schedule inactive). standby -> cooling (room temp above cooling setpoint AND cooling enabled).
+
+**Related registers:** GG=0x02 RR=0x001E `pump_status` (tracks circuit_state: 0->off, 1->heat, 2->cool), GG=0x02 RR=0x001A `mixer_movement`, GG=0x02 RR=0x0020 `calculated_flow_temperature`.
+
+**Confidence:** HIGH for 0/1 (live confirmed + myPyllant); MEDIUM for 2 (no cooling hardware in lab).
+
+### `system_quick_mode` (GG=0x00 RR=0x0016 + 0x0074)
+
+Asymmetric read/write paths:
+- **Read active flag:** `OP=0x01, GG=0x00, RR=0x0016` (u8 bool)
+- **Read mode value:** `OP=0x01, GG=0x00, RR=0x0074` (u8 enum)
+- **Write:** `OP=0x02, GG=0x09, RR=0x0001` (value) + `RR=0x0002` (active flag) -- asymmetric path
+
+| Value (RR=0x0074) | State | Description |
+|--------------------|-------|-------------|
+| 0x00 | `dormant` | No quick mode active; RR=0x0016 returns `off` or dormant |
+| 0x01 | `ventilation` | Ventilation-only mode |
+| 0x02 | `party` | Party mode -- enhanced heating |
+| 0x03 | `away` | Away mode -- reduced heating |
+| 0x04 | `one_day_at_home` | Single-day manual override |
+
+**Transitions:** dormant -> any active (B524 write to GG=0x09). Active -> dormant (duration expires or explicit deactivation write).
+
+**Related registers:** GG=0x09 RR=0x0001/0x0002 (write targets), GG=0x00 RR=0x0048 `energy_manager_state` (downstream effect: quick mode changes demand), B524 GG=0x03 zone schedules (quick mode overrides scheduled time programs).
+
+**Confidence:** HIGH for register addresses and asymmetric path; MEDIUM for exact enum labels (KNX firmware RE, single decompilation source).
 
 ---
 

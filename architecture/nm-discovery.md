@@ -250,4 +250,4 @@ once the device is known -- it does not feed back into NM topology.
 - [`architecture/nm-model.md`](./nm-model.md) -- NM state machine, gateway ownership, wire lanes
 - [`architecture/semantic-structure-discovery.md`](./semantic-structure-discovery.md) -- B524 structural discovery (separate concern)
 - `architecture/nm-participant-policy.md` -- bus-load policy and cycle-time bounds (ISSUE-DOC-02, planned)
-- [`protocols/ebus-overview.md`](../protocols/ebus-overview.md) -- wire-level QueryExistence, Identification formats
+- [`protocols/ebus-services/ebus-overview.md`](../protocols/ebus-services/ebus-overview.md) -- wire-level QueryExistence, Identification formats

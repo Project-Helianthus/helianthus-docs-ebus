@@ -98,4 +98,4 @@ That is a gateway surface limitation, not evidence that B503 lacks the error.
 - Public TypeSpec: [errors_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/errors_inc.tsp)
 - Public TypeSpec: [service_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/service_inc.tsp)
 - Public TypeSpec: [08.hmu.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/08.hmu.tsp)
-- Data type reference: [`../types/ebusd-csv.md`](../types/ebusd-csv.md)
+- Data type reference: [`../../types/ebusd-csv.md`](../../types/ebusd-csv.md)

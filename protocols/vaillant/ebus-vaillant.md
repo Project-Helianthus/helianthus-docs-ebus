@@ -10,6 +10,8 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x21` (B521, OMU service registers): [`protocols/ebus-vaillant-B521.md`](ebus-vaillant-B521.md)
 - `0xB5 0x22` (B522, recoVAIR ventilation commands): [`protocols/ebus-vaillant-B522.md`](ebus-vaillant-B522.md)
 - `0xB5 0x23` (B523, functional-module actor/sensor data): [`protocols/ebus-vaillant-B523.md`](ebus-vaillant-B523.md)
+- `0xB5 0x07` (B507, heat pump load/poll): [`protocols/ebus-vaillant-B507.md`](ebus-vaillant-B507.md)
+- `0xB5 0x08` (B508, NoiseReduction broadcast): [`protocols/ebus-vaillant-B508.md`](ebus-vaillant-B508.md)
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`protocols/ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`protocols/ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 
@@ -24,6 +26,8 @@ For detailed coverage of selector-heavy identifiers, see:
 ```text
 0xB5 0x04  GetOperationalData (request parameter op; response is op-dependent)
 0xB5 0x05  SetOperationalData (request parameter op + optional payload; response is op-dependent)
+0xB5 0x07  Heat pump load/poll (B507; CTLV2→HMU, heat-pump-only — enrichment research, not live-validated)
+0xB5 0x08  NoiseReduction broadcast (B508; ZZ=FE broadcast — enrichment research, not live-validated)
 0xB5 0x09  Register access / scan-id chunk discovery (selector-dependent payload forms)
 0xB5 0x13  Value-range query
 0xB5 0x14  Service test-menu values
@@ -229,6 +233,63 @@ Encoding of `W/V/QQ` is regulator-dependent; observations indicate:
   - `QQ = 0x35` (53) → second half of 2026.
 - For X=2 (month): month is still selected via `W`, while `QQ` provides the year context using the same half-year timeline.
 - For X=1 (day): only the last 16 days are available; `W` parity selects first/second half of month, `V` selects day within half, and `QQ+W` determine year/month context.
+
+---
+
+## Device-Type Reference
+
+> Source: `GATES-protocol-level.md` Section 1, `FINAL-corrections-and-devices.md` Part B.
+
+### VRC720 Family (720-Series Controllers)
+
+All share eBUS address `0x15`, B524 (OP=0x02/0x06), and B555 timer transport.
+
+| Variant | Device IDs | Form Factor |
+|---------|-----------|-------------|
+| Wireless base stations | BASV0, BASV2, BASV3 | RF bridge near boiler/HP |
+| Wired controllers (Vaillant) | CTLV0, CTLV2, CTLV3 | Wall-mounted wired unit |
+| Wired controllers (Saunier Duval) | CTLS2 | Wall-mounted wired unit |
+
+### VRC700 Family (700-Series Controllers)
+
+Separate older family. eBUS address `0x15`. Uses B524 opcodes `0x02`/`0x03`/`0x04`. Does **NOT** support B555.
+
+| Device ID | Notes |
+|-----------|-------|
+| 70000 | Vaillant multiMATIC VRC700 |
+| B7S00 | Saunier Duval alias of VRC700 |
+
+### Device-Type Protocol Support Matrix
+
+| Device Type | eBUS Addr | Key Protocols | Timer Transport |
+|-------------|-----------|---------------|-----------------|
+| BAI00 (gas boiler) | 0x08 | B504, B505, B509 (1533 rx), B510, B511, B512 | N/A |
+| EHP00 (heat pump IDU) | 0x08 | B504, B505, B507, B509 (EHP regs), B511, B514, B51A | N/A |
+| HMU00 (hydraulic mgmt) | 0x08 | B504, B505, B509 (`54 02 00` sub-addressing), B511, B512, B514, B51A | N/A |
+| VRC720 family | 0x15 | B504, B505, B509, B524 (OP=0x02/0x06) | B555 |
+| VRC700 | 0x15 | B524 (OP=0x02/0x03/0x04) | B524 0x03/0x04 |
+| VRC Legacy (VRT 350/370/430/470) | 0x15 | B509 only (7 regs) | None |
+| VR_71 (functional module) | 0x26 | B504, B505, B509, B523, B524 (stub) | N/A |
+| NETX3 / VR921 (gateway) | 0xF6 | B504, B505, B509, B511, B524 master, B555 master | N/A |
+| SOL00 (solar/FM5 module) | 0xEC | Same MCU as BASV2 (secondary slave) | N/A |
+| VWZIO (indoor hydraulic station) | 0x76 | B511, B512, B514 (T.1), B516 | N/A |
+
+### eBUS Address Collision Warning
+
+Address `0x08` hosts completely different device types depending on installation:
+- **BAI00** (gas boiler) — B509 register `0xBB00` = `gasValveActive` (UCH sentinel 0x0F/0xF0)
+- **EHP00/HMU** (heat pump) — same address `0xBB00` = `actualEnvPowerPercentage` (percent, %)
+
+Device type MUST be established via B509 product ID scan (`0x9A00` DSN or scan-ID chunks `0x24`-`0x27`) before decoding any B509 register at address `0x08`.
+
+### f32 Byte Order Gate
+
+B524 f32 registers have device-dependent byte order:
+
+| Device | eBUS Address | f32 Byte Order |
+|--------|-------------|----------------|
+| BASV2, CTLV2, VRC720 | 0x15 | Little-endian |
+| HMU (heat pump) | 0x08 | **Big-endian** |
 
 ---
 
