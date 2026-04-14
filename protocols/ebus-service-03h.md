@@ -23,7 +23,7 @@ Secondary commands `0x00`–`0x03` are barred for historical reasons.
 | `0x03` | `0x06` | Operating Time Level 2 | Initiator → Target | Initiator/Target | One-time |
 | `0x03` | `0x07` | Operating Time Level 3 | Initiator → Target | Initiator/Target | One-time |
 | `0x03` | `0x08` | Fuel Quantity Counter | Initiator → Target | Initiator/Target | One-time |
-| `0x03` | `0x10` | Meter Reading | Initiator → Target | Initiator/Target or Broadcast | One-time |
+| `0x03` | `0x10` | Meter Reading | Initiator → Target | Initiator/Target or Initiator/Initiator | One-time |
 
 ## Commands
 
@@ -98,7 +98,7 @@ Secondary commands `0x00`–`0x03` are barred for historical reasons.
 | 1 | qty_1s | CHAR | 0–99 | 1s digits |
 | 2 | qty_100s | CHAR | 0–99 | 100s digits |
 | 3 | qty_10000s | CHAR | 0–99 | 10000s digits |
-| 4 | qty_1000000s | CHAR | 0–9 | 1000000s digit |
+| 4 | qty_100000s | CHAR | 0–9 | 100000s digit |
 
 ---
 

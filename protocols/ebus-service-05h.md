@@ -109,7 +109,7 @@ The service defines two parallel channel groups with symmetric structure:
 | 3 | setting_degree | CHAR | 0–100% | — | Setting degree (min–max boiler performance) |
 | 4 | boiler_temp | DATA1c | 0–100 degC | — | Boiler temperature |
 | 5 | return_temp | CHAR | 0–100 degC | — | Return water temperature |
-| 6 | hot_water_temp | CHAR | 0–100 degC | — | Boiler temperature (alt. reading) |
+| 6 | boiler_temp_2 | CHAR | 0–100 degC | — | Boiler temperature (BT, secondary reading) |
 | 7 | outside_temp | SIGNED CHAR | -30 to +50 degC | `0x3F` | Outside temperature |
 
 **Bus load:** 0.66% at 1/10s–1/1min.
@@ -177,7 +177,7 @@ This secondary command is barred for compatibility reasons.
 | 1 | pump_control | BYTE | — | — | `0x00`=no action, `0x01`=pump off, `0x02`=pump on, `0x03`=variable user off, `0x04`=variable user on |
 | 2–3 | boiler_target | DATA2c | 0–2000 degC | — | Boiler target temperature |
 | 4–5 | boiler_press | DATA2b | 0–100 bar | — | Boiler target pressure |
-| 6 | setting_degree | DATA1c | 0–100% | `0xFF` | Stepped: 0=off,1–4=steps. Modulating: min–max performance |
+| 6 | setting_degree | DATA1c | 0–100% | `0xFF` | If heat_request=`0x44` (stepped): 0=off, 1=step1, ..., 4=step4. Otherwise (modulating): min–max boiler performance at controller-stop or for automats without integrated power control |
 | 7 | dhw_target | DATA1c | 0–100 degC | `0xFF` | Service water target |
 | 8 | fuel_select | BYTE | — | `0xFF` | Bit1/Bit0: `00`/`11`=don't care, `01`=gas, `10`=oil |
 
@@ -207,7 +207,7 @@ This secondary command is barred for compatibility reasons.
 |---:|---|---|---|---|---|
 | 0 | block_number | BYTE | — | — | `0x01` |
 | 1 | phase_or_error | BYTE | — | — | Effective phase number or error code (if Bit5 in byte 3 = alarm). If Bit6 = 1: start prevention reason |
-| 2 | signals_1 | BIT | — | — | Bit0:fuel(0=gas,1=oil), Bit1:GDW_min, Bit2:GDW_max, Bit3:LDW, Bit4:flame, Bit5:valve1, Bit6:valve2, Bit7:valve3 |
+| 2 | signals_1 | BIT | — | — | Bit0:fuel(0=gas,1=oil), Bit1:ODW_min/GDW_min, Bit2:ODW_max/GDW_max, Bit3:LDW, Bit4:flame, Bit5:valve1, Bit6:valve2, Bit7:valve3 |
 | 3 | signals_2 | BIT | — | — | Bit0:blower, Bit1:ignition, Bit2:oil pump, Bit3:value mode(0=temp,1=pressure), Bit4:fuel source(0=local,1=GLT), Bit5:alarm, Bit6:start prevention, Bit7:error reset |
 | 4 | eff_performance | CHAR | 0–100% | — | Effective performance (setting degree) |
 | 5–6 | boiler_actual | DATA2c | 0–2000 degC/0–100 bar | — | Boiler temp or pressure actual (per Bit3 of byte 3) |
@@ -266,7 +266,7 @@ This secondary command is barred for compatibility reasons.
 
 | Byte | Field | Type | Range | Repl. | Description |
 |---:|---|---|---|---|---|
-| 0 | dhw_config | BIT | — | — | Bit0:DHW exists, Bit1:parallel(1)/preference(0), Bit2:thermostat, Bit3:flow-through heater |
+| 0 | dhw_config | BIT | — | — | Bit0:DHW exists, Bit1:parallel(1)/preference(0), Bit2:thermostat, Bit3:flow-through heater. Bit4–7: reserved (must be 0) |
 | 1 | min_setting | DATA1c | 0–100% | — | Minimum setting degree |
 | 2 | min_dhw_target | DATA1c | 0–100 degC | — | Minimum DHW target temperature |
 | 3 | max_dhw_target | DATA1c | 0–100 degC | — | Maximum DHW target temperature |
@@ -300,7 +300,7 @@ This secondary command is barred for compatibility reasons.
 |---:|---|---|---|---|---|
 | 0 | room_target | DATA1c | 0–100 degC | — | Room temperature target |
 | 1–2 | room_actual | DATA2c | -50 to +50 degC | — | Room temperature actual |
-| 3 | status | BIT | — | — | Bit0: DHW preparation active |
+| 3 | status | BIT | — | — | Bit0: DHW preparation active. Bit1–7: reserved (must be 0) |
 | 4–5 | reserved_1 | — | — | `0x8000` | Reserved |
 | 6–7 | reserved_2 | — | — | `0x8000` | Reserved |
 | 8 | reserved_3 | — | — | `0xFF` | Reserved |

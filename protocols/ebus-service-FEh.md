@@ -30,7 +30,7 @@ Service `0xFE` carries general-purpose broadcast messages. Currently only one se
 |---:|---|---|---|---|---|
 | 0–9 | error_text | CHAR×10 | — | — | 10-character error message (ASCII) |
 
-**Telegram type:** Broadcast (`DST=0xFE`). No ACK, no response.
+**Telegram type:** Broadcast (`DST=0xFE`). The official spec includes trailing ACK and SYN bytes in the wire table, though broadcast semantics do not require a target acknowledgement.
 
 **Bus load:** `0.0%` (one-time only, on error event).
 

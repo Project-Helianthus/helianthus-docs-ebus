@@ -13,7 +13,7 @@ Service `0xFF` carries all Network Management (NM) messages. NM enables safe ope
 
 NM is based on **indirect network management** (OSEK/VDX concept): it monitors the bus by observing cyclic application messages, adding **no extra bus load** for monitoring. NM implementation is optional. Target devices have no network management — each target is monitored by the initiator nodes that need it.
 
-> **Helianthus implementation:** For the Helianthus-specific NM model (passive/indirect approach with semantic polling as the heartbeat source), see [`../architecture/nm-model.md`](../architecture/nm-model.md).
+> **Helianthus implementation:** For the Helianthus-specific NM model, see [`../architecture/nm-model.md`](../architecture/nm-model.md).
 
 ## Terminology
 
@@ -133,9 +133,9 @@ flowchart TD
 | Element | Description |
 |---|---|
 | **Target configuration** | List of eBUS addresses to monitor (including own node implicitly) |
-| **Status chart** | Per-node status: OK (message received within cycle time) / NOK (expired) |
+| **Status chart** | Per-node status: OK (message received within cycle time, or own message sent successfully) / NOK (cycle time expired without message, or own node unable to send) |
 | **Cycle times** | Per-node or default time window within which a message is expected |
-| **Start flag** | Set after reset; cleared when the longest cycle time expires once. While set, OK entries may be default (unchecked) |
+| **Start flag** | Set after reset; cleared when the longest cycle time expires once. While set, OK entries may be default (unchecked). NOK remains a valid statement even while the start flag is set |
 | **Net status** (optional) | Summary: OK if all monitored nodes OK and own node can send; NOK otherwise |
 
 ### Target Configuration Types
@@ -190,7 +190,7 @@ flowchart TD
 
 ### Service 0xFF 0x02 — Failure Message
 
-**Description:** Broadcast issued when NM detects that a monitored node has failed (cycle time expired without message). May be repeated every ≥15 minutes while failure persists.
+**Description:** Broadcast issued when NM detects that a monitored node has failed (cycle time expired without message) or that the own node is incapable of sending. May be repeated every ≥15 minutes while failure persists.
 
 **Payload (broadcast):** Empty (`NN=0x00`).
 
@@ -226,8 +226,8 @@ flowchart TD
 
 | Byte | Field | Type | Description |
 |---:|---|---|---|
-| 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit7: 1=more data, 0=complete |
-| 1 | nm_status | BIT | Bit0–7: status of addresses in bytes 2–9. 0=NOK, 1=OK. Bit0 = status of address in byte 2 |
+| 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
+| 1 | nm_status | BIT | Bit0–7: status of addresses in bytes 2–9 (up to 8 bits used). 0=NOK, 1=OK. Bit0 = status of address in byte 2 |
 | 2..NN-1 | addresses | CHAR×(NN-2) | eBUS addresses of monitored nodes |
 
 ---
@@ -246,7 +246,7 @@ flowchart TD
 
 | Byte | Field | Type | Description |
 |---:|---|---|---|
-| 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit7: 1=more data, 0=complete |
+| 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
 | 1..NN-1 | addresses | CHAR×(NN-1) | eBUS addresses of failed nodes |
 
 ---
@@ -265,7 +265,7 @@ flowchart TD
 
 | Byte | Field | Type | Description |
 |---:|---|---|---|
-| 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit7: 1=more data, 0=complete |
+| 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
 | 1 | pb_1 | CHAR | PB of first required service |
 | 2 | sb_1 | CHAR | SB of first required service |
 | ... | ... | ... | Additional PB/SB pairs |
@@ -305,6 +305,7 @@ flowchart TD
 |---|---|
 | Generator list | PB₁/SB₁/Time₁/not-received, ..., PBₙ/SBₙ/Timeₙ/not-received |
 | Target configuration | `0xAA`, ..., `0xAA`, own-address |
+| Cycle times | Time₁, ..., Timeₙ, own-time |
 | Status chart | OK, ..., OK, OK |
 | Net status | OK |
 | Start flag | Set |
@@ -325,7 +326,7 @@ Per-node memory cost for NM (static target configuration, default cycle time):
 
 | Component | Bits per monitored node | Overhead (own node) |
 |---|---|---|
-| Own address configuration | — | 8 |
+| Default cycle time | — | 8 |
 | Target configuration (address) | 8 | — |
 | Status chart | 1 | 1 |
 | Current time data | 8 | 8 |

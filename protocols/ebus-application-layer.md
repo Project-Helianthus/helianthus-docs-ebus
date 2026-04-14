@@ -44,7 +44,7 @@ For detailed type definitions including encoding formulas and Go codec implement
 
 ## Communication Rules
 
-1. Standardised commands: payload **typically** limited to **10 data bytes** in both initiator and target telegram parts. **Known exceptions:** Service `0x09` (Memory Server) permits larger payloads in service mode, and Service `0x0F` (Test) allows `NN` up to `0x10`. Implementations must not reject valid standard-service traffic solely based on a hard 10-byte ceiling.
+1. Standardised commands: payload **typically** limited to **10 data bytes** in both initiator and target telegram parts. **Known exceptions:** Service `0x09` read commands (`0x00`/`0x02`) permit `DN > 10` in service mode (writes remain constrained); Service `0x0F` test message (`0x02` only) allows `NN` up to `0x10`.
 2. Manufacturer-specific commands: payload sum must not exceed **14 data bytes**.
 
 ## Bus Load Calculation
@@ -53,7 +53,7 @@ For detailed type definitions including encoding formulas and Go codec implement
 Bus load (%) = byte_count × cycle_rate × 4.16 × 10⁻³ s × 100%
 ```
 
-Where `cycle_rate` is in Hz (1/period).
+Where `cycle_rate` is in Hz (1/period). One-time or event-driven commands have a bus load of `0.0%`.
 
 ## See Also
 

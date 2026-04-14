@@ -24,7 +24,7 @@ Several commands in this service are also documented (from the implementation pe
 | `0x07` | `0x03` | Query Supported Commands | Any → target | Initiator/Target | One-time |
 | `0x07` | `0x04` | Identification | Any → target or broadcast | Initiator/Target or Broadcast | One-time |
 | `0x07` | `0x05` | Query Supported Commands (extended) | Any → target | Initiator/Target | One-time |
-| `0x07` | `0xFE` | Inquiry of Existence | Any → all | Broadcast | One-time (infrequent) |
+| `0x07` | `0xFE` | Inquiry of Existence | Any → all | Broadcast (typically) | One-time (infrequent) |
 | `0x07` | `0xFF` | Sign of Life | Any → all | Broadcast | One-time (response to 0xFE) |
 
 ## Commands
@@ -78,13 +78,13 @@ Several commands in this service are also documented (from the implementation pe
 | Byte | Field | Type | Range | Description |
 |---:|---|---|---|---|
 | 0–1 | outside_temp | DATA2b | -50.0 to +50.0 degC | Temperature override |
-| 2 | validity | BYTE | 0–255 | `0x00` = permanent (until further notice), `0x9B` (155) = duration in minutes |
+| 2 | validity | BYTE | 0–255 | `0x00` = permanent (until further notice), `0x01`–`0xFF` = override duration in minutes |
 
 ---
 
 ### Service 0x07 0x03 — Query Supported Commands
 
-**Description:** Queries which secondary commands a target device supports for a given PB range. Useful for capability discovery from a PC or diagnostic tool.
+**Description:** Queries which secondary commands a target device supports. The response has a fixed PB-per-byte mapping (`0x05`–`0x0C`). Useful for capability discovery from a PC or diagnostic tool.
 
 **Request payload (`NN=0x01`):**
 
@@ -163,11 +163,11 @@ Unlike `0x07 0x03` (which has fixed PB mapping `0x05`–`0x0C`), the PB-per-byte
 
 ### Service 0x07 0xFE — Inquiry of Existence
 
-**Description:** A broadcast request that triggers all ready-to-send initiators to transmit at the earliest opportunity. Should be used infrequently due to significant bus load impact.
+**Description:** Triggers all ready-to-send initiators to transmit at the earliest opportunity. Typically sent as broadcast, but the spec notes it does not have to be. Should be used infrequently due to significant bus load impact.
 
 > **Cross-reference:** The implementation perspective is documented in [`ebus-overview.md` § QueryExistence](./ebus-overview.md#queryexistence-0x07-0xfe).
 
-**Payload (broadcast):** Empty (`NN=0x00`). No response frame — initiators respond by sending their next scheduled telegram or a Sign of Life (`0x07 0xFF`).
+**Payload:** Empty (`NN=0x00`). No response frame — initiators respond by sending their next scheduled telegram or a Sign of Life (`0x07 0xFF`).
 
 ---
 

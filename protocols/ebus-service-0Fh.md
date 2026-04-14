@@ -88,7 +88,7 @@ stateDiagram-v2
 |---:|---|---|---|---|
 | 0 | result | BYTE | — | `0x59` = test successful, any other value = error |
 
-**Response (target device):** `NN=0x01`, data = `0x59` (EOT confirmed).
+**Response:** When the target is an initiator address: ACK/SYN only (no data response). When the target is a target address: `NN=0x01`, data = `0x59` (EOT confirmed).
 
 ## Test Sequence Table
 
@@ -102,10 +102,10 @@ stateDiagram-v2
 | `0x11` | Initiator | Target | Copy 24 telegrams, route to companion target address (`QQ + 0x05`), return target responses via `0x0F 0x02` |
 | `0x14` | Initiator | Target | Copy telegram, cycle through all 228 target addresses (skipping own), return each exchange |
 | `0x21` | Target | Initiator | Read broadcast data, copy into subsequent target response |
-| `0x22` | Target | Initiator | Echo initiator data in target response, repeat until End of Test |
+| `0x22` | Target | Initiator | Echo initiator data in target response, repeat until End of Test (`0x0F 0x03`) is received |
 | `0x25` | Target | Initiator | Same as `0x22` |
 
-All test sequences are terminated by the test device sending End of Test (`0x0F 0x03`).
+For initiator-device functions (`0x01`–`0x14`), the test device sends End of Test (`0x0F 0x03`). For target-device functions (`0x22`/`0x25`), the sequence repeats until an End of Test is received as a master-slave telegram.
 
 ## Communication Flow
 
