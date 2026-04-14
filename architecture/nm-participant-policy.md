@@ -333,7 +333,7 @@ A future doc-gated issue must define the Helianthus-wide semantics for
   classification
 - [architecture/nm-discovery.md](./nm-discovery.md) -- discovery-to-NM
   pipeline, evidence fusion, indirect observation interpretation
-- [protocols/ebus-overview.md](../protocols/ebus-overview.md) --
+- [protocols/ebus-services/ebus-overview.md](../protocols/ebus-services/ebus-overview.md) --
   wire-level formats, address derivation, and frame structure
 - [architecture/bus-observability-v2.md](./bus-observability-v2.md) --
   observability surface for bus-load metrics

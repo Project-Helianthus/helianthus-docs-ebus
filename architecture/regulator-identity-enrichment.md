@@ -43,7 +43,7 @@ Examples already documented in the repo include:
 
 See:
 
-- [`../protocols/basv.md`](../protocols/basv.md)
+- [`../protocols/vaillant/basv.md`](../protocols/vaillant/basv.md)
 
 ## Product-IDs Catalog
 
@@ -131,5 +131,5 @@ These may still be useful as enrichment or hints, but they must not remain the s
 - Semantic root discovery: [`b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
 - Vaillant regulator model: [`vaillant.md`](./vaillant.md)
 - Functional-module target: [`functional-modules.md`](./functional-modules.md)
-- Family naming reference: [`../protocols/basv.md`](../protocols/basv.md)
+- Family naming reference: [`../protocols/vaillant/basv.md`](../protocols/vaillant/basv.md)
 - Product IDs catalog: [`helianthus-ebus-vaillant-productids`](https://github.com/Project-Helianthus/helianthus-ebus-vaillant-productids)

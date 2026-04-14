@@ -41,6 +41,19 @@ outcome:     abandoned_partial
 This proves recent local passive observation of `B512 02 fe` from BAI00 source
 `0x03` to target `0x64`. It does not prove the semantic meaning of `0xfe`.
 
+### Heat Pump System Shapes (Enrichment Research)
+
+> Source: `CROSSCHECK-B555-misc.md` B512 section; 4 independent community forks (pulquero, morphZ, jonesPD, xerion3800). NOT live-validated on Helianthus bus.
+
+The following B512 shapes are observed on heat pump installations only and are absent from gas-boiler-only systems.
+
+| Request payload | Name/context | Target | Response shape | Evidence | Notes |
+|---|---|---|---|---|---|
+| `0f 00 01` | `StatusHydraulics` | VWZ/VWZIO (`0x76`) | 7 bytes raw (undecoded) | 4 independent forks — MEDIUM-HIGH confidence | 10-second poll from CTLV2 (`0x15`) to VWZ; hydraulic status. HP-system-specific. |
+| `13 00` | `StatusHydraulics` (HMU variant) | HMU (`0x08`) | system pressure (UCH/10, bar) + flow (UIN, l/h) — field byte offsets TBD | FINAL-corrections-and-devices summary table — MEDIUM confidence | Wire decode (field byte offsets, types) not available in enrichment corpus; requires further research. |
+
+**Device scope:** These shapes gate on heat pump device type. ID `0f0001` requires CTLV2 + VWZ/VWZIO at `0x76`. ID `1300` requires HMU at `0x08`.
+
 ## Unknowns
 
 - Whether target `0x64` is a physical VR65-like device, a virtual/internal
@@ -49,6 +62,8 @@ This proves recent local passive observation of `B512 02 fe` from BAI00 source
   traces.
 - Whether the old "modulation/fan" label has any valid subset for other
   devices.
+- VWZ/VWZIO at `0x76` is a confirmed B512 target on heat pump systems
+  (4 independent community forks). Full register decode pending.
 
 ## References
 

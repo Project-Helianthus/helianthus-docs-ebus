@@ -41,7 +41,7 @@ b524,<PAYLOAD_HEX>
 Where `<PAYLOAD_HEX>` is the raw B524 request payload bytes (no eBUS framing, no CRC).
 
 Detailed semantics and response layouts are documented in:
-- [`protocols/ebus-vaillant-B524.md`](../protocols/ebus-vaillant-B524.md)
+- [`protocols/vaillant/ebus-vaillant-B524.md`](../protocols/vaillant/ebus-vaillant-B524.md)
 
 ### Directory Probe (opcode 0x00)
 

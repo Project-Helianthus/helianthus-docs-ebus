@@ -98,5 +98,5 @@ traffic.
 - Public TypeSpec: [52.vr_70.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/52.vr_70.tsp)
 - Public TypeSpec: [53.vr_70.5.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/53.vr_70.5.tsp)
 - Local TypeSpec template: `helianthus-ebus-vaillant-productids/repos/john30-ebusd-configuration/src/vaillant/_templates.tsp`
-- Functional-module architecture: [`../architecture/functional-modules.md`](../architecture/functional-modules.md)
+- Functional-module architecture: [`../../architecture/functional-modules.md`](../../architecture/functional-modules.md)
 - B524 functional-module register map: [`ebus-vaillant-B524-register-map.md`](ebus-vaillant-B524-register-map.md)

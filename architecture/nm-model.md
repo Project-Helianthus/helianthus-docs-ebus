@@ -261,7 +261,7 @@ decisions.
 
 ## Cross-References
 
-- [protocols/ebus-overview.md](../protocols/ebus-overview.md) -- wire-level frame formats, QueryExistence, Identification
+- [protocols/ebus-services/ebus-overview.md](../protocols/ebus-services/ebus-overview.md) -- wire-level frame formats, QueryExistence, Identification
 - [architecture/overview.md](./overview.md) -- layered architecture context
 - `architecture/nm-discovery.md` -- discovery realignment and indirect NM (ISSUE-DOC-01, planned)
 - `architecture/nm-participant-policy.md` -- local participant behavior and bus-load policy (ISSUE-DOC-02, planned)
