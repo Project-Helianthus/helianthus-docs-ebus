@@ -23,15 +23,15 @@ Service `0x05` is the primary communication protocol between burner control unit
 | `0x05` | `0x01` | Op. Data (RC→FA) | Controller → Burner | 1/15s |
 | `0x05` | `0x02` | Op. Data Request (RC→FA) | Controller → Burner | 1/15min |
 | `0x05` | `0x03` | Op. Data (FA→RC) Block 1 | Burner → Controller | 1/10s–1/1min |
-| `0x05` | `0x03` | Op. Data (FA→RC) Block 2 | Burner → Controller | 1/10s–1/1min |
+| `0x05` | `0x03` | Op. Data (FA→RC) Block 2 | Burner → Controller | One-time |
 | `0x05` | `0x04` | Control Stop Response | Burner → Controller | 1/15s |
 | `0x05` | `0x05` | *(barred)* | — | — |
 | `0x05` | `0x06` | Op. Data Request (FA→RC) | Burner → Controller | 1/15min |
 | `0x05` | `0x07` | Op. Data (RC→FA) | Controller → Burner | 1/15s |
 | `0x05` | `0x08` | Op. Data Request (RC→FA) | Controller → Burner | 1/15min |
 | `0x05` | `0x09` | Op. Data (FA→RC) Block 1 | Burner → Controller | 1/1s–1/1min |
-| `0x05` | `0x09` | Op. Data (FA→RC) Block 2 | Burner → Controller | 1/10s–1/1min |
-| `0x05` | `0x09` | Op. Data (FA→RC) Block 3 | Burner → Controller | 1/10s–... |
+| `0x05` | `0x09` | Op. Data (FA→RC) Block 2 | Burner → Controller | One-time |
+| `0x05` | `0x09` | Op. Data (FA→RC) Block 3 | Burner → Controller | One-time |
 | `0x05` | `0x0A` | Config Data Request (RC→FA) | Controller → Burner | One-time |
 | `0x05` | `0x0B` | Config Data (FA→RC) | Burner → Controller | One-time |
 | `0x05` | `0x0C` | Op. Requirements (FA→RC) | Burner → Controller | One-time |

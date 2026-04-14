@@ -325,12 +325,13 @@ Per-node memory cost for NM (static target configuration, default cycle time):
 
 | Component | Bits per monitored node | Overhead (own node) |
 |---|---|---|
+| Own address configuration | — | 8 |
 | Target configuration (address) | 8 | — |
 | Status chart | 1 | 1 |
 | Current time data | 8 | 8 |
 | Start flag | — | 1 |
 | Net status | — | 1 |
-| **Total** | **17** | **11** |
+| **Total** | **17** | **19** |
 
 Formula: `19 + (monitored_nodes × 17)` bits.
 
