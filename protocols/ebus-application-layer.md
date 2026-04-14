@@ -44,7 +44,7 @@ For detailed type definitions including encoding formulas and Go codec implement
 
 ## Communication Rules
 
-1. Standardised commands: payload limited to **10 data bytes** in both initiator and target telegram parts.
+1. Standardised commands: payload limited to **10 data bytes** in both initiator and target telegram parts. Exceptions: Service `0x09` (Memory Server) permits larger payloads in service mode, and Service `0x0F` (Test) allows `NN` up to `0x10`.
 2. Manufacturer-specific commands: payload sum must not exceed **14 data bytes**.
 
 ## Bus Load Calculation

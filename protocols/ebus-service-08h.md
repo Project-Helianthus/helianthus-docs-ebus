@@ -107,7 +107,7 @@ Service `0x08` handles communication between heating controllers and mixer modul
 | Byte | Field | Type | Range | Repl. | Description |
 |---:|---|---|---|---|---|
 | 0 | sys_control | BYTE | — | `0xFF` | Low nibble = DHW circuit mode, High nibble = heating circuit mode. Values: 0=standby+antifreeze, 1=auto, 2=day, 3=night, 4=target value day, 5=target value night |
-| 1–2 | heating_target | DATA2c | 0–200 degC | `0xFF` | Heating target temperature |
+| 1–2 | heating_target | DATA2c | 0–200 degC | `0x8000` | Heating target temperature |
 | 3 | dhw_target | DATA1c | 0–100 degC | `0xFF` | DHW target temperature |
 | 4 | reserved_1 | — | — | `0xFF` | Reserved |
 | 5 | reserved_2 | — | — | `0xFF` | Reserved |

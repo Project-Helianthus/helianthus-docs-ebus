@@ -29,7 +29,7 @@ Secondary commands `0x00`–`0x03` are barred for historical reasons.
 
 ### Service 0x03 0x04 — Complete Reading of Start Counts
 
-**Description:** Reads the total start count of a burner control unit. The response carries three BCD bytes encoding a value 0–999999.
+**Description:** Reads the total start count of a burner control unit. The response carries three CHAR bytes (decimal 0–99 each), encoding a value 0–999999.
 
 **Request payload:** Empty (`NN=0x00`).
 
@@ -37,7 +37,7 @@ Secondary commands `0x00`–`0x03` are barred for historical reasons.
 
 | Byte | Field | Type | Range | Description |
 |---:|---|---|---|---|
-| 0 | start_count_1s | CHAR | 0–99 | 1s position (BCD-style) |
+| 0 | start_count_1s | CHAR | 0–99 | 1s position (decimal, not BCD) |
 | 1 | start_count_100s | CHAR | 0–99 | 100s position |
 | 2 | start_count_10000s | CHAR | 0–99 | 10000s position |
 
@@ -86,7 +86,7 @@ Secondary commands `0x00`–`0x03` are barred for historical reasons.
 
 ### Service 0x03 0x08 — Complete Reading of Fuel Quantity Counter
 
-**Description:** Reads the fuel quantity counter. The first byte indicates the fuel unit, followed by four BCD-encoded quantity digits.
+**Description:** Reads the fuel quantity counter. The first byte indicates the fuel unit, followed by four CHAR-encoded quantity digits (decimal 0–99 each).
 
 **Request payload:** Empty (`NN=0x00`).
 

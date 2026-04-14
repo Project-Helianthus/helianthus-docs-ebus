@@ -98,7 +98,16 @@ Several commands in this service are also documented (from the implementation pe
 |---:|---|---|---|---|
 | 0 | version | BCD | 0–99 | Implementation version |
 | 1 | revision | BCD | 0–99 | Implementation revision |
-| 2–9 | supported | BIT×8 | — | Each bit represents a secondary command. Bit = 1 if supported. Byte 2 bit0 = first SB in the requested block |
+| 2 | pb_05 | BIT | — | Bits represent SBs for PB `0x05`. Bit0 = first SB in requested block, bit set = supported |
+| 3 | pb_06 | BIT | — | SB support for PB `0x06` |
+| 4 | pb_07 | BIT | — | SB support for PB `0x07` |
+| 5 | pb_08 | BIT | — | SB support for PB `0x08` |
+| 6 | pb_09 | BIT | — | SB support for PB `0x09` |
+| 7 | pb_0A | BIT | — | SB support for PB `0x0A` |
+| 8 | pb_0B | BIT | — | SB support for PB `0x0B` |
+| 9 | pb_0C | BIT | — | SB support for PB `0x0C` |
+
+Each response byte maps to a fixed primary command (`0x05`–`0x0C`). Within each byte, the bit position selects the secondary command from the requested SB block: e.g., with `sb_block=0x00`, bit0 = SB `0x00`, bit7 = SB `0x07`.
 
 ---
 
@@ -140,7 +149,15 @@ Payload (`NN=0x0A`): Same fields as the response above, carried in the initiator
 | 0 | sb_block | BYTE | — | SB block selector (same as `0x07 0x03`) |
 | 1 | pb_block | BYTE | — | PB block: `0x00` = PB `0x00`–`0x07`, `0x01` = PB `0x08`–`0x0F`, ..., `0x1F` = PB `0xF8`–`0xFF` |
 
-**Response payload (`NN=0x0A`):** Same layout as [0x07 0x03](#service-0x07-0x03--query-supported-commands), but bits now represent support for the specified PB block's commands.
+**Response payload (`NN=0x0A`):**
+
+| Byte | Field | Type | Range | Description |
+|---:|---|---|---|---|
+| 0 | version | BCD | 0–99 | Implementation version |
+| 1 | revision | BCD | 0–99 | Implementation revision |
+| 2–9 | pb_x..pb_x+7 | BIT×8 | — | Each byte maps to one PB in the selected block (byte 2 = first PB, byte 9 = eighth PB). Bits select SBs from the requested SB block, same as `0x07 0x03` |
+
+Unlike `0x07 0x03` (which has fixed PB mapping `0x05`–`0x0C`), the PB-per-byte mapping here depends on the `pb_block` selector: block 0 → PBs `0x00`–`0x07`, block 1 → PBs `0x08`–`0x0F`, etc.
 
 ---
 
