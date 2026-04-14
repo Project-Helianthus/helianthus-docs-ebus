@@ -22,7 +22,6 @@ For wire-level framing (SRC/DST, CRC8, escaping, ACK/NACK, transaction flow), se
 | `0x08` | Controller-to-Controller | `0x00`–`0x04` | [`ebus-service-08h.md`](./ebus-service-08h.md) |
 | `0x09` | Memory Server | `0x00`–`0x03` | [`ebus-service-09h.md`](./ebus-service-09h.md) |
 | `0x0F` | Test Commands | `0x01`–`0x03` | [`ebus-service-0Fh.md`](./ebus-service-0Fh.md) |
-| `0xB5` | Vaillant Proprietary | (manufacturer-specific) | [`ebus-vaillant.md`](./ebus-vaillant.md) |
 | `0xFE` | General Broadcast | `0x01` | [`ebus-service-FEh.md`](./ebus-service-FEh.md) |
 | `0xFF` | Network Management | `0x00`–`0x06` | [`ebus-service-FFh.md`](./ebus-service-FFh.md) |
 
@@ -53,7 +52,9 @@ For detailed type definitions including encoding formulas and Go codec implement
 Bus load (%) = byte_count × (1 / cycle_period) × 4.16 × 10⁻³ s × 100%
 ```
 
-The official spec expresses cycle rates as `1/x[unit]` (e.g., `1/10s`, `1/15min`). Commands marked `unique` or `one-time` are sent once (event-triggered) and are listed as `0.0%` bus load. Some event-driven commands with nonzero cycle rates carry nonzero bus load when actively cycling.
+The official spec expresses cycle rates as `1/x[unit]` (e.g., `1/10s`, `1/15min`). Commands marked `unique` are listed as `0.0%` bus load. Commands described as "one-time" may still carry nonzero bus load when the spec assigns a cycle-rate window (e.g., `0x05 0x03` block 2 at `0.66%`).
+
+Manufacturer-specific PB families (e.g., Vaillant `0xB5`) are not part of the standard Application Layer and are documented separately in [`ebus-vaillant.md`](./ebus-vaillant.md).
 
 ## See Also
 

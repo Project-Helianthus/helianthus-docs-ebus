@@ -13,7 +13,7 @@ Service `0xFF` carries all Network Management (NM) messages. NM enables safe ope
 
 NM is based on **indirect network management** (OSEK/VDX concept): it monitors the bus by observing cyclic application messages, adding **no extra bus load** for monitoring. NM implementation is optional. Target devices have no network management — each target is monitored by the initiator nodes that need it.
 
-> **Helianthus implementation:** For the Helianthus-specific NM model, see [`../architecture/nm-model.md`](../architecture/nm-model.md). Note: the architecture doc uses different naming conventions for some NM services; the wire-level service IDs and semantics in this document are authoritative.
+> **Helianthus implementation:** For the Helianthus-specific NM model, see [`../architecture/nm-model.md`](../architecture/nm-model.md). **Caveat:** the architecture doc remaps official service IDs to different names and directions (e.g., `FF03`/`FF04` as resolution messages, `07FF` as QueryExistence). For wire-level service IDs, semantics, and payload formats, this document is authoritative; the architecture doc describes the Helianthus behavioral interpretation layered on top.
 
 ## Terminology
 

@@ -23,15 +23,15 @@ Service `0x05` is the primary communication protocol between burner control unit
 | `0x05` | `0x01` | Op. Data (RC→FA) | Controller → Burner | 1/15s |
 | `0x05` | `0x02` | Op. Data Request (RC→FA) | Controller → Burner | 1/15min |
 | `0x05` | `0x03` | Op. Data (FA→RC) Block 1 | Burner → Controller | 1/10s–1/1min |
-| `0x05` | `0x03` | Op. Data (FA→RC) Block 2 | Burner → Controller | One-time |
+| `0x05` | `0x03` | Op. Data (FA→RC) Block 2 | Burner → Controller | 1/10s–1/1min |
 | `0x05` | `0x04` | Control Stop Response | Burner → Controller | 1/15s |
 | `0x05` | `0x05` | *(barred)* | — | — |
 | `0x05` | `0x06` | Op. Data Request (FA→RC) | Burner → Controller | 1/15min |
 | `0x05` | `0x07` | Op. Data (RC→FA) | Controller → Burner | 1/15s |
 | `0x05` | `0x08` | Op. Data Request (RC→FA) | Controller → Burner | 1/15min |
 | `0x05` | `0x09` | Op. Data (FA→RC) Block 1 | Burner → Controller | 1/1s–1/1min |
-| `0x05` | `0x09` | Op. Data (FA→RC) Block 2 | Burner → Controller | One-time |
-| `0x05` | `0x09` | Op. Data (FA→RC) Block 3 | Burner → Controller | One-time |
+| `0x05` | `0x09` | Op. Data (FA→RC) Block 2 | Burner → Controller | 1/10s–1/1min |
+| `0x05` | `0x09` | Op. Data (FA→RC) Block 3 | Burner → Controller | 1/10s–... |
 | `0x05` | `0x0A` | Config Data Request (RC→FA) | Controller → Burner | One-time |
 | `0x05` | `0x0B` | Config Data (FA→RC) | Burner → Controller | One-time |
 | `0x05` | `0x0C` | Op. Requirements (FA→RC) | Burner → Controller | One-time |
@@ -118,7 +118,7 @@ The service defines two parallel channel groups with symmetric structure:
 
 ### Service 0x05 0x03 Block 2 — Operational Data (Burner → Controller)
 
-**Description:** One-time burner data block with exhaust temperature, DHW lead temperature, and performance values.
+**Description:** Burner data block with exhaust temperature, DHW lead temperature, and performance values. Requested once via block number, but the spec assigns a nonzero cycle-rate window.
 
 **Payload (`NN=0x07`):**
 
@@ -130,6 +130,8 @@ The service defines two parallel channel groups with symmetric structure:
 | 4 | eff_rel_perf | DATA1c | 0–100% | — | Effective relative boiler performance |
 | 5 | cascade_lead | DATA1c | 0–100 degC | — | Joint lead water temp (cascade operation) |
 | 6 | reserved | — | — | `0xFF` | Reserved |
+
+**Bus load:** 0.66% at 1/10s–1/1min.
 
 ---
 
@@ -219,7 +221,7 @@ This secondary command is barred for compatibility reasons.
 
 ### Service 0x05 0x09 Block 2 — Operational Data (Burner → Controller, Channel B)
 
-**Description:** One-time burner data (Channel B, block 2). Gas analysis and temperature readings.
+**Description:** Burner data (Channel B, block 2). Gas analysis and temperature readings. Requested once via block number, but the spec assigns a nonzero cycle-rate window.
 
 **Payload (`NN=0x09`):**
 
@@ -231,11 +233,13 @@ This secondary command is barred for compatibility reasons.
 | 5–6 | exhaust_temp | DATA2c | -20 to +400 degC | — | Exhaust gas temperature (ARF value) |
 | 7–8 | boiler_target_end | DATA2c | 0–2000 degC/0–100 bar | — | Boiler target end value |
 
+**Bus load:** 0.70% at 1/10s–1/1min.
+
 ---
 
 ### Service 0x05 0x09 Block 3 — Operational Data (Burner → Controller, Channel B)
 
-**Description:** One-time burner data (Channel B, block 3). Fuel burning coefficient.
+**Description:** Burner data (Channel B, block 3). Fuel burning coefficient.
 
 **Payload (`NN=0x09`):**
 

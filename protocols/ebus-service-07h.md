@@ -125,7 +125,7 @@ Request payload: Empty (`NN=0x00`).
 
 | Byte | Field | Type | Range | Description |
 |---:|---|---|---|---|
-| 0 | manufacturer | BYTE | 0x00–0xFF | Manufacturer code. The official spec states 0–99, but observed values exceed this range (e.g., Vaillant uses `0xB5`) |
+| 0 | manufacturer | BYTE | 0–99 | Manufacturer code (per official spec). **Observed extension:** real-world devices use values beyond this range (e.g., Vaillant `0xB5`); implementations should accept the full byte range |
 | 1–5 | unit_id | ASCII×5 | — | Unit/device identifier (5 bytes) |
 | 6 | sw_version | BCD | 0–99 | Software version |
 | 7 | sw_revision | BCD | 0–99 | Software revision |
@@ -140,7 +140,7 @@ Payload (`NN=0x0A`): Same fields as the response above, carried in the initiator
 
 ### Service 0x07 0x05 — Query Supported Commands (Extended)
 
-**Description:** Extended version of `0x07 0x03` that queries supported commands for a specific primary command block.
+**Description:** Extended version of `0x07 0x03` that queries supported commands for a specific primary command block. **Source note:** the official request table row lists `SB = 03h` instead of `05h`; this is treated as a spec erratum given the distinct heading, description, and extended request shape.
 
 **Request payload (`NN=0x02`):**
 
