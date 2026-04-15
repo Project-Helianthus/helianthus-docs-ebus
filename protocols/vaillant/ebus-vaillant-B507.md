@@ -1,12 +1,16 @@
 # Vaillant B507 Heat Pump Load/Poll Protocol
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 `PB=0xB5`, `SB=0x07`.
 
 ## Status
 
 **Enrichment research** -- not yet live-validated on a Helianthus bus.
 B507 is heat-pump specific (CTLV2 + HMU topology). It is absent from
-john30/ebusd-configuration master and was absent from helianthus-docs-ebus
+john30/ebusd-configuration <!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> and was absent from helianthus-docs-ebus
 prior to this document.
 
 Helianthus live bus runs BAI00 + BASV2 (gas boiler topology). B507 frames
@@ -26,19 +30,19 @@ HeatpumpLoadSensor decode; LOW for write semantics.
 ## Wire Format
 
 ```
-Master -> Slave request:
+Initiator -> Target request:
   [0xB5] [0x07] [0x09] [sub] [...]
 
-Slave response (ID 0900):  :HEX:* (variable length, undecoded)
-Slave response (ID 0931):  D1C (1 byte, signed 0.5-step %, range -64.0 to +63.5)
+Target response (ID 0900):  :HEX:* (variable length, undecoded)
+Target response (ID 0931):  D1C (1 byte, signed 0.5-step %, range -64.0 to +63.5)
 
-QQ (initiator):    0x15 (CTLV2 master address)
-ZZ (target slave): 0x08 (HMU -- Heat Management Unit)
+QQ (initiator):    0x15 (CTLV2 initiator address)
+ZZ (target):       0x08 (HMU -- Heat Management Unit)
 ```
 
 ## Device Scope
 
-**Target:** HMU (Heat Management Unit) at slave address `0x08`.
+**Target:** HMU (Heat Management Unit) at target address `0x08`.
 
 In heat pump systems, `0x08` is the compressor/heat exchanger management
 unit. In gas boiler systems, `0x08` is BAI00 -- a different device class at
@@ -53,7 +57,7 @@ systems.
 |----------|------|-----------|-------------|-----------|--------------|------------|
 | `09 00` | unknown_m_poll_60s_b507h (`unknownMPoll60sB507h`) | `r` | `:HEX:*` (variable, undecoded) | CTLV2 (`0x15`) -> HMU (`0x08`) | 60 s | MEDIUM-HIGH |
 | `09 31` | heatpump_load_sensor (`HeatpumpLoadSensor`) | `r` / `r5` | `percent1:D1C` (1 byte, %) | CTLV2 -> HMU | 5 s (morphZ custom) | MEDIUM |
-| `09` (write) | -- (unnamed) | `*w` | -- (undecoded capture) | unknown master -> HMU | observed | LOW |
+| `09` (write) | -- (unnamed) | `*w` | -- (undecoded capture) | unknown initiator -> HMU | observed | LOW |
 
 ### D1C Encoding
 

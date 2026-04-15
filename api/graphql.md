@@ -347,13 +347,12 @@ type Zone {
   config: ZoneConfig
 }
 type ZoneState {
-  operatingMode: String
-  currentTemperature: Float
-  desiredTemperature: Float
-  currentRoomHumidity: Float
+  currentTempC: Float
+  currentHumidityPct: Float
 }
 type ZoneConfig {
-  desiredTemperature: Float
+  operatingMode: String
+  targetTempC: Float
   heatingMode: String
   quickVeto: Boolean
   quickVetoSetpoint: Float
@@ -362,8 +361,8 @@ type ZoneConfig {
 
 type Dhw {
   operatingMode: String
-  currentTemperature: Float
-  desiredTemperature: Float
+  currentTempC: Float
+  targetTempC: Float
   state: String
   config: String
 }

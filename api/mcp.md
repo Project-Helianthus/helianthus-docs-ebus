@@ -322,8 +322,11 @@ Periodicity response fragment:
 
 ## Implemented Surface
 
+Note: This inventory reflects the current known tool surface. The gateway may expose additional tools discovered via the MCP `tools/list` endpoint.
+
 - Core stable (`ebus.v1.*`)
   - `ebus.v1.runtime.status.get`
+  - `ebus.v1.adapter_info.get`
   - `ebus.v1.registry.devices.list`
   - `ebus.v1.registry.devices.get`
   - `ebus.v1.registry.planes.list`
@@ -338,6 +341,9 @@ Periodicity response fragment:
   - `ebus.v1.semantic.fm5_mode.get`
   - `ebus.v1.semantic.solar.get`
   - `ebus.v1.semantic.cylinders.get`
+  - `ebus.v1.semantic.schedules.get`
+  - `ebus.v1.semantic.schedules.set_zone_time_program`
+  - `ebus.v1.semantic.schedules.set_dhw_time_program`
   - `ebus.v1.semantic.snapshot.get`
   - `ebus.v1.snapshot.capture`
   - `ebus.v1.snapshot.drop`

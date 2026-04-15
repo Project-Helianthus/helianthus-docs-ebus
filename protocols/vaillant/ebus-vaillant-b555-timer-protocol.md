@@ -1,5 +1,9 @@
 # B555 Timer/Schedule Protocol Specification
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 **Protocol:** eBUS B555 (PB=0xB5, SB=0x55)
 **Status:** Reverse-engineered, validated on live hardware
 **Date:** 2026-03-08
@@ -10,7 +14,7 @@
 
 This document specifies the eBUS B555 protocol used by **VRC720-family controllers only** for reading and writing weekly heating, DHW, and other timer/schedule programs.
 
-> **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID 70000, including Saunier Duval B7S00) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for all timer operations. Both device families share eBUS slave address `0x15` but are different device classes with different timer transports. (Source: FINAL-B524-B555-B507-B508.md B1, CROSSCHECK-B555-misc.md; confidence HIGH.)
+> **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID 70000, including Saunier Duval B7S00) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for all timer operations. Both device families share eBUS target address `0x15` but are different device classes with different timer transports. (Source: FINAL-B524-B555-B507-B508.md B1, CROSSCHECK-B555-misc.md; confidence HIGH.)
 
 ### 1.0 Timer Transport Device Binding
 
@@ -44,9 +48,9 @@ A scanner or schedule writer that does not check device identity before choosing
 
 ## 2. Frame Structure
 
-B555 uses the standard eBUS Master-Slave (MS) transaction format.
+B555 uses the standard eBUS Initiator-Target (MS) transaction format.
 
-### 2.1 Master Frame
+### 2.1 Initiator Frame
 
 ```
 QQ ZZ B5 55 NN <data[0..NN-1]> CRC
@@ -62,7 +66,7 @@ QQ ZZ B5 55 NN <data[0..NN-1]> CRC
 | data | NN | Opcode + selector + payload |
 | CRC | 1 | CRC-8 of QQ..data |
 
-### 2.2 Slave Response
+### 2.2 Target Response
 
 ```
 ACK NN <response[0..NN-1]> CRC ACK
@@ -74,18 +78,18 @@ ACK NN <response[0..NN-1]> CRC ACK
 | NN | 1 | Response data length |
 | response | NN | Response payload |
 | CRC | 1 | CRC-8 of NN..response |
-| ACK | 1 | Master ACK |
+| ACK | 1 | Initiator ACK |
 
 ### 2.3 Notation Conventions
 
 This document uses two distinct notations for bus data:
 
 1. **Full wire captures** (Section 12.1): show QQ, ZZ, PB, SB, NN and payload
-   as seen on the physical bus, using the format `Master: QQ ZZ ... / NN data`.
+   as seen on the physical bus, using the format `Initiator: QQ ZZ ... / NN data`.
    Example: `F1 15 B5 55 0C A6 ... / 01 00`.
 
 2. **ebusd `hex` command output**: the ebusd telnet interface strips ACK bytes
-   and CRCs. It returns only `NN <response_payload>` for slave responses.
+   and CRCs. It returns only `NN <response_payload>` for target responses.
    Example: `0100` = NN=0x01 followed by one payload byte 0x00.
    Similarly, `070006000c00e100` = NN=0x07 followed by 7 payload bytes.
 
@@ -180,6 +184,7 @@ A3 [ZONE] [HC]
 - `max_slots` is **enforced by the controller**. Writing SC > max_slots
   returns error code 0x01. Validated: SC=4 on CC (max_slots=3) → 0x01;
   SC=12 on DHW (max_slots=3) → 0x01; SC=12 on Heating (max_slots=12) → ACK.
+  Observed max_slots values: 3 for DHW, CC, and Silent timers; 12 for Heating and Cooling timers. Excess slots beyond max_slots are rejected by the controller (error 0x01), not silently ignored.
 - `min_temp_c` and `max_temp_c` are **enforced by the controller**. Writing a
   numeric temperature outside this range returns error code 0x06. Validated:
   34°C on DHW (min=35) → 0x06; 66°C on DHW (max=65) → 0x06; exact boundary
@@ -253,8 +258,8 @@ read back as the B524 value.
 **Wire-validated example:**
 
 ```
-Master: 31 15 B5 55 03 A3 00 00
-Slave:  09 00 0C 0A 05 01 0C 05 1E 00
+Initiator: 31 15 B5 55 03 A3 00 00
+Target:  09 00 0C 0A 05 01 0C 05 1E 00
 ```
 
 ### 5.2 SLOTS_READ (0xA4)
@@ -275,15 +280,17 @@ A4 [ZONE] [HC]
 
 | Field | Size | Description |
 |-------|------|-------------|
-| status | 1 | Timer status: 0x00 = active, 0x03 = unavailable (matches A3 byte[0]) |
+| status | 1 | Timer status: 0x00 = active, 0x03 = unavailable (matches A3 byte[0]). See A5 status for comparison. |
 | Mon..Sun | 7 | Slot count per day (UCH, 0x00-0x0C) |
 | pad | 1 | Trailing padding (always 0x00) |
+
+> **Cross-reference:** The first byte of A4 (status/slot-count context) and A5 (status/timer-entry context) responses share the same byte position but have different semantics. A4 byte[0] gates the validity of the per-weekday slot counts; A5 byte[0] gates the validity of a single timer slot entry. See the respective section for details.
 
 **Wire-validated example (Z1 Heating, all single-slot):**
 
 ```
-Master: 31 15 B5 55 03 A4 00 00
-Slave:  09 00 01 01 01 01 01 01 01 00
+Initiator: 31 15 B5 55 03 A4 00 00
+Target:  09 00 01 01 01 01 01 01 01 00
 ```
 
 ### 5.3 TIMER_READ (0xA5)
@@ -355,28 +362,28 @@ A5 [ZONE] [HC] [DD] [SS]
 
 ```
 # Z1 Heating Monday: 00:00-24:00 @ 22.5°C
-Master: 31 15 B5 55 05 A5 00 00 00 00
-Slave:  07 00 00 00 18 00 E1 00
+Initiator: 31 15 B5 55 05 A5 00 00 00 00
+Target:  07 00 00 00 18 00 E1 00
 
 # Z1 Heating Sunday: 00:00-18:00 @ 22.5°C
-Master: 31 15 B5 55 05 A5 00 00 06 00
-Slave:  07 00 00 00 12 00 E1 00
+Initiator: 31 15 B5 55 05 A5 00 00 06 00
+Target:  07 00 00 00 12 00 E1 00
 
 # Z2 Heating Monday: 00:00-24:00 @ 20.0°C
-Master: 31 15 B5 55 05 A5 01 00 00 00
-Slave:  07 00 00 00 18 00 C8 00
+Initiator: 31 15 B5 55 05 A5 01 00 00 00
+Target:  07 00 00 00 18 00 C8 00
 
 # HWC Monday: 00:00-24:00 @ 61.0°C (DHW target)
-Master: 31 15 B5 55 05 A5 00 02 00 00
-Slave:  07 00 00 00 18 00 62 02
+Initiator: 31 15 B5 55 05 A5 00 02 00 00
+Target:  07 00 00 00 18 00 62 02
 
 # HWC Saturday: 06:00-24:00 @ 61.0°C
-Master: 31 15 B5 55 05 A5 00 02 05 00
-Slave:  07 00 06 00 18 00 62 02
+Initiator: 31 15 B5 55 05 A5 00 02 05 00
+Target:  07 00 06 00 18 00 62 02
 
 # CC Monday: 00:00-24:00 @ NONE
-Master: 31 15 B5 55 05 A5 00 03 00 00
-Slave:  07 00 00 00 18 00 FF FF
+Initiator: 31 15 B5 55 05 A5 00 03 00 00
+Target:  07 00 00 00 18 00 FF FF
 ```
 
 ### 5.4 TIMER_WRITE (0xA6)
@@ -425,20 +432,20 @@ Always verify writes with a read-back (A5) when persistence must be confirmed.
 
 ```
 # Monday slot 0/2: 00:00-06:00 @ 28.0°C
-Master: F1 15 B5 55 0C A6 00 00 00 00 02 00 00 06 00 18 01
-Slave:  01 00
+Initiator: F1 15 B5 55 0C A6 00 00 00 00 02 00 00 06 00 18 01
+Target:  01 00
 
 # Monday slot 1/2: 06:00-23:50 @ 7.5°C
-Master: F1 15 B5 55 0C A6 00 00 00 01 02 06 00 17 32 4B 00
-Slave:  01 00
+Initiator: F1 15 B5 55 0C A6 00 00 00 01 02 06 00 17 32 4B 00
+Target:  01 00
 
 # Tuesday slot 0/1: 00:00-24:00 @ 22.5°C (single slot)
-Master: F1 15 B5 55 0C A6 00 00 01 00 01 00 00 18 00 E1 00
-Slave:  01 00
+Initiator: F1 15 B5 55 0C A6 00 00 01 00 01 00 00 18 00 E1 00
+Target:  01 00
 
 # Sunday slot 0/1: 00:00-18:00 @ 22.5°C (single slot)
-Master: F1 15 B5 55 0C A6 00 00 06 00 01 00 00 12 00 E1 00
-Slave:  01 00
+Initiator: F1 15 B5 55 0C A6 00 00 06 00 01 00 00 12 00 E1 00
+Target:  01 00
 ```
 
 **Write verified by read-back (ebusd `hex -n` command):**
@@ -505,7 +512,7 @@ Observations:
 **The silent discard of slots 1+ cannot be attributed to the B555
 protocol itself.** The ebusd telnet path requires re-arbitration for
 each `hex -n` command, adding a minimum inter-frame gap of ~150-300ms
-(command parsing + bus arbitration + frame TX + slave response). This
+(command parsing + bus arbitration + frame TX + target response). This
 gap overlaps with the VR940's successful 190-300ms range, but the two
 paths differ qualitatively:
 
@@ -730,7 +737,7 @@ increases contention. Consider:
 - ebusd uses source address 0x31
 - VR940 uses source address 0xF1
 - Helianthus gateway uses source address 0x71 (initiator)
-- Any valid eBUS master address can send B555 commands
+- Any valid eBUS initiator address can send B555 commands
 
 ## 12. Raw Wire Captures
 

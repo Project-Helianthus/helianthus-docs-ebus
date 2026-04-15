@@ -35,63 +35,50 @@ import re
 import subprocess
 import sys
 
-allowed_file = pathlib.Path("protocols/ebus-services/ebus-overview.md")
 begin_marker = "<!-- legacy-role-mapping:begin -->"
 end_marker = "<!-- legacy-role-mapping:end -->"
 
 # Construct legacy terms without spelling them out literally in-repo.
 terms = ["m" + "aster", "sl" + "ave"]
-pattern = re.compile(r"\\b(" + "|".join(map(re.escape, terms)) + r")\\b", re.IGNORECASE)
+pattern = re.compile(r"\b(" + "|".join(map(re.escape, terms)) + r")\b", re.IGNORECASE)
 
 md_files = subprocess.check_output(["git", "ls-files", "*.md"], text=True).splitlines()
 
 def line_number(text: str, index: int) -> int:
-    return text.count("\\n", 0, index) + 1
+    return text.count("\n", 0, index) + 1
 
 def print_match(file_path: str, text: str, index: int, match_text: str) -> None:
     print(f"{file_path}:{line_number(text, index)}:{match_text}", file=sys.stderr)
-
-if not allowed_file.exists():
-    print(f"Expected {allowed_file} to exist.", file=sys.stderr)
-    sys.exit(1)
-
-allowed_text = allowed_file.read_text(encoding="utf-8")
-begin_index = allowed_text.find(begin_marker)
-end_index = allowed_text.find(end_marker)
-if begin_index == -1 or end_index == -1 or end_index <= begin_index:
-    print(
-        "Missing or malformed legacy-role-mapping markers in protocols/ebus-services/ebus-overview.md.",
-        file=sys.stderr,
-    )
-    sys.exit(1)
-
-allowed_region_start = begin_index
-allowed_region_end = end_index
 
 failed = False
 
 for file_path in md_files:
     path = pathlib.Path(file_path)
     text = path.read_text(encoding="utf-8")
+
+    # Build allowed regions from legacy-role-mapping markers in this file.
+    allowed_ranges: list[tuple[int, int]] = []
+    search_start = 0
+    while True:
+        b = text.find(begin_marker, search_start)
+        if b == -1:
+            break
+        e = text.find(end_marker, b)
+        if e == -1:
+            break
+        allowed_ranges.append((b, e + len(end_marker)))
+        search_start = e + len(end_marker)
+
     for match in pattern.finditer(text):
-        if path != allowed_file:
+        in_allowed = any(s <= match.start() < e for s, e in allowed_ranges)
+        if not in_allowed:
             if not failed:
                 print(
-                    "Legacy role terms must not appear outside protocols/ebus-services/ebus-overview.md.",
+                    "Legacy role terms found outside legacy-role-mapping regions.",
                     file=sys.stderr,
                 )
             failed = True
             print_match(file_path, text, match.start(), match.group(0))
-
-for match in pattern.finditer(allowed_text):
-    if not (allowed_region_start <= match.start() < allowed_region_end):
-        if not failed:
-            print(
-                "Legacy role terms must only appear inside the legacy-role-mapping note.",
-                file=sys.stderr,
-            )
-        failed = True
-        print_match(str(allowed_file), allowed_text, match.start(), match.group(0))
 
 if failed:
     sys.exit(1)

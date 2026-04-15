@@ -59,10 +59,10 @@ The config entry `unique_id` is the verified `instanceGuid`, not `host:port`.
 
 The integration reads semantic zone data from GraphQL and exposes:
 
-- `current_temperature` from `zones[].currentTempC`
-- `target_temperature` from `zones[].targetTempC`
-- `current_humidity` from `zones[].currentHumidityPct` (when available)
-- `hvac_mode` from `zones[].operatingMode`
+- `current_temperature` from `zones[].state.currentTempC`
+- `target_temperature` from `zones[].config.targetTempC`
+- `current_humidity` from `zones[].state.currentHumidityPct` (when available)
+- `hvac_mode` from `zones[].config.operatingMode`
 - `preset_mode` normalized to canonical tokens:
   - `schedule`
   - `manual`
@@ -195,6 +195,12 @@ At setup, integration performs best-effort cleanup of stale `helianthus/*` regis
 
 - Zeroconf TXT `instance_guid` did not match the GraphQL-verified `gatewayIdentity.instanceGuid`.
 - Automatic rebind is refused.
+
+### Coordinator response structure
+
+The coordinator now uses a nested response structure from the GraphQL semantic snapshot.
+Zone, DHW, circuit, and system data are returned as sub-objects (`zones`, `dhw`, `circuits`, `system`, `boiler_status`, etc.) rather than flat top-level fields.
+Entity platforms consume these nested sub-objects directly from the coordinator data dict.
 
 ### Missing optional data
 

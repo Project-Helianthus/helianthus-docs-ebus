@@ -96,9 +96,11 @@ go run ./cmd/matrix-runner \
 
 `matrix-runner` currently marks these families as expected failures by default:
 
-- `T05..T08` (`via-ebusd-tcp`): gentle-join cannot be verified when Helianthus uses `ebusd-tcp`.
+- `T06..T08` (`via-ebusd-tcp`, excluding T05): gentle-join cannot be verified when Helianthus uses `ebusd-tcp`. Note: T05 is NOT a default expected failure per `runner_test.go` assertions.
 - `proxy-dual-client` with `ebusd->proxy = udp`: bus-traffic visibility is not reliable for the current proxy behavior.
 - `proxy-dual-client` with `proxy->adapter = udp` or `proxy->adapter = tcp`: dual-client cohabitation is currently unstable across these southbound modes.
+
+The total number of default expected failures is 42 cases (per `runner_test.go`).
 
 When running the gate, treat `xfail` as known limitations only if the reason is explicitly listed in the attached expected-failure inventory.
 

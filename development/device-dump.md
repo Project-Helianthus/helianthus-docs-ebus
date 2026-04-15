@@ -98,7 +98,8 @@ Schema:
       "instance": "0x00",
       "address": "0x0400",
       "raw": "0401004000000000",
-      "decoded": "field_a=12.3,field_b=1"
+      "decoded": "field_a=12.3,field_b=1",
+      "result": "ok"
     }
   ]
 }
@@ -109,12 +110,40 @@ Field notes:
 - `target`, `group`, `instance`, `address` are **hex strings** with `0x` prefix.
 - `raw` is the payload as **lowercase hex** without a `0x` prefix. It can be empty if no payload was returned.
 - `decoded` is a comma-separated `name=value` string derived from TSP `model` definitions. It is empty when no model matches or decoding fails.
+- `result` is the request outcome string (e.g. `"ok"`, `"timeout"`, `"error"`). Present in each entry to distinguish successful reads from failures without inspecting `raw`.
 - For `get_ext_register`, the first 4 bytes of `raw` are the response header (`TT GG RR_LO RR_HI`). Decoding uses only the data bytes that follow.
 
 If a request fails, the corresponding entry remains in `entries` with empty `raw`/`decoded`; the error is captured in the text log.
 
-## Upload Flow (TODO — M3)
+## Upload Flow
 
-There is **no upload step** implemented in code as of **2026-02-11**. Dump artifacts are written only to local disk.
+The gateway implements two opt-in upload mechanisms, both disabled by default:
 
-**TODO (M3):** add an explicit upload stage (target location + auth) and document the exact transport once implemented.
+### Register Dump Upload
+
+Uploads the B524 register scan JSON to a remote endpoint after smoke-test completion.
+
+| Config | CLI Flag | Default | Purpose |
+|---|---|---|---|
+| `Smoke.RegisterDumpUploadURL` | (YAML field) | `""` (disabled) | Client: POST JSON to this URL after register dump |
+| `DumpUploadPath` | `-dump-upload-path` | `""` (disabled) | Server: mount upload handler at this HTTP path |
+| `DumpOutputDir` | `-dump-output-dir` | `"./dumps"` | Local directory for received dump files |
+
+- **Server handler** (`NewRegisterDumpUploadHandler`): accepts POST with JSON body (10 MiB limit), validates metadata, writes to `{outputDir}/register_dumps/register_dump_{target}_{timestamp}.json`, returns 201.
+- **Client** (`uploadRegisterDumpJSON`): POSTs the JSON file with 20-second timeout.
+
+### Unknown Device Dump Upload
+
+Uploads a ZIP bundle with full device scan data for unrecognized devices.
+
+| Config | CLI Flag | Default | Purpose |
+|---|---|---|---|
+| `DumpUploadURL` | `-dump-upload-url` | `""` (disabled) | Client: POST multipart bundle to this URL |
+| `DumpIncludePII` | `-dump-include-pii` | `false` | Include device identifiers in the bundle |
+
+- **Client** (`uploadDumpBundle`): builds multipart form with ZIP file, manifest JSON, and metadata (`bundle_id`, `address`, `created_at`, `include_pii`). 20-second timeout.
+- When `DumpUploadURL` is empty, the gateway logs a hint: "set DumpUploadURL to upload this bundle for analysis."
+
+### Privacy Model
+
+All upload flows are **opt-in**: empty URL = no upload. Device identifiers (serial numbers, product IDs) are stripped from unknown device bundles unless `-dump-include-pii=true` is explicitly set. The manifest includes a `Privacy.IncludePII` field for the receiving endpoint.

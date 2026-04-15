@@ -1,5 +1,9 @@
 # Vaillant GetExtendedRegisters (`0xB5 0x24`, B524)
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This document is the canonical wire-protocol reference for Vaillant `GetExtendedRegisters` (`PB=0xB5`, `SB=0x24`).
 
 It is structured by:
@@ -160,7 +164,7 @@ Opcode  Name                 Request shape                     Status
 0x00    Directory probe      00 <GG> 00                        Confirmed
 0x01    Constraint dictionary 01 <GG> <RR>                     Confirmed
 0x02    Local register I/O   02 <RW> <GG> <II> <RR_LO> <RR_HI> Confirmed
-0x03    Timer read           03 <SEL1> <SEL2> <SEL3> <WD>      Confirmed (VRC700 only)
+0x03    Timer read           03 <SEL1> <SEL2> <SEL3> <WD>      Non-functional on VRC720/BASV2 (VRC700 only)
 0x04    Timer write          04 <SEL1> <SEL2> <SEL3> <WD> ...  Confirmed (VRC700 only)
 0x06    Remote register I/O  06 <RW> <GG> <II> <RR_LO> <RR_HI> Confirmed
 0x0B    Array/table read     Shape unresolved (non-scalar)     Observed/partial
@@ -228,6 +232,8 @@ combinations until they are fully mapped.
 ## 4. Family Details
 
 ### 4.1 `0x00` Directory Probe
+
+The directory probe (`0x00`) enumerates group availability. It is distinct from the register I/O opcodes: OP=0x02 (instance directory / local register I/O) reads or writes individual registers within a group, while OP=0x06 (register directory / remote register I/O) accesses a separate opcode-scoped selector family. The directory probe itself is opcode-independent -- it discovers groups that may then be accessed via either OP=0x02 or OP=0x06 depending on the group's documented opcode binding.
 
 ```text
 Request payload (3 bytes):
@@ -392,7 +398,7 @@ Addressing notes:
 
 ### 4.4 `0x03` / `0x04` Timer Schedules
 
-> **Device binding:** Opcodes 0x03/0x04 are available on **VRC700 (device ID 70000, including Saunier Duval B7S00) only**. VRC720-family controllers (BASV2, BASV3, CTLV2, CTLV3, CTLS2, CTLV0, BASV0) do NOT respond to B524 timer opcodes -- they use the [B555 protocol](./ebus-vaillant-b555-timer-protocol.md) for all timer/schedule operations. Both device families share eBUS slave address `0x15` but are different device classes. A scanner or schedule writer that does not check device identity before choosing transport will send the wrong protocol. (Source: FINAL-B524-B555-B507-B508.md A2/A3; confidence HIGH.)
+> **Device binding:** Opcodes 0x03/0x04 are available on **VRC700 (device ID 70000, including Saunier Duval B7S00) only**. VRC720-family controllers (BASV2, BASV3, CTLV2, CTLV3, CTLS2, CTLV0, BASV0) do NOT respond to B524 timer opcodes -- they use the [B555 protocol](./ebus-vaillant-b555-timer-protocol.md) for all timer/schedule operations. Both device families share eBUS target address `0x15` but are different device classes. A scanner or schedule writer that does not check device identity before choosing transport will send the wrong protocol. (Source: FINAL-B524-B555-B507-B508.md A2/A3; confidence HIGH.)
 
 ```text
 Timer read request (5 bytes):
@@ -515,7 +521,7 @@ Descriptor class values behave like coarse enum tags, not physical numeric quant
 GG   Opcode  InstanceMax  RegisterMax
 0x02 0x02    0x0A         0x0025
 0x03 0x02    0x0A         0x002F
-0x09 0x06    0x0A         0x002F
+0x09 0x06    0x0A         0x0030
 0x0A 0x06    0x0A         0x003F
 0x0C 0x06    0x0A         0x003F
 ```
