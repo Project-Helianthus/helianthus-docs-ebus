@@ -117,6 +117,33 @@ If a request fails, the corresponding entry remains in `entries` with empty `raw
 
 ## Upload Flow
 
-There is **no upload step** implemented in code. Dump artifacts are written only to local disk.
+The gateway implements two opt-in upload mechanisms, both disabled by default:
 
-[Stale -- verify current status] The original M3 TODO (2026-02-11) planned an explicit upload stage (target location + auth). Check whether this has been implemented before relying on this section.
+### Register Dump Upload
+
+Uploads the B524 register scan JSON to a remote endpoint after smoke-test completion.
+
+| Config | CLI Flag | Default | Purpose |
+|---|---|---|---|
+| `Smoke.RegisterDumpUploadURL` | (YAML field) | `""` (disabled) | Client: POST JSON to this URL after register dump |
+| `DumpUploadPath` | `-dump-upload-path` | `""` (disabled) | Server: mount upload handler at this HTTP path |
+| `DumpOutputDir` | `-dump-output-dir` | `"./dumps"` | Local directory for received dump files |
+
+- **Server handler** (`NewRegisterDumpUploadHandler`): accepts POST with JSON body (10 MiB limit), validates metadata, writes to `{outputDir}/register_dumps/register_dump_{target}_{timestamp}.json`, returns 201.
+- **Client** (`uploadRegisterDumpJSON`): POSTs the JSON file with 20-second timeout.
+
+### Unknown Device Dump Upload
+
+Uploads a ZIP bundle with full device scan data for unrecognized devices.
+
+| Config | CLI Flag | Default | Purpose |
+|---|---|---|---|
+| `DumpUploadURL` | `-dump-upload-url` | `""` (disabled) | Client: POST multipart bundle to this URL |
+| `DumpIncludePII` | `-dump-include-pii` | `false` | Include device identifiers in the bundle |
+
+- **Client** (`uploadDumpBundle`): builds multipart form with ZIP file, manifest JSON, and metadata (`bundle_id`, `address`, `created_at`, `include_pii`). 20-second timeout.
+- When `DumpUploadURL` is empty, the gateway logs a hint: "set DumpUploadURL to upload this bundle for analysis."
+
+### Privacy Model
+
+All upload flows are **opt-in**: empty URL = no upload. Device identifiers (serial numbers, product IDs) are stripped from unknown device bundles unless `-dump-include-pii=true` is explicitly set. The manifest includes a `Privacy.IncludePII` field for the receiving endpoint.
