@@ -88,4 +88,4 @@ The ENS firmware codec (`codec_ens.c`) is a data-only encoding layer. It cannot 
 - `STARTED` (arbitration grant)
 - `FAILED` (arbitration failure)
 
-These events exist only in the ENH protocol. Clients receiving ENS-encoded streams will never see adapter reset notifications, which means they cannot detect adapter firmware restarts or bus reinitializations. This is the root cause of the ENH/ENS parity gap documented in the audit (PX51, PX58, WS13, WS23).
+These events exist only in the ENH protocol. Clients receiving streams encoded by the firmware `codec_ens.c` layer will never see adapter reset notifications, which means they cannot detect adapter firmware restarts or bus reinitializations. This limitation does not apply to the `ens:` transport prefix (which uses ENH framing at 115200 baud). This is the root cause of the ENH/ENS parity gap documented in the audit (PX51, PX58, WS13, WS23).
