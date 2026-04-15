@@ -2,8 +2,8 @@
 
 > **License:** AGPL-3.0. This file documents Helianthus-specific semantic mapping, not protocol-level specifications.
 >
-> For the B524 wire protocol, see [`../protocols/vaillant/ebus-vaillant-b524.md`](../protocols/vaillant/ebus-vaillant-b524.md).
-> For the register catalog, see [`../protocols/vaillant/ebus-vaillant-b524-register-map.md`](../protocols/vaillant/ebus-vaillant-b524-register-map.md).
+> For the B524 wire protocol, see [`../protocols/vaillant/ebus-vaillant-B524.md`](../protocols/vaillant/ebus-vaillant-B524.md).
+> For the register catalog, see [`../protocols/vaillant/ebus-vaillant-B524-register-map.md`](../protocols/vaillant/ebus-vaillant-B524-register-map.md).
 
 This document maps B524 registers to Helianthus MCP semantic plane fields. Only registers actively read by the gateway's semantic poller are listed. The **S** prefix in the register map's Notes column marks these registers.
 
@@ -58,7 +58,7 @@ Ownership note:
 | `[].state.pump_status` | GG=0x02, RR=0x001E | bool (u16) |
 | `[].state.calculated_flow_temperature` | GG=0x02, RR=0x0020 | f32 |
 | `[].state.mixer_position_percentage` | GG=0x02, RR=0x0021 | f32 |
-| `[].state.current_room_humidity` | GG=0x02, RR=0x0022 | f32 |
+| `[].state.current_humidity_pct` | GG=0x02, RR=0x0022 | f32 |
 | `[].state.dew_point_temperature` | GG=0x02, RR=0x0023 | f32 |
 | `[].state.pump_operating_hours` | GG=0x02, RR=0x0024 | u32 |
 | `[].state.pump_starts_count` | GG=0x02, RR=0x0025 | u32 |
@@ -85,9 +85,9 @@ Source: `refreshState()` / `refreshDiscovery()` in `semantic_vaillant.go`
 |---------------|------|------|
 | `[].name` | GG=0x03, RR=0x0016 | string |
 | `[].config.operating_mode` | derived from GG=0x03 RR=0x0006 + 0x000E | — |
-| `[].state.current_temperature` | GG=0x03, RR=0x000F | f32 |
-| `[].config.desired_temperature` | GG=0x03, RR=0x0022 (primary), 0x0014 (fallback) | f32 |
-| `[].state.current_room_humidity` | GG=0x03, RR=0x0028 | f32 |
+| `[].state.current_temp_c` | GG=0x03, RR=0x000F | f32 |
+| `[].config.target_temp_c` | GG=0x03, RR=0x0022 (primary), 0x0014 (fallback) | f32 |
+| `[].state.current_humidity_pct` | GG=0x03, RR=0x0028 | f32 |
 
 ### Zone Mode Derivation
 
@@ -103,8 +103,8 @@ Source: `refreshDHW()` in `semantic_vaillant.go`
 | Semantic Path | B524 | Type |
 |---------------|------|------|
 | `operating_mode` | GG=0x01, RR=0x0003 | u16 (derived) |
-| `current_temperature` | GG=0x01, RR=0x0005 | f32 |
-| `desired_temperature` | GG=0x01, RR=0x0004 | f32 |
+| `current_temp_c` | GG=0x01, RR=0x0005 | f32 |
+| `target_temp_c` | GG=0x01, RR=0x0004 | f32 |
 | `state` | GG=0x01, RR=0x000D | u16 (special function) |
 
 ## `ebus.v1.semantic.boiler_status.get`

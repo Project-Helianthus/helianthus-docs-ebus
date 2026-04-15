@@ -102,7 +102,7 @@ Key points:
 
 - **Per-byte echo**: When an initiator drives a symbol onto the bus it will also observe the same symbol (“echo”). An echo mismatch indicates arbitration loss or a collision.
 - **ACK/NAK timing**: `ACK`/`NACK` is exchanged **once per command**, after the initiator sends the command CRC (not after each byte).
-- **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses. CRC is computed over `LEN DATA...` only (not including any address bytes). Implementors must **not** attempt to read header bytes (SRC/DST/PB/SB) from the slave response — they are inferred from the initiator telegram. See ebusgo#104 for a regression where phantom header reads caused all master-slave transactions to fail.
+- **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses. CRC is computed over `LEN DATA...` only (not including any address bytes). Implementors must **not** attempt to read header bytes (SRC/DST/PB/SB) from the target response -- they are inferred from the initiator telegram. See ebusgo#104 for a regression where phantom header reads caused all initiator-target transactions to fail.
 - **SYN** (`0xAA`) is used as an **end-of-message** delimiter and may also appear during idle.
 
 > **Note:** ENH-based adapters abstract physical SYN detection. The host does not observe raw SYN bytes; the adapter handles arbitration internally and signals transaction boundaries via ENH command framing (STARTED, FAILED, etc.).
@@ -135,7 +135,7 @@ CRC8 is computed over the **logical (unescaped) frame bytes**:
 
 - **CRC8 polynomial:** `0x9B` (init `0x00`).
 
-> **Important:** CRC is always computed over the logical frame bytes, **before** escape substitution. The escaped wire representation is never used for CRC calculation. Confusing logical vs wire bytes was the root cause of CRC bugs across multiple codebases (VE16, VE25, EG47).
+> **Important:** CRC is always computed over the logical frame bytes, **before** escape substitution. The escaped wire representation is never used for CRC calculation. Confusing logical vs wire bytes was the root cause of CRC bugs across multiple codebases (VE16, VE25, EG47). This supersedes the earlier ADR-006 guidance. ADR-006 incorrectly specified CRC over escaped bytes; all implementations (ebusgo, ebusd, VRC Explorer) compute CRC over logical bytes.
 
 CRC8 coverage depends on the direct-mode phase:
 
@@ -262,6 +262,6 @@ Notes:
 
 ## See Also
 
-- `protocols/ebusd-tcp.md` – ebusd daemon TCP command protocol (for tooling that sends direct-mode telegrams via ebusd).
-- `protocols/ebus-vaillant.md#vaillant-scanid-chunks-qq0x240x27` – Vaillant extended discovery (`0xB5 0x09`) details.
-- `protocols/basv.md` – BASV discovery orchestration flow (observed).
+- [`../ebusd-tcp.md`](../ebusd-tcp.md) -- ebusd daemon TCP command protocol (for tooling that sends direct-mode telegrams via ebusd).
+- [`../vaillant/ebus-vaillant.md#vaillant-scanid-chunks-qq0x240x27`](../vaillant/ebus-vaillant.md#vaillant-scanid-chunks-qq0x240x27) -- Vaillant extended discovery (`0xB5 0x09`) details.
+- [`../vaillant/basv.md`](../vaillant/basv.md) -- BASV discovery orchestration flow (observed).

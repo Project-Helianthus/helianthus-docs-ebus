@@ -23,7 +23,7 @@
 
 | Flag | Purpose | Notes |
 |---|---|---|
-| `-transport` | Backend protocol | `enh`, `ens` (alias of `enh`), `udp-plain`, `tcp-plain`, `ebusd-tcp`, or `adapter_direct` |
+| `-transport` | Backend protocol | `enh`, `ens` (alias of `enh`), `udp-plain`, `tcp-plain`, `ebusd-tcp`, or `adapter-direct` |
 | `-network` | Dial network | `unix`, `tcp`, or `udp` |
 | `-address` | Socket path or host:port | Example: `/var/run/ebusd/ebusd.socket` or `127.0.0.1:8888` |
 | `-source-addr` | Initiator/source address used by scan + semantic reads | Hex (`0xF0`), decimal, `0x00`, or `auto` |
@@ -70,7 +70,7 @@ go run ./cmd/gateway \
 
 # adapter-direct (gateway-embedded adapter multiplexer, no external proxy)
 go run ./cmd/gateway \
-  -transport adapter_direct \
+  -transport adapter-direct \
   -network tcp \
   -address 203.0.113.10:9999 \
   -source-addr auto

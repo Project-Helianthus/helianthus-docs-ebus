@@ -4,7 +4,7 @@
 
 The abbreviation "ENS" appears in two different contexts within the Helianthus ecosystem. They refer to different things:
 
-1. **ENS as ebusd transport prefix** (`ens:`): selects the ENH (enhanced adapter) protocol over high-speed serial at `115200` Baud. This is a transport-layer concept -- `ens:` is simply an alias for `enh:` with a different baud rate. Documented in this file and in `protocols/enh.md`.
+1. **ENS as ebusd transport prefix** (`ens:`): selects the ENH (enhanced adapter) protocol over high-speed serial at `115200` Baud. This is a transport-layer concept -- `ens:` is simply an alias for `enh:` with a different baud rate. Documented in this file and in [`enh.md`](enh.md).
 
 2. **ENS as firmware codec** (`codec_ens.c`): a distinct escape-based encoding layer implemented in adapter firmware (e.g., PIC-based eBUS adapters). This codec uses `0xA9` as an escape byte to encode control symbols in the byte stream between the firmware and the host. See the "ENS Escape Encoding (Firmware Codec)" section below.
 
@@ -12,9 +12,9 @@ In the Go codebase (`enh_transport.go`), `ENS` is aliased to the ENH transport -
 
 ---
 
-In ebusd-style device naming, `ens:` selects the **enhanced adapter protocol** (see `protocols/enh.md`) and uses the **high-speed serial** variant (typically `115200` Baud).
+In ebusd-style device naming, `ens:` selects the **enhanced adapter protocol** (see [`enh.md`](enh.md)) and uses the **high-speed serial** variant (typically `115200` Baud).
 
-This is distinct from the eBUS wire-level escaping of `ESC=0xA9` / `SYN=0xAA`, which is documented in `protocols/ebus-overview.md`.
+This is distinct from the eBUS wire-level escaping of `ESC=0xA9` / `SYN=0xAA`, which is documented in [`ebus-services/ebus-overview.md`](ebus-services/ebus-overview.md).
 
 ## Device Prefix Semantics (ebusd)
 
@@ -29,7 +29,7 @@ Both prefixes enable the same ENH framing; only the serial transfer speed differ
 
 When the underlying transport is TCP/UDP (for example `host:9999`), there is no serial baud rate. In that case, `enh:` and `ens:` are effectively equivalent and simply indicate “use ENH framing”.
 
-If an adapter exposes raw eBUS bytes over UDP without ENH framing, use UDP-PLAIN instead (`protocols/udp-plain.md`).
+If an adapter exposes raw eBUS bytes over UDP without ENH framing, use UDP-PLAIN instead ([`udp-plain.md`](udp-plain.md)).
 
 Observe-first caveat: direct adapter-class `enh:` / `ens:` listeners on the
 adapter port remain `unsupported_or_misconfigured` for passive observe-first.
@@ -76,5 +76,7 @@ The escape byte is `0xA9`. When a data byte matches a control symbol, it is repl
 
 Both the ENS firmware codec and the eBUS wire protocol use `0xA9`/`0xAA` escape sequences with identical substitution rules. However, they operate at different layers:
 
-- **eBUS wire escaping** is applied on the physical bus between eBUS devices. CRC is computed on logical bytes before this encoding (see `protocols/ebus-services/ebus-overview.md#crc8-and-escaping`).
+- **eBUS wire escaping** is applied on the physical bus between eBUS devices. CRC is computed on logical bytes before this encoding (see [`ebus-services/ebus-overview.md#crc8-and-escaping`](ebus-services/ebus-overview.md#crc8-and-escaping)).
 - **ENS firmware escaping** is applied on the serial/USB link between the adapter and the host software. It ensures that `0xA9` and `0xAA` bytes in the data stream do not get misinterpreted as framing symbols by the host.
+
+> **Note:** `codec_ens.c` is a firmware-level codec module. The current PIC16F15356 runtime (`runtime.c`) uses ENH only and does not implement bus TX. ENS escape encoding is available as a codec primitive but is not wired into the active runtime path.

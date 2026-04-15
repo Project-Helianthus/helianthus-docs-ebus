@@ -4,8 +4,8 @@
 >
 > **Last updated:** 2026-04-06
 >
-> For the B524 protocol specification, see [ebus-vaillant-b524.md](./ebus-vaillant-b524.md).
-> For the register catalog, see [ebus-vaillant-b524-register-map.md](./ebus-vaillant-b524-register-map.md).
+> For the B524 protocol specification, see [ebus-vaillant-B524.md](./ebus-vaillant-B524.md).
+> For the register catalog, see [ebus-vaillant-B524-register-map.md](./ebus-vaillant-B524-register-map.md).
 
 This document collects protocol-level observations, working hypotheses, and open questions about B524 behavior that have not yet been resolved into confirmed protocol rules. Items graduate to the main protocol spec when sufficient evidence accumulates.
 

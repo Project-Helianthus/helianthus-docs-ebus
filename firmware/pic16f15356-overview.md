@@ -89,7 +89,7 @@ written by `ebuspicloader` and derives runtime state from it at boot:
 
 The runtime cache is derivative only. It is not a second persistent format.
 
-The current combined static footprint (`picfw_runtime_t` + `picfw_pic16f15356_hal_t`) is tracked by `make check-all`. At the time of this review the host-side `sizeof` reports 1056 bytes. The 75% budget threshold is applied against the PIC16F15356's full 2048-byte RAM (i.e. 1536 bytes usable budget), giving 1056/2048 = 51.6% utilization.
+The current combined static footprint (`picfw_runtime_t` + `picfw_pic16f15356_hal_t`) is tracked by `make check-all`. At the time of this review the host-side `sizeof` reports 1056 bytes. The PIC16F15356 has 2048 bytes of total RAM, and the 75% budget threshold yields a usable budget of 1536 bytes (0.75 x 2048). Current utilization is 1056/1536 = 68.8% of budget, which is within the 75% threshold.
 
 ## Determinism
 
@@ -137,7 +137,7 @@ The `NOLINT(determinism)` comment suppression mechanism allows intentional excep
 | R10 | Ring buffers power-of-2 + bitmask | -- | Buffer size + indexing scan |
 | STACK | Call depth limit | < 13 of 16 HW levels | Call graph DFS |
 | GUARD | Header include guards | -- | Pattern scan |
-| RAM | Static struct footprint | < 75% of 2 KB (1056 / 2048 = 51.6%) | Host sizeof budget check |
+| RAM | Static struct footprint | < 75% of 2 KB (1056 / 1536 = 68.8% of budget) | Host sizeof budget check |
 | WCET | ISR-context functions | < 60 cycles (peak: 51) | Source heuristic (`*_isr_*`) |
 | CONST | Function pointer arrays | Must be `const` | Qualifier scan |
 

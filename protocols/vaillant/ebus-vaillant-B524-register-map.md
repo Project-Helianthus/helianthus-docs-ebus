@@ -6,7 +6,7 @@
 >
 > **Device:** BASV2 (VRC720-compatible, HW 1704)
 
-This is the register catalog for B524. For the protocol specification (wire format, opcodes, FLAGS encoding, response states), see [ebus-vaillant-b524.md](./ebus-vaillant-b524.md). For research and working hypotheses, see [ebus-vaillant-b524-research.md](./ebus-vaillant-b524-research.md).
+This is the register catalog for B524. For the protocol specification (wire format, opcodes, FLAGS encoding, response states), see [ebus-vaillant-B524.md](./ebus-vaillant-B524.md). For research and working hypotheses, see [ebus-vaillant-b524-research.md](./ebus-vaillant-b524-research.md).
 
 ---
 

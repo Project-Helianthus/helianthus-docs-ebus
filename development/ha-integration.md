@@ -59,10 +59,10 @@ The config entry `unique_id` is the verified `instanceGuid`, not `host:port`.
 
 The integration reads semantic zone data from GraphQL and exposes:
 
-- `current_temperature` from `zones[].currentTempC`
-- `target_temperature` from `zones[].targetTempC`
-- `current_humidity` from `zones[].currentHumidityPct` (when available)
-- `hvac_mode` from `zones[].operatingMode`
+- `current_temperature` from `zones[].state.currentTempC`
+- `target_temperature` from `zones[].config.targetTempC`
+- `current_humidity` from `zones[].state.currentHumidityPct` (when available)
+- `hvac_mode` from `zones[].config.operatingMode`
 - `preset_mode` normalized to canonical tokens:
   - `schedule`
   - `manual`
@@ -82,9 +82,9 @@ Raw semantic fields are also kept as extra attributes for diagnostics:
 
 The DHW entity reads semantic data from `dhw` and exposes:
 
-- `current_temperature` from `dhw.currentTempC`
-- `target_temperature` from `dhw.targetTempC`
-- `operation_mode` from `dhw.operatingMode` (`off` / `auto` / `manual`)
+- `current_temperature` from `dhw.state.currentTempC`
+- `target_temperature` from `dhw.config.targetTempC`
+- `operation_mode` from `dhw.config.operatingMode` (`off` / `auto` / `manual`)
 - canonical preset in attributes (`schedule` / `manual` / `quickveto` / `away`)
 
 Raw DHW fields are also exposed as attributes:

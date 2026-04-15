@@ -107,14 +107,14 @@ For `data < 0x80`, the short-form (unframed) byte is also allowed.
 `START` requests that the adapter begins arbitration after the next bus `SYN` (`0xAA`) and uses the supplied initiator address:
 
 ```text
-<START> <master>
+<START> <initiator>
 ```
 
-If `<master>` is `SYN` (`0xAA`), a running arbitration is cancelled.
+If `<initiator>` is `SYN` (`0xAA`), a running arbitration is cancelled.
 
 Outcomes:
 
-- `<STARTED> <master>`: arbitration won
+- `<STARTED> <initiator>`: arbitration won
 - `<FAILED> <winner>`: arbitration lost (the data byte indicates the winning initiator address)
 
 ### Arbitration byte visibility
