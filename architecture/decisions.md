@@ -55,17 +55,27 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Consequences:** Callers do not set frame type explicitly; it is derived from addressing rules.
 
-## ADR-006: CRC8 is computed over logical (unescaped) bytes
+## ADR-006: CRC8 accepts logical bytes, expands 0xA9/0xAA internally
 
-**Status:** Corrected (2026-04)
+**Status:** Corrected (2026-04, revised R6)
 
-**Context:** eBUS CRC8 must produce consistent checksums regardless of wire-level escape encoding.
+**Context:** eBUS CRC8 must produce consistent checksums. Two bytes (0xA9=ESC, 0xAA=SYN) have special wire-level meaning and require escape expansion.
 
-**Decision:** CRC computation operates on the logical (unescaped) frame bytes. Escape substitution (`0xA9` -> `0xA9 0x00`, `0xAA` -> `0xA9 0x01`) is applied after CRC computation on transmit, and reversed before CRC verification on receive. The CRC byte itself is also subject to escape encoding on the wire.
+**Decision:** The CRC function's **API accepts logical frame bytes**, but internally expands the two special values before feeding them into the CRC8 polynomial (`0x9B`, init `0x00`):
+- Logical `0xA9` → CRC update with `0xA9, 0x00`
+- Logical `0xAA` → CRC update with `0xA9, 0x01`
+- All other bytes → CRC update directly
 
-**Correction note:** The original ADR-006 incorrectly stated that CRC was computed over escaped symbols. All implementations (ebusgo, ebusd, VRC Explorer) compute CRC over logical bytes. The original wording caused confusion and was the root cause of CRC bugs across multiple codebases (VE16, VE25, EG47). See DOC-NEW-04 in the audit findings.
+Wire-level escape encoding for **transmission** is a separate step applied after CRC computation (the CRC byte itself is also subject to wire escaping). On **receive**, wire escaping is reversed before CRC verification.
 
-**Consequences:** CRC validation is independent of wire-level escape encoding. The same logical frame always produces the same CRC regardless of whether any data bytes happen to require escaping.
+**Correction history:**
+- Original ADR-006 incorrectly stated CRC was computed over escaped symbols.
+- PR #262 correction said "CRC over logical bytes before escape substitution" — still misleading because the CRC function does perform internal expansion.
+- R6 verification (NI-01) identified the self-contradiction. This revision describes the actual implementation: API accepts logical bytes, polynomial applied to wire-expanded form.
+
+**Evidence:** ebusgo `protocol.CRC` (protocol.go:51), VRC Explorer `_crc()`, and ebusd all implement identical internal expansion. See DOC-NEW-04, VE16, VE25, EG47.
+
+**Consequences:** `CRC([0x01, 0xAA])` produces `CRC_update(0x01) → CRC_update(0xA9) → CRC_update(0x01)`, NOT `CRC_update(0x01) → CRC_update(0xAA)`. Implementors must replicate this expansion inside their CRC function.
 
 ## ADR-007: Bus owns ACK/response state machine and retry policy
 

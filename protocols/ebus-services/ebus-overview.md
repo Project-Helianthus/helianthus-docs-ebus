@@ -140,11 +140,15 @@ For multi-client/proxy setups, Helianthus collision handling uses a receive-vs-t
 
 ### CRC8
 
-CRC8 is computed over the **logical (unescaped) frame bytes**:
+The CRC8 function accepts **logical frame bytes** (the bytes the application layer works with) and internally **expands** the two special values before feeding them into the polynomial:
+
+- Logical `0xA9` (ESC) → CRC update with `0xA9, 0x00`
+- Logical `0xAA` (SYN) → CRC update with `0xA9, 0x01`
+- All other bytes → CRC update directly
 
 - **CRC8 polynomial:** `0x9B` (init `0x00`).
 
-> **Important:** CRC is always computed over the logical frame bytes, **before** escape substitution. The escaped wire representation is never used for CRC calculation. Confusing logical vs wire bytes was the root cause of CRC bugs across multiple codebases (VE16, VE25, EG47). This supersedes the earlier ADR-006 guidance. ADR-006 incorrectly specified CRC over escaped bytes; all implementations (ebusgo, ebusd, VRC Explorer) compute CRC over logical bytes.
+> **Important:** The CRC function's API accepts logical bytes, but the polynomial is applied to the **wire-expanded form**. This means `CRC([0x01, 0xAA])` internally computes `CRC_update(0x01) → CRC_update(0xA9) → CRC_update(0x01)`, NOT `CRC_update(0x01) → CRC_update(0xAA)`. All three Helianthus implementations (ebusgo `protocol.CRC`, VRC Explorer `_crc()`, ebusd) implement this expansion. Omitting the expansion was the root cause of CRC bugs VE16, VE25, and EG47. This supersedes ADR-006.
 
 CRC8 coverage depends on the direct-mode phase:
 
