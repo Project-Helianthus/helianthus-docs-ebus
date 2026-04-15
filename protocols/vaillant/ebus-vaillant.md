@@ -359,7 +359,7 @@ B524 f32 registers have device-dependent byte order:
 - **target** — device responds to queries on its target address (tested actively by gateway 0x71)
 - **initiator** — device initiates communication from its initiator address (observed passively on bus)
 - **stub** — transport-level ACK, response `0x00`, no real data
-- **---** — not observed on this device
+- **—** — not observed on this device
 - **tx/rx counts** — from gateway bus summary (current session)
 
 ---

@@ -82,9 +82,9 @@ Raw semantic fields are also kept as extra attributes for diagnostics:
 
 The DHW entity reads semantic data from `dhw` and exposes:
 
-- `current_temperature` from `dhw.state.currentTempC`
-- `target_temperature` from `dhw.config.targetTempC`
-- `operation_mode` from `dhw.config.operatingMode` (`off` / `auto` / `manual`)
+- `current_temperature` from `dhw.currentTempC`
+- `target_temperature` from `dhw.targetTempC`
+- `operation_mode` from `dhw.operatingMode` (`off` / `auto` / `manual`)
 - canonical preset in attributes (`schedule` / `manual` / `quickveto` / `away`)
 
 Raw DHW fields are also exposed as attributes:

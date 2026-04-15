@@ -90,7 +90,7 @@ Raw binary hardware configuration. Length and format are adapter-specific.
 
 ## ID 0x06 -- Reset Info
 
-Prerequisite: ID 0x00 (Version) must be queried first to determine availability of IDs 0x06 and 0x07 via the `version_len` and `jumpers` fields.
+Protocol-level recommendation: query ID 0x00 (Version) first to determine availability of IDs 0x06 and 0x07 via the `version_len` and `jumpers` fields. Some firmware may respond to 0x06/0x07 without a prior 0x00 query, but callers should not rely on firmware-side enforcement.
 
 Requires bootloader gate (`version_len == 8`).
 
@@ -114,7 +114,7 @@ Requires bootloader gate (`version_len == 8`).
 
 ## ID 0x07 -- WiFi RSSI
 
-Prerequisite: ID 0x00 (Version) must be queried first to determine availability via the `version_len` and `jumpers` fields.
+Protocol-level recommendation: query ID 0x00 (Version) first to determine availability via the `version_len` and `jumpers` fields. Some firmware may respond without a prior 0x00 query, but callers should not rely on firmware-side enforcement.
 
 Requires WiFi gate (`version_len >= 5 && jumpers & 0x08`).
 
