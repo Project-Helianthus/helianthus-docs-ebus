@@ -360,9 +360,9 @@ stateDiagram-v2
   [*] --> Idle
   Idle --> WriteFrame: Enqueue + Dequeue
   WriteFrame --> Done: Broadcast
-  WriteFrame --> WaitAck: MasterMaster/MasterSlave
-  WaitAck --> Done: ACK + MasterMaster
-  WaitAck --> WaitResponse: ACK + MasterSlave
+  WriteFrame --> WaitAck: i2i / i2t
+  WaitAck --> Done: ACK + i2i
+  WaitAck --> WaitResponse: ACK + i2t
   WaitResponse --> Done: Response + CRC ok
   WaitAck --> Retry: NACK/Timeout
   WaitResponse --> Retry: Timeout/CRC mismatch

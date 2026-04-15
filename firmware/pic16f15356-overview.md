@@ -16,6 +16,8 @@ See also:
 
 The current PIC16F15356 firmware tree is a **host-buildable adapter/runtime scaffold** between an ESP host and the eBUS adapter hardware model. It is **not** yet a silicon-complete production image, and all eBUS protocol responsibilities above the adapter framing layer remain delegated to host software.
 
+> **Port note:** The current scaffold firmware uses TCP port 3333 (`PICFW_W5500_EBUSD_PORT`). Production ENH adapters use port 9999 (or a configurable port stored in EEPROM). Clients connecting to this firmware scaffold must use port 3333 instead of the standard 9999.
+
 The firmware handles:
 
 - SYN byte (`0xAA`) detection and forwarding

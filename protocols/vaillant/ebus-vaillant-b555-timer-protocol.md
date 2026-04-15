@@ -417,8 +417,8 @@ A6 [ZONE] [HC] [DD] [SI] [SC] [Sh] [Sm] [Eh] [Em] [Tlo] [Thi]
 | 0x00 | ACK — frame accepted by controller | Yes |
 | 0x01 | Parameter out of range | Yes — hour ≥ 0x19 rejected; SC > max_slots rejected (e.g., SC=4 on CC with max_slots=3; SC=12 on DHW with max_slots=3); Heating 0xFFFF rejected (Section 12.14) |
 | 0x03 | Timer type unavailable (status=0x03 in A3 config) | Yes — writes to Cooling/Z3/Silent rejected |
-| 0x04 | Multi-slot write error | Observed once in early testing, not reproducible |
-| 0x05 | Multi-slot write error | Observed once in early testing, not reproducible |
+| 0x04 | Timer write rejected (device-specific) | Observed once in early testing, not reproducible. Exact semantics unconfirmed — falls through to "unknown error" in gateway if not explicitly handled. |
+| 0x05 | Timer write rejected (device-specific variant) | Observed once in early testing, not reproducible. Exact semantics unconfirmed — falls through to "unknown error" in gateway if not explicitly handled. |
 | 0x06 | Validation failure (temperature or parameter) | Yes — triggered by: (1) temperature below min or above max (e.g., 34°C on DHW min=35; 66°C on DHW max=65; boundary values accepted); (2) ZONE=0xFF + full-day (00:00-24:00) + explicit temperature on DHW writes, even when temp is in range (Section 12.13). Semantics broader than "temp out of range". |
 
 **Important:** A response of 0x00 means the controller accepted the frame,
