@@ -66,6 +66,8 @@ The selector nibble values (`W`, `V`, `Q`) are encoded differently per period an
   - `Q = 0` → previous year (`byte7 = 0x30`).
 - Historic windows beyond `Q=0` have not been observed; regulators tend to expose only current/previous years.
 
+> **Disambiguation:** The top-level Vaillant message reference (`ebus-vaillant.md`) describes `QQ` for yearly windows as "the number of half-years since year 2000" (e.g., `QQ=0x34` (52) = first half of 2026). That encoding applies to the raw `QQ` byte (byte 7) on the wire. This section describes the `Q` nibble (`QQ = 0x30 | Q`), where `Q=0` and `Q=2` select previous/current year respectively. Both descriptions are consistent: `Q=2` yields `byte7 = 0x32` (50 decimal = 25 half-years = mid-2012 in the absolute scheme, but the controller interprets it as "current year" in the bank-relative scheme). The bank-relative `Q` interpretation documented here is the practical encoding used by Helianthus.
+
 ### 4.4 Daily Windows (`X=1`)
 
 Day-level reads require packing the month, half-month, and day within half-month into `W`, `V`, and `Q`:

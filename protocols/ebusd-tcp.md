@@ -27,7 +27,12 @@ and
 ```text
 hex <TELEGRAM_HEX>
 hex -s <SRC_HEX> <TELEGRAM_HEX>
+hex -n <TELEGRAM_HEX>
 ```
+
+The `-n` flag requests **numeric** output: ebusd returns the raw response bytes as space-separated decimal integers instead of a hex string. This variant is useful when the caller needs numeric values directly and wants to avoid hex-to-int conversion. The telegram format is identical to the standard `hex` command.
+
+> **Production note:** Omission of `-n` documentation was the root cause of the B555 rev 2.5 production bug, where numeric timer-byte parsing assumed hex output format.
 
 Where `<TELEGRAM_HEX>` encodes:
 

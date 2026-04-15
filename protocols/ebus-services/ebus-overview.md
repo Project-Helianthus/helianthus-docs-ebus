@@ -54,7 +54,7 @@ When Helianthus must choose an initiator address on a live bus, it follows a low
 
 1. Passive listen warmup (default `5s`), collecting observed source and destination activity.
 2. Candidate selection from the valid 25-address initiator set.
-3. Default preference for higher addresses first (`FF, F7, ...`) to keep lower-priority arbitration behavior.
+3. Default preference for higher addresses first (`F7, F3, F1, ...`) to keep lower-priority arbitration behavior. (`0xFF` is excluded from the default preference list because it may conflict with NACK signaling.)
 4. Companion-target heuristic: reject a candidate if `(initiator + 0x05)` appears active as a probable target source or is frequently addressed as destination traffic.
 5. Optional active discovery (`0x07 0xFE`) is disabled by default and bounded/rate-limited when enabled.
 
@@ -71,7 +71,9 @@ NACK = 0xFF
 
 Broadcast frames do not receive ACK/NACK or responses.
 
-Idle periods may include `SYN` (`0xAA`) bytes on the bus; receivers typically ignore these while waiting for an `ACK`/`NACK`.
+**SYN during active waits:** If a `SYN` (`0xAA`) byte is received while waiting for an `ACK`/`NACK` or a target response, it signals end-of-transaction (timeout). All known implementations (ebusgo, ebusd, VRC Explorer) treat SYN during ACK/response wait as a timeout indicator and abort the current transaction. Ignoring SYN and continuing to wait is incorrect -- it causes the receiver to stall past the end of the transaction.
+
+**Early SYN during request collection:** If SYN arrives when only 0 or 1 request bytes have been collected (`requestBytesSeen <= 1`), it indicates a new arbitration cycle rather than a framing error. Implementations should reset collection state and treat the next byte as the start of a new transaction.
 
 ## Transaction Flow (Direct Mode)
 
@@ -103,6 +105,16 @@ Key points:
 - **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses. CRC is computed over `LEN DATA...` only (not including any address bytes). Implementors must **not** attempt to read header bytes (SRC/DST/PB/SB) from the slave response — they are inferred from the initiator telegram. See ebusgo#104 for a regression where phantom header reads caused all master-slave transactions to fail.
 - **SYN** (`0xAA`) is used as an **end-of-message** delimiter and may also appear during idle.
 
+> **Note:** ENH-based adapters abstract physical SYN detection. The host does not observe raw SYN bytes; the adapter handles arbitration internally and signals transaction boundaries via ENH command framing (STARTED, FAILED, etc.).
+
+### Initiator-to-Initiator (i2i) Transactions
+
+When the destination is an initiator-capable address, the eBUS transaction has **no response phase**. The target sends ACK after the command CRC and the transaction is complete. The initiator sends SYN (end-of-message) immediately after ACK -- it must not wait for a response length byte.
+
+This is distinct from initiator/target transactions where the target returns a response payload (LEN DATA... CRC) after ACK.
+
+Implementations must detect i2i frame type from the destination address pattern before entering the response-read phase. Entering WaitResponseLen for an i2i transaction causes an indefinite hang because no response bytes will arrive.
+
 ### Collision Detection Model (Helianthus)
 
 For multi-client/proxy setups, Helianthus collision handling uses a receive-vs-transmit check:
@@ -117,23 +129,27 @@ For multi-client/proxy setups, Helianthus collision handling uses a receive-vs-t
 
 ## CRC8 and Escaping
 
-CRC8 is computed over the frame data with special handling for control symbols:
+### CRC8
+
+CRC8 is computed over the **logical (unescaped) frame bytes**:
 
 - **CRC8 polynomial:** `0x9B` (init `0x00`).
-- `0xA9` (escape) is treated as `0xA9 0x00`
-- `0xAA` (SYN) is treated as `0xA9 0x01`
 
-This substitution is applied before CRC8 updates so that control symbols do not break framing.
+> **Important:** CRC is always computed over the logical frame bytes, **before** escape substitution. The escaped wire representation is never used for CRC calculation. Confusing logical vs wire bytes was the root cause of CRC bugs across multiple codebases (VE16, VE25, EG47).
 
 CRC8 coverage depends on the direct-mode phase:
 
 - **Initiator telegram CRC** is computed over: `SRC DST PB SB LEN DATA...`
 - **Target response CRC** is computed over: `LEN DATA...` (responses do not repeat addresses in direct mode)
 
-On the wire, the same escape mechanism is used when sending these control bytes:
+### Wire Escape Encoding
 
-- Literal `0xA9` is encoded as `0xA9 0x00`
-- Literal `0xAA` is encoded as `0xA9 0x01`
+On the wire, two byte values require escape substitution because they have special meaning (ESC and SYN). This encoding is applied **after** CRC computation when transmitting, and reversed **before** CRC verification when receiving:
+
+- Literal `0xA9` (ESC) is encoded as `0xA9 0x00`
+- Literal `0xAA` (SYN) is encoded as `0xA9 0x01`
+
+The escape encoding applies to all frame bytes on the wire, including the CRC byte itself. If the computed CRC value happens to be `0xA9` or `0xAA`, it is also escape-encoded for transmission.
 
 ## Example
 
@@ -141,7 +157,7 @@ On the wire, the same escape mechanism is used when sending these control bytes:
 SRC=0x10 DST=0x08 PB=0xB5 SB=0x04 LEN=0x01 DATA=0x7F CRC=0x??
 ```
 
-The CRC byte depends on the exact CRC8 implementation and the escape-aware substitution described above.
+The CRC byte is computed over the logical bytes `SRC DST PB SB LEN DATA` using CRC8/0x9B. If the resulting CRC value is `0xA9` or `0xAA`, it is escape-encoded on the wire.
 
 ## Common Discovery Functions
 

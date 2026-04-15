@@ -322,6 +322,8 @@ Periodicity response fragment:
 
 ## Implemented Surface
 
+Note: This inventory reflects the documented subset. The gateway may expose additional tools discovered via the MCP `tools/list` endpoint.
+
 - Core stable (`ebus.v1.*`)
   - `ebus.v1.runtime.status.get`
   - `ebus.v1.registry.devices.list`

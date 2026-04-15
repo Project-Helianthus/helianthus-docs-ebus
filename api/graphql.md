@@ -348,8 +348,8 @@ type Zone {
 }
 type ZoneState {
   operatingMode: String
-  currentTemperature: Float
-  desiredTemperature: Float
+  currentTempC: Float
+  targetTempC: Float
   currentRoomHumidity: Float
 }
 type ZoneConfig {

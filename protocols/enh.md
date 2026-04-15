@@ -100,6 +100,8 @@ Practical note: some adapters may start streaming bus bytes before emitting `RES
 
 For `data < 0x80`, the short-form (unframed) byte is also allowed.
 
+> **Escape responsibility:** The adapter is responsible for eBUS wire escape encoding (`0xA9` substitution) on SEND data. The host provides logical frame bytes without escape encoding. The adapter applies escape substitution before placing bytes on the bus.
+
 ## START / STARTED / FAILED
 
 `START` requests that the adapter begins arbitration after the next bus `SYN` (`0xAA`) and uses the supplied initiator address:
@@ -123,7 +125,7 @@ During arbitration initiated by the host, adapters **must not** emit `RECEIVED` 
 
 In ebusd “direct” mode, the initiator address byte is emitted as part of arbitration. After a successful `STARTED`, the host continues the telegram by sending `DST`, then `PB SB LEN ...` (i.e., it does not re-send `SRC`).
 
-> **Implementation note — ENS and ENH share arbitration semantics.** Both ENS and ENH adapters transmit the source byte on the wire during START arbitration. Callers must NOT include the source byte in the outgoing telegram payload for either mode. Setting `arbitrationSendsSource=false` for ENS is incorrect and causes a double source byte on the wire. See ebusgo#113.
+> **Implementation note — ENS and ENH share arbitration semantics.** Both ENS and ENH adapters transmit the source byte on the wire during START arbitration. Callers must NOT include the source byte in the outgoing telegram payload for either mode. Setting `arbitrationSendsSource=false` for ENS is incorrect and causes a double source byte on the wire. See ebusgo#113. Default: `arbitrationSendsSource` is `false` (adapter does not automatically include source address in arbitration); both ENH and ENS override this to `true`.
 
 ### Parser state after arbitration
 
@@ -139,7 +141,9 @@ Implementations that use a stateful parser for ENH framing (e.g., two-byte comma
 
 The response is a stream of `<INFO> <data>` bytes where the **first** byte is a length `N` (excluding the length byte itself), followed by `N` data bytes.
 
-Sending a new `INFO` request while a previous response is still streaming immediately terminates the previous transfer.
+Sending a new `INFO` request while a previous response is still streaming has implementation-defined behavior. Known variants: (1) immediately terminate the previous transfer and start the new one (ebusd reference), (2) queue the new request until the previous transfer completes, (3) ignore the new request until the previous transfer finishes. Consumers should avoid overlapping INFO requests for portable behavior.
+
+There is no explicit cancellation frame for INFO streaming. If a non-INFO command arrives during INFO delivery, the INFO stream is implicitly terminated.
 
 Common `info_id` values include:
 
@@ -151,6 +155,12 @@ Common `info_id` values include:
 - `0x05`: bus voltage
 - `0x06`: reset info
 - `0x07`: WiFi RSSI
+
+## Initiator-to-Initiator (i2i) Transactions
+
+When the destination address is an initiator-capable address (both high and low nibbles in the set {0x0, 0x1, 0x3, 0x7, 0xF}), the transaction has **no response phase**. The target ACKs the command telegram and the transaction is complete -- the initiator must not wait for a response payload.
+
+In ENH transport terms, after the target sends ACK (0x00) for an i2i frame, the host should proceed directly to end-of-message (SYN). The wire_phase FSM enters TransactionDone after ACK, not WaitResponseLen. Waiting for a response length byte on an i2i transaction would hang indefinitely.
 
 ## Errors
 

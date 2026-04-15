@@ -84,9 +84,9 @@ Source: `refreshState()` / `refreshDiscovery()` in `semantic_vaillant.go`
 | Semantic Path | B524 | Type |
 |---------------|------|------|
 | `[].name` | GG=0x03, RR=0x0016 | string |
-| `[].state.operating_mode` | derived from GG=0x03 RR=0x0006 + 0x000E | — |
+| `[].config.operating_mode` | derived from GG=0x03 RR=0x0006 + 0x000E | — |
 | `[].state.current_temperature` | GG=0x03, RR=0x000F | f32 |
-| `[].state.desired_temperature` | GG=0x03, RR=0x0022 (primary), 0x0014 (fallback) | f32 |
+| `[].config.desired_temperature` | GG=0x03, RR=0x0022 (primary), 0x0014 (fallback) | f32 |
 | `[].state.current_room_humidity` | GG=0x03, RR=0x0028 | f32 |
 
 ### Zone Mode Derivation
@@ -221,7 +221,7 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 GG   Opcode  InstanceMax  RegisterMax
 0x02 0x02    0x0A         0x0025
 0x03 0x02    0x0A         0x002F
-0x09 0x06    0x0A         0x002F
+0x09 0x06    0x0A         0x0030
 0x0A 0x06    0x0A         0x003F
 0x0C 0x06    0x0A         0x003F
 ```

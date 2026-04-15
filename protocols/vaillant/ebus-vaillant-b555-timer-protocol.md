@@ -180,6 +180,7 @@ A3 [ZONE] [HC]
 - `max_slots` is **enforced by the controller**. Writing SC > max_slots
   returns error code 0x01. Validated: SC=4 on CC (max_slots=3) → 0x01;
   SC=12 on DHW (max_slots=3) → 0x01; SC=12 on Heating (max_slots=12) → ACK.
+  Observed max_slots values: 3 for DHW, CC, and Silent timers; 12 for Heating and Cooling timers. Excess slots beyond max_slots are rejected by the controller (error 0x01), not silently ignored.
 - `min_temp_c` and `max_temp_c` are **enforced by the controller**. Writing a
   numeric temperature outside this range returns error code 0x06. Validated:
   34°C on DHW (min=35) → 0x06; 66°C on DHW (max=65) → 0x06; exact boundary
@@ -275,9 +276,11 @@ A4 [ZONE] [HC]
 
 | Field | Size | Description |
 |-------|------|-------------|
-| status | 1 | Timer status: 0x00 = active, 0x03 = unavailable (matches A3 byte[0]) |
+| status | 1 | Timer status: 0x00 = active, 0x03 = unavailable (matches A3 byte[0]). See A5 status for comparison. |
 | Mon..Sun | 7 | Slot count per day (UCH, 0x00-0x0C) |
 | pad | 1 | Trailing padding (always 0x00) |
+
+> **Cross-reference:** The first byte of A4 (status/slot-count context) and A5 (status/timer-entry context) responses share the same byte position but have different semantics. A4 byte[0] gates the validity of the per-weekday slot counts; A5 byte[0] gates the validity of a single timer slot entry. See the respective section for details.
 
 **Wire-validated example (Z1 Heating, all single-slot):**
 

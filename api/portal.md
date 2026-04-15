@@ -811,6 +811,12 @@ Response includes:
 - `evidence`
 - `filename_hint`
 
+### `GET /explorer`
+
+VRC Explorer endpoint. Serves the interactive B524 register explorer UI for scanning groups, instances, and registers on discovered devices. This endpoint is exposed at the gateway HTTP root level (not under `/portal/api/v1`).
+
+See the VRC Explorer documentation for scan workflow, SSE progress, and client-side typecasting details.
+
 ### `GET /portal/api/v1/deprecation/vrc-explorer`
 
 Returns deprecation and migration metadata for VRC-Explorer transition.

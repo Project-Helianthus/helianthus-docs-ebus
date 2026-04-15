@@ -98,7 +98,8 @@ Schema:
       "instance": "0x00",
       "address": "0x0400",
       "raw": "0401004000000000",
-      "decoded": "field_a=12.3,field_b=1"
+      "decoded": "field_a=12.3,field_b=1",
+      "result": "ok"
     }
   ]
 }
@@ -109,12 +110,13 @@ Field notes:
 - `target`, `group`, `instance`, `address` are **hex strings** with `0x` prefix.
 - `raw` is the payload as **lowercase hex** without a `0x` prefix. It can be empty if no payload was returned.
 - `decoded` is a comma-separated `name=value` string derived from TSP `model` definitions. It is empty when no model matches or decoding fails.
+- `result` is the request outcome string (e.g. `"ok"`, `"timeout"`, `"error"`). Present in each entry to distinguish successful reads from failures without inspecting `raw`.
 - For `get_ext_register`, the first 4 bytes of `raw` are the response header (`TT GG RR_LO RR_HI`). Decoding uses only the data bytes that follow.
 
 If a request fails, the corresponding entry remains in `entries` with empty `raw`/`decoded`; the error is captured in the text log.
 
-## Upload Flow (TODO — M3)
+## Upload Flow
 
-There is **no upload step** implemented in code as of **2026-02-11**. Dump artifacts are written only to local disk.
+There is **no upload step** implemented in code. Dump artifacts are written only to local disk.
 
-**TODO (M3):** add an explicit upload stage (target location + auth) and document the exact transport once implemented.
+[Stale -- verify current status] The original M3 TODO (2026-02-11) planned an explicit upload stage (target location + auth). Check whether this has been implemented before relying on this section.

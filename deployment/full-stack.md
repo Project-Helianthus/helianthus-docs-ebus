@@ -23,7 +23,7 @@
 
 | Flag | Purpose | Notes |
 |---|---|---|
-| `-transport` | Backend protocol | `enh`, `ens` (alias of `enh`), `udp-plain`, `tcp-plain`, or `ebusd-tcp` |
+| `-transport` | Backend protocol | `enh`, `ens` (alias of `enh`), `udp-plain`, `tcp-plain`, `ebusd-tcp`, or `adapter_direct` |
 | `-network` | Dial network | `unix`, `tcp`, or `udp` |
 | `-address` | Socket path or host:port | Example: `/var/run/ebusd/ebusd.socket` or `127.0.0.1:8888` |
 | `-source-addr` | Initiator/source address used by scan + semantic reads | Hex (`0xF0`), decimal, `0x00`, or `auto` |
@@ -41,6 +41,7 @@ go run ./cmd/gateway \
   -address 203.0.113.10:9999
 
 # ENS alias over TCP (same framing as ENH for network endpoints)
+# Note: `ens` is an alias for `enh` (Enhanced protocol). Both values are accepted.
 go run ./cmd/gateway \
   -transport ens \
   -network tcp \
@@ -66,6 +67,13 @@ go run ./cmd/gateway \
   -transport ebusd-tcp \
   -network unix \
   -address /var/run/ebusd/ebusd.socket
+
+# adapter-direct (gateway-embedded adapter multiplexer, no external proxy)
+go run ./cmd/gateway \
+  -transport adapter_direct \
+  -network tcp \
+  -address 203.0.113.10:9999 \
+  -source-addr auto
 ```
 
 For ebusd command syntax and response framing details, see `protocols/ebusd-tcp.md`.
