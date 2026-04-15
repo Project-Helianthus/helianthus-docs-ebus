@@ -117,6 +117,8 @@ Outcomes:
 - `<STARTED> <initiator>`: arbitration won
 - `<FAILED> <winner>`: arbitration lost (the data byte indicates the winning initiator address)
 
+> **Implementation recommendation:** If the adapter sends repeated STARTED frames with an initiator address that does not match the host's arbitration request, the host should abort arbitration after a configurable threshold (typically 3 mismatches). This prevents infinite arbitration loops when the bus is congested with competing initiators. All three Helianthus implementations (ebusgo, VRC Explorer, adaptermux) enforce this pattern.
+
 ### Arbitration byte visibility
 
 During arbitration initiated by the host, adapters **must not** emit `RECEIVED` notifications for the arbitration bytes they put on the bus. Clients should not rely on echo notifications for those bytes.
