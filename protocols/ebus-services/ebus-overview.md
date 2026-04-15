@@ -73,7 +73,7 @@ Broadcast frames do not receive ACK/NACK or responses.
 
 **SYN during active waits:** If a `SYN` (`0xAA`) byte is received while waiting for an `ACK`/`NACK` or a target response, it signals end-of-transaction (timeout). All known implementations (ebusgo, ebusd, VRC Explorer) treat SYN during ACK/response wait as a timeout indicator and abort the current transaction. Ignoring SYN and continuing to wait is incorrect -- it causes the receiver to stall past the end of the transaction.
 
-**ENH transport caveat:** On ENH-based transports, the adapter decodes wire escapes before forwarding to the host. The byte 0xAA is therefore valid data, not necessarily a SYN idle marker. SYN detection and bus-idle timeout are handled internally by the adapter hardware/firmware. The host-side SYN guards described above apply only to raw bus access and ebusd-tcp transports.
+**ENH transport caveat:** On ENH-based transports, the adapter decodes wire escapes before forwarding to the host. The byte 0xAA is therefore valid data, not necessarily a SYN idle marker. SYN detection and bus-idle timeout are handled internally by the adapter hardware/firmware. The host-side SYN guards described above apply only to raw bus access (serial or direct TCP connection to the adapter).
 
 **Escape-aware SYN counting:** On raw bus transports, the escape sequence `0xA9 0x01` represents the data byte 0xAA and must NOT be counted as SYN. Only a standalone, unescaped `0xAA` outside of an active frame's data region indicates bus idle.
 
