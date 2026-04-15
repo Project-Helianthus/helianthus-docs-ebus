@@ -1,5 +1,9 @@
 # Adapter-Direct Multiplexer Architecture
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 Status: Accepted (v0.4.0)
 Plan package: [gateway-embedded-proxy](https://github.com/Project-Helianthus/helianthus-execution-plans)
 
@@ -10,7 +14,7 @@ adapter-direct deployments.
 ## Problem
 
 The gateway's passive bus tap sees approximately 40% `corrupted_request` events
-on a 3-master eBUS (0x71 gateway, 0x31 ebusd, 0x10 VRC700). Root causes:
+on a 3-initiator eBUS (0x71 gateway, 0x31 ebusd, 0x10 VRC700). Root causes:
 
 - Passive reconstruction from a raw byte stream lacks echo matching and frame
   boundary knowledge (structural limitation of passive observation).
@@ -35,7 +39,7 @@ single upstream connection into three paths:
 - **Passive path**: filtered symbol callback delivering third-party traffic only
   (gateway echo suppressed)
 - **Proxy endpoint**: optional TCP listener for external ENH clients (ebusd,
-  VRC Explorer) with full master access
+  VRC Explorer) with full initiator access
 
 The standalone proxy (`helianthus-ebus-adapter-proxy`) remains available as an
 independent product for non-gateway deployments.
@@ -95,7 +99,7 @@ design -- no wire-level byte accumulation in observer streams.
 ### AD08: Proxy Listener Compatibility
 
 The optional proxy listener (`--proxy-listen`) provides backward compatibility
-for ebusd and VRC Explorer. External sessions get full ENH master access through
+for ebusd and VRC Explorer. External sessions get full ENH initiator access through
 the multiplexer's arbitration system.
 
 ### AD09: RESETTED Propagation
@@ -139,7 +143,7 @@ verified results:
 
 - Device scan: 4 devices discovered (BAI00, BASV2, VR_71, SOL00)
 - B524 register access: coherent responses across all groups
-- Semantic planes: zones=2, dhw=true, INFO=7 of 8 IDs cached (BusSpeed unsupported by adapter)
+- Semantic planes: zones=2, dhw=true, INFO=7 of 8 IDs cached (Bus Voltage unsupported by adapter)
 - Passive path: third-party traffic delivered without self-echo corruption
 
 ## References

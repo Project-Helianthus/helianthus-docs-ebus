@@ -60,6 +60,7 @@ sequenceDiagram
     P-->>C: FAILED (collision)
     P->>P: bounded retry + backoff
   end
+  P->>P: retain ownership until idle SYN observed
   P->>P: release bus token
 ```
 
@@ -73,7 +74,7 @@ Current proxy behavior for UDP-PLAIN arbitration:
 - bounded jitter is applied on retry backoff (`udp-retry-jitter`, default `0.2`) to avoid synchronized retry storms,
 - START arbitration timeout is configurable (`udp-plain-start-wait`, default `5s`),
 - timeout fallback to `STARTED` is enabled by default for plain-wire interoperability and can be disabled with `udp-plain-disable-start-fallback=true`,
-- ownership is released on upstream idle boundary (`SYN`/`0xAA`) and terminal upstream errors (`ERROR_EBUS`, `ERROR_HOST`),
+- the proxy retains bus ownership after STARTED until idle SYN (`0xAA`) is observed on the upstream bus (not released immediately after STARTED); ownership is also released on terminal upstream errors (`ERROR_EBUS`, `ERROR_HOST`),
 - timeout paths return host-side error to the northbound client.
 
 This keeps retry behavior finite and prevents uncontrolled retry loops on busy buses.
@@ -84,7 +85,7 @@ Proxy startup performs a passive warmup window (`auto-join-warmup`, default `5s`
 
 When a northbound client sends `START` with `initiator=0x00`, proxy selects an initiator automatically using:
 
-- highest-priority-safe preference (`FF`, `F7`, `F3`, ...),
+- highest-priority-safe preference (`F7`, `F3`, `F1`, ...),
 - recently observed initiator activity (window: `auto-join-activity-window`),
 - currently leased initiators in proxy.
 

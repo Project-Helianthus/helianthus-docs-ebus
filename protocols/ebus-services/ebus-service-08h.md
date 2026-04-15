@@ -9,11 +9,11 @@ Service `0x08` handles communication between heating controllers and mixer modul
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping: `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 - **Controller 0 (heater controller):** The primary controller that aggregates demands and distributes parameters.
-- **Slave controllers / mixer modules:** Secondary controllers that submit target values and receive operational data.
+- **Target controllers / mixer modules:** Secondary controllers that submit target values and receive operational data.
 
 ## Command Summary
 
@@ -63,7 +63,7 @@ Service `0x08` handles communication between heating controllers and mixer modul
 
 ---
 
-### Service 0x08 0x02 — Control Commands (Controller 0 → Slave Controllers)
+### Service 0x08 0x02 — Control Commands (Controller 0 → Target Controllers)
 
 **Description:** Heater controller 0 broadcasts target values and burner error status to auxiliary controllers and remote actuators.
 

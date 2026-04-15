@@ -1,5 +1,9 @@
 # Vaillant B509 Boiler Register Map (BAI00)
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This document is the authoritative public reference for the direct BAI00 boiler registers used by the GW-2 PASS-profile boiler model in Helianthus.
 
 Scope:
@@ -74,7 +78,7 @@ Source: `refreshBoilerStatusTier()` in `cmd/gateway/semantic_vaillant.go`
 ### Enrichment: additional BAI00 registers (not yet in semantic plane)
 
 The following registers were identified through enrichment analysis of public
-ebusd-configuration forks (john30/master, bumaas/xerion3800). They are not yet
+ebusd-configuration forks (john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end -->, bumaas/xerion3800). They are not yet
 mapped into the Helianthus semantic plane but are documented here for
 completeness and future integration.
 
@@ -85,23 +89,23 @@ D11-fork-B509-B51A-enrichment.md cross-fork delta.
 
 | Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
 |---------------------------|---------------|---------------|-----|------------|----------|-------|
-| `diagnostics.airControlOk` | `0x0300` | `UCH (0x0F=ok, 0xF0=fault)` | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Air control system status |
-| `diagnostics.flameSensingAsic` | `0x2F00` | `UIN` (raw ADC count) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Raw ADC output of flame sensing ASIC |
-| `state.flueGasValve` | `0x3C00` | `on/off` | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Flue gas valve state |
-| `diagnostics.gasValveAsicFeedback` | `0x4700` | `UCH` (state enum) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Gas valve ASIC feedback signal |
-| `diagnostics.gasValveUcFeedback` | `0x4800` | `UCH` (state enum) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Gas valve microcontroller feedback; distinct from `0x4700` (ASIC vs UC path) |
+| `diagnostics.airControlOk` | `0x0300` | `UCH (0x0F=ok, 0xF0=fault)` | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | Air control system status |
+| `diagnostics.flameSensingAsic` | `0x2F00` | `UIN` (raw ADC count) | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | Raw ADC output of flame sensing ASIC |
+| `state.flueGasValve` | `0x3C00` | `on/off` | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | Flue gas valve state |
+| `diagnostics.gasValveAsicFeedback` | `0x4700` | `UCH` (state enum) | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | Gas valve ASIC feedback signal |
+| `diagnostics.gasValveUcFeedback` | `0x4800` | `UCH` (state enum) | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | Gas valve microcontroller feedback; distinct from `0x4700` (ASIC vs UC path) |
 | `state.externGasValve` | `0xE400` | `on/off` | R | MEDIUM | ENRICHMENT_D1 → Phase 1 BAI analysis | External gas valve state. **Address collision**: same ID means `compressorState` on EHP00/HMU |
-| `diagnostics.prApsCounter` | `0xF200` | `UCH` (count) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | APS (anti-pollution/burner start) event counter |
-| `diagnostics.prApsSum` | `0xF300` | `seconds2` (seconds) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | APS accumulated time in seconds |
+| `diagnostics.prApsCounter` | `0xF200` | `UCH` (count) | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | APS (anti-pollution/burner start) event counter |
+| `diagnostics.prApsSum` | `0xF300` | `seconds2` (seconds) | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | APS accumulated time in seconds |
 
 **Configuration and identity:**
 
 | Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
 |---------------------------|---------------|---------------|-----|------------|----------|-------|
-| `identity.dsn` | `0x9A00` | `UIN` (device serial/product ID) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Device serial number. Use as product-type gate for register collision resolution |
+| `identity.dsn` | `0x9A00` | `UIN` (device serial/product ID) | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | Device serial number. Use as product-type gate for register collision resolution |
 | `config.displayMode` | `0xDA00` | `UCH` (enum) | R | MEDIUM | ENRICHMENT_D1 → Phase 1 BAI analysis (single source) | Current display state on boiler PCB |
-| `config.fanMinSpeedOperation` | `0xDF00` | `UIN` (RPM) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Configured minimum fan speed during operation |
-| `config.fanMaxSpeedOperation` | `0xE000` | `UIN` (RPM) | R | HIGH | ENRICHMENT_D1 → john30/master `bai.csv` | Configured maximum fan speed during operation |
+| `config.fanMinSpeedOperation` | `0xDF00` | `UIN` (RPM) | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | Configured minimum fan speed during operation |
+| `config.fanMaxSpeedOperation` | `0xE000` | `UIN` (RPM) | R | HIGH | ENRICHMENT_D1 → john30/<!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> `bai.csv` | Configured maximum fan speed during operation |
 | `state.dcfTimeDate` | `0xE500` | `HEX:8` (time struct) | R | MEDIUM | ENRICHMENT_D1 → Phase 1 BAI analysis | DCF77-style 8-byte time/date sync state. Format not live-confirmed |
 
 **Energy yield (product-specific):**

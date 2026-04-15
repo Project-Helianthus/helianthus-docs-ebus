@@ -11,7 +11,7 @@ Several commands in this service are also documented (from the implementation pe
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping: `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 ## Command Summary

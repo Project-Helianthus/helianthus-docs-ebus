@@ -18,7 +18,7 @@ NM is based on **indirect network management** (OSEK/VDX concept): it monitors t
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping: `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 ## Command Summary

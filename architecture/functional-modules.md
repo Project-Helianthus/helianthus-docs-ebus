@@ -1,5 +1,9 @@
 # Functional Module Semantics
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This page documents the current and target architecture for **functional modules** in Helianthus.
 
 It exists because the current implementation exposes a useful but family-specific surface around `VR71/FM5`, while the longer-term architecture must also accommodate other module families such as:
@@ -218,7 +222,7 @@ Suggested field semantics:
   - optional controller/profile address index when the documented ecosystem exposes per-module addressing
   - example: `VR70 addr. 1..3`
 - `busAddress`
-  - optional physical eBUS slave address when proven
+  - optional physical eBUS target address when proven
   - not interchangeable with `profileAddressIndex`
 - `configurationSetValue`
   - optional profile-scoped configuration value when proven

@@ -1,5 +1,9 @@
 # Brink 40xx Protocol Family (Heat Recovery Ventilation)
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 `PB=0x40`, `SB=0xFF/0x91/0x90/0xA1/0xCB/0x22/0x50/0x80`.
 
 ## Status
@@ -36,7 +40,7 @@ a single response, eliminating the need for out-of-band metadata queries.
 ### Physical Addressing
 
 Devices are expected on eBUS address **0x3C** (confirmed by
-`JOHN30_DEVICE`). The master sends to 0x3C; the HRU device replies from
+`JOHN30_DEVICE`). The initiator sends to 0x3C; the HRU device replies from
 0x3C.
 
 ### Wire-Level Framing
@@ -88,7 +92,7 @@ flow rates in some peripherals.
 
 ### 3.1 -- PBSB 0x40FF: Factory Reset
 
-**Direction:** Master -> Slave (write-only, no response data).
+**Direction:** Initiator -> Target (write-only, no response data).
 
 #### Wire Format
 
@@ -115,7 +119,7 @@ flow rates in some peripherals.
 
 ### 3.2 -- PBSB 0x4091: Reset Notifications
 
-**Direction:** Master -> Slave.
+**Direction:** Initiator -> Target.
 
 #### Wire Format
 
@@ -144,7 +148,7 @@ flow rates in some peripherals.
 
 ### 3.3 -- PBSB 0x4090: Error History
 
-**Direction:** Master -> Slave request; Slave -> Master response.
+**Direction:** Initiator -> Target request; Target -> Initiator response.
 
 #### Wire Format -- Request
 
@@ -174,7 +178,7 @@ is device-dependent.
 
 ### 3.4 -- PBSB 0x40A1: Fan Mode Temporary Override
 
-**Direction:** Master -> Slave.
+**Direction:** Initiator -> Target.
 
 #### Wire Format
 
@@ -204,7 +208,7 @@ is device-dependent.
 
 ### 3.5 -- PBSB 0x40CB: Fan Mode Persistent Set
 
-**Direction:** Master -> Slave.
+**Direction:** Initiator -> Target.
 
 #### Wire Format
 
@@ -238,7 +242,7 @@ is device-dependent.
 **Purpose:** Live operational status: fan speeds, temperatures, pressures,
 flows, CO2 levels, filter state, frost state, bypass state.
 
-**Direction:** Master -> Slave request; Slave -> Master response.
+**Direction:** Initiator -> Target request; Target -> Initiator response.
 
 #### Wire Format -- Request
 
@@ -466,7 +470,7 @@ Response NN and payload width depend on the ID's declared type:
 **Purpose:** Reads configurable parameters. Each response contains five
 fields: current value, minimum, maximum, step, and default.
 
-**Direction:** Master -> Slave request; Slave -> Master response.
+**Direction:** Initiator -> Target request; Target -> Initiator response.
 
 This is the **defining protocol** of the Brink 40xx family. The
 self-describing five-field response means a controller can discover the
@@ -650,7 +654,7 @@ fully resolved from decompilation (known gap -- see Section 8, Gap 4).
 **Purpose:** Writes configurable parameters. Uses identical IDs to 4050.
 The write takes a single value, not the five-field structure.
 
-**Direction:** Master -> Slave.
+**Direction:** Initiator -> Target.
 
 #### Wire Format
 

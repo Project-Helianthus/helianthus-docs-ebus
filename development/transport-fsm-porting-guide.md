@@ -11,17 +11,17 @@ Date: 2026-04-08
 
 | # | Title | Severity | ebusgo | proxy |
 |---|-------|----------|--------|-------|
-| 1 | RESETTED during arbitration: close+reopen session | HANG | PARTIAL | YES |
-| 2 | RESETTED during bus read: close+reopen session | HANG | PARTIAL | N/A |
+| 1 | RESETTED during arbitration: close+reopen session | HANG | IMPLEMENTED | YES |
+| 2 | RESETTED during bus read: close+reopen session | HANG | IMPLEMENTED | N/A |
 | 3 | Parser reset after every state transition | DESYNC | YES | N/A |
-| 4 | Collision backoff: 50ms floor for PIC16F firmware race | HANG | MISSING | PARTIAL |
-| 5 | TCP reconnect after timeout retries exhausted | HANG | MISSING | N/A |
+| 4 | Collision backoff: 50ms floor for PIC16F firmware race | HANG | IMPLEMENTED | PARTIAL |
+| 5 | TCP reconnect after timeout retries exhausted | HANG | IMPLEMENTED | N/A |
 | 6 | Echo mismatch -> collision (SYN detection) | DESYNC | YES | N/A |
 | 7 | Response CRC: 2-attempt inline retry with NACK/re-read | DATA_LOSS | YES | N/A |
 | 8 | NACK + CRC unified retry counter | COSMETIC | MISSING | N/A |
 | 9 | Initiator-to-initiator: no response expected | HANG | YES | N/A |
 | 10 | SYN detection at every bus-read point | DESYNC | YES | N/A |
-| 11 | TCP_NODELAY on adapter socket | COSMETIC | MISSING | MISSING |
+| 11 | TCP_NODELAY on adapter socket | COSMETIC | IMPLEMENTED | MISSING |
 | 12 | Pre-encoded hot-path ENH frames | COSMETIC | N/A | N/A |
 | 13 | INIT deadline: tolerate bus flooding | HANG | YES | YES |
 | 14 | Adapter reset retry delay (200ms stabilization) | HANG | YES | PARTIAL |
@@ -62,15 +62,9 @@ and all subsequent frames are corrupt.
 
 **Go status:**
 
-- **ebusgo (enh_transport.go lines 300-303):** `PARTIAL` -- The
-  `StartArbitration` method detects RESETTED and calls
-  `resetStateLocked()` + increments `resets` counter, then returns
-  `ErrAdapterReset`. However, it does NOT close the TCP connection and
-  re-INIT. The `protocol/bus.go` retry loop (line 285) handles
-  `ErrAdapterReset` with a 200ms delay then retries, but the retry
-  happens on the same potentially-stale TCP stream. The parser is reset
-  but the TCP socket is not torn down, so bytes from the old session
-  may still be buffered in the kernel.
+- **ebusgo (enh_transport.go lines 190-213):** `IMPLEMENTED` -- The
+  transport now performs full TCP teardown and re-INIT on RESETTED during
+  arbitration, matching the Python close+reopen behavior.
 
 - **proxy (server.go lines 1314-1383):** `YES` -- The proxy's upstream
   reader handles RESETTED comprehensively: aborts pending START, aborts
@@ -78,10 +72,7 @@ and all subsequent frames are corrupt.
   re-INITs upstream with feedback-loop prevention
   (`initSentAtNano` timestamp guard).
 
-**Port required (ebusgo):** After RESETTED in `StartArbitration`, the
-transport should close the TCP connection and re-establish it with a fresh
-INIT handshake, not just reset the parser. This matches the Python behavior
-of `self.close()` + `self._open_session()`.
+**Port status:** Implemented in ebusgo enh_transport.go.
 
 ---
 
@@ -113,20 +104,14 @@ against a stale TCP stream.
 
 **Go status:**
 
-- **ebusgo (enh_transport.go lines 519-521):** `PARTIAL` -- In
-  `fillPendingLocked`, RESETTED calls `surfaceResetLocked()` which
-  increments the resets counter. The `ReadByte` caller then gets
-  `ErrAdapterReset`. But again, the TCP connection is NOT torn down.
-  The protocol/bus.go layer retries with a 200ms delay, but on the same
-  socket.
+- **ebusgo (enh_transport.go lines 190-213):** `IMPLEMENTED` -- The
+  transport now performs full TCP teardown and re-INIT on RESETTED during
+  bus reads, matching the Python close+reopen behavior.
 
 - **proxy:** `N/A` -- The proxy does not do bus-level reads in the same
   way; it processes upstream frames in a dedicated reader goroutine.
 
-**Port required (ebusgo):** Same as FIX 1 -- RESETTED should trigger TCP
-teardown + reconnect, not just parser reset. The current behavior risks
-reading stale bytes from the kernel TCP buffer that crossed the reset
-boundary.
+**Port status:** Implemented in ebusgo enh_transport.go (same as FIX 1).
 
 ---
 
@@ -206,14 +191,9 @@ The bus effectively goes down until the adapter firmware resets.
 
 **Go status:**
 
-- **ebusgo (protocol/bus.go lines 266-277):** `MISSING` -- After collision
-  (`ErrBusCollision`), the Go code calls `waitForSyn(runCtx, reqCtx, 2)`
-  which waits for 2 SYN symbols from the bus. This is the ebusd-style
-  approach (wait for bus idle) rather than a timed backoff. On a busy bus
-  this works because SYNs arrive regularly. But if the adapter is in an
-  error state from the firmware race, no SYNs arrive, and `waitForSyn`
-  times out, leading to timeout escalation. The 50ms fixed floor is not
-  present.
+- **ebusgo (protocol/bus.go lines 22-27):** `IMPLEMENTED` -- The Go code
+  now includes a configurable collision backoff floor (default 50ms)
+  applied before re-issuing START after arbitration FAILED.
 
 - **proxy (server.go lines 42-43):** `PARTIAL` -- The proxy has
   `udpPlainBackoffBase = 25ms` and `udpPlainBackoffMax = 400ms` with
@@ -222,11 +202,7 @@ The bus effectively goes down until the adapter firmware resets.
   own timing, and there is no explicit post-collision backoff injected
   before re-issuing START to the upstream adapter.
 
-**Port required (ebusgo):** Add a configurable minimum collision backoff
-(default 50ms) between arbitration FAILED and the next START request.
-The existing `waitForSyn` approach should be kept as a secondary gate,
-but the 50ms floor must come first. This is specific to PIC16F-based
-adapters (eBUS Adapter Shield v5, ebusd-esp).
+**Port status:** Implemented in ebusgo protocol/bus.go.
 
 ---
 
@@ -268,22 +244,16 @@ entire scan/operation fails permanently.
 
 **Go status:**
 
-- **ebusgo:** `MISSING` -- The `ENHTransport` has no reconnect logic.
-  Once the connection errors, the transport is dead. The `protocol/join.go`
-  `JoinConfig` has `RejoinBackoffBase` and `RejoinBackoffMax` for
-  reconnecting the entire Bus instance, but this is at a much higher
-  level (re-dial from scratch) and is not integrated into the
-  per-request retry path.
+- **ebusgo (enh_transport.go line 21):** `IMPLEMENTED` -- The
+  `ENHTransport` now includes mid-session TCP reconnect logic. When
+  timeout retries are exhausted, the transport closes the connection,
+  waits, re-dials, and re-INITs before resetting the timeout counter.
 
 - **proxy:** `N/A` -- The proxy's upstream reader detects EOF/closed and
   signals `ErrUpstreamLost`. The caller (gateway) is expected to create a
   new Server instance. The proxy does not auto-reconnect to upstream.
 
-**Port required (ebusgo):** The `ENHTransport` or the `Bus` retry policy
-should support mid-session TCP reconnect. When timeout retries are
-exhausted, close the connection, wait, re-dial, re-INIT, and reset the
-timeout counter. This is especially important for long-running gateway
-processes where adapter reboots are expected.
+**Port status:** Implemented in ebusgo enh_transport.go.
 
 ---
 
@@ -458,19 +428,14 @@ fix, which accumulates significantly during a multi-thousand-register scan.
 
 **Go status:**
 
-- **ebusgo (transport/enh_transport.go):** `MISSING` -- The
-  `NewENHTransport` accepts a `net.Conn` and does not set TCP_NODELAY.
-  The caller (dialer) may or may not set it. There is no explicit
-  `TCP_NODELAY` in the transport layer.
+- **ebusgo:** `IMPLEMENTED` -- `SetNoDelay` is called on the adapter-facing
+  TCP connection in ebusgo.
 
 - **proxy:** `MISSING` -- The proxy dials upstream via the `dialUpstream`
   helper. Whether TCP_NODELAY is set depends on the dialer implementation,
   but it is not explicitly documented or guaranteed.
 
-**Port required (both):** Set `TCP_NODELAY` on the adapter-facing TCP
-connection. For ebusgo, this should be done in `NewENHTransport` via
-type-asserting the conn to `*net.TCPConn`. For the proxy, set it in
-`dialUpstream`.
+**Port status:** Implemented in ebusgo. Proxy still pending.
 
 ---
 
@@ -579,35 +544,26 @@ produce cascading timeouts.
 
 ## Port Priority Matrix
 
-### Critical (HANG severity, missing in Go)
+### Remaining (proxy-side only)
 
 | Fix | Component | What to do |
 |-----|-----------|------------|
-| 4 | ebusgo | Add 50ms collision backoff before re-START |
-| 5 | ebusgo | Add TCP reconnect in retry policy after timeout exhaustion |
-
-### Important (HANG severity, partial in Go)
-
-| Fix | Component | What to do |
-|-----|-----------|------------|
-| 1 | ebusgo | RESETTED in StartArbitration should close+reopen TCP, not just reset parser |
-| 2 | ebusgo | RESETTED in ReadByte/fillPending should trigger transport-level reconnect |
-
-### Minor (COSMETIC/performance)
-
-| Fix | Component | What to do |
-|-----|-----------|------------|
-| 11 | ebusgo, proxy | Set TCP_NODELAY on adapter-facing TCP connections |
+| 11 | proxy | Set TCP_NODELAY on upstream-facing TCP connection |
 
 ### Already implemented (no action needed)
 
 | Fix | Component | Status |
 |-----|-----------|--------|
+| 1 | ebusgo | TCP teardown + re-INIT on RESETTED in StartArbitration (enh_transport.go) |
+| 2 | ebusgo | TCP teardown + re-INIT on RESETTED in bus reads (enh_transport.go) |
 | 3 | ebusgo | Parser reset after arbitration |
+| 4 | ebusgo | 50ms collision backoff floor (bus.go) |
+| 5 | ebusgo | TCP reconnect after timeout retries exhausted (enh_transport.go) |
 | 6 | ebusgo | Echo mismatch / SYN collision detection |
 | 7 | ebusgo | Response CRC 2-attempt inline retry |
 | 9 | ebusgo | Initiator-to-initiator skip response |
 | 10 | ebusgo | SYN detection at all bus-read points |
+| 11 | ebusgo | TCP_NODELAY on adapter-facing TCP connection |
 | 13 | ebusgo, proxy | INIT deadline tolerance |
 | 14 | ebusgo | Adapter reset 200ms stabilization delay |
 
@@ -627,13 +583,11 @@ The Go implementation splits this across layers:
   retry policy)
 - `protocol/Join` -- reconnection/lifecycle management
 
-This means some Python "transport" fixes need to be implemented at different
-Go layers:
-- FIX 1, 2: Could be in `ENHTransport` (reconnect on RESETTED) or in a
-  new reconnect wrapper
-- FIX 4: Should be in `protocol/Bus.sendWithRetries` (post-collision delay)
-- FIX 5: Should be in `protocol/Join` or a new transport reconnect layer
-- FIX 11: Should be in `ENHTransport` constructor or the dialer
+The Python "transport" fixes were implemented at these Go layers:
+- FIX 1, 2: `ENHTransport` (reconnect on RESETTED)
+- FIX 4: `protocol/Bus.sendWithRetries` (post-collision delay)
+- FIX 5: `ENHTransport` (mid-session TCP reconnect)
+- FIX 11: ebusgo dialer (TCP_NODELAY)
 
 ---
 

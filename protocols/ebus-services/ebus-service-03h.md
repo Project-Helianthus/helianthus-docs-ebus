@@ -9,7 +9,7 @@ Service `0x03` provides diagnostic and service data collection from burner contr
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping: `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 Secondary commands `0x00`–`0x03` are barred for historical reasons.

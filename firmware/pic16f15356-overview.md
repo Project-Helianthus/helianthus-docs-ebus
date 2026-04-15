@@ -1,5 +1,9 @@
 # PIC16F15356 eBUS Adapter Firmware
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This document describes the architecture and scope of the PIC16F15356 firmware used in Helianthus eBUS adapter v3.x hardware.
 
 See also:
@@ -15,8 +19,8 @@ The current PIC16F15356 firmware tree is a **host-buildable adapter/runtime scaf
 The firmware handles:
 
 - SYN byte (`0xAA`) detection and forwarding
-- ENH/ENS encoding and decoding between PIC and host
-- Bus byte forwarding with arbitration echo suppression
+- ENH encoding and decoding between PIC and host (the runtime uses ENH protocol only; there is no ENS parser path in the current firmware)
+- Bus byte receive and forwarding to the host (the firmware does not implement bus TX -- it receives and relays only; the HAL has no EUSART1 write binding for bus-side transmission)
 - Scan window management and descriptor processing
 - Periodic status emission (snapshot and variant frames)
 - Host parser timeout enforcement (64 ms)
@@ -29,7 +33,7 @@ The firmware handles:
 graph TD
     subgraph PIC16F15356["PIC16F15356 Firmware"]
         APP["Application<br/><i>pic16f15356_app</i><br/>ISR + mainline wrapper"]
-        RT["Runtime<br/>Protocol FSM + ENH/ENS codec<br/>Scan engine + Descriptor merge<br/>Status emission + Diagnostics"]
+        RT["Runtime<br/>Protocol FSM + ENH codec (RX only)<br/>Scan engine + Descriptor merge<br/>Status emission + Diagnostics"]
         HAL["HAL<br/><i>pic16f15356_hal</i><br/>ISR latch FIFOs + TMR0 tick<br/>UART mode switching"]
         BOOT["Bootloader<br/><i>picboot</i><br/>STX frames + Flash/EEPROM<br/>11 commands + CRC16-CCITT"]
         APP --> RT
@@ -47,7 +51,7 @@ graph TD
     end
 
     ESP <-->|"ENH/ENS 9600 / 115200 baud"| PIC16F15356
-    HAL <-->|"UART RX/TX byte forwarding"| BUS
+    HAL <--|"UART RX byte forwarding (receive only)"| BUS
     BOILER --- VRC
 ```
 
@@ -56,7 +60,7 @@ graph TD
 | Layer | Role | Implementation |
 |---|---|---|
 | **Application** | ISR dispatcher, mainline superloop, clock switch | `pic16f15356_app` |
-| **Runtime** | Protocol FSM, ENH/ENS codec, scan/status scaffolding, diagnostics | `runtime.c` |
+| **Runtime** | Protocol FSM, ENH codec (receive path only), scan/status scaffolding, diagnostics | `runtime.c` |
 | **HAL** | ISR byte latch into FIFOs, TMR0 tick management, UART baud rate switching | `pic16f15356_hal` |
 | **Bootloader** | STX-framed protocol, host validation model, target backend profile | `picboot` |
 
@@ -66,7 +70,7 @@ graph TD
 |---|---|---|
 | Physical | eBUS transceiver, 2400 baud, differential signaling | External hardware |
 | Data link | CRC-8, frame escaping (`ESC=0xA9` / `SYN=0xAA`), arbitration decisions | Host gateway (Go) |
-| Adapter | ENH/ENS encoding, SYN forwarding, scan windows, status emission | This firmware (PIC) |
+| Adapter | ENH encoding (receive path only), SYN forwarding, scan windows, status emission | This firmware (PIC) |
 | Application | Scan/status interpretation, INFO queries, feature negotiation | Host gateway (Go) |
 
 ## Memory Map
@@ -76,7 +80,7 @@ graph TD
 | Boot | `0x0000`--`0x03FF` | 1 KB | Bootloader image, reset vector, clock-switch helper |
 | App | `0x0400`--`0x3FFF` | 15 KB | Application image, ISR dispatcher, runtime, HAL |
 | EEPROM | 256 bytes | 256 B | Persistent configuration |
-| RAM | 2048 bytes | 2 KB | Runtime state, stack, FIFOs |
+| RAM | `0x0000`--`0x07FF` | 2 KB (2048 bytes) | Runtime state, stack, FIFOs |
 
 ## Provisioning Model
 
@@ -89,7 +93,7 @@ written by `ebuspicloader` and derives runtime state from it at boot:
 
 The runtime cache is derivative only. It is not a second persistent format.
 
-The current combined static footprint (`picfw_runtime_t` + `picfw_pic16f15356_hal_t`) is tracked by `make check-all`. At the time of this review it is 1056 bytes (68.8% of the 1536-byte host-side RAM budget used for tracking), not 612 bytes.
+The current combined static footprint (`picfw_runtime_t` + `picfw_pic16f15356_hal_t`) is tracked by `make check-all`. At the time of this review the host-side `sizeof` reports 1056 bytes. The PIC16F15356 has 2048 bytes of total RAM, and the 75% budget threshold yields a usable budget of 1536 bytes (0.75 x 2048). Current utilization is 1056/1536 = 68.8% of budget, which is within the 75% threshold.
 
 ## Determinism
 
@@ -97,7 +101,7 @@ The codebase is structured for bounded execution, but the deterministic guarante
 
 ### Why Determinism
 
-The eBUS adapter firmware must behave as a transparent, jitter-free UART bridge. eBUS master-master arbitration is bit-level at 2400 baud: if the adapter introduces more than ~10 us of jitter in byte forwarding, it loses arbitration and corrupts the bus. There is no retry mechanism -- a missed window means dropped frames and broken heating control.
+The eBUS adapter firmware must behave as a transparent, jitter-free UART bridge. eBUS initiator-initiator arbitration is bit-level at 2400 baud: if the adapter introduces more than ~10 us of jitter in byte forwarding, it loses arbitration and corrupts the bus. There is no retry mechanism -- a missed window means dropped frames and broken heating control.
 
 This constraint drives every architectural decision:
 
@@ -108,7 +112,7 @@ This constraint drives every architectural decision:
 - **ISR WCET < 60 cycles** (R4/WCET) -- the ISR fires every 500 us (TMR0 period). At 8 MHz instruction clock, 60 cycles = 7.5 us -- well under the 500 us period and the 10 us jitter budget. ISR functions only latch bytes into ring buffer FIFOs; all protocol processing happens in the mainline superloop. This separation guarantees the ISR never blocks.
 - **Call depth < 13** (STACK) -- PIC16F15356 has a 16-level hardware call stack (not software, not growable). 3 levels are reserved for the deepest ISR chain (`app_isr_host_rx -> isr_latch_host_rx -> byte_fifo_push`), leaving 13 for mainline. The deepest mainline chain (scan FSM retry path) uses exactly 13 -- zero margin. This is a frozen path: new function extractions here are prohibited.
 - **Power-of-2 ring buffers with bitmask indexing** (R10) -- the PIC16F has no hardware divider. Modulo (`%`) on a non-power-of-2 value compiles to a software division routine (~30 cycles). Bitmask (`& (CAP - 1)`) is a single AND instruction (~1 cycle). For ISR-context FIFO push/pop, this 30x speedup is the difference between meeting and missing the WCET budget.
-- **RAM budget < 75%** (RAM) -- the combined static footprint of `picfw_runtime_t` + `picfw_pic16f15356_hal_t` is tracked by a compiled C program using `sizeof`. Host compiler alignment differs from XC8, but relative growth is tracked: if a struct grows 32 bytes on the host, it grew similarly on PIC. The 25% headroom covers the hardware call stack, local variables, and compiler temporaries.
+- **RAM budget < 75%** (RAM) -- the combined static footprint of `picfw_runtime_t` + `picfw_pic16f15356_hal_t` is tracked by a compiled C program using `sizeof` against the PIC16F15356's 2048-byte RAM. Host compiler alignment differs from XC8, but relative growth is tracked: if a struct grows 32 bytes on the host, it grew similarly on PIC. The 25% headroom covers the hardware call stack, local variables, and compiler temporaries.
 - **Const dispatch enforcement** (CONST) -- function pointer arrays must be `const` (placed in ROM by XC8). Mutable function pointer dispatch is prohibited because it introduces runtime-dependent branching that defeats WCET analysis. The `const` qualifier is both a correctness guarantee (table cannot be corrupted) and a ROM/RAM optimization.
 
 ### Self-Testing
@@ -137,7 +141,7 @@ The `NOLINT(determinism)` comment suppression mechanism allows intentional excep
 | R10 | Ring buffers power-of-2 + bitmask | -- | Buffer size + indexing scan |
 | STACK | Call depth limit | < 13 of 16 HW levels | Call graph DFS |
 | GUARD | Header include guards | -- | Pattern scan |
-| RAM | Static struct footprint | < 75% of 2 KB (612 / 1536) | Host sizeof budget check |
+| RAM | Static struct footprint | < 75% of 2 KB (1056 / 1536 = 68.8% of budget) | Host sizeof budget check |
 | WCET | ISR-context functions | < 60 cycles (peak: 51) | Source heuristic (`*_isr_*`) |
 | CONST | Function pointer arrays | Must be `const` | Qualifier scan |
 

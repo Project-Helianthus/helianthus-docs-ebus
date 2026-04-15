@@ -9,7 +9,7 @@ Service `0x0F` provides a structured test framework for factory and service test
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping: `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 - **Test system:** Software or hardware that controls and verifies the test run.
@@ -105,7 +105,7 @@ stateDiagram-v2
 | `0x22` | Target | Initiator | Echo initiator data in target response, repeat until End of Test (`0x0F 0x03`) is received |
 | `0x25` | Target | Initiator | Same as `0x22` |
 
-For initiator-device functions (`0x01`–`0x14`), the test device sends End of Test (`0x0F 0x03`). For target-device functions (`0x22`/`0x25`), the sequence repeats until an End of Test is received as a master-slave telegram.
+For initiator-device functions (`0x01`–`0x14`), the test device sends End of Test (`0x0F 0x03`). For target-device functions (`0x22`/`0x25`), the sequence repeats until an End of Test is received as an initiator-target telegram.
 
 ## Communication Flow
 

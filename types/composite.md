@@ -12,6 +12,7 @@ BITFIELD represents a fixed-width bitmask across N bytes.
   - `[]byte` of length `N` (raw bytes)
   - integer value (packed little-endian across `N` bytes)
 - **Encode rules:** values that would encode to the replacement value (all `0xFF`) are rejected.
+- **Size limit:** Maximum `SizeBytes` is 8 (64 bits). Values exceeding this limit are rejected.
 
 ```text
 byte0 bit0 -> index 0

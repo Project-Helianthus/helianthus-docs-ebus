@@ -1,5 +1,9 @@
 # Kromschroeder/Weishaupt eBUS Protocols (MF=0x50/0xC5)
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 > **Confidence:** LOW -- TypeSpec-only source (`aghulas/ebusd-configuration`), no eBUS wire data, no live validation. Archive-quality research document; no Helianthus action items arise from this protocol family.
 >
 > **Source fork:** `aghulas/ebusd-configuration` (commit `90c509d`, last push 2026-03-13)
@@ -190,7 +194,7 @@ Representative subset from `0000360.tsp` (the shared register include file). Ful
 
 - TVIST (`0x0068`) and TVISTAD (`0x005C`) should converge during steady-state operation; a persistent large delta indicates the damping constant is incorrect or addresses are wrong.
 - IONIST (`0x0060`) should be 0 when the burner is off and non-zero during active combustion. A non-zero value in standby suggests the address maps to a different register in this firmware version.
-- EBUS_BITS (`0x0026`) should change when bus traffic state changes (master/slave election). Stable value under varying bus load indicates it is a different register.
+- EBUS_BITS (`0x0026`) should change when bus traffic state changes (initiator/target election). Stable value under varying bus load indicates it is a different register.
 
 ---
 

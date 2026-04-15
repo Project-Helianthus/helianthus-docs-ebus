@@ -27,7 +27,12 @@ and
 ```text
 hex <TELEGRAM_HEX>
 hex -s <SRC_HEX> <TELEGRAM_HEX>
+hex -n <TELEGRAM_HEX>
 ```
+
+The `-n` flag tells ebusd to **auto-calculate the NN (length) byte** from the provided data bytes, so the caller omits `NN` from the telegram. The response format remains hex (`OO[EE]*`), identical to the standard `hex` command.
+
+> **Production note:** Omission of `-n` documentation was the root cause of the B555 rev 2.5 production bug, where the request framing omitted the length byte without using `-n`, causing ebusd to misparse the telegram.
 
 Where `<TELEGRAM_HEX>` encodes:
 

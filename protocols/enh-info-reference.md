@@ -30,6 +30,13 @@ version response (ID 0x00) further gates access to higher IDs:
 
 `version_len` is the response length for ID 0x00 (2, 5, or 8 bytes).
 
+> **PIC16F15356 firmware note:** The current PIC firmware only validates that
+> the INFO ID is within range (`< INFO_COUNT`). It does not enforce the
+> features/version/jumper gating described above -- all IDs up to `INFO_COUNT`
+> are serviced regardless of the version response length or jumper flags. The
+> gating table above describes the intended protocol-level behavior; host
+> software should not rely on firmware-side gating.
+
 ## ID 0x00 -- Version
 
 | Offset | Field | Notes |
@@ -83,6 +90,8 @@ Raw binary hardware configuration. Length and format are adapter-specific.
 
 ## ID 0x06 -- Reset Info
 
+Protocol-level recommendation: query ID 0x00 (Version) first to determine availability of IDs 0x06 and 0x07 via the `version_len` and `jumpers` fields. Some firmware may respond to 0x06/0x07 without a prior 0x00 query, but callers should not rely on firmware-side enforcement.
+
 Requires bootloader gate (`version_len == 8`).
 
 | Offset | Field | Encoding |
@@ -104,6 +113,8 @@ Requires bootloader gate (`version_len == 8`).
 | other | unknown |
 
 ## ID 0x07 -- WiFi RSSI
+
+Protocol-level recommendation: query ID 0x00 (Version) first to determine availability via the `version_len` and `jumpers` fields. Some firmware may respond without a prior 0x00 query, but callers should not rely on firmware-side enforcement.
 
 Requires WiFi gate (`version_len >= 5 && jumpers & 0x08`).
 

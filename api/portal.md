@@ -811,6 +811,16 @@ Response includes:
 - `evidence`
 - `filename_hint`
 
+### VRC Explorer Endpoints (`/portal/api/v1/explorer/...`)
+
+The VRC Explorer is served under the Portal API namespace. Key sub-endpoints:
+
+- `GET /portal/api/v1/explorer/` -- Explorer UI shell (interactive B524 register explorer for scanning groups, instances, and registers on discovered devices).
+- `GET /portal/api/v1/explorer/scan` -- Initiates a B524 scan. Returns SSE progress events during the scan.
+- `GET /portal/api/v1/explorer/results` -- Returns scan results (group/instance/register data with client-side typecasting).
+
+See the VRC Explorer documentation for scan workflow, SSE progress, and client-side typecasting details.
+
 ### `GET /portal/api/v1/deprecation/vrc-explorer`
 
 Returns deprecation and migration metadata for VRC-Explorer transition.

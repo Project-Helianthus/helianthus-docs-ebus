@@ -1,5 +1,9 @@
 # PIC16F15356 Pin Configuration
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This document describes the complete pin assignment, peripheral mapping, and hardware configuration of the PIC16F15356 as used on the Helianthus eBUS adapter v3.x board (IC5, 28-pin SOIC).
 
 See also:
@@ -14,7 +18,7 @@ Complete 28-pin SOIC assignment from the v3 schematic (IC5):
 
 | Pin | Port | Function | Direction | Notes |
 |---|---|---|---|---|
-| 1 | VPP/MCLR/RE3 | Reset | Input | Master clear (active low) |
+| 1 | VPP/MCLR/RE3 | Reset | Input | <!-- legacy-role-mapping:begin -->Master clear<!-- legacy-role-mapping:end --> (active low) |
 | 2 | RA0 | GPIO | Input | J12 strap (variant decode) |
 | 3 | RA1 | GPIO | Input | J12 strap (variant decode) |
 | 4 | RA2 | C1IN0+ | Input | Comparator 1 input (analog) |

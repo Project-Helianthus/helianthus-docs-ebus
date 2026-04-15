@@ -1,5 +1,9 @@
 # Device Discovery (BASV) (Observed)
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This document describes the **BASV orchestration flow** used to enumerate devices and build one coherent identity view.
 
 Wire-level message layouts are intentionally documented in protocol-centric docs:
@@ -92,7 +96,7 @@ All 720-series device IDs listed in the table above are firmware/hardware varian
 - **Wired controllers (CTLV\*/CTLS\*):** CTLV0, CTLV2, CTLV3, CTLS2 — wall-mounted wired controllers connected directly via eBUS.
 
 All VRC720-family devices share:
-- eBUS slave address `0x15`
+- eBUS target address `0x15`
 - B524 extended register protocol (opcodes `0x02`/`0x06`)
 - B555 timer/schedule protocol
 - Config-compatible register map (john30 `15.700.csv` symlinked for CTLV2/CTLV3)

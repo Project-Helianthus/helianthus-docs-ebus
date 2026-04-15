@@ -1,5 +1,9 @@
 # Semantic Configuration Gates (B524)
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This page documents the **structural gates** that determine whether semantic families, instances, and structure-bearing fields are allowed to appear in the B524 semantic model.
 
 It is intentionally different from:
@@ -31,7 +35,7 @@ The authoritative rule-by-rule source remains the decision catalog:
 
 | Gate | Decision IDs | Inputs | Output | Scope |
 | --- | --- | --- | --- | --- |
-| B524 semantic root precondition | `SD-01` | B524 capability probes on candidate slave addresses | Enables or suppresses B524 structure discovery families | `PROTOCOL` for capability; `GATEWAY_POLICY` for candidate ordering |
+| B524 semantic root precondition | `SD-01` | B524 capability probes on candidate target addresses | Enables or suppresses B524 structure discovery families | `PROTOCOL` for capability; `GATEWAY_POLICY` for candidate ordering |
 | Zone instance gate | `SD-02`, `SD-03` | `GG=0x03 RR=0x001C` + zone presence FSM | Zone instance becomes present/absent | `PROTOCOL` for direct probe path; `GATEWAY_POLICY` for hysteresis/fallback |
 | Zone naming gate | `SD-04` | `GG=0x03 RR=0x0016/0x0017/0x0018` | Zone name becomes explicit or falls back | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
 | Zone room-sensor mapping gate | `SD-05` | `GG=0x03 RR=0x0013` | `roomTemperatureZoneMapping` becomes available | `PROTOCOL` |

@@ -1,5 +1,9 @@
 # Vaillant B524 Structural Decision Catalog
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This page documents the **implemented structural decisions** in `helianthus-ebusgateway` for B524-backed semantic discovery.
 
 Each entry records:
@@ -49,15 +53,15 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Field | Value |
 | --- | --- |
 | Semantic effect | Enables or disables B524-backed structure discovery for zones, circuits, radio devices, FM5, solar, and cylinders |
-| Source registers | No single register. This is a capability-discovery rule over B524 request/response behavior on candidate slave addresses. |
+| Source registers | No single register. This is a capability-discovery rule over B524 request/response behavior on candidate target addresses. |
 | Reference | [`ebus-vaillant-B524-register-map.md`](../protocols/vaillant/ebus-vaillant-B524-register-map.md), [`../architecture/b524-semantic-root-discovery.md`](../architecture/b524-semantic-root-discovery.md) |
 | Source document title | None. Product identity and regulator branding are not required to prove B524 semantic-root availability. |
 | Source section | None |
-| Supporting statement | None. Identity enrichment and branding classification are separate from the structural precondition that a slave endpoint responds coherently as a B524 semantic root. |
+| Supporting statement | None. Identity enrichment and branding classification are separate from the structural precondition that a target endpoint responds coherently as a B524 semantic root. |
 | Constraint strength | None |
 | Scope of validity | `PROTOCOL` for the capability gate; `GATEWAY_POLICY` for candidate ordering and multi-root selection policy |
-| Evaluation rule | B524-backed structure discovery is allowed once at least one candidate slave address responds coherently to B524 discovery probes. Scan may start at `0x15` for convenience, but it must not be limited to `0x15` and must not require known product identity. |
-| Fallback / unknown behavior | If no candidate slave proves B524 capability, B524-backed families remain unavailable. Unknown identity does not block discovery once capability is proven. |
+| Evaluation rule | B524-backed structure discovery is allowed once at least one candidate target address responds coherently to B524 discovery probes. Scan may start at `0x15` for convenience, but it must not be limited to `0x15` and must not require known product identity. |
+| Fallback / unknown behavior | If no candidate target proves B524 capability, B524-backed families remain unavailable. Unknown identity does not block discovery once capability is proven. |
 | Published effect | `zones`, `circuits`, `radioDevices`, `fm5SemanticMode`, `solar`, and `cylinders` are eligible for structural evaluation once a B524 semantic root is available. |
 | Evidence status | `PROVEN` for the capability gate; candidate ordering remains `GATEWAY_POLICY` |
 | Code anchors | Canonical contract: `refreshDiscovery()` root-discovery phase. Current implementation still uses `findDeviceAddressByPrefix()` and therefore diverges from this contract. |

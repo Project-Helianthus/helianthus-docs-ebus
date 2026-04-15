@@ -55,15 +55,17 @@ This document records the architectural decisions implemented in the codebase. E
 
 **Consequences:** Callers do not set frame type explicitly; it is derived from addressing rules.
 
-## ADR-006: CRC8 is computed over escaped symbols
+## ADR-006: CRC8 is computed over logical (unescaped) bytes
 
-**Status:** Accepted
+**Status:** Corrected (2026-04)
 
-**Context:** eBUS CRC8 must account for reserved symbols `0xA9` (escape) and `0xAA` (SYN).
+**Context:** eBUS CRC8 must produce consistent checksums regardless of wire-level escape encoding.
 
-**Decision:** CRC computation treats `0xA9` as `0xA9 0x00` and `0xAA` as `0xA9 0x01` before updating CRC.
+**Decision:** CRC computation operates on the logical (unescaped) frame bytes. Escape substitution (`0xA9` -> `0xA9 0x00`, `0xAA` -> `0xA9 0x01`) is applied after CRC computation on transmit, and reversed before CRC verification on receive. The CRC byte itself is also subject to escape encoding on the wire.
 
-**Consequences:** CRC validation matches the wire-level framing used by the transports.
+**Correction note:** The original ADR-006 incorrectly stated that CRC was computed over escaped symbols. All implementations (ebusgo, ebusd, VRC Explorer) compute CRC over logical bytes. The original wording caused confusion and was the root cause of CRC bugs across multiple codebases (VE16, VE25, EG47). See DOC-NEW-04 in the audit findings.
+
+**Consequences:** CRC validation is independent of wire-level escape encoding. The same logical frame always produces the same CRC regardless of whether any data bytes happen to require escaping.
 
 ## ADR-007: Bus owns ACK/response state machine and retry policy
 
