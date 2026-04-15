@@ -23,6 +23,7 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x23` (B523, functional-module actor/sensor data): [`ebus-vaillant-B523.md`](ebus-vaillant-B523.md)
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
+- VR90 room controller emulation: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
 
 ## Scope
 

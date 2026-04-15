@@ -1,5 +1,9 @@
 # Vaillant B508 NoiseReduction Broadcast Protocol
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 `PB=0xB5`, `SB=0x08`.
 
 ## Status
@@ -29,8 +33,8 @@ QQ FE B5 08 04 02 XX SS SS CRC
                +------------- Message ID = 0x02
             NN = 0x04 (data length)
          PBSB = B5 08
-      ZZ = FE (broadcast -- no slave response)
-QQ = source master (address unconfirmed from live capture)
+      ZZ = FE (broadcast -- no target response)
+QQ = source initiator (address unconfirmed from live capture)
 ```
 
 ### ebusd CSV Definition
@@ -79,14 +83,14 @@ inferred from device function, not observed.
 
 | ID (hex) | Name | Data fields | Direction | Confidence |
 |----------|------|-------------|-----------|------------|
-| `02` | noise_reduction_broadcast (`NoiseReductionBroadcast`) | IGN:1, State1:onoff, State2:onoff | master (`0x15`?) -> broadcast (`0xFE`) | MEDIUM-HIGH |
+| `02` | noise_reduction_broadcast (`NoiseReductionBroadcast`) | IGN:1, State1:onoff, State2:onoff | initiator (`0x15`?) -> broadcast (`0xFE`) | MEDIUM-HIGH |
 
 ## Open Questions
 
 - **State1 vs State2:** Both bytes present in the frame; whether they are
   always identical (redundant) or represent "requested vs active" states
   is unknown. No live capture available.
-- **QQ source address:** Which master emits the broadcast is unconfirmed.
+- **QQ source address:** Which initiator emits the broadcast is unconfirmed.
 - **IGN byte content:** Purpose of the ignored byte between the ID and
   State1 is unknown.
 

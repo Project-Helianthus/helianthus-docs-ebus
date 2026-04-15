@@ -1,5 +1,9 @@
 # WRSol -- Implemented eBUS Commands of the Weishaupt Devices (Implementierte eBUS-Befehle der Weishaupt-Gerate)
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 > **Source:** Weishaupt Technique -- Implemented eBUS Commands of the Weishaupt Devices (Implementierte eBUS-Befehle der Weishaupt-Gerate), Version 8\_16
 > **Date:** FG-Schb / 24.09.2007
 > **Section:** Chapter 11 -- WRSol
@@ -102,7 +106,7 @@ The WRSol has the eBUS address:
 
 #### Frame Structure
 
-| Master/Slave Byte No. | Abbrev. | Description                           | Unit | Range       | Type / Format | PMC DB 81 | Notes                              |
+| Initiator/Target Byte No. | Abbrev. | Description                           | Unit | Range       | Type / Format | PMC DB 81 | Notes                              |
 |------------------------|---------|---------------------------------------|------|-------------|---------------|-----------|------------------------------------|
 | M 1                    | QQ      | Source Address (Quelladresse)         |      |             |               |           | Broadcast                          |
 | M 2                    | ZZ = FEh| Destination Address (Zieladresse)    |      |             |               |           | Broadcast                          |
@@ -138,10 +142,10 @@ QQ FE 07 00 09 TA_L TA_H ss min hh dd mm ww yy CRC SYN
 
 #### Frame Structure
 
-| Master/Slave Byte No. | Abbrev.     | Description                            | Unit | Range | Type / Format | PMC DB 81 | Notes        |
+| Initiator/Target Byte No. | Abbrev.     | Description                            | Unit | Range | Type / Format | PMC DB 81 | Notes        |
 |------------------------|-------------|----------------------------------------|------|-------|---------------|-----------|--------------|
 | M 1                    | QQ          | Source Address (Quelladresse)          |      |       |               |           |              |
-| M 2                    | ZZ          | Destination Address / Slave (Zieladresse) |   |       |               |           |              |
+| M 2                    | ZZ          | Destination Address / Target (Zieladresse) |   |       |               |           |              |
 | M 3                    | PB = 07h    | System Commands (Systembefehle)        |      |       |               |           |              |
 | M 4                    | SB = 04h    | Identification (Identifikation)        |      |       |               |           |              |
 | M 5                    | NN = 00h    | Data Length (Datenlange)               |      |       |               |           |              |
@@ -152,7 +156,7 @@ QQ FE 07 00 09 TA_L TA_H ss min hh dd mm ww yy CRC SYN
 
 #### Device ID Response
 
-| Slave Byte | Abbrev.      | Description                          | Format   | PMC DB 81 | V. 2.30 | V. 2.40 |
+| Target Byte | Abbrev.      | Description                          | Format   | PMC DB 81 | V. 2.30 | V. 2.40 |
 |------------|--------------|--------------------------------------|----------|-----------|---------|---------|
 | S 4        | gg           | Device ID 0 (Gerate\_ID\_0)          | ASCII    | DR 673    | P       | W       |
 | S 5        |              | Device ID 1 (Gerate\_ID\_1)          | BYTE     | DL 674    | S       | R       |
@@ -196,10 +200,10 @@ QQ ZZ 07 04 00 CRC | ACK 0A 10 gg gg gg gg gg vv rr vv rr CRC | ACK SYN
 
 #### Frame Structure
 
-| Master/Slave Byte No. | Abbrev.     | Description                                   | Unit | Range | Type / Format | PMC DB 81 | Notes  |
+| Initiator/Target Byte No. | Abbrev.     | Description                                   | Unit | Range | Type / Format | PMC DB 81 | Notes  |
 |------------------------|-------------|-----------------------------------------------|------|-------|---------------|-----------|--------|
 | M 1                    | QQ          | Source Address (Quelladresse)                 |      |       |               |           |        |
-| M 2                    | ZZ          | Destination Address / Slave (Zieladresse)     |      |       |               |           |        |
+| M 2                    | ZZ          | Destination Address / Target (Zieladresse)     |      |       |               |           |        |
 | M 3                    | PB = 09h    |                                               |      |       |               |           |        |
 | M 4                    | SB = 00h    | Read RAM (RAM lesen)                          |      |       |               |           |        |
 | M 5                    | NN = 03h    | Following Bytes (folgende Bytes)              |      |       |               |           |        |
@@ -301,25 +305,25 @@ RAM data to be read (dependent on configuration / hydraulic variant HV being pre
 
 ```mermaid
 sequenceDiagram
-    participant Master
+    participant Initiator
     participant WRSol as WRSol (0xF7)
 
-    Note over Master,WRSol: Read RAM Data (RAM-Daten lesen) (09h 00h)
-    Master->>WRSol: QQ ZZ 09 00 03 LL HH 02 CRC
-    WRSol->>Master: ACK
-    WRSol->>Master: 02 Data0 Data1 CRC
-    Master->>WRSol: ACK
-    Note over Master,WRSol: SYN
+    Note over Initiator,WRSol: Read RAM Data (RAM-Daten lesen) (09h 00h)
+    Initiator->>WRSol: QQ ZZ 09 00 03 LL HH 02 CRC
+    WRSol->>Initiator: ACK
+    WRSol->>Initiator: 02 Data0 Data1 CRC
+    Initiator->>WRSol: ACK
+    Note over Initiator,WRSol: SYN
 
-    Note over Master,WRSol: Identification (Identifikation) (07h 04h)
-    Master->>WRSol: QQ ZZ 07 04 00 CRC
-    WRSol->>Master: ACK
-    WRSol->>Master: 0A 10 ID0..ID4 vv rr vv rr CRC
-    Master->>WRSol: ACK
-    Note over Master,WRSol: SYN
+    Note over Initiator,WRSol: Identification (Identifikation) (07h 04h)
+    Initiator->>WRSol: QQ ZZ 07 04 00 CRC
+    WRSol->>Initiator: ACK
+    WRSol->>Initiator: 0A 10 ID0..ID4 vv rr vv rr CRC
+    Initiator->>WRSol: ACK
+    Note over Initiator,WRSol: SYN
 
-    Note over Master,WRSol: Date/Time Broadcast (Datum/Zeit Broadcast) (07h 00h)
-    Master->>WRSol: QQ FE 07 00 09 TA ss min hh dd mm ww yy CRC
+    Note over Initiator,WRSol: Date/Time Broadcast (Datum/Zeit Broadcast) (07h 00h)
+    Initiator->>WRSol: QQ FE 07 00 09 TA ss min hh dd mm ww yy CRC
     Note over WRSol: No response (broadcast)
-    Note over Master,WRSol: SYN
+    Note over Initiator,WRSol: SYN
 ```

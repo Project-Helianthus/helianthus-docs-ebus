@@ -1,5 +1,9 @@
 # PIC16F15356 eBUS Adapter Firmware
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This document describes the architecture and scope of the PIC16F15356 firmware used in Helianthus eBUS adapter v3.x hardware.
 
 See also:
@@ -97,7 +101,7 @@ The codebase is structured for bounded execution, but the deterministic guarante
 
 ### Why Determinism
 
-The eBUS adapter firmware must behave as a transparent, jitter-free UART bridge. eBUS master-master arbitration is bit-level at 2400 baud: if the adapter introduces more than ~10 us of jitter in byte forwarding, it loses arbitration and corrupts the bus. There is no retry mechanism -- a missed window means dropped frames and broken heating control.
+The eBUS adapter firmware must behave as a transparent, jitter-free UART bridge. eBUS initiator-initiator arbitration is bit-level at 2400 baud: if the adapter introduces more than ~10 us of jitter in byte forwarding, it loses arbitration and corrupts the bus. There is no retry mechanism -- a missed window means dropped frames and broken heating control.
 
 This constraint drives every architectural decision:
 

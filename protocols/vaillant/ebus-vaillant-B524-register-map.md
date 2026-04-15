@@ -1,5 +1,9 @@
 # Vaillant B524 Extended Register Map
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 > **Status:** Authoritative reference. Single source of truth for B524 register semantics.
 >
 > **Last updated:** 2026-04-06 (v5)
@@ -76,7 +80,7 @@ All MUST gate on `device_connected` (RR=0x0001). Instance `II` selects the slot.
 selector set is documented. Uses the same remote-device slot schema as `GG=0x09/0x0A`.
 In the current lab, `II=0x01` with
 `device_class_address=0x26` correlates to the eBUS-identified `VR_71` hardware
-at slave address `0x26`, but that family identification comes from eBUS
+at target address `0x26`, but that family identification comes from eBUS
 identity correlation rather than from B524 alone.
 
 **Discovery:** Directory probe (`opcode=0x00`) is not a reliable presence indicator. Descriptor=0 does NOT mean the group is absent (see [ebus-vaillant-b524-research.md](./ebus-vaillant-b524-research.md) for directory descriptor analysis). Use static topology for group enumeration. Multi-instance groups: scan all instances up to II=0x0A, expose only active ones.
@@ -616,7 +620,7 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active devices are identi
 | 0x0015 | (unknown) | S | u16 | — | — | — | — | — | FLAGS=0x00 |
 | 0x0016 | (unknown) | S | u16 | — | — | — | — | — | FLAGS=0x00 |
 | 0x0017 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. Empty: 0xFF, II=1: 0 |
-| 0x0019 | remote_control_address | S | u8 | count | — | — | — | — | FLAGS=0x01. VR92f/3 manual: "each remote control has a unique address starting at 1". VRC720=0 (master), VR92=1. Installer-settable per zone assignment |
+| 0x0019 | remote_control_address | S | u8 | count | — | — | — | — | FLAGS=0x01. VR92f/3 manual: "each remote control has a unique address starting at 1". VRC720=0 (initiator), VR92=1. Installer-settable per zone assignment |
 | 0x001B | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00 |
 | 0x001E | device_paired | P | u8 | bool | — | — | `0=no 1=yes` | — | FLAGS=0x01. II=1: 1. Confirms active pairing. Empty: 0xFF |
 | 0x001F | reception_strength | P | u8 | count | — | — | `4=acceptable <4=unstable 10=max` | — | FLAGS=0x01. VR92f/3 manual: "System control reception strength". Scale 0-10: 4=acceptable, <4=not stable, 10=highly stable. II=1: 7 |
@@ -712,7 +716,7 @@ For each slot, read `device_connected` (0x0001). If =1, read:
 - `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in the current lab, `0x26` correlates with the eBUS-identified `VR_71`
 - `device_firmware_version` (0x0004) — byte-decimal triplet
 - `reception_strength` (0x001F) — 0-10 scale (4=acceptable, <4=unstable)
-- `remote_control_address` (0x0019) — unique per remote (1..N), 0 for master
+- `remote_control_address` (0x0019) — unique per remote (1..N), 0 for initiator
 - `current_room_air_humidity` (0x0007) — f32 %, NaN if no sensor
 - `current_room_temperature` (0x000F) — f32 °C, NaN if no sensor
 
@@ -742,16 +746,16 @@ No register table. Schema under investigation.
 
 > **Verified 2026-03-05:** Responds only to opcode 0x06 (no local config selector set documented; opcode 0x02 returns 0 valid registers). 15 registers per instance, 165 total valid. Uses the same remote-device slot schema as GG=0x09/0x0A.
 >
-> In the current lab, the slot at **II=0x01** has `device_class_address=0x26` and firmware 01.00.00. This correlates with the eBUS-identified `VR_71` hardware at slave address `0x26`. The family/product identification comes from eBUS identity, not from B524 alone.
+> In the current lab, the slot at **II=0x01** has `device_class_address=0x26` and firmware 01.00.00. This correlates with the eBUS-identified `VR_71` hardware at target address `0x26`. The family/product identification comes from eBUS identity, not from B524 alone.
 
 ### GG=0x0C Remote Data (opcode 0x06)
 
-Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. In the current lab, **II=0x01 has `device_class_address=0x26`**, matching the eBUS-identified hardware at slave address `0x26`, but `device_connected=0` — the slot is recognized but currently not reporting as "live" (wired module, not radio — may use a different liveness mechanism).
+Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. In the current lab, **II=0x01 has `device_class_address=0x26`**, matching the eBUS-identified hardware at target address `0x26`, but `device_connected=0` — the slot is recognized but currently not reporting as "live" (wired module, not radio — may use a different liveness mechanism).
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
 | 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | FLAGS=0x01. All: 0 |
-| 0x0002 | device_class_address | S | u8 | enum | — | — | `0x26` in current lab | — | FLAGS=0x00. II=1: 0x26 (38). In the current lab, this matches the eBUS-identified `VR_71` hardware at slave address `0x26`; treat as correlation, not standalone B524 proof. |
+| 0x0002 | device_class_address | S | u8 | enum | — | — | `0x26` in current lab | — | FLAGS=0x00. II=1: 0x26 (38). In the current lab, this matches the eBUS-identified `VR_71` hardware at target address `0x26`; treat as correlation, not standalone B524 proof. |
 | 0x0003 | device_error_code | S | u8 | — | — | — | — | — | FLAGS=0x00. All empty: 0xFF |
 | 0x0004 | device_firmware_version | S | time | version | — | — | — | — | FLAGS=0x00. II=1: 01.00.00 (byte-decimal). Empty: FF/FF/FF |
 | 0x000A | (unknown) | C | u16 | — | — | — | — | — | FLAGS=0x02. All: 0 |
@@ -760,7 +764,7 @@ Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-devi
 | 0x0028-0x002E | (unknown, 7 regs) | C | u8 | — | — | — | — | — | FLAGS=0x02. All: 0 |
 | 0x002F | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x00. All: 5 |
 
-**Current-lab VR_71 correlation:** B524 yields `device_class_address=0x26` at `II=0x01`. The conclusion that this slot corresponds to `VR_71` comes from correlating that hint with eBUS identity data, where slave address `0x26` identifies itself as `VR_71`. Vaillant controller documentation then constrains the profile interpretation by describing `FM5` as "instead of VR 71". This is useful and strong for the current lab/profile, but it is not standalone protocol proof that `GG=0x0C` universally means `VR71/FM5`.
+**Current-lab VR_71 correlation:** B524 yields `device_class_address=0x26` at `II=0x01`. The conclusion that this slot corresponds to `VR_71` comes from correlating that hint with eBUS identity data, where target address `0x26` identifies itself as `VR_71`. Vaillant controller documentation then constrains the profile interpretation by describing `FM5` as "instead of VR 71". This is useful and strong for the current lab/profile, but it is not standalone protocol proof that `GG=0x0C` universally means `VR71/FM5`.
 
 Architectural note: Functional-module semantics (FM3/FM5/VR66 families) are documented separately in [`../../architecture/functional-modules.md`](../../architecture/functional-modules.md).
 

@@ -1,10 +1,14 @@
 # B524 Semantic Root Discovery
 
+<!-- legacy-role-mapping:begin -->
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+<!-- legacy-role-mapping:end -->
+
 This page documents the structural precondition for B524-backed semantic discovery.
 
 The key rule is simple:
 
-- if a slave endpoint proves coherent B524 capability, semantic discovery may run;
+- if a target endpoint proves coherent B524 capability, semantic discovery may run;
 - product identity and regulator branding are optional enrichment, not prerequisites.
 
 ## Purpose
@@ -22,7 +26,7 @@ It is therefore the true precondition behind structural discovery.
 
 ## Contract
 
-B524 structure discovery is enabled when at least one candidate slave address responds coherently to B524 discovery probes.
+B524 structure discovery is enabled when at least one candidate target address responds coherently to B524 discovery probes.
 
 This means:
 
@@ -35,7 +39,7 @@ This means:
 Recommended gateway policy:
 
 1. start with `0x15` when present, because it is a common regulator address in known topologies;
-2. continue across other discovered slave addresses;
+2. continue across other discovered target addresses;
 3. do not assume that `0x15` is mandatory or unique;
 4. do not reject a candidate only because its identity is unknown.
 
@@ -43,7 +47,7 @@ This ordering is a gateway policy convenience, not protocol truth.
 
 ## Success Criterion
 
-A candidate slave qualifies as a semantic root when it responds coherently to B524 probing.
+A candidate target qualifies as a semantic root when it responds coherently to B524 probing.
 
 For the purposes of this contract, coherent response means:
 
@@ -55,7 +59,7 @@ This page does not freeze one exact probe sequence yet. The key point is that ca
 
 ## Failure Behavior
 
-If no candidate slave proves B524 capability:
+If no candidate target proves B524 capability:
 
 - B524-backed semantic families remain unavailable;
 - B524 structural discovery does not run;
