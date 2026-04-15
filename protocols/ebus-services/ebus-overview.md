@@ -73,6 +73,10 @@ Broadcast frames do not receive ACK/NACK or responses.
 
 **SYN during active waits:** If a `SYN` (`0xAA`) byte is received while waiting for an `ACK`/`NACK` or a target response, it signals end-of-transaction (timeout). All known implementations (ebusgo, ebusd, VRC Explorer) treat SYN during ACK/response wait as a timeout indicator and abort the current transaction. Ignoring SYN and continuing to wait is incorrect -- it causes the receiver to stall past the end of the transaction.
 
+**ENH transport caveat:** On ENH-based transports, the adapter decodes wire escapes before forwarding to the host. The byte 0xAA is therefore valid data, not necessarily a SYN idle marker. SYN detection and bus-idle timeout are handled internally by the adapter hardware/firmware. The host-side SYN guards described above apply only to raw bus access (serial or direct TCP connection to the adapter).
+
+**Escape-aware SYN counting:** On raw bus transports, the escape sequence `0xA9 0x01` represents the data byte 0xAA and must NOT be counted as SYN. Only a standalone, unescaped `0xAA` outside of an active frame's data region indicates bus idle.
+
 **Early SYN during request collection:** If SYN arrives when only 0 or 1 request bytes have been collected (`requestBytesSeen <= 1`), it indicates a new arbitration cycle rather than a framing error. Implementations should reset collection state and treat the next byte as the start of a new transaction.
 
 ## Transaction Flow (Direct Mode)
@@ -104,6 +108,11 @@ Key points:
 - **ACK/NAK timing**: `ACK`/`NACK` is exchanged **once per command**, after the initiator sends the command CRC (not after each byte).
 - **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses. CRC is computed over `LEN DATA...` only (not including any address bytes). Implementors must **not** attempt to read header bytes (SRC/DST/PB/SB) from the target response -- they are inferred from the initiator telegram. See ebusgo#104 for a regression where phantom header reads caused all initiator-target transactions to fail.
 - **SYN** (`0xAA`) is used as an **end-of-message** delimiter and may also appear during idle.
+
+> **NACK retry semantics (per eBUS specification SS7.4):**
+> - **CmdNACK**: If the target NACKs the command (responds with `0xFF` instead of ACK `0x00`), the initiator retries the command portion once WITHOUT re-arbitration. If the retry also receives NACK, the transaction fails.
+> - **ResponseNACK**: If the initiator NACKs the target's response, the target retransmits the response once. If the second response also receives NACK, the transaction fails.
+> - The NACK byte is specifically `0xFF`. Any other non-ACK byte indicates a bus error, not a deliberate NACK.
 
 > **Note:** ENH-based adapters abstract physical SYN detection. The host does not observe raw SYN bytes; the adapter handles arbitration internally and signals transaction boundaries via ENH command framing (STARTED, FAILED, etc.).
 

@@ -4,6 +4,8 @@ Some Ethernet eBUS adapters expose the wire-level eBUS byte stream over UDP data
 
 This transport is **not** ENH: there is no `<INIT>`, no `<START>` arbitration request, and no ENH command/data framing. The UDP payload is simply a sequence of bytes as observed on / written to the bus.
 
+> **Important:** UDP-plain is a raw byte transport with NO bus arbitration and NO escape encoding/decoding. Bytes are forwarded as-is between the UDP client and the bus. When multiple UDP clients are active simultaneously, bus collisions are possible with no retry mechanism. UDP-plain is intended for single-client diagnostic use, not multi-client production deployments.
+
 ## Semantics
 
 - **Unit of transfer:** UDP datagrams.
