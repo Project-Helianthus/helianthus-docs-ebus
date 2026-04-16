@@ -178,7 +178,7 @@ Portable behavior: no overlapping INFO requests on the same transport/session.
 
 ### INFO Frame Length and Interleaving
 
-INFO response frames have explicit length: `1 + N` bytes where byte 0 is the INFO ID and bytes 1..N are the payload. The payload length is determined by the INFO ID (see `enh-info-reference.md`).
+INFO response framing: the first INFO response byte is the payload length `N`, followed by exactly `N` data bytes. The INFO ID is not echoed in the response — it is known from the request. Total response size is `1 + N` bytes (length byte + payload). Expected payload lengths per INFO ID are documented in `enh-info-reference.md`.
 
 **Interleaving rules:**
 - Bus traffic (`RECEIVED` frames) MAY arrive between INFO request and response. These MUST be buffered or dispatched separately; they do not terminate the INFO exchange.
