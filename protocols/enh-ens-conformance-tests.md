@@ -34,7 +34,7 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 **Invariant:** An ENH byte whose high nibble does not match any defined command ID is reported as an explicit protocol error, not as a timeout or collision.
 
-**Falsifiable:** Inject byte `0x40` (response nibble 0x4, undefined in ENH response space — defined response nibbles are 0x0-0x3, 0xA-0xC) into the adapter→host stream. Host must emit a transport error, not a timeout. For host→adapter direction, inject request nibble `0x50` (defined request nibbles are 0x0-0x3). Adapter should emit `ERROR_HOST`.
+**Falsifiable:** Inject an encoded ENH command sequence with an undefined command nibble into the adapter→host stream. For response nibble 0x4 (undefined — defined response nibbles are 0x0-0x3, 0xA-0xC), the encoded bytes are `0xD0 0x80` (byte1=`11_0100_00`, byte2=`10_000000`, command=0x4, data=0x00). Raw bytes `< 0x80` are short-form data, not commands, and would not exercise this path. Host must emit a transport error, not a timeout. For host→adapter direction, inject encoded request nibble 0x4 (undefined — defined request nibbles are 0x0-0x3): bytes `0xD0 0x80`. Adapter should emit `ERROR_HOST`.
 
 ### XR_ENH_ParserReset_AfterReadTimeout
 
