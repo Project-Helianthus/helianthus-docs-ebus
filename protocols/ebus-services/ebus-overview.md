@@ -77,7 +77,9 @@ Broadcast frames do not receive ACK/NACK or responses.
 
 **Escape-aware SYN counting:** On raw bus transports, the escape sequence `0xA9 0x01` represents the data byte 0xAA and must NOT be counted as SYN. Only a standalone, unescaped `0xAA` outside of an active frame's data region indicates bus idle.
 
-**0xAA data vs boundary scoping:** The byte `0xAA` serves as SYN (bus idle marker / frame boundary) ONLY at the raw eBUS wire layer and within raw byte-stream transports. At the logical protocol layer (inside frame payloads, register values, or ENH-decoded data), `0xAA` is a valid data byte with no special meaning. Implementations MUST NOT interpret a logical `0xAA` in payload data as a frame boundary or bus idle signal.
+**0xAA data vs boundary scoping:** The byte `0xAA` serves as SYN (bus idle marker / frame boundary) ONLY at the raw eBUS wire layer and within raw byte-stream transports. At the logical protocol layer (inside frame payloads, register values, or ENH-decoded data), `0xAA` has no wire-boundary or idle meaning — it is a valid data byte. Implementations MUST NOT interpret a logical `0xAA` in payload data as a frame boundary or bus idle signal.
+
+Exception: in ENH `START` requests, a logical `0xAA` in the initiator-address field is a protocol-level cancel sentinel for a running arbitration (see [enh.md §START](../enh.md#start--started--failed)). This is a command-level convention, not a wire-boundary meaning.
 
 **Invariant name:** `XR_ENH_0xAA_DataNotSYN`
 
