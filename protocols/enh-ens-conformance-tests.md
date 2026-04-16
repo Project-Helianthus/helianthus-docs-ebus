@@ -34,7 +34,7 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 **Invariant:** An ENH byte whose high nibble does not match any defined command ID is reported as an explicit protocol error, not as a timeout or collision.
 
-**Falsifiable:** Inject byte `0xB0` (undefined command 0xB) into the ENH stream. Host must emit a transport error, not a timeout.
+**Falsifiable:** Inject byte `0x40` (response nibble 0x4, undefined in ENH response space — defined response nibbles are 0x0-0x3, 0xA-0xC) into the adapter→host stream. Host must emit a transport error, not a timeout. For host→adapter direction, inject request nibble `0x50` (defined request nibbles are 0x0-0x3). Adapter should emit `ERROR_HOST`.
 
 ### XR_ENH_ParserReset_AfterReadTimeout
 
@@ -58,9 +58,9 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 ### XR_INFO_FrameLength_AndSerialAccess
 
-**Invariant:** INFO responses have explicit length (`1 + N` bytes). Concurrent INFO requests on the same session are serialized or rejected; a new request does not steal the response channel.
+**Invariant:** The first byte of an INFO response is the payload length `N` (the INFO ID is not echoed — it is known from the request). The host reads exactly `N` data bytes after the length byte. Concurrent INFO requests on the same session are serialized or rejected; a new request does not steal the response channel.
 
-**Falsifiable:** Issue two INFO requests concurrently. The first requester must receive its complete response; the second must either wait or receive an explicit error.
+**Falsifiable:** (a) Send INFO request for ID 0x00. Verify response starts with length byte, followed by exactly that many data bytes. (b) Issue two INFO requests concurrently. The first requester must receive its complete response; the second must either wait or receive an explicit error.
 
 ## Arbitration
 
@@ -96,7 +96,7 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 | Test Name | Primary Spec | Implementing Repos |
 |-----------|-------------|-------------------|
-| XR_INIT_TimeoutFailOpen_Bounded | enh.md INIT | ebusgo, VRC Explorer, proxy, adaptermux |
+| XR_INIT_TimeoutFailOpen_Bounded | enh.md INIT | ebusgo, proxy, adaptermux; VRC Explorer: **deviation** (TransportTimeout = fail-closed on missing RESETTED) |
 | XR_UpstreamLoss_GracefulShutdown_NoHang | enh.md Errors | ebusgo, VRC Explorer, proxy |
 | XR_START_ReconnectWait_BoundedDeadline | enh.md START | ebusgo, VRC Explorer, proxy |
 | XR_ENH_UnknownCommand_ExplicitError | enh.md Errors | ebusgo, VRC Explorer, proxy |
