@@ -66,9 +66,9 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 ### XR_START_RequestStart_WriteAll_NoDoubleSend
 
-**Invariant:** The START request (source address byte) is written exactly once per arbitration attempt. The write is atomic (all bytes in a single write call).
+**Invariant:** The START request (source address byte) is sent exactly once per arbitration attempt on the wire. The host MUST NOT send duplicate START frames for the same arbitration attempt (double-send causes the adapter to see two arbitration requests).
 
-**Falsifiable:** Mock transport that counts write calls during START. Exactly one write call must occur per START attempt.
+**Falsifiable:** Mock transport that captures all bytes written during START. The encoded START command sequence and source address byte must appear exactly once in the captured wire bytes per arbitration attempt.
 
 ### XR_START_Cancel_ReleasesOwnership
 
