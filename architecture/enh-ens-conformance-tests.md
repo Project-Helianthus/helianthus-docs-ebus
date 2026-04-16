@@ -10,7 +10,7 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 ## Scope: ENH/ENS in This Document
 
-In this document and its referenced invariants, `ENH` and `ENS` refer to the **ebusd transport prefixes** (`enh:` on TCP, `ens:` as a serial-baud alias equivalent to `enh:` on network transports). This is NOT the firmware data-only ENS codec (`codec_ens.c`) described in [ens.md §Disambiguation](ens.md#disambiguation). Conformance tests in this catalog apply to the transport protocol, not to the firmware codec layer.
+In this document and its referenced invariants, `ENH` and `ENS` refer to the **ebusd transport prefixes** (`enh:` on TCP, `ens:` as a serial-baud alias equivalent to `enh:` on network transports). This is NOT the firmware data-only ENS codec (`codec_ens.c`) described in [ens.md §Disambiguation](../protocols/ens.md#disambiguation). Conformance tests in this catalog apply to the transport protocol, not to the firmware codec layer.
 
 ## Timeout Glossary
 
@@ -58,7 +58,7 @@ XR rows below reference these symbols explicitly. Implementations MAY expose the
 
 **Invariant:** An encoded ENH request with an undefined command nibble (defined request nibbles are 0x0-0x3) MUST be rejected by the adapter with an explicit error signal, not silently dropped.
 
-**Falsifiable:** Send encoded `0xD0 0x80` to the adapter as a request. Adapter MUST emit `ERROR_HOST` or `FAILED` (see [enh.md §Unknown Command Contract](enh.md#unknown-command-contract) for variant handling); the host MUST NOT see a generic timeout.
+**Falsifiable:** Send encoded `0xD0 0x80` to the adapter as a request. Adapter MUST emit `ERROR_HOST` or `FAILED` (see [enh.md §Unknown Command Contract](../protocols/enh.md#unknown-command-contract) for variant handling); the host MUST NOT see a generic timeout.
 
 ### XR_ENH_ParserReset_AfterReadTimeout
 
@@ -82,13 +82,9 @@ XR rows below reference these symbols explicitly. Implementations MAY expose the
 
 ### XR_INFO_FrameLength_AndSerialAccess
 
-**Invariant:** The first byte of an INFO response is the payload length `N` (the INFO ID is not echoed — it is known from the request). The host reads exactly `N` data bytes after the length byte. Concurrent INFO requests on the same session MUST use one of the following deterministic policies (no stealing, no undefined behavior):
+**Invariant:** The first byte of an INFO response is the payload length `N` (the INFO ID is not echoed — it is known from the request). The host reads exactly `N` data bytes after the length byte. Per the primary spec ([enh.md §INFO Concurrency](../protocols/enh.md#info-concurrency)), concurrent INFO requests on the same session MUST be either **serialized** (queue the second request until the first completes) or **rejected** (explicit error to the second requester). Evict-old (cancelling the first request to admit a newer one) is NOT conformant — it is a documented deviation and must be flagged as such in the matrix.
 
-- **Serialize**: queue the second request until the first completes.
-- **Reject**: return an explicit error to the second requester.
-- **Evict-old**: cancel the first request with an explicit error to its caller, then start the second. The first requester MUST NOT silently time out — it MUST be notified of the eviction.
-
-**Falsifiable:** (a) Send INFO request for ID 0x00. Verify response starts with length byte, followed by exactly that many data bytes. (b) Issue two INFO requests concurrently. The implementation MUST produce one of the three policies above; the first requester MUST NOT silently receive timeout or corrupted data without an explicit cancellation signal.
+**Falsifiable:** (a) Send INFO request for ID 0x00. Verify response starts with length byte, followed by exactly that many data bytes. (b) Issue two INFO requests concurrently. The implementation MUST either complete the first requester's response (serialize) or return an explicit error to the second (reject). Any implementation that cancels the first request to admit the second fails this invariant.
 
 ## Arbitration
 
@@ -133,19 +129,19 @@ XR rows below reference these symbols explicitly. Implementations MAY expose the
 
 | Test Name | Primary Spec | ebusgo | VRC Explorer | adaptermux | proxy |
 |-----------|-------------|--------|--------------|------------|-------|
-| XR_INIT_TimeoutFailOpen_Bounded | [enh.md §INIT](enh.md#init-timeout-invariant) | ✅ | ❌ deviation (TransportTimeout = fail-closed) | ✅ | ✅ |
-| XR_UpstreamLoss_GracefulShutdown_NoHang | [enh.md §Errors](enh.md#errors) | ✅ | ⚠️ alias (no same-name test) | — | ✅ |
-| XR_START_ReconnectWait_BoundedDeadline | [enh.md §START](enh.md#start--started--failed) | ✅ | ⚠️ alias (no same-name test) | — | ✅ |
-| XR_ENH_UnknownCommand_ExplicitError_AdapterToHost | [enh.md §Unknown Command](enh.md#unknown-command-contract) | ⚠️ partial (`transport_recovery` subcase expects silent discard) | ⚠️ alias (no same-name test) | — | — |
-| XR_ENH_UnknownCommand_ExplicitError_HostToAdapter | [enh.md §Unknown Command](enh.md#unknown-command-contract) | — | — | — | ✅ |
-| XR_INFO_RESETTED_CachePolicy_Explicit | [enh-info-reference.md](enh-info-reference.md) | ✅ | N/A (no INFO cache) | ⚠️ alias (`XR_INFO_CACHE_SNAPSHOT`) | — |
-| XR_INFO_FrameLength_AndSerialAccess | [enh.md §INFO](enh.md#info-frame-length-and-interleaving) | ✅ (serialize) | — | ⚠️ alias (serialize) | ⚠️ partial (evict-old policy — see invariant) |
-| XR_ENH_ParserReset_AfterReadTimeout | [enh.md §Parser](enh.md#parser-reset-after-read-timeout) | ✅ | ✅ | — | ✅ |
-| XR_ENH_0xAA_DataNotSYN | [ebus-overview.md §SYN](../ebus-services/ebus-overview.md#acknack-symbols) | ✅ | ✅ | — | ✅ |
-| XR_START_RequestStart_WriteAll_NoDoubleSend | [enh.md §START](enh.md#start--started--failed) | ✅ | ✅ | — | ✅ |
-| XR_START_Cancel_ReleasesOwnership | [enh.md §START](enh.md#start--started--failed) | ✅ | — | ⚠️ alias (`XR_BLOCKING_ARB_DEADLINE`) | ✅ |
-| XR_Arbitration_Fairness_NoStarvation | [enh.md §START](enh.md#start--started--failed) | ✅ | — | ⚠️ alias | — |
-| XR_UDP_LeaseTTL_CapRefresh_Bounded | [udp-plain.md §Ownership](udp-plain.md#ownership-lease-ttl) | — | — | — | ✅ |
+| XR_INIT_TimeoutFailOpen_Bounded | [enh.md §INIT](../protocols/enh.md#init-timeout-invariant) | ✅ | ❌ deviation (TransportTimeout = fail-closed) | ✅ | ✅ |
+| XR_UpstreamLoss_GracefulShutdown_NoHang | [enh.md §Errors](../protocols/enh.md#errors) | ✅ | ⚠️ alias (no same-name test) | — | ✅ |
+| XR_START_ReconnectWait_BoundedDeadline | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | ⚠️ alias (no same-name test) | — | ✅ |
+| XR_ENH_UnknownCommand_ExplicitError_AdapterToHost | [enh.md §Unknown Command](../protocols/enh.md#unknown-command-contract) | ⚠️ partial (`transport_recovery` subcase expects silent discard) | ⚠️ alias (no same-name test) | — | — |
+| XR_ENH_UnknownCommand_ExplicitError_HostToAdapter | [enh.md §Unknown Command](../protocols/enh.md#unknown-command-contract) | — | — | — | ✅ |
+| XR_INFO_RESETTED_CachePolicy_Explicit | [enh-info-reference.md](../protocols/enh-info-reference.md) | ✅ | N/A (no INFO cache) | ⚠️ alias (`XR_INFO_CACHE_SNAPSHOT`) | — |
+| XR_INFO_FrameLength_AndSerialAccess | [enh.md §INFO](../protocols/enh.md#info-frame-length-and-interleaving) | ✅ (serialize) | — | ⚠️ alias (serialize) | ❌ deviation (evict-old policy — non-conformant) |
+| XR_ENH_ParserReset_AfterReadTimeout | [enh.md §Parser](../protocols/enh.md#parser-reset-after-read-timeout) | ✅ | ✅ | — | ✅ |
+| XR_ENH_0xAA_DataNotSYN | [ebus-overview.md §SYN](../protocols/ebus-services/ebus-overview.md#acknack-symbols) | ✅ | ✅ | — | ✅ |
+| XR_START_RequestStart_WriteAll_NoDoubleSend | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | ✅ | — | ✅ |
+| XR_START_Cancel_ReleasesOwnership | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | — | ⚠️ alias (`XR_BLOCKING_ARB_DEADLINE`) | ✅ |
+| XR_Arbitration_Fairness_NoStarvation | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | — | ⚠️ alias | — |
+| XR_UDP_LeaseTTL_CapRefresh_Bounded | [udp-plain.md §Ownership](../protocols/udp-plain.md#ownership-lease-ttl) | — | — | — | ✅ |
 
 **Notes:**
 - `XR_ENH_UnknownCommand_ExplicitError_AdapterToHost` was split from a single bidirectional invariant because proxy currently covers only the host→adapter direction. ebusgo's `transport_recovery` subcase expects silent discard on the adapter→host path; this is marked `⚠️ partial` until the live read path returns explicit errors.
