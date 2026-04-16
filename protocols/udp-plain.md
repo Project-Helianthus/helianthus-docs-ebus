@@ -95,7 +95,12 @@ If no safe initiator is available, proxy returns a host-side error for the `STAR
 
 ### Ownership Lease TTL
 
-Bus ownership acquired via UDP-PLAIN MUST be bounded by a maximum TTL (time-to-live). Ownership begins when the adapter echoes the requested initiator address byte on the bus (arbitration win, southbound signal — UDP-PLAIN has no `STARTED` response). If the proxy does not observe idle SYN (`0xAA`) within the TTL period after the arbitration-byte echo, ownership MUST be released unconditionally to prevent bus lockout.
+Bus ownership acquired via UDP-PLAIN MUST be bounded by a maximum TTL (time-to-live). Ownership begins at one of two well-defined timestamps:
+
+- **Normal path**: the moment the adapter echoes the requested initiator address byte on the bus (arbitration win, southbound signal — UDP-PLAIN has no `STARTED` response).
+- **Fallback path** (when `udp-plain-disable-start-fallback=false`, the default): if no echo arrives within `udp-plain-start-wait` (default 5s), the proxy synthesizes a northbound `STARTED` and ownership begins at the synthesis timestamp. Implementations MUST record this synthesis timestamp explicitly and MUST NOT skip TTL enforcement because the echo was absent.
+
+If the proxy does not observe idle SYN (`0xAA`) within the TTL period after the recorded lease-start timestamp, ownership MUST be released unconditionally to prevent bus lockout.
 
 The TTL cap applies to both:
 - **Active ownership**: the proxy is sending data and waiting for ACK/response.

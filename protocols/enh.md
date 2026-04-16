@@ -185,7 +185,7 @@ INFO response framing: the first INFO response byte is the payload length `N`, f
 - A `RESETTED` frame arriving during an INFO exchange terminates the INFO exchange. The cached INFO data from before the reset is invalidated.
 - Stale INFO frames (from a previous session or before a RESETTED) MUST be discarded. The INFO cache MUST be invalidated on every RESETTED event.
 
-There is no explicit cancellation frame for INFO streaming. If a non-INFO command arrives during INFO delivery, the INFO stream is implicitly terminated.
+There is no explicit cancellation frame for INFO streaming. `RECEIVED` frames are an explicit exception to termination (per the interleaving rules above) — they represent asynchronous bus traffic and are buffered/dispatched separately without affecting the INFO exchange. Any other non-INFO control frame (e.g., `STARTED`, `FAILED`, `ERROR_EBUS`, `ERROR_HOST`) that arrives during INFO delivery implicitly terminates the INFO stream. `RESETTED` always terminates per the rules above.
 
 Common `info_id` values include:
 
