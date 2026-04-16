@@ -93,6 +93,18 @@ When a northbound client sends `START` with `initiator=0x00`, proxy selects an i
 
 If no safe initiator is available, proxy returns a host-side error for the `START`.
 
+### Ownership Lease TTL
+
+Bus ownership acquired via UDP-PLAIN MUST be bounded by a maximum TTL (time-to-live). If the proxy does not observe idle SYN within the TTL period after STARTED, ownership MUST be released unconditionally to prevent bus lockout.
+
+The TTL cap applies to both:
+- **Active ownership**: the proxy is sending data and waiting for ACK/response.
+- **Passive ownership**: the proxy received STARTED but has not yet sent data.
+
+Implementations SHOULD use a configurable TTL with a reasonable default (e.g., 5 seconds). The TTL MUST NOT be refreshed by non-SYN bus traffic (RECEIVED frames do not extend the lease).
+
+**Invariant name:** `XR_UDP_LeaseTTL_CapRefresh_Bounded`
+
 ### Fail-fast send behavior after collision
 
 If arbitration reaches terminal failure for a session, the next send attempt for that session is short-circuited with `FAILED` (`ENHResFailed`) and the winning initiator byte in payload (when available), instead of generic host error.
