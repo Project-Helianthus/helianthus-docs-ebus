@@ -232,4 +232,4 @@ byte2 = 0x80 | (0x5A & 0x3F)           = 0x9A
 
 ## See Also
 
-- [`enh-ens-conformance-tests.md`](enh-ens-conformance-tests.md) -- ENH/ENS shared conformance test catalog (canonical XR test names and falsifiable invariants).
+- [`architecture/enh-ens-conformance-tests.md`](../architecture/enh-ens-conformance-tests.md) -- ENH/ENS shared conformance test catalog (canonical XR test names and falsifiable invariants) — Helianthus architecture document, not public-domain protocol spec.
