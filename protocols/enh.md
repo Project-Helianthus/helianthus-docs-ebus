@@ -4,7 +4,7 @@ ENH is the “enhanced” host↔adapter protocol used by ebusd-style interfaces
 
 See also:
 
-- `protocols/ens.md` for ebusd’s `ens:` prefix semantics (serial speed selector; equivalent to `enh:` on network transports).
+- `protocols/ens.md` for ebusd’s `ens:` prefix semantics (serial speed selector; equivalent to `enh:` on network transports). Note: in this document and its conformance tests, `ENH`/`ENS` refer to the ebusd transport prefixes, NOT the firmware data-only ENS codec (`codec_ens.c`) described in [ens.md §Disambiguation](ens.md#disambiguation).
 - `protocols/udp-plain.md` for raw eBUS bytes over UDP without ENH framing.
 
 Observe-first caveat: direct adapter-class ENH/ENS listeners on the adapter port
@@ -212,7 +212,7 @@ Implementations MUST NOT:
 - Report an unknown command as a timeout or collision.
 - Silently discard the byte and continue parsing (this corrupts the subsequent frame boundary).
 
-The host SHOULD emit a transport-level error (e.g., `ErrUnknownENHCommand`) and reset the parser state. The adapter SHOULD emit `ERROR_HOST` for unrecognized host commands.
+The host SHOULD emit a transport-level error (e.g., `ErrUnknownENHCommand`) and reset the parser state. The adapter SHOULD emit `ERROR_HOST` for unrecognized host commands. Some compatibility paths emit `FAILED` instead of `ERROR_HOST`; this is a documented deviation and implementations MAY accept either as a valid adapter-side rejection signal. Conformance tests MUST accept both and mark the exact variant observed.
 
 ## Errors
 
