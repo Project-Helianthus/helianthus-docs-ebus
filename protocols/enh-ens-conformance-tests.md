@@ -52,7 +52,7 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 ### XR_INFO_RESETTED_CachePolicy_Explicit
 
-**Invariant:** Cached INFO data is invalidated on every RESETTED event. INFO responses received before RESETTED are not used after RESETTED.
+**Invariant:** Cached INFO data is invalidated on every RESETTED event. INFO responses received before RESETTED are not used after RESETTED. This invariant applies only to implementations that cache INFO responses across requests (ebusgo, adaptermux). Stateless implementations that issue single-request INFO without caching (e.g., VRC Explorer) are exempt.
 
 **Falsifiable:** Query INFO ID 0x00, receive response, then receive RESETTED. Query INFO ID 0x00 again. Host must re-query the adapter, not return stale cached data.
 
@@ -96,15 +96,15 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 | Test Name | Primary Spec | Implementing Repos |
 |-----------|-------------|-------------------|
-| XR_INIT_TimeoutFailOpen_Bounded | enh.md INIT | ebusgo, proxy, adaptermux; VRC Explorer: **deviation** (TransportTimeout = fail-closed on missing RESETTED) |
-| XR_UpstreamLoss_GracefulShutdown_NoHang | enh.md Errors | ebusgo, VRC Explorer, proxy |
-| XR_START_ReconnectWait_BoundedDeadline | enh.md START | ebusgo, VRC Explorer, proxy |
-| XR_ENH_UnknownCommand_ExplicitError | enh.md Errors | ebusgo, VRC Explorer, proxy |
-| XR_INFO_RESETTED_CachePolicy_Explicit | enh-info-reference.md | ebusgo, adaptermux |
-| XR_INFO_FrameLength_AndSerialAccess | enh.md INFO | ebusgo, adaptermux, proxy |
-| XR_ENH_ParserReset_AfterReadTimeout | enh.md Parser | ebusgo, VRC Explorer |
-| XR_ENH_0xAA_DataNotSYN | ebus-overview.md SYN | ebusgo, VRC Explorer, proxy |
-| XR_START_RequestStart_WriteAll_NoDoubleSend | enh.md START | ebusgo, VRC Explorer |
-| XR_START_Cancel_ReleasesOwnership | enh.md START | ebusgo, adaptermux |
-| XR_Arbitration_Fairness_NoStarvation | enh.md START | ebusgo, adaptermux |
-| XR_UDP_LeaseTTL_CapRefresh_Bounded | udp-plain.md Ownership | proxy |
+| XR_INIT_TimeoutFailOpen_Bounded | [enh.md §INIT](enh.md#init-timeout-invariant) | ebusgo, proxy, adaptermux; VRC Explorer: **deviation** (TransportTimeout = fail-closed on missing RESETTED) |
+| XR_UpstreamLoss_GracefulShutdown_NoHang | [enh.md §Errors](enh.md#errors) | ebusgo, VRC Explorer, proxy |
+| XR_START_ReconnectWait_BoundedDeadline | [enh.md §START](enh.md#start--started--failed) | ebusgo, VRC Explorer, proxy |
+| XR_ENH_UnknownCommand_ExplicitError | [enh.md §Unknown Command](enh.md#unknown-command-contract) | ebusgo, VRC Explorer, proxy |
+| XR_INFO_RESETTED_CachePolicy_Explicit | [enh-info-reference.md](enh-info-reference.md) | ebusgo, adaptermux |
+| XR_INFO_FrameLength_AndSerialAccess | [enh.md §INFO](enh.md#info-frame-length-and-interleaving) | ebusgo, adaptermux, proxy |
+| XR_ENH_ParserReset_AfterReadTimeout | [enh.md §Parser](enh.md#parser-reset-after-read-timeout) | ebusgo, VRC Explorer |
+| XR_ENH_0xAA_DataNotSYN | [ebus-overview.md §SYN](../ebus-services/ebus-overview.md#acknack-symbols) | ebusgo, VRC Explorer, proxy |
+| XR_START_RequestStart_WriteAll_NoDoubleSend | [enh.md §START](enh.md#start--started--failed) | ebusgo, VRC Explorer |
+| XR_START_Cancel_ReleasesOwnership | [enh.md §START](enh.md#start--started--failed) | ebusgo, adaptermux, proxy |
+| XR_Arbitration_Fairness_NoStarvation | [enh.md §START](enh.md#start--started--failed) | ebusgo, adaptermux |
+| XR_UDP_LeaseTTL_CapRefresh_Bounded | [udp-plain.md §Ownership](udp-plain.md#ownership-lease-ttl) | proxy |
