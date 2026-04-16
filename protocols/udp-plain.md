@@ -101,7 +101,7 @@ The TTL cap applies to both:
 - **Active ownership**: the proxy is sending data and waiting for ACK/response.
 - **Passive ownership**: the proxy received STARTED but has not yet sent data.
 
-Implementations SHOULD use a configurable TTL with a reasonable default (e.g., 5 seconds). The TTL MUST NOT be refreshed by non-SYN bus traffic (RECEIVED frames do not extend the lease).
+Implementations SHOULD use a configurable TTL with a reasonable default (e.g., 5 seconds). The TTL MUST NOT be refreshed by non-SYN raw bus traffic (that is, observing other bus bytes or proxy-emitted notifications does not extend the lease).
 
 **Invariant name:** `XR_UDP_LeaseTTL_CapRefresh_Bounded`
 

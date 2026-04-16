@@ -32,7 +32,7 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 ### XR_ENH_UnknownCommand_ExplicitError
 
-**Invariant:** An ENH byte whose high nibble does not match any defined command ID is reported as an explicit protocol error, not as a timeout or collision.
+**Invariant:** An encoded ENH command sequence whose command nibble (carried in `byte1` bits 5..2) does not match any defined command ID is reported as an explicit protocol error, not as a timeout or collision.
 
 **Falsifiable:** Inject an encoded ENH command sequence with an undefined command nibble into the adapter→host stream. For response nibble 0x4 (undefined — defined response nibbles are 0x0-0x3, 0xA-0xC), the encoded bytes are `0xD0 0x80` (byte1=`11_0100_00`, byte2=`10_000000`, command=0x4, data=0x00). Raw bytes `< 0x80` are short-form data, not commands, and would not exercise this path. Host must emit a transport error, not a timeout. For host→adapter direction, inject encoded request nibble 0x4 (undefined — defined request nibbles are 0x0-0x3): bytes `0xD0 0x80`. Adapter should emit `ERROR_HOST`.
 
@@ -86,9 +86,9 @@ These tests are the **doc-gate** for aligning proxy PR #101, adaptermux PR #502,
 
 ### XR_UDP_LeaseTTL_CapRefresh_Bounded
 
-**Invariant:** Bus ownership acquired via UDP-PLAIN is bounded by a maximum TTL. If idle SYN is not observed within the TTL after STARTED, ownership is released unconditionally. Non-SYN traffic does not refresh the lease.
+**Invariant:** Bus ownership acquired via UDP-PLAIN is bounded by a maximum TTL. Once the adapter echoes the arbitration byte to indicate the bus win, ownership is released unconditionally if no idle SYN (`0xAA`) is observed within the TTL. Non-SYN raw traffic does not refresh the lease. If a proxy surfaces `STARTED`/`RECEIVED` northbound, those are derived proxy events rather than UDP-PLAIN adapter messages.
 
-**Falsifiable:** Mock adapter sends STARTED then only RECEIVED frames (no SYN). Ownership must be released after TTL expires.
+**Falsifiable:** Mock UDP-PLAIN adapter echoes the arbitration byte to indicate ownership, then produces only raw bytes other than `0xAA` (no idle SYN). Ownership must be released after TTL expires.
 
 ---
 

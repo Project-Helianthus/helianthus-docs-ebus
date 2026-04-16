@@ -206,13 +206,13 @@ In ENH transport terms, after the target sends ACK (0x00) for an i2i frame, the 
 
 ### Unknown Command Contract
 
-An ENH command byte whose high nibble does not match any defined command ID (host: INIT=0x0, SEND=0x1, START=0x2, INFO=0x3; adapter: RESETTED=0x0, RECEIVED=0x1, STARTED=0x2, INFO=0x3, FAILED=0xA, ERROR_EBUS=0xB, ERROR_HOST=0xC) MUST be mapped to an explicit protocol error.
+An ENH encoded command nibble (carried in the first encoded byte, `byte1` bits 5..2) that does not match any defined command ID (host: INIT=0x0, SEND=0x1, START=0x2, INFO=0x3; adapter: RESETTED=0x0, RECEIVED=0x1, STARTED=0x2, INFO=0x3, FAILED=0xA, ERROR_EBUS=0xB, ERROR_HOST=0xC) MUST be mapped to an explicit protocol error.
 
 Implementations MUST NOT:
 - Report an unknown command as a timeout or collision.
 - Silently discard the byte and continue parsing (this corrupts the subsequent frame boundary).
 
-The host SHOULD emit a transport-level error (e.g., `ErrUnknownENHCommand`) and reset the parser state. The adapter SHOULD emit `ERROR_HOST(4)` for unrecognized host commands.
+The host SHOULD emit a transport-level error (e.g., `ErrUnknownENHCommand`) and reset the parser state. The adapter SHOULD emit `ERROR_HOST` for unrecognized host commands.
 
 ## Errors
 
