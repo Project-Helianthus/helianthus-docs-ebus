@@ -73,7 +73,7 @@ Broadcast frames do not receive ACK/NACK or responses.
 
 **SYN during active waits:** If a `SYN` (`0xAA`) byte is received while waiting for an `ACK`/`NACK` or a target response, it signals end-of-transaction (timeout). All known implementations (ebusgo, ebusd, VRC Explorer) treat SYN during ACK/response wait as a timeout indicator and abort the current transaction. Ignoring SYN and continuing to wait is incorrect -- it causes the receiver to stall past the end of the transaction.
 
-**ENH transport caveat:** On ENH-based transports, the adapter decodes wire escapes before forwarding to the host. The byte 0xAA is therefore valid data, not necessarily a SYN idle marker. SYN detection and bus-idle timeout are handled internally by the adapter hardware/firmware. The host-side SYN guards described above apply only to raw bus access (serial or direct TCP connection to the adapter).
+**ENH transport caveat:** On ENH-based transports, the adapter forwards raw eBUS wire bytes via `RECEIVED` events **without decoding wire escapes** (verified against PIC firmware `runtime.c:1835-1841`). Therefore `RECEIVED(0xAA)` is always a SYN boundary (raw wire `0xAA` = SYN). A logical data byte `0xAA` arrives as two separate events: `RECEIVED(0xA9)` followed by `RECEIVED(0x01)`, and the host-side escape decoder reassembles them into the logical `0xAA`. Host SYN guards apply to the `RECEIVED` event stream — `RECEIVED(0xAA)` signals bus idle; the escape-expanded `RECEIVED(0xA9) RECEIVED(0x01)` pair does not.
 
 **Escape-aware SYN counting:** On raw bus transports, the escape sequence `0xA9 0x01` represents the data byte 0xAA and must NOT be counted as SYN. Only a standalone, unescaped `0xAA` outside of an active frame's data region indicates bus idle.
 
