@@ -15,7 +15,7 @@ Response:  <INFO(0x3)> <length_N>          (first frame)
 ```
 
 `length_N` excludes itself. An empty response has `length_N = 0` with no data
-frames. A new request terminates any in-progress transfer immediately.
+frames. Overlapping INFO requests on the same session MUST be serialized or rejected (see [enh.md §INFO Concurrency](enh.md#info-concurrency)). For portable behavior, a new INFO request SHOULD NOT be sent while a previous response is still streaming.
 
 ## Capability gating
 
