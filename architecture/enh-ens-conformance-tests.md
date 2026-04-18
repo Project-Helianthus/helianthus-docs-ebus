@@ -68,9 +68,9 @@ XR rows below reference these symbols explicitly. Implementations MAY expose the
 
 ### XR_ENH_0xAA_DataNotSYN
 
-**Invariant:** A logical `0xAA` byte in payload data (inside a RECEIVED frame, register value, or protocol response) is treated as data, not as a SYN/boundary marker.
+**Invariant:** A logical `0xAA` byte in payload data (a register value or protocol payload) is treated as data at the logical layer, not as a SYN/boundary marker. On ENH, the adapter forwards raw wire bytes without decoding escapes — so a logical `0xAA` payload byte arrives over the wire as the escape pair `RECEIVED(0xA9) RECEIVED(0x01)`, which the host-side escape decoder reassembles into logical `0xAA`. A bare `RECEIVED(0xAA)` is always a raw-wire SYN boundary, not a data byte.
 
-**Falsifiable:** Send a RECEIVED frame containing payload byte `0xAA`. Host must deliver the byte as data. Frame boundary detection must not trigger.
+**Falsifiable:** Feed the host's ENH event stream the sequence `RECEIVED(0xA9) RECEIVED(0x01)` inside an active frame's data region. The host's escape decoder MUST emit logical `0xAA` as a data byte in the decoded frame payload, and MUST NOT treat the sequence as a frame boundary or bus-idle marker.
 
 ## INFO and Feature Discovery
 

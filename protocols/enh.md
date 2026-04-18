@@ -111,7 +111,9 @@ This invariant ensures that an adapter which does not implement RESETTED (e.g., 
 
 For `data < 0x80`, the short-form (unframed) byte is also allowed.
 
-> **Escape responsibility:** The adapter is responsible for eBUS wire escape encoding (`0xA9` substitution) on SEND data. The host provides logical frame bytes without escape encoding. The adapter applies escape substitution before placing bytes on the bus.
+> **Escape responsibility (SEND / TX path only):** The adapter is responsible for eBUS wire escape **encoding** (`0xA9` substitution) on `SEND` data: the host provides logical frame bytes without escape encoding, and the adapter applies escape substitution before placing bytes on the bus.
+>
+> **Receive path (RX) is different:** The adapter does NOT decode wire escapes on the receive path. Raw eBUS wire bytes are forwarded to the host as `RECEIVED` events without transformation (verified against PIC firmware `runtime.c:1835-1841`). The host-side escape decoder reassembles `RECEIVED(0xA9) RECEIVED(0x00)` into logical `0xA9` and `RECEIVED(0xA9) RECEIVED(0x01)` into logical `0xAA`. `RECEIVED(0xAA)` is always a raw-wire SYN boundary, not a data byte.
 
 ## START / STARTED / FAILED
 
