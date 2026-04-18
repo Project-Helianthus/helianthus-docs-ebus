@@ -120,7 +120,7 @@ Key points:
 > - **ResponseNACK**: If the initiator NACKs the target's response, the target retransmits the response once. If the second response also receives NACK, the transaction fails.
 > - The NACK byte is specifically `0xFF`. Any other non-ACK byte indicates a bus error, not a deliberate NACK.
 
-> **Note:** ENH-based adapters abstract physical SYN detection. The host does not observe raw SYN bytes; the adapter handles arbitration internally and signals transaction boundaries via ENH command framing (STARTED, FAILED, etc.).
+> **Note:** ENH-based adapters forward raw wire bytes (including SYN `0xAA`) as `RECEIVED` events — they do NOT abstract SYN detection away from the host (verified against PIC firmware `runtime.c:1835-1841`; see the ENH transport caveat in the SYN handling section above). Arbitration is signalled separately via ENH control frames (`STARTED`, `FAILED`) that are distinct from the `RECEIVED` byte stream, but raw SYN bytes remain visible to the host on the `RECEIVED` channel.
 
 ### Initiator-to-Initiator (i2i) Transactions
 
