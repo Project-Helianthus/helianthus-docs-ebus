@@ -4,7 +4,7 @@ ENH is the “enhanced” host↔adapter protocol used by ebusd-style interfaces
 
 See also:
 
-- `protocols/ens.md` for ebusd’s `ens:` prefix semantics (serial speed selector; equivalent to `enh:` on network transports).
+- `protocols/ens.md` for ebusd’s `ens:` prefix semantics (serial speed selector; equivalent to `enh:` on network transports). Note: in this document and its conformance tests, `ENH`/`ENS` refer to the ebusd transport prefixes, NOT the firmware data-only ENS codec (`codec_ens.c`) described in [ens.md §Disambiguation](ens.md#disambiguation).
 - `protocols/udp-plain.md` for raw eBUS bytes over UDP without ENH framing.
 
 Observe-first caveat: direct adapter-class ENH/ENS listeners on the adapter port
@@ -90,6 +90,17 @@ Feature bits:
 
 Practical note: some adapters may start streaming bus bytes before emitting `RESETTED`. A robust client treats `INIT` as best-effort and proceeds once it sees either a valid `RESETTED` or valid bus traffic within a short timeout window.
 
+### INIT Timeout Invariant
+
+The INIT exchange follows a **fail-open bounded** model:
+
+- If `RESETTED` is received within the timeout: `init_confirmed = true`, `features = <RESETTED.features>`.
+- If `RESETTED` is **not** received before timeout: `init_confirmed = false`, `features = unknown` (no optional features may be assumed).
+- Implementations MUST NOT claim INFO support solely because they requested INFO. Feature availability is determined exclusively by a confirmed RESETTED response.
+- **Fail-closed** (abort connection) is permitted ONLY for explicit adapter errors (`ERROR_HOST`) or transport hard failures (TCP RST, socket EOF).
+
+This invariant ensures that an adapter which does not implement RESETTED (e.g., older firmware) does not cause the host to hang or assume capabilities that do not exist.
+
 ## SEND
 
 `SEND` requests transmission of a single byte onto the eBUS:
@@ -100,7 +111,9 @@ Practical note: some adapters may start streaming bus bytes before emitting `RES
 
 For `data < 0x80`, the short-form (unframed) byte is also allowed.
 
-> **Escape responsibility:** The adapter is responsible for eBUS wire escape encoding (`0xA9` substitution) on SEND data. The host provides logical frame bytes without escape encoding. The adapter applies escape substitution before placing bytes on the bus.
+> **Escape responsibility (SEND / TX path only):** The adapter is responsible for eBUS wire escape **encoding** (`0xA9` substitution) on `SEND` data: the host provides logical frame bytes without escape encoding, and the adapter applies escape substitution before placing bytes on the bus.
+>
+> **Receive path (RX) is different:** The adapter does NOT decode wire escapes on the receive path. Raw eBUS wire bytes are forwarded to the host as `RECEIVED` events without transformation (verified against PIC firmware `runtime.c:1835-1841`). The host-side escape decoder reassembles `RECEIVED(0xA9) RECEIVED(0x00)` into logical `0xA9` and `RECEIVED(0xA9) RECEIVED(0x01)` into logical `0xAA`. `RECEIVED(0xAA)` is always a raw-wire SYN boundary, not a data byte.
 
 ## START / STARTED / FAILED
 
@@ -133,6 +146,17 @@ In ebusd “direct” mode, the initiator address byte is emitted as part of arb
 
 Implementations that use a stateful parser for ENH framing (e.g., two-byte command decoding) **must reset parser state** after arbitration completes (STARTED or FAILED). TCP fragmentation can deliver extra bytes alongside the arbitration response, leaving the parser with a partially-decoded frame. Without a reset, the stale parser state corrupts subsequent echo matching. See ebusgo#113, adapter-proxy#78.
 
+### Parser Reset After Read Timeout
+
+Any read timeout that interrupts a partially received ENH frame MUST trigger a parser reset before the next frame is processed. Without this reset, the parser may interpret the first byte of the next frame as a continuation of the interrupted frame, causing cascading decode errors.
+
+The reset clears:
+- Pending byte1 (the first byte of a two-byte encoded sequence)
+- Any accumulated multi-byte response buffer
+- The current command context
+
+**Invariant name:** `XR_ENH_ParserReset_AfterReadTimeout`
+
 ## INFO
 
 `INFO` requests additional adapter metadata:
@@ -143,9 +167,27 @@ Implementations that use a stateful parser for ENH framing (e.g., two-byte comma
 
 The response is a stream of `<INFO> <data>` bytes where the **first** byte is a length `N` (excluding the length byte itself), followed by `N` data bytes.
 
-Sending a new `INFO` request while a previous response is still streaming has implementation-defined behavior. Known variants: (1) immediately terminate the previous transfer and start the new one (ebusd reference), (2) queue the new request until the previous transfer completes, (3) ignore the new request until the previous transfer finishes. Consumers should avoid overlapping INFO requests for portable behavior.
+### INFO Concurrency
 
-There is no explicit cancellation frame for INFO streaming. If a non-INFO command arrives during INFO delivery, the INFO stream is implicitly terminated.
+A new INFO request on the same transport/session while a previous INFO response is still streaming MUST be handled deterministically:
+
+1. **Serialize**: Queue the new request until the current INFO response completes, OR
+2. **Reject**: Return an explicit error to the caller of the new request.
+
+An implementation MUST NOT allow a new INFO request to "steal" the response channel from an in-progress request. The previous requester would then receive a timeout or corrupted data.
+
+Portable behavior: no overlapping INFO requests on the same transport/session.
+
+### INFO Frame Length and Interleaving
+
+INFO response framing: the first INFO response byte is the payload length `N`, followed by exactly `N` data bytes. The INFO ID is not echoed in the response — it is known from the request. Total response size is `1 + N` bytes (length byte + payload). Expected payload lengths per INFO ID are documented in `enh-info-reference.md`.
+
+**Interleaving rules:**
+- Bus traffic (`RECEIVED` frames) MAY arrive between INFO request and response. These MUST be buffered or dispatched separately; they do not terminate the INFO exchange.
+- A `RESETTED` frame arriving during an INFO exchange terminates the INFO exchange. The cached INFO data from before the reset is invalidated.
+- Stale INFO frames (from a previous session or before a RESETTED) MUST be discarded. The INFO cache MUST be invalidated on every RESETTED event.
+
+There is no explicit cancellation frame for INFO streaming. `RECEIVED` frames are an explicit exception to termination (per the interleaving rules above) — they represent asynchronous bus traffic and are buffered/dispatched separately without affecting the INFO exchange. Any other non-INFO control frame (e.g., `STARTED`, `FAILED`, `ERROR_EBUS`, `ERROR_HOST`) that arrives during INFO delivery implicitly terminates the INFO stream. `RESETTED` always terminates per the rules above.
 
 Common `info_id` values include:
 
@@ -164,6 +206,16 @@ When the destination address is an initiator-capable address (both high and low 
 
 In ENH transport terms, after the target sends ACK (0x00) for an i2i frame, the host should proceed directly to end-of-message (SYN). The wire_phase FSM enters TransactionDone after ACK, not WaitResponseLen. Waiting for a response length byte on an i2i transaction would hang indefinitely.
 
+### Unknown Command Contract
+
+An ENH encoded command nibble (carried in the first encoded byte, `byte1` bits 5..2) that does not match any defined command ID (host: INIT=0x0, SEND=0x1, START=0x2, INFO=0x3; adapter: RESETTED=0x0, RECEIVED=0x1, STARTED=0x2, INFO=0x3, FAILED=0xA, ERROR_EBUS=0xB, ERROR_HOST=0xC) MUST be mapped to an explicit protocol error.
+
+Implementations MUST NOT:
+- Report an unknown command as a timeout or collision.
+- Silently discard the byte and continue parsing (this corrupts the subsequent frame boundary).
+
+The host SHOULD emit a transport-level error (e.g., `ErrUnknownENHCommand`) and reset the parser state. The adapter SHOULD emit `ERROR_HOST` for unrecognized host commands. Some compatibility paths emit `FAILED` instead of `ERROR_HOST`; this is a documented deviation and implementations MAY accept either as a valid adapter-side rejection signal. Conformance tests MUST accept both and mark the exact variant observed.
+
 ## Errors
 
 The adapter can report:
@@ -179,3 +231,7 @@ SEND data byte `0x5A` (encoded form):
 byte1 = 0xC0 | (0x1 << 2) | (0x5A >> 6) = 0xC5
 byte2 = 0x80 | (0x5A & 0x3F)           = 0x9A
 ```
+
+## See Also
+
+- [`architecture/enh-ens-conformance-tests.md`](../architecture/enh-ens-conformance-tests.md) -- ENH/ENS shared conformance test catalog (canonical XR test names and falsifiable invariants) — Helianthus architecture document, not public-domain protocol spec.

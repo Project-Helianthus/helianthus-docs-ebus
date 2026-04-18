@@ -93,6 +93,25 @@ When a northbound client sends `START` with `initiator=0x00`, proxy selects an i
 
 If no safe initiator is available, proxy returns a host-side error for the `START`.
 
+### Ownership Lease TTL
+
+Bus ownership acquired via UDP-PLAIN MUST be bounded by a maximum TTL (time-to-live). Ownership begins at one of two well-defined timestamps:
+
+- **Normal path**: the moment the adapter echoes the requested initiator address byte on the bus (arbitration win, southbound signal — UDP-PLAIN has no `STARTED` response).
+- **Fallback path** (when `udp-plain-disable-start-fallback=false`, the default): if no echo arrives within `udp-plain-start-wait` (default 5s), the proxy synthesizes a northbound `STARTED` and ownership begins at the synthesis timestamp. Implementations MUST record this synthesis timestamp explicitly and MUST NOT skip TTL enforcement because the echo was absent.
+
+If the proxy does not observe idle SYN (`0xAA`) within the TTL period after the recorded lease-start timestamp, ownership MUST be released unconditionally to prevent bus lockout.
+
+The TTL cap applies to both:
+- **Active ownership**: the proxy is sending data and waiting for ACK/response.
+- **Passive ownership**: the arbitration byte has been echoed but the proxy has not yet sent data.
+
+Note: `STARTED` is an optional northbound (proxy-emitted) event, not a UDP-PLAIN adapter message. The lease TTL is anchored to the southbound arbitration-byte echo.
+
+Implementations SHOULD use a configurable TTL with a reasonable default (e.g., 5 seconds). The TTL MUST NOT be refreshed by non-SYN raw bus traffic (that is, observing other bus bytes or proxy-emitted notifications does not extend the lease).
+
+**Invariant name:** `XR_UDP_LeaseTTL_CapRefresh_Bounded`
+
 ### Fail-fast send behavior after collision
 
 If arbitration reaches terminal failure for a session, the next send attempt for that session is short-circuited with `FAILED` (`ENHResFailed`) and the winning initiator byte in payload (when available), instead of generic host error.
