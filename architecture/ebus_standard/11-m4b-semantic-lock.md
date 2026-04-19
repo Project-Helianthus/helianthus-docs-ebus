@@ -380,10 +380,17 @@ This is the explicit stage-2 trigger for the decode surface.
 
 The following tests are normative and MUST exist in the gateway repo:
 
-1. **Golden fixtures** (shipped at `92fb98cc`): byte-identical
-   comparison of each of the 4 surfaces' responses against the fixture
-   set in `helianthus-ebusgateway/mcp/ebus_standard/testdata/`,
-   modulo `meta.data_timestamp`.
+1. **Golden fixtures** — byte-identical comparison of each of the 4
+   surfaces' responses against the fixture set in
+   `helianthus-ebusgateway/mcp/ebus_standard/testdata/`, modulo
+   `meta.data_timestamp`. The v1.0 reference fixture set is the one
+   shipped at gateway commit `92fb98cc`. Each subsequent additive
+   `v1.minor` change (§6.2) MUST land together with updated fixtures
+   that include the additive content; the byte-identical invariant
+   applies against the fixture set **of the same `meta.contract.minor`
+   version**, not against the v1.0 set. Removing or mutating any field
+   that was present in a prior `v1.minor` fixture set is a §6.3 v2
+   breaking change.
 
 2. **`data_hash` determinism**: for each golden fixture, recomputing
    canonical-JSON SHA-256 over `data` MUST yield
