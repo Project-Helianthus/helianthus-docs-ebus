@@ -71,13 +71,20 @@ key set:
 ```
 {
   "meta":  <object, required, non-null>,
-  "data":  <surface-specific object or null per §4.1>,
+  "data":  <surface-specific object, always present, never null>,
   "error": <null on success, structured object on failure per §3>
 }
 ```
 
 No other top-level keys are permitted. `additionalProperties: false`
 is locked at the top level.
+
+`data` MUST always be a surface-specific typed JSON object; it MUST
+NOT be `null` or omitted, on success OR on failure. On failure, `data`
+is the partial typed body when available, otherwise the empty typed
+body for that surface (consistent with `09-mcp-envelope.md` §Envelope
+Shape). The success/failure signal is carried by `error` per §3.1,
+never by `data` nullability.
 
 ### §1.2 `meta` shape
 
@@ -122,10 +129,12 @@ canonical-JSON encoding of the `data` member, where canonical JSON is:
 - No insignificant whitespace.
 - UTF-8, no BOM.
 
-When `data` is the JSON literal `null`, the hash is computed over the
-4-byte literal `null`. Producers and consumers that compute the hash
-MUST use the same canonical-JSON implementation; the gateway fixture
-set at `92fb98cc` is the reference.
+`data` is never emitted as the JSON literal `null` under this lock
+(§1.1): failure paths emit the empty typed body for the surface, so
+the hash is always computed over a canonical-JSON object encoding.
+Producers and consumers that compute the hash MUST use the same
+canonical-JSON implementation; the gateway fixture set at `92fb98cc`
+is the reference.
 
 `meta.data_hash` is locked as a wire-visible determinism invariant: a
 byte-identical `data` MUST always produce a byte-identical
