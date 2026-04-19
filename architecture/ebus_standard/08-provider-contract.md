@@ -48,6 +48,10 @@ The generic `ebus_standard` provider is:
    [`05-execution-safety.md`](./05-execution-safety.md#runtime-enforcement);
    the sentinel `ErrSafetyClassDenied` is its denial signal.
 
+The gateway `rpc.invoke` boundary, generated provider methods, and NM
+runtime share the same execution-policy module; see
+[`05-execution-safety.md#policy-module-single-source`](./05-execution-safety.md#policy-module-single-source).
+
 The provider does NOT:
 
 - Hard-code per-device behaviour.
