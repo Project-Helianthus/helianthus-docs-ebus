@@ -28,43 +28,34 @@ through `ebus.v1.rpc.invoke`; see
 
 ## Envelope Shape
 
-Every successful MCP response for the first-delivery surfaces MUST be a
-single JSON object with these top-level members:
+Every MCP response for the first-delivery surfaces — successful or
+failed — MUST be a single JSON object with these top-level members:
 
 1. `meta`: envelope metadata.
-2. `data`: the per-method typed response body.
+2. `data`: the per-method typed response body. On failure, `data` is
+   the partial typed body when available, otherwise the empty typed
+   body for that method.
+3. `error`: the typed error shape. `error` MUST be present in every
+   response. On success, `error` MUST be emitted as the JSON literal
+   `null`. On failure, `error` MUST be a structured object as defined
+   below.
 
-Every failed MCP response MUST be a single JSON object with these
-top-level members:
+The `error` field is mandatory in all responses. It MUST NOT be
+omitted on success, MUST NOT be an empty string, and MUST NOT be any
+non-object primitive other than `null`. Producers MUST emit
+`error: null` on success and a structured error object on failure;
+consumers MUST rely on the field being present.
 
-1. `meta`: envelope metadata.
-2. `data`: the per-method typed response body when a partial typed body
-   is available, otherwise an empty typed body for that method.
-3. `error`: the typed error shape.
-
-The `error` member is tolerated in two shapes on success to preserve
-wire compatibility with the pre-existing Helianthus MCP envelope
-baseline:
-
-- MAY be omitted entirely on success, or
-- MAY be emitted as `error: null` on success.
-
-Implementations of the first-delivery `ebus_standard` surfaces MUST
-accept both shapes when consuming envelopes, and producers MUST pick
-one shape and keep it stable per surface (covered by golden fixtures).
-When `error` is present, it MUST be either `null` or a structured
-object as defined below; `error` MUST NOT be an empty string or any
-non-object primitive.
-
-This rule is a reconciliation with, not a departure from, the existing
-envelope baseline documented in
+This rule aligns with, and does not depart from, the existing envelope
+baseline documented in
 [`architecture/mcp-first-development.md`](../mcp-first-development.md)
 ("MCP Contract Baseline") which lists `error` as "null or structured",
 and in [`api/mcp.md`](../../api/mcp.md) ("Shared Request and Envelope
 Rules") which enumerates `error` as part of the standard envelope.
 Those documents remain the canonical baseline for the wire contract;
-this chapter narrows acceptable shapes and emission discipline for the
-`ebus_standard` first-delivery surfaces without changing the baseline.
+this chapter tightens emission discipline for the `ebus_standard`
+first-delivery surfaces (mandatory `error: null` on success) without
+changing the baseline shape.
 
 ### `meta`
 
@@ -114,7 +105,7 @@ The stable field order for the top-level envelope is:
 
 1. `meta`
 2. `data`
-3. `error`, when present
+3. `error` (always present; `null` on success, structured object on failure)
 
 Within `meta`, fields MUST be emitted in a documented stable order, with
 `data_hash` present at `meta.data_hash`. Within `data`, every JSON
