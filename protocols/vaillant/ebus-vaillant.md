@@ -31,6 +31,31 @@ For detailed coverage of selector-heavy identifiers, see:
 - Layouts are observation-based and may vary by target class.
 - `PB/SB` identifiers can multiplex multiple payload shapes.
 
+## Device ID Prefix Glossary
+
+Vaillant `0x07 0x04` identification scans commonly return short ASCII device
+IDs or prefixes. The following expansions are useful when interpreting scan
+results and mapping a physical target to its product family:
+
+| Prefix | Meaning |
+|--------|---------|
+| `BAI` | Burner Adjustment Interface |
+| `BMU` | Burner Management Unit |
+| `HMU` | Heat Management Unit |
+| `UI` | User Interface |
+| `VMS` | Vaillant Multi-circuit Solarmodul |
+| `VRC` | Vaillant Regulator Control |
+| `VWL` | Vaillant Waermepumpe Luft |
+| `VWS` | Vaillant Waermepumpe Sole |
+| `VWZ` | Vaillant Waermepumpe Zusatz |
+
+Notes:
+- These are identity hints from scan payloads, not semantic proof by
+  themselves. Runtime code still needs device-specific register evidence before
+  publishing protocol semantics.
+- `VWL`, `VWS`, and `VWZ` are German product-family abbreviations. The ASCII
+  spellings above normalize `Waermepumpe` for repository-wide portability.
+
 ## Identifier Index
 
 ```text
