@@ -73,8 +73,13 @@ Notes per row:
   forbidden per §5 invariants.
 
 Additional transports (e.g. `tcp_plain`, `udp_plain`, `loopback`) are NOT
-enumerated at this minor. Their absence from the `transports[]` array is
-`state: unknown` per §5, not `state: blocked`.
+enumerated at this minor. `transports[]` at v1.1 contains EXACTLY three
+rows (ENH, ENS, ebusd-tcp) per §4.4 I1. Enumerating a new transport
+requires a subsequent `contract.minor` bump that adds its row
+explicitly; omission-as-unknown is NOT a permitted encoding. Consumers
+that encounter a transport name they do not recognize (whether in
+`active.transport` or in a future `transports[]` row after a minor
+bump) fail closed per §4.3 rule 6.
 
 ## §4 — Capability signal contract
 
