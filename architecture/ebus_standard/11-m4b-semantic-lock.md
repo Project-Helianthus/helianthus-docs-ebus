@@ -106,6 +106,24 @@ their locked semantics:
 meta keys MAY be added under §6. Consumers MUST accept unknown `meta.*`
 keys and MUST NOT fail on them.
 
+#### Method identifier and request identifier (supersedes 09-mcp-envelope)
+
+`09-mcp-envelope.md` §`meta` stated that `meta` MUST include a method
+identifier and a request identifier. M4B supersedes that clause: the
+method identifier and request identifier are carried by the JSON-RPC
+2.0 transport envelope (`method` and `id` fields on the request, echoed
+on the response), not duplicated inside `meta`. The gateway wire shipped
+at `92fb98cc` does not emit them in `meta`, and this lock ratifies that
+placement. Any future producer that wishes to additionally mirror them
+into `meta` MAY do so under §6.2 (additive); no consumer MAY require
+them in `meta` for M4B compliance. Correlation / traceability remains
+supported end-to-end through the JSON-RPC `id` field.
+
+Timestamp field names are locked at §1.2 above (`meta.data_timestamp`
+only; no request/response pair). This resolves the 09-mcp-envelope
+delegation clause ("implementation-owned until M4B_read_decode_lock")
+for the timestamp and correlation metadata surface.
+
 ### §1.3 `meta.consistency.mode` enum
 
 Locked open enum. Known values at v1.0:
