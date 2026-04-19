@@ -56,6 +56,26 @@ Attribution: canonical plan
 `ebus-standard-l7-services-w16-26.locked/00-canonical.md`, SHA-256
 `9e0a29bb76d99f551904b05749e322aafd3972621858aa6d1acbe49b9ef37305`.
 
+### Policy Module (Single Source)
+
+The execution-policy Go module is the single source of truth for
+runtime authorization. It is consulted by:
+
+- the gateway `rpc.invoke` path
+- generated provider methods
+- the NM runtime
+
+All three entry points MUST call the same policy function with an
+explicit `caller_context`. This is a deny-parity contract: for the same
+catalog identity and caller context, the policy decision MUST be
+identical regardless of whether the attempt arrives through MCP
+`rpc.invoke`, direct generated-provider invocation, or NM runtime
+execution.
+
+Bypass paths are forbidden. Any new caller context, or any caller that
+needs a different accept set, requires a locked-plan decision before it
+is implemented.
+
 ## system_nm_runtime Whitelist
 
 The locked plan states:

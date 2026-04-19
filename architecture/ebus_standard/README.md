@@ -35,6 +35,8 @@ Attribution: canonical plan
 | [`06-nm-adoption.md`](./06-nm-adoption.md) | Adopt-and-extend of merged NM docs |
 | [`07-identity-provenance.md`](./07-identity-provenance.md) | Identity provenance and `DeviceInfo` non-overwrite policy |
 | [`08-provider-contract.md`](./08-provider-contract.md) | M3 provider contract: ABI snapshot stability, disable switch, runtime enforcement pointer |
+| [`09-mcp-envelope.md`](./09-mcp-envelope.md) | M4 MCP envelope contract, deterministic `data_hash`, golden fixture discipline |
+| [`10-rpc-source-113.md`](./10-rpc-source-113.md) | M4 `rpc.invoke` gateway source byte invariant |
 
 ## Related Source Documents
 
@@ -42,4 +44,3 @@ Attribution: canonical plan
 - [`../nm-discovery.md`](../nm-discovery.md)
 - [`../nm-participant-policy.md`](../nm-participant-policy.md)
 - [`../../protocols/ebus-services/ebus-application-layer.md`](../../protocols/ebus-services/ebus-application-layer.md)
-
