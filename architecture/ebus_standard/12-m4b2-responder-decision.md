@@ -170,6 +170,12 @@ Consumers MUST gate current-request responder behavior on **`active` only**:
    current-request responder behavior. A `transports[]` entry with
    `scope: partial` on a non-active transport is discovery data for
    transport-switch UX, not an authorization signal.
+6. Unknown `active.refusal.code` string ⇒ treat as generic capability
+   refusal (fail-closed); MUST NOT attempt responder invocation; MAY log
+   the unknown code for diagnostics but MUST NOT surface it as a
+   success-path signal. Unknown `transports[].state` and unknown
+   `transports[].reason` strings degrade to fail-closed per the same
+   rule.
 
 ### §4.4 Invariants (normative)
 
@@ -185,7 +191,7 @@ Consumers MUST gate current-request responder behavior on **`active` only**:
 - I6. `state == supported` REQUIRES `reason == null` and `scope != none`.
 - I7. Duplicate transport rows in `transports[]` are forbidden.
 - I8. Unknown `active.refusal.code` values are treated as generic
-  capability refusal (fail-closed) per §4.3 rule 3.
+  capability refusal (fail-closed) per §4.3 rule 6.
 
 ### §4.5 `v1.minor` additive justification
 
@@ -301,26 +307,47 @@ No user-facing surface is widened by M4c2.
 
 ## §7 — No-go fallback
 
+### §7.1 Lane-abort conditions (mid-flight abort; responder lane reverts to readonly)
+
 M4c aborts mid-flight and the responder lane reverts to readonly IF any of:
 
 1. Live-bus bench in M4c1 shows responder ACK emission consistently
    exceeding the eBUS target-response window on ENH → transport degrades
    to `scope: none, reason: timing_unavailable`; no M4c2 for that transport.
+   If both ENH and ENS fail → full lane abort.
 2. Adapter-proxy fan-out measurement reveals byte serialization or
    reordering breaking timing on the shared RPi4 → open `ISSUE-PROXY-EBS-01`
-   and pause M4c2 until resolved.
+   and pause M4c2 until resolved. If the proxy architecture cannot
+   guarantee timing under any achievable configuration → lane abort.
 3. Concurrent initiator + responder ownership on the gateway deadlocks via
    `protocol.Bus.readMu` → abort M4c2, revert to single-role posture,
    re-architect; do NOT ship a deadlock-prone runtime.
-4. `execution_policy.Check` returns `ErrSafetyClassDenied` for a
-   whitelisted FF 0x tuple due to `IdentityKey` construction drift in M4c2
-   (catalog-integration test fails) → block the offending PR, not the lane
-   itself; rework.
 
-Under aborts (1) / (3), the capability signal collapses to `active.scope =
-none` + `transports[].scope = none` across all transports, and the v1.minor
-bump STILL ships to document the capability vocabulary and lock shape for
-any future spike.
+Under these aborts, the capability signal collapses to `active.scope =
+none` + `transports[].scope = none` across all transports (ENH/ENS rows
+carry `state: blocked` + `reason: timing_unavailable` as applicable), and
+the v1.minor bump STILL ships to document the capability vocabulary and
+lock shape for any future spike.
+
+### §7.2 PR-local rework conditions (block the PR, NOT the lane)
+
+The following conditions are PR-local quality gates; they block the
+offending PR but DO NOT trigger a §7.1 lane abort:
+
+1. `execution_policy.Check` returns `ErrSafetyClassDenied` for a
+   whitelisted FF 0x tuple due to `IdentityKey` construction drift in
+   M4c2 (catalog-integration test fails) → block the PR, fix key
+   construction, re-submit; lane continues.
+2. Forward-compat conformance golden (per §4.5) fails on a synthetic
+   unknown-value payload → block the PR, fix schema/emission, re-submit.
+3. Audit-outcome parity test (`suppressed_by_capability` vs
+   `policy_denied` separation) fails → block the PR, fix outcome
+   routing, re-submit.
+
+These are distinct from §7.1 because they indicate implementation bugs
+within a lane that is otherwise viable. Decisions on §7.1 vs §7.2
+classification MUST be made by the merge-gate owner; ambiguous cases
+escalate to operator per cruise-run protocol.
 
 ## §8 — Residual risks
 
