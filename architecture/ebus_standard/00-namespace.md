@@ -122,3 +122,48 @@ The first-lock `ebus_standard` namespace covers these primary services:
 
 The per-command catalog is frozen in
 [`01-services-catalog.md`](./01-services-catalog.md).
+
+## Cross-Namespace Import Invariant
+
+Milestone reference: `M3_PROVIDER` (canonical plan).
+
+Provider separation, defined above, is a semantic invariant. At the Go
+source level it has a stricter, machine-checkable form:
+
+> Cross-namespace Go imports from the Vaillant namespace
+> (`types.Vaillant` and any Vaillant-specific sub-packages) into any
+> package under `ebus_standard/**` are PROHIBITED.
+
+The invariant applies in both directions in spirit, but the prohibition
+documented here is specifically the non-importation of Vaillant
+symbols, types, quirks, aliases, or helpers into the `ebus_standard`
+tree. The reverse direction (Vaillant provider not depending on
+`ebus_standard` internals) is covered by the Provider Separation
+section above.
+
+### Enforcement Mechanism
+
+The mechanism is an implementation choice; the invariant is not. An
+implementation MUST select at least one of the following, such that a
+forbidden import is rejected before merge:
+
+1. `internal/` package discipline: Vaillant-specific packages live
+   under an `internal/` path that Go's visibility rules forbid
+   importing from `ebus_standard/**`, plus a compile-time negative
+   test that attempts an illegal import and expects failure.
+2. Linter rule via `depguard` in `golangci-lint`, denying the
+   `types.Vaillant` import path (and equivalents) from any package
+   matching `ebus_standard/**`.
+3. `go:build` tag constraint isolating the `ebus_standard` build graph
+   from Vaillant sources, with CI enforcing the constrained build.
+
+Any of these satisfies the invariant. What MUST NOT happen is a
+convention-only rule with no machine check. "We agreed not to do this"
+is not acceptable enforcement.
+
+### Regression Proof
+
+A test under the `ebus_standard` tree MUST demonstrate that a Vaillant
+quirk, codec, selector, or helper cannot reach `ebus_standard` decode
+output. The test's failure mode MUST be a CI failure, not a code-review
+hand-check.

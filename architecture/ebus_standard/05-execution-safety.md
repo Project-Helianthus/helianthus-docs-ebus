@@ -135,3 +135,101 @@ Attribution: canonical plan
 The first-delivery whitelist is a compile-time constant. Configuration,
 operator commands, feature flags, environment variables, registry
 records, and portal state MUST NOT widen it at runtime.
+
+## Runtime Enforcement
+
+Milestone reference: `M3_PROVIDER` (canonical plan, see "Milestone Plan").
+
+The policy described above is realised at runtime by the generic
+`ebus_standard` provider delivered in `helianthus-ebusreg`. Runtime
+enforcement MUST be default-deny: the policy module is not advisory, it
+is the gate that catalog-driven method invocation passes through.
+
+### Enforcement Boundary
+
+`provider.Invoke()` (the generic `ebus_standard` provider entry point)
+is the default-deny enforcement boundary. Every catalog-driven
+invocation inside the `ebus_standard` namespace MUST traverse this
+boundary. Bypassing the provider entry point to reach a catalog method
+by a side channel is a contract violation and MUST be rejected by
+namespace-isolation tests.
+
+The enforcement boundary consults the shared execution-policy module
+defined in [`#single-policy-function`](#single-policy-function); it
+does not re-implement safety-class logic.
+
+### `ErrSafetyClassDenied`
+
+An exported sentinel error, `ErrSafetyClassDenied`, identifies the
+terminal error class returned by `provider.Invoke()` when a caller's
+combination of catalog `safety_class` and `caller_context` resolves to
+a denial under the default-deny policy. The sentinel:
+
+1. Is exported from the `ebus_standard` catalog / provider surface in
+   `helianthus-ebusreg`.
+2. Is stable across patch versions of the provider. Renames or
+   replacements are a new locked-plan decision, not a code change.
+3. Is a **classification sentinel only**: it is the stable target of
+   `errors.Is(err, ErrSafetyClassDenied)` and MUST NOT be mutated to
+   carry per-invocation dynamic fields. Dynamic audit context (catalog
+   identity tuple, caller context, resolved safety class) is carried by
+   the **wrapping error value**, not by the sentinel itself.
+4. Is used by both direct provider callers and `rpc.invoke` denial
+   parity tests. The parity tests MUST confirm that identical input
+   produces `errors.Is(err, ErrSafetyClassDenied) == true` for the
+   returned error.
+
+#### Error-shape contract (normative)
+
+The runtime error-shape contract for denials is:
+
+1. `provider.Invoke()` and any downstream wrapper MUST return an error
+   value `err` such that `errors.Is(err, ErrSafetyClassDenied) == true`.
+2. Implementations MUST NOT return the bare sentinel
+   (`return ErrSafetyClassDenied`). Returning the bare sentinel loses
+   the dynamic audit context required by the Audit Requirement above
+   and is a contract violation.
+3. Implementations MUST return an error that wraps the sentinel and
+   carries the dynamic audit context (catalog identity tuple, caller
+   context, resolved/attempted safety class). Two permitted shapes:
+   - `fmt.Errorf("...: %w", ErrSafetyClassDenied)` with the dynamic
+     context rendered into the format string, OR
+   - a custom typed error whose `Unwrap() error` returns
+     `ErrSafetyClassDenied` and whose exported fields expose the
+     catalog identity tuple, caller context, and resolved safety
+     class to audit sinks without string parsing. The typed-error
+     shape is preferred where audit sinks need structured access.
+4. Parity tests (direct provider vs. `rpc.invoke`) MUST classify
+   errors via `errors.Is(err, ErrSafetyClassDenied)`, not via pointer
+   or string equality against the sentinel. This keeps the sentinel
+   as a pure classification anchor while preserving per-invocation
+   audit context on the wrapping error.
+
+### safety_class → Runtime Behaviour
+
+The following table is the normative runtime mapping for calls that
+enter `provider.Invoke()` from any caller context OTHER than the
+`system_nm_runtime` whitelist. The whitelist described in
+[`#system_nm_runtime-whitelist`](#system_nm_runtime-whitelist) is the
+only path that can widen the accept set, and only by full catalog
+identity, never by safety class alone.
+
+| `safety_class` | Runtime behaviour | Sentinel |
+|---|---|---|
+| `read_only_safe` | allowed | — |
+| `read_only_bus_load` | allowed | — |
+| `mutating` | denied | `ErrSafetyClassDenied` |
+| `destructive` | denied | `ErrSafetyClassDenied` |
+| `broadcast` | denied | `ErrSafetyClassDenied` |
+| `memory_write` | denied | `ErrSafetyClassDenied` |
+
+For `caller_context=system_nm_runtime` the table above is extended by
+the compile-time whitelist in
+[`#system_nm_runtime-whitelist`](#system_nm_runtime-whitelist).
+Safety-class acceptance remains necessary but not sufficient: matching
+MUST be on the full 14-axis catalog identity, not on PB/SB or safety
+class alone.
+
+No other caller context widens the accept set. Future caller contexts
+are a new locked-plan decision, per
+[`#no-runtime-widening`](#no-runtime-widening).

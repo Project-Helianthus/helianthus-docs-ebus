@@ -34,6 +34,7 @@ Attribution: canonical plan
 | [`05-execution-safety.md`](./05-execution-safety.md) | Safety classes, default-deny policy, NM runtime whitelist |
 | [`06-nm-adoption.md`](./06-nm-adoption.md) | Adopt-and-extend of merged NM docs |
 | [`07-identity-provenance.md`](./07-identity-provenance.md) | Identity provenance and `DeviceInfo` non-overwrite policy |
+| [`08-provider-contract.md`](./08-provider-contract.md) | M3 provider contract: ABI snapshot stability, disable switch, runtime enforcement pointer |
 
 ## Related Source Documents
 
