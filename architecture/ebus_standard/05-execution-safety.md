@@ -160,21 +160,50 @@ does not re-implement safety-class logic.
 
 ### `ErrSafetyClassDenied`
 
-An exported sentinel error, `ErrSafetyClassDenied`, is returned by
-`provider.Invoke()` when a caller's combination of catalog
-`safety_class` and `caller_context` resolves to a denial under the
-default-deny policy. The sentinel:
+An exported sentinel error, `ErrSafetyClassDenied`, identifies the
+terminal error class returned by `provider.Invoke()` when a caller's
+combination of catalog `safety_class` and `caller_context` resolves to
+a denial under the default-deny policy. The sentinel:
 
 1. Is exported from the `ebus_standard` catalog / provider surface in
    `helianthus-ebusreg`.
 2. Is stable across patch versions of the provider. Renames or
    replacements are a new locked-plan decision, not a code change.
-3. Carries enough structured context (catalog identity tuple, caller
-   context, resolved safety class) for audit records to satisfy the
-   Audit Requirement above.
+3. Is a **classification sentinel only**: it is the stable target of
+   `errors.Is(err, ErrSafetyClassDenied)` and MUST NOT be mutated to
+   carry per-invocation dynamic fields. Dynamic audit context (catalog
+   identity tuple, caller context, resolved safety class) is carried by
+   the **wrapping error value**, not by the sentinel itself.
 4. Is used by both direct provider callers and `rpc.invoke` denial
    parity tests. The parity tests MUST confirm that identical input
-   produces the same terminal error class.
+   produces `errors.Is(err, ErrSafetyClassDenied) == true` for the
+   returned error.
+
+#### Error-shape contract (normative)
+
+The runtime error-shape contract for denials is:
+
+1. `provider.Invoke()` and any downstream wrapper MUST return an error
+   value `err` such that `errors.Is(err, ErrSafetyClassDenied) == true`.
+2. Implementations MUST NOT return the bare sentinel
+   (`return ErrSafetyClassDenied`). Returning the bare sentinel loses
+   the dynamic audit context required by the Audit Requirement above
+   and is a contract violation.
+3. Implementations MUST return an error that wraps the sentinel and
+   carries the dynamic audit context (catalog identity tuple, caller
+   context, resolved/attempted safety class). Two permitted shapes:
+   - `fmt.Errorf("...: %w", ErrSafetyClassDenied)` with the dynamic
+     context rendered into the format string, OR
+   - a custom typed error whose `Unwrap() error` returns
+     `ErrSafetyClassDenied` and whose exported fields expose the
+     catalog identity tuple, caller context, and resolved safety
+     class to audit sinks without string parsing. The typed-error
+     shape is preferred where audit sinks need structured access.
+4. Parity tests (direct provider vs. `rpc.invoke`) MUST classify
+   errors via `errors.Is(err, ErrSafetyClassDenied)`, not via pointer
+   or string equality against the sentinel. This keeps the sentinel
+   as a pure classification anchor while preserving per-invocation
+   audit context on the wrapping error.
 
 ### safety_class → Runtime Behaviour
 
