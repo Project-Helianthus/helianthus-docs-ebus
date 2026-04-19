@@ -98,12 +98,12 @@ same minor.
         "active": {
           "transport": "ENH",
           "scope": "partial",
-          "surfaces": ["07_04", "FF_03", "FF_04", "FF_05", "FF_06"],
+          "surfaces": ["FF_03", "FF_04", "FF_05", "FF_06"],
           "refusal": null
         },
         "transports": [
-          { "transport": "ENH",       "state": "supported", "scope": "partial", "surfaces": ["07_04","FF_03","FF_04","FF_05","FF_06"], "reason": null },
-          { "transport": "ENS",       "state": "supported", "scope": "partial", "surfaces": ["07_04","FF_03","FF_04","FF_05","FF_06"], "reason": null },
+          { "transport": "ENH",       "state": "supported", "scope": "partial", "surfaces": ["FF_03","FF_04","FF_05","FF_06"], "reason": null },
+          { "transport": "ENS",       "state": "supported", "scope": "partial", "surfaces": ["FF_03","FF_04","FF_05","FF_06"], "reason": null },
           { "transport": "ebusd-tcp", "state": "blocked",   "scope": "none",    "surfaces": [],                                          "reason": "command_bridge_no_companion_listen" }
         ]
       }
