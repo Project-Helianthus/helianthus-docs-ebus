@@ -226,6 +226,8 @@ Observed target response payload layout:
 Notes:
 - The response length varies by device because the device id field is variable-length.
 - Many tools treat `sw`/`hw` as opaque hex.
+- Vaillant device IDs and prefixes observed through this scan are expanded in
+  [`../vaillant/ebus-vaillant.md#device-id-prefix-glossary`](../vaillant/ebus-vaillant.md#device-id-prefix-glossary).
 
 ### Identify-Only Profile Fields (Generic)
 
