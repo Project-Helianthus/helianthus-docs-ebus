@@ -37,7 +37,12 @@
 | Product range | Residential / light-commercial boilers (Germany/Austria) |
 | eBUS address slots | Same as Vaillant (0x08 boiler, 0x50 solar) -- physically incompatible on the same bus |
 
-Wolf boilers occupy address 0x08 (burner controller) and 0x50 (solar module). The `0x50` in "MF=0x19/0x50" refers to the eBUS primary byte shared with the solar module address, not a second manufacturer ID.
+Wolf boilers occupy address `0x08` (burner controller) and Wolf solar modules
+occupy address `0x50`. Separately, Wolf CSVs also use manufacturer-specific
+primary command `PB=0x50`; that command byte has the same numeric value as the
+solar module address but is a different frame field. Neither value is a second
+manufacturer ID; Wolf identity still comes from `0x07 0x04` manufacturer byte
+`0x19`.
 
 All Wolf CSV material lives in `ebusd-22.4.x/de/wolf/all.csv` and `ebusd-22.4.x/de/wolf/_templates.csv` of the ulda fork.
 
@@ -45,7 +50,25 @@ All Wolf CSV material lives in `ebusd-22.4.x/de/wolf/all.csv` and `ebusd-22.4.x/
 
 ## 2. Broadcast Protocols
 
-PB=0x05 is the standard eBUS broadcast primary byte; the SB values 0x03/0x04/0x07 are not present in john30 upstream, making them Wolf-proprietary extensions. PB=0x08 is the standard destination for the primary boiler controller.
+The `0x05 xx` and `0x08 xx` PBSBs below are **standard eBUS
+Application Layer command allocations**, not Wolf-proprietary command numbers.
+Wolf implements these standard service slots with Wolf-specific payload
+profiles derived from the ulda CSV files.
+
+Cross-reference:
+- `0x05 0x03`: standard Burner Control, operational data from burner to
+  controller; see [`../ebus-services/ebus-service-05h.md`](../ebus-services/ebus-service-05h.md).
+- `0x05 0x04`: standard Burner Control, control-stop response allocation; the
+  Wolf CSV maps it to a modulation payload, so treat the payload as
+  Wolf-specific until live traces prove spec parity.
+- `0x05 0x07`: standard Burner Control, channel-B operational data from
+  controller to burner; Wolf extends the request-state enum with additional
+  composite values.
+- `0x08 0x00`: standard Controller-to-Controller target-values allocation; Wolf
+  uses a shorter boiler-setpoint transfer profile than the generic service table.
+
+Do not infer proprietary status from absence in john30 Vaillant-oriented CSVs.
+The proprietary part here is the Wolf payload/profile, not the PBSB allocation.
 
 ### 2.1 PBSB 0503 -- Burner Controller Status
 
@@ -57,16 +80,21 @@ PB=0x05 is the standard eBUS broadcast primary byte; the SB values 0x03/0x04/0x0
 #### Wire Format
 
 ```
-QQ ZZ 05 03 NN [status:UCH:1B] [stellgrad:UCH:1B] [kesseltemp:1B...] CRC
+QQ ZZ 05 03 NN [block_number:0x01] [status:UCH:1B] [stellgrad:UCH:1B] [kesseltemp:1B...] CRC
 ```
 
 | Byte | Field | Type | Description |
 |------|-------|------|-------------|
+| 0 | block_number | UCH (1B) | Constant `0x01`; matches standard `0x05 0x03` block-1 framing |
 | 1 | status | UCH (1B) | Burner automaton state, transmitted as raw hex |
 | 2 | stellgrad | UCH (1B) | Boiler output modulation; Wolf thermae send `0xFF` (dummy -- "Gastherme Ersatzwert: FF") |
 | 3+ | kesseltemp | 1B+ | Boiler supply temperature |
 
 **Evidence:** ulda -> `ebusd-22.4.x/de/wolf/all.csv` [line 3](https://github.com/ulda/ebusd-configuration/blob/6ef5eb6cd12548f7b0e33386bef56838594e0037/ebusd-22.4.x/de/wolf/all.csv#L3) (broadcast), [line 10](https://github.com/ulda/ebusd-configuration/blob/6ef5eb6cd12548f7b0e33386bef56838594e0037/ebusd-22.4.x/de/wolf/all.csv#L10) (write)
+
+**Standard-service note:** PBSB `0503` is the standard Burner Control
+operational-data slot for burner-to-controller data. The Wolf CSV `ID=01`
+corresponds to the block-1 selector in the standard payload.
 
 **Falsifiable:** Wolf gas thermae should always transmit `0xFF` in byte 2 of PBSB 0503. A non-`0xFF` value indicates a different Wolf device variant (e.g., oil boiler with real modulation).
 
@@ -92,6 +120,12 @@ QQ ZZ 05 04 NN [stellgradist:percent0:1B] [stellgradmax:percent0:1B] CRC
 
 **Evidence:** ulda -> all.csv [line 11](https://github.com/ulda/ebusd-configuration/blob/6ef5eb6cd12548f7b0e33386bef56838594e0037/ebusd-22.4.x/de/wolf/all.csv#L11)
 
+**Standard-service note:** PBSB `0504` is allocated by the standard Burner
+Control service as the control-stop response. The Wolf CSV names and shapes it
+as `Stellgrad Ist` with two percent bytes, so the safe interpretation is
+"standard PBSB allocation, Wolf-specific modulation payload" rather than
+"Wolf-proprietary PBSB".
+
 **Falsifiable:** Both bytes should be in range 0--100 (percent0 encoding). Values above 100 indicate decode error or a different wire type.
 
 ---
@@ -100,7 +134,9 @@ QQ ZZ 05 04 NN [stellgradist:percent0:1B] [stellgradmax:percent0:1B] CRC
 
 **Statuswaermeanforderung (Heat Request Status, Regulator -> Burner)**
 
-This is the heat demand message from the Wolf regulator (at PB=0x50) to the burner controller (at PB=0x08). The 10-state enum is substantially richer than a standard binary heat-request signal.
+This is the heat demand message from the Wolf regulator/sender at address
+`0x50` to the burner controller at address `0x08`. The 10-state enum is
+substantially richer than a standard binary heat-request signal.
 
 - **Type:** `w` (write)
 - **ID:** none (`-`)
@@ -134,6 +170,11 @@ QQ ZZ 05 07 NN [status:UCH:1B] [kesselsolltemp:1B] [solldruck:...] CRC
 
 **Evidence:** ulda -> all.csv [line 13](https://github.com/ulda/ebusd-configuration/blob/6ef5eb6cd12548f7b0e33386bef56838594e0037/ebusd-22.4.x/de/wolf/all.csv#L13)
 
+**Standard-service note:** PBSB `0507` is the standard Burner Control channel-B
+operational-data slot for controller-to-burner data. Wolf reuses the standard
+first-byte heat-request position but extends the enum beyond the generic
+standard values with composite states such as `0x66` and `0xBB`.
+
 **Falsifiable:** Status byte value should always be one of the 10 listed hex values. Any other value (e.g. `0x11`, `0x33`) indicates an undocumented state or parsing error.
 
 ---
@@ -159,13 +200,21 @@ QQ ZZ 08 00 NN [kesselsolltemp:temp2:2B LE] [leistungszwang:1B] [status:1B] CRC
 
 **Evidence:** ulda -> all.csv [line 4](https://github.com/ulda/ebusd-configuration/blob/6ef5eb6cd12548f7b0e33386bef56838594e0037/ebusd-22.4.x/de/wolf/all.csv#L4) (broadcast), [line 27](https://github.com/ulda/ebusd-configuration/blob/6ef5eb6cd12548f7b0e33386bef56838594e0037/ebusd-22.4.x/de/wolf/all.csv#L27) (write+broadcast)
 
+**Standard-service note:** PBSB `0800` is the standard
+Controller-to-Controller target-values allocation. The Wolf profile documented
+here is shorter than the generic standard payload and should be decoded as a
+Wolf-specific profile of that standard command, not as a manufacturer-specific
+PB family.
+
 **Falsifiable:** kesselsolltemp decoded as temp2 (divide by 16) should yield a plausible boiler setpoint, typically 40--90 degrees C. Raw value outside `0x0280`--`0x05A0` would indicate a different encoding.
 
 ---
 
 ## 3. Register Access (5022/5023)
 
-Service parameter read/write using 3-byte CRC-addressed IDs. Distinct from Kromschroeder's 5000/5001 (same PB=0x50 manufacturer byte, different SB opcodes).
+Service parameter read/write using 3-byte CRC-addressed IDs. Distinct from
+Kromschroeder's `5000`/`5001` use of the same manufacturer-specific primary
+command byte (`PB=0x50`) with different secondary opcodes.
 
 ### 3.1 Wire Format
 
@@ -225,7 +274,10 @@ The write ID is the **first 2 bytes** of the 5022 read ID; the third byte (param
 
 ## 4. Solar Extensions (5014, 5017, 5018)
 
-All three PBSBs use PB=0x50 (Wolf solar module address) and type `w` (write/broadcast from solar module to bus). They carry real-time solar operational data.
+All three PBSBs use manufacturer-specific `PB=0x50` and type `w`
+(write/broadcast from the Wolf solar module to the bus). They carry real-time
+solar operational data. The sender address is also commonly `0x50`, but that is
+separate from the `PB=0x50` command byte.
 
 ### 4.1 PBSB 5014 -- Solar Status + Mixer Setpoint
 
@@ -297,7 +349,11 @@ QQ ZZ 50 18 NN [leistung:D2B:2B signed] [ertraghigh:1B] [ertragsummelow:1B] CRC
 
 ## 5. PB=0x50 Disambiguation
 
-PB=0x50 is shared between Wolf (MF=0x19) and Kromschroeder (MF=0x50). The opcode spaces are non-overlapping:
+`PB=0x50` is a manufacturer-specific primary command byte used by multiple
+vendor profiles. It is not itself a manufacturer ID. Wolf devices are identified
+by the standard `0x07 0x04` manufacturer byte `0x19`; Kromschroeder material
+uses different identity metadata while also defining `PB=0x50` opcodes. The
+opcode spaces are non-overlapping:
 
 | PBSB | Manufacturer | Role |
 |------|-------------|------|
@@ -310,7 +366,11 @@ PB=0x50 is shared between Wolf (MF=0x19) and Kromschroeder (MF=0x50). The opcode
 | 5022 | Wolf | Service parameter read |
 | 5023 | Wolf | Service parameter write |
 
-No physical overlap is possible in practice: Wolf's solar MC at 0x50 and Kromschroeder's em1 at 0x50 cannot co-exist on the same eBUS ring. ebusd disambiguates by ident (PBSB 0704) manufacturer byte.
+No physical overlap is possible in practice: Wolf's solar MC at address `0x50`
+and Kromschroeder's em1 at address `0x50` cannot co-exist on the same eBUS
+ring. ebusd disambiguates profiles through the standard identification service
+(`PBSB 0704`) manufacturer byte and device ID, not by treating `PB=0x50` as a
+manufacturer ID.
 
 See also: [`kromschroeder-5000.md`](../weishaupt/kromschroeder-5000.md) for the Kromschroeder side of this disambiguation.
 
@@ -322,7 +382,9 @@ See also: [`kromschroeder-5000.md`](../weishaupt/kromschroeder-5000.md) for the 
 
 - Wolf boilers occupy the same eBUS address slots as Vaillant (0x08, 0x50) -- physically incompatible on the same bus.
 - The 5022/5023 service parameter set (25 reads, 14 writes) covers the same operational surface as Helianthus reads from Vaillant via B524/B555: temperatures, pump states, blower RPM, flow rate, burner hours/starts. This is the closest non-Vaillant analogue to the Helianthus semantic adapter.
-- The 0503/0504/0507 broadcast messages provide real-time burner status equivalent to the Vaillant BAI00 broadcasts.
+- The `0503`/`0504`/`0507` messages use standard eBUS Burner Control PBSB
+  allocations with Wolf-specific payload profiles and provide real-time burner
+  status equivalent to the Vaillant BAI00 broadcasts.
 - **Blocker:** Wolf MF=0x19 requires a separate semantic adapter. No code path is shared with Vaillant MF=0xB5.
 - **Recommendation:** Document as "manufacturer expansion track candidate." No issues to open now.
 
