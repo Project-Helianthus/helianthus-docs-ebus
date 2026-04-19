@@ -42,8 +42,29 @@ top-level members:
    is available, otherwise an empty typed body for that method.
 3. `error`: the typed error shape.
 
-The `error` member is optional and MUST be present only on failure.
-Successful responses MUST NOT include `error: null`.
+The `error` member is tolerated in two shapes on success to preserve
+wire compatibility with the pre-existing Helianthus MCP envelope
+baseline:
+
+- MAY be omitted entirely on success, or
+- MAY be emitted as `error: null` on success.
+
+Implementations of the first-delivery `ebus_standard` surfaces MUST
+accept both shapes when consuming envelopes, and producers MUST pick
+one shape and keep it stable per surface (covered by golden fixtures).
+When `error` is present, it MUST be either `null` or a structured
+object as defined below; `error` MUST NOT be an empty string or any
+non-object primitive.
+
+This rule is a reconciliation with, not a departure from, the existing
+envelope baseline documented in
+[`architecture/mcp-first-development.md`](../mcp-first-development.md)
+("MCP Contract Baseline") which lists `error` as "null or structured",
+and in [`api/mcp.md`](../../api/mcp.md) ("Shared Request and Envelope
+Rules") which enumerates `error` as part of the standard envelope.
+Those documents remain the canonical baseline for the wire contract;
+this chapter narrows acceptable shapes and emission discipline for the
+`ebus_standard` first-delivery surfaces without changing the baseline.
 
 ### `meta`
 
