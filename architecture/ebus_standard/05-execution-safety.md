@@ -135,3 +135,72 @@ Attribution: canonical plan
 The first-delivery whitelist is a compile-time constant. Configuration,
 operator commands, feature flags, environment variables, registry
 records, and portal state MUST NOT widen it at runtime.
+
+## Runtime Enforcement
+
+Milestone reference: `M3_PROVIDER` (canonical plan, see "Milestone Plan").
+
+The policy described above is realised at runtime by the generic
+`ebus_standard` provider delivered in `helianthus-ebusreg`. Runtime
+enforcement MUST be default-deny: the policy module is not advisory, it
+is the gate that catalog-driven method invocation passes through.
+
+### Enforcement Boundary
+
+`provider.Invoke()` (the generic `ebus_standard` provider entry point)
+is the default-deny enforcement boundary. Every catalog-driven
+invocation inside the `ebus_standard` namespace MUST traverse this
+boundary. Bypassing the provider entry point to reach a catalog method
+by a side channel is a contract violation and MUST be rejected by
+namespace-isolation tests.
+
+The enforcement boundary consults the shared execution-policy module
+defined in [`#single-policy-function`](#single-policy-function); it
+does not re-implement safety-class logic.
+
+### `ErrSafetyClassDenied`
+
+An exported sentinel error, `ErrSafetyClassDenied`, is returned by
+`provider.Invoke()` when a caller's combination of catalog
+`safety_class` and `caller_context` resolves to a denial under the
+default-deny policy. The sentinel:
+
+1. Is exported from the `ebus_standard` catalog / provider surface in
+   `helianthus-ebusreg`.
+2. Is stable across patch versions of the provider. Renames or
+   replacements are a new locked-plan decision, not a code change.
+3. Carries enough structured context (catalog identity tuple, caller
+   context, resolved safety class) for audit records to satisfy the
+   Audit Requirement above.
+4. Is used by both direct provider callers and `rpc.invoke` denial
+   parity tests. The parity tests MUST confirm that identical input
+   produces the same terminal error class.
+
+### safety_class → Runtime Behaviour
+
+The following table is the normative runtime mapping for calls that
+enter `provider.Invoke()` from any caller context OTHER than the
+`system_nm_runtime` whitelist. The whitelist described in
+[`#system_nm_runtime-whitelist`](#system_nm_runtime-whitelist) is the
+only path that can widen the accept set, and only by full catalog
+identity, never by safety class alone.
+
+| `safety_class` | Runtime behaviour | Sentinel |
+|---|---|---|
+| `read_only_safe` | allowed | — |
+| `read_only_bus_load` | allowed | — |
+| `mutating` | denied | `ErrSafetyClassDenied` |
+| `destructive` | denied | `ErrSafetyClassDenied` |
+| `broadcast` | denied | `ErrSafetyClassDenied` |
+| `memory_write` | denied | `ErrSafetyClassDenied` |
+
+For `caller_context=system_nm_runtime` the table above is extended by
+the compile-time whitelist in
+[`#system_nm_runtime-whitelist`](#system_nm_runtime-whitelist).
+Safety-class acceptance remains necessary but not sufficient: matching
+MUST be on the full 14-axis catalog identity, not on PB/SB or safety
+class alone.
+
+No other caller context widens the accept set. Future caller contexts
+are a new locked-plan decision, per
+[`#no-runtime-widening`](#no-runtime-widening).
