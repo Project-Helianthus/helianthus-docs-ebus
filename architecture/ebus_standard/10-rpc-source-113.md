@@ -25,8 +25,35 @@ SHA-256 `9e0a29bb76d99f551904b05749e322aafd3972621858aa6d1acbe49b9ef37305`.
 Every gateway-originated `ebus.v1.rpc.invoke` frame MUST use source byte
 `113` (`0x71`).
 
-The source byte is not a caller-provided MCP parameter. User-facing MCP
-input MUST NOT be allowed to override it.
+### Scope: gateway-internal invocation only
+
+This invariant is a **gateway-internal** constraint. It does not change
+the public `rpc.invoke` wire shape documented in
+[`api/mcp.md`](../../api/mcp.md) ("RPC Method Reference"), where
+`source` is defined as a caller-provided required parameter of
+`ebus.v1.rpc.invoke`. The `source` parameter continues to exist in the
+API exactly as documented.
+
+The invariant narrows caller behaviour along two axes:
+
+1. **Gateway as caller.** When `helianthus-ebusgateway` itself invokes
+   `ebus.v1.rpc.invoke` from its own code paths (for example NM
+   broadcasts, provider dispatch, internal semantic probes, or any
+   other gateway-originated live traffic), the gateway's code MUST set
+   `source = 113` (`0x71`). Gateway-internal call sites MUST NOT
+   construct, forward, or propagate any other source byte into
+   `rpc.invoke` frames.
+2. **External callers.** External MCP clients invoking
+   `ebus.v1.rpc.invoke` pass `source` per the API contract. The gateway
+   verifies and authorizes such calls per its own policy (safety class,
+   allow_dangerous, idempotency_key, etc.), but it does not rewrite the
+   caller-provided `source`. The gateway MAY reject an external caller
+   whose `source` conflicts with project policy; it MUST NOT silently
+   re-label the traffic as `0x71`.
+
+The effect is that every `rpc.invoke` frame whose origin is the gateway
+process carries `0x71` in the source byte, while the public API wire
+shape of `ebus.v1.rpc.invoke` is unchanged.
 
 ## Rationale
 
@@ -48,8 +75,10 @@ participants.
 ## Enforcement
 
 The implementation MAY choose any enforcement mechanism that makes the
-invariant non-bypassable at the `rpc.invoke` call site. Acceptable
-mechanisms include:
+invariant non-bypassable at the gateway-internal `rpc.invoke` call
+sites described above. Enforcement applies to gateway-originated
+construction paths; it is not a rewrite of caller-supplied `source` on
+external `ebus.v1.rpc.invoke` requests. Acceptable mechanisms include:
 
 - a compile-time constant used by the only frame-construction path
 - a centralized helper that injects `0x71` and rejects conflicting input
