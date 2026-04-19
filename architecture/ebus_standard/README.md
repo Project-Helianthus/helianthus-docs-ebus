@@ -38,6 +38,7 @@ Attribution: canonical plan
 | [`09-mcp-envelope.md`](./09-mcp-envelope.md) | M4 MCP envelope contract, deterministic `data_hash`, golden fixture discipline |
 | [`10-rpc-source-113.md`](./10-rpc-source-113.md) | M4 `rpc.invoke` gateway source byte invariant |
 | [`11-m4b-semantic-lock.md`](./11-m4b-semantic-lock.md) | M4B semantic lock of read & decode surfaces (envelope, error, safety_class, decode scaffold, catalog version) |
+| [`12-m4b2-responder-decision.md`](./12-m4b2-responder-decision.md) | M4b2 responder go/no-go decision + capability signal contract (ENH/ENS GO, ebusd-tcp BLOCKED, meta.capabilities.responder v1.minor additive) |
 
 ## Related Source Documents
 
