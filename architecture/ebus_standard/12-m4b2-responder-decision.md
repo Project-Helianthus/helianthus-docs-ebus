@@ -144,10 +144,16 @@ Field semantics:
   - `transports[].surfaces`: subset of the L7 surfaces the catalog declares
     as responder-emittable; empty when `scope == none`.
   - `transports[].reason`: required when `state == blocked`; enum at v1.1:
-    `{command_bridge_no_companion_listen, timing_unavailable,
-    policy_denied}`. MUST be `null` when `state == supported`. Enum is
-    locked-open per §6 — new reasons MAY be added under a later
-    `contract.minor` bump.
+    `{command_bridge_no_companion_listen, timing_unavailable}`. MUST be
+    `null` when `state == supported`. Enum is locked-open per §6 — new
+    reasons MAY be added under a later `contract.minor` bump, but the
+    enum is **scoped to transport-capability conditions only**. Per-request
+    authorization failures MUST NOT be expressed via this field; they
+    flow through `ErrSafetyClassDenied` with audit `outcome=policy_denied`
+    per §5. In particular, `policy_denied` is **forbidden** as a
+    `transports[].reason` value — conflating the two channels would break
+    audit parity and mislead consumers that treat blocked reasons as
+    static transport constraints.
 
 ### §4.3 Consumer rule (fail-closed)
 
@@ -363,7 +369,7 @@ any future spike.
   - `surfaces[]` per-transport (Codex) for introspection.
   - `scope` as single authorization signal (Claude) — no redundant
     `responder_available` boolean.
-  - Machine-readable `reason` enum (union of both).
+  - Machine-readable `reason` enum (union of both), scoped to transport-capability conditions only; per-request authorization denials flow exclusively through `ErrSafetyClassDenied` / audit `outcome=policy_denied` (no cross-channel leak).
   - `ErrResponderTransportUnavailable` construction-time sentinel (both).
 - **Supersedes**: nothing (first M4b2 artifact).
 - **Amendment policy**: changes to §3 / §4.1-4.4 / §5 / §7 require a
