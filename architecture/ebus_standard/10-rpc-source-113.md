@@ -46,14 +46,20 @@ The invariant narrows caller behaviour along two axes:
 2. **External callers.** External MCP clients invoking
    `ebus.v1.rpc.invoke` pass `source` per the API contract. The gateway
    verifies and authorizes such calls per its own policy (safety class,
-   allow_dangerous, idempotency_key, etc.), but it does not rewrite the
-   caller-provided `source`. The gateway MAY reject an external caller
-   whose `source` conflicts with project policy; it MUST NOT silently
-   re-label the traffic as `0x71`.
+   allow_dangerous, idempotency_key, etc.) and MUST NOT rewrite the
+   caller-provided `source`. External callers MUST supply
+   `source = 113` (`0x71`); the gateway MUST reject any external
+   `ebus.v1.rpc.invoke` request whose `source` is not `0x71` with an
+   explicit error before any frame reaches the bus. Silent re-labelling
+   of non-`0x71` traffic as `0x71` is forbidden, and silent forwarding
+   of non-`0x71` traffic to the bus is equally forbidden.
 
-The effect is that every `rpc.invoke` frame whose origin is the gateway
-process carries `0x71` in the source byte, while the public API wire
-shape of `ebus.v1.rpc.invoke` is unchanged.
+The effect is that every `rpc.invoke` frame that reaches the bus —
+whether constructed internally by the gateway or relayed from an
+external MCP caller — carries `0x71` in the source byte. Non-`0x71`
+external requests are rejected, not forwarded. The public API wire
+shape of `ebus.v1.rpc.invoke` is unchanged; the `source` parameter
+remains caller-provided, but its only accepted value is `0x71`.
 
 ## Rationale
 
@@ -74,20 +80,32 @@ participants.
 
 ## Enforcement
 
-The implementation MAY choose any enforcement mechanism that makes the
-invariant non-bypassable at the gateway-internal `rpc.invoke` call
-sites described above. Enforcement applies to gateway-originated
-construction paths; it is not a rewrite of caller-supplied `source` on
-external `ebus.v1.rpc.invoke` requests. Acceptable mechanisms include:
+Enforcement is mandatory on two construction paths:
 
-- a compile-time constant used by the only frame-construction path
-- a centralized helper that injects `0x71` and rejects conflicting input
-- a linter or static check that forbids ad-hoc source-byte construction
-  in the gateway invoke path
+1. **Gateway-internal construction.** The implementation MAY choose any
+   mechanism that makes the invariant non-bypassable at the
+   gateway-internal `rpc.invoke` call sites described above. Acceptable
+   mechanisms include:
 
-The enforcement mechanism is implementation-owned, but the outcome is
-normative: gateway `rpc.invoke` traffic uses `0x71`, and non-`0x71`
-gateway source construction is rejected before it reaches the bus.
+   - a compile-time constant used by the only frame-construction path
+   - a centralized helper that injects `0x71` and rejects conflicting
+     input
+   - a linter or static check that forbids ad-hoc source-byte
+     construction in the gateway invoke path
+
+2. **External caller admission.** The gateway MUST reject any external
+   `ebus.v1.rpc.invoke` request whose caller-supplied `source` is not
+   `0x71`. Rejection MUST happen at request admission, before the
+   request reaches any bus-facing construction path, and MUST surface
+   as an explicit typed error to the caller. The gateway MUST NOT
+   rewrite a non-`0x71` caller `source` to `0x71`, and MUST NOT
+   silently forward non-`0x71` traffic to the bus.
+
+The enforcement mechanism on path 1 is implementation-owned, but the
+outcome on both paths is normative: every `rpc.invoke` frame reaching
+the bus uses `0x71`, gateway-internal non-`0x71` construction is
+rejected before it reaches the bus, and external non-`0x71`
+`ebus.v1.rpc.invoke` requests are rejected at admission.
 
 ## Test Requirement
 
