@@ -40,7 +40,7 @@ This lock covers, exactly and exhaustively:
 2. The JSON shape of `meta.capabilities.responder` (fields, types,
    defaults, null-semantics).
 3. The invariants I1 through I8 that relate `active` to `transports[]`.
-4. The fail-closed consumer rule (six normative MUST clauses).
+4. The fail-closed consumer rule (seven normative MUST clauses).
 5. The enum surfaces at `v1.1`: `surfaces`, `reason`, `state`, `scope`.
 6. The subtree-version policy (`responder.version`) and its orthogonality
    to `meta.contract.minor`.
@@ -165,7 +165,7 @@ Consumers MUST gate current-request responder behaviour on the `active`
 sub-object only. `transports[]` is profile data and MUST NOT be used to
 authorise responder emission on the current request.
 
-The six fail-closed MUST clauses:
+The seven fail-closed MUST clauses:
 
 1. **Absence of `meta.capabilities.responder`** ⇒ treat as
    `active.scope = none`. No responder invocation attempted.
@@ -187,10 +187,26 @@ The six fail-closed MUST clauses:
    surface it as a success-path signal. Unknown `transports[].state` and
    unknown `transports[].reason` strings degrade to fail-closed per the
    same rule.
+7. **Unknown `active.transport` string** (any value not in the
+   enumerated set at the consumer's build-time awareness) ⇒ treat as
+   `active.scope = none` fail-closed **regardless of what
+   `active.scope` actually says**. The consumer MUST NOT attempt
+   responder invocation even if `active.scope ∈ {full, partial}`; the
+   unknown-transport fail-closed override takes precedence over a
+   known-good scope value. The consumer MAY log the unknown transport
+   for diagnostics, MUST NOT surface it as a success-path signal, and
+   MAY render a transport-switch affordance drawn from `transports[]`
+   (informational only, per rule 5). This rule exists to close the
+   forward-minor gap where a producer at a later `contract.minor` emits
+   a new transport enum value (e.g. future `udp-plain`) paired with a
+   known non-`none` scope: without this explicit override a consumer
+   implementing only rule 6 could infer responder capability from
+   `scope = "partial"` alone, contradicting the §6.2 fail-closed intent
+   for non-enumerated transports.
 
 These clauses are the load-bearing consumer contract for M5_PORTAL
 (vrc-explorer) and M5b_HA_NOOP_COMPAT (ha-integration). Consumer
-regression tests MUST cover all six clauses.
+regression tests MUST cover all seven clauses.
 
 ## §5 — Enum catalogue at v1.1
 
@@ -301,7 +317,9 @@ envelope while `responder.version` remains `"v1"`:
   `transports[]` row **and** a matching `surfaces[]` population or an
   explicit `blocked`/`unknown` state. Omission-as-unknown is NOT a
   permitted encoding; consumers that encounter a non-enumerated
-  `active.transport` fail closed per §4 rule 6.
+  `active.transport` fail closed per §4 rule 7 (unknown-transport
+  override) regardless of any known non-`none` `active.scope` value
+  accompanying it.
 - A new `reason` or `refusal.code` value (new transport-capability
   condition).
 - A new `state` value (e.g. a future `degraded`).
@@ -339,7 +357,12 @@ The capability-signal forward-compat invariants mandated by M4B
 - Missing `meta.capabilities.responder` key entirely.
 
 All of the above MUST parse without error under the canonical consumer
-decoder and MUST degrade to fail-closed per §4.
+decoder and MUST degrade to fail-closed per §4. Specifically: unknown
+`active.transport` degrades per §4 rule 7 (with scope-override
+precedence); unknown `active.scope` per §4 rule 3; unknown
+`active.refusal.code`, unknown `transports[].state`, and unknown
+`transports[].reason` per §4 rule 6; missing key entirely per §4
+rule 1.
 
 ## §7 — Relationship to M4B lock
 
@@ -436,7 +459,18 @@ exist continuously:
    This fixture carries an unknown `active.transport`, unknown
    `active.scope`, unknown `state`, and unknown `reason` simultaneously
    and MUST parse under the canonical consumer decoder with every
-   unknown preserved.
+   unknown preserved. The conformance-test suite MUST additionally
+   include a **forward-compat consumer test** asserting §4 rule 7:
+   a synthetic payload with `active.transport = "future_transport"`
+   (any value outside the `v1.1` enum) AND `active.scope = "partial"`
+   (a known non-`none` value) ⇒ the canonical consumer decoder MUST
+   NOT invoke responder emission. This test guards the unknown-transport
+   scope-override precedence that distinguishes rule 7 from rule 6. If
+   `forward_compat_synthetic_v1_1.golden.json` does not already pair an
+   unknown `active.transport` with a known non-`none` `active.scope`,
+   an additional golden (or an in-test synthetic) MUST be introduced;
+   this is a follow-up obligation on the producer side to be tracked
+   separately.
 4. **Envelope golden fixtures** — the four M4B surface goldens
    (`testdata/services_list.golden.json`,
    `testdata/commands_list_pb03.golden.json`,
