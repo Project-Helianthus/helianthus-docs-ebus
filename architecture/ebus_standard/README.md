@@ -5,6 +5,15 @@ Milestone: M0_DOC_GATE
 Plan reference: ebus-standard-l7-services-w16-26.locked/00-canonical.md
 Canonical SHA-256: 9e0a29bb76d99f551904b05749e322aafd3972621858aa6d1acbe49b9ef37305
 
+## Completion status
+
+The first-delivery `ebus_standard` L7 namespace plan (cruise-run meta
+`Project-Helianthus/helianthus-execution-plans#14`) completed 2026-04-20
+with 17 milestones merged. Transport matrix:
+`helianthus-ebusgateway/matrix/M6a-transport-matrix.md` (anchor commit
+`686dfaf0`, helianthus-ebusgateway#514). BENCH-REPLACE operator
+follow-up: pending (matrix §7 status `PLACEHOLDER`).
+
 ## Purpose
 
 This directory freezes the first normative documentation set for the
@@ -39,6 +48,7 @@ Attribution: canonical plan
 | [`10-rpc-source-113.md`](./10-rpc-source-113.md) | M4 `rpc.invoke` gateway source byte invariant |
 | [`11-m4b-semantic-lock.md`](./11-m4b-semantic-lock.md) | M4B semantic lock of read & decode surfaces (envelope, error, safety_class, decode scaffold, catalog version) |
 | [`13-responder-capability-signal.md`](./13-responder-capability-signal.md) | M4D normative lock of `meta.capabilities.responder` (shape, invariants I1-I8, fail-closed consumer rule, enum catalogue at v1.1, subtree version policy) |
+| [`14-transport-matrix-cross-reference.md`](./14-transport-matrix-cross-reference.md) | M6b pointer to the canonical transport matrix artifact in helianthus-ebusgateway (section pointers §3-§7, BENCH-REPLACE status) |
 
 ## Related Source Documents
 
