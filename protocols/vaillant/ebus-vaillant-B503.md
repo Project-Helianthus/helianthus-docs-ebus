@@ -38,13 +38,23 @@ namespace.
 
 ```text
 Request payload (normative baseline — all selectors start with these 2 bytes):
-  family   : byte     # 0x00 current-read | 0x01 history-lookup | 0x02 clear-command
-  selector : byte     # 0x01 error        | 0x02 service        | 0x03 HMU live-monitor
+  family   : byte     # 0x00 current | 0x01 history-lookup | 0x02 clear-command
+  selector : byte     # 0x01 error   | 0x02 service        | 0x03 HMU live-monitor
 ```
 
 The `family` byte classifies the request CLASS; its value is not itself a
 history index. `selector` classifies the data plane (error / service / HMU
 live-monitor). The two bytes together identify the row in §3.
+
+**The `family` byte is NOT safety-bearing.** Invoke-safety classification
+(`READ` / `SERVICE_WRITE` / `INSTALL_WRITE`) is a property of the *complete*
+`(family, selector)` tuple as enumerated in §3 / §4, NOT of the family byte
+alone. In particular, `family=0x00` includes both `READ` selectors
+(`00 01`, `00 02`) and the `SERVICE_WRITE` live-monitor selector
+(`00 03`). Implementations MUST derive invoke safety from the §3 catalog
+lookup (or equivalent decoder-table entry), never from the family byte in
+isolation. A gateway that treats `family=0x00` as passive-by-default would
+bypass the session gating required in §6–§7 for `00 03`.
 
 **History reads** (`family = 0x01`, selectors `Errorhistory` / `Servicehistory`)
 are indexable. Per `LOCAL_TYPESPEC`, the response carries an echoed `index`
