@@ -31,10 +31,12 @@ Evidence labels used throughout:
 
 ## 2. Wire Shape
 
-`B503` requests are **always** a two-byte selector. The request payload is
-opaque to `protocol.Frame`; framing, CRC, escaping, and bus-transaction
-behaviour are unchanged. No new transport semantics are introduced by this
-namespace.
+`B503` requests **always begin with a two-byte `(family, selector)` prefix**.
+The prefix identifies the §3 catalog row; per-selector request lengths MAY
+extend beyond 2 bytes (see "History reads" below for the documented
+extension case). The request payload is opaque to `protocol.Frame`;
+framing, CRC, escaping, and bus-transaction behaviour are unchanged. No new
+transport semantics are introduced by this namespace.
 
 ```text
 Request payload (normative baseline — all selectors start with these 2 bytes):
@@ -223,7 +225,7 @@ access.
 |---|---|---|---|
 | `IDLE` | enable request, no owner | `ENABLING` | emit enable frame after poll-quiesce |
 | `ENABLING` | enable ACK received | `ACTIVE` | start 30s idle timer; arm reads |
-| `ENABLING` | ACK timeout / NAK | `DISABLED` | release `liveMonitorMu` |
+| `ENABLING` | ACK timeout / NAK | `DISABLED` | (see release rule below) |
 | `ACTIVE` | read request | `ACTIVE` | reset idle timer |
 | `ACTIVE` | explicit disable | `DISABLED` | emit disable frame after quiesce |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable frame after quiesce |
@@ -231,9 +233,18 @@ access.
 | `EXPIRED` | refresh succeeds | `ACTIVE` | resume; retry budget consumed |
 | `EXPIRED` | refresh → `TRANSPORT_DOWN` | `DISABLED` | surface `TRANSPORT_DOWN` (NOT `SESSION_BUSY`) |
 | `EXPIRED` | refresh → `UNKNOWN` | `DISABLED` | surface `UNKNOWN` (NOT `SESSION_BUSY`) |
-| `DISABLED` | owner cleanup complete | `IDLE` | release `liveMonitorMu`; session may be re-claimed by any client |
-| any | transport disconnect | `DISABLED` | MUST release `liveMonitorMu`; owner cleanup |
-| any | gateway restart | `DISABLED` | MUST release `liveMonitorMu`; owner cleanup; session state is NOT recoverable across restart (no EXPIRED refresh path — restart destroys all handles) |
+| `DISABLED` | owner cleanup complete | `IDLE` | session may be re-claimed by any client |
+| any | transport disconnect | `DISABLED` | owner cleanup |
+| any | gateway restart | `DISABLED` | owner cleanup; session state is NOT recoverable across restart (no EXPIRED refresh path — restart destroys all handles) |
+
+**Lock lifecycle (single assignment):** `liveMonitorMu` is acquired exactly
+once on the `IDLE → ENABLING` transition and released exactly once on
+**entry to `DISABLED`** — regardless of the source state (`ENABLING`,
+`ACTIVE`, `EXPIRED`, or "any" via disconnect/restart). The `DISABLED → IDLE`
+transition does NOT release the mutex; it only marks the session slot as
+re-claimable after cleanup completes. Implementations MUST NOT release the
+mutex at any other transition. This keeps the release rule single-sourced
+and avoids double-unlock panics on timeout/NAK paths.
 
 ## 7. Gateway Operational Contract
 
