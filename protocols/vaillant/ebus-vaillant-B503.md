@@ -237,14 +237,19 @@ access.
 | any | transport disconnect | `DISABLED` | owner cleanup |
 | any | gateway restart | `DISABLED` | owner cleanup; session state is NOT recoverable across restart (no EXPIRED refresh path — restart destroys all handles) |
 
-**Lock lifecycle (single assignment):** `liveMonitorMu` is acquired exactly
-once on the `IDLE → ENABLING` transition and released exactly once on
-**entry to `DISABLED`** — regardless of the source state (`ENABLING`,
-`ACTIVE`, `EXPIRED`, or "any" via disconnect/restart). The `DISABLED → IDLE`
-transition does NOT release the mutex; it only marks the session slot as
-re-claimable after cleanup completes. Implementations MUST NOT release the
-mutex at any other transition. This keeps the release rule single-sourced
-and avoids double-unlock panics on timeout/NAK paths.
+**Lock lifecycle (single assignment, owner-conditional):**
+`liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
+transition. It is released exactly once **on entry to `DISABLED` from a
+held-owner state** — i.e., when the source state is `ENABLING`, `ACTIVE`,
+or `EXPIRED`. The "any" transitions (transport disconnect, gateway
+restart) release the mutex only when FSM was in a held-owner state at the
+time the event fired; if the FSM was already `IDLE` or `DISABLED` (no
+owner), no release occurs. The `DISABLED → IDLE` transition does NOT
+release the mutex; it only marks the session slot as re-claimable after
+cleanup completes. Implementations MUST NOT release the mutex at any
+other transition, and MUST NOT attempt a release when no owner is held.
+This keeps the release single-sourced, owner-conditional, and free of
+double-unlock panics on timeout/NAK paths or disconnect-while-idle events.
 
 ## 7. Gateway Operational Contract
 
@@ -446,7 +451,7 @@ enum B503Availability {
   AVAILABLE
   NOT_SUPPORTED    # device class does not implement B503
   TRANSPORT_DOWN   # transport currently disconnected
-  SESSION_BUSY     # live-monitor session owned by another client
+  SESSION_BUSY     # bounded contention: session held by another client OR in-flight lifecycle ambiguity (see §7.1, §8)
   UNKNOWN          # gateway has not yet determined availability
 }
 ```
