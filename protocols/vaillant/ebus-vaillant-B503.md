@@ -110,8 +110,17 @@ truncate scanning of slot N+1.
 > `first_active_error` is absent.
 
 Home Assistant entity `boiler_active_error` (plan M4) publishes this value
-directly as a decimal integer, or the entity reports `unavailable` if absent
-(see §11 for availability semantics).
+directly as a decimal integer when `first_active_error` is present. When
+`first_active_error` is absent (all five slots `0xFFFF` — i.e. the device
+reports no active fault), the entity state is `None` (rendered as HA
+`unknown`), signalling a healthy "no-active-error" state.
+
+**This is distinct from `unavailable`.** `unavailable` is reserved for
+capability / transport outages per §11 (`TRANSPORT_DOWN`, `UNKNOWN`,
+`NOT_SUPPORTED`). A read that successfully returns five `0xFFFF` slots is a
+positive health signal, NOT an outage: the entity MUST NOT be rendered
+`unavailable` in that case. Conflating the two states would cause
+downstream automations to treat normal operation as device unavailability.
 
 ### 5.3 Worked example (LOCAL_CAPTURE)
 
