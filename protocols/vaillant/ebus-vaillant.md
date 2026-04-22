@@ -3,7 +3,7 @@
 This document is the top-level reference for Vaillant message identifiers (`PB/SB`) observed by Helianthus tooling.
 
 For detailed coverage of selector-heavy identifiers, see:
-- `0xB5 0x03` (B503, error history): [`ebus-vaillant-B503.md`](ebus-vaillant-B503.md)
+- `0xB5 0x03` (B503, diagnostic / service / HMU live-monitor — **normative L7 spec**): [`ebus-vaillant-B503.md`](ebus-vaillant-B503.md)
 - `0xB5 0x04` (B504, GetOperationalData): [`ebus-vaillant-B504.md`](ebus-vaillant-B504.md)
 - `0xB5 0x05` (B505, SetOperationalData): [`ebus-vaillant-B505.md`](ebus-vaillant-B505.md)
 - `0xB5 0x06` (B506, error flags): [`ebus-vaillant-B506.md`](ebus-vaillant-B506.md)
