@@ -169,7 +169,7 @@ stateDiagram-v2
     ACTIVE --> DISABLED: 30s idle timer
     DISABLED --> IDLE: owner cleanup complete
 
-    ACTIVE --> EXPIRED: reconnect / restart / epoch mismatch
+    ACTIVE --> EXPIRED: reconnect / epoch mismatch
     EXPIRED --> ACTIVE: resolver refresh + retry (success)
     EXPIRED --> DISABLED: refresh reveals TRANSPORT_DOWN
     EXPIRED --> DISABLED: refresh reveals UNKNOWN
@@ -231,8 +231,9 @@ access.
 | `EXPIRED` | refresh succeeds | `ACTIVE` | resume; retry budget consumed |
 | `EXPIRED` | refresh → `TRANSPORT_DOWN` | `DISABLED` | surface `TRANSPORT_DOWN` (NOT `SESSION_BUSY`) |
 | `EXPIRED` | refresh → `UNKNOWN` | `DISABLED` | surface `UNKNOWN` (NOT `SESSION_BUSY`) |
+| `DISABLED` | owner cleanup complete | `IDLE` | release `liveMonitorMu`; session may be re-claimed by any client |
 | any | transport disconnect | `DISABLED` | MUST release `liveMonitorMu`; owner cleanup |
-| any | gateway restart | `DISABLED` | MUST release `liveMonitorMu`; owner cleanup |
+| any | gateway restart | `DISABLED` | MUST release `liveMonitorMu`; owner cleanup; session state is NOT recoverable across restart (no EXPIRED refresh path — restart destroys all handles) |
 
 ## 7. Gateway Operational Contract
 
