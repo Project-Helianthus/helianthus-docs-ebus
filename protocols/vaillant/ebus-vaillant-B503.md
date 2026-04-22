@@ -197,14 +197,27 @@ are normative (MUST / MUST NOT / SHOULD).
 
 ### 7.1 Public error model
 
-Three public outcomes exist for `SERVICE_WRITE` and `READ` operations that
-depend on capability state:
+Exactly **two** public outcomes exist for `SERVICE_WRITE` and `READ`
+operations that depend on capability state. Both are members of the
+public `B503Availability` enum (§11) or map onto it:
 
 | Public value | Meaning | When it surfaces |
 |---|---|---|
 | `BUSY` (`SESSION_BUSY`) | Live-monitor session owned by another client, OR bounded lifecycle/contention ambiguity. | Concurrent claim with different `ownership_key`; genuine contention that is not transport loss. |
 | `UNAVAILABLE` (`TRANSPORT_DOWN` / `UNKNOWN` / `NOT_SUPPORTED`) | Capability is not currently usable; distinguish reason per public enum (§11). | Transport disconnected; gateway has not yet determined availability; device class does not implement B503. |
-| `EXPIRED` | **INTERNAL ONLY — never surfaced publicly.** | Transport epoch advanced under an in-flight owner handle. |
+
+#### 7.1.1 Internal-only state (NOT public)
+
+`EXPIRED` is a gateway-internal FSM sub-state (§6.1) and MUST NOT appear
+in any public MCP / GraphQL / portal / HA surface. It exists only inside
+the gateway and is consumed by the resolver refresh-once policy (§7.3):
+
+| Internal value | Where it lives | Public exposure |
+|---|---|---|
+| `EXPIRED` | gateway FSM only | **forbidden** — surfaces as `AVAILABLE` (after successful refresh), `BUSY`, or `UNAVAILABLE` per §8 normalization |
+
+Downstream contract tests (M2a, M2b) MUST assert that no public response
+ever carries `EXPIRED`; any such surface is a gateway bug.
 
 ### 7.2 Quiesce timing bounds (normative)
 
