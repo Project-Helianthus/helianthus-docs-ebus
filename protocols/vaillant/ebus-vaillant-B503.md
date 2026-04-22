@@ -37,10 +37,24 @@ behaviour are unchanged. No new transport semantics are introduced by this
 namespace.
 
 ```text
-Request payload (normative, all selectors):
-  family   : byte     # 0x00 current  | 0x01 history index  | 0x02 clear
-  selector : byte     # 0x01 error    | 0x02 service        | 0x03 HMU live-monitor
+Request payload (normative baseline — all selectors start with these 2 bytes):
+  family   : byte     # 0x00 current-read | 0x01 history-lookup | 0x02 clear-command
+  selector : byte     # 0x01 error        | 0x02 service        | 0x03 HMU live-monitor
 ```
+
+The `family` byte classifies the request CLASS; its value is not itself a
+history index. `selector` classifies the data plane (error / service / HMU
+live-monitor). The two bytes together identify the row in §3.
+
+**History reads** (`family = 0x01`, selectors `Errorhistory` / `Servicehistory`)
+are indexable. Per `LOCAL_TYPESPEC`, the response carries an echoed `index`
+field; the mechanism by which the client SELECTS which history entry to
+retrieve is **device-class dependent** and MAY append additional bytes after
+the two-byte baseline. Implementers MUST consult the per-target decoder in
+`helianthus-ebusgo/protocol/vaillant/b503` and the LOCAL_TYPESPEC / LOCAL_CAPTURE
+evidence for the target device class, and MUST run the falsification test in
+§3 against multiple history indexes on real hardware before locking the
+request encoding for a given target.
 
 Response shape is selector-dependent; see §3 and the `helianthus-ebusgo`
 per-selector struct definitions under `protocol/vaillant/b503`.
