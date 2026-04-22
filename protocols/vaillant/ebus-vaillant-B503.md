@@ -147,7 +147,7 @@ governing how this decimal is surfaced to consumers.
 The gateway runs a single-owner FSM per transport incarnation for selector
 `00 03` (HMU `LiveMonitorMain`). `EXPIRED` is an **internal** sub-state
 emitted only after the transport epoch advances under an in-flight owner
-handle; it MUST NOT appear on any public surface (§7.2).
+handle; it MUST NOT appear on any public surface (§7.1.1, §8, §11).
 
 ```mermaid
 stateDiagram-v2
