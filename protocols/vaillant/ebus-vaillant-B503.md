@@ -306,10 +306,19 @@ live-monitor enable and disable frame. Bounds:
 
 ### 7.4 Ownership release
 
-- On transport disconnect, the gateway MUST release `liveMonitorMu` and
-  transition the FSM to `DISABLED`.
-- On gateway restart, the gateway MUST release `liveMonitorMu` and transition
-  the FSM to `DISABLED`. No state persists across restart.
+Release is owner-conditional (§6.3 "Lock lifecycle"). The release
+obligations below apply **only when an owner is held at the moment the
+event fires**; they are no-ops when the FSM is already `IDLE` or
+`DISABLED`:
+
+- On transport disconnect, the gateway MUST transition the FSM to
+  `DISABLED` and — if an owner was held — release `liveMonitorMu`.
+- On gateway restart, the gateway MUST transition the FSM to `DISABLED`
+  and — if an owner was held — release `liveMonitorMu`. No state persists
+  across restart.
+- If the FSM was already `IDLE` or `DISABLED` at disconnect/restart time,
+  these events are no-ops with respect to the mutex; no release is
+  attempted.
 - `liveMonitorMu` is a **distinct** `sync.Mutex` from the B524 `readMu`.
   Acquisition order when both are needed: `liveMonitorMu` → (optional)
   `readMu`. The reverse order is forbidden.
