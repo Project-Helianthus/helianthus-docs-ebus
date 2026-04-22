@@ -139,7 +139,7 @@ stateDiagram-v2
     ACTIVE --> EXPIRED: reconnect / restart / epoch mismatch
     EXPIRED --> ACTIVE: resolver refresh + retry (success)
     EXPIRED --> DISABLED: refresh reveals TRANSPORT_DOWN
-    EXPIRED --> DISABLED: refresh reveals SESSION_BUSY
+    EXPIRED --> DISABLED: refresh reveals UNKNOWN
 
     note right of EXPIRED
       Internal-only. Never surfaced publicly.
@@ -238,9 +238,12 @@ live-monitor enable and disable frame. Bounds:
 - In `ACTIVE`, if no read request arrives within 30 seconds, the gateway emits
   a disable frame (with quiesce) and transitions to `DISABLED`.
 - The 30s timer resets on every successful read.
-- Idle disable is observable by the client as the capability transitioning
-  from `AVAILABLE` to `NOT_SUPPORTED`-equivalent-while-idle; the client may
-  re-enable by issuing a new live-monitor request.
+- Idle disable transitions the **internal** FSM from `ACTIVE` to `DISABLED`.
+  The **public capability signal** (§10) remains `AVAILABLE` throughout: idle
+  auto-disable is a session-lifecycle event, not a capability change. A client
+  that issues a new live-monitor request simply re-enters `ENABLING`. Idle
+  auto-disable MUST NOT be reported to consumers as `NOT_SUPPORTED`, which is
+  reserved for "device class does not implement B503" (§10).
 
 ### 7.7 Concurrency with B524
 
