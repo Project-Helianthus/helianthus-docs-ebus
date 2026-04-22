@@ -48,7 +48,7 @@ per-selector struct definitions under `protocol/vaillant/b503`.
 ## 3. Selector Catalog (NORMATIVE)
 
 The table below is the full v1 selector set. The `Invoke-Safety` column is the
-authoritative classification applied at the gateway invoke boundary (§6).
+authoritative classification applied at the gateway invoke boundary (§7).
 `Install-write` selectors (`02 01`, `02 02`) are classified `INSTALL_WRITE` and
 MUST NOT be reachable through any public surface in v1 (§9).
 
@@ -71,7 +71,7 @@ gateway MUST consult it at the invoke boundary before dispatching a frame.
 | Class | Semantics | Gateway behaviour |
 |---|---|---|
 | `READ` | Passive-safe, idempotent. No session state. | May be invoked directly via `ebus.v1.rpc.invoke` substrate. |
-| `SERVICE_WRITE` | Side-effectful, stateful. Gated by live-monitor session (§5). | MUST acquire `liveMonitorMu` and respect the FSM in §5. |
+| `SERVICE_WRITE` | Side-effectful, stateful. Gated by live-monitor session (§6). | MUST acquire `liveMonitorMu` and respect the FSM in §6. |
 | `INSTALL_WRITE` | Side-effectful, requires installer authority. | MUST NOT be exposed on any public surface in v1. Negative tests in M2a / M2b / M3 assert absence on MCP, GraphQL, and portal respectively. |
 
 Install-write classification for `02 01` (`Clearerrorhistory`) and `02 02`
@@ -97,7 +97,7 @@ truncate scanning of slot N+1.
 
 Home Assistant entity `boiler_active_error` (plan M4) publishes this value
 directly as a decimal integer, or the entity reports `unavailable` if absent
-(see §10 for availability semantics).
+(see §11 for availability semantics).
 
 ### 5.3 Worked example (LOCAL_CAPTURE)
 
@@ -114,7 +114,7 @@ Decode:
 - Slot 0: `19 01` → LE `0x0119` → decimal `281`.
 - Slots 1..4: `ff ff` → `0xFFFF` → empty.
 
-`first_active_error` = `281`. See §8 for the F.xxx correlation caveat
+`first_active_error` = `281`. See §10 for the F.xxx correlation caveat
 governing how this decimal is surfaced to consumers.
 
 ## 6. Live-Monitor Session
@@ -189,7 +189,7 @@ depend on capability state:
 | Public value | Meaning | When it surfaces |
 |---|---|---|
 | `BUSY` (`SESSION_BUSY`) | Live-monitor session owned by another client, OR bounded lifecycle/contention ambiguity. | Concurrent claim with different `ownership_key`; genuine contention that is not transport loss. |
-| `UNAVAILABLE` (`TRANSPORT_DOWN` / `UNKNOWN` / `NOT_SUPPORTED`) | Capability is not currently usable; distinguish reason per public enum (§10). | Transport disconnected; gateway has not yet determined availability; device class does not implement B503. |
+| `UNAVAILABLE` (`TRANSPORT_DOWN` / `UNKNOWN` / `NOT_SUPPORTED`) | Capability is not currently usable; distinguish reason per public enum (§11). | Transport disconnected; gateway has not yet determined availability; device class does not implement B503. |
 | `EXPIRED` | **INTERNAL ONLY — never surfaced publicly.** | Transport epoch advanced under an in-flight owner handle. |
 
 ### 7.2 Quiesce timing bounds (normative)
@@ -211,7 +211,7 @@ live-monitor enable and disable frame. Bounds:
   retries.
 - On refresh success → retry once; then surface the retry outcome.
 - On refresh revealing `TRANSPORT_DOWN` or `UNKNOWN` → surface that value
-  literally (§10). It MUST NOT be collapsed into `SESSION_BUSY`.
+  literally (§11). It MUST NOT be collapsed into `SESSION_BUSY`.
 - No infinite reconnect loops. Reconnect is driven by the transport layer, not
   by B503 resolvers.
 
@@ -239,11 +239,11 @@ live-monitor enable and disable frame. Bounds:
   a disable frame (with quiesce) and transitions to `DISABLED`.
 - The 30s timer resets on every successful read.
 - Idle disable transitions the **internal** FSM from `ACTIVE` to `DISABLED`.
-  The **public capability signal** (§10) remains `AVAILABLE` throughout: idle
+  The **public capability signal** (§11) remains `AVAILABLE` throughout: idle
   auto-disable is a session-lifecycle event, not a capability change. A client
   that issues a new live-monitor request simply re-enters `ENABLING`. Idle
   auto-disable MUST NOT be reported to consumers as `NOT_SUPPORTED`, which is
-  reserved for "device class does not implement B503" (§10).
+  reserved for "device class does not implement B503" (§11).
 
 ### 7.7 Concurrency with B524
 
@@ -265,7 +265,7 @@ The stable API (GraphQL `B503Availability` enum + MCP error code) exposes:
 - `UNKNOWN`
 
 `EXPIRED` is not a member of this enum and never appears in any public
-payload. See §8 for the normative normalization rules and §10 for the GraphQL
+payload. See §8 for the normative normalization rules and §11 for the GraphQL
 capability-signal contract.
 
 ## 8. Public Normalization Rules
