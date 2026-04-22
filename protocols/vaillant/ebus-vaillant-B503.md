@@ -172,14 +172,40 @@ stateDiagram-v2
 
 ### 6.2 Ownership key
 
+B503 live-monitor ownership has two composition layers:
+
 ```text
-ownership_key = (adapter_instance_id, transport_incarnation_epoch)
+transport_key = (adapter_instance_id, transport_incarnation_epoch)
+session_key   = (transport_key, issuer_token)
 ```
 
-- A second claimant presenting a different `ownership_key` receives `BUSY`.
-- A first-claimant handle whose `transport_incarnation_epoch` has advanced
-  since claim acquisition receives `EXPIRED` (internal) and is auto-refreshed
-  per §7.3 exactly once.
+- `transport_key` is the bus-level identity: at most one live-monitor
+  session may be ACTIVE per `transport_key` (physical bus constraint —
+  HMU cannot multiplex simultaneous live-monitor streams).
+- `issuer_token` is an **opaque, gateway-issued token** returned to the
+  client on successful ENABLE. It scopes session control authority (disable,
+  idle-extend) to the specific caller that claimed the session.
+
+Rules (normative):
+
+| Operation | Required key match | Outcome on mismatch |
+|---|---|---|
+| ENABLE | none (new claim) | succeeds iff FSM is `IDLE`; if any session already `ENABLING`/`ACTIVE`/`EXPIRED` under a different `issuer_token` → `SESSION_BUSY` |
+| DISABLE | full `session_key` must match the active session | `SESSION_BUSY` (caller does not own the session) — prevents session hijacking between clients on the same transport |
+| READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE` — physically there is only one data stream on the bus; denying reads to non-owning clients would serve no safety purpose |
+| Epoch advance under any handle | — | handle → `EXPIRED` (internal); resolver refresh per §7.3 |
+
+The `issuer_token` is opaque to clients; it MUST NOT be derived from
+user-visible identifiers, and MUST be sufficient entropy that a second
+client cannot forge another client's token (e.g., gateway-internal UUID or
+cryptographic nonce). Clients obtain their token from the ENABLE response
+envelope and return it in subsequent DISABLE calls.
+
+This refines plan AD04's baseline `(adapter_instance_id,
+transport_incarnation_epoch)` with a client-scoped control token. The
+refinement is additive: the plan-level transport identity is preserved, and
+the token layer only affects session control (enable/disable), not bus
+access.
 
 ### 6.3 Transitions (normative)
 
@@ -212,7 +238,7 @@ public `B503Availability` enum (§11) or map onto it:
 
 | Public value | Meaning | When it surfaces |
 |---|---|---|
-| `BUSY` (`SESSION_BUSY`) | Live-monitor session owned by another client, OR bounded lifecycle/contention ambiguity. | Concurrent claim with different `ownership_key`; genuine contention that is not transport loss. |
+| `BUSY` (`SESSION_BUSY`) | Live-monitor session already claimed under a different `issuer_token`, OR bounded lifecycle/contention ambiguity. | Another client holds the session (ENABLE/DISABLE mismatch per §6.2); genuine contention that is not transport loss. |
 | `UNAVAILABLE` (`TRANSPORT_DOWN` / `UNKNOWN` / `NOT_SUPPORTED`) | Capability is not currently usable; distinguish reason per public enum (§11). | Transport disconnected; gateway has not yet determined availability; device class does not implement B503. |
 
 #### 7.1.1 Internal-only state (NOT public)
