@@ -541,6 +541,7 @@ Address semantics:
 - `address` is the canonical primary eBUS address for the physical device node.
 - `addresses` contains canonical + alias faces observed for that same device.
 - `device(address:)`, `planes(address:)`, and `methods(address:, plane:)` accept either the canonical address or any alias address from `addresses`.
+- Alias grouping uses stable physical identifiers when available. A shared manufacturer + serial number or manufacturer + MAC address can merge faces even when their eBUS `deviceId` values differ; `deviceId` remains exported as model/provider metadata for the canonical entry.
 
 ### Service Status Notes
 
