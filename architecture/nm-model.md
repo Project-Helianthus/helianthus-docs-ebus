@@ -154,6 +154,14 @@ wire presence.
 exists. Without an address, the gateway cannot construct a valid eBUS
 frame.
 
+For startup ordering on join-capable direct transports, Helianthus MUST
+also satisfy the admission gate frozen in
+[startup-admission-and-discovery.md §2, "Startup Ordering Contract"](./startup-admission-and-discovery.md#startup-ordering-contract):
+passive reconstructor and Joiner warmup complete before any
+non-override active startup traffic, and semantic polling is released
+only after `semanticBootstrapReady` plus `{Joiner-success OR
+Override-set}`.
+
 `FF 02` is payload-less before responder support is available. It
 serves as a partially interrogable failure signal: peers can observe
 that a failure was detected, but cannot query details until the
