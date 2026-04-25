@@ -5,11 +5,18 @@
 This document is the **normative L7 protocol specification** for the Vaillant
 `B503` selector family within the Helianthus `vaillant/b503` namespace. It is
 the `M0_DOC_GATE` deliverable for execution-plans#19 (plan
-`vaillant-b503-namespace-w17-26`, canonical SHA `896a82e7`). Downstream code
+`vaillant-b503-namespace-w17-26`, canonical SHA `86495340`). Downstream code
 milestones `M1_DECODER` (helianthus-ebusgo), `M2a_GATEWAY_MCP` /
 `M2b_GATEWAY_GRAPHQL` / `M5_TRANSPORT_MATRIX` (helianthus-ebusgateway), `M3`
 portal and `M4` Home Assistant MUST cite this document as their doc-gate
 companion.
+
+Amendment-1 (2026-04-25) extends the v1 surface with the `M0b_DOC_DISPATCHER_BRIDGE`
+deliverable (this doc, §12) and the production-dispatch milestone
+`M6_DISPATCHER_BRIDGE` (helianthus-ebusgateway). The amendment adds the
+production dispatcher contract, the AD18 capability-signal 8-state truth
+table, and the AD16 lock-order + epoch-tagged in-flight discipline. All
+amendment-1 content is rendered in §12 and cross-referenced from §13 and §14.
 
 ## 1. Status
 
@@ -17,6 +24,11 @@ companion.
 listed in §3 are locked per plan AD01..AD15 as the v1 delivery surface. The
 wire shape is stable; decoder structure, invoke-safety classification, session
 model, error model, and public-surface normalization rules are frozen for v1.
+
+Amendment-1 (2026-04-25) keeps the v1 wire/safety surface unchanged and
+extends the document with the production dispatcher contract in §12
+(plan AD16 + AD18). The amendment is additive: no v1 selector, FSM, or
+public enum is altered.
 
 Changes to this document require a new plan revision and a corresponding
 doc-gate PR before any downstream code change may land.
@@ -467,7 +479,227 @@ enum B503Availability {
 
 `EXPIRED` is **not** a member of this enum, per §8.
 
-## 12. Evidence Labels (preserved)
+## 12. Production dispatcher contract
+
+This section is the `M0b_DOC_DISPATCHER_BRIDGE` deliverable for execution-plans#19
+amendment-1 and is the doc-gate companion for `M6_DISPATCHER_BRIDGE`
+(helianthus-ebusgateway). It mirrors plan decisions AD16 (production raw-frame
+dispatcher contract) and AD18 (capability-signal 8-state truth table +
+stale-epoch discipline) from plan canonical SHA
+`86495340799be9340dc191c371a49a958f65c357c76a1e0a2974502c8489b508`. The plan
+chunks `13-amendment-1-dispatcher-portal-ux.md` and `10-scope-decisions.md` are
+the canonical source; this section MUST NOT diverge. On conflict, the plan
+wins and this section is updated by a follow-up doc-gate PR.
+
+### 12.1 Dispatcher path overview
+
+```mermaid
+flowchart LR
+    Caller[MCP / GraphQL caller]
+    MCP[mcp_server resolver]
+    Mgr["b503session.Manager<br/>(single-owner FSM, §6)"]
+    Disp[RawFrameDispatcher.Invoke]
+    Router[router.Invoke<br/>shared adaptermux/router substrate]
+    Mux[adaptermux]
+    Bus[(eBUS)]
+
+    Caller --> MCP
+    MCP --> Mgr
+    Mgr --> Disp
+    Disp --> Router
+    Router --> Mux
+    Mux --> Bus
+```
+
+The dispatcher path is single-substrate. There is **no** parallel transport
+path for B503 (AD16). B524 and B525 already traverse the same `router.Invoke`
+substrate; B503 production dispatch reuses that substrate verbatim. A gateway
+configuration that injects any other transport path for B503 is
+non-conforming.
+
+### 12.2 `RawFrameDispatcher.Invoke` contract <a id="rawframedispatcher-invoke-contract"></a>
+
+The dispatcher exposes a single method whose Go signature is fixed:
+
+```go
+Invoke(ctx context.Context, target byte, payload []byte) ([]byte, error)
+```
+
+Normative obligations:
+
+- **Request shape.** `target` is the bus address of the destination slave
+  (e.g. `0x08` for BAI00). `payload` is the L7 request body whose first
+  two bytes are the §2 `(family, selector)` prefix (e.g. `00 01` for
+  `Currenterror`, `01 01` for `Errorhistory`, `00 03` for the HMU
+  live-monitor enable). The dispatcher MUST NOT prepend or rewrite those
+  two bytes — the caller is responsible for emitting the correct §2
+  prefix and any per-selector extensions documented in §3 (e.g. the
+  history-index byte for `01 01` / `01 02`). The namespace bytes
+  `PB=0xB5` / `SB=0x03` are NOT part of `payload`; they are populated
+  by the framing layer when building the `protocol.Frame`
+  (`Primary=0xB5`, `Secondary=0x03`, `Data=payload`) and MUST NOT appear
+  inside `payload` itself. A `payload` that starts with `b5 03` is
+  malformed and the dispatcher MUST reject it (M6 acceptance enforces
+  this).
+- **Response shape.** On success the returned `[]byte` is the decoded L7
+  response payload exactly as delivered by the underlying `router.Invoke`
+  substrate, with no B503-specific stripping or padding.
+- **Cancellation discipline.** The dispatcher MUST honour `ctx.Done()`.
+  Cancellation before bus turnaround MUST surface as an
+  `UPSTREAM_TIMEOUT` per §12.4 with `structured.detail.phase="ctx_canceled"`.
+  In-flight bus traffic that is already on the wire MAY complete and be
+  discarded; the dispatcher MUST NOT block on bus-quiesce after `ctx.Done()`.
+- **Error mapping.** Transport and protocol errors are translated to the
+  caller-visible enum in §12.4. Legitimate B503 protocol errors (NAK from
+  the device) MUST NOT be collapsed into transport-level errors
+  (`TRANSPORT_DOWN`).
+- **Stub forbidden post-M6.** Once `M6_DISPATCHER_BRIDGE` lands, the
+  `b503StubDispatcher{}` injection in `cmd/gateway/vaillant_b503_wiring.go`
+  MUST be removed. The only acceptable post-deploy state is the production
+  dispatcher live; reintroducing a stub fallback is a defect class (AD16).
+
+### 12.3 Shared adaptermux/router routing semantics <a id="shared-router-substrate"></a>
+
+The dispatcher routes through the **same** `router.Invoke` substrate used
+by B524 and B525 (AD16). Implementation rules:
+
+- The B503 dispatcher MUST NOT open its own adaptermux subscription, its
+  own bus session, or any auxiliary transport channel.
+- READ selectors (`00 01`, `01 01`, `00 02`, `01 02`) MAY proceed
+  concurrently with B524 / B525 traffic on the same router (consistent
+  with §7.7).
+- `SERVICE_WRITE` (`00 03`) enable / disable frames serialise via
+  `liveMonitorMu` and the §7.2 quiesce window, but the actual bus
+  transaction is still issued through `router.Invoke`. The router is the
+  one and only bus-access primitive.
+- Transport disconnect MUST be propagated to
+  `b503session.Manager.OnTransportDisconnect()` so the AD04 quiesce-release
+  fires; the dispatcher acts as the propagation site.
+
+### 12.4 Error-mapping table (NORMATIVE) <a id="error-mapping-table"></a>
+
+The dispatcher translates transport and protocol errors to caller-visible
+public surfaces as follows. The `structured.detail` discriminator keys are
+the assertion targets for `M6_DISPATCHER_BRIDGE` tests; M6 tests fail if
+any row collapses to a different public surface or omits the detail keys.
+
+| Transport / protocol error | Caller-visible error | `structured.detail` keys |
+|---|---|---|
+| transport_down (adaptermux disconnected) | `TRANSPORT_DOWN` | `transport_state="down"`, `last_seen_ts=<unix>` |
+| `ctx.Done` before bus turnaround | `UPSTREAM_TIMEOUT` | `timeout_ms=<int>`, `phase="ctx_canceled"` |
+| bus NAK | `UPSTREAM_RPC_FAILED` | `nak_byte=<hex>`, `target=<hex>` |
+| CRC mismatch | `UPSTREAM_RPC_FAILED` | `crc_expected=<hex>`, `crc_got=<hex>` |
+| stale-epoch reply (AD18 row 8) | (frame discarded; caller still pending) | n/a — see §12.7 stale-epoch discipline |
+
+Discriminator rules:
+
+- `TRANSPORT_DOWN` is reserved for transport-level loss. A device NAK is a
+  legitimate B503 protocol response and MUST NOT be reported as
+  `TRANSPORT_DOWN`. A CRC mismatch is a protocol-layer failure and MUST
+  NOT be reported as `TRANSPORT_DOWN` either.
+- `UPSTREAM_TIMEOUT` is reserved for caller-driven cancellation
+  (`ctx.Done`) before the bus has produced a reply. Bus arbitration
+  timeouts that occur after the request reaches the wire are reported as
+  `UPSTREAM_RPC_FAILED` with a `phase="bus_timeout"` detail key (added by
+  M6 if observed; not pre-declared here).
+- `UPSTREAM_RPC_FAILED` is the catch-all for protocol-level failure with
+  a populated discriminator. The discriminator MUST be present; an
+  `UPSTREAM_RPC_FAILED` without `structured.detail` is non-conforming.
+
+### 12.5 Capability-signal 8-state truth table (mirror of AD18) <a id="capability-truth-table"></a>
+
+The `vaillantCapabilities.b503` capability output (§11) follows the 8-state
+truth table below. The plan AD18 entry in
+`vaillant-b503-namespace-w17-26.implementing/10-scope-decisions.md` is the
+canonical source; this table mirrors it for doc-gate completeness. Each
+row is a separate `M6_DISPATCHER_BRIDGE` test target; missing-coverage on
+any row is an automatic merge-gate block.
+
+| # | State | Capability output | Stale-frame discipline |
+|---|---|---|---|
+| 1 | cold-boot, no successful dispatch yet | `UNKNOWN` | n/a |
+| 2 | post-first-success steady state | `AVAILABLE` | n/a |
+| 3 | disconnect during ACTIVE session | `TRANSPORT_DOWN` (literal) | in-flight requests fail `TRANSPORT_DOWN`; no late mutation |
+| 4 | reconnect, before first post-reconnect dispatch | `UNKNOWN` (NOT sticky `AVAILABLE`) | reset to `UNKNOWN` regardless of pre-disconnect state |
+| 5 | reconnect, post-first-success-after-reconnect | `AVAILABLE` | n/a |
+| 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known | n/a |
+| 7 | session-expiry detected | `EXPIRED` internal → AD14 1-retry → `AVAILABLE` OR `TRANSPORT_DOWN` literal | n/a |
+| 8 | stale in-flight completion across epoch rollover | n/a — frame discarded | reply/NAK/timeout from epoch N arriving after reconnect to epoch N+1 MUST be discarded; MUST NOT mutate capability to `AVAILABLE`; MUST NOT satisfy any post-reconnect waiter |
+
+**Forbidden states** (M6 tests assert absence):
+
+- sticky `AVAILABLE` after transport loss;
+- premature `AVAILABLE` before the first real dispatch;
+- silent fallback to `UNKNOWN` once `TRANSPORT_DOWN` is knowable.
+
+`EXPIRED` remains gateway-internal per §7.1.1 and §8; row 7 above describes
+the internal sub-state, not a public capability value.
+
+### 12.6 Lock acquisition order invariant <a id="lock-order"></a>
+
+The gateway uses two B503-related mutexes:
+
+- `liveMonitorMu` — write-class mutex acquired by `b503session.Manager.Enable`,
+  `Read` on the `00 03` selector, and `Disable`. It is **distinct** from
+  the B524 `readMu` (§7.4).
+- `readMu` — the B524 family poll mutex.
+
+**Acquisition order is INVARIANT: `liveMonitorMu → readMu`.** Reversal is a
+defect class (AD16). Concretely, when both mutexes participate in the same
+critical section, callers MUST acquire `liveMonitorMu` BEFORE `readMu`, and
+MUST release in the reverse (LIFO) order. The forbidden orderings — and the
+ones the M6 tracer flags as defects — are:
+
+- entering `liveMonitorMu` while already holding `readMu` (reverse acquisition);
+- entering `liveMonitorMu` while a goroutine on this stack is waiting on `readMu` (deadlock potential under partial overlap).
+
+Holding `liveMonitorMu` and then entering `readMu` is the canonical, allowed
+order and is what `b503session.Manager.Read` does on the `00 03` selector.
+
+`M6_DISPATCHER_BRIDGE` acceptance verifies this mechanically: the test
+harness installs a build-tagged lock tracer/hook on `liveMonitorMu` and
+`readMu` that records every `Lock()` / `Unlock()` with goroutine ID and
+timestamp. Each `M6-CONC-*` concurrency test asserts via the tracer that no
+goroutine ever crossed the forbidden order. `-race` and a 30 s deadlock
+timeout are SECONDARY trip-wires, not the primary proof (AD16 + R3 A1 fix
+in plan §13).
+
+### 12.7 Epoch-tagged in-flight requests <a id="epoch-tagged-inflight"></a>
+
+Per AD18 row 8 (stale-epoch discipline), every B503 dispatch request MUST
+capture the current `b503session.Manager.epoch` value into an in-flight
+request record at issue-time. Reply, NAK, and timeout completion paths
+MUST compare against the **stored** epoch BEFORE waking waiters or
+mutating capability state.
+
+Normative rules:
+
+- Epoch comparison is **request-side metadata**, populated when the
+  request leaves `RawFrameDispatcher.Invoke`. It MUST NOT be re-derived
+  from `Manager` at receive time.
+- A reply / NAK / timeout from epoch N that arrives after the transport
+  has rolled over to epoch N+1 MUST be:
+  1. discarded silently;
+  2. NOT used to mutate the capability signal to `AVAILABLE`;
+  3. NOT used to satisfy any post-reconnect waiter.
+- The discard path MUST NOT inspect the new (epoch N+1) `Manager` state to
+  decide; the request's stored epoch is sufficient on its own.
+
+This is the only correct closure for the AD18 row 8 stale-frame race. A
+completion path that compares against `Manager.epoch` at receive time is
+non-conforming because the epoch may have advanced between request issue
+and reply arrival, allowing a stale frame to satisfy a fresh waiter.
+
+### 12.8 Companion test surface
+
+`M6_DISPATCHER_BRIDGE` acceptance lives in the plan
+(`13-amendment-1-dispatcher-portal-ux.md §M6`); §12.4–§12.7 are the
+assertion targets (error-mapping rows, 8 truth-table tests, 4 `M6-CONC-*`
+lock-tracer tests, stale-epoch in-flight completion test). On disagreement
+between this doc and the plan, the plan wins and a follow-up doc-gate PR
+realigns §12.
+
+## 13. Evidence Labels (preserved)
 
 The evidence labels defined in §1 are used throughout. In particular:
 
@@ -478,7 +710,7 @@ The evidence labels defined in §1 are used throughout. In particular:
 - Future device-class coverage additions MUST cite the evidence label that
   supports them before entering the normative catalog.
 
-## 13. Companion Links (downstream code milestones)
+## 14. Companion Links (downstream code milestones)
 
 | Milestone | Repo | Artefact |
 |---|---|---|
@@ -488,19 +720,30 @@ The evidence labels defined in §1 are used throughout. In particular:
 | `M2b_GATEWAY_GRAPHQL` | `helianthus-ebusgateway` | GraphQL read-only parity + `vaillantCapabilities.b503` signal |
 | `M3_PORTAL` | `helianthus-ebusgateway` | Vaillant pane (errors / service / live-monitor tabs, read-only) |
 | `M4_HA` | `helianthus-ha-integration` | diagnostic sensor `boiler_active_error` + `error_history` attribute, capability-signal-gated |
+| `M6_DISPATCHER_BRIDGE` (amendment-1) | `helianthus-ebusgateway` | production `RawFrameDispatcher` replacing `b503StubDispatcher{}` injection in `cmd/gateway/vaillant_b503_wiring.go`; contract per §12 (PR ref: TBD) |
 
-Dependency DAG (plan AD09):
-`M0 → M1 → M2a → M5 → M2b → {M3, M4}`.
+Dependency DAG (plan AD09 + amendment-1):
+`M0 → M1 → M2a → M5 → M2b → {M3, M4} → M6 → {M7, M8}` with
+`M0b` parallel to `M6` and merge-blocking it.
 
 All downstream PRs MUST include a companion-link reference to this document in
 their PR body.
 
-## 14. References
+## 15. References
 
-- Plan: `helianthus-execution-plans/vaillant-b503-namespace-w17-26.locked/`
-  (canonical SHA `896a82e720b33eefb449ea532570e0a962bfa76504519996825f13d92ec9bb28`).
+- Plan: `helianthus-execution-plans/vaillant-b503-namespace-w17-26.implementing/`
+  (canonical SHA `86495340799be9340dc191c371a49a958f65c357c76a1e0a2974502c8489b508`,
+  amendment-1 locked 2026-04-25). Prior v1.0 baseline canonical SHA was
+  `896a82e720b33eefb449ea532570e0a962bfa76504519996825f13d92ec9bb28`; amendment-1
+  supersedes it.
+- Amendment-1 chunk: [`13-amendment-1-dispatcher-portal-ux.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/vaillant-b503-namespace-w17-26.implementing/13-amendment-1-dispatcher-portal-ux.md)
+  — canonical source for §12 (M0b / M6 / M7 / M8).
+- Decision matrix: [`10-scope-decisions.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/vaillant-b503-namespace-w17-26.implementing/10-scope-decisions.md)
+  — canonical source for AD16 (production dispatcher contract) and AD18
+  (capability-signal 8-state truth table + stale-epoch discipline).
 - Meta-issue: [execution-plans#19](https://github.com/Project-Helianthus/helianthus-execution-plans/issues/19).
-- Doc-gate issue: [docs-ebus#282](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/282).
+- Doc-gate issue (v1.0): [docs-ebus#282](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/282).
+- Doc-gate issue (amendment-1 / M0b): [docs-ebus#288](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/288).
 - Public TypeSpec: [errors_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/errors_inc.tsp)
 - Public TypeSpec: [service_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/service_inc.tsp)
 - Public TypeSpec: [08.hmu.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/08.hmu.tsp)
