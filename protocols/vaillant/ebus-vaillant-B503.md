@@ -581,7 +581,7 @@ any row collapses to a different public surface or omits the detail keys.
 | `ctx.Done` before bus turnaround | `UPSTREAM_TIMEOUT` | `timeout_ms=<int>`, `phase="ctx_canceled"` |
 | bus NAK | `UPSTREAM_RPC_FAILED` | `nak_byte=<hex>`, `target=<hex>` |
 | CRC mismatch | `UPSTREAM_RPC_FAILED` | `crc_expected=<hex>`, `crc_got=<hex>` |
-| stale-epoch reply (AD18 row 8) | (frame discarded; caller still pending) | n/a — see §12.6 stale-epoch discipline |
+| stale-epoch reply (AD18 row 8) | (frame discarded; caller still pending) | n/a — see §12.7 stale-epoch discipline |
 
 Discriminator rules:
 
@@ -637,9 +637,16 @@ The gateway uses two B503-related mutexes:
 - `readMu` — the B524 family poll mutex.
 
 **Acquisition order is INVARIANT: `liveMonitorMu → readMu`.** Reversal is a
-defect class (AD16). Implementations MUST NOT enter `readMu` while holding
-`liveMonitorMu` in the forbidden order, AND MUST NOT enter `liveMonitorMu`
-while waiting on `readMu`.
+defect class (AD16). Concretely, when both mutexes participate in the same
+critical section, callers MUST acquire `liveMonitorMu` BEFORE `readMu`, and
+MUST release in the reverse (LIFO) order. The forbidden orderings — and the
+ones the M6 tracer flags as defects — are:
+
+- entering `liveMonitorMu` while already holding `readMu` (reverse acquisition);
+- entering `liveMonitorMu` while a goroutine on this stack is waiting on `readMu` (deadlock potential under partial overlap).
+
+Holding `liveMonitorMu` and then entering `readMu` is the canonical, allowed
+order and is what `b503session.Manager.Read` does on the `00 03` selector.
 
 `M6_DISPATCHER_BRIDGE` acceptance verifies this mechanically: the test
 harness installs a build-tagged lock tracer/hook on `liveMonitorMu` and
