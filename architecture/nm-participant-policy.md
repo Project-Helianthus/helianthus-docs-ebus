@@ -237,6 +237,25 @@ Reset and rejoin windows are bounded by the NMReset-to-NMNormal
 transition. Once the state machine enters NMNormal, the sustained
 budget applies.
 
+### Discovery-Class Burst Budget
+
+The startup-admission directed discovery phase defined in
+[startup-admission-and-discovery.md](./startup-admission-and-discovery.md#startup-directed-probe-phase)
+uses a distinct **discovery-class** startup burst budget and MUST be
+kept separate from the frozen NM-class sustained and burst numbers
+above. The NM-class policy remains `0.5%` sustained / `2.0%` burst;
+the startup discovery-class allowance is a bounded `2.0%` over a
+`60s` startup window for explicit-target `07 04` confirmation only.
+
+Using the same wire-capacity baseline (`240 bytes/s` at 2400 baud,
+10 bits per byte), `2.0%` corresponds to `4.8 B/s`, operationally
+treated as approximately `5 B/s`. A hard ceiling of
+`probe_count <= 15` over `60s` yields roughly `270-330` wire bytes for
+full `07 04` transactions (`18-22` bytes each), or about
+`4.5-5.5 B/s`, which is the ratified startup-discovery envelope for
+this plan. Post-startup steady-state reverts to the separate
+`1 probe per 15s` limit defined in the startup-admission document.
+
 ### 07 FF Cadence Floor
 
 A minimum of **10 seconds** must elapse between successive

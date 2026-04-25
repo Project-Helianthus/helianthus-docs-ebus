@@ -102,6 +102,13 @@ active confirmation mechanism because:
 Active `07 04` queries are subject to the bus-load policy frozen in
 `architecture/nm-participant-policy.md` (ISSUE-DOC-02, planned).
 
+For startup on join-capable direct transports, these directed `07 04`
+queries are further constrained by
+[startup-admission-and-discovery.md §5, "Directed Probe Phase and Bus-Load Budget"](./startup-admission-and-discovery.md#startup-directed-probe-phase):
+they occur only in the explicit `startup_directed_probe_phase`, only
+against promoted suspects without identity, and have zero intersection
+with the legacy full-range `0x01..0xFD` scan.
+
 ### 07 FE (QueryExistence) -- Bounded and Indirect Only
 
 **Critical constraint:** `07 FE` is NEVER treated as a direct-answer
