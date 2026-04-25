@@ -528,11 +528,19 @@ Invoke(ctx context.Context, target byte, payload []byte) ([]byte, error)
 Normative obligations:
 
 - **Request shape.** `target` is the bus address of the destination slave
-  (e.g. `0x08` for BAI00). `payload` is the complete L7 request body
-  starting with the family/selector prefix defined in §2 (e.g.
-  `b5 03 00 01` for `Currenterror`). The dispatcher MUST NOT prepend or
-  rewrite the family/selector bytes; payload framing is the caller's
-  responsibility.
+  (e.g. `0x08` for BAI00). `payload` is the L7 request body whose first
+  two bytes are the §2 `(family, selector)` prefix (e.g. `00 01` for
+  `Currenterror`, `01 01` for `Errorhistory`, `00 03` for the HMU
+  live-monitor enable). The dispatcher MUST NOT prepend or rewrite those
+  two bytes — the caller is responsible for emitting the correct §2
+  prefix and any per-selector extensions documented in §3 (e.g. the
+  history-index byte for `01 01` / `01 02`). The namespace bytes
+  `PB=0xB5` / `SB=0x03` are NOT part of `payload`; they are populated
+  by the framing layer when building the `protocol.Frame`
+  (`Primary=0xB5`, `Secondary=0x03`, `Data=payload`) and MUST NOT appear
+  inside `payload` itself. A `payload` that starts with `b5 03` is
+  malformed and the dispatcher MUST reject it (M6 acceptance enforces
+  this).
 - **Response shape.** On success the returned `[]byte` is the decoded L7
   response payload exactly as delivered by the underlying `router.Invoke`
   substrate, with no B503-specific stripping or padding.
