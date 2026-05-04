@@ -1,0 +1,293 @@
+{
+  "table_version": "ebus-source-address-table/v1",
+  "normalized_table_hash": "e78954445087f63064818ab60a2739b9a6b9bf0ae0147fbe92aac5ac76592103",
+  "source_files": {
+    "Spec_Prot_7_V1_6_1_Anhang_Ausgabe_1.en.md": {
+      "sha256": "befb1f93d08a29722c0cd6476e6ed64245c9fd5a13267b7057178d4899bd05a5",
+      "line_ranges": [
+        "28-60",
+        "69-77"
+      ],
+      "excerpts": {
+        "28-60": "## 1 Assignment of Master Addresses\n\nThe following address allocation is prescribed for eBUS systems. Addresses not pre-assigned may be freely allocated for special system configurations.\n\n| Address | Priority | Master    | Description                                                       |\n|---------|----------|-----------|-------------------------------------------------------------------|\n| `00H`   | 0        | Master 1  | PC/Modem                                                          |\n| `10H`   | 0        | Master 2  | Heating controller (Heizungsregler)                               |\n| `30H`   | 0        | Master 3  | Heating circuit controller 1 (Heizkreisregler 1)                  |\n| `70H`   | 0        | Master 4  | Heating circuit controller 2 (Heizkreisregler 2)                  |\n| `F0H`   | 0        | Master 5  | Heating circuit controller 3 (Heizkreisregler 3)                  |\n| `01H`   | 1        | Master 6  | Hand programmer / Remote control (Handprogrammiergerät / Fernbedienung) |\n| `11H`   | 1        | Master 7  | Bus interface / Climate controller (Businterface / Klimaregler)   |\n| `31H`   | 1        | Master 8  | Bus interface (Businterface)                                      |\n| `71H`   | 1        | Master 9  | Heating controller (Heizungsregler)                               |\n| `F1H`   | 1        | Master 10 | Heating controller (Heizungsregler)                               |\n| `03H`   | 2        | Master 11 | Burner controller 1 (Feuerungsautomat 1)                          |\n| `13H`   | 2        | Master 12 | Burner controller 2 (Feuerungsautomat 2)                          |\n| `33H`   | 2        | Master 13 | Burner controller 3 (Feuerungsautomat 3)                          |\n| `73H`   | 2        | Master 14 | Burner controller 4 (Feuerungsautomat 4)                          |\n| `F3H`   | 2        | Master 15 | Burner controller 5 (Feuerungsautomat 5)                          |\n| `07H`   | 3        | Master 16 |                                                                   |\n| `17H`   | 3        | Master 17 | *Heating controller (Heizungsregler)*                             |\n| `37H`   | 3        | Master 18 | *Heating controller (Heizungsregler)*                             |\n| `77H`   | 3        | Master 19 | *Heating controller (Heizungsregler)*                             |\n| `F7H`   | 3        | Master 20 | *Heating controller (Heizungsregler)*                             |\n| `0FH`   | 4        | Master 21 | Clock module / Radio clock module (Uhrmodul / Funkuhrmodul)       |\n| `1FH`   | 4        | Master 22 | *Burner controller 6 (Feuerungsautomat 6)*                        |\n| `3FH`   | 4        | Master 23 | *Burner controller 7 (Feuerungsautomat 7)*                        |\n| `7FH`   | 4        | Master 24 | *Burner controller 8 (Feuerungsautomat 8)*                        |\n| `FFH`   | 4        | Master 25 | PC                                                                |\n\n> **Note:** The marked (italic) addresses are reserved for free use; the device types listed there are recommendations.\n",
+        "69-77": "## 2 Assignment of Slave Addresses\n\nThe slave addresses are listed in ascending address order. All grey-highlighted addresses must not be used as slave addresses, as they are reserved.\n\n| Address | Slave     | Description                                                                                             |\n|---------|-----------|---------------------------------------------------------------------------------------------------------|\n| `02H`   | Slave 1   |                                                                                                         |\n| `04H`   |           | Reserved for slave address of master address `FFH`                                                      |\n| `05H`   |           | Reserved for slave address of master address `00H`                                                      |\n"
+      }
+    },
+    "Spec_Prot_12_V1_3_1_E.en.md": {
+      "sha256": "e0073cb088ad617fbb7a953e67f318abc1188bf6b9e9fb309712beb590c4bafc",
+      "line_ranges": [
+        "178-184",
+        "254-256",
+        "320-349",
+        "471-478"
+      ],
+      "excerpts": {
+        "178-184": "#### 4.1.1 Master\n\nA master may start communication with other bus participants. It has to meet certain criteria, i.e. must carry out a bus-arbitration in order to control bus allocation in case of simultaneous bus access action by several masters.\n\nFurthermore, a master possesses a slave address. The slave address of a master results from the addition of a 5 to the master address. (Example: Slave-address of master `0x01` = `0x06`). Provided it supports them, it may be accessed also in slave mode.\n\n**SPECIAL CASE:** The master with the address `0xFF` receives by addition of 5 to its master-address the slave-address `0x04`.\n",
+        "254-256": "### 5.2 The Source Address [QQ]\n\nThe source address is the address of the master that is issuing a telegram. At the same time, it serves for arbitration of a bus conflict. A maximum of 25 source addresses are possible.\n",
+        "320-349": "#### 6.2.2 The Byte-oriented Arbitration Procedure\n\nIn a byte-oriented arbitration procedure the assignment of addresses is of utmost importance.\n\n##### 6.2.2.1 Priority Class and Sub Address\n\nThe address (the 8-bit word) is split in two 4-bit words. The address consists of a priority class (bit.0 to bit.3) and of a sub-address (bit.4 to bit.7). By this measure, it is possible to assign 25 master addresses.\n\n| Participant    | Sub-Address | Priority Class |\n|----------------|-------------|----------------|\n| Participant 1  | 0000        | 0000           |\n| Participant 2  | 0001        | 0000           |\n| Participant 3  | 0011        | 0000           |\n| Participant 4  | 0111        | 0000           |\n| Participant 5  | 1111        | 0000           |\n| Participant 6  | 0000        | 0001           |\n| Participant 7  | 0001        | 0001           |\n| ...            | ...         | ...            |\n| Participant 24 | 0111        | 1111           |\n| Participant 25 | 1111        | 1111           |\n\nAlso with these addresses, it may occur that none of the participants recognises itself, if several participants attempt to access the bus simultaneously. This is illustrated in the following diagram.\n\n##### 6.2.2.2 Collision Remedy\n\nIf several sending-authorised participants attempt to access the bus simultaneously and fail to recognise themselves, these participants withdraw from the bus. Subsequently, each of these participants checks if its address bit.0 to address bit.3 (priority class) matches with the received word. If this is the case, another access attempt will be started following the next SYN-symbol (AUTO-SYN).\n\nWhen the SYN-symbol is sent, all participants that have made no prior attempt to access the bus will recognise that only one word has been sent to the bus between two SYN-symbols. Through word sequence SYN-symbol / Address-symbol / AUTO-SYN-symbol, these participants will be barred and may only attempt to access the bus following the next SYN-symbol. The members that have recognised their priority class before that, will access the bus following the AUTO-SYN symbol.\n\nSince all participants that access the bus in this second round of arbitration have the same priority class, one of them will recognise itself and stay on the bus. The others that do not recognise their priority class will withdraw.\n",
+        "471-478": "### 7.3 Acknowledgement\n\nIf the receiver has received the message correctly, i.e. received CRC and calculated CRC match, it will send a positive acknowledgement (`0x00`). Should, however, the received CRC not match the calculated CRC, the receiver will send a negative acknowledgement (`0xFF`). Broadcast messages are not acknowledged.\n\n### 7.4 Repetition of a Telegram in Case of failed Transmission\n\nIn case a master or slave receives a negative acknowledgement, they will repeat their telegram. The telegram repetition must be generated before the AUTO-SYN facility initiates an AUTO-SYN symbol. To prevent blocking the bus by constant telegram repetitions, the repeat rate is set to the value 1, i.e. repetition is limited to one. In case a repeated message again does not get a positive acknowledgement, the respective telegram is rated as not sent.\n\n"
+      }
+    },
+    "SRC/Spec_Prot_12_V1_3_1_E.md": {
+      "sha256": "c3ed91075c078a78cf9c2141bdb920c416356bb93536c45605ba22eede876ceb",
+      "line_ranges": [
+        "320-349"
+      ],
+      "excerpts": {
+        "320-349": "#### 6.2.2 The Byte-oriented Arbitration Procedure\n\nIn a byte-oriented arbitration procedure the assignment of addresses is of utmost importance.\n\n##### 6.2.2.1 Priority Class and Sub Address\n\nThe address (the 8-bit word) is split in two 4-bit words. The address consists of a priority class (bit.0 to bit.3) and of a sub-address (bit.4 to bit.7). By this measure, it is possible to assign 25 master addresses.\n\n| Participant    | Sub-Address | Priority Class |\n|----------------|-------------|----------------|\n| Participant 1  | 0000        | 0000           |\n| Participant 2  | 0001        | 0000           |\n| Participant 3  | 0011        | 0000           |\n| Participant 4  | 0111        | 0000           |\n| Participant 5  | 1111        | 0000           |\n| Participant 6  | 0000        | 0001           |\n| Participant 7  | 0001        | 0001           |\n| ...            | ...         | ...            |\n| Participant 24 | 0111        | 1111           |\n| Participant 25 | 1111        | 1111           |\n\nAlso with these addresses, it may occur that none of the participants recognises itself, if several participants attempt to access the bus simultaneously. This is illustrated in the following diagram.\n\n##### 6.2.2.2 Collision Remedy\n\nIf several sending-authorised participants attempt to access the bus simultaneously and fail to recognise themselves, these participants withdraw from the bus. Subsequently, each of these participants checks if its address bit.0 to address bit.3 (priority class) matches with the received word. If this is the case, another access attempt will be started following the next SYN-symbol (AUTO-SYN).\n\nWhen the SYN-symbol is sent, all participants that have made no prior attempt to access the bus will recognise that only one word has been sent to the bus between two SYN-symbols. Through word sequence SYN-symbol / Address-symbol / AUTO-SYN-symbol, these participants will be barred and may only attempt to access the bus following the next SYN-symbol. The members that have recognised their priority class before that, will access the bus following the AUTO-SYN symbol.\n\nSince all participants that access the bus in this second round of arbitration have the same priority class, one of them will recognise itself and stay on the bus. The others that do not recognise their priority class will withdraw.\n"
+      }
+    }
+  },
+  "rows": [
+    {
+      "source": "0x00",
+      "priority_index": "p0",
+      "arbitration_nibble": "0x0",
+      "official_description_summary": "PC/Modem",
+      "canonical_description": "PC/Modem",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x05"
+    },
+    {
+      "source": "0x10",
+      "priority_index": "p0",
+      "arbitration_nibble": "0x0",
+      "official_description_summary": "Heating controller",
+      "canonical_description": "Heating regulator",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x15"
+    },
+    {
+      "source": "0x30",
+      "priority_index": "p0",
+      "arbitration_nibble": "0x0",
+      "official_description_summary": "Heating circuit controller 1",
+      "canonical_description": "Heating circuit regulator 1",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x35"
+    },
+    {
+      "source": "0x70",
+      "priority_index": "p0",
+      "arbitration_nibble": "0x0",
+      "official_description_summary": "Heating circuit controller 2",
+      "canonical_description": "Heating circuit regulator 2",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x75"
+    },
+    {
+      "source": "0xF0",
+      "priority_index": "p0",
+      "arbitration_nibble": "0x0",
+      "official_description_summary": "Heating circuit controller 3",
+      "canonical_description": "Heating circuit regulator 3",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0xF5"
+    },
+    {
+      "source": "0x01",
+      "priority_index": "p1",
+      "arbitration_nibble": "0x1",
+      "official_description_summary": "Hand programmer / Remote control",
+      "canonical_description": "Handheld programmer / remote",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x06"
+    },
+    {
+      "source": "0x11",
+      "priority_index": "p1",
+      "arbitration_nibble": "0x1",
+      "official_description_summary": "Bus interface / Climate controller",
+      "canonical_description": "Bus interface / climate regulator",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x16"
+    },
+    {
+      "source": "0x31",
+      "priority_index": "p1",
+      "arbitration_nibble": "0x1",
+      "official_description_summary": "Bus interface",
+      "canonical_description": "Bus interface",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x36"
+    },
+    {
+      "source": "0x71",
+      "priority_index": "p1",
+      "arbitration_nibble": "0x1",
+      "official_description_summary": "Heating controller",
+      "canonical_description": "Heating regulator",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x76"
+    },
+    {
+      "source": "0xF1",
+      "priority_index": "p1",
+      "arbitration_nibble": "0x1",
+      "official_description_summary": "Heating controller",
+      "canonical_description": "Heating regulator",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0xF6"
+    },
+    {
+      "source": "0x03",
+      "priority_index": "p2",
+      "arbitration_nibble": "0x3",
+      "official_description_summary": "Burner controller 1",
+      "canonical_description": "Combustion controller 1",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x08"
+    },
+    {
+      "source": "0x13",
+      "priority_index": "p2",
+      "arbitration_nibble": "0x3",
+      "official_description_summary": "Burner controller 2",
+      "canonical_description": "Combustion controller 2",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x18"
+    },
+    {
+      "source": "0x33",
+      "priority_index": "p2",
+      "arbitration_nibble": "0x3",
+      "official_description_summary": "Burner controller 3",
+      "canonical_description": "Combustion controller 3",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x38"
+    },
+    {
+      "source": "0x73",
+      "priority_index": "p2",
+      "arbitration_nibble": "0x3",
+      "official_description_summary": "Burner controller 4",
+      "canonical_description": "Combustion controller 4",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x78"
+    },
+    {
+      "source": "0xF3",
+      "priority_index": "p2",
+      "arbitration_nibble": "0x3",
+      "official_description_summary": "Burner controller 5",
+      "canonical_description": "Combustion controller 5",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0xF8"
+    },
+    {
+      "source": "0x07",
+      "priority_index": "p3",
+      "arbitration_nibble": "0x7",
+      "official_description_summary": "empty",
+      "canonical_description": "Not preallocated",
+      "free_use": "yes",
+      "recommended_for": "none",
+      "companion": "0x0C"
+    },
+    {
+      "source": "0x17",
+      "priority_index": "p3",
+      "arbitration_nibble": "0x7",
+      "official_description_summary": "Heating controller recommendation",
+      "canonical_description": "Not preallocated",
+      "free_use": "yes",
+      "recommended_for": "Heating regulator",
+      "companion": "0x1C"
+    },
+    {
+      "source": "0x37",
+      "priority_index": "p3",
+      "arbitration_nibble": "0x7",
+      "official_description_summary": "Heating controller recommendation",
+      "canonical_description": "Not preallocated",
+      "free_use": "yes",
+      "recommended_for": "Heating regulator",
+      "companion": "0x3C"
+    },
+    {
+      "source": "0x77",
+      "priority_index": "p3",
+      "arbitration_nibble": "0x7",
+      "official_description_summary": "Heating controller recommendation",
+      "canonical_description": "Not preallocated",
+      "free_use": "yes",
+      "recommended_for": "Heating regulator",
+      "companion": "0x7C"
+    },
+    {
+      "source": "0xF7",
+      "priority_index": "p3",
+      "arbitration_nibble": "0x7",
+      "official_description_summary": "Heating controller recommendation",
+      "canonical_description": "Not preallocated",
+      "free_use": "yes",
+      "recommended_for": "Heating regulator",
+      "companion": "0xFC"
+    },
+    {
+      "source": "0x0F",
+      "priority_index": "p4",
+      "arbitration_nibble": "0xF",
+      "official_description_summary": "Clock module / Radio clock module",
+      "canonical_description": "Clock/radio-clock module",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x14"
+    },
+    {
+      "source": "0x1F",
+      "priority_index": "p4",
+      "arbitration_nibble": "0xF",
+      "official_description_summary": "Burner controller 6 recommendation",
+      "canonical_description": "Not preallocated",
+      "free_use": "yes",
+      "recommended_for": "Combustion controller 6",
+      "companion": "0x24"
+    },
+    {
+      "source": "0x3F",
+      "priority_index": "p4",
+      "arbitration_nibble": "0xF",
+      "official_description_summary": "Burner controller 7 recommendation",
+      "canonical_description": "Not preallocated",
+      "free_use": "yes",
+      "recommended_for": "Combustion controller 7",
+      "companion": "0x44"
+    },
+    {
+      "source": "0x7F",
+      "priority_index": "p4",
+      "arbitration_nibble": "0xF",
+      "official_description_summary": "Burner controller 8 recommendation",
+      "canonical_description": "Not preallocated",
+      "free_use": "yes",
+      "recommended_for": "Combustion controller 8",
+      "companion": "0x84"
+    },
+    {
+      "source": "0xFF",
+      "priority_index": "p4",
+      "arbitration_nibble": "0xF",
+      "official_description_summary": "PC",
+      "canonical_description": "PC",
+      "free_use": "no",
+      "recommended_for": "none",
+      "companion": "0x04"
+    }
+  ]
+}

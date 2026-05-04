@@ -1,9 +1,30 @@
 # `rpc.invoke` Source Byte Invariant
 
-Status: Normative
+Status: Superseded by SAS-01 for normal gateway-owned traffic
 Milestone: M4_GATEWAY_MCP
 Plan reference: ebus-standard-l7-services-w16-26.implementing/00-canonical.md
 Canonical SHA-256: 9e0a29bb76d99f551904b05749e322aafd3972621858aa6d1acbe49b9ef37305
+
+## SAS-01 Supersession
+
+The fixed `0x71` invariant below is historical. It applied to the
+`ebus-standard-l7-services-w16-26` M4 implementation before source address
+selection admission was locked. Current gateway-owned traffic uses the admitted
+`SourceAddressSelection.Source` after `active_probe_passed`.
+
+Normal MCP/GraphQL/Portal/semantic/NM/protocol-dispatch paths must not hardcode
+`0x71`, fallback to `0x31`, or accept caller-selected source authority. Missing
+source uses the admitted source. A value matching the admitted source is
+redundant diagnostic input. A nonmatching source is rejected for normal
+operations. `DEGRADED_SOURCE_SELECTION` fails closed with no
+Helianthus-originated eBUS traffic.
+
+Only transport-specific diagnostic MCP requests may use a non-admitted explicit
+source, and only for one audited, non-persistent request that does not mutate
+the admitted source.
+
+The remaining sections are retained as historical rationale for the superseded
+fixed-source contract.
 
 ## Purpose
 
