@@ -13,21 +13,24 @@ standard rows or infer device intent from priority alone.
 
 ## Official Spec Evidence
 
-This table is derived only from local official specifications in the workspace
-corpus:
+This table is derived only from local official specifications. In developer
+workspaces and local CI, `HELIANTHUS_OFFICIAL_SPEC_DIR` points to the directory
+that contains these files. If the variable is unset, the checker tries
+`../docs` relative to this repository; repo-only CI falls back to the committed
+excerpt fixture below.
 
-- `/Users/razvan/Desktop/Helianthus Project/docs/Spec_Prot_7_V1_6_1_Anhang_Ausgabe_1.en.md:28-60`
+- `$HELIANTHUS_OFFICIAL_SPEC_DIR/Spec_Prot_7_V1_6_1_Anhang_Ausgabe_1.en.md:28-60`
   for the 25 source-capable address rows and free-use note.
-- `/Users/razvan/Desktop/Helianthus Project/docs/Spec_Prot_7_V1_6_1_Anhang_Ausgabe_1.en.md:69-77`
+- `$HELIANTHUS_OFFICIAL_SPEC_DIR/Spec_Prot_7_V1_6_1_Anhang_Ausgabe_1.en.md:69-77`
   for companion-address reservation examples.
-- `/Users/razvan/Desktop/Helianthus Project/docs/Spec_Prot_12_V1_3_1_E.en.md:178-184`
+- `$HELIANTHUS_OFFICIAL_SPEC_DIR/Spec_Prot_12_V1_3_1_E.en.md:178-184`
   for the companion-address arithmetic.
-- `/Users/razvan/Desktop/Helianthus Project/docs/Spec_Prot_12_V1_3_1_E.en.md:254-256`
+- `$HELIANTHUS_OFFICIAL_SPEC_DIR/Spec_Prot_12_V1_3_1_E.en.md:254-256`
   for the source-address and arbitration role.
-- `/Users/razvan/Desktop/Helianthus Project/docs/Spec_Prot_12_V1_3_1_E.en.md:320-349`
-  and `/Users/razvan/Desktop/Helianthus Project/docs/SRC/Spec_Prot_12_V1_3_1_E.md:320-349`
+- `$HELIANTHUS_OFFICIAL_SPEC_DIR/Spec_Prot_12_V1_3_1_E.en.md:320-349`
+  and `$HELIANTHUS_OFFICIAL_SPEC_DIR/SRC/Spec_Prot_12_V1_3_1_E.md:320-349`
   for the priority-class and sub-address split.
-- `/Users/razvan/Desktop/Helianthus Project/docs/Spec_Prot_12_V1_3_1_E.en.md:471-478`
+- `$HELIANTHUS_OFFICIAL_SPEC_DIR/Spec_Prot_12_V1_3_1_E.en.md:471-478`
   for the ACK/NACK byte context.
 
 The checker in
