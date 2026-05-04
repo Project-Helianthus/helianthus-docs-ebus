@@ -527,7 +527,7 @@ Invoke(ctx context.Context, target byte, payload []byte) ([]byte, error)
 
 Normative obligations:
 
-- **Request shape.** `target` is the bus address of the destination slave
+- **Request shape.** `target` is the bus address of the destination responder
   (e.g. `0x08` for BAI00). `payload` is the L7 request body whose first
   two bytes are the §2 `(family, selector)` prefix (e.g. `00 01` for
   `Currenterror`, `01 01` for `Errorhistory`, `00 03` for the HMU
