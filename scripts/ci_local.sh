@@ -137,6 +137,48 @@ echo "==> check eBUS source-address table"
 python3 scripts/check_source_address_table_against_official_specs.py --run-canary
 python3 -m pytest -q tests/test_source_address_table_checker.py
 
+echo "==> check deployment source-address wording"
+python3 - <<'PY'
+from __future__ import annotations
+
+import pathlib
+import sys
+
+path = pathlib.Path("deployment/full-stack.md")
+text = path.read_text(encoding="utf-8")
+lower = text.lower()
+
+forbidden = [
+    "gentle-join",
+    "gentle join",
+    "enables **gentle-join**",
+    "asks the proxy to select a free initiator",
+    "reuses the persisted source address",
+    "promote source_addr.last",
+]
+required = [
+    "gateway default source-selection policy",
+    "selects and validates an admitted source",
+    "rollback/migration input only",
+    "must not be promoted into active source authority",
+]
+
+failed = False
+for phrase in forbidden:
+    if phrase in lower:
+        print(f"{path}: legacy source-address wording remains: {phrase}", file=sys.stderr)
+        failed = True
+
+for phrase in required:
+    if phrase not in lower:
+        print(f"{path}: required source-address wording missing: {phrase}", file=sys.stderr)
+        failed = True
+
+if failed:
+    sys.exit(1)
+print("Deployment source-address wording gate passed.")
+PY
+
 echo "==> check NM 07FE/07FF service names"
 python3 - <<'PY'
 from __future__ import annotations

@@ -80,8 +80,8 @@ For ebusd command syntax and response framing details, see `protocols/ebusd-tcp.
 
 ### Source-address behavior
 
-- `-source-addr auto` (or `-source-addr 0x00`) enables **gentle-join** behavior with proxy-mediated ENS/ENH/UDP-plain/TCP-plain flows.
-- In gentle-join mode, Helianthus asks the proxy to select a free initiator dynamically instead of pinning a fixed address.
+- `-source-addr auto` delegates to the gateway default source-selection policy. The gateway selects and validates an admitted source before any normal Helianthus-originated bus traffic.
+- Legacy `source_addr.last` files are rollback/migration input only. They must not be promoted into active source authority before gateway validation.
 - `-source-addr 0x31` should be avoided when `ebusd` is also active, because `0x31` is `ebusd`'s common default initiator.
 - With `-transport ebusd-tcp`, source selection only affects ebusd command parameters; the on-wire initiator is still ebusd's own bus identity.
 
