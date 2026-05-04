@@ -3,6 +3,13 @@
 Status: Normative
 Plan reference: ebus-good-citizen-network-management.locked (M0/ISSUE-DOC-02)
 
+SAS-01 update: local NM source authority is the admitted
+`SourceAddressSelection` after `active_probe_passed`. Earlier references to
+`JoinResult`, configured fallback, or re-admission are historical for the prior
+startup-admission plan. NM runtime must fail closed before admission and during
+`DEGRADED_SOURCE_SELECTION`; it must not emit `FF 00`, `FF 02`, or `0x07/0xFF`
+without an admitted source.
+
 ## Purpose
 
 This document freezes the numeric bus-load bounds, transport capability
@@ -22,22 +29,22 @@ initiator address and one companion target address. The pair is runtime
 state with provenance, not a literal constant. Provenance indicates how
 the pair was selected and from which source.
 
-### Preferred Source: JoinResult
+### Preferred Source: SourceAddressSelection
 
-On transports that support a join handshake, the canonical source is the
-transport join result:
+On transports that support source address selection admission, the canonical
+source is the gateway-owned selection that has passed the active admission
+probe:
 
-- **Initiator:** `JoinResult.Initiator`
-- **Companion target:** `JoinResult.CompanionTarget`
+- **Initiator:** `SourceAddressSelection.Source`
+- **Companion target:** `SourceAddressSelection.CompanionTarget`
 
-A completed join that yields a valid pair is the highest-confidence
-source. The ENH, ENS, UDP-plain, and TCP-plain transports are expected
-to support this path once their join protocols are implemented.
+An active-probe-passed selection is the only high-confidence source for
+gateway-originated NM traffic on ENH, ENS, UDP-plain, and TCP-plain.
 
 ### Fallback Source: Configured Policy
 
-On transports that do not support a join handshake (notably ebusd-tcp),
-the canonical source is operator configuration:
+On transports that do not support source-selection active validation (notably
+ebusd-tcp), the canonical source is operator configuration:
 
 - **Initiator:** configured local initiator address
 - **Companion target:** derived from the initiator per the eBUS
@@ -50,12 +57,12 @@ validated against the live bus before use.
 
 The active local address pair carries a provenance tag that records:
 
-- The source class (join-result or configured-fallback)
+- The source class (`active_probe_passed` or configured fallback)
 - The transport identity that produced the pair
 - A monotonic sequence number incremented on each address-pair change
 
 Provenance enables runtime code to distinguish high-confidence pairs
-from configured fallbacks and to detect stale references after a rejoin.
+from configured fallbacks and to detect stale references after re-admission.
 
 ## Init_NM and Transport Events
 
@@ -66,8 +73,8 @@ Helianthus enters the NMInit state on exactly these events:
 1. **Process start.** Gateway process begins execution.
 2. **First valid address pair.** First successful acquisition of a valid
    local address pair after process start.
-3. **Completed join or rejoin after transport recovery.** Transport
-   reconnects and a join handshake completes successfully.
+3. **Completed source-selection admission or re-admission after transport
+   recovery.** Transport reconnects and source admission succeeds.
 4. **Explicit operator-triggered NM reset.** An operator command
    requests NM reinitialization.
 5. **Configuration change invalidating the target configuration.**
@@ -77,9 +84,10 @@ Helianthus enters the NMInit state on exactly these events:
 Cross-reference: [nm-model.md](./nm-model.md) defines the NMInit,
 NMReset, and NMNormal state machine transitions.
 
-### Rejoin Semantics
+### Re-admission Semantics
 
-A rejoin that changes the active local address pair is NM-relevant. The
+A source-selection re-admission that changes the active local address pair is
+NM-relevant. The
 transition sequence is:
 
     NMInit --> NMReset --> NMNormal
@@ -87,15 +95,16 @@ transition sequence is:
 The previous address pair is discarded. All NM state derived from the
 old pair (including monitored-node timers) is invalidated.
 
-A rejoin that preserves the same address pair is NOT NM-relevant and
+A re-admission that preserves the same address pair is NOT NM-relevant and
 does not trigger a state transition.
 
-Joiner warmup observations seed evidence but do not promote devices
-directly into the monitored-node set.
+Source-selection observations seed evidence but do not promote devices directly
+into the monitored-node set.
 
 ### Transport Blindness
 
-When the transport disconnects without a completed rejoin:
+When the transport disconnects without a completed source-selection
+re-admission:
 
 - **self status:** transitions to NOK immediately.
 - **Remote-node cycle-time timers:** freeze. Timers do not advance
@@ -103,9 +112,9 @@ When the transport disconnects without a completed rejoin:
 - **NM-originated broadcasts:** suppressed. Any broadcast requiring a
   valid local initiator address is not emitted.
 
-A transport disconnect without a completed rejoin is NOT a fake NM
+A transport disconnect without a completed source-selection re-admission is NOT a fake NM
 reset. The NM state machine remains in its current state; it does not
-transition to NMInit until a rejoin completes.
+transition to NMInit until source admission succeeds.
 
 ## Self-Monitoring
 
@@ -160,12 +169,12 @@ Deferred until the broadcast lane is proven stable through operational
 experience with `FF 00` and `FF 02`. Not part of the first lock
 baseline.
 
-### 07 FF (QueryExistence) -- Optional-Later
+### 07 FF (Sign of Life) -- Optional-Later
 
 Deferred. Subject to the cadence floor defined in the Bus-Load Policy
 section below (minimum 10 seconds between successive broadcasts).
 
-`07 FF` is a broadcast (DST = `0xFE`) used for existence queries, not
+`07 FF` is a broadcast (DST = `0xFE`) used as a sign-of-life signal, not
 a targeted discovery probe. Cross-reference:
 [nm-discovery.md](./nm-discovery.md) defines the discovery pipeline and
 its relationship to NM.
@@ -222,7 +231,7 @@ measurement at implementation time.
 ### Sustained Load Budget
 
 Helianthus-originated NM traffic must not exceed **0.5% of bus
-capacity** outside of reset and rejoin windows.
+capacity** outside of reset and source-selection re-admission windows.
 
 This is a sustained average measured over a rolling window. The
 measurement window length is defined at implementation time but must be
@@ -231,9 +240,9 @@ at least 60 seconds.
 ### Burst Load Budget
 
 Helianthus-originated NM traffic must not exceed **2.0% of bus
-capacity** during reset and rejoin windows.
+capacity** during reset and source-selection re-admission windows.
 
-Reset and rejoin windows are bounded by the NMReset-to-NMNormal
+Reset and source-selection re-admission windows are bounded by the NMReset-to-NMNormal
 transition. Once the state machine enters NMNormal, the sustained
 budget applies.
 
@@ -259,7 +268,7 @@ this plan. Post-startup steady-state reverts to the separate
 ### 07 FF Cadence Floor
 
 A minimum of **10 seconds** must elapse between successive
-`07 FF` (QueryExistence) broadcasts originated by Helianthus,
+`07 FF` (Sign of Life) broadcasts originated by Helianthus,
 regardless of how many monitored nodes are pending existence
 confirmation.
 

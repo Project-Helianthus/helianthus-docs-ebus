@@ -1,2 +1,7 @@
 # Claude Code orchestrator-session artifacts (per-session tool/skills config, not repo-tracked)
 .claude/
+
+# Python local test/cache artifacts
+__pycache__/
+*.pyc
+.pytest_cache/

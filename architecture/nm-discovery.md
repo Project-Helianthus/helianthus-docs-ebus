@@ -3,6 +3,12 @@
 Status: Normative
 Plan reference: ebus-good-citizen-network-management.locked (M0/ISSUE-DOC-01)
 
+SAS-01 update: source-selection observation replaces Joiner warmup as the
+admission evidence stage. The only first-implementation pre-discovery
+source-validation active probe is bounded addressed `0x07/0x04`; `0x07/0xFE`
+Inquiry of Existence and `0x07/0xFF` Sign of Life are not startup admission
+validation probes.
+
 ## Purpose
 
 This document freezes the normative interpretation of the eBUS
@@ -125,7 +131,7 @@ When Helianthus does use `07 FE`, responses are fed into the same
 evidence pipeline as passive observations -- they do not bypass the
 normal promotion path.
 
-### 07 FF (QueryExistence Broadcast) -- Not Discovery
+### 07 FF (Sign of Life Broadcast) -- Not Discovery
 
 `07 FF` is a good-citizen existence signal that Helianthus may emit
 as an optional-later feature, with a cadence floor of >= 10 seconds
@@ -148,7 +154,7 @@ devices cannot skip stages.
 ### Pipeline Stages
 
 ```text
-1. Joiner warmup observation
+1. Source-selection observation
        |
        v
 2. Evidence buffer / suspect seeding
@@ -160,11 +166,10 @@ devices cannot skip stages.
 4. Target-configuration enrollment
 ```
 
-**Stage 1 -- Joiner warmup observation.** During transport join
-warmup, Helianthus observes bus traffic and collects evidence without
-promoting any device. This is a listen-only period where the gateway
-builds an initial picture of bus population without injecting any
-traffic of its own.
+**Stage 1 -- Source-selection observation.** During source-selection warmup,
+Helianthus observes bus traffic and collects evidence without promoting any
+device. This is a listen-only period where the gateway builds an initial
+picture of bus population without injecting any traffic of its own.
 
 **Stage 2 -- Evidence buffer / suspect seeding.** Passive
 observations create suspect entries. Each suspect accumulates

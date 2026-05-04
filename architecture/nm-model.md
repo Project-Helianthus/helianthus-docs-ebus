@@ -3,6 +3,11 @@
 Status: Normative
 Plan reference: ebus-good-citizen-network-management.locked (M0/ISSUE-DOC-00)
 
+SAS-01 update: startup NM authority is the admitted
+`SourceAddressSelection` after `active_probe_passed`. Earlier references to
+join/rejoin or fixed local source are historical. During
+`DEGRADED_SOURCE_SELECTION`, Helianthus emits no NM traffic.
+
 ## Purpose
 
 This document freezes the normative interpretation of the eBUS Network
@@ -93,8 +98,9 @@ re-entering `NMInit`):
 1. **Process start.** Gateway process launches for the first time.
 2. **First successful local address-pair acquisition.** The gateway
    obtains a valid active local initiator address and its companion.
-3. **Completed join/rejoin after transport recovery.** Transport
-   reconnects after a disconnection event.
+3. **Completed source-selection admission or re-admission after transport
+   recovery.** Transport reconnects after a disconnection event and source
+   admission succeeds.
 4. **Explicit operator NM reset.** An operator or MCP tool issues a
    manual NM reset command.
 5. **Configuration changes invalidating target configuration.** The
@@ -154,13 +160,13 @@ wire presence.
 exists. Without an address, the gateway cannot construct a valid eBUS
 frame.
 
-For startup ordering on join-capable direct transports, Helianthus MUST
+For startup ordering on source-selection-capable direct transports, Helianthus MUST
 also satisfy the admission gate frozen in
 [startup-admission-and-discovery.md §2, "Startup Ordering Contract"](./startup-admission-and-discovery.md#startup-ordering-contract):
-passive reconstructor and Joiner warmup complete before any
+passive reconstructor and source-selection observation complete before any
 non-override active startup traffic, and semantic polling is released
-only after `semanticBootstrapReady` plus `{Joiner-success OR
-Override-set}`.
+only after `semanticBootstrapReady` plus active-probe-passed
+`SourceAddressSelection`.
 
 `FF 02` is payload-less before responder support is available. It
 serves as a partially interrogable failure signal: peers can observe
@@ -175,9 +181,9 @@ production.
 | Service ID | Name | Purpose | Notes |
 |---|---|---|---|
 | `FF 01` | NMState | Periodic NM state broadcast | Added after broadcast lane is proven stable |
-| `07 FF` | QueryExistence | Good-citizen existence signal | Cadence floor >= 10 seconds |
+| `07 FF` | Sign of Life | Good-citizen presence signal | Cadence floor >= 10 seconds |
 
-`07 FF` QueryExistence is a good-citizen signal announcing the
+`07 FF` Sign of Life is a good-citizen signal announcing the
 gateway's presence on the bus. The cadence floor of 10 seconds ensures
 the gateway does not contribute excessive bus load.
 
@@ -217,13 +223,14 @@ by its OSI Layer 7 role within the eBUS application layer.
 | `FF 05` | QueryNMState | Network management | Targeted |
 | `FF 06` | ReportNMState | Network management | Targeted |
 | `07 04` | Identification | Identification | Targeted |
-| `07 FE` | QueryExistence | Existence/presence | Broadcast |
-| `07 FF` | QueryExistence (broadcast) | Existence/presence | Broadcast |
+| `07 FE` | Inquiry of Existence | Existence/presence | Broadcast |
+| `07 FF` | Sign of Life | Presence signal | Broadcast |
 
 These services form a subset of the eBUS OSI Layer 7 application
 services. The NM services (`FF 00` through `FF 06`) manage topology
 state. The identification service (`07 04`) provides device identity.
-The existence services (`07 FE`, `07 FF`) provide presence detection.
+`07 FE` is Inquiry of Existence. `07 FF` is Sign of Life. Both can provide
+presence evidence, but they are distinct services.
 
 Within Helianthus, `07 FE` is used only for bounded active confirmation
 during discovery. It is never treated as a direct-answer NM query. See
