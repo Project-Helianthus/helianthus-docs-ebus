@@ -87,13 +87,16 @@ Wire-level escape encoding for **transmission** is a separate step applied after
 
 **Consequences:** Callers use a single `Send` call and receive typed errors after retries are exhausted.
 
-## ADR-008: Priority queue by source address
+## ADR-008: Priority queue by eBUS arbitration rank
 
 **Status:** Accepted
 
 **Context:** eBUS arbitration favors lower initiator addresses.
 
-**Decision:** Outgoing frames are queued in a priority queue keyed by the source address, with FIFO ordering for equal priority.
+**Decision:** Outgoing frames are queued by eBUS arbitration rank, not by
+Helianthus preference. p0 / `0x0` outranks p1 / `0x1`, then p2 / `0x3`, p3 /
+`0x7`, and p4 / `0xF`. Lower source byte wins only within otherwise equal
+contention. FIFO ordering applies after that protocol ordering.
 
 **Consequences:** Concurrent callers are serialized according to bus arbitration rules without each caller knowing about priorities.
 
@@ -247,23 +250,31 @@ For write confirmation (when a write API exists), perform targeted confirm reads
 
 **Consequences:** Device identity remains stable and explainable, UIs can render correct parent/child topology, and derived semantic devices do not pretend to be independently addressable hardware.
 
-## ADR-018: Initiator join uses passive warmup with bounded active inquiry
+## ADR-018: Source address selection uses passive observation with bounded active validation
 
 **Status:** Accepted
 
-**Context:** On live buses, Helianthus may join while other initiators are already active. Joining should minimize additional traffic and avoid known address collisions.
+**Context:** On live buses, Helianthus must choose a source address while other
+initiators may already be active. Selection should minimize additional traffic
+and avoid known source/companion collisions.
 
 **Decision:**
 
-- Join starts with a passive listen warmup (default 5s) and builds source/target activity statistics.
-- Candidate initiator addresses are selected from the valid 25-address set.
-- Selection prefers highest addresses by default (lower arbitration priority) unless explicitly configured otherwise.
-- Companion target (`initiator + 0x05`) activity heuristics reject risky candidates when the companion target looks active.
-- Active `0x07 0xFE` inquiry is optional, rate-limited, and bounded per process session.
-- Last-good initiator persistence is best-effort and only reused when still safe.
-- If all initiator addresses are occupied, join fails explicitly by default; force mode is opt-in.
+- Source address selection starts with passive observation and known-address
+  evidence.
+- The default gateway policy is `0xFF,0x7F,0x3F,0x1F,0xF7,0x77,0x37,0x17,0x07,0x11,0x31,0x00`.
+- Companion target is computed as source plus `0x05` modulo one byte, so
+  `0xFF -> 0x04` and `0xF7 -> 0xFC`.
+- Exact source configuration uses `explicit_validate_only`: no candidate
+  search, but active validation remains mandatory.
+- The only first-implementation active validation probe is bounded addressed
+  `0x07/0x04`; `0x07/0xFE` is not a startup admission probe.
+- If no source passes validation, Helianthus enters
+  `DEGRADED_SOURCE_SELECTION` and emits no Helianthus-originated eBUS traffic.
 
-**Consequences:** Default join behavior keeps bus chatter low, produces deterministic telemetry for selection rationale, and avoids unsafe address reuse while preserving an explicit operator override path.
+**Consequences:** Default selection behavior keeps bus chatter low, produces
+deterministic telemetry for selection rationale, and avoids unsafe address reuse
+without pretending there is a protocol join handshake.
 
 ## ADR-019: Collision monitor enforces fail-fast writes on foreign same-source traffic
 

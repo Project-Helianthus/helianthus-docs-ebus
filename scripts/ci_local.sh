@@ -132,3 +132,49 @@ if failed:
     sys.exit(1)
 print("Private IPv4 gate passed.")
 PY
+
+echo "==> check eBUS source-address table"
+python3 scripts/check_source_address_table_against_official_specs.py --run-canary
+python3 -m pytest -q tests/test_source_address_table_checker.py
+
+echo "==> check NM 07FE/07FF service names"
+python3 - <<'PY'
+from __future__ import annotations
+
+import pathlib
+import sys
+
+checks = {
+    "architecture/nm-model.md": [
+        "`07 FE` | Inquiry of Existence",
+        "`07 FF` | Sign of Life",
+        "`07 FE` is Inquiry of Existence. `07 FF` is Sign of Life.",
+    ],
+    "architecture/nm-discovery.md": [
+        "### 07 FF (Sign of Life Broadcast) -- Not Discovery",
+    ],
+    "architecture/nm-participant-policy.md": [
+        "### 07 FF (Sign of Life) -- Optional-Later",
+        "`07 FF` (Sign of Life) broadcasts originated by Helianthus",
+    ],
+}
+
+for file_path, required_fragments in checks.items():
+    text = pathlib.Path(file_path).read_text(encoding="utf-8")
+    for fragment in required_fragments:
+        if fragment not in text:
+            print(f"{file_path}: missing required fragment: {fragment}", file=sys.stderr)
+            sys.exit(1)
+    forbidden = [
+        "07 FF (QueryExistence",
+        "`07 FF` | QueryExistence",
+        "`07 FF` QueryExistence",
+        "`07 FF` (QueryExistence)",
+    ]
+    for fragment in forbidden:
+        if fragment in text:
+            print(f"{file_path}: stale 07FF QueryExistence text: {fragment}", file=sys.stderr)
+            sys.exit(1)
+
+print("NM 07FE/07FF service name gate passed.")
+PY

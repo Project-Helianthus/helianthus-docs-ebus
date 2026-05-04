@@ -1,10 +1,38 @@
 # Startup Admission and Discovery Pipeline
 
-Status: Normative
+Status: Normative; source-selection semantics superseded by SAS-01
 Plan reference:
 [startup-admission-discovery-w17-26.locked/00-canonical.md](../../helianthus-execution-plans/startup-admission-discovery-w17-26.locked/00-canonical.md)
 (`Canonical-SHA256:
 345445f1cedfc21e6c35d6e0f21513979fbf7ff3a520978932f0dd82e65c1b3d`)
+
+SAS-01 update:
+`source-address-selection-admission.locked` supersedes this document wherever
+it describes `JoinBus`, `Joiner`, `JoinConfig`, `JoinResult`,
+`admission_path_selected`, forced selection, or fixed-source override as current
+startup authority. Those terms remain here only as history for the W17-26
+startup plan. Current startup admission is:
+
+```text
+observe -> source_address_select -> active_probe
+  -> persist/scan only on active_probe_passed
+  -> quarantine/exclude/reselect on probe failure
+  -> DEGRADED_SOURCE_SELECTION with zero Helianthus-originated eBUS traffic
+     when no candidate can be admitted
+```
+
+The admitted `SourceAddressSelection.Source` is the sole normal source
+authority for gateway-owned MCP, GraphQL, Portal, semantic, scheduler, poller,
+NM, and protocol-dispatch traffic. Exact operator source configuration maps to
+`explicit_validate_only`; it bypasses candidate search but not active
+validation. Persisted raw `source_addr.last` is migration input only and cannot
+override explicit configuration or current validation.
+
+The only first-implementation pre-discovery source-validation probe is a
+bounded addressed `0x07/0x04` read-only request against a configured or current
+positive target. Broadcast `0x07/0xFE`, `0x07/0xFF`, `0x0F`, NM, mutating
+services, memory writes, and full-range probes are not admission-validation
+traffic.
 
 ## Purpose
 

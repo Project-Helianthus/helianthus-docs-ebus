@@ -48,17 +48,35 @@ In direct-mode eBUS implementations (including Helianthus), initiator addresses 
 
 Addresses equal to `0xA9` (escape) or `0xAA` (SYN) are invalid in address positions.
 
-### Helianthus Initiator Join Strategy
+### Helianthus Source Address Selection
 
-When Helianthus must choose an initiator address on a live bus, it follows a low-disturbance join sequence:
+When Helianthus must choose an initiator address on a live bus, it performs
+source address selection plus gateway admission validation. It does not perform
+a protocol membership join.
 
-1. Passive listen warmup (default `5s`), collecting observed source and destination activity.
-2. Candidate selection from the valid 25-address initiator set.
-3. Default preference for higher addresses first (`F7, F3, F1, ...`) to keep lower-priority arbitration behavior. (`0xFF` is excluded from the default preference list because it may conflict with NACK signaling.)
-4. Companion-target heuristic: reject a candidate if `(initiator + 0x05)` appears active as a probable target source or is frequently addressed as destination traffic.
-5. Optional active discovery (`0x07 0xFE`) is disabled by default and bounded/rate-limited when enabled.
+The standard source-address table is frozen in
+[`architecture/ebus_standard/12-source-address-table.md`](../../architecture/ebus_standard/12-source-address-table.md).
+The default gateway candidate order is:
 
-If all 25 initiator addresses are observed as occupied, join fails by default with an explicit error. Force selection is opt-in.
+```text
+0xFF, 0x7F, 0x3F, 0x1F,
+0xF7, 0x77, 0x37, 0x17, 0x07,
+0x11, 0x31,
+0x00
+```
+
+This order is Helianthus policy. It is not the eBUS arbitration rank. On the
+wire, p0 / `0x0` outranks p1 / `0x1`, then p2 / `0x3`, p3 / `0x7`, and p4 /
+`0xF`; lower source byte wins only within otherwise equal contention.
+
+`0xFF` is a valid source address and maps to companion `0x04`. The `0xFF`
+NACK meaning applies only in ACK/NACK byte context.
+
+Before startup scan or any normal gateway-owned bus-reaching operation,
+gateway admission must actively validate the selected source and companion. A
+failed active probe quarantines/excludes that source and either tries the next
+candidate or enters `DEGRADED_SOURCE_SELECTION`, which emits no
+Helianthus-originated eBUS traffic.
 
 ## ACK/NACK Symbols
 
@@ -184,9 +202,10 @@ This section documents common discovery-style requests used to enumerate devices
 
 In BASV-style discovery orchestration, these standard functions are the protocol-level building blocks for presence refresh and identity probing.
 
-### QueryExistence (0x07 0xFE)
+### Inquiry of Existence (0x07 0xFE)
 
-QueryExistence is commonly used as a best-effort “who is present?” broadcast.
+Inquiry of Existence is commonly used as a best-effort “who is present?”
+broadcast.
 
 ```text
 Initiator telegram:
@@ -199,7 +218,13 @@ Initiator telegram:
 
 Notes:
 - Broadcast messages do not have a response telegram.
-- Some stacks (including ebusd) use QueryExistence as a trigger to refresh internal address state that can later be queried (e.g. via the ebusd TCP `info` command).
+- Some stacks (including ebusd) use Inquiry of Existence as a trigger to
+  refresh internal address state that can later be queried (e.g. via the ebusd
+  TCP `info` command).
+
+Helianthus source-selection admission does not use `0x07/0xFE` as its first
+startup validation probe. The admission probe is bounded addressed
+Identification (`0x07/0x04`) only.
 
 ### Identification Scan (0x07 0x04)
 
