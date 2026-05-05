@@ -268,7 +268,7 @@ and avoid known source/companion collisions.
 - Exact source configuration uses `explicit_validate_only`: no candidate
   search, but active validation remains mandatory.
 - The only first-implementation active validation probe is bounded addressed
-  `0x07/0x04`; `0x07/0xFE` is not a startup admission probe.
+  `0x07/0x04`; `0x07/0xFE` is not a startup source-selection validation probe.
 - If no source passes validation, Helianthus enters
   `DEGRADED_SOURCE_SELECTION` and emits no Helianthus-originated eBUS traffic.
 
@@ -289,10 +289,10 @@ without pretending there is a protocol join handshake.
   - matching frame: treat as local echo, no collision event,
   - non-matching frame: mark collision as foreign same-source.
 - If runtime is in muted/listen-only mode, any `SRC == active initiator` frame is treated as collision.
-- After rejoin (initiator change), ignore frames from the previous initiator during a grace window (default `750ms`) to avoid delayed-echo false positives.
+- After an initiator source change, ignore frames from the previous initiator during a grace window (default `750ms`) to avoid delayed-echo false positives.
 - While collision state is active, new writes fail fast with an explicit arbitration-failed error classification.
 
-**Consequences:** Collision state becomes deterministic and observable, upper layers can immediately stop unsafe writes, and rejoin transitions remain stable under delayed bus echoes.
+**Consequences:** Collision state becomes deterministic and observable, upper layers can immediately stop unsafe writes, and initiator source transitions remain stable under delayed bus echoes.
 
 ## ADR-020: Read scheduler coalescing with state/config refresh windows
 
