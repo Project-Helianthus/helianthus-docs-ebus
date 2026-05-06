@@ -8,7 +8,7 @@ normal Helianthus-owned paths use only the active-probe-passed source selected
 by the gateway. Transport-specific diagnostics may use a caller supplied source
 only for one explicit request and must not mutate gateway source authority.
 
-## Migration Matrix
+## Artifact And MCP JSON Migration Matrix
 
 | Old public name | New public name | Required consumer action |
 | --- | --- | --- |
@@ -28,6 +28,14 @@ only for one explicit request and must not mutate gateway source authority.
 | `startup_admission_degraded_since_ms` | `startup_source_selection_degraded_since_ms` | Rename degraded entry timestamp. |
 | `startup_admission_consecutive_rejoin_failures` | `startup_source_selection_consecutive_failures` | Track failed reselection or validation cycles without protocol rejoin wording. |
 | `startup_admission_degraded_cumulative_ms` | `startup_source_selection_degraded_cumulative_ms` | Rename degraded cumulative duration. |
+
+## GraphQL Migration
+
+GraphQL does not expose `source_selection.mode`. Gateway GraphQL consumers that
+previously queried the removed `busAdmission` compatibility alias must query
+`busSummary.status.bus_admission.source_selection` instead and use the fields
+defined in [`graphql.md`](./graphql.md), especially `state`, `outcome`,
+`selected_source`, `companion_target`, and `reason`.
 
 ## Consumer Rules
 
