@@ -61,10 +61,10 @@ Expected: zero unexpected `fail` deltas; zero unexpected `xpass` deltas. Any inf
 Procedure: send a synthetic frame ZZ=0x99 (a known-non-existent address) from the gateway's admitted source, expect NACK (0xFF in ACK position) from the bus. Query GraphQL.
 Expected: NO entry at address 0x99 in `devices`.
 
-### N2 — Broadcast 0xFE does NOT insert at 0xFE slot
+### N2 — Broadcast 0xFE destination does NOT insert at 0xFE slot
 
-Procedure: observe natural broadcast traffic (e.g. B510 `07 FF` sign-of-life). Query GraphQL.
-Expected: NO entry at address 0xFE OR 0xFF (when 0xFF appears as broadcast destination class).
+Procedure: observe natural broadcast traffic addressed to `ZZ=0xFE` (the eBUS broadcast destination). Examples include any frame with primary `B5` and secondary in the broadcast namespace, or the `07 FF` Sign-of-Life service (PB=`07`, SB=`FF`) sent to ZZ=`FE`. Query GraphQL.
+Expected: NO entry at address `0xFE` in `devices`. Note: this assertion targets `ZZ=0xFE` (broadcast destination), distinct from the `07 FF` service (PB=0x07 SB=0xFF Sign-of-Life) and from B510 (PB=0xB5 SB=0x10 SetMode); both services are valid broadcast payloads but do not change the requirement that `ZZ=0xFE` is filtered. AD04's separate 0xFF/NACK disambiguation rule covers the `0xFF` ACK-position case (see N3); N2 is only about broadcast destination.
 
 ### N3 — ACK byte 0xFF does NOT insert at 0xFF slot via ACK position
 
