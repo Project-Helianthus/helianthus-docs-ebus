@@ -3,12 +3,13 @@
 Status: Normative
 Plan reference: ebus-good-citizen-network-management.locked (M0/ISSUE-DOC-02)
 
-SAS-01 update: local NM source authority is the admitted
-`SourceAddressSelection` after `active_probe_passed`. Earlier references to
-`JoinResult`, configured fallback, or re-admission are historical for the prior
-startup-admission plan. NM runtime must fail closed before admission and during
+SAS-01 update: local NM source authority is
+`SourceAddressSelection.Source` after `active_probe_passed`. Earlier references to
+`JoinResult`, configured fallback, or source reselection are historical for the
+prior startup plan. NM runtime must fail closed before source-selection
+validation and during
 `DEGRADED_SOURCE_SELECTION`; it must not emit `FF 00`, `FF 02`, or `0x07/0xFF`
-without an admitted source.
+without an active-probe-passed source.
 
 ## Purpose
 
@@ -31,9 +32,8 @@ the pair was selected and from which source.
 
 ### Preferred Source: SourceAddressSelection
 
-On transports that support source address selection admission, the canonical
-source is the gateway-owned selection that has passed the active admission
-probe:
+On transports that support source address selection validation, the canonical
+source is the gateway-owned selection that has passed the active probe:
 
 - **Initiator:** `SourceAddressSelection.Source`
 - **Companion target:** `SourceAddressSelection.CompanionTarget`
@@ -62,7 +62,8 @@ The active local address pair carries a provenance tag that records:
 - A monotonic sequence number incremented on each address-pair change
 
 Provenance enables runtime code to distinguish high-confidence pairs
-from configured fallbacks and to detect stale references after re-admission.
+from configured fallbacks and to detect stale references after source
+reselection.
 
 ## Init_NM and Transport Events
 
@@ -73,8 +74,8 @@ Helianthus enters the NMInit state on exactly these events:
 1. **Process start.** Gateway process begins execution.
 2. **First valid address pair.** First successful acquisition of a valid
    local address pair after process start.
-3. **Completed source-selection admission or re-admission after transport
-   recovery.** Transport reconnects and source admission succeeds.
+3. **Completed source-selection validation after transport recovery.**
+   Transport reconnects and source-selection validation succeeds.
 4. **Explicit operator-triggered NM reset.** An operator command
    requests NM reinitialization.
 5. **Configuration change invalidating the target configuration.**
@@ -84,9 +85,9 @@ Helianthus enters the NMInit state on exactly these events:
 Cross-reference: [nm-model.md](./nm-model.md) defines the NMInit,
 NMReset, and NMNormal state machine transitions.
 
-### Re-admission Semantics
+### Source Reselection Semantics
 
-A source-selection re-admission that changes the active local address pair is
+A source-selection validation cycle that changes the active local address pair is
 NM-relevant. The
 transition sequence is:
 
@@ -95,16 +96,16 @@ transition sequence is:
 The previous address pair is discarded. All NM state derived from the
 old pair (including monitored-node timers) is invalidated.
 
-A re-admission that preserves the same address pair is NOT NM-relevant and
-does not trigger a state transition.
+A source-selection validation cycle that preserves the same address pair is NOT
+NM-relevant and does not trigger a state transition.
 
 Source-selection observations seed evidence but do not promote devices directly
 into the monitored-node set.
 
 ### Transport Blindness
 
-When the transport disconnects without a completed source-selection
-re-admission:
+When the transport disconnects without a completed source-selection validation
+cycle:
 
 - **self status:** transitions to NOK immediately.
 - **Remote-node cycle-time timers:** freeze. Timers do not advance
@@ -112,9 +113,9 @@ re-admission:
 - **NM-originated broadcasts:** suppressed. Any broadcast requiring a
   valid local initiator address is not emitted.
 
-A transport disconnect without a completed source-selection re-admission is NOT a fake NM
-reset. The NM state machine remains in its current state; it does not
-transition to NMInit until source admission succeeds.
+A transport disconnect without a completed source-selection validation cycle is
+NOT a fake NM reset. The NM state machine remains in its current state; it does
+not transition to NMInit until source-selection validation succeeds.
 
 ## Self-Monitoring
 
@@ -231,7 +232,7 @@ measurement at implementation time.
 ### Sustained Load Budget
 
 Helianthus-originated NM traffic must not exceed **0.5% of bus
-capacity** outside of reset and source-selection re-admission windows.
+capacity** outside of reset and source-reselection windows.
 
 This is a sustained average measured over a rolling window. The
 measurement window length is defined at implementation time but must be
@@ -240,15 +241,15 @@ at least 60 seconds.
 ### Burst Load Budget
 
 Helianthus-originated NM traffic must not exceed **2.0% of bus
-capacity** during reset and source-selection re-admission windows.
+capacity** during reset and source-reselection windows.
 
-Reset and source-selection re-admission windows are bounded by the NMReset-to-NMNormal
-transition. Once the state machine enters NMNormal, the sustained
-budget applies.
+Reset and source-reselection windows are bounded by the NMReset-to-NMNormal
+transition. Once the state machine enters NMNormal, the sustained budget
+applies.
 
 ### Discovery-Class Burst Budget
 
-The startup-admission directed discovery phase defined in
+The startup source-selection directed discovery phase defined in
 [startup-admission-and-discovery.md](./startup-admission-and-discovery.md#startup-directed-probe-phase)
 uses a distinct **discovery-class** startup burst budget and MUST be
 kept separate from the frozen NM-class sustained and burst numbers
@@ -263,7 +264,7 @@ treated as approximately `5 B/s`. A hard ceiling of
 full `07 04` transactions (`18-22` bytes each), or about
 `4.5-5.5 B/s`, which is the ratified startup-discovery envelope for
 this plan. Post-startup steady-state reverts to the separate
-`1 probe per 15s` limit defined in the startup-admission document.
+`1 probe per 15s` limit defined in the startup source-selection document.
 
 ### 07 FF Cadence Floor
 

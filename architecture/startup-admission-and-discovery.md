@@ -259,64 +259,55 @@ Before those conditions hold:
 
 #### 2.2.5 Directed Probes Follow Admission
 
-The directed-probe phase MAY begin only after the `join` path has been
-selected. Directed probes use `JoinResult.Initiator` as their source.
+In the historical W17-26 wording, the directed-probe phase could begin only
+after the `join` path was selected, and directed probes used
+`JoinResult.Initiator` as their source.
+
+In current SAS M4 terms, directed probes MAY begin only after source selection
+and active probe validation admit a source. Directed probes use the admitted
+`SourceAddressSelection.Source` as their source.
 
 No directed probe MAY be used to bootstrap admission itself.
 
-### 2.3 Override Carve-Out
+### 2.3 Historical Override Carve-Out
 
-The override path is an explicit carve-out from the warmup-before-
-active-frame invariant.
+The old override path was an explicit W17-26 carve-out from the
+warmup-before-active-frame invariant: when `StartupSource.Override` was set,
+the operator override acted as the active source and warmup did not gate
+emission on that historical path.
 
-When `StartupSource.Override` is set:
+SAS M4 supersedes that carve-out. Exact source configuration now maps to
+`explicit_validate_only`: candidate search is bypassed, but the configured
+source still requires active validation before any normal Helianthus-owned
+traffic uses it. It does not create a general allowance for static-source
+fallthrough on source-selection-capable direct transports.
 
-- active frames MAY emit immediately using the override initiator;
-- the active source is the operator override, not a `JoinResult`;
-- warmup does not gate emission on this path.
+### 2.4 Historical Override Branches
 
-This carve-out exists only for the override path. It does not create a
-general allowance for static-source fallthrough on join-capable direct
-transports.
+#### 2.4.1 Historical `Override` Set and `Validate=false`
 
-### 2.4 Override Branches
+The old `StartupSource.Override.Validate=false` branch is historical W17-26
+wording only. Current SAS M4 implementations SHALL NOT emit immediate normal
+Helianthus-owned active traffic from this branch. Exact configured source input
+SHALL be represented as `admission.source_selection.mode =
+explicit_validate_only`, SHALL set
+`startup_source_selection_explicit_source_active=1`, and SHALL pass active
+validation before normal gateway-owned MCP, GraphQL, Portal, semantic,
+scheduler, poller, NM, or protocol-dispatch traffic uses the source.
 
-#### 2.4.1 `Override` Set and `Validate=false`
+Diagnostic transport-specific MCP calls remain outside this normal-operation
+authority and may use a caller-supplied source for that one diagnostic request.
 
-When `StartupSource.Override` is set and
-`StartupSource.Override.Validate=false`:
+#### 2.4.2 Historical `Override` Set and `Validate=true`
 
-- Joiner does NOT gate startup;
-- Joiner does NOT need to run;
-- the gateway emits
-  `startup admission override source=0xXX confidence=low`
-  before the first active frame;
-- `startup_admission_override_active=1` is exposed;
-- the selected path is `override`.
+The old `StartupSource.Override.Validate=true` advisory-Joiner branch is also
+historical. Current SAS M4 implementations use source-address selection plus
+active probe validation; they SHALL NOT emit the removed `override` value and
+SHALL NOT keep an advisory Joiner as current source authority.
 
-This path is a soft short-circuit, not a silent fallback.
-
-#### 2.4.2 `Override` Set and `Validate=true`
-
-When `StartupSource.Override` is set and
-`StartupSource.Override.Validate=true`:
-
-- active frames MAY still emit immediately using the override
-  initiator;
-- Joiner runs in parallel in advisory-only mode;
-- Joiner warmup does NOT gate emissions;
-- Joiner may populate `JoinMetrics` and a preferred initiator view;
-- retrospective conflict detection runs at approximately the end of
-  the `5s` advisory warmup.
-
-If advisory Joiner disagrees with the override choice:
-
-- the gateway emits a structured WARN;
-- `startup_admission_override_conflict_detected=1` is set;
-- already-emitted active traffic remains valid and is NOT
-  retroactively invalidated;
-- the selected path remains `override` until the operator changes
-  configuration and restarts.
+If exact source validation fails, normal gateway-owned traffic remains blocked
+and the admission state transitions to degraded source selection rather than
+falling back to unvalidated static-source operation.
 
 ### 2.5 Semantic Polling Gate
 
@@ -326,14 +317,14 @@ closes only when BOTH of the following are true:
 
 1. `startupScanSignals.semanticBootstrapReady` has fired; and
 2. admission is either:
-   - Joiner-success with a valid `JoinResult`, or
-   - override-set.
+   - `source_selection` with active probe validation passed; or
+   - `explicit_validate_only` with active probe validation passed.
 
 The barrier MUST remain open when:
 
-- admission is degraded without override;
+- admission is degraded;
 - warmup observed no valid admission outcome;
-- Joiner has not yet succeeded;
+- active probe validation has not succeeded;
 - the transport has not recovered after rejoin failure.
 
 The semantic polling change above is a signal-source change only. The
@@ -360,26 +351,32 @@ full-range scan or to static-source operation.
 
 ### 3.1 Enum
 
-The startup admission path selection SHALL be emitted and reasoned
-about using the enum:
+For the current SAS M4 source-selection surface, startup source selection SHALL
+be emitted and reasoned about using:
 
-`admission_path_selected ∈ {join, override, degraded_transport_blind,
-degraded_no_events}`
+`admission.source_selection.mode ∈ {source_selection, explicit_validate_only,
+degraded_transport_blind, degraded_no_events}`
 
-No other value is valid under AD23.
+No other value is valid under the current source-selection artifact contract.
 
 ### 3.2 Value Definitions
 
 | Value | Triggering Condition | Meaning | Active Traffic Allowed |
 |---|---|---|---|
-| `join` | Join-capable direct transport produced a valid `JoinResult` before first non-override active frame | direct admission succeeded | yes, using `JoinResult.Initiator` |
-| `override` | `StartupSource.Override` is set, regardless of `Validate` branch | operator supplied active source | yes, using override initiator |
+| `source_selection` | source-selection-capable direct transport produced a valid source before first non-explicit-source active frame | direct source selection succeeded | yes, using selected source |
+| `explicit_validate_only` | exact source configuration is set, regardless of `Validate` branch | operator supplied exact source, still actively validated | yes, using explicitly configured source after validation rules |
 | `degraded_transport_blind` | warmup window observed zero passive events and admission could not establish a valid source | silent-bus or transport-blind startup | no |
 | `degraded_no_events` | transport is observable enough to run warmup, but no admissible `JoinResult` exists by warmup end and no override is set | admission degraded after observable but insufficient or conflicting evidence | no |
 
+Subsections 3.3 through 3.6 retain the historical W17-26 wording. Current SAS
+M4 consumers use the mapped labels in the table above.
+
 ### 3.3 `join`
 
-`join` is selected only when all of the following are true:
+`join` is a historical W17-26 artifact label. Current SAS M4 artifacts SHALL
+emit `source_selection` instead.
+
+The old `join` label was selected only when all of the following were true:
 
 - the transport is one of ENH, ENS, UDP-plain, or TCP-plain;
 - Joiner was wired through `JoinBus`;
@@ -387,19 +384,15 @@ No other value is valid under AD23.
 - the first non-override active frame, if any, uses
   `JoinResult.Initiator`.
 
-`join` is the only high-confidence non-override admission path on
-join-capable direct transports.
+The current high-confidence non-explicit-source path on source-selection-
+capable direct transports is `source_selection`, not `join`.
 
 ### 3.4 `override`
 
-`override` is selected when the operator has configured an explicit
-override. The `Validate` flag changes observability and advisory
-behaviour, but it does not change the selected enum.
-
-`override` therefore covers both:
-
-- set + `Validate=false`;
-- set + `Validate=true`.
+`override` is a historical W17-26 artifact label. Current SAS M4 artifacts SHALL
+emit `explicit_validate_only` for exact configured source input, and that source
+still requires active validation before normal Helianthus-owned traffic may use
+it. Current artifacts SHALL NOT emit `override`.
 
 ### 3.5 `degraded_transport_blind`
 
@@ -439,15 +432,15 @@ and restated as a focused startup matrix in
 The path-selection implications are:
 
 - ENH, ENS, UDP-plain, TCP-plain:
-  `join` or `override`, otherwise degraded;
+  `source_selection` or `explicit_validate_only`, otherwise degraded;
 - `ebusd-tcp`:
   static configured fallback remains the default path outside the
   artifact scope of this plan.
 
 The selected enum value SHALL drive the admission artifact field
-`admission.admission_path_selected`, degraded-mode log classification,
-and observability review of startup behaviour. It SHALL NOT by itself
-change discovery promotion rules.
+`admission.source_selection.mode`, degraded-mode log classification, and
+observability review of startup behaviour. It SHALL NOT by itself change
+discovery promotion rules.
 
 <a id="evidence-pipeline-and-promotion"></a>
 ## 4. Evidence Pipeline and Promotion
@@ -644,8 +637,8 @@ scan pass" for adapter-direct transports.
 The startup-directed probe phase MAY begin only when all of the
 following are true:
 
-- the transport is join-capable direct transport;
-- the admission path is `join` or `override`;
+- the transport is source-selection-capable direct transport;
+- the admission mode is `source_selection` or `explicit_validate_only`;
 - the target set is explicit and non-empty;
 - each target is target-capable and valid for directed scan;
 - the startup rate limiter allows the next probe.
@@ -743,10 +736,9 @@ fails acceptance regardless of why extra probes were emitted.
 
 ### 5.9 Probe Source
 
-The source address used for directed probes SHALL be:
-
-- `JoinResult.Initiator` on the `join` path;
-- override initiator on the `override` path.
+The source address used for directed probes SHALL be the admitted
+`SourceAddressSelection.Source`, regardless of whether the mode is
+`source_selection` or `explicit_validate_only`.
 
 No other source is valid on direct transports in this plan.
 
@@ -827,17 +819,17 @@ expvars:
 
 | Expvar | Type / Domain | Required Semantics |
 |---|---|---|
-| `startup_admission_degraded_total` | monotonic counter | count of degraded transitions |
-| `startup_admission_state` | enum `{0,1,2}` | current admission state |
-| `startup_admission_override_active` | boolean-like gauge | `1` when override configured |
-| `startup_admission_warmup_events_seen` | per-cycle gauge | reset each warmup interval |
-| `startup_admission_warmup_cycles_total` | monotonic counter | increments per Joiner warmup entered |
-| `startup_admission_override_bypass_total` | monotonic counter | increments per override-selected admission cycle |
-| `startup_admission_override_conflict_detected` | boolean-like gauge | advisory conflict under `Validate=true` |
-| `startup_admission_degraded_escalated` | latched flag | `1` while escalation latch active |
-| `startup_admission_degraded_since_ms` | unix-ms gauge | timestamp of current envelope-visible degraded state entry |
-| `startup_admission_consecutive_rejoin_failures` | gauge | reset on rejoin success |
-| `startup_admission_degraded_cumulative_ms` | rolling gauge | 15-minute in-process cumulative degraded time |
+| `startup_source_selection_degraded_total` | monotonic counter | count of degraded transitions |
+| `startup_source_selection_state` | enum `{0,1,2}` | current source-selection state |
+| `startup_source_selection_explicit_source_active` | boolean-like gauge | `1` when exact source configuration is active |
+| `startup_source_selection_warmup_events_seen` | per-cycle gauge | reset each warmup interval |
+| `startup_source_selection_warmup_cycles_total` | monotonic counter | increments per source-selection warmup entered |
+| `startup_source_selection_explicit_validate_only_total` | monotonic counter | increments per exact-source validation cycle |
+| `startup_source_selection_explicit_source_conflict_detected` | boolean-like gauge | exact-source validation conflict detected |
+| `startup_source_selection_degraded_escalated` | latched flag | `1` while escalation latch active |
+| `startup_source_selection_degraded_since_ms` | unix-ms gauge | timestamp of current envelope-visible degraded state entry |
+| `startup_source_selection_consecutive_failures` | gauge | reset on source-selection success |
+| `startup_source_selection_degraded_cumulative_ms` | rolling gauge | 15-minute in-process cumulative degraded time |
 
 ### 6.5 `bus_admission` Envelope Field
 
@@ -894,7 +886,7 @@ On the first unlatched-to-latched escalation transition, the gateway
 SHALL:
 
 - emit one structured WARN line;
-- set `startup_admission_degraded_escalated=1`.
+- set `startup_source_selection_degraded_escalated=1`.
 
 The WARN line is:
 
@@ -925,7 +917,7 @@ The implementation is defined as:
 - rolling window length `900s` (`15 min`);
 - each slot stores degraded milliseconds in that second;
 - sum over all slots produces
-  `startup_admission_degraded_cumulative_ms`.
+  `startup_source_selection_degraded_cumulative_ms`.
 
 With `900` buckets at `4 bytes` each, the memory bound is
 approximately `3.6 KB` per admission instance.
@@ -947,9 +939,11 @@ On process start the gateway SHALL emit:
 
 Operator override is opt-in and default-off.
 
-It exists to let an operator intentionally force the local initiator
-selection on join-capable direct transports when admission must not
-wait for a successful Joiner result.
+Historically it let an operator force the local initiator selection on
+join-capable direct transports. SAS M4 supersedes that behavior: the operator
+may configure an exact source, but the gateway treats it as
+`explicit_validate_only` and still requires active validation before normal
+Helianthus-owned traffic uses it.
 
 ### 7.2 Configuration Surface
 
@@ -973,37 +967,28 @@ When override is unset:
 
 This is the default and preferred branch.
 
-### 7.4 Set + `Validate=false`
+### 7.4 Exact Source Set
 
-When override is set and `Validate=false`:
+When exact source configuration is set:
 
-- warmup does not gate active traffic;
-- Joiner is bypassed for gating purposes;
-- active traffic uses the override initiator immediately;
-- the selected path is `override`;
-- the gateway logs
-  `startup admission override source=0xXX confidence=low`
-  before the first active frame;
-- `startup_admission_override_active=1`;
-- `startup_admission_override_bypass_total` increments for the
+- candidate search is bypassed;
+- active probe validation remains mandatory;
+- normal gateway-owned active traffic waits for validation success;
+- the selected mode is `explicit_validate_only`;
+- `startup_source_selection_explicit_source_active=1`;
+- `startup_source_selection_explicit_validate_only_total` increments for the
   admission cycle.
 
-### 7.5 Set + `Validate=true`
+### 7.5 Exact Source Validation Failure
 
-When override is set and `Validate=true`:
+If exact source validation fails:
 
-- active traffic still uses the override initiator immediately;
-- warmup does not gate active traffic;
-- Joiner runs in parallel for advisory observation only;
-- advisory Joiner may populate `JoinMetrics`;
-- retrospective conflict detection runs at approximately `t=5s`.
-
-If advisory Joiner prefers a different initiator than the override:
-
-- the gateway emits a WARN;
-- `startup_admission_override_conflict_detected=1`;
-- the selected path remains `override`;
-- already-emitted traffic is not invalidated.
+- normal gateway-owned active traffic remains blocked;
+- the gateway records a degraded source-selection state;
+- the selected mode remains `explicit_validate_only` for the attempted
+  exact-source cycle;
+- the failed source may be reported under `source_selection.failed_source`;
+- automatic fallback to unvalidated static-source operation is forbidden.
 
 ### 7.6 No Auto-Lift
 
@@ -1017,15 +1002,15 @@ The implementation MUST NOT:
 - promote advisory Joiner output into runtime configuration.
 
 <a id="admission-artifact-schema-key-paths"></a>
-## 8. Admission-Artifact Schema Key-Paths
+## 8. Source-Selection Artifact Schema Key-Paths
 
 ### 8.1 Status and Scope
 
-This section is the normative AD23 key-path listing for the admission
+This section is the normative SAS M4 key-path listing for the source-selection
 artifact. The JSON schema file itself lives in
 `helianthus-ebusgateway` at
-`docs/schemas/admission-artifact.schema.json` and is committed there as
-part of `M2a`. This document authorizes the schema semantics and field
+`docs/schemas/source-selection-artifact.schema.json`. This document authorizes
+the schema semantics and field
 set; it does not move schema-file authorship into this repository.
 
 Artifact scope is:
@@ -1043,7 +1028,7 @@ Artifact scope is:
 | `admission.warmup_duration_s` | yes | effective warmup duration used for the admission cycle |
 | `admission.reason_if_degraded` | yes | structured degraded reason, empty or null-equivalent only when not degraded |
 | `admission.transport_kind` | yes | classified transport kind for the run |
-| `admission.admission_path_selected` | yes | enum in `{join, override, degraded_transport_blind, degraded_no_events}` |
+| `admission.source_selection.mode` | yes | enum in `{source_selection, explicit_validate_only, degraded_transport_blind, degraded_no_events}` |
 
 ### 8.3 Discovery Object
 
@@ -1061,7 +1046,7 @@ Artifact scope is:
 
 The schema SHALL enforce:
 
-`admission.admission_path_selected ∈ {join, override,
+`admission.source_selection.mode ∈ {source_selection, explicit_validate_only,
 degraded_transport_blind, degraded_no_events}`
 
 Any out-of-range value is invalid and SHALL be treated as a failure by
@@ -1082,7 +1067,7 @@ At minimum, the emitted values must support validation that:
 
 This admission artifact is outside `ebusd-tcp` scope in this plan.
 `ebusd-tcp` is referenced in the transport matrix and in the guarded
-full-range retry rule, but does not emit `admission_path_selected`
+full-range retry rule, but does not emit `admission.source_selection.mode`
 within this plan's adapter-direct acceptance surface.
 
 <a id="full-range-retry-guard"></a>
