@@ -169,7 +169,6 @@ baseline — 0 diffs (`transport-matrix-baseline-w19-26.json`).
   observe-first) is unit-uncovered in the gateway's main_test suite. A
   future follow-up will add a stub source-selector returning a result so
   the async goroutine fires.
-
 ## Phase C Live Validation Acceptance (M-C8)
 
 **Date:** 2026-05-08
