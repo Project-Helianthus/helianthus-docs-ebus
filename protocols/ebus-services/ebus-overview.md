@@ -51,8 +51,8 @@ Addresses equal to `0xA9` (escape) or `0xAA` (SYN) are invalid in address positi
 ### Helianthus Source Address Selection
 
 When Helianthus must choose an initiator address on a live bus, it performs
-source address selection plus gateway admission validation. It does not perform
-a protocol membership join.
+source address selection plus gateway active-probe validation. It does not
+perform a protocol membership operation.
 
 The standard source-address table is frozen in
 [`architecture/ebus_standard/12-source-address-table.md`](../../architecture/ebus_standard/12-source-address-table.md).
@@ -72,10 +72,10 @@ wire, p0 / `0x0` outranks p1 / `0x1`, then p2 / `0x3`, p3 / `0x7`, and p4 /
 `0xFF` is a valid source address and maps to companion `0x04`. The `0xFF`
 NACK meaning applies only in ACK/NACK byte context.
 
-Before startup scan or any normal gateway-owned bus-reaching operation,
-gateway admission must actively validate the selected source and companion. A
-failed active probe quarantines/excludes that source and either tries the next
-candidate or enters `DEGRADED_SOURCE_SELECTION`, which emits no
+Before startup scan or any normal gateway-owned bus-reaching operation, gateway
+source-selection validation must actively validate the selected source and
+companion. A failed active probe quarantines/excludes that source and either
+tries the next candidate or enters `DEGRADED_SOURCE_SELECTION`, which emits no
 Helianthus-originated eBUS traffic.
 
 ## ACK/NACK Symbols
@@ -157,7 +157,7 @@ For multi-client/proxy setups, Helianthus collision handling uses a receive-vs-t
   - if frame matches a recent local transmit inside the echo window (`200ms` default), treat as local echo,
   - otherwise classify as foreign same-source collision.
 - In muted/listen-only mode, any `SRC == active initiator` receive frame is classified as collision.
-- After initiator rejoin, frames with the previous initiator source are ignored during a grace window (`750ms` default).
+- After initiator source changes, frames with the previous initiator source are ignored during a grace window (`750ms` default).
 - While collision is active, write attempts fail fast with an arbitration-failed classification.
 
 ## CRC8 and Escaping
@@ -222,8 +222,8 @@ Notes:
   refresh internal address state that can later be queried (e.g. via the ebusd
   TCP `info` command).
 
-Helianthus source-selection admission does not use `0x07/0xFE` as its first
-startup validation probe. The admission probe is bounded addressed
+Helianthus source-selection validation does not use `0x07/0xFE` as its first
+startup validation probe. The active probe is bounded addressed
 Identification (`0x07/0x04`) only.
 
 ### Identification Scan (0x07 0x04)

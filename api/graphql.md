@@ -122,6 +122,10 @@ Current value/encoding rules:
 
 - GraphQL names are camelCase (`activationCounts`, `freshnessClasses`,
   `directApplyEligibilityClasses`, `shadowingEnabled`).
+- Source-selection admission status is the explicit SAS M4 exception frozen by
+  the gateway schema: consumers query `busSummary.status.bus_admission` and
+  `bus_admission.source_selection`. The old `busAdmission` compatibility alias
+  is intentionally absent.
 - `freshnessClasses`, `directApplyEligibilityClasses`, `inventory.stateClasses`,
   `inventory.pinClasses`, `activationCounts.sourceClasses`, and
   `degraded.reasons` are non-null lists.
@@ -181,9 +185,40 @@ type BusSummary {
 type BusObservabilityStatus {
   transportClass: String!
   capability: BusObservabilityCapability!
+  bus_admission: BusAdmission
   warmup: BusObservabilityWarmup!
   timingQuality: BusObservabilityTimingQuality!
   degraded: BusObservabilityDegraded!
+}
+
+type BusAdmission {
+  source_selection: BusAdmissionSourceSelection
+}
+
+type BusAdmissionSourceSelection {
+  state: String!
+  outcome: String!
+  selected_source: Int
+  companion_target: Int
+  reason: String
+  active_probe: BusAdmissionActiveProbe
+  retryable: Boolean!
+  automatic_retry_scheduled: Boolean!
+  next_action: String
+  last_successful_source: Int
+  rejected_candidates: [BusAdmissionRejectedCandidate!]!
+}
+
+type BusAdmissionActiveProbe {
+  target: Int
+  status: String!
+}
+
+type BusAdmissionRejectedCandidate {
+  source: Int!
+  companion_target: Int
+  reason: String!
+  retryable: Boolean!
 }
 
 type BusObservabilityCapability {

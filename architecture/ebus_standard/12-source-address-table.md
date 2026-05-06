@@ -85,24 +85,25 @@ bypassed, but the selected source and companion must still pass availability
 and active-probe validation before any normal gateway-owned bus-reaching path
 can use them.
 
-## Startup Admission Boundary
+## Startup Source-Selection Boundary
 
 `helianthus-ebusgo` owns the reusable `SourceAddressSelector` mechanics and
-the static table constants. `helianthus-ebusgateway` owns startup admission:
-active probe, retry/quarantine, persistence metadata, operator recovery
-surfaces, and admission status. `helianthus-ebusreg` remains admission-agnostic
-and consumes only the source byte it is given.
+the static table constants. `helianthus-ebusgateway` owns startup
+source-selection validation: active probe, retry/quarantine, persistence
+metadata, operator recovery surfaces, and source-selection status.
+`helianthus-ebusreg` remains source-selection-agnostic and consumes only the
+source byte it is given.
 
-Normal gateway-owned operations use only the admitted
+Normal gateway-owned operations use only
 `SourceAddressSelection.Source` after `active_probe_passed`. This includes MCP,
 GraphQL, Portal explorer, semantic pollers/writers, schedulers, NM runtime, and
 gateway-internal protocol dispatch. A redundant caller-provided source matching
-the admitted source may be accepted as diagnostic input; a nonmatching source
-is rejected on normal gateway-owned paths.
+the active-probe-passed source may be accepted as diagnostic input; a
+nonmatching source is rejected on normal gateway-owned paths.
 
-Only transport-specific diagnostic MCP requests may use a non-admitted source,
+Only transport-specific diagnostic MCP requests may use a non-selected source,
 and only for one audited, non-persistent request that does not mutate the
-admitted source.
+active-probe-passed source.
 
 `DEGRADED_SOURCE_SELECTION` is fail-closed. While it is active, Helianthus
 originates no eBUS traffic: no scan, semantic polling, MCP/GraphQL bus invoke,
@@ -110,10 +111,14 @@ NM `FF 00`/`FF 02`, `0x07/0xFF`, or companion responder activity.
 
 The only first-implementation pre-discovery validation probe is addressed
 `0x07/0x04`, classified as `read_only_bus_load`, against a configured or
-current bounded positive target. Startup admission must not use broadcast
-`0x07/0xFE`, `0x0F` test commands, NM services, mutating services, memory
-writes, full-range probes, SYN/ESC/broadcast destinations, the selected source,
-or the selected companion as a validation target.
+current bounded positive target. Startup source-selection validation must not
+use broadcast `0x07/0xFE`, `0x0F` test commands, NM services, mutating
+services, memory writes, full-range probes, SYN/ESC/broadcast destinations, the
+selected source, or the selected companion as a validation target.
+
+The public API migration matrix for these source-selection status and source
+authority changes is maintained in
+[`api/source-selection-migration.md`](../../api/source-selection-migration.md).
 
 ## Hash Contract
 
