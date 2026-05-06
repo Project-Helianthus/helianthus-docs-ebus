@@ -291,7 +291,7 @@ When `StartupSource.Override` is set and
 - the gateway emits
   `startup admission override source=0xXX confidence=low`
   before the first active frame;
-- `startup_admission_override_active=1` is exposed;
+- `startup_source_selection_explicit_source_active=1` is exposed;
 - the selected path is `override`.
 
 This path is a soft short-circuit, not a silent fallback.
@@ -312,7 +312,7 @@ When `StartupSource.Override` is set and
 If advisory Joiner disagrees with the override choice:
 
 - the gateway emits a structured WARN;
-- `startup_admission_override_conflict_detected=1` is set;
+- `startup_source_selection_explicit_source_conflict_detected=1` is set;
 - already-emitted active traffic remains valid and is NOT
   retroactively invalidated;
 - the selected path remains `override` until the operator changes
@@ -448,9 +448,9 @@ The path-selection implications are:
   artifact scope of this plan.
 
 The selected enum value SHALL drive the admission artifact field
-`admission.admission_path_selected`, degraded-mode log classification,
-and observability review of startup behaviour. It SHALL NOT by itself
-change discovery promotion rules.
+`admission.source_selection.mode`, degraded-mode log classification, and
+observability review of startup behaviour. It SHALL NOT by itself change
+discovery promotion rules.
 
 <a id="evidence-pipeline-and-promotion"></a>
 ## 4. Evidence Pipeline and Promotion
@@ -830,17 +830,17 @@ expvars:
 
 | Expvar | Type / Domain | Required Semantics |
 |---|---|---|
-| `startup_admission_degraded_total` | monotonic counter | count of degraded transitions |
-| `startup_admission_state` | enum `{0,1,2}` | current admission state |
-| `startup_admission_override_active` | boolean-like gauge | `1` when override configured |
-| `startup_admission_warmup_events_seen` | per-cycle gauge | reset each warmup interval |
-| `startup_admission_warmup_cycles_total` | monotonic counter | increments per Joiner warmup entered |
-| `startup_admission_override_bypass_total` | monotonic counter | increments per override-selected admission cycle |
-| `startup_admission_override_conflict_detected` | boolean-like gauge | advisory conflict under `Validate=true` |
-| `startup_admission_degraded_escalated` | latched flag | `1` while escalation latch active |
-| `startup_admission_degraded_since_ms` | unix-ms gauge | timestamp of current envelope-visible degraded state entry |
-| `startup_admission_consecutive_rejoin_failures` | gauge | reset on rejoin success |
-| `startup_admission_degraded_cumulative_ms` | rolling gauge | 15-minute in-process cumulative degraded time |
+| `startup_source_selection_degraded_total` | monotonic counter | count of degraded transitions |
+| `startup_source_selection_state` | enum `{0,1,2}` | current source-selection state |
+| `startup_source_selection_explicit_source_active` | boolean-like gauge | `1` when exact source configuration is active |
+| `startup_source_selection_warmup_events_seen` | per-cycle gauge | reset each warmup interval |
+| `startup_source_selection_warmup_cycles_total` | monotonic counter | increments per source-selection warmup entered |
+| `startup_source_selection_explicit_validate_only_total` | monotonic counter | increments per exact-source validation cycle |
+| `startup_source_selection_explicit_source_conflict_detected` | boolean-like gauge | advisory conflict under `Validate=true` |
+| `startup_source_selection_degraded_escalated` | latched flag | `1` while escalation latch active |
+| `startup_source_selection_degraded_since_ms` | unix-ms gauge | timestamp of current envelope-visible degraded state entry |
+| `startup_source_selection_consecutive_failures` | gauge | reset on source-selection success |
+| `startup_source_selection_degraded_cumulative_ms` | rolling gauge | 15-minute in-process cumulative degraded time |
 
 ### 6.5 `bus_admission` Envelope Field
 
@@ -897,7 +897,7 @@ On the first unlatched-to-latched escalation transition, the gateway
 SHALL:
 
 - emit one structured WARN line;
-- set `startup_admission_degraded_escalated=1`.
+- set `startup_source_selection_degraded_escalated=1`.
 
 The WARN line is:
 
@@ -928,7 +928,7 @@ The implementation is defined as:
 - rolling window length `900s` (`15 min`);
 - each slot stores degraded milliseconds in that second;
 - sum over all slots produces
-  `startup_admission_degraded_cumulative_ms`.
+  `startup_source_selection_degraded_cumulative_ms`.
 
 With `900` buckets at `4 bytes` each, the memory bound is
 approximately `3.6 KB` per admission instance.
@@ -987,8 +987,8 @@ When override is set and `Validate=false`:
 - the gateway logs
   `startup admission override source=0xXX confidence=low`
   before the first active frame;
-- `startup_admission_override_active=1`;
-- `startup_admission_override_bypass_total` increments for the
+- `startup_source_selection_explicit_source_active=1`;
+- `startup_source_selection_explicit_validate_only_total` increments for the
   admission cycle.
 
 ### 7.5 Set + `Validate=true`
@@ -1004,7 +1004,7 @@ When override is set and `Validate=true`:
 If advisory Joiner prefers a different initiator than the override:
 
 - the gateway emits a WARN;
-- `startup_admission_override_conflict_detected=1`;
+- `startup_source_selection_explicit_source_conflict_detected=1`;
 - the selected path remains `override`;
 - already-emitted traffic is not invalidated.
 
@@ -1085,7 +1085,7 @@ At minimum, the emitted values must support validation that:
 
 This admission artifact is outside `ebusd-tcp` scope in this plan.
 `ebusd-tcp` is referenced in the transport matrix and in the guarded
-full-range retry rule, but does not emit `admission_path_selected`
+full-range retry rule, but does not emit `admission.source_selection.mode`
 within this plan's adapter-direct acceptance surface.
 
 <a id="full-range-retry-guard"></a>
