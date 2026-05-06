@@ -317,14 +317,14 @@ closes only when BOTH of the following are true:
 
 1. `startupScanSignals.semanticBootstrapReady` has fired; and
 2. admission is either:
-   - Joiner-success with a valid `JoinResult`, or
-   - override-set.
+   - `source_selection` with active probe validation passed; or
+   - `explicit_validate_only` with active probe validation passed.
 
 The barrier MUST remain open when:
 
-- admission is degraded without override;
+- admission is degraded;
 - warmup observed no valid admission outcome;
-- Joiner has not yet succeeded;
+- active probe validation has not succeeded;
 - the transport has not recovered after rejoin failure.
 
 The semantic polling change above is a signal-source change only. The
