@@ -360,22 +360,25 @@ full-range scan or to static-source operation.
 
 ### 3.1 Enum
 
-The startup admission path selection SHALL be emitted and reasoned
-about using the enum:
+For the current SAS M4 source-selection surface, startup source selection SHALL
+be emitted and reasoned about using:
 
-`admission_path_selected ∈ {join, override, degraded_transport_blind,
-degraded_no_events}`
+`admission.source_selection.mode ∈ {source_selection, explicit_validate_only,
+degraded_transport_blind, degraded_no_events}`
 
-No other value is valid under AD23.
+No other value is valid under the current source-selection artifact contract.
 
 ### 3.2 Value Definitions
 
 | Value | Triggering Condition | Meaning | Active Traffic Allowed |
 |---|---|---|---|
-| `join` | Join-capable direct transport produced a valid `JoinResult` before first non-override active frame | direct admission succeeded | yes, using `JoinResult.Initiator` |
-| `override` | `StartupSource.Override` is set, regardless of `Validate` branch | operator supplied active source | yes, using override initiator |
+| `source_selection` | source-selection-capable direct transport produced a valid source before first non-explicit-source active frame | direct source selection succeeded | yes, using selected source |
+| `explicit_validate_only` | exact source configuration is set, regardless of `Validate` branch | operator supplied exact source, still actively validated | yes, using explicitly configured source after validation rules |
 | `degraded_transport_blind` | warmup window observed zero passive events and admission could not establish a valid source | silent-bus or transport-blind startup | no |
 | `degraded_no_events` | transport is observable enough to run warmup, but no admissible `JoinResult` exists by warmup end and no override is set | admission degraded after observable but insufficient or conflicting evidence | no |
+
+Subsections 3.3 through 3.6 retain the historical W17-26 wording. Current SAS
+M4 consumers use the mapped labels in the table above.
 
 ### 3.3 `join`
 
@@ -1017,15 +1020,15 @@ The implementation MUST NOT:
 - promote advisory Joiner output into runtime configuration.
 
 <a id="admission-artifact-schema-key-paths"></a>
-## 8. Admission-Artifact Schema Key-Paths
+## 8. Source-Selection Artifact Schema Key-Paths
 
 ### 8.1 Status and Scope
 
-This section is the normative AD23 key-path listing for the admission
+This section is the normative SAS M4 key-path listing for the source-selection
 artifact. The JSON schema file itself lives in
 `helianthus-ebusgateway` at
-`docs/schemas/admission-artifact.schema.json` and is committed there as
-part of `M2a`. This document authorizes the schema semantics and field
+`docs/schemas/source-selection-artifact.schema.json`. This document authorizes
+the schema semantics and field
 set; it does not move schema-file authorship into this repository.
 
 Artifact scope is:
@@ -1043,7 +1046,7 @@ Artifact scope is:
 | `admission.warmup_duration_s` | yes | effective warmup duration used for the admission cycle |
 | `admission.reason_if_degraded` | yes | structured degraded reason, empty or null-equivalent only when not degraded |
 | `admission.transport_kind` | yes | classified transport kind for the run |
-| `admission.admission_path_selected` | yes | enum in `{join, override, degraded_transport_blind, degraded_no_events}` |
+| `admission.source_selection.mode` | yes | enum in `{source_selection, explicit_validate_only, degraded_transport_blind, degraded_no_events}` |
 
 ### 8.3 Discovery Object
 
@@ -1061,7 +1064,7 @@ Artifact scope is:
 
 The schema SHALL enforce:
 
-`admission.admission_path_selected ∈ {join, override,
+`admission.source_selection.mode ∈ {source_selection, explicit_validate_only,
 degraded_transport_blind, degraded_no_events}`
 
 Any out-of-range value is invalid and SHALL be treated as a failure by
