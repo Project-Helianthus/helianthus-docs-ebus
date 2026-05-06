@@ -23,7 +23,7 @@ only for one explicit request and must not mutate gateway source authority.
 | `startup_admission_warmup_events_seen` | `startup_source_selection_warmup_events_seen` | Track passive observation evidence collected before active validation. |
 | `startup_admission_warmup_cycles_total` | `startup_source_selection_warmup_cycles_total` | Track source-selection cycles. |
 | `startup_admission_override_bypass_total` | `startup_source_selection_explicit_validate_only_total` | Track exact-source validation cycles. |
-| `startup_admission_override_conflict_detected` | `startup_source_selection_explicit_source_conflict_detected` | Track advisory disagreement for exact-source validation. |
+| `startup_admission_override_conflict_detected` | `startup_source_selection_explicit_source_conflict_detected` | Track exact-source validation conflict. |
 | `startup_admission_degraded_escalated` | `startup_source_selection_degraded_escalated` | Rename degraded escalation flag. |
 | `startup_admission_degraded_since_ms` | `startup_source_selection_degraded_since_ms` | Rename degraded entry timestamp. |
 | `startup_admission_consecutive_rejoin_failures` | `startup_source_selection_consecutive_failures` | Track failed reselection or validation cycles without protocol rejoin wording. |
