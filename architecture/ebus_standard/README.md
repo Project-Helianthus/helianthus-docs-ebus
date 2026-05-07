@@ -47,7 +47,9 @@ Attribution: canonical plan
 | [`09-mcp-envelope.md`](./09-mcp-envelope.md) | M4 MCP envelope contract, deterministic `data_hash`, golden fixture discipline |
 | [`10-rpc-source-113.md`](./10-rpc-source-113.md) | M4 `rpc.invoke` gateway source byte invariant |
 | [`11-m4b-semantic-lock.md`](./11-m4b-semantic-lock.md) | M4B semantic lock of read & decode surfaces (envelope, error, safety_class, decode scaffold, catalog version) |
+<!-- legacy-role-mapping:begin -->
 | [`12-address-table.md`](./12-address-table.md) | SAS-01 source-address table v1, priority mapping, companion mapping, hash contract; Phase C 256-byte address taxonomy (`Master\|Slave\|Broadcast\|Reserved`), frame-type addressing contract, and `ValidateFrameAddressing` validator contract |
+<!-- legacy-role-mapping:end -->
 | [`13-responder-capability-signal.md`](./13-responder-capability-signal.md) | M4D normative lock of `meta.capabilities.responder` (shape, invariants I1-I8, fail-closed consumer rule, enum catalogue at v1.1, subtree version policy) |
 | [`14-transport-matrix-cross-reference.md`](./14-transport-matrix-cross-reference.md) | M6b pointer to the canonical transport matrix artifact in helianthus-ebusgateway (section pointers §3-§7, BENCH-REPLACE status) |
 

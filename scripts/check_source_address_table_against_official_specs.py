@@ -12,7 +12,7 @@ from typing import Any
 
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-DOC_PATH = REPO_ROOT / "architecture/ebus_standard/12-source-address-table.md"
+DOC_PATH = REPO_ROOT / "architecture/ebus_standard/12-address-table.md"
 FIXTURE_PATH = REPO_ROOT / "tests/fixtures/source_address_table_official_v1.json"
 
 TABLE_VERSION = "ebus-source-address-table/v1"
