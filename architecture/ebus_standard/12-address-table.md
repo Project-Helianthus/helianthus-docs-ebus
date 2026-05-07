@@ -4,6 +4,14 @@ Status: Normative
 Milestone: SAS-01 M1 (table v1) + Phase C C0_DOC_SPEC (256-byte taxonomy and frame-type contract)
 Table owner: `helianthus-docs-ebus`
 
+<!-- legacy-role-mapping:begin -->
+> **Vocabulary note**: this chapter uses the eBUS-spec normative terms
+> "Master" and "Slave" verbatim because they are the AddressClass enum
+> names defined by the spec. In Helianthus prose outside this chapter,
+> "initiator" maps to Master and "target" maps to Slave per the global
+> terminology gate. The legacy-role-mapping markers wrap the entire
+> chapter to allow spec-faithful vocabulary in the normative content.
+
 ## Rename note
 
 This chapter was previously named `12-source-address-table.md` and is renamed
@@ -661,3 +669,5 @@ independently against this file.
 - `helianthus-docs-ebus/architecture/atr/01-address-table-model.md` for the
   `AddressSlot` data model that consumes this taxonomy at the registry
   layer.
+
+<!-- legacy-role-mapping:end -->
