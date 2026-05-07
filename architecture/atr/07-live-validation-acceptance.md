@@ -109,4 +109,64 @@ Rollback steps:
 
 The rollback decision MUST be made from the failed assertion log and the
 transport-matrix diff.
+
+## Phase A.5 Live Evidence (post-merge runtime wire-up)
+
+Phase A's first live deployment validation surfaced a runtime gap: the
+`AddressTableInserter` introduced in M3+M4 (PR #564) was never instantiated
+in `cmd/gateway/main.go`. The type-level pieces (M2A correlator, AD04/AD05
+insertion rules, `ACKCorrelation` population by the reconstructor) were all
+merged but the inserter was idle in production — passively-observed
+addresses were therefore not landing in the registry. P1 failed live.
+
+PR #565 (gateway, merged 2026-05-06 as 2281196) closes the gap:
+
+- `AddressTable` + `AddressTableInserter` are instantiated once after
+  `gateway.Start(ctx)` and the GraphQL builder, with a live `AdmittedSource`
+  closure tied to `builder.AdmittedMutationSource()`.
+- Subscription is gated on `builder.AdmittedMutationSource()` returning
+  `ok=true`, with three wire-in points covering both the synchronous
+  override / static fallback path and the async source-selection-capable +
+  observe-first path (after `activeProbePassed`).
+- `sync.Once` + `atomic.Bool` provide cross-goroutine safety.
+- Subscription failure is non-fatal — logged and skipped, consistent with
+  the `PassiveDiscoveryPromoter` init pattern.
+
+Live evidence captured 2026-05-06 against HA at 192.168.100.4:
+
+- ✅ Source-selection completed (`active_probe_passed`, `selected_source=127`,
+  `companion_target=132`).
+- ✅ Inserter wired and subscribed via the async wire-in point.
+- ✅ Existing devices (BAI00 / BASV2 / VR_71) unchanged at active-discovered
+  state.
+- ⏳ P1 (passive 0xF6 detection) pending organic 0xF1-originated bus traffic.
+  The bus is dominated by gateway traffic during initial steady-state; NETX3
+  master 0xF1 emits sparsely (per Prometheus 3h analysis: periodic enrichment
+  calls). Once observed twice with positive ACK on any target, the
+  AD05-second-corroboration rule inserts companion `0xF6`. P2/P3 (static seed
+  for 0x04 / 0xEC) remain N/A by default since `EnableStaticSeedTable=false`.
+
+Transport-matrix dry-run (M9) post-merge: 88-case index identical to the M0A
+baseline — 0 diffs (`transport-matrix-baseline-w19-26.json`).
+
+## Phase A.5 Known Follow-ups (Phase B / future)
+
+- **Pre-existing `*AddressSlot` data race** introduced by PR #131 + #564:
+  the inserter mutates `registrySlot.DiscoverySource`, `VerificationState`,
+  `Role`, and `FirstObservedAt/LastObservedAt` through a pointer returned
+  by `LookupSlot()` without holding the registry lock. PR #565's runtime
+  test sidesteps the race by asserting via the lock-safe `DeviceEntry`
+  interface. Production reads via MCP / GraphQL today don't access
+  `*AddressSlot` fields directly, so the race is benign for the current
+  surface area, but will be addressed by adding a thread-safe API in
+  `helianthus-ebusreg` (proposed:
+  `(*DeviceRegistry).MarkSlotPassiveObserved(addr, role, observedAt)`)
+  and refactoring the inserter to use it.
+
+- **Async-path test coverage debt**: the runtime test exercises only the
+  synchronous static-fallback admission wire-in. The async
+  `activeProbePassed` wire-in path (source-selection-capable +
+  observe-first) is unit-uncovered in the gateway's main_test suite. A
+  future follow-up will add a stub source-selector returning a result so
+  the async goroutine fires.
 <!-- legacy-role-mapping:end -->
