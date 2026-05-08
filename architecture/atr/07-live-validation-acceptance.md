@@ -169,4 +169,87 @@ baseline — 0 diffs (`transport-matrix-baseline-w19-26.json`).
   observe-first) is unit-uncovered in the gateway's main_test suite. A
   future follow-up will add a stub source-selector returning a result so
   the async goroutine fires.
+
+## Phase C Live Validation Acceptance (M-C8)
+
+**Date:** 2026-05-08
+**Binary:** Phase C build (M-C6a..M-C7 merged), SHA256
+`11491e4978fd6d0ae669d30786a496e3376568dadc3ef3b6c84ca65fff1d7746`,
+deployed to HA OS 6.12.75 / RPi4 / aarch64.
+
+### Falsifiability gate
+
+Pre-Phase-C bug operator surfaced from live Grafana traffic analysis:
+M2S sends from gateway (initiator 0x7F) routed to the **initiator** byte
+of an aliased canonical pair instead of the **target** byte. Concretely:
+`registry.devices` listed BAI 0x03↔0x08 with `entry.Address()` returning
+`0x03` (initiator side); semantic poller built `Frame{Target: 0x03, …}`
+on B509/B524 reads, so traffic went to the master byte instead of the
+slave that answers M2S. The pre-Phase-C `Bus.Send` derived FrameType
+from `Target` via `FrameTypeForTarget(0x03)` → M2M, validator accepted,
+frame went to wire under the wrong contract.
+
+Phase C contract (AD24..AD30): every active gateway send site declares
+its FrameType explicitly; `Bus.Send.Validate` refuses M2S to a master
+byte with `ErrInvalidFrameAddress`; routing helpers prefer the target-
+role byte for aliased pairs.
+
+### Live evidence (10-min observation window post-deploy)
+
+**Active gateway M2S sends per destination** (from `/metrics`,
+`ebus_frames_observed_total{src="0x7f", scope="active"}`):
+
+| Destination | Address class | Send count | Verdict |
+|-------------|---------------|------------|---------|
+| 0x08 (BAI target)    | Slave  | 2 frames | Routes to target ✅ |
+| 0x15 (BASV2 target)  | Slave  | 4 frames | Routes to target ✅ |
+| 0x26 (VR_71 target)  | Slave  | 1 frame  | Routes to target ✅ |
+| **0x03 (BAI initiator)**   | Master | **0** | Pre-Phase-C had ≥1 ✅ |
+| **0x10 (BASV2 initiator)** | Master | **0** | Pre-Phase-C had ≥1 ✅ |
+
+**FrameType labels.** All active gateway sends carry
+`frame_type="initiator_target"` (M2S declared explicitly per M-C7).
+Broadcast traffic (e.g. 0xFE destination) carries
+`frame_type="broadcast"`. No active sends carry derived/unknown type.
+
+**Validation failures.** `helianthus_invalid_frame_address_total`
+counter is zero (Prometheus emits non-zero counters only; absence
+confirms no validator rejections). Addon log search for
+`ErrInvalidFrameAddress` / `invalid_frame_address` / `validate.*frame`
+during the observation window: zero matches.
+
+**Boiler reads functional** (B509/B524 to 0x08 succeeded):
+`flow_temperature_c=18`, `water_pressure_bar=8.16`,
+`dhw_temperature_c=39.875`, `central_heating_pump_active=true`.
+
+### Build-break safety net (M-C6d)
+
+Bumping `helianthus-ebusgateway` to the post-M-C6c `helianthus-ebusreg`
+(commit 77b56516, where `DeviceEntry.Address()` is removed) preserved
+all CI checks: `go build/vet/test ./...` clean; GH Actions 4/4 green;
+`scripts/ci_local.sh` exit 0. Any caller missed by M-C6b's migration
+would have surfaced as a compile error here. Zero misses.
+
+### Transport-matrix zero-diff (M-C9)
+
+88-case post-Phase-C topology byte-identical to the M-C0A baseline.
+SHA256 `46431e22d8ed3909db19a34196df72575df8afb7ae03658be32cde0f2734a143`
+matches across:
+- M-C0A baseline (`transport-matrix-baseline-phase-c.json` →
+  `cases[]` extracted)
+- Post-#576 main (M-C6b merged)
+- Post-#577 main (M-C7 merged)
+
+`internal/matrix/` was not modified by any Phase C commit; zero-diff
+is structurally guaranteed in addition to the byte-equality proof.
+
+### Verdict
+
+**Phase C M-C8 PASS.** The defense-in-depth FrameType-aware transport
+contract holds in production: every gateway-initiated M2S frame
+targets a slave byte; the explicit `Frame.FrameType` from M-C7
+prevents the pre-Phase-C silent-derivation hazard; `Bus.Send.Validate`
+from M-C5 stands as the transport-side refusal of invalid frames.
+The pre-Phase-C bug (M2S to master byte) is fixed end-to-end,
+verified live on BAI 0x03↔0x08 and BASV2 0x10↔0x15 canonical pairs.
 <!-- legacy-role-mapping:end -->
