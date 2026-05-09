@@ -19,9 +19,9 @@ This matches the eBUS bus-idle marker requirement between frames (ref: 12-addres
 
 ### Layer 2 — Source AddressClass validation
 
-After Layer 1 admits a byte as eligible (i.e. `synced == true`), the reconstructor validates that `protocol.AddressClassOf(symbol) == AddressClassMaster` (initiator-class — the 25 canonical initiator addresses per AD05 / Phase C / `sourceAddressTableV1`).
+After Layer 1 admits a byte as eligible (i.e. `synced == true`), the reconstructor validates that `protocol.AddressClassOf(symbol)` returns the initiator-class enum value (the 25 canonical initiator addresses per AD05 / Phase C / `sourceAddressTableV1`).
 
-Bytes whose `AddressClass` is `Slave`, `Broadcast`, or `Reserved` indicate either:
+Bytes whose address class is target-class, broadcast, or reserved indicate either:
 
 - a corrupt-state window the reconstructor cannot recover from blindly, OR
 - the upstream loss of the actual SRC byte — the operator-confirmed Mode B signature. Live evidence: 25+ `[SYN] [TGT] [PB=0xB5] [SB] [data]` events per 5000-line log window where the actual source (e.g. `0x10 BASV2 initiator`, `0xF1 NETX3 initiator`) was eaten upstream by the ENH transport's `StreamEventStarted{Data: <src>}` capture-as-control-event drop in the gateway adapter mux (or the analogous proxy drop at `helianthus-ebus-adapter-proxy/internal/adapterproxy/server.go:1841-1847`).
