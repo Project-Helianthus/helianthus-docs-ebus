@@ -329,6 +329,25 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
   - `ebus.v1.adapter_info.get`
   - `ebus.v1.registry.devices.list`
   - `ebus.v1.registry.devices.get`
+    - JSON response items carry `discovery_source` and
+      `verification_state` fields (P3.5). `discovery_source` is one of
+      `passive_observed | static_seed | active_confirmed`;
+      `verification_state` is one of
+      `candidate | corroborated_pending | identity_confirmed`.
+      Both are omitted when the registry has no slot record for the
+      address. For `devices.list` the labels reflect the entry's
+      primary address; for `devices.get(address=X)` the labels
+      reflect the queried address X — important for merged entries
+      whose aliases may be at different DiscoverySource levels (e.g.
+      NETX3's broadcast face `0x04` stays at `static_seed/candidate`
+      while the `0xF1` face advances to
+      `active_confirmed/identity_confirmed` via active scan).
+      Per the
+      [`05-static-seed-provenance`](../architecture/atr/05-static-seed-provenance.md)
+      ATR, addresses planted by the productids static seed table MUST
+      surface as `static_seed/candidate` until corroborated by passive
+      observation (→ `corroborated_pending`) or identity-confirmed by
+      active scan (→ `active_confirmed/identity_confirmed`).
   - `ebus.v1.registry.planes.list`
   - `ebus.v1.registry.methods.list`
   - `ebus.v1.semantic.zones.get`
