@@ -54,6 +54,9 @@ This page documents the runtime observability signals currently emitted by `heli
 | `ebus_dedup_local_participant_inbound_total` | counter | Passive traffic classified as local-participant inbound. |
 | `ebus_passive_fanout_overflow_total` | counter | Passive classified fan-out overflows labelled by `consumer` and `criticality`. |
 | `ebus_passive_reconstructor_recoveries_total` | counter | Passive reconstructor recoveries labelled by `reason=unexpected_syn|transport_reset|decode_fault`. |
+| `ebus_passive_reconstructor_abandons_total` | counter | Passive reconstructor abandons labelled by `reason` (e.g. `corrupted_request`, `no_response`). |
+| `ebus_passive_reconstructor_prefix_resync_skipped_total` | counter | Bytes dropped because no `SymbolSyn` was observed since the previous frame boundary (P6 Layer 1 inter-frame SYN gate). |
+| `ebus_passive_reconstructor_invalid_src_class_skipped_total` | counter | Bytes rejected as non-initiator-class in source position (P6 Layer 2 SRC AddressClass validation; direct measure of upstream byte loss). |
 
 ## M4 Observe-First Watch Notes
 
