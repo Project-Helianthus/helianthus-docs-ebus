@@ -160,7 +160,7 @@ means "no prior session data".
 |-------|------|-------|
 | `last_admitted_source` | integer 0..255 | The eBUS source byte the gateway successfully joined as in the last session. |
 | `last_admitted_at` | RFC 3339 timestamp | When the SourceAddressSelector accepted the initiator. |
-| `selection_method` | string enum | One of `source_selection_warmup`, `override`, `explicit_validate_only`, `ebusd-tcp-fallback`. |
+| `selection_method` | string enum | One of `source_selection_warmup`, `explicit_validate_only`, `ebusd-tcp-fallback`. The legacy `override` enum was removed in the v1.1 amendment per source-address-selection-admission terminology — explicit overrides always validate via `explicit_validate_only`. |
 | `companion_target` | integer 0..255 \| null | The companion address derived from the initiator per the eBUS standard companion rule. Null when no valid companion exists per the bit-pattern rule documented in the address-table-registry plan. |
 
 #### `ebus.known_bus_members[]` (array of objects, optional)
