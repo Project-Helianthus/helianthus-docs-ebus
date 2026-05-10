@@ -138,6 +138,18 @@ the gateway starts normally with empty cache for that namespace, and other
 namespaces (currently only `meta` in v1) load. A warning is logged with the
 namespace name and the observed/expected schema version.
 
+**Note on the v1.1 amendment** — the runtime-state plan v1.0 used legacy
+field names (`last_join_initiator`, `last_join_at`, `join_method`) per the
+historical Joiner vocabulary. The v1.1 amendment (synchronized with the
+[`source-address-selection-admission`](https://github.com/Project-Helianthus/helianthus-execution-plans/tree/main/source-address-selection-admission.locked)
+locked plan) renamed those keys before any production code shipped.
+`ebus.schema_version` was NOT bumped because the rename is a pre-shipment
+plan correction, not a runtime-data migration: M2_GATEWAY_LOADER and
+M3_GATEWAY_PERSISTER (the milestones that actually write/read the file)
+have not merged. No production file has ever been written with the old
+field names, so a dual-read window is unnecessary. Implementations are
+required to use ONLY the v1.1 names from the start.
+
 #### `ebus.self` (object, optional)
 
 The most recent SourceAddressSelector result. Used as a HINT for subsequent SourceAddressSelector sessions
