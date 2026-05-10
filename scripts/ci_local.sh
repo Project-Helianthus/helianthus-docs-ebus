@@ -140,6 +140,9 @@ python3 -m pytest -q tests/test_source_address_table_checker.py
 echo "==> check eBUS address-table taxonomy + frame-type contract hash (Phase C M-C0)"
 bash scripts/check_address_table_taxonomy_hash.sh
 
+echo "==> check runtime_state.json schema (runtime-state-w19-26 M0_DOC_GATE)"
+bash scripts/check_runtime_state_schema.sh
+
 echo "==> check deployment source-address wording"
 python3 - <<'PY'
 from __future__ import annotations

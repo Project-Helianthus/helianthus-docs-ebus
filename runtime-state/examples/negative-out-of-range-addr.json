@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "meta": {
+    "instance_guid": "8a3f2b9e-4d7c-4f1a-9b5e-2c1f3e7a9d5b",
+    "written_at": "2026-05-10T19:42:11Z"
+  },
+  "ebus": {
+    "schema_version": 1,
+    "known_bus_members": [
+      {
+        "addr": 300,
+        "last_seen_at": "2026-05-10T19:39:55Z",
+        "last_source": "passive_observed",
+        "confidence": "verified"
+      }
+    ]
+  }
+}

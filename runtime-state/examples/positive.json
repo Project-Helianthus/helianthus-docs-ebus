@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "meta": {
+    "instance_guid": "8a3f2b9e-4d7c-4f1a-9b5e-2c1f3e7a9d5b",
+    "written_at": "2026-05-10T19:42:11Z",
+    "gateway_build": "1.2.3-abc123",
+    "addon_version": "0.4.7"
+  },
+  "ebus": {
+    "schema_version": 1,
+    "self": {
+      "last_join_initiator": 247,
+      "last_join_at": "2026-05-10T19:38:55Z",
+      "join_method": "joiner-warmup",
+      "companion_target": 252
+    },
+    "known_bus_members": [
+      {
+        "addr": 8,
+        "companion_addr": 13,
+        "identity": {
+          "manufacturer": "Vaillant",
+          "device_id": "BAI00",
+          "sn": "0x21000567"
+        },
+        "last_seen_at": "2026-05-10T19:39:55Z",
+        "last_source": "passive_observed",
+        "confidence": "verified"
+      },
+      {
+        "addr": 21,
+        "companion_addr": 16,
+        "identity": {
+          "manufacturer": "Vaillant",
+          "device_id": "BASV2",
+          "sn": "0x42012345"
+        },
+        "last_seen_at": "2026-05-10T19:39:48Z",
+        "last_source": "directed_07_04",
+        "confidence": "verified"
+      },
+      {
+        "addr": 246,
+        "companion_addr": null,
+        "identity": null,
+        "last_seen_at": "2026-05-10T19:39:55Z",
+        "last_source": "passive_observed",
+        "confidence": "corroborated"
+      }
+    ]
+  }
+}
