@@ -2,7 +2,7 @@
 
 Status: Normative
 Plan: `runtime-state-w19-26.locked`
-Plan-SHA256: `f1129d0c442d3b2704f6f7e7eed2042c05df3f83e21ad57ccebdd6884f42241d`
+Plan-SHA256: `5f723d7122dd24c81357dc7adb640cbdb805679a5d91c8b8dedcbe6ef60edede`
 Decision references: AD01..AD27
 
 ## Purpose
@@ -14,12 +14,12 @@ that must survive restarts:
 - `meta.instance_guid` — the canonical Helianthus instance identity (UUIDv4),
   migrated from the standalone file `/data/instance_guid` documented in
   [stable instance identity & verified rediscovery](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/instance-identity-rediscovery.maintenance/00-canonical.md).
-- `ebus.self` — the most recent successful Joiner result (admitted source,
+- `ebus.self` — the most recent successful SourceAddressSelector result (admitted source,
   companion target, join method). This is a HISTORICAL HINT, not the current
   authoritative source (see Hint vs Source-of-Truth below).
 - `ebus.known_bus_members[]` — observed eBUS members from prior sessions,
   cached so the gateway can re-identify them quickly via directed `07 04`
-  after Joiner warmup completes. Cache is observation persistence, never
+  after SourceAddressSelector warmup completes. Cache is observation persistence, never
   assumption.
 
 The file is namespaced under top-level plugin keys (`meta`, `ebus`) so future
@@ -68,9 +68,9 @@ Top-level structure:
   "ebus": {
     "schema_version": 1,
     "self": {
-      "last_join_initiator": 247,
-      "last_join_at": "2026-05-10T19:38:55Z",
-      "join_method": "joiner-warmup",
+      "last_admitted_source": 247,
+      "last_admitted_at": "2026-05-10T19:38:55Z",
+      "selection_method": "source_selection_warmup",
       "companion_target": 252
     },
     "known_bus_members": [
@@ -138,17 +138,29 @@ the gateway starts normally with empty cache for that namespace, and other
 namespaces (currently only `meta` in v1) load. A warning is logged with the
 namespace name and the observed/expected schema version.
 
+**Note on the v1.1 amendment** — the runtime-state plan v1.0 used legacy
+field names (`last_join_initiator`, `last_join_at`, `join_method`) per the
+historical Joiner vocabulary. The v1.1 amendment (synchronized with the
+[`source-address-selection-admission`](https://github.com/Project-Helianthus/helianthus-execution-plans/tree/main/source-address-selection-admission.locked)
+locked plan) renamed those keys before any production code shipped.
+`ebus.schema_version` was NOT bumped because the rename is a pre-shipment
+plan correction, not a runtime-data migration: M2_GATEWAY_LOADER and
+M3_GATEWAY_PERSISTER (the milestones that actually write/read the file)
+have not merged. No production file has ever been written with the old
+field names, so a dual-read window is unnecessary. Implementations are
+required to use ONLY the v1.1 names from the start.
+
 #### `ebus.self` (object, optional)
 
-The most recent Joiner result. Used as a HINT for subsequent Joiner sessions
+The most recent SourceAddressSelector result. Used as a HINT for subsequent SourceAddressSelector sessions
 (see Hint vs Source-of-Truth below). All fields are optional in v1; absence
 means "no prior session data".
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `last_join_initiator` | integer 0..255 | The eBUS source byte the gateway successfully joined as in the last session. |
-| `last_join_at` | RFC 3339 timestamp | When the Joiner accepted the initiator. |
-| `join_method` | string enum | One of `joiner-warmup`, `override`, `override-validate`, `ebusd-tcp-fallback`. |
+| `last_admitted_source` | integer 0..255 | The eBUS source byte the gateway successfully joined as in the last session. |
+| `last_admitted_at` | RFC 3339 timestamp | When the SourceAddressSelector accepted the initiator. |
+| `selection_method` | string enum | One of `source_selection_warmup`, `explicit_validate_only`, `ebusd-tcp-fallback`. The legacy `override` enum was removed in the v1.1 amendment per source-address-selection-admission terminology — explicit overrides always validate via `explicit_validate_only`. |
 | `companion_target` | integer 0..255 \| null | The companion address derived from the initiator per the eBUS standard companion rule. Null when no valid companion exists per the bit-pattern rule documented in the address-table-registry plan. |
 
 #### `ebus.known_bus_members[]` (array of objects, optional)
@@ -191,10 +203,10 @@ forcing `verified` presence to wait for identity decoding to succeed.
 ## Hint vs source-of-truth (AD24)
 
 `ebus.self` is **historical only**. The current admitted source is
-exclusively the in-memory `JoinResult.Initiator` from the current session
-AFTER Joiner validation succeeds. No surface (loader, GraphQL, MCP, metrics)
-may report the cached `last_join_initiator` as the current admitted source
-until the current session's Joiner validation passes.
+exclusively the in-memory `SourceAddressSelection.Source` from the current session
+AFTER SourceAddressSelector validation succeeds. No surface (loader, GraphQL, MCP, metrics)
+may report the cached `last_admitted_source` as the current admitted source
+until the current session's SourceAddressSelector validation passes.
 
 This invariant exists because the cache predates the current session by an
 arbitrary amount of time. Reporting it as "current" before validation would
@@ -242,7 +254,7 @@ The gateway writes the file:
 - On a 15-minute jittered ticker (jitter ±30s; the jitter avoids
   synchronized fsync storms across multi-instance HA installs on shared NAS
   storage).
-- On `JoinResult.Initiator` change (after Joiner validation succeeds with a
+- On `SourceAddressSelection.Source` change (after SourceAddressSelector validation succeeds with a
   different initiator than the cached one).
 - Eagerly within the first second of startup, persisting `meta.instance_guid`
   to close the crash-before-first-periodic-persist window (AD08).
@@ -402,5 +414,5 @@ The script performs a **two-stage** check per file:
   [`address-table-registry-w19-26.maintenance`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/address-table-registry-w19-26.maintenance/00-canonical.md)
   (slot model + companion derivation),
   [`startup-admission-discovery-w17-26.maintenance`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/startup-admission-discovery-w17-26.maintenance/00-canonical.md)
-  (Joiner contract).
+  (SourceAddressSelector contract).
 - Validator: [santhosh-tekuri/jsonschema](https://github.com/santhosh-tekuri/jsonschema).
