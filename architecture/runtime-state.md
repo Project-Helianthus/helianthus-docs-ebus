@@ -76,7 +76,7 @@ Top-level structure:
     "known_bus_members": [
       {
         "addr": 8,
-        "companion_addr": 13,
+        "companion_addr": 3,
         "identity": {
           "manufacturer": "Vaillant",
           "device_id": "BAI00",
@@ -90,6 +90,12 @@ Top-level structure:
   }
 }
 ```
+
+The `0x08 ↔ 0x03` pair above matches the pinned companion-derivation case
+documented in [`atr/02-companion-derivation.md`](atr/02-companion-derivation.md).
+For addresses with no valid companion per the bit-pattern rule (e.g. `0x26`
+or `0xEC`, where `addr - 0x05` fails the initiator-capable nibble check),
+`companion_addr` is `null`.
 
 ### Field semantics
 

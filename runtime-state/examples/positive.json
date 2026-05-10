@@ -17,7 +17,7 @@
     "known_bus_members": [
       {
         "addr": 8,
-        "companion_addr": 13,
+        "companion_addr": 3,
         "identity": {
           "manufacturer": "Vaillant",
           "device_id": "BAI00",
@@ -40,7 +40,7 @@
         "confidence": "verified"
       },
       {
-        "addr": 246,
+        "addr": 38,
         "companion_addr": null,
         "identity": null,
         "last_seen_at": "2026-05-10T19:39:55Z",
