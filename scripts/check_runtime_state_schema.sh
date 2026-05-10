@@ -3,7 +3,8 @@
 # santhosh-tekuri/jsonschema/cmd/jv. Plan: runtime-state-w19-26.locked AD05/AD22.
 #
 # Two-stage check per file:
-#   1. JSON Schema (jv) — types, ranges, regex, required, enum, format-assert.
+#   1. JSON Schema (jv) — types, ranges, regex, required, enum, format-assert,
+#      conditional v1-ebus constraints (AD12: only fire when ebus.schema_version=1).
 #   2. Python post-check — invariants that JSON Schema cannot express cleanly:
 #      - AD18 uniqueness: ebus.known_bus_members[].addr must be unique
 #        (one cache entry per eBUS address).
@@ -17,7 +18,10 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 schema="runtime-state/runtime_state.schema.json"
-positive="runtime-state/examples/positive.json"
+positives=(
+  "runtime-state/examples/positive.json"
+  "runtime-state/examples/positive-future-ebus-version.json"
+)
 negatives=(
   "runtime-state/examples/negative-out-of-range-addr.json"
   "runtime-state/examples/negative-invalid-uuid.json"
@@ -34,6 +38,23 @@ fi
 
 echo "==> jv version"
 jv --version || true
+
+# Pre-flight: every fixture must be readable. A typoed/deleted fixture path
+# would otherwise make jv exit non-zero from a file-open error and the
+# negative-validation branch would silently mistake that for a real rejection.
+preflight_failed=0
+echo "==> preflight: fixture readability"
+for fixture in "${positives[@]}" "${negatives[@]}"; do
+  if [ ! -r "${fixture}" ]; then
+    echo "  FAIL: fixture not readable or missing: ${fixture}" >&2
+    preflight_failed=1
+  fi
+done
+if [ "${preflight_failed}" -ne 0 ]; then
+  echo "Runtime-state schema gate FAILED at preflight." >&2
+  exit 1
+fi
+echo "  OK"
 
 # Returns 0 if the file passes BOTH jv schema validation AND the AD18 uniqueness
 # post-check; non-zero on any failure. Uses python3 for the AD18 check.
@@ -69,12 +90,15 @@ for idx, member in enumerate(members):
 PY
 }
 
-echo "==> validating positive fixture: ${positive}"
-if ! validate_one "${positive}"; then
-  echo "FAIL: positive fixture rejected" >&2
-  exit 1
-fi
-echo "  OK"
+echo "==> validating positive fixtures"
+for positive in "${positives[@]}"; do
+  echo "  ${positive}"
+  if ! validate_one "${positive}"; then
+    echo "    FAIL: positive fixture rejected" >&2
+    exit 1
+  fi
+  echo "    OK"
+done
 
 echo "==> validating negative fixtures (must be rejected)"
 failed=0

@@ -356,9 +356,9 @@ It uses Draft 2020-12
 
 The artifact is validated in CI against:
 
-- A positive example fixture
-  ([`runtime-state/examples/positive.json`](../runtime-state/examples/positive.json))
-  that must validate clean.
+- Two positive fixtures that must validate clean:
+  - [`runtime-state/examples/positive.json`](../runtime-state/examples/positive.json) — a complete v1 file with `ebus.schema_version=1`.
+  - [`runtime-state/examples/positive-future-ebus-version.json`](../runtime-state/examples/positive-future-ebus-version.json) — a file with `ebus.schema_version=99` carrying v99-shaped fields. This proves the schema's `if/then` conditional gating: v1 field constraints (`self`, `known_bus_members[]`) only fire when `ebus.schema_version == 1`. Files for unknown plugin versions pass schema validation so the gateway can ignore the namespace at runtime per AD12 (otherwise plugin-version mismatches would be promoted to corrupt-quarantine, breaking the AD12 ignore-namespace promise).
 - Six negative fixtures
   ([`runtime-state/examples/negative-*.json`](../runtime-state/examples/))
   that must validate as invalid:
