@@ -97,7 +97,7 @@ import subprocess
 import sys
 
 md_files = subprocess.check_output(["git", "ls-files", "*.md"], text=True).splitlines()
-ipv4_re = re.compile(r"\\b(?:(?:\\d{1,3})\\.){3}(?:\\d{1,3})\\b")
+ipv4_re = re.compile(r"\b(?:(?:\d{1,3})\.){3}(?:\d{1,3})\b")
 
 PRIVATE_NETS = [
     ipaddress.ip_network("10.0.0.0/8"),
