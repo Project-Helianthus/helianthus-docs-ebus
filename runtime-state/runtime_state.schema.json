@@ -8,9 +8,8 @@
   "additionalProperties": true,
   "properties": {
     "schema_version": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "File-format compatibility version. Currently 1."
+      "const": 1,
+      "description": "File-format compatibility version. Exactly 1 in v1; unknown values are hard load failures per architecture/runtime-state.md (per-plugin schema_version is permissive — see ebus.schema_version)."
     },
     "meta": {
       "type": "object",

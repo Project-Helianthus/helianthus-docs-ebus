@@ -93,11 +93,21 @@ Top-level structure:
 
 ### Field semantics
 
-#### `schema_version` (top-level, integer, required)
+#### `schema_version` (top-level, integer, required, exactly `1` in v1)
 
-File-format compatibility version. Currently `1`. Mismatch with a value the
-gateway does not know is treated as a hard load failure (file renamed to
-`.corrupt-<ISO8601>`, gateway starts with empty state).
+File-format compatibility version. Schema-enforced as `const: 1`. Any other
+value (including `2`, `0`, or strings) fails JSON Schema validation. Per
+AD11/AD12 the gateway treats schema-validation failure as a hard load
+failure (file renamed to `runtime_state.json.corrupt-<ISO8601>`, gateway
+starts with empty state). v2 of this plan will change the `const` to allow
+`1` AND `2` once a forward-compat migration policy lands.
+
+This is **distinct from** the per-plugin `<plugin>.schema_version` (e.g.,
+`ebus.schema_version`), which is permissively constrained as `minimum: 1`
+and whose mismatch is **silently ignored** at load time (the namespace is
+dropped from the in-memory load; gateway proceeds normally with other
+namespaces). The two-tier design lets a v2 gateway load a v1 file while
+gracefully ignoring future plugin additions it doesn't understand.
 
 #### `meta` (object, required)
 
@@ -321,17 +331,22 @@ The artifact is validated in CI against:
 - A positive example fixture
   ([`runtime-state/examples/positive.json`](../runtime-state/examples/positive.json))
   that must validate clean.
-- Three negative fixtures
+- Five negative fixtures
   ([`runtime-state/examples/negative-*.json`](../runtime-state/examples/))
   that must validate as invalid:
   - `negative-out-of-range-addr.json` — `addr=300`.
   - `negative-invalid-uuid.json` — `meta.instance_guid` not a lowercase UUIDv4.
   - `negative-missing-instance-guid.json` — `meta.instance_guid` absent.
+  - `negative-unsupported-schema-version.json` — top-level `schema_version=2` (must be exactly `1` in v1).
+  - `negative-invalid-timestamp.json` — `written_at` not RFC 3339 (exercises `--assert-format` flag).
 
 CI step is `scripts/check_runtime_state_schema.sh`, wired into
 `scripts/ci_local.sh` after the existing taxonomy gate. The script installs
 `santhosh-tekuri/jsonschema/cmd/jv` if not already present (in CI: via
-`setup-go` action; locally: via `go install`).
+`setup-go` action; locally: via `go install`). The validator is invoked with
+`-d 2020 -f` to enable Draft 2020-12 dialect AND format assertions
+(`format: date-time` is annotation-only by default in jv; `-f` makes it a
+hard validation rule).
 
 ## References
 

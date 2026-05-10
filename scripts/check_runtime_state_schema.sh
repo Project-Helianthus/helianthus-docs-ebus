@@ -16,6 +16,8 @@ negatives=(
   "runtime-state/examples/negative-out-of-range-addr.json"
   "runtime-state/examples/negative-invalid-uuid.json"
   "runtime-state/examples/negative-missing-instance-guid.json"
+  "runtime-state/examples/negative-unsupported-schema-version.json"
+  "runtime-state/examples/negative-invalid-timestamp.json"
 )
 
 if ! command -v jv >/dev/null 2>&1; then
@@ -27,7 +29,7 @@ echo "==> jv version"
 jv --version || true
 
 echo "==> validating positive fixture: ${positive}"
-if ! jv -d 2020 "${schema}" "${positive}"; then
+if ! jv -d 2020 -f "${schema}" "${positive}"; then
   echo "FAIL: positive fixture rejected by schema" >&2
   exit 1
 fi
@@ -37,7 +39,7 @@ echo "==> validating negative fixtures (must be rejected)"
 failed=0
 for fixture in "${negatives[@]}"; do
   echo "  ${fixture}"
-  if jv -d 2020 "${schema}" "${fixture}" 2>/dev/null; then
+  if jv -d 2020 -f "${schema}" "${fixture}" 2>/dev/null; then
     echo "    FAIL: negative fixture was accepted by schema" >&2
     failed=1
   else
