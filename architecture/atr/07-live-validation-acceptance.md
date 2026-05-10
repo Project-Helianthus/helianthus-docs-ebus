@@ -132,7 +132,7 @@ PR #565 (gateway, merged 2026-05-06 as 2281196) closes the gap:
 - Subscription failure is non-fatal — logged and skipped, consistent with
   the `PassiveDiscoveryPromoter` init pattern.
 
-Live evidence captured 2026-05-06 against HA at 192.168.100.4:
+Live evidence captured 2026-05-06 against HA at `<ha-host>`:
 
 - ✅ Source-selection completed (`active_probe_passed`, `selected_source=127`,
   `companion_target=132`).
