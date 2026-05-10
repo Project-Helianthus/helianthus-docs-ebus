@@ -624,14 +624,17 @@ Phase C M-C0):
 ```bash
 #!/usr/bin/env bash
 # Recomputes the taxonomy + frame-type-contract hash from this file.
+# Block boundaries: from `## 256-Byte Address Taxonomy` (inclusive) to
+# `## Hash Contract (taxonomy + frame-type contract)` (exclusive),
+# matching the prose algorithm above.
 set -euo pipefail
 file="${1:-architecture/ebus_standard/12-address-table.md}"
 awk '
-  /^## 256-Byte Address Taxonomy[[:space:]]*$/ { inblock = 1 }
-  inblock { print }
   /^## Hash Contract \(taxonomy \+ frame-type contract\)[[:space:]]*$/ {
     inblock = 0
   }
+  inblock { print }
+  /^## 256-Byte Address Taxonomy[[:space:]]*$/ { inblock = 1; print }
 ' "$file" | sed -E 's/[[:space:]]+$//' | shasum -a 256 | cut -d' ' -f1
 ```
 
@@ -640,9 +643,13 @@ this one are frozen for a release). Phase C M-C0 acceptance requires the
 hash recorded here to match the script output bit-for-bit.
 
 Normalized hash:
-`316baf20ab0d0a64b36613bb8c7604d7570fecc01071daca94931029ae82ebec`
+`c19124aca8b42c1dcae659c37e7b21b20a4538dc7bc2bd785b5643b3f70503cc`
 
-Computed from this file post-operator-freeze (Phase C M-C0 close).
+Computed from this file post-operator-freeze (Phase C M-C0 close;
+hash recomputed under PR #297 thread `PRRT_kwDORGW9z86ATOzD`
+follow-up after the awk extractor was corrected so the
+`## Hash Contract` heading is excluded — matching the prose
+algorithm above).
 The validator CI script (post-M-C0) hard-fails if the script's
 recomputed hash does not match this value — any subsequent edit
 to the taxonomy / frame-type-contract / validator-contract blocks

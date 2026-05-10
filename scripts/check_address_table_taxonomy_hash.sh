@@ -15,7 +15,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DOC_PATH="${REPO_ROOT}/architecture/ebus_standard/12-address-table.md"
-EXPECTED_HASH="316baf20ab0d0a64b36613bb8c7604d7570fecc01071daca94931029ae82ebec"
+EXPECTED_HASH="c19124aca8b42c1dcae659c37e7b21b20a4538dc7bc2bd785b5643b3f70503cc"
 
 if [[ ! -f "${DOC_PATH}" ]]; then
   echo "ERROR: address-table doc not found at ${DOC_PATH}" >&2
@@ -27,11 +27,11 @@ fi
 # Trailing whitespace stripped per line, exactly one terminal LF.
 ACTUAL_HASH="$(
   awk '
-    /^## 256-Byte Address Taxonomy[[:space:]]*$/ { inblock = 1 }
-    inblock { print }
     /^## Hash Contract \(taxonomy \+ frame-type contract\)[[:space:]]*$/ {
       inblock = 0
     }
+    inblock { print }
+    /^## 256-Byte Address Taxonomy[[:space:]]*$/ { inblock = 1; print }
   ' "${DOC_PATH}" \
     | sed -E 's/[[:space:]]+$//' \
     | shasum -a 256 \
