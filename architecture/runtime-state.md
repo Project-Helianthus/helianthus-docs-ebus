@@ -280,9 +280,31 @@ When AD09b case (2) or (5) triggers, the add-on:
 
 1. Emits ONE structured banner log line to Supervisor stdout with the stable
    token `HELIANTHUS_MIGRATION_REQUIRED` and the actionable message:
-   `Migration step missing: copy /data/instance_guid value into /data/runtime_state.json under meta.instance_guid, then restart`.
-2. Writes a marker file `/data/.helianthus_migration_required` with the same
-   instructions in plaintext (operator-readable when inspecting `/data/`).
+   `Migration step missing: write a complete /data/runtime_state.json carrying your existing instance_guid (template in /data/.helianthus_migration_required), then restart`.
+2. Writes a marker file `/data/.helianthus_migration_required` containing
+   the **complete migration template** ready for the operator to fill in.
+   The marker file is the authoritative recovery instruction; the log line
+   is a pointer to it. The template is a fully schema-valid v1 file:
+
+   ```json
+   {
+     "schema_version": 1,
+     "meta": {
+       "instance_guid": "PASTE-LEGACY-GUID-FROM-/data/instance_guid-HERE",
+       "written_at": "1970-01-01T00:00:00Z"
+     }
+   }
+   ```
+
+   Operators who write a partial file (only `meta.instance_guid`, missing
+   `schema_version` or `meta.written_at`) will pass the add-on read but
+   trigger a corrupt-file quarantine on the gateway side, which is
+   recoverable but adds a `.corrupt-<ISO8601>` rename and a quarantine log
+   line. Following the template avoids that churn.
+
+   The add-on emits the marker file with the actual file path of the legacy
+   `/data/instance_guid` content interpolated when possible, so the
+   operator can copy-paste directly without inspecting another file.
 3. Exits with code **1** (NOT sysexits-78 EX_CONFIG; exit 78 collides with
    Docker convention noise — Elasticsearch `vm.max_map_count`, PHP-FPM init
    — and HA Supervisor does not differentiate non-zero exits anyway).
