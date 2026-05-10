@@ -9,9 +9,9 @@
   "ebus": {
     "schema_version": 1,
     "self": {
-      "last_join_initiator": 247,
-      "last_join_at": "2026-05-10T19:38:55Z",
-      "join_method": "joiner-warmup",
+      "last_admitted_source": 247,
+      "last_admitted_at": "2026-05-10T19:38:55Z",
+      "selection_method": "source_selection_warmup",
       "companion_target": 252
     },
     "known_bus_members": [
