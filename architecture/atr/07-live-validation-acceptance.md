@@ -146,6 +146,32 @@ Live evidence captured 2026-05-06 against HA at `<ha-host>`:
   AD05-second-corroboration rule inserts companion `0xF6`. P2/P3 (static seed
   for 0x04 / 0xEC) remain N/A by default since `EnableStaticSeedTable=false`.
 
+### Phase A.6 spec-compliance fix (gateway #566 → `fce1a94`)
+
+Phase A.5 deploy surfaced a deeper bug: PR #564 (M3+M4) inserts dst on
+positive ACK and companion(src) after 2× corroboration but **never inserts
+the request src itself**. The AD05 spec explicitly states "request src MAY
+create a slot if it is not the gateway's own admitted source".
+
+Live evidence on HA after A.5 deploy: `bus_messages_list` showed 1× passive
+frame `source=0xF1 target=0x15 outcome=success` but 0xF1 never landed in
+the registry — confirming the regression.
+
+PR #566 adds `maybeInsert(srcAddr, "initiator", admittedSrc, observedAt)`
+between the self-source filter and the dst insertion. After this:
+
+- Single positive ACK from `0xF1 → any-target` inserts both 0xF1 (initiator)
+  and the target.
+- Companion-pair corroboration gate (`observationsByAddr[srcAddr] ≥ 2`)
+  still governs companion(src) insertion (i.e. 0xF6) — semantic unchanged.
+
+Codex review (gpt-5.5) APPROVE. RED→GREEN test
+`TestFirstObservation_SourceInserted` passes; existing tests unchanged.
+
+Post-A.6 redeploy: addon up at `LIVE_READY`, source-selection
+`active_probe_passed`, source=0x7F. Awaiting next organic NETX3 0xF1
+emission for P1 live confirmation (0xF1 + 0xF6 both visible).
+
 Transport-matrix dry-run (M9) post-merge: 88-case index identical to the M0A
 baseline — 0 diffs (`transport-matrix-baseline-w19-26.json`).
 
@@ -169,7 +195,6 @@ baseline — 0 diffs (`transport-matrix-baseline-w19-26.json`).
   observe-first) is unit-uncovered in the gateway's main_test suite. A
   future follow-up will add a stub source-selector returning a result so
   the async goroutine fires.
-
 ## Phase C Live Validation Acceptance (M-C8)
 
 **Date:** 2026-05-08
