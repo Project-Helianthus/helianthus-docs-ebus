@@ -359,7 +359,7 @@ The artifact is validated in CI against:
 - A positive example fixture
   ([`runtime-state/examples/positive.json`](../runtime-state/examples/positive.json))
   that must validate clean.
-- Five negative fixtures
+- Six negative fixtures
   ([`runtime-state/examples/negative-*.json`](../runtime-state/examples/))
   that must validate as invalid:
   - `negative-out-of-range-addr.json` — `addr=300`.
@@ -367,6 +367,7 @@ The artifact is validated in CI against:
   - `negative-missing-instance-guid.json` — `meta.instance_guid` absent.
   - `negative-unsupported-schema-version.json` — top-level `schema_version=2` (must be exactly `1` in v1).
   - `negative-invalid-timestamp.json` — `written_at` not RFC 3339 (exercises `--assert-format` flag).
+  - `negative-duplicate-addr.json` — two `known_bus_members[]` entries with the same `addr` (exercises the AD18 uniqueness post-check).
 
 CI step is `scripts/check_runtime_state_schema.sh`, wired into
 `scripts/ci_local.sh` after the existing taxonomy gate. The script installs
@@ -375,6 +376,18 @@ CI step is `scripts/check_runtime_state_schema.sh`, wired into
 `-d 2020 -f` to enable Draft 2020-12 dialect AND format assertions
 (`format: date-time` is annotation-only by default in jv; `-f` makes it a
 hard validation rule).
+
+The script performs a **two-stage** check per file:
+
+1. JSON Schema validation via `jv` — types, ranges, regex, required, enum,
+   format-assert.
+2. **AD18 uniqueness post-check** in Python — `ebus.known_bus_members[].addr`
+   values must be unique (one cache entry per eBUS address). JSON Schema
+   2020-12 cannot express unique-by-property cleanly; this invariant is
+   enforced at the gate-script level. The gateway loader also enforces it at
+   runtime: a duplicate-`addr` file falls through to corrupt-quarantine
+   (rename to `runtime_state.json.corrupt-<ISO8601>`, empty start, log
+   warning) per AD11.
 
 ## References
 
