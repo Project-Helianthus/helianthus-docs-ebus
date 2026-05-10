@@ -7,7 +7,7 @@
   "ebus": {
     "schema_version": 99,
     "self": {
-      "last_join_initiator": 247,
+      "last_admitted_source": 247,
       "v99_new_field": "anything"
     },
     "v99_new_namespace_member": {
