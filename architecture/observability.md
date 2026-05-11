@@ -158,6 +158,51 @@ These variables exist in-process today but are not mounted as a public HTTP endp
 | --- | --- | --- |
 | `semantic_bus_collisions_total` | int | Count of bus collision events during scan |
 
+### Adaptermux Session Frame Pipeline Latency
+
+The gateway's external-session multiplexer (`adaptermux`) measures the
+enqueue→TCP-write latency for every frame delivered to a connected
+client (e.g. ebusd). The intent is to surface gateway-side pipeline
+stalls that correlate with downstream "send to fe: ERR: read timeout"
+events on ebusd, whose default `--receivetimeout` is 25 ms.
+
+| Metric | Type | Description |
+| --- | --- | --- |
+| `adaptermux_session_frame_latency_us_bucket_total` | map | Cumulative latency histogram. Keys are `le_1000`, `le_5000`, `le_25000`, `le_100000`, and `gt_100000`. |
+
+The histogram is **Prometheus-style cumulative**: each `le_X` counter
+holds the total number of frame samples whose elapsed enqueue→write
+time was ≤ X microseconds. A sample at 500 µs increments `le_1000`,
+`le_5000`, `le_25000`, and `le_100000`. The `gt_100000` counter is the
+**non-cumulative overflow bin** for samples exceeding every `le_*`
+boundary.
+
+| Quantity | Formula |
+| --- | --- |
+| Total samples | `le_100000 + gt_100000` |
+| Frames within ebusd's 25 ms budget | `le_25000` |
+| Frames over the 25 ms budget | `(le_100000 + gt_100000) - le_25000` |
+| Frames over 100 ms (tail) | `gt_100000` |
+
+The latency measurement uses a monotonic clock anchor captured at
+process start, so wall-clock steps (NTP/chrony correction, manual
+`date -s`) cannot produce negative or inflated samples. The metric is
+exposed via the in-process Go `expvar` map and is currently **not
+mounted on a public HTTP endpoint** — it backs internal observability
+and slow-frame log markers below.
+
+In addition to the histogram, frames with latency above
+**25 ms** emit a structured log line:
+
+```
+adaptermux: session <ID> frame delivery slow: kind=<K> latency=<USES>us
+   (threshold=25000us — exceeds ebusd's default --receivetimeout)
+```
+
+These log markers exist so operators can pinpoint concrete slow samples
+without needing histogram tooling. (F-10 diagnostic — see
+`_work_adaptermux_audit/EBUSD-VERIFICATION-2026-05-10.md`.)
+
 ## Structured Log Markers
 
 Bus observability warmup and dedup health are metric-first today. The structured log markers currently emitted by gateway are the semantic lifecycle and merge markers below.
