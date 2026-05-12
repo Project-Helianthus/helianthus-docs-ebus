@@ -136,6 +136,31 @@ Outcomes:
 
 During arbitration initiated by the host, adapters **must not** emit `RECEIVED` notifications for the arbitration bytes they put on the bus. Clients should not rely on echo notifications for those bytes.
 
+### Post-arbitration byte echo (F-18 contract)
+
+For every byte the host writes **after** the arbitration byte — i.e., every `SEND` byte that traverses `DST PB SB LEN DATA... CRC` and any subsequent response-phase bytes the host writes — the adapter (or proxy) **MUST** emit a corresponding `RECEIVED` notification that reflects the byte observed on the bus.
+
+This follows directly from john30/ebusd's [`docs/enhanced_proto.md`](https://github.com/john30/ebusd/blob/main/docs/enhanced_proto.md), which says ENH_RES_RECEIVED "shall not be sent when the byte received was part of an arbitration request initiated by ebusd." The converse is implied: ENH_RES_RECEIVED MUST be sent for every other host-written byte.
+
+Why this matters: ebusd's [`DirectProtocolHandler` at `protocol_direct.cpp:412-414`](https://github.com/john30/ebusd/blob/main/src/lib/ebus/protocol_direct.cpp) compares `recvSymbol != sentSymbol` after each send and collapses the bus state to `bs_skip` on mismatch or `SEND_TIMEOUT` (~10 ms). Without the echo, ebusd cannot advance `bs_sendCmd` past the arbitration byte — the entire post-arbitration phase abandons silently, no frame ever lands on the bus, and the next retry cycle re-enters arbitration to repeat the failure indefinitely.
+
+Proxy and adapter implementations:
+
+- Adapters that observe the bus directly (e.g., a microcontroller speaking ENH over UART) MUST emit `ENH_RES_RECEIVED(byte)` for every non-arbitration byte they observe on the wire while the host owns the bus.
+- Proxies that multiplex multiple ENH client sessions over a single adapter MUST forward each received byte to **every** session, including the session that owns the bus. Suppressing the echo for the owner — a tempting "optimization" because the owner already knows what it sent — violates the contract and breaks any downstream client (ebusd, third-party tooling) that gates `bs_sendCmd` advancement on the round-trip.
+- The arbitration byte itself is handled separately: clients receive it via `ENH_RES_STARTED(initiator)` on a successful win, not as `ENH_RES_RECEIVED`. Proxies that emit a synthesized `ENH_RES_RECEIVED(arbitration_byte)` to the winning session violate the "shall not be sent" half of the contract.
+
+Implementations:
+
+- ebusd-adapter-proxy (standalone): a single shared `ownerObserverSeen []byte` is forwarded to whichever session owns the bus. Correct.
+- helianthus-ebusgateway adaptermux (embedded mux): every external session — owner and non-owner alike — receives every post-arbitration byte. The arbitration byte is delivered via `deliverWinnerByteToOtherSessions` to non-winners and via `ENH_RES_STARTED` to the winner. See `internal/adaptermux/mux.go` `deliverToSessions` and `_work_adaptermux_audit/EBUSD-VERIFICATION-2026-05-12-batch13.md` (F-18).
+
+Symptoms of a non-conformant proxy that suppresses the owner echo:
+
+- The owner client (e.g., ebusd) issues one `ENH_REQ_SEND(0xFE)` per scan attempt and never advances to `ENH_REQ_SEND(LEN)` or subsequent bytes.
+- `passive_reconstructor` logs `abandon reason=corrupted_request phase=1 src=<owner_byte>` at a high rate.
+- ebusd's local FSM collapses to `bs_skip` ~10 ms after each `SEND`, retries arbitration, wins again (`STARTED` arrives), and repeats — visible as multiple consecutive `STARTED` frames with no completed transactions in between (`ebusctl info` shows the `messages` counter stuck at a low value).
+
 ### Why ebusd sends `DST` first after STARTED
 
 In ebusd “direct” mode, the initiator address byte is emitted as part of arbitration. After a successful `STARTED`, the host continues the telegram by sending `DST`, then `PB SB LEN ...` (i.e., it does not re-send `SRC`).
