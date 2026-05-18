@@ -45,7 +45,7 @@ Special case for IDLE→PASSIVE_TRACKING entry: the entering byte is the FIRST b
 
 **v7 prose:** "ENH adapters surface foreign-arbitration via FAILED(winner_addr) control events that arrive BEFORE the first data byte."
 
-**Both reviewers verified (independently) against ENH spec:** FAILED fires only as response to our own arbitration request, not for foreign-master arbitrations where we weren't competing. v7 inverted the architecture under a false premise.
+**Both reviewers verified (independently) against ENH spec:** FAILED fires only as response to our own arbitration request, not for foreign-initiator arbitrations where we weren't competing. v7 inverted the architecture under a false premise.
 
 **v8 fix:** Re-order primary/fallback in §1.2:
 
@@ -53,11 +53,11 @@ Special case for IDLE→PASSIVE_TRACKING entry: the entering byte is the FIRST b
 IDLE → PASSIVE_TRACKING entry rule (v8):
 
   Primary path: first non-SYN byte from adapter when no STARTED-for-us
-    is in flight. The byte IS the foreign master's QQ. Classify it
+    is in flight. The byte IS the foreign initiator's QQ. Classify it
     under PASSIVE_TRACKING/MASTER_HEADER byte_index=0.
 
   Contention edge case: if we happened to issue a START at the same
-    moment a foreign master won arbitration, ENH adapter emits
+    moment a foreign initiator won arbitration, ENH adapter emits
     FAILED(winner_addr). Use winner_addr as a validation hint for
     the subsequent QQ byte (validate QQ == winner_addr; on mismatch,
     PROTOCOL_FAULT).
@@ -80,12 +80,13 @@ This corrects the prose without changing implementation: §1.6's winner_addr val
 
   on byte b:
     if T_now - T_a9_seen > 32 ms:
-      # ESCAPE_PENDING timeout — drop both the 0xA9 and absorbed AAs.
+      # ESCAPE_PENDING timeout — drop the 0xA9 and absorbed AAs.
       # No emission to classifier; admin log only.
       admin.log("escape_pending_timeout", duration=T_now-T_a9_seen)
       state := NORMAL
-      drop b too (treat current byte as continuation of corruption);
-      OR re-process b in NORMAL state (if next-byte recovery preferred).
+      # Re-process current byte b in NORMAL state to preserve it
+      # for next-byte resync (chosen over drop-b for data preservation).
+      goto NORMAL with input b
 
     elif b == 0x01: emit (0xAA, was_escaped=true); state := NORMAL
     elif b == 0x00: emit (0xA9, was_escaped=true); state := NORMAL
@@ -106,7 +107,7 @@ Updated invariant **I4 (v8)**: "Escape decoder budget: absorb up to 8 AAs OR wai
 
 **v7 attempt:** Sample L_rtt during PASSIVE_TRACKING by computing `T_received - (previous_wire_byte_estimate + τ_wire_byte)`.
 
-**Codex correctly identifies:** This estimate includes foreign-master inter-byte gaps, target think time, OS/TCP jitter, adapter buffering. Cannot separate link latency from foreign-side cadence variability without adapter wire timestamps (which we don't have). Poisons the EMA.
+**Codex correctly identifies:** This estimate includes foreign-initiator inter-byte gaps, target think time, OS/TCP jitter, adapter buffering. Cannot separate link latency from foreign-side cadence variability without adapter wire timestamps (which we don't have). Poisons the EMA.
 
 **v8 fix:** Abandon passive sampling entirely. L_rtt is measured ONLY during active mode (echoes of our own writes). For long idle stretches:
 
@@ -153,7 +154,7 @@ Step A acceptance criteria:
   - Pass/fail gate: no NEW error classes appear; pre-existing error
     classes (echo_mismatch, collision, nack) maintain or reduce.
   - Specific tests: scan duration bound, no-ACK behavior, slow-ACK
-    (target responding at 100ms), NACK retry sequence, multi-master
+    (target responding at 100ms), NACK retry sequence, multi-initiator
     contention.
 ```
 
