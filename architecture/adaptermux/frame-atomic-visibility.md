@@ -12,6 +12,35 @@ atomic event.
 
 ---
 
+## 0. Headline invariant — proxy transparency
+
+The single overriding constraint is **proxy transparency**: no client of
+the proxy should be able to detect that a proxy exists between it and
+the physical bus. Every connected client must behave as if it had its
+own dedicated ENS-WiFi adapter wired directly to the raw eBUS, reached
+over TCP/ENS.
+
+Concrete consequences, each one cross-referenced in the sections below:
+
+  - The byte stream emitted to a client conforms exactly to the ENS/ENH
+    protocol an actual adapter would emit — same event types, same
+    framing, same escape rules. (§6)
+  - The perceived bus density (`symbol_rate`) per session matches what
+    a real ENS adapter would deliver to that specific client over its
+    own TCP link, including any per-link latency or congestion. (§3)
+  - Telegram bytes are paced across roughly the wire-time of the
+    telegram, not burst-flushed. (§4.5)
+  - Arbitration control events (`STARTED` / `FAILED` / `RESET`) carry
+    timing as close to direct-adapter timing as the model can preserve.
+  - The proxy never injects events the wire did not produce. No health
+    frames, no markers, no debug taps. Diagnostic telemetry lives
+    strictly on the proxy's own out-of-band admin channel, never in
+    the client byte stream.
+
+Every design choice below derives from this single rule.
+
+---
+
 ## 1. Problem
 
 eBUS is a 2400-baud half-duplex serial protocol where every transaction
@@ -60,9 +89,22 @@ may transition between modes from one telegram to the next.
 | `cross-proxy`    | telegram-atomic + synthetic SYNs  | symbol-rate based | every other client of the proxy            |
 
 In our topology nearly every observer is `cross-proxy`. There is exactly
-one `token-holder` at a time (the arbitration winner), and
-`passive-direct` is rare (it requires a separate physical tap on the
-bus, which we do not have).
+one `token-holder` at a time (the arbitration winner for the current
+telegram), and `passive-direct` is rare (it requires a separate
+physical tap on the bus, which we do not have).
+
+**The mode is per-telegram, not per-session.** A session's role is
+fixed at the moment a telegram begins — specifically at the
+`IDLE → ARBITRATING` FSM transition (§5). If this session was the
+arbitration winner it becomes `token-holder` for this telegram; every
+other session becomes `cross-proxy` observer for this telegram. The
+role is held until the telegram terminates (`DONE` or `ABORTED`), at
+which point the session drops back to "no role" and sees only the
+inter-telegram filler stream until the next `STARTED` event.
+
+A session therefore cannot be `token-holder` and `cross-proxy`
+*simultaneously*. It alternates between the two roles from one
+telegram to the next as arbitration outcomes determine.
 
 For `token-holder`, byte-level visibility is unavoidable — the client is
 driving the wire and must see its own echoes byte by byte to detect
@@ -71,8 +113,9 @@ requires mid-telegram visibility, and the current code path stays as-is
 for it.
 
 For `cross-proxy`, telegrams are buffered server-side until complete and
-then emitted as a coherent block, padded with synthetic SYNs to preserve
-correct wire-density timing.
+then emitted as a coherent block, paced across the wire-time of the
+telegram and padded with synthetic SYNs to preserve correct wire-density
+timing.
 
 ---
 
@@ -84,17 +127,35 @@ stream. The theoretical maximum on eBUS is 240 symbols/sec (2400 baud,
 typical healthy bus reports somewhere around 100–150 symbols/sec,
 reflecting actual telegram density plus AUTO-SYN keepalives.
 
-The Helianthus proxy maintains its own observed `symbol_rate`, computed
-as an exponential moving average over bytes-received-from-transport per
-unit time. This rate is then used everywhere the proxy needs to
-synthesize filler SYN bytes — never the theoretical 240/s rate, always
-the observed rate. The point is that a `cross-proxy` client should
-perceive the same bus density it would have perceived as a
-`passive-direct` consumer; both modes share the same observable
-`symbol_rate`.
+The Helianthus proxy maintains a `symbol_rate` EMA **per cross-proxy
+session** — not a single global per-transport value. The EMA tracks
+the rate at which bytes can actually be drained to that session's TCP
+egress (bytes-delivered ÷ wall-clock window), bounded above by the
+wire-side observed rate.
 
-This is the analogue of ebusd's `symbol_rate` indicator and gives us a
-single calibration knob for filler generation.
+Per-session scoping is dictated by the transparency invariant of §0:
+each client must perceive the bus density it would have observed if
+connected to its own dedicated ENS adapter over its own TCP link. A
+client with a slow or jittery link to the proxy will see a slightly
+lower `symbol_rate` than a client with a fast link, exactly mirroring
+what would happen with two independent ENS adapters delivering the
+same physical bus to two different observers with different link
+qualities. This is the architecturally correct behavior even though it
+means the proxy generates fewer filler SYNs for slow clients, lowering
+their effective view of bus density.
+
+**Bootstrap.** A session that has just connected has no per-session
+history. The proxy seeds the per-session EMA from a transport-level
+"wire-observed" reference rate (computed once on the adapter-facing
+side, common across sessions only as a bootstrap value), then lets the
+per-session EMA diverge as the session's own drain characteristics
+manifest. The transport-level reference is only ever used at session
+boot or after a session reset.
+
+This is the analogue of ebusd's `symbol_rate` indicator — but
+ebusd-as-process has only one bus view per process, so its
+`symbol_rate` is naturally per-process. We have N concurrent sessions
+on one proxy, so we need N independent rates.
 
 ---
 
@@ -171,6 +232,32 @@ it drops. The proxy emits at the EMA, not the instantaneous rate, which
 smooths the cross-proxy view. This is intentional — clients receive a
 locally-stable view of wire density and do not chase microsecond
 jitter.
+
+### 4.5 Intra-telegram pacing
+
+Telegram bytes are emitted to a `cross-proxy` observer **spread
+across roughly the wire-time `W_F` of the telegram, not burst-flushed.**
+Each byte is scheduled at approximately
+
+```
+T_byte_i = T_emit_start + i × tau_byte
+```
+
+where `tau_byte = 1 / per_session_symbol_rate`.
+
+This matches the natural pacing a real ENS adapter would produce —
+bytes arrive at the receiver spaced by the wire bit period plus
+inter-byte processing time (≈4–8 ms per byte at 2400 baud). A
+burst-flush would deliver the entire telegram in a single TCP write
+(<1 ms perceived by the client), which would violate the transparency
+invariant of §0: no real adapter delivers bytes that fast, and a
+client running its own framing-by-timing heuristics could detect the
+proxy by the unnatural intra-telegram density.
+
+The cost is straightforward emission-scheduling complexity in the
+proxy: each per-session emission queue is timer-driven rather than
+flush-on-arrival. The benefit is a wire-indistinguishable byte stream
+on the client side.
 
 ---
 
@@ -333,28 +420,43 @@ the existing escape-decoder + echo-comparator infrastructure unchanged.
 
 ---
 
-## 9. Open questions
+## 9. Decisions
 
-  1. Do we emit telegram bytes to a `cross-proxy` observer as a single
-     burst, or spread out across `W_F` to mimic wire pacing? Burst is
-     simpler and ENH parsers handle it; pacing is more "natural" but
-     adds emission complexity.
+The four design questions raised in the initial draft have been
+resolved. Numbering preserved for traceability.
 
-  2. How does the gateway behave when it is both the token holder (for
-     its own telegrams) and a cross-proxy observer (for ebusd-originated
-     telegrams)? Same TCP session, two visibility modes alternated per
-     transaction. The session-level state machine must track the role
-     transition.
+  1. **Intra-telegram pacing: natural (per-byte pacing).** Telegram
+     bytes are emitted across `W_F` matching wire pacing, not
+     burst-flushed. Driven directly by the transparency invariant of
+     §0 — a burst-flushed telegram is detectable by the client as
+     non-wire timing. Detailed in §4.5.
 
-  3. Should the symbol-rate EMA be per-session or global per-transport?
-     Global is simpler and matches ebusd; per-session captures observer
-     bandwidth limitations but probably not needed.
+  2. **`token-holder` vs `cross-proxy` is a per-telegram role, never
+     simultaneous.** A session cannot hold both roles at once. Its
+     role is determined at the `IDLE → ARBITRATING` FSM transition
+     (arbitration winner = token holder for that telegram; everyone
+     else = cross-proxy observer for that telegram) and remains fixed
+     until `DONE` or `ABORTED`. Between telegrams the session has no
+     role; it sees only the filler SYN stream. Detailed in §2.
 
-  4. What's the right backpressure policy if a cross-proxy observer is
-     slow? Dropping filler SYNs is safe (parsers tolerate "long idle").
-     Dropping telegrams is not. Proposal: bounded per-session telegram
-     queue, drop oldest on overflow with explicit `OVERFLOW` marker
-     event.
+  3. **Symbol-rate EMA is per-session, not per-transport.** Each
+     cross-proxy session has its own `symbol_rate` EMA driven by the
+     actual rate at which bytes drain to that session's TCP egress.
+     Slow clients perceive a slower bus by design — a consequence of
+     the transparency invariant. The transport-level wire-observed
+     rate is retained only as a bootstrap seed for newly connected
+     sessions. Detailed in §3.
+
+  4. **Backpressure: drop whole telegrams from the per-session queue.**
+     If the per-session emission queue overflows because the client
+     cannot drain fast enough, the proxy drops entire queued telegrams
+     oldest-first. Communication is at the telegram layer, so partial
+     drops are nonsensical. An `OVERFLOW` notice is recorded on the
+     proxy's admin channel — never injected into the client byte
+     stream (transparency invariant). From the client's perspective
+     this looks identical to a real ENS adapter whose buffer
+     overflowed: the client simply misses telegrams from its view of
+     the bus, with no in-stream indication that anything was dropped.
 
 ---
 
