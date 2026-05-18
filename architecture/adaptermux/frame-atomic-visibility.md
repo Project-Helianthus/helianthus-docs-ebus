@@ -181,58 +181,80 @@ telegram is now complete" so it can flush the buffered bytes. The
 machine runs once per active session, fed by `StreamEvent`s from the
 transport.
 
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+
+    IDLE --> ARBITRATING : STARTED event
+
+    ARBITRATING --> IDLE : FAILED event
+    ARBITRATING --> MASTER_HEADER : grant resolved<br/>first byte = QQ
+
+    MASTER_HEADER --> MASTER_DATA : NN > 0
+    MASTER_HEADER --> MASTER_CRC : NN == 0
+
+    MASTER_DATA --> MASTER_CRC : NN bytes consumed
+
+    MASTER_CRC --> WAIT_TERMINATOR_SYN : ZZ == 0xFE<br/>(broadcast)
+    MASTER_CRC --> WAIT_MASTER_ACK : ZZ != 0xFE
+
+    WAIT_MASTER_ACK --> MASTER_HEADER : NACK<br/>(retransmit, retries remain)
+    WAIT_MASTER_ACK --> WAIT_TERMINATOR_SYN : ACK +<br/>master-master
+    WAIT_MASTER_ACK --> SLAVE_LENGTH : ACK +<br/>master-slave
+    WAIT_MASTER_ACK --> ABORTED : NACK exhausted
+
+    SLAVE_LENGTH --> SLAVE_DATA : NN' > 0
+    SLAVE_LENGTH --> SLAVE_CRC : NN' == 0
+
+    SLAVE_DATA --> SLAVE_CRC : NN' bytes consumed
+
+    SLAVE_CRC --> WAIT_SLAVE_ACK
+
+    WAIT_SLAVE_ACK --> SLAVE_LENGTH : NACK<br/>(retransmit, retries remain)
+    WAIT_SLAVE_ACK --> WAIT_TERMINATOR_SYN : ACK
+    WAIT_SLAVE_ACK --> ABORTED : NACK exhausted
+
+    WAIT_TERMINATOR_SYN --> DONE : SYN observed
+
+    DONE --> IDLE : emit telegram block<br/>to cross-proxy observers
+    ABORTED --> IDLE : emit failure marker
+
+    note right of IDLE
+        Every non-terminal state may transition
+        to ABORTED on:
+        - per-state read timeout exceeded
+        - transport reset / adapter disconnect
+        - arbitration-loss observed mid-telegram
+        - illegal symbol in current phase
+    end note
 ```
-IDLE
- │ (arbitration won — either by us or observed externally)
- ▼
-ARBITRATING
- │ (first non-SYN byte after grant)
- ▼
-MASTER_HEADER       (QQ ZZ PB SB NN consumed)
- │ (NN bytes consumed)
- ▼
-MASTER_DATA
- │ (CRC byte consumed)
- ▼
-MASTER_CRC
- │
- ▼
-WAIT_ACK            (ACK / NACK / SYN — or timeout)
- │ if NACK and retries remain → MASTER_HEADER (retransmit)
- │ if ACK and broadcast → DONE
- │ if ACK and master-master → WAIT_TERMINATOR_SYN
- │ if ACK and master-slave → SLAVE_LENGTH
- ▼
-SLAVE_LENGTH
- │
- ▼
-SLAVE_DATA
- │
- ▼
-SLAVE_CRC
- │
- ▼
-WAIT_SLAVE_ACK      (initiator's ACK / NACK back)
- │
- ▼
-WAIT_TERMINATOR_SYN
- │
- ▼
-DONE → emit telegram block to all cross-proxy observers, return to IDLE
 
-(any state) ── abort triggers ──▶ ABORTED → emit failure marker to observers
-```
+### 5.1 State legend
 
-Abort triggers are: transport read timeout exceeding the state-specific
-budget, transport reset, arbitration-loss detected mid-telegram,
-unexpected SYN in a phase where SYN is illegal.
+| State                 | Consumes / awaits                                       | Typical wall-clock budget |
+|-----------------------|---------------------------------------------------------|----------------------------|
+| `IDLE`                | filler SYN stream; STARTED arbitration event           | unbounded                  |
+| `ARBITRATING`         | grant resolution (won/lost), first post-grant byte     | ~50 ms                     |
+| `MASTER_HEADER`       | `QQ ZZ PB SB NN` (5 bytes)                              | ~25 ms                     |
+| `MASTER_DATA`         | NN data bytes (0–16)                                    | ~70 ms                     |
+| `MASTER_CRC`          | 1 CRC byte                                              | ~5 ms                      |
+| `WAIT_MASTER_ACK`     | ACK (0x00), NACK (0xFF), or SYN-timeout                 | ~25 ms                     |
+| `SLAVE_LENGTH`        | NN' (response data length)                              | ~25 ms                     |
+| `SLAVE_DATA`          | NN' data bytes (0–16)                                   | ~70 ms                     |
+| `SLAVE_CRC`           | 1 CRC byte                                              | ~5 ms                      |
+| `WAIT_SLAVE_ACK`      | initiator's ACK/NACK back to slave                      | ~25 ms                     |
+| `WAIT_TERMINATOR_SYN` | first SYN after the telegram ends                       | ~50 ms                     |
+| `DONE`                | terminal-success; emit block; reset                     | one tick                   |
+| `ABORTED`             | terminal-failure; emit failure marker; reset            | one tick                   |
 
-This is closely modelled on the existing passive reconstructor in
-`helianthus-ebusgo/protocol/passive_reconstructor.go`, which already
+### 5.2 Inheritance from `passive_reconstructor`
+
+This machine is closely modelled on the existing passive reconstructor
+in `helianthus-ebusgo/protocol/passive_reconstructor.go`, which already
 solves the bulk of the framing problem for `passive` scope. The
 proposal is to use the same machine for `active` cross-proxy emission,
 with the addition of per-telegram timing metadata (`T_wire_start`,
-`W_F`, `L_up`) needed by the SYN insertion logic.
+`W_F`, `L_up`) needed by the SYN insertion logic described in §4.
 
 ---
 
