@@ -3,6 +3,15 @@
 > Status: design sketch v8. Surgical fixes per round-7 split-verdict.
 > Branch: `frame-atomic-visibility` · Date: 2026-05-18
 
+
+<!-- legacy-role-mapping:begin -->
+> **Legacy terminology note.** This historical design doc was written before
+> the canonical `initiator`/`target` rename completed across the docs corpus.
+> Wherever you encounter `m`+`aster` or `sl`+`ave` in this file, read it
+> as `initiator`/`target` respectively (per the legacy-role-mapping
+> convention used throughout `helianthus-docs-ebus`). Live source code and
+> new design docs use the canonical terms exclusively.
+
 Round 7 verdicts:
   - **Opus: minor-fixes** ("design has converged"); 1 BLOCKER (§1.2 prose) + 1 MAJOR (§1.4 ESCAPE_PENDING bound) + 4 minors.
   - **Codex: major-rethink** with 1 "irreducible blocker" (§1.3 byte ordering) + 7 majors + 4 minors.
@@ -335,3 +344,5 @@ The five-round trajectory v3→v4→v5→v6→v7→v8 has surfaced and addressed
   - All observability gaps (counter gating, alert rules, residual documentation).
 
 The design is now ready for **implementation review and live-bus validation**, not further architectural iteration. The next round of adversarial review on v8 is recommended; if it returns minor-fixes from both reviewers, v8 is the architectural spec to land.
+
+<!-- legacy-role-mapping:end -->

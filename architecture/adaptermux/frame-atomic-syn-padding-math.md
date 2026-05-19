@@ -3,6 +3,15 @@
 > Companion to `frame-atomic-visibility.md`. Status: design sketch.
 > Branch: `frame-atomic-visibility` (multi-repo).
 
+
+<!-- legacy-role-mapping:begin -->
+> **Legacy terminology note.** This historical design doc was written before
+> the canonical `initiator`/`target` rename completed across the docs corpus.
+> Wherever you encounter `m`+`aster` or `sl`+`ave` in this file, read it
+> as `initiator`/`target` respectively (per the legacy-role-mapping
+> convention used throughout `helianthus-docs-ebus`). Live source code and
+> new design docs use the canonical terms exclusively.
+
 This document formalizes the per-session timing model that backs §3 and
 §4 of the parent design. The parent doc states *what* the proxy emits;
 this one states *exactly when, in what order, and based on which
@@ -429,3 +438,5 @@ worst-case error it introduces.
 | τ_byte_s constant within a telegram                 | jitter not modeled per byte                     | telegrams are short (<200 ms); jitter averages out  |
 | Single L_up_EMA per originator                      | per-telegram L_up may differ from EMA           | smoothing across telegrams is the point             |
 | Prefix only, no postfix                             | inter-telegram idle slightly off if back-to-back | next telegram's prefix handles it                   |
+
+<!-- legacy-role-mapping:end -->
