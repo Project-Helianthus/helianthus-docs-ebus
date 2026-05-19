@@ -2,6 +2,15 @@
 
 > Status: design sketch v5. Supersedes v1, v2, v3, v4. Branch: `frame-atomic-visibility` · Date: 2026-05-18
 
+
+<!-- legacy-role-mapping:begin -->
+> **Legacy terminology note.** This historical design doc was written before
+> the canonical `initiator`/`target` rename completed across the docs corpus.
+> Wherever you encounter `m`+`aster` or `sl`+`ave` in this file, read it
+> as `initiator`/`target` respectively (per the legacy-role-mapping
+> convention used throughout `helianthus-docs-ebus`). Live source code and
+> new design docs use the canonical terms exclusively.
+
 ## 1. Convergent findings from v4 review that v5 must resolve
 
 Codex and Opus both returned `major-rethink` on v4 with overlapping findings:
@@ -344,3 +353,5 @@ Each step independently testable and rollback-able. No big-bang migration.
 | Codex terminator vs idle cadence | §2: no IDLE cadence filter at all. |
 | Codex passive_reconstructor location | §8: corrected to `helianthus-ebusgateway/internal/adaptermux/passive_transaction_reconstructor.go`. |
 | Codex PROTOCOL_FAULT contract | §9: ENH RESETTED to originator + admin event. |
+
+<!-- legacy-role-mapping:end -->
