@@ -118,7 +118,7 @@ v8 L_rtt regime:
   α = 0.3.
   Per-byte measurement during ACTIVE mode only: round-trip via echo.
   No measurement during PASSIVE_TRACKING.
-  
+
   On entry to ACTIVE mode after long IDLE (>30 s without active write):
     Use a GRACE_BOOTSTRAP period for the first 3 echoes of the new
     write. During grace, no hard timeout fires — only soft timeout
