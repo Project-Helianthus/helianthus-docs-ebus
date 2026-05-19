@@ -11,7 +11,7 @@ with the deployment.
 
 | Alert name | Source counter | Reference |
 |---|---|---|
-| `HelianthusRound9FiredUnderProxy` | `helianthus_round9_absorb_fired_proxy_mediated_total` | [frame-atomic-visibility-v8 §1.12 / I8](../architecture/adaptermux/frame-atomic-visibility-v8.md) |
+| `HelianthusRound9FiredUnderProxy` | `helianthus_round9_absorb_entered_total` | [frame-atomic-visibility-v8 §1.12 / I8](../architecture/adaptermux/frame-atomic-visibility-v8.md) |
 
 ## HelianthusRound9FiredUnderProxy
 
@@ -20,12 +20,16 @@ config (`prometheus-rules.yaml`) before the adaptermux classifier is
 enabled in `enforce` mode. Step C live-bus validation (v8 §14) verifies
 rule presence via the Prometheus API before proxy rollout.
 
-**Counter source:** `helianthus_round9_absorb_fired_proxy_mediated_total`
-— exported by `helianthus-ebusgo`'s `protocol.Bus.Round9AbsorbFiredProxyMediated()`
-accessor. The counter increments once per fire of the round-9 AUTO-SYN
-absorb predicate inside `sendRawWithEcho` (`protocol/bus.go`), gated on
-`inSendRawWithEchoActiveEchoWait()` — see [frame-atomic-visibility-v8 §1.8](../architecture/adaptermux/frame-atomic-visibility-v8.md)
-for the invariant.
+**Counter source:** `helianthus_round9_absorb_entered_total`
+— exported by `helianthus-ebusgo`'s `protocol.Bus.Round9AbsorbEntered()`
+accessor. The counter is named neutrally on the Go side — it counts
+every round-9 AUTO-SYN absorb predicate fire inside `sendRawWithEcho`
+(`protocol/bus.go`), gated on the runtime phase predicate
+`inSendRawWithEchoActiveEchoWait()` (see [frame-atomic-visibility-v8 §1.8](../architecture/adaptermux/frame-atomic-visibility-v8.md)).
+The "fired under proxy" interpretation lives ENTIRELY in this alert
+rule's PromQL (which AND-s the counter with `classifier_mode == "enforce"`),
+not in the counter's code-side name. This keeps the Go protocol layer
+free of cross-repo coupling.
 
 **Why this alert exists:** under v8 I8, round-9 absorb code is RETAINED
 as a legacy fallback for direct-adapter mode (no proxy mediating wire
@@ -42,7 +46,7 @@ groups:
     rules:
       - alert: HelianthusRound9FiredUnderProxy
         expr: |
-          rate(helianthus_round9_absorb_fired_proxy_mediated_total[5m]) > 0
+          rate(helianthus_round9_absorb_entered_total[5m]) > 0
           and on(instance) helianthus_adaptermux_classifier_mode{mode="enforce"} == 1
         for: 1m
         labels:
