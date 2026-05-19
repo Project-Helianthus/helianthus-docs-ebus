@@ -3,6 +3,15 @@
 > Status: design sketch v7. Tightens v6 per round-6 review findings.
 > Branch: `frame-atomic-visibility` · Date: 2026-05-18
 
+
+<!-- legacy-role-mapping:begin -->
+> **Legacy terminology note.** This historical design doc was written before
+> the canonical `initiator`/`target` rename completed across the docs corpus.
+> Wherever you encounter `m`+`aster` or `sl`+`ave` in this file, read it
+> as `initiator`/`target` respectively (per the legacy-role-mapping
+> convention used throughout `helianthus-docs-ebus`). Live source code and
+> new design docs use the canonical terms exclusively.
+
 v6 received split verdicts on round 6:
 
   - **Opus: minor-fixes** ("genuinely minor-fixes territory but with two MAJOR holes that must close before ship... isn't a rethink — it's a localized tightening").
@@ -338,3 +347,5 @@ PASSIVE_TRACKING runs the FULL sub-FSM including MASTER_RETX and SLAVE_RETX with
 | Codex MINOR docs CI terminology | §1.12 initiator/target throughout doc text. |
 
 Every BLOCKER and MAJOR from both reviewers has an explicit v7 resolution. The two not-fixed items (§2.1 slow-slave edge, §2.2 pacer architecture) are reframed as residual or clarified, with rationale.
+
+<!-- legacy-role-mapping:end -->

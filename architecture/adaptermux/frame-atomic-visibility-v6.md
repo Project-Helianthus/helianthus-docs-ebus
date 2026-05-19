@@ -2,6 +2,15 @@
 
 > Status: design sketch v6. Supersedes v1–v5. Branch: `frame-atomic-visibility` · Date: 2026-05-18
 
+
+<!-- legacy-role-mapping:begin -->
+> **Legacy terminology note.** This historical design doc was written before
+> the canonical `initiator`/`target` rename completed across the docs corpus.
+> Wherever you encounter `m`+`aster` or `sl`+`ave` in this file, read it
+> as `initiator`/`target` respectively (per the legacy-role-mapping
+> convention used throughout `helianthus-docs-ebus`). Live source code and
+> new design docs use the canonical terms exclusively.
+
 ## 1. Convergent v5 findings v6 must resolve
 
 Codex and Opus converged on five blockers/majors against v5:
@@ -345,3 +354,5 @@ Each step independently testable and rollback-able.
 | Codex MINOR §6 locking | §6 explicit per-session mutex + scope. |
 
 Every v5 blocker and major has an explicit v6 resolution. Mediums and minors likewise.
+
+<!-- legacy-role-mapping:end -->

@@ -21,6 +21,15 @@
 >
 > v2 takes those findings as constraints and reformulates the design.
 
+
+<!-- legacy-role-mapping:begin -->
+> **Legacy terminology note.** This historical design doc was written before
+> the canonical `initiator`/`target` rename completed across the docs corpus.
+> Wherever you encounter `m`+`aster` or `sl`+`ave` in this file, read it
+> as `initiator`/`target` respectively (per the legacy-role-mapping
+> convention used throughout `helianthus-docs-ebus`). Live source code and
+> new design docs use the canonical terms exclusively.
+
 ---
 
 ## 1. Keep the intent, drop the wrong primitive
@@ -394,3 +403,5 @@ Honest accounting of what stays open:
 
 Each step is independently verifiable and rollback-able. No "big
 bang" migration.
+
+<!-- legacy-role-mapping:end -->

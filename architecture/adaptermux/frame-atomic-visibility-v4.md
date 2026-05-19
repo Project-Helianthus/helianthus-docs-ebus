@@ -4,6 +4,15 @@
 > received `major-rethink` from convergent Codex + Opus reviews.
 > Branch: `frame-atomic-visibility` · Date: 2026-05-18
 
+
+<!-- legacy-role-mapping:begin -->
+> **Legacy terminology note.** This historical design doc was written before
+> the canonical `initiator`/`target` rename completed across the docs corpus.
+> Wherever you encounter `m`+`aster` or `sl`+`ave` in this file, read it
+> as `initiator`/`target` respectively (per the legacy-role-mapping
+> convention used throughout `helianthus-docs-ebus`). Live source code and
+> new design docs use the canonical terms exclusively.
+
 ## 1. What v3 got wrong
 
 v3 inverted the model correctly (proxy holds intelligence, clients get
@@ -501,3 +510,5 @@ resolution. The single architectural concession over v3 is admitting
 the proxy needs a minimal eBUS telegram FSM — but this is the same
 FSM already implemented for passive observation, just instanced for
 active sessions.
+
+<!-- legacy-role-mapping:end -->

@@ -3,6 +3,15 @@
 > Status: design sketch · Branch: `frame-atomic-visibility` (multi-repo)
 > · Authors: Razvan + Claude · Date: 2026-05-18
 
+
+<!-- legacy-role-mapping:begin -->
+> **Legacy terminology note.** This historical design doc was written before
+> the canonical `initiator`/`target` rename completed across the docs corpus.
+> Wherever you encounter `m`+`aster` or `sl`+`ave` in this file, read it
+> as `initiator`/`target` respectively (per the legacy-role-mapping
+> convention used throughout `helianthus-docs-ebus`). Live source code and
+> new design docs use the canonical terms exclusively.
+
 A design note for a curious reader. This describes a redesign of how the
 Helianthus eBUS gateway/proxy exposes wire activity to its multiple
 clients (ebusd, vrc-explorer, the Helianthus gateway when it is acting as
@@ -501,3 +510,5 @@ so the work can land coherently.
 Status today: design only, no code changes. The companion-repo branches
 exist as markers to anchor future commits when this proposal exits
 sketch state.
+
+<!-- legacy-role-mapping:end -->
