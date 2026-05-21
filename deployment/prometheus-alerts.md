@@ -32,6 +32,27 @@ rule's PromQL (which AND-s the counter with `classifier_mode == "enforce"`),
 not in the counter's code-side name. This keeps the Go protocol layer
 free of cross-repo coupling.
 
+**Important — entry vs. consumption semantics.** The counter ticks at
+the moment the absorb branch is *entered* (the predicate fires),
+NOT on actual byte absorption. The downstream work — calling
+`readByteWithEscape` in a loop to consume up to 3 wire SYNs — happens
+*after* the increment. If `readByteWithEscape` returns an error on
+the FIRST call (transport timeout, connection reset, context cancel),
+the absorb path early-returns BEFORE any `payloadAaAutoSynAbsorbed`
+increment. Result: `round9_absorb_entered_total > 0` but
+`payload_aa_auto_syn_absorbed_total == 0` for that transaction.
+
+This is the **expected** behavior — the entry counter measures
+"how often the proxy left the gateway exposed to wire AUTO-SYNs on
+a payload-0xAA write", regardless of whether the subsequent absorb
+work could complete. Operators reading the alert should NOT expect
+the entry counter to be matched 1:1 by absorption counter ticks;
+the absorption counter is a SUBSET driven by transport health
+during the absorb window.
+
+See the "Diagnostic correlation" runbook section below for how
+to interpret entry-vs-consumption gaps during incident response.
+
 **Why this alert exists:** under v8 I8, round-9 absorb code is RETAINED
 as a legacy fallback for direct-adapter mode (no proxy mediating wire
 AUTO-SYNs). When the adaptermux classifier is in `enforce` mode, the
@@ -97,6 +118,47 @@ curl -s "${PROMETHEUS_URL}/api/v1/rules" \
 
 If the rule is absent or fails to load, the proxy MUST NOT be promoted
 to `enforce` mode — the v8 invariant is unobservable without it.
+
+**Diagnostic correlation (incident-response runbook):**
+
+When the alert fires, scrape both the entry counter AND the
+three sub-counters that record the actual absorb work to
+classify the fault:
+
+```bash
+curl -s ${GATEWAY_URL}/metrics | grep -E '^helianthus_(round9_absorb_entered|payload_aa_auto_syn)_'
+```
+
+Expected counter family:
+
+| Counter | Increments when |
+|---|---|
+| `helianthus_round9_absorb_entered_total` | Absorb branch ENTERED (predicate fired in `sendRawWithEcho`). |
+| `helianthus_payload_aa_auto_syn_absorbed_total` | A wire byte was successfully read inside the absorb loop. Per-byte. |
+| `helianthus_payload_aa_auto_syn_recovered_total` | The absorb loop recovered cleanly: the next byte was the real escape-decoded payload echo. Per-transaction. |
+| `helianthus_payload_aa_auto_syn_drain_exhausted_total` | The absorb loop ran out of drain budget (3 bytes) without recovering. Per-transaction. |
+
+The relationship: `entered = recovered + drain_exhausted + transport_failures`.
+The third term is implicit (no dedicated counter — early-return on
+read error skips both `absorbed` and `recovered`/`drain_exhausted`
+increments).
+
+Interpretation matrix:
+
+| Counter pattern | Diagnosis |
+|---|---|
+| `entered > 0`, all three sub-counters at 0 | All round-9 entries hit transport errors before reading the first absorb byte. The adapter or upstream connection is unhealthy, NOT a proxy filtering problem. Investigate `ebus_errors_total{class="transport_reset"}` and `ebus_passive_tap_connected`. |
+| `entered > 0`, `absorbed > 0`, `recovered > 0`, `drain_exhausted == 0` | Round-9 is doing its job: real wire AUTO-SYNs interfered with payload-0xAA writes and the absorb loop rescued every one. Under `enforce` mode this means the proxy let the AUTO-SYN through and round-9 caught it — the v8 invariant violation HelianthusRound9FiredUnderProxy is alerting on. Investigate the adaptermux classifier path. |
+| `entered > 0`, `drain_exhausted > 0` | Round-9 entered, consumed bytes, but didn't recover within 3 drain attempts. Indicates a sustained AUTO-SYN burst (>3 bytes) or genuinely-stuck adapter. Pre-round-9 collision behavior was preserved (the transaction surfaces as `BusOutcomeEchoMismatch`). |
+| `recovered > drain_exhausted` (steady-state ratio) | Healthy round-9 operation in direct-adapter mode. Expected when classifier_mode != "enforce". This pattern is INFORMATIONAL; the alert above does NOT fire (gated on classifier_mode == "enforce"). |
+
+The `HelianthusRound9FiredUnderProxy` alert is intentionally
+deliberate: it does NOT subdivide by which sub-counter ticked, because
+the v8 invariant (I8) is "no round-9 entry under proxy enforce-mode",
+not "no absorb work under proxy enforce-mode". An entry that
+immediately transport-failed STILL indicates the proxy let an
+AUTO-SYN reach the gateway's echo position — the proxy's job is to
+prevent that arrival, regardless of what happened next.
 
 ## HelianthusV8ShadowWouldHaveDroppedGrowing
 
