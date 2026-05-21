@@ -121,36 +121,59 @@ to `enforce` mode — the v8 invariant is unobservable without it.
 
 **Diagnostic correlation (incident-response runbook):**
 
-When the alert fires, scrape both the entry counter AND the
-three sub-counters that record the actual absorb work to
-classify the fault:
+When the alert fires, query the counter family using
+`increase(...[5m])` (same-window deltas — NOT raw cumulative
+totals, which include history that pre-dates the incident and
+will misclassify the current state):
 
-```bash
-curl -s ${GATEWAY_URL}/metrics | grep -E '^helianthus_(round9_absorb_entered|payload_aa_auto_syn)_'
+```promql
+increase(helianthus_round9_absorb_entered_total[5m])
+increase(helianthus_payload_aa_auto_syn_absorbed_total[5m])
+increase(helianthus_payload_aa_auto_syn_recovered_total[5m])
+increase(helianthus_payload_aa_auto_syn_drain_exhausted_total[5m])
 ```
 
-Expected counter family:
+Or scrape `/metrics` and compute deltas manually against a
+baseline scrape from before the incident — never compare
+absolute cumulative values across long windows.
 
-| Counter | Increments when |
-|---|---|
-| `helianthus_round9_absorb_entered_total` | Absorb branch ENTERED (predicate fired in `sendRawWithEcho`). |
-| `helianthus_payload_aa_auto_syn_absorbed_total` | A wire byte was successfully read inside the absorb loop. Per-byte. |
-| `helianthus_payload_aa_auto_syn_recovered_total` | The absorb loop recovered cleanly: the next byte was the real escape-decoded payload echo. Per-transaction. |
-| `helianthus_payload_aa_auto_syn_drain_exhausted_total` | The absorb loop ran out of drain budget (3 bytes) without recovering. Per-transaction. |
+Counter family:
 
-The relationship: `entered = recovered + drain_exhausted + transport_failures`.
-The third term is implicit (no dedicated counter — early-return on
-read error skips both `absorbed` and `recovered`/`drain_exhausted`
-increments).
+| Counter | Granularity | Increments when |
+|---|---|---|
+| `helianthus_round9_absorb_entered_total` | per-transaction | Absorb branch ENTERED (predicate fired in `sendRawWithEcho`). |
+| `helianthus_payload_aa_auto_syn_absorbed_total` | **per-byte** | A wire byte was successfully read inside the absorb loop. May tick multiple times per transaction. |
+| `helianthus_payload_aa_auto_syn_recovered_total` | per-transaction | The absorb loop found the real escape-decoded payload echo and the transaction succeeded cleanly. |
+| `helianthus_payload_aa_auto_syn_drain_exhausted_total` | per-transaction | The absorb loop ran the full 3-byte budget without finding the real echo. Terminal outcome surfaces as `ebus_errors_total{class="collision"}` (via `ErrBusCollision`), NOT as `class="echo_mismatch"` despite the internal `BusEventEchoMismatch` observer event. |
 
-Interpretation matrix:
+Per-transaction accounting (across a same-window `increase(...)`
+sample):
+
+```
+entered = recovered
+        + drain_exhausted
+        + non_syn_break        (absorbed ticks, neither recovered nor
+                                drain_exhausted; transaction surfaces
+                                as a real echo-mismatch with the
+                                non-SYN byte)
+        + transport_failures   (no sub-counter ticks at all;
+                                read errored out before the first
+                                absorbed++ increment)
+```
+
+The `non_syn_break` term has no dedicated counter — it's the
+`absorbed > 0, recovered == 0, drain_exhausted == 0` residual
+once `transport_failures` is accounted for.
+
+Interpretation matrix (all terms read as `increase(...[5m])`):
 
 | Counter pattern | Diagnosis |
 |---|---|
-| `entered > 0`, all three sub-counters at 0 | All round-9 entries hit transport errors before reading the first absorb byte. The adapter or upstream connection is unhealthy, NOT a proxy filtering problem. Investigate `ebus_errors_total{class="transport_reset"}` and `ebus_passive_tap_connected`. |
-| `entered > 0`, `absorbed > 0`, `recovered > 0`, `drain_exhausted == 0` | Round-9 is doing its job: real wire AUTO-SYNs interfered with payload-0xAA writes and the absorb loop rescued every one. Under `enforce` mode this means the proxy let the AUTO-SYN through and round-9 caught it — the v8 invariant violation HelianthusRound9FiredUnderProxy is alerting on. Investigate the adaptermux classifier path. |
-| `entered > 0`, `drain_exhausted > 0` | Round-9 entered, consumed bytes, but didn't recover within 3 drain attempts. Indicates a sustained AUTO-SYN burst (>3 bytes) or genuinely-stuck adapter. Pre-round-9 collision behavior was preserved (the transaction surfaces as `BusOutcomeEchoMismatch`). |
-| `recovered > drain_exhausted` (steady-state ratio) | Healthy round-9 operation in direct-adapter mode. Expected when classifier_mode != "enforce". This pattern is INFORMATIONAL; the alert above does NOT fire (gated on classifier_mode == "enforce"). |
+| `entered > 0`, all three sub-counters at 0 | All round-9 entries in the window had transport errors before reading the first absorb byte. **This is STILL an I8 violation** — the proxy let the wire AUTO-SYN reach the gateway's echo position in the first place. The transport-error layer is a secondary fault on top: investigate `ebus_errors_total{class="transport_reset"}` and `ebus_passive_tap_connected` alongside the adaptermux classifier path. |
+| `entered ≈ recovered`, `drain_exhausted == 0` | Healthy round-9 rescue: every entered transaction recovered cleanly via the absorb loop. Under `enforce` mode this is the v8 invariant violation HelianthusRound9FiredUnderProxy is alerting on — the proxy let AUTO-SYNs through and round-9 absorbed them. Investigate the adaptermux classifier path and per-session pacer; round-9 ABSORBED the violation but the entry itself is the contract breach. |
+| `entered > recovered + drain_exhausted` | The residual indicates non-SYN-break terminations (absorb consumed bytes, the next byte was not the real echo, transaction surfaced as `class="collision"`). Indicates a mid-frame collision pattern beyond the pure AA-injection case — the absorb path is correctly bailing out into the legacy collision-retry classification. |
+| `drain_exhausted > 0` | Sustained AUTO-SYN bursts longer than the 3-byte drain cap, OR a genuinely-stuck adapter. Transaction outcome surfaces as `ebus_errors_total{class="collision"}` via `ErrBusCollision`. Check upstream-adapter health (voltage / WiFi signal) before assuming classifier fault. |
+| `recovered > drain_exhausted` steady-state with `classifier_mode != "enforce"` | Healthy round-9 operation in direct-adapter mode. Expected; alert does NOT fire (gated on `classifier_mode == "enforce"`). |
 
 The `HelianthusRound9FiredUnderProxy` alert is intentionally
 deliberate: it does NOT subdivide by which sub-counter ticked, because
