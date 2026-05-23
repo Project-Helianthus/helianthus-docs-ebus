@@ -156,7 +156,11 @@ Semantics:
 
 ## `ebus.v1.semantic.solar.get`
 
-Not implemented. Gated by `fm5_config<=2`. Source registers would come from GG=0x04 (solar circuit).
+Gated by `fm5_config<=2`. Source registers come from GG=0x04 (solar circuit).
+When FM5 evidence exists but the runtime cannot safely interpret FM5-backed
+solar semantics, the MCP plane remains non-null and returns an empty typed
+object. Consumers must treat that as known absent/non-interpreted, not as a
+zero-valued solar measurement.
 
 ## `ebus.v1.semantic.cylinders.get`
 
@@ -166,6 +170,9 @@ Publication gate:
 - Entire family is gated by `fm5_config<=2`.
 - Individual instances are published only when `GG=0x05 RR=0x0004` (`cylinder_temperature`) is live and decodable for that instance.
 - Config-only responses from `GG=0x05 RR=0x0001..0x0003` do not imply a real cylinder and must not create `cylinders[]` entries.
+- When FM5 is absent or GPIO-only, the MCP plane remains non-null and returns
+  `[]`. Consumers must treat this as known absent/non-interpreted rather than
+  unknown data.
 
 | Semantic Path | B524 | Type |
 |---------------|------|------|

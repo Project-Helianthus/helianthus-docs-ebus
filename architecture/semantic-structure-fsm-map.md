@@ -91,8 +91,8 @@ These suppress or delay evidence collection without being structural decisions b
 | `circuits` | `GG=0x02 RR=0x0002` | Circuit discovery + managing-device evaluation | Startup semantic FSM | Yes | Omitted when no active circuit evidence exists |
 | `radioDevices` | `GG=0x09/0x0A/0x0C` slot evidence | Radio inventory evaluation | Startup semantic FSM | Yes | Omitted when slot evidence is absent or withheld |
 | `fm5SemanticMode` | System + radio + solar/cylinder evidence | FM5 semantic evaluation | Startup semantic FSM | Yes | Downgraded/cleared when evidence falls below gate |
-| `solar` | FM5 + `GG=0x04` | Solar family gate | Startup semantic FSM | Yes | Cleared when FM5 is not interpreted |
-| `cylinders` | FM5 + `GG=0x05` + per-instance temperature evidence | Cylinder family gate + individual cylinder gate | Startup semantic FSM | Yes | Family cleared when FM5 not interpreted; instance omitted without live evidence |
+| `solar` | FM5 + `GG=0x04` | Solar family gate | Startup semantic FSM | Yes | Published as an empty non-null object when FM5 is absent or GPIO-only; interpreted fields remain null until live evidence exists |
+| `cylinders` | FM5 + `GG=0x05` + per-instance temperature evidence | Cylinder family gate + individual cylinder gate | Startup semantic FSM | Yes | Published as an empty non-null list when FM5 is absent or GPIO-only; individual instances are omitted without live evidence |
 | `dhw` | B524 reads / fallback hydration | No structural FSM in Phase 1 | Startup semantic FSM + DHW freshness FSM | Yes | Can expire after TTL without changing topology |
 | `energyTotals` | Energy broadcast ingestion | No structural FSM in Phase 1 | Published independently of startup readiness | No direct B524 breaker path | Can remain absent or stale independently of structure |
 
