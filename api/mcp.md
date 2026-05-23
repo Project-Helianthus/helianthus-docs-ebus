@@ -357,6 +357,9 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
   - `ebus.v1.semantic.system.get`
   - `ebus.v1.semantic.circuits.get`
   - `ebus.v1.semantic.radio_devices.get`
+    - `data: []` means the startup radio inventory probe completed without
+      publishable radio slots. `data: null` means the plane has not been
+      published yet.
   - `ebus.v1.semantic.fm5_mode.get`
   - `ebus.v1.semantic.solar.get`
   - `ebus.v1.semantic.cylinders.get`

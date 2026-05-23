@@ -10,6 +10,9 @@ Goal: suppress repeated failing reads per semantic register target while still a
 - Circuit scope is per selector key: `b524:<group>:<instance>:<addr>` (hex formatted as `%02x:%02x:%04x`).
 - A breaker decision suppresses only that key; other semantic keys continue polling.
 - The B524 fetch path still performs bounded internal retries (up to 3 attempts, `75ms` backoff) before returning one success/failure outcome to the breaker.
+- Startup L1 priming is intentionally outside this breaker path. Its bounded
+  first-minute probes use direct live reads so a short breaker cooldown from an
+  early miss cannot by itself keep required MCP semantic planes `null`.
 
 ## State Machine
 
