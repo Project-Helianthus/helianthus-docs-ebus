@@ -56,6 +56,38 @@ stateDiagram-v2
 - In `ebusd-tcp` fallback mode, successful `grab result all` hydration for zones/DHW is classified as **live** and can advance `live_epoch`.
 - Energy broadcast ingestion updates `energyTotals` but does **not** advance startup `live_epoch` and does not trigger startup phase transitions.
 
+## M4 L1 Startup Priming
+
+After B524 semantic root discovery succeeds, the gateway runs a bounded startup
+priming pass before the normal periodic semantic loop. The purpose is L1 plane
+availability: every MCP semantic plane required by the M4 O1 gate must publish a
+non-null payload within 60 seconds of add-on startup when live bus access is
+working.
+
+Startup priming is a publication-ordering rule, not a transport or protocol
+arbitration change. It does not change `bus.Send`, the adaptermux first-byte
+arbitration behavior, or the Direction C F-NEW-29 predicate documented in
+[`adaptermux/first-byte-arbitration-revalidation.md`](./adaptermux/first-byte-arbitration-revalidation.md).
+
+The priming pass is intentionally bounded:
+
+- run only after a B524-capable semantic root has been found;
+- use short per-probe timeouts so a slow register family cannot monopolize the
+  startup window;
+- publish lightweight structural or skeleton payloads for planes whose full
+  detail is filled by later periodic pollers;
+- seed radio-device availability from already-known regulator/FM5 registry
+  evidence when remote slot scans have not completed yet;
+- allow the first coherent zone-discovery result to publish zones during
+  startup, then return zone lifecycle control to the normal presence hysteresis
+  FSM.
+
+The normal steady-state pollers remain authoritative for complete values,
+freshness, removal, and downgrade behavior. For example, schedules may become
+non-null during startup before the heavier schedule read cycle fills detailed
+entries, and FM5-related planes may publish a bounded startup interpretation
+before later system/radio/solar/cylinder reads refine or downgrade the model.
+
 ## Incremental Merge and Freshness Semantics
 
 Zone and DHW updates are merged incrementally, not replaced wholesale.
