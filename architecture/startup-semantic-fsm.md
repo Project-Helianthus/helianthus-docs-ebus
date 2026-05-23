@@ -74,6 +74,12 @@ The priming pass is intentionally bounded:
 - run only after a B524-capable semantic root has been found;
 - use short per-probe timeouts so a slow register family cannot monopolize the
   startup window;
+- release source-selection semantic bootstrap as soon as active source evidence
+  exists; physical identity confirmation and full-range recovery must not hold
+  the semantic L1 barrier open;
+- retry the DHW singleton path before the startup zone sweep so a transient
+  first DHW miss cannot leave the `dhw` plane null while the heavier structural
+  scan runs;
 - publish lightweight structural or skeleton payloads for planes whose full
   detail is filled by later periodic pollers;
 - seed radio-device availability from already-known regulator/FM5 registry
@@ -81,6 +87,13 @@ The priming pass is intentionally bounded:
 - allow the first coherent zone-discovery result to publish zones during
   startup, then return zone lifecycle control to the normal presence hysteresis
   FSM.
+
+Physical device identity enrichment is not part of the L1 semantic gate. Serial
+number retry/enrichment may refine registry identity after startup, but it must
+not consume the first 60 seconds needed to publish the required MCP semantic
+planes. The L1 gate requires non-null publication for zones, circuits, DHW,
+radio devices, FM5 mode, solar, cylinders, schedules, energy totals, system,
+adapter info, and boiler status.
 
 The normal steady-state pollers remain authoritative for complete values,
 freshness, removal, and downgrade behavior. For example, schedules may become
