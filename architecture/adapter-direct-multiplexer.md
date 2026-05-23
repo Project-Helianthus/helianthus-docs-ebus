@@ -82,13 +82,31 @@ that RESETTED as part of their normal startup sequence.
 
 ### AD06: Owner Arbitration Model
 
-Two-class gateway-priority model. At each SYN boundary:
+The embedded mux arbitrates between two request classes:
 
-1. If gateway has a pending START request, gateway wins.
-2. Else if an external session has a pending START, external wins (FIFO order).
-3. Else bus is idle, no owner.
+- gateway session 0, used by `gateway.Bus`
+- external sessions, such as ebusd or VRC Explorer clients connected through
+  the compatibility listener
 
-Gateway requests are never delayed by external contention.
+When only one class has a pending START request, that class is granted. When
+both classes are pending, the mux treats the decision as real contention even if
+the wire is currently between frames. It applies the configured fairness ratio
+(`FairnessRatio`, default `2`) so the contended rotation is gateway, external,
+gateway, external, and so on. The external side is FIFO within the external
+class.
+
+The bus-idle fast path is intentionally narrower: if the wire is idle and only
+external sessions are pending, the external FIFO head may be granted immediately
+without consuming a fairness rotation. That avoids wasting ebusd's local START
+deadline on a quiet bus. The fast path must not run when gateway is also pending,
+because a continuous external scanner with a lower eBUS source address, for
+example `0x31`, can otherwise monopolize idle-boundary grants and hold the
+gateway source (`0x7f`/configured gateway source) near zero until the scanner
+stops.
+
+This is gateway-side scheduling only. It does not rewrite eBUS physical
+arbitration priority: if `0x31` and `0x7f` reach the actual wire at the same
+time, the lower-priority/later source still loses according to the bus rules.
 
 ### AD07: Echo Suppression
 
