@@ -133,6 +133,24 @@ v1 default profile TTLs:
 Runtime scheduler semantics use descriptor policy, not legacy hard-coded
 `500ms` windows.
 
+Execution loops must also respect the freshness profile. A selector classified
+as `state_slow`, `config`, or `discovery` must not be invoked from the
+one-minute state loop just because the scheduler can cache it; the caller
+cadence is part of the bus traffic contract. For B524-backed semantic reads,
+the steady-state split is:
+
+| Profile | Execution owner |
+| --- | --- |
+| `state_fast` | One-minute semantic state loop, limited to fast-changing live values such as current temperatures, special functions, valve state, and other actuator/runtime state. |
+| `state_slow` | Slower semantic refresh path; never promoted to the one-minute state loop only for convenience. |
+| `config` | Config refresh path. Target temperatures, operation modes, zone mappings, circuit type, holiday/quick-veto configuration, and DHW target/op-mode selectors live here. |
+| `discovery` | Discovery/identity refresh path. Names, structural indexes, and topology evidence live here. |
+
+This rule was made explicit after gateway issue
+Project-Helianthus/helianthus-ebusgateway#680: descriptor classification alone
+was insufficient when the execution loop still called slower selectors at
+state cadence.
+
 Effective shadow-hit limit is:
 
 `min(caller maxAge, descriptor EffectiveFreshnessTTL())`
