@@ -133,6 +133,22 @@ documented range has produced definitive active/inactive answers; partial scans
 retry on the regular configuration cadence. Critical state and boiler fast-tier
 reads are not delayed by this backfill pacing rule.
 
+Steady-state zone and DHW polling is split by freshness class:
+
+- The 60-second state task is reserved for live-critical values: zone current
+  temperature, target temperature, humidity, operating mode, special function,
+  valve/HVAC action, and DHW current/target temperature plus DHW mode fields.
+- Slow or rarely changing selectors run on the config cadence: zone quick-veto
+  expiry/details, holiday windows, room-temperature-zone mapping, per-zone
+  associated circuit type, and DHW holiday dates.
+- The boiler fast tier may project DHW fields from the already-refreshed DHW
+  semantic snapshot; it must not duplicate the DHW B524 state reads just to
+  populate the boiler-status view.
+
+This split bounds gateway-originated `0x7F -> 0x15` B524 traffic after startup
+without weakening the L1 startup gate. Startup-specific priming paths may still
+perform direct reads for the planes needed to become non-null within 60 seconds.
+
 ## Incremental Merge and Freshness Semantics
 
 Zone and DHW updates are merged incrementally, not replaced wholesale.
