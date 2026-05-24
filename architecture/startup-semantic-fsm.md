@@ -105,8 +105,8 @@ before later system/radio/solar/cylinder reads refine or downgrade the model.
 
 The Vaillant semantic poller uses a single serialized task scheduler for active
 semantic reads. Each recurring task family has a stable scheduler key:
-discovery, config, state, circuits, system, radio devices, energy, schedules,
-and the three boiler-status tiers.
+regulator capability, discovery, config, state, circuits, system, radio
+devices, energy, schedules, and the three boiler-status tiers.
 
 The scheduler MUST coalesce duplicate queued or running tasks with the same key.
 If a new tick arrives while the same task family is pending, the queued task is
