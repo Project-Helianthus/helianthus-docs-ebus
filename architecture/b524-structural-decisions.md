@@ -135,7 +135,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Constraint strength | `CORROBORATING` |
 | Scope of validity | `PROTOCOL` |
 | Evaluation rule | `refreshState()` reads the raw value; `publishZones()` exposes the decoded integer via `decodeRoomTemperatureZoneMapping()` |
-| Fallback / unknown behavior | Missing or undecodable values are published as absent rather than synthesized |
+| Fallback / unknown behavior | Missing or undecodable mapping values are published as absent rather than synthesized. When the mapping is known and direct zone room-state values are absent, the gateway may project room temperature/humidity from the already refreshed radio-device snapshot: `1 -> GG=0x09 regulator sensor`, `>=2 -> GG=0x0A thermostat instance mapping - 1`. Direct zone-state register values remain authoritative. |
 | Published effect | Consumers receive explicit zone-to-room-sensor mapping data instead of guessing |
 | Evidence status | `PROVEN` |
 | Code anchors | `refreshState()`, `decodeRoomTemperatureZoneMapping()`, `publishZones()` |
