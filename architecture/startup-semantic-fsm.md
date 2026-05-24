@@ -111,9 +111,10 @@ devices, energy, schedules, and the three boiler-status tiers.
 The scheduler MUST coalesce duplicate queued or running tasks with the same key.
 If a new tick arrives while the same task family is pending, the queued task is
 kept once and its priority may be raised. If the same task family is already
-running, the duplicate tick is dropped. This is a load-shaping rule: it prevents
-bus contention or slow responders from creating a backlog of identical B524/B509
-sweeps that later drain as gateway-originated bursts.
+running, at most one deferred rerun is kept for the next available task slot and
+additional same-key signals merge into that rerun. This is a load-shaping rule:
+it prevents bus contention or slow responders from creating an unbounded backlog
+of identical B524/B509 sweeps while preserving edge-triggered refresh signals.
 
 Coalescing does not change any eBUS wire format, `bus.Send` behavior,
 adaptermux arbitration, retry classification, or semantic merge semantics. The
