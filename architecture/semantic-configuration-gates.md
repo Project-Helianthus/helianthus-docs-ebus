@@ -79,6 +79,14 @@ This page does not restate the root-discovery or identity-enrichment rationale. 
 - Primary evidence: `GG=0x03 RR=0x0013`
 - Structural effect: publishes `roomTemperatureZoneMapping`
 - Cross-check path: remote-side `zone_assignment` from `GG=0x09/0x0A RR=0x0025`
+- Projection fallback: when direct zone room-state registers are absent, the
+  gateway may fill `zones[].state.currentTempC` and
+  `zones[].state.currentHumidityPct` from the mapped radio-device snapshot:
+  mapping `1` uses the regulator sensor (`GG=0x09`), while mapping values
+  `>=2` use thermostat instance `mapping - 1` (`GG=0x0A`). Direct zone-state
+  register values remain authoritative when present.
+- Traffic rule: this fallback consumes already refreshed radio-device semantic
+  data; it must not introduce extra active B524 polling from zone publication.
 
 ### Zone-to-circuit derivation gate
 
