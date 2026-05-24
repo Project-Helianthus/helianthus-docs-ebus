@@ -124,8 +124,8 @@ v1 default profile TTLs:
 
 | Freshness profile | Default TTL |
 | --- | --- |
-| `state_fast` | `10s` |
-| `state_slow` | `30s` |
+| `state_fast` | `30s` |
+| `state_slow` | `120s` |
 | `config` | `5m` |
 | `discovery` | `1h` |
 | `debug` | `0` (ineligible for shadow-hit serving) |
