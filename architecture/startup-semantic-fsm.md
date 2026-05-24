@@ -122,6 +122,17 @@ next successful execution of a task family remains authoritative for live values
 partial results are still merged according to the incremental freshness rules
 below.
 
+Broad B524 backfill tasks must also avoid repeating full topology sweeps when a
+stable live inventory already exists. Circuit refresh is the reference pattern:
+startup and periodic rediscovery may scan the full documented circuit instance
+range, but normal steady-state refreshes operate on the known active circuit
+instances until the rediscovery interval expires. This preserves detection of
+new or removed circuits without making every config refresh pay the full
+`GG=0x02` scan cost. The long rediscovery interval starts only after the full
+documented range has produced definitive active/inactive answers; partial scans
+retry on the regular configuration cadence. Critical state and boiler fast-tier
+reads are not delayed by this backfill pacing rule.
+
 ## Incremental Merge and Freshness Semantics
 
 Zone and DHW updates are merged incrementally, not replaced wholesale.
