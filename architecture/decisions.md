@@ -223,9 +223,18 @@ contention. FIFO ordering applies after that protocol ordering.
 - coalesces “same tick” requests into one bus request,
 - publishes the resulting value to all waiting callers/subscribers, and
 - enforces default polling cadences by semantic class:
-  - `state`: 1 minute
+  - `state_fast`: 1 minute
+  - `state_slow`: slower semantic refresh path, not the 1-minute loop
   - `config`: 5 minutes
   - `discovery`: 10 minutes
+
+Descriptor classification and execution cadence are both normative. A B524
+selector classified as `config`, `discovery`, or `state_slow` must not be
+called from the 1-minute state loop simply because scheduler caching exists.
+Gateway issue Project-Helianthus/helianthus-ebusgateway#680 closed the
+regression where zone/DHW target, operation-mode, humidity, mapping, and
+holiday/quick-veto selectors were classified correctly but still invoked at
+state cadence.
 
 For write confirmation (when a write API exists), perform targeted confirm reads:
 - start at 5 seconds after the write,
@@ -294,7 +303,7 @@ without pretending there is a protocol join handshake.
 
 **Consequences:** Collision state becomes deterministic and observable, upper layers can immediately stop unsafe writes, and initiator source transitions remain stable under delayed bus echoes.
 
-## ADR-020: Read scheduler coalescing with state/config refresh windows
+## ADR-020: Read scheduler coalescing with freshness-profile refresh windows
 
 **Status:** Accepted
 
@@ -304,10 +313,16 @@ without pretending there is a protocol join handshake.
 
 - Coalesce read-only invocations by deterministic key: `(plane, method, params)`.
 - If the same key is already in-flight, subsequent callers wait for the same result instead of issuing another bus read.
-- Cache successful responses per key and apply policy windows:
-  - **state** refresh window defaults to `1m`,
-  - **config** refresh window defaults to `5m`.
-- Policy is tunable in router options (`state`/`config` intervals), and invocation class can be overridden per call via params (`cache_class` / `refresh_class`).
+- Cache successful responses per key and apply freshness-profile policy
+  windows:
+  - **state_fast** refresh window defaults to `1m`,
+  - **state_slow** refresh window is longer than the one-minute state loop,
+  - **config** refresh window defaults to `5m`,
+  - **discovery** refresh window is for topology/identity evidence.
+- Policy is tunable in router options by freshness profile
+  (`state_fast`/`state_slow`/`config`/`discovery` intervals), and invocation
+  class can be overridden per call via params (`cache_class` /
+  `refresh_class`).
 - Write methods (`ReadOnly=false`) bypass cache/coalescing and always go to bus.
 - Cached representation stores raw decoded response frame copy, and each caller re-decodes from that frame to avoid shared mutable decoded state.
 
