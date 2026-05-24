@@ -389,7 +389,24 @@ Current canon status:
 
 ## GG=0x02 — Heating Circuits (multi-instance)
 
-All registers use opcode `0x02`. Instances 0x00-0x0A; active circuits discovered by probing `heating_circuit_type` (RR=0x0002) — value `0` (`mctype=inactive`) indicates unused circuit slot. Absent instances (beyond the highest configured slot) return empty/null response (no valid payload from bus). Verified via scan: II=0,1 return mctype=1 (heating), II=2-9 return mctype=0 (inactive), II=10 returns null (absent).
+All registers use opcode `0x02`. Instances 0x00-0x0A; active heating
+circuits are normally discovered by probing `heating_circuit_type`
+(RR=0x0002). Value `0` (`mctype=inactive`) indicates an unused circuit slot
+for ordinary heating-circuit instances, while absent instances beyond the
+highest configured slot return empty/null response (no valid payload from bus).
+
+Observed exception: instance `II=0x09` can represent a DHW/additional-cylinder
+pseudo-circuit even when `heating_circuit_type` reports `0`. Treat this slot as
+active DHW (`mctype=3`) only when it has plausible live temperature evidence
+from `current_circuit_flow_temperature` (RR=0x0008) or
+`calculated_flow_temperature` (RR=0x0020). This preserves inactive handling for
+all other `mctype=0` circuit slots. Community evidence:
+[`helianthus-vrc-explorer#53`](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53).
+
+Older scan baseline: II=0,1 return mctype=1 (heating), II=2-9 return mctype=0
+(inactive), II=10 returns null (absent). That baseline does not disprove the
+`II=0x09` pseudo-circuit because its discriminator is temperature evidence, not
+the type selector alone.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -874,7 +891,7 @@ Used by: GG=0x02 RR=0x0002
 | 0 | inactive | inactive | Inactive | Circuit unused |
 | 1 | mixer | heating | Heating | Weather-compensated heating. Mixing or direct depending on basic system diagram. |
 | 2 | fixed | fixed_value | Fixed value | Circuit held at a fixed target flow temperature. Applications: swimming pool heating, door air curtain heating. |
-| 3 | hwc | dhw | DHW | Heating circuit used as DHW circuit for an additional cylinder. |
+| 3 | hwc | dhw | DHW | Heating circuit used as DHW circuit for an additional cylinder. Instance `II=0x09` may need to be inferred as this role from live temperature evidence when RR=0x0002 reports inactive. |
 | 4 | returnincr | return_increase | Increase in return | Return temperature raise circuit. Target return temperature at RR=0x0004 (factory setting 30°C). |
 
 **Naming note:** ebusd templates label value 1 as "mixer" — this is a community naming convention; the Vaillant VRC720 operating & installation manual calls it "Heating" (Heizen). The mixing valve is an implementation detail of the hydraulic system, not the circuit type itself.
