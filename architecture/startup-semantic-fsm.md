@@ -149,6 +149,37 @@ This split bounds gateway-originated `0x7F -> 0x15` B524 traffic after startup
 without weakening the L1 startup gate. Startup-specific priming paths may still
 perform direct reads for the planes needed to become non-null within 60 seconds.
 
+Steady-state B524 semantic reads are also classified by watch freshness profile.
+This is a scheduler max-age and passive-shadow policy, not a new wire protocol:
+the semantic task may still ask for a field, but the scheduler can serve a
+fresh cached/shadow value instead of issuing a new active `B5 24` request.
+
+- `state_fast`: live-critical state such as zone current temperature, zone
+  special function, zone valve/HVAC state, DHW current temperature, DHW special
+  function, and equivalent fast circuit/solar live values.
+- `state_slow`: slower live telemetry such as humidity, quick-veto expiry,
+  operating counters, remote-slot connected/liveness state, remote-slot
+  reception/paired state, and remote room telemetry.
+- `config`: user or system configuration such as zone/DHW target temperature,
+  operating mode, manual fallback temperature, holiday windows, quick-veto
+  configuration, and room-temperature-zone mapping. Passive direct apply for
+  this class remains `config_opt_in`.
+- `discovery`: structural or identity selectors such as zone names, zone index,
+  associated circuit type, remote device-slot identity, and device-slot
+  topology. These selectors are not `state_default` direct-apply eligible.
+
+Disconnected functional-module inventory slots are identity-only during
+steady-state detail refresh. If `device_connected=false` but class/firmware or
+hardware evidence proves the slot represents a real FM, the gateway keeps the
+inventory snapshot and skips volatile detail reads such as paired state,
+reception, zone assignment, room temperature, and humidity until the slot is
+connected. This bounds request bursts against empty FM detail registers while
+preserving physical topology evidence.
+
+The startup L1 semantic priming path is not weakened by this pacing: startup may
+still perform bounded direct reads needed to publish the required semantic
+planes non-null within the startup gate.
+
 ## Incremental Merge and Freshness Semantics
 
 Zone and DHW updates are merged incrementally, not replaced wholesale.
