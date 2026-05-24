@@ -101,6 +101,26 @@ non-null during startup before the heavier schedule read cycle fills detailed
 entries, and FM5-related planes may publish a bounded startup interpretation
 before later system/radio/solar/cylinder reads refine or downgrade the model.
 
+## Steady-State Poll Scheduling
+
+The Vaillant semantic poller uses a single serialized task scheduler for active
+semantic reads. Each recurring task family has a stable scheduler key:
+discovery, config, state, circuits, system, radio devices, energy, schedules,
+and the three boiler-status tiers.
+
+The scheduler MUST coalesce duplicate queued or running tasks with the same key.
+If a new tick arrives while the same task family is pending, the queued task is
+kept once and its priority may be raised. If the same task family is already
+running, the duplicate tick is dropped. This is a load-shaping rule: it prevents
+bus contention or slow responders from creating a backlog of identical B524/B509
+sweeps that later drain as gateway-originated bursts.
+
+Coalescing does not change any eBUS wire format, `bus.Send` behavior,
+adaptermux arbitration, retry classification, or semantic merge semantics. The
+next successful execution of a task family remains authoritative for live values;
+partial results are still merged according to the incremental freshness rules
+below.
+
 ## Incremental Merge and Freshness Semantics
 
 Zone and DHW updates are merged incrementally, not replaced wholesale.
