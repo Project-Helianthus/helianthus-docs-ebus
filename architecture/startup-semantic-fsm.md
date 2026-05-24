@@ -162,11 +162,11 @@ fresh cached/shadow value instead of issuing a new active `B5 24` request.
   reception/paired state, and remote room telemetry.
 - `config`: user or system configuration such as zone/DHW target temperature,
   operating mode, manual fallback temperature, holiday windows, quick-veto
-  configuration, and room-temperature-zone mapping. Passive direct apply for
-  this class remains `config_opt_in`.
+  configuration, room-temperature-zone mapping, and associated circuit type.
+  Passive direct apply for this class remains `config_opt_in`.
 - `discovery`: structural or identity selectors such as zone names, zone index,
-  associated circuit type, remote device-slot identity, and device-slot
-  topology. These selectors are not `state_default` direct-apply eligible.
+  remote device-slot identity, and device-slot topology. These selectors are
+  not `state_default` direct-apply eligible.
 
 Disconnected functional-module inventory slots are identity-only during
 steady-state detail refresh. If `device_connected=false` but class/firmware or
