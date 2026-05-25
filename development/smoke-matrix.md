@@ -199,9 +199,9 @@ merges, a required adjunct proof subset is evaluated in addition to `T01..T88`:
 - `PX02`: stale `STARTED` absorb expiry with bounded fail path
 - `PX03`: `SYN` while waiting for command `ACK` reopens arbitration immediately
 - `PX04`: `SYN` while waiting for target response reopens arbitration immediately
-- `PX05`: lower initiator wins same-boundary competition
-- `PX06`: lower initiator arriving before next round closes beats queued higher
-- `PX07`: requeue-after-timeout by former owner still wins over higher
+- `PX05`: same-boundary competition is resolved by FIFO registration order, not initiator priority
+- `PX06`: queued higher initiator keeps its FIFO turn when a lower initiator arrives before the next round closes
+- `PX07`: requeue-after-timeout receives a new FIFO position and cannot steal priority from an older contender
 - `PX08`: equal-initiator FIFO ordering is preserved
 - `PX09`: local target sees request only from echoed `RECEIVED`, never `SEND`
 - `PX10`: local emulated target response inside responder window remains coherent

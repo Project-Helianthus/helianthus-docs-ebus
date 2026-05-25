@@ -102,9 +102,16 @@ XR rows below reference these symbols explicitly. Implementations MAY expose the
 
 ### XR_Arbitration_Fairness_NoStarvation
 
-**Invariant:** Under contention (multiple pending bus requests), no single request is starved indefinitely. A fairness mechanism (e.g., priority queue, round-robin, or bounded retry) ensures all requests eventually get bus access.
+**Invariant:** Under proxy-mediated contention (multiple pending northbound bus
+requests), no single request is starved indefinitely. Proxy arbitration is fair
+across sessions and transports, including clients that use different initiator
+addresses; lower initiator address is physical bus priority, not proxy-session
+priority.
 
-**Falsifiable:** Queue 10 requests with equal priority. Mock adapter grants STARTED to each in turn. All 10 must complete within `10 x single_request_timeout`.
+**Falsifiable:** Queue requests from at least two sessions with different
+initiator addresses and from both TCP and UDP northbound paths. Mock adapter
+grants `STARTED` to each in proxy FIFO order. All requests must complete without
+a lower-address client bypassing an older higher-address contender.
 
 ## UDP-PLAIN
 
