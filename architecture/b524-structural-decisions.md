@@ -181,16 +181,16 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Field | Value |
 | --- | --- |
 | Semantic effect | Determines which heating circuit instances exist and whether they are active or inactive |
-| Source registers | `GG=0x02 RR=0x0002` (`circuit_type`) |
+| Source registers | `GG=0x02 RR=0x0002` (`circuit_type`), with `II=0x09` DHW pseudo-circuit corroboration from `RR=0x0008` (`current_circuit_flow_temperature`) or `RR=0x0020` (`calculated_flow_temperature`) |
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance), [`ebus-vaillant-B524-register-map.md#mctype--circuit-type`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#mctype--circuit-type) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document`; `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica` |
 | Source section | `6.2.2 Settings in the Installation Wizard`; `Distribucion de zonas y circuitos de calefaccion` |
 | Supporting statement | In `6.2.2 Settings in the Installation Wizard`, the VRC 720 training documents "Enter the number of heating circuits" as `0-3` with VR 71 and up to `0-9` with VR 71 plus VR 70 expansion. In `Distribucion de zonas y circuitos de calefaccion`, the multiMATIC training states "Hasta 9 circuitos de calefaccion de mezcla y 9 zonas". This constrains expected circuit cardinality, while the gateway still relies on direct `circuit_type` probes for actual publication. |
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `PROTOCOL` |
-| Evaluation rule | `refreshCircuits()` probes instances `0x00..0x0A`; readable `0x0000`, `0x00FF`, and `0xFFFF` are treated as inactive, any other value creates/keeps an active circuit snapshot |
-| Fallback / unknown behavior | No synthetic circuit count is invented if type reads never succeed. Helianthus intentionally does **not** derive primary circuit inventory from functional-module topology or hydraulic-scheme inference, because B524 is treated as the authoritative aggregation surface for this structure. The inactive markers `0x00FF` and `0xFFFF` align with common invalid/uninitialized conventions, while `0x0000` is treated as inactive based on current lab observation rather than protocol specification. |
-| Published effect | `circuits[]` contains only active discovered instances |
+| Evaluation rule | `refreshCircuits()` probes instances `0x00..0x0A`; readable `0x00FF` and `0xFFFF` are treated as inactive, any non-zero/non-invalid value creates/keeps an active circuit snapshot. Readable `0x0000` is inactive except for `II=0x09`, which is promoted to active DHW (`mctype=3`) only when plausible live temperature evidence exists at `RR=0x0008` or `RR=0x0020`. |
+| Fallback / unknown behavior | No synthetic circuit count is invented if type reads never succeed. Helianthus intentionally does **not** derive primary circuit inventory from functional-module topology or hydraulic-scheme inference, because B524 is treated as the authoritative aggregation surface for this structure. The inactive markers `0x00FF` and `0xFFFF` align with common invalid/uninitialized conventions, while ordinary `0x0000` circuit instances are treated as inactive based on current lab observation rather than protocol specification. The `II=0x09` exception is evidence-gated so empty inactive slots are not published. |
+| Published effect | `circuits[]` contains active discovered instances, including the `II=0x09` DHW pseudo-circuit when live evidence exists |
 | Evidence status | `PROVEN` |
 | Code anchors | `refreshCircuits()`, `mergeCircuitSnapshotNonDestructive()`, `publishCircuits()` |
 
