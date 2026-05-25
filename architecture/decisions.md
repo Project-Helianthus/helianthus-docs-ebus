@@ -100,6 +100,11 @@ contention. FIFO ordering applies after that protocol ordering.
 
 **Consequences:** Concurrent callers are serialized according to bus arbitration rules without each caller knowing about priorities.
 
+**Proxy note:** This ADR describes physical eBUS arbitration rank. A proxy that
+emulates bus access among northbound clients MUST NOT use lower initiator
+addresses as client-session priority. It grants proxy turns by FIFO/fair queue;
+the selected client's frame then participates in physical bus arbitration.
+
 ## ADR-009: Sentinel errors with classification helpers
 
 **Status:** Accepted
