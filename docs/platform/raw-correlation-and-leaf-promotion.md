@@ -69,25 +69,72 @@ The only permitted bridge before M8.5 is a candidate correlation record that
 stores source evidence, comparator parameters, pass/fail results, terminal
 negative states, replay references, coexistence evidence, and redacted hashes.
 
+### Candidate Status
+
+Candidate status controls which evidence fields are mandatory:
+
+| Status | Meaning | Coexistence evidence |
+| --- | --- | --- |
+| `draft` | Correlation is being investigated. | Optional; use `pending` or omit. |
+| `rejected` | Comparator or terminal negative state disproved the candidate. | Optional; include when rejection depends on coexistence evidence. |
+| `coexistence_proven` | M8 has shown no eeBUS/eBUS runtime drift for this leaf. | Required. |
+| `locked` | M8.5 dossier is accepted for promotion. | Required. |
+| `superseded` | Replaced by a newer candidate or dossier. | Preserve previous value if one existed. |
+
 ### Correlation Keys
 
-Every candidate correlation record must carry:
+Every candidate correlation record must carry the fields below. Fields marked
+`pending` are allowed only for `draft` or `rejected` candidates and must be
+resolved before `coexistence_proven` or `locked`:
 
 | Field | Meaning |
 | --- | --- |
 | `candidate_id` | Stable local identifier for the candidate dossier. |
 | `leaf_path` | Proposed protocol-agnostic semantic leaf path; candidate-only before M8.5. |
 | `eebus_ref` | Raw eeBUS evidence ref with runtime, contract, tool/scope, mask tier, and auth scope. |
-| `ebus_source_family` | B509, B524, B555, or other source family; exact opcode/register identity when applicable. |
+| `ebus_source_family` | B509, B524, B555, or other source family; family-specific identity is defined below. |
 | `myvaillant_evidence_id` | Optional publishable evidence ID for app-visible or API-visible observations. |
 | `comparator_id` | Versioned comparator definition, including units, tolerance, cadence, and stale policy. |
-| `coexistence_bundle_id` | Evidence that eeBUS observation did not perturb eBUS runtime behavior. |
+| `coexistence_bundle_id` | Evidence that eeBUS observation did not perturb eBUS runtime behavior; `pending` only for `draft` or `rejected`. |
 | `replay_bundle_id` | Replay artifact able to regenerate the candidate result. |
 | `redacted_hashes` | Hashes of raw inputs and normalized candidate output. |
 | `status` | `draft`, `rejected`, `coexistence_proven`, `locked`, or `superseded`. |
 
 Field names in code may differ by package convention, but the same information
 must be reviewable in the dossier before promotion.
+
+### eBUS Source-Family Identity
+
+The source-family identity must be precise enough to avoid collisions between
+register families, target devices, and schedule namespaces.
+
+| Family | Required identity fields |
+| --- | --- |
+| B509 | target address, target device/product identity when known, register family, register id, unit/scale source, and whether the value is authoritative or mirror/fallback evidence. |
+| B524 | full opcode-scoped tuple `(opcode, GG, II, RR)`, target/source address context, group meaning, instance gate, register category, and unit/scale source. |
+| B555 | device family, schedule/program identity, slot/day/time identity when applicable, operation mode context, and unit/scale source. |
+| Other | protocol family, address/device context, exact read identity, unit/scale source, and evidence status. |
+
+If a family-specific field is unavailable, the candidate remains `draft` or is
+`rejected`; it cannot be locked with a generic "register identity" placeholder.
+
+### Hash And Replay Comparability
+
+Evidence hashes are comparable only when the binding fields match. Every
+evidence row used for a candidate must therefore record:
+
+- contract or schema version;
+- tool id or replay tool id;
+- snapshot scope;
+- mask tier;
+- auth scope;
+- data timestamp or capture window;
+- data hash;
+- replay tool version;
+- replay input bundle id;
+- normalized output hash.
+
+Missing binding fields keep the candidate in `draft` or `rejected`.
 
 ### Comparator Requirements
 
@@ -147,14 +194,17 @@ Retest trigger:
 | Source | Identity | Evidence ID | Notes |
 | --- | --- | --- | --- |
 | eeBUS | entity/service/feature/path |  |  |
-| eBUS | B509/B524/B555 opcode/register identity |  |  |
+| eBUS B509 | target address; device/product identity; register family; register id; unit/scale source; authoritative or mirror/fallback |  |  |
+| eBUS B524 | `(opcode, GG, II, RR)`; target/source address context; group meaning; instance gate; register category; unit/scale source |  |  |
+| eBUS B555 | device family; schedule/program identity; slot/day/time identity; operation mode context; unit/scale source |  |  |
+| eBUS other | protocol family; address/device context; exact read identity; unit/scale source; evidence status |  |  |
 | myVaillant | app/API observation ID, if used |  |  |
 
 ## Evidence Inventory
 
-| Evidence ID | Source | Capture window | Mask tier | Data hash | Replay ID |
-| --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |
+| Evidence ID | Source | Contract/schema | Tool/scope | Mask tier | Auth scope | Capture window | Data hash | Replay tool/version | Replay input | Output hash |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |  |  |  |
 
 ## Comparator
 
@@ -184,6 +234,7 @@ Retest trigger:
 
 ## Coexistence Evidence
 
+- Required for `coexistence_proven` and `locked`:
 - eBUS baseline bundle:
 - eeBUS-enabled bundle:
 - Drift checks:
@@ -193,6 +244,8 @@ Retest trigger:
 ## Replay Regeneration
 
 - Replay command or tool:
+- Replay tool version:
+- Replay input bundle:
 - Expected output hash:
 - Actual output hash:
 - Determinism result:
@@ -204,6 +257,21 @@ Retest trigger:
 - Redaction/mask tier checked:
 - Raw eeBUS field anti-leak checked:
 - Mutable-proof appendix required: yes/no
+
+## Mutable-Proof Appendix
+
+Required only when the candidate leaf is mutable.
+
+- Lab lease:
+- Exclusive writer proof:
+- Gateway/router write path proof:
+- Direct adapter writes excluded:
+- Abort conditions:
+- Rollback verification per cycle:
+- Perturbation cycle 1 evidence:
+- Perturbation cycle 2 evidence:
+- Perturbation cycle 3 evidence:
+- Consumer mutable-control gate:
 
 ## Promotion Decision
 
