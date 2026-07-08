@@ -13,14 +13,16 @@ per-leaf promotion gates.
 
 1. Control-plane issue matrix and `eebus-transport-gate v0`.
 2. Platform ownership ADR and eeBUS docs bootstrap.
-3. Raw identity, snapshot, evidence, and correlation drafts.
-4. `enbility/eebus-go v0.7.0` feasibility proof behind internal facades.
-5. Production trust and first-trust hardening.
-6. Disabled-by-default gateway sidecar.
-7. Read-only `eebus.v1.*` MCP.
-8. Evidence recorder and draft candidate facts.
-9. Coexistence proof and per-leaf promotion lock.
-10. GraphQL, Portal, and HA only for promoted leaves.
+3. `helianthus-eebusreg` raw runtime/evidence repo bootstrap with no runtime
+   contracts, no listeners, no trust store, and no `enbility` dependency.
+4. Raw identity, snapshot, evidence, and correlation drafts.
+5. `enbility/eebus-go v0.7.0` feasibility proof behind internal facades.
+6. Production trust and first-trust hardening.
+7. Disabled-by-default gateway sidecar.
+8. Read-only `eebus.v1.*` MCP.
+9. Evidence recorder and draft candidate facts.
+10. Coexistence proof and per-leaf promotion lock.
+11. GraphQL, Portal, and HA only for promoted leaves.
 
 ## Stable MCP Rules
 
