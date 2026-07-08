@@ -11,6 +11,12 @@ It owns contracts that apply across protocol families:
 - multi-runtime coexistence and conflict handling;
 - consumer rollout order for GraphQL, Portal, and Home Assistant.
 
+Current platform contracts:
+
+- [`ownership-and-doc-gates.md`](./ownership-and-doc-gates.md)
+- [`eebus-raw-first-contract.md`](./eebus-raw-first-contract.md)
+- [`raw-correlation-and-leaf-promotion.md`](./raw-correlation-and-leaf-promotion.md)
+
 Protocol-specific repositories may link here, but they must not duplicate these
 contracts as normative text. Non-owning pages are summary-only.
 

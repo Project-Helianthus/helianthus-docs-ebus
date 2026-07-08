@@ -11,6 +11,7 @@ Helianthus expands from eBUS to eeBUS and later protocol families.
 | --- | --- |
 | Cross-protocol MCP lifecycle | `helianthus-docs-ebus/docs/platform/` |
 | Raw evidence, snapshot, and hash contract | `helianthus-docs-ebus/docs/platform/` |
+| Raw correlation and leaf-promotion dossiers | `helianthus-docs-ebus/docs/platform/` |
 | Semantic promotion gate | `helianthus-docs-ebus/docs/platform/` |
 | Multi-runtime coexistence policy | `helianthus-docs-ebus/docs/platform/` |
 | GraphQL, Portal, and HA rollout order | `helianthus-docs-ebus/docs/platform/` |
