@@ -17,10 +17,12 @@ contracts as normative text. Non-owning pages are summary-only.
 ## Transition Rule
 
 This directory remains the platform-contract home until a separate
-`helianthus-docs-platform` repository is created. The trigger is either:
+`helianthus-docs-platform` repository is created after the current eeBUS
+raw-first bootstrap. The trigger is either:
 
-- a second non-eBUS protocol reaches a promoted-leaf gate; or
-- a cross-protocol contract changes for non-eBUS reasons.
+- a later non-eBUS protocol reaches a promoted-leaf gate; or
+- a cross-protocol contract changes for reasons unrelated to eBUS or the eeBUS
+  VR940f raw-first track.
 
 When that happens, platform pages move as a unit, this directory keeps stubs,
 and canonical links are updated.

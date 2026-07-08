@@ -44,7 +44,8 @@ approval steps.
 
 Every PR that changes architecture, API, protocol behavior, runtime behavior,
 state-machine behavior, reverse-engineered knowledge, or consumer-visible
-semantics must link merged documentation commits from the canonical owner.
+semantics must update the canonical owner docs in the same PR or link already
+merged documentation commits from the canonical owner.
 
 A PR fails doc-gate when it:
 
@@ -56,7 +57,8 @@ A PR fails doc-gate when it:
 
 ## Future Platform Repository
 
-Create `helianthus-docs-platform` when a second non-eBUS protocol reaches a
-promoted-leaf gate or a cross-protocol contract changes for non-eBUS reasons.
-The migration moves platform pages, leaves stubs here, and updates canonical
-links. Protocol repositories remain protocol-fact homes only.
+Create `helianthus-docs-platform` after this eeBUS raw-first bootstrap when a
+later non-eBUS protocol reaches a promoted-leaf gate, or when a cross-protocol
+contract changes for reasons unrelated to eBUS or the eeBUS VR940f raw-first
+track. The migration moves platform pages, leaves stubs here, and updates
+canonical links. Protocol repositories remain protocol-fact homes only.

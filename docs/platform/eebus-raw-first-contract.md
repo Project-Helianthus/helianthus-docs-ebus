@@ -1,6 +1,9 @@
 # eeBUS Raw-First Platform Contract
 
-Canonical source: `helianthus-execution-plans/multi-runtime-semantic-platform.draft`.
+Canonical source: this page.
+
+Plan provenance:
+`helianthus-execution-plans/multi-runtime-semantic-platform.draft`.
 
 ## Scope
 
