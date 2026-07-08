@@ -43,3 +43,6 @@ M7 candidate facts do not promote leaves. M8 proves coexistence. M8.5 locks
 individual leaf promotions with a dossier containing source identity,
 comparator results, coexistence evidence, replay regeneration, terminal
 negative-state handling, and redacted hashes.
+
+The canonical correlation and dossier contract is
+[`raw-correlation-and-leaf-promotion.md`](./raw-correlation-and-leaf-promotion.md).
