@@ -20,12 +20,14 @@ per-leaf promotion gates.
    contracts, no listeners, no trust store, and no `enbility` dependency.
 4. Raw identity, snapshot, evidence, and correlation drafts.
 5. `enbility/eebus-go v0.7.0` feasibility proof behind internal facades.
-6. Production trust and first-trust hardening.
-7. Disabled-by-default gateway sidecar.
-8. Read-only `eebus.v1.*` MCP.
-9. Evidence recorder and draft candidate facts.
-10. Coexistence proof and per-leaf promotion lock.
-11. GraphQL, Portal, and HA only for promoted leaves.
+6. Home Assistant add-on networking proof for listener scope, mDNS, manual
+   endpoint fallback, and disposable proof credential persistence.
+7. Production trust and first-trust hardening.
+8. Disabled-by-default gateway sidecar.
+9. Read-only `eebus.v1.*` MCP.
+10. Evidence recorder and draft candidate facts.
+11. Coexistence proof and per-leaf promotion lock.
+12. GraphQL, Portal, and HA only for promoted leaves.
 
 ## Stable MCP Rules
 
@@ -46,3 +48,6 @@ negative-state handling, and redacted hashes.
 
 The canonical correlation and dossier contract is
 [`raw-correlation-and-leaf-promotion.md`](./raw-correlation-and-leaf-promotion.md).
+
+The canonical Home Assistant runtime networking proof gate is
+[`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md).
