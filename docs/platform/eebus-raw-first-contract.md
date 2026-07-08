@@ -22,12 +22,13 @@ per-leaf promotion gates.
 5. `enbility/eebus-go v0.7.0` feasibility proof behind internal facades.
 6. Home Assistant add-on networking proof for listener scope, mDNS, manual
    endpoint fallback, and disposable proof credential persistence.
-7. Production trust and first-trust hardening.
-8. Disabled-by-default gateway sidecar.
-9. Read-only `eebus.v1.*` MCP.
-10. Evidence recorder and draft candidate facts.
-11. Coexistence proof and per-leaf promotion lock.
-12. GraphQL, Portal, and HA only for promoted leaves.
+7. Black-box fake-peer and live VR940f interop smoke.
+8. Production trust and first-trust hardening.
+9. Disabled-by-default gateway sidecar.
+10. Read-only `eebus.v1.*` MCP.
+11. Evidence recorder and draft candidate facts.
+12. Coexistence proof and per-leaf promotion lock.
+13. GraphQL, Portal, and HA only for promoted leaves.
 
 ## Stable MCP Rules
 
@@ -51,3 +52,6 @@ The canonical correlation and dossier contract is
 
 The canonical Home Assistant runtime networking proof gate is
 [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md).
+
+The canonical fake-peer and live VR940f smoke gate is
+[`eebus-interop-smoke.md`](./eebus-interop-smoke.md).
