@@ -177,12 +177,25 @@ jobs:
 
       - name: Enforce main manifest expiry
         if: github.event_name == 'push'
+        env:
+          RAW_EVALUATED_AT: ${{ github.event.head_commit.timestamp }}
         working-directory: checkouts/docs-ebus
         run: |
+          evaluated_at="$(python3 - <<'PY'
+          import datetime
+          import os
+
+          raw = os.environ["RAW_EVALUATED_AT"]
+          instant = datetime.datetime.fromisoformat(raw.replace("Z", "+00:00"))
+          if instant.tzinfo is None or instant.utcoffset() is None:
+              raise SystemExit("head commit timestamp must include a UTC offset")
+          print(instant.astimezone(datetime.timezone.utc).isoformat().replace("+00:00", "Z"))
+          PY
+          )"
           python3 scripts/validate_platform_contracts.py \
             --mode main-expiry \
             --docs-ebus-root . \
-            --evaluated-at "${{ github.event.head_commit.timestamp }}" \
+            --evaluated-at "${evaluated_at}" \
             --evaluation-source github.event.head_commit.timestamp \
             --enforce-through MSP-DOCS-PLATFORM \
             --toolchain-mode exact

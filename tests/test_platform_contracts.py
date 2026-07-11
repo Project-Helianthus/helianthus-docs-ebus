@@ -1355,6 +1355,26 @@ def test_ci_workflow_uses_locked_python_pip_and_dependencies(
     assert "requirements-ci.txt" in install
 
 
+def test_main_expiry_workflow_normalizes_webhook_timestamp_to_utc() -> None:
+    workflow = yaml.safe_load(
+        (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(encoding="utf-8")
+    )
+    steps = workflow["jobs"]["markdown-checks"]["steps"]
+    expiry_steps = [
+        step for step in steps if step.get("name") == "Enforce main manifest expiry"
+    ]
+    assert len(expiry_steps) == 1
+    step = expiry_steps[0]
+    assert step["env"]["RAW_EVALUATED_AT"] == "${{ github.event.head_commit.timestamp }}"
+    script = step["run"]
+    assert "datetime.datetime.fromisoformat" in script
+    assert "instant.tzinfo is None" in script
+    assert "astimezone(datetime.timezone.utc)" in script
+    assert '.replace("+00:00", "Z")' in script
+    assert '--evaluated-at "${evaluated_at}"' in script
+    assert '--evaluated-at "${{ github.event.head_commit.timestamp }}"' not in script
+
+
 @pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
 def test_trusted_prior_workflow_materializes_inspected_blob(
     tmp_path: pathlib.Path, workflow_path: pathlib.Path
