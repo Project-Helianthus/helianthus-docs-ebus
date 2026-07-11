@@ -1406,6 +1406,20 @@ def test_combined_ref_workflow_checks_out_pr_head_repository() -> None:
     assert "repository: Project-Helianthus/helianthus-docs-ebus" in reusable
 
 
+def test_combined_ref_caller_pins_trusted_reusable_workflow() -> None:
+    caller = (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(
+        encoding="utf-8"
+    )
+
+    trusted_call = (
+        "uses: Project-Helianthus/helianthus-docs-ebus/"
+        ".github/workflows/platform-contracts-combined-ref.yml@"
+        "cb938e56af237fc9c71b13a222a0b1d940f8bbac"
+    )
+    assert trusted_call in caller
+    assert "uses: ./.github/workflows/platform-contracts-combined-ref.yml" not in caller
+
+
 def test_combined_ref_executes_only_trusted_validator_checkout() -> None:
     reusable = (
         REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
