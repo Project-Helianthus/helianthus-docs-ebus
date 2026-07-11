@@ -616,6 +616,60 @@ def candidate_outside_hidden_area(spec: dict[str, Any]) -> None:
     spec["docs_eebus"]["api/lifecycle.md"] = "# Candidate Go API\n"
 
 
+def reassign_protocol_to_code_readme(spec: dict[str, Any]) -> None:
+    item = find_entry(spec, "eebus-protocol")
+    item["owner"] = {
+        "repository": "helianthus-eebusreg",
+        "path": "README.md",
+    }
+    item["source"] = copy.deepcopy(item["owner"])
+
+
+def reassign_architecture_to_platform_docs(spec: dict[str, Any]) -> None:
+    path = "docs/platform/future-runtime.md"
+    spec["docs_ebus"][path] = "# Future Runtime\n"
+    item = find_entry(spec, "eebus-architecture-planned")
+    item["owner"] = {
+        "repository": "helianthus-docs-ebus",
+        "path": path,
+    }
+    item["source"] = copy.deepcopy(item["owner"])
+
+
+def move_api_outside_api_prefix(spec: dict[str, Any]) -> None:
+    path = "reference/_candidate/lifecycle.md"
+    spec["docs_eebus"][path] = "# Candidate Go API\n"
+    find_entry(spec, "eebus-api-candidate")["owner"]["path"] = path
+
+
+def reassign_platform_to_protocol_docs(spec: dict[str, Any]) -> None:
+    path = "protocols/platform-envelope.md"
+    spec["docs_eebus"][path] = "# Platform Envelope\n"
+    item = find_entry(spec, "platform-contracts")
+    item["owner"] = {
+        "repository": "helianthus-docs-eebus",
+        "path": path,
+    }
+    item["source"] = copy.deepcopy(item["owner"])
+
+
+def move_code_docs_outside_docs_prefix(spec: dict[str, Any]) -> None:
+    spec["eebusreg"]["legacy/README.md"] = "# Legacy Runtime Docs\n"
+    item = find_entry(spec, "code-repo-docs-planned")
+    item["owner"]["path"] = "legacy"
+    item["source"]["path"] = "legacy"
+
+
+def move_summary_from_readme(spec: dict[str, Any]) -> None:
+    path = "SUMMARY.md"
+    spec["eebusreg"][path] = "# Summary\n"
+    find_entry(spec, "code-repo-summary-planned")["owner"]["path"] = path
+
+
+def mark_protocol_noncanonical(spec: dict[str, Any]) -> None:
+    find_entry(spec, "eebus-protocol")["canonical"] = False
+
+
 NEGATIVE_CASES = (
     NegativeCase(
         "manifest_missing",
@@ -671,6 +725,41 @@ NEGATIVE_CASES = (
     ),
     NegativeCase(
         "canonical_duplicate", "ownership.canonical-duplicate", duplicate_canonical
+    ),
+    NegativeCase(
+        "protocol_reassigned_to_code_readme",
+        "ownership.surface-binding",
+        reassign_protocol_to_code_readme,
+    ),
+    NegativeCase(
+        "architecture_reassigned_to_platform_docs",
+        "ownership.surface-binding",
+        reassign_architecture_to_platform_docs,
+    ),
+    NegativeCase(
+        "api_moved_outside_api_prefix",
+        "ownership.surface-binding",
+        move_api_outside_api_prefix,
+    ),
+    NegativeCase(
+        "platform_reassigned_to_protocol_docs",
+        "ownership.surface-binding",
+        reassign_platform_to_protocol_docs,
+    ),
+    NegativeCase(
+        "code_docs_moved_outside_docs_prefix",
+        "ownership.surface-binding",
+        move_code_docs_outside_docs_prefix,
+    ),
+    NegativeCase(
+        "summary_moved_from_readme",
+        "ownership.surface-binding",
+        move_summary_from_readme,
+    ),
+    NegativeCase(
+        "protocol_marked_noncanonical",
+        "ownership.canonical-state",
+        mark_protocol_noncanonical,
     ),
     NegativeCase(
         "unknown_state",
@@ -795,7 +884,7 @@ NEGATIVE_CASES = (
             "eebus-architecture-planned",
             "source",
             "path",
-            "devices/serial=redacted-value",
+            "architecture/serial=redacted-value",
         ),
     ),
     NegativeCase(
@@ -811,6 +900,29 @@ NEGATIVE_CASES = (
         append_platform(
             "[Unmerged][future]\n\n"
             "[future]: ../../helianthus-docs-eebus/architecture/future.md\n"
+        ),
+    ),
+    NegativeCase(
+        "forward_autolink",
+        "link.forward",
+        append_platform(
+            "<https://github.com/Project-Helianthus/helianthus-docs-eebus/"
+            "blob/main/architecture/future.md>\n"
+        ),
+    ),
+    NegativeCase(
+        "forward_bare_github_url",
+        "link.forward",
+        append_platform(
+            "Unmerged: https://github.com/Project-Helianthus/"
+            "helianthus-docs-eebus/blob/main/architecture/future.md.\n"
+        ),
+    ),
+    NegativeCase(
+        "forward_mixed_case_repository_path",
+        "link.forward",
+        append_platform(
+            "[Unmerged](../../HeLiAnThUs-DoCs-EeBuS/architecture/future.md)\n"
         ),
     ),
     NegativeCase(
@@ -939,6 +1051,8 @@ def test_negative_matrix_has_broad_unique_category_coverage() -> None:
         "ownership.surface-missing",
         "ownership.pair-duplicate",
         "ownership.canonical-duplicate",
+        "ownership.surface-binding",
+        "ownership.canonical-state",
         "state.invalid",
         "state.planned",
         "state.candidate",
@@ -979,6 +1093,67 @@ def test_clean_transition_passes_after_docs_removed_and_summary_trimmed(
     assert validate(load_validator(), workspace) == []
 
 
+def withdraw_api_candidate(spec: dict[str, Any], *, remove_owner: bool = True) -> None:
+    item = find_entry(spec, "eebus-api-candidate")
+    item.update(
+        {
+            "state": "withdrawn",
+            "canonical": False,
+            "outputs": outputs(),
+            "lifecycle": lifecycle(
+                created_at="2026-01-15T00:00:00Z",
+                source_pr="Project-Helianthus/helianthus-eebusreg#20",
+                cleanup_required=True,
+            ),
+        }
+    )
+    if remove_owner:
+        del spec["docs_eebus"]["api/_candidate/lifecycle.md"]
+
+
+@pytest.mark.parametrize(
+    "stage_transition",
+    (
+        lambda spec: None,
+        transition_e2,
+        transition_clean,
+    ),
+    ids=("before-target", "at-target", "after-target"),
+)
+def test_candidate_withdrawal_is_terminal_across_staged_enforcement(
+    tmp_path: pathlib.Path,
+    stage_transition: Callable[[dict[str, Any]], None],
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        stage_transition(spec)
+        withdraw_api_candidate(spec)
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == []
+
+
+def test_withdrawn_candidate_rejects_stale_owner_artifact(
+    tmp_path: pathlib.Path,
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        withdraw_api_candidate(spec, remove_owner=False)
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
+        "artifact.withdrawn"
+    ]
+
+
+def test_candidate_target_cannot_activate_instead_of_reaching_required_state(
+    tmp_path: pathlib.Path,
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        transition_e2(spec)
+        set_active(find_entry(spec, "eebus-api-candidate"), canonical=True)
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
+        "enforcement.transition"
+    ]
+
+
 def remove_active_owner(spec: dict[str, Any]) -> None:
     del spec["docs_eebus"]["protocols/ship-spine.md"]
 
@@ -1005,16 +1180,16 @@ def directory_as_active_owner(spec: dict[str, Any]) -> None:
 
 def relative_symlink_component(spec: dict[str, Any]) -> None:
     item = find_entry(spec, "eebus-protocol")
-    item["owner"]["path"] = "protocol-link/ship-spine.md"
-    item["source"]["path"] = "protocol-link/ship-spine.md"
-    spec["symlinks"]["docs_eebus"]["protocol-link"] = "protocols"
+    item["owner"]["path"] = "protocols/protocol-link/ship-spine.md"
+    item["source"]["path"] = "protocols/protocol-link/ship-spine.md"
+    spec["symlinks"]["docs_eebus"]["protocols/protocol-link"] = "."
 
 
 def absolute_symlink_component(spec: dict[str, Any]) -> None:
     item = find_entry(spec, "eebus-protocol")
-    item["owner"]["path"] = "protocol-link/ship-spine.md"
-    item["source"]["path"] = "protocol-link/ship-spine.md"
-    spec["symlinks"]["docs_eebus"]["protocol-link"] = "ABS:protocols"
+    item["owner"]["path"] = "protocols/protocol-link/ship-spine.md"
+    item["source"]["path"] = "protocols/protocol-link/ship-spine.md"
+    spec["symlinks"]["docs_eebus"]["protocols/protocol-link"] = "ABS:protocols"
 
 
 def source_symlink(spec: dict[str, Any]) -> None:
@@ -1073,6 +1248,8 @@ def test_repository_root_identity_is_verified(tmp_path: pathlib.Path) -> None:
         "\n    The eeBUS Go API MUST expose package symbols.\n",
         "\nSummary: SHIP peers negotiate sessions in the canonical protocol docs.\n",
         "\nThe platform evidence gate MUST record whether a SHIP session was observed.\n",
+        "\n## SHIP Protocol Evidence Gate\n\n"
+        "The artifact MUST record whether peers negotiated before sending messages.\n",
     ),
     ids=(
         "fenced-code",
@@ -1080,6 +1257,7 @@ def test_repository_root_identity_is_verified(tmp_path: pathlib.Path) -> None:
         "indented-code",
         "non-normative-summary",
         "evidence-gate-false-positive",
+        "evidence-record",
     ),
 )
 def test_semantic_copy_false_positive_controls(
@@ -1108,8 +1286,25 @@ def test_semantic_copy_false_positive_controls(
             "[api-reference]: https://example.invalid/api\n",
             "ownership.api-copy",
         ),
+        (
+            "\n## eeBUS Go API Reference\n\n"
+            "The package MUST provide lifecycle methods.\n",
+            "ownership.api-copy",
+        ),
+        (
+            "\n## SHIP Protocol Evidence Gate\n\n"
+            "Peers MUST negotiate before sending messages; "
+            "the artifact records the result.\n",
+            "ownership.protocol-copy",
+        ),
     ),
-    ids=("protocol-h2", "architecture-h4", "reference-style-api-h3"),
+    ids=(
+        "protocol-h2",
+        "architecture-h4",
+        "reference-style-api-h3",
+        "api-provide-synonym",
+        "mixed-evidence-and-protocol",
+    ),
 )
 def test_semantic_copy_preserves_heading_section_context(
     tmp_path: pathlib.Path, addition: str, expected: str
@@ -1123,6 +1318,8 @@ def test_semantic_copy_preserves_heading_section_context(
     (
         "\n## SHIP Protocol Example\n\n"
         "Non-normative example quotation:\n\n"
+        "> Peers MUST negotiate a session before sending SPINE messages.\n",
+        "\n## SHIP Protocol Quotation\n\n"
         "> Peers MUST negotiate a session before sending SPINE messages.\n",
         "\n### Non-normative eeBUS Runtime Trust Example\n\n"
         "Implementations MUST persist trust state before reconnecting.\n",
@@ -1143,6 +1340,7 @@ def test_semantic_copy_preserves_heading_section_context(
     ),
     ids=(
         "quoted-protocol-example",
+        "standalone-quotation",
         "non-normative-architecture-section",
         "non-normative-api-lead-in",
         "non-normative-api-example",
@@ -1167,10 +1365,22 @@ def test_heading_context_semantic_copy_false_positive_controls(
         "\n<a href=\"https://github.com/Project-Helianthus/"
         "helianthus-docs-eebus/blob/__DOCS_EEBUS_REF__/"
         "protocols/ship-spine.md\">Protocol</a>\n",
+        "\n<https://github.com/pRoJeCt-HeLiAnThUs/"
+        "HeLiAnThUs-DoCs-EeBuS/blob/__DOCS_EEBUS_REF__/"
+        "protocols/ship-spine.md>\n",
+        "\nStable: https://github.com/pRoJeCt-HeLiAnThUs/"
+        "HeLiAnThUs-DoCs-EeBuS/blob/__DOCS_EEBUS_REF__/"
+        "protocols/ship-spine.md.\n",
         "\n```markdown\n[Bad][future]\n"
         "[future]: ../../helianthus-docs-eebus/architecture/future.md\n```\n",
     ),
-    ids=("reference-style-active", "html-active", "code-link-ignored"),
+    ids=(
+        "reference-style-active",
+        "html-active",
+        "mixed-case-autolink-active",
+        "mixed-case-bare-active",
+        "code-link-ignored",
+    ),
 )
 def test_markdown_link_parser_accepts_only_real_active_links(
     tmp_path: pathlib.Path, addition: str

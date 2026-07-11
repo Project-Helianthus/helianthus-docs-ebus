@@ -99,6 +99,7 @@ LIFECYCLE_TIMESTAMP_FIELDS = {
 }
 ENFORCEMENT_FIELDS = {"milestone", "required_state"}
 STABLE_OUTPUTS = OUTPUT_FIELDS - {"candidate"}
+CANONICAL_SURFACES = {"protocol", "architecture", "api", "platform"}
 
 IMMUTABLE_REF = re.compile(r"[0-9a-fA-F]{40}\Z")
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
@@ -112,7 +113,10 @@ PRIVATE_IDENTIFIER = re.compile(
     r"(?i)(?:serial|ski|mac|peer[_-]?id|device[_-]?id|token|password|secret)\s*="
 )
 WINDOWS_ABSOLUTE = re.compile(r"[A-Za-z]:[\\/]")
-NORMATIVE = re.compile(r"\b(?:must|shall|required|acceptance criteria)\b", re.I)
+NORMATIVE = re.compile(
+    r"\b(?:must|shall|should|required|mandatory|acceptance criteria|needs? to)\b",
+    re.I,
+)
 FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 ATX_HEADING = re.compile(r"^ {0,3}(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$")
 SETEXT_HEADING = re.compile(r"^ {0,3}(=+|-+)[ \t]*$")
@@ -120,14 +124,19 @@ REFERENCE_DEFINITION = re.compile(
     r"^ {0,3}\[([^\]]+)\]:[ \t]*(?:<([^>\n]+)>|(\S+))"
 )
 VERSION = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)\Z")
+RENDERED_URL = re.compile(r"\bhttps?://[^\s<>\"']+", re.I)
+CLAUSE_BOUNDARY = re.compile(r"(?:;|(?<=[.!?])\s+)")
 
 PROTOCOL_CONTEXT = re.compile(
     r"\b(?:SHIP|SPINE|SKI|wire protocol|protocol peer|protocol frame|protocol message)\b",
     re.I,
 )
 PROTOCOL_BEHAVIOR = re.compile(
-    r"\b(?:send|receive|negotiate|encode|decode|respond|retry|acknowledge|"
-    r"advertise|initiate|establish|close)s?\b",
+    r"\b(?:send(?:s|ing)?|receiv(?:e|es|ed|ing)|negotiat(?:e|es|ed|ing)|"
+    r"encod(?:e|es|ed|ing)|decod(?:e|es|ed|ing)|respond(?:s|ed|ing)?|"
+    r"retr(?:y|ies|ied|ying)|acknowledg(?:e|es|ed|ing)|"
+    r"advertis(?:e|es|ed|ing)|initiat(?:e|es|ed|ing)|"
+    r"establish(?:es|ed|ing)?|clos(?:e|es|ed|ing))\b",
     re.I,
 )
 ARCHITECTURE_CONTEXT = re.compile(
@@ -146,7 +155,10 @@ API_CONTEXT = re.compile(
     re.I | re.S,
 )
 API_BEHAVIOR = re.compile(
-    r"\b(?:expose|export|return|accept|declare|define)s?\b", re.I
+    r"\b(?:expos(?:e|es|ed|ing)|export(?:s|ed|ing)?|return(?:s|ed|ing)?|"
+    r"accept(?:s|ed|ing)?|declar(?:e|es|ed|ing)|defin(?:e|es|ed|ing)|"
+    r"provid(?:e|es|ed|ing))\b",
+    re.I,
 )
 GO_DECLARATION = re.compile(r"\bfunc\s+[A-Z][A-Za-z0-9_]*\s*\(")
 NON_NORMATIVE = re.compile(
@@ -172,6 +184,11 @@ PLATFORM_GOVERNANCE_CONTEXT = re.compile(
 )
 PLATFORM_GOVERNANCE_PROSE = re.compile(
     r"\b(?:artifact|evidence|proof|case|result|record|claim|reference|scope)\w*\b",
+    re.I,
+)
+PLATFORM_GOVERNANCE_ACTION = re.compile(
+    r"\b(?:record|report|claim|prove|verify|capture|include|reference|link|"
+    r"document|state)s?\b",
     re.I,
 )
 
@@ -267,6 +284,59 @@ def _portable_path(value: str) -> bool:
         and "//" not in value
         and all(part not in {"", ".", ".."} for part in path.parts)
     )
+
+
+def _path_at_or_below(value: str, prefix: str) -> bool:
+    path_parts = pathlib.PurePosixPath(value).parts
+    prefix_parts = pathlib.PurePosixPath(prefix).parts
+    return path_parts[: len(prefix_parts)] == prefix_parts
+
+
+def _location_matches(
+    location: Mapping[str, str], repository: str, prefix: str
+) -> bool:
+    return location["repository"] == repository and _path_at_or_below(
+        location["path"], prefix
+    )
+
+
+def _surface_binding_valid(entry: Mapping[str, Any]) -> bool:
+    surface = entry["surface"]
+    owner = entry["owner"]
+    source = entry["source"]
+    if surface == "protocol":
+        return _location_matches(
+            owner, "helianthus-docs-eebus", "protocols"
+        ) and _location_matches(source, "helianthus-docs-eebus", "protocols")
+    if surface == "architecture":
+        return _location_matches(
+            owner, "helianthus-docs-eebus", "architecture"
+        ) and _location_matches(source, "helianthus-docs-eebus", "architecture")
+    if surface == "api":
+        source_valid = _location_matches(
+            source, "helianthus-docs-eebus", "api"
+        ) or _location_matches(source, "helianthus-eebusreg", "api")
+        return (
+            _location_matches(owner, "helianthus-docs-eebus", "api")
+            and source_valid
+        )
+    if surface == "platform":
+        return _location_matches(
+            owner, "helianthus-docs-ebus", "docs/platform"
+        ) and _location_matches(source, "helianthus-docs-ebus", "docs/platform")
+    if surface == "code_repo":
+        return _location_matches(
+            owner, "helianthus-eebusreg", "docs"
+        ) and _location_matches(source, "helianthus-eebusreg", "docs")
+    if surface == "summary_only":
+        return owner == {
+            "repository": "helianthus-eebusreg",
+            "path": "README.md",
+        } and source == {
+            "repository": "helianthus-docs-eebus",
+            "path": "README.md",
+        }
+    return False
 
 
 def _artifact_kind(root: pathlib.Path, relative: str) -> str:
@@ -592,6 +662,18 @@ def _manifest_categories(manifest: dict[str, Any]) -> set[str]:
         for location in (entry["owner"], entry["source"]):
             if not _portable_path(location["path"]):
                 categories.add("path.absolute")
+        if all(
+            _portable_path(location["path"])
+            for location in (entry["owner"], entry["source"])
+        ) and not _surface_binding_valid(entry):
+            categories.add("ownership.surface-binding")
+        if entry["state"] in STATES:
+            expected_canonical = (
+                entry["surface"] in CANONICAL_SURFACES
+                and entry["state"] == "active"
+            )
+            if entry["canonical"] != expected_canonical:
+                categories.add("ownership.canonical-state")
 
     if any(
         PRIVATE_IDENTIFIER.search(value) or _contains_private_network(value)
@@ -612,6 +694,8 @@ def _enforcement_categories(
         required_at = MILESTONE_INDEX[enforcement["milestone"]]
         state = entry["state"]
         if state not in STATES:
+            continue
+        if state == "withdrawn":
             continue
         if required_at <= stage:
             if state != enforcement["required_state"]:
@@ -924,6 +1008,16 @@ class _HTMLLinks(HTMLParser):
                 self.targets.append(value)
 
 
+def _trim_rendered_url(value: str) -> str:
+    trimmed = value.rstrip(".,;:!?")
+    for opening, closing in (("(", ")"), ("[", "]"), ("{", "}")):
+        while trimmed.endswith(closing) and trimmed.count(closing) > trimmed.count(
+            opening
+        ):
+            trimmed = trimmed[:-1]
+    return trimmed
+
+
 def _markdown_links(text: str) -> list[str]:
     clean = _strip_markdown_code(text)
     definitions: dict[str, str] = {}
@@ -980,7 +1074,12 @@ def _markdown_links(text: str) -> list[str]:
     except (ValueError, RecursionError):
         pass
     targets.extend(html_links.targets)
-    return targets
+    targets.extend(
+        target
+        for match in RENDERED_URL.finditer(body)
+        if (target := _trim_rendered_url(match.group(0)))
+    )
+    return list(dict.fromkeys(targets))
 
 
 def _eebus_link_target(
@@ -988,10 +1087,12 @@ def _eebus_link_target(
 ) -> tuple[str | None, bool]:
     decoded = urllib.parse.unquote(target)
     parsed = urllib.parse.urlsplit(decoded)
-    if parsed.hostname == "github.com":
+    hostname = (parsed.hostname or "").casefold()
+    if hostname in {"github.com", "www.github.com"}:
         parts = parsed.path.strip("/").split("/")
-        if len(parts) >= 6 and parts[:3] == [
-            "Project-Helianthus",
+        folded = [part.casefold() for part in parts]
+        if len(parts) >= 6 and folded[:3] == [
+            "project-helianthus",
             "helianthus-docs-eebus",
             "blob",
         ]:
@@ -1003,12 +1104,13 @@ def _eebus_link_target(
                 and _portable_path(relative)
             )
             return relative, valid
-        if "helianthus-docs-eebus" in parts:
+        if "helianthus-docs-eebus" in folded:
             return "", False
-    if parsed.hostname == "raw.githubusercontent.com":
+    if hostname == "raw.githubusercontent.com":
         parts = parsed.path.strip("/").split("/")
-        if len(parts) >= 4 and parts[:2] == [
-            "Project-Helianthus",
+        folded = [part.casefold() for part in parts]
+        if len(parts) >= 4 and folded[:2] == [
+            "project-helianthus",
             "helianthus-docs-eebus",
         ]:
             ref = parts[2]
@@ -1019,8 +1121,12 @@ def _eebus_link_target(
                 and _portable_path(relative)
             )
             return relative, valid
-    if "helianthus-docs-eebus/" in decoded:
-        relative = decoded.split("helianthus-docs-eebus/", 1)[1].split("#", 1)[0]
+    repository = "helianthus-docs-eebus/"
+    repository_index = decoded.casefold().find(repository)
+    if repository_index >= 0 and (
+        repository_index == 0 or decoded[repository_index - 1] == "/"
+    ):
+        relative = decoded[repository_index + len(repository) :].split("#", 1)[0]
         return relative, False
     return None, True
 
@@ -1060,6 +1166,9 @@ def _semantic_sections(text: str) -> list[tuple[str, str, bool]]:
     def flush() -> None:
         nonlocal non_normative_lead
         compact = " ".join(" ".join(paragraph).split())
+        quoted = bool(paragraph) and all(
+            line.lstrip().startswith(">") for line in paragraph
+        )
         paragraph.clear()
         if not compact:
             return
@@ -1068,6 +1177,7 @@ def _semantic_sections(text: str) -> list[tuple[str, str, bool]]:
             NON_NORMATIVE.search(compact) is not None
             or any(NON_NORMATIVE.search(heading) for heading in headings.values())
             or non_normative_lead
+            or quoted
         )
         sections.append((heading_context, compact, explicitly_non_normative))
         non_normative_lead = NON_NORMATIVE_LEAD.search(compact) is not None
@@ -1116,7 +1226,26 @@ def _platform_governance_summary(heading_context: str, paragraph: str) -> bool:
     return bool(
         PLATFORM_GOVERNANCE_CONTEXT.search(heading_context)
         and PLATFORM_GOVERNANCE_PROSE.search(paragraph)
+        and PLATFORM_GOVERNANCE_ACTION.search(paragraph)
     )
+
+
+def _prohibited_clause_categories(
+    heading_context: str, clause: str
+) -> set[str]:
+    if NORMATIVE.search(clause) is None:
+        return set()
+    contextual = " ".join(part for part in (heading_context, clause) if part)
+    categories: set[str] = set()
+    if PROTOCOL_CONTEXT.search(contextual) and PROTOCOL_BEHAVIOR.search(clause):
+        categories.add("ownership.protocol-copy")
+    if ARCHITECTURE_CONTEXT.search(
+        contextual
+    ) and ARCHITECTURE_BEHAVIOR.search(clause):
+        categories.add("ownership.architecture-copy")
+    if API_CONTEXT.search(contextual) and API_BEHAVIOR.search(clause):
+        categories.add("ownership.api-copy")
+    return categories
 
 
 def _semantic_copy_categories(text: str) -> set[str]:
@@ -1125,29 +1254,29 @@ def _semantic_copy_categories(text: str) -> set[str]:
     for heading_context, paragraph, explicitly_non_normative in _semantic_sections(
         clean
     ):
-        if explicitly_non_normative:
-            continue
         contextual = " ".join(part for part in (heading_context, paragraph) if part)
         if GO_DECLARATION.search(paragraph) and re.search(
             r"\b(?:eebus|SHIP|SPINE)\b", contextual, re.I
-        ):
+        ) and not explicitly_non_normative:
             categories.add("ownership.api-copy")
-        if NORMATIVE.search(paragraph) is None:
-            continue
-        if _documentation_ownership_summary(
-            paragraph
-        ) or _platform_governance_summary(heading_context, paragraph):
-            continue
-        if PROTOCOL_CONTEXT.search(contextual) and PROTOCOL_BEHAVIOR.search(paragraph):
-            categories.add("ownership.protocol-copy")
-        if ARCHITECTURE_CONTEXT.search(
-            contextual
-        ) and ARCHITECTURE_BEHAVIOR.search(
-            paragraph
-        ):
-            categories.add("ownership.architecture-copy")
-        if API_CONTEXT.search(contextual) and API_BEHAVIOR.search(paragraph):
-            categories.add("ownership.api-copy")
+        for clause in CLAUSE_BOUNDARY.split(paragraph):
+            compact_clause = clause.strip()
+            if not compact_clause:
+                continue
+            prohibited = _prohibited_clause_categories(
+                heading_context, compact_clause
+            )
+            if not prohibited:
+                continue
+            if (
+                explicitly_non_normative
+                or _documentation_ownership_summary(compact_clause)
+                or _platform_governance_summary(
+                    heading_context, compact_clause
+                )
+            ):
+                continue
+            categories.update(prohibited)
     return categories
 
 

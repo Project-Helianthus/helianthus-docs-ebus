@@ -29,6 +29,12 @@ The six required surfaces are `protocol`, `architecture`, `api`, `platform`,
 | Substantive code-repository docs | Removed by `MSP-DOCS-CLEAN` |
 | Code README | Minimal summary-only pointer after `MSP-DOCS-CLEAN` |
 
+The validator freezes these repository and path-prefix bindings. Canonical
+surfaces are canonical exactly while `active`; planned, candidate, withdrawn,
+code-repository, and summary-only entries are noncanonical. In particular,
+protocol ownership cannot be reassigned to the code README or marked
+noncanonical while active.
+
 ## State Contract
 
 | State | Expiry | Output | Required artifact rule |
@@ -53,7 +59,10 @@ any path component. Absolute and relative symlinks are equally invalid.
 The ordered enforcement stages are `MSP-DOCS-API-SCHEMA`,
 `MSP-DOCS-PLATFORM`, `MSP-DOCS-E2`, and `MSP-DOCS-CLEAN`. Before an entry's
 owning milestone, its state must be `planned` or `candidate`. At and after that
-milestone, its state must equal `enforcement.required_state` exactly.
+milestone, its state must equal `enforcement.required_state`. A valid
+`withdrawn` state is the terminal alternative at every stage: cleanup must be
+required, the owner artifact must be absent, and later stages never resurrect
+the entry.
 
 The current PLATFORM transition is:
 
@@ -114,5 +123,7 @@ Every diagnostic is terminal and consists only of a sorted unique category id.
 
 Platform pages may reference only platform pages merged in the same repository
 or immutable active targets present at the supplied docs-eebus commit. Inline,
-reference-style, and HTML links are parsed outside fenced, indented, and inline
-code. Moving, candidate, planned, withdrawn, missing, and symlink targets fail.
+reference-style, HTML, autolink, and bare GitHub URL forms are parsed outside
+fenced, indented, and inline code. GitHub owner and repository names are
+compared case-insensitively. Moving, candidate, planned, withdrawn, missing,
+and symlink targets fail.
