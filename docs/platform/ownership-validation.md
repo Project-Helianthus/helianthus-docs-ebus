@@ -71,12 +71,14 @@ any path component. Absolute and relative symlinks are equally invalid.
 The ordered enforcement stages are `MSP-DOCS-API-SCHEMA`,
 `MSP-DOCS-PLATFORM`, `MSP-DOCS-E2`, and `MSP-DOCS-CLEAN`. Before an entry's
 owning milestone, its state must be `planned` or `candidate`. At and after that
-milestone, its state must equal `enforcement.required_state`. A valid
-`withdrawn` state is the terminal alternative at every stage: cleanup must be
-required, owner and source artifacts must be absent immediately, and later
-stages never resurrect the entry. This applies to `code_repo` before
-`MSP-DOCS-CLEAN`; the CLEAN-stage substantive code-document check remains an
-independent requirement for both withdrawn and non-withdrawn entries.
+milestone, its state must equal `enforcement.required_state`. A terminal
+`withdrawn` alternative is valid only when `required_state` is `candidate` or
+`withdrawn`; an `active` obligation cannot be cancelled through withdrawal.
+For a valid withdrawal, cleanup must be required, owner and source artifacts
+must be absent immediately, and later stages never resurrect the entry. This
+applies to `code_repo` before `MSP-DOCS-CLEAN`; the CLEAN-stage substantive
+code-document check remains an independent requirement for both withdrawn and
+non-withdrawn entries.
 
 Terminal withdrawal is also checked against history. When a trusted prior
 manifest exists, pass it as `--prior-manifest PATH`. Every prior `withdrawn`

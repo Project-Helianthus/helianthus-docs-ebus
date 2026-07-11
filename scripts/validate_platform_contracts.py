@@ -868,6 +868,8 @@ def _enforcement_categories(
         if state not in STATES:
             continue
         if state == "withdrawn":
+            if enforcement["required_state"] not in {"candidate", "withdrawn"}:
+                return {"enforcement.transition"}
             continue
         if required_at <= stage:
             if state != enforcement["required_state"]:

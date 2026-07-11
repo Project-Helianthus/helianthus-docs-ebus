@@ -1804,6 +1804,20 @@ def test_candidate_withdrawal_is_terminal_across_staged_enforcement(
     assert validate(load_validator(), build_workspace(tmp_path, mutate)) == []
 
 
+@pytest.mark.parametrize(
+    "entry_id",
+    ("eebus-architecture-planned", "code-repo-summary-planned"),
+    ids=("architecture-active-required", "summary-active-required"),
+)
+def test_withdrawal_cannot_cancel_required_active_state(entry_id: str) -> None:
+    manifest = base_manifest()
+    find_entry({"manifest": manifest}, entry_id)["state"] = "withdrawn"
+
+    assert load_validator()._enforcement_categories(manifest, CLEAN_STAGE) == {
+        "enforcement.transition"
+    }
+
+
 def test_withdrawn_candidate_rejects_stale_owner_artifact(
     tmp_path: pathlib.Path,
 ) -> None:
