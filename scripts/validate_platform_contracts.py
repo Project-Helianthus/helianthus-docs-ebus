@@ -105,6 +105,7 @@ STABLE_OUTPUTS = OUTPUT_FIELDS - {"candidate"}
 CANONICAL_SURFACES = {"protocol", "architecture", "api", "platform"}
 
 IMMUTABLE_REF = re.compile(r"[0-9a-fA-F]{40}\Z")
+GITHUB_REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\Z")
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 ENTRY_ID = re.compile(r"[a-z0-9][a-z0-9-]*\Z")
 RFC3339_UTC = re.compile(
@@ -360,7 +361,7 @@ def _remote_repository(value: str) -> str | None:
     return None
 
 
-def _repository_root_valid(root: pathlib.Path, repository: str) -> bool:
+def _repository_root_valid(root: pathlib.Path, expected_repository: str) -> bool:
     try:
         root_stat = root.lstat()
     except OSError:
@@ -376,9 +377,12 @@ def _repository_root_valid(root: pathlib.Path, repository: str) -> bool:
         root_path = root.resolve(strict=True)
     except OSError:
         return False
-    expected = f"Project-Helianthus/{repository}"
     actual = _remote_repository(remote.stdout)
-    return top_path == root_path and actual is not None and actual.casefold() == expected.casefold()
+    return (
+        top_path == root_path
+        and actual is not None
+        and actual.casefold() == expected_repository.casefold()
+    )
 
 
 def _portable_path(value: str) -> bool:
@@ -1820,7 +1824,9 @@ def validate_repository(
 ) -> list[str]:
     root = pathlib.Path(docs_ebus_root)
     categories = _toolchain_categories(toolchain_mode)
-    root_valid = _repository_root_valid(root, "helianthus-docs-ebus")
+    root_valid = _repository_root_valid(
+        root, "Project-Helianthus/helianthus-docs-ebus"
+    )
     if not root_valid:
         categories.add("input.repository-root")
     manifest, manifest_categories = _validated_manifest(root)
@@ -1850,6 +1856,7 @@ def validate_workspace(
     docs_ebus_ref: str | None,
     docs_eebus_ref: str | None,
     eebusreg_ref: str | None,
+    docs_ebus_repository: str,
     enforce_through: str,
     toolchain_mode: str,
     prior_manifest: pathlib.Path | None = None,
@@ -1878,10 +1885,18 @@ def validate_workspace(
     if any(not _clean_checkout(root) for root in roots.values()):
         categories.add("input.clean-clone")
 
+    expected_repositories = {
+        "helianthus-docs-ebus": docs_ebus_repository,
+        "helianthus-docs-eebus": "Project-Helianthus/helianthus-docs-eebus",
+        "helianthus-eebusreg": "Project-Helianthus/helianthus-eebusreg",
+    }
+    if GITHUB_REPOSITORY.fullmatch(docs_ebus_repository) is None:
+        categories.add("input.docs-ebus-repository")
+
     valid_roots: dict[str, pathlib.Path] = {}
     resolved: set[pathlib.Path] = set()
     for repository, root in roots.items():
-        if not _repository_root_valid(root, repository):
+        if not _repository_root_valid(root, expected_repositories[repository]):
             categories.add("input.repository-root")
             continue
         resolved_root = root.resolve(strict=True)
@@ -1934,6 +1949,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--docs-eebus-root", type=pathlib.Path)
     parser.add_argument("--eebusreg-root", type=pathlib.Path)
     parser.add_argument("--docs-ebus-ref")
+    parser.add_argument(
+        "--docs-ebus-repository",
+        default="Project-Helianthus/helianthus-docs-ebus",
+    )
     parser.add_argument("--docs-eebus-ref")
     parser.add_argument("--eebusreg-ref")
     parser.add_argument("--evaluated-at")
@@ -1969,6 +1988,7 @@ def main(argv: list[str] | None = None) -> int:
             docs_ebus_ref=args.docs_ebus_ref,
             docs_eebus_ref=args.docs_eebus_ref,
             eebusreg_ref=args.eebusreg_ref,
+            docs_ebus_repository=args.docs_ebus_repository,
             enforce_through=args.enforce_through,
             toolchain_mode=args.toolchain_mode,
             prior_manifest=args.prior_manifest,

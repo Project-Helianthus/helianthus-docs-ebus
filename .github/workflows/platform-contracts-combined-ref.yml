@@ -233,6 +233,7 @@ jobs:
           python3 checkouts/docs-ebus/scripts/validate_platform_contracts.py \
             --mode combined-ref \
             --docs-ebus-root checkouts/docs-ebus \
+            --docs-ebus-repository "${{ inputs.docs_ebus_repository }}" \
             --docs-eebus-root checkouts/docs-eebus \
             --eebusreg-root checkouts/eebusreg \
             --docs-ebus-ref "${{ inputs.docs_ebus_ref }}" \

@@ -400,13 +400,16 @@ def commit_fixture(
 ) -> str:
     subprocess.run(["git", "init", "-q"], cwd=root, check=True)
     remote = remote_repository or repository
+    remote_full_name = (
+        remote if "/" in remote else f"Project-Helianthus/{remote}"
+    )
     subprocess.run(
         [
             "git",
             "remote",
             "add",
             "origin",
-            f"https://github.com/Project-Helianthus/{remote}.git",
+            f"https://github.com/{remote_full_name}.git",
         ],
         cwd=root,
         check=True,
@@ -447,6 +450,7 @@ class Workspace:
     docs_ebus_ref: str | None
     docs_eebus_ref: str | None
     eebusreg_ref: str | None
+    docs_ebus_repository: str
     enforce_through: str
     toolchain_mode: str
 
@@ -600,6 +604,11 @@ def build_workspace(
         docs_ebus_ref=selected(spec["docs_ebus_ref"], docs_ebus_head),
         docs_eebus_ref=selected(spec["docs_eebus_ref"], docs_eebus_head),
         eebusreg_ref=selected(spec["eebusreg_ref"], eebusreg_head),
+        docs_ebus_repository=(
+            spec["remotes"]["docs_ebus"]
+            if "/" in spec["remotes"]["docs_ebus"]
+            else f"Project-Helianthus/{spec['remotes']['docs_ebus']}"
+        ),
         enforce_through=spec["enforce_through"],
         toolchain_mode=spec["toolchain_mode"],
     )
@@ -629,6 +638,7 @@ def validate(
         docs_ebus_ref=workspace.docs_ebus_ref,
         docs_eebus_ref=workspace.docs_eebus_ref,
         eebusreg_ref=workspace.eebusreg_ref,
+        docs_ebus_repository=workspace.docs_ebus_repository,
         enforce_through=workspace.enforce_through,
         toolchain_mode=workspace.toolchain_mode,
         prior_manifest=prior_manifest,
@@ -1390,6 +1400,7 @@ def test_combined_ref_workflow_checks_out_pr_head_repository() -> None:
     assert reusable.count("docs_ebus_repository:") >= 2
     assert "DOCS_EBUS_REPOSITORY: ${{ inputs.docs_ebus_repository }}" in reusable
     assert "repository: ${{ inputs.docs_ebus_repository }}" in reusable
+    assert '--docs-ebus-repository "${{ inputs.docs_ebus_repository }}"' in reusable
     assert "repository='^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'" in reusable
     assert "repository: Project-Helianthus/helianthus-docs-ebus" in reusable
 
@@ -2208,6 +2219,13 @@ def test_repository_root_identity_is_verified(tmp_path: pathlib.Path) -> None:
 
     workspace = build_workspace(tmp_path, wrong_remote)
     assert validate(load_validator(), workspace) == ["input.repository-root"]
+
+
+def test_combined_ref_accepts_fork_candidate_origin(tmp_path: pathlib.Path) -> None:
+    def fork_origin(spec: dict[str, Any]) -> None:
+        spec["remotes"]["docs_ebus"] = "contributor/helianthus-docs-ebus"
+
+    assert validate(load_validator(), build_workspace(tmp_path, fork_origin)) == []
 
 
 @pytest.mark.parametrize(
