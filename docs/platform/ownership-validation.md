@@ -38,6 +38,11 @@ The six required surfaces are `protocol`, `architecture`, `api`, `platform`,
 | `active` | No expiry | All stable outputs after approval and freeze | Regular owner and source files |
 | `withdrawn` | No expiry | No output and never consumer-visible | Owner artifact absent and cleanup mandatory |
 
+Every present lifecycle timestamp (`created_at`, `expires_at`, `approved_at`, or
+`frozen_at`) uses the same strict RFC 3339 UTC extended form described below.
+Malformed present values fail manifest schema validation before state-specific
+presence or absence rules are evaluated.
+
 Every required owner/source file is checked at the repository root named by the
 manifest. The root must be the expected GitHub repository top level. The file
 must remain inside that root, exist, be a regular file, and have no symlink at

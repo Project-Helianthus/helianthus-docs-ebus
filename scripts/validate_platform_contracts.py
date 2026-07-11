@@ -91,6 +91,12 @@ LIFECYCLE_FIELDS = {
     "frozen_at",
     "cleanup_required",
 }
+LIFECYCLE_TIMESTAMP_FIELDS = {
+    "created_at",
+    "expires_at",
+    "approved_at",
+    "frozen_at",
+}
 ENFORCEMENT_FIELDS = {"milestone", "required_state"}
 STABLE_OUTPUTS = OUTPUT_FIELDS - {"candidate"}
 
@@ -108,6 +114,8 @@ PRIVATE_IDENTIFIER = re.compile(
 WINDOWS_ABSOLUTE = re.compile(r"[A-Za-z]:[\\/]")
 NORMATIVE = re.compile(r"\b(?:must|shall|required|acceptance criteria)\b", re.I)
 FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+ATX_HEADING = re.compile(r"^ {0,3}(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$")
+SETEXT_HEADING = re.compile(r"^ {0,3}(=+|-+)[ \t]*$")
 REFERENCE_DEFINITION = re.compile(
     r"^ {0,3}\[([^\]]+)\]:[ \t]*(?:<([^>\n]+)>|(\S+))"
 )
@@ -141,6 +149,31 @@ API_BEHAVIOR = re.compile(
     r"\b(?:expose|export|return|accept|declare|define)s?\b", re.I
 )
 GO_DECLARATION = re.compile(r"\bfunc\s+[A-Z][A-Za-z0-9_]*\s*\(")
+NON_NORMATIVE = re.compile(
+    r"\b(?:non[- ]normative|informative only|example only)\b", re.I
+)
+NON_NORMATIVE_LEAD = re.compile(
+    r"\b(?:non[- ]normative|informative)\b.*"
+    r"\b(?:example|quotation|quote|excerpt|reference)\b",
+    re.I,
+)
+DOCUMENTATION_OWNERSHIP = re.compile(
+    r"(?:\b(?:documentation|docs?|page|repository)\b[^.!?]{0,80}"
+    r"\b(?:must|shall|required)\b[^.!?]{0,80}"
+    r"\b(?:own|ownership|summar(?:y|ize|izes|ized)|link|reference|"
+    r"source of truth)\b|"
+    r"\b(?:must|shall|required)\b[^.!?]{0,80}"
+    r"\b(?:owned|documented|summarized|linked|referenced)\b[^.!?]{0,80}"
+    r"\b(?:documentation|docs?|page|repository|source of truth)\b)",
+    re.I,
+)
+PLATFORM_GOVERNANCE_CONTEXT = re.compile(
+    r"\b(?:gate|proof|artifact|evidence|ownership|summary)\b", re.I
+)
+PLATFORM_GOVERNANCE_PROSE = re.compile(
+    r"\b(?:artifact|evidence|proof|case|result|record|claim|reference|scope)\w*\b",
+    re.I,
+)
 
 
 class _ManifestSchemaError(Exception):
@@ -452,11 +485,17 @@ def _schema_valid(manifest: Mapping[str, Any]) -> bool:
         lifecycle = entry.get("lifecycle")
         if not isinstance(lifecycle, dict) or set(lifecycle) != LIFECYCLE_FIELDS:
             return False
-        if not isinstance(lifecycle.get("created_at"), str):
+        if _parse_instant(lifecycle.get("created_at")) is None:
             return False
         if any(
             not _optional_text(lifecycle.get(key))
             for key in LIFECYCLE_FIELDS - {"created_at", "cleanup_required"}
+        ):
+            return False
+        if any(
+            lifecycle.get(key) is not None
+            and _parse_instant(lifecycle.get(key)) is None
+            for key in LIFECYCLE_TIMESTAMP_FIELDS - {"created_at"}
         ):
             return False
         if not isinstance(lifecycle.get("cleanup_required"), bool):
@@ -1012,27 +1051,102 @@ def _link_categories(
     return set()
 
 
+def _semantic_sections(text: str) -> list[tuple[str, str, bool]]:
+    headings: dict[int, str] = {}
+    sections: list[tuple[str, str, bool]] = []
+    paragraph: list[str] = []
+    non_normative_lead = False
+
+    def flush() -> None:
+        nonlocal non_normative_lead
+        compact = " ".join(" ".join(paragraph).split())
+        paragraph.clear()
+        if not compact:
+            return
+        heading_context = " ".join(headings[level] for level in sorted(headings))
+        explicitly_non_normative = (
+            NON_NORMATIVE.search(compact) is not None
+            or any(NON_NORMATIVE.search(heading) for heading in headings.values())
+            or non_normative_lead
+        )
+        sections.append((heading_context, compact, explicitly_non_normative))
+        non_normative_lead = NON_NORMATIVE_LEAD.search(compact) is not None
+
+    lines = text.splitlines()
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        atx = ATX_HEADING.match(line)
+        setext = (
+            SETEXT_HEADING.match(lines[index + 1])
+            if line.strip() and index + 1 < len(lines)
+            else None
+        )
+        if atx is not None or setext is not None:
+            flush()
+            non_normative_lead = False
+            if atx is not None:
+                level = len(atx.group(1))
+                heading = atx.group(2).strip()
+            else:
+                assert setext is not None
+                level = 1 if setext.group(1).startswith("=") else 2
+                heading = line.strip()
+                index += 1
+            headings = {
+                current_level: current_heading
+                for current_level, current_heading in headings.items()
+                if current_level < level
+            }
+            headings[level] = heading
+        elif not line.strip():
+            flush()
+        else:
+            paragraph.append(line)
+        index += 1
+    flush()
+    return sections
+
+
+def _documentation_ownership_summary(paragraph: str) -> bool:
+    return DOCUMENTATION_OWNERSHIP.search(paragraph) is not None
+
+
+def _platform_governance_summary(heading_context: str, paragraph: str) -> bool:
+    return bool(
+        PLATFORM_GOVERNANCE_CONTEXT.search(heading_context)
+        and PLATFORM_GOVERNANCE_PROSE.search(paragraph)
+    )
+
+
 def _semantic_copy_categories(text: str) -> set[str]:
     categories: set[str] = set()
     clean = _strip_markdown_code(text)
-    paragraphs = re.split(r"\n\s*\n", clean)
-    for paragraph in paragraphs:
-        compact = " ".join(paragraph.split())
-        if not compact:
+    for heading_context, paragraph, explicitly_non_normative in _semantic_sections(
+        clean
+    ):
+        if explicitly_non_normative:
             continue
-        if GO_DECLARATION.search(compact) and re.search(
-            r"\b(?:eebus|SHIP|SPINE)\b", compact, re.I
+        contextual = " ".join(part for part in (heading_context, paragraph) if part)
+        if GO_DECLARATION.search(paragraph) and re.search(
+            r"\b(?:eebus|SHIP|SPINE)\b", contextual, re.I
         ):
             categories.add("ownership.api-copy")
-        if NORMATIVE.search(compact) is None:
+        if NORMATIVE.search(paragraph) is None:
             continue
-        if PROTOCOL_CONTEXT.search(compact) and PROTOCOL_BEHAVIOR.search(compact):
+        if _documentation_ownership_summary(
+            paragraph
+        ) or _platform_governance_summary(heading_context, paragraph):
+            continue
+        if PROTOCOL_CONTEXT.search(contextual) and PROTOCOL_BEHAVIOR.search(paragraph):
             categories.add("ownership.protocol-copy")
-        if ARCHITECTURE_CONTEXT.search(compact) and ARCHITECTURE_BEHAVIOR.search(
-            compact
+        if ARCHITECTURE_CONTEXT.search(
+            contextual
+        ) and ARCHITECTURE_BEHAVIOR.search(
+            paragraph
         ):
             categories.add("ownership.architecture-copy")
-        if API_CONTEXT.search(compact) and API_BEHAVIOR.search(compact):
+        if API_CONTEXT.search(contextual) and API_BEHAVIOR.search(paragraph):
             categories.add("ownership.api-copy")
     return categories
 

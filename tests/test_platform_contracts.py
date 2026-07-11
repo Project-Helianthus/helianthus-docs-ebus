@@ -703,7 +703,7 @@ NEGATIVE_CASES = (
     ),
     NegativeCase(
         "planned_basic_iso_timestamp",
-        "state.planned",
+        "manifest.schema",
         set_nested(
             "eebus-architecture-planned",
             "lifecycle",
@@ -762,7 +762,7 @@ NEGATIVE_CASES = (
     ),
     NegativeCase(
         "active_offset_timestamp",
-        "state.active",
+        "manifest.schema",
         set_nested(
             "platform-contracts",
             "lifecycle",
@@ -1090,6 +1090,75 @@ def test_semantic_copy_false_positive_controls(
 
 
 @pytest.mark.parametrize(
+    "addition,expected",
+    (
+        (
+            "\n## SHIP Protocol Reference\n\n"
+            "Peers MUST negotiate a session before sending messages.\n",
+            "ownership.protocol-copy",
+        ),
+        (
+            "\n#### eeBUS Runtime Trust And Lifecycle\n\n"
+            "Implementations MUST persist trust state before reconnecting.\n",
+            "ownership.architecture-copy",
+        ),
+        (
+            "\n## eeBUS\n\n### [Go API Reference][api-reference]\n\n"
+            "The package MUST expose exported lifecycle functions.\n\n"
+            "[api-reference]: https://example.invalid/api\n",
+            "ownership.api-copy",
+        ),
+    ),
+    ids=("protocol-h2", "architecture-h4", "reference-style-api-h3"),
+)
+def test_semantic_copy_preserves_heading_section_context(
+    tmp_path: pathlib.Path, addition: str, expected: str
+) -> None:
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == [expected]
+
+
+@pytest.mark.parametrize(
+    "addition",
+    (
+        "\n## SHIP Protocol Example\n\n"
+        "Non-normative example quotation:\n\n"
+        "> Peers MUST negotiate a session before sending SPINE messages.\n",
+        "\n### Non-normative eeBUS Runtime Trust Example\n\n"
+        "Implementations MUST persist trust state before reconnecting.\n",
+        "\n#### eeBUS Go API Example\n\nNon-normative example:\n\n"
+        "The package MUST expose lifecycle functions.\n",
+        "\n#### eeBUS Go API Reference\n\n"
+        "This non-normative example says the package MUST expose lifecycle functions.\n",
+        "\n## eeBUS Runtime Trust And Lifecycle Ownership\n\n"
+        "The canonical eeBUS documentation MUST own runtime, trust, and lifecycle details; "
+        "this platform page remains a summary only.\n",
+        "\n# eeBUS HA Network Proof Gate\n\n## Credential Boundary\n\n"
+        "Production trust-store semantics, clone/restore lockout, quarantine/backoff, "
+        "and first-trust confirmation are M4 work. MSP-03C evidence must not claim "
+        "those properties.\n",
+        "\n# eeBUS Interop Smoke Gate\n\n## Live VR940f Boundary\n\n"
+        "The artifact may record service visibility, but it must not claim pairing/session, "
+        "feature graph, reconnect, or semantic facts.\n",
+    ),
+    ids=(
+        "quoted-protocol-example",
+        "non-normative-architecture-section",
+        "non-normative-api-lead-in",
+        "non-normative-api-example",
+        "platform-ownership-summary",
+        "network-proof-boundary",
+        "interop-artifact-boundary",
+    ),
+)
+def test_heading_context_semantic_copy_false_positive_controls(
+    tmp_path: pathlib.Path, addition: str
+) -> None:
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == []
+
+
+@pytest.mark.parametrize(
     "addition",
     (
         "\n[Protocol [stable]][proto]\n\n"
@@ -1330,6 +1399,101 @@ def test_candidate_expiry_boundary_is_inclusive(tmp_path: pathlib.Path) -> None:
 )
 def test_strict_timestamp_parser_accepts_documented_forms(timestamp: str) -> None:
     assert load_validator()._parse_instant(timestamp) is not None
+
+
+def lifecycle_timestamp_case(
+    state: str, field: str, timestamp: str
+) -> Callable[[dict[str, Any]], None]:
+    def mutate(spec: dict[str, Any]) -> None:
+        if state == "planned":
+            item = find_entry(spec, "eebus-architecture-planned")
+        elif state == "candidate":
+            item = find_entry(spec, "eebus-api-candidate")
+        elif state == "active":
+            item = find_entry(spec, "platform-contracts")
+        else:
+            transition_clean(spec)
+            item = find_entry(spec, "code-repo-docs-planned")
+        item["lifecycle"][field] = timestamp
+
+    return mutate
+
+
+@pytest.mark.parametrize(
+    "state,field,timestamp",
+    (
+        ("planned", "approved_at", "2026-01-02T00:00:00+00:00"),
+        ("candidate", "frozen_at", "20260103T000000Z"),
+        ("active", "expires_at", "2026-02-30T00:00:00Z"),
+        ("withdrawn", "created_at", "not-a-timestamp"),
+    ),
+    ids=(
+        "planned-optional-offset",
+        "candidate-optional-basic",
+        "active-optional-invalid-date",
+        "withdrawn-required-invalid",
+    ),
+)
+def test_present_lifecycle_timestamps_fail_schema_before_state_logic(
+    tmp_path: pathlib.Path, state: str, field: str, timestamp: str
+) -> None:
+    workspace = build_workspace(
+        tmp_path, lifecycle_timestamp_case(state, field, timestamp)
+    )
+    assert validate(load_validator(), workspace) == ["manifest.schema"]
+
+
+def test_malformed_optional_lifecycle_timestamp_cli_is_category_only(
+    tmp_path: pathlib.Path,
+) -> None:
+    workspace = build_workspace(
+        tmp_path,
+        lifecycle_timestamp_case(
+            "planned", "approved_at", "2026-01-02T00:00:00+00:00"
+        ),
+    )
+    result = subprocess.run(
+        [
+            "python3",
+            str(VALIDATOR_PATH),
+            "--mode",
+            "repository",
+            "--docs-ebus-root",
+            str(workspace.docs_ebus),
+            "--enforce-through",
+            PLATFORM_STAGE,
+            "--toolchain-mode",
+            "supported",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == "manifest.schema\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "field", ("created_at", "expires_at", "approved_at", "frozen_at")
+)
+@pytest.mark.parametrize(
+    "timestamp",
+    (
+        "2026-01-02T00:00:00+00:00",
+        "20260102T000000Z",
+        "2026-02-30T00:00:00Z",
+    ),
+    ids=("offset", "basic", "invalid-date"),
+)
+def test_every_present_lifecycle_timestamp_field_uses_strict_parser(
+    field: str, timestamp: str
+) -> None:
+    manifest = base_manifest()
+    find_entry({"manifest": manifest}, "platform-contracts")["lifecycle"][field] = (
+        timestamp
+    )
+    assert load_validator()._schema_valid(manifest) is False
 
 
 def test_toolchain_checks_actual_versions_not_caller_claims(
