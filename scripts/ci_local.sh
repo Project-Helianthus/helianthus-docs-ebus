@@ -139,6 +139,11 @@ python3 -m pytest -q tests/test_source_address_table_checker.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-PLATFORM)"
 python3 -m pytest -q tests/test_platform_contracts.py
+python3 scripts/validate_platform_contracts.py \
+  --mode repository \
+  --docs-ebus-root . \
+  --pinned-tool python=3.12.10 \
+  --pinned-tool pyyaml=6.0.2
 
 echo "==> check eBUS address-table taxonomy + frame-type contract hash (Phase C M-C0)"
 bash scripts/check_address_table_taxonomy_hash.sh
