@@ -175,8 +175,7 @@ jobs:
         working-directory: checkouts/docs-ebus
         run: ./scripts/ci_local.sh
 
-      - name: Enforce main manifest expiry
-        if: github.event_name == 'push'
+      - name: Enforce manifest expiry
         working-directory: checkouts/docs-ebus
         run: |
           evaluated_at="$(python3 - <<'PY'

@@ -1371,10 +1371,11 @@ def test_main_expiry_workflow_uses_trusted_runner_clock() -> None:
     )
     steps = workflow["jobs"]["markdown-checks"]["steps"]
     expiry_steps = [
-        step for step in steps if step.get("name") == "Enforce main manifest expiry"
+        step for step in steps if step.get("name") == "Enforce manifest expiry"
     ]
     assert len(expiry_steps) == 1
     step = expiry_steps[0]
+    assert "if" not in step
     assert "RAW_EVALUATED_AT" not in step.get("env", {})
     script = step["run"]
     assert "datetime.datetime.now(datetime.timezone.utc)" in script
