@@ -33,9 +33,22 @@ jobs:
     name: Docs Checks
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout PR head
+        if: github.event_name == 'pull_request'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: checkouts/docs-ebus
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout push commit
+        if: github.event_name == 'push'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
           path: checkouts/docs-ebus
           clean: true
           persist-credentials: false
@@ -170,6 +183,7 @@ jobs:
 
       - name: Run local docs CI
         env:
+          PLATFORM_DOCS_EBUS_REPOSITORY: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
           PLATFORM_TOOLCHAIN_MODE: exact
           PLATFORM_PRIOR_MANIFEST: ${{ steps.prior_manifest.outputs.path }}
         working-directory: checkouts/docs-ebus
@@ -177,14 +191,14 @@ jobs:
 
   platform-contracts-combined-ref:
     name: Platform Contracts Combined Ref
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     permissions:
       contents: read
-    uses: Project-Helianthus/helianthus-docs-ebus/.github/workflows/platform-contracts-combined-ref.yml@b612a1168c6509d04da13243e7d6cef3f2318dd7
+    uses: Project-Helianthus/helianthus-docs-ebus/.github/workflows/platform-contracts-combined-ref.yml@d1b3deead08ecb84baf3dcfe5382e3c519d44b60
     with:
-      docs_ebus_repository: ${{ github.event.pull_request.head.repo.full_name }}
-      docs_ebus_ref: ${{ github.event.pull_request.head.sha }}
-      docs_ebus_base_ref: ${{ github.event.pull_request.base.sha }}
+      docs_ebus_repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+      docs_ebus_ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      docs_ebus_base_ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
       docs_eebus_ref: f23a7c35e6803501f185923de061f935bbac1466
       eebusreg_ref: 0e58327dfdb86ef243a19e18d590564813feaa00
       enforce_through: MSP-DOCS-PLATFORM

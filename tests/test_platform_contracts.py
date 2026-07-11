@@ -1419,10 +1419,11 @@ def test_combined_ref_workflow_checks_out_pr_head_repository() -> None:
     ).read_text(encoding="utf-8")
 
     assert (
-        "docs_ebus_repository: "
-        "${{ github.event.pull_request.head.repo.full_name }}" in caller
+        "docs_ebus_repository: ${{ github.event_name == 'pull_request'" in caller
     )
-    assert "docs_ebus_ref: ${{ github.event.pull_request.head.sha }}" in caller
+    assert "docs_ebus_ref: ${{ github.event_name == 'pull_request'" in caller
+    assert "repository: ${{ github.event.pull_request.head.repo.full_name }}" in caller
+    assert "ref: ${{ github.event.pull_request.head.sha }}" in caller
     assert reusable.count("docs_ebus_repository:") >= 2
     assert "DOCS_EBUS_REPOSITORY: ${{ inputs.docs_ebus_repository }}" in reusable
     assert "repository: ${{ inputs.docs_ebus_repository }}" in reusable
@@ -1439,10 +1440,31 @@ def test_combined_ref_caller_pins_trusted_reusable_workflow() -> None:
     trusted_call = (
         "uses: Project-Helianthus/helianthus-docs-ebus/"
         ".github/workflows/platform-contracts-combined-ref.yml@"
-        "b612a1168c6509d04da13243e7d6cef3f2318dd7"
+        "d1b3deead08ecb84baf3dcfe5382e3c519d44b60"
     )
     assert trusted_call in caller
     assert "uses: ./.github/workflows/platform-contracts-combined-ref.yml" not in caller
+
+
+def test_docs_ci_binds_pr_head_and_runs_trusted_expiry_on_push() -> None:
+    caller = (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "- name: Checkout PR head" in caller
+    assert "- name: Checkout push commit" in caller
+    assert "repository: ${{ github.event.pull_request.head.repo.full_name }}" in caller
+    assert "ref: ${{ github.event.pull_request.head.sha }}" in caller
+    assert "repository: ${{ github.repository }}" in caller
+    assert "ref: ${{ github.sha }}" in caller
+    assert (
+        "PLATFORM_DOCS_EBUS_REPOSITORY: ${{ github.event_name == "
+        "'pull_request' && github.event.pull_request.head.repo.full_name || "
+        "github.repository }}" in caller
+    )
+    assert "if: github.event_name == 'pull_request' || github.event_name == 'push'" in caller
+    assert "docs_ebus_ref: ${{ github.event_name == 'pull_request'" in caller
+    assert "github.event.before }}" in caller
 
 
 def test_combined_ref_executes_only_trusted_validator_checkout() -> None:
