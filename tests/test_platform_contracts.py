@@ -508,7 +508,12 @@ def load_validator():
     return module
 
 
-def validate(validator: Any, workspace: Workspace) -> list[str]:
+def validate(
+    validator: Any,
+    workspace: Workspace,
+    *,
+    prior_manifest: pathlib.Path | None = None,
+) -> list[str]:
     diagnostics = validator.validate_workspace(
         docs_ebus_root=workspace.docs_ebus,
         docs_eebus_root=workspace.docs_eebus,
@@ -519,6 +524,7 @@ def validate(validator: Any, workspace: Workspace) -> list[str]:
         eebusreg_ref=workspace.eebusreg_ref,
         enforce_through=workspace.enforce_through,
         toolchain_mode=workspace.toolchain_mode,
+        prior_manifest=prior_manifest,
     )
     assert diagnostics == sorted(set(diagnostics))
     assert all(
@@ -534,14 +540,48 @@ def repository_validate(
     mode: str = "repository",
     evaluated_at: str | None = None,
     evaluation_source: str | None = None,
+    prior_manifest: pathlib.Path | None = None,
 ) -> list[str]:
     return validator.validate_repository(
         docs_ebus_root=root,
         mode=mode,
         enforce_through=PLATFORM_STAGE,
         toolchain_mode="supported",
+        prior_manifest=prior_manifest,
         evaluated_at=evaluated_at,
         evaluation_source=evaluation_source,
+    )
+
+
+def write_prior_manifest(
+    tmp_path: pathlib.Path, manifest: dict[str, Any]
+) -> pathlib.Path:
+    materialized = copy.deepcopy(manifest)
+    for item in materialized["entries"]:
+        if item["lifecycle"]["source_ref"] == "__SOURCE_REF__":
+            item["lifecycle"]["source_ref"] = "0" * 40
+    path = tmp_path / "prior-manifest.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(materialized, sort_keys=False), encoding="utf-8")
+    return path
+
+
+def mark_manifest_entry_withdrawn(
+    manifest: dict[str, Any], entry_id: str
+) -> None:
+    item = next(entry for entry in manifest["entries"] if entry["id"] == entry_id)
+    item.update(
+        {
+            "state": "withdrawn",
+            "canonical": False,
+            "outputs": outputs(),
+            "lifecycle": lifecycle(
+                created_at=item["lifecycle"]["created_at"],
+                source_issue=item["lifecycle"]["source_issue"],
+                source_pr=item["lifecycle"]["source_pr"],
+                cleanup_required=True,
+            ),
+        }
     )
 
 
@@ -1093,7 +1133,12 @@ def test_clean_transition_passes_after_docs_removed_and_summary_trimmed(
     assert validate(load_validator(), workspace) == []
 
 
-def withdraw_api_candidate(spec: dict[str, Any], *, remove_owner: bool = True) -> None:
+def withdraw_api_candidate(
+    spec: dict[str, Any],
+    *,
+    remove_owner: bool = True,
+    remove_source: bool = True,
+) -> None:
     item = find_entry(spec, "eebus-api-candidate")
     item.update(
         {
@@ -1109,6 +1154,8 @@ def withdraw_api_candidate(spec: dict[str, Any], *, remove_owner: bool = True) -
     )
     if remove_owner:
         del spec["docs_eebus"]["api/_candidate/lifecycle.md"]
+    if remove_source:
+        del spec["eebusreg"]["api/lifecycle.go"]
 
 
 @pytest.mark.parametrize(
@@ -1140,6 +1187,97 @@ def test_withdrawn_candidate_rejects_stale_owner_artifact(
     assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
         "artifact.withdrawn"
     ]
+
+
+def test_withdrawn_candidate_rejects_stale_source_artifact(
+    tmp_path: pathlib.Path,
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        withdraw_api_candidate(spec, remove_source=False)
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
+        "artifact.withdrawn"
+    ]
+
+
+@pytest.mark.parametrize(
+    "entry_id,current_mutation",
+    (
+        ("eebus-api-candidate", lambda spec: None),
+        ("eebus-architecture-planned", lambda spec: None),
+        ("platform-contracts", lambda spec: None),
+    ),
+    ids=("withdrawn-to-candidate", "withdrawn-to-planned", "withdrawn-to-active"),
+)
+def test_withdrawn_history_rejects_every_nonterminal_state(
+    tmp_path: pathlib.Path,
+    entry_id: str,
+    current_mutation: Callable[[dict[str, Any]], None],
+) -> None:
+    prior = base_manifest()
+    mark_manifest_entry_withdrawn(prior, entry_id)
+    prior_path = write_prior_manifest(tmp_path, prior)
+    workspace = build_workspace(tmp_path / "current", current_mutation)
+
+    assert validate(
+        load_validator(), workspace, prior_manifest=prior_path
+    ) == ["history.withdrawn-terminal"]
+
+
+def test_withdrawn_tombstone_ownership_is_immutable(
+    tmp_path: pathlib.Path,
+) -> None:
+    prior = base_manifest()
+    mark_manifest_entry_withdrawn(prior, "eebus-api-candidate")
+    prior_path = write_prior_manifest(tmp_path, prior)
+
+    def move_tombstone(spec: dict[str, Any]) -> None:
+        withdraw_api_candidate(spec)
+        find_entry(spec, "eebus-api-candidate")["owner"]["path"] = (
+            "api/_candidate/renamed.md"
+        )
+
+    workspace = build_workspace(tmp_path / "current", move_tombstone)
+    assert validate(
+        load_validator(), workspace, prior_manifest=prior_path
+    ) == ["history.tombstone-identity"]
+
+
+def test_first_manifest_introduction_passes_without_prior_manifest(
+    tmp_path: pathlib.Path,
+) -> None:
+    assert validate(load_validator(), build_workspace(tmp_path)) == []
+
+
+@pytest.mark.parametrize("contents", ("entries: [", "schema: incomplete\n"))
+def test_explicit_malformed_prior_manifest_fails_closed(
+    tmp_path: pathlib.Path, contents: str
+) -> None:
+    prior_path = tmp_path / "prior-manifest.yaml"
+    prior_path.write_text(contents, encoding="utf-8")
+    workspace = build_workspace(tmp_path / "current")
+    assert validate(
+        load_validator(), workspace, prior_manifest=prior_path
+    ) == ["history.prior-manifest"]
+
+
+def test_explicit_missing_prior_manifest_fails_closed(
+    tmp_path: pathlib.Path,
+) -> None:
+    workspace = build_workspace(tmp_path / "current")
+    assert validate(
+        load_validator(),
+        workspace,
+        prior_manifest=tmp_path / "missing-prior.yaml",
+    ) == ["history.prior-manifest"]
+
+
+def test_normal_nonterminal_history_progression_passes(
+    tmp_path: pathlib.Path,
+) -> None:
+    prior_path = write_prior_manifest(tmp_path, base_manifest())
+    workspace = build_workspace(tmp_path / "current", transition_e2)
+    assert validate(load_validator(), workspace, prior_manifest=prior_path) == []
 
 
 def test_candidate_target_cannot_activate_instead_of_reaching_required_state(
@@ -1265,6 +1403,35 @@ def test_semantic_copy_false_positive_controls(
 ) -> None:
     workspace = build_workspace(tmp_path, append_platform(addition))
     assert validate(load_validator(), workspace) == []
+
+
+@pytest.mark.parametrize(
+    "statement",
+    (
+        "The artifact MUST record the result and peers MUST negotiate before "
+        "sending messages.",
+        "The artifact MUST record the result, peers MUST negotiate before "
+        "sending messages.",
+        "The artifact MUST record the result, which peers MUST negotiate before "
+        "sending messages.",
+        "The artifact MUST record the result and negotiate before sending messages.",
+        "The documentation MUST own the evidence summary and peers MUST negotiate "
+        "before sending messages.",
+    ),
+    ids=(
+        "governance-and",
+        "governance-comma",
+        "governance-relative-clause",
+        "governance-shared-modal",
+        "ownership-and",
+    ),
+)
+def test_semantic_copy_exemptions_are_predicate_local(
+    tmp_path: pathlib.Path, statement: str
+) -> None:
+    addition = f"\n## SHIP Protocol Evidence Gate\n\n{statement}\n"
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == ["ownership.protocol-copy"]
 
 
 @pytest.mark.parametrize(

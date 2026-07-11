@@ -126,6 +126,13 @@ REFERENCE_DEFINITION = re.compile(
 VERSION = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)\Z")
 RENDERED_URL = re.compile(r"\bhttps?://[^\s<>\"']+", re.I)
 CLAUSE_BOUNDARY = re.compile(r"(?:;|(?<=[.!?])\s+)")
+EXPLICIT_PREDICATE_BOUNDARY = re.compile(
+    r"(?:,\s*|\s+\b(?:and|but|yet|while|whereas)\b\s+|"
+    r"\s+(?=(?:which|that|who)\b))"
+    r"(?=(?:(?:which|that|who)\b\s+)?[^,;]{0,80}"
+    r"\b(?:must|shall|should|required|mandatory|needs?\s+to)\b)",
+    re.I,
+)
 
 PROTOCOL_CONTEXT = re.compile(
     r"\b(?:SHIP|SPINE|SKI|wire protocol|protocol peer|protocol frame|protocol message)\b",
@@ -191,6 +198,17 @@ PLATFORM_GOVERNANCE_ACTION = re.compile(
     r"document|state)s?\b",
     re.I,
 )
+GOVERNANCE_COMPLEMENT = re.compile(
+    r"\b(?:record|report|claim|prove|verify|capture|include|reference|link|"
+    r"document|state)s?\b[^,;]*\b(?:whether|if)\b",
+    re.I,
+)
+NEGATIVE_GOVERNANCE_CLAIM = re.compile(
+    r"\b(?:must|shall|should|needs?\s+to)\s+not\s+"
+    r"(?:claim|report|state|document)\b",
+    re.I,
+)
+TOMBSTONE_IMMUTABLE_FIELDS = ("surface", "owner", "source")
 
 
 class _ManifestSchemaError(Exception):
@@ -465,15 +483,12 @@ def _inspect_yaml_node(root: yaml.nodes.Node | None) -> None:
     visit(root, 1)
 
 
-def _load_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, str | None]:
-    kind = _artifact_kind(root, MANIFEST.as_posix())
-    if kind == "missing":
-        return None, "manifest.missing"
-    if kind != "regular":
-        return None, "manifest.schema"
-    path = root / MANIFEST
+def _parse_manifest_path(path: pathlib.Path) -> dict[str, Any] | None:
     loader: yaml.SafeLoader | None = None
     try:
+        path_stat = path.lstat()
+        if not stat.S_ISREG(path_stat.st_mode):
+            raise _ManifestSchemaError
         raw = path.read_bytes()
         if len(raw) > MAX_MANIFEST_BYTES:
             raise _ManifestSchemaError
@@ -493,13 +508,23 @@ def _load_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, str | Non
         OverflowError,
         _ManifestSchemaError,
     ):
-        return None, "manifest.schema"
+        return None
     finally:
         if loader is not None:
             loader.dispose()
     if not isinstance(loaded, dict):
+        return None
+    return loaded
+
+
+def _load_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, str | None]:
+    kind = _artifact_kind(root, MANIFEST.as_posix())
+    if kind == "missing":
+        return None, "manifest.missing"
+    if kind != "regular":
         return None, "manifest.schema"
-    return loaded, None
+    loaded = _parse_manifest_path(root / MANIFEST)
+    return (loaded, None) if loaded is not None else (None, "manifest.schema")
 
 
 def _optional_text(value: Any) -> bool:
@@ -851,12 +876,17 @@ def _artifact_categories(
                 categories.add("artifact.source")
 
         elif state == "withdrawn" and entry["surface"] != "code_repo":
-            owner = entry["owner"]
-            owner_root = roots.get(owner["repository"])
-            if owner_root is not None and _artifact_kind(
-                owner_root, owner["path"]
-            ) != "missing":
-                categories.add("artifact.withdrawn")
+            checked: set[tuple[str, str]] = set()
+            for location in (entry["owner"], entry["source"]):
+                identity = (location["repository"], location["path"])
+                if identity in checked:
+                    continue
+                checked.add(identity)
+                location_root = roots.get(location["repository"])
+                if location_root is not None and _artifact_kind(
+                    location_root, location["path"]
+                ) != "missing":
+                    categories.add("artifact.withdrawn")
     return categories
 
 
@@ -1223,17 +1253,39 @@ def _documentation_ownership_summary(paragraph: str) -> bool:
 
 
 def _platform_governance_summary(heading_context: str, paragraph: str) -> bool:
-    return bool(
+    governance = bool(
         PLATFORM_GOVERNANCE_CONTEXT.search(heading_context)
         and PLATFORM_GOVERNANCE_PROSE.search(paragraph)
         and PLATFORM_GOVERNANCE_ACTION.search(paragraph)
     )
+    if not governance:
+        return False
+    has_owned_behavior = bool(
+        PROTOCOL_BEHAVIOR.search(paragraph)
+        or ARCHITECTURE_BEHAVIOR.search(paragraph)
+        or API_BEHAVIOR.search(paragraph)
+    )
+    return bool(
+        not has_owned_behavior
+        or GOVERNANCE_COMPLEMENT.search(paragraph)
+        or NEGATIVE_GOVERNANCE_CLAIM.search(paragraph)
+    )
+
+
+def _predicate_units(clause: str) -> list[tuple[str, bool]]:
+    """Return predicate-local text and whether a leading modal is inherited."""
+
+    return [
+        (part.strip(), False)
+        for part in EXPLICIT_PREDICATE_BOUNDARY.split(clause)
+        if part.strip()
+    ]
 
 
 def _prohibited_clause_categories(
-    heading_context: str, clause: str
+    heading_context: str, clause: str, *, inherited_normative: bool = False
 ) -> set[str]:
-    if NORMATIVE.search(clause) is None:
+    if not inherited_normative and NORMATIVE.search(clause) is None:
         return set()
     contextual = " ".join(part for part in (heading_context, clause) if part)
     categories: set[str] = set()
@@ -1260,23 +1312,21 @@ def _semantic_copy_categories(text: str) -> set[str]:
         ) and not explicitly_non_normative:
             categories.add("ownership.api-copy")
         for clause in CLAUSE_BOUNDARY.split(paragraph):
-            compact_clause = clause.strip()
-            if not compact_clause:
-                continue
-            prohibited = _prohibited_clause_categories(
-                heading_context, compact_clause
-            )
-            if not prohibited:
-                continue
-            if (
-                explicitly_non_normative
-                or _documentation_ownership_summary(compact_clause)
-                or _platform_governance_summary(
-                    heading_context, compact_clause
+            for predicate, inherited_normative in _predicate_units(clause):
+                prohibited = _prohibited_clause_categories(
+                    heading_context,
+                    predicate,
+                    inherited_normative=inherited_normative,
                 )
-            ):
-                continue
-            categories.update(prohibited)
+                if not prohibited:
+                    continue
+                if (
+                    explicitly_non_normative
+                    or _documentation_ownership_summary(predicate)
+                    or _platform_governance_summary(heading_context, predicate)
+                ):
+                    continue
+                categories.update(prohibited)
     return categories
 
 
@@ -1390,12 +1440,43 @@ def _validated_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, set[
     return manifest, _manifest_categories(manifest)
 
 
+def _history_categories(
+    manifest: dict[str, Any], prior_manifest_path: pathlib.Path | None
+) -> set[str]:
+    if prior_manifest_path is None:
+        return set()
+    prior = _parse_manifest_path(pathlib.Path(prior_manifest_path))
+    if prior is None or not _schema_valid(prior):
+        return {"history.prior-manifest"}
+    prior_errors = _manifest_categories(prior)
+    prior_errors.update(_state_categories(prior, {}))
+    if prior_errors:
+        return {"history.prior-manifest"}
+
+    categories: set[str] = set()
+    current_by_id = {entry["id"]: entry for entry in manifest["entries"]}
+    for prior_entry in prior["entries"]:
+        if prior_entry["state"] != "withdrawn":
+            continue
+        current_entry = current_by_id.get(prior_entry["id"])
+        if current_entry is None or current_entry["state"] != "withdrawn":
+            categories.add("history.withdrawn-terminal")
+            continue
+        if any(
+            current_entry[field] != prior_entry[field]
+            for field in TOMBSTONE_IMMUTABLE_FIELDS
+        ):
+            categories.add("history.tombstone-identity")
+    return categories
+
+
 def validate_repository(
     *,
     docs_ebus_root: pathlib.Path,
     mode: str,
     enforce_through: str,
     toolchain_mode: str,
+    prior_manifest: pathlib.Path | None = None,
     evaluated_at: str | None = None,
     evaluation_source: str | None = None,
 ) -> list[str]:
@@ -1408,6 +1489,7 @@ def validate_repository(
     categories.update(manifest_categories)
     if manifest is None:
         return _result(categories)
+    categories.update(_history_categories(manifest, prior_manifest))
     categories.update(_enforcement_categories(manifest, enforce_through))
     roots = {"helianthus-docs-ebus": root} if root_valid else {}
     categories.update(_state_categories(manifest, roots))
@@ -1432,6 +1514,7 @@ def validate_workspace(
     eebusreg_ref: str | None,
     enforce_through: str,
     toolchain_mode: str,
+    prior_manifest: pathlib.Path | None = None,
 ) -> list[str]:
     roots = {
         "helianthus-docs-ebus": pathlib.Path(docs_ebus_root),
@@ -1474,6 +1557,7 @@ def validate_workspace(
     categories.update(manifest_categories)
     if manifest is None:
         return _result(categories)
+    categories.update(_history_categories(manifest, prior_manifest))
     categories.update(_enforcement_categories(manifest, enforce_through))
     categories.update(_state_categories(manifest, valid_roots))
     categories.update(_artifact_categories(manifest, valid_roots))
@@ -1516,6 +1600,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--eebusreg-ref")
     parser.add_argument("--evaluated-at")
     parser.add_argument("--evaluation-source")
+    parser.add_argument("--prior-manifest", type=pathlib.Path)
     parser.add_argument("--enforce-through", required=True, choices=MILESTONES)
     parser.add_argument(
         "--toolchain-mode", default="exact", choices=tuple(sorted(TOOLCHAIN_MODES))
@@ -1531,6 +1616,7 @@ def main(argv: list[str] | None = None) -> int:
             mode=args.mode,
             enforce_through=args.enforce_through,
             toolchain_mode=args.toolchain_mode,
+            prior_manifest=args.prior_manifest,
             evaluated_at=args.evaluated_at,
             evaluation_source=args.evaluation_source,
         )
@@ -1547,6 +1633,7 @@ def main(argv: list[str] | None = None) -> int:
             eebusreg_ref=args.eebusreg_ref,
             enforce_through=args.enforce_through,
             toolchain_mode=args.toolchain_mode,
+            prior_manifest=args.prior_manifest,
         )
     for diagnostic in diagnostics:
         print(diagnostic)

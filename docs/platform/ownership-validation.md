@@ -64,6 +64,16 @@ milestone, its state must equal `enforcement.required_state`. A valid
 required, the owner artifact must be absent, and later stages never resurrect
 the entry.
 
+Terminal withdrawal is also checked against history. When a trusted prior
+manifest exists, pass it as `--prior-manifest PATH`. Every prior `withdrawn`
+entry must remain present by `id`, remain `withdrawn`, and retain its immutable
+`surface`, `owner`, and `source` fields. Its `cleanup_required` value remains
+true under the current-state rules, and both distinct owner and source
+artifacts must remain absent. A missing, unreadable, non-regular, malformed, or
+internally inconsistent explicitly supplied prior manifest fails closed. When
+the trusted base has no manifest, omitting the option is the valid
+first-introduction case.
+
 The current PLATFORM transition is:
 
 - existing protocol ownership and the API representation schema are `active`;
@@ -97,6 +107,26 @@ checked out into a separate clean root and validated without sibling discovery
 or ambient checkout state. A missing, symbolic, moving, mismatched, dirty, or
 incorrect repository root is terminal. Dependency pins change only in the PR
 that owns the corresponding successor transition.
+
+For pull requests, both Docs Checks and Combined Ref independently materialize
+the prior manifest from `github.event.pull_request.base.sha` with the pinned
+checkout action. The base checkout is read only: no scripts, dependencies, or
+commands from it are executed. If that checkout contains the manifest, its
+absolute file path is supplied to the candidate validator; if it does not,
+validation proceeds as the first manifest introduction. Python never resolves
+or executes an operator-supplied command or Git ref.
+
+Local CI uses the same file contract. A developer with a trusted prior checkout
+invokes it deterministically as:
+
+```bash
+PLATFORM_PRIOR_MANIFEST=/path/to/trusted-base/docs/platform/manifests/eebus-doc-ownership.yaml \
+  ./scripts/ci_local.sh
+```
+
+Leave `PLATFORM_PRIOR_MANIFEST` unset only when no prior manifest exists. If it
+is set, `ci_local.sh` passes the path unchanged to `--prior-manifest`, so bad or
+missing explicit input fails closed.
 
 GitHub uses exact Python `3.12.10` and PyYAML `6.0.2`. The validator reads the
 actual Python runtime and installed PyYAML distribution/module versions; caller

@@ -168,11 +168,16 @@ python3 -m pytest -q tests/test_source_address_table_checker.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-PLATFORM)"
 python3 -m pytest -q tests/test_platform_contracts.py
+set --
+if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then
+  set -- --prior-manifest "${PLATFORM_PRIOR_MANIFEST}"
+fi
 python3 scripts/validate_platform_contracts.py \
   --mode repository \
   --docs-ebus-root . \
   --enforce-through MSP-DOCS-PLATFORM \
-  --toolchain-mode "${platform_toolchain_mode}"
+  --toolchain-mode "${platform_toolchain_mode}" \
+  "$@"
 
 echo "==> check eBUS address-table taxonomy + frame-type contract hash (Phase C M-C0)"
 bash scripts/check_address_table_taxonomy_hash.sh
