@@ -52,7 +52,7 @@ Public artifacts must include:
 - listener socket reference, mDNS browse reference, and mDNS resolve reference
   for `_ship._tcp`;
 - manual endpoint fallback result;
-- disposable credential store path, permission modes, restart continuity, and
+- disposable credential storage path, permission modes, restart continuity, and
   proof that production trust was not written.
 - per-case evidence IDs for `EEBUS-G05` through `EEBUS-G09`.
 

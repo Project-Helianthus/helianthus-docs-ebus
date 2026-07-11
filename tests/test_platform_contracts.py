@@ -1118,6 +1118,10 @@ def test_required_platform_artifacts_exist() -> None:
     assert all((REPO_ROOT / path).is_file() for path in CONTRACT_PAGES)
 
 
+def test_canonical_repository_validation_passes() -> None:
+    assert repository_validate(load_validator(), REPO_ROOT) == []
+
+
 def test_production_validator_entrypoint_exists() -> None:
     assert VALIDATOR_PATH.is_file()
 
