@@ -1311,7 +1311,7 @@ def test_ci_workflow_uses_locked_python_pip_and_dependencies(
     assert len(python_steps) == 1
     python_step = python_steps[0]
     assert python_step["with"]["python-version"] == PINNED_CI_PYTHON
-    assert python_step.get("env", {}).get("PIP_NO_INDEX") == "1"
+    assert "PIP_NO_INDEX" not in python_step.get("env", {})
 
     bootstrap_steps = [
         step for step in steps if step.get("name") == "Verify pinned Python and pip"
@@ -1323,13 +1323,15 @@ def test_ci_workflow_uses_locked_python_pip_and_dependencies(
     assert 'version("pip")' in bootstrap
     assert f'"{PINNED_CI_PIP}"' in bootstrap
 
-    pip_installs = [
-        step["run"]
+    pip_install_steps = [
+        step
         for step in steps
         if "python -m pip install" in step.get("run", "")
     ]
-    assert len(pip_installs) == 1
-    install = pip_installs[0]
+    assert len(pip_install_steps) == 1
+    pip_install_step = pip_install_steps[0]
+    assert pip_install_step.get("env", {}).get("PIP_NO_INDEX") == "1"
+    install = pip_install_step["run"]
     assert "--require-hashes" in install
     assert "--no-deps" in install
     assert "--no-build-isolation" in install

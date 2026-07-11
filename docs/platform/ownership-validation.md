@@ -165,9 +165,10 @@ missing explicit input fails closed. The validator rejects a symbolic link at
 the file or any parent path component before reading the manifest.
 
 GitHub uses exact Python `3.12.10`, its bundled pip `25.0.1`, and PyYAML
-`6.0.2`. The setup step disables index access while materializing Python so its
-installer cannot upgrade itself, then explicitly verifies both Python and pip.
-Every direct and transitive CI dependency is fully pinned in
+`6.0.2`. The commit-pinned setup action materializes Python and its bundled pip,
+then the workflow explicitly verifies both versions. Index access is disabled
+for the subsequent dependency-install step, where every direct and transitive
+CI dependency is fully pinned in
 `requirements-ci.txt`; installation uses `--require-hashes`, `--no-deps`, and
 `--no-build-isolation`. The lock includes the accepted universal wheels and
 source distributions plus PyYAML wheels for GitHub Linux x86_64 and local macOS
