@@ -4,6 +4,36 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
+platform_toolchain_mode="${PLATFORM_TOOLCHAIN_MODE:-supported}"
+platform_docs_ebus_repository="${PLATFORM_DOCS_EBUS_REPOSITORY:-Project-Helianthus/helianthus-docs-ebus}"
+case "${platform_toolchain_mode}" in
+  exact|supported) ;;
+  *)
+    echo "PLATFORM_TOOLCHAIN_MODE must be exact or supported." >&2
+    exit 2
+    ;;
+esac
+
+echo "==> verify pinned workflow/schema gate tools"
+if ! command -v actionlint >/dev/null 2>&1; then
+  echo "actionlint v1.7.7 is required: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7" >&2
+  exit 2
+fi
+if [ "$(actionlint -version | sed -n '1p')" != "v1.7.7" ]; then
+  echo "actionlint must report v1.7.7." >&2
+  exit 2
+fi
+if ! command -v jv >/dev/null 2>&1; then
+  echo "jv v0.7.0 is required: go install github.com/santhosh-tekuri/jsonschema/cmd/jv@v0.7.0" >&2
+  exit 2
+fi
+if [ "$(jv --version | sed -n '1p')" != "github.com/santhosh-tekuri/jsonschema/cmd/jv v0.7.0" ]; then
+  echo "jv must report v0.7.0." >&2
+  exit 2
+fi
+actionlint .github/workflows/*.yml
+echo "Pinned workflow/schema gate tools passed."
+
 echo "==> verify markdown files are present"
 count="$(git ls-files '*.md' | wc -l | tr -d ' ')"
 if [ "${count}" -eq 0 ]; then
@@ -86,56 +116,50 @@ if failed:
 print("Terminology gate passed.")
 PY
 
-echo "==> private IPv4 address gate (docs must use placeholders)"
+echo "==> private network address gate (docs must use placeholders)"
 python3 - <<'PY'
 from __future__ import annotations
 
-import ipaddress
 import pathlib
-import re
 import subprocess
 import sys
 
+sys.path.insert(0, str(pathlib.Path("scripts").resolve()))
+from validate_platform_contracts import _private_network_literals
+
 md_files = subprocess.check_output(["git", "ls-files", "*.md"], text=True).splitlines()
-ipv4_re = re.compile(r"\b(?:(?:\d{1,3})\.){3}(?:\d{1,3})\b")
-
-PRIVATE_NETS = [
-    ipaddress.ip_network("10.0.0.0/8"),
-    ipaddress.ip_network("172.16.0.0/12"),
-    ipaddress.ip_network("192.168.0.0/16"),
-    ipaddress.ip_network("100.64.0.0/10"),  # CGNAT
-    ipaddress.ip_network("169.254.0.0/16"),  # link-local
-]
-
-def is_private_ipv4(ip: str) -> bool:
-    try:
-        addr = ipaddress.ip_address(ip)
-    except ValueError:
-        return False
-    if addr.version != 4:
-        return False
-    return any(addr in net for net in PRIVATE_NETS)
-
 failed = False
 
 for file_path in md_files:
     text = pathlib.Path(file_path).read_text(encoding="utf-8")
-    for match in ipv4_re.finditer(text):
-        ip = match.group(0)
-        if not is_private_ipv4(ip):
-            continue
-        line = text.count("\n", 0, match.start()) + 1
-        print(f"{file_path}:{line}: private IPv4 address found (redact and use a placeholder)", file=sys.stderr)
+    for _, offset in _private_network_literals(text):
+        line = text.count("\n", 0, offset) + 1
+        print(f"{file_path}:{line}: private network address found (redact and use a placeholder)", file=sys.stderr)
         failed = True
 
 if failed:
     sys.exit(1)
-print("Private IPv4 gate passed.")
+print("Private network gate passed.")
 PY
 
 echo "==> check eBUS source-address table"
 python3 scripts/check_source_address_table_against_official_specs.py --run-canary
 python3 -m pytest -q tests/test_source_address_table_checker.py
+
+echo "==> check cross-runtime platform contracts (MSP-DOCS-PLATFORM)"
+python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow
+python3 -m pytest -q tests/test_platform_contracts.py -k 'not trusted_prior_workflow'
+set --
+if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then
+  set -- --prior-manifest "${PLATFORM_PRIOR_MANIFEST}"
+fi
+python3 scripts/validate_platform_contracts.py \
+  --mode repository \
+  --docs-ebus-root . \
+  --docs-ebus-repository "${platform_docs_ebus_repository}" \
+  --enforce-through MSP-DOCS-PLATFORM \
+  --toolchain-mode "${platform_toolchain_mode}" \
+  "$@"
 
 echo "==> check eBUS address-table taxonomy + frame-type contract hash (Phase C M-C0)"
 bash scripts/check_address_table_taxonomy_hash.sh

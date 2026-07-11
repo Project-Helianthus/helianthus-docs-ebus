@@ -10,8 +10,8 @@
 #        (one cache entry per eBUS address).
 #
 # CI installs jv via setup-go (see .github/workflows/docs-ci.yml).
-# Local invocation: requires `go install github.com/santhosh-tekuri/jsonschema/cmd/jv@v0.7.0`
-# (or any tagged release providing the cmd/jv binary).
+# Local invocation requires the exact pinned binary:
+# `go install github.com/santhosh-tekuri/jsonschema/cmd/jv@v0.7.0`.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -37,7 +37,12 @@ if ! command -v jv >/dev/null 2>&1; then
 fi
 
 echo "==> jv version"
-jv --version || true
+jv_version="$(jv --version | sed -n '1p')"
+if [ "${jv_version}" != "github.com/santhosh-tekuri/jsonschema/cmd/jv v0.7.0" ]; then
+  echo "jv must report v0.7.0." >&2
+  exit 2
+fi
+echo "${jv_version}"
 
 # Pre-flight: every fixture must be readable. A typoed/deleted fixture path
 # would otherwise make jv exit non-zero from a file-open error and the
