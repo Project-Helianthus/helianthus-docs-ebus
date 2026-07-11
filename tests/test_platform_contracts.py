@@ -21,10 +21,28 @@ WORKFLOW_PATHS = (
     REPO_ROOT / ".github/workflows/docs-ci.yml",
     REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml",
 )
+REQUIREMENTS_CI_PATH = REPO_ROOT / "requirements-ci.txt"
 TRUSTED_PRIOR_STEP = "Materialize trusted prior manifest"
 PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
 CLEAN_STAGE = "MSP-DOCS-CLEAN"
+PINNED_CI_PYTHON = "3.12.10"
+PINNED_CI_PIP = "25.0.1"
+PINNED_CI_REQUIREMENTS = {
+    "iniconfig": "2.3.0",
+    "packaging": "25.0",
+    "pluggy": "1.6.0",
+    "pygments": "2.19.2",
+    "pyyaml": "6.0.2",
+    "pytest": "9.0.2",
+}
+PYYAML_PORTABLE_HASHES = {
+    # CPython 3.12: GitHub Linux x86_64, macOS x86_64, macOS arm64, sdist.
+    "80bab7bfc629882493af4aa31a4cfa43a4c57c83813253626916b8c7ada83476",
+    "c70c95198c015b85feafc136515252a261a84561b7b1d51e3384e0655ddf25ab",
+    "ce826d6ef20b1bc864f0a68340c8b3287705cae2f8b4b1d932177dcc76721725",
+    "d584d9ec91ad65861cc08d42e834324ef890a082e591037abe114850ff7bbc3e",
+}
 CONTRACT_PAGES = (
     pathlib.Path("docs/platform/cross-runtime-envelope.md"),
     pathlib.Path("docs/platform/hash-auth-binding.md"),
@@ -63,6 +81,8 @@ PAGE_REQUIRED_TERMS = {
         "supported",
         "actionlint `v1.7.7`",
         "jv v0.7.0",
+        "pip `25.0.1`",
+        "--require-hashes",
         "six decimal digits",
         "inclusive",
     ),
@@ -681,6 +701,34 @@ def trusted_prior_workflow_step(path: pathlib.Path) -> dict[str, Any]:
     raise AssertionError(f"{TRUSTED_PRIOR_STEP!r} missing from {path.name}")
 
 
+def locked_requirements(path: pathlib.Path) -> dict[str, tuple[str, set[str]]]:
+    blocks: list[str] = []
+    current: list[str] = []
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if raw_line[:1].isspace():
+            assert current, f"orphan requirement continuation in {path.name}"
+            current.append(line.removesuffix("\\").strip())
+            continue
+        if current:
+            blocks.append(" ".join(current))
+        current = [line.removesuffix("\\").strip()]
+    if current:
+        blocks.append(" ".join(current))
+
+    parsed: dict[str, tuple[str, set[str]]] = {}
+    for block in blocks:
+        match = re.match(r"([A-Za-z0-9_.-]+)==([^\s]+)", block)
+        assert match is not None, f"unpinned requirement: {block}"
+        name = match.group(1).casefold().replace("_", "-")
+        hashes = set(re.findall(r"--hash=sha256:([0-9a-f]{64})(?:\s|$)", block))
+        assert name not in parsed, f"duplicate requirement: {name}"
+        parsed[name] = (match.group(2), hashes)
+    return parsed
+
+
 def create_trusted_base_fixture(root: pathlib.Path, kind: str) -> tuple[str, bytes]:
     root.mkdir(parents=True)
     manifest = root / MANIFEST_PATH
@@ -1235,6 +1283,59 @@ def test_trusted_prior_workflow_static_contract(workflow_path: pathlib.Path) -> 
     assert "${RUNNER_TEMP}/helianthus-trusted-prior-" in script
 
 
+def test_ci_requirement_lock_is_complete_and_portable() -> None:
+    requirements = locked_requirements(REQUIREMENTS_CI_PATH)
+    assert {
+        name: version for name, (version, _) in requirements.items()
+    } == PINNED_CI_REQUIREMENTS
+    assert all(hashes for _, hashes in requirements.values())
+    assert all(len(hashes) >= 2 for _, hashes in requirements.values())
+    assert PYYAML_PORTABLE_HASHES <= requirements["pyyaml"][1]
+
+
+@pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
+def test_ci_workflow_uses_locked_python_pip_and_dependencies(
+    workflow_path: pathlib.Path,
+) -> None:
+    workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    steps = [
+        step
+        for job in workflow["jobs"].values()
+        for step in job.get("steps", [])
+    ]
+    python_steps = [
+        step
+        for step in steps
+        if step.get("uses", "").startswith("actions/setup-python@")
+    ]
+    assert len(python_steps) == 1
+    python_step = python_steps[0]
+    assert python_step["with"]["python-version"] == PINNED_CI_PYTHON
+    assert python_step.get("env", {}).get("PIP_NO_INDEX") == "1"
+
+    bootstrap_steps = [
+        step for step in steps if step.get("name") == "Verify pinned Python and pip"
+    ]
+    assert len(bootstrap_steps) == 1
+    bootstrap = bootstrap_steps[0]["run"]
+    assert "sys.version_info[:3]" in bootstrap
+    assert "(3, 12, 10)" in bootstrap
+    assert 'version("pip")' in bootstrap
+    assert f'"{PINNED_CI_PIP}"' in bootstrap
+
+    pip_installs = [
+        step["run"]
+        for step in steps
+        if "python -m pip install" in step.get("run", "")
+    ]
+    assert len(pip_installs) == 1
+    install = pip_installs[0]
+    assert "--require-hashes" in install
+    assert "--no-deps" in install
+    assert "--no-build-isolation" in install
+    assert "requirements-ci.txt" in install
+
+
 @pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
 def test_trusted_prior_workflow_materializes_inspected_blob(
     tmp_path: pathlib.Path, workflow_path: pathlib.Path
@@ -1486,6 +1587,63 @@ def test_clean_scans_documentation_authority_outside_docs(
     assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
         "ownership.code-repo-substantive"
     ]
+
+
+@pytest.mark.parametrize(
+    "path",
+    (
+        "AUTHORITY.txt",
+        "notes/nested/AUTHORITY.txt",
+        "PROTOCOL.rst",
+        "notes/nested/PROTOCOL.rst",
+        "PROTOCOL.adoc",
+        "notes/nested/PROTOCOL.adoc",
+    ),
+    ids=(
+        "root-txt",
+        "nested-txt",
+        "root-rst",
+        "nested-rst",
+        "root-adoc",
+        "nested-adoc",
+    ),
+)
+def test_clean_scans_indented_non_markdown_authority(
+    tmp_path: pathlib.Path, path: str
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        transition_clean(spec)
+        spec["eebusreg"][path] = (
+            "    SHIP peers MUST negotiate before sending protocol messages.\n"
+        )
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
+        "ownership.code-repo-substantive"
+    ]
+
+
+@pytest.mark.parametrize(
+    "path,text",
+    (
+        (
+            "EXAMPLES.md",
+            "```text\nSHIP peers MUST negotiate before sending protocol messages.\n```\n",
+        ),
+        (
+            "notes/nested/EXAMPLES.md",
+            "    SHIP peers MUST negotiate before sending protocol messages.\n",
+        ),
+    ),
+    ids=("fenced-markdown", "indented-markdown"),
+)
+def test_clean_keeps_markdown_code_examples_non_authoritative(
+    tmp_path: pathlib.Path, path: str, text: str
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        transition_clean(spec)
+        spec["eebusreg"][path] = text
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == []
 
 
 @pytest.mark.parametrize(
@@ -2241,6 +2399,33 @@ def test_heading_context_semantic_copy_false_positive_controls(
 @pytest.mark.parametrize(
     "addition",
     (
+        "\n[Unmerged](../../helianthus\\-docs\\-eebus/architecture/future.md)\n",
+        "\n[Unmerged][future]\n\n"
+        "[future]: ../../helianthus&#45;docs&#x2d;eebus/architecture/future.md\n",
+        "\n[Unmerged](<../../helianthus-docs-eebus&sol;architecture&sol;future.md>)\n",
+        "\n<https://github.com/Project-Helianthus/"
+        "helianthus\\-docs\\-eebus/blob/main/architecture/future.md>\n",
+        "\nUnmerged: https://github.com/Project-Helianthus/"
+        "helianthus-docs-eebus&sol;blob&sol;main&sol;architecture&sol;future.md\n",
+    ),
+    ids=(
+        "inline-backslash-punctuation",
+        "reference-numeric-entities",
+        "inline-angle-named-entities",
+        "autolink-backslash-punctuation",
+        "bare-named-entities",
+    ),
+)
+def test_markdown_destinations_are_normalized_before_forward_classification(
+    tmp_path: pathlib.Path, addition: str
+) -> None:
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == ["link.forward"]
+
+
+@pytest.mark.parametrize(
+    "addition",
+    (
         "\n[Protocol [stable]][proto]\n\n"
         "[proto]: https://github.com/Project-Helianthus/helianthus-docs-eebus/"
         "blob/__DOCS_EEBUS_REF__/protocols/ship-spine.md \"title\"\n",
@@ -2255,6 +2440,9 @@ def test_heading_context_semantic_copy_false_positive_controls(
         "protocols/ship-spine.md.\n",
         "\n```markdown\n[Bad][future]\n"
         "[future]: ../../helianthus-docs-eebus/architecture/future.md\n```\n",
+        "\nLiteral escaped path text: "
+        "../../helianthus\\-docs\\-eebus/architecture/future.md\n",
+        "\n[Safe helianthus\\-docs\\-eebus text](https://example.invalid/)\n",
     ),
     ids=(
         "reference-style-active",
@@ -2262,6 +2450,8 @@ def test_heading_context_semantic_copy_false_positive_controls(
         "mixed-case-autolink-active",
         "mixed-case-bare-active",
         "code-link-ignored",
+        "escaped-literal-text",
+        "escaped-link-text",
     ),
 )
 def test_markdown_link_parser_accepts_only_real_active_links(
@@ -2305,12 +2495,32 @@ def test_markdown_link_parser_accepts_only_real_active_links(
             "protocols/ship-spine.md\n",
             [],
         ),
+        (
+            "\n[Protocol][duplicate-id]\n\n"
+            "[duplicate\\-id]: ../../helianthus\\-docs\\-eebus/"
+            "architecture/future.md\n"
+            "[duplicate&#45;id]: https://github.com/Project-Helianthus/"
+            "helianthus-docs-eebus/blob/__DOCS_EEBUS_REF__/"
+            "protocols/ship-spine.md\n",
+            ["link.forward"],
+        ),
+        (
+            "\n[Protocol][duplicate-id]\n\n"
+            "[duplicate&#45;id]: https://github.com/Project-Helianthus/"
+            "helianthus-docs-eebus/blob/__DOCS_EEBUS_REF__/"
+            "protocols/ship-spine.md\n"
+            "[duplicate\\-id]: ../../helianthus\\-docs\\-eebus/"
+            "architecture/future.md\n",
+            [],
+        ),
     ),
     ids=(
         "prohibited-first-safe-second",
         "safe-first-prohibited-second",
         "normalized-case-and-spacing",
         "ordinary-reference",
+        "normalized-id-prohibited-first-safe-second",
+        "normalized-id-safe-first-prohibited-second",
     ),
 )
 def test_markdown_reference_definitions_use_first_definition(

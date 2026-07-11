@@ -110,9 +110,12 @@ eebusreg checkout, including root architecture files and alternate nested
 locations. Normative protocol, architecture, or API authority is rejected
 outside the canonical docs repository. The scan is bounded to documentation
 names and extensions, skips Git metadata and generated, build, vendor, and cache
-trees, and deterministically ignores binary files. The active minimal README,
-noncanonical links, and evidence summaries remain governed by their narrower
-summary and predicate-local contracts.
+trees, and deterministically ignores binary files. Markdown fenced, indented,
+and inline code remains non-authoritative. Other documentation formats,
+including `.txt`, `.rst`, and `.adoc`, are scanned as raw prose so indentation
+cannot suppress normative text. The active minimal README, noncanonical links,
+and evidence summaries remain governed by their narrower summary and
+predicate-local contracts.
 
 An E2 or CLEAN check cannot reuse PLATFORM enforcement: each successor invokes
 the same combined-ref validator with its own required stage. Planned entries
@@ -161,11 +164,18 @@ is set, `ci_local.sh` passes the path unchanged to `--prior-manifest`, so bad or
 missing explicit input fails closed. The validator rejects a symbolic link at
 the file or any parent path component before reading the manifest.
 
-GitHub uses exact Python `3.12.10` and PyYAML `6.0.2`. The validator reads the
-actual Python runtime and installed PyYAML distribution/module versions; caller
-strings cannot assert them. Local developers use the documented `supported`
-mode: Python `>=3.12.0,<3.15.0` and PyYAML `>=6.0.2,<7.0.0`, with distribution
-and imported-module versions equal. GitHub always uses `exact` mode.
+GitHub uses exact Python `3.12.10`, its bundled pip `25.0.1`, and PyYAML
+`6.0.2`. The setup step disables index access while materializing Python so its
+installer cannot upgrade itself, then explicitly verifies both Python and pip.
+Every direct and transitive CI dependency is fully pinned in
+`requirements-ci.txt`; installation uses `--require-hashes`, `--no-deps`, and
+`--no-build-isolation`. The lock includes the accepted universal wheels and
+source distributions plus PyYAML wheels for GitHub Linux x86_64 and local macOS
+x86_64/arm64. The validator reads the actual Python runtime and installed
+PyYAML distribution/module versions; caller strings cannot assert them. Local
+developers use the documented `supported` mode: Python `>=3.12.0,<3.15.0` and
+PyYAML `>=6.0.2,<7.0.0`, with distribution and imported-module versions equal.
+GitHub always uses `exact` mode.
 
 Workflow validation is gated by actionlint `v1.7.7`; runtime-state schema
 validation is gated by `jv v0.7.0`. Both binaries are installed at pinned Go
@@ -197,5 +207,8 @@ reference-style, HTML, autolink, and bare GitHub URL forms are parsed outside
 fenced, indented, and inline code. GitHub owner and repository names are
 compared case-insensitively. Normalized reference identifiers use Markdown's
 first-definition-wins behavior, including duplicate identifiers that differ
-only in case or whitespace. Moving, candidate, planned, withdrawn, missing,
-and symlink targets fail.
+by case, whitespace, escaped punctuation, or character references. Before
+classification, destinations normalize HTML character references and only the
+ASCII punctuation escapes defined by CommonMark; unrelated backslashes and
+escaped link text are not blanket-unescaped. Moving, candidate, planned,
+withdrawn, missing, and symlink targets fail.

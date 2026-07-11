@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import html
 import importlib.metadata
 import ipaddress
 import os
 import pathlib
 import re
 import stat
+import string
 import subprocess
 import sys
 import urllib.parse
@@ -127,6 +129,9 @@ ATX_HEADING = re.compile(r"^ {0,3}(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$")
 SETEXT_HEADING = re.compile(r"^ {0,3}(=+|-+)[ \t]*$")
 REFERENCE_DEFINITION = re.compile(
     r"^ {0,3}\[([^\]]+)\]:[ \t]*(?:<([^>\n]+)>|(\S+))"
+)
+COMMONMARK_BACKSLASH_ESCAPE = re.compile(
+    rf"\\([{re.escape(string.punctuation)}])"
 )
 VERSION = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)\Z")
 RENDERED_URL = re.compile(r"\bhttps?://[^\s<>\"']+", re.I)
@@ -253,6 +258,7 @@ DOCUMENTATION_EXTENSIONS = {
     ".rst",
     ".txt",
 }
+MARKDOWN_EXTENSIONS = {".markdown", ".md", ".mdown", ".mkd"}
 DOCUMENTATION_NAMES = re.compile(
     r"(?:README|ARCHITECTURE|DESIGN|PROTOCOL|API|CONTRIBUTING|CHANGELOG|"
     r"SECURITY|SUPPORT|GOVERNANCE|ROADMAP)(?:\..*)?\Z",
@@ -1112,6 +1118,10 @@ def _strip_markdown_code(text: str) -> str:
     return "\n".join(clean)
 
 
+def _is_markdown_document(path: str) -> bool:
+    return pathlib.PurePosixPath(path).suffix.casefold() in MARKDOWN_EXTENSIONS
+
+
 def _platform_markdown(root: pathlib.Path) -> Iterable[tuple[pathlib.Path, str]]:
     platform = root / "docs/platform"
     if _artifact_kind(root, "docs/platform") != "directory":
@@ -1129,15 +1139,28 @@ def _platform_markdown(root: pathlib.Path) -> Iterable[tuple[pathlib.Path, str]]
             continue
 
 
+def _normalize_commonmark_text(value: str) -> str:
+    decoded = html.unescape(value)
+    return COMMONMARK_BACKSLASH_ESCAPE.sub(r"\1", decoded)
+
+
 def _normalize_reference_label(value: str) -> str:
-    return " ".join(value.split()).casefold()
+    return " ".join(_normalize_commonmark_text(value).split()).casefold()
+
+
+def _commonmark_escape_at(text: str, index: int) -> bool:
+    return (
+        text[index] == "\\"
+        and index + 1 < len(text)
+        and text[index + 1] in string.punctuation
+    )
 
 
 def _find_markdown_closer(text: str, start: int, opening: str, closing: str) -> int:
     depth = 1
     index = start
     while index < len(text):
-        if text[index] == "\\":
+        if _commonmark_escape_at(text, index):
             index += 2
             continue
         if text[index] == opening:
@@ -1155,15 +1178,22 @@ def _inline_destination(value: str) -> str | None:
     if not content:
         return None
     if content.startswith("<"):
-        end = content.find(">", 1)
-        return content[1:end] if end > 1 else None
+        index = 1
+        while index < len(content):
+            if _commonmark_escape_at(content, index):
+                index += 2
+                continue
+            if content[index] == ">":
+                return content[1:index] if index > 1 else None
+            index += 1
+        return None
     depth = 0
     result: list[str] = []
     index = 0
     while index < len(content):
         char = content[index]
-        if char == "\\" and index + 1 < len(content):
-            result.append(content[index + 1])
+        if _commonmark_escape_at(content, index):
+            result.extend(content[index : index + 2])
             index += 2
             continue
         if char == "(":
@@ -1262,13 +1292,15 @@ def _markdown_links(text: str) -> list[str]:
         for match in RENDERED_URL.finditer(body)
         if (target := _trim_rendered_url(match.group(0)))
     )
-    return list(dict.fromkeys(targets))
+    return list(
+        dict.fromkeys(_normalize_commonmark_text(target) for target in targets)
+    )
 
 
 def _eebus_link_target(
     target: str, docs_eebus_ref: str
 ) -> tuple[str | None, bool]:
-    decoded = urllib.parse.unquote(target)
+    decoded = _normalize_commonmark_text(urllib.parse.unquote(target))
     parsed = urllib.parse.urlsplit(decoded)
     hostname = (parsed.hostname or "").casefold()
     if hostname in {"github.com", "www.github.com"}:
@@ -1528,9 +1560,9 @@ def _prohibited_clause_categories(
     return categories
 
 
-def _semantic_copy_categories(text: str) -> set[str]:
+def _semantic_copy_categories(text: str, *, markdown: bool = True) -> set[str]:
     categories: set[str] = set()
-    clean = _strip_markdown_code(text)
+    clean = _strip_markdown_code(text) if markdown else text
     for heading_context, paragraph, explicitly_non_normative in _semantic_sections(
         clean
     ):
@@ -1640,13 +1672,14 @@ def _code_repo_categories(
         except UnicodeError:
             categories.add("ownership.summary-only-substantive")
             continue
-        prose = _strip_markdown_code(text)
+        markdown = _is_markdown_document(entry["owner"]["path"])
+        prose = _strip_markdown_code(text) if markdown else text
         nonblank_lines = [line for line in text.splitlines() if line.strip()]
         if (
             NORMATIVE.search(prose)
             or len(nonblank_lines) > 12
             or re.search(r"(?m)^##\s+", prose)
-            or _semantic_copy_categories(prose)
+            or _semantic_copy_categories(prose, markdown=False)
         ):
             categories.add("ownership.summary-only-substantive")
     code_root = roots.get("helianthus-eebusreg")
@@ -1660,7 +1693,9 @@ def _code_repo_categories(
             if relative in summary_paths:
                 continue
             contextual = f"# eeBUS code repository {relative}\n\n{text}"
-            if _semantic_copy_categories(contextual):
+            if _semantic_copy_categories(
+                contextual, markdown=_is_markdown_document(relative)
+            ):
                 categories.add("ownership.code-repo-substantive")
     return categories
 
