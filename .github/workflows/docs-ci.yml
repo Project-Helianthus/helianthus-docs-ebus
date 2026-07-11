@@ -204,6 +204,7 @@ jobs:
       contents: read
     uses: ./.github/workflows/platform-contracts-combined-ref.yml
     with:
+      docs_ebus_repository: ${{ github.event.pull_request.head.repo.full_name }}
       docs_ebus_ref: ${{ github.event.pull_request.head.sha }}
       docs_ebus_base_ref: ${{ github.event.pull_request.base.sha }}
       docs_eebus_ref: f23a7c35e6803501f185923de061f935bbac1466

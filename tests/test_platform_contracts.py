@@ -1374,6 +1374,26 @@ def test_main_expiry_workflow_uses_trusted_runner_clock() -> None:
     assert "--evaluation-source github.runner.utc_now" in script
 
 
+def test_combined_ref_workflow_checks_out_pr_head_repository() -> None:
+    caller = (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(
+        encoding="utf-8"
+    )
+    reusable = (
+        REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
+    ).read_text(encoding="utf-8")
+
+    assert (
+        "docs_ebus_repository: "
+        "${{ github.event.pull_request.head.repo.full_name }}" in caller
+    )
+    assert "docs_ebus_ref: ${{ github.event.pull_request.head.sha }}" in caller
+    assert reusable.count("docs_ebus_repository:") >= 2
+    assert "DOCS_EBUS_REPOSITORY: ${{ inputs.docs_ebus_repository }}" in reusable
+    assert "repository: ${{ inputs.docs_ebus_repository }}" in reusable
+    assert "repository='^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'" in reusable
+    assert "repository: Project-Helianthus/helianthus-docs-ebus" in reusable
+
+
 @pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
 def test_trusted_prior_workflow_materializes_inspected_blob(
     tmp_path: pathlib.Path, workflow_path: pathlib.Path
