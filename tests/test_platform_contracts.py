@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import os
 import pathlib
+import re
 import subprocess
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -16,6 +17,11 @@ import yaml
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 VALIDATOR_PATH = REPO_ROOT / "scripts/validate_platform_contracts.py"
 MANIFEST_PATH = pathlib.Path("docs/platform/manifests/eebus-doc-ownership.yaml")
+WORKFLOW_PATHS = (
+    REPO_ROOT / ".github/workflows/docs-ci.yml",
+    REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml",
+)
+TRUSTED_PRIOR_STEP = "Materialize trusted prior manifest"
 PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
 CLEAN_STAGE = "MSP-DOCS-CLEAN"
@@ -585,6 +591,67 @@ def mark_manifest_entry_withdrawn(
     )
 
 
+def trusted_prior_workflow_step(path: pathlib.Path) -> dict[str, Any]:
+    workflow = yaml.safe_load(path.read_text(encoding="utf-8"))
+    for job in workflow["jobs"].values():
+        for step in job.get("steps", []):
+            if step.get("name") == TRUSTED_PRIOR_STEP:
+                return step
+    raise AssertionError(f"{TRUSTED_PRIOR_STEP!r} missing from {path.name}")
+
+
+def create_trusted_base_fixture(root: pathlib.Path, kind: str) -> tuple[str, bytes]:
+    root.mkdir(parents=True)
+    manifest = root / MANIFEST_PATH
+    expected = b"schema: trusted-base-fixture\n"
+    if kind == "regular":
+        manifest.parent.mkdir(parents=True)
+        manifest.write_bytes(expected)
+    elif kind == "absent":
+        (root / "README.md").write_text("# Prior without manifest\n", encoding="utf-8")
+    elif kind == "dangling-symlink":
+        manifest.parent.mkdir(parents=True)
+        manifest.symlink_to("missing-manifest.yaml")
+    elif kind == "wrong-type":
+        manifest.mkdir(parents=True)
+        (manifest / "child.yaml").write_text("not a manifest\n", encoding="utf-8")
+    else:
+        raise AssertionError(f"unknown fixture kind: {kind}")
+    return commit_fixture(root, "helianthus-docs-ebus"), expected
+
+
+def run_trusted_prior_workflow_step(
+    tmp_path: pathlib.Path, workflow_path: pathlib.Path, kind: str
+) -> tuple[subprocess.CompletedProcess[str], pathlib.Path, bytes]:
+    workspace = tmp_path / "workspace"
+    base_root = workspace / "checkouts/docs-ebus-base"
+    trusted_ref, expected = create_trusted_base_fixture(base_root, kind)
+    runner_temp = tmp_path / "runner-temp"
+    runner_temp.mkdir()
+    github_output = tmp_path / "github-output.txt"
+    env = os.environ.copy()
+    env.update(
+        {
+            "GITHUB_WORKSPACE": str(workspace),
+            "RUNNER_TEMP": str(runner_temp),
+            "GITHUB_RUN_ID": "342",
+            "GITHUB_RUN_ATTEMPT": "1",
+            "GITHUB_OUTPUT": str(github_output),
+            "TRUSTED_BASE_REF": trusted_ref,
+        }
+    )
+    script = trusted_prior_workflow_step(workflow_path)["run"]
+    result = subprocess.run(
+        ["bash", "-euo", "pipefail", "-c", script],
+        check=False,
+        capture_output=True,
+        text=True,
+        cwd=workspace,
+        env=env,
+    )
+    return result, github_output, expected
+
+
 @dataclass(frozen=True)
 class NegativeCase:
     name: str
@@ -608,6 +675,14 @@ def remove_surface(spec: dict[str, Any]) -> None:
 def duplicate_pair(spec: dict[str, Any]) -> None:
     duplicate = copy.deepcopy(find_entry(spec, "code-repo-summary-planned"))
     duplicate["id"] = "duplicate-pair"
+    spec["manifest"]["entries"].append(duplicate)
+
+
+def duplicate_surface(spec: dict[str, Any]) -> None:
+    duplicate = copy.deepcopy(find_entry(spec, "eebus-architecture-planned"))
+    duplicate["id"] = "duplicate-architecture-surface"
+    duplicate["owner"]["path"] = "architecture/future.md"
+    duplicate["source"]["path"] = "architecture/future.md"
     spec["manifest"]["entries"].append(duplicate)
 
 
@@ -760,12 +835,6 @@ NEGATIVE_CASES = (
         lambda s: s["manifest"].update({"version": 2}),
     ),
     NegativeCase("surface_missing", "ownership.surface-missing", remove_surface),
-    NegativeCase(
-        "owner_source_pair_duplicate", "ownership.pair-duplicate", duplicate_pair
-    ),
-    NegativeCase(
-        "canonical_duplicate", "ownership.canonical-duplicate", duplicate_canonical
-    ),
     NegativeCase(
         "protocol_reassigned_to_code_readme",
         "ownership.surface-binding",
@@ -1037,11 +1106,6 @@ NEGATIVE_CASES = (
         ),
     ),
     NegativeCase(
-        "code_repo_docs_at_clean",
-        "ownership.code-repo-substantive",
-        clean_with_docs,
-    ),
-    NegativeCase(
         "summary_substantive_at_clean",
         "ownership.summary-only-substantive",
         clean_with_substantive_summary,
@@ -1056,6 +1120,69 @@ def test_required_platform_artifacts_exist() -> None:
 
 def test_production_validator_entrypoint_exists() -> None:
     assert VALIDATOR_PATH.is_file()
+
+
+@pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
+def test_trusted_prior_workflow_static_contract(workflow_path: pathlib.Path) -> None:
+    workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    checkout_paths = {
+        step.get("with", {}).get("path")
+        for job in workflow["jobs"].values()
+        for step in job.get("steps", [])
+        if step.get("uses", "").startswith("actions/checkout@")
+    }
+    candidate = pathlib.PurePosixPath("checkouts/docs-ebus")
+    trusted = pathlib.PurePosixPath("checkouts/docs-ebus-base")
+    assert candidate.as_posix() in checkout_paths
+    assert trusted.as_posix() in checkout_paths
+    assert candidate.parent == trusted.parent
+    assert not trusted.is_relative_to(candidate)
+
+    step = trusted_prior_workflow_step(workflow_path)
+    script = step["run"]
+    assert re.search(r"\[\[\s+-e\b", script) is None
+    assert "sparse-checkout" not in workflow_path.read_text(encoding="utf-8")
+    assert 'cat-file -t "${TRUSTED_BASE_REF}"' in script
+    assert 'ls-tree "${trusted_commit}" -- "${prefix}"' in script
+    assert '"${mode}" != "040000"' in script
+    assert '! "${mode}" =~ ^100(644|755)$' in script
+    assert 'cat-file blob "${manifest_oid}"' in script
+    assert "${RUNNER_TEMP}/helianthus-trusted-prior-" in script
+
+
+@pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
+def test_trusted_prior_workflow_materializes_inspected_blob(
+    tmp_path: pathlib.Path, workflow_path: pathlib.Path
+) -> None:
+    result, github_output, expected = run_trusted_prior_workflow_step(
+        tmp_path, workflow_path, "regular"
+    )
+    assert result.returncode == 0, result.stderr
+    output = github_output.read_text(encoding="utf-8").strip()
+    assert output.startswith("path=")
+    materialized = pathlib.Path(output.removeprefix("path="))
+    assert materialized.read_bytes() == expected
+    assert materialized.is_relative_to(tmp_path / "runner-temp")
+
+
+@pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
+def test_trusted_prior_workflow_accepts_only_true_manifest_absence(
+    tmp_path: pathlib.Path, workflow_path: pathlib.Path
+) -> None:
+    result, github_output, _ = run_trusted_prior_workflow_step(
+        tmp_path, workflow_path, "absent"
+    )
+    assert result.returncode == 0, result.stderr
+    assert github_output.read_text(encoding="utf-8") == "path=\n"
+
+
+@pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
+@pytest.mark.parametrize("kind", ("dangling-symlink", "wrong-type"))
+def test_trusted_prior_workflow_rejects_nonregular_manifest_objects(
+    tmp_path: pathlib.Path, workflow_path: pathlib.Path, kind: str
+) -> None:
+    result, _, _ = run_trusted_prior_workflow_step(tmp_path, workflow_path, kind)
+    assert result.returncode != 0
 
 
 @pytest.mark.parametrize("path,required_terms", PAGE_REQUIRED_TERMS.items())
@@ -1081,14 +1208,43 @@ def test_negative_mutations_emit_one_exact_category(
     assert validate(load_validator(), workspace) == [case.category]
 
 
+@pytest.mark.parametrize(
+    "mutate,expected",
+    (
+        (duplicate_surface, ["ownership.surface-duplicate"]),
+        (
+            duplicate_pair,
+            ["ownership.pair-duplicate", "ownership.surface-duplicate"],
+        ),
+        (
+            duplicate_canonical,
+            ["ownership.canonical-duplicate", "ownership.surface-duplicate"],
+        ),
+    ),
+    ids=("duplicate-surface", "duplicate-pair", "duplicate-canonical"),
+)
+def test_every_surface_has_exactly_one_manifest_entry(
+    tmp_path: pathlib.Path,
+    mutate: Callable[[dict[str, Any]], None],
+    expected: list[str],
+) -> None:
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == expected
+
+
 def test_negative_matrix_has_broad_unique_category_coverage() -> None:
-    categories = {case.category for case in NEGATIVE_CASES}
+    categories = {case.category for case in NEGATIVE_CASES} | {
+        "ownership.surface-duplicate",
+        "ownership.pair-duplicate",
+        "ownership.canonical-duplicate",
+        "ownership.code-repo-substantive",
+    }
     assert SURFACES == {item["surface"] for item in base_manifest()["entries"]}
     assert {
         "manifest.missing",
         "manifest.schema",
         "manifest.version",
         "ownership.surface-missing",
+        "ownership.surface-duplicate",
         "ownership.pair-duplicate",
         "ownership.canonical-duplicate",
         "ownership.surface-binding",
@@ -1123,7 +1279,10 @@ def test_e2_transition_passes_but_clean_cannot_be_skipped(tmp_path: pathlib.Path
         spec["enforce_through"] = CLEAN_STAGE
 
     clean_required = build_workspace(tmp_path / "clean-required", require_clean)
-    assert validate(load_validator(), clean_required) == ["enforcement.transition"]
+    assert validate(load_validator(), clean_required) == [
+        "enforcement.transition",
+        "ownership.code-repo-substantive",
+    ]
 
 
 def test_clean_transition_passes_after_docs_removed_and_summary_trimmed(
@@ -1131,6 +1290,43 @@ def test_clean_transition_passes_after_docs_removed_and_summary_trimmed(
 ) -> None:
     workspace = build_workspace(tmp_path, transition_clean)
     assert validate(load_validator(), workspace) == []
+
+
+def test_clean_rejects_retained_withdrawn_code_repo_artifacts(
+    tmp_path: pathlib.Path,
+) -> None:
+    assert validate(load_validator(), build_workspace(tmp_path, clean_with_docs)) == [
+        "artifact.withdrawn",
+        "ownership.code-repo-substantive",
+    ]
+
+
+def test_clean_keeps_code_repo_gate_for_nonwithdrawn_entries(
+    tmp_path: pathlib.Path,
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        transition_clean(spec)
+        code = find_entry(spec, "code-repo-docs-planned")
+        code.update(
+            {
+                "state": "planned",
+                "canonical": False,
+                "outputs": outputs(),
+                "lifecycle": lifecycle(
+                    created_at="2026-01-01T00:00:00Z",
+                    expires_at="2026-01-15T00:00:00Z",
+                    source_issue=(
+                        "Project-Helianthus/helianthus-execution-plans#58"
+                    ),
+                ),
+            }
+        )
+        spec["eebusreg"]["docs/legacy.md"] = "# Retained code docs\n"
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
+        "enforcement.transition",
+        "ownership.code-repo-substantive",
+    ]
 
 
 def withdraw_api_candidate(
@@ -1200,6 +1396,43 @@ def test_withdrawn_candidate_rejects_stale_source_artifact(
     ]
 
 
+def test_withdrawn_candidate_rejects_dangling_source_symlink(
+    tmp_path: pathlib.Path,
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        withdraw_api_candidate(spec)
+        spec["symlinks"]["eebusreg"]["api/lifecycle.go"] = "missing.go"
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
+        "artifact.withdrawn"
+    ]
+
+
+def test_withdrawn_code_repo_cleanup_is_immediate_before_clean(
+    tmp_path: pathlib.Path,
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        code = find_entry(spec, "code-repo-docs-planned")
+        code.update(
+            {
+                "state": "withdrawn",
+                "canonical": False,
+                "outputs": outputs(),
+                "lifecycle": lifecycle(
+                    created_at="2026-01-01T00:00:00Z",
+                    source_issue=(
+                        "Project-Helianthus/helianthus-execution-plans#58"
+                    ),
+                    cleanup_required=True,
+                ),
+            }
+        )
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
+        "artifact.withdrawn"
+    ]
+
+
 @pytest.mark.parametrize(
     "entry_id,current_mutation",
     (
@@ -1222,6 +1455,67 @@ def test_withdrawn_history_rejects_every_nonterminal_state(
     assert validate(
         load_validator(), workspace, prior_manifest=prior_path
     ) == ["history.withdrawn-terminal"]
+
+
+@pytest.mark.parametrize(
+    "entry_id,replacement_id",
+    (
+        ("eebus-architecture-planned", "architecture-resurrected"),
+        ("eebus-api-candidate", "api-resurrected"),
+        ("platform-contracts", "platform-resurrected"),
+    ),
+    ids=("new-id-planned", "new-id-candidate", "new-id-active"),
+)
+def test_withdrawn_surface_rejects_new_id_resurrection_in_every_state(
+    tmp_path: pathlib.Path, entry_id: str, replacement_id: str
+) -> None:
+    prior = base_manifest()
+    mark_manifest_entry_withdrawn(prior, entry_id)
+    prior_path = write_prior_manifest(tmp_path, prior)
+
+    def replace_id(spec: dict[str, Any]) -> None:
+        find_entry(spec, entry_id)["id"] = replacement_id
+
+    workspace = build_workspace(tmp_path / "current", replace_id)
+    assert validate(load_validator(), workspace, prior_manifest=prior_path) == [
+        "history.withdrawn-terminal"
+    ]
+
+
+def test_withdrawn_surface_rejects_duplicate_replacement_entry(
+    tmp_path: pathlib.Path,
+) -> None:
+    prior = base_manifest()
+    mark_manifest_entry_withdrawn(prior, "eebus-api-candidate")
+    prior_path = write_prior_manifest(tmp_path, prior)
+
+    def add_replacement(spec: dict[str, Any]) -> None:
+        withdraw_api_candidate(spec)
+        spec["manifest"]["entries"].append(
+            entry(
+                "api-replacement-planned",
+                "api",
+                "helianthus-docs-eebus",
+                "api/_candidate/replacement.md",
+                "helianthus-eebusreg",
+                "api/replacement.go",
+                "planned",
+                canonical=False,
+                output=outputs(),
+                state_lifecycle=lifecycle(
+                    created_at="2026-01-01T00:00:00Z",
+                    expires_at="2026-01-15T00:00:00Z",
+                    source_issue="Project-Helianthus/helianthus-eebusreg#20",
+                ),
+                state_enforcement=enforcement(E2_STAGE, "candidate"),
+            )
+        )
+
+    workspace = build_workspace(tmp_path / "current", add_replacement)
+    assert validate(load_validator(), workspace, prior_manifest=prior_path) == [
+        "history.withdrawn-terminal",
+        "ownership.surface-duplicate",
+    ]
 
 
 def test_withdrawn_tombstone_ownership_is_immutable(
@@ -1269,6 +1563,22 @@ def test_explicit_missing_prior_manifest_fails_closed(
         load_validator(),
         workspace,
         prior_manifest=tmp_path / "missing-prior.yaml",
+    ) == ["history.prior-manifest"]
+
+
+def test_explicit_prior_manifest_rejects_symlinked_path_component(
+    tmp_path: pathlib.Path,
+) -> None:
+    trusted = tmp_path / "trusted"
+    prior_path = write_prior_manifest(trusted, base_manifest())
+    linked = tmp_path / "linked"
+    linked.symlink_to(trusted, target_is_directory=True)
+    workspace = build_workspace(tmp_path / "current")
+
+    assert validate(
+        load_validator(),
+        workspace,
+        prior_manifest=linked / prior_path.name,
     ) == ["history.prior-manifest"]
 
 
@@ -1408,6 +1718,16 @@ def test_semantic_copy_false_positive_controls(
 @pytest.mark.parametrize(
     "statement",
     (
+        "Protocol peers MUST record whether the artifact exists and negotiate "
+        "before sending messages.",
+        "Protocol peers MUST record whether the artifact exists, and negotiate "
+        "before sending messages.",
+        "Protocol peers MUST record whether the artifact exists, negotiate "
+        "before sending messages.",
+        "The artifact MUST record whether it exists, which protocol peers "
+        "negotiate before sending messages.",
+        "Protocol peers MUST record whether the artifact exists as well as "
+        "send protocol messages.",
         "The artifact MUST record the result and peers MUST negotiate before "
         "sending messages.",
         "The artifact MUST record the result, peers MUST negotiate before "
@@ -1419,6 +1739,11 @@ def test_semantic_copy_false_positive_controls(
         "before sending messages.",
     ),
     ids=(
+        "shared-modal-conjunction",
+        "shared-modal-comma-conjunction",
+        "shared-modal-comma",
+        "shared-modal-relative",
+        "shared-modal-as-well-as",
         "governance-and",
         "governance-comma",
         "governance-relative-clause",
@@ -1432,6 +1757,30 @@ def test_semantic_copy_exemptions_are_predicate_local(
     addition = f"\n## SHIP Protocol Evidence Gate\n\n{statement}\n"
     workspace = build_workspace(tmp_path, append_platform(addition))
     assert validate(load_validator(), workspace) == ["ownership.protocol-copy"]
+
+
+@pytest.mark.parametrize(
+    "statement",
+    (
+        "The artifact MUST record whether the manifest exists and whether the "
+        "proof is complete.",
+        "The artifact MUST record whether protocol peers negotiated before "
+        "sending messages.",
+        "The artifact MUST record whether the manifest exists, and may report "
+        "the proof digest.",
+    ),
+    ids=(
+        "coordinated-governance-complements",
+        "reported-protocol-observation",
+        "explicit-nonnormative-modal-reset",
+    ),
+)
+def test_shared_modal_segmentation_preserves_governance_only_prose(
+    tmp_path: pathlib.Path, statement: str
+) -> None:
+    addition = f"\n## SHIP Protocol Evidence Gate\n\n{statement}\n"
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == []
 
 
 @pytest.mark.parametrize(

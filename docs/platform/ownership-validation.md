@@ -5,10 +5,10 @@ Canonical source: this page.
 ## Manifest
 
 `manifests/eebus-doc-ownership.yaml` is the authoritative versioned ownership
-manifest. Its schema is closed. Every owner/source pair is globally unique,
-and a canonical owner path may occur only once. All repository paths are
-portable relative paths with no traversal, private path, private identifier,
-credential, or network data.
+manifest. Its schema is closed. Each of the six surfaces has exactly one entry,
+every owner/source pair is globally unique, and a canonical owner path may occur
+only once. All repository paths are portable relative paths with no traversal,
+private path, private identifier, credential, or network data.
 
 The loader retains YAML mapping pairs until duplicate-key validation is
 complete. It rejects duplicate keys at any depth, cyclic aliases, more than 16
@@ -35,6 +35,13 @@ code-repository, and summary-only entries are noncanonical. In particular,
 protocol ownership cannot be reassigned to the code README or marked
 noncanonical while active.
 
+Platform governance prose may require an artifact to record or report evidence,
+including whether protocol activity was observed. That exemption is local to
+the reporting predicate. A deterministic clause splitter propagates a normative
+modal across comma, conjunction, relative-clause, and shared-modal predicate
+boundaries, so a coordinated protocol, architecture, or API predicate cannot
+inherit the governance exemption.
+
 ## State Contract
 
 | State | Expiry | Output | Required artifact rule |
@@ -42,7 +49,7 @@ noncanonical while active.
 | `planned` | Exactly 14 days after `created_at` | No candidate or stable output; noncanonical and nonlinkable | Owner/source may be absent or may be pre-existing material that has no publication authority |
 | `candidate` | Exactly 30 days after `created_at` | Candidate output only from a hidden `_candidate` area | Regular owner and source files plus immutable source head and exact content hash |
 | `active` | No expiry | All stable outputs after approval and freeze | Regular owner and source files |
-| `withdrawn` | No expiry | No output and never consumer-visible | Owner artifact absent and cleanup mandatory |
+| `withdrawn` | No expiry | No output and never consumer-visible | Owner and every distinct source artifact absent immediately; cleanup mandatory |
 
 Every present lifecycle timestamp (`created_at`, `expires_at`, `approved_at`, or
 `frozen_at`) uses the same strict RFC 3339 UTC extended form described below.
@@ -61,18 +68,22 @@ The ordered enforcement stages are `MSP-DOCS-API-SCHEMA`,
 owning milestone, its state must be `planned` or `candidate`. At and after that
 milestone, its state must equal `enforcement.required_state`. A valid
 `withdrawn` state is the terminal alternative at every stage: cleanup must be
-required, the owner artifact must be absent, and later stages never resurrect
-the entry.
+required, owner and source artifacts must be absent immediately, and later
+stages never resurrect the entry. This applies to `code_repo` before
+`MSP-DOCS-CLEAN`; the CLEAN-stage substantive code-document check remains an
+independent requirement for both withdrawn and non-withdrawn entries.
 
 Terminal withdrawal is also checked against history. When a trusted prior
 manifest exists, pass it as `--prior-manifest PATH`. Every prior `withdrawn`
-entry must remain present by `id`, remain `withdrawn`, and retain its immutable
-`surface`, `owner`, and `source` fields. Its `cleanup_required` value remains
-true under the current-state rules, and both distinct owner and source
-artifacts must remain absent. A missing, unreadable, non-regular, malformed, or
-internally inconsistent explicitly supplied prior manifest fails closed. When
-the trusted base has no manifest, omitting the option is the valid
-first-introduction case.
+entry remains indexed by both `surface` and `id`, remains the sole entry for that
+surface, remains `withdrawn`, and retains its immutable `surface`, `owner`, and
+`source` fields. A new ID cannot resurrect that surface as `planned`,
+`candidate`, or `active`, and a duplicate replacement cannot coexist with the
+tombstone. Its `cleanup_required` value remains true under the current-state
+rules, and both distinct owner and source artifacts remain absent. A missing,
+unreadable, non-regular, malformed, or internally inconsistent explicitly
+supplied prior manifest fails closed. When the trusted base commit tree truly
+has no manifest, omitting the option is the valid first-introduction case.
 
 The current PLATFORM transition is:
 
@@ -108,13 +119,17 @@ or ambient checkout state. A missing, symbolic, moving, mismatched, dirty, or
 incorrect repository root is terminal. Dependency pins change only in the PR
 that owns the corresponding successor transition.
 
-For pull requests, both Docs Checks and Combined Ref independently materialize
-the prior manifest from `github.event.pull_request.base.sha` with the pinned
-checkout action. The base checkout is read only: no scripts, dependencies, or
-commands from it are executed. If that checkout contains the manifest, its
-absolute file path is supplied to the candidate validator; if it does not,
-validation proceeds as the first manifest introduction. Python never resolves
-or executes an operator-supplied command or Git ref.
+For pull requests, both Docs Checks and Combined Ref independently check out the
+trusted base at `github.event.pull_request.base.sha` into a sibling of the
+candidate checkout. No scripts, dependencies, or commands from the base are
+executed. The workflow verifies that the supplied object is the checked-out
+commit, walks every manifest path component with `git ls-tree`, requires tree
+objects for parents and a regular blob mode for the final object, and extracts
+that inspected blob with `git cat-file` into a private path under
+`RUNNER_TEMP`. A missing tree entry is the only valid first-introduction case;
+symbolic links, wrong object types, malformed content, and inspection,
+extraction, or read failures fail closed. Candidate and dependency refs remain
+explicit immutable commits in Combined Ref, including fork pull requests.
 
 Local CI uses the same file contract. A developer with a trusted prior checkout
 invokes it deterministically as:
@@ -126,7 +141,8 @@ PLATFORM_PRIOR_MANIFEST=/path/to/trusted-base/docs/platform/manifests/eebus-doc-
 
 Leave `PLATFORM_PRIOR_MANIFEST` unset only when no prior manifest exists. If it
 is set, `ci_local.sh` passes the path unchanged to `--prior-manifest`, so bad or
-missing explicit input fails closed.
+missing explicit input fails closed. The validator rejects a symbolic link at
+the file or any parent path component before reading the manifest.
 
 GitHub uses exact Python `3.12.10` and PyYAML `6.0.2`. The validator reads the
 actual Python runtime and installed PyYAML distribution/module versions; caller

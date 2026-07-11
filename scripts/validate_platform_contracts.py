@@ -126,11 +126,15 @@ REFERENCE_DEFINITION = re.compile(
 VERSION = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)\Z")
 RENDERED_URL = re.compile(r"\bhttps?://[^\s<>\"']+", re.I)
 CLAUSE_BOUNDARY = re.compile(r"(?:;|(?<=[.!?])\s+)")
-EXPLICIT_PREDICATE_BOUNDARY = re.compile(
-    r"(?:,\s*|\s+\b(?:and|but|yet|while|whereas)\b\s+|"
-    r"\s+(?=(?:which|that|who)\b))"
-    r"(?=(?:(?:which|that|who)\b\s+)?[^,;]{0,80}"
-    r"\b(?:must|shall|should|required|mandatory|needs?\s+to)\b)",
+PREDICATE_BOUNDARY = re.compile(
+    r"(?:\s+(?:and|or|but|yet|while|whereas|as\s+well\s+as)\s+|"
+    r"\s+(?=(?:which|that|who)\b))",
+    re.I,
+)
+COMMA_BOUNDARY = re.compile(r",\s*(?:(?:and|or|but|yet)\s+)?", re.I)
+ANY_MODAL = re.compile(
+    r"\b(?:must|shall|should|required|mandatory|needs?\s+to|may|might|can|"
+    r"could|will|would)\b",
     re.I,
 )
 
@@ -398,6 +402,34 @@ def _artifact_kind(root: pathlib.Path, relative: str) -> str:
     return "invalid"
 
 
+def _regular_path_without_symlinks(path: pathlib.Path) -> bool:
+    absolute = path.absolute()
+    if not absolute.anchor:
+        return False
+    current = pathlib.Path(absolute.anchor)
+    try:
+        root_stat = current.lstat()
+    except OSError:
+        return False
+    if stat.S_ISLNK(root_stat.st_mode) or not stat.S_ISDIR(root_stat.st_mode):
+        return False
+    parts = absolute.parts[1:]
+    for index, part in enumerate(parts):
+        current = current / part
+        try:
+            item_stat = current.lstat()
+        except OSError:
+            return False
+        if stat.S_ISLNK(item_stat.st_mode):
+            return False
+        if index < len(parts) - 1:
+            if not stat.S_ISDIR(item_stat.st_mode):
+                return False
+        elif not stat.S_ISREG(item_stat.st_mode):
+            return False
+    return bool(parts)
+
+
 def _read_regular_artifact(root: pathlib.Path, relative: str) -> bytes | None:
     if _artifact_kind(root, relative) != "regular":
         return None
@@ -486,8 +518,7 @@ def _inspect_yaml_node(root: yaml.nodes.Node | None) -> None:
 def _parse_manifest_path(path: pathlib.Path) -> dict[str, Any] | None:
     loader: yaml.SafeLoader | None = None
     try:
-        path_stat = path.lstat()
-        if not stat.S_ISREG(path_stat.st_mode):
+        if not _regular_path_without_symlinks(path):
             raise _ManifestSchemaError
         raw = path.read_bytes()
         if len(raw) > MAX_MANIFEST_BYTES:
@@ -664,8 +695,11 @@ def _manifest_categories(manifest: dict[str, Any]) -> set[str]:
         categories.add("manifest.schema")
     if manifest["version"] != 1:
         categories.add("manifest.version")
-    if {entry["surface"] for entry in manifest["entries"]} != SURFACES:
+    manifest_surfaces = [entry["surface"] for entry in manifest["entries"]]
+    if set(manifest_surfaces) != SURFACES:
         categories.add("ownership.surface-missing")
+    if len(manifest_surfaces) != len(set(manifest_surfaces)):
+        categories.add("ownership.surface-duplicate")
 
     pairs: set[tuple[str, str, str, str]] = set()
     canonical_owners: set[tuple[str, str]] = set()
@@ -875,7 +909,7 @@ def _artifact_categories(
             elif source_kind is not None and source_kind != "regular":
                 categories.add("artifact.source")
 
-        elif state == "withdrawn" and entry["surface"] != "code_repo":
+        elif state == "withdrawn":
             checked: set[tuple[str, str]] = set()
             for location in (entry["owner"], entry["source"]):
                 identity = (location["repository"], location["path"])
@@ -1275,27 +1309,64 @@ def _platform_governance_summary(heading_context: str, paragraph: str) -> bool:
 def _predicate_units(clause: str) -> list[tuple[str, bool]]:
     """Return predicate-local text and whether a leading modal is inherited."""
 
-    return [
-        (part.strip(), False)
-        for part in EXPLICIT_PREDICATE_BOUNDARY.split(clause)
-        if part.strip()
-    ]
+    comma_parts: list[str] = []
+    start = 0
+    for boundary in COMMA_BOUNDARY.finditer(clause):
+        tail = clause[boundary.end() :]
+        candidate = tail.split(",", 1)[0].strip()
+        behavior = (
+            PROTOCOL_BEHAVIOR.search(candidate)
+            or ARCHITECTURE_BEHAVIOR.search(candidate)
+            or API_BEHAVIOR.search(candidate)
+        )
+        starts_predicate = bool(
+            re.match(r"(?:which|that|who)\b", candidate, re.I)
+            or NORMATIVE.search(candidate)
+            or (
+                behavior is not None
+                and ("," not in tail or candidate[behavior.end() :].strip())
+            )
+        )
+        if starts_predicate:
+            comma_parts.append(clause[start : boundary.start()])
+            start = boundary.end()
+    comma_parts.append(clause[start:])
+
+    units: list[tuple[str, bool]] = []
+    normative_scope = False
+    for comma_part in comma_parts:
+        for raw_part in PREDICATE_BOUNDARY.split(comma_part):
+            part = raw_part.strip()
+            if not part:
+                continue
+            explicit_normative = NORMATIVE.search(part) is not None
+            explicit_modal = ANY_MODAL.search(part) is not None
+            units.append((part, normative_scope and not explicit_modal))
+            if explicit_modal or explicit_normative:
+                normative_scope = explicit_normative
+    return units
 
 
 def _prohibited_clause_categories(
-    heading_context: str, clause: str, *, inherited_normative: bool = False
+    heading_context: str,
+    predicate: str,
+    *,
+    clause_context: str | None = None,
+    inherited_normative: bool = False,
 ) -> set[str]:
-    if not inherited_normative and NORMATIVE.search(clause) is None:
+    if not inherited_normative and NORMATIVE.search(predicate) is None:
         return set()
-    contextual = " ".join(part for part in (heading_context, clause) if part)
+    contextual = " ".join(
+        part for part in (heading_context, clause_context or predicate) if part
+    )
     categories: set[str] = set()
-    if PROTOCOL_CONTEXT.search(contextual) and PROTOCOL_BEHAVIOR.search(clause):
+    if PROTOCOL_CONTEXT.search(contextual) and PROTOCOL_BEHAVIOR.search(predicate):
         categories.add("ownership.protocol-copy")
     if ARCHITECTURE_CONTEXT.search(
         contextual
-    ) and ARCHITECTURE_BEHAVIOR.search(clause):
+    ) and ARCHITECTURE_BEHAVIOR.search(predicate):
         categories.add("ownership.architecture-copy")
-    if API_CONTEXT.search(contextual) and API_BEHAVIOR.search(clause):
+    if API_CONTEXT.search(contextual) and API_BEHAVIOR.search(predicate):
         categories.add("ownership.api-copy")
     return categories
 
@@ -1316,6 +1387,7 @@ def _semantic_copy_categories(text: str) -> set[str]:
                 prohibited = _prohibited_clause_categories(
                     heading_context,
                     predicate,
+                    clause_context=clause,
                     inherited_normative=inherited_normative,
                 )
                 if not prohibited:
@@ -1346,12 +1418,18 @@ def _code_repo_categories(
         return set()
     categories: set[str] = set()
     for entry in manifest["entries"]:
-        if entry["surface"] == "code_repo" and entry["state"] == "withdrawn":
-            owner_root = roots.get(entry["owner"]["repository"])
-            if owner_root is not None and _artifact_kind(
-                owner_root, entry["owner"]["path"]
-            ) != "missing":
-                categories.add("ownership.code-repo-substantive")
+        if entry["surface"] == "code_repo":
+            checked: set[tuple[str, str]] = set()
+            for location in (entry["owner"], entry["source"]):
+                identity = (location["repository"], location["path"])
+                if identity in checked:
+                    continue
+                checked.add(identity)
+                location_root = roots.get(location["repository"])
+                if location_root is not None and _artifact_kind(
+                    location_root, location["path"]
+                ) != "missing":
+                    categories.add("ownership.code-repo-substantive")
         if entry["surface"] != "summary_only" or entry["state"] != "active":
             continue
         owner_root = roots.get(entry["owner"]["repository"])
@@ -1455,14 +1533,25 @@ def _history_categories(
 
     categories: set[str] = set()
     current_by_id = {entry["id"]: entry for entry in manifest["entries"]}
+    current_by_surface: dict[str, list[dict[str, Any]]] = {}
+    for entry in manifest["entries"]:
+        current_by_surface.setdefault(entry["surface"], []).append(entry)
     for prior_entry in prior["entries"]:
         if prior_entry["state"] != "withdrawn":
             continue
         current_entry = current_by_id.get(prior_entry["id"])
-        if current_entry is None or current_entry["state"] != "withdrawn":
+        surface_entries = current_by_surface.get(prior_entry["surface"], [])
+        tombstone_is_unique = (
+            len(surface_entries) == 1
+            and surface_entries[0]["id"] == prior_entry["id"]
+        )
+        if (
+            current_entry is None
+            or current_entry["state"] != "withdrawn"
+            or not tombstone_is_unique
+        ):
             categories.add("history.withdrawn-terminal")
-            continue
-        if any(
+        if current_entry is not None and any(
             current_entry[field] != prior_entry[field]
             for field in TOMBSTONE_IMMUTABLE_FIELDS
         ):

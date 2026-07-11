@@ -36,6 +36,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          path: checkouts/docs-ebus
           clean: true
           persist-credentials: false
 
@@ -45,23 +46,72 @@ jobs:
         with:
           repository: Project-Helianthus/helianthus-docs-ebus
           ref: ${{ github.event.pull_request.base.sha }}
-          path: .trusted-base/docs-ebus
+          path: checkouts/docs-ebus-base
           clean: true
           persist-credentials: false
-          sparse-checkout: docs/platform/manifests/eebus-doc-ownership.yaml
-          sparse-checkout-cone-mode: false
 
-      - name: Resolve trusted prior manifest
+      - name: Materialize trusted prior manifest
         if: github.event_name == 'pull_request'
         id: prior_manifest
         shell: bash
+        env:
+          TRUSTED_BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: |
-          prior="${GITHUB_WORKSPACE}/.trusted-base/docs-ebus/docs/platform/manifests/eebus-doc-ownership.yaml"
-          if [[ -e "${prior}" ]]; then
-            [[ -f "${prior}" && ! -L "${prior}" ]]
-            echo "path=${prior}" >> "${GITHUB_OUTPUT}"
+          set -euo pipefail
+          base_root="${GITHUB_WORKSPACE}/checkouts/docs-ebus-base"
+          manifest_path="docs/platform/manifests/eebus-doc-ownership.yaml"
+          materialized_root="${RUNNER_TEMP}/helianthus-trusted-prior-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          materialized="${materialized_root}/eebus-doc-ownership.yaml"
+
+          trusted_type="$(git -C "${base_root}" cat-file -t "${TRUSTED_BASE_REF}")"
+          if [[ "${trusted_type}" != "commit" ]]; then
+            exit 1
+          fi
+          trusted_commit="$(git -C "${base_root}" rev-parse --verify "${TRUSTED_BASE_REF}")"
+          actual_commit="$(git -C "${base_root}" rev-parse --verify HEAD)"
+          if [[ "${actual_commit}" != "${trusted_commit}" ]]; then
+            exit 1
+          fi
+
+          IFS='/' read -r -a components <<< "${manifest_path}"
+          prefix=""
+          manifest_oid=""
+          manifest_present=true
+          last_index=$((${#components[@]} - 1))
+          for index in "${!components[@]}"; do
+            prefix="${prefix:+${prefix}/}${components[${index}]}"
+            entry="$(git -C "${base_root}" ls-tree "${trusted_commit}" -- "${prefix}")"
+            if [[ -z "${entry}" ]]; then
+              manifest_present=false
+              break
+            fi
+            metadata="${entry%%$'\t'*}"
+            read -r mode object_type object_id <<< "${metadata}"
+            if ((index < last_index)); then
+              if [[ "${mode}" != "040000" || "${object_type}" != "tree" ]]; then
+                exit 1
+              fi
+            else
+              if [[ ! "${mode}" =~ ^100(644|755)$ || "${object_type}" != "blob" ]]; then
+                exit 1
+              fi
+              manifest_oid="${object_id}"
+            fi
+          done
+
+          if [[ "${manifest_present}" == "true" ]]; then
+            umask 077
+            mkdir -p "${materialized_root}"
+            if [[ ! -d "${materialized_root}" || -L "${materialized_root}" ]]; then
+              exit 1
+            fi
+            git -C "${base_root}" cat-file blob "${manifest_oid}" > "${materialized}"
+            if [[ ! -f "${materialized}" || -L "${materialized}" ]]; then
+              exit 1
+            fi
+            printf 'path=%s\n' "${materialized}" >> "${GITHUB_OUTPUT}"
           else
-            echo "path=" >> "${GITHUB_OUTPUT}"
+            printf 'path=\n' >> "${GITHUB_OUTPUT}"
           fi
 
       - name: Set up Python
@@ -70,7 +120,7 @@ jobs:
           python-version: "3.12.10"
 
       - name: Install test dependencies
-        run: python -m pip install --disable-pip-version-check -r requirements-ci.txt
+        run: python -m pip install --disable-pip-version-check -r checkouts/docs-ebus/requirements-ci.txt
 
       - name: Set up Go (for santhosh-tekuri/jsonschema/cmd/jv)
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
@@ -89,10 +139,12 @@ jobs:
         env:
           PLATFORM_TOOLCHAIN_MODE: exact
           PLATFORM_PRIOR_MANIFEST: ${{ steps.prior_manifest.outputs.path }}
+        working-directory: checkouts/docs-ebus
         run: ./scripts/ci_local.sh
 
       - name: Enforce main manifest expiry
         if: github.event_name == 'push'
+        working-directory: checkouts/docs-ebus
         run: |
           python3 scripts/validate_platform_contracts.py \
             --mode main-expiry \
