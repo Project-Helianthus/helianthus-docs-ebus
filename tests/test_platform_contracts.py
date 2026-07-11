@@ -1537,6 +1537,64 @@ def test_withdrawn_tombstone_ownership_is_immutable(
     ) == ["history.tombstone-identity"]
 
 
+@pytest.mark.parametrize(
+    "path,value",
+    (
+        (("canonical",), True),
+        (("owner", "repository"), "helianthus-docs-ebus"),
+        (("owner", "path"), "api/_candidate/moved.md"),
+        (("source", "repository"), "helianthus-docs-eebus"),
+        (("source", "path"), "api/moved.go"),
+        (("outputs", "candidate"), True),
+        (("outputs", "stable_navigation"), True),
+        (("outputs", "search"), True),
+        (("outputs", "sitemap"), True),
+        (("outputs", "versioned_bundle"), True),
+        (("outputs", "release_bundle"), True),
+        (("lifecycle", "created_at"), "2026-01-16T00:00:00Z"),
+        (("lifecycle", "expires_at"), "2026-02-15T00:00:00Z"),
+        (("lifecycle", "source_issue"), "Project-Helianthus/plan#1"),
+        (("lifecycle", "source_pr"), "Project-Helianthus/plan#2"),
+        (("lifecycle", "source_ref"), "0" * 40),
+        (("lifecycle", "content_sha256"), "0" * 64),
+        (("lifecycle", "approved_at"), "2026-01-16T00:00:00Z"),
+        (("lifecycle", "frozen_at"), "2026-01-17T00:00:00Z"),
+        (("lifecycle", "cleanup_required"), False),
+        (("enforcement", "milestone"), CLEAN_STAGE),
+        (("enforcement", "required_state"), "active"),
+        (("future_metadata",), {"owner": "changed"}),
+        (("owner", "future_metadata"), "changed"),
+    ),
+    ids=lambda value: ".".join(value) if isinstance(value, tuple) else None,
+)
+def test_withdrawn_tombstone_rejects_every_deep_entry_mutation(
+    tmp_path: pathlib.Path,
+    path: tuple[str, ...],
+    value: Any,
+) -> None:
+    prior = base_manifest()
+    mark_manifest_entry_withdrawn(prior, "eebus-api-candidate")
+    prior_path = write_prior_manifest(tmp_path, prior)
+    current = copy.deepcopy(prior)
+    item = find_entry({"manifest": current}, "eebus-api-candidate")
+    target = item
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+
+    assert load_validator()._history_categories(current, prior_path) == {
+        "history.tombstone-identity"
+    }
+
+
+def test_normal_first_withdrawal_transition_passes(
+    tmp_path: pathlib.Path,
+) -> None:
+    prior_path = write_prior_manifest(tmp_path, base_manifest())
+    workspace = build_workspace(tmp_path / "current", withdraw_api_candidate)
+    assert validate(load_validator(), workspace, prior_manifest=prior_path) == []
+
+
 def test_first_manifest_introduction_passes_without_prior_manifest(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -1728,6 +1786,18 @@ def test_semantic_copy_false_positive_controls(
         "negotiate before sending messages.",
         "Protocol peers MUST record whether the artifact exists as well as "
         "send protocol messages.",
+        "Protocol peers MUST record whether the artifact exists along with "
+        "sending protocol messages.",
+        "Protocol peers MUST record whether the artifact exists together with "
+        "sending protocol messages.",
+        "Protocol peers MUST record whether the artifact exists plus sending "
+        "protocol messages.",
+        "Protocol peers MUST record whether the artifact exists; then send "
+        "protocol messages.",
+        "Protocol peers MUST record whether the artifact exists: send protocol "
+        "messages.",
+        "Protocol peers MUST record whether the artifact exists — send protocol "
+        "messages.",
         "The artifact MUST record the result and peers MUST negotiate before "
         "sending messages.",
         "The artifact MUST record the result, peers MUST negotiate before "
@@ -1744,6 +1814,12 @@ def test_semantic_copy_false_positive_controls(
         "shared-modal-comma",
         "shared-modal-relative",
         "shared-modal-as-well-as",
+        "shared-modal-along-with",
+        "shared-modal-together-with",
+        "shared-modal-plus",
+        "shared-modal-semicolon",
+        "shared-modal-colon",
+        "shared-modal-em-dash",
         "governance-and",
         "governance-comma",
         "governance-relative-clause",

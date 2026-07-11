@@ -37,10 +37,13 @@ noncanonical while active.
 
 Platform governance prose may require an artifact to record or report evidence,
 including whether protocol activity was observed. That exemption is local to
-the reporting predicate. A deterministic clause splitter propagates a normative
-modal across comma, conjunction, relative-clause, and shared-modal predicate
-boundaries, so a coordinated protocol, architecture, or API predicate cannot
-inherit the governance exemption.
+the reporting predicate and its single bounded observation complement. The
+validator accepts owned behavior inside that complement only when it begins as
+an observation about a recognized protocol, runtime, or API subject; it then
+checks all remaining predicate content normally. A deterministic clause splitter
+propagates a normative modal across punctuation, conjunction, relative-clause,
+and shared-modal predicate boundaries, so coordinated protocol, architecture,
+or API behavior cannot inherit the governance exemption.
 
 ## State Contract
 
@@ -76,14 +79,17 @@ independent requirement for both withdrawn and non-withdrawn entries.
 Terminal withdrawal is also checked against history. When a trusted prior
 manifest exists, pass it as `--prior-manifest PATH`. Every prior `withdrawn`
 entry remains indexed by both `surface` and `id`, remains the sole entry for that
-surface, remains `withdrawn`, and retains its immutable `surface`, `owner`, and
-`source` fields. A new ID cannot resurrect that surface as `planned`,
-`candidate`, or `active`, and a duplicate replacement cannot coexist with the
-tombstone. Its `cleanup_required` value remains true under the current-state
-rules, and both distinct owner and source artifacts remain absent. A missing,
-unreadable, non-regular, malformed, or internally inconsistent explicitly
-supplied prior manifest fails closed. When the trusted base commit tree truly
-has no manifest, omitting the option is the valid first-introduction case.
+surface, and remains `withdrawn`. For the same surface and ID, the complete
+normalized manifest entry is an immutable tombstone: lifecycle and provenance,
+enforcement, owner/source metadata, output flags, and any additional fields must
+all remain byte-for-value equivalent after YAML normalization. A new ID cannot
+resurrect that surface as `planned`, `candidate`, or `active`, and a duplicate
+replacement cannot coexist with the tombstone. Artifact absence remains a
+separate current-state rule for every distinct owner and source location. A
+missing, unreadable, non-regular, malformed, or internally inconsistent
+explicitly supplied prior manifest fails closed. When the trusted base commit
+tree truly has no manifest, omitting the option is the valid first-introduction
+case.
 
 The current PLATFORM transition is:
 

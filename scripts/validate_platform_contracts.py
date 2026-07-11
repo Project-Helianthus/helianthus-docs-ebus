@@ -125,7 +125,7 @@ REFERENCE_DEFINITION = re.compile(
 )
 VERSION = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)\Z")
 RENDERED_URL = re.compile(r"\bhttps?://[^\s<>\"']+", re.I)
-CLAUSE_BOUNDARY = re.compile(r"(?:;|(?<=[.!?])\s+)")
+CLAUSE_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
 PREDICATE_BOUNDARY = re.compile(
     r"(?:\s+(?:and|or|but|yet|while|whereas|as\s+well\s+as)\s+|"
     r"\s+(?=(?:which|that|who)\b))",
@@ -212,7 +212,13 @@ NEGATIVE_GOVERNANCE_CLAIM = re.compile(
     r"(?:claim|report|state|document)\b",
     re.I,
 )
-TOMBSTONE_IMMUTABLE_FIELDS = ("surface", "owner", "source")
+GOVERNANCE_OBSERVED_SUBJECT = re.compile(
+    r"\s*(?:(?:the|a|an)\s+)?"
+    r"(?:(?:SHIP|SPINE|eeBUS|protocol|runtime|Go|public)\s+){0,3}"
+    r"(?:peers?|sessions?|frames?|messages?|runtimes?|adapters?|"
+    r"implementations?|packages?|functions?|methods?|symbols?|APIs?|it|they)\s+",
+    re.I,
+)
 
 
 class _ManifestSchemaError(Exception):
@@ -1294,15 +1300,41 @@ def _platform_governance_summary(heading_context: str, paragraph: str) -> bool:
     )
     if not governance:
         return False
-    has_owned_behavior = bool(
-        PROTOCOL_BEHAVIOR.search(paragraph)
-        or ARCHITECTURE_BEHAVIOR.search(paragraph)
-        or API_BEHAVIOR.search(paragraph)
+    behavior_patterns = (
+        PROTOCOL_BEHAVIOR,
+        ARCHITECTURE_BEHAVIOR,
+        API_BEHAVIOR,
     )
+    if not any(
+        pattern.search(paragraph) for pattern in behavior_patterns
+    ) or NEGATIVE_GOVERNANCE_CLAIM.search(paragraph):
+        return True
+
+    observation = GOVERNANCE_COMPLEMENT.search(paragraph)
+    if observation is None:
+        return False
+    if any(
+        pattern.search(paragraph, 0, observation.end())
+        for pattern in behavior_patterns
+    ):
+        return False
+
+    complement = paragraph[observation.end() :]
+    first_behavior = min(
+        (
+            match
+            for pattern in behavior_patterns
+            if (match := pattern.search(complement)) is not None
+        ),
+        key=lambda match: match.start(),
+        default=None,
+    )
+    if first_behavior is None or ANY_MODAL.search(complement):
+        return False
     return bool(
-        not has_owned_behavior
-        or GOVERNANCE_COMPLEMENT.search(paragraph)
-        or NEGATIVE_GOVERNANCE_CLAIM.search(paragraph)
+        GOVERNANCE_OBSERVED_SUBJECT.fullmatch(
+            complement[: first_behavior.start()]
+        )
     )
 
 
@@ -1551,9 +1583,11 @@ def _history_categories(
             or not tombstone_is_unique
         ):
             categories.add("history.withdrawn-terminal")
-        if current_entry is not None and any(
-            current_entry[field] != prior_entry[field]
-            for field in TOMBSTONE_IMMUTABLE_FIELDS
+        if (
+            current_entry is not None
+            and current_entry["state"] == "withdrawn"
+            and current_entry["surface"] == prior_entry["surface"]
+            and current_entry != prior_entry
         ):
             categories.add("history.tombstone-identity")
     return categories
