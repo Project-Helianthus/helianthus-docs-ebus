@@ -13,11 +13,20 @@ It owns contracts that apply across protocol families:
 
 Current platform contracts:
 
+- [`cross-runtime-envelope.md`](./cross-runtime-envelope.md)
+- [`hash-auth-binding.md`](./hash-auth-binding.md)
+- [`shared-registry-boundary.md`](./shared-registry-boundary.md)
+- [`promotion-and-consumer-contract.md`](./promotion-and-consumer-contract.md)
+- [`ownership-validation.md`](./ownership-validation.md)
 - [`ownership-and-doc-gates.md`](./ownership-and-doc-gates.md)
 - [`eebus-raw-first-contract.md`](./eebus-raw-first-contract.md)
 - [`raw-correlation-and-leaf-promotion.md`](./raw-correlation-and-leaf-promotion.md)
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md)
+
+The authoritative eeBUS ownership state is the versioned
+[`manifests/eebus-doc-ownership.yaml`](./manifests/eebus-doc-ownership.yaml)
+manifest.
 
 Protocol-specific repositories may link here, but they must not duplicate these
 contracts as normative text. Non-owning pages are summary-only.
