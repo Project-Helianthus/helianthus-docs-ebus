@@ -356,11 +356,14 @@ def transition_clean(
     spec["enforce_through"] = CLEAN_STAGE
 
 
-def write_files(root: pathlib.Path, files: dict[str, str]) -> None:
-    for relative, text in files.items():
+def write_files(root: pathlib.Path, files: dict[str, str | bytes]) -> None:
+    for relative, content in files.items():
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+        if isinstance(content, bytes):
+            path.write_bytes(content)
+        else:
+            path.write_text(content, encoding="utf-8")
 
 
 def write_symlinks(root: pathlib.Path, links: dict[str, str]) -> None:
@@ -440,14 +443,92 @@ def build_workspace(
     eebusreg.mkdir()
     write_files(eebusreg, spec["eebusreg"])
     write_symlinks(eebusreg, spec["symlinks"]["eebusreg"])
-    eebusreg_head = commit_fixture(
+    eebusreg_initial_head = commit_fixture(
         eebusreg,
         "helianthus-eebusreg",
         remote_repository=spec["remotes"]["eebusreg"],
     )
+    candidate_markers = {
+        item["lifecycle"]["source_ref"] for item in spec["manifest"]["entries"]
+    }
+    eebusreg_head = eebusreg_initial_head
+    if "__SOURCE_WRONG_COMMIT__" in candidate_markers:
+        env = os.environ.copy()
+        env.update(
+            {
+                "GIT_AUTHOR_DATE": "2026-01-02T00:00:00Z",
+                "GIT_COMMITTER_DATE": "2026-01-02T00:00:00Z",
+            }
+        )
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=Contract Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "--allow-empty",
+                "-qm",
+                "pinned fixture",
+            ],
+            cwd=eebusreg,
+            check=True,
+            env=env,
+        )
+        eebusreg_head = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=eebusreg, text=True
+        ).strip()
+
+    source_objects = {
+        "__SOURCE_REF__": eebusreg_head,
+        "__SOURCE_WRONG_COMMIT__": eebusreg_initial_head,
+    }
+    if "__SOURCE_TREE__" in candidate_markers:
+        source_objects["__SOURCE_TREE__"] = subprocess.check_output(
+            ["git", "rev-parse", "HEAD^{tree}"], cwd=eebusreg, text=True
+        ).strip()
+    if "__SOURCE_BLOB__" in candidate_markers:
+        source_objects["__SOURCE_BLOB__"] = subprocess.check_output(
+            ["git", "rev-parse", "HEAD:api/lifecycle.go"],
+            cwd=eebusreg,
+            text=True,
+        ).strip()
+    if "__SOURCE_ANNOTATED_TAG__" in candidate_markers:
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=Contract Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "tag",
+                "-a",
+                "candidate-annotated",
+                "-m",
+                "candidate fixture",
+            ],
+            cwd=eebusreg,
+            check=True,
+        )
+        source_objects["__SOURCE_ANNOTATED_TAG__"] = subprocess.check_output(
+            ["git", "rev-parse", "refs/tags/candidate-annotated"],
+            cwd=eebusreg,
+            text=True,
+        ).strip()
+    if "__SOURCE_LIGHTWEIGHT_TAG__" in candidate_markers:
+        subprocess.run(
+            ["git", "tag", "candidate-lightweight"], cwd=eebusreg, check=True
+        )
+        source_objects["__SOURCE_LIGHTWEIGHT_TAG__"] = subprocess.check_output(
+            ["git", "rev-parse", "refs/tags/candidate-lightweight"],
+            cwd=eebusreg,
+            text=True,
+        ).strip()
     for item in spec["manifest"]["entries"]:
-        if item["lifecycle"]["source_ref"] == "__SOURCE_REF__":
-            item["lifecycle"]["source_ref"] = eebusreg_head
+        marker = item["lifecycle"]["source_ref"]
+        if marker in source_objects:
+            item["lifecycle"]["source_ref"] = source_objects[marker]
 
     docs_eebus = tmp_path / "helianthus-docs-eebus"
     docs_eebus.mkdir()
@@ -1213,6 +1294,87 @@ def test_negative_mutations_emit_one_exact_category(
 
 
 @pytest.mark.parametrize(
+    "source_marker,expected",
+    (
+        ("__SOURCE_TREE__", ["state.candidate"]),
+        ("__SOURCE_BLOB__", ["state.candidate"]),
+        ("__SOURCE_ANNOTATED_TAG__", ["state.candidate"]),
+        ("__SOURCE_WRONG_COMMIT__", ["state.candidate"]),
+        ("__SOURCE_LIGHTWEIGHT_TAG__", []),
+        ("__SOURCE_REF__", []),
+    ),
+    ids=(
+        "head-tree",
+        "source-blob",
+        "annotated-tag-object",
+        "wrong-commit",
+        "lightweight-tag-commit",
+        "pinned-commit",
+    ),
+)
+def test_candidate_source_ref_is_the_pinned_commit_object(
+    tmp_path: pathlib.Path, source_marker: str, expected: list[str]
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        find_entry(spec, "eebus-api-candidate")["lifecycle"]["source_ref"] = (
+            source_marker
+        )
+
+    workspace = build_workspace(tmp_path, mutate)
+    assert validate(load_validator(), workspace) == expected
+
+
+@pytest.mark.parametrize(
+    "path",
+    (
+        "architecture/name:variant.md",
+        "architecture/<draft>.md",
+        'architecture/quote"name.md',
+        "architecture/pipe|name.md",
+        "architecture/query?.md",
+        "architecture/star*.md",
+        "architecture/CON",
+        "architecture/prn.md",
+        "architecture/AUX.txt",
+        "architecture/nul.reference.md",
+        "architecture/COM1.md",
+        "architecture/com9",
+        "architecture/LPT1.md",
+        "architecture/lpt9.reference",
+        "architecture/trailing.",
+        "architecture/trailing ",
+        "architecture/nested./page.md",
+        "architecture/nested /page.md",
+    ),
+)
+def test_manifest_paths_reject_windows_invalid_segments(
+    tmp_path: pathlib.Path, path: str
+) -> None:
+    mutate = set_nested("eebus-architecture-planned", "owner", "path", path)
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
+        "path.absolute"
+    ]
+
+
+@pytest.mark.parametrize(
+    "path",
+    (
+        "architecture/console.md",
+        "architecture/com10.md",
+        "architecture/lpt0.md",
+        "architecture/auxiliary.md",
+        "architecture/con-file.md",
+        "architecture/question-name.md",
+    ),
+)
+def test_manifest_paths_preserve_valid_windows_near_misses(
+    tmp_path: pathlib.Path, path: str
+) -> None:
+    mutate = set_nested("eebus-architecture-planned", "owner", "path", path)
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == []
+
+
+@pytest.mark.parametrize(
     "mutate,expected",
     (
         (duplicate_surface, ["ownership.surface-duplicate"]),
@@ -1294,6 +1456,74 @@ def test_clean_transition_passes_after_docs_removed_and_summary_trimmed(
 ) -> None:
     workspace = build_workspace(tmp_path, transition_clean)
     assert validate(load_validator(), workspace) == []
+
+
+@pytest.mark.parametrize(
+    "path,text",
+    (
+        (
+            "ARCHITECTURE.md",
+            "# Runtime Architecture\n\nThe eeBUS runtime MUST persist trust state.\n",
+        ),
+        (
+            "notes/alternate/protocol.rst",
+            "Protocol Notes\n\nSHIP peers MUST negotiate before sending messages.\n",
+        ),
+        (
+            "reference/API.adoc",
+            "= API\n\nThe eeBUS Go API MUST expose lifecycle methods.\n",
+        ),
+    ),
+    ids=("root-architecture", "nested-protocol", "nested-api"),
+)
+def test_clean_scans_documentation_authority_outside_docs(
+    tmp_path: pathlib.Path, path: str, text: str
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        transition_clean(spec)
+        spec["eebusreg"][path] = text
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [
+        "ownership.code-repo-substantive"
+    ]
+
+
+@pytest.mark.parametrize(
+    "path",
+    (
+        "generated/ARCHITECTURE.md",
+        "build/reference/PROTOCOL.rst",
+        "vendor/package/API.adoc",
+        "cache/docs/DESIGN.txt",
+        ".cache/docs/ARCHITECTURE.md",
+    ),
+)
+def test_clean_excludes_nonpublishable_documentation_directories(
+    tmp_path: pathlib.Path, path: str
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        transition_clean(spec)
+        spec["eebusreg"][path] = "SHIP peers MUST negotiate sessions.\n"
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == []
+
+
+def test_clean_excludes_binary_documentation_like_files(
+    tmp_path: pathlib.Path,
+) -> None:
+    def mutate(spec: dict[str, Any]) -> None:
+        transition_clean(spec)
+        spec["eebusreg"]["ARCHITECTURE.md"] = (
+            b"\x00SHIP peers MUST negotiate sessions.\xff"
+        )
+
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == []
+
+
+def test_clean_preserves_the_minimal_noncanonical_readme_summary(
+    tmp_path: pathlib.Path,
+) -> None:
+    assert validate(load_validator(), build_workspace(tmp_path, transition_clean)) == []
 
 
 def test_clean_rejects_retained_withdrawn_code_repo_artifacts(
@@ -1840,6 +2070,62 @@ def test_semantic_copy_exemptions_are_predicate_local(
 
 
 @pytest.mark.parametrize(
+    "exempt_prefix",
+    (
+        "The documentation MUST own the evidence summary",
+        "The artifact MUST not claim the digest",
+    ),
+    ids=("ownership", "negative-governance"),
+)
+@pytest.mark.parametrize(
+    "continuation",
+    (
+        " plus SHIP peers negotiate before sending messages",
+        " along with SHIP peers negotiating before sending messages",
+        " together with SHIP peers negotiating before sending messages",
+        ", SHIP peers negotiate before sending messages",
+        " and SHIP peers negotiate before sending messages",
+        ", which SHIP peers negotiate before sending messages",
+        " and SHIP peers MUST negotiate before sending messages",
+    ),
+    ids=(
+        "plus",
+        "along-with",
+        "together-with",
+        "comma",
+        "and",
+        "relative",
+        "shared-modal",
+    ),
+)
+def test_ownership_and_negative_governance_exempt_only_their_own_span(
+    tmp_path: pathlib.Path, exempt_prefix: str, continuation: str
+) -> None:
+    addition = (
+        "\n## SHIP Protocol Evidence Gate\n\n"
+        f"{exempt_prefix}{continuation}.\n"
+    )
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == ["ownership.protocol-copy"]
+
+
+@pytest.mark.parametrize(
+    "statement",
+    (
+        "The documentation MUST own the evidence summary.",
+        "The artifact MUST not claim the digest.",
+    ),
+    ids=("ownership", "negative-governance"),
+)
+def test_pure_ownership_and_negative_governance_prose_remains_allowed(
+    tmp_path: pathlib.Path, statement: str
+) -> None:
+    addition = f"\n## SHIP Protocol Evidence Gate\n\n{statement}\n"
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == []
+
+
+@pytest.mark.parametrize(
     "statement",
     (
         "The artifact MUST record whether the manifest exists and whether the "
@@ -1982,6 +2268,100 @@ def test_markdown_link_parser_accepts_only_real_active_links(
     tmp_path: pathlib.Path, addition: str
 ) -> None:
     workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == []
+
+
+@pytest.mark.parametrize(
+    "addition,expected",
+    (
+        (
+            "\n[Protocol][duplicate]\n\n"
+            "[duplicate]: ../../helianthus-docs-eebus/architecture/future.md\n"
+            "[duplicate]: https://github.com/Project-Helianthus/"
+            "helianthus-docs-eebus/blob/__DOCS_EEBUS_REF__/"
+            "protocols/ship-spine.md\n",
+            ["link.forward"],
+        ),
+        (
+            "\n[Protocol][duplicate]\n\n"
+            "[duplicate]: https://github.com/Project-Helianthus/"
+            "helianthus-docs-eebus/blob/__DOCS_EEBUS_REF__/"
+            "protocols/ship-spine.md\n"
+            "[duplicate]: ../../helianthus-docs-eebus/architecture/future.md\n",
+            [],
+        ),
+        (
+            "\n[Protocol][My Ref]\n\n"
+            "[my   ref]: https://github.com/Project-Helianthus/"
+            "helianthus-docs-eebus/blob/__DOCS_EEBUS_REF__/"
+            "protocols/ship-spine.md\n"
+            "[MY REF]: ../../helianthus-docs-eebus/architecture/future.md\n",
+            [],
+        ),
+        (
+            "\n[Protocol][protocol-ref]\n\n"
+            "[protocol-ref]: https://github.com/Project-Helianthus/"
+            "helianthus-docs-eebus/blob/__DOCS_EEBUS_REF__/"
+            "protocols/ship-spine.md\n",
+            [],
+        ),
+    ),
+    ids=(
+        "prohibited-first-safe-second",
+        "safe-first-prohibited-second",
+        "normalized-case-and-spacing",
+        "ordinary-reference",
+    ),
+)
+def test_markdown_reference_definitions_use_first_definition(
+    tmp_path: pathlib.Path, addition: str, expected: list[str]
+) -> None:
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == expected
+
+
+@pytest.mark.parametrize(
+    "literal",
+    (
+        "fc00::42",
+        "fd12:3456:789a::1",
+        "fe80::1",
+        "[fe80::1%en0]",
+        "::1",
+        "::ffff:192.168.1.25",
+    ),
+    ids=(
+        "unique-local-fc",
+        "unique-local-fd",
+        "link-local",
+        "link-local-zone",
+        "loopback",
+        "mapped-private-ipv4",
+    ),
+)
+def test_private_ipv6_literals_are_rejected(
+    tmp_path: pathlib.Path, literal: str
+) -> None:
+    workspace = build_workspace(
+        tmp_path, append_platform(f"\nObserved endpoint: {literal}\n")
+    )
+    assert validate(load_validator(), workspace) == ["privacy.private-identifier"]
+
+
+@pytest.mark.parametrize(
+    "text",
+    (
+        "Documentation endpoint: 2001:db8::1",
+        "Public resolver: 2606:4700:4700::1111",
+        "Digest: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+        "Versions 1.2.3 and 12:30:00 remain ordinary prose.",
+    ),
+    ids=("documentation-ipv6", "public-ipv6", "hash", "version-and-prose"),
+)
+def test_ipv6_privacy_parser_avoids_nonprivate_false_positives(
+    tmp_path: pathlib.Path, text: str
+) -> None:
+    workspace = build_workspace(tmp_path, append_platform(f"\n{text}\n"))
     assert validate(load_validator(), workspace) == []
 
 

@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import importlib.metadata
 import ipaddress
+import os
 import pathlib
 import re
 import stat
@@ -113,6 +114,10 @@ PRIVATE_IDENTIFIER = re.compile(
     r"(?i)(?:serial|ski|mac|peer[_-]?id|device[_-]?id|token|password|secret)\s*="
 )
 WINDOWS_ABSOLUTE = re.compile(r"[A-Za-z]:[\\/]")
+WINDOWS_INVALID_SEGMENT = re.compile(r'[<>:"|?*\x00-\x1f]')
+WINDOWS_RESERVED_SEGMENT = re.compile(
+    r"(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?\Z", re.I
+)
 NORMATIVE = re.compile(
     r"\b(?:must|shall|should|required|mandatory|acceptance criteria|needs? to)\b",
     re.I,
@@ -127,7 +132,8 @@ VERSION = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)\Z")
 RENDERED_URL = re.compile(r"\bhttps?://[^\s<>\"']+", re.I)
 CLAUSE_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
 PREDICATE_BOUNDARY = re.compile(
-    r"(?:\s+(?:and|or|but|yet|while|whereas|as\s+well\s+as)\s+|"
+    r"(?:\s+(?:and|or|but|yet|while|whereas|plus|as\s+well\s+as|"
+    r"along\s+with|together\s+with)\s+|"
     r"\s+(?=(?:which|that|who)\b))",
     re.I,
 )
@@ -212,13 +218,63 @@ NEGATIVE_GOVERNANCE_CLAIM = re.compile(
     r"(?:claim|report|state|document)\b",
     re.I,
 )
-GOVERNANCE_OBSERVED_SUBJECT = re.compile(
-    r"\s*(?:(?:the|a|an)\s+)?"
-    r"(?:(?:SHIP|SPINE|eeBUS|protocol|runtime|Go|public)\s+){0,3}"
-    r"(?:peers?|sessions?|frames?|messages?|runtimes?|adapters?|"
-    r"implementations?|packages?|functions?|methods?|symbols?|APIs?|it|they)\s+",
+OBSERVATION_SUBJECT = re.compile(
+    r"\s*(?:(?:the|a|an)\s+)?(?:[A-Za-z][A-Za-z0-9_-]*\s+){1,6}\Z", re.I
+)
+
+IPV4_LITERAL = re.compile(r"\b(?:(?:\d{1,3})\.){3}(?:\d{1,3})\b")
+IPV6_LITERAL = re.compile(
+    r"\[(?P<bracketed>[0-9A-Fa-f:.]+(?:%[0-9A-Za-z_.-]+)?)\]|"
+    r"(?<![0-9A-Za-z])(?P<bare>(?:[0-9A-Fa-f]{0,4}:){2,}"
+    r"[0-9A-Fa-f:.]*(?:%[0-9A-Za-z_.-]+)?)(?![0-9A-Za-z])"
+)
+PRIVATE_IPV4_NETWORKS = tuple(
+    ipaddress.ip_network(value)
+    for value in (
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "100.64.0.0/10",
+        "169.254.0.0/16",
+    )
+)
+PRIVATE_IPV6_NETWORKS = (
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+)
+
+DOCUMENTATION_EXTENSIONS = {
+    ".adoc",
+    ".asciidoc",
+    ".markdown",
+    ".md",
+    ".mdown",
+    ".mkd",
+    ".rst",
+    ".txt",
+}
+DOCUMENTATION_NAMES = re.compile(
+    r"(?:README|ARCHITECTURE|DESIGN|PROTOCOL|API|CONTRIBUTING|CHANGELOG|"
+    r"SECURITY|SUPPORT|GOVERNANCE|ROADMAP)(?:\..*)?\Z",
     re.I,
 )
+NONPUBLISHABLE_DIRECTORIES = {
+    ".cache",
+    ".git",
+    ".pytest_cache",
+    ".venv",
+    "__pycache__",
+    "build",
+    "cache",
+    "coverage",
+    "dist",
+    "generated",
+    "node_modules",
+    "out",
+    "target",
+    "vendor",
+    "venv",
+}
 
 
 class _ManifestSchemaError(Exception):
@@ -271,6 +327,23 @@ def _checkout_matches_ref(root: pathlib.Path, ref: str | None) -> bool:
     )
 
 
+def _candidate_ref_matches_checkout(
+    root: pathlib.Path, source_ref: str, pinned_ref: str | None
+) -> bool:
+    object_type = _run_git(root, "cat-file", "-t", source_ref)
+    head = _run_git(root, "rev-parse", "--verify", "HEAD^{commit}")
+    if (
+        object_type.returncode != 0
+        or object_type.stdout.strip() != "commit"
+        or head.returncode != 0
+        or head.stdout.strip().casefold() != source_ref.casefold()
+    ):
+        return False
+    if pinned_ref is None or IMMUTABLE_REF.fullmatch(pinned_ref) is None:
+        return True
+    return pinned_ref.casefold() == source_ref.casefold()
+
+
 def _remote_repository(value: str) -> str | None:
     remote = value.strip().removesuffix(".git")
     if remote.startswith("git@github.com:"):
@@ -303,14 +376,17 @@ def _repository_root_valid(root: pathlib.Path, repository: str) -> bool:
 
 
 def _portable_path(value: str) -> bool:
-    path = pathlib.PurePosixPath(value)
+    parts = value.split("/")
     return (
         bool(value)
         and not value.startswith(("/", "~", "./"))
         and WINDOWS_ABSOLUTE.match(value) is None
         and "\\" not in value
         and "//" not in value
-        and all(part not in {"", ".", ".."} for part in path.parts)
+        and all(part not in {"", ".", ".."} for part in parts)
+        and all(WINDOWS_INVALID_SEGMENT.search(part) is None for part in parts)
+        and all(not part.endswith((".", " ")) for part in parts)
+        and all(WINDOWS_RESERVED_SEGMENT.fullmatch(part) is None for part in parts)
     )
 
 
@@ -684,15 +760,40 @@ def _all_strings(value: Any) -> Iterable[str]:
     yield from walk(value)
 
 
-def _contains_private_network(value: str) -> bool:
-    for token in re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", value):
+def _private_network_literals(value: str) -> list[tuple[str, int]]:
+    private: list[tuple[str, int]] = []
+    for match in IPV4_LITERAL.finditer(value):
+        token = match.group(0)
         try:
             address = ipaddress.ip_address(token)
         except ValueError:
             continue
-        if address.is_private or address.is_link_local or address.is_loopback:
-            return True
-    return False
+        if any(address in network for network in PRIVATE_IPV4_NETWORKS):
+            private.append((token, match.start()))
+
+    for match in IPV6_LITERAL.finditer(value):
+        token = match.group("bracketed") or match.group("bare")
+        try:
+            address = ipaddress.ip_address(token)
+        except ValueError:
+            continue
+        if not isinstance(address, ipaddress.IPv6Address):
+            continue
+        mapped = address.ipv4_mapped
+        if (
+            address == ipaddress.IPv6Address("::1")
+            or any(address in network for network in PRIVATE_IPV6_NETWORKS)
+            or (
+                mapped is not None
+                and any(mapped in network for network in PRIVATE_IPV4_NETWORKS)
+            )
+        ):
+            private.append((token, match.start()))
+    return private
+
+
+def _contains_private_network(value: str) -> bool:
+    return bool(_private_network_literals(value))
 
 
 def _manifest_categories(manifest: dict[str, Any]) -> set[str]:
@@ -771,7 +872,9 @@ def _enforcement_categories(
 
 
 def _state_categories(
-    manifest: dict[str, Any], roots: Mapping[str, pathlib.Path]
+    manifest: dict[str, Any],
+    roots: Mapping[str, pathlib.Path],
+    refs: Mapping[str, str | None] | None = None,
 ) -> set[str]:
     categories: set[str] = set()
     for entry in manifest["entries"]:
@@ -828,19 +931,28 @@ def _state_categories(
                 or lifecycle["cleanup_required"]
             )
             source_root = roots.get(entry["source"]["repository"])
-            if (
-                not invalid
-                and source_root is not None
-                and _artifact_kind(source_root, entry["source"]["path"]) == "regular"
-            ):
-                shown = _run_git_bytes(
-                    source_root,
-                    "show",
-                    f"{source_ref}:{entry['source']['path']}",
+            if not invalid and source_root is not None:
+                pinned_ref = (
+                    refs.get(entry["source"]["repository"])
+                    if refs is not None
+                    else None
                 )
-                invalid = shown.returncode != 0 or hashlib.sha256(
-                    shown.stdout
-                ).hexdigest() != content_hash
+                invalid = not _candidate_ref_matches_checkout(
+                    source_root, source_ref, pinned_ref
+                )
+                if (
+                    not invalid
+                    and _artifact_kind(source_root, entry["source"]["path"])
+                    == "regular"
+                ):
+                    shown = _run_git_bytes(
+                        source_root,
+                        "show",
+                        f"{source_ref}:{entry['source']['path']}",
+                    )
+                    invalid = shown.returncode != 0 or hashlib.sha256(
+                        shown.stdout
+                    ).hexdigest() != content_hash
             if invalid:
                 categories.add("state.candidate")
 
@@ -1097,8 +1209,9 @@ def _markdown_links(text: str) -> list[str]:
         if match is None:
             body_lines.append(line)
             continue
-        definitions[_normalize_reference_label(match.group(1))] = (
-            match.group(2) or match.group(3)
+        definitions.setdefault(
+            _normalize_reference_label(match.group(1)),
+            match.group(2) or match.group(3),
         )
         body_lines.append("")
     body = "\n".join(body_lines)
@@ -1292,6 +1405,22 @@ def _documentation_ownership_summary(paragraph: str) -> bool:
     return DOCUMENTATION_OWNERSHIP.search(paragraph) is not None
 
 
+def _without_documentation_ownership_spans(paragraph: str) -> str:
+    redacted = list(paragraph)
+    for match in DOCUMENTATION_OWNERSHIP.finditer(paragraph):
+        redacted[match.start() : match.end()] = " " * (match.end() - match.start())
+    return "".join(redacted)
+
+
+def _observation_subject(value: str) -> bool:
+    return (
+        bool(value.strip())
+        and ANY_MODAL.search(value) is None
+        and re.search(r"[,;:]", value) is None
+        and OBSERVATION_SUBJECT.fullmatch(value) is not None
+    )
+
+
 def _platform_governance_summary(heading_context: str, paragraph: str) -> bool:
     governance = bool(
         PLATFORM_GOVERNANCE_CONTEXT.search(heading_context)
@@ -1331,11 +1460,7 @@ def _platform_governance_summary(heading_context: str, paragraph: str) -> bool:
     )
     if first_behavior is None or ANY_MODAL.search(complement):
         return False
-    return bool(
-        GOVERNANCE_OBSERVED_SUBJECT.fullmatch(
-            complement[: first_behavior.start()]
-        )
-    )
+    return _observation_subject(complement[: first_behavior.start()])
 
 
 def _predicate_units(clause: str) -> list[tuple[str, bool]]:
@@ -1416,18 +1541,20 @@ def _semantic_copy_categories(text: str) -> set[str]:
             categories.add("ownership.api-copy")
         for clause in CLAUSE_BOUNDARY.split(paragraph):
             for predicate, inherited_normative in _predicate_units(clause):
+                inspected = _without_documentation_ownership_spans(predicate)
                 prohibited = _prohibited_clause_categories(
                     heading_context,
-                    predicate,
+                    inspected,
                     clause_context=clause,
-                    inherited_normative=inherited_normative,
+                    inherited_normative=(
+                        inherited_normative or NORMATIVE.search(predicate) is not None
+                    ),
                 )
                 if not prohibited:
                     continue
                 if (
                     explicitly_non_normative
-                    or _documentation_ownership_summary(predicate)
-                    or _platform_governance_summary(heading_context, predicate)
+                    or _platform_governance_summary(heading_context, inspected)
                 ):
                     continue
                 categories.update(prohibited)
@@ -1439,6 +1566,44 @@ def _ownership_copy_categories(docs_ebus_root: pathlib.Path) -> set[str]:
     for _, text in _platform_markdown(docs_ebus_root):
         categories.update(_semantic_copy_categories(text))
     return categories
+
+
+def _documentation_like(name: str) -> bool:
+    return (
+        pathlib.PurePosixPath(name).suffix.casefold() in DOCUMENTATION_EXTENSIONS
+        or DOCUMENTATION_NAMES.fullmatch(name) is not None
+    )
+
+
+def _code_repository_documents(
+    root: pathlib.Path,
+) -> Iterable[tuple[str, str]]:
+    for current, directory_names, file_names in os.walk(
+        root, topdown=True, followlinks=False
+    ):
+        current_path = pathlib.Path(current)
+        directory_names[:] = [
+            name
+            for name in sorted(directory_names)
+            if name.casefold() not in NONPUBLISHABLE_DIRECTORIES
+            and not (current_path / name).is_symlink()
+        ]
+        for name in sorted(file_names):
+            if not _documentation_like(name):
+                continue
+            path = current_path / name
+            try:
+                relative = path.relative_to(root).as_posix()
+            except ValueError:
+                continue
+            raw = _read_regular_artifact(root, relative)
+            if raw is None or b"\x00" in raw:
+                continue
+            try:
+                text = raw.decode("utf-8")
+            except UnicodeError:
+                continue
+            yield relative, text
 
 
 def _code_repo_categories(
@@ -1484,6 +1649,19 @@ def _code_repo_categories(
             or _semantic_copy_categories(prose)
         ):
             categories.add("ownership.summary-only-substantive")
+    code_root = roots.get("helianthus-eebusreg")
+    summary_paths = {
+        entry["owner"]["path"]
+        for entry in manifest["entries"]
+        if entry["surface"] == "summary_only" and entry["state"] == "active"
+    }
+    if code_root is not None:
+        for relative, text in _code_repository_documents(code_root):
+            if relative in summary_paths:
+                continue
+            contextual = f"# eeBUS code repository {relative}\n\n{text}"
+            if _semantic_copy_categories(contextual):
+                categories.add("ownership.code-repo-substantive")
     return categories
 
 
@@ -1682,7 +1860,7 @@ def validate_workspace(
         return _result(categories)
     categories.update(_history_categories(manifest, prior_manifest))
     categories.update(_enforcement_categories(manifest, enforce_through))
-    categories.update(_state_categories(manifest, valid_roots))
+    categories.update(_state_categories(manifest, valid_roots, refs))
     categories.update(_artifact_categories(manifest, valid_roots))
     categories.update(_ownership_copy_categories(roots["helianthus-docs-ebus"]))
     categories.update(_code_repo_categories(manifest, valid_roots, enforce_through))

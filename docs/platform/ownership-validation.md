@@ -8,7 +8,9 @@ Canonical source: this page.
 manifest. Its schema is closed. Each of the six surfaces has exactly one entry,
 every owner/source pair is globally unique, and a canonical owner path may occur
 only once. All repository paths are portable relative paths with no traversal,
-private path, private identifier, credential, or network data.
+private path, private identifier, credential, or network data. Every path
+segment also excludes Windows-reserved characters, trailing dots or spaces, and
+reserved device names (including reserved names followed by an extension).
 
 The loader retains YAML mapping pairs until duplicate-key validation is
 complete. It rejects duplicate keys at any depth, cyclic aliases, more than 16
@@ -39,18 +41,18 @@ Platform governance prose may require an artifact to record or report evidence,
 including whether protocol activity was observed. That exemption is local to
 the reporting predicate and its single bounded observation complement. The
 validator accepts owned behavior inside that complement only when it begins as
-an observation about a recognized protocol, runtime, or API subject; it then
-checks all remaining predicate content normally. A deterministic clause splitter
-propagates a normative modal across punctuation, conjunction, relative-clause,
-and shared-modal predicate boundaries, so coordinated protocol, architecture,
-or API behavior cannot inherit the governance exemption.
+a bounded grammatical observation subject; it then masks only the validated
+ownership or governance span and checks all remaining predicate content. A
+deterministic clause splitter propagates a normative modal across punctuation,
+conjunction, relative-clause, and shared-modal predicate boundaries, so
+coordinated protocol, architecture, or API behavior cannot inherit an exemption.
 
 ## State Contract
 
 | State | Expiry | Output | Required artifact rule |
 | --- | --- | --- | --- |
 | `planned` | Exactly 14 days after `created_at` | No candidate or stable output; noncanonical and nonlinkable | Owner/source may be absent or may be pre-existing material that has no publication authority |
-| `candidate` | Exactly 30 days after `created_at` | Candidate output only from a hidden `_candidate` area | Regular owner and source files plus immutable source head and exact content hash |
+| `candidate` | Exactly 30 days after `created_at` | Candidate output only from a hidden `_candidate` area | Regular owner and source files plus the direct commit object at the pinned source checkout HEAD and exact content hash |
 | `active` | No expiry | All stable outputs after approval and freeze | Regular owner and source files |
 | `withdrawn` | No expiry | No output and never consumer-visible | Owner and every distinct source artifact absent immediately; cleanup mandatory |
 
@@ -102,6 +104,15 @@ The current PLATFORM transition is:
 - at `MSP-DOCS-CLEAN`, code-repository docs must transition
   `planned -> withdrawn`, while the README must transition
   `planned -> active` as a minimal summary-only pointer.
+
+At CLEAN, the validator also scans documentation-like files throughout the
+eebusreg checkout, including root architecture files and alternate nested
+locations. Normative protocol, architecture, or API authority is rejected
+outside the canonical docs repository. The scan is bounded to documentation
+names and extensions, skips Git metadata and generated, build, vendor, and cache
+trees, and deterministically ignores binary files. The active minimal README,
+noncanonical links, and evidence summaries remain governed by their narrower
+summary and predicate-local contracts.
 
 An E2 or CLEAN check cannot reuse PLATFORM enforcement: each successor invokes
 the same combined-ref validator with its own required stage. Planned entries
@@ -173,9 +184,18 @@ The validator never reads the local clock implicitly. Expiry is inclusive: an
 entry is expired when the evaluation instant equals or exceeds `expires_at`.
 Every diagnostic is terminal and consists only of a sorted unique category id.
 
+The repository privacy gate and platform validator share the same structured IP
+literal parser. They reject private, carrier-grade NAT, and link-local IPv4
+addresses, plus IPv6 unique-local, link-local, loopback, scoped private literals,
+and IPv4-mapped private addresses. Public and documentation IPv6 literals,
+hashes, versions, localhost IPv4 examples, and ordinary colon-bearing prose are
+not addresses under this contract.
+
 Platform pages may reference only platform pages merged in the same repository
 or immutable active targets present at the supplied docs-eebus commit. Inline,
 reference-style, HTML, autolink, and bare GitHub URL forms are parsed outside
 fenced, indented, and inline code. GitHub owner and repository names are
-compared case-insensitively. Moving, candidate, planned, withdrawn, missing,
+compared case-insensitively. Normalized reference identifiers use Markdown's
+first-definition-wins behavior, including duplicate identifiers that differ
+only in case or whitespace. Moving, candidate, planned, withdrawn, missing,
 and symlink targets fail.
