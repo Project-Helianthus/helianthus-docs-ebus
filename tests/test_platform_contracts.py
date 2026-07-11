@@ -1406,6 +1406,31 @@ def test_combined_ref_workflow_checks_out_pr_head_repository() -> None:
     assert "repository: Project-Helianthus/helianthus-docs-ebus" in reusable
 
 
+def test_combined_ref_executes_only_trusted_validator_checkout() -> None:
+    reusable = (
+        REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
+    ).read_text(encoding="utf-8")
+
+    assert "bootstrap_base=114072fe8bdf027cfdd3472d7f2b0896a2496db4" in reusable
+    assert (
+        "bootstrap_validator=c4d87b2d1fbdc9627a3a2aedaae298547f1908d2"
+        in reusable
+    )
+    assert "path: checkouts/docs-ebus-validator" in reusable
+    assert "repository: Project-Helianthus/helianthus-docs-ebus" in reusable
+    assert "cat-file -t \"${TRUSTED_VALIDATOR_REF}\"" in reusable
+    assert "checkouts/docs-ebus-validator/requirements-ci.txt" in reusable
+    assert (
+        "checkouts/docs-ebus-validator/scripts/validate_platform_contracts.py"
+        in reusable
+    )
+    assert "-r checkouts/docs-ebus/requirements-ci.txt" not in reusable
+    assert (
+        "python3 checkouts/docs-ebus/scripts/validate_platform_contracts.py"
+        not in reusable
+    )
+
+
 @pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
 def test_trusted_prior_workflow_materializes_inspected_blob(
     tmp_path: pathlib.Path, workflow_path: pathlib.Path

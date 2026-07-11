@@ -143,9 +143,14 @@ that owns the corresponding successor transition.
 
 For pull requests, both Docs Checks and Combined Ref independently check out the
 trusted base at `github.event.pull_request.base.sha` into a sibling of the
-candidate checkout. No scripts, dependencies, or commands from the base are
-executed. The workflow verifies that the supplied object is the checked-out
-commit, walks every manifest path component with `git ls-tree`, requires tree
+candidate checkout. Combined Ref executes its validator and dependency lock
+only from that official trusted-base checkout; candidate and dependency
+checkouts are input data and their scripts are never executed. The one-time
+bootstrap from base `114072fe8bdf027cfdd3472d7f2b0896a2496db4`, which predates
+the validator, uses reviewed immutable validator commit
+`c4d87b2d1fbdc9627a3a2aedaae298547f1908d2`. The workflow verifies the trusted
+validator commit and regular script/lock files before execution. It separately
+walks every prior-manifest path component with `git ls-tree`, requires tree
 objects for parents and a regular blob mode for the final object, and extracts
 that inspected blob with `git cat-file` into a private path under
 `RUNNER_TEMP`. A missing tree entry is the only valid first-introduction case;

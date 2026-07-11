@@ -82,6 +82,41 @@ jobs:
           [[ "${DOCS_EEBUS_REF}" =~ ${immutable_ref} ]]
           [[ "${EEBUSREG_REF}" =~ ${immutable_ref} ]]
 
+      - name: Select trusted validator ref
+        id: trusted_validator
+        env:
+          DOCS_EBUS_BASE_REF: ${{ inputs.docs_ebus_base_ref }}
+        run: |
+          bootstrap_base=114072fe8bdf027cfdd3472d7f2b0896a2496db4
+          bootstrap_validator=c4d87b2d1fbdc9627a3a2aedaae298547f1908d2
+          if [[ "${DOCS_EBUS_BASE_REF}" == "${bootstrap_base}" ]]; then
+            validator_ref="${bootstrap_validator}"
+          else
+            validator_ref="${DOCS_EBUS_BASE_REF}"
+          fi
+          printf 'ref=%s\n' "${validator_ref}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout trusted validator
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: Project-Helianthus/helianthus-docs-ebus
+          ref: ${{ steps.trusted_validator.outputs.ref }}
+          path: checkouts/docs-ebus-validator
+          clean: true
+          persist-credentials: false
+
+      - name: Verify trusted validator checkout
+        env:
+          TRUSTED_VALIDATOR_REF: ${{ steps.trusted_validator.outputs.ref }}
+        run: |
+          set -euo pipefail
+          validator_root="${GITHUB_WORKSPACE}/checkouts/docs-ebus-validator"
+          [[ "$(git -C "${validator_root}" cat-file -t "${TRUSTED_VALIDATOR_REF}")" == "commit" ]]
+          [[ "$(git -C "${validator_root}" rev-parse --verify HEAD)" == "${TRUSTED_VALIDATOR_REF}" ]]
+          for path in requirements-ci.txt scripts/validate_platform_contracts.py; do
+            [[ -f "${validator_root}/${path}" && ! -L "${validator_root}/${path}" ]]
+          done
+
       - name: Checkout docs-ebus ref
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -219,7 +254,7 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check --no-deps \
             --no-build-isolation --require-hashes \
-            -r checkouts/docs-ebus/requirements-ci.txt
+            -r checkouts/docs-ebus-validator/requirements-ci.txt
           python -m pip check
 
       - name: Validate combined refs
@@ -230,7 +265,7 @@ jobs:
           if [[ -n "${PRIOR_MANIFEST}" ]]; then
             set -- --prior-manifest "${PRIOR_MANIFEST}"
           fi
-          python3 checkouts/docs-ebus/scripts/validate_platform_contracts.py \
+          python3 checkouts/docs-ebus-validator/scripts/validate_platform_contracts.py \
             --mode combined-ref \
             --docs-ebus-root checkouts/docs-ebus \
             --docs-ebus-repository "${{ inputs.docs_ebus_repository }}" \
