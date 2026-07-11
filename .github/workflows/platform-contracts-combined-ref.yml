@@ -283,3 +283,25 @@ jobs:
             --enforce-through "${ENFORCE_THROUGH}" \
             --toolchain-mode exact \
             "$@"
+
+      - name: Enforce trusted manifest expiry
+        env:
+          ENFORCE_THROUGH: ${{ inputs.enforce_through }}
+        run: |
+          evaluated_at="$(python3 - <<'PY'
+          import datetime
+
+          print(
+              datetime.datetime.now(datetime.timezone.utc)
+              .isoformat()
+              .replace("+00:00", "Z")
+          )
+          PY
+          )"
+          python3 checkouts/docs-ebus-validator/scripts/validate_platform_contracts.py \
+            --mode main-expiry \
+            --docs-ebus-root checkouts/docs-ebus \
+            --evaluated-at "${evaluated_at}" \
+            --evaluation-source github.runner.utc_now \
+            --enforce-through "${ENFORCE_THROUGH}" \
+            --toolchain-mode exact

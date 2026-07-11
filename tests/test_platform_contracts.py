@@ -1365,21 +1365,33 @@ def test_ci_workflow_uses_locked_python_pip_and_dependencies(
     assert "requirements-ci.txt" in install
 
 
-def test_main_expiry_workflow_uses_trusted_runner_clock() -> None:
+def test_combined_ref_expiry_uses_trusted_validator_and_runner_clock() -> None:
     workflow = yaml.safe_load(
-        (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(encoding="utf-8")
+        (
+            REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
+        ).read_text(encoding="utf-8")
     )
-    steps = workflow["jobs"]["markdown-checks"]["steps"]
+    steps = workflow["jobs"]["validate"]["steps"]
     expiry_steps = [
-        step for step in steps if step.get("name") == "Enforce manifest expiry"
+        step
+        for step in steps
+        if step.get("name") == "Enforce trusted manifest expiry"
     ]
     assert len(expiry_steps) == 1
     step = expiry_steps[0]
     assert "if" not in step
     assert "RAW_EVALUATED_AT" not in step.get("env", {})
+    assert step["env"]["ENFORCE_THROUGH"] == "${{ inputs.enforce_through }}"
     script = step["run"]
     assert "datetime.datetime.now(datetime.timezone.utc)" in script
     assert '.replace("+00:00", "Z")' in script
+    assert (
+        "python3 checkouts/docs-ebus-validator/scripts/validate_platform_contracts.py"
+        in script
+    )
+    assert "python3 checkouts/docs-ebus/scripts/validate_platform_contracts.py" not in script
+    assert "--mode main-expiry" in script
+    assert "--docs-ebus-root checkouts/docs-ebus" in script
     assert '--evaluated-at "${evaluated_at}"' in script
     assert "github.event.head_commit.timestamp" not in script
     assert "--evaluation-source github.runner.utc_now" in script
@@ -1450,7 +1462,7 @@ def test_combined_ref_validates_milestone_before_shell_use() -> None:
         REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
     ).read_text(encoding="utf-8")
 
-    assert reusable.count("ENFORCE_THROUGH: ${{ inputs.enforce_through }}") == 2
+    assert reusable.count("ENFORCE_THROUGH: ${{ inputs.enforce_through }}") == 3
     assert "MSP-DOCS-PLATFORM|MSP-DOCS-E2|MSP-DOCS-CLEAN" in reusable
     assert '--enforce-through "${ENFORCE_THROUGH}"' in reusable
     assert '--enforce-through "${{ inputs.enforce_through }}"' not in reusable
