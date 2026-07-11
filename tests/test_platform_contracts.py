@@ -1396,6 +1396,12 @@ def test_combined_ref_expiry_uses_trusted_validator_and_runner_clock() -> None:
     assert "github.event.head_commit.timestamp" not in script
     assert "--evaluation-source github.runner.utc_now" in script
 
+    caller = yaml.safe_load(
+        (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(encoding="utf-8")
+    )
+    candidate_steps = caller["jobs"]["markdown-checks"]["steps"]
+    assert all(step.get("name") != "Enforce manifest expiry" for step in candidate_steps)
+
 
 def test_combined_ref_workflow_checks_out_pr_head_repository() -> None:
     caller = (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(
@@ -1426,7 +1432,7 @@ def test_combined_ref_caller_pins_trusted_reusable_workflow() -> None:
     trusted_call = (
         "uses: Project-Helianthus/helianthus-docs-ebus/"
         ".github/workflows/platform-contracts-combined-ref.yml@"
-        "cb938e56af237fc9c71b13a222a0b1d940f8bbac"
+        "b612a1168c6509d04da13243e7d6cef3f2318dd7"
     )
     assert trusted_call in caller
     assert "uses: ./.github/workflows/platform-contracts-combined-ref.yml" not in caller

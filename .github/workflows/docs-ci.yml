@@ -175,33 +175,12 @@ jobs:
         working-directory: checkouts/docs-ebus
         run: ./scripts/ci_local.sh
 
-      - name: Enforce manifest expiry
-        working-directory: checkouts/docs-ebus
-        run: |
-          evaluated_at="$(python3 - <<'PY'
-          import datetime
-
-          print(
-              datetime.datetime.now(datetime.timezone.utc)
-              .isoformat()
-              .replace("+00:00", "Z")
-          )
-          PY
-          )"
-          python3 scripts/validate_platform_contracts.py \
-            --mode main-expiry \
-            --docs-ebus-root . \
-            --evaluated-at "${evaluated_at}" \
-            --evaluation-source github.runner.utc_now \
-            --enforce-through MSP-DOCS-PLATFORM \
-            --toolchain-mode exact
-
   platform-contracts-combined-ref:
     name: Platform Contracts Combined Ref
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
-    uses: Project-Helianthus/helianthus-docs-ebus/.github/workflows/platform-contracts-combined-ref.yml@cb938e56af237fc9c71b13a222a0b1d940f8bbac
+    uses: Project-Helianthus/helianthus-docs-ebus/.github/workflows/platform-contracts-combined-ref.yml@b612a1168c6509d04da13243e7d6cef3f2318dd7
     with:
       docs_ebus_repository: ${{ github.event.pull_request.head.repo.full_name }}
       docs_ebus_ref: ${{ github.event.pull_request.head.sha }}
