@@ -1311,7 +1311,24 @@ def test_ci_workflow_uses_locked_python_pip_and_dependencies(
     assert len(python_steps) == 1
     python_step = python_steps[0]
     assert python_step["with"]["python-version"] == PINNED_CI_PYTHON
-    assert "PIP_NO_INDEX" not in python_step.get("env", {})
+    assert python_step.get("env", {}).get("PIP_NO_INDEX") == "1"
+    assert "helianthus-pip-bootstrap" in python_step.get("env", {}).get(
+        "PIP_FIND_LINKS", ""
+    )
+
+    bootstrap_artifact_steps = [
+        step
+        for step in steps
+        if step.get("name") == "Prepare hash-locked pip bootstrap"
+    ]
+    assert len(bootstrap_artifact_steps) == 1
+    bootstrap_artifact = bootstrap_artifact_steps[0]["run"]
+    assert "pip-25.0.1-py3-none-any.whl" in bootstrap_artifact
+    assert (
+        "c46efd13b6aa8279f33f2864459c8ce587ea6a1a59ee20de055868d8f7688f7f"
+        in bootstrap_artifact
+    )
+    assert "sha256sum --check --strict" in bootstrap_artifact
 
     bootstrap_steps = [
         step for step in steps if step.get("name") == "Verify pinned Python and pip"
@@ -1330,7 +1347,7 @@ def test_ci_workflow_uses_locked_python_pip_and_dependencies(
     ]
     assert len(pip_install_steps) == 1
     pip_install_step = pip_install_steps[0]
-    assert pip_install_step.get("env", {}).get("PIP_NO_INDEX") == "1"
+    assert "PIP_NO_INDEX" not in pip_install_step.get("env", {})
     install = pip_install_step["run"]
     assert "--require-hashes" in install
     assert "--no-deps" in install
