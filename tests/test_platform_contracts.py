@@ -654,6 +654,7 @@ def repository_validate(
     validator: Any,
     root: pathlib.Path,
     *,
+    docs_ebus_repository: str = "Project-Helianthus/helianthus-docs-ebus",
     mode: str = "repository",
     evaluated_at: str | None = None,
     evaluation_source: str | None = None,
@@ -661,6 +662,7 @@ def repository_validate(
 ) -> list[str]:
     return validator.validate_repository(
         docs_ebus_root=root,
+        docs_ebus_repository=docs_ebus_repository,
         mode=mode,
         enforce_through=PLATFORM_STAGE,
         toolchain_mode="supported",
@@ -1382,6 +1384,10 @@ def test_combined_ref_expiry_uses_trusted_validator_and_runner_clock() -> None:
     assert "if" not in step
     assert "RAW_EVALUATED_AT" not in step.get("env", {})
     assert step["env"]["ENFORCE_THROUGH"] == "${{ inputs.enforce_through }}"
+    assert (
+        step["env"]["DOCS_EBUS_REPOSITORY"]
+        == "${{ inputs.docs_ebus_repository }}"
+    )
     script = step["run"]
     assert "datetime.datetime.now(datetime.timezone.utc)" in script
     assert '.replace("+00:00", "Z")' in script
@@ -1392,6 +1398,7 @@ def test_combined_ref_expiry_uses_trusted_validator_and_runner_clock() -> None:
     assert "python3 checkouts/docs-ebus/scripts/validate_platform_contracts.py" not in script
     assert "--mode main-expiry" in script
     assert "--docs-ebus-root checkouts/docs-ebus" in script
+    assert '--docs-ebus-repository "${DOCS_EBUS_REPOSITORY}"' in script
     assert '--evaluated-at "${evaluated_at}"' in script
     assert "github.event.head_commit.timestamp" not in script
     assert "--evaluation-source github.runner.utc_now" in script
@@ -2295,6 +2302,32 @@ def test_combined_ref_accepts_fork_candidate_origin(tmp_path: pathlib.Path) -> N
         spec["remotes"]["docs_ebus"] = "contributor/helianthus-docs-ebus"
 
     assert validate(load_validator(), build_workspace(tmp_path, fork_origin)) == []
+
+
+def test_main_expiry_accepts_declared_fork_candidate_origin(
+    tmp_path: pathlib.Path,
+) -> None:
+    def fork_origin(spec: dict[str, Any]) -> None:
+        spec["remotes"]["docs_ebus"] = "contributor/helianthus-docs-ebus"
+
+    workspace = build_workspace(tmp_path, fork_origin)
+    validator = load_validator()
+    arguments = {
+        "mode": "main-expiry",
+        "evaluated_at": "2026-01-10T00:00:00Z",
+        "evaluation_source": "test.runner.utc_now",
+    }
+    assert repository_validate(
+        validator,
+        workspace.docs_ebus,
+        docs_ebus_repository=workspace.docs_ebus_repository,
+        **arguments,
+    ) == []
+    assert repository_validate(
+        validator,
+        workspace.docs_ebus,
+        **arguments,
+    ) == ["input.repository-root"]
 
 
 @pytest.mark.parametrize(

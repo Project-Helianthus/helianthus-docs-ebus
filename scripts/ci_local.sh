@@ -5,6 +5,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 platform_toolchain_mode="${PLATFORM_TOOLCHAIN_MODE:-supported}"
+platform_docs_ebus_repository="${PLATFORM_DOCS_EBUS_REPOSITORY:-Project-Helianthus/helianthus-docs-ebus}"
 case "${platform_toolchain_mode}" in
   exact|supported) ;;
   *)
@@ -155,6 +156,7 @@ fi
 python3 scripts/validate_platform_contracts.py \
   --mode repository \
   --docs-ebus-root . \
+  --docs-ebus-repository "${platform_docs_ebus_repository}" \
   --enforce-through MSP-DOCS-PLATFORM \
   --toolchain-mode "${platform_toolchain_mode}" \
   "$@"

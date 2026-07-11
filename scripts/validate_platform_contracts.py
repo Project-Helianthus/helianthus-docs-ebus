@@ -1815,6 +1815,7 @@ def _history_categories(
 def validate_repository(
     *,
     docs_ebus_root: pathlib.Path,
+    docs_ebus_repository: str,
     mode: str,
     enforce_through: str,
     toolchain_mode: str,
@@ -1824,8 +1825,11 @@ def validate_repository(
 ) -> list[str]:
     root = pathlib.Path(docs_ebus_root)
     categories = _toolchain_categories(toolchain_mode)
-    root_valid = _repository_root_valid(
-        root, "Project-Helianthus/helianthus-docs-ebus"
+    repository_valid = GITHUB_REPOSITORY.fullmatch(docs_ebus_repository) is not None
+    if not repository_valid:
+        categories.add("input.docs-ebus-repository")
+    root_valid = repository_valid and _repository_root_valid(
+        root, docs_ebus_repository
     )
     if not root_valid:
         categories.add("input.repository-root")
@@ -1970,6 +1974,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.mode in {"repository", "main-expiry"}:
         diagnostics = validate_repository(
             docs_ebus_root=args.docs_ebus_root,
+            docs_ebus_repository=args.docs_ebus_repository,
             mode=args.mode,
             enforce_through=args.enforce_through,
             toolchain_mode=args.toolchain_mode,

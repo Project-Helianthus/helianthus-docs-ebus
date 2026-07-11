@@ -286,6 +286,7 @@ jobs:
 
       - name: Enforce trusted manifest expiry
         env:
+          DOCS_EBUS_REPOSITORY: ${{ inputs.docs_ebus_repository }}
           ENFORCE_THROUGH: ${{ inputs.enforce_through }}
         run: |
           evaluated_at="$(python3 - <<'PY'
@@ -301,6 +302,7 @@ jobs:
           python3 checkouts/docs-ebus-validator/scripts/validate_platform_contracts.py \
             --mode main-expiry \
             --docs-ebus-root checkouts/docs-ebus \
+            --docs-ebus-repository "${DOCS_EBUS_REPOSITORY}" \
             --evaluated-at "${evaluated_at}" \
             --evaluation-source github.runner.utc_now \
             --enforce-through "${ENFORCE_THROUGH}" \
