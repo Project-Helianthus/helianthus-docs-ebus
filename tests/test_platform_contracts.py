@@ -1431,6 +1431,17 @@ def test_combined_ref_executes_only_trusted_validator_checkout() -> None:
     )
 
 
+def test_combined_ref_validates_milestone_before_shell_use() -> None:
+    reusable = (
+        REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
+    ).read_text(encoding="utf-8")
+
+    assert reusable.count("ENFORCE_THROUGH: ${{ inputs.enforce_through }}") == 2
+    assert "MSP-DOCS-PLATFORM|MSP-DOCS-E2|MSP-DOCS-CLEAN" in reusable
+    assert '--enforce-through "${ENFORCE_THROUGH}"' in reusable
+    assert '--enforce-through "${{ inputs.enforce_through }}"' not in reusable
+
+
 @pytest.mark.parametrize("workflow_path", WORKFLOW_PATHS, ids=lambda path: path.stem)
 def test_trusted_prior_workflow_materializes_inspected_blob(
     tmp_path: pathlib.Path, workflow_path: pathlib.Path
