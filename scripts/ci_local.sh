@@ -4,6 +4,35 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
+platform_toolchain_mode="${PLATFORM_TOOLCHAIN_MODE:-supported}"
+case "${platform_toolchain_mode}" in
+  exact|supported) ;;
+  *)
+    echo "PLATFORM_TOOLCHAIN_MODE must be exact or supported." >&2
+    exit 2
+    ;;
+esac
+
+echo "==> verify pinned workflow/schema gate tools"
+if ! command -v actionlint >/dev/null 2>&1; then
+  echo "actionlint v1.7.7 is required: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7" >&2
+  exit 2
+fi
+if [ "$(actionlint -version | sed -n '1p')" != "v1.7.7" ]; then
+  echo "actionlint must report v1.7.7." >&2
+  exit 2
+fi
+if ! command -v jv >/dev/null 2>&1; then
+  echo "jv v0.7.0 is required: go install github.com/santhosh-tekuri/jsonschema/cmd/jv@v0.7.0" >&2
+  exit 2
+fi
+if [ "$(jv --version | sed -n '1p')" != "github.com/santhosh-tekuri/jsonschema/cmd/jv v0.7.0" ]; then
+  echo "jv must report v0.7.0." >&2
+  exit 2
+fi
+actionlint .github/workflows/*.yml
+echo "Pinned workflow/schema gate tools passed."
+
 echo "==> verify markdown files are present"
 count="$(git ls-files '*.md' | wc -l | tr -d ' ')"
 if [ "${count}" -eq 0 ]; then
@@ -142,8 +171,8 @@ python3 -m pytest -q tests/test_platform_contracts.py
 python3 scripts/validate_platform_contracts.py \
   --mode repository \
   --docs-ebus-root . \
-  --pinned-tool python=3.12.10 \
-  --pinned-tool pyyaml=6.0.2
+  --enforce-through MSP-DOCS-PLATFORM \
+  --toolchain-mode "${platform_toolchain_mode}"
 
 echo "==> check eBUS address-table taxonomy + frame-type contract hash (Phase C M-C0)"
 bash scripts/check_address_table_taxonomy_hash.sh

@@ -15,6 +15,10 @@ on:
         description: Immutable helianthus-eebusreg commit
         required: true
         type: string
+      enforce_through:
+        description: Owning milestone enforced by this combined-ref run
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       docs_ebus_ref:
@@ -29,6 +33,14 @@ on:
         description: Immutable helianthus-eebusreg commit
         required: true
         type: string
+      enforce_through:
+        description: Owning milestone enforced by this combined-ref run
+        required: true
+        type: choice
+        options:
+          - MSP-DOCS-PLATFORM
+          - MSP-DOCS-E2
+          - MSP-DOCS-CLEAN
 
 permissions:
   contents: read
@@ -94,5 +106,5 @@ jobs:
             --docs-ebus-ref "${{ inputs.docs_ebus_ref }}" \
             --docs-eebus-ref "${{ inputs.docs_eebus_ref }}" \
             --eebusreg-ref "${{ inputs.eebusreg_ref }}" \
-            --pinned-tool python=3.12.10 \
-            --pinned-tool pyyaml=6.0.2
+            --enforce-through "${{ inputs.enforce_through }}" \
+            --toolchain-mode exact

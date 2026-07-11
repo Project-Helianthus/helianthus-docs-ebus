@@ -57,7 +57,12 @@ jobs:
           go install github.com/santhosh-tekuri/jsonschema/cmd/jv@v0.7.0
           echo "${HOME}/go/bin" >> "${GITHUB_PATH}"
 
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7
+
       - name: Run local docs CI
+        env:
+          PLATFORM_TOOLCHAIN_MODE: exact
         run: ./scripts/ci_local.sh
 
       - name: Enforce main manifest expiry
@@ -68,5 +73,17 @@ jobs:
             --docs-ebus-root . \
             --evaluated-at "${{ github.event.head_commit.timestamp }}" \
             --evaluation-source github.event.head_commit.timestamp \
-            --pinned-tool python=3.12.10 \
-            --pinned-tool pyyaml=6.0.2
+            --enforce-through MSP-DOCS-PLATFORM \
+            --toolchain-mode exact
+
+  platform-contracts-combined-ref:
+    name: Platform Contracts Combined Ref
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/platform-contracts-combined-ref.yml
+    with:
+      docs_ebus_ref: ${{ github.event.pull_request.head.sha }}
+      docs_eebus_ref: f23a7c35e6803501f185923de061f935bbac1466
+      eebusreg_ref: 0e58327dfdb86ef243a19e18d590564813feaa00
+      enforce_through: MSP-DOCS-PLATFORM

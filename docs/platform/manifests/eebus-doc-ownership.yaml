@@ -28,6 +28,9 @@ entries:
       approved_at: "2026-07-10T00:00:00Z"
       frozen_at: "2026-07-10T00:00:00Z"
       cleanup_required: false
+    enforcement:
+      milestone: MSP-DOCS-API-SCHEMA
+      required_state: active
 
   - id: eebus-architecture
     surface: architecture
@@ -37,25 +40,28 @@ entries:
     source:
       repository: helianthus-docs-eebus
       path: architecture/README.md
-    canonical: true
-    state: active
+    canonical: false
+    state: planned
     outputs:
       candidate: false
-      stable_navigation: true
-      search: true
-      sitemap: true
-      versioned_bundle: true
-      release_bundle: true
+      stable_navigation: false
+      search: false
+      sitemap: false
+      versioned_bundle: false
+      release_bundle: false
     lifecycle:
-      created_at: "2026-07-10T00:00:00Z"
-      expires_at: null
-      source_issue: Project-Helianthus/helianthus-docs-eebus#6
-      source_pr: Project-Helianthus/helianthus-docs-eebus#7
+      created_at: "2026-07-11T00:00:00Z"
+      expires_at: "2026-07-25T00:00:00Z"
+      source_issue: Project-Helianthus/helianthus-execution-plans#58
+      source_pr: null
       source_ref: null
       content_sha256: null
-      approved_at: "2026-07-10T00:00:00Z"
-      frozen_at: "2026-07-10T00:00:00Z"
+      approved_at: null
+      frozen_at: null
       cleanup_required: false
+    enforcement:
+      milestone: MSP-DOCS-E2
+      required_state: active
 
   - id: eebus-api-v1
     surface: api
@@ -84,6 +90,9 @@ entries:
       approved_at: "2026-07-10T00:00:00Z"
       frozen_at: "2026-07-10T00:00:00Z"
       cleanup_required: false
+    enforcement:
+      milestone: MSP-DOCS-API-SCHEMA
+      required_state: active
 
   - id: cross-runtime-platform-contracts
     surface: platform
@@ -112,6 +121,9 @@ entries:
       approved_at: "2026-07-11T00:00:00Z"
       frozen_at: "2026-07-11T00:00:00Z"
       cleanup_required: false
+    enforcement:
+      milestone: MSP-DOCS-PLATFORM
+      required_state: active
 
   - id: eebusreg-substantive-docs
     surface: code_repo
@@ -122,7 +134,7 @@ entries:
       repository: helianthus-eebusreg
       path: docs
     canonical: false
-    state: withdrawn
+    state: planned
     outputs:
       candidate: false
       stable_navigation: false
@@ -132,14 +144,17 @@ entries:
       release_bundle: false
     lifecycle:
       created_at: "2026-07-11T00:00:00Z"
-      expires_at: null
-      source_issue: null
+      expires_at: "2026-07-25T00:00:00Z"
+      source_issue: Project-Helianthus/helianthus-execution-plans#58
       source_pr: null
       source_ref: null
       content_sha256: null
       approved_at: null
       frozen_at: null
-      cleanup_required: true
+      cleanup_required: false
+    enforcement:
+      milestone: MSP-DOCS-CLEAN
+      required_state: withdrawn
 
   - id: eebusreg-readme-summary
     surface: summary_only
@@ -150,21 +165,24 @@ entries:
       repository: helianthus-docs-eebus
       path: README.md
     canonical: false
-    state: active
+    state: planned
     outputs:
       candidate: false
-      stable_navigation: true
-      search: true
-      sitemap: true
-      versioned_bundle: true
-      release_bundle: true
+      stable_navigation: false
+      search: false
+      sitemap: false
+      versioned_bundle: false
+      release_bundle: false
     lifecycle:
-      created_at: "2026-07-10T00:00:00Z"
-      expires_at: null
-      source_issue: Project-Helianthus/helianthus-docs-eebus#6
-      source_pr: Project-Helianthus/helianthus-docs-eebus#7
+      created_at: "2026-07-11T00:00:00Z"
+      expires_at: "2026-07-25T00:00:00Z"
+      source_issue: Project-Helianthus/helianthus-execution-plans#58
+      source_pr: null
       source_ref: null
       content_sha256: null
-      approved_at: "2026-07-10T00:00:00Z"
-      frozen_at: "2026-07-10T00:00:00Z"
+      approved_at: null
+      frozen_at: null
       cleanup_required: false
+    enforcement:
+      milestone: MSP-DOCS-CLEAN
+      required_state: active

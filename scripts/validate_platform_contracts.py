@@ -5,19 +5,28 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.metadata
 import ipaddress
 import pathlib
 import re
+import stat
 import subprocess
 import sys
+import urllib.parse
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
 from typing import Any
 
 import yaml
 
 
 MANIFEST = pathlib.Path("docs/platform/manifests/eebus-doc-ownership.yaml")
+REPOSITORIES = (
+    "helianthus-docs-ebus",
+    "helianthus-docs-eebus",
+    "helianthus-eebusreg",
+)
 SURFACES = {
     "protocol",
     "architecture",
@@ -27,7 +36,29 @@ SURFACES = {
     "summary_only",
 }
 STATES = {"planned", "candidate", "active", "withdrawn"}
-PINNED_TOOLS = {"python": "3.12.10", "pyyaml": "6.0.2"}
+MILESTONES = (
+    "MSP-DOCS-API-SCHEMA",
+    "MSP-DOCS-PLATFORM",
+    "MSP-DOCS-E2",
+    "MSP-DOCS-CLEAN",
+)
+MILESTONE_INDEX = {name: index for index, name in enumerate(MILESTONES)}
+TARGET_STATES = {"candidate", "active", "withdrawn"}
+
+EXACT_PYTHON = (3, 12, 10)
+EXACT_PYYAML = "6.0.2"
+SUPPORTED_PYTHON_MIN = (3, 12, 0)
+SUPPORTED_PYTHON_MAX = (3, 15, 0)
+SUPPORTED_PYYAML_MIN = (6, 0, 2)
+SUPPORTED_PYYAML_MAX = (7, 0, 0)
+TOOLCHAIN_MODES = {"exact", "supported"}
+
+MAX_MANIFEST_BYTES = 64 * 1024
+MAX_YAML_NESTING = 24
+MAX_YAML_ALIASES = 16
+MAX_YAML_TOKENS = 8192
+MAX_YAML_NODES = 4096
+
 TOP_FIELDS = {"schema", "version", "entries"}
 ENTRY_FIELDS = {
     "id",
@@ -38,6 +69,7 @@ ENTRY_FIELDS = {
     "state",
     "outputs",
     "lifecycle",
+    "enforcement",
 }
 LOCATION_FIELDS = {"repository", "path"}
 OUTPUT_FIELDS = {
@@ -59,16 +91,60 @@ LIFECYCLE_FIELDS = {
     "frozen_at",
     "cleanup_required",
 }
+ENFORCEMENT_FIELDS = {"milestone", "required_state"}
 STABLE_OUTPUTS = OUTPUT_FIELDS - {"candidate"}
+
 IMMUTABLE_REF = re.compile(r"[0-9a-fA-F]{40}\Z")
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 ENTRY_ID = re.compile(r"[a-z0-9][a-z0-9-]*\Z")
-MARKDOWN_LINK = re.compile(r"(?:\[[^]]*\]\(|href=[\"'])([^)\"'\s]+)")
+RFC3339_UTC = re.compile(
+    r"[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])"
+    r"T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]"
+    r"(?:\.[0-9]{1,6})?Z\Z"
+)
 PRIVATE_IDENTIFIER = re.compile(
     r"(?i)(?:serial|ski|mac|peer[_-]?id|device[_-]?id|token|password|secret)\s*="
 )
 WINDOWS_ABSOLUTE = re.compile(r"[A-Za-z]:[\\/]")
 NORMATIVE = re.compile(r"\b(?:must|shall|required|acceptance criteria)\b", re.I)
+FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+REFERENCE_DEFINITION = re.compile(
+    r"^ {0,3}\[([^\]]+)\]:[ \t]*(?:<([^>\n]+)>|(\S+))"
+)
+VERSION = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)\Z")
+
+PROTOCOL_CONTEXT = re.compile(
+    r"\b(?:SHIP|SPINE|SKI|wire protocol|protocol peer|protocol frame|protocol message)\b",
+    re.I,
+)
+PROTOCOL_BEHAVIOR = re.compile(
+    r"\b(?:send|receive|negotiate|encode|decode|respond|retry|acknowledge|"
+    r"advertise|initiate|establish|close)s?\b",
+    re.I,
+)
+ARCHITECTURE_CONTEXT = re.compile(
+    r"\beebus\b.*\b(?:runtime|trust|persistence|lifecycle|adapter|reconnect|"
+    r"session store|cache)\b|\b(?:runtime|trust|persistence|lifecycle|adapter|"
+    r"reconnect|session store|cache)\b.*\beebus\b",
+    re.I | re.S,
+)
+ARCHITECTURE_BEHAVIOR = re.compile(
+    r"\b(?:persist|store|load|restore|reconnect|manage|own|create|listen|cache)s?\b",
+    re.I,
+)
+API_CONTEXT = re.compile(
+    r"\beebus\b.*\b(?:Go API|package|function|method|symbol|signature|public API)\b|"
+    r"\b(?:Go API|package|function|method|symbol|signature|public API)\b.*\beebus\b",
+    re.I | re.S,
+)
+API_BEHAVIOR = re.compile(
+    r"\b(?:expose|export|return|accept|declare|define)s?\b", re.I
+)
+GO_DECLARATION = re.compile(r"\bfunc\s+[A-Z][A-Za-z0-9_]*\s*\(")
+
+
+class _ManifestSchemaError(Exception):
+    """Internal marker for non-reflective manifest parse failures."""
 
 
 def _result(categories: Iterable[str]) -> list[str]:
@@ -84,14 +160,24 @@ def _run_git(root: pathlib.Path, *args: str) -> subprocess.CompletedProcess[str]
     )
 
 
+def _run_git_bytes(
+    root: pathlib.Path, *args: str
+) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run(
+        ["git", "-C", str(root), *args],
+        check=False,
+        capture_output=True,
+    )
+
+
 def _clean_checkout(root: pathlib.Path) -> bool:
-    if not root.is_dir():
-        return False
     inside = _run_git(root, "rev-parse", "--is-inside-work-tree")
     if inside.returncode != 0 or inside.stdout.strip() != "true":
         return False
-    status = _run_git(root, "status", "--porcelain=v1", "--untracked-files=all")
-    return status.returncode == 0 and not status.stdout
+    status_result = _run_git(
+        root, "status", "--porcelain=v1", "--untracked-files=all"
+    )
+    return status_result.returncode == 0 and not status_result.stdout
 
 
 def _checkout_matches_ref(root: pathlib.Path, ref: str | None) -> bool:
@@ -107,14 +193,207 @@ def _checkout_matches_ref(root: pathlib.Path, ref: str | None) -> bool:
     )
 
 
-def _load_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, str | None]:
-    path = root / MANIFEST
-    if not path.is_file() or path.is_symlink():
-        return None, "manifest.missing"
+def _remote_repository(value: str) -> str | None:
+    remote = value.strip().removesuffix(".git")
+    if remote.startswith("git@github.com:"):
+        return remote.split(":", 1)[1]
+    parsed = urllib.parse.urlsplit(remote)
+    if parsed.hostname == "github.com":
+        return parsed.path.lstrip("/")
+    return None
+
+
+def _repository_root_valid(root: pathlib.Path, repository: str) -> bool:
     try:
-        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, yaml.YAMLError):
+        root_stat = root.lstat()
+    except OSError:
+        return False
+    if stat.S_ISLNK(root_stat.st_mode) or not stat.S_ISDIR(root_stat.st_mode):
+        return False
+    top = _run_git(root, "rev-parse", "--show-toplevel")
+    remote = _run_git(root, "remote", "get-url", "origin")
+    if top.returncode != 0 or remote.returncode != 0:
+        return False
+    try:
+        top_path = pathlib.Path(top.stdout.strip()).resolve(strict=True)
+        root_path = root.resolve(strict=True)
+    except OSError:
+        return False
+    expected = f"Project-Helianthus/{repository}"
+    actual = _remote_repository(remote.stdout)
+    return top_path == root_path and actual is not None and actual.casefold() == expected.casefold()
+
+
+def _portable_path(value: str) -> bool:
+    path = pathlib.PurePosixPath(value)
+    return (
+        bool(value)
+        and not value.startswith(("/", "~", "./"))
+        and WINDOWS_ABSOLUTE.match(value) is None
+        and "\\" not in value
+        and "//" not in value
+        and all(part not in {"", ".", ".."} for part in path.parts)
+    )
+
+
+def _artifact_kind(root: pathlib.Path, relative: str) -> str:
+    if not _portable_path(relative):
+        return "outside"
+    try:
+        root_path = root.absolute()
+        root_stat = root_path.lstat()
+    except OSError:
+        return "missing"
+    if stat.S_ISLNK(root_stat.st_mode) or not stat.S_ISDIR(root_stat.st_mode):
+        return "symlink" if stat.S_ISLNK(root_stat.st_mode) else "invalid"
+
+    current = root_path
+    parts = pathlib.PurePosixPath(relative).parts
+    for index, part in enumerate(parts):
+        current = current / part
+        try:
+            item_stat = current.lstat()
+        except FileNotFoundError:
+            return "missing"
+        except OSError:
+            return "invalid"
+        if stat.S_ISLNK(item_stat.st_mode):
+            return "symlink"
+        if index < len(parts) - 1 and not stat.S_ISDIR(item_stat.st_mode):
+            return "invalid"
+
+    try:
+        resolved_root = root_path.resolve(strict=True)
+        resolved_item = current.resolve(strict=True)
+    except OSError:
+        return "invalid"
+    if not resolved_item.is_relative_to(resolved_root):
+        return "outside"
+    final_stat = current.lstat()
+    if stat.S_ISREG(final_stat.st_mode):
+        return "regular"
+    if stat.S_ISDIR(final_stat.st_mode):
+        return "directory"
+    return "invalid"
+
+
+def _read_regular_artifact(root: pathlib.Path, relative: str) -> bytes | None:
+    if _artifact_kind(root, relative) != "regular":
+        return None
+    try:
+        return (root / pathlib.PurePosixPath(relative)).read_bytes()
+    except OSError:
+        return None
+
+
+def _scan_yaml_resources(text: str) -> None:
+    alias_count = 0
+    depth = 0
+    token_count = 0
+    starts = (
+        yaml.tokens.BlockMappingStartToken,
+        yaml.tokens.BlockSequenceStartToken,
+        yaml.tokens.FlowMappingStartToken,
+        yaml.tokens.FlowSequenceStartToken,
+    )
+    ends = (
+        yaml.tokens.BlockEndToken,
+        yaml.tokens.FlowMappingEndToken,
+        yaml.tokens.FlowSequenceEndToken,
+    )
+    for token in yaml.scan(text, Loader=yaml.SafeLoader):
+        token_count += 1
+        if token_count > MAX_YAML_TOKENS:
+            raise _ManifestSchemaError
+        if isinstance(token, yaml.tokens.AliasToken):
+            alias_count += 1
+            if alias_count > MAX_YAML_ALIASES:
+                raise _ManifestSchemaError
+        if isinstance(token, starts):
+            depth += 1
+            if depth > MAX_YAML_NESTING:
+                raise _ManifestSchemaError
+        elif isinstance(token, ends):
+            depth = max(0, depth - 1)
+
+
+def _inspect_yaml_node(root: yaml.nodes.Node | None) -> None:
+    if root is None:
+        raise _ManifestSchemaError
+    seen: set[int] = set()
+    active: set[int] = set()
+    node_count = 0
+
+    def visit(node: yaml.nodes.Node, depth: int) -> None:
+        nonlocal node_count
+        if depth > MAX_YAML_NESTING:
+            raise _ManifestSchemaError
+        identity = id(node)
+        if identity in active:
+            raise _ManifestSchemaError
+        if identity in seen:
+            return
+        seen.add(identity)
+        active.add(identity)
+        node_count += 1
+        if node_count > MAX_YAML_NODES:
+            raise _ManifestSchemaError
+        try:
+            if isinstance(node, yaml.nodes.MappingNode):
+                keys: set[str] = set()
+                for key, value in node.value:
+                    if (
+                        not isinstance(key, yaml.nodes.ScalarNode)
+                        or key.tag != "tag:yaml.org,2002:str"
+                        or key.value in keys
+                    ):
+                        raise _ManifestSchemaError
+                    keys.add(key.value)
+                    visit(key, depth + 1)
+                    visit(value, depth + 1)
+            elif isinstance(node, yaml.nodes.SequenceNode):
+                for value in node.value:
+                    visit(value, depth + 1)
+            elif not isinstance(node, yaml.nodes.ScalarNode):
+                raise _ManifestSchemaError
+        finally:
+            active.remove(identity)
+
+    visit(root, 1)
+
+
+def _load_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, str | None]:
+    kind = _artifact_kind(root, MANIFEST.as_posix())
+    if kind == "missing":
+        return None, "manifest.missing"
+    if kind != "regular":
         return None, "manifest.schema"
+    path = root / MANIFEST
+    loader: yaml.SafeLoader | None = None
+    try:
+        raw = path.read_bytes()
+        if len(raw) > MAX_MANIFEST_BYTES:
+            raise _ManifestSchemaError
+        text = raw.decode("utf-8")
+        _scan_yaml_resources(text)
+        loader = yaml.SafeLoader(text)
+        node = loader.get_single_node()
+        _inspect_yaml_node(node)
+        assert node is not None
+        loaded = loader.construct_document(node)
+    except (
+        OSError,
+        UnicodeError,
+        yaml.YAMLError,
+        RecursionError,
+        MemoryError,
+        OverflowError,
+        _ManifestSchemaError,
+    ):
+        return None, "manifest.schema"
+    finally:
+        if loader is not None:
+            loader.dispose()
     if not isinstance(loaded, dict):
         return None, "manifest.schema"
     return loaded, None
@@ -141,12 +420,13 @@ def _schema_valid(manifest: Mapping[str, Any]) -> bool:
         if not isinstance(entry, dict) or set(entry) != ENTRY_FIELDS:
             return False
         entry_id = entry.get("id")
+        surface = entry.get("surface")
         if (
             not isinstance(entry_id, str)
-            or not entry_id
             or ENTRY_ID.fullmatch(entry_id) is None
             or entry_id in ids
-            or not isinstance(entry.get("surface"), str)
+            or not isinstance(surface, str)
+            or surface not in SURFACES
             or not isinstance(entry.get("canonical"), bool)
             or not isinstance(entry.get("state"), str)
         ):
@@ -157,10 +437,9 @@ def _schema_valid(manifest: Mapping[str, Any]) -> bool:
             if (
                 not isinstance(location, dict)
                 or set(location) != LOCATION_FIELDS
-                or any(
-                    not isinstance(location.get(key), str) or not location.get(key)
-                    for key in LOCATION_FIELDS
-                )
+                or location.get("repository") not in REPOSITORIES
+                or not isinstance(location.get("path"), str)
+                or not location.get("path")
             ):
                 return False
         outputs = entry.get("outputs")
@@ -182,11 +461,25 @@ def _schema_valid(manifest: Mapping[str, Any]) -> bool:
             return False
         if not isinstance(lifecycle.get("cleanup_required"), bool):
             return False
+        enforcement = entry.get("enforcement")
+        milestone = enforcement.get("milestone") if isinstance(enforcement, dict) else None
+        required_state = (
+            enforcement.get("required_state") if isinstance(enforcement, dict) else None
+        )
+        if (
+            not isinstance(enforcement, dict)
+            or set(enforcement) != ENFORCEMENT_FIELDS
+            or not isinstance(milestone, str)
+            or milestone not in MILESTONE_INDEX
+            or not isinstance(required_state, str)
+            or required_state not in TARGET_STATES
+        ):
+            return False
     return True
 
 
 def _parse_instant(value: Any) -> datetime | None:
-    if not isinstance(value, str) or not value.endswith("Z"):
+    if not isinstance(value, str) or RFC3339_UTC.fullmatch(value) is None:
         return None
     try:
         parsed = datetime.fromisoformat(value[:-1] + "+00:00")
@@ -197,28 +490,27 @@ def _parse_instant(value: Any) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
-def _portable_path(value: str) -> bool:
-    path = pathlib.PurePosixPath(value)
-    return (
-        bool(value)
-        and not value.startswith(("/", "~"))
-        and not value.startswith("./")
-        and WINDOWS_ABSOLUTE.match(value) is None
-        and "\\" not in value
-        and "//" not in value
-        and all(part not in {"", ".", ".."} for part in path.parts)
-    )
-
-
 def _all_strings(value: Any) -> Iterable[str]:
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, Mapping):
-        for item in value.values():
-            yield from _all_strings(item)
-    elif isinstance(value, list):
-        for item in value:
-            yield from _all_strings(item)
+    seen: set[int] = set()
+
+    def walk(item: Any) -> Iterable[str]:
+        if isinstance(item, str):
+            yield item
+            return
+        if not isinstance(item, (Mapping, list)):
+            return
+        identity = id(item)
+        if identity in seen:
+            return
+        seen.add(identity)
+        if isinstance(item, Mapping):
+            for child in item.values():
+                yield from walk(child)
+        else:
+            for child in item:
+                yield from walk(child)
+
+    yield from walk(value)
 
 
 def _contains_private_network(value: str) -> bool:
@@ -238,14 +530,12 @@ def _manifest_categories(manifest: dict[str, Any]) -> set[str]:
         categories.add("manifest.schema")
     if manifest["version"] != 1:
         categories.add("manifest.version")
-
-    entries = manifest["entries"]
-    if {entry["surface"] for entry in entries} != SURFACES:
+    if {entry["surface"] for entry in manifest["entries"]} != SURFACES:
         categories.add("ownership.surface-missing")
 
     pairs: set[tuple[str, str, str, str]] = set()
     canonical_owners: set[tuple[str, str]] = set()
-    for entry in entries:
+    for entry in manifest["entries"]:
         pair = (
             entry["owner"]["repository"],
             entry["owner"]["path"],
@@ -260,7 +550,6 @@ def _manifest_categories(manifest: dict[str, Any]) -> set[str]:
             if owner in canonical_owners:
                 categories.add("ownership.canonical-duplicate")
             canonical_owners.add(owner)
-
         for location in (entry["owner"], entry["source"]):
             if not _portable_path(location["path"]):
                 categories.add("path.absolute")
@@ -273,8 +562,28 @@ def _manifest_categories(manifest: dict[str, Any]) -> set[str]:
     return categories
 
 
+def _enforcement_categories(
+    manifest: dict[str, Any], enforce_through: str
+) -> set[str]:
+    if enforce_through not in MILESTONE_INDEX:
+        return {"enforcement.stage"}
+    stage = MILESTONE_INDEX[enforce_through]
+    for entry in manifest["entries"]:
+        enforcement = entry["enforcement"]
+        required_at = MILESTONE_INDEX[enforcement["milestone"]]
+        state = entry["state"]
+        if state not in STATES:
+            continue
+        if required_at <= stage:
+            if state != enforcement["required_state"]:
+                return {"enforcement.transition"}
+        elif state not in {"planned", "candidate"}:
+            return {"enforcement.transition"}
+    return set()
+
+
 def _state_categories(
-    manifest: dict[str, Any], roots: Mapping[str, pathlib.Path] | None
+    manifest: dict[str, Any], roots: Mapping[str, pathlib.Path]
 ) -> set[str]:
     categories: set[str] = set()
     for entry in manifest["entries"]:
@@ -308,7 +617,9 @@ def _state_categories(
                 categories.add("state.planned")
 
         elif state == "candidate":
-            hidden = "_candidate" in pathlib.PurePosixPath(entry["owner"]["path"]).parts
+            hidden = "_candidate" in pathlib.PurePosixPath(
+                entry["owner"]["path"]
+            ).parts
             source_ref = lifecycle["source_ref"]
             content_hash = lifecycle["content_sha256"]
             invalid = (
@@ -328,19 +639,20 @@ def _state_categories(
                 or frozen is not None
                 or lifecycle["cleanup_required"]
             )
-            if not invalid and roots is not None:
-                source_root = roots.get(entry["source"]["repository"])
-                if source_root is None:
-                    invalid = True
-                else:
-                    shown = _run_git(
-                        source_root,
-                        "show",
-                        f"{source_ref}:{entry['source']['path']}",
-                    )
-                    invalid = shown.returncode != 0 or hashlib.sha256(
-                        shown.stdout.encode("utf-8")
-                    ).hexdigest() != content_hash
+            source_root = roots.get(entry["source"]["repository"])
+            if (
+                not invalid
+                and source_root is not None
+                and _artifact_kind(source_root, entry["source"]["path"]) == "regular"
+            ):
+                shown = _run_git_bytes(
+                    source_root,
+                    "show",
+                    f"{source_ref}:{entry['source']['path']}",
+                )
+                invalid = shown.returncode != 0 or hashlib.sha256(
+                    shown.stdout
+                ).hexdigest() != content_hash
             if invalid:
                 categories.add("state.candidate")
 
@@ -355,14 +667,6 @@ def _state_categories(
                 or any(not outputs[key] for key in STABLE_OUTPUTS)
                 or lifecycle["cleanup_required"]
             )
-            if not invalid and roots is not None:
-                owner_root = roots.get(entry["owner"]["repository"])
-                owner_path = entry["owner"]["path"]
-                if _portable_path(owner_path):
-                    invalid = (
-                        owner_root is None
-                        or not (owner_root / owner_path).exists()
-                    )
             if invalid:
                 categories.add("state.active")
 
@@ -376,25 +680,67 @@ def _state_categories(
                 or frozen is not None
                 or not lifecycle["cleanup_required"]
             )
-            if (
-                not invalid
-                and roots is not None
-                and entry["surface"] != "code_repo"
-                and _portable_path(entry["owner"]["path"])
-            ):
-                owner_root = roots.get(entry["owner"]["repository"])
-                invalid = owner_root is not None and (
-                    owner_root / entry["owner"]["path"]
-                ).exists()
             if invalid:
                 categories.add("state.withdrawn")
+    return categories
+
+
+def _artifact_categories(
+    manifest: dict[str, Any], roots: Mapping[str, pathlib.Path]
+) -> set[str]:
+    categories: set[str] = set()
+    for entry in manifest["entries"]:
+        state = entry["state"]
+        if state in {"active", "candidate"}:
+            owner = entry["owner"]
+            owner_root = roots.get(owner["repository"])
+            owner_kind = (
+                _artifact_kind(owner_root, owner["path"])
+                if owner_root is not None
+                else None
+            )
+            if owner_kind == "symlink":
+                categories.add("path.symlink")
+            elif owner_kind == "outside":
+                categories.add("path.absolute")
+            elif owner_kind is not None and owner_kind != "regular":
+                categories.add("artifact.owner")
+
+            source = entry["source"]
+            same_location = source == owner
+            source_root = roots.get(source["repository"])
+            source_kind = (
+                owner_kind
+                if same_location
+                else (
+                    _artifact_kind(source_root, source["path"])
+                    if source_root is not None
+                    else None
+                )
+            )
+            if same_location and owner_kind != "regular":
+                continue
+            if source_kind == "symlink":
+                categories.add("path.symlink")
+            elif source_kind == "outside":
+                categories.add("path.absolute")
+            elif source_kind is not None and source_kind != "regular":
+                categories.add("artifact.source")
+
+        elif state == "withdrawn" and entry["surface"] != "code_repo":
+            owner = entry["owner"]
+            owner_root = roots.get(owner["repository"])
+            if owner_root is not None and _artifact_kind(
+                owner_root, owner["path"]
+            ) != "missing":
+                categories.add("artifact.withdrawn")
     return categories
 
 
 def _expiry_categories(
     manifest: dict[str, Any], evaluated_at: str | None, evaluation_source: str | None
 ) -> set[str]:
-    if not evaluation_source:
+    if not isinstance(evaluation_source, str) or not evaluation_source.strip():
         return {"expiry.source"}
     evaluated = _parse_instant(evaluated_at)
     if evaluated is None:
@@ -410,21 +756,240 @@ def _expiry_categories(
     return categories
 
 
+def _strip_inline_code(line: str) -> str:
+    result: list[str] = []
+    index = 0
+    while index < len(line):
+        if line[index] != "`":
+            result.append(line[index])
+            index += 1
+            continue
+        end_run = index
+        while end_run < len(line) and line[end_run] == "`":
+            end_run += 1
+        marker = line[index:end_run]
+        closing = line.find(marker, end_run)
+        if closing == -1:
+            result.append(marker)
+            index = end_run
+            continue
+        result.append(" " * (closing + len(marker) - index))
+        index = closing + len(marker)
+    return "".join(result)
+
+
+def _strip_markdown_code(text: str) -> str:
+    clean: list[str] = []
+    fence_char: str | None = None
+    fence_length = 0
+    for line in text.splitlines():
+        match = FENCE.match(line)
+        if fence_char is not None:
+            if (
+                match is not None
+                and match.group(1)[0] == fence_char
+                and len(match.group(1)) >= fence_length
+                and not match.group(2).strip()
+            ):
+                fence_char = None
+                fence_length = 0
+            clean.append("")
+            continue
+        if match is not None:
+            fence_char = match.group(1)[0]
+            fence_length = len(match.group(1))
+            clean.append("")
+            continue
+        if line.startswith(("    ", "\t")):
+            clean.append("")
+            continue
+        clean.append(_strip_inline_code(line))
+    return "\n".join(clean)
+
+
 def _platform_markdown(root: pathlib.Path) -> Iterable[tuple[pathlib.Path, str]]:
     platform = root / "docs/platform"
-    if not platform.is_dir():
+    if _artifact_kind(root, "docs/platform") != "directory":
         return
     for path in sorted(platform.rglob("*.md")):
-        if path.is_file() and not path.is_symlink():
-            try:
-                yield path, path.read_text(encoding="utf-8")
-            except (OSError, UnicodeError):
+        try:
+            relative = path.relative_to(root).as_posix()
+        except ValueError:
+            continue
+        if _artifact_kind(root, relative) != "regular":
+            continue
+        try:
+            yield path, path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+
+
+def _normalize_reference_label(value: str) -> str:
+    return " ".join(value.split()).casefold()
+
+
+def _find_markdown_closer(text: str, start: int, opening: str, closing: str) -> int:
+    depth = 1
+    index = start
+    while index < len(text):
+        if text[index] == "\\":
+            index += 2
+            continue
+        if text[index] == opening:
+            depth += 1
+        elif text[index] == closing:
+            depth -= 1
+            if depth == 0:
+                return index
+        index += 1
+    return -1
+
+
+def _inline_destination(value: str) -> str | None:
+    content = value.strip()
+    if not content:
+        return None
+    if content.startswith("<"):
+        end = content.find(">", 1)
+        return content[1:end] if end > 1 else None
+    depth = 0
+    result: list[str] = []
+    index = 0
+    while index < len(content):
+        char = content[index]
+        if char == "\\" and index + 1 < len(content):
+            result.append(content[index + 1])
+            index += 2
+            continue
+        if char == "(":
+            depth += 1
+        elif char == ")" and depth:
+            depth -= 1
+        elif char.isspace() and depth == 0:
+            break
+        result.append(char)
+        index += 1
+    return "".join(result) or None
+
+
+class _HTMLLinks(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.targets: list[str] = []
+
+    def handle_starttag(
+        self, tag: str, attrs: list[tuple[str, str | None]]
+    ) -> None:
+        for key, value in attrs:
+            if key.casefold() == "href" and value:
+                self.targets.append(value)
+
+
+def _markdown_links(text: str) -> list[str]:
+    clean = _strip_markdown_code(text)
+    definitions: dict[str, str] = {}
+    body_lines: list[str] = []
+    for line in clean.splitlines():
+        match = REFERENCE_DEFINITION.match(line)
+        if match is None:
+            body_lines.append(line)
+            continue
+        definitions[_normalize_reference_label(match.group(1))] = (
+            match.group(2) or match.group(3)
+        )
+        body_lines.append("")
+    body = "\n".join(body_lines)
+    targets: list[str] = []
+    index = 0
+    while index < len(body):
+        if body[index] != "[" or (index > 0 and body[index - 1] == "\\"):
+            index += 1
+            continue
+        label_end = _find_markdown_closer(body, index + 1, "[", "]")
+        if label_end == -1:
+            index += 1
+            continue
+        label = body[index + 1 : label_end]
+        cursor = label_end + 1
+        while cursor < len(body) and body[cursor] in " \t\n":
+            cursor += 1
+        if cursor < len(body) and body[cursor] == "(":
+            destination_end = _find_markdown_closer(body, cursor + 1, "(", ")")
+            if destination_end != -1:
+                destination = _inline_destination(body[cursor + 1 : destination_end])
+                if destination is not None:
+                    targets.append(destination)
+                index = destination_end + 1
                 continue
+        if cursor < len(body) and body[cursor] == "[":
+            reference_end = _find_markdown_closer(body, cursor + 1, "[", "]")
+            if reference_end != -1:
+                reference = body[cursor + 1 : reference_end] or label
+                target = definitions.get(_normalize_reference_label(reference))
+                if target is not None:
+                    targets.append(target)
+                index = reference_end + 1
+                continue
+        shortcut = definitions.get(_normalize_reference_label(label))
+        if shortcut is not None:
+            targets.append(shortcut)
+        index = label_end + 1
+
+    html_links = _HTMLLinks()
+    try:
+        html_links.feed(body)
+    except (ValueError, RecursionError):
+        pass
+    targets.extend(html_links.targets)
+    return targets
+
+
+def _eebus_link_target(
+    target: str, docs_eebus_ref: str
+) -> tuple[str | None, bool]:
+    decoded = urllib.parse.unquote(target)
+    parsed = urllib.parse.urlsplit(decoded)
+    if parsed.hostname == "github.com":
+        parts = parsed.path.strip("/").split("/")
+        if len(parts) >= 6 and parts[:3] == [
+            "Project-Helianthus",
+            "helianthus-docs-eebus",
+            "blob",
+        ]:
+            ref = parts[3]
+            relative = "/".join(parts[4:])
+            valid = (
+                IMMUTABLE_REF.fullmatch(ref) is not None
+                and ref.casefold() == docs_eebus_ref.casefold()
+                and _portable_path(relative)
+            )
+            return relative, valid
+        if "helianthus-docs-eebus" in parts:
+            return "", False
+    if parsed.hostname == "raw.githubusercontent.com":
+        parts = parsed.path.strip("/").split("/")
+        if len(parts) >= 4 and parts[:2] == [
+            "Project-Helianthus",
+            "helianthus-docs-eebus",
+        ]:
+            ref = parts[2]
+            relative = "/".join(parts[3:])
+            valid = (
+                IMMUTABLE_REF.fullmatch(ref) is not None
+                and ref.casefold() == docs_eebus_ref.casefold()
+                and _portable_path(relative)
+            )
+            return relative, valid
+    if "helianthus-docs-eebus/" in decoded:
+        relative = decoded.split("helianthus-docs-eebus/", 1)[1].split("#", 1)[0]
+        return relative, False
+    return None, True
 
 
 def _link_categories(
     docs_ebus_root: pathlib.Path,
     docs_eebus_root: pathlib.Path,
+    docs_eebus_ref: str,
     manifest: dict[str, Any],
 ) -> set[str]:
     active_targets = {
@@ -434,69 +999,86 @@ def _link_categories(
         and entry["state"] == "active"
     }
     for _, text in _platform_markdown(docs_ebus_root):
-        for match in MARKDOWN_LINK.finditer(text):
-            target = match.group(1)
-            marker = "helianthus-docs-eebus/"
-            if marker not in target:
+        for target in _markdown_links(text):
+            relative, immutable = _eebus_link_target(target, docs_eebus_ref)
+            if relative is None:
                 continue
-            relative = target.split(marker, 1)[1].split("#", 1)[0]
-            if relative.startswith("blob/"):
-                parts = relative.split("/", 2)
-                relative = parts[2] if len(parts) == 3 else ""
-            if relative not in active_targets or not (docs_eebus_root / relative).is_file():
+            if (
+                not immutable
+                or relative not in active_targets
+                or _artifact_kind(docs_eebus_root, relative) != "regular"
+            ):
                 return {"link.forward"}
     return set()
+
+
+def _semantic_copy_categories(text: str) -> set[str]:
+    categories: set[str] = set()
+    clean = _strip_markdown_code(text)
+    paragraphs = re.split(r"\n\s*\n", clean)
+    for paragraph in paragraphs:
+        compact = " ".join(paragraph.split())
+        if not compact:
+            continue
+        if GO_DECLARATION.search(compact) and re.search(
+            r"\b(?:eebus|SHIP|SPINE)\b", compact, re.I
+        ):
+            categories.add("ownership.api-copy")
+        if NORMATIVE.search(compact) is None:
+            continue
+        if PROTOCOL_CONTEXT.search(compact) and PROTOCOL_BEHAVIOR.search(compact):
+            categories.add("ownership.protocol-copy")
+        if ARCHITECTURE_CONTEXT.search(compact) and ARCHITECTURE_BEHAVIOR.search(
+            compact
+        ):
+            categories.add("ownership.architecture-copy")
+        if API_CONTEXT.search(compact) and API_BEHAVIOR.search(compact):
+            categories.add("ownership.api-copy")
+    return categories
 
 
 def _ownership_copy_categories(docs_ebus_root: pathlib.Path) -> set[str]:
     categories: set[str] = set()
     for _, text in _platform_markdown(docs_ebus_root):
-        normative = NORMATIVE.search(text) is not None
-        if normative and re.search(
-            r"(?im)^#\s+.*SHIP.*SPINE.*(?:Protocol|Behavior).*$", text
-        ):
-            categories.add("ownership.protocol-copy")
-        if normative and re.search(
-            r"(?im)^#\s+eeBUS (?:Runtime|Trust|Persistence|Lifecycle|Architecture)\b",
-            text,
-        ):
-            categories.add("ownership.architecture-copy")
-        if re.search(r"(?im)^#\s+.*eeBUS.*Go API.*$", text) and re.search(
-            r"(?m)\bfunc\s+[A-Z]|schema", text
-        ):
-            categories.add("ownership.api-copy")
+        categories.update(_semantic_copy_categories(text))
     return categories
 
 
 def _code_repo_categories(
-    manifest: dict[str, Any], roots: Mapping[str, pathlib.Path]
+    manifest: dict[str, Any],
+    roots: Mapping[str, pathlib.Path],
+    enforce_through: str,
 ) -> set[str]:
+    if MILESTONE_INDEX[enforce_through] < MILESTONE_INDEX["MSP-DOCS-CLEAN"]:
+        return set()
     categories: set[str] = set()
-    eebusreg = roots.get("helianthus-eebusreg")
-    if eebusreg is None:
-        return categories
-
-    docs = eebusreg / "docs"
-    if docs.exists() and any(path.is_file() or path.is_symlink() for path in docs.rglob("*")):
-        categories.add("ownership.code-repo-substantive")
-
     for entry in manifest["entries"]:
-        if entry["surface"] != "summary_only":
+        if entry["surface"] == "code_repo" and entry["state"] == "withdrawn":
+            owner_root = roots.get(entry["owner"]["repository"])
+            if owner_root is not None and _artifact_kind(
+                owner_root, entry["owner"]["path"]
+            ) != "missing":
+                categories.add("ownership.code-repo-substantive")
+        if entry["surface"] != "summary_only" or entry["state"] != "active":
             continue
         owner_root = roots.get(entry["owner"]["repository"])
         if owner_root is None:
             continue
-        path = owner_root / entry["owner"]["path"]
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeError):
+        raw = _read_regular_artifact(owner_root, entry["owner"]["path"])
+        if raw is None:
             continue
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeError:
+            categories.add("ownership.summary-only-substantive")
+            continue
+        prose = _strip_markdown_code(text)
         nonblank_lines = [line for line in text.splitlines() if line.strip()]
         if (
-            NORMATIVE.search(text)
+            NORMATIVE.search(prose)
             or len(nonblank_lines) > 12
-            or "```" in text
-            or re.search(r"(?m)^##\s+", text)
+            or re.search(r"(?m)^##\s+", prose)
+            or _semantic_copy_categories(prose)
         ):
             categories.add("ownership.summary-only-substantive")
     return categories
@@ -507,6 +1089,52 @@ def _privacy_categories(root: pathlib.Path) -> set[str]:
         if PRIVATE_IDENTIFIER.search(text) or _contains_private_network(text):
             return {"privacy.private-identifier"}
     return set()
+
+
+def _version_tuple(value: str | None) -> tuple[int, int, int] | None:
+    if not isinstance(value, str):
+        return None
+    match = VERSION.fullmatch(value)
+    if match is None:
+        return None
+    return tuple(int(part) for part in match.groups())  # type: ignore[return-value]
+
+
+def _actual_tool_versions() -> tuple[tuple[int, int, int], str | None, str | None]:
+    python = tuple(sys.version_info[:3])
+    try:
+        distribution = importlib.metadata.version("PyYAML")
+    except importlib.metadata.PackageNotFoundError:
+        distribution = None
+    module = getattr(yaml, "__version__", None)
+    return python, distribution, module
+
+
+def _toolchain_categories(mode: str) -> set[str]:
+    if mode not in TOOLCHAIN_MODES:
+        return {"toolchain.mode"}
+    python, pyyaml_distribution, pyyaml_module = _actual_tool_versions()
+    categories: set[str] = set()
+    if mode == "exact":
+        if python != EXACT_PYTHON:
+            categories.add("toolchain.python")
+        if (
+            pyyaml_distribution != EXACT_PYYAML
+            or pyyaml_module != EXACT_PYYAML
+        ):
+            categories.add("toolchain.pyyaml")
+        return categories
+
+    if not (SUPPORTED_PYTHON_MIN <= python < SUPPORTED_PYTHON_MAX):
+        categories.add("toolchain.python")
+    parsed_pyyaml = _version_tuple(pyyaml_distribution)
+    if (
+        parsed_pyyaml is None
+        or not (SUPPORTED_PYYAML_MIN <= parsed_pyyaml < SUPPORTED_PYYAML_MAX)
+        or pyyaml_distribution != pyyaml_module
+    ):
+        categories.add("toolchain.pyyaml")
+    return categories
 
 
 def _validated_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, set[str]]:
@@ -522,23 +1150,31 @@ def _validated_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, set[
 def validate_repository(
     *,
     docs_ebus_root: pathlib.Path,
-    mode: str = "repository",
+    mode: str,
+    enforce_through: str,
+    toolchain_mode: str,
     evaluated_at: str | None = None,
     evaluation_source: str | None = None,
-    pinned_tools: Mapping[str, str] | None = None,
 ) -> list[str]:
-    categories: set[str] = set()
-    if dict(pinned_tools or {}) != PINNED_TOOLS:
-        categories.add("input.pinned-tools")
-    manifest, manifest_categories = _validated_manifest(pathlib.Path(docs_ebus_root))
+    root = pathlib.Path(docs_ebus_root)
+    categories = _toolchain_categories(toolchain_mode)
+    root_valid = _repository_root_valid(root, "helianthus-docs-ebus")
+    if not root_valid:
+        categories.add("input.repository-root")
+    manifest, manifest_categories = _validated_manifest(root)
     categories.update(manifest_categories)
     if manifest is None:
         return _result(categories)
-    categories.update(_state_categories(manifest, None))
-    categories.update(_ownership_copy_categories(pathlib.Path(docs_ebus_root)))
-    categories.update(_privacy_categories(pathlib.Path(docs_ebus_root)))
+    categories.update(_enforcement_categories(manifest, enforce_through))
+    roots = {"helianthus-docs-ebus": root} if root_valid else {}
+    categories.update(_state_categories(manifest, roots))
+    categories.update(_artifact_categories(manifest, roots))
+    categories.update(_ownership_copy_categories(root))
+    categories.update(_privacy_categories(root))
     if mode == "main-expiry":
         categories.update(_expiry_categories(manifest, evaluated_at, evaluation_source))
+    elif mode != "repository":
+        categories.add("input.mode")
     return _result(categories)
 
 
@@ -550,57 +1186,71 @@ def validate_workspace(
     mode: str,
     docs_ebus_ref: str | None,
     docs_eebus_ref: str | None,
-    evaluated_at: str | None,
-    evaluation_source: str | None,
-    pinned_tools: Mapping[str, str] | None,
+    eebusreg_ref: str | None,
+    enforce_through: str,
+    toolchain_mode: str,
 ) -> list[str]:
-    docs_ebus_root = pathlib.Path(docs_ebus_root)
-    docs_eebus_root = pathlib.Path(docs_eebus_root)
-    eebusreg_root = pathlib.Path(eebusreg_root)
-    categories: set[str] = set()
-
-    if dict(pinned_tools or {}) != PINNED_TOOLS:
-        categories.add("input.pinned-tools")
-    if not _checkout_matches_ref(docs_ebus_root, docs_ebus_ref):
-        categories.add("input.docs-ebus-ref")
-    if not _checkout_matches_ref(docs_eebus_root, docs_eebus_ref):
-        categories.add("input.docs-eebus-ref")
-    if any(
-        not _clean_checkout(root)
-        for root in (docs_ebus_root, docs_eebus_root, eebusreg_root)
-    ):
+    roots = {
+        "helianthus-docs-ebus": pathlib.Path(docs_ebus_root),
+        "helianthus-docs-eebus": pathlib.Path(docs_eebus_root),
+        "helianthus-eebusreg": pathlib.Path(eebusreg_root),
+    }
+    refs = {
+        "helianthus-docs-ebus": docs_ebus_ref,
+        "helianthus-docs-eebus": docs_eebus_ref,
+        "helianthus-eebusreg": eebusreg_ref,
+    }
+    ref_categories = {
+        "helianthus-docs-ebus": "input.docs-ebus-ref",
+        "helianthus-docs-eebus": "input.docs-eebus-ref",
+        "helianthus-eebusreg": "input.eebusreg-ref",
+    }
+    categories = _toolchain_categories(toolchain_mode)
+    if mode != "combined-ref":
+        categories.add("input.mode")
+    for repository, root in roots.items():
+        if not _checkout_matches_ref(root, refs[repository]):
+            categories.add(ref_categories[repository])
+    if any(not _clean_checkout(root) for root in roots.values()):
         categories.add("input.clean-clone")
 
-    manifest, manifest_categories = _validated_manifest(docs_ebus_root)
+    valid_roots: dict[str, pathlib.Path] = {}
+    resolved: set[pathlib.Path] = set()
+    for repository, root in roots.items():
+        if not _repository_root_valid(root, repository):
+            categories.add("input.repository-root")
+            continue
+        resolved_root = root.resolve(strict=True)
+        if resolved_root in resolved:
+            categories.add("input.repository-root")
+            continue
+        resolved.add(resolved_root)
+        valid_roots[repository] = root
+
+    manifest, manifest_categories = _validated_manifest(roots["helianthus-docs-ebus"])
     categories.update(manifest_categories)
     if manifest is None:
         return _result(categories)
-
-    roots = {
-        "helianthus-docs-ebus": docs_ebus_root,
-        "helianthus-docs-eebus": docs_eebus_root,
-        "helianthus-eebusreg": eebusreg_root,
-    }
-    categories.update(_state_categories(manifest, roots))
-    categories.update(_ownership_copy_categories(docs_ebus_root))
-    categories.update(_code_repo_categories(manifest, roots))
-    categories.update(_privacy_categories(docs_ebus_root))
-    categories.update(_link_categories(docs_ebus_root, docs_eebus_root, manifest))
-    if mode in {"main", "main-expiry"}:
-        categories.update(_expiry_categories(manifest, evaluated_at, evaluation_source))
+    categories.update(_enforcement_categories(manifest, enforce_through))
+    categories.update(_state_categories(manifest, valid_roots))
+    categories.update(_artifact_categories(manifest, valid_roots))
+    categories.update(_ownership_copy_categories(roots["helianthus-docs-ebus"]))
+    categories.update(_code_repo_categories(manifest, valid_roots, enforce_through))
+    categories.update(_privacy_categories(roots["helianthus-docs-ebus"]))
+    if (
+        "helianthus-docs-eebus" in valid_roots
+        and isinstance(docs_eebus_ref, str)
+        and IMMUTABLE_REF.fullmatch(docs_eebus_ref) is not None
+    ):
+        categories.update(
+            _link_categories(
+                roots["helianthus-docs-ebus"],
+                roots["helianthus-docs-eebus"],
+                docs_eebus_ref,
+                manifest,
+            )
+        )
     return _result(categories)
-
-
-def _parse_pins(values: list[str]) -> dict[str, str]:
-    pins: dict[str, str] = {}
-    for value in values:
-        if value.count("=") != 1:
-            return {}
-        key, version = value.split("=", 1)
-        if not key or not version or key in pins:
-            return {}
-        pins[key] = version
-    return pins
 
 
 class _CategoryParser(argparse.ArgumentParser):
@@ -613,7 +1263,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--mode",
         default="repository",
-        choices=("repository", "combined-ref", "main-expiry", "pr", "main"),
+        choices=("repository", "combined-ref", "main-expiry"),
     )
     parser.add_argument("--docs-ebus-root", type=pathlib.Path, default=pathlib.Path("."))
     parser.add_argument("--docs-eebus-root", type=pathlib.Path)
@@ -623,39 +1273,38 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--eebusreg-ref")
     parser.add_argument("--evaluated-at")
     parser.add_argument("--evaluation-source")
-    parser.add_argument("--pinned-tool", action="append", default=[])
+    parser.add_argument("--enforce-through", required=True, choices=MILESTONES)
+    parser.add_argument(
+        "--toolchain-mode", default="exact", choices=tuple(sorted(TOOLCHAIN_MODES))
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    pins = _parse_pins(args.pinned_tool)
-    if args.mode in {"repository", "main-expiry"} and args.docs_eebus_root is None:
+    if args.mode in {"repository", "main-expiry"}:
         diagnostics = validate_repository(
             docs_ebus_root=args.docs_ebus_root,
             mode=args.mode,
+            enforce_through=args.enforce_through,
+            toolchain_mode=args.toolchain_mode,
             evaluated_at=args.evaluated_at,
             evaluation_source=args.evaluation_source,
-            pinned_tools=pins,
         )
+    elif args.docs_eebus_root is None or args.eebusreg_root is None:
+        diagnostics = ["input.roots"]
     else:
-        if args.docs_eebus_root is None or args.eebusreg_root is None:
-            diagnostics = ["input.roots"]
-        else:
-            diagnostics = validate_workspace(
-                docs_ebus_root=args.docs_ebus_root,
-                docs_eebus_root=args.docs_eebus_root,
-                eebusreg_root=args.eebusreg_root,
-                mode=args.mode,
-                docs_ebus_ref=args.docs_ebus_ref,
-                docs_eebus_ref=args.docs_eebus_ref,
-                evaluated_at=args.evaluated_at,
-                evaluation_source=args.evaluation_source,
-                pinned_tools=pins,
-            )
-            if args.mode == "combined-ref":
-                if not _checkout_matches_ref(args.eebusreg_root, args.eebusreg_ref):
-                    diagnostics = _result([*diagnostics, "input.eebusreg-ref"])
+        diagnostics = validate_workspace(
+            docs_ebus_root=args.docs_ebus_root,
+            docs_eebus_root=args.docs_eebus_root,
+            eebusreg_root=args.eebusreg_root,
+            mode=args.mode,
+            docs_ebus_ref=args.docs_ebus_ref,
+            docs_eebus_ref=args.docs_eebus_ref,
+            eebusreg_ref=args.eebusreg_ref,
+            enforce_through=args.enforce_through,
+            toolchain_mode=args.toolchain_mode,
+        )
     for diagnostic in diagnostics:
         print(diagnostic)
     return 1 if diagnostics else 0
@@ -666,6 +1315,13 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except BrokenPipeError:
         raise SystemExit(1) from None
-    except (OSError, ValueError, yaml.YAMLError):
+    except (
+        OSError,
+        ValueError,
+        yaml.YAMLError,
+        RecursionError,
+        MemoryError,
+        OverflowError,
+    ):
         print("input.arguments")
         raise SystemExit(1) from None

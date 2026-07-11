@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import hashlib
 import importlib.util
-import json
 import os
 import pathlib
 import subprocess
@@ -11,11 +10,15 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 import pytest
+import yaml
 
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 VALIDATOR_PATH = REPO_ROOT / "scripts/validate_platform_contracts.py"
 MANIFEST_PATH = pathlib.Path("docs/platform/manifests/eebus-doc-ownership.yaml")
+PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
+E2_STAGE = "MSP-DOCS-E2"
+CLEAN_STAGE = "MSP-DOCS-CLEAN"
 CONTRACT_PAGES = (
     pathlib.Path("docs/platform/cross-runtime-envelope.md"),
     pathlib.Path("docs/platform/hash-auth-binding.md"),
@@ -48,14 +51,14 @@ PAGE_REQUIRED_TERMS = {
         "Home Assistant",
     ),
     pathlib.Path("docs/platform/ownership-validation.md"): (
-        "docs-ebus ref",
-        "docs-eebus ref",
-        "clean clone",
-        "pinned",
-        "no ambient checkout state",
-        "evaluation timestamp",
-        "timestamp source",
-        "terminal",
+        "current PR head SHA",
+        "clean root",
+        "actual Python runtime",
+        "supported",
+        "actionlint `v1.7.7`",
+        "jv v0.7.0",
+        "six decimal digits",
+        "inclusive",
     ),
 }
 SURFACES = {
@@ -66,7 +69,6 @@ SURFACES = {
     "code_repo",
     "summary_only",
 }
-PINNED_TOOLS = {"python": "3.12.10", "pyyaml": "6.0.2"}
 
 
 def lifecycle(
@@ -105,6 +107,10 @@ def outputs(*, candidate: bool = False, stable: bool = False) -> dict[str, bool]
     }
 
 
+def enforcement(milestone: str, required_state: str) -> dict[str, str]:
+    return {"milestone": milestone, "required_state": required_state}
+
+
 def entry(
     entry_id: str,
     surface: str,
@@ -117,6 +123,7 @@ def entry(
     canonical: bool,
     output: dict[str, bool],
     state_lifecycle: dict[str, Any],
+    state_enforcement: dict[str, str],
 ) -> dict[str, Any]:
     return {
         "id": entry_id,
@@ -127,15 +134,19 @@ def entry(
         "state": state,
         "outputs": output,
         "lifecycle": state_lifecycle,
+        "enforcement": state_enforcement,
     }
 
 
-def base_manifest() -> dict[str, Any]:
-    active_lifecycle = lifecycle(
+def active_lifecycle() -> dict[str, Any]:
+    return lifecycle(
         created_at="2026-01-01T00:00:00Z",
         approved_at="2026-01-02T00:00:00Z",
         frozen_at="2026-01-03T00:00:00Z",
     )
+
+
+def base_manifest() -> dict[str, Any]:
     return {
         "schema": "helianthus.platform.doc-ownership",
         "version": 1,
@@ -150,15 +161,18 @@ def base_manifest() -> dict[str, Any]:
                 "active",
                 canonical=True,
                 output=outputs(stable=True),
-                state_lifecycle=copy.deepcopy(active_lifecycle),
+                state_lifecycle=active_lifecycle(),
+                state_enforcement=enforcement(
+                    "MSP-DOCS-API-SCHEMA", "active"
+                ),
             ),
             entry(
                 "eebus-architecture-planned",
                 "architecture",
                 "helianthus-docs-eebus",
-                "architecture/lifecycle.md",
+                "architecture/README.md",
                 "helianthus-docs-eebus",
-                "architecture/lifecycle.md",
+                "architecture/README.md",
                 "planned",
                 canonical=False,
                 output=outputs(),
@@ -167,6 +181,7 @@ def base_manifest() -> dict[str, Any]:
                     expires_at="2026-01-15T00:00:00Z",
                     source_issue="Project-Helianthus/helianthus-docs-eebus#8",
                 ),
+                state_enforcement=enforcement(E2_STAGE, "active"),
             ),
             entry(
                 "eebus-api-candidate",
@@ -185,6 +200,7 @@ def base_manifest() -> dict[str, Any]:
                     source_ref="__SOURCE_REF__",
                     content_sha256=hashlib.sha256(b"package api\n").hexdigest(),
                 ),
+                state_enforcement=enforcement(E2_STAGE, "candidate"),
             ),
             entry(
                 "platform-contracts",
@@ -196,33 +212,42 @@ def base_manifest() -> dict[str, Any]:
                 "active",
                 canonical=True,
                 output=outputs(stable=True),
-                state_lifecycle=copy.deepcopy(active_lifecycle),
+                state_lifecycle=active_lifecycle(),
+                state_enforcement=enforcement(PLATFORM_STAGE, "active"),
             ),
             entry(
-                "code-repo-docs-withdrawn",
+                "code-repo-docs-planned",
                 "code_repo",
                 "helianthus-eebusreg",
                 "docs",
                 "helianthus-eebusreg",
                 "docs",
-                "withdrawn",
+                "planned",
                 canonical=False,
                 output=outputs(),
                 state_lifecycle=lifecycle(
-                    created_at="2026-01-01T00:00:00Z", cleanup_required=True
+                    created_at="2026-01-01T00:00:00Z",
+                    expires_at="2026-01-15T00:00:00Z",
+                    source_issue="Project-Helianthus/helianthus-execution-plans#58",
                 ),
+                state_enforcement=enforcement(CLEAN_STAGE, "withdrawn"),
             ),
             entry(
-                "code-repo-summary",
+                "code-repo-summary-planned",
                 "summary_only",
                 "helianthus-eebusreg",
                 "README.md",
                 "helianthus-docs-eebus",
                 "README.md",
-                "active",
+                "planned",
                 canonical=False,
-                output=outputs(stable=True),
-                state_lifecycle=copy.deepcopy(active_lifecycle),
+                output=outputs(),
+                state_lifecycle=lifecycle(
+                    created_at="2026-01-01T00:00:00Z",
+                    expires_at="2026-01-15T00:00:00Z",
+                    source_issue="Project-Helianthus/helianthus-execution-plans#58",
+                ),
+                state_enforcement=enforcement(CLEAN_STAGE, "active"),
             ),
         ],
     }
@@ -232,6 +257,7 @@ def base_spec() -> dict[str, Any]:
     platform_header = "Canonical source: this page.\n\n"
     return {
         "manifest": base_manifest(),
+        "manifest_present": True,
         "docs_ebus": {
             "docs/platform/cross-runtime-envelope.md": platform_header
             + "# Cross-Runtime Envelope\n\nLanguage-neutral envelope rules.\n",
@@ -242,26 +268,86 @@ def base_spec() -> dict[str, Any]:
             "docs/platform/promotion-and-consumer-contract.md": platform_header
             + "# Promotion And Consumer Contract\n\nPer-leaf promotion precedes GraphQL, Portal, and Home Assistant.\n",
             "docs/platform/ownership-validation.md": platform_header
-            + "# Ownership Validation\n\nPR validation uses an explicit docs-ebus ref and docs-eebus ref, separate clean clones, pinned Python 3.12.10 and PyYAML 6.0.2, and no ambient checkout state. Main expiry validation requires an RFC 3339 evaluation timestamp and named timestamp source, and any diagnostic is terminal.\n",
+            + "# Ownership Validation\n\nExact refs and clean roots.\n",
         },
         "docs_eebus": {
             "README.md": "# eeBUS Documentation\n",
-            "protocols/ship-spine.md": "# SHIP/SPINE Protocol\n\nCanonical protocol behavior.\n",
-            "api/_candidate/lifecycle.md": "# Candidate Go API\n\nHidden candidate API.\n",
+            "protocols/ship-spine.md": "# SHIP/SPINE Protocol Ownership\n",
+            "architecture/README.md": "# Architecture Ownership Landing\n",
+            "api/_candidate/lifecycle.md": "# Candidate Go API\n",
         },
         "eebusreg": {
-            "README.md": "# eeBUS Registry\n\nCanonical docs: ../helianthus-docs-eebus/README.md\n",
+            "README.md": "# eeBUS Registry\n\n## Current Work\n\nThe runtime MUST keep this pre-CLEAN material.\n",
+            "docs/legacy.md": "# Pre-CLEAN Runtime Notes\n",
             "api/lifecycle.go": "package api\n",
         },
-        "mode": "pr",
-        "evaluated_at": None,
-        "evaluation_source": None,
+        "symlinks": {"docs_ebus": {}, "docs_eebus": {}, "eebusreg": {}},
+        "remotes": {
+            "docs_ebus": "helianthus-docs-ebus",
+            "docs_eebus": "helianthus-docs-eebus",
+            "eebusreg": "helianthus-eebusreg",
+        },
         "docs_ebus_ref": "__AUTO__",
         "docs_eebus_ref": "__AUTO__",
+        "eebusreg_ref": "__AUTO__",
         "dirty_repo": None,
-        "manifest_present": True,
-        "pinned_tools": copy.deepcopy(PINNED_TOOLS),
+        "enforce_through": PLATFORM_STAGE,
+        "toolchain_mode": "supported",
     }
+
+
+def find_entry(spec: dict[str, Any], entry_id: str) -> dict[str, Any]:
+    return next(item for item in spec["manifest"]["entries"] if item["id"] == entry_id)
+
+
+def set_active(item: dict[str, Any], *, canonical: bool) -> None:
+    item.update(
+        {
+            "state": "active",
+            "canonical": canonical,
+            "outputs": outputs(stable=True),
+            "lifecycle": active_lifecycle(),
+        }
+    )
+
+
+def transition_e2(spec: dict[str, Any]) -> None:
+    set_active(find_entry(spec, "eebus-architecture-planned"), canonical=True)
+    spec["enforce_through"] = E2_STAGE
+
+
+def transition_clean(
+    spec: dict[str, Any], *, remove_docs: bool = True, minimal_summary: bool = True
+) -> None:
+    transition_e2(spec)
+    code = find_entry(spec, "code-repo-docs-planned")
+    code.update(
+        {
+            "state": "withdrawn",
+            "canonical": False,
+            "outputs": outputs(),
+            "lifecycle": lifecycle(
+                created_at="2026-01-01T00:00:00Z",
+                source_issue="Project-Helianthus/helianthus-execution-plans#58",
+                cleanup_required=True,
+            ),
+        }
+    )
+    summary = find_entry(spec, "code-repo-summary-planned")
+    set_active(summary, canonical=False)
+    if remove_docs:
+        spec["eebusreg"] = {
+            path: text
+            for path, text in spec["eebusreg"].items()
+            if not path.startswith("docs/")
+        }
+    if minimal_summary:
+        spec["eebusreg"]["README.md"] = (
+            "# eeBUS Registry\n\n"
+            "Canonical docs: Project-Helianthus/helianthus-docs-eebus.\n\n"
+            "Build: `./scripts/ci_local.sh`.\n"
+        )
+    spec["enforce_through"] = CLEAN_STAGE
 
 
 def write_files(root: pathlib.Path, files: dict[str, str]) -> None:
@@ -271,8 +357,31 @@ def write_files(root: pathlib.Path, files: dict[str, str]) -> None:
         path.write_text(text, encoding="utf-8")
 
 
-def commit_fixture(root: pathlib.Path) -> str:
+def write_symlinks(root: pathlib.Path, links: dict[str, str]) -> None:
+    for relative, target in links.items():
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if target.startswith("ABS:"):
+            target = str(root / target.removeprefix("ABS:"))
+        os.symlink(target, path)
+
+
+def commit_fixture(
+    root: pathlib.Path, repository: str, *, remote_repository: str | None = None
+) -> str:
     subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    remote = remote_repository or repository
+    subprocess.run(
+        [
+            "git",
+            "remote",
+            "add",
+            "origin",
+            f"https://github.com/Project-Helianthus/{remote}.git",
+        ],
+        cwd=root,
+        check=True,
+    )
     subprocess.run(["git", "add", "."], cwd=root, check=True)
     env = os.environ.copy()
     env.update(
@@ -308,15 +417,15 @@ class Workspace:
     eebusreg: pathlib.Path
     docs_ebus_ref: str | None
     docs_eebus_ref: str | None
-    mode: str
-    evaluated_at: str | None
-    evaluation_source: str | None
-    pinned_tools: dict[str, str]
+    eebusreg_ref: str | None
+    enforce_through: str
+    toolchain_mode: str
 
 
 def build_workspace(
     tmp_path: pathlib.Path, mutate: Callable[[dict[str, Any]], None] | None = None
 ) -> Workspace:
+    tmp_path.mkdir(parents=True, exist_ok=True)
     spec = base_spec()
     if mutate is not None:
         mutate(spec)
@@ -324,58 +433,68 @@ def build_workspace(
     eebusreg = tmp_path / "helianthus-eebusreg"
     eebusreg.mkdir()
     write_files(eebusreg, spec["eebusreg"])
-    eebusreg_head = commit_fixture(eebusreg)
-
-    docs_eebus = tmp_path / "helianthus-docs-eebus"
-    docs_eebus.mkdir()
-    write_files(docs_eebus, spec["docs_eebus"])
-    docs_eebus_head = commit_fixture(docs_eebus)
-
+    write_symlinks(eebusreg, spec["symlinks"]["eebusreg"])
+    eebusreg_head = commit_fixture(
+        eebusreg,
+        "helianthus-eebusreg",
+        remote_repository=spec["remotes"]["eebusreg"],
+    )
     for item in spec["manifest"]["entries"]:
         if item["lifecycle"]["source_ref"] == "__SOURCE_REF__":
             item["lifecycle"]["source_ref"] = eebusreg_head
 
+    docs_eebus = tmp_path / "helianthus-docs-eebus"
+    docs_eebus.mkdir()
+    write_files(docs_eebus, spec["docs_eebus"])
+    write_symlinks(docs_eebus, spec["symlinks"]["docs_eebus"])
+    docs_eebus_head = commit_fixture(
+        docs_eebus,
+        "helianthus-docs-eebus",
+        remote_repository=spec["remotes"]["docs_eebus"],
+    )
+
     docs_ebus = tmp_path / "helianthus-docs-ebus"
     docs_ebus.mkdir()
-    write_files(docs_ebus, spec["docs_ebus"])
+    docs_files = {
+        path: text.replace("__DOCS_EEBUS_REF__", docs_eebus_head)
+        for path, text in spec["docs_ebus"].items()
+    }
+    write_files(docs_ebus, docs_files)
     if spec["manifest_present"]:
         manifest_path = docs_ebus / MANIFEST_PATH
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(
-            json.dumps(spec["manifest"], indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
+            yaml.safe_dump(spec["manifest"], sort_keys=False), encoding="utf-8"
         )
-    docs_ebus_head = commit_fixture(docs_ebus)
+    write_symlinks(docs_ebus, spec["symlinks"]["docs_ebus"])
+    docs_ebus_head = commit_fixture(
+        docs_ebus,
+        "helianthus-docs-ebus",
+        remote_repository=spec["remotes"]["docs_ebus"],
+    )
 
     roots = {
         "docs_ebus": docs_ebus,
         "docs_eebus": docs_eebus,
         "eebusreg": eebusreg,
     }
-    dirty_repo = spec["dirty_repo"]
-    if dirty_repo is not None:
-        (roots[dirty_repo] / "ambient-untracked.txt").write_text(
+    if spec["dirty_repo"] is not None:
+        (roots[spec["dirty_repo"]] / "ambient-untracked.txt").write_text(
             "dirty\n", encoding="utf-8"
         )
 
-    docs_ebus_ref = (
-        docs_ebus_head if spec["docs_ebus_ref"] == "__AUTO__" else spec["docs_ebus_ref"]
-    )
-    docs_eebus_ref = (
-        docs_eebus_head
-        if spec["docs_eebus_ref"] == "__AUTO__"
-        else spec["docs_eebus_ref"]
-    )
+    def selected(value: str | None, automatic: str) -> str | None:
+        return automatic if value == "__AUTO__" else value
+
     return Workspace(
         docs_ebus=docs_ebus,
         docs_eebus=docs_eebus,
         eebusreg=eebusreg,
-        docs_ebus_ref=docs_ebus_ref,
-        docs_eebus_ref=docs_eebus_ref,
-        mode=spec["mode"],
-        evaluated_at=spec["evaluated_at"],
-        evaluation_source=spec["evaluation_source"],
-        pinned_tools=spec["pinned_tools"],
+        docs_ebus_ref=selected(spec["docs_ebus_ref"], docs_ebus_head),
+        docs_eebus_ref=selected(spec["docs_eebus_ref"], docs_eebus_head),
+        eebusreg_ref=selected(spec["eebusreg_ref"], eebusreg_head),
+        enforce_through=spec["enforce_through"],
+        toolchain_mode=spec["toolchain_mode"],
     )
 
 
@@ -383,8 +502,7 @@ def load_validator():
     spec = importlib.util.spec_from_file_location(
         "platform_contract_validator", VALIDATOR_PATH
     )
-    assert spec is not None
-    assert spec.loader is not None
+    assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -395,14 +513,13 @@ def validate(validator: Any, workspace: Workspace) -> list[str]:
         docs_ebus_root=workspace.docs_ebus,
         docs_eebus_root=workspace.docs_eebus,
         eebusreg_root=workspace.eebusreg,
-        mode=workspace.mode,
+        mode="combined-ref",
         docs_ebus_ref=workspace.docs_ebus_ref,
         docs_eebus_ref=workspace.docs_eebus_ref,
-        evaluated_at=workspace.evaluated_at,
-        evaluation_source=workspace.evaluation_source,
-        pinned_tools=workspace.pinned_tools,
+        eebusreg_ref=workspace.eebusreg_ref,
+        enforce_through=workspace.enforce_through,
+        toolchain_mode=workspace.toolchain_mode,
     )
-    assert isinstance(diagnostics, list)
     assert diagnostics == sorted(set(diagnostics))
     assert all(
         isinstance(item, str) and item and " " not in item for item in diagnostics
@@ -410,8 +527,22 @@ def validate(validator: Any, workspace: Workspace) -> list[str]:
     return diagnostics
 
 
-def find_entry(spec: dict[str, Any], entry_id: str) -> dict[str, Any]:
-    return next(item for item in spec["manifest"]["entries"] if item["id"] == entry_id)
+def repository_validate(
+    validator: Any,
+    root: pathlib.Path,
+    *,
+    mode: str = "repository",
+    evaluated_at: str | None = None,
+    evaluation_source: str | None = None,
+) -> list[str]:
+    return validator.validate_repository(
+        docs_ebus_root=root,
+        mode=mode,
+        enforce_through=PLATFORM_STAGE,
+        toolchain_mode="supported",
+        evaluated_at=evaluated_at,
+        evaluation_source=evaluation_source,
+    )
 
 
 @dataclass(frozen=True)
@@ -435,7 +566,7 @@ def remove_surface(spec: dict[str, Any]) -> None:
 
 
 def duplicate_pair(spec: dict[str, Any]) -> None:
-    duplicate = copy.deepcopy(find_entry(spec, "code-repo-summary"))
+    duplicate = copy.deepcopy(find_entry(spec, "code-repo-summary-planned"))
     duplicate["id"] = "duplicate-pair"
     spec["manifest"]["entries"].append(duplicate)
 
@@ -447,27 +578,42 @@ def duplicate_canonical(spec: dict[str, Any]) -> None:
     spec["manifest"]["entries"].append(duplicate)
 
 
-def add_substantive(path_group: str, path: str, text: str):
+def append_platform(text: str):
     def mutate(spec: dict[str, Any]) -> None:
-        spec[path_group][path] = text
+        path = "docs/platform/cross-runtime-envelope.md"
+        spec["docs_ebus"][path] += text
 
     return mutate
 
 
-def expire_candidate(spec: dict[str, Any]) -> None:
-    find_entry(spec, "eebus-architecture-planned")["lifecycle"].update(
-        {
-            "created_at": "2026-02-15T00:00:00Z",
-            "expires_at": "2026-03-01T00:00:00Z",
-        }
-    )
-    spec.update(
-        {
-            "mode": "main",
-            "evaluated_at": "2026-02-15T00:00:00Z",
-            "evaluation_source": "github.event.repository.updated_at",
-        }
-    )
+def invalid_withdrawn_cleanup(spec: dict[str, Any]) -> None:
+    transition_clean(spec)
+    find_entry(spec, "code-repo-docs-planned")["lifecycle"][
+        "cleanup_required"
+    ] = False
+
+
+def invalid_withdrawn_output(spec: dict[str, Any]) -> None:
+    transition_clean(spec)
+    find_entry(spec, "code-repo-docs-planned")["outputs"]["search"] = True
+
+
+def clean_with_docs(spec: dict[str, Any]) -> None:
+    transition_clean(spec, remove_docs=False)
+
+
+def clean_with_substantive_summary(spec: dict[str, Any]) -> None:
+    transition_clean(spec)
+    spec["eebusreg"]["README.md"] += "The eeBUS runtime MUST persist trust.\n"
+
+
+def early_architecture(spec: dict[str, Any]) -> None:
+    set_active(find_entry(spec, "eebus-architecture-planned"), canonical=True)
+
+
+def candidate_outside_hidden_area(spec: dict[str, Any]) -> None:
+    find_entry(spec, "eebus-api-candidate")["owner"]["path"] = "api/lifecycle.md"
+    spec["docs_eebus"]["api/lifecycle.md"] = "# Candidate Go API\n"
 
 
 NEGATIVE_CASES = (
@@ -489,12 +635,28 @@ NEGATIVE_CASES = (
     NegativeCase(
         "unknown_owner_field",
         "manifest.schema",
-        lambda s: find_entry(s, "platform-contracts")["owner"].update({"extra": True}),
+        lambda s: find_entry(s, "platform-contracts")["owner"].update(
+            {"extra": True}
+        ),
     ),
     NegativeCase(
         "unknown_output_field",
         "manifest.schema",
         lambda s: find_entry(s, "platform-contracts")["outputs"].update(
+            {"extra": True}
+        ),
+    ),
+    NegativeCase(
+        "unknown_lifecycle_field",
+        "manifest.schema",
+        lambda s: find_entry(s, "platform-contracts")["lifecycle"].update(
+            {"extra": True}
+        ),
+    ),
+    NegativeCase(
+        "unknown_enforcement_field",
+        "manifest.schema",
+        lambda s: find_entry(s, "platform-contracts")["enforcement"].update(
             {"extra": True}
         ),
     ),
@@ -526,9 +688,28 @@ NEGATIVE_CASES = (
         ),
     ),
     NegativeCase(
-        "planned_linkable_output",
+        "planned_output",
         "state.planned",
-        set_nested("eebus-architecture-planned", "outputs", "stable_navigation", True),
+        set_nested(
+            "eebus-architecture-planned", "outputs", "stable_navigation", True
+        ),
+    ),
+    NegativeCase(
+        "planned_missing_source_issue",
+        "state.planned",
+        set_nested(
+            "eebus-architecture-planned", "lifecycle", "source_issue", None
+        ),
+    ),
+    NegativeCase(
+        "planned_basic_iso_timestamp",
+        "state.planned",
+        set_nested(
+            "eebus-architecture-planned",
+            "lifecycle",
+            "created_at",
+            "20260101T000000Z",
+        ),
     ),
     NegativeCase(
         "candidate_wrong_expiry",
@@ -553,6 +734,11 @@ NEGATIVE_CASES = (
         set_nested("eebus-api-candidate", "lifecycle", "content_sha256", None),
     ),
     NegativeCase(
+        "candidate_digest_mismatch",
+        "state.candidate",
+        set_nested("eebus-api-candidate", "lifecycle", "content_sha256", "0" * 64),
+    ),
+    NegativeCase(
         "candidate_stable_output",
         "state.candidate",
         set_nested("eebus-api-candidate", "outputs", "release_bundle", True),
@@ -560,7 +746,7 @@ NEGATIVE_CASES = (
     NegativeCase(
         "candidate_outside_hidden_area",
         "state.candidate",
-        set_nested("eebus-api-candidate", "owner", "path", "api/lifecycle.md"),
+        candidate_outside_hidden_area,
     ),
     NegativeCase(
         "active_not_frozen",
@@ -575,37 +761,65 @@ NEGATIVE_CASES = (
         ),
     ),
     NegativeCase(
-        "withdrawn_cleanup_optional",
-        "state.withdrawn",
-        set_nested("code-repo-docs-withdrawn", "lifecycle", "cleanup_required", False),
+        "active_offset_timestamp",
+        "state.active",
+        set_nested(
+            "platform-contracts",
+            "lifecycle",
+            "approved_at",
+            "2026-01-02T00:00:00+00:00",
+        ),
     ),
     NegativeCase(
-        "withdrawn_in_output",
-        "state.withdrawn",
-        set_nested("code-repo-docs-withdrawn", "outputs", "search", True),
+        "withdrawn_cleanup_optional", "state.withdrawn", invalid_withdrawn_cleanup
     ),
+    NegativeCase("withdrawn_output", "state.withdrawn", invalid_withdrawn_output),
     NegativeCase(
         "absolute_path",
         "path.absolute",
-        set_nested("platform-contracts", "owner", "path", "/Users/operator/private.md"),
+        set_nested(
+            "eebus-architecture-planned", "owner", "path", "/private/future.md"
+        ),
+    ),
+    NegativeCase(
+        "traversal_path",
+        "path.absolute",
+        set_nested(
+            "eebus-architecture-planned", "source", "path", "../future.md"
+        ),
     ),
     NegativeCase(
         "private_identifier",
         "privacy.private-identifier",
         set_nested(
-            "eebus-protocol", "source", "path", "devices/serial=VR940F-123456789"
+            "eebus-architecture-planned",
+            "source",
+            "path",
+            "devices/serial=redacted-value",
         ),
     ),
     NegativeCase(
-        "forward_link",
+        "forward_inline_link",
         "link.forward",
-        lambda s: s["docs_ebus"].update(
-            {
-                "docs/platform/cross-runtime-envelope.md": s["docs_ebus"][
-                    "docs/platform/cross-runtime-envelope.md"
-                ]
-                + "[Unmerged](../../helianthus-docs-eebus/architecture/lifecycle.md)\n"
-            }
+        append_platform(
+            "[Unmerged](../../helianthus-docs-eebus/architecture/future.md)\n"
+        ),
+    ),
+    NegativeCase(
+        "forward_reference_link",
+        "link.forward",
+        append_platform(
+            "[Unmerged][future]\n\n"
+            "[future]: ../../helianthus-docs-eebus/architecture/future.md\n"
+        ),
+    ),
+    NegativeCase(
+        "candidate_immutable_link",
+        "link.forward",
+        append_platform(
+            "[Candidate](https://github.com/Project-Helianthus/"
+            "helianthus-docs-eebus/blob/__DOCS_EEBUS_REF__/"
+            "api/_candidate/lifecycle.md)\n"
         ),
     ),
     NegativeCase(
@@ -614,7 +828,7 @@ NEGATIVE_CASES = (
         lambda s: s.update({"docs_ebus_ref": None}),
     ),
     NegativeCase(
-        "docs_ebus_ref_not_commit",
+        "docs_ebus_ref_moving",
         "input.docs-ebus-ref",
         lambda s: s.update({"docs_ebus_ref": "main"}),
     ),
@@ -624,9 +838,19 @@ NEGATIVE_CASES = (
         lambda s: s.update({"docs_eebus_ref": None}),
     ),
     NegativeCase(
-        "docs_eebus_ref_not_commit",
+        "docs_eebus_ref_moving",
         "input.docs-eebus-ref",
         lambda s: s.update({"docs_eebus_ref": "feature/docs"}),
+    ),
+    NegativeCase(
+        "eebusreg_ref_missing",
+        "input.eebusreg-ref",
+        lambda s: s.update({"eebusreg_ref": None}),
+    ),
+    NegativeCase(
+        "eebusreg_ref_moving",
+        "input.eebusreg-ref",
+        lambda s: s.update({"eebusreg_ref": "main"}),
     ),
     NegativeCase(
         "ambient_dirty_clone",
@@ -634,119 +858,69 @@ NEGATIVE_CASES = (
         lambda s: s.update({"dirty_repo": "docs_eebus"}),
     ),
     NegativeCase(
-        "unpinned_tool",
-        "input.pinned-tools",
-        lambda s: s.update({"pinned_tools": {"python": "3.12"}}),
+        "e2_transition_skipped",
+        "enforcement.transition",
+        lambda s: s.update({"enforce_through": E2_STAGE}),
     ),
     NegativeCase(
-        "main_timestamp_missing",
-        "expiry.timestamp",
-        lambda s: s.update(
-            {"mode": "main", "evaluation_source": "github.event.repository.updated_at"}
-        ),
+        "future_state_activated_early",
+        "enforcement.transition",
+        early_architecture,
     ),
     NegativeCase(
-        "main_timestamp_source_missing",
-        "expiry.source",
-        lambda s: s.update({"mode": "main", "evaluated_at": "2026-01-10T00:00:00Z"}),
-    ),
-    NegativeCase(
-        "planned_expired",
-        "expiry.planned",
-        lambda s: s.update(
-            {
-                "mode": "main",
-                "evaluated_at": "2026-01-16T00:00:00Z",
-                "evaluation_source": "github.event.repository.updated_at",
-            }
-        ),
-    ),
-    NegativeCase("candidate_expired", "expiry.candidate", expire_candidate),
-    NegativeCase(
-        "protocol_copy",
+        "protocol_copy_alternate_heading",
         "ownership.protocol-copy",
-        add_substantive(
-            "docs_ebus",
-            "docs/platform/ship-spine-protocol.md",
-            "# SHIP/SPINE Protocol\n\nPeers MUST negotiate this protocol.\n",
-        ),
+        append_platform("\n## Wire Notes\n\nSHIP peers MUST negotiate sessions.\n"),
     ),
     NegativeCase(
-        "architecture_copy",
+        "architecture_copy_without_h1",
         "ownership.architecture-copy",
-        add_substantive(
-            "docs_ebus",
-            "docs/platform/eebus-runtime-trust.md",
-            "# eeBUS Trust\n\nThe runtime MUST persist trust.\n",
-        ),
+        append_platform("\nState notes: the eeBUS runtime MUST persist trust state.\n"),
     ),
     NegativeCase(
-        "api_copy",
+        "api_copy_normative_summary",
         "ownership.api-copy",
-        add_substantive(
-            "docs_ebus",
-            "docs/platform/eebus-go-api.md",
-            "# eeBUS Go API\n\nfunc Snapshot() returns the API value.\n",
+        append_platform(
+            "\nSummary-only: the eeBUS Go API MUST expose package symbols.\n"
         ),
     ),
     NegativeCase(
-        "code_repo_docs",
+        "code_repo_docs_at_clean",
         "ownership.code-repo-substantive",
-        add_substantive(
-            "eebusreg",
-            "docs/guide.md",
-            "# Runtime Guide\n\nSubstantive implementation documentation.\n",
-        ),
+        clean_with_docs,
     ),
     NegativeCase(
-        "summary_becomes_normative",
+        "summary_substantive_at_clean",
         "ownership.summary-only-substantive",
-        lambda s: s["eebusreg"].update(
-            {
-                "README.md": s["eebusreg"]["README.md"]
-                + "The runtime MUST expose this API.\n"
-            }
-        ),
+        clean_with_substantive_summary,
     ),
 )
 
 
 def test_required_platform_artifacts_exist() -> None:
-    diagnostics: list[str] = []
-    if not (REPO_ROOT / MANIFEST_PATH).is_file():
-        diagnostics.append("artifact.manifest-missing")
-    if any(not (REPO_ROOT / path).is_file() for path in CONTRACT_PAGES):
-        diagnostics.append("artifact.contract-page-missing")
-    assert diagnostics == []
+    assert (REPO_ROOT / MANIFEST_PATH).is_file()
+    assert all((REPO_ROOT / path).is_file() for path in CONTRACT_PAGES)
 
 
 def test_production_validator_entrypoint_exists() -> None:
-    assert VALIDATOR_PATH.is_file(), "artifact.validator-missing"
+    assert VALIDATOR_PATH.is_file()
 
 
 @pytest.mark.parametrize("path,required_terms", PAGE_REQUIRED_TERMS.items())
 def test_contract_page_contains_required_clauses(
     path: pathlib.Path, required_terms: tuple[str, ...]
 ) -> None:
-    full_path = REPO_ROOT / path
-    if not full_path.is_file():
-        pytest.skip("artifact.contract-page-missing")
-    text = full_path.read_text(encoding="utf-8")
-    diagnostics = [
-        "contract.required-clause-missing"
-        for term in required_terms
-        if term.casefold() not in text.casefold()
-    ]
-    assert diagnostics == []
+    text = (REPO_ROOT / path).read_text(encoding="utf-8")
+    assert [term for term in required_terms if term.casefold() not in text.casefold()] == []
 
 
-@pytest.mark.skipif(not VALIDATOR_PATH.is_file(), reason="artifact.validator-missing")
-def test_closed_manifest_fixture_is_valid(tmp_path: pathlib.Path) -> None:
+def test_current_platform_fixture_passes_with_pre_e2_and_pre_clean_material(
+    tmp_path: pathlib.Path,
+) -> None:
     workspace = build_workspace(tmp_path)
     assert validate(load_validator(), workspace) == []
 
 
-@pytest.mark.skipif(not VALIDATOR_PATH.is_file(), reason="artifact.validator-missing")
 @pytest.mark.parametrize("case", NEGATIVE_CASES, ids=lambda case: case.name)
 def test_negative_mutations_emit_one_exact_category(
     tmp_path: pathlib.Path, case: NegativeCase
@@ -755,7 +929,7 @@ def test_negative_mutations_emit_one_exact_category(
     assert validate(load_validator(), workspace) == [case.category]
 
 
-def test_negative_matrix_is_exhaustive_and_category_unique() -> None:
+def test_negative_matrix_has_broad_unique_category_coverage() -> None:
     categories = {case.category for case in NEGATIVE_CASES}
     assert SURFACES == {item["surface"] for item in base_manifest()["entries"]}
     assert {
@@ -775,12 +949,9 @@ def test_negative_matrix_is_exhaustive_and_category_unique() -> None:
         "link.forward",
         "input.docs-ebus-ref",
         "input.docs-eebus-ref",
+        "input.eebusreg-ref",
         "input.clean-clone",
-        "input.pinned-tools",
-        "expiry.timestamp",
-        "expiry.source",
-        "expiry.planned",
-        "expiry.candidate",
+        "enforcement.transition",
         "ownership.protocol-copy",
         "ownership.architecture-copy",
         "ownership.api-copy",
@@ -789,42 +960,440 @@ def test_negative_matrix_is_exhaustive_and_category_unique() -> None:
     } <= categories
 
 
-@pytest.mark.skipif(not VALIDATOR_PATH.is_file(), reason="artifact.validator-missing")
-def test_main_expiry_cli_is_terminal_and_category_only(tmp_path: pathlib.Path) -> None:
-    def expire_planned(spec: dict[str, Any]) -> None:
-        spec.update(
-            {
-                "mode": "main",
-                "evaluated_at": "2026-01-16T00:00:00Z",
-                "evaluation_source": "github.event.repository.updated_at",
-            }
-        )
+def test_e2_transition_passes_but_clean_cannot_be_skipped(tmp_path: pathlib.Path) -> None:
+    e2 = build_workspace(tmp_path / "e2", transition_e2)
+    assert validate(load_validator(), e2) == []
 
-    workspace = build_workspace(tmp_path, expire_planned)
+    def require_clean(spec: dict[str, Any]) -> None:
+        transition_e2(spec)
+        spec["enforce_through"] = CLEAN_STAGE
+
+    clean_required = build_workspace(tmp_path / "clean-required", require_clean)
+    assert validate(load_validator(), clean_required) == ["enforcement.transition"]
+
+
+def test_clean_transition_passes_after_docs_removed_and_summary_trimmed(
+    tmp_path: pathlib.Path,
+) -> None:
+    workspace = build_workspace(tmp_path, transition_clean)
+    assert validate(load_validator(), workspace) == []
+
+
+def remove_active_owner(spec: dict[str, Any]) -> None:
+    del spec["docs_eebus"]["protocols/ship-spine.md"]
+
+
+def remove_candidate_owner(spec: dict[str, Any]) -> None:
+    del spec["docs_eebus"]["api/_candidate/lifecycle.md"]
+
+
+def remove_candidate_source(spec: dict[str, Any]) -> None:
+    del spec["eebusreg"]["api/lifecycle.go"]
+
+
+def missing_active_source(spec: dict[str, Any]) -> None:
+    find_entry(spec, "platform-contracts")["source"]["path"] = (
+        "docs/platform/missing-source.md"
+    )
+
+
+def directory_as_active_owner(spec: dict[str, Any]) -> None:
+    item = find_entry(spec, "eebus-protocol")
+    item["owner"]["path"] = "protocols"
+    item["source"]["path"] = "protocols"
+
+
+def relative_symlink_component(spec: dict[str, Any]) -> None:
+    item = find_entry(spec, "eebus-protocol")
+    item["owner"]["path"] = "protocol-link/ship-spine.md"
+    item["source"]["path"] = "protocol-link/ship-spine.md"
+    spec["symlinks"]["docs_eebus"]["protocol-link"] = "protocols"
+
+
+def absolute_symlink_component(spec: dict[str, Any]) -> None:
+    item = find_entry(spec, "eebus-protocol")
+    item["owner"]["path"] = "protocol-link/ship-spine.md"
+    item["source"]["path"] = "protocol-link/ship-spine.md"
+    spec["symlinks"]["docs_eebus"]["protocol-link"] = "ABS:protocols"
+
+
+def source_symlink(spec: dict[str, Any]) -> None:
+    find_entry(spec, "platform-contracts")["source"]["path"] = (
+        "docs/platform/source-link.md"
+    )
+    spec["symlinks"]["docs_ebus"]["docs/platform/source-link.md"] = (
+        "cross-runtime-envelope.md"
+    )
+
+
+@pytest.mark.parametrize(
+    "mutate,expected",
+    (
+        (remove_active_owner, "artifact.owner"),
+        (remove_candidate_owner, "artifact.owner"),
+        (remove_candidate_source, "artifact.source"),
+        (missing_active_source, "artifact.source"),
+        (directory_as_active_owner, "artifact.owner"),
+        (relative_symlink_component, "path.symlink"),
+        (absolute_symlink_component, "path.symlink"),
+        (source_symlink, "path.symlink"),
+    ),
+    ids=(
+        "missing-active-owner",
+        "missing-candidate-owner",
+        "missing-candidate-source",
+        "missing-active-source",
+        "owner-not-regular",
+        "relative-symlink-component",
+        "absolute-symlink-component",
+        "source-symlink",
+    ),
+)
+def test_owner_source_artifact_safety(
+    tmp_path: pathlib.Path,
+    mutate: Callable[[dict[str, Any]], None],
+    expected: str,
+) -> None:
+    assert validate(load_validator(), build_workspace(tmp_path, mutate)) == [expected]
+
+
+def test_repository_root_identity_is_verified(tmp_path: pathlib.Path) -> None:
+    def wrong_remote(spec: dict[str, Any]) -> None:
+        spec["remotes"]["docs_eebus"] = "helianthus-docs-ebus"
+
+    workspace = build_workspace(tmp_path, wrong_remote)
+    assert validate(load_validator(), workspace) == ["input.repository-root"]
+
+
+@pytest.mark.parametrize(
+    "addition",
+    (
+        "\n```markdown\nSHIP peers MUST negotiate sessions.\n```\n",
+        "\n`The eeBUS runtime MUST persist trust state.`\n",
+        "\n    The eeBUS Go API MUST expose package symbols.\n",
+        "\nSummary: SHIP peers negotiate sessions in the canonical protocol docs.\n",
+        "\nThe platform evidence gate MUST record whether a SHIP session was observed.\n",
+    ),
+    ids=(
+        "fenced-code",
+        "inline-code",
+        "indented-code",
+        "non-normative-summary",
+        "evidence-gate-false-positive",
+    ),
+)
+def test_semantic_copy_false_positive_controls(
+    tmp_path: pathlib.Path, addition: str
+) -> None:
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == []
+
+
+@pytest.mark.parametrize(
+    "addition",
+    (
+        "\n[Protocol [stable]][proto]\n\n"
+        "[proto]: https://github.com/Project-Helianthus/helianthus-docs-eebus/"
+        "blob/__DOCS_EEBUS_REF__/protocols/ship-spine.md \"title\"\n",
+        "\n<a href=\"https://github.com/Project-Helianthus/"
+        "helianthus-docs-eebus/blob/__DOCS_EEBUS_REF__/"
+        "protocols/ship-spine.md\">Protocol</a>\n",
+        "\n```markdown\n[Bad][future]\n"
+        "[future]: ../../helianthus-docs-eebus/architecture/future.md\n```\n",
+    ),
+    ids=("reference-style-active", "html-active", "code-link-ignored"),
+)
+def test_markdown_link_parser_accepts_only_real_active_links(
+    tmp_path: pathlib.Path, addition: str
+) -> None:
+    workspace = build_workspace(tmp_path, append_platform(addition))
+    assert validate(load_validator(), workspace) == []
+
+
+def write_manifest_text(workspace: Workspace, text: str | bytes) -> None:
+    path = workspace.docs_ebus / MANIFEST_PATH
+    if isinstance(text, bytes):
+        path.write_bytes(text)
+    else:
+        path.write_text(text, encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        lambda text: text.replace(
+            "schema: helianthus.platform.doc-ownership\n",
+            "schema: helianthus.platform.doc-ownership\n"
+            "schema: helianthus.platform.doc-ownership\n",
+            1,
+        ),
+        lambda text: text.replace(
+            "    candidate: false\n",
+            "    candidate: false\n    candidate: false\n",
+            1,
+        ),
+        lambda _text: "schema: [unterminated /private/secret-value\n",
+        lambda _text: (
+            "schema: helianthus.platform.doc-ownership\n"
+            "version: 1\nentries: &entries [*entries]\n"
+        ),
+    ),
+    ids=("duplicate-top", "duplicate-nested", "malformed", "cyclic-alias"),
+)
+def test_manifest_parser_failures_are_schema_only(
+    tmp_path: pathlib.Path, mutation: Callable[[str], str]
+) -> None:
+    workspace = build_workspace(tmp_path)
+    path = workspace.docs_ebus / MANIFEST_PATH
+    write_manifest_text(workspace, mutation(path.read_text(encoding="utf-8")))
+    assert repository_validate(load_validator(), workspace.docs_ebus) == [
+        "manifest.schema"
+    ]
+
+
+def test_manifest_invalid_utf8_is_schema_only(tmp_path: pathlib.Path) -> None:
+    workspace = build_workspace(tmp_path)
+    write_manifest_text(workspace, b"\xff\xfeprivate-value")
+    assert repository_validate(load_validator(), workspace.docs_ebus) == [
+        "manifest.schema"
+    ]
+
+
+@pytest.mark.parametrize(
+    "limit_name,limit_value",
+    (
+        ("MAX_MANIFEST_BYTES", 32),
+        ("MAX_YAML_NESTING", 2),
+        ("MAX_YAML_TOKENS", 10),
+        ("MAX_YAML_NODES", 10),
+    ),
+)
+def test_manifest_resource_bounds_are_schema_only(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch, limit_name: str, limit_value: int
+) -> None:
+    workspace = build_workspace(tmp_path)
+    validator = load_validator()
+    monkeypatch.setattr(validator, limit_name, limit_value)
+    assert repository_validate(validator, workspace.docs_ebus) == ["manifest.schema"]
+
+
+def test_manifest_alias_limit_and_small_alias_behavior(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = build_workspace(tmp_path)
+    path = workspace.docs_ebus / MANIFEST_PATH
+    text = path.read_text(encoding="utf-8")
+    text = text.replace("    source_ref: null\n", "    source_ref: &none null\n", 1)
+    text = text.replace("    content_sha256: null\n", "    content_sha256: *none\n", 1)
+    write_manifest_text(workspace, text)
+    validator = load_validator()
+    assert repository_validate(validator, workspace.docs_ebus) == []
+    monkeypatch.setattr(validator, "MAX_YAML_ALIASES", 0)
+    assert repository_validate(validator, workspace.docs_ebus) == ["manifest.schema"]
+
+
+def test_manifest_cli_never_leaks_parser_value_or_path(tmp_path: pathlib.Path) -> None:
+    workspace = build_workspace(tmp_path)
+    write_manifest_text(
+        workspace, "schema: [unterminated /private/operator/secret-marker\n"
+    )
     result = subprocess.run(
         [
             "python3",
             str(VALIDATOR_PATH),
             "--mode",
-            workspace.mode,
+            "repository",
             "--docs-ebus-root",
             str(workspace.docs_ebus),
-            "--docs-eebus-root",
-            str(workspace.docs_eebus),
-            "--eebusreg-root",
-            str(workspace.eebusreg),
-            "--docs-ebus-ref",
-            str(workspace.docs_ebus_ref),
-            "--docs-eebus-ref",
-            str(workspace.docs_eebus_ref),
+            "--enforce-through",
+            PLATFORM_STAGE,
+            "--toolchain-mode",
+            "supported",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == "manifest.schema\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    (
+        "20260115T000000Z",
+        "2026-01-15 00:00:00Z",
+        "2026-01-15T00:00:00+00:00",
+        "2026-01-15T01:00:00+01:00",
+        "2026-01-15T00:00:00z",
+        "2026-01-15T00:00:60Z",
+        "2026-01-15T00:00:00,1Z",
+        "2026-01-15T00:00:00.1234567Z",
+    ),
+)
+def test_main_expiry_rejects_non_contract_timestamps(
+    tmp_path: pathlib.Path, timestamp: str
+) -> None:
+    workspace = build_workspace(tmp_path)
+    assert repository_validate(
+        load_validator(),
+        workspace.docs_ebus,
+        mode="main-expiry",
+        evaluated_at=timestamp,
+        evaluation_source="test.event.timestamp",
+    ) == ["expiry.timestamp"]
+
+
+def test_main_expiry_requires_named_source(tmp_path: pathlib.Path) -> None:
+    workspace = build_workspace(tmp_path)
+    assert repository_validate(
+        load_validator(),
+        workspace.docs_ebus,
+        mode="main-expiry",
+        evaluated_at="2026-01-10T00:00:00Z",
+        evaluation_source=None,
+    ) == ["expiry.source"]
+
+
+def test_planned_expiry_boundary_is_inclusive(tmp_path: pathlib.Path) -> None:
+    workspace = build_workspace(tmp_path)
+    validator = load_validator()
+    assert repository_validate(
+        validator,
+        workspace.docs_ebus,
+        mode="main-expiry",
+        evaluated_at="2026-01-14T23:59:59.999999Z",
+        evaluation_source="test.event.timestamp",
+    ) == []
+    assert repository_validate(
+        validator,
+        workspace.docs_ebus,
+        mode="main-expiry",
+        evaluated_at="2026-01-15T00:00:00Z",
+        evaluation_source="test.event.timestamp",
+    ) == ["expiry.planned"]
+
+
+def test_fractional_expiry_boundary_is_inclusive(tmp_path: pathlib.Path) -> None:
+    def fractional(spec: dict[str, Any]) -> None:
+        for entry_id in (
+            "eebus-architecture-planned",
+            "code-repo-docs-planned",
+            "code-repo-summary-planned",
+        ):
+            item = find_entry(spec, entry_id)
+            item["lifecycle"]["created_at"] = "2026-01-01T00:00:00.123456Z"
+            item["lifecycle"]["expires_at"] = "2026-01-15T00:00:00.123456Z"
+
+    workspace = build_workspace(tmp_path, fractional)
+    validator = load_validator()
+    assert repository_validate(
+        validator,
+        workspace.docs_ebus,
+        mode="main-expiry",
+        evaluated_at="2026-01-15T00:00:00.123455Z",
+        evaluation_source="test.event.timestamp",
+    ) == []
+    assert repository_validate(
+        validator,
+        workspace.docs_ebus,
+        mode="main-expiry",
+        evaluated_at="2026-01-15T00:00:00.123456Z",
+        evaluation_source="test.event.timestamp",
+    ) == ["expiry.planned"]
+
+
+def test_candidate_expiry_boundary_is_inclusive(tmp_path: pathlib.Path) -> None:
+    def candidate_first(spec: dict[str, Any]) -> None:
+        item = find_entry(spec, "eebus-api-candidate")
+        item["lifecycle"]["created_at"] = "2025-12-11T00:00:00Z"
+        item["lifecycle"]["expires_at"] = "2026-01-10T00:00:00Z"
+
+    workspace = build_workspace(tmp_path, candidate_first)
+    assert repository_validate(
+        load_validator(),
+        workspace.docs_ebus,
+        mode="main-expiry",
+        evaluated_at="2026-01-10T00:00:00Z",
+        evaluation_source="test.event.timestamp",
+    ) == ["expiry.candidate"]
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    (
+        "2026-01-15T00:00:00Z",
+        "2026-01-15T00:00:00.1Z",
+        "2026-01-15T00:00:00.123456Z",
+    ),
+)
+def test_strict_timestamp_parser_accepts_documented_forms(timestamp: str) -> None:
+    assert load_validator()._parse_instant(timestamp) is not None
+
+
+def test_toolchain_checks_actual_versions_not_caller_claims(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    validator = load_validator()
+    monkeypatch.setattr(
+        validator, "_actual_tool_versions", lambda: ((3, 12, 10), "6.0.2", "6.0.2")
+    )
+    assert validator._toolchain_categories("exact") == set()
+    monkeypatch.setattr(
+        validator, "_actual_tool_versions", lambda: ((3, 12, 9), "6.0.2", "6.0.2")
+    )
+    assert validator._toolchain_categories("exact") == {"toolchain.python"}
+    monkeypatch.setattr(
+        validator, "_actual_tool_versions", lambda: ((3, 14, 5), "6.0.3", "6.0.2")
+    )
+    assert validator._toolchain_categories("supported") == {"toolchain.pyyaml"}
+
+
+def test_removed_caller_pin_arguments_are_category_only(tmp_path: pathlib.Path) -> None:
+    workspace = build_workspace(tmp_path)
+    result = subprocess.run(
+        [
+            "python3",
+            str(VALIDATOR_PATH),
+            "--mode",
+            "repository",
+            "--docs-ebus-root",
+            str(workspace.docs_ebus),
+            "--enforce-through",
+            PLATFORM_STAGE,
+            "--toolchain-mode",
+            "supported",
+            "--pinned-tool",
+            "python=0.0.0-secret-value",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == "input.arguments\n"
+    assert result.stderr == ""
+
+
+def test_main_expiry_cli_is_terminal_and_category_only(tmp_path: pathlib.Path) -> None:
+    workspace = build_workspace(tmp_path)
+    result = subprocess.run(
+        [
+            "python3",
+            str(VALIDATOR_PATH),
+            "--mode",
+            "main-expiry",
+            "--docs-ebus-root",
+            str(workspace.docs_ebus),
             "--evaluated-at",
-            str(workspace.evaluated_at),
+            "2026-01-15T00:00:00Z",
             "--evaluation-source",
-            str(workspace.evaluation_source),
-            "--pinned-tool",
-            "python=3.12.10",
-            "--pinned-tool",
-            "pyyaml=6.0.2",
+            "test.event.timestamp",
+            "--enforce-through",
+            PLATFORM_STAGE,
+            "--toolchain-mode",
+            "supported",
         ],
         check=False,
         capture_output=True,
