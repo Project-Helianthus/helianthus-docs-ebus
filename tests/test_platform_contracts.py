@@ -24,6 +24,7 @@ WORKFLOW_PATHS = (
 )
 REQUIREMENTS_CI_PATH = REPO_ROOT / "requirements-ci.txt"
 MAKEFILE_PATH = REPO_ROOT / "Makefile"
+COMBINED_REF_CLI_PATH = REPO_ROOT / "scripts/validate_platform_combined_ref.py"
 TRUSTED_PRIOR_STEP = "Materialize trusted prior manifest"
 PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
@@ -952,6 +953,46 @@ def test_publication_docs_ci_tracks_makefile() -> None:
     )
     assert "Makefile" in workflow[True]["pull_request"]["paths"]
     assert "Makefile" in workflow[True]["push"]["paths"]
+
+
+def test_publication_combined_ref_cli_is_canonical() -> None:
+    assert COMBINED_REF_CLI_PATH.is_file()
+    assert not COMBINED_REF_CLI_PATH.is_symlink()
+    cli = COMBINED_REF_CLI_PATH.read_text(encoding="utf-8")
+    for option in (
+        "--docs-ebus-root",
+        "--docs-eebus-root",
+        "--eebusreg-root",
+        "--docs-ebus-ref",
+        "--docs-eebus-ref",
+        "--eebusreg-ref",
+        "--enforce-through",
+        "--prior-manifest",
+    ):
+        assert option in cli
+
+
+def test_publication_combined_ref_cli_rejects_missing_inputs() -> None:
+    result = subprocess.run(
+        ["python3", str(COMBINED_REF_CLI_PATH)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert "the following arguments are required" in result.stderr
+
+
+def test_publication_combined_ref_cli_has_one_invocation_surface() -> None:
+    local_ci = (REPO_ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
+    makefile = MAKEFILE_PATH.read_text(encoding="utf-8")
+    workflow = (
+        REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
+    ).read_text(encoding="utf-8")
+    assert "scripts/validate_platform_combined_ref.py" in local_ci
+    assert "scripts/validate_platform_combined_ref.py" in makefile
+    assert "scripts/validate_platform_combined_ref.py" in workflow
 
 
 def mark_manifest_entry_withdrawn(
