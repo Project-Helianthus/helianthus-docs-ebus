@@ -1680,7 +1680,7 @@ def test_combined_ref_caller_pins_trusted_reusable_workflow() -> None:
     trusted_call = (
         "uses: Project-Helianthus/helianthus-docs-ebus/"
         ".github/workflows/platform-contracts-combined-ref.yml@"
-        "d1b3deead08ecb84baf3dcfe5382e3c519d44b60"
+        "153191f72b5b9ecacbadcf2f3d7e480c6fef89a4"
     )
     assert trusted_call in caller
     assert "uses: ./.github/workflows/platform-contracts-combined-ref.yml" not in caller
