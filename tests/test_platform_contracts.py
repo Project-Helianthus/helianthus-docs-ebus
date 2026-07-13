@@ -6,6 +6,7 @@ import importlib.util
 import os
 import pathlib
 import re
+import shlex
 import subprocess
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -22,6 +23,7 @@ WORKFLOW_PATHS = (
     REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml",
 )
 REQUIREMENTS_CI_PATH = REPO_ROOT / "requirements-ci.txt"
+MAKEFILE_PATH = REPO_ROOT / "Makefile"
 TRUSTED_PRIOR_STEP = "Materialize trusted prior manifest"
 PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
@@ -401,6 +403,42 @@ def assert_e2_manifest_contract(manifest: dict[str, Any]) -> None:
 def assert_e2_combined_ref_contract(inputs: dict[str, Any]) -> None:
     assert inputs["docs_eebus_ref"] == E2_DOCS_EEBUS_REF
     assert inputs["enforce_through"] == E2_STAGE
+
+
+def make_validator_args(target: str) -> list[str]:
+    result = subprocess.run(
+        [
+            "make",
+            "--dry-run",
+            "--no-print-directory",
+            "--file",
+            str(MAKEFILE_PATH),
+            target,
+            "EVALUATED_AT=2026-07-13T00:00:00Z",
+            "EVALUATION_SOURCE=test.makefile-contract",
+        ],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    commands = [shlex.split(line) for line in result.stdout.splitlines() if line]
+    validator_commands = [
+        command
+        for command in commands
+        if "scripts/validate_platform_contracts.py" in command
+    ]
+    assert len(validator_commands) == 1, result.stdout
+    return validator_commands[0]
+
+
+def cli_option(args: list[str], option: str) -> str | None:
+    for index, arg in enumerate(args):
+        if arg == option:
+            return args[index + 1] if index + 1 < len(args) else None
+        if arg.startswith(f"{option}="):
+            return arg.partition("=")[2]
+    return None
 
 
 def desired_e2_manifest() -> dict[str, Any]:
@@ -1413,6 +1451,13 @@ def test_e2_combined_ref_uses_exact_merged_docs_pin() -> None:
 
 def test_e2_combined_ref_enforces_exact_stage() -> None:
     assert combined_ref_inputs()["enforce_through"] == E2_STAGE
+
+
+@pytest.mark.parametrize(
+    "target", ("validate-platform-contracts", "validate-platform-expiry")
+)
+def test_platform_make_target_enforces_e2_stage(target: str) -> None:
+    assert cli_option(make_validator_args(target), "--enforce-through") == E2_STAGE
 
 
 def test_ownership_validation_guide_tracks_supported_e2_contract() -> None:
