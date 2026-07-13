@@ -1415,6 +1415,60 @@ def test_e2_combined_ref_enforces_exact_stage() -> None:
     assert combined_ref_inputs()["enforce_through"] == E2_STAGE
 
 
+def test_ownership_validation_guide_tracks_supported_e2_contract() -> None:
+    guide = (
+        REPO_ROOT / "docs/platform/ownership-validation.md"
+    ).read_text(encoding="utf-8")
+
+    def section(title: str) -> str:
+        match = re.search(
+            rf"(?ms)^## {re.escape(title)}\s*$\n(?P<body>.*?)(?=^## |\Z)",
+            guide,
+        )
+        assert match is not None, f"missing {title!r} section"
+        return match.group("body")
+
+    staged_claims = [
+        " ".join(match.group("claim").split())
+        for match in re.finditer(
+            r"(?ms)^-\s+(?P<claim>.*?)(?=^-\s+|\n\n|\Z)",
+            section("Staged Enforcement"),
+        )
+    ]
+    architecture_claims = [
+        claim
+        for claim in staged_claims
+        if "architecture ownership landing" in claim
+    ]
+    assert len(architecture_claims) == 1
+    state_match = re.search(
+        r"\b(?:is|remains)\s+`(?P<state>planned|candidate|active|withdrawn)`",
+        architecture_claims[0],
+    )
+    assert state_match is not None, "missing current architecture state claim"
+
+    ref_match = re.search(
+        r"(?m)^-\s+docs-eebus:\s+`(?P<ref>[0-9a-f]{40})`[.;]?\s*$",
+        section("Combined-Ref Pull Request Validation"),
+    )
+    assert ref_match is not None, "missing immutable docs-eebus ref claim"
+
+    canonical = {
+        "architecture_state": repository_entry(
+            repository_manifest(), "eebus-architecture"
+        )["state"],
+        "docs_eebus_ref": combined_ref_inputs()["docs_eebus_ref"],
+    }
+    assert canonical == {
+        "architecture_state": "active",
+        "docs_eebus_ref": E2_DOCS_EEBUS_REF,
+    }
+    assert {
+        "architecture_state": state_match.group("state"),
+        "docs_eebus_ref": ref_match.group("ref"),
+    } == canonical
+
+
 def test_e2_does_not_transition_clean_entries() -> None:
     manifest = repository_manifest()
 
