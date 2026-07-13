@@ -953,6 +953,37 @@ def test_publication_v2_allows_multiple_documents_on_one_surface() -> None:
     assert validator._manifest_categories(manifest) == set()
 
 
+def test_publication_v2_rejects_multiple_documents_outside_platform() -> None:
+    validator = load_validator()
+    manifest = publication_v2_manifest()
+    by_surface = {item["surface"]: item for item in manifest["entries"]}
+    duplicate = copy.deepcopy(by_surface["protocol"])
+    duplicate.update(
+        {
+            "id": "duplicate-protocol-document",
+            "owner": {
+                "repository": "helianthus-docs-eebus",
+                "path": "protocols/duplicate.md",
+            },
+            "source": {
+                "repository": "helianthus-docs-eebus",
+                "path": "protocols/duplicate.md",
+            },
+        }
+    )
+    manifest["entries"].append(duplicate)
+    manifest["eligible_channels"][duplicate["id"]] = [PUBLICATION_CHANNEL]
+    manifest["exact_memberships"][PUBLICATION_CHANNEL] = sorted(
+        manifest["exact_memberships"][PUBLICATION_CHANNEL] + [duplicate["id"]]
+    )
+    by_surface["platform"]["members"] = sorted(
+        by_surface["platform"]["members"] + [duplicate["id"]]
+    )
+
+    assert validator._schema_valid(manifest) is True
+    assert "ownership.surface-duplicate" in validator._manifest_categories(manifest)
+
+
 @pytest.mark.parametrize("surface", ("api", "summary_only", "code_repo"))
 def test_publication_v2_collection_rejects_noncanonical_members(
     surface: str,
