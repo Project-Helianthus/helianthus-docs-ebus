@@ -196,7 +196,7 @@ jobs:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     permissions:
       contents: read
-    uses: Project-Helianthus/helianthus-docs-ebus/.github/workflows/platform-contracts-combined-ref.yml@153191f72b5b9ecacbadcf2f3d7e480c6fef89a4
+    uses: Project-Helianthus/helianthus-docs-ebus/.github/workflows/platform-contracts-combined-ref.yml@41a04eabdeefa2fdfe34ea36dfdcc80d8624b849
     with:
       docs_ebus_repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
       docs_ebus_ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}

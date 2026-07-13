@@ -962,7 +962,10 @@ def _manifest_categories(manifest: dict[str, Any]) -> set[str]:
     manifest_surfaces = [entry["surface"] for entry in manifest["entries"]]
     if set(manifest_surfaces) != SURFACES:
         categories.add("ownership.surface-missing")
-    if len(manifest_surfaces) != len(set(manifest_surfaces)):
+    if (
+        set(manifest) == TOP_FIELDS_V1
+        and len(manifest_surfaces) != len(set(manifest_surfaces))
+    ):
         categories.add("ownership.surface-duplicate")
 
     pairs: set[tuple[str, str, str, str]] = set()
