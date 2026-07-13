@@ -25,6 +25,8 @@ WORKFLOW_PATHS = (
 REQUIREMENTS_CI_PATH = REPO_ROOT / "requirements-ci.txt"
 MAKEFILE_PATH = REPO_ROOT / "Makefile"
 COMBINED_REF_CLI_PATH = REPO_ROOT / "scripts/validate_platform_combined_ref.py"
+PUBLICATION_TOKEN_PATH = REPO_ROOT / "scripts/platform_publication_token.py"
+PLATFORM_A_MERGE = "41a04eabdeefa2fdfe34ea36dfdcc80d8624b849"
 TRUSTED_PRIOR_STEP = "Materialize trusted prior manifest"
 PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
@@ -1013,6 +1015,105 @@ def test_publication_combined_ref_cli_has_one_invocation_surface() -> None:
     assert "scripts/validate_platform_combined_ref.py" in makefile
     assert "scripts/validate_platform_combined_ref.py" in workflow
     assert '--docs-eebus-ref "${PLATFORM_DOCS_EEBUS_REF}"' in local_ci
+
+
+def test_platform_b_repository_manifest_is_v2() -> None:
+    validator = load_validator()
+    manifest = repository_manifest()
+    assert manifest["version"] == 2
+    assert validator._schema_valid(manifest) is True
+    assert all("outputs" not in item for item in manifest["entries"])
+    assert manifest["channel_registry"] == {
+        "canonical": {
+            "visibility": "stable",
+            "owner": "canonical_documentation_owner",
+        }
+    }
+
+
+def test_platform_b_collection_has_exact_platform_inventory() -> None:
+    manifest = repository_manifest()
+    entries = {item["id"]: item for item in manifest["entries"]}
+    expected = {
+        "platform-cross-runtime-envelope": "docs/platform/cross-runtime-envelope.md",
+        "platform-hash-auth-binding": "docs/platform/hash-auth-binding.md",
+        "platform-shared-registry-boundary": "docs/platform/shared-registry-boundary.md",
+        "platform-promotion-consumer-contract": "docs/platform/promotion-and-consumer-contract.md",
+        "platform-ownership-validation": "docs/platform/ownership-validation.md",
+    }
+    collection = entries["cross-runtime-platform-contracts"]
+    assert collection["kind"] == "canonical_collection"
+    assert collection["owner"]["path"] == "docs/platform/README.md"
+    assert collection["members"] == sorted(expected)
+    for entry_id, path in expected.items():
+        assert entries[entry_id]["kind"] == "canonical_document"
+        assert entries[entry_id]["owner"] == {
+            "repository": "helianthus-docs-ebus",
+            "path": path,
+        }
+
+
+def test_platform_b_membership_and_noncanonical_constraints_are_exact() -> None:
+    manifest = repository_manifest()
+    entries = {item["id"]: item for item in manifest["entries"]}
+    expected_members = sorted(
+        entry_id
+        for entry_id, item in entries.items()
+        if item["state"] == "active"
+        and item["kind"] in {"canonical_document", "canonical_collection"}
+    )
+    assert manifest["eligible_channels"] == {
+        entry_id: ["canonical"] for entry_id in expected_members
+    }
+    assert manifest["exact_memberships"] == {"canonical": expected_members}
+    assert entries["eebusreg-substantive-docs"]["kind"] == "absence_constraint"
+    assert entries["eebusreg-substantive-docs"]["channels"] == ["canonical"]
+    assert entries["eebusreg-substantive-docs"]["forbidden_states"] == [
+        "candidate"
+    ]
+    assert entries["eebusreg-readme-summary"]["kind"] == "summary_pointer"
+    assert entries["eebusreg-readme-summary"]["target"] == "eebus-architecture"
+
+
+def test_platform_b_combined_ref_uses_platform_a_validator() -> None:
+    caller = (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(encoding="utf-8")
+    assert (
+        "Project-Helianthus/helianthus-docs-ebus/"
+        ".github/workflows/platform-contracts-combined-ref.yml@"
+        f"{PLATFORM_A_MERGE}"
+    ) in caller
+
+
+def test_platform_b_token_generator_has_closed_identity_contract() -> None:
+    assert PUBLICATION_TOKEN_PATH.is_file()
+    assert not PUBLICATION_TOKEN_PATH.is_symlink()
+    text = PUBLICATION_TOKEN_PATH.read_text(encoding="utf-8")
+    for field in (
+        "producer_id",
+        "consumer_id",
+        "repository",
+        "pr",
+        "base_oid",
+        "head_oid",
+        "merge_oid",
+        "tree_oid",
+        "evidence_core_sha256",
+        "prior_token_digest",
+        "observation_source",
+    ):
+        assert field in text
+
+
+def test_platform_b_token_generator_requires_immutable_inputs() -> None:
+    result = subprocess.run(
+        ["python3", str(PUBLICATION_TOKEN_PATH)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert "the following arguments are required" in result.stderr
 
 
 def mark_manifest_entry_withdrawn(
