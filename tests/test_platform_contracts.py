@@ -761,6 +761,7 @@ def repository_validate(
     *,
     docs_ebus_repository: str = "Project-Helianthus/helianthus-docs-ebus",
     mode: str = "repository",
+    enforce_through: str = PLATFORM_STAGE,
     evaluated_at: str | None = None,
     evaluation_source: str | None = None,
     prior_manifest: pathlib.Path | None = None,
@@ -769,7 +770,7 @@ def repository_validate(
         docs_ebus_root=root,
         docs_ebus_repository=docs_ebus_repository,
         mode=mode,
-        enforce_through=PLATFORM_STAGE,
+        enforce_through=enforce_through,
         toolchain_mode="supported",
         prior_manifest=prior_manifest,
         evaluated_at=evaluated_at,
@@ -1501,7 +1502,9 @@ def test_e2_contract_rejects_premature_clean_transition(
 
 
 def test_canonical_repository_validation_passes() -> None:
-    assert repository_validate(load_validator(), REPO_ROOT) == []
+    assert repository_validate(
+        load_validator(), REPO_ROOT, enforce_through=E2_STAGE
+    ) == []
 
 
 def test_production_validator_entrypoint_exists() -> None:

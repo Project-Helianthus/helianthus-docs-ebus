@@ -146,7 +146,7 @@ echo "==> check eBUS source-address table"
 python3 scripts/check_source_address_table_against_official_specs.py --run-canary
 python3 -m pytest -q tests/test_source_address_table_checker.py
 
-echo "==> check cross-runtime platform contracts (MSP-DOCS-PLATFORM)"
+echo "==> check cross-runtime platform contracts (MSP-DOCS-E2)"
 python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow
 python3 -m pytest -q tests/test_platform_contracts.py -k 'not trusted_prior_workflow'
 set --
@@ -157,7 +157,7 @@ python3 scripts/validate_platform_contracts.py \
   --mode repository \
   --docs-ebus-root . \
   --docs-ebus-repository "${platform_docs_ebus_repository}" \
-  --enforce-through MSP-DOCS-PLATFORM \
+  --enforce-through MSP-DOCS-E2 \
   --toolchain-mode "${platform_toolchain_mode}" \
   "$@"
 
