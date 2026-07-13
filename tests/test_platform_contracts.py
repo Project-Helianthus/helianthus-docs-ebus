@@ -829,6 +829,131 @@ def write_prior_manifest(
     return path
 
 
+PUBLICATION_CHANNEL = "canonical"
+PUBLICATION_V2_KINDS = (
+    "canonical_document",
+    "canonical_collection",
+    "summary_pointer",
+    "absence_constraint",
+)
+
+
+def publication_v2_manifest() -> dict[str, Any]:
+    manifest = copy.deepcopy(base_manifest())
+    manifest["version"] = 2
+    manifest["channel_registry"] = {
+        PUBLICATION_CHANNEL: {
+            "visibility": "stable",
+            "owner": "canonical_documentation_owner",
+        }
+    }
+    manifest["eligible_channels"] = {
+        item["id"]: [PUBLICATION_CHANNEL]
+        for item in manifest["entries"]
+        if item["state"] == "active"
+    }
+    manifest["exact_memberships"] = {
+        PUBLICATION_CHANNEL: sorted(manifest["eligible_channels"])
+    }
+
+    by_surface = {item["surface"]: item for item in manifest["entries"]}
+    for item in manifest["entries"]:
+        item.pop("outputs")
+        item["kind"] = "canonical_document"
+
+    platform = by_surface["platform"]
+    platform["kind"] = "canonical_collection"
+    platform["members"] = sorted(
+        item["id"]
+        for item in manifest["entries"]
+        if item["surface"] in {"protocol", "architecture", "api"}
+        and item["state"] == "active"
+    )
+
+    summary = by_surface["summary_only"]
+    summary["kind"] = "summary_pointer"
+    summary["canonical"] = False
+    summary["target"] = by_surface["code_repo"]["id"]
+
+    code_repo = by_surface["code_repo"]
+    code_repo["kind"] = "absence_constraint"
+    code_repo["canonical"] = False
+    code_repo["forbidden_states"] = ["candidate"]
+    code_repo["channels"] = sorted(manifest["channel_registry"])
+    return manifest
+
+
+def test_publication_v1_manifest_remains_accepted_unchanged() -> None:
+    assert load_validator()._schema_valid(base_manifest()) is True
+
+
+def test_publication_v2_accepts_closed_contract() -> None:
+    assert load_validator()._schema_valid(publication_v2_manifest()) is True
+
+
+@pytest.mark.parametrize("kind", PUBLICATION_V2_KINDS)
+def test_publication_v2_accepts_each_closed_entry_kind(kind: str) -> None:
+    manifest = publication_v2_manifest()
+    manifest["entries"][0]["kind"] = kind
+    if kind == "canonical_collection":
+        manifest["entries"][0]["members"] = []
+    elif kind == "summary_pointer":
+        manifest["entries"][0]["canonical"] = False
+        manifest["entries"][0]["target"] = manifest["entries"][1]["id"]
+    elif kind == "absence_constraint":
+        manifest["entries"][0]["canonical"] = False
+        manifest["entries"][0]["forbidden_states"] = ["candidate"]
+        manifest["entries"][0]["channels"] = [PUBLICATION_CHANNEL]
+    assert load_validator()._schema_valid(manifest) is True
+
+
+def test_publication_v2_rejects_unregistered_eligible_channel() -> None:
+    manifest = publication_v2_manifest()
+    entry_id = next(iter(manifest["eligible_channels"]))
+    manifest["eligible_channels"][entry_id].append("unregistered")
+    assert load_validator()._schema_valid(manifest) is False
+
+
+def test_publication_v2_rejects_exact_membership_drift() -> None:
+    manifest = publication_v2_manifest()
+    manifest["exact_memberships"][PUBLICATION_CHANNEL].pop()
+    assert load_validator()._schema_valid(manifest) is False
+
+
+def test_publication_v2_absence_covers_all_registered_channels() -> None:
+    validator = load_validator()
+    manifest = publication_v2_manifest()
+    manifest["channel_registry"]["release"] = {
+        "visibility": "stable",
+        "owner": "canonical_documentation_owner",
+    }
+    absence = next(
+        item for item in manifest["entries"] if item["kind"] == "absence_constraint"
+    )
+    assert validator._schema_valid(manifest) is False
+    absence["channels"].append("release")
+    manifest["exact_memberships"]["release"] = []
+    assert validator._schema_valid(manifest) is True
+
+
+def test_publication_expiry_boundary_is_inclusive() -> None:
+    validator = load_validator()
+    manifest = base_manifest()
+    planned = next(item for item in manifest["entries"] if item["state"] == "planned")
+    expires_at = planned["lifecycle"]["expires_at"]
+    assert validator._expiry_categories(manifest, expires_at, "test.clock") == {
+        "expiry.planned"
+    }
+
+
+def test_publication_docs_ci_tracks_makefile() -> None:
+    workflow = yaml.safe_load(
+        (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(encoding="utf-8")
+    )
+    assert "Makefile" in workflow[True]["pull_request"]["paths"]
+    assert "Makefile" in workflow[True]["push"]["paths"]
+
+
 def mark_manifest_entry_withdrawn(
     manifest: dict[str, Any], entry_id: str
 ) -> None:
