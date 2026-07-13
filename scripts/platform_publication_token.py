@@ -12,15 +12,15 @@ import re
 import stat
 import subprocess
 import sys
+import urllib.parse
 from datetime import datetime, timezone
 from typing import Any
-
-import yaml
 
 
 EXPECTED_REPOSITORY = "Project-Helianthus/helianthus-docs-ebus"
 PRODUCER_ID = "MSP-DOCS-E2R-PLATFORM"
 CONSUMER_ID = "MSP-DOCS-E2R-PUBLISH"
+ENFORCE_THROUGH = "MSP-DOCS-E2"
 MANIFEST_PATH = "docs/platform/manifests/eebus-doc-ownership.yaml"
 VALIDATOR_PATH = pathlib.Path(__file__).with_name("validate_platform_contracts.py")
 OID = re.compile(r"[0-9a-f]{40}\Z")
@@ -89,7 +89,10 @@ def _load_validator() -> Any:
     if spec is None or spec.loader is None:
         raise TokenError("publication-token.validator")
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        raise TokenError("publication-token.validator") from None
     return module
 
 
@@ -118,20 +121,17 @@ def _manifest_at(
     root: pathlib.Path, commit: str, expected_version: int, validator: Any
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     mode, blob_oid, raw = _blob_at(root, commit, MANIFEST_PATH)
-    if len(raw) > validator.MAX_MANIFEST_BYTES:
-        raise TokenError("publication-token.manifest")
-    try:
-        text = raw.decode("utf-8")
-        validator._scan_yaml_resources(text)
-        manifest = yaml.safe_load(text)
-    except (UnicodeError, yaml.YAMLError, RecursionError, MemoryError):
-        raise TokenError("publication-token.manifest") from None
+    manifest = validator._parse_manifest_bytes(raw)
     if (
         not isinstance(manifest, dict)
         or manifest.get("version") != expected_version
         or not validator._schema_valid(manifest)
         or validator._manifest_categories(manifest)
         or validator._state_categories(manifest, {})
+        or (
+            expected_version == 2
+            and validator._enforcement_categories(manifest, ENFORCE_THROUGH)
+        )
     ):
         raise TokenError("publication-token.manifest")
     return manifest, {
@@ -183,14 +183,51 @@ def _publisher_blobs(
     return dict(sorted(blobs.items()))
 
 
+def _github_repository(remote: str) -> str | None:
+    scp = re.fullmatch(r"(?:git@)?github\.com:(?P<path>[^?#]+)", remote, re.I)
+    if scp is not None:
+        path = scp.group("path")
+    else:
+        try:
+            parsed = urllib.parse.urlsplit(remote)
+            port = parsed.port
+        except ValueError:
+            return None
+        scheme = parsed.scheme.casefold()
+        if (
+            scheme not in {"https", "ssh", "git"}
+            or (parsed.hostname or "").casefold() != "github.com"
+            or parsed.password is not None
+            or parsed.query
+            or parsed.fragment
+        ):
+            return None
+        if scheme == "https" and (parsed.username is not None or port is not None):
+            return None
+        if scheme == "ssh" and (
+            (parsed.username or "git").casefold() != "git" or port not in {None, 22}
+        ):
+            return None
+        if scheme == "git" and (
+            parsed.username is not None or port not in {None, 9418}
+        ):
+            return None
+        path = parsed.path
+
+    normalized = path.strip("/")
+    if normalized.casefold().endswith(".git"):
+        normalized = normalized[:-4]
+    parts = normalized.split("/")
+    if len(parts) != 2 or any(not part for part in parts):
+        return None
+    if any(re.fullmatch(r"[A-Za-z0-9_.-]+", part) is None for part in parts):
+        return None
+    return "/".join(parts).casefold()
+
+
 def _repository_matches(root: pathlib.Path, repository: str) -> bool:
     remote = _git(root, "remote", "get-url", "origin")
-    accepted = {
-        f"https://github.com/{repository}.git",
-        f"git@github.com:{repository}.git",
-        f"ssh://git@github.com/{repository}.git",
-    }
-    return remote in accepted
+    return _github_repository(remote) == repository.casefold()
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -320,6 +357,6 @@ if __name__ == "__main__":
     except TokenError as exc:
         print(exc.category, file=sys.stderr)
         raise SystemExit(1) from None
-    except (OSError, UnicodeError, ValueError, yaml.YAMLError):
+    except (OSError, UnicodeError, ValueError, RecursionError, MemoryError):
         print("publication-token.input", file=sys.stderr)
         raise SystemExit(1) from None

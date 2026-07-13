@@ -27,7 +27,7 @@ REQUIREMENTS_CI_PATH = REPO_ROOT / "requirements-ci.txt"
 MAKEFILE_PATH = REPO_ROOT / "Makefile"
 COMBINED_REF_CLI_PATH = REPO_ROOT / "scripts/validate_platform_combined_ref.py"
 PUBLICATION_TOKEN_PATH = REPO_ROOT / "scripts/platform_publication_token.py"
-PLATFORM_A_MERGE = "41a04eabdeefa2fdfe34ea36dfdcc80d8624b849"
+PLATFORM_A_MERGE = "b245469c30752f06a49bb567b9a4680431774d0d"
 TRUSTED_PRIOR_STEP = "Materialize trusted prior manifest"
 PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
@@ -803,6 +803,7 @@ def validate(
         enforce_through=workspace.enforce_through,
         toolchain_mode=workspace.toolchain_mode,
         prior_manifest=prior_manifest,
+        _current_manifest_version=1,
     )
     assert diagnostics == sorted(set(diagnostics))
     assert all(
@@ -831,6 +832,7 @@ def repository_validate(
         prior_manifest=prior_manifest,
         evaluated_at=evaluated_at,
         evaluation_source=evaluation_source,
+        _current_manifest_version=1,
     )
 
 
@@ -865,15 +867,6 @@ def publication_v2_manifest() -> dict[str, Any]:
             "owner": "canonical_documentation_owner",
         }
     }
-    manifest["eligible_channels"] = {
-        item["id"]: [PUBLICATION_CHANNEL]
-        for item in manifest["entries"]
-        if item["state"] == "active"
-    }
-    manifest["exact_memberships"] = {
-        PUBLICATION_CHANNEL: sorted(manifest["eligible_channels"])
-    }
-
     by_surface = {item["surface"]: item for item in manifest["entries"]}
     for item in manifest["entries"]:
         item.pop("outputs")
@@ -900,11 +893,33 @@ def publication_v2_manifest() -> dict[str, Any]:
     code_repo["canonical"] = False
     code_repo["forbidden_states"] = ["candidate"]
     code_repo["channels"] = sorted(manifest["channel_registry"])
+    manifest["eligible_channels"] = {
+        item["id"]: [PUBLICATION_CHANNEL]
+        for item in manifest["entries"]
+        if item["state"] == "active"
+        and item["kind"] in {"canonical_document", "canonical_collection"}
+    }
+    manifest["exact_memberships"] = {
+        PUBLICATION_CHANNEL: sorted(manifest["eligible_channels"])
+    }
     return manifest
 
 
-def test_publication_v1_manifest_remains_accepted_unchanged() -> None:
+def test_publication_v1_manifest_remains_accepted_as_history_schema() -> None:
     assert load_validator()._schema_valid(base_manifest()) is True
+
+
+def test_publication_v1_manifest_is_rejected_as_current_after_migration(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = tmp_path / "docs-ebus"
+    write_files(
+        root,
+        {MANIFEST_PATH.as_posix(): yaml.safe_dump(base_manifest(), sort_keys=False)},
+    )
+    manifest, categories = load_validator()._validated_manifest(root)
+    assert manifest is None
+    assert categories == {"manifest.version-floor"}
 
 
 def test_publication_v2_accepts_closed_contract() -> None:
@@ -928,6 +943,21 @@ def test_publication_v2_rejects_unregistered_eligible_channel() -> None:
 def test_publication_v2_rejects_exact_membership_drift() -> None:
     manifest = publication_v2_manifest()
     manifest["exact_memberships"][PUBLICATION_CHANNEL].pop()
+    assert load_validator()._schema_valid(manifest) is False
+
+
+@pytest.mark.parametrize("surface", ("summary_only", "code_repo"))
+def test_publication_v2_rejects_noncanonical_channel_membership(
+    surface: str,
+) -> None:
+    manifest = publication_v2_manifest()
+    entry_id = next(
+        item["id"] for item in manifest["entries"] if item["surface"] == surface
+    )
+    manifest["eligible_channels"][entry_id] = [PUBLICATION_CHANNEL]
+    manifest["exact_memberships"][PUBLICATION_CHANNEL] = sorted(
+        manifest["exact_memberships"][PUBLICATION_CHANNEL] + [entry_id]
+    )
     assert load_validator()._schema_valid(manifest) is False
 
 
@@ -1196,6 +1226,8 @@ def test_platform_b_token_generator_requires_immutable_inputs() -> None:
 
 def build_publication_token_fixture(
     tmp_path: pathlib.Path,
+    *,
+    current_manifest: str | bytes | None = None,
 ) -> tuple[pathlib.Path, str, str, str]:
     root = tmp_path / "helianthus-docs-ebus"
     root.mkdir()
@@ -1212,9 +1244,9 @@ def build_publication_token_fixture(
     base_oid = commit_fixture(root, "helianthus-docs-ebus")
 
     current_files: dict[str, str | bytes] = {
-        MANIFEST_PATH.as_posix(): yaml.safe_dump(
-            repository_manifest(), sort_keys=False
-        ),
+        MANIFEST_PATH.as_posix(): current_manifest
+        if current_manifest is not None
+        else yaml.safe_dump(repository_manifest(), sort_keys=False),
         "docs/platform/README.md": (
             REPO_ROOT / "docs/platform/README.md"
         ).read_bytes(),
@@ -1300,7 +1332,7 @@ def publication_token_command(
     ]
 
 
-def test_platform_b_token_is_reproducible_from_raw_git_objects(
+def test_platform_b_token_is_reproducible_from_objects_and_attestation_inputs(
     tmp_path: pathlib.Path,
 ) -> None:
     root, base_oid, head_oid, merge_oid = build_publication_token_fixture(tmp_path)
@@ -1340,6 +1372,73 @@ def test_platform_b_token_is_reproducible_from_raw_git_objects(
         "platform-promotion-consumer-contract",
         "platform-shared-registry-boundary",
     }
+
+
+def test_platform_b_token_rejects_duplicate_manifest_keys(
+    tmp_path: pathlib.Path,
+) -> None:
+    duplicate_key_manifest = (
+        yaml.safe_dump(repository_manifest(), sort_keys=False) + "version: 2\n"
+    )
+    root, base_oid, head_oid, merge_oid = build_publication_token_fixture(
+        tmp_path, current_manifest=duplicate_key_manifest
+    )
+    result = subprocess.run(
+        publication_token_command(root, base_oid, head_oid, merge_oid),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stderr == "publication-token.manifest\n"
+
+
+def test_platform_b_token_rejects_unmet_stage_enforcement(
+    tmp_path: pathlib.Path,
+) -> None:
+    manifest = repository_manifest()
+    entry = repository_entry(manifest, "platform-hash-auth-binding")
+    entry["enforcement"] = {
+        "milestone": E2_STAGE,
+        "required_state": "candidate",
+    }
+    root, base_oid, head_oid, merge_oid = build_publication_token_fixture(
+        tmp_path,
+        current_manifest=yaml.safe_dump(manifest, sort_keys=False),
+    )
+    result = subprocess.run(
+        publication_token_command(root, base_oid, head_oid, merge_oid),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stderr == "publication-token.manifest\n"
+
+
+@pytest.mark.parametrize(
+    "remote",
+    (
+        "https://github.com/Project-Helianthus/helianthus-docs-ebus",
+        "git@github.com:project-helianthus/HELIANTHUS-DOCS-EBUS.git",
+        "ssh://git@github.com:22/Project-Helianthus/helianthus-docs-ebus.git",
+        "git://github.com/Project-Helianthus/helianthus-docs-ebus.git",
+    ),
+)
+def test_platform_b_token_accepts_normalized_github_origins(
+    tmp_path: pathlib.Path, remote: str
+) -> None:
+    root, base_oid, head_oid, merge_oid = build_publication_token_fixture(tmp_path)
+    subprocess.run(
+        ["git", "remote", "set-url", "origin", remote], cwd=root, check=True
+    )
+    result = subprocess.run(
+        publication_token_command(root, base_oid, head_oid, merge_oid),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_platform_b_token_rejects_identity_drift(tmp_path: pathlib.Path) -> None:
@@ -4049,6 +4148,9 @@ def test_removed_caller_pin_arguments_are_category_only(tmp_path: pathlib.Path) 
 
 def test_main_expiry_cli_is_terminal_and_category_only(tmp_path: pathlib.Path) -> None:
     workspace = build_workspace(tmp_path)
+    write_manifest_text(
+        workspace, yaml.safe_dump(publication_v2_manifest(), sort_keys=False)
+    )
     result = subprocess.run(
         [
             "python3",

@@ -227,7 +227,8 @@ The canonical JSON token binds `producer_id`, `consumer_id`, `repository`, `pr`,
 `prior_token_digest`, and `observation_source`. Its evidence core also records
 manifest blob identities, registered channels, eligibility, exact memberships,
 collection members, candidate inventory, and local publisher blob identities.
-Re-running the command with the same immutable objects produces identical bytes.
+Re-running the command with the same immutable objects and the same explicit
+evaluation instant and observation source produces identical bytes.
 
 ## Main Expiry Validation
 
