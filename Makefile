@@ -9,12 +9,13 @@
 
 PLATFORM_TOOLCHAIN_MODE ?= supported
 
-.PHONY: validate-schemas validate-platform-contracts validate-platform-expiry ci-local help
+.PHONY: validate-schemas validate-platform-contracts validate-platform-combined-ref validate-platform-expiry ci-local help
 
 help:
 	@echo "Available targets:"
 	@echo "  validate-schemas    Validate runtime-state JSON Schema vs example + negative fixtures (M0_DOC_GATE)"
 	@echo "  validate-platform-contracts  Validate cross-runtime ownership contracts"
+	@echo "  validate-platform-combined-ref  Validate exact supplied cross-repository refs"
 	@echo "  validate-platform-expiry     Validate manifest expiry at EVALUATED_AT from EVALUATION_SOURCE"
 	@echo "  ci-local            Run full local CI suite (scripts/ci_local.sh)"
 
@@ -24,6 +25,12 @@ validate-schemas:
 validate-platform-contracts:
 	@python3 -m pytest -q tests/test_platform_contracts.py
 	@python3 scripts/validate_platform_contracts.py --mode repository --docs-ebus-root . --enforce-through MSP-DOCS-E2 --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
+
+validate-platform-combined-ref:
+	@test -n "$(DOCS_EEBUS_ROOT)" && test -n "$(EEBUSREG_ROOT)"
+	@test -n "$(DOCS_EBUS_REF)" && test -n "$(DOCS_EEBUS_REF)" && test -n "$(EEBUSREG_REF)"
+	@test -n "$(PRIOR_MANIFEST)" && test -n "$(ENFORCE_THROUGH)"
+	@python3 scripts/validate_platform_combined_ref.py --docs-ebus-root . --docs-eebus-root "$(DOCS_EEBUS_ROOT)" --eebusreg-root "$(EEBUSREG_ROOT)" --docs-ebus-ref "$(DOCS_EBUS_REF)" --docs-eebus-ref "$(DOCS_EEBUS_REF)" --eebusreg-ref "$(EEBUSREG_REF)" --prior-manifest "$(PRIOR_MANIFEST)" --enforce-through "$(ENFORCE_THROUGH)" --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
 
 validate-platform-expiry:
 	@test -n "$(EVALUATED_AT)" || (echo "EVALUATED_AT is required" >&2; exit 2)

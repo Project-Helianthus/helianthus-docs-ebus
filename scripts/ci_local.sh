@@ -161,6 +161,41 @@ python3 scripts/validate_platform_contracts.py \
   --toolchain-mode "${platform_toolchain_mode}" \
   "$@"
 
+combined_ref_values=(
+  "${PLATFORM_DOCS_EEBUS_ROOT:-}"
+  "${PLATFORM_EEBUSREG_ROOT:-}"
+  "${PLATFORM_DOCS_EBUS_REF:-}"
+  "${PLATFORM_DOCS_EEBUS_REF:-}"
+  "${PLATFORM_EEBUSREG_REF:-}"
+  "${PLATFORM_PRIOR_MANIFEST:-}"
+)
+combined_ref_requested=false
+for value in \
+  "${PLATFORM_DOCS_EEBUS_ROOT:-}" \
+  "${PLATFORM_EEBUSREG_ROOT:-}" \
+  "${PLATFORM_DOCS_EBUS_REF:-}" \
+  "${PLATFORM_DOCS_EEBUS_REF:-}" \
+  "${PLATFORM_EEBUSREG_REF:-}"; do
+  if [ -n "${value}" ]; then
+    combined_ref_requested=true
+  fi
+done
+if [ "${combined_ref_requested}" = true ]; then
+  for value in "${combined_ref_values[@]}"; do
+    test -n "${value}"
+  done
+  python3 scripts/validate_platform_combined_ref.py \
+    --docs-ebus-root . \
+    --docs-eebus-root "${PLATFORM_DOCS_EEBUS_ROOT}" \
+    --eebusreg-root "${PLATFORM_EEBUSREG_ROOT}" \
+    --docs-ebus-ref "${PLATFORM_DOCS_EBUS_REF}" \
+    --docs-eebus-ref "${PLATFORM_DOCS_EEBUS_REF}" \
+    --eebusreg-ref "${PLATFORM_EEBUSREG_REF}" \
+    --prior-manifest "${PLATFORM_PRIOR_MANIFEST}" \
+    --enforce-through MSP-DOCS-E2 \
+    --toolchain-mode "${platform_toolchain_mode}"
+fi
+
 echo "==> check eBUS address-table taxonomy + frame-type contract hash (Phase C M-C0)"
 bash scripts/check_address_table_taxonomy_hash.sh
 

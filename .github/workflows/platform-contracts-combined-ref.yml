@@ -267,12 +267,8 @@ jobs:
           ENFORCE_THROUGH: ${{ inputs.enforce_through }}
           PRIOR_MANIFEST: ${{ steps.prior_manifest.outputs.path }}
         run: |
-          set --
-          if [[ -n "${PRIOR_MANIFEST}" ]]; then
-            set -- --prior-manifest "${PRIOR_MANIFEST}"
-          fi
-          python3 checkouts/docs-ebus-validator/scripts/validate_platform_contracts.py \
-            --mode combined-ref \
+          test -n "${PRIOR_MANIFEST}"
+          python3 checkouts/docs-ebus-validator/scripts/validate_platform_combined_ref.py \
             --docs-ebus-root checkouts/docs-ebus \
             --docs-ebus-repository "${{ inputs.docs_ebus_repository }}" \
             --docs-eebus-root checkouts/docs-eebus \
@@ -280,9 +276,9 @@ jobs:
             --docs-ebus-ref "${{ inputs.docs_ebus_ref }}" \
             --docs-eebus-ref "${{ inputs.docs_eebus_ref }}" \
             --eebusreg-ref "${{ inputs.eebusreg_ref }}" \
+            --prior-manifest "${PRIOR_MANIFEST}" \
             --enforce-through "${ENFORCE_THROUGH}" \
-            --toolchain-mode exact \
-            "$@"
+            --toolchain-mode exact
 
       - name: Enforce trusted manifest expiry
         env:
