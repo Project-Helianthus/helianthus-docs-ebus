@@ -6,6 +6,7 @@ import importlib.util
 import os
 import pathlib
 import re
+import shlex
 import subprocess
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -22,10 +23,26 @@ WORKFLOW_PATHS = (
     REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml",
 )
 REQUIREMENTS_CI_PATH = REPO_ROOT / "requirements-ci.txt"
+MAKEFILE_PATH = REPO_ROOT / "Makefile"
 TRUSTED_PRIOR_STEP = "Materialize trusted prior manifest"
 PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
 CLEAN_STAGE = "MSP-DOCS-CLEAN"
+E2_DOCS_EEBUS_REF = "62e4c2f2022c22f5129db923079268aafdc5617b"
+E2_SOURCE_ISSUE = "Project-Helianthus/helianthus-docs-eebus#8"
+E2_SOURCE_PR = "Project-Helianthus/helianthus-docs-eebus#9"
+E2_MERGED_AT = "2026-07-12T19:42:19Z"
+E2_STABLE_OUTPUTS = (
+    "stable_navigation",
+    "search",
+    "sitemap",
+    "versioned_bundle",
+    "release_bundle",
+)
+E2_CLEAN_ENTRY_IDS = (
+    "eebusreg-substantive-docs",
+    "eebusreg-readme-summary",
+)
 PINNED_CI_PYTHON = "3.12.10"
 PINNED_CI_PIP = "25.0.1"
 PINNED_CI_REQUIREMENTS = {
@@ -324,6 +341,132 @@ def base_spec() -> dict[str, Any]:
 
 def find_entry(spec: dict[str, Any], entry_id: str) -> dict[str, Any]:
     return next(item for item in spec["manifest"]["entries"] if item["id"] == entry_id)
+
+
+def repository_manifest() -> dict[str, Any]:
+    manifest = yaml.safe_load((REPO_ROOT / MANIFEST_PATH).read_text(encoding="utf-8"))
+    assert isinstance(manifest, dict)
+    return manifest
+
+
+def repository_entry(manifest: dict[str, Any], entry_id: str) -> dict[str, Any]:
+    matches = [item for item in manifest["entries"] if item["id"] == entry_id]
+    assert len(matches) == 1
+    return matches[0]
+
+
+def combined_ref_inputs() -> dict[str, Any]:
+    workflow = yaml.safe_load(
+        (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(encoding="utf-8")
+    )
+    inputs = workflow["jobs"]["platform-contracts-combined-ref"]["with"]
+    assert isinstance(inputs, dict)
+    return inputs
+
+
+def assert_stable_outputs(item: dict[str, Any]) -> None:
+    assert item["outputs"] == {
+        "candidate": False,
+        **{name: True for name in E2_STABLE_OUTPUTS},
+    }
+
+
+def assert_e2_manifest_contract(manifest: dict[str, Any]) -> None:
+    architecture = repository_entry(manifest, "eebus-architecture")
+    assert not any(
+        item["id"] == "eebus-architecture-planned"
+        for item in manifest["entries"]
+    )
+    assert architecture["state"] == "active"
+    assert architecture["canonical"] is True
+    assert_stable_outputs(architecture)
+    assert {
+        key: architecture["lifecycle"][key]
+        for key in ("source_issue", "source_pr", "approved_at", "frozen_at")
+    } == {
+        "source_issue": E2_SOURCE_ISSUE,
+        "source_pr": E2_SOURCE_PR,
+        "approved_at": E2_MERGED_AT,
+        "frozen_at": E2_MERGED_AT,
+    }
+
+    api = repository_entry(manifest, "eebus-api-v1")
+    assert api["state"] == "active"
+    assert_stable_outputs(api)
+
+    for entry_id in E2_CLEAN_ENTRY_IDS:
+        item = repository_entry(manifest, entry_id)
+        assert item["enforcement"]["milestone"] == CLEAN_STAGE
+        assert item["state"] == "planned"
+
+
+def assert_e2_combined_ref_contract(inputs: dict[str, Any]) -> None:
+    assert inputs["docs_eebus_ref"] == E2_DOCS_EEBUS_REF
+    assert inputs["enforce_through"] == E2_STAGE
+
+
+def make_validator_args(target: str) -> list[str]:
+    result = subprocess.run(
+        [
+            "make",
+            "--dry-run",
+            "--no-print-directory",
+            "--file",
+            str(MAKEFILE_PATH),
+            target,
+            "EVALUATED_AT=2026-07-13T00:00:00Z",
+            "EVALUATION_SOURCE=test.makefile-contract",
+        ],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    commands = [shlex.split(line) for line in result.stdout.splitlines() if line]
+    validator_commands = [
+        command
+        for command in commands
+        if "scripts/validate_platform_contracts.py" in command
+    ]
+    assert len(validator_commands) == 1, result.stdout
+    return validator_commands[0]
+
+
+def cli_option(args: list[str], option: str) -> str | None:
+    for index, arg in enumerate(args):
+        if arg == option:
+            return args[index + 1] if index + 1 < len(args) else None
+        if arg.startswith(f"{option}="):
+            return arg.partition("=")[2]
+    return None
+
+
+def desired_e2_manifest() -> dict[str, Any]:
+    manifest = copy.deepcopy(repository_manifest())
+    architecture = repository_entry(manifest, "eebus-architecture")
+    architecture["state"] = "active"
+    architecture["canonical"] = True
+    architecture["outputs"] = {
+        "candidate": False,
+        **{name: True for name in E2_STABLE_OUTPUTS},
+    }
+    architecture["lifecycle"].update(
+        {
+            "expires_at": None,
+            "source_issue": E2_SOURCE_ISSUE,
+            "source_pr": E2_SOURCE_PR,
+            "approved_at": E2_MERGED_AT,
+            "frozen_at": E2_MERGED_AT,
+        }
+    )
+    return manifest
+
+
+def desired_e2_combined_ref_inputs() -> dict[str, Any]:
+    inputs = copy.deepcopy(combined_ref_inputs())
+    inputs["docs_eebus_ref"] = E2_DOCS_EEBUS_REF
+    inputs["enforce_through"] = E2_STAGE
+    return inputs
 
 
 def set_active(item: dict[str, Any], *, canonical: bool) -> None:
@@ -656,6 +799,7 @@ def repository_validate(
     *,
     docs_ebus_repository: str = "Project-Helianthus/helianthus-docs-ebus",
     mode: str = "repository",
+    enforce_through: str = PLATFORM_STAGE,
     evaluated_at: str | None = None,
     evaluation_source: str | None = None,
     prior_manifest: pathlib.Path | None = None,
@@ -664,7 +808,7 @@ def repository_validate(
         docs_ebus_root=root,
         docs_ebus_repository=docs_ebus_repository,
         mode=mode,
-        enforce_through=PLATFORM_STAGE,
+        enforce_through=enforce_through,
         toolchain_mode="supported",
         prior_manifest=prior_manifest,
         evaluated_at=evaluated_at,
@@ -1259,8 +1403,207 @@ def test_required_platform_artifacts_exist() -> None:
     assert all((REPO_ROOT / path).is_file() for path in CONTRACT_PAGES)
 
 
+# E2 promotion gate after helianthus-docs-eebus PR #9.
+def test_e2_architecture_entry_is_activated_in_place() -> None:
+    manifest = repository_manifest()
+    architecture = repository_entry(manifest, "eebus-architecture")
+
+    assert not any(
+        item["id"] == "eebus-architecture-planned"
+        for item in manifest["entries"]
+    )
+    assert architecture["state"] == "active"
+    assert architecture["canonical"] is True
+
+
+def test_e2_architecture_enables_all_stable_outputs() -> None:
+    assert_stable_outputs(
+        repository_entry(repository_manifest(), "eebus-architecture")
+    )
+
+
+def test_e2_architecture_lifecycle_is_bound_to_merged_docs_pr() -> None:
+    lifecycle = repository_entry(
+        repository_manifest(), "eebus-architecture"
+    )["lifecycle"]
+
+    assert {
+        key: lifecycle[key]
+        for key in ("source_issue", "source_pr", "approved_at", "frozen_at")
+    } == {
+        "source_issue": E2_SOURCE_ISSUE,
+        "source_pr": E2_SOURCE_PR,
+        "approved_at": E2_MERGED_AT,
+        "frozen_at": E2_MERGED_AT,
+    }
+
+
+def test_e2_api_v1_remains_active_with_all_stable_outputs() -> None:
+    api = repository_entry(repository_manifest(), "eebus-api-v1")
+
+    assert api["state"] == "active"
+    assert_stable_outputs(api)
+
+
+def test_e2_combined_ref_uses_exact_merged_docs_pin() -> None:
+    assert combined_ref_inputs()["docs_eebus_ref"] == E2_DOCS_EEBUS_REF
+
+
+def test_e2_combined_ref_enforces_exact_stage() -> None:
+    assert combined_ref_inputs()["enforce_through"] == E2_STAGE
+
+
+@pytest.mark.parametrize(
+    "target", ("validate-platform-contracts", "validate-platform-expiry")
+)
+def test_platform_make_target_enforces_e2_stage(target: str) -> None:
+    assert cli_option(make_validator_args(target), "--enforce-through") == E2_STAGE
+
+
+def test_ownership_validation_guide_tracks_supported_e2_contract() -> None:
+    guide = (
+        REPO_ROOT / "docs/platform/ownership-validation.md"
+    ).read_text(encoding="utf-8")
+
+    def section(title: str) -> str:
+        match = re.search(
+            rf"(?ms)^## {re.escape(title)}\s*$\n(?P<body>.*?)(?=^## |\Z)",
+            guide,
+        )
+        assert match is not None, f"missing {title!r} section"
+        return match.group("body")
+
+    staged_claims = [
+        " ".join(match.group("claim").split())
+        for match in re.finditer(
+            r"(?ms)^-\s+(?P<claim>.*?)(?=^-\s+|\n\n|\Z)",
+            section("Staged Enforcement"),
+        )
+    ]
+    architecture_claims = [
+        claim
+        for claim in staged_claims
+        if "architecture ownership landing" in claim
+    ]
+    assert len(architecture_claims) == 1
+    state_match = re.search(
+        r"\b(?:is|remains)\s+`(?P<state>planned|candidate|active|withdrawn)`",
+        architecture_claims[0],
+    )
+    assert state_match is not None, "missing current architecture state claim"
+
+    ref_match = re.search(
+        r"(?m)^-\s+docs-eebus:\s+`(?P<ref>[0-9a-f]{40})`[.;]?\s*$",
+        section("Combined-Ref Pull Request Validation"),
+    )
+    assert ref_match is not None, "missing immutable docs-eebus ref claim"
+
+    canonical = {
+        "architecture_state": repository_entry(
+            repository_manifest(), "eebus-architecture"
+        )["state"],
+        "docs_eebus_ref": combined_ref_inputs()["docs_eebus_ref"],
+    }
+    assert canonical == {
+        "architecture_state": "active",
+        "docs_eebus_ref": E2_DOCS_EEBUS_REF,
+    }
+    assert {
+        "architecture_state": state_match.group("state"),
+        "docs_eebus_ref": ref_match.group("ref"),
+    } == canonical
+
+
+def test_e2_does_not_transition_clean_entries() -> None:
+    manifest = repository_manifest()
+
+    for entry_id in E2_CLEAN_ENTRY_IDS:
+        item = repository_entry(manifest, entry_id)
+        assert item["enforcement"]["milestone"] == CLEAN_STAGE
+        assert item["state"] == "planned"
+
+
+@pytest.mark.parametrize(
+    "invalid_ref",
+    (
+        "f23a7c35e6803501f185923de061f935bbac1466",
+        "main",
+    ),
+    ids=("stale-pin", "moving-ref"),
+)
+def test_e2_contract_rejects_noncanonical_docs_ref(invalid_ref: str) -> None:
+    inputs = desired_e2_combined_ref_inputs()
+    inputs["docs_eebus_ref"] = invalid_ref
+
+    with pytest.raises(AssertionError):
+        assert_e2_combined_ref_contract(inputs)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    (
+        ("source_issue", "Project-Helianthus/helianthus-docs-eebus#7"),
+        ("source_pr", "Project-Helianthus/helianthus-docs-eebus#8"),
+        ("approved_at", "2026-07-12T19:42:18Z"),
+        ("frozen_at", "2026-07-12T19:42:20Z"),
+    ),
+    ids=("source-issue", "source-pr", "approved-at", "frozen-at"),
+)
+def test_e2_contract_rejects_incorrect_lifecycle_metadata(
+    field: str, value: str
+) -> None:
+    manifest = desired_e2_manifest()
+    repository_entry(manifest, "eebus-architecture")["lifecycle"][field] = value
+
+    with pytest.raises(AssertionError):
+        assert_e2_manifest_contract(manifest)
+
+
+@pytest.mark.parametrize("entry_id", ("eebus-architecture", "eebus-api-v1"))
+@pytest.mark.parametrize("output", E2_STABLE_OUTPUTS)
+def test_e2_contract_rejects_disabled_stable_output(
+    entry_id: str, output: str
+) -> None:
+    manifest = desired_e2_manifest()
+    repository_entry(manifest, entry_id)["outputs"][output] = False
+
+    with pytest.raises(AssertionError):
+        assert_e2_manifest_contract(manifest)
+
+
+@pytest.mark.parametrize(
+    "wrong_stage", (PLATFORM_STAGE, CLEAN_STAGE), ids=("previous", "premature-clean")
+)
+def test_e2_contract_rejects_wrong_enforcement_stage(wrong_stage: str) -> None:
+    inputs = desired_e2_combined_ref_inputs()
+    inputs["enforce_through"] = wrong_stage
+
+    with pytest.raises(AssertionError):
+        assert_e2_combined_ref_contract(inputs)
+
+
+@pytest.mark.parametrize(
+    "entry_id,premature_state",
+    (
+        ("eebusreg-substantive-docs", "withdrawn"),
+        ("eebusreg-readme-summary", "active"),
+    ),
+    ids=("substantive-docs", "readme-summary"),
+)
+def test_e2_contract_rejects_premature_clean_transition(
+    entry_id: str, premature_state: str
+) -> None:
+    manifest = desired_e2_manifest()
+    repository_entry(manifest, entry_id)["state"] = premature_state
+
+    with pytest.raises(AssertionError):
+        assert_e2_manifest_contract(manifest)
+
+
 def test_canonical_repository_validation_passes() -> None:
-    assert repository_validate(load_validator(), REPO_ROOT) == []
+    assert repository_validate(
+        load_validator(), REPO_ROOT, enforce_through=E2_STAGE
+    ) == []
 
 
 def test_production_validator_entrypoint_exists() -> None:
@@ -1440,7 +1783,7 @@ def test_combined_ref_caller_pins_trusted_reusable_workflow() -> None:
     trusted_call = (
         "uses: Project-Helianthus/helianthus-docs-ebus/"
         ".github/workflows/platform-contracts-combined-ref.yml@"
-        "d1b3deead08ecb84baf3dcfe5382e3c519d44b60"
+        "153191f72b5b9ecacbadcf2f3d7e480c6fef89a4"
     )
     assert trusted_call in caller
     assert "uses: ./.github/workflows/platform-contracts-combined-ref.yml" not in caller

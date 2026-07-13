@@ -95,14 +95,14 @@ explicitly supplied prior manifest fails closed. When the trusted base commit
 tree truly has no manifest, omitting the option is the valid first-introduction
 case.
 
-The current PLATFORM transition is:
+The current E2 enforcement state is:
 
 - existing protocol ownership and the API representation schema are `active`;
-- the platform contracts become `active` at `MSP-DOCS-PLATFORM`;
-- the architecture ownership landing remains `planned` with no stable output
-  until it transitions to `active` at `MSP-DOCS-E2`;
+- the platform contracts are `active` from `MSP-DOCS-PLATFORM` onward;
+- the architecture ownership landing is `active`, with its stable output
+  supported at `MSP-DOCS-E2`;
 - current `helianthus-eebusreg/docs` and its README remain `planned` and are not
-  failures during PLATFORM or E2;
+  failures during E2;
 - at `MSP-DOCS-CLEAN`, code-repository docs must transition
   `planned -> withdrawn`, while the README must transition
   `planned -> active` as a minimal summary-only pointer.
@@ -132,7 +132,7 @@ remains excluded from every stable channel.
 checks out the current PR head SHA for docs-ebus and these merged dependency
 commits:
 
-- docs-eebus: `f23a7c35e6803501f185923de061f935bbac1466`;
+- docs-eebus: `62e4c2f2022c22f5129db923079268aafdc5617b`;
 - eebusreg: `0e58327dfdb86ef243a19e18d590564813feaa00`.
 
 All three values are explicit immutable 40-hex commits. Each repository is
