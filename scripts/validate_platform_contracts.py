@@ -62,8 +62,13 @@ MAX_YAML_ALIASES = 16
 MAX_YAML_TOKENS = 8192
 MAX_YAML_NODES = 4096
 
-TOP_FIELDS = {"schema", "version", "entries"}
-ENTRY_FIELDS = {
+TOP_FIELDS_V1 = {"schema", "version", "entries"}
+TOP_FIELDS_V2 = TOP_FIELDS_V1 | {
+    "channel_registry",
+    "eligible_channels",
+    "exact_memberships",
+}
+ENTRY_FIELDS_V1 = {
     "id",
     "surface",
     "owner",
@@ -74,6 +79,15 @@ ENTRY_FIELDS = {
     "lifecycle",
     "enforcement",
 }
+ENTRY_FIELDS_V2 = ENTRY_FIELDS_V1 - {"outputs"} | {"kind"}
+ENTRY_KIND_FIELDS = {
+    "canonical_document": set(),
+    "canonical_collection": {"members"},
+    "summary_pointer": {"target"},
+    "absence_constraint": {"forbidden_states", "channels"},
+}
+CHANNEL_FIELDS = {"visibility", "owner"}
+CHANNEL_VISIBILITIES = {"candidate", "stable"}
 LOCATION_FIELDS = {"repository", "path"}
 OUTPUT_FIELDS = {
     "candidate",
@@ -654,8 +668,65 @@ def _optional_text(value: Any) -> bool:
     return value is None or isinstance(value, str)
 
 
-def _schema_valid(manifest: Mapping[str, Any]) -> bool:
-    if set(manifest) != TOP_FIELDS:
+def _common_entry_schema_valid(entry: Mapping[str, Any], ids: set[str]) -> bool:
+    entry_id = entry.get("id")
+    surface = entry.get("surface")
+    if (
+        not isinstance(entry_id, str)
+        or ENTRY_ID.fullmatch(entry_id) is None
+        or entry_id in ids
+        or not isinstance(surface, str)
+        or surface not in SURFACES
+        or not isinstance(entry.get("canonical"), bool)
+        or not isinstance(entry.get("state"), str)
+    ):
+        return False
+    ids.add(entry_id)
+    for field in ("owner", "source"):
+        location = entry.get(field)
+        if (
+            not isinstance(location, dict)
+            or set(location) != LOCATION_FIELDS
+            or location.get("repository") not in REPOSITORIES
+            or not isinstance(location.get("path"), str)
+            or not location.get("path")
+        ):
+            return False
+    lifecycle = entry.get("lifecycle")
+    if not isinstance(lifecycle, dict) or set(lifecycle) != LIFECYCLE_FIELDS:
+        return False
+    if _parse_instant(lifecycle.get("created_at")) is None:
+        return False
+    if any(
+        not _optional_text(lifecycle.get(key))
+        for key in LIFECYCLE_FIELDS - {"created_at", "cleanup_required"}
+    ):
+        return False
+    if any(
+        lifecycle.get(key) is not None
+        and _parse_instant(lifecycle.get(key)) is None
+        for key in LIFECYCLE_TIMESTAMP_FIELDS - {"created_at"}
+    ):
+        return False
+    if not isinstance(lifecycle.get("cleanup_required"), bool):
+        return False
+    enforcement = entry.get("enforcement")
+    milestone = enforcement.get("milestone") if isinstance(enforcement, dict) else None
+    required_state = (
+        enforcement.get("required_state") if isinstance(enforcement, dict) else None
+    )
+    return bool(
+        isinstance(enforcement, dict)
+        and set(enforcement) == ENFORCEMENT_FIELDS
+        and isinstance(milestone, str)
+        and milestone in MILESTONE_INDEX
+        and isinstance(required_state, str)
+        and required_state in TARGET_STATES
+    )
+
+
+def _schema_valid_v1(manifest: Mapping[str, Any]) -> bool:
+    if set(manifest) != TOP_FIELDS_V1:
         return False
     if not isinstance(manifest.get("schema"), str):
         return False
@@ -668,31 +739,10 @@ def _schema_valid(manifest: Mapping[str, Any]) -> bool:
 
     ids: set[str] = set()
     for entry in entries:
-        if not isinstance(entry, dict) or set(entry) != ENTRY_FIELDS:
+        if not isinstance(entry, dict) or set(entry) != ENTRY_FIELDS_V1:
             return False
-        entry_id = entry.get("id")
-        surface = entry.get("surface")
-        if (
-            not isinstance(entry_id, str)
-            or ENTRY_ID.fullmatch(entry_id) is None
-            or entry_id in ids
-            or not isinstance(surface, str)
-            or surface not in SURFACES
-            or not isinstance(entry.get("canonical"), bool)
-            or not isinstance(entry.get("state"), str)
-        ):
+        if not _common_entry_schema_valid(entry, ids):
             return False
-        ids.add(entry_id)
-        for field in ("owner", "source"):
-            location = entry.get(field)
-            if (
-                not isinstance(location, dict)
-                or set(location) != LOCATION_FIELDS
-                or location.get("repository") not in REPOSITORIES
-                or not isinstance(location.get("path"), str)
-                or not location.get("path")
-            ):
-                return False
         outputs = entry.get("outputs")
         if (
             not isinstance(outputs, dict)
@@ -700,39 +750,115 @@ def _schema_valid(manifest: Mapping[str, Any]) -> bool:
             or any(not isinstance(outputs.get(key), bool) for key in OUTPUT_FIELDS)
         ):
             return False
-        lifecycle = entry.get("lifecycle")
-        if not isinstance(lifecycle, dict) or set(lifecycle) != LIFECYCLE_FIELDS:
-            return False
-        if _parse_instant(lifecycle.get("created_at")) is None:
-            return False
-        if any(
-            not _optional_text(lifecycle.get(key))
-            for key in LIFECYCLE_FIELDS - {"created_at", "cleanup_required"}
-        ):
-            return False
-        if any(
-            lifecycle.get(key) is not None
-            and _parse_instant(lifecycle.get(key)) is None
-            for key in LIFECYCLE_TIMESTAMP_FIELDS - {"created_at"}
-        ):
-            return False
-        if not isinstance(lifecycle.get("cleanup_required"), bool):
-            return False
-        enforcement = entry.get("enforcement")
-        milestone = enforcement.get("milestone") if isinstance(enforcement, dict) else None
-        required_state = (
-            enforcement.get("required_state") if isinstance(enforcement, dict) else None
-        )
+    return True
+
+
+def _sorted_unique_names(value: Any, allowed: set[str]) -> bool:
+    return bool(
+        isinstance(value, list)
+        and all(isinstance(item, str) and item in allowed for item in value)
+        and value == sorted(set(value))
+    )
+
+
+def _schema_valid_v2(manifest: Mapping[str, Any]) -> bool:
+    if set(manifest) != TOP_FIELDS_V2 or manifest.get("version") != 2:
+        return False
+    if manifest.get("schema") != "helianthus.platform.doc-ownership":
+        return False
+    entries = manifest.get("entries")
+    registry = manifest.get("channel_registry")
+    eligible = manifest.get("eligible_channels")
+    memberships = manifest.get("exact_memberships")
+    if (
+        not isinstance(entries, list)
+        or not entries
+        or not isinstance(registry, dict)
+        or not registry
+        or not isinstance(eligible, dict)
+        or not isinstance(memberships, dict)
+        or set(memberships) != set(registry)
+    ):
+        return False
+
+    channels = set(registry)
+    for channel, definition in registry.items():
         if (
-            not isinstance(enforcement, dict)
-            or set(enforcement) != ENFORCEMENT_FIELDS
-            or not isinstance(milestone, str)
-            or milestone not in MILESTONE_INDEX
-            or not isinstance(required_state, str)
-            or required_state not in TARGET_STATES
+            not isinstance(channel, str)
+            or ENTRY_ID.fullmatch(channel) is None
+            or not isinstance(definition, dict)
+            or set(definition) != CHANNEL_FIELDS
+            or definition.get("visibility") not in CHANNEL_VISIBILITIES
+            or not isinstance(definition.get("owner"), str)
+            or not definition["owner"]
+        ):
+            return False
+
+    ids: set[str] = set()
+    entries_by_id: dict[str, Mapping[str, Any]] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            return False
+        kind = entry.get("kind")
+        kind_fields = ENTRY_KIND_FIELDS.get(kind) if isinstance(kind, str) else None
+        if kind_fields is None or set(entry) != ENTRY_FIELDS_V2 | kind_fields:
+            return False
+        if not _common_entry_schema_valid(entry, ids):
+            return False
+        entries_by_id[entry["id"]] = entry
+
+    for entry_id, entry_channels in eligible.items():
+        if entry_id not in entries_by_id or not _sorted_unique_names(
+            entry_channels, channels
+        ):
+            return False
+    for channel, members in memberships.items():
+        if not _sorted_unique_names(members, ids):
+            return False
+        for entry_id in members:
+            if (
+                channel not in eligible.get(entry_id, [])
+                or entries_by_id[entry_id]["state"] != "active"
+            ):
+                return False
+
+    for entry in entries:
+        entry_id = entry["id"]
+        kind = entry["kind"]
+        if kind == "canonical_collection":
+            if not _sorted_unique_names(entry["members"], ids - {entry_id}):
+                return False
+        elif kind == "summary_pointer":
+            if entry["canonical"] or entry["target"] not in ids - {entry_id}:
+                return False
+        elif kind == "absence_constraint":
+            if (
+                entry["canonical"]
+                or entry["forbidden_states"] != ["candidate"]
+                or entry["channels"] != sorted(channels)
+            ):
+                return False
+        if kind in {"canonical_document", "canonical_collection"}:
+            for channel in eligible.get(entry_id, []):
+                if (
+                    entry["state"] == "active"
+                    and entry_id not in memberships[channel]
+                ):
+                    return False
+        if entry["state"] == "candidate" and any(
+            entry_id in members for members in memberships.values()
         ):
             return False
     return True
+
+
+def _schema_valid(manifest: Mapping[str, Any]) -> bool:
+    fields = set(manifest)
+    if fields == TOP_FIELDS_V1:
+        return _schema_valid_v1(manifest)
+    if fields == TOP_FIELDS_V2:
+        return _schema_valid_v2(manifest)
+    return False
 
 
 def _parse_instant(value: Any) -> datetime | None:
@@ -810,7 +936,13 @@ def _manifest_categories(manifest: dict[str, Any]) -> set[str]:
     categories: set[str] = set()
     if manifest["schema"] != "helianthus.platform.doc-ownership":
         categories.add("manifest.schema")
-    if manifest["version"] != 1:
+    if (
+        set(manifest) == TOP_FIELDS_V1
+        and manifest["version"] != 1
+    ) or (
+        set(manifest) == TOP_FIELDS_V2
+        and manifest["version"] != 2
+    ):
         categories.add("manifest.version")
     manifest_surfaces = [entry["surface"] for entry in manifest["entries"]]
     if set(manifest_surfaces) != SURFACES:

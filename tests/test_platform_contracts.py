@@ -895,16 +895,7 @@ def test_publication_v2_accepts_closed_contract() -> None:
 @pytest.mark.parametrize("kind", PUBLICATION_V2_KINDS)
 def test_publication_v2_accepts_each_closed_entry_kind(kind: str) -> None:
     manifest = publication_v2_manifest()
-    manifest["entries"][0]["kind"] = kind
-    if kind == "canonical_collection":
-        manifest["entries"][0]["members"] = []
-    elif kind == "summary_pointer":
-        manifest["entries"][0]["canonical"] = False
-        manifest["entries"][0]["target"] = manifest["entries"][1]["id"]
-    elif kind == "absence_constraint":
-        manifest["entries"][0]["canonical"] = False
-        manifest["entries"][0]["forbidden_states"] = ["candidate"]
-        manifest["entries"][0]["channels"] = [PUBLICATION_CHANNEL]
+    assert any(item["kind"] == kind for item in manifest["entries"])
     assert load_validator()._schema_valid(manifest) is True
 
 
