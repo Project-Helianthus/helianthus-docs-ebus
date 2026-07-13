@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import importlib.util
+import json
 import os
 import pathlib
 import re
@@ -25,6 +26,8 @@ WORKFLOW_PATHS = (
 REQUIREMENTS_CI_PATH = REPO_ROOT / "requirements-ci.txt"
 MAKEFILE_PATH = REPO_ROOT / "Makefile"
 COMBINED_REF_CLI_PATH = REPO_ROOT / "scripts/validate_platform_combined_ref.py"
+PUBLICATION_TOKEN_PATH = REPO_ROOT / "scripts/platform_publication_token.py"
+PLATFORM_A_MERGE = "b245469c30752f06a49bb567b9a4680431774d0d"
 TRUSTED_PRIOR_STEP = "Materialize trusted prior manifest"
 PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
@@ -365,11 +368,18 @@ def combined_ref_inputs() -> dict[str, Any]:
     return inputs
 
 
-def assert_stable_outputs(item: dict[str, Any]) -> None:
-    assert item["outputs"] == {
-        "candidate": False,
-        **{name: True for name in E2_STABLE_OUTPUTS},
-    }
+def assert_stable_publication(
+    manifest: dict[str, Any], item: dict[str, Any]
+) -> None:
+    if manifest["version"] == 1:
+        assert item["outputs"] == {
+            "candidate": False,
+            **{name: True for name in E2_STABLE_OUTPUTS},
+        }
+        return
+    assert item["kind"] in {"canonical_document", "canonical_collection"}
+    assert manifest["eligible_channels"][item["id"]] == ["canonical"]
+    assert item["id"] in manifest["exact_memberships"]["canonical"]
 
 
 def assert_e2_manifest_contract(manifest: dict[str, Any]) -> None:
@@ -380,7 +390,7 @@ def assert_e2_manifest_contract(manifest: dict[str, Any]) -> None:
     )
     assert architecture["state"] == "active"
     assert architecture["canonical"] is True
-    assert_stable_outputs(architecture)
+    assert_stable_publication(manifest, architecture)
     assert {
         key: architecture["lifecycle"][key]
         for key in ("source_issue", "source_pr", "approved_at", "frozen_at")
@@ -393,7 +403,7 @@ def assert_e2_manifest_contract(manifest: dict[str, Any]) -> None:
 
     api = repository_entry(manifest, "eebus-api-v1")
     assert api["state"] == "active"
-    assert_stable_outputs(api)
+    assert_stable_publication(manifest, api)
 
     for entry_id in E2_CLEAN_ENTRY_IDS:
         item = repository_entry(manifest, entry_id)
@@ -447,10 +457,17 @@ def desired_e2_manifest() -> dict[str, Any]:
     architecture = repository_entry(manifest, "eebus-architecture")
     architecture["state"] = "active"
     architecture["canonical"] = True
-    architecture["outputs"] = {
-        "candidate": False,
-        **{name: True for name in E2_STABLE_OUTPUTS},
-    }
+    if manifest["version"] == 1:
+        architecture["outputs"] = {
+            "candidate": False,
+            **{name: True for name in E2_STABLE_OUTPUTS},
+        }
+    else:
+        architecture["kind"] = "canonical_document"
+        manifest["eligible_channels"][architecture["id"]] = ["canonical"]
+        manifest["exact_memberships"]["canonical"] = sorted(
+            set(manifest["exact_memberships"]["canonical"]) | {architecture["id"]}
+        )
     architecture["lifecycle"].update(
         {
             "expires_at": None,
@@ -786,6 +803,7 @@ def validate(
         enforce_through=workspace.enforce_through,
         toolchain_mode=workspace.toolchain_mode,
         prior_manifest=prior_manifest,
+        _current_manifest_version=1,
     )
     assert diagnostics == sorted(set(diagnostics))
     assert all(
@@ -814,6 +832,7 @@ def repository_validate(
         prior_manifest=prior_manifest,
         evaluated_at=evaluated_at,
         evaluation_source=evaluation_source,
+        _current_manifest_version=1,
     )
 
 
@@ -848,15 +867,6 @@ def publication_v2_manifest() -> dict[str, Any]:
             "owner": "canonical_documentation_owner",
         }
     }
-    manifest["eligible_channels"] = {
-        item["id"]: [PUBLICATION_CHANNEL]
-        for item in manifest["entries"]
-        if item["state"] == "active"
-    }
-    manifest["exact_memberships"] = {
-        PUBLICATION_CHANNEL: sorted(manifest["eligible_channels"])
-    }
-
     by_surface = {item["surface"]: item for item in manifest["entries"]}
     for item in manifest["entries"]:
         item.pop("outputs")
@@ -883,11 +893,33 @@ def publication_v2_manifest() -> dict[str, Any]:
     code_repo["canonical"] = False
     code_repo["forbidden_states"] = ["candidate"]
     code_repo["channels"] = sorted(manifest["channel_registry"])
+    manifest["eligible_channels"] = {
+        item["id"]: [PUBLICATION_CHANNEL]
+        for item in manifest["entries"]
+        if item["state"] == "active"
+        and item["kind"] in {"canonical_document", "canonical_collection"}
+    }
+    manifest["exact_memberships"] = {
+        PUBLICATION_CHANNEL: sorted(manifest["eligible_channels"])
+    }
     return manifest
 
 
-def test_publication_v1_manifest_remains_accepted_unchanged() -> None:
+def test_publication_v1_manifest_remains_accepted_as_history_schema() -> None:
     assert load_validator()._schema_valid(base_manifest()) is True
+
+
+def test_publication_v1_manifest_is_rejected_as_current_after_migration(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = tmp_path / "docs-ebus"
+    write_files(
+        root,
+        {MANIFEST_PATH.as_posix(): yaml.safe_dump(base_manifest(), sort_keys=False)},
+    )
+    manifest, categories = load_validator()._validated_manifest(root)
+    assert manifest is None
+    assert categories == {"manifest.version-floor"}
 
 
 def test_publication_v2_accepts_closed_contract() -> None:
@@ -911,6 +943,21 @@ def test_publication_v2_rejects_unregistered_eligible_channel() -> None:
 def test_publication_v2_rejects_exact_membership_drift() -> None:
     manifest = publication_v2_manifest()
     manifest["exact_memberships"][PUBLICATION_CHANNEL].pop()
+    assert load_validator()._schema_valid(manifest) is False
+
+
+@pytest.mark.parametrize("surface", ("summary_only", "code_repo"))
+def test_publication_v2_rejects_noncanonical_channel_membership(
+    surface: str,
+) -> None:
+    manifest = publication_v2_manifest()
+    entry_id = next(
+        item["id"] for item in manifest["entries"] if item["surface"] == surface
+    )
+    manifest["eligible_channels"][entry_id] = [PUBLICATION_CHANNEL]
+    manifest["exact_memberships"][PUBLICATION_CHANNEL] = sorted(
+        manifest["exact_memberships"][PUBLICATION_CHANNEL] + [entry_id]
+    )
     assert load_validator()._schema_valid(manifest) is False
 
 
@@ -1076,6 +1123,358 @@ def test_publication_combined_ref_cli_has_one_invocation_surface() -> None:
     assert "scripts/validate_platform_combined_ref.py" in makefile
     assert "scripts/validate_platform_combined_ref.py" in workflow
     assert '--docs-eebus-ref "${PLATFORM_DOCS_EEBUS_REF}"' in local_ci
+
+
+def test_platform_b_repository_manifest_is_v2() -> None:
+    validator = load_validator()
+    manifest = repository_manifest()
+    assert manifest["version"] == 2
+    assert validator._schema_valid(manifest) is True
+    assert all("outputs" not in item for item in manifest["entries"])
+    assert manifest["channel_registry"] == {
+        "canonical": {
+            "visibility": "stable",
+            "owner": "canonical_documentation_owner",
+        }
+    }
+
+
+def test_platform_b_collection_has_exact_platform_inventory() -> None:
+    manifest = repository_manifest()
+    entries = {item["id"]: item for item in manifest["entries"]}
+    expected = {
+        "platform-cross-runtime-envelope": "docs/platform/cross-runtime-envelope.md",
+        "platform-hash-auth-binding": "docs/platform/hash-auth-binding.md",
+        "platform-shared-registry-boundary": "docs/platform/shared-registry-boundary.md",
+        "platform-promotion-consumer-contract": "docs/platform/promotion-and-consumer-contract.md",
+        "platform-ownership-validation": "docs/platform/ownership-validation.md",
+    }
+    collection = entries["cross-runtime-platform-contracts"]
+    assert collection["kind"] == "canonical_collection"
+    assert collection["owner"]["path"] == "docs/platform/README.md"
+    assert collection["members"] == sorted(expected)
+    for entry_id, path in expected.items():
+        assert entries[entry_id]["kind"] == "canonical_document"
+        assert entries[entry_id]["owner"] == {
+            "repository": "helianthus-docs-ebus",
+            "path": path,
+        }
+
+
+def test_platform_b_membership_and_noncanonical_constraints_are_exact() -> None:
+    manifest = repository_manifest()
+    entries = {item["id"]: item for item in manifest["entries"]}
+    expected_members = sorted(
+        entry_id
+        for entry_id, item in entries.items()
+        if item["state"] == "active"
+        and item["kind"] in {"canonical_document", "canonical_collection"}
+    )
+    assert manifest["eligible_channels"] == {
+        entry_id: ["canonical"] for entry_id in expected_members
+    }
+    assert manifest["exact_memberships"] == {"canonical": expected_members}
+    assert entries["eebusreg-substantive-docs"]["kind"] == "absence_constraint"
+    assert entries["eebusreg-substantive-docs"]["channels"] == ["canonical"]
+    assert entries["eebusreg-substantive-docs"]["forbidden_states"] == [
+        "candidate"
+    ]
+    assert entries["eebusreg-readme-summary"]["kind"] == "summary_pointer"
+    assert entries["eebusreg-readme-summary"]["target"] == "eebus-architecture"
+
+
+def test_platform_b_combined_ref_uses_platform_a_validator() -> None:
+    caller = (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(encoding="utf-8")
+    assert (
+        "Project-Helianthus/helianthus-docs-ebus/"
+        ".github/workflows/platform-contracts-combined-ref.yml@"
+        f"{PLATFORM_A_MERGE}"
+    ) in caller
+
+
+def test_platform_b_token_generator_has_closed_identity_contract() -> None:
+    assert PUBLICATION_TOKEN_PATH.is_file()
+    assert not PUBLICATION_TOKEN_PATH.is_symlink()
+    text = PUBLICATION_TOKEN_PATH.read_text(encoding="utf-8")
+    for field in (
+        "producer_id",
+        "consumer_id",
+        "repository",
+        "pr",
+        "base_oid",
+        "head_oid",
+        "merge_oid",
+        "tree_oid",
+        "evidence_core_sha256",
+        "prior_token_digest",
+        "observation_source",
+    ):
+        assert field in text
+
+
+def test_platform_b_token_generator_requires_immutable_inputs() -> None:
+    result = subprocess.run(
+        ["python3", str(PUBLICATION_TOKEN_PATH)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert "the following arguments are required" in result.stderr
+
+
+def build_publication_token_fixture(
+    tmp_path: pathlib.Path,
+    *,
+    current_manifest: str | bytes | None = None,
+) -> tuple[pathlib.Path, str, str, str]:
+    root = tmp_path / "helianthus-docs-ebus"
+    root.mkdir()
+    prior = base_manifest()
+    for entry_item in prior["entries"]:
+        if entry_item["lifecycle"]["source_ref"] == "__SOURCE_REF__":
+            entry_item["lifecycle"]["source_ref"] = "0" * 40
+    write_files(
+        root,
+        {
+            MANIFEST_PATH.as_posix(): yaml.safe_dump(prior, sort_keys=False),
+        },
+    )
+    base_oid = commit_fixture(root, "helianthus-docs-ebus")
+
+    current_files: dict[str, str | bytes] = {
+        MANIFEST_PATH.as_posix(): current_manifest
+        if current_manifest is not None
+        else yaml.safe_dump(repository_manifest(), sort_keys=False),
+        "docs/platform/README.md": (
+            REPO_ROOT / "docs/platform/README.md"
+        ).read_bytes(),
+    }
+    for page in CONTRACT_PAGES:
+        current_files[page.as_posix()] = (REPO_ROOT / page).read_bytes()
+    write_files(root, current_files)
+    subprocess.run(["git", "add", "."], cwd=root, check=True)
+    env = os.environ.copy()
+    env.update(
+        {
+            "GIT_AUTHOR_DATE": "2026-07-13T15:00:00Z",
+            "GIT_COMMITTER_DATE": "2026-07-13T15:00:00Z",
+        }
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Contract Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-qm",
+            "platform b head",
+        ],
+        cwd=root,
+        check=True,
+        env=env,
+    )
+    head_oid = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=root, text=True
+    ).strip()
+    tree_oid = subprocess.check_output(
+        ["git", "rev-parse", "HEAD^{tree}"], cwd=root, text=True
+    ).strip()
+    merge_oid = subprocess.check_output(
+        [
+            "git",
+            "-c",
+            "user.name=Contract Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit-tree",
+            tree_oid,
+            "-p",
+            base_oid,
+            "-m",
+            "platform b squash merge",
+        ],
+        cwd=root,
+        text=True,
+        env=env,
+    ).strip()
+    subprocess.run(
+        ["git", "reset", "--hard", "-q", merge_oid], cwd=root, check=True
+    )
+    return root, base_oid, head_oid, merge_oid
+
+
+def publication_token_command(
+    root: pathlib.Path, base_oid: str, head_oid: str, merge_oid: str
+) -> list[str]:
+    return [
+        "python3",
+        str(PUBLICATION_TOKEN_PATH),
+        "--root",
+        str(root),
+        "--repository",
+        "Project-Helianthus/helianthus-docs-ebus",
+        "--pr",
+        "347",
+        "--base-oid",
+        base_oid,
+        "--head-oid",
+        head_oid,
+        "--merge-oid",
+        merge_oid,
+        "--evaluated-at",
+        "2026-07-13T15:00:01Z",
+        "--observation-source",
+        "test.fixture-clock",
+    ]
+
+
+def test_platform_b_token_is_reproducible_from_objects_and_attestation_inputs(
+    tmp_path: pathlib.Path,
+) -> None:
+    root, base_oid, head_oid, merge_oid = build_publication_token_fixture(tmp_path)
+    command = publication_token_command(root, base_oid, head_oid, merge_oid)
+    first = subprocess.run(command, check=False, capture_output=True, text=True)
+    second = subprocess.run(command, check=False, capture_output=True, text=True)
+    assert first.returncode == 0, first.stderr
+    assert second.returncode == 0, second.stderr
+    assert first.stdout == second.stdout
+
+    token = json.loads(first.stdout)
+    assert token["schema_version"] == 2
+    assert token["producer_id"] == "MSP-DOCS-E2R-PLATFORM"
+    assert token["consumer_id"] == "MSP-DOCS-E2R-PUBLISH"
+    assert token["repository"] == "Project-Helianthus/helianthus-docs-ebus"
+    assert token["pr"] == 347
+    assert token["base_oid"] == base_oid
+    assert token["head_oid"] == head_oid
+    assert token["merge_oid"] == merge_oid
+    assert token["observation_source"] == "test.fixture-clock"
+    assert token["evidence_core"]["prior_manifest"]["version"] == 1
+    assert token["evidence_core"]["manifest"]["version"] == 2
+    assert token["evidence_core"]["candidate_inventory"] == []
+    core = json.dumps(
+        token["evidence_core"],
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    assert token["evidence_core_sha256"] == hashlib.sha256(core).hexdigest()
+    assert re.fullmatch(r"[0-9a-f]{64}", token["prior_token_digest"])
+    assert set(token["evidence_core"]["publisher_blobs"]) == {
+        "cross-runtime-platform-contracts",
+        "platform-cross-runtime-envelope",
+        "platform-hash-auth-binding",
+        "platform-ownership-validation",
+        "platform-promotion-consumer-contract",
+        "platform-shared-registry-boundary",
+    }
+
+
+def test_platform_b_token_rejects_duplicate_manifest_keys(
+    tmp_path: pathlib.Path,
+) -> None:
+    duplicate_key_manifest = (
+        yaml.safe_dump(repository_manifest(), sort_keys=False) + "version: 2\n"
+    )
+    root, base_oid, head_oid, merge_oid = build_publication_token_fixture(
+        tmp_path, current_manifest=duplicate_key_manifest
+    )
+    result = subprocess.run(
+        publication_token_command(root, base_oid, head_oid, merge_oid),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stderr == "publication-token.manifest\n"
+
+
+def test_platform_b_token_rejects_unmet_stage_enforcement(
+    tmp_path: pathlib.Path,
+) -> None:
+    manifest = repository_manifest()
+    entry = repository_entry(manifest, "platform-hash-auth-binding")
+    entry["enforcement"] = {
+        "milestone": E2_STAGE,
+        "required_state": "candidate",
+    }
+    root, base_oid, head_oid, merge_oid = build_publication_token_fixture(
+        tmp_path,
+        current_manifest=yaml.safe_dump(manifest, sort_keys=False),
+    )
+    result = subprocess.run(
+        publication_token_command(root, base_oid, head_oid, merge_oid),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stderr == "publication-token.manifest\n"
+
+
+@pytest.mark.parametrize(
+    "remote",
+    (
+        "https://github.com/Project-Helianthus/helianthus-docs-ebus",
+        "git@github.com:project-helianthus/HELIANTHUS-DOCS-EBUS.git",
+        "ssh://git@github.com:22/Project-Helianthus/helianthus-docs-ebus.git",
+        "git://github.com/Project-Helianthus/helianthus-docs-ebus.git",
+    ),
+)
+def test_platform_b_token_accepts_normalized_github_origins(
+    tmp_path: pathlib.Path, remote: str
+) -> None:
+    root, base_oid, head_oid, merge_oid = build_publication_token_fixture(tmp_path)
+    subprocess.run(
+        ["git", "remote", "set-url", "origin", remote], cwd=root, check=True
+    )
+    result = subprocess.run(
+        publication_token_command(root, base_oid, head_oid, merge_oid),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_platform_b_token_rejects_identity_drift(tmp_path: pathlib.Path) -> None:
+    root, _, head_oid, merge_oid = build_publication_token_fixture(tmp_path)
+    result = subprocess.run(
+        publication_token_command(root, head_oid, head_oid, merge_oid),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stderr == "publication-token.identity\n"
+
+
+def test_platform_b_token_rejects_dirty_root(tmp_path: pathlib.Path) -> None:
+    root, base_oid, head_oid, merge_oid = build_publication_token_fixture(tmp_path)
+    (root / "untracked.txt").write_text("drift\n", encoding="utf-8")
+    result = subprocess.run(
+        publication_token_command(root, base_oid, head_oid, merge_oid),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stderr == "publication-token.identity\n"
+
+
+def test_platform_b_token_rejects_backdated_evaluation(
+    tmp_path: pathlib.Path,
+) -> None:
+    root, base_oid, head_oid, merge_oid = build_publication_token_fixture(tmp_path)
+    command = publication_token_command(root, base_oid, head_oid, merge_oid)
+    command[command.index("--evaluated-at") + 1] = "2026-07-13T14:59:59Z"
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    assert result.returncode == 1
+    assert result.stderr == "publication-token.evaluation-time\n"
 
 
 def mark_manifest_entry_withdrawn(
@@ -1665,9 +2064,10 @@ def test_e2_architecture_entry_is_activated_in_place() -> None:
     assert architecture["canonical"] is True
 
 
-def test_e2_architecture_enables_all_stable_outputs() -> None:
-    assert_stable_outputs(
-        repository_entry(repository_manifest(), "eebus-architecture")
+def test_e2_architecture_is_canonically_published() -> None:
+    manifest = repository_manifest()
+    assert_stable_publication(
+        manifest, repository_entry(manifest, "eebus-architecture")
     )
 
 
@@ -1687,11 +2087,12 @@ def test_e2_architecture_lifecycle_is_bound_to_merged_docs_pr() -> None:
     }
 
 
-def test_e2_api_v1_remains_active_with_all_stable_outputs() -> None:
-    api = repository_entry(repository_manifest(), "eebus-api-v1")
+def test_e2_api_v1_remains_active_and_canonically_published() -> None:
+    manifest = repository_manifest()
+    api = repository_entry(manifest, "eebus-api-v1")
 
     assert api["state"] == "active"
-    assert_stable_outputs(api)
+    assert_stable_publication(manifest, api)
 
 
 def test_e2_combined_ref_uses_exact_merged_docs_pin() -> None:
@@ -1809,12 +2210,15 @@ def test_e2_contract_rejects_incorrect_lifecycle_metadata(
 
 
 @pytest.mark.parametrize("entry_id", ("eebus-architecture", "eebus-api-v1"))
-@pytest.mark.parametrize("output", E2_STABLE_OUTPUTS)
-def test_e2_contract_rejects_disabled_stable_output(
-    entry_id: str, output: str
+@pytest.mark.parametrize("surface", ("eligibility", "membership"))
+def test_e2_contract_rejects_missing_canonical_publication(
+    entry_id: str, surface: str
 ) -> None:
     manifest = desired_e2_manifest()
-    repository_entry(manifest, entry_id)["outputs"][output] = False
+    if surface == "eligibility":
+        manifest["eligible_channels"][entry_id] = []
+    else:
+        manifest["exact_memberships"]["canonical"].remove(entry_id)
 
     with pytest.raises(AssertionError):
         assert_e2_manifest_contract(manifest)
@@ -2032,7 +2436,7 @@ def test_combined_ref_caller_pins_trusted_reusable_workflow() -> None:
     trusted_call = (
         "uses: Project-Helianthus/helianthus-docs-ebus/"
         ".github/workflows/platform-contracts-combined-ref.yml@"
-        "153191f72b5b9ecacbadcf2f3d7e480c6fef89a4"
+        + PLATFORM_A_MERGE
     )
     assert trusted_call in caller
     assert "uses: ./.github/workflows/platform-contracts-combined-ref.yml" not in caller
@@ -3744,6 +4148,9 @@ def test_removed_caller_pin_arguments_are_category_only(tmp_path: pathlib.Path) 
 
 def test_main_expiry_cli_is_terminal_and_category_only(tmp_path: pathlib.Path) -> None:
     workspace = build_workspace(tmp_path)
+    write_manifest_text(
+        workspace, yaml.safe_dump(publication_v2_manifest(), sort_keys=False)
+    )
     result = subprocess.run(
         [
             "python3",

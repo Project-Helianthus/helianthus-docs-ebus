@@ -24,6 +24,12 @@ Current platform contracts:
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md)
 
+The publication-contract v2 canonical collection is the exact foundational
+inventory of `cross-runtime-envelope.md`, `hash-auth-binding.md`,
+`shared-registry-boundary.md`, `promotion-and-consumer-contract.md`, and
+`ownership-validation.md`. The remaining pages are milestone-specific
+operational contracts and are not silently added to that collection.
+
 The authoritative eeBUS ownership state is the versioned
 [`manifests/eebus-doc-ownership.yaml`](./manifests/eebus-doc-ownership.yaml)
 manifest.

@@ -621,12 +621,9 @@ def _inspect_yaml_node(root: yaml.nodes.Node | None) -> None:
     visit(root, 1)
 
 
-def _parse_manifest_path(path: pathlib.Path) -> dict[str, Any] | None:
+def _parse_manifest_bytes(raw: bytes) -> dict[str, Any] | None:
     loader: yaml.SafeLoader | None = None
     try:
-        if not _regular_path_without_symlinks(path):
-            raise _ManifestSchemaError
-        raw = path.read_bytes()
         if len(raw) > MAX_MANIFEST_BYTES:
             raise _ManifestSchemaError
         text = raw.decode("utf-8")
@@ -652,6 +649,15 @@ def _parse_manifest_path(path: pathlib.Path) -> dict[str, Any] | None:
     if not isinstance(loaded, dict):
         return None
     return loaded
+
+
+def _parse_manifest_path(path: pathlib.Path) -> dict[str, Any] | None:
+    try:
+        if not _regular_path_without_symlinks(path):
+            raise _ManifestSchemaError
+        return _parse_manifest_bytes(path.read_bytes())
+    except (OSError, _ManifestSchemaError):
+        return None
 
 
 def _load_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, str | None]:
@@ -819,6 +825,9 @@ def _schema_valid_v2(manifest: Mapping[str, Any]) -> bool:
             if (
                 channel not in eligible.get(entry_id, [])
                 or entries_by_id[entry_id]["state"] != "active"
+                or entries_by_id[entry_id]["kind"]
+                not in {"canonical_document", "canonical_collection"}
+                or not entries_by_id[entry_id]["canonical"]
             ):
                 return False
 
@@ -839,6 +848,8 @@ def _schema_valid_v2(manifest: Mapping[str, Any]) -> bool:
             target = entries_by_id.get(entry["target"])
             if (
                 entry["canonical"]
+                or eligible.get(entry_id, [])
+                or any(entry_id in members for members in memberships.values())
                 or target is None
                 or target["kind"]
                 not in {"canonical_document", "canonical_collection"}
@@ -849,6 +860,8 @@ def _schema_valid_v2(manifest: Mapping[str, Any]) -> bool:
         elif kind == "absence_constraint":
             if (
                 entry["canonical"]
+                or eligible.get(entry_id, [])
+                or any(entry_id in members for members in memberships.values())
                 or entry["forbidden_states"] != ["candidate"]
                 or entry["channels"] != sorted(channels)
             ):
@@ -1948,14 +1961,21 @@ def _toolchain_categories(mode: str) -> set[str]:
     return categories
 
 
-def _validated_manifest(root: pathlib.Path) -> tuple[dict[str, Any] | None, set[str]]:
+def _validated_manifest(
+    root: pathlib.Path, *, current_manifest_version: int = 2
+) -> tuple[dict[str, Any] | None, set[str]]:
     manifest, error = _load_manifest(root)
     if error is not None:
         return None, {error}
     assert manifest is not None
     if not _schema_valid(manifest):
         return None, {"manifest.schema"}
-    return manifest, _manifest_categories(manifest)
+    manifest_categories = _manifest_categories(manifest)
+    if manifest_categories:
+        return manifest, manifest_categories
+    if manifest["version"] < current_manifest_version:
+        return None, {"manifest.version-floor"}
+    return manifest, set()
 
 
 def _history_categories(
@@ -2011,6 +2031,7 @@ def validate_repository(
     prior_manifest: pathlib.Path | None = None,
     evaluated_at: str | None = None,
     evaluation_source: str | None = None,
+    _current_manifest_version: int = 2,
 ) -> list[str]:
     root = pathlib.Path(docs_ebus_root)
     categories = _toolchain_categories(toolchain_mode)
@@ -2022,7 +2043,9 @@ def validate_repository(
     )
     if not root_valid:
         categories.add("input.repository-root")
-    manifest, manifest_categories = _validated_manifest(root)
+    manifest, manifest_categories = _validated_manifest(
+        root, current_manifest_version=_current_manifest_version
+    )
     categories.update(manifest_categories)
     if manifest is None:
         return _result(categories)
@@ -2053,6 +2076,7 @@ def validate_workspace(
     enforce_through: str,
     toolchain_mode: str,
     prior_manifest: pathlib.Path | None = None,
+    _current_manifest_version: int = 2,
 ) -> list[str]:
     roots = {
         "helianthus-docs-ebus": pathlib.Path(docs_ebus_root),
@@ -2099,7 +2123,10 @@ def validate_workspace(
         resolved.add(resolved_root)
         valid_roots[repository] = root
 
-    manifest, manifest_categories = _validated_manifest(roots["helianthus-docs-ebus"])
+    manifest, manifest_categories = _validated_manifest(
+        roots["helianthus-docs-ebus"],
+        current_manifest_version=_current_manifest_version,
+    )
     categories.update(manifest_categories)
     if manifest is None:
         return _result(categories)

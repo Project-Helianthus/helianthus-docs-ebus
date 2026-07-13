@@ -5,12 +5,15 @@ Canonical source: this page.
 ## Manifest
 
 `manifests/eebus-doc-ownership.yaml` is the authoritative versioned ownership
-manifest. Its schema is closed. Each of the six surfaces has exactly one entry,
-every owner/source pair is globally unique, and a canonical owner path may occur
-only once. All repository paths are portable relative paths with no traversal,
-private path, private identifier, credential, or network data. Every path
-segment also excludes Windows-reserved characters, trailing dots or spaces, and
-reserved device names (including reserved names followed by an extension).
+manifest. Version 2 is the current publication contract; version 1 remains a
+trusted-prior input during migration. The schema is closed. All six surfaces
+must be represented, while the platform surface may contain multiple canonical
+documents plus explicit canonical collections. Every owner/source pair is
+globally unique, and a canonical owner path may occur only once. All repository
+paths are portable relative paths with no traversal, private path, private
+identifier, credential, or network data. Every path segment also excludes
+Windows-reserved characters, trailing dots or spaces, and reserved device names
+(including reserved names followed by an extension).
 
 The loader retains YAML mapping pairs until duplicate-key validation is
 complete. It rejects duplicate keys at any depth, cyclic aliases, more than 16
@@ -37,6 +40,16 @@ code-repository, and summary-only entries are noncanonical. In particular,
 protocol ownership cannot be reassigned to the code README or marked
 noncanonical while active.
 
+Version 2 separates eligibility from publication. `channel_registry` is the
+closed inventory of controlled publication channels, `eligible_channels`
+declares where an entry may appear, and `exact_memberships` records the complete
+current membership of every registered channel. An active canonical document
+or collection must be present in each declared membership. Candidate entries
+cannot appear in a stable membership. Collections contain only active canonical
+documents; summary pointers target an active canonical document or collection
+without acquiring canonical membership themselves. An absence constraint
+covers all and only the registered channels.
+
 Platform governance prose may require an artifact to record or report evidence,
 including whether protocol activity was observed. That exemption is local to
 the reporting predicate and its single bounded observation complement. The
@@ -49,12 +62,12 @@ coordinated protocol, architecture, or API behavior cannot inherit an exemption.
 
 ## State Contract
 
-| State | Expiry | Output | Required artifact rule |
+| State | Expiry | Publication | Required artifact rule |
 | --- | --- | --- | --- |
-| `planned` | Exactly 14 days after `created_at` | No candidate or stable output; noncanonical and nonlinkable | Owner/source may be absent or may be pre-existing material that has no publication authority |
-| `candidate` | Exactly 30 days after `created_at` | Candidate output only from a hidden `_candidate` area | Regular owner and source files plus the direct commit object at the pinned source checkout HEAD and exact content hash |
-| `active` | No expiry | All stable outputs after approval and freeze | Regular owner and source files |
-| `withdrawn` | No expiry | No output and never consumer-visible | Owner and every distinct source artifact absent immediately; cleanup mandatory |
+| `planned` | Exactly 14 days after `created_at` | No eligibility or membership; noncanonical and nonlinkable | Owner/source may be absent or may be pre-existing material that has no publication authority |
+| `candidate` | Exactly 30 days after `created_at` | Candidate-channel eligibility only from a hidden `_candidate` area; never in a stable membership | Regular owner and source files plus the direct commit object at the pinned source checkout HEAD and exact content hash |
+| `active` | No expiry | Exact registered-channel membership after approval and freeze | Regular owner and source files |
+| `withdrawn` | No expiry | No eligibility or membership and never consumer-visible | Owner and every distinct source artifact absent immediately; cleanup mandatory |
 
 Every present lifecycle timestamp (`created_at`, `expires_at`, `approved_at`, or
 `frozen_at`) uses the same strict RFC 3339 UTC extended form described below.
@@ -85,7 +98,7 @@ manifest exists, pass it as `--prior-manifest PATH`. Every prior `withdrawn`
 entry remains indexed by both `surface` and `id`, remains the sole entry for that
 surface, and remains `withdrawn`. For the same surface and ID, the complete
 normalized manifest entry is an immutable tombstone: lifecycle and provenance,
-enforcement, owner/source metadata, output flags, and any additional fields must
+enforcement, owner/source metadata, publication fields, and any additional fields must
 all remain byte-for-value equivalent after YAML normalization. A new ID cannot
 resurrect that surface as `planned`, `candidate`, or `active`, and a duplicate
 replacement cannot coexist with the tombstone. Artifact absence remains a
@@ -98,8 +111,9 @@ case.
 The current E2 enforcement state is:
 
 - existing protocol ownership and the API representation schema are `active`;
-- the platform contracts are `active` from `MSP-DOCS-PLATFORM` onward;
-- the architecture ownership landing is `active`, with its stable output
+- the five foundational platform documents and their canonical collection are
+  `active` from `MSP-DOCS-PLATFORM` onward;
+- the architecture ownership landing is `active`, with its canonical membership
   supported at `MSP-DOCS-E2`;
 - current `helianthus-eebusreg/docs` and its README remain `planned` and are not
   failures during E2;
@@ -123,8 +137,8 @@ An E2 or CLEAN check cannot reuse PLATFORM enforcement: each successor invokes
 the same combined-ref validator with its own required stage. Planned entries
 also expire after 14 days, so main expiry CI fails inclusively if a required
 successor transition is not completed. Candidate entries transition only to
-their declared required state or to `withdrawn` cleanup, while candidate output
-remains excluded from every stable channel.
+their declared required state or to `withdrawn` cleanup, while candidate
+membership remains excluded from every stable channel.
 
 ## Combined-Ref Pull Request Validation
 
@@ -190,6 +204,31 @@ GitHub always uses `exact` mode.
 Workflow validation is gated by actionlint `v1.7.7`; runtime-state schema
 validation is gated by `jv v0.7.0`. Both binaries are installed at pinned Go
 module versions and their reported versions are verified before use.
+
+## Post-Merge Completion Token
+
+`scripts/platform_publication_token.py` mints the PLATFORM-B completion token
+only from a clean, nonsymlinked checkout whose `HEAD` is the supplied squash
+merge. The supplied base, PR head, and merge values must be distinct lowercase
+40-hex commit objects. The merge must have the supplied base as its only parent,
+the base must be an ancestor of the PR head, and the merge and PR head trees must
+match exactly. Repository identity is bound to the expected GitHub origin.
+
+The generator reads the prior and current manifests plus every local publisher
+artifact with `git ls-tree` and `git cat-file`. The base manifest must be valid
+version 1 and the merged manifest must be valid version 2. Planned or candidate
+expiry at the supplied strict UTC evaluation instant blocks token creation. The
+evaluation instant cannot precede the immutable merge committer time and carries
+an explicit observation source. No network request or moving ref participates
+in the proof.
+
+The canonical JSON token binds `producer_id`, `consumer_id`, `repository`, `pr`,
+`base_oid`, `head_oid`, `merge_oid`, `tree_oid`, `evidence_core_sha256`,
+`prior_token_digest`, and `observation_source`. Its evidence core also records
+manifest blob identities, registered channels, eligibility, exact memberships,
+collection members, candidate inventory, and local publisher blob identities.
+Re-running the command with the same immutable objects and the same explicit
+evaluation instant and observation source produces identical bytes.
 
 ## Main Expiry Validation
 
