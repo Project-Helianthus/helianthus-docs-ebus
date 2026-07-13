@@ -33,6 +33,8 @@ PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
 CLEAN_STAGE = "MSP-DOCS-CLEAN"
 E2_DOCS_EEBUS_REF = "62e4c2f2022c22f5129db923079268aafdc5617b"
+CLEAN_DOCS_EEBUS_REF = "9fc4b2a86424ac00075cf3bd3510918c3f9cefaf"
+CLEAN_EEBUSREG_REF = "9fb73c5be17ceb28742c1428ef61a0c197cbc07d"
 E2_SOURCE_ISSUE = "Project-Helianthus/helianthus-docs-eebus#8"
 E2_SOURCE_PR = "Project-Helianthus/helianthus-docs-eebus#9"
 E2_MERGED_AT = "2026-07-12T19:42:19Z"
@@ -477,6 +479,22 @@ def desired_e2_manifest() -> dict[str, Any]:
             "frozen_at": E2_MERGED_AT,
         }
     )
+    for entry_id in E2_CLEAN_ENTRY_IDS:
+        item = repository_entry(manifest, entry_id)
+        item["state"] = "planned"
+        item["canonical"] = False
+        item["lifecycle"].update(
+            {
+                "expires_at": "2026-07-25T00:00:00Z",
+                "source_issue": "Project-Helianthus/helianthus-execution-plans#58",
+                "source_pr": None,
+                "source_ref": None,
+                "content_sha256": None,
+                "approved_at": None,
+                "frozen_at": None,
+                "cleanup_required": False,
+            }
+        )
     return manifest
 
 
@@ -1246,7 +1264,7 @@ def build_publication_token_fixture(
     current_files: dict[str, str | bytes] = {
         MANIFEST_PATH.as_posix(): current_manifest
         if current_manifest is not None
-        else yaml.safe_dump(repository_manifest(), sort_keys=False),
+        else yaml.safe_dump(desired_e2_manifest(), sort_keys=False),
         "docs/platform/README.md": (
             REPO_ROOT / "docs/platform/README.md"
         ).read_bytes(),
@@ -1378,7 +1396,7 @@ def test_platform_b_token_rejects_duplicate_manifest_keys(
     tmp_path: pathlib.Path,
 ) -> None:
     duplicate_key_manifest = (
-        yaml.safe_dump(repository_manifest(), sort_keys=False) + "version: 2\n"
+        yaml.safe_dump(desired_e2_manifest(), sort_keys=False) + "version: 2\n"
     )
     root, base_oid, head_oid, merge_oid = build_publication_token_fixture(
         tmp_path, current_manifest=duplicate_key_manifest
@@ -1396,7 +1414,7 @@ def test_platform_b_token_rejects_duplicate_manifest_keys(
 def test_platform_b_token_rejects_unmet_stage_enforcement(
     tmp_path: pathlib.Path,
 ) -> None:
-    manifest = repository_manifest()
+    manifest = desired_e2_manifest()
     entry = repository_entry(manifest, "platform-hash-auth-binding")
     entry["enforcement"] = {
         "milestone": E2_STAGE,
@@ -2095,22 +2113,30 @@ def test_e2_api_v1_remains_active_and_canonically_published() -> None:
     assert_stable_publication(manifest, api)
 
 
-def test_e2_combined_ref_uses_exact_merged_docs_pin() -> None:
-    assert combined_ref_inputs()["docs_eebus_ref"] == E2_DOCS_EEBUS_REF
+def test_clean_combined_ref_uses_exact_merged_dependency_pins() -> None:
+    inputs = combined_ref_inputs()
+    assert inputs["docs_eebus_ref"] == CLEAN_DOCS_EEBUS_REF
+    assert inputs["eebusreg_ref"] == CLEAN_EEBUSREG_REF
 
 
-def test_e2_combined_ref_enforces_exact_stage() -> None:
-    assert combined_ref_inputs()["enforce_through"] == E2_STAGE
+def test_clean_combined_ref_enforces_exact_stage() -> None:
+    assert combined_ref_inputs()["enforce_through"] == CLEAN_STAGE
 
 
 @pytest.mark.parametrize(
     "target", ("validate-platform-contracts", "validate-platform-expiry")
 )
-def test_platform_make_target_enforces_e2_stage(target: str) -> None:
-    assert cli_option(make_validator_args(target), "--enforce-through") == E2_STAGE
+def test_platform_make_target_enforces_clean_stage(target: str) -> None:
+    assert cli_option(make_validator_args(target), "--enforce-through") == CLEAN_STAGE
 
 
-def test_ownership_validation_guide_tracks_supported_e2_contract() -> None:
+def test_local_ci_enforces_clean_stage() -> None:
+    local_ci = (REPO_ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
+    assert "cross-runtime platform contracts (MSP-DOCS-CLEAN)" in local_ci
+    assert local_ci.count("--enforce-through MSP-DOCS-CLEAN") == 2
+
+
+def test_ownership_validation_guide_tracks_supported_clean_contract() -> None:
     guide = (
         REPO_ROOT / "docs/platform/ownership-validation.md"
     ).read_text(encoding="utf-8")
@@ -2156,7 +2182,7 @@ def test_ownership_validation_guide_tracks_supported_e2_contract() -> None:
     }
     assert canonical == {
         "architecture_state": "active",
-        "docs_eebus_ref": E2_DOCS_EEBUS_REF,
+        "docs_eebus_ref": CLEAN_DOCS_EEBUS_REF,
     }
     assert {
         "architecture_state": state_match.group("state"),
@@ -2164,13 +2190,26 @@ def test_ownership_validation_guide_tracks_supported_e2_contract() -> None:
     } == canonical
 
 
-def test_e2_does_not_transition_clean_entries() -> None:
+def test_clean_transitions_code_repository_ownership_entries() -> None:
     manifest = repository_manifest()
+    docs = repository_entry(manifest, "eebusreg-substantive-docs")
+    readme = repository_entry(manifest, "eebusreg-readme-summary")
 
-    for entry_id in E2_CLEAN_ENTRY_IDS:
-        item = repository_entry(manifest, entry_id)
-        assert item["enforcement"]["milestone"] == CLEAN_STAGE
-        assert item["state"] == "planned"
+    assert docs["enforcement"] == {
+        "milestone": CLEAN_STAGE,
+        "required_state": "withdrawn",
+    }
+    assert docs["state"] == "withdrawn"
+    assert docs["lifecycle"]["cleanup_required"] is True
+    assert docs["lifecycle"]["expires_at"] is None
+
+    assert readme["enforcement"] == {
+        "milestone": CLEAN_STAGE,
+        "required_state": "active",
+    }
+    assert readme["state"] == "active"
+    assert readme["lifecycle"]["cleanup_required"] is False
+    assert readme["lifecycle"]["expires_at"] is None
 
 
 @pytest.mark.parametrize(
@@ -2255,7 +2294,7 @@ def test_e2_contract_rejects_premature_clean_transition(
 
 def test_canonical_repository_validation_passes() -> None:
     assert repository_validate(
-        load_validator(), REPO_ROOT, enforce_through=E2_STAGE
+        load_validator(), REPO_ROOT, enforce_through=CLEAN_STAGE
     ) == []
 
 
