@@ -479,6 +479,22 @@ def desired_e2_manifest() -> dict[str, Any]:
             "frozen_at": E2_MERGED_AT,
         }
     )
+    for entry_id in E2_CLEAN_ENTRY_IDS:
+        item = repository_entry(manifest, entry_id)
+        item["state"] = "planned"
+        item["canonical"] = False
+        item["lifecycle"].update(
+            {
+                "expires_at": "2026-07-25T00:00:00Z",
+                "source_issue": "Project-Helianthus/helianthus-execution-plans#58",
+                "source_pr": None,
+                "source_ref": None,
+                "content_sha256": None,
+                "approved_at": None,
+                "frozen_at": None,
+                "cleanup_required": False,
+            }
+        )
     return manifest
 
 
@@ -1248,7 +1264,7 @@ def build_publication_token_fixture(
     current_files: dict[str, str | bytes] = {
         MANIFEST_PATH.as_posix(): current_manifest
         if current_manifest is not None
-        else yaml.safe_dump(repository_manifest(), sort_keys=False),
+        else yaml.safe_dump(desired_e2_manifest(), sort_keys=False),
         "docs/platform/README.md": (
             REPO_ROOT / "docs/platform/README.md"
         ).read_bytes(),
@@ -1380,7 +1396,7 @@ def test_platform_b_token_rejects_duplicate_manifest_keys(
     tmp_path: pathlib.Path,
 ) -> None:
     duplicate_key_manifest = (
-        yaml.safe_dump(repository_manifest(), sort_keys=False) + "version: 2\n"
+        yaml.safe_dump(desired_e2_manifest(), sort_keys=False) + "version: 2\n"
     )
     root, base_oid, head_oid, merge_oid = build_publication_token_fixture(
         tmp_path, current_manifest=duplicate_key_manifest
@@ -1398,7 +1414,7 @@ def test_platform_b_token_rejects_duplicate_manifest_keys(
 def test_platform_b_token_rejects_unmet_stage_enforcement(
     tmp_path: pathlib.Path,
 ) -> None:
-    manifest = repository_manifest()
+    manifest = desired_e2_manifest()
     entry = repository_entry(manifest, "platform-hash-auth-binding")
     entry["enforcement"] = {
         "milestone": E2_STAGE,
@@ -2278,7 +2294,7 @@ def test_e2_contract_rejects_premature_clean_transition(
 
 def test_canonical_repository_validation_passes() -> None:
     assert repository_validate(
-        load_validator(), REPO_ROOT, enforce_through=E2_STAGE
+        load_validator(), REPO_ROOT, enforce_through=CLEAN_STAGE
     ) == []
 
 

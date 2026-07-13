@@ -24,7 +24,7 @@ validate-schemas:
 
 validate-platform-contracts:
 	@python3 -m pytest -q tests/test_platform_contracts.py
-	@python3 scripts/validate_platform_contracts.py --mode repository --docs-ebus-root . --enforce-through MSP-DOCS-E2 --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
+	@python3 scripts/validate_platform_contracts.py --mode repository --docs-ebus-root . --enforce-through MSP-DOCS-CLEAN --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
 
 validate-platform-combined-ref:
 	@test -n "$(DOCS_EEBUS_ROOT)" && test -n "$(EEBUSREG_ROOT)"
@@ -35,7 +35,7 @@ validate-platform-combined-ref:
 validate-platform-expiry:
 	@test -n "$(EVALUATED_AT)" || (echo "EVALUATED_AT is required" >&2; exit 2)
 	@test -n "$(EVALUATION_SOURCE)" || (echo "EVALUATION_SOURCE is required" >&2; exit 2)
-	@python3 scripts/validate_platform_contracts.py --mode main-expiry --docs-ebus-root . --evaluated-at "$(EVALUATED_AT)" --evaluation-source "$(EVALUATION_SOURCE)" --enforce-through MSP-DOCS-E2 --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
+	@python3 scripts/validate_platform_contracts.py --mode main-expiry --docs-ebus-root . --evaluated-at "$(EVALUATED_AT)" --evaluation-source "$(EVALUATION_SOURCE)" --enforce-through MSP-DOCS-CLEAN --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
 
 ci-local:
 	@bash scripts/ci_local.sh

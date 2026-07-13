@@ -115,11 +115,11 @@ The current E2 enforcement state is:
   `active` from `MSP-DOCS-PLATFORM` onward;
 - the architecture ownership landing is `active`, with its canonical membership
   supported at `MSP-DOCS-E2`;
-- current `helianthus-eebusreg/docs` and its README remain `planned` and are not
-  failures during E2;
-- at `MSP-DOCS-CLEAN`, code-repository docs must transition
-  `planned -> withdrawn`, while the README must transition
-  `planned -> active` as a minimal summary-only pointer.
+- `helianthus-eebusreg/docs` is `withdrawn` at `MSP-DOCS-CLEAN`;
+- the code-repository README is `active` only as the exact minimal
+  summary-and-build pointer;
+- both CLEAN states are terminal inputs to successors and are validated against
+  the immutable eebusreg cleanup head.
 
 At CLEAN, the validator also scans documentation-like files throughout the
 eebusreg checkout, including root architecture files and alternate nested
@@ -146,14 +146,15 @@ membership remains excluded from every stable channel.
 checks out the current PR head SHA for docs-ebus and these merged dependency
 commits:
 
-- docs-eebus: `62e4c2f2022c22f5129db923079268aafdc5617b`;
-- eebusreg: `0e58327dfdb86ef243a19e18d590564813feaa00`.
+- docs-eebus: `9fc4b2a86424ac00075cf3bd3510918c3f9cefaf`;
+- eebusreg: `9fb73c5be17ceb28742c1428ef61a0c197cbc07d`.
 
 All three values are explicit immutable 40-hex commits. Each repository is
 checked out into a separate clean root and validated without sibling discovery
 or ambient checkout state. A missing, symbolic, moving, mismatched, dirty, or
-incorrect repository root is terminal. Dependency pins change only in the PR
-that owns the corresponding successor transition.
+incorrect repository root is terminal. This caller enforces
+`MSP-DOCS-CLEAN`; dependency pins change only in the PR that owns the
+corresponding successor transition.
 
 For pull requests, both Docs Checks and Combined Ref independently check out the
 trusted base at `github.event.pull_request.base.sha` into a sibling of the
