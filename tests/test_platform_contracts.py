@@ -1364,6 +1364,7 @@ def test_required_platform_artifacts_exist() -> None:
     assert all((REPO_ROOT / path).is_file() for path in CONTRACT_PAGES)
 
 
+# E2 promotion gate after helianthus-docs-eebus PR #9.
 def test_e2_architecture_entry_is_activated_in_place() -> None:
     manifest = repository_manifest()
     architecture = repository_entry(manifest, "eebus-architecture")
