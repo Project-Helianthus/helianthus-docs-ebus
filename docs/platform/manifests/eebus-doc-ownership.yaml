@@ -275,7 +275,7 @@ entries:
       repository: helianthus-eebusreg
       path: docs
     canonical: false
-    state: planned
+    state: withdrawn
     kind: absence_constraint
     forbidden_states:
       - candidate
@@ -283,14 +283,14 @@ entries:
       - canonical
     lifecycle:
       created_at: "2026-07-11T00:00:00Z"
-      expires_at: "2026-07-25T00:00:00Z"
-      source_issue: Project-Helianthus/helianthus-execution-plans#58
-      source_pr: null
-      source_ref: null
+      expires_at: null
+      source_issue: Project-Helianthus/helianthus-docs-ebus#349
+      source_pr: Project-Helianthus/helianthus-docs-ebus#350
+      source_ref: 9fb73c5be17ceb28742c1428ef61a0c197cbc07d
       content_sha256: null
       approved_at: null
       frozen_at: null
-      cleanup_required: false
+      cleanup_required: true
     enforcement:
       milestone: MSP-DOCS-CLEAN
       required_state: withdrawn
@@ -304,18 +304,18 @@ entries:
       repository: helianthus-docs-eebus
       path: README.md
     canonical: false
-    state: planned
+    state: active
     kind: summary_pointer
     target: eebus-architecture
     lifecycle:
       created_at: "2026-07-11T00:00:00Z"
-      expires_at: "2026-07-25T00:00:00Z"
-      source_issue: Project-Helianthus/helianthus-execution-plans#58
-      source_pr: null
-      source_ref: null
-      content_sha256: null
-      approved_at: null
-      frozen_at: null
+      expires_at: null
+      source_issue: Project-Helianthus/helianthus-docs-ebus#349
+      source_pr: Project-Helianthus/helianthus-docs-ebus#350
+      source_ref: 9fc4b2a86424ac00075cf3bd3510918c3f9cefaf
+      content_sha256: 2cbdf09619d7bdee2c6cc9c11495da15a04a1888309ea5df487c70c1a5c1eeba
+      approved_at: "2026-07-13T21:59:00Z"
+      frozen_at: "2026-07-13T21:59:00Z"
       cleanup_required: false
     enforcement:
       milestone: MSP-DOCS-CLEAN
