@@ -118,7 +118,7 @@ The current E2 enforcement state is:
 - `helianthus-eebusreg/docs` is `withdrawn` at `MSP-DOCS-CLEAN`;
 - the code-repository README is `active` only as the exact minimal
   summary-and-build pointer;
-- both CLEAN states are terminal inputs to successors and are validated against
+- both CLEAN states are required inputs to successors and are validated against
   the immutable eebusreg cleanup head.
 
 At CLEAN, the validator also scans documentation-like files throughout the
