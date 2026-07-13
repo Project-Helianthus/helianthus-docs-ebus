@@ -861,6 +861,8 @@ def publication_v2_manifest() -> dict[str, Any]:
     for item in manifest["entries"]:
         item.pop("outputs")
         item["kind"] = "canonical_document"
+        if item["lifecycle"]["source_ref"] == "__SOURCE_REF__":
+            item["lifecycle"]["source_ref"] = "0" * 40
 
     platform = by_surface["platform"]
     platform["kind"] = "canonical_collection"
@@ -874,7 +876,7 @@ def publication_v2_manifest() -> dict[str, Any]:
     summary = by_surface["summary_only"]
     summary["kind"] = "summary_pointer"
     summary["canonical"] = False
-    summary["target"] = by_surface["code_repo"]["id"]
+    summary["target"] = platform["id"]
 
     code_repo = by_surface["code_repo"]
     code_repo["kind"] = "absence_constraint"
@@ -909,6 +911,32 @@ def test_publication_v2_rejects_unregistered_eligible_channel() -> None:
 def test_publication_v2_rejects_exact_membership_drift() -> None:
     manifest = publication_v2_manifest()
     manifest["exact_memberships"][PUBLICATION_CHANNEL].pop()
+    assert load_validator()._schema_valid(manifest) is False
+
+
+def test_publication_v2_state_validation_is_end_to_end() -> None:
+    validator = load_validator()
+    manifest = publication_v2_manifest()
+    assert validator._manifest_categories(manifest) == set()
+    assert validator._state_categories(manifest, {}) == set()
+
+
+@pytest.mark.parametrize("surface", ("api", "summary_only", "code_repo"))
+def test_publication_v2_collection_rejects_noncanonical_members(
+    surface: str,
+) -> None:
+    manifest = publication_v2_manifest()
+    by_surface = {item["surface"]: item for item in manifest["entries"]}
+    collection = by_surface["platform"]
+    collection["members"] = sorted(collection["members"] + [by_surface[surface]["id"]])
+    assert load_validator()._schema_valid(manifest) is False
+
+
+@pytest.mark.parametrize("surface", ("api", "summary_only", "code_repo"))
+def test_publication_v2_summary_rejects_noncanonical_targets(surface: str) -> None:
+    manifest = publication_v2_manifest()
+    by_surface = {item["surface"]: item for item in manifest["entries"]}
+    by_surface["summary_only"]["target"] = by_surface[surface]["id"]
     assert load_validator()._schema_valid(manifest) is False
 
 
@@ -984,6 +1012,7 @@ def test_publication_combined_ref_cli_has_one_invocation_surface() -> None:
     assert "scripts/validate_platform_combined_ref.py" in local_ci
     assert "scripts/validate_platform_combined_ref.py" in makefile
     assert "scripts/validate_platform_combined_ref.py" in workflow
+    assert '--docs-eebus-ref "${PLATFORM_DOCS_EEBUS_REF}"' in local_ci
 
 
 def mark_manifest_entry_withdrawn(

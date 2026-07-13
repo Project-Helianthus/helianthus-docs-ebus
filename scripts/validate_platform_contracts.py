@@ -828,8 +828,23 @@ def _schema_valid_v2(manifest: Mapping[str, Any]) -> bool:
         if kind == "canonical_collection":
             if not _sorted_unique_names(entry["members"], ids - {entry_id}):
                 return False
+            if any(
+                entries_by_id[member]["kind"] != "canonical_document"
+                or entries_by_id[member]["state"] != "active"
+                or not entries_by_id[member]["canonical"]
+                for member in entry["members"]
+            ):
+                return False
         elif kind == "summary_pointer":
-            if entry["canonical"] or entry["target"] not in ids - {entry_id}:
+            target = entries_by_id.get(entry["target"])
+            if (
+                entry["canonical"]
+                or target is None
+                or target["kind"]
+                not in {"canonical_document", "canonical_collection"}
+                or target["state"] != "active"
+                or not target["canonical"]
+            ):
                 return False
         elif kind == "absence_constraint":
             if (
@@ -1021,6 +1036,7 @@ def _state_categories(
     refs: Mapping[str, str | None] | None = None,
 ) -> set[str]:
     categories: set[str] = set()
+    is_v2 = set(manifest) == TOP_FIELDS_V2
     for entry in manifest["entries"]:
         state = entry["state"]
         if state not in STATES:
@@ -1028,7 +1044,30 @@ def _state_categories(
             continue
 
         lifecycle = entry["lifecycle"]
-        outputs = entry["outputs"]
+        if is_v2:
+            eligible_channels = set(
+                manifest["eligible_channels"].get(entry["id"], [])
+            )
+            published_channels = {
+                channel
+                for channel, members in manifest["exact_memberships"].items()
+                if entry["id"] in members
+            }
+            stable_eligible = {
+                channel
+                for channel in eligible_channels
+                if manifest["channel_registry"][channel]["visibility"] == "stable"
+            }
+            candidate_eligible = eligible_channels - stable_eligible
+            has_publication = bool(eligible_channels or published_channels)
+        else:
+            outputs = entry["outputs"]
+            stable_eligible = {
+                key for key in STABLE_OUTPUTS if outputs[key]
+            }
+            candidate_eligible = {"candidate"} if outputs["candidate"] else set()
+            published_channels = stable_eligible | candidate_eligible
+            has_publication = any(outputs.values())
         created = _parse_instant(lifecycle["created_at"])
         expires = _parse_instant(lifecycle["expires_at"])
         approved = _parse_instant(lifecycle["approved_at"])
@@ -1040,7 +1079,7 @@ def _state_categories(
                 or expires is None
                 or expires - created != timedelta(days=14)
                 or entry["canonical"]
-                or any(outputs.values())
+                or has_publication
                 or not (lifecycle["source_issue"] or lifecycle["source_pr"])
                 or lifecycle["source_ref"] is not None
                 or lifecycle["content_sha256"] is not None
@@ -1062,8 +1101,9 @@ def _state_categories(
                 or expires is None
                 or expires - created != timedelta(days=30)
                 or entry["canonical"]
-                or outputs["candidate"] is not True
-                or any(outputs[key] for key in STABLE_OUTPUTS)
+                or (not is_v2 and not candidate_eligible)
+                or bool(stable_eligible)
+                or bool(published_channels - candidate_eligible)
                 or not hidden
                 or not lifecycle["source_pr"]
                 or not isinstance(source_ref, str)
@@ -1107,8 +1147,17 @@ def _state_categories(
                 or approved is None
                 or frozen is None
                 or not (created <= approved <= frozen)
-                or outputs["candidate"]
-                or any(not outputs[key] for key in STABLE_OUTPUTS)
+                or bool(candidate_eligible)
+                or (
+                    not is_v2
+                    and stable_eligible != STABLE_OUTPUTS
+                )
+                or (
+                    is_v2
+                    and entry["kind"]
+                    in {"canonical_document", "canonical_collection"}
+                    and not published_channels
+                )
                 or lifecycle["cleanup_required"]
             )
             if invalid:
@@ -1118,7 +1167,7 @@ def _state_categories(
             invalid = (
                 created is None
                 or entry["canonical"]
-                or any(outputs.values())
+                or has_publication
                 or lifecycle["expires_at"] is not None
                 or approved is not None
                 or frozen is not None
