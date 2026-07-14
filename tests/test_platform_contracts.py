@@ -33,8 +33,8 @@ PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
 CLEAN_STAGE = "MSP-DOCS-CLEAN"
 E2_DOCS_EEBUS_REF = "62e4c2f2022c22f5129db923079268aafdc5617b"
-CLEAN_DOCS_EEBUS_REF = "9fc4b2a86424ac00075cf3bd3510918c3f9cefaf"
-CLEAN_EEBUSREG_REF = "9fb73c5be17ceb28742c1428ef61a0c197cbc07d"
+CLEAN_DOCS_EEBUS_REF = "93097087611b3a7643e4f4a36679ea9742842190"
+CLEAN_EEBUSREG_REF = "d5fc5ae9914391534b5da9a3ae5565c5a54ec580"
 E2_SOURCE_ISSUE = "Project-Helianthus/helianthus-docs-eebus#8"
 E2_SOURCE_PR = "Project-Helianthus/helianthus-docs-eebus#9"
 E2_MERGED_AT = "2026-07-12T19:42:19Z"
@@ -72,6 +72,14 @@ CONTRACT_PAGES = (
     pathlib.Path("docs/platform/shared-registry-boundary.md"),
     pathlib.Path("docs/platform/promotion-and-consumer-contract.md"),
     pathlib.Path("docs/platform/ownership-validation.md"),
+)
+INTEROP_SMOKE_PATH = pathlib.Path("docs/platform/eebus-interop-smoke.md")
+INTEROP_REPORT_SHA256 = (
+    "fe3e3cde5287d1151d55654f42a77520cbe606801d4245b4ac1ef4b2794f05df"
+)
+INTEROP_PROTOCOL_COMPANION = (
+    "https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/"
+    f"{CLEAN_DOCS_EEBUS_REF}/protocols/ship-spine-overview.md"
 )
 PAGE_REQUIRED_TERMS = {
     pathlib.Path("docs/platform/cross-runtime-envelope.md"): (
@@ -2579,6 +2587,36 @@ def test_contract_page_contains_required_clauses(
 ) -> None:
     text = (REPO_ROOT / path).read_text(encoding="utf-8")
     assert [term for term in required_terms if term.casefold() not in text.casefold()] == []
+
+
+def test_interop_smoke_tracks_reviewed_g17_g19_cross_seed() -> None:
+    text = (REPO_ROOT / INTEROP_SMOKE_PATH).read_text(encoding="utf-8")
+    compact = " ".join(text.split())
+    required = (
+        "local Helianthus `_ship._tcp` announcement",
+        "independent LAN observer",
+        "myVaillant displays the corresponding trust visibility",
+        "exact `TTL=0`",
+        "never treats or describes VR940 as a SHIP server",
+        "VR940 acts as the client",
+        "inbound TCP acceptance by Helianthus",
+        "TLS completion on that connection",
+        "WebSocket completion on that connection",
+        "SHIP completion on that connection",
+        "first actual inbound SPINE payload",
+        "same live run and current connection generation",
+        "Live Authority",
+        "Deterministic Executable CI Replay Authority",
+        "Terminal Partial Or Negative Attempts",
+        f"sha256:{INTEROP_REPORT_SHA256}",
+        "does not complete G17 or G19",
+        "Project-Helianthus/helianthus-eebusreg#17",
+        "Project-Helianthus/helianthus-docs-eebus#13 reviewed content",
+        INTEROP_PROTOCOL_COMPANION,
+    )
+    assert [term for term in required if term not in compact] == []
+    assert "feature graph extraction" not in text
+    assert "A live VR940f/myVaillant device completes discovery" not in text
 
 
 def test_current_platform_fixture_passes_with_pre_e2_and_pre_clean_material(

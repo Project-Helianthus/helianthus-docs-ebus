@@ -143,18 +143,25 @@ membership remains excluded from every stable channel.
 ## Combined-Ref Pull Request Validation
 
 `Docs CI / Platform Contracts Combined Ref` is a required pull-request job. It
-checks out the current PR head SHA for docs-ebus and these merged dependency
+checks out the current PR head SHA for docs-ebus and these reviewed dependency
 commits:
 
-- docs-eebus: `9fc4b2a86424ac00075cf3bd3510918c3f9cefaf`;
-- eebusreg: `9fb73c5be17ceb28742c1428ef61a0c197cbc07d`.
+- docs-eebus: `93097087611b3a7643e4f4a36679ea9742842190`;
+  reviewed content from PR #13;
+- eebusreg: `d5fc5ae9914391534b5da9a3ae5565c5a54ec580`.
+  Reviewed implementation from
+  [PR #17](https://github.com/Project-Helianthus/helianthus-eebusreg/pull/17).
 
 All three values are explicit immutable 40-hex commits. Each repository is
 checked out into a separate clean root and validated without sibling discovery
 or ambient checkout state. A missing, symbolic, moving, mismatched, dirty, or
 incorrect repository root is terminal. This caller enforces
 `MSP-DOCS-CLEAN`; dependency pins change only in the PR that owns the
-corresponding successor transition.
+corresponding reviewed cross-repository transition.
+
+The G17/G19 cross-seed refresh changes only these Combined Ref inputs. It does
+not rewrite the manifest lifecycle source refs that preserve the earlier CLEAN
+transition and its immutable withdrawal tombstone.
 
 For pull requests, both Docs Checks and Combined Ref independently check out the
 trusted base at `github.event.pull_request.base.sha` into a sibling of the
