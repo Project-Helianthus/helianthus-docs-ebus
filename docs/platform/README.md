@@ -22,13 +22,16 @@ Current platform contracts:
 - [`eebus-raw-first-contract.md`](./eebus-raw-first-contract.md)
 - [`raw-correlation-and-leaf-promotion.md`](./raw-correlation-and-leaf-promotion.md)
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
-- [`eebus-interop-smoke.md`](./eebus-interop-smoke.md)
+- [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
+  evidence, authority, redaction, and promotion boundary
 
 The publication-contract v2 canonical collection is the exact foundational
 inventory of `cross-runtime-envelope.md`, `hash-auth-binding.md`,
 `shared-registry-boundary.md`, `promotion-and-consumer-contract.md`, and
 `ownership-validation.md`. The remaining pages are milestone-specific
-operational contracts and are not silently added to that collection.
+operational contracts and are not silently added to that collection. The
+G17/G19 smoke page cross-seeds only the platform evidence boundary; eeBUS-native
+transport evidence remains with the protocol-owned companion.
 
 The authoritative eeBUS ownership state is the versioned
 [`manifests/eebus-doc-ownership.yaml`](./manifests/eebus-doc-ownership.yaml)
