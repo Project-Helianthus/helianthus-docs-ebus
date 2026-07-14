@@ -148,7 +148,7 @@ commits:
 
 - docs-eebus: `93097087611b3a7643e4f4a36679ea9742842190`;
   reviewed content from PR #13;
-- eebusreg: `3726349cdde9eb64168d688d269f35e1937dc590`.
+- eebusreg: `1121511afaf8583c9aeb698ba6c6d2b0807673db`.
   Reviewed implementation from
   [PR #17](https://github.com/Project-Helianthus/helianthus-eebusreg/pull/17).
 
