@@ -10,7 +10,7 @@ Implementation provenance:
 - issue: [`#18`](https://github.com/Project-Helianthus/helianthus-eebusreg/issues/18);
 - code PR: [`#19`](https://github.com/Project-Helianthus/helianthus-eebusreg/pull/19);
 - required code commit:
-  [`e61b6b1e65f4fdc29a3ea41241f904983cdc810d`](https://github.com/Project-Helianthus/helianthus-eebusreg/commit/e61b6b1e65f4fdc29a3ea41241f904983cdc810d).
+  [`f0ed9ad277a469b5a64cd975f8ab2473d2d1c36a`](https://github.com/Project-Helianthus/helianthus-eebusreg/commit/f0ed9ad277a469b5a64cd975f8ab2473d2d1c36a).
 
 The field, enum, ordering, hashing, redaction, and boundary rules below are
 normative for that exact code revision. A later change to any frozen item
