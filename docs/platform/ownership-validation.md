@@ -146,10 +146,10 @@ membership remains excluded from every stable channel.
 checks out the current PR head SHA for docs-ebus and these reviewed dependency
 commits:
 
-- docs-eebus: `93097087611b3a7643e4f4a36679ea9742842190`;
-  reviewed content from PR #13;
-- eebusreg: `1121511afaf8583c9aeb698ba6c6d2b0807673db`.
-  Reviewed implementation from
+- docs-eebus: `b9413bda992b99e4f719ad2e26e1937ff11a5b4a`;
+  squash-merged content from PR #13;
+- eebusreg: `7c00bacbba34b796b79e64d7460cbeeb2f306553`.
+  Squash-merged implementation from
   [PR #17](https://github.com/Project-Helianthus/helianthus-eebusreg/pull/17).
 
 All three values are explicit immutable 40-hex commits. Each repository is

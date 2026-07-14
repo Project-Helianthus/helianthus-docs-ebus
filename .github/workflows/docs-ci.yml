@@ -201,6 +201,6 @@ jobs:
       docs_ebus_repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
       docs_ebus_ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       docs_ebus_base_ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-      docs_eebus_ref: 93097087611b3a7643e4f4a36679ea9742842190
-      eebusreg_ref: 1121511afaf8583c9aeb698ba6c6d2b0807673db
+      docs_eebus_ref: b9413bda992b99e4f719ad2e26e1937ff11a5b4a
+      eebusreg_ref: 7c00bacbba34b796b79e64d7460cbeeb2f306553
       enforce_through: MSP-DOCS-CLEAN

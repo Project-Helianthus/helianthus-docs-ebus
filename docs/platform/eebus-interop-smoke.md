@@ -9,7 +9,7 @@ Implementation companion:
 [Project-Helianthus/helianthus-eebusreg#17](https://github.com/Project-Helianthus/helianthus-eebusreg/pull/17).
 
 Protocol-owned companion:
-[Project-Helianthus/helianthus-docs-eebus#13 reviewed content](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/93097087611b3a7643e4f4a36679ea9742842190/protocols/ship-spine-overview.md).
+[Project-Helianthus/helianthus-docs-eebus#13 merged content](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/b9413bda992b99e4f719ad2e26e1937ff11a5b4a/protocols/ship-spine-overview.md).
 
 Implementation hook:
 `helianthus-eebusreg/internal/eebusinteropsmoke`.

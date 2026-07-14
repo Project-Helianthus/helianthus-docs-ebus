@@ -33,8 +33,8 @@ PLATFORM_STAGE = "MSP-DOCS-PLATFORM"
 E2_STAGE = "MSP-DOCS-E2"
 CLEAN_STAGE = "MSP-DOCS-CLEAN"
 E2_DOCS_EEBUS_REF = "62e4c2f2022c22f5129db923079268aafdc5617b"
-CLEAN_DOCS_EEBUS_REF = "93097087611b3a7643e4f4a36679ea9742842190"
-CLEAN_EEBUSREG_REF = "1121511afaf8583c9aeb698ba6c6d2b0807673db"
+CLEAN_DOCS_EEBUS_REF = "b9413bda992b99e4f719ad2e26e1937ff11a5b4a"
+CLEAN_EEBUSREG_REF = "7c00bacbba34b796b79e64d7460cbeeb2f306553"
 E2_SOURCE_ISSUE = "Project-Helianthus/helianthus-docs-eebus#8"
 E2_SOURCE_PR = "Project-Helianthus/helianthus-docs-eebus#9"
 E2_MERGED_AT = "2026-07-12T19:42:19Z"
@@ -2611,7 +2611,7 @@ def test_interop_smoke_tracks_reviewed_g17_g19_cross_seed() -> None:
         f"sha256:{INTEROP_REPORT_SHA256}",
         "does not complete G17 or G19",
         "Project-Helianthus/helianthus-eebusreg#17",
-        "Project-Helianthus/helianthus-docs-eebus#13 reviewed content",
+        "Project-Helianthus/helianthus-docs-eebus#13 merged content",
         INTEROP_PROTOCOL_COMPANION,
     )
     assert [term for term in required if term not in compact] == []
