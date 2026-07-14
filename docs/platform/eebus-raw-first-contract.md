@@ -55,3 +55,6 @@ The canonical Home Assistant runtime networking proof gate is
 
 The canonical fake-peer and live VR940f smoke gate is
 [`eebus-interop-smoke.md`](./eebus-interop-smoke.md).
+
+The M3.5 raw identity, snapshot-envelope, and evidence-object freeze is
+[`eebus-raw-runtime-freeze.md`](./eebus-raw-runtime-freeze.md).

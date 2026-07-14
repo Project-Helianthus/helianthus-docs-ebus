@@ -20,6 +20,8 @@ Current platform contracts:
 - [`ownership-validation.md`](./ownership-validation.md)
 - [`ownership-and-doc-gates.md`](./ownership-and-doc-gates.md)
 - [`eebus-raw-first-contract.md`](./eebus-raw-first-contract.md)
+- [`eebus-raw-runtime-freeze.md`](./eebus-raw-runtime-freeze.md) - M3.5
+  identity, snapshot-envelope, and evidence-object freeze boundary
 - [`raw-correlation-and-leaf-promotion.md`](./raw-correlation-and-leaf-promotion.md)
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
