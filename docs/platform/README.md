@@ -25,6 +25,8 @@ Current platform contracts:
 - [`raw-correlation-and-leaf-promotion.md`](./raw-correlation-and-leaf-promotion.md)
 - [`synchronized-evidence-bundle-v1.md`](./synchronized-evidence-bundle-v1.md) -
   MSP-065 closed synchronized capture and deterministic offline replay contract
+- [`draft-candidate-fact-graph-v1.md`](./draft-candidate-fact-graph-v1.md) -
+  MSP-07 closed M7 candidate-only fact graph and deterministic replay contract
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary
