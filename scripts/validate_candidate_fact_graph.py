@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Offline verifier and deterministic replayer for the M7 candidate fact graph."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,7 +10,7 @@ import json
 import pathlib
 import re
 import sys
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_EVEN, localcontext
 from typing import Any
 
 
@@ -21,20 +23,29 @@ import validate_synchronized_evidence as synchronized
 GRAPH_CONTRACT = "helianthus.platform.draft-candidate-fact-graph.v1"
 REGISTRY_CONTRACT = "helianthus.platform.draft-candidate-fact-registry.v1"
 SOURCE_CONTRACT = "helianthus.platform.synchronized-evidence-bundle.v1"
-NEGATIVE_FIXTURE_CONTRACT = (
-    "helianthus.platform.draft-candidate-fact-negative-fixture.v1"
-)
 FACT_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT:V1"
 GRAPH_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT-GRAPH:V1"
 REPLAY_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT-REPLAY:V1"
 SOURCE_REPLAY_DOMAIN = b"HELIANTHUS:SYNCHRONIZED-EVIDENCE-REPLAY:V1"
-SAFE_INTEGER = 9007199254740991
+SAFE_INTEGER = 9_007_199_254_740_991
+HARD_LIMITS = {
+    "max_graph_bytes": 1_048_576,
+    "max_depth": 32,
+    "max_facts": 64,
+    "max_evidence_refs_per_fact": 16,
+    "max_samples_per_comparator": 1024,
+    "max_string_bytes": 4096,
+    "max_path_segments": 32,
+    "max_total_members": 16_384,
+    "max_total_list_items": 8192,
+}
 DECIMAL_RE = re.compile(r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$")
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 GRAPH_ID_RE = re.compile(r"^dcfgv1:sha256:[0-9a-f]{64}$")
 BUNDLE_ID_RE = re.compile(r"^sebv1:sha256:[0-9a-f]{64}$")
 CANDIDATE_ID_RE = re.compile(r"^m7-candidate-[0-9]{4}$")
 PATH_RE = re.compile(r"^/[a-z0-9_]+(?:/[a-z0-9_]+)*$")
+PUBLIC_EVIDENCE_RE = re.compile(r"^public-evidence:sha256:[0-9a-f]{64}$")
 
 ROOT_KEYS = {
     "contract",
@@ -48,58 +59,6 @@ ROOT_KEYS = {
     "comparator_drafts",
     "facts",
 }
-REGISTRY_BINDING_KEYS = {"contract", "version", "digest"}
-SOURCE_BUNDLE_KEYS = {
-    "contract",
-    "schema_version",
-    "bundle_id",
-    "bundle_hash",
-    "replay_hash",
-    "evidence_refs",
-}
-VISIBILITY_KEYS = {
-    "channel",
-    "promotion_state",
-    "stable_exposure",
-    "command_capable",
-    "protocol_translation",
-}
-LIMIT_KEYS = {
-    "max_graph_bytes",
-    "max_depth",
-    "max_facts",
-    "max_evidence_refs_per_fact",
-    "max_samples_per_comparator",
-    "max_string_bytes",
-    "max_path_segments",
-}
-COMPARATOR_DRAFT_KEYS = {"draft_id", "type", "parameters"}
-PARAMETER_KEYS = {
-    "window",
-    "tolerance",
-    "unit_conversion",
-    "rounding",
-    "minimum_samples",
-    "maximum_missing_samples",
-    "stale_cutoff_ns",
-    "conflict_threshold",
-}
-FACT_KEYS = {
-    "candidate_id",
-    "proposed_path",
-    "draft_value",
-    "draft_unit",
-    "status",
-    "terminal_negative_state",
-    "confidence",
-    "provenance",
-    "comparator",
-    "falsifier",
-    "retest_trigger",
-    "debug_only",
-    "fact_hash",
-}
-CONFIDENCE_KEYS = {"level", "basis", "score_milli"}
 PROVENANCE_KEYS = {
     "source_bundle_id",
     "native_evidence_refs",
@@ -108,13 +67,10 @@ PROVENANCE_KEYS = {
     "ebus",
     "eebus_source_id",
     "eebus_artifact_id",
+    "eebus_service",
     "eebus",
     "cloud",
 }
-COMPARATOR_KEYS = {"draft_id", "samples", "outcome"}
-SAMPLE_KEYS = {"offset_ns", "left_decimal", "right_decimal", "state"}
-FALSIFIER_KEYS = {"condition_code", "expected_terminal_state", "description"}
-RETEST_KEYS = {"trigger_code", "required_source_kinds", "minimum_new_samples"}
 EVIDENCE_REF_KEYS = {
     "kind",
     "digest_algorithm",
@@ -123,6 +79,31 @@ EVIDENCE_REF_KEYS = {
     "commit",
     "path",
 }
+OBSERVATION_BINDING_KEYS = {
+    "source_kind",
+    "source_id",
+    "artifact_id",
+    "evidence_ref",
+    "observed_offset_ns",
+    "value_pointer",
+    "unit_pointer",
+    "native_decimal",
+    "native_unit",
+}
+VALIDATION_PRECEDENCE = [
+    "json.syntax",
+    "schema.graph",
+    "limits.exceeded",
+    "registry.binding",
+    "provenance.binding",
+    "identity.native",
+    "ordering.invalid",
+    "state.terminal",
+    "comparator.invalid",
+    "anti_leak.consumer",
+    "hash.fact",
+    "hash.graph",
+]
 
 
 class Failure(Exception):
@@ -133,54 +114,206 @@ def fail(category: str) -> None:
     raise Failure(category)
 
 
-def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    result: dict[str, Any] = {}
-    for key, value in pairs:
-        if key in result:
-            fail("json.syntax")
-        result[key] = value
-    return result
+def _input_category(input_kind: str) -> str:
+    return {
+        "graph": "json.syntax",
+        "registry": "registry.binding",
+        "source": "provenance.binding",
+    }[input_kind]
 
 
-def reject_float(_: str) -> None:
-    fail("json.syntax")
+def _bounded_preflight(raw: bytes, limits: dict[str, int]) -> None:
+    """Bound allocation drivers before Python's recursive decoder is entered."""
+    if len(raw) > limits["max_graph_bytes"]:
+        fail("limits.exceeded")
+    depth = 0
+    members = 0
+    list_items = 0
+    in_string = False
+    escaped = False
+    string_bytes = 0
+    stack: list[dict[str, Any]] = []
+
+    def mark_list_value() -> None:
+        nonlocal list_items
+        if stack and stack[-1]["kind"] == "list" and stack[-1]["expecting"]:
+            stack[-1]["expecting"] = False
+            stack[-1]["items"] += 1
+            list_items += 1
+            if (
+                stack[-1]["items"] > limits["max_samples_per_comparator"]
+                or list_items > limits["max_total_list_items"]
+            ):
+                fail("limits.exceeded")
+
+    index = 0
+    while index < len(raw):
+        byte = raw[index]
+        if in_string:
+            if escaped:
+                escaped = False
+                string_bytes += 1
+            elif byte == 0x5C:
+                escaped = True
+                string_bytes += 1
+            elif byte == 0x22:
+                in_string = False
+            else:
+                string_bytes += 1
+            if string_bytes > limits["max_string_bytes"]:
+                fail("limits.exceeded")
+            index += 1
+            continue
+        if byte in b" \t\r\n":
+            index += 1
+            continue
+        if byte == 0x22:
+            mark_list_value()
+            in_string = True
+            string_bytes = 0
+        elif byte in (0x7B, 0x5B):
+            mark_list_value()
+            depth += 1
+            if depth > limits["max_depth"]:
+                fail("limits.exceeded")
+            stack.append(
+                {
+                    "kind": "list" if byte == 0x5B else "object",
+                    "expecting": byte == 0x5B,
+                    "items": 0,
+                }
+            )
+        elif byte in (0x7D, 0x5D):
+            depth -= 1
+            if depth < 0 or not stack:
+                return
+            stack.pop()
+        elif byte == 0x3A:
+            members += 1
+            if members > limits["max_total_members"]:
+                fail("limits.exceeded")
+        elif byte == 0x2C:
+            if stack and stack[-1]["kind"] == "list":
+                stack[-1]["expecting"] = True
+        else:
+            mark_list_value()
+        index += 1
 
 
-def load_json(path: pathlib.Path) -> tuple[Any, bytes]:
+def _parse_integer(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError:
+        fail("json.syntax")
+    if abs(parsed) > SAFE_INTEGER:
+        fail("json.syntax")
+    return parsed
+
+
+def load_json(path: pathlib.Path, *, input_kind: str = "graph") -> tuple[Any, bytes]:
+    category = _input_category(input_kind)
     try:
         raw = path.read_bytes()
     except OSError:
-        fail("json.syntax")
+        fail(category)
+    try:
+        if input_kind in {"graph", "registry"}:
+            _bounded_preflight(raw, HARD_LIMITS)
+        else:
+            synchronized.preflight_json_bytes(raw)
+    except (Failure, synchronized.Failure):
+        if input_kind == "graph":
+            raise
+        fail(category)
     if re.search(rb"(?<![0-9A-Za-z_])-0(?:[^0-9.]|$)", raw):
-        fail("json.syntax")
+        fail(category)
+
+    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                fail(category)
+            result[key] = value
+        return result
+
+    def reject_non_integer(_: str) -> None:
+        fail(category)
+
     try:
         value = json.loads(
             raw.decode("utf-8"),
             object_pairs_hook=reject_duplicate_keys,
-            parse_float=reject_float,
-            parse_constant=reject_float,
+            parse_int=_parse_integer if input_kind == "graph" else int,
+            parse_float=reject_non_integer if input_kind == "graph" else float,
+            parse_constant=reject_non_integer,
         )
     except Failure:
         raise
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        fail("json.syntax")
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
+        fail(category)
     return value, raw
 
 
-def exact_keys(value: Any, expected: set[str]) -> None:
+def exact_keys(value: Any, expected: set[str], category: str) -> None:
     if not isinstance(value, dict) or set(value) != expected:
-        fail("schema.graph")
+        fail(category)
+
+
+def check_portable(value: Any, limits: dict[str, int] = HARD_LIMITS) -> None:
+    members = 0
+    list_items = 0
+    stack: list[tuple[Any, int]] = [(value, 1)]
+    while stack:
+        current, depth = stack.pop()
+        if current is None or isinstance(current, bool):
+            continue
+        if isinstance(current, int):
+            if abs(current) > SAFE_INTEGER:
+                fail("json.syntax")
+            continue
+        if isinstance(current, float):
+            fail("json.syntax")
+        if isinstance(current, str):
+            if len(current.encode("utf-8")) > limits["max_string_bytes"] or "\x00" in current:
+                fail("limits.exceeded")
+            continue
+        if isinstance(current, list):
+            if depth > limits["max_depth"]:
+                fail("limits.exceeded")
+            if len(current) > limits["max_samples_per_comparator"]:
+                fail("limits.exceeded")
+            list_items += len(current)
+            if list_items > limits["max_total_list_items"]:
+                fail("limits.exceeded")
+            stack.extend((item, depth + 1) for item in reversed(current))
+            continue
+        if isinstance(current, dict):
+            if depth > limits["max_depth"]:
+                fail("limits.exceeded")
+            members += len(current)
+            if members > limits["max_total_members"]:
+                fail("limits.exceeded")
+            for key, item in reversed(list(current.items())):
+                if not isinstance(key, str):
+                    fail("json.syntax")
+                stack.append((item, depth + 1))
+                stack.append((key, depth + 1))
+            continue
+        fail("json.syntax")
 
 
 def canonical(value: Any) -> bytes:
-    check_portable(value, 0, {"max_depth": 32, "max_string_bytes": 4096})
-    return json.dumps(
+    check_portable(value)
+    encoded = json.dumps(
         value,
         ensure_ascii=False,
         allow_nan=False,
         separators=(",", ":"),
         sort_keys=True,
     ).encode("utf-8")
+    if len(encoded) > HARD_LIMITS["max_graph_bytes"]:
+        fail("limits.exceeded")
+    return encoded
 
 
 def digest(domain: bytes, value: Any) -> str:
@@ -188,13 +321,20 @@ def digest(domain: bytes, value: Any) -> str:
 
 
 def fact_hexdigest(fact: dict[str, Any]) -> str:
-    return digest(FACT_DOMAIN, {key: value for key, value in fact.items() if key != "fact_hash"})
+    return digest(
+        FACT_DOMAIN,
+        {key: value for key, value in fact.items() if key != "fact_hash"},
+    )
 
 
 def graph_hexdigest(graph: dict[str, Any]) -> str:
     return digest(
         GRAPH_DOMAIN,
-        {key: value for key, value in graph.items() if key not in {"graph_id", "graph_hash"}},
+        {
+            key: value
+            for key, value in graph.items()
+            if key not in {"graph_id", "graph_hash"}
+        },
     )
 
 
@@ -204,86 +344,121 @@ def source_replay_hexdigest(value: Any) -> str:
     ).hexdigest()
 
 
-def check_portable(value: Any, depth: int, limits: dict[str, int]) -> None:
-    if depth > limits["max_depth"]:
-        fail("limits.exceeded")
-    if value is None or isinstance(value, bool):
-        return
-    if isinstance(value, int):
-        if abs(value) > SAFE_INTEGER:
-            fail("json.syntax")
-        return
-    if isinstance(value, float):
-        fail("json.syntax")
+def _is_schema_type(value: Any, expected: str) -> bool:
+    return {
+        "object": isinstance(value, dict),
+        "array": isinstance(value, list),
+        "string": isinstance(value, str),
+        "integer": isinstance(value, int) and not isinstance(value, bool),
+        "boolean": isinstance(value, bool),
+        "null": value is None,
+    }.get(expected, False)
+
+
+def _schema_validate(value: Any, rule: dict[str, Any], root: dict[str, Any]) -> bool:
+    if "$ref" in rule:
+        prefix = "#/$defs/"
+        reference = rule["$ref"]
+        if not isinstance(reference, str) or not reference.startswith(prefix):
+            return False
+        target = root.get("$defs", {}).get(reference.removeprefix(prefix))
+        return isinstance(target, dict) and _schema_validate(value, target, root)
+    if "oneOf" in rule:
+        return sum(_schema_validate(value, item, root) for item in rule["oneOf"]) == 1
+    if "anyOf" in rule and not any(
+        _schema_validate(value, item, root) for item in rule["anyOf"]
+    ):
+        return False
+    if "allOf" in rule and not all(
+        _schema_validate(value, item, root) for item in rule["allOf"]
+    ):
+        return False
+    expected_type = rule.get("type")
+    if expected_type is not None:
+        if isinstance(expected_type, list):
+            if not any(_is_schema_type(value, item) for item in expected_type):
+                return False
+        elif not _is_schema_type(value, expected_type):
+            return False
+    if "const" in rule and value != rule["const"]:
+        return False
+    if "enum" in rule and value not in rule["enum"]:
+        return False
     if isinstance(value, str):
-        if len(value.encode("utf-8")) > limits["max_string_bytes"] or "\x00" in value:
-            fail("limits.exceeded")
-        return
+        if len(value) < rule.get("minLength", 0) or len(value) > rule.get(
+            "maxLength", SAFE_INTEGER
+        ):
+            return False
+        if "pattern" in rule and re.fullmatch(rule["pattern"], value) is None:
+            return False
+    if isinstance(value, int) and not isinstance(value, bool):
+        if value < rule.get("minimum", -SAFE_INTEGER) or value > rule.get(
+            "maximum", SAFE_INTEGER
+        ):
+            return False
     if isinstance(value, list):
-        for item in value:
-            check_portable(item, depth + 1, limits)
-        return
+        if len(value) < rule.get("minItems", 0) or len(value) > rule.get(
+            "maxItems", SAFE_INTEGER
+        ):
+            return False
+        if rule.get("uniqueItems"):
+            encoded = [
+                json.dumps(item, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+                for item in value
+            ]
+            if len(encoded) != len(set(encoded)):
+                return False
+        item_rule = rule.get("items")
+        if item_rule is not None and not all(
+            _schema_validate(item, item_rule, root) for item in value
+        ):
+            return False
     if isinstance(value, dict):
+        required = rule.get("required", [])
+        if not isinstance(required, list) or not set(required) <= set(value):
+            return False
+        properties = rule.get("properties", {})
+        if rule.get("additionalProperties") is False and not set(value) <= set(properties):
+            return False
         for key, item in value.items():
-            if not isinstance(key, str):
-                fail("json.syntax")
-            check_portable(key, depth + 1, limits)
-            check_portable(item, depth + 1, limits)
-        return
-    fail("json.syntax")
+            if key in properties and not _schema_validate(item, properties[key], root):
+                return False
+    return True
 
 
 def schema_check(graph: Any) -> None:
-    exact_keys(graph, ROOT_KEYS)
-    if graph["contract"] != GRAPH_CONTRACT or graph["schema_version"] != 1:
+    schema_path = (
+        SCRIPT_ROOT.parent
+        / "docs/platform/schemas/draft-candidate-fact-graph-v1.schema.json"
+    )
+    try:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
         fail("schema.graph")
-    if not isinstance(graph["graph_id"], str) or not GRAPH_ID_RE.fullmatch(graph["graph_id"]):
+    if not _schema_validate(graph, schema, schema):
         fail("schema.graph")
-    if not isinstance(graph["graph_hash"], str) or not DIGEST_RE.fullmatch(graph["graph_hash"]):
-        fail("schema.graph")
-    exact_keys(graph["registry"], REGISTRY_BINDING_KEYS)
-    exact_keys(graph["source_bundle"], SOURCE_BUNDLE_KEYS)
-    exact_keys(graph["visibility"], VISIBILITY_KEYS)
-    exact_keys(graph["limits"], LIMIT_KEYS)
-    if not isinstance(graph["comparator_drafts"], list) or not graph["comparator_drafts"]:
-        fail("schema.graph")
-    if not isinstance(graph["facts"], list) or not graph["facts"]:
-        fail("schema.graph")
-    for draft in graph["comparator_drafts"]:
-        exact_keys(draft, COMPARATOR_DRAFT_KEYS)
-        exact_keys(draft["parameters"], PARAMETER_KEYS)
-    for fact in graph["facts"]:
-        exact_keys(fact, FACT_KEYS)
-        exact_keys(fact["confidence"], CONFIDENCE_KEYS)
-        exact_keys(fact["provenance"], PROVENANCE_KEYS)
-        exact_keys(fact["comparator"], COMPARATOR_KEYS)
-        exact_keys(fact["falsifier"], FALSIFIER_KEYS)
-        exact_keys(fact["retest_trigger"], RETEST_KEYS)
-        if not isinstance(fact["comparator"]["samples"], list):
-            fail("schema.graph")
-        for sample in fact["comparator"]["samples"]:
-            exact_keys(sample, SAMPLE_KEYS)
 
 
-def check_limits(graph: dict[str, Any], registry: dict[str, Any], raw_size: int) -> None:
-    limits = graph["limits"]
-    if limits != registry.get("limits"):
+def check_limits(graph: dict[str, Any], raw_size: int) -> None:
+    if graph["limits"] != HARD_LIMITS or raw_size > HARD_LIMITS["max_graph_bytes"]:
         fail("limits.exceeded")
-    if raw_size > limits["max_graph_bytes"] or len(graph["facts"]) > limits["max_facts"]:
+    check_portable(graph, HARD_LIMITS)
+    if len(graph["facts"]) > HARD_LIMITS["max_facts"]:
         fail("limits.exceeded")
-    check_portable(graph, 0, limits)
     for fact in graph["facts"]:
-        if len(fact["provenance"]["native_evidence_refs"]) > limits["max_evidence_refs_per_fact"]:
-            fail("limits.exceeded")
-        if len(fact["comparator"]["samples"]) > limits["max_samples_per_comparator"]:
-            fail("limits.exceeded")
-        path_segments = [part for part in fact["proposed_path"].split("/") if part]
-        if len(path_segments) > limits["max_path_segments"]:
+        if (
+            len(fact["provenance"]["native_evidence_refs"])
+            > HARD_LIMITS["max_evidence_refs_per_fact"]
+            or len(fact["comparator"]["samples"])
+            > HARD_LIMITS["max_samples_per_comparator"]
+            or len([part for part in fact["proposed_path"].split("/") if part])
+            > HARD_LIMITS["max_path_segments"]
+        ):
             fail("limits.exceeded")
 
 
 def check_registry_binding(
-    graph: dict[str, Any], registry: dict[str, Any], registry_raw: bytes
+    graph: dict[str, Any], registry: Any, registry_raw: bytes
 ) -> None:
     binding = graph["registry"]
     expected_digest = "sha256:" + hashlib.sha256(registry_raw).hexdigest()
@@ -308,23 +483,107 @@ def check_registry_binding(
     }
     if not isinstance(registry, dict) or set(registry) != expected_top:
         fail("registry.binding")
-    if registry["contract"] != REGISTRY_CONTRACT or registry["version"] != 1:
-        fail("registry.binding")
-    if registry["candidate_contract"].get("contract") != GRAPH_CONTRACT:
-        fail("registry.binding")
-    if registry["source_contract"].get("contract") != SOURCE_CONTRACT:
-        fail("registry.binding")
     if (
-        registry["source_contract"].get("replay_digest_algorithm")
-        != "SHA256_JCS_DOMAIN_V1"
-        or registry["source_contract"].get("replay_digest_domain")
-        != SOURCE_REPLAY_DOMAIN.decode("ascii")
+        registry["contract"] != REGISTRY_CONTRACT
+        or registry["version"] != 1
+        or registry["candidate_contract"]
+        != {
+            "contract": GRAPH_CONTRACT,
+            "schema_version": 1,
+            "schema_path": "docs/platform/schemas/draft-candidate-fact-graph-v1.schema.json",
+            "replay_contract": "helianthus.platform.draft-candidate-fact-replay.v1",
+            "replay_schema_path": "docs/platform/schemas/draft-candidate-fact-replay-v1.schema.json",
+        }
+        or registry["statuses"]
+        != ["RAW_ONLY", "CANDIDATE", "CONFLICTED", "WITHHELD"]
+        or registry["terminal_negative_states"]
+        != ["NO_SIGNAL", "CLOUD_ONLY", "CONFLICT", "NOT_TESTED"]
+        or registry["candidate_channel"] != "CANDIDATE_DEBUG_REPLAY"
+        or registry["validation_precedence"] != VALIDATION_PRECEDENCE
+        or registry["limits"] != HARD_LIMITS
     ):
+        fail("registry.binding")
+    comparators = registry["comparators"]
+    if (
+        not isinstance(comparators, list)
+        or len(comparators) != 1
+        or comparators[0]
+        != {
+            "draft_id": "NUMERIC_WINDOW_V1_DRAFT",
+            "type": "NUMERIC_WINDOW",
+            "required_parameters": [
+                "window",
+                "tolerance",
+                "unit_conversion",
+                "rounding",
+                "minimum_samples",
+                "maximum_missing_samples",
+                "stale_cutoff_ns",
+                "conflict_threshold",
+            ],
+            "outcomes": [
+                "MATCH",
+                "MISMATCH",
+                "CONFLICT",
+                "INDETERMINATE",
+                "NOT_EVALUATED",
+            ],
+        }
+    ):
+        fail("registry.binding")
+    source_contract = registry["source_contract"]
+    if (
+        not isinstance(source_contract, dict)
+        or set(source_contract)
+        != {
+            "contract",
+            "schema_version",
+            "owner_repository",
+            "owner_commit",
+            "schema_path",
+            "schema_sha256",
+            "source_registry_path",
+            "source_registry_sha256",
+            "replay_digest_algorithm",
+            "replay_digest_domain",
+        }
+        or source_contract.get("contract") != SOURCE_CONTRACT
+        or source_contract.get("schema_version") != 1
+        or not _ascii_token(source_contract.get("owner_repository"))
+        or re.fullmatch(r"[0-9a-f]{40}", source_contract.get("owner_commit", ""))
+        is None
+        or not _ascii_token(source_contract.get("schema_path"), maximum=512)
+        or re.fullmatch(r"[0-9a-f]{64}", source_contract.get("schema_sha256", ""))
+        is None
+        or source_contract.get("replay_digest_algorithm") != "SHA256_JCS_DOMAIN_V1"
+        or source_contract.get("replay_digest_domain")
+        != SOURCE_REPLAY_DOMAIN.decode("ascii")
+        or not isinstance(source_contract.get("source_registry_path"), str)
+        or not re.fullmatch(
+            r"[0-9a-f]{64}", source_contract.get("source_registry_sha256", "")
+        )
+    ):
+        fail("registry.binding")
+    forbidden = registry["forbidden_surfaces"]
+    if forbidden != [
+        "STABLE_DOC_NAVIGATION",
+        "STABLE_DOC_SEARCH",
+        "STABLE_DOC_SITEMAP",
+        "VERSIONED_DOC_BUNDLE",
+        "RELEASE_DOC_BUNDLE",
+        "EBUS_V1_MCP",
+        "GRAPHQL",
+        "PORTAL",
+        "HOME_ASSISTANT",
+        "COMMAND_ROUTING",
+        "PROMOTED_SEMANTICS",
+        "STABLE_SEMANTIC_REGISTRY",
+    ]:
         fail("registry.binding")
 
 
 def validate_evidence_ref(ref: Any) -> None:
-    exact_keys(ref, EVIDENCE_REF_KEYS)
+    exact_keys(ref, EVIDENCE_REF_KEYS, "provenance.binding")
     if not isinstance(ref["digest"], str) or not DIGEST_RE.fullmatch(ref["digest"]):
         fail("provenance.binding")
     if ref["kind"] == "CONTENT":
@@ -338,10 +597,10 @@ def validate_evidence_ref(ref: Any) -> None:
     elif ref["kind"] == "GIT_BLOB":
         if (
             ref["digest_algorithm"] != "SHA256_GIT_BLOB_V1"
-            or not isinstance(ref["repository"], str)
+            or not _ascii_token(ref["repository"])
             or not isinstance(ref["commit"], str)
-            or not re.fullmatch(r"[0-9a-f]{40}", ref["commit"])
-            or not isinstance(ref["path"], str)
+            or re.fullmatch(r"[0-9a-f]{40}", ref["commit"]) is None
+            or not _ascii_token(ref["path"], maximum=512)
         ):
             fail("provenance.binding")
     else:
@@ -355,6 +614,45 @@ def ref_sort_key(ref: dict[str, Any]) -> tuple[Any, ...]:
     )
 
 
+def _artifact_index(source_bundle: dict[str, Any]) -> dict[tuple[str, str], dict[str, Any]]:
+    return {
+        (artifact["source_id"], artifact["artifact_id"]): artifact
+        for artifact in source_bundle["artifacts"]
+    }
+
+
+def _check_sample_provenance(
+    fact: dict[str, Any], artifacts: dict[tuple[str, str], dict[str, Any]]
+) -> None:
+    provenance = fact["provenance"]
+    fact_refs = {canonical(ref) for ref in provenance["native_evidence_refs"]}
+    for sample in fact["comparator"]["samples"]:
+        for side_name, expected_kind, source_field, artifact_field in (
+            ("left", "EBUS", "ebus_source_id", "ebus_artifact_id"),
+            ("right", "EEBUS", "eebus_source_id", "eebus_artifact_id"),
+        ):
+            side = sample[side_name]
+            expected_pair = (
+                provenance[source_field],
+                provenance[artifact_field],
+            )
+            actual_pair = (side["source_id"], side["artifact_id"])
+            artifact = artifacts.get(actual_pair)
+            encoded_ref = canonical(side["evidence_ref"])
+            if (
+                side["source_kind"] != expected_kind
+                or None in expected_pair
+                or actual_pair != expected_pair
+                or artifact is None
+                or artifact["source_kind"] != expected_kind
+                or encoded_ref not in fact_refs
+                or not any(
+                    encoded_ref == canonical(ref) for ref in artifact["evidence_refs"]
+                )
+            ):
+                fail("provenance.binding")
+
+
 def check_provenance(
     graph: dict[str, Any],
     registry: dict[str, Any],
@@ -362,20 +660,6 @@ def check_provenance(
     source_replay: dict[str, Any],
 ) -> None:
     bundle = graph["source_bundle"]
-    if (
-        bundle["contract"] != registry["source_contract"]["contract"]
-        or bundle["schema_version"] != registry["source_contract"]["schema_version"]
-        or not isinstance(bundle["bundle_id"], str)
-        or not BUNDLE_ID_RE.fullmatch(bundle["bundle_id"])
-        or not isinstance(bundle["bundle_hash"], str)
-        or not DIGEST_RE.fullmatch(bundle["bundle_hash"])
-        or bundle["bundle_id"].removeprefix("sebv1:") != bundle["bundle_hash"]
-        or not isinstance(bundle["replay_hash"], str)
-        or not DIGEST_RE.fullmatch(bundle["replay_hash"])
-        or not isinstance(bundle["evidence_refs"], list)
-        or not bundle["evidence_refs"]
-    ):
-        fail("provenance.binding")
     expected_source_binding = {
         "contract": source_bundle["contract"],
         "schema_version": source_bundle["schema_version"],
@@ -384,7 +668,12 @@ def check_provenance(
         "replay_hash": "sha256:" + source_replay_hexdigest(source_replay),
         "evidence_refs": source_bundle["evidence_refs"],
     }
-    if bundle != expected_source_binding:
+    if (
+        bundle != expected_source_binding
+        or bundle["contract"] != registry["source_contract"]["contract"]
+        or not BUNDLE_ID_RE.fullmatch(bundle["bundle_id"])
+        or bundle["bundle_id"].removeprefix("sebv1:") != bundle["bundle_hash"]
+    ):
         fail("provenance.binding")
     root_refs: set[bytes] = set()
     for ref in bundle["evidence_refs"]:
@@ -394,12 +683,10 @@ def check_provenance(
             fail("provenance.binding")
         root_refs.add(encoded)
     sources = {source["source_id"]: source for source in source_bundle["sources"]}
-    artifacts = {
-        (artifact["source_id"], artifact["artifact_id"]): artifact
-        for artifact in source_bundle["artifacts"]
-    }
+    artifacts = _artifact_index(source_bundle)
     for fact in graph["facts"]:
         provenance = fact["provenance"]
+        exact_keys(provenance, PROVENANCE_KEYS, "provenance.binding")
         if provenance["source_bundle_id"] != bundle["bundle_id"]:
             fail("provenance.binding")
         refs = provenance["native_evidence_refs"]
@@ -412,7 +699,7 @@ def check_provenance(
             if encoded not in root_refs or encoded in seen:
                 fail("provenance.binding")
             seen.add(encoded)
-        referenced_artifacts: list[dict[str, Any]] = []
+        referenced: list[dict[str, Any]] = []
         for source_field, artifact_field, expected_kind in (
             ("ebus_source_id", "ebus_artifact_id", "EBUS"),
             ("eebus_source_id", "eebus_artifact_id", "EEBUS"),
@@ -424,42 +711,66 @@ def check_provenance(
             source = sources.get(source_id)
             artifact = artifacts.get((source_id, artifact_id))
             if (
-                source is None
+                source_id is None
+                or artifact_id is None
+                or source is None
                 or artifact is None
                 or source["source_kind"] != expected_kind
                 or artifact["source_kind"] != expected_kind
                 or artifact_id not in source["artifact_ids"]
             ):
                 fail("provenance.binding")
-            referenced_artifacts.append(artifact)
+            referenced.append(artifact)
         cloud = provenance["cloud"]
         if cloud is not None:
-            source = sources.get(cloud.get("source_id")) if isinstance(cloud, dict) else None
-            artifact = artifacts.get((cloud.get("source_id"), cloud.get("artifact_id"))) if isinstance(cloud, dict) else None
+            source = sources.get(cloud["source_id"])
+            artifact = artifacts.get((cloud["source_id"], cloud["artifact_id"]))
             if (
                 source is None
                 or artifact is None
                 or source["source_kind"] != "CLOUD_APP"
                 or artifact["source_kind"] != "CLOUD_APP"
                 or cloud["artifact_id"] not in source["artifact_ids"]
+                or not PUBLIC_EVIDENCE_RE.fullmatch(cloud["evidence_id"])
+                or cloud["evidence_id"]
+                not in {
+                    "public-evidence:" + ref["digest"]
+                    for ref in artifact["evidence_refs"]
+                }
             ):
                 fail("provenance.binding")
-            referenced_artifacts.append(artifact)
-        for artifact in referenced_artifacts:
-            for ref in artifact["evidence_refs"]:
-                if canonical(ref) not in seen:
-                    fail("provenance.binding")
+            referenced.append(artifact)
+        for artifact in referenced:
+            if any(canonical(ref) not in seen for ref in artifact["evidence_refs"]):
+                fail("provenance.binding")
+        _check_sample_provenance(fact, artifacts)
+        if fact["status"] in {"CANDIDATE", "CONFLICTED"} or fact[
+            "terminal_negative_state"
+        ] == "CONFLICT":
+            if (
+                provenance["ebus"] is None
+                or provenance["eebus"] is None
+                or provenance["ebus_source_id"] is None
+                or provenance["eebus_source_id"] is None
+                or not fact["comparator"]["samples"]
+            ):
+                fail("provenance.binding")
 
 
-def token(value: Any) -> bool:
-    return isinstance(value, str) and 0 < len(value) <= 256 and "\x00" not in value
+def _ascii_token(value: Any, *, maximum: int = 256) -> bool:
+    return (
+        isinstance(value, str)
+        and 0 < len(value) <= maximum
+        and value.isascii()
+        and all(0x20 <= ord(char) <= 0x7E for char in value)
+    )
 
 
-def byte_int(value: Any) -> bool:
+def _byte_int(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 255
 
 
-def word_int(value: Any) -> bool:
+def _word_int(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 65535
 
 
@@ -467,7 +778,10 @@ def validate_ebus_identity(identity: Any) -> None:
     if not isinstance(identity, dict):
         fail("identity.native")
     family = identity.get("family")
-    common = all(token(identity.get(field)) for field in ("target_pseudonym", "unit_scale_source"))
+    common = all(
+        _ascii_token(identity.get(field))
+        for field in ("target_pseudonym", "unit_scale_source")
+    )
     if family == "B509":
         expected = {
             "family",
@@ -482,10 +796,10 @@ def validate_ebus_identity(identity: Any) -> None:
         valid = (
             set(identity) == expected
             and common
-            and byte_int(identity["target_address"])
-            and token(identity["target_product"])
-            and token(identity["register_family"])
-            and word_int(identity["register_id"])
+            and _byte_int(identity["target_address"])
+            and _ascii_token(identity["target_product"])
+            and _ascii_token(identity["register_family"])
+            and _word_int(identity["register_id"])
             and identity["evidence_role"] in {"AUTHORITATIVE", "MIRROR", "FALLBACK"}
         )
     elif family == "B524":
@@ -506,10 +820,13 @@ def validate_ebus_identity(identity: Any) -> None:
         valid = (
             set(identity) == expected
             and common
-            and all(byte_int(identity[field]) for field in ("opcode", "GG", "II", "target_address", "source_address"))
-            and word_int(identity["RR"])
-            and token(identity["group_meaning"])
-            and token(identity["instance_gate"])
+            and all(
+                _byte_int(identity[field])
+                for field in ("opcode", "GG", "II", "target_address", "source_address")
+            )
+            and _word_int(identity["RR"])
+            and _ascii_token(identity["group_meaning"])
+            and _ascii_token(identity["instance_gate"])
             and identity["register_category"] in {"STATE", "CONFIG", "PARAMS"}
         )
     elif family == "B555":
@@ -527,13 +844,26 @@ def validate_ebus_identity(identity: Any) -> None:
         valid = (
             set(identity) == expected
             and common
-            and token(identity["device_family"])
-            and token(identity["schedule_program"])
-            and byte_int(identity["slot_index"])
-            and identity["day_of_week"] in {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"}
+            and _ascii_token(identity["device_family"])
+            and _ascii_token(identity["schedule_program"])
+            and _byte_int(identity["slot_index"])
+            and identity["day_of_week"]
+            in {
+                "MONDAY",
+                "TUESDAY",
+                "WEDNESDAY",
+                "THURSDAY",
+                "FRIDAY",
+                "SATURDAY",
+                "SUNDAY",
+            }
             and isinstance(identity["time_identity"], str)
-            and re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]", identity["time_identity"]) is not None
-            and token(identity["operation_mode_context"])
+            and re.fullmatch(
+                r"(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]",
+                identity["time_identity"],
+            )
+            is not None
+            and _ascii_token(identity["operation_mode_context"])
         )
     else:
         valid = False
@@ -545,66 +875,62 @@ def validate_eebus_path(value: Any) -> None:
     expected = {"service", "entity", "feature", "feature_path"}
     if not isinstance(value, dict) or set(value) != expected:
         fail("identity.native")
-    if not all(token(value[field]) for field in ("service", "entity", "feature")):
+    if not all(_ascii_token(value[field]) for field in ("service", "entity", "feature")):
         fail("identity.native")
     path = value["feature_path"]
-    if not isinstance(path, list) or len(path) < 3 or len(path) > 32:
+    if not isinstance(path, list) or not 3 <= len(path) <= HARD_LIMITS["max_path_segments"]:
         fail("identity.native")
     for segment in path:
-        if not isinstance(segment, dict) or set(segment) != {"kind", "selector"}:
+        if (
+            not isinstance(segment, dict)
+            or set(segment) != {"kind", "selector"}
+            or segment["kind"] not in {"SERVICE", "ENTITY", "FEATURE", "FIELD"}
+            or not _ascii_token(segment["selector"])
+        ):
             fail("identity.native")
-        if segment["kind"] not in {"SERVICE", "ENTITY", "FEATURE", "FIELD"} or not token(segment["selector"]):
-            fail("identity.native")
-    if [segment["kind"] for segment in path[:3]] != ["SERVICE", "ENTITY", "FEATURE"]:
-        fail("identity.native")
-    if any(segment["kind"] != "FIELD" for segment in path[3:]):
-        fail("identity.native")
-    if [path[0]["selector"], path[1]["selector"], path[2]["selector"]] != [
-        value["service"],
-        value["entity"],
-        value["feature"],
-    ]:
+    if (
+        [segment["kind"] for segment in path[:3]]
+        != ["SERVICE", "ENTITY", "FEATURE"]
+        or any(segment["kind"] != "FIELD" for segment in path[3:])
+        or [path[0]["selector"], path[1]["selector"], path[2]["selector"]]
+        != [value["service"], value["entity"], value["feature"]]
+    ):
         fail("identity.native")
 
 
 def check_identities(graph: dict[str, Any], source_bundle: dict[str, Any]) -> None:
-    artifacts = {
-        (artifact["source_id"], artifact["artifact_id"]): artifact
-        for artifact in source_bundle["artifacts"]
-    }
+    artifacts = _artifact_index(source_bundle)
     for fact in graph["facts"]:
         provenance = fact["provenance"]
         if provenance["ebus"] is None:
             if provenance["ebus_source_id"] is not None or provenance["ebus_artifact_id"] is not None:
                 fail("identity.native")
         else:
-            if not token(provenance["ebus_source_id"]) or not token(provenance["ebus_artifact_id"]):
-                fail("identity.native")
             validate_ebus_identity(provenance["ebus"])
             artifact = artifacts[(provenance["ebus_source_id"], provenance["ebus_artifact_id"])]
             if provenance["ebus"] != artifact["ebus_identity"]:
                 fail("identity.native")
-        if provenance["eebus"] is None:
-            if provenance["eebus_source_id"] is not None or provenance["eebus_artifact_id"] is not None:
+        eebus_pair = (provenance["eebus_source_id"], provenance["eebus_artifact_id"])
+        if eebus_pair == (None, None):
+            if provenance["eebus_service"] is not None or provenance["eebus"] is not None:
                 fail("identity.native")
         else:
-            if not token(provenance["eebus_source_id"]) or not token(provenance["eebus_artifact_id"]):
+            if not _ascii_token(provenance["eebus_service"]):
                 fail("identity.native")
-            validate_eebus_path(provenance["eebus"])
-            artifact = artifacts[(provenance["eebus_source_id"], provenance["eebus_artifact_id"])]
+            artifact = artifacts[eebus_pair]
             services = artifact["normalized_evidence"]["data"]["services"]
             service_ids = {service["id"]["digest"] for service in services}
-            if provenance["eebus"]["service"] not in service_ids:
+            if provenance["eebus_service"] not in service_ids:
                 fail("identity.native")
-            feature_paths = artifact["normalized_evidence"]["data"].get("feature_paths")
-            if not isinstance(feature_paths, list) or provenance["eebus"] not in feature_paths:
-                fail("identity.native")
-        cloud = provenance["cloud"]
-        if cloud is not None:
-            if not isinstance(cloud, dict) or set(cloud) != {"source_id", "artifact_id", "evidence_id"}:
-                fail("identity.native")
-            if not all(token(cloud[field]) for field in cloud):
-                fail("identity.native")
+            if provenance["eebus"] is not None:
+                validate_eebus_path(provenance["eebus"])
+                feature_paths = artifact["normalized_evidence"]["data"].get("feature_paths")
+                if (
+                    provenance["eebus"]["service"] != provenance["eebus_service"]
+                    or not isinstance(feature_paths, list)
+                    or provenance["eebus"] not in feature_paths
+                ):
+                    fail("identity.native")
 
 
 def check_ordering(graph: dict[str, Any]) -> None:
@@ -612,7 +938,13 @@ def check_ordering(graph: dict[str, Any]) -> None:
     if refs != sorted(refs, key=ref_sort_key):
         fail("ordering.invalid")
     facts = graph["facts"]
-    if facts != sorted(facts, key=lambda fact: (fact["proposed_path"].encode(), fact["candidate_id"].encode())):
+    if facts != sorted(
+        facts,
+        key=lambda fact: (
+            fact["proposed_path"].encode("utf-8"),
+            fact["candidate_id"].encode("utf-8"),
+        ),
+    ):
         fail("ordering.invalid")
     ids: set[str] = set()
     paths: set[str] = set()
@@ -625,10 +957,13 @@ def check_ordering(graph: dict[str, Any]) -> None:
         if refs != sorted(refs, key=ref_sort_key):
             fail("ordering.invalid")
         samples = fact["comparator"]["samples"]
+        encoded = [canonical(sample) for sample in samples]
+        if len(encoded) != len(set(encoded)):
+            fail("ordering.invalid")
         if samples != sorted(samples, key=lambda sample: (sample["offset_ns"], canonical(sample))):
             fail("ordering.invalid")
         required = fact["retest_trigger"]["required_source_kinds"]
-        if required != sorted(set(required), key=lambda value: value.encode()):
+        if required != sorted(set(required), key=lambda value: value.encode("utf-8")):
             fail("ordering.invalid")
 
 
@@ -636,152 +971,333 @@ def check_states(graph: dict[str, Any], registry: dict[str, Any]) -> None:
     statuses = set(registry["statuses"])
     terminals = set(registry["terminal_negative_states"])
     for fact in graph["facts"]:
-        if not isinstance(fact["candidate_id"], str) or not CANDIDATE_ID_RE.fullmatch(fact["candidate_id"]):
-            fail("state.terminal")
-        if not isinstance(fact["proposed_path"], str) or not PATH_RE.fullmatch(fact["proposed_path"]):
+        if (
+            not CANDIDATE_ID_RE.fullmatch(fact["candidate_id"])
+            or not PATH_RE.fullmatch(fact["proposed_path"])
+            or fact["status"] not in statuses
+            or (
+                fact["terminal_negative_state"] is not None
+                and fact["terminal_negative_state"] not in terminals
+            )
+            or fact["debug_only"] is not True
+        ):
             fail("state.terminal")
         status = fact["status"]
         terminal = fact["terminal_negative_state"]
-        if status not in statuses or (terminal is not None and terminal not in terminals):
+        samples = fact["comparator"]["samples"]
+        outcome = fact["comparator"]["outcome"]
+        provenance = fact["provenance"]
+        native_kinds = {
+            kind
+            for kind, source_id in (
+                ("EBUS", provenance["ebus_source_id"]),
+                ("EEBUS", provenance["eebus_source_id"]),
+            )
+            if source_id is not None
+        }
+        cloud_only = provenance["cloud"] is not None and not native_kinds
+        if cloud_only and (status != "WITHHELD" or terminal != "CLOUD_ONLY"):
             fail("state.terminal")
-        if fact["debug_only"] is not True:
-            fail("state.terminal")
-        if terminal is not None:
-            if status != "WITHHELD" or fact["draft_value"] is not None or fact["draft_unit"] is not None:
+        if status == "RAW_ONLY":
+            if (
+                terminal is not None
+                or fact["draft_value"] is not None
+                or fact["draft_unit"] is not None
+                or samples
+                or outcome != "NOT_EVALUATED"
+            ):
+                fail("state.terminal")
+        elif status == "CANDIDATE":
+            if (
+                terminal is not None
+                or fact["draft_value"] is None
+                or fact["draft_unit"] is None
+                or outcome != "MATCH"
+                or native_kinds != {"EBUS", "EEBUS"}
+            ):
+                fail("state.terminal")
+        elif status == "CONFLICTED":
+            if (
+                terminal is not None
+                or fact["draft_value"] is not None
+                or fact["draft_unit"] is not None
+                or outcome != "CONFLICT"
+                or native_kinds != {"EBUS", "EEBUS"}
+            ):
                 fail("state.terminal")
         elif status == "WITHHELD":
-            fail("state.terminal")
-        confidence = fact["confidence"]
-        if (
-            confidence["level"] not in {"LOW", "MEDIUM", "HIGH"}
-            or confidence["basis"] not in {"OBSERVED", "INFERRED", "INSUFFICIENT"}
-            or not isinstance(confidence["score_milli"], int)
-            or not 0 <= confidence["score_milli"] <= 1000
-        ):
-            fail("state.terminal")
-        falsifier = fact["falsifier"]
-        if (
-            falsifier["condition_code"] not in {"VALUE_DIVERGES", "IDENTITY_CHANGES", "SIGNAL_DISAPPEARS", "ORDER_CHANGES", "PROVENANCE_BREAKS"}
-            or falsifier["expected_terminal_state"] not in terminals
-            or not token(falsifier["description"])
-        ):
-            fail("state.terminal")
-        trigger = fact["retest_trigger"]
-        if (
-            trigger["trigger_code"] not in {"NEW_SYNCHRONIZED_BUNDLE", "SOURCE_RECOVERED", "IDENTITY_CONFIRMED", "COMPARATOR_REVISED"}
-            or not isinstance(trigger["minimum_new_samples"], int)
-            or not 1 <= trigger["minimum_new_samples"] <= 1024
-            or not isinstance(trigger["required_source_kinds"], list)
-            or not trigger["required_source_kinds"]
-            or not set(trigger["required_source_kinds"]) <= {"CLOUD_APP", "EBUS", "EEBUS"}
-        ):
-            fail("state.terminal")
+            if terminal is None or fact["draft_value"] is not None or fact["draft_unit"] is not None:
+                fail("state.terminal")
+            if terminal in {"CLOUD_ONLY", "NO_SIGNAL", "NOT_TESTED"} and (
+                samples or outcome != "NOT_EVALUATED"
+            ):
+                fail("state.terminal")
+            if terminal == "CLOUD_ONLY" and not cloud_only:
+                fail("state.terminal")
+            if terminal == "NO_SIGNAL" and not native_kinds:
+                fail("state.terminal")
+            if terminal == "CONFLICT" and (
+                outcome != "CONFLICT" or native_kinds != {"EBUS", "EEBUS"} or not samples
+            ):
+                fail("state.terminal")
 
 
-def decimal(value: Any, *, nonnegative: bool = False) -> Decimal:
-    if not isinstance(value, str) or not DECIMAL_RE.fullmatch(value):
+def _decimal(value: Any, *, nonnegative: bool = False) -> Decimal:
+    if not isinstance(value, str) or len(value) > 64 or not DECIMAL_RE.fullmatch(value):
         fail("comparator.invalid")
     try:
         parsed = Decimal(value)
     except InvalidOperation:
         fail("comparator.invalid")
-    if nonnegative and parsed < 0:
+    if (parsed == 0 and value.startswith("-")) or (nonnegative and parsed < 0):
         fail("comparator.invalid")
     return parsed
 
 
-def check_comparators(graph: dict[str, Any], registry: dict[str, Any]) -> None:
-    drafts = graph["comparator_drafts"]
-    if len(drafts) != 1:
+def _pointer_get(value: Any, pointer: str) -> Any:
+    if not isinstance(pointer, str) or not pointer.startswith("/") or len(pointer) > 512:
         fail("comparator.invalid")
-    draft = drafts[0]
-    if draft["draft_id"] != "NUMERIC_WINDOW_V1_DRAFT" or draft["type"] != "NUMERIC_WINDOW":
+    current = value
+    for raw_segment in pointer.split("/")[1:]:
+        segment = raw_segment.replace("~1", "/").replace("~0", "~")
+        if "~" in raw_segment.replace("~0", "").replace("~1", ""):
+            fail("comparator.invalid")
+        if isinstance(current, dict) and segment in current:
+            current = current[segment]
+        elif isinstance(current, list) and re.fullmatch(r"0|[1-9][0-9]*", segment):
+            index = int(segment)
+            if index >= len(current):
+                fail("comparator.invalid")
+            current = current[index]
+        else:
+            fail("comparator.invalid")
+    return current
+
+
+def _bind_observation_side(
+    side: Any,
+    expected_kind: str,
+    artifacts: dict[tuple[str, str], dict[str, Any]],
+    allowed_refs: set[bytes] | None,
+) -> tuple[Decimal | None, str | None, int]:
+    exact_keys(side, OBSERVATION_BINDING_KEYS, "comparator.invalid")
+    if side["source_kind"] != expected_kind:
         fail("comparator.invalid")
-    if registry["comparators"][0]["draft_id"] != draft["draft_id"]:
+    artifact = artifacts.get((side["source_id"], side["artifact_id"]))
+    if artifact is None or artifact["source_kind"] != expected_kind:
         fail("comparator.invalid")
-    parameters = draft["parameters"]
+    encoded_ref = canonical(side["evidence_ref"])
+    if (
+        not any(encoded_ref == canonical(ref) for ref in artifact["evidence_refs"])
+        or (allowed_refs is not None and encoded_ref not in allowed_refs)
+        or side["observed_offset_ns"] != artifact["recorder_ingested_offset_ns"]
+    ):
+        fail("comparator.invalid")
+    selected_value = _pointer_get(
+        artifact["normalized_evidence"], side["value_pointer"]
+    )
+    selected_unit = _pointer_get(
+        artifact["normalized_evidence"], side["unit_pointer"]
+    )
+    if selected_value != side["native_decimal"] or selected_unit != side["native_unit"]:
+        fail("comparator.invalid")
+    parsed = None if selected_value is None else _decimal(selected_value)
+    if selected_unit is not None and not _ascii_token(selected_unit):
+        fail("comparator.invalid")
+    return parsed, selected_unit, side["observed_offset_ns"]
+
+
+def _validate_parameters(parameters: dict[str, Any]) -> None:
     window = parameters["window"]
     tolerance = parameters["tolerance"]
     conversion = parameters["unit_conversion"]
     rounding = parameters["rounding"]
     threshold = parameters["conflict_threshold"]
-    for value, keys in (
-        (window, {"start_offset_ns", "end_offset_ns"}),
-        (tolerance, {"absolute_decimal", "relative_ppm"}),
-        (conversion, {"mode", "source_unit", "target_unit", "scale_decimal", "offset_decimal"}),
-        (rounding, {"mode", "decimal_places"}),
-        (threshold, {"absolute_decimal", "consecutive_samples"}),
-    ):
-        if not isinstance(value, dict) or set(value) != keys:
-            fail("comparator.invalid")
     if (
-        not isinstance(window["start_offset_ns"], int)
-        or not isinstance(window["end_offset_ns"], int)
-        or not 0 <= window["start_offset_ns"] < window["end_offset_ns"]
-        or not isinstance(tolerance["relative_ppm"], int)
-        or tolerance["relative_ppm"] < 0
-        or conversion["mode"] not in {"IDENTITY", "AFFINE"}
-        or not token(conversion["source_unit"])
-        or not token(conversion["target_unit"])
-        or rounding["mode"] not in {"NONE", "HALF_EVEN"}
-        or (rounding["decimal_places"] is not None and (not isinstance(rounding["decimal_places"], int) or not 0 <= rounding["decimal_places"] <= 9))
-        or not isinstance(parameters["minimum_samples"], int)
-        or parameters["minimum_samples"] < 1
-        or not isinstance(parameters["maximum_missing_samples"], int)
-        or parameters["maximum_missing_samples"] < 0
-        or not isinstance(parameters["stale_cutoff_ns"], int)
-        or parameters["stale_cutoff_ns"] < 1
-        or not isinstance(threshold["consecutive_samples"], int)
-        or threshold["consecutive_samples"] < 1
+        window["start_offset_ns"] >= window["end_offset_ns"]
+        or tolerance["relative_ppm"] > 1_000_000
+        or parameters["minimum_samples"] > HARD_LIMITS["max_samples_per_comparator"]
+        or parameters["maximum_missing_samples"]
+        > HARD_LIMITS["max_samples_per_comparator"]
+        or threshold["consecutive_samples"]
+        > HARD_LIMITS["max_samples_per_comparator"]
+        or (rounding["mode"] == "NONE" and rounding["decimal_places"] is not None)
+        or (rounding["mode"] == "HALF_EVEN" and rounding["decimal_places"] is None)
+        or (
+            conversion["mode"] == "IDENTITY"
+            and (
+                conversion["source_unit"] != conversion["target_unit"]
+                or conversion["scale_decimal"] != "1"
+                or conversion["offset_decimal"] != "0"
+            )
+        )
     ):
         fail("comparator.invalid")
-    decimal(tolerance["absolute_decimal"], nonnegative=True)
-    decimal(conversion["scale_decimal"])
-    decimal(conversion["offset_decimal"])
-    decimal(threshold["absolute_decimal"], nonnegative=True)
+    _decimal(tolerance["absolute_decimal"], nonnegative=True)
+    _decimal(conversion["scale_decimal"])
+    _decimal(conversion["offset_decimal"])
+    _decimal(threshold["absolute_decimal"], nonnegative=True)
+
+
+def _round_decimal(value: Decimal, rounding: dict[str, Any]) -> Decimal:
+    if rounding["mode"] == "NONE":
+        return value
+    quantum = Decimal(1).scaleb(-rounding["decimal_places"])
+    try:
+        return value.quantize(quantum, rounding=ROUND_HALF_EVEN)
+    except InvalidOperation:
+        fail("comparator.invalid")
+
+
+def _format_decimal(value: Decimal, rounding: dict[str, Any]) -> str:
+    if rounding["mode"] == "HALF_EVEN":
+        return f"{value:.{rounding['decimal_places']}f}"
+    return format(value, "f")
+
+
+def _evaluate_numeric_window_details(
+    parameters: dict[str, Any],
+    samples: list[dict[str, Any]],
+    artifacts: dict[tuple[str, str], dict[str, Any]],
+    allowed_refs: set[bytes] | None = None,
+) -> tuple[str, Decimal | None]:
+    _validate_parameters(parameters)
+    if not samples:
+        return "NOT_EVALUATED", None
+    encoded = [canonical(sample) for sample in samples]
+    if len(encoded) != len(set(encoded)):
+        fail("ordering.invalid")
+    window = parameters["window"]
+    conversion = parameters["unit_conversion"]
+    rounding = parameters["rounding"]
+    unavailable = 0
+    present = 0
+    mismatch = False
+    conflict_run = 0
+    conflict = False
+    last_right: Decimal | None = None
+    with localcontext() as context:
+        context.prec = 512
+        absolute_tolerance = _decimal(
+            parameters["tolerance"]["absolute_decimal"], nonnegative=True
+        )
+        relative_ppm = Decimal(parameters["tolerance"]["relative_ppm"])
+        conflict_threshold = _decimal(
+            parameters["conflict_threshold"]["absolute_decimal"],
+            nonnegative=True,
+        )
+        for sample in samples:
+            offset = sample["offset_ns"]
+            if not window["start_offset_ns"] <= offset <= window["end_offset_ns"]:
+                fail("comparator.invalid")
+            left, left_unit, left_offset = _bind_observation_side(
+                sample["left"], "EBUS", artifacts, allowed_refs
+            )
+            right, right_unit, right_offset = _bind_observation_side(
+                sample["right"], "EEBUS", artifacts, allowed_refs
+            )
+            if offset < left_offset or offset < right_offset:
+                fail("comparator.invalid")
+            if left is None or right is None or left_unit is None or right_unit is None:
+                computed_state = "MISSING"
+            elif (
+                offset - left_offset > parameters["stale_cutoff_ns"]
+                or offset - right_offset > parameters["stale_cutoff_ns"]
+            ):
+                computed_state = "STALE"
+            else:
+                computed_state = "PRESENT"
+            if sample["state"] != computed_state:
+                fail("comparator.invalid")
+            if computed_state != "PRESENT":
+                unavailable += 1
+                conflict_run = 0
+                continue
+            if left_unit != conversion["source_unit"] or right_unit != conversion["target_unit"]:
+                fail("comparator.invalid")
+            converted_left = left * _decimal(conversion["scale_decimal"]) + _decimal(
+                conversion["offset_decimal"]
+            )
+            rounded_left = _round_decimal(converted_left, rounding)
+            rounded_right = _round_decimal(right, rounding)
+            last_right = rounded_right
+            delta = abs(rounded_left - rounded_right)
+            allowed = absolute_tolerance + abs(rounded_right) * relative_ppm / Decimal(
+                1_000_000
+            )
+            present += 1
+            mismatch = mismatch or delta > allowed
+            if delta >= conflict_threshold:
+                conflict_run += 1
+                if conflict_run >= parameters["conflict_threshold"]["consecutive_samples"]:
+                    conflict = True
+            else:
+                conflict_run = 0
+    if conflict:
+        return "CONFLICT", last_right
+    if (
+        unavailable > parameters["maximum_missing_samples"]
+        or present < parameters["minimum_samples"]
+    ):
+        return "INDETERMINATE", last_right
+    return ("MISMATCH" if mismatch else "MATCH"), last_right
+
+
+def _evaluate_numeric_window(
+    parameters: dict[str, Any],
+    samples: list[dict[str, Any]],
+    artifacts: dict[tuple[str, str], dict[str, Any]],
+) -> str:
+    return _evaluate_numeric_window_details(parameters, samples, artifacts)[0]
+
+
+def check_comparators(
+    graph: dict[str, Any], registry: dict[str, Any], source_bundle: dict[str, Any]
+) -> None:
+    drafts = graph["comparator_drafts"]
+    if (
+        len(drafts) != 1
+        or drafts[0]["draft_id"] != "NUMERIC_WINDOW_V1_DRAFT"
+        or drafts[0]["type"] != "NUMERIC_WINDOW"
+        or registry["comparators"][0]["draft_id"] != drafts[0]["draft_id"]
+    ):
+        fail("comparator.invalid")
+    parameters = drafts[0]["parameters"]
+    _validate_parameters(parameters)
+    artifacts = _artifact_index(source_bundle)
     for fact in graph["facts"]:
         evaluation = fact["comparator"]
-        if evaluation["draft_id"] != draft["draft_id"]:
+        if evaluation["draft_id"] != drafts[0]["draft_id"]:
             fail("comparator.invalid")
-        samples = evaluation["samples"]
-        present = 0
-        missing = 0
-        for sample in samples:
-            if (
-                not isinstance(sample["offset_ns"], int)
-                or not window["start_offset_ns"] <= sample["offset_ns"] <= window["end_offset_ns"]
-                or sample["state"] not in {"PRESENT", "MISSING", "STALE"}
-            ):
-                fail("comparator.invalid")
-            if sample["state"] == "MISSING":
-                missing += 1
-                if sample["left_decimal"] is not None or sample["right_decimal"] is not None:
-                    fail("comparator.invalid")
-            else:
-                if sample["left_decimal"] is None or sample["right_decimal"] is None:
-                    fail("comparator.invalid")
-                decimal(sample["left_decimal"])
-                decimal(sample["right_decimal"])
-                if sample["state"] == "PRESENT":
-                    present += 1
-        if missing > parameters["maximum_missing_samples"]:
+        allowed_refs = {
+            canonical(ref) for ref in fact["provenance"]["native_evidence_refs"]
+        }
+        computed, last_right = _evaluate_numeric_window_details(
+            parameters, evaluation["samples"], artifacts, allowed_refs
+        )
+        if evaluation["outcome"] != computed:
             fail("comparator.invalid")
         status = fact["status"]
-        outcome = evaluation["outcome"]
         expected = {
             "RAW_ONLY": {"NOT_EVALUATED"},
             "CANDIDATE": {"MATCH"},
             "CONFLICTED": {"CONFLICT"},
-            "WITHHELD": {"NOT_EVALUATED", "CONFLICT"},
+            "WITHHELD": {"NOT_EVALUATED", "CONFLICT", "INDETERMINATE"},
         }
-        if outcome not in expected[status]:
+        if computed not in expected[status]:
             fail("comparator.invalid")
-        if status in {"CANDIDATE", "CONFLICTED"} and present < parameters["minimum_samples"]:
-            fail("comparator.invalid")
+        if status == "CANDIDATE":
+            if (
+                last_right is None
+                or fact["draft_unit"] != parameters["unit_conversion"]["target_unit"]
+                or fact["draft_value"]
+                != _format_decimal(last_right, parameters["rounding"])
+            ):
+                fail("comparator.invalid")
         terminal = fact["terminal_negative_state"]
-        if terminal == "CONFLICT" and outcome != "CONFLICT":
+        if terminal == "CONFLICT" and computed != "CONFLICT":
             fail("comparator.invalid")
-        if terminal in {"NO_SIGNAL", "CLOUD_ONLY", "NOT_TESTED"} and outcome != "NOT_EVALUATED":
+        if terminal in {"NO_SIGNAL", "CLOUD_ONLY", "NOT_TESTED"} and computed != "NOT_EVALUATED":
             fail("comparator.invalid")
 
 
@@ -798,11 +1314,13 @@ def check_anti_leak(graph: dict[str, Any], registry: dict[str, Any]) -> None:
 
 def check_hashes(graph: dict[str, Any]) -> None:
     for fact in graph["facts"]:
-        expected = "sha256:" + fact_hexdigest(fact)
-        if fact["fact_hash"] != expected:
+        if fact["fact_hash"] != "sha256:" + fact_hexdigest(fact):
             fail("hash.fact")
     hexdigest = graph_hexdigest(graph)
-    if graph["graph_hash"] != "sha256:" + hexdigest or graph["graph_id"] != "dcfgv1:sha256:" + hexdigest:
+    if (
+        graph["graph_hash"] != "sha256:" + hexdigest
+        or graph["graph_id"] != "dcfgv1:sha256:" + hexdigest
+    ):
         fail("hash.graph")
 
 
@@ -815,35 +1333,37 @@ def verify(
     source_replay: dict[str, Any],
 ) -> dict[str, Any]:
     schema_check(graph)
-    check_limits(graph, registry, raw_size)
+    check_limits(graph, raw_size)
     check_registry_binding(graph, registry, registry_raw)
     check_provenance(graph, registry, source_bundle, source_replay)
     check_identities(graph, source_bundle)
     check_ordering(graph)
     check_states(graph, registry)
-    check_comparators(graph, registry)
+    check_comparators(graph, registry, source_bundle)
     check_anti_leak(graph, registry)
     check_hashes(graph)
     return graph
 
 
 def replay(graph: dict[str, Any]) -> dict[str, Any]:
-    results = []
-    for fact in graph["facts"]:
-        results.append(
-            {
-                "candidate_id": fact["candidate_id"],
-                "proposed_path": fact["proposed_path"],
-                "status": fact["status"],
-                "terminal_negative_state": fact["terminal_negative_state"],
-                "confidence": fact["confidence"],
-                "comparator_outcome": fact["comparator"]["outcome"],
-                "fact_hash": fact["fact_hash"],
-                "native_evidence_digests": sorted(
-                    {ref["digest"] for ref in fact["provenance"]["native_evidence_refs"]}
-                ),
-            }
-        )
+    results = [
+        {
+            "candidate_id": fact["candidate_id"],
+            "proposed_path": fact["proposed_path"],
+            "status": fact["status"],
+            "terminal_negative_state": fact["terminal_negative_state"],
+            "confidence": fact["confidence"],
+            "comparator_outcome": fact["comparator"]["outcome"],
+            "fact_hash": fact["fact_hash"],
+            "native_evidence_digests": sorted(
+                {
+                    ref["digest"]
+                    for ref in fact["provenance"]["native_evidence_refs"]
+                }
+            ),
+        }
+        for fact in graph["facts"]
+    ]
     value = {
         "contract": "helianthus.platform.draft-candidate-fact-replay.v1",
         "schema_version": 1,
@@ -859,93 +1379,46 @@ def replay(graph: dict[str, Any]) -> dict[str, Any]:
         },
         "results": results,
     }
-    view = {key: item for key, item in value.items() if key not in {"replay_id", "replay_hash"}}
+    check_portable(value)
+    view = {
+        key: item
+        for key, item in value.items()
+        if key not in {"replay_id", "replay_hash"}
+    }
     hexdigest = digest(REPLAY_DOMAIN, view)
     value["replay_id"] = "dcfrv1:sha256:" + hexdigest
     value["replay_hash"] = "sha256:" + hexdigest
     return value
 
 
-def expand_negative_fixture(path: pathlib.Path, value: Any) -> Any:
-    if not isinstance(value, dict) or value.get("contract") != NEGATIVE_FIXTURE_CONTRACT:
-        return value
-    if set(value) != {"contract", "base", "mutation"} or value["base"] != "../positive/graph.json":
-        fail("json.syntax")
-    base_path = path.parent.parent / "positive/graph.json"
-    graph, _ = load_json(base_path)
-    graph = copy.deepcopy(graph)
-    mutation = value["mutation"]
-    if mutation == "ANTI_LEAK_STABLE_SURFACE":
-        graph["visibility"]["stable_exposure"] = True
-    elif mutation == "COMPARATOR_PARAMETER_INVALID":
-        graph["comparator_drafts"][0]["parameters"]["minimum_samples"] = 0
-    elif mutation == "EVIDENCE_REF_NOT_IN_BUNDLE":
-        graph["facts"][0]["provenance"]["native_evidence_refs"][0]["digest"] = "sha256:" + "f" * 64
-    elif mutation == "GRAPH_HASH_MISMATCH":
-        graph["graph_hash"] = "sha256:" + "0" * 64
-    elif mutation == "FORGED_ARTIFACT_ID":
-        graph["facts"][0]["provenance"]["cloud"]["artifact_id"] = "seav1:sha256:" + "f" * 64
-    elif mutation == "FORGED_SOURCE_ID":
-        graph["facts"][0]["provenance"]["cloud"]["source_id"] = "cloud-ffffffffffffffffffffffffffffffff"
-    elif mutation == "FORGED_B524_OPCODE":
-        target = next(fact for fact in graph["facts"] if fact["provenance"]["ebus"] and fact["provenance"]["ebus"]["family"] == "B524")
-        target["provenance"]["ebus"]["opcode"] = 6
-    elif mutation == "INCOMPLETE_B524_IDENTITY":
-        target = next(fact for fact in graph["facts"] if fact["provenance"]["ebus"] and fact["provenance"]["ebus"]["family"] == "B524")
-        del target["provenance"]["ebus"]["RR"]
-    elif mutation == "INVALID_EEBUS_FEATURE_PATH":
-        target = graph["facts"][2]
-        target["provenance"]["eebus_source_id"] = "eebus-44444444444444444444444444444444"
-        target["provenance"]["eebus_artifact_id"] = "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8"
-        target["provenance"]["eebus"] = {
-            "service": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-            "entity": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-            "feature": "feature-ffffffffffffffffffffffffffffffff",
-            "feature_path": [
-                {"kind": "SERVICE", "selector": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"},
-                {"kind": "ENTITY", "selector": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
-                {"kind": "FEATURE", "selector": "feature-ffffffffffffffffffffffffffffffff"},
-            ],
-        }
-        target["provenance"]["native_evidence_refs"].append(
-            copy.deepcopy(graph["source_bundle"]["evidence_refs"][4])
+def _verify_source_inputs(
+    registry: dict[str, Any],
+    registry_path: pathlib.Path,
+    source_bundle: dict[str, Any],
+    source_bundle_raw: bytes,
+    source_replay: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    source_registry_path = registry_path.parent / pathlib.Path(
+        registry["source_contract"]["source_registry_path"]
+    ).name
+    try:
+        if (
+            hashlib.sha256(source_registry_path.read_bytes()).hexdigest()
+            != registry["source_contract"]["source_registry_sha256"]
+        ):
+            fail("provenance.binding")
+        source_registry = synchronized.load_registry(source_registry_path)
+        verified_source = synchronized.verify(
+            copy.deepcopy(source_bundle), source_registry, len(source_bundle_raw)
         )
-        target["provenance"]["eebus"]["feature_path"][0]["kind"] = "FEATURE"
-    elif mutation == "FORGED_EEBUS_ENTITY_FEATURE":
-        target = graph["facts"][2]
-        target["provenance"]["eebus_source_id"] = "eebus-44444444444444444444444444444444"
-        target["provenance"]["eebus_artifact_id"] = "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8"
-        target["provenance"]["eebus"] = {
-            "service": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-            "entity": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-            "feature": "feature-ffffffffffffffffffffffffffffffff",
-            "feature_path": [
-                {"kind": "SERVICE", "selector": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"},
-                {"kind": "ENTITY", "selector": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
-                {"kind": "FEATURE", "selector": "feature-ffffffffffffffffffffffffffffffff"},
-            ],
-        }
-        target["provenance"]["native_evidence_refs"].append(
-            copy.deepcopy(graph["source_bundle"]["evidence_refs"][4])
-        )
-    elif mutation == "LIMIT_EXCEEDED":
-        graph["limits"]["max_facts"] = 65
-    elif mutation == "ORDERING_INVALID":
-        graph["facts"].reverse()
-    elif mutation == "REGISTRY_MISMATCH":
-        graph["registry"]["digest"] = "sha256:" + "0" * 64
-    elif mutation == "WRONG_SOURCE_BUNDLE":
-        graph["source_bundle"]["bundle_hash"] = "sha256:" + "f" * 64
-    elif mutation == "WRONG_SOURCE_REPLAY":
-        graph["source_bundle"]["replay_hash"] = "sha256:" + "f" * 64
-    elif mutation == "TERMINAL_STATE_NOT_WITHHELD":
-        target = next(fact for fact in graph["facts"] if fact["terminal_negative_state"] is not None)
-        target["status"] = "CANDIDATE"
-    elif mutation == "UNKNOWN_FIELD":
-        graph["unknown"] = True
-    else:
-        fail("json.syntax")
-    return graph
+        generated_source_replay = synchronized.replay(verified_source)
+    except Failure:
+        raise
+    except (synchronized.Failure, OSError, KeyError, TypeError, ValueError):
+        fail("provenance.binding")
+    if generated_source_replay != source_replay:
+        fail("provenance.binding")
+    return verified_source, generated_source_replay
 
 
 def main() -> int:
@@ -957,42 +1430,36 @@ def main() -> int:
     parser.add_argument("--source-replay", type=pathlib.Path, required=True)
     args = parser.parse_args()
     try:
-        value, raw = load_json(args.graph)
-        registry, registry_raw = load_json(args.registry)
-        source_bundle, source_bundle_raw = load_json(args.source_bundle)
-        source_replay, _ = load_json(args.source_replay)
-        source_registry_path = args.registry.parent / pathlib.Path(
-            registry["source_contract"]["source_registry_path"]
-        ).name
-        if (
-            hashlib.sha256(source_registry_path.read_bytes()).hexdigest()
-            != registry["source_contract"]["source_registry_sha256"]
-        ):
-            fail("provenance.binding")
-        try:
-            synchronized.preflight_json_bytes(source_bundle_raw)
-            source_registry = synchronized.load_registry(source_registry_path)
-            verified_source = synchronized.verify(
-                copy.deepcopy(source_bundle), source_registry, len(source_bundle_raw)
-            )
-            generated_source_replay = synchronized.replay(verified_source)
-        except (synchronized.Failure, OSError, KeyError, TypeError, ValueError):
-            fail("provenance.binding")
-        if generated_source_replay != source_replay:
-            fail("provenance.binding")
-        graph = expand_negative_fixture(args.graph, value)
-        verified = verify(
-            graph,
+        graph, graph_raw = load_json(args.graph, input_kind="graph")
+        schema_check(graph)
+        check_limits(graph, len(graph_raw))
+
+        registry, registry_raw = load_json(args.registry, input_kind="registry")
+        check_registry_binding(graph, registry, registry_raw)
+
+        source_bundle, source_bundle_raw = load_json(
+            args.source_bundle, input_kind="source"
+        )
+        source_replay, _ = load_json(args.source_replay, input_kind="source")
+        verified_source, verified_source_replay = _verify_source_inputs(
             registry,
-            registry_raw,
-            len(raw),
+            args.registry,
             source_bundle,
+            source_bundle_raw,
             source_replay,
         )
+
+        check_provenance(graph, registry, verified_source, verified_source_replay)
+        check_identities(graph, verified_source)
+        check_ordering(graph)
+        check_states(graph, registry)
+        check_comparators(graph, registry, verified_source)
+        check_anti_leak(graph, registry)
+        check_hashes(graph)
         if args.command == "verify":
             sys.stdout.write("ok\n")
         else:
-            sys.stdout.write(canonical(replay(verified)).decode("utf-8") + "\n")
+            sys.stdout.write(canonical(replay(graph)).decode("utf-8") + "\n")
         return 0
     except Failure as error:
         sys.stdout.write(str(error) + "\n")
