@@ -49,6 +49,55 @@ EXPECTED_NEGATIVE = {
     "wrong-source-replay.json": "provenance.binding",
 }
 
+COEXISTENCE_VALIDATOR = REPO_ROOT / "scripts/validate_multi_runtime_coexistence.py"
+COEXISTENCE_GENERATOR = (
+    REPO_ROOT / "scripts/generate_multi_runtime_coexistence_fixture.py"
+)
+COEXISTENCE_SCHEMA = (
+    SCHEMA_ROOT / "multi-runtime-coexistence-evidence-v1.schema.json"
+)
+COEXISTENCE_REPORT_SCHEMA = (
+    SCHEMA_ROOT / "multi-runtime-coexistence-report-v1.schema.json"
+)
+COEXISTENCE_REGISTRY = (
+    SCHEMA_ROOT / "multi-runtime-coexistence-registry-v1.json"
+)
+COEXISTENCE_FIXTURE_ROOT = (
+    REPO_ROOT / "docs/platform/fixtures/coexistence-no-drift/v1"
+)
+COEXISTENCE_POSITIVE = COEXISTENCE_FIXTURE_ROOT / "positive/evidence.json"
+COEXISTENCE_GOLDEN_REPORT = COEXISTENCE_FIXTURE_ROOT / "positive/report.json"
+COEXISTENCE_NEGATIVE_ROOT = COEXISTENCE_FIXTURE_ROOT / "negative"
+M7_GRAPH = FIXTURE_ROOT / "positive/graph.json"
+M7_REPLAY = FIXTURE_ROOT / "positive/replay-result.json"
+M7_REGISTRY = REGISTRY
+M7_SOURCE_BUNDLE = SOURCE_BUNDLE
+M7_SOURCE_REPLAY = SOURCE_REPLAY
+EXPECTED_COEXISTENCE_NEGATIVE = {
+    "candidate-leak-ebus-mcp.json": "anti_leak.candidate",
+    "canonical-hash-mismatch.json": "hash.payload",
+    "clock-mismatch.json": "provenance.clock",
+    "config-hash-mismatch.json": "provenance.config",
+    "conflict-leak-graphql.json": "anti_leak.candidate",
+    "dropped-payload-field.json": "drift.consumer",
+    "duplicate-provenance.json": "ordering.duplicate",
+    "g17-claim.json": "gate.scope",
+    "g19-claim.json": "gate.scope",
+    "input-hash-mismatch.json": "provenance.runtime",
+    "m7-graph-mismatch.json": "provenance.m7",
+    "mask-scope-mismatch.json": "provenance.auth_mask",
+    "missing-provenance.json": "schema.evidence",
+    "missing-required-view.json": "view.coverage",
+    "no-services-empty-success.json": "state.evidence",
+    "public-v2-surface.json": "gate.scope",
+    "resource-limit-exceeded.json": "limits.exceeded",
+    "rollback-drift.json": "rollback.drift",
+    "runtime-artifact-mismatch.json": "provenance.runtime",
+    "stale-capture.json": "provenance.clock",
+    "timestamp-exclusion-mismatch.json": "canonicalization.invalid",
+    "unknown-field.json": "schema.evidence",
+}
+
 
 def load_json(path: pathlib.Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -1044,3 +1093,426 @@ def test_fail_closed_provenance_status_matrix(tmp_path: pathlib.Path) -> None:
         "verify", write_json(tmp_path / "service-only.json", graph)
     )
     assert result.stdout == "provenance.binding\n"
+
+
+def run_coexistence_validator(
+    command: str, evidence: pathlib.Path
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(COEXISTENCE_VALIDATOR),
+            command,
+            "--evidence",
+            str(evidence),
+            "--registry",
+            str(COEXISTENCE_REGISTRY),
+            "--m7-graph",
+            str(M7_GRAPH),
+            "--m7-replay",
+            str(M7_REPLAY),
+            "--m7-registry",
+            str(M7_REGISTRY),
+            "--m7-source-bundle",
+            str(M7_SOURCE_BUNDLE),
+            "--m7-source-replay",
+            str(M7_SOURCE_REPLAY),
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONHASHSEED": "random"},
+    )
+
+
+def _coexistence_digest(domain: bytes, value: object) -> str:
+    encoded = json.dumps(
+        value, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(domain + b"\0" + encoded).hexdigest()
+
+
+def _replace_pointer(value: object, pointer: str, replacement: str) -> None:
+    current = value
+    for raw_part in pointer.split("/")[1:-1]:
+        part = raw_part.replace("~1", "/").replace("~0", "~")
+        current = current[int(part)] if isinstance(current, list) else current[part]
+    raw_leaf = pointer.split("/")[-1]
+    leaf = raw_leaf.replace("~1", "/").replace("~0", "~")
+    if isinstance(current, list):
+        current[int(leaf)] = replacement
+    else:
+        current[leaf] = replacement
+
+
+def _payload_shape(value: object) -> object:
+    if isinstance(value, dict):
+        return {key: _payload_shape(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_payload_shape(item) for item in value]
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, int):
+        return "integer"
+    return "string"
+
+
+def _refresh_view_hashes(evidence: dict[str, object], view: dict[str, object]) -> None:
+    rules = next(
+        item
+        for item in evidence["normalization"]["view_rules"]
+        if item["view_id"] == view["view_id"]
+    )
+    normalized = deepcopy(view["payload"])
+    for pointer in rules["timestamp_pointers"]:
+        _replace_pointer(normalized, pointer, "<TIMESTAMP>")
+    for pointer in rules["mask_pointers"]:
+        _replace_pointer(normalized, pointer, "<MASKED>")
+    view["raw_payload_hash"] = _coexistence_digest(
+        b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-RAW-PAYLOAD:V1",
+        view["payload"],
+    )
+    view["shape_hash"] = _coexistence_digest(
+        b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-PAYLOAD-SHAPE:V1",
+        _payload_shape(view["payload"]),
+    )
+    view["canonical_payload_hash"] = _coexistence_digest(
+        b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-CANONICAL-PAYLOAD:V1",
+        normalized,
+    )
+    run = next(run for run in evidence["runs"] if view in run["protected_views"])
+    immutable_input = next(
+        item
+        for item in run["provenance"]["immutable_inputs"]
+        if item["input_id"] == "view:" + view["view_id"]
+    )
+    immutable_input["digest"] = view["raw_payload_hash"]
+    immutable_input["byte_length"] = len(
+        json.dumps(
+            view["payload"],
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    )
+
+
+def _run_by_state(evidence: dict[str, object], state: str) -> dict[str, object]:
+    return next(run for run in evidence["runs"] if run["state"] == state)
+
+
+def _view_by_id(run: dict[str, object], view_id: str) -> dict[str, object]:
+    return next(view for view in run["protected_views"] if view["view_id"] == view_id)
+
+
+def _apply_coexistence_mutation(
+    evidence: dict[str, object], mutation: str
+) -> None:
+    disabled = _run_by_state(evidence, "EEBUS_DISABLED_CONFIRMED")
+    no_services = _run_by_state(evidence, "EEBUS_ENABLED_NO_SERVICES")
+    candidate = _run_by_state(evidence, "EEBUS_CONNECTED_CANDIDATE_ONLY")
+    conflicted = _run_by_state(evidence, "EEBUS_CONFLICTED_WITHHELD")
+    rollback = _run_by_state(evidence, "EEBUS_DISABLED_ROLLBACK")
+    if mutation == "CANDIDATE_LEAK_EBUS_MCP":
+        view = _view_by_id(candidate, "mcp.ebus.v1.responses")
+        view["payload"]["data"]["candidate_status"] = "CANDIDATE"
+        _refresh_view_hashes(evidence, view)
+    elif mutation == "CANONICAL_HASH_MISMATCH":
+        disabled["protected_views"][0]["canonical_payload_hash"] = (
+            "sha256:" + "f" * 64
+        )
+    elif mutation == "CLOCK_MISMATCH":
+        disabled["provenance"]["capture_clock_id"] = "clock-" + "f" * 32
+    elif mutation == "CONFIG_HASH_MISMATCH":
+        disabled["provenance"]["config"]["config_hash"] = "sha256:" + "f" * 64
+    elif mutation == "CONFLICT_LEAK_GRAPHQL":
+        view = _view_by_id(conflicted, "graphql.ebus.values")
+        view["payload"]["data"]["conflict_status"] = "WITHHELD/CONFLICT"
+        _refresh_view_hashes(evidence, view)
+    elif mutation == "DROPPED_PAYLOAD_FIELD":
+        view = _view_by_id(disabled, "ha.identity")
+        del view["payload"]["data"]["devices"][0]["manufacturer"]
+        _refresh_view_hashes(evidence, view)
+    elif mutation == "DUPLICATE_PROVENANCE":
+        disabled["provenance"]["immutable_inputs"].append(
+            deepcopy(disabled["provenance"]["immutable_inputs"][0])
+        )
+    elif mutation == "G17_CLAIM":
+        evidence["scope"]["claims"].append("EEBUS-G17")
+    elif mutation == "G19_CLAIM":
+        evidence["scope"]["claims"].append("EEBUS-G19")
+    elif mutation == "INPUT_HASH_MISMATCH":
+        disabled["provenance"]["immutable_inputs"][0]["digest"] = (
+            "sha256:" + "f" * 64
+        )
+    elif mutation == "M7_GRAPH_MISMATCH":
+        evidence["m7_binding"]["graph_hash"] = "sha256:" + "f" * 64
+    elif mutation == "MASK_SCOPE_MISMATCH":
+        disabled["provenance"]["mask_scope_digest"] = "sha256:" + "f" * 64
+    elif mutation == "MISSING_PROVENANCE":
+        del disabled["provenance"]
+    elif mutation == "MISSING_REQUIRED_VIEW":
+        removed = disabled["protected_views"].pop()
+        disabled["provenance"]["immutable_inputs"] = [
+            item
+            for item in disabled["provenance"]["immutable_inputs"]
+            if item["input_id"] != "view:" + removed["view_id"]
+        ]
+    elif mutation == "NO_SERVICES_EMPTY_SUCCESS":
+        no_services["state_evidence"]["empty_success"] = True
+    elif mutation == "PUBLIC_V2_SURFACE":
+        view = _view_by_id(disabled, "mcp.tool.inventory")
+        view["payload"]["data"]["tools"].append("eebus.v2.runtime.status")
+        _refresh_view_hashes(evidence, view)
+    elif mutation == "RESOURCE_LIMIT_EXCEEDED":
+        evidence["limits"]["max_runs"] += 1
+    elif mutation == "ROLLBACK_DRIFT":
+        view = _view_by_id(rollback, "semantic.registry")
+        view["payload"]["data"]["authority"] = "eebus-candidate"
+        _refresh_view_hashes(evidence, view)
+    elif mutation == "RUNTIME_ARTIFACT_MISMATCH":
+        disabled["provenance"]["runtime"]["artifact_digest"] = (
+            "sha256:" + "f" * 64
+        )
+    elif mutation == "STALE_CAPTURE":
+        evidence["capture_clock"]["verification_offset_ns"] = (
+            evidence["capture_clock"]["max_capture_age_ns"]
+            + evidence["runs"][0]["capture_offset_ns"]
+            + 1
+        )
+    elif mutation == "TIMESTAMP_EXCLUSION_MISMATCH":
+        evidence["normalization"]["view_rules"][0]["timestamp_pointers"] = []
+        profile = {
+            key: value
+            for key, value in evidence["normalization"].items()
+            if key != "profile_digest"
+        }
+        digest = _coexistence_digest(
+            b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-NORMALIZATION:V1",
+            profile,
+        )
+        evidence["normalization"]["profile_digest"] = digest
+        for run in evidence["runs"]:
+            run["provenance"]["mask_scope_digest"] = digest
+    elif mutation == "UNKNOWN_FIELD":
+        evidence["verdict"] = "PASS"
+    else:
+        raise AssertionError(f"unhandled MSP-08 mutation: {mutation}")
+
+
+def test_msp08_executable_contract_inventory_is_frozen_for_gateway_red() -> None:
+    for path in (
+        COEXISTENCE_VALIDATOR,
+        COEXISTENCE_GENERATOR,
+        COEXISTENCE_SCHEMA,
+        COEXISTENCE_REPORT_SCHEMA,
+        COEXISTENCE_REGISTRY,
+        COEXISTENCE_POSITIVE,
+        COEXISTENCE_GOLDEN_REPORT,
+        M7_GRAPH,
+        M7_REPLAY,
+        M7_REGISTRY,
+        M7_SOURCE_BUNDLE,
+        M7_SOURCE_REPLAY,
+    ):
+        assert path.is_file(), f"missing executable MSP-08 contract file: {path}"
+    assert {path.name for path in COEXISTENCE_NEGATIVE_ROOT.glob("*.json")} == set(
+        EXPECTED_COEXISTENCE_NEGATIVE
+    )
+
+
+def test_msp08_positive_fixture_ids_states_and_protected_views_are_closed() -> None:
+    evidence = load_json(COEXISTENCE_POSITIVE)
+    registry = load_json(COEXISTENCE_REGISTRY)
+    assert evidence["fixture_id"] == "MSP08-G18-SYNTHETIC-POSITIVE-001"
+    assert evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE"
+    assert evidence["scope"]["live_vr940_claim"] is False
+    assert evidence["scope"]["claims"] == ["EEBUS-G18"]
+    assert [run["state"] for run in evidence["runs"]] == registry[
+        "scenario_order"
+    ]
+    expected_views = registry["protected_views"]
+    for run in evidence["runs"]:
+        assert [view["view_id"] for view in run["protected_views"]] == (
+            expected_views
+        )
+        assert run["state_evidence"]["empty_success"] is False
+    candidate = _run_by_state(evidence, "EEBUS_CONNECTED_CANDIDATE_ONLY")
+    conflicted = _run_by_state(evidence, "EEBUS_CONFLICTED_WITHHELD")
+    assert candidate["state_evidence"]["facts"][0]["status"] == "CANDIDATE"
+    assert conflicted["state_evidence"]["facts"][0] == {
+        "candidate_id": "m7-candidate-synthetic-conflict-0001",
+        "status": "WITHHELD",
+        "terminal_negative_state": "CONFLICT",
+        "visibility_channel": "CANDIDATE_DEBUG_REPLAY",
+    }
+
+
+def test_msp08_positive_evidence_and_report_are_schema_valid() -> None:
+    for schema, fixture in (
+        (COEXISTENCE_SCHEMA, COEXISTENCE_POSITIVE),
+        (COEXISTENCE_REPORT_SCHEMA, COEXISTENCE_GOLDEN_REPORT),
+    ):
+        result = subprocess.run(
+            ["jv", str(schema), str(fixture)],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
+    first = run_coexistence_validator("report", COEXISTENCE_POSITIVE)
+    second = run_coexistence_validator("report", COEXISTENCE_POSITIVE)
+    assert first.returncode == 0, first.stdout + first.stderr
+    assert second.returncode == 0, second.stdout + second.stderr
+    golden = COEXISTENCE_GOLDEN_REPORT.read_text(encoding="utf-8")
+    assert first.stdout == golden
+    assert second.stdout == golden
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_msp08_generator_reproduces_exact_positive_artifacts(
+    tmp_path: pathlib.Path,
+) -> None:
+    generated = tmp_path / "positive"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(COEXISTENCE_GENERATOR),
+            "--output-root",
+            str(generated),
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == ""
+    assert result.stderr == ""
+    assert (generated / "evidence.json").read_bytes() == COEXISTENCE_POSITIVE.read_bytes()
+    assert (generated / "report.json").read_bytes() == COEXISTENCE_GOLDEN_REPORT.read_bytes()
+
+
+def test_msp08_report_is_offline_under_host_variation(
+    tmp_path: pathlib.Path,
+) -> None:
+    env = {
+        "PATH": os.environ["PATH"],
+        "HOME": str(tmp_path / "unavailable-home"),
+        "LANG": "invalid_LOCALE",
+        "LC_ALL": "C",
+        "TZ": "Pacific/Kiritimati",
+        "PYTHONHASHSEED": "7234",
+    }
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(COEXISTENCE_VALIDATOR),
+            "report",
+            "--evidence",
+            str(COEXISTENCE_POSITIVE),
+            "--registry",
+            str(COEXISTENCE_REGISTRY),
+            "--m7-graph",
+            str(M7_GRAPH),
+            "--m7-replay",
+            str(M7_REPLAY),
+            "--m7-registry",
+            str(M7_REGISTRY),
+            "--m7-source-bundle",
+            str(M7_SOURCE_BUNDLE),
+            "--m7-source-replay",
+            str(M7_SOURCE_REPLAY),
+        ],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == COEXISTENCE_GOLDEN_REPORT.read_text(encoding="utf-8")
+    assert result.stderr == ""
+
+
+def test_msp08_registry_cannot_be_caller_substituted(
+    tmp_path: pathlib.Path,
+) -> None:
+    registry = deepcopy(load_json(COEXISTENCE_REGISTRY))
+    registry["protected_views"].pop()
+    registry_path = write_json(tmp_path / "registry.json", registry)
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    evidence["registry"]["digest"] = "sha256:" + hashlib.sha256(
+        registry_path.read_bytes()
+    ).hexdigest()
+    evidence_path = write_json(tmp_path / "evidence.json", evidence)
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(COEXISTENCE_VALIDATOR),
+            "verify",
+            "--evidence",
+            str(evidence_path),
+            "--registry",
+            str(registry_path),
+            "--m7-graph",
+            str(M7_GRAPH),
+            "--m7-replay",
+            str(M7_REPLAY),
+            "--m7-registry",
+            str(M7_REGISTRY),
+            "--m7-source-bundle",
+            str(M7_SOURCE_BUNDLE),
+            "--m7-source-replay",
+            str(M7_SOURCE_REPLAY),
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == "registry.binding\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "name,category",
+    sorted(EXPECTED_COEXISTENCE_NEGATIVE.items()),
+    ids=sorted(EXPECTED_COEXISTENCE_NEGATIVE),
+)
+def test_msp08_mutation_classes_fail_at_one_precedence_category(
+    tmp_path: pathlib.Path, name: str, category: str
+) -> None:
+    descriptor = load_json(COEXISTENCE_NEGATIVE_ROOT / name)
+    assert descriptor["contract"] == (
+        "helianthus.platform.multi-runtime-coexistence-negative-fixture.v1"
+    )
+    assert descriptor["fixture_id"].startswith("MSP08-G18-SYNTHETIC-NEG-")
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    _apply_coexistence_mutation(evidence, descriptor["mutation"])
+    result = run_coexistence_validator(
+        "verify", write_json(tmp_path / name, evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == f"{category}\n"
+    assert result.stderr == ""
+
+
+def test_msp08_production_validator_has_no_test_fixture_mutation_language() -> None:
+    source = COEXISTENCE_VALIDATOR.read_text(encoding="utf-8")
+    for token in (
+        "CANDIDATE_LEAK_EBUS_MCP",
+        "DROPPED_PAYLOAD_FIELD",
+        "ROLLBACK_DRIFT",
+        "expand_negative_fixture",
+    ):
+        assert token not in source
