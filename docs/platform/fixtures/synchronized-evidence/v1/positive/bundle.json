@@ -196,7 +196,7 @@
       "source_schema_version": 1
     },
     {
-      "artifact_id": "seav1:sha256:2ca07d3fe1754ffb544fed5989c482b997155f3427d543ad9434b3271857d52f",
+      "artifact_id": "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8",
       "auth_scope": {
         "authority": "effective",
         "permissions": [
@@ -285,7 +285,7 @@
             "minor": 0,
             "name": "helianthus-eebus-mcp"
           },
-          "data_hash": "sha256:0ae8821fbb2049b269b5ca764b5bcbbf1aeb2c661a642f3d97600070cd03f465",
+          "data_hash": "sha256:c0b9b1353fe49a47f5d3039156225ae47236fddb8054a875f25bf004d9fecc0d",
           "data_timestamp": "2026-07-19T12:00:02Z",
           "mask_tier": "redacted",
           "mode": "evidence",
@@ -300,7 +300,7 @@
       "recorder_ingested_at": "2026-07-19T12:00:02.75Z",
       "recorder_ingested_offset_ns": 2750000000,
       "recorder_version": "1.0.0+git.175b4695cfa738162613e8c823036d8ab5d7ecda",
-      "redacted_hash": "sha256:2ca07d3fe1754ffb544fed5989c482b997155f3427d543ad9434b3271857d52f",
+      "redacted_hash": "sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8",
       "remasking": {
         "entries": [
           {
@@ -966,8 +966,8 @@
       "eebus.raw.read"
     ]
   },
-  "bundle_hash": "sha256:8dee84c2c5c2295aac9a0d9869ed3c1ee207fadcc263923eac3aaf8fd61f8dc6",
-  "bundle_id": "sebv1:sha256:8dee84c2c5c2295aac9a0d9869ed3c1ee207fadcc263923eac3aaf8fd61f8dc6",
+  "bundle_hash": "sha256:2df0e688d8c615c657698350eac545a5997af39d50502dc56fe2df5eade5da61",
+  "bundle_id": "sebv1:sha256:2df0e688d8c615c657698350eac545a5997af39d50502dc56fe2df5eade5da61",
   "capture_window": {
     "action": {
       "end_offset_ns": 6000000000,
@@ -1270,7 +1270,7 @@
       "acquisition_start_offset_ns": 1500000000,
       "acquisition_started_at": "2026-07-19T12:00:01.5Z",
       "artifact_ids": [
-        "seav1:sha256:2ca07d3fe1754ffb544fed5989c482b997155f3427d543ad9434b3271857d52f"
+        "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8"
       ],
       "auth_scope": {
         "authority": "effective",
