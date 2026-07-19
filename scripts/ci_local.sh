@@ -151,6 +151,8 @@ python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow
 python3 -m pytest -q tests/test_platform_contracts.py -k 'not trusted_prior_workflow'
 python3 -m pytest -q tests/test_synchronized_evidence_contract.py
 python3 -m pytest -q tests/test_synchronized_evidence_executable_contract.py
+python3 -m pytest -q tests/test_candidate_fact_graph_contract.py
+python3 -m pytest -q tests/test_candidate_fact_graph_executable_contract.py
 set --
 if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then
   set -- --prior-manifest "${PLATFORM_PRIOR_MANIFEST}"
