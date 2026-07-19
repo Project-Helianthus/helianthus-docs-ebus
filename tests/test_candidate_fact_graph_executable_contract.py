@@ -482,9 +482,29 @@ def _comparison_vector(
     draft_unit: str | None = None,
 ) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
     graph = deepcopy(load_json(POSITIVE))
-    left = _artifact("EBUS", "a", "1", left_value, "degC" if left_value else None)
-    right = _artifact("EEBUS", "b", "2", right_value, "degC" if right_value else None)
-    target = graph["facts"][0]
+    left = _artifact("EBUS", "a", "8", left_value, "degC" if left_value else None)
+    right = _artifact("EEBUS", "b", "9", right_value, "degC" if right_value else None)
+    target = next(
+        fact
+        for fact in graph["facts"]
+        if fact["provenance"]["ebus"]
+        and fact["provenance"]["ebus"]["family"] == "B524"
+    )
+    eebus_path = {
+        "service": "service-" + "a" * 32,
+        "entity": "entity-" + "b" * 32,
+        "feature": "feature-" + "c" * 32,
+        "feature_path": [
+            {"kind": "SERVICE", "selector": "service-" + "a" * 32},
+            {"kind": "ENTITY", "selector": "entity-" + "b" * 32},
+            {"kind": "FEATURE", "selector": "feature-" + "c" * 32},
+        ],
+    }
+    left["ebus_identity"] = deepcopy(target["provenance"]["ebus"])
+    right["normalized_evidence"]["data"] = {
+        "services": [{"id": {"digest": eebus_path["service"]}}],
+        "feature_paths": [deepcopy(eebus_path)],
+    }
     target["status"] = status
     target["terminal_negative_state"] = terminal
     target["draft_value"] = draft_value
@@ -497,6 +517,8 @@ def _comparison_vector(
     target["provenance"]["ebus_artifact_id"] = left["artifact_id"]
     target["provenance"]["eebus_source_id"] = right["source_id"]
     target["provenance"]["eebus_artifact_id"] = right["artifact_id"]
+    target["provenance"]["eebus_service"] = eebus_path["service"]
+    target["provenance"]["eebus"] = eebus_path
     target["comparator"] = {
         "draft_id": "NUMERIC_WINDOW_V1_DRAFT",
         "samples": [
@@ -510,7 +532,26 @@ def _comparison_vector(
         ],
         "outcome": outcome,
     }
-    source = {"artifacts": [left, right]}
+    source = deepcopy(load_json(SOURCE_BUNDLE))
+    source["sources"].extend(
+        [
+            {
+                "source_id": left["source_id"],
+                "source_kind": "EBUS",
+                "artifact_ids": [left["artifact_id"]],
+            },
+            {
+                "source_id": right["source_id"],
+                "source_kind": "EEBUS",
+                "artifact_ids": [right["artifact_id"]],
+            },
+        ]
+    )
+    source["artifacts"].extend([left, right])
+    source["evidence_refs"].extend(
+        [deepcopy(left["evidence_refs"][0]), deepcopy(right["evidence_refs"][0])]
+    )
+    graph["source_bundle"]["evidence_refs"] = deepcopy(source["evidence_refs"])
     return graph, target, source
 
 
@@ -518,11 +559,13 @@ def _validate_comparison_vector(
     module, graph: dict[str, object], target: dict[str, object], source: dict[str, object]
 ) -> None:
     registry = load_json(REGISTRY)
-    artifacts = {
-        (artifact["source_id"], artifact["artifact_id"]): artifact
-        for artifact in source["artifacts"]
-    }
-    module._check_sample_provenance(target, artifacts)
+    module.check_provenance(
+        graph,
+        registry,
+        source,
+        load_json(SOURCE_REPLAY),
+    )
+    module.check_identities(graph, source)
     module.check_states(graph, registry)
     module.check_comparators(graph, registry, source)
 
@@ -731,6 +774,32 @@ def test_evaluator_derives_missing_and_excludes_it_from_minimum_samples() -> Non
     parameters["maximum_missing_samples"] = 1
     missing = _sample(left, right, state="MISSING")
     assert _evaluate(parameters, [missing], [left, right]) == "INDETERMINATE"
+
+
+def test_failed_availability_bounds_precede_conflict_classification() -> None:
+    left = _artifact("EBUS", "a", "1", "10", "degC")
+    unavailable_left = _artifact("EBUS", "c", "3", None, None)
+    right = _artifact("EEBUS", "b", "2", "11", "degC")
+    parameters = _parameters()
+    parameters["minimum_samples"] = 1
+    parameters["maximum_missing_samples"] = 0
+    parameters["conflict_threshold"] = {
+        "absolute_decimal": "1",
+        "consecutive_samples": 1,
+    }
+    samples = [
+        _sample(left, right, offset_ns=4_000_000_000),
+        _sample(
+            unavailable_left,
+            right,
+            offset_ns=5_000_000_000,
+            state="MISSING",
+        ),
+    ]
+    assert (
+        _evaluate(parameters, samples, [left, unavailable_left, right])
+        == "INDETERMINATE"
+    )
 
 
 def test_evaluator_resets_conflict_run_on_below_threshold_sample() -> None:
