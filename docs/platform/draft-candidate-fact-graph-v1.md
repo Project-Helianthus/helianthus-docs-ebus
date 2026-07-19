@@ -2,7 +2,8 @@ Canonical source: this page.
 
 # Draft Candidate Fact Graph V1
 
-Issue: `Project-Helianthus/helianthus-docs-ebus#359` (`MSP-07`, M7).
+Issues: `Project-Helianthus/helianthus-docs-ebus#359` and hardening issue
+`Project-Helianthus/helianthus-docs-ebus#361` (`MSP-07`, M7).
 
 Plan provenance: the locked multi-runtime semantic platform plan,
 `12-eebus-mcp-first-vr940f.md`, `13-semantic-fact-graph-and-integration.md`, and
@@ -42,6 +43,11 @@ non-integer JSON numbers, negative zero, and integers outside the portable
 JSON safe-integer range are rejected. Optional meaning is represented by an
 explicit JSON `null`; omission is not another state.
 
+All contract tokens are printable ASCII and at most 256 characters. Proposed
+paths, evidence paths, and native observation pointers are at most 512
+characters. The schema and executable validator apply the same closed types,
+enums, integer ranges, string bounds, required fields, and unknown-field rule.
+
 The root binds the exact synchronized evidence contract, bundle id, bundle
 hash, replay hash, immutable evidence refs, candidate registry digest,
 visibility flags, hard limits, comparator drafts, and ordered facts. An input
@@ -68,16 +74,20 @@ requires deep equality with `--source-replay`. It then requires exact equality
 for bundle contract/version/id/hash and the complete root evidence-ref set.
 
 Every non-null source/artifact pair on a fact must exist in that verified
-bundle with the declared source kind, and every artifact evidence ref must be
-present on the fact. eBUS B509/B524/B555 identity must be deep-equal to the
+bundle with the declared source kind, and every evidence ref of every selected
+artifact must be present directly on the fact. A root bundle ref alone is not
+fact provenance. eBUS B509/B524/B555 identity must be deep-equal to the
 verified artifact identity. A B524 OP=0x02 artifact cannot be relabeled as
 OP=0x06. Cloud source/artifact pairs are checked the same way.
 
 An eeBUS service/entity/feature/path is accepted only when the referenced
-verified artifact carries that complete path. The current MSP-065 v1
-`services.list` evidence carries a service anchor but no entity/feature path,
-so M7 must leave the path null and withhold any claim that needs it. A service
-anchor never licenses invented entity or feature selectors.
+verified artifact carries that complete path. A service-only artifact may bind
+`eebus_service` for `RAW_ONLY` review, but it cannot bind an entity, feature,
+numeric observation, or semantic comparison. The current MSP-065 v1
+`services.list` evidence carries a service anchor but no entity/feature/value,
+so the canonical graph has no evaluated sample and no `CANDIDATE` or
+`CONFLICTED` fact. A service anchor never licenses invented entity or feature
+selectors.
 
 `source_bundle.replay_hash` is not a file hash. It is lowercase SHA-256 over
 ASCII `HELIANTHUS:SYNCHRONIZED-EVIDENCE-REPLAY:V1`, one NUL byte, then RFC
@@ -122,6 +132,26 @@ Confidence is closed metadata, not promotion authority. It records `level`,
 `basis`, and `score_milli`. High confidence cannot bypass M8/M8.5 or make a
 candidate stable.
 
+### Fail-closed provenance/status matrix
+
+This fail-closed provenance/status matrix is normative. No unlisted
+combination is valid:
+
+| Status / terminal | Required direct provenance | Samples and outcome | Draft value |
+| --- | --- | --- | --- |
+| `RAW_ONLY` / null | At least one reviewable native or root ref; any selected artifact contributes all of its refs | no samples; `NOT_EVALUATED` | null |
+| `CANDIDATE` / null | complete eBUS identity and complete eeBUS service/entity/feature path, with both native artifacts and refs | non-empty, directly bound cross-runtime samples; recomputed `MATCH` | recomputed final rounded eeBUS value and target unit |
+| `CONFLICTED` / null | same complete direct eBUS and eeBUS provenance as `CANDIDATE` | non-empty samples; recomputed `CONFLICT` | null |
+| `WITHHELD` / `CLOUD_ONLY` | a verified cloud artifact and its refs, and no native substitute | no samples; `NOT_EVALUATED` | null |
+| `WITHHELD` / `NO_SIGNAL` | at least one selected native artifact and all its refs | no samples; `NOT_EVALUATED` | null |
+| `WITHHELD` / `NOT_TESTED` | bundle provenance only, or incomplete native provenance | no samples; `NOT_EVALUATED` | null |
+| `WITHHELD` / `CONFLICT` | complete direct eBUS and eeBUS provenance | non-empty samples; recomputed `CONFLICT` | null |
+
+Cloud-only evidence cannot escape `WITHHELD/CLOUD_ONLY`. Cloud evidence ids
+are exactly `public-evidence:sha256:<64 lowercase hex>` and the digest must be
+one of the selected verified cloud artifact's evidence-ref digests. An
+arbitrary publishable-looking token is invalid.
+
 ## Exact Native Provenance
 
 Every provenance record binds its native evidence refs to the root bundle.
@@ -149,7 +179,7 @@ segments follow. A service, entity, or feature from another evidence row may
 not fill a missing segment. The path is native evidence identity, not a stable
 semantic hierarchy and not a publication of restricted feature meaning.
 
-Cloud/app provenance is optional and only accepts a publishable evidence id.
+Cloud/app provenance is optional and only accepts a bound publishable evidence id.
 It cannot replace missing eBUS or eeBUS identity. A cloud-only observation
 ends as `WITHHELD/CLOUD_ONLY`.
 
@@ -168,12 +198,44 @@ definition, whose pass/fail parameters are:
 - `stale_cutoff_ns`; and
 - an absolute and consecutive-sample `conflict_threshold`.
 
-Exact decimals are canonical strings. Sample offsets are captured monotonic
-offsets from the evidence bundle. The evaluator does not read a clock or
-acquire more samples. `MATCH`, `MISMATCH`, `CONFLICT`, `INDETERMINATE`, and
-`NOT_EVALUATED` are draft outcomes only. The result is invalid if sample
-ordering, bounds, missing/stale accounting, or status/outcome consistency does
-not satisfy the validator.
+Exact decimals are canonical strings. Every sample has an eBUS left side and
+an eeBUS right side. Each side selects one verified source id, artifact id,
+artifact evidence ref, recorder ingest offset, native value JSON pointer, and
+native unit JSON pointer. The copied decimal/unit must deep-equal the selected
+native values. The side ref must occur both on the artifact and directly on the
+fact. This is the native observation pointer binding; caller-supplied decimal
+text has no authority by itself.
+
+The deterministic evaluator performs these steps in order:
+
+1. reject duplicate canonical samples before any sample can count;
+2. resolve both pointers against the verified artifact and require the copied
+   value, unit, evidence ref, source kind, ids, and ingest offset to match;
+3. derive `MISSING` when either selected value or unit is null, derive `STALE`
+   when either age is strictly greater than `stale_cutoff_ns`, otherwise derive
+   `PRESENT`, and reject a caller state that differs;
+4. for `PRESENT`, compute the left value as `left * scale + offset`, then apply
+   the declared rounding to converted left and native right (`HALF_EVEN` uses
+   the declared decimal places; `NONE` requires null places);
+5. compute `delta = abs(left - right)` and `allowed = absolute tolerance plus relative tolerance`,
+   where relative tolerance is `abs(right) * relative_ppm / 1,000,000`; equality
+   with `allowed` is a match;
+6. count `MISSING` and `STALE` together against `maximum_missing_samples` and
+   exclude both from `minimum_samples`;
+7. count a conflict when `delta >= conflict_threshold.absolute_decimal` for
+   the declared number of consecutive `PRESENT` samples; an unavailable or
+   below-threshold sample resets the run; and
+8. return `CONFLICT` first, otherwise `INDETERMINATE` when an availability or
+   minimum-sample bound fails, otherwise `MISMATCH` when any present delta is
+   over tolerance, otherwise `MATCH`. An empty list alone returns
+   `NOT_EVALUATED`.
+
+All arithmetic is exact decimal arithmetic with sufficient fixed precision for
+the bounded 64-character inputs. Sample offsets are captured monotonic offsets
+from the evidence bundle. The evaluator does not read a clock or acquire more
+samples. `MATCH`, `MISMATCH`, `CONFLICT`, `INDETERMINATE`, and `NOT_EVALUATED`
+are draft outcomes only. The stored outcome must equal the recomputed outcome;
+it is never caller-controlled.
 
 ## Deterministic Ordering And Hashes
 
@@ -213,10 +275,15 @@ The limits are part of the hash view and must equal the closed registry:
 | `max_samples_per_comparator` | 1,024 |
 | `max_string_bytes` | 4,096 |
 | `max_path_segments` | 32 |
+| `max_total_members` | 16,384 |
+| `max_total_list_items` | 8,192 |
 
-An implementation may configure a lower ceiling before capture, but the
-serialized graph declares the effective values and cannot exceed or alter the
-registry values. Limit failure produces no partial graph or replay.
+Before `json.loads`, a pre-parse byte scanner enforces graph bytes, nesting
+depth, serialized string bytes, total object members, total list items, and
+the per-list ceiling. The iterative canonicalization preflight enforces the
+same budgets before graph or replay serialization. The serialized graph must
+declare exactly the registry ceilings. Limit failure produces no partial graph
+or replay and cannot recurse or allocate an unbounded decoded object first.
 
 ## Validation Precedence
 
@@ -237,6 +304,14 @@ Validation stops at the first category in this order:
 
 Unsupported internal combinations are contract violations; validators do not
 invent another state or silently normalize an input.
+
+For bounded graph inputs, the CLI parses and validates graph `json.syntax`,
+`schema.graph`, `limits.exceeded`, and `registry.binding` before it opens or
+verifies either source input. Source bundle/replay syntax, synchronized replay,
+and source registry failures map to `provenance.binding`; they cannot preempt
+an earlier graph defect. The allocation-safety pre-parse ceilings run before
+recursive parsing by necessity and therefore have absolute priority for an
+oversized or over-deep byte stream.
 
 ## Stable Consumer Anti-Leak
 
