@@ -81,6 +81,10 @@ def test_contract_closes_status_identity_comparator_and_retest_fields() -> None:
         "OP=0x02",
         "OP=0x06",
         "service/entity/feature/path",
+        "native observation pointer",
+        "absolute tolerance plus relative tolerance",
+        "fail-closed provenance/status matrix",
+        "pre-parse",
         "no family inheritance",
         "no sibling inheritance",
     ):
@@ -117,6 +121,18 @@ def test_machine_schema_and_registry_are_closed() -> None:
     ]
     assert registry["candidate_channel"] == "CANDIDATE_DEBUG_REPLAY"
     assert len(registry["validation_precedence"]) >= 10
+    assert registry["limits"]["max_total_members"] == 16384
+    assert registry["limits"]["max_total_list_items"] == 8192
+    sample = schema["$defs"]["ComparatorEvaluationV1"]["properties"]["samples"][
+        "items"
+    ]
+    assert set(sample["required"]) == {"offset_ns", "left", "right", "state"}
+    assert set(sample["properties"]) == {"offset_ns", "left", "right", "state"}
+    assert schema["$defs"]["TokenV1"]["pattern"].startswith("^[\\x20-\\x7e]")
+    assert schema["$defs"]["NullableTokenV1"]["oneOf"][0]["maxLength"] == 256
+    assert schema["$defs"]["FactV1"]["properties"]["proposed_path"][
+        "maxLength"
+    ] == 512
 
 
 def test_determinism_limits_precedence_and_replay_are_normative() -> None:

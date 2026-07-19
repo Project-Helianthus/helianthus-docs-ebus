@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import os
 import pathlib
 import subprocess
 import sys
+from copy import deepcopy
 
 import pytest
 
@@ -36,7 +38,7 @@ EXPECTED_NEGATIVE = {
     "forged-eebus-entity-feature.json": "identity.native",
     "forged-source-id.json": "provenance.binding",
     "graph-hash-mismatch.json": "hash.graph",
-    "incomplete-b524-identity.json": "identity.native",
+    "incomplete-b524-identity.json": "schema.graph",
     "invalid-eebus-feature-path.json": "identity.native",
     "limit-exceeded.json": "limits.exceeded",
     "ordering-invalid.json": "ordering.invalid",
@@ -50,6 +52,19 @@ EXPECTED_NEGATIVE = {
 
 def load_json(path: pathlib.Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_validator_module():
+    spec = importlib.util.spec_from_file_location("candidate_fact_validator", VALIDATOR)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def write_json(path: pathlib.Path, value: object) -> pathlib.Path:
+    path.write_text(json.dumps(value, separators=(",", ":")), encoding="utf-8")
+    return path
 
 
 def run_validator(
@@ -100,17 +115,12 @@ def test_machine_contract_inventory_is_complete() -> None:
 def test_positive_graph_exercises_closed_status_and_native_identity_vocabulary() -> None:
     graph = load_json(POSITIVE)
     facts = graph["facts"]
-    assert {fact["status"] for fact in facts} == {
-        "RAW_ONLY",
-        "CANDIDATE",
-        "CONFLICTED",
-        "WITHHELD",
-    }
+    assert {fact["status"] for fact in facts} == {"RAW_ONLY", "WITHHELD"}
     assert {
         fact["terminal_negative_state"]
         for fact in facts
         if fact["terminal_negative_state"] is not None
-    } == {"NO_SIGNAL", "CLOUD_ONLY", "CONFLICT", "NOT_TESTED"}
+    } == {"NO_SIGNAL", "CLOUD_ONLY", "NOT_TESTED"}
     families = {
         fact["provenance"]["ebus"]["family"]
         for fact in facts
@@ -125,13 +135,9 @@ def test_positive_graph_exercises_closed_status_and_native_identity_vocabulary()
     ]
     assert {identity["opcode"] for identity in b524} == {2}
     for fact in facts:
-        eebus = fact["provenance"]["eebus"]
-        if eebus is not None:
-            assert [segment["kind"] for segment in eebus["feature_path"][:3]] == [
-                "SERVICE",
-                "ENTITY",
-                "FEATURE",
-            ]
+        assert fact["provenance"]["eebus"] is None
+        assert fact["comparator"]["samples"] == []
+        assert fact["comparator"]["outcome"] == "NOT_EVALUATED"
 
 
 def test_positive_provenance_ids_and_identities_bind_to_verified_source() -> None:
@@ -148,7 +154,7 @@ def test_positive_provenance_ids_and_identities_bind_to_verified_source() -> Non
                 (provenance["ebus_source_id"], provenance["ebus_artifact_id"])
             ]
             assert provenance["ebus"] == artifact["ebus_identity"]
-        if provenance["eebus"] is not None:
+        if provenance["eebus_source_id"] is not None:
             artifact = artifacts[
                 (provenance["eebus_source_id"], provenance["eebus_artifact_id"])
             ]
@@ -156,12 +162,21 @@ def test_positive_provenance_ids_and_identities_bind_to_verified_source() -> Non
                 row["id"]["digest"]
                 for row in artifact["normalized_evidence"]["data"]["services"]
             }
-            assert provenance["eebus"]["service"] in service_ids
+            assert provenance["eebus_service"] in service_ids
+            if provenance["eebus"] is not None:
+                assert provenance["eebus"]["service"] == provenance["eebus_service"]
         if provenance["cloud"] is not None:
             assert (
                 provenance["cloud"]["source_id"],
                 provenance["cloud"]["artifact_id"],
             ) in artifacts
+            cloud_artifact = artifacts[
+                (provenance["cloud"]["source_id"], provenance["cloud"]["artifact_id"])
+            ]
+            digest = cloud_artifact["evidence_refs"][0]["digest"].removeprefix(
+                "sha256:"
+            )
+            assert provenance["cloud"]["evidence_id"] == f"public-evidence:sha256:{digest}"
 
 
 def test_source_replay_digest_is_domain_separated_jcs_not_file_bytes() -> None:
@@ -210,9 +225,83 @@ def test_positive_graph_replays_to_exact_golden_bytes() -> None:
     "name,category", sorted(EXPECTED_NEGATIVE.items()), ids=sorted(EXPECTED_NEGATIVE)
 )
 def test_negative_graphs_fail_with_one_precedence_category(
-    name: str, category: str
+    tmp_path: pathlib.Path, name: str, category: str
 ) -> None:
-    result = run_validator("verify", NEGATIVE_ROOT / name)
+    fixture = load_json(NEGATIVE_ROOT / name)
+    assert fixture["contract"] == (
+        "helianthus.platform.draft-candidate-fact-negative-fixture.v1"
+    )
+    graph = deepcopy(load_json(POSITIVE))
+    mutation = fixture["mutation"]
+    if mutation == "ANTI_LEAK_STABLE_SURFACE":
+        graph["visibility"]["stable_exposure"] = True
+    elif mutation == "COMPARATOR_PARAMETER_INVALID":
+        graph["comparator_drafts"][0]["parameters"]["window"][
+            "start_offset_ns"
+        ] = graph["comparator_drafts"][0]["parameters"]["window"]["end_offset_ns"]
+    elif mutation == "EVIDENCE_REF_NOT_IN_BUNDLE":
+        graph["facts"][0]["provenance"]["native_evidence_refs"][0]["digest"] = (
+            "sha256:" + "f" * 64
+        )
+    elif mutation == "GRAPH_HASH_MISMATCH":
+        graph["graph_hash"] = "sha256:" + "0" * 64
+    elif mutation == "FORGED_ARTIFACT_ID":
+        graph["facts"][0]["provenance"]["cloud"]["artifact_id"] = (
+            "seav1:sha256:" + "f" * 64
+        )
+    elif mutation == "FORGED_SOURCE_ID":
+        graph["facts"][0]["provenance"]["cloud"]["source_id"] = (
+            "cloud-" + "f" * 32
+        )
+    elif mutation in {"FORGED_B524_OPCODE", "INCOMPLETE_B524_IDENTITY"}:
+        target = next(
+            fact
+            for fact in graph["facts"]
+            if fact["provenance"]["ebus"]
+            and fact["provenance"]["ebus"]["family"] == "B524"
+        )
+        if mutation == "FORGED_B524_OPCODE":
+            target["provenance"]["ebus"]["opcode"] = 6
+        else:
+            del target["provenance"]["ebus"]["RR"]
+    elif mutation in {"INVALID_EEBUS_FEATURE_PATH", "FORGED_EEBUS_ENTITY_FEATURE"}:
+        target = next(
+            fact for fact in graph["facts"] if fact["provenance"]["eebus_service"]
+        )
+        target["provenance"]["eebus"] = {
+            "service": target["provenance"]["eebus_service"],
+            "entity": "entity-" + "e" * 32,
+            "feature": "feature-" + "f" * 32,
+            "feature_path": [
+                {
+                    "kind": "SERVICE",
+                    "selector": target["provenance"]["eebus_service"],
+                },
+                {"kind": "ENTITY", "selector": "entity-" + "e" * 32},
+                {"kind": "FEATURE", "selector": "feature-" + "f" * 32},
+            ],
+        }
+        if mutation == "INVALID_EEBUS_FEATURE_PATH":
+            target["provenance"]["eebus"]["feature_path"][0]["kind"] = "FEATURE"
+    elif mutation == "LIMIT_EXCEEDED":
+        graph["limits"]["max_facts"] = 65
+    elif mutation == "ORDERING_INVALID":
+        graph["facts"].reverse()
+    elif mutation == "REGISTRY_MISMATCH":
+        graph["registry"]["digest"] = "sha256:" + "0" * 64
+    elif mutation == "WRONG_SOURCE_BUNDLE":
+        graph["source_bundle"]["bundle_hash"] = "sha256:" + "f" * 64
+    elif mutation == "WRONG_SOURCE_REPLAY":
+        graph["source_bundle"]["replay_hash"] = "sha256:" + "f" * 64
+    elif mutation == "TERMINAL_STATE_NOT_WITHHELD":
+        target = next(fact for fact in graph["facts"] if fact["provenance"]["cloud"])
+        target["status"] = "RAW_ONLY"
+        target["terminal_negative_state"] = None
+    elif mutation == "UNKNOWN_FIELD":
+        graph["unknown"] = True
+    else:
+        raise AssertionError(f"unhandled test-only mutation: {mutation}")
+    result = run_validator("verify", write_json(tmp_path / name, graph))
     assert result.returncode == 1
     assert result.stdout == f"{category}\n"
     assert result.stderr == ""
@@ -293,4 +382,406 @@ def test_graph_declares_bounded_limits_and_candidate_only_visibility() -> None:
         "max_samples_per_comparator": 1024,
         "max_string_bytes": 4096,
         "max_path_segments": 32,
+        "max_total_members": 16384,
+        "max_total_list_items": 8192,
     }
+
+
+def test_production_validator_has_no_negative_fixture_command_language() -> None:
+    source = VALIDATOR.read_text(encoding="utf-8")
+    assert "NEGATIVE_FIXTURE_CONTRACT" not in source
+    assert "expand_negative_fixture" not in source
+    assert "COMPARATOR_PARAMETER_INVALID" not in source
+
+
+def _evidence_ref(digit: str) -> dict[str, object]:
+    return {
+        "kind": "CONTENT",
+        "digest_algorithm": "SHA256_CONTENT_BYTES",
+        "digest": "sha256:" + digit * 64,
+        "repository": None,
+        "commit": None,
+        "path": None,
+    }
+
+
+def _artifact(
+    kind: str,
+    suffix: str,
+    digit: str,
+    value: str | None,
+    unit: str | None,
+    offset_ns: int = 2_000_000_000,
+) -> dict[str, object]:
+    return {
+        "source_kind": kind,
+        "source_id": f"{kind.lower()}-{suffix * 32}",
+        "artifact_id": f"seav1:sha256:{digit * 64}",
+        "recorder_ingested_offset_ns": offset_ns,
+        "evidence_refs": [_evidence_ref(digit)],
+        "normalized_evidence": {"observation": {"value": value, "unit": unit}},
+    }
+
+
+def _side(artifact: dict[str, object]) -> dict[str, object]:
+    return {
+        "source_kind": artifact["source_kind"],
+        "source_id": artifact["source_id"],
+        "artifact_id": artifact["artifact_id"],
+        "evidence_ref": deepcopy(artifact["evidence_refs"][0]),
+        "observed_offset_ns": artifact["recorder_ingested_offset_ns"],
+        "value_pointer": "/observation/value",
+        "unit_pointer": "/observation/unit",
+        "native_decimal": artifact["normalized_evidence"]["observation"]["value"],
+        "native_unit": artifact["normalized_evidence"]["observation"]["unit"],
+    }
+
+
+def _parameters() -> dict[str, object]:
+    return deepcopy(load_json(POSITIVE)["comparator_drafts"][0]["parameters"])
+
+
+def _sample(
+    left: dict[str, object],
+    right: dict[str, object],
+    *,
+    offset_ns: int = 4_000_000_000,
+    state: str = "PRESENT",
+) -> dict[str, object]:
+    return {
+        "offset_ns": offset_ns,
+        "left": _side(left),
+        "right": _side(right),
+        "state": state,
+    }
+
+
+def _evaluate(
+    parameters: dict[str, object],
+    samples: list[dict[str, object]],
+    artifacts: list[dict[str, object]],
+) -> str:
+    module = load_validator_module()
+    index = {
+        (artifact["source_id"], artifact["artifact_id"]): artifact
+        for artifact in artifacts
+    }
+    return module._evaluate_numeric_window(parameters, samples, index)
+
+
+def test_evaluator_uses_exact_absolute_plus_relative_tolerance_boundary() -> None:
+    left = _artifact("EBUS", "a", "1", "10", "degC")
+    right = _artifact("EEBUS", "b", "2", "10.3", "degC")
+    parameters = _parameters()
+    parameters["minimum_samples"] = 1
+    parameters["tolerance"] = {"absolute_decimal": "0.197", "relative_ppm": 10000}
+    parameters["conflict_threshold"] = {
+        "absolute_decimal": "10",
+        "consecutive_samples": 2,
+    }
+    assert _evaluate(parameters, [_sample(left, right)], [left, right]) == "MATCH"
+
+
+def test_evaluator_applies_affine_conversion_then_half_even_rounding() -> None:
+    left = _artifact("EBUS", "a", "1", "2.25", "source")
+    right = _artifact("EEBUS", "b", "2", "5.4", "target")
+    parameters = _parameters()
+    parameters["minimum_samples"] = 1
+    parameters["tolerance"] = {"absolute_decimal": "0", "relative_ppm": 0}
+    parameters["unit_conversion"] = {
+        "mode": "AFFINE",
+        "source_unit": "source",
+        "target_unit": "target",
+        "scale_decimal": "2",
+        "offset_decimal": "0.9",
+    }
+    parameters["rounding"] = {"mode": "HALF_EVEN", "decimal_places": 0}
+    assert _evaluate(parameters, [_sample(left, right)], [left, right]) == "MATCH"
+
+
+def test_evaluator_conflict_threshold_is_inclusive_and_consecutive() -> None:
+    left = _artifact("EBUS", "a", "1", "10", "degC", offset_ns=3_000_000_000)
+    right = _artifact("EEBUS", "b", "2", "11", "degC", offset_ns=3_000_000_000)
+    parameters = _parameters()
+    parameters["minimum_samples"] = 2
+    parameters["conflict_threshold"] = {
+        "absolute_decimal": "1",
+        "consecutive_samples": 2,
+    }
+    samples = [
+        _sample(left, right, offset_ns=4_000_000_000),
+        _sample(left, right, offset_ns=5_000_000_000),
+    ]
+    assert _evaluate(parameters, samples, [left, right]) == "CONFLICT"
+
+
+def test_evaluator_stale_cutoff_boundary_and_missing_budget() -> None:
+    left = _artifact("EBUS", "a", "1", "10", "degC")
+    right = _artifact("EEBUS", "b", "2", "10", "degC")
+    parameters = _parameters()
+    parameters["minimum_samples"] = 1
+    parameters["maximum_missing_samples"] = 0
+    parameters["stale_cutoff_ns"] = 2_000_000_000
+    at_cutoff = _sample(left, right, offset_ns=4_000_000_000)
+    assert _evaluate(parameters, [at_cutoff], [left, right]) == "MATCH"
+    past_cutoff = _sample(
+        left,
+        right,
+        offset_ns=4_000_000_001,
+        state="STALE",
+    )
+    assert _evaluate(parameters, [past_cutoff], [left, right]) == "INDETERMINATE"
+
+
+def test_evaluator_derives_missing_and_excludes_it_from_minimum_samples() -> None:
+    left = _artifact("EBUS", "a", "1", None, None)
+    right = _artifact("EEBUS", "b", "2", "10", "degC")
+    parameters = _parameters()
+    parameters["minimum_samples"] = 1
+    parameters["maximum_missing_samples"] = 1
+    missing = _sample(left, right, state="MISSING")
+    assert _evaluate(parameters, [missing], [left, right]) == "INDETERMINATE"
+
+
+def test_evaluator_resets_conflict_run_on_below_threshold_sample() -> None:
+    left = _artifact(
+        "EBUS", "a", "1", "10", "degC", offset_ns=4_000_000_000
+    )
+    right_conflict = _artifact(
+        "EEBUS", "b", "2", "11", "degC", offset_ns=4_000_000_000
+    )
+    right_match = _artifact(
+        "EEBUS", "c", "3", "10", "degC", offset_ns=4_000_000_000
+    )
+    parameters = _parameters()
+    parameters["minimum_samples"] = 3
+    parameters["conflict_threshold"] = {
+        "absolute_decimal": "1",
+        "consecutive_samples": 2,
+    }
+    samples = [
+        _sample(left, right_conflict, offset_ns=4_000_000_000),
+        _sample(left, right_match, offset_ns=5_000_000_000),
+        _sample(left, right_conflict, offset_ns=6_000_000_000),
+    ]
+    assert (
+        _evaluate(parameters, samples, [left, right_conflict, right_match])
+        == "MISMATCH"
+    )
+
+
+def test_evaluator_rejects_forged_native_value_and_artifact_ref() -> None:
+    module = load_validator_module()
+    left = _artifact("EBUS", "a", "1", "10", "degC")
+    right = _artifact("EEBUS", "b", "2", "10", "degC")
+    index = {
+        (artifact["source_id"], artifact["artifact_id"]): artifact
+        for artifact in (left, right)
+    }
+    forged_value = _sample(left, right)
+    forged_value["right"]["native_decimal"] = "99"
+    with pytest.raises(module.Failure):
+        module._evaluate_numeric_window(_parameters(), [forged_value], index)
+    forged_ref = _sample(left, right)
+    forged_ref["left"]["evidence_ref"]["digest"] = "sha256:" + "f" * 64
+    with pytest.raises(module.Failure):
+        module._evaluate_numeric_window(_parameters(), [forged_ref], index)
+
+
+def test_sample_provenance_uses_exact_fact_selected_artifacts() -> None:
+    module = load_validator_module()
+    left = _artifact("EBUS", "a", "1", "10", "degC")
+    other_left = _artifact("EBUS", "c", "3", "10", "degC")
+    right = _artifact("EEBUS", "b", "2", "10", "degC")
+    sample = _sample(left, right)
+    fact = deepcopy(load_json(POSITIVE)["facts"][0])
+    fact["provenance"]["ebus_source_id"] = left["source_id"]
+    fact["provenance"]["ebus_artifact_id"] = left["artifact_id"]
+    fact["provenance"]["eebus_source_id"] = right["source_id"]
+    fact["provenance"]["eebus_artifact_id"] = right["artifact_id"]
+    fact["provenance"]["native_evidence_refs"] = [
+        deepcopy(left["evidence_refs"][0]),
+        deepcopy(right["evidence_refs"][0]),
+    ]
+    fact["comparator"]["samples"] = [sample]
+    index = {
+        (artifact["source_id"], artifact["artifact_id"]): artifact
+        for artifact in (left, other_left, right)
+    }
+    module._check_sample_provenance(fact, index)
+    forged = deepcopy(sample)
+    forged["left"] = _side(other_left)
+    fact["provenance"]["native_evidence_refs"].append(
+        deepcopy(other_left["evidence_refs"][0])
+    )
+    fact["comparator"]["samples"] = [forged]
+    with pytest.raises(module.Failure) as error:
+        module._check_sample_provenance(fact, index)
+    assert str(error.value) == "provenance.binding"
+
+
+def test_evaluator_rejects_caller_state_and_duplicate_canonical_samples() -> None:
+    module = load_validator_module()
+    left = _artifact("EBUS", "a", "1", "10", "degC")
+    right = _artifact("EEBUS", "b", "2", "10", "degC")
+    index = {
+        (artifact["source_id"], artifact["artifact_id"]): artifact
+        for artifact in (left, right)
+    }
+    forged = _sample(left, right, offset_ns=4_000_000_001, state="PRESENT")
+    with pytest.raises(module.Failure):
+        module._evaluate_numeric_window(_parameters(), [forged], index)
+    duplicate = _sample(left, right)
+    with pytest.raises(module.Failure):
+        module._evaluate_numeric_window(
+            _parameters(), [duplicate, deepcopy(duplicate)], index
+        )
+
+
+def test_stored_comparator_outcome_must_equal_recomputed_result() -> None:
+    module = load_validator_module()
+    graph = deepcopy(load_json(POSITIVE))
+    registry = load_json(REGISTRY)
+    left = _artifact("EBUS", "a", "1", "10", "degC")
+    right = _artifact("EEBUS", "b", "2", "10", "degC")
+    target = graph["facts"][0]
+    target["status"] = "CANDIDATE"
+    target["terminal_negative_state"] = None
+    target["draft_value"] = "10"
+    target["draft_unit"] = "degC"
+    target["comparator"] = {
+        "draft_id": "NUMERIC_WINDOW_V1_DRAFT",
+        "samples": [
+            _sample(left, right, offset_ns=3_000_000_000),
+            _sample(left, right, offset_ns=4_000_000_000),
+        ],
+        "outcome": "MISMATCH",
+    }
+    target["provenance"]["native_evidence_refs"] = [
+        deepcopy(left["evidence_refs"][0]),
+        deepcopy(right["evidence_refs"][0]),
+    ]
+    target["provenance"]["ebus_source_id"] = left["source_id"]
+    target["provenance"]["ebus_artifact_id"] = left["artifact_id"]
+    target["provenance"]["eebus_source_id"] = right["source_id"]
+    target["provenance"]["eebus_artifact_id"] = right["artifact_id"]
+    with pytest.raises(module.Failure):
+        module.check_comparators(graph, registry, {"artifacts": [left, right]})
+    target["comparator"]["outcome"] = "MATCH"
+    target["draft_value"] = "99.0"
+    with pytest.raises(module.Failure):
+        module.check_comparators(graph, registry, {"artifacts": [left, right]})
+    target["draft_value"] = "10.0"
+    module.check_comparators(graph, registry, {"artifacts": [left, right]})
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        lambda graph: graph["facts"][0]["confidence"].__setitem__("score_milli", True),
+        lambda graph: graph["facts"][0].__setitem__("draft_unit", "x" * 257),
+        lambda graph: graph["facts"][0].__setitem__("draft_unit", "degr\N{DEGREE SIGN}"),
+        lambda graph: graph["facts"][0].__setitem__("proposed_path", "/" + "a" * 512),
+        lambda graph: graph["facts"][0]["confidence"].__setitem__("level", "CERTAIN"),
+        lambda graph: graph["facts"][0]["retest_trigger"].__setitem__(
+            "minimum_new_samples", 1025
+        ),
+        lambda graph: graph["facts"][0]["provenance"]["cloud"].__setitem__(
+            "evidence_id", "arbitrary-publishable-token"
+        ),
+    ),
+)
+def test_executable_schema_rejects_all_closed_type_length_enum_and_range_errors(
+    tmp_path: pathlib.Path, mutation,
+) -> None:
+    graph = deepcopy(load_json(POSITIVE))
+    mutation(graph)
+    result = run_validator("verify", write_json(tmp_path / "graph.json", graph))
+    assert result.returncode == 1
+    assert result.stdout == "schema.graph\n"
+
+
+def test_preflight_rejects_byte_depth_member_string_and_list_budgets_before_loads(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = load_validator_module()
+    values = (
+        b" " * (1_048_576 + 1),
+        (b"[" * 34) + (b"]" * 34),
+        b"{" + b','.join(b'\"a%d\":0' % index for index in range(16385)) + b"}",
+        b'{"value":"' + (b"a" * 4097) + b'"}',
+        b"[" + b",".join(b"0" for _ in range(1025)) + b"]",
+    )
+
+    def decoder_must_not_run(*_args, **_kwargs):
+        raise AssertionError("json.loads ran before bounded preflight")
+
+    monkeypatch.setattr(module.json, "loads", decoder_must_not_run)
+    for index, raw in enumerate(values):
+        path = tmp_path / f"preflight-{index}.json"
+        path.write_bytes(raw)
+        with pytest.raises(module.Failure) as error:
+            module.load_json(path, input_kind="graph")
+        assert str(error.value) == "limits.exceeded"
+
+
+def test_graph_validation_precedes_bad_source_inputs(tmp_path: pathlib.Path) -> None:
+    malformed_source = tmp_path / "source.json"
+    malformed_source.write_text("{", encoding="utf-8")
+
+    malformed_graph = tmp_path / "malformed-graph.json"
+    malformed_graph.write_text("{", encoding="utf-8")
+    result = run_validator(
+        "verify", malformed_graph, malformed_source, malformed_source
+    )
+    assert result.stdout == "json.syntax\n"
+
+    unknown = deepcopy(load_json(POSITIVE))
+    unknown["unknown"] = True
+    result = run_validator(
+        "verify",
+        write_json(tmp_path / "unknown.json", unknown),
+        malformed_source,
+        malformed_source,
+    )
+    assert result.stdout == "schema.graph\n"
+
+    registry_bad = deepcopy(load_json(POSITIVE))
+    registry_bad["registry"]["digest"] = "sha256:" + "0" * 64
+    result = run_validator(
+        "verify",
+        write_json(tmp_path / "registry.json", registry_bad),
+        malformed_source,
+        malformed_source,
+    )
+    assert result.stdout == "registry.binding\n"
+
+
+def test_fail_closed_provenance_status_matrix(tmp_path: pathlib.Path) -> None:
+    graph = deepcopy(load_json(POSITIVE))
+    cloud = next(fact for fact in graph["facts"] if fact["provenance"]["cloud"])
+    cloud["status"] = "RAW_ONLY"
+    cloud["terminal_negative_state"] = None
+    result = run_validator("verify", write_json(tmp_path / "cloud.json", graph))
+    assert result.stdout == "state.terminal\n"
+
+    graph = deepcopy(load_json(POSITIVE))
+    target = next(fact for fact in graph["facts"] if fact["provenance"]["ebus"])
+    target["status"] = "CANDIDATE"
+    target["terminal_negative_state"] = None
+    target["draft_value"] = "21.25"
+    target["draft_unit"] = "degC"
+    result = run_validator("verify", write_json(tmp_path / "one-sided.json", graph))
+    assert result.stdout == "provenance.binding\n"
+
+    graph = deepcopy(load_json(POSITIVE))
+    service_only = next(
+        fact for fact in graph["facts"] if fact["provenance"]["eebus_service"]
+    )
+    service_only["status"] = "CANDIDATE"
+    service_only["draft_value"] = "21"
+    service_only["draft_unit"] = "degC"
+    result = run_validator(
+        "verify", write_json(tmp_path / "service-only.json", graph)
+    )
+    assert result.stdout == "provenance.binding\n"
