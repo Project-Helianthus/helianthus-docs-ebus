@@ -23,6 +23,8 @@ Current platform contracts:
 - [`eebus-raw-runtime-freeze.md`](./eebus-raw-runtime-freeze.md) - M3.5
   identity, snapshot-envelope, and evidence-object freeze boundary
 - [`raw-correlation-and-leaf-promotion.md`](./raw-correlation-and-leaf-promotion.md)
+- [`synchronized-evidence-bundle-v1.md`](./synchronized-evidence-bundle-v1.md) -
+  MSP-065 closed synchronized capture and deterministic offline replay contract
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary
