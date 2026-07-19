@@ -673,7 +673,21 @@ def validate_source_payload(artifact: dict[str, Any]) -> int:
                 raise Failure("schema.source")
             if service["kind"] not in {"local", "remote"} or type(service["visible"]) is not bool or type(service["paired"]) is not bool:
                 raise Failure("schema.source")
-        if meta["data_hash"] != "sha256:" + hashlib.sha256(canonical(data)).hexdigest():
+        hash_view = {
+            "contract": meta["contract"],
+            "tool": meta["tool"],
+            "scope": meta["scope"],
+            "mask_tier": meta["mask_tier"],
+            "auth_scope": meta["auth_scope"],
+            "mode": meta["mode"],
+            "data_timestamp": meta["data_timestamp"],
+            "runtime_state": meta["runtime"]["state"],
+            "degradation": meta["runtime"].get("degradation"),
+            "data": data,
+            "error": payload["error"],
+        }
+        expected_hash = "sha256:" + hashlib.sha256(canonical(hash_view)).hexdigest()
+        if meta["data_hash"] != expected_hash:
             raise Failure("hash.artifact")
         if artifact["source_binding"]["operation_id"] != meta["tool"]:
             raise Failure("binding.registry")
