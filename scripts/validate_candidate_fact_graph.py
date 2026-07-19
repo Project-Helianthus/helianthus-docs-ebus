@@ -744,9 +744,11 @@ def check_provenance(
             if any(canonical(ref) not in seen for ref in artifact["evidence_refs"]):
                 fail("provenance.binding")
         _check_sample_provenance(fact, artifacts)
-        if fact["status"] in {"CANDIDATE", "CONFLICTED"} or fact[
-            "terminal_negative_state"
-        ] == "CONFLICT":
+        if (
+            fact["comparator"]["samples"]
+            or fact["status"] in {"CANDIDATE", "CONFLICTED"}
+            or fact["terminal_negative_state"] == "CONFLICT"
+        ):
             if (
                 provenance["ebus"] is None
                 or provenance["eebus"] is None
@@ -1012,6 +1014,7 @@ def check_states(graph: dict[str, Any], registry: dict[str, Any]) -> None:
                 terminal is not None
                 or fact["draft_value"] is None
                 or fact["draft_unit"] is None
+                or not samples
                 or outcome != "MATCH"
                 or native_kinds != {"EBUS", "EEBUS"}
             ):
@@ -1021,20 +1024,30 @@ def check_states(graph: dict[str, Any], registry: dict[str, Any]) -> None:
                 terminal is not None
                 or fact["draft_value"] is not None
                 or fact["draft_unit"] is not None
-                or outcome != "CONFLICT"
+                or not samples
+                or outcome not in {"MISMATCH", "CONFLICT"}
                 or native_kinds != {"EBUS", "EEBUS"}
             ):
                 fail("state.terminal")
         elif status == "WITHHELD":
             if terminal is None or fact["draft_value"] is not None or fact["draft_unit"] is not None:
                 fail("state.terminal")
-            if terminal in {"CLOUD_ONLY", "NO_SIGNAL", "NOT_TESTED"} and (
+            if terminal in {"CLOUD_ONLY", "NO_SIGNAL"} and (
                 samples or outcome != "NOT_EVALUATED"
             ):
                 fail("state.terminal")
             if terminal == "CLOUD_ONLY" and not cloud_only:
                 fail("state.terminal")
             if terminal == "NO_SIGNAL" and not native_kinds:
+                fail("state.terminal")
+            if terminal == "NOT_TESTED" and not (
+                (not samples and outcome == "NOT_EVALUATED")
+                or (
+                    samples
+                    and outcome == "INDETERMINATE"
+                    and native_kinds == {"EBUS", "EEBUS"}
+                )
+            ):
                 fail("state.terminal")
             if terminal == "CONFLICT" and (
                 outcome != "CONFLICT" or native_kinds != {"EBUS", "EEBUS"} or not samples
@@ -1233,13 +1246,13 @@ def _evaluate_numeric_window_details(
                     conflict = True
             else:
                 conflict_run = 0
-    if conflict:
-        return "CONFLICT", last_right
     if (
         unavailable > parameters["maximum_missing_samples"]
         or present < parameters["minimum_samples"]
     ):
         return "INDETERMINATE", last_right
+    if conflict:
+        return "CONFLICT", last_right
     return ("MISMATCH" if mismatch else "MATCH"), last_right
 
 
@@ -1279,12 +1292,19 @@ def check_comparators(
             fail("comparator.invalid")
         status = fact["status"]
         expected = {
-            "RAW_ONLY": {"NOT_EVALUATED"},
-            "CANDIDATE": {"MATCH"},
-            "CONFLICTED": {"CONFLICT"},
-            "WITHHELD": {"NOT_EVALUATED", "CONFLICT", "INDETERMINATE"},
+            ("RAW_ONLY", None): {"NOT_EVALUATED"},
+            ("CANDIDATE", None): {"MATCH"},
+            ("CONFLICTED", None): {"MISMATCH", "CONFLICT"},
+            ("WITHHELD", "CONFLICT"): {"CONFLICT"},
+            ("WITHHELD", "NOT_TESTED"): {
+                "NOT_EVALUATED",
+                "INDETERMINATE",
+            },
+            ("WITHHELD", "NO_SIGNAL"): {"NOT_EVALUATED"},
+            ("WITHHELD", "CLOUD_ONLY"): {"NOT_EVALUATED"},
         }
-        if computed not in expected[status]:
+        terminal = fact["terminal_negative_state"]
+        if computed not in expected.get((status, terminal), set()):
             fail("comparator.invalid")
         if status == "CANDIDATE":
             if (
@@ -1294,10 +1314,9 @@ def check_comparators(
                 != _format_decimal(last_right, parameters["rounding"])
             ):
                 fail("comparator.invalid")
-        terminal = fact["terminal_negative_state"]
         if terminal == "CONFLICT" and computed != "CONFLICT":
             fail("comparator.invalid")
-        if terminal in {"NO_SIGNAL", "CLOUD_ONLY", "NOT_TESTED"} and computed != "NOT_EVALUATED":
+        if terminal in {"NO_SIGNAL", "CLOUD_ONLY"} and computed != "NOT_EVALUATED":
             fail("comparator.invalid")
 
 
