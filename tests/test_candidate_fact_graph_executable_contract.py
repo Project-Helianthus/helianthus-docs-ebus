@@ -469,6 +469,239 @@ def _evaluate(
     return module._evaluate_numeric_window(parameters, samples, index)
 
 
+def _comparison_vector(
+    *,
+    status: str,
+    terminal: str | None,
+    outcome: str,
+    left_value: str | None,
+    right_value: str | None,
+    sample_state: str,
+    sample_count: int,
+    draft_value: str | None = None,
+    draft_unit: str | None = None,
+) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+    graph = deepcopy(load_json(POSITIVE))
+    left = _artifact("EBUS", "a", "8", left_value, "degC" if left_value else None)
+    right = _artifact("EEBUS", "b", "9", right_value, "degC" if right_value else None)
+    target = next(
+        fact
+        for fact in graph["facts"]
+        if fact["provenance"]["ebus"]
+        and fact["provenance"]["ebus"]["family"] == "B524"
+    )
+    eebus_path = {
+        "service": "service-" + "a" * 32,
+        "entity": "entity-" + "b" * 32,
+        "feature": "feature-" + "c" * 32,
+        "feature_path": [
+            {"kind": "SERVICE", "selector": "service-" + "a" * 32},
+            {"kind": "ENTITY", "selector": "entity-" + "b" * 32},
+            {"kind": "FEATURE", "selector": "feature-" + "c" * 32},
+        ],
+    }
+    left["ebus_identity"] = deepcopy(target["provenance"]["ebus"])
+    right["normalized_evidence"]["data"] = {
+        "services": [{"id": {"digest": eebus_path["service"]}}],
+        "feature_paths": [deepcopy(eebus_path)],
+    }
+    target["status"] = status
+    target["terminal_negative_state"] = terminal
+    target["draft_value"] = draft_value
+    target["draft_unit"] = draft_unit
+    target["provenance"]["native_evidence_refs"] = [
+        deepcopy(left["evidence_refs"][0]),
+        deepcopy(right["evidence_refs"][0]),
+    ]
+    target["provenance"]["ebus_source_id"] = left["source_id"]
+    target["provenance"]["ebus_artifact_id"] = left["artifact_id"]
+    target["provenance"]["eebus_source_id"] = right["source_id"]
+    target["provenance"]["eebus_artifact_id"] = right["artifact_id"]
+    target["provenance"]["eebus_service"] = eebus_path["service"]
+    target["provenance"]["eebus"] = eebus_path
+    target["comparator"] = {
+        "draft_id": "NUMERIC_WINDOW_V1_DRAFT",
+        "samples": [
+            _sample(
+                left,
+                right,
+                offset_ns=3_000_000_000 + index,
+                state=sample_state,
+            )
+            for index in range(sample_count)
+        ],
+        "outcome": outcome,
+    }
+    source = deepcopy(load_json(SOURCE_BUNDLE))
+    source["sources"].extend(
+        [
+            {
+                "source_id": left["source_id"],
+                "source_kind": "EBUS",
+                "artifact_ids": [left["artifact_id"]],
+            },
+            {
+                "source_id": right["source_id"],
+                "source_kind": "EEBUS",
+                "artifact_ids": [right["artifact_id"]],
+            },
+        ]
+    )
+    source["artifacts"].extend([left, right])
+    source["evidence_refs"].extend(
+        [deepcopy(left["evidence_refs"][0]), deepcopy(right["evidence_refs"][0])]
+    )
+    graph["source_bundle"]["evidence_refs"] = deepcopy(source["evidence_refs"])
+    return graph, target, source
+
+
+def _validate_comparison_vector(
+    module, graph: dict[str, object], target: dict[str, object], source: dict[str, object]
+) -> None:
+    registry = load_json(REGISTRY)
+    module.check_provenance(
+        graph,
+        registry,
+        source,
+        load_json(SOURCE_REPLAY),
+    )
+    module.check_identities(graph, source)
+    module.check_states(graph, registry)
+    module.check_comparators(graph, registry, source)
+
+
+@pytest.mark.parametrize(
+    (
+        "status",
+        "terminal",
+        "outcome",
+        "left_value",
+        "right_value",
+        "sample_state",
+        "sample_count",
+        "draft_value",
+        "draft_unit",
+    ),
+    (
+        ("CANDIDATE", None, "MATCH", "10", "10", "PRESENT", 2, "10.0", "degC"),
+        ("CONFLICTED", None, "MISMATCH", "10", "10.5", "PRESENT", 2, None, None),
+        ("CONFLICTED", None, "CONFLICT", "10", "11", "PRESENT", 2, None, None),
+        ("WITHHELD", "CONFLICT", "CONFLICT", "10", "11", "PRESENT", 2, None, None),
+        (
+            "WITHHELD",
+            "NOT_TESTED",
+            "INDETERMINATE",
+            None,
+            "10",
+            "MISSING",
+            2,
+            None,
+            None,
+        ),
+        ("WITHHELD", "NOT_TESTED", "NOT_EVALUATED", "10", "10", "PRESENT", 0, None, None),
+    ),
+)
+def test_integrated_fully_bound_vectors_accept_exact_outcome_state_matrix(
+    status: str,
+    terminal: str | None,
+    outcome: str,
+    left_value: str | None,
+    right_value: str | None,
+    sample_state: str,
+    sample_count: int,
+    draft_value: str | None,
+    draft_unit: str | None,
+) -> None:
+    module = load_validator_module()
+    graph, target, source = _comparison_vector(
+        status=status,
+        terminal=terminal,
+        outcome=outcome,
+        left_value=left_value,
+        right_value=right_value,
+        sample_state=sample_state,
+        sample_count=sample_count,
+        draft_value=draft_value,
+        draft_unit=draft_unit,
+    )
+    _validate_comparison_vector(module, graph, target, source)
+
+
+@pytest.mark.parametrize(
+    ("status", "terminal", "outcome", "left_value", "right_value", "state"),
+    (
+        ("WITHHELD", "CONFLICT", "MISMATCH", "10", "10.5", "PRESENT"),
+        ("CONFLICTED", None, "INDETERMINATE", None, "10", "MISSING"),
+    ),
+)
+def test_swapped_sampled_outcome_mappings_are_rejected(
+    status: str,
+    terminal: str | None,
+    outcome: str,
+    left_value: str | None,
+    right_value: str | None,
+    state: str,
+) -> None:
+    module = load_validator_module()
+    graph, target, source = _comparison_vector(
+        status=status,
+        terminal=terminal,
+        outcome=outcome,
+        left_value=left_value,
+        right_value=right_value,
+        sample_state=state,
+        sample_count=2,
+    )
+    with pytest.raises(module.Failure):
+        _validate_comparison_vector(module, graph, target, source)
+
+
+def test_sampled_outcomes_reject_empty_samples_and_non_null_draft() -> None:
+    module = load_validator_module()
+    empty_graph, empty_target, empty_source = _comparison_vector(
+        status="CONFLICTED",
+        terminal=None,
+        outcome="MISMATCH",
+        left_value="10",
+        right_value="10.5",
+        sample_state="PRESENT",
+        sample_count=0,
+    )
+    with pytest.raises(module.Failure):
+        _validate_comparison_vector(module, empty_graph, empty_target, empty_source)
+
+    draft_graph, draft_target, draft_source = _comparison_vector(
+        status="CONFLICTED",
+        terminal=None,
+        outcome="MISMATCH",
+        left_value="10",
+        right_value="10.5",
+        sample_state="PRESENT",
+        sample_count=2,
+        draft_value="10.5",
+        draft_unit="degC",
+    )
+    with pytest.raises(module.Failure):
+        _validate_comparison_vector(module, draft_graph, draft_target, draft_source)
+
+
+def test_sampled_outcome_rejects_incomplete_direct_provenance() -> None:
+    module = load_validator_module()
+    graph, target, source = _comparison_vector(
+        status="CONFLICTED",
+        terminal=None,
+        outcome="MISMATCH",
+        left_value="10",
+        right_value="10.5",
+        sample_state="PRESENT",
+        sample_count=2,
+    )
+    target["provenance"]["native_evidence_refs"].pop()
+    with pytest.raises(module.Failure) as error:
+        _validate_comparison_vector(module, graph, target, source)
+    assert str(error.value) == "provenance.binding"
+
+
 def test_evaluator_uses_exact_absolute_plus_relative_tolerance_boundary() -> None:
     left = _artifact("EBUS", "a", "1", "10", "degC")
     right = _artifact("EEBUS", "b", "2", "10.3", "degC")
@@ -541,6 +774,32 @@ def test_evaluator_derives_missing_and_excludes_it_from_minimum_samples() -> Non
     parameters["maximum_missing_samples"] = 1
     missing = _sample(left, right, state="MISSING")
     assert _evaluate(parameters, [missing], [left, right]) == "INDETERMINATE"
+
+
+def test_failed_availability_bounds_precede_conflict_classification() -> None:
+    left = _artifact("EBUS", "a", "1", "10", "degC")
+    unavailable_left = _artifact("EBUS", "c", "3", None, None)
+    right = _artifact("EEBUS", "b", "2", "11", "degC")
+    parameters = _parameters()
+    parameters["minimum_samples"] = 1
+    parameters["maximum_missing_samples"] = 0
+    parameters["conflict_threshold"] = {
+        "absolute_decimal": "1",
+        "consecutive_samples": 1,
+    }
+    samples = [
+        _sample(left, right, offset_ns=4_000_000_000),
+        _sample(
+            unavailable_left,
+            right,
+            offset_ns=5_000_000_000,
+            state="MISSING",
+        ),
+    ]
+    assert (
+        _evaluate(parameters, samples, [left, unavailable_left, right])
+        == "INDETERMINATE"
+    )
 
 
 def test_evaluator_resets_conflict_run_on_below_threshold_sample() -> None:

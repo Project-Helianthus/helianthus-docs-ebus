@@ -141,11 +141,36 @@ combination is valid:
 | --- | --- | --- | --- |
 | `RAW_ONLY` / null | At least one reviewable native or root ref; any selected artifact contributes all of its refs | no samples; `NOT_EVALUATED` | null |
 | `CANDIDATE` / null | complete eBUS identity and complete eeBUS service/entity/feature path, with both native artifacts and refs | non-empty, directly bound cross-runtime samples; recomputed `MATCH` | recomputed final rounded eeBUS value and target unit |
-| `CONFLICTED` / null | same complete direct eBUS and eeBUS provenance as `CANDIDATE` | non-empty samples; recomputed `CONFLICT` | null |
+| `CONFLICTED` / null | same complete direct eBUS and eeBUS provenance as `CANDIDATE` | non-empty samples; recomputed `MISMATCH` or `CONFLICT` | null |
 | `WITHHELD` / `CLOUD_ONLY` | a verified cloud artifact and its refs, and no native substitute | no samples; `NOT_EVALUATED` | null |
 | `WITHHELD` / `NO_SIGNAL` | at least one selected native artifact and all its refs | no samples; `NOT_EVALUATED` | null |
-| `WITHHELD` / `NOT_TESTED` | bundle provenance only, or incomplete native provenance | no samples; `NOT_EVALUATED` | null |
+| `WITHHELD` / `NOT_TESTED` | bundle provenance only or incomplete native provenance for `NOT_EVALUATED`; complete direct eBUS and eeBUS provenance for `INDETERMINATE` | empty samples and `NOT_EVALUATED`, or non-empty directly bound samples and `INDETERMINATE` | null |
 | `WITHHELD` / `CONFLICT` | complete direct eBUS and eeBUS provenance | non-empty samples; recomputed `CONFLICT` | null |
+
+The outcome mapping is deterministic and exhaustive. "Fact" means the
+in-progress candidate fact; "terminal bundle" means a terminal result for this
+immutable evidence bundle:
+
+| Outcome | Scope | Status | Terminal state | Samples | Draft |
+| --- | --- | --- | --- | --- | --- |
+| `MATCH` | fact | `CANDIDATE` | null | non-empty | value and unit set |
+| `MISMATCH` | fact | `CONFLICTED` | null | non-empty | null |
+| `CONFLICT` | fact | `CONFLICTED` | null | non-empty | null |
+| `CONFLICT` | terminal bundle | `WITHHELD` | `CONFLICT` | non-empty | null |
+| `INDETERMINATE` | terminal bundle | `WITHHELD` | `NOT_TESTED` | non-empty | null |
+| `NOT_EVALUATED` | terminal bundle | `WITHHELD` | `NOT_TESTED` | empty | null |
+
+The existing `RAW_ONLY`/`NOT_EVALUATED`, `WITHHELD/NO_SIGNAL`, and
+`WITHHELD/CLOUD_ONLY` rows above remain closed. MISMATCH maps to no terminal state.
+It is never collapsed into terminal `CONFLICT`. `WITHHELD/CONFLICT` requires
+recomputed `CONFLICT`. `INDETERMINATE` and `NOT_EVALUATED` share
+`WITHHELD/NOT_TESTED` only because their explicit outcomes and non-empty versus
+empty sample lists distinguish them. `NO_SIGNAL` and `CLOUD_ONLY` are never synthesized
+from a comparator outcome.
+
+Only the `CANDIDATE`/`MATCH` row can be considered for later semantic
+eligibility. It is still M7 candidate raw/debug material and gains no stable
+consumer exposure or promotion authority.
 
 Cloud-only evidence cannot escape `WITHHELD/CLOUD_ONLY`. Cloud evidence ids
 are exactly `public-evidence:sha256:<64 lowercase hex>` and the digest must be
@@ -225,10 +250,10 @@ The deterministic evaluator performs these steps in order:
 7. count a conflict when `delta >= conflict_threshold.absolute_decimal` for
    the declared number of consecutive `PRESENT` samples; an unavailable or
    below-threshold sample resets the run; and
-8. return `CONFLICT` first, otherwise `INDETERMINATE` when an availability or
-   minimum-sample bound fails, otherwise `MISMATCH` when any present delta is
-   over tolerance, otherwise `MATCH`. An empty list alone returns
-   `NOT_EVALUATED`.
+8. return `INDETERMINATE` first when an availability or minimum-sample bound
+   fails, otherwise `CONFLICT` when the consecutive threshold was reached,
+   otherwise `MISMATCH` when any present delta is over tolerance, otherwise
+   `MATCH`. An empty list alone returns `NOT_EVALUATED`.
 
 All arithmetic is exact decimal arithmetic with sufficient fixed precision for
 the bounded 64-character inputs. Sample offsets are captured monotonic offsets
@@ -236,6 +261,14 @@ from the evidence bundle. The evaluator does not read a clock or acquire more
 samples. `MATCH`, `MISMATCH`, `CONFLICT`, `INDETERMINATE`, and `NOT_EVALUATED`
 are draft outcomes only. The stored outcome must equal the recomputed outcome;
 it is never caller-controlled.
+
+Every non-empty evaluation list must contain valid, directly bound eBUS and
+eeBUS sides. A schema-invalid, unbound, or forged side is rejected rather than
+classified. For bound inputs, a missing or stale native observation, or too few
+available samples, produces `INDETERMINATE`; it cannot produce `MISMATCH` or
+`CONFLICT`. Consequently `MISMATCH` and `CONFLICT` always prove non-empty,
+available cross-runtime numeric inputs, while sampled `INDETERMINATE` preserves
+the bound unavailable or insufficient observations that caused it.
 
 ## Deterministic Ordering And Hashes
 

@@ -91,6 +91,22 @@ def test_contract_closes_status_identity_comparator_and_retest_fields() -> None:
         assert token in page
 
 
+def test_contract_defines_exact_sampled_outcome_state_matrix() -> None:
+    page = read(PAGE)
+    required_rows = (
+        "`MATCH` | fact | `CANDIDATE` | null | non-empty | value and unit set",
+        "`MISMATCH` | fact | `CONFLICTED` | null | non-empty | null",
+        "`CONFLICT` | fact | `CONFLICTED` | null | non-empty | null",
+        "`CONFLICT` | terminal bundle | `WITHHELD` | `CONFLICT` | non-empty | null",
+        "`INDETERMINATE` | terminal bundle | `WITHHELD` | `NOT_TESTED` | non-empty | null",
+        "`NOT_EVALUATED` | terminal bundle | `WITHHELD` | `NOT_TESTED` | empty | null",
+    )
+    for row in required_rows:
+        assert row in page
+    assert "MISMATCH maps to no terminal state" in page
+    assert "NO_SIGNAL` and `CLOUD_ONLY` are never synthesized" in page
+
+
 def test_machine_schema_and_registry_are_closed() -> None:
     schema = json.loads(read(SCHEMA))
     replay_schema = json.loads(read(REPLAY_SCHEMA))
