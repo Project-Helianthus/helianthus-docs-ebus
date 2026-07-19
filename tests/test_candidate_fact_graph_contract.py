@@ -11,6 +11,16 @@ README = PLATFORM_ROOT / "README.md"
 SCHEMA = PLATFORM_ROOT / "schemas/draft-candidate-fact-graph-v1.schema.json"
 REPLAY_SCHEMA = PLATFORM_ROOT / "schemas/draft-candidate-fact-replay-v1.schema.json"
 REGISTRY = PLATFORM_ROOT / "schemas/draft-candidate-fact-registry-v1.json"
+COEXISTENCE_PAGE = PLATFORM_ROOT / "multi-runtime-coexistence-no-drift-v1.md"
+COEXISTENCE_EVIDENCE_SCHEMA = (
+    PLATFORM_ROOT / "schemas/multi-runtime-coexistence-evidence-v1.schema.json"
+)
+COEXISTENCE_REPORT_SCHEMA = (
+    PLATFORM_ROOT / "schemas/multi-runtime-coexistence-report-v1.schema.json"
+)
+COEXISTENCE_REGISTRY = (
+    PLATFORM_ROOT / "schemas/multi-runtime-coexistence-registry-v1.json"
+)
 
 
 def read(path: pathlib.Path) -> str:
@@ -172,3 +182,104 @@ def test_determinism_limits_precedence_and_replay_are_normative() -> None:
         "trailing newline",
     ):
         assert phrase in page
+
+
+def test_msp08_contract_inventory_is_canonical_and_gateway_ready() -> None:
+    for path in (
+        COEXISTENCE_PAGE,
+        COEXISTENCE_EVIDENCE_SCHEMA,
+        COEXISTENCE_REPORT_SCHEMA,
+        COEXISTENCE_REGISTRY,
+    ):
+        assert path.is_file(), f"missing MSP-08 contract artifact: {path}"
+    page = read(COEXISTENCE_PAGE)
+    assert page.startswith(
+        "Canonical source: this page.\n\n"
+        "# Multi-Runtime Coexistence No-Drift V1"
+    )
+    assert "MSP-08" in page
+    assert "EEBUS-G18" in page
+    assert "multi-runtime-coexistence-no-drift-v1.md" in read(README)
+
+
+def test_msp08_contract_freezes_no_drift_and_no_leak_semantics() -> None:
+    page = read(COEXISTENCE_PAGE)
+    required = (
+        "MSP-07@ff511b035b85aef6123fb0853bb3d2f3af6fc01e",
+        "ea88fef23ecb154b08f70e7f94b36e1738ed08bf",
+        "EEBUS_DISABLED_BASELINE",
+        "EEBUS_DISABLED_CONFIRMED",
+        "EEBUS_ENABLED_NO_SERVICES",
+        "EEBUS_CONNECTED_CANDIDATE_ONLY",
+        "EEBUS_CONFLICTED_WITHHELD",
+        "EEBUS_DISABLED_ROLLBACK",
+        "RFC 8785/JCS",
+        "timestamp replacement",
+        "mask replacement",
+        "shape hash",
+        "cannot pass by dropping fields",
+        "verifier-derived",
+        "no empty-success",
+        "CANDIDATE_DEBUG_REPLAY",
+        "existing promoted eBUS leaves remain authoritative",
+        "no public V2",
+        "G17",
+        "G19",
+        "synthetic",
+        "Rollback",
+        "Validation Precedence",
+        "Resource Bounds",
+        "Gateway RED Handoff",
+    )
+    for phrase in required:
+        assert phrase in page
+    for surface in (
+        "`ebus.v1` MCP responses",
+        "GraphQL schema",
+        "GraphQL eBUS values",
+        "HA-consumed GraphQL values",
+        "HA identity",
+        "eBUS debug output",
+        "Portal bootstrap",
+        "command routing",
+        "semantic registry",
+        "`eebus.v1` V1 contract",
+    ):
+        assert surface in page
+
+
+def test_msp08_machine_contract_ids_and_closed_registry_are_frozen() -> None:
+    evidence_schema = json.loads(read(COEXISTENCE_EVIDENCE_SCHEMA))
+    report_schema = json.loads(read(COEXISTENCE_REPORT_SCHEMA))
+    registry = json.loads(read(COEXISTENCE_REGISTRY))
+    assert evidence_schema["$id"] == (
+        "https://docs.helianthus.local/schemas/"
+        "multi-runtime-coexistence-evidence-v1.schema.json"
+    )
+    assert report_schema["$id"] == (
+        "https://docs.helianthus.local/schemas/"
+        "multi-runtime-coexistence-report-v1.schema.json"
+    )
+    assert evidence_schema["additionalProperties"] is False
+    assert report_schema["additionalProperties"] is False
+    assert registry["contract"] == (
+        "helianthus.platform.multi-runtime-coexistence-registry.v1"
+    )
+    assert registry["gate"] == "EEBUS-G18"
+    assert registry["excluded_gates"] == ["EEBUS-G17", "EEBUS-G19"]
+    assert registry["m7_completion_token"] == (
+        "MSP-07@ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
+    )
+    assert registry["m7_docs_source_commit"] == (
+        "ea88fef23ecb154b08f70e7f94b36e1738ed08bf"
+    )
+    assert registry["scenario_order"] == [
+        "EEBUS_DISABLED_BASELINE",
+        "EEBUS_DISABLED_CONFIRMED",
+        "EEBUS_ENABLED_NO_SERVICES",
+        "EEBUS_CONNECTED_CANDIDATE_ONLY",
+        "EEBUS_CONFLICTED_WITHHELD",
+        "EEBUS_DISABLED_ROLLBACK",
+    ]
+    assert len(registry["protected_views"]) == 11
+    assert len(registry["validation_precedence"]) >= 18
