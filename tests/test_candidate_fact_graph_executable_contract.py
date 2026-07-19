@@ -50,6 +50,9 @@ EXPECTED_NEGATIVE = {
 }
 
 COEXISTENCE_VALIDATOR = REPO_ROOT / "scripts/validate_multi_runtime_coexistence.py"
+COEXISTENCE_GENERATOR = (
+    REPO_ROOT / "scripts/generate_multi_runtime_coexistence_fixture.py"
+)
 COEXISTENCE_SCHEMA = (
     SCHEMA_ROOT / "multi-runtime-coexistence-evidence-v1.schema.json"
 )
@@ -1180,6 +1183,21 @@ def _refresh_view_hashes(evidence: dict[str, object], view: dict[str, object]) -
         b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-CANONICAL-PAYLOAD:V1",
         normalized,
     )
+    run = next(run for run in evidence["runs"] if view in run["protected_views"])
+    immutable_input = next(
+        item
+        for item in run["provenance"]["immutable_inputs"]
+        if item["input_id"] == "view:" + view["view_id"]
+    )
+    immutable_input["digest"] = view["raw_payload_hash"]
+    immutable_input["byte_length"] = len(
+        json.dumps(
+            view["payload"],
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    )
 
 
 def _run_by_state(evidence: dict[str, object], state: str) -> dict[str, object]:
@@ -1237,7 +1255,12 @@ def _apply_coexistence_mutation(
     elif mutation == "MISSING_PROVENANCE":
         del disabled["provenance"]
     elif mutation == "MISSING_REQUIRED_VIEW":
-        disabled["protected_views"].pop()
+        removed = disabled["protected_views"].pop()
+        disabled["provenance"]["immutable_inputs"] = [
+            item
+            for item in disabled["provenance"]["immutable_inputs"]
+            if item["input_id"] != "view:" + removed["view_id"]
+        ]
     elif mutation == "NO_SERVICES_EMPTY_SUCCESS":
         no_services["state_evidence"]["empty_success"] = True
     elif mutation == "PUBLIC_V2_SURFACE":
@@ -1262,6 +1285,18 @@ def _apply_coexistence_mutation(
         )
     elif mutation == "TIMESTAMP_EXCLUSION_MISMATCH":
         evidence["normalization"]["view_rules"][0]["timestamp_pointers"] = []
+        profile = {
+            key: value
+            for key, value in evidence["normalization"].items()
+            if key != "profile_digest"
+        }
+        digest = _coexistence_digest(
+            b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-NORMALIZATION:V1",
+            profile,
+        )
+        evidence["normalization"]["profile_digest"] = digest
+        for run in evidence["runs"]:
+            run["provenance"]["mask_scope_digest"] = digest
     elif mutation == "UNKNOWN_FIELD":
         evidence["verdict"] = "PASS"
     else:
@@ -1271,6 +1306,7 @@ def _apply_coexistence_mutation(
 def test_msp08_executable_contract_inventory_is_frozen_for_gateway_red() -> None:
     for path in (
         COEXISTENCE_VALIDATOR,
+        COEXISTENCE_GENERATOR,
         COEXISTENCE_SCHEMA,
         COEXISTENCE_REPORT_SCHEMA,
         COEXISTENCE_REGISTRY,
@@ -1340,6 +1376,112 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
     assert second.stdout == golden
     assert first.stderr == ""
     assert second.stderr == ""
+
+
+def test_msp08_generator_reproduces_exact_positive_artifacts(
+    tmp_path: pathlib.Path,
+) -> None:
+    generated = tmp_path / "positive"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(COEXISTENCE_GENERATOR),
+            "--output-root",
+            str(generated),
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == ""
+    assert result.stderr == ""
+    assert (generated / "evidence.json").read_bytes() == COEXISTENCE_POSITIVE.read_bytes()
+    assert (generated / "report.json").read_bytes() == COEXISTENCE_GOLDEN_REPORT.read_bytes()
+
+
+def test_msp08_report_is_offline_under_host_variation(
+    tmp_path: pathlib.Path,
+) -> None:
+    env = {
+        "PATH": os.environ["PATH"],
+        "HOME": str(tmp_path / "unavailable-home"),
+        "LANG": "invalid_LOCALE",
+        "LC_ALL": "C",
+        "TZ": "Pacific/Kiritimati",
+        "PYTHONHASHSEED": "7234",
+    }
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(COEXISTENCE_VALIDATOR),
+            "report",
+            "--evidence",
+            str(COEXISTENCE_POSITIVE),
+            "--registry",
+            str(COEXISTENCE_REGISTRY),
+            "--m7-graph",
+            str(M7_GRAPH),
+            "--m7-replay",
+            str(M7_REPLAY),
+            "--m7-registry",
+            str(M7_REGISTRY),
+            "--m7-source-bundle",
+            str(M7_SOURCE_BUNDLE),
+            "--m7-source-replay",
+            str(M7_SOURCE_REPLAY),
+        ],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == COEXISTENCE_GOLDEN_REPORT.read_text(encoding="utf-8")
+    assert result.stderr == ""
+
+
+def test_msp08_registry_cannot_be_caller_substituted(
+    tmp_path: pathlib.Path,
+) -> None:
+    registry = deepcopy(load_json(COEXISTENCE_REGISTRY))
+    registry["protected_views"].pop()
+    registry_path = write_json(tmp_path / "registry.json", registry)
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    evidence["registry"]["digest"] = "sha256:" + hashlib.sha256(
+        registry_path.read_bytes()
+    ).hexdigest()
+    evidence_path = write_json(tmp_path / "evidence.json", evidence)
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(COEXISTENCE_VALIDATOR),
+            "verify",
+            "--evidence",
+            str(evidence_path),
+            "--registry",
+            str(registry_path),
+            "--m7-graph",
+            str(M7_GRAPH),
+            "--m7-replay",
+            str(M7_REPLAY),
+            "--m7-registry",
+            str(M7_REGISTRY),
+            "--m7-source-bundle",
+            str(M7_SOURCE_BUNDLE),
+            "--m7-source-replay",
+            str(M7_SOURCE_REPLAY),
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == "registry.binding\n"
+    assert result.stderr == ""
 
 
 @pytest.mark.parametrize(
