@@ -166,3 +166,16 @@ def test_msp065_cross_seed_is_immutable_and_nonduplicating() -> None:
         "canonical in `helianthus-docs-eebus`",
         "does not restate",
     )
+
+
+def test_msp07_candidate_fact_contract_is_present_before_green() -> None:
+    platform_root = REPO_ROOT / "docs/platform"
+    required = (
+        platform_root / "draft-candidate-fact-graph-v1.md",
+        platform_root / "schemas/draft-candidate-fact-graph-v1.schema.json",
+        platform_root / "schemas/draft-candidate-fact-replay-v1.schema.json",
+        platform_root / "schemas/draft-candidate-fact-registry-v1.json",
+        REPO_ROOT / "scripts/validate_candidate_fact_graph.py",
+    )
+    for path in required:
+        assert path.is_file(), f"missing MSP-07 implementation artifact: {path}"
