@@ -11,6 +11,9 @@ Issue provenance:
 
 Immutable eeBUS cross-seed provenance:
 `Project-Helianthus/helianthus-docs-eebus@9819762a61c28eeceb11beb775aa2a91c83a68b6`.
+The pinned source schema is
+`api/_candidate/msp-06/helianthus.eebus.mcp.v1.schema.json`, SHA-256
+`7f10fa6860e8ccee1af7f155e03d5ac208b5a6fb30518aa3145122a9a1dc0a1c`.
 This immutable ref is provenance text rather than an active navigation link so
 candidate-link validation cannot make this platform contract depend on an
 unpublished page.
@@ -75,6 +78,14 @@ The following primitive rules apply everywhere:
   seconds, zero dates, and unrepresentable dates are rejected.
 - No value is nullable unless its table says so. A required nullable field is
   serialized explicitly as JSON `null`.
+
+The executable V1 profile accepts only fixed ASCII schema keys, JSON safe
+integers, booleans, nulls, arrays, objects, and NFC string values. It rejects
+floating-point values. Under that profile, the reference serializer emits
+RFC 8785-compatible JCS bytes without implementation-dependent number
+rendering. A future profile that admits general JSON numbers must implement
+the complete RFC 8785 number algorithm and needs new golden vectors before it
+can claim V1 interoperability.
 
 ## Closed Root Schema
 
@@ -213,21 +224,69 @@ write target for the action.
 
 | Order | Field | Type | Null | Rule |
 | ---: | --- | --- | --- | --- |
-| 1 | `kind` | string enum | no | `CONTENT` or `GIT_OBJECT`. |
-| 2 | `digest` | digest | no | SHA-256 of the referenced redacted bytes. |
-| 3 | `repository` | string | yes | Required only for `GIT_OBJECT`. |
-| 4 | `commit` | `git_commit` | yes | Required only for `GIT_OBJECT`. |
-| 5 | `path` | string | yes | Required only for `GIT_OBJECT`; repository-relative normalized path. |
+| 1 | `kind` | string enum | no | `CONTENT` or `GIT_BLOB`. |
+| 2 | `digest_algorithm` | string enum | no | `SHA256_CONTENT_BYTES` or `SHA256_GIT_BLOB_V1`, matching `kind`. |
+| 3 | `digest` | digest | no | Domain-separated digest defined below. |
+| 4 | `repository` | string | yes | Required only for `GIT_BLOB`. |
+| 5 | `commit` | `git_commit` | yes | Required only for `GIT_BLOB`. |
+| 6 | `path` | string | yes | Required only for `GIT_BLOB`; repository-relative normalized path. |
 
-For `CONTENT`, the last three fields are `null`. For `GIT_OBJECT`, all three
+For `CONTENT`, the last three fields are `null`. For `GIT_BLOB`, all three
 are non-null, `repository` is an immutable owner/repository name, and `path`
 is non-empty. Absolute paths, empty components, `.`, `..`, backslashes, NUL,
 and percent-encoded traversal are rejected. Mutable URLs, branch refs, query
 parameters, and redirects are not evidence refs.
 
-References sort by `kind`, `digest`, nullable `repository`, nullable `commit`,
-then nullable `path`, comparing null before a string and strings by bytewise
-UTF-8 order. Exact duplicate references are rejected.
+The two reference algorithms are deliberately separate from artifact and
+bundle JCS hashes:
+
+- `SHA256_CONTENT_BYTES` hashes ASCII
+  `HELIANTHUS:EVIDENCE-CONTENT:V1`, one NUL byte, then the exact immutable
+  redacted content bytes. JSON content bytes must already be RFC 8785 JCS.
+- `SHA256_GIT_BLOB_V1` hashes ASCII
+  `HELIANTHUS:EVIDENCE-GIT-BLOB:V1`, one NUL byte, the UTF-8 repository, one
+  NUL byte, the lowercase commit, one NUL byte, the normalized path, one NUL
+  byte, then the exact Git blob bytes at that tuple.
+
+Neither algorithm parses or assumes JSON for arbitrary Git blobs. A kind and
+algorithm mismatch is rejected before dereference.
+
+References sort by `kind`, `digest_algorithm`, `digest`, nullable `repository`,
+nullable `commit`, then nullable `path`, comparing null before a string and
+strings by bytewise UTF-8 order. Exact duplicate references are rejected.
+
+## Immutable Source-Schema Authority
+
+Offline replay accepts only source contracts listed in the closed
+`helianthus.platform.source-schema-registry.v1`. Each registry entry binds
+`source_kind`, `source_contract`, `source_schema_version`, canonical owner
+repository/path/commit, schema SHA-256, and an optional embedded schema path.
+The canonical machine-readable registry is
+`schemas/synchronized-evidence-source-registry-v1.json`.
+
+The eeBUS entry pins the immutable MSP-06 schema ref and digest stated at the
+top of this page. B509, B524, B555, and cloud/app normalized inputs use the
+closed schemas next to the registry. Their owner references identify the
+canonical protocol or platform source; the embedded schema digest identifies
+the exact offline validation bytes. Replay does not fetch a repository,
+resolve a branch, or consult a mutable schema catalog. A source binding that
+is absent from this registry or differs in any authority field is rejected.
+
+`SourceBindingV1` is the complete comparability object. Its closed fields are:
+
+- runtime kind and per-bundle runtime pseudonym;
+- operation/tool id and immutable operation version;
+- request scope and snapshot scope;
+- the source kind, contract, schema version, owner repository/path/commit, and
+  schema SHA-256 from the registry;
+- the exact capture window, mask tier, and effective authorization scope; and
+- complete `EBusSourceIdentityV1` for eBUS, otherwise explicit `null`.
+
+The exact machine field names and types are normative in
+`schemas/synchronized-evidence-bundle-v1.schema.json`. The full binding is
+copied into the source and every owned artifact, included in the artifact and
+bundle hash views, and emitted in each future-candidate-input row. Missing
+binding fields make hashes non-comparable and prevent a `PRESENT` source.
 
 ## Source Records
 
@@ -245,22 +304,23 @@ phase and ends in exactly one terminal state.
 | 7 | `error_category` | string enum | yes | State-specific category; never free text. |
 | 8 | `source_contract` | string | no | Frozen producer contract identifier. |
 | 9 | `source_schema_version` | integer | no | Producer schema version used to validate evidence. |
-| 10 | `capture_window` | `CaptureWindowV1` | no | Exact deep-equal copy of the root window. |
-| 11 | `clock` | `CaptureClockV1` | no | Exact deep-equal copy of the root clock. |
-| 12 | `scope` | `CaptureScopeV1` | no | Exact deep-equal copy of the root scope. |
-| 13 | `mask_tier` | string enum | no | Exact root `mask_tier`. |
-| 14 | `auth_scope` | `AuthScopeV1` | no | Effective source-operation scope. |
-| 15 | `evidence_refs` | array of `EvidenceRefV1` | no | Non-empty immutable redacted provenance. |
-| 16 | `recorder_version` | string | no | Exact root `recorder_version`. |
-| 17 | `replay_version` | string | no | Exact root `replay_version`. |
-| 18 | `acquisition_started_at` | timestamp | yes | Wall start; null only as allowed by the state matrix. |
-| 19 | `acquisition_ended_at` | timestamp | yes | Wall end; null only as allowed by the state matrix. |
-| 20 | `acquisition_start_offset_ns` | integer | yes | Monotonic start on the bundle clock. |
-| 21 | `acquisition_end_offset_ns` | integer | yes | Monotonic end on the bundle clock. |
-| 22 | `measured_latency_ns` | integer | yes | Exact end offset minus start offset. |
-| 23 | `maximum_skew_ns` | integer | no | Exact root clock `maximum_skew_ns`. |
-| 24 | `ebus_identity` | `EBusSourceIdentityV1` | yes | Required only for a `PRESENT` EBUS record. |
-| 25 | `artifact_ids` | array of string | no | Content-addressed artifacts owned by this record. |
+| 10 | `source_binding` | `SourceBindingV1` | no | Complete immutable source/comparability binding. |
+| 11 | `capture_window` | `CaptureWindowV1` | no | Exact deep-equal copy of the root window. |
+| 12 | `clock` | `CaptureClockV1` | no | Exact deep-equal copy of the root clock. |
+| 13 | `scope` | `CaptureScopeV1` | no | Exact deep-equal copy of the root scope. |
+| 14 | `mask_tier` | string enum | no | Exact root `mask_tier`. |
+| 15 | `auth_scope` | `AuthScopeV1` | no | Effective source-operation scope. |
+| 16 | `evidence_refs` | array of `EvidenceRefV1` | no | Non-empty immutable redacted provenance. |
+| 17 | `recorder_version` | string | no | Exact root `recorder_version`. |
+| 18 | `replay_version` | string | no | Exact root `replay_version`. |
+| 19 | `acquisition_started_at` | timestamp | yes | Wall start; null only as allowed by the state matrix. |
+| 20 | `acquisition_ended_at` | timestamp | yes | Wall end; null only as allowed by the state matrix. |
+| 21 | `acquisition_start_offset_ns` | integer | yes | Monotonic start on the bundle clock. |
+| 22 | `acquisition_end_offset_ns` | integer | yes | Monotonic end on the bundle clock. |
+| 23 | `measured_latency_ns` | integer | yes | Exact end offset minus start offset. |
+| 24 | `maximum_skew_ns` | integer | no | Exact root clock `maximum_skew_ns`. |
+| 25 | `ebus_identity` | `EBusSourceIdentityV1` | yes | Exact binding copy for eBUS; otherwise null. |
+| 26 | `artifact_ids` | array of string | no | Content-addressed artifacts owned by this record. |
 
 The five acquisition timing fields are either all non-null or all null. When
 non-null, start is not after end, both offsets lie in the named phase, wall
@@ -313,24 +373,29 @@ violations and abort the bundle rather than inventing another state.
 
 ### Exact eBUS source-family identity
 
-`EBusSourceIdentityV1` is closed:
+`EBusSourceIdentityV1` is a closed discriminated union. Every variant carries
+`family` and a per-bundle `target_pseudonym`; the remaining mandatory fields
+are family-specific:
 
-| Order | Field | Type | Null | Rule |
-| ---: | --- | --- | --- | --- |
-| 1 | `family` | string enum | no | `B509`, `B524`, or `B555`. |
-| 2 | `selector` | string | no | Exact canonical read selector from the existing source-family surface. |
-| 3 | `target_pseudonym` | string | no | Per-bundle pseudonym; not a stable device identifier. |
-| 4 | `opcode` | integer | yes | Required for B524; otherwise null. |
-| 5 | `GG` | integer | yes | Required for B524; otherwise null. |
-| 6 | `II` | integer | yes | Required for B524; otherwise null. |
-| 7 | `RR` | integer | yes | Required for B524; otherwise null. |
+| Family | Complete required identity |
+| --- | --- |
+| `B509` | target address, target product class, register family, 16-bit register id, unit/scale source, and evidence role `AUTHORITATIVE`, `MIRROR`, or `FALLBACK` |
+| `B524` | source and target address context, full `(opcode, GG, II, RR)`, group meaning, instance gate, register category, and unit/scale source |
+| `B555` | device family, schedule/program identity, slot index, day-of-week identity, time identity, operation-mode context, and unit/scale source |
 
-For B524, `opcode`, `GG`, and `II` are in `0..255`; `RR` is in `0..65535`.
-Together they form the exact `(opcode, GG, II, RR)` tuple. OP=0x02 and OP=0x06
-are separate namespaces even when `GG`, `II`, and `RR` match. For B509 and
-B555, `selector` is the exact family-defined read key from the existing
-read-only eBUS surface; a family name, display label, or generic placeholder
-is invalid.
+The exact fields, enums, ranges, and closure rules are normative in the three
+`schemas/synchronized-evidence-source-ebus-*-v1.schema.json` files. For B524,
+`opcode`, `GG`, and `II` are in `0..255`; `RR` is in `0..65535`. OP=0x02 and
+OP=0x06 are separate namespaces even when `GG`, `II`, and `RR` match. B509
+target product is mandatory because register addresses collide across product
+classes. B555 device family and selector context are mandatory because timer
+transport and selector namespaces differ across controller families.
+
+Within a bundle, one physical source/target identity maps injectively to one
+pseudonym and every repeated occurrence of that identity reuses the same
+pseudonym. Two different identities cannot share a pseudonym. The ephemeral
+input-to-pseudonym map is not persisted. These rules preserve equality needed
+for synchronized comparison without creating a cross-bundle correlator.
 
 A `PRESENT` EBUS record requires this identity before its artifact can be
 accepted. There is no inferred tuple, no log-scraping guess, no family or
@@ -353,26 +418,46 @@ nearby log line, or another capture.
 | 6 | `phase` | string enum | no | Exact owning source phase. |
 | 7 | `source_contract` | string | no | Exact owning source contract. |
 | 8 | `source_schema_version` | integer | no | Exact owning source schema version. |
-| 9 | `captured_at` | timestamp | no | Original source data timestamp. |
-| 10 | `captured_offset_ns` | integer | no | Position on the one capture clock. |
-| 11 | `capture_window` | `CaptureWindowV1` | no | Exact deep-equal copy of the root window. |
-| 12 | `clock` | `CaptureClockV1` | no | Exact deep-equal copy of the root clock. |
-| 13 | `scope` | `CaptureScopeV1` | no | Exact deep-equal copy of the root scope. |
-| 14 | `mask_tier` | string enum | no | Exact root `mask_tier`. |
-| 15 | `auth_scope` | `AuthScopeV1` | no | Exact owning source scope. |
-| 16 | `evidence_refs` | array of `EvidenceRefV1` | no | Non-empty immutable provenance. |
-| 17 | `recorder_version` | string | no | Exact root `recorder_version`. |
-| 18 | `replay_version` | string | no | Exact root `replay_version`. |
-| 19 | `item_count` | integer | no | Source-schema item count, within effective limits. |
-| 20 | `byte_count` | integer | no | RFC 8785 byte length of `normalized_evidence`. |
-| 21 | `normalized_evidence` | source-schema JSON value | no | Redacted raw normalized evidence, validated before persistence. |
-| 22 | `redacted_hash` | digest | no | Artifact hash defined below. |
+| 9 | `source_binding` | `SourceBindingV1` | no | Exact owning source binding. |
+| 10 | `ebus_identity` | `EBusSourceIdentityV1` | yes | Exact binding copy for eBUS; otherwise null. |
+| 11 | `source_observed_at` | timestamp | no | Timestamp supplied by the source-owned contract; never replaced by recorder time. |
+| 12 | `recorder_ingested_at` | timestamp | no | Recorder wall observation when the validated payload entered the bundle. |
+| 13 | `recorder_ingested_offset_ns` | integer | no | Same ingestion event on the one monotonic capture clock. |
+| 14 | `capture_window` | `CaptureWindowV1` | no | Exact deep-equal copy of the root window. |
+| 15 | `clock` | `CaptureClockV1` | no | Exact deep-equal copy of the root clock. |
+| 16 | `scope` | `CaptureScopeV1` | no | Exact deep-equal copy of the root scope. |
+| 17 | `mask_tier` | string enum | no | Exact root `mask_tier`. |
+| 18 | `auth_scope` | `AuthScopeV1` | no | Exact owning source scope and a subset of root effective permissions. |
+| 19 | `evidence_refs` | array of `EvidenceRefV1` | no | Non-empty immutable redacted provenance. |
+| 20 | `recorder_version` | string | no | Exact root `recorder_version`. |
+| 21 | `replay_version` | string | no | Exact root `replay_version`. |
+| 22 | `remasking` | `RemaskingV1` | no | Per-bundle remasking manifest described below. |
+| 23 | `item_count` | integer | no | Recomputed source-schema item count, within effective limits. |
+| 24 | `byte_count` | integer | no | JCS byte length of `normalized_evidence`. |
+| 25 | `normalized_evidence` | source-schema JSON value | no | Redacted raw normalized evidence, validated before persistence. |
+| 26 | `redacted_hash` | digest | no | Artifact hash defined below. |
 
 Raw normalized evidence means source-owned read-only observations normalized
 to their frozen schema. It does not mean a raw packet, wire transcript, native
 object dump, or unredacted preimage. Platform validation treats the value as
 opaque after the named source validator closes and validates it; the platform
 does not rename, interpret, or copy eeBUS-native fields into another surface.
+
+`source_observed_at` and recorder ingestion time are intentionally distinct.
+Source time preserves the frozen source contract's observation and may predate
+the capture window; freshness is not inferred from it. The recorder clock
+binds acquisition and ingestion to the synchronized window. A producer must
+not copy recorder time into `source_observed_at` when the source supplied a
+different timestamp, and replay emits both values verbatim.
+
+`RemaskingV1` is closed and contains `method` (exactly
+`PER_BUNDLE_CSPRNG`), one per-bundle `scope_id`, and ordered unique entries of
+JSON Pointer plus a 43-character base64url pseudonym. Every eeBUS identity
+`digest` and every cloud subject pseudonym in normalized evidence must appear
+in this manifest and equal the value at its pointer. Field names remain those
+of the pinned source schema; only their values are remasked. A runtime-scoped
+opaque token may never pass through unchanged or become a cross-bundle
+correlator.
 
 ## Ordering And Duplicate Rejection
 
@@ -386,7 +471,8 @@ emit and validators must require:
    `artifact_id`;
 3. each `artifact_ids` array sorted ascending;
 4. all evidence refs sorted by the key defined above; and
-5. authorization permissions sorted ascending.
+5. authorization permissions sorted ascending; and
+6. remasking entries sorted by JSON Pointer, then pseudonym.
 
 Duplicate source key `(phase, source_kind, source_id)`, duplicate
 `artifact_id`, duplicate `artifact_ids` entry, duplicate evidence ref, or
@@ -455,6 +541,14 @@ requested.
 | `redacted_hashes` | array of digest | Recomputed artifact hashes followed by the bundle hash. |
 | `future_candidate_inputs` | array | Artifact ids and provenance only, in artifact order. |
 
+Every array item is itself a closed object. The normative item fields,
+nullability, and enums are in
+`schemas/synchronized-evidence-replay-v1.schema.json`; the corresponding
+bundle envelope is in
+`schemas/synchronized-evidence-bundle-v1.schema.json`. Replay output that is
+not valid against the replay schema is a hard failure, even if its values
+would otherwise compare equal.
+
 Replay reuses captured timestamps verbatim. It does not call a clock, parse and
 reformat a timestamp for output, substitute replay time, or derive a new
 acquisition time. It regenerates the same raw normalized evidence, terminal
@@ -471,8 +565,9 @@ hard failure and produces no partial replay result.
 The recorder and replayer never log in to a cloud service. A `CLOUD_APP`
 source enters only as a pre-captured, already redacted input object supplied on
 the recorder's bounded local input seam. The seam accepts one declared source
-contract/version, one capture-clock timestamp, one item count, one byte count,
-and one immutable evidence ref. It applies the same closure, size, depth,
+contract/version, the source's original observation timestamp, the recorder's
+ingestion timestamp and monotonic offset, one item count, one byte count, and
+one immutable evidence ref. It applies the same closure, size, depth,
 number, timestamp, ordering, auth, and redaction validation as any artifact.
 
 The seam has no URL fetch, callback, browser session, SDK client, credential
@@ -482,8 +577,9 @@ not moved into a different phase.
 
 ## Privacy And Security
 
-Every `source_id`, `target_pseudonym`, and `marker_id` is a per-bundle pseudonym
-with exact form `<kind>-<32 lowercase hexadecimal characters>`.
+Every `source_id`, `runtime_pseudonym`, `target_pseudonym`, and `marker_id` is
+a per-bundle pseudonym with the schema-defined kind prefix and 32 lowercase
+hexadecimal characters.
 They are minted during capture with a CSPRNG, stored verbatim for replay, and
 must not be derived from source data. A value cannot be reused across bundles.
 Any private mapping is outside the bundle, is never an evidence ref, and is
@@ -541,6 +637,10 @@ It does not start a capture that cannot fit its time, count, memory, or storage
 budget. Parsers enforce maximum source/item/byte/depth limits incrementally
 before decoding or allocating the claimed amount.
 
+The capture clock's computed and declared `maximum_skew_ns` are each capped at
+1,000,000,000 ns in V1. A higher value is not degraded evidence; it rejects the
+bundle because the sources are not synchronized enough for comparison.
+
 ## Persistence, Retention, And Recovery
 
 The store root and every created directory use mode `0700`; staging and final
@@ -549,6 +649,15 @@ path component, path traversal, absolute user-supplied paths, hard-link count
 other than one, non-regular files, and a destination that escapes the opened
 store root. Path checks operate on directory handles, not on later string
 re-resolution.
+
+Exactly one writer holds an exclusive store lock for capture, publication,
+retention, drop, and crash recovery. The portable Linux profile uses an
+advisory file lock held on an opened regular file below the verified store
+root. Startup fails closed when the lock cannot be acquired, when the
+filesystem does not provide process-visible locking semantics, or when lock
+ownership cannot be verified. There is no lockless fallback. Read-only replay
+of an already opened immutable bundle may run concurrently and never mutates
+the store.
 
 A successful write follows this order:
 
@@ -602,11 +711,20 @@ different versions or binding dimensions are not comparable.
 
 ## Acceptance Fixture
 
+The canonical executable inventory is the two JSON schemas, the closed source
+registry, the positive bundle, golden replay, and named negative fixtures under
+`schemas/` and `fixtures/synchronized-evidence/v1/`, validated by
+`scripts/validate_synchronized_evidence.py`. The validator is offline,
+category-only on failure, and supports only the safe V1 JCS subset.
+
 The MSP-065 smoke fixture is a deterministic redacted replay bundle containing
-at least one `PRESENT` source and one terminal negative source. Acceptance
+`PRESENT` eBUS, eeBUS, and cloud/app sources. Its negative corpus contains
+terminal negative and malformed cases. Acceptance
 requires two isolated replays to produce byte-identical `ReplayResultV1`
 output, original captured timestamps, identical redacted hashes, and identical
 future candidate inputs while network, cloud, runtime, clock, randomness,
 locale, host paths, and mutable storage are unavailable. The fixture must also
-prove rejection for one unknown field, duplicate key, invalid eBUS identity,
-prohibited privacy value, over-limit payload, and hash mismatch.
+prove rejection for unknown fields, duplicate bindings, incomplete
+B509/B524/B555 identities, clock skew, prohibited privacy values, missing
+per-bundle remasking, over-limit values, terminal-state contradictions,
+noncanonical references, and hash mismatch.
