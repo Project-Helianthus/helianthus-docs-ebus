@@ -272,6 +272,15 @@ the exact offline validation bytes. Replay does not fetch a repository,
 resolve a branch, or consult a mutable schema catalog. A source binding that
 is absent from this registry or differs in any authority field is rejected.
 
+For an `EEBUS` artifact, replay verifies `meta.data_hash` against the complete
+frozen MSP-06 hash view at the immutable eeBUS authority cited above. That view
+contains `contract`, `tool`, `scope`, `mask_tier`, `auth_scope`, `mode`,
+`data_timestamp`, `runtime_state`, `degradation`, `data`, and `error`, with an
+explicit JSON `null` where the authority requires one. Replay applies RFC 8785
+JCS to that object and then lowercase SHA-256. Hashing only `data` is invalid
+because it would leave the operation, scope, authorization, mode, observation
+time, runtime state, degradation, and error bindings outside the source hash.
+
 `SourceBindingV1` is the complete comparability object. Its closed fields are:
 
 - runtime kind and per-bundle runtime pseudonym;

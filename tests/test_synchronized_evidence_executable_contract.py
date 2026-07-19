@@ -171,6 +171,36 @@ def test_positive_bundle_has_complete_bindings_and_remasked_eebus_evidence() -> 
     assert "/data/services/0/id/digest" in digest_paths
 
 
+def test_eebus_artifact_uses_complete_frozen_msp06_hash_view() -> None:
+    bundle = load_json(POSITIVE)
+    artifact = next(row for row in bundle["artifacts"] if row["source_kind"] == "EEBUS")
+    envelope = artifact["normalized_evidence"]
+    meta = envelope["meta"]
+    hash_view = {
+        "contract": meta["contract"],
+        "tool": meta["tool"],
+        "scope": meta["scope"],
+        "mask_tier": meta["mask_tier"],
+        "auth_scope": meta["auth_scope"],
+        "mode": meta["mode"],
+        "data_timestamp": meta["data_timestamp"],
+        "runtime_state": meta["runtime"]["state"],
+        "degradation": meta["runtime"].get("degradation"),
+        "data": envelope["data"],
+        "error": envelope["error"],
+    }
+    digest = "sha256:" + hashlib.sha256(
+        json.dumps(
+            hash_view,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()
+    assert digest == "sha256:c0b9b1353fe49a47f5d3039156225ae47236fddb8054a875f25bf004d9fecc0d"
+    assert meta["data_hash"] == digest
+
+
 def test_positive_bundle_and_golden_replay_are_schema_valid() -> None:
     for schema, fixture in (
         (BUNDLE_SCHEMA, POSITIVE),
