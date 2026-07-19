@@ -131,6 +131,12 @@ def test_determinism_limits_precedence_and_replay_are_normative() -> None:
         "replay uses captured evidence",
         "must not read the network",
         "must not read the wall clock",
+        "--source-bundle",
+        "--source-replay",
+        "MSP-065 synchronized-evidence verifier",
+        "deep equality",
+        "HELIANTHUS:SYNCHRONIZED-EVIDENCE-REPLAY:V1",
+        "not a file hash",
+        "trailing newline",
     ):
         assert phrase in page
-

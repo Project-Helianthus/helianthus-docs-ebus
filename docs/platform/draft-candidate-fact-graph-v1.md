@@ -46,7 +46,43 @@ The root binds the exact synchronized evidence contract, bundle id, bundle
 hash, replay hash, immutable evidence refs, candidate registry digest,
 visibility flags, hard limits, comparator drafts, and ordered facts. An input
 bundle must be verified under the synchronized-evidence v1 contract before the
-graph is built. This validator does not fetch, reacquire, or reinterpret it.
+graph is built. The candidate validator requires the exact source bundle and
+source replay as separate inputs; a graph cannot attest its own provenance.
+
+### Exact source consumption
+
+The executable invocation is:
+
+```text
+validate_candidate_fact_graph.py verify \
+  --graph <candidate-graph.json> \
+  --registry <draft-candidate-fact-registry-v1.json> \
+  --source-bundle <synchronized-evidence-bundle.json> \
+  --source-replay <synchronized-evidence-replay.json>
+```
+
+`replay` requires the same four inputs. The validator invokes the existing
+MSP-065 synchronized-evidence verifier with the registry pinned by this
+contract, regenerates the synchronized replay from the verified bundle, and
+requires deep equality with `--source-replay`. It then requires exact equality
+for bundle contract/version/id/hash and the complete root evidence-ref set.
+
+Every non-null source/artifact pair on a fact must exist in that verified
+bundle with the declared source kind, and every artifact evidence ref must be
+present on the fact. eBUS B509/B524/B555 identity must be deep-equal to the
+verified artifact identity. A B524 OP=0x02 artifact cannot be relabeled as
+OP=0x06. Cloud source/artifact pairs are checked the same way.
+
+An eeBUS service/entity/feature/path is accepted only when the referenced
+verified artifact carries that complete path. The current MSP-065 v1
+`services.list` evidence carries a service anchor but no entity/feature path,
+so M7 must leave the path null and withhold any claim that needs it. A service
+anchor never licenses invented entity or feature selectors.
+
+`source_bundle.replay_hash` is not a file hash. It is lowercase SHA-256 over
+ASCII `HELIANTHUS:SYNCHRONIZED-EVIDENCE-REPLAY:V1`, one NUL byte, then RFC
+8785/JCS bytes of the regenerated replay object. A trailing newline, JSON
+indentation, or object member order therefore cannot change this digest.
 
 ## Candidate Fact Nodes
 

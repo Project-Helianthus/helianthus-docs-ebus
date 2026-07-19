@@ -16,7 +16,9 @@
     "schema_path": "docs/platform/schemas/synchronized-evidence-bundle-v1.schema.json",
     "schema_sha256": "ed574071fdb11e10d5696c62e873a38c6c6dde64c6069bf616476cea8e8bf737",
     "source_registry_path": "docs/platform/schemas/synchronized-evidence-source-registry-v1.json",
-    "source_registry_sha256": "a91b2106076c3ef0f70578e9fc1c85925dd085af323c5889f809b5b2ef1a2488"
+    "source_registry_sha256": "a91b2106076c3ef0f70578e9fc1c85925dd085af323c5889f809b5b2ef1a2488",
+    "replay_digest_algorithm": "SHA256_JCS_DOMAIN_V1",
+    "replay_digest_domain": "HELIANTHUS:SYNCHRONIZED-EVIDENCE-REPLAY:V1"
   },
   "statuses": [
     "RAW_ONLY",

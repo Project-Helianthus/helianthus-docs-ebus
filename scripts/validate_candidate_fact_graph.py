@@ -12,6 +12,12 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 
+SCRIPT_ROOT = pathlib.Path(__file__).resolve().parent
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+import validate_synchronized_evidence as synchronized
+
+
 GRAPH_CONTRACT = "helianthus.platform.draft-candidate-fact-graph.v1"
 REGISTRY_CONTRACT = "helianthus.platform.draft-candidate-fact-registry.v1"
 SOURCE_CONTRACT = "helianthus.platform.synchronized-evidence-bundle.v1"
@@ -21,6 +27,7 @@ NEGATIVE_FIXTURE_CONTRACT = (
 FACT_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT:V1"
 GRAPH_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT-GRAPH:V1"
 REPLAY_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT-REPLAY:V1"
+SOURCE_REPLAY_DOMAIN = b"HELIANTHUS:SYNCHRONIZED-EVIDENCE-REPLAY:V1"
 SAFE_INTEGER = 9007199254740991
 DECIMAL_RE = re.compile(r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$")
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -191,6 +198,12 @@ def graph_hexdigest(graph: dict[str, Any]) -> str:
     )
 
 
+def source_replay_hexdigest(value: Any) -> str:
+    return hashlib.sha256(
+        SOURCE_REPLAY_DOMAIN + b"\0" + synchronized.canonical(value)
+    ).hexdigest()
+
+
 def check_portable(value: Any, depth: int, limits: dict[str, int]) -> None:
     if depth > limits["max_depth"]:
         fail("limits.exceeded")
@@ -301,6 +314,13 @@ def check_registry_binding(
         fail("registry.binding")
     if registry["source_contract"].get("contract") != SOURCE_CONTRACT:
         fail("registry.binding")
+    if (
+        registry["source_contract"].get("replay_digest_algorithm")
+        != "SHA256_JCS_DOMAIN_V1"
+        or registry["source_contract"].get("replay_digest_domain")
+        != SOURCE_REPLAY_DOMAIN.decode("ascii")
+    ):
+        fail("registry.binding")
 
 
 def validate_evidence_ref(ref: Any) -> None:
@@ -335,7 +355,12 @@ def ref_sort_key(ref: dict[str, Any]) -> tuple[Any, ...]:
     )
 
 
-def check_provenance(graph: dict[str, Any], registry: dict[str, Any]) -> None:
+def check_provenance(
+    graph: dict[str, Any],
+    registry: dict[str, Any],
+    source_bundle: dict[str, Any],
+    source_replay: dict[str, Any],
+) -> None:
     bundle = graph["source_bundle"]
     if (
         bundle["contract"] != registry["source_contract"]["contract"]
@@ -351,6 +376,16 @@ def check_provenance(graph: dict[str, Any], registry: dict[str, Any]) -> None:
         or not bundle["evidence_refs"]
     ):
         fail("provenance.binding")
+    expected_source_binding = {
+        "contract": source_bundle["contract"],
+        "schema_version": source_bundle["schema_version"],
+        "bundle_id": source_bundle["bundle_id"],
+        "bundle_hash": source_bundle["bundle_hash"],
+        "replay_hash": "sha256:" + source_replay_hexdigest(source_replay),
+        "evidence_refs": source_bundle["evidence_refs"],
+    }
+    if bundle != expected_source_binding:
+        fail("provenance.binding")
     root_refs: set[bytes] = set()
     for ref in bundle["evidence_refs"]:
         validate_evidence_ref(ref)
@@ -358,6 +393,11 @@ def check_provenance(graph: dict[str, Any], registry: dict[str, Any]) -> None:
         if encoded in root_refs:
             fail("provenance.binding")
         root_refs.add(encoded)
+    sources = {source["source_id"]: source for source in source_bundle["sources"]}
+    artifacts = {
+        (artifact["source_id"], artifact["artifact_id"]): artifact
+        for artifact in source_bundle["artifacts"]
+    }
     for fact in graph["facts"]:
         provenance = fact["provenance"]
         if provenance["source_bundle_id"] != bundle["bundle_id"]:
@@ -372,6 +412,43 @@ def check_provenance(graph: dict[str, Any], registry: dict[str, Any]) -> None:
             if encoded not in root_refs or encoded in seen:
                 fail("provenance.binding")
             seen.add(encoded)
+        referenced_artifacts: list[dict[str, Any]] = []
+        for source_field, artifact_field, expected_kind in (
+            ("ebus_source_id", "ebus_artifact_id", "EBUS"),
+            ("eebus_source_id", "eebus_artifact_id", "EEBUS"),
+        ):
+            source_id = provenance[source_field]
+            artifact_id = provenance[artifact_field]
+            if source_id is None and artifact_id is None:
+                continue
+            source = sources.get(source_id)
+            artifact = artifacts.get((source_id, artifact_id))
+            if (
+                source is None
+                or artifact is None
+                or source["source_kind"] != expected_kind
+                or artifact["source_kind"] != expected_kind
+                or artifact_id not in source["artifact_ids"]
+            ):
+                fail("provenance.binding")
+            referenced_artifacts.append(artifact)
+        cloud = provenance["cloud"]
+        if cloud is not None:
+            source = sources.get(cloud.get("source_id")) if isinstance(cloud, dict) else None
+            artifact = artifacts.get((cloud.get("source_id"), cloud.get("artifact_id"))) if isinstance(cloud, dict) else None
+            if (
+                source is None
+                or artifact is None
+                or source["source_kind"] != "CLOUD_APP"
+                or artifact["source_kind"] != "CLOUD_APP"
+                or cloud["artifact_id"] not in source["artifact_ids"]
+            ):
+                fail("provenance.binding")
+            referenced_artifacts.append(artifact)
+        for artifact in referenced_artifacts:
+            for ref in artifact["evidence_refs"]:
+                if canonical(ref) not in seen:
+                    fail("provenance.binding")
 
 
 def token(value: Any) -> bool:
@@ -490,7 +567,11 @@ def validate_eebus_path(value: Any) -> None:
         fail("identity.native")
 
 
-def check_identities(graph: dict[str, Any]) -> None:
+def check_identities(graph: dict[str, Any], source_bundle: dict[str, Any]) -> None:
+    artifacts = {
+        (artifact["source_id"], artifact["artifact_id"]): artifact
+        for artifact in source_bundle["artifacts"]
+    }
     for fact in graph["facts"]:
         provenance = fact["provenance"]
         if provenance["ebus"] is None:
@@ -500,6 +581,9 @@ def check_identities(graph: dict[str, Any]) -> None:
             if not token(provenance["ebus_source_id"]) or not token(provenance["ebus_artifact_id"]):
                 fail("identity.native")
             validate_ebus_identity(provenance["ebus"])
+            artifact = artifacts[(provenance["ebus_source_id"], provenance["ebus_artifact_id"])]
+            if provenance["ebus"] != artifact["ebus_identity"]:
+                fail("identity.native")
         if provenance["eebus"] is None:
             if provenance["eebus_source_id"] is not None or provenance["eebus_artifact_id"] is not None:
                 fail("identity.native")
@@ -507,6 +591,14 @@ def check_identities(graph: dict[str, Any]) -> None:
             if not token(provenance["eebus_source_id"]) or not token(provenance["eebus_artifact_id"]):
                 fail("identity.native")
             validate_eebus_path(provenance["eebus"])
+            artifact = artifacts[(provenance["eebus_source_id"], provenance["eebus_artifact_id"])]
+            services = artifact["normalized_evidence"]["data"]["services"]
+            service_ids = {service["id"]["digest"] for service in services}
+            if provenance["eebus"]["service"] not in service_ids:
+                fail("identity.native")
+            feature_paths = artifact["normalized_evidence"]["data"].get("feature_paths")
+            if not isinstance(feature_paths, list) or provenance["eebus"] not in feature_paths:
+                fail("identity.native")
         cloud = provenance["cloud"]
         if cloud is not None:
             if not isinstance(cloud, dict) or set(cloud) != {"source_id", "artifact_id", "evidence_id"}:
@@ -719,12 +811,14 @@ def verify(
     registry: dict[str, Any],
     registry_raw: bytes,
     raw_size: int,
+    source_bundle: dict[str, Any],
+    source_replay: dict[str, Any],
 ) -> dict[str, Any]:
     schema_check(graph)
     check_limits(graph, registry, raw_size)
     check_registry_binding(graph, registry, registry_raw)
-    check_provenance(graph, registry)
-    check_identities(graph)
+    check_provenance(graph, registry, source_bundle, source_replay)
+    check_identities(graph, source_bundle)
     check_ordering(graph)
     check_states(graph, registry)
     check_comparators(graph, registry)
@@ -789,18 +883,61 @@ def expand_negative_fixture(path: pathlib.Path, value: Any) -> Any:
         graph["facts"][0]["provenance"]["native_evidence_refs"][0]["digest"] = "sha256:" + "f" * 64
     elif mutation == "GRAPH_HASH_MISMATCH":
         graph["graph_hash"] = "sha256:" + "0" * 64
+    elif mutation == "FORGED_ARTIFACT_ID":
+        graph["facts"][0]["provenance"]["cloud"]["artifact_id"] = "seav1:sha256:" + "f" * 64
+    elif mutation == "FORGED_SOURCE_ID":
+        graph["facts"][0]["provenance"]["cloud"]["source_id"] = "cloud-ffffffffffffffffffffffffffffffff"
+    elif mutation == "FORGED_B524_OPCODE":
+        target = next(fact for fact in graph["facts"] if fact["provenance"]["ebus"] and fact["provenance"]["ebus"]["family"] == "B524")
+        target["provenance"]["ebus"]["opcode"] = 6
     elif mutation == "INCOMPLETE_B524_IDENTITY":
         target = next(fact for fact in graph["facts"] if fact["provenance"]["ebus"] and fact["provenance"]["ebus"]["family"] == "B524")
         del target["provenance"]["ebus"]["RR"]
     elif mutation == "INVALID_EEBUS_FEATURE_PATH":
-        target = next(fact for fact in graph["facts"] if fact["provenance"]["eebus"] is not None)
+        target = graph["facts"][2]
+        target["provenance"]["eebus_source_id"] = "eebus-44444444444444444444444444444444"
+        target["provenance"]["eebus_artifact_id"] = "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8"
+        target["provenance"]["eebus"] = {
+            "service": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+            "entity": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "feature": "feature-ffffffffffffffffffffffffffffffff",
+            "feature_path": [
+                {"kind": "SERVICE", "selector": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"},
+                {"kind": "ENTITY", "selector": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
+                {"kind": "FEATURE", "selector": "feature-ffffffffffffffffffffffffffffffff"},
+            ],
+        }
+        target["provenance"]["native_evidence_refs"].append(
+            copy.deepcopy(graph["source_bundle"]["evidence_refs"][4])
+        )
         target["provenance"]["eebus"]["feature_path"][0]["kind"] = "FEATURE"
+    elif mutation == "FORGED_EEBUS_ENTITY_FEATURE":
+        target = graph["facts"][2]
+        target["provenance"]["eebus_source_id"] = "eebus-44444444444444444444444444444444"
+        target["provenance"]["eebus_artifact_id"] = "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8"
+        target["provenance"]["eebus"] = {
+            "service": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+            "entity": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "feature": "feature-ffffffffffffffffffffffffffffffff",
+            "feature_path": [
+                {"kind": "SERVICE", "selector": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"},
+                {"kind": "ENTITY", "selector": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
+                {"kind": "FEATURE", "selector": "feature-ffffffffffffffffffffffffffffffff"},
+            ],
+        }
+        target["provenance"]["native_evidence_refs"].append(
+            copy.deepcopy(graph["source_bundle"]["evidence_refs"][4])
+        )
     elif mutation == "LIMIT_EXCEEDED":
         graph["limits"]["max_facts"] = 65
     elif mutation == "ORDERING_INVALID":
         graph["facts"].reverse()
     elif mutation == "REGISTRY_MISMATCH":
         graph["registry"]["digest"] = "sha256:" + "0" * 64
+    elif mutation == "WRONG_SOURCE_BUNDLE":
+        graph["source_bundle"]["bundle_hash"] = "sha256:" + "f" * 64
+    elif mutation == "WRONG_SOURCE_REPLAY":
+        graph["source_bundle"]["replay_hash"] = "sha256:" + "f" * 64
     elif mutation == "TERMINAL_STATE_NOT_WITHHELD":
         target = next(fact for fact in graph["facts"] if fact["terminal_negative_state"] is not None)
         target["status"] = "CANDIDATE"
@@ -816,12 +953,42 @@ def main() -> int:
     parser.add_argument("command", choices=("verify", "replay"))
     parser.add_argument("--graph", type=pathlib.Path, required=True)
     parser.add_argument("--registry", type=pathlib.Path, required=True)
+    parser.add_argument("--source-bundle", type=pathlib.Path, required=True)
+    parser.add_argument("--source-replay", type=pathlib.Path, required=True)
     args = parser.parse_args()
     try:
         value, raw = load_json(args.graph)
         registry, registry_raw = load_json(args.registry)
+        source_bundle, source_bundle_raw = load_json(args.source_bundle)
+        source_replay, _ = load_json(args.source_replay)
+        source_registry_path = args.registry.parent / pathlib.Path(
+            registry["source_contract"]["source_registry_path"]
+        ).name
+        if (
+            hashlib.sha256(source_registry_path.read_bytes()).hexdigest()
+            != registry["source_contract"]["source_registry_sha256"]
+        ):
+            fail("provenance.binding")
+        try:
+            synchronized.preflight_json_bytes(source_bundle_raw)
+            source_registry = synchronized.load_registry(source_registry_path)
+            verified_source = synchronized.verify(
+                copy.deepcopy(source_bundle), source_registry, len(source_bundle_raw)
+            )
+            generated_source_replay = synchronized.replay(verified_source)
+        except (synchronized.Failure, OSError, KeyError, TypeError, ValueError):
+            fail("provenance.binding")
+        if generated_source_replay != source_replay:
+            fail("provenance.binding")
         graph = expand_negative_fixture(args.graph, value)
-        verified = verify(graph, registry, registry_raw, len(raw))
+        verified = verify(
+            graph,
+            registry,
+            registry_raw,
+            len(raw),
+            source_bundle,
+            source_replay,
+        )
         if args.command == "verify":
             sys.stdout.write("ok\n")
         else:

@@ -1,19 +1,19 @@
 {
   "contract": "helianthus.platform.draft-candidate-fact-graph.v1",
   "schema_version": 1,
-  "graph_id": "dcfgv1:sha256:9ad91e173e2736d5fb8e3c7ed26b924808a1d38cd53d0a94a4483db1dcc1a078",
-  "graph_hash": "sha256:9ad91e173e2736d5fb8e3c7ed26b924808a1d38cd53d0a94a4483db1dcc1a078",
+  "graph_id": "dcfgv1:sha256:e20087a0df5febae51a0edb5eecf1eda149419951554105416989130ceed30a3",
+  "graph_hash": "sha256:e20087a0df5febae51a0edb5eecf1eda149419951554105416989130ceed30a3",
   "registry": {
     "contract": "helianthus.platform.draft-candidate-fact-registry.v1",
     "version": 1,
-    "digest": "sha256:e522cbb2ded953dd219647b97b708d6a788a1e6ce53e66b724dccfe15ae93a55"
+    "digest": "sha256:3126379f5a59d5751954235ea996bdcb63ce09d51d009382982716c46ba4559a"
   },
   "source_bundle": {
     "contract": "helianthus.platform.synchronized-evidence-bundle.v1",
     "schema_version": 1,
     "bundle_id": "sebv1:sha256:2df0e688d8c615c657698350eac545a5997af39d50502dc56fe2df5eade5da61",
     "bundle_hash": "sha256:2df0e688d8c615c657698350eac545a5997af39d50502dc56fe2df5eade5da61",
-    "replay_hash": "sha256:3061c507677f1f41861c20096ff7581ccb6e35c2e01bf66a568e2277df285539",
+    "replay_hash": "sha256:d67fbf596558b994a42ed93e7436a340c22d34d93e4db6f2bf442a48a7f82a4f",
     "evidence_refs": [
       {
         "kind": "CONTENT",
@@ -134,7 +134,7 @@
           {
             "kind": "CONTENT",
             "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
             "repository": null,
             "commit": null,
             "path": null
@@ -171,7 +171,7 @@
         "minimum_new_samples": 2
       },
       "debug_only": true,
-      "fact_hash": "sha256:66fc1a0ffe6f15f372745f98f5cb88fcb2a22c81921b237aff89711252cc3ac9"
+      "fact_hash": "sha256:18fd9637122bb2fec20b1ba78e131a658bf31972329a772f444f46e79fff999b"
     },
     {
       "candidate_id": "m7-candidate-0002",
@@ -191,57 +191,31 @@
           {
             "kind": "CONTENT",
             "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-            "repository": null,
-            "commit": null,
-            "path": null
-          },
-          {
-            "kind": "CONTENT",
-            "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
             "repository": null,
             "commit": null,
             "path": null
           }
         ],
-        "ebus_source_id": "ebus-66666666666666666666666666666666",
-        "ebus_artifact_id": "seav1:sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "ebus_source_id": "ebus-22222222222222222222222222222222",
+        "ebus_artifact_id": "seav1:sha256:2b4dd42381a84888d9db61696e07fe1cd435aa591ce46e106346abb3c6a997fd",
         "ebus": {
           "family": "B524",
           "target_pseudonym": "target-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-          "opcode": 6,
+          "opcode": 2,
           "GG": 3,
           "II": 0,
           "RR": 28,
           "target_address": 21,
           "source_address": 247,
-          "group_meaning": "remote-zone-observation",
-          "instance_gate": "device-connected",
+          "group_meaning": "zones",
+          "instance_gate": "index-not-ff",
           "register_category": "STATE",
-          "unit_scale_source": "public-catalog-v1"
+          "unit_scale_source": "vrc-explorer-v1"
         },
-        "eebus_source_id": "eebus-44444444444444444444444444444444",
-        "eebus_artifact_id": "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8",
-        "eebus": {
-          "service": "service-dddddddddddddddddddddddddddddddd",
-          "entity": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-          "feature": "feature-ffffffffffffffffffffffffffffffff",
-          "feature_path": [
-            {
-              "kind": "SERVICE",
-              "selector": "service-dddddddddddddddddddddddddddddddd"
-            },
-            {
-              "kind": "ENTITY",
-              "selector": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-            },
-            {
-              "kind": "FEATURE",
-              "selector": "feature-ffffffffffffffffffffffffffffffff"
-            }
-          ]
-        },
+        "eebus_source_id": null,
+        "eebus_artifact_id": null,
+        "eebus": null,
         "cloud": null
       },
       "comparator": {
@@ -276,7 +250,7 @@
         "minimum_new_samples": 2
       },
       "debug_only": true,
-      "fact_hash": "sha256:74675ab7b4cf0c5739c9170c276e1a9ccc67700af9e45ef1b748d13d7963bce0"
+      "fact_hash": "sha256:da2274efe34521abd40a0e54e01a30c18bf1ab6eb7bb5975f9f19f60e744e1b4"
     },
     {
       "candidate_id": "m7-candidate-0003",
@@ -296,15 +270,7 @@
           {
             "kind": "CONTENT",
             "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-            "repository": null,
-            "commit": null,
-            "path": null
-          },
-          {
-            "kind": "CONTENT",
-            "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
             "repository": null,
             "commit": null,
             "path": null
@@ -319,30 +285,12 @@
           "target_product": "BAI00",
           "register_family": "system",
           "register_id": 512,
-          "unit_scale_source": "public-catalog-v1",
+          "unit_scale_source": "gateway-catalog-v1",
           "evidence_role": "AUTHORITATIVE"
         },
-        "eebus_source_id": "eebus-44444444444444444444444444444444",
-        "eebus_artifact_id": "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8",
-        "eebus": {
-          "service": "service-dddddddddddddddddddddddddddddddd",
-          "entity": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-          "feature": "feature-ffffffffffffffffffffffffffffffff",
-          "feature_path": [
-            {
-              "kind": "SERVICE",
-              "selector": "service-dddddddddddddddddddddddddddddddd"
-            },
-            {
-              "kind": "ENTITY",
-              "selector": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-            },
-            {
-              "kind": "FEATURE",
-              "selector": "feature-ffffffffffffffffffffffffffffffff"
-            }
-          ]
-        },
+        "eebus_source_id": null,
+        "eebus_artifact_id": null,
+        "eebus": null,
         "cloud": null
       },
       "comparator": {
@@ -364,7 +312,7 @@
         "minimum_new_samples": 2
       },
       "debug_only": true,
-      "fact_hash": "sha256:8513c9c39a9a5dc1c29242b738e2fffd4cd704fa935cbeef4b54635515e6f75d"
+      "fact_hash": "sha256:feb134bc2c969d7e3e9aa2f99e7b52e6320a14edbdcf413ea64e82bbefd70615"
     },
     {
       "candidate_id": "m7-candidate-0004",
@@ -384,7 +332,7 @@
           {
             "kind": "CONTENT",
             "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
             "repository": null,
             "commit": null,
             "path": null
@@ -399,7 +347,7 @@
           "target_product": "BAI00",
           "register_family": "system",
           "register_id": 512,
-          "unit_scale_source": "public-catalog-v1",
+          "unit_scale_source": "gateway-catalog-v1",
           "evidence_role": "AUTHORITATIVE"
         },
         "eebus_source_id": null,
@@ -425,7 +373,7 @@
         "minimum_new_samples": 2
       },
       "debug_only": true,
-      "fact_hash": "sha256:5c5a0d232b638a032d0a54e3141482d20e97a8f88bfcd3886ca86f6fbdf4ffe4"
+      "fact_hash": "sha256:bcec5e1365b67ddd78782d66d3634633ca50aad616b1d034a31632249f3c69da"
     },
     {
       "candidate_id": "m7-candidate-0005",
@@ -445,7 +393,7 @@
           {
             "kind": "CONTENT",
             "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
             "repository": null,
             "commit": null,
             "path": null
@@ -478,7 +426,7 @@
         "minimum_new_samples": 2
       },
       "debug_only": true,
-      "fact_hash": "sha256:5f18f677977368dc67c82842c6eab0a47d1e97942dac343707948810640cf70b"
+      "fact_hash": "sha256:7283369e0ca1d351094cd177189b3e7fd5d9c892d0a93db9533bbae62fb4fd3a"
     },
     {
       "candidate_id": "m7-candidate-0006",
@@ -498,15 +446,7 @@
           {
             "kind": "CONTENT",
             "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-            "repository": null,
-            "commit": null,
-            "path": null
-          },
-          {
-            "kind": "CONTENT",
-            "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
             "repository": null,
             "commit": null,
             "path": null
@@ -526,29 +466,11 @@
           "group_meaning": "zones",
           "instance_gate": "index-not-ff",
           "register_category": "STATE",
-          "unit_scale_source": "public-catalog-v1"
+          "unit_scale_source": "vrc-explorer-v1"
         },
-        "eebus_source_id": "eebus-44444444444444444444444444444444",
-        "eebus_artifact_id": "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8",
-        "eebus": {
-          "service": "service-dddddddddddddddddddddddddddddddd",
-          "entity": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-          "feature": "feature-ffffffffffffffffffffffffffffffff",
-          "feature_path": [
-            {
-              "kind": "SERVICE",
-              "selector": "service-dddddddddddddddddddddddddddddddd"
-            },
-            {
-              "kind": "ENTITY",
-              "selector": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-            },
-            {
-              "kind": "FEATURE",
-              "selector": "feature-ffffffffffffffffffffffffffffffff"
-            }
-          ]
-        },
+        "eebus_source_id": null,
+        "eebus_artifact_id": null,
+        "eebus": null,
         "cloud": null
       },
       "comparator": {
@@ -583,7 +505,7 @@
         "minimum_new_samples": 2
       },
       "debug_only": true,
-      "fact_hash": "sha256:0e150d01802bb316572cad02d316b142ab0cedb32f424ac8dd5c7ea9e69368bb"
+      "fact_hash": "sha256:ff189d1ceb088d706946112326adffe7c4d202f0db9a48c3d653b019c55edfa9"
     },
     {
       "candidate_id": "m7-candidate-0007",
@@ -600,14 +522,6 @@
       "provenance": {
         "source_bundle_id": "sebv1:sha256:2df0e688d8c615c657698350eac545a5997af39d50502dc56fe2df5eade5da61",
         "native_evidence_refs": [
-          {
-            "kind": "CONTENT",
-            "digest_algorithm": "SHA256_CONTENT_BYTES",
-            "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-            "repository": null,
-            "commit": null,
-            "path": null
-          },
           {
             "kind": "CONTENT",
             "digest_algorithm": "SHA256_CONTENT_BYTES",
@@ -630,27 +544,9 @@
           "operation_mode_context": "AUTO",
           "unit_scale_source": "source-native"
         },
-        "eebus_source_id": "eebus-44444444444444444444444444444444",
-        "eebus_artifact_id": "seav1:sha256:841786ac24dc98b6384aaa8fa3930c50404140bf0a38d97cad1aba717bac3ac8",
-        "eebus": {
-          "service": "service-dddddddddddddddddddddddddddddddd",
-          "entity": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-          "feature": "feature-ffffffffffffffffffffffffffffffff",
-          "feature_path": [
-            {
-              "kind": "SERVICE",
-              "selector": "service-dddddddddddddddddddddddddddddddd"
-            },
-            {
-              "kind": "ENTITY",
-              "selector": "entity-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-            },
-            {
-              "kind": "FEATURE",
-              "selector": "feature-ffffffffffffffffffffffffffffffff"
-            }
-          ]
-        },
+        "eebus_source_id": null,
+        "eebus_artifact_id": null,
+        "eebus": null,
         "cloud": null
       },
       "comparator": {
@@ -685,7 +581,7 @@
         "minimum_new_samples": 2
       },
       "debug_only": true,
-      "fact_hash": "sha256:5f58613efe9ac94465eb73bf6b2e166a05e6ad1b84dbd2516ae293b4a3ba18b0"
+      "fact_hash": "sha256:90b5bdcff58c86e2de3aff841f5f06f878974570c506285c2582e2ada603868d"
     }
   ]
 }
