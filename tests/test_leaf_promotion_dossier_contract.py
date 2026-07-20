@@ -35,6 +35,8 @@ EXPECTED_NEGATIVE = {
     "lease-holder-mismatch.json": "mutable.safety",
     "lease-window-invalid.json": "mutable.safety",
     "mutable-cycle-duplicate.json": "mutable.safety",
+    "mutable-cycle-input-duplicate.json": "mutable.safety",
+    "mutable-cycle-outside-lease.json": "mutable.safety",
     "mutable-direct-adapter-write.json": "mutable.safety",
     "mutable-missing-cycle.json": "schema.dossier",
     "mutable-nonexclusive-writer.json": "mutable.safety",
@@ -370,6 +372,14 @@ def apply_mutation(dossier: dict[str, object], mutation: str) -> None:
         )
     elif mutation == "MUTABLE_CYCLE_DUPLICATE":
         mutable["mutable_proof"]["cycles"][1]["cycle_id"] = mutable["mutable_proof"]["cycles"][0]["cycle_id"]
+    elif mutation == "MUTABLE_CYCLE_INPUT_DUPLICATE":
+        mutable["mutable_proof"]["cycles"][1]["perturbation_input_hash"] = (
+            mutable["mutable_proof"]["cycles"][0]["perturbation_input_hash"]
+        )
+    elif mutation == "MUTABLE_CYCLE_OUTSIDE_LEASE":
+        mutable["mutable_proof"]["cycles"][2]["performed_at"] = (
+            "2026-07-20T01:00:01Z"
+        )
     elif mutation == "MUTABLE_DIRECT_ADAPTER_WRITE":
         mutable["mutable_proof"]["direct_adapter_write"] = True
     elif mutation == "MUTABLE_MISSING_CYCLE":
