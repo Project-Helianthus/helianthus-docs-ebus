@@ -27,9 +27,13 @@ NEGATIVE_ROOT = FIXTURE_ROOT / "negative"
 EXPECTED_NEGATIVE = {
     "b524-namespace-mismatch.json": "identity.native",
     "coexistence-drift.json": "coexistence.invalid",
+    "coexistence-run-mismatch.json": "coexistence.invalid",
+    "coexistence-view-hash-mismatch.json": "coexistence.invalid",
     "comparator-incomplete.json": "schema.dossier",
     "dossier-hash-mismatch.json": "hash.dossier",
     "inherited-source.json": "inheritance.forbidden",
+    "lease-holder-mismatch.json": "mutable.safety",
+    "lease-window-invalid.json": "mutable.safety",
     "mutable-cycle-duplicate.json": "mutable.safety",
     "mutable-direct-adapter-write.json": "mutable.safety",
     "mutable-missing-cycle.json": "schema.dossier",
@@ -38,8 +42,11 @@ EXPECTED_NEGATIVE = {
     "provenance-hash-mismatch.json": "provenance.binding",
     "replay-hash-mismatch.json": "hash.replay",
     "synthetic-promotion.json": "evidence.ineligible",
+    "forged-captured-promotion.json": "evidence.ineligible",
+    "source-binding-mismatch.json": "provenance.binding",
     "terminal-not-withheld.json": "state.terminal",
     "unknown-field.json": "schema.dossier",
+    "unordered-leaves.json": "identity.native",
     "zero-promoted-m9-open.json": "consumer.block",
 }
 
@@ -304,6 +311,29 @@ def refresh_dossier_hash(dossier: dict[str, object]) -> None:
     ).hexdigest()
 
 
+def refresh_leaf_replay(leaf: dict[str, object]) -> None:
+    payload = {
+        key: leaf[key]
+        for key in (
+            "leaf_id",
+            "semantic_path",
+            "source_identity",
+            "comparator",
+            "decision",
+            "terminal_state",
+        )
+    }
+    encoded = json.dumps(
+        payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+    value = "sha256:" + hashlib.sha256(
+        b"HELIANTHUS:LEAF-PROMOTION-REPLAY:V1\0" + encoded
+    ).hexdigest()
+    leaf["provenance"]["normalized_output_hash"] = value
+    leaf["replay"]["expected_output_hash"] = value
+    leaf["replay"]["actual_output_hash"] = value
+
+
 def apply_mutation(dossier: dict[str, object], mutation: str) -> None:
     first = dossier["leaves"][0]
     mutable = dossier["leaves"][3]
@@ -311,6 +341,12 @@ def apply_mutation(dossier: dict[str, object], mutation: str) -> None:
         dossier["leaves"][1]["source_identity"]["ebus"]["namespace"] = "OP_0X06"
     elif mutation == "COEXISTENCE_DRIFT":
         first["coexistence_proof"]["no_drift"] = False
+    elif mutation == "COEXISTENCE_RUN_MISMATCH":
+        first["coexistence_proof"]["scenario_run_ids"][0] = "forged-run"
+    elif mutation == "COEXISTENCE_VIEW_HASH_MISMATCH":
+        first["coexistence_proof"]["protected_view_hashes"][0] = (
+            "sha256:" + "f" * 64
+        )
     elif mutation == "COMPARATOR_INCOMPLETE":
         del first["comparator"]["rounding"]
     elif mutation == "DOSSIER_HASH_MISMATCH":
@@ -318,6 +354,12 @@ def apply_mutation(dossier: dict[str, object], mutation: str) -> None:
         return
     elif mutation == "INHERITED_SOURCE":
         first["inheritance"]["sibling"] = True
+    elif mutation == "LEASE_HOLDER_MISMATCH":
+        mutable["mutable_proof"]["lease"]["holder"] = "different-writer"
+    elif mutation == "LEASE_WINDOW_INVALID":
+        mutable["mutable_proof"]["lease"]["valid_until"] = (
+            mutable["mutable_proof"]["lease"]["valid_from"]
+        )
     elif mutation == "MUTABLE_CYCLE_DUPLICATE":
         mutable["mutable_proof"]["cycles"][1]["cycle_id"] = mutable["mutable_proof"]["cycles"][0]["cycle_id"]
     elif mutation == "MUTABLE_DIRECT_ADAPTER_WRITE":
@@ -336,6 +378,28 @@ def apply_mutation(dossier: dict[str, object], mutation: str) -> None:
         first["decision"] = "PROMOTED"
         first["terminal_state"] = None
         first["visibility"] = "LOCKED_NOT_EXPOSED"
+        refresh_leaf_replay(first)
+    elif mutation == "FORGED_CAPTURED_PROMOTION":
+        dossier["evidence_class"] = "CAPTURED_RUNTIME_EVIDENCE"
+        dossier["capture_context"] = "SAME_LAN_LAB"
+        dossier["positive_promotion_claim"] = True
+        first["decision"] = "PROMOTED"
+        first["terminal_state"] = None
+        first["visibility"] = "LOCKED_NOT_EXPOSED"
+        first["comparator"]["outcome"] = "MATCH"
+        first["comparator"]["observed_samples"] = 3
+        first["comparator"]["missing_samples"] = 0
+        dossier["m9_consumer_gate"] = "READY_FOR_M9"
+        refresh_leaf_replay(first)
+    elif mutation == "SOURCE_BINDING_MISMATCH":
+        dossier["source_bindings"]["m8_evidence_hash"] = "sha256:" + "f" * 64
+        for leaf in dossier["leaves"]:
+            leaf["provenance"]["redacted_input_hashes"][1] = "sha256:" + "f" * 64
+    elif mutation == "UNORDERED_LEAVES":
+        dossier["leaves"][0], dossier["leaves"][1] = (
+            dossier["leaves"][1],
+            dossier["leaves"][0],
+        )
     elif mutation == "TERMINAL_NOT_WITHHELD":
         first["decision"] = "PROMOTED"
     elif mutation == "UNKNOWN_FIELD":
