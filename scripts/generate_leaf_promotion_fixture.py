@@ -160,6 +160,7 @@ def mutable_proof() -> dict[str, object]:
         cycles.append(
             {
                 "cycle_id": f"fixture-cycle-{index + 1}",
+                "performed_at": f"2026-07-20T00:{(index + 1) * 10:02d}:00Z",
                 "perturbation_input_hash": "sha256:" + digit * 64,
                 "observed_state_hash": "sha256:" + str(index + 4) * 64,
                 "rollback_state_hash": "sha256:" + str(index + 7) * 64,

@@ -175,12 +175,13 @@ decision is withheld. The proof requires:
 - rollback after every cycle; and
 - exactly three independent perturbation cycles.
 
-Each cycle has a unique cycle id, perturbation input hash, observed-state hash,
-rollback-state hash, `independent=true`, and `rollback=EXACT`. The writer must
-abort on lease expiry, writer conflict, loss of the gateway/router path, stale
-source evidence, conflict-threshold breach, or rollback failure. Any abort or
-failed rollback withholds the leaf and invalidates that cycle as promotion
-evidence.
+Each cycle has a unique cycle id, a distinct perturbation input hash, a
+canonical UTC execution time inside the lease window, an observed-state hash,
+a rollback-state hash, `independent=true`, and `rollback=EXACT`. Cycle times
+are strictly increasing. The writer must abort on lease expiry, writer
+conflict, loss of the gateway/router path, stale source evidence,
+conflict-threshold breach, or rollback failure. Any abort or failed rollback
+withholds the leaf and invalidates that cycle as promotion evidence.
 
 Read-only leaves carry `mutable_proof=null`. A read lock never authorizes a
 write.

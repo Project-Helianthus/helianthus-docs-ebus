@@ -449,10 +449,16 @@ def mutable_safety_check(
         if proof is None:
             fail("mutable.safety")
         cycle_ids = [cycle["cycle_id"] for cycle in proof["cycles"]]
+        perturbation_hashes = [
+            cycle["perturbation_input_hash"] for cycle in proof["cycles"]
+        ]
         lease = proof["lease"]
         try:
             valid_from = parse_utc(lease["valid_from"])
             valid_until = parse_utc(lease["valid_until"])
+            performed_at = [
+                parse_utc(cycle["performed_at"]) for cycle in proof["cycles"]
+            ]
         except ValueError:
             fail("mutable.safety")
         if (
@@ -464,7 +470,11 @@ def mutable_safety_check(
             or set(proof["abort_conditions"]) != required_abort
             or len(proof["cycles"]) != registry["required_perturbation_cycles"]
             or len(set(cycle_ids)) != len(cycle_ids)
+            or len(set(perturbation_hashes)) != len(perturbation_hashes)
             or not all(cycle["independent"] for cycle in proof["cycles"])
+            or performed_at != sorted(performed_at)
+            or len(set(performed_at)) != len(performed_at)
+            or not all(valid_from <= instant <= valid_until for instant in performed_at)
         ):
             fail("mutable.safety")
 
