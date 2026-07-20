@@ -177,12 +177,20 @@ def test_machine_contract_and_registry_are_closed() -> None:
     assert registry["current_evidence_policy"] == (
         "OFF_LAN_OR_SYNTHETIC_CANNOT_PROMOTE"
     )
+    assert set(registry["source_artifacts"]) == {
+        "m7_graph",
+        "m7_replay",
+        "m8_evidence",
+        "m8_report",
+    }
     assert len(registry["validation_precedence"]) >= 12
 
 
 def test_zero_promotion_fixture_is_explicit_valid_and_blocks_m9() -> None:
     dossier = load_json(DOSSIER)
     result = load_json(RESULT)
+    assert dossier["dossier_id"] == result["dossier_id"]
+    assert "fixture_id" not in dossier
     assert dossier["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE"
     assert dossier["capture_context"] == "OFF_LAN"
     assert dossier["positive_promotion_claim"] is False
