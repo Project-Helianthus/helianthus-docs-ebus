@@ -107,7 +107,7 @@ def _view_payloads() -> dict[str, object]:
             "tools": [
                 "ebus.v1.devices.list",
                 "ebus.v1.zones.list",
-                "eebus.v1.runtime.status",
+                "eebus.v1.runtime.status.get",
                 "eebus.v1.services.list",
             ]
         },
