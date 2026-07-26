@@ -157,6 +157,13 @@ python3 -m pytest -q tests/test_leaf_promotion_dossier_contract.py
 
 echo "==> check Modbus M1/M2 companion contract"
 python3 -m pytest -q tests/test_modbus_companion_contract.py
+if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
+  python3 scripts/validate_modbus_companion.py \
+    --root . \
+    --prior-root "${MODBUS_PRIOR_ROOT}"
+else
+  python3 scripts/validate_modbus_companion.py --root .
+fi
 
 set --
 if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then

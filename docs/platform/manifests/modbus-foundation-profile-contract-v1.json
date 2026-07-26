@@ -1,6 +1,6 @@
 {
   "artifact_sha256": {
-    "policy": "5d10caff8df382ff63a339a79f34426a73b185cb64e2352730a52276cc7f7e08",
+    "policy": "241270ff391f33ab25188f41d40ff48fe5a99c36ee595c9f0eb5e9f231021e29",
     "wire": "b941a60b39409c570f904f8e6830787203f8041c2fee462164c4c50c7a8f4444"
   },
   "artifacts": {
@@ -17,6 +17,10 @@
     "FMV3-M2-03"
   ],
   "consumer_pin": {
+    "contract_id": "HELIANTHUS_MODBUS_FOUNDATION_PROFILE_V1",
+    "contract_version": 1,
+    "content_revision": 1,
+    "lock_schema": "docs/platform/schemas/modbus-companion-consumer-lock-v1.schema.json",
     "manifest_sha256": {
       "format": "lowercase_64_hex",
       "required": true
@@ -26,7 +30,12 @@
       "required": true
     },
     "repository": "Project-Helianthus/helianthus-docs-ebus",
-    "validation": "exact"
+    "validation": {
+      "docs_checkout": "clean_exact_head",
+      "docs_commit_sha": "exact_match",
+      "manifest_bytes": "sha256_exact",
+      "validator": "scripts/validate_modbus_companion.py"
+    }
   },
   "content_revision": 1,
   "contract_id": "HELIANTHUS_MODBUS_FOUNDATION_PROFILE_V1",
