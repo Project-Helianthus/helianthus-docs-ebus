@@ -13,9 +13,11 @@ MANIFEST_PATH = pathlib.Path(
     "docs/platform/manifests/modbus-foundation-profile-contract-v1.json"
 )
 EXPECTED_TOP_LEVEL = {
+    "artifact_sha256",
     "artifacts",
     "companion_for",
     "consumer_pin",
+    "content_revision",
     "contract_id",
     "execution",
     "licenses",
@@ -26,6 +28,14 @@ EXPECTED_TOP_LEVEL = {
     "source_policy",
     "transport_recovery_rows",
     "version",
+}
+EXPECTED_ARTIFACT_SHA256 = {
+    "policy": (
+        "5d10caff8df382ff63a339a79f34426a73b185cb64e2352730a52276cc7f7e08"
+    ),
+    "wire": (
+        "b941a60b39409c570f904f8e6830787203f8041c2fee462164c4c50c7a8f4444"
+    ),
 }
 EXPECTED_OPERATIONS = [
     "fc03_read_holding_registers",
@@ -171,6 +181,7 @@ def validate(root: pathlib.Path) -> tuple[list[str], str | None]:
         errors,
     )
     _require_equal(manifest, "version", 1, errors)
+    _require_equal(manifest, "content_revision", 1, errors)
     _require_equal(
         manifest,
         "contract_id",
@@ -197,6 +208,12 @@ def validate(root: pathlib.Path) -> tuple[list[str], str | None]:
         manifest,
         "licenses",
         {"policy": "AGPL-3.0", "wire": "CC0-1.0"},
+        errors,
+    )
+    _require_equal(
+        manifest,
+        "artifact_sha256",
+        EXPECTED_ARTIFACT_SHA256,
         errors,
     )
     _require_equal(
@@ -249,6 +266,14 @@ def validate(root: pathlib.Path) -> tuple[list[str], str | None]:
         policy_path.read_text(encoding="utf-8") if policy_path else ""
     )
     wire_text = wire_path.read_text(encoding="utf-8") if wire_path else ""
+    for label, path in (("policy", policy_path), ("wire", wire_path)):
+        if path is None:
+            continue
+        actual_digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual_digest != EXPECTED_ARTIFACT_SHA256[label]:
+            errors.append(
+                f"{label} artifact bytes do not match contract v1 revision 1"
+            )
 
     for term in POLICY_REQUIRED_TERMS:
         if term not in policy_text:

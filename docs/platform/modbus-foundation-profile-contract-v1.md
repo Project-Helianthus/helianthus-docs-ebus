@@ -835,6 +835,12 @@ and downstream pin schema. `scripts/ci_local.sh` runs its positive and mutation
 tests. Review still classifies new facts that no marker-based validator can
 understand, and cannot weaken the machine gate.
 
+For contract version 1, the manifest and validator also pin the exact SHA-256
+of the normative policy and CC0 wire artifacts. A normative byte change
+requires an explicit content-revision or contract-version bump plus matching
+manifest, validator, mutation-test, and downstream-lock updates. Rewording a
+safety rule while leaving version-1 hashes unchanged fails CI.
+
 The transport matrix for M1 is not the eBUS T01..T88 matrix. M1 must create a
 Modbus-neutral matrix covering every TCP and RTU recovery row named by
 `FMV3-M1-04`, including FC2B/MEI0E on both transports. It must have no

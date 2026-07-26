@@ -1,4 +1,8 @@
 {
+  "artifact_sha256": {
+    "policy": "5d10caff8df382ff63a339a79f34426a73b185cb64e2352730a52276cc7f7e08",
+    "wire": "b941a60b39409c570f904f8e6830787203f8041c2fee462164c4c50c7a8f4444"
+  },
   "artifacts": {
     "policy": "docs/platform/modbus-foundation-profile-contract-v1.md",
     "wire": "protocols/modbus/modbus-phase-one-wire-v1.md"
@@ -24,6 +28,7 @@
     "repository": "Project-Helianthus/helianthus-docs-ebus",
     "validation": "exact"
   },
+  "content_revision": 1,
   "contract_id": "HELIANTHUS_MODBUS_FOUNDATION_PROFILE_V1",
   "execution": {
     "authorization_anchor": "0576544bd8851c4e32da3ca7c401270eee43ef5c",
