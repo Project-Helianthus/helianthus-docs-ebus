@@ -198,6 +198,11 @@ coalescing contracts belong to the separately gated Modbus foundation
 companion. Until that contract and implementation are merged, this list is a
 scope boundary rather than an implementation claim.
 
+Implementation-neutral framing and operation facts are owned in the CC0
+[`protocols/modbus/modbus-phase-one-wire-v1.md`](../../protocols/modbus/modbus-phase-one-wire-v1.md)
+artifact. Helianthus scheduling, recovery, provenance, profile, and
+qualification policy remains in the AGPL platform companion.
+
 There is no generic write escape hatch. FC05, FC06, FC0F, FC10, FC16, FC17,
 vendor write operations, and profile-authored arbitrary function codes are
 outside phase one.

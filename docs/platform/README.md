@@ -22,6 +22,9 @@ Current platform contracts:
 - [`modbus-multivendor-boundaries.md`](./modbus-multivendor-boundaries.md) -
   pre-implementation ownership, evidence, licensing, and public/private
   direction contract for the shared Modbus runtime and multi-vendor registry
+- [`modbus-foundation-profile-contract-v1.md`](./modbus-foundation-profile-contract-v1.md) -
+  normative M1 transport and M2 profile-registry contract for phase-one
+  read-only Modbus
 - [`eebus-raw-first-contract.md`](./eebus-raw-first-contract.md)
 - [`eebus-raw-runtime-freeze.md`](./eebus-raw-runtime-freeze.md) - M3.5
   identity, snapshot-envelope, and evidence-object freeze boundary
