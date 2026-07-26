@@ -368,7 +368,11 @@ Every endpoint configuration declares finite positive limits for:
 
 - connections;
 - in-flight requests per connection;
-- queued requests per endpoint, authorization scope, and unit;
+- total queued requests per endpoint;
+- maximum active admission keys;
+- protected queued slots per admission key;
+- shared burst slots;
+- queued requests per authorization scope and unit;
 - transaction tombstones;
 - coalesced dependents per `(endpoint, authorization_scope, unit_id)`;
 - request and response deadlines;
@@ -380,7 +384,24 @@ Invalid, zero, negative, overflowing, or internally inconsistent limits fail
 configuration before endpoint activation. Queue admission fails explicitly
 when a bound is reached.
 
-The scheduler maintains bounded queues by `(authorization_scope, unit_id)`.
+An admission key is `(authorization_scope, unit_id)`. Configuration declares
+`max_active_admission_keys = K`, `protected_slots_per_key = R`, and
+`shared_burst_slots = B`. Total endpoint queue capacity MUST be at least
+`K * R + B`, using checked arithmetic. A key becomes active on admission of its
+first queued request and releases its protected capacity only after its queue,
+in-flight physical requests, and attached dependents are all empty. At most
+`K` keys may be active.
+
+Each active key owns `R` protected slots. It may additionally consume available
+shared burst slots, but it MUST NOT consume capacity protected for another
+active key or capacity needed to activate any of the remaining `K` keys.
+Consequently, one key cannot fill the endpoint queue in a way that rejects the
+first request for another key while an admission-key position remains. Limits
+for an authorization scope, unit, or coalesced dependent MUST be at least the
+protected capacity promised to that key and MUST NOT exceed the checked
+endpoint total. Any inconsistent relationship fails before activation.
+
+The scheduler maintains bounded queues by admission key.
 Across non-empty authorization scopes it uses deterministic round-robin
 service; within each scope it uses deterministic round-robin across non-empty
 unit queues; within one scope/unit queue requests are FIFO by monotonic enqueue
@@ -731,7 +752,7 @@ The conformance harness includes, at minimum:
 | TCP tombstoned identifier reuse | reject until controlled generation rollover |
 | late response matching a TCP tombstone | retain `late_after_abandonment` wire identity and bytes; never deliver |
 | old-generation or unmatched TCP response | drop |
-| one unit saturates a shared endpoint | another unit keeps bounded admission and round-robin service |
+| one admission key exhausts its protected and shared capacity | another key still activates, admits its protected request, and receives round-robin service |
 | one authorization scope saturates a unit's dependents | another scope retains its own bounded capacity |
 | replay runs in fresh processes | identical jitter, retry, admission, and output sequence |
 | response, cancellation, and deadline share a clock offset | recorded event sequence yields one identical outcome |
@@ -815,10 +836,20 @@ delivery.
 
 Each dependent repository commits a machine-readable companion lock containing
 the exact repository, full 40-character merged docs commit, companion contract
-ID/version, and SHA-256 of the canonical manifest bytes. Its local and hosted
-CI reject a missing field, short or moving ref, unknown version, or digest
-mismatch before implementation tests run. Branch names, tags, and "latest"
-cannot satisfy the lock.
+ID/version/content revision, and SHA-256 of the canonical manifest bytes. The
+closed schema is
+[`schemas/modbus-companion-consumer-lock-v1.schema.json`](./schemas/modbus-companion-consumer-lock-v1.schema.json).
+Its local and hosted CI check out the public docs repository at the exact locked
+commit and invoke `scripts/validate_modbus_companion.py --root <docs-root>
+--consumer-lock <consumer-lock> --docs-commit-sha <locked-sha>` before
+implementation tests run. The validator independently requires the docs
+checkout's full `HEAD` to equal the lock and rejects tracked modifications.
+The first implementation PR in each of
+`helianthus-modbus` and `helianthus-modbusreg` MUST add this gate; later M1/M2
+PRs MUST retain it and update the lock only for an accepted contract revision.
+CI rejects a missing or additional field, short or moving ref, unknown version,
+wrong repository or contract identity, stale content revision, or manifest
+digest mismatch. Branch names, tags, and "latest" cannot satisfy the lock.
 
 The documentation licensing gate classifies every changed Modbus artifact:
 
@@ -836,10 +867,21 @@ tests. Review still classifies new facts that no marker-based validator can
 understand, and cannot weaken the machine gate.
 
 For contract version 1, the manifest and validator also pin the exact SHA-256
-of the normative policy and CC0 wire artifacts. A normative byte change
-requires an explicit content-revision or contract-version bump plus matching
-manifest, validator, mutation-test, and downstream-lock updates. Rewording a
-safety rule while leaving version-1 hashes unchanged fails CI.
+of the normative policy and CC0 wire artifacts. Pull-request CI supplies the
+trusted base checkout to the validator. If a prior manifest exists and the
+contract version is unchanged, changed normative artifact hashes require
+exactly the next `content_revision`; an unchanged artifact set requires the
+same revision. A revision cannot decrease or skip. A new contract without a
+prior manifest starts at revision 1. A contract-version change requires an
+explicit validator/schema update and is rejected by this V1 validator until
+that update exists.
+
+The prior-state comparison is independent of editable in-tree expected-hash
+constants. A coordinated edit to policy, manifest, and validator that leaves
+the revision unchanged therefore fails against the trusted base. Every
+accepted normative byte change also requires matching mutation-test and
+downstream-lock updates. Rewording a safety rule without the required revision
+transition fails CI.
 
 The transport matrix for M1 is not the eBUS T01..T88 matrix. M1 must create a
 Modbus-neutral matrix covering every TCP and RTU recovery row named by

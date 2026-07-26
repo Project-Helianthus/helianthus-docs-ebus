@@ -15,20 +15,36 @@ VALIDATOR = pathlib.Path("scripts/validate_modbus_companion.py")
 MANIFEST = pathlib.Path(
     "docs/platform/manifests/modbus-foundation-profile-contract-v1.json"
 )
+SCHEMA = pathlib.Path(
+    "docs/platform/schemas/modbus-companion-consumer-lock-v1.schema.json"
+)
 POLICY = pathlib.Path(
     "docs/platform/modbus-foundation-profile-contract-v1.md"
 )
 WIRE = pathlib.Path("protocols/modbus/modbus-phase-one-wire-v1.md")
 
 
-def run_validator(root: pathlib.Path) -> subprocess.CompletedProcess[str]:
+def run_validator(
+    root: pathlib.Path,
+    *,
+    prior_root: pathlib.Path | None = None,
+    consumer_lock: pathlib.Path | None = None,
+    docs_commit_sha: str | None = None,
+) -> subprocess.CompletedProcess[str]:
+    command = [
+        "python3",
+        str(root / VALIDATOR),
+        "--root",
+        str(root),
+    ]
+    if prior_root is not None:
+        command.extend(("--prior-root", str(prior_root)))
+    if consumer_lock is not None:
+        command.extend(("--consumer-lock", str(consumer_lock)))
+    if docs_commit_sha is not None:
+        command.extend(("--docs-commit-sha", docs_commit_sha))
     return subprocess.run(
-        [
-            "python3",
-            str(root / VALIDATOR),
-            "--root",
-            str(root),
-        ],
+        command,
         check=False,
         capture_output=True,
         text=True,
@@ -39,6 +55,7 @@ def materialize_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     for relative in (
         VALIDATOR,
         MANIFEST,
+        SCHEMA,
         POLICY,
         WIRE,
         pathlib.Path("README.md"),
@@ -62,10 +79,113 @@ def write_manifest(root: pathlib.Path, value: dict[str, object]) -> None:
     )
 
 
+def make_consumer_lock(
+    root: pathlib.Path,
+    *,
+    docs_commit_sha: str = "a" * 40,
+) -> dict[str, object]:
+    manifest = load_manifest(root)
+    return {
+        "schema": "helianthus.modbus.companion-consumer-lock",
+        "schema_version": 1,
+        "repository": manifest["repository"],
+        "merged_commit_sha": docs_commit_sha,
+        "contract_id": manifest["contract_id"],
+        "contract_version": manifest["version"],
+        "content_revision": manifest["content_revision"],
+        "manifest_sha256": hashlib.sha256(
+            (root / MANIFEST).read_bytes()
+        ).hexdigest(),
+    }
+
+
+def write_consumer_lock(
+    root: pathlib.Path,
+    value: dict[str, object],
+) -> pathlib.Path:
+    path = root / "consumer-lock.json"
+    path.write_text(
+        json.dumps(value, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def initialize_git_checkout(root: pathlib.Path) -> str:
+    subprocess.run(
+        ["git", "init", "-q", str(root)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(root), "config", "user.name", "Contract Test"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "config",
+            "user.email",
+            "contract-test@example.invalid",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(root), "add", "."],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(root), "commit", "-q", "-m", "fixture"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return subprocess.check_output(
+        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        text=True,
+    ).strip()
+
+
 def test_repository_modbus_companion_contract_is_valid() -> None:
     result = run_validator(REPO_ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "modbus_companion_contract_ok" in result.stdout
+
+
+def test_new_contract_revision_one_accepts_trusted_base_without_manifest(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = materialize_fixture(tmp_path / "current")
+    prior_root = tmp_path / "prior"
+    prior_root.mkdir()
+    result = run_validator(root, prior_root=prior_root)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_valid_consumer_lock_matches_exact_docs_checkout(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = materialize_fixture(tmp_path)
+    docs_commit_sha = initialize_git_checkout(root)
+    lock_path = write_consumer_lock(
+        root,
+        make_consumer_lock(root, docs_commit_sha=docs_commit_sha),
+    )
+    result = run_validator(
+        root,
+        consumer_lock=lock_path,
+        docs_commit_sha=docs_commit_sha,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 Mutation = Callable[[pathlib.Path, dict[str, object]], None]
@@ -200,6 +320,27 @@ def mutate_policy_hash(
     hashes["policy"] = "0" * 64
 
 
+def mutate_admission_reservation_row_and_rehash(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    policy = root / POLICY
+    text = policy.read_text(encoding="utf-8")
+    original = (
+        "| one admission key exhausts its protected and shared capacity | "
+        "another key still activates, admits its protected request, and "
+        "receives round-robin service |"
+    )
+    assert original in text
+    policy.write_text(
+        text.replace(
+            original,
+            "| one admission key exhausts endpoint capacity | reject all peers |",
+        ),
+        encoding="utf-8",
+    )
+    refresh_policy_hash(root, manifest)
+
+
 @pytest.mark.parametrize(
     "mutation",
     (
@@ -217,6 +358,7 @@ def mutate_policy_hash(
         mutate_contradict_tombstone_and_rehash,
         mutate_unrecognized_wire_fact_and_rehash,
         mutate_policy_hash,
+        mutate_admission_reservation_row_and_rehash,
     ),
 )
 def test_modbus_companion_mutations_fail_closed(
@@ -229,3 +371,88 @@ def test_modbus_companion_mutations_fail_closed(
     result = run_validator(root)
     assert result.returncode != 0
     assert "modbus_companion_contract_invalid" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    (
+        ("schema", "helianthus.modbus.other-lock"),
+        ("schema_version", 2),
+        ("repository", "Project-Helianthus/other"),
+        ("merged_commit_sha", "a" * 12),
+        ("contract_id", "OTHER_CONTRACT"),
+        ("contract_version", 2),
+        ("content_revision", 2),
+        ("manifest_sha256", "0" * 64),
+    ),
+)
+def test_consumer_lock_mutations_fail_closed(
+    tmp_path: pathlib.Path,
+    key: str,
+    value: object,
+) -> None:
+    root = materialize_fixture(tmp_path)
+    docs_commit_sha = initialize_git_checkout(root)
+    lock = make_consumer_lock(root, docs_commit_sha=docs_commit_sha)
+    lock[key] = value
+    lock_path = write_consumer_lock(root, lock)
+    result = run_validator(
+        root,
+        consumer_lock=lock_path,
+        docs_commit_sha=docs_commit_sha,
+    )
+    assert result.returncode != 0
+    assert "modbus_companion_contract_invalid" in result.stderr
+
+
+def test_consumer_lock_additional_key_fails_closed(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = materialize_fixture(tmp_path)
+    docs_commit_sha = initialize_git_checkout(root)
+    lock = make_consumer_lock(root, docs_commit_sha=docs_commit_sha)
+    lock["moving_ref"] = "main"
+    lock_path = write_consumer_lock(root, lock)
+    result = run_validator(
+        root,
+        consumer_lock=lock_path,
+        docs_commit_sha=docs_commit_sha,
+    )
+    assert result.returncode != 0
+    assert "consumer lock keys must match the closed schema" in result.stderr
+
+
+def test_coordinated_hash_edit_without_revision_bump_fails_against_prior(
+    tmp_path: pathlib.Path,
+) -> None:
+    prior_root = materialize_fixture(tmp_path / "prior")
+    current_root = materialize_fixture(tmp_path / "current")
+    manifest = load_manifest(current_root)
+    policy = current_root / POLICY
+    policy.write_text(
+        policy.read_text(encoding="utf-8")
+        + "\nA weakened coordinated policy edit.\n",
+        encoding="utf-8",
+    )
+    refresh_policy_hash(current_root, manifest)
+    write_manifest(current_root, manifest)
+
+    old_hashes = load_manifest(prior_root)["artifact_sha256"]
+    new_hashes = manifest["artifact_sha256"]
+    assert isinstance(old_hashes, dict)
+    assert isinstance(new_hashes, dict)
+    old_policy_hash = old_hashes["policy"]
+    new_policy_hash = new_hashes["policy"]
+    assert isinstance(old_policy_hash, str)
+    assert isinstance(new_policy_hash, str)
+    validator = current_root / VALIDATOR
+    validator_text = validator.read_text(encoding="utf-8")
+    assert old_policy_hash in validator_text
+    validator.write_text(
+        validator_text.replace(old_policy_hash, new_policy_hash),
+        encoding="utf-8",
+    )
+
+    result = run_validator(current_root, prior_root=prior_root)
+    assert result.returncode != 0
+    assert "normative artifact changes require exactly" in result.stderr
