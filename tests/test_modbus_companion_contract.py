@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 import shutil
 import subprocess
 from collections.abc import Callable
 
 import pytest
+from scripts import validate_modbus_companion as companion_validator
 
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -22,6 +24,12 @@ POLICY = pathlib.Path(
     "docs/platform/modbus-foundation-profile-contract-v1.md"
 )
 WIRE = pathlib.Path("protocols/modbus/modbus-phase-one-wire-v1.md")
+TRUSTED_VALIDATOR = pathlib.Path(
+    "scripts/validate_modbus_revision_transition.py"
+)
+TRUSTED_WORKFLOW = pathlib.Path(
+    ".github/workflows/modbus-trusted-revision.yml"
+)
 
 
 def run_validator(
@@ -30,7 +38,6 @@ def run_validator(
     prior_root: pathlib.Path | None = None,
     consumer_lock: pathlib.Path | None = None,
     docs_commit_sha: str | None = None,
-    docs_main_ref: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     command = [
         "python3",
@@ -44,8 +51,6 @@ def run_validator(
         command.extend(("--consumer-lock", str(consumer_lock)))
     if docs_commit_sha is not None:
         command.extend(("--docs-commit-sha", docs_commit_sha))
-    if docs_main_ref is not None:
-        command.extend(("--docs-main-ref", docs_main_ref))
     return subprocess.run(
         command,
         check=False,
@@ -54,12 +59,35 @@ def run_validator(
     )
 
 
+def validate_consumer_lock(
+    root: pathlib.Path,
+    lock_path: pathlib.Path,
+    docs_commit_sha: str,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    canonical_contains: bool = True,
+) -> list[str]:
+    monkeypatch.setattr(
+        companion_validator,
+        "_canonical_main_contains",
+        lambda _sha, _errors: canonical_contains,
+    )
+    errors, _ = companion_validator.validate(
+        root.resolve(),
+        consumer_lock=lock_path.resolve(),
+        docs_commit_sha=docs_commit_sha,
+    )
+    return errors
+
+
 def materialize_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     for relative in (
         VALIDATOR,
         MANIFEST,
         SCHEMA,
         POLICY,
+        TRUSTED_VALIDATOR,
+        TRUSTED_WORKFLOW,
         WIRE,
         pathlib.Path("README.md"),
         pathlib.Path("protocols/LICENSE"),
@@ -204,6 +232,7 @@ def test_new_contract_revision_one_accepts_trusted_base_without_manifest(
 
 def test_valid_consumer_lock_matches_exact_docs_checkout(
     tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     root = materialize_fixture(tmp_path)
     docs_commit_sha = initialize_git_checkout(root)
@@ -211,17 +240,18 @@ def test_valid_consumer_lock_matches_exact_docs_checkout(
         root,
         make_consumer_lock(root, docs_commit_sha=docs_commit_sha),
     )
-    result = run_validator(
+    errors = validate_consumer_lock(
         root,
-        consumer_lock=lock_path,
-        docs_commit_sha=docs_commit_sha,
-        docs_main_ref="refs/remotes/origin/main",
+        lock_path,
+        docs_commit_sha,
+        monkeypatch,
     )
-    assert result.returncode == 0, result.stdout + result.stderr
+    assert errors == []
 
 
 def test_consumer_lock_rejects_untracked_docs_content(
     tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     root = materialize_fixture(tmp_path / "docs")
     docs_commit_sha = initialize_git_checkout(root)
@@ -230,18 +260,18 @@ def test_consumer_lock_rejects_untracked_docs_content(
         root,
         make_consumer_lock(root, docs_commit_sha=docs_commit_sha),
     )
-    result = run_validator(
+    errors = validate_consumer_lock(
         root,
-        consumer_lock=lock_path,
-        docs_commit_sha=docs_commit_sha,
-        docs_main_ref="refs/remotes/origin/main",
+        lock_path,
+        docs_commit_sha,
+        monkeypatch,
     )
-    assert result.returncode != 0
-    assert "tracked or untracked modifications" in result.stderr
+    assert any("tracked or untracked modifications" in error for error in errors)
 
 
 def test_consumer_lock_rejects_commit_not_on_canonical_main(
     tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     root = materialize_fixture(tmp_path / "docs")
     initialize_git_checkout(root)
@@ -270,14 +300,42 @@ def test_consumer_lock_rejects_commit_not_on_canonical_main(
         root,
         make_consumer_lock(root, docs_commit_sha=docs_commit_sha),
     )
-    result = run_validator(
+    errors = validate_consumer_lock(
         root,
-        consumer_lock=lock_path,
-        docs_commit_sha=docs_commit_sha,
-        docs_main_ref="refs/remotes/origin/main",
+        lock_path,
+        docs_commit_sha,
+        monkeypatch,
+        canonical_contains=False,
     )
-    assert result.returncode != 0
-    assert "not an ancestor of canonical origin/main" in result.stderr
+    assert "locked docs commit is not on canonical GitHub main" in errors
+
+
+def test_canonical_main_fetch_uses_fixed_https_and_fresh_ref(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[list[str], dict[str, object]]] = []
+
+    def fake_run(
+        command: list[str],
+        **kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append((command, kwargs))
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(companion_validator.subprocess, "run", fake_run)
+    errors: list[str] = []
+    assert companion_validator._canonical_main_contains("a" * 40, errors)
+    assert errors == []
+    fetch_command, fetch_options = calls[1]
+    assert companion_validator.CANONICAL_REPOSITORY_URL in fetch_command
+    assert (
+        "+refs/heads/main:"
+        + companion_validator.CANONICAL_MAIN_REF
+    ) in fetch_command
+    fetch_env = fetch_options["env"]
+    assert isinstance(fetch_env, dict)
+    assert fetch_env["GIT_CONFIG_GLOBAL"] == os.devnull
+    assert fetch_env["GIT_CONFIG_SYSTEM"] == os.devnull
 
 
 Mutation = Callable[[pathlib.Path, dict[str, object]], None]
@@ -480,6 +538,7 @@ def test_modbus_companion_mutations_fail_closed(
 )
 def test_consumer_lock_mutations_fail_closed(
     tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
     key: str,
     value: object,
 ) -> None:
@@ -488,32 +547,31 @@ def test_consumer_lock_mutations_fail_closed(
     lock = make_consumer_lock(root, docs_commit_sha=docs_commit_sha)
     lock[key] = value
     lock_path = write_consumer_lock(root, lock)
-    result = run_validator(
+    errors = validate_consumer_lock(
         root,
-        consumer_lock=lock_path,
-        docs_commit_sha=docs_commit_sha,
-        docs_main_ref="refs/remotes/origin/main",
+        lock_path,
+        docs_commit_sha,
+        monkeypatch,
     )
-    assert result.returncode != 0
-    assert "modbus_companion_contract_invalid" in result.stderr
+    assert errors
 
 
 def test_consumer_lock_additional_key_fails_closed(
     tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     root = materialize_fixture(tmp_path)
     docs_commit_sha = initialize_git_checkout(root)
     lock = make_consumer_lock(root, docs_commit_sha=docs_commit_sha)
     lock["moving_ref"] = "main"
     lock_path = write_consumer_lock(root, lock)
-    result = run_validator(
+    errors = validate_consumer_lock(
         root,
-        consumer_lock=lock_path,
-        docs_commit_sha=docs_commit_sha,
-        docs_main_ref="refs/remotes/origin/main",
+        lock_path,
+        docs_commit_sha,
+        monkeypatch,
     )
-    assert result.returncode != 0
-    assert "consumer lock keys must match the closed schema" in result.stderr
+    assert "consumer lock keys must match the closed schema" in errors
 
 
 def test_coordinated_hash_edit_without_revision_bump_fails_against_prior(

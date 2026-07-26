@@ -1,12 +1,16 @@
 {
   "artifact_sha256": {
     "consumer_lock_schema": "369a724954d21614d71fd970c8b6224d8c892af8870819cbef159619acce4ad0",
-    "policy": "5eb6743772d7d2f816a8507e319f0266fddc5f37b63e1177a387b36cba0d73b3",
+    "policy": "9077b2f38cb0991657d861c38078ea2356a71511beae12c15de5b53f150c99b8",
+    "trusted_revision_validator": "4a2deeeb03a13f08ed005468261037404947f7a7ef01abe11ea2c48ec16043d8",
+    "trusted_revision_workflow": "d7cdf80b5b9078747b3f73029e64d34225e61c484134ad4f66b04f0c278e3fbc",
     "wire": "b941a60b39409c570f904f8e6830787203f8041c2fee462164c4c50c7a8f4444"
   },
   "artifacts": {
     "consumer_lock_schema": "docs/platform/schemas/modbus-companion-consumer-lock-v1.schema.json",
     "policy": "docs/platform/modbus-foundation-profile-contract-v1.md",
+    "trusted_revision_validator": "scripts/validate_modbus_revision_transition.py",
+    "trusted_revision_workflow": ".github/workflows/modbus-trusted-revision.yml",
     "wire": "protocols/modbus/modbus-phase-one-wire-v1.md"
   },
   "companion_for": [
@@ -33,7 +37,7 @@
     },
     "repository": "Project-Helianthus/helianthus-docs-ebus",
     "validation": {
-      "canonical_main": "required_ancestor",
+      "canonical_main": "fresh_https_fetch_required_ancestor",
       "docs_checkout": "fully_clean_exact_head",
       "docs_commit_sha": "exact_match",
       "manifest_bytes": "sha256_exact",
@@ -51,6 +55,8 @@
   "licenses": {
     "consumer_lock_schema": "AGPL-3.0",
     "policy": "AGPL-3.0",
+    "trusted_revision_validator": "AGPL-3.0",
+    "trusted_revision_workflow": "AGPL-3.0",
     "wire": "CC0-1.0"
   },
   "phase1_operations": [
@@ -86,5 +92,12 @@
     "rtu_late_same_shape_discarded",
     "rtu_quiescence_failure_endpoint_recovery"
   ],
+  "trust_anchor": {
+    "commit_sha": "a211bcfac1fe782f298e97676b45d28424ada5ff",
+    "local_mirror": "scripts/validate_modbus_revision_transition.py",
+    "m1_admission_gate": "runtime-gates/fronius-modbus-m1-admission.json",
+    "repository": "Project-Helianthus/helianthus-execution-plans",
+    "workflow": ".github/workflows/modbus-trusted-revision.yml"
+  },
   "version": 1
 }
