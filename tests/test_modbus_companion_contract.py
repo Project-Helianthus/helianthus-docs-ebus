@@ -30,6 +30,7 @@ def run_validator(
     prior_root: pathlib.Path | None = None,
     consumer_lock: pathlib.Path | None = None,
     docs_commit_sha: str | None = None,
+    docs_main_ref: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     command = [
         "python3",
@@ -43,6 +44,8 @@ def run_validator(
         command.extend(("--consumer-lock", str(consumer_lock)))
     if docs_commit_sha is not None:
         command.extend(("--docs-commit-sha", docs_commit_sha))
+    if docs_main_ref is not None:
+        command.extend(("--docs-main-ref", docs_main_ref))
     return subprocess.run(
         command,
         check=False,
@@ -103,7 +106,7 @@ def write_consumer_lock(
     root: pathlib.Path,
     value: dict[str, object],
 ) -> pathlib.Path:
-    path = root / "consumer-lock.json"
+    path = root.parent / f"{root.name}-consumer-lock.json"
     path.write_text(
         json.dumps(value, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -149,10 +152,38 @@ def initialize_git_checkout(root: pathlib.Path) -> str:
         capture_output=True,
         text=True,
     )
-    return subprocess.check_output(
+    head = subprocess.check_output(
         ["git", "-C", str(root), "rev-parse", "HEAD"],
         text=True,
     ).strip()
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "remote",
+            "add",
+            "origin",
+            "https://github.com/Project-Helianthus/helianthus-docs-ebus.git",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "update-ref",
+            "refs/remotes/origin/main",
+            head,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return head
 
 
 def test_repository_modbus_companion_contract_is_valid() -> None:
@@ -184,8 +215,69 @@ def test_valid_consumer_lock_matches_exact_docs_checkout(
         root,
         consumer_lock=lock_path,
         docs_commit_sha=docs_commit_sha,
+        docs_main_ref="refs/remotes/origin/main",
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_consumer_lock_rejects_untracked_docs_content(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = materialize_fixture(tmp_path / "docs")
+    docs_commit_sha = initialize_git_checkout(root)
+    (root / "untracked.txt").write_text("not canonical\n", encoding="utf-8")
+    lock_path = write_consumer_lock(
+        root,
+        make_consumer_lock(root, docs_commit_sha=docs_commit_sha),
+    )
+    result = run_validator(
+        root,
+        consumer_lock=lock_path,
+        docs_commit_sha=docs_commit_sha,
+        docs_main_ref="refs/remotes/origin/main",
+    )
+    assert result.returncode != 0
+    assert "tracked or untracked modifications" in result.stderr
+
+
+def test_consumer_lock_rejects_commit_not_on_canonical_main(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = materialize_fixture(tmp_path / "docs")
+    initialize_git_checkout(root)
+    readme = root / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8") + "\nPR-only commit.\n",
+        encoding="utf-8",
+    )
+    subprocess.run(
+        ["git", "-C", str(root), "add", "README.md"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(root), "commit", "-q", "-m", "pr-only"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    docs_commit_sha = subprocess.check_output(
+        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        text=True,
+    ).strip()
+    lock_path = write_consumer_lock(
+        root,
+        make_consumer_lock(root, docs_commit_sha=docs_commit_sha),
+    )
+    result = run_validator(
+        root,
+        consumer_lock=lock_path,
+        docs_commit_sha=docs_commit_sha,
+        docs_main_ref="refs/remotes/origin/main",
+    )
+    assert result.returncode != 0
+    assert "not an ancestor of canonical origin/main" in result.stderr
 
 
 Mutation = Callable[[pathlib.Path, dict[str, object]], None]
@@ -400,6 +492,7 @@ def test_consumer_lock_mutations_fail_closed(
         root,
         consumer_lock=lock_path,
         docs_commit_sha=docs_commit_sha,
+        docs_main_ref="refs/remotes/origin/main",
     )
     assert result.returncode != 0
     assert "modbus_companion_contract_invalid" in result.stderr
@@ -417,6 +510,7 @@ def test_consumer_lock_additional_key_fails_closed(
         root,
         consumer_lock=lock_path,
         docs_commit_sha=docs_commit_sha,
+        docs_main_ref="refs/remotes/origin/main",
     )
     assert result.returncode != 0
     assert "consumer lock keys must match the closed schema" in result.stderr
