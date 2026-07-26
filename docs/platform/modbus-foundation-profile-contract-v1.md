@@ -885,15 +885,17 @@ that update exists.
 The prior-state comparison is independent of editable in-tree expected-hash
 constants. A coordinated edit to policy, manifest, and validator that leaves
 the revision unchanged therefore fails against the trusted base. The trusted
-revision workflow is canonical JSON and pins
-`Project-Helianthus/helianthus-execution-plans` commit
-`a211bcfac1fe782f298e97676b45d28424ada5ff`. It executes
+revision workflow is canonical JSON and pins the full commit recorded at
+`trust_anchor.commit_sha` in the companion manifest from
+`Project-Helianthus/helianthus-execution-plans`. It executes
 `scripts/validate_modbus_docs_trust.py` from that immutable checkout, not code
 from this repository. The local transition validator is a byte-identical
 mirror. The external anchor treats the head checkout only as bounded untrusted
-data, validates the workflow object exactly, and makes both protected files
-immutable after bootstrap. A head change cannot remove, repin, or replace that
-invocation. Every accepted normative byte change also requires matching
+data, validates the workflow object exactly, pins the semantic validator and
+the normalized V1 contract, and makes all three protected files immutable
+after bootstrap. A head change cannot remove, repin, or replace that
+invocation. Changing V1 requires a new independently reviewed trust anchor;
+every accepted normative byte change also requires matching
 mutation-test and downstream-lock updates. Rewording a safety rule without the
 required revision transition fails CI.
 

@@ -10,6 +10,7 @@ from scripts import validate_modbus_revision_transition as transition_validator
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 VALIDATOR = REPO_ROOT / "scripts/validate_modbus_revision_transition.py"
 WORKFLOW = REPO_ROOT / ".github/workflows/modbus-trusted-revision.yml"
+SEMANTIC_VALIDATOR = REPO_ROOT / "scripts/validate_modbus_companion.py"
 MANIFEST = pathlib.Path(
     "docs/platform/manifests/modbus-foundation-profile-contract-v1.json"
 )
@@ -22,6 +23,9 @@ def materialize(root: pathlib.Path) -> pathlib.Path:
     artifacts = manifest["artifacts"]
     assert isinstance(artifacts, dict)
     relative_paths.extend(pathlib.Path(path) for path in artifacts.values())
+    relative_paths.append(
+        SEMANTIC_VALIDATOR.relative_to(REPO_ROOT)
+    )
     for relative in relative_paths:
         source = REPO_ROOT / relative
         target = root / relative
@@ -125,7 +129,7 @@ def test_manifest_change_without_revision_bump_fails(
     assert any("require exactly the next" in error for error in errors)
 
 
-def test_changed_contract_with_exact_revision_bump_passes(
+def test_changed_contract_with_revision_bump_requires_new_external_anchor(
     tmp_path: pathlib.Path,
 ) -> None:
     prior = materialize(tmp_path / "prior")
@@ -134,7 +138,10 @@ def test_changed_contract_with_exact_revision_bump_passes(
     mutate_policy(current, manifest)
     bump_revision(manifest)
     write_manifest(current, manifest)
-    assert run_validator(prior, current) == []
+    assert (
+        "current manifest is not the independently frozen V1 contract"
+        in run_validator(prior, current)
+    )
 
 
 def test_contract_removal_fails(tmp_path: pathlib.Path) -> None:

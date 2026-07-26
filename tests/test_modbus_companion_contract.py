@@ -313,6 +313,18 @@ def test_consumer_lock_rejects_commit_not_on_canonical_main(
 def test_canonical_main_fetch_uses_fixed_https_and_fresh_ref(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    hostile_git_environment = {
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": (
+            "url.https://attacker.invalid/helianthus-docs-ebus.git.insteadOf"
+        ),
+        "GIT_CONFIG_VALUE_0": companion_validator.CANONICAL_REPOSITORY_URL,
+        "GIT_DIR": "/tmp/attacker.git",
+        "GIT_INDEX_FILE": "/tmp/attacker.index",
+        "GIT_EXEC_PATH": "/tmp/attacker-exec-path",
+    }
+    for key, value in hostile_git_environment.items():
+        monkeypatch.setenv(key, value)
     calls: list[tuple[list[str], dict[str, object]]] = []
 
     def fake_run(
@@ -334,8 +346,17 @@ def test_canonical_main_fetch_uses_fixed_https_and_fresh_ref(
     ) in fetch_command
     fetch_env = fetch_options["env"]
     assert isinstance(fetch_env, dict)
+    assert fetch_env["GIT_CONFIG_COUNT"] == "0"
     assert fetch_env["GIT_CONFIG_GLOBAL"] == os.devnull
     assert fetch_env["GIT_CONFIG_SYSTEM"] == os.devnull
+    assert fetch_env["GIT_CONFIG_NOSYSTEM"] == "1"
+    assert fetch_env["HOME"] != os.environ.get("HOME")
+    for key in hostile_git_environment:
+        if key != "GIT_CONFIG_COUNT":
+            assert key not in fetch_env
+    for command, options in calls:
+        assert command[0] == companion_validator.GIT_EXECUTABLE
+        assert options["env"] == fetch_env
 
 
 Mutation = Callable[[pathlib.Path, dict[str, object]], None]
