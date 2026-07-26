@@ -3,7 +3,7 @@
     "consumer_lock_schema": "369a724954d21614d71fd970c8b6224d8c892af8870819cbef159619acce4ad0",
     "policy": "1a53f203eed42766ac2d91580c41f72674b5eaea374a1cf4fff650396f06b196",
     "trusted_revision_validator": "77c41742a84bde193ef0b2adfc5ed220c5da937cec7cb0e2ce96cca047b3614c",
-    "trusted_revision_workflow": "d7cdf80b5b9078747b3f73029e64d34225e61c484134ad4f66b04f0c278e3fbc",
+    "trusted_revision_workflow": "e8bb7a61243698ae2da9ddccd5c7d11636fadfaf55e850d54ddf66cb0b00134b",
     "wire": "b941a60b39409c570f904f8e6830787203f8041c2fee462164c4c50c7a8f4444"
   },
   "artifacts": {
@@ -93,7 +93,7 @@
     "rtu_quiescence_failure_endpoint_recovery"
   ],
   "trust_anchor": {
-    "commit_sha": "a211bcfac1fe782f298e97676b45d28424ada5ff",
+    "commit_sha": "d6cfed15e75482fb75e630d38b664fdf0e1f8a43",
     "local_mirror": "scripts/validate_modbus_revision_transition.py",
     "m1_admission_gate": "runtime-gates/fronius-modbus-m1-admission.json",
     "repository": "Project-Helianthus/helianthus-execution-plans",
