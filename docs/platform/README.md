@@ -19,6 +19,9 @@ Current platform contracts:
 - [`promotion-and-consumer-contract.md`](./promotion-and-consumer-contract.md)
 - [`ownership-validation.md`](./ownership-validation.md)
 - [`ownership-and-doc-gates.md`](./ownership-and-doc-gates.md)
+- [`modbus-multivendor-boundaries.md`](./modbus-multivendor-boundaries.md) -
+  pre-implementation ownership, evidence, licensing, and public/private
+  direction contract for the shared Modbus runtime and multi-vendor registry
 - [`eebus-raw-first-contract.md`](./eebus-raw-first-contract.md)
 - [`eebus-raw-runtime-freeze.md`](./eebus-raw-runtime-freeze.md) - M3.5
   identity, snapshot-envelope, and evidence-object freeze boundary
