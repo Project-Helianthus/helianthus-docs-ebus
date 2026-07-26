@@ -154,6 +154,10 @@ python3 -m pytest -q tests/test_synchronized_evidence_executable_contract.py
 python3 -m pytest -q tests/test_candidate_fact_graph_contract.py
 python3 -m pytest -q tests/test_candidate_fact_graph_executable_contract.py
 python3 -m pytest -q tests/test_leaf_promotion_dossier_contract.py
+
+echo "==> check Modbus M1/M2 companion contract"
+python3 -m pytest -q tests/test_modbus_companion_contract.py
+
 set --
 if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then
   set -- --prior-manifest "${PLATFORM_PRIOR_MANIFEST}"
