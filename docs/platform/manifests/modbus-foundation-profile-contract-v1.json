@@ -1,0 +1,72 @@
+{
+  "artifacts": {
+    "policy": "docs/platform/modbus-foundation-profile-contract-v1.md",
+    "wire": "protocols/modbus/modbus-phase-one-wire-v1.md"
+  },
+  "companion_for": [
+    "FMV3-M1-01",
+    "FMV3-M1-02",
+    "FMV3-M1-03",
+    "FMV3-M1-04",
+    "FMV3-M2-01",
+    "FMV3-M2-02",
+    "FMV3-M2-03"
+  ],
+  "consumer_pin": {
+    "manifest_sha256": {
+      "format": "lowercase_64_hex",
+      "required": true
+    },
+    "merged_commit_sha": {
+      "format": "full_lowercase_40_hex",
+      "required": true
+    },
+    "repository": "Project-Helianthus/helianthus-docs-ebus",
+    "validation": "exact"
+  },
+  "contract_id": "HELIANTHUS_MODBUS_FOUNDATION_PROFILE_V1",
+  "execution": {
+    "authorization_anchor": "0576544bd8851c4e32da3ca7c401270eee43ef5c",
+    "hard_stop_before": "FMV3-M4-01",
+    "meta_issue": "Project-Helianthus/helianthus-execution-plans#71",
+    "plan_issue": "FMV3-M1-00"
+  },
+  "licenses": {
+    "policy": "AGPL-3.0",
+    "wire": "CC0-1.0"
+  },
+  "phase1_operations": [
+    "fc03_read_holding_registers",
+    "fc04_read_input_registers",
+    "fc2b_mei0e_read_device_identification"
+  ],
+  "read_only": true,
+  "repository": "Project-Helianthus/helianthus-docs-ebus",
+  "schema": "helianthus.modbus.foundation-profile-companion",
+  "source_policy": {
+    "restricted_source_copy": "forbidden",
+    "upstream_specification_mode": "link_and_independent_summary"
+  },
+  "transport_recovery_rows": [
+    "tcp_provable_zero_no_abandonment",
+    "tcp_partial_write_close_reconnect",
+    "tcp_indeterminate_error_close_reconnect",
+    "tcp_cancellation_race_close_reconnect",
+    "tcp_ambiguous_completion_close_reconnect",
+    "tcp_full_transmit_timeout_tombstone",
+    "tcp_full_transmit_cancellation_tombstone",
+    "tcp_same_socket_tombstone_reuse_rejected",
+    "tcp_tombstone_exhaustion_controlled_rollover",
+    "tcp_old_generation_late_frame_rejected",
+    "rtu_provable_zero_no_abandonment",
+    "rtu_partial_write_quarantine",
+    "rtu_indeterminate_error_quarantine",
+    "rtu_cancellation_race_quarantine",
+    "rtu_ambiguous_completion_quarantine",
+    "rtu_full_transmit_timeout_quarantine",
+    "rtu_full_transmit_cancellation_quarantine",
+    "rtu_late_same_shape_discarded",
+    "rtu_quiescence_failure_endpoint_recovery"
+  ],
+  "version": 1
+}

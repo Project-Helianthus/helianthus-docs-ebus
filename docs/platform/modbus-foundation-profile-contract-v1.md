@@ -21,6 +21,12 @@ boundaries in
 If the two pages appear to conflict, the stricter read-only, provenance, or
 fail-closed rule applies until a versioned correction resolves the conflict.
 
+The machine-readable companion is
+[`manifests/modbus-foundation-profile-contract-v1.json`](./manifests/modbus-foundation-profile-contract-v1.json).
+`scripts/validate_modbus_companion.py` validates its closed inventory,
+artifact/license lanes, operation set, companion issues, recovery rows, source
+policy, and downstream pin requirements.
+
 ## Wire Contract And Local Policy
 
 The implementation-neutral, CC0-1.0 wire owner is
@@ -297,13 +303,29 @@ indeterminate, cancellation-race, or ambiguous transmit enters quarantine.
 Full transmit enters response wait; timeout or cancellation from response wait
 also enters quarantine.
 
+One serialized endpoint owner linearizes write completion, receive parsing,
+timeout, cancellation, quarantine, and successor dispatch. On an abandonment
+event it changes receive state to `QUARANTINE` atomically before resolving the
+waiter or considering a successor. Bytes not already linearized as a valid
+response before that transition, including bytes buffered concurrently, belong
+to the abandoned exchange and are discarded.
+
+The quarantine time anchor is:
+
+- full-transmit completion for response-wait timeout or cancellation; or
+- a conservative transmit horizon for partial, indeterminate,
+  cancellation-race, or ambiguous completion, computed from write invocation,
+  frame length, declared serial format, and baud when an exact last-byte time
+  is unavailable.
+
 During quarantine:
 
 - no successor request may transmit;
 - all received frames are discarded, including a valid same-address and
   same-function frame;
-- the owner waits through the endpoint-declared maximum response latency and
-  then proves a complete bus-idle resynchronization interval;
+- release is no earlier than the quarantine anchor plus the endpoint-declared
+  maximum response latency and also requires one complete wire-reference
+  bus-idle interval after the last discarded byte;
 - the proof and discarded-frame count are observable; and
 - only successful resynchronization returns the endpoint to service.
 
@@ -348,7 +370,7 @@ Every endpoint configuration declares finite positive limits for:
 - in-flight requests per connection;
 - queued requests per endpoint, authorization scope, and unit;
 - transaction tombstones;
-- coalesced dependents per endpoint and unit;
+- coalesced dependents per `(endpoint, authorization_scope, unit_id)`;
 - request and response deadlines;
 - Device Identification aggregation;
 - retry attempts; and
@@ -378,6 +400,14 @@ from entropy, but deterministic replay injects the recorded algorithm and seed
 or schedule; wall clock, process identity, and fresh entropy cannot alter
 replayed retry ordering or deadline outcomes.
 
+The monotonic clock is also injected. Endpoint traces record clock-contract
+version plus monotonic offsets and owner-assigned event sequence for enqueue,
+admission, write invocation, transmit result, cancellation, response receive,
+timer arm/fire, quarantine transition, queue service, and jitter/backoff.
+Replay drives a virtual monotonic clock from that timeline. Events with equal
+offset are ordered by recorded event sequence, so deadline, response, and
+cancellation ties have one reproducible outcome.
+
 ## Read Coalescing And Provenance
 
 ### Compatibility
@@ -398,9 +428,19 @@ reads are not coalesced by V1. Any mismatch refuses coalescing without changing
 either logical request.
 
 The physical request range is the minimal union of compatible ranges.
-Coalescing MUST NOT change per-request admission, cancellation, or visibility:
-one dependent may cancel without cancelling a physical request still needed by
-another admitted dependent.
+Coalescing MUST NOT change per-request admission, cancellation, or visibility.
+Each dependent moves through `queued`, `attached`, and exactly one terminal
+state: `delivered`, `cancelled`, or `failed`.
+
+- Cancellation while queued removes that dependent. If it was the final
+  dependent, no physical request is transmitted.
+- Cancellation after transport write detaches that dependent. It receives no
+  logical view or observation, even if the physical response later succeeds.
+- The physical request continues while any attached dependent remains.
+- Cancellation of the last attached dependent after write invokes the
+  transport-specific abandonment path: TCP response-wait tombstone after full
+  transmit, or RTU quarantine for possibly transmitted/full-transmit cases.
+- Endpoint-owner event sequence resolves cancellation/response races.
 
 ### Physical And Logical Identity
 
@@ -424,8 +464,8 @@ It also retains exact response bytes and one outcome:
 `late_after_abandonment`. An uncorrelated frame has diagnostic frame identity
 but cannot claim a request-bound `wire_response_id`.
 
-Only `successful_data` can produce dependent observations. Every successful
-dependent observation has its own `logical_view_id` linked to that
+Only `successful_data` can produce dependent observations. Every still-attached
+successful dependent has its own `logical_view_id` linked to that
 `wire_response_id`, plus:
 
 - logical zero-based PDU offset;
@@ -634,6 +674,7 @@ Every admitted fixture has a machine-readable manifest containing:
   versions;
 - runtime scheduler/backoff/jitter algorithm versions plus the recorded jitter
   seed or exact schedule;
+- virtual-clock contract version and complete monotonic event timeline;
 - source type and stable evidence locator;
 - permission basis and redistribution disposition;
 - transformation from source to fixture;
@@ -691,8 +732,13 @@ The conformance harness includes, at minimum:
 | late response matching a TCP tombstone | retain `late_after_abandonment` wire identity and bytes; never deliver |
 | old-generation or unmatched TCP response | drop |
 | one unit saturates a shared endpoint | another unit keeps bounded admission and round-robin service |
+| one authorization scope saturates a unit's dependents | another scope retains its own bounded capacity |
 | replay runs in fresh processes | identical jitter, retry, admission, and output sequence |
+| response, cancellation, and deadline share a clock offset | recorded event sequence yields one identical outcome |
+| one coalesced dependent cancels after write | detach it; emit no logical view while active dependents may complete |
+| final coalesced dependent cancels after write | enter the transport-specific abandonment path |
 | RTU late same-shape frame during quarantine | discard |
+| RTU response races quarantine transition | serialized event order either completes the old request or discards under quarantine, never reaches a successor |
 | RTU quiescence failure | disable and recover endpoint |
 | word-order, byte-order, signedness, scale, string-padding mutation | match only the declared codec |
 | address-base off-by-one mutation | reject or produce the declared negative result |
@@ -767,6 +813,13 @@ delivery.
    licensing, and adversarial review gates; and
 6. retain explicit disabled dispositions for unavailable hardware.
 
+Each dependent repository commits a machine-readable companion lock containing
+the exact repository, full 40-character merged docs commit, companion contract
+ID/version, and SHA-256 of the canonical manifest bytes. Its local and hosted
+CI reject a missing field, short or moving ref, unknown version, or digest
+mismatch before implementation tests run. Branch names, tags, and "latest"
+cannot satisfy the lock.
+
 The documentation licensing gate classifies every changed Modbus artifact:
 
 - implementation-neutral wire facts MUST be under `protocols/modbus/` and are
@@ -776,8 +829,11 @@ The documentation licensing gate classifies every changed Modbus artifact:
 - copied upstream specifications, restricted vendor material, or neutral wire
   facts placed in the AGPL platform file fail the gate.
 
-Review records the changed paths and classification. A future automated check
-may enforce the same rule, but cannot weaken it.
+`scripts/validate_modbus_companion.py` enforces the current artifact locations,
+license declarations, source-link lane, operation/issue/recovery inventory,
+and downstream pin schema. `scripts/ci_local.sh` runs its positive and mutation
+tests. Review still classifies new facts that no marker-based validator can
+understand, and cannot weaken the machine gate.
 
 The transport matrix for M1 is not the eBUS T01..T88 matrix. M1 must create a
 Modbus-neutral matrix covering every TCP and RTU recovery row named by

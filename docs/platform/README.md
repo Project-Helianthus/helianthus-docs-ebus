@@ -25,6 +25,8 @@ Current platform contracts:
 - [`modbus-foundation-profile-contract-v1.md`](./modbus-foundation-profile-contract-v1.md) -
   normative M1 transport and M2 profile-registry contract for phase-one
   read-only Modbus
+- [`manifests/modbus-foundation-profile-contract-v1.json`](./manifests/modbus-foundation-profile-contract-v1.json) -
+  machine-readable M1/M2 companion inventory and downstream pin contract
 - [`eebus-raw-first-contract.md`](./eebus-raw-first-contract.md)
 - [`eebus-raw-runtime-freeze.md`](./eebus-raw-runtime-freeze.md) - M3.5
   identity, snapshot-envelope, and evidence-object freeze boundary
