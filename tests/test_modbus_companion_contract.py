@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import shutil
@@ -157,6 +158,48 @@ def mutate_read_only_type(
     manifest["read_only"] = 1
 
 
+def refresh_policy_hash(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    hashes = manifest["artifact_sha256"]
+    assert isinstance(hashes, dict)
+    hashes["policy"] = hashlib.sha256((root / POLICY).read_bytes()).hexdigest()
+
+
+def mutate_contradict_tombstone_and_rehash(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    policy = root / POLICY
+    text = policy.read_text(encoding="utf-8")
+    original = (
+        "A tombstoned\nidentifier MUST NOT be reused on that socket."
+    )
+    replacement = "A tombstoned identifier MAY be reused immediately."
+    assert original in text
+    policy.write_text(text.replace(original, replacement), encoding="utf-8")
+    refresh_policy_hash(root, manifest)
+
+
+def mutate_unrecognized_wire_fact_and_rehash(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    policy = root / POLICY
+    policy.write_text(
+        policy.read_text(encoding="utf-8")
+        + "\nThe MBAP length includes the unit and PDU.\n",
+        encoding="utf-8",
+    )
+    refresh_policy_hash(root, manifest)
+
+
+def mutate_policy_hash(
+    _root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    hashes = manifest["artifact_sha256"]
+    assert isinstance(hashes, dict)
+    hashes["policy"] = "0" * 64
+
+
 @pytest.mark.parametrize(
     "mutation",
     (
@@ -171,6 +214,9 @@ def mutate_read_only_type(
         mutate_source_policy,
         mutate_hard_stop,
         mutate_read_only_type,
+        mutate_contradict_tombstone_and_rehash,
+        mutate_unrecognized_wire_fact_and_rehash,
+        mutate_policy_hash,
     ),
 )
 def test_modbus_companion_mutations_fail_closed(
