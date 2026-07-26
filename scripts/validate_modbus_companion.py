@@ -4,10 +4,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 from typing import Any
 
 
@@ -17,6 +19,10 @@ MANIFEST_PATH = pathlib.Path(
 CONSUMER_LOCK_SCHEMA_PATH = pathlib.Path(
     "docs/platform/schemas/modbus-companion-consumer-lock-v1.schema.json"
 )
+CANONICAL_REPOSITORY_URL = (
+    "https://github.com/Project-Helianthus/helianthus-docs-ebus.git"
+)
+CANONICAL_MAIN_REF = "refs/helianthus-validation/canonical-main"
 EXPECTED_TOP_LEVEL = {
     "artifact_sha256",
     "artifacts",
@@ -31,6 +37,7 @@ EXPECTED_TOP_LEVEL = {
     "repository",
     "schema",
     "source_policy",
+    "trust_anchor",
     "transport_recovery_rows",
     "version",
 }
@@ -39,7 +46,13 @@ EXPECTED_ARTIFACT_SHA256 = {
         "369a724954d21614d71fd970c8b6224d8c892af8870819cbef159619acce4ad0"
     ),
     "policy": (
-        "5eb6743772d7d2f816a8507e319f0266fddc5f37b63e1177a387b36cba0d73b3"
+        "9077b2f38cb0991657d861c38078ea2356a71511beae12c15de5b53f150c99b8"
+    ),
+    "trusted_revision_validator": (
+        "4a2deeeb03a13f08ed005468261037404947f7a7ef01abe11ea2c48ec16043d8"
+    ),
+    "trusted_revision_workflow": (
+        "d7cdf80b5b9078747b3f73029e64d34225e61c484134ad4f66b04f0c278e3fbc"
     ),
     "wire": (
         "b941a60b39409c570f904f8e6830787203f8041c2fee462164c4c50c7a8f4444"
@@ -95,7 +108,7 @@ EXPECTED_CONSUMER_PIN = {
     },
     "repository": "Project-Helianthus/helianthus-docs-ebus",
     "validation": {
-        "canonical_main": "required_ancestor",
+        "canonical_main": "fresh_https_fetch_required_ancestor",
         "docs_checkout": "fully_clean_exact_head",
         "docs_commit_sha": "exact_match",
         "manifest_bytes": "sha256_exact",
@@ -184,7 +197,9 @@ POLICY_REQUIRED_TERMS = (
     "shared_burst_slots",
     "another key still activates, admits its protected request",
     "schemas/modbus-companion-consumer-lock-v1.schema.json",
-    "--docs-main-ref refs/remotes/origin/main",
+    "fresh bare",
+    "a211bcfac1fe782f298e97676b45d28424ada5ff",
+    "runtime-gates/fronius-modbus-m1-admission.json",
     "protocols/modbus/modbus-phase-one-wire-v1.md",
 )
 
@@ -321,13 +336,80 @@ def _validate_consumer_lock_schema(
         errors.append("consumer lock schema must equal the closed V1 schema")
 
 
+def _canonical_main_contains(
+    commit_sha: str,
+    errors: list[str],
+) -> bool:
+    clean_env = {
+        **os.environ,
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_SYSTEM": os.devnull,
+        "GIT_TERMINAL_PROMPT": "0",
+    }
+    try:
+        with tempfile.TemporaryDirectory(
+            prefix="helianthus-modbus-canonical-main-"
+        ) as temporary:
+            bare = pathlib.Path(temporary) / "canonical.git"
+            subprocess.run(
+                ["git", "init", "--bare", "-q", str(bare)],
+                check=True,
+                capture_output=True,
+                text=True,
+                env=clean_env,
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(bare),
+                    "-c",
+                    "credential.helper=",
+                    "-c",
+                    "protocol.file.allow=never",
+                    "fetch",
+                    "--no-tags",
+                    "--force",
+                    CANONICAL_REPOSITORY_URL,
+                    f"+refs/heads/main:{CANONICAL_MAIN_REF}",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                env=clean_env,
+                timeout=120,
+            )
+            result = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(bare),
+                    "merge-base",
+                    "--is-ancestor",
+                    commit_sha,
+                    CANONICAL_MAIN_REF,
+                ],
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                env=clean_env,
+            )
+    except (
+        OSError,
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+    ) as exc:
+        errors.append(f"canonical GitHub main fetch failed: {exc}")
+        return False
+    return result.returncode == 0
+
+
 def _validate_consumer_lock(
     root: pathlib.Path,
     manifest: dict[str, Any],
     manifest_digest: str,
     lock_path: pathlib.Path,
     docs_commit_sha: str,
-    docs_main_ref: str,
     errors: list[str],
 ) -> None:
     if lock_path.is_relative_to(root):
@@ -356,8 +438,6 @@ def _validate_consumer_lock(
 
     if re.fullmatch(r"[0-9a-f]{40}", docs_commit_sha) is None:
         errors.append("docs commit SHA must be full lowercase 40-hex")
-    if docs_main_ref != "refs/remotes/origin/main":
-        errors.append("docs main ref must be refs/remotes/origin/main")
     try:
         origin_url = subprocess.check_output(
             ["git", "-C", str(root), "remote", "get-url", "origin"],
@@ -388,22 +468,8 @@ def _validate_consumer_lock(
             text=True,
             stderr=subprocess.DEVNULL,
         )
-        main_commit = subprocess.check_output(
-            [
-                "git",
-                "-C",
-                str(root),
-                "rev-parse",
-                "--verify",
-                f"{docs_main_ref}^{{commit}}",
-            ],
-            text=True,
-            stderr=subprocess.DEVNULL,
-        ).strip()
     except (OSError, subprocess.CalledProcessError):
-        errors.append(
-            "consumer validation requires canonical origin/main in the Git checkout"
-        )
+        errors.append("consumer validation requires a valid Git checkout")
     else:
         canonical_urls = {
             "https://github.com/Project-Helianthus/helianthus-docs-ebus",
@@ -417,24 +483,8 @@ def _validate_consumer_lock(
             errors.append("docs checkout HEAD does not match the consumer lock")
         if dirty:
             errors.append("docs checkout has tracked or untracked modifications")
-        ancestry = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(root),
-                "merge-base",
-                "--is-ancestor",
-                docs_commit_sha,
-                main_commit,
-            ],
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        if ancestry.returncode != 0:
-            errors.append(
-                "locked docs commit is not an ancestor of canonical origin/main"
-            )
+        if not _canonical_main_contains(docs_commit_sha, errors):
+            errors.append("locked docs commit is not on canonical GitHub main")
     merged_commit_sha = lock.get("merged_commit_sha")
     if (
         not isinstance(merged_commit_sha, str)
@@ -456,7 +506,6 @@ def validate(
     prior_root: pathlib.Path | None = None,
     consumer_lock: pathlib.Path | None = None,
     docs_commit_sha: str | None = None,
-    docs_main_ref: str | None = None,
 ) -> tuple[list[str], str | None]:
     errors: list[str] = []
     manifest_file = root / MANIFEST_PATH
@@ -503,6 +552,8 @@ def validate(
         {
             "consumer_lock_schema": "AGPL-3.0",
             "policy": "AGPL-3.0",
+            "trusted_revision_validator": "AGPL-3.0",
+            "trusted_revision_workflow": "AGPL-3.0",
             "wire": "CC0-1.0",
         },
         errors,
@@ -537,18 +588,42 @@ def validate(
         },
         errors,
     )
+    _require_equal(
+        manifest,
+        "trust_anchor",
+        {
+            "commit_sha": "a211bcfac1fe782f298e97676b45d28424ada5ff",
+            "local_mirror": (
+                "scripts/validate_modbus_revision_transition.py"
+            ),
+            "m1_admission_gate": (
+                "runtime-gates/fronius-modbus-m1-admission.json"
+            ),
+            "repository": (
+                "Project-Helianthus/helianthus-execution-plans"
+            ),
+            "workflow": (
+                ".github/workflows/modbus-trusted-revision.yml"
+            ),
+        },
+        errors,
+    )
 
     artifacts = manifest.get("artifacts")
     if not isinstance(artifacts, dict) or set(artifacts) != {
         "consumer_lock_schema",
         "policy",
+        "trusted_revision_validator",
+        "trusted_revision_workflow",
         "wire",
     }:
         errors.append(
-            "artifacts must contain exactly consumer_lock_schema, policy, and wire"
+            "artifacts must contain the exact five normative companion artifacts"
         )
         schema_path = None
         policy_path = None
+        trusted_validator_path = None
+        trusted_workflow_path = None
         wire_path = None
     else:
         schema_path = _artifact(
@@ -563,6 +638,20 @@ def validate(
             artifacts["policy"],
             "docs/platform/",
             "policy",
+            errors,
+        )
+        trusted_validator_path = _artifact(
+            root,
+            artifacts["trusted_revision_validator"],
+            "scripts/",
+            "trusted_revision_validator",
+            errors,
+        )
+        trusted_workflow_path = _artifact(
+            root,
+            artifacts["trusted_revision_workflow"],
+            ".github/workflows/",
+            "trusted_revision_workflow",
             errors,
         )
         wire_path = _artifact(
@@ -580,6 +669,8 @@ def validate(
     for label, path in (
         ("consumer_lock_schema", schema_path),
         ("policy", policy_path),
+        ("trusted_revision_validator", trusted_validator_path),
+        ("trusted_revision_workflow", trusted_workflow_path),
         ("wire", wire_path),
     ):
         if path is None:
@@ -636,18 +727,16 @@ def validate(
     digest = hashlib.sha256(manifest_file.read_bytes()).hexdigest()
     if prior_root is not None:
         _validate_prior_revision(manifest, prior_root, errors)
-    lock_arguments = (consumer_lock, docs_commit_sha, docs_main_ref)
+    lock_arguments = (consumer_lock, docs_commit_sha)
     if any(value is None for value in lock_arguments) and any(
         value is not None for value in lock_arguments
     ):
         errors.append(
-            "--consumer-lock, --docs-commit-sha, and --docs-main-ref "
-            "must be provided together"
+            "--consumer-lock and --docs-commit-sha must be provided together"
         )
     elif (
         consumer_lock is not None
         and docs_commit_sha is not None
-        and docs_main_ref is not None
     ):
         _validate_consumer_lock(
             root,
@@ -655,7 +744,6 @@ def validate(
             digest,
             consumer_lock,
             docs_commit_sha,
-            docs_main_ref,
             errors,
         )
     return errors, digest
@@ -667,14 +755,12 @@ def main() -> int:
     parser.add_argument("--prior-root", type=pathlib.Path)
     parser.add_argument("--consumer-lock", type=pathlib.Path)
     parser.add_argument("--docs-commit-sha")
-    parser.add_argument("--docs-main-ref")
     args = parser.parse_args()
     errors, digest = validate(
         args.root.resolve(),
         args.prior_root.resolve() if args.prior_root else None,
         args.consumer_lock.resolve() if args.consumer_lock else None,
         args.docs_commit_sha,
-        args.docs_main_ref,
     )
     if errors:
         for error in errors:

@@ -4,8 +4,8 @@ import hashlib
 import json
 import pathlib
 import shutil
-import subprocess
 
+from scripts import validate_modbus_revision_transition as transition_validator
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 VALIDATOR = REPO_ROOT / "scripts/validate_modbus_revision_transition.py"
@@ -13,6 +13,7 @@ WORKFLOW = REPO_ROOT / ".github/workflows/modbus-trusted-revision.yml"
 MANIFEST = pathlib.Path(
     "docs/platform/manifests/modbus-foundation-profile-contract-v1.json"
 )
+ANCHOR_SHA = "a211bcfac1fe782f298e97676b45d28424ada5ff"
 
 
 def materialize(root: pathlib.Path) -> pathlib.Path:
@@ -43,19 +44,11 @@ def write_manifest(root: pathlib.Path, manifest: dict[str, object]) -> None:
 def run_validator(
     prior_root: pathlib.Path,
     current_root: pathlib.Path,
-) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [
-            "python3",
-            str(VALIDATOR),
-            "--prior-root",
-            str(prior_root),
-            "--current-root",
-            str(current_root),
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
+) -> list[str]:
+    return transition_validator.validate_transition(
+        prior_root.resolve(),
+        current_root.resolve(),
+        ANCHOR_SHA,
     )
 
 
@@ -86,23 +79,24 @@ def test_first_contract_starts_at_revision_one(tmp_path: pathlib.Path) -> None:
     prior = tmp_path / "prior"
     prior.mkdir()
     current = materialize(tmp_path / "current")
-    result = run_validator(prior, current)
-    assert result.returncode == 0, result.stdout + result.stderr
+    assert run_validator(prior, current) == []
 
 
 def test_workflow_executes_only_base_owned_transition_code() -> None:
-    text = WORKFLOW.read_text(encoding="utf-8")
-    assert "pull_request_target:" in text
-    assert "ref: ${{ github.event.pull_request.base.sha }}" in text
-    assert "python3 trusted/scripts/validate_modbus_revision_transition.py" in text
-    assert "python3 current/" not in text
+    workflow = json.loads(WORKFLOW.read_text(encoding="utf-8"))
+    assert workflow == transition_validator.expected_workflow(ANCHOR_SHA)
+    manifest = load_manifest(REPO_ROOT)
+    hashes = manifest["artifact_sha256"]
+    assert isinstance(hashes, dict)
+    assert hashlib.sha256(VALIDATOR.read_bytes()).hexdigest() == (
+        hashes["trusted_revision_validator"]
+    )
 
 
 def test_unchanged_contract_retains_revision(tmp_path: pathlib.Path) -> None:
     prior = materialize(tmp_path / "prior")
     current = materialize(tmp_path / "current")
-    result = run_validator(prior, current)
-    assert result.returncode == 0, result.stdout + result.stderr
+    assert run_validator(prior, current) == []
 
 
 def test_policy_change_without_revision_bump_fails(
@@ -113,9 +107,8 @@ def test_policy_change_without_revision_bump_fails(
     manifest = load_manifest(current)
     mutate_policy(current, manifest)
     write_manifest(current, manifest)
-    result = run_validator(prior, current)
-    assert result.returncode != 0
-    assert "require exactly the next" in result.stderr
+    errors = run_validator(prior, current)
+    assert any("require exactly the next" in error for error in errors)
 
 
 def test_manifest_change_without_revision_bump_fails(
@@ -128,9 +121,8 @@ def test_manifest_change_without_revision_bump_fails(
     assert isinstance(source_policy, dict)
     source_policy["restricted_source_copy"] = "allowed"
     write_manifest(current, manifest)
-    result = run_validator(prior, current)
-    assert result.returncode != 0
-    assert "require exactly the next" in result.stderr
+    errors = run_validator(prior, current)
+    assert any("require exactly the next" in error for error in errors)
 
 
 def test_changed_contract_with_exact_revision_bump_passes(
@@ -142,14 +134,12 @@ def test_changed_contract_with_exact_revision_bump_passes(
     mutate_policy(current, manifest)
     bump_revision(manifest)
     write_manifest(current, manifest)
-    result = run_validator(prior, current)
-    assert result.returncode == 0, result.stdout + result.stderr
+    assert run_validator(prior, current) == []
 
 
 def test_contract_removal_fails(tmp_path: pathlib.Path) -> None:
     prior = materialize(tmp_path / "prior")
     current = tmp_path / "current"
     current.mkdir()
-    result = run_validator(prior, current)
-    assert result.returncode != 0
-    assert "cannot be removed" in result.stderr
+    errors = run_validator(prior, current)
+    assert "the Modbus companion manifest cannot be removed" in errors

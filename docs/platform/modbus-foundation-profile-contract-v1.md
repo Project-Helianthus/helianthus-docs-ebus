@@ -841,12 +841,15 @@ closed schema is
 [`schemas/modbus-companion-consumer-lock-v1.schema.json`](./schemas/modbus-companion-consumer-lock-v1.schema.json).
 Its local and hosted CI check out the public docs repository at the exact locked
 commit and invoke `scripts/validate_modbus_companion.py --root <docs-root>
---consumer-lock <consumer-lock> --docs-commit-sha <locked-sha>
---docs-main-ref refs/remotes/origin/main` before implementation tests run.
+--consumer-lock <consumer-lock> --docs-commit-sha <locked-sha>` before
+implementation tests run.
 The lock MUST reside outside the docs checkout. The validator independently
 requires the canonical GitHub `origin`, requires the docs checkout's full
-`HEAD` to equal the lock and to be an ancestor of canonical `origin/main`, and
-rejects tracked or untracked modifications.
+`HEAD` to equal the lock, and rejects tracked or untracked modifications. It
+also fetches canonical GitHub `main` by fixed HTTPS URL into a fresh bare
+repository and protected validation ref, with global/system Git configuration
+disabled, then proves that the locked SHA is its ancestor. Local remote-tracking
+refs and URL rewrite configuration are not ancestry authorities.
 The first implementation PR in each of
 `helianthus-modbus` and `helianthus-modbusreg` MUST add this gate; later M1/M2
 PRs MUST retain it and update the lock only for an accepted contract revision.
@@ -882,17 +885,30 @@ that update exists.
 The prior-state comparison is independent of editable in-tree expected-hash
 constants. A coordinated edit to policy, manifest, and validator that leaves
 the revision unchanged therefore fails against the trusted base. The trusted
-revision workflow executes the transition validator from the pull request's
-base commit and treats the head checkout only as untrusted data; a head change
-cannot remove or replace that invocation. Every accepted normative byte change
-also requires matching mutation-test and downstream-lock updates. Rewording a
-safety rule without the required revision transition fails CI.
+revision workflow is canonical JSON and pins
+`Project-Helianthus/helianthus-execution-plans` commit
+`a211bcfac1fe782f298e97676b45d28424ada5ff`. It executes
+`scripts/validate_modbus_docs_trust.py` from that immutable checkout, not code
+from this repository. The local transition validator is a byte-identical
+mirror. The external anchor treats the head checkout only as bounded untrusted
+data, validates the workflow object exactly, and makes both protected files
+immutable after bootstrap. A head change cannot remove, repin, or replace that
+invocation. Every accepted normative byte change also requires matching
+mutation-test and downstream-lock updates. Rewording a safety rule without the
+required revision transition fails CI.
 
 This first-publication PR has no prior Modbus manifest, so its bootstrap is
 certified by local/hosted CI and fresh adversarial review. Immediately after
 that PR merges, `Modbus Trusted Revision` MUST be configured as a required
-`main` status check. `FMV3-M1-00` is not complete and `FMV3-M1-01` MUST NOT
-start until the required-check configuration is verified from GitHub.
+`main` status check and a verification PR MUST prove that exact context green.
+The external gate
+`runtime-gates/fronius-modbus-m1-admission.json` in
+`helianthus-execution-plans/main` remains `BLOCKED_PENDING_DOCS_TRUST` until
+GitHub live evidence proves this docs PR merge, the required-check setting, its
+successful verification check run, and the pinned anchor workflow. The plan
+validator rejects `FMV3-M1-01` through M3 while that gate is not `OPEN`.
+`FMV3-M1-00` is not complete and `FMV3-M1-01` MUST NOT start before the
+evidence-bearing gate-opening PR merges.
 
 The transport matrix for M1 is not the eBUS T01..T88 matrix. M1 must create a
 Modbus-neutral matrix covering every TCP and RTU recovery row named by
