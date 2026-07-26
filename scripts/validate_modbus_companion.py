@@ -35,8 +35,11 @@ EXPECTED_TOP_LEVEL = {
     "version",
 }
 EXPECTED_ARTIFACT_SHA256 = {
+    "consumer_lock_schema": (
+        "369a724954d21614d71fd970c8b6224d8c892af8870819cbef159619acce4ad0"
+    ),
     "policy": (
-        "241270ff391f33ab25188f41d40ff48fe5a99c36ee595c9f0eb5e9f231021e29"
+        "5eb6743772d7d2f816a8507e319f0266fddc5f37b63e1177a387b36cba0d73b3"
     ),
     "wire": (
         "b941a60b39409c570f904f8e6830787203f8041c2fee462164c4c50c7a8f4444"
@@ -92,7 +95,8 @@ EXPECTED_CONSUMER_PIN = {
     },
     "repository": "Project-Helianthus/helianthus-docs-ebus",
     "validation": {
-        "docs_checkout": "clean_exact_head",
+        "canonical_main": "required_ancestor",
+        "docs_checkout": "fully_clean_exact_head",
         "docs_commit_sha": "exact_match",
         "manifest_bytes": "sha256_exact",
         "validator": "scripts/validate_modbus_companion.py",
@@ -180,7 +184,7 @@ POLICY_REQUIRED_TERMS = (
     "shared_burst_slots",
     "another key still activates, admits its protected request",
     "schemas/modbus-companion-consumer-lock-v1.schema.json",
-    "--consumer-lock <consumer-lock> --docs-commit-sha <locked-sha>",
+    "--docs-main-ref refs/remotes/origin/main",
     "protocols/modbus/modbus-phase-one-wire-v1.md",
 )
 
@@ -323,8 +327,11 @@ def _validate_consumer_lock(
     manifest_digest: str,
     lock_path: pathlib.Path,
     docs_commit_sha: str,
+    docs_main_ref: str,
     errors: list[str],
 ) -> None:
+    if lock_path.is_relative_to(root):
+        errors.append("consumer lock must reside outside the docs checkout")
     lock = _read_json(lock_path, errors, "consumer lock")
     if not lock:
         return
@@ -349,7 +356,14 @@ def _validate_consumer_lock(
 
     if re.fullmatch(r"[0-9a-f]{40}", docs_commit_sha) is None:
         errors.append("docs commit SHA must be full lowercase 40-hex")
+    if docs_main_ref != "refs/remotes/origin/main":
+        errors.append("docs main ref must be refs/remotes/origin/main")
     try:
+        origin_url = subprocess.check_output(
+            ["git", "-C", str(root), "remote", "get-url", "origin"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
         docs_head = subprocess.check_output(
             [
                 "git",
@@ -369,18 +383,58 @@ def _validate_consumer_lock(
                 str(root),
                 "status",
                 "--porcelain",
-                "--untracked-files=no",
+                "--untracked-files=all",
             ],
             text=True,
             stderr=subprocess.DEVNULL,
         )
+        main_commit = subprocess.check_output(
+            [
+                "git",
+                "-C",
+                str(root),
+                "rev-parse",
+                "--verify",
+                f"{docs_main_ref}^{{commit}}",
+            ],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
     except (OSError, subprocess.CalledProcessError):
-        errors.append("consumer validation requires a Git docs checkout")
+        errors.append(
+            "consumer validation requires canonical origin/main in the Git checkout"
+        )
     else:
+        canonical_urls = {
+            "https://github.com/Project-Helianthus/helianthus-docs-ebus",
+            "https://github.com/Project-Helianthus/helianthus-docs-ebus.git",
+            "git@github.com:Project-Helianthus/helianthus-docs-ebus",
+            "git@github.com:Project-Helianthus/helianthus-docs-ebus.git",
+        }
+        if origin_url not in canonical_urls:
+            errors.append("docs checkout origin is not the canonical repository")
         if docs_head != docs_commit_sha:
             errors.append("docs checkout HEAD does not match the consumer lock")
         if dirty:
-            errors.append("docs checkout has tracked modifications")
+            errors.append("docs checkout has tracked or untracked modifications")
+        ancestry = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "merge-base",
+                "--is-ancestor",
+                docs_commit_sha,
+                main_commit,
+            ],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if ancestry.returncode != 0:
+            errors.append(
+                "locked docs commit is not an ancestor of canonical origin/main"
+            )
     merged_commit_sha = lock.get("merged_commit_sha")
     if (
         not isinstance(merged_commit_sha, str)
@@ -402,6 +456,7 @@ def validate(
     prior_root: pathlib.Path | None = None,
     consumer_lock: pathlib.Path | None = None,
     docs_commit_sha: str | None = None,
+    docs_main_ref: str | None = None,
 ) -> tuple[list[str], str | None]:
     errors: list[str] = []
     manifest_file = root / MANIFEST_PATH
@@ -445,7 +500,11 @@ def validate(
     _require_equal(
         manifest,
         "licenses",
-        {"policy": "AGPL-3.0", "wire": "CC0-1.0"},
+        {
+            "consumer_lock_schema": "AGPL-3.0",
+            "policy": "AGPL-3.0",
+            "wire": "CC0-1.0",
+        },
         errors,
     )
     _require_equal(
@@ -480,11 +539,25 @@ def validate(
     )
 
     artifacts = manifest.get("artifacts")
-    if not isinstance(artifacts, dict) or set(artifacts) != {"policy", "wire"}:
-        errors.append("artifacts must contain exactly policy and wire")
+    if not isinstance(artifacts, dict) or set(artifacts) != {
+        "consumer_lock_schema",
+        "policy",
+        "wire",
+    }:
+        errors.append(
+            "artifacts must contain exactly consumer_lock_schema, policy, and wire"
+        )
+        schema_path = None
         policy_path = None
         wire_path = None
     else:
+        schema_path = _artifact(
+            root,
+            artifacts["consumer_lock_schema"],
+            "docs/platform/schemas/",
+            "consumer_lock_schema",
+            errors,
+        )
         policy_path = _artifact(
             root,
             artifacts["policy"],
@@ -504,7 +577,11 @@ def validate(
         policy_path.read_text(encoding="utf-8") if policy_path else ""
     )
     wire_text = wire_path.read_text(encoding="utf-8") if wire_path else ""
-    for label, path in (("policy", policy_path), ("wire", wire_path)):
+    for label, path in (
+        ("consumer_lock_schema", schema_path),
+        ("policy", policy_path),
+        ("wire", wire_path),
+    ):
         if path is None:
             continue
         actual_digest = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -559,17 +636,26 @@ def validate(
     digest = hashlib.sha256(manifest_file.read_bytes()).hexdigest()
     if prior_root is not None:
         _validate_prior_revision(manifest, prior_root, errors)
-    if (consumer_lock is None) != (docs_commit_sha is None):
+    lock_arguments = (consumer_lock, docs_commit_sha, docs_main_ref)
+    if any(value is None for value in lock_arguments) and any(
+        value is not None for value in lock_arguments
+    ):
         errors.append(
-            "--consumer-lock and --docs-commit-sha must be provided together"
+            "--consumer-lock, --docs-commit-sha, and --docs-main-ref "
+            "must be provided together"
         )
-    elif consumer_lock is not None and docs_commit_sha is not None:
+    elif (
+        consumer_lock is not None
+        and docs_commit_sha is not None
+        and docs_main_ref is not None
+    ):
         _validate_consumer_lock(
             root,
             manifest,
             digest,
             consumer_lock,
             docs_commit_sha,
+            docs_main_ref,
             errors,
         )
     return errors, digest
@@ -581,12 +667,14 @@ def main() -> int:
     parser.add_argument("--prior-root", type=pathlib.Path)
     parser.add_argument("--consumer-lock", type=pathlib.Path)
     parser.add_argument("--docs-commit-sha")
+    parser.add_argument("--docs-main-ref")
     args = parser.parse_args()
     errors, digest = validate(
         args.root.resolve(),
         args.prior_root.resolve() if args.prior_root else None,
         args.consumer_lock.resolve() if args.consumer_lock else None,
         args.docs_commit_sha,
+        args.docs_main_ref,
     )
     if errors:
         for error in errors:
