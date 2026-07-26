@@ -7,6 +7,7 @@ import json
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -23,6 +24,7 @@ CANONICAL_REPOSITORY_URL = (
     "https://github.com/Project-Helianthus/helianthus-docs-ebus.git"
 )
 CANONICAL_MAIN_REF = "refs/helianthus-validation/canonical-main"
+GIT_EXECUTABLE = shutil.which("git", path=os.defpath)
 EXPECTED_TOP_LEVEL = {
     "artifact_sha256",
     "artifacts",
@@ -41,18 +43,12 @@ EXPECTED_TOP_LEVEL = {
     "transport_recovery_rows",
     "version",
 }
-EXPECTED_ARTIFACT_SHA256 = {
+EXPECTED_STATIC_ARTIFACT_SHA256 = {
     "consumer_lock_schema": (
         "369a724954d21614d71fd970c8b6224d8c892af8870819cbef159619acce4ad0"
     ),
     "policy": (
-        "9077b2f38cb0991657d861c38078ea2356a71511beae12c15de5b53f150c99b8"
-    ),
-    "trusted_revision_validator": (
-        "4a2deeeb03a13f08ed005468261037404947f7a7ef01abe11ea2c48ec16043d8"
-    ),
-    "trusted_revision_workflow": (
-        "d7cdf80b5b9078747b3f73029e64d34225e61c484134ad4f66b04f0c278e3fbc"
+        "1a53f203eed42766ac2d91580c41f72674b5eaea374a1cf4fff650396f06b196"
     ),
     "wire": (
         "b941a60b39409c570f904f8e6830787203f8041c2fee462164c4c50c7a8f4444"
@@ -198,7 +194,7 @@ POLICY_REQUIRED_TERMS = (
     "another key still activates, admits its protected request",
     "schemas/modbus-companion-consumer-lock-v1.schema.json",
     "fresh bare",
-    "a211bcfac1fe782f298e97676b45d28424ada5ff",
+    "trust_anchor.commit_sha",
     "runtime-gates/fronius-modbus-m1-admission.json",
     "protocols/modbus/modbus-phase-one-wire-v1.md",
 )
@@ -340,19 +336,28 @@ def _canonical_main_contains(
     commit_sha: str,
     errors: list[str],
 ) -> bool:
-    clean_env = {
-        **os.environ,
-        "GIT_CONFIG_GLOBAL": os.devnull,
-        "GIT_CONFIG_SYSTEM": os.devnull,
-        "GIT_TERMINAL_PROMPT": "0",
-    }
+    if GIT_EXECUTABLE is None:
+        errors.append("canonical GitHub main fetch failed: system Git not found")
+        return False
     try:
         with tempfile.TemporaryDirectory(
             prefix="helianthus-modbus-canonical-main-"
         ) as temporary:
-            bare = pathlib.Path(temporary) / "canonical.git"
+            temporary_root = pathlib.Path(temporary)
+            bare = temporary_root / "canonical.git"
+            clean_env = {
+                "GIT_CONFIG_COUNT": "0",
+                "GIT_CONFIG_GLOBAL": os.devnull,
+                "GIT_CONFIG_NOSYSTEM": "1",
+                "GIT_CONFIG_SYSTEM": os.devnull,
+                "GIT_TERMINAL_PROMPT": "0",
+                "HOME": str(temporary_root),
+                "LANG": "C",
+                "LC_ALL": "C",
+                "PATH": os.defpath,
+            }
             subprocess.run(
-                ["git", "init", "--bare", "-q", str(bare)],
+                [GIT_EXECUTABLE, "init", "--bare", "-q", str(bare)],
                 check=True,
                 capture_output=True,
                 text=True,
@@ -360,7 +365,7 @@ def _canonical_main_contains(
             )
             subprocess.run(
                 [
-                    "git",
+                    GIT_EXECUTABLE,
                     "-C",
                     str(bare),
                     "-c",
@@ -381,7 +386,7 @@ def _canonical_main_contains(
             )
             result = subprocess.run(
                 [
-                    "git",
+                    GIT_EXECUTABLE,
                     "-C",
                     str(bare),
                     "merge-base",
@@ -506,6 +511,7 @@ def validate(
     prior_root: pathlib.Path | None = None,
     consumer_lock: pathlib.Path | None = None,
     docs_commit_sha: str | None = None,
+    expected_trust_anchor_sha: str | None = None,
 ) -> tuple[list[str], str | None]:
     errors: list[str] = []
     manifest_file = root / MANIFEST_PATH
@@ -558,12 +564,28 @@ def validate(
         },
         errors,
     )
-    _require_equal(
-        manifest,
-        "artifact_sha256",
-        EXPECTED_ARTIFACT_SHA256,
-        errors,
-    )
+    artifact_hashes = manifest.get("artifact_sha256")
+    expected_artifact_keys = {
+        "consumer_lock_schema",
+        "policy",
+        "trusted_revision_validator",
+        "trusted_revision_workflow",
+        "wire",
+    }
+    if (
+        not isinstance(artifact_hashes, dict)
+        or set(artifact_hashes) != expected_artifact_keys
+        or any(
+            not isinstance(value, str)
+            or re.fullmatch(r"[0-9a-f]{64}", value) is None
+            for value in artifact_hashes.values()
+        )
+    ):
+        errors.append(
+            "artifact_sha256 must contain exact lowercase hashes for "
+            "the five normative companion artifacts"
+        )
+        artifact_hashes = {}
     _require_equal(
         manifest,
         "source_policy",
@@ -588,26 +610,44 @@ def validate(
         },
         errors,
     )
-    _require_equal(
-        manifest,
-        "trust_anchor",
-        {
-            "commit_sha": "a211bcfac1fe782f298e97676b45d28424ada5ff",
-            "local_mirror": (
-                "scripts/validate_modbus_revision_transition.py"
-            ),
+    trust_anchor = manifest.get("trust_anchor")
+    if not isinstance(trust_anchor, dict) or set(trust_anchor) != {
+        "commit_sha",
+        "local_mirror",
+        "m1_admission_gate",
+        "repository",
+        "workflow",
+    }:
+        errors.append("trust_anchor must match the closed schema")
+    else:
+        commit_sha = trust_anchor.get("commit_sha")
+        if (
+            not isinstance(commit_sha, str)
+            or re.fullmatch(r"[0-9a-f]{40}", commit_sha) is None
+        ):
+            errors.append(
+                "trust_anchor.commit_sha must be full lowercase 40-hex"
+            )
+        if (
+            expected_trust_anchor_sha is not None
+            and commit_sha != expected_trust_anchor_sha
+        ):
+            errors.append(
+                "trust_anchor.commit_sha does not match the external anchor"
+            )
+        expected_anchor_fields = {
+            "local_mirror": "scripts/validate_modbus_revision_transition.py",
             "m1_admission_gate": (
                 "runtime-gates/fronius-modbus-m1-admission.json"
             ),
             "repository": (
                 "Project-Helianthus/helianthus-execution-plans"
             ),
-            "workflow": (
-                ".github/workflows/modbus-trusted-revision.yml"
-            ),
-        },
-        errors,
-    )
+            "workflow": ".github/workflows/modbus-trusted-revision.yml",
+        }
+        for key, value in expected_anchor_fields.items():
+            if trust_anchor.get(key) != value:
+                errors.append(f"trust_anchor.{key} must equal {value!r}")
 
     artifacts = manifest.get("artifacts")
     if not isinstance(artifacts, dict) or set(artifacts) != {
@@ -676,7 +716,12 @@ def validate(
         if path is None:
             continue
         actual_digest = hashlib.sha256(path.read_bytes()).hexdigest()
-        if actual_digest != EXPECTED_ARTIFACT_SHA256[label]:
+        if artifact_hashes.get(label) != actual_digest:
+            errors.append(
+                f"{label} artifact bytes do not match the manifest hash"
+            )
+        static_digest = EXPECTED_STATIC_ARTIFACT_SHA256.get(label)
+        if static_digest is not None and actual_digest != static_digest:
             errors.append(
                 f"{label} artifact bytes do not match contract v1 revision 1"
             )
@@ -755,12 +800,14 @@ def main() -> int:
     parser.add_argument("--prior-root", type=pathlib.Path)
     parser.add_argument("--consumer-lock", type=pathlib.Path)
     parser.add_argument("--docs-commit-sha")
+    parser.add_argument("--expected-trust-anchor-sha")
     args = parser.parse_args()
     errors, digest = validate(
         args.root.resolve(),
         args.prior_root.resolve() if args.prior_root else None,
         args.consumer_lock.resolve() if args.consumer_lock else None,
         args.docs_commit_sha,
+        args.expected_trust_anchor_sha,
     )
     if errors:
         for error in errors:

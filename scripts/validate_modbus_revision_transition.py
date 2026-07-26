@@ -18,6 +18,13 @@ MANIFEST_PATH = pathlib.Path(
 PROTECTED_PATHS = (
     pathlib.Path(".github/workflows/modbus-trusted-revision.yml"),
     pathlib.Path("scripts/validate_modbus_revision_transition.py"),
+    pathlib.Path("scripts/validate_modbus_companion.py"),
+)
+V1_SEMANTIC_VALIDATOR_SHA256 = (
+    "7a22d9f88defdc53c1db893dcc496b07232fd60115ddf25f2aad6bcd8152525c"
+)
+V1_NORMALIZED_MANIFEST_SHA256 = (
+    "9ba7a7a02397aec46cb42c69a2fd7bc1572055f68414761b0a49f4460aea8d4d"
 )
 MAX_MANIFEST_BYTES = 256 * 1024
 MAX_ARTIFACT_BYTES = 4 * 1024 * 1024
@@ -217,6 +224,54 @@ def _revision_payload(manifest: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
+def _normalized_manifest_digest(manifest: dict[str, Any]) -> str | None:
+    normalized = copy.deepcopy(manifest)
+    trust_anchor = normalized.get("trust_anchor")
+    hashes = normalized.get("artifact_sha256")
+    if not isinstance(trust_anchor, dict) or not isinstance(hashes, dict):
+        return None
+    trust_anchor["commit_sha"] = "<trust-anchor-sha>"
+    hashes["trusted_revision_validator"] = (
+        "<trusted-revision-validator-sha256>"
+    )
+    hashes["trusted_revision_workflow"] = (
+        "<trusted-revision-workflow-sha256>"
+    )
+    canonical = json.dumps(normalized, indent=2, sort_keys=True) + "\n"
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _validate_closed_v1(
+    root: pathlib.Path,
+    manifest: dict[str, Any],
+    label: str,
+    trust_anchor_sha: str,
+    errors: list[str],
+) -> None:
+    if _normalized_manifest_digest(manifest) != V1_NORMALIZED_MANIFEST_SHA256:
+        errors.append(
+            f"{label} manifest is not the independently frozen V1 contract"
+        )
+    trust_anchor = manifest.get("trust_anchor")
+    if (
+        not isinstance(trust_anchor, dict)
+        or trust_anchor.get("commit_sha") != trust_anchor_sha
+    ):
+        errors.append(
+            f"{label} manifest trust anchor does not match the executing anchor"
+        )
+    semantic_validator = root / PROTECTED_PATHS[2]
+    if (
+        not semantic_validator.is_file()
+        or semantic_validator.is_symlink()
+        or _digest(semantic_validator) != V1_SEMANTIC_VALIDATOR_SHA256
+    ):
+        errors.append(
+            f"{label} semantic validator is not the independently frozen V1 "
+            "validator"
+        )
+
+
 def _validate_protected_paths(
     prior_root: pathlib.Path,
     current_root: pathlib.Path,
@@ -251,6 +306,14 @@ def _validate_protected_paths(
         pathlib.Path(__file__).resolve()
     ):
         errors.append("bootstrap transition mirror must equal the trust anchor")
+    semantic_validator = current_root / PROTECTED_PATHS[2]
+    if (
+        semantic_validator.is_file()
+        and _digest(semantic_validator) != V1_SEMANTIC_VALIDATOR_SHA256
+    ):
+        errors.append(
+            "bootstrap semantic validator must equal the frozen V1 validator"
+        )
     if not workflow.is_file():
         return
     try:
@@ -306,6 +369,13 @@ def validate_transition(
     ):
         errors.append("current consumer pin must carry the content_revision")
     _validate_artifacts(current_root, current, "current", errors)
+    _validate_closed_v1(
+        current_root,
+        current,
+        "current",
+        trust_anchor_sha,
+        errors,
+    )
 
     if prior is None:
         if current_version != 1 or current_revision != 1:
@@ -320,6 +390,13 @@ def validate_transition(
         errors.append("prior version and content_revision must be positive integers")
         return errors
     _validate_artifacts(prior_root, prior, "prior", errors)
+    _validate_closed_v1(
+        prior_root,
+        prior,
+        "prior",
+        trust_anchor_sha,
+        errors,
+    )
     if current.get("repository") != prior.get("repository"):
         errors.append("companion repository identity cannot change")
 
