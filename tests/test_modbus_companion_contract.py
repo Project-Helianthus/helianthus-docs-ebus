@@ -129,6 +129,34 @@ def mutate_agpl_wire_fact(
     )
 
 
+def mutate_extra_schema_key(
+    _root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    manifest["extension"] = "not-allowed"
+
+
+def mutate_source_policy(
+    _root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    policy = manifest["source_policy"]
+    assert isinstance(policy, dict)
+    policy["restricted_source_copy"] = "allowed"
+
+
+def mutate_hard_stop(
+    _root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    execution = manifest["execution"]
+    assert isinstance(execution, dict)
+    execution["hard_stop_before"] = "FMV3-M5-01"
+
+
+def mutate_read_only_type(
+    _root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    manifest["read_only"] = 1
+
+
 @pytest.mark.parametrize(
     "mutation",
     (
@@ -139,6 +167,10 @@ def mutate_agpl_wire_fact(
         mutate_remove_companion,
         mutate_remove_consumer_pin,
         mutate_agpl_wire_fact,
+        mutate_extra_schema_key,
+        mutate_source_policy,
+        mutate_hard_stop,
+        mutate_read_only_type,
     ),
 )
 def test_modbus_companion_mutations_fail_closed(
