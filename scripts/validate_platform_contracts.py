@@ -1714,8 +1714,17 @@ def _link_categories(
         if entry["owner"]["repository"] == "helianthus-docs-eebus"
         and entry["state"] == "active"
     }
-    for _, text in _platform_markdown(docs_ebus_root):
+    m625_external_links = {M625_PROVENANCE_URL, M625_ARCHITECTURE_URL}
+    for relative_path, text in _platform_markdown(docs_ebus_root):
         for target in _markdown_links(text):
+            # M6.25 has a separately hash-verified, immutable provenance
+            # binding.  Its two source links intentionally target the source
+            # commit rather than the newer combined-ref checkout.
+            if (
+                relative_path == M625_CROSS_SEED_PATH
+                and target in m625_external_links
+            ):
+                continue
             relative, immutable = _eebus_link_target(target, docs_eebus_ref)
             if relative is None:
                 continue
