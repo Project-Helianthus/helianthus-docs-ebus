@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import pathlib
+import shutil
 
 import pytest
 import yaml
@@ -81,6 +82,26 @@ def test_m625_cross_seed_manifest_entry_is_required_fail_closed() -> None:
     }
 
 
+def test_m625_cross_seed_complete_deletion_is_required_fail_closed(
+    tmp_path: pathlib.Path,
+) -> None:
+    """The static M6.25 registry, not surviving artifacts, anchors the gate."""
+    validator = load_validator()
+    manifest = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8"))
+    manifest["entries"] = [
+        entry
+        for entry in manifest["entries"]
+        if entry["id"] != "platform-m625-public-acquisition-methodology"
+    ]
+    # Deliberately provide a root with neither page nor input binding.
+    empty_root = tmp_path / "empty-docs-root"
+    empty_root.mkdir()
+
+    assert validator._m625_cross_seed_categories(empty_root, manifest) == {
+        "m625.cross-seed-manifest"
+    }
+
+
 def test_m625_cross_seed_machine_binds_exact_external_inputs() -> None:
     validator = load_validator()
     binding = yaml.safe_load(INPUTS_PATH.read_text(encoding="utf-8"))
@@ -122,8 +143,12 @@ def test_m625_cross_seed_machine_binds_exact_external_inputs() -> None:
         },
     ]
     text = cross_seed_text()
-    assert f"`{M625_PROVENANCE_URL}`" in text
-    assert f"`{M625_ARCHITECTURE_URL}`" in text
+    parsed_links = set(validator._markdown_links(text, include_rendered=False))
+    assert validator.M625_PLAN_URL in parsed_links
+    assert M625_PROVENANCE_URL in parsed_links
+    assert M625_ARCHITECTURE_URL in parsed_links
+    assert f"`{M625_PROVENANCE_URL}`" not in text
+    assert f"`{M625_ARCHITECTURE_URL}`" not in text
     assert validator._m625_cross_seed_categories(REPO_ROOT, manifest) == set()
 
 
@@ -131,19 +156,19 @@ def test_m625_cross_seed_machine_binds_exact_external_inputs() -> None:
     ("mutation", "category"),
     [
         (
-            "The protocol defines a command payload field named operationCode.",
+            "A wire-format message uses the field command_selector.",
             "m625.cross-seed-protocol-api-declaration",
         ),
         (
-            "The public API exposes a stable rawFeature query.",
+            "Clients call queryCrossSeed() to fetch the result.",
             "m625.cross-seed-protocol-api-declaration",
         ),
         (
-            "Live support is implemented and verified.",
+            "The operational path now works against a real installation.",
             "m625.cross-seed-live-claim",
         ),
         (
-            "This behavior is confirmed by a confidential vendor manual.",
+            "An OEM document supplies the evidence for this behavior.",
             "m625.cross-seed-private-source-attribution",
         ),
         (
@@ -175,11 +200,11 @@ def test_m625_cross_seed_machine_binds_exact_external_inputs() -> None:
             "m625.cross-seed-restricted-material",
         ),
         (
-            "The owner-authorized raw tier may expose a session token.",
+            "Return the session credential to the owner-authorized operator.",
             "m625.cross-seed-secret-policy",
         ),
         (
-            "A SHA-256 digest may replace a password in public evidence.",
+            "Password material is represented as a checksum in public evidence.",
             "m625.cross-seed-secret-policy",
         ),
     ],
