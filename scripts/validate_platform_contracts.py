@@ -1721,7 +1721,8 @@ def _link_categories(
             # binding.  Its two source links intentionally target the source
             # commit rather than the newer combined-ref checkout.
             if (
-                relative_path == M625_CROSS_SEED_PATH
+                relative_path
+                == docs_ebus_root / M625_CROSS_SEED_PATH
                 and target in m625_external_links
             ):
                 continue
