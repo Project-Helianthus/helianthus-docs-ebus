@@ -1,23 +1,24 @@
 # M6.25 Public Acquisition Methodology Cross-Seed
 
-Status: candidate methodology only. This page records neither an implementation
-nor bounded live validation.
+Status: active public methodology. Implementation and bounded live validation
+remain pending their separate gates.
 
 ## Ownership And Inputs
 
 This page owns only language-neutral acquisition, reference-binding, and public
 evidence methodology. Protocol, API, and architecture material remains owned by
-[helianthus-docs-eebus](https://github.com/Project-Helianthus/helianthus-docs-eebus)
-and is not restated here.
+`helianthus-docs-eebus` and is not restated here.
 
 The cross-seed is bound to these immutable public inputs:
 
 - [locked M6.25 plan](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/fb384ab57d79f0020c54d2c66416e8a7666f0ceb/multi-runtime-semantic-platform.locked/118-w30-26-m625-raw-spine-feature-acquisition.md);
-- [canonical provenance policy](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/cedf238e34f879815ba773e9cd76b2b31c2822a3/development/msp-0625-provenance-policy.md); and
-- [candidate command-path ownership record](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/cedf238e34f879815ba773e9cd76b2b31c2822a3/architecture/_candidate/msp-0625-raw-feature-command-path.md).
+- canonical provenance policy:
+  `Project-Helianthus/helianthus-docs-eebus@cedf238e34f879815ba773e9cd76b2b31c2822a3:development/msp-0625-provenance-policy.md`; and
+- candidate command-path ownership record:
+  `Project-Helianthus/helianthus-docs-eebus@cedf238e34f879815ba773e9cd76b2b31c2822a3:architecture/_candidate/msp-0625-raw-feature-command-path.md`.
 
-Those links establish this page's source boundary; they do not import their
-protocol-native content or create a second canonical owner.
+Those immutable locators establish this page's source boundary; they do not
+import protocol-native content or create a second canonical owner.
 
 ## Two Views, One Non-Escalation Rule
 
@@ -49,9 +50,8 @@ only its recorded observation and not a general rule.
 
 ## Pending State And Falsifier
 
-Implementation and bounded live validation remain pending their separate gates.
-This candidate creates no stable API schema, tool name, protocol-native detail,
-or consumer surface.
+This methodology creates no stable API schema, tool name, protocol-native
+detail, or consumer surface.
 
 This cross-seed is falsified if it exposes protocol-native material or
 restricted material, permits a mismatched bound reference to dereference, or

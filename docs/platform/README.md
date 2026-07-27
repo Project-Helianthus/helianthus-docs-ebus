@@ -44,8 +44,8 @@ Current platform contracts:
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary
-- [`_candidate/msp-0625-public-acquisition-methodology.md`](./_candidate/msp-0625-public-acquisition-methodology.md) -
-  M6.25 candidate-only cross-seed for public acquisition and evidence
+- [`msp-0625-public-acquisition-methodology.md`](./msp-0625-public-acquisition-methodology.md) -
+  M6.25 public cross-seed for acquisition and evidence
   methodology; it does not own protocol, API, or architecture details
 
 The publication-contract v2 canonical collection is the exact foundational
@@ -60,9 +60,8 @@ The authoritative eeBUS ownership state is the versioned
 [`manifests/eebus-doc-ownership.yaml`](./manifests/eebus-doc-ownership.yaml)
 manifest.
 
-The M6.25 cross-seed is a candidate and is deliberately outside the stable
-canonical collection until its separate implementation and live-evidence gates
-complete.
+The M6.25 cross-seed is outside the foundational canonical collection. Its
+implementation and live-evidence claims remain pending their separate gates.
 
 Protocol-specific repositories may link here, but they must not duplicate these
 contracts as normative text. Non-owning pages are summary-only.

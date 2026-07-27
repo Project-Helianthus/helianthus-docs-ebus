@@ -25,11 +25,11 @@ def load_validator():
 def cross_seed_text() -> str:
     return (
         REPO_ROOT
-        / "docs/platform/_candidate/msp-0625-public-acquisition-methodology.md"
+        / "docs/platform/msp-0625-public-acquisition-methodology.md"
     ).read_text(encoding="utf-8")
 
 
-def test_m625_cross_seed_is_candidate_only_and_immutably_bound() -> None:
+def test_m625_cross_seed_is_active_methodology_and_immutably_bound() -> None:
     validator = load_validator()
     manifest = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8"))
     entry = next(
@@ -38,20 +38,27 @@ def test_m625_cross_seed_is_candidate_only_and_immutably_bound() -> None:
         if item["id"] == validator.M625_CROSS_SEED_ID
     )
 
-    assert entry["state"] == "candidate"
-    assert entry["canonical"] is False
+    assert entry["state"] == "active"
+    assert entry["canonical"] is True
     assert entry["owner"]["path"] == validator.M625_CROSS_SEED_PATH.as_posix()
-    assert entry["lifecycle"]["source_ref"] == (
-        "cedf238e34f879815ba773e9cd76b2b31c2822a3"
-    )
-    assert entry["lifecycle"]["content_sha256"] == (
-        "f52a15cab0ec7cfebb67a1932b27259489846619b109ea71e43ca54531191db2"
-    )
+    assert entry["lifecycle"]["source_ref"] is None
+    assert entry["lifecycle"]["content_sha256"] is None
     assert validator._m625_cross_seed_categories(REPO_ROOT, manifest) == set()
 
     forged = copy.deepcopy(entry)
     forged["source"]["path"] = "architecture/unbound.md"
     assert validator._surface_binding_valid(forged) is False
+
+
+def test_m625_cross_seed_binds_exact_external_source_locators() -> None:
+    validator = load_validator()
+    allowed = {
+        validator.M625_PROVENANCE_LOCATOR,
+        validator.M625_ARCHITECTURE_LOCATOR,
+    }
+
+    assert all(link in cross_seed_text() for link in allowed)
+    assert "cedf238e34f879815ba773e9cd76b2b31c2822a3" in cross_seed_text()
 
 
 def test_m625_cross_seed_rejects_protocol_native_leakage() -> None:

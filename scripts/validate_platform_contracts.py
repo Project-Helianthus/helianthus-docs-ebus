@@ -44,7 +44,6 @@ MILESTONES = (
     "MSP-DOCS-PLATFORM",
     "MSP-DOCS-E2",
     "MSP-DOCS-CLEAN",
-    "MSP-0625-DOCS-P",
 )
 MILESTONE_INDEX = {name: index for index, name in enumerate(MILESTONES)}
 TARGET_STATES = {"candidate", "active", "withdrawn"}
@@ -133,7 +132,7 @@ PRIVATE_IDENTIFIER = re.compile(
 )
 M625_CROSS_SEED_ID = "platform-m625-public-acquisition-methodology"
 M625_CROSS_SEED_PATH = pathlib.Path(
-    "docs/platform/_candidate/msp-0625-public-acquisition-methodology.md"
+    "docs/platform/msp-0625-public-acquisition-methodology.md"
 )
 M625_PLAN_URL = (
     "https://github.com/Project-Helianthus/helianthus-execution-plans/blob/"
@@ -141,22 +140,23 @@ M625_PLAN_URL = (
     "multi-runtime-semantic-platform.locked/"
     "118-w30-26-m625-raw-spine-feature-acquisition.md"
 )
-M625_PROVENANCE_URL = (
-    "https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/"
-    "cedf238e34f879815ba773e9cd76b2b31c2822a3/"
+M625_PROVENANCE_LOCATOR = (
+    "Project-Helianthus/helianthus-docs-eebus@"
+    "cedf238e34f879815ba773e9cd76b2b31c2822a3:"
     "development/msp-0625-provenance-policy.md"
 )
-M625_ARCHITECTURE_URL = (
-    "https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/"
-    "cedf238e34f879815ba773e9cd76b2b31c2822a3/"
+M625_ARCHITECTURE_LOCATOR = (
+    "Project-Helianthus/helianthus-docs-eebus@"
+    "cedf238e34f879815ba773e9cd76b2b31c2822a3:"
     "architecture/_candidate/msp-0625-raw-feature-command-path.md"
 )
 M625_REQUIRED_TERMS = (
     "owner-authorized local raw operator view",
     "public redacted export",
     "fails closed before dereference",
-    "Implementation and bounded live validation remain pending",
-    "no stable API schema, tool name, protocol-native detail",
+    "Implementation and bounded live validation",
+    "remain pending their separate gates.",
+    "This methodology creates no stable API schema, tool name, protocol-native",
 )
 M625_PROTOCOL_NATIVE_TERMS = (
     "RawFeatureRuntimeV1",
@@ -489,20 +489,11 @@ def _surface_binding_valid(entry: Mapping[str, Any]) -> bool:
             and source_valid
         )
     if surface == "platform":
-        owner_valid = _location_matches(
+        return _location_matches(
             owner, "helianthus-docs-ebus", "docs/platform"
-        )
-        source_valid = _location_matches(
+        ) and _location_matches(
             source, "helianthus-docs-ebus", "docs/platform"
-        ) or (
-            entry["id"] == M625_CROSS_SEED_ID
-            and source
-            == {
-                "repository": "helianthus-docs-eebus",
-                "path": "development/msp-0625-provenance-policy.md",
-            }
         )
-        return owner_valid and source_valid
     if surface == "code_repo":
         return _location_matches(
             owner, "helianthus-eebusreg", "docs"
@@ -1970,7 +1961,11 @@ def _m625_cross_seed_text_categories(text: str) -> set[str]:
     categories: set[str] = set()
     if any(term not in text for term in M625_REQUIRED_TERMS) or any(
         url not in text
-        for url in (M625_PLAN_URL, M625_PROVENANCE_URL, M625_ARCHITECTURE_URL)
+        for url in (
+            M625_PLAN_URL,
+            M625_PROVENANCE_LOCATOR,
+            M625_ARCHITECTURE_LOCATOR,
+        )
     ):
         categories.add("m625.cross-seed-contract")
     prose = re.sub(r"https?://\S+", "", text)
@@ -2004,18 +1999,20 @@ def _m625_cross_seed_categories(
         }
         or entry["source"]
         != {
-            "repository": "helianthus-docs-eebus",
-            "path": "development/msp-0625-provenance-policy.md",
+            "repository": "helianthus-docs-ebus",
+            "path": M625_CROSS_SEED_PATH.as_posix(),
         }
-        or entry["canonical"]
-        or entry["state"] != "candidate"
+        or not entry["canonical"]
+        or entry["state"] != "active"
         or entry["kind"] != "canonical_document"
-        or entry["lifecycle"]["source_ref"]
-        != "cedf238e34f879815ba773e9cd76b2b31c2822a3"
-        or entry["lifecycle"]["content_sha256"]
-        != "f52a15cab0ec7cfebb67a1932b27259489846619b109ea71e43ca54531191db2"
+        or entry["lifecycle"]["source_issue"]
+        != "Project-Helianthus/helianthus-docs-ebus#380"
+        or entry["lifecycle"]["source_pr"]
+        != "Project-Helianthus/helianthus-docs-eebus#77"
+        or entry["lifecycle"]["source_ref"] is not None
+        or entry["lifecycle"]["content_sha256"] is not None
         or entry["enforcement"]
-        != {"milestone": "MSP-0625-DOCS-P", "required_state": "candidate"}
+        != {"milestone": "MSP-DOCS-CLEAN", "required_state": "active"}
     ):
         return {"m625.cross-seed-manifest"}
     if _artifact_kind(root, M625_CROSS_SEED_PATH.as_posix()) != "regular":

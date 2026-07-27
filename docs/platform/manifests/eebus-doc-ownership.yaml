@@ -17,6 +17,8 @@ eligible_channels:
     - canonical
   platform-hash-auth-binding:
     - canonical
+  platform-m625-public-acquisition-methodology:
+    - canonical
   platform-ownership-validation:
     - canonical
   platform-promotion-consumer-contract:
@@ -31,6 +33,7 @@ exact_memberships:
     - eebus-protocol
     - platform-cross-runtime-envelope
     - platform-hash-auth-binding
+    - platform-m625-public-acquisition-methodology
     - platform-ownership-validation
     - platform-promotion-consumer-contract
     - platform-shared-registry-boundary
@@ -325,23 +328,23 @@ entries:
     surface: platform
     owner:
       repository: helianthus-docs-ebus
-      path: docs/platform/_candidate/msp-0625-public-acquisition-methodology.md
+      path: docs/platform/msp-0625-public-acquisition-methodology.md
     source:
-      repository: helianthus-docs-eebus
-      path: development/msp-0625-provenance-policy.md
-    canonical: false
-    state: candidate
+      repository: helianthus-docs-ebus
+      path: docs/platform/msp-0625-public-acquisition-methodology.md
+    canonical: true
+    state: active
     kind: canonical_document
     lifecycle:
       created_at: "2026-07-27T00:00:00Z"
-      expires_at: "2026-08-26T00:00:00Z"
+      expires_at: null
       source_issue: Project-Helianthus/helianthus-docs-ebus#380
       source_pr: Project-Helianthus/helianthus-docs-eebus#77
-      source_ref: cedf238e34f879815ba773e9cd76b2b31c2822a3
-      content_sha256: f52a15cab0ec7cfebb67a1932b27259489846619b109ea71e43ca54531191db2
-      approved_at: null
-      frozen_at: null
+      source_ref: null
+      content_sha256: null
+      approved_at: "2026-07-27T00:00:00Z"
+      frozen_at: "2026-07-27T00:00:00Z"
       cleanup_required: false
     enforcement:
-      milestone: MSP-0625-DOCS-P
-      required_state: candidate
+      milestone: MSP-DOCS-CLEAN
+      required_state: active

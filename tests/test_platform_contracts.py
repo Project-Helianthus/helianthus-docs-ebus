@@ -464,6 +464,12 @@ def cli_option(args: list[str], option: str) -> str | None:
 
 def desired_e2_manifest() -> dict[str, Any]:
     manifest = copy.deepcopy(repository_manifest())
+    m625_id = "platform-m625-public-acquisition-methodology"
+    manifest["entries"] = [
+        item for item in manifest["entries"] if item["id"] != m625_id
+    ]
+    manifest["eligible_channels"].pop(m625_id, None)
+    manifest["exact_memberships"]["canonical"].remove(m625_id)
     architecture = repository_entry(manifest, "eebus-architecture")
     architecture["state"] = "active"
     architecture["canonical"] = True
@@ -1381,9 +1387,7 @@ def test_platform_b_token_is_reproducible_from_objects_and_attestation_inputs(
     assert token["observation_source"] == "test.fixture-clock"
     assert token["evidence_core"]["prior_manifest"]["version"] == 1
     assert token["evidence_core"]["manifest"]["version"] == 2
-    assert token["evidence_core"]["candidate_inventory"] == [
-        "platform-m625-public-acquisition-methodology"
-    ]
+    assert token["evidence_core"]["candidate_inventory"] == []
     core = json.dumps(
         token["evidence_core"],
         ensure_ascii=True,
