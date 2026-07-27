@@ -246,9 +246,13 @@ def test_m625_cross_seed_rejects_independent_policy_mutations(
 ) -> None:
     validator = load_validator()
 
-    assert validator._m625_cross_seed_text_categories(
+    categories = validator._m625_cross_seed_text_categories(
         cross_seed_text() + f"\n{mutation}\n"
-    ) == {category}
+    )
+    # A new paragraph also violates the closed thin-page shape.  The category
+    # under test must still be independently present and not rely on that
+    # structural rejection.
+    assert category in categories
 
 
 def test_m625_cross_seed_policy_checks_allow_legitimate_exclusion_prose() -> None:
