@@ -11,7 +11,7 @@
             "clean": true,
             "path": "anchor",
             "persist-credentials": false,
-            "ref": "5e0674e7514b038418eae6a10beca4632751860b",
+            "ref": "af75995c1587589906213eebc732f9fa317f6787",
             "repository": "Project-Helianthus/helianthus-execution-plans"
           }
         },
@@ -43,12 +43,12 @@
             "UNTRUSTED_HEAD_SHA": "${{ github.event.pull_request.head.sha }}"
           },
           "name": "Verify immutable checkout identities",
-          "run": "set -euo pipefail\ntest \"$(git -C anchor rev-parse HEAD)\" = \"5e0674e7514b038418eae6a10beca4632751860b\"\ntest \"$(git -C prior rev-parse HEAD)\" = \"${TRUSTED_BASE_SHA}\"\ntest \"$(git -C current rev-parse HEAD)\" = \"${UNTRUSTED_HEAD_SHA}\"",
+          "run": "set -euo pipefail\ntest \"$(git -C anchor rev-parse HEAD)\" = \"af75995c1587589906213eebc732f9fa317f6787\"\ntest \"$(git -C prior rev-parse HEAD)\" = \"${TRUSTED_BASE_SHA}\"\ntest \"$(git -C current rev-parse HEAD)\" = \"${UNTRUSTED_HEAD_SHA}\"",
           "shell": "bash"
         },
         {
           "name": "Validate Modbus revision transition with immutable anchor",
-          "run": "python3 anchor/scripts/validate_modbus_docs_trust.py --prior-root prior --current-root current --trust-anchor-sha 5e0674e7514b038418eae6a10beca4632751860b",
+          "run": "python3 anchor/scripts/validate_modbus_docs_trust.py --prior-root prior --current-root current --trust-anchor-sha af75995c1587589906213eebc732f9fa317f6787",
           "shell": "bash"
         }
       ]
