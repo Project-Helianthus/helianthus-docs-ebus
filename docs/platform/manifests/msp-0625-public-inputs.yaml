@@ -11,9 +11,9 @@ sources:
     ref: cedf238e34f879815ba773e9cd76b2b31c2822a3
     path: development/msp-0625-provenance-policy.md
     content_sha256: f52a15cab0ec7cfebb67a1932b27259489846619b109ea71e43ca54531191db2
-    url: https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/cedf238e34f879815ba773e9cd76b2b31c2822a3/development/msp-0625-provenance-policy.md
+    url: https://api.github.com/repositories/1293598306/contents/development/msp-0625-provenance-policy.md?ref=cedf238e34f879815ba773e9cd76b2b31c2822a3
   - repository: Project-Helianthus/helianthus-docs-eebus
     ref: cedf238e34f879815ba773e9cd76b2b31c2822a3
     path: architecture/_candidate/msp-0625-raw-feature-command-path.md
     content_sha256: e782c764e5bed3ca103b3544e2bfcb97f7869416184175ad576a90c8f6302e64
-    url: https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/cedf238e34f879815ba773e9cd76b2b31c2822a3/architecture/_candidate/msp-0625-raw-feature-command-path.md
+    url: https://api.github.com/repositories/1293598306/contents/architecture/_candidate/msp-0625-raw-feature-command-path.md?ref=cedf238e34f879815ba773e9cd76b2b31c2822a3

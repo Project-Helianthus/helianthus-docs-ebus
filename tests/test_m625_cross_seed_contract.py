@@ -14,14 +14,17 @@ MANIFEST_PATH = REPO_ROOT / "docs/platform/manifests/eebus-doc-ownership.yaml"
 INPUTS_PATH = REPO_ROOT / "docs/platform/manifests/msp-0625-public-inputs.yaml"
 M625_SOURCE_REF = "cedf238e34f879815ba773e9cd76b2b31c2822a3"
 M625_PLAN_REF = "fb384ab57d79f0020c54d2c66416e8a7666f0ceb"
+TRUSTED_BASE_REF = "8215201a4274db5310ee672619ba2f1d27b99bec"
+COMBINED_DOCS_EEBUS_REF = "b9413bda992b99e4f719ad2e26e1937ff11a5b4a"
 M625_PROVENANCE_URL = (
-    "https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/"
-    f"{M625_SOURCE_REF}/development/msp-0625-provenance-policy.md"
+    "https://api.github.com/repositories/1293598306/contents/"
+    "development/msp-0625-provenance-policy.md"
+    f"?ref={M625_SOURCE_REF}"
 )
 M625_ARCHITECTURE_URL = (
-    "https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/"
-    f"{M625_SOURCE_REF}/architecture/_candidate/"
-    "msp-0625-raw-feature-command-path.md"
+    "https://api.github.com/repositories/1293598306/contents/"
+    "architecture/_candidate/msp-0625-raw-feature-command-path.md"
+    f"?ref={M625_SOURCE_REF}"
 )
 
 
@@ -150,6 +153,39 @@ def test_m625_cross_seed_machine_binds_exact_external_inputs() -> None:
     assert f"`{M625_PROVENANCE_URL}`" not in text
     assert f"`{M625_ARCHITECTURE_URL}`" not in text
     assert validator._m625_cross_seed_categories(REPO_ROOT, manifest) == set()
+
+
+def test_m625_source_links_coexist_with_the_exact_trusted_base_validator(
+    tmp_path: pathlib.Path,
+) -> None:
+    """M6.25 source links must not become legacy combined-ref forward links."""
+    validator_source = subprocess.run(
+        [
+            "git",
+            "show",
+            f"{TRUSTED_BASE_REF}:scripts/validate_platform_contracts.py",
+        ],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    trusted_path = tmp_path / "trusted_validate_platform_contracts.py"
+    trusted_path.write_text(validator_source, encoding="utf-8")
+    spec = importlib.util.spec_from_file_location(
+        "trusted_validate_platform_contracts", trusted_path
+    )
+    assert spec is not None and spec.loader is not None
+    trusted = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(trusted)
+
+    manifest = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8"))
+    combined_target = tmp_path / "protocols/ship-spine-overview.md"
+    combined_target.parent.mkdir()
+    combined_target.write_text("trusted combined target\n", encoding="utf-8")
+    assert trusted._link_categories(
+        REPO_ROOT, tmp_path, COMBINED_DOCS_EEBUS_REF, manifest
+    ) == set()
 
 
 def test_m625_external_provenance_fails_closed_for_unavailable_roots() -> None:
@@ -288,6 +324,11 @@ def test_m625_focused_contract_is_in_local_and_github_docs_ci() -> None:
     ).read_text(encoding="utf-8")
 
     assert "python3 -m pytest -q tests/test_m625_cross_seed_contract.py" in local_ci
+    assert "--m625-docs-eebus-root \"${PLATFORM_M625_DOCS_EEBUS_ROOT}\"" in local_ci
+    assert (
+        "--m625-execution-plans-root \"${PLATFORM_M625_EXECUTION_PLANS_ROOT}\""
+        in local_ci
+    )
     assert "run: ./scripts/ci_local.sh" in docs_ci
     assert "Validate PR M6.25 provenance contract" in combined_ref
     assert "checkouts/docs-ebus/scripts/validate_platform_combined_ref.py" in combined_ref

@@ -216,6 +216,8 @@ if [ "${combined_ref_requested}" = true ]; then
     --docs-ebus-root . \
     --docs-eebus-root "${PLATFORM_DOCS_EEBUS_ROOT}" \
     --eebusreg-root "${PLATFORM_EEBUSREG_ROOT}" \
+    --m625-docs-eebus-root "${PLATFORM_M625_DOCS_EEBUS_ROOT}" \
+    --m625-execution-plans-root "${PLATFORM_M625_EXECUTION_PLANS_ROOT}" \
     --docs-ebus-ref "${PLATFORM_DOCS_EBUS_REF}" \
     --docs-eebus-ref "${PLATFORM_DOCS_EEBUS_REF}" \
     --eebusreg-ref "${PLATFORM_EEBUSREG_REF}" \
