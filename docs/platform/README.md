@@ -58,7 +58,8 @@ transport evidence remains with the protocol-owned companion.
 
 The authoritative eeBUS ownership state is the versioned
 [`manifests/eebus-doc-ownership.yaml`](./manifests/eebus-doc-ownership.yaml)
-manifest.
+manifest. Its M6.25 entry sources the exact immutable public inputs through
+[`manifests/msp-0625-public-inputs.yaml`](./manifests/msp-0625-public-inputs.yaml).
 
 The M6.25 cross-seed is outside the foundational canonical collection. Its
 implementation and live-evidence claims remain pending their separate gates.

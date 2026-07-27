@@ -147,6 +147,7 @@ python3 scripts/check_source_address_table_against_official_specs.py --run-canar
 python3 -m pytest -q tests/test_source_address_table_checker.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
+python3 -m pytest -q tests/test_m625_cross_seed_contract.py
 python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow
 python3 -m pytest -q tests/test_platform_contracts.py -k 'not trusted_prior_workflow'
 python3 -m pytest -q tests/test_synchronized_evidence_contract.py

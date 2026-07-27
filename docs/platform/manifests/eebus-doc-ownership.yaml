@@ -330,8 +330,8 @@ entries:
       repository: helianthus-docs-ebus
       path: docs/platform/msp-0625-public-acquisition-methodology.md
     source:
-      repository: helianthus-docs-ebus
-      path: docs/platform/msp-0625-public-acquisition-methodology.md
+      repository: helianthus-docs-eebus
+      path: development/msp-0625-provenance-policy.md
     canonical: true
     state: active
     kind: canonical_document
@@ -340,8 +340,8 @@ entries:
       expires_at: null
       source_issue: Project-Helianthus/helianthus-docs-ebus#380
       source_pr: Project-Helianthus/helianthus-docs-eebus#77
-      source_ref: null
-      content_sha256: null
+      source_ref: cedf238e34f879815ba773e9cd76b2b31c2822a3
+      content_sha256: f52a15cab0ec7cfebb67a1932b27259489846619b109ea71e43ca54531191db2
       approved_at: "2026-07-27T00:00:00Z"
       frozen_at: "2026-07-27T00:00:00Z"
       cleanup_required: false
