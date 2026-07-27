@@ -332,6 +332,20 @@ def _validate_consumer_lock_schema(
         errors.append("consumer lock schema must equal the closed V1 schema")
 
 
+def _isolated_git_env(home: pathlib.Path) -> dict[str, str]:
+    return {
+        "GIT_CONFIG_COUNT": "0",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_SYSTEM": os.devnull,
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": str(home),
+        "LANG": "C",
+        "LC_ALL": "C",
+        "PATH": os.defpath,
+    }
+
+
 def _canonical_main_contains(
     commit_sha: str,
     errors: list[str],
@@ -345,17 +359,7 @@ def _canonical_main_contains(
         ) as temporary:
             temporary_root = pathlib.Path(temporary)
             bare = temporary_root / "canonical.git"
-            clean_env = {
-                "GIT_CONFIG_COUNT": "0",
-                "GIT_CONFIG_GLOBAL": os.devnull,
-                "GIT_CONFIG_NOSYSTEM": "1",
-                "GIT_CONFIG_SYSTEM": os.devnull,
-                "GIT_TERMINAL_PROMPT": "0",
-                "HOME": str(temporary_root),
-                "LANG": "C",
-                "LC_ALL": "C",
-                "PATH": os.defpath,
-            }
+            clean_env = _isolated_git_env(temporary_root)
             subprocess.run(
                 [GIT_EXECUTABLE, "init", "--bare", "-q", str(bare)],
                 check=True,
@@ -443,36 +447,53 @@ def _validate_consumer_lock(
 
     if re.fullmatch(r"[0-9a-f]{40}", docs_commit_sha) is None:
         errors.append("docs commit SHA must be full lowercase 40-hex")
+    if GIT_EXECUTABLE is None:
+        errors.append("consumer validation requires system Git")
+        return
     try:
-        origin_url = subprocess.check_output(
-            ["git", "-C", str(root), "remote", "get-url", "origin"],
-            text=True,
-            stderr=subprocess.DEVNULL,
-        ).strip()
-        docs_head = subprocess.check_output(
-            [
-                "git",
-                "-C",
-                str(root),
-                "rev-parse",
-                "--verify",
-                "HEAD^{commit}",
-            ],
-            text=True,
-            stderr=subprocess.DEVNULL,
-        ).strip()
-        dirty = subprocess.check_output(
-            [
-                "git",
-                "-C",
-                str(root),
-                "status",
-                "--porcelain",
-                "--untracked-files=all",
-            ],
-            text=True,
-            stderr=subprocess.DEVNULL,
-        )
+        with tempfile.TemporaryDirectory(
+            prefix="helianthus-modbus-local-git-home-"
+        ) as temporary:
+            clean_env = _isolated_git_env(pathlib.Path(temporary))
+            origin_url = subprocess.check_output(
+                [
+                    GIT_EXECUTABLE,
+                    "-C",
+                    str(root),
+                    "remote",
+                    "get-url",
+                    "origin",
+                ],
+                text=True,
+                stderr=subprocess.DEVNULL,
+                env=clean_env,
+            ).strip()
+            docs_head = subprocess.check_output(
+                [
+                    GIT_EXECUTABLE,
+                    "-C",
+                    str(root),
+                    "rev-parse",
+                    "--verify",
+                    "HEAD^{commit}",
+                ],
+                text=True,
+                stderr=subprocess.DEVNULL,
+                env=clean_env,
+            ).strip()
+            dirty = subprocess.check_output(
+                [
+                    GIT_EXECUTABLE,
+                    "-C",
+                    str(root),
+                    "status",
+                    "--porcelain",
+                    "--untracked-files=all",
+                ],
+                text=True,
+                stderr=subprocess.DEVNULL,
+                env=clean_env,
+            )
     except (OSError, subprocess.CalledProcessError):
         errors.append("consumer validation requires a valid Git checkout")
     else:

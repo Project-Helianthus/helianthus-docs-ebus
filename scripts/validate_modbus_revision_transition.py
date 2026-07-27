@@ -21,7 +21,7 @@ PROTECTED_PATHS = (
     pathlib.Path("scripts/validate_modbus_companion.py"),
 )
 V1_SEMANTIC_VALIDATOR_SHA256 = (
-    "7a22d9f88defdc53c1db893dcc496b07232fd60115ddf25f2aad6bcd8152525c"
+    "944a69d586bc89529f5c4eb1cc30e2e7f3b2f7cae73af8c2785be71bd7efe08b"
 )
 V1_NORMALIZED_MANIFEST_SHA256 = (
     "9ba7a7a02397aec46cb42c69a2fd7bc1572055f68414761b0a49f4460aea8d4d"

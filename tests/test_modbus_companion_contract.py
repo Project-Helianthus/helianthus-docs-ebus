@@ -269,6 +269,101 @@ def test_consumer_lock_rejects_untracked_docs_content(
     assert any("tracked or untracked modifications" in error for error in errors)
 
 
+def test_consumer_lock_ignores_attacker_git_dir_and_core_worktree(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = materialize_fixture(tmp_path / "docs")
+    initialize_git_checkout(root)
+    (root / "README.md").write_text(
+        (root / "README.md").read_text(encoding="utf-8")
+        + "\nAttacker-controlled checkout content.\n",
+        encoding="utf-8",
+    )
+
+    attacker = tmp_path / "attacker"
+    subprocess.run(
+        ["git", "init", "-q", str(attacker)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    attacker_git = attacker / ".git"
+    for key, value in (
+        ("user.name", "Attacker"),
+        ("user.email", "attacker@example.invalid"),
+        ("core.worktree", str(root)),
+    ):
+        subprocess.run(
+            ["git", "--git-dir", str(attacker_git), "config", key, value],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    subprocess.run(
+        [
+            "git",
+            "--git-dir",
+            str(attacker_git),
+            "--work-tree",
+            str(root),
+            "add",
+            "-A",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "--git-dir",
+            str(attacker_git),
+            "--work-tree",
+            str(root),
+            "commit",
+            "-q",
+            "-m",
+            "forged clean checkout",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "--git-dir",
+            str(attacker_git),
+            "remote",
+            "add",
+            "origin",
+            companion_validator.CANONICAL_REPOSITORY_URL,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    attacker_head = subprocess.check_output(
+        ["git", "--git-dir", str(attacker_git), "rev-parse", "HEAD"],
+        text=True,
+    ).strip()
+    monkeypatch.setenv("GIT_DIR", str(attacker_git))
+
+    lock_path = write_consumer_lock(
+        root,
+        make_consumer_lock(root, docs_commit_sha=attacker_head),
+    )
+    errors = validate_consumer_lock(
+        root,
+        lock_path,
+        attacker_head,
+        monkeypatch,
+    )
+    assert "docs checkout HEAD does not match the consumer lock" in errors
+    assert any("tracked or untracked modifications" in error for error in errors)
+
+
 def test_consumer_lock_rejects_commit_not_on_canonical_main(
     tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
