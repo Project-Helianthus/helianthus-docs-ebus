@@ -14,7 +14,7 @@ SEMANTIC_VALIDATOR = REPO_ROOT / "scripts/validate_modbus_companion.py"
 MANIFEST = pathlib.Path(
     "docs/platform/manifests/modbus-foundation-profile-contract-v1.json"
 )
-ANCHOR_SHA = "d6cfed15e75482fb75e630d38b664fdf0e1f8a43"
+ANCHOR_SHA = "5e0674e7514b038418eae6a10beca4632751860b"
 
 
 def materialize(root: pathlib.Path) -> pathlib.Path:
