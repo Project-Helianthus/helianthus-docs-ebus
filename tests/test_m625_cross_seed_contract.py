@@ -54,21 +54,16 @@ def test_m625_cross_seed_is_active_methodology_and_immutably_bound() -> None:
     assert entry["state"] == "active"
     assert entry["canonical"] is True
     assert entry["owner"]["path"] == validator.M625_CROSS_SEED_PATH.as_posix()
-    assert entry["source"] == {
-        "repository": "helianthus-docs-eebus",
-        "path": "development/msp-0625-provenance-policy.md",
-    }
+    assert entry["source"] == entry["owner"]
     assert entry["lifecycle"]["source_pr"] == (
-        "Project-Helianthus/helianthus-docs-eebus#77"
+        "Project-Helianthus/helianthus-docs-ebus#381"
     )
-    assert entry["lifecycle"]["source_ref"] == M625_SOURCE_REF
-    assert entry["lifecycle"]["content_sha256"] == (
-        "f52a15cab0ec7cfebb67a1932b27259489846619b109ea71e43ca54531191db2"
-    )
+    assert entry["lifecycle"]["source_ref"] is None
+    assert entry["lifecycle"]["content_sha256"] is None
     assert validator._m625_cross_seed_categories(REPO_ROOT, manifest) == set()
 
     forged = copy.deepcopy(entry)
-    forged["source"]["path"] = "architecture/unbound.md"
+    forged["source"]["repository"] = "helianthus-docs-eebus"
     assert validator._surface_binding_valid(forged) is False
 
 
@@ -127,11 +122,8 @@ def test_m625_cross_seed_machine_binds_exact_external_inputs() -> None:
         },
     ]
     text = cross_seed_text()
-    assert f"[canonical provenance policy]({M625_PROVENANCE_URL})" in text
-    assert (
-        "[candidate command-path ownership record]"
-        f"({M625_ARCHITECTURE_URL})"
-    ) in text
+    assert f"`{M625_PROVENANCE_URL}`" in text
+    assert f"`{M625_ARCHITECTURE_URL}`" in text
     assert validator._m625_cross_seed_categories(REPO_ROOT, manifest) == set()
 
 

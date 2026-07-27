@@ -554,15 +554,9 @@ def _surface_binding_valid(entry: Mapping[str, Any]) -> bool:
             and source_valid
         )
     if surface == "platform":
-        owner_valid = _location_matches(
+        return _location_matches(
             owner, "helianthus-docs-ebus", "docs/platform"
-        )
-        if entry.get("id") == M625_CROSS_SEED_ID:
-            return owner_valid and source == {
-                "repository": "helianthus-docs-eebus",
-                "path": "development/msp-0625-provenance-policy.md",
-            }
-        return owner_valid and _location_matches(
+        ) and _location_matches(
             source, "helianthus-docs-ebus", "docs/platform"
         )
     if surface == "code_repo":
@@ -1336,14 +1330,9 @@ def _artifact_categories(
             source = entry["source"]
             same_location = source == owner
             source_root = roots.get(source["repository"])
-            m625_external_source = (
-                entry["id"] == M625_CROSS_SEED_ID and not same_location
-            )
             source_kind = (
                 owner_kind
                 if same_location
-                else None
-                if m625_external_source
                 else (
                     _artifact_kind(source_root, source["path"])
                     if source_root is not None
@@ -1684,13 +1673,8 @@ def _link_categories(
         if entry["owner"]["repository"] == "helianthus-docs-eebus"
         and entry["state"] == "active"
     }
-    for relative_path, text in _platform_markdown(docs_ebus_root):
+    for _, text in _platform_markdown(docs_ebus_root):
         for target in _markdown_links(text):
-            if (
-                relative_path == M625_CROSS_SEED_PATH
-                and target in {M625_PROVENANCE_URL, M625_ARCHITECTURE_URL}
-            ):
-                continue
             relative, immutable = _eebus_link_target(target, docs_eebus_ref)
             if relative is None:
                 continue
@@ -2063,7 +2047,9 @@ def _m625_cross_seed_text_categories(text: str) -> set[str]:
     return categories
 
 
-def _m625_external_input_categories(root: pathlib.Path) -> set[str]:
+def _m625_external_input_categories(
+    root: pathlib.Path, source_roots: Mapping[str, pathlib.Path] | None = None
+) -> set[str]:
     if _artifact_kind(root, M625_INPUTS_PATH.as_posix()) != "regular":
         return {"m625.cross-seed-input-binding"}
     try:
@@ -2080,6 +2066,26 @@ def _m625_external_input_categories(root: pathlib.Path) -> set[str]:
     }
     if binding != expected:
         return {"m625.cross-seed-input-binding"}
+    source_root = (source_roots or {}).get("helianthus-docs-eebus")
+    if source_root is None:
+        return set()
+    for source in M625_EXTERNAL_INPUTS:
+        if source["repository"] != "Project-Helianthus/helianthus-docs-eebus":
+            continue
+        source_ref = source["ref"]
+        if _run_git_bytes(
+            source_root, "cat-file", "-e", f"{source_ref}^{{commit}}"
+        ).returncode != 0:
+            continue
+        shown = _run_git_bytes(
+            source_root, "show", f"{source_ref}:{source['path']}"
+        )
+        if (
+            shown.returncode != 0
+            or hashlib.sha256(shown.stdout).hexdigest()
+            != source["content_sha256"]
+        ):
+            return {"m625.cross-seed-input-content"}
     return set()
 
 
@@ -2110,8 +2116,8 @@ def _m625_cross_seed_categories(
         }
         or entry["source"]
         != {
-            "repository": "helianthus-docs-eebus",
-            "path": "development/msp-0625-provenance-policy.md",
+            "repository": "helianthus-docs-ebus",
+            "path": M625_CROSS_SEED_PATH.as_posix(),
         }
         or not entry["canonical"]
         or entry["state"] != "active"
@@ -2119,36 +2125,20 @@ def _m625_cross_seed_categories(
         or entry["lifecycle"]["source_issue"]
         != "Project-Helianthus/helianthus-docs-ebus#380"
         or entry["lifecycle"]["source_pr"]
-        != "Project-Helianthus/helianthus-docs-eebus#77"
+        != "Project-Helianthus/helianthus-docs-ebus#381"
         or entry["lifecycle"]["source_ref"]
-        != "cedf238e34f879815ba773e9cd76b2b31c2822a3"
+        is not None
         or entry["lifecycle"]["content_sha256"]
-        != "f52a15cab0ec7cfebb67a1932b27259489846619b109ea71e43ca54531191db2"
+        is not None
         or entry["enforcement"]
         != {"milestone": "MSP-DOCS-CLEAN", "required_state": "active"}
     ):
         return {"m625.cross-seed-manifest"}
     if _artifact_kind(root, M625_CROSS_SEED_PATH.as_posix()) != "regular":
         return {"m625.cross-seed-artifact"}
-    input_categories = _m625_external_input_categories(root)
+    input_categories = _m625_external_input_categories(root, source_roots)
     if input_categories:
         return input_categories
-    source_root = (source_roots or {}).get(entry["source"]["repository"])
-    source_ref = entry["lifecycle"]["source_ref"]
-    if source_root is not None and _run_git_bytes(
-        source_root, "cat-file", "-e", f"{source_ref}^{{commit}}"
-    ).returncode == 0:
-        shown = _run_git_bytes(
-            source_root,
-            "show",
-            f"{source_ref}:{entry['source']['path']}",
-        )
-        if (
-            shown.returncode != 0
-            or hashlib.sha256(shown.stdout).hexdigest()
-            != entry["lifecycle"]["content_sha256"]
-        ):
-            return {"m625.cross-seed-source-content"}
     path = root / M625_CROSS_SEED_PATH
     return _m625_cross_seed_text_categories(path.read_text(encoding="utf-8"))
 
