@@ -364,6 +364,42 @@ def test_consumer_lock_ignores_attacker_git_dir_and_core_worktree(
     assert any("tracked or untracked modifications" in error for error in errors)
 
 
+def test_consumer_lock_ignores_local_core_worktree_shadow(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = materialize_fixture(tmp_path / "docs")
+    docs_commit_sha = initialize_git_checkout(root)
+    shadow = tmp_path / "shadow"
+    shutil.copytree(
+        root,
+        shadow,
+        ignore=shutil.ignore_patterns(".git"),
+    )
+    subprocess.run(
+        ["git", "-C", str(root), "config", "core.worktree", str(shadow)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    (root / "README.md").write_text(
+        (root / "README.md").read_text(encoding="utf-8")
+        + "\nModified real checkout hidden by core.worktree.\n",
+        encoding="utf-8",
+    )
+    lock_path = write_consumer_lock(
+        root,
+        make_consumer_lock(root, docs_commit_sha=docs_commit_sha),
+    )
+    errors = validate_consumer_lock(
+        root,
+        lock_path,
+        docs_commit_sha,
+        monkeypatch,
+    )
+    assert any("tracked or untracked modifications" in error for error in errors)
+
+
 def test_consumer_lock_rejects_commit_not_on_canonical_main(
     tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,

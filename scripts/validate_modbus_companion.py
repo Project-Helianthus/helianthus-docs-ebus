@@ -8,6 +8,7 @@ import os
 import pathlib
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -346,6 +347,125 @@ def _isolated_git_env(home: pathlib.Path) -> dict[str, str]:
     }
 
 
+def _local_git_command(root: pathlib.Path, *args: str) -> list[str]:
+    assert GIT_EXECUTABLE is not None
+    return [
+        GIT_EXECUTABLE,
+        "-C",
+        str(root),
+        "-c",
+        f"core.worktree={root}",
+        "-c",
+        "core.bare=false",
+        "-c",
+        "core.fsmonitor=false",
+        *args,
+    ]
+
+
+def _git_blob_oid(data: bytes, object_format: str) -> str:
+    try:
+        digest = hashlib.new(object_format)
+    except ValueError as exc:
+        raise ValueError(
+            f"unsupported Git object format: {object_format}"
+        ) from exc
+    digest.update(f"blob {len(data)}\0".encode("ascii"))
+    digest.update(data)
+    return digest.hexdigest()
+
+
+def _path_has_symlink_parent(root: pathlib.Path, parts: tuple[str, ...]) -> bool:
+    current = root
+    for part in parts[:-1]:
+        current /= part
+        try:
+            mode = current.lstat().st_mode
+        except OSError:
+            return True
+        if not stat.S_ISDIR(mode):
+            return True
+    return False
+
+
+def _worktree_matches_head(
+    root: pathlib.Path,
+    clean_env: dict[str, str],
+) -> bool:
+    object_format = subprocess.check_output(
+        _local_git_command(root, "rev-parse", "--show-object-format"),
+        text=True,
+        stderr=subprocess.DEVNULL,
+        env=clean_env,
+    ).strip()
+    tree = subprocess.check_output(
+        _local_git_command(root, "ls-tree", "-rz", "--full-tree", "HEAD"),
+        stderr=subprocess.DEVNULL,
+        env=clean_env,
+    )
+    tracked: set[tuple[str, ...]] = set()
+    clean = True
+    for record in tree.split(b"\0"):
+        if not record:
+            continue
+        metadata, raw_path = record.split(b"\t", 1)
+        mode, object_type, expected_oid = metadata.decode("ascii").split()
+        relative = pathlib.PurePosixPath(os.fsdecode(raw_path))
+        parts = tuple(relative.parts)
+        if (
+            relative.is_absolute()
+            or not parts
+            or ".." in parts
+            or parts[0] == ".git"
+            or parts in tracked
+        ):
+            return False
+        tracked.add(parts)
+        path = root.joinpath(*parts)
+        if _path_has_symlink_parent(root, parts):
+            clean = False
+            continue
+        try:
+            actual_mode = path.lstat().st_mode
+            if object_type != "blob":
+                return False
+            if mode == "120000":
+                if not stat.S_ISLNK(actual_mode):
+                    clean = False
+                    continue
+                data = os.fsencode(os.readlink(path))
+            elif mode in {"100644", "100755"}:
+                if not stat.S_ISREG(actual_mode):
+                    clean = False
+                    continue
+                executable = bool(actual_mode & 0o111)
+                if executable != (mode == "100755"):
+                    clean = False
+                data = path.read_bytes()
+            else:
+                return False
+        except OSError:
+            clean = False
+            continue
+        if _git_blob_oid(data, object_format) != expected_oid:
+            clean = False
+
+    for directory, dirnames, filenames in os.walk(root, followlinks=False):
+        directory_path = pathlib.Path(directory)
+        if directory_path == root:
+            dirnames[:] = [name for name in dirnames if name != ".git"]
+            filenames = [name for name in filenames if name != ".git"]
+        symlink_dirs = [
+            name for name in dirnames if (directory_path / name).is_symlink()
+        ]
+        dirnames[:] = [name for name in dirnames if name not in symlink_dirs]
+        for name in filenames + symlink_dirs:
+            relative = (directory_path / name).relative_to(root)
+            if tuple(relative.parts) not in tracked:
+                clean = False
+    return clean
+
+
 def _canonical_main_contains(
     commit_sha: str,
     errors: list[str],
@@ -456,44 +576,40 @@ def _validate_consumer_lock(
         ) as temporary:
             clean_env = _isolated_git_env(pathlib.Path(temporary))
             origin_url = subprocess.check_output(
-                [
-                    GIT_EXECUTABLE,
-                    "-C",
-                    str(root),
-                    "remote",
-                    "get-url",
-                    "origin",
-                ],
+                _local_git_command(
+                    root,
+                    "config",
+                    "--local",
+                    "--no-includes",
+                    "--get",
+                    "remote.origin.url",
+                ),
                 text=True,
                 stderr=subprocess.DEVNULL,
                 env=clean_env,
             ).strip()
             docs_head = subprocess.check_output(
-                [
-                    GIT_EXECUTABLE,
-                    "-C",
-                    str(root),
+                _local_git_command(
+                    root,
                     "rev-parse",
                     "--verify",
                     "HEAD^{commit}",
-                ],
+                ),
                 text=True,
                 stderr=subprocess.DEVNULL,
                 env=clean_env,
             ).strip()
-            dirty = subprocess.check_output(
-                [
-                    GIT_EXECUTABLE,
-                    "-C",
-                    str(root),
-                    "status",
-                    "--porcelain",
-                    "--untracked-files=all",
-                ],
+            top_level = subprocess.check_output(
+                _local_git_command(
+                    root,
+                    "rev-parse",
+                    "--show-toplevel",
+                ),
                 text=True,
                 stderr=subprocess.DEVNULL,
                 env=clean_env,
-            )
+            ).strip()
+            clean_worktree = _worktree_matches_head(root, clean_env)
     except (OSError, subprocess.CalledProcessError):
         errors.append("consumer validation requires a valid Git checkout")
     else:
@@ -507,7 +623,9 @@ def _validate_consumer_lock(
             errors.append("docs checkout origin is not the canonical repository")
         if docs_head != docs_commit_sha:
             errors.append("docs checkout HEAD does not match the consumer lock")
-        if dirty:
+        if pathlib.Path(top_level).resolve() != root:
+            errors.append("docs checkout top-level does not match its root")
+        if not clean_worktree:
             errors.append("docs checkout has tracked or untracked modifications")
         if not _canonical_main_contains(docs_commit_sha, errors):
             errors.append("locked docs commit is not on canonical GitHub main")
