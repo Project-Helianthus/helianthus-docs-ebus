@@ -237,5 +237,12 @@ Each implementation PR must:
 - pass the repository CI and all applicable doc, protocol-interoperability,
   licensing, security, and adversarial review gates.
 
+Changes in the Modbus companion surface are additionally checked by the
+required `Modbus Trusted Revision` status. That check executes the base-owned
+workflow under `pull_request_target`, checks out the proposed head only as
+untrusted data, and validates the transition with the immutable external anchor
+recorded in the companion manifest. The protected workflow and validators must
+not be executed from the proposed head.
+
 Any proposed gateway composition or private binding change is outside this
 pre-gateway contract and requires its own execution authorization.
