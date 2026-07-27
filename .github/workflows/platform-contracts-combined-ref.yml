@@ -23,6 +23,10 @@ on:
         description: Immutable helianthus-eebusreg commit
         required: true
         type: string
+      execution_plans_ref:
+        description: Immutable M6.25 execution-plan source commit
+        required: true
+        type: string
       enforce_through:
         description: Owning milestone enforced by this combined-ref run
         required: true
@@ -49,6 +53,11 @@ on:
         description: Immutable helianthus-eebusreg commit
         required: true
         type: string
+      execution_plans_ref:
+        description: Immutable M6.25 execution-plan source commit
+        required: true
+        default: fb384ab57d79f0020c54d2c66416e8a7666f0ceb
+        type: string
       enforce_through:
         description: Owning milestone enforced by this combined-ref run
         required: true
@@ -73,6 +82,7 @@ jobs:
           DOCS_EBUS_BASE_REF: ${{ inputs.docs_ebus_base_ref }}
           DOCS_EEBUS_REF: ${{ inputs.docs_eebus_ref }}
           EEBUSREG_REF: ${{ inputs.eebusreg_ref }}
+          EXECUTION_PLANS_REF: ${{ inputs.execution_plans_ref }}
           ENFORCE_THROUGH: ${{ inputs.enforce_through }}
         run: |
           repository='^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'
@@ -82,6 +92,7 @@ jobs:
           [[ "${DOCS_EBUS_BASE_REF}" =~ ${immutable_ref} ]]
           [[ "${DOCS_EEBUS_REF}" =~ ${immutable_ref} ]]
           [[ "${EEBUSREG_REF}" =~ ${immutable_ref} ]]
+          [[ "${EXECUTION_PLANS_REF}" =~ ${immutable_ref} ]]
           case "${ENFORCE_THROUGH}" in
             MSP-DOCS-PLATFORM|MSP-DOCS-E2|MSP-DOCS-CLEAN) ;;
             *) exit 1 ;;
@@ -221,6 +232,24 @@ jobs:
           clean: true
           persist-credentials: false
 
+      - name: Checkout M6.25 docs-eebus source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: Project-Helianthus/helianthus-docs-eebus
+          ref: cedf238e34f879815ba773e9cd76b2b31c2822a3
+          path: checkouts/m625-docs-eebus
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout M6.25 execution-plan source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: Project-Helianthus/helianthus-execution-plans
+          ref: ${{ inputs.execution_plans_ref }}
+          path: checkouts/m625-execution-plans
+          clean: true
+          persist-credentials: false
+
       - name: Prepare hash-locked pip bootstrap
         run: |
           set -euo pipefail
@@ -261,6 +290,26 @@ jobs:
             --no-build-isolation --require-hashes \
             -r checkouts/docs-ebus-validator/requirements-ci.txt
           python -m pip check
+
+      - name: Validate PR M6.25 provenance contract
+        env:
+          ENFORCE_THROUGH: ${{ inputs.enforce_through }}
+          PRIOR_MANIFEST: ${{ steps.prior_manifest.outputs.path }}
+        run: |
+          test -n "${PRIOR_MANIFEST}"
+          python3 checkouts/docs-ebus/scripts/validate_platform_combined_ref.py \
+            --docs-ebus-root checkouts/docs-ebus \
+            --docs-ebus-repository "${{ inputs.docs_ebus_repository }}" \
+            --docs-eebus-root checkouts/docs-eebus \
+            --eebusreg-root checkouts/eebusreg \
+            --m625-docs-eebus-root checkouts/m625-docs-eebus \
+            --m625-execution-plans-root checkouts/m625-execution-plans \
+            --docs-ebus-ref "${{ inputs.docs_ebus_ref }}" \
+            --docs-eebus-ref "${{ inputs.docs_eebus_ref }}" \
+            --eebusreg-ref "${{ inputs.eebusreg_ref }}" \
+            --prior-manifest "${PRIOR_MANIFEST}" \
+            --enforce-through "${ENFORCE_THROUGH}" \
+            --toolchain-mode exact
 
       - name: Validate combined refs
         env:

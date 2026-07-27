@@ -18,6 +18,10 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--docs-eebus-ref", required=True)
     result.add_argument("--eebusreg-ref", required=True)
     result.add_argument("--prior-manifest", type=pathlib.Path, required=True)
+    result.add_argument("--m625-docs-eebus-root", type=pathlib.Path, required=True)
+    result.add_argument(
+        "--m625-execution-plans-root", type=pathlib.Path, required=True
+    )
     result.add_argument("--enforce-through", choices=contracts.MILESTONES, required=True)
     result.add_argument(
         "--docs-ebus-repository",
@@ -45,6 +49,8 @@ def main() -> int:
         enforce_through=args.enforce_through,
         toolchain_mode=args.toolchain_mode,
         prior_manifest=args.prior_manifest,
+        m625_docs_eebus_root=args.m625_docs_eebus_root,
+        m625_execution_plans_root=args.m625_execution_plans_root,
     )
     for diagnostic in diagnostics:
         print(diagnostic)
