@@ -190,6 +190,7 @@ jobs:
           PLATFORM_DOCS_EBUS_REPOSITORY: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
           PLATFORM_TOOLCHAIN_MODE: exact
           PLATFORM_PRIOR_MANIFEST: ${{ steps.prior_manifest.outputs.path }}
+          MODBUS_PRIOR_ROOT: ${{ github.event_name == 'pull_request' && format('{0}/checkouts/docs-ebus-base', github.workspace) || '' }}
         working-directory: checkouts/docs-ebus
         run: ./scripts/ci_local.sh
 

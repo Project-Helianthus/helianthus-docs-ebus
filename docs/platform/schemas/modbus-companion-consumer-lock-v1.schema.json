@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.helianthus.local/schemas/modbus-companion-consumer-lock-v1.schema.json",
+  "title": "Helianthus Modbus Companion Consumer Lock V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "schema_version",
+    "repository",
+    "merged_commit_sha",
+    "contract_id",
+    "contract_version",
+    "content_revision",
+    "manifest_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "helianthus.modbus.companion-consumer-lock"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "repository": {
+      "const": "Project-Helianthus/helianthus-docs-ebus"
+    },
+    "merged_commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "contract_id": {
+      "const": "HELIANTHUS_MODBUS_FOUNDATION_PROFILE_V1"
+    },
+    "contract_version": {
+      "const": 1
+    },
+    "content_revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}
