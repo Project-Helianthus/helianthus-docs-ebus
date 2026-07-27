@@ -296,7 +296,10 @@ def _validate_protected_paths(
         if not current.is_file() or current.is_symlink():
             errors.append(f"protected path cannot be removed: {relative.as_posix()}")
             continue
-        if _digest(prior) != _digest(current):
+        if (
+            _digest(prior) != _digest(current)
+            and not (bootstrap and relative == PROTECTED_PATHS[0])
+        ):
             errors.append(f"protected path is immutable: {relative.as_posix()}")
     if not bootstrap:
         return
@@ -346,6 +349,12 @@ def validate_transition(
         errors,
     )
 
+    bootstrap = any(
+        not (prior_root / relative).exists() for relative in PROTECTED_PATHS
+    )
+    if bootstrap and current is None:
+        errors.append("bootstrap must introduce the closed V1 manifest")
+        return errors
     if prior is None and current is None:
         return errors
     if prior is not None and current is None:
