@@ -836,6 +836,7 @@ def validate(
         toolchain_mode=workspace.toolchain_mode,
         prior_manifest=prior_manifest,
         _current_manifest_version=1,
+        _m625_required=False,
     )
     assert diagnostics == sorted(set(diagnostics))
     assert all(
@@ -1216,12 +1217,12 @@ def test_platform_b_membership_and_noncanonical_constraints_are_exact() -> None:
 
 
 def test_platform_b_combined_ref_uses_platform_a_validator() -> None:
-    caller = (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(encoding="utf-8")
+    reusable = (
+        REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
+    ).read_text(encoding="utf-8")
     assert (
-        "Project-Helianthus/helianthus-docs-ebus/"
-        ".github/workflows/platform-contracts-combined-ref.yml@"
-        f"{PLATFORM_A_MERGE}"
-    ) in caller
+        "path: checkouts/docs-ebus-validator" in reusable
+    )
 
 
 def test_platform_b_token_generator_has_closed_identity_contract() -> None:
@@ -2306,10 +2307,10 @@ def test_e2_contract_rejects_premature_clean_transition(
         assert_e2_manifest_contract(manifest)
 
 
-def test_canonical_repository_validation_passes() -> None:
+def test_canonical_repository_validation_fails_closed_without_m625_sources() -> None:
     assert repository_validate(
         load_validator(), REPO_ROOT, enforce_through=CLEAN_STAGE
-    ) == []
+    ) == ["m625.cross-seed-input-source"]
 
 
 def test_production_validator_entrypoint_exists() -> None:
@@ -2481,18 +2482,18 @@ def test_combined_ref_workflow_checks_out_pr_head_repository() -> None:
     assert "repository: Project-Helianthus/helianthus-docs-ebus" in reusable
 
 
-def test_combined_ref_caller_pins_trusted_reusable_workflow() -> None:
+def test_combined_ref_caller_runs_pr_m625_validator_with_trusted_guard() -> None:
     caller = (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(
         encoding="utf-8"
     )
+    reusable = (
+        REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
+    ).read_text(encoding="utf-8")
 
-    trusted_call = (
-        "uses: Project-Helianthus/helianthus-docs-ebus/"
-        ".github/workflows/platform-contracts-combined-ref.yml@"
-        + PLATFORM_A_MERGE
-    )
-    assert trusted_call in caller
-    assert "uses: ./.github/workflows/platform-contracts-combined-ref.yml" not in caller
+    assert "uses: ./.github/workflows/platform-contracts-combined-ref.yml" in caller
+    assert "Validate PR M6.25 provenance contract" in reusable
+    assert "checkouts/docs-ebus/scripts/validate_platform_combined_ref.py" in reusable
+    assert "checkouts/docs-ebus-validator/scripts/validate_platform_combined_ref.py" in reusable
 
 
 def test_docs_ci_binds_pr_head_and_runs_trusted_expiry_on_push() -> None:
@@ -2516,7 +2517,7 @@ def test_docs_ci_binds_pr_head_and_runs_trusted_expiry_on_push() -> None:
     assert "github.event.before }}" in caller
 
 
-def test_combined_ref_executes_only_trusted_validator_checkout() -> None:
+def test_combined_ref_executes_pr_m625_and_trusted_validator_checkouts() -> None:
     reusable = (
         REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
     ).read_text(encoding="utf-8")
@@ -2535,10 +2536,8 @@ def test_combined_ref_executes_only_trusted_validator_checkout() -> None:
         in reusable
     )
     assert "-r checkouts/docs-ebus/requirements-ci.txt" not in reusable
-    assert (
-        "python3 checkouts/docs-ebus/scripts/validate_platform_contracts.py"
-        not in reusable
-    )
+    assert "Validate PR M6.25 provenance contract" in reusable
+    assert "checkouts/m625-execution-plans" in reusable
 
 
 def test_combined_ref_validates_milestone_before_shell_use() -> None:
@@ -2546,7 +2545,7 @@ def test_combined_ref_validates_milestone_before_shell_use() -> None:
         REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
     ).read_text(encoding="utf-8")
 
-    assert reusable.count("ENFORCE_THROUGH: ${{ inputs.enforce_through }}") == 3
+    assert reusable.count("ENFORCE_THROUGH: ${{ inputs.enforce_through }}") == 4
     assert "MSP-DOCS-PLATFORM|MSP-DOCS-E2|MSP-DOCS-CLEAN" in reusable
     assert '--enforce-through "${ENFORCE_THROUGH}"' in reusable
     assert '--enforce-through "${{ inputs.enforce_through }}"' not in reusable

@@ -11,9 +11,9 @@ evidence methodology. Protocol, API, and architecture material remains owned by
 
 The machine-readable input binding preserves these immutable public references:
 
-- locked M6.25 plan: `https://github.com/Project-Helianthus/helianthus-execution-plans/blob/fb384ab57d79f0020c54d2c66416e8a7666f0ceb/multi-runtime-semantic-platform.locked/118-w30-26-m625-raw-spine-feature-acquisition.md`;
-- canonical provenance policy: `https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/cedf238e34f879815ba773e9cd76b2b31c2822a3/development/msp-0625-provenance-policy.md`; and
-- candidate command-path ownership record: `https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/cedf238e34f879815ba773e9cd76b2b31c2822a3/architecture/_candidate/msp-0625-raw-feature-command-path.md`.
+- [locked M6.25 plan](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/fb384ab57d79f0020c54d2c66416e8a7666f0ceb/multi-runtime-semantic-platform.locked/118-w30-26-m625-raw-spine-feature-acquisition.md);
+- [canonical provenance policy](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/cedf238e34f879815ba773e9cd76b2b31c2822a3/development/msp-0625-provenance-policy.md); and
+- [candidate command-path ownership record](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/cedf238e34f879815ba773e9cd76b2b31c2822a3/architecture/_candidate/msp-0625-raw-feature-command-path.md).
 
 The ownership manifest points to a machine-readable binding that fixes each
 repository, commit, path, content hash, and link. Those immutable inputs

@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import pathlib
-import shutil
+import subprocess
 
 import pytest
 import yaml
@@ -152,6 +152,38 @@ def test_m625_cross_seed_machine_binds_exact_external_inputs() -> None:
     assert validator._m625_cross_seed_categories(REPO_ROOT, manifest) == set()
 
 
+def test_m625_external_provenance_fails_closed_for_unavailable_roots() -> None:
+    validator = load_validator()
+
+    assert validator._m625_external_input_categories(REPO_ROOT, {}) == {
+        "m625.cross-seed-input-source"
+    }
+
+
+def test_m625_external_provenance_fails_closed_for_hash_mismatch(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
+) -> None:
+    validator = load_validator()
+    source_roots = {
+        source["repository"]: tmp_path / source["repository"].rsplit("/", 1)[-1]
+        for source in validator.M625_EXTERNAL_INPUTS
+    }
+    for root in source_roots.values():
+        root.mkdir()
+
+    monkeypatch.setattr(validator, "_repository_root_valid", lambda *_: True)
+    monkeypatch.setattr(validator, "_checkout_matches_ref", lambda *_: True)
+    monkeypatch.setattr(
+        validator,
+        "_run_git_bytes",
+        lambda *_: subprocess.CompletedProcess([], 0, stdout=b"wrong-content"),
+    )
+
+    assert validator._m625_external_input_categories(REPO_ROOT, source_roots) == {
+        "m625.cross-seed-input-content"
+    }
+
+
 @pytest.mark.parametrize(
     ("mutation", "category"),
     [
@@ -228,7 +260,7 @@ def test_m625_cross_seed_policy_checks_allow_legitimate_exclusion_prose() -> Non
         "in every tier and cannot be replaced by a digest.\n"
     )
 
-    assert validator._m625_cross_seed_text_categories(
+    assert validator._m625_positive_assertion_categories(
         cross_seed_text() + exclusion
     ) == set()
 
@@ -247,6 +279,11 @@ def test_m625_focused_contract_is_in_local_and_github_docs_ci() -> None:
     docs_ci = (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(
         encoding="utf-8"
     )
+    combined_ref = (
+        REPO_ROOT / ".github/workflows/platform-contracts-combined-ref.yml"
+    ).read_text(encoding="utf-8")
 
     assert "python3 -m pytest -q tests/test_m625_cross_seed_contract.py" in local_ci
     assert "run: ./scripts/ci_local.sh" in docs_ci
+    assert "Validate PR M6.25 provenance contract" in combined_ref
+    assert "checkouts/docs-ebus/scripts/validate_platform_combined_ref.py" in combined_ref

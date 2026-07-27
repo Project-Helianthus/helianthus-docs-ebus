@@ -172,6 +172,15 @@ set --
 if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then
   set -- --prior-manifest "${PLATFORM_PRIOR_MANIFEST}"
 fi
+for required_var in PLATFORM_M625_DOCS_EEBUS_ROOT PLATFORM_M625_EXECUTION_PLANS_ROOT; do
+  if [ -z "${!required_var:-}" ]; then
+    echo "${required_var} is required for fail-closed M6.25 provenance validation." >&2
+    exit 2
+  fi
+done
+set -- "$@" \
+  --m625-docs-eebus-root "${PLATFORM_M625_DOCS_EEBUS_ROOT}" \
+  --m625-execution-plans-root "${PLATFORM_M625_EXECUTION_PLANS_ROOT}"
 python3 scripts/validate_platform_contracts.py \
   --mode repository \
   --docs-ebus-root . \

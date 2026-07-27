@@ -137,6 +137,15 @@ M625_CROSS_SEED_PATH = pathlib.Path(
 M625_INPUTS_PATH = pathlib.Path(
     "docs/platform/manifests/msp-0625-public-inputs.yaml"
 )
+# This registry is CI policy, not a property inferred from the manifest or the
+# candidate artifacts.  Removing every M6.25 file therefore cannot deactivate
+# the MSP-DOCS-CLEAN deliverable.
+M625_REQUIRED_DELIVERABLE = {
+    "id": M625_CROSS_SEED_ID,
+    "page": M625_CROSS_SEED_PATH,
+    "input_binding": M625_INPUTS_PATH,
+    "milestone": "MSP-DOCS-CLEAN",
+}
 M625_PLAN_URL = (
     "https://github.com/Project-Helianthus/helianthus-execution-plans/blob/"
     "fb384ab57d79f0020c54d2c66416e8a7666f0ceb/"
@@ -187,46 +196,77 @@ M625_EXTERNAL_INPUTS = (
         "url": M625_ARCHITECTURE_URL,
     },
 )
-M625_REQUIRED_TERMS = (
-    "owner-authorized local raw operator view",
-    "public redacted export",
-    "fails closed before dereference",
-    "Implementation and bounded live validation",
-    "remain pending their separate gates.",
-    "This methodology creates no stable API schema, tool name, protocol-native",
-    "Every tier, including the owner-authorized local raw operator view",
-    "passwords, credentials, bearer, session, and authentication tokens",
-    "cryptographic secrets, and trust-store bytes",
-    "cannot be replaced by a digest or other deterministic commitment",
+M625_PAGE_TITLE = "M6.25 Public Acquisition Methodology Cross-Seed"
+M625_REQUIRED_HEADINGS = (
+    "Ownership And Inputs",
+    "Two Views, One Non-Escalation Rule",
+    "Public Evidence Commitments",
+    "Pending State And Falsifier",
 )
-M625_PROTOCOL_API_DECLARATION = re.compile(
-    r"(?i)\b(?:protocol|api)\b[^.\n]{0,120}"
-    r"\b(?:defines?|declares?|exposes?|returns?|accepts?|requires?)\b"
+M625_REQUIRED_CLAUSES = {
+    "Ownership And Inputs": (
+        "This page owns only language-neutral acquisition, reference-binding, and public evidence methodology.",
+        "Protocol, API, and architecture material remains owned by `helianthus-docs-eebus` and is not restated here.",
+    ),
+    "Two Views, One Non-Escalation Rule": (
+        "An owner-authorized local raw operator view may be necessary to perform or audit an authorized acquisition.",
+        "A reference presented through a mismatched tier, authorization, runtime, tool, scope, or boundary fails closed before dereference.",
+    ),
+    "Public Evidence Commitments": (
+        "Every tier, including the owner-authorized local raw operator view, prohibits private keys, passwords, credentials, bearer, session, and authentication tokens, cryptographic secrets, and trust-store bytes.",
+        "It cannot be replaced by a digest or other deterministic commitment.",
+        "Private or vendor-only material cannot support, attribute, or substitute for a public claim.",
+    ),
+    "Pending State And Falsifier": (
+        "This methodology creates no stable API schema, tool name, protocol-native detail, or consumer surface.",
+    ),
+}
+M625_REQUIRED_DOCUMENT_CLAUSES = (
+    "Implementation and bounded live validation remain pending their separate gates.",
 )
-M625_UNSUPPORTED_LIVE_CLAIM = re.compile(
-    r"(?i)\blive support\b[^.\n]{0,80}\b(?:is|has been)\s+"
-    r"(?:implemented|verified|validated|supported|available)\b"
+M625_SECTION_PARAGRAPH_COUNTS = {
+    "Ownership And Inputs": 4,
+    "Two Views, One Non-Escalation Rule": 2,
+    "Public Evidence Commitments": 4,
+    "Pending State And Falsifier": 2,
+}
+M625_NEGATIVE_ASSERTION = re.compile(
+    r"\b(?:no|not|never|cannot|can't|without|exclude(?:s|d)?|prohibit(?:s|ed)?|"
+    r"forbid(?:s|den)?|pending|unverified|withheld|fails?\s+closed)\b",
+    re.I,
 )
-M625_PRIVATE_SOURCE_ATTRIBUTION = re.compile(
-    r"(?i)(?:\baccording to\b[^.\n]{0,80}\b"
-    r"(?:confidential|private|vendor-only)\b|"
-    r"\b(?:confirmed|verified|established|derived)\s+by\s+(?:a\s+)?"
-    r"(?:confidential|private|vendor-only)(?:\s+vendor)?\s+"
-    r"(?:manual|specification|material|document)\b)"
+M625_PROTOCOL_OR_API_TERMS = frozenset(
+    {
+        "api", "command", "endpoint", "field", "frame", "message", "method",
+        "payload", "protocol", "query", "tool", "wire",
+    }
 )
-M625_SECRET_POLICY_CONTRADICTION = re.compile(
-    r"(?i)(?:"
-    r"\b(?:raw|owner-authorized)[^.\n]{0,100}\b(?:may|can|will)\s+"
-    r"(?:expose|include|return|retain)\b[^.\n]{0,100}\b"
-    r"(?:password|credential|token|private key|trust[ _-]?store|secret)\b|"
-    r"\b(?:digest|hash|fingerprint|commitment)\b[^.\n]{0,80}"
-    r"\b(?:may|can|will)\s+(?:replace|substitute|stand in for)\b"
-    r"[^.\n]{0,80}\b(?:password|credential|token|private key|"
-    r"trust[ _-]?store|secret)\b|"
-    r"\b(?:password|credential|token|private key|trust[ _-]?store|secret)\b"
-    r"[^.\n]{0,80}\b(?:may|can|will)\s+be\s+"
-    r"(?:replaced|substituted)\s+by\s+(?:a\s+)?"
-    r"(?:digest|hash|fingerprint|commitment)\b)"
+M625_PROTOCOL_OR_API_ACTIONS = frozenset(
+    {
+        "accept", "call", "declare", "define", "fetch", "provide", "return",
+        "send", "support", "use",
+    }
+)
+M625_LIVE_TERMS = frozenset(
+    {"deployment", "installation", "live", "operational", "production", "runtime"}
+)
+M625_LIVE_ACTIONS = frozenset(
+    {"active", "available", "implemented", "running", "supported", "validated", "verified", "work"}
+)
+M625_VENDOR_TERMS = frozenset(
+    {"confidential", "manufacturer", "oem", "private", "vendor", "vendor-only"}
+)
+M625_EVIDENCE_TERMS = frozenset(
+    {"document", "evidence", "manual", "material", "source", "specification"}
+)
+M625_SECRET_TERMS = frozenset(
+    {"authentication", "credential", "password", "secret", "session", "token"}
+)
+M625_SECRET_OUTPUT_ACTIONS = frozenset(
+    {"contain", "expose", "include", "publish", "release", "return", "retain"}
+)
+M625_SECRET_SUBSTITUTES = frozenset(
+    {"checksum", "commitment", "digest", "fingerprint", "hash"}
 )
 M625_RESTRICTED_MATERIAL = re.compile(
     r"(?i)(?:-----BEGIN(?: [A-Z]+)? PRIVATE KEY-----|"
@@ -1545,7 +1585,7 @@ def _trim_rendered_url(value: str) -> str:
     return trimmed
 
 
-def _markdown_links(text: str) -> list[str]:
+def _markdown_links(text: str, *, include_rendered: bool = True) -> list[str]:
     clean = _strip_markdown_code(text)
     definitions: dict[str, str] = {}
     body_lines: list[str] = []
@@ -1602,11 +1642,12 @@ def _markdown_links(text: str) -> list[str]:
     except (ValueError, RecursionError):
         pass
     targets.extend(html_links.targets)
-    targets.extend(
-        target
-        for match in RENDERED_URL.finditer(body)
-        if (target := _trim_rendered_url(match.group(0)))
-    )
+    if include_rendered:
+        targets.extend(
+            target
+            for match in RENDERED_URL.finditer(body)
+            if (target := _trim_rendered_url(match.group(0)))
+        )
     return list(
         dict.fromkeys(_normalize_commonmark_text(target) for target in targets)
     )
@@ -2022,26 +2063,106 @@ def _privacy_categories(root: pathlib.Path) -> set[str]:
     return set()
 
 
-def _m625_cross_seed_text_categories(text: str) -> set[str]:
-    categories: set[str] = set()
-    if any(term not in text for term in M625_REQUIRED_TERMS) or any(
-        url not in text
-        for url in (
-            M625_PLAN_URL,
-            M625_PROVENANCE_URL,
-            M625_ARCHITECTURE_URL,
-        )
+def _m625_heading_structure(text: str) -> tuple[str | None, list[str]]:
+    title: str | None = None
+    headings: list[str] = []
+    for line in text.splitlines():
+        match = ATX_HEADING.match(line)
+        if match is None:
+            continue
+        level = len(match.group(1))
+        heading = match.group(2).strip()
+        if level == 1 and title is None:
+            title = heading
+        elif level == 2:
+            headings.append(heading)
+        else:
+            return title, [*headings, "__invalid_heading_level__"]
+    return title, headings
+
+
+def _m625_structure_categories(text: str) -> set[str]:
+    title, headings = _m625_heading_structure(text)
+    if (
+        title != M625_PAGE_TITLE
+        or headings != list(M625_REQUIRED_HEADINGS)
+        or any(FENCE.match(line) for line in text.splitlines())
     ):
-        categories.add("m625.cross-seed-contract")
-    prose = re.sub(r"https?://\S+", "", text)
-    if M625_PROTOCOL_API_DECLARATION.search(prose):
-        categories.add("m625.cross-seed-protocol-api-declaration")
-    if M625_UNSUPPORTED_LIVE_CLAIM.search(prose):
-        categories.add("m625.cross-seed-live-claim")
-    if M625_PRIVATE_SOURCE_ATTRIBUTION.search(prose):
-        categories.add("m625.cross-seed-private-source-attribution")
-    if M625_SECRET_POLICY_CONTRADICTION.search(prose):
-        categories.add("m625.cross-seed-secret-policy")
+        return {"m625.cross-seed-contract"}
+
+    sections = _semantic_sections(text)
+    paragraphs_by_heading: dict[str, list[str]] = {
+        heading: [] for heading in M625_REQUIRED_HEADINGS
+    }
+    for heading_context, paragraph, _ in sections:
+        matches = [
+            heading
+            for heading in M625_REQUIRED_HEADINGS
+            if heading_context.endswith(heading)
+        ]
+        if not matches:
+            continue
+        paragraphs_by_heading[matches[-1]].append(paragraph)
+    for heading, clauses in M625_REQUIRED_CLAUSES.items():
+        joined = "\n".join(paragraphs_by_heading[heading])
+        if (
+            len(paragraphs_by_heading[heading])
+            != M625_SECTION_PARAGRAPH_COUNTS[heading]
+            or any(clause not in joined for clause in clauses)
+        ):
+            return {"m625.cross-seed-contract"}
+    compact_text = " ".join(text.split())
+    if any(
+        " ".join(clause.split()) not in compact_text
+        for clause in M625_REQUIRED_DOCUMENT_CLAUSES
+    ):
+        return {"m625.cross-seed-contract"}
+
+    source_links = set(_markdown_links(text, include_rendered=False))
+    expected_links = {
+        M625_PLAN_URL,
+        M625_PROVENANCE_URL,
+        M625_ARCHITECTURE_URL,
+    }
+    if source_links != expected_links:
+        return {"m625.cross-seed-contract"}
+    return set()
+
+
+def _m625_positive_assertion_categories(text: str) -> set[str]:
+    categories: set[str] = set()
+    for _, paragraph, _ in _semantic_sections(text):
+        for sentence in CLAUSE_BOUNDARY.split(paragraph):
+            normalized = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", sentence)
+            words = {
+                word.casefold()
+                for word in re.findall(r"[A-Za-z][A-Za-z0-9]*", normalized)
+            }
+            if not words or M625_NEGATIVE_ASSERTION.search(sentence):
+                continue
+            action_words = {
+                word[:-1] if word.endswith("s") else word for word in words
+            }
+            if (
+                words & M625_PROTOCOL_OR_API_TERMS
+                and action_words & M625_PROTOCOL_OR_API_ACTIONS
+            ):
+                categories.add("m625.cross-seed-protocol-api-declaration")
+            if words & M625_LIVE_TERMS and action_words & M625_LIVE_ACTIONS:
+                categories.add("m625.cross-seed-live-claim")
+            if words & M625_VENDOR_TERMS and words & M625_EVIDENCE_TERMS:
+                categories.add("m625.cross-seed-private-source-attribution")
+            if words & M625_SECRET_TERMS and (
+                action_words & M625_SECRET_OUTPUT_ACTIONS
+                or words & M625_SECRET_SUBSTITUTES
+            ):
+                categories.add("m625.cross-seed-secret-policy")
+    return categories
+
+
+def _m625_cross_seed_text_categories(text: str) -> set[str]:
+    categories = _m625_structure_categories(text)
+    categories.update(_m625_positive_assertion_categories(text))
     if M625_RESTRICTED_MATERIAL.search(text) or _contains_private_network(text):
         categories.add("m625.cross-seed-restricted-material")
     return categories
@@ -2066,25 +2187,27 @@ def _m625_external_input_categories(
     }
     if binding != expected:
         return {"m625.cross-seed-input-binding"}
-    source_root = (source_roots or {}).get("helianthus-docs-eebus")
-    if source_root is None:
+    # Unit-level page checks can omit external roots; all repository and
+    # combined-ref entry points pass an explicit mapping, including an empty
+    # mapping, so a real gate fails closed on an unavailable source root.
+    if source_roots is None:
         return set()
+    roots = source_roots
     for source in M625_EXTERNAL_INPUTS:
-        if source["repository"] != "Project-Helianthus/helianthus-docs-eebus":
-            continue
+        source_root = roots.get(source["repository"])
+        if source_root is None or not _repository_root_valid(
+            source_root, source["repository"]
+        ):
+            return {"m625.cross-seed-input-source"}
         source_ref = source["ref"]
-        if _run_git_bytes(
-            source_root, "cat-file", "-e", f"{source_ref}^{{commit}}"
-        ).returncode != 0:
-            continue
+        if not _checkout_matches_ref(source_root, source_ref):
+            return {"m625.cross-seed-input-source"}
         shown = _run_git_bytes(
             source_root, "show", f"{source_ref}:{source['path']}"
         )
-        if (
-            shown.returncode != 0
-            or hashlib.sha256(shown.stdout).hexdigest()
-            != source["content_sha256"]
-        ):
+        if shown.returncode != 0:
+            return {"m625.cross-seed-input-source"}
+        if hashlib.sha256(shown.stdout).hexdigest() != source["content_sha256"]:
             return {"m625.cross-seed-input-content"}
     return set()
 
@@ -2098,12 +2221,7 @@ def _m625_cross_seed_categories(
         entry for entry in manifest["entries"] if entry["id"] == M625_CROSS_SEED_ID
     ]
     if not entries:
-        if any(
-            _artifact_kind(root, path.as_posix()) == "regular"
-            for path in (M625_CROSS_SEED_PATH, M625_INPUTS_PATH)
-        ):
-            return {"m625.cross-seed-manifest"}
-        return set()
+        return {"m625.cross-seed-manifest"}
     if len(entries) != 1:
         return {"m625.cross-seed-manifest"}
     entry = entries[0]
@@ -2259,7 +2377,10 @@ def validate_repository(
     prior_manifest: pathlib.Path | None = None,
     evaluated_at: str | None = None,
     evaluation_source: str | None = None,
+    m625_docs_eebus_root: pathlib.Path | None = None,
+    m625_execution_plans_root: pathlib.Path | None = None,
     _current_manifest_version: int = 2,
+    _m625_required: bool = True,
 ) -> list[str]:
     root = pathlib.Path(docs_ebus_root)
     categories = _toolchain_categories(toolchain_mode)
@@ -2284,7 +2405,20 @@ def validate_repository(
     categories.update(_artifact_categories(manifest, roots))
     categories.update(_ownership_copy_categories(root))
     categories.update(_privacy_categories(root))
-    categories.update(_m625_cross_seed_categories(root, manifest))
+    if _m625_required and enforce_through == M625_REQUIRED_DELIVERABLE["milestone"]:
+        categories.update(
+            _m625_cross_seed_categories(
+                root,
+                manifest,
+                {
+                    "Project-Helianthus/helianthus-docs-eebus": m625_docs_eebus_root,
+                    "Project-Helianthus/helianthus-execution-plans": m625_execution_plans_root,
+                }
+                if m625_docs_eebus_root is not None
+                and m625_execution_plans_root is not None
+                else {},
+            )
+        )
     if mode == "main-expiry":
         categories.update(_expiry_categories(manifest, evaluated_at, evaluation_source))
     elif mode != "repository":
@@ -2305,7 +2439,10 @@ def validate_workspace(
     enforce_through: str,
     toolchain_mode: str,
     prior_manifest: pathlib.Path | None = None,
+    m625_docs_eebus_root: pathlib.Path | None = None,
+    m625_execution_plans_root: pathlib.Path | None = None,
     _current_manifest_version: int = 2,
+    _m625_required: bool = True,
 ) -> list[str]:
     roots = {
         "helianthus-docs-ebus": pathlib.Path(docs_ebus_root),
@@ -2366,11 +2503,20 @@ def validate_workspace(
     categories.update(_ownership_copy_categories(roots["helianthus-docs-ebus"]))
     categories.update(_code_repo_categories(manifest, valid_roots, enforce_through))
     categories.update(_privacy_categories(roots["helianthus-docs-ebus"]))
-    categories.update(
-        _m625_cross_seed_categories(
-            roots["helianthus-docs-ebus"], manifest, valid_roots
+    if _m625_required and enforce_through == M625_REQUIRED_DELIVERABLE["milestone"]:
+        categories.update(
+            _m625_cross_seed_categories(
+                roots["helianthus-docs-ebus"],
+                manifest,
+                {
+                    "Project-Helianthus/helianthus-docs-eebus": m625_docs_eebus_root,
+                    "Project-Helianthus/helianthus-execution-plans": m625_execution_plans_root,
+                }
+                if m625_docs_eebus_root is not None
+                and m625_execution_plans_root is not None
+                else {},
+            )
         )
-    )
     if (
         "helianthus-docs-eebus" in valid_roots
         and isinstance(docs_eebus_ref, str)
@@ -2412,6 +2558,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--evaluated-at")
     parser.add_argument("--evaluation-source")
     parser.add_argument("--prior-manifest", type=pathlib.Path)
+    parser.add_argument("--m625-docs-eebus-root", type=pathlib.Path)
+    parser.add_argument("--m625-execution-plans-root", type=pathlib.Path)
     parser.add_argument("--enforce-through", required=True, choices=MILESTONES)
     parser.add_argument(
         "--toolchain-mode", default="exact", choices=tuple(sorted(TOOLCHAIN_MODES))
@@ -2431,6 +2579,8 @@ def main(argv: list[str] | None = None) -> int:
             prior_manifest=args.prior_manifest,
             evaluated_at=args.evaluated_at,
             evaluation_source=args.evaluation_source,
+            m625_docs_eebus_root=args.m625_docs_eebus_root,
+            m625_execution_plans_root=args.m625_execution_plans_root,
         )
     elif args.docs_eebus_root is None or args.eebusreg_root is None:
         diagnostics = ["input.roots"]
@@ -2447,6 +2597,8 @@ def main(argv: list[str] | None = None) -> int:
             enforce_through=args.enforce_through,
             toolchain_mode=args.toolchain_mode,
             prior_manifest=args.prior_manifest,
+            m625_docs_eebus_root=args.m625_docs_eebus_root,
+            m625_execution_plans_root=args.m625_execution_plans_root,
         )
     for diagnostic in diagnostics:
         print(diagnostic)
