@@ -209,6 +209,7 @@ jobs:
           PLATFORM_TOOLCHAIN_MODE: exact
           PLATFORM_PRIOR_MANIFEST: ${{ steps.prior_manifest.outputs.path }}
           MODBUS_PRIOR_ROOT: ${{ github.event_name == 'pull_request' && format('{0}/checkouts/docs-ebus-base', github.workspace) || '' }}
+          M625_TRUSTED_BASE_ROOT: ${{ github.event_name == 'pull_request' && format('{0}/checkouts/docs-ebus-base', github.workspace) || '' }}
           PLATFORM_M625_DOCS_EEBUS_ROOT: ${{ github.workspace }}/checkouts/m625-docs-eebus
           PLATFORM_M625_EXECUTION_PLANS_ROOT: ${{ github.workspace }}/checkouts/m625-execution-plans
         working-directory: checkouts/docs-ebus

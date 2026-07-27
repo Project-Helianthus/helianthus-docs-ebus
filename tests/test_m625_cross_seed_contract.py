@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import importlib.util
+import os
 import pathlib
 import subprocess
 
@@ -159,17 +160,33 @@ def test_m625_source_links_coexist_with_the_exact_trusted_base_validator(
     tmp_path: pathlib.Path,
 ) -> None:
     """M6.25 source links must not become legacy combined-ref forward links."""
-    validator_source = subprocess.run(
-        [
-            "git",
-            "show",
-            f"{TRUSTED_BASE_REF}:scripts/validate_platform_contracts.py",
-        ],
-        cwd=REPO_ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout
+    trusted_root = os.environ.get("M625_TRUSTED_BASE_ROOT")
+    if trusted_root:
+        trusted_checkout = pathlib.Path(trusted_root)
+        assert (
+            subprocess.run(
+                ["git", "-C", trusted_checkout, "rev-parse", "--verify", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            == TRUSTED_BASE_REF
+        )
+        validator_source = (
+            trusted_checkout / "scripts/validate_platform_contracts.py"
+        ).read_text(encoding="utf-8")
+    else:
+        validator_source = subprocess.run(
+            [
+                "git",
+                "show",
+                f"{TRUSTED_BASE_REF}:scripts/validate_platform_contracts.py",
+            ],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
     trusted_path = tmp_path / "trusted_validate_platform_contracts.py"
     trusted_path.write_text(validator_source, encoding="utf-8")
     spec = importlib.util.spec_from_file_location(
@@ -329,6 +346,7 @@ def test_m625_focused_contract_is_in_local_and_github_docs_ci() -> None:
         "--m625-execution-plans-root \"${PLATFORM_M625_EXECUTION_PLANS_ROOT}\""
         in local_ci
     )
+    assert "M625_TRUSTED_BASE_ROOT" in docs_ci
     assert "run: ./scripts/ci_local.sh" in docs_ci
     assert "Validate PR M6.25 provenance contract" in combined_ref
     assert "checkouts/docs-ebus/scripts/validate_platform_combined_ref.py" in combined_ref
