@@ -1381,7 +1381,9 @@ def test_platform_b_token_is_reproducible_from_objects_and_attestation_inputs(
     assert token["observation_source"] == "test.fixture-clock"
     assert token["evidence_core"]["prior_manifest"]["version"] == 1
     assert token["evidence_core"]["manifest"]["version"] == 2
-    assert token["evidence_core"]["candidate_inventory"] == []
+    assert token["evidence_core"]["candidate_inventory"] == [
+        "platform-m625-public-acquisition-methodology"
+    ]
     core = json.dumps(
         token["evidence_core"],
         ensure_ascii=True,

@@ -44,6 +44,7 @@ MILESTONES = (
     "MSP-DOCS-PLATFORM",
     "MSP-DOCS-E2",
     "MSP-DOCS-CLEAN",
+    "MSP-0625-DOCS-P",
 )
 MILESTONE_INDEX = {name: index for index, name in enumerate(MILESTONES)}
 TARGET_STATES = {"candidate", "active", "withdrawn"}
@@ -129,6 +130,45 @@ RFC3339_UTC = re.compile(
 )
 PRIVATE_IDENTIFIER = re.compile(
     r"(?i)(?:serial|ski|mac|peer[_-]?id|device[_-]?id|token|password|secret)\s*="
+)
+M625_CROSS_SEED_ID = "platform-m625-public-acquisition-methodology"
+M625_CROSS_SEED_PATH = pathlib.Path(
+    "docs/platform/_candidate/msp-0625-public-acquisition-methodology.md"
+)
+M625_PLAN_URL = (
+    "https://github.com/Project-Helianthus/helianthus-execution-plans/blob/"
+    "fb384ab57d79f0020c54d2c66416e8a7666f0ceb/"
+    "multi-runtime-semantic-platform.locked/"
+    "118-w30-26-m625-raw-spine-feature-acquisition.md"
+)
+M625_PROVENANCE_URL = (
+    "https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/"
+    "cedf238e34f879815ba773e9cd76b2b31c2822a3/"
+    "development/msp-0625-provenance-policy.md"
+)
+M625_ARCHITECTURE_URL = (
+    "https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/"
+    "cedf238e34f879815ba773e9cd76b2b31c2822a3/"
+    "architecture/_candidate/msp-0625-raw-feature-command-path.md"
+)
+M625_REQUIRED_TERMS = (
+    "owner-authorized local raw operator view",
+    "public redacted export",
+    "fails closed before dereference",
+    "Implementation and bounded live validation remain pending",
+    "no stable API schema, tool name, protocol-native detail",
+)
+M625_PROTOCOL_NATIVE_TERMS = (
+    "RawFeatureRuntimeV1",
+    "EEBusCommandRouter",
+    "AF_UNIX",
+    "eebus.v1",
+    "SHIP",
+    "SPINE",
+)
+M625_RESTRICTED_MATERIAL = re.compile(
+    r"(?i)(?:-----BEGIN(?: [A-Z]+)? PRIVATE KEY-----|"
+    r"\bbearer\s+\S+|\b(?:ski|ship[ _-]?id|device[ _-]?id|serial)\s*[:=])"
 )
 WINDOWS_ABSOLUTE = re.compile(r"[A-Za-z]:[\\/]")
 WINDOWS_INVALID_SEGMENT = re.compile(r'[<>:"|?*\x00-\x1f]')
@@ -449,9 +489,20 @@ def _surface_binding_valid(entry: Mapping[str, Any]) -> bool:
             and source_valid
         )
     if surface == "platform":
-        return _location_matches(
+        owner_valid = _location_matches(
             owner, "helianthus-docs-ebus", "docs/platform"
-        ) and _location_matches(source, "helianthus-docs-ebus", "docs/platform")
+        )
+        source_valid = _location_matches(
+            source, "helianthus-docs-ebus", "docs/platform"
+        ) or (
+            entry["id"] == M625_CROSS_SEED_ID
+            and source
+            == {
+                "repository": "helianthus-docs-eebus",
+                "path": "development/msp-0625-provenance-policy.md",
+            }
+        )
+        return owner_valid and source_valid
     if surface == "code_repo":
         return _location_matches(
             owner, "helianthus-eebusreg", "docs"
@@ -1915,6 +1966,64 @@ def _privacy_categories(root: pathlib.Path) -> set[str]:
     return set()
 
 
+def _m625_cross_seed_text_categories(text: str) -> set[str]:
+    categories: set[str] = set()
+    if any(term not in text for term in M625_REQUIRED_TERMS) or any(
+        url not in text
+        for url in (M625_PLAN_URL, M625_PROVENANCE_URL, M625_ARCHITECTURE_URL)
+    ):
+        categories.add("m625.cross-seed-contract")
+    prose = re.sub(r"https?://\S+", "", text)
+    if any(
+        re.search(r"\b" + re.escape(term) + r"\b", prose, re.IGNORECASE)
+        for term in M625_PROTOCOL_NATIVE_TERMS
+    ):
+        categories.add("m625.cross-seed-protocol-leak")
+    if M625_RESTRICTED_MATERIAL.search(text) or _contains_private_network(text):
+        categories.add("m625.cross-seed-restricted-material")
+    return categories
+
+
+def _m625_cross_seed_categories(
+    root: pathlib.Path, manifest: Mapping[str, Any]
+) -> set[str]:
+    entries = [
+        entry for entry in manifest["entries"] if entry["id"] == M625_CROSS_SEED_ID
+    ]
+    if not entries:
+        return set()
+    if len(entries) != 1:
+        return {"m625.cross-seed-manifest"}
+    entry = entries[0]
+    if (
+        entry["surface"] != "platform"
+        or entry["owner"]
+        != {
+            "repository": "helianthus-docs-ebus",
+            "path": M625_CROSS_SEED_PATH.as_posix(),
+        }
+        or entry["source"]
+        != {
+            "repository": "helianthus-docs-eebus",
+            "path": "development/msp-0625-provenance-policy.md",
+        }
+        or entry["canonical"]
+        or entry["state"] != "candidate"
+        or entry["kind"] != "canonical_document"
+        or entry["lifecycle"]["source_ref"]
+        != "cedf238e34f879815ba773e9cd76b2b31c2822a3"
+        or entry["lifecycle"]["content_sha256"]
+        != "f52a15cab0ec7cfebb67a1932b27259489846619b109ea71e43ca54531191db2"
+        or entry["enforcement"]
+        != {"milestone": "MSP-0625-DOCS-P", "required_state": "candidate"}
+    ):
+        return {"m625.cross-seed-manifest"}
+    if _artifact_kind(root, M625_CROSS_SEED_PATH.as_posix()) != "regular":
+        return {"m625.cross-seed-artifact"}
+    path = root / M625_CROSS_SEED_PATH
+    return _m625_cross_seed_text_categories(path.read_text(encoding="utf-8"))
+
+
 def _version_tuple(value: str | None) -> tuple[int, int, int] | None:
     if not isinstance(value, str):
         return None
@@ -2056,6 +2165,7 @@ def validate_repository(
     categories.update(_artifact_categories(manifest, roots))
     categories.update(_ownership_copy_categories(root))
     categories.update(_privacy_categories(root))
+    categories.update(_m625_cross_seed_categories(root, manifest))
     if mode == "main-expiry":
         categories.update(_expiry_categories(manifest, evaluated_at, evaluation_source))
     elif mode != "repository":
@@ -2137,6 +2247,7 @@ def validate_workspace(
     categories.update(_ownership_copy_categories(roots["helianthus-docs-ebus"]))
     categories.update(_code_repo_categories(manifest, valid_roots, enforce_through))
     categories.update(_privacy_categories(roots["helianthus-docs-ebus"]))
+    categories.update(_m625_cross_seed_categories(roots["helianthus-docs-ebus"], manifest))
     if (
         "helianthus-docs-eebus" in valid_roots
         and isinstance(docs_eebus_ref, str)

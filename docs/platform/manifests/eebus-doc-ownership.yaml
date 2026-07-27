@@ -320,3 +320,28 @@ entries:
     enforcement:
       milestone: MSP-DOCS-CLEAN
       required_state: active
+
+  - id: platform-m625-public-acquisition-methodology
+    surface: platform
+    owner:
+      repository: helianthus-docs-ebus
+      path: docs/platform/_candidate/msp-0625-public-acquisition-methodology.md
+    source:
+      repository: helianthus-docs-eebus
+      path: development/msp-0625-provenance-policy.md
+    canonical: false
+    state: candidate
+    kind: canonical_document
+    lifecycle:
+      created_at: "2026-07-27T00:00:00Z"
+      expires_at: "2026-08-26T00:00:00Z"
+      source_issue: Project-Helianthus/helianthus-docs-ebus#380
+      source_pr: Project-Helianthus/helianthus-docs-eebus#77
+      source_ref: cedf238e34f879815ba773e9cd76b2b31c2822a3
+      content_sha256: f52a15cab0ec7cfebb67a1932b27259489846619b109ea71e43ca54531191db2
+      approved_at: null
+      frozen_at: null
+      cleanup_required: false
+    enforcement:
+      milestone: MSP-0625-DOCS-P
+      required_state: candidate
