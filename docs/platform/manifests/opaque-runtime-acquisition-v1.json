@@ -1,0 +1,407 @@
+{
+  "companion_for": [
+    "FMV3-M1-06",
+    "FMV3-M2-01"
+  ],
+  "content_revision": 1,
+  "contract_id": "OPAQUE_RUNTIME_ACQUISITION_V1",
+  "contract_version": 1,
+  "discoverability": {
+    "manifest_link": "docs/platform/manifests/opaque-runtime-acquisition-v1.json",
+    "platform_index": "docs/platform/README.md",
+    "policy_link": "docs/platform/opaque-runtime-acquisition-v1.md",
+    "root_index": "README.md"
+  },
+  "execution": {
+    "plan_decision": "D13",
+    "plan_issue": "FMV3-M1-05",
+    "producer_issue": "FMV3-M1-06",
+    "consumer_issue": "FMV3-M2-01"
+  },
+  "licensing": {
+    "policy": "AGPL-3.0",
+    "restricted_source_copy": "forbidden",
+    "vendor_protocol_facts": "none"
+  },
+  "bounded_values": {
+    "activation": "finite_positive_checked_nonoverflowing_bounds_before_activation",
+    "allocation": "validate_before_decode_copy_hash_intern_or_retain",
+    "attempt_key": {
+      "encoding": "non_empty_utf8",
+      "equality": "exact_encoded_bytes_no_normalization",
+      "max": "attempt_key_max_utf8_bytes",
+      "source_ledger_agreement": "required"
+    },
+    "retained_diagnostics": {
+      "count_max": "retained_diagnostic_count_per_object_max",
+      "form": "ordered_utf8_strings_only",
+      "item_max": "retained_diagnostic_max_utf8_bytes",
+      "oversize": "reject_without_truncation",
+      "tombstone_retention": "forbidden"
+    }
+  },
+  "m2_ledger": {
+    "attempt_lifecycle": {
+      "initial": "open",
+      "legal_transitions": [
+        "open_to_sealed",
+        "open_to_cancelling",
+        "sealed_to_publishing",
+        "sealed_to_cancelling",
+        "cancelling_to_cancelled",
+        "publishing_to_published",
+        "publishing_to_publish_failed"
+      ],
+      "publish": "one_shot_sealed_to_publishing",
+      "publish_cancellation_after_admission": "publishing_to_publish_failed",
+      "seal_condition": "all_data_bearing_runtime_claims_claim_succeeded",
+      "seal_linearization": "success_predicate_and_open_to_sealed_atomic",
+      "seal_non_success": "cancellation_and_audit_only_publication_forbidden",
+      "terminal": [
+        "published",
+        "publish_failed",
+        "cancelled"
+      ],
+      "terminal_immutable": true
+    },
+    "attempt_key": {
+      "duplicate": "reject_before_any_state_change",
+      "source_binding_match": "required_for_every_runtime_capability",
+      "validation": "bounded_before_copy_hash_intern_or_allocation"
+    },
+    "bounds": {
+      "claim_entries_per_attempt": "dependency_set_hard_limit",
+      "covered_attempt_states": [
+        "open",
+        "sealed",
+        "cancelling",
+        "publishing",
+        "published",
+        "publish_failed",
+        "cancelled"
+      ],
+      "covered_claim_states": [
+        "unresolved",
+        "claim_in_progress",
+        "claim_succeeded",
+        "capability_cancelled",
+        "capability_failed",
+        "capability_expired",
+        "claim_rejected_terminal",
+        "attempt_cancelled"
+      ],
+      "retained_attempts": "consumer_configured_hard_limit_all_states",
+      "retained_claims_total": "checked_attempt_limit_times_claim_limit",
+      "terminal_sequence": {
+        "domain": "uint64_1_to_2^64_minus_1",
+        "exhaustion": "reject_new_attempt_preserve_existing_termination",
+        "reservation": "attempt_plus_all_claim_entries_batch_before_admission",
+        "reuse": "forbidden_within_owner_lifetime_including_after_reclamation",
+        "wrap": "forbidden_checked_arithmetic"
+      }
+    },
+    "cancellation_protocol": {
+      "admitted_claim_wins": true,
+      "blocks_after_linearization": [
+        "claim_admission",
+        "seal",
+        "publish"
+      ],
+      "completion": "cancelling_to_cancelled_after_source_return_and_unresolved_closure",
+      "drain": "wait_for_all_claim_in_progress_finalization",
+      "linearization": [
+        "open_to_cancelling",
+        "sealed_to_cancelling"
+      ],
+      "source_operation": "runtime_source_owned_CancelOpen_exact_AttemptKey",
+      "unresolved_close": "only_remaining_unresolved_to_attempt_cancelled"
+    },
+    "capability_state_ownership": "external_private_runtime_source",
+    "claim_entry_lifecycle": {
+      "admission": "unresolved_to_claim_in_progress_only_while_attempt_open",
+      "cancellation": "claim_in_progress_drains_unresolved_only_attempt_cancelled",
+      "finalization": "record_immutable_source_result_before_completion",
+      "initial": "unresolved",
+      "legal_transitions": [
+        "unresolved_to_claim_in_progress",
+        "claim_in_progress_to_claim_succeeded",
+        "claim_in_progress_to_capability_cancelled",
+        "claim_in_progress_to_capability_failed",
+        "claim_in_progress_to_capability_expired",
+        "claim_in_progress_to_claim_rejected_terminal",
+        "unresolved_to_attempt_cancelled"
+      ],
+      "nonterminal": [
+        "unresolved",
+        "claim_in_progress"
+      ],
+      "retry": "forbidden",
+      "source_result_mapping": {
+        "already_cancelled": "capability_cancelled",
+        "already_expired": "capability_expired",
+        "already_failed": "capability_failed",
+        "already_claimed": "claim_rejected_terminal",
+        "open_to_claimed": "claim_succeeded"
+      },
+      "terminal": [
+        "claim_succeeded",
+        "capability_cancelled",
+        "capability_failed",
+        "capability_expired",
+        "claim_rejected_terminal",
+        "attempt_cancelled"
+      ],
+      "terminal_immutable": true
+    },
+    "mutable_dto": "forbidden",
+    "publish": "sealed_immutable_ledger_state_only",
+    "reclamation": {
+      "audit_tombstone": {
+        "additional_fields": "forbidden",
+        "count_bound": "ledger_audit_tombstone_limit_finite_positive",
+        "eviction": "lowest_reserved_terminal_sequence_first",
+        "forbidden_payloads": [
+          "raw_attempt_key",
+          "source_evidence_id",
+          "normalization_record",
+          "evidence_payload",
+          "capability_representation",
+          "free_form_diagnostic"
+        ],
+        "max_encoded_bytes": "ledger_audit_tombstone_max_encoded_bytes_finite_positive",
+        "variants": {
+          "attempt": {
+            "fields": [
+              "schema_version",
+              "object_kind",
+              "terminal_sequence",
+              "terminal_outcome"
+            ],
+            "object_kind": "attempt",
+            "schema_version": 1,
+            "terminal_outcome": [
+              "published",
+              "publish_failed",
+              "cancelled"
+            ],
+            "terminal_sequence": "reserved_uint64_nonzero"
+          },
+          "claim": {
+            "attempt_terminal_sequence": "reserved_uint64_nonzero",
+            "claim_ordinal": "uint64_zero_based",
+            "fields": [
+              "schema_version",
+              "object_kind",
+              "terminal_sequence",
+              "attempt_terminal_sequence",
+              "claim_ordinal",
+              "terminal_outcome"
+            ],
+            "object_kind": "claim",
+            "schema_version": 1,
+            "terminal_outcome": [
+              "claim_succeeded",
+              "capability_cancelled",
+              "capability_failed",
+              "capability_expired",
+              "claim_rejected_terminal",
+              "attempt_cancelled"
+            ],
+            "terminal_sequence": "reserved_uint64_nonzero"
+          }
+        }
+      },
+      "caller_terminal_wrappers": "immutable_non_owning_not_retained_ledger_state",
+      "eligibility": "terminal_no_in_progress_operation_no_retained_nonterminal_reference",
+      "mode": "deterministic_synchronous_on_terminal_and_admission",
+      "order": "admission_reserved_terminal_sequence"
+    },
+    "state_owner": "shared_ledger_owned_pointer",
+    "terminal_reclamation": "required"
+  },
+  "normalization_record": {
+    "bounds": {
+      "encoded_record_max": "normalization_record_max_encoded_bytes",
+      "field_count_max": "checked_10_plus_normalization_extension_count_max",
+      "required_string_max": "normalization_required_string_max_utf8_bytes",
+      "source_evidence_id": {
+        "encoding": "non_empty_utf8",
+        "max": "source_evidence_id_max_utf8_bytes"
+      },
+      "unknown_extensions": {
+        "count_max": "normalization_extension_count_max",
+        "key": "non_empty_utf8_at_most_normalization_extension_key_max_utf8_bytes",
+        "value_max": "normalization_extension_value_max_encoded_bytes"
+      },
+      "validation_order": "encoded_total_then_fields_before_owner_allocation"
+    },
+    "required_fields": [
+      "schema_version",
+      "source_kind",
+      "source_evidence_id",
+      "documentary_notation",
+      "documentary_address",
+      "documentary_address_base",
+      "function_code",
+      "logical_table",
+      "normalized_zero_based_pdu_offset",
+      "word_count"
+    ],
+    "round_trip": "exact_record_equality_within_admitted_bounds",
+    "schema": "versioned",
+    "unknown_extension_fields": "preserved_losslessly_without_truncation"
+  },
+  "policy": "docs/platform/opaque-runtime-acquisition-v1.md",
+  "policy_sha256": "fd7110af13091cd391244dd5f2f8fa918d0f8606d6309a37144306aa87257c2f",
+  "public_authorization": {
+    "gateway": "none",
+    "hardware": "none",
+    "semantic": "none",
+    "vendor": "none",
+    "write": "none"
+  },
+  "schema": "helianthus.modbus.opaque-runtime-acquisition",
+  "source_kind": {
+    "allowed": [
+      "runtime",
+      "offline_fixture"
+    ],
+    "offline_fixture": {
+      "capability": "forbidden",
+      "capability_cas_calls": 0,
+      "production_sample_id": "forbidden",
+      "trust": "untrusted"
+    },
+    "runtime": {
+      "capability": "required_for_delivery",
+      "deliverability": {
+        "authority": "runtime_source_owned",
+        "caller_control": "forbidden",
+        "excluded_outcomes": [
+          "detached_dependent",
+          "cancelled_dependent",
+          "protocol_exception",
+          "malformed_response",
+          "transport_or_dependent_failure",
+          "late_or_abandoned_response",
+          "uncorrelated_frame",
+          "torn_or_incoherent_production",
+          "any_non_success_outcome"
+        ],
+        "predecessor_contract": "docs/platform/modbus-foundation-profile-contract-v1.md#physical-and-logical-identity",
+        "production_stage": "post_correlation_successful_dependent_production",
+        "reconstruction": "forbidden",
+        "required_conditions": [
+          "request_bound_wire_response_id",
+          "wire_outcome_successful_data",
+          "dependent_still_attached",
+          "exact_logical_slice_validated",
+          "coherent_production"
+        ],
+        "serialization": "forbidden"
+      },
+      "issuer": "runtime_source",
+      "issue_condition": "deliverable_runtime_acquisition_only"
+    }
+  },
+  "version": 1,
+  "zero_trust_boundary": "no_gateway_vendor_semantic_write_authorization",
+  "opaque_capability": {
+    "attempt_binding": {
+      "cancel_open": {
+        "capability_effect": "still_open_to_cancelled_terminal_unchanged",
+        "ledger_mutation": "forbidden",
+        "lookup": "exact_bounded_AttemptKey_only",
+        "owner": "runtime_source",
+        "return": "after_all_matching_live_operations_and_reclamation_complete"
+      },
+      "claim_path_after_m2_admission": "ledger_linearization_required",
+      "key": "immutable_exact_source_owned_AttemptKey",
+      "source_operation": "CancelOpen(AttemptKey)"
+    },
+    "bounded_state": {
+      "capabilities": "endpoint_configured_hard_limit",
+      "terminal_reclamation": "required",
+      "terminal_sequence": {
+        "domain": "uint64_1_to_2^64_minus_1",
+        "exhaustion": "reject_new_capability_preserve_existing_termination",
+        "reservation": "one_before_capability_admission_or_allocation",
+        "reuse": "forbidden_within_owner_lifetime_including_after_reclamation",
+        "wrap": "forbidden_checked_arithmetic"
+      },
+      "tombstone": {
+        "additional_fields": "forbidden",
+        "count_bound": "capability_tombstone_limit_finite_positive",
+        "eviction": "lowest_reserved_terminal_sequence_first",
+        "fields": [
+          "schema_version",
+          "terminal_sequence",
+          "terminal_outcome"
+        ],
+        "forbidden_payloads": [
+          "raw_attempt_key",
+          "source_evidence_id",
+          "normalization_record",
+          "evidence_payload",
+          "capability_representation",
+          "free_form_diagnostic"
+        ],
+        "max_encoded_bytes": "capability_tombstone_max_encoded_bytes_finite_positive",
+        "schema_version": 1,
+        "terminal_outcome": [
+          "claimed",
+          "cancelled",
+          "failed",
+          "expired"
+        ],
+        "terminal_sequence": "reserved_uint64_nonzero"
+      }
+    },
+    "coalesced_dependents": "independent_capability_per_dependent",
+    "copied_view_race": "exactly_one_winner",
+    "endpoint_recreation": {
+      "eligible_new_acquisition": "fresh_independent_capability_state",
+      "existing_capability_lifecycle": "own_acquisition_or_attempt_only",
+      "forbidden_prior_capability_actions": [
+        "alias",
+        "remint",
+        "reset",
+        "merge"
+      ],
+      "security_identity": "source_issued_acquisition_capability_not_endpoint_identity",
+      "visible_identity_or_data_match": "irrelevant"
+    },
+    "forbidden_issue_conditions": [
+      "non_deliverable_runtime_acquisition",
+      "offline_fixture"
+    ],
+    "issued_lifecycle": {
+      "initial": "open",
+      "legal_transitions": [
+        "open_to_claimed",
+        "open_to_cancelled",
+        "open_to_failed",
+        "open_to_expired"
+      ],
+      "non_issuance": "no_capability_outside_lifecycle",
+      "reclamation": {
+        "caller_terminal_wrappers": "immutable_non_owning_not_source_tracked",
+        "mode": "source_deterministic_synchronous_before_terminal_return",
+        "order": "admission_reserved_terminal_sequence"
+      },
+      "retry": "forbidden",
+      "terminal": [
+        "claimed",
+        "cancelled",
+        "failed",
+        "expired"
+      ],
+      "terminal_immutable": true
+    },
+    "representation": "opaque_non_serializable",
+    "state_owner": "source_owned_shared_capability_state",
+    "terminal_reuse": "forbidden",
+    "value_copy_semantics": "shared_state",
+    "consumption": "one_shot_compare_and_swap"
+  }
+}
