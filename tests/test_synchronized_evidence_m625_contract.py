@@ -649,6 +649,38 @@ def test_candidate_m625_pointer_binding_is_exact_and_path_index_bound() -> None:
         module._check_sample_provenance(malformed, artifacts)
 
 
+def test_candidate_m625_pointer_binding_matches_source_schema_path_index_rules(
+    tmp_path: pathlib.Path,
+) -> None:
+    module = load_candidate_validator()
+    bundle, artifact = m625_two_path_artifact()
+    artifacts = module._artifact_index(bundle)
+    payload = artifact["normalized_evidence"]
+    payload["observations"][0]["path_index"] = 0.0
+
+    assert schema_accepts(VENDORED_M625_SCHEMA, payload, tmp_path / "integral")
+    module._check_sample_provenance(m625_sample_fact(artifact, 0), artifacts)
+
+    bound_to_other_path = m625_sample_fact(artifact, 0)
+    bound_to_other_path["provenance"]["eebus"] = payload["feature_paths"][1]
+    bound_to_other_path["provenance"]["eebus_service"] = payload["feature_paths"][1][
+        "service"
+    ]
+    with pytest.raises(module.Failure):
+        module._check_sample_provenance(bound_to_other_path, artifacts)
+
+    for invalid_path_index in (True, 0.5, 2):
+        invalid_bundle, invalid_artifact = m625_two_path_artifact()
+        invalid_artifact["normalized_evidence"]["observations"][0][
+            "path_index"
+        ] = invalid_path_index
+        with pytest.raises(module.Failure):
+            module._check_sample_provenance(
+                m625_sample_fact(invalid_artifact, 0),
+                module._artifact_index(invalid_bundle),
+            )
+
+
 def test_m625_rehashed_bundle_rejects_observation_ref_shared_across_paths(
     tmp_path: pathlib.Path,
 ) -> None:
