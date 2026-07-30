@@ -350,6 +350,8 @@ jobs:
             --mode main-expiry \
             --docs-ebus-root checkouts/docs-ebus \
             --docs-ebus-repository "${DOCS_EBUS_REPOSITORY}" \
+            --m625-docs-eebus-root checkouts/m625-docs-eebus \
+            --m625-execution-plans-root checkouts/m625-execution-plans \
             --evaluated-at "${evaluated_at}" \
             --evaluation-source github.runner.utc_now \
             --enforce-through "${ENFORCE_THROUGH}" \
