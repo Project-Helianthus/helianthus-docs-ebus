@@ -361,11 +361,11 @@ def test_m625_focused_contract_is_in_local_and_github_docs_ci() -> None:
         combined_ref.count(
             "--m625-docs-eebus-root checkouts/m625-docs-eebus"
         )
-        == 2
+        == 3
     )
     assert (
         combined_ref.count(
             "--m625-execution-plans-root checkouts/m625-execution-plans"
         )
-        == 2
+        == 3
     )
