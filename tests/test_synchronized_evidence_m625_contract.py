@@ -123,6 +123,40 @@ def write_mutation(tmp_path: pathlib.Path, mutation) -> pathlib.Path:
     return path
 
 
+def write_rehashed_bundle(
+    tmp_path: pathlib.Path, bundle: dict, module
+) -> pathlib.Path:
+    artifacts_by_source: dict[str, list[str]] = {
+        source["source_id"]: [] for source in bundle["sources"]
+    }
+    for artifact in bundle["artifacts"]:
+        view = {
+            key: value
+            for key, value in artifact.items()
+            if key not in {"artifact_id", "redacted_hash"}
+        }
+        digest = module.digest(module.ARTIFACT_DOMAIN, view)
+        artifact["artifact_id"] = "seav1:sha256:" + digest
+        artifact["redacted_hash"] = "sha256:" + digest
+        artifacts_by_source[artifact["source_id"]].append(artifact["artifact_id"])
+    for source in bundle["sources"]:
+        source["artifact_ids"] = sorted(artifacts_by_source[source["source_id"]])
+    bundle_view = {
+        key: value
+        for key, value in bundle.items()
+        if key not in {"bundle_id", "bundle_hash"}
+    }
+    digest = module.digest(module.BUNDLE_DOMAIN, bundle_view)
+    bundle["bundle_id"] = "sebv1:sha256:" + digest
+    bundle["bundle_hash"] = "sha256:" + digest
+    path = tmp_path / "rehashed.json"
+    path.write_text(
+        json.dumps(bundle, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
 def eebus_source(bundle: dict) -> dict:
     return next(source for source in bundle["sources"] if source["source_kind"] == "EEBUS")
 
@@ -615,6 +649,50 @@ def test_candidate_m625_pointer_binding_is_exact_and_path_index_bound() -> None:
         module._check_sample_provenance(malformed, artifacts)
 
 
+def test_m625_rehashed_bundle_rejects_observation_ref_shared_across_paths(
+    tmp_path: pathlib.Path,
+) -> None:
+    module = load_candidate_validator().synchronized
+    bundle, artifact = m625_two_path_artifact()
+    payload = artifact["normalized_evidence"]
+    second_path = payload["feature_paths"][1]
+    payload["observations"][1]["observation_ref"] = payload["observations"][0][
+        "observation_ref"
+    ]
+    for field in ("service", "entity", "feature"):
+        artifact["remasking"]["entries"].append(
+            {
+                "path": f"/feature_paths/1/{field}",
+                "pseudonym": second_path[field],
+            }
+        )
+    for index, segment in enumerate(second_path["feature_path"]):
+        artifact["remasking"]["entries"].append(
+            {
+                "path": f"/feature_paths/1/feature_path/{index}/selector",
+                "pseudonym": segment["selector"],
+            }
+        )
+    artifact["remasking"]["entries"].append(
+        {
+            "path": "/observations/1/observation_ref",
+            "pseudonym": payload["observations"][0][
+                "observation_ref"
+            ].removeprefix("obs-"),
+        }
+    )
+    artifact["remasking"]["entries"].sort(key=lambda entry: entry["path"])
+    artifact["item_count"] = len(payload["observations"])
+    artifact["byte_count"] = len(module.canonical(payload))
+
+    result = run_validator(
+        "verify", write_rehashed_bundle(tmp_path, bundle, module)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "privacy.remask\n"
+    assert result.stderr == ""
+
+
 def schema_accepts(path: pathlib.Path, payload: dict, tmp_path: pathlib.Path) -> bool:
     tmp_path.mkdir(parents=True, exist_ok=True)
     instance = tmp_path / "source.json"
@@ -637,6 +715,7 @@ def validator_accepts_m625(module, artifact: dict, payload: dict) -> bool:
     candidate["normalized_evidence"] = payload
     try:
         module.validate_m625_eebus_payload(payload, candidate)
+        module.validate_m625_path_binding(payload)
     except module.Failure:
         return False
     return True
@@ -648,8 +727,12 @@ def test_m625_validator_matches_vendored_source_schema_for_integer_edges(
     module = load_candidate_validator().synchronized
     artifact = eebus_artifact(load_json(M625_BUNDLE))
     base = deepcopy(artifact["normalized_evidence"])
+    schema_integral = deepcopy(base)
+    schema_integral["schema_version"] = 1.0
     schema_bool = deepcopy(base)
     schema_bool["schema_version"] = True
+    path_integral = deepcopy(base)
+    path_integral["observations"][0]["path_index"] = 0.0
     path_bool = deepcopy(base)
     path_bool["observations"][0]["path_index"] = True
     repeated_path = deepcopy(base)
@@ -659,7 +742,9 @@ def test_m625_validator_matches_vendored_source_schema_for_integer_edges(
 
     for name, payload in (
         ("base", base),
+        ("schema-version-integral-number", schema_integral),
         ("schema-version-bool", schema_bool),
+        ("path-index-integral-number", path_integral),
         ("path-index-bool", path_bool),
         ("repeated-path-index", repeated_path),
     ):

@@ -54,10 +54,18 @@ def test_machine_contract_freezes_private_tool_paths_and_empty_args() -> None:
         ),
         "source_schema_version": 1,
         "idempotency_key": "ACTION_EVIDENCE_REF_PLUS_SOURCE_TUPLE",
-        "offline_replay_count": 2,
-        "offline_replay_equality": "BYTE_IDENTICAL",
-        "receipt_after": "BUNDLE_PUBLISH",
-        "repeat_result": "EXISTING_NO_IO_NO_TIMESTAMP_NO_BUNDLE",
+        "prepublish_replay_count": 2,
+        "prepublish_replay_input": "FINALIZED_CANONICAL_STAGING_BYTES",
+        "prepublish_replay_equality": "BYTE_IDENTICAL",
+        "postpublish_verification": "REOPEN_VALIDATE_REPLAY_MATCH",
+        "receipt_after": "ATOMIC_PUBLISH_REOPEN_VALIDATE_REPLAY",
+        "repeat_result": (
+            "EXISTING_NO_RUNTIME_NETWORK_SOURCE_ACQUISITION_IO"
+        ),
+        "repeat_allowed_io": (
+            "REQUEST_STORE_READ_RETAINED_VALIDATION_OFFLINE_REPLAY"
+        ),
+        "repeat_forbidden_new": "TIMESTAMPS_BUNDLE_PSEUDONYMS_STAGING",
     }
     args = schema["$defs"]["EmptyArgsV1"]
     assert args == {
@@ -125,13 +133,18 @@ def test_docs_freeze_crash_idempotency_selection_and_publish_order() -> None:
         "validated retained-bundle lookup",
         "action evidence ref plus the M6.25 source tuple",
         "before any acquisition",
-        "two offline byte-identical replays",
-        "publish the receipt only after the bundle",
+        "two offline byte-identical replays consume the finalized canonical staging bytes",
+        "before atomic publication",
+        "re-opens the final bundle, validates it, and verifies replay",
+        "success receipt only after",
         "including after process restart",
-        "no new reads and no new timestamps",
-        "no new bundle",
+        "request and store reads, retained-bundle validation, and offline replay",
+        "no runtime, network, or source-acquisition I/O",
+        "no new timestamps, bundle, pseudonyms, or staging artifact",
         "response and logs contain no raw evidence",
         "public `tools/list` omits",
     )
     for phrase in required:
         assert phrase in text
+    assert "no new reads" not in text
+    assert "EXISTING_NO_IO" not in SCHEMA.read_text(encoding="utf-8")
