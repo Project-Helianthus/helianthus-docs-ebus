@@ -27,6 +27,16 @@ GENERATOR = REPO_ROOT / "scripts/generate_synchronized_evidence_m625_fixture.py"
 CANDIDATE_VALIDATOR = REPO_ROOT / "scripts/validate_candidate_fact_graph.py"
 BUNDLE_SCHEMA = SCHEMA_ROOT / "synchronized-evidence-bundle-v1.schema.json"
 REPLAY_SCHEMA = SCHEMA_ROOT / "synchronized-evidence-replay-v1.schema.json"
+VENDORED_M625_SCHEMA = (
+    SCHEMA_ROOT
+    / "vendor"
+    / "helianthus.eebus.m625.public-redacted-evidence.v1.schema.json"
+)
+CANDIDATE_REGISTRY = SCHEMA_ROOT / "draft-candidate-fact-registry-v1.json"
+CANDIDATE_GRAPH = (
+    REPO_ROOT
+    / "docs/platform/fixtures/candidate-fact-graph/v1/positive/graph.json"
+)
 
 HISTORICAL_TUPLE = ("EEBUS", "helianthus-eebus-mcp", 1)
 HISTORICAL_OWNER_COMMIT = "9819762a61c28eeceb11beb775aa2a91c83a68b6"
@@ -123,6 +133,22 @@ def eebus_artifact(bundle: dict) -> dict:
     )
 
 
+def artifact_by_contract(bundle: dict, contract: str) -> dict:
+    return next(
+        artifact
+        for artifact in bundle["artifacts"]
+        if artifact["source_contract"] == contract
+    )
+
+
+def source_by_contract(bundle: dict, contract: str) -> dict:
+    return next(
+        source
+        for source in bundle["sources"]
+        if source["source_contract"] == contract
+    )
+
+
 def test_historical_tuple_and_fixture_bytes_are_immutable() -> None:
     assert hashlib.sha256(HISTORICAL_BUNDLE.read_bytes()).hexdigest() == (
         HISTORICAL_BUNDLE_SHA256
@@ -138,6 +164,42 @@ def test_historical_tuple_and_fixture_bytes_are_immutable() -> None:
     assert historical["schema_sha256"] == HISTORICAL_SCHEMA_SHA256
 
 
+def per_bundle_identity_values(bundle: dict) -> set[str]:
+    values = {
+        bundle["bundle_id"],
+        bundle["capture_window"]["action"]["marker_id"],
+    }
+    for source in bundle["sources"]:
+        values.add(source["source_id"])
+        values.add(source["source_binding"]["runtime_pseudonym"])
+        identity = source["ebus_identity"]
+        if identity is not None:
+            values.add(identity["target_pseudonym"])
+        values.update(source["artifact_ids"])
+    for artifact in bundle["artifacts"]:
+        values.add(artifact["artifact_id"])
+        values.add(artifact["remasking"]["scope_id"])
+        values.update(
+            entry["pseudonym"] for entry in artifact["remasking"]["entries"]
+        )
+    return values
+
+
+def test_m625_fixture_uses_an_independent_bundle_identity_domain() -> None:
+    historical = load_json(HISTORICAL_BUNDLE)
+    m625 = load_json(M625_BUNDLE)
+    assert per_bundle_identity_values(historical).isdisjoint(
+        per_bundle_identity_values(m625)
+    )
+    marker = m625["capture_window"]["action"]["marker_id"]
+    for source in m625["sources"]:
+        assert source["capture_window"]["action"]["marker_id"] == marker
+        assert source["source_binding"]["capture_window"]["action"]["marker_id"] == marker
+    for artifact in m625["artifacts"]:
+        assert artifact["capture_window"]["action"]["marker_id"] == marker
+        assert artifact["source_binding"]["capture_window"]["action"]["marker_id"] == marker
+
+
 def test_registry_appends_exact_m625_source_authority_tuple() -> None:
     entries = registry_entries()
     assert HISTORICAL_TUPLE in entries
@@ -150,8 +212,15 @@ def test_registry_appends_exact_m625_source_authority_tuple() -> None:
         "owner_path": M625_OWNER_PATH,
         "owner_commit": M625_OWNER_COMMIT,
         "schema_sha256": M625_SCHEMA_SHA256,
-        "embedded_schema": None,
+        "embedded_schema": (
+            "docs/platform/schemas/vendor/"
+            "helianthus.eebus.m625.public-redacted-evidence.v1.schema.json"
+        ),
     }
+    assert VENDORED_M625_SCHEMA.is_file()
+    assert hashlib.sha256(VENDORED_M625_SCHEMA.read_bytes()).hexdigest() == (
+        M625_SCHEMA_SHA256
+    )
 
 
 def test_m625_fixture_and_canonical_generator_inventory_is_complete() -> None:
@@ -241,14 +310,27 @@ def test_m625_dispatch_preserves_complete_path_and_comparison_pointers() -> None
     assert observation["value"] == "21.5"
     assert observation["unit"] == "degC"
 
-    remasked = {entry["pseudonym"] for entry in artifact["remasking"]["entries"]}
-    assert {
-        payload["services"][0],
-        path["service"],
-        path["entity"],
-        path["feature"],
-        path["feature_path"][3]["selector"],
-    } <= remasked
+    manifested = {
+        entry["path"]: entry["pseudonym"]
+        for entry in artifact["remasking"]["entries"]
+    }
+    assert set(manifested) == {
+        "/feature_paths/0/entity",
+        "/feature_paths/0/feature",
+        "/feature_paths/0/feature_path/0/selector",
+        "/feature_paths/0/feature_path/1/selector",
+        "/feature_paths/0/feature_path/2/selector",
+        "/feature_paths/0/feature_path/3/selector",
+        "/feature_paths/0/service",
+        "/observations/0/observation_ref",
+        "/services/0",
+    }
+    assert manifested["/services/0"] == path["service"]
+    assert manifested["/feature_paths/0/service"] == path["service"]
+    assert (
+        manifested["/feature_paths/0/feature_path/0/selector"]
+        == path["service"]
+    )
 
 
 @pytest.mark.parametrize(
@@ -329,6 +411,305 @@ def load_candidate_validator():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def refresh_candidate_hashes(module, graph: dict) -> None:
+    for fact in graph["facts"]:
+        fact["fact_hash"] = "sha256:" + module.fact_hexdigest(fact)
+    digest = module.graph_hexdigest(graph)
+    graph["graph_id"] = "dcfgv1:sha256:" + digest
+    graph["graph_hash"] = "sha256:" + digest
+
+
+def candidate_graph_for_source(module, source: dict, replay: dict) -> dict:
+    graph = deepcopy(load_json(CANDIDATE_GRAPH))
+    graph["source_bundle"] = {
+        "contract": source["contract"],
+        "schema_version": source["schema_version"],
+        "bundle_id": source["bundle_id"],
+        "bundle_hash": source["bundle_hash"],
+        "replay_hash": "sha256:" + module.source_replay_hexdigest(replay),
+        "evidence_refs": deepcopy(source["evidence_refs"]),
+    }
+    for fact in graph["facts"]:
+        provenance = fact["provenance"]
+        provenance["source_bundle_id"] = source["bundle_id"]
+        if provenance["ebus"] is not None:
+            family = provenance["ebus"]["family"]
+            contract = f"helianthus.ebus.{family.lower()}.evidence.v1"
+            source_row = source_by_contract(source, contract)
+            artifact = artifact_by_contract(source, contract)
+            provenance["ebus_source_id"] = source_row["source_id"]
+            provenance["ebus_artifact_id"] = artifact["artifact_id"]
+            provenance["ebus"] = deepcopy(artifact["ebus_identity"])
+        if provenance["eebus_source_id"] is not None:
+            source_row = source_by_contract(source, M625_TUPLE[1])
+            artifact = artifact_by_contract(source, M625_TUPLE[1])
+            provenance["eebus_source_id"] = source_row["source_id"]
+            provenance["eebus_artifact_id"] = artifact["artifact_id"]
+            provenance["eebus_service"] = artifact["normalized_evidence"][
+                "services"
+            ][0]
+        if provenance["cloud"] is not None:
+            contract = "helianthus.cloud-app.precaptured.evidence.v1"
+            source_row = source_by_contract(source, contract)
+            artifact = artifact_by_contract(source, contract)
+            provenance["cloud"]["source_id"] = source_row["source_id"]
+            provenance["cloud"]["artifact_id"] = artifact["artifact_id"]
+        provenance["native_evidence_refs"] = sorted(
+            provenance["native_evidence_refs"],
+            key=module.ref_sort_key,
+        )
+    refresh_candidate_hashes(module, graph)
+    return graph
+
+
+def test_candidate_outer_verifier_accepts_historical_and_m625_authorities(
+    tmp_path: pathlib.Path,
+) -> None:
+    historical = subprocess.run(
+        [
+            sys.executable,
+            str(CANDIDATE_VALIDATOR),
+            "verify",
+            "--graph",
+            str(CANDIDATE_GRAPH),
+            "--registry",
+            str(CANDIDATE_REGISTRY),
+            "--source-bundle",
+            str(HISTORICAL_BUNDLE),
+            "--source-replay",
+            str(HISTORICAL_REPLAY),
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert historical.returncode == 0, historical.stdout + historical.stderr
+
+    module = load_candidate_validator()
+    source = load_json(M625_BUNDLE)
+    replay = load_json(M625_REPLAY)
+    graph = candidate_graph_for_source(module, source, replay)
+    graph_path = tmp_path / "m625-candidate.json"
+    graph_path.write_text(
+        json.dumps(graph, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    m625 = subprocess.run(
+        [
+            sys.executable,
+            str(CANDIDATE_VALIDATOR),
+            "verify",
+            "--graph",
+            str(graph_path),
+            "--registry",
+            str(CANDIDATE_REGISTRY),
+            "--source-bundle",
+            str(M625_BUNDLE),
+            "--source-replay",
+            str(M625_REPLAY),
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert m625.returncode == 0, m625.stdout + m625.stderr
+    assert m625.stdout == "ok\n"
+    assert m625.stderr == ""
+
+
+def m625_two_path_artifact() -> tuple[dict, dict]:
+    bundle = deepcopy(load_json(M625_BUNDLE))
+    artifact = eebus_artifact(bundle)
+    payload = artifact["normalized_evidence"]
+    second_path = deepcopy(payload["feature_paths"][0])
+    second_path["entity"] = "R" * 43
+    second_path["feature"] = "S" * 43
+    second_path["feature_path"][1]["selector"] = second_path["entity"]
+    second_path["feature_path"][2]["selector"] = second_path["feature"]
+    second_path["feature_path"][3]["selector"] = "T" * 43
+    payload["feature_paths"].append(second_path)
+    second_observation = deepcopy(payload["observations"][0])
+    second_observation["observation_ref"] = "obs-" + "U" * 43
+    second_observation["path_index"] = 1
+    payload["observations"].append(second_observation)
+    return bundle, artifact
+
+
+def m625_sample_fact(artifact: dict, observation_index: int) -> dict:
+    bundle = load_json(M625_BUNDLE)
+    ebus = next(row for row in bundle["artifacts"] if row["source_kind"] == "EBUS")
+    payload = artifact["normalized_evidence"]
+    selected_path = payload["feature_paths"][0]
+    return {
+        "provenance": {
+            "native_evidence_refs": [
+                deepcopy(ebus["evidence_refs"][0]),
+                deepcopy(artifact["evidence_refs"][0]),
+            ],
+            "ebus_source_id": ebus["source_id"],
+            "ebus_artifact_id": ebus["artifact_id"],
+            "eebus_source_id": artifact["source_id"],
+            "eebus_artifact_id": artifact["artifact_id"],
+            "eebus_service": selected_path["service"],
+            "eebus": deepcopy(selected_path),
+        },
+        "comparator": {
+            "samples": [
+                {
+                    "left": {
+                        "source_kind": "EBUS",
+                        "source_id": ebus["source_id"],
+                        "artifact_id": ebus["artifact_id"],
+                        "evidence_ref": deepcopy(ebus["evidence_refs"][0]),
+                        "observed_offset_ns": ebus[
+                            "recorder_ingested_offset_ns"
+                        ],
+                        "value_pointer": "/observations/0/value",
+                        "unit_pointer": "/observations/0/unit",
+                        "native_decimal": "21.5",
+                        "native_unit": "degC",
+                    },
+                    "right": {
+                        "source_kind": "EEBUS",
+                        "source_id": artifact["source_id"],
+                        "artifact_id": artifact["artifact_id"],
+                        "evidence_ref": deepcopy(artifact["evidence_refs"][0]),
+                        "observed_offset_ns": artifact[
+                            "recorder_ingested_offset_ns"
+                        ],
+                        "value_pointer": (
+                            f"/observations/{observation_index}/value"
+                        ),
+                        "unit_pointer": (
+                            f"/observations/{observation_index}/unit"
+                        ),
+                        "native_decimal": "21.5",
+                        "native_unit": "degC",
+                    },
+                }
+            ]
+        },
+    }
+
+
+def test_candidate_m625_pointer_binding_is_exact_and_path_index_bound() -> None:
+    module = load_candidate_validator()
+    bundle, artifact = m625_two_path_artifact()
+    artifacts = module._artifact_index(bundle)
+    valid = m625_sample_fact(artifact, 0)
+    module._check_sample_provenance(valid, artifacts)
+
+    mismatch = m625_sample_fact(artifact, 1)
+    with pytest.raises(module.Failure):
+        module._check_sample_provenance(mismatch, artifacts)
+
+    malformed = m625_sample_fact(artifact, 0)
+    malformed["comparator"]["samples"][0]["right"]["value_pointer"] = (
+        "/observations/00/value"
+    )
+    with pytest.raises(module.Failure):
+        module._check_sample_provenance(malformed, artifacts)
+
+
+def schema_accepts(path: pathlib.Path, payload: dict, tmp_path: pathlib.Path) -> bool:
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    instance = tmp_path / "source.json"
+    instance.write_text(
+        json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True),
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["jv", str(path), str(instance)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
+def validator_accepts_m625(module, artifact: dict, payload: dict) -> bool:
+    candidate = deepcopy(artifact)
+    candidate["normalized_evidence"] = payload
+    try:
+        module.validate_m625_eebus_payload(payload, candidate)
+    except module.Failure:
+        return False
+    return True
+
+
+def test_m625_validator_matches_vendored_source_schema_for_integer_edges(
+    tmp_path: pathlib.Path,
+) -> None:
+    module = load_candidate_validator().synchronized
+    artifact = eebus_artifact(load_json(M625_BUNDLE))
+    base = deepcopy(artifact["normalized_evidence"])
+    schema_bool = deepcopy(base)
+    schema_bool["schema_version"] = True
+    path_bool = deepcopy(base)
+    path_bool["observations"][0]["path_index"] = True
+    repeated_path = deepcopy(base)
+    second = deepcopy(repeated_path["observations"][0])
+    second["observation_ref"] = "obs-" + "V" * 43
+    repeated_path["observations"].append(second)
+
+    for name, payload in (
+        ("base", base),
+        ("schema-version-bool", schema_bool),
+        ("path-index-bool", path_bool),
+        ("repeated-path-index", repeated_path),
+    ):
+        expected = schema_accepts(
+            VENDORED_M625_SCHEMA, payload, tmp_path / name
+        )
+        actual = validator_accepts_m625(module, artifact, payload)
+        assert actual == expected, name
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        lambda bundle: _set_all_schema_versions(bundle, True),
+        lambda bundle: eebus_artifact(bundle).__setitem__("item_count", True),
+        lambda bundle: eebus_artifact(bundle).__setitem__("byte_count", True),
+    ),
+    ids=("schema-version-bool", "item-count-bool", "byte-count-bool"),
+)
+def test_bundle_integer_fields_reject_boolean_before_hash(
+    tmp_path: pathlib.Path, mutation
+) -> None:
+    result = run_validator("verify", write_mutation(tmp_path, mutation))
+    assert result.returncode == 1
+    assert result.stdout == "schema.bundle\n"
+    assert result.stderr == ""
+
+
+def _set_all_schema_versions(bundle: dict, value: bool) -> None:
+    bundle["schema_version"] = value
+    for source in bundle["sources"]:
+        source["schema_version"] = value
+    for artifact in bundle["artifacts"]:
+        artifact["schema_version"] = value
+
+
+def test_m625_remasking_rejects_one_pseudonym_for_distinct_identities() -> None:
+    module = load_candidate_validator().synchronized
+    artifact = deepcopy(eebus_artifact(load_json(M625_BUNDLE)))
+    payload = artifact["normalized_evidence"]
+    service = payload["services"][0]
+    payload["feature_paths"][0]["entity"] = service
+    payload["feature_paths"][0]["feature_path"][1]["selector"] = service
+    artifact["remasking"]["entries"] = [
+        entry
+        for entry in artifact["remasking"]["entries"]
+        if entry["path"] != "/feature_paths/0/entity"
+    ]
+    with pytest.raises(module.Failure):
+        module.validate_remasking([artifact])
 
 
 def test_candidate_fact_consumes_m625_identity_and_observation_pointers() -> None:
