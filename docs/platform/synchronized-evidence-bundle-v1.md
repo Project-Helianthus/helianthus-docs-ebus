@@ -302,7 +302,13 @@ payload at its root. The operation is exactly
 `eebus.v1.features.data.get`; each observation binds
 `/observations/{index}/value` and `/observations/{index}/unit`, while
 `path_index` selects one complete pseudonymous service/entity/feature/field
-path. Tuple substitution is rejected before artifact hashing.
+path. One `observation_ref` may repeat only for repeated observations selecting
+the same complete path identity and path position; reusing it across distinct
+paths or positions is rejected. The pinned source schema's JSON Schema integer
+semantics accept integral JSON numbers such as `schema_version: 1.0` and
+`path_index: 0.0`, while booleans are not integers. The platform envelope keeps
+its own V1 safe-integer encoding rules. Tuple substitution is rejected before
+artifact hashing.
 
 `SourceBindingV1` is the complete comparability object. Its closed fields are:
 

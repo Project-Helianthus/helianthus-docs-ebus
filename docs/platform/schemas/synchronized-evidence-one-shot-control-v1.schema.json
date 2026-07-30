@@ -121,9 +121,13 @@
     "source_contract": "helianthus.eebus.m625.public-redacted-evidence.v1",
     "source_schema_version": 1,
     "idempotency_key": "ACTION_EVIDENCE_REF_PLUS_SOURCE_TUPLE",
-    "offline_replay_count": 2,
-    "offline_replay_equality": "BYTE_IDENTICAL",
-    "receipt_after": "BUNDLE_PUBLISH",
-    "repeat_result": "EXISTING_NO_IO_NO_TIMESTAMP_NO_BUNDLE"
+    "prepublish_replay_count": 2,
+    "prepublish_replay_input": "FINALIZED_CANONICAL_STAGING_BYTES",
+    "prepublish_replay_equality": "BYTE_IDENTICAL",
+    "postpublish_verification": "REOPEN_VALIDATE_REPLAY_MATCH",
+    "receipt_after": "ATOMIC_PUBLISH_REOPEN_VALIDATE_REPLAY",
+    "repeat_result": "EXISTING_NO_RUNTIME_NETWORK_SOURCE_ACQUISITION_IO",
+    "repeat_allowed_io": "REQUEST_STORE_READ_RETAINED_VALIDATION_OFFLINE_REPLAY",
+    "repeat_forbidden_new": "TIMESTAMPS_BUNDLE_PSEUDONYMS_STAGING"
   }
 }

@@ -8,6 +8,7 @@ import calendar
 import copy
 import hashlib
 import json
+import math
 import pathlib
 import re
 import sys
@@ -296,6 +297,18 @@ def check_portable(value: Any, depth: int, limits: dict[str, Any], *, key: bool 
 def exact_keys(value: Any, keys: set[str]) -> None:
     if not isinstance(value, dict) or set(value) != keys:
         raise Failure("schema.bundle")
+
+
+def is_json_schema_integer(
+    value: Any, *, minimum: int = 0, maximum: int = SAFE_MAX
+) -> bool:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    if isinstance(value, float) and (
+        not math.isfinite(value) or not value.is_integer()
+    ):
+        return False
+    return minimum <= value <= maximum
 
 
 def validate_identity(identity: Any, expected_kind: str | None = None) -> None:
@@ -604,8 +617,8 @@ def identity_digest_paths(value: Any, prefix: str = "") -> set[str]:
 
 def m625_remasking_requirements(
     payload: dict[str, Any],
-) -> dict[str, tuple[str, tuple[str, ...]]]:
-    requirements: dict[str, tuple[str, tuple[str, ...]]] = {}
+) -> dict[str, tuple[str, tuple[Any, ...]]]:
+    requirements: dict[str, tuple[str, tuple[Any, ...]]] = {}
     try:
         services = payload["services"]
         feature_paths = payload["feature_paths"]
@@ -668,9 +681,23 @@ def m625_remasking_requirements(
                 ] = (segment["selector"], identities[segment_index])
         for index, observation in enumerate(observations):
             pseudonym = observation["observation_ref"].removeprefix("obs-")
+            path_index = observation["path_index"]
+            if not is_json_schema_integer(path_index):
+                raise Failure("privacy.remask")
+            selected_path = feature_paths[int(path_index)]
             requirements[f"/observations/{index}/observation_ref"] = (
                 pseudonym,
-                ("OBSERVATION", pseudonym),
+                (
+                    "OBSERVATION",
+                    int(path_index),
+                    selected_path["service"],
+                    selected_path["entity"],
+                    selected_path["feature"],
+                    *(
+                        (segment["kind"], segment["selector"])
+                        for segment in selected_path["feature_path"]
+                    ),
+                ),
             )
     except (KeyError, TypeError, IndexError, AttributeError):
         raise Failure("privacy.remask")
@@ -681,7 +708,7 @@ def validate_remasking(artifacts: list[dict[str, Any]]) -> None:
     scope_ids = {artifact["remasking"]["scope_id"] for artifact in artifacts}
     if len(scope_ids) > 1:
         raise Failure("privacy.remask")
-    assignments: dict[str, tuple[str, ...]] = {}
+    assignments: dict[str, tuple[Any, ...]] = {}
     for artifact in artifacts:
         remasking = artifact["remasking"]
         exact_keys(remasking, {"method", "scope_id", "entries"})
@@ -764,8 +791,9 @@ def validate_m625_eebus_payload(
         raise Failure("schema.source")
     if (
         payload["contract"] != M625_EEBUS_CONTRACT
-        or type(payload["schema_version"]) is not int
-        or payload["schema_version"] != 1
+        or not is_json_schema_integer(
+            payload["schema_version"], minimum=1, maximum=1
+        )
     ):
         raise Failure("schema.source")
     try:
@@ -841,8 +869,7 @@ def validate_m625_eebus_payload(
         if (
             not isinstance(observation["observation_ref"], str)
             or not M625_OBSERVATION_REF.fullmatch(observation["observation_ref"])
-            or type(observation["path_index"]) is not int
-            or not 0 <= observation["path_index"] <= SAFE_MAX
+            or not is_json_schema_integer(observation["path_index"])
             or not isinstance(observation["feature_type"], str)
             or not M625_IDENTIFIER.fullmatch(observation["feature_type"])
             or not isinstance(observation["feature_role"], str)
@@ -924,8 +951,9 @@ def validate_m625_path_binding(payload: dict[str, Any]) -> None:
         if {path["service"] for path in paths} != set(services):
             raise Failure("schema.source")
         if any(
-            type(observation["path_index"]) is not int
-            or not 0 <= observation["path_index"] < len(paths)
+            not is_json_schema_integer(
+                observation["path_index"], maximum=len(paths) - 1
+            )
             for observation in observations
         ):
             raise Failure("schema.source")
@@ -979,7 +1007,9 @@ def validate_source_payload(artifact: dict[str, Any]) -> int:
         if artifact["source_contract"] == M625_EEBUS_CONTRACT:
             if (
                 payload.get("contract") != artifact["source_contract"]
-                or type(payload.get("schema_version")) is not int
+                or not is_json_schema_integer(
+                    payload.get("schema_version"), minimum=1, maximum=1
+                )
                 or payload["schema_version"] != artifact["source_schema_version"]
                 or payload.get("source_observed_at")
                 != artifact["source_observed_at"]

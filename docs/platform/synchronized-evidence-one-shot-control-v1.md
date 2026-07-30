@@ -79,20 +79,23 @@ or any conflicting retained candidate returns `CONFLICT`; neither case reads
 the runtime. No mutable side index is authority for this decision.
 
 For a new capture, all source and `CLOUD_APP` input validation completes
-before the first read. The completed candidate bundle must pass two offline byte-identical replays.
-Each replay starts from the published candidate bytes and has no runtime,
-network, clock, randomness, or mutable-store input. Any byte difference returns
-`REPLAY_MISMATCH` and publishes nothing.
+before the first read. The completed candidate contract requires that two offline byte-identical replays consume the finalized canonical staging bytes
+before atomic publication. Each replay has no runtime, network, clock, randomness,
+or mutable-store input. Any byte difference returns `REPLAY_MISMATCH` and
+publishes nothing.
 
 Publication follows the synchronized-evidence durable-write order. The
-implementation must publish the receipt only after the bundle is atomically
-published, re-opened, validated, and the containing directory is synced. A
+implementation atomically publishes the bundle, then re-opens the final bundle, validates it, and verifies replay
+against the prepublication result. It syncs the containing directory and may
+publish or return a success receipt only after all of those steps complete. A
 crash after bundle publication but before the response is recovered by the
 retained-bundle lookup.
 
-A repeated call, including after process restart, returns `EXISTING` with
-no new reads and no new timestamps, no new bundle, no new pseudonyms, and no
-staging artifact. The result does not depend on a process-local cache.
+A repeated call, including after process restart, may perform the required
+request and store reads, retained-bundle validation, and offline replay before
+returning `EXISTING`. It performs no runtime, network, or source-acquisition I/O
+and creates no new timestamps, bundle, pseudonyms, or staging artifact. The
+result does not depend on a process-local cache.
 
 ## Failure Surface
 
