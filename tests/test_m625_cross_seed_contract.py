@@ -347,6 +347,25 @@ def test_m625_focused_contract_is_in_local_and_github_docs_ci() -> None:
         in local_ci
     )
     assert "M625_TRUSTED_BASE_ROOT" in docs_ci
+    assert "Checkout exact M6.25 trusted validator base" in docs_ci
+    assert "ref: 8215201a4274db5310ee672619ba2f1d27b99bec" in docs_ci
+    assert "path: checkouts/m625-trusted-base" in docs_ci
+    assert (
+        "M625_TRUSTED_BASE_ROOT: ${{ github.workspace }}/checkouts/m625-trusted-base"
+        in docs_ci
+    )
     assert "run: ./scripts/ci_local.sh" in docs_ci
     assert "Validate PR M6.25 provenance contract" in combined_ref
     assert "checkouts/docs-ebus/scripts/validate_platform_combined_ref.py" in combined_ref
+    assert (
+        combined_ref.count(
+            "--m625-docs-eebus-root checkouts/m625-docs-eebus"
+        )
+        == 3
+    )
+    assert (
+        combined_ref.count(
+            "--m625-execution-plans-root checkouts/m625-execution-plans"
+        )
+        == 3
+    )
