@@ -24,6 +24,25 @@ GRAPH_CONTRACT = "helianthus.platform.draft-candidate-fact-graph.v1"
 REGISTRY_CONTRACT = "helianthus.platform.draft-candidate-fact-registry.v1"
 SOURCE_CONTRACT = "helianthus.platform.synchronized-evidence-bundle.v1"
 M625_EEBUS_CONTRACT = "helianthus.eebus.m625.public-redacted-evidence.v1"
+M625_SOURCE_KEY = ("EEBUS", M625_EEBUS_CONTRACT, 1)
+M625_SOURCE_AUTHORITY = {
+    "source_kind": "EEBUS",
+    "source_contract": M625_EEBUS_CONTRACT,
+    "source_schema_version": 1,
+    "owner_repository": "Project-Helianthus/helianthus-docs-eebus",
+    "owner_path": (
+        "api/_candidate/msp-0625/"
+        "helianthus.eebus.m625.public-redacted-evidence.v1.schema.json"
+    ),
+    "owner_commit": "a09e3a77153204bc3117e233c71e77ef1859834e",
+    "schema_sha256": (
+        "0a2885d01d6703389541e246db59bcd845a332e7ed296abca2d49b4f8de31811"
+    ),
+    "embedded_schema": (
+        "docs/platform/schemas/vendor/"
+        "helianthus.eebus.m625.public-redacted-evidence.v1.schema.json"
+    ),
+}
 FACT_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT:V1"
 GRAPH_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT-GRAPH:V1"
 REPLAY_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT-REPLAY:V1"
@@ -652,6 +671,40 @@ def _check_sample_provenance(
                 )
             ):
                 fail("provenance.binding")
+            if (
+                expected_kind == "EEBUS"
+                and artifact.get("source_contract") == M625_EEBUS_CONTRACT
+            ):
+                value_match = re.fullmatch(
+                    r"/observations/(0|[1-9][0-9]*)/value",
+                    side["value_pointer"],
+                )
+                unit_match = re.fullmatch(
+                    r"/observations/(0|[1-9][0-9]*)/unit",
+                    side["unit_pointer"],
+                )
+                if value_match is None or unit_match is None:
+                    fail("provenance.binding")
+                observation_index = int(value_match.group(1))
+                if int(unit_match.group(1)) != observation_index:
+                    fail("provenance.binding")
+                try:
+                    observation = artifact["normalized_evidence"][
+                        "observations"
+                    ][observation_index]
+                    path_index = observation["path_index"]
+                    selected_path = artifact["normalized_evidence"][
+                        "feature_paths"
+                    ][path_index]
+                except (KeyError, IndexError, TypeError):
+                    fail("provenance.binding")
+                if (
+                    type(path_index) is not int
+                    or provenance["eebus"] != selected_path
+                    or provenance["eebus_service"]
+                    != selected_path["service"]
+                ):
+                    fail("provenance.binding")
 
 
 def check_provenance(
@@ -1439,29 +1492,65 @@ def _verify_source_inputs(
     source_bundle_raw: bytes,
     source_replay: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    source_registry_path = registry_path.parent / pathlib.Path(
+    current_registry_path = registry_path.parent / pathlib.Path(
         registry["source_contract"]["source_registry_path"]
     ).name
     try:
         expected_registry_sha = registry["source_contract"][
             "source_registry_sha256"
         ]
-        if (
-            hashlib.sha256(source_registry_path.read_bytes()).hexdigest()
-            != expected_registry_sha
-        ):
-            source_registry_path = (
-                source_registry_path.parent
+        current_registry_sha = hashlib.sha256(
+            current_registry_path.read_bytes()
+        ).hexdigest()
+        if current_registry_sha == expected_registry_sha:
+            source_registry = synchronized.load_registry(
+                current_registry_path
+            )
+        else:
+            historical_registry_path = (
+                current_registry_path.parent
                 / "history"
                 / expected_registry_sha
-                / source_registry_path.name
+                / current_registry_path.name
             )
             if (
-                hashlib.sha256(source_registry_path.read_bytes()).hexdigest()
+                hashlib.sha256(
+                    historical_registry_path.read_bytes()
+                ).hexdigest()
                 != expected_registry_sha
             ):
                 fail("provenance.binding")
-        source_registry = synchronized.load_registry(source_registry_path)
+            historical_registry = synchronized.load_registry(
+                historical_registry_path
+            )
+            required_source_keys = {
+                (
+                    row["source_binding"]["source_kind"],
+                    row["source_binding"]["source_contract"],
+                    row["source_binding"]["source_schema_version"],
+                )
+                for row in source_bundle["sources"]
+            }
+            missing_source_keys = (
+                required_source_keys - historical_registry.keys()
+            )
+            if not missing_source_keys:
+                source_registry = historical_registry
+            elif missing_source_keys == {M625_SOURCE_KEY}:
+                source_registry = synchronized.load_registry(
+                    current_registry_path
+                )
+                if (
+                    source_registry.get(M625_SOURCE_KEY)
+                    != M625_SOURCE_AUTHORITY
+                    or any(
+                        source_registry.get(key) != entry
+                        for key, entry in historical_registry.items()
+                    )
+                ):
+                    fail("provenance.binding")
+            else:
+                fail("provenance.binding")
         verified_source = synchronized.verify(
             copy.deepcopy(source_bundle), source_registry, len(source_bundle_raw)
         )

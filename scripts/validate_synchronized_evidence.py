@@ -336,6 +336,8 @@ def validate_binding(binding: Any, registry: dict[tuple[str, str, int], dict[str
         raise Failure("schema.bundle")
     if binding["snapshot_scope"]["mode"] not in {"SNAPSHOT", "LIVE_READ", "PRECAPTURED"}:
         raise Failure("schema.bundle")
+    if type(binding["source_schema_version"]) is not int:
+        raise Failure("schema.bundle")
     key = (binding["source_kind"], binding["source_contract"], binding["source_schema_version"])
     entry = registry.get(key)
     if entry is None:
@@ -458,7 +460,11 @@ def load_registry(path: pathlib.Path) -> dict[tuple[str, str, int], dict[str, An
     raw = load_json(path, "schema.registry")
     if not isinstance(raw, dict) or set(raw) != {"contract", "version", "entries"}:
         raise Failure("schema.registry")
-    if raw["contract"] != "helianthus.platform.source-schema-registry.v1" or raw["version"] != 1:
+    if (
+        raw["contract"] != "helianthus.platform.source-schema-registry.v1"
+        or type(raw["version"]) is not int
+        or raw["version"] != 1
+    ):
         raise Failure("schema.registry")
     result = {}
     try:
@@ -475,6 +481,8 @@ def load_registry(path: pathlib.Path) -> dict[tuple[str, str, int], dict[str, An
     }
     for entry in raw["entries"]:
         if not isinstance(entry, dict) or set(entry) != entry_keys:
+            raise Failure("schema.registry")
+        if type(entry["source_schema_version"]) is not int:
             raise Failure("schema.registry")
         key = (entry["source_kind"], entry["source_contract"], entry["source_schema_version"])
         if key in result:
@@ -594,28 +602,86 @@ def identity_digest_paths(value: Any, prefix: str = "") -> set[str]:
     return paths
 
 
-def m625_pseudonym_values(payload: dict[str, Any]) -> set[str]:
-    values = set(payload.get("services", []))
-    for path in payload.get("feature_paths", []):
-        if not isinstance(path, dict):
-            continue
-        values.update(path.get(field) for field in ("service", "entity", "feature"))
-        for segment in path.get("feature_path", []):
-            if isinstance(segment, dict):
-                values.add(segment.get("selector"))
-    for observation in payload.get("observations", []):
-        if isinstance(observation, dict):
-            ref = observation.get("observation_ref")
-            if isinstance(ref, str) and ref.startswith("obs-"):
-                values.add(ref.removeprefix("obs-"))
-    return {value for value in values if isinstance(value, str)}
+def m625_remasking_requirements(
+    payload: dict[str, Any],
+) -> dict[str, tuple[str, tuple[str, ...]]]:
+    requirements: dict[str, tuple[str, tuple[str, ...]]] = {}
+    try:
+        services = payload["services"]
+        feature_paths = payload["feature_paths"]
+        observations = payload["observations"]
+        for index, service in enumerate(services):
+            requirements[f"/services/{index}"] = (
+                service,
+                ("SERVICE", service),
+            )
+        for path_index, path in enumerate(feature_paths):
+            segments = path["feature_path"]
+            if (
+                [segment["kind"] for segment in segments[:3]]
+                != ["SERVICE", "ENTITY", "FEATURE"]
+                or any(segment["kind"] != "FIELD" for segment in segments[3:])
+                or [segment["selector"] for segment in segments[:3]]
+                != [path["service"], path["entity"], path["feature"]]
+                or path["service"] not in services
+            ):
+                raise Failure("privacy.remask")
+            prefix = f"/feature_paths/{path_index}"
+            service_identity = ("SERVICE", path["service"])
+            entity_identity = ("ENTITY", path["service"], path["entity"])
+            feature_identity = (
+                "FEATURE",
+                path["service"],
+                path["entity"],
+                path["feature"],
+            )
+            requirements[f"{prefix}/service"] = (
+                path["service"],
+                service_identity,
+            )
+            requirements[f"{prefix}/entity"] = (
+                path["entity"],
+                entity_identity,
+            )
+            requirements[f"{prefix}/feature"] = (
+                path["feature"],
+                feature_identity,
+            )
+            identities = [
+                service_identity,
+                entity_identity,
+                feature_identity,
+            ]
+            for segment_index, segment in enumerate(segments):
+                if segment_index >= 3:
+                    identities.append(
+                        (
+                            "FIELD",
+                            *(
+                                item["selector"]
+                                for item in segments[: segment_index + 1]
+                            ),
+                        )
+                    )
+                requirements[
+                    f"{prefix}/feature_path/{segment_index}/selector"
+                ] = (segment["selector"], identities[segment_index])
+        for index, observation in enumerate(observations):
+            pseudonym = observation["observation_ref"].removeprefix("obs-")
+            requirements[f"/observations/{index}/observation_ref"] = (
+                pseudonym,
+                ("OBSERVATION", pseudonym),
+            )
+    except (KeyError, TypeError, IndexError, AttributeError):
+        raise Failure("privacy.remask")
+    return requirements
 
 
 def validate_remasking(artifacts: list[dict[str, Any]]) -> None:
     scope_ids = {artifact["remasking"]["scope_id"] for artifact in artifacts}
     if len(scope_ids) > 1:
         raise Failure("privacy.remask")
-    assignments: dict[str, tuple[str, str]] = {}
+    assignments: dict[str, tuple[str, ...]] = {}
     for artifact in artifacts:
         remasking = artifact["remasking"]
         exact_keys(remasking, {"method", "scope_id", "entries"})
@@ -624,13 +690,17 @@ def validate_remasking(artifacts: list[dict[str, Any]]) -> None:
         if not re.fullmatch(r"remask-[0-9a-f]{32}", remasking["scope_id"]):
             raise Failure("privacy.remask")
         seen_paths: set[str] = set()
-        seen_values: set[str] = set()
         ordered_entries: list[tuple[str, str]] = []
+        requirements = (
+            m625_remasking_requirements(artifact["normalized_evidence"])
+            if artifact["source_contract"] == M625_EEBUS_CONTRACT
+            else None
+        )
         for entry in remasking["entries"]:
             if set(entry) != {"path", "pseudonym"}:
                 raise Failure("schema.bundle")
             path, pseudonym = entry["path"], entry["pseudonym"]
-            if path in seen_paths or pseudonym in seen_values:
+            if path in seen_paths:
                 raise Failure("privacy.remask")
             try:
                 actual = pointer_get(artifact["normalized_evidence"], path)
@@ -646,13 +716,21 @@ def validate_remasking(artifacts: list[dict[str, Any]]) -> None:
                 or not M625_PSEUDONYM.fullmatch(pseudonym)
             ):
                 raise Failure("privacy.remask")
+            if requirements is not None:
+                expected = requirements.get(path)
+                if expected is None or expected[0] != pseudonym:
+                    raise Failure("privacy.remask")
+                identity = (
+                    artifact["source_id"],
+                    *expected[1],
+                )
+            else:
+                identity = (artifact["source_id"], path)
             previous = assignments.get(pseudonym)
-            identity = (artifact["source_id"], path)
             if previous is not None and previous != identity:
                 raise Failure("privacy.remask")
             assignments[pseudonym] = identity
             seen_paths.add(path)
-            seen_values.add(pseudonym)
             ordered_entries.append((path, pseudonym))
         if ordered_entries != sorted(ordered_entries):
             raise Failure("ordering.invalid")
@@ -662,9 +740,7 @@ def validate_remasking(artifacts: list[dict[str, Any]]) -> None:
                 raise Failure("privacy.remask")
         if artifact["source_binding"]["source_kind"] == "EEBUS":
             if artifact["source_contract"] == M625_EEBUS_CONTRACT:
-                if not m625_pseudonym_values(
-                    artifact["normalized_evidence"]
-                ) <= seen_values:
+                if requirements is None or set(requirements) != seen_paths:
                     raise Failure("privacy.remask")
             else:
                 declared = {entry["path"] for entry in remasking["entries"]}
@@ -688,9 +764,8 @@ def validate_m625_eebus_payload(
         raise Failure("schema.source")
     if (
         payload["contract"] != M625_EEBUS_CONTRACT
-        or payload["contract"] != artifact["source_contract"]
-        or payload["schema_version"] != artifact["source_schema_version"]
-        or payload["source_observed_at"] != artifact["source_observed_at"]
+        or type(payload["schema_version"]) is not int
+        or payload["schema_version"] != 1
     ):
         raise Failure("schema.source")
     try:
@@ -711,13 +786,9 @@ def validate_m625_eebus_payload(
         for service in services
     ):
         raise Failure("schema.source")
-    if services != sorted(set(services)):
-        raise Failure("ordering.invalid")
-
     paths = payload["feature_paths"]
     if not isinstance(paths, list) or not paths or len(paths) > 4096:
         raise Failure("schema.source")
-    path_order: list[bytes] = []
     for path in paths:
         if not isinstance(path, dict) or set(path) != {
             "service",
@@ -745,21 +816,6 @@ def validate_m625_eebus_payload(
                 or not M625_PSEUDONYM.fullmatch(segment["selector"])
             ):
                 raise Failure("schema.source")
-        if (
-            [segment["kind"] for segment in segments[:3]]
-            != ["SERVICE", "ENTITY", "FEATURE"]
-            or any(segment["kind"] != "FIELD" for segment in segments[3:])
-            or [segment["selector"] for segment in segments[:3]]
-            != [path["service"], path["entity"], path["feature"]]
-            or path["service"] not in services
-        ):
-            raise Failure("schema.source")
-        path_order.append(canonical(path))
-    if path_order != sorted(set(path_order)):
-        raise Failure("ordering.invalid")
-    if {path["service"] for path in paths} != set(services):
-        raise Failure("schema.source")
-
     observations = payload["observations"]
     if (
         not isinstance(observations, list)
@@ -767,9 +823,6 @@ def validate_m625_eebus_payload(
         or len(observations) > 4096
     ):
         raise Failure("schema.source")
-    observation_refs: list[str] = []
-    observation_times: list[int] = []
-    path_indices: set[int] = set()
     for observation in observations:
         if not isinstance(observation, dict) or set(observation) != {
             "observation_ref",
@@ -789,7 +842,7 @@ def validate_m625_eebus_payload(
             not isinstance(observation["observation_ref"], str)
             or not M625_OBSERVATION_REF.fullmatch(observation["observation_ref"])
             or type(observation["path_index"]) is not int
-            or not 0 <= observation["path_index"] < len(paths)
+            or not 0 <= observation["path_index"] <= SAFE_MAX
             or not isinstance(observation["feature_type"], str)
             or not M625_IDENTIFIER.fullmatch(observation["feature_type"])
             or not isinstance(observation["feature_role"], str)
@@ -801,14 +854,9 @@ def validate_m625_eebus_payload(
         ):
             raise Failure("schema.source")
         try:
-            observation_time = timestamp_ns(observation["source_observed_at"])
+            timestamp_ns(observation["source_observed_at"])
         except Failure:
             raise Failure("schema.source")
-        if observation["path_index"] in path_indices:
-            raise Failure("schema.source")
-        path_indices.add(observation["path_index"])
-        observation_times.append(observation_time)
-        observation_refs.append(observation["observation_ref"])
 
         value_type = observation["value_type"]
         value = observation["value"]
@@ -854,11 +902,35 @@ def validate_m625_eebus_payload(
                 raise Failure("schema.source")
         else:
             raise Failure("schema.source")
-    if observation_refs != sorted(set(observation_refs)):
-        raise Failure("ordering.invalid")
-    if timestamp_ns(payload["source_observed_at"]) != max(observation_times):
-        raise Failure("schema.source")
     return len(observations)
+
+
+def validate_m625_path_binding(payload: dict[str, Any]) -> None:
+    try:
+        services = payload["services"]
+        paths = payload["feature_paths"]
+        observations = payload["observations"]
+        for path in paths:
+            segments = path["feature_path"]
+            if (
+                [segment["kind"] for segment in segments[:3]]
+                != ["SERVICE", "ENTITY", "FEATURE"]
+                or any(segment["kind"] != "FIELD" for segment in segments[3:])
+                or [segment["selector"] for segment in segments[:3]]
+                != [path["service"], path["entity"], path["feature"]]
+                or path["service"] not in services
+            ):
+                raise Failure("schema.source")
+        if {path["service"] for path in paths} != set(services):
+            raise Failure("schema.source")
+        if any(
+            type(observation["path_index"]) is not int
+            or not 0 <= observation["path_index"] < len(paths)
+            for observation in observations
+        ):
+            raise Failure("schema.source")
+    except (KeyError, TypeError, IndexError):
+        raise Failure("schema.source")
 
 
 def validate_source_payload(artifact: dict[str, Any]) -> int:
@@ -905,7 +977,17 @@ def validate_source_payload(artifact: dict[str, Any]) -> int:
         return 1
     elif kind == "EEBUS":
         if artifact["source_contract"] == M625_EEBUS_CONTRACT:
-            return validate_m625_eebus_payload(payload, artifact)
+            if (
+                payload.get("contract") != artifact["source_contract"]
+                or type(payload.get("schema_version")) is not int
+                or payload["schema_version"] != artifact["source_schema_version"]
+                or payload.get("source_observed_at")
+                != artifact["source_observed_at"]
+            ):
+                raise Failure("schema.source")
+            count = validate_m625_eebus_payload(payload, artifact)
+            validate_m625_path_binding(payload)
+            return count
         if set(payload) != {"meta", "data", "error"} or payload["error"] is not None:
             raise Failure("schema.source")
         meta = payload["meta"]
@@ -977,7 +1059,12 @@ def verify(bundle: Any, registry: dict[tuple[str, str, int], dict[str, Any]], ra
         or len(bundle["artifacts"]) > limits["max_sources"] * 3
     ):
         raise Failure("limits.exceeded")
-    if bundle["contract"] != "helianthus.platform.synchronized-evidence-bundle.v1" or bundle["schema_version"] != 1:
+    if (
+        bundle["contract"]
+        != "helianthus.platform.synchronized-evidence-bundle.v1"
+        or type(bundle["schema_version"]) is not int
+        or bundle["schema_version"] != 1
+    ):
         raise Failure("schema.bundle")
     if not isinstance(bundle["bundle_id"], str) or not re.fullmatch(r"sebv1:sha256:[0-9a-f]{64}", bundle["bundle_id"]):
         raise Failure("schema.bundle")
@@ -1002,7 +1089,12 @@ def verify(bundle: Any, registry: dict[tuple[str, str, int], dict[str, Any]], ra
         raise Failure("schema.bundle")
     for source in bundle["sources"]:
         exact_keys(source, SOURCE_KEYS)
-        if source["contract"] != bundle["contract"] or source["schema_version"] != 1:
+        if (
+            source["contract"] != bundle["contract"]
+            or type(source["schema_version"]) is not int
+            or source["schema_version"] != 1
+            or type(source["source_schema_version"]) is not int
+        ):
             raise Failure("schema.bundle")
         if source["phase"] not in PHASE_RANK or source["source_kind"] not in RUNTIME_KINDS:
             raise Failure("schema.bundle")
@@ -1063,7 +1155,15 @@ def verify(bundle: Any, registry: dict[tuple[str, str, int], dict[str, Any]], ra
             raise Failure("schema.bundle")
     for artifact in bundle["artifacts"]:
         exact_keys(artifact, ARTIFACT_KEYS)
-        if artifact["contract"] != bundle["contract"] or artifact["schema_version"] != 1:
+        if (
+            artifact["contract"] != bundle["contract"]
+            or type(artifact["schema_version"]) is not int
+            or artifact["schema_version"] != 1
+            or type(artifact["source_schema_version"]) is not int
+            or type(artifact["recorder_ingested_offset_ns"]) is not int
+            or type(artifact["item_count"]) is not int
+            or type(artifact["byte_count"]) is not int
+        ):
             raise Failure("schema.bundle")
         timestamp_ns(artifact["source_observed_at"])
         timestamp_ns(artifact["recorder_ingested_at"])

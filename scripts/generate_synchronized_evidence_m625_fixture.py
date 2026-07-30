@@ -41,6 +41,37 @@ SCHEMA_SHA256 = (
     "0a2885d01d6703389541e246db59bcd845a332e7ed296abca2d49b4f8de31811"
 )
 OPERATION_VERSION = "git:1a02388170a1ee6befeed1529956a7104aa94e21"
+MARKER_ID = "marker-66666666666666666666666666666666"
+REMASK_SCOPE_ID = "remask-88888888888888888888888888888888"
+CLOUD_SUBJECT_PSEUDONYM = "Q" * 43
+SOURCE_IDS = {
+    "ebus-11111111111111111111111111111111":
+        "ebus-61111111111111111111111111111111",
+    "ebus-22222222222222222222222222222222":
+        "ebus-62222222222222222222222222222222",
+    "ebus-33333333333333333333333333333333":
+        "ebus-63333333333333333333333333333333",
+    "eebus-44444444444444444444444444444444":
+        "eebus-64444444444444444444444444444444",
+    "cloud-55555555555555555555555555555555":
+        "cloud-65555555555555555555555555555555",
+}
+RUNTIME_PSEUDONYMS = {
+    "runtime-11111111111111111111111111111111":
+        "runtime-66666666666666666666666666666666",
+    "runtime-44444444444444444444444444444444":
+        "runtime-77777777777777777777777777777777",
+    "runtime-55555555555555555555555555555555":
+        "runtime-88888888888888888888888888888888",
+}
+TARGET_PSEUDONYMS = {
+    "target-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa":
+        "target-dddddddddddddddddddddddddddddddd",
+    "target-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb":
+        "target-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "target-cccccccccccccccccccccccccccccccc":
+        "target-ffffffffffffffffffffffffffffffff",
+}
 
 
 def load_json(path: pathlib.Path) -> dict[str, Any]:
@@ -108,6 +139,59 @@ def source_payload(source_observed_at: str) -> dict[str, Any]:
     }
 
 
+def remap_identity(identity: dict[str, Any] | None) -> dict[str, Any] | None:
+    if identity is None:
+        return None
+    remapped = copy.deepcopy(identity)
+    remapped["target_pseudonym"] = TARGET_PSEUDONYMS[
+        remapped["target_pseudonym"]
+    ]
+    return remapped
+
+
+def independentize_bundle(bundle: dict[str, Any]) -> None:
+    capture_window = copy.deepcopy(bundle["capture_window"])
+    capture_window["action"]["marker_id"] = MARKER_ID
+    bundle["capture_window"] = capture_window
+
+    for source in bundle["sources"]:
+        source["source_id"] = SOURCE_IDS[source["source_id"]]
+        source["capture_window"] = copy.deepcopy(capture_window)
+        source["ebus_identity"] = remap_identity(source["ebus_identity"])
+        binding = source["source_binding"]
+        binding["runtime_pseudonym"] = RUNTIME_PSEUDONYMS[
+            binding["runtime_pseudonym"]
+        ]
+        binding["capture_window"] = copy.deepcopy(capture_window)
+        binding["ebus_identity"] = copy.deepcopy(source["ebus_identity"])
+
+    for artifact in bundle["artifacts"]:
+        artifact["source_id"] = SOURCE_IDS[artifact["source_id"]]
+        artifact["capture_window"] = copy.deepcopy(capture_window)
+        artifact["ebus_identity"] = remap_identity(artifact["ebus_identity"])
+        binding = artifact["source_binding"]
+        binding["runtime_pseudonym"] = RUNTIME_PSEUDONYMS[
+            binding["runtime_pseudonym"]
+        ]
+        binding["capture_window"] = copy.deepcopy(capture_window)
+        binding["ebus_identity"] = copy.deepcopy(artifact["ebus_identity"])
+        artifact["remasking"]["scope_id"] = REMASK_SCOPE_ID
+        if artifact["source_kind"] == "EBUS":
+            artifact["normalized_evidence"]["identity"] = copy.deepcopy(
+                artifact["ebus_identity"]
+            )
+        elif artifact["source_kind"] == "CLOUD_APP":
+            artifact["normalized_evidence"][
+                "subject_pseudonym"
+            ] = CLOUD_SUBJECT_PSEUDONYM
+            artifact["remasking"]["entries"] = [
+                {
+                    "path": "/subject_pseudonym",
+                    "pseudonym": CLOUD_SUBJECT_PSEUDONYM,
+                }
+            ]
+
+
 def replace_eebus_source(bundle: dict[str, Any]) -> None:
     source = next(
         row for row in bundle["sources"] if row["source_kind"] == "EEBUS"
@@ -147,7 +231,7 @@ def replace_eebus_source(bundle: dict[str, Any]) -> None:
     artifact["byte_count"] = len(synchronized.canonical(payload))
     artifact["remasking"] = {
         "method": "PER_BUNDLE_CSPRNG",
-        "scope_id": artifact["remasking"]["scope_id"],
+        "scope_id": REMASK_SCOPE_ID,
         "entries": [
             {
                 "path": "/feature_paths/0/entity",
@@ -158,10 +242,32 @@ def replace_eebus_source(bundle: dict[str, Any]) -> None:
                 "pseudonym": payload["feature_paths"][0]["feature"],
             },
             {
+                "path": "/feature_paths/0/feature_path/0/selector",
+                "pseudonym": payload["feature_paths"][0]["feature_path"][0][
+                    "selector"
+                ],
+            },
+            {
+                "path": "/feature_paths/0/feature_path/1/selector",
+                "pseudonym": payload["feature_paths"][0]["feature_path"][1][
+                    "selector"
+                ],
+            },
+            {
+                "path": "/feature_paths/0/feature_path/2/selector",
+                "pseudonym": payload["feature_paths"][0]["feature_path"][2][
+                    "selector"
+                ],
+            },
+            {
                 "path": "/feature_paths/0/feature_path/3/selector",
                 "pseudonym": payload["feature_paths"][0]["feature_path"][3][
                     "selector"
                 ],
+            },
+            {
+                "path": "/feature_paths/0/service",
+                "pseudonym": payload["feature_paths"][0]["service"],
             },
             {
                 "path": "/observations/0/observation_ref",
@@ -176,22 +282,34 @@ def replace_eebus_source(bundle: dict[str, Any]) -> None:
         ],
     }
 
-    artifact_view = {
-        key: value
-        for key, value in artifact.items()
-        if key not in {"artifact_id", "redacted_hash"}
+
+def rehash_artifacts(bundle: dict[str, Any]) -> None:
+    artifacts_by_source: dict[str, list[str]] = {
+        source["source_id"]: [] for source in bundle["sources"]
     }
-    artifact_hash = synchronized.digest(
-        synchronized.ARTIFACT_DOMAIN, artifact_view
-    )
-    artifact["artifact_id"] = "seav1:sha256:" + artifact_hash
-    artifact["redacted_hash"] = "sha256:" + artifact_hash
-    source["artifact_ids"] = [artifact["artifact_id"]]
+    for artifact in bundle["artifacts"]:
+        artifact_view = {
+            key: value
+            for key, value in artifact.items()
+            if key not in {"artifact_id", "redacted_hash"}
+        }
+        artifact_hash = synchronized.digest(
+            synchronized.ARTIFACT_DOMAIN, artifact_view
+        )
+        artifact["artifact_id"] = "seav1:sha256:" + artifact_hash
+        artifact["redacted_hash"] = "sha256:" + artifact_hash
+        artifacts_by_source[artifact["source_id"]].append(
+            artifact["artifact_id"]
+        )
+    for source in bundle["sources"]:
+        source["artifact_ids"] = sorted(artifacts_by_source[source["source_id"]])
 
 
 def generate() -> tuple[bytes, bytes]:
     bundle = load_json(HISTORICAL_BUNDLE)
+    independentize_bundle(bundle)
     replace_eebus_source(bundle)
+    rehash_artifacts(bundle)
     bundle["sources"].sort(
         key=lambda row: (
             synchronized.PHASE_RANK[row["phase"]],

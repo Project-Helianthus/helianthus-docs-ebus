@@ -270,6 +270,13 @@ and digest stated at the top of this page. The additive M6.25 tuple
 `("EEBUS", "helianthus.eebus.m625.public-redacted-evidence.v1", 1)` pins the
 source-owned schema at
 `Project-Helianthus/helianthus-docs-eebus@a09e3a77153204bc3117e233c71e77ef1859834e`.
+Its exact pinned bytes are vendored at
+`schemas/vendor/helianthus.eebus.m625.public-redacted-evidence.v1.schema.json`
+and must hash to
+`0a2885d01d6703389541e246db59bcd845a332e7ed296abca2d49b4f8de31811`.
+The handwritten M6.25 source validator accepts exactly the instances accepted
+by those schema bytes; platform envelope, remasking, and candidate-binding
+checks run as separate layers and do not narrow the source schema.
 The historical tuple and its fixture/replay remain byte-locked; a registry
 snapshot addressed by its SHA-256 preserves offline verification of that
 prior input after the additive entry.
@@ -480,12 +487,16 @@ different timestamp, and replay emits both values verbatim.
 JSON Pointer plus a 43-character base64url pseudonym. Every historical eeBUS
 identity `digest`, every M6.25 service/entity/feature/field and observation
 reference pseudonym, and every cloud subject pseudonym in normalized evidence
-must appear in this manifest. An `obs-` reference binds the suffix pseudonym;
-other entries equal the value at their pointer. Repeated occurrences of one
-complete path identity are covered by one canonical manifest entry. Field
-names remain those of the pinned source schema; only their values are
-remasked. A runtime-scoped opaque token may never pass through unchanged or
-become a cross-bundle correlator.
+must appear in this manifest at every identity-bearing JSON Pointer. An
+`obs-` reference binds the suffix pseudonym; other entries equal the value at
+their pointer. Repeated occurrences of the same logical service, entity, or
+feature use the same pseudonym but retain one manifest entry per pointer.
+Distinct logical identity positions must never share a pseudonym. The
+manifest is therefore path-complete and injective while still preserving
+required repeated occurrences of one identity. Field names remain those of
+the pinned source schema; only their values are remasked. A runtime-scoped
+opaque token may never pass through unchanged or become a cross-bundle
+correlator.
 
 ## Ordering And Duplicate Rejection
 
@@ -750,9 +761,10 @@ containing `PRESENT` eBUS, eeBUS, and cloud/app sources. The independent
 M6.25 fixture under `fixtures/synchronized-evidence/v1/m625/positive/` is
 generated only by
 `scripts/generate_synchronized_evidence_m625_fixture.py`; the generator derives
-all content-addressed ids, byte counts, artifact hashes, bundle hashes, and
-replay bytes. Its negative corpus contains terminal negative and malformed
-cases. Acceptance
+all per-bundle identifiers and pseudonyms independently from the historical
+fixture and derives all content-addressed ids, byte counts, artifact hashes,
+bundle hashes, and replay bytes. Its negative corpus contains terminal
+negative and malformed cases. Acceptance
 requires two isolated replays to produce byte-identical `ReplayResultV1`
 output, original captured timestamps, identical redacted hashes, and identical
 future candidate inputs while network, cloud, runtime, clock, randomness,
