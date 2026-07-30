@@ -101,6 +101,42 @@ IDENTITY_KEYS = {
         "unit_scale_source",
     },
 }
+M625_EEBUS_CONTRACT = "helianthus.eebus.m625.public-redacted-evidence.v1"
+M625_PSEUDONYM = re.compile(r"^[A-Za-z0-9_-]{43}$")
+M625_OBSERVATION_REF = re.compile(r"^obs-[A-Za-z0-9_-]{43}$")
+M625_IDENTIFIER = re.compile(r"^[A-Za-z][A-Za-z0-9]{0,127}$")
+M625_DECIMAL = re.compile(
+    r"^(0(\.0+)?|0\.[0-9]*[1-9][0-9]*|[1-9][0-9]*(\.[0-9]+)?|"
+    r"-(0\.[0-9]*[1-9][0-9]*|[1-9][0-9]*(\.[0-9]+)?))$"
+)
+M625_ENUM = re.compile(r"^ID_(0|[1-9][0-9]{0,9})$")
+M625_UNITS = {
+    "unknown", "1", "m", "kg", "s", "A", "K", "mol", "cd", "V", "W", "Wh",
+    "VA", "VAh", "var", "varh", "degC", "degF", "Lm", "lx", "Ohm", "Hz",
+    "dB", "dBm", "pct", "ppm", "l", "l/s", "l/h", "deg", "rad", "rad/s",
+    "sr", "Gy", "Bq", "Bq/m^3", "Sv", "Rd", "C", "F", "H", "J", "N",
+    "N_m", "N_s", "Wb", "T", "Pa", "bar", "atm", "psi", "mmHg", "m^2",
+    "m^3", "m^3/h", "m/s", "m/s^2", "m^3/s", "m/m^3", "kg/m^3", "kg_m",
+    "m^2/s", "W/m_K", "J/K", "1/s", "W/m^2", "J/m^2", "S", "S/m", "K/s",
+    "Pa/s", "J/kg_K", "Vs", "V/m", "V/Hz", "As", "A/m", "Hz/s", "kg/s",
+    "kg_m^2", "J/Wh", "W/s", "ft^3", "ft^3/h", "ccf", "ccf/h",
+    "US.liq.gal", "US.liq.gal/h", "Imp.gal", "Imp.gal/h", "Btu", "Btu/h",
+    "Ah", "kg/Wh",
+}
+M625_TERMINALS = {
+    "SUCCESS", "INVALID_ARGUMENT", "PERMISSION_DENIED", "UNSUPPORTED_OPERATION",
+    "PARTIAL_OPERATION_FORBIDDEN", "CONSTRAINTS_UNKNOWN", "CONSTRAINT_FAILURE",
+    "STALE_READ_TOKEN", "CAS_MISMATCH", "RUNTIME_EPOCH_MISMATCH",
+    "CONNECTION_GENERATION_MISMATCH", "IDEMPOTENCY_CONFLICT", "WRITER_BUSY",
+    "TIMEOUT", "CANCELLED", "DISCONNECTED", "REMOTE_ERROR", "DECODE_ERROR",
+    "PARTIAL_RESULT", "NO_EFFECT", "OUTCOME_UNKNOWN", "CONFLICT",
+    "ROLLBACK_FAILED", "NOT_FOUND", "SECRET_DETECTED", "INTERNAL",
+}
+M625_VALUE_TYPES = {
+    ("Measurement", "measurementListData"): {"DECIMAL"},
+    ("Setpoint", "setpointListData"): {"BOOLEAN", "DECIMAL"},
+    ("HVAC", "hvacSystemFunctionListData"): {"BOOLEAN", "ENUM"},
+}
 
 
 class Failure(Exception):
@@ -425,7 +461,14 @@ def load_registry(path: pathlib.Path) -> dict[tuple[str, str, int], dict[str, An
     if raw["contract"] != "helianthus.platform.source-schema-registry.v1" or raw["version"] != 1:
         raise Failure("schema.registry")
     result = {}
-    root = path.resolve().parents[3]
+    try:
+        root = next(
+            parent
+            for parent in path.resolve().parents
+            if (parent / "docs/platform/schemas").is_dir()
+        )
+    except StopIteration:
+        raise Failure("schema.registry")
     entry_keys = {
         "source_kind", "source_contract", "source_schema_version", "owner_repository",
         "owner_path", "owner_commit", "schema_sha256", "embedded_schema",
@@ -551,6 +594,23 @@ def identity_digest_paths(value: Any, prefix: str = "") -> set[str]:
     return paths
 
 
+def m625_pseudonym_values(payload: dict[str, Any]) -> set[str]:
+    values = set(payload.get("services", []))
+    for path in payload.get("feature_paths", []):
+        if not isinstance(path, dict):
+            continue
+        values.update(path.get(field) for field in ("service", "entity", "feature"))
+        for segment in path.get("feature_path", []):
+            if isinstance(segment, dict):
+                values.add(segment.get("selector"))
+    for observation in payload.get("observations", []):
+        if isinstance(observation, dict):
+            ref = observation.get("observation_ref")
+            if isinstance(ref, str) and ref.startswith("obs-"):
+                values.add(ref.removeprefix("obs-"))
+    return {value for value in values if isinstance(value, str)}
+
+
 def validate_remasking(artifacts: list[dict[str, Any]]) -> None:
     scope_ids = {artifact["remasking"]["scope_id"] for artifact in artifacts}
     if len(scope_ids) > 1:
@@ -576,7 +636,15 @@ def validate_remasking(artifacts: list[dict[str, Any]]) -> None:
                 actual = pointer_get(artifact["normalized_evidence"], path)
             except (KeyError, IndexError, ValueError, TypeError):
                 raise Failure("privacy.remask")
-            if actual != pseudonym or not re.fullmatch(r"[A-Za-z0-9_-]{43}", pseudonym):
+            observation_ref = (
+                artifact["source_contract"] == M625_EEBUS_CONTRACT
+                and re.fullmatch(r"/observations/[0-9]+/observation_ref", path)
+                and actual == "obs-" + pseudonym
+            )
+            if (
+                (actual != pseudonym and not observation_ref)
+                or not M625_PSEUDONYM.fullmatch(pseudonym)
+            ):
                 raise Failure("privacy.remask")
             previous = assignments.get(pseudonym)
             identity = (artifact["source_id"], path)
@@ -593,9 +661,204 @@ def validate_remasking(artifacts: list[dict[str, Any]]) -> None:
             if "/subject_pseudonym" not in declared:
                 raise Failure("privacy.remask")
         if artifact["source_binding"]["source_kind"] == "EEBUS":
-            declared = {entry["path"] for entry in remasking["entries"]}
-            if not identity_digest_paths(artifact["normalized_evidence"]) <= declared:
-                raise Failure("privacy.remask")
+            if artifact["source_contract"] == M625_EEBUS_CONTRACT:
+                if not m625_pseudonym_values(
+                    artifact["normalized_evidence"]
+                ) <= seen_values:
+                    raise Failure("privacy.remask")
+            else:
+                declared = {entry["path"] for entry in remasking["entries"]}
+                if not identity_digest_paths(
+                    artifact["normalized_evidence"]
+                ) <= declared:
+                    raise Failure("privacy.remask")
+
+
+def validate_m625_eebus_payload(
+    payload: dict[str, Any], artifact: dict[str, Any]
+) -> int:
+    if set(payload) != {
+        "contract",
+        "schema_version",
+        "source_observed_at",
+        "services",
+        "feature_paths",
+        "observations",
+    }:
+        raise Failure("schema.source")
+    if (
+        payload["contract"] != M625_EEBUS_CONTRACT
+        or payload["contract"] != artifact["source_contract"]
+        or payload["schema_version"] != artifact["source_schema_version"]
+        or payload["source_observed_at"] != artifact["source_observed_at"]
+    ):
+        raise Failure("schema.source")
+    try:
+        timestamp_ns(payload["source_observed_at"])
+    except Failure:
+        raise Failure("schema.source")
+
+    services = payload["services"]
+    if (
+        not isinstance(services, list)
+        or not services
+        or len(services) > 64
+    ):
+        raise Failure("schema.source")
+    if any(
+        not isinstance(service, str)
+        or not M625_PSEUDONYM.fullmatch(service)
+        for service in services
+    ):
+        raise Failure("schema.source")
+    if services != sorted(set(services)):
+        raise Failure("ordering.invalid")
+
+    paths = payload["feature_paths"]
+    if not isinstance(paths, list) or not paths or len(paths) > 4096:
+        raise Failure("schema.source")
+    path_order: list[bytes] = []
+    for path in paths:
+        if not isinstance(path, dict) or set(path) != {
+            "service",
+            "entity",
+            "feature",
+            "feature_path",
+        }:
+            raise Failure("schema.source")
+        if any(
+            not isinstance(path[field], str)
+            or not M625_PSEUDONYM.fullmatch(path[field])
+            for field in ("service", "entity", "feature")
+        ):
+            raise Failure("schema.source")
+        segments = path["feature_path"]
+        if not isinstance(segments, list) or not 3 <= len(segments) <= 32:
+            raise Failure("schema.source")
+        for segment in segments:
+            if (
+                not isinstance(segment, dict)
+                or set(segment) != {"kind", "selector"}
+                or not isinstance(segment["kind"], str)
+                or segment["kind"] not in {"SERVICE", "ENTITY", "FEATURE", "FIELD"}
+                or not isinstance(segment["selector"], str)
+                or not M625_PSEUDONYM.fullmatch(segment["selector"])
+            ):
+                raise Failure("schema.source")
+        if (
+            [segment["kind"] for segment in segments[:3]]
+            != ["SERVICE", "ENTITY", "FEATURE"]
+            or any(segment["kind"] != "FIELD" for segment in segments[3:])
+            or [segment["selector"] for segment in segments[:3]]
+            != [path["service"], path["entity"], path["feature"]]
+            or path["service"] not in services
+        ):
+            raise Failure("schema.source")
+        path_order.append(canonical(path))
+    if path_order != sorted(set(path_order)):
+        raise Failure("ordering.invalid")
+    if {path["service"] for path in paths} != set(services):
+        raise Failure("schema.source")
+
+    observations = payload["observations"]
+    if (
+        not isinstance(observations, list)
+        or not observations
+        or len(observations) > 4096
+    ):
+        raise Failure("schema.source")
+    observation_refs: list[str] = []
+    observation_times: list[int] = []
+    path_indices: set[int] = set()
+    for observation in observations:
+        if not isinstance(observation, dict) or set(observation) != {
+            "observation_ref",
+            "path_index",
+            "feature_type",
+            "feature_role",
+            "function",
+            "source_observed_at",
+            "terminal_classification",
+            "value_type",
+            "value",
+            "unit",
+            "quality",
+        }:
+            raise Failure("schema.source")
+        if (
+            not isinstance(observation["observation_ref"], str)
+            or not M625_OBSERVATION_REF.fullmatch(observation["observation_ref"])
+            or type(observation["path_index"]) is not int
+            or not 0 <= observation["path_index"] < len(paths)
+            or not isinstance(observation["feature_type"], str)
+            or not M625_IDENTIFIER.fullmatch(observation["feature_type"])
+            or not isinstance(observation["feature_role"], str)
+            or observation["feature_role"] not in {"client", "server", "special"}
+            or not isinstance(observation["function"], str)
+            or not M625_IDENTIFIER.fullmatch(observation["function"])
+            or not isinstance(observation["terminal_classification"], str)
+            or observation["terminal_classification"] not in M625_TERMINALS
+        ):
+            raise Failure("schema.source")
+        try:
+            observation_time = timestamp_ns(observation["source_observed_at"])
+        except Failure:
+            raise Failure("schema.source")
+        if observation["path_index"] in path_indices:
+            raise Failure("schema.source")
+        path_indices.add(observation["path_index"])
+        observation_times.append(observation_time)
+        observation_refs.append(observation["observation_ref"])
+
+        value_type = observation["value_type"]
+        value = observation["value"]
+        unit = observation["unit"]
+        quality = observation["quality"]
+        allowed_types = M625_VALUE_TYPES.get(
+            (observation["feature_type"], observation["function"])
+        )
+        if allowed_types is None:
+            raise Failure("schema.source")
+        if observation["terminal_classification"] != "SUCCESS":
+            if any(item is not None for item in (value_type, value, unit, quality)):
+                raise Failure("schema.source")
+            continue
+        if not isinstance(value_type, str) or value_type not in allowed_types:
+            raise Failure("schema.source")
+        if not isinstance(quality, str) or quality not in {"OBSERVED", "STALE"}:
+            raise Failure("schema.source")
+        if value_type == "DECIMAL":
+            if (
+                not isinstance(value, str)
+                or len(value) > 64
+                or not M625_DECIMAL.fullmatch(value)
+                or (
+                    unit is not None
+                    and (not isinstance(unit, str) or unit not in M625_UNITS)
+                )
+            ):
+                raise Failure("schema.source")
+        elif value_type == "BOOLEAN":
+            if (
+                not isinstance(value, str)
+                or value not in {"false", "true"}
+                or unit is not None
+            ):
+                raise Failure("schema.source")
+        elif value_type == "ENUM":
+            if (
+                not isinstance(value, str)
+                or not M625_ENUM.fullmatch(value)
+                or unit is not None
+            ):
+                raise Failure("schema.source")
+        else:
+            raise Failure("schema.source")
+    if observation_refs != sorted(set(observation_refs)):
+        raise Failure("ordering.invalid")
+    if timestamp_ns(payload["source_observed_at"]) != max(observation_times):
+        raise Failure("schema.source")
+    return len(observations)
 
 
 def validate_source_payload(artifact: dict[str, Any]) -> int:
@@ -641,6 +904,8 @@ def validate_source_payload(artifact: dict[str, Any]) -> int:
             raise Failure("schema.source")
         return 1
     elif kind == "EEBUS":
+        if artifact["source_contract"] == M625_EEBUS_CONTRACT:
+            return validate_m625_eebus_payload(payload, artifact)
         if set(payload) != {"meta", "data", "error"} or payload["error"] is not None:
             raise Failure("schema.source")
         meta = payload["meta"]
@@ -758,7 +1023,16 @@ def verify(bundle: Any, registry: dict[tuple[str, str, int], dict[str, Any]], ra
             "EEBUS": ("eebus.v1.services.list", "LIVE_READ"),
             "CLOUD_APP": ("cloud.precaptured.import", "PRECAPTURED"),
         }
-        if (binding["operation_id"], binding["snapshot_scope"]["mode"]) != expected_operations[source["source_kind"]]:
+        expected_operation = expected_operations[source["source_kind"]]
+        if (
+            source["source_kind"] == "EEBUS"
+            and binding["source_contract"] == M625_EEBUS_CONTRACT
+        ):
+            expected_operation = ("eebus.v1.features.data.get", "LIVE_READ")
+        if (
+            binding["operation_id"],
+            binding["snapshot_scope"]["mode"],
+        ) != expected_operation:
             raise Failure("binding.registry")
         if source["source_kind"] == "EBUS":
             if not binding["source_kind"].startswith("EBUS_"):
@@ -816,6 +1090,16 @@ def verify(bundle: Any, registry: dict[tuple[str, str, int], dict[str, Any]], ra
         id_to_binding[source["source_id"]] = encoded
     validate_clock(bundle)
     validate_privacy(bundle)
+    for artifact in bundle["artifacts"]:
+        payload = artifact["normalized_evidence"]
+        if (
+            artifact["source_contract"] == M625_EEBUS_CONTRACT
+            or (
+                isinstance(payload, dict)
+                and payload.get("contract") == M625_EEBUS_CONTRACT
+            )
+        ):
+            validate_source_payload(artifact)
     validate_remasking(bundle["artifacts"])
     by_id = {source["source_id"]: source for source in bundle["sources"]}
     referenced: set[str] = set()

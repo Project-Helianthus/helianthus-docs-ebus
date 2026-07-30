@@ -23,6 +23,7 @@ import validate_synchronized_evidence as synchronized
 GRAPH_CONTRACT = "helianthus.platform.draft-candidate-fact-graph.v1"
 REGISTRY_CONTRACT = "helianthus.platform.draft-candidate-fact-registry.v1"
 SOURCE_CONTRACT = "helianthus.platform.synchronized-evidence-bundle.v1"
+M625_EEBUS_CONTRACT = "helianthus.eebus.m625.public-redacted-evidence.v1"
 FACT_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT:V1"
 GRAPH_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT-GRAPH:V1"
 REPLAY_DOMAIN = b"HELIANTHUS:DRAFT-CANDIDATE-FACT-REPLAY:V1"
@@ -900,6 +901,30 @@ def validate_eebus_path(value: Any) -> None:
         fail("identity.native")
 
 
+def eebus_identity_view(
+    artifact: dict[str, Any],
+) -> tuple[set[str], list[dict[str, Any]]]:
+    payload = artifact["normalized_evidence"]
+    if artifact.get("source_contract") == M625_EEBUS_CONTRACT:
+        services = payload.get("services")
+        paths = payload.get("feature_paths")
+        if not isinstance(services, list) or not isinstance(paths, list):
+            fail("identity.native")
+        return set(services), paths
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        fail("identity.native")
+    services = data.get("services")
+    paths = data.get("feature_paths", [])
+    if not isinstance(services, list) or not isinstance(paths, list):
+        fail("identity.native")
+    try:
+        service_ids = {service["id"]["digest"] for service in services}
+    except (KeyError, TypeError):
+        fail("identity.native")
+    return service_ids, paths
+
+
 def check_identities(graph: dict[str, Any], source_bundle: dict[str, Any]) -> None:
     artifacts = _artifact_index(source_bundle)
     for fact in graph["facts"]:
@@ -920,16 +945,13 @@ def check_identities(graph: dict[str, Any], source_bundle: dict[str, Any]) -> No
             if not _ascii_token(provenance["eebus_service"]):
                 fail("identity.native")
             artifact = artifacts[eebus_pair]
-            services = artifact["normalized_evidence"]["data"]["services"]
-            service_ids = {service["id"]["digest"] for service in services}
+            service_ids, feature_paths = eebus_identity_view(artifact)
             if provenance["eebus_service"] not in service_ids:
                 fail("identity.native")
             if provenance["eebus"] is not None:
                 validate_eebus_path(provenance["eebus"])
-                feature_paths = artifact["normalized_evidence"]["data"].get("feature_paths")
                 if (
                     provenance["eebus"]["service"] != provenance["eebus_service"]
-                    or not isinstance(feature_paths, list)
                     or provenance["eebus"] not in feature_paths
                 ):
                     fail("identity.native")
@@ -1421,11 +1443,24 @@ def _verify_source_inputs(
         registry["source_contract"]["source_registry_path"]
     ).name
     try:
+        expected_registry_sha = registry["source_contract"][
+            "source_registry_sha256"
+        ]
         if (
             hashlib.sha256(source_registry_path.read_bytes()).hexdigest()
-            != registry["source_contract"]["source_registry_sha256"]
+            != expected_registry_sha
         ):
-            fail("provenance.binding")
+            source_registry_path = (
+                source_registry_path.parent
+                / "history"
+                / expected_registry_sha
+                / source_registry_path.name
+            )
+            if (
+                hashlib.sha256(source_registry_path.read_bytes()).hexdigest()
+                != expected_registry_sha
+            ):
+                fail("provenance.binding")
         source_registry = synchronized.load_registry(source_registry_path)
         verified_source = synchronized.verify(
             copy.deepcopy(source_bundle), source_registry, len(source_bundle_raw)

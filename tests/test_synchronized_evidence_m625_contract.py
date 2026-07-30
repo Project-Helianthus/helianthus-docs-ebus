@@ -25,6 +25,8 @@ REGISTRY = SCHEMA_ROOT / "synchronized-evidence-source-registry-v1.json"
 VALIDATOR = REPO_ROOT / "scripts/validate_synchronized_evidence.py"
 GENERATOR = REPO_ROOT / "scripts/generate_synchronized_evidence_m625_fixture.py"
 CANDIDATE_VALIDATOR = REPO_ROOT / "scripts/validate_candidate_fact_graph.py"
+BUNDLE_SCHEMA = SCHEMA_ROOT / "synchronized-evidence-bundle-v1.schema.json"
+REPLAY_SCHEMA = SCHEMA_ROOT / "synchronized-evidence-replay-v1.schema.json"
 
 HISTORICAL_TUPLE = ("EEBUS", "helianthus-eebus-mcp", 1)
 HISTORICAL_OWNER_COMMIT = "9819762a61c28eeceb11beb775aa2a91c83a68b6"
@@ -36,6 +38,15 @@ HISTORICAL_BUNDLE_SHA256 = (
 )
 HISTORICAL_REPLAY_SHA256 = (
     "3061c507677f1f41861c20096ff7581ccb6e35c2e01bf66a568e2277df285539"
+)
+HISTORICAL_REGISTRY_SHA256 = (
+    "a91b2106076c3ef0f70578e9fc1c85925dd085af323c5889f809b5b2ef1a2488"
+)
+HISTORICAL_REGISTRY = (
+    SCHEMA_ROOT
+    / "history"
+    / HISTORICAL_REGISTRY_SHA256
+    / "synchronized-evidence-source-registry-v1.json"
 )
 
 M625_TUPLE = (
@@ -119,6 +130,9 @@ def test_historical_tuple_and_fixture_bytes_are_immutable() -> None:
     assert hashlib.sha256(HISTORICAL_REPLAY.read_bytes()).hexdigest() == (
         HISTORICAL_REPLAY_SHA256
     )
+    assert hashlib.sha256(HISTORICAL_REGISTRY.read_bytes()).hexdigest() == (
+        HISTORICAL_REGISTRY_SHA256
+    )
     historical = registry_entries()[HISTORICAL_TUPLE]
     assert historical["owner_commit"] == HISTORICAL_OWNER_COMMIT
     assert historical["schema_sha256"] == HISTORICAL_SCHEMA_SHA256
@@ -183,6 +197,20 @@ def test_m625_bundle_validates_and_replays_to_exact_golden_bytes() -> None:
     assert replayed.returncode == 0, replayed.stdout + replayed.stderr
     assert replayed.stdout == M625_REPLAY.read_text(encoding="utf-8")
     assert replayed.stderr == ""
+    for schema, fixture in (
+        (BUNDLE_SCHEMA, M625_BUNDLE),
+        (REPLAY_SCHEMA, M625_REPLAY),
+    ):
+        schema_result = subprocess.run(
+            ["jv", str(schema), str(fixture)],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert schema_result.returncode == 0, (
+            schema_result.stdout + schema_result.stderr
+        )
 
 
 def test_m625_dispatch_preserves_complete_path_and_comparison_pointers() -> None:

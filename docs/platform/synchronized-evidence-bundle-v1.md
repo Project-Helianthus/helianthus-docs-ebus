@@ -264,13 +264,22 @@ repository/path/commit, schema SHA-256, and an optional embedded schema path.
 The canonical machine-readable registry is
 `schemas/synchronized-evidence-source-registry-v1.json`.
 
-The eeBUS entry pins the immutable MSP-06 schema ref and digest stated at the
-top of this page. B509, B524, B555, and cloud/app normalized inputs use the
-closed schemas next to the registry. Their owner references identify the
-canonical protocol or platform source; the embedded schema digest identifies
-the exact offline validation bytes. Replay does not fetch a repository,
-resolve a branch, or consult a mutable schema catalog. A source binding that
-is absent from this registry or differs in any authority field is rejected.
+The historical eeBUS tuple
+`("EEBUS", "helianthus-eebus-mcp", 1)` pins the immutable MSP-06 schema ref
+and digest stated at the top of this page. The additive M6.25 tuple
+`("EEBUS", "helianthus.eebus.m625.public-redacted-evidence.v1", 1)` pins the
+source-owned schema at
+`Project-Helianthus/helianthus-docs-eebus@a09e3a77153204bc3117e233c71e77ef1859834e`.
+The historical tuple and its fixture/replay remain byte-locked; a registry
+snapshot addressed by its SHA-256 preserves offline verification of that
+prior input after the additive entry.
+
+B509, B524, B555, and cloud/app normalized inputs use the closed schemas next
+to the registry. Their owner references identify the canonical protocol or
+platform source; the embedded schema digest identifies the exact offline
+validation bytes. Replay does not fetch a repository, resolve a branch, or
+consult a mutable schema catalog. A source binding that is absent from this
+registry or differs in any authority field is rejected.
 
 For an `EEBUS` artifact, replay verifies `meta.data_hash` against the complete
 frozen MSP-06 hash view at the immutable eeBUS authority cited above. That view
@@ -280,6 +289,13 @@ explicit JSON `null` where the authority requires one. Replay applies RFC 8785
 JCS to that object and then lowercase SHA-256. Hashing only `data` is invalid
 because it would leave the operation, scope, authorization, mode, observation
 time, runtime state, degradation, and error bindings outside the source hash.
+
+For the M6.25 eeBUS tuple, replay instead validates the closed source-owned
+payload at its root. The operation is exactly
+`eebus.v1.features.data.get`; each observation binds
+`/observations/{index}/value` and `/observations/{index}/unit`, while
+`path_index` selects one complete pseudonymous service/entity/feature/field
+path. Tuple substitution is rejected before artifact hashing.
 
 `SourceBindingV1` is the complete comparability object. Its closed fields are:
 
@@ -461,12 +477,15 @@ different timestamp, and replay emits both values verbatim.
 
 `RemaskingV1` is closed and contains `method` (exactly
 `PER_BUNDLE_CSPRNG`), one per-bundle `scope_id`, and ordered unique entries of
-JSON Pointer plus a 43-character base64url pseudonym. Every eeBUS identity
-`digest` and every cloud subject pseudonym in normalized evidence must appear
-in this manifest and equal the value at its pointer. Field names remain those
-of the pinned source schema; only their values are remasked. A runtime-scoped
-opaque token may never pass through unchanged or become a cross-bundle
-correlator.
+JSON Pointer plus a 43-character base64url pseudonym. Every historical eeBUS
+identity `digest`, every M6.25 service/entity/feature/field and observation
+reference pseudonym, and every cloud subject pseudonym in normalized evidence
+must appear in this manifest. An `obs-` reference binds the suffix pseudonym;
+other entries equal the value at their pointer. Repeated occurrences of one
+complete path identity are covered by one canonical manifest entry. Field
+names remain those of the pinned source schema; only their values are
+remasked. A runtime-scoped opaque token may never pass through unchanged or
+become a cross-bundle correlator.
 
 ## Ordering And Duplicate Rejection
 
@@ -726,9 +745,14 @@ registry, the positive bundle, golden replay, and named negative fixtures under
 `scripts/validate_synchronized_evidence.py`. The validator is offline,
 category-only on failure, and supports only the safe V1 JCS subset.
 
-The MSP-065 smoke fixture is a deterministic redacted replay bundle containing
-`PRESENT` eBUS, eeBUS, and cloud/app sources. Its negative corpus contains
-terminal negative and malformed cases. Acceptance
+The historical MSP-065 smoke fixture is a deterministic redacted replay bundle
+containing `PRESENT` eBUS, eeBUS, and cloud/app sources. The independent
+M6.25 fixture under `fixtures/synchronized-evidence/v1/m625/positive/` is
+generated only by
+`scripts/generate_synchronized_evidence_m625_fixture.py`; the generator derives
+all content-addressed ids, byte counts, artifact hashes, bundle hashes, and
+replay bytes. Its negative corpus contains terminal negative and malformed
+cases. Acceptance
 requires two isolated replays to produce byte-identical `ReplayResultV1`
 output, original captured timestamps, identical redacted hashes, and identical
 future candidate inputs while network, cloud, runtime, clock, randomness,
