@@ -33,6 +33,8 @@ Current platform contracts:
 - [`raw-correlation-and-leaf-promotion.md`](./raw-correlation-and-leaf-promotion.md)
 - [`synchronized-evidence-bundle-v1.md`](./synchronized-evidence-bundle-v1.md) -
   MSP-065 closed synchronized capture and deterministic offline replay contract
+- [`synchronized-evidence-one-shot-control-v1.md`](./synchronized-evidence-one-shot-control-v1.md) -
+  MSP-065-LIVE-R1 owner-only one-shot activation and crash-idempotency contract
 - [`draft-candidate-fact-graph-v1.md`](./draft-candidate-fact-graph-v1.md) -
   MSP-07 closed M7 candidate-only fact graph and deterministic replay contract
 - [`multi-runtime-coexistence-no-drift-v1.md`](./multi-runtime-coexistence-no-drift-v1.md) -
