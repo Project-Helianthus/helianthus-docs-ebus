@@ -693,14 +693,16 @@ def _check_sample_provenance(
                         "observations"
                     ][observation_index]
                     path_index = observation["path_index"]
-                    selected_path = artifact["normalized_evidence"][
-                        "feature_paths"
-                    ][path_index]
+                    feature_paths = artifact["normalized_evidence"]["feature_paths"]
+                    if not synchronized.is_json_schema_integer(
+                        path_index, maximum=len(feature_paths) - 1
+                    ):
+                        fail("provenance.binding")
+                    selected_path = feature_paths[int(path_index)]
                 except (KeyError, IndexError, TypeError):
                     fail("provenance.binding")
                 if (
-                    type(path_index) is not int
-                    or provenance["eebus"] != selected_path
+                    provenance["eebus"] != selected_path
                     or provenance["eebus_service"]
                     != selected_path["service"]
                 ):
