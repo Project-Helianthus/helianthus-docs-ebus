@@ -322,6 +322,8 @@ jobs:
             --docs-ebus-repository "${{ inputs.docs_ebus_repository }}" \
             --docs-eebus-root checkouts/docs-eebus \
             --eebusreg-root checkouts/eebusreg \
+            --m625-docs-eebus-root checkouts/m625-docs-eebus \
+            --m625-execution-plans-root checkouts/m625-execution-plans \
             --docs-ebus-ref "${{ inputs.docs_ebus_ref }}" \
             --docs-eebus-ref "${{ inputs.docs_eebus_ref }}" \
             --eebusreg-ref "${{ inputs.eebusreg_ref }}" \

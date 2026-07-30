@@ -149,6 +149,15 @@ jobs:
           clean: true
           persist-credentials: false
 
+      - name: Checkout exact M6.25 trusted validator base
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: Project-Helianthus/helianthus-docs-ebus
+          ref: 8215201a4274db5310ee672619ba2f1d27b99bec
+          path: checkouts/m625-trusted-base
+          clean: true
+          persist-credentials: false
+
       - name: Prepare hash-locked pip bootstrap
         run: |
           set -euo pipefail
@@ -209,7 +218,7 @@ jobs:
           PLATFORM_TOOLCHAIN_MODE: exact
           PLATFORM_PRIOR_MANIFEST: ${{ steps.prior_manifest.outputs.path }}
           MODBUS_PRIOR_ROOT: ${{ github.event_name == 'pull_request' && format('{0}/checkouts/docs-ebus-base', github.workspace) || '' }}
-          M625_TRUSTED_BASE_ROOT: ${{ github.event_name == 'pull_request' && format('{0}/checkouts/docs-ebus-base', github.workspace) || '' }}
+          M625_TRUSTED_BASE_ROOT: ${{ github.workspace }}/checkouts/m625-trusted-base
           PLATFORM_M625_DOCS_EEBUS_ROOT: ${{ github.workspace }}/checkouts/m625-docs-eebus
           PLATFORM_M625_EXECUTION_PLANS_ROOT: ${{ github.workspace }}/checkouts/m625-execution-plans
         working-directory: checkouts/docs-ebus
