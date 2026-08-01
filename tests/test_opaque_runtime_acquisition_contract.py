@@ -56,6 +56,10 @@ def write_manifest(root: pathlib.Path, manifest: dict[str, object]) -> None:
     )
 
 
+def write_raw_manifest(root: pathlib.Path, raw_manifest: str) -> None:
+    (root / MANIFEST).write_text(raw_manifest, encoding="utf-8")
+
+
 def refresh_policy_hash(root: pathlib.Path, manifest: dict[str, object]) -> None:
     manifest["policy_sha256"] = hashlib.sha256(
         (root / POLICY).read_bytes()
@@ -74,6 +78,40 @@ def test_empty_manifest_fails_closed(tmp_path: pathlib.Path) -> None:
     result = run_validator(root)
     assert result.returncode != 0
     assert "opaque_runtime_acquisition_contract_invalid" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("key", "expected_key_first"),
+    (
+        ("version", True),
+        ("version", False),
+        ("policy_link", True),
+        ("policy_link", False),
+    ),
+)
+def test_duplicate_json_keys_fail_closed_regardless_of_order(
+    tmp_path: pathlib.Path, key: str, expected_key_first: bool
+) -> None:
+    root = materialize_fixture(tmp_path)
+    manifest_path = root / MANIFEST
+    raw_manifest = manifest_path.read_text(encoding="utf-8")
+    if key == "version":
+        expected = '  "version": 1,'
+        unexpected = '  "version": 2,'
+    else:
+        expected = (
+            '    "policy_link": '
+            '"docs/platform/opaque-runtime-acquisition-v1.md",'
+        )
+        unexpected = '    "policy_link": "unexpected-policy.md",'
+    assert raw_manifest.count(expected) == 1
+    members = (expected, unexpected) if expected_key_first else (unexpected, expected)
+    write_raw_manifest(root, raw_manifest.replace(expected, "\n".join(members)))
+
+    result = run_validator(root)
+
+    assert result.returncode != 0
+    assert f"duplicate JSON key: '{key}'" in result.stderr
 
 
 def test_ledger_eviction_sentinel_is_ledger_specific() -> None:
@@ -569,6 +607,102 @@ def mutate_extension_value_bound(
     extensions["value_max"] = "unbounded"
 
 
+def mutate_downstream_docs_lock(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    conformance = manifest["downstream_conformance"]
+    assert isinstance(conformance, dict)
+    lock = conformance["docs_lock"]
+    assert isinstance(lock, list)
+    lock.remove("manifest_sha256")
+
+
+def mutate_attempt_instance_identity(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    capability = manifest["opaque_capability"]
+    assert isinstance(capability, dict)
+    instance = capability["attempt_instance"]
+    assert isinstance(instance, dict)
+    instance["identity"] = "reusable_AttemptKey"
+
+
+def mutate_attempt_membership_close(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    capability = manifest["opaque_capability"]
+    assert isinstance(capability, dict)
+    instance = capability["attempt_instance"]
+    assert isinstance(instance, dict)
+    membership = instance["membership"]
+    assert isinstance(membership, dict)
+    membership["close"] = "scan_without_blocking_registration"
+
+
+def mutate_cancel_instance_lookup(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    capability = manifest["opaque_capability"]
+    assert isinstance(capability, dict)
+    binding = capability["attempt_binding"]
+    assert isinstance(binding, dict)
+    cancel_open = binding["cancel_open"]
+    assert isinstance(cancel_open, dict)
+    cancel_open["lookup"] = "AttemptKey_only"
+
+
+def mutate_dependency_set_order(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    ledger = manifest["m2_ledger"]
+    assert isinstance(ledger, dict)
+    dependency_set = ledger["dependency_set"]
+    assert isinstance(dependency_set, dict)
+    dependency_set["order"] = "unordered_map_iteration"
+
+
+def mutate_dependency_set_byte_bound(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    ledger = manifest["m2_ledger"]
+    assert isinstance(ledger, dict)
+    bounds = ledger["bounds"]
+    assert isinstance(bounds, dict)
+    bounds["dependency_set_encoded_bytes"] = "unbounded"
+
+
+def mutate_seal_forbidden_sets(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    ledger = manifest["m2_ledger"]
+    assert isinstance(ledger, dict)
+    lifecycle = ledger["attempt_lifecycle"]
+    assert isinstance(lifecycle, dict)
+    lifecycle["seal_forbidden_sets"] = "empty_and_fixture_allowed"
+
+
+def mutate_publish_commit_linearization(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    ledger = manifest["m2_ledger"]
+    assert isinstance(ledger, dict)
+    lifecycle = ledger["attempt_lifecycle"]
+    assert isinstance(lifecycle, dict)
+    lifecycle["publish_commit_linearization"] = "external_effect_before_state"
+
+
+def mutate_published_projection_leak(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    ledger = manifest["m2_ledger"]
+    assert isinstance(ledger, dict)
+    projection = ledger["published_projection"]
+    assert isinstance(projection, dict)
+    fields = projection["fields"]
+    assert isinstance(fields, list)
+    fields.append("source_evidence_id")
+
+
 Mutation = Callable[[pathlib.Path, dict[str, object]], None]
 
 
@@ -621,6 +755,15 @@ Mutation = Callable[[pathlib.Path, dict[str, object]], None]
         mutate_extension_count_bound,
         mutate_extension_key_bound,
         mutate_extension_value_bound,
+        mutate_downstream_docs_lock,
+        mutate_attempt_instance_identity,
+        mutate_attempt_membership_close,
+        mutate_cancel_instance_lookup,
+        mutate_dependency_set_order,
+        mutate_dependency_set_byte_bound,
+        mutate_seal_forbidden_sets,
+        mutate_publish_commit_linearization,
+        mutate_published_projection_leak,
     ),
 )
 def test_closed_manifest_mutations_fail(

@@ -26,6 +26,7 @@ EXPECTED_TOP_LEVEL = {
     "contract_id",
     "contract_version",
     "discoverability",
+    "downstream_conformance",
     "execution",
     "licensing",
     "m2_ledger",
@@ -39,9 +40,26 @@ EXPECTED_TOP_LEVEL = {
     "version",
     "zero_trust_boundary",
 }
-EXPECTED_POLICY_SHA256 = "fd7110af13091cd391244dd5f2f8fa918d0f8606d6309a37144306aa87257c2f"
+EXPECTED_POLICY_SHA256 = "a95e2ec593a6c06584c06f1486b167c917e756d0af48b83896c51f05e58742d8"
 EXPECTED_SOURCE_KINDS = ["runtime", "offline_fixture"]
 EXPECTED_COMPANIONS = ["FMV3-M1-06", "FMV3-M2-01"]
+EXPECTED_DOWNSTREAM_CONFORMANCE = {
+    "docs_lock": [
+        "merged_docs_commit_sha_full_40",
+        "policy_sha256",
+        "manifest_sha256",
+    ],
+    "required_behavioral_tests": [
+        "registration_paused_before_membership_then_close_wins_without_visible_capability",
+        "stale_instance_a_cancellation_does_not_affect_same_key_instance_b",
+        "cancel_before_publish_commit_yields_publish_failed_without_external_effect",
+        "simultaneous_publish_cancel_has_exactly_one_atomic_winner",
+        "cancel_after_publish_commit_returns_already_published_without_mutation",
+        "dependency_permutation_omission_duplication_extra_and_count_mismatch_reject_before_cas",
+        "empty_fixture_only_and_mixed_source_seal_reject",
+        "secret_canaries_absent_from_closed_publication_projection_fields_and_bytes",
+    ],
+}
 EXPECTED_NORMALIZATION_FIELDS = [
     "schema_version",
     "source_kind",
@@ -72,21 +90,40 @@ EXPECTED_BOUNDED_VALUES = {
     },
 }
 EXPECTED_OPAQUE_CAPABILITY = {
+    "attempt_instance": {
+        "capability_binding": "exact_instance_before_capability_visibility",
+        "identity": "opaque_unforgeable_nonserializable_per_attempt_incarnation",
+        "key_role": "AttemptKey_documentary_only_not_security_identity",
+        "membership": {
+            "close": "ledger_admission_atomic_open_to_closing_blocks_new_registration",
+            "drain": "wait_all_preclose_registrations",
+            "freeze": "closed_exact_ordered_member_set",
+            "late_registration": (
+                "reject_without_visible_capability_or_retained_open_state"
+            ),
+            "states": ["open", "closing", "closed"],
+        },
+        "same_key_recreation": "fresh_independent_instance",
+    },
     "representation": "opaque_non_serializable",
     "consumption": "one_shot_compare_and_swap",
     "state_owner": "source_owned_shared_capability_state",
     "value_copy_semantics": "shared_state",
     "attempt_binding": {
         "key": "immutable_exact_source_owned_AttemptKey",
+        "security_identity": "opaque_AttemptInstance_not_AttemptKey",
         "claim_path_after_m2_admission": "ledger_linearization_required",
-        "source_operation": "CancelOpen(AttemptKey)",
+        "source_operation": "CancelOpen(AttemptInstance)",
         "cancel_open": {
             "owner": "runtime_source",
-            "lookup": "exact_bounded_AttemptKey_only",
+            "lookup": (
+                "exact_opaque_closed_AttemptInstance_frozen_membership_only"
+            ),
             "capability_effect": "still_open_to_cancelled_terminal_unchanged",
             "ledger_mutation": "forbidden",
             "return": (
-                "after_all_matching_live_operations_and_reclamation_complete"
+                "after_preclose_registrations_member_operations_"
+                "reclamation_and_no_open_member"
             ),
         },
     },
@@ -179,6 +216,22 @@ EXPECTED_M2_LEDGER = {
         "source_binding_match": "required_for_every_runtime_capability",
         "validation": "bounded_before_copy_hash_intern_or_allocation",
     },
+    "dependency_set": {
+        "claim_binding": (
+            "every_capability_claim_and_zero_based_ordinal_exact_digest_"
+            "and_declared_order"
+        ),
+        "identity": (
+            "sha256_domain_separated_canonical_count_plus_ordered_"
+            "dependent_identities"
+        ),
+        "order": "exact_predecessor_dependency_set_id_order",
+        "sequence_reservation": "attempt_then_claims_in_declared_ordinal_order",
+        "validation": (
+            "nonempty_unique_bounded_count_and_encoded_bytes_before_decode_"
+            "allocation_sequence_reservation_or_cas"
+        ),
+    },
     "claim_entry_lifecycle": {
         "initial": "unresolved",
         "nonterminal": ["unresolved", "claim_in_progress"],
@@ -227,14 +280,25 @@ EXPECTED_M2_LEDGER = {
             "publishing_to_published",
             "publishing_to_publish_failed",
         ],
-        "seal_condition": "all_data_bearing_runtime_claims_claim_succeeded",
+        "seal_condition": (
+            "nonempty_all_runtime_data_bearing_exact_cardinality_"
+            "all_claim_succeeded"
+        ),
+        "seal_forbidden_sets": (
+            "empty_fixture_only_mixed_zero_runtime_duplicate_omitted_reordered"
+        ),
         "seal_linearization": "success_predicate_and_open_to_sealed_atomic",
         "seal_non_success": (
             "cancellation_and_audit_only_publication_forbidden"
         ),
         "publish": "one_shot_sealed_to_publishing",
         "publish_cancellation_after_admission": (
-            "publishing_to_publish_failed"
+            "atomic_commit_winner_publish_failed_before_commit_"
+            "already_published_after_commit"
+        ),
+        "publish_commit_linearization": (
+            "irreversible_external_effect_and_publishing_to_published_"
+            "one_transactional_commit"
         ),
         "terminal": ["published", "publish_failed", "cancelled"],
         "terminal_immutable": True,
@@ -242,6 +306,9 @@ EXPECTED_M2_LEDGER = {
     "bounds": {
         "retained_attempts": "consumer_configured_hard_limit_all_states",
         "claim_entries_per_attempt": "dependency_set_hard_limit",
+        "dependency_set_encoded_bytes": (
+            "finite_positive_checked_before_collection_decode"
+        ),
         "retained_claims_total": (
             "checked_attempt_limit_times_claim_limit"
         ),
@@ -282,7 +349,9 @@ EXPECTED_M2_LEDGER = {
         "linearization": ["open_to_cancelling", "sealed_to_cancelling"],
         "blocks_after_linearization": ["claim_admission", "seal", "publish"],
         "drain": "wait_for_all_claim_in_progress_finalization",
-        "source_operation": "runtime_source_owned_CancelOpen_exact_AttemptKey",
+        "source_operation": (
+            "runtime_source_owned_CancelOpen_exact_closed_AttemptInstance"
+        ),
         "unresolved_close": "only_remaining_unresolved_to_attempt_cancelled",
         "completion": (
             "cancelling_to_cancelled_after_source_return_and_unresolved_closure"
@@ -290,6 +359,34 @@ EXPECTED_M2_LEDGER = {
         "admitted_claim_wins": True,
     },
     "publish": "sealed_immutable_ledger_state_only",
+    "published_projection": {
+        "additional_fields": "forbidden",
+        "claim_outcome_digest": (
+            "domain_separated_ordered_successful_claim_outcomes"
+        ),
+        "fields": [
+            "schema_version",
+            "attempt_terminal_sequence",
+            "dependency_set_digest",
+            "runtime_dependency_count",
+            "claim_outcome_digest",
+        ],
+        "forbidden_payloads": [
+            "raw_attempt_key",
+            "attempt_instance",
+            "dependent_identity",
+            "source_evidence_id",
+            "normalization_record",
+            "unknown_extension_key_or_value",
+            "retained_diagnostic",
+            "evidence_payload",
+            "capability_representation",
+            "endpoint_identity",
+            "raw_protocol_data",
+        ],
+        "schema": "published_attempt_v1",
+        "schema_version": 1,
+    },
     "mutable_dto": "forbidden",
     "reclamation": {
         "mode": "deterministic_synchronous_on_terminal_and_admission",
@@ -438,7 +535,11 @@ EXPECTED_REQUIRED_TERMS = (
     "There is no transition between terminal states and no return to `open`",
     "exactly one claim wins",
     "every conforming claim through\nany copied view MUST pass through that attempt's ledger claim-admission\nlinearization",
-    "attempt-bound operation, `CancelOpen(AttemptKey)`",
+    "attempt-bound operation, `CancelOpen(AttemptInstance)`",
+    "An `AttemptInstance` is an opaque, unforgeable, non-serializable source-owned",
+    "Instance membership begins `open`. Ledger admission atomically performs",
+    "`open -> closing`, blocks every later registration",
+    "performs `closing -> closed`",
     "The source owns and executes\nthis operation and all capability CAS state. M2 owns the attempt",
     "atomically performs `open -> cancelled` when the state is still `open`",
     "cannot mutate any ledger entry or attempt state",
@@ -473,7 +574,7 @@ EXPECTED_REQUIRED_TERMS = (
     "`open -> cancelling` or `sealed -> cancelling`",
     "prevents new claim admission, `Seal()`, and `Publish()`",
     "waits\nuntil every already admitted `claim_in_progress` operation has recorded its\nimmutable terminal result",
-    "invokes the source-owned\n`CancelOpen(AttemptKey)` operation",
+    "invokes the source-owned\n`CancelOpen(AttemptInstance)` operation",
     "closes only the\nremaining `unresolved` entries as `attempt_cancelled`",
     "an admitted claim wins the ordering race",
     "| `open` | `sealed` |",
@@ -484,11 +585,18 @@ EXPECTED_REQUIRED_TERMS = (
     "| `publishing` | `publish_failed` |",
     "No other attempt transition is legal",
     "`Publish()` MUST consume that sealed immutable ledger state",
-    "`Seal()` MUST reject unless every data-bearing runtime dependent has exactly\none claim entry and every such entry is exactly `claim_succeeded`",
+    "`Seal()` MUST reject unless the ordered dependency set is non-empty",
+    "claim cardinality equals dependency cardinality",
+    "fixture-only, mixed fixture/runtime",
     "permanently blocks sealing and publication for that attempt",
     "The success predicate and `open -> sealed` transition MUST linearize as one\natomic decision",
     "`Publish()` is one-shot",
-    "publication is admitted, cancellation is a publication failure",
+    "atomic publication decision that performs exactly one of",
+    "returns exactly `already_published` without state or external-effect change",
+    "`Publish()` MUST emit only `published_attempt_v1`",
+    "secret canaries into\nevery forbidden source location",
+    "predecessor's exact ordered `dependency_set_id`",
+    "Before terminal-sequence reservation, ledger allocation, or any capability CAS",
     "all retained attempts across `open`, `sealed`, `cancelling`, `publishing`,",
     "total retained claim entries across `unresolved`, `claim_in_progress`, and",
     "Admission counts every retained state, not only `open`",
@@ -539,12 +647,28 @@ EXPECTED_INDEX_LINKS = {
 NORMATIVE_ARTIFACT_PATHS = (MANIFEST_PATH, POLICY_PATH, VALIDATOR_PATH)
 
 
+class DuplicateJSONKeyError(ValueError):
+    """Raised when a JSON object repeats a member name."""
+
+
+def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise DuplicateJSONKeyError(f"duplicate JSON key: {key!r}")
+        value[key] = item
+    return value
+
+
 def _read_json(
     path: pathlib.Path, errors: list[str], label: str = "manifest"
 ) -> dict[str, Any] | None:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        value = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_reject_duplicate_json_keys,
+        )
+    except (OSError, json.JSONDecodeError, DuplicateJSONKeyError) as exc:
         errors.append(f"{label} unreadable: {exc}")
         return None
     if not isinstance(value, dict):
@@ -772,6 +896,12 @@ def validate(
     _require_equal(manifest, "content_revision", 1, errors)
     _require_equal(manifest, "policy", POLICY_PATH.as_posix(), errors)
     _require_equal(manifest, "companion_for", EXPECTED_COMPANIONS, errors)
+    _validate_closed_object(
+        manifest.get("downstream_conformance"),
+        EXPECTED_DOWNSTREAM_CONFORMANCE,
+        "downstream_conformance",
+        errors,
+    )
     _validate_closed_object(
         manifest.get("discoverability"),
         EXPECTED_DISCOVERABILITY,

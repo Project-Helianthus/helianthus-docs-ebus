@@ -59,11 +59,28 @@ It MUST issue one only when all of the following are true:
 1. `source_kind` is exactly `runtime`;
 2. the runtime source has produced a deliverable successful dependent; and
 3. the capability is assigned to one specific dependent and immutably bound
-   by the source to that dependent's exact validated `AttemptKey`.
+   by the source to that dependent's exact validated `AttemptKey` and one
+   source-issued `AttemptInstance`.
 
 The source MUST validate the key's encoding and bound before capability
 allocation or binding. Capability issuance does not admit the M2 attempt; the
-ledger independently validates the same exact binding during attempt admission.
+ledger independently validates the same exact bindings during attempt admission.
+
+An `AttemptInstance` is an opaque, unforgeable, non-serializable source-owned
+identity for one attempt incarnation. It is not an `AttemptKey`, endpoint
+generation, counter, UUID, digest, byte sequence, or reconstructible token. A
+reused `AttemptKey` always receives a fresh independent instance. Every member
+capability MUST register atomically with its exact instance before that
+capability becomes caller-visible.
+
+Instance membership begins `open`. Ledger admission atomically performs
+`open -> closing`, blocks every later registration, waits for every registration
+that linearized before closure, validates the exact ordered member set, and then
+performs `closing -> closed`. A registration that loses the close race fails
+without making a capability visible or retaining open source state. The closed
+membership set is immutable and is the only set that M2 may admit. Caller
+convention, a scan by `AttemptKey`, or eventually consistent enumeration cannot
+substitute for this source-owned close-and-drain barrier.
 
 The capability is source-issued, opaque, and non-serializable. It MUST NOT be
 represented as a string, integer, byte sequence, map, JSON field, wire value,
@@ -127,21 +144,23 @@ alone is insufficient.
 #### Source-Owned Attempt Cancellation
 
 The runtime source MUST expose the M2 ledger cancellation path to exactly one
-attempt-bound operation, `CancelOpen(AttemptKey)`. The source owns and executes
+attempt-bound operation, `CancelOpen(AttemptInstance)`. The source owns and executes
 this operation and all capability CAS state. M2 owns the attempt and decides
 when its cancellation protocol invokes the operation. `CancelOpen` is not a
 caller-visible capability method, cannot be synthesized from an `AttemptKey`,
 and cannot mutate any ledger entry or attempt state.
 
-`CancelOpen` examines only source-owned live capabilities whose immutable
-binding exactly matches the supplied `AttemptKey`. For each such capability it
+`CancelOpen` accepts only the exact opaque closed instance handle transferred at
+ledger admission and examines exactly that instance's frozen membership. For
+each member capability it
 atomically performs `open -> cancelled` when the state is still `open`; it
 leaves `claimed`, `cancelled`, `failed`, and `expired` unchanged. It returns
-only after all matching live capability operations and synchronous terminal
-reclamation have completed. The operation cannot mint, replace, reconstruct,
-or reopen a capability. The source MUST reject an invalid or over-bound key
-before lookup or allocation and MUST NOT use partial, normalized, prefix, or
-hash-only key equality to select the attempt.
+only after all pre-close registrations, member capability operations, and
+synchronous terminal reclamation have completed and no member remains open.
+The operation cannot mint, replace, reconstruct, reopen, or discover a
+capability by documentary key. A stale cancellation for instance A MUST NOT
+affect instance B even when both have byte-identical `AttemptKey`, endpoint,
+generation, and values.
 
 Endpoint recreation that produces a new eligible acquisition MUST create fresh,
 independent capability state for each eligible dependent, even when endpoint
@@ -232,7 +251,8 @@ The ledger may record a capability claim outcome, but it MUST NOT own, replace,
 serialize, reconstruct, or expose the capability's private source-owned CAS
 state. A caller-supplied mutable DTO is forbidden as publication input.
 
-An `AttemptKey` identifies one ledger attempt, which begins `open`. Before
+An `AttemptKey` documents one ledger attempt, which begins `open`; the exact
+opaque `AttemptInstance` is its security and cancellation identity. Before
 copying, hashing, interning, or otherwise allocating for a key, the ledger MUST
 validate its exact UTF-8 byte length against the finite positive
 `attempt_key_max_utf8_bytes`. An empty, invalidly encoded, or over-bound key is
@@ -240,6 +260,20 @@ rejected. Insertion of a duplicate `AttemptKey` MUST be rejected before it
 changes capability, claim, or publication state. Every runtime capability in
 the inserted attempt MUST carry the same exact source-owned key binding; a
 mismatch rejects the whole insertion without changing either owner's state.
+
+Before terminal-sequence reservation, ledger allocation, or any capability CAS,
+admission MUST validate a non-empty ordered dependency declaration copied from
+the predecessor's exact ordered `dependency_set_id`. The dependency count and
+complete canonical encoded byte length are finite-positive bounded and checked
+before decoding or materializing the collection. Every dependent identity is
+non-empty and unique. The ledger computes `dependency_set_digest` as SHA-256 of
+the domain-separated canonical encoding of the count followed by each dependent
+identity in declared ordinal order. Each capability, claim entry, and
+zero-based `claim_ordinal` is bound to that exact digest and ordinal. A
+permutation, omission, duplication, extra member, count mismatch, capability
+membership mismatch, or digest mismatch rejects the whole attempt before
+source or ledger state changes. Claim terminal sequences are reserved in that
+same declared ordinal order.
 
 ### Claim-Entry Lifecycle
 
@@ -289,7 +323,7 @@ Attempt cancellation linearizes by atomically performing exactly one of
 prevents new claim admission, `Seal()`, and `Publish()`. Cancellation then waits
 until every already admitted `claim_in_progress` operation has recorded its
 immutable terminal result. It next invokes the source-owned
-`CancelOpen(AttemptKey)` operation, waits for it to return, and closes only the
+`CancelOpen(AttemptInstance)` operation, waits for it to return, and closes only the
 remaining `unresolved` entries as `attempt_cancelled`. Finally it performs
 `cancelling -> cancelled`.
 
@@ -321,8 +355,13 @@ attempt set containing the exact ordered dependent and terminal claim
 outcomes. `Publish()` MUST consume that sealed immutable ledger state and MUST
 NOT accept a mutable DTO or an unsealed attempt.
 
-`Seal()` MUST reject unless every data-bearing runtime dependent has exactly
-one claim entry and every such entry is exactly `claim_succeeded`. Merely being
+`Seal()` MUST reject unless the ordered dependency set is non-empty, every
+dependent is exactly `runtime` and data-bearing, every dependent has exactly
+one claim entry, claim cardinality equals dependency cardinality, and every
+entry is exactly `claim_succeeded`. Empty, fixture-only, mixed fixture/runtime,
+zero-runtime, duplicated, omitted, or reordered dependency sets permanently
+forbid production sealing and publication and may follow only a distinct
+non-publishable evidence/audit path. Merely being
 terminal is insufficient. Any `capability_cancelled`, `capability_failed`,
 `capability_expired`, `claim_rejected_terminal`, or `attempt_cancelled` entry
 permanently blocks sealing and publication for that attempt; the attempt may
@@ -339,10 +378,34 @@ cannot authorize sealing after either state has changed.
 `sealed -> publishing`; concurrent or later calls are rejected without state
 change. A cancellation that linearizes before admission performs
 `sealed -> cancelling` and completes the cancellation protocol above. Once
-publication is admitted, cancellation is a publication failure and performs
-`publishing -> publish_failed`; it never returns to `sealed` and cannot
-authorize a retry. No post-seal mutation, addition, deletion, substitution, or
-reordered dependent is valid.
+publication is admitted, successful commit and cancellation arbitrate at one
+atomic publication decision that performs exactly one of
+`publishing -> published` or `publishing -> publish_failed`. The irreversible
+external publication effect and `published` decision MUST be one transactional
+commit; an implementation that cannot provide that boundary MUST fail before
+external publication. Cancellation wins only before that commit and yields
+`publish_failed`. Publication wins at commit; concurrent or later cancellation
+returns exactly `already_published` without state or external-effect change.
+No execution can expose a committed publication with `publish_failed`, expose
+both outcomes, return to `sealed`, or authorize a retry. No post-seal mutation,
+addition, deletion, substitution, or reordered dependent is valid.
+
+#### Closed Publication Projection
+
+The sealed normalization records and evidence are internal ledger state.
+`Publish()` MUST emit only `published_attempt_v1`, a closed projection with
+exactly `schema_version`, `attempt_terminal_sequence`,
+`dependency_set_digest`, `runtime_dependency_count`, and
+`claim_outcome_digest`. Additional fields are forbidden. The projection MUST
+NOT contain or serialize an `AttemptKey`, `AttemptInstance`, dependent identity,
+`source_evidence_id`, normalization record, unknown extension key or value,
+retained diagnostic, evidence payload, capability representation, endpoint
+identity, or raw protocol data. `claim_outcome_digest` is domain-separated and
+commits to the ordered successful claim outcomes without exposing their source
+records. Downstream domain values require their own public contract and are not
+authorized by this receipt. Tests MUST inject distinct secret canaries into
+every forbidden source location and prove both field-level and byte-level
+absence from the published projection.
 
 ### Ledger Bounds And Deterministic Reclamation
 
@@ -351,6 +414,7 @@ The ledger MUST configure finite positive hard limits for:
 - all retained attempts across `open`, `sealed`, `cancelling`, `publishing`,
   `published`, `publish_failed`, and `cancelled` pending reclamation;
 - claim entries per attempt;
+- complete ordered dependency-set encoded bytes before collection decode;
 - total retained claim entries across `unresolved`, `claim_in_progress`, and
   every terminal outcome, bounded by the checked product of retained-attempt
   and per-attempt limits;
@@ -501,10 +565,22 @@ and is not evidence of a production sample.
 ## Downstream Obligations And Versioning
 
 `FMV3-M1-06` implements the source-issued runtime capability behavior against
-this contract. `FMV3-M2-01` consumes it only after pinning and verifying the
-full 40-character merged producer SHA from M1-06. Both downstream issues must
+this contract. Its CI MUST first pin and verify the full 40-character merged
+docs commit plus the exact policy and manifest SHA-256 digests. `FMV3-M2-01`
+must verify the same docs lock and consumes M1-06 only after also pinning and
+verifying the full 40-character merged producer SHA. Both downstream issues must
 keep fixture and runtime trust distinct, preserve lossless normalization, and
 fail closed on any violation.
+
+Their executable conformance suites MUST force the following interleavings and
+negative cases: registration paused before instance membership while closure
+wins; stale instance-A cancellation against same-key instance B; cancellation
+before publication commit; simultaneous publish/cancel with exactly one winner;
+cancellation after commit returning `already_published`; ordered-set
+permutation, omission, duplication, extra-member, and count mismatch before any
+CAS; empty, fixture-only, and mixed-source seal rejection; and secret canaries
+absent from the closed publication projection. A prose assertion or manifest
+match without these behavioral tests is insufficient.
 
 V1 is closed. Any semantic addition or correction requires a new versioned
 contract and manifest; no implementation may silently broaden the enums,

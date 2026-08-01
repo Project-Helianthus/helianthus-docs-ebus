@@ -18,6 +18,23 @@
     "producer_issue": "FMV3-M1-06",
     "consumer_issue": "FMV3-M2-01"
   },
+  "downstream_conformance": {
+    "docs_lock": [
+      "merged_docs_commit_sha_full_40",
+      "policy_sha256",
+      "manifest_sha256"
+    ],
+    "required_behavioral_tests": [
+      "registration_paused_before_membership_then_close_wins_without_visible_capability",
+      "stale_instance_a_cancellation_does_not_affect_same_key_instance_b",
+      "cancel_before_publish_commit_yields_publish_failed_without_external_effect",
+      "simultaneous_publish_cancel_has_exactly_one_atomic_winner",
+      "cancel_after_publish_commit_returns_already_published_without_mutation",
+      "dependency_permutation_omission_duplication_extra_and_count_mismatch_reject_before_cas",
+      "empty_fixture_only_and_mixed_source_seal_reject",
+      "secret_canaries_absent_from_closed_publication_projection_fields_and_bytes"
+    ]
+  },
   "licensing": {
     "policy": "AGPL-3.0",
     "restricted_source_copy": "forbidden",
@@ -53,8 +70,10 @@
         "publishing_to_publish_failed"
       ],
       "publish": "one_shot_sealed_to_publishing",
-      "publish_cancellation_after_admission": "publishing_to_publish_failed",
-      "seal_condition": "all_data_bearing_runtime_claims_claim_succeeded",
+      "publish_cancellation_after_admission": "atomic_commit_winner_publish_failed_before_commit_already_published_after_commit",
+      "publish_commit_linearization": "irreversible_external_effect_and_publishing_to_published_one_transactional_commit",
+      "seal_condition": "nonempty_all_runtime_data_bearing_exact_cardinality_all_claim_succeeded",
+      "seal_forbidden_sets": "empty_fixture_only_mixed_zero_runtime_duplicate_omitted_reordered",
       "seal_linearization": "success_predicate_and_open_to_sealed_atomic",
       "seal_non_success": "cancellation_and_audit_only_publication_forbidden",
       "terminal": [
@@ -69,8 +88,16 @@
       "source_binding_match": "required_for_every_runtime_capability",
       "validation": "bounded_before_copy_hash_intern_or_allocation"
     },
+    "dependency_set": {
+      "claim_binding": "every_capability_claim_and_zero_based_ordinal_exact_digest_and_declared_order",
+      "identity": "sha256_domain_separated_canonical_count_plus_ordered_dependent_identities",
+      "order": "exact_predecessor_dependency_set_id_order",
+      "sequence_reservation": "attempt_then_claims_in_declared_ordinal_order",
+      "validation": "nonempty_unique_bounded_count_and_encoded_bytes_before_decode_allocation_sequence_reservation_or_cas"
+    },
     "bounds": {
       "claim_entries_per_attempt": "dependency_set_hard_limit",
+      "dependency_set_encoded_bytes": "finite_positive_checked_before_collection_decode",
       "covered_attempt_states": [
         "open",
         "sealed",
@@ -113,7 +140,7 @@
         "open_to_cancelling",
         "sealed_to_cancelling"
       ],
-      "source_operation": "runtime_source_owned_CancelOpen_exact_AttemptKey",
+      "source_operation": "runtime_source_owned_CancelOpen_exact_closed_AttemptInstance",
       "unresolved_close": "only_remaining_unresolved_to_attempt_cancelled"
     },
     "capability_state_ownership": "external_private_runtime_source",
@@ -155,6 +182,32 @@
     },
     "mutable_dto": "forbidden",
     "publish": "sealed_immutable_ledger_state_only",
+    "published_projection": {
+      "additional_fields": "forbidden",
+      "claim_outcome_digest": "domain_separated_ordered_successful_claim_outcomes",
+      "fields": [
+        "schema_version",
+        "attempt_terminal_sequence",
+        "dependency_set_digest",
+        "runtime_dependency_count",
+        "claim_outcome_digest"
+      ],
+      "forbidden_payloads": [
+        "raw_attempt_key",
+        "attempt_instance",
+        "dependent_identity",
+        "source_evidence_id",
+        "normalization_record",
+        "unknown_extension_key_or_value",
+        "retained_diagnostic",
+        "evidence_payload",
+        "capability_representation",
+        "endpoint_identity",
+        "raw_protocol_data"
+      ],
+      "schema": "published_attempt_v1",
+      "schema_version": 1
+    },
     "reclamation": {
       "audit_tombstone": {
         "additional_fields": "forbidden",
@@ -252,7 +305,7 @@
     "unknown_extension_fields": "preserved_losslessly_without_truncation"
   },
   "policy": "docs/platform/opaque-runtime-acquisition-v1.md",
-  "policy_sha256": "fd7110af13091cd391244dd5f2f8fa918d0f8606d6309a37144306aa87257c2f",
+  "policy_sha256": "a95e2ec593a6c06584c06f1486b167c917e756d0af48b83896c51f05e58742d8",
   "public_authorization": {
     "gateway": "none",
     "hardware": "none",
@@ -307,17 +360,35 @@
   "version": 1,
   "zero_trust_boundary": "no_gateway_vendor_semantic_write_authorization",
   "opaque_capability": {
+    "attempt_instance": {
+      "capability_binding": "exact_instance_before_capability_visibility",
+      "identity": "opaque_unforgeable_nonserializable_per_attempt_incarnation",
+      "key_role": "AttemptKey_documentary_only_not_security_identity",
+      "membership": {
+        "close": "ledger_admission_atomic_open_to_closing_blocks_new_registration",
+        "drain": "wait_all_preclose_registrations",
+        "freeze": "closed_exact_ordered_member_set",
+        "late_registration": "reject_without_visible_capability_or_retained_open_state",
+        "states": [
+          "open",
+          "closing",
+          "closed"
+        ]
+      },
+      "same_key_recreation": "fresh_independent_instance"
+    },
     "attempt_binding": {
       "cancel_open": {
         "capability_effect": "still_open_to_cancelled_terminal_unchanged",
         "ledger_mutation": "forbidden",
-        "lookup": "exact_bounded_AttemptKey_only",
+        "lookup": "exact_opaque_closed_AttemptInstance_frozen_membership_only",
         "owner": "runtime_source",
-        "return": "after_all_matching_live_operations_and_reclamation_complete"
+        "return": "after_preclose_registrations_member_operations_reclamation_and_no_open_member"
       },
       "claim_path_after_m2_admission": "ledger_linearization_required",
       "key": "immutable_exact_source_owned_AttemptKey",
-      "source_operation": "CancelOpen(AttemptKey)"
+      "security_identity": "opaque_AttemptInstance_not_AttemptKey",
+      "source_operation": "CancelOpen(AttemptInstance)"
     },
     "bounded_state": {
       "capabilities": "endpoint_configured_hard_limit",
