@@ -159,7 +159,7 @@
       "audit_tombstone": {
         "additional_fields": "forbidden",
         "count_bound": "ledger_audit_tombstone_limit_finite_positive",
-        "eviction": "lowest_reserved_terminal_sequence_first",
+        "eviction": "lowest_ledger_reserved_terminal_sequence_first",
         "forbidden_payloads": [
           "raw_attempt_key",
           "source_evidence_id",

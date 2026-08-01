@@ -300,7 +300,7 @@ EXPECTED_M2_LEDGER = {
             "max_encoded_bytes": (
                 "ledger_audit_tombstone_max_encoded_bytes_finite_positive"
             ),
-            "eviction": "lowest_reserved_terminal_sequence_first",
+            "eviction": "lowest_ledger_reserved_terminal_sequence_first",
             "forbidden_payloads": [
                 "raw_attempt_key",
                 "source_evidence_id",
@@ -541,22 +541,38 @@ NORMATIVE_ARTIFACT_PATHS = (MANIFEST_PATH, POLICY_PATH, VALIDATOR_PATH)
 
 def _read_json(
     path: pathlib.Path, errors: list[str], label: str = "manifest"
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         errors.append(f"{label} unreadable: {exc}")
-        return {}
+        return None
     if not isinstance(value, dict):
         errors.append(f"{label} root must be an object")
-        return {}
+        return None
     return value
+
+
+def _strict_json_equal(actual: object, expected: object) -> bool:
+    if type(actual) is not type(expected):
+        return False
+    if isinstance(expected, dict):
+        return set(actual) == set(expected) and all(
+            _strict_json_equal(actual[key], value)
+            for key, value in expected.items()
+        )
+    if isinstance(expected, list):
+        return len(actual) == len(expected) and all(
+            _strict_json_equal(item, value)
+            for item, value in zip(actual, expected)
+        )
+    return actual == expected
 
 
 def _require_equal(
     manifest: dict[str, Any], key: str, expected: object, errors: list[str]
 ) -> None:
-    if manifest.get(key) != expected:
+    if not _strict_json_equal(manifest.get(key), expected):
         errors.append(f"{key} does not match the closed V1 inventory")
 
 
@@ -566,7 +582,7 @@ def _validate_closed_object(
     if not isinstance(value, dict):
         errors.append(f"{label} must be an object")
         return
-    if value != expected:
+    if not _strict_json_equal(value, expected):
         errors.append(f"{label} does not match the closed V1 inventory")
 
 
@@ -700,7 +716,7 @@ def _validate_prior_revision(
     prior_manifest = _read_json(
         prior_manifest_path, errors, "prior opaque manifest"
     )
-    if not prior_manifest:
+    if prior_manifest is None:
         return
     identity = ("contract_id", "version", "contract_version", "content_revision")
     if any(prior_manifest.get(key) != manifest.get(key) for key in identity):
@@ -742,7 +758,7 @@ def validate(
     manifest_path = root / MANIFEST_PATH
     policy_path = root / POLICY_PATH
     manifest = _read_json(manifest_path, errors)
-    if not manifest:
+    if manifest is None:
         return errors, None
 
     if set(manifest) != EXPECTED_TOP_LEVEL:
@@ -813,7 +829,9 @@ def validate(
     else:
         if set(source_kind) != {"allowed", "runtime", "offline_fixture"}:
             errors.append("source_kind keys must match the closed V1 schema")
-        if source_kind.get("allowed") != EXPECTED_SOURCE_KINDS:
+        if not _strict_json_equal(
+            source_kind.get("allowed"), EXPECTED_SOURCE_KINDS
+        ):
             errors.append("source_kind.allowed must be exactly runtime/offline_fixture")
         _validate_closed_object(
             source_kind.get("runtime"), EXPECTED_RUNTIME_SOURCE,
@@ -835,7 +853,7 @@ def validate(
     normalization = manifest.get("normalization_record")
     if not isinstance(normalization, dict):
         errors.append("normalization_record must be an object")
-    elif normalization != {
+    elif not _strict_json_equal(normalization, {
         "schema": "versioned",
         "required_fields": EXPECTED_NORMALIZATION_FIELDS,
         "unknown_extension_fields": (
@@ -868,7 +886,7 @@ def validate(
                 "encoded_total_then_fields_before_owner_allocation"
             ),
         },
-    }:
+    }):
         errors.append("normalization_record does not match the closed V1 inventory")
 
     try:

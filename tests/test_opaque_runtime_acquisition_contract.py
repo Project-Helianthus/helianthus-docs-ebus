@@ -68,6 +68,55 @@ def test_repository_opaque_runtime_acquisition_contract_is_valid() -> None:
     assert "opaque_runtime_acquisition_contract_ok" in result.stdout
 
 
+def test_empty_manifest_fails_closed(tmp_path: pathlib.Path) -> None:
+    root = materialize_fixture(tmp_path)
+    (root / MANIFEST).write_text("{}\n", encoding="utf-8")
+    result = run_validator(root)
+    assert result.returncode != 0
+    assert "opaque_runtime_acquisition_contract_invalid" in result.stderr
+
+
+def test_ledger_eviction_sentinel_is_ledger_specific() -> None:
+    manifest = load_manifest(REPO_ROOT)
+    capability = manifest["opaque_capability"]
+    ledger = manifest["m2_ledger"]
+    assert isinstance(capability, dict)
+    assert isinstance(ledger, dict)
+    capability_state = capability["bounded_state"]
+    ledger_reclamation = ledger["reclamation"]
+    assert isinstance(capability_state, dict)
+    assert isinstance(ledger_reclamation, dict)
+    capability_tombstone = capability_state["tombstone"]
+    ledger_tombstone = ledger_reclamation["audit_tombstone"]
+    assert isinstance(capability_tombstone, dict)
+    assert isinstance(ledger_tombstone, dict)
+    assert ledger_tombstone["eviction"] == (
+        "lowest_ledger_reserved_terminal_sequence_first"
+    )
+    assert ledger_tombstone["eviction"] != capability_tombstone["eviction"]
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        lambda manifest: manifest.__setitem__("version", True),
+        lambda manifest: manifest["opaque_capability"]["bounded_state"][
+            "tombstone"
+        ].__setitem__("schema_version", True),
+    ),
+)
+def test_boolean_cannot_satisfy_numeric_json_sentinel(
+    tmp_path: pathlib.Path, mutation: Callable[[dict[str, object]], None]
+) -> None:
+    root = materialize_fixture(tmp_path)
+    manifest = load_manifest(root)
+    mutation(manifest)
+    write_manifest(root, manifest)
+    result = run_validator(root)
+    assert result.returncode != 0
+    assert "opaque_runtime_acquisition_contract_invalid" in result.stderr
+
+
 def mutate_extra_source_kind(root: pathlib.Path, manifest: dict[str, object]) -> None:
     source_kind = manifest["source_kind"]
     assert isinstance(source_kind, dict)
