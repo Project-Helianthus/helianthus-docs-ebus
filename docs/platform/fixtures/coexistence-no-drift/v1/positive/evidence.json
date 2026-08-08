@@ -11,8 +11,8 @@
   },
   "contract": "helianthus.platform.multi-runtime-coexistence-evidence.v1",
   "evidence_class": "SYNTHETIC_OFFLINE_FIXTURE",
-  "evidence_hash": "sha256:9055d83a83042c70131769e7d6f33f6eabe1665532634299d0fbdc65c58b6218",
-  "evidence_id": "mrcv1:sha256:9055d83a83042c70131769e7d6f33f6eabe1665532634299d0fbdc65c58b6218",
+  "evidence_hash": "sha256:0866cebd0caadb974f88d6eff25d049bb2e2aeb0ac22b2e9c4b89f30bf71d6be",
+  "evidence_id": "mrcv1:sha256:0866cebd0caadb974f88d6eff25d049bb2e2aeb0ac22b2e9c4b89f30bf71d6be",
   "fixture_id": "MSP08-G18-SYNTHETIC-POSITIVE-001",
   "limits": {
     "max_depth": 32,
@@ -27,14 +27,14 @@
     "max_views_per_run": 16
   },
   "m7_binding": {
-    "completion_token": "MSP-07@ff511b035b85aef6123fb0853bb3d2f3af6fc01e",
     "docs_source_commit": "ea88fef23ecb154b08f70e7f94b36e1738ed08bf",
     "graph_contract": "helianthus.platform.draft-candidate-fact-graph.v1",
     "graph_hash": "sha256:00f2b3c48959605d311d0d3895ec924b475d8fa25ee4e236d32d6facbd32c4ac",
     "graph_id": "dcfgv1:sha256:00f2b3c48959605d311d0d3895ec924b475d8fa25ee4e236d32d6facbd32c4ac",
     "replay_contract": "helianthus.platform.draft-candidate-fact-replay.v1",
     "replay_hash": "sha256:0d3d6c1b4d23e1a8dfe6137fd7956f2c0c3fa51009c1ebb9129807c9fd49850b",
-    "replay_id": "dcfrv1:sha256:0d3d6c1b4d23e1a8dfe6137fd7956f2c0c3fa51009c1ebb9129807c9fd49850b"
+    "replay_id": "dcfrv1:sha256:0d3d6c1b4d23e1a8dfe6137fd7956f2c0c3fa51009c1ebb9129807c9fd49850b",
+    "source_commit": "ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
   },
   "normalization": {
     "canonicalization": "RFC8785_JCS_INTEGER_SUBSET",
@@ -157,7 +157,7 @@
   },
   "registry": {
     "contract": "helianthus.platform.multi-runtime-coexistence-registry.v1",
-    "digest": "sha256:82cf854d335da31dcda65ff45a024cbb4a1ce515965cb8165122c0b4ef7d8505",
+    "digest": "sha256:080a69fe3657bc590c177020814dc2f123d9811aceb6c05cc4ba629a66f331c3",
     "version": 1
   },
   "runs": [
@@ -559,7 +559,9 @@
         "empty_success": false,
         "facts": [],
         "outcome": "BASELINE_CAPTURED",
-        "service_count": 0
+        "raw_only_count": 0,
+        "service_count": 0,
+        "withheld_count": 0
       }
     },
     {
@@ -960,7 +962,9 @@
         "empty_success": false,
         "facts": [],
         "outcome": "DISABLED_CONFIRMED",
-        "service_count": 0
+        "raw_only_count": 0,
+        "service_count": 0,
+        "withheld_count": 0
       }
     },
     {
@@ -1361,7 +1365,9 @@
         "empty_success": false,
         "facts": [],
         "outcome": "NO_SERVICES_OBSERVED",
-        "service_count": 0
+        "raw_only_count": 0,
+        "service_count": 0,
+        "withheld_count": 0
       }
     },
     {
@@ -1769,7 +1775,9 @@
           }
         ],
         "outcome": "CANDIDATE_ONLY_OBSERVED",
-        "service_count": 1
+        "raw_only_count": 0,
+        "service_count": 1,
+        "withheld_count": 0
       }
     },
     {
@@ -2177,7 +2185,9 @@
           }
         ],
         "outcome": "CONFLICT_WITHHELD_OBSERVED",
-        "service_count": 1
+        "raw_only_count": 0,
+        "service_count": 1,
+        "withheld_count": 1
       }
     },
     {
@@ -2578,7 +2588,9 @@
         "empty_success": false,
         "facts": [],
         "outcome": "ROLLBACK_BASELINE_RESTORED",
-        "service_count": 0
+        "raw_only_count": 0,
+        "service_count": 0,
+        "withheld_count": 0
       }
     }
   ],

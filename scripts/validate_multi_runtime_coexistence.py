@@ -36,7 +36,7 @@ EVIDENCE_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1"
 REPORT_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-REPORT:V1"
 SAFE_INTEGER = 9_007_199_254_740_991
 BASELINE_SOURCE_SHA = "ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
-EXPECTED_REGISTRY_SHA256 = "82cf854d335da31dcda65ff45a024cbb4a1ce515965cb8165122c0b4ef7d8505"
+EXPECTED_REGISTRY_SHA256 = "080a69fe3657bc590c177020814dc2f123d9811aceb6c05cc4ba629a66f331c3"
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
@@ -262,7 +262,7 @@ def schema_check(evidence: Any) -> None:
     exact(
         evidence["m7_binding"],
         {
-            "completion_token",
+            "source_commit",
             "docs_source_commit",
             "graph_contract",
             "graph_id",
@@ -351,8 +351,10 @@ def schema_check(evidence: Any) -> None:
                 "eebus_runtime_enabled",
                 "candidate_graph_enabled",
                 "service_count",
+                "raw_only_count",
                 "candidate_count",
                 "conflict_count",
+                "withheld_count",
                 "degraded",
                 "empty_success",
                 "facts",
@@ -399,10 +401,10 @@ def check_registry(evidence: dict[str, Any], registry: Any, raw: bytes) -> None:
             "report_contract",
             "gate",
             "excluded_gates",
-            "m7_completion_token",
-            "m7_docs_source_commit",
-            "m7_binding",
-            "scenario_order",
+            "m7_synthetic_predecessor",
+            "m7_live_predecessor",
+            "m7_synthetic_binding",
+            "scenario_profiles",
             "protected_views",
             "view_rules",
             "required_acceptance_checks",
@@ -422,6 +424,29 @@ def check_registry(evidence: dict[str, Any], registry: Any, raw: bytes) -> None:
         or evidence["registry"]
         != {"contract": REGISTRY_CONTRACT, "version": 1, "digest": expected_digest}
     ):
+        fail("registry.binding")
+    for key, mode in (
+        ("m7_synthetic_predecessor", "EXACT_SYNTHETIC_FIXTURE"),
+        ("m7_live_predecessor", "VALIDATED_INPUTS_AND_REGENERATED_REPLAY"),
+    ):
+        predecessor = registry[key]
+        exact(
+            predecessor,
+            {"repository", "source_commit", "docs_source_commit", "binding_mode"},
+            "registry.binding",
+        )
+        if (
+            predecessor["repository"]
+            != "github.com/Project-Helianthus/helianthus-ebusgateway"
+            or not SHA_RE.fullmatch(predecessor["source_commit"])
+            or not SHA_RE.fullmatch(predecessor["docs_source_commit"])
+            or predecessor["binding_mode"] != mode
+        ):
+            fail("registry.binding")
+    if set(registry["scenario_profiles"]) != {
+        "SYNTHETIC_OFFLINE_FIXTURE",
+        "CAPTURED_RUNTIME_EVIDENCE",
+    }:
         fail("registry.binding")
 
 
@@ -461,13 +486,25 @@ def _verify_m7(
         raise
     except (candidate.Failure, KeyError, TypeError, ValueError, OSError):
         fail("provenance.m7")
+    evidence_class = evidence["evidence_class"]
+    predecessor_key = (
+        "m7_synthetic_predecessor"
+        if evidence_class == "SYNTHETIC_OFFLINE_FIXTURE"
+        else "m7_live_predecessor"
+    )
+    predecessor = registry[predecessor_key]
     expected = {
-        "completion_token": registry["m7_completion_token"],
-        "docs_source_commit": registry["m7_docs_source_commit"],
-        **registry["m7_binding"],
+        "source_commit": predecessor["source_commit"],
+        "docs_source_commit": predecessor["docs_source_commit"],
+        "graph_contract": graph["contract"],
+        "graph_id": graph["graph_id"],
+        "graph_hash": graph["graph_hash"],
+        "replay_contract": replay["contract"],
+        "replay_id": replay["replay_id"],
+        "replay_hash": replay["replay_hash"],
     }
     actual = {
-        "completion_token": evidence["m7_binding"]["completion_token"],
+        "source_commit": evidence["m7_binding"]["source_commit"],
         "docs_source_commit": evidence["m7_binding"]["docs_source_commit"],
         "graph_contract": graph["contract"],
         "graph_id": graph["graph_id"],
@@ -476,6 +513,14 @@ def _verify_m7(
         "replay_id": replay["replay_id"],
         "replay_hash": replay["replay_hash"],
     }
+    if evidence_class == "SYNTHETIC_OFFLINE_FIXTURE":
+        fixed = {
+            "source_commit": predecessor["source_commit"],
+            "docs_source_commit": predecessor["docs_source_commit"],
+            **registry["m7_synthetic_binding"],
+        }
+        if expected != fixed:
+            fail("provenance.m7")
     if evidence["m7_binding"] != expected or actual != expected:
         fail("provenance.m7")
     return graph, replay, graph_raw, replay_raw
@@ -485,11 +530,19 @@ def check_runtime(
     evidence: dict[str, Any], graph: dict[str, Any], replay: dict[str, Any]
 ) -> None:
     baseline = evidence["runs"][0]["provenance"]["runtime"]
-    if baseline["source_commit"] != BASELINE_SOURCE_SHA or baseline["source_parent_commit"] is not None:
-        fail("provenance.runtime")
-    compared_runtime = evidence["runs"][1]["provenance"]["runtime"]
-    if compared_runtime["source_parent_commit"] != BASELINE_SOURCE_SHA:
-        fail("provenance.runtime")
+    if evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE":
+        if (
+            baseline["source_commit"] != BASELINE_SOURCE_SHA
+            or baseline["source_parent_commit"] is not None
+        ):
+            fail("provenance.runtime")
+        compared_runtime = evidence["runs"][1]["provenance"]["runtime"]
+        if compared_runtime["source_parent_commit"] != BASELINE_SOURCE_SHA:
+            fail("provenance.runtime")
+    else:
+        compared_runtime = baseline
+        if baseline["source_parent_commit"] != evidence["m7_binding"]["source_commit"]:
+            fail("provenance.runtime")
     for run in evidence["runs"]:
         runtime = run["provenance"]["runtime"]
         if (
@@ -503,7 +556,12 @@ def check_runtime(
             or not integer(runtime["artifact_size_bytes"], 1)
         ):
             fail("provenance.runtime")
-    for run in evidence["runs"][1:]:
+    compared_runs = (
+        evidence["runs"][1:]
+        if evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE"
+        else evidence["runs"]
+    )
+    for run in compared_runs:
         if run["provenance"]["runtime"] != compared_runtime:
             fail("provenance.runtime")
     m7_sizes = {
@@ -530,7 +588,11 @@ def check_config(evidence: dict[str, Any]) -> None:
         config = run["provenance"]["config"]
         if config["config_hash"] != digest(CONFIG_DOMAIN, config["payload"]):
             fail("provenance.config")
-        if config["payload"]["outbound_enabled"] or config["payload"]["public_v2_enabled"]:
+        expected_outbound = evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
+        if (
+            config["payload"]["outbound_enabled"] is not expected_outbound
+            or config["payload"]["public_v2_enabled"]
+        ):
             fail("provenance.config")
 
 
@@ -577,7 +639,8 @@ def check_clock(evidence: dict[str, Any]) -> None:
 
 def check_ordering(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
     runs = evidence["runs"]
-    if [run["state"] for run in runs] != registry["scenario_order"]:
+    scenario_order = registry["scenario_profiles"][evidence["evidence_class"]]
+    if [run["state"] for run in runs] != scenario_order:
         fail("ordering.duplicate")
     if len({run["run_id"] for run in runs}) != len(runs):
         fail("ordering.duplicate")
@@ -600,48 +663,77 @@ def check_ordering(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
             fail("ordering.duplicate")
 
 
-def check_states(evidence: dict[str, Any]) -> None:
-    expected = {
-        "EEBUS_DISABLED_BASELINE": ("BASELINE_CAPTURED", False, False, 0, 0, 0, False, []),
-        "EEBUS_DISABLED_CONFIRMED": ("DISABLED_CONFIRMED", False, False, 0, 0, 0, False, []),
-        "EEBUS_ENABLED_NO_SERVICES": ("NO_SERVICES_OBSERVED", True, True, 0, 0, 0, True, []),
-        "EEBUS_CONNECTED_CANDIDATE_ONLY": (
-            "CANDIDATE_ONLY_OBSERVED",
+def _fact_summaries(graph: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        {
+            "candidate_id": fact["candidate_id"],
+            "status": fact["status"],
+            "terminal_negative_state": fact["terminal_negative_state"],
+            "visibility_channel": "CANDIDATE_DEBUG_REPLAY",
+        }
+        for fact in graph["facts"]
+    ]
+
+
+def _state_tuple(state: dict[str, Any]) -> tuple[Any, ...]:
+    return (
+        state["outcome"],
+        state["eebus_runtime_enabled"],
+        state["candidate_graph_enabled"],
+        state["service_count"],
+        state["raw_only_count"],
+        state["candidate_count"],
+        state["conflict_count"],
+        state["withheld_count"],
+        state["degraded"],
+        state["facts"],
+    )
+
+
+def check_states(evidence: dict[str, Any], graph: dict[str, Any]) -> None:
+    if evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE":
+        expected = {
+            "EEBUS_DISABLED_BASELINE": ("BASELINE_CAPTURED", False, False, 0, 0, 0, 0, 0, False, []),
+            "EEBUS_DISABLED_CONFIRMED": ("DISABLED_CONFIRMED", False, False, 0, 0, 0, 0, 0, False, []),
+            "EEBUS_ENABLED_NO_SERVICES": ("NO_SERVICES_OBSERVED", True, True, 0, 0, 0, 0, 0, True, []),
+            "EEBUS_CONNECTED_CANDIDATE_ONLY": (
+                "CANDIDATE_ONLY_OBSERVED", True, True, 1, 0, 1, 0, 0, False,
+                [{"candidate_id": "m7-candidate-synthetic-0001", "status": "CANDIDATE", "terminal_negative_state": None, "visibility_channel": "CANDIDATE_DEBUG_REPLAY"}],
+            ),
+            "EEBUS_CONFLICTED_WITHHELD": (
+                "CONFLICT_WITHHELD_OBSERVED", True, True, 1, 0, 0, 1, 1, True,
+                [{"candidate_id": "m7-candidate-synthetic-conflict-0001", "status": "WITHHELD", "terminal_negative_state": "CONFLICT", "visibility_channel": "CANDIDATE_DEBUG_REPLAY"}],
+            ),
+            "EEBUS_DISABLED_ROLLBACK": ("ROLLBACK_BASELINE_RESTORED", False, False, 0, 0, 0, 0, 0, False, []),
+        }
+    else:
+        facts = _fact_summaries(graph)
+        counts = {
+            status: sum(fact["status"] == status for fact in facts)
+            for status in ("RAW_ONLY", "CANDIDATE", "CONFLICTED", "WITHHELD")
+        }
+        services = evidence["runs"][0]["state_evidence"]["service_count"]
+        if services < 1:
+            fail("state.evidence")
+        connected = (
             True,
-            True,
-            1,
-            1,
-            0,
-            False,
-            [{"candidate_id": "m7-candidate-synthetic-0001", "status": "CANDIDATE", "terminal_negative_state": None, "visibility_channel": "CANDIDATE_DEBUG_REPLAY"}],
-        ),
-        "EEBUS_CONFLICTED_WITHHELD": (
-            "CONFLICT_WITHHELD_OBSERVED",
-            True,
-            True,
-            1,
-            0,
-            1,
-            True,
-            [{"candidate_id": "m7-candidate-synthetic-conflict-0001", "status": "WITHHELD", "terminal_negative_state": "CONFLICT", "visibility_channel": "CANDIDATE_DEBUG_REPLAY"}],
-        ),
-        "EEBUS_DISABLED_ROLLBACK": ("ROLLBACK_BASELINE_RESTORED", False, False, 0, 0, 0, False, []),
-    }
+            services,
+            counts["RAW_ONLY"],
+            counts["CANDIDATE"],
+            counts["CONFLICTED"],
+            counts["WITHHELD"],
+        )
+        expected = {
+            "EEBUS_CONNECTED_BASELINE": ("CONNECTED_BASELINE_CAPTURED", True, False, services, 0, 0, 0, 0, False, []),
+            "EEBUS_CONNECTED_RAW_WITHHELD": ("RAW_WITHHELD_OBSERVED", connected[0], True, *connected[1:], False, facts),
+            "EEBUS_RESTART_PERSISTED": ("RESTART_PERSISTED", connected[0], True, *connected[1:], False, facts),
+            "EEBUS_CONNECTED_ROLLBACK": ("GRAPH_EVIDENCE_DROPPED", True, False, services, 0, 0, 0, 0, False, []),
+        }
     for run in evidence["runs"]:
         state = run["state_evidence"]
-        actual = (
-            state["outcome"],
-            state["eebus_runtime_enabled"],
-            state["candidate_graph_enabled"],
-            state["service_count"],
-            state["candidate_count"],
-            state["conflict_count"],
-            state["degraded"],
-            state["facts"],
-        )
         config = run["provenance"]["config"]["payload"]
         if (
-            actual != expected[run["state"]]
+            _state_tuple(state) != expected[run["state"]]
             or state["empty_success"] is not False
             or config["eebus_runtime_enabled"] != state["eebus_runtime_enabled"]
             or config["candidate_graph_enabled"] != state["candidate_graph_enabled"]
@@ -766,11 +858,12 @@ def check_authority(evidence: dict[str, Any]) -> None:
 
 def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
     scope = evidence["scope"]
+    expected_live_claim = evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
     if (
         scope["gate"] != registry["gate"]
         or scope["claims"] != ["EEBUS-G18"]
         or scope["excluded_gates"] != registry["excluded_gates"]
-        or scope["live_vr940_claim"] is not False
+        or scope["live_vr940_claim"] is not expected_live_claim
         or scope["public_version_policy"] != "V1_ONLY_NO_PUBLIC_V2"
     ):
         fail("gate.scope")
@@ -846,9 +939,11 @@ def check_rollback(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         for view in rollback["protected_views"]
     ]
     config = rollback["provenance"]["config"]["payload"]
+    live = evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
+    expected_state = "EEBUS_CONNECTED_ROLLBACK" if live else "EEBUS_DISABLED_ROLLBACK"
     if (
-        rollback["state"] != "EEBUS_DISABLED_ROLLBACK"
-        or config["eebus_runtime_enabled"]
+        rollback["state"] != expected_state
+        or config["eebus_runtime_enabled"] is not live
         or config["candidate_graph_enabled"]
         or rollback_hashes != baseline_hashes
         or rollback_bytes != baseline_bytes
@@ -879,7 +974,7 @@ def verify(
     check_auth_mask(evidence)
     check_clock(evidence)
     check_ordering(evidence, registry)
-    check_states(evidence)
+    check_states(evidence, graph)
     check_view_coverage(evidence, registry)
     check_normalization(evidence, registry)
     check_payload_hashes(evidence, registry)
@@ -911,12 +1006,20 @@ def report(evidence: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]
         "EEBUS_CONNECTED_CANDIDATE_ONLY": "CANDIDATE_CONFINED_NO_DRIFT",
         "EEBUS_CONFLICTED_WITHHELD": "CONFLICT_WITHHELD_NO_DRIFT",
         "EEBUS_DISABLED_ROLLBACK": "ROLLBACK_EXACT_BASELINE",
+        "EEBUS_CONNECTED_RAW_WITHHELD": "RAW_WITHHELD_CONFINED_NO_DRIFT",
+        "EEBUS_RESTART_PERSISTED": "RESTART_PERSISTED_NO_DRIFT",
+        "EEBUS_CONNECTED_ROLLBACK": "GRAPH_EVIDENCE_DROPPED_NO_DRIFT",
     }
     baseline = evidence["runs"][0]
+    fixture_id = (
+        registry["fixture_ids"]["synthetic_positive_report"]
+        if evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE"
+        else evidence["fixture_id"] + registry["fixture_ids"]["live_report_suffix"]
+    )
     value = {
         "contract": REPORT_CONTRACT,
         "schema_version": 1,
-        "fixture_id": registry["fixture_ids"]["positive_report"],
+        "fixture_id": fixture_id,
         "report_id": "mrcrv1:sha256:" + "0" * 64,
         "report_hash": "sha256:" + "0" * 64,
         "evidence_id": evidence["evidence_id"],
@@ -926,7 +1029,7 @@ def report(evidence: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]
         "m7_binding": {
             key: evidence["m7_binding"][key]
             for key in (
-                "completion_token",
+                "source_commit",
                 "docs_source_commit",
                 "graph_id",
                 "graph_hash",
@@ -957,7 +1060,7 @@ def report(evidence: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]
         ],
         "rollback": {
             "run_id": evidence["runs"][-1]["run_id"],
-            "runtime_disabled": True,
+            "runtime_enabled": evidence["runs"][-1]["state_evidence"]["eebus_runtime_enabled"],
             "candidate_graph_disabled": True,
             "exact_baseline_restored": True,
         },

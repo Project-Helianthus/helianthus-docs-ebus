@@ -236,7 +236,8 @@ def test_msp08_contract_inventory_is_canonical_and_gateway_ready() -> None:
 def test_msp08_contract_freezes_no_drift_and_no_leak_semantics() -> None:
     page = read(COEXISTENCE_PAGE)
     required = (
-        "MSP-07@ff511b035b85aef6123fb0853bb3d2f3af6fc01e",
+        "8bcba2107d10b149f984ac9546ea6427a9cda8a1",
+        "35d2eba256a77b6575a2b45c07e73f054ff74ced",
         "ea88fef23ecb154b08f70e7f94b36e1738ed08bf",
         "EEBUS_DISABLED_BASELINE",
         "EEBUS_DISABLED_CONFIRMED",
@@ -298,13 +299,13 @@ def test_msp08_machine_contract_ids_and_closed_registry_are_frozen() -> None:
     )
     assert registry["gate"] == "EEBUS-G18"
     assert registry["excluded_gates"] == ["EEBUS-G17", "EEBUS-G19"]
-    assert registry["m7_completion_token"] == (
-        "MSP-07@ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
+    assert registry["m7_live_predecessor"]["source_commit"] == (
+        "8bcba2107d10b149f984ac9546ea6427a9cda8a1"
     )
-    assert registry["m7_docs_source_commit"] == (
-        "ea88fef23ecb154b08f70e7f94b36e1738ed08bf"
+    assert registry["m7_live_predecessor"]["docs_source_commit"] == (
+        "35d2eba256a77b6575a2b45c07e73f054ff74ced"
     )
-    assert registry["scenario_order"] == [
+    assert registry["scenario_profiles"]["SYNTHETIC_OFFLINE_FIXTURE"] == [
         "EEBUS_DISABLED_BASELINE",
         "EEBUS_DISABLED_CONFIRMED",
         "EEBUS_ENABLED_NO_SERVICES",

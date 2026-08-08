@@ -279,8 +279,10 @@ def _state_evidence(state: str) -> dict[str, object]:
         "eebus_runtime_enabled": runtime_enabled,
         "candidate_graph_enabled": graph_enabled,
         "service_count": service_count,
+        "raw_only_count": 0,
         "candidate_count": candidate_count,
         "conflict_count": conflict_count,
+        "withheld_count": 1 if state == "EEBUS_CONFLICTED_WITHHELD" else 0,
         "degraded": degraded,
         "empty_success": False,
         "facts": facts,
@@ -312,7 +314,9 @@ def build_evidence(
     compared_runtime = _runtime("a" * 40, coexistence.BASELINE_SOURCE_SHA, "b", "SYNTHETIC_FIXTURE")
     auth = _auth_scope()
     runs: list[dict[str, object]] = []
-    for index, state in enumerate(registry["scenario_order"]):
+    for index, state in enumerate(
+        registry["scenario_profiles"]["SYNTHETIC_OFFLINE_FIXTURE"]
+    ):
         views = _views(registry, index)
         state_evidence = _state_evidence(state)
         runtime = baseline_runtime if index == 0 else compared_runtime
@@ -366,7 +370,7 @@ def build_evidence(
     evidence = {
         "contract": coexistence.EVIDENCE_CONTRACT,
         "schema_version": 1,
-        "fixture_id": registry["fixture_ids"]["positive_evidence"],
+        "fixture_id": registry["fixture_ids"]["synthetic_positive_evidence"],
         "evidence_class": "SYNTHETIC_OFFLINE_FIXTURE",
         "evidence_id": "mrcv1:sha256:" + "0" * 64,
         "evidence_hash": "sha256:" + "0" * 64,
@@ -383,9 +387,9 @@ def build_evidence(
             "public_version_policy": "V1_ONLY_NO_PUBLIC_V2",
         },
         "m7_binding": {
-            "completion_token": registry["m7_completion_token"],
-            "docs_source_commit": registry["m7_docs_source_commit"],
-            **copy.deepcopy(registry["m7_binding"]),
+            "source_commit": registry["m7_synthetic_predecessor"]["source_commit"],
+            "docs_source_commit": registry["m7_synthetic_predecessor"]["docs_source_commit"],
+            **copy.deepcopy(registry["m7_synthetic_binding"]),
         },
         "capture_clock": clock,
         "normalization": profile,

@@ -80,9 +80,9 @@
     "M7Binding": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["completion_token", "docs_source_commit", "graph_contract", "graph_id", "graph_hash", "replay_contract", "replay_id", "replay_hash"],
+      "required": ["source_commit", "docs_source_commit", "graph_contract", "graph_id", "graph_hash", "replay_contract", "replay_id", "replay_hash"],
       "properties": {
-        "completion_token": {"$ref": "#/$defs/Token"},
+        "source_commit": {"$ref": "#/$defs/SHA"},
         "docs_source_commit": {"$ref": "#/$defs/SHA"},
         "graph_contract": {"const": "helianthus.platform.draft-candidate-fact-graph.v1"},
         "graph_id": {"type": "string", "pattern": "^dcfgv1:sha256:[0-9a-f]{64}$"},
@@ -236,22 +236,24 @@
       "required": ["candidate_id", "status", "terminal_negative_state", "visibility_channel"],
       "properties": {
         "candidate_id": {"$ref": "#/$defs/Token"},
-        "status": {"enum": ["CANDIDATE", "WITHHELD"]},
-        "terminal_negative_state": {"oneOf": [{"const": "CONFLICT"}, {"type": "null"}]},
+        "status": {"enum": ["RAW_ONLY", "CANDIDATE", "CONFLICTED", "WITHHELD"]},
+        "terminal_negative_state": {"oneOf": [{"enum": ["NO_SIGNAL", "CLOUD_ONLY", "CONFLICT", "NOT_TESTED"]}, {"type": "null"}]},
         "visibility_channel": {"const": "CANDIDATE_DEBUG_REPLAY"}
       }
     },
     "StateEvidence": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["outcome", "eebus_runtime_enabled", "candidate_graph_enabled", "service_count", "candidate_count", "conflict_count", "degraded", "empty_success", "facts"],
+      "required": ["outcome", "eebus_runtime_enabled", "candidate_graph_enabled", "service_count", "raw_only_count", "candidate_count", "conflict_count", "withheld_count", "degraded", "empty_success", "facts"],
       "properties": {
-        "outcome": {"enum": ["BASELINE_CAPTURED", "DISABLED_CONFIRMED", "NO_SERVICES_OBSERVED", "CANDIDATE_ONLY_OBSERVED", "CONFLICT_WITHHELD_OBSERVED", "ROLLBACK_BASELINE_RESTORED"]},
+        "outcome": {"enum": ["BASELINE_CAPTURED", "DISABLED_CONFIRMED", "NO_SERVICES_OBSERVED", "CANDIDATE_ONLY_OBSERVED", "CONFLICT_WITHHELD_OBSERVED", "ROLLBACK_BASELINE_RESTORED", "CONNECTED_BASELINE_CAPTURED", "RAW_WITHHELD_OBSERVED", "RESTART_PERSISTED", "GRAPH_EVIDENCE_DROPPED"]},
         "eebus_runtime_enabled": {"type": "boolean"},
         "candidate_graph_enabled": {"type": "boolean"},
         "service_count": {"type": "integer", "minimum": 0, "maximum": 65535},
+        "raw_only_count": {"type": "integer", "minimum": 0, "maximum": 64},
         "candidate_count": {"type": "integer", "minimum": 0, "maximum": 64},
         "conflict_count": {"type": "integer", "minimum": 0, "maximum": 64},
+        "withheld_count": {"type": "integer", "minimum": 0, "maximum": 64},
         "degraded": {"type": "boolean"},
         "empty_success": {"type": "boolean"},
         "facts": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/CandidateFact"}}
@@ -277,7 +279,7 @@
       "required": ["run_id", "state", "capture_offset_ns", "provenance", "state_evidence", "protected_views"],
       "properties": {
         "run_id": {"type": "string", "pattern": "^msp08-run-[0-9]{2}$"},
-        "state": {"enum": ["EEBUS_DISABLED_BASELINE", "EEBUS_DISABLED_CONFIRMED", "EEBUS_ENABLED_NO_SERVICES", "EEBUS_CONNECTED_CANDIDATE_ONLY", "EEBUS_CONFLICTED_WITHHELD", "EEBUS_DISABLED_ROLLBACK"]},
+        "state": {"enum": ["EEBUS_DISABLED_BASELINE", "EEBUS_DISABLED_CONFIRMED", "EEBUS_ENABLED_NO_SERVICES", "EEBUS_CONNECTED_CANDIDATE_ONLY", "EEBUS_CONFLICTED_WITHHELD", "EEBUS_DISABLED_ROLLBACK", "EEBUS_CONNECTED_BASELINE", "EEBUS_CONNECTED_RAW_WITHHELD", "EEBUS_RESTART_PERSISTED", "EEBUS_CONNECTED_ROLLBACK"]},
         "capture_offset_ns": {"type": "integer", "minimum": 0, "maximum": 86400000000000},
         "provenance": {"$ref": "#/$defs/Provenance"},
         "state_evidence": {"$ref": "#/$defs/StateEvidence"},

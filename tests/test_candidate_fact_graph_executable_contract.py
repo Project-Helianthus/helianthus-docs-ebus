@@ -1612,8 +1612,8 @@ def test_msp08_positive_fixture_ids_states_and_protected_views_are_closed() -> N
     assert evidence["scope"]["live_vr940_claim"] is False
     assert evidence["scope"]["claims"] == ["EEBUS-G18"]
     assert [run["state"] for run in evidence["runs"]] == registry[
-        "scenario_order"
-    ]
+        "scenario_profiles"
+    ]["SYNTHETIC_OFFLINE_FIXTURE"]
     expected_views = registry["protected_views"]
     for run in evidence["runs"]:
         assert [view["view_id"] for view in run["protected_views"]] == (

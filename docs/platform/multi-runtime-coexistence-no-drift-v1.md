@@ -2,22 +2,27 @@ Canonical source: this page.
 
 # Multi-Runtime Coexistence No-Drift V1
 
-Issue: `Project-Helianthus/helianthus-docs-ebus#365` (`MSP-08`, M8).
+Issues: `Project-Helianthus/helianthus-docs-ebus#365` (`MSP-08`, M8) and
+`Project-Helianthus/helianthus-docs-ebus#391` (`MSP-08-LIVE-R1`).
 
-Plan provenance: the locked multi-runtime semantic platform plan, its `MSP-08`
-row, and predecessor completion token
-`MSP-07@ff511b035b85aef6123fb0853bb3d2f3af6fc01e`. The canonical M7 candidate
-graph documentation input is commit
-`ea88fef23ecb154b08f70e7f94b36e1738ed08bf`.
+The historical synthetic predecessor is gateway commit
+`ff511b035b85aef6123fb0853bb3d2f3af6fc01e` with candidate-graph docs commit
+`ea88fef23ecb154b08f70e7f94b36e1738ed08bf`. The live predecessor is the M7
+gateway merge `8bcba2107d10b149f984ac9546ea6427a9cda8a1` with M7 docs merge
+`35d2eba256a77b6575a2b45c07e73f054ff74ced`. These are ordinary source
+provenance bindings, not execution authorization.
 
 ## Purpose And Boundary
 
 This language-neutral executable contract proves EEBUS-G18 coexistence no
-drift. It freezes a complete eBUS/consumer baseline, captures five compared
-runs, derives every result in an offline verifier, and accepts only when the
-protected outputs remain byte-equal after the closed normalization procedure.
-It is additive documentation and evidence machinery. It does not change a
-runtime API.
+drift. Its synthetic profile freezes a complete eBUS/consumer baseline and
+captures five compared runs. Its live profile captures four states with the
+same exact gateway artifact: connected baseline, raw/withheld evidence,
+restart persistence, and connected rollback after the evidence graph is
+dropped. Every result is derived in an offline verifier and accepted only when
+the protected outputs remain byte-equal after the closed normalization
+procedure. It is additive documentation and evidence machinery. It does not
+change a runtime API.
 
 Existing promoted eBUS leaves remain authoritative. eeBUS candidate and
 conflict facts may appear only on the existing internal
@@ -36,8 +41,15 @@ evidence and G19 direct outbound VR940 TCP/TLS/WebSocket/SHIP and first SPINE
 data are excluded. A G17 or G19 claim makes this artifact invalid.
 
 The repository positive fixture is synthetic offline evidence. It is not a
-canonical positive live VR940 claim and cannot be cited as one. It contains no
-vendor-restricted material or private protocol text.
+canonical positive live VR940 claim and cannot be cited as one. The captured
+runtime profile instead validates the supplied M7 graph and source evidence,
+regenerates replay, and binds the result to the live M7 source commits above.
+Neither profile contains vendor-restricted material or private protocol text.
+
+The live M7 graph currently contains inspectable `RAW_ONLY` and `WITHHELD`
+facts. M8 preserves those actual statuses and does not fabricate `CANDIDATE`
+or `CONFLICTED` facts merely to satisfy a synthetic scenario. M8 does not
+authorize M8.5 or M9 and does not promote any leaf.
 
 ## Closed Machine Contract
 
@@ -150,11 +162,13 @@ Each digest is lowercase SHA-256 over the ASCII domain, one NUL byte, and the
 canonical bytes. Equality is verifier-derived. Caller-asserted hashes,
 booleans, or verdicts have no authority.
 
-## Required Scenario Sequence
+## Required Scenario Profiles
 
 Runs are ordered by increasing monotonic capture offset. Their IDs, states,
 runtime/config provenance, immutable inputs, state evidence, and protected
 views are closed.
+
+### Synthetic Offline Fixture
 
 | State | Required state evidence | Consumer result |
 | --- | --- | --- |
@@ -169,6 +183,23 @@ views are closed.
 explicit outcomes, not generic success. A missing state record, zero-length
 run list, generic `PASS`, or no-services run that omits its degraded outcome is
 invalid. There is no empty-success path.
+
+### Captured Runtime Evidence
+
+All four states use the same exact gateway artifact and keep the eeBUS runtime
+connected. Candidate evidence is an offline harness input and remains confined
+to `CANDIDATE_DEBUG_REPLAY`; it does not alter the runtime's public surfaces.
+
+| State | Required state evidence | Consumer result |
+| --- | --- | --- |
+| `EEBUS_CONNECTED_BASELINE` | Runtime connected; graph absent; at least one visible service | Live baseline captured with exact no drift |
+| `EEBUS_CONNECTED_RAW_WITHHELD` | Validated M7 graph present; real `RAW_ONLY` and `WITHHELD` counts and facts | Raw-first facts confined; exact no drift |
+| `EEBUS_RESTART_PERSISTED` | Same artifact after restart; runtime connected; same validated graph | Trust/session visibility survives restart; exact no drift |
+| `EEBUS_CONNECTED_ROLLBACK` | Runtime stays connected; graph evidence removed | Consumer baseline remains exact and authority unchanged |
+
+The live profile proves restart persistence without turning runtime shutdown
+into rollback. Its rollback is removal of candidate evidence from the harness,
+not disconnection of the paired VR940 runtime.
 
 ## Provenance Binding
 
@@ -189,26 +220,32 @@ Every result binds all of the following:
 
 The M7 graph is not accepted from hashes alone. The verifier invokes the
 existing synchronized-evidence and candidate-fact validators, regenerates the
-M7 replay, requires deep equality with the supplied replay, and then requires
-the exact frozen graph and replay IDs/hashes. The supplied graph, replay,
-registry, synchronized bundle, and synchronized replay are immutable inputs.
+M7 replay, and requires deep equality with the supplied replay. The synthetic
+profile then requires its frozen graph and replay IDs/hashes. The captured
+runtime profile accepts the dynamically validated live graph and replay only
+when their source commits equal the live M7 predecessor. The supplied graph,
+replay, registry, synchronized bundle, and synchronized replay are immutable
+inputs in both profiles.
 
-The baseline runtime source is exact gateway main
-`ff511b035b85aef6123fb0853bb3d2f3af6fc01e`. All compared and rollback runs
-must use one exact new runtime identity whose parent is that baseline. A
-missing, duplicate, stale, reordered, mismatched, or unhashed provenance item
-fails closed. Capture age is derived only from bound monotonic offsets; replay
-does not read the wall clock.
+The synthetic baseline runtime source is exact gateway main
+`ff511b035b85aef6123fb0853bb3d2f3af6fc01e`; its compared runtime has that
+source as parent. The captured runtime profile uses one exact artifact across
+all four states and requires source parent
+`8bcba2107d10b149f984ac9546ea6427a9cda8a1`. A missing, duplicate, stale,
+reordered, mismatched, or unhashed provenance item fails closed. Capture age is
+derived only from bound monotonic offsets; replay does not read the wall clock.
 
 ## Authority And Anti-Leak Rules
 
-The internal candidate facts prove visibility without publication. Their
-closed fields are candidate ID, status, terminal state, and visibility
-channel. The candidate run accepts only `CANDIDATE` with no terminal state.
-The conflict run accepts only `WITHHELD` with terminal `CONFLICT`.
+The internal facts prove visibility without publication. Their closed fields
+are candidate ID, status, terminal state, and visibility channel. The
+synthetic candidate run accepts only `CANDIDATE` with no terminal state and its
+conflict run accepts only `WITHHELD` with terminal `CONFLICT`. The live profile
+accepts the validated M7 statuses `RAW_ONLY`, `CANDIDATE`, `CONFLICTED`, and
+`WITHHELD` but reports only what the supplied graph actually contains.
 
-Protected outputs must contain no candidate/conflict field or value. In
-particular, candidate or conflict material cannot appear in:
+Protected outputs must contain no candidate, raw-only, conflicted, or withheld
+fact field or value. In particular, this internal material cannot appear in:
 
 - `ebus.v1` MCP responses;
 - the MCP public inventory;
@@ -227,12 +264,14 @@ authorize protocol translation.
 
 ## Rollback
 
-Rollback disables the eeBUS runtime and candidate graph in the same compared
-runtime artifact. The verifier requires `EEBUS_DISABLED_ROLLBACK`, disabled
-config bits, explicit `ROLLBACK_BASELINE_RESTORED`, zero service/candidate/
-conflict counts, and exact shape and canonical bytes for all protected views.
-Rollback succeeds only when it demonstrates restoration of the exact
-baseline. Restart success or an empty response is not rollback evidence.
+Synthetic rollback disables the eeBUS runtime and candidate graph in the same
+compared artifact. The verifier requires `EEBUS_DISABLED_ROLLBACK`, disabled
+config bits, explicit `ROLLBACK_BASELINE_RESTORED`, zero service and fact
+counts, and exact shape and canonical bytes for all protected views. Live
+rollback keeps the runtime connected, drops only the candidate graph, requires
+`EEBUS_CONNECTED_ROLLBACK` and `GRAPH_EVIDENCE_DROPPED`, and retains at least
+one visible service. In either profile, restart success or an empty response is
+not rollback evidence.
 
 ## Validation Precedence
 
@@ -285,8 +324,17 @@ ceilings. Raising, lowering, omitting, or exceeding a ceiling is invalid.
 
 The transport-gate evidence artifact is the closed evidence JSON plus its
 verifier-derived report. It proves coexistence only and is suitable for the
-`eebus_v0` G18 row. It does not satisfy G17 or G19 and does not require a live
-outbound connection.
+`eebus_v0` G18 row. Synthetic evidence does not satisfy G17 or G19 and does not
+require a live outbound connection. Captured runtime evidence may use the
+already-proven outbound connection, but this contract still makes no new G17
+or G19 claim.
+
+Runtime/operator captures may inspect local raw eeBUS facts. Any evidence
+published from this gate must use the explicit `public-redacted` export path:
+stable device identity and protocol addresses are removed, while all
+cryptographic secrets remain forbidden in every tier. The protected-view
+comparison binds the effective auth and mask scope and never permits a tier
+change on dereference.
 
 The positive fixture IDs are:
 
@@ -294,13 +342,15 @@ The positive fixture IDs are:
 - `MSP08-G18-SYNTHETIC-REPORT-001`.
 
 The generated report includes the exact baseline runtime identity and eleven
-view hashes, all five scenario results and view hashes, the six-row acceptance
-matrix, the exact M7 binding, and the rollback result. `PASS` is emitted only
-after every validation stage completes.
+view hashes, every scenario result and view hash, the profile-specific
+acceptance matrix, the exact M7 binding, and the rollback result. `PASS` is
+emitted only after every validation stage completes.
 
 ## Acceptance Matrix
 
-Each state must pass every listed check. No cell is caller-provided.
+Each state must pass every listed check. No cell is caller-provided. The table
+below is the synthetic profile; the captured profile applies the same checks
+to its four live states, including restart persistence.
 
 | State | Provenance | Explicit state | Complete views | Hashes | Shape | Canonical bytes | eBUS authority | Candidate confined | V1 only | G18 only |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -351,15 +401,16 @@ positive evidence and require one precedence category.
 ## Gateway RED Handoff
 
 The next gateway RED test should vendor or fetch these exact docs artifacts by
-immutable docs commit, then emit one evidence JSON conforming to the evidence
-schema. It must supply all five M7 validation inputs to the verifier. Expected
-runtime output paths are the registry `capture_path` values under
-`artifacts/protected/`; candidate-only facts remain in the separate internal
-capture for `CANDIDATE_DEBUG_REPLAY`.
+immutable docs commit, then emit one captured-runtime evidence JSON conforming
+to the evidence schema. It must supply all five M7 validation inputs to the
+verifier. Expected runtime output paths are the registry `capture_path` values
+under `artifacts/protected/`; raw and withheld facts remain in the separate
+internal capture for `CANDIDATE_DEBUG_REPLAY`.
 
-Gateway acceptance must exercise the six registry scenario IDs in order, use
-the eleven protected view IDs without substitution, and run all twenty-two
-mutation classes. Its G18 artifact is the input evidence plus exact report
-bytes. A gateway test must not replace the verifier with a caller comparison,
-drop fields before capture, extend masking, infer a state from missing data,
-or claim G17/G19 from this contract.
+Gateway synthetic conformance must retain the six synthetic scenario IDs and
+all mutation classes. Live acceptance must exercise the four captured-runtime
+states in order with one artifact and the eleven protected view IDs without
+substitution. Its G18 artifact is the input evidence plus exact report bytes.
+A gateway test must not replace the verifier with a caller comparison, drop
+fields before capture, extend masking, infer a state from missing data, or
+claim G17/G19 from this contract. Passing M8 does not authorize M8.5 or M9.
