@@ -63,9 +63,7 @@ PRIVATE_KEY_RE = re.compile(
     r"-----BEGIN (?:[A-Z0-9]+(?: [A-Z0-9]+)* )?PRIVATE KEY-----",
     re.IGNORECASE,
 )
-IPV4_CANDIDATE_RE = re.compile(
-    r"(?<![0-9])[0-9]+(?:\.[0-9]+){3,}\.*(?![0-9.])"
-)
+DOTTED_NUMERIC_RUN_RE = re.compile(r"(?<![0-9])[0-9][0-9.]*(?![0-9.])")
 IPV6_CANDIDATE_RE = re.compile(
     r"(?i)(?<![0-9a-f:])(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}"
     r"(?:%[a-z0-9_.-]+)?(?![0-9a-f:])"
@@ -79,22 +77,37 @@ MAC_RE = re.compile(
 )
 SKI_RE = re.compile(r"(?i)(?:^|[^0-9a-f])[0-9a-f]{40}(?:$|[^0-9a-f])")
 REDACTED_ID_RE = re.compile(r"^redacted:sha256:[0-9a-f]{12}$")
+CREDENTIAL_VALUE_RE = re.compile(
+    r"(?i)\bauthorization\s*:\s*(?:bearer|basic)\s+[a-z0-9._~+/=-]+"
+    r"|\bbearer\s+[a-z0-9._~+/=-]+"
+    r"|\b(?:set-cookie|cookie)\s*:\s*\S+"
+)
 CANDIDATE_LEAK_COMPACT_NAMES = frozenset(
     {
         "bindingsourcekind",
         "candidatefact",
         "candidatefacts",
         "candidateid",
+        "candidateids",
+        "candidatecount",
+        "candidatecounts",
         "candidateref",
         "candidaterefs",
         "candidatestatus",
+        "candidatestatuses",
         "conflictstatus",
         "errorcategory",
+        "facthash",
+        "facthashes",
+        "rawonlycount",
+        "rawonlycounts",
         "sourcecontract",
         "sourceid",
         "sourceschemaversion",
         "sourceterminal",
+        "sourceterminals",
         "terminalnegativestate",
+        "terminalnegativestates",
         "visibilitychannel",
     }
 )
@@ -103,18 +116,28 @@ CANDIDATE_LEAK_TOKEN_PATTERNS = frozenset(
         ("binding", "source", "kind"),
         ("candidate", "fact"),
         ("candidate", "facts"),
+        ("candidate", "count"),
+        ("candidate", "counts"),
         ("candidate", "id"),
+        ("candidate", "ids"),
         ("candidate", "ref"),
         ("candidate", "refs"),
         ("candidate", "status"),
+        ("candidate", "statuses"),
         ("conflict", "status"),
         ("error", "category"),
+        ("fact", "hash"),
+        ("fact", "hashes"),
+        ("raw", "only", "count"),
+        ("raw", "only", "counts"),
         ("source", "contract"),
         ("source", "id"),
         ("source", "kind"),
         ("source", "schema", "version"),
         ("source", "terminal"),
+        ("source", "terminals"),
         ("terminal", "negative", "state"),
+        ("terminal", "negative", "states"),
         ("visibility", "channel"),
     }
 )
@@ -165,6 +188,8 @@ PUBLIC_IDENTITY_SUFFIXES = frozenset(
         "addresses",
         "entities",
         "entity",
+        "device",
+        "devices",
         "feature",
         "features",
         "id",
@@ -177,8 +202,12 @@ PUBLIC_IDENTITY_SUFFIXES = frozenset(
         "kinds",
         "number",
         "numbers",
+        "node",
+        "nodes",
         "path",
         "paths",
+        "peer",
+        "peers",
         "selector",
         "selectors",
         "serial",
@@ -189,6 +218,22 @@ PUBLIC_IDENTITY_SUFFIXES = frozenset(
         "skis",
         "subject",
         "subjects",
+    }
+)
+PUBLIC_IDENTITY_HASH_ROOTS = frozenset(
+    {
+        "device",
+        "eebus",
+        "endpoint",
+        "entity",
+        "feature",
+        "peer",
+        "remote",
+        "service",
+        "session",
+        "ship",
+        "ski",
+        "spine",
     }
 )
 PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
@@ -202,6 +247,42 @@ PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
         prefix + suffix
         for prefix in PUBLIC_IDENTITY_PREFIXES
         for suffix in PUBLIC_IDENTITY_SUFFIXES
+    }
+)
+SENSITIVE_KEY_COMPACT_NAMES = frozenset(
+    {
+        "accesskey",
+        "accesskeyid",
+        "apikey",
+        "authheader",
+        "authorization",
+        "credential",
+        "keymaterial",
+        "password",
+        "privatekey",
+        "secret",
+        "sessioncookie",
+        "token",
+        "truststore",
+    }
+)
+SENSITIVE_KEY_TOKEN_PATTERNS = frozenset(
+    {
+        ("access", "key"),
+        ("api", "key"),
+        ("auth", "header"),
+        ("authorization",),
+        ("cookie",),
+        ("cookies",),
+        ("credential",),
+        ("credentials",),
+        ("key", "material"),
+        ("password",),
+        ("private", "key"),
+        ("secret",),
+        ("session", "cookie"),
+        ("token",),
+        ("trust", "store"),
     }
 )
 HARD_LIMITS = {
@@ -1504,6 +1585,13 @@ def _contains_token_sequence(
     )
 
 
+def _contains_candidate_field_name(value: str) -> bool:
+    return bool(
+        _compact_key(value) in CANDIDATE_LEAK_COMPACT_NAMES
+        or _contains_token_sequence(_key_tokens(value), CANDIDATE_LEAK_TOKEN_PATTERNS)
+    )
+
+
 def _terminal_vocabulary(graph: dict[str, Any]) -> set[str]:
     values: set[str] = set()
     for fact in graph["facts"]:
@@ -1532,11 +1620,7 @@ def _contains_candidate_leak(
     value: Any, candidate_ids: set[str], terminal_values: set[str]
 ) -> bool:
     if isinstance(value, dict):
-        compact_keys = {_compact_key(key) for key in value}
-        if compact_keys & CANDIDATE_LEAK_COMPACT_NAMES or any(
-            _contains_token_sequence(_key_tokens(key), CANDIDATE_LEAK_TOKEN_PATTERNS)
-            for key in value
-        ):
+        if any(_contains_candidate_field_name(key) for key in value):
             return True
         return any(
             _contains_candidate_leak(item_key, candidate_ids, terminal_values)
@@ -1549,7 +1633,8 @@ def _contains_candidate_leak(
             for item in value
         )
     return isinstance(value, str) and (
-        value
+        _contains_candidate_field_name(value)
+        or value
         in {
             "RAW_ONLY",
             "CANDIDATE",
@@ -1592,8 +1677,10 @@ def _contains_private_ipv6(value: str) -> bool:
 
 
 def _contains_non_public_ipv4(value: str) -> bool:
-    for match in IPV4_CANDIDATE_RE.finditer(value):
+    for match in DOTTED_NUMERIC_RUN_RE.finditer(value):
         candidate_value = match.group(0)
+        if candidate_value.count(".") < 3:
+            continue
         trailing_dots = len(candidate_value) - len(candidate_value.rstrip("."))
         if trailing_dots > 1:
             return True
@@ -1630,11 +1717,13 @@ def _valid_redacted_identity(value: Any) -> bool:
 def _has_public_identity_key(key: str) -> bool:
     normalized = _compact_key(key)
     tokens = _key_tokens(key)
-    identity_tokens = (
-        tokens[:-1] if tokens and tokens[-1] in {"digest", "hash"} else tokens
-    )
+    hash_qualified = bool(tokens and tokens[-1] in {"digest", "hash"})
+    identity_tokens = tokens[:-1] if hash_qualified else tokens
     return bool(
         identity_tokens and identity_tokens[-1] in PUBLIC_IDENTITY_GENERIC_TOKENS
+        or hash_qualified
+        and identity_tokens
+        and identity_tokens[-1] in PUBLIC_IDENTITY_HASH_ROOTS
         or any(
             left in PUBLIC_IDENTITY_PREFIXES and right in PUBLIC_IDENTITY_SUFFIXES
             for left, right in zip(identity_tokens, identity_tokens[1:])
@@ -1643,25 +1732,26 @@ def _has_public_identity_key(key: str) -> bool:
     )
 
 
+def _has_sensitive_key(key: str, value: Any) -> bool:
+    normalized = _compact_key(key)
+    tokens = _key_tokens(key)
+    if (
+        tokens
+        and tokens[-1] in {"count", "counts", "total", "totals"}
+        and isinstance(value, int)
+        and not isinstance(value, bool)
+    ):
+        return False
+    return bool(
+        normalized in SENSITIVE_KEY_COMPACT_NAMES
+        or _contains_token_sequence(tokens, SENSITIVE_KEY_TOKEN_PATTERNS)
+    )
+
+
 def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     if key is not None:
         normalized = _compact_key(key)
-        if any(
-            part in normalized
-            for part in (
-                "privatekey",
-                "apikey",
-                "accesskey",
-                "authorization",
-                "authheader",
-                "password",
-                "secret",
-                "token",
-                "credential",
-                "truststore",
-                "keymaterial",
-            )
-        ):
+        if _has_sensitive_key(key, value):
             return True
         if _has_public_identity_key(key):
             return not _valid_redacted_identity(value)
@@ -1689,6 +1779,7 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         return False
     return bool(
         PRIVATE_KEY_RE.search(value)
+        or CREDENTIAL_VALUE_RE.search(value)
         or _contains_non_public_ipv4(value)
         or _contains_private_ipv6(value)
         or MAC_RE.search(value)
@@ -1713,6 +1804,12 @@ def check_authority(evidence: dict[str, Any]) -> None:
         )
         if registry_view["payload"]["data"]["authority"] != "ebus.promoted":
             fail("authority.ebus")
+        if any(
+            leaf.get("source") != "ebus"
+            or leaf.get("promotion_state") != "PROMOTED"
+            for leaf in registry_view["payload"]["data"]["leaves"]
+        ):
+            fail("authority.ebus")
         if any(route["source"] != "ebus" for route in routes_view["payload"]["data"]["routes"]):
             fail("authority.ebus")
 
@@ -1735,9 +1832,17 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         eebus_contract = next(
             view for view in run["protected_views"] if view["view_id"] == "mcp.eebus.v1.contract"
         )
+        tools = inventory["payload"]["data"]["tools"]
+        contract_data = eebus_contract["payload"]["data"]
         if (
-            any(".v2" in tool for tool in inventory["payload"]["data"]["tools"])
-            or eebus_contract["payload"]["data"]["version"] != 1
+            any(
+                tool.casefold().startswith("eebus.")
+                and not tool.startswith("eebus.v1.")
+                for tool in tools
+            )
+            or contract_data["namespace"] != "eebus.v1"
+            or contract_data["version"] != 1
+            or contract_data["public_v2"] is not False
         ):
             fail("gate.scope")
 
