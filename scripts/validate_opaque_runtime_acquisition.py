@@ -751,7 +751,7 @@ def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
         flags=re.DOTALL,
     )
     visible = re.sub(
-        r"^[ \t]{0,3}\[[^\]\n]+\]:[^\n]*$",
+        r"^[ \t]{0,3}\[(?:\\.|[^\]\\\n])+\]:[^\n]*$",
         "",
         visible,
         flags=re.MULTILINE,
@@ -760,7 +760,7 @@ def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
         return visible
 
     return re.sub(
-        r"(?P<link>!?\[[^\]\n]*\]\(\s*[^\s)]+)"
+        r"(?P<link>!?\[(?:\\.|[^\]\\\n])*\]\(\s*(?:\\.|[^\s)])+)"
         r"(?:\s+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
         r"\((?:\\.|[^)\\])*\)))?\s*\)",
         lambda match: f'{match.group("link")})',
@@ -771,7 +771,8 @@ def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
 def _visible_markdown_link_destinations(text: str) -> set[str]:
     visible = _visible_markdown(text, retain_link_metadata=True)
     pattern = re.compile(
-        r"(?<!!)\[(?P<label>[^\]\n]*)\]\(\s*(?P<destination>[^\s)]+)"
+        r"(?<!!)\[(?P<label>(?:\\.|[^\]\\\n])*)\]\(\s*"
+        r"(?P<destination>(?:\\.|[^\s)])+)"
         r"(?:\s+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
         r"\((?:\\.|[^)\\])*\)))?\s*\)"
     )
@@ -856,6 +857,9 @@ def _validate_prior_revision(
         errors.append("prior root must be an existing regular directory")
         return
     prior_manifest_path = prior_root / MANIFEST_PATH
+    if prior_manifest_path.is_symlink():
+        errors.append("prior opaque manifest must be a regular file")
+        return
     if not prior_manifest_path.exists():
         if (
             manifest.get("contract_id") != "OPAQUE_RUNTIME_ACQUISITION_V1"
@@ -870,7 +874,6 @@ def _validate_prior_revision(
         return
     if (
         not prior_manifest_path.is_file()
-        or prior_manifest_path.is_symlink()
     ):
         errors.append("prior opaque manifest must be a regular file")
         return

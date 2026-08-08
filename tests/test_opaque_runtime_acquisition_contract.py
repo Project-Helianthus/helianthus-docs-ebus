@@ -878,7 +878,9 @@ def test_required_term_loop_canary_fails_when_term_is_absent(
         "    {term}",
         '[hidden](./x "{term}")',
         '[hidden](./x "prefix \\"{term}\\" suffix")',
+        '[hidden\\]](./x "{term}")',
         '[hidden]: ./x "{term}"',
+        '[hidden\\]]: ./x "{term}"',
     ),
 )
 def test_required_terms_in_nonvisible_markdown_do_not_satisfy_contract(
@@ -1072,6 +1074,19 @@ def test_symlinked_prior_root_fails_closed(tmp_path: pathlib.Path) -> None:
     result = run_validator(current, prior_root=prior_link)
     assert result.returncode != 0
     assert "prior root must be an existing regular directory" in result.stderr
+
+
+def test_dangling_prior_manifest_symlink_fails_closed(
+    tmp_path: pathlib.Path,
+) -> None:
+    current = materialize_fixture(tmp_path / "current")
+    prior = tmp_path / "prior"
+    prior_manifest = prior / MANIFEST
+    prior_manifest.parent.mkdir(parents=True)
+    prior_manifest.symlink_to(prior / "missing-manifest.json")
+    result = run_validator(current, prior_root=prior)
+    assert result.returncode != 0
+    assert "prior opaque manifest must be a regular file" in result.stderr
 
 
 def test_prior_root_without_artifact_rejects_noninitial_revision(
