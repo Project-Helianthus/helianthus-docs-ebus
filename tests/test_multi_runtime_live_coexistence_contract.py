@@ -773,6 +773,8 @@ def test_msp08_live_internal_fact_vocabulary_cannot_leak(
         {"ship_hash": "b" * 40},
         {"spine_hash": "b" * 40},
         {"evidenceDigest": None},
+        {"extra": {"key": "selector", "value": "private-selector"}},
+        {"device": "private-device-identity"},
     ],
 )
 def test_msp08_public_export_rejects_secrets_and_stable_identity(
@@ -792,6 +794,26 @@ def test_msp08_public_export_rejects_secrets_and_stable_identity(
     )
     assert result.returncode == 1
     assert result.stdout == "redaction.public\n"
+
+
+def test_msp08_public_export_allows_boolean_auth_policy_metadata(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    for run in evidence["runs"]:
+        run["protected_views"][-1]["payload"]["data"]["api_key_required"] = False
+    refresh_protected_views(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
+    result = subprocess.run(
+        validator_command("verify", evidence_path),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == "public-only-ok\n"
+    assert result.stderr == ""
 
 
 def test_msp08_public_export_rejects_private_metadata_outside_views(

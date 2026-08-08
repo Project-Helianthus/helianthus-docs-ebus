@@ -191,8 +191,11 @@ PUBLIC_IDENTITY_GENERIC_TOKENS = frozenset(
     {
         "address",
         "addresses",
+        "device",
         "endpoint",
         "endpoints",
+        "host",
+        "hostname",
         "identifier",
         "identifiers",
         "identities",
@@ -289,6 +292,8 @@ PUBLIC_IDENTITY_HASH_ROOTS = frozenset(
 PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
     {
         "authsubject",
+        "id",
+        "ids",
         "remoteshipid",
         "remoteski",
         "viadevice",
@@ -1812,6 +1817,12 @@ def _has_sensitive_key(key: str, value: Any) -> bool:
         and not isinstance(value, bool)
     ):
         return False
+    if (
+        tokens
+        and tokens[-1] in {"available", "enabled", "required", "supported"}
+        and isinstance(value, bool)
+    ):
+        return False
     return bool(
         normalized in SENSITIVE_KEY_COMPACT_NAMES
         or _contains_token_sequence(tokens, SENSITIVE_KEY_TOKEN_PATTERNS)
@@ -1832,6 +1843,13 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         if normalized.endswith(("spinepath", "spinekind")):
             return True
     if isinstance(value, dict):
+        declared_key = value.get("key")
+        if (
+            isinstance(declared_key, str)
+            and "value" in value
+            and _contains_public_secret(value["value"], declared_key)
+        ):
+            return True
         return any(
             _contains_public_secret(item_key)
             or _contains_public_secret(item, item_key)
@@ -1864,24 +1882,28 @@ def check_public_redaction(evidence: dict[str, Any]) -> None:
         fail("redaction.public")
 
 
-def _contains_eebus_promotion(value: Any) -> bool:
+def _contains_eebus_source(value: Any) -> bool:
     if isinstance(value, dict):
         source = value.get("source")
-        promotion_state = value.get("promotion_state")
-        if (
-            isinstance(source, str)
-            and source.casefold() == "eebus"
-            and promotion_state == "PROMOTED"
-        ):
+        if isinstance(source, str) and source.casefold() == "eebus":
             return True
-        return any(_contains_eebus_promotion(item) for item in value.values())
+        return any(_contains_eebus_source(item) for item in value.values())
     if isinstance(value, list):
-        return any(_contains_eebus_promotion(item) for item in value)
+        return any(_contains_eebus_source(item) for item in value)
     return False
 
 
 def _contains_non_v1_eebus_surface(value: Any) -> bool:
     if isinstance(value, dict):
+        for item_key, item in value.items():
+            if _compact_key(item_key) in {
+                "alias",
+                "aliases",
+                "compatibilityalias",
+                "compatibilityaliases",
+            } and item is not None and item != "":
+                if not isinstance(item, (list, dict)) or item:
+                    return True
         namespace = value.get("namespace")
         if isinstance(namespace, str) and namespace.casefold().startswith("eebus."):
             if namespace.casefold() != "eebus.v1":
@@ -1915,9 +1937,10 @@ def check_authority(evidence: dict[str, Any]) -> None:
             view for view in run["protected_views"] if view["view_id"] == "command.routing"
         )
         registry_data = registry_view["payload"]["data"]
+        routes_data = routes_view["payload"]["data"]
         if (
             registry_data["authority"] != "ebus.promoted"
-            or _contains_eebus_promotion(registry_data)
+            or _contains_eebus_source(registry_data)
         ):
             fail("authority.ebus")
         if any(
@@ -1926,7 +1949,9 @@ def check_authority(evidence: dict[str, Any]) -> None:
             for leaf in registry_data["leaves"]
         ):
             fail("authority.ebus")
-        if any(route["source"] != "ebus" for route in routes_view["payload"]["data"]["routes"]):
+        if _contains_eebus_source(routes_data) or any(
+            route["source"] != "ebus" for route in routes_data["routes"]
+        ):
             fail("authority.ebus")
 
 

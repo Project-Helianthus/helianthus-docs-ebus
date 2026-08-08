@@ -1843,6 +1843,7 @@ def test_msp08_report_allows_globally_routable_ipv4(
         "MALFORMED_TOOL",
         "NESTED_V2",
         "NESTED_VERSION2",
+        "ALIASES",
     ],
 )
 def test_msp08_report_rejects_non_v1_eebus_surfaces(
@@ -1866,11 +1867,14 @@ def test_msp08_report_rejects_non_v1_eebus_surfaces(
             view["payload"]["data"]["alternate_contracts"] = [
                 {"active": True, "namespace": "eebus.v2"}
             ]
-        else:
+        elif mutation == "NESTED_VERSION2":
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             view["payload"]["data"]["alternate_contracts"] = [
                 {"active": True, "namespace": "eebus.v1", "version": 2}
             ]
+        else:
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["aliases"] = ["eebus.v1.compat"]
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
 
@@ -1915,6 +1919,46 @@ def test_msp08_report_rejects_nested_eebus_semantic_leaf_promotion(
 
     result = run_coexistence_validator(
         "report", write_json(tmp_path / "nested-eebus-semantic-leaf.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_nested_eebus_semantic_promotion_shape(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "semantic.registry")
+        view["payload"]["data"]["alternate_registry"] = {
+            "leaves": [{"promotion": {"state": "PROMOTED"}, "source": "eebus"}]
+        }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "nested-eebus-promotion-shape.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_nested_eebus_command_route(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "command.routing")
+        view["payload"]["data"]["alternate_routes"] = [
+            {"path": "/candidate/private", "source": "eebus"}
+        ]
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "nested-eebus-route.json", evidence)
     )
     assert result.returncode == 1
     assert result.stdout == "authority.ebus\n"
