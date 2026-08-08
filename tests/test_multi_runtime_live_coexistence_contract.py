@@ -648,6 +648,8 @@ def test_msp08_live_rejects_fixture_id_without_report_suffix_space(
         "WITHHELD",
         "CANDIDATE_DEBUG_REPLAY",
         "m7-candidate-1001",
+        "m7-candidate-synthetic-0001",
+        {"detail": "terminal=BACKEND_UNAVAILABLE"},
         {"source_terminal": {"state": "UNAVAILABLE"}},
         {"error_category": "BACKEND_UNAVAILABLE"},
         {"detail": "UNAVAILABLE"},
@@ -744,6 +746,8 @@ def test_msp08_live_internal_fact_vocabulary_cannot_leak(
         {"debug_detail": "239.255.255.250:1900"},
         {"debug_detail": "8.8.8.8."},
         {"debug_detail": "Authorization: Bearer synthetic-credential"},
+        {"debug_detail": "Basic dXNlcjpwYXNz"},
+        {"debug_detail": "api_key: private-api-key"},
         {"debug_detail": "session_cookie=synthetic-cookie"},
         {"debug_detail": "access_token=synthetic-token"},
         {"debug_detail": "refresh_token=synthetic-token"},
@@ -777,6 +781,7 @@ def test_msp08_live_internal_fact_vocabulary_cannot_leak(
         {"extra": {"Key": "selector", "Value": "private-selector"}},
         {"extra": {"name": "selector", "value": "private-selector"}},
         {"device": "private-device-identity"},
+        {"device_id": "sha256:" + "a" * 64},
     ],
 )
 def test_msp08_public_export_rejects_secrets_and_stable_identity(

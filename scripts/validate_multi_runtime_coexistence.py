@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import copy
 import hashlib
 import ipaddress
@@ -92,11 +93,12 @@ CREDENTIAL_VALUE_RE = re.compile(
     r"|\bbearer\s+[a-z0-9._~+/=-]+"
     r"|\b(?:set-cookie|cookie)\s*:\s*\S+"
     r"|\b(?:access[_-]?keys?|api[_-]?keys?|credentials?|passwords?|secrets?|"
-    r"session[_-]?cookies?|tokens?)\s*=\s*\S+"
+    r"session[_-]?cookies?|tokens?)\s*(?::|=|\bis\b)\s*\S+"
     r"|(?<![a-z0-9])(?:[a-z0-9]+[_-])+(?:cookie|credential|password|secret|"
-    r"token)\s*=\s*\S+"
-    r"|(?<![a-z0-9])private[_-]key\s*=\s*\S+"
+    r"token)\s*[:=]\s*\S+"
+    r"|(?<![a-z0-9])private[_-]key\s*[:=]\s*\S+"
 )
+BASIC_CREDENTIAL_RE = re.compile(r"(?i)\bbasic\s+([a-z0-9+/]+={0,2})(?!\S)")
 CANDIDATE_LEAK_COMPACT_NAMES = frozenset(
     {
         "bindingsourcekind",
@@ -1726,8 +1728,20 @@ def _contains_candidate_leak(
             "CANDIDATE_DEBUG_REPLAY",
         }
         or any(candidate_id in value for candidate_id in candidate_ids)
-        or value in terminal_values
-        or re.search(r"m7-candidate-[0-9]{4}", value) is not None
+        or any(
+            re.search(
+                rf"(?<![a-z0-9_]){re.escape(terminal)}(?![a-z0-9_])",
+                value,
+                re.IGNORECASE,
+            )
+            is not None
+            for terminal in terminal_values
+        )
+        or re.search(
+            r"(?i)(?<![a-z0-9_])m7-candidate-[a-z0-9-]+(?![a-z0-9_-])",
+            value,
+        )
+        is not None
     )
 
 
@@ -1736,6 +1750,14 @@ def check_anti_leak(evidence: dict[str, Any], *graphs: dict[str, Any]) -> None:
         fact["candidate_id"] for graph in graphs for fact in graph["facts"]
     }
     terminal_values = set().union(*(_terminal_vocabulary(graph) for graph in graphs))
+    for run in evidence["runs"]:
+        for fact in run["state_evidence"]["facts"]:
+            candidate_id = fact.get("candidate_id")
+            if isinstance(candidate_id, str):
+                candidate_ids.add(candidate_id)
+            terminal = fact.get("terminal_negative_state")
+            if isinstance(terminal, str):
+                terminal_values.add(terminal)
     for run in evidence["runs"]:
         if any(
             _contains_candidate_leak(view["payload"], candidate_ids, terminal_values)
@@ -1788,11 +1810,23 @@ def _valid_hash_like(value: Any) -> bool:
 def _valid_redacted_identity(value: Any) -> bool:
     if isinstance(value, list):
         return all(_valid_redacted_identity(item) for item in value)
-    return isinstance(value, str) and bool(
-        REDACTED_ID_RE.fullmatch(value)
-        or DIGEST_RE.fullmatch(value)
-        or re.fullmatch(r"[a-z0-9.-]+:sha256:[0-9a-f]{64}", value)
-    )
+    return isinstance(value, str) and bool(REDACTED_ID_RE.fullmatch(value))
+
+
+def _contains_credential_value(value: str) -> bool:
+    if CREDENTIAL_VALUE_RE.search(value):
+        return True
+    for match in BASIC_CREDENTIAL_RE.finditer(value):
+        token = match.group(1)
+        if len(token) % 4 != 0:
+            continue
+        try:
+            decoded = base64.b64decode(token, validate=True)
+        except ValueError:
+            continue
+        if b":" in decoded:
+            return True
+    return False
 
 
 def _has_public_identity_key(key: str) -> bool:
@@ -1829,6 +1863,14 @@ def _has_sensitive_key(key: str, value: Any) -> bool:
         and isinstance(value, bool)
     ):
         return False
+    if (
+        tokens
+        and tokens[-1] in {"description", "detail", "message", "note"}
+        and isinstance(value, str)
+        and len(value.split()) >= 3
+        and not _contains_credential_value(value)
+    ):
+        return False
     return bool(
         normalized in SENSITIVE_KEY_COMPACT_NAMES
         or _contains_token_sequence(tokens, SENSITIVE_KEY_TOKEN_PATTERNS)
@@ -1856,12 +1898,22 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         normalized = _compact_key(key)
         if _has_sensitive_key(key, value):
             return True
-        if _has_public_identity_key(key):
-            return not _valid_redacted_identity(value)
-        if normalized.endswith(("hash", "digest", "commit")):
+        if normalized.endswith("commit"):
             if value is None:
                 return normalized != "sourceparentcommit"
             return not _valid_hash_like(value)
+        if normalized.endswith(("hash", "digest")):
+            if value is None:
+                return True
+            return not (
+                isinstance(value, str)
+                and (
+                    DIGEST_RE.fullmatch(value)
+                    or re.fullmatch(r"[a-z0-9.-]+:sha256:[0-9a-f]{64}", value)
+                )
+            )
+        if _has_public_identity_key(key):
+            return not _valid_redacted_identity(value)
         if normalized.endswith(("spinepath", "spinekind")):
             return True
     if isinstance(value, dict):
@@ -1887,7 +1939,7 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         return False
     return bool(
         PRIVATE_KEY_RE.search(value)
-        or CREDENTIAL_VALUE_RE.search(value)
+        or _contains_credential_value(value)
         or _contains_non_public_ipv4(value)
         or _contains_private_ipv6(value)
         or MAC_RE.search(value)
@@ -1905,15 +1957,25 @@ def check_public_redaction(evidence: dict[str, Any]) -> None:
 EEBUS_AUTHORITY_KEY_TOKENS = frozenset(
     {
         "adapter",
+        "adapters",
         "authority",
+        "authorities",
         "backend",
+        "backends",
         "driver",
+        "drivers",
         "origin",
+        "origins",
         "provider",
+        "providers",
         "protocol",
+        "protocols",
         "runtime",
+        "runtimes",
         "source",
+        "sources",
         "transport",
+        "transports",
     }
 )
 
@@ -1976,14 +2038,17 @@ def _exact_version_one(value: Any) -> bool:
 
 
 def _invalid_eebus_declarations(
-    declarations: list[tuple[str, Any]], *, reject_any_alias: bool
+    declarations: list[tuple[str, Any]],
+    *,
+    reject_any_alias: bool,
+    eebus_context: bool,
 ) -> bool:
     namespaces = [
         item
         for item_key, item in declarations
         if _compact_key(item_key) == "namespace" and isinstance(item, str)
     ]
-    eebus_namespace = any(
+    eebus_namespace = eebus_context or any(
         namespace.casefold().startswith("eebus") for namespace in namespaces
     )
     if any(
@@ -2033,27 +2098,55 @@ def _invalid_eebus_declarations(
 
 
 def _contains_non_v1_eebus_surface(
-    value: Any, *, reject_any_alias: bool = False
+    value: Any, *, reject_any_alias: bool = False, eebus_context: bool = False
 ) -> bool:
     if isinstance(value, dict):
+        declarations = _container_declarations(value)
+        child_context = eebus_context or any(
+            _compact_key(item_key) == "namespace"
+            and isinstance(item, str)
+            and item.casefold().startswith("eebus")
+            for item_key, item in declarations
+        )
         if _invalid_eebus_declarations(
-            _container_declarations(value), reject_any_alias=reject_any_alias
+            declarations,
+            reject_any_alias=reject_any_alias,
+            eebus_context=eebus_context,
         ):
             return True
         return any(
             _contains_non_v1_eebus_surface(
-                item_key, reject_any_alias=reject_any_alias
+                item_key,
+                reject_any_alias=reject_any_alias,
+                eebus_context=child_context,
             )
-            or _contains_non_v1_eebus_surface(item, reject_any_alias=reject_any_alias)
+            or _contains_non_v1_eebus_surface(
+                item,
+                reject_any_alias=reject_any_alias,
+                eebus_context=child_context,
+            )
             for item_key, item in value.items()
         )
     if isinstance(value, list):
+        declarations = _container_declarations(value)
+        child_context = eebus_context or any(
+            _compact_key(item_key) == "namespace"
+            and isinstance(item, str)
+            and item.casefold().startswith("eebus")
+            for item_key, item in declarations
+        )
         if _invalid_eebus_declarations(
-            _container_declarations(value), reject_any_alias=reject_any_alias
+            declarations,
+            reject_any_alias=reject_any_alias,
+            eebus_context=eebus_context,
         ):
             return True
         return any(
-            _contains_non_v1_eebus_surface(item, reject_any_alias=reject_any_alias)
+            _contains_non_v1_eebus_surface(
+                item,
+                reject_any_alias=reject_any_alias,
+                eebus_context=child_context,
+            )
             for item in value
         )
     if not isinstance(value, str):
@@ -2106,7 +2199,79 @@ def _contains_later_milestone_declaration(
             )
             for item in value
         )
-    return False
+    return bool(
+        milestone_context
+        and isinstance(value, str)
+        and _compact_key(value).startswith(("m85", "m9"))
+    )
+
+
+EEBUS_WRITE_DECLARATION_KEYS = frozenset(
+    {
+        "mutationauthority",
+        "mutationenabled",
+        "mutationsenabled",
+        "writeauthority",
+        "writeenabled",
+        "writesenabled",
+    }
+)
+EEBUS_MUTATION_TOOL_ACTIONS = frozenset(
+    {
+        "authorize",
+        "create",
+        "delete",
+        "pair",
+        "register",
+        "set",
+        "trust",
+        "unpair",
+        "unregister",
+        "untrust",
+        "update",
+        "write",
+    }
+)
+
+
+def _contains_eebus_write_surface(
+    value: Any, *, eebus_context: bool = False
+) -> bool:
+    if isinstance(value, dict):
+        declarations = _container_declarations(value)
+        child_context = eebus_context or any(
+            _compact_key(item_key) == "namespace"
+            and isinstance(item, str)
+            and item.casefold().startswith("eebus")
+            for item_key, item in declarations
+        )
+        if child_context and any(
+            _compact_key(item_key) in EEBUS_WRITE_DECLARATION_KEYS
+            and bool(item)
+            for item_key, item in declarations
+        ):
+            return True
+        return any(
+            _contains_eebus_write_surface(item, eebus_context=child_context)
+            for item in value.values()
+        )
+    if isinstance(value, list):
+        return any(
+            _contains_eebus_write_surface(item, eebus_context=eebus_context)
+            for item in value
+        )
+    if not isinstance(value, str):
+        return False
+    normalized = value.casefold()
+    if (
+        not normalized.startswith("eebus.v1.")
+        or normalized == "eebus.v1.snapshot.drop"
+    ):
+        return False
+    return any(
+        token in EEBUS_MUTATION_TOOL_ACTIONS
+        for token in re.findall(r"[a-z0-9]+", normalized.removeprefix("eebus.v1."))
+    )
 
 
 def check_authority(evidence: dict[str, Any]) -> None:
@@ -2151,6 +2316,7 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         if any(
             _contains_non_v1_eebus_surface(view["payload"]["data"])
             or _contains_later_milestone_declaration(view["payload"]["data"])
+            or _contains_eebus_write_surface(view["payload"]["data"])
             for view in run["protected_views"]
         ):
             fail("gate.scope")

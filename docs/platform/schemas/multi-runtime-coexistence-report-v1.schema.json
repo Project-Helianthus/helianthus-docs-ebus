@@ -55,14 +55,92 @@
       "if": {"properties": {"evidence_class": {"const": "SYNTHETIC_OFFLINE_FIXTURE"}}},
       "then": {
         "properties": {
-          "scenarios": {"minItems": 5, "maxItems": 5},
-          "acceptance_matrix": {"minItems": 6, "maxItems": 6}
+          "m7_binding": {
+            "properties": {
+              "live_status_projection_id": {"type": "null"},
+              "live_status_projection_hash": {"type": "null"}
+            }
+          },
+          "baseline": {
+            "properties": {
+              "run_id": {"const": "msp08-run-01"},
+              "state": {"const": "EEBUS_DISABLED_BASELINE"}
+            }
+          },
+          "scenarios": {
+            "minItems": 5,
+            "maxItems": 5,
+            "prefixItems": [
+              {"properties": {"run_id": {"const": "msp08-run-02"}, "state": {"const": "EEBUS_DISABLED_CONFIRMED"}, "result": {"const": "NO_DRIFT"}}},
+              {"properties": {"run_id": {"const": "msp08-run-03"}, "state": {"const": "EEBUS_ENABLED_NO_SERVICES"}, "result": {"const": "EXPECTED_NO_SERVICES_NO_DRIFT"}}},
+              {"properties": {"run_id": {"const": "msp08-run-04"}, "state": {"const": "EEBUS_CONNECTED_CANDIDATE_ONLY"}, "result": {"const": "CANDIDATE_CONFINED_NO_DRIFT"}}},
+              {"properties": {"run_id": {"const": "msp08-run-05"}, "state": {"const": "EEBUS_CONFLICTED_WITHHELD"}, "result": {"const": "CONFLICT_WITHHELD_NO_DRIFT"}}},
+              {"properties": {"run_id": {"const": "msp08-run-06"}, "state": {"const": "EEBUS_DISABLED_ROLLBACK"}, "result": {"const": "ROLLBACK_EXACT_BASELINE"}}}
+            ],
+            "items": false
+          },
+          "acceptance_matrix": {
+            "minItems": 6,
+            "maxItems": 6,
+            "prefixItems": [
+              {"properties": {"state": {"const": "EEBUS_DISABLED_BASELINE"}}},
+              {"properties": {"state": {"const": "EEBUS_DISABLED_CONFIRMED"}}},
+              {"properties": {"state": {"const": "EEBUS_ENABLED_NO_SERVICES"}}},
+              {"properties": {"state": {"const": "EEBUS_CONNECTED_CANDIDATE_ONLY"}}},
+              {"properties": {"state": {"const": "EEBUS_CONFLICTED_WITHHELD"}}},
+              {"properties": {"state": {"const": "EEBUS_DISABLED_ROLLBACK"}}}
+            ],
+            "items": false
+          },
+          "rollback": {
+            "properties": {
+              "run_id": {"const": "msp08-run-06"},
+              "runtime_enabled": {"const": false}
+            }
+          }
         }
       },
       "else": {
         "properties": {
-          "scenarios": {"minItems": 3, "maxItems": 3},
-          "acceptance_matrix": {"minItems": 4, "maxItems": 4}
+          "m7_binding": {
+            "properties": {
+              "live_status_projection_id": {"type": "string", "pattern": "^dcfpsv1:sha256:[0-9a-f]{64}$"},
+              "live_status_projection_hash": {"$ref": "#/$defs/Digest"}
+            }
+          },
+          "baseline": {
+            "properties": {
+              "run_id": {"const": "msp08-run-01"},
+              "state": {"const": "EEBUS_CONNECTED_BASELINE"}
+            }
+          },
+          "scenarios": {
+            "minItems": 3,
+            "maxItems": 3,
+            "prefixItems": [
+              {"properties": {"run_id": {"const": "msp08-run-02"}, "state": {"const": "EEBUS_CONNECTED_RAW_WITHHELD"}, "result": {"const": "RAW_WITHHELD_CONFINED_NO_DRIFT"}}},
+              {"properties": {"run_id": {"const": "msp08-run-03"}, "state": {"const": "EEBUS_RESTART_PERSISTED"}, "result": {"const": "RESTART_PERSISTED_NO_DRIFT"}}},
+              {"properties": {"run_id": {"const": "msp08-run-04"}, "state": {"const": "EEBUS_CONNECTED_ROLLBACK"}, "result": {"const": "GRAPH_EVIDENCE_DROPPED_NO_DRIFT"}}}
+            ],
+            "items": false
+          },
+          "acceptance_matrix": {
+            "minItems": 4,
+            "maxItems": 4,
+            "prefixItems": [
+              {"properties": {"state": {"const": "EEBUS_CONNECTED_BASELINE"}}},
+              {"properties": {"state": {"const": "EEBUS_CONNECTED_RAW_WITHHELD"}}},
+              {"properties": {"state": {"const": "EEBUS_RESTART_PERSISTED"}}},
+              {"properties": {"state": {"const": "EEBUS_CONNECTED_ROLLBACK"}}}
+            ],
+            "items": false
+          },
+          "rollback": {
+            "properties": {
+              "run_id": {"const": "msp08-run-04"},
+              "runtime_enabled": {"const": true}
+            }
+          }
         }
       }
     }
