@@ -1815,6 +1815,9 @@ def test_msp08_report_allows_globally_routable_ipv4(
             "candidate facts are not published"
         )
         view["payload"]["data"]["scope_note"] = "eebus.v2 is not active"
+        view["payload"]["data"]["protocol_label"] = "EBUS"
+        view["payload"]["data"]["phase"] = "post"
+        view["payload"]["data"]["operation"] = "action"
         _refresh_view_hashes(evidence, view)
     evidence_view = {
         key: value
@@ -1844,6 +1847,7 @@ def test_msp08_report_allows_globally_routable_ipv4(
         "NESTED_V2",
         "NESTED_VERSION2",
         "ALIASES",
+        "ALIASES_INVENTORY",
     ],
 )
 def test_msp08_report_rejects_non_v1_eebus_surfaces(
@@ -1872,8 +1876,11 @@ def test_msp08_report_rejects_non_v1_eebus_surfaces(
             view["payload"]["data"]["alternate_contracts"] = [
                 {"active": True, "namespace": "eebus.v1", "version": 2}
             ]
-        else:
+        elif mutation == "ALIASES":
             view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["aliases"] = ["eebus.v1.compat"]
+        else:
+            view = _view_by_id(run, "mcp.tool.inventory")
             view["payload"]["data"]["aliases"] = ["eebus.v1.compat"]
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
@@ -1932,7 +1939,7 @@ def test_msp08_report_rejects_nested_eebus_semantic_promotion_shape(
     for run in evidence["runs"]:
         view = _view_by_id(run, "semantic.registry")
         view["payload"]["data"]["alternate_registry"] = {
-            "leaves": [{"promotion": {"state": "PROMOTED"}, "source": "eebus"}]
+            "leaves": [{"promotion": {"state": "PROMOTED"}, "protocol": "eebus"}]
         }
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
@@ -1952,7 +1959,7 @@ def test_msp08_report_rejects_nested_eebus_command_route(
     for run in evidence["runs"]:
         view = _view_by_id(run, "command.routing")
         view["payload"]["data"]["alternate_routes"] = [
-            {"path": "/candidate/private", "source": "eebus"}
+            {"active": True, "path": "/candidate/private", "provider": "eebus"}
         ]
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
@@ -1962,6 +1969,45 @@ def test_msp08_report_rejects_nested_eebus_command_route(
     )
     assert result.returncode == 1
     assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_later_milestone_authorization(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "debug.ebus")
+        view["payload"]["data"]["m9_consumer_gate"] = "AUTHORIZED"
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "m9-authorization.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_write_capable_auth_scope(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        auth = run["provenance"]["auth_scope"]
+        auth["permissions"] = ["read:ebus", "write:eebus"]
+        auth_view = {key: value for key, value in auth.items() if key != "scope_hash"}
+        auth["scope_hash"] = _coexistence_digest(
+            b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-AUTH:V1", auth_view
+        )
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "write-capable-auth.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "provenance.auth_mask\n"
     assert result.stderr == ""
 
 

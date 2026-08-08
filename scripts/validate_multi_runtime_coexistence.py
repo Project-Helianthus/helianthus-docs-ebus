@@ -53,6 +53,13 @@ REPORT_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-REPORT:V1"
 SAFE_INTEGER = 9_007_199_254_740_991
 BASELINE_SOURCE_SHA = "ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
 EXPECTED_REGISTRY_SHA256 = "8fab50c488cf99a5f6c29cb8cddc41df9728b5c5edde99e3c1e58d13c9f8407b"
+READ_ONLY_PERMISSIONS = [
+    "read:ebus",
+    "read:eebus-v1-contract",
+    "read:graphql",
+    "read:portal-bootstrap",
+    "read:debug",
+]
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
@@ -1310,6 +1317,7 @@ def check_auth_mask(evidence: dict[str, Any]) -> None:
         if (
             auth != first_auth
             or auth["principal_class"] != "READ_ONLY_TEST"
+            or auth["permissions"] != READ_ONLY_PERMISSIONS
             or auth["scope_hash"] != digest(AUTH_DOMAIN, auth_view)
             or provenance["mask_scope_digest"] != profile["profile_digest"]
         ):
@@ -1680,10 +1688,8 @@ def _terminal_vocabulary(graph: dict[str, Any]) -> set[str]:
         for key in (
             "binding_source_kind",
             "error_category",
-            "phase",
             "source_contract",
             "source_id",
-            "source_kind",
             "state",
         ):
             item = source_terminal.get(key)
@@ -1843,11 +1849,20 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         if normalized.endswith(("spinepath", "spinekind")):
             return True
     if isinstance(value, dict):
-        declared_key = value.get("key")
-        if (
-            isinstance(declared_key, str)
-            and "value" in value
-            and _contains_public_secret(value["value"], declared_key)
+        declared_keys = [
+            item
+            for item_key, item in value.items()
+            if _compact_key(item_key) in {"key", "name"} and isinstance(item, str)
+        ]
+        declared_values = [
+            item
+            for item_key, item in value.items()
+            if _compact_key(item_key) == "value"
+        ]
+        if any(
+            _contains_public_secret(item, declared_key)
+            for declared_key in declared_keys
+            for item in declared_values
         ):
             return True
         return any(
@@ -1882,18 +1897,35 @@ def check_public_redaction(evidence: dict[str, Any]) -> None:
         fail("redaction.public")
 
 
-def _contains_eebus_source(value: Any) -> bool:
+def _contains_eebus_authority(value: Any) -> bool:
     if isinstance(value, dict):
-        source = value.get("source")
-        if isinstance(source, str) and source.casefold() == "eebus":
+        if any(
+            isinstance(item_key, str) and item_key.casefold() == "eebus"
+            for item_key in value
+        ):
             return True
-        return any(_contains_eebus_source(item) for item in value.values())
+        return any(_contains_eebus_authority(item) for item in value.values())
     if isinstance(value, list):
-        return any(_contains_eebus_source(item) for item in value)
-    return False
+        return any(_contains_eebus_authority(item) for item in value)
+    return isinstance(value, str) and value.casefold() == "eebus"
 
 
-def _contains_non_v1_eebus_surface(value: Any) -> bool:
+def _contains_eebus_reference(value: Any) -> bool:
+    if isinstance(value, dict):
+        return any(
+            _contains_eebus_reference(item_key) or _contains_eebus_reference(item)
+            for item_key, item in value.items()
+        )
+    if isinstance(value, list):
+        return any(_contains_eebus_reference(item) for item in value)
+    return isinstance(value, str) and (
+        value.casefold() == "eebus" or value.casefold().startswith("eebus.")
+    )
+
+
+def _contains_non_v1_eebus_surface(
+    value: Any, *, reject_any_alias: bool = False
+) -> bool:
     if isinstance(value, dict):
         for item_key, item in value.items():
             if _compact_key(item_key) in {
@@ -1902,7 +1934,10 @@ def _contains_non_v1_eebus_surface(value: Any) -> bool:
                 "compatibilityalias",
                 "compatibilityaliases",
             } and item is not None and item != "":
-                if not isinstance(item, (list, dict)) or item:
+                if (
+                    (not isinstance(item, (list, dict)) or item)
+                    and (reject_any_alias or _contains_eebus_reference(item))
+                ):
                     return True
         namespace = value.get("namespace")
         if isinstance(namespace, str) and namespace.casefold().startswith("eebus."):
@@ -1911,12 +1946,17 @@ def _contains_non_v1_eebus_surface(value: Any) -> bool:
             if value.get("version", 1) != 1 or value.get("public_v2", False) is not False:
                 return True
         return any(
-            _contains_non_v1_eebus_surface(item_key)
-            or _contains_non_v1_eebus_surface(item)
+            _contains_non_v1_eebus_surface(
+                item_key, reject_any_alias=reject_any_alias
+            )
+            or _contains_non_v1_eebus_surface(item, reject_any_alias=reject_any_alias)
             for item_key, item in value.items()
         )
     if isinstance(value, list):
-        return any(_contains_non_v1_eebus_surface(item) for item in value)
+        return any(
+            _contains_non_v1_eebus_surface(item, reject_any_alias=reject_any_alias)
+            for item in value
+        )
     if not isinstance(value, str):
         return False
     normalized = value.casefold()
@@ -1926,6 +1966,24 @@ def _contains_non_v1_eebus_surface(value: Any) -> bool:
         and normalized != "eebus.v1"
         and not normalized.startswith("eebus.v1.")
     )
+
+
+def _contains_later_milestone_declaration(value: Any) -> bool:
+    if isinstance(value, dict):
+        for item_key, item in value.items():
+            normalized = _compact_key(item_key)
+            if normalized.startswith(("m85", "m9")):
+                return True
+            if normalized in {"gate", "milestone", "phase"} and isinstance(item, str):
+                item_normalized = _compact_key(item)
+                if item_normalized.startswith(("m85", "m9")):
+                    return True
+            if _contains_later_milestone_declaration(item):
+                return True
+        return False
+    if isinstance(value, list):
+        return any(_contains_later_milestone_declaration(item) for item in value)
+    return False
 
 
 def check_authority(evidence: dict[str, Any]) -> None:
@@ -1940,7 +1998,7 @@ def check_authority(evidence: dict[str, Any]) -> None:
         routes_data = routes_view["payload"]["data"]
         if (
             registry_data["authority"] != "ebus.promoted"
-            or _contains_eebus_source(registry_data)
+            or _contains_eebus_authority(registry_data)
         ):
             fail("authority.ebus")
         if any(
@@ -1949,7 +2007,7 @@ def check_authority(evidence: dict[str, Any]) -> None:
             for leaf in registry_data["leaves"]
         ):
             fail("authority.ebus")
-        if _contains_eebus_source(routes_data) or any(
+        if _contains_eebus_authority(routes_data) or any(
             route["source"] != "ebus" for route in routes_data["routes"]
         ):
             fail("authority.ebus")
@@ -1967,6 +2025,12 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
     ):
         fail("gate.scope")
     for run in evidence["runs"]:
+        if any(
+            _contains_non_v1_eebus_surface(view["payload"]["data"])
+            or _contains_later_milestone_declaration(view["payload"]["data"])
+            for view in run["protected_views"]
+        ):
+            fail("gate.scope")
         inventory = next(
             view for view in run["protected_views"] if view["view_id"] == "mcp.tool.inventory"
         )
@@ -1988,7 +2052,9 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
             or contract_data["namespace"] != "eebus.v1"
             or contract_data["version"] != 1
             or contract_data["public_v2"] is not False
-            or _contains_non_v1_eebus_surface(contract_data)
+            or _contains_non_v1_eebus_surface(
+                contract_data, reject_any_alias=True
+            )
         ):
             fail("gate.scope")
 
