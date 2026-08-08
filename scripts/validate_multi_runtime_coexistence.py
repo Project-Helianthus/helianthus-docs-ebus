@@ -63,10 +63,8 @@ PRIVATE_KEY_RE = re.compile(
     r"-----BEGIN (?:[A-Z0-9]+(?: [A-Z0-9]+)* )?PRIVATE KEY-----",
     re.IGNORECASE,
 )
-PRIVATE_IPV4_RE = re.compile(
-    r"(?:^|[^0-9])(?:10\.(?:[0-9]{1,3}\.){2}[0-9]{1,3}|"
-    r"192\.168\.(?:[0-9]{1,3}\.)[0-9]{1,3}|"
-    r"172\.(?:1[6-9]|2[0-9]|3[01])\.(?:[0-9]{1,3}\.)[0-9]{1,3})(?:$|[^0-9])"
+IPV4_CANDIDATE_RE = re.compile(
+    r"(?<![0-9])(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?![0-9])"
 )
 IPV6_CANDIDATE_RE = re.compile(
     r"(?i)(?<![0-9a-f:])(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}"
@@ -1460,6 +1458,19 @@ def _contains_private_ipv6(value: str) -> bool:
     return False
 
 
+def _contains_non_public_ipv4(value: str) -> bool:
+    for match in IPV4_CANDIDATE_RE.finditer(value):
+        try:
+            address = ipaddress.ip_address(match.group(0))
+        except ValueError:
+            continue
+        if isinstance(address, ipaddress.IPv4Address) and (
+            address.is_private or address.is_link_local or address.is_loopback
+        ):
+            return True
+    return False
+
+
 def _valid_hash_like(value: Any) -> bool:
     return isinstance(value, str) and bool(
         DIGEST_RE.fullmatch(value)
@@ -1499,7 +1510,11 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
             "endpoint",
             "entityaddress",
             "entityid",
+            "eebusentity",
+            "eebusfeature",
+            "eebusservice",
             "featureaddress",
+            "featurepath",
             "ipaddress",
             "macaddress",
             "peerid",
@@ -1511,6 +1526,9 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
             "shipid",
             "ski",
             "sourceaddress",
+            "spineentity",
+            "spinefeature",
+            "spineservice",
             "targetaddress",
             "uniqueid",
             "viadevice",
@@ -1535,7 +1553,7 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         return False
     return bool(
         PRIVATE_KEY_RE.search(value)
-        or PRIVATE_IPV4_RE.search(value)
+        or _contains_non_public_ipv4(value)
         or _contains_private_ipv6(value)
         or MAC_RE.search(value)
         or SKI_RE.search(value)

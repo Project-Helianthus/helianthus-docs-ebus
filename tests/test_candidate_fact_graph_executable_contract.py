@@ -1658,6 +1658,47 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
     assert second.stderr == ""
 
 
+@pytest.mark.parametrize(
+    "leak",
+    [
+        {"spineService": "private-spine-service"},
+        {"spineEntity": "private-spine-entity"},
+        {"spineFeature": "private-spine-feature"},
+        {"eebusService": "private-eebus-service"},
+        {"eebusEntity": "private-eebus-entity"},
+        {"eebusFeature": "private-eebus-feature"},
+        {"feature_path": "private-feature-path"},
+        {"debug_detail": "127.0.0.1:4712"},
+        {"debug_detail": "169.254.12.34"},
+    ],
+)
+def test_msp08_report_rejects_native_identity_and_non_public_ipv4(
+    tmp_path: pathlib.Path, leak: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = run["protected_views"][-1]
+        view["payload"]["data"]["public_leak"] = leak
+        _refresh_view_hashes(evidence, view)
+    evidence_view = {
+        key: value
+        for key, value in evidence.items()
+        if key not in {"evidence_id", "evidence_hash"}
+    }
+    evidence_hash = _coexistence_digest(
+        b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1", evidence_view
+    )
+    evidence["evidence_hash"] = evidence_hash
+    evidence["evidence_id"] = "mrcv1:" + evidence_hash
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "redaction-leak.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "redaction.public\n"
+    assert result.stderr == ""
+
+
 def test_msp08_generator_reproduces_exact_positive_artifacts(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -1679,6 +1720,37 @@ def test_msp08_generator_reproduces_exact_positive_artifacts(
     assert result.stderr == ""
     assert (generated / "evidence.json").read_bytes() == COEXISTENCE_POSITIVE.read_bytes()
     assert (generated / "report.json").read_bytes() == COEXISTENCE_GOLDEN_REPORT.read_bytes()
+
+
+def test_msp08_generator_refuses_unverified_pass_report(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    spec = importlib.util.spec_from_file_location(
+        "msp08_fixture_generator_under_test", COEXISTENCE_GENERATOR
+    )
+    assert spec is not None and spec.loader is not None
+    monkeypatch.syspath_prepend(str(REPO_ROOT / "scripts"))
+    generator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generator)
+
+    graph = json.loads(M7_GRAPH.read_text(encoding="utf-8"))
+    graph["graph_hash"] = "sha256:" + "f" * 64
+    malformed_graph = tmp_path / "malformed-graph.json"
+    malformed_graph.write_text(
+        json.dumps(graph, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    output_root = tmp_path / "positive"
+    monkeypatch.setattr(generator, "M7_GRAPH_PATH", malformed_graph)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [str(COEXISTENCE_GENERATOR), "--output-root", str(output_root)],
+    )
+
+    with pytest.raises(generator.coexistence.Failure, match="provenance.m7"):
+        generator.main()
+    assert not output_root.exists()
 
 
 def test_msp08_report_is_offline_under_host_variation(

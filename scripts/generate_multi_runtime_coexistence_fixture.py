@@ -454,12 +454,30 @@ def main() -> int:
     graph = load(M7_GRAPH_PATH)
     replay = load(M7_REPLAY_PATH)
     evidence = build_evidence(registry, registry_raw, graph, replay)
+    evidence_raw = (
+        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    coexistence.verify(
+        evidence,
+        len(evidence_raw),
+        registry,
+        registry_raw,
+        {
+            "graph": M7_GRAPH_PATH,
+            "replay": M7_REPLAY_PATH,
+            "registry": M7_REGISTRY_PATH,
+            "source_bundle": M7_SOURCE_BUNDLE_PATH,
+            "source_replay": M7_SOURCE_REPLAY_PATH,
+            "terminal_graph": None,
+            "terminal_replay": None,
+            "terminal_source_bundle": None,
+            "terminal_source_replay": None,
+            "status": None,
+        },
+    )
     report = coexistence.report(evidence, registry)
     args.output_root.mkdir(parents=True, exist_ok=True)
-    (args.output_root / "evidence.json").write_text(
-        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    (args.output_root / "evidence.json").write_bytes(evidence_raw)
     (args.output_root / "report.json").write_text(
         coexistence.canonical(report).decode("utf-8") + "\n",
         encoding="utf-8",
