@@ -36,19 +36,28 @@ EVIDENCE_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1"
 REPORT_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-REPORT:V1"
 SAFE_INTEGER = 9_007_199_254_740_991
 BASELINE_SOURCE_SHA = "ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
-EXPECTED_REGISTRY_SHA256 = "080a69fe3657bc590c177020814dc2f123d9811aceb6c05cc4ba629a66f331c3"
+EXPECTED_REGISTRY_SHA256 = "0934574c3c4124752fcaf731df8ead11911fad47a20db4f2a475e88dbdb787eb"
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
 RFC3339_UTC_RE = re.compile(
     r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?Z$"
 )
+PRIVATE_KEY_RE = re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")
+PRIVATE_IPV4_RE = re.compile(
+    r"(?:^|[^0-9])(?:10\.(?:[0-9]{1,3}\.){2}[0-9]{1,3}|"
+    r"192\.168\.(?:[0-9]{1,3}\.)[0-9]{1,3}|"
+    r"172\.(?:1[6-9]|2[0-9]|3[01])\.(?:[0-9]{1,3}\.)[0-9]{1,3})(?:$|[^0-9])"
+)
+MAC_RE = re.compile(r"(?i)(?:^|[^0-9a-f])(?:[0-9a-f]{2}:){5}[0-9a-f]{2}(?:$|[^0-9a-f])")
+SKI_RE = re.compile(r"(?i)(?:^|[^0-9a-f])[0-9a-f]{40}(?:$|[^0-9a-f])")
+REDACTED_ID_RE = re.compile(r"^redacted:sha256:[0-9a-f]{12}$")
 HARD_LIMITS = {
     "max_evidence_bytes": 2_097_152,
     "max_depth": 32,
     "max_runs": 8,
     "max_views_per_run": 16,
-    "max_inputs_per_run": 16,
+    "max_inputs_per_run": 17,
     "max_internal_facts_per_run": 64,
     "max_payload_bytes": 262_144,
     "max_string_bytes": 4_096,
@@ -230,6 +239,7 @@ def schema_check(evidence: Any) -> None:
             "schema_version",
             "fixture_id",
             "evidence_class",
+            "export_tier",
             "evidence_id",
             "evidence_hash",
             "registry",
@@ -247,6 +257,7 @@ def schema_check(evidence: Any) -> None:
         or not token(evidence["fixture_id"], 128)
         or evidence["evidence_class"]
         not in {"SYNTHETIC_OFFLINE_FIXTURE", "CAPTURED_RUNTIME_EVIDENCE"}
+        or evidence["export_tier"] != "PUBLIC_REDACTED"
         or not isinstance(evidence["evidence_id"], str)
         or not re.fullmatch(r"mrcv1:sha256:[0-9a-f]{64}", evidence["evidence_id"])
         or not isinstance(evidence["evidence_hash"], str)
@@ -270,6 +281,9 @@ def schema_check(evidence: Any) -> None:
             "replay_contract",
             "replay_id",
             "replay_hash",
+            "registry_content_hash",
+            "source_bundle_content_hash",
+            "source_replay_content_hash",
         },
     )
     exact(
@@ -314,7 +328,7 @@ def schema_check(evidence: Any) -> None:
         provenance = run["provenance"]
         exact(
             provenance,
-            {"capture_clock_id", "runtime", "config", "auth_scope", "mask_scope_digest", "immutable_inputs"},
+            {"capture_clock_id", "process_instance_id", "runtime", "config", "auth_scope", "mask_scope_digest", "immutable_inputs"},
         )
         runtime = provenance["runtime"]
         exact(
@@ -358,12 +372,27 @@ def schema_check(evidence: Any) -> None:
                 "degraded",
                 "empty_success",
                 "facts",
+                "restart_transition",
             },
         )
         if not isinstance(state["facts"], list) or not isinstance(run["protected_views"], list):
             fail("schema.evidence")
         for fact in state["facts"]:
             exact(fact, {"candidate_id", "status", "terminal_negative_state", "visibility_channel"})
+        if state["restart_transition"] is not None:
+            exact(
+                state["restart_transition"],
+                {
+                    "event_id",
+                    "before_process_instance_id",
+                    "after_process_instance_id",
+                    "before_trust_state_hash",
+                    "after_trust_state_hash",
+                    "before_peer_binding_hash",
+                    "after_peer_binding_hash",
+                    "session_reconnected",
+                },
+            )
         for view in run["protected_views"]:
             exact(
                 view,
@@ -404,6 +433,7 @@ def check_registry(evidence: dict[str, Any], registry: Any, raw: bytes) -> None:
             "m7_synthetic_predecessor",
             "m7_live_predecessor",
             "m7_synthetic_binding",
+            "m7_live_binding",
             "scenario_profiles",
             "protected_views",
             "view_rules",
@@ -454,7 +484,7 @@ def _verify_m7(
     evidence: dict[str, Any],
     registry: dict[str, Any],
     paths: dict[str, pathlib.Path],
-) -> tuple[dict[str, Any], dict[str, Any], bytes, bytes]:
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, tuple[str, int]]]:
     try:
         graph, graph_raw = candidate.load_json(paths["graph"], input_kind="graph")
         m7_registry, m7_registry_raw = candidate.load_json(
@@ -463,7 +493,9 @@ def _verify_m7(
         source_bundle, source_bundle_raw = candidate.load_json(
             paths["source_bundle"], input_kind="source"
         )
-        source_replay, _ = candidate.load_json(paths["source_replay"], input_kind="source")
+        source_replay, source_replay_raw = candidate.load_json(
+            paths["source_replay"], input_kind="source"
+        )
         verified_source, verified_source_replay = candidate._verify_source_inputs(
             m7_registry,
             paths["registry"],
@@ -493,6 +525,16 @@ def _verify_m7(
         else "m7_live_predecessor"
     )
     predecessor = registry[predecessor_key]
+    binding_key = (
+        "m7_synthetic_binding"
+        if evidence_class == "SYNTHETIC_OFFLINE_FIXTURE"
+        else "m7_live_binding"
+    )
+    content_binding = {
+        "registry_content_hash": "sha256:" + hashlib.sha256(m7_registry_raw).hexdigest(),
+        "source_bundle_content_hash": "sha256:" + hashlib.sha256(source_bundle_raw).hexdigest(),
+        "source_replay_content_hash": "sha256:" + hashlib.sha256(source_replay_raw).hexdigest(),
+    }
     expected = {
         "source_commit": predecessor["source_commit"],
         "docs_source_commit": predecessor["docs_source_commit"],
@@ -502,6 +544,7 @@ def _verify_m7(
         "replay_contract": replay["contract"],
         "replay_id": replay["replay_id"],
         "replay_hash": replay["replay_hash"],
+        **content_binding,
     }
     actual = {
         "source_commit": evidence["m7_binding"]["source_commit"],
@@ -512,23 +555,33 @@ def _verify_m7(
         "replay_contract": replay["contract"],
         "replay_id": replay["replay_id"],
         "replay_hash": replay["replay_hash"],
+        **content_binding,
     }
-    if evidence_class == "SYNTHETIC_OFFLINE_FIXTURE":
-        fixed = {
-            "source_commit": predecessor["source_commit"],
-            "docs_source_commit": predecessor["docs_source_commit"],
-            **registry["m7_synthetic_binding"],
-        }
-        if expected != fixed:
-            fail("provenance.m7")
+    fixed = {
+        "source_commit": predecessor["source_commit"],
+        "docs_source_commit": predecessor["docs_source_commit"],
+        **registry[binding_key],
+    }
+    if expected != fixed:
+        fail("provenance.m7")
     if evidence["m7_binding"] != expected or actual != expected:
         fail("provenance.m7")
-    return graph, replay, graph_raw, replay_raw
+    return graph, replay, {
+        "m7:graph": (graph["graph_hash"], len(canonical(graph))),
+        "m7:replay": (replay["replay_hash"], len(canonical(replay))),
+        "m7:registry": (content_binding["registry_content_hash"], len(m7_registry_raw)),
+        "m7:source-bundle": (
+            content_binding["source_bundle_content_hash"],
+            len(source_bundle_raw),
+        ),
+        "m7:source-replay": (
+            content_binding["source_replay_content_hash"],
+            len(source_replay_raw),
+        ),
+    }
 
 
-def check_runtime(
-    evidence: dict[str, Any], graph: dict[str, Any], replay: dict[str, Any]
-) -> None:
+def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]]) -> None:
     baseline = evidence["runs"][0]["provenance"]["runtime"]
     if evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE":
         if (
@@ -564,17 +617,13 @@ def check_runtime(
     for run in compared_runs:
         if run["provenance"]["runtime"] != compared_runtime:
             fail("provenance.runtime")
-    m7_sizes = {
-        "m7:graph": (graph["graph_hash"], len(canonical(graph))),
-        "m7:replay": (replay["replay_hash"], len(canonical(replay))),
-    }
     for run in evidence["runs"]:
         views = {view["view_id"]: view for view in run["protected_views"]}
         expected = {
             f"view:{view_id}": (view["raw_payload_hash"], len(canonical(view["payload"])))
             for view_id, view in views.items()
         }
-        expected.update(m7_sizes)
+        expected.update(m7_inputs)
         actual = {
             item["input_id"]: (item["digest"], item["byte_length"])
             for item in run["provenance"]["immutable_inputs"]
@@ -650,7 +699,13 @@ def check_ordering(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
     for run in runs:
         views = [view["view_id"] for view in run["protected_views"]]
         inputs = [item["input_id"] for item in run["provenance"]["immutable_inputs"]]
-        expected_inputs = [f"view:{item}" for item in views] + ["m7:graph", "m7:replay"]
+        expected_inputs = [f"view:{item}" for item in views] + [
+            "m7:graph",
+            "m7:replay",
+            "m7:registry",
+            "m7:source-bundle",
+            "m7:source-replay",
+        ]
         if (
             len(views) != len(set(views))
             or len(inputs) != len(set(inputs))
@@ -741,6 +796,35 @@ def check_states(evidence: dict[str, Any], graph: dict[str, Any]) -> None:
             fail("state.evidence")
 
 
+def check_restart(evidence: dict[str, Any]) -> None:
+    runs = evidence["runs"]
+    transitions = [run["state_evidence"]["restart_transition"] for run in runs]
+    if evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE":
+        if any(item is not None for item in transitions):
+            fail("state.evidence")
+        return
+    process_ids = [run["provenance"]["process_instance_id"] for run in runs]
+    transition = transitions[2]
+    if (
+        process_ids[0] != process_ids[1]
+        or process_ids[2] != process_ids[3]
+        or process_ids[0] == process_ids[2]
+        or transitions[:2] != [None, None]
+        or transitions[3] is not None
+        or not isinstance(transition, dict)
+        or transition["before_process_instance_id"] != process_ids[1]
+        or transition["after_process_instance_id"] != process_ids[2]
+        or transition["before_process_instance_id"]
+        == transition["after_process_instance_id"]
+        or transition["before_trust_state_hash"]
+        != transition["after_trust_state_hash"]
+        or transition["before_peer_binding_hash"]
+        != transition["after_peer_binding_hash"]
+        or transition["session_reconnected"] is not True
+    ):
+        fail("state.evidence")
+
+
 def check_view_coverage(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
     for run in evidence["runs"]:
         if [view["view_id"] for view in run["protected_views"]] != registry["protected_views"]:
@@ -824,22 +908,90 @@ def check_payload_hashes(evidence: dict[str, Any], registry: dict[str, Any]) -> 
                 fail("hash.payload")
 
 
-def _contains_candidate_leak(value: Any) -> bool:
+def _contains_candidate_leak(value: Any, candidate_ids: set[str]) -> bool:
     if isinstance(value, dict):
-        if set(value) & {"candidate_status", "conflict_status", "candidate_fact", "candidate_facts"}:
+        if set(value) & {
+            "candidate_id",
+            "candidate_status",
+            "conflict_status",
+            "candidate_fact",
+            "candidate_facts",
+            "terminal_negative_state",
+            "visibility_channel",
+        }:
             return True
-        return any(_contains_candidate_leak(item) for item in value.values())
+        return any(_contains_candidate_leak(item, candidate_ids) for item in value.values())
     if isinstance(value, list):
-        return any(_contains_candidate_leak(item) for item in value)
-    return isinstance(value, str) and value in {"CANDIDATE", "WITHHELD/CONFLICT"}
+        return any(_contains_candidate_leak(item, candidate_ids) for item in value)
+    return isinstance(value, str) and (
+        value
+        in {
+            "RAW_ONLY",
+            "CANDIDATE",
+            "CONFLICTED",
+            "WITHHELD",
+            "WITHHELD/CONFLICT",
+            "CANDIDATE_DEBUG_REPLAY",
+        }
+        or value in candidate_ids
+    )
 
 
-def check_anti_leak(evidence: dict[str, Any]) -> None:
+def check_anti_leak(evidence: dict[str, Any], graph: dict[str, Any]) -> None:
+    candidate_ids = {fact["candidate_id"] for fact in graph["facts"]}
     for run in evidence["runs"]:
-        if run["state"] == "EEBUS_DISABLED_ROLLBACK":
-            continue
-        if any(_contains_candidate_leak(view["payload"]) for view in run["protected_views"]):
+        if any(
+            _contains_candidate_leak(view["payload"], candidate_ids)
+            for view in run["protected_views"]
+        ):
             fail("anti_leak.candidate")
+
+
+def _contains_public_secret(value: Any, key: str | None = None) -> bool:
+    if key is not None:
+        normalized = key.casefold().replace("-", "_")
+        if any(
+            part in normalized
+            for part in ("private_key", "password", "secret", "token", "credential", "trust_store")
+        ):
+            return True
+        if normalized in {
+            "address",
+            "auth_subject",
+            "device_id",
+            "entity_id",
+            "feature_address",
+            "ip_address",
+            "mac_address",
+            "peer_id",
+            "serial",
+            "serial_number",
+            "ship_id",
+            "ski",
+            "unique_id",
+            "via_device",
+        } and not (isinstance(value, str) and REDACTED_ID_RE.fullmatch(value)):
+            return True
+    if isinstance(value, dict):
+        return any(_contains_public_secret(item, item_key) for item_key, item in value.items())
+    if isinstance(value, list):
+        return any(_contains_public_secret(item) for item in value)
+    if not isinstance(value, str):
+        return False
+    return bool(
+        PRIVATE_KEY_RE.search(value)
+        or PRIVATE_IPV4_RE.search(value)
+        or MAC_RE.search(value)
+        or SKI_RE.search(value)
+    )
+
+
+def check_public_redaction(evidence: dict[str, Any]) -> None:
+    if evidence["export_tier"] != "PUBLIC_REDACTED":
+        fail("redaction.public")
+    for run in evidence["runs"]:
+        if any(_contains_public_secret(view["payload"]) for view in run["protected_views"]):
+            fail("redaction.public")
 
 
 def check_authority(evidence: dict[str, Any]) -> None:
@@ -968,17 +1120,19 @@ def verify(
     schema_check(evidence)
     check_limits(evidence, raw_size)
     check_registry(evidence, registry, registry_raw)
-    graph, replay, _, _ = _verify_m7(evidence, registry, m7_paths)
-    check_runtime(evidence, graph, replay)
+    graph, _, m7_inputs = _verify_m7(evidence, registry, m7_paths)
+    check_runtime(evidence, m7_inputs)
     check_config(evidence)
     check_auth_mask(evidence)
     check_clock(evidence)
     check_ordering(evidence, registry)
     check_states(evidence, graph)
+    check_restart(evidence)
     check_view_coverage(evidence, registry)
     check_normalization(evidence, registry)
     check_payload_hashes(evidence, registry)
-    check_anti_leak(evidence)
+    check_anti_leak(evidence, graph)
+    check_public_redaction(evidence)
     check_authority(evidence)
     check_scope(evidence, registry)
     check_drift(evidence, registry)
@@ -1020,6 +1174,8 @@ def report(evidence: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]
         "contract": REPORT_CONTRACT,
         "schema_version": 1,
         "fixture_id": fixture_id,
+        "evidence_class": evidence["evidence_class"],
+        "export_tier": evidence["export_tier"],
         "report_id": "mrcrv1:sha256:" + "0" * 64,
         "report_hash": "sha256:" + "0" * 64,
         "evidence_id": evidence["evidence_id"],

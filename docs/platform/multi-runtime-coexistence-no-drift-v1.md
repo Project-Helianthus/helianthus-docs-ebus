@@ -73,6 +73,10 @@ contract ID is
 `helianthus.platform.multi-runtime-coexistence-report.v1`. The registry ID is
 `helianthus.platform.multi-runtime-coexistence-registry.v1`.
 
+Every accepted evidence and report artifact declares
+`export_tier=PUBLIC_REDACTED`. Raw operator captures are inputs to the gateway
+harness, not valid instances of this public evidence contract.
+
 Unknown fields, duplicate JSON keys, malformed UTF-8, non-integer JSON
 numbers, negative zero, integers outside the portable JSON safe-integer range,
 unknown enum members, missing required objects, and out-of-bound inputs are
@@ -215,17 +219,19 @@ Every result binds all of the following:
   maximum evidence age, verification offset, and clock hash;
 - every protected raw payload digest and exact canonical byte length;
 - the supplied M7 graph and replay digests and exact canonical byte lengths;
-  and
+- exact content digests and byte lengths for the M7 registry, synchronized
+  source bundle, and synchronized source replay; and
 - evidence ID/hash and registry content digest.
 
-The M7 graph is not accepted from hashes alone. The verifier invokes the
+The M7 graph is not accepted from caller attribution alone. The verifier invokes the
 existing synchronized-evidence and candidate-fact validators, regenerates the
 M7 replay, and requires deep equality with the supplied replay. The synthetic
-profile then requires its frozen graph and replay IDs/hashes. The captured
-runtime profile accepts the dynamically validated live graph and replay only
-when their source commits equal the live M7 predecessor. The supplied graph,
-replay, registry, synchronized bundle, and synchronized replay are immutable
-inputs in both profiles.
+profile then requires its frozen graph, replay, registry, source-bundle, and
+source-replay digests. The captured runtime profile requires a separate frozen
+set for the live M7 predecessor. Substituting any otherwise valid synthetic or
+live input fails `provenance.m7`. The supplied graph, replay, registry,
+synchronized bundle, and synchronized replay are immutable inputs in both
+profiles.
 
 The synthetic baseline runtime source is exact gateway main
 `ff511b035b85aef6123fb0853bb3d2f3af6fc01e`; its compared runtime has that
@@ -243,6 +249,11 @@ synthetic candidate run accepts only `CANDIDATE` with no terminal state and its
 conflict run accepts only `WITHHELD` with terminal `CONFLICT`. The live profile
 accepts the validated M7 statuses `RAW_ONLY`, `CANDIDATE`, `CONFLICTED`, and
 `WITHHELD` but reports only what the supplied graph actually contains.
+
+Every graph-derived candidate ID, the four statuses `RAW_ONLY`, `CANDIDATE`,
+`CONFLICTED`, and `WITHHELD`, the terminal-state fields, and
+`CANDIDATE_DEBUG_REPLAY` are forbidden in every protected view. This rule also
+applies to baseline and rollback views.
 
 Protected outputs must contain no candidate, raw-only, conflicted, or withheld
 fact field or value. In particular, this internal material cannot appear in:
@@ -273,6 +284,13 @@ rollback keeps the runtime connected, drops only the candidate graph, requires
 one visible service. In either profile, restart success or an empty response is
 not rollback evidence.
 
+Live restart persistence requires two distinct process instances. The restart
+state carries one bound transition from the pre-restart process to the
+post-restart process, preserves the redacted trust-state and peer-binding
+hashes exactly, and records a successfully reconnected session. Relabeling a
+state in one process, reusing the same process instance ID, changing either
+persisted binding, or omitting reconnection fails `state.evidence`.
+
 ## Validation Precedence
 
 Validation stops at the first category in this exact order:
@@ -292,11 +310,12 @@ Validation stops at the first category in this exact order:
 13. `canonicalization.invalid`
 14. `hash.payload`
 15. `anti_leak.candidate`
-16. `authority.ebus`
-17. `gate.scope`
-18. `drift.consumer`
-19. `rollback.drift`
-20. `hash.evidence`
+16. `redaction.public`
+17. `authority.ebus`
+18. `gate.scope`
+19. `drift.consumer`
+20. `rollback.drift`
+21. `hash.evidence`
 
 Allocation-driving byte, nesting, string, member, and list limits run before
 recursive parsing by necessity. They still report `limits.exceeded`.
@@ -310,7 +329,7 @@ Validation emits no partial success or report.
 | `max_depth` | 32 |
 | `max_runs` | 8 |
 | `max_views_per_run` | 16 |
-| `max_inputs_per_run` | 16 |
+| `max_inputs_per_run` | 17 |
 | `max_internal_facts_per_run` | 64 |
 | `max_payload_bytes` | 262,144 |
 | `max_string_bytes` | 4,096 |
@@ -336,6 +355,14 @@ cryptographic secrets remain forbidden in every tier. The protected-view
 comparison binds the effective auth and mask scope and never permits a tier
 change on dereference.
 
+The public verifier fails closed on private-key material; credential, secret,
+password, token, or trust-store fields; private IPv4 addresses; MAC addresses;
+raw 40-hex-character SKIs; and unredacted stable device, entity, feature, peer,
+SHIP, authentication-subject, or protocol addresses. A retained secondary
+identifier must use the deterministic `redacted:sha256:<12-hex>` form. This
+rule does not redefine SKI, SHIP ID, or SPINE addresses as cryptographic
+secrets in the local authorized operator view.
+
 The positive fixture IDs are:
 
 - `MSP08-G18-SYNTHETIC-POSITIVE-001`; and
@@ -345,6 +372,11 @@ The generated report includes the exact baseline runtime identity and eleven
 view hashes, every scenario result and view hash, the profile-specific
 acceptance matrix, the exact M7 binding, and the rollback result. `PASS` is
 emitted only after every validation stage completes.
+
+The report schema enforces profile-specific cardinality: synthetic evidence
+produces five scenario results and six acceptance rows, while captured live
+evidence produces three scenario results and four acceptance rows. Both
+profiles carry the same `PUBLIC_REDACTED` export tier as their source evidence.
 
 ## Acceptance Matrix
 
@@ -365,8 +397,8 @@ The machine check IDs are `PROVENANCE_BOUND`,
 `STATE_EVIDENCE_EXPLICIT`, `PROTECTED_VIEW_SET_COMPLETE`,
 `PAYLOAD_HASHES_VERIFIED`, `SHAPE_IDENTICAL`,
 `CANONICAL_BYTES_IDENTICAL`, `EBUS_AUTHORITY_PRESERVED`,
-`CANDIDATE_CONFINED`, `V1_SURFACES_PRESERVED`, and
-`G18_SCOPE_ONLY`.
+`CANDIDATE_CONFINED`, `PUBLIC_REDACTION_ENFORCED`,
+`V1_SURFACES_PRESERVED`, and `G18_SCOPE_ONLY`.
 
 ## Mutation Classes
 

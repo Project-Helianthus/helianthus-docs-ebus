@@ -9,6 +9,7 @@
     "schema_version",
     "fixture_id",
     "evidence_class",
+    "export_tier",
     "evidence_id",
     "evidence_hash",
     "registry",
@@ -24,6 +25,7 @@
     "schema_version": {"const": 1},
     "fixture_id": {"type": "string", "pattern": "^MSP08-G18-[A-Z0-9-]+$", "maxLength": 128},
     "evidence_class": {"enum": ["SYNTHETIC_OFFLINE_FIXTURE", "CAPTURED_RUNTIME_EVIDENCE"]},
+    "export_tier": {"const": "PUBLIC_REDACTED"},
     "evidence_id": {"type": "string", "pattern": "^mrcv1:sha256:[0-9a-f]{64}$"},
     "evidence_hash": {"$ref": "#/$defs/Digest"},
     "registry": {"$ref": "#/$defs/RegistryBinding"},
@@ -80,7 +82,7 @@
     "M7Binding": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_commit", "docs_source_commit", "graph_contract", "graph_id", "graph_hash", "replay_contract", "replay_id", "replay_hash"],
+      "required": ["source_commit", "docs_source_commit", "graph_contract", "graph_id", "graph_hash", "replay_contract", "replay_id", "replay_hash", "registry_content_hash", "source_bundle_content_hash", "source_replay_content_hash"],
       "properties": {
         "source_commit": {"$ref": "#/$defs/SHA"},
         "docs_source_commit": {"$ref": "#/$defs/SHA"},
@@ -89,7 +91,10 @@
         "graph_hash": {"$ref": "#/$defs/Digest"},
         "replay_contract": {"const": "helianthus.platform.draft-candidate-fact-replay.v1"},
         "replay_id": {"type": "string", "pattern": "^dcfrv1:sha256:[0-9a-f]{64}$"},
-        "replay_hash": {"$ref": "#/$defs/Digest"}
+        "replay_hash": {"$ref": "#/$defs/Digest"},
+        "registry_content_hash": {"$ref": "#/$defs/Digest"},
+        "source_bundle_content_hash": {"$ref": "#/$defs/Digest"},
+        "source_replay_content_hash": {"$ref": "#/$defs/Digest"}
       }
     },
     "CaptureClock": {
@@ -212,7 +217,7 @@
       "required": ["input_id", "kind", "digest", "byte_length"],
       "properties": {
         "input_id": {"$ref": "#/$defs/Token"},
-        "kind": {"enum": ["PROTECTED_VIEW_PAYLOAD", "M7_GRAPH", "M7_REPLAY"]},
+        "kind": {"enum": ["PROTECTED_VIEW_PAYLOAD", "M7_GRAPH", "M7_REPLAY", "M7_REGISTRY", "M7_SOURCE_BUNDLE", "M7_SOURCE_REPLAY"]},
         "digest": {"$ref": "#/$defs/Digest"},
         "byte_length": {"type": "integer", "minimum": 1, "maximum": 2097152}
       }
@@ -220,14 +225,15 @@
     "Provenance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["capture_clock_id", "runtime", "config", "auth_scope", "mask_scope_digest", "immutable_inputs"],
+      "required": ["capture_clock_id", "process_instance_id", "runtime", "config", "auth_scope", "mask_scope_digest", "immutable_inputs"],
       "properties": {
         "capture_clock_id": {"type": "string", "pattern": "^clock-[0-9a-f]{32}$"},
+        "process_instance_id": {"type": "string", "pattern": "^process-[0-9a-f]{32}$"},
         "runtime": {"$ref": "#/$defs/Runtime"},
         "config": {"$ref": "#/$defs/Config"},
         "auth_scope": {"$ref": "#/$defs/AuthScope"},
         "mask_scope_digest": {"$ref": "#/$defs/Digest"},
-        "immutable_inputs": {"type": "array", "minItems": 1, "maxItems": 16, "items": {"$ref": "#/$defs/ImmutableInput"}}
+        "immutable_inputs": {"type": "array", "minItems": 1, "maxItems": 17, "items": {"$ref": "#/$defs/ImmutableInput"}}
       }
     },
     "CandidateFact": {
@@ -241,10 +247,25 @@
         "visibility_channel": {"const": "CANDIDATE_DEBUG_REPLAY"}
       }
     },
+    "RestartTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "before_process_instance_id", "after_process_instance_id", "before_trust_state_hash", "after_trust_state_hash", "before_peer_binding_hash", "after_peer_binding_hash", "session_reconnected"],
+      "properties": {
+        "event_id": {"$ref": "#/$defs/Token"},
+        "before_process_instance_id": {"type": "string", "pattern": "^process-[0-9a-f]{32}$"},
+        "after_process_instance_id": {"type": "string", "pattern": "^process-[0-9a-f]{32}$"},
+        "before_trust_state_hash": {"$ref": "#/$defs/Digest"},
+        "after_trust_state_hash": {"$ref": "#/$defs/Digest"},
+        "before_peer_binding_hash": {"$ref": "#/$defs/Digest"},
+        "after_peer_binding_hash": {"$ref": "#/$defs/Digest"},
+        "session_reconnected": {"const": true}
+      }
+    },
     "StateEvidence": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["outcome", "eebus_runtime_enabled", "candidate_graph_enabled", "service_count", "raw_only_count", "candidate_count", "conflict_count", "withheld_count", "degraded", "empty_success", "facts"],
+      "required": ["outcome", "eebus_runtime_enabled", "candidate_graph_enabled", "service_count", "raw_only_count", "candidate_count", "conflict_count", "withheld_count", "degraded", "empty_success", "facts", "restart_transition"],
       "properties": {
         "outcome": {"enum": ["BASELINE_CAPTURED", "DISABLED_CONFIRMED", "NO_SERVICES_OBSERVED", "CANDIDATE_ONLY_OBSERVED", "CONFLICT_WITHHELD_OBSERVED", "ROLLBACK_BASELINE_RESTORED", "CONNECTED_BASELINE_CAPTURED", "RAW_WITHHELD_OBSERVED", "RESTART_PERSISTED", "GRAPH_EVIDENCE_DROPPED"]},
         "eebus_runtime_enabled": {"type": "boolean"},
@@ -256,7 +277,8 @@
         "withheld_count": {"type": "integer", "minimum": 0, "maximum": 64},
         "degraded": {"type": "boolean"},
         "empty_success": {"type": "boolean"},
-        "facts": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/CandidateFact"}}
+        "facts": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/CandidateFact"}},
+        "restart_transition": {"oneOf": [{"$ref": "#/$defs/RestartTransition"}, {"type": "null"}]}
       }
     },
     "ProtectedView": {

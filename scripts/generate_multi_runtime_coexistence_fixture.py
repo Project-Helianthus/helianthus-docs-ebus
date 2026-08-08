@@ -20,6 +20,20 @@ REGISTRY_PATH = (
 M7_ROOT = REPO_ROOT / "docs/platform/fixtures/candidate-fact-graph/v1/positive"
 M7_GRAPH_PATH = M7_ROOT / "graph.json"
 M7_REPLAY_PATH = M7_ROOT / "replay-result.json"
+M7_REGISTRY_PATH = (
+    REPO_ROOT / "docs/platform/schemas/draft-candidate-fact-registry-v1.json"
+)
+M7_SOURCE_BUNDLE_PATH = (
+    REPO_ROOT / "docs/platform/fixtures/synchronized-evidence/v1/positive/bundle.json"
+)
+M7_SOURCE_REPLAY_PATH = (
+    REPO_ROOT
+    / "docs/platform/fixtures/synchronized-evidence/v1/positive/replay-result.json"
+)
+
+
+def redacted(digit: str) -> str:
+    return "redacted:sha256:" + digit * 12
 
 
 def load(path: pathlib.Path) -> object:
@@ -94,8 +108,8 @@ def _view_payloads() -> dict[str, object]:
                     "result": {
                         "devices": [
                             {
-                                "address": "0x15",
-                                "device_id": "fixture-regulator",
+                                "address": redacted("1"),
+                                "device_id": redacted("2"),
                                 "manufacturer": "fixture-vendor",
                             }
                         ]
@@ -118,7 +132,7 @@ def _view_payloads() -> dict[str, object]:
         "graphql.ebus.values": {
             "zones": [
                 {
-                    "id": "fixture-zone-1",
+                    "id": redacted("3"),
                     "name": "Fixture Zone",
                     "currentTempC": "21.5",
                     "targetTempC": "22.0",
@@ -129,7 +143,7 @@ def _view_payloads() -> dict[str, object]:
         "ha.graphql.values": {
             "entities": [
                 {
-                    "entity_id": "climate.fixture_zone_1",
+                    "entity_id": redacted("4"),
                     "state": "heat",
                     "current_temperature": "21.5",
                     "target_temperature": "22.0",
@@ -139,10 +153,10 @@ def _view_payloads() -> dict[str, object]:
         "ha.identity": {
             "devices": [
                 {
-                    "unique_id": "helianthus-ebus-fixture-regulator",
+                    "unique_id": redacted("5"),
                     "manufacturer": "fixture-vendor",
                     "model": "fixture-regulator",
-                    "via_device": "helianthus-gateway-fixture",
+                    "via_device": redacted("6"),
                 }
             ]
         },
@@ -191,7 +205,7 @@ def _views(
         payload = {
             "meta": {
                 "captured_at": f"2026-07-20T00:00:0{run_index}Z",
-                "auth_subject": f"fixture-principal-{run_index}",
+                "auth_subject": "redacted:sha256:" + f"{run_index:012x}",
             },
             "data": copy.deepcopy(payloads[view_id]),
         }
@@ -286,6 +300,7 @@ def _state_evidence(state: str) -> dict[str, object]:
         "degraded": degraded,
         "empty_success": False,
         "facts": facts,
+        "restart_transition": None,
     }
 
 
@@ -348,6 +363,24 @@ def build_evidence(
                     "digest": replay["replay_hash"],
                     "byte_length": len(coexistence.canonical(replay)),
                 },
+                {
+                    "input_id": "m7:registry",
+                    "kind": "M7_REGISTRY",
+                    "digest": registry["m7_synthetic_binding"]["registry_content_hash"],
+                    "byte_length": len(M7_REGISTRY_PATH.read_bytes()),
+                },
+                {
+                    "input_id": "m7:source-bundle",
+                    "kind": "M7_SOURCE_BUNDLE",
+                    "digest": registry["m7_synthetic_binding"]["source_bundle_content_hash"],
+                    "byte_length": len(M7_SOURCE_BUNDLE_PATH.read_bytes()),
+                },
+                {
+                    "input_id": "m7:source-replay",
+                    "kind": "M7_SOURCE_REPLAY",
+                    "digest": registry["m7_synthetic_binding"]["source_replay_content_hash"],
+                    "byte_length": len(M7_SOURCE_REPLAY_PATH.read_bytes()),
+                },
             ]
         )
         runs.append(
@@ -357,6 +390,9 @@ def build_evidence(
                 "capture_offset_ns": index * 1_000_000_000,
                 "provenance": {
                     "capture_clock_id": clock["clock_id"],
+                    "process_instance_id": (
+                        "process-" + ("0" if index == 0 else "1") * 32
+                    ),
                     "runtime": copy.deepcopy(runtime),
                     "config": config,
                     "auth_scope": copy.deepcopy(auth),
@@ -372,6 +408,7 @@ def build_evidence(
         "schema_version": 1,
         "fixture_id": registry["fixture_ids"]["synthetic_positive_evidence"],
         "evidence_class": "SYNTHETIC_OFFLINE_FIXTURE",
+        "export_tier": "PUBLIC_REDACTED",
         "evidence_id": "mrcv1:sha256:" + "0" * 64,
         "evidence_hash": "sha256:" + "0" * 64,
         "registry": {
