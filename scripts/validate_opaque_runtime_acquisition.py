@@ -504,6 +504,7 @@ EXPECTED_DISCOVERABILITY = {
     "root_index": ROOT_INDEX_PATH.as_posix(),
 }
 EXPECTED_AUTHORIZATION = {
+    "device": "none",
     "gateway": "none",
     "hardware": "none",
     "semantic": "none",
@@ -765,6 +766,17 @@ def _visible_markdown_link_destinations(text: str) -> set[str]:
             elif active_links and child.type in {"softbreak", "hardbreak"}:
                 active_links[-1][1].append("\n")
     return destinations
+
+
+def _contains_raw_html(text: str) -> bool:
+    for token in _parse_commonmark(text):
+        if token.type == "html_block":
+            return True
+        if token.children is not None and any(
+            child.type == "html_inline" for child in token.children
+        ):
+            return True
+    return False
 
 
 def _regular_in_repo_target(
@@ -1091,6 +1103,8 @@ def validate(
     except UnicodeDecodeError as exc:
         errors.append(f"policy is not UTF-8: {exc}")
         return errors, policy_digest
+    if _contains_raw_html(policy_text):
+        errors.append("policy must not contain raw HTML")
     visible_policy_text = _visible_markdown(policy_text)
     visible_policy_links = _visible_markdown_link_destinations(policy_text)
     for term in required_terms:

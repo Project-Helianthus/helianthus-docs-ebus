@@ -309,6 +309,7 @@
   "policy": "docs/platform/opaque-runtime-acquisition-v1.md",
   "policy_sha256": "a95e2ec593a6c06584c06f1486b167c917e756d0af48b83896c51f05e58742d8",
   "public_authorization": {
+    "device": "none",
     "gateway": "none",
     "hardware": "none",
     "semantic": "none",

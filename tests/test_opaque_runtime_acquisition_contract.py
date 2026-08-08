@@ -215,6 +215,14 @@ def mutate_extra_source_kind(root: pathlib.Path, manifest: dict[str, object]) ->
     allowed.append("replay")
 
 
+def mutate_missing_device_authorization(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    authorization = manifest["public_authorization"]
+    assert isinstance(authorization, dict)
+    authorization.pop("device")
+
+
 def mutate_runtime_issuance(root: pathlib.Path, manifest: dict[str, object]) -> None:
     source_kind = manifest["source_kind"]
     assert isinstance(source_kind, dict)
@@ -776,6 +784,7 @@ Mutation = Callable[[pathlib.Path, dict[str, object]], None]
     "mutation",
     (
         mutate_extra_source_kind,
+        mutate_missing_device_authorization,
         mutate_runtime_issuance,
         mutate_deliverability_exclusion,
         mutate_fixture_capability,
@@ -937,7 +946,38 @@ def test_required_terms_in_nonvisible_markdown_do_not_satisfy_contract(
         expected_policy_sha256=digest,
         required_terms=(term,),
     )
-    assert errors == [f"policy missing required normative term: {term}"]
+    expected_errors = [f"policy missing required normative term: {term}"]
+    if hidden_wrapper.startswith("<"):
+        expected_errors.insert(0, "policy must not contain raw HTML")
+    assert errors == expected_errors
+
+
+@pytest.mark.parametrize(
+    "hidden_wrapper",
+    ("<template>{term}</template>", "<span hidden>{term}</span>"),
+)
+def test_raw_html_cannot_hide_required_normative_text(
+    tmp_path: pathlib.Path, hidden_wrapper: str
+) -> None:
+    root = materialize_fixture(tmp_path)
+    policy = root / POLICY
+    term = "The capability is source-issued, opaque, and non-serializable"
+    policy_text = policy.read_text(encoding="utf-8")
+    assert term in policy_text
+    policy.write_text(
+        policy_text.replace(term, "removed") + "\n" + hidden_wrapper.format(term=term),
+        encoding="utf-8",
+    )
+    manifest = load_manifest(root)
+    refresh_policy_hash(root, manifest)
+    write_manifest(root, manifest)
+    digest = hashlib.sha256(policy.read_bytes()).hexdigest()
+    errors, _ = contract_validator.validate(
+        root.resolve(),
+        expected_policy_sha256=digest,
+        required_terms=(term,),
+    )
+    assert errors == ["policy must not contain raw HTML"]
 
 
 @pytest.mark.parametrize(
