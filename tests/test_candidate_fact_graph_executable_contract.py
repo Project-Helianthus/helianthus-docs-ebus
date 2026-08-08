@@ -1677,6 +1677,8 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
         {"spineService": "private-spine-service"},
         {"spineEntity": "private-spine-entity"},
         {"spineFeature": "private-spine-feature"},
+        {"frame_route": {"source": 247, "target": 21}},
+        {"frame_route": {"source": "0xf7", "target": "0x15"}},
         {"eebusService": "private-eebus-service"},
         {"eebusEntity": "private-eebus-entity"},
         {"eebusFeature": "private-eebus-feature"},
@@ -1721,6 +1723,7 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
         {"serial_numbers": ["private-serial"]},
         {"authorization": "Bearer synthetic-credential"},
         {"authHeader": "Bearer synthetic-credential"},
+        {"tls_key": "cHJpdmF0ZS1rZXktbWF0ZXJpYWw="},
         {"access_key_id": "SYNTHETICACCESSKEY"},
         {"endpoint_hash": "b" * 40},
         {"session_cookie": "synthetic-cookie"},
@@ -1808,6 +1811,7 @@ def test_msp08_report_allows_globally_routable_ipv4(
         view["payload"]["data"]["address_count"] = 2
         view["payload"]["data"]["resource_id"] = "redacted:sha256:" + "b" * 12
         view["payload"]["data"]["endpoint_hash"] = "sha256:" + "c" * 64
+        view["payload"]["data"]["tls_key_hash"] = "sha256:" + "e" * 64
         view["payload"]["data"]["ship_ids"] = ["redacted:sha256:" + "d" * 12]
         view["payload"]["data"]["token_count"] = 2
         view["payload"]["data"]["monkey_material"] = "public"
@@ -1862,6 +1866,7 @@ def test_msp08_report_allows_globally_routable_ipv4(
         "ALIASES_ASSOCIATED",
         "ALIASES_NESTED_CONTEXT",
         "ALIASES_WRAPPER",
+        "SNAKE_CASE_V2",
     ],
 )
 def test_msp08_report_rejects_non_v1_eebus_surfaces(
@@ -1880,6 +1885,9 @@ def test_msp08_report_rejects_non_v1_eebus_surfaces(
         elif mutation == "LEGACY_NAMESPACE":
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             view["payload"]["data"]["namespace"] = "eebus.legacy"
+        elif mutation == "SNAKE_CASE_V2":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["eebus_v2"] = {"enabled": True}
         elif mutation == "NESTED_V2":
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             view["payload"]["data"]["alternate_contracts"] = [
@@ -2134,7 +2142,9 @@ def test_msp08_report_rejects_write_capable_auth_scope(
     assert result.stderr == ""
 
 
-@pytest.mark.parametrize("mutation", ["WRITE_AUTHORITY", "WRITE_TOOL"])
+@pytest.mark.parametrize(
+    "mutation", ["WRITE_AUTHORITY", "WRITE_TOOL", "NAMESPACE_OPERATION"]
+)
 def test_msp08_report_rejects_eebus_write_surface(
     tmp_path: pathlib.Path, mutation: str
 ) -> None:
@@ -2143,9 +2153,12 @@ def test_msp08_report_rejects_eebus_write_surface(
         if mutation == "WRITE_AUTHORITY":
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             view["payload"]["data"]["write_authority"] = True
-        else:
+        elif mutation == "WRITE_TOOL":
             view = _view_by_id(run, "mcp.tool.inventory")
             view["payload"]["data"]["tools"].append("eebus.v1.values.set")
+        else:
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["operations"] = ["values.get", "values.set"]
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
 

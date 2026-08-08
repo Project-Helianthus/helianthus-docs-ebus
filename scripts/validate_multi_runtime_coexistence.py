@@ -324,6 +324,7 @@ SENSITIVE_KEY_COMPACT_NAMES = frozenset(
         "authorization",
         "credential",
         "credentials",
+        "encryptionkey",
         "keymaterial",
         "password",
         "passwords",
@@ -331,6 +332,8 @@ SENSITIVE_KEY_COMPACT_NAMES = frozenset(
         "secret",
         "secrets",
         "sessioncookie",
+        "signingkey",
+        "tlskey",
         "token",
         "tokens",
         "truststore",
@@ -348,6 +351,7 @@ SENSITIVE_KEY_TOKEN_PATTERNS = frozenset(
         ("cookies",),
         ("credential",),
         ("credentials",),
+        ("encryption", "key"),
         ("key", "material"),
         ("key", "materials"),
         ("password",),
@@ -357,6 +361,8 @@ SENSITIVE_KEY_TOKEN_PATTERNS = frozenset(
         ("secret",),
         ("secrets",),
         ("session", "cookie"),
+        ("signing", "key"),
+        ("tls", "key"),
         ("token",),
         ("tokens",),
         ("trust", "store"),
@@ -1851,6 +1857,24 @@ def _has_sensitive_key(key: str, value: Any) -> bool:
     normalized = _compact_key(key)
     tokens = _key_tokens(key)
     if (
+        normalized.endswith(("hash", "digest"))
+        and isinstance(value, str)
+        and any(
+            _contains_token_sequence(tokens, {pattern})
+            for pattern in {
+                ("encryption", "key"),
+                ("private", "key"),
+                ("signing", "key"),
+                ("tls", "key"),
+            }
+        )
+        and (
+            DIGEST_RE.fullmatch(value)
+            or re.fullmatch(r"[a-z0-9.-]+:sha256:[0-9a-f]{64}", value)
+        )
+    ):
+        return False
+    if (
         tokens
         and tokens[-1] in {"count", "counts", "total", "totals"}
         and isinstance(value, int)
@@ -1896,6 +1920,17 @@ def _declared_key_value_pairs(value: dict[str, Any]) -> list[tuple[str, Any]]:
 def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     if key is not None:
         normalized = _compact_key(key)
+        if (
+            normalized in {"source", "target"}
+            and (
+                isinstance(value, (int, float))
+                and not isinstance(value, bool)
+                or isinstance(value, str)
+                and re.fullmatch(r"(?i)(?:0x[0-9a-f]{1,2}|[0-9]{1,3})", value)
+                is not None
+            )
+        ):
+            return True
         if _has_sensitive_key(key, value):
             return True
         if normalized.endswith("commit"):
@@ -2152,11 +2187,16 @@ def _contains_non_v1_eebus_surface(
     if not isinstance(value, str):
         return False
     normalized = value.casefold()
+    compact = _compact_key(normalized)
+    versioned_surface = re.fullmatch(r"eebus(?:v|version)?([0-9]+)", compact)
     return bool(
-        TOOL_NAME_RE.fullmatch(normalized)
-        and normalized.startswith("eebus.")
-        and normalized != "eebus.v1"
-        and not normalized.startswith("eebus.v1.")
+        (versioned_surface is not None and versioned_surface.group(1) != "1")
+        or (
+            TOOL_NAME_RE.fullmatch(normalized)
+            and normalized.startswith("eebus.")
+            and normalized != "eebus.v1"
+            and not normalized.startswith("eebus.v1.")
+        )
     )
 
 
@@ -2263,14 +2303,17 @@ def _contains_eebus_write_surface(
     if not isinstance(value, str):
         return False
     normalized = value.casefold()
-    if (
-        not normalized.startswith("eebus.v1.")
-        or normalized == "eebus.v1.snapshot.drop"
-    ):
+    if normalized.startswith("eebus.v1."):
+        operation = normalized.removeprefix("eebus.v1.")
+    elif eebus_context and TOOL_NAME_RE.fullmatch(normalized):
+        operation = normalized
+    else:
+        return False
+    if operation == "snapshot.drop":
         return False
     return any(
         token in EEBUS_MUTATION_TOOL_ACTIONS
-        for token in re.findall(r"[a-z0-9]+", normalized.removeprefix("eebus.v1."))
+        for token in re.findall(r"[a-z0-9]+", operation)
     )
 
 
