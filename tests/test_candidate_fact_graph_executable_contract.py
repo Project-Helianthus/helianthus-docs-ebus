@@ -1849,8 +1849,12 @@ def test_msp08_report_allows_globally_routable_ipv4(
         "NESTED_VERSION2",
         "NESTED_REVISION2",
         "NESTED_REVISION_WRAPPER",
+        "NESTED_SCHEMA2",
+        "NESTED_VERSION_TRUE",
+        "SIBLING_VERSION_WRAPPERS",
         "ALIASES",
         "ALIASES_INVENTORY",
+        "ALIASES_ASSOCIATED",
         "ALIASES_WRAPPER",
     ],
 )
@@ -1879,23 +1883,40 @@ def test_msp08_report_rejects_non_v1_eebus_surfaces(
             "NESTED_VERSION2",
             "NESTED_REVISION2",
             "NESTED_REVISION_WRAPPER",
+            "NESTED_SCHEMA2",
+            "NESTED_VERSION_TRUE",
         }:
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             alternate_contract = {"active": True, "namespace": "eebus.v1"}
             if mutation == "NESTED_REVISION_WRAPPER":
                 alternate_contract.update({"Key": "revision", "Value": 2})
             else:
-                version_key = (
-                    "version" if mutation == "NESTED_VERSION2" else "revision"
+                version_key = {
+                    "NESTED_REVISION2": "revision",
+                    "NESTED_SCHEMA2": "schema",
+                }.get(mutation, "version")
+                alternate_contract[version_key] = (
+                    True if mutation == "NESTED_VERSION_TRUE" else 2
                 )
-                alternate_contract[version_key] = 2
             view["payload"]["data"]["alternate_contracts"] = [alternate_contract]
+        elif mutation == "SIBLING_VERSION_WRAPPERS":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["alternate_contracts"] = [
+                {"Key": "namespace", "Value": "eebus.v1"},
+                {"Key": "revision", "Value": 2},
+            ]
         elif mutation == "ALIASES":
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             view["payload"]["data"]["aliases"] = ["eebus.v1.compat"]
         elif mutation == "ALIASES_INVENTORY":
             view = _view_by_id(run, "mcp.tool.inventory")
             view["payload"]["data"]["aliases"] = ["eebus.v1.compat"]
+        elif mutation == "ALIASES_ASSOCIATED":
+            view = _view_by_id(run, "mcp.tool.inventory")
+            view["payload"]["data"]["alternate_contract"] = {
+                "aliases": ["compat"],
+                "namespace": "eebus.v1",
+            }
         else:
             view = _view_by_id(run, "mcp.tool.inventory")
             view["payload"]["data"]["wrapper"] = {
@@ -1994,12 +2015,50 @@ def test_msp08_report_rejects_nested_eebus_command_route(
     assert result.stderr == ""
 
 
+def test_msp08_report_rejects_versioned_eebus_authority_key(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "semantic.registry")
+        view["payload"]["data"]["eebus.v1"] = {"write_authority": True}
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "versioned-eebus-key.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_allows_candidate_only_eebus_prose_in_authority_views(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        for view_id in ("semantic.registry", "command.routing"):
+            view = _view_by_id(run, view_id)
+            view["payload"]["data"]["note"] = "eebus.v1 remains candidate-only"
+            _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "candidate-only-prose.json", evidence)
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["verdict"] == "PASS"
+    assert result.stderr == ""
+
+
 @pytest.mark.parametrize(
     "declaration",
     [
         {"m9_consumer_gate": "AUTHORIZED"},
         {"Key": "milestone", "Value": "M9"},
         {"milestone_name": "M9"},
+        {"release": {"milestones": [{"name": "M9"}]}},
     ],
 )
 def test_msp08_report_rejects_later_milestone_authorization(
