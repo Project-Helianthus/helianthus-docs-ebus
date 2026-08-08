@@ -877,6 +877,8 @@ def test_required_term_loop_canary_fails_when_term_is_absent(
         "`{term}`",
         "    {term}",
         '[hidden](./x "{term}")',
+        '[hidden](./x "prefix \\"{term}\\" suffix")',
+        '[hidden]: ./x "{term}"',
     ),
 )
 def test_required_terms_in_nonvisible_markdown_do_not_satisfy_contract(
@@ -969,6 +971,30 @@ def test_hidden_or_code_only_discoverability_link_fails_closed(
     ) in result.stderr
 
 
+def test_empty_discoverability_link_label_fails_closed(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = materialize_fixture(tmp_path)
+    index = root / PLATFORM_INDEX
+    destination = "./opaque-runtime-acquisition-v1.md"
+    visible_link = (
+        "[`opaque-runtime-acquisition-v1.md`]"
+        "(./opaque-runtime-acquisition-v1.md)"
+    )
+    text = index.read_text(encoding="utf-8")
+    assert visible_link in text
+    index.write_text(
+        text.replace(visible_link, f"[]({destination})"),
+        encoding="utf-8",
+    )
+    result = run_validator(root)
+    assert result.returncode != 0
+    assert (
+        "missing visible discoverability link: "
+        "./opaque-runtime-acquisition-v1.md"
+    ) in result.stderr
+
+
 def test_wrong_discoverability_target_fails_closed(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -1034,6 +1060,16 @@ def test_initial_v1_allows_prior_root_without_artifact(
 def test_missing_prior_root_fails_closed(tmp_path: pathlib.Path) -> None:
     current = materialize_fixture(tmp_path / "current")
     result = run_validator(current, prior_root=tmp_path / "missing-prior")
+    assert result.returncode != 0
+    assert "prior root must be an existing regular directory" in result.stderr
+
+
+def test_symlinked_prior_root_fails_closed(tmp_path: pathlib.Path) -> None:
+    current = materialize_fixture(tmp_path / "current")
+    prior = materialize_fixture(tmp_path / "prior")
+    prior_link = tmp_path / "prior-link"
+    prior_link.symlink_to(prior, target_is_directory=True)
+    result = run_validator(current, prior_root=prior_link)
     assert result.returncode != 0
     assert "prior root must be an existing regular directory" in result.stderr
 

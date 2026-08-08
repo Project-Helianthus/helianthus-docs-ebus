@@ -750,12 +750,19 @@ def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
         visible,
         flags=re.DOTALL,
     )
+    visible = re.sub(
+        r"^[ \t]{0,3}\[[^\]\n]+\]:[^\n]*$",
+        "",
+        visible,
+        flags=re.MULTILINE,
+    )
     if retain_link_metadata:
         return visible
 
     return re.sub(
         r"(?P<link>!?\[[^\]\n]*\]\(\s*[^\s)]+)"
-        r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?\s*\)",
+        r"(?:\s+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
+        r"\((?:\\.|[^)\\])*\)))?\s*\)",
         lambda match: f'{match.group("link")})',
         visible,
     )
@@ -764,10 +771,15 @@ def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
 def _visible_markdown_link_destinations(text: str) -> set[str]:
     visible = _visible_markdown(text, retain_link_metadata=True)
     pattern = re.compile(
-        r"(?<!!)\[[^\]\n]*\]\(\s*([^\s)]+)"
-        r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?\s*\)"
+        r"(?<!!)\[(?P<label>[^\]\n]*)\]\(\s*(?P<destination>[^\s)]+)"
+        r"(?:\s+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
+        r"\((?:\\.|[^)\\])*\)))?\s*\)"
     )
-    return {match.group(1) for match in pattern.finditer(visible)}
+    return {
+        match.group("destination")
+        for match in pattern.finditer(visible)
+        if match.group("label").strip()
+    }
 
 
 def _regular_in_repo_target(
@@ -1086,7 +1098,7 @@ def main() -> int:
     args = parser.parse_args()
     errors, digest = validate(
         args.root.resolve(),
-        args.prior_root.resolve() if args.prior_root else None,
+        args.prior_root.absolute() if args.prior_root else None,
     )
     if errors:
         for error in errors:
