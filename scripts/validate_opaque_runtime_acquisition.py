@@ -514,7 +514,7 @@ EXPECTED_REQUIRED_TERMS = (
     "The capability is source-issued, opaque, and non-serializable",
     "Deliverability is owned and decided by the runtime source after correlation",
     "exactly post-correlation successful dependent production",
-    "[successful dependent production](./modbus-foundation-profile-contract-v1.md#physical-and-logical-identity)",
+    "predecessor contract's\n[successful dependent production](./modbus-foundation-profile-contract-v1.md#physical-and-logical-identity)\nboundary",
     "outcome `successful_data`",
     "the\ndependent remains attached",
     "its exact logical slice validates",
@@ -760,12 +760,15 @@ def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
     if retain_link_metadata:
         return visible
 
+    def render_link_label(match: re.Match[str]) -> str:
+        return "" if match.group("image") else match.group("label")
+
     return re.sub(
-        r"(?P<link>!?\[(?:\\.|[^\]\\\n])*\]\(\s*"
-        r"(?:<(?:\\.|[^>\\\n])*>|(?:\\.|[^\s)])+))"
+        r"(?P<image>!)?\[(?P<label>(?:\\.|[^\]\\\n])*)\]\(\s*"
+        r"(?:<(?:\\.|[^>\\\n])*>|(?:\\.|[^\s)])+)"
         r"(?:\s+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
         r"\((?:\\.|[^)\\])*\)))?\s*\)",
-        lambda match: f'{match.group("link")})',
+        render_link_label,
         visible,
     )
 
@@ -855,15 +858,20 @@ def _validate_prior_revision(
     manifest: dict[str, Any],
     errors: list[str],
 ) -> None:
-    current = pathlib.Path(prior_root.anchor)
-    for part in prior_root.parts[1:]:
-        current = current / part
-        try:
-            if stat.S_ISLNK(current.lstat().st_mode):
-                errors.append("prior root must be an existing regular directory")
-                return
-        except OSError:
-            break
+    def has_symlink_component(path: pathlib.Path) -> bool:
+        current = pathlib.Path(path.anchor)
+        for part in path.parts[1:]:
+            current = current / part
+            try:
+                if stat.S_ISLNK(current.lstat().st_mode):
+                    return True
+            except OSError:
+                return False
+        return False
+
+    if has_symlink_component(prior_root):
+        errors.append("prior root must be an existing regular directory")
+        return
     if not prior_root.is_dir() or prior_root.is_symlink():
         errors.append("prior root must be an existing regular directory")
         return
@@ -871,7 +879,7 @@ def _validate_prior_revision(
         errors.append("prior root must differ from current root")
         return
     prior_manifest_path = prior_root / MANIFEST_PATH
-    if prior_manifest_path.is_symlink():
+    if has_symlink_component(prior_manifest_path):
         errors.append("prior opaque manifest must be a regular file")
         return
     if not prior_manifest_path.exists():
@@ -908,9 +916,9 @@ def _validate_prior_revision(
         prior_path = prior_root / relative
         if (
             not current_path.is_file()
-            or current_path.is_symlink()
+            or has_symlink_component(current_path)
             or not prior_path.is_file()
-            or prior_path.is_symlink()
+            or has_symlink_component(prior_path)
         ):
             errors.append(
                 "same-version prior comparison requires regular normative "
@@ -1093,9 +1101,15 @@ def validate(
         errors.append(f"policy is not UTF-8: {exc}")
         return errors, policy_digest
     visible_policy_text = _visible_markdown(policy_text)
+    visible_policy_links = _visible_markdown_link_destinations(policy_text)
     for term in required_terms:
         visible_term = _visible_markdown(term)
-        if not visible_term or visible_term not in visible_policy_text:
+        required_links = _visible_markdown_link_destinations(term)
+        if (
+            not visible_term
+            or visible_term not in visible_policy_text
+            or not required_links.issubset(visible_policy_links)
+        ):
             errors.append(f"policy missing required normative term: {term}")
     for term in FORBIDDEN_POLICY_TERMS:
         if term in policy_text:

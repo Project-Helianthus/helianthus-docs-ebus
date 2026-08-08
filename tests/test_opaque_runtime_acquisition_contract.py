@@ -908,6 +908,8 @@ def test_required_term_loop_canary_fails_when_term_is_absent(
         '[hidden](./x "prefix \\"{term}\\" suffix")',
         '[hidden\\]](./x "{term}")',
         '[hidden](<./hidden target> "{term}")',
+        '[hidden](<{term}>)',
+        '![{term}](./hidden.png)',
         '[hidden]: ./x "{term}"',
         '[hidden\\]]: ./x "{term}"',
         '[hidden]: ./x\n  "{term}"',
@@ -1124,6 +1126,22 @@ def test_symlinked_prior_root_ancestor_fails_closed(
     result = run_validator(current, prior_root=alias / "current")
     assert result.returncode != 0
     assert "prior root must be an existing regular directory" in result.stderr
+
+
+def test_symlinked_prior_artifact_ancestor_fails_closed(
+    tmp_path: pathlib.Path,
+) -> None:
+    current = materialize_fixture(tmp_path / "current")
+    prior = materialize_fixture(tmp_path / "prior")
+    prior_platform = prior / "docs/platform"
+    shutil.rmtree(prior_platform)
+    prior_platform.symlink_to(
+        current / "docs/platform",
+        target_is_directory=True,
+    )
+    result = run_validator(current, prior_root=prior)
+    assert result.returncode != 0
+    assert "prior opaque manifest must be a regular file" in result.stderr
 
 
 def test_dangling_prior_manifest_symlink_fails_closed(
