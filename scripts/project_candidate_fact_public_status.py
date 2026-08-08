@@ -105,6 +105,52 @@ def project(
     return value
 
 
+def load_verified_projection(
+    *,
+    graph_path: pathlib.Path,
+    replay_path: pathlib.Path,
+    registry_path: pathlib.Path,
+    source_bundle_path: pathlib.Path,
+    source_replay_path: pathlib.Path,
+    source_commit: str,
+    docs_source_commit: str,
+) -> tuple[dict[str, Any], dict[str, bytes]]:
+    graph, graph_raw = candidate.load_json(graph_path, input_kind="graph")
+    registry, registry_raw = candidate.load_json(
+        registry_path, input_kind="registry"
+    )
+    source_bundle, source_bundle_raw = candidate.load_json(
+        source_bundle_path, input_kind="source"
+    )
+    source_replay, source_replay_raw = candidate.load_json(
+        source_replay_path, input_kind="source"
+    )
+    verified_source, verified_source_replay = candidate._verify_source_inputs(
+        registry,
+        registry_path,
+        source_bundle,
+        source_bundle_raw,
+        source_replay,
+    )
+    candidate.verify(
+        graph,
+        registry,
+        registry_raw,
+        len(graph_raw),
+        verified_source,
+        verified_source_replay,
+    )
+    replay, replay_raw = candidate.load_json(replay_path, input_kind="source")
+    value = project(graph, replay, source_commit, docs_source_commit)
+    return value, {
+        "graph": graph_raw,
+        "replay": replay_raw,
+        "registry": registry_raw,
+        "source_bundle": source_bundle_raw,
+        "source_replay": source_replay_raw,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--graph", type=pathlib.Path, required=True)
@@ -118,37 +164,14 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        graph, graph_raw = candidate.load_json(args.graph, input_kind="graph")
-        registry, registry_raw = candidate.load_json(
-            args.registry, input_kind="registry"
-        )
-        source_bundle, source_bundle_raw = candidate.load_json(
-            args.source_bundle, input_kind="source"
-        )
-        source_replay, _ = candidate.load_json(
-            args.source_replay, input_kind="source"
-        )
-        verified_source, verified_source_replay = candidate._verify_source_inputs(
-            registry,
-            args.registry,
-            source_bundle,
-            source_bundle_raw,
-            source_replay,
-        )
-        candidate.verify(
-            graph,
-            registry,
-            registry_raw,
-            len(graph_raw),
-            verified_source,
-            verified_source_replay,
-        )
-        replay, _ = candidate.load_json(args.replay, input_kind="source")
-        value = project(
-            graph,
-            replay,
-            args.source_commit,
-            args.docs_source_commit,
+        value, _ = load_verified_projection(
+            graph_path=args.graph,
+            replay_path=args.replay,
+            registry_path=args.registry,
+            source_bundle_path=args.source_bundle,
+            source_replay_path=args.source_replay,
+            source_commit=args.source_commit,
+            docs_source_commit=args.docs_source_commit,
         )
         schema_path = (
             SCRIPT_ROOT.parent

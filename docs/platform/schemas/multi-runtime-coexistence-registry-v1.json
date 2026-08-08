@@ -39,6 +39,17 @@
   },
   "m7_live_binding": {
     "graph_contract": "helianthus.platform.draft-candidate-fact-graph.v1",
+    "graph_id": "dcfgv1:sha256:a7e4e661b2b78b37ff60f6f5c5b419d9af1cdf1b0f0570a9168b3ecbd3f99be9",
+    "graph_hash": "sha256:a7e4e661b2b78b37ff60f6f5c5b419d9af1cdf1b0f0570a9168b3ecbd3f99be9",
+    "replay_contract": "helianthus.platform.draft-candidate-fact-replay.v1",
+    "replay_id": "dcfrv1:sha256:3690beebdd13cb0109c2662f070edeee52906fd79c2ce44cb6e850361b82dc55",
+    "replay_hash": "sha256:3690beebdd13cb0109c2662f070edeee52906fd79c2ce44cb6e850361b82dc55",
+    "registry_content_hash": "sha256:e6895b8d7406b58ed97599d8da7e9bd3b252e6e7ca3b0578ec6385bfe6dfe1c0",
+    "source_bundle_content_hash": "sha256:4a6f2b1759d15ff12fbdb05e3e3f70689442ddb80b6091caa7bd8ee2f5abf8c5",
+    "source_replay_content_hash": "sha256:ef18ace29b4b2bb8b2b94b874aa07d2f46e98efba3e0a6ee56ef85a5f2d7d1df"
+  },
+  "m7_live_terminal_binding": {
+    "graph_contract": "helianthus.platform.draft-candidate-fact-graph.v1",
     "graph_id": "dcfgv1:sha256:9291ab6dc01c97153d6bd1c05ae7326954d6f536eb44ba109cf3e85d183a04a4",
     "graph_hash": "sha256:9291ab6dc01c97153d6bd1c05ae7326954d6f536eb44ba109cf3e85d183a04a4",
     "replay_contract": "helianthus.platform.draft-candidate-fact-replay.v1",
@@ -47,6 +58,12 @@
     "registry_content_hash": "sha256:e6895b8d7406b58ed97599d8da7e9bd3b252e6e7ca3b0578ec6385bfe6dfe1c0",
     "source_bundle_content_hash": "sha256:b7269e608dfc004f6737fd80b34a1c6018483942632e0c3c8bfd33cadbaa8134",
     "source_replay_content_hash": "sha256:82ed1c66222348746abd9f4291e10b968314363160ba4cfc568044390aced9d2"
+  },
+  "m7_live_private_inputs": {
+    "graph": {"digest": "sha256:51c2a8efb6dfcd70964b85a71fe0d0af9337c7d92fec9e1d9d2b31c403f72654", "byte_length": 38990},
+    "replay": {"digest": "sha256:86baff2793027809a869e074a8537834f0199e4d6de4cbb0496369da45336f36", "byte_length": 9903},
+    "source_bundle": {"digest": "sha256:4a6f2b1759d15ff12fbdb05e3e3f70689442ddb80b6091caa7bd8ee2f5abf8c5", "byte_length": 70698},
+    "source_replay": {"digest": "sha256:ef18ace29b4b2bb8b2b94b874aa07d2f46e98efba3e0a6ee56ef85a5f2d7d1df", "byte_length": 26494}
   },
   "m7_live_status_binding": {
     "contract": "helianthus.platform.draft-candidate-fact-public-status.v1",

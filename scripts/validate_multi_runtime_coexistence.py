@@ -18,6 +18,7 @@ SCRIPT_ROOT = pathlib.Path(__file__).resolve().parent
 if str(SCRIPT_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPT_ROOT))
 import validate_candidate_fact_graph as candidate
+import project_candidate_fact_public_status as status_projector
 
 
 EVIDENCE_CONTRACT = "helianthus.platform.multi-runtime-coexistence-evidence.v1"
@@ -51,7 +52,7 @@ EVIDENCE_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1"
 REPORT_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-REPORT:V1"
 SAFE_INTEGER = 9_007_199_254_740_991
 BASELINE_SOURCE_SHA = "ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
-EXPECTED_REGISTRY_SHA256 = "5bf86a7019d03c2d48caacb5551daaca5d23ec6634360917de1576b95556a081"
+EXPECTED_REGISTRY_SHA256 = "8fab50c488cf99a5f6c29cb8cddc41df9728b5c5edde99e3c1e58d13c9f8407b"
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
@@ -515,6 +516,8 @@ def check_registry(evidence: dict[str, Any], registry: Any, raw: bytes) -> None:
             "m7_live_predecessor",
             "m7_synthetic_binding",
             "m7_live_binding",
+            "m7_live_terminal_binding",
+            "m7_live_private_inputs",
             "m7_live_status_binding",
             "scenario_profiles",
             "protected_views",
@@ -629,26 +632,42 @@ def _verify_m7_status(
     return {"facts": facts}, raw
 
 
-def _verify_m7(
-    evidence: dict[str, Any],
-    registry: dict[str, Any],
-    paths: dict[str, pathlib.Path],
+def _load_verified_m7_graph(
+    paths: dict[str, pathlib.Path | None], prefix: str = ""
 ) -> tuple[
     dict[str, Any],
+    bytes,
     dict[str, Any],
-    dict[str, tuple[str, int]],
+    bytes,
+    bytes,
+    bytes,
     dict[str, Any],
+    bytes,
 ]:
     try:
-        graph, graph_raw = candidate.load_json(paths["graph"], input_kind="graph")
+        graph_path = paths[prefix + "graph"]
+        replay_path = paths[prefix + "replay"]
+        source_bundle_path = paths[prefix + "source_bundle"]
+        source_replay_path = paths[prefix + "source_replay"]
+        if any(
+            path is None
+            for path in (
+                graph_path,
+                replay_path,
+                source_bundle_path,
+                source_replay_path,
+            )
+        ):
+            fail("provenance.m7")
+        graph, graph_raw = candidate.load_json(graph_path, input_kind="graph")
         m7_registry, m7_registry_raw = candidate.load_json(
             paths["registry"], input_kind="registry"
         )
         source_bundle, source_bundle_raw = candidate.load_json(
-            paths["source_bundle"], input_kind="source"
+            source_bundle_path, input_kind="source"
         )
         source_replay, source_replay_raw = candidate.load_json(
-            paths["source_replay"], input_kind="source"
+            source_replay_path, input_kind="source"
         )
         verified_source, verified_source_replay = candidate._verify_source_inputs(
             m7_registry,
@@ -665,85 +684,224 @@ def _verify_m7(
             verified_source,
             verified_source_replay,
         )
-        replay, replay_raw = candidate.load_json(paths["replay"], input_kind="source")
+        replay, replay_raw = candidate.load_json(replay_path, input_kind="source")
         if candidate.replay(graph) != replay:
             fail("provenance.m7")
     except Failure:
         raise
     except (candidate.Failure, KeyError, TypeError, ValueError, OSError):
         fail("provenance.m7")
+    return (
+        graph,
+        graph_raw,
+        replay,
+        replay_raw,
+        m7_registry_raw,
+        source_bundle_raw,
+        source_replay,
+        source_replay_raw,
+    )
+
+
+def _binding(
+    graph: dict[str, Any],
+    replay: dict[str, Any],
+    registry_raw: bytes,
+    source_bundle_raw: bytes,
+    source_replay_raw: bytes,
+) -> dict[str, Any]:
+    return {
+        "graph_contract": graph["contract"],
+        "graph_id": graph["graph_id"],
+        "graph_hash": graph["graph_hash"],
+        "replay_contract": replay["contract"],
+        "replay_id": replay["replay_id"],
+        "replay_hash": replay["replay_hash"],
+        "registry_content_hash": "sha256:" + hashlib.sha256(registry_raw).hexdigest(),
+        "source_bundle_content_hash": "sha256:"
+        + hashlib.sha256(source_bundle_raw).hexdigest(),
+        "source_replay_content_hash": "sha256:"
+        + hashlib.sha256(source_replay_raw).hexdigest(),
+    }
+
+
+def _verify_m7(
+    evidence: dict[str, Any],
+    registry: dict[str, Any],
+    paths: dict[str, pathlib.Path | None],
+    *,
+    require_private: bool,
+) -> tuple[
+    dict[str, Any],
+    dict[str, Any],
+    dict[str, tuple[str, int]],
+    dict[str, Any],
+]:
     status_graph, status_raw = _verify_m7_status(
         evidence, registry, paths["status"]
     )
     evidence_class = evidence["evidence_class"]
-    predecessor_key = (
-        "m7_synthetic_predecessor"
-        if evidence_class == "SYNTHETIC_OFFLINE_FIXTURE"
-        else "m7_live_predecessor"
+    if evidence_class == "SYNTHETIC_OFFLINE_FIXTURE":
+        (
+            graph,
+            _,
+            replay,
+            _,
+            m7_registry_raw,
+            source_bundle_raw,
+            _,
+            source_replay_raw,
+        ) = _load_verified_m7_graph(paths)
+        predecessor = registry["m7_synthetic_predecessor"]
+        content_binding = _binding(
+            graph, replay, m7_registry_raw, source_bundle_raw, source_replay_raw
+        )
+        fixed = {
+            "source_commit": predecessor["source_commit"],
+            "docs_source_commit": predecessor["docs_source_commit"],
+            **registry["m7_synthetic_binding"],
+        }
+        if evidence["m7_binding"] != fixed or content_binding != registry["m7_synthetic_binding"]:
+            fail("provenance.m7")
+        inputs = {
+            "m7:graph": (graph["graph_hash"], len(canonical(graph))),
+            "m7:replay": (replay["replay_hash"], len(canonical(replay))),
+            "m7:registry": (
+                content_binding["registry_content_hash"],
+                len(m7_registry_raw),
+            ),
+            "m7:source-bundle": (
+                content_binding["source_bundle_content_hash"],
+                len(source_bundle_raw),
+            ),
+            "m7:source-replay": (
+                content_binding["source_replay_content_hash"],
+                len(source_replay_raw),
+            ),
+        }
+        return graph, replay, inputs, graph
+
+    (
+        terminal_graph,
+        _,
+        terminal_replay,
+        _,
+        terminal_registry_raw,
+        terminal_source_bundle_raw,
+        _,
+        terminal_source_replay_raw,
+    ) = _load_verified_m7_graph(paths, "terminal_")
+    terminal_binding = _binding(
+        terminal_graph,
+        terminal_replay,
+        terminal_registry_raw,
+        terminal_source_bundle_raw,
+        terminal_source_replay_raw,
     )
-    predecessor = registry[predecessor_key]
-    binding_key = (
-        "m7_synthetic_binding"
-        if evidence_class == "SYNTHETIC_OFFLINE_FIXTURE"
-        else "m7_live_binding"
-    )
-    content_binding = {
-        "registry_content_hash": "sha256:" + hashlib.sha256(m7_registry_raw).hexdigest(),
-        "source_bundle_content_hash": "sha256:" + hashlib.sha256(source_bundle_raw).hexdigest(),
-        "source_replay_content_hash": "sha256:" + hashlib.sha256(source_replay_raw).hexdigest(),
-    }
-    expected = {
+    if terminal_binding != registry["m7_live_terminal_binding"]:
+        fail("provenance.m7")
+
+    predecessor = registry["m7_live_predecessor"]
+    fixed_live_binding = {
         "source_commit": predecessor["source_commit"],
         "docs_source_commit": predecessor["docs_source_commit"],
-        "graph_contract": graph["contract"],
-        "graph_id": graph["graph_id"],
-        "graph_hash": graph["graph_hash"],
-        "replay_contract": replay["contract"],
-        "replay_id": replay["replay_id"],
-        "replay_hash": replay["replay_hash"],
-        **content_binding,
+        **registry["m7_live_binding"],
     }
-    actual = {
-        "source_commit": evidence["m7_binding"]["source_commit"],
-        "docs_source_commit": evidence["m7_binding"]["docs_source_commit"],
-        "graph_contract": graph["contract"],
-        "graph_id": graph["graph_id"],
-        "graph_hash": graph["graph_hash"],
-        "replay_contract": replay["contract"],
-        "replay_id": replay["replay_id"],
-        "replay_hash": replay["replay_hash"],
-        **content_binding,
-    }
-    fixed = {
-        "source_commit": predecessor["source_commit"],
-        "docs_source_commit": predecessor["docs_source_commit"],
-        **registry[binding_key],
-    }
-    if expected != fixed:
+    if evidence["m7_binding"] != fixed_live_binding:
         fail("provenance.m7")
-    if evidence["m7_binding"] != expected or actual != expected:
+    if (
+        status_graph["facts"]
+        and (
+            evidence["m7_live_status"]["source_graph_id"]
+            != registry["m7_live_binding"]["graph_id"]
+            or evidence["m7_live_status"]["source_graph_hash"]
+            != registry["m7_live_binding"]["graph_hash"]
+            or evidence["m7_live_status"]["source_replay_id"]
+            != registry["m7_live_binding"]["replay_id"]
+            or evidence["m7_live_status"]["source_replay_hash"]
+            != registry["m7_live_binding"]["replay_hash"]
+        )
+    ):
         fail("provenance.m7")
+
+    private_inputs = registry["m7_live_private_inputs"]
+    if require_private:
+        try:
+            projected, private_raw = status_projector.load_verified_projection(
+                graph_path=paths["graph"],
+                replay_path=paths["replay"],
+                registry_path=paths["registry"],
+                source_bundle_path=paths["source_bundle"],
+                source_replay_path=paths["source_replay"],
+                source_commit=predecessor["source_commit"],
+                docs_source_commit=predecessor["docs_source_commit"],
+            )
+        except (
+            status_projector.Failure,
+            candidate.Failure,
+            AttributeError,
+            OSError,
+            KeyError,
+            TypeError,
+            ValueError,
+        ):
+            fail("provenance.m7")
+        if status_projector.render(projected) != status_raw:
+            fail("provenance.m7")
+        actual_private_inputs = {
+            name: {
+                "digest": "sha256:" + hashlib.sha256(raw).hexdigest(),
+                "byte_length": len(raw),
+            }
+            for name, raw in private_raw.items()
+            if name != "registry"
+        }
+        if actual_private_inputs != private_inputs:
+            fail("provenance.m7")
+
     inputs = {
-        "m7:graph": (graph["graph_hash"], len(canonical(graph))),
-        "m7:replay": (replay["replay_hash"], len(canonical(replay))),
-        "m7:registry": (content_binding["registry_content_hash"], len(m7_registry_raw)),
-        "m7:source-bundle": (
-            content_binding["source_bundle_content_hash"],
-            len(source_bundle_raw),
+        "m7:terminal-graph": (
+            terminal_graph["graph_hash"],
+            len(canonical(terminal_graph)),
         ),
-        "m7:source-replay": (
-            content_binding["source_replay_content_hash"],
-            len(source_replay_raw),
+        "m7:terminal-replay": (
+            terminal_replay["replay_hash"],
+            len(canonical(terminal_replay)),
         ),
-    }
-    source_graph = graph
-    if evidence_class == "CAPTURED_RUNTIME_EVIDENCE":
-        inputs["m7:status-projection"] = (
+        "m7:registry": (
+            terminal_binding["registry_content_hash"],
+            len(terminal_registry_raw),
+        ),
+        "m7:terminal-source-bundle": (
+            terminal_binding["source_bundle_content_hash"],
+            len(terminal_source_bundle_raw),
+        ),
+        "m7:terminal-source-replay": (
+            terminal_binding["source_replay_content_hash"],
+            len(terminal_source_replay_raw),
+        ),
+        "m7:private-graph": (
+            private_inputs["graph"]["digest"],
+            private_inputs["graph"]["byte_length"],
+        ),
+        "m7:private-replay": (
+            private_inputs["replay"]["digest"],
+            private_inputs["replay"]["byte_length"],
+        ),
+        "m7:private-source-bundle": (
+            private_inputs["source_bundle"]["digest"],
+            private_inputs["source_bundle"]["byte_length"],
+        ),
+        "m7:private-source-replay": (
+            private_inputs["source_replay"]["digest"],
+            private_inputs["source_replay"]["byte_length"],
+        ),
+        "m7:status-projection": (
             evidence["m7_live_status"]["content_hash"],
             len(status_raw),
-        )
-        graph = status_graph
-    return graph, replay, inputs, source_graph
+        ),
+    }
+    return status_graph, terminal_replay, inputs, terminal_graph
 
 
 def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]]) -> None:
@@ -792,17 +950,25 @@ def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]
             f"view:{view_id}": "PROTECTED_VIEW_PAYLOAD" for view_id in views
         }
         expected.update(m7_inputs)
+        m7_kinds = {
+            "m7:graph": "M7_GRAPH",
+            "m7:replay": "M7_REPLAY",
+            "m7:registry": "M7_REGISTRY",
+            "m7:source-bundle": "M7_SOURCE_BUNDLE",
+            "m7:source-replay": "M7_SOURCE_REPLAY",
+            "m7:terminal-graph": "M7_TERMINAL_GRAPH",
+            "m7:terminal-replay": "M7_TERMINAL_REPLAY",
+            "m7:terminal-source-bundle": "M7_TERMINAL_SOURCE_BUNDLE",
+            "m7:terminal-source-replay": "M7_TERMINAL_SOURCE_REPLAY",
+            "m7:private-graph": "M7_PRIVATE_GRAPH",
+            "m7:private-replay": "M7_PRIVATE_REPLAY",
+            "m7:private-source-bundle": "M7_PRIVATE_SOURCE_BUNDLE",
+            "m7:private-source-replay": "M7_PRIVATE_SOURCE_REPLAY",
+            "m7:status-projection": "M7_PUBLIC_STATUS",
+        }
         expected_kinds.update(
-            {
-                "m7:graph": "M7_GRAPH",
-                "m7:replay": "M7_REPLAY",
-                "m7:registry": "M7_REGISTRY",
-                "m7:source-bundle": "M7_SOURCE_BUNDLE",
-                "m7:source-replay": "M7_SOURCE_REPLAY",
-            }
+            {input_id: m7_kinds[input_id] for input_id in m7_inputs}
         )
-        if "m7:status-projection" in m7_inputs:
-            expected_kinds["m7:status-projection"] = "M7_PUBLIC_STATUS"
         transition = run["state_evidence"]["restart_transition"]
         if transition is not None:
             expected.update(
@@ -912,15 +1078,32 @@ def check_ordering(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
     for run in runs:
         views = [view["view_id"] for view in run["protected_views"]]
         inputs = [item["input_id"] for item in run["provenance"]["immutable_inputs"]]
-        expected_inputs = [f"view:{item}" for item in views] + [
-            "m7:graph",
-            "m7:replay",
-            "m7:registry",
-            "m7:source-bundle",
-            "m7:source-replay",
-        ]
+        expected_inputs = [f"view:{item}" for item in views]
         if evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE":
-            expected_inputs.append("m7:status-projection")
+            expected_inputs.extend(
+                [
+                    "m7:terminal-graph",
+                    "m7:terminal-replay",
+                    "m7:registry",
+                    "m7:terminal-source-bundle",
+                    "m7:terminal-source-replay",
+                    "m7:private-graph",
+                    "m7:private-replay",
+                    "m7:private-source-bundle",
+                    "m7:private-source-replay",
+                    "m7:status-projection",
+                ]
+            )
+        else:
+            expected_inputs.extend(
+                [
+                    "m7:graph",
+                    "m7:replay",
+                    "m7:registry",
+                    "m7:source-bundle",
+                    "m7:source-replay",
+                ]
+            )
         if run["state_evidence"]["restart_transition"] is not None:
             expected_inputs.extend(
                 [
@@ -1292,6 +1475,7 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
             part in normalized
             for part in (
                 "privatekey",
+                "apikey",
                 "password",
                 "secret",
                 "token",
@@ -1302,7 +1486,11 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         ):
             return True
         if normalized.endswith(("hash", "digest", "commit")):
-            return value is not None and not _valid_hash_like(value)
+            if value is None:
+                return normalized != "sourceparentcommit"
+            return not _valid_hash_like(value)
+        if normalized.endswith(("spinepath", "spinekind")):
+            return True
         identity_names = {
             "address",
             "authsubject",
@@ -1482,12 +1670,16 @@ def verify(
     raw_size: int,
     registry: dict[str, Any],
     registry_raw: bytes,
-    m7_paths: dict[str, pathlib.Path],
+    m7_paths: dict[str, pathlib.Path | None],
+    *,
+    require_private: bool = True,
 ) -> dict[str, Any]:
     schema_check(evidence)
     check_limits(evidence, raw_size)
     check_registry(evidence, registry, registry_raw)
-    graph, _, m7_inputs, source_graph = _verify_m7(evidence, registry, m7_paths)
+    graph, _, m7_inputs, source_graph = _verify_m7(
+        evidence, registry, m7_paths, require_private=require_private
+    )
     check_runtime(evidence, m7_inputs)
     check_config(evidence)
     check_auth_mask(evidence)
@@ -1609,14 +1801,18 @@ def report(evidence: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=("verify", "report"))
+    parser.add_argument("command", choices=("verify-public", "verify", "report"))
     parser.add_argument("--evidence", type=pathlib.Path, required=True)
     parser.add_argument("--registry", type=pathlib.Path, required=True)
-    parser.add_argument("--m7-graph", type=pathlib.Path, required=True)
-    parser.add_argument("--m7-replay", type=pathlib.Path, required=True)
+    parser.add_argument("--m7-graph", type=pathlib.Path)
+    parser.add_argument("--m7-replay", type=pathlib.Path)
     parser.add_argument("--m7-registry", type=pathlib.Path, required=True)
-    parser.add_argument("--m7-source-bundle", type=pathlib.Path, required=True)
-    parser.add_argument("--m7-source-replay", type=pathlib.Path, required=True)
+    parser.add_argument("--m7-source-bundle", type=pathlib.Path)
+    parser.add_argument("--m7-source-replay", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-graph", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-replay", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-source-bundle", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-source-replay", type=pathlib.Path)
     parser.add_argument(
         "--m7-live-status",
         type=pathlib.Path,
@@ -1637,10 +1833,23 @@ def main() -> int:
             "registry": args.m7_registry,
             "source_bundle": args.m7_source_bundle,
             "source_replay": args.m7_source_replay,
+            "terminal_graph": args.m7_terminal_graph,
+            "terminal_replay": args.m7_terminal_replay,
+            "terminal_source_bundle": args.m7_terminal_source_bundle,
+            "terminal_source_replay": args.m7_terminal_source_replay,
             "status": args.m7_live_status,
         }
-        verify(evidence, len(evidence_raw), registry, registry_raw, m7_paths)
-        if args.command == "verify":
+        verify(
+            evidence,
+            len(evidence_raw),
+            registry,
+            registry_raw,
+            m7_paths,
+            require_private=args.command != "verify-public",
+        )
+        if args.command == "verify-public":
+            sys.stdout.write("public-only-ok\n")
+        elif args.command == "verify":
             sys.stdout.write("ok\n")
         else:
             sys.stdout.write(canonical(report(evidence, registry)).decode("utf-8") + "\n")

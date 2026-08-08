@@ -91,16 +91,24 @@ The executable command is:
 validate_multi_runtime_coexistence.py verify \
   --evidence <coexistence-evidence.json> \
   --registry <multi-runtime-coexistence-registry-v1.json> \
-  --m7-graph <draft-candidate-fact-graph.json> \
-  --m7-replay <draft-candidate-fact-replay.json> \
+  --m7-graph <private-draft-candidate-fact-graph.json> \
+  --m7-replay <private-draft-candidate-fact-replay.json> \
   --m7-registry <draft-candidate-fact-registry-v1.json> \
-  --m7-source-bundle <synchronized-evidence-bundle.json> \
-  --m7-source-replay <synchronized-evidence-replay.json>
+  --m7-source-bundle <private-synchronized-evidence-bundle.json> \
+  --m7-source-replay <private-synchronized-evidence-replay.json> \
+  --m7-terminal-graph <public-source-terminal-graph.json> \
+  --m7-terminal-replay <public-source-terminal-replay.json> \
+  --m7-terminal-source-bundle <public-source-terminal-bundle.json> \
+  --m7-terminal-source-replay <public-source-terminal-source-replay.json>
 ```
 
 Replace `verify` with `report` to emit exact RFC 8785/JCS-subset report bytes.
 `verify` emits only `ok`. Failure emits exactly one validation category and no
-partial report.
+partial report. For captured-runtime evidence, both commands require the
+private inputs, rederive the public status projection in-process, require exact
+bytes, and bind the private graph, replay, source bundle, and source replay as
+immutable inputs. `verify-public` accepts only the public terminal inputs and
+emits `public-only-ok`; it cannot emit a report or establish G18 PASS.
 
 The public M7 status projection is generated, never hand-authored:
 
@@ -259,6 +267,9 @@ projection contains only candidate IDs, fact hashes, statuses, and terminal
 classes: 18 facts, including 14 `RAW_ONLY` and 4 `WITHHELD`. It contains no
 protocol identities or addresses and binds source graph
 `dcfgv1:sha256:a7e4e661b2b78b37ff60f6f5c5b419d9af1cdf1b0f0570a9168b3ecbd3f99be9`.
+The separate public source-terminal graph is validated only to supply the
+complete anti-leak vocabulary. It cannot supply live fact counts or substitute
+for the private graph during `verify` or `report`.
 Substituting any otherwise valid synthetic or live input fails
 `provenance.m7`. Every supplied M7 input is immutable.
 

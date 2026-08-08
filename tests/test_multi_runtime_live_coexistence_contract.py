@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import json
+import hashlib
 import importlib.util
+import json
 import pathlib
 import subprocess
 import sys
@@ -73,6 +74,24 @@ def test_msp08_v1_declares_distinct_synthetic_and_live_profiles() -> None:
         "docs_source_commit": M7_DOCS_MERGE,
         "binding_mode": "VALIDATED_INPUTS_AND_REGENERATED_REPLAY",
     }
+    assert (
+        registry["m7_live_binding"]["graph_hash"]
+        == registry["m7_live_status_binding"]["source_graph_hash"]
+    )
+    assert (
+        registry["m7_live_binding"]["replay_hash"]
+        == registry["m7_live_status_binding"]["source_replay_hash"]
+    )
+    assert (
+        registry["m7_live_terminal_binding"]["graph_hash"]
+        != registry["m7_live_binding"]["graph_hash"]
+    )
+    assert set(registry["m7_live_private_inputs"]) == {
+        "graph",
+        "replay",
+        "source_bundle",
+        "source_replay",
+    }
     assert registry["scenario_profiles"]["SYNTHETIC_OFFLINE_FIXTURE"] == [
         "EEBUS_DISABLED_BASELINE",
         "EEBUS_DISABLED_CONFIRMED",
@@ -128,6 +147,10 @@ def build_live_evidence(validator) -> dict[str, object]:
     graph = load(M7_GRAPH)
     replay = load(M7_REPLAY)
     live_status = load(M7_LIVE_STATUS)
+
+    evidence["registry"]["digest"] = "sha256:" + hashlib.sha256(
+        REGISTRY.read_bytes()
+    ).hexdigest()
 
     evidence["fixture_id"] = "MSP08-G18-LIVE-EVIDENCE-TEST001"
     evidence["evidence_class"] = "CAPTURED_RUNTIME_EVIDENCE"
@@ -252,29 +275,66 @@ def build_live_evidence(validator) -> dict[str, object]:
                 else None
             ),
         }
-        for item in run["provenance"]["immutable_inputs"]:
-            if item["input_id"] == "m7:graph":
-                item["digest"] = graph["graph_hash"]
-                item["byte_length"] = len(validator.canonical(graph))
-            elif item["input_id"] == "m7:replay":
-                item["digest"] = evidence["m7_binding"]["replay_hash"]
-                item["byte_length"] = len(validator.canonical(replay))
-            elif item["input_id"] == "m7:registry":
-                item["digest"] = evidence["m7_binding"]["registry_content_hash"]
-                item["byte_length"] = len(M7_REGISTRY.read_bytes())
-            elif item["input_id"] == "m7:source-bundle":
-                item["digest"] = evidence["m7_binding"]["source_bundle_content_hash"]
-                item["byte_length"] = len(M7_SOURCE_BUNDLE.read_bytes())
-            elif item["input_id"] == "m7:source-replay":
-                item["digest"] = evidence["m7_binding"]["source_replay_content_hash"]
-                item["byte_length"] = len(M7_SOURCE_REPLAY.read_bytes())
-        run["provenance"]["immutable_inputs"].append(
-            {
-                "input_id": "m7:status-projection",
-                "kind": "M7_PUBLIC_STATUS",
-                "digest": evidence["m7_live_status"]["content_hash"],
-                "byte_length": len(M7_LIVE_STATUS.read_bytes()),
-            }
+        run["provenance"]["immutable_inputs"] = [
+            item
+            for item in run["provenance"]["immutable_inputs"]
+            if item["input_id"].startswith("view:")
+        ]
+        terminal_binding = registry["m7_live_terminal_binding"]
+        private_inputs = registry["m7_live_private_inputs"]
+        run["provenance"]["immutable_inputs"].extend(
+            [
+                {
+                    "input_id": "m7:terminal-graph",
+                    "kind": "M7_TERMINAL_GRAPH",
+                    "digest": graph["graph_hash"],
+                    "byte_length": len(validator.canonical(graph)),
+                },
+                {
+                    "input_id": "m7:terminal-replay",
+                    "kind": "M7_TERMINAL_REPLAY",
+                    "digest": replay["replay_hash"],
+                    "byte_length": len(validator.canonical(replay)),
+                },
+                {
+                    "input_id": "m7:registry",
+                    "kind": "M7_REGISTRY",
+                    "digest": terminal_binding["registry_content_hash"],
+                    "byte_length": len(M7_REGISTRY.read_bytes()),
+                },
+                {
+                    "input_id": "m7:terminal-source-bundle",
+                    "kind": "M7_TERMINAL_SOURCE_BUNDLE",
+                    "digest": terminal_binding["source_bundle_content_hash"],
+                    "byte_length": len(M7_SOURCE_BUNDLE.read_bytes()),
+                },
+                {
+                    "input_id": "m7:terminal-source-replay",
+                    "kind": "M7_TERMINAL_SOURCE_REPLAY",
+                    "digest": terminal_binding["source_replay_content_hash"],
+                    "byte_length": len(M7_SOURCE_REPLAY.read_bytes()),
+                },
+                *[
+                    {
+                        "input_id": "m7:private-" + name.replace("_", "-"),
+                        "kind": "M7_PRIVATE_" + name.upper(),
+                        "digest": private_inputs[name]["digest"],
+                        "byte_length": private_inputs[name]["byte_length"],
+                    }
+                    for name in (
+                        "graph",
+                        "replay",
+                        "source_bundle",
+                        "source_replay",
+                    )
+                ],
+                {
+                    "input_id": "m7:status-projection",
+                    "kind": "M7_PUBLIC_STATUS",
+                    "digest": evidence["m7_live_status"]["content_hash"],
+                    "byte_length": len(M7_LIVE_STATUS.read_bytes()),
+                },
+            ]
         )
         if index == 2:
             transition = run["state_evidence"]["restart_transition"]
@@ -368,20 +428,20 @@ def validator_command(
     return [
         sys.executable,
         str(VALIDATOR),
-        command,
+        "verify-public" if command == "verify" else command,
         "--evidence",
         str(evidence_path),
         "--registry",
         str(REGISTRY),
-        "--m7-graph",
+        "--m7-terminal-graph",
         str(graph),
-        "--m7-replay",
+        "--m7-terminal-replay",
         str(replay),
         "--m7-registry",
         str(M7_REGISTRY),
-        "--m7-source-bundle",
+        "--m7-terminal-source-bundle",
         str(source_bundle),
-        "--m7-source-replay",
+        "--m7-terminal-source-replay",
         str(source_replay),
         "--m7-live-status",
         str(live_status),
@@ -406,10 +466,27 @@ def test_msp08_live_profile_validates_bound_m7_and_restart(
         text=True,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout == "ok\n"
+    assert result.stdout == "public-only-ok\n"
 
 
 def test_msp08_live_report_matches_public_schema(tmp_path: pathlib.Path) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    report = validator.report(evidence, load(REGISTRY))
+    assert report["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
+    assert report["export_tier"] == "PUBLIC_REDACTED"
+    report_path = tmp_path / "report.json"
+    report_path.write_bytes(validator.canonical(report) + b"\n")
+    checked = subprocess.run(
+        ["jv", str(REPORT_SCHEMA), str(report_path)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert checked.returncode == 0, checked.stdout + checked.stderr
+
+
+def test_msp08_live_report_refuses_public_only_inputs(tmp_path: pathlib.Path) -> None:
     validator = validator_module()
     evidence_path = write_evidence(tmp_path, build_live_evidence(validator))
     result = subprocess.run(
@@ -418,19 +495,8 @@ def test_msp08_live_report_matches_public_schema(tmp_path: pathlib.Path) -> None
         capture_output=True,
         text=True,
     )
-    assert result.returncode == 0, result.stdout + result.stderr
-    report = json.loads(result.stdout)
-    assert report["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
-    assert report["export_tier"] == "PUBLIC_REDACTED"
-    report_path = tmp_path / "report.json"
-    report_path.write_text(result.stdout, encoding="utf-8")
-    checked = subprocess.run(
-        ["jv", str(REPORT_SCHEMA), str(report_path)],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-    )
-    assert checked.returncode == 0, checked.stdout + checked.stderr
+    assert result.returncode == 1
+    assert result.stdout == "provenance.m7\n"
 
 
 def test_msp08_live_public_status_projection_is_redacted_and_schema_valid(
@@ -540,18 +606,10 @@ def test_msp08_live_report_reserves_fixture_suffix_space(
     evidence["fixture_id"] = "MSP08-G18-" + "A" * 111
     assert len(evidence["fixture_id"]) == 121
     refresh_evidence_hash(validator, evidence)
-    evidence_path = write_evidence(tmp_path, evidence)
-    result = subprocess.run(
-        validator_command("report", evidence_path),
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    report = json.loads(result.stdout)
+    report = validator.report(evidence, load(REGISTRY))
     assert len(report["fixture_id"]) == 128
     report_path = tmp_path / "max-report.json"
-    report_path.write_text(result.stdout, encoding="utf-8")
+    report_path.write_bytes(validator.canonical(report) + b"\n")
     checked = subprocess.run(
         ["jv", str(REPORT_SCHEMA), str(report_path)],
         cwd=REPO_ROOT,
@@ -642,10 +700,16 @@ def test_msp08_live_internal_fact_vocabulary_cannot_leak(
         {"endpointHash": "192.168.100.4"},
         {"endpoint": "fd00::1234"},
         {"endpoint": "fe80::1%eth0"},
+        {"api_key": "private-api-key"},
+        {"apikey": "private-api-key"},
+        {"apiKey": "private-api-key"},
+        {"spine_path": "private-spine-path"},
+        {"spineKind": "ENTITY"},
+        {"evidenceDigest": None},
     ],
 )
 def test_msp08_public_export_rejects_secrets_and_stable_identity(
-    tmp_path: pathlib.Path, leak: dict[str, str]
+    tmp_path: pathlib.Path, leak: dict[str, object]
 ) -> None:
     validator = validator_module()
     evidence = build_live_evidence(validator)
