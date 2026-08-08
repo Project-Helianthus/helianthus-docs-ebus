@@ -32,6 +32,9 @@ CLOCK_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-CLOCK:V1"
 BUILD_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-BUILD:V1"
 CONFIG_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-CONFIG:V1"
 AUTH_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-AUTH:V1"
+M7_STATUS_PROJECTION_DOMAIN = (
+    b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-M7-PUBLIC-STATUS:V1"
+)
 RESTART_PROCESS_EVENT_DOMAIN = (
     b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-RESTART-PROCESS-EVENT:V1"
 )
@@ -47,20 +50,29 @@ EVIDENCE_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1"
 REPORT_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-REPORT:V1"
 SAFE_INTEGER = 9_007_199_254_740_991
 BASELINE_SOURCE_SHA = "ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
-EXPECTED_REGISTRY_SHA256 = "ac7639b0c9f1af62d36fdffd8907ffbf19d9ccf1e81c899d97808baecb107945"
+EXPECTED_REGISTRY_SHA256 = "5bf86a7019d03c2d48caacb5551daaca5d23ec6634360917de1576b95556a081"
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
 RFC3339_UTC_RE = re.compile(
     r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?Z$"
 )
-PRIVATE_KEY_RE = re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")
+PRIVATE_KEY_RE = re.compile(
+    r"-----BEGIN (?:[A-Z0-9]+(?: [A-Z0-9]+)* )?PRIVATE KEY-----",
+    re.IGNORECASE,
+)
 PRIVATE_IPV4_RE = re.compile(
     r"(?:^|[^0-9])(?:10\.(?:[0-9]{1,3}\.){2}[0-9]{1,3}|"
     r"192\.168\.(?:[0-9]{1,3}\.)[0-9]{1,3}|"
     r"172\.(?:1[6-9]|2[0-9]|3[01])\.(?:[0-9]{1,3}\.)[0-9]{1,3})(?:$|[^0-9])"
 )
-MAC_RE = re.compile(r"(?i)(?:^|[^0-9a-f])(?:[0-9a-f]{2}:){5}[0-9a-f]{2}(?:$|[^0-9a-f])")
+MAC_RE = re.compile(
+    r"(?i)(?:^|[^0-9a-f])(?:"
+    r"(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}|"
+    r"[0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4}|"
+    r"[0-9a-f]{12}"
+    r")(?:$|[^0-9a-f])"
+)
 SKI_RE = re.compile(r"(?i)(?:^|[^0-9a-f])[0-9a-f]{40}(?:$|[^0-9a-f])")
 REDACTED_ID_RE = re.compile(r"^redacted:sha256:[0-9a-f]{12}$")
 HARD_LIMITS = {
@@ -68,7 +80,7 @@ HARD_LIMITS = {
     "max_depth": 32,
     "max_runs": 8,
     "max_views_per_run": 16,
-    "max_inputs_per_run": 21,
+    "max_inputs_per_run": 27,
     "max_internal_facts_per_run": 64,
     "max_payload_bytes": 262_144,
     "max_string_bytes": 4_096,
@@ -256,6 +268,7 @@ def schema_check(evidence: Any) -> None:
             "registry",
             "scope",
             "m7_binding",
+            "m7_live_status",
             "capture_clock",
             "normalization",
             "limits",
@@ -265,7 +278,7 @@ def schema_check(evidence: Any) -> None:
     if (
         evidence["contract"] != EVIDENCE_CONTRACT
         or evidence["schema_version"] != 1
-        or not token(evidence["fixture_id"], 128)
+        or not token(evidence["fixture_id"], 121)
         or evidence["evidence_class"]
         not in {"SYNTHETIC_OFFLINE_FIXTURE", "CAPTURED_RUNTIME_EVIDENCE"}
         or evidence["export_tier"] != "PUBLIC_REDACTED"
@@ -297,6 +310,20 @@ def schema_check(evidence: Any) -> None:
             "source_replay_content_hash",
         },
     )
+    if evidence["m7_live_status"] is not None:
+        exact(
+            evidence["m7_live_status"],
+            {
+                "contract",
+                "projection_id",
+                "projection_hash",
+                "content_hash",
+                "source_graph_id",
+                "source_graph_hash",
+                "source_replay_id",
+                "source_replay_hash",
+            },
+        )
     exact(
         evidence["capture_clock"],
         {
@@ -483,6 +510,7 @@ def check_registry(evidence: dict[str, Any], registry: Any, raw: bytes) -> None:
             "m7_live_predecessor",
             "m7_synthetic_binding",
             "m7_live_binding",
+            "m7_live_status_binding",
             "scenario_profiles",
             "protected_views",
             "view_rules",
@@ -529,6 +557,73 @@ def check_registry(evidence: dict[str, Any], registry: Any, raw: bytes) -> None:
         fail("registry.binding")
 
 
+def _verify_m7_status(
+    evidence: dict[str, Any], registry: dict[str, Any], path: pathlib.Path
+) -> tuple[dict[str, Any], bytes]:
+    if evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE":
+        if evidence["m7_live_status"] is not None:
+            fail("provenance.m7")
+        return {"facts": []}, b""
+    try:
+        status, raw = candidate.load_json(path, input_kind="source")
+        schema_path = (
+            pathlib.Path(__file__).resolve().parents[1]
+            / "docs/platform/schemas/draft-candidate-fact-public-status-v1.schema.json"
+        )
+        schema, _ = load_json(schema_path, "provenance.m7")
+        if not candidate._schema_validate(status, schema, schema):
+            fail("provenance.m7")
+    except Failure:
+        raise
+    except (candidate.Failure, KeyError, TypeError, ValueError, OSError):
+        fail("provenance.m7")
+    view = {
+        key: value
+        for key, value in status.items()
+        if key not in {"projection_id", "projection_hash"}
+    }
+    projection_hash = digest(M7_STATUS_PROJECTION_DOMAIN, view)
+    counts = {
+        name: sum(fact["status"] == name for fact in status["facts"])
+        for name in ("RAW_ONLY", "WITHHELD")
+    }
+    expected_binding = {
+        "contract": status["contract"],
+        "projection_id": status["projection_id"],
+        "projection_hash": status["projection_hash"],
+        "content_hash": "sha256:" + hashlib.sha256(raw).hexdigest(),
+        "source_graph_id": status["source_graph_id"],
+        "source_graph_hash": status["source_graph_hash"],
+        "source_replay_id": status["source_replay_id"],
+        "source_replay_hash": status["source_replay_hash"],
+    }
+    facts = status["facts"]
+    if (
+        status["projection_hash"] != projection_hash
+        or status["projection_id"] != "dcfpsv1:" + projection_hash
+        or status["source_commit"]
+        != registry["m7_live_predecessor"]["source_commit"]
+        or status["docs_source_commit"]
+        != registry["m7_live_predecessor"]["docs_source_commit"]
+        or expected_binding != registry["m7_live_status_binding"]
+        or evidence["m7_live_status"] != expected_binding
+        or status["fact_count"] != len(facts)
+        or status["status_counts"] != counts
+        or counts["RAW_ONLY"] < 1
+        or counts["WITHHELD"] < 1
+        or [fact["candidate_id"] for fact in facts]
+        != sorted(fact["candidate_id"] for fact in facts)
+        or len({fact["candidate_id"] for fact in facts}) != len(facts)
+        or any(
+            (fact["status"] == "RAW_ONLY")
+            != (fact["terminal_negative_state"] is None)
+            for fact in facts
+        )
+    ):
+        fail("provenance.m7")
+    return {"facts": facts}, raw
+
+
 def _verify_m7(
     evidence: dict[str, Any],
     registry: dict[str, Any],
@@ -567,6 +662,9 @@ def _verify_m7(
         raise
     except (candidate.Failure, KeyError, TypeError, ValueError, OSError):
         fail("provenance.m7")
+    status_graph, status_raw = _verify_m7_status(
+        evidence, registry, paths["status"]
+    )
     evidence_class = evidence["evidence_class"]
     predecessor_key = (
         "m7_synthetic_predecessor"
@@ -615,7 +713,7 @@ def _verify_m7(
         fail("provenance.m7")
     if evidence["m7_binding"] != expected or actual != expected:
         fail("provenance.m7")
-    return graph, replay, {
+    inputs = {
         "m7:graph": (graph["graph_hash"], len(canonical(graph))),
         "m7:replay": (replay["replay_hash"], len(canonical(replay))),
         "m7:registry": (content_binding["registry_content_hash"], len(m7_registry_raw)),
@@ -628,6 +726,13 @@ def _verify_m7(
             len(source_replay_raw),
         ),
     }
+    if evidence_class == "CAPTURED_RUNTIME_EVIDENCE":
+        inputs["m7:status-projection"] = (
+            evidence["m7_live_status"]["content_hash"],
+            len(status_raw),
+        )
+        graph = status_graph
+    return graph, replay, inputs
 
 
 def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]]) -> None:
@@ -685,6 +790,8 @@ def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]
                 "m7:source-replay": "M7_SOURCE_REPLAY",
             }
         )
+        if "m7:status-projection" in m7_inputs:
+            expected_kinds["m7:status-projection"] = "M7_PUBLIC_STATUS"
         transition = run["state_evidence"]["restart_transition"]
         if transition is not None:
             expected.update(
@@ -801,6 +908,8 @@ def check_ordering(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
             "m7:source-bundle",
             "m7:source-replay",
         ]
+        if evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE":
+            expected_inputs.append("m7:status-projection")
         if run["state_evidence"]["restart_transition"] is not None:
             expected_inputs.extend(
                 [
@@ -871,6 +980,8 @@ def check_states(evidence: dict[str, Any], graph: dict[str, Any]) -> None:
             status: sum(fact["status"] == status for fact in facts)
             for status in ("RAW_ONLY", "CANDIDATE", "CONFLICTED", "WITHHELD")
         }
+        if counts["RAW_ONLY"] < 1 or counts["WITHHELD"] < 1:
+            fail("state.evidence")
         services = evidence["runs"][0]["state_evidence"]["service_count"]
         if services < 1:
             fail("state.evidence")
@@ -1124,6 +1235,7 @@ def _contains_candidate_leak(
         }
         or value in candidate_ids
         or value in terminal_values
+        or re.fullmatch(r"m7-candidate-[0-9]{4}", value) is not None
     )
 
 
@@ -1154,6 +1266,8 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
             )
         ):
             return True
+        if normalized.endswith(("hash", "digest", "commit")):
+            return False
         if normalized in {
             "address",
             "authsubject",
@@ -1185,6 +1299,12 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         return any(_contains_public_secret(item) for item in value)
     if not isinstance(value, str):
         return False
+    if (
+        REDACTED_ID_RE.fullmatch(value)
+        or DIGEST_RE.fullmatch(value)
+        or re.fullmatch(r"[a-z0-9.-]+:sha256:[0-9a-f]{64}", value)
+    ):
+        return False
     return bool(
         PRIVATE_KEY_RE.search(value)
         or PRIVATE_IPV4_RE.search(value)
@@ -1196,9 +1316,8 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
 def check_public_redaction(evidence: dict[str, Any]) -> None:
     if evidence["export_tier"] != "PUBLIC_REDACTED":
         fail("redaction.public")
-    for run in evidence["runs"]:
-        if any(_contains_public_secret(view["payload"]) for view in run["protected_views"]):
-            fail("redaction.public")
+    if _contains_public_secret(evidence):
+        fail("redaction.public")
 
 
 def check_authority(evidence: dict[str, Any]) -> None:
@@ -1399,6 +1518,18 @@ def report(evidence: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]
                 "replay_id",
                 "replay_hash",
             )
+        }
+        | {
+            "live_status_projection_id": (
+                evidence["m7_live_status"]["projection_id"]
+                if evidence["m7_live_status"] is not None
+                else None
+            ),
+            "live_status_projection_hash": (
+                evidence["m7_live_status"]["projection_hash"]
+                if evidence["m7_live_status"] is not None
+                else None
+            ),
         },
         "baseline": {
             "run_id": baseline["run_id"],
@@ -1445,6 +1576,14 @@ def main() -> int:
     parser.add_argument("--m7-registry", type=pathlib.Path, required=True)
     parser.add_argument("--m7-source-bundle", type=pathlib.Path, required=True)
     parser.add_argument("--m7-source-replay", type=pathlib.Path, required=True)
+    parser.add_argument(
+        "--m7-live-status",
+        type=pathlib.Path,
+        default=(
+            pathlib.Path(__file__).resolve().parents[1]
+            / "docs/platform/fixtures/candidate-fact-graph/v1/positive/live-public-status.json"
+        ),
+    )
     args = parser.parse_args()
     try:
         evidence, evidence_raw = load_json(args.evidence, "json.syntax", bounded=True)
@@ -1457,6 +1596,7 @@ def main() -> int:
             "registry": args.m7_registry,
             "source_bundle": args.m7_source_bundle,
             "source_replay": args.m7_source_replay,
+            "status": args.m7_live_status,
         }
         verify(evidence, len(evidence_raw), registry, registry_raw, m7_paths)
         if args.command == "verify":

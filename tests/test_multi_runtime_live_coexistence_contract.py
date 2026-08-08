@@ -20,6 +20,10 @@ REPORT_SCHEMA = (
     REPO_ROOT
     / "docs/platform/schemas/multi-runtime-coexistence-report-v1.schema.json"
 )
+M7_STATUS_SCHEMA = (
+    REPO_ROOT
+    / "docs/platform/schemas/draft-candidate-fact-public-status-v1.schema.json"
+)
 REGISTRY = (
     REPO_ROOT
     / "docs/platform/schemas/multi-runtime-coexistence-registry-v1.json"
@@ -34,6 +38,7 @@ M7_GRAPH = M7_ROOT / "source-terminal-graph.json"
 M7_REPLAY = M7_ROOT / "source-terminal-replay-result.json"
 M7_SOURCE_BUNDLE = M7_ROOT / "source-terminal-bundle.json"
 M7_SOURCE_REPLAY = M7_ROOT / "source-terminal-source-replay.json"
+M7_LIVE_STATUS = M7_ROOT / "live-public-status.json"
 M7_REGISTRY = REPO_ROOT / "docs/platform/schemas/draft-candidate-fact-registry-v1.json"
 SYNCHRONIZED_ROOT = REPO_ROOT / "docs/platform/fixtures/synchronized-evidence/v1/positive"
 M7_SYNTHETIC_GRAPH = M7_ROOT / "graph.json"
@@ -121,6 +126,7 @@ def build_live_evidence(validator) -> dict[str, object]:
     evidence = deepcopy(load(SYNTHETIC_EVIDENCE))
     graph = load(M7_GRAPH)
     replay = load(M7_REPLAY)
+    live_status = load(M7_LIVE_STATUS)
 
     evidence["fixture_id"] = "MSP08-G18-LIVE-EVIDENCE-TEST001"
     evidence["evidence_class"] = "CAPTURED_RUNTIME_EVIDENCE"
@@ -130,6 +136,7 @@ def build_live_evidence(validator) -> dict[str, object]:
         "docs_source_commit": M7_DOCS_MERGE,
         **deepcopy(registry["m7_live_binding"]),
     }
+    evidence["m7_live_status"] = deepcopy(registry["m7_live_status_binding"])
 
     selected = [deepcopy(evidence["runs"][index]) for index in (0, 3, 3, 5)]
     runtime = deepcopy(evidence["runs"][1]["provenance"]["runtime"])
@@ -142,7 +149,7 @@ def build_live_evidence(validator) -> dict[str, object]:
             "terminal_negative_state": fact["terminal_negative_state"],
             "visibility_channel": "CANDIDATE_DEBUG_REPLAY",
         }
-        for fact in graph["facts"]
+        for fact in live_status["facts"]
     ]
     states = registry["scenario_profiles"]["CAPTURED_RUNTIME_EVIDENCE"]
     outcomes = (
@@ -260,6 +267,14 @@ def build_live_evidence(validator) -> dict[str, object]:
             elif item["input_id"] == "m7:source-replay":
                 item["digest"] = evidence["m7_binding"]["source_replay_content_hash"]
                 item["byte_length"] = len(M7_SOURCE_REPLAY.read_bytes())
+        run["provenance"]["immutable_inputs"].append(
+            {
+                "input_id": "m7:status-projection",
+                "kind": "M7_PUBLIC_STATUS",
+                "digest": evidence["m7_live_status"]["content_hash"],
+                "byte_length": len(M7_LIVE_STATUS.read_bytes()),
+            }
+        )
         if index == 2:
             transition = run["state_evidence"]["restart_transition"]
             for input_id, kind, domain, field in (
@@ -347,6 +362,7 @@ def validator_command(
     replay: pathlib.Path = M7_REPLAY,
     source_bundle: pathlib.Path = M7_SOURCE_BUNDLE,
     source_replay: pathlib.Path = M7_SOURCE_REPLAY,
+    live_status: pathlib.Path = M7_LIVE_STATUS,
 ) -> list[str]:
     return [
         sys.executable,
@@ -366,6 +382,8 @@ def validator_command(
         str(source_bundle),
         "--m7-source-replay",
         str(source_replay),
+        "--m7-live-status",
+        str(live_status),
     ]
 
 
@@ -414,6 +432,72 @@ def test_msp08_live_report_matches_public_schema(tmp_path: pathlib.Path) -> None
     assert checked.returncode == 0, checked.stdout + checked.stderr
 
 
+def test_msp08_live_public_status_projection_is_redacted_and_schema_valid(
+    tmp_path: pathlib.Path,
+) -> None:
+    checked = subprocess.run(
+        ["jv", str(M7_STATUS_SCHEMA), str(M7_LIVE_STATUS)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert checked.returncode == 0, checked.stdout + checked.stderr
+    status = load(M7_LIVE_STATUS)
+    assert status["status_counts"] == {"RAW_ONLY": 14, "WITHHELD": 4}
+    assert len(status["facts"]) == 18
+    serialized = json.dumps(status, sort_keys=True)
+    for forbidden in ("source_address", "target_address", "ship_id", "ski"):
+        assert forbidden not in serialized
+
+
+def test_msp08_live_report_reserves_fixture_suffix_space(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    evidence["fixture_id"] = "MSP08-G18-" + "A" * 111
+    assert len(evidence["fixture_id"]) == 121
+    refresh_evidence_hash(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
+    result = subprocess.run(
+        validator_command("report", evidence_path),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    report = json.loads(result.stdout)
+    assert len(report["fixture_id"]) == 128
+    report_path = tmp_path / "max-report.json"
+    report_path.write_text(result.stdout, encoding="utf-8")
+    checked = subprocess.run(
+        ["jv", str(REPORT_SCHEMA), str(report_path)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert checked.returncode == 0, checked.stdout + checked.stderr
+
+
+def test_msp08_live_rejects_fixture_id_without_report_suffix_space(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    evidence["fixture_id"] = "MSP08-G18-" + "A" * 112
+    assert len(evidence["fixture_id"]) == 122
+    refresh_evidence_hash(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
+    result = subprocess.run(
+        validator_command("verify", evidence_path),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == "schema.evidence\n"
+
+
 @pytest.mark.parametrize(
     "leak",
     [
@@ -457,6 +541,13 @@ def test_msp08_live_internal_fact_vocabulary_cannot_leak(
         {"targetAddress": 21},
         {"remoteShipId": "unredacted-ship-peer"},
         {"privateKey": "cHJpdmF0ZS1qd2stbWF0ZXJpYWw="},
+        {"encrypted_pem": "-----BEGIN ENCRYPTED PRIVATE KEY-----"},
+        {"dsa_pem": "-----BEGIN DSA PRIVATE KEY-----"},
+        {"hw_addr": "aa-bb-cc-dd-ee-ff"},
+        {"hw_addr": "aabb.ccdd.eeff"},
+        {"hw_addr": "aabbccddeeff"},
+        {"password_hash": "sha256:" + "a" * 64},
+        {"sessionTokenDigest": "sha256:" + "b" * 64},
     ],
 )
 def test_msp08_public_export_rejects_secrets_and_stable_identity(
@@ -467,6 +558,25 @@ def test_msp08_public_export_rejects_secrets_and_stable_identity(
     for run in evidence["runs"]:
         run["protected_views"][-1]["payload"]["data"]["public_leak"] = leak
     refresh_protected_views(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
+    result = subprocess.run(
+        validator_command("verify", evidence_path),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == "redaction.public\n"
+
+
+def test_msp08_public_export_rejects_private_metadata_outside_views(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    for run in evidence["runs"]:
+        run["provenance"]["config"]["config_id"] = "192.168.100.4"
+    refresh_evidence_hash(validator, evidence)
     evidence_path = write_evidence(tmp_path, evidence)
     result = subprocess.run(
         validator_command("verify", evidence_path),
@@ -498,6 +608,25 @@ def test_msp08_live_rejects_synthetic_m7_inputs_with_live_attribution(
     )
     assert result.returncode == 1
     assert result.stdout == "provenance.m7\n"
+
+
+def test_msp08_live_rejects_graph_enabled_states_without_raw_only_fact() -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    withheld = [
+        fact
+        for fact in evidence["runs"][1]["state_evidence"]["facts"]
+        if fact["status"] == "WITHHELD"
+    ]
+    for run in evidence["runs"][1:3]:
+        state = run["state_evidence"]
+        state["facts"] = deepcopy(withheld)
+        state["raw_only_count"] = 0
+        state["candidate_count"] = 0
+        state["conflict_count"] = 0
+        state["withheld_count"] = len(withheld)
+    with pytest.raises(validator.Failure, match="state.evidence"):
+        validator.check_states(evidence, {"facts": withheld})
 
 
 def test_msp08_live_rejects_restart_without_new_process_instance(

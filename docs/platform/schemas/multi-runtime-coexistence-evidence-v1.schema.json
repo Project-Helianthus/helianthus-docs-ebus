@@ -15,6 +15,7 @@
     "registry",
     "scope",
     "m7_binding",
+    "m7_live_status",
     "capture_clock",
     "normalization",
     "limits",
@@ -23,7 +24,7 @@
   "properties": {
     "contract": {"const": "helianthus.platform.multi-runtime-coexistence-evidence.v1"},
     "schema_version": {"const": 1},
-    "fixture_id": {"type": "string", "pattern": "^MSP08-G18-[A-Z0-9-]+$", "maxLength": 128},
+    "fixture_id": {"type": "string", "pattern": "^MSP08-G18-[A-Z0-9-]+$", "maxLength": 121},
     "evidence_class": {"enum": ["SYNTHETIC_OFFLINE_FIXTURE", "CAPTURED_RUNTIME_EVIDENCE"]},
     "export_tier": {"const": "PUBLIC_REDACTED"},
     "evidence_id": {"type": "string", "pattern": "^mrcv1:sha256:[0-9a-f]{64}$"},
@@ -31,6 +32,7 @@
     "registry": {"$ref": "#/$defs/RegistryBinding"},
     "scope": {"$ref": "#/$defs/Scope"},
     "m7_binding": {"$ref": "#/$defs/M7Binding"},
+    "m7_live_status": {"oneOf": [{"$ref": "#/$defs/M7LiveStatusBinding"}, {"type": "null"}]},
     "capture_clock": {"$ref": "#/$defs/CaptureClock"},
     "normalization": {"$ref": "#/$defs/Normalization"},
     "limits": {"$ref": "#/$defs/Limits"},
@@ -95,6 +97,21 @@
         "registry_content_hash": {"$ref": "#/$defs/Digest"},
         "source_bundle_content_hash": {"$ref": "#/$defs/Digest"},
         "source_replay_content_hash": {"$ref": "#/$defs/Digest"}
+      }
+    },
+    "M7LiveStatusBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract", "projection_id", "projection_hash", "content_hash", "source_graph_id", "source_graph_hash", "source_replay_id", "source_replay_hash"],
+      "properties": {
+        "contract": {"const": "helianthus.platform.draft-candidate-fact-public-status.v1"},
+        "projection_id": {"type": "string", "pattern": "^dcfpsv1:sha256:[0-9a-f]{64}$"},
+        "projection_hash": {"$ref": "#/$defs/Digest"},
+        "content_hash": {"$ref": "#/$defs/Digest"},
+        "source_graph_id": {"type": "string", "pattern": "^dcfgv1:sha256:[0-9a-f]{64}$"},
+        "source_graph_hash": {"$ref": "#/$defs/Digest"},
+        "source_replay_id": {"type": "string", "pattern": "^dcfrv1:sha256:[0-9a-f]{64}$"},
+        "source_replay_hash": {"$ref": "#/$defs/Digest"}
       }
     },
     "CaptureClock": {
@@ -217,7 +234,7 @@
       "required": ["input_id", "kind", "digest", "byte_length"],
       "properties": {
         "input_id": {"$ref": "#/$defs/Token"},
-        "kind": {"enum": ["PROTECTED_VIEW_PAYLOAD", "M7_GRAPH", "M7_REPLAY", "M7_REGISTRY", "M7_SOURCE_BUNDLE", "M7_SOURCE_REPLAY", "RESTART_PROCESS_EVENT", "RESTART_STATE_SNAPSHOT", "RESTART_SESSION_EVENT"]},
+        "kind": {"enum": ["PROTECTED_VIEW_PAYLOAD", "M7_GRAPH", "M7_REPLAY", "M7_REGISTRY", "M7_SOURCE_BUNDLE", "M7_SOURCE_REPLAY", "M7_PUBLIC_STATUS", "RESTART_PROCESS_EVENT", "RESTART_STATE_SNAPSHOT", "RESTART_SESSION_EVENT"]},
         "digest": {"$ref": "#/$defs/Digest"},
         "byte_length": {"type": "integer", "minimum": 1, "maximum": 2097152}
       }
@@ -233,7 +250,7 @@
         "config": {"$ref": "#/$defs/Config"},
         "auth_scope": {"$ref": "#/$defs/AuthScope"},
         "mask_scope_digest": {"$ref": "#/$defs/Digest"},
-        "immutable_inputs": {"type": "array", "minItems": 1, "maxItems": 21, "items": {"$ref": "#/$defs/ImmutableInput"}}
+        "immutable_inputs": {"type": "array", "minItems": 1, "maxItems": 27, "items": {"$ref": "#/$defs/ImmutableInput"}}
       }
     },
     "CandidateFact": {

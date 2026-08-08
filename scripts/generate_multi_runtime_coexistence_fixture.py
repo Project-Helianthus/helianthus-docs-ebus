@@ -428,6 +428,7 @@ def build_evidence(
             "docs_source_commit": registry["m7_synthetic_predecessor"]["docs_source_commit"],
             **copy.deepcopy(registry["m7_synthetic_binding"]),
         },
+        "m7_live_status": None,
         "capture_clock": clock,
         "normalization": profile,
         "limits": copy.deepcopy(registry["limits"]),

@@ -11,14 +11,14 @@
   },
   "contract": "helianthus.platform.multi-runtime-coexistence-evidence.v1",
   "evidence_class": "SYNTHETIC_OFFLINE_FIXTURE",
-  "evidence_hash": "sha256:826e2680f9ea587ae0fcfbfdbfe40a2941ed5f4973ecca6cc0b6a6fcce24a6b3",
-  "evidence_id": "mrcv1:sha256:826e2680f9ea587ae0fcfbfdbfe40a2941ed5f4973ecca6cc0b6a6fcce24a6b3",
+  "evidence_hash": "sha256:d1c82f403002c330cc69bbc8c8abb8d6cfd8dcb5662025c9c0b173d0fc9ff552",
+  "evidence_id": "mrcv1:sha256:d1c82f403002c330cc69bbc8c8abb8d6cfd8dcb5662025c9c0b173d0fc9ff552",
   "export_tier": "PUBLIC_REDACTED",
   "fixture_id": "MSP08-G18-SYNTHETIC-POSITIVE-001",
   "limits": {
     "max_depth": 32,
     "max_evidence_bytes": 2097152,
-    "max_inputs_per_run": 21,
+    "max_inputs_per_run": 27,
     "max_internal_facts_per_run": 64,
     "max_payload_bytes": 262144,
     "max_runs": 8,
@@ -40,6 +40,7 @@
     "source_commit": "ff511b035b85aef6123fb0853bb3d2f3af6fc01e",
     "source_replay_content_hash": "sha256:3061c507677f1f41861c20096ff7581ccb6e35c2e01bf66a568e2277df285539"
   },
+  "m7_live_status": null,
   "normalization": {
     "canonicalization": "RFC8785_JCS_INTEGER_SUBSET",
     "mask_replacement": "<MASKED>",
@@ -161,7 +162,7 @@
   },
   "registry": {
     "contract": "helianthus.platform.multi-runtime-coexistence-registry.v1",
-    "digest": "sha256:ac7639b0c9f1af62d36fdffd8907ffbf19d9ccf1e81c899d97808baecb107945",
+    "digest": "sha256:5bf86a7019d03c2d48caacb5551daaca5d23ec6634360917de1576b95556a081",
     "version": 1
   },
   "runs": [

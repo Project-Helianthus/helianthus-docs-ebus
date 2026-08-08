@@ -72,14 +72,16 @@
     "M7Binding": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_commit", "docs_source_commit", "graph_id", "graph_hash", "replay_id", "replay_hash"],
+      "required": ["source_commit", "docs_source_commit", "graph_id", "graph_hash", "replay_id", "replay_hash", "live_status_projection_id", "live_status_projection_hash"],
       "properties": {
         "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "docs_source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "graph_id": {"type": "string", "pattern": "^dcfgv1:sha256:[0-9a-f]{64}$"},
         "graph_hash": {"$ref": "#/$defs/Digest"},
         "replay_id": {"type": "string", "pattern": "^dcfrv1:sha256:[0-9a-f]{64}$"},
-        "replay_hash": {"$ref": "#/$defs/Digest"}
+        "replay_hash": {"$ref": "#/$defs/Digest"},
+        "live_status_projection_id": {"oneOf": [{"type": "string", "pattern": "^dcfpsv1:sha256:[0-9a-f]{64}$"}, {"type": "null"}]},
+        "live_status_projection_hash": {"oneOf": [{"$ref": "#/$defs/Digest"}, {"type": "null"}]}
       }
     },
     "ViewHash": {

@@ -220,18 +220,23 @@ Every result binds all of the following:
 - every protected raw payload digest and exact canonical byte length;
 - the supplied M7 graph and replay digests and exact canonical byte lengths;
 - exact content digests and byte lengths for the M7 registry, synchronized
-  source bundle, and synchronized source replay; and
+  source bundle, and synchronized source replay;
+- for captured evidence, the exact content digest of the public-redacted M7
+  status projection bound to the real graph and replay hashes; and
 - evidence ID/hash and registry content digest.
 
-The M7 graph is not accepted from caller attribution alone. The verifier invokes the
-existing synchronized-evidence and candidate-fact validators, regenerates the
-M7 replay, and requires deep equality with the supplied replay. The synthetic
-profile then requires its frozen graph, replay, registry, source-bundle, and
-source-replay digests. The captured runtime profile requires a separate frozen
-set for the live M7 predecessor. Substituting any otherwise valid synthetic or
-live input fails `provenance.m7`. The supplied graph, replay, registry,
-synchronized bundle, and synchronized replay are immutable inputs in both
-profiles.
+The M7 graph is not accepted from caller attribution alone. The verifier
+invokes the existing synchronized-evidence and candidate-fact validators,
+regenerates the M7 replay, and requires deep equality with the supplied replay.
+The synthetic profile then requires its frozen graph, replay, registry,
+source-bundle, and source-replay digests. The captured runtime profile also
+requires the frozen public status projection of the real M7 graph. That
+projection contains only candidate IDs, fact hashes, statuses, and terminal
+classes: 18 facts, including 14 `RAW_ONLY` and 4 `WITHHELD`. It contains no
+protocol identities or addresses and binds source graph
+`dcfgv1:sha256:a7e4e661b2b78b37ff60f6f5c5b419d9af1cdf1b0f0570a9168b3ecbd3f99be9`.
+Substituting any otherwise valid synthetic or live input fails
+`provenance.m7`. Every supplied M7 input is immutable.
 
 The synthetic baseline runtime source is exact gateway main
 `ff511b035b85aef6123fb0853bb3d2f3af6fc01e`; its compared runtime has that
@@ -335,7 +340,7 @@ Validation emits no partial success or report.
 | `max_depth` | 32 |
 | `max_runs` | 8 |
 | `max_views_per_run` | 16 |
-| `max_inputs_per_run` | 21 |
+| `max_inputs_per_run` | 27 |
 | `max_internal_facts_per_run` | 64 |
 | `max_payload_bytes` | 262,144 |
 | `max_string_bytes` | 4,096 |
@@ -361,14 +366,18 @@ cryptographic secrets remain forbidden in every tier. The protected-view
 comparison binds the effective auth and mask scope and never permits a tier
 change on dereference.
 
-The public verifier normalizes snake-case, kebab-case, and camel-case field
-names and fails closed on private-key or key-material fields; credential,
-secret, password, token, or trust-store fields; private IPv4 addresses; MAC
+The public verifier scans the complete evidence artifact, not only protected
+payloads. It normalizes snake-case, kebab-case, and camel-case field names and
+fails closed on private-key or key-material fields; encrypted, DSA, and other
+private-key PEM labels; credential, secret, password, token, or trust-store
+fields; private IPv4 addresses; colon, hyphen, dotted, or compact MAC
 addresses; raw 40-hex-character SKIs; and unredacted stable device, entity,
 feature, peer, SHIP, authentication-subject, endpoint, source, target, or other
-protocol addresses. A retained secondary identifier must use the deterministic
-`redacted:sha256:<12-hex>` form. This rule does not redefine SKI, SHIP ID, or
-SPINE addresses as cryptographic secrets in the local authorized operator view.
+protocol addresses. Only typed commits, hashes, and digests bypass scalar
+secret-pattern inspection. A retained secondary identifier must use the
+deterministic `redacted:sha256:<12-hex>` form. This rule does not redefine SKI,
+SHIP ID, or SPINE addresses as cryptographic secrets in the local authorized
+operator view.
 
 The positive fixture IDs are:
 
@@ -379,6 +388,10 @@ The generated report includes the exact baseline runtime identity and eleven
 view hashes, every scenario result and view hash, the profile-specific
 acceptance matrix, the exact M7 binding, and the rollback result. `PASS` is
 emitted only after every validation stage completes.
+
+Live evidence reserves the seven-character `-REPORT` suffix within the
+121-character evidence fixture-ID limit, so every accepted evidence ID yields
+a report fixture ID within the report schema's 128-character ceiling.
 
 The report schema enforces profile-specific cardinality: synthetic evidence
 produces five scenario results and six acceptance rows, while captured live
