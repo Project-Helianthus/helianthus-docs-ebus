@@ -1693,9 +1693,17 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
         {"debug_detail": "http://10.255.255.254.:4712"},
         {"debug_detail": "10..8.8.8.8"},
         {"debug_detail": "100.64.0.1"},
+        {"debug_detail": "224.0.0.251"},
+        {"debug_detail": "239.255.255.250:1900"},
         {"debug_detail": "8.8.8.8."},
         {"debug_detail": "Authorization: Bearer synthetic-credential"},
         {"debug_detail": "session_cookie=synthetic-cookie"},
+        {"debug_detail": "access_token=synthetic-token"},
+        {"debug_detail": "refresh_token=synthetic-token"},
+        {"debug_detail": "client_secret=synthetic-secret"},
+        {"debug_detail": "csrf_token=synthetic-token"},
+        {"debug_detail": "private_key=synthetic-key"},
+        {"debug_detail": "ff02::fb"},
         {"10.255.255.254": "redacted"},
         {"selectors": ["private-selector"]},
         {"ship_ids": ["private-ship-id"]},
@@ -1751,10 +1759,18 @@ def test_msp08_report_rejects_native_identity_and_non_public_ipv4(
     [
         "candidateFacts",
         "candidates",
+        "conflicted",
+        "withheld",
         {"candidate_count": 1},
         {"candidate_ids": []},
         {"candidate_statuses": []},
         {"fact_hash": "sha256:" + "a" * 64},
+        {"evidence_digests": ["sha256:" + "a" * 64]},
+        {"evidence_refs": []},
+        {"identity_family": "redacted"},
+        {"debug_only": True},
+        {"proposed_path": "/candidate/private"},
+        {"retest_trigger": "private"},
         {"raw_only_count": 14},
         {"raw_only": True},
         {"source_terminals": []},
@@ -1795,6 +1811,10 @@ def test_msp08_report_allows_globally_routable_ipv4(
         view["payload"]["data"]["monkey_material"] = "public"
         view["payload"]["data"]["debug_note"] = "basic public metadata"
         view["payload"]["data"]["debug_version"] = "v10.2.3.4"
+        view["payload"]["data"]["debug_note_secondary"] = (
+            "candidate facts are not published"
+        )
+        view["payload"]["data"]["scope_note"] = "eebus.v2 is not active"
         _refresh_view_hashes(evidence, view)
     evidence_view = {
         key: value
@@ -1816,7 +1836,14 @@ def test_msp08_report_allows_globally_routable_ipv4(
 
 
 @pytest.mark.parametrize(
-    "mutation", ["LEGACY_TOOL", "LEGACY_NAMESPACE", "MALFORMED_TOOL"]
+    "mutation",
+    [
+        "LEGACY_TOOL",
+        "LEGACY_NAMESPACE",
+        "MALFORMED_TOOL",
+        "NESTED_V2",
+        "NESTED_VERSION2",
+    ],
 )
 def test_msp08_report_rejects_non_v1_eebus_surfaces(
     tmp_path: pathlib.Path, mutation: str
@@ -1831,9 +1858,19 @@ def test_msp08_report_rejects_non_v1_eebus_surfaces(
                 else " eebus.runtime.status.get"
             )
             view["payload"]["data"]["tools"].append(tool)
-        else:
+        elif mutation == "LEGACY_NAMESPACE":
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             view["payload"]["data"]["namespace"] = "eebus.legacy"
+        elif mutation == "NESTED_V2":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["alternate_contracts"] = [
+                {"active": True, "namespace": "eebus.v2"}
+            ]
+        else:
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["alternate_contracts"] = [
+                {"active": True, "namespace": "eebus.v1", "version": 2}
+            ]
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
 
@@ -1858,6 +1895,26 @@ def test_msp08_report_rejects_eebus_semantic_leaf_promotion(
 
     result = run_coexistence_validator(
         "report", write_json(tmp_path / "eebus-semantic-leaf.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_nested_eebus_semantic_leaf_promotion(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "semantic.registry")
+        view["payload"]["data"]["alternate_registry"] = {
+            "leaves": [{"promotion_state": "PROMOTED", "source": "eebus"}]
+        }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "nested-eebus-semantic-leaf.json", evidence)
     )
     assert result.returncode == 1
     assert result.stdout == "authority.ebus\n"

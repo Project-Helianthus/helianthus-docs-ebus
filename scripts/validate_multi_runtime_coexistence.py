@@ -86,6 +86,9 @@ CREDENTIAL_VALUE_RE = re.compile(
     r"|\b(?:set-cookie|cookie)\s*:\s*\S+"
     r"|\b(?:access[_-]?keys?|api[_-]?keys?|credentials?|passwords?|secrets?|"
     r"session[_-]?cookies?|tokens?)\s*=\s*\S+"
+    r"|(?<![a-z0-9])(?:[a-z0-9]+[_-])+(?:cookie|credential|password|secret|"
+    r"token)\s*=\s*\S+"
+    r"|(?<![a-z0-9])private[_-]key\s*=\s*\S+"
 )
 CANDIDATE_LEAK_COMPACT_NAMES = frozenset(
     {
@@ -104,10 +107,21 @@ CANDIDATE_LEAK_COMPACT_NAMES = frozenset(
         "candidatestatuses",
         "conflictstatus",
         "conflict",
+        "conflicted",
         "conflicts",
+        "comparatoroutcome",
+        "debugonly",
+        "draftunit",
+        "draftvalue",
         "errorcategory",
+        "evidencedigests",
+        "evidencerefs",
         "facthash",
         "facthashes",
+        "identityfamily",
+        "nativeevidencedigests",
+        "nativeevidencerefs",
+        "proposedpath",
         "rawonlycount",
         "rawonlycounts",
         "rawonly",
@@ -116,9 +130,12 @@ CANDIDATE_LEAK_COMPACT_NAMES = frozenset(
         "sourceschemaversion",
         "sourceterminal",
         "sourceterminals",
+        "sourcebundleid",
         "terminalnegativestate",
         "terminalnegativestates",
+        "retesttrigger",
         "visibilitychannel",
+        "withheld",
     }
 )
 CANDIDATE_LEAK_TOKEN_PATTERNS = frozenset(
@@ -138,10 +155,21 @@ CANDIDATE_LEAK_TOKEN_PATTERNS = frozenset(
         ("candidates",),
         ("conflict", "status"),
         ("conflict",),
+        ("conflicted",),
         ("conflicts",),
+        ("comparator", "outcome"),
+        ("debug", "only"),
+        ("draft", "unit"),
+        ("draft", "value"),
         ("error", "category"),
+        ("evidence", "digests"),
+        ("evidence", "refs"),
         ("fact", "hash"),
         ("fact", "hashes"),
+        ("identity", "family"),
+        ("native", "evidence", "digests"),
+        ("native", "evidence", "refs"),
+        ("proposed", "path"),
         ("raw", "only", "count"),
         ("raw", "only", "counts"),
         ("raw", "only"),
@@ -151,9 +179,12 @@ CANDIDATE_LEAK_TOKEN_PATTERNS = frozenset(
         ("source", "schema", "version"),
         ("source", "terminal"),
         ("source", "terminals"),
+        ("source", "bundle", "id"),
         ("terminal", "negative", "state"),
         ("terminal", "negative", "states"),
+        ("retest", "trigger"),
         ("visibility", "channel"),
+        ("withheld",),
     }
 )
 PUBLIC_IDENTITY_GENERIC_TOKENS = frozenset(
@@ -1710,7 +1741,7 @@ def _contains_private_ipv6(value: str) -> bool:
         except ValueError:
             continue
         if isinstance(address, ipaddress.IPv6Address) and (
-            address.is_private or address.is_link_local or address.is_loopback
+            not address.is_global or address.is_multicast
         ):
             return True
     return False
@@ -1728,7 +1759,9 @@ def _contains_non_public_ipv4(value: str) -> bool:
             address = ipaddress.ip_address(candidate_value)
         except ValueError:
             return True
-        if isinstance(address, ipaddress.IPv4Address) and not address.is_global:
+        if isinstance(address, ipaddress.IPv4Address) and (
+            not address.is_global or address.is_multicast
+        ):
             return True
     return False
 
@@ -1831,6 +1864,48 @@ def check_public_redaction(evidence: dict[str, Any]) -> None:
         fail("redaction.public")
 
 
+def _contains_eebus_promotion(value: Any) -> bool:
+    if isinstance(value, dict):
+        source = value.get("source")
+        promotion_state = value.get("promotion_state")
+        if (
+            isinstance(source, str)
+            and source.casefold() == "eebus"
+            and promotion_state == "PROMOTED"
+        ):
+            return True
+        return any(_contains_eebus_promotion(item) for item in value.values())
+    if isinstance(value, list):
+        return any(_contains_eebus_promotion(item) for item in value)
+    return False
+
+
+def _contains_non_v1_eebus_surface(value: Any) -> bool:
+    if isinstance(value, dict):
+        namespace = value.get("namespace")
+        if isinstance(namespace, str) and namespace.casefold().startswith("eebus."):
+            if namespace.casefold() != "eebus.v1":
+                return True
+            if value.get("version", 1) != 1 or value.get("public_v2", False) is not False:
+                return True
+        return any(
+            _contains_non_v1_eebus_surface(item_key)
+            or _contains_non_v1_eebus_surface(item)
+            for item_key, item in value.items()
+        )
+    if isinstance(value, list):
+        return any(_contains_non_v1_eebus_surface(item) for item in value)
+    if not isinstance(value, str):
+        return False
+    normalized = value.casefold()
+    return bool(
+        TOOL_NAME_RE.fullmatch(normalized)
+        and normalized.startswith("eebus.")
+        and normalized != "eebus.v1"
+        and not normalized.startswith("eebus.v1.")
+    )
+
+
 def check_authority(evidence: dict[str, Any]) -> None:
     for run in evidence["runs"][:-1]:
         registry_view = next(
@@ -1839,12 +1914,16 @@ def check_authority(evidence: dict[str, Any]) -> None:
         routes_view = next(
             view for view in run["protected_views"] if view["view_id"] == "command.routing"
         )
-        if registry_view["payload"]["data"]["authority"] != "ebus.promoted":
+        registry_data = registry_view["payload"]["data"]
+        if (
+            registry_data["authority"] != "ebus.promoted"
+            or _contains_eebus_promotion(registry_data)
+        ):
             fail("authority.ebus")
         if any(
             leaf.get("source") != "ebus"
             or leaf.get("promotion_state") != "PROMOTED"
-            for leaf in registry_view["payload"]["data"]["leaves"]
+            for leaf in registry_data["leaves"]
         ):
             fail("authority.ebus")
         if any(route["source"] != "ebus" for route in routes_view["payload"]["data"]["routes"]):
@@ -1884,6 +1963,7 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
             or contract_data["namespace"] != "eebus.v1"
             or contract_data["version"] != 1
             or contract_data["public_v2"] is not False
+            or _contains_non_v1_eebus_surface(contract_data)
         ):
             fail("gate.scope")
 
