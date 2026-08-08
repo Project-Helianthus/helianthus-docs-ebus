@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import hashlib
 import json
 import os
@@ -19,6 +20,10 @@ REPLAY_SCHEMA = SCHEMA_ROOT / "synchronized-evidence-replay-v1.schema.json"
 REGISTRY = SCHEMA_ROOT / "synchronized-evidence-source-registry-v1.json"
 POSITIVE = FIXTURE_ROOT / "positive/bundle.json"
 GOLDEN_REPLAY = FIXTURE_ROOT / "positive/replay-result.json"
+SOURCE_TERMINAL_BUNDLE = (
+    REPO_ROOT
+    / "docs/platform/fixtures/candidate-fact-graph/v1/positive/source-terminal-bundle.json"
+)
 NEGATIVE_ROOT = FIXTURE_ROOT / "negative"
 EXPECTED_NEGATIVE = {
     "bundle-hash-mismatch.json": "hash.bundle",
@@ -289,4 +294,49 @@ def test_validator_fails_closed_on_cross_field_invariants(
     result = run_validator("verify", path)
     assert result.returncode == 1
     assert result.stdout == f"{category}\n"
+    assert result.stderr == ""
+
+
+def test_validator_rejects_scope_kind_without_a_matching_source(
+    tmp_path: pathlib.Path,
+) -> None:
+    bundle = deepcopy(load_json(SOURCE_TERMINAL_BUNDLE))
+    bundle["scope"]["source_kinds"] = ["EBUS", "EEBUS"]
+    path = tmp_path / "extra-scope-kind.json"
+    path.write_text(json.dumps(bundle), encoding="utf-8")
+
+    result = run_validator("verify", path)
+
+    assert result.returncode == 1
+    assert result.stdout == "ordering.invalid\n"
+    assert result.stderr == ""
+
+
+def test_validator_rejects_unowned_root_evidence_reference(
+    tmp_path: pathlib.Path,
+) -> None:
+    bundle = deepcopy(load_json(POSITIVE))
+    extra = deepcopy(bundle["evidence_refs"][-1])
+    extra["digest"] = "sha256:" + "f" * 64
+    bundle["evidence_refs"].append(extra)
+    bundle["evidence_refs"].sort(
+        key=lambda ref: tuple(
+            "" if ref[field] is None else ref[field]
+            for field in (
+                "kind",
+                "digest_algorithm",
+                "digest",
+                "repository",
+                "commit",
+                "path",
+            )
+        )
+    )
+    path = tmp_path / "unowned-root-reference.json"
+    path.write_text(json.dumps(bundle), encoding="utf-8")
+
+    result = run_validator("verify", path)
+
+    assert result.returncode == 1
+    assert result.stdout == "binding.registry\n"
     assert result.stderr == ""
