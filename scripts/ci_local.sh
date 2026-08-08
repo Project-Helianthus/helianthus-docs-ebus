@@ -170,6 +170,16 @@ else
   python3 scripts/validate_modbus_companion.py --root .
 fi
 
+echo "==> check opaque runtime acquisition companion contract"
+python3 -m pytest -q tests/test_opaque_runtime_acquisition_contract.py
+if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
+  python3 scripts/validate_opaque_runtime_acquisition.py \
+    --root . \
+    --prior-root "${MODBUS_PRIOR_ROOT}"
+else
+  python3 scripts/validate_opaque_runtime_acquisition.py --root .
+fi
+
 set --
 if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then
   set -- --prior-manifest "${PLATFORM_PRIOR_MANIFEST}"
