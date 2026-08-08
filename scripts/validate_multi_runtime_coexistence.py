@@ -63,7 +63,9 @@ PRIVATE_KEY_RE = re.compile(
     r"-----BEGIN (?:[A-Z0-9]+(?: [A-Z0-9]+)* )?PRIVATE KEY-----",
     re.IGNORECASE,
 )
-DOTTED_NUMERIC_RUN_RE = re.compile(r"(?<![0-9])[0-9][0-9.]*(?![0-9.])")
+DOTTED_NUMERIC_RUN_RE = re.compile(
+    r"(?<![a-z0-9_])[0-9][0-9.]*(?![a-z0-9_])", re.IGNORECASE
+)
 IPV6_CANDIDATE_RE = re.compile(
     r"(?i)(?<![0-9a-f:])(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}"
     r"(?:%[a-z0-9_.-]+)?(?![0-9a-f:])"
@@ -77,30 +79,38 @@ MAC_RE = re.compile(
 )
 SKI_RE = re.compile(r"(?i)(?:^|[^0-9a-f])[0-9a-f]{40}(?:$|[^0-9a-f])")
 REDACTED_ID_RE = re.compile(r"^redacted:sha256:[0-9a-f]{12}$")
+TOOL_NAME_RE = re.compile(r"^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$")
 CREDENTIAL_VALUE_RE = re.compile(
     r"(?i)\bauthorization\s*:\s*(?:bearer|basic)\s+[a-z0-9._~+/=-]+"
     r"|\bbearer\s+[a-z0-9._~+/=-]+"
     r"|\b(?:set-cookie|cookie)\s*:\s*\S+"
+    r"|\b(?:access[_-]?keys?|api[_-]?keys?|credentials?|passwords?|secrets?|"
+    r"session[_-]?cookies?|tokens?)\s*=\s*\S+"
 )
 CANDIDATE_LEAK_COMPACT_NAMES = frozenset(
     {
         "bindingsourcekind",
+        "candidate",
         "candidatefact",
         "candidatefacts",
         "candidateid",
         "candidateids",
         "candidatecount",
         "candidatecounts",
+        "candidates",
         "candidateref",
         "candidaterefs",
         "candidatestatus",
         "candidatestatuses",
         "conflictstatus",
+        "conflict",
+        "conflicts",
         "errorcategory",
         "facthash",
         "facthashes",
         "rawonlycount",
         "rawonlycounts",
+        "rawonly",
         "sourcecontract",
         "sourceid",
         "sourceschemaversion",
@@ -114,6 +124,7 @@ CANDIDATE_LEAK_COMPACT_NAMES = frozenset(
 CANDIDATE_LEAK_TOKEN_PATTERNS = frozenset(
     {
         ("binding", "source", "kind"),
+        ("candidate",),
         ("candidate", "fact"),
         ("candidate", "facts"),
         ("candidate", "count"),
@@ -124,12 +135,16 @@ CANDIDATE_LEAK_TOKEN_PATTERNS = frozenset(
         ("candidate", "refs"),
         ("candidate", "status"),
         ("candidate", "statuses"),
+        ("candidates",),
         ("conflict", "status"),
+        ("conflict",),
+        ("conflicts",),
         ("error", "category"),
         ("fact", "hash"),
         ("fact", "hashes"),
         ("raw", "only", "count"),
         ("raw", "only", "counts"),
+        ("raw", "only"),
         ("source", "contract"),
         ("source", "id"),
         ("source", "kind"),
@@ -216,8 +231,12 @@ PUBLIC_IDENTITY_SUFFIXES = frozenset(
         "services",
         "ski",
         "skis",
+        "source",
+        "sources",
         "subject",
         "subjects",
+        "target",
+        "targets",
     }
 )
 PUBLIC_IDENTITY_HASH_ROOTS = frozenset(
@@ -253,23 +272,31 @@ SENSITIVE_KEY_COMPACT_NAMES = frozenset(
     {
         "accesskey",
         "accesskeyid",
+        "accesskeys",
         "apikey",
+        "apikeys",
         "authheader",
         "authorization",
         "credential",
+        "credentials",
         "keymaterial",
         "password",
+        "passwords",
         "privatekey",
         "secret",
+        "secrets",
         "sessioncookie",
         "token",
+        "tokens",
         "truststore",
     }
 )
 SENSITIVE_KEY_TOKEN_PATTERNS = frozenset(
     {
         ("access", "key"),
+        ("access", "keys"),
         ("api", "key"),
+        ("api", "keys"),
         ("auth", "header"),
         ("authorization",),
         ("cookie",),
@@ -277,12 +304,18 @@ SENSITIVE_KEY_TOKEN_PATTERNS = frozenset(
         ("credential",),
         ("credentials",),
         ("key", "material"),
+        ("key", "materials"),
         ("password",),
+        ("passwords",),
         ("private", "key"),
+        ("private", "keys"),
         ("secret",),
+        ("secrets",),
         ("session", "cookie"),
         ("token",),
+        ("tokens",),
         ("trust", "store"),
+        ("trust", "stores"),
     }
 )
 HARD_LIMITS = {
@@ -1585,10 +1618,17 @@ def _contains_token_sequence(
     )
 
 
-def _contains_candidate_field_name(value: str) -> bool:
+def _contains_candidate_field_key(value: str) -> bool:
     return bool(
         _compact_key(value) in CANDIDATE_LEAK_COMPACT_NAMES
         or _contains_token_sequence(_key_tokens(value), CANDIDATE_LEAK_TOKEN_PATTERNS)
+    )
+
+
+def _is_candidate_field_value(value: str) -> bool:
+    return bool(
+        _compact_key(value) in CANDIDATE_LEAK_COMPACT_NAMES
+        or _key_tokens(value) in CANDIDATE_LEAK_TOKEN_PATTERNS
     )
 
 
@@ -1620,7 +1660,7 @@ def _contains_candidate_leak(
     value: Any, candidate_ids: set[str], terminal_values: set[str]
 ) -> bool:
     if isinstance(value, dict):
-        if any(_contains_candidate_field_name(key) for key in value):
+        if any(_contains_candidate_field_key(key) for key in value):
             return True
         return any(
             _contains_candidate_leak(item_key, candidate_ids, terminal_values)
@@ -1633,7 +1673,7 @@ def _contains_candidate_leak(
             for item in value
         )
     return isinstance(value, str) and (
-        _contains_candidate_field_name(value)
+        _is_candidate_field_value(value)
         or value
         in {
             "RAW_ONLY",
@@ -1682,16 +1722,13 @@ def _contains_non_public_ipv4(value: str) -> bool:
         if candidate_value.count(".") < 3:
             continue
         trailing_dots = len(candidate_value) - len(candidate_value.rstrip("."))
-        if trailing_dots > 1:
+        if trailing_dots:
             return True
-        candidate_value = candidate_value.rstrip(".")
         try:
             address = ipaddress.ip_address(candidate_value)
         except ValueError:
             return True
-        if isinstance(address, ipaddress.IPv4Address) and (
-            address.is_private or address.is_link_local or address.is_loopback
-        ):
+        if isinstance(address, ipaddress.IPv4Address) and not address.is_global:
             return True
     return False
 
@@ -1836,6 +1873,10 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         contract_data = eebus_contract["payload"]["data"]
         if (
             any(
+                not isinstance(tool, str) or not TOOL_NAME_RE.fullmatch(tool)
+                for tool in tools
+            )
+            or any(
                 tool.casefold().startswith("eebus.")
                 and not tool.startswith("eebus.v1.")
                 for tool in tools

@@ -1692,12 +1692,17 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
         {"ship_identities": ["synthetic-peer-identity"]},
         {"debug_detail": "http://10.255.255.254.:4712"},
         {"debug_detail": "10..8.8.8.8"},
+        {"debug_detail": "100.64.0.1"},
+        {"debug_detail": "8.8.8.8."},
         {"debug_detail": "Authorization: Bearer synthetic-credential"},
+        {"debug_detail": "session_cookie=synthetic-cookie"},
         {"10.255.255.254": "redacted"},
         {"selectors": ["private-selector"]},
         {"ship_ids": ["private-ship-id"]},
         {"spine_entities": ["private-spine-entity"]},
         {"spine_services": ["private-spine-service"]},
+        {"spine_sources": [247]},
+        {"spine_source_hash": "b" * 40},
         {"eebus_devices": ["private-eebus-device"]},
         {"eebus_nodes": ["private-eebus-node"]},
         {"eebus_peers": ["private-eebus-peer"]},
@@ -1709,6 +1714,7 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
         {"access_key_id": "SYNTHETICACCESSKEY"},
         {"endpoint_hash": "b" * 40},
         {"session_cookie": "synthetic-cookie"},
+        {"tokens": ["synthetic-token"]},
         {"ship_hash": "b" * 40},
         {"spine_hash": "b" * 40},
     ],
@@ -1744,11 +1750,13 @@ def test_msp08_report_rejects_native_identity_and_non_public_ipv4(
     "leak",
     [
         "candidateFacts",
+        "candidates",
         {"candidate_count": 1},
         {"candidate_ids": []},
         {"candidate_statuses": []},
         {"fact_hash": "sha256:" + "a" * 64},
         {"raw_only_count": 14},
+        {"raw_only": True},
         {"source_terminals": []},
         {"terminal_negative_states": []},
     ],
@@ -1786,6 +1794,7 @@ def test_msp08_report_allows_globally_routable_ipv4(
         view["payload"]["data"]["token_count"] = 2
         view["payload"]["data"]["monkey_material"] = "public"
         view["payload"]["data"]["debug_note"] = "basic public metadata"
+        view["payload"]["data"]["debug_version"] = "v10.2.3.4"
         _refresh_view_hashes(evidence, view)
     evidence_view = {
         key: value
@@ -1806,15 +1815,22 @@ def test_msp08_report_allows_globally_routable_ipv4(
     assert result.stderr == ""
 
 
-@pytest.mark.parametrize("mutation", ["LEGACY_TOOL", "LEGACY_NAMESPACE"])
+@pytest.mark.parametrize(
+    "mutation", ["LEGACY_TOOL", "LEGACY_NAMESPACE", "MALFORMED_TOOL"]
+)
 def test_msp08_report_rejects_non_v1_eebus_surfaces(
     tmp_path: pathlib.Path, mutation: str
 ) -> None:
     evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
     for run in evidence["runs"]:
-        if mutation == "LEGACY_TOOL":
+        if mutation in {"LEGACY_TOOL", "MALFORMED_TOOL"}:
             view = _view_by_id(run, "mcp.tool.inventory")
-            view["payload"]["data"]["tools"].append("eebus.runtime.status.get")
+            tool = (
+                "eebus.runtime.status.get"
+                if mutation == "LEGACY_TOOL"
+                else " eebus.runtime.status.get"
+            )
+            view["payload"]["data"]["tools"].append(tool)
         else:
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             view["payload"]["data"]["namespace"] = "eebus.legacy"
