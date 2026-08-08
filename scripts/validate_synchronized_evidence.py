@@ -423,7 +423,7 @@ def validate_capture_window(window: Any) -> None:
     validate_refs([action["evidence_ref"]])
 
 
-def validate_scope(scope: Any) -> None:
+def validate_scope(scope: Any, sources: Any) -> None:
     exact_keys(scope, {"purpose", "source_kinds", "phases"})
     if scope["purpose"] != "SYNCHRONIZED_EVIDENCE_ONLY" or scope["phases"] != ["pre", "action", "post"]:
         raise Failure("schema.bundle")
@@ -432,6 +432,15 @@ def validate_scope(scope: Any) -> None:
         raise Failure("ordering.invalid")
     if any(kind not in RUNTIME_KINDS for kind in kinds):
         raise Failure("schema.bundle")
+    if any(
+        not isinstance(source, dict) or source.get("source_kind") not in RUNTIME_KINDS
+        for source in sources
+    ):
+        raise Failure("schema.bundle")
+    present = {source["source_kind"] for source in sources}
+    expected = sorted(present, key=KIND_RANK.get)
+    if kinds != expected:
+        raise Failure("ordering.invalid")
 
 
 def validate_phase_timing(
@@ -1100,7 +1109,7 @@ def verify(bundle: Any, registry: dict[tuple[str, str, int], dict[str, Any]], ra
         raise Failure("schema.bundle")
     timestamp_ns(bundle["captured_at"])
     validate_capture_window(bundle["capture_window"])
-    validate_scope(bundle["scope"])
+    validate_scope(bundle["scope"], bundle["sources"])
     if bundle["mask_tier"] != "redacted":
         raise Failure("schema.bundle")
     root_permissions = validate_auth(bundle["auth_scope"])
@@ -1183,6 +1192,16 @@ def verify(bundle: Any, registry: dict[tuple[str, str, int], dict[str, Any]], ra
             raise Failure("schema.bundle")
         if source["source_binding"]["ebus_identity"] != identity:
             raise Failure("schema.bundle")
+    expected_root_refs = {
+        canonical(bundle["capture_window"]["action"]["evidence_ref"]),
+        *(
+            canonical(ref)
+            for source in bundle["sources"]
+            for ref in source["evidence_refs"]
+        ),
+    }
+    if root_refs != expected_root_refs:
+        raise Failure("binding.registry")
     for artifact in bundle["artifacts"]:
         exact_keys(artifact, ARTIFACT_KEYS)
         if (
