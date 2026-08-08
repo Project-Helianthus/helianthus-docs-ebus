@@ -158,6 +158,34 @@ def test_ledger_eviction_required_term_cannot_use_capability_occurrence(
     assert errors == [f"policy missing required normative term: {ledger_term}"]
 
 
+def test_capability_eviction_required_term_cannot_use_ledger_occurrence(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = materialize_fixture(tmp_path)
+    policy = root / POLICY
+    capability_term = (
+        "`capability_tombstone_limit`. Tombstones are\n"
+        "ordered by a source-reserved terminal sequence; insertion that exceeds the\n"
+        "limit synchronously evicts the lowest terminal sequence first"
+    )
+    policy_text = policy.read_text(encoding="utf-8")
+    assert capability_term in policy_text
+    policy.write_text(
+        policy_text.replace(capability_term, "removed"),
+        encoding="utf-8",
+    )
+    manifest = load_manifest(root)
+    refresh_policy_hash(root, manifest)
+    write_manifest(root, manifest)
+    digest = hashlib.sha256(policy.read_bytes()).hexdigest()
+    errors, _ = contract_validator.validate(
+        root.resolve(),
+        expected_policy_sha256=digest,
+        required_terms=(capability_term,),
+    )
+    assert errors == [f"policy missing required normative term: {capability_term}"]
+
+
 @pytest.mark.parametrize(
     "mutation",
     (
@@ -1076,6 +1104,15 @@ def test_symlinked_prior_root_fails_closed(tmp_path: pathlib.Path) -> None:
     result = run_validator(current, prior_root=prior_link)
     assert result.returncode != 0
     assert "prior root must be an existing regular directory" in result.stderr
+
+
+def test_current_root_cannot_be_its_own_prior_root(
+    tmp_path: pathlib.Path,
+) -> None:
+    current = materialize_fixture(tmp_path / "current")
+    result = run_validator(current, prior_root=current)
+    assert result.returncode != 0
+    assert "prior root must differ from current root" in result.stderr
 
 
 def test_symlinked_prior_root_ancestor_fails_closed(

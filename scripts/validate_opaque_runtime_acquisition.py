@@ -553,14 +553,13 @@ EXPECTED_REQUIRED_TERMS = (
     "configured finite hard limit on private\ncapability state",
     "non-issuance is outside the capability lifecycle",
     "synchronously removes terminal capability state from its bounded\nlive tracking set before the terminal operation returns",
-    "`capability_tombstone_limit`",
+    "`capability_tombstone_limit`. Tombstones are\nordered by a source-reserved terminal sequence; insertion that exceeds the\nlimit synchronously evicts the lowest terminal sequence first",
     "Before capability admission or allocation, the source MUST reserve one unique\nterminal sequence",
     "checked, monotonic, non-wrapping",
     "Exhaustion rejects new capability\nissuance",
     "The capability tombstone schema is closed and has exactly these fields",
     "capability tombstone MUST NOT retain a raw `AttemptKey`, `source_evidence_id`,\nnormalization record, evidence payload",
     "`capability_tombstone_max_encoded_bytes`",
-    "lowest terminal sequence first",
     "caller-retained terminal wrapper is an immutable, non-owning view",
     "ledger-owned shared pointer",
     "MUST NOT own, replace,\nserialize, reconstruct, or expose the capability's private source-owned CAS\nstate",
@@ -867,6 +866,9 @@ def _validate_prior_revision(
             break
     if not prior_root.is_dir() or prior_root.is_symlink():
         errors.append("prior root must be an existing regular directory")
+        return
+    if prior_root.resolve() == root.resolve():
+        errors.append("prior root must differ from current root")
         return
     prior_manifest_path = prior_root / MANIFEST_PATH
     if prior_manifest_path.is_symlink():
