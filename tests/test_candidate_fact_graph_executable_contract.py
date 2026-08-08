@@ -1677,6 +1677,19 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
         {"ship_identifier": "synthetic-peer-identity"},
         {"ship_identity": "synthetic-peer-identity"},
         {"ship_identities": ["synthetic-peer-identity"]},
+        {"debug_detail": "http://10.255.255.254.:4712"},
+        {"10.255.255.254": "redacted"},
+        {"selectors": ["private-selector"]},
+        {"ship_ids": ["private-ship-id"]},
+        {"spine_entities": ["private-spine-entity"]},
+        {"spine_services": ["private-spine-service"]},
+        {"endpoint_ids": ["private-endpoint-id"]},
+        {"remote_skis": ["b" * 40]},
+        {"serial_numbers": ["private-serial"]},
+        {"authorization": "Bearer synthetic-credential"},
+        {"authHeader": "Bearer synthetic-credential"},
+        {"access_key_id": "SYNTHETICACCESSKEY"},
+        {"endpoint_hash": "b" * 40},
     ],
 )
 def test_msp08_report_rejects_native_identity_and_non_public_ipv4(
@@ -1713,6 +1726,11 @@ def test_msp08_report_allows_globally_routable_ipv4(
     for run in evidence["runs"]:
         view = run["protected_views"][-1]
         view["payload"]["data"]["debug_detail"] = "8.8.8.8:53"
+        view["payload"]["data"]["endpoint_count"] = 2
+        view["payload"]["data"]["address_count"] = 2
+        view["payload"]["data"]["resource_id"] = "public-resource"
+        view["payload"]["data"]["endpoint_hash"] = "sha256:" + "c" * 64
+        view["payload"]["data"]["ship_ids"] = ["sha256:" + "d" * 64]
         _refresh_view_hashes(evidence, view)
     evidence_view = {
         key: value

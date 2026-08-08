@@ -64,7 +64,7 @@ PRIVATE_KEY_RE = re.compile(
     re.IGNORECASE,
 )
 IPV4_CANDIDATE_RE = re.compile(
-    r"(?<![0-9])[0-9]+(?:\.[0-9]+){3,}(?![0-9.])"
+    r"(?<![0-9])[0-9]+(?:\.[0-9]+){3,}\.*(?![0-9.])"
 )
 IPV6_CANDIDATE_RE = re.compile(
     r"(?i)(?<![0-9a-f:])(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}"
@@ -79,6 +79,131 @@ MAC_RE = re.compile(
 )
 SKI_RE = re.compile(r"(?i)(?:^|[^0-9a-f])[0-9a-f]{40}(?:$|[^0-9a-f])")
 REDACTED_ID_RE = re.compile(r"^redacted:sha256:[0-9a-f]{12}$")
+CANDIDATE_LEAK_COMPACT_NAMES = frozenset(
+    {
+        "bindingsourcekind",
+        "candidatefact",
+        "candidatefacts",
+        "candidateid",
+        "candidateref",
+        "candidaterefs",
+        "candidatestatus",
+        "conflictstatus",
+        "errorcategory",
+        "sourcecontract",
+        "sourceid",
+        "sourceschemaversion",
+        "sourceterminal",
+        "terminalnegativestate",
+        "visibilitychannel",
+    }
+)
+CANDIDATE_LEAK_TOKEN_PATTERNS = frozenset(
+    {
+        ("binding", "source", "kind"),
+        ("candidate", "fact"),
+        ("candidate", "facts"),
+        ("candidate", "id"),
+        ("candidate", "ref"),
+        ("candidate", "refs"),
+        ("candidate", "status"),
+        ("conflict", "status"),
+        ("error", "category"),
+        ("source", "contract"),
+        ("source", "id"),
+        ("source", "kind"),
+        ("source", "schema", "version"),
+        ("source", "terminal"),
+        ("terminal", "negative", "state"),
+        ("visibility", "channel"),
+    }
+)
+PUBLIC_IDENTITY_GENERIC_TOKENS = frozenset(
+    {
+        "address",
+        "addresses",
+        "endpoint",
+        "endpoints",
+        "identifier",
+        "identifiers",
+        "identities",
+        "identity",
+        "selector",
+        "selectors",
+        "serial",
+        "serials",
+        "ski",
+        "skis",
+    }
+)
+PUBLIC_IDENTITY_PREFIXES = frozenset(
+    {
+        "auth",
+        "client",
+        "device",
+        "eebus",
+        "endpoint",
+        "entity",
+        "feature",
+        "ip",
+        "mac",
+        "peer",
+        "remote",
+        "serial",
+        "service",
+        "session",
+        "ship",
+        "source",
+        "spine",
+        "target",
+        "unique",
+    }
+)
+PUBLIC_IDENTITY_SUFFIXES = frozenset(
+    {
+        "address",
+        "addresses",
+        "entities",
+        "entity",
+        "feature",
+        "features",
+        "id",
+        "identifier",
+        "identifiers",
+        "identities",
+        "identity",
+        "ids",
+        "kind",
+        "kinds",
+        "number",
+        "numbers",
+        "path",
+        "paths",
+        "selector",
+        "selectors",
+        "serial",
+        "serials",
+        "service",
+        "services",
+        "ski",
+        "skis",
+        "subject",
+        "subjects",
+    }
+)
+PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
+    {
+        "authsubject",
+        "remoteshipid",
+        "remoteski",
+        "viadevice",
+    }
+    | {
+        prefix + suffix
+        for prefix in PUBLIC_IDENTITY_PREFIXES
+        for suffix in PUBLIC_IDENTITY_SUFFIXES
+    }
+)
 HARD_LIMITS = {
     "max_evidence_bytes": 2_097_152,
     "max_depth": 32,
@@ -1363,6 +1488,22 @@ def _compact_key(key: str) -> str:
     return re.sub(r"[^a-z0-9]", "", key.casefold())
 
 
+def _key_tokens(key: str) -> tuple[str, ...]:
+    separated = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", key)
+    return tuple(re.findall(r"[a-z0-9]+", separated.casefold()))
+
+
+def _contains_token_sequence(
+    tokens: tuple[str, ...],
+    patterns: set[tuple[str, ...]] | frozenset[tuple[str, ...]],
+) -> bool:
+    return any(
+        tokens[index : index + len(pattern)] == pattern
+        for pattern in patterns
+        for index in range(len(tokens) - len(pattern) + 1)
+    )
+
+
 def _terminal_vocabulary(graph: dict[str, Any]) -> set[str]:
     values: set[str] = set()
     for fact in graph["facts"]:
@@ -1375,8 +1516,10 @@ def _terminal_vocabulary(graph: dict[str, Any]) -> set[str]:
         for key in (
             "binding_source_kind",
             "error_category",
+            "phase",
             "source_contract",
             "source_id",
+            "source_kind",
             "state",
         ):
             item = source_terminal.get(key)
@@ -1390,25 +1533,15 @@ def _contains_candidate_leak(
 ) -> bool:
     if isinstance(value, dict):
         compact_keys = {_compact_key(key) for key in value}
-        if compact_keys & {
-            "candidateid",
-            "candidatestatus",
-            "conflictstatus",
-            "candidatefact",
-            "candidatefacts",
-            "terminalnegativestate",
-            "visibilitychannel",
-            "sourceterminal",
-            "bindingsourcekind",
-            "errorcategory",
-            "sourcecontract",
-            "sourceid",
-            "sourceschemaversion",
-        }:
+        if compact_keys & CANDIDATE_LEAK_COMPACT_NAMES or any(
+            _contains_token_sequence(_key_tokens(key), CANDIDATE_LEAK_TOKEN_PATTERNS)
+            for key in value
+        ):
             return True
         return any(
-            _contains_candidate_leak(item, candidate_ids, terminal_values)
-            for item in value.values()
+            _contains_candidate_leak(item_key, candidate_ids, terminal_values)
+            or _contains_candidate_leak(item, candidate_ids, terminal_values)
+            for item_key, item in value.items()
         )
     if isinstance(value, list):
         return any(
@@ -1425,9 +1558,9 @@ def _contains_candidate_leak(
             "WITHHELD/CONFLICT",
             "CANDIDATE_DEBUG_REPLAY",
         }
-        or value in candidate_ids
+        or any(candidate_id in value for candidate_id in candidate_ids)
         or value in terminal_values
-        or re.fullmatch(r"m7-candidate-[0-9]{4}", value) is not None
+        or re.search(r"m7-candidate-[0-9]{4}", value) is not None
     )
 
 
@@ -1460,8 +1593,13 @@ def _contains_private_ipv6(value: str) -> bool:
 
 def _contains_non_public_ipv4(value: str) -> bool:
     for match in IPV4_CANDIDATE_RE.finditer(value):
+        candidate_value = match.group(0)
+        trailing_dots = len(candidate_value) - len(candidate_value.rstrip("."))
+        if trailing_dots > 1:
+            return True
+        candidate_value = candidate_value.rstrip(".")
         try:
-            address = ipaddress.ip_address(match.group(0))
+            address = ipaddress.ip_address(candidate_value)
         except ValueError:
             return True
         if isinstance(address, ipaddress.IPv4Address) and (
@@ -1479,6 +1617,32 @@ def _valid_hash_like(value: Any) -> bool:
     )
 
 
+def _valid_redacted_identity(value: Any) -> bool:
+    if isinstance(value, list):
+        return all(_valid_redacted_identity(item) for item in value)
+    return isinstance(value, str) and bool(
+        REDACTED_ID_RE.fullmatch(value)
+        or DIGEST_RE.fullmatch(value)
+        or re.fullmatch(r"[a-z0-9.-]+:sha256:[0-9a-f]{64}", value)
+    )
+
+
+def _has_public_identity_key(key: str) -> bool:
+    normalized = _compact_key(key)
+    tokens = _key_tokens(key)
+    identity_tokens = (
+        tokens[:-1] if tokens and tokens[-1] in {"digest", "hash"} else tokens
+    )
+    return bool(
+        identity_tokens and identity_tokens[-1] in PUBLIC_IDENTITY_GENERIC_TOKENS
+        or any(
+            left in PUBLIC_IDENTITY_PREFIXES and right in PUBLIC_IDENTITY_SUFFIXES
+            for left, right in zip(identity_tokens, identity_tokens[1:])
+        )
+        or normalized in PUBLIC_IDENTITY_COMPACT_NAMES
+    )
+
+
 def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     if key is not None:
         normalized = _compact_key(key)
@@ -1487,6 +1651,9 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
             for part in (
                 "privatekey",
                 "apikey",
+                "accesskey",
+                "authorization",
+                "authheader",
                 "password",
                 "secret",
                 "token",
@@ -1496,56 +1663,20 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
             )
         ):
             return True
+        if _has_public_identity_key(key):
+            return not _valid_redacted_identity(value)
         if normalized.endswith(("hash", "digest", "commit")):
             if value is None:
                 return normalized != "sourceparentcommit"
             return not _valid_hash_like(value)
         if normalized.endswith(("spinepath", "spinekind")):
             return True
-        identity_names = {
-            "address",
-            "addresses",
-            "authsubject",
-            "deviceaddress",
-            "deviceid",
-            "endpoint",
-            "entityaddress",
-            "entityid",
-            "eebusentity",
-            "eebusfeature",
-            "eebusservice",
-            "featureaddress",
-            "featurepath",
-            "ipaddress",
-            "identifier",
-            "identifiers",
-            "identity",
-            "identities",
-            "macaddress",
-            "peerid",
-            "remoteaddress",
-            "remoteshipid",
-            "remoteski",
-            "serial",
-            "serialnumber",
-            "shipid",
-            "ski",
-            "sourceaddress",
-            "spineentity",
-            "spinefeature",
-            "spineservice",
-            "targetaddress",
-            "uniqueid",
-            "viadevice",
-            "selector",
-        }
-        if any(
-            normalized == name or normalized.endswith(name)
-            for name in identity_names
-        ) and not (isinstance(value, str) and REDACTED_ID_RE.fullmatch(value)):
-            return True
     if isinstance(value, dict):
-        return any(_contains_public_secret(item, item_key) for item_key, item in value.items())
+        return any(
+            _contains_public_secret(item_key)
+            or _contains_public_secret(item, item_key)
+            for item_key, item in value.items()
+        )
     if isinstance(value, list):
         return any(_contains_public_secret(item) for item in value)
     if not isinstance(value, str):
