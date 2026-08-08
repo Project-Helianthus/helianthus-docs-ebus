@@ -34,7 +34,10 @@ def test_msp07_contract_inventory_is_canonical_and_navigable() -> None:
     assert page.startswith("Canonical source: this page.\n\n# Draft Candidate Fact Graph V1")
     assert "MSP-07" in page
     assert "M7" in page
-    assert "draft-candidate-fact-graph-v1.md" in read(README)
+    index = read(README)
+    assert "draft-candidate-fact-graph-v1.md" in index
+    assert "source-terminal provenance" in index
+    assert "zero-artifact B509/B524/B555 records" in index
 
 
 def test_contract_is_closed_candidate_only_and_has_no_promotion_language() -> None:
@@ -97,6 +100,12 @@ def test_contract_closes_status_identity_comparator_and_retest_fields() -> None:
         "pre-parse",
         "no family inheritance",
         "no sibling inheritance",
+        "`source_terminal`",
+        "UNAVAILABLE/BACKEND_UNAVAILABLE",
+        "source-terminal deep equality",
+        "zero-artifact exclusivity",
+        "Coverage is exhaustive",
+        "appears in exactly one fact's",
     ):
         assert token in page
 
@@ -115,6 +124,9 @@ def test_contract_defines_exact_sampled_outcome_state_matrix() -> None:
         assert row in page
     assert "MISMATCH maps to no terminal state" in page
     assert "NO_SIGNAL` and `CLOUD_ONLY` are never synthesized" in page
+    assert "It never maps to `NO_SIGNAL`" in page
+    assert "required_source_kinds=[\"EBUS\"]" in page
+    assert "minimum_new_samples=1" in page
 
 
 def test_machine_schema_and_registry_are_closed() -> None:
@@ -159,6 +171,25 @@ def test_machine_schema_and_registry_are_closed() -> None:
     assert schema["$defs"]["FactV1"]["properties"]["proposed_path"][
         "maxLength"
     ] == 512
+    provenance = schema["$defs"]["ProvenanceV1"]
+    assert "source_terminal" not in provenance["required"]
+    assert set(provenance["properties"]["source_terminal"]) == {"oneOf"}
+    source_terminal = schema["$defs"]["SourceTerminalV1"]
+    assert source_terminal["additionalProperties"] is False
+    assert set(source_terminal["required"]) == {
+        "source_id",
+        "source_kind",
+        "binding_source_kind",
+        "source_contract",
+        "source_schema_version",
+        "phase",
+        "state",
+        "error_category",
+        "ebus_identity",
+        "evidence_refs",
+    }
+    replay_terminal = replay_schema["$defs"]["SourceTerminalReplayV1"]
+    assert replay_terminal["additionalProperties"] is False
 
 
 def test_determinism_limits_precedence_and_replay_are_normative() -> None:

@@ -2,8 +2,9 @@ Canonical source: this page.
 
 # Draft Candidate Fact Graph V1
 
-Issues: `Project-Helianthus/helianthus-docs-ebus#359` and hardening issue
-`Project-Helianthus/helianthus-docs-ebus#361` (`MSP-07`, M7).
+Issues: `Project-Helianthus/helianthus-docs-ebus#359`, hardening issue
+`Project-Helianthus/helianthus-docs-ebus#361`, and source-terminal provenance
+correction `Project-Helianthus/helianthus-docs-ebus#387` (`MSP-07`, M7).
 
 Plan provenance: the locked multi-runtime semantic platform plan,
 `12-eebus-mcp-first-vr940f.md`, `13-semantic-fact-graph-and-integration.md`, and
@@ -41,7 +42,11 @@ The canonical machine files are:
 Unknown fields, unknown enum members, duplicate JSON keys, malformed UTF-8,
 non-integer JSON numbers, negative zero, and integers outside the portable
 JSON safe-integer range are rejected. Optional meaning is represented by an
-explicit JSON `null`; omission is not another state.
+explicit JSON `null`; omission is not another state. The sole compatibility
+exception is `provenance.source_terminal`: an artifact-backed graph produced
+before issue #387 may omit it so existing valid V1 fixture bytes and hashes
+remain valid. Omission and explicit `null` both mean that no terminal source
+record is selected. A source-record-only fact must carry the non-null object.
 
 All contract tokens are printable ASCII and at most 256 characters. Proposed
 paths, evidence paths, and native observation pointers are at most 512
@@ -80,6 +85,21 @@ fact provenance. eBUS B509/B524/B555 identity must be deep-equal to the
 verified artifact identity. A B524 OP=0x02 artifact cannot be relabeled as
 OP=0x06. Cloud source/artifact pairs are checked the same way.
 
+A non-null `source_terminal` selects exactly one verified zero-artifact eBUS
+source record. Its source id/kind, binding source kind, source contract/version,
+phase, terminal state/error, complete B509/B524/B555 identity, and ordered
+evidence refs must deep-equal the source record and its verified source binding.
+The only accepted source terminal is `UNAVAILABLE/BACKEND_UNAVAILABLE`; no
+source/artifact pair, cloud ref, eeBUS path, or second runtime may coexist on
+that fact. This prevents inferred cross-runtime pairing and does not fabricate
+an artifact from source metadata.
+
+Coverage is exhaustive: every verified zero-artifact eBUS B509/B524/B555 source
+in `UNAVAILABLE/BACKEND_UNAVAILABLE` state appears in exactly one fact's
+non-null `source_terminal`, and no other source may appear there. Omitting the
+member or setting it to null cannot downgrade such a source to generic bundle
+provenance or silently drop its terminal identity.
+
 An eeBUS service/entity/feature/path is accepted only when the referenced
 verified artifact carries that complete path. A service-only artifact may bind
 `eebus_service` for `RAW_ONLY` review, but it cannot bind an entity, feature,
@@ -103,6 +123,8 @@ Each node is closed and contains:
 - status, terminal negative state, confidence, and a domain-separated fact
   hash;
 - exact native provenance and immutable native evidence refs;
+- an explicit nullable source-terminal binding for verified zero-artifact
+  source records;
 - a comparator draft reference, captured sample inputs, and draft outcome;
 - a falsifier with the terminal state produced when observed; and
 - a bounded, explicit `retest_trigger`.
@@ -144,6 +166,7 @@ combination is valid:
 | `CONFLICTED` / null | same complete direct eBUS and eeBUS provenance as `CANDIDATE` | non-empty samples; recomputed `MISMATCH` or `CONFLICT` | null |
 | `WITHHELD` / `CLOUD_ONLY` | a verified cloud artifact and its refs, and no native substitute | no samples; `NOT_EVALUATED` | null |
 | `WITHHELD` / `NO_SIGNAL` | at least one selected native artifact and all its refs | no samples; `NOT_EVALUATED` | null |
+| `WITHHELD` / `NOT_TESTED` (source terminal) | one verified eBUS B509/B524/B555 `UNAVAILABLE/BACKEND_UNAVAILABLE` source, complete native identity and refs, zero artifacts, and no second runtime | empty samples; `NOT_EVALUATED` | null |
 | `WITHHELD` / `NOT_TESTED` | bundle provenance only or incomplete native provenance for `NOT_EVALUATED`; complete direct eBUS and eeBUS provenance for `INDETERMINATE` | empty samples and `NOT_EVALUATED`, or non-empty directly bound samples and `INDETERMINATE` | null |
 | `WITHHELD` / `CONFLICT` | complete direct eBUS and eeBUS provenance | non-empty samples; recomputed `CONFLICT` | null |
 
@@ -168,6 +191,14 @@ recomputed `CONFLICT`. `INDETERMINATE` and `NOT_EVALUATED` share
 empty sample lists distinguish them. `NO_SIGNAL` and `CLOUD_ONLY` are never synthesized
 from a comparator outcome.
 
+The source-terminal row is a deterministic acquisition mapping, not a
+comparator inference: `UNAVAILABLE/BACKEND_UNAVAILABLE` maps only to
+`WITHHELD/NOT_TESTED`, null value/unit, empty samples, `NOT_EVALUATED`, and
+`debug_only=true`. Its retest trigger is exactly bounded `SOURCE_RECOVERED`
+with `required_source_kinds=["EBUS"]` and `minimum_new_samples=1`.
+It never maps to `NO_SIGNAL`; `NO_SIGNAL` continues to require a selected native
+artifact proving that the bounded observation had no peer signal.
+
 Only the `CANDIDATE`/`MATCH` row can be considered for later semantic
 eligibility. It is still M7 candidate raw/debug material and gains no stable
 consumer exposure or promotion authority.
@@ -182,6 +213,15 @@ arbitrary publishable-looking token is invalid.
 Every provenance record binds its native evidence refs to the root bundle.
 References are copied exactly and must be members of the synchronized bundle's
 immutable reference set.
+
+`source_terminal` is a closed projection, not a replacement source schema. It
+copies `source_id`, `source_kind`, the source binding's native
+`binding_source_kind`, `source_contract`, `source_schema_version`, `phase`,
+`state`, `error_category`, `ebus_identity`, and `evidence_refs`. The candidate
+validator first verifies the synchronized bundle, then requires deep equality
+for the projection and corresponding source-binding fields. The source record
+must own an empty `artifact_ids` list and no artifact in the bundle may name
+its source id.
 
 eBUS identity is a closed B509/B524/B555 union:
 
@@ -281,6 +321,8 @@ Evidence refs sort by kind, digest algorithm, digest, repository, commit, and
 path, with null before a string. Comparator samples sort by offset and then
 their canonical bytes. Facts sort by proposed path and candidate id using
 bytewise UTF-8 order. Duplicate ids, refs, paths, or samples are rejected.
+Source-terminal evidence refs use the same canonical ordering and must exactly
+equal the fact's native evidence refs.
 
 Fact hashes use ASCII `HELIANTHUS:DRAFT-CANDIDATE-FACT:V1`, one NUL byte, then
 JCS of the fact without `fact_hash`. The graph hash uses ASCII
@@ -294,6 +336,13 @@ locale, randomness, mutable files, environment-derived identity, or runtime
 state. Replay emits facts in graph order and regenerates exact JCS bytes plus
 a domain-separated replay hash. Repeated replay of the same verified graph is
 byte-identical.
+
+For a non-null source terminal, replay includes its source and binding kinds,
+contract/version, phase, terminal state/error, identity family, and evidence
+digests. The complete binding remains covered by the fact and graph hashes.
+Legacy artifact-backed replay results omit this correction-only member and
+therefore retain their existing V1 bytes; an artifact-backed graph that carries
+the explicit nullable encoding replays `source_terminal=null`.
 
 ## Bounded Limits
 
@@ -326,8 +375,10 @@ Validation stops at the first category in this order:
 2. `schema.graph` - closed shape, types, enums, and contract version;
 3. `limits.exceeded` - declared and observed resource limits;
 4. `registry.binding` - exact registry contract/version/digest;
-5. `provenance.binding` - bundle identity and evidence-ref membership;
-6. `identity.native` - complete direct B509/B524/B555 and eeBUS path identity;
+5. `provenance.binding` - bundle identity, source-terminal deep equality,
+   zero-artifact exclusivity, and evidence-ref membership;
+6. `identity.native` - complete direct B509/B524/B555, source-binding family,
+   and eeBUS path identity;
 7. `ordering.invalid` - deterministic ordering and uniqueness;
 8. `state.terminal` - status, confidence, falsifier, and terminal-state matrix;
 9. `comparator.invalid` - parameters, samples, and outcome consistency;
@@ -337,6 +388,13 @@ Validation stops at the first category in this order:
 
 Unsupported internal combinations are contract violations; validators do not
 invent another state or silently normalize an input.
+
+This precedence means a forged source id/kind/contract/version/phase/state,
+error, identity, evidence ref, or inferred cross-runtime pairing fails before
+state mapping and hashes. Once provenance and identity are valid,
+`state.terminal` rejects source-terminal use by `RAW_ONLY`, `CANDIDATE`, or
+`CONFLICTED`, any evaluated/non-empty sample set, any terminal other than
+`NOT_TESTED`, or any recovery trigger other than the bounded rule above.
 
 For bounded graph inputs, the CLI parses and validates graph `json.syntax`,
 `schema.graph`, `limits.exceeded`, and `registry.binding` before it opens or
