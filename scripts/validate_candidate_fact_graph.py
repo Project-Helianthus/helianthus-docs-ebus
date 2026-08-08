@@ -752,6 +752,7 @@ def check_provenance(
         root_refs.add(encoded)
     sources = {source["source_id"]: source for source in source_bundle["sources"]}
     artifacts = _artifact_index(source_bundle)
+    bound_terminal_source_ids: list[str] = []
     for fact in graph["facts"]:
         provenance = fact["provenance"]
         provenance_keys = set(provenance)
@@ -834,6 +835,7 @@ def check_provenance(
                 )
             ):
                 fail("provenance.binding")
+            bound_terminal_source_ids.append(source["source_id"])
         referenced: list[dict[str, Any]] = []
         for source_field, artifact_field, expected_kind in (
             ("ebus_source_id", "ebus_artifact_id", "EBUS"),
@@ -892,6 +894,20 @@ def check_provenance(
                 or not fact["comparator"]["samples"]
             ):
                 fail("provenance.binding")
+
+    eligible_terminal_source_ids = sorted(
+        source["source_id"]
+        for source in source_bundle["sources"]
+        if source["source_kind"] == "EBUS"
+        and source.get("state") == "UNAVAILABLE"
+        and source.get("error_category") == "BACKEND_UNAVAILABLE"
+        and source.get("artifact_ids") == []
+        and isinstance(source.get("source_binding"), dict)
+        and source["source_binding"].get("source_kind")
+        in {"EBUS_B509", "EBUS_B524", "EBUS_B555"}
+    )
+    if sorted(bound_terminal_source_ids) != eligible_terminal_source_ids:
+        fail("provenance.binding")
 
 
 def _ascii_token(value: Any, *, maximum: int = 256) -> bool:

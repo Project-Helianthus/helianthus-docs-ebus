@@ -104,6 +104,8 @@ def test_contract_closes_status_identity_comparator_and_retest_fields() -> None:
         "UNAVAILABLE/BACKEND_UNAVAILABLE",
         "source-terminal deep equality",
         "zero-artifact exclusivity",
+        "Coverage is exhaustive",
+        "appears in exactly one fact's",
     ):
         assert token in page
 

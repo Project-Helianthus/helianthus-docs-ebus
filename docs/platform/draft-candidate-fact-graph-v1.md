@@ -94,6 +94,12 @@ source/artifact pair, cloud ref, eeBUS path, or second runtime may coexist on
 that fact. This prevents inferred cross-runtime pairing and does not fabricate
 an artifact from source metadata.
 
+Coverage is exhaustive: every verified zero-artifact eBUS B509/B524/B555 source
+in `UNAVAILABLE/BACKEND_UNAVAILABLE` state appears in exactly one fact's
+non-null `source_terminal`, and no other source may appear there. Omitting the
+member or setting it to null cannot downgrade such a source to generic bundle
+provenance or silently drop its terminal identity.
+
 An eeBUS service/entity/feature/path is accepted only when the referenced
 verified artifact carries that complete path. A service-only artifact may bind
 `eebus_service` for `RAW_ONLY` review, but it cannot bind an entity, feature,

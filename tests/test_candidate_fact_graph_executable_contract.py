@@ -70,6 +70,8 @@ EXPECTED_NEGATIVE = {
     "source-terminal-forged-state.json": "schema.graph",
     "source-terminal-forged-version.json": "provenance.binding",
     "source-terminal-no-signal.json": "state.terminal",
+    "source-terminal-null.json": "provenance.binding",
+    "source-terminal-omitted.json": "provenance.binding",
     "source-terminal-promoted-exposure.json": "anti_leak.consumer",
 }
 
@@ -615,6 +617,10 @@ def test_negative_graphs_fail_with_one_precedence_category(
         elif mutation == "SOURCE_TERMINAL_NO_SIGNAL":
             target["terminal_negative_state"] = "NO_SIGNAL"
             target["falsifier"]["expected_terminal_state"] = "NO_SIGNAL"
+        elif mutation == "SOURCE_TERMINAL_NULL":
+            target["provenance"]["source_terminal"] = None
+        elif mutation == "SOURCE_TERMINAL_OMITTED":
+            del target["provenance"]["source_terminal"]
         else:
             raise AssertionError(f"unhandled source-terminal mutation: {mutation}")
     else:
