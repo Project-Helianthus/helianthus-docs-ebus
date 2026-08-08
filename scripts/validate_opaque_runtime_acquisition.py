@@ -751,7 +751,9 @@ def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
         flags=re.DOTALL,
     )
     visible = re.sub(
-        r"^[ \t]{0,3}\[(?:\\.|[^\]\\\n])+\]:[^\n]*$",
+        r"^[ \t]{0,3}\[(?:\\.|[^\]\\\n])+\]:[^\n]*"
+        r"(?:\n[ \t]{0,3}(?:\"(?:\\.|[^\"\\])*\"|"
+        r"'(?:\\.|[^'\\])*'|\((?:\\.|[^)\\])*\))\s*)?$",
         "",
         visible,
         flags=re.MULTILINE,
@@ -760,7 +762,8 @@ def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
         return visible
 
     return re.sub(
-        r"(?P<link>!?\[(?:\\.|[^\]\\\n])*\]\(\s*(?:\\.|[^\s)])+)"
+        r"(?P<link>!?\[(?:\\.|[^\]\\\n])*\]\(\s*"
+        r"(?:<(?:\\.|[^>\\\n])*>|(?:\\.|[^\s)])+))"
         r"(?:\s+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
         r"\((?:\\.|[^)\\])*\)))?\s*\)",
         lambda match: f'{match.group("link")})',
@@ -772,7 +775,7 @@ def _visible_markdown_link_destinations(text: str) -> set[str]:
     visible = _visible_markdown(text, retain_link_metadata=True)
     pattern = re.compile(
         r"(?<!!)\[(?P<label>(?:\\.|[^\]\\\n])*)\]\(\s*"
-        r"(?P<destination>(?:\\.|[^\s)])+)"
+        r"(?P<destination><(?:\\.|[^>\\\n])*>|(?:\\.|[^\s)])+)"
         r"(?:\s+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
         r"\((?:\\.|[^)\\])*\)))?\s*\)"
     )
@@ -853,6 +856,15 @@ def _validate_prior_revision(
     manifest: dict[str, Any],
     errors: list[str],
 ) -> None:
+    current = pathlib.Path(prior_root.anchor)
+    for part in prior_root.parts[1:]:
+        current = current / part
+        try:
+            if stat.S_ISLNK(current.lstat().st_mode):
+                errors.append("prior root must be an existing regular directory")
+                return
+        except OSError:
+            break
     if not prior_root.is_dir() or prior_root.is_symlink():
         errors.append("prior root must be an existing regular directory")
         return

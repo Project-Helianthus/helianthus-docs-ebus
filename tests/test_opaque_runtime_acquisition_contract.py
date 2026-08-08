@@ -879,8 +879,10 @@ def test_required_term_loop_canary_fails_when_term_is_absent(
         '[hidden](./x "{term}")',
         '[hidden](./x "prefix \\"{term}\\" suffix")',
         '[hidden\\]](./x "{term}")',
+        '[hidden](<./hidden target> "{term}")',
         '[hidden]: ./x "{term}"',
         '[hidden\\]]: ./x "{term}"',
+        '[hidden]: ./x\n  "{term}"',
     ),
 )
 def test_required_terms_in_nonvisible_markdown_do_not_satisfy_contract(
@@ -1072,6 +1074,17 @@ def test_symlinked_prior_root_fails_closed(tmp_path: pathlib.Path) -> None:
     prior_link = tmp_path / "prior-link"
     prior_link.symlink_to(prior, target_is_directory=True)
     result = run_validator(current, prior_root=prior_link)
+    assert result.returncode != 0
+    assert "prior root must be an existing regular directory" in result.stderr
+
+
+def test_symlinked_prior_root_ancestor_fails_closed(
+    tmp_path: pathlib.Path,
+) -> None:
+    current = materialize_fixture(tmp_path / "current")
+    alias = tmp_path / "alias"
+    alias.symlink_to(tmp_path, target_is_directory=True)
+    result = run_validator(current, prior_root=alias / "current")
     assert result.returncode != 0
     assert "prior root must be an existing regular directory" in result.stderr
 
