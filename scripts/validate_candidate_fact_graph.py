@@ -1584,9 +1584,12 @@ def replay(graph: dict[str, Any]) -> dict[str, Any]:
                 "state": source_terminal["state"],
                 "error_category": source_terminal["error_category"],
                 "identity_family": source_terminal["ebus_identity"]["family"],
-                "evidence_digests": [
-                    ref["digest"] for ref in source_terminal["evidence_refs"]
-                ],
+                "evidence_digests": sorted(
+                    {
+                        ref["digest"]
+                        for ref in source_terminal["evidence_refs"]
+                    }
+                ),
             }
         results.append(result)
     value = {

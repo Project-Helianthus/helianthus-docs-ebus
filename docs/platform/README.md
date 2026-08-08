@@ -41,7 +41,8 @@ Current platform contracts:
 - [`synchronized-evidence-one-shot-control-v1.md`](./synchronized-evidence-one-shot-control-v1.md) -
   MSP-065-LIVE-R1 owner-only one-shot activation and crash-idempotency contract
 - [`draft-candidate-fact-graph-v1.md`](./draft-candidate-fact-graph-v1.md) -
-  MSP-07 closed M7 candidate-only fact graph and deterministic replay contract
+  MSP-07 closed M7 candidate-only fact graph, source-terminal provenance for
+  zero-artifact B509/B524/B555 records, and deterministic replay contract
 - [`multi-runtime-coexistence-no-drift-v1.md`](./multi-runtime-coexistence-no-drift-v1.md) -
   MSP-08 closed EEBUS-G18 coexistence, protected-view no-drift, and rollback
   contract
