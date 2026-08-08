@@ -22,7 +22,8 @@
     "docs_lock": [
       "merged_docs_commit_sha_full_40",
       "policy_sha256",
-      "manifest_sha256"
+      "manifest_sha256",
+      "merged_producer_commit_sha_full_40"
     ],
     "required_behavioral_tests": [
       "registration_paused_before_membership_then_close_wins_without_visible_capability",

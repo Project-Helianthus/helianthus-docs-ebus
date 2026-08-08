@@ -134,6 +134,30 @@ def test_ledger_eviction_sentinel_is_ledger_specific() -> None:
     assert ledger_tombstone["eviction"] != capability_tombstone["eviction"]
 
 
+def test_ledger_eviction_required_term_cannot_use_capability_occurrence(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = materialize_fixture(tmp_path)
+    policy = root / POLICY
+    policy_text = policy.read_text(encoding="utf-8")
+    ledger_term = (
+        "`ledger_audit_tombstone_limit`; insertion beyond the limit synchronously\n"
+        "evicts the lowest terminal sequence first"
+    )
+    assert ledger_term in policy_text
+    policy.write_text(policy_text.replace(ledger_term, "removed"), encoding="utf-8")
+    manifest = load_manifest(root)
+    refresh_policy_hash(root, manifest)
+    write_manifest(root, manifest)
+    digest = hashlib.sha256(policy.read_bytes()).hexdigest()
+    errors, _ = contract_validator.validate(
+        root.resolve(),
+        expected_policy_sha256=digest,
+        required_terms=(ledger_term,),
+    )
+    assert errors == [f"policy missing required normative term: {ledger_term}"]
+
+
 @pytest.mark.parametrize(
     "mutation",
     (
@@ -831,6 +855,39 @@ def test_required_term_loop_canary_fails_when_term_is_absent(
 
 
 @pytest.mark.parametrize(
+    "hidden_wrapper",
+    (
+        "<!-- {term} -->",
+        "```markdown\n{term}\n```",
+        "`{term}`",
+        "    {term}",
+    ),
+)
+def test_required_terms_in_nonvisible_markdown_do_not_satisfy_contract(
+    tmp_path: pathlib.Path, hidden_wrapper: str
+) -> None:
+    root = materialize_fixture(tmp_path)
+    policy = root / POLICY
+    term = "The capability is source-issued, opaque, and non-serializable"
+    policy_text = policy.read_text(encoding="utf-8")
+    assert term in policy_text
+    policy.write_text(
+        policy_text.replace(term, "removed") + "\n" + hidden_wrapper.format(term=term),
+        encoding="utf-8",
+    )
+    manifest = load_manifest(root)
+    refresh_policy_hash(root, manifest)
+    write_manifest(root, manifest)
+    digest = hashlib.sha256(policy.read_bytes()).hexdigest()
+    errors, _ = contract_validator.validate(
+        root.resolve(),
+        expected_policy_sha256=digest,
+        required_terms=(term,),
+    )
+    assert errors == [f"policy missing required normative term: {term}"]
+
+
+@pytest.mark.parametrize(
     ("index_path", "destination"),
     (
         (PLATFORM_INDEX, "./opaque-runtime-acquisition-v1.md"),
@@ -864,6 +921,7 @@ def test_discoverability_link_removal_fails_closed(
         "<!-- [hidden]({destination}) -->",
         "```markdown\n[hidden]({destination})\n```",
         "`[hidden]({destination})`",
+        "    [hidden]({destination})",
     ),
 )
 def test_hidden_or_code_only_discoverability_link_fails_closed(
@@ -926,6 +984,27 @@ def test_missing_discoverability_target_fails_closed(
     ) in errors
 
 
+def test_symlinked_discoverability_target_fails_closed(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = materialize_fixture(tmp_path)
+    manifest = root / MANIFEST
+    replacement = manifest.with_name("replacement.json")
+    replacement.write_bytes(manifest.read_bytes())
+    manifest.unlink()
+    manifest.symlink_to(replacement.name)
+    errors: list[str] = []
+    contract_validator._validate_discoverability(root.resolve(), errors)
+    assert (
+        "docs/platform/README.md discoverability target is not a regular "
+        "in-repo file: ./manifests/opaque-runtime-acquisition-v1.json"
+    ) in errors
+    assert (
+        "README.md discoverability target is not a regular in-repo file: "
+        "docs/platform/manifests/opaque-runtime-acquisition-v1.json"
+    ) in errors
+
+
 def test_initial_v1_allows_prior_root_without_artifact(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -934,6 +1013,13 @@ def test_initial_v1_allows_prior_root_without_artifact(
     prior.mkdir()
     result = run_validator(current, prior_root=prior)
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_missing_prior_root_fails_closed(tmp_path: pathlib.Path) -> None:
+    current = materialize_fixture(tmp_path / "current")
+    result = run_validator(current, prior_root=tmp_path / "missing-prior")
+    assert result.returncode != 0
+    assert "prior root must be an existing regular directory" in result.stderr
 
 
 def test_prior_root_without_artifact_rejects_noninitial_revision(

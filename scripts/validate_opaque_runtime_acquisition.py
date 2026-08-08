@@ -48,6 +48,7 @@ EXPECTED_DOWNSTREAM_CONFORMANCE = {
         "merged_docs_commit_sha_full_40",
         "policy_sha256",
         "manifest_sha256",
+        "merged_producer_commit_sha_full_40",
     ],
     "required_behavioral_tests": [
         "registration_paused_before_membership_then_close_wins_without_visible_capability",
@@ -602,7 +603,7 @@ EXPECTED_REQUIRED_TERMS = (
     "Admission counts every retained state, not only `open`",
     "ledger synchronously reclaims eligible terminal attempt and claim entries",
     "no reference from a\nretained nonterminal attempt",
-    "`ledger_audit_tombstone_limit`",
+    "`ledger_audit_tombstone_limit`; insertion beyond the limit synchronously\nevicts the lowest terminal sequence first",
     "reserve one unique attempt terminal sequence and one\nunique claim terminal sequence for every admitted claim entry",
     "reserved all-or-nothing from `1..2^64-1` using checked monotonic unsigned 64-bit\narithmetic",
     "Sequence exhaustion blocks new attempts but cannot prevent any existing\nattempt or claim entry from reaching its terminal outcome",
@@ -724,7 +725,10 @@ def _visible_markdown(text: str) -> str:
                 fence_length = len(marker)
                 visible_lines.append("")
                 continue
-            visible_lines.append(line)
+            if line.startswith(("    ", "\t")):
+                visible_lines.append("")
+            else:
+                visible_lines.append(line)
             continue
         closing = re.match(
             rf"^\s*{re.escape(fence_character)}{{{fence_length},}}\s*$",
@@ -735,9 +739,13 @@ def _visible_markdown(text: str) -> str:
             fence_length = 0
         visible_lines.append("")
     visible = "\n".join(visible_lines)
+    def mask_inline_code(match: re.Match[str]) -> str:
+        digest = hashlib.sha256(match.group(0).encode("utf-8")).hexdigest()
+        return f"<inline-code:{digest}>"
+
     return re.sub(
         r"(?P<ticks>`+).*?(?P=ticks)",
-        "",
+        mask_inline_code,
         visible,
         flags=re.DOTALL,
     )
@@ -769,12 +777,10 @@ def _regular_in_repo_target(
         return False
     candidate = root / index_path.parent / pathlib.Path(*relative.parts)
     try:
-        root_resolved = root.resolve(strict=True)
-        candidate_resolved = candidate.resolve(strict=True)
-        candidate_relative = candidate_resolved.relative_to(root_resolved)
-    except (OSError, ValueError):
+        candidate_relative = candidate.relative_to(root)
+    except ValueError:
         return False
-    current = root_resolved
+    current = root
     for part in candidate_relative.parts:
         current = current / part
         try:
@@ -782,6 +788,12 @@ def _regular_in_repo_target(
                 return False
         except OSError:
             return False
+    try:
+        root_resolved = root.resolve(strict=True)
+        candidate_resolved = candidate.resolve(strict=True)
+        candidate_resolved.relative_to(root_resolved)
+    except (OSError, ValueError):
+        return False
     try:
         return stat.S_ISREG(candidate_resolved.stat().st_mode)
     except OSError:
@@ -818,6 +830,9 @@ def _validate_prior_revision(
     manifest: dict[str, Any],
     errors: list[str],
 ) -> None:
+    if not prior_root.is_dir() or prior_root.is_symlink():
+        errors.append("prior root must be an existing regular directory")
+        return
     prior_manifest_path = prior_root / MANIFEST_PATH
     if not prior_manifest_path.exists():
         if (
@@ -1038,8 +1053,10 @@ def validate(
     except UnicodeDecodeError as exc:
         errors.append(f"policy is not UTF-8: {exc}")
         return errors, policy_digest
+    visible_policy_text = _visible_markdown(policy_text)
     for term in required_terms:
-        if term not in policy_text:
+        visible_term = _visible_markdown(term)
+        if not visible_term or visible_term not in visible_policy_text:
             errors.append(f"policy missing required normative term: {term}")
     for term in FORBIDDEN_POLICY_TERMS:
         if term in policy_text:
