@@ -34,7 +34,10 @@ def test_msp07_contract_inventory_is_canonical_and_navigable() -> None:
     assert page.startswith("Canonical source: this page.\n\n# Draft Candidate Fact Graph V1")
     assert "MSP-07" in page
     assert "M7" in page
-    assert "draft-candidate-fact-graph-v1.md" in read(README)
+    index = read(README)
+    assert "draft-candidate-fact-graph-v1.md" in index
+    assert "source-terminal provenance" in index
+    assert "zero-artifact B509/B524/B555 records" in index
 
 
 def test_contract_is_closed_candidate_only_and_has_no_promotion_language() -> None:

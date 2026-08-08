@@ -392,6 +392,37 @@ def test_source_terminal_graph_and_replay_are_schema_valid_and_deterministic() -
     }
 
 
+def test_source_terminal_replay_deduplicates_shared_evidence_digests(
+    tmp_path: pathlib.Path,
+) -> None:
+    module = load_validator_module()
+    graph = deepcopy(load_json(SOURCE_TERMINAL_GRAPH))
+    terminal = graph["facts"][0]["provenance"]["source_terminal"]
+    duplicate = deepcopy(terminal["evidence_refs"][0])
+    duplicate.update(
+        {
+            "repository": "Project-Helianthus/helianthus-docs-ebus",
+            "commit": "a" * 40,
+            "path": "evidence/same-content-at-another-path.json",
+        }
+    )
+    terminal["evidence_refs"].append(duplicate)
+
+    replay = module.replay(graph)
+    digests = replay["results"][0]["source_terminal"]["evidence_digests"]
+    assert digests == [duplicate["digest"]]
+
+    fixture = write_json(tmp_path / "replay.json", replay)
+    result = subprocess.run(
+        ["jv", str(REPLAY_SCHEMA), str(fixture)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_artifact_backed_v1_accepts_explicit_null_source_terminal(
     tmp_path: pathlib.Path,
 ) -> None:
