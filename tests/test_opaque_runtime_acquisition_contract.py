@@ -1099,6 +1099,34 @@ def test_missing_prior_root_fails_closed(tmp_path: pathlib.Path) -> None:
     assert "prior root must be an existing regular directory" in result.stderr
 
 
+def test_symlinked_current_root_fails_closed(tmp_path: pathlib.Path) -> None:
+    current = materialize_fixture(tmp_path / "current")
+    current_link = tmp_path / "current-link"
+    current_link.symlink_to(current, target_is_directory=True)
+    result = run_validator(current_link)
+    assert result.returncode != 0
+    assert "root must be an existing regular directory" in result.stderr
+
+
+def test_symlinked_current_artifact_ancestor_fails_closed(
+    tmp_path: pathlib.Path,
+) -> None:
+    current = materialize_fixture(tmp_path / "current")
+    external = materialize_fixture(tmp_path / "external")
+    current_platform = current / "docs/platform"
+    shutil.rmtree(current_platform)
+    current_platform.symlink_to(
+        external / "docs/platform",
+        target_is_directory=True,
+    )
+    result = run_validator(current)
+    assert result.returncode != 0
+    assert (
+        "current normative artifact must not use symlink components: "
+        "docs/platform/manifests/opaque-runtime-acquisition-v1.json"
+    ) in result.stderr
+
+
 def test_symlinked_prior_root_fails_closed(tmp_path: pathlib.Path) -> None:
     current = materialize_fixture(tmp_path / "current")
     prior = materialize_fixture(tmp_path / "prior")

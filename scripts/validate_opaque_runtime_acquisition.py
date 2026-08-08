@@ -831,24 +831,25 @@ def _validate_discoverability(
                 )
 
 
+def _has_symlink_component(path: pathlib.Path) -> bool:
+    current = pathlib.Path(path.anchor)
+    for part in path.parts[1:]:
+        current = current / part
+        try:
+            if stat.S_ISLNK(current.lstat().st_mode):
+                return True
+        except OSError:
+            return False
+    return False
+
+
 def _validate_prior_revision(
     root: pathlib.Path,
     prior_root: pathlib.Path,
     manifest: dict[str, Any],
     errors: list[str],
 ) -> None:
-    def has_symlink_component(path: pathlib.Path) -> bool:
-        current = pathlib.Path(path.anchor)
-        for part in path.parts[1:]:
-            current = current / part
-            try:
-                if stat.S_ISLNK(current.lstat().st_mode):
-                    return True
-            except OSError:
-                return False
-        return False
-
-    if has_symlink_component(prior_root):
+    if _has_symlink_component(prior_root):
         errors.append("prior root must be an existing regular directory")
         return
     if not prior_root.is_dir() or prior_root.is_symlink():
@@ -858,7 +859,7 @@ def _validate_prior_revision(
         errors.append("prior root must differ from current root")
         return
     prior_manifest_path = prior_root / MANIFEST_PATH
-    if has_symlink_component(prior_manifest_path):
+    if _has_symlink_component(prior_manifest_path):
         errors.append("prior opaque manifest must be a regular file")
         return
     if not prior_manifest_path.exists():
@@ -895,9 +896,9 @@ def _validate_prior_revision(
         prior_path = prior_root / relative
         if (
             not current_path.is_file()
-            or has_symlink_component(current_path)
+            or _has_symlink_component(current_path)
             or not prior_path.is_file()
-            or has_symlink_component(prior_path)
+            or _has_symlink_component(prior_path)
         ):
             errors.append(
                 "same-version prior comparison requires regular normative "
@@ -920,6 +921,17 @@ def validate(
     required_terms: tuple[str, ...] = EXPECTED_REQUIRED_TERMS,
 ) -> tuple[list[str], str | None]:
     errors: list[str] = []
+    if _has_symlink_component(root) or not root.is_dir():
+        return ["root must be an existing regular directory"], None
+    for relative in NORMATIVE_ARTIFACT_PATHS:
+        if _has_symlink_component(root / relative):
+            errors.append(
+                "current normative artifact must not use symlink components: "
+                f"{relative}"
+            )
+    if errors:
+        return errors, None
+
     manifest_path = root / MANIFEST_PATH
     policy_path = root / POLICY_PATH
     manifest = _read_json(manifest_path, errors)
@@ -1107,7 +1119,7 @@ def main() -> int:
     parser.add_argument("--prior-root", type=pathlib.Path)
     args = parser.parse_args()
     errors, digest = validate(
-        args.root.resolve(),
+        args.root.absolute(),
         args.prior_root.absolute() if args.prior_root else None,
     )
     if errors:
