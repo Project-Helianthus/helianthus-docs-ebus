@@ -91,6 +91,18 @@ PROVENANCE_KEYS = {
     "eebus",
     "cloud",
 }
+SOURCE_TERMINAL_KEYS = {
+    "source_id",
+    "source_kind",
+    "binding_source_kind",
+    "source_contract",
+    "source_schema_version",
+    "phase",
+    "state",
+    "error_category",
+    "ebus_identity",
+    "evidence_refs",
+}
 EVIDENCE_REF_KEYS = {
     "kind",
     "digest_algorithm",
@@ -742,7 +754,11 @@ def check_provenance(
     artifacts = _artifact_index(source_bundle)
     for fact in graph["facts"]:
         provenance = fact["provenance"]
-        exact_keys(provenance, PROVENANCE_KEYS, "provenance.binding")
+        provenance_keys = set(provenance)
+        if provenance_keys != PROVENANCE_KEYS and provenance_keys != (
+            PROVENANCE_KEYS | {"source_terminal"}
+        ):
+            fail("provenance.binding")
         if provenance["source_bundle_id"] != bundle["bundle_id"]:
             fail("provenance.binding")
         refs = provenance["native_evidence_refs"]
@@ -755,6 +771,69 @@ def check_provenance(
             if encoded not in root_refs or encoded in seen:
                 fail("provenance.binding")
             seen.add(encoded)
+        source_terminal = provenance.get("source_terminal")
+        if source_terminal is not None:
+            exact_keys(source_terminal, SOURCE_TERMINAL_KEYS, "provenance.binding")
+            matching_sources = [
+                source
+                for source in source_bundle["sources"]
+                if source["source_id"] == source_terminal["source_id"]
+            ]
+            if len(matching_sources) != 1:
+                fail("provenance.binding")
+            source = matching_sources[0]
+            binding = source["source_binding"]
+            expected_terminal = {
+                "source_id": source["source_id"],
+                "source_kind": source["source_kind"],
+                "binding_source_kind": binding["source_kind"],
+                "source_contract": source["source_contract"],
+                "source_schema_version": source["source_schema_version"],
+                "phase": source["phase"],
+                "state": source["state"],
+                "error_category": source["error_category"],
+                "ebus_identity": source["ebus_identity"],
+                "evidence_refs": source["evidence_refs"],
+            }
+            expected_binding_kind = "EBUS_" + source_terminal["ebus_identity"][
+                "family"
+            ]
+            if (
+                source_terminal != expected_terminal
+                or source["state"] != "UNAVAILABLE"
+                or source["error_category"] != "BACKEND_UNAVAILABLE"
+                or source["source_kind"] != "EBUS"
+                or source["artifact_ids"] != []
+                or any(
+                    artifact["source_id"] == source["source_id"]
+                    for artifact in source_bundle["artifacts"]
+                )
+                or binding["runtime_kind"] != source["source_kind"]
+                or binding["source_kind"] != expected_binding_kind
+                or binding["source_contract"] != source["source_contract"]
+                or binding["source_schema_version"]
+                != source["source_schema_version"]
+                or binding["request_scope"]["phase"] != source["phase"]
+                or binding["request_scope"]["source_kind"]
+                != source["source_kind"]
+                or binding["ebus_identity"] != source["ebus_identity"]
+                or provenance["native_evidence_refs"]
+                != source_terminal["evidence_refs"]
+                or any(
+                    provenance[field] is not None
+                    for field in (
+                        "ebus_source_id",
+                        "ebus_artifact_id",
+                        "ebus",
+                        "eebus_source_id",
+                        "eebus_artifact_id",
+                        "eebus_service",
+                        "eebus",
+                        "cloud",
+                    )
+                )
+            ):
+                fail("provenance.binding")
         referenced: list[dict[str, Any]] = []
         for source_field, artifact_field, expected_kind in (
             ("ebus_source_id", "ebus_artifact_id", "EBUS"),
@@ -984,6 +1063,13 @@ def check_identities(graph: dict[str, Any], source_bundle: dict[str, Any]) -> No
     artifacts = _artifact_index(source_bundle)
     for fact in graph["facts"]:
         provenance = fact["provenance"]
+        source_terminal = provenance.get("source_terminal")
+        if source_terminal is not None:
+            validate_ebus_identity(source_terminal["ebus_identity"])
+            if source_terminal["binding_source_kind"] != (
+                "EBUS_" + source_terminal["ebus_identity"]["family"]
+            ):
+                fail("identity.native")
         if provenance["ebus"] is None:
             if provenance["ebus_source_id"] is not None or provenance["ebus_artifact_id"] is not None:
                 fail("identity.native")
@@ -1035,6 +1121,13 @@ def check_ordering(graph: dict[str, Any]) -> None:
         refs = fact["provenance"]["native_evidence_refs"]
         if refs != sorted(refs, key=ref_sort_key):
             fail("ordering.invalid")
+        source_terminal = fact["provenance"].get("source_terminal")
+        if (
+            source_terminal is not None
+            and source_terminal["evidence_refs"]
+            != sorted(source_terminal["evidence_refs"], key=ref_sort_key)
+        ):
+            fail("ordering.invalid")
         samples = fact["comparator"]["samples"]
         encoded = [canonical(sample) for sample in samples]
         if len(encoded) != len(set(encoded)):
@@ -1066,6 +1159,7 @@ def check_states(graph: dict[str, Any], registry: dict[str, Any]) -> None:
         samples = fact["comparator"]["samples"]
         outcome = fact["comparator"]["outcome"]
         provenance = fact["provenance"]
+        source_terminal = provenance.get("source_terminal")
         native_kinds = {
             kind
             for kind, source_id in (
@@ -1075,6 +1169,22 @@ def check_states(graph: dict[str, Any], registry: dict[str, Any]) -> None:
             if source_id is not None
         }
         cloud_only = provenance["cloud"] is not None and not native_kinds
+        if source_terminal is not None and (
+            status != "WITHHELD"
+            or terminal != "NOT_TESTED"
+            or fact["draft_value"] is not None
+            or fact["draft_unit"] is not None
+            or samples
+            or outcome != "NOT_EVALUATED"
+            or fact["falsifier"]["expected_terminal_state"] != "NOT_TESTED"
+            or fact["retest_trigger"]
+            != {
+                "trigger_code": "SOURCE_RECOVERED",
+                "required_source_kinds": ["EBUS"],
+                "minimum_new_samples": 1,
+            }
+        ):
+            fail("state.terminal")
         if cloud_only and (status != "WITHHELD" or terminal != "CLOUD_ONLY"):
             fail("state.terminal")
         if status == "RAW_ONLY":
@@ -1442,8 +1552,9 @@ def verify(
 
 
 def replay(graph: dict[str, Any]) -> dict[str, Any]:
-    results = [
-        {
+    results = []
+    for fact in graph["facts"]:
+        result = {
             "candidate_id": fact["candidate_id"],
             "proposed_path": fact["proposed_path"],
             "status": fact["status"],
@@ -1458,8 +1569,26 @@ def replay(graph: dict[str, Any]) -> dict[str, Any]:
                 }
             ),
         }
-        for fact in graph["facts"]
-    ]
+        provenance = fact["provenance"]
+        source_terminal = provenance.get("source_terminal")
+        if "source_terminal" in provenance and source_terminal is None:
+            result["source_terminal"] = None
+        elif source_terminal is not None:
+            result["source_terminal"] = {
+                "source_id": source_terminal["source_id"],
+                "source_kind": source_terminal["source_kind"],
+                "binding_source_kind": source_terminal["binding_source_kind"],
+                "source_contract": source_terminal["source_contract"],
+                "source_schema_version": source_terminal["source_schema_version"],
+                "phase": source_terminal["phase"],
+                "state": source_terminal["state"],
+                "error_category": source_terminal["error_category"],
+                "identity_family": source_terminal["ebus_identity"]["family"],
+                "evidence_digests": [
+                    ref["digest"] for ref in source_terminal["evidence_refs"]
+                ],
+            }
+        results.append(result)
     value = {
         "contract": "helianthus.platform.draft-candidate-fact-replay.v1",
         "schema_version": 1,

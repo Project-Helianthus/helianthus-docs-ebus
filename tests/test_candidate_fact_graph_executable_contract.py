@@ -21,6 +21,14 @@ REPLAY_SCHEMA = SCHEMA_ROOT / "draft-candidate-fact-replay-v1.schema.json"
 REGISTRY = SCHEMA_ROOT / "draft-candidate-fact-registry-v1.json"
 POSITIVE = FIXTURE_ROOT / "positive/graph.json"
 GOLDEN_REPLAY = FIXTURE_ROOT / "positive/replay-result.json"
+SOURCE_TERMINAL_GRAPH = FIXTURE_ROOT / "positive/source-terminal-graph.json"
+SOURCE_TERMINAL_REPLAY = (
+    FIXTURE_ROOT / "positive/source-terminal-replay-result.json"
+)
+SOURCE_TERMINAL_BUNDLE = FIXTURE_ROOT / "positive/source-terminal-bundle.json"
+SOURCE_TERMINAL_SOURCE_REPLAY = (
+    FIXTURE_ROOT / "positive/source-terminal-source-replay.json"
+)
 NEGATIVE_ROOT = FIXTURE_ROOT / "negative"
 SOURCE_BUNDLE = (
     REPO_ROOT / "docs/platform/fixtures/synchronized-evidence/v1/positive/bundle.json"
@@ -47,6 +55,22 @@ EXPECTED_NEGATIVE = {
     "unknown-field.json": "schema.graph",
     "wrong-source-bundle.json": "provenance.binding",
     "wrong-source-replay.json": "provenance.binding",
+    "source-terminal-candidate.json": "provenance.binding",
+    "source-terminal-conflicted.json": "provenance.binding",
+    "source-terminal-cross-runtime-pairing.json": "provenance.binding",
+    "source-terminal-evaluated-samples.json": "provenance.binding",
+    "source-terminal-forged-binding-kind.json": "provenance.binding",
+    "source-terminal-forged-contract.json": "provenance.binding",
+    "source-terminal-forged-error.json": "schema.graph",
+    "source-terminal-forged-evidence-refs.json": "provenance.binding",
+    "source-terminal-forged-identity.json": "provenance.binding",
+    "source-terminal-forged-phase.json": "provenance.binding",
+    "source-terminal-forged-source-id.json": "provenance.binding",
+    "source-terminal-forged-source-kind.json": "schema.graph",
+    "source-terminal-forged-state.json": "schema.graph",
+    "source-terminal-forged-version.json": "provenance.binding",
+    "source-terminal-no-signal.json": "state.terminal",
+    "source-terminal-promoted-exposure.json": "anti_leak.consumer",
 }
 
 COEXISTENCE_VALIDATOR = REPO_ROOT / "scripts/validate_multi_runtime_coexistence.py"
@@ -154,6 +178,10 @@ def test_machine_contract_inventory_is_complete() -> None:
         GOLDEN_REPLAY,
         SOURCE_BUNDLE,
         SOURCE_REPLAY,
+        SOURCE_TERMINAL_GRAPH,
+        SOURCE_TERMINAL_REPLAY,
+        SOURCE_TERMINAL_BUNDLE,
+        SOURCE_TERMINAL_SOURCE_REPLAY,
     ):
         assert path.is_file(), f"missing executable MSP-07 contract file: {path}"
     assert {path.name for path in NEGATIVE_ROOT.glob("*.json")} == set(
@@ -270,6 +298,134 @@ def test_positive_graph_replays_to_exact_golden_bytes() -> None:
     assert second.stderr == ""
 
 
+def test_existing_artifact_backed_v1_fixture_bytes_are_unchanged() -> None:
+    assert hashlib.sha256(POSITIVE.read_bytes()).hexdigest() == (
+        "b5c5d79e540a1691ee60c6db3e9405a92d9d544d871c74b26800fe449a318b0e"
+    )
+    assert hashlib.sha256(GOLDEN_REPLAY.read_bytes()).hexdigest() == (
+        "8280f6278ffe8598dfd767bb5bf9e60dce3c145b4612174b7c5a32fbff282f5c"
+    )
+    assert all(
+        "source_terminal" not in fact["provenance"]
+        for fact in load_json(POSITIVE)["facts"]
+    )
+
+
+def test_source_terminal_fixture_binds_b509_b524_b555_without_artifacts() -> None:
+    graph = load_json(SOURCE_TERMINAL_GRAPH)
+    bundle = load_json(SOURCE_TERMINAL_BUNDLE)
+    assert bundle["artifacts"] == []
+    assert {
+        (source["ebus_identity"]["family"], source["state"], source["error_category"])
+        for source in bundle["sources"]
+    } == {
+        ("B509", "UNAVAILABLE", "BACKEND_UNAVAILABLE"),
+        ("B524", "UNAVAILABLE", "BACKEND_UNAVAILABLE"),
+        ("B555", "UNAVAILABLE", "BACKEND_UNAVAILABLE"),
+    }
+    sources = {source["source_id"]: source for source in bundle["sources"]}
+    for fact in graph["facts"]:
+        terminal = fact["provenance"]["source_terminal"]
+        source = sources[terminal["source_id"]]
+        assert terminal == {
+            "source_id": source["source_id"],
+            "source_kind": source["source_kind"],
+            "binding_source_kind": source["source_binding"]["source_kind"],
+            "source_contract": source["source_contract"],
+            "source_schema_version": source["source_schema_version"],
+            "phase": source["phase"],
+            "state": source["state"],
+            "error_category": source["error_category"],
+            "ebus_identity": source["ebus_identity"],
+            "evidence_refs": source["evidence_refs"],
+        }
+        assert fact["status"] == "WITHHELD"
+        assert fact["terminal_negative_state"] == "NOT_TESTED"
+        assert fact["draft_value"] is None and fact["draft_unit"] is None
+        assert fact["comparator"] == {
+            "draft_id": "NUMERIC_WINDOW_V1_DRAFT",
+            "samples": [],
+            "outcome": "NOT_EVALUATED",
+        }
+        assert fact["debug_only"] is True
+        assert fact["retest_trigger"] == {
+            "trigger_code": "SOURCE_RECOVERED",
+            "required_source_kinds": ["EBUS"],
+            "minimum_new_samples": 1,
+        }
+
+
+def test_source_terminal_graph_and_replay_are_schema_valid_and_deterministic() -> None:
+    for schema, fixture in (
+        (SCHEMA, SOURCE_TERMINAL_GRAPH),
+        (REPLAY_SCHEMA, SOURCE_TERMINAL_REPLAY),
+    ):
+        result = subprocess.run(
+            ["jv", str(schema), str(fixture)],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+    first = run_validator(
+        "replay",
+        SOURCE_TERMINAL_GRAPH,
+        SOURCE_TERMINAL_BUNDLE,
+        SOURCE_TERMINAL_SOURCE_REPLAY,
+    )
+    second = run_validator(
+        "replay",
+        SOURCE_TERMINAL_GRAPH,
+        SOURCE_TERMINAL_BUNDLE,
+        SOURCE_TERMINAL_SOURCE_REPLAY,
+    )
+    golden = SOURCE_TERMINAL_REPLAY.read_text(encoding="utf-8")
+    assert first.returncode == second.returncode == 0
+    assert first.stdout == second.stdout == golden
+    assert first.stderr == second.stderr == ""
+    replay = load_json(SOURCE_TERMINAL_REPLAY)
+    assert {result["source_terminal"]["identity_family"] for result in replay["results"]} == {
+        "B509",
+        "B524",
+        "B555",
+    }
+
+
+def test_artifact_backed_v1_accepts_explicit_null_source_terminal(
+    tmp_path: pathlib.Path,
+) -> None:
+    module = load_validator_module()
+    graph = deepcopy(load_json(POSITIVE))
+    for fact in graph["facts"]:
+        fact["provenance"]["source_terminal"] = None
+        fact["fact_hash"] = "sha256:" + module.fact_hexdigest(fact)
+    hexdigest = module.graph_hexdigest(graph)
+    graph["graph_id"] = "dcfgv1:sha256:" + hexdigest
+    graph["graph_hash"] = "sha256:" + hexdigest
+    result = run_validator("verify", write_json(tmp_path / "graph.json", graph))
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == "ok\n"
+    assert all(
+        item["source_terminal"] is None for item in module.replay(graph)["results"]
+    )
+
+
+def test_source_terminal_participates_in_fact_graph_and_replay_hashes() -> None:
+    module = load_validator_module()
+    graph = deepcopy(load_json(SOURCE_TERMINAL_GRAPH))
+    fact = graph["facts"][0]
+    original_fact_digest = module.fact_hexdigest(fact)
+    original_graph_digest = module.graph_hexdigest(graph)
+    original_replay_hash = module.replay(graph)["replay_hash"]
+    fact["provenance"]["source_terminal"]["source_contract"] = (
+        "helianthus.ebus.synthetic-mutated.evidence.v1"
+    )
+    assert module.fact_hexdigest(fact) != original_fact_digest
+    assert module.graph_hexdigest(graph) != original_graph_digest
+    assert module.replay(graph)["replay_hash"] != original_replay_hash
+
+
 @pytest.mark.parametrize(
     "name,category", sorted(EXPECTED_NEGATIVE.items()), ids=sorted(EXPECTED_NEGATIVE)
 )
@@ -280,7 +436,13 @@ def test_negative_graphs_fail_with_one_precedence_category(
     assert fixture["contract"] == (
         "helianthus.platform.draft-candidate-fact-negative-fixture.v1"
     )
-    graph = deepcopy(load_json(POSITIVE))
+    base = (NEGATIVE_ROOT / fixture["base"]).resolve()
+    graph = deepcopy(load_json(base))
+    source_bundle = SOURCE_BUNDLE
+    source_replay = SOURCE_REPLAY
+    if base == SOURCE_TERMINAL_GRAPH.resolve():
+        source_bundle = SOURCE_TERMINAL_BUNDLE
+        source_replay = SOURCE_TERMINAL_SOURCE_REPLAY
     mutation = fixture["mutation"]
     if mutation == "ANTI_LEAK_STABLE_SURFACE":
         graph["visibility"]["stable_exposure"] = True
@@ -348,9 +510,90 @@ def test_negative_graphs_fail_with_one_precedence_category(
         target["terminal_negative_state"] = None
     elif mutation == "UNKNOWN_FIELD":
         graph["unknown"] = True
+    elif mutation.startswith("SOURCE_TERMINAL_"):
+        target = graph["facts"][0]
+        terminal = target["provenance"]["source_terminal"]
+        if mutation == "SOURCE_TERMINAL_CANDIDATE":
+            target["status"] = "CANDIDATE"
+            target["terminal_negative_state"] = None
+        elif mutation == "SOURCE_TERMINAL_CONFLICTED":
+            target["status"] = "CONFLICTED"
+            target["terminal_negative_state"] = None
+        elif mutation == "SOURCE_TERMINAL_EVALUATED_SAMPLES":
+            ref = deepcopy(target["provenance"]["native_evidence_refs"][0])
+            target["comparator"] = {
+                "draft_id": "NUMERIC_WINDOW_V1_DRAFT",
+                "samples": [
+                    {
+                        "offset_ns": 1,
+                        "left": {
+                            "source_kind": "EBUS",
+                            "source_id": "ebus-" + "a" * 32,
+                            "artifact_id": "seav1:sha256:" + "a" * 64,
+                            "evidence_ref": ref,
+                            "observed_offset_ns": 1,
+                            "value_pointer": "/value",
+                            "unit_pointer": "/unit",
+                            "native_decimal": "1",
+                            "native_unit": "degC",
+                        },
+                        "right": {
+                            "source_kind": "EEBUS",
+                            "source_id": "eebus-" + "b" * 32,
+                            "artifact_id": "seav1:sha256:" + "b" * 64,
+                            "evidence_ref": ref,
+                            "observed_offset_ns": 1,
+                            "value_pointer": "/value",
+                            "unit_pointer": "/unit",
+                            "native_decimal": "1",
+                            "native_unit": "degC",
+                        },
+                        "state": "PRESENT",
+                    }
+                ],
+                "outcome": "INDETERMINATE",
+            }
+        elif mutation == "SOURCE_TERMINAL_PROMOTED_EXPOSURE":
+            graph["visibility"]["stable_exposure"] = True
+        elif mutation == "SOURCE_TERMINAL_FORGED_SOURCE_ID":
+            terminal["source_id"] = "ebus-" + "f" * 32
+        elif mutation == "SOURCE_TERMINAL_FORGED_SOURCE_KIND":
+            terminal["source_kind"] = "EEBUS"
+        elif mutation == "SOURCE_TERMINAL_FORGED_BINDING_KIND":
+            terminal["binding_source_kind"] = "EBUS_B524"
+        elif mutation == "SOURCE_TERMINAL_FORGED_CONTRACT":
+            terminal["source_contract"] = "helianthus.ebus.forged.evidence.v1"
+        elif mutation == "SOURCE_TERMINAL_FORGED_VERSION":
+            terminal["source_schema_version"] = 2
+        elif mutation == "SOURCE_TERMINAL_FORGED_PHASE":
+            terminal["phase"] = "action"
+        elif mutation == "SOURCE_TERMINAL_FORGED_STATE":
+            terminal["state"] = "NOT_TESTED"
+        elif mutation == "SOURCE_TERMINAL_FORGED_ERROR":
+            terminal["error_category"] = "TIMEOUT"
+        elif mutation == "SOURCE_TERMINAL_FORGED_IDENTITY":
+            terminal["ebus_identity"]["target_address"] += 1
+        elif mutation == "SOURCE_TERMINAL_FORGED_EVIDENCE_REFS":
+            terminal["evidence_refs"][0]["digest"] = "sha256:" + "f" * 64
+        elif mutation == "SOURCE_TERMINAL_CROSS_RUNTIME_PAIRING":
+            target["provenance"]["eebus_source_id"] = "eebus-" + "e" * 32
+            target["provenance"]["eebus_artifact_id"] = (
+                "seav1:sha256:" + "e" * 64
+            )
+            target["provenance"]["eebus_service"] = "service-" + "e" * 32
+        elif mutation == "SOURCE_TERMINAL_NO_SIGNAL":
+            target["terminal_negative_state"] = "NO_SIGNAL"
+            target["falsifier"]["expected_terminal_state"] = "NO_SIGNAL"
+        else:
+            raise AssertionError(f"unhandled source-terminal mutation: {mutation}")
     else:
         raise AssertionError(f"unhandled test-only mutation: {mutation}")
-    result = run_validator("verify", write_json(tmp_path / name, graph))
+    result = run_validator(
+        "verify",
+        write_json(tmp_path / name, graph),
+        source_bundle,
+        source_replay,
+    )
     assert result.returncode == 1
     assert result.stdout == f"{category}\n"
     assert result.stderr == ""
