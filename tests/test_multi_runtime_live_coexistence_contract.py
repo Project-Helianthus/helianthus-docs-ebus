@@ -29,6 +29,7 @@ REGISTRY = (
     / "docs/platform/schemas/multi-runtime-coexistence-registry-v1.json"
 )
 VALIDATOR = REPO_ROOT / "scripts/validate_multi_runtime_coexistence.py"
+STATUS_PROJECTOR = REPO_ROOT / "scripts/project_candidate_fact_public_status.py"
 SYNTHETIC_EVIDENCE = (
     REPO_ROOT
     / "docs/platform/fixtures/coexistence-no-drift/v1/positive/evidence.json"
@@ -450,6 +451,87 @@ def test_msp08_live_public_status_projection_is_redacted_and_schema_valid(
         assert forbidden not in serialized
 
 
+def status_projector_command(
+    *,
+    graph: pathlib.Path,
+    replay: pathlib.Path,
+    source_bundle: pathlib.Path,
+    source_replay: pathlib.Path,
+    expect: pathlib.Path | None = None,
+) -> list[str]:
+    command = [
+        sys.executable,
+        str(STATUS_PROJECTOR),
+        "--graph",
+        str(graph),
+        "--replay",
+        str(replay),
+        "--registry",
+        str(M7_REGISTRY),
+        "--source-bundle",
+        str(source_bundle),
+        "--source-replay",
+        str(source_replay),
+        "--source-commit",
+        M7_GATEWAY_MERGE,
+        "--docs-source-commit",
+        M7_DOCS_MERGE,
+    ]
+    if expect is not None:
+        command.extend(("--expect", str(expect)))
+    return command
+
+
+def test_msp08_public_status_projector_is_deterministic_and_bound(
+    tmp_path: pathlib.Path,
+) -> None:
+    command = status_projector_command(
+        graph=M7_SYNTHETIC_GRAPH,
+        replay=M7_SYNTHETIC_REPLAY,
+        source_bundle=M7_SYNTHETIC_SOURCE_BUNDLE,
+        source_replay=M7_SYNTHETIC_SOURCE_REPLAY,
+    )
+    first = subprocess.run(command, cwd=REPO_ROOT, capture_output=True)
+    second = subprocess.run(command, cwd=REPO_ROOT, capture_output=True)
+    assert first.returncode == 0, first.stdout + first.stderr
+    assert second.returncode == 0, second.stdout + second.stderr
+    assert first.stdout == second.stdout
+    projection = json.loads(first.stdout)
+    assert projection["fact_count"] == 7
+    assert projection["status_counts"] == {"RAW_ONLY": 3, "WITHHELD": 4}
+    expected = tmp_path / "expected-status.json"
+    expected.write_bytes(first.stdout)
+
+    bound = subprocess.run(
+        status_projector_command(
+            graph=M7_SYNTHETIC_GRAPH,
+            replay=M7_SYNTHETIC_REPLAY,
+            source_bundle=M7_SYNTHETIC_SOURCE_BUNDLE,
+            source_replay=M7_SYNTHETIC_SOURCE_REPLAY,
+            expect=expected,
+        ),
+        cwd=REPO_ROOT,
+        capture_output=True,
+    )
+    assert bound.returncode == 0, bound.stdout + bound.stderr
+    assert bound.stdout == first.stdout
+
+    different_valid_graph = subprocess.run(
+        status_projector_command(
+            graph=M7_GRAPH,
+            replay=M7_REPLAY,
+            source_bundle=M7_SOURCE_BUNDLE,
+            source_replay=M7_SOURCE_REPLAY,
+            expect=expected,
+        ),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert different_valid_graph.returncode == 1
+    assert different_valid_graph.stdout == "projection.binding\n"
+
+
 def test_msp08_live_report_reserves_fixture_suffix_space(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -509,6 +591,9 @@ def test_msp08_live_rejects_fixture_id_without_report_suffix_space(
         "m7-candidate-1001",
         {"source_terminal": {"state": "UNAVAILABLE"}},
         {"error_category": "BACKEND_UNAVAILABLE"},
+        {"detail": "UNAVAILABLE"},
+        {"detail": "BACKEND_UNAVAILABLE"},
+        {"outer": {"detail": "EBUS_B509"}},
     ],
 )
 def test_msp08_live_internal_fact_vocabulary_cannot_leak(
@@ -548,6 +633,15 @@ def test_msp08_live_internal_fact_vocabulary_cannot_leak(
         {"hw_addr": "aabbccddeeff"},
         {"password_hash": "sha256:" + "a" * 64},
         {"sessionTokenDigest": "sha256:" + "b" * 64},
+        {"spineSourceAddress": 247},
+        {
+            "spine_path": [
+                {"kind": "ENTITY", "selector": "private-entity-selector"}
+            ]
+        },
+        {"endpointHash": "192.168.100.4"},
+        {"endpoint": "fd00::1234"},
+        {"endpoint": "fe80::1%eth0"},
     ],
 )
 def test_msp08_public_export_rejects_secrets_and_stable_identity(

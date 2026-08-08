@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import ipaddress
 import json
 import pathlib
 import re
@@ -65,6 +66,10 @@ PRIVATE_IPV4_RE = re.compile(
     r"(?:^|[^0-9])(?:10\.(?:[0-9]{1,3}\.){2}[0-9]{1,3}|"
     r"192\.168\.(?:[0-9]{1,3}\.)[0-9]{1,3}|"
     r"172\.(?:1[6-9]|2[0-9]|3[01])\.(?:[0-9]{1,3}\.)[0-9]{1,3})(?:$|[^0-9])"
+)
+IPV6_CANDIDATE_RE = re.compile(
+    r"(?i)(?<![0-9a-f:])(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}"
+    r"(?:%[a-z0-9_.-]+)?(?![0-9a-f:])"
 )
 MAC_RE = re.compile(
     r"(?i)(?:^|[^0-9a-f])(?:"
@@ -628,7 +633,12 @@ def _verify_m7(
     evidence: dict[str, Any],
     registry: dict[str, Any],
     paths: dict[str, pathlib.Path],
-) -> tuple[dict[str, Any], dict[str, Any], dict[str, tuple[str, int]]]:
+) -> tuple[
+    dict[str, Any],
+    dict[str, Any],
+    dict[str, tuple[str, int]],
+    dict[str, Any],
+]:
     try:
         graph, graph_raw = candidate.load_json(paths["graph"], input_kind="graph")
         m7_registry, m7_registry_raw = candidate.load_json(
@@ -726,13 +736,14 @@ def _verify_m7(
             len(source_replay_raw),
         ),
     }
+    source_graph = graph
     if evidence_class == "CAPTURED_RUNTIME_EVIDENCE":
         inputs["m7:status-projection"] = (
             evidence["m7_live_status"]["content_hash"],
             len(status_raw),
         )
         graph = status_graph
-    return graph, replay, inputs
+    return graph, replay, inputs, source_graph
 
 
 def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]]) -> None:
@@ -1239,15 +1250,39 @@ def _contains_candidate_leak(
     )
 
 
-def check_anti_leak(evidence: dict[str, Any], graph: dict[str, Any]) -> None:
-    candidate_ids = {fact["candidate_id"] for fact in graph["facts"]}
-    terminal_values = _terminal_vocabulary(graph)
+def check_anti_leak(evidence: dict[str, Any], *graphs: dict[str, Any]) -> None:
+    candidate_ids = {
+        fact["candidate_id"] for graph in graphs for fact in graph["facts"]
+    }
+    terminal_values = set().union(*(_terminal_vocabulary(graph) for graph in graphs))
     for run in evidence["runs"]:
         if any(
             _contains_candidate_leak(view["payload"], candidate_ids, terminal_values)
             for view in run["protected_views"]
         ):
             fail("anti_leak.candidate")
+
+
+def _contains_private_ipv6(value: str) -> bool:
+    for match in IPV6_CANDIDATE_RE.finditer(value):
+        candidate_value = match.group(0).split("%", 1)[0]
+        try:
+            address = ipaddress.ip_address(candidate_value)
+        except ValueError:
+            continue
+        if isinstance(address, ipaddress.IPv6Address) and (
+            address.is_private or address.is_link_local or address.is_loopback
+        ):
+            return True
+    return False
+
+
+def _valid_hash_like(value: Any) -> bool:
+    return isinstance(value, str) and bool(
+        DIGEST_RE.fullmatch(value)
+        or SHA_RE.fullmatch(value)
+        or re.fullmatch(r"[a-z0-9.-]+:sha256:[0-9a-f]{64}", value)
+    )
 
 
 def _contains_public_secret(value: Any, key: str | None = None) -> bool:
@@ -1267,8 +1302,8 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         ):
             return True
         if normalized.endswith(("hash", "digest", "commit")):
-            return False
-        if normalized in {
+            return value is not None and not _valid_hash_like(value)
+        identity_names = {
             "address",
             "authsubject",
             "deviceaddress",
@@ -1291,7 +1326,12 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
             "targetaddress",
             "uniqueid",
             "viadevice",
-        } and not (isinstance(value, str) and REDACTED_ID_RE.fullmatch(value)):
+            "selector",
+        }
+        if any(
+            normalized == name or normalized.endswith(name)
+            for name in identity_names
+        ) and not (isinstance(value, str) and REDACTED_ID_RE.fullmatch(value)):
             return True
     if isinstance(value, dict):
         return any(_contains_public_secret(item, item_key) for item_key, item in value.items())
@@ -1308,6 +1348,7 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     return bool(
         PRIVATE_KEY_RE.search(value)
         or PRIVATE_IPV4_RE.search(value)
+        or _contains_private_ipv6(value)
         or MAC_RE.search(value)
         or SKI_RE.search(value)
     )
@@ -1446,7 +1487,7 @@ def verify(
     schema_check(evidence)
     check_limits(evidence, raw_size)
     check_registry(evidence, registry, registry_raw)
-    graph, _, m7_inputs = _verify_m7(evidence, registry, m7_paths)
+    graph, _, m7_inputs, source_graph = _verify_m7(evidence, registry, m7_paths)
     check_runtime(evidence, m7_inputs)
     check_config(evidence)
     check_auth_mask(evidence)
@@ -1457,7 +1498,7 @@ def verify(
     check_view_coverage(evidence, registry)
     check_normalization(evidence, registry)
     check_payload_hashes(evidence, registry)
-    check_anti_leak(evidence, graph)
+    check_anti_leak(evidence, graph, source_graph)
     check_public_redaction(evidence)
     check_authority(evidence)
     check_scope(evidence, registry)

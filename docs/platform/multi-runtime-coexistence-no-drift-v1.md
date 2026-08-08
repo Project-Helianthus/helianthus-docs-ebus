@@ -63,7 +63,9 @@ The canonical artifacts are:
   schema ID
   `https://docs.helianthus.local/schemas/multi-runtime-coexistence-report-v1.schema.json`;
 - `docs/platform/schemas/multi-runtime-coexistence-registry-v1.json`;
+- `docs/platform/schemas/draft-candidate-fact-public-status-v1.schema.json`;
 - `scripts/validate_multi_runtime_coexistence.py`;
+- `scripts/project_candidate_fact_public_status.py`;
 - `scripts/generate_multi_runtime_coexistence_fixture.py`; and
 - `docs/platform/fixtures/coexistence-no-drift/v1`.
 
@@ -99,6 +101,28 @@ validate_multi_runtime_coexistence.py verify \
 Replace `verify` with `report` to emit exact RFC 8785/JCS-subset report bytes.
 `verify` emits only `ok`. Failure emits exactly one validation category and no
 partial report.
+
+The public M7 status projection is generated, never hand-authored:
+
+```text
+project_candidate_fact_public_status.py \
+  --graph <private-draft-candidate-fact-graph.json> \
+  --replay <private-draft-candidate-fact-replay.json> \
+  --registry <draft-candidate-fact-registry-v1.json> \
+  --source-bundle <private-synchronized-evidence-bundle.json> \
+  --source-replay <private-synchronized-evidence-replay.json> \
+  --source-commit <40-character-gateway-commit> \
+  --docs-source-commit <40-character-docs-commit> \
+  --expect <committed-public-status.json>
+```
+
+The projector first runs the complete synchronized-evidence and candidate-fact
+validators, regenerates the candidate replay, and then emits deterministic
+public bytes containing only candidate ID, fact hash, status, and terminal
+class. `--expect` requires byte-for-byte equality with the committed public
+projection. A changed but otherwise valid graph or replay fails
+`projection.binding`; invalid private input fails in its originating validator.
+Private inputs remain outside git.
 
 ## Frozen Protected Views
 
@@ -264,6 +288,13 @@ The same prohibition covers the complete M7 source-terminal structure,
 including its binding kind, source contract and ID, schema version, error
 category, and graph-derived terminal vocabulary. Splitting those fields across
 adjacent objects does not make them publishable.
+
+Public redaction scans the complete artifact. Qualified or prefixed SHIP/SPINE
+address and selector keys are treated as identity fields. A key ending in
+`hash`, `digest`, or `commit` is exempt only when its value is a valid typed
+SHA-256 digest, namespaced SHA-256 digest, 40-character commit, or null where
+the schema permits null. Private IPv4, unique-local/link-local/loopback IPv6,
+all supported MAC spellings, SKIs, and private-key PEM labels fail closed.
 
 Protected outputs must contain no candidate, raw-only, conflicted, or withheld
 fact field or value. In particular, this internal material cannot appear in:
