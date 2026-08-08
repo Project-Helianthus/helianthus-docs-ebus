@@ -901,6 +901,7 @@ def test_required_term_loop_canary_fails_when_term_is_absent(
     "hidden_wrapper",
     (
         "<!-- {term} -->",
+        '<span title="{term}"></span>',
         "```markdown\n{term}\n```",
         "`{term}`",
         "    {term}",

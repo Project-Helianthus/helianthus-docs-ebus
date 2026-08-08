@@ -53,6 +53,8 @@ PINNED_CI_PYTHON = "3.12.10"
 PINNED_CI_PIP = "25.0.1"
 PINNED_CI_REQUIREMENTS = {
     "iniconfig": "2.3.0",
+    "markdown-it-py": "4.0.0",
+    "mdurl": "0.1.2",
     "packaging": "25.0",
     "pluggy": "1.6.0",
     "pygments": "2.19.2",

@@ -6,10 +6,11 @@ import argparse
 import hashlib
 import json
 import pathlib
-import re
 import stat
 import sys
 from typing import Any
+
+from markdown_it import MarkdownIt
 
 
 MANIFEST_PATH = pathlib.Path(
@@ -628,7 +629,7 @@ EXPECTED_REQUIRED_TERMS = (
     "exact record equality",
     "## Normative Public API Behavior",
     "## Implementation Examples (Non-Normative)",
-    "no** gateway authorization, vendor authorization,\nsemantic authorization, device authorization, or write authorization",
+    "**no** gateway authorization, vendor authorization,\nsemantic authorization, device authorization, or write authorization",
 )
 FORBIDDEN_POLICY_TERMS = (
     "source_issued_shared_ledger_pointer",
@@ -711,81 +712,59 @@ def _validate_closed_object(
         errors.append(f"{label} does not match the closed V1 inventory")
 
 
-def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
-    without_comments = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
-    visible_lines: list[str] = []
-    fence_character: str | None = None
-    fence_length = 0
-    for line in without_comments.splitlines():
-        fence = re.match(r"^\s*(`{3,}|~{3,})", line)
-        if fence_character is None:
-            if fence is not None:
-                marker = fence.group(1)
-                fence_character = marker[0]
-                fence_length = len(marker)
-                visible_lines.append("")
-                continue
-            if line.startswith(("    ", "\t")):
-                visible_lines.append("")
-            else:
-                visible_lines.append(line)
+_COMMONMARK = MarkdownIt("commonmark")
+
+
+def _inline_code_marker(content: str) -> str:
+    digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    return f"<inline-code:{digest}>"
+
+
+def _parse_commonmark(text: str) -> list[Any]:
+    sanitized = "\n".join(
+        "" if line.startswith(("    ", "\t")) else line
+        for line in text.splitlines()
+    )
+    return _COMMONMARK.parse(sanitized)
+
+
+def _visible_markdown(text: str) -> str:
+    visible: list[str] = []
+    for token in _parse_commonmark(text):
+        if token.type != "inline" or token.children is None:
             continue
-        closing = re.match(
-            rf"^\s*{re.escape(fence_character)}{{{fence_length},}}\s*$",
-            line,
-        )
-        if closing is not None:
-            fence_character = None
-            fence_length = 0
-        visible_lines.append("")
-    visible = "\n".join(visible_lines)
-    def mask_inline_code(match: re.Match[str]) -> str:
-        digest = hashlib.sha256(match.group(0).encode("utf-8")).hexdigest()
-        return f"<inline-code:{digest}>"
-
-    visible = re.sub(
-        r"(?P<ticks>`+).*?(?P=ticks)",
-        mask_inline_code,
-        visible,
-        flags=re.DOTALL,
-    )
-    visible = re.sub(
-        r"^[ \t]{0,3}\[(?:\\.|[^\]\\\n])+\]:[^\n]*"
-        r"(?:\n[ \t]{0,3}(?:\"(?:\\.|[^\"\\])*\"|"
-        r"'(?:\\.|[^'\\])*'|\((?:\\.|[^)\\])*\))\s*)?$",
-        "",
-        visible,
-        flags=re.MULTILINE,
-    )
-    if retain_link_metadata:
-        return visible
-
-    def render_link_label(match: re.Match[str]) -> str:
-        return "" if match.group("image") else match.group("label")
-
-    return re.sub(
-        r"(?P<image>!)?\[(?P<label>(?:\\.|[^\]\\\n])*)\]\(\s*"
-        r"(?:<(?:\\.|[^>\\\n])*>|(?:\\.|[^\s)])+)"
-        r"(?:\s+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
-        r"\((?:\\.|[^)\\])*\)))?\s*\)",
-        render_link_label,
-        visible,
-    )
+        for child in token.children:
+            if child.type == "text":
+                visible.append(child.content)
+            elif child.type in {"softbreak", "hardbreak"}:
+                visible.append("\n")
+            elif child.type == "code_inline":
+                visible.append(_inline_code_marker(child.content))
+        visible.append("\n")
+    return "".join(visible).rstrip("\n")
 
 
 def _visible_markdown_link_destinations(text: str) -> set[str]:
-    visible = _visible_markdown(text, retain_link_metadata=True)
-    pattern = re.compile(
-        r"(?<!!)\[(?P<label>(?:\\.|[^\]\\\n])*)\]\(\s*"
-        r"(?P<destination><(?:\\.|[^>\\\n])*>|(?:\\.|[^\s)])+)"
-        r"(?:\s+(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
-        r"\((?:\\.|[^)\\])*\)))?\s*\)"
-    )
-    return {
-        match.group("destination")
-        for match in pattern.finditer(visible)
-        if match.group("label").strip()
-    }
+    destinations: set[str] = set()
+    for token in _parse_commonmark(text):
+        if token.type != "inline" or token.children is None:
+            continue
+        active_links: list[tuple[str, list[str]]] = []
+        for child in token.children:
+            if child.type == "link_open":
+                href = child.attrGet("href") or ""
+                active_links.append((href, []))
+            elif child.type == "link_close" and active_links:
+                href, label = active_links.pop()
+                if href and "".join(label).strip():
+                    destinations.add(href)
+            elif active_links and child.type == "text":
+                active_links[-1][1].append(child.content)
+            elif active_links and child.type == "code_inline":
+                active_links[-1][1].append(child.content)
+            elif active_links and child.type in {"softbreak", "hardbreak"}:
+                active_links[-1][1].append("\n")
+    return destinations
 
 
 def _regular_in_repo_target(
