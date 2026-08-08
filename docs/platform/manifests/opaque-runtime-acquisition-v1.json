@@ -216,6 +216,7 @@
         "eviction": "lowest_ledger_reserved_terminal_sequence_first",
         "forbidden_payloads": [
           "raw_attempt_key",
+          "attempt_key_digest",
           "source_evidence_id",
           "normalization_record",
           "evidence_payload",

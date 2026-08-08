@@ -547,6 +547,20 @@ def mutate_ledger_tombstone_schema(
     fields.append("normalization_record")
 
 
+def mutate_ledger_tombstone_attempt_key_digest_ban(
+    root: pathlib.Path, manifest: dict[str, object]
+) -> None:
+    ledger = manifest["m2_ledger"]
+    assert isinstance(ledger, dict)
+    reclamation = ledger["reclamation"]
+    assert isinstance(reclamation, dict)
+    tombstone = reclamation["audit_tombstone"]
+    assert isinstance(tombstone, dict)
+    forbidden_payloads = tombstone["forbidden_payloads"]
+    assert isinstance(forbidden_payloads, list)
+    forbidden_payloads.remove("attempt_key_digest")
+
+
 def mutate_ledger_tombstone_byte_bound(
     root: pathlib.Path, manifest: dict[str, object]
 ) -> None:
@@ -771,6 +785,7 @@ Mutation = Callable[[pathlib.Path, dict[str, object]], None]
         mutate_ledger_terminal_sequence,
         mutate_ledger_reclamation,
         mutate_ledger_tombstone_schema,
+        mutate_ledger_tombstone_attempt_key_digest_ban,
         mutate_ledger_tombstone_byte_bound,
         mutate_normalization_field,
         mutate_normalization_loss,
@@ -861,6 +876,7 @@ def test_required_term_loop_canary_fails_when_term_is_absent(
         "```markdown\n{term}\n```",
         "`{term}`",
         "    {term}",
+        '[hidden](./x "{term}")',
     ),
 )
 def test_required_terms_in_nonvisible_markdown_do_not_satisfy_contract(

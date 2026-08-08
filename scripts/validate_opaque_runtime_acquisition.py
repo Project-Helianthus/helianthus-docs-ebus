@@ -401,6 +401,7 @@ EXPECTED_M2_LEDGER = {
             "eviction": "lowest_ledger_reserved_terminal_sequence_first",
             "forbidden_payloads": [
                 "raw_attempt_key",
+                "attempt_key_digest",
                 "source_evidence_id",
                 "normalization_record",
                 "evidence_payload",
@@ -711,7 +712,7 @@ def _validate_closed_object(
         errors.append(f"{label} does not match the closed V1 inventory")
 
 
-def _visible_markdown(text: str) -> str:
+def _visible_markdown(text: str, *, retain_link_metadata: bool = False) -> str:
     without_comments = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
     visible_lines: list[str] = []
     fence_character: str | None = None
@@ -743,16 +744,25 @@ def _visible_markdown(text: str) -> str:
         digest = hashlib.sha256(match.group(0).encode("utf-8")).hexdigest()
         return f"<inline-code:{digest}>"
 
-    return re.sub(
+    visible = re.sub(
         r"(?P<ticks>`+).*?(?P=ticks)",
         mask_inline_code,
         visible,
         flags=re.DOTALL,
     )
+    if retain_link_metadata:
+        return visible
+
+    return re.sub(
+        r"(?P<link>!?\[[^\]\n]*\]\(\s*[^\s)]+)"
+        r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?\s*\)",
+        lambda match: f'{match.group("link")})',
+        visible,
+    )
 
 
 def _visible_markdown_link_destinations(text: str) -> set[str]:
-    visible = _visible_markdown(text)
+    visible = _visible_markdown(text, retain_link_metadata=True)
     pattern = re.compile(
         r"(?<!!)\[[^\]\n]*\]\(\s*([^\s)]+)"
         r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?\s*\)"
