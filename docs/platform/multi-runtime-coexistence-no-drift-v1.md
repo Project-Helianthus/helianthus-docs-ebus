@@ -255,6 +255,11 @@ Every graph-derived candidate ID, the four statuses `RAW_ONLY`, `CANDIDATE`,
 `CANDIDATE_DEBUG_REPLAY` are forbidden in every protected view. This rule also
 applies to baseline and rollback views.
 
+The same prohibition covers the complete M7 source-terminal structure,
+including its binding kind, source contract and ID, schema version, error
+category, and graph-derived terminal vocabulary. Splitting those fields across
+adjacent objects does not make them publishable.
+
 Protected outputs must contain no candidate, raw-only, conflicted, or withheld
 fact field or value. In particular, this internal material cannot appear in:
 
@@ -285,11 +290,12 @@ one visible service. In either profile, restart success or an empty response is
 not rollback evidence.
 
 Live restart persistence requires two distinct process instances. The restart
-state carries one bound transition from the pre-restart process to the
-post-restart process, preserves the redacted trust-state and peer-binding
-hashes exactly, and records a successfully reconnected session. Relabeling a
-state in one process, reusing the same process instance ID, changing either
-persisted binding, or omitting reconnection fails `state.evidence`.
+state carries domain-hashed immutable inputs for the observed process event,
+the redacted pre/post state snapshots, and the observed reconnection event.
+The verifier derives process, trust, peer-binding, and session continuity from
+those captures. Relabeling a state in one process, changing a capture without
+its input digest, reusing the same process instance ID, changing either
+persisted binding, reusing the old session, or omitting reconnection fails.
 
 ## Validation Precedence
 
@@ -329,7 +335,7 @@ Validation emits no partial success or report.
 | `max_depth` | 32 |
 | `max_runs` | 8 |
 | `max_views_per_run` | 16 |
-| `max_inputs_per_run` | 17 |
+| `max_inputs_per_run` | 21 |
 | `max_internal_facts_per_run` | 64 |
 | `max_payload_bytes` | 262,144 |
 | `max_string_bytes` | 4,096 |
@@ -355,13 +361,14 @@ cryptographic secrets remain forbidden in every tier. The protected-view
 comparison binds the effective auth and mask scope and never permits a tier
 change on dereference.
 
-The public verifier fails closed on private-key material; credential, secret,
-password, token, or trust-store fields; private IPv4 addresses; MAC addresses;
-raw 40-hex-character SKIs; and unredacted stable device, entity, feature, peer,
-SHIP, authentication-subject, or protocol addresses. A retained secondary
-identifier must use the deterministic `redacted:sha256:<12-hex>` form. This
-rule does not redefine SKI, SHIP ID, or SPINE addresses as cryptographic
-secrets in the local authorized operator view.
+The public verifier normalizes snake-case, kebab-case, and camel-case field
+names and fails closed on private-key or key-material fields; credential,
+secret, password, token, or trust-store fields; private IPv4 addresses; MAC
+addresses; raw 40-hex-character SKIs; and unredacted stable device, entity,
+feature, peer, SHIP, authentication-subject, endpoint, source, target, or other
+protocol addresses. A retained secondary identifier must use the deterministic
+`redacted:sha256:<12-hex>` form. This rule does not redefine SKI, SHIP ID, or
+SPINE addresses as cryptographic secrets in the local authorized operator view.
 
 The positive fixture IDs are:
 

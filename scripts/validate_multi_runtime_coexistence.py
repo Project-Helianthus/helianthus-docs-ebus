@@ -32,11 +32,22 @@ CLOCK_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-CLOCK:V1"
 BUILD_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-BUILD:V1"
 CONFIG_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-CONFIG:V1"
 AUTH_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-AUTH:V1"
+RESTART_PROCESS_EVENT_DOMAIN = (
+    b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-RESTART-PROCESS-EVENT:V1"
+)
+RESTART_SNAPSHOT_DOMAIN = (
+    b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-RESTART-SNAPSHOT:V1"
+)
+RESTART_SESSION_EVENT_DOMAIN = (
+    b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-RESTART-SESSION-EVENT:V1"
+)
+RESTART_TRUST_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-RESTART-TRUST:V1"
+RESTART_PEER_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-RESTART-PEER:V1"
 EVIDENCE_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1"
 REPORT_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-REPORT:V1"
 SAFE_INTEGER = 9_007_199_254_740_991
 BASELINE_SOURCE_SHA = "ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
-EXPECTED_REGISTRY_SHA256 = "0934574c3c4124752fcaf731df8ead11911fad47a20db4f2a475e88dbdb787eb"
+EXPECTED_REGISTRY_SHA256 = "ac7639b0c9f1af62d36fdffd8907ffbf19d9ccf1e81c899d97808baecb107945"
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
@@ -57,7 +68,7 @@ HARD_LIMITS = {
     "max_depth": 32,
     "max_runs": 8,
     "max_views_per_run": 16,
-    "max_inputs_per_run": 17,
+    "max_inputs_per_run": 21,
     "max_internal_facts_per_run": 64,
     "max_payload_bytes": 262_144,
     "max_string_bytes": 4_096,
@@ -380,8 +391,9 @@ def schema_check(evidence: Any) -> None:
         for fact in state["facts"]:
             exact(fact, {"candidate_id", "status", "terminal_negative_state", "visibility_channel"})
         if state["restart_transition"] is not None:
+            transition = state["restart_transition"]
             exact(
-                state["restart_transition"],
+                transition,
                 {
                     "event_id",
                     "before_process_instance_id",
@@ -391,6 +403,43 @@ def schema_check(evidence: Any) -> None:
                     "before_peer_binding_hash",
                     "after_peer_binding_hash",
                     "session_reconnected",
+                    "process_event",
+                    "before_snapshot",
+                    "after_snapshot",
+                    "session_event",
+                },
+            )
+            exact(
+                transition["process_event"],
+                {
+                    "event_id",
+                    "event_type",
+                    "before_process_instance_id",
+                    "after_process_instance_id",
+                    "observed_at_offset_ns",
+                },
+            )
+            for snapshot_name in ("before_snapshot", "after_snapshot"):
+                exact(
+                    transition[snapshot_name],
+                    {
+                        "process_instance_id",
+                        "capture_offset_ns",
+                        "trust_state_id",
+                        "peer_binding_id",
+                        "session_id",
+                        "session_state",
+                    },
+                )
+            exact(
+                transition["session_event"],
+                {
+                    "event_id",
+                    "event_type",
+                    "process_instance_id",
+                    "session_id",
+                    "observed_at_offset_ns",
+                    "state",
                 },
             )
         for view in run["protected_views"]:
@@ -623,12 +672,58 @@ def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]
             f"view:{view_id}": (view["raw_payload_hash"], len(canonical(view["payload"])))
             for view_id, view in views.items()
         }
+        expected_kinds = {
+            f"view:{view_id}": "PROTECTED_VIEW_PAYLOAD" for view_id in views
+        }
         expected.update(m7_inputs)
+        expected_kinds.update(
+            {
+                "m7:graph": "M7_GRAPH",
+                "m7:replay": "M7_REPLAY",
+                "m7:registry": "M7_REGISTRY",
+                "m7:source-bundle": "M7_SOURCE_BUNDLE",
+                "m7:source-replay": "M7_SOURCE_REPLAY",
+            }
+        )
+        transition = run["state_evidence"]["restart_transition"]
+        if transition is not None:
+            expected.update(
+                {
+                    "restart:process-event": (
+                        digest(RESTART_PROCESS_EVENT_DOMAIN, transition["process_event"]),
+                        len(canonical(transition["process_event"])),
+                    ),
+                    "restart:before-snapshot": (
+                        digest(RESTART_SNAPSHOT_DOMAIN, transition["before_snapshot"]),
+                        len(canonical(transition["before_snapshot"])),
+                    ),
+                    "restart:after-snapshot": (
+                        digest(RESTART_SNAPSHOT_DOMAIN, transition["after_snapshot"]),
+                        len(canonical(transition["after_snapshot"])),
+                    ),
+                    "restart:session-event": (
+                        digest(RESTART_SESSION_EVENT_DOMAIN, transition["session_event"]),
+                        len(canonical(transition["session_event"])),
+                    ),
+                }
+            )
+            expected_kinds.update(
+                {
+                    "restart:process-event": "RESTART_PROCESS_EVENT",
+                    "restart:before-snapshot": "RESTART_STATE_SNAPSHOT",
+                    "restart:after-snapshot": "RESTART_STATE_SNAPSHOT",
+                    "restart:session-event": "RESTART_SESSION_EVENT",
+                }
+            )
         actual = {
             item["input_id"]: (item["digest"], item["byte_length"])
             for item in run["provenance"]["immutable_inputs"]
         }
-        if actual != expected:
+        actual_kinds = {
+            item["input_id"]: item["kind"]
+            for item in run["provenance"]["immutable_inputs"]
+        }
+        if actual != expected or actual_kinds != expected_kinds:
             fail("provenance.runtime")
 
 
@@ -706,6 +801,15 @@ def check_ordering(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
             "m7:source-bundle",
             "m7:source-replay",
         ]
+        if run["state_evidence"]["restart_transition"] is not None:
+            expected_inputs.extend(
+                [
+                    "restart:process-event",
+                    "restart:before-snapshot",
+                    "restart:after-snapshot",
+                    "restart:session-event",
+                ]
+            )
         if (
             len(views) != len(set(views))
             or len(inputs) != len(set(inputs))
@@ -805,13 +909,18 @@ def check_restart(evidence: dict[str, Any]) -> None:
         return
     process_ids = [run["provenance"]["process_instance_id"] for run in runs]
     transition = transitions[2]
+    if not isinstance(transition, dict):
+        fail("state.evidence")
+    process_event = transition["process_event"]
+    before_snapshot = transition["before_snapshot"]
+    after_snapshot = transition["after_snapshot"]
+    session_event = transition["session_event"]
     if (
         process_ids[0] != process_ids[1]
         or process_ids[2] != process_ids[3]
         or process_ids[0] == process_ids[2]
         or transitions[:2] != [None, None]
         or transitions[3] is not None
-        or not isinstance(transition, dict)
         or transition["before_process_instance_id"] != process_ids[1]
         or transition["after_process_instance_id"] != process_ids[2]
         or transition["before_process_instance_id"]
@@ -821,6 +930,45 @@ def check_restart(evidence: dict[str, Any]) -> None:
         or transition["before_peer_binding_hash"]
         != transition["after_peer_binding_hash"]
         or transition["session_reconnected"] is not True
+        or process_event["event_id"] != transition["event_id"]
+        or process_event["event_type"] != "PROCESS_RESTART_OBSERVED"
+        or process_event["before_process_instance_id"] != process_ids[1]
+        or process_event["after_process_instance_id"] != process_ids[2]
+        or process_event["observed_at_offset_ns"] != runs[2]["capture_offset_ns"]
+        or before_snapshot["process_instance_id"] != process_ids[1]
+        or before_snapshot["capture_offset_ns"] != runs[1]["capture_offset_ns"]
+        or after_snapshot["process_instance_id"] != process_ids[2]
+        or after_snapshot["capture_offset_ns"] != runs[2]["capture_offset_ns"]
+        or before_snapshot["trust_state_id"] != after_snapshot["trust_state_id"]
+        or before_snapshot["peer_binding_id"] != after_snapshot["peer_binding_id"]
+        or before_snapshot["session_id"] == after_snapshot["session_id"]
+        or before_snapshot["session_state"] != "CONNECTED"
+        or after_snapshot["session_state"] != "CONNECTED"
+        or transition["before_trust_state_hash"]
+        != digest(
+            RESTART_TRUST_DOMAIN,
+            {"trust_state_id": before_snapshot["trust_state_id"]},
+        )
+        or transition["after_trust_state_hash"]
+        != digest(
+            RESTART_TRUST_DOMAIN,
+            {"trust_state_id": after_snapshot["trust_state_id"]},
+        )
+        or transition["before_peer_binding_hash"]
+        != digest(
+            RESTART_PEER_DOMAIN,
+            {"peer_binding_id": before_snapshot["peer_binding_id"]},
+        )
+        or transition["after_peer_binding_hash"]
+        != digest(
+            RESTART_PEER_DOMAIN,
+            {"peer_binding_id": after_snapshot["peer_binding_id"]},
+        )
+        or session_event["event_type"] != "SESSION_RECONNECTED_OBSERVED"
+        or session_event["process_instance_id"] != process_ids[2]
+        or session_event["session_id"] != after_snapshot["session_id"]
+        or session_event["observed_at_offset_ns"] != runs[2]["capture_offset_ns"]
+        or session_event["state"] != "CONNECTED"
     ):
         fail("state.evidence")
 
@@ -908,21 +1056,62 @@ def check_payload_hashes(evidence: dict[str, Any], registry: dict[str, Any]) -> 
                 fail("hash.payload")
 
 
-def _contains_candidate_leak(value: Any, candidate_ids: set[str]) -> bool:
+def _compact_key(key: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", key.casefold())
+
+
+def _terminal_vocabulary(graph: dict[str, Any]) -> set[str]:
+    values: set[str] = set()
+    for fact in graph["facts"]:
+        terminal = fact.get("terminal_negative_state")
+        if isinstance(terminal, str):
+            values.add(terminal)
+        source_terminal = fact.get("provenance", {}).get("source_terminal")
+        if not isinstance(source_terminal, dict):
+            continue
+        for key in (
+            "binding_source_kind",
+            "error_category",
+            "source_contract",
+            "source_id",
+            "state",
+        ):
+            item = source_terminal.get(key)
+            if isinstance(item, str):
+                values.add(item)
+    return values
+
+
+def _contains_candidate_leak(
+    value: Any, candidate_ids: set[str], terminal_values: set[str]
+) -> bool:
     if isinstance(value, dict):
-        if set(value) & {
-            "candidate_id",
-            "candidate_status",
-            "conflict_status",
-            "candidate_fact",
-            "candidate_facts",
-            "terminal_negative_state",
-            "visibility_channel",
+        compact_keys = {_compact_key(key) for key in value}
+        if compact_keys & {
+            "candidateid",
+            "candidatestatus",
+            "conflictstatus",
+            "candidatefact",
+            "candidatefacts",
+            "terminalnegativestate",
+            "visibilitychannel",
+            "sourceterminal",
+            "bindingsourcekind",
+            "errorcategory",
+            "sourcecontract",
+            "sourceid",
+            "sourceschemaversion",
         }:
             return True
-        return any(_contains_candidate_leak(item, candidate_ids) for item in value.values())
+        return any(
+            _contains_candidate_leak(item, candidate_ids, terminal_values)
+            for item in value.values()
+        )
     if isinstance(value, list):
-        return any(_contains_candidate_leak(item, candidate_ids) for item in value)
+        return any(
+            _contains_candidate_leak(item, candidate_ids, terminal_values)
+            for item in value
+        )
     return isinstance(value, str) and (
         value
         in {
@@ -934,14 +1123,16 @@ def _contains_candidate_leak(value: Any, candidate_ids: set[str]) -> bool:
             "CANDIDATE_DEBUG_REPLAY",
         }
         or value in candidate_ids
+        or value in terminal_values
     )
 
 
 def check_anti_leak(evidence: dict[str, Any], graph: dict[str, Any]) -> None:
     candidate_ids = {fact["candidate_id"] for fact in graph["facts"]}
+    terminal_values = _terminal_vocabulary(graph)
     for run in evidence["runs"]:
         if any(
-            _contains_candidate_leak(view["payload"], candidate_ids)
+            _contains_candidate_leak(view["payload"], candidate_ids, terminal_values)
             for view in run["protected_views"]
         ):
             fail("anti_leak.candidate")
@@ -949,27 +1140,43 @@ def check_anti_leak(evidence: dict[str, Any], graph: dict[str, Any]) -> None:
 
 def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     if key is not None:
-        normalized = key.casefold().replace("-", "_")
+        normalized = _compact_key(key)
         if any(
             part in normalized
-            for part in ("private_key", "password", "secret", "token", "credential", "trust_store")
+            for part in (
+                "privatekey",
+                "password",
+                "secret",
+                "token",
+                "credential",
+                "truststore",
+                "keymaterial",
+            )
         ):
             return True
         if normalized in {
             "address",
-            "auth_subject",
-            "device_id",
-            "entity_id",
-            "feature_address",
-            "ip_address",
-            "mac_address",
-            "peer_id",
+            "authsubject",
+            "deviceaddress",
+            "deviceid",
+            "endpoint",
+            "entityaddress",
+            "entityid",
+            "featureaddress",
+            "ipaddress",
+            "macaddress",
+            "peerid",
+            "remoteaddress",
+            "remoteshipid",
+            "remoteski",
             "serial",
-            "serial_number",
-            "ship_id",
+            "serialnumber",
+            "shipid",
             "ski",
-            "unique_id",
-            "via_device",
+            "sourceaddress",
+            "targetaddress",
+            "uniqueid",
+            "viadevice",
         } and not (isinstance(value, str) and REDACTED_ID_RE.fullmatch(value)):
             return True
     if isinstance(value, dict):

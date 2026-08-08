@@ -153,8 +153,12 @@ def build_live_evidence(validator) -> dict[str, object]:
     )
     graph_enabled = (False, True, True, False)
     process_ids = ("process-" + "a" * 32, "process-" + "b" * 32)
-    continuity_hash = "sha256:" + "c" * 64
-    peer_binding_hash = "sha256:" + "d" * 64
+    trust_state_id = "redacted:sha256:" + "c" * 12
+    peer_binding_id = "redacted:sha256:" + "d" * 12
+    session_ids = (
+        "redacted:sha256:" + "e" * 12,
+        "redacted:sha256:" + "f" * 12,
+    )
     for index, run in enumerate(selected):
         run["run_id"] = f"msp08-run-{index + 1:02d}"
         run["state"] = states[index]
@@ -191,11 +195,50 @@ def build_live_evidence(validator) -> dict[str, object]:
                     "event_id": "restart-event-redacted-001",
                     "before_process_instance_id": process_ids[0],
                     "after_process_instance_id": process_ids[1],
-                    "before_trust_state_hash": continuity_hash,
-                    "after_trust_state_hash": continuity_hash,
-                    "before_peer_binding_hash": peer_binding_hash,
-                    "after_peer_binding_hash": peer_binding_hash,
+                    "before_trust_state_hash": validator.digest(
+                        validator.RESTART_TRUST_DOMAIN, {"trust_state_id": trust_state_id}
+                    ),
+                    "after_trust_state_hash": validator.digest(
+                        validator.RESTART_TRUST_DOMAIN, {"trust_state_id": trust_state_id}
+                    ),
+                    "before_peer_binding_hash": validator.digest(
+                        validator.RESTART_PEER_DOMAIN, {"peer_binding_id": peer_binding_id}
+                    ),
+                    "after_peer_binding_hash": validator.digest(
+                        validator.RESTART_PEER_DOMAIN, {"peer_binding_id": peer_binding_id}
+                    ),
                     "session_reconnected": True,
+                    "process_event": {
+                        "event_id": "restart-event-redacted-001",
+                        "event_type": "PROCESS_RESTART_OBSERVED",
+                        "before_process_instance_id": process_ids[0],
+                        "after_process_instance_id": process_ids[1],
+                        "observed_at_offset_ns": 2_000_000_000,
+                    },
+                    "before_snapshot": {
+                        "process_instance_id": process_ids[0],
+                        "capture_offset_ns": 1_000_000_000,
+                        "trust_state_id": trust_state_id,
+                        "peer_binding_id": peer_binding_id,
+                        "session_id": session_ids[0],
+                        "session_state": "CONNECTED",
+                    },
+                    "after_snapshot": {
+                        "process_instance_id": process_ids[1],
+                        "capture_offset_ns": 2_000_000_000,
+                        "trust_state_id": trust_state_id,
+                        "peer_binding_id": peer_binding_id,
+                        "session_id": session_ids[1],
+                        "session_state": "CONNECTED",
+                    },
+                    "session_event": {
+                        "event_id": "session-reconnected-redacted-001",
+                        "event_type": "SESSION_RECONNECTED_OBSERVED",
+                        "process_instance_id": process_ids[1],
+                        "session_id": session_ids[1],
+                        "observed_at_offset_ns": 2_000_000_000,
+                        "state": "CONNECTED",
+                    },
                 }
                 if index == 2
                 else None
@@ -217,6 +260,43 @@ def build_live_evidence(validator) -> dict[str, object]:
             elif item["input_id"] == "m7:source-replay":
                 item["digest"] = evidence["m7_binding"]["source_replay_content_hash"]
                 item["byte_length"] = len(M7_SOURCE_REPLAY.read_bytes())
+        if index == 2:
+            transition = run["state_evidence"]["restart_transition"]
+            for input_id, kind, domain, field in (
+                (
+                    "restart:process-event",
+                    "RESTART_PROCESS_EVENT",
+                    validator.RESTART_PROCESS_EVENT_DOMAIN,
+                    "process_event",
+                ),
+                (
+                    "restart:before-snapshot",
+                    "RESTART_STATE_SNAPSHOT",
+                    validator.RESTART_SNAPSHOT_DOMAIN,
+                    "before_snapshot",
+                ),
+                (
+                    "restart:after-snapshot",
+                    "RESTART_STATE_SNAPSHOT",
+                    validator.RESTART_SNAPSHOT_DOMAIN,
+                    "after_snapshot",
+                ),
+                (
+                    "restart:session-event",
+                    "RESTART_SESSION_EVENT",
+                    validator.RESTART_SESSION_EVENT_DOMAIN,
+                    "session_event",
+                ),
+            ):
+                payload = transition[field]
+                run["provenance"]["immutable_inputs"].append(
+                    {
+                        "input_id": input_id,
+                        "kind": kind,
+                        "digest": validator.digest(domain, payload),
+                        "byte_length": len(validator.canonical(payload)),
+                    }
+                )
     evidence["runs"] = selected
     refresh_evidence_hash(validator, evidence)
     return evidence
@@ -343,10 +423,12 @@ def test_msp08_live_report_matches_public_schema(tmp_path: pathlib.Path) -> None
         "WITHHELD",
         "CANDIDATE_DEBUG_REPLAY",
         "m7-candidate-1001",
+        {"source_terminal": {"state": "UNAVAILABLE"}},
+        {"error_category": "BACKEND_UNAVAILABLE"},
     ],
 )
 def test_msp08_live_internal_fact_vocabulary_cannot_leak(
-    tmp_path: pathlib.Path, leak: str
+    tmp_path: pathlib.Path, leak: object
 ) -> None:
     validator = validator_module()
     evidence = build_live_evidence(validator)
@@ -371,6 +453,10 @@ def test_msp08_live_internal_fact_vocabulary_cannot_leak(
         {"ski": "b" * 40},
         {"endpoint": "192.168.100.4:4712"},
         {"device_id": "unredacted-stable-device"},
+        {"source_address": 247},
+        {"targetAddress": 21},
+        {"remoteShipId": "unredacted-ship-peer"},
+        {"privateKey": "cHJpdmF0ZS1qd2stbWF0ZXJpYWw="},
     ],
 )
 def test_msp08_public_export_rejects_secrets_and_stable_identity(
@@ -434,3 +520,45 @@ def test_msp08_live_rejects_restart_without_new_process_instance(
     )
     assert result.returncode == 1
     assert result.stdout == "state.evidence\n"
+
+
+def test_msp08_live_rejects_restart_event_not_bound_as_immutable_input(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    transition = evidence["runs"][2]["state_evidence"]["restart_transition"]
+    transition["process_event"]["event_id"] = "restart-event-redacted-forged"
+    transition["event_id"] = "restart-event-redacted-forged"
+    refresh_evidence_hash(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
+    result = subprocess.run(
+        validator_command("verify", evidence_path),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == "provenance.runtime\n"
+
+
+def test_msp08_live_rejects_relabelled_restart_immutable_input_kind(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    inputs = evidence["runs"][2]["provenance"]["immutable_inputs"]
+    restart_input = next(
+        item for item in inputs if item["input_id"] == "restart:process-event"
+    )
+    restart_input["kind"] = "RESTART_SESSION_EVENT"
+    refresh_evidence_hash(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
+    result = subprocess.run(
+        validator_command("verify", evidence_path),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert result.stdout == "provenance.runtime\n"

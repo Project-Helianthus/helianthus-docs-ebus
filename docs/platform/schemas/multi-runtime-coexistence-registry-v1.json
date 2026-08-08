@@ -186,7 +186,7 @@
     "max_depth": 32,
     "max_runs": 8,
     "max_views_per_run": 16,
-    "max_inputs_per_run": 17,
+    "max_inputs_per_run": 21,
     "max_internal_facts_per_run": 64,
     "max_payload_bytes": 262144,
     "max_string_bytes": 4096,
