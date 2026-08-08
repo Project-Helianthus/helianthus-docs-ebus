@@ -50,6 +50,7 @@ M7_SYNTHETIC_SOURCE_REPLAY = SYNCHRONIZED_ROOT / "replay-result.json"
 
 M7_GATEWAY_MERGE = "8bcba2107d10b149f984ac9546ea6427a9cda8a1"
 M7_DOCS_MERGE = "35d2eba256a77b6575a2b45c07e73f054ff74ced"
+SYNTHETIC_PRIVATE_IPV4 = "10.255.255.254"
 
 
 def load(path: pathlib.Path) -> dict[str, object]:
@@ -678,7 +679,7 @@ def test_msp08_live_internal_fact_vocabulary_cannot_leak(
     [
         {"tls_private_key": "-----BEGIN PRIVATE KEY-----"},
         {"ski": "b" * 40},
-        {"endpoint": "192.168.100.4:4712"},
+        {"endpoint": SYNTHETIC_PRIVATE_IPV4 + ":4712"},
         {"device_id": "unredacted-stable-device"},
         {"source_address": 247},
         {"targetAddress": 21},
@@ -697,7 +698,7 @@ def test_msp08_live_internal_fact_vocabulary_cannot_leak(
                 {"kind": "ENTITY", "selector": "private-entity-selector"}
             ]
         },
-        {"endpointHash": "192.168.100.4"},
+        {"endpointHash": SYNTHETIC_PRIVATE_IPV4},
         {"endpoint": "fd00::1234"},
         {"endpoint": "fe80::1%eth0"},
         {"api_key": "private-api-key"},
@@ -742,7 +743,7 @@ def test_msp08_public_export_rejects_private_metadata_outside_views(
     validator = validator_module()
     evidence = build_live_evidence(validator)
     for run in evidence["runs"]:
-        run["provenance"]["config"]["config_id"] = "192.168.100.4"
+        run["provenance"]["config"]["config_id"] = SYNTHETIC_PRIVATE_IPV4
     refresh_evidence_hash(validator, evidence)
     evidence_path = write_evidence(tmp_path, evidence)
     result = subprocess.run(

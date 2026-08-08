@@ -1670,6 +1670,8 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
         {"feature_path": "private-feature-path"},
         {"debug_detail": "127.0.0.1:4712"},
         {"debug_detail": "169.254.12.34"},
+        {"debug_detail": "10.255.255.025:4712"},
+        {"debug_detail": "999.999.999.999:4712"},
     ],
 )
 def test_msp08_report_rejects_native_identity_and_non_public_ipv4(
@@ -1696,6 +1698,33 @@ def test_msp08_report_rejects_native_identity_and_non_public_ipv4(
     )
     assert result.returncode == 1
     assert result.stdout == "redaction.public\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_allows_globally_routable_ipv4(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = run["protected_views"][-1]
+        view["payload"]["data"]["debug_detail"] = "8.8.8.8:53"
+        _refresh_view_hashes(evidence, view)
+    evidence_view = {
+        key: value
+        for key, value in evidence.items()
+        if key not in {"evidence_id", "evidence_hash"}
+    }
+    evidence_hash = _coexistence_digest(
+        b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1", evidence_view
+    )
+    evidence["evidence_hash"] = evidence_hash
+    evidence["evidence_id"] = "mrcv1:" + evidence_hash
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "public-ipv4.json", evidence)
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["verdict"] == "PASS"
     assert result.stderr == ""
 
 

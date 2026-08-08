@@ -1463,7 +1463,7 @@ def _contains_non_public_ipv4(value: str) -> bool:
         try:
             address = ipaddress.ip_address(match.group(0))
         except ValueError:
-            continue
+            return True
         if isinstance(address, ipaddress.IPv4Address) and (
             address.is_private or address.is_link_local or address.is_loopback
         ):
