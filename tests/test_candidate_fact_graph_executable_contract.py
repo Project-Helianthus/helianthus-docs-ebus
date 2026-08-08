@@ -1672,6 +1672,11 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
         {"debug_detail": "169.254.12.34"},
         {"debug_detail": "10.255.255.025:4712"},
         {"debug_detail": "999.999.999.999:4712"},
+        {"debug_detail": "1.10.255.255.254:4712"},
+        {"addresses": [4, 246]},
+        {"ship_identifier": "synthetic-peer-identity"},
+        {"ship_identity": "synthetic-peer-identity"},
+        {"ship_identities": ["synthetic-peer-identity"]},
     ],
 )
 def test_msp08_report_rejects_native_identity_and_non_public_ipv4(

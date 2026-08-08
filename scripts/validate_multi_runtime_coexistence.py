@@ -64,7 +64,7 @@ PRIVATE_KEY_RE = re.compile(
     re.IGNORECASE,
 )
 IPV4_CANDIDATE_RE = re.compile(
-    r"(?<![0-9])(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?![0-9])"
+    r"(?<![0-9])[0-9]+(?:\.[0-9]+){3,}(?![0-9.])"
 )
 IPV6_CANDIDATE_RE = re.compile(
     r"(?i)(?<![0-9a-f:])(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}"
@@ -1504,6 +1504,7 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
             return True
         identity_names = {
             "address",
+            "addresses",
             "authsubject",
             "deviceaddress",
             "deviceid",
@@ -1516,6 +1517,10 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
             "featureaddress",
             "featurepath",
             "ipaddress",
+            "identifier",
+            "identifiers",
+            "identity",
+            "identities",
             "macaddress",
             "peerid",
             "remoteaddress",
