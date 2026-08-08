@@ -1815,6 +1815,7 @@ def test_msp08_report_allows_globally_routable_ipv4(
             "candidate facts are not published"
         )
         view["payload"]["data"]["scope_note"] = "eebus.v2 is not active"
+        view["payload"]["data"]["scope_note_m9"] = "M9 is not active"
         view["payload"]["data"]["protocol_label"] = "EBUS"
         view["payload"]["data"]["phase"] = "post"
         view["payload"]["data"]["operation"] = "action"
@@ -1846,8 +1847,11 @@ def test_msp08_report_allows_globally_routable_ipv4(
         "MALFORMED_TOOL",
         "NESTED_V2",
         "NESTED_VERSION2",
+        "NESTED_REVISION2",
+        "NESTED_REVISION_WRAPPER",
         "ALIASES",
         "ALIASES_INVENTORY",
+        "ALIASES_WRAPPER",
     ],
 )
 def test_msp08_report_rejects_non_v1_eebus_surfaces(
@@ -1871,17 +1875,33 @@ def test_msp08_report_rejects_non_v1_eebus_surfaces(
             view["payload"]["data"]["alternate_contracts"] = [
                 {"active": True, "namespace": "eebus.v2"}
             ]
-        elif mutation == "NESTED_VERSION2":
+        elif mutation in {
+            "NESTED_VERSION2",
+            "NESTED_REVISION2",
+            "NESTED_REVISION_WRAPPER",
+        }:
             view = _view_by_id(run, "mcp.eebus.v1.contract")
-            view["payload"]["data"]["alternate_contracts"] = [
-                {"active": True, "namespace": "eebus.v1", "version": 2}
-            ]
+            alternate_contract = {"active": True, "namespace": "eebus.v1"}
+            if mutation == "NESTED_REVISION_WRAPPER":
+                alternate_contract.update({"Key": "revision", "Value": 2})
+            else:
+                version_key = (
+                    "version" if mutation == "NESTED_VERSION2" else "revision"
+                )
+                alternate_contract[version_key] = 2
+            view["payload"]["data"]["alternate_contracts"] = [alternate_contract]
         elif mutation == "ALIASES":
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             view["payload"]["data"]["aliases"] = ["eebus.v1.compat"]
-        else:
+        elif mutation == "ALIASES_INVENTORY":
             view = _view_by_id(run, "mcp.tool.inventory")
             view["payload"]["data"]["aliases"] = ["eebus.v1.compat"]
+        else:
+            view = _view_by_id(run, "mcp.tool.inventory")
+            view["payload"]["data"]["wrapper"] = {
+                "Key": "aliases",
+                "Value": ["eebus.v1.compat"],
+            }
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
 
@@ -1939,7 +1959,9 @@ def test_msp08_report_rejects_nested_eebus_semantic_promotion_shape(
     for run in evidence["runs"]:
         view = _view_by_id(run, "semantic.registry")
         view["payload"]["data"]["alternate_registry"] = {
-            "leaves": [{"promotion": {"state": "PROMOTED"}, "protocol": "eebus"}]
+            "leaves": [
+                {"promotion": {"state": "PROMOTED"}, "protocol": "eebus.v1"}
+            ]
         }
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
@@ -1959,7 +1981,7 @@ def test_msp08_report_rejects_nested_eebus_command_route(
     for run in evidence["runs"]:
         view = _view_by_id(run, "command.routing")
         view["payload"]["data"]["alternate_routes"] = [
-            {"active": True, "path": "/candidate/private", "provider": "eebus"}
+            {"active": True, "path": "/candidate/private", "provider": "eebus.v1"}
         ]
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
@@ -1972,13 +1994,21 @@ def test_msp08_report_rejects_nested_eebus_command_route(
     assert result.stderr == ""
 
 
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        {"m9_consumer_gate": "AUTHORIZED"},
+        {"Key": "milestone", "Value": "M9"},
+        {"milestone_name": "M9"},
+    ],
+)
 def test_msp08_report_rejects_later_milestone_authorization(
-    tmp_path: pathlib.Path,
+    tmp_path: pathlib.Path, declaration: dict[str, object]
 ) -> None:
     evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
     for run in evidence["runs"]:
         view = _view_by_id(run, "debug.ebus")
-        view["payload"]["data"]["m9_consumer_gate"] = "AUTHORIZED"
+        view["payload"]["data"]["later_milestone"] = declaration
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
 

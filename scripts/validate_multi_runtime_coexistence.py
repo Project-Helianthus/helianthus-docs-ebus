@@ -1835,6 +1835,22 @@ def _has_sensitive_key(key: str, value: Any) -> bool:
     )
 
 
+def _declared_key_value_pairs(value: dict[str, Any]) -> list[tuple[str, Any]]:
+    declared_keys = [
+        item
+        for item_key, item in value.items()
+        if _compact_key(item_key) in {"key", "name"} and isinstance(item, str)
+    ]
+    declared_values = [
+        item for item_key, item in value.items() if _compact_key(item_key) == "value"
+    ]
+    return [
+        (declared_key, item)
+        for declared_key in declared_keys
+        for item in declared_values
+    ]
+
+
 def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     if key is not None:
         normalized = _compact_key(key)
@@ -1849,20 +1865,9 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         if normalized.endswith(("spinepath", "spinekind")):
             return True
     if isinstance(value, dict):
-        declared_keys = [
-            item
-            for item_key, item in value.items()
-            if _compact_key(item_key) in {"key", "name"} and isinstance(item, str)
-        ]
-        declared_values = [
-            item
-            for item_key, item in value.items()
-            if _compact_key(item_key) == "value"
-        ]
         if any(
             _contains_public_secret(item, declared_key)
-            for declared_key in declared_keys
-            for item in declared_values
+            for declared_key, item in _declared_key_value_pairs(value)
         ):
             return True
         return any(
@@ -1907,7 +1912,10 @@ def _contains_eebus_authority(value: Any) -> bool:
         return any(_contains_eebus_authority(item) for item in value.values())
     if isinstance(value, list):
         return any(_contains_eebus_authority(item) for item in value)
-    return isinstance(value, str) and value.casefold() == "eebus"
+    if not isinstance(value, str):
+        return False
+    normalized = value.casefold()
+    return normalized == "eebus" or normalized.startswith("eebus.")
 
 
 def _contains_eebus_reference(value: Any) -> bool:
@@ -1927,6 +1935,19 @@ def _contains_non_v1_eebus_surface(
     value: Any, *, reject_any_alias: bool = False
 ) -> bool:
     if isinstance(value, dict):
+        wrapper_context = {
+            item_key: item
+            for item_key, item in value.items()
+            if _compact_key(item_key) not in {"key", "name", "value"}
+        }
+        if any(
+            _contains_non_v1_eebus_surface(
+                {**wrapper_context, declared_key: item},
+                reject_any_alias=reject_any_alias,
+            )
+            for declared_key, item in _declared_key_value_pairs(value)
+        ):
+            return True
         for item_key, item in value.items():
             if _compact_key(item_key) in {
                 "alias",
@@ -1939,11 +1960,39 @@ def _contains_non_v1_eebus_surface(
                     and (reject_any_alias or _contains_eebus_reference(item))
                 ):
                     return True
-        namespace = value.get("namespace")
-        if isinstance(namespace, str) and namespace.casefold().startswith("eebus."):
-            if namespace.casefold() != "eebus.v1":
-                return True
-            if value.get("version", 1) != 1 or value.get("public_v2", False) is not False:
+        namespaces = [
+            item
+            for item_key, item in value.items()
+            if _compact_key(item_key) == "namespace" and isinstance(item, str)
+        ]
+        if any(
+            namespace.casefold().startswith("eebus")
+            and namespace.casefold() != "eebus.v1"
+            for namespace in namespaces
+        ):
+            return True
+        if any(namespace.casefold() == "eebus.v1" for namespace in namespaces):
+            version_values = [
+                item
+                for item_key, item in value.items()
+                if _compact_key(item_key)
+                in {
+                    "apiversion",
+                    "contractversion",
+                    "publicversion",
+                    "revision",
+                    "schemaversion",
+                    "version",
+                }
+            ]
+            public_v2_values = [
+                item
+                for item_key, item in value.items()
+                if _compact_key(item_key) == "publicv2"
+            ]
+            if any(item != 1 for item in version_values) or any(
+                item is not False for item in public_v2_values
+            ):
                 return True
         return any(
             _contains_non_v1_eebus_surface(
@@ -1970,11 +2019,20 @@ def _contains_non_v1_eebus_surface(
 
 def _contains_later_milestone_declaration(value: Any) -> bool:
     if isinstance(value, dict):
+        if any(
+            _contains_later_milestone_declaration({declared_key: item})
+            for declared_key, item in _declared_key_value_pairs(value)
+        ):
+            return True
         for item_key, item in value.items():
             normalized = _compact_key(item_key)
             if normalized.startswith(("m85", "m9")):
                 return True
-            if normalized in {"gate", "milestone", "phase"} and isinstance(item, str):
+            key_tokens = set(_key_tokens(item_key))
+            if (
+                key_tokens.intersection({"gate", "milestone", "phase"})
+                and isinstance(item, str)
+            ):
                 item_normalized = _compact_key(item)
                 if item_normalized.startswith(("m85", "m9")):
                     return True
