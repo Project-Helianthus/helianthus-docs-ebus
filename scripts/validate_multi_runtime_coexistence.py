@@ -2050,6 +2050,13 @@ def _is_eebus_identifier(value: str) -> bool:
     return EEBUS_IDENTIFIER_RE.fullmatch(value) is not None
 
 
+def _is_eebus_authority_declaration_key(key: str) -> bool:
+    tokens = set(_key_tokens(key))
+    return bool(
+        "eebus" in tokens and tokens.intersection(EEBUS_AUTHORITY_KEY_TOKENS)
+    )
+
+
 def _contains_eebus_authority(
     value: Any,
     key: str | None = None,
@@ -2065,6 +2072,8 @@ def _contains_eebus_authority(
     )
     if isinstance(value, dict):
         for item_key, item in value.items():
+            if _is_eebus_authority_declaration_key(item_key) and bool(item):
+                return True
             if _is_eebus_identifier(item_key):
                 return True
             if _contains_eebus_authority(
@@ -2208,6 +2217,8 @@ def _contains_non_v1_eebus_surface(
     value: Any, *, reject_any_alias: bool = False, eebus_context: bool = False
 ) -> bool:
     if isinstance(value, dict):
+        if any(_is_eebus_identifier(item_key) for item_key in value):
+            return True
         declarations = _container_declarations(value)
         child_context = eebus_context or any(
             _compact_key(item_key) == "namespace"
@@ -2351,11 +2362,15 @@ def _contains_eebus_write_surface(
 ) -> bool:
     if isinstance(value, dict):
         declarations = _container_declarations(value)
-        child_context = eebus_context or any(
-            _compact_key(item_key) == "namespace"
-            and isinstance(item, str)
-            and item.casefold().startswith("eebus")
-            for item_key, item in declarations
+        child_context = (
+            eebus_context
+            or any(
+                _compact_key(item_key) == "namespace"
+                and isinstance(item, str)
+                and item.casefold().startswith("eebus")
+                for item_key, item in declarations
+            )
+            or any(_is_eebus_identifier(item_key) for item_key in value)
         )
         if child_context and any(
             _compact_key(item_key) in EEBUS_WRITE_DECLARATION_KEYS

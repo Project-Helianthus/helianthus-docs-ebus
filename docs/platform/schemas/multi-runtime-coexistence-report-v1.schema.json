@@ -172,6 +172,25 @@
         "canonical_payload_hash": {"$ref": "#/$defs/Digest"}
       }
     },
+    "ProtectedViewHashes": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "prefixItems": [
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "mcp.ebus.v1.responses"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "mcp.tool.inventory"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "graphql.schema"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "graphql.ebus.values"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "ha.graphql.values"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "ha.identity"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "debug.ebus"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "portal.ebus.bootstrap"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "command.routing"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "semantic.registry"}}}]},
+        {"allOf": [{"$ref": "#/$defs/ViewHash"}, {"properties": {"view_id": {"const": "mcp.eebus.v1.contract"}}}]}
+      ],
+      "items": false
+    },
     "Baseline": {
       "type": "object",
       "additionalProperties": false,
@@ -181,7 +200,7 @@
         "state": {"enum": ["EEBUS_DISABLED_BASELINE", "EEBUS_CONNECTED_BASELINE"]},
         "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "artifact_digest": {"$ref": "#/$defs/Digest"},
-        "view_hashes": {"type": "array", "minItems": 11, "maxItems": 11, "items": {"$ref": "#/$defs/ViewHash"}}
+        "view_hashes": {"$ref": "#/$defs/ProtectedViewHashes"}
       }
     },
     "Scenario": {
@@ -193,7 +212,7 @@
         "state": {"enum": ["EEBUS_DISABLED_CONFIRMED", "EEBUS_ENABLED_NO_SERVICES", "EEBUS_CONNECTED_CANDIDATE_ONLY", "EEBUS_CONFLICTED_WITHHELD", "EEBUS_DISABLED_ROLLBACK", "EEBUS_CONNECTED_RAW_WITHHELD", "EEBUS_RESTART_PERSISTED", "EEBUS_CONNECTED_ROLLBACK"]},
         "result": {"enum": ["NO_DRIFT", "EXPECTED_NO_SERVICES_NO_DRIFT", "CANDIDATE_CONFINED_NO_DRIFT", "CONFLICT_WITHHELD_NO_DRIFT", "ROLLBACK_EXACT_BASELINE", "RAW_WITHHELD_CONFINED_NO_DRIFT", "RESTART_PERSISTED_NO_DRIFT", "GRAPH_EVIDENCE_DROPPED_NO_DRIFT"]},
         "checks": {"type": "array", "minItems": 11, "maxItems": 11, "items": {"type": "string", "maxLength": 128}},
-        "view_hashes": {"type": "array", "minItems": 11, "maxItems": 11, "items": {"$ref": "#/$defs/ViewHash"}}
+        "view_hashes": {"$ref": "#/$defs/ProtectedViewHashes"}
       }
     },
     "AcceptanceRow": {

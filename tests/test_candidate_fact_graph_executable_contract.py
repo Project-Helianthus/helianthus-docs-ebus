@@ -2153,6 +2153,26 @@ def test_msp08_report_rejects_equivalent_eebus_authority_identifier(
     assert result.stderr == ""
 
 
+@pytest.mark.parametrize("view_id", ["semantic.registry", "command.routing"])
+@pytest.mark.parametrize("declaration", [True, {"enabled": True}])
+def test_msp08_report_rejects_truthy_eebus_authority_declaration(
+    tmp_path: pathlib.Path, view_id: str, declaration: object
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, view_id)
+        view["payload"]["data"]["eebusAuthority"] = deepcopy(declaration)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "truthy-eebus-authority.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
 def test_msp08_report_allows_candidate_only_eebus_prose_in_authority_views(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -2290,6 +2310,60 @@ def test_msp08_report_rejects_unapproved_eebus_tools(
     assert result.returncode == 1
     assert result.stdout == "gate.scope\n"
     assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    ("namespace_key", "payload"),
+    [
+        ("eebus_v1", {"enabled": True}),
+        ("eebus", {"write_enabled": True}),
+    ],
+)
+def test_msp08_report_rejects_namespace_object_surfaces(
+    tmp_path: pathlib.Path, namespace_key: str, payload: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["data"][namespace_key] = deepcopy(payload)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "namespace-object-surface.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("target", ["baseline", "scenario"])
+@pytest.mark.parametrize("mutation", ["duplicate", "substitute", "reorder"])
+def test_msp08_report_schema_requires_exact_ordered_protected_views(
+    tmp_path: pathlib.Path, target: str, mutation: str
+) -> None:
+    report = deepcopy(load_json(COEXISTENCE_GOLDEN_REPORT))
+    view_hashes = (
+        report["baseline"]["view_hashes"]
+        if target == "baseline"
+        else report["scenarios"][0]["view_hashes"]
+    )
+    if mutation == "duplicate":
+        view_hashes[1] = deepcopy(view_hashes[0])
+    elif mutation == "substitute":
+        view_hashes[1]["view_id"] = "mcp.unknown"
+    else:
+        view_hashes[0], view_hashes[1] = view_hashes[1], view_hashes[0]
+    report_path = write_json(tmp_path / "invalid-view-inventory.json", report)
+
+    result = subprocess.run(
+        ["jv", str(COEXISTENCE_REPORT_SCHEMA), str(report_path)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
 
 
 def test_msp08_live_report_schema_rejects_synthetic_profile_semantics(
