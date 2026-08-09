@@ -108,6 +108,30 @@
       "type": "string",
       "pattern": "^[0-9a-f]{40}$"
     },
+    "CandidateIdV1": {
+      "type": "string",
+      "pattern": "^m7-candidate-[0-9]{4}$"
+    },
+    "GraphIdV1": {
+      "type": "string",
+      "pattern": "^dcfgv1:sha256:[0-9a-f]{64}$"
+    },
+    "ReplayIdV1": {
+      "type": "string",
+      "pattern": "^dcfrv1:sha256:[0-9a-f]{64}$"
+    },
+    "StatusProjectionIdV1": {
+      "type": "string",
+      "pattern": "^dcfpsv1:sha256:[0-9a-f]{64}$"
+    },
+    "CoexistenceEvidenceIdV1": {
+      "type": "string",
+      "pattern": "^mrcv1:sha256:[0-9a-f]{64}$"
+    },
+    "CoexistenceReportIdV1": {
+      "type": "string",
+      "pattern": "^mrcrv1:sha256:[0-9a-f]{64}$"
+    },
     "NullableTerminalV1": {
       "oneOf": [
         {"enum": ["NO_SIGNAL", "CLOUD_ONLY", "CONFLICT", "NOT_TESTED"]},
@@ -164,17 +188,17 @@
       "properties": {
         "m7_gateway_source_commit": {"$ref": "#/$defs/CommitV1"},
         "m7_docs_source_commit": {"$ref": "#/$defs/CommitV1"},
-        "m7_graph_id": {"$ref": "#/$defs/TokenV1"},
+        "m7_graph_id": {"$ref": "#/$defs/GraphIdV1"},
         "m7_graph_hash": {"$ref": "#/$defs/DigestV1"},
-        "m7_replay_id": {"$ref": "#/$defs/TokenV1"},
+        "m7_replay_id": {"$ref": "#/$defs/ReplayIdV1"},
         "m7_replay_hash": {"$ref": "#/$defs/DigestV1"},
-        "m7_status_projection_id": {"$ref": "#/$defs/TokenV1"},
+        "m7_status_projection_id": {"$ref": "#/$defs/StatusProjectionIdV1"},
         "m7_status_projection_hash": {"$ref": "#/$defs/DigestV1"},
         "m8_gateway_source_commit": {"$ref": "#/$defs/CommitV1"},
         "m8_docs_source_commit": {"$ref": "#/$defs/CommitV1"},
-        "m8_evidence_id": {"$ref": "#/$defs/TokenV1"},
+        "m8_evidence_id": {"$ref": "#/$defs/CoexistenceEvidenceIdV1"},
         "m8_evidence_hash": {"$ref": "#/$defs/DigestV1"},
-        "m8_report_id": {"$ref": "#/$defs/TokenV1"},
+        "m8_report_id": {"$ref": "#/$defs/CoexistenceReportIdV1"},
         "m8_report_hash": {"$ref": "#/$defs/DigestV1"},
         "coexistence_verdict": {"const": "PASS"}
       }
@@ -184,7 +208,14 @@
       "additionalProperties": false,
       "required": ["trigger", "required_source_kinds", "minimum_new_samples"],
       "properties": {
-        "trigger": {"$ref": "#/$defs/TokenV1"},
+        "trigger": {
+          "enum": [
+            "NEW_SYNCHRONIZED_BUNDLE",
+            "SOURCE_RECOVERED",
+            "IDENTITY_CONFIRMED",
+            "COMPARATOR_REVISED"
+          ]
+        },
         "required_source_kinds": {
           "type": "array",
           "minItems": 1,
@@ -208,7 +239,7 @@
         "retest_trigger"
       ],
       "properties": {
-        "candidate_id": {"$ref": "#/$defs/TokenV1"},
+        "candidate_id": {"$ref": "#/$defs/CandidateIdV1"},
         "fact_hash": {"$ref": "#/$defs/DigestV1"},
         "source_status": {"enum": ["RAW_ONLY", "WITHHELD"]},
         "terminal_state": {"$ref": "#/$defs/NullableTerminalV1"},

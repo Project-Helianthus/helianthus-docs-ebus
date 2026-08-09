@@ -471,7 +471,9 @@ def test_captured_derivation_reuses_canonical_m7_and_m8_validators() -> None:
         assert call in source
 
 
-def captured_cli_command(*, replay: pathlib.Path) -> list[str]:
+def captured_cli_command(
+    *, replay: pathlib.Path, registry: pathlib.Path = REGISTRY
+) -> list[str]:
     candidate_root = PLATFORM_ROOT / "fixtures/candidate-fact-graph/v1/positive"
     synchronized_root = PLATFORM_ROOT / "fixtures/synchronized-evidence/v1/positive"
     coexistence_root = PLATFORM_ROOT / "fixtures/coexistence-no-drift/v1/positive"
@@ -480,7 +482,7 @@ def captured_cli_command(*, replay: pathlib.Path) -> list[str]:
         str(VALIDATOR),
         "derive-captured",
         "--registry",
-        str(REGISTRY),
+        str(registry),
         "--m7-graph",
         str(candidate_root / "graph.json"),
         "--m7-replay",
@@ -541,6 +543,90 @@ def test_graph_replay_mismatch_fails_before_captured_status() -> None:
     )
     assert completed.returncode == 1
     assert completed.stdout == "projection.replay\n"
+    assert completed.stderr == ""
+
+
+def test_m7_snapshot_is_immutable_when_source_changes_after_validation(
+    tmp_path: pathlib.Path,
+) -> None:
+    module = validator_module()
+    source_graph = tmp_path / "source-graph.json"
+    original_graph = b'{"graph":"validated"}\n'
+    source_graph.write_bytes(original_graph)
+    verified_raw = {
+        "graph": source_graph.read_bytes(),
+        "replay": b'{"replay":"validated"}\n',
+    }
+    source_graph.write_bytes(b'{"graph":"swapped-after-validation"}\n')
+
+    snapshot_root = tmp_path / "snapshot"
+    snapshot_root.mkdir()
+    graph_path, replay_path = module._write_verified_m7_snapshot(
+        snapshot_root, verified_raw
+    )
+
+    assert graph_path.read_bytes() == original_graph
+    assert replay_path.read_bytes() == verified_raw["replay"]
+    assert graph_path.read_bytes() != source_graph.read_bytes()
+
+
+@pytest.mark.parametrize(
+    ("mutation", "value"),
+    [
+        ("candidate_id", "192.168.37.21"),
+        ("m7_graph_id", "/private/captures/graph.raw"),
+        ("m8_evidence_id", "/private/captures/device.raw"),
+        ("retest_trigger", "/private/retry/device.raw"),
+        ("secret", "synthetic-private-key"),
+    ],
+)
+def test_public_result_schema_rejects_identity_path_and_secret_leaks(
+    tmp_path: pathlib.Path, mutation: str, value: str
+) -> None:
+    module = validator_module()
+    result = module.build_captured_result(captured_assessment_fixture(module))
+    if mutation == "candidate_id":
+        result["assessments"][0]["candidate_id"] = value
+    elif mutation == "m7_graph_id":
+        result["source_bindings"]["m7_graph_id"] = value
+    elif mutation == "m8_evidence_id":
+        result["source_bindings"]["m8_evidence_id"] = value
+    elif mutation == "retest_trigger":
+        result["assessments"][0]["retest_trigger"]["trigger"] = value
+    elif mutation == "secret":
+        result["private_key"] = value
+    else:
+        raise AssertionError(mutation)
+    result_path = write_json(tmp_path / f"{mutation}.json", result)
+    checked = subprocess.run(
+        ["jv", str(RESULT_SCHEMA), str(result_path)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert checked.returncode != 0
+
+
+def test_malformed_captured_registry_shape_fails_without_traceback(
+    tmp_path: pathlib.Path,
+) -> None:
+    registry = load_json(REGISTRY)
+    registry["profiles"] = 1
+    registry_path = write_json(tmp_path / "registry.json", registry)
+    replay = (
+        PLATFORM_ROOT
+        / "fixtures/candidate-fact-graph/v1/positive/replay-result.json"
+    )
+    completed = subprocess.run(
+        captured_cli_command(replay=replay, registry=registry_path),
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 1
+    assert completed.stdout == "registry.binding\n"
     assert completed.stderr == ""
 
 

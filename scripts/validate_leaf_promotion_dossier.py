@@ -10,6 +10,7 @@ import json
 import pathlib
 import re
 import sys
+import tempfile
 from typing import Any
 
 
@@ -267,15 +268,20 @@ def registry_check(
 
 
 def captured_registry_check(registry: Any, registry_raw: bytes) -> dict[str, Any]:
+    if not isinstance(registry, dict):
+        fail("registry.binding")
+    profiles = registry.get("profiles")
+    predecessors = registry.get("captured_runtime_predecessors")
     if (
-        not isinstance(registry, dict)
-        or registry.get("contract") != REGISTRY_CONTRACT
+        registry.get("contract") != REGISTRY_CONTRACT
         or registry.get("version") != 1
         or registry.get("gate") != "MSP-085"
         or registry.get("limits") != HARD_LIMITS
-        or set(registry.get("profiles", {}))
+        or not isinstance(profiles, dict)
+        or set(profiles)
         != {"SYNTHETIC_CONFORMANCE", "CAPTURED_RUNTIME_ZERO_PROMOTION"}
-        or set(registry.get("captured_runtime_predecessors", {}))
+        or not isinstance(predecessors, dict)
+        or set(predecessors)
         != {
             "m7_gateway_source_commit",
             "m7_docs_source_commit",
@@ -321,6 +327,16 @@ def _captured_predecessor_check(
         runtime = run["provenance"]["runtime"]
         if runtime["source_commit"] != expected["m8_gateway_source_commit"]:
             fail("captured.predecessor")
+
+
+def _write_verified_m7_snapshot(
+    directory: pathlib.Path, verified_raw: dict[str, bytes]
+) -> tuple[pathlib.Path, pathlib.Path]:
+    graph_path = directory / "graph.json"
+    replay_path = directory / "replay.json"
+    graph_path.write_bytes(verified_raw["graph"])
+    replay_path.write_bytes(verified_raw["replay"])
+    return graph_path, replay_path
 
 
 def _exact_ebus_identity(fact: dict[str, Any]) -> tuple[bool, bool]:
@@ -568,7 +584,7 @@ def derive_captured(
 ) -> dict[str, Any]:
     predecessor = promotion_registry["captured_runtime_predecessors"]
     try:
-        projected, _ = status_projector.load_verified_projection(
+        projected, verified_raw = status_projector.load_verified_projection(
             graph_path=graph_path,
             replay_path=replay_path,
             registry_path=m7_registry_path,
@@ -582,34 +598,39 @@ def derive_captured(
         )
         if status_projector.render(projected) != status_raw:
             fail("captured.status")
-        graph, _ = candidate.load_json(graph_path, input_kind="graph")
-        replay, _ = candidate.load_json(replay_path, input_kind="source")
+        graph = json.loads(verified_raw["graph"])
+        replay = json.loads(verified_raw["replay"])
         evidence, evidence_raw = coexistence.load_json(
             evidence_path, "json.syntax", bounded=True
         )
         m8_registry, m8_registry_raw = coexistence.load_json(
             m8_registry_path, "registry.binding"
         )
-        m7_paths = {
-            "graph": graph_path,
-            "replay": replay_path,
-            "registry": m7_registry_path,
-            "source_bundle": source_bundle_path,
-            "source_replay": source_replay_path,
-            "terminal_graph": terminal_graph_path,
-            "terminal_replay": terminal_replay_path,
-            "terminal_source_bundle": terminal_source_bundle_path,
-            "terminal_source_replay": terminal_source_replay_path,
-            "status": status_path,
-        }
-        coexistence.verify(
-            evidence,
-            len(evidence_raw),
-            m8_registry,
-            m8_registry_raw,
-            m7_paths,
-            require_private=True,
-        )
+        with tempfile.TemporaryDirectory(prefix="leaf-promotion-m7-") as directory:
+            snapshot_root = pathlib.Path(directory)
+            snapshot_graph, snapshot_replay = _write_verified_m7_snapshot(
+                snapshot_root, verified_raw
+            )
+            m7_paths = {
+                "graph": snapshot_graph,
+                "replay": snapshot_replay,
+                "registry": m7_registry_path,
+                "source_bundle": source_bundle_path,
+                "source_replay": source_replay_path,
+                "terminal_graph": terminal_graph_path,
+                "terminal_replay": terminal_replay_path,
+                "terminal_source_bundle": terminal_source_bundle_path,
+                "terminal_source_replay": terminal_source_replay_path,
+                "status": status_path,
+            }
+            coexistence.verify(
+                evidence,
+                len(evidence_raw),
+                m8_registry,
+                m8_registry_raw,
+                m7_paths,
+                require_private=True,
+            )
         report, report_raw = coexistence.load_json(
             report_path, "captured.coexistence", bounded=True
         )
