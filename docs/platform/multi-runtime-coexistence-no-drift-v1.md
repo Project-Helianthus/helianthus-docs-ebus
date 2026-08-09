@@ -2,22 +2,27 @@ Canonical source: this page.
 
 # Multi-Runtime Coexistence No-Drift V1
 
-Issue: `Project-Helianthus/helianthus-docs-ebus#365` (`MSP-08`, M8).
+Issues: `Project-Helianthus/helianthus-docs-ebus#365` (`MSP-08`, M8) and
+`Project-Helianthus/helianthus-docs-ebus#391` (`MSP-08-LIVE-R1`).
 
-Plan provenance: the locked multi-runtime semantic platform plan, its `MSP-08`
-row, and predecessor completion token
-`MSP-07@ff511b035b85aef6123fb0853bb3d2f3af6fc01e`. The canonical M7 candidate
-graph documentation input is commit
-`ea88fef23ecb154b08f70e7f94b36e1738ed08bf`.
+The historical synthetic predecessor is gateway commit
+`ff511b035b85aef6123fb0853bb3d2f3af6fc01e` with candidate-graph docs commit
+`ea88fef23ecb154b08f70e7f94b36e1738ed08bf`. The live predecessor is the M7
+gateway merge `8bcba2107d10b149f984ac9546ea6427a9cda8a1` with M7 docs merge
+`35d2eba256a77b6575a2b45c07e73f054ff74ced`. These are ordinary source
+provenance bindings, not execution authorization.
 
 ## Purpose And Boundary
 
 This language-neutral executable contract proves EEBUS-G18 coexistence no
-drift. It freezes a complete eBUS/consumer baseline, captures five compared
-runs, derives every result in an offline verifier, and accepts only when the
-protected outputs remain byte-equal after the closed normalization procedure.
-It is additive documentation and evidence machinery. It does not change a
-runtime API.
+drift. Its synthetic profile freezes a complete eBUS/consumer baseline and
+captures five compared runs. Its live profile captures four states with the
+same exact gateway artifact: connected baseline, raw/withheld evidence,
+restart persistence, and connected rollback after the evidence graph is
+dropped. Every result is derived in an offline verifier and accepted only when
+the protected outputs remain byte-equal after the closed normalization
+procedure. It is additive documentation and evidence machinery. It does not
+change a runtime API.
 
 Existing promoted eBUS leaves remain authoritative. eeBUS candidate and
 conflict facts may appear only on the existing internal
@@ -36,8 +41,15 @@ evidence and G19 direct outbound VR940 TCP/TLS/WebSocket/SHIP and first SPINE
 data are excluded. A G17 or G19 claim makes this artifact invalid.
 
 The repository positive fixture is synthetic offline evidence. It is not a
-canonical positive live VR940 claim and cannot be cited as one. It contains no
-vendor-restricted material or private protocol text.
+canonical positive live VR940 claim and cannot be cited as one. The captured
+runtime profile instead validates the supplied M7 graph and source evidence,
+regenerates replay, and binds the result to the live M7 source commits above.
+Neither profile contains vendor-restricted material or private protocol text.
+
+The live M7 graph currently contains inspectable `RAW_ONLY` and `WITHHELD`
+facts. M8 preserves those actual statuses and does not fabricate `CANDIDATE`
+or `CONFLICTED` facts merely to satisfy a synthetic scenario. M8 does not
+authorize M8.5 or M9 and does not promote any leaf.
 
 ## Closed Machine Contract
 
@@ -51,7 +63,9 @@ The canonical artifacts are:
   schema ID
   `https://docs.helianthus.local/schemas/multi-runtime-coexistence-report-v1.schema.json`;
 - `docs/platform/schemas/multi-runtime-coexistence-registry-v1.json`;
+- `docs/platform/schemas/draft-candidate-fact-public-status-v1.schema.json`;
 - `scripts/validate_multi_runtime_coexistence.py`;
+- `scripts/project_candidate_fact_public_status.py`;
 - `scripts/generate_multi_runtime_coexistence_fixture.py`; and
 - `docs/platform/fixtures/coexistence-no-drift/v1`.
 
@@ -60,6 +74,10 @@ The evidence contract ID is
 contract ID is
 `helianthus.platform.multi-runtime-coexistence-report.v1`. The registry ID is
 `helianthus.platform.multi-runtime-coexistence-registry.v1`.
+
+Every accepted evidence and report artifact declares
+`export_tier=PUBLIC_REDACTED`. Raw operator captures are inputs to the gateway
+harness, not valid instances of this public evidence contract.
 
 Unknown fields, duplicate JSON keys, malformed UTF-8, non-integer JSON
 numbers, negative zero, integers outside the portable JSON safe-integer range,
@@ -73,16 +91,46 @@ The executable command is:
 validate_multi_runtime_coexistence.py verify \
   --evidence <coexistence-evidence.json> \
   --registry <multi-runtime-coexistence-registry-v1.json> \
-  --m7-graph <draft-candidate-fact-graph.json> \
-  --m7-replay <draft-candidate-fact-replay.json> \
+  --m7-graph <private-draft-candidate-fact-graph.json> \
+  --m7-replay <private-draft-candidate-fact-replay.json> \
   --m7-registry <draft-candidate-fact-registry-v1.json> \
-  --m7-source-bundle <synchronized-evidence-bundle.json> \
-  --m7-source-replay <synchronized-evidence-replay.json>
+  --m7-source-bundle <private-synchronized-evidence-bundle.json> \
+  --m7-source-replay <private-synchronized-evidence-replay.json> \
+  --m7-terminal-graph <public-source-terminal-graph.json> \
+  --m7-terminal-replay <public-source-terminal-replay.json> \
+  --m7-terminal-source-bundle <public-source-terminal-bundle.json> \
+  --m7-terminal-source-replay <public-source-terminal-source-replay.json>
 ```
 
 Replace `verify` with `report` to emit exact RFC 8785/JCS-subset report bytes.
 `verify` emits only `ok`. Failure emits exactly one validation category and no
-partial report.
+partial report. For captured-runtime evidence, both commands require the
+private inputs, rederive the public status projection in-process, require exact
+bytes, and bind the private graph, replay, source bundle, and source replay as
+immutable inputs. `verify-public` accepts only the public terminal inputs and
+emits `public-only-ok`; it cannot emit a report or establish G18 PASS.
+
+The public M7 status projection is generated, never hand-authored:
+
+```text
+project_candidate_fact_public_status.py \
+  --graph <private-draft-candidate-fact-graph.json> \
+  --replay <private-draft-candidate-fact-replay.json> \
+  --registry <draft-candidate-fact-registry-v1.json> \
+  --source-bundle <private-synchronized-evidence-bundle.json> \
+  --source-replay <private-synchronized-evidence-replay.json> \
+  --source-commit <40-character-gateway-commit> \
+  --docs-source-commit <40-character-docs-commit> \
+  --expect <committed-public-status.json>
+```
+
+The projector first runs the complete synchronized-evidence and candidate-fact
+validators, regenerates the candidate replay, and then emits deterministic
+public bytes containing only candidate ID, fact hash, status, and terminal
+class. `--expect` requires byte-for-byte equality with the committed public
+projection. A changed but otherwise valid graph or replay fails
+`projection.binding`; invalid private input fails in its originating validator.
+Private inputs remain outside git.
 
 ## Frozen Protected Views
 
@@ -150,11 +198,13 @@ Each digest is lowercase SHA-256 over the ASCII domain, one NUL byte, and the
 canonical bytes. Equality is verifier-derived. Caller-asserted hashes,
 booleans, or verdicts have no authority.
 
-## Required Scenario Sequence
+## Required Scenario Profiles
 
 Runs are ordered by increasing monotonic capture offset. Their IDs, states,
 runtime/config provenance, immutable inputs, state evidence, and protected
 views are closed.
+
+### Synthetic Offline Fixture
 
 | State | Required state evidence | Consumer result |
 | --- | --- | --- |
@@ -170,6 +220,23 @@ explicit outcomes, not generic success. A missing state record, zero-length
 run list, generic `PASS`, or no-services run that omits its degraded outcome is
 invalid. There is no empty-success path.
 
+### Captured Runtime Evidence
+
+All four states use the same exact gateway artifact and keep the eeBUS runtime
+connected. Candidate evidence is an offline harness input and remains confined
+to `CANDIDATE_DEBUG_REPLAY`; it does not alter the runtime's public surfaces.
+
+| State | Required state evidence | Consumer result |
+| --- | --- | --- |
+| `EEBUS_CONNECTED_BASELINE` | Runtime connected; graph absent; at least one visible service | Live baseline captured with exact no drift |
+| `EEBUS_CONNECTED_RAW_WITHHELD` | Validated M7 graph present; real `RAW_ONLY` and `WITHHELD` counts and facts | Raw-first facts confined; exact no drift |
+| `EEBUS_RESTART_PERSISTED` | Same artifact after restart; runtime connected; same validated graph | Trust/session visibility survives restart; exact no drift |
+| `EEBUS_CONNECTED_ROLLBACK` | Runtime stays connected; graph evidence removed | Consumer baseline remains exact and authority unchanged |
+
+The live profile proves restart persistence without turning runtime shutdown
+into rollback. Its rollback is removal of candidate evidence from the harness,
+not disconnection of the paired VR940 runtime.
+
 ## Provenance Binding
 
 Every result binds all of the following:
@@ -184,31 +251,64 @@ Every result binds all of the following:
   maximum evidence age, verification offset, and clock hash;
 - every protected raw payload digest and exact canonical byte length;
 - the supplied M7 graph and replay digests and exact canonical byte lengths;
-  and
+- exact content digests and byte lengths for the M7 registry, synchronized
+  source bundle, and synchronized source replay;
+- for captured evidence, the exact content digest of the public-redacted M7
+  status projection bound to the real graph and replay hashes; and
 - evidence ID/hash and registry content digest.
 
-The M7 graph is not accepted from hashes alone. The verifier invokes the
-existing synchronized-evidence and candidate-fact validators, regenerates the
-M7 replay, requires deep equality with the supplied replay, and then requires
-the exact frozen graph and replay IDs/hashes. The supplied graph, replay,
-registry, synchronized bundle, and synchronized replay are immutable inputs.
+The M7 graph is not accepted from caller attribution alone. The verifier
+invokes the existing synchronized-evidence and candidate-fact validators,
+regenerates the M7 replay, and requires deep equality with the supplied replay.
+The synthetic profile then requires its frozen graph, replay, registry,
+source-bundle, and source-replay digests. The captured runtime profile also
+requires the frozen public status projection of the real M7 graph. That
+projection contains only candidate IDs, fact hashes, statuses, and terminal
+classes: 18 facts, including 14 `RAW_ONLY` and 4 `WITHHELD`. It contains no
+protocol identities or addresses and binds source graph
+`dcfgv1:sha256:a7e4e661b2b78b37ff60f6f5c5b419d9af1cdf1b0f0570a9168b3ecbd3f99be9`.
+The separate public source-terminal graph is validated only to supply the
+complete anti-leak vocabulary. It cannot supply live fact counts or substitute
+for the private graph during `verify` or `report`.
+Substituting any otherwise valid synthetic or live input fails
+`provenance.m7`. Every supplied M7 input is immutable.
 
-The baseline runtime source is exact gateway main
-`ff511b035b85aef6123fb0853bb3d2f3af6fc01e`. All compared and rollback runs
-must use one exact new runtime identity whose parent is that baseline. A
-missing, duplicate, stale, reordered, mismatched, or unhashed provenance item
-fails closed. Capture age is derived only from bound monotonic offsets; replay
-does not read the wall clock.
+The synthetic baseline runtime source is exact gateway main
+`ff511b035b85aef6123fb0853bb3d2f3af6fc01e`; its compared runtime has that
+source as parent. The captured runtime profile uses one exact artifact across
+all four states and requires source parent
+`8bcba2107d10b149f984ac9546ea6427a9cda8a1`. A missing, duplicate, stale,
+reordered, mismatched, or unhashed provenance item fails closed. Capture age is
+derived only from bound monotonic offsets; replay does not read the wall clock.
 
 ## Authority And Anti-Leak Rules
 
-The internal candidate facts prove visibility without publication. Their
-closed fields are candidate ID, status, terminal state, and visibility
-channel. The candidate run accepts only `CANDIDATE` with no terminal state.
-The conflict run accepts only `WITHHELD` with terminal `CONFLICT`.
+The internal facts prove visibility without publication. Their closed fields
+are candidate ID, status, terminal state, and visibility channel. The
+synthetic candidate run accepts only `CANDIDATE` with no terminal state and its
+conflict run accepts only `WITHHELD` with terminal `CONFLICT`. The live profile
+accepts the validated M7 statuses `RAW_ONLY`, `CANDIDATE`, `CONFLICTED`, and
+`WITHHELD` but reports only what the supplied graph actually contains.
 
-Protected outputs must contain no candidate/conflict field or value. In
-particular, candidate or conflict material cannot appear in:
+Every graph-derived candidate ID, the four statuses `RAW_ONLY`, `CANDIDATE`,
+`CONFLICTED`, and `WITHHELD`, the terminal-state fields, and
+`CANDIDATE_DEBUG_REPLAY` are forbidden in every protected view. This rule also
+applies to baseline and rollback views.
+
+The same prohibition covers the complete M7 source-terminal structure,
+including its binding kind, source contract and ID, schema version, error
+category, and graph-derived terminal vocabulary. Splitting those fields across
+adjacent objects does not make them publishable.
+
+Public redaction scans the complete artifact. Qualified or prefixed SHIP/SPINE
+address and selector keys are treated as identity fields. A key ending in
+`hash`, `digest`, or `commit` is exempt only when its value is a valid typed
+SHA-256 digest, namespaced SHA-256 digest, 40-character commit, or null where
+the schema permits null. Private IPv4, unique-local/link-local/loopback IPv6,
+all supported MAC spellings, SKIs, and private-key PEM labels fail closed.
+
+Protected outputs must contain no candidate, raw-only, conflicted, or withheld
+fact field or value. In particular, this internal material cannot appear in:
 
 - `ebus.v1` MCP responses;
 - the MCP public inventory;
@@ -227,12 +327,22 @@ authorize protocol translation.
 
 ## Rollback
 
-Rollback disables the eeBUS runtime and candidate graph in the same compared
-runtime artifact. The verifier requires `EEBUS_DISABLED_ROLLBACK`, disabled
-config bits, explicit `ROLLBACK_BASELINE_RESTORED`, zero service/candidate/
-conflict counts, and exact shape and canonical bytes for all protected views.
-Rollback succeeds only when it demonstrates restoration of the exact
-baseline. Restart success or an empty response is not rollback evidence.
+Synthetic rollback disables the eeBUS runtime and candidate graph in the same
+compared artifact. The verifier requires `EEBUS_DISABLED_ROLLBACK`, disabled
+config bits, explicit `ROLLBACK_BASELINE_RESTORED`, zero service and fact
+counts, and exact shape and canonical bytes for all protected views. Live
+rollback keeps the runtime connected, drops only the candidate graph, requires
+`EEBUS_CONNECTED_ROLLBACK` and `GRAPH_EVIDENCE_DROPPED`, and retains at least
+one visible service. In either profile, restart success or an empty response is
+not rollback evidence.
+
+Live restart persistence requires two distinct process instances. The restart
+state carries domain-hashed immutable inputs for the observed process event,
+the redacted pre/post state snapshots, and the observed reconnection event.
+The verifier derives process, trust, peer-binding, and session continuity from
+those captures. Relabeling a state in one process, changing a capture without
+its input digest, reusing the same process instance ID, changing either
+persisted binding, reusing the old session, or omitting reconnection fails.
 
 ## Validation Precedence
 
@@ -253,11 +363,12 @@ Validation stops at the first category in this exact order:
 13. `canonicalization.invalid`
 14. `hash.payload`
 15. `anti_leak.candidate`
-16. `authority.ebus`
-17. `gate.scope`
-18. `drift.consumer`
-19. `rollback.drift`
-20. `hash.evidence`
+16. `redaction.public`
+17. `authority.ebus`
+18. `gate.scope`
+19. `drift.consumer`
+20. `rollback.drift`
+21. `hash.evidence`
 
 Allocation-driving byte, nesting, string, member, and list limits run before
 recursive parsing by necessity. They still report `limits.exceeded`.
@@ -271,7 +382,7 @@ Validation emits no partial success or report.
 | `max_depth` | 32 |
 | `max_runs` | 8 |
 | `max_views_per_run` | 16 |
-| `max_inputs_per_run` | 16 |
+| `max_inputs_per_run` | 27 |
 | `max_internal_facts_per_run` | 64 |
 | `max_payload_bytes` | 262,144 |
 | `max_string_bytes` | 4,096 |
@@ -285,8 +396,30 @@ ceilings. Raising, lowering, omitting, or exceeding a ceiling is invalid.
 
 The transport-gate evidence artifact is the closed evidence JSON plus its
 verifier-derived report. It proves coexistence only and is suitable for the
-`eebus_v0` G18 row. It does not satisfy G17 or G19 and does not require a live
-outbound connection.
+`eebus_v0` G18 row. Synthetic evidence does not satisfy G17 or G19 and does not
+require a live outbound connection. Captured runtime evidence may use the
+already-proven outbound connection, but this contract still makes no new G17
+or G19 claim.
+
+Runtime/operator captures may inspect local raw eeBUS facts. Any evidence
+published from this gate must use the explicit `public-redacted` export path:
+stable device identity and protocol addresses are removed, while all
+cryptographic secrets remain forbidden in every tier. The protected-view
+comparison binds the effective auth and mask scope and never permits a tier
+change on dereference.
+
+The public verifier scans the complete evidence artifact, not only protected
+payloads. It normalizes snake-case, kebab-case, and camel-case field names and
+fails closed on private-key or key-material fields; encrypted, DSA, and other
+private-key PEM labels; credential, secret, password, token, or trust-store
+fields; private IPv4 addresses; colon, hyphen, dotted, or compact MAC
+addresses; raw 40-hex-character SKIs; and unredacted stable device, entity,
+feature, peer, SHIP, authentication-subject, endpoint, source, target, or other
+protocol addresses. Only typed commits, hashes, and digests bypass scalar
+secret-pattern inspection. A retained secondary identifier must use the
+deterministic `redacted:sha256:<12-hex>` form. This rule does not redefine SKI,
+SHIP ID, or SPINE addresses as cryptographic secrets in the local authorized
+operator view.
 
 The positive fixture IDs are:
 
@@ -294,13 +427,24 @@ The positive fixture IDs are:
 - `MSP08-G18-SYNTHETIC-REPORT-001`.
 
 The generated report includes the exact baseline runtime identity and eleven
-view hashes, all five scenario results and view hashes, the six-row acceptance
-matrix, the exact M7 binding, and the rollback result. `PASS` is emitted only
-after every validation stage completes.
+view hashes, every scenario result and view hash, the profile-specific
+acceptance matrix, the exact M7 binding, and the rollback result. `PASS` is
+emitted only after every validation stage completes.
+
+Live evidence reserves the seven-character `-REPORT` suffix within the
+121-character evidence fixture-ID limit, so every accepted evidence ID yields
+a report fixture ID within the report schema's 128-character ceiling.
+
+The report schema enforces profile-specific cardinality: synthetic evidence
+produces five scenario results and six acceptance rows, while captured live
+evidence produces three scenario results and four acceptance rows. Both
+profiles carry the same `PUBLIC_REDACTED` export tier as their source evidence.
 
 ## Acceptance Matrix
 
-Each state must pass every listed check. No cell is caller-provided.
+Each state must pass every listed check. No cell is caller-provided. The table
+below is the synthetic profile; the captured profile applies the same checks
+to its four live states, including restart persistence.
 
 | State | Provenance | Explicit state | Complete views | Hashes | Shape | Canonical bytes | eBUS authority | Candidate confined | V1 only | G18 only |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -315,8 +459,8 @@ The machine check IDs are `PROVENANCE_BOUND`,
 `STATE_EVIDENCE_EXPLICIT`, `PROTECTED_VIEW_SET_COMPLETE`,
 `PAYLOAD_HASHES_VERIFIED`, `SHAPE_IDENTICAL`,
 `CANONICAL_BYTES_IDENTICAL`, `EBUS_AUTHORITY_PRESERVED`,
-`CANDIDATE_CONFINED`, `V1_SURFACES_PRESERVED`, and
-`G18_SCOPE_ONLY`.
+`CANDIDATE_CONFINED`, `PUBLIC_REDACTION_ENFORCED`,
+`V1_SURFACES_PRESERVED`, and `G18_SCOPE_ONLY`.
 
 ## Mutation Classes
 
@@ -351,15 +495,16 @@ positive evidence and require one precedence category.
 ## Gateway RED Handoff
 
 The next gateway RED test should vendor or fetch these exact docs artifacts by
-immutable docs commit, then emit one evidence JSON conforming to the evidence
-schema. It must supply all five M7 validation inputs to the verifier. Expected
-runtime output paths are the registry `capture_path` values under
-`artifacts/protected/`; candidate-only facts remain in the separate internal
-capture for `CANDIDATE_DEBUG_REPLAY`.
+immutable docs commit, then emit one captured-runtime evidence JSON conforming
+to the evidence schema. It must supply all five M7 validation inputs to the
+verifier. Expected runtime output paths are the registry `capture_path` values
+under `artifacts/protected/`; raw and withheld facts remain in the separate
+internal capture for `CANDIDATE_DEBUG_REPLAY`.
 
-Gateway acceptance must exercise the six registry scenario IDs in order, use
-the eleven protected view IDs without substitution, and run all twenty-two
-mutation classes. Its G18 artifact is the input evidence plus exact report
-bytes. A gateway test must not replace the verifier with a caller comparison,
-drop fields before capture, extend masking, infer a state from missing data,
-or claim G17/G19 from this contract.
+Gateway synthetic conformance must retain the six synthetic scenario IDs and
+all mutation classes. Live acceptance must exercise the four captured-runtime
+states in order with one artifact and the eleven protected view IDs without
+substitution. Its G18 artifact is the input evidence plus exact report bytes.
+A gateway test must not replace the verifier with a caller comparison, drop
+fields before capture, extend masking, infer a state from missing data, or
+claim G17/G19 from this contract. Passing M8 does not authorize M8.5 or M9.

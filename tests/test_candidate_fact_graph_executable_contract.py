@@ -1480,6 +1480,19 @@ def _refresh_view_hashes(evidence: dict[str, object], view: dict[str, object]) -
     )
 
 
+def _refresh_coexistence_evidence_identity(evidence: dict[str, object]) -> None:
+    evidence_view = {
+        key: value
+        for key, value in evidence.items()
+        if key not in {"evidence_id", "evidence_hash"}
+    }
+    evidence_hash = _coexistence_digest(
+        b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1", evidence_view
+    )
+    evidence["evidence_hash"] = evidence_hash
+    evidence["evidence_id"] = "mrcv1:" + evidence_hash
+
+
 def _run_by_state(evidence: dict[str, object], state: str) -> dict[str, object]:
     return next(run for run in evidence["runs"] if run["state"] == state)
 
@@ -1612,8 +1625,8 @@ def test_msp08_positive_fixture_ids_states_and_protected_views_are_closed() -> N
     assert evidence["scope"]["live_vr940_claim"] is False
     assert evidence["scope"]["claims"] == ["EEBUS-G18"]
     assert [run["state"] for run in evidence["runs"]] == registry[
-        "scenario_order"
-    ]
+        "scenario_profiles"
+    ]["SYNTHETIC_OFFLINE_FIXTURE"]
     expected_views = registry["protected_views"]
     for run in evidence["runs"]:
         assert [view["view_id"] for view in run["protected_views"]] == (
@@ -1658,6 +1671,994 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
     assert second.stderr == ""
 
 
+@pytest.mark.parametrize(
+    "leak",
+    [
+        {"spineService": "private-spine-service"},
+        {"spineEntity": "private-spine-entity"},
+        {"spineFeature": "private-spine-feature"},
+        {"frame_route": {"source": 247, "target": 21}},
+        {"frame_route": {"source": "0xf7", "target": "0x15"}},
+        {"eebusService": "private-eebus-service"},
+        {"eebusEntity": "private-eebus-entity"},
+        {"eebusFeature": "private-eebus-feature"},
+        {"feature_path": "private-feature-path"},
+        {"debug_detail": "127.0.0.1:4712"},
+        {"debug_detail": "169.254.12.34"},
+        {"debug_detail": "10.255.255.025:4712"},
+        {"debug_detail": "999.999.999.999:4712"},
+        {"debug_detail": "1.10.255.255.254:4712"},
+        {"addresses": [4, 246]},
+        {"ship_identifier": "synthetic-peer-identity"},
+        {"ship_identity": "synthetic-peer-identity"},
+        {"ship_identities": ["synthetic-peer-identity"]},
+        {"debug_detail": "http://10.255.255.254.:4712"},
+        {"debug_detail": "10..8.8.8.8"},
+        {"debug_detail": "100.64.0.1"},
+        {"debug_detail": "224.0.0.251"},
+        {"debug_detail": "239.255.255.250:1900"},
+        {"debug_detail": "8.8.8.8."},
+        {"debug_detail": "Authorization: Bearer synthetic-credential"},
+        {"debug_detail": "Basic dXNlcjpwYXNz"},
+        {"debug_detail": "api_key: private-api-key"},
+        {"debug_detail": "session_cookie=synthetic-cookie"},
+        {"debug_detail": "access_token=synthetic-token"},
+        {"debug_detail": "refresh_token=synthetic-token"},
+        {"debug_detail": "client_secret=synthetic-secret"},
+        {"debug_detail": "csrf_token=synthetic-token"},
+        {"debug_detail": "private_key=synthetic-key"},
+        {"debug_detail": "ff02::fb"},
+        {"10.255.255.254": "redacted"},
+        {"selectors": ["private-selector"]},
+        {"ship_ids": ["private-ship-id"]},
+        {"spine_entities": ["private-spine-entity"]},
+        {"spine_services": ["private-spine-service"]},
+        {"spine_sources": [247]},
+        {"spine_source_hash": "b" * 40},
+        {"eebus_devices": ["private-eebus-device"]},
+        {"eebus_nodes": ["private-eebus-node"]},
+        {"eebus_peers": ["private-eebus-peer"]},
+        {"endpoint_ids": ["private-endpoint-id"]},
+        {"remote_skis": ["b" * 40]},
+        {"serial_numbers": ["private-serial"]},
+        {"authorization": "Bearer synthetic-credential"},
+        {"authHeader": "Bearer synthetic-credential"},
+        {"tls_key": "cHJpdmF0ZS1rZXktbWF0ZXJpYWw="},
+        {"passphrase": "synthetic-passphrase"},
+        {"psk": "synthetic-psk"},
+        {"pre_shared_key": "synthetic-key"},
+        {"device_uid": "private-device-uid"},
+        {"peer_uid": "private-peer-uid"},
+        {"spine_uid": "private-spine-uid"},
+        {"access_key_id": "SYNTHETICACCESSKEY"},
+        {"endpoint_hash": "b" * 40},
+        {"session_cookie": "synthetic-cookie"},
+        {"tokens": ["synthetic-token"]},
+        {"ship_hash": "b" * 40},
+        {"spine_hash": "b" * 40},
+    ],
+)
+def test_msp08_report_rejects_native_identity_and_non_public_ipv4(
+    tmp_path: pathlib.Path, leak: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "debug.ebus")
+        view["payload"]["data"]["public_leak"] = leak
+        _refresh_view_hashes(evidence, view)
+    evidence_view = {
+        key: value
+        for key, value in evidence.items()
+        if key not in {"evidence_id", "evidence_hash"}
+    }
+    evidence_hash = _coexistence_digest(
+        b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1", evidence_view
+    )
+    evidence["evidence_hash"] = evidence_hash
+    evidence["evidence_id"] = "mrcv1:" + evidence_hash
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "redaction-leak.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "redaction.public\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "leak",
+    [
+        "candidateFacts",
+        "candidates",
+        "conflicted",
+        "withheld",
+        {"candidate_count": 1},
+        {"candidate_ids": []},
+        {"candidate_statuses": []},
+        {"fact_hash": "sha256:" + "a" * 64},
+        {"evidence_digests": ["sha256:" + "a" * 64]},
+        {"evidence_refs": []},
+        {"identity_family": "redacted"},
+        {"debug_only": True},
+        {"proposed_path": "/candidate/private"},
+        {"retest_trigger": "private"},
+        {"raw_only_count": 14},
+        {"raw_only": True},
+        {"source_terminals": []},
+        {"terminal_negative_states": []},
+    ],
+)
+def test_msp08_report_rejects_candidate_metadata_names(
+    tmp_path: pathlib.Path, leak: object
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = run["protected_views"][-1]
+        view["payload"]["data"]["candidate_metadata_leak"] = leak
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "candidate-metadata-leak.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "anti_leak.candidate\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_allows_globally_routable_ipv4(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "debug.ebus")
+        view["payload"]["data"]["debug_detail"] = "8.8.8.8:53"
+        view["payload"]["data"]["endpoint_count"] = 2
+        view["payload"]["data"]["address_count"] = 2
+        view["payload"]["data"]["resource_id"] = "redacted:sha256:" + "b" * 12
+        view["payload"]["data"]["endpoint_hash"] = "sha256:" + "c" * 64
+        view["payload"]["data"]["tls_key_hash"] = "sha256:" + "e" * 64
+        view["payload"]["data"]["ship_ids"] = ["redacted:sha256:" + "d" * 12]
+        view["payload"]["data"]["token_count"] = 2
+        view["payload"]["data"]["monkey_material"] = "public"
+        view["payload"]["data"]["debug_note"] = "basic public metadata"
+        view["payload"]["data"]["debug_version"] = "v10.2.3.4"
+        view["payload"]["data"]["debug_note_secondary"] = (
+            "candidate facts are not published"
+        )
+        view["payload"]["data"]["scope_note"] = "eebus.v2 is not active"
+        view["payload"]["data"]["scope_note_m9"] = "M9 is not active"
+        view["payload"]["data"]["credential_note"] = (
+            "Basic authentication and API key support are disabled"
+        )
+        view["payload"]["data"]["protocol_label"] = "EBUS"
+        view["payload"]["data"]["phase"] = "post"
+        view["payload"]["data"]["operation"] = "action"
+        _refresh_view_hashes(evidence, view)
+    evidence_view = {
+        key: value
+        for key, value in evidence.items()
+        if key not in {"evidence_id", "evidence_hash"}
+    }
+    evidence_hash = _coexistence_digest(
+        b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1", evidence_view
+    )
+    evidence["evidence_hash"] = evidence_hash
+    evidence["evidence_id"] = "mrcv1:" + evidence_hash
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "public-ipv4.json", evidence)
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["verdict"] == "PASS"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "LEGACY_TOOL",
+        "LEGACY_NAMESPACE",
+        "MALFORMED_TOOL",
+        "NESTED_V2",
+        "NESTED_VERSION2",
+        "NESTED_REVISION2",
+        "NESTED_REVISION_WRAPPER",
+        "NESTED_SCHEMA2",
+        "NESTED_VERSION_TRUE",
+        "SIBLING_VERSION_WRAPPERS",
+        "ALIASES",
+        "ALIASES_INVENTORY",
+        "ALIASES_ASSOCIATED",
+        "ALIASES_NESTED_CONTEXT",
+        "ALIASES_WRAPPER",
+        "SNAKE_CASE_V2",
+    ],
+)
+def test_msp08_report_rejects_non_v1_eebus_surfaces(
+    tmp_path: pathlib.Path, mutation: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        if mutation in {"LEGACY_TOOL", "MALFORMED_TOOL"}:
+            view = _view_by_id(run, "mcp.tool.inventory")
+            tool = (
+                "eebus.runtime.status.get"
+                if mutation == "LEGACY_TOOL"
+                else " eebus.runtime.status.get"
+            )
+            view["payload"]["data"]["tools"].append(tool)
+        elif mutation == "LEGACY_NAMESPACE":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["namespace"] = "eebus.legacy"
+        elif mutation == "SNAKE_CASE_V2":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["eebus_v2"] = {"enabled": True}
+        elif mutation == "NESTED_V2":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["alternate_contracts"] = [
+                {"active": True, "namespace": "eebus.v2"}
+            ]
+        elif mutation in {
+            "NESTED_VERSION2",
+            "NESTED_REVISION2",
+            "NESTED_REVISION_WRAPPER",
+            "NESTED_SCHEMA2",
+            "NESTED_VERSION_TRUE",
+        }:
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            alternate_contract = {"active": True, "namespace": "eebus.v1"}
+            if mutation == "NESTED_REVISION_WRAPPER":
+                alternate_contract.update({"Key": "revision", "Value": 2})
+            else:
+                version_key = {
+                    "NESTED_REVISION2": "revision",
+                    "NESTED_SCHEMA2": "schema",
+                }.get(mutation, "version")
+                alternate_contract[version_key] = (
+                    True if mutation == "NESTED_VERSION_TRUE" else 2
+                )
+            view["payload"]["data"]["alternate_contracts"] = [alternate_contract]
+        elif mutation == "SIBLING_VERSION_WRAPPERS":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["alternate_contracts"] = [
+                {"Key": "namespace", "Value": "eebus.v1"},
+                {"Key": "revision", "Value": 2},
+            ]
+        elif mutation == "ALIASES":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["aliases"] = ["eebus.v1.compat"]
+        elif mutation == "ALIASES_INVENTORY":
+            view = _view_by_id(run, "mcp.tool.inventory")
+            view["payload"]["data"]["aliases"] = ["eebus.v1.compat"]
+        elif mutation == "ALIASES_ASSOCIATED":
+            view = _view_by_id(run, "mcp.tool.inventory")
+            view["payload"]["data"]["alternate_contract"] = {
+                "aliases": ["compat"],
+                "namespace": "eebus.v1",
+            }
+        elif mutation == "ALIASES_NESTED_CONTEXT":
+            view = _view_by_id(run, "mcp.tool.inventory")
+            view["payload"]["data"]["alternate_contract"] = {
+                "metadata": {"aliases": ["compat"], "version": 2},
+                "namespace": "eebus.v1",
+            }
+        else:
+            view = _view_by_id(run, "mcp.tool.inventory")
+            view["payload"]["data"]["wrapper"] = {
+                "Key": "aliases",
+                "Value": ["eebus.v1.compat"],
+            }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "legacy-eebus.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_eebus_semantic_leaf_promotion(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "semantic.registry")
+        for leaf in view["payload"]["data"]["leaves"]:
+            leaf["source"] = "eebus"
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "eebus-semantic-leaf.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_nested_eebus_semantic_leaf_promotion(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "semantic.registry")
+        view["payload"]["data"]["alternate_registry"] = {
+            "leaves": [{"promotion_state": "PROMOTED", "source": "eebus"}]
+        }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "nested-eebus-semantic-leaf.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_nested_eebus_semantic_promotion_shape(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "semantic.registry")
+        view["payload"]["data"]["alternate_registry"] = {
+            "leaves": [
+                {"promotion": {"state": "PROMOTED"}, "protocol": "eebus.v1"}
+            ]
+        }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "nested-eebus-promotion-shape.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_nested_eebus_command_route(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "command.routing")
+        view["payload"]["data"]["alternate_routes"] = [
+            {"active": True, "path": "/candidate/private", "provider": "eebus.v1"}
+        ]
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "nested-eebus-route.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_plural_eebus_semantic_authority(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "semantic.registry")
+        view["payload"]["data"]["alternate_registry"] = {
+            "promotion_state": "PROMOTED",
+            "sources": ["eebus.v1"],
+        }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "plural-eebus-authority.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("view_id", ["semantic.registry", "command.routing"])
+def test_msp08_report_rejects_nested_eebus_authority_context(
+    tmp_path: pathlib.Path, view_id: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, view_id)
+        view["payload"]["data"]["fallback_backend"] = {
+            "active": True,
+            "name": "eebus.v1",
+        }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "nested-eebus-authority.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "alias_key",
+    [
+        "legacy_names",
+        "alternate_names",
+        "compat_names",
+        "accepted_names",
+        "synonyms",
+        "equivalent_names",
+    ],
+)
+def test_msp08_report_rejects_equivalent_alias_declarations(
+    tmp_path: pathlib.Path, alias_key: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "mcp.eebus.v1.contract")
+        view["payload"]["data"][alias_key] = ["eebus.v1.compat"]
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "equivalent-alias.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_versioned_eebus_authority_key(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "semantic.registry")
+        view["payload"]["data"]["eebus.v1"] = {"write_authority": True}
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "versioned-eebus-key.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("view_id", ["semantic.registry", "command.routing"])
+def test_msp08_report_rejects_equivalent_eebus_authority_identifier(
+    tmp_path: pathlib.Path, view_id: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, view_id)
+        view["payload"]["data"]["fallback_backend"] = {
+            "active": True,
+            "name": "eebus_v1",
+        }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "equivalent-eebus-authority.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("view_id", ["semantic.registry", "command.routing"])
+@pytest.mark.parametrize("declaration", [True, {"enabled": True}])
+def test_msp08_report_rejects_truthy_eebus_authority_declaration(
+    tmp_path: pathlib.Path, view_id: str, declaration: object
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, view_id)
+        view["payload"]["data"]["eebusAuthority"] = deepcopy(declaration)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "truthy-eebus-authority.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_allows_candidate_only_eebus_prose_in_authority_views(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        for view_id in ("semantic.registry", "command.routing"):
+            view = _view_by_id(run, view_id)
+            view["payload"]["data"]["note"] = "eebus.v1 remains candidate-only"
+            _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "candidate-only-prose.json", evidence)
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["verdict"] == "PASS"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        {"m9_consumer_gate": "AUTHORIZED"},
+        {"Key": "milestone", "Value": "M9"},
+        {"milestone_name": "M9"},
+        {"release": {"milestones": [{"name": "M9"}]}},
+        {"release": ["M9"]},
+    ],
+)
+def test_msp08_report_rejects_later_milestone_authorization(
+    tmp_path: pathlib.Path, declaration: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "debug.ebus")
+        view["payload"]["data"]["later_milestone"] = declaration
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "m9-authorization.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_write_capable_auth_scope(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        auth = run["provenance"]["auth_scope"]
+        auth["permissions"] = ["read:ebus", "write:eebus"]
+        auth_view = {key: value for key, value in auth.items() if key != "scope_hash"}
+        auth["scope_hash"] = _coexistence_digest(
+            b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-AUTH:V1", auth_view
+        )
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "write-capable-auth.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "provenance.auth_mask\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "WRITE_AUTHORITY",
+        "WRITE_TOOL",
+        "NAMESPACE_OPERATION",
+        "NAMESPACE_UNAPPROVED_OPERATION",
+    ],
+)
+def test_msp08_report_rejects_eebus_write_surface(
+    tmp_path: pathlib.Path, mutation: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        if mutation == "WRITE_AUTHORITY":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["write_authority"] = True
+        elif mutation == "WRITE_TOOL":
+            view = _view_by_id(run, "mcp.tool.inventory")
+            view["payload"]["data"]["tools"].append("eebus.v1.values.set")
+        elif mutation == "NAMESPACE_OPERATION":
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["operations"] = ["values.get", "values.set"]
+        else:
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["operations"] = [
+                "runtime.status.get",
+                "configure",
+            ]
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "eebus-write-surface.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "tool",
+    [
+        "eebus.v1.configure",
+        "eebus.v1.control",
+        "eebus.v1.patch",
+        "eebus.v1.execute",
+        "eebus.v1.reboot",
+        "eebus.v1.reset",
+        "eebus.v1.commission",
+        "eebusv1.runtime.status.get",
+    ],
+)
+def test_msp08_report_rejects_unapproved_eebus_tools(
+    tmp_path: pathlib.Path, tool: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "mcp.tool.inventory")
+        view["payload"]["data"]["tools"].append(tool)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "unapproved-eebus-tool.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    ("namespace_key", "payload"),
+    [
+        ("eebus_v1", {"enabled": True}),
+        ("eebus", {"write_enabled": True}),
+    ],
+)
+def test_msp08_report_rejects_namespace_object_surfaces(
+    tmp_path: pathlib.Path, namespace_key: str, payload: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["data"][namespace_key] = deepcopy(payload)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "namespace-object-surface.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        {
+            "authority": "eebus.v1",
+            "namespace": "eebus.v1",
+            "public_v2": False,
+            "version": 1,
+        },
+        {
+            "declarations": [
+                {"Key": "namespace", "Value": "eebus.v1"},
+                {"Key": "authority", "Value": "eebus.v1"},
+            ]
+        },
+        {"namespace": {"const": "eebus.v1"}},
+        {"namespace": {"pattern": r"^eebus\.v1$"}},
+        {
+            "namespace": {"$ref": "#/definitions/eebusNamespace"},
+            "definitions": {
+                "eebusNamespace": {"const": "eebus.v1"},
+            },
+        },
+        {"authority": {"pattern": r"^eebus\.v1$"}},
+        {
+            "authority": {"$ref": "#/definitions/eebusAuthority"},
+            "definitions": {
+                "eebusAuthority": {"const": "eebus.v1"},
+            },
+        },
+        {"propertyNames": {"pattern": r"^namespace$"}},
+        {
+            "name": "namespace",
+            "schema": {"$ref": "#/$defs/namespaceChoice"},
+            "$defs": {"namespaceChoice": {"const": "eebus.v1"}},
+        },
+        {"propertyNames": {"pattern": r"^authority$"}},
+        {
+            "name": "authority",
+            "schema": {"$ref": "#/$defs/authorityChoice"},
+            "$defs": {"authorityChoice": {"const": "eebus.v1"}},
+        },
+        {"namespaces": ["eebus.v1"]},
+        {"Key": "namespaces", "Value": ["eebus.v1"]},
+        {
+            "name": "namespaces",
+            "schema": {"$ref": "#/$defs/namespaceChoices"},
+            "$defs": {"namespaceChoices": {"items": {"const": "eebus.v1"}}},
+        },
+        {"contract": "eebus.v1", "operations": ["values.set"]},
+        {"surface": "eebus.v2"},
+        {
+            "name": "contract",
+            "schema": {"const": "eebus.v1"},
+        },
+        {"ee_bus": {"enabled": True}},
+        {"ee-bus": {"enabled": True}},
+        {"ee.bus": {"enabled": True}},
+        {"eeBusAuthority": True},
+    ],
+)
+def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
+    tmp_path: pathlib.Path, declaration: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["data"]["consumer_contract"] = deepcopy(declaration)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "consumer-eebus-declaration.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        {"aliases": ["eebus_v1"]},
+        {"surface": "eebus_v2_values_get"},
+        {"surface": "eebus_v1_values_set"},
+        {"aliases": ["eeBusV1Compat"]},
+        {"surface": "eeBusV2ValuesGet"},
+        {"surface": "eeBusV1ValuesSet"},
+        {"surface": "eebusv1valuesset"},
+    ],
+)
+def test_msp08_report_rejects_separator_variant_eebus_surfaces(
+    tmp_path: pathlib.Path, declaration: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "debug.ebus")
+        view["payload"]["data"]["alternate_surface"] = deepcopy(declaration)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "separator-variant-surface.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("ip", 167772161),
+        ("ip", "0x0a000001"),
+        ("ipV4", 167772161),
+        ("ipV4", "0x0a000001"),
+        ("ipV6", 1),
+        ("ipV6", "0x1"),
+    ],
+)
+def test_msp08_report_rejects_encoded_private_ip_identity(
+    tmp_path: pathlib.Path, key: str, value: object
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "debug.ebus")
+        view["payload"]["data"][key] = value
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify-public", write_json(tmp_path / "encoded-private-ip.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "redaction.public\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "descriptor",
+    [
+        {"name": "ipV4", "schema": {"const": 167772161}},
+        {"key": "ipV6", "field": {"default": "0x1"}},
+        {"name": "device_id", "values": ["private-stable-device"]},
+    ],
+)
+def test_msp08_report_rejects_schema_wrapped_ip_identity(
+    tmp_path: pathlib.Path, descriptor: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["data"]["address_descriptor"] = deepcopy(descriptor)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify-public", write_json(tmp_path / "wrapped-private-ip.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "redaction.public\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_concatenated_candidate_metadata(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["data"]["withheldcount"] = 1
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "concatenated-candidate-field.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "anti_leak.candidate\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_eebus_declaration_in_payload_meta(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["meta"]["namespace"] = "eebus.v1"
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "payload-meta-namespace.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+def test_msp08_rollback_only_payload_meta_declaration_keeps_drift_precedence(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    rollback = _run_by_state(evidence, "EEBUS_DISABLED_ROLLBACK")
+    view = _view_by_id(rollback, "graphql.schema")
+    view["payload"]["meta"]["namespace"] = "eebus.v1"
+    _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify", write_json(tmp_path / "rollback-payload-meta-namespace.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "rollback.drift\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        {"namespace": {"pattern": r"^eebus\.v1$"}},
+        {
+            "authority": {"$ref": "#/definitions/eebusAuthority"},
+            "definitions": {
+                "eebusAuthority": {"const": "eebus.v1"},
+            },
+        },
+    ],
+)
+def test_msp08_rollback_only_structured_declaration_keeps_drift_precedence(
+    tmp_path: pathlib.Path, declaration: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    rollback = _run_by_state(evidence, "EEBUS_DISABLED_ROLLBACK")
+    view = _view_by_id(rollback, "graphql.schema")
+    view["payload"]["data"]["consumer_contract"] = deepcopy(declaration)
+    _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify", write_json(tmp_path / "rollback-structured-namespace.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "rollback.drift\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("mutation", ["V2", "WRITE", "M9"])
+def test_msp08_rollback_only_scope_mutation_keeps_drift_precedence(
+    tmp_path: pathlib.Path, mutation: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    rollback = _run_by_state(evidence, "EEBUS_DISABLED_ROLLBACK")
+    view = _view_by_id(rollback, "debug.ebus")
+    if mutation == "V2":
+        view["payload"]["data"]["eebus_v2"] = {"enabled": True}
+    elif mutation == "WRITE":
+        view["payload"]["data"]["operation"] = "eebus.v1.values.set"
+    else:
+        view["payload"]["data"]["later_milestone"] = {
+            "m9_consumer_gate": "AUTHORIZED"
+        }
+    _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify", write_json(tmp_path / "rollback-scope-mutation.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "rollback.drift\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("target", ["baseline", "scenario"])
+@pytest.mark.parametrize("mutation", ["duplicate", "substitute", "reorder"])
+def test_msp08_report_schema_requires_exact_ordered_protected_views(
+    tmp_path: pathlib.Path, target: str, mutation: str
+) -> None:
+    report = deepcopy(load_json(COEXISTENCE_GOLDEN_REPORT))
+    view_hashes = (
+        report["baseline"]["view_hashes"]
+        if target == "baseline"
+        else report["scenarios"][0]["view_hashes"]
+    )
+    if mutation == "duplicate":
+        view_hashes[1] = deepcopy(view_hashes[0])
+    elif mutation == "substitute":
+        view_hashes[1]["view_id"] = "mcp.unknown"
+    else:
+        view_hashes[0], view_hashes[1] = view_hashes[1], view_hashes[0]
+    report_path = write_json(tmp_path / "invalid-view-inventory.json", report)
+
+    result = subprocess.run(
+        ["jv", str(COEXISTENCE_REPORT_SCHEMA), str(report_path)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+
+
+def test_msp08_live_report_schema_rejects_synthetic_profile_semantics(
+    tmp_path: pathlib.Path,
+) -> None:
+    report = deepcopy(load_json(COEXISTENCE_GOLDEN_REPORT))
+    report["evidence_class"] = "CAPTURED_RUNTIME_EVIDENCE"
+    report["scenarios"] = report["scenarios"][:3]
+    report["acceptance_matrix"] = report["acceptance_matrix"][:4]
+    report_path = write_json(tmp_path / "live-with-synthetic-semantics.json", report)
+
+    result = subprocess.run(
+        ["jv", str(COEXISTENCE_REPORT_SCHEMA), str(report_path)],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+
+
 def test_msp08_generator_reproduces_exact_positive_artifacts(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -1679,6 +2680,37 @@ def test_msp08_generator_reproduces_exact_positive_artifacts(
     assert result.stderr == ""
     assert (generated / "evidence.json").read_bytes() == COEXISTENCE_POSITIVE.read_bytes()
     assert (generated / "report.json").read_bytes() == COEXISTENCE_GOLDEN_REPORT.read_bytes()
+
+
+def test_msp08_generator_refuses_unverified_pass_report(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    spec = importlib.util.spec_from_file_location(
+        "msp08_fixture_generator_under_test", COEXISTENCE_GENERATOR
+    )
+    assert spec is not None and spec.loader is not None
+    monkeypatch.syspath_prepend(str(REPO_ROOT / "scripts"))
+    generator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generator)
+
+    graph = json.loads(M7_GRAPH.read_text(encoding="utf-8"))
+    graph["graph_hash"] = "sha256:" + "f" * 64
+    malformed_graph = tmp_path / "malformed-graph.json"
+    malformed_graph.write_text(
+        json.dumps(graph, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    output_root = tmp_path / "positive"
+    monkeypatch.setattr(generator, "M7_GRAPH_PATH", malformed_graph)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [str(COEXISTENCE_GENERATOR), "--output-root", str(output_root)],
+    )
+
+    with pytest.raises(generator.coexistence.Failure, match="provenance.m7"):
+        generator.main()
+    assert not output_root.exists()
 
 
 def test_msp08_report_is_offline_under_host_variation(
