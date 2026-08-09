@@ -47,8 +47,8 @@ Current platform contracts:
   MSP-08 closed EEBUS-G18 coexistence, protected-view no-drift, and rollback
   contract
 - [`leaf-promotion-dossier-lock-v1.md`](./leaf-promotion-dossier-lock-v1.md) -
-  MSP-085 closed M8.5 per-leaf promotion dossier and zero-promotion lock
-  contract
+  MSP-085 M8.5 per-leaf dossier lock plus captured-runtime zero-promotion
+  assessment; current live facts create zero dossiers and keep M9 blocked
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary

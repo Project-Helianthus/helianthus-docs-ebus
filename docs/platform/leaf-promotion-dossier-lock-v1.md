@@ -2,10 +2,17 @@ Canonical source: this page.
 
 # Leaf Promotion Dossier Lock V1
 
-Issue: `Project-Helianthus/helianthus-docs-ebus#367` (`MSP-085`, M8.5).
+Initial issue: `Project-Helianthus/helianthus-docs-ebus#367` (`MSP-085`,
+M8.5). Captured-runtime amendment:
+`Project-Helianthus/helianthus-docs-ebus#393` (`MSP-085-LIVE-R1`).
 
-Dependency: gateway M8 issue
-`Project-Helianthus/helianthus-ebusgateway#707`.
+Ordinary provenance dependencies are M7 gateway
+`8bcba2107d10b149f984ac9546ea6427a9cda8a1`, M7 docs
+`35d2eba256a77b6575a2b45c07e73f054ff74ced`, M8 gateway
+`89cf8876a9cd8aa4e6aab9ad21cc05cac523426a`, and M8 docs
+`9cede4c61a4f73019142b7418cf6f87537cf645c`. These source commits identify
+the reviewed implementations. They are not authorization tokens and do not
+cause execution or consumer exposure.
 
 ## Purpose And Boundary
 
@@ -26,11 +33,20 @@ zero promoted leaves. That result is deterministic, successful validation, and
 blocks all M9 consumer work until at least one separately proven leaf is
 locked.
 
+V1 has two closed profiles. `SYNTHETIC_CONFORMANCE` retains the four-state
+offline fixture and cannot establish a live claim.
+`CAPTURED_RUNTIME_ZERO_PROMOTION` consumes the validated private M7 inputs,
+their generated public status, the public source-terminal artifacts, and one
+captured-runtime M8 evidence/report pair. It assesses every actual M7 fact but
+creates no dossier and promotes no leaf. There is one unreleased V1: no V2,
+legacy alias, or compatibility namespace exists.
+
 ## Canonical Machine Contract
 
 The canonical files are:
 
 - `schemas/leaf-promotion-dossier-v1.schema.json`;
+- `schemas/leaf-promotion-captured-assessment-v1.schema.json`;
 - `schemas/leaf-promotion-lock-result-v1.schema.json`;
 - `schemas/leaf-promotion-registry-v1.json`;
 - `scripts/validate_leaf_promotion_dossier.py`; and
@@ -56,6 +72,58 @@ validate_leaf_promotion_dossier.py replay \
 `verify` emits `PASS` and no stderr on success. `replay` emits one
 verifier-derived canonical JSON result with a trailing newline. It must not
 read the network, wall clock, locale, host identity, or unlisted evidence.
+
+The captured command is:
+
+```text
+validate_leaf_promotion_dossier.py derive-captured \
+  --registry <leaf-promotion-registry-v1.json> \
+  --m7-graph <private-candidate-graph.json> \
+  --m7-replay <private-candidate-replay.json> \
+  --m7-registry <draft-candidate-fact-registry-v1.json> \
+  --m7-source-bundle <private-source-bundle.json> \
+  --m7-source-replay <private-source-replay.json> \
+  --m7-live-status <generated-public-status.json> \
+  --m7-terminal-graph <public-terminal-graph.json> \
+  --m7-terminal-replay <public-terminal-replay.json> \
+  --m7-terminal-source-bundle <public-terminal-source-bundle.json> \
+  --m7-terminal-source-replay <public-terminal-source-replay.json> \
+  --m8-evidence <captured-public-redacted-evidence.json> \
+  --m8-report <captured-public-redacted-report.json> \
+  --m8-registry <multi-runtime-coexistence-registry-v1.json>
+```
+
+The command invokes the canonical synchronized-evidence, candidate-graph,
+public-status, and M8 coexistence validators. It regenerates both M7 replay and
+M8 report and requires exact equality. A caller-authored status or report
+cannot substitute. The private assessment exists only in process and has
+`export_tier=PRIVATE_OPERATOR`; the generator persists only the derived
+`PUBLIC_REDACTED` result. The repository intentionally contains a profile
+fixture, not a fabricated captured live result.
+
+## Captured Runtime Zero Promotion
+
+The bound public M7 projection contains 18 actual facts: 14 `RAW_ONLY` and
+four `WITHHELD`. The verifier orders the private graph by exact semantic path
+and then candidate id and derives one assessment per fact. The public result
+preserves candidate id, fact hash, source status, terminal state, withholding
+reasons, and bounded retest data. It omits the semantic path and all protocol
+identity.
+
+Every current fact remains withheld. `RAW_ONLY` and `WITHHELD` are not positive
+comparator results. A promotion dossier is absent unless the exact leaf has all
+of the following at once:
+
+- exact B509, B524, or B555 eBUS identity;
+- exact eeBUS entity/service/feature/path;
+- a complete comparator with eligible captured samples and `MATCH`;
+- the exact captured evidence binding; and
+- passing M8 coexistence and rollback proof.
+
+Missing data is never inherited from a family, device, sibling, or another
+fact. The current derivation therefore emits `dossier_count=0`,
+`promoted=0`, `withheld=18`, `verdict=VALID_ZERO_PROMOTION`, and
+`m9_consumer_gate=BLOCKED_ZERO_PROMOTED_LEAVES`.
 
 ## One Dossier Per Leaf
 
@@ -153,6 +221,13 @@ hashes, and the normalized output hash. Raw identifiers, addresses outside the
 closed identity shape, credentials, network coordinates, and unredacted
 payloads are forbidden.
 
+The captured public result also forbids semantic paths, eBUS addresses, eeBUS
+entity/service/feature selectors, SKI, SHIP ID, `candidate_ref`, private-key
+material, tokens, trust-store bytes, and vendor-restricted material. Commit
+IDs, contract IDs, candidate IDs, and typed content hashes remain ordinary
+public provenance. No private assessment is a stable MCP, GraphQL, registry,
+or command API.
+
 Replay regeneration hashes the semantic path, exact source identity,
 comparator, decision, and terminal state. Expected and actual replay hashes
 must match the normalized output hash. The dossier hash and result hash use
@@ -196,7 +271,8 @@ fixture are ineligible for promotion; changing only dossier claims cannot make
 them eligible.
 
 The canonical fixture deliberately records `SYNTHETIC_OFFLINE_FIXTURE`,
-`OFF_LAN`, and `positive_promotion_claim=false`. It makes
+`OFF_LAN`, `profile=SYNTHETIC_CONFORMANCE`, and
+`positive_promotion_claim=false`. It makes
 no positive promotion claim. Its four leaves close the terminal-state matrix
 and produce:
 
@@ -208,6 +284,11 @@ m9_consumer_gate=BLOCKED_ZERO_PROMOTED_LEAVES
 
 This is a valid M8.5 result, not an error or empty-success shortcut. It blocks
 all M9 consumer work.
+
+The synthetic fixture remains non-live even if a caller changes its evidence
+class, source status, predecessor, or M9 field. The captured path rejects a
+synthetic graph or M8 artifact before assessment. M8 no-drift by itself is not
+a promotion claim.
 
 ## Validation Precedence
 
@@ -233,6 +314,17 @@ The first failure category is deterministic:
 The validator exits `1`, prints exactly that category plus a newline to
 stdout, and writes no stderr. Resource use is bounded before and after parse.
 
+Captured derivation additionally preserves fail-closed ordering for wrong M7
+or M8 predecessor, source validation, generated-status mismatch,
+graph/replay mismatch, synthetic-as-live substitution, assessment ordering,
+fabricated dossier or promotion, M9 opening, public identity or secret leak,
+unknown fields, and result hash mismatch. Failures from the reused M7 or M8
+validators retain their originating category. Captured-only categories are
+`captured.input`, `captured.predecessor`, `captured.status`, `captured.coexistence`,
+`captured.schema`, `assessment.ordering`, `assessment.derivation`,
+`promotion.forbidden`, `consumer.block`, `redaction.public`, and
+`hash.result`.
+
 ## M9 Handoff
 
 M9 work is considered only for the exact paths listed as promoted by a valid
@@ -240,3 +332,7 @@ lock result. It cannot infer permission from a source family, device, sibling,
 candidate bundle, M8 coexistence pass, or non-zero candidate count. A
 zero-promoted-leaves result leaves every GraphQL, Portal, Home Assistant, and
 command-routing task blocked.
+
+This amendment changes no runtime, transport, MCP, GraphQL, Portal, Home
+Assistant, command, registry, B509, B524, or B555 behavior. It only defines
+the language-neutral M8.5 assessment and public-redacted result contract.
