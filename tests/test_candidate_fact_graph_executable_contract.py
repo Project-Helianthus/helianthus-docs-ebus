@@ -2353,6 +2353,20 @@ def test_msp08_report_rejects_namespace_object_surfaces(
             ]
         },
         {"namespace": {"const": "eebus.v1"}},
+        {"namespace": {"pattern": r"^eebus\.v1$"}},
+        {
+            "namespace": {"$ref": "#/definitions/eebusNamespace"},
+            "definitions": {
+                "eebusNamespace": {"const": "eebus.v1"},
+            },
+        },
+        {"authority": {"pattern": r"^eebus\.v1$"}},
+        {
+            "authority": {"$ref": "#/definitions/eebusAuthority"},
+            "definitions": {
+                "eebusAuthority": {"const": "eebus.v1"},
+            },
+        },
     ],
 )
 def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
@@ -2373,15 +2387,25 @@ def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
     assert result.stderr == ""
 
 
-def test_msp08_rollback_only_structured_namespace_keeps_drift_precedence(
-    tmp_path: pathlib.Path,
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        {"namespace": {"pattern": r"^eebus\.v1$"}},
+        {
+            "authority": {"$ref": "#/definitions/eebusAuthority"},
+            "definitions": {
+                "eebusAuthority": {"const": "eebus.v1"},
+            },
+        },
+    ],
+)
+def test_msp08_rollback_only_structured_declaration_keeps_drift_precedence(
+    tmp_path: pathlib.Path, declaration: dict[str, object]
 ) -> None:
     evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
     rollback = _run_by_state(evidence, "EEBUS_DISABLED_ROLLBACK")
     view = _view_by_id(rollback, "graphql.schema")
-    view["payload"]["data"]["consumer_contract"] = {
-        "namespace": {"const": "eebus.v1"}
-    }
+    view["payload"]["data"]["consumer_contract"] = deepcopy(declaration)
     _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
 

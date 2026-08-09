@@ -2113,24 +2113,11 @@ def _contains_eebus_reference(value: Any) -> bool:
     )
 
 
-def _contains_eebus_identifier_value(value: Any) -> bool:
-    if isinstance(value, str):
-        return _is_eebus_identifier(value)
-    if isinstance(value, dict):
-        return any(
-            _contains_eebus_identifier_value(item) for item in value.values()
-        )
-    if isinstance(value, list):
-        return any(_contains_eebus_identifier_value(item) for item in value)
-    return False
-
-
 def _contains_eebus_namespace_declaration(value: Any) -> bool:
     if isinstance(value, dict):
         if any(
             _compact_key(item_key) == "namespace"
-            and _contains_eebus_identifier_value(item)
-            for item_key, item in _container_declarations(value)
+            for item_key, _ in _container_declarations(value)
         ):
             return True
         return any(
@@ -2138,6 +2125,26 @@ def _contains_eebus_namespace_declaration(value: Any) -> bool:
         )
     if isinstance(value, list):
         return any(_contains_eebus_namespace_declaration(item) for item in value)
+    return False
+
+
+def _contains_structured_authority_declaration(value: Any) -> bool:
+    if isinstance(value, dict):
+        if any(
+            _compact_key(item_key) in {"authority", "authorities"}
+            and isinstance(item, (dict, list))
+            and bool(item)
+            for item_key, item in _container_declarations(value)
+        ):
+            return True
+        return any(
+            _contains_structured_authority_declaration(item)
+            for item in value.values()
+        )
+    if isinstance(value, list):
+        return any(
+            _contains_structured_authority_declaration(item) for item in value
+        )
     return False
 
 
@@ -2480,6 +2487,9 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
             and view["view_id"] != "mcp.eebus.v1.contract"
             and (
                 _contains_eebus_namespace_declaration(view["payload"]["data"])
+                or _contains_structured_authority_declaration(
+                    view["payload"]["data"]
+                )
                 or _contains_eebus_authority(view["payload"]["data"])
             )
             for view in run["protected_views"]
