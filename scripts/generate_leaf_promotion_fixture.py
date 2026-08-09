@@ -280,6 +280,8 @@ def build_dossier() -> dict[str, object]:
     dossier: dict[str, object] = {
         "contract": promotion.DOSSIER_CONTRACT,
         "schema_version": 1,
+        "profile": "SYNTHETIC_CONFORMANCE",
+        "export_tier": "PUBLIC_REDACTED",
         "dossier_id": "MSP085-SYNTHETIC-ZERO-PROMOTION-001",
         "evidence_class": "SYNTHETIC_OFFLINE_FIXTURE",
         "capture_context": "OFF_LAN",
@@ -309,12 +311,72 @@ def write(path: pathlib.Path, value: object) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--profile",
+        choices=("synthetic-conformance", "captured-runtime-zero-promotion"),
+        default="synthetic-conformance",
+    )
     parser.add_argument("--output-root", type=pathlib.Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--m7-graph", type=pathlib.Path)
+    parser.add_argument("--m7-replay", type=pathlib.Path)
+    parser.add_argument("--m7-registry", type=pathlib.Path)
+    parser.add_argument("--m7-source-bundle", type=pathlib.Path)
+    parser.add_argument("--m7-source-replay", type=pathlib.Path)
+    parser.add_argument("--m7-live-status", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-graph", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-replay", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-source-bundle", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-source-replay", type=pathlib.Path)
+    parser.add_argument("--m8-evidence", type=pathlib.Path)
+    parser.add_argument("--m8-report", type=pathlib.Path)
+    parser.add_argument("--m8-registry", type=pathlib.Path)
     args = parser.parse_args()
     args.output_root.mkdir(parents=True, exist_ok=True)
-    dossier = build_dossier()
-    write(args.output_root / "dossier.json", dossier)
-    write(args.output_root / "result.json", promotion.build_result(copy.deepcopy(dossier)))
+    if args.profile == "synthetic-conformance":
+        dossier = build_dossier()
+        write(args.output_root / "dossier.json", dossier)
+        write(
+            args.output_root / "result.json",
+            promotion.build_result(copy.deepcopy(dossier)),
+        )
+        return 0
+
+    required = (
+        "m7_graph",
+        "m7_replay",
+        "m7_registry",
+        "m7_source_bundle",
+        "m7_source_replay",
+        "m7_live_status",
+        "m7_terminal_graph",
+        "m7_terminal_replay",
+        "m7_terminal_source_bundle",
+        "m7_terminal_source_replay",
+        "m8_evidence",
+        "m8_report",
+        "m8_registry",
+    )
+    if any(getattr(args, name) is None for name in required):
+        parser.error("captured-runtime-zero-promotion requires all M7 and M8 inputs")
+    registry, registry_raw = promotion.load_json(REGISTRY_PATH)
+    registry = promotion.captured_registry_check(registry, registry_raw)
+    result = promotion.derive_captured(
+        graph_path=args.m7_graph,
+        replay_path=args.m7_replay,
+        m7_registry_path=args.m7_registry,
+        source_bundle_path=args.m7_source_bundle,
+        source_replay_path=args.m7_source_replay,
+        status_path=args.m7_live_status,
+        terminal_graph_path=args.m7_terminal_graph,
+        terminal_replay_path=args.m7_terminal_replay,
+        terminal_source_bundle_path=args.m7_terminal_source_bundle,
+        terminal_source_replay_path=args.m7_terminal_source_replay,
+        evidence_path=args.m8_evidence,
+        report_path=args.m8_report,
+        m8_registry_path=args.m8_registry,
+        promotion_registry=registry,
+    )
+    write(args.output_root / "captured-runtime-zero-result.json", result)
     return 0
 
 
