@@ -65,6 +65,17 @@ APPROVED_M8_EEBUS_TOOLS = [
     "eebus.v1.runtime.status.get",
     "eebus.v1.services.list",
 ]
+APPROVED_M8_TOOL_INVENTORY = [
+    "ebus.v1.devices.list",
+    "ebus.v1.zones.list",
+    *APPROVED_M8_EEBUS_TOOLS,
+]
+APPROVED_M8_EEBUS_CONTRACT_FIELDS = {
+    "namespace",
+    "public_v2",
+    "schema_digest",
+    "version",
+}
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
@@ -2029,6 +2040,14 @@ EEBUS_AUTHORITY_KEY_TOKENS = frozenset(
         "transports",
     }
 )
+EEBUS_IDENTIFIER_RE = re.compile(
+    r"^eebus(?:(?:[._-]?v?[0-9]+)?(?:[._-][a-z0-9][a-z0-9._-]*)?)?$",
+    re.IGNORECASE,
+)
+
+
+def _is_eebus_identifier(value: str) -> bool:
+    return EEBUS_IDENTIFIER_RE.fullmatch(value) is not None
 
 
 def _contains_eebus_authority(
@@ -2046,8 +2065,7 @@ def _contains_eebus_authority(
     )
     if isinstance(value, dict):
         for item_key, item in value.items():
-            normalized_key = item_key.casefold()
-            if normalized_key == "eebus" or normalized_key.startswith("eebus."):
+            if _is_eebus_identifier(item_key):
                 return True
             if _contains_eebus_authority(
                 item, item_key, authority_context=context
@@ -2069,7 +2087,7 @@ def _contains_eebus_authority(
     normalized = value.casefold()
     return bool(
         context
-        and (normalized == "eebus" or normalized.startswith("eebus."))
+        and _is_eebus_identifier(normalized)
     )
 
 
@@ -2431,7 +2449,9 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
             if isinstance(tool, str) and tool.startswith("eebus.v1.")
         ]
         if (
-            any(
+            tools != APPROVED_M8_TOOL_INVENTORY
+            or set(contract_data) != APPROVED_M8_EEBUS_CONTRACT_FIELDS
+            or any(
                 not isinstance(tool, str) or not TOOL_NAME_RE.fullmatch(tool)
                 for tool in tools
             )

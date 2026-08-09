@@ -809,7 +809,10 @@ def test_msp08_public_export_allows_boolean_auth_policy_metadata(
     validator = validator_module()
     evidence = build_live_evidence(validator)
     for run in evidence["runs"]:
-        run["protected_views"][-1]["payload"]["data"]["api_key_required"] = False
+        view = next(
+            view for view in run["protected_views"] if view["view_id"] == "debug.ebus"
+        )
+        view["payload"]["data"]["api_key_required"] = False
     refresh_protected_views(validator, evidence)
     evidence_path = write_evidence(tmp_path, evidence)
     result = subprocess.run(
@@ -829,7 +832,10 @@ def test_msp08_public_export_allows_ambiguous_terminal_words_as_metadata(
     validator = validator_module()
     evidence = build_live_evidence(validator)
     for run in evidence["runs"]:
-        data = run["protected_views"][-1]["payload"]["data"]
+        view = next(
+            view for view in run["protected_views"] if view["view_id"] == "debug.ebus"
+        )
+        data = view["payload"]["data"]
         data["protocol_label"] = "EBUS"
         data["phase"] = "post"
         data["operation"] = "action"

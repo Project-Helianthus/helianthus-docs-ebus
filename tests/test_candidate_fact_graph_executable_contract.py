@@ -1743,7 +1743,7 @@ def test_msp08_report_rejects_native_identity_and_non_public_ipv4(
 ) -> None:
     evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
     for run in evidence["runs"]:
-        view = run["protected_views"][-1]
+        view = _view_by_id(run, "debug.ebus")
         view["payload"]["data"]["public_leak"] = leak
         _refresh_view_hashes(evidence, view)
     evidence_view = {
@@ -1811,7 +1811,7 @@ def test_msp08_report_allows_globally_routable_ipv4(
 ) -> None:
     evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
     for run in evidence["runs"]:
-        view = run["protected_views"][-1]
+        view = _view_by_id(run, "debug.ebus")
         view["payload"]["data"]["debug_detail"] = "8.8.8.8:53"
         view["payload"]["data"]["endpoint_count"] = 2
         view["payload"]["data"]["address_count"] = 2
@@ -2085,7 +2085,15 @@ def test_msp08_report_rejects_nested_eebus_authority_context(
 
 
 @pytest.mark.parametrize(
-    "alias_key", ["legacy_names", "alternate_names", "compat_names", "accepted_names"]
+    "alias_key",
+    [
+        "legacy_names",
+        "alternate_names",
+        "compat_names",
+        "accepted_names",
+        "synonyms",
+        "equivalent_names",
+    ],
 )
 def test_msp08_report_rejects_equivalent_alias_declarations(
     tmp_path: pathlib.Path, alias_key: str
@@ -2117,6 +2125,28 @@ def test_msp08_report_rejects_versioned_eebus_authority_key(
 
     result = run_coexistence_validator(
         "report", write_json(tmp_path / "versioned-eebus-key.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("view_id", ["semantic.registry", "command.routing"])
+def test_msp08_report_rejects_equivalent_eebus_authority_identifier(
+    tmp_path: pathlib.Path, view_id: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, view_id)
+        view["payload"]["data"]["fallback_backend"] = {
+            "active": True,
+            "name": "eebus_v1",
+        }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "equivalent-eebus-authority.json", evidence)
     )
     assert result.returncode == 1
     assert result.stdout == "authority.ebus\n"
@@ -2192,7 +2222,13 @@ def test_msp08_report_rejects_write_capable_auth_scope(
 
 
 @pytest.mark.parametrize(
-    "mutation", ["WRITE_AUTHORITY", "WRITE_TOOL", "NAMESPACE_OPERATION"]
+    "mutation",
+    [
+        "WRITE_AUTHORITY",
+        "WRITE_TOOL",
+        "NAMESPACE_OPERATION",
+        "NAMESPACE_UNAPPROVED_OPERATION",
+    ],
 )
 def test_msp08_report_rejects_eebus_write_surface(
     tmp_path: pathlib.Path, mutation: str
@@ -2205,9 +2241,15 @@ def test_msp08_report_rejects_eebus_write_surface(
         elif mutation == "WRITE_TOOL":
             view = _view_by_id(run, "mcp.tool.inventory")
             view["payload"]["data"]["tools"].append("eebus.v1.values.set")
-        else:
+        elif mutation == "NAMESPACE_OPERATION":
             view = _view_by_id(run, "mcp.eebus.v1.contract")
             view["payload"]["data"]["operations"] = ["values.get", "values.set"]
+        else:
+            view = _view_by_id(run, "mcp.eebus.v1.contract")
+            view["payload"]["data"]["operations"] = [
+                "runtime.status.get",
+                "configure",
+            ]
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
 
@@ -2229,6 +2271,7 @@ def test_msp08_report_rejects_eebus_write_surface(
         "eebus.v1.reboot",
         "eebus.v1.reset",
         "eebus.v1.commission",
+        "eebusv1.runtime.status.get",
     ],
 )
 def test_msp08_report_rejects_unapproved_eebus_tools(
