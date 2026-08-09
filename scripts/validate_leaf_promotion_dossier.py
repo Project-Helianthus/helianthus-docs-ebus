@@ -487,7 +487,7 @@ def build_captured_result(assessment: dict[str, Any]) -> dict[str, Any]:
         "schema_version": 1,
         "profile": "CAPTURED_RUNTIME_ZERO_PROMOTION",
         "export_tier": "PUBLIC_REDACTED",
-        "source_bindings": assessment["source_bindings"],
+        "source_bindings": dict(assessment["source_bindings"]),
         "replay_tool": "leaf-promotion-replay",
         "replay_version": 1,
         "counts": {"total": total, "promoted": 0, "withheld": total},
@@ -506,6 +506,32 @@ def build_captured_result(assessment: dict[str, Any]) -> dict[str, Any]:
 def captured_result_check(
     result: dict[str, Any], assessment: dict[str, Any]
 ) -> None:
+    expected_keys = {
+        "contract",
+        "schema_version",
+        "profile",
+        "export_tier",
+        "source_bindings",
+        "replay_tool",
+        "replay_version",
+        "counts",
+        "dossier_count",
+        "assessments",
+        "m9_consumer_gate",
+        "verdict",
+        "result_hash",
+    }
+    if (
+        not isinstance(result, dict)
+        or set(result) != expected_keys
+        or result.get("contract") != RESULT_CONTRACT
+        or result.get("schema_version") != 1
+        or result.get("profile") != "CAPTURED_RUNTIME_ZERO_PROMOTION"
+        or result.get("export_tier") != "PUBLIC_REDACTED"
+        or result.get("replay_tool") != "leaf-promotion-replay"
+        or result.get("replay_version") != 1
+    ):
+        fail("captured.result")
     _schema_validate(
         result, "leaf-promotion-lock-result-v1.schema.json", "captured.result"
     )
@@ -532,7 +558,10 @@ def captured_result_check(
         }
         for item in private_items
     ]
-    if result["assessments"] != expected_public:
+    if (
+        result["assessments"] != expected_public
+        or result["source_bindings"] != assessment["source_bindings"]
+    ):
         fail("assessment.derivation")
     total = len(expected_public)
     if (

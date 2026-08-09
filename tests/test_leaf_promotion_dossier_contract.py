@@ -635,10 +635,14 @@ def test_malformed_captured_registry_shape_fails_without_traceback(
     [
         ("CALLER_AUTHORED_STATUS", "assessment.derivation"),
         ("FABRICATED_DOSSIER", "promotion.forbidden"),
+        ("FABRICATED_DOSSIER_METADATA", "captured.result"),
         ("FABRICATED_PROMOTION", "captured.result"),
         ("IDENTITY_LEAK", "captured.result"),
         ("M9_OPEN", "consumer.block"),
+        ("MISSING_ASSESSMENTS", "captured.result"),
+        ("PROFILE_RELABEL", "captured.result"),
         ("SECRET_LEAK", "captured.result"),
+        ("SOURCE_BINDING_MISMATCH", "assessment.derivation"),
         ("STATUS_MISMATCH", "assessment.derivation"),
         ("UNKNOWN_FIELD", "captured.result"),
         ("UNORDERED_ASSESSMENTS", "assessment.ordering"),
@@ -654,14 +658,23 @@ def test_captured_result_mutations_fail_closed(
         result["assessments"][0]["source_status"] = "RAW_ONLY"
     elif mutation == "FABRICATED_DOSSIER":
         result["dossier_count"] = 1
+    elif mutation == "FABRICATED_DOSSIER_METADATA":
+        result["dossier_id"] = "fabricated-dossier"
+        result["dossier_hash"] = "sha256:" + "f" * 64
     elif mutation == "FABRICATED_PROMOTION":
         result["assessments"][0]["decision"] = "PROMOTED"
     elif mutation == "IDENTITY_LEAK":
         result["assessments"][0]["semantic_path"] = "/private/path"
     elif mutation == "M9_OPEN":
         result["m9_consumer_gate"] = "READY_FOR_M9"
+    elif mutation == "MISSING_ASSESSMENTS":
+        del result["assessments"]
+    elif mutation == "PROFILE_RELABEL":
+        result["profile"] = "SYNTHETIC_CONFORMANCE"
     elif mutation == "SECRET_LEAK":
         result["private_key"] = "synthetic-secret"
+    elif mutation == "SOURCE_BINDING_MISMATCH":
+        result["source_bindings"]["m8_evidence_hash"] = "sha256:" + "f" * 64
     elif mutation == "UNKNOWN_FIELD":
         result["unknown"] = True
     elif mutation == "UNORDERED_ASSESSMENTS":
