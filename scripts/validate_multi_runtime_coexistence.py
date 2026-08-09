@@ -224,6 +224,9 @@ PUBLIC_IDENTITY_GENERIC_TOKENS = frozenset(
         "identifiers",
         "identities",
         "identity",
+        "ip",
+        "ipv4",
+        "ipv6",
         "selector",
         "selectors",
         "serial",
@@ -2050,6 +2053,21 @@ def _is_eebus_identifier(value: str) -> bool:
     return EEBUS_IDENTIFIER_RE.fullmatch(value) is not None
 
 
+def _eebus_surface_tokens(value: str) -> tuple[str, ...]:
+    if any(character.isspace() for character in value):
+        return ()
+    tokens = _key_tokens(value)
+    if tokens and tokens[0] == "eebus":
+        return tokens
+    compact = _compact_key(value)
+    if compact == "eebus":
+        return ("eebus",)
+    version_only = re.fullmatch(r"eebus((?:v|version)?[0-9]+)", compact)
+    if version_only is not None:
+        return ("eebus", version_only.group(1))
+    return ()
+
+
 def _is_eebus_authority_declaration_key(key: str) -> bool:
     tokens = set(_key_tokens(key))
     return bool(
@@ -2108,15 +2126,13 @@ def _contains_eebus_reference(value: Any) -> bool:
         )
     if isinstance(value, list):
         return any(_contains_eebus_reference(item) for item in value)
-    return isinstance(value, str) and (
-        value.casefold() == "eebus" or value.casefold().startswith("eebus.")
-    )
+    return isinstance(value, str) and bool(_eebus_surface_tokens(value))
 
 
 def _contains_eebus_namespace_declaration(value: Any) -> bool:
     if isinstance(value, dict):
         if any(
-            _compact_key(item_key) == "namespace"
+            _compact_key(item_key) in {"namespace", "namespaces"}
             for item_key, _ in _container_declarations(value)
         ):
             return True
@@ -2159,7 +2175,8 @@ def _contains_contract_descriptor_declaration(value: Any) -> bool:
             if (
                 normalized_key in {"key", "name"}
                 and isinstance(item, str)
-                and _compact_key(item) in {"namespace", "authority", "authorities"}
+                and _compact_key(item)
+                in {"namespace", "namespaces", "authority", "authorities"}
             ):
                 return True
         return any(
@@ -2225,7 +2242,8 @@ def _invalid_eebus_declarations(
     namespaces = [
         item
         for item_key, item in declarations
-        if _compact_key(item_key) == "namespace" and isinstance(item, str)
+        if _compact_key(item_key) in {"namespace", "namespaces"}
+        and isinstance(item, str)
     ]
     eebus_namespace = eebus_context or any(
         namespace.casefold().startswith("eebus") for namespace in namespaces
@@ -2279,7 +2297,7 @@ def _contains_non_v1_eebus_surface(
             return True
         declarations = _container_declarations(value)
         child_context = eebus_context or any(
-            _compact_key(item_key) == "namespace"
+            _compact_key(item_key) in {"namespace", "namespaces"}
             and isinstance(item, str)
             and item.casefold().startswith("eebus")
             for item_key, item in declarations
@@ -2306,7 +2324,7 @@ def _contains_non_v1_eebus_surface(
     if isinstance(value, list):
         declarations = _container_declarations(value)
         child_context = eebus_context or any(
-            _compact_key(item_key) == "namespace"
+            _compact_key(item_key) in {"namespace", "namespaces"}
             and isinstance(item, str)
             and item.casefold().startswith("eebus")
             for item_key, item in declarations
@@ -2330,8 +2348,15 @@ def _contains_non_v1_eebus_surface(
     normalized = value.casefold()
     compact = _compact_key(normalized)
     versioned_surface = re.fullmatch(r"eebus(?:v|version)?([0-9]+)", compact)
+    surface_tokens = _eebus_surface_tokens(value)
+    token_version = (
+        re.fullmatch(r"(?:v|version)?([0-9]+)", surface_tokens[1])
+        if len(surface_tokens) > 1
+        else None
+    )
     return bool(
         (versioned_surface is not None and versioned_surface.group(1) != "1")
+        or (token_version is not None and token_version.group(1) != "1")
         or (
             TOOL_NAME_RE.fullmatch(normalized)
             and normalized.startswith("eebus.")
@@ -2423,7 +2448,7 @@ def _contains_eebus_write_surface(
         child_context = (
             eebus_context
             or any(
-                _compact_key(item_key) == "namespace"
+                _compact_key(item_key) in {"namespace", "namespaces"}
                 and isinstance(item, str)
                 and item.casefold().startswith("eebus")
                 for item_key, item in declarations
@@ -2448,18 +2473,20 @@ def _contains_eebus_write_surface(
     if not isinstance(value, str):
         return False
     normalized = value.casefold()
-    if normalized.startswith("eebus.v1."):
-        operation = normalized.removeprefix("eebus.v1.")
+    surface_tokens = _eebus_surface_tokens(value)
+    if (
+        len(surface_tokens) > 2
+        and surface_tokens[0] == "eebus"
+        and surface_tokens[1] in {"1", "v1", "version1"}
+    ):
+        operation_tokens = surface_tokens[2:]
     elif eebus_context and TOOL_NAME_RE.fullmatch(normalized):
-        operation = normalized
+        operation_tokens = _key_tokens(normalized)
     else:
         return False
-    if operation == "snapshot.drop":
+    if operation_tokens == ("snapshot", "drop"):
         return False
-    return any(
-        token in EEBUS_MUTATION_TOOL_ACTIONS
-        for token in re.findall(r"[a-z0-9]+", operation)
-    )
+    return any(token in EEBUS_MUTATION_TOOL_ACTIONS for token in operation_tokens)
 
 
 def check_authority(evidence: dict[str, Any]) -> None:

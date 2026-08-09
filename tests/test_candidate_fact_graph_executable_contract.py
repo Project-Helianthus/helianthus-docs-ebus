@@ -2379,6 +2379,13 @@ def test_msp08_report_rejects_namespace_object_surfaces(
             "schema": {"$ref": "#/$defs/authorityChoice"},
             "$defs": {"authorityChoice": {"const": "eebus.v1"}},
         },
+        {"namespaces": ["eebus.v1"]},
+        {"Key": "namespaces", "Value": ["eebus.v1"]},
+        {
+            "name": "namespaces",
+            "schema": {"$ref": "#/$defs/namespaceChoices"},
+            "$defs": {"namespaceChoices": {"items": {"const": "eebus.v1"}}},
+        },
     ],
 )
 def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
@@ -2396,6 +2403,51 @@ def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
     )
     assert result.returncode == 1
     assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        {"aliases": ["eebus_v1"]},
+        {"surface": "eebus_v2_values_get"},
+        {"surface": "eebus_v1_values_set"},
+    ],
+)
+def test_msp08_report_rejects_separator_variant_eebus_surfaces(
+    tmp_path: pathlib.Path, declaration: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "debug.ebus")
+        view["payload"]["data"]["alternate_surface"] = deepcopy(declaration)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "separator-variant-surface.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("value", [167772161, "0x0a000001"])
+def test_msp08_report_rejects_encoded_private_ip_identity(
+    tmp_path: pathlib.Path, value: object
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "debug.ebus")
+        view["payload"]["data"]["ip"] = value
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify-public", write_json(tmp_path / "encoded-private-ip.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "redaction.public\n"
     assert result.stderr == ""
 
 
