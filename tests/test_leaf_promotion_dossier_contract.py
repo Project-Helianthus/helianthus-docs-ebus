@@ -19,10 +19,18 @@ PAGE = PLATFORM_ROOT / "leaf-promotion-dossier-lock-v1.md"
 README = PLATFORM_ROOT / "README.md"
 SCHEMA = SCHEMA_ROOT / "leaf-promotion-dossier-v1.schema.json"
 RESULT_SCHEMA = SCHEMA_ROOT / "leaf-promotion-lock-result-v1.schema.json"
+CAPTURED_SCHEMA = (
+    SCHEMA_ROOT / "leaf-promotion-captured-assessment-v1.schema.json"
+)
 REGISTRY = SCHEMA_ROOT / "leaf-promotion-registry-v1.json"
 VALIDATOR = REPO_ROOT / "scripts/validate_leaf_promotion_dossier.py"
 DOSSIER = FIXTURE_ROOT / "positive/dossier.json"
 RESULT = FIXTURE_ROOT / "positive/result.json"
+CAPTURED_RESULT = FIXTURE_ROOT / "positive/captured-runtime-zero-result.json"
+M7_LIVE_STATUS = (
+    PLATFORM_ROOT
+    / "fixtures/candidate-fact-graph/v1/positive/live-public-status.json"
+)
 NEGATIVE_ROOT = FIXTURE_ROOT / "negative"
 EXPECTED_NEGATIVE = {
     "b524-namespace-mismatch.json": "identity.native",
@@ -87,7 +95,17 @@ def run_validator(
 
 
 def test_msp085_contract_inventory_is_canonical_and_navigable() -> None:
-    for path in (PAGE, SCHEMA, RESULT_SCHEMA, REGISTRY, VALIDATOR, DOSSIER, RESULT):
+    for path in (
+        PAGE,
+        SCHEMA,
+        RESULT_SCHEMA,
+        CAPTURED_SCHEMA,
+        REGISTRY,
+        VALIDATOR,
+        DOSSIER,
+        RESULT,
+        CAPTURED_RESULT,
+    ):
         assert path.is_file(), f"missing MSP-085 contract artifact: {path}"
     assert {path.name for path in NEGATIVE_ROOT.glob("*.json")} == set(
         EXPECTED_NEGATIVE
@@ -179,6 +197,30 @@ def test_machine_contract_and_registry_are_closed() -> None:
     assert registry["current_evidence_policy"] == (
         "OFF_LAN_OR_SYNTHETIC_CANNOT_PROMOTE"
     )
+    assert registry["profiles"] == {
+        "SYNTHETIC_CONFORMANCE": {
+            "live_promotion_claim": False,
+            "persist_private_assessment": False,
+        },
+        "CAPTURED_RUNTIME_ZERO_PROMOTION": {
+            "live_promotion_claim": False,
+            "persist_private_assessment": False,
+        },
+    }
+    assert registry["captured_runtime_predecessors"] == {
+        "m7_gateway_source_commit": (
+            "8bcba2107d10b149f984ac9546ea6427a9cda8a1"
+        ),
+        "m7_docs_source_commit": (
+            "35d2eba256a77b6575a2b45c07e73f054ff74ced"
+        ),
+        "m8_gateway_source_commit": (
+            "89cf8876a9cd8aa4e6aab9ad21cc05cac523426a"
+        ),
+        "m8_docs_source_commit": (
+            "9cede4c61a4f73019142b7418cf6f87537cf645c"
+        ),
+    }
     assert set(registry["source_artifacts"]) == {
         "m7_graph",
         "m7_replay",
@@ -196,6 +238,9 @@ def test_zero_promotion_fixture_is_explicit_valid_and_blocks_m9() -> None:
     assert dossier["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE"
     assert dossier["capture_context"] == "OFF_LAN"
     assert dossier["positive_promotion_claim"] is False
+    assert dossier["profile"] == "SYNTHETIC_CONFORMANCE"
+    assert result["profile"] == "SYNTHETIC_CONFORMANCE"
+    assert result["export_tier"] == "PUBLIC_REDACTED"
     assert [leaf["terminal_state"] for leaf in dossier["leaves"]] == [
         "NO_SIGNAL",
         "CLOUD_ONLY",
@@ -207,6 +252,49 @@ def test_zero_promotion_fixture_is_explicit_valid_and_blocks_m9() -> None:
     assert result["verdict"] == "VALID_ZERO_PROMOTION"
     assert result["counts"] == {"total": 4, "promoted": 0, "withheld": 4}
     assert result["m9_consumer_gate"] == "BLOCKED_ZERO_PROMOTED_LEAVES"
+
+
+def test_captured_runtime_result_assesses_every_actual_m7_fact_once() -> None:
+    status = load_json(M7_LIVE_STATUS)
+    result = load_json(CAPTURED_RESULT)
+    assert result["profile"] == "CAPTURED_RUNTIME_ZERO_PROMOTION"
+    assert result["export_tier"] == "PUBLIC_REDACTED"
+    assert result["verdict"] == "VALID_ZERO_PROMOTION"
+    assert result["counts"] == {"total": 18, "promoted": 0, "withheld": 18}
+    assert result["dossier_count"] == 0
+    assert result["m9_consumer_gate"] == "BLOCKED_ZERO_PROMOTED_LEAVES"
+    expected = {
+        (fact["candidate_id"], fact["fact_hash"], fact["status"])
+        for fact in status["facts"]
+    }
+    actual = {
+        (item["candidate_id"], item["fact_hash"], item["source_status"])
+        for item in result["assessments"]
+    }
+    assert actual == expected
+    assert len(actual) == len(result["assessments"]) == status["fact_count"]
+    assert all(item["decision"] == "WITHHELD" for item in result["assessments"])
+    assert all(item["withholding_reasons"] for item in result["assessments"])
+    assert all(item["retest_trigger"]["trigger"] for item in result["assessments"])
+
+
+def test_captured_runtime_result_is_public_redacted() -> None:
+    serialized = CAPTURED_RESULT.read_text(encoding="utf-8").lower()
+    for forbidden in (
+        "semantic_path",
+        "proposed_path",
+        "source_address",
+        "target_address",
+        "entity",
+        "feature",
+        "service",
+        "ship_id",
+        "ski",
+        "private_key",
+        "trust_store",
+        "candidate_ref",
+    ):
+        assert forbidden not in serialized
 
 
 def test_fixture_covers_source_families_and_b524_namespaces_exactly() -> None:
