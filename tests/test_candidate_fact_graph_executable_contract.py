@@ -2425,6 +2425,7 @@ def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
         {"aliases": ["eeBusV1Compat"]},
         {"surface": "eeBusV2ValuesGet"},
         {"surface": "eeBusV1ValuesSet"},
+        {"surface": "eebusv1valuesset"},
     ],
 )
 def test_msp08_report_rejects_separator_variant_eebus_surfaces(
@@ -2479,6 +2480,7 @@ def test_msp08_report_rejects_encoded_private_ip_identity(
     [
         {"name": "ipV4", "schema": {"const": 167772161}},
         {"key": "ipV6", "field": {"default": "0x1"}},
+        {"name": "device_id", "values": ["private-stable-device"]},
     ],
 )
 def test_msp08_report_rejects_schema_wrapped_ip_identity(
@@ -2496,6 +2498,60 @@ def test_msp08_report_rejects_schema_wrapped_ip_identity(
     )
     assert result.returncode == 1
     assert result.stdout == "redaction.public\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_concatenated_candidate_metadata(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["data"]["withheldcount"] = 1
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "concatenated-candidate-field.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "anti_leak.candidate\n"
+    assert result.stderr == ""
+
+
+def test_msp08_report_rejects_eebus_declaration_in_payload_meta(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["meta"]["namespace"] = "eebus.v1"
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "payload-meta-namespace.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+def test_msp08_rollback_only_payload_meta_declaration_keeps_drift_precedence(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    rollback = _run_by_state(evidence, "EEBUS_DISABLED_ROLLBACK")
+    view = _view_by_id(rollback, "graphql.schema")
+    view["payload"]["meta"]["namespace"] = "eebus.v1"
+    _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify", write_json(tmp_path / "rollback-payload-meta-namespace.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "rollback.drift\n"
     assert result.stderr == ""
 
 

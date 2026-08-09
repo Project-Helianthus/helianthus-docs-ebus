@@ -160,6 +160,8 @@ CANDIDATE_LEAK_COMPACT_NAMES = frozenset(
         "retesttrigger",
         "visibilitychannel",
         "withheld",
+        "withheldcount",
+        "withheldcounts",
     }
 )
 CANDIDATE_LEAK_TOKEN_PATTERNS = frozenset(
@@ -1982,17 +1984,23 @@ def _contains_public_identity_descriptor(value: Any) -> bool:
             and isinstance(item, str)
             and _has_public_identity_key(item)
         ]
-        descriptor_values = [
-            item
-            for item_key, item in value.items()
-            if _compact_key(item_key) in {"field", "schema", "type"}
-        ]
-        if any(
-            _contains_identity_descriptor_value(item, declared_key)
-            for declared_key in declared_keys
-            for item in descriptor_values
-        ):
-            return True
+        for declared_key in declared_keys:
+            for item_key, item in value.items():
+                normalized_key = _compact_key(item_key)
+                if normalized_key in {
+                    "const",
+                    "default",
+                    "enum",
+                    "example",
+                    "examples",
+                    "value",
+                    "values",
+                } and _contains_public_secret(item, declared_key):
+                    return True
+                if normalized_key in {"field", "schema", "type"} and (
+                    _contains_identity_descriptor_value(item, declared_key)
+                ):
+                    return True
     return False
 
 
@@ -2123,9 +2131,22 @@ def _eebus_surface_tokens(value: str) -> tuple[str, ...]:
     compact = _compact_key(normalized_value)
     if compact == "eebus":
         return ("eebus",)
-    version_only = re.fullmatch(r"eebus((?:v|version)?[0-9]+)", compact)
-    if version_only is not None:
-        return ("eebus", version_only.group(1))
+    compact_surface = re.fullmatch(
+        r"eebus((?:v|version)?[0-9]+)([a-z0-9]*)", compact
+    )
+    if compact_surface is not None:
+        version, operation = compact_surface.groups()
+        if not operation:
+            return ("eebus", version)
+        for action in sorted(EEBUS_MUTATION_TOOL_ACTIONS, key=len, reverse=True):
+            if operation.endswith(action):
+                operation_root = operation[: -len(action)]
+                return tuple(
+                    item
+                    for item in ("eebus", version, operation_root, action)
+                    if item
+                )
+        return ("eebus", version, operation)
     return ()
 
 
@@ -2617,22 +2638,18 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         if rollback_run:
             continue
         if any(
-            _contains_non_v1_eebus_surface(view["payload"]["data"])
-            or _contains_later_milestone_declaration(view["payload"]["data"])
-            or _contains_eebus_write_surface(view["payload"]["data"])
+            _contains_non_v1_eebus_surface(view["payload"])
+            or _contains_later_milestone_declaration(view["payload"])
+            or _contains_eebus_write_surface(view["payload"])
             or view["view_id"] != "mcp.eebus.v1.contract"
             and (
-                _contains_eebus_namespace_declaration(view["payload"]["data"])
-                or _contains_eebus_contract_declaration(
-                    view["payload"]["data"]
-                )
+                _contains_eebus_namespace_declaration(view["payload"])
+                or _contains_eebus_contract_declaration(view["payload"])
                 or _contains_structured_authority_declaration(
-                    view["payload"]["data"]
+                    view["payload"]
                 )
-                or _contains_contract_descriptor_declaration(
-                    view["payload"]["data"]
-                )
-                or _contains_eebus_authority(view["payload"]["data"])
+                or _contains_contract_descriptor_declaration(view["payload"])
+                or _contains_eebus_authority(view["payload"])
             )
             for view in run["protected_views"]
         ):
