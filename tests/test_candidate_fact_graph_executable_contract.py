@@ -2352,6 +2352,7 @@ def test_msp08_report_rejects_namespace_object_surfaces(
                 {"Key": "authority", "Value": "eebus.v1"},
             ]
         },
+        {"namespace": {"const": "eebus.v1"}},
     ],
 )
 def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
@@ -2369,6 +2370,26 @@ def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
     )
     assert result.returncode == 1
     assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+def test_msp08_rollback_only_structured_namespace_keeps_drift_precedence(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    rollback = _run_by_state(evidence, "EEBUS_DISABLED_ROLLBACK")
+    view = _view_by_id(rollback, "graphql.schema")
+    view["payload"]["data"]["consumer_contract"] = {
+        "namespace": {"const": "eebus.v1"}
+    }
+    _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify", write_json(tmp_path / "rollback-structured-namespace.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "rollback.drift\n"
     assert result.stderr == ""
 
 

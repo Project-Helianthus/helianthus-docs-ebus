@@ -2113,12 +2113,23 @@ def _contains_eebus_reference(value: Any) -> bool:
     )
 
 
+def _contains_eebus_identifier_value(value: Any) -> bool:
+    if isinstance(value, str):
+        return _is_eebus_identifier(value)
+    if isinstance(value, dict):
+        return any(
+            _contains_eebus_identifier_value(item) for item in value.values()
+        )
+    if isinstance(value, list):
+        return any(_contains_eebus_identifier_value(item) for item in value)
+    return False
+
+
 def _contains_eebus_namespace_declaration(value: Any) -> bool:
     if isinstance(value, dict):
         if any(
             _compact_key(item_key) == "namespace"
-            and isinstance(item, str)
-            and _is_eebus_identifier(item)
+            and _contains_eebus_identifier_value(item)
             for item_key, item in _container_declarations(value)
         ):
             return True
