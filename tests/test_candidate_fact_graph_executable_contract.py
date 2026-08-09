@@ -2412,6 +2412,9 @@ def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
         {"aliases": ["eebus_v1"]},
         {"surface": "eebus_v2_values_get"},
         {"surface": "eebus_v1_values_set"},
+        {"aliases": ["eeBusV1Compat"]},
+        {"surface": "eeBusV2ValuesGet"},
+        {"surface": "eeBusV1ValuesSet"},
     ],
 )
 def test_msp08_report_rejects_separator_variant_eebus_surfaces(
@@ -2432,14 +2435,24 @@ def test_msp08_report_rejects_separator_variant_eebus_surfaces(
     assert result.stderr == ""
 
 
-@pytest.mark.parametrize("value", [167772161, "0x0a000001"])
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("ip", 167772161),
+        ("ip", "0x0a000001"),
+        ("ipV4", 167772161),
+        ("ipV4", "0x0a000001"),
+        ("ipV6", 1),
+        ("ipV6", "0x1"),
+    ],
+)
 def test_msp08_report_rejects_encoded_private_ip_identity(
-    tmp_path: pathlib.Path, value: object
+    tmp_path: pathlib.Path, key: str, value: object
 ) -> None:
     evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
     for run in evidence["runs"]:
         view = _view_by_id(run, "debug.ebus")
-        view["payload"]["data"]["ip"] = value
+        view["payload"]["data"][key] = value
         _refresh_view_hashes(evidence, view)
     _refresh_coexistence_evidence_identity(evidence)
 

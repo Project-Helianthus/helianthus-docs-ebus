@@ -325,6 +325,9 @@ PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
         "authsubject",
         "id",
         "ids",
+        "ip",
+        "ipv4",
+        "ipv6",
         "remoteshipid",
         "remoteski",
         "viadevice",
@@ -2056,10 +2059,11 @@ def _is_eebus_identifier(value: str) -> bool:
 def _eebus_surface_tokens(value: str) -> tuple[str, ...]:
     if any(character.isspace() for character in value):
         return ()
-    tokens = _key_tokens(value)
+    normalized_value = re.sub(r"(?i)^ee[._-]?bus", "eebus", value)
+    tokens = _key_tokens(normalized_value)
     if tokens and tokens[0] == "eebus":
         return tokens
-    compact = _compact_key(value)
+    compact = _compact_key(normalized_value)
     if compact == "eebus":
         return ("eebus",)
     version_only = re.fullmatch(r"eebus((?:v|version)?[0-9]+)", compact)
