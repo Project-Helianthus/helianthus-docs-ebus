@@ -2103,14 +2103,20 @@ EEBUS_DECLARATION_CONTEXT_KEYS = frozenset(
 )
 
 
+def _normalize_eebus_prefix(value: str) -> str:
+    return re.sub(r"(?i)^ee[._-]?bus", "eebus", value)
+
+
 def _is_eebus_identifier(value: str) -> bool:
-    return EEBUS_IDENTIFIER_RE.fullmatch(value) is not None
+    return EEBUS_IDENTIFIER_RE.fullmatch(
+        _normalize_eebus_prefix(value).casefold()
+    ) is not None
 
 
 def _eebus_surface_tokens(value: str) -> tuple[str, ...]:
     if any(character.isspace() for character in value):
         return ()
-    normalized_value = re.sub(r"(?i)^ee[._-]?bus", "eebus", value)
+    normalized_value = _normalize_eebus_prefix(value)
     tokens = _key_tokens(normalized_value)
     if tokens and tokens[0] == "eebus":
         return tokens
@@ -2124,7 +2130,7 @@ def _eebus_surface_tokens(value: str) -> tuple[str, ...]:
 
 
 def _is_eebus_authority_declaration_key(key: str) -> bool:
-    tokens = set(_key_tokens(key))
+    tokens = set(_eebus_surface_tokens(key) or _key_tokens(key))
     return bool(
         "eebus" in tokens and tokens.intersection(EEBUS_AUTHORITY_KEY_TOKENS)
     )
@@ -2140,7 +2146,9 @@ def _contains_eebus_authority(
         key
         and (
             _compact_key(key) in EEBUS_AUTHORITY_KEY_TOKENS
-            or set(_key_tokens(key)).intersection(EEBUS_AUTHORITY_KEY_TOKENS)
+            or set(_eebus_surface_tokens(key) or _key_tokens(key)).intersection(
+                EEBUS_AUTHORITY_KEY_TOKENS
+            )
         )
     )
     if isinstance(value, dict):

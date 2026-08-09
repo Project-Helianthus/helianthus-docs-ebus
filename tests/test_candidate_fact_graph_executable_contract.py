@@ -2392,6 +2392,10 @@ def test_msp08_report_rejects_namespace_object_surfaces(
             "name": "contract",
             "schema": {"const": "eebus.v1"},
         },
+        {"ee_bus": {"enabled": True}},
+        {"ee-bus": {"enabled": True}},
+        {"ee.bus": {"enabled": True}},
+        {"eeBusAuthority": True},
     ],
 )
 def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
