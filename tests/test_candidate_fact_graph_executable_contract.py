@@ -2367,6 +2367,18 @@ def test_msp08_report_rejects_namespace_object_surfaces(
                 "eebusAuthority": {"const": "eebus.v1"},
             },
         },
+        {"propertyNames": {"pattern": r"^namespace$"}},
+        {
+            "name": "namespace",
+            "schema": {"$ref": "#/$defs/namespaceChoice"},
+            "$defs": {"namespaceChoice": {"const": "eebus.v1"}},
+        },
+        {"propertyNames": {"pattern": r"^authority$"}},
+        {
+            "name": "authority",
+            "schema": {"$ref": "#/$defs/authorityChoice"},
+            "$defs": {"authorityChoice": {"const": "eebus.v1"}},
+        },
     ],
 )
 def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
@@ -2411,6 +2423,32 @@ def test_msp08_rollback_only_structured_declaration_keeps_drift_precedence(
 
     result = run_coexistence_validator(
         "verify", write_json(tmp_path / "rollback-structured-namespace.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "rollback.drift\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("mutation", ["V2", "WRITE", "M9"])
+def test_msp08_rollback_only_scope_mutation_keeps_drift_precedence(
+    tmp_path: pathlib.Path, mutation: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    rollback = _run_by_state(evidence, "EEBUS_DISABLED_ROLLBACK")
+    view = _view_by_id(rollback, "debug.ebus")
+    if mutation == "V2":
+        view["payload"]["data"]["eebus_v2"] = {"enabled": True}
+    elif mutation == "WRITE":
+        view["payload"]["data"]["operation"] = "eebus.v1.values.set"
+    else:
+        view["payload"]["data"]["later_milestone"] = {
+            "m9_consumer_gate": "AUTHORIZED"
+        }
+    _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify", write_json(tmp_path / "rollback-scope-mutation.json", evidence)
     )
     assert result.returncode == 1
     assert result.stdout == "rollback.drift\n"

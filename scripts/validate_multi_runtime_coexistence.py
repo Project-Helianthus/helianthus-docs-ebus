@@ -2148,6 +2148,29 @@ def _contains_structured_authority_declaration(value: Any) -> bool:
     return False
 
 
+def _contains_contract_descriptor_declaration(value: Any) -> bool:
+    if isinstance(value, dict):
+        for item_key, item in value.items():
+            normalized_key = _compact_key(item_key)
+            if normalized_key in {"propertynames", "patternproperties"} and bool(
+                item
+            ):
+                return True
+            if (
+                normalized_key in {"key", "name"}
+                and isinstance(item, str)
+                and _compact_key(item) in {"namespace", "authority", "authorities"}
+            ):
+                return True
+        return any(
+            _contains_contract_descriptor_declaration(item)
+            for item in value.values()
+        )
+    if isinstance(value, list):
+        return any(_contains_contract_descriptor_declaration(item) for item in value)
+    return False
+
+
 def _container_declarations(value: Any) -> list[tuple[str, Any]]:
     if isinstance(value, dict):
         return [*value.items(), *_declared_key_value_pairs(value)]
@@ -2479,15 +2502,19 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         fail("gate.scope")
     for run_index, run in enumerate(evidence["runs"]):
         rollback_run = run_index == len(evidence["runs"]) - 1
+        if rollback_run:
+            continue
         if any(
             _contains_non_v1_eebus_surface(view["payload"]["data"])
             or _contains_later_milestone_declaration(view["payload"]["data"])
             or _contains_eebus_write_surface(view["payload"]["data"])
-            or not rollback_run
-            and view["view_id"] != "mcp.eebus.v1.contract"
+            or view["view_id"] != "mcp.eebus.v1.contract"
             and (
                 _contains_eebus_namespace_declaration(view["payload"]["data"])
                 or _contains_structured_authority_declaration(
+                    view["payload"]["data"]
+                )
+                or _contains_contract_descriptor_declaration(
                     view["payload"]["data"]
                 )
                 or _contains_eebus_authority(view["payload"]["data"])
