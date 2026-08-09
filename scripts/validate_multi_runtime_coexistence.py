@@ -2113,6 +2113,23 @@ def _contains_eebus_reference(value: Any) -> bool:
     )
 
 
+def _contains_eebus_namespace_declaration(value: Any) -> bool:
+    if isinstance(value, dict):
+        if any(
+            _compact_key(item_key) == "namespace"
+            and isinstance(item, str)
+            and _is_eebus_identifier(item)
+            for item_key, item in _container_declarations(value)
+        ):
+            return True
+        return any(
+            _contains_eebus_namespace_declaration(item) for item in value.values()
+        )
+    if isinstance(value, list):
+        return any(_contains_eebus_namespace_declaration(item) for item in value)
+    return False
+
+
 def _container_declarations(value: Any) -> list[tuple[str, Any]]:
     if isinstance(value, dict):
         return [*value.items(), *_declared_key_value_pairs(value)]
@@ -2442,11 +2459,18 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         or scope["public_version_policy"] != "V1_ONLY_NO_PUBLIC_V2"
     ):
         fail("gate.scope")
-    for run in evidence["runs"]:
+    for run_index, run in enumerate(evidence["runs"]):
+        rollback_run = run_index == len(evidence["runs"]) - 1
         if any(
             _contains_non_v1_eebus_surface(view["payload"]["data"])
             or _contains_later_milestone_declaration(view["payload"]["data"])
             or _contains_eebus_write_surface(view["payload"]["data"])
+            or not rollback_run
+            and view["view_id"] != "mcp.eebus.v1.contract"
+            and (
+                _contains_eebus_namespace_declaration(view["payload"]["data"])
+                or _contains_eebus_authority(view["payload"]["data"])
+            )
             for view in run["protected_views"]
         ):
             fail("gate.scope")

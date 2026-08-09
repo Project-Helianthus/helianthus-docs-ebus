@@ -2337,6 +2337,41 @@ def test_msp08_report_rejects_namespace_object_surfaces(
     assert result.stderr == ""
 
 
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        {
+            "authority": "eebus.v1",
+            "namespace": "eebus.v1",
+            "public_v2": False,
+            "version": 1,
+        },
+        {
+            "declarations": [
+                {"Key": "namespace", "Value": "eebus.v1"},
+                {"Key": "authority", "Value": "eebus.v1"},
+            ]
+        },
+    ],
+)
+def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
+    tmp_path: pathlib.Path, declaration: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["data"]["consumer_contract"] = deepcopy(declaration)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "consumer-eebus-declaration.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
 @pytest.mark.parametrize("target", ["baseline", "scenario"])
 @pytest.mark.parametrize("mutation", ["duplicate", "substitute", "reorder"])
 def test_msp08_report_schema_requires_exact_ordered_protected_views(
