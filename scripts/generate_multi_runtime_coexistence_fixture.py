@@ -20,6 +20,20 @@ REGISTRY_PATH = (
 M7_ROOT = REPO_ROOT / "docs/platform/fixtures/candidate-fact-graph/v1/positive"
 M7_GRAPH_PATH = M7_ROOT / "graph.json"
 M7_REPLAY_PATH = M7_ROOT / "replay-result.json"
+M7_REGISTRY_PATH = (
+    REPO_ROOT / "docs/platform/schemas/draft-candidate-fact-registry-v1.json"
+)
+M7_SOURCE_BUNDLE_PATH = (
+    REPO_ROOT / "docs/platform/fixtures/synchronized-evidence/v1/positive/bundle.json"
+)
+M7_SOURCE_REPLAY_PATH = (
+    REPO_ROOT
+    / "docs/platform/fixtures/synchronized-evidence/v1/positive/replay-result.json"
+)
+
+
+def redacted(digit: str) -> str:
+    return "redacted:sha256:" + digit * 12
 
 
 def load(path: pathlib.Path) -> object:
@@ -94,8 +108,8 @@ def _view_payloads() -> dict[str, object]:
                     "result": {
                         "devices": [
                             {
-                                "address": "0x15",
-                                "device_id": "fixture-regulator",
+                                "address": redacted("1"),
+                                "device_id": redacted("2"),
                                 "manufacturer": "fixture-vendor",
                             }
                         ]
@@ -118,7 +132,7 @@ def _view_payloads() -> dict[str, object]:
         "graphql.ebus.values": {
             "zones": [
                 {
-                    "id": "fixture-zone-1",
+                    "id": redacted("3"),
                     "name": "Fixture Zone",
                     "currentTempC": "21.5",
                     "targetTempC": "22.0",
@@ -129,7 +143,7 @@ def _view_payloads() -> dict[str, object]:
         "ha.graphql.values": {
             "entities": [
                 {
-                    "entity_id": "climate.fixture_zone_1",
+                    "entity_id": redacted("4"),
                     "state": "heat",
                     "current_temperature": "21.5",
                     "target_temperature": "22.0",
@@ -139,10 +153,10 @@ def _view_payloads() -> dict[str, object]:
         "ha.identity": {
             "devices": [
                 {
-                    "unique_id": "helianthus-ebus-fixture-regulator",
+                    "unique_id": redacted("5"),
                     "manufacturer": "fixture-vendor",
                     "model": "fixture-regulator",
-                    "via_device": "helianthus-gateway-fixture",
+                    "via_device": redacted("6"),
                 }
             ]
         },
@@ -191,7 +205,7 @@ def _views(
         payload = {
             "meta": {
                 "captured_at": f"2026-07-20T00:00:0{run_index}Z",
-                "auth_subject": f"fixture-principal-{run_index}",
+                "auth_subject": "redacted:sha256:" + f"{run_index:012x}",
             },
             "data": copy.deepcopy(payloads[view_id]),
         }
@@ -279,11 +293,14 @@ def _state_evidence(state: str) -> dict[str, object]:
         "eebus_runtime_enabled": runtime_enabled,
         "candidate_graph_enabled": graph_enabled,
         "service_count": service_count,
+        "raw_only_count": 0,
         "candidate_count": candidate_count,
         "conflict_count": conflict_count,
+        "withheld_count": 1 if state == "EEBUS_CONFLICTED_WITHHELD" else 0,
         "degraded": degraded,
         "empty_success": False,
         "facts": facts,
+        "restart_transition": None,
     }
 
 
@@ -312,7 +329,9 @@ def build_evidence(
     compared_runtime = _runtime("a" * 40, coexistence.BASELINE_SOURCE_SHA, "b", "SYNTHETIC_FIXTURE")
     auth = _auth_scope()
     runs: list[dict[str, object]] = []
-    for index, state in enumerate(registry["scenario_order"]):
+    for index, state in enumerate(
+        registry["scenario_profiles"]["SYNTHETIC_OFFLINE_FIXTURE"]
+    ):
         views = _views(registry, index)
         state_evidence = _state_evidence(state)
         runtime = baseline_runtime if index == 0 else compared_runtime
@@ -344,6 +363,24 @@ def build_evidence(
                     "digest": replay["replay_hash"],
                     "byte_length": len(coexistence.canonical(replay)),
                 },
+                {
+                    "input_id": "m7:registry",
+                    "kind": "M7_REGISTRY",
+                    "digest": registry["m7_synthetic_binding"]["registry_content_hash"],
+                    "byte_length": len(M7_REGISTRY_PATH.read_bytes()),
+                },
+                {
+                    "input_id": "m7:source-bundle",
+                    "kind": "M7_SOURCE_BUNDLE",
+                    "digest": registry["m7_synthetic_binding"]["source_bundle_content_hash"],
+                    "byte_length": len(M7_SOURCE_BUNDLE_PATH.read_bytes()),
+                },
+                {
+                    "input_id": "m7:source-replay",
+                    "kind": "M7_SOURCE_REPLAY",
+                    "digest": registry["m7_synthetic_binding"]["source_replay_content_hash"],
+                    "byte_length": len(M7_SOURCE_REPLAY_PATH.read_bytes()),
+                },
             ]
         )
         runs.append(
@@ -353,6 +390,9 @@ def build_evidence(
                 "capture_offset_ns": index * 1_000_000_000,
                 "provenance": {
                     "capture_clock_id": clock["clock_id"],
+                    "process_instance_id": (
+                        "process-" + ("0" if index == 0 else "1") * 32
+                    ),
                     "runtime": copy.deepcopy(runtime),
                     "config": config,
                     "auth_scope": copy.deepcopy(auth),
@@ -366,8 +406,9 @@ def build_evidence(
     evidence = {
         "contract": coexistence.EVIDENCE_CONTRACT,
         "schema_version": 1,
-        "fixture_id": registry["fixture_ids"]["positive_evidence"],
+        "fixture_id": registry["fixture_ids"]["synthetic_positive_evidence"],
         "evidence_class": "SYNTHETIC_OFFLINE_FIXTURE",
+        "export_tier": "PUBLIC_REDACTED",
         "evidence_id": "mrcv1:sha256:" + "0" * 64,
         "evidence_hash": "sha256:" + "0" * 64,
         "registry": {
@@ -383,10 +424,11 @@ def build_evidence(
             "public_version_policy": "V1_ONLY_NO_PUBLIC_V2",
         },
         "m7_binding": {
-            "completion_token": registry["m7_completion_token"],
-            "docs_source_commit": registry["m7_docs_source_commit"],
-            **copy.deepcopy(registry["m7_binding"]),
+            "source_commit": registry["m7_synthetic_predecessor"]["source_commit"],
+            "docs_source_commit": registry["m7_synthetic_predecessor"]["docs_source_commit"],
+            **copy.deepcopy(registry["m7_synthetic_binding"]),
         },
+        "m7_live_status": None,
         "capture_clock": clock,
         "normalization": profile,
         "limits": copy.deepcopy(registry["limits"]),
@@ -412,12 +454,30 @@ def main() -> int:
     graph = load(M7_GRAPH_PATH)
     replay = load(M7_REPLAY_PATH)
     evidence = build_evidence(registry, registry_raw, graph, replay)
+    evidence_raw = (
+        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    coexistence.verify(
+        evidence,
+        len(evidence_raw),
+        registry,
+        registry_raw,
+        {
+            "graph": M7_GRAPH_PATH,
+            "replay": M7_REPLAY_PATH,
+            "registry": M7_REGISTRY_PATH,
+            "source_bundle": M7_SOURCE_BUNDLE_PATH,
+            "source_replay": M7_SOURCE_REPLAY_PATH,
+            "terminal_graph": None,
+            "terminal_replay": None,
+            "terminal_source_bundle": None,
+            "terminal_source_replay": None,
+            "status": None,
+        },
+    )
     report = coexistence.report(evidence, registry)
     args.output_root.mkdir(parents=True, exist_ok=True)
-    (args.output_root / "evidence.json").write_text(
-        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    (args.output_root / "evidence.json").write_bytes(evidence_raw)
     (args.output_root / "report.json").write_text(
         coexistence.canonical(report).decode("utf-8") + "\n",
         encoding="utf-8",
