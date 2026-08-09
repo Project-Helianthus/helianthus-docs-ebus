@@ -1724,6 +1724,12 @@ def test_msp08_report_is_verifier_derived_and_byte_deterministic() -> None:
         {"authorization": "Bearer synthetic-credential"},
         {"authHeader": "Bearer synthetic-credential"},
         {"tls_key": "cHJpdmF0ZS1rZXktbWF0ZXJpYWw="},
+        {"passphrase": "synthetic-passphrase"},
+        {"psk": "synthetic-psk"},
+        {"pre_shared_key": "synthetic-key"},
+        {"device_uid": "private-device-uid"},
+        {"peer_uid": "private-peer-uid"},
+        {"spine_uid": "private-spine-uid"},
         {"access_key_id": "SYNTHETICACCESSKEY"},
         {"endpoint_hash": "b" * 40},
         {"session_cookie": "synthetic-cookie"},
@@ -2056,6 +2062,49 @@ def test_msp08_report_rejects_plural_eebus_semantic_authority(
     assert result.stderr == ""
 
 
+@pytest.mark.parametrize("view_id", ["semantic.registry", "command.routing"])
+def test_msp08_report_rejects_nested_eebus_authority_context(
+    tmp_path: pathlib.Path, view_id: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, view_id)
+        view["payload"]["data"]["fallback_backend"] = {
+            "active": True,
+            "name": "eebus.v1",
+        }
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "nested-eebus-authority.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "authority.ebus\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "alias_key", ["legacy_names", "alternate_names", "compat_names", "accepted_names"]
+)
+def test_msp08_report_rejects_equivalent_alias_declarations(
+    tmp_path: pathlib.Path, alias_key: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "mcp.eebus.v1.contract")
+        view["payload"]["data"][alias_key] = ["eebus.v1.compat"]
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "equivalent-alias.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
 def test_msp08_report_rejects_versioned_eebus_authority_key(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -2164,6 +2213,36 @@ def test_msp08_report_rejects_eebus_write_surface(
 
     result = run_coexistence_validator(
         "report", write_json(tmp_path / "eebus-write-surface.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "gate.scope\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "tool",
+    [
+        "eebus.v1.configure",
+        "eebus.v1.control",
+        "eebus.v1.patch",
+        "eebus.v1.execute",
+        "eebus.v1.reboot",
+        "eebus.v1.reset",
+        "eebus.v1.commission",
+    ],
+)
+def test_msp08_report_rejects_unapproved_eebus_tools(
+    tmp_path: pathlib.Path, tool: str
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "mcp.tool.inventory")
+        view["payload"]["data"]["tools"].append(tool)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "report", write_json(tmp_path / "unapproved-eebus-tool.json", evidence)
     )
     assert result.returncode == 1
     assert result.stdout == "gate.scope\n"

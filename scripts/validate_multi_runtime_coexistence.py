@@ -61,6 +61,10 @@ READ_ONLY_PERMISSIONS = [
     "read:portal-bootstrap",
     "read:debug",
 ]
+APPROVED_M8_EEBUS_TOOLS = [
+    "eebus.v1.runtime.status.get",
+    "eebus.v1.services.list",
+]
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
@@ -215,6 +219,8 @@ PUBLIC_IDENTITY_GENERIC_TOKENS = frozenset(
         "serials",
         "ski",
         "skis",
+        "uid",
+        "uids",
     }
 )
 PUBLIC_IDENTITY_PREFIXES = frozenset(
@@ -280,6 +286,8 @@ PUBLIC_IDENTITY_SUFFIXES = frozenset(
         "subjects",
         "target",
         "targets",
+        "uid",
+        "uids",
     }
 )
 PUBLIC_IDENTITY_HASH_ROOTS = frozenset(
@@ -328,7 +336,11 @@ SENSITIVE_KEY_COMPACT_NAMES = frozenset(
         "keymaterial",
         "password",
         "passwords",
+        "passphrase",
+        "passphrases",
+        "presharedkey",
         "privatekey",
+        "psk",
         "secret",
         "secrets",
         "sessioncookie",
@@ -356,8 +368,12 @@ SENSITIVE_KEY_TOKEN_PATTERNS = frozenset(
         ("key", "materials"),
         ("password",),
         ("passwords",),
+        ("passphrase",),
+        ("passphrases",),
+        ("pre", "shared", "key"),
         ("private", "key"),
         ("private", "keys"),
+        ("psk",),
         ("secret",),
         ("secrets",),
         ("session", "cookie"),
@@ -2015,29 +2031,44 @@ EEBUS_AUTHORITY_KEY_TOKENS = frozenset(
 )
 
 
-def _contains_eebus_authority(value: Any, key: str | None = None) -> bool:
-    if isinstance(value, dict):
-        for item_key, item in value.items():
-            normalized_key = item_key.casefold()
-            if normalized_key == "eebus" or normalized_key.startswith("eebus."):
-                return True
-            if _contains_eebus_authority(item, item_key):
-                return True
-        return any(
-            _contains_eebus_authority(item, declared_key)
-            for declared_key, item in _declared_key_value_pairs(value)
-        )
-    if isinstance(value, list):
-        return any(_contains_eebus_authority(item, key) for item in value)
-    if not isinstance(value, str):
-        return False
-    normalized = value.casefold()
-    return bool(
+def _contains_eebus_authority(
+    value: Any,
+    key: str | None = None,
+    *,
+    authority_context: bool = False,
+) -> bool:
+    context = authority_context or bool(
         key
         and (
             _compact_key(key) in EEBUS_AUTHORITY_KEY_TOKENS
             or set(_key_tokens(key)).intersection(EEBUS_AUTHORITY_KEY_TOKENS)
         )
+    )
+    if isinstance(value, dict):
+        for item_key, item in value.items():
+            normalized_key = item_key.casefold()
+            if normalized_key == "eebus" or normalized_key.startswith("eebus."):
+                return True
+            if _contains_eebus_authority(
+                item, item_key, authority_context=context
+            ):
+                return True
+        return any(
+            _contains_eebus_authority(
+                item, declared_key, authority_context=context
+            )
+            for declared_key, item in _declared_key_value_pairs(value)
+        )
+    if isinstance(value, list):
+        return any(
+            _contains_eebus_authority(item, key, authority_context=context)
+            for item in value
+        )
+    if not isinstance(value, str):
+        return False
+    normalized = value.casefold()
+    return bool(
+        context
         and (normalized == "eebus" or normalized.startswith("eebus."))
     )
 
@@ -2072,6 +2103,34 @@ def _exact_version_one(value: Any) -> bool:
     return integer(value, 1) and value == 1
 
 
+def _is_alias_declaration_key(key: str) -> bool:
+    normalized = _compact_key(key)
+    if normalized in {
+        "alias",
+        "aliases",
+        "compatibilityalias",
+        "compatibilityaliases",
+    }:
+        return True
+    tokens = set(_key_tokens(key))
+    return bool(
+        tokens.intersection(
+            {
+                "accepted",
+                "alternate",
+                "compat",
+                "compatibility",
+                "deprecated",
+                "legacy",
+                "previous",
+            }
+        )
+        and tokens.intersection(
+            {"alias", "aliases", "name", "names", "namespace", "namespaces"}
+        )
+    )
+
+
 def _invalid_eebus_declarations(
     declarations: list[tuple[str, Any]],
     *,
@@ -2093,12 +2152,7 @@ def _invalid_eebus_declarations(
     ):
         return True
     for item_key, item in declarations:
-        if _compact_key(item_key) in {
-            "alias",
-            "aliases",
-            "compatibilityalias",
-            "compatibilityaliases",
-        } and item is not None and item != "":
+        if _is_alias_declaration_key(item_key) and item is not None and item != "":
             if (not isinstance(item, (list, dict)) or item) and (
                 reject_any_alias
                 or eebus_namespace
@@ -2371,6 +2425,11 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         )
         tools = inventory["payload"]["data"]["tools"]
         contract_data = eebus_contract["payload"]["data"]
+        eebus_tools = [
+            tool
+            for tool in tools
+            if isinstance(tool, str) and tool.startswith("eebus.v1.")
+        ]
         if (
             any(
                 not isinstance(tool, str) or not TOOL_NAME_RE.fullmatch(tool)
@@ -2381,6 +2440,7 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
                 and not tool.startswith("eebus.v1.")
                 for tool in tools
             )
+            or eebus_tools != APPROVED_M8_EEBUS_TOOLS
             or contract_data["namespace"] != "eebus.v1"
             or not _exact_version_one(contract_data["version"])
             or contract_data["public_v2"] is not False
