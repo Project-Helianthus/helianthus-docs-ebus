@@ -2386,6 +2386,12 @@ def test_msp08_report_rejects_namespace_object_surfaces(
             "schema": {"$ref": "#/$defs/namespaceChoices"},
             "$defs": {"namespaceChoices": {"items": {"const": "eebus.v1"}}},
         },
+        {"contract": "eebus.v1", "operations": ["values.set"]},
+        {"surface": "eebus.v2"},
+        {
+            "name": "contract",
+            "schema": {"const": "eebus.v1"},
+        },
     ],
 )
 def test_msp08_report_rejects_eebus_declarations_in_protected_consumers(
@@ -2458,6 +2464,31 @@ def test_msp08_report_rejects_encoded_private_ip_identity(
 
     result = run_coexistence_validator(
         "verify-public", write_json(tmp_path / "encoded-private-ip.json", evidence)
+    )
+    assert result.returncode == 1
+    assert result.stdout == "redaction.public\n"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "descriptor",
+    [
+        {"name": "ipV4", "schema": {"const": 167772161}},
+        {"key": "ipV6", "field": {"default": "0x1"}},
+    ],
+)
+def test_msp08_report_rejects_schema_wrapped_ip_identity(
+    tmp_path: pathlib.Path, descriptor: dict[str, object]
+) -> None:
+    evidence = deepcopy(load_json(COEXISTENCE_POSITIVE))
+    for run in evidence["runs"]:
+        view = _view_by_id(run, "graphql.schema")
+        view["payload"]["data"]["address_descriptor"] = deepcopy(descriptor)
+        _refresh_view_hashes(evidence, view)
+    _refresh_coexistence_evidence_identity(evidence)
+
+    result = run_coexistence_validator(
+        "verify-public", write_json(tmp_path / "wrapped-private-ip.json", evidence)
     )
     assert result.returncode == 1
     assert result.stdout == "redaction.public\n"

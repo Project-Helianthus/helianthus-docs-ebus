@@ -1950,6 +1950,52 @@ def _declared_key_value_pairs(value: dict[str, Any]) -> list[tuple[str, Any]]:
     ]
 
 
+def _contains_identity_descriptor_value(value: Any, declared_key: str) -> bool:
+    if isinstance(value, dict):
+        for item_key, item in value.items():
+            if _compact_key(item_key) in {
+                "const",
+                "default",
+                "enum",
+                "example",
+                "examples",
+                "value",
+                "values",
+            } and _contains_public_secret(item, declared_key):
+                return True
+            if _contains_identity_descriptor_value(item, declared_key):
+                return True
+        return False
+    if isinstance(value, list):
+        return any(
+            _contains_identity_descriptor_value(item, declared_key) for item in value
+        )
+    return False
+
+
+def _contains_public_identity_descriptor(value: Any) -> bool:
+    if isinstance(value, dict):
+        declared_keys = [
+            item
+            for item_key, item in value.items()
+            if _compact_key(item_key) in {"key", "name"}
+            and isinstance(item, str)
+            and _has_public_identity_key(item)
+        ]
+        descriptor_values = [
+            item
+            for item_key, item in value.items()
+            if _compact_key(item_key) in {"field", "schema", "type"}
+        ]
+        if any(
+            _contains_identity_descriptor_value(item, declared_key)
+            for declared_key in declared_keys
+            for item in descriptor_values
+        ):
+            return True
+    return False
+
+
 def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     if key is not None:
         normalized = _compact_key(key)
@@ -1985,6 +2031,8 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
         if normalized.endswith(("spinepath", "spinekind")):
             return True
     if isinstance(value, dict):
+        if _contains_public_identity_descriptor(value):
+            return True
         if any(
             _contains_public_secret(item, declared_key)
             for declared_key, item in _declared_key_value_pairs(value)
@@ -2049,6 +2097,9 @@ EEBUS_AUTHORITY_KEY_TOKENS = frozenset(
 EEBUS_IDENTIFIER_RE = re.compile(
     r"^eebus(?:(?:[._-]?v?[0-9]+)?(?:[._-][a-z0-9][a-z0-9._-]*)?)?$",
     re.IGNORECASE,
+)
+EEBUS_DECLARATION_CONTEXT_KEYS = frozenset(
+    {"contract", "contracts", "namespace", "namespaces", "surface", "surfaces"}
 )
 
 
@@ -2148,6 +2199,22 @@ def _contains_eebus_namespace_declaration(value: Any) -> bool:
     return False
 
 
+def _contains_eebus_contract_declaration(value: Any) -> bool:
+    if isinstance(value, dict):
+        if any(
+            _compact_key(item_key) in EEBUS_DECLARATION_CONTEXT_KEYS
+            and _contains_eebus_reference(item)
+            for item_key, item in _container_declarations(value)
+        ):
+            return True
+        return any(
+            _contains_eebus_contract_declaration(item) for item in value.values()
+        )
+    if isinstance(value, list):
+        return any(_contains_eebus_contract_declaration(item) for item in value)
+    return False
+
+
 def _contains_structured_authority_declaration(value: Any) -> bool:
     if isinstance(value, dict):
         if any(
@@ -2180,7 +2247,16 @@ def _contains_contract_descriptor_declaration(value: Any) -> bool:
                 normalized_key in {"key", "name"}
                 and isinstance(item, str)
                 and _compact_key(item)
-                in {"namespace", "namespaces", "authority", "authorities"}
+                in {
+                    "authority",
+                    "authorities",
+                    "contract",
+                    "contracts",
+                    "namespace",
+                    "namespaces",
+                    "surface",
+                    "surfaces",
+                }
             ):
                 return True
         return any(
@@ -2301,9 +2377,8 @@ def _contains_non_v1_eebus_surface(
             return True
         declarations = _container_declarations(value)
         child_context = eebus_context or any(
-            _compact_key(item_key) in {"namespace", "namespaces"}
-            and isinstance(item, str)
-            and item.casefold().startswith("eebus")
+            _compact_key(item_key) in EEBUS_DECLARATION_CONTEXT_KEYS
+            and _contains_eebus_reference(item)
             for item_key, item in declarations
         )
         if _invalid_eebus_declarations(
@@ -2328,9 +2403,8 @@ def _contains_non_v1_eebus_surface(
     if isinstance(value, list):
         declarations = _container_declarations(value)
         child_context = eebus_context or any(
-            _compact_key(item_key) in {"namespace", "namespaces"}
-            and isinstance(item, str)
-            and item.casefold().startswith("eebus")
+            _compact_key(item_key) in EEBUS_DECLARATION_CONTEXT_KEYS
+            and _contains_eebus_reference(item)
             for item_key, item in declarations
         )
         if _invalid_eebus_declarations(
@@ -2452,9 +2526,8 @@ def _contains_eebus_write_surface(
         child_context = (
             eebus_context
             or any(
-                _compact_key(item_key) in {"namespace", "namespaces"}
-                and isinstance(item, str)
-                and item.casefold().startswith("eebus")
+                _compact_key(item_key) in EEBUS_DECLARATION_CONTEXT_KEYS
+                and _contains_eebus_reference(item)
                 for item_key, item in declarations
             )
             or any(_is_eebus_identifier(item_key) for item_key in value)
@@ -2542,6 +2615,9 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
             or view["view_id"] != "mcp.eebus.v1.contract"
             and (
                 _contains_eebus_namespace_declaration(view["payload"]["data"])
+                or _contains_eebus_contract_declaration(
+                    view["payload"]["data"]
+                )
                 or _contains_structured_authority_declaration(
                     view["payload"]["data"]
                 )
