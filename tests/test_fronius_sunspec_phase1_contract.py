@@ -438,7 +438,7 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
     assert model_103_chain_error is None
     assert model_103_chain == [
         {"model_id": 103, "length_words": 50, "header_offset_words": 2},
-        {"model_id": 777, "length_words": 3, "header_offset_words": 54},
+        {"model_id": 666, "length_words": 3, "header_offset_words": 54},
         {"model_id": 0xFFFF, "length_words": 0, "header_offset_words": 59},
     ]
     assert model_103_chain[1] == {
@@ -446,6 +446,11 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
         for key in ("model_id", "length_words", "header_offset_words")
     }
     assert model_103["following_unknown_model"]["expected"] == "structural_skip_only"
+    unknown_id = model_103["following_unknown_model"]["model_id"]
+    assert unknown_id not in {111, 112, 113, 160}
+    assert not 120 <= unknown_id <= 124
+    assert not 200 <= unknown_id <= 219
+    assert not 700 <= unknown_id <= 799
     context = model_102["observation_context"]
     required_context = {
         "profile_version",
