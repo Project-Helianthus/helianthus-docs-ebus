@@ -73,6 +73,7 @@
       "int16_twos_complement",
       "acc32_high_word_first",
       "sunssf_scaling",
+      "sunssf_range_minus_10_through_10",
       "fixed_width_string_and_wire_word_order",
       "exact_raw_and_sample_identity",
       "single_generation_coherence",
@@ -124,11 +125,11 @@
     {"fixture_id": "FSS-P-002", "path": "positive/common-model-1.json", "kind": "positive", "covers": ["common_model_1", "fixed_width_strings", "placeholder_identity"]},
     {"fixture_id": "FSS-P-003", "path": "positive/inverter-101.json", "kind": "positive", "covers": ["model_101", "signed_int16", "acc32_high_word_first", "sunssf"]},
     {"fixture_id": "FSS-P-004", "path": "positive/inverter-103-unknown-skip.json", "kind": "positive", "covers": ["model_103", "signed_int16", "acc32_high_word_first", "sunssf", "unknown_model_skip"]},
-    {"fixture_id": "FSS-P-005", "path": "positive/inverter-102-observation.json", "kind": "positive", "covers": ["model_102", "signed_int16", "acc32_high_word_first", "sunssf", "raw_sample_identity", "single_generation_coherence", "provenance", "transport_neutrality"]},
+    {"fixture_id": "FSS-P-005", "path": "positive/inverter-102-observation.json", "kind": "positive", "covers": ["model_102", "signed_int16", "acc32_high_word_first", "sunssf", "raw_sample_identity", "single_generation_coherence", "complete_source_observation_envelope", "bounded_multi_response", "provenance", "transport_neutrality"]},
     {"fixture_id": "FSS-N-001", "path": "negative/malformed-length.json", "kind": "negative", "covers": ["malformed_length"]},
     {"fixture_id": "FSS-N-002", "path": "negative/extent-overrun.json", "kind": "negative", "covers": ["extent_overrun"]},
     {"fixture_id": "FSS-N-003", "path": "negative/missing-end.json", "kind": "negative", "covers": ["missing_end_sentinel"]},
-    {"fixture_id": "FSS-N-004", "path": "negative/invalid-scale-sentinel.json", "kind": "negative", "covers": ["invalid_scale_sentinel"]},
+    {"fixture_id": "FSS-N-004", "path": "negative/invalid-scale-sentinel.json", "kind": "negative", "covers": ["invalid_scale_sentinel", "sunssf_range_enforcement"]},
     {"fixture_id": "FSS-N-005", "path": "negative/unsupported-profile-version.json", "kind": "negative", "covers": ["unsupported_profile_version"]}
   ],
   "claims": [

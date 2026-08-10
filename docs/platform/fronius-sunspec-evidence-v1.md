@@ -64,8 +64,9 @@ The standard-model source identifies the admitted fields and types. The SunSpec
 Device Information Model Specification defines the required decoder semantics:
 two's-complement `int16`, big-endian multi-register `acc32`, `sunssf` scaling,
 fixed-width strings, and wire-order 16-bit words. An invalid scale-factor
-sentinel is not a numeric scale and must fail the affected typed value rather
-than be interpreted as zero.
+sentinel is not a numeric scale, and a `sunssf` exponent outside `-10` through
+`10` is invalid. Either case must fail the affected typed value rather than be
+interpreted as zero or applied as an unbounded exponent.
 
 ## M3-02 implementation boundary
 
@@ -106,9 +107,14 @@ Positive fixtures cover signature/base normalization and a chain, Common model
 strings, standard `101`, `102`, and `103` value decoding, unknown-model skip,
 the end sentinel, and the observation context that M3-02 must preserve.
 Negative fixtures constrain malformed length, extent overrun, missing end
-sentinel, an invalid scale-factor sentinel, and an unsupported profile version.
-The fixture values are invented examples chosen to make decoding errors
-observable; they do not describe a customer system or a Fronius device state.
+sentinel, invalid scale factors on both sides of the permitted range, and an
+unsupported profile version. The model `102` fixture carries the complete
+source-observation envelope required by the foundation contract, including
+version identities, endpoint/unit identity, ordered raw dependencies,
+normalization records, logical/wire response identities, and bounded
+multi-response coherence. The fixture values are invented examples chosen to
+make decoding errors observable; they do not describe a customer system or a
+Fronius device state.
 
 ## Open questions and downstream use
 

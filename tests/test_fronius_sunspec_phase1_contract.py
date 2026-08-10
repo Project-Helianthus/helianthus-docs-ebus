@@ -4,6 +4,7 @@ import json
 import pathlib
 import re
 from collections.abc import Iterable
+from datetime import datetime
 
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -30,8 +31,11 @@ EXPECTED_COVERAGE = {
     "extent_overrun",
     "missing_end_sentinel",
     "invalid_scale_sentinel",
+    "sunssf_range_enforcement",
     "raw_sample_identity",
     "single_generation_coherence",
+    "complete_source_observation_envelope",
+    "bounded_multi_response",
     "provenance",
     "transport_neutrality",
     "unsupported_profile_version",
@@ -59,10 +63,10 @@ def fixture_words(value: dict[str, object]) -> Iterable[int]:
 def test_all_phase_one_json_is_parseable_and_bounded() -> None:
     manifest = load_json(MANIFEST_PATH)
     paths = fixture_paths()
-    assert len(paths) == 10
-    assert len(paths) <= 10
+    assert 1 <= len(paths) <= 12
     fixtures = [load_json(path) for path in paths]
     assert manifest["fixture_root"] == "docs/platform/fixtures/fronius-sunspec-phase1/v1"
+    assert len(paths) == len(manifest["fixtures"])
 
     for path, fixture in zip(paths, fixtures, strict=True):
         assert fixture["kind"] in {"positive", "negative"}, path
@@ -194,16 +198,74 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
         wh_scale_word = examples["WH_SF"]["words"][0]
         assert int16(wh_scale_word) == 0
     context = model_102["observation_context"]
-    assert context == {
-        "raw_id": "fixture-raw-102",
-        "sample_id": "fixture-sample-102",
-        "generation": 7,
-        "source_time": "2026-01-01T00:00:00Z",
-        "transport": "unspecified",
+    required_context = {
+        "profile_version",
+        "codec_version",
+        "detector_version",
+        "normalization_version",
+        "coherence_version",
+        "qualification_version",
+        "sample_id",
+        "poll_generation_id",
+        "dependency_set_id",
+        "source_validity",
+        "source_time",
+        "local_receipt_time",
+        "endpoint_identity",
+        "unit_identity",
+        "dependencies",
     }
+    assert set(context) == required_context
+    assert context["poll_generation_id"] == "fixture-poll-generation-7"
+    assert context["source_time"] == {
+        "state": "available",
+        "value": "2026-01-01T00:00:00Z",
+    }
+    dependencies = context["dependencies"]
+    assert [dependency["dependency_id"] for dependency in dependencies] == [
+        "model-102-w",
+        "model-102-wh",
+    ]
+    assert [dependency["raw_words"] for dependency in dependencies] == [
+        [321, 65535],
+        [2, 0, 0],
+    ]
+    for dependency in dependencies:
+        assert dependency["poll_generation_id"] == context["poll_generation_id"]
+        assert dependency["normalization_record"]["version"] == 1
+        assert dependency["logical_view_id"].startswith("fixture-logical-view-")
+        assert dependency["wire_response_id"].startswith("fixture-wire-response-")
+        assert dependency["logical_count_words"] == dependency["slice_count_words"]
+        assert dependency["slice_offset_words"] == 0
+    coherence = model_102["coherence_policy"]
+    assert coherence == {
+        "version": 1,
+        "mode": "bounded_multi_response",
+        "ordered_dependency_ids": ["model-102-w", "model-102-wh"],
+        "maximum_source_skew_ms": 1000,
+        "maximum_receipt_skew_ms": 1000,
+        "generation_equality_required": True,
+        "retry_set": "all_dependencies",
+        "documentary_consistency_marker": "unavailable",
+    }
+    source_times = [datetime.fromisoformat(item["source_time"]) for item in dependencies]
+    receipt_times = [
+        datetime.fromisoformat(item["local_receipt_time"]) for item in dependencies
+    ]
+    source_skew_ms = (max(source_times) - min(source_times)).total_seconds() * 1000
+    receipt_skew_ms = (max(receipt_times) - min(receipt_times)).total_seconds() * 1000
+    assert source_skew_ms <= coherence["maximum_source_skew_ms"]
+    assert receipt_skew_ms <= coherence["maximum_receipt_skew_ms"]
     assert model_102["expected"]["preserve_observation_context_exactly"] is True
-    sentinel = invalid_scale["logical_word_examples"][0]["words"][0]
-    assert sentinel == 0x8000
+
+    scale_examples = invalid_scale["logical_word_examples"]
+    decoded_scales = [int16(example["words"][0]) for example in scale_examples]
+    assert decoded_scales == [-32768, 11, -11]
+    assert invalid_scale["valid_exponent_range"] == {"minimum": -10, "maximum": 10}
+    assert scale_examples[0]["expected_error"] == "invalid_scale_factor_sentinel"
+    assert {example["expected_error"] for example in scale_examples[1:]} == {
+        "scale_factor_out_of_range"
+    }
 
 
 def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> None:
