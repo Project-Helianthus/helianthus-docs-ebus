@@ -8,3 +8,6 @@ They are covered by [`protocols/LICENSE`](../LICENSE), CC0-1.0.
 
 Helianthus scheduling, abandonment, provenance, profile, and qualification
 policy remains under `docs/platform/` and is not relicensed by this directory.
+The [Fronius SunSpec phase-one evidence packet](../../docs/platform/fronius-sunspec-evidence-v1.md)
+is an AGPL platform-policy artifact; it independently summarizes sources and
+does not add vendor register tables to this CC0 protocol directory.

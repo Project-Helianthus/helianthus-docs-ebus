@@ -1,0 +1,161 @@
+{
+  "schema": "helianthus.fronius-sunspec.phase1-evidence",
+  "version": 1,
+  "issue": "Project-Helianthus/helianthus-docs-ebus#397",
+  "status": "EVIDENCE_PACKET_NOT_IMPLEMENTATION",
+  "documentation": {
+    "packet": "docs/platform/fronius-sunspec-evidence-v1.md",
+    "license_lane": "AGPL-3.0",
+    "restricted_source_copy": "forbidden",
+    "source_transformation": "link_and_independent_summary",
+    "authorization": "no_document_hash_or_manifest_field_authorizes_execution"
+  },
+  "sources": [
+    {
+      "source_id": "fronius-manual-4204102649",
+      "kind": "official_vendor_manual",
+      "url": "https://manuals.fronius.com/html/4204102649/en-US.html",
+      "pdf_url": "https://www.fronius.com/~/downloads/Solar%20Energy/Operating%20Instructions/42%2C0410%2C2649.pdf",
+      "document_id": "42,0410,2649",
+      "edition": "033-24022026",
+      "publication_treatment": "independent_summary_only"
+    },
+    {
+      "source_id": "fronius-register-package-1.2.7-2",
+      "kind": "official_vendor_register_package",
+      "url": "https://www.fronius.com/QR-link/0024",
+      "redirect_target": "gen24-modbus-api-external-docs.zip",
+      "package_version": "1.2.7-2",
+      "bundle_version": "GEN24 1.36.x",
+      "publication_treatment": "source_only_no_workbook_or_table_copy"
+    },
+    {
+      "source_id": "sunspec-models-7abdf898",
+      "kind": "official_standard_model_repository",
+      "url": "https://github.com/sunspec/models",
+      "commit": "7abdf8982d5364f8ae916deee18aac86c11be36d",
+      "revision_date": "2026-04-22",
+      "license": "Apache-2.0",
+      "publication_treatment": "independent_summary_only"
+    },
+    {
+      "source_id": "sunspec-device-information-model-v1.1",
+      "kind": "official_standard_specification",
+      "url": "https://sunspec.org/wp-content/uploads/2025/01/SunSpec-Device-Information-Model-Specificiation-V1-1-final-1.pdf",
+      "version": "1.1",
+      "approved_on": "2022-05-09",
+      "publication_treatment": "independent_summary_only"
+    }
+  ],
+  "phase_one": {
+    "read_only": true,
+    "allowed_function_codes": ["FC03"],
+    "sunspec_pdu_base_register": 40001,
+    "zero_based_modbus_address": 40000,
+    "dynamic_model_chain_required": true,
+    "operational_guidance": {
+      "minimum_timeout_seconds": 1,
+      "preferred_request_pattern": "sequential",
+      "maximum_parallel_requests": 2
+    }
+  },
+  "fronius_acquisition_evidence": {
+    "tcp_unit_id": "0x01",
+    "scope": "vendor_tcp_acquisition_only",
+    "standard_profile_input": false,
+    "m3_02_fixture_unit_identity": "runtime_supplied_abstract_identity",
+    "retained_for": "future_gateway_acquisition_outside_current_hard_stop"
+  },
+  "m3_02_contract": {
+    "supported_profile_versions": [1],
+    "supported_codec_versions": [1],
+    "supported_model_ids": [1, 101, 102, 103],
+    "deferred_model_ids": [111, 112, 113, 120, 121, 122, 123, 124, 160, "20x", "21x", "7xx"],
+    "required_behavior": [
+      "signature_and_base_normalization",
+      "bounded_dynamic_chain_parser",
+      "common_model_1",
+      "int_sf_inverter_models_101_102_103",
+      "unknown_model_structural_skip",
+      "end_sentinel",
+      "int16_twos_complement",
+      "acc32_high_word_first",
+      "sunssf_scaling",
+      "sunssf_range_minus_10_through_10",
+      "fixed_width_string_and_wire_word_order",
+      "first_nul_string_termination_without_post_terminator_emission",
+      "exact_raw_and_sample_identity",
+      "single_generation_coherence",
+      "source_profile_and_codec_provenance",
+      "explicit_profile_and_codec_version_gates",
+      "transport_neutral_activation"
+    ],
+    "forbidden_behavior": [
+      "write_or_control_operation",
+      "fixed_vendor_table_addresses",
+      "implicit_support_for_deferred_models",
+      "fronius_assumptions_inside_standard_profile"
+    ]
+  },
+  "applicability": [
+    {
+      "applicability_id": "gen24-primo-symo-row-int-sf-1.2.7-2",
+      "vendor": "Fronius",
+      "product_family": "GEN24 Primo/Symo ROW",
+      "model_mode": "int+SF",
+      "package_version": "1.2.7-2",
+      "bundle_version": "GEN24 1.36.x",
+      "disposition": "PROVEN",
+      "limitation": "documentary qualification only; successful runtime chain discovery remains required"
+    },
+    {
+      "applicability_id": "verto-tauro",
+      "product_family": "Verto/Tauro",
+      "disposition": "UNKNOWN",
+      "limitation": "maps exist in the source package but phase-one admission and tests do not"
+    },
+    {
+      "applicability_id": "older-datamanager-snapinverter-live-hardware",
+      "product_family": "older Datamanager/SnapINverter and any live hardware",
+      "disposition": "UNKNOWN",
+      "limitation": "no admission evidence is included in this packet"
+    }
+  ],
+  "fronius_overlay": {
+    "disposition": "HYPOTHESIS",
+    "state": "PENDING_M3_03",
+    "m3_03_terminal_dispositions": ["STANDARD_ONLY", "OVERLAY_REQUIRED"],
+    "terminal_rule": "exactly_one_no_third_state",
+    "standard_only_effect": "no_production_fronius_overlay",
+    "overlay_required_limit": "evidence_supported_transport_neutral_read_only_profile_logic",
+    "candidate_gates": ["manufacturer", "model", "firmware", "package"],
+    "production_detector": "not_present",
+    "standard_only": false
+  },
+  "fixture_root": "docs/platform/fixtures/fronius-sunspec-phase1/v1",
+  "fixtures": [
+    {"fixture_id": "FSS-P-001", "path": "positive/signature-chain.json", "kind": "positive", "covers": ["signature", "base_normalization", "dynamic_chain", "model_102_presence", "end_sentinel"]},
+    {"fixture_id": "FSS-P-002", "path": "positive/common-model-1.json", "kind": "positive", "covers": ["common_model_1", "fixed_width_strings", "placeholder_identity"]},
+    {"fixture_id": "FSS-P-003", "path": "positive/inverter-101.json", "kind": "positive", "covers": ["model_101", "signed_int16", "acc32_high_word_first", "sunssf"]},
+    {"fixture_id": "FSS-P-004", "path": "positive/inverter-103-unknown-skip.json", "kind": "positive", "covers": ["model_103", "signed_int16", "acc32_high_word_first", "sunssf", "unknown_model_skip"]},
+    {"fixture_id": "FSS-P-005", "path": "positive/inverter-102-observation.json", "kind": "positive", "covers": ["model_102", "signed_int16", "acc32_high_word_first", "sunssf", "raw_sample_identity", "single_generation_coherence", "complete_source_observation_envelope", "bounded_multi_response", "provenance", "transport_neutrality"]},
+    {"fixture_id": "FSS-N-001", "path": "negative/malformed-length.json", "kind": "negative", "covers": ["malformed_length"]},
+    {"fixture_id": "FSS-N-002", "path": "negative/extent-overrun.json", "kind": "negative", "covers": ["extent_overrun"]},
+    {"fixture_id": "FSS-N-003", "path": "negative/missing-end.json", "kind": "negative", "covers": ["missing_end_sentinel"]},
+    {"fixture_id": "FSS-N-004", "path": "negative/invalid-scale-sentinel.json", "kind": "negative", "covers": ["invalid_scale_sentinel", "sunssf_range_enforcement"]},
+    {"fixture_id": "FSS-N-005", "path": "negative/unsupported-profile-version.json", "kind": "negative", "covers": ["unsupported_profile_version"]},
+    {"fixture_id": "FSS-N-006", "path": "negative/unsupported-codec-version.json", "kind": "negative", "covers": ["unsupported_codec_version"]},
+    {"fixture_id": "FSS-N-007", "path": "negative/invalid-chain-headers.json", "kind": "negative", "covers": ["invalid_sunspec_signature", "invalid_end_sentinel"]}
+  ],
+  "claims": [
+    {"claim_id": "FSS-C-001", "statement": "SunSpec base 40001 is requested at zero-based address 40000", "source_ids": ["fronius-manual-4204102649"], "fixture_ids": ["FSS-P-001"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
+    {"claim_id": "FSS-C-002", "statement": "Model addresses are dynamic and require bounded chain discovery", "source_ids": ["fronius-manual-4204102649", "sunspec-models-7abdf898"], "fixture_ids": ["FSS-P-001", "FSS-N-001", "FSS-N-002", "FSS-N-003", "FSS-N-007"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
+    {"claim_id": "FSS-C-003", "statement": "Phase one is FC03 read-only", "source_ids": ["fronius-manual-4204102649"], "fixture_ids": ["FSS-P-001"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
+    {"claim_id": "FSS-C-004", "statement": "Common model 1 and int+SF inverter models 101, 102, and 103 are the M3-02 admission set", "source_ids": ["fronius-manual-4204102649", "fronius-register-package-1.2.7-2", "sunspec-models-7abdf898"], "fixture_ids": ["FSS-P-001", "FSS-P-002", "FSS-P-003", "FSS-P-004", "FSS-P-005"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
+    {"claim_id": "FSS-C-005", "statement": "The standard decoding contract includes signed int16, big-endian multi-register acc32, sunssf, and fixed-width strings", "source_ids": ["sunspec-models-7abdf898", "sunspec-device-information-model-v1.1"], "fixture_ids": ["FSS-P-002", "FSS-P-003", "FSS-P-004", "FSS-P-005", "FSS-N-004"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
+    {"claim_id": "FSS-C-006", "statement": "GEN24 Primo/Symo ROW int+SF is documented for package 1.2.7-2 and bundle 1.36.x", "source_ids": ["fronius-register-package-1.2.7-2"], "fixture_ids": [], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02", "M3-03"]},
+    {"claim_id": "FSS-C-007", "statement": "A Fronius overlay may need manufacturer, model, firmware, and package gates", "source_ids": ["fronius-manual-4204102649", "fronius-register-package-1.2.7-2"], "fixture_ids": [], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2", "verto-tauro", "older-datamanager-snapinverter-live-hardware"], "disposition": "HYPOTHESIS", "downstream_use": ["M3-03"]},
+    {"claim_id": "FSS-C-008", "statement": "Fronius inverter TCP acquisition uses unit ID 0x01, which is not a standard-profile input", "source_ids": ["fronius-manual-4204102649"], "fixture_ids": [], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": []},
+    {"claim_id": "FSS-C-009", "statement": "M3-02 admits only SunSpec phase-one profile and codec contract version 1", "source_ids": [], "fixture_ids": ["FSS-N-005", "FSS-N-006"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]}
+  ]
+}
