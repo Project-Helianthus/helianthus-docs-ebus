@@ -4,6 +4,7 @@
   "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
   "request": {"function_code": "FC03", "unit_identity": "runtime-supplied-unit", "pdu_base_register": 40001, "zero_based_address": 40000},
   "coordinate_origin": "pdu_base_word_zero_includes_two_word_sunspec_signature",
+  "logical_words": [21365,28243,1,65,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,102,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,65535,0],
   "chain": [
     {"model_id": 1, "length_words": 65, "header_offset_words": 2},
     {"model_id": 102, "length_words": 50, "header_offset_words": 69},

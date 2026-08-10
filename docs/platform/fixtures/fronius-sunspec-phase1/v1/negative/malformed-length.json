@@ -2,6 +2,7 @@
   "fixture_id": "FSS-N-001",
   "kind": "negative",
   "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "logical_words": [21365,28243,101,0],
   "chain": [{"model_id": 101, "length_words": 0, "header_offset_words": 2}],
   "expected_error": "zero_length_non_end_model"
 }

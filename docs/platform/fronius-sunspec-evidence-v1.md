@@ -83,7 +83,7 @@ code exists:
 
 | M3-02 may implement | M3-02 must not silently implement |
 | --- | --- |
-| signature/base normalization; bounded chain parser; Common model `1`; models `101`, `102`, `103`; unknown-model structural skip; end sentinel; documented standard signedness, scaling, fixed-width string, and word order; exact raw and sample identity; coherent single-generation observations; source/profile/codec provenance; explicit profile-version gates; transport-neutral activation | float models `111`, `112`, `113`; models `120` through `124`; `160`; `20x`/`21x`; `7xx`; any write/control operation; fixed vendor table addresses; Fronius manufacturer, unit-ID, firmware, or package assumptions inside the standard profile |
+| signature/base normalization; bounded chain parser; Common model `1`; models `101`, `102`, `103`; unknown-model structural skip; end sentinel; documented standard signedness, scaling, fixed-width string, and word order; exact raw and sample identity; coherent single-generation observations; source/profile/codec provenance; explicit profile- and codec-version gates; transport-neutral activation | float models `111`, `112`, `113`; models `120` through `124`; `160`; `20x`/`21x`; `7xx`; any write/control operation; fixed vendor table addresses; Fronius manufacturer, unit-ID, firmware, or package assumptions inside the standard profile |
 
 An unknown model may be skipped only after its header and declared extent are
 validated within the bounded read. It does not establish semantic support, and
@@ -122,8 +122,10 @@ Positive fixtures cover signature/base normalization and a chain, Common model
 strings, standard `101`, `102`, and `103` value decoding, unknown-model skip,
 the end sentinel, and the observation context that M3-02 must preserve.
 Negative fixtures constrain malformed length, extent overrun, missing end
-sentinel, invalid scale factors on both sides of the permitted range, and an
-unsupported profile version. The model `102` fixture carries the complete
+sentinel, invalid scale factors on both sides of the permitted range, and
+unsupported profile and codec versions. Chain fixtures carry bounded raw
+logical words, including the `SunS` signature, so downstream parsers must derive
+headers, offsets, and failures rather than trusting decoded metadata. The model `102` fixture carries the complete
 source-observation envelope required by the foundation contract, including
 version identities, endpoint/unit identity, ordered raw dependencies,
 normalization records, logical/wire response identities, and bounded

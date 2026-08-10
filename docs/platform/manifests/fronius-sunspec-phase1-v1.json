@@ -67,6 +67,8 @@
     "retained_for": "future_gateway_acquisition_outside_current_hard_stop"
   },
   "m3_02_contract": {
+    "supported_profile_versions": [1],
+    "supported_codec_versions": [1],
     "supported_model_ids": [1, 101, 102, 103],
     "deferred_model_ids": [111, 112, 113, 120, 121, 122, 123, 124, 160, "20x", "21x", "7xx"],
     "required_behavior": [
@@ -85,7 +87,7 @@
       "exact_raw_and_sample_identity",
       "single_generation_coherence",
       "source_profile_and_codec_provenance",
-      "explicit_profile_version_gates",
+      "explicit_profile_and_codec_version_gates",
       "transport_neutral_activation"
     ],
     "forbidden_behavior": [
@@ -141,7 +143,8 @@
     {"fixture_id": "FSS-N-002", "path": "negative/extent-overrun.json", "kind": "negative", "covers": ["extent_overrun"]},
     {"fixture_id": "FSS-N-003", "path": "negative/missing-end.json", "kind": "negative", "covers": ["missing_end_sentinel"]},
     {"fixture_id": "FSS-N-004", "path": "negative/invalid-scale-sentinel.json", "kind": "negative", "covers": ["invalid_scale_sentinel", "sunssf_range_enforcement"]},
-    {"fixture_id": "FSS-N-005", "path": "negative/unsupported-profile-version.json", "kind": "negative", "covers": ["unsupported_profile_version"]}
+    {"fixture_id": "FSS-N-005", "path": "negative/unsupported-profile-version.json", "kind": "negative", "covers": ["unsupported_profile_version"]},
+    {"fixture_id": "FSS-N-006", "path": "negative/unsupported-codec-version.json", "kind": "negative", "covers": ["unsupported_codec_version"]}
   ],
   "claims": [
     {"claim_id": "FSS-C-001", "statement": "SunSpec base 40001 is requested at zero-based address 40000", "source_ids": ["fronius-manual-4204102649"], "fixture_ids": ["FSS-P-001"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},

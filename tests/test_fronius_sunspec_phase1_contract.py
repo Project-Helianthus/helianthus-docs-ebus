@@ -57,6 +57,7 @@ EXPECTED_COVERAGE = {
     "provenance",
     "transport_neutrality",
     "unsupported_profile_version",
+    "unsupported_codec_version",
 }
 SENSITIVE_FIXTURE_KEYS = {
     "access_token",
@@ -114,11 +115,38 @@ def fixture_paths() -> list[pathlib.Path]:
 
 
 def fixture_words(value: dict[str, object]) -> Iterable[int]:
+    logical_words = value.get("logical_words", [])
+    assert isinstance(logical_words, list)
+    yield from logical_words
     for example in value.get("logical_word_examples", []):
         assert isinstance(example, dict)
         words = example.get("words", [])
         assert isinstance(words, list)
         yield from words
+
+
+def parse_model_chain(words: list[int]) -> tuple[list[dict[str, int]], str | None]:
+    if words[:2] != [0x5375, 0x6E53]:
+        return [], "invalid_sunspec_signature"
+    chain: list[dict[str, int]] = []
+    offset = 2
+    while offset + 2 <= len(words):
+        model_id, length_words = words[offset : offset + 2]
+        model = {
+            "model_id": model_id,
+            "length_words": length_words,
+            "header_offset_words": offset,
+        }
+        chain.append(model)
+        if model_id == 0xFFFF:
+            return chain, None if length_words == 0 else "invalid_end_sentinel"
+        if length_words == 0:
+            return chain, "zero_length_non_end_model"
+        next_offset = offset + 2 + length_words
+        if next_offset > len(words):
+            return chain, "model_extent_overrun"
+        offset = next_offset
+    return chain, "missing_end_sentinel"
 
 
 def is_sensitive_fixture_key(normalized_key: str) -> bool:
@@ -229,6 +257,8 @@ def test_source_pins_scope_and_dispositions_are_exact() -> None:
         "retained_for": "future_gateway_acquisition_outside_current_hard_stop",
     }
     assert manifest["m3_02_contract"]["supported_model_ids"] == EXPECTED_SUPPORTED
+    assert manifest["m3_02_contract"]["supported_profile_versions"] == [1]
+    assert manifest["m3_02_contract"]["supported_codec_versions"] == [1]
     assert manifest["m3_02_contract"]["deferred_model_ids"] == EXPECTED_DEFERRED
     assert manifest["m3_02_contract"]["forbidden_behavior"] == EXPECTED_FORBIDDEN
     overlay = manifest["fronius_overlay"]
@@ -308,6 +338,9 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
     assert signature["coordinate_origin"] == (
         "pdu_base_word_zero_includes_two_word_sunspec_signature"
     )
+    parsed_chain, chain_error = parse_model_chain(signature["logical_words"])
+    assert chain_error is None
+    assert parsed_chain == signature["chain"]
     expected_header_offset = len(signature["expected"]["signature_words"])
     for model in signature["chain"]:
         assert model["header_offset_words"] == expected_header_offset
@@ -446,28 +479,35 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
 
 def test_negative_fixtures_encode_reachable_failures() -> None:
     malformed = load_json(FIXTURE_ROOT / "negative/malformed-length.json")
-    malformed_model = malformed["chain"][0]
-    assert malformed_model["model_id"] != 0xFFFF
-    assert malformed_model["length_words"] == 0
-    assert malformed["expected_error"] == "zero_length_non_end_model"
+    malformed_chain, malformed_error = parse_model_chain(malformed["logical_words"])
+    assert malformed_chain == malformed["chain"]
+    assert malformed_error == malformed["expected_error"] == "zero_length_non_end_model"
 
     overrun = load_json(FIXTURE_ROOT / "negative/extent-overrun.json")
-    overrun_model = overrun["chain"][0]
-    required_words = 2 + overrun_model["length_words"]
-    assert required_words > overrun["bounded_words_available"]
-    assert overrun["expected_error"] == "model_extent_overrun"
+    assert len(overrun["logical_words"]) == overrun["bounded_words_available"]
+    overrun_chain, overrun_error = parse_model_chain(overrun["logical_words"])
+    assert overrun_chain == overrun["chain"]
+    assert overrun_error == overrun["expected_error"] == "model_extent_overrun"
 
     missing_end = load_json(FIXTURE_ROOT / "negative/missing-end.json")
-    assert all(model["model_id"] != 0xFFFF for model in missing_end["chain"])
-    expected_offset = 2
-    for model in missing_end["chain"]:
-        assert model["header_offset_words"] == expected_offset
-        expected_offset += 2 + model["length_words"]
-    assert missing_end["expected_error"] == "missing_end_sentinel"
+    missing_chain, missing_error = parse_model_chain(missing_end["logical_words"])
+    assert missing_chain == missing_end["chain"]
+    assert missing_error == missing_end["expected_error"] == "missing_end_sentinel"
 
     unsupported = load_json(FIXTURE_ROOT / "negative/unsupported-profile-version.json")
     assert unsupported["profile"]["version"] not in unsupported["supported_profile_versions"]
     assert unsupported["expected_error"] == "unsupported_profile_version"
+
+    unsupported_codec = load_json(
+        FIXTURE_ROOT / "negative/unsupported-codec-version.json"
+    )
+    assert unsupported_codec["profile"]["version"] in unsupported_codec[
+        "supported_profile_versions"
+    ]
+    assert unsupported_codec["profile"]["codec_version"] not in unsupported_codec[
+        "supported_codec_versions"
+    ]
+    assert unsupported_codec["expected_error"] == "unsupported_codec_version"
 
 
 def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> None:
