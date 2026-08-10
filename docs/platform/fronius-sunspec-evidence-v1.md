@@ -47,7 +47,10 @@ manifest:
 - Fronius inverter TCP uses unit ID `0x01`. The manual also describes serial
   and TCP interfaces. This phase-one packet does not admit an RTU deployment.
   The unit ID is an acquisition/applicability fact and must not be embedded in
-  the transport-neutral standard profile implemented by M3-02.
+  the transport-neutral standard profile implemented by M3-02 or in Fronius
+  profile logic decided by M3-03. It is retained only for future gateway
+  acquisition work beyond the current hard stop; M3-02 fixtures use a
+  runtime-supplied abstract unit identity.
 - The Fronius manual identifies FC03 for the listed SunSpec holding-register
   reads. Phase one remains read-only even where the vendor materials describe
   writable controls.

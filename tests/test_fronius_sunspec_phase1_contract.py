@@ -116,6 +116,14 @@ def test_source_pins_scope_and_dispositions_are_exact() -> None:
     assert manifest["documentation"]["authorization"] == "no_document_hash_or_manifest_field_authorizes_execution"
     assert manifest["phase_one"]["read_only"] is True
     assert manifest["phase_one"]["allowed_function_codes"] == ["FC03"]
+    assert "tcp_unit_id" not in manifest["phase_one"]
+    assert manifest["fronius_acquisition_evidence"] == {
+        "tcp_unit_id": "0x01",
+        "scope": "vendor_tcp_acquisition_only",
+        "standard_profile_input": False,
+        "m3_02_fixture_unit_identity": "runtime_supplied_abstract_identity",
+        "retained_for": "future_gateway_acquisition_outside_current_hard_stop",
+    }
     assert manifest["m3_02_contract"]["supported_model_ids"] == EXPECTED_SUPPORTED
     assert manifest["m3_02_contract"]["deferred_model_ids"] == EXPECTED_DEFERRED
     assert manifest["m3_02_contract"]["forbidden_behavior"] == EXPECTED_FORBIDDEN
@@ -175,6 +183,14 @@ def test_claim_fixture_and_coverage_references_are_closed() -> None:
         assert set(claim["applicability_ids"]) <= applicability_ids
         assert set(claim["downstream_use"]) <= {"M3-02", "M3-03"}
     assert {"M3-02", "M3-03"} <= {use for claim in claims for use in claim["downstream_use"]}
+    m3_02_claims = [claim for claim in claims if "M3-02" in claim["downstream_use"]]
+    assert all("unit ID 0x01" not in claim["statement"] for claim in m3_02_claims)
+    acquisition_claim = next(claim for claim in claims if claim["claim_id"] == "FSS-C-008")
+    assert acquisition_claim["downstream_use"] == []
+
+    signature = load_json(FIXTURE_ROOT / "positive/signature-chain.json")
+    assert signature["request"]["unit_identity"] == "runtime-supplied-unit"
+    assert "unit_id" not in signature["request"]
 
 
 def test_synthetic_values_exercise_standard_decode_rules() -> None:
