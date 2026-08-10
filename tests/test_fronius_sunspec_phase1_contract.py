@@ -279,16 +279,34 @@ def test_claim_fixture_and_coverage_references_are_closed() -> None:
 
 
 def test_synthetic_values_exercise_standard_decode_rules() -> None:
+    signature = load_json(FIXTURE_ROOT / "positive/signature-chain.json")
     common = load_json(FIXTURE_ROOT / "positive/common-model-1.json")
     model_101 = load_json(FIXTURE_ROOT / "positive/inverter-101.json")
     model_102 = load_json(FIXTURE_ROOT / "positive/inverter-102-observation.json")
     model_103 = load_json(FIXTURE_ROOT / "positive/inverter-103-unknown-skip.json")
     invalid_scale = load_json(FIXTURE_ROOT / "negative/invalid-scale-sentinel.json")
 
+    assert signature["coordinate_origin"] == (
+        "pdu_base_word_zero_includes_two_word_sunspec_signature"
+    )
+    expected_header_offset = len(signature["expected"]["signature_words"])
+    for model in signature["chain"]:
+        assert model["header_offset_words"] == expected_header_offset
+        if model["model_id"] == 0xFFFF:
+            break
+        expected_header_offset += 2 + model["length_words"]
+
     for example in common["logical_word_examples"]:
         assert isinstance(example, dict)
-        decoded = b"".join(word.to_bytes(2, "big") for word in example["words"])
-        assert decoded.rstrip(b"\x00").decode("ascii") == example["expected"]
+        raw = b"".join(word.to_bytes(2, "big") for word in example["words"])
+        terminator = raw.find(b"\x00")
+        decoded = raw if terminator < 0 else raw[:terminator]
+        assert decoded.decode("ascii") == example["expected"]
+    assert common["expected"] == {
+        "fixed_width_strings": True,
+        "termination": "first_nul",
+        "bytes_after_first_nul": "ignored_not_emitted",
+    }
 
     def int16(word: int) -> int:
         return word - 0x10000 if word & 0x8000 else word

@@ -71,6 +71,11 @@ sentinel is not a numeric scale, and a `sunssf` exponent outside `-10` through
 `10` is invalid. Either case must fail the affected typed value rather than be
 interpreted as zero or applied as an unbounded exponent.
 
+The two-word `SunS` signature occupies PDU-base word offsets `0` and `1`; the
+first model header therefore begins at offset `2`. A fixed-width string ends at
+the first NUL byte. Bytes after that terminator are not emitted, including
+non-NUL residue; a full-width field with no NUL consumes its declared width.
+
 ## M3-02 implementation boundary
 
 The following is a downstream contract for `FMV3-M3-02`, not evidence that the

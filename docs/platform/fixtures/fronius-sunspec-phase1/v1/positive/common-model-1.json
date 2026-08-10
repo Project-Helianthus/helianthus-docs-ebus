@@ -6,7 +6,8 @@
   "logical_word_examples": [
     {"field": "Mn", "type": "string", "words": [18025, 30836, 30066, 25923, 28416], "expected": "FixtureCo"},
     {"field": "Md", "type": "string", "words": [18025, 30836, 30066, 25901, 12544], "expected": "Fixture-1"},
-    {"field": "SN", "type": "string", "words": [20556, 16707, 17736, 20300, 17477, 20992], "expected": "PLACEHOLDER"}
+    {"field": "SN", "type": "string", "words": [20556, 16707, 17736, 20300, 17477, 20992], "expected": "PLACEHOLDER"},
+    {"field": "Opt", "type": "string", "words": [16640, 16896], "expected": "A", "mutation_case": "non_nul_bytes_after_first_terminator_are_not_emitted"}
   ],
-  "expected": {"fixed_width_strings": true, "trim_trailing_nul_only": true}
+  "expected": {"fixed_width_strings": true, "termination": "first_nul", "bytes_after_first_nul": "ignored_not_emitted"}
 }

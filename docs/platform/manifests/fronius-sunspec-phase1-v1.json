@@ -81,6 +81,7 @@
       "sunssf_scaling",
       "sunssf_range_minus_10_through_10",
       "fixed_width_string_and_wire_word_order",
+      "first_nul_string_termination_without_post_terminator_emission",
       "exact_raw_and_sample_identity",
       "single_generation_coherence",
       "source_profile_and_codec_provenance",
