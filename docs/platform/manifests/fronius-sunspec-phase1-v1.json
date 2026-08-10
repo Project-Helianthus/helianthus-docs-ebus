@@ -115,6 +115,10 @@
   "fronius_overlay": {
     "disposition": "HYPOTHESIS",
     "state": "PENDING_M3_03",
+    "m3_03_terminal_dispositions": ["STANDARD_ONLY", "OVERLAY_REQUIRED"],
+    "terminal_rule": "exactly_one_no_third_state",
+    "standard_only_effect": "no_production_fronius_overlay",
+    "overlay_required_limit": "evidence_supported_transport_neutral_read_only_profile_logic",
     "candidate_gates": ["manufacturer", "model", "firmware", "package"],
     "production_detector": "not_present",
     "standard_only": false

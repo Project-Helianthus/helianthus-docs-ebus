@@ -14,6 +14,12 @@ FIXTURE_ROOT = REPO_ROOT / "docs/platform/fixtures/fronius-sunspec-phase1/v1"
 
 EXPECTED_SUPPORTED = [1, 101, 102, 103]
 EXPECTED_DEFERRED = [111, 112, 113, 120, 121, 122, 123, 124, 160, "20x", "21x", "7xx"]
+EXPECTED_FORBIDDEN = [
+    "write_or_control_operation",
+    "fixed_vendor_table_addresses",
+    "implicit_support_for_deferred_models",
+    "fronius_assumptions_inside_standard_profile",
+]
 EXPECTED_COVERAGE = {
     "signature",
     "base_normalization",
@@ -112,10 +118,15 @@ def test_source_pins_scope_and_dispositions_are_exact() -> None:
     assert manifest["phase_one"]["allowed_function_codes"] == ["FC03"]
     assert manifest["m3_02_contract"]["supported_model_ids"] == EXPECTED_SUPPORTED
     assert manifest["m3_02_contract"]["deferred_model_ids"] == EXPECTED_DEFERRED
+    assert manifest["m3_02_contract"]["forbidden_behavior"] == EXPECTED_FORBIDDEN
     overlay = manifest["fronius_overlay"]
     assert overlay == {
         "disposition": "HYPOTHESIS",
         "state": "PENDING_M3_03",
+        "m3_03_terminal_dispositions": ["STANDARD_ONLY", "OVERLAY_REQUIRED"],
+        "terminal_rule": "exactly_one_no_third_state",
+        "standard_only_effect": "no_production_fronius_overlay",
+        "overlay_required_limit": "evidence_supported_transport_neutral_read_only_profile_logic",
         "candidate_gates": ["manufacturer", "model", "firmware", "package"],
         "production_detector": "not_present",
         "standard_only": False,

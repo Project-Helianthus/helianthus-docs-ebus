@@ -95,6 +95,13 @@ sources establish that manufacturer, model, firmware, and package are plausible
 gates; they do not provide a production detector or prove that no overlay is
 needed. Therefore no `STANDARD_ONLY` profile conclusion is made here.
 
+`FMV3-M3-03` must replace this pending state with exactly one terminal
+disposition: **`STANDARD_ONLY`** or **`OVERLAY_REQUIRED`**. No third terminal
+state is valid. `STANDARD_ONLY` adds no production Fronius overlay;
+`OVERLAY_REQUIRED` may add only evidence-supported, transport-neutral,
+read-only Fronius profile logic. Both paths must retain green standard
+conformance and the phase-one no-write boundary.
+
 ## Synthetic fixtures
 
 The fixture set is deliberately logical and small. Every JSON file says it is
