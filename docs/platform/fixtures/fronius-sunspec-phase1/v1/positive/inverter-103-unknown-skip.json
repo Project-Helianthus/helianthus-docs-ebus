@@ -3,13 +3,13 @@
   "kind": "positive",
   "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
   "model": {"model_id": 103, "length_words": 50},
-  "logical_words": [21365,28243,103,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,777,3,0,0,0,65535,0],
+  "logical_words": [21365,28243,103,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,666,3,0,0,0,65535,0],
   "logical_word_examples": [
     {"field": "W", "type": "int16", "words": [65526], "expected_raw": -10},
     {"field": "WH", "type": "acc32", "words": [0, 4660], "word_order": "high_word_first", "expected_raw": 4660},
     {"field": "W_SF", "type": "sunssf", "words": [65534], "expected_scale_exponent": -2},
     {"field": "WH_SF", "type": "sunssf", "words": [0], "expected_scale_exponent": 0}
   ],
-  "following_unknown_model": {"model_id": 777, "length_words": 3, "header_offset_words": 54, "expected": "structural_skip_only"},
+  "following_unknown_model": {"model_id": 666, "length_words": 3, "header_offset_words": 54, "expected": "structural_skip_only"},
   "expected": {"scaled_w": -0.1, "scaled_wh": 4660, "unknown_model_has_no_semantic_publication": true}
 }
