@@ -88,6 +88,12 @@ registry and the same distinction. SmartLogger, EMMA, and S-Dongle are
 applicability and detection dimensions inside Huawei profiles, not reasons to
 create separate repositories.
 
+[`fronius-sunspec-evidence-v1.md`](./fronius-sunspec-evidence-v1.md) records
+the current M3-01 Fronius documentary boundary. Its overlay conclusion is
+`HYPOTHESIS` / `PENDING_M3_03`, not `STANDARD_ONLY`: manufacturer, model,
+firmware, and package remain candidate gates until a separately evidenced
+detector exists.
+
 Profiles are versioned and independently disableable. Failure or dispute in one
 profile must not change the shared runtime or silently alter another profile.
 

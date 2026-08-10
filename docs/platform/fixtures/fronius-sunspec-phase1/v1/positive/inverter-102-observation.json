@@ -1,0 +1,61 @@
+{
+  "fixture_id": "FSS-P-005",
+  "kind": "positive",
+  "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "profile": {"id": "sunspec-phase1", "version": 1},
+  "observation_context": {
+    "profile_version": 1,
+    "codec_version": 1,
+    "detector_version": 1,
+    "normalization_version": 1,
+    "coherence_version": 1,
+    "qualification_version": 1,
+    "sample_id": "fixture-sample-102",
+    "poll_generation_id": "fixture-poll-generation-7",
+    "dependency_set_id": "fixture-model-102-dependencies-v1",
+    "source_validity": "valid",
+    "source_time": {"state": "available", "value": "2026-01-01T00:00:00Z"},
+    "local_receipt_time": "2026-01-01T00:00:00.050Z",
+    "endpoint_identity": "fixture-endpoint",
+    "unit_identity": "fixture-unit",
+    "dependencies": [
+      {
+        "dependency_id": "model-102-w",
+        "raw_words": [321, 65535],
+        "poll_generation_id": "fixture-poll-generation-7",
+        "source_time": "2026-01-01T00:00:00.000Z",
+        "local_receipt_time": "2026-01-01T00:00:00.050Z",
+        "normalization_record": {"version": 1, "input_address_mode": "zero_based", "normalized_logical_offset_words": 12},
+        "logical_view_id": "fixture-logical-view-w",
+        "wire_response_id": "fixture-wire-response-w",
+        "logical_offset_words": 12,
+        "logical_count_words": 2,
+        "slice_offset_words": 0,
+        "slice_count_words": 2
+      },
+      {
+        "dependency_id": "model-102-wh",
+        "raw_words": [2, 0, 0],
+        "poll_generation_id": "fixture-poll-generation-7",
+        "source_time": "2026-01-01T00:00:00.020Z",
+        "local_receipt_time": "2026-01-01T00:00:00.070Z",
+        "normalization_record": {"version": 1, "input_address_mode": "zero_based", "normalized_logical_offset_words": 22},
+        "logical_view_id": "fixture-logical-view-wh",
+        "wire_response_id": "fixture-wire-response-wh",
+        "logical_offset_words": 22,
+        "logical_count_words": 3,
+        "slice_offset_words": 0,
+        "slice_count_words": 3
+      }
+    ]
+  },
+  "coherence_policy": {"version": 1, "mode": "bounded_multi_response", "ordered_dependency_ids": ["model-102-w", "model-102-wh"], "maximum_source_skew_ms": 1000, "maximum_receipt_skew_ms": 1000, "generation_equality_required": true, "retry_set": "all_dependencies", "documentary_consistency_marker": "unavailable"},
+  "model": {"model_id": 102, "length_words": 50},
+  "logical_word_examples": [
+    {"field": "W", "type": "int16", "words": [321], "expected_raw": 321},
+    {"field": "W_SF", "type": "sunssf", "words": [65535], "expected_scale_exponent": -1},
+    {"field": "WH", "type": "acc32", "words": [2, 0], "word_order": "high_word_first", "expected_raw": 131072},
+    {"field": "WH_SF", "type": "sunssf", "words": [0], "expected_scale_exponent": 0}
+  ],
+  "expected": {"scaled_w": 32.1, "scaled_wh": 131072, "preserve_observation_context_exactly": true, "single_generation_only": true, "reject_mixed_or_incomplete_dependencies": true, "transport_neutral": true}
+}

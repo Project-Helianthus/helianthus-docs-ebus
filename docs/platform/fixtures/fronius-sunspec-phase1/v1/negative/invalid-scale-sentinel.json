@@ -1,0 +1,14 @@
+{
+  "fixture_id": "FSS-N-004",
+  "kind": "negative",
+  "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "model": {"model_id": 101, "length_words": 50},
+  "logical_word_examples": [
+    {"field": "W_SF_sentinel", "type": "sunssf", "words": [32768], "decoded_exponent": -32768, "expected_error": "invalid_scale_factor_sentinel"},
+    {"field": "W_SF_above_range", "type": "sunssf", "words": [11], "decoded_exponent": 11, "expected_error": "scale_factor_out_of_range"},
+    {"field": "W_SF_below_range", "type": "sunssf", "words": [65525], "decoded_exponent": -11, "expected_error": "scale_factor_out_of_range"},
+    {"field": "W_SF_minimum_valid", "type": "sunssf", "words": [65526], "decoded_exponent": -10, "raw_value": 1000, "expected_scaled": "0.0000001"},
+    {"field": "W_SF_maximum_valid", "type": "sunssf", "words": [10], "decoded_exponent": 10, "raw_value": 2, "expected_scaled": "20000000000"}
+  ],
+  "valid_exponent_range": {"minimum": -10, "maximum": 10}
+}

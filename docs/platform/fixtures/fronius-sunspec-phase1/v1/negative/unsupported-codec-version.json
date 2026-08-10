@@ -1,0 +1,9 @@
+{
+  "fixture_id": "FSS-N-006",
+  "kind": "negative",
+  "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "profile": {"id": "sunspec-phase1", "version": 1, "codec_version": 2},
+  "supported_profile_versions": [1],
+  "supported_codec_versions": [1],
+  "expected_error": "unsupported_codec_version"
+}

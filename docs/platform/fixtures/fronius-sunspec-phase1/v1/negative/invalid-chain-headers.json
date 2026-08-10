@@ -1,0 +1,9 @@
+{
+  "fixture_id": "FSS-N-007",
+  "kind": "negative",
+  "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "cases": [
+    {"case_id": "invalid-signature", "logical_words": [0, 0, 65535, 0], "expected_error": "invalid_sunspec_signature"},
+    {"case_id": "invalid-end-sentinel", "logical_words": [21365, 28243, 65535, 1, 0], "expected_error": "invalid_end_sentinel"}
+  ]
+}
