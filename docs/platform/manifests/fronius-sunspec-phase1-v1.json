@@ -5,7 +5,7 @@
   "status": "EVIDENCE_PACKET_NOT_IMPLEMENTATION",
   "documentation": {
     "packet": "docs/platform/fronius-sunspec-evidence-v1.md",
-    "license_lane": "AGPL-3.0-or-later",
+    "license_lane": "AGPL-3.0",
     "restricted_source_copy": "forbidden",
     "source_transformation": "link_and_independent_summary",
     "authorization": "no_document_hash_or_manifest_field_authorizes_execution"

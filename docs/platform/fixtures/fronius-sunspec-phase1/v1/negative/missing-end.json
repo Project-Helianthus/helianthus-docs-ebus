@@ -1,7 +1,7 @@
 {
   "fixture_id": "FSS-N-003",
   "kind": "negative",
-  "provenance": {"synthetic": true, "license": "AGPL-3.0-or-later", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
   "chain": [{"model_id": 1, "length_words": 65, "header_offset_words": 0}, {"model_id": 101, "length_words": 50, "header_offset_words": 67}],
   "expected_error": "missing_end_sentinel"
 }

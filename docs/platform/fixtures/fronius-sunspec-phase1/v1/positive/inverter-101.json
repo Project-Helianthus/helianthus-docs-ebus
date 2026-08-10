@@ -1,7 +1,7 @@
 {
   "fixture_id": "FSS-P-003",
   "kind": "positive",
-  "provenance": {"synthetic": true, "license": "AGPL-3.0-or-later", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
   "model": {"model_id": 101, "length_words": 50},
   "logical_word_examples": [
     {"field": "W", "type": "int16", "words": [65413], "expected_raw": -123},

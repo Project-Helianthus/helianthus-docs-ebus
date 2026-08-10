@@ -1,7 +1,7 @@
 {
   "fixture_id": "FSS-P-001",
   "kind": "positive",
-  "provenance": {"synthetic": true, "license": "AGPL-3.0-or-later", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
   "request": {"function_code": "FC03", "unit_id": "0x01", "pdu_base_register": 40001, "zero_based_address": 40000},
   "chain": [
     {"model_id": 1, "length_words": 65, "header_offset_words": 0},

@@ -74,7 +74,7 @@ def test_all_phase_one_json_is_parseable_and_bounded() -> None:
         assert isinstance(provenance, dict)
         assert provenance == {
             "synthetic": True,
-            "license": "AGPL-3.0-or-later",
+            "license": "AGPL-3.0",
             "capture": "not_a_live_capture",
             "identity": "fixture-placeholder",
         }
