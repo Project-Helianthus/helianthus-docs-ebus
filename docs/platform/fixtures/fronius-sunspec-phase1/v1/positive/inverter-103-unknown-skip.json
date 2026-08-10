@@ -10,5 +10,5 @@
     {"field": "WH_SF", "type": "sunssf", "words": [0], "expected_scale_exponent": 0}
   ],
   "following_unknown_model": {"model_id": 777, "length_words": 3, "header_offset_words": 52, "expected": "structural_skip_only"},
-  "expected": {"scaled_w": -0.1, "unknown_model_has_no_semantic_publication": true}
+  "expected": {"scaled_w": -0.1, "scaled_wh": 4660, "unknown_model_has_no_semantic_publication": true}
 }

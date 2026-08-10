@@ -7,6 +7,7 @@ import re
 import sys
 from collections.abc import Iterable
 from datetime import datetime
+from decimal import Decimal
 
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -305,9 +306,16 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
         assert acc32(examples["WH"]["words"]) == expected_energy
         assert examples["WH"]["word_order"] == "high_word_first"
         scale_word = examples["W_SF"]["words"][0]
-        assert int16(scale_word) == expected_scale
+        power_scale = int16(scale_word)
+        assert power_scale == expected_scale
         wh_scale_word = examples["WH_SF"]["words"][0]
-        assert int16(wh_scale_word) == 0
+        energy_scale = int16(wh_scale_word)
+        assert energy_scale == 0
+        expected = fixture["expected"]
+        scaled_power = Decimal(expected_power) * (Decimal(10) ** power_scale)
+        scaled_energy = Decimal(expected_energy) * (Decimal(10) ** energy_scale)
+        assert scaled_power == Decimal(str(expected["scaled_w"]))
+        assert scaled_energy == Decimal(str(expected["scaled_wh"]))
     context = model_102["observation_context"]
     required_context = {
         "profile_version",
