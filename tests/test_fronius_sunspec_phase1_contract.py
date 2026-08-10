@@ -275,7 +275,11 @@ def test_source_pins_scope_and_dispositions_are_exact() -> None:
     assert by_id["sunspec-models-7abdf898"]["commit"] == "7abdf8982d5364f8ae916deee18aac86c11be36d"
     assert by_id["sunspec-models-7abdf898"]["revision_date"] == "2026-04-22"
     assert by_id["sunspec-device-information-model-v1.1"]["version"] == "1.1"
-    assert manifest["documentation"]["authorization"] == "no_document_hash_or_manifest_field_authorizes_execution"
+    assert manifest["schema"] == "helianthus.fmv3-m3-03-completion.v2"
+    assert manifest["version"] == 2
+    assert manifest["issue"] == "Project-Helianthus/helianthus-docs-ebus#401"
+    assert manifest["status"] == "STANDARD_ONLY"
+    assert manifest["documentation"]["execution_effect"] == "none"
     assert manifest["phase_one"]["read_only"] is True
     assert manifest["phase_one"]["allowed_function_codes"] == ["FC03"]
     assert "tcp_unit_id" not in manifest["phase_one"]
@@ -291,17 +295,25 @@ def test_source_pins_scope_and_dispositions_are_exact() -> None:
     assert manifest["m3_02_contract"]["supported_codec_versions"] == [1]
     assert manifest["m3_02_contract"]["deferred_model_ids"] == EXPECTED_DEFERRED
     assert manifest["m3_02_contract"]["forbidden_behavior"] == EXPECTED_FORBIDDEN
-    overlay = manifest["fronius_overlay"]
-    assert overlay == {
-        "disposition": "HYPOTHESIS",
-        "state": "PENDING_M3_03",
-        "m3_03_terminal_dispositions": ["STANDARD_ONLY", "OVERLAY_REQUIRED"],
-        "terminal_rule": "exactly_one_no_third_state",
-        "standard_only_effect": "no_production_fronius_overlay",
-        "overlay_required_limit": "evidence_supported_transport_neutral_read_only_profile_logic",
-        "candidate_gates": ["manufacturer", "model", "firmware", "package"],
-        "production_detector": "not_present",
-        "standard_only": False,
+    assert "fronius_overlay" not in manifest
+    completion = manifest["m3_03_completion"]
+    assert completion == {
+        "schema": "helianthus.fmv3-m3-03-completion.v2",
+        "version": 2,
+        "disposition": "STANDARD_ONLY",
+        "companion_code_pr": "Project-Helianthus/helianthus-modbusreg#12",
+        "m3_02_merge": "867c8275c090d3c703a9638548b48ea6846e8c56",
+        "m3_02_effect": "implements_all_proven_phase_one_standard_behavior",
+        "fronius_specific_delta": "not_evidenced",
+        "detector": "not_evidenced",
+        "effects": {
+            "production_fronius_overlay": False,
+            "automatic_product_qualification": False,
+            "write_capability": False,
+            "tcp_production_dependency": False,
+            "authorization_effect": False,
+        },
+        "sha_treatment": "provenance_only",
     }
 
     applicability = manifest["applicability"]
@@ -341,7 +353,7 @@ def test_claim_fixture_and_coverage_references_are_closed() -> None:
     assert EXPECTED_COVERAGE <= coverage
     for claim in claims:
         assert isinstance(claim, dict)
-        assert claim["disposition"] in {"PROVEN", "HYPOTHESIS", "UNKNOWN"}
+        assert claim["disposition"] in {"PROVEN", "UNKNOWN"}
         assert set(claim["source_ids"]) <= source_ids
         assert set(claim["fixture_ids"]) <= fixture_id_set
         assert set(claim["applicability_ids"]) <= applicability_ids
@@ -625,4 +637,10 @@ def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> Non
     }
     for path, fragment in required_links.items():
         assert fragment in path.read_text(encoding="utf-8"), path
-    assert "PENDING_M3_03" in PACKET.read_text(encoding="utf-8")
+    packet = PACKET.read_text(encoding="utf-8")
+    manifest_text = MANIFEST_PATH.read_text(encoding="utf-8")
+    for forbidden in ("PENDING_M3_03", "HYPOTHESIS", "OVERLAY_REQUIRED"):
+        assert forbidden not in packet
+        assert forbidden not in manifest_text
+    assert "standard_only" not in manifest_text
+    assert "STANDARD_ONLY" in packet
