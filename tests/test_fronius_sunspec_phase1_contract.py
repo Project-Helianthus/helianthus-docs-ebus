@@ -298,6 +298,9 @@ def test_source_pins_scope_and_dispositions_are_exact() -> None:
     assert manifest["m3_02_contract"]["deferred_model_ids"] == EXPECTED_DEFERRED
     assert manifest["m3_02_contract"]["forbidden_behavior"] == EXPECTED_FORBIDDEN
     completion = manifest["m3_03_completion"]
+    assert completion["allowed_current_vendor_logic"] == []
+    assert completion["permitted_research_hypothesis_claim_ids"] == ["FSS-C-007"]
+    assert completion["hard_stop_before"] == "FMV3-M4-01"
     assert completion == {
         "schema": "helianthus.fmv3-m3-03-completion.v2",
         "version": 2,
@@ -316,6 +319,9 @@ def test_source_pins_scope_and_dispositions_are_exact() -> None:
             "authorization_effect": False,
         },
         "sha_treatment": "provenance_only",
+        "allowed_current_vendor_logic": [],
+        "permitted_research_hypothesis_claim_ids": ["FSS-C-007"],
+        "hard_stop_before": "FMV3-M4-01",
     }
 
     applicability = manifest["applicability"]
@@ -395,6 +401,12 @@ def test_claim_fixture_and_coverage_references_are_closed() -> None:
         "research_use": "future_research_only",
         "downstream_use": [],
     }
+    hypothesis_claims = [
+        claim for claim in claims if claim["disposition"] == "HYPOTHESIS"
+    ]
+    assert [claim["claim_id"] for claim in hypothesis_claims] == ["FSS-C-007"]
+    assert hypothesis_claims[0]["production_use"] == "forbidden"
+    assert hypothesis_claims[0]["downstream_use"] == []
 
     signature = load_json(FIXTURE_ROOT / "positive/signature-chain.json")
     assert signature["request"]["unit_identity"] == "runtime-supplied-unit"
@@ -664,3 +676,18 @@ def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> Non
     normalized_manifest = json.dumps(manifest, sort_keys=True)
     assert "PENDING_M3_03" not in normalized_manifest
     assert '"standard_only": false' not in normalized_manifest
+
+
+def test_m3_03_document_declares_the_closed_current_surface() -> None:
+    packet = PACKET.read_text(encoding="utf-8")
+    required_terminal_wording = [
+        "The only current M3-03 conclusion is **`STANDARD_ONLY`**.",
+        (
+            "No production Fronius overlay, detector, automatic product "
+            "qualification, write capability, TCP production dependency, "
+            "authorization effect, or runtime effect is admitted."
+        ),
+        "The hard stop is before `FMV3-M4-01`.",
+    ]
+    for wording in required_terminal_wording:
+        assert wording in packet
