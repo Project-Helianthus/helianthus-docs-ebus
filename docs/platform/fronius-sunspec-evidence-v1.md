@@ -104,15 +104,15 @@ maps, but their phase-one qualification is `UNKNOWN` until separately
 admitted and tested. Older Datamanager/SnapINverter products and all live
 installations are also `UNKNOWN`.
 
-The M3-03 terminal disposition is exactly **`STANDARD_ONLY`**. The
-M3-02 implementation above contains all proven standard behavior, and this
+The only current M3-03 conclusion is **`STANDARD_ONLY`**.
+The M3-02 implementation above contains all proven standard behavior, and this
 packet contains no evidence for a Fronius-specific delta or a product detector.
-Accordingly, phase one admits no Fronius overlay, detector, automatic product
-qualification, write capability, TCP production dependency, or authorization
-effect. The companion completion record is
+No production Fronius overlay, detector, automatic product qualification, write capability, TCP production dependency, authorization effect, or runtime effect is admitted.
+The companion completion record is
 [`Project-Helianthus/helianthus-modbusreg#12`](https://github.com/Project-Helianthus/helianthus-modbusreg/pull/12),
 whose completion schema is `helianthus.fmv3-m3-03-completion.v2`, version `2`.
 The merge SHA and PR link are provenance references only.
+The hard stop is before `FMV3-M4-01`.
 
 `FSS-C-007` remains a retained **`HYPOTHESIS`**: manufacturer, model, firmware,
 and package are candidate detector gates for future research. It is explicitly

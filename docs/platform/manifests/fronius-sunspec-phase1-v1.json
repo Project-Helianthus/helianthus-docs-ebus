@@ -138,7 +138,10 @@
       "tcp_production_dependency": false,
       "authorization_effect": false
     },
-    "sha_treatment": "provenance_only"
+    "sha_treatment": "provenance_only",
+    "allowed_current_vendor_logic": [],
+    "permitted_research_hypothesis_claim_ids": ["FSS-C-007"],
+    "hard_stop_before": "FMV3-M4-01"
   },
   "fixture_root": "docs/platform/fixtures/fronius-sunspec-phase1/v1",
   "fixtures": [
