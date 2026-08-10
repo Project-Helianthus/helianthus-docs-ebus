@@ -2,10 +2,13 @@
 
 ## Status and scope
 
-This is the `FMV3-M3-01` evidence packet completed by `FMV3-M3-03` for issue
-#401. It records the documentary boundary for the Fronius-oriented SunSpec
-profile in `helianthus-modbusreg`. It is not a device qualification result, a
-live capture, or permission to start gateway work.
+This is the `FMV3-M3-01` evidence packet for issue #397. It records the
+documentary boundary for the Fronius-oriented SunSpec profile in
+`helianthus-modbusreg`. Its companion manifest retains the
+`helianthus.fronius-sunspec.phase1-evidence` schema and this packet's original
+provenance. A separate `m3_03_completion` object records the later issue #401
+terminal disposition. This packet is not a device qualification result, a live
+capture, or permission to start gateway work.
 
 The machine-readable companion is
 [`manifests/fronius-sunspec-phase1-v1.json`](./manifests/fronius-sunspec-phase1-v1.json).
@@ -111,6 +114,13 @@ effect. The companion completion record is
 whose completion schema is `helianthus.fmv3-m3-03-completion.v2`, version `2`.
 The merge SHA and PR link are provenance references only.
 
+`FSS-C-007` remains a retained **`HYPOTHESIS`**: manufacturer, model, firmware,
+and package are candidate detector gates for future research. It is explicitly
+forbidden from production use, does not qualify any product automatically, and
+is not an unresolved M3-03 gate. The terminal `STANDARD_ONLY` disposition is
+therefore compatible with preserving this historical/evidentiary research
+claim.
+
 ## Synthetic fixtures
 
 The fixture set is deliberately logical and small. Every JSON file says it is
@@ -138,7 +148,7 @@ Fronius device state.
 
 | Question | Current disposition | Next use |
 | --- | --- | --- |
-| Which exact product, firmware, package, and model-chain observations are sufficient for automatic profile admission? | No automatic qualification or detector is admitted | Separate evidence and sanitized tests, outside this completion |
+| Which exact product, firmware, package, and model-chain observations are sufficient for automatic profile admission? | `HYPOTHESIS` for future research only; no automatic qualification or detector is admitted | Separate evidence and sanitized tests, outside this completion |
 | Is a Fronius-specific delta required after the standard chain parser and int+SF decoder exist? | No delta is evidenced; `STANDARD_ONLY` | Separate evidence if a future delta is observed |
 | Are Verto, Tauro, older Datamanager/SnapINverter, or a particular live device eligible? | `UNKNOWN` | Separate admission and sanitized test evidence |
 | Can any control model be written? | Outside phase one | A separately authorized write-safety plan |
