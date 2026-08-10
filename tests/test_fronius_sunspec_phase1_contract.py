@@ -412,6 +412,28 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
     }
 
 
+def test_negative_fixtures_encode_reachable_failures() -> None:
+    malformed = load_json(FIXTURE_ROOT / "negative/malformed-length.json")
+    malformed_model = malformed["chain"][0]
+    assert malformed_model["model_id"] != 0xFFFF
+    assert malformed_model["length_words"] == 0
+    assert malformed["expected_error"] == "zero_length_non_end_model"
+
+    overrun = load_json(FIXTURE_ROOT / "negative/extent-overrun.json")
+    overrun_model = overrun["chain"][0]
+    required_words = 2 + overrun_model["length_words"]
+    assert required_words > overrun["bounded_words_available"]
+    assert overrun["expected_error"] == "model_extent_overrun"
+
+    missing_end = load_json(FIXTURE_ROOT / "negative/missing-end.json")
+    assert all(model["model_id"] != 0xFFFF for model in missing_end["chain"])
+    assert missing_end["expected_error"] == "missing_end_sentinel"
+
+    unsupported = load_json(FIXTURE_ROOT / "negative/unsupported-profile-version.json")
+    assert unsupported["profile"]["version"] not in unsupported["supported_profile_versions"]
+    assert unsupported["expected_error"] == "unsupported_profile_version"
+
+
 def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> None:
     for path in fixture_paths():
         assert fixture_sanitization_errors(load_json(path)) == [], path
