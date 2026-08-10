@@ -121,6 +121,19 @@ def fixture_words(value: dict[str, object]) -> Iterable[int]:
         yield from words
 
 
+def is_sensitive_fixture_key(normalized_key: str) -> bool:
+    key_parts = normalized_key.split("_")
+    for sensitive in SENSITIVE_FIXTURE_KEYS:
+        sensitive_parts = sensitive.split("_")
+        width = len(sensitive_parts)
+        if any(
+            key_parts[index : index + width] == sensitive_parts
+            for index in range(len(key_parts) - width + 1)
+        ):
+            return True
+    return False
+
+
 def fixture_sanitization_errors(value: object, path: str = "$") -> list[str]:
     errors: list[str] = []
     if isinstance(value, dict):
@@ -129,7 +142,7 @@ def fixture_sanitization_errors(value: object, path: str = "$") -> list[str]:
         for key, item in value.items():
             normalized_key = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", key).lower()
             normalized_key = re.sub(r"[^a-z0-9]+", "_", normalized_key).strip("_")
-            if normalized_key in SENSITIVE_FIXTURE_KEYS:
+            if is_sensitive_fixture_key(normalized_key):
                 errors.append(f"{path}.{key}:sensitive-key")
             if normalized_key in PLACEHOLDER_IDENTITY_KEYS:
                 if not isinstance(item, str) or not item.startswith(
@@ -402,14 +415,33 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
     assert receipt_skew_ms <= coherence["maximum_receipt_skew_ms"]
     assert model_102["expected"]["preserve_observation_context_exactly"] is True
 
-    scale_examples = invalid_scale["logical_word_examples"]
-    decoded_scales = [int16(example["words"][0]) for example in scale_examples]
-    assert decoded_scales == [-32768, 11, -11]
+    scale_examples = {
+        example["field"]: example for example in invalid_scale["logical_word_examples"]
+    }
+    decoded_scales = {
+        field: int16(example["words"][0]) for field, example in scale_examples.items()
+    }
+    assert decoded_scales == {
+        "W_SF_sentinel": -32768,
+        "W_SF_above_range": 11,
+        "W_SF_below_range": -11,
+        "W_SF_minimum_valid": -10,
+        "W_SF_maximum_valid": 10,
+    }
     assert invalid_scale["valid_exponent_range"] == {"minimum": -10, "maximum": 10}
-    assert scale_examples[0]["expected_error"] == "invalid_scale_factor_sentinel"
-    assert {example["expected_error"] for example in scale_examples[1:]} == {
+    assert scale_examples["W_SF_sentinel"]["expected_error"] == "invalid_scale_factor_sentinel"
+    assert {
+        scale_examples[field]["expected_error"]
+        for field in ("W_SF_above_range", "W_SF_below_range")
+    } == {
         "scale_factor_out_of_range"
     }
+    for field in ("W_SF_minimum_valid", "W_SF_maximum_valid"):
+        example = scale_examples[field]
+        scaled = Decimal(example["raw_value"]) * (
+            Decimal(10) ** decoded_scales[field]
+        )
+        assert scaled == Decimal(example["expected_scaled"])
 
 
 def test_negative_fixtures_encode_reachable_failures() -> None:
@@ -427,6 +459,10 @@ def test_negative_fixtures_encode_reachable_failures() -> None:
 
     missing_end = load_json(FIXTURE_ROOT / "negative/missing-end.json")
     assert all(model["model_id"] != 0xFFFF for model in missing_end["chain"])
+    expected_offset = 2
+    for model in missing_end["chain"]:
+        assert model["header_offset_words"] == expected_offset
+        expected_offset += 2 + model["length_words"]
     assert missing_end["expected_error"] == "missing_end_sentinel"
 
     unsupported = load_json(FIXTURE_ROOT / "negative/unsupported-profile-version.json")
@@ -453,6 +489,10 @@ def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> Non
         {"api_key": "fixture-secret"},
         {"apiKey": "fixture-secret"},
         {"client_secret": "fixture-secret"},
+        {"adminPassword": "bare-value"},
+        {"meterSerialNumber": "bare-value"},
+        {"apiToken": "bare-value"},
+        {"x-api-key": "bare-value"},
         {"control_payload": [1, 2, 3]},
         {"field": "SN", "expected": "REAL-SERIAL"},
     ]
