@@ -121,8 +121,8 @@ vendor register row.
 Positive fixtures cover signature/base normalization and a chain, Common model
 strings, standard `101`, `102`, and `103` value decoding, unknown-model skip,
 the end sentinel, and the observation context that M3-02 must preserve.
-Negative fixtures constrain malformed length, extent overrun, missing end
-sentinel, invalid scale factors on both sides of the permitted range, and
+Negative fixtures constrain signature and end-header validity, malformed
+length, extent overrun, missing end sentinel, invalid scale factors on both sides of the permitted range, and
 unsupported profile and codec versions. Chain fixtures carry bounded raw
 logical words, including the `SunS` signature, so downstream parsers must derive
 headers, offsets, and failures rather than trusting decoded metadata. The model `102` fixture carries the complete

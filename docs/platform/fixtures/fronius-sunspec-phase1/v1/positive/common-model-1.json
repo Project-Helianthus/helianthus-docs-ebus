@@ -7,7 +7,8 @@
     {"field": "Mn", "type": "string", "declared_width_words": 16, "words": [18025, 30836, 30066, 25923, 28416, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "expected": "FixtureCo"},
     {"field": "Md", "type": "string", "declared_width_words": 16, "words": [18025, 30836, 30066, 25901, 12544, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "expected": "Fixture-1"},
     {"field": "SN", "type": "string", "declared_width_words": 16, "words": [20556, 16707, 17736, 20300, 17477, 20992, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "expected": "PLACEHOLDER"},
-    {"field": "Opt", "type": "string", "declared_width_words": 8, "words": [16640, 16896, 0, 0, 0, 0, 0, 0], "expected": "A", "mutation_case": "non_nul_bytes_after_first_terminator_are_not_emitted"}
+    {"field": "Opt", "type": "string", "declared_width_words": 8, "words": [16640, 16896, 0, 0, 0, 0, 0, 0], "expected": "A", "mutation_case": "non_nul_bytes_after_first_terminator_are_not_emitted"},
+    {"field": "Vr", "type": "string", "declared_width_words": 8, "words": [22085,21075,18767,20017,12851,13365,13879,14393], "expected": "VERSION123456789", "mutation_case": "full_width_without_nul_is_emitted_completely"}
   ],
   "expected": {"fixed_width_strings": true, "termination": "first_nul", "bytes_after_first_nul": "ignored_not_emitted"}
 }

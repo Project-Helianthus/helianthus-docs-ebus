@@ -58,6 +58,8 @@ EXPECTED_COVERAGE = {
     "transport_neutrality",
     "unsupported_profile_version",
     "unsupported_codec_version",
+    "invalid_sunspec_signature",
+    "invalid_end_sentinel",
 }
 SENSITIVE_FIXTURE_KEYS = {
     "access_token",
@@ -66,9 +68,12 @@ SENSITIVE_FIXTURE_KEYS = {
     "auth_header",
     "auth_token",
     "authorization",
+    "bearer",
     "bearer_token",
     "client_secret",
+    "command",
     "command_payload",
+    "control",
     "control_payload",
     "credential",
     "credentials",
@@ -77,6 +82,7 @@ SENSITIVE_FIXTURE_KEYS = {
     "hostname",
     "mac",
     "packet_capture",
+    "payload",
     "password",
     "private_key",
     "raw_packet",
@@ -90,6 +96,7 @@ SENSITIVE_FIXTURE_KEYS = {
     "token",
     "tokens",
     "wire_transcript",
+    "write",
     "write_payload",
 }
 PLACEHOLDER_IDENTITY_KEYS = {
@@ -118,6 +125,11 @@ def fixture_words(value: dict[str, object]) -> Iterable[int]:
     logical_words = value.get("logical_words", [])
     assert isinstance(logical_words, list)
     yield from logical_words
+    for case in value.get("cases", []):
+        assert isinstance(case, dict)
+        case_words = case.get("logical_words", [])
+        assert isinstance(case_words, list)
+        yield from case_words
     for example in value.get("logical_word_examples", []):
         assert isinstance(example, dict)
         words = example.get("words", [])
@@ -156,6 +168,7 @@ def is_sensitive_fixture_key(normalized_key: str) -> bool:
         return part
 
     key_parts = [canonical_part(part) for part in normalized_key.split("_")]
+    collapsed_key = "".join(key_parts)
     for sensitive in SENSITIVE_FIXTURE_KEYS:
         sensitive_parts = [
             canonical_part(part) for part in sensitive.split("_")
@@ -164,6 +177,11 @@ def is_sensitive_fixture_key(normalized_key: str) -> bool:
         if any(
             key_parts[index : index + width] == sensitive_parts
             for index in range(len(key_parts) - width + 1)
+        ):
+            return True
+        collapsed_sensitive = "".join(sensitive_parts)
+        if collapsed_key == collapsed_sensitive or collapsed_key.endswith(
+            collapsed_sensitive
         ):
             return True
     return False
@@ -175,8 +193,13 @@ def fixture_sanitization_errors(value: object, path: str = "$") -> list[str]:
         if value.get("field") == "SN" and value.get("expected") != "PLACEHOLDER":
             errors.append(f"{path}.SN")
         for key, item in value.items():
-            normalized_key = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", key).lower()
+            normalized_key = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", key)
+            normalized_key = re.sub(
+                r"(?<=[a-z0-9])(?=[A-Z])", "_", normalized_key
+            ).lower()
             normalized_key = re.sub(r"[^a-z0-9]+", "_", normalized_key).strip("_")
+            if normalized_key == "function_code" and item != "FC03":
+                errors.append(f"{path}.{key}:forbidden-function-code")
             if is_sensitive_fixture_key(normalized_key):
                 errors.append(f"{path}.{key}:sensitive-key")
             if normalized_key in PLACEHOLDER_IDENTITY_KEYS:
@@ -328,6 +351,15 @@ def test_claim_fixture_and_coverage_references_are_closed() -> None:
     assert all("unit ID 0x01" not in claim["statement"] for claim in m3_02_claims)
     acquisition_claim = next(claim for claim in claims if claim["claim_id"] == "FSS-C-008")
     assert acquisition_claim["downstream_use"] == []
+    claims_by_id = {claim["claim_id"]: claim for claim in claims}
+    assert claims_by_id["FSS-C-004"]["fixture_ids"] == [
+        "FSS-P-001",
+        "FSS-P-002",
+        "FSS-P-003",
+        "FSS-P-004",
+        "FSS-P-005",
+    ]
+    assert claims_by_id["FSS-C-009"]["fixture_ids"] == ["FSS-N-005", "FSS-N-006"]
 
     signature = load_json(FIXTURE_ROOT / "positive/signature-chain.json")
     assert signature["request"]["unit_identity"] == "runtime-supplied-unit"
@@ -362,6 +394,12 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
         terminator = raw.find(b"\x00")
         decoded = raw if terminator < 0 else raw[:terminator]
         assert decoded.decode("ascii") == example["expected"]
+    full_width = next(
+        example for example in common["logical_word_examples"] if example["field"] == "Vr"
+    )
+    assert b"\x00" not in b"".join(
+        word.to_bytes(2, "big") for word in full_width["words"]
+    )
     assert common["expected"] == {
         "fixed_width_strings": True,
         "termination": "first_nul",
@@ -394,6 +432,20 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
         scaled_energy = Decimal(expected_energy) * (Decimal(10) ** energy_scale)
         assert scaled_power == Decimal(str(expected["scaled_w"]))
         assert scaled_energy == Decimal(str(expected["scaled_wh"]))
+    model_103_chain, model_103_chain_error = parse_model_chain(
+        model_103["logical_words"]
+    )
+    assert model_103_chain_error is None
+    assert model_103_chain == [
+        {"model_id": 103, "length_words": 50, "header_offset_words": 2},
+        {"model_id": 777, "length_words": 3, "header_offset_words": 54},
+        {"model_id": 0xFFFF, "length_words": 0, "header_offset_words": 59},
+    ]
+    assert model_103_chain[1] == {
+        key: model_103["following_unknown_model"][key]
+        for key in ("model_id", "length_words", "header_offset_words")
+    }
+    assert model_103["following_unknown_model"]["expected"] == "structural_skip_only"
     context = model_102["observation_context"]
     required_context = {
         "profile_version",
@@ -516,6 +568,11 @@ def test_negative_fixtures_encode_reachable_failures() -> None:
     ]
     assert unsupported_codec["expected_error"] == "unsupported_codec_version"
 
+    invalid_headers = load_json(FIXTURE_ROOT / "negative/invalid-chain-headers.json")
+    for case in invalid_headers["cases"]:
+        _, error = parse_model_chain(case["logical_words"])
+        assert error == case["expected_error"]
+
 
 def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> None:
     for path in fixture_paths():
@@ -544,6 +601,13 @@ def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> Non
         {"privateKeys": ["bare-value"]},
         {"passwords": ["bare-value"]},
         {"deviceIds": ["bare-value"]},
+        {"APIKey": "bare-value"},
+        {"XAPIKey": "bare-value"},
+        {"MACAddress": "00:11:22:33:44:55"},
+        {"write": {"function_code": "FC06", "payload": [1]}},
+        {"function_code": "FC06"},
+        {"payload": [1]},
+        {"bearer": "fixture-secret"},
         {"control_payload": [1, 2, 3]},
         {"field": "SN", "expected": "REAL-SERIAL"},
     ]
