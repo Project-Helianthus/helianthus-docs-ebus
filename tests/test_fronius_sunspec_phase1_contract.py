@@ -60,8 +60,13 @@ EXPECTED_COVERAGE = {
 }
 SENSITIVE_FIXTURE_KEYS = {
     "access_token",
+    "api_key",
+    "api_keys",
     "auth_header",
+    "auth_token",
     "authorization",
+    "bearer_token",
+    "client_secret",
     "command_payload",
     "control_payload",
     "credential",
@@ -176,7 +181,8 @@ def test_all_phase_one_json_is_parseable_and_bounded() -> None:
             assert isinstance(model, dict)
             length = model["length_words"]
             if fixture["fixture_id"] == "FSS-N-001":
-                assert length == -1
+                assert model["model_id"] != 0xFFFF
+                assert length == 0
             else:
                 assert isinstance(length, int) and 0 <= length <= 128
 
@@ -298,6 +304,7 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
 
     for example in common["logical_word_examples"]:
         assert isinstance(example, dict)
+        assert len(example["words"]) == example["declared_width_words"]
         raw = b"".join(word.to_bytes(2, "big") for word in example["words"])
         terminator = raw.find(b"\x00")
         decoded = raw if terminator < 0 else raw[:terminator]
@@ -421,6 +428,9 @@ def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> Non
         {"serial_number": "REAL-SERIAL"},
         {"hostname": "inverter.local"},
         {"access_token": "fixture-secret"},
+        {"api_key": "fixture-secret"},
+        {"apiKey": "fixture-secret"},
+        {"client_secret": "fixture-secret"},
         {"control_payload": [1, 2, 3]},
         {"field": "SN", "expected": "REAL-SERIAL"},
     ]

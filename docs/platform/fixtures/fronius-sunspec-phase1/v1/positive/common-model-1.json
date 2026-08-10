@@ -4,10 +4,10 @@
   "provenance": {"synthetic": true, "license": "AGPL-3.0", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
   "model": {"model_id": 1, "length_words": 65},
   "logical_word_examples": [
-    {"field": "Mn", "type": "string", "words": [18025, 30836, 30066, 25923, 28416], "expected": "FixtureCo"},
-    {"field": "Md", "type": "string", "words": [18025, 30836, 30066, 25901, 12544], "expected": "Fixture-1"},
-    {"field": "SN", "type": "string", "words": [20556, 16707, 17736, 20300, 17477, 20992], "expected": "PLACEHOLDER"},
-    {"field": "Opt", "type": "string", "words": [16640, 16896], "expected": "A", "mutation_case": "non_nul_bytes_after_first_terminator_are_not_emitted"}
+    {"field": "Mn", "type": "string", "declared_width_words": 16, "words": [18025, 30836, 30066, 25923, 28416, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "expected": "FixtureCo"},
+    {"field": "Md", "type": "string", "declared_width_words": 16, "words": [18025, 30836, 30066, 25901, 12544, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "expected": "Fixture-1"},
+    {"field": "SN", "type": "string", "declared_width_words": 16, "words": [20556, 16707, 17736, 20300, 17477, 20992, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "expected": "PLACEHOLDER"},
+    {"field": "Opt", "type": "string", "declared_width_words": 8, "words": [16640, 16896, 0, 0, 0, 0, 0, 0], "expected": "A", "mutation_case": "non_nul_bytes_after_first_terminator_are_not_emitted"}
   ],
   "expected": {"fixed_width_strings": true, "termination": "first_nul", "bytes_after_first_nul": "ignored_not_emitted"}
 }
