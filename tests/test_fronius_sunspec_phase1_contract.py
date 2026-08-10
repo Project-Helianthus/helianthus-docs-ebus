@@ -150,9 +150,16 @@ def parse_model_chain(words: list[int]) -> tuple[list[dict[str, int]], str | Non
 
 
 def is_sensitive_fixture_key(normalized_key: str) -> bool:
-    key_parts = normalized_key.split("_")
+    def canonical_part(part: str) -> str:
+        if len(part) > 2 and part.endswith("s") and not part.endswith("ss"):
+            return part[:-1]
+        return part
+
+    key_parts = [canonical_part(part) for part in normalized_key.split("_")]
     for sensitive in SENSITIVE_FIXTURE_KEYS:
-        sensitive_parts = sensitive.split("_")
+        sensitive_parts = [
+            canonical_part(part) for part in sensitive.split("_")
+        ]
         width = len(sensitive_parts)
         if any(
             key_parts[index : index + width] == sensitive_parts
@@ -533,6 +540,10 @@ def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> Non
         {"meterSerialNumber": "bare-value"},
         {"apiToken": "bare-value"},
         {"x-api-key": "bare-value"},
+        {"clientSecrets": ["bare-value"]},
+        {"privateKeys": ["bare-value"]},
+        {"passwords": ["bare-value"]},
+        {"deviceIds": ["bare-value"]},
         {"control_payload": [1, 2, 3]},
         {"field": "SN", "expected": "REAL-SERIAL"},
     ]
