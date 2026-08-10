@@ -3,9 +3,12 @@
 ## Status and scope
 
 This is the `FMV3-M3-01` evidence packet for issue #397. It records the
-documentary boundary for a future Fronius-oriented SunSpec profile in
-`helianthus-modbusreg`. It is not an implementation claim, a device
-qualification result, a live capture, or permission to start gateway work.
+documentary boundary for the Fronius-oriented SunSpec profile in
+`helianthus-modbusreg`. Its companion manifest retains the
+`helianthus.fronius-sunspec.phase1-evidence` schema and this packet's original
+provenance. A separate `m3_03_completion` object records the later issue #401
+terminal disposition. This packet is not a device qualification result, a live
+capture, or permission to start gateway work.
 
 The machine-readable companion is
 [`manifests/fronius-sunspec-phase1-v1.json`](./manifests/fronius-sunspec-phase1-v1.json).
@@ -78,8 +81,11 @@ non-NUL residue; a full-width field with no NUL consumes its declared width.
 
 ## M3-02 implementation boundary
 
-The following is a downstream contract for `FMV3-M3-02`, not evidence that the
-code exists:
+The M3-02 merge
+[`867c8275c090d3c703a9638548b48ea6846e8c56`](https://github.com/Project-Helianthus/helianthus-modbusreg/commit/867c8275c090d3c703a9638548b48ea6846e8c56)
+implements every proven phase-one standard behavior below. This is a
+provenance reference, not an authorization mechanism. No evidence in this
+packet proves a Fronius-specific delta or detector for that behavior.
 
 | M3-02 may implement | M3-02 must not silently implement |
 | --- | --- |
@@ -89,26 +95,31 @@ An unknown model may be skipped only after its header and declared extent are
 validated within the bounded read. It does not establish semantic support, and
 an absent end sentinel, malformed length, or overrun is a chain failure.
 
-## Applicability and Fronius overlay disposition
+## M3-03 completion and applicability
 
 The current Fronius register package directly qualifies only the documented
 GEN24 Primo/Symo ROW int+SF map at package `1.2.7-2` / bundle `1.36.x`, subject
 to successful runtime chain discovery. The package contains Verto and Tauro
 maps, but their phase-one qualification is `UNKNOWN` until separately
 admitted and tested. Older Datamanager/SnapINverter products and all live
-hardware are also `UNKNOWN`.
+installations are also `UNKNOWN`.
 
-The Fronius overlay disposition is **`HYPOTHESIS` / `PENDING_M3_03`**. The
-sources establish that manufacturer, model, firmware, and package are plausible
-gates; they do not provide a production detector or prove that no overlay is
-needed. Therefore no `STANDARD_ONLY` profile conclusion is made here.
+The only current M3-03 conclusion is **`STANDARD_ONLY`**.
+The M3-02 implementation above contains all proven standard behavior, and this
+packet contains no evidence for a Fronius-specific delta or a product detector.
+No production Fronius overlay, detector, automatic product qualification, write capability, TCP production dependency, authorization effect, or runtime effect is admitted.
+The companion completion record is
+[`Project-Helianthus/helianthus-modbusreg#12`](https://github.com/Project-Helianthus/helianthus-modbusreg/pull/12),
+whose completion schema is `helianthus.fmv3-m3-03-completion.v2`, version `2`.
+The merge SHA and PR link are provenance references only.
+The hard stop is before `FMV3-M4-01`.
 
-`FMV3-M3-03` must replace this pending state with exactly one terminal
-disposition: **`STANDARD_ONLY`** or **`OVERLAY_REQUIRED`**. No third terminal
-state is valid. `STANDARD_ONLY` adds no production Fronius overlay;
-`OVERLAY_REQUIRED` may add only evidence-supported, transport-neutral,
-read-only Fronius profile logic. Both paths must retain green standard
-conformance and the phase-one no-write boundary.
+`FSS-C-007` remains a retained **`HYPOTHESIS`**: manufacturer, model, firmware,
+and package are candidate detector gates for future research. It is explicitly
+forbidden from production use, does not qualify any product automatically, and
+is not an unresolved M3-03 gate. The terminal `STANDARD_ONLY` disposition is
+therefore compatible with preserving this historical/evidentiary research
+claim.
 
 ## Synthetic fixtures
 
@@ -137,8 +148,8 @@ Fronius device state.
 
 | Question | Current disposition | Next use |
 | --- | --- | --- |
-| Which exact product, firmware, package, and model-chain observations are sufficient for automatic profile admission? | `HYPOTHESIS`; no detector exists | `FMV3-M3-03` overlay/detection evidence |
-| Is a Fronius overlay required after a standard chain parser and int+SF decoder exist? | `HYPOTHESIS`; not `STANDARD_ONLY` | `FMV3-M3-03` |
+| Which exact product, firmware, package, and model-chain observations are sufficient for automatic profile admission? | `HYPOTHESIS` for future research only; no automatic qualification or detector is admitted | Separate evidence and sanitized tests, outside this completion |
+| Is a Fronius-specific delta required after the standard chain parser and int+SF decoder exist? | No delta is evidenced; `STANDARD_ONLY` | Separate evidence if a future delta is observed |
 | Are Verto, Tauro, older Datamanager/SnapINverter, or a particular live device eligible? | `UNKNOWN` | Separate admission and sanitized test evidence |
 | Can any control model be written? | Outside phase one | A separately authorized write-safety plan |
 
