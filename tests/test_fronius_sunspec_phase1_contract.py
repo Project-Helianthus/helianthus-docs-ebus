@@ -1,13 +1,24 @@
 from __future__ import annotations
 
 import json
+import ipaddress
 import pathlib
 import re
+import sys
 from collections.abc import Iterable
 from datetime import datetime
 
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+from validate_platform_contracts import (  # noqa: E402
+    IPV4_LITERAL,
+    M625_RESTRICTED_MATERIAL,
+    _private_network_literals,
+)
+
+
 PACKET = REPO_ROOT / "docs/platform/fronius-sunspec-evidence-v1.md"
 MANIFEST_PATH = REPO_ROOT / "docs/platform/manifests/fronius-sunspec-phase1-v1.json"
 FIXTURE_ROOT = REPO_ROOT / "docs/platform/fixtures/fronius-sunspec-phase1/v1"
@@ -46,6 +57,44 @@ EXPECTED_COVERAGE = {
     "transport_neutrality",
     "unsupported_profile_version",
 }
+SENSITIVE_FIXTURE_KEYS = {
+    "access_token",
+    "auth_header",
+    "authorization",
+    "command_payload",
+    "control_payload",
+    "credential",
+    "credentials",
+    "device_id",
+    "host",
+    "hostname",
+    "mac",
+    "packet_capture",
+    "password",
+    "private_key",
+    "raw_packet",
+    "refresh_token",
+    "secret",
+    "serial",
+    "serial_number",
+    "serial_numbers",
+    "session_token",
+    "ski",
+    "token",
+    "tokens",
+    "wire_transcript",
+    "write_payload",
+}
+PLACEHOLDER_IDENTITY_KEYS = {
+    "dependency_set_id",
+    "endpoint_identity",
+    "identity",
+    "logical_view_id",
+    "poll_generation_id",
+    "sample_id",
+    "unit_identity",
+    "wire_response_id",
+}
 
 
 def load_json(path: pathlib.Path) -> dict[str, object]:
@@ -64,6 +113,41 @@ def fixture_words(value: dict[str, object]) -> Iterable[int]:
         words = example.get("words", [])
         assert isinstance(words, list)
         yield from words
+
+
+def fixture_sanitization_errors(value: object, path: str = "$") -> list[str]:
+    errors: list[str] = []
+    if isinstance(value, dict):
+        if value.get("field") == "SN" and value.get("expected") != "PLACEHOLDER":
+            errors.append(f"{path}.SN")
+        for key, item in value.items():
+            normalized_key = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", key).lower()
+            normalized_key = re.sub(r"[^a-z0-9]+", "_", normalized_key).strip("_")
+            if normalized_key in SENSITIVE_FIXTURE_KEYS:
+                errors.append(f"{path}.{key}:sensitive-key")
+            if normalized_key in PLACEHOLDER_IDENTITY_KEYS:
+                if not isinstance(item, str) or not item.startswith(
+                    ("fixture-", "runtime-supplied-")
+                ):
+                    errors.append(f"{path}.{key}:non-placeholder-identity")
+            errors.extend(fixture_sanitization_errors(item, f"{path}.{key}"))
+        return errors
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            errors.extend(fixture_sanitization_errors(item, f"{path}[{index}]"))
+        return errors
+    if not isinstance(value, str):
+        return errors
+
+    if _private_network_literals(value):
+        errors.append(f"{path}:private-network")
+    for match in IPV4_LITERAL.finditer(value):
+        address = ipaddress.ip_address(match.group(0))
+        if not address.is_global or address.is_multicast:
+            errors.append(f"{path}:non-public-ipv4")
+    if M625_RESTRICTED_MATERIAL.search(value):
+        errors.append(f"{path}:restricted-material")
+    return errors
 
 
 def test_all_phase_one_json_is_parseable_and_bounded() -> None:
@@ -296,12 +380,26 @@ def test_synthetic_values_exercise_standard_decode_rules() -> None:
 
 
 def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> None:
-    private_address = re.compile(r"\b(?:10|127)\.(?:\d{1,3}\.){2}\d{1,3}\b|\b192\.168\.")
     for path in fixture_paths():
-        text = path.read_text(encoding="utf-8")
-        assert private_address.search(text) is None, path
-        assert "credential" not in text.lower(), path
-        assert "password" not in text.lower(), path
+        assert fixture_sanitization_errors(load_json(path)) == [], path
+
+    sanitizer_canaries = [
+        {"debug": "10.0.0.1"},
+        {"debug": "127.0.0.1"},
+        {"debug": "172.16.0.1"},
+        {"debug": "192.168.1.1"},
+        {"debug": "100.64.0.1"},
+        {"debug": "169.254.1.1"},
+        {"debug": "fc00::1"},
+        {"debug": "fe80::1"},
+        {"serial_number": "REAL-SERIAL"},
+        {"hostname": "inverter.local"},
+        {"access_token": "fixture-secret"},
+        {"control_payload": [1, 2, 3]},
+        {"field": "SN", "expected": "REAL-SERIAL"},
+    ]
+    for canary in sanitizer_canaries:
+        assert fixture_sanitization_errors(canary), canary
     required_links = {
         REPO_ROOT / "docs/platform/README.md": "fronius-sunspec-evidence-v1.md",
         REPO_ROOT / "docs/platform/modbus-multivendor-boundaries.md": "fronius-sunspec-evidence-v1.md",
