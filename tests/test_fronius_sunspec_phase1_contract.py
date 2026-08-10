@@ -61,6 +61,33 @@ EXPECTED_COVERAGE = {
     "invalid_sunspec_signature",
     "invalid_end_sentinel",
 }
+EXPECTED_MANIFEST_ROOT_KEYS = {
+    "applicability",
+    "claims",
+    "documentation",
+    "fixture_root",
+    "fixtures",
+    "fronius_acquisition_evidence",
+    "issue",
+    "m3_02_contract",
+    "m3_03_completion",
+    "phase_one",
+    "schema",
+    "sources",
+    "status",
+    "version",
+}
+EXPECTED_CLAIM_IDS = {
+    "FSS-C-001",
+    "FSS-C-002",
+    "FSS-C-003",
+    "FSS-C-004",
+    "FSS-C-005",
+    "FSS-C-006",
+    "FSS-C-007",
+    "FSS-C-008",
+    "FSS-C-009",
+}
 SENSITIVE_FIXTURE_KEYS = {
     "access_token",
     "api_key",
@@ -115,6 +142,74 @@ def load_json(path: pathlib.Path) -> dict[str, object]:
     value = json.loads(path.read_text(encoding="utf-8"))
     assert isinstance(value, dict), path
     return value
+
+
+def m3_03_manifest_surface_errors(manifest: dict[str, object]) -> list[str]:
+    errors: list[str] = []
+    root_keys = set(manifest)
+    if root_keys != EXPECTED_MANIFEST_ROOT_KEYS:
+        errors.append(f"manifest_root_keys:{sorted(root_keys)!r}")
+
+    claims = manifest.get("claims")
+    if not isinstance(claims, list):
+        errors.append("claims:not_a_list")
+        return errors
+
+    claim_ids = [
+        claim.get("claim_id") if isinstance(claim, dict) else None for claim in claims
+    ]
+    if set(claim_ids) != EXPECTED_CLAIM_IDS or len(claim_ids) != len(EXPECTED_CLAIM_IDS):
+        errors.append(f"claim_ids:{claim_ids!r}")
+    return errors
+
+
+def markdown_h2_section(text: str, heading: str) -> str:
+    marker = f"## {heading}\n"
+    assert marker in text
+    start = text.index(marker) + len(marker)
+    end = text.find("\n## ", start)
+    return text[start:] if end == -1 else text[start:end]
+
+
+def m3_03_document_section_errors(section: str) -> list[str]:
+    normalized = " ".join(section.split())
+    required_semantics = [
+        "The only current M3-03 conclusion is **`STANDARD_ONLY`**.",
+        (
+            "No production Fronius overlay, detector, automatic product "
+            "qualification, write capability, TCP production dependency, "
+            "authorization effect, or runtime effect is admitted."
+        ),
+        "The hard stop is before `FMV3-M4-01`.",
+        "`FSS-C-007` remains a retained **`HYPOTHESIS`**",
+        "forbidden from production use",
+    ]
+    errors = [
+        f"missing:{wording}" for wording in required_semantics if wording not in normalized
+    ]
+
+    contradiction_scan = normalized.replace(required_semantics[1], "").replace("`", "")
+    forbidden_assertions = {
+        "overlay_required_or_admitted": (
+            r"\b(?:a |the )?(?:production )?(?:fronius )?overlay "
+            r"(?:is )?(?:required|admitted)\b"
+        ),
+        "detector_admitted_or_present": (
+            r"\b(?:a |the )?(?:production )?detector "
+            r"(?:is )?(?:admitted|present)\b"
+        ),
+        "automatic_qualification_admitted": (
+            r"\bautomatic (?:product )?qualification (?:is )?admitted\b"
+        ),
+        "runtime_effect_admitted": r"\b(?:a )?runtime effect (?:is )?admitted\b",
+        "m4_started_or_authorized": (
+            r"\b(?:fmv3-)?m4-01 (?:has |is )?(?:been )?(?:started|authorized)\b"
+        ),
+    }
+    for label, pattern in forbidden_assertions.items():
+        if re.search(pattern, contradiction_scan, flags=re.IGNORECASE):
+            errors.append(f"forbidden:{label}")
+    return errors
 
 
 def fixture_paths() -> list[pathlib.Path]:
@@ -260,6 +355,7 @@ def test_all_phase_one_json_is_parseable_and_bounded() -> None:
 
 def test_source_pins_scope_and_dispositions_are_exact() -> None:
     manifest = load_json(MANIFEST_PATH)
+    assert set(manifest) == EXPECTED_MANIFEST_ROOT_KEYS
     sources = manifest["sources"]
     assert isinstance(sources, list)
     by_id = {source["source_id"]: source for source in sources if isinstance(source, dict)}
@@ -350,6 +446,8 @@ def test_claim_fixture_and_coverage_references_are_closed() -> None:
     applicability_ids = {item["applicability_id"] for item in applicability if isinstance(item, dict)}
     assert len(fixture_ids) == len(set(fixture_ids))
     assert len(claim_ids) == len(set(claim_ids))
+    assert set(claim_ids) == EXPECTED_CLAIM_IDS
+    assert len(claim_ids) == len(EXPECTED_CLAIM_IDS)
     fixture_id_set = set(fixture_ids)
     coverage = set()
     for fixture in fixtures:
@@ -411,6 +509,31 @@ def test_claim_fixture_and_coverage_references_are_closed() -> None:
     signature = load_json(FIXTURE_ROOT / "positive/signature-chain.json")
     assert signature["request"]["unit_identity"] == "runtime-supplied-unit"
     assert "unit_id" not in signature["request"]
+
+
+def test_m3_03_manifest_surface_guard_rejects_parallel_root_or_extra_claim() -> None:
+    manifest = load_json(MANIFEST_PATH)
+    assert m3_03_manifest_surface_errors(manifest) == []
+
+    for forbidden_root in ("fronius_overlay", "current_runtime"):
+        mutated = json.loads(json.dumps(manifest))
+        mutated[forbidden_root] = {"disposition": "PROVEN"}
+        assert any(
+            error.startswith("manifest_root_keys:")
+            for error in m3_03_manifest_surface_errors(mutated)
+        )
+
+    mutated = json.loads(json.dumps(manifest))
+    mutated["claims"].append(
+        {
+            "claim_id": "FSS-C-010",
+            "disposition": "PROVEN",
+            "downstream_use": ["M3-03"],
+        }
+    )
+    assert any(
+        error.startswith("claim_ids:") for error in m3_03_manifest_surface_errors(mutated)
+    )
 
 
 def test_synthetic_values_exercise_standard_decode_rules() -> None:
@@ -680,14 +803,21 @@ def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> Non
 
 def test_m3_03_document_declares_the_closed_current_surface() -> None:
     packet = PACKET.read_text(encoding="utf-8")
-    required_terminal_wording = [
-        "The only current M3-03 conclusion is **`STANDARD_ONLY`**.",
-        (
-            "No production Fronius overlay, detector, automatic product "
-            "qualification, write capability, TCP production dependency, "
-            "authorization effect, or runtime effect is admitted."
-        ),
-        "The hard stop is before `FMV3-M4-01`.",
+    section = markdown_h2_section(packet, "M3-03 completion and applicability")
+    assert m3_03_document_section_errors(section) == []
+
+    contradictions = [
+        "A Fronius overlay is required.",
+        "A production Fronius overlay is admitted.",
+        "A production detector is admitted.",
+        "A production detector is present.",
+        "Automatic product qualification is admitted.",
+        "A runtime effect is admitted.",
+        "`FMV3-M4-01` has started.",
+        "`FMV3-M4-01` is authorized.",
     ]
-    for wording in required_terminal_wording:
-        assert wording in packet
+    for contradiction in contradictions:
+        assert any(
+            error.startswith("forbidden:")
+            for error in m3_03_document_section_errors(f"{section}\n{contradiction}")
+        ), contradiction
