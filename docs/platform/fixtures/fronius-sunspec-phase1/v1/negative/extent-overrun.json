@@ -1,0 +1,8 @@
+{
+  "fixture_id": "FSS-N-002",
+  "kind": "negative",
+  "provenance": {"synthetic": true, "license": "AGPL-3.0-or-later", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "bounded_words_available": 12,
+  "chain": [{"model_id": 101, "length_words": 50, "header_offset_words": 0}],
+  "expected_error": "model_extent_overrun"
+}

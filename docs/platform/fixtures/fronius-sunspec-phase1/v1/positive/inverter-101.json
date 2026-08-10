@@ -1,0 +1,13 @@
+{
+  "fixture_id": "FSS-P-003",
+  "kind": "positive",
+  "provenance": {"synthetic": true, "license": "AGPL-3.0-or-later", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "model": {"model_id": 101, "length_words": 50},
+  "logical_word_examples": [
+    {"field": "W", "type": "int16", "words": [65413], "expected_raw": -123},
+    {"field": "WH", "type": "acc32", "words": [1, 54464], "word_order": "high_word_first", "expected_raw": 120000},
+    {"field": "W_SF", "type": "sunssf", "words": [65535], "expected_scale_exponent": -1},
+    {"field": "WH_SF", "type": "sunssf", "words": [0], "expected_scale_exponent": 0}
+  ],
+  "expected": {"scaled_w": -12.3, "scaled_wh": 120000}
+}

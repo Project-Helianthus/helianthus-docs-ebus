@@ -1,0 +1,12 @@
+{
+  "fixture_id": "FSS-P-002",
+  "kind": "positive",
+  "provenance": {"synthetic": true, "license": "AGPL-3.0-or-later", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "model": {"model_id": 1, "length_words": 65},
+  "logical_word_examples": [
+    {"field": "Mn", "type": "string", "words": [18025, 30836, 30066, 25923, 28416], "expected": "FixtureCo"},
+    {"field": "Md", "type": "string", "words": [18025, 30836, 30066, 25901, 12544], "expected": "Fixture-1"},
+    {"field": "SN", "type": "string", "words": [20556, 16707, 17736, 20300, 17477, 20992], "expected": "PLACEHOLDER"}
+  ],
+  "expected": {"fixed_width_strings": true, "trim_trailing_nul_only": true}
+}

@@ -1,0 +1,15 @@
+{
+  "fixture_id": "FSS-P-005",
+  "kind": "positive",
+  "provenance": {"synthetic": true, "license": "AGPL-3.0-or-later", "capture": "not_a_live_capture", "identity": "fixture-placeholder"},
+  "profile": {"id": "sunspec-phase1", "version": 1, "codec_version": 1},
+  "observation_context": {"raw_id": "fixture-raw-102", "sample_id": "fixture-sample-102", "generation": 7, "source_time": "2026-01-01T00:00:00Z", "transport": "unspecified"},
+  "model": {"model_id": 102, "length_words": 50},
+  "logical_word_examples": [
+    {"field": "W", "type": "int16", "words": [321], "expected_raw": 321},
+    {"field": "W_SF", "type": "sunssf", "words": [65535], "expected_scale_exponent": -1},
+    {"field": "WH", "type": "acc32", "words": [2, 0], "word_order": "high_word_first", "expected_raw": 131072},
+    {"field": "WH_SF", "type": "sunssf", "words": [0], "expected_scale_exponent": 0}
+  ],
+  "expected": {"scaled_w": 32.1, "scaled_wh": 131072, "preserve_observation_context_exactly": true, "single_generation_only": true, "transport_neutral": true}
+}
