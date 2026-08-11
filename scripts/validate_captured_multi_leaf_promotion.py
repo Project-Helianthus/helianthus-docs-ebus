@@ -7,9 +7,12 @@ import argparse
 import copy
 import hashlib
 import json
+import os
 import pathlib
 import re
+import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
@@ -801,6 +804,309 @@ def _process_instance_hash(process_instance_id: str) -> str:
     )
 
 
+def _redacted_binding_id(binding_hash: str) -> str:
+    if not isinstance(binding_hash, str) or not re.fullmatch(
+        r"sha256:[0-9a-f]{64}", binding_hash
+    ):
+        fail("live.restart.binding")
+    return "redacted:sha256:" + binding_hash[7:19]
+
+
+def _run_build_command(
+    command: list[str],
+    *,
+    cwd: pathlib.Path,
+    env: dict[str, str] | None = None,
+    input_data: bytes | None = None,
+) -> bytes:
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            env=env,
+            input=input_data,
+            check=False,
+            capture_output=True,
+            timeout=300,
+        )
+    except (OSError, subprocess.SubprocessError):
+        fail("live.deployment")
+    if completed.returncode != 0:
+        fail("live.deployment")
+    return completed.stdout
+
+
+def _decode_build_output(value: bytes, encoding: str) -> str:
+    try:
+        return value.decode(encoding, errors="strict")
+    except UnicodeError:
+        fail("live.deployment")
+
+
+def _reject_local_module_replacements(raw: bytes) -> None:
+    try:
+        module = json.loads(_decode_build_output(raw, "utf-8"))
+    except (TypeError, ValueError):
+        fail("live.deployment")
+    if not isinstance(module, dict):
+        fail("live.deployment")
+    replacements = module.get("Replace", [])
+    if replacements is None:
+        replacements = []
+    if not isinstance(replacements, list):
+        fail("live.deployment")
+    for replacement in replacements:
+        if not isinstance(replacement, dict):
+            fail("live.deployment")
+        target = replacement.get("New")
+        if (
+            not isinstance(target, dict)
+            or not isinstance(target.get("Path"), str)
+            or not target["Path"]
+            or not isinstance(target.get("Version"), str)
+            or not target["Version"]
+        ):
+            fail("live.deployment")
+
+
+def _regular_tracked_entries(raw: bytes) -> list[tuple[bytes, str]]:
+    entries = [entry for entry in raw.split(b"\x00") if entry]
+    if not entries:
+        fail("live.deployment")
+    result: list[tuple[bytes, str]] = []
+    for entry in entries:
+        metadata, separator, path = entry.partition(b"\t")
+        fields = metadata.split(b" ")
+        if (
+            not separator
+            or not path
+            or len(fields) != 3
+            or fields[0] not in {b"100644", b"100755"}
+            or not re.fullmatch(rb"[0-9a-f]{40}|[0-9a-f]{64}", fields[1])
+            or fields[2] != b"0"
+        ):
+            fail("live.deployment")
+        try:
+            decoded_path = path.decode("utf-8", errors="strict")
+        except UnicodeError:
+            fail("live.deployment")
+        result.append((fields[1], decoded_path))
+    return result
+
+
+def _reject_filter_attributes(raw: bytes) -> None:
+    fields = raw.split(b"\x00")
+    if fields and fields[-1] == b"":
+        fields.pop()
+    if len(fields) % 3 != 0:
+        fail("live.deployment")
+    for index in range(0, len(fields), 3):
+        if fields[index + 1] != b"filter" or fields[index + 2] not in {
+            b"unspecified",
+            b"unset",
+        }:
+            fail("live.deployment")
+
+
+def _validate_reproducible_build(
+    source_tree: pathlib.Path,
+    binary_path: pathlib.Path,
+    runtime: dict[str, Any],
+) -> None:
+    try:
+        source_tree = source_tree.resolve(strict=True)
+    except OSError:
+        fail("live.deployment")
+    if not source_tree.is_dir():
+        fail("live.deployment")
+
+    git_environment = {
+        "HOME": os.environ.get("HOME", str(source_tree)),
+        "PATH": os.environ.get("PATH", ""),
+        "GIT_ATTR_NOSYSTEM": "1",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_NOSYSTEM": "1",
+    }
+    head = _run_build_command(
+        ["git", "rev-parse", "--verify", "HEAD"],
+        cwd=source_tree,
+        env=git_environment,
+    )
+    root = _run_build_command(
+        ["git", "rev-parse", "--show-toplevel"],
+        cwd=source_tree,
+        env=git_environment,
+    )
+    remote = _run_build_command(
+        ["git", "remote", "get-url", "origin"],
+        cwd=source_tree,
+        env=git_environment,
+    )
+    if (
+        _decode_build_output(head, "ascii").strip() != runtime["source_commit"]
+        or pathlib.Path(_decode_build_output(root, "utf-8").strip()).resolve()
+        != source_tree
+        or _decode_build_output(remote, "utf-8").strip()
+        not in {
+            "https://github.com/Project-Helianthus/helianthus-ebusgateway",
+            "https://github.com/Project-Helianthus/helianthus-ebusgateway.git",
+            "git@github.com:Project-Helianthus/helianthus-ebusgateway.git",
+        }
+    ):
+        fail("live.deployment")
+
+    manifest = runtime["build_manifest"]
+    if manifest["flags"] != ["-trimpath", "CGO_ENABLED=0"]:
+        fail("live.deployment")
+    target = manifest["target"].split("/")
+    if len(target) not in (2, 3) or target[0] not in {"linux"}:
+        fail("live.deployment")
+    if target[1] not in {"386", "amd64", "arm", "arm64"}:
+        fail("live.deployment")
+    if len(target) == 3 and (target[1] != "arm" or target[2] not in {"v6", "v7"}):
+        fail("live.deployment")
+
+    environment = {
+        "HOME": os.environ.get("HOME", str(source_tree)),
+        "PATH": os.environ.get("PATH", ""),
+        "CGO_ENABLED": "0",
+        "GOOS": target[0],
+        "GOARCH": target[1],
+        "GOENV": "off",
+        "GOTOOLCHAIN": "local",
+        "GOFLAGS": "-mod=readonly",
+        "GOWORK": "off",
+    }
+    if target[1] == "arm":
+        if len(target) != 3:
+            fail("live.deployment")
+        environment["GOARM"] = target[2].removeprefix("v")
+    elif len(target) != 2:
+        fail("live.deployment")
+    elif target[1] == "386":
+        environment["GO386"] = "sse2"
+    elif target[1] == "amd64":
+        environment["GOAMD64"] = "v1"
+    elif target[1] == "arm64":
+        environment["GOARM64"] = "v8.0"
+    go_version = _run_build_command(
+        ["go", "version"], cwd=source_tree, env=environment
+    )
+    go_version = _decode_build_output(go_version, "ascii").split()
+    if len(go_version) < 3 or go_version[2] != manifest["go_version"]:
+        fail("live.deployment")
+
+    with tempfile.TemporaryDirectory(prefix="helianthus-m8-rebuild-") as work_dir:
+        materialized = pathlib.Path(work_dir) / "source"
+        rebuilt = pathlib.Path(work_dir) / "helianthus-gateway"
+        _run_build_command(
+            [
+                "git",
+                "clone",
+                "--no-local",
+                "--no-checkout",
+                str(source_tree),
+                str(materialized),
+            ],
+            cwd=source_tree,
+            env=git_environment,
+        )
+        _run_build_command(
+            ["git", "checkout", "--detach", runtime["source_commit"]],
+            cwd=materialized,
+            env=git_environment,
+        )
+        tracked_entries = _run_build_command(
+            ["git", "ls-files", "--stage", "-z"],
+            cwd=materialized,
+            env=git_environment,
+        )
+        regular_entries = _regular_tracked_entries(tracked_entries)
+        path_input = b"\x00".join(
+            path.encode("utf-8") for _, path in regular_entries
+        ) + b"\x00"
+        attributes = _run_build_command(
+            [
+                "git",
+                "check-attr",
+                "--stdin",
+                "-z",
+                "--source=" + runtime["source_commit"],
+                "filter",
+            ],
+            cwd=materialized,
+            env=git_environment,
+            input_data=path_input,
+        )
+        _reject_filter_attributes(attributes)
+        for expected_digest, path in regular_entries:
+            actual_digest = _run_build_command(
+                ["git", "hash-object", "--no-filters", "--", path],
+                cwd=materialized,
+                env=git_environment,
+            ).strip()
+            if actual_digest != expected_digest:
+                fail("live.deployment")
+        module = _run_build_command(
+            ["go", "mod", "edit", "-json"],
+            cwd=materialized,
+            env=environment,
+        )
+        _reject_local_module_replacements(module)
+        _run_build_command(
+            [
+                "go",
+                "build",
+                "-trimpath",
+                "-buildvcs=true",
+                "-o",
+                str(rebuilt),
+                "./cmd/gateway",
+            ],
+            cwd=materialized,
+            env=environment,
+        )
+        rebuilt_raw = _read_bounded_bytes(
+            rebuilt, MAX_DEPLOYMENT_BINARY_BYTES, "live.deployment"
+        )
+        binary_raw = _read_bounded_bytes(
+            binary_path, MAX_DEPLOYMENT_BINARY_BYTES, "live.deployment"
+        )
+        build_info = _run_build_command(
+            ["go", "version", "-m", str(rebuilt)],
+            cwd=materialized,
+            env=environment,
+        )
+        materialized_status = _run_build_command(
+            [
+                "git",
+                "status",
+                "--porcelain=v1",
+                "--untracked-files=all",
+                "--ignored=matching",
+            ],
+            cwd=materialized,
+            env=git_environment,
+        )
+        build_info = _decode_build_output(build_info, "utf-8")
+    build_settings = {
+        key: value
+        for key, value in re.findall(
+            r"^\s*build\s+([^=\s]+)=([^\s]+)\s*$", build_info, re.MULTILINE
+        )
+    }
+    if (
+        build_settings.get("vcs") != "git"
+        or build_settings.get("vcs.revision") != runtime["source_commit"]
+        or build_settings.get("vcs.modified") != "false"
+        or rebuilt_raw != binary_raw
+        or bytes_digest(rebuilt_raw) != runtime["artifact_digest"]
+        or len(rebuilt_raw) != runtime["artifact_size_bytes"]
+        or materialized_status
+    ):
+        fail("live.deployment")
+
+
 def _immutable_input(run: dict[str, Any], input_id: str) -> dict[str, Any]:
     matches = [
         item
@@ -906,35 +1212,36 @@ def _validate_live_cross_bindings(
         != transition["after_process_instance_id"]
     ):
         fail("live.restart.binding")
-    before_run = before_runs[0]
     windows = value["windows"]
+    m8_process_hashes = {
+        _process_instance_hash(transition["before_process_instance_id"]),
+        _process_instance_hash(transition["after_process_instance_id"]),
+    }
+    if m8_process_hashes & {
+        window["process_instance_hash"] for window in windows
+    }:
+        fail("live.restart.binding")
     expected_window_bindings = (
         {
-            "process_instance_hash": _process_instance_hash(
-                transition["before_process_instance_id"]
-            ),
-            "trust_state_hash": transition["before_trust_state_hash"],
-            "peer_binding_hash": transition["before_peer_binding_hash"],
+            "trust_state_hash": transition["before_snapshot"]["trust_state_id"],
+            "peer_binding_hash": transition["before_snapshot"]["peer_binding_id"],
         },
         {
-            "process_instance_hash": _process_instance_hash(
-                transition["after_process_instance_id"]
-            ),
-            "trust_state_hash": transition["after_trust_state_hash"],
-            "peer_binding_hash": transition["after_peer_binding_hash"],
+            "trust_state_hash": transition["after_snapshot"]["trust_state_id"],
+            "peer_binding_hash": transition["after_snapshot"]["peer_binding_id"],
         },
     )
     for window, expected in zip(windows, expected_window_bindings, strict=True):
-        if any(window[key] != item for key, item in expected.items()):
+        if any(_redacted_binding_id(window[key]) != item for key, item in expected.items()):
             fail("live.restart.binding")
 
+    try:
+        coexistence.check_runtime_identity(evidence)
+    except (coexistence.Failure, KeyError, TypeError, ValueError):
+        fail("live.deployment")
     runtime = restart_run["provenance"]["runtime"]
     if (
-        any(
-            run["provenance"]["runtime"] != runtime
-            for run in evidence["runs"][1:]
-        )
-        or runtime["source_parent_commit"] != status["source_commit"]
+        runtime["source_parent_commit"] != status["source_commit"]
         or runtime["artifact_id"] != "gateway:" + runtime["artifact_digest"]
     ):
         fail("live.deployment")
@@ -960,7 +1267,6 @@ def _validate_live_cross_bindings(
             "binary_hash": runtime["artifact_digest"],
         },
         "runtime": runtime,
-        "window_runs": (before_run, restart_run),
         "transition": transition,
     }
 
@@ -974,14 +1280,8 @@ def _validate_capture_receipts(
         fail("live.receipt")
     windows = value["windows"]
     observed: list[str] = []
-    transition = live_context["transition"]
-    process_hashes = (
-        _process_instance_hash(transition["before_process_instance_id"]),
-        _process_instance_hash(transition["after_process_instance_id"]),
-    )
-    for index, (path, window, run) in enumerate(
-        zip(receipt_paths, windows, live_context["window_runs"], strict=True)
-    ):
+    process_hashes = tuple(window["process_instance_hash"] for window in windows)
+    for index, (path, window) in enumerate(zip(receipt_paths, windows, strict=True)):
         receipt, raw = load_json(path)
         if set(receipt) != {
             "contract",
@@ -995,7 +1295,6 @@ def _validate_capture_receipts(
             "peer_binding_hash",
             "admitted_source",
             "window_evidence_hash",
-            "m8_run_id",
             "m7_binding",
             "m8_binding",
             "deployment_binding",
@@ -1022,7 +1321,6 @@ def _validate_capture_receipts(
             )
             or receipt["window_evidence_hash"]
             != digest(WINDOW_EVIDENCE_DOMAIN, window)
-            or receipt["m8_run_id"] != run["run_id"]
             or receipt["m7_binding"] != live_context["m7_binding"]
             or receipt["m8_binding"] != live_context["m8_binding"]
             or receipt["deployment_binding"]
@@ -1033,7 +1331,6 @@ def _validate_capture_receipts(
         if index == 1:
             expected_restart = {
                 "event_type": "HA_ADDON_RESTART_COMPLETED",
-                "event_id": transition["event_id"],
                 "outcome": "COMPLETED",
                 "before_process_instance_hash": process_hashes[0],
                 "after_process_instance_hash": process_hashes[1],
@@ -1041,7 +1338,10 @@ def _validate_capture_receipts(
             restart_event = receipt["restart_event"]
             if (
                 not isinstance(restart_event, dict)
-                or set(restart_event) != set(expected_restart) | {"completed_at"}
+                or set(restart_event)
+                != set(expected_restart) | {"event_id", "completed_at"}
+                or not isinstance(restart_event["event_id"], str)
+                or not 1 <= len(restart_event["event_id"]) <= 256
                 or any(
                     restart_event[key] != item
                     for key, item in expected_restart.items()
@@ -1117,17 +1417,27 @@ def _validate_non_synthetic_selectors(value: dict[str, Any]) -> None:
 def _validate_live_source_bundle(
     value: dict[str, Any],
     registry: dict[str, Any],
-    live_sources: dict[str, pathlib.Path | list[pathlib.Path]],
+    live_sources: dict[str, Any],
 ) -> None:
     required = {
         "m7_graph",
         "m7_status",
         "m7_replay",
+        "m7_registry",
+        "m7_source_bundle",
+        "m7_source_replay",
+        "m7_terminal_graph",
+        "m7_terminal_replay",
+        "m7_terminal_source_bundle",
+        "m7_terminal_source_replay",
         "m8_evidence",
         "m8_report",
+        "m8_trust_state_hash",
+        "m8_peer_binding_hash",
         "capture_receipts",
         "deployment_source",
         "deployment_binary",
+        "deployment_source_tree",
     }
     if set(live_sources) != required:
         fail("live.sources.required")
@@ -1173,24 +1483,29 @@ def _validate_live_source_bundle(
     evidence = artifacts["m8_evidence"]
     report = artifacts["m8_report"]
     m8_registry, m8_registry_raw = load_json(M8_REGISTRY)
+    m7_paths = {
+        "graph": live_sources["m7_graph"],
+        "replay": live_sources["m7_replay"],
+        "registry": live_sources["m7_registry"],
+        "source_bundle": live_sources["m7_source_bundle"],
+        "source_replay": live_sources["m7_source_replay"],
+        "terminal_graph": live_sources["m7_terminal_graph"],
+        "terminal_replay": live_sources["m7_terminal_replay"],
+        "terminal_source_bundle": live_sources["m7_terminal_source_bundle"],
+        "terminal_source_replay": live_sources["m7_terminal_source_replay"],
+        "status": live_sources["m7_status"],
+    }
+    if not all(isinstance(path, pathlib.Path) for path in m7_paths.values()):
+        fail("live.sources.required")
     try:
-        coexistence.check_limits(evidence, len(raw_artifacts["m8_evidence"]))
-        coexistence.check_registry(evidence, m8_registry, m8_registry_raw)
-        coexistence.check_config(evidence)
-        coexistence.check_auth_mask(evidence)
-        coexistence.check_clock(evidence)
-        coexistence.check_ordering(evidence, m8_registry)
-        coexistence.check_states(evidence, {"facts": status["facts"]})
-        coexistence.check_restart(evidence)
-        coexistence.check_view_coverage(evidence, m8_registry)
-        coexistence.check_normalization(evidence, m8_registry)
-        coexistence.check_payload_hashes(evidence, m8_registry)
-        coexistence.check_public_redaction(evidence)
-        coexistence.check_authority(evidence)
-        coexistence.check_scope(evidence, m8_registry)
-        coexistence.check_drift(evidence, m8_registry)
-        coexistence.check_rollback(evidence, m8_registry)
-        coexistence.check_evidence_hash(evidence)
+        coexistence.verify(
+            evidence,
+            len(raw_artifacts["m8_evidence"]),
+            m8_registry,
+            m8_registry_raw,
+            m7_paths,
+            require_private=True,
+        )
         derived_report = coexistence.report(copy.deepcopy(evidence), m8_registry)
     except (coexistence.Failure, KeyError, TypeError, ValueError):
         fail("live.m8")
@@ -1231,6 +1546,18 @@ def _validate_live_source_bundle(
         evidence,
         report,
     )
+    full_hashes = {
+        "trust_state_hash": live_sources["m8_trust_state_hash"],
+        "peer_binding_hash": live_sources["m8_peer_binding_hash"],
+    }
+    if any(
+        not isinstance(item, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", item) is None
+        for item in full_hashes.values()
+    ):
+        fail("live.restart.binding")
+    for window in value["windows"]:
+        if any(window[key] != item for key, item in full_hashes.items()):
+            fail("live.restart.binding")
     receipt_paths = live_sources["capture_receipts"]
     if not isinstance(receipt_paths, list) or not all(
         isinstance(path, pathlib.Path) for path in receipt_paths
@@ -1245,6 +1572,12 @@ def _validate_live_source_bundle(
     _validate_deployment_source(
         value, deployment_source, deployment_binary, live_context
     )
+    source_tree = live_sources["deployment_source_tree"]
+    if not isinstance(source_tree, pathlib.Path):
+        fail("live.sources.required")
+    _validate_reproducible_build(
+        source_tree, deployment_binary, live_context["runtime"]
+    )
     _validate_capture_receipts(value, receipt_paths, live_context)
     _validate_non_synthetic_selectors(value)
 
@@ -1252,7 +1585,7 @@ def _validate_live_source_bundle(
 def verify_private(
     value: dict[str, Any],
     registry: dict[str, Any],
-    live_sources: dict[str, pathlib.Path | list[pathlib.Path]] | None = None,
+    live_sources: dict[str, Any] | None = None,
 ) -> None:
     reject_secret_material(value)
     schema_validate(value, PRIVATE_SCHEMA, "schema.private")
@@ -1488,7 +1821,7 @@ def derive_public(
     value: dict[str, Any],
     registry: dict[str, Any],
     private_raw: bytes,
-    live_sources: dict[str, pathlib.Path | list[pathlib.Path]] | None = None,
+    live_sources: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     verify_private(value, registry, live_sources)
     public = _build_public(value, private_raw)
@@ -1595,7 +1928,7 @@ def verify_public(
     registry: dict[str, Any],
     private_value: dict[str, Any] | None = None,
     private_raw: bytes | None = None,
-    live_sources: dict[str, pathlib.Path | list[pathlib.Path]] | None = None,
+    live_sources: dict[str, Any] | None = None,
 ) -> None:
     _verify_public_structure(value, registry)
     if value["evidence_mode"] == "LIVE_CAPTURE" and (
@@ -1612,16 +1945,26 @@ def verify_public(
 
 def _live_sources_from_args(
     args: argparse.Namespace,
-) -> dict[str, pathlib.Path | list[pathlib.Path]] | None:
+) -> dict[str, Any] | None:
     values = {
         "m7_graph": args.m7_graph,
         "m7_status": args.m7_status,
         "m7_replay": args.m7_replay,
+        "m7_registry": args.m7_registry,
+        "m7_source_bundle": args.m7_source_bundle,
+        "m7_source_replay": args.m7_source_replay,
+        "m7_terminal_graph": args.m7_terminal_graph,
+        "m7_terminal_replay": args.m7_terminal_replay,
+        "m7_terminal_source_bundle": args.m7_terminal_source_bundle,
+        "m7_terminal_source_replay": args.m7_terminal_source_replay,
         "m8_evidence": args.m8_evidence,
         "m8_report": args.m8_report,
+        "m8_trust_state_hash": args.m8_trust_state_hash,
+        "m8_peer_binding_hash": args.m8_peer_binding_hash,
         "capture_receipts": args.capture_receipt,
         "deployment_source": args.deployment_source,
         "deployment_binary": args.deployment_binary,
+        "deployment_source_tree": args.deployment_source_tree,
     }
     supplied = any(value not in (None, []) for value in values.values())
     if not supplied:
@@ -1640,11 +1983,21 @@ def main() -> int:
     parser.add_argument("--m7-graph", type=pathlib.Path)
     parser.add_argument("--m7-status", type=pathlib.Path)
     parser.add_argument("--m7-replay", type=pathlib.Path)
+    parser.add_argument("--m7-registry", type=pathlib.Path)
+    parser.add_argument("--m7-source-bundle", type=pathlib.Path)
+    parser.add_argument("--m7-source-replay", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-graph", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-replay", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-source-bundle", type=pathlib.Path)
+    parser.add_argument("--m7-terminal-source-replay", type=pathlib.Path)
     parser.add_argument("--m8-evidence", type=pathlib.Path)
     parser.add_argument("--m8-report", type=pathlib.Path)
+    parser.add_argument("--m8-trust-state-hash")
+    parser.add_argument("--m8-peer-binding-hash")
     parser.add_argument("--capture-receipt", type=pathlib.Path, action="append", default=[])
     parser.add_argument("--deployment-source", type=pathlib.Path)
     parser.add_argument("--deployment-binary", type=pathlib.Path)
+    parser.add_argument("--deployment-source-tree", type=pathlib.Path)
     args = parser.parse_args()
     try:
         value, raw = load_json(args.input)
