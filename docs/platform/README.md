@@ -52,6 +52,9 @@ Current platform contracts:
 - [`leaf-promotion-dossier-lock-v1.md`](./leaf-promotion-dossier-lock-v1.md) -
   MSP-085 M8.5 per-leaf dossier lock plus captured-runtime zero-promotion
   assessment; current live facts create zero dossiers and keep M9 blocked
+- [`captured-multi-leaf-promotion-v1.md`](./captured-multi-leaf-promotion-v1.md) -
+  additive unreleased-V1 profile for restart-separated, per-candidate live
+  promotion evidence and deterministic public-redacted results
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary

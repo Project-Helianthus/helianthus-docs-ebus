@@ -158,6 +158,7 @@ python3 -m pytest -q tests/test_candidate_fact_graph_contract.py
 python3 -m pytest -q tests/test_candidate_fact_graph_executable_contract.py
 python3 -m pytest -q tests/test_multi_runtime_live_coexistence_contract.py
 python3 -m pytest -q tests/test_leaf_promotion_dossier_contract.py
+python3 -m pytest -q tests/test_captured_multi_leaf_promotion_contract.py
 
 echo "==> check Modbus M1/M2 companion contract"
 python3 -m pytest -q \
