@@ -6,6 +6,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import pathlib
+from typing import Any
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -26,35 +27,80 @@ def sha(character: str) -> str:
     return "sha256:" + character * 64
 
 
+def encoded(value: object) -> bytes:
+    return (
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
+            "utf-8"
+        )
+        + b"\n"
+    )
+
+
 def typed_numeric(number: int, scale: int) -> dict[str, object]:
-    return {"kind": "NUMERIC", "decimal": {"number": number, "scale": scale}, "enum": None, "boolean": None}
+    return {
+        "kind": "NUMERIC",
+        "decimal": {"number": number, "scale": scale},
+        "enum": None,
+        "boolean": None,
+    }
 
 
-def eebus_identity(module, candidate: dict[str, object]) -> dict[str, object]:
+def typed_enum(value: str) -> dict[str, object]:
+    return {"kind": "ENUM", "decimal": None, "enum": value, "boolean": None}
+
+
+def typed_boolean(value: bool) -> dict[str, object]:
+    return {"kind": "BOOLEAN", "decimal": None, "enum": None, "boolean": value}
+
+
+def ebus_identity(module, candidate: dict[str, Any]) -> dict[str, Any]:
+    selector = candidate["ebus_selector"]
+    assert isinstance(selector, dict)
+    identity = {
+        **selector,
+        "target_pseudonym": "target-" + "1" * 32,
+        "target_address": 21,
+        "source_address": 253,
+        "selector_hash": sha("0"),
+    }
+    identity["selector_hash"] = module.digest(
+        module.EBUS_SELECTOR_DOMAIN,
+        {key: value for key, value in identity.items() if key != "selector_hash"},
+    )
+    return identity
+
+
+def eebus_identity(module, candidate: dict[str, Any]) -> dict[str, Any]:
     candidate_id = str(candidate["candidate_id"])
     source = candidate["eebus_source"]
     assert isinstance(source, dict)
     index = int(candidate_id[-4:])
-    entity = [1000 + index]
-    feature_address = 100 + index
-    return {
+    identity = {
         "service_id": "sanitized-service-v1",
         "device_address": "sanitized-device-v1",
-        "entity_address": entity,
-        "entity_type": source["entity_type"],
-        "feature_address": feature_address,
-        "feature_type": source["feature_type"],
-        "feature_role": source["feature_role"],
-        "function": source["value_function"],
-        "field_path": source["field_path"],
-        "descriptor": source["descriptor"],
-        "unit": source["unit"],
+        "entity_address": [1000 + index],
+        "feature_address": 100 + index,
+        **source,
         "source_profile_hash": module.digest(module.SOURCE_PROFILE_DOMAIN, source),
-        "identity_hash": sha("8"),
+        "identity_hash": sha("0"),
     }
+    identity["identity_hash"] = module.digest(
+        module.EEBUS_IDENTITY_DOMAIN,
+        {key: value for key, value in identity.items() if key != "identity_hash"},
+    )
+    return identity
 
 
-def sample(source: str, timestamp: str, value: dict[str, object], window: dict[str, object], suffix: str) -> dict[str, object]:
+def sample(
+    module,
+    source: str,
+    timestamp: str,
+    raw_value: dict[str, object],
+    value: dict[str, object],
+    unit: str | None,
+    window: dict[str, object],
+    suffix: str,
+) -> dict[str, object]:
     return {
         "source": source,
         "observed_at": timestamp,
@@ -63,16 +109,61 @@ def sample(source: str, timestamp: str, value: dict[str, object], window: dict[s
         "poll_id": "poll-" + suffix if source == "EBUS" else None,
         "poll_generation": window["ebus_poll_generation"] if source == "EBUS" else None,
         "runtime_epoch": window["eebus_runtime_epoch"] if source == "EEBUS" else None,
-        "connection_generation": window["connection_generation"] if source == "EEBUS" else None,
-        "raw_hash": sha("6" if source == "EBUS" else "7"),
-        "raw_value": value,
+        "connection_generation": (
+            window["connection_generation"] if source == "EEBUS" else None
+        ),
+        "raw_hash": module.digest(module.RAW_VALUE_DOMAIN, raw_value),
+        "raw_value": raw_value,
         "value": value,
-        "unit": "degC",
+        "unit": unit,
     }
 
 
-def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
-    windows = [
+def comparator(module, expected: dict[str, Any], outcome: str) -> dict[str, Any]:
+    source = expected["eebus_source"]
+    assert isinstance(source, dict)
+    if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY":
+        return {
+            "class": expected["comparator_class"],
+            "declared_spine_step": source["declared_constraints"]["step"],
+            "delta": None,
+            "conversion": source["conversion"],
+            "mapping_hash": None,
+            "outcome": outcome,
+        }
+    return {
+        "class": expected["comparator_class"],
+        "declared_spine_step": None,
+        "delta": None,
+        "conversion": None,
+        "mapping_hash": module.digest(module.MAPPING_DOMAIN, source["mapping_profile"]),
+        "outcome": outcome,
+    }
+
+
+def missing_eebus_sample(
+    module,
+    expected: dict[str, Any],
+    window: dict[str, object],
+    timestamp: str,
+    suffix: str,
+) -> dict[str, object]:
+    source = expected["eebus_source"]
+    assert isinstance(source, dict)
+    if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY":
+        raw = typed_numeric(20, 0)
+        value = typed_numeric(20, 0)
+    elif expected["comparator_class"] == "ENUM_EXACT_MAPPING":
+        raw = typed_numeric(2, 0)
+        value = typed_enum("off")
+    else:
+        raw = typed_boolean(False)
+        value = typed_boolean(False)
+    return sample(module, "EEBUS", timestamp, raw, value, source["unit"], window, suffix)
+
+
+def build_campaign(module, registry: dict[str, Any]) -> dict[str, Any]:
+    windows: list[dict[str, Any]] = [
         {
             "window_id": "window-pre-restart",
             "phase": "PRE_RESTART",
@@ -106,92 +197,98 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
             "rollback_exact": True,
         },
     ]
-    candidates: list[dict[str, object]] = []
-    missing_numeric = {5, 6, 10, 11, 14, 15}
-    missing_mapped = {7, 9, 12, 16}
+    candidates: list[dict[str, Any]] = []
     for expected in registry["candidate_catalog"]:
-        index = int(expected["candidate_id"][-4:])
-        if expected["source_status"] == "WITHHELD":
-            candidate = {
-                "candidate_id": expected["candidate_id"],
-                "fact_hash": expected["fact_hash"],
-                "source_status": expected["source_status"],
-                "semantic_path": expected["semantic_path"],
-                "comparator_class": expected["comparator_class"],
-                "ebus_identity": None,
-                "eebus_identity": None,
-                "assessments": [],
-                "decision": "WITHHELD",
-                "terminal_state": expected["terminal_state"],
-                "visibility": "RAW_DEBUG_ONLY",
-                "dossier_hash": None,
-            }
-        else:
-            terminal = "MISSING" if index in missing_numeric | missing_mapped else "NOT_COMPARABLE"
-            candidate = {
-                "candidate_id": expected["candidate_id"],
-                "fact_hash": expected["fact_hash"],
-                "source_status": expected["source_status"],
-                "semantic_path": expected["semantic_path"],
-                "comparator_class": expected["comparator_class"],
-                "ebus_identity": None,
-                "eebus_identity": eebus_identity(module, expected),
-                "assessments": [],
-                "decision": "WITHHELD",
-                "terminal_state": terminal,
-                "visibility": "RAW_DEBUG_ONLY",
-                "dossier_hash": None,
-            }
+        candidate = {
+            "candidate_id": expected["candidate_id"],
+            "fact_hash": expected["fact_hash"],
+            "source_status": expected["source_status"],
+            "semantic_path": expected["semantic_path"],
+            "comparator_class": expected["comparator_class"],
+            "ebus_identity": None,
+            "eebus_identity": None,
+            "assessments": [],
+            "decision": "WITHHELD",
+            "terminal_state": expected["terminal_state"],
+            "visibility": "RAW_DEBUG_ONLY",
+            "dossier_hash": None,
+        }
+        if expected["protocol_eligibility"] != "TERMINAL":
+            candidate["eebus_identity"] = eebus_identity(module, expected)
+        if expected["protocol_eligibility"] == "WITHHOLD_NO_EBUS_CAPABILITY_SOURCE":
+            candidate["terminal_state"] = "NOT_COMPARABLE"
+        elif expected["protocol_eligibility"] == "ELIGIBLE":
+            candidate["ebus_identity"] = ebus_identity(module, expected)
+            candidate["terminal_state"] = "MISSING"
+            for position, window in enumerate(windows):
+                prefix = "2026-08-11T10:00:05" if position == 0 else "2026-08-11T10:05:05"
+                candidate["assessments"].append(
+                    {
+                        "window_id": window["window_id"],
+                        "ebus_sample": None,
+                        "eebus_sample": missing_eebus_sample(
+                            module,
+                            expected,
+                            window,
+                            prefix + ".100000000Z",
+                            "pre" if position == 0 else "post",
+                        ),
+                        "skew_ns": None,
+                        "max_skew_ns": registry["capture_limits"]["max_skew_ns"],
+                        "age_ns": None,
+                        "max_age_ns": registry["capture_limits"]["max_age_ns"],
+                        "comparator": comparator(module, expected, "MISSING"),
+                    }
+                )
         candidates.append(candidate)
 
     promoted = candidates[-1]
-    promoted["ebus_identity"] = {
-        "family": "B524",
-        "target_address": 254,
-        "source_address": 253,
-        "opcode": 2,
-        "group": 254,
-        "instance": 254,
-        "register": 65535,
-        "register_id": None,
-        "selector_hash": sha("5"),
-    }
+    promoted_expected = registry["candidate_catalog"][-1]
     promoted["decision"] = "PROMOTED"
     promoted["terminal_state"] = None
     promoted["visibility"] = "LOCKED_NOT_EXPOSED"
     promoted["assessments"] = []
     for position, window in enumerate(windows):
         prefix = "2026-08-11T10:00:05" if position == 0 else "2026-08-11T10:05:05"
-        ebus = sample("EBUS", prefix + "Z", typed_numeric(125 if position == 0 else 13, -1 if position == 0 else 0), window, "pre" if position == 0 else "post")
-        eebus = sample("EEBUS", prefix + ".100000000Z", typed_numeric(13 if position == 0 else 135, 0 if position == 0 else -1), window, "pre" if position == 0 else "post")
+        ebus_value = typed_numeric(125 if position == 0 else 13, -1 if position == 0 else 0)
+        eebus_value = typed_numeric(13 if position == 0 else 135, 0 if position == 0 else -1)
+        promoted_comparator = comparator(module, promoted_expected, "MATCH")
+        promoted_comparator["delta"] = {"number": 5, "scale": -1}
         promoted["assessments"].append(
             {
                 "window_id": window["window_id"],
-                "ebus_sample": ebus,
-                "eebus_sample": eebus,
+                "ebus_sample": sample(
+                    module,
+                    "EBUS",
+                    prefix + "Z",
+                    ebus_value,
+                    ebus_value,
+                    "degC",
+                    window,
+                    "pre" if position == 0 else "post",
+                ),
+                "eebus_sample": sample(
+                    module,
+                    "EEBUS",
+                    prefix + ".100000000Z",
+                    eebus_value,
+                    eebus_value,
+                    "degC",
+                    window,
+                    "pre" if position == 0 else "post",
+                ),
                 "skew_ns": 100_000_000,
                 "max_skew_ns": registry["capture_limits"]["max_skew_ns"],
                 "age_ns": 5_000_000_000,
                 "max_age_ns": registry["capture_limits"]["max_age_ns"],
-                "comparator": {
-                    "class": "NUMERIC_DECLARED_GRANULARITY",
-                    "declared_spine_step": {"number": 5, "scale": -1},
-                    "delta": {"number": 5, "scale": -1},
-                    "conversion": {
-                        "mode": "IDENTITY",
-                        "source_unit": "degC",
-                        "target_unit": "degC",
-                        "scale": {"number": 1, "scale": 0},
-                        "offset": {"number": 0, "scale": 0},
-                    },
-                    "mapping_hash": None,
-                    "outcome": "MATCH",
-                },
+                "comparator": promoted_comparator,
             }
         )
-    promoted["dossier_hash"] = module.digest(module.DOSSIER_DOMAIN, module._candidate_payload(promoted))
+    promoted["dossier_hash"] = module.digest(
+        module.DOSSIER_DOMAIN, module._candidate_payload(promoted)
+    )
 
-    campaign: dict[str, object] = {
+    campaign = {
         "contract": "helianthus.platform.leaf-promotion-captured-multi-leaf.v1",
         "schema_version": 1,
         "profile": "CAPTURED_RUNTIME_MULTI_LEAF_V1",
@@ -199,6 +296,7 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
         "export_tier": "PRIVATE_OPERATOR",
         "provenance": registry["sanitized_provenance"],
         "source_bindings": {
+            "registry_sha256": module.PINNED_REGISTRY_SHA256,
             "docs_eebus_commit": registry["docs_eebus_source_commit"],
             "m7_graph_id": "dcfgv1:captured-campaign",
             "m7_graph_hash": sha("a"),
@@ -225,14 +323,16 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
 
 def write(path: pathlib.Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8") + b"\n")
+    path.write_bytes(encoded(value))
 
 
 def main() -> None:
     module = validator_module()
-    registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
+    registry, _ = module.load_json(REGISTRY)
+    module.registry_value(REGISTRY)
     campaign = build_campaign(module, registry)
-    public = module.derive_public(campaign, registry)
+    private_raw = encoded(campaign)
+    public = module.derive_public(campaign, registry, private_raw)
     write(FIXTURE / "positive/private-campaign.json", campaign)
     write(FIXTURE / "positive/public-result.json", public)
     negatives = {

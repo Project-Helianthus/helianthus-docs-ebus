@@ -23,6 +23,7 @@ PUBLIC = FIXTURE / "positive/public-result.json"
 NEGATIVE = FIXTURE / "negative"
 VALIDATOR = ROOT / "scripts/validate_captured_multi_leaf_promotion.py"
 GENERATOR = ROOT / "scripts/generate_captured_multi_leaf_promotion_fixture.py"
+REGISTRY_SHA256 = "854eb51398c949f14bc905d1d26c906f37243e4a218b7e990734064944621f59"
 
 
 EXPECTED_NEGATIVE = {
@@ -57,9 +58,26 @@ def write(path: pathlib.Path, value: object) -> pathlib.Path:
     return path
 
 
-def run(command: str, path: pathlib.Path) -> subprocess.CompletedProcess[str]:
+def run(
+    command: str,
+    path: pathlib.Path,
+    *,
+    private_campaign: pathlib.Path | None = None,
+    registry: pathlib.Path = REGISTRY,
+) -> subprocess.CompletedProcess[str]:
+    args = [
+        sys.executable,
+        str(VALIDATOR),
+        command,
+        "--input",
+        str(path),
+        "--registry",
+        str(registry),
+    ]
+    if private_campaign is not None:
+        args.extend(("--private-campaign", str(private_campaign)))
     return subprocess.run(
-        [sys.executable, str(VALIDATOR), command, "--input", str(path), "--registry", str(REGISTRY)],
+        args,
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -68,13 +86,20 @@ def run(command: str, path: pathlib.Path) -> subprocess.CompletedProcess[str]:
     )
 
 
+def candidate(campaign: dict, candidate_id: str) -> dict:
+    return next(item for item in campaign["candidates"] if item["candidate_id"] == candidate_id)
+
+
 def promoted(campaign: dict) -> dict:
     return next(item for item in campaign["candidates"] if item["decision"] == "PROMOTED")
 
 
 def rehash_campaign(validator, campaign: dict) -> None:
-    leaf = promoted(campaign)
-    leaf["dossier_hash"] = validator.digest(validator.DOSSIER_DOMAIN, validator._candidate_payload(leaf))
+    for leaf in campaign["candidates"]:
+        if leaf["decision"] == "PROMOTED":
+            leaf["dossier_hash"] = validator.digest(
+                validator.DOSSIER_DOMAIN, validator._candidate_payload(leaf)
+            )
     campaign["source_bindings"]["replay_hash"] = validator.replay_hash(campaign)
     campaign["campaign_hash"] = validator.digest(
         validator.CAMPAIGN_DOMAIN,
@@ -89,58 +114,82 @@ def rehash_public(validator, public: dict) -> None:
     )
 
 
-def promote_enum_candidate(validator, campaign: dict, candidate_id: str) -> dict:
+def rehash_ebus_identity(validator, identity: dict) -> None:
+    identity["selector_hash"] = validator.digest(
+        validator.EBUS_SELECTOR_DOMAIN,
+        {key: value for key, value in identity.items() if key != "selector_hash"},
+    )
+
+
+def rehash_eebus_identity(validator, identity: dict) -> None:
+    identity["identity_hash"] = validator.digest(
+        validator.EEBUS_IDENTITY_DOMAIN,
+        {key: value for key, value in identity.items() if key != "identity_hash"},
+    )
+
+
+def rehash_raw(validator, sample: dict) -> None:
+    sample["raw_hash"] = validator.digest(validator.RAW_VALUE_DOMAIN, sample["raw_value"])
+
+
+def live_campaign(validator) -> dict:
+    campaign = load(PRIVATE)
+    campaign["evidence_mode"] = "LIVE_CAPTURE"
+    campaign["provenance"] = {
+        "class": "LIVE_CAPTURE",
+        "fixture_id": None,
+        "generator": None,
+        "capture_receipts": ["sha256:" + "e" * 64, "sha256:" + "f" * 64],
+        "deployment_source_commit": "1" * 40,
+        "deployment_binary_hash": "sha256:" + "9" * 64,
+    }
+    rehash_campaign(validator, campaign)
+    return campaign
+
+
+def promote_mapped_candidate(validator, campaign: dict, candidate_id: str) -> dict:
     registry = load(REGISTRY)
     expected = next(item for item in registry["candidate_catalog"] if item["candidate_id"] == candidate_id)
-    candidate = next(item for item in campaign["candidates"] if item["candidate_id"] == candidate_id)
-    original_promoted = promoted(campaign)
-    source_identity = copy.deepcopy(original_promoted["ebus_identity"])
-    templates = copy.deepcopy(original_promoted["assessments"])
-    candidate.update(
+    leaf = candidate(campaign, candidate_id)
+    templates = copy.deepcopy(candidate(campaign, "m7-candidate-0018")["assessments"])
+    leaf.update(
         {
-            "ebus_identity": source_identity,
             "decision": "PROMOTED",
             "terminal_state": None,
             "visibility": "LOCKED_NOT_EXPOSED",
             "assessments": [],
         }
     )
-    mapping_hash = validator.digest(
-        validator.MAPPING_DOMAIN,
-        expected["eebus_source"]["mapping_profile"],
-    )
+    is_enum = expected["comparator_class"] == "ENUM_EXACT_MAPPING"
     for window, template in zip(campaign["windows"], templates, strict=True):
         assessment = copy.deepcopy(template)
         assessment["window_id"] = window["window_id"]
+        if is_enum:
+            ebus_raw = {"kind": "NUMERIC", "decimal": {"number": 0, "scale": 0}, "enum": None, "boolean": None}
+            eebus_raw = {"kind": "NUMERIC", "decimal": {"number": 2, "scale": 0}, "enum": None, "boolean": None}
+            decoded = {"kind": "ENUM", "decimal": None, "enum": "off", "boolean": None}
+        else:
+            ebus_raw = {"kind": "NUMERIC", "decimal": {"number": 0, "scale": 0}, "enum": None, "boolean": None}
+            eebus_raw = {"kind": "BOOLEAN", "decimal": None, "enum": None, "boolean": False}
+            decoded = {"kind": "BOOLEAN", "decimal": None, "enum": None, "boolean": False}
+        assessment["ebus_sample"]["raw_value"] = ebus_raw
+        assessment["eebus_sample"]["raw_value"] = eebus_raw
         for key in ("ebus_sample", "eebus_sample"):
-            assessment[key]["value"] = {"kind": "ENUM", "decimal": None, "enum": "off", "boolean": None}
+            assessment[key]["value"] = copy.deepcopy(decoded)
             assessment[key]["unit"] = None
-        assessment["ebus_sample"]["raw_value"] = {
-            "kind": "NUMERIC",
-            "decimal": {"number": 0, "scale": 0},
-            "enum": None,
-            "boolean": None,
-        }
-        assessment["eebus_sample"]["raw_value"] = {
-            "kind": "NUMERIC",
-            "decimal": {"number": 2, "scale": 0},
-            "enum": None,
-            "boolean": None,
-        }
+            rehash_raw(validator, assessment[key])
         assessment["comparator"] = {
-            "class": "ENUM_EXACT_MAPPING",
+            "class": expected["comparator_class"],
             "declared_spine_step": None,
             "delta": None,
             "conversion": None,
-            "mapping_hash": mapping_hash,
+            "mapping_hash": validator.digest(
+                validator.MAPPING_DOMAIN, expected["eebus_source"]["mapping_profile"]
+            ),
             "outcome": "MATCH",
         }
-        candidate["assessments"].append(assessment)
-    candidate["dossier_hash"] = validator.digest(
-        validator.DOSSIER_DOMAIN,
-        validator._candidate_payload(candidate),
-    )
-    return candidate
+        leaf["assessments"].append(assessment)
+    return leaf
 
 
 def test_inventory_and_normative_boundaries() -> None:
@@ -152,61 +201,77 @@ def test_inventory_and_normative_boundaries() -> None:
         "CAPTURED_RUNTIME_MULTI_LEAF_V1",
         "18 M7 VR940 facts",
         "11 protocol-comparable observations",
-        "numeric values",
-        "three operation-mode enums",
-        "four booleans",
         "NUMERIC_DECLARED_GRANULARITY",
         "abs(convert(eBUS) - eeBUS) <= declared SPINE step",
-        "LOCKED_NOT_EXPOSED",
         "PRE_RESTART",
         "POST_RESTART",
         "PRIVATE_OPERATOR",
         "PUBLIC_REDACTED",
         "SANITIZED_CONFORMANCE",
         "LIVE_CAPTURE",
-        "1000000000",
-        "10000000000",
+        "private_campaign_bytes_hash",
+        "registry_sha256",
+        "first non-`MATCH` outcome",
         "657a36d07e52570326384b757a5382a6789f641b",
     ):
         assert phrase in page
 
 
-def test_registry_classifies_all_18_actual_candidates() -> None:
+def test_registry_is_exact_and_contains_full_source_and_selector_profiles() -> None:
+    validator = module()
     registry = load(REGISTRY)
     catalog = registry["candidate_catalog"]
+    assert hashlib.sha256(REGISTRY.read_bytes()).hexdigest() == REGISTRY_SHA256
+    assert validator.PINNED_REGISTRY_SHA256 == "sha256:" + REGISTRY_SHA256
     assert [item["candidate_id"] for item in catalog] == [f"m7-candidate-{index:04d}" for index in range(1, 19)]
-    assert sum(item["source_status"] == "WITHHELD" for item in catalog) == 4
-    assert sum(item["source_status"] == "RAW_ONLY" for item in catalog) == 14
-    assert sum(item["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY" for item in catalog) == 7
-    assert sum(item["comparator_class"] == "ENUM_EXACT_MAPPING" for item in catalog) == 3
-    assert sum(item["comparator_class"] == "BOOLEAN_EXACT_MAPPING" for item in catalog) == 4
+    assert sum(item["protocol_eligibility"] == "TERMINAL" for item in catalog) == 4
     assert sum(item["protocol_eligibility"] == "ELIGIBLE" for item in catalog) == 11
     assert sum(item["protocol_eligibility"] == "WITHHOLD_NO_EBUS_CAPABILITY_SOURCE" for item in catalog) == 3
-    assert registry["capture_limits"] == {"max_skew_ns": 1_000_000_000, "max_age_ns": 10_000_000_000}
-    numeric = [item for item in catalog if item["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY"]
-    mapped = [item for item in catalog if item["comparator_class"] in {"ENUM_EXACT_MAPPING", "BOOLEAN_EXACT_MAPPING"}]
-    assert all(item["eebus_source"]["unit"] == "degC" for item in numeric)
-    assert all(item["eebus_source"]["unit"] is None for item in mapped)
-    assert catalog[-1]["eebus_source"]["descriptor"] == "outsideAirTemperature"
-    status = load(ROOT / registry["m7_public_status"])
-    assert [
-        (item["candidate_id"], item["fact_hash"], item["source_status"], item["terminal_state"])
-        for item in catalog
-    ] == [
-        (item["candidate_id"], item["fact_hash"], item["status"], item["terminal_negative_state"])
-        for item in status["facts"]
-    ]
-
-
-def test_existing_zero_profile_canonical_bytes_are_unchanged() -> None:
-    expected = {
-        "leaf-promotion-registry-v1.json": "ad33736c00aa2c3ecaac981606d25c064088c80cb72ca5389b83c5d9df40f6a3",
-        "../fixtures/leaf-promotion-dossier/v1/positive/dossier.json": "3b12e3b6f625f6efb28fced19d679ab73b974fc4369e0dba9f61f1a2d104ec64",
-        "../fixtures/leaf-promotion-dossier/v1/positive/result.json": "a4e5deb1027e337e917304addfa1aebaaf8f04659d7de38b36083c78525d1a04",
+    source_keys = {
+        "entity_slot",
+        "entity_type",
+        "feature_type",
+        "feature_role",
+        "description_functions",
+        "constraints_function",
+        "value_functions",
+        "field_path",
+        "descriptor",
+        "unit",
+        "declared_constraints",
+        "conversion",
+        "exact_mapping",
+        "mapping_profile",
     }
-    for relative, digest in expected.items():
-        path = SCHEMA_ROOT / relative
-        assert hashlib.sha256(path.resolve().read_bytes()).hexdigest() == digest
+    active = [item for item in catalog if item["eebus_source"] is not None]
+    assert len(active) == 14
+    assert all(set(item["eebus_source"]) == source_keys for item in active)
+    eligible = [item for item in catalog if item["protocol_eligibility"] == "ELIGIBLE"]
+    assert all(item["ebus_selector"]["family"] == "B524" for item in eligible)
+    assert all(item["ebus_selector"]["target_address"] == 0x15 for item in eligible)
+    assert all(item["ebus_selector"] is None for item in catalog if item["protocol_eligibility"] != "ELIGIBLE")
+    assert catalog[6]["eebus_source"]["description_functions"] == [
+        "hvacSystemFunctionDescriptionListData",
+        "hvacOperationModeDescriptionListData",
+        "hvacSystemFunctionOperationModeRelationListData",
+    ]
+    assert catalog[8]["eebus_source"]["value_functions"] == [
+        "hvacSystemFunctionListData",
+        "hvacOverrunListData",
+    ]
+    assert catalog[-1]["eebus_source"]["descriptor"]["scope_type"] == "outsideAirTemperature"
+
+
+def test_registry_argument_accepts_only_canonical_bytes(tmp_path: pathlib.Path) -> None:
+    exact = tmp_path / "exact-registry.json"
+    exact.write_bytes(REGISTRY.read_bytes())
+    result = run("verify-private", PRIVATE, registry=exact)
+    assert (result.returncode, result.stdout) == (0, "PASS\n")
+
+    substituted = load(REGISTRY)
+    substituted["capture_limits"]["max_skew_ns"] *= 2
+    result = run("verify-private", PRIVATE, registry=write(tmp_path / "substitute.json", substituted))
+    assert (result.returncode, result.stdout) == (1, "registry.binding\n")
 
 
 def test_positive_subset_fixture_verifies_and_derives_byte_identically() -> None:
@@ -217,143 +282,86 @@ def test_positive_subset_fixture_verifies_and_derives_byte_identically() -> None
     assert derived.stdout.encode("utf-8") == PUBLIC.read_bytes()
     public = run("verify-public", PUBLIC)
     assert (public.returncode, public.stdout, public.stderr) == (0, "PASS\n", "")
+    bound = run("verify-public", PUBLIC, private_campaign=PRIVATE)
+    assert (bound.returncode, bound.stdout, bound.stderr) == (0, "PASS\n", "")
     result = load(PUBLIC)
+    assert result["source_bindings"]["private_campaign_bytes_hash"] == "sha256:" + hashlib.sha256(PRIVATE.read_bytes()).hexdigest()
     assert result["counts"] == {"total": 18, "promoted": 1, "withheld": 17}
     assert result["m9_consumer_gate"] == "BLOCKED_CONFORMANCE_ONLY"
-    assert result["verdict"] == "VALID_SUBSET_PROMOTION_CONFORMANCE"
 
 
-def test_positive_fixture_locks_inclusive_equality_boundary() -> None:
-    campaign = load(PRIVATE)
-    numeric_matches = [
-        assessment["comparator"]
-        for candidate in campaign["candidates"]
-        for assessment in candidate["assessments"]
-        if assessment["comparator"]["class"] == "NUMERIC_DECLARED_GRANULARITY"
-        and assessment["comparator"]["outcome"] == "MATCH"
-    ]
-    assert any(
-        comparator["delta"] == comparator["declared_spine_step"]
-        for comparator in numeric_matches
-    )
-
-
-def test_numeric_rule_is_inclusive_at_the_declared_spine_step(tmp_path: pathlib.Path) -> None:
+def test_live_public_requires_validated_byte_identical_private_campaign(tmp_path: pathlib.Path) -> None:
     validator = module()
-    campaign = load(PRIVATE)
-    leaf = promoted(campaign)
-    for assessment in leaf["assessments"]:
-        assessment["ebus_sample"]["value"]["decimal"] = {"number": 125, "scale": -1}
-        assessment["eebus_sample"]["value"]["decimal"] = {"number": 13, "scale": 0}
-        assessment["comparator"]["delta"] = {"number": 5, "scale": -1}
-        assessment["comparator"]["declared_spine_step"] = {"number": 5, "scale": -1}
-    rehash_campaign(validator, campaign)
-    result = run("verify-private", write(tmp_path / "inclusive.json", campaign))
-    assert (result.returncode, result.stdout) == (0, "PASS\n")
+    private_path = write(tmp_path / "live-private.json", live_campaign(validator))
+    derived = run("derive-public", private_path)
+    assert derived.returncode == 0
+    public_path = tmp_path / "live-public.json"
+    public_path.write_text(derived.stdout, encoding="utf-8")
+
+    standalone = run("verify-public", public_path)
+    assert (standalone.returncode, standalone.stdout) == (1, "private.required\n")
+    bound = run("verify-public", public_path, private_campaign=private_path)
+    assert (bound.returncode, bound.stdout) == (0, "PASS\n")
+
+    byte_variant = tmp_path / "live-private-byte-variant.json"
+    byte_variant.write_bytes(private_path.read_bytes() + b"\n")
+    mismatch = run("verify-public", public_path, private_campaign=byte_variant)
+    assert (mismatch.returncode, mismatch.stdout) == (1, "private.binding\n")
 
 
-def test_capture_skew_and_age_limits_are_catalog_owned(tmp_path: pathlib.Path) -> None:
-    validator = module()
-    campaign = load(PRIVATE)
-    leaf = promoted(campaign)
-    leaf["assessments"][0]["max_skew_ns"] = 2_000_000_000
-    leaf["assessments"][0]["max_age_ns"] = 20_000_000_000
-    rehash_campaign(validator, campaign)
-    result = run("verify-private", write(tmp_path / "widened-capture-limits.json", campaign))
-    assert (result.returncode, result.stdout) == (1, "sample.invalid\n")
-
-
-def test_sanitized_campaign_cannot_be_relabelled_live(tmp_path: pathlib.Path) -> None:
-    validator = module()
-    campaign = load(PRIVATE)
-    campaign["evidence_mode"] = "LIVE_CAPTURE"
-    rehash_campaign(validator, campaign)
-    result = run("derive-public", write(tmp_path / "relabelled-live.json", campaign))
-    assert (result.returncode, result.stdout) == (1, "provenance.binding\n")
-
-
-def test_public_terminal_candidate_cannot_be_promoted_by_rehashing(tmp_path: pathlib.Path) -> None:
+def test_relabelled_public_cannot_open_m9(tmp_path: pathlib.Path) -> None:
     validator = module()
     public = load(PUBLIC)
-    terminal = public["candidate_results"][0]
-    terminal.update(
-        {
-            "decision": "PROMOTED",
-            "terminal_state": None,
-            "visibility": "LOCKED_NOT_EXPOSED",
-            "dossier_hash": "sha256:" + "e" * 64,
-            "window_outcomes": ["MATCH", "MATCH"],
-        }
-    )
     public["evidence_mode"] = "LIVE_CAPTURE"
-    public["counts"] = {"total": 18, "promoted": 2, "withheld": 16}
+    public["provenance"]["class"] = "LIVE_CAPTURE"
     public["m9_consumer_gate"] = "READY_FOR_M9_PLANNING"
     public["verdict"] = "VALID_PROMOTION_LOCK"
     rehash_public(validator, public)
-    result = run("verify-public", write(tmp_path / "terminal-promoted.json", public))
-    assert (result.returncode, result.stdout) == (1, "candidate.catalog\n")
+    path = write(tmp_path / "relabelled-public.json", public)
+    standalone = run("verify-public", path)
+    assert (standalone.returncode, standalone.stdout) == (1, "private.required\n")
+    rebound = run("verify-public", path, private_campaign=PRIVATE)
+    assert (rebound.returncode, rebound.stdout) == (1, "private.binding\n")
 
 
-def test_protocol_step_and_descriptor_cannot_be_substituted(tmp_path: pathlib.Path) -> None:
-    validator = module()
-
-    inflated = load(PRIVATE)
-    leaf = promoted(inflated)
-    for assessment in leaf["assessments"]:
-        assessment["comparator"]["declared_spine_step"] = {"number": 99, "scale": 0}
-    rehash_campaign(validator, inflated)
-    result = run("verify-private", write(tmp_path / "inflated-step.json", inflated))
-    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
-
-    changed_identity = load(PRIVATE)
-    promoted(changed_identity)["eebus_identity"]["descriptor"] = "dhwTemperature"
-    rehash_campaign(validator, changed_identity)
-    result = run("verify-private", write(tmp_path / "changed-descriptor.json", changed_identity))
-    assert (result.returncode, result.stdout) == (1, "identity.binding\n")
-
-    invented_unit = load(PRIVATE)
-    enum_identity = next(
-        item for item in invented_unit["candidates"]
-        if item["candidate_id"] == "m7-candidate-0007"
-    )["eebus_identity"]
-    enum_identity["unit"] = "unitless"
-    rehash_campaign(validator, invented_unit)
-    result = run("verify-private", write(tmp_path / "invented-unit.json", invented_unit))
-    assert (result.returncode, result.stdout) == (1, "identity.binding\n")
-
-
-def test_mapping_hash_is_catalog_derived_not_campaign_authority(tmp_path: pathlib.Path) -> None:
+def test_eligible_terminal_state_is_derived_from_two_ordered_windows(tmp_path: pathlib.Path) -> None:
     validator = module()
     campaign = load(PRIVATE)
-    leaf = promote_enum_candidate(validator, campaign, "m7-candidate-0007")
-    leaf["assessments"][0]["comparator"]["mapping_hash"] = "sha256:" + "f" * 64
-    rehash_campaign(validator, campaign)
-    result = run("verify-private", write(tmp_path / "substituted-mapping.json", campaign))
-    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+    registry = load(REGISTRY)
+    for leaf, expected in zip(campaign["candidates"], registry["candidate_catalog"], strict=True):
+        if expected["protocol_eligibility"] == "ELIGIBLE":
+            assert [item["window_id"] for item in leaf["assessments"]] == [
+                "window-pre-restart",
+                "window-post-restart",
+            ]
+        else:
+            assert leaf["assessments"] == []
 
-    raw_substitution = load(PRIVATE)
-    raw_leaf = promote_enum_candidate(validator, raw_substitution, "m7-candidate-0007")
-    raw_leaf["assessments"][0]["eebus_sample"]["raw_value"]["decimal"] = {
-        "number": 1,
-        "scale": 0,
-    }
-    rehash_campaign(validator, raw_substitution)
-    result = run("verify-private", write(tmp_path / "substituted-raw-map.json", raw_substitution))
-    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+    wrong_terminal = load(PRIVATE)
+    candidate(wrong_terminal, "m7-candidate-0005")["terminal_state"] = "MISMATCH"
+    rehash_campaign(validator, wrong_terminal)
+    result = run("verify-private", write(tmp_path / "wrong-terminal.json", wrong_terminal))
+    assert (result.returncode, result.stdout) == (1, "state.invalid\n")
 
-    unit_substitution = load(PRIVATE)
-    unit_leaf = promote_enum_candidate(validator, unit_substitution, "m7-candidate-0007")
-    unit_leaf["assessments"][0]["eebus_sample"]["unit"] = "unitless"
-    rehash_campaign(validator, unit_substitution)
-    result = run("verify-private", write(tmp_path / "substituted-mapped-unit.json", unit_substitution))
-    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+    missing_window = load(PRIVATE)
+    candidate(missing_window, "m7-candidate-0005")["assessments"].pop()
+    rehash_campaign(validator, missing_window)
+    result = run("verify-private", write(tmp_path / "missing-window.json", missing_window))
+    assert (result.returncode, result.stdout) == (1, "state.invalid\n")
 
 
-def test_missing_ebus_capability_source_cannot_be_promoted(tmp_path: pathlib.Path) -> None:
+def test_catalog_terminal_and_capability_exceptions_remain_exact(tmp_path: pathlib.Path) -> None:
     validator = module()
     public = load(PUBLIC)
-    item = next(candidate for candidate in public["candidate_results"] if candidate["candidate_id"] == "m7-candidate-0008")
-    item.update(
+    terminal = public["candidate_results"][0]
+    terminal.update({"terminal_state": "MISSING", "window_outcomes": ["MISSING", "MISSING"]})
+    rehash_public(validator, public)
+    result = run("verify-public", write(tmp_path / "terminal-relabel.json", public))
+    assert (result.returncode, result.stdout) == (1, "candidate.catalog\n")
+
+    public = load(PUBLIC)
+    capability = next(item for item in public["candidate_results"] if item["candidate_id"] == "m7-candidate-0008")
+    capability.update(
         {
             "decision": "PROMOTED",
             "terminal_state": None,
@@ -368,37 +376,174 @@ def test_missing_ebus_capability_source_cannot_be_promoted(tmp_path: pathlib.Pat
     assert (result.returncode, result.stdout) == (1, "candidate.catalog\n")
 
 
-def test_restart_chronology_and_capture_generation_are_bound(tmp_path: pathlib.Path) -> None:
+def test_b524_selector_family_and_catalog_tuple_are_bound(tmp_path: pathlib.Path) -> None:
     validator = module()
+    campaign = load(PRIVATE)
+    identity = candidate(campaign, "m7-candidate-0005")["ebus_identity"]
+    identity["RR"] += 1
+    rehash_ebus_identity(validator, identity)
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "selector-substitution.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "identity.binding\n")
 
-    reversed_windows = load(PRIVATE)
-    post = reversed_windows["windows"][1]
-    post["started_at"] = "2026-08-11T09:55:00Z"
-    post["ended_at"] = "2026-08-11T09:55:10Z"
-    post_assessment = promoted(reversed_windows)["assessments"][1]
-    post_assessment["ebus_sample"]["observed_at"] = "2026-08-11T09:55:05Z"
-    post_assessment["eebus_sample"]["observed_at"] = "2026-08-11T09:55:05.100000000Z"
-    rehash_campaign(validator, reversed_windows)
-    result = run("verify-private", write(tmp_path / "reversed-windows.json", reversed_windows))
-    assert (result.returncode, result.stdout) == (1, "window.restart\n")
+    campaign = load(PRIVATE)
+    identity = candidate(campaign, "m7-candidate-0005")["ebus_identity"]
+    identity["family"] = "B509"
+    rehash_ebus_identity(validator, identity)
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "family-substitution.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "schema.private\n")
 
-    generation_mismatch = load(PRIVATE)
-    promoted(generation_mismatch)["assessments"][0]["eebus_sample"]["capture_generation"] = "wrong-generation"
-    rehash_campaign(validator, generation_mismatch)
-    result = run("verify-private", write(tmp_path / "capture-generation.json", generation_mismatch))
+
+def test_full_eebus_source_profile_and_identity_hash_are_bound(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    registry = load(REGISTRY)
+    campaign = load(PRIVATE)
+    leaf = candidate(campaign, "m7-candidate-0007")
+    identity = leaf["eebus_identity"]
+    identity["description_functions"] = ["hvacSystemFunctionDescriptionListData"]
+    source_keys = registry["candidate_catalog"][6]["eebus_source"].keys()
+    substituted_source = {key: identity[key] for key in source_keys}
+    identity["source_profile_hash"] = validator.digest(
+        validator.SOURCE_PROFILE_DOMAIN, substituted_source
+    )
+    rehash_eebus_identity(validator, identity)
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "source-profile-substitution.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "identity.binding\n")
+
+    campaign = load(PRIVATE)
+    candidate(campaign, "m7-candidate-0007")["eebus_identity"]["feature_address"] += 1
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "native-identity-substitution.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "identity.binding\n")
+
+
+def test_raw_hash_and_numeric_raw_to_decoded_identity_are_bound(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    sample = promoted(campaign)["assessments"][0]["ebus_sample"]
+    sample["raw_value"]["decimal"] = {"number": 126, "scale": -1}
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "raw-hash-substitution.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "raw.binding\n")
+
+    campaign = load(PRIVATE)
+    sample = promoted(campaign)["assessments"][0]["ebus_sample"]
+    sample["raw_value"]["decimal"] = {"number": 126, "scale": -1}
+    rehash_raw(validator, sample)
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "raw-decoded-substitution.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "raw.binding\n")
+
+
+def test_enum_and_boolean_raw_pairs_are_catalog_mapped(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    for candidate_id in ("m7-candidate-0007", "m7-candidate-0009"):
+        campaign = load(PRIVATE)
+        leaf = promote_mapped_candidate(validator, campaign, candidate_id)
+        rehash_campaign(validator, campaign)
+        passing = run("verify-private", write(tmp_path / f"{candidate_id}-valid.json", campaign))
+        assert (passing.returncode, passing.stdout) == (0, "PASS\n")
+
+        raw = leaf["assessments"][0]["eebus_sample"]["raw_value"]
+        if raw["kind"] == "NUMERIC":
+            raw["decimal"] = {"number": 1, "scale": 0}
+        else:
+            raw["boolean"] = True
+        rehash_raw(validator, leaf["assessments"][0]["eebus_sample"])
+        rehash_campaign(validator, campaign)
+        result = run("verify-private", write(tmp_path / f"{candidate_id}-raw-substitution.json", campaign))
+        assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+
+    campaign = load(PRIVATE)
+    sample = candidate(campaign, "m7-candidate-0007")["assessments"][0]["eebus_sample"]
+    sample["raw_value"]["decimal"] = {"number": 1, "scale": 0}
+    rehash_raw(validator, sample)
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "missing-peer-raw-substitution.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+
+
+def test_numeric_rule_is_inclusive_and_catalog_owned(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    comparators = [item["comparator"] for item in promoted(campaign)["assessments"]]
+    assert all(item["delta"] == item["declared_spine_step"] for item in comparators)
+    comparators[0]["declared_spine_step"] = {"number": 99, "scale": 0}
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "inflated-step.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+
+
+def test_mismatch_is_recomputed_from_bound_values(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    leaf = promoted(campaign)
+    for assessment in leaf["assessments"]:
+        assessment["comparator"]["outcome"] = "MISMATCH"
+    leaf.update(
+        decision="WITHHELD",
+        terminal_state="MISMATCH",
+        visibility="RAW_DEBUG_ONLY",
+        dossier_hash=None,
+    )
+    rehash_campaign(validator, campaign)
+    fabricated = run(
+        "verify-private", write(tmp_path / "fabricated-mismatch.json", campaign)
+    )
+    assert (fabricated.returncode, fabricated.stdout) == (
+        1,
+        "comparator.invalid\n",
+    )
+
+    campaign = load(PRIVATE)
+    leaf = promoted(campaign)
+    for position, assessment in enumerate(leaf["assessments"]):
+        sample = assessment["eebus_sample"]
+        sample["raw_value"]["decimal"] = {"number": 14, "scale": 0}
+        sample["value"]["decimal"] = {"number": 14, "scale": 0}
+        rehash_raw(validator, sample)
+        assessment["comparator"]["delta"] = (
+            {"number": 15, "scale": -1}
+            if position == 0
+            else {"number": 1, "scale": 0}
+        )
+        assessment["comparator"]["outcome"] = "MISMATCH"
+    leaf.update(
+        decision="WITHHELD",
+        terminal_state="MISMATCH",
+        visibility="RAW_DEBUG_ONLY",
+        dossier_hash=None,
+    )
+    rehash_campaign(validator, campaign)
+    observed = run("verify-private", write(tmp_path / "observed-mismatch.json", campaign))
+    assert (observed.returncode, observed.stdout) == (0, "PASS\n")
+
+
+def test_capture_limits_and_restart_generation_are_bound(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    promoted(campaign)["assessments"][0]["max_skew_ns"] *= 2
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "widened-limit.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "sample.invalid\n")
+
+    campaign = load(PRIVATE)
+    promoted(campaign)["assessments"][0]["eebus_sample"]["capture_generation"] = "wrong"
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "wrong-generation.json", campaign))
     assert (result.returncode, result.stdout) == (1, "sample.invalid\n")
 
 
-def test_canonical_json_emits_unicode_as_utf8() -> None:
-    validator = module()
-    assert validator.canonical({"text": "é"}) == '{"text":"é"}'.encode("utf-8")
-
-
-def test_generator_is_deterministic() -> None:
-    before = {path: path.read_bytes() for path in (PRIVATE, PUBLIC)}
-    result = subprocess.run([sys.executable, str(GENERATOR)], cwd=ROOT, check=False, capture_output=True, text=True)
-    assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
-    assert before == {path: path.read_bytes() for path in (PRIVATE, PUBLIC)}
+def test_existing_zero_profile_canonical_bytes_are_unchanged() -> None:
+    expected = {
+        "leaf-promotion-registry-v1.json": "ad33736c00aa2c3ecaac981606d25c064088c80cb72ca5389b83c5d9df40f6a3",
+        "../fixtures/leaf-promotion-dossier/v1/positive/dossier.json": "3b12e3b6f625f6efb28fced19d679ab73b974fc4369e0dba9f61f1a2d104ec64",
+        "../fixtures/leaf-promotion-dossier/v1/positive/result.json": "a4e5deb1027e337e917304addfa1aebaaf8f04659d7de38b36083c78525d1a04",
+    }
+    for relative, expected_hash in expected.items():
+        assert hashlib.sha256((SCHEMA_ROOT / relative).resolve().read_bytes()).hexdigest() == expected_hash
 
 
 def mutate(campaign: dict, public: dict, mutation: str) -> tuple[str, dict]:
@@ -437,8 +582,7 @@ def test_negative_vectors_are_closed_and_fail_in_declared_category(tmp_path: pat
     baseline_private = load(PRIVATE)
     baseline_public = load(PUBLIC)
     for name, (mutation, category) in EXPECTED_NEGATIVE.items():
-        descriptor = load(NEGATIVE / name)
-        assert descriptor == {
+        assert load(NEGATIVE / name) == {
             "contract": "helianthus.platform.leaf-promotion-captured-multi-leaf-negative.v1",
             "mutation": mutation,
             "expected_category": category,
@@ -448,7 +592,7 @@ def test_negative_vectors_are_closed_and_fail_in_declared_category(tmp_path: pat
         assert (result.returncode, result.stdout, result.stderr) == (1, category + "\n", ""), name
 
 
-def test_no_secret_or_candidate_ref_field_exists_in_either_tier(tmp_path: pathlib.Path) -> None:
+def test_public_redaction_and_private_schema_fail_closed(tmp_path: pathlib.Path) -> None:
     for path in (PRIVATE, PUBLIC):
         serialized = path.read_text(encoding="utf-8").lower()
         for forbidden in ("private_key", "trust_store", "candidate_ref", "ship_id", "ski", "token"):
@@ -459,14 +603,19 @@ def test_no_secret_or_candidate_ref_field_exists_in_either_tier(tmp_path: pathli
     assert (result.returncode, result.stdout) == (1, "schema.private\n")
 
 
-def test_negative_zero_and_public_gate_substitution_fail_closed(tmp_path: pathlib.Path) -> None:
-    raw = PRIVATE.read_text(encoding="utf-8").replace('"scale":0', '"scale":-0', 1)
-    negative_zero = tmp_path / "negative-zero.json"
-    negative_zero.write_text(raw, encoding="utf-8")
-    result = run("verify-private", negative_zero)
-    assert (result.returncode, result.stdout) == (1, "json.syntax\n")
+def test_canonical_json_emits_unicode_as_utf8() -> None:
+    validator = module()
+    assert validator.canonical({"text": "é"}) == '{"text":"é"}'.encode("utf-8")
 
-    public = load(PUBLIC)
-    public["m9_consumer_gate"] = "READY_FOR_M9_PLANNING"
-    result = run("verify-public", write(tmp_path / "public-gate.json", public))
-    assert (result.returncode, result.stdout) == (1, "state.invalid\n")
+
+def test_generator_is_deterministic() -> None:
+    before = {path: path.read_bytes() for path in (PRIVATE, PUBLIC)}
+    result = subprocess.run(
+        [sys.executable, str(GENERATOR)],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
+    assert before == {path: path.read_bytes() for path in (PRIVATE, PUBLIC)}

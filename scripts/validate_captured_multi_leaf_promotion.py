@@ -30,8 +30,12 @@ DOSSIER_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:CAPTURED-DOSSIER:V1\x00"
 RESULT_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:CAPTURED-PUBLIC:V1\x00"
 REPLAY_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:CAPTURED-REPLAY:V1\x00"
 SOURCE_PROFILE_DOMAIN = b"HELIANTHUS:EEBUS:SOURCE-PROFILE:V1\x00"
+EEBUS_IDENTITY_DOMAIN = b"HELIANTHUS:EEBUS:CAPTURED-IDENTITY:V1\x00"
+EBUS_SELECTOR_DOMAIN = b"HELIANTHUS:EBUS:B524-SELECTOR:V1\x00"
+RAW_VALUE_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:RAW-VALUE:V1\x00"
 MAPPING_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:MAPPING:V1\x00"
 PROVENANCE_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:PROVENANCE:V1\x00"
+PINNED_REGISTRY_SHA256 = "sha256:854eb51398c949f14bc905d1d26c906f37243e4a218b7e990734064944621f59"
 SAFE_INTEGER = 9_007_199_254_740_991
 MAX_INPUT_BYTES = 1_048_576
 
@@ -96,6 +100,10 @@ def digest(domain: bytes, value: Any) -> str:
     return "sha256:" + hashlib.sha256(domain + canonical(value)).hexdigest()
 
 
+def bytes_digest(value: bytes) -> str:
+    return "sha256:" + hashlib.sha256(value).hexdigest()
+
+
 def schema_validate(value: dict[str, Any], path: pathlib.Path, category: str) -> None:
     schema, _ = load_json(path)
     if not candidate_schema._schema_validate(value, schema, schema):
@@ -125,7 +133,9 @@ def timestamp_ns(value: str) -> int:
 
 
 def registry_value(path: pathlib.Path) -> dict[str, Any]:
-    registry, _ = load_json(path)
+    registry, raw = load_json(path)
+    if bytes_digest(raw) != PINNED_REGISTRY_SHA256:
+        fail("registry.binding")
     if (
         registry.get("contract")
         != "helianthus.platform.leaf-promotion-captured-multi-leaf-registry.v1"
@@ -174,6 +184,15 @@ def _typed(value: dict[str, Any], expected: str) -> Any:
 def _validate_sample(sample: dict[str, Any], source: str, window: dict[str, Any]) -> None:
     if sample["source"] != source or not sample["valid"]:
         fail("sample.invalid")
+    if sample["raw_hash"] != digest(RAW_VALUE_DOMAIN, sample["raw_value"]):
+        fail("raw.binding")
+    if sample["value"]["kind"] == "NUMERIC":
+        if (
+            sample["raw_value"]["kind"] != "NUMERIC"
+            or _typed(sample["raw_value"], "NUMERIC")
+            != _typed(sample["value"], "NUMERIC")
+        ):
+            fail("raw.binding")
     observed = timestamp_ns(sample["observed_at"])
     if observed < timestamp_ns(window["started_at"]) or observed > timestamp_ns(window["ended_at"]):
         fail("sample.invalid")
@@ -225,6 +244,27 @@ def _raw_profile_value(value: dict[str, Any]) -> Any:
     fail("comparator.invalid")
 
 
+def _protocol_raw_value(value: dict[str, Any]) -> Any:
+    raw = _raw_profile_value(value)
+    if value["kind"] != "NUMERIC":
+        return raw
+    numeric = decimal_value(raw)
+    if numeric != numeric.to_integral_value():
+        fail("comparator.invalid")
+    return int(numeric)
+
+
+def _protocol_mapping_matches(source: dict[str, Any], sample: dict[str, Any], normalized: Any) -> bool:
+    profile = source.get("exact_mapping")
+    if not isinstance(profile, dict) or not isinstance(profile.get("pairs"), list):
+        return False
+    raw = _protocol_raw_value(sample["raw_value"])
+    return any(
+        pair == {"raw": raw, "normalized": normalized}
+        for pair in profile["pairs"]
+    )
+
+
 def _mapping_pair_matches(
     expected: dict[str, Any], ebus: dict[str, Any], eebus: dict[str, Any], normalized: Any
 ) -> bool:
@@ -239,6 +279,30 @@ def _mapping_pair_matches(
     )
 
 
+def _catalog_sample_matches(
+    expected: dict[str, Any], sample: dict[str, Any], sample_source: str
+) -> bool:
+    source = expected["eebus_source"]
+    comparator_class = expected["comparator_class"]
+    if comparator_class == "NUMERIC_DECLARED_GRANULARITY":
+        expected_unit = source["conversion"][
+            "source_unit" if sample_source == "EBUS" else "target_unit"
+        ]
+        return sample["value"]["kind"] == "NUMERIC" and sample["unit"] == expected_unit
+    expected_kind = "ENUM" if comparator_class == "ENUM_EXACT_MAPPING" else "BOOLEAN"
+    if sample["value"]["kind"] != expected_kind or sample["unit"] != source["unit"]:
+        return False
+    normalized = _typed(sample["value"], expected_kind)
+    if sample_source == "EEBUS":
+        return _protocol_mapping_matches(source, sample, normalized)
+    ebus_raw = _raw_profile_value(sample["raw_value"])
+    profile = source["mapping_profile"]
+    return any(
+        pair["ebus_raw"] == ebus_raw and pair["normalized"] == normalized
+        for pair in profile["pairs"]
+    )
+
+
 def _validate_match(
     assessment: dict[str, Any],
     expected: dict[str, Any],
@@ -246,24 +310,7 @@ def _validate_match(
     capture_limits: dict[str, int],
 ) -> None:
     comparator_class = expected["comparator_class"]
-    ebus = assessment["ebus_sample"]
-    eebus = assessment["eebus_sample"]
-    if ebus is None or eebus is None:
-        fail("comparator.invalid")
-    _validate_sample(ebus, "EBUS", window)
-    _validate_sample(eebus, "EEBUS", window)
-    if (
-        assessment["max_skew_ns"] != capture_limits["max_skew_ns"]
-        or assessment["max_age_ns"] != capture_limits["max_age_ns"]
-    ):
-        fail("sample.invalid")
-    ebus_ns = timestamp_ns(ebus["observed_at"])
-    eebus_ns = timestamp_ns(eebus["observed_at"])
-    if assessment["skew_ns"] != abs(ebus_ns - eebus_ns) or assessment["skew_ns"] > assessment["max_skew_ns"]:
-        fail("sample.invalid")
-    age = max(timestamp_ns(window["ended_at"]) - ebus_ns, timestamp_ns(window["ended_at"]) - eebus_ns)
-    if assessment["age_ns"] != age or age > assessment["max_age_ns"]:
-        fail("sample.invalid")
+    ebus, eebus = _validate_pair(assessment, window, capture_limits)
 
     comparator = assessment["comparator"]
     if comparator["class"] != comparator_class or comparator["outcome"] != "MATCH":
@@ -272,7 +319,7 @@ def _validate_match(
     if comparator_class == "NUMERIC_DECLARED_GRANULARITY":
         step = decimal_value(comparator["declared_spine_step"])
         if (
-            comparator["declared_spine_step"] != source["declared_step"]
+            comparator["declared_spine_step"] != source["declared_constraints"]["step"]
             or comparator["conversion"] != source["conversion"]
             or step is None
             or step <= 0
@@ -299,8 +346,10 @@ def _validate_match(
         ):
             fail("comparator.invalid")
         normalized = _typed(ebus["value"], "ENUM")
-        if normalized != _typed(eebus["value"], "ENUM") or not _mapping_pair_matches(
-            expected, ebus, eebus, normalized
+        if (
+            normalized != _typed(eebus["value"], "ENUM")
+            or not _protocol_mapping_matches(source, eebus, normalized)
+            or not _mapping_pair_matches(expected, ebus, eebus, normalized)
         ):
             fail("comparator.invalid")
     elif comparator_class == "BOOLEAN_EXACT_MAPPING":
@@ -314,12 +363,161 @@ def _validate_match(
         ):
             fail("comparator.invalid")
         normalized = _typed(ebus["value"], "BOOLEAN")
-        if normalized != _typed(eebus["value"], "BOOLEAN") or not _mapping_pair_matches(
-            expected, ebus, eebus, normalized
+        if (
+            normalized != _typed(eebus["value"], "BOOLEAN")
+            or not _protocol_mapping_matches(source, eebus, normalized)
+            or not _mapping_pair_matches(expected, ebus, eebus, normalized)
         ):
             fail("comparator.invalid")
     else:
         fail("comparator.invalid")
+
+
+def _validate_pair(
+    assessment: dict[str, Any],
+    window: dict[str, Any],
+    capture_limits: dict[str, int],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    ebus = assessment["ebus_sample"]
+    eebus = assessment["eebus_sample"]
+    if ebus is None or eebus is None:
+        fail("comparator.invalid")
+    _validate_sample(ebus, "EBUS", window)
+    _validate_sample(eebus, "EEBUS", window)
+    if (
+        assessment["max_skew_ns"] != capture_limits["max_skew_ns"]
+        or assessment["max_age_ns"] != capture_limits["max_age_ns"]
+    ):
+        fail("sample.invalid")
+    ebus_ns = timestamp_ns(ebus["observed_at"])
+    eebus_ns = timestamp_ns(eebus["observed_at"])
+    if (
+        assessment["skew_ns"] != abs(ebus_ns - eebus_ns)
+        or assessment["skew_ns"] > assessment["max_skew_ns"]
+    ):
+        fail("sample.invalid")
+    age = max(
+        timestamp_ns(window["ended_at"]) - ebus_ns,
+        timestamp_ns(window["ended_at"]) - eebus_ns,
+    )
+    if assessment["age_ns"] != age or age > assessment["max_age_ns"]:
+        fail("sample.invalid")
+    return ebus, eebus
+
+
+def _validate_ebus_identity(
+    identity: dict[str, Any],
+    selector: dict[str, Any],
+    windows: list[dict[str, Any]],
+) -> None:
+    if any(identity.get(key) != value for key, value in selector.items()):
+        fail("identity.binding")
+    if any(identity["source_address"] != window["admitted_source"] for window in windows):
+        fail("identity.binding")
+    selector_payload = {key: value for key, value in identity.items() if key != "selector_hash"}
+    if identity["selector_hash"] != digest(EBUS_SELECTOR_DOMAIN, selector_payload):
+        fail("identity.binding")
+
+
+def _validate_eebus_identity(identity: dict[str, Any], source: dict[str, Any]) -> None:
+    if any(identity.get(key) != value for key, value in source.items()):
+        fail("identity.binding")
+    if identity["source_profile_hash"] != digest(SOURCE_PROFILE_DOMAIN, source):
+        fail("identity.binding")
+    identity_payload = {key: value for key, value in identity.items() if key != "identity_hash"}
+    if identity["identity_hash"] != digest(EEBUS_IDENTITY_DOMAIN, identity_payload):
+        fail("identity.binding")
+
+
+def _validate_non_match_assessment(
+    assessment: dict[str, Any],
+    expected: dict[str, Any],
+    window: dict[str, Any],
+    capture_limits: dict[str, int],
+) -> None:
+    comparator = assessment["comparator"]
+    source = expected["eebus_source"]
+    if comparator["class"] != expected["comparator_class"]:
+        fail("comparator.invalid")
+    if (
+        assessment["max_skew_ns"] != capture_limits["max_skew_ns"]
+        or assessment["max_age_ns"] != capture_limits["max_age_ns"]
+    ):
+        fail("sample.invalid")
+    if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY":
+        if (
+            comparator["declared_spine_step"] != source["declared_constraints"]["step"]
+            or comparator["conversion"] != source["conversion"]
+            or comparator["mapping_hash"] is not None
+        ):
+            fail("comparator.invalid")
+    elif expected["comparator_class"] in {"ENUM_EXACT_MAPPING", "BOOLEAN_EXACT_MAPPING"}:
+        if (
+            comparator["declared_spine_step"] is not None
+            or comparator["delta"] is not None
+            or comparator["conversion"] is not None
+            or comparator["mapping_hash"] != _expected_mapping_hash(expected)
+        ):
+            fail("comparator.invalid")
+    else:
+        fail("comparator.invalid")
+
+    ebus = assessment["ebus_sample"]
+    eebus = assessment["eebus_sample"]
+    if ebus is None or eebus is None:
+        if (
+            comparator["outcome"] != "MISSING"
+            or assessment["skew_ns"] is not None
+            or assessment["age_ns"] is not None
+        ):
+            fail("state.invalid")
+        if ebus is not None:
+            _validate_sample(ebus, "EBUS", window)
+            if not _catalog_sample_matches(expected, ebus, "EBUS"):
+                fail("comparator.invalid")
+        if eebus is not None:
+            _validate_sample(eebus, "EEBUS", window)
+            if not _catalog_sample_matches(expected, eebus, "EEBUS"):
+                fail("comparator.invalid")
+        return
+    if comparator["outcome"] == "MISSING":
+        fail("state.invalid")
+    if comparator["outcome"] != "MISMATCH":
+        fail("state.invalid")
+
+    ebus, eebus = _validate_pair(assessment, window, capture_limits)
+    if not _catalog_sample_matches(expected, ebus, "EBUS") or not _catalog_sample_matches(
+        expected, eebus, "EEBUS"
+    ):
+        fail("comparator.invalid")
+
+    if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY":
+        step = decimal_value(comparator["declared_spine_step"])
+        left = _converted(_typed(ebus["value"], "NUMERIC"), comparator["conversion"])
+        right = _typed(eebus["value"], "NUMERIC")
+        delta = abs(left - right)
+        if decimal_value(comparator["delta"]) != delta or delta <= step:
+            fail("comparator.invalid")
+        return
+
+    expected_kind = (
+        "ENUM"
+        if expected["comparator_class"] == "ENUM_EXACT_MAPPING"
+        else "BOOLEAN"
+    )
+    if _typed(ebus["value"], expected_kind) == _typed(
+        eebus["value"], expected_kind
+    ):
+        fail("comparator.invalid")
+
+
+def _derived_terminal(outcomes: list[str]) -> str | None:
+    for outcome in outcomes:
+        if outcome != "MATCH":
+            if outcome in {"NOT_EVALUATED", "NOT_COMPARABLE"}:
+                fail("state.invalid")
+            return outcome
+    return None
 
 
 def _candidate_payload(candidate: dict[str, Any]) -> dict[str, Any]:
@@ -344,6 +542,12 @@ def replay_hash(value: dict[str, Any]) -> str:
 
 def verify_private(value: dict[str, Any], registry: dict[str, Any]) -> None:
     schema_validate(value, PRIVATE_SCHEMA, "schema.private")
+    if (
+        value["source_bindings"]["registry_sha256"] != PINNED_REGISTRY_SHA256
+        or value["source_bindings"]["docs_eebus_commit"]
+        != registry["docs_eebus_source_commit"]
+    ):
+        fail("registry.binding")
     provenance = value["provenance"]
     if provenance["class"] != value["evidence_mode"]:
         fail("provenance.binding")
@@ -358,6 +562,7 @@ def verify_private(value: dict[str, Any], registry: dict[str, Any]) -> None:
         or provenance["deployment_binary_hash"] is None
     ):
         fail("provenance.binding")
+
     windows = value["windows"]
     capture_limits = registry.get("capture_limits")
     if (
@@ -390,14 +595,25 @@ def verify_private(value: dict[str, Any], registry: dict[str, Any]) -> None:
         fail("window.restart")
 
     catalog = registry["candidate_catalog"]
-    if [item["candidate_id"] for item in value["candidates"]] != [item["candidate_id"] for item in catalog]:
+    if [item["candidate_id"] for item in value["candidates"]] != [
+        item["candidate_id"] for item in catalog
+    ]:
         fail("candidate.catalog")
+    window_ids = [window["window_id"] for window in windows]
     window_by_id = {window["window_id"]: window for window in windows}
+    ebus_peer: tuple[Any, ...] | None = None
     for candidate, expected in zip(value["candidates"], catalog, strict=True):
-        for field in ("candidate_id", "fact_hash", "source_status", "semantic_path", "comparator_class"):
+        for field in (
+            "candidate_id",
+            "fact_hash",
+            "source_status",
+            "semantic_path",
+            "comparator_class",
+        ):
             if candidate[field] != expected[field]:
                 fail("candidate.catalog")
-        if expected["source_status"] == "WITHHELD":
+
+        if expected["protocol_eligibility"] == "TERMINAL":
             if (
                 candidate["decision"] != "WITHHELD"
                 or candidate["terminal_state"] != expected["terminal_state"]
@@ -407,88 +623,80 @@ def verify_private(value: dict[str, Any], registry: dict[str, Any]) -> None:
                 or candidate["assessments"]
                 or candidate["dossier_hash"] is not None
             ):
-                fail("state.invalid")
+                fail("candidate.catalog")
             continue
-        if candidate["eebus_identity"] is None:
-            fail("identity.binding")
+
         source = expected["eebus_source"]
-        if source is None:
-            fail("candidate.catalog")
-        identity = candidate["eebus_identity"]
-        expected_identity = {
-            "entity_type": source["entity_type"],
-            "feature_type": source["feature_type"],
-            "feature_role": source["feature_role"],
-            "function": source["value_function"],
-            "field_path": source["field_path"],
-            "descriptor": source["descriptor"],
-            "unit": source["unit"],
-            "source_profile_hash": digest(SOURCE_PROFILE_DOMAIN, source),
-        }
-        if any(identity[field] != expected_value for field, expected_value in expected_identity.items()):
+        if source is None or candidate["eebus_identity"] is None:
             fail("identity.binding")
+        _validate_eebus_identity(candidate["eebus_identity"], source)
+
         if expected["protocol_eligibility"] == "WITHHOLD_NO_EBUS_CAPABILITY_SOURCE":
             if (
-                candidate["decision"] != "WITHHELD"
+                expected["ebus_selector"] is not None
+                or candidate["decision"] != "WITHHELD"
                 or candidate["terminal_state"] != "NOT_COMPARABLE"
+                or candidate["visibility"] != "RAW_DEBUG_ONLY"
                 or candidate["assessments"]
                 or candidate["ebus_identity"] is not None
                 or candidate["dossier_hash"] is not None
             ):
                 fail("candidate.catalog")
             continue
-        outcomes = [assessment["comparator"]["outcome"] for assessment in candidate["assessments"]]
-        if candidate["assessments"] and (
-            len(candidate["assessments"]) != 2
-            or [assessment["window_id"] for assessment in candidate["assessments"]]
-            != [window["window_id"] for window in windows]
-        ):
+
+        selector = expected["ebus_selector"]
+        if selector is None or candidate["ebus_identity"] is None:
+            fail("identity.binding")
+        _validate_ebus_identity(candidate["ebus_identity"], selector, windows)
+        peer = tuple(
+            candidate["ebus_identity"][key]
+            for key in ("target_pseudonym", "target_address", "source_address")
+        )
+        if ebus_peer is None:
+            ebus_peer = peer
+        elif peer != ebus_peer:
+            fail("identity.binding")
+
+        assessments = candidate["assessments"]
+        if len(assessments) != 2 or [item["window_id"] for item in assessments] != window_ids:
             fail("state.invalid")
-        if candidate["decision"] == "PROMOTED":
+        outcomes = [assessment["comparator"]["outcome"] for assessment in assessments]
+        for assessment in assessments:
+            window = window_by_id[assessment["window_id"]]
+            if assessment["comparator"]["outcome"] == "MATCH":
+                _validate_match(assessment, expected, window, capture_limits)
+            else:
+                _validate_non_match_assessment(assessment, expected, window, capture_limits)
+
+        terminal = _derived_terminal(outcomes)
+        if terminal is None:
             if (
-                candidate["ebus_identity"] is None
-                or len(candidate["assessments"]) != 2
-                or [assessment["window_id"] for assessment in candidate["assessments"]] != [window["window_id"] for window in windows]
-                or outcomes != ["MATCH", "MATCH"]
+                candidate["decision"] != "PROMOTED"
                 or candidate["terminal_state"] is not None
                 or candidate["visibility"] != "LOCKED_NOT_EXPOSED"
+                or candidate["dossier_hash"]
+                != digest(DOSSIER_DOMAIN, _candidate_payload(candidate))
             ):
                 fail("state.invalid")
-            if candidate["ebus_identity"]["source_address"] != windows[0]["admitted_source"]:
-                fail("identity.binding")
-            for assessment in candidate["assessments"]:
-                _validate_match(
-                    assessment,
-                    expected,
-                    window_by_id[assessment["window_id"]],
-                    capture_limits,
-                )
-            if candidate["dossier_hash"] != digest(DOSSIER_DOMAIN, _candidate_payload(candidate)):
-                fail("hash.dossier")
-        else:
-            if candidate["terminal_state"] is None or candidate["visibility"] != "RAW_DEBUG_ONLY" or candidate["dossier_hash"] is not None:
-                fail("state.invalid")
-            if outcomes and all(outcome == "MATCH" for outcome in outcomes):
-                fail("state.invalid")
-            for assessment in candidate["assessments"]:
-                if assessment["comparator"]["class"] != candidate["comparator_class"]:
-                    fail("comparator.invalid")
-                if assessment["comparator"]["outcome"] == "MATCH":
-                    _validate_match(
-                        assessment,
-                        expected,
-                        window_by_id[assessment["window_id"]],
-                        capture_limits,
-                    )
+        elif (
+            candidate["decision"] != "WITHHELD"
+            or candidate["terminal_state"] != terminal
+            or candidate["visibility"] != "RAW_DEBUG_ONLY"
+            or candidate["dossier_hash"] is not None
+        ):
+            fail("state.invalid")
+
     if value["source_bindings"]["replay_hash"] != replay_hash(value):
         fail("hash.replay")
-    expected_hash = digest(CAMPAIGN_DOMAIN, {key: item for key, item in value.items() if key != "campaign_hash"})
+    expected_hash = digest(
+        CAMPAIGN_DOMAIN,
+        {key: item for key, item in value.items() if key != "campaign_hash"},
+    )
     if value["campaign_hash"] != expected_hash:
         fail("hash.campaign")
 
 
-def derive_public(value: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]:
-    verify_private(value, registry)
+def _build_public(value: dict[str, Any], private_raw: bytes) -> dict[str, Any]:
     results = [
         {
             "candidate_id": candidate["candidate_id"],
@@ -522,12 +730,15 @@ def derive_public(value: dict[str, Any], registry: dict[str, Any]) -> dict[str, 
             "binding_hash": digest(PROVENANCE_DOMAIN, value["provenance"]),
         },
         "source_bindings": {
+            "registry_sha256": value["source_bindings"]["registry_sha256"],
+            "docs_eebus_commit": value["source_bindings"]["docs_eebus_commit"],
             "m7_graph_hash": value["source_bindings"]["m7_graph_hash"],
             "m7_status_hash": value["source_bindings"]["m7_status_hash"],
             "m8_evidence_hash": value["source_bindings"]["m8_evidence_hash"],
             "m8_report_hash": value["source_bindings"]["m8_report_hash"],
             "replay_hash": value["source_bindings"]["replay_hash"],
             "campaign_hash": value["campaign_hash"],
+            "private_campaign_bytes_hash": bytes_digest(private_raw),
         },
         "counts": {"total": 18, "promoted": promoted, "withheld": 18 - promoted},
         "candidate_results": results,
@@ -535,8 +746,19 @@ def derive_public(value: dict[str, Any], registry: dict[str, Any]) -> dict[str, 
         "verdict": verdict,
         "result_hash": "sha256:" + "0" * 64,
     }
-    public["result_hash"] = digest(RESULT_DOMAIN, {key: item for key, item in public.items() if key != "result_hash"})
-    verify_public(public, registry)
+    public["result_hash"] = digest(
+        RESULT_DOMAIN,
+        {key: item for key, item in public.items() if key != "result_hash"},
+    )
+    return public
+
+
+def derive_public(
+    value: dict[str, Any], registry: dict[str, Any], private_raw: bytes
+) -> dict[str, Any]:
+    verify_private(value, registry)
+    public = _build_public(value, private_raw)
+    _verify_public_structure(public, registry)
     return public
 
 
@@ -552,10 +774,18 @@ def _walk_keys(value: Any) -> list[str]:
     return []
 
 
-def verify_public(value: dict[str, Any], registry: dict[str, Any]) -> None:
+def _verify_public_structure(value: dict[str, Any], registry: dict[str, Any]) -> None:
     schema_validate(value, PUBLIC_SCHEMA, "schema.public")
     catalog = registry["candidate_catalog"]
-    if [item["candidate_id"] for item in value["candidate_results"]] != [item["candidate_id"] for item in catalog]:
+    if (
+        value["source_bindings"]["registry_sha256"] != PINNED_REGISTRY_SHA256
+        or value["source_bindings"]["docs_eebus_commit"]
+        != registry["docs_eebus_source_commit"]
+    ):
+        fail("registry.binding")
+    if [item["candidate_id"] for item in value["candidate_results"]] != [
+        item["candidate_id"] for item in catalog
+    ]:
         fail("candidate.catalog")
     if any(key in set(registry["public_forbidden_keys"]) for key in _walk_keys(value)):
         fail("redaction.public")
@@ -563,28 +793,46 @@ def verify_public(value: dict[str, Any], registry: dict[str, Any]) -> None:
     if value["counts"] != {"total": 18, "promoted": promoted, "withheld": 18 - promoted}:
         fail("state.invalid")
     for item, expected in zip(value["candidate_results"], catalog, strict=True):
-        if item["fact_hash"] != expected["fact_hash"]:
+        if item["candidate_id"] != expected["candidate_id"] or item["fact_hash"] != expected["fact_hash"]:
             fail("candidate.catalog")
-        if expected["source_status"] == "WITHHELD" and (
-            item["decision"] != "WITHHELD"
-            or item["terminal_state"] != expected["terminal_state"]
-            or item["visibility"] != "RAW_DEBUG_ONLY"
-            or item["dossier_hash"] is not None
-            or item["window_outcomes"]
-        ):
-            fail("candidate.catalog")
-        if expected["protocol_eligibility"] == "WITHHOLD_NO_EBUS_CAPABILITY_SOURCE" and (
-            item["decision"] != "WITHHELD"
-            or item["terminal_state"] != "NOT_COMPARABLE"
-            or item["visibility"] != "RAW_DEBUG_ONLY"
-            or item["dossier_hash"] is not None
-            or item["window_outcomes"]
-        ):
-            fail("candidate.catalog")
-        if item["decision"] == "PROMOTED":
-            if item["terminal_state"] is not None or item["visibility"] != "LOCKED_NOT_EXPOSED" or item["dossier_hash"] is None or item["window_outcomes"] != ["MATCH", "MATCH"]:
+        if expected["protocol_eligibility"] == "TERMINAL":
+            if (
+                item["decision"] != "WITHHELD"
+                or item["terminal_state"] != expected["terminal_state"]
+                or item["visibility"] != "RAW_DEBUG_ONLY"
+                or item["dossier_hash"] is not None
+                or item["window_outcomes"]
+            ):
+                fail("candidate.catalog")
+            continue
+        if expected["protocol_eligibility"] == "WITHHOLD_NO_EBUS_CAPABILITY_SOURCE":
+            if (
+                item["decision"] != "WITHHELD"
+                or item["terminal_state"] != "NOT_COMPARABLE"
+                or item["visibility"] != "RAW_DEBUG_ONLY"
+                or item["dossier_hash"] is not None
+                or item["window_outcomes"]
+            ):
+                fail("candidate.catalog")
+            continue
+        outcomes = item["window_outcomes"]
+        if len(outcomes) != 2:
+            fail("state.invalid")
+        terminal = _derived_terminal(outcomes)
+        if terminal is None:
+            if (
+                item["decision"] != "PROMOTED"
+                or item["terminal_state"] is not None
+                or item["visibility"] != "LOCKED_NOT_EXPOSED"
+                or item["dossier_hash"] is None
+            ):
                 fail("state.invalid")
-        elif item["terminal_state"] is None or item["visibility"] != "RAW_DEBUG_ONLY" or item["dossier_hash"] is not None:
+        elif (
+            item["decision"] != "WITHHELD"
+            or item["terminal_state"] != terminal
+            or item["visibility"] != "RAW_DEBUG_ONLY"
+            or item["dossier_hash"] is not None
+        ):
             fail("state.invalid")
     if value["evidence_mode"] == "SANITIZED_CONFORMANCE":
         expected_gate = "BLOCKED_CONFORMANCE_ONLY"
@@ -599,9 +847,31 @@ def verify_public(value: dict[str, Any], registry: dict[str, Any]) -> None:
         fail("state.invalid")
     if value["provenance"]["class"] != value["evidence_mode"]:
         fail("provenance.binding")
-    expected_hash = digest(RESULT_DOMAIN, {key: item for key, item in value.items() if key != "result_hash"})
+    expected_hash = digest(
+        RESULT_DOMAIN,
+        {key: item for key, item in value.items() if key != "result_hash"},
+    )
     if value["result_hash"] != expected_hash:
         fail("hash.result")
+
+
+def verify_public(
+    value: dict[str, Any],
+    registry: dict[str, Any],
+    private_value: dict[str, Any] | None = None,
+    private_raw: bytes | None = None,
+) -> None:
+    _verify_public_structure(value, registry)
+    if value["evidence_mode"] == "LIVE_CAPTURE" and (
+        private_value is None or private_raw is None
+    ):
+        fail("private.required")
+    if (private_value is None) != (private_raw is None):
+        fail("private.required")
+    if private_value is not None and private_raw is not None:
+        verify_private(private_value, registry)
+        if value != _build_public(private_value, private_raw):
+            fail("private.binding")
 
 
 def main() -> int:
@@ -609,17 +879,22 @@ def main() -> int:
     parser.add_argument("command", choices=("verify-private", "derive-public", "verify-public"))
     parser.add_argument("--input", required=True, type=pathlib.Path)
     parser.add_argument("--registry", type=pathlib.Path, default=DEFAULT_REGISTRY)
+    parser.add_argument("--private-campaign", type=pathlib.Path)
     args = parser.parse_args()
     try:
-        value, _ = load_json(args.input)
+        value, raw = load_json(args.input)
         registry = registry_value(args.registry)
         if args.command == "verify-private":
             verify_private(value, registry)
             print("PASS")
         elif args.command == "derive-public":
-            print(canonical(derive_public(value, registry)).decode("utf-8"))
+            print(canonical(derive_public(value, registry, raw)).decode("utf-8"))
         else:
-            verify_public(value, registry)
+            private_value = None
+            private_raw = None
+            if args.private_campaign is not None:
+                private_value, private_raw = load_json(args.private_campaign)
+            verify_public(value, registry, private_value, private_raw)
             print("PASS")
         return 0
     except ValidationFailure as exc:

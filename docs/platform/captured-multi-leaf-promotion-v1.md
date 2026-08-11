@@ -19,18 +19,33 @@ evidence, deterministic replay, and dossier assembly. Protocol-independent
 freshness, unavailable policy, source precedence, semantic registry ownership,
 GraphQL, Portal, Home Assistant, and command routing remain outside this gate.
 
-The exact protocol selectors exist only in the `PRIVATE_OPERATOR` campaign.
+The exact captured protocol selectors exist only in the `PRIVATE_OPERATOR`
+campaign. Each eligible eBUS identity is family-discriminated as `B524` and
+binds the catalog-owned target address `0x15`, `(opcode, GG, II, RR)`, group
+meaning, instance gate, register category, and unit/scale source together with
+the captured target pseudonym and admitted source. A selector from another family or
+candidate is not interchangeable even when its decoded value is equal.
 The derived `PUBLIC_REDACTED` result retains candidate ids, content hashes,
 decisions, terminal outcomes, and replay bindings, but no eBUS addresses or
 eeBUS device, entity, feature, service, path, SKI, or SHIP identity. Neither
 tier may contain private keys, PEM private material, tokens, trust-store bytes,
 or `candidate_ref`.
 
-The eeBUS source contract used to select descriptors is grounded by
-`helianthus-docs-eebus` commit
-`657a36d07e52570326384b757a5382a6789f641b`. Public documentation names only
-publishable descriptors and functions. Exact native selectors and captured
-values remain private evidence.
+The eeBUS source contract is grounded by `helianthus-docs-eebus` commit
+`657a36d07e52570326384b757a5382a6789f641b`. For every protocol-present leaf,
+the registry owns the entity slot and type, feature type and role, complete
+description/constraints/value function lists, field path, complete descriptor,
+unit, declared minimum/maximum/step, conversion, exact protocol mapping, and
+cross-protocol raw-pair mapping. The private eeBUS identity reproduces that
+whole profile, binds it with `source_profile_hash`, adds its captured native
+service/device/entity/feature selectors, and binds the complete result with
+`identity_hash`.
+
+The canonical registry is also an exact byte contract. Its raw SHA-256 is
+`854eb51398c949f14bc905d1d26c906f37243e4a218b7e990734064944621f59`, exposed
+as `registry_sha256=sha256:854eb51398c949f14bc905d1d26c906f37243e4a218b7e990734064944621f59`.
+`--registry` may name a byte-identical copy; it cannot substitute tolerances,
+selectors, mappings, or an eeBUS source profile.
 
 ## Candidate Classes
 
@@ -55,6 +70,14 @@ A strict subset may be promoted. A withheld sibling does not invalidate an
 otherwise complete dossier, and a promoted sibling supplies no inherited
 identity, comparator, or evidence.
 
+Every `ELIGIBLE` candidate has exactly two assessments in window order. Two
+`MATCH` outcomes derive `PROMOTED`; otherwise `WITHHELD` and its terminal state
+are derived from the first non-`MATCH` outcome in `PRE_RESTART`, then
+`POST_RESTART`, order. A campaign or public result cannot assert a different
+terminal state. The four catalog-terminal rows retain their exact catalog state
+without assessments. The three capability-only rows retain exactly
+`NOT_COMPARABLE` without an eBUS identity or assessments.
+
 ## Comparator Rules
 
 Numeric leaves use `NUMERIC_DECLARED_GRANULARITY`. Each capture window binds:
@@ -67,6 +90,12 @@ Numeric leaves use `NUMERIC_DECLARED_GRANULARITY`. Each capture window binds:
   generation, admitted eBUS source, the catalog-owned maximum skew of
   `1000000000` ns and maximum age of `10000000000` ns; and
 - one comparator outcome.
+
+Every non-null sample binds `raw_hash` deterministically to its complete
+`raw_value`. Numeric raw and decoded decimals must denote the same number.
+Enum and boolean samples instead require the exact eeBUS raw-to-decoded pair
+and the exact catalog cross-protocol pair; rehashing a substituted raw value
+does not make it comparable.
 
 The SPINE-declared step must be finite, positive, equal to the protocol catalog
 entry, and present in the same hashed evidence. A campaign cannot enlarge its
@@ -93,7 +122,8 @@ The campaign has exactly two ordered windows, `PRE_RESTART` and
 `POST_RESTART`, separated by a completed Home Assistant add-on restart. Their
 process-instance hashes must differ. The persistent local eeBUS identity hash,
 trust-state hash, admitted eBUS source, and exact candidate identity bindings
-must remain stable. Each promoted leaf must pass in both windows with valid
+must remain stable. Each eligible leaf has one assessment in both windows.
+Each promoted leaf must pass in both windows with valid
 samples, identical source identity, bounded skew and age, and no generation
 change within a window.
 
@@ -120,6 +150,13 @@ newline. It reads no network, wall clock, locale, or host identity. Unknown
 fields, duplicate JSON keys, malformed UTF-8, non-integer JSON numbers,
 negative zero, invalid decimal scales, unordered candidates/windows, and
 unregistered candidate ids are rejected.
+
+The public result records `private_campaign_bytes_hash`, the SHA-256 of the
+exact private input bytes from which it was derived. For `LIVE_CAPTURE`,
+`verify-public` requires `--private-campaign PATH`, successfully validates that
+private campaign against the pinned registry, recomputes the byte hash, and
+requires byte-for-object equality with a fresh deterministic public derivation.
+A standalone or relabeled public object therefore cannot open M9.
 
 The repository fixture is `SANITIZED_CONFORMANCE`; its closed provenance names
 the canonical generator and fixture id, while all selector values are synthetic
