@@ -172,7 +172,12 @@ ignored files in the operator's supplied checkout cannot enter this build. A
 filesystem-backed Go module replacement is rejected; versioned module
 replacements remain admissible under the committed module graph. The rebuild
 also rejects tracked symlinks and gitlinks, so a tracked source path cannot
-escape the materialized checkout. A
+escape the materialized checkout. Git checkout ignores global and system
+configuration, rejects active content filters, and verifies every materialized
+regular file against its committed blob without filters. Go build disables
+persisted `GOENV` configuration and fixes the baseline architecture tuning for
+the declared target (`GO386=sse2`, `GOAMD64=v1`, `GOARM64=v8.0`, or the
+declared `GOARM=v6/v7`). A
 change to source identity, descriptor, unit/conversion, declared step,
 generation, validity, comparator, coexistence proof, or replay hash requires a
 new dossier.

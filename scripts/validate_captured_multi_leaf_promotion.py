@@ -813,13 +813,18 @@ def _redacted_binding_id(binding_hash: str) -> str:
 
 
 def _run_build_command(
-    command: list[str], *, cwd: pathlib.Path, env: dict[str, str] | None = None
+    command: list[str],
+    *,
+    cwd: pathlib.Path,
+    env: dict[str, str] | None = None,
+    input_data: bytes | None = None,
 ) -> bytes:
     try:
         completed = subprocess.run(
             command,
             cwd=cwd,
             env=env,
+            input=input_data,
             check=False,
             capture_output=True,
             timeout=300,
@@ -864,13 +869,42 @@ def _reject_local_module_replacements(raw: bytes) -> None:
             fail("live.deployment")
 
 
-def _reject_nonregular_tracked_entries(raw: bytes) -> None:
+def _regular_tracked_entries(raw: bytes) -> list[tuple[bytes, str]]:
     entries = [entry for entry in raw.split(b"\x00") if entry]
     if not entries:
         fail("live.deployment")
+    result: list[tuple[bytes, str]] = []
     for entry in entries:
-        mode, separator, _ = entry.partition(b" ")
-        if not separator or mode not in {b"100644", b"100755"}:
+        metadata, separator, path = entry.partition(b"\t")
+        fields = metadata.split(b" ")
+        if (
+            not separator
+            or not path
+            or len(fields) != 3
+            or fields[0] not in {b"100644", b"100755"}
+            or not re.fullmatch(rb"[0-9a-f]{40}|[0-9a-f]{64}", fields[1])
+            or fields[2] != b"0"
+        ):
+            fail("live.deployment")
+        try:
+            decoded_path = path.decode("utf-8", errors="strict")
+        except UnicodeError:
+            fail("live.deployment")
+        result.append((fields[1], decoded_path))
+    return result
+
+
+def _reject_filter_attributes(raw: bytes) -> None:
+    fields = raw.split(b"\x00")
+    if fields and fields[-1] == b"":
+        fields.pop()
+    if len(fields) % 3 != 0:
+        fail("live.deployment")
+    for index in range(0, len(fields), 3):
+        if fields[index + 1] != b"filter" or fields[index + 2] not in {
+            b"unspecified",
+            b"unset",
+        }:
             fail("live.deployment")
 
 
@@ -886,14 +920,27 @@ def _validate_reproducible_build(
     if not source_tree.is_dir():
         fail("live.deployment")
 
+    git_environment = {
+        "HOME": os.environ.get("HOME", str(source_tree)),
+        "PATH": os.environ.get("PATH", ""),
+        "GIT_ATTR_NOSYSTEM": "1",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_NOSYSTEM": "1",
+    }
     head = _run_build_command(
-        ["git", "rev-parse", "--verify", "HEAD"], cwd=source_tree
+        ["git", "rev-parse", "--verify", "HEAD"],
+        cwd=source_tree,
+        env=git_environment,
     )
     root = _run_build_command(
-        ["git", "rev-parse", "--show-toplevel"], cwd=source_tree
+        ["git", "rev-parse", "--show-toplevel"],
+        cwd=source_tree,
+        env=git_environment,
     )
     remote = _run_build_command(
-        ["git", "remote", "get-url", "origin"], cwd=source_tree
+        ["git", "remote", "get-url", "origin"],
+        cwd=source_tree,
+        env=git_environment,
     )
     if (
         _decode_build_output(head, "ascii").strip() != runtime["source_commit"]
@@ -925,12 +972,23 @@ def _validate_reproducible_build(
         "CGO_ENABLED": "0",
         "GOOS": target[0],
         "GOARCH": target[1],
+        "GOENV": "off",
         "GOTOOLCHAIN": "local",
         "GOFLAGS": "-mod=readonly",
         "GOWORK": "off",
     }
-    if len(target) == 3:
+    if target[1] == "arm":
+        if len(target) != 3:
+            fail("live.deployment")
         environment["GOARM"] = target[2].removeprefix("v")
+    elif len(target) != 2:
+        fail("live.deployment")
+    elif target[1] == "386":
+        environment["GO386"] = "sse2"
+    elif target[1] == "amd64":
+        environment["GOAMD64"] = "v1"
+    elif target[1] == "arm64":
+        environment["GOARM64"] = "v8.0"
     go_version = _run_build_command(
         ["go", "version"], cwd=source_tree, env=environment
     )
@@ -951,15 +1009,44 @@ def _validate_reproducible_build(
                 str(materialized),
             ],
             cwd=source_tree,
+            env=git_environment,
         )
         _run_build_command(
             ["git", "checkout", "--detach", runtime["source_commit"]],
             cwd=materialized,
+            env=git_environment,
         )
         tracked_entries = _run_build_command(
-            ["git", "ls-files", "--stage", "-z"], cwd=materialized
+            ["git", "ls-files", "--stage", "-z"],
+            cwd=materialized,
+            env=git_environment,
         )
-        _reject_nonregular_tracked_entries(tracked_entries)
+        regular_entries = _regular_tracked_entries(tracked_entries)
+        path_input = b"\x00".join(
+            path.encode("utf-8") for _, path in regular_entries
+        ) + b"\x00"
+        attributes = _run_build_command(
+            [
+                "git",
+                "check-attr",
+                "--stdin",
+                "-z",
+                "--source=" + runtime["source_commit"],
+                "filter",
+            ],
+            cwd=materialized,
+            env=git_environment,
+            input_data=path_input,
+        )
+        _reject_filter_attributes(attributes)
+        for expected_digest, path in regular_entries:
+            actual_digest = _run_build_command(
+                ["git", "hash-object", "--no-filters", "--", path],
+                cwd=materialized,
+                env=git_environment,
+            ).strip()
+            if actual_digest != expected_digest:
+                fail("live.deployment")
         module = _run_build_command(
             ["go", "mod", "edit", "-json"],
             cwd=materialized,
@@ -999,6 +1086,7 @@ def _validate_reproducible_build(
                 "--ignored=matching",
             ],
             cwd=materialized,
+            env=git_environment,
         )
         build_info = _decode_build_output(build_info, "utf-8")
     build_settings = {

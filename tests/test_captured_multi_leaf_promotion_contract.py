@@ -1376,6 +1376,104 @@ def test_reproducible_build_rejects_tracked_external_go_symlink(
     assert raised.value.category == "live.deployment"
 
 
+def test_reproducible_build_rejects_global_smudge_source_injection(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    validator = module()
+    git_home = tmp_path / "git-home"
+    git_home.mkdir()
+    monkeypatch.setenv("HOME", str(git_home))
+    source_tree, _, go_version, target_name = generated_gateway_source(tmp_path)
+    ignored_source = source_tree / "ignored-filter-source"
+    ignored_source.mkdir()
+    committed_go = ignored_source / "committed.go"
+    committed_go.write_text(
+        "package main\n\nconst committedInput = true\n", encoding="utf-8"
+    )
+    external_go = ignored_source / "external.go"
+    external_go.write_text(
+        'package main\n\nimport "fmt"\n\nfunc init() { fmt.Print("smudged-input") }\n',
+        encoding="utf-8",
+    )
+    (source_tree / ".git/info/exclude").write_text(
+        "ignored-filter-source/\n", encoding="utf-8"
+    )
+    for key, value in (
+        ("filter.external.clean", f"/bin/cat {committed_go}"),
+        ("filter.external.smudge", f"/bin/cat {external_go}"),
+        ("filter.external.required", "true"),
+    ):
+        subprocess.run(
+            ["git", "config", "--global", key, value],
+            check=True,
+            capture_output=True,
+        )
+    (source_tree / ".gitattributes").write_text(
+        "cmd/gateway/injected.go filter=external\n", encoding="utf-8"
+    )
+    injected_go = source_tree / "cmd/gateway/injected.go"
+    injected_go.write_text("placeholder\n", encoding="utf-8")
+    subprocess.run(
+        ["git", "add", ".gitattributes", "cmd/gateway/injected.go"],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Helianthus Test",
+            "-c",
+            "user.email=test@helianthus.invalid",
+            "commit",
+            "-q",
+            "-m",
+            "add filtered source",
+        ],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+    )
+    injected_go.unlink()
+    subprocess.run(
+        ["git", "checkout", "--", "cmd/gateway/injected.go"],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+    )
+    assert injected_go.read_bytes() == external_go.read_bytes()
+
+    binary = tmp_path / "global-smudge.bin"
+    runtime = build_gateway_runtime(
+        validator, source_tree, binary, go_version, target_name
+    )
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator._validate_reproducible_build(source_tree, binary, runtime)
+    assert raised.value.category == "live.deployment"
+
+
+def test_reproducible_build_rejects_persisted_goamd64(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    validator = module()
+    go_home = tmp_path / "go-home"
+    go_home.mkdir()
+    monkeypatch.setenv("HOME", str(go_home))
+    subprocess.run(
+        ["go", "env", "-w", "GOAMD64=v3"], check=True, capture_output=True
+    )
+    source_tree, _, go_version, _ = generated_gateway_source(tmp_path)
+    target_name = "linux/amd64"
+    binary = tmp_path / "hidden-goamd64.bin"
+    runtime = build_gateway_runtime(
+        validator, source_tree, binary, go_version, target_name
+    )
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator._validate_reproducible_build(source_tree, binary, runtime)
+    assert raised.value.category == "live.deployment"
+
+
 def test_full_live_verifier_rejects_reused_m8_processes(
     tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
