@@ -27,7 +27,7 @@ GENERATOR = ROOT / "scripts/generate_captured_multi_leaf_promotion_fixture.py"
 
 EXPECTED_NEGATIVE = {
     "granularity-substitution.json": ("GRANULARITY_SUBSTITUTION", "comparator.invalid"),
-    "missing-granularity.json": ("MISSING_GRANULARITY", "comparator.invalid"),
+    "missing-granularity.json": ("MISSING_GRANULARITY", "schema.private"),
     "identity-mismatch.json": ("IDENTITY_MISMATCH", "identity.binding"),
     "generation-change.json": ("GENERATION_CHANGE", "sample.invalid"),
     "skew-exceeded.json": ("SKEW_EXCEEDED", "sample.invalid"),
@@ -82,6 +82,67 @@ def rehash_campaign(validator, campaign: dict) -> None:
     )
 
 
+def rehash_public(validator, public: dict) -> None:
+    public["result_hash"] = validator.digest(
+        validator.RESULT_DOMAIN,
+        {key: value for key, value in public.items() if key != "result_hash"},
+    )
+
+
+def promote_enum_candidate(validator, campaign: dict, candidate_id: str) -> dict:
+    registry = load(REGISTRY)
+    expected = next(item for item in registry["candidate_catalog"] if item["candidate_id"] == candidate_id)
+    candidate = next(item for item in campaign["candidates"] if item["candidate_id"] == candidate_id)
+    original_promoted = promoted(campaign)
+    source_identity = copy.deepcopy(original_promoted["ebus_identity"])
+    templates = copy.deepcopy(original_promoted["assessments"])
+    candidate.update(
+        {
+            "ebus_identity": source_identity,
+            "decision": "PROMOTED",
+            "terminal_state": None,
+            "visibility": "LOCKED_NOT_EXPOSED",
+            "assessments": [],
+        }
+    )
+    mapping_hash = validator.digest(
+        validator.MAPPING_DOMAIN,
+        expected["eebus_source"]["mapping_profile"],
+    )
+    for window, template in zip(campaign["windows"], templates, strict=True):
+        assessment = copy.deepcopy(template)
+        assessment["window_id"] = window["window_id"]
+        for key in ("ebus_sample", "eebus_sample"):
+            assessment[key]["value"] = {"kind": "ENUM", "decimal": None, "enum": "off", "boolean": None}
+            assessment[key]["unit"] = None
+        assessment["ebus_sample"]["raw_value"] = {
+            "kind": "NUMERIC",
+            "decimal": {"number": 0, "scale": 0},
+            "enum": None,
+            "boolean": None,
+        }
+        assessment["eebus_sample"]["raw_value"] = {
+            "kind": "NUMERIC",
+            "decimal": {"number": 2, "scale": 0},
+            "enum": None,
+            "boolean": None,
+        }
+        assessment["comparator"] = {
+            "class": "ENUM_EXACT_MAPPING",
+            "declared_spine_step": None,
+            "delta": None,
+            "conversion": None,
+            "mapping_hash": mapping_hash,
+            "outcome": "MATCH",
+        }
+        candidate["assessments"].append(assessment)
+    candidate["dossier_hash"] = validator.digest(
+        validator.DOSSIER_DOMAIN,
+        validator._candidate_payload(candidate),
+    )
+    return candidate
+
+
 def test_inventory_and_normative_boundaries() -> None:
     for path in (PAGE, PRIVATE_SCHEMA, PUBLIC_SCHEMA, REGISTRY, PRIVATE, PUBLIC, VALIDATOR, GENERATOR):
         assert path.is_file()
@@ -90,8 +151,8 @@ def test_inventory_and_normative_boundaries() -> None:
     for phrase in (
         "CAPTURED_RUNTIME_MULTI_LEAF_V1",
         "18 M7 VR940 facts",
-        "14 raw eeBUS observations",
-        "seven numeric values",
+        "11 protocol-comparable observations",
+        "numeric values",
         "three operation-mode enums",
         "four booleans",
         "NUMERIC_DECLARED_GRANULARITY",
@@ -103,7 +164,9 @@ def test_inventory_and_normative_boundaries() -> None:
         "PUBLIC_REDACTED",
         "SANITIZED_CONFORMANCE",
         "LIVE_CAPTURE",
-        "ea2538bb24f3a13ef8c35624440b4830b618c48a",
+        "1000000000",
+        "10000000000",
+        "657a36d07e52570326384b757a5382a6789f641b",
     ):
         assert phrase in page
 
@@ -117,7 +180,14 @@ def test_registry_classifies_all_18_actual_candidates() -> None:
     assert sum(item["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY" for item in catalog) == 7
     assert sum(item["comparator_class"] == "ENUM_EXACT_MAPPING" for item in catalog) == 3
     assert sum(item["comparator_class"] == "BOOLEAN_EXACT_MAPPING" for item in catalog) == 4
-    assert catalog[-1]["descriptor"] == "outsideAirTemperature"
+    assert sum(item["protocol_eligibility"] == "ELIGIBLE" for item in catalog) == 11
+    assert sum(item["protocol_eligibility"] == "WITHHOLD_NO_EBUS_CAPABILITY_SOURCE" for item in catalog) == 3
+    assert registry["capture_limits"] == {"max_skew_ns": 1_000_000_000, "max_age_ns": 10_000_000_000}
+    numeric = [item for item in catalog if item["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY"]
+    mapped = [item for item in catalog if item["comparator_class"] in {"ENUM_EXACT_MAPPING", "BOOLEAN_EXACT_MAPPING"}]
+    assert all(item["eebus_source"]["unit"] == "degC" for item in numeric)
+    assert all(item["eebus_source"]["unit"] is None for item in mapped)
+    assert catalog[-1]["eebus_source"]["descriptor"] == "outsideAirTemperature"
     status = load(ROOT / registry["m7_public_status"])
     assert [
         (item["candidate_id"], item["fact_hash"], item["source_status"], item["terminal_state"])
@@ -144,13 +214,28 @@ def test_positive_subset_fixture_verifies_and_derives_byte_identically() -> None
     assert (private.returncode, private.stdout, private.stderr) == (0, "PASS\n", "")
     derived = run("derive-public", PRIVATE)
     assert derived.returncode == 0 and derived.stderr == ""
-    assert derived.stdout.encode("ascii") == PUBLIC.read_bytes()
+    assert derived.stdout.encode("utf-8") == PUBLIC.read_bytes()
     public = run("verify-public", PUBLIC)
     assert (public.returncode, public.stdout, public.stderr) == (0, "PASS\n", "")
     result = load(PUBLIC)
     assert result["counts"] == {"total": 18, "promoted": 1, "withheld": 17}
     assert result["m9_consumer_gate"] == "BLOCKED_CONFORMANCE_ONLY"
     assert result["verdict"] == "VALID_SUBSET_PROMOTION_CONFORMANCE"
+
+
+def test_positive_fixture_locks_inclusive_equality_boundary() -> None:
+    campaign = load(PRIVATE)
+    numeric_matches = [
+        assessment["comparator"]
+        for candidate in campaign["candidates"]
+        for assessment in candidate["assessments"]
+        if assessment["comparator"]["class"] == "NUMERIC_DECLARED_GRANULARITY"
+        and assessment["comparator"]["outcome"] == "MATCH"
+    ]
+    assert any(
+        comparator["delta"] == comparator["declared_spine_step"]
+        for comparator in numeric_matches
+    )
 
 
 def test_numeric_rule_is_inclusive_at_the_declared_spine_step(tmp_path: pathlib.Path) -> None:
@@ -165,6 +250,148 @@ def test_numeric_rule_is_inclusive_at_the_declared_spine_step(tmp_path: pathlib.
     rehash_campaign(validator, campaign)
     result = run("verify-private", write(tmp_path / "inclusive.json", campaign))
     assert (result.returncode, result.stdout) == (0, "PASS\n")
+
+
+def test_capture_skew_and_age_limits_are_catalog_owned(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    leaf = promoted(campaign)
+    leaf["assessments"][0]["max_skew_ns"] = 2_000_000_000
+    leaf["assessments"][0]["max_age_ns"] = 20_000_000_000
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "widened-capture-limits.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "sample.invalid\n")
+
+
+def test_sanitized_campaign_cannot_be_relabelled_live(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    campaign["evidence_mode"] = "LIVE_CAPTURE"
+    rehash_campaign(validator, campaign)
+    result = run("derive-public", write(tmp_path / "relabelled-live.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "provenance.binding\n")
+
+
+def test_public_terminal_candidate_cannot_be_promoted_by_rehashing(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    public = load(PUBLIC)
+    terminal = public["candidate_results"][0]
+    terminal.update(
+        {
+            "decision": "PROMOTED",
+            "terminal_state": None,
+            "visibility": "LOCKED_NOT_EXPOSED",
+            "dossier_hash": "sha256:" + "e" * 64,
+            "window_outcomes": ["MATCH", "MATCH"],
+        }
+    )
+    public["evidence_mode"] = "LIVE_CAPTURE"
+    public["counts"] = {"total": 18, "promoted": 2, "withheld": 16}
+    public["m9_consumer_gate"] = "READY_FOR_M9_PLANNING"
+    public["verdict"] = "VALID_PROMOTION_LOCK"
+    rehash_public(validator, public)
+    result = run("verify-public", write(tmp_path / "terminal-promoted.json", public))
+    assert (result.returncode, result.stdout) == (1, "candidate.catalog\n")
+
+
+def test_protocol_step_and_descriptor_cannot_be_substituted(tmp_path: pathlib.Path) -> None:
+    validator = module()
+
+    inflated = load(PRIVATE)
+    leaf = promoted(inflated)
+    for assessment in leaf["assessments"]:
+        assessment["comparator"]["declared_spine_step"] = {"number": 99, "scale": 0}
+    rehash_campaign(validator, inflated)
+    result = run("verify-private", write(tmp_path / "inflated-step.json", inflated))
+    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+
+    changed_identity = load(PRIVATE)
+    promoted(changed_identity)["eebus_identity"]["descriptor"] = "dhwTemperature"
+    rehash_campaign(validator, changed_identity)
+    result = run("verify-private", write(tmp_path / "changed-descriptor.json", changed_identity))
+    assert (result.returncode, result.stdout) == (1, "identity.binding\n")
+
+    invented_unit = load(PRIVATE)
+    enum_identity = next(
+        item for item in invented_unit["candidates"]
+        if item["candidate_id"] == "m7-candidate-0007"
+    )["eebus_identity"]
+    enum_identity["unit"] = "unitless"
+    rehash_campaign(validator, invented_unit)
+    result = run("verify-private", write(tmp_path / "invented-unit.json", invented_unit))
+    assert (result.returncode, result.stdout) == (1, "identity.binding\n")
+
+
+def test_mapping_hash_is_catalog_derived_not_campaign_authority(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    leaf = promote_enum_candidate(validator, campaign, "m7-candidate-0007")
+    leaf["assessments"][0]["comparator"]["mapping_hash"] = "sha256:" + "f" * 64
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "substituted-mapping.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+
+    raw_substitution = load(PRIVATE)
+    raw_leaf = promote_enum_candidate(validator, raw_substitution, "m7-candidate-0007")
+    raw_leaf["assessments"][0]["eebus_sample"]["raw_value"]["decimal"] = {
+        "number": 1,
+        "scale": 0,
+    }
+    rehash_campaign(validator, raw_substitution)
+    result = run("verify-private", write(tmp_path / "substituted-raw-map.json", raw_substitution))
+    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+
+    unit_substitution = load(PRIVATE)
+    unit_leaf = promote_enum_candidate(validator, unit_substitution, "m7-candidate-0007")
+    unit_leaf["assessments"][0]["eebus_sample"]["unit"] = "unitless"
+    rehash_campaign(validator, unit_substitution)
+    result = run("verify-private", write(tmp_path / "substituted-mapped-unit.json", unit_substitution))
+    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+
+
+def test_missing_ebus_capability_source_cannot_be_promoted(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    public = load(PUBLIC)
+    item = next(candidate for candidate in public["candidate_results"] if candidate["candidate_id"] == "m7-candidate-0008")
+    item.update(
+        {
+            "decision": "PROMOTED",
+            "terminal_state": None,
+            "visibility": "LOCKED_NOT_EXPOSED",
+            "dossier_hash": "sha256:" + "e" * 64,
+            "window_outcomes": ["MATCH", "MATCH"],
+        }
+    )
+    public["counts"] = {"total": 18, "promoted": 2, "withheld": 16}
+    rehash_public(validator, public)
+    result = run("verify-public", write(tmp_path / "capability-promoted.json", public))
+    assert (result.returncode, result.stdout) == (1, "candidate.catalog\n")
+
+
+def test_restart_chronology_and_capture_generation_are_bound(tmp_path: pathlib.Path) -> None:
+    validator = module()
+
+    reversed_windows = load(PRIVATE)
+    post = reversed_windows["windows"][1]
+    post["started_at"] = "2026-08-11T09:55:00Z"
+    post["ended_at"] = "2026-08-11T09:55:10Z"
+    post_assessment = promoted(reversed_windows)["assessments"][1]
+    post_assessment["ebus_sample"]["observed_at"] = "2026-08-11T09:55:05Z"
+    post_assessment["eebus_sample"]["observed_at"] = "2026-08-11T09:55:05.100000000Z"
+    rehash_campaign(validator, reversed_windows)
+    result = run("verify-private", write(tmp_path / "reversed-windows.json", reversed_windows))
+    assert (result.returncode, result.stdout) == (1, "window.restart\n")
+
+    generation_mismatch = load(PRIVATE)
+    promoted(generation_mismatch)["assessments"][0]["eebus_sample"]["capture_generation"] = "wrong-generation"
+    rehash_campaign(validator, generation_mismatch)
+    result = run("verify-private", write(tmp_path / "capture-generation.json", generation_mismatch))
+    assert (result.returncode, result.stdout) == (1, "sample.invalid\n")
+
+
+def test_canonical_json_emits_unicode_as_utf8() -> None:
+    validator = module()
+    assert validator.canonical({"text": "é"}) == '{"text":"é"}'.encode("utf-8")
 
 
 def test_generator_is_deterministic() -> None:

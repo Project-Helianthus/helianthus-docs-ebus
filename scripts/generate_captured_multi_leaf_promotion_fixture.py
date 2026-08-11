@@ -30,25 +30,26 @@ def typed_numeric(number: int, scale: int) -> dict[str, object]:
     return {"kind": "NUMERIC", "decimal": {"number": number, "scale": scale}, "enum": None, "boolean": None}
 
 
-def eebus_identity(candidate: dict[str, object]) -> dict[str, object]:
+def eebus_identity(module, candidate: dict[str, object]) -> dict[str, object]:
     candidate_id = str(candidate["candidate_id"])
-    descriptor = str(candidate["descriptor"])
+    source = candidate["eebus_source"]
+    assert isinstance(source, dict)
     index = int(candidate_id[-4:])
     entity = [1000 + index]
-    feature_type = "Generic"
     feature_address = 100 + index
-    function = "sanitizedConformanceRead"
     return {
         "service_id": "sanitized-service-v1",
         "device_address": "sanitized-device-v1",
         "entity_address": entity,
+        "entity_type": source["entity_type"],
         "feature_address": feature_address,
-        "feature_type": feature_type,
-        "feature_role": "server",
-        "function": function,
-        "field_path": [descriptor],
-        "descriptor": descriptor,
-        "unit": "degC" if candidate["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY" else "unitless",
+        "feature_type": source["feature_type"],
+        "feature_role": source["feature_role"],
+        "function": source["value_function"],
+        "field_path": source["field_path"],
+        "descriptor": source["descriptor"],
+        "unit": source["unit"],
+        "source_profile_hash": module.digest(module.SOURCE_PROFILE_DOMAIN, source),
         "identity_hash": sha("8"),
     }
 
@@ -58,11 +59,13 @@ def sample(source: str, timestamp: str, value: dict[str, object], window: dict[s
         "source": source,
         "observed_at": timestamp,
         "valid": True,
-        "capture_generation": "capture-" + suffix,
+        "capture_generation": window["capture_generation"],
         "poll_id": "poll-" + suffix if source == "EBUS" else None,
+        "poll_generation": window["ebus_poll_generation"] if source == "EBUS" else None,
         "runtime_epoch": window["eebus_runtime_epoch"] if source == "EEBUS" else None,
         "connection_generation": window["connection_generation"] if source == "EEBUS" else None,
         "raw_hash": sha("6" if source == "EBUS" else "7"),
+        "raw_value": value,
         "value": value,
         "unit": "degC",
     }
@@ -75,6 +78,7 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
             "phase": "PRE_RESTART",
             "started_at": "2026-08-11T10:00:00Z",
             "ended_at": "2026-08-11T10:00:10Z",
+            "capture_generation": "capture-pre",
             "process_instance_hash": sha("1"),
             "local_identity_hash": sha("3"),
             "trust_state_hash": sha("4"),
@@ -90,6 +94,7 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
             "phase": "POST_RESTART",
             "started_at": "2026-08-11T10:05:00Z",
             "ended_at": "2026-08-11T10:05:10Z",
+            "capture_generation": "capture-post",
             "process_instance_hash": sha("2"),
             "local_identity_hash": sha("3"),
             "trust_state_hash": sha("4"),
@@ -130,7 +135,7 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
                 "semantic_path": expected["semantic_path"],
                 "comparator_class": expected["comparator_class"],
                 "ebus_identity": None,
-                "eebus_identity": eebus_identity(expected),
+                "eebus_identity": eebus_identity(module, expected),
                 "assessments": [],
                 "decision": "WITHHELD",
                 "terminal_state": terminal,
@@ -157,7 +162,7 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
     promoted["assessments"] = []
     for position, window in enumerate(windows):
         prefix = "2026-08-11T10:00:05" if position == 0 else "2026-08-11T10:05:05"
-        ebus = sample("EBUS", prefix + "Z", typed_numeric(13125 if position == 0 else 13375, -3), window, "pre" if position == 0 else "post")
+        ebus = sample("EBUS", prefix + "Z", typed_numeric(125 if position == 0 else 13, -1 if position == 0 else 0), window, "pre" if position == 0 else "post")
         eebus = sample("EEBUS", prefix + ".100000000Z", typed_numeric(13 if position == 0 else 135, 0 if position == 0 else -1), window, "pre" if position == 0 else "post")
         promoted["assessments"].append(
             {
@@ -165,13 +170,13 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
                 "ebus_sample": ebus,
                 "eebus_sample": eebus,
                 "skew_ns": 100_000_000,
-                "max_skew_ns": 1_000_000_000,
+                "max_skew_ns": registry["capture_limits"]["max_skew_ns"],
                 "age_ns": 5_000_000_000,
-                "max_age_ns": 10_000_000_000,
+                "max_age_ns": registry["capture_limits"]["max_age_ns"],
                 "comparator": {
                     "class": "NUMERIC_DECLARED_GRANULARITY",
                     "declared_spine_step": {"number": 5, "scale": -1},
-                    "delta": {"number": 125, "scale": -3},
+                    "delta": {"number": 5, "scale": -1},
                     "conversion": {
                         "mode": "IDENTITY",
                         "source_unit": "degC",
@@ -192,6 +197,7 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
         "profile": "CAPTURED_RUNTIME_MULTI_LEAF_V1",
         "evidence_mode": "SANITIZED_CONFORMANCE",
         "export_tier": "PRIVATE_OPERATOR",
+        "provenance": registry["sanitized_provenance"],
         "source_bindings": {
             "docs_eebus_commit": registry["docs_eebus_source_commit"],
             "m7_graph_id": "dcfgv1:captured-campaign",
@@ -219,7 +225,7 @@ def build_campaign(module, registry: dict[str, object]) -> dict[str, object]:
 
 def write(path: pathlib.Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(json.dumps(value, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("ascii") + b"\n")
+    path.write_bytes(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8") + b"\n")
 
 
 def main() -> None:
@@ -231,7 +237,7 @@ def main() -> None:
     write(FIXTURE / "positive/public-result.json", public)
     negatives = {
         "granularity-substitution.json": ("GRANULARITY_SUBSTITUTION", "comparator.invalid"),
-        "missing-granularity.json": ("MISSING_GRANULARITY", "comparator.invalid"),
+        "missing-granularity.json": ("MISSING_GRANULARITY", "schema.private"),
         "identity-mismatch.json": ("IDENTITY_MISMATCH", "identity.binding"),
         "generation-change.json": ("GENERATION_CHANGE", "sample.invalid"),
         "skew-exceeded.json": ("SKEW_EXCEEDED", "sample.invalid"),
