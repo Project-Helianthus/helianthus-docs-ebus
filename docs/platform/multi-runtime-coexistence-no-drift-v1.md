@@ -225,6 +225,12 @@ invalid. There is no empty-success path.
 All four states use the same exact gateway artifact and keep the eeBUS runtime
 connected. Candidate evidence is an offline harness input and remains confined
 to `CANDIDATE_DEBUG_REPLAY`; it does not alter the runtime's public surfaces.
+The runtime artifact must use `REPRODUCIBLE_BUILD`. This field is a structural
+M8 claim; the downstream M8.5 private verifier closes it by rebuilding the
+exact clean source commit with the declared toolchain and comparing the output
+byte-for-byte with the deployed binary. A `SYNTHETIC_FIXTURE` build remains
+conformance-only, and relabeling arbitrary bytes cannot pass that downstream
+rebuild gate even if every caller-controlled hash is recomputed.
 
 | State | Required state evidence | Consumer result |
 | --- | --- | --- |
@@ -241,7 +247,9 @@ not disconnection of the paired VR940 runtime.
 
 Every result binds all of the following:
 
-- exact gateway repository, 40-character source commit and parent commit;
+- exact gateway repository, 40-character source commit and milestone
+  predecessor commit; `source_parent_commit` names that frozen predecessor and
+  does not claim to be the source commit's first Git parent;
 - runtime artifact ID, byte digest, byte length, build manifest, and
   domain-separated build-manifest hash;
 - exact config payload and domain-separated config hash;

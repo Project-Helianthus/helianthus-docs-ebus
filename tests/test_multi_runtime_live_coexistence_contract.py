@@ -167,6 +167,10 @@ def build_live_evidence(validator) -> dict[str, object]:
     runtime = deepcopy(evidence["runs"][1]["provenance"]["runtime"])
     runtime["source_commit"] = "9" * 40
     runtime["source_parent_commit"] = M7_GATEWAY_MERGE
+    runtime["build_manifest"]["build_mode"] = "REPRODUCIBLE_BUILD"
+    runtime["build_manifest_hash"] = validator.digest(
+        validator.BUILD_DOMAIN, runtime["build_manifest"]
+    )
     facts = [
         {
             "candidate_id": fact["candidate_id"],
@@ -468,6 +472,32 @@ def test_msp08_live_profile_validates_bound_m7_and_restart(
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == "public-only-ok\n"
+
+
+def test_msp08_live_profile_rejects_synthetic_build_mode(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    for run in evidence["runs"]:
+        runtime = run["provenance"]["runtime"]
+        runtime["build_manifest"]["build_mode"] = "SYNTHETIC_FIXTURE"
+        runtime["build_manifest_hash"] = validator.digest(
+            validator.BUILD_DOMAIN, runtime["build_manifest"]
+        )
+    refresh_evidence_hash(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
+    result = subprocess.run(
+        validator_command("verify", evidence_path),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "provenance.runtime\n",
+        "",
+    )
 
 
 def test_msp08_live_report_matches_public_schema(tmp_path: pathlib.Path) -> None:
