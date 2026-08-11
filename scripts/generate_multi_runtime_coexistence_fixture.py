@@ -104,7 +104,7 @@ def _view_payloads() -> dict[str, object]:
             "contract": "ebus.v1",
             "responses": [
                 {
-                    "operation": "ebus.v1.devices.list",
+                    "operation": "ebus.v1.registry.devices.list",
                     "result": {
                         "devices": [
                             {
@@ -119,10 +119,17 @@ def _view_payloads() -> dict[str, object]:
         },
         "mcp.tool.inventory": {
             "tools": [
-                "ebus.v1.devices.list",
-                "ebus.v1.zones.list",
+                "ebus.v1.registry.devices.list",
+                "ebus.v1.semantic.snapshot.get",
                 "eebus.v1.runtime.status.get",
                 "eebus.v1.services.list",
+                "eebus.v1.services.get",
+                "eebus.v1.sessions.list",
+                "eebus.v1.sessions.get",
+                "eebus.v1.topology.get",
+                "eebus.v1.snapshot.capture",
+                "eebus.v1.snapshot.drop",
+                "eebus.v1.pairing.status.get",
             ]
         },
         "graphql.schema": {

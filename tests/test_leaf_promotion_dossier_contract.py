@@ -291,11 +291,11 @@ def test_machine_contract_and_registry_are_closed() -> None:
     ]
 
 
-def test_canonical_artifacts_match_gateway_pr_773_exact_bytes() -> None:
+def test_canonical_artifacts_match_current_m8_inventory_revision_exact_bytes() -> None:
     expected_sha256 = {
         REGISTRY: "ad33736c00aa2c3ecaac981606d25c064088c80cb72ca5389b83c5d9df40f6a3",
-        DOSSIER: "3b12e3b6f625f6efb28fced19d679ab73b974fc4369e0dba9f61f1a2d104ec64",
-        RESULT: "a4e5deb1027e337e917304addfa1aebaaf8f04659d7de38b36083c78525d1a04",
+        DOSSIER: "1f97fc824b88cd7a950488dd27a6cd26ffa7977a3355d3009de3759535ffb6c0",
+        RESULT: "a8175dd33822a3174d74c9fae9541a3af4ba6a7a9cc0572ab6796e0e9d979d0c",
     }
     for path, expected in expected_sha256.items():
         assert hashlib.sha256(path.read_bytes()).hexdigest() == expected

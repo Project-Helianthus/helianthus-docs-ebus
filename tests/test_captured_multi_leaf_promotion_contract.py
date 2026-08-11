@@ -2101,11 +2101,11 @@ def test_capture_limits_and_restart_generation_are_bound(tmp_path: pathlib.Path)
     assert (result.returncode, result.stdout) == (1, "sample.invalid\n")
 
 
-def test_existing_zero_profile_canonical_bytes_are_unchanged() -> None:
+def test_zero_profile_canonical_bytes_match_current_m8_inventory_revision() -> None:
     expected = {
         "leaf-promotion-registry-v1.json": "ad33736c00aa2c3ecaac981606d25c064088c80cb72ca5389b83c5d9df40f6a3",
-        "../fixtures/leaf-promotion-dossier/v1/positive/dossier.json": "3b12e3b6f625f6efb28fced19d679ab73b974fc4369e0dba9f61f1a2d104ec64",
-        "../fixtures/leaf-promotion-dossier/v1/positive/result.json": "a4e5deb1027e337e917304addfa1aebaaf8f04659d7de38b36083c78525d1a04",
+        "../fixtures/leaf-promotion-dossier/v1/positive/dossier.json": "1f97fc824b88cd7a950488dd27a6cd26ffa7977a3355d3009de3759535ffb6c0",
+        "../fixtures/leaf-promotion-dossier/v1/positive/result.json": "a8175dd33822a3174d74c9fae9541a3af4ba6a7a9cc0572ab6796e0e9d979d0c",
     }
     for relative, expected_hash in expected.items():
         assert hashlib.sha256((SCHEMA_ROOT / relative).resolve().read_bytes()).hexdigest() == expected_hash

@@ -51,6 +51,21 @@ M7_SYNTHETIC_SOURCE_REPLAY = SYNCHRONIZED_ROOT / "replay-result.json"
 M7_GATEWAY_MERGE = "8bcba2107d10b149f984ac9546ea6427a9cda8a1"
 M7_DOCS_MERGE = "35d2eba256a77b6575a2b45c07e73f054ff74ced"
 SYNTHETIC_PRIVATE_IPV4 = "10.255.255.254"
+EXPECTED_EBUS_TOOLS = [
+    "ebus.v1.registry.devices.list",
+    "ebus.v1.semantic.snapshot.get",
+]
+EXPECTED_EEBUS_TOOLS = [
+    "eebus.v1.runtime.status.get",
+    "eebus.v1.services.list",
+    "eebus.v1.services.get",
+    "eebus.v1.sessions.list",
+    "eebus.v1.sessions.get",
+    "eebus.v1.topology.get",
+    "eebus.v1.snapshot.capture",
+    "eebus.v1.snapshot.drop",
+    "eebus.v1.pairing.status.get",
+]
 
 
 def load(path: pathlib.Path) -> dict[str, object]:
@@ -140,6 +155,62 @@ def test_msp08_live_contract_is_same_artifact_raw_first_and_non_promoting() -> N
         "does not authorize M8.5 or M9",
     ):
         assert phrase in page
+
+
+def test_msp08_inventory_matches_the_complete_stable_v1_contract() -> None:
+    validator = validator_module()
+    evidence = load(SYNTHETIC_EVIDENCE)
+    inventory = next(
+        view
+        for view in evidence["runs"][0]["protected_views"]
+        if view["view_id"] == "mcp.tool.inventory"
+    )
+
+    assert inventory["payload"]["data"]["tools"] == [
+        *EXPECTED_EBUS_TOOLS,
+        *EXPECTED_EEBUS_TOOLS,
+    ]
+    assert validator.APPROVED_M8_EEBUS_TOOLS == EXPECTED_EEBUS_TOOLS
+    assert validator.APPROVED_M8_TOOL_INVENTORY == [
+        *EXPECTED_EBUS_TOOLS,
+        *EXPECTED_EEBUS_TOOLS,
+    ]
+
+
+@pytest.mark.parametrize("mutation", ["missing", "stale", "reordered", "write"])
+def test_msp08_live_inventory_drift_fails_closed(
+    tmp_path: pathlib.Path, mutation: str
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    for run in evidence["runs"][:-1]:
+        inventory = next(
+            view
+            for view in run["protected_views"]
+            if view["view_id"] == "mcp.tool.inventory"
+        )
+        tools = inventory["payload"]["data"]["tools"]
+        if mutation == "missing":
+            tools.remove("eebus.v1.sessions.get")
+        elif mutation == "stale":
+            tools[0] = "ebus.v1.devices.list"
+        elif mutation == "reordered":
+            tools[-1], tools[-2] = tools[-2], tools[-1]
+        else:
+            tools.append("eebus.v1.features.data.set")
+    refresh_protected_views(validator, evidence)
+
+    result = subprocess.run(
+        validator_command("verify", write_evidence(tmp_path, evidence)),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "gate.scope\n",
+        "",
+    )
 
 
 def build_live_evidence(validator) -> dict[str, object]:
