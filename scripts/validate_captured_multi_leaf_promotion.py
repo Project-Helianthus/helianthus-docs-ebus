@@ -838,6 +838,32 @@ def _decode_build_output(value: bytes, encoding: str) -> str:
         fail("live.deployment")
 
 
+def _reject_local_module_replacements(raw: bytes) -> None:
+    try:
+        module = json.loads(_decode_build_output(raw, "utf-8"))
+    except (TypeError, ValueError):
+        fail("live.deployment")
+    if not isinstance(module, dict):
+        fail("live.deployment")
+    replacements = module.get("Replace", [])
+    if replacements is None:
+        replacements = []
+    if not isinstance(replacements, list):
+        fail("live.deployment")
+    for replacement in replacements:
+        if not isinstance(replacement, dict):
+            fail("live.deployment")
+        target = replacement.get("New")
+        if (
+            not isinstance(target, dict)
+            or not isinstance(target.get("Path"), str)
+            or not target["Path"]
+            or not isinstance(target.get("Version"), str)
+            or not target["Version"]
+        ):
+            fail("live.deployment")
+
+
 def _validate_reproducible_build(
     source_tree: pathlib.Path,
     binary_path: pathlib.Path,
@@ -920,6 +946,12 @@ def _validate_reproducible_build(
             ["git", "checkout", "--detach", runtime["source_commit"]],
             cwd=materialized,
         )
+        module = _run_build_command(
+            ["go", "mod", "edit", "-json"],
+            cwd=materialized,
+            env=environment,
+        )
+        _reject_local_module_replacements(module)
         _run_build_command(
             [
                 "go",

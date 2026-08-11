@@ -169,6 +169,8 @@ rebuilds it with the declared Go toolchain, target,
 the deployed binary. A synthetic fixture, relabeled arbitrary binary, or a
 narrower coexistence archive cannot substitute for that proof. Untracked or
 ignored files in the operator's supplied checkout cannot enter this build. A
+filesystem-backed Go module replacement is rejected; versioned module
+replacements remain admissible under the committed module graph. A
 change to source identity, descriptor, unit/conversion, declared step,
 generation, validity, comparator, coexistence proof, or replay hash requires a
 new dossier.

@@ -1192,6 +1192,128 @@ def test_reproducible_build_rejects_ignored_source_input(
     assert raised.value.category == "live.deployment"
 
 
+def test_reproducible_build_rejects_absolute_local_module_replacement(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    source_tree, _, go_version, target_name = generated_gateway_source(tmp_path)
+    ignored_module = source_tree / "ignored-module"
+    ignored_module.mkdir()
+    (ignored_module / "go.mod").write_text(
+        "module example.invalid/ignored\n\ngo 1.22\n", encoding="utf-8"
+    )
+    (ignored_module / "ignored.go").write_text(
+        'package ignored\n\nfunc Message() string { return "ignored-input" }\n',
+        encoding="utf-8",
+    )
+    (source_tree / ".git/info/exclude").write_text(
+        "ignored-module/\n", encoding="utf-8"
+    )
+    (source_tree / "go.mod").write_text(
+        "module github.com/Project-Helianthus/helianthus-ebusgateway\n\n"
+        "go 1.22\n\n"
+        "require example.invalid/ignored v0.0.0\n\n"
+        f"replace example.invalid/ignored => {ignored_module}\n",
+        encoding="utf-8",
+    )
+    (source_tree / "cmd/gateway/main.go").write_text(
+        'package main\n\nimport (\n\t"fmt"\n\t"example.invalid/ignored"\n)\n\n'
+        "func main() { fmt.Println(ignored.Message()) }\n",
+        encoding="utf-8",
+    )
+    subprocess.run(
+        ["git", "add", "go.mod", "cmd/gateway/main.go"],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Helianthus Test",
+            "-c",
+            "user.email=test@helianthus.invalid",
+            "commit",
+            "-q",
+            "-m",
+            "add local replacement",
+        ],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+    )
+    source_commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+    ).stdout == b""
+
+    binary = tmp_path / "local-replacement.bin"
+    target = target_name.split("/")
+    environment = {
+        **os.environ,
+        "CGO_ENABLED": "0",
+        "GOOS": target[0],
+        "GOARCH": target[1],
+        "GOTOOLCHAIN": "local",
+        "GOFLAGS": "-mod=readonly",
+        "GOWORK": "off",
+    }
+    subprocess.run(
+        [
+            "go",
+            "build",
+            "-trimpath",
+            "-buildvcs=true",
+            "-o",
+            str(binary),
+            "./cmd/gateway",
+        ],
+        cwd=source_tree,
+        env=environment,
+        check=True,
+        capture_output=True,
+    )
+    build_info = subprocess.run(
+        ["go", "version", "-m", str(binary)],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert "build\tvcs.modified=false" in build_info
+
+    raw = binary.read_bytes()
+    runtime = {
+        "source_commit": source_commit,
+        "artifact_digest": validator.bytes_digest(raw),
+        "artifact_size_bytes": len(raw),
+        "build_manifest": {
+            "flags": ["-trimpath", "CGO_ENABLED=0"],
+            "go_version": go_version,
+            "target": target_name,
+        },
+    }
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator._validate_reproducible_build(source_tree, binary, runtime)
+    assert raised.value.category == "live.deployment"
+
+
+def test_reproducible_build_allows_versioned_module_replacement() -> None:
+    validator = module()
+    validator._reject_local_module_replacements(
+        b'{"Replace":[{"New":{"Path":"example.invalid/new","Version":"v1.2.3"}}]}'
+    )
+
+
 def test_full_live_verifier_rejects_reused_m8_processes(
     tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
