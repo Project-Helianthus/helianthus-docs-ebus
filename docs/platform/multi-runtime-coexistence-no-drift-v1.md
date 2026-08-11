@@ -2,8 +2,10 @@ Canonical source: this page.
 
 # Multi-Runtime Coexistence No-Drift V1
 
-Issues: `Project-Helianthus/helianthus-docs-ebus#365` (`MSP-08`, M8) and
-`Project-Helianthus/helianthus-docs-ebus#391` (`MSP-08-LIVE-R1`).
+Issues: `Project-Helianthus/helianthus-docs-ebus#365` (`MSP-08`, M8),
+`Project-Helianthus/helianthus-docs-ebus#391` (`MSP-08-LIVE-R1`), and
+`Project-Helianthus/helianthus-docs-ebus#407` (stable MCP V1 inventory
+alignment).
 
 The historical synthetic predecessor is gateway commit
 `ff511b035b85aef6123fb0853bb3d2f3af6fc01e` with candidate-graph docs commit
@@ -35,6 +37,28 @@ Across every compared state, existing promoted eBUS leaves remain authoritative.
 This milestone preserves the stable `eebus.v1` V1 contract and all existing
 eBUS/consumer contracts. There is no public V2. M8 does not promote a leaf,
 define a protocol translation, add a command route, or authorize a consumer.
+
+The protected MCP inventory is the exact stable read-only inventory exercised
+by coexistence capture. It contains the current eBUS registry and semantic
+snapshot reads:
+
+- `ebus.v1.registry.devices.list`;
+- `ebus.v1.semantic.snapshot.get`.
+
+It also contains all nine stable raw eeBUS V1 tools, in canonical order:
+
+- `eebus.v1.runtime.status.get`;
+- `eebus.v1.services.list`;
+- `eebus.v1.services.get`;
+- `eebus.v1.sessions.list`;
+- `eebus.v1.sessions.get`;
+- `eebus.v1.topology.get`;
+- `eebus.v1.snapshot.capture`;
+- `eebus.v1.snapshot.drop`;
+- `eebus.v1.pairing.status.get`.
+
+This is an exact V1 contract assertion, not a compatibility alias set. Missing,
+additional, stale, reordered, write-capable, legacy, or V2 entries fail closed.
 
 EEBUS-G18 is only the no-drift gate. G17 advertisement/discovery and trust
 evidence and G19 direct outbound VR940 TCP/TLS/WebSocket/SHIP and first SPINE

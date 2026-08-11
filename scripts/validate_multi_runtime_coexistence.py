@@ -64,10 +64,17 @@ READ_ONLY_PERMISSIONS = [
 APPROVED_M8_EEBUS_TOOLS = [
     "eebus.v1.runtime.status.get",
     "eebus.v1.services.list",
+    "eebus.v1.services.get",
+    "eebus.v1.sessions.list",
+    "eebus.v1.sessions.get",
+    "eebus.v1.topology.get",
+    "eebus.v1.snapshot.capture",
+    "eebus.v1.snapshot.drop",
+    "eebus.v1.pairing.status.get",
 ]
 APPROVED_M8_TOOL_INVENTORY = [
-    "ebus.v1.devices.list",
-    "ebus.v1.zones.list",
+    "ebus.v1.registry.devices.list",
+    "ebus.v1.semantic.snapshot.get",
     *APPROVED_M8_EEBUS_TOOLS,
 ]
 APPROVED_M8_EEBUS_CONTRACT_FIELDS = {
