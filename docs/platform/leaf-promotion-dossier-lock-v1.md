@@ -41,6 +41,13 @@ captured-runtime M8 evidence/report pair. It assesses every actual M7 fact but
 creates no dossier and promotes no leaf. There is one unreleased V1: no V2,
 legacy alias, or compatibility namespace exists.
 
+Issue `#403` adds the companion `CAPTURED_RUNTIME_MULTI_LEAF_V1` profile in
+[`captured-multi-leaf-promotion-v1.md`](./captured-multi-leaf-promotion-v1.md).
+It leaves both profiles and every canonical artifact described on this page
+unchanged. The companion contract can promote a strict subset only after two
+restart-separated captured windows pass; it is still part of the single
+unreleased V1 surface.
+
 ## Canonical Machine Contract
 
 The canonical files are:

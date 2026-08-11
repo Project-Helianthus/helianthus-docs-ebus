@@ -387,6 +387,26 @@ def _is_schema_type(value: Any, expected: str) -> bool:
     }.get(expected, False)
 
 
+def _schema_equal(left: Any, right: Any) -> bool:
+    if isinstance(left, bool) or isinstance(right, bool):
+        return isinstance(left, bool) and isinstance(right, bool) and left == right
+    if isinstance(left, dict) or isinstance(right, dict):
+        return (
+            isinstance(left, dict)
+            and isinstance(right, dict)
+            and left.keys() == right.keys()
+            and all(_schema_equal(left[key], right[key]) for key in left)
+        )
+    if isinstance(left, list) or isinstance(right, list):
+        return (
+            isinstance(left, list)
+            and isinstance(right, list)
+            and len(left) == len(right)
+            and all(_schema_equal(a, b) for a, b in zip(left, right, strict=True))
+        )
+    return left == right
+
+
 def _schema_validate(value: Any, rule: dict[str, Any], root: dict[str, Any]) -> bool:
     if "$ref" in rule:
         prefix = "#/$defs/"
@@ -412,9 +432,9 @@ def _schema_validate(value: Any, rule: dict[str, Any], root: dict[str, Any]) -> 
                 return False
         elif not _is_schema_type(value, expected_type):
             return False
-    if "const" in rule and value != rule["const"]:
+    if "const" in rule and not _schema_equal(value, rule["const"]):
         return False
-    if "enum" in rule and value not in rule["enum"]:
+    if "enum" in rule and not any(_schema_equal(value, item) for item in rule["enum"]):
         return False
     if isinstance(value, str):
         if len(value) < rule.get("minLength", 0) or len(value) > rule.get(
