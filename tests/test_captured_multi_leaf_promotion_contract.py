@@ -1438,14 +1438,16 @@ def test_secret_material_is_rejected_recursively_in_schema_allowed_strings(
         "Bearer abcdefghijklmnopqrstuvwxyz0123456789",
         "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvcGVyYXRvciJ9.abcdefghijklmnop",
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        "__________________________________________8=",
         "A" * 180,
         "trust_store=" + "Q" * 32,
     )
     for index, payload in enumerate(payloads):
         campaign = load(PRIVATE)
-        candidate(campaign, "m7-candidate-0018")["eebus_identity"][
-            "service_id"
-        ] = payload
+        identity = candidate(campaign, "m7-candidate-0018")["eebus_identity"]
+        identity["service_id"] = payload
+        rehash_eebus_identity(module(), identity)
+        rehash_campaign(module(), campaign)
         result = run(
             "verify-private", write(tmp_path / f"private-secret-{index}.json", campaign)
         )

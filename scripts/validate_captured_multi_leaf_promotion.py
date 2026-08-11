@@ -58,7 +58,7 @@ SECRET_MARKERS = re.compile(
 JWT_TOKEN = re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
 LONG_ENCODED_SECRET = re.compile(r"^[A-Za-z0-9+/=_-]{160,}$")
 RAW_256_BIT_MATERIAL = re.compile(
-    r"^(?:[A-Fa-f0-9]{64}|[A-Za-z0-9+/]{43}=|[A-Za-z0-9_-]{43})$"
+    r"^(?:[A-Fa-f0-9]{64}|[A-Za-z0-9+/_-]{43}=?)$"
 )
 SYNTHETIC_SELECTOR = re.compile(r"(?i)(?:synthetic|fixture|sanitized|placeholder|dummy|opaque)")
 
