@@ -856,10 +856,6 @@ def _validate_reproducible_build(
     root = _run_build_command(
         ["git", "rev-parse", "--show-toplevel"], cwd=source_tree
     )
-    status = _run_build_command(
-        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
-        cwd=source_tree,
-    )
     remote = _run_build_command(
         ["git", "remote", "get-url", "origin"], cwd=source_tree
     )
@@ -867,7 +863,6 @@ def _validate_reproducible_build(
         _decode_build_output(head, "ascii").strip() != runtime["source_commit"]
         or pathlib.Path(_decode_build_output(root, "utf-8").strip()).resolve()
         != source_tree
-        or status
         or _decode_build_output(remote, "utf-8").strip()
         not in {
             "https://github.com/Project-Helianthus/helianthus-ebusgateway",
@@ -907,8 +902,24 @@ def _validate_reproducible_build(
     if len(go_version) < 3 or go_version[2] != manifest["go_version"]:
         fail("live.deployment")
 
-    with tempfile.TemporaryDirectory(prefix="helianthus-m8-rebuild-") as output_dir:
-        rebuilt = pathlib.Path(output_dir) / "helianthus-gateway"
+    with tempfile.TemporaryDirectory(prefix="helianthus-m8-rebuild-") as work_dir:
+        materialized = pathlib.Path(work_dir) / "source"
+        rebuilt = pathlib.Path(work_dir) / "helianthus-gateway"
+        _run_build_command(
+            [
+                "git",
+                "clone",
+                "--no-local",
+                "--no-checkout",
+                str(source_tree),
+                str(materialized),
+            ],
+            cwd=source_tree,
+        )
+        _run_build_command(
+            ["git", "checkout", "--detach", runtime["source_commit"]],
+            cwd=materialized,
+        )
         _run_build_command(
             [
                 "go",
@@ -919,7 +930,7 @@ def _validate_reproducible_build(
                 str(rebuilt),
                 "./cmd/gateway",
             ],
-            cwd=source_tree,
+            cwd=materialized,
             env=environment,
         )
         rebuilt_raw = _read_bounded_bytes(
@@ -929,7 +940,19 @@ def _validate_reproducible_build(
             binary_path, MAX_DEPLOYMENT_BINARY_BYTES, "live.deployment"
         )
         build_info = _run_build_command(
-            ["go", "version", "-m", str(rebuilt)], cwd=source_tree, env=environment
+            ["go", "version", "-m", str(rebuilt)],
+            cwd=materialized,
+            env=environment,
+        )
+        materialized_status = _run_build_command(
+            [
+                "git",
+                "status",
+                "--porcelain=v1",
+                "--untracked-files=all",
+                "--ignored=matching",
+            ],
+            cwd=materialized,
         )
         build_info = _decode_build_output(build_info, "utf-8")
     build_settings = {
@@ -945,10 +968,7 @@ def _validate_reproducible_build(
         or rebuilt_raw != binary_raw
         or bytes_digest(rebuilt_raw) != runtime["artifact_digest"]
         or len(rebuilt_raw) != runtime["artifact_size_bytes"]
-        or _run_build_command(
-            ["git", "status", "--porcelain=v1", "--untracked-files=all"],
-            cwd=source_tree,
-        )
+        or materialized_status
     ):
         fail("live.deployment")
 

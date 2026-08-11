@@ -659,6 +659,63 @@ def live_sources(bundle: dict) -> dict:
     }
 
 
+def rebind_live_deployment(validator, bundle: dict) -> None:
+    binary_hash = validator.bytes_digest(bundle["binary"].read_bytes())
+    evidence = load(bundle["m8_evidence"])
+    for run_item in evidence["runs"]:
+        runtime = run_item["provenance"]["runtime"]
+        runtime.update(
+            artifact_digest=binary_hash,
+            artifact_id="gateway:" + binary_hash,
+            artifact_size_bytes=len(bundle["binary"].read_bytes()),
+        )
+    m8_live_test = load_module(M8_LIVE_TEST, "captured_multi_leaf_rebind_test")
+    m8_live_test.refresh_evidence_hash(validator.coexistence, evidence)
+    write(bundle["m8_evidence"], evidence)
+    report = validator.coexistence.report(
+        copy.deepcopy(evidence), load(validator.M8_REGISTRY)
+    )
+    write(bundle["m8_report"], report)
+
+    deployment = load(bundle["deployment"])
+    deployment["binary_hash"] = binary_hash
+    write(bundle["deployment"], deployment)
+    campaign = load(bundle["campaign"])
+    campaign["source_bindings"].update(
+        m8_evidence_id=evidence["evidence_id"],
+        m8_evidence_hash=evidence["evidence_hash"],
+        m8_evidence_bytes_hash=validator.bytes_digest(
+            bundle["m8_evidence"].read_bytes()
+        ),
+        m8_report_id=report["report_id"],
+        m8_report_hash=report["report_hash"],
+        m8_report_bytes_hash=validator.bytes_digest(
+            bundle["m8_report"].read_bytes()
+        ),
+    )
+    campaign["provenance"].update(
+        deployment_binary_hash=binary_hash,
+        deployment_source_hash=validator.bytes_digest(
+            bundle["deployment"].read_bytes()
+        ),
+    )
+    for receipt_path in bundle["receipts"]:
+        receipt = load(receipt_path)
+        receipt["m8_binding"] = {
+            "evidence_id": evidence["evidence_id"],
+            "evidence_hash": evidence["evidence_hash"],
+            "report_id": report["report_id"],
+            "report_hash": report["report_hash"],
+        }
+        receipt["deployment_binding"]["binary_hash"] = binary_hash
+        write(receipt_path, receipt)
+    campaign["provenance"]["capture_receipts"] = [
+        validator.bytes_digest(path.read_bytes()) for path in bundle["receipts"]
+    ]
+    rehash_campaign(validator, campaign)
+    write(bundle["campaign"], campaign)
+
+
 def promote_mapped_candidate(validator, campaign: dict, candidate_id: str) -> dict:
     registry = load(REGISTRY)
     expected = next(item for item in registry["candidate_catalog"] if item["candidate_id"] == candidate_id)
@@ -1065,64 +1122,16 @@ def test_reproducible_build_rejects_coherently_relabelled_arbitrary_binary(
         validator, "PINNED_REGISTRY_SHA256", bundle["registry_hash"]
     )
     bundle["binary"].write_bytes(b"coherently-relabelled-arbitrary-binary")
-    binary_hash = validator.bytes_digest(bundle["binary"].read_bytes())
+    rebind_live_deployment(validator, bundle)
 
-    evidence = load(bundle["m8_evidence"])
-    for run_item in evidence["runs"]:
-        runtime = run_item["provenance"]["runtime"]
-        runtime.update(
-            artifact_digest=binary_hash,
-            artifact_id="gateway:" + binary_hash,
-            artifact_size_bytes=len(bundle["binary"].read_bytes()),
-        )
-    m8_live_test = load_module(M8_LIVE_TEST, "captured_multi_leaf_build_forgery_test")
-    m8_live_test.refresh_evidence_hash(validator.coexistence, evidence)
-    write(bundle["m8_evidence"], evidence)
-    m8_registry = load(validator.M8_REGISTRY)
-    report = validator.coexistence.report(copy.deepcopy(evidence), m8_registry)
-    write(bundle["m8_report"], report)
-
-    deployment = load(bundle["deployment"])
-    deployment["binary_hash"] = binary_hash
-    write(bundle["deployment"], deployment)
-    campaign = load(bundle["campaign"])
-    campaign["source_bindings"].update(
-        m8_evidence_id=evidence["evidence_id"],
-        m8_evidence_hash=evidence["evidence_hash"],
-        m8_evidence_bytes_hash=validator.bytes_digest(
-            bundle["m8_evidence"].read_bytes()
-        ),
-        m8_report_id=report["report_id"],
-        m8_report_hash=report["report_hash"],
-        m8_report_bytes_hash=validator.bytes_digest(bundle["m8_report"].read_bytes()),
-    )
-    campaign["provenance"].update(
-        deployment_binary_hash=binary_hash,
-        deployment_source_hash=validator.bytes_digest(bundle["deployment"].read_bytes()),
-    )
-    for receipt_path in bundle["receipts"]:
-        receipt = load(receipt_path)
-        receipt["m8_binding"] = {
-            "evidence_id": evidence["evidence_id"],
-            "evidence_hash": evidence["evidence_hash"],
-            "report_id": report["report_id"],
-            "report_hash": report["report_hash"],
-        }
-        receipt["deployment_binding"]["binary_hash"] = binary_hash
-        write(receipt_path, receipt)
-    campaign["provenance"]["capture_receipts"] = [
-        validator.bytes_digest(path.read_bytes()) for path in bundle["receipts"]
-    ]
-    rehash_campaign(validator, campaign)
-    write(bundle["campaign"], campaign)
-
+    campaign, _ = validator.load_json(bundle["campaign"])
     registry = validator.registry_value(bundle["registry"])
     with pytest.raises(validator.ValidationFailure) as raised:
         validator.verify_private(campaign, registry, live_sources(bundle))
     assert raised.value.category == "live.deployment"
 
 
-def test_reproducible_build_rejects_untracked_source_input(
+def test_reproducible_build_rejects_ignored_source_input(
     tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     validator = module()
@@ -1130,9 +1139,52 @@ def test_reproducible_build_rejects_untracked_source_input(
     monkeypatch.setattr(
         validator, "PINNED_REGISTRY_SHA256", bundle["registry_hash"]
     )
-    (bundle["source_tree"] / "cmd/gateway/untracked.go").write_text(
-        "package main\n\nconst untrackedBuildInput = true\n", encoding="utf-8"
+    ignored_source = bundle["source_tree"] / "cmd/gateway/ignored.go"
+    ignored_source.write_text(
+        'package main\n\nimport "fmt"\n\nfunc init() { fmt.Print("ignored-input") }\n',
+        encoding="utf-8",
     )
+    (bundle["source_tree"] / ".git/info/exclude").write_text(
+        "cmd/gateway/ignored.go\n", encoding="utf-8"
+    )
+    assert subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=bundle["source_tree"],
+        check=True,
+        capture_output=True,
+    ).stdout == b""
+
+    evidence = load(bundle["m8_evidence"])
+    runtime = evidence["runs"][0]["provenance"]["runtime"]
+    target = runtime["build_manifest"]["target"].split("/")
+    environment = {
+        **os.environ,
+        "CGO_ENABLED": "0",
+        "GOOS": target[0],
+        "GOARCH": target[1],
+        "GOTOOLCHAIN": "local",
+        "GOFLAGS": "-mod=readonly",
+        "GOWORK": "off",
+    }
+    if len(target) == 3:
+        environment["GOARM"] = target[2].removeprefix("v")
+    subprocess.run(
+        [
+            "go",
+            "build",
+            "-trimpath",
+            "-buildvcs=true",
+            "-o",
+            str(bundle["binary"]),
+            "./cmd/gateway",
+        ],
+        cwd=bundle["source_tree"],
+        env=environment,
+        check=True,
+        capture_output=True,
+    )
+    rebind_live_deployment(validator, bundle)
+
     campaign, _ = validator.load_json(bundle["campaign"])
     registry = validator.registry_value(bundle["registry"])
     with pytest.raises(validator.ValidationFailure) as raised:

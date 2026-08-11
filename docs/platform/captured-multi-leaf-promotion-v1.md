@@ -162,11 +162,13 @@ hashes and compares them byte-for-byte with both M8.5 windows; the truncated
 public ids are correlation labels only. The M8 transition still validates its
 own domain-separated trust and peer hashes.
 M8 must cover all eleven frozen protected views and all four
-captured-runtime states with `REPRODUCIBLE_BUILD`. The private verifier rebuilds
-the exact clean gateway source commit with the declared Go toolchain, target,
+captured-runtime states with `REPRODUCIBLE_BUILD`. The private verifier creates
+a fresh local clone, checks out the exact gateway source commit detached, and
+rebuilds it with the declared Go toolchain, target,
 `CGO_ENABLED=0`, `-trimpath`, and VCS stamping, then requires byte equality with
 the deployed binary. A synthetic fixture, relabeled arbitrary binary, or a
-narrower coexistence archive cannot substitute for that proof. A
+narrower coexistence archive cannot substitute for that proof. Untracked or
+ignored files in the operator's supplied checkout cannot enter this build. A
 change to source identity, descriptor, unit/conversion, declared step,
 generation, validity, comparator, coexistence proof, or replay hash requires a
 new dossier.
@@ -213,8 +215,9 @@ private trust/peer hashes. The M7 graph/replay/status ids, hashes, source
 commits, and exact bytes must equal the M8 `m7_binding`, `m7_live_status`, and
 immutable inputs. Deployment commit, digest, and size must equal every
 non-baseline live M8 runtime and the M8.5 deployment receipt/binary. M8 must use
-`REPRODUCIBLE_BUILD`, and the clean source checkout must rebuild to the exact
-same bytes with matching embedded VCS revision and `vcs.modified=false`;
+`REPRODUCIBLE_BUILD`, and a fresh detached checkout materialized from the exact
+source commit must rebuild to the same bytes with matching embedded VCS
+revision and `vcs.modified=false`;
 `SYNTHETIC_FIXTURE` is never live evidence. M8's own
 process restart is validated within M8. M8.5 PRE/POST process hashes are
 validated independently by its two capture receipts and must differ, while
