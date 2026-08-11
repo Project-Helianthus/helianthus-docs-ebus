@@ -225,9 +225,12 @@ invalid. There is no empty-success path.
 All four states use the same exact gateway artifact and keep the eeBUS runtime
 connected. Candidate evidence is an offline harness input and remains confined
 to `CANDIDATE_DEBUG_REPLAY`; it does not alter the runtime's public surfaces.
-The runtime artifact must use `REPRODUCIBLE_BUILD`. A
-`SYNTHETIC_FIXTURE` build remains conformance-only even if a caller relabels
-the evidence class or recomputes every caller-controlled hash.
+The runtime artifact must use `REPRODUCIBLE_BUILD`. This field is a structural
+M8 claim; the downstream M8.5 private verifier closes it by rebuilding the
+exact clean source commit with the declared toolchain and comparing the output
+byte-for-byte with the deployed binary. A `SYNTHETIC_FIXTURE` build remains
+conformance-only, and relabeling arbitrary bytes cannot pass that downstream
+rebuild gate even if every caller-controlled hash is recomputed.
 
 | State | Required state evidence | Consumer result |
 | --- | --- | --- |
