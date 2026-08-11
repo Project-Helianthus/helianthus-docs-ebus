@@ -271,7 +271,7 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
             artifact_id="gateway:" + binary_hash,
             artifact_size_bytes=len(binary_path.read_bytes()),
         )
-        runtime["build_manifest"]["build_mode"] = "REPRODUCIBLE_GO_BUILD"
+        runtime["build_manifest"]["build_mode"] = "REPRODUCIBLE_BUILD"
         runtime["build_manifest_hash"] = validator.coexistence.digest(
             validator.coexistence.BUILD_DOMAIN, runtime["build_manifest"]
         )
@@ -312,11 +312,6 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
         if item["state"] == "EEBUS_RESTART_PERSISTED"
     )
     transition = transition_run["state_evidence"]["restart_transition"]
-    before_run = next(
-        item
-        for item in evidence["runs"]
-        if item["state"] == "EEBUS_CONNECTED_RAW_WITHHELD"
-    )
     leaf_process_ids = (
         "process-leaf-" + "a" * 27,
         "process-leaf-" + "b" * 27,

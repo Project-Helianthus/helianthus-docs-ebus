@@ -1240,7 +1240,12 @@ def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]
             fail("provenance.runtime")
     else:
         compared_runtime = baseline
-        if baseline["source_parent_commit"] != evidence["m7_binding"]["source_commit"]:
+        if (
+            baseline["source_parent_commit"]
+            != evidence["m7_binding"]["source_commit"]
+            or baseline["build_manifest"]["build_mode"]
+            != "REPRODUCIBLE_BUILD"
+        ):
             fail("provenance.runtime")
     for run in evidence["runs"]:
         runtime = run["provenance"]["runtime"]

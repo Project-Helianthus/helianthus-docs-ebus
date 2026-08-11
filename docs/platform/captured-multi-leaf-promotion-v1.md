@@ -150,8 +150,14 @@ samples, identical source identity, bounded skew and age, and no generation
 change within a window.
 
 The campaign also binds the exact bytes and protocol ids/hashes of the M7
-graph/status/replay and M8 coexistence evidence/report, `no_drift=true`,
-`rollback_exact=true`, and deterministic replay. A
+graph/status/replay and the complete M8 coexistence evidence/report,
+`no_drift=true`, `rollback_exact=true`, and deterministic replay. M8 and M8.5
+are separate capture campaigns: their process-instance ids are expected to
+differ. They must nevertheless bind the same exact gateway source commit,
+binary digest and byte length, and the same persistent trust and peer
+identities. M8 must cover all eleven frozen protected views and all four
+captured-runtime states with `REPRODUCIBLE_BUILD`; a synthetic fixture or a
+narrower coexistence archive cannot substitute for that proof. A
 change to source identity, descriptor, unit/conversion, declared step,
 generation, validity, comparator, coexistence proof, or replay hash requires a
 new dossier.
@@ -193,14 +199,19 @@ window/generation/process binding, the deployment source commit receipt, and
 the deployed binary hash. The M7 graph/replay/status ids, hashes, source
 commits, and exact bytes must equal the M8 `m7_binding`, `m7_live_status`, and
 immutable inputs. Deployment commit, digest, and size must equal every
-non-baseline live M8 runtime. PRE/POST process hashes, trust state, and peer
-binding must equal the unique `EEBUS_RESTART_PERSISTED` transition. Known
+non-baseline live M8 runtime and the M8.5 deployment receipt/binary. M8 must use
+`REPRODUCIBLE_BUILD`; `SYNTHETIC_FIXTURE` is never live evidence. M8's own
+process restart is validated within M8. M8.5 PRE/POST process hashes are
+validated independently by its two capture receipts and must differ, while
+their trust state and peer binding must equal the unique
+`EEBUS_RESTART_PERSISTED` transition. Known
 synthetic selector markers fail closed. Numeric SPINE enum ids use the exact
 integer representation (`scale=0`); scaled numeric aliases are invalid. The
 deployment source receipt is the closed JSON object
 `{contract,source_commit,binary_hash}`. Each closed capture receipt binds one
-campaign id, the full window hash, M7/M8/deployment bindings, and the exact M8
-run. PRE has no restart event. POST must carry exactly one
+campaign id, the full window hash, and the M7/M8/deployment bindings. It does
+not claim that a later leaf window is an M8 run. PRE has no restart event. POST
+must carry exactly one
 `HA_ADDON_RESTART_COMPLETED` event whose `completed_at` is strictly after the
 PRE window and strictly before the POST window. Omitting, splicing, or
 substituting any input prevents LIVE derivation and M9 readiness.

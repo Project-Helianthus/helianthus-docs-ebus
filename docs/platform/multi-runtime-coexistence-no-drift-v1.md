@@ -225,6 +225,9 @@ invalid. There is no empty-success path.
 All four states use the same exact gateway artifact and keep the eeBUS runtime
 connected. Candidate evidence is an offline harness input and remains confined
 to `CANDIDATE_DEBUG_REPLAY`; it does not alter the runtime's public surfaces.
+The runtime artifact must use `REPRODUCIBLE_BUILD`. A
+`SYNTHETIC_FIXTURE` build remains conformance-only even if a caller relabels
+the evidence class or recomputes every caller-controlled hash.
 
 | State | Required state evidence | Consumer result |
 | --- | --- | --- |

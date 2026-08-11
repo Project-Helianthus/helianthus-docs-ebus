@@ -906,20 +906,13 @@ def _validate_live_cross_bindings(
         != transition["after_process_instance_id"]
     ):
         fail("live.restart.binding")
-    before_run = before_runs[0]
     windows = value["windows"]
     expected_window_bindings = (
         {
-            "process_instance_hash": _process_instance_hash(
-                transition["before_process_instance_id"]
-            ),
             "trust_state_hash": transition["before_trust_state_hash"],
             "peer_binding_hash": transition["before_peer_binding_hash"],
         },
         {
-            "process_instance_hash": _process_instance_hash(
-                transition["after_process_instance_id"]
-            ),
             "trust_state_hash": transition["after_trust_state_hash"],
             "peer_binding_hash": transition["after_peer_binding_hash"],
         },
@@ -934,6 +927,7 @@ def _validate_live_cross_bindings(
             run["provenance"]["runtime"] != runtime
             for run in evidence["runs"][1:]
         )
+        or runtime["build_manifest"]["build_mode"] != "REPRODUCIBLE_BUILD"
         or runtime["source_parent_commit"] != status["source_commit"]
         or runtime["artifact_id"] != "gateway:" + runtime["artifact_digest"]
     ):
@@ -960,7 +954,6 @@ def _validate_live_cross_bindings(
             "binary_hash": runtime["artifact_digest"],
         },
         "runtime": runtime,
-        "window_runs": (before_run, restart_run),
         "transition": transition,
     }
 
@@ -974,14 +967,8 @@ def _validate_capture_receipts(
         fail("live.receipt")
     windows = value["windows"]
     observed: list[str] = []
-    transition = live_context["transition"]
-    process_hashes = (
-        _process_instance_hash(transition["before_process_instance_id"]),
-        _process_instance_hash(transition["after_process_instance_id"]),
-    )
-    for index, (path, window, run) in enumerate(
-        zip(receipt_paths, windows, live_context["window_runs"], strict=True)
-    ):
+    process_hashes = tuple(window["process_instance_hash"] for window in windows)
+    for index, (path, window) in enumerate(zip(receipt_paths, windows, strict=True)):
         receipt, raw = load_json(path)
         if set(receipt) != {
             "contract",
@@ -995,7 +982,6 @@ def _validate_capture_receipts(
             "peer_binding_hash",
             "admitted_source",
             "window_evidence_hash",
-            "m8_run_id",
             "m7_binding",
             "m8_binding",
             "deployment_binding",
@@ -1022,7 +1008,6 @@ def _validate_capture_receipts(
             )
             or receipt["window_evidence_hash"]
             != digest(WINDOW_EVIDENCE_DOMAIN, window)
-            or receipt["m8_run_id"] != run["run_id"]
             or receipt["m7_binding"] != live_context["m7_binding"]
             or receipt["m8_binding"] != live_context["m8_binding"]
             or receipt["deployment_binding"]
@@ -1033,7 +1018,6 @@ def _validate_capture_receipts(
         if index == 1:
             expected_restart = {
                 "event_type": "HA_ADDON_RESTART_COMPLETED",
-                "event_id": transition["event_id"],
                 "outcome": "COMPLETED",
                 "before_process_instance_hash": process_hashes[0],
                 "after_process_instance_hash": process_hashes[1],
@@ -1041,7 +1025,10 @@ def _validate_capture_receipts(
             restart_event = receipt["restart_event"]
             if (
                 not isinstance(restart_event, dict)
-                or set(restart_event) != set(expected_restart) | {"completed_at"}
+                or set(restart_event)
+                != set(expected_restart) | {"event_id", "completed_at"}
+                or not isinstance(restart_event["event_id"], str)
+                or not 1 <= len(restart_event["event_id"]) <= 256
                 or any(
                     restart_event[key] != item
                     for key, item in expected_restart.items()
