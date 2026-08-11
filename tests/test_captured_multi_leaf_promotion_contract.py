@@ -1192,6 +1192,75 @@ def test_reproducible_build_rejects_ignored_source_input(
     assert raised.value.category == "live.deployment"
 
 
+def build_gateway_runtime(
+    validator,
+    source_tree: pathlib.Path,
+    binary: pathlib.Path,
+    go_version: str,
+    target_name: str,
+) -> dict:
+    source_commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+    ).stdout == b""
+
+    target = target_name.split("/")
+    environment = {
+        **os.environ,
+        "CGO_ENABLED": "0",
+        "GOOS": target[0],
+        "GOARCH": target[1],
+        "GOTOOLCHAIN": "local",
+        "GOFLAGS": "-mod=readonly",
+        "GOWORK": "off",
+    }
+    if len(target) == 3:
+        environment["GOARM"] = target[2].removeprefix("v")
+    subprocess.run(
+        [
+            "go",
+            "build",
+            "-trimpath",
+            "-buildvcs=true",
+            "-o",
+            str(binary),
+            "./cmd/gateway",
+        ],
+        cwd=source_tree,
+        env=environment,
+        check=True,
+        capture_output=True,
+    )
+    build_info = subprocess.run(
+        ["go", "version", "-m", str(binary)],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert "build\tvcs.modified=false" in build_info
+
+    raw = binary.read_bytes()
+    return {
+        "source_commit": source_commit,
+        "artifact_digest": validator.bytes_digest(raw),
+        "artifact_size_bytes": len(raw),
+        "build_manifest": {
+            "flags": ["-trimpath", "CGO_ENABLED=0"],
+            "go_version": go_version,
+            "target": target_name,
+        },
+    }
+
+
 def test_reproducible_build_rejects_absolute_local_module_replacement(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -1243,65 +1312,10 @@ def test_reproducible_build_rejects_absolute_local_module_replacement(
         check=True,
         capture_output=True,
     )
-    source_commit = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=source_tree,
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
-    assert subprocess.run(
-        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
-        cwd=source_tree,
-        check=True,
-        capture_output=True,
-    ).stdout == b""
-
     binary = tmp_path / "local-replacement.bin"
-    target = target_name.split("/")
-    environment = {
-        **os.environ,
-        "CGO_ENABLED": "0",
-        "GOOS": target[0],
-        "GOARCH": target[1],
-        "GOTOOLCHAIN": "local",
-        "GOFLAGS": "-mod=readonly",
-        "GOWORK": "off",
-    }
-    subprocess.run(
-        [
-            "go",
-            "build",
-            "-trimpath",
-            "-buildvcs=true",
-            "-o",
-            str(binary),
-            "./cmd/gateway",
-        ],
-        cwd=source_tree,
-        env=environment,
-        check=True,
-        capture_output=True,
+    runtime = build_gateway_runtime(
+        validator, source_tree, binary, go_version, target_name
     )
-    build_info = subprocess.run(
-        ["go", "version", "-m", str(binary)],
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout
-    assert "build\tvcs.modified=false" in build_info
-
-    raw = binary.read_bytes()
-    runtime = {
-        "source_commit": source_commit,
-        "artifact_digest": validator.bytes_digest(raw),
-        "artifact_size_bytes": len(raw),
-        "build_manifest": {
-            "flags": ["-trimpath", "CGO_ENABLED=0"],
-            "go_version": go_version,
-            "target": target_name,
-        },
-    }
     with pytest.raises(validator.ValidationFailure) as raised:
         validator._validate_reproducible_build(source_tree, binary, runtime)
     assert raised.value.category == "live.deployment"
@@ -1312,6 +1326,54 @@ def test_reproducible_build_allows_versioned_module_replacement() -> None:
     validator._reject_local_module_replacements(
         b'{"Replace":[{"New":{"Path":"example.invalid/new","Version":"v1.2.3"}}]}'
     )
+
+
+def test_reproducible_build_rejects_tracked_external_go_symlink(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    source_tree, _, go_version, target_name = generated_gateway_source(tmp_path)
+    ignored_source = source_tree / "ignored-source"
+    ignored_source.mkdir()
+    external_go = ignored_source / "external.go"
+    external_go.write_text(
+        'package main\n\nimport "fmt"\n\nfunc init() { fmt.Print("external-input") }\n',
+        encoding="utf-8",
+    )
+    (source_tree / ".git/info/exclude").write_text(
+        "ignored-source/\n", encoding="utf-8"
+    )
+    linked_go = source_tree / "cmd/gateway/linked.go"
+    linked_go.symlink_to(external_go)
+    subprocess.run(
+        ["git", "add", "cmd/gateway/linked.go"],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Helianthus Test",
+            "-c",
+            "user.email=test@helianthus.invalid",
+            "commit",
+            "-q",
+            "-m",
+            "add external source symlink",
+        ],
+        cwd=source_tree,
+        check=True,
+        capture_output=True,
+    )
+    binary = tmp_path / "external-symlink.bin"
+    runtime = build_gateway_runtime(
+        validator, source_tree, binary, go_version, target_name
+    )
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator._validate_reproducible_build(source_tree, binary, runtime)
+    assert raised.value.category == "live.deployment"
 
 
 def test_full_live_verifier_rejects_reused_m8_processes(

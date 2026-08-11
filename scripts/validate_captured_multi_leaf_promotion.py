@@ -864,6 +864,16 @@ def _reject_local_module_replacements(raw: bytes) -> None:
             fail("live.deployment")
 
 
+def _reject_nonregular_tracked_entries(raw: bytes) -> None:
+    entries = [entry for entry in raw.split(b"\x00") if entry]
+    if not entries:
+        fail("live.deployment")
+    for entry in entries:
+        mode, separator, _ = entry.partition(b" ")
+        if not separator or mode not in {b"100644", b"100755"}:
+            fail("live.deployment")
+
+
 def _validate_reproducible_build(
     source_tree: pathlib.Path,
     binary_path: pathlib.Path,
@@ -946,6 +956,10 @@ def _validate_reproducible_build(
             ["git", "checkout", "--detach", runtime["source_commit"]],
             cwd=materialized,
         )
+        tracked_entries = _run_build_command(
+            ["git", "ls-files", "--stage", "-z"], cwd=materialized
+        )
+        _reject_nonregular_tracked_entries(tracked_entries)
         module = _run_build_command(
             ["go", "mod", "edit", "-json"],
             cwd=materialized,
