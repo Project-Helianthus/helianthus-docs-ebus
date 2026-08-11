@@ -857,7 +857,7 @@ def _validate_reproducible_build(
         ["git", "rev-parse", "--show-toplevel"], cwd=source_tree
     )
     status = _run_build_command(
-        ["git", "status", "--porcelain=v1", "--untracked-files=no"],
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
         cwd=source_tree,
     )
     remote = _run_build_command(
@@ -946,7 +946,7 @@ def _validate_reproducible_build(
         or bytes_digest(rebuilt_raw) != runtime["artifact_digest"]
         or len(rebuilt_raw) != runtime["artifact_size_bytes"]
         or _run_build_command(
-            ["git", "status", "--porcelain=v1", "--untracked-files=no"],
+            ["git", "status", "--porcelain=v1", "--untracked-files=all"],
             cwd=source_tree,
         )
     ):

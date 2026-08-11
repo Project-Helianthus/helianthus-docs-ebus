@@ -1122,6 +1122,24 @@ def test_reproducible_build_rejects_coherently_relabelled_arbitrary_binary(
     assert raised.value.category == "live.deployment"
 
 
+def test_reproducible_build_rejects_untracked_source_input(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    validator = module()
+    bundle = generated_live_bundle(validator, tmp_path)
+    monkeypatch.setattr(
+        validator, "PINNED_REGISTRY_SHA256", bundle["registry_hash"]
+    )
+    (bundle["source_tree"] / "cmd/gateway/untracked.go").write_text(
+        "package main\n\nconst untrackedBuildInput = true\n", encoding="utf-8"
+    )
+    campaign, _ = validator.load_json(bundle["campaign"])
+    registry = validator.registry_value(bundle["registry"])
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator.verify_private(campaign, registry, live_sources(bundle))
+    assert raised.value.category == "live.deployment"
+
+
 def test_full_live_verifier_rejects_reused_m8_processes(
     tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
