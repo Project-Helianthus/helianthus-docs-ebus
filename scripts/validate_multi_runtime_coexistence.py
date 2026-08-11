@@ -1227,7 +1227,7 @@ def _verify_m7(
     return status_graph, terminal_replay, inputs, terminal_graph
 
 
-def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]]) -> None:
+def check_runtime_identity(evidence: dict[str, Any]) -> None:
     baseline = evidence["runs"][0]["provenance"]["runtime"]
     if evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE":
         if (
@@ -1268,6 +1268,10 @@ def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]
     for run in compared_runs:
         if run["provenance"]["runtime"] != compared_runtime:
             fail("provenance.runtime")
+
+
+def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]]) -> None:
+    check_runtime_identity(evidence)
     for run in evidence["runs"]:
         views = {view["view_id"]: view for view in run["protected_views"]}
         expected = {

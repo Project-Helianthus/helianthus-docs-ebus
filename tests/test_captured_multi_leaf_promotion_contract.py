@@ -463,6 +463,19 @@ def live_cli_args(bundle: dict) -> list[str]:
     return args
 
 
+def live_sources(bundle: dict) -> dict:
+    return {
+        "m7_graph": bundle["m7_graph"],
+        "m7_status": bundle["m7_status"],
+        "m7_replay": bundle["m7_replay"],
+        "m8_evidence": bundle["m8_evidence"],
+        "m8_report": bundle["m8_report"],
+        "capture_receipts": bundle["receipts"],
+        "deployment_source": bundle["deployment"],
+        "deployment_binary": bundle["binary"],
+    }
+
+
 def promote_mapped_candidate(validator, campaign: dict, candidate_id: str) -> dict:
     registry = load(REGISTRY)
     expected = next(item for item in registry["candidate_catalog"] if item["candidate_id"] == candidate_id)
@@ -775,6 +788,62 @@ def test_live_cross_binding_rejects_component_splices(tmp_path: pathlib.Path) ->
     spliced_window["windows"][1]["trust_state_hash"] = "sha256:" + "0" * 64
     with pytest.raises(validator.ValidationFailure) as raised:
         validate(candidate_campaign=spliced_window)
+    assert raised.value.category == "live.restart.binding"
+
+
+def test_full_live_verifier_rejects_synthetic_m8_baseline_only(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    validator = module()
+    bundle = generated_live_bundle(validator, tmp_path)
+    monkeypatch.setattr(
+        validator, "PINNED_REGISTRY_SHA256", bundle["registry_hash"]
+    )
+    evidence = load(bundle["m8_evidence"])
+    runtime = evidence["runs"][0]["provenance"]["runtime"]
+    runtime["build_manifest"]["build_mode"] = "SYNTHETIC_FIXTURE"
+    runtime["build_manifest_hash"] = validator.coexistence.digest(
+        validator.coexistence.BUILD_DOMAIN, runtime["build_manifest"]
+    )
+    m8_live_test = load_module(M8_LIVE_TEST, "captured_multi_leaf_m8_mutation_test")
+    m8_live_test.refresh_evidence_hash(validator.coexistence, evidence)
+    write(bundle["m8_evidence"], evidence)
+    campaign, _ = validator.load_json(bundle["campaign"])
+    registry = validator.registry_value(bundle["registry"])
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator.verify_private(campaign, registry, live_sources(bundle))
+    assert raised.value.category == "live.m8"
+
+
+def test_full_live_verifier_rejects_reused_m8_processes(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    validator = module()
+    bundle = generated_live_bundle(validator, tmp_path)
+    monkeypatch.setattr(
+        validator, "PINNED_REGISTRY_SHA256", bundle["registry_hash"]
+    )
+    campaign = load(bundle["campaign"])
+    evidence = load(bundle["m8_evidence"])
+    transition = next(
+        run["state_evidence"]["restart_transition"]
+        for run in evidence["runs"]
+        if run["state"] == "EEBUS_RESTART_PERSISTED"
+    )
+    for window, process_id in zip(
+        campaign["windows"],
+        (
+            transition["before_process_instance_id"],
+            transition["after_process_instance_id"],
+        ),
+        strict=True,
+    ):
+        window["process_instance_hash"] = validator._process_instance_hash(process_id)
+    rehash_campaign(validator, campaign)
+    write(bundle["campaign"], campaign)
+    registry = validator.registry_value(bundle["registry"])
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator.verify_private(campaign, registry, live_sources(bundle))
     assert raised.value.category == "live.restart.binding"
 
 

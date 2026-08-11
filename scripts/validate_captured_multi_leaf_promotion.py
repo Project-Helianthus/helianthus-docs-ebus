@@ -907,6 +907,14 @@ def _validate_live_cross_bindings(
     ):
         fail("live.restart.binding")
     windows = value["windows"]
+    m8_process_hashes = {
+        _process_instance_hash(transition["before_process_instance_id"]),
+        _process_instance_hash(transition["after_process_instance_id"]),
+    }
+    if m8_process_hashes & {
+        window["process_instance_hash"] for window in windows
+    }:
+        fail("live.restart.binding")
     expected_window_bindings = (
         {
             "trust_state_hash": transition["before_trust_state_hash"],
@@ -921,14 +929,13 @@ def _validate_live_cross_bindings(
         if any(window[key] != item for key, item in expected.items()):
             fail("live.restart.binding")
 
+    try:
+        coexistence.check_runtime_identity(evidence)
+    except (coexistence.Failure, KeyError, TypeError, ValueError):
+        fail("live.deployment")
     runtime = restart_run["provenance"]["runtime"]
     if (
-        any(
-            run["provenance"]["runtime"] != runtime
-            for run in evidence["runs"][1:]
-        )
-        or runtime["build_manifest"]["build_mode"] != "REPRODUCIBLE_BUILD"
-        or runtime["source_parent_commit"] != status["source_commit"]
+        runtime["source_parent_commit"] != status["source_commit"]
         or runtime["artifact_id"] != "gateway:" + runtime["artifact_digest"]
     ):
         fail("live.deployment")
