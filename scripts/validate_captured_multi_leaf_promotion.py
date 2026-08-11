@@ -130,6 +130,28 @@ def registry_value(path: pathlib.Path) -> dict[str, Any]:
         or len(registry.get("candidate_catalog", [])) != 18
     ):
         fail("registry.binding")
+    status_path = ROOT / registry.get("m7_public_status", "")
+    status, _ = load_json(status_path)
+    projected = [
+        {
+            "candidate_id": item["candidate_id"],
+            "fact_hash": item["fact_hash"],
+            "source_status": item["status"],
+            "terminal_state": item["terminal_negative_state"],
+        }
+        for item in status.get("facts", [])
+    ]
+    catalog_projection = [
+        {
+            "candidate_id": item["candidate_id"],
+            "fact_hash": item["fact_hash"],
+            "source_status": item["source_status"],
+            "terminal_state": item["terminal_state"],
+        }
+        for item in registry["candidate_catalog"]
+    ]
+    if projected != catalog_projection:
+        fail("registry.binding")
     return registry
 
 

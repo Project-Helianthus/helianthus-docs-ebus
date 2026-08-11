@@ -118,6 +118,14 @@ def test_registry_classifies_all_18_actual_candidates() -> None:
     assert sum(item["comparator_class"] == "ENUM_EXACT_MAPPING" for item in catalog) == 3
     assert sum(item["comparator_class"] == "BOOLEAN_EXACT_MAPPING" for item in catalog) == 4
     assert catalog[-1]["descriptor"] == "outsideAirTemperature"
+    status = load(ROOT / registry["m7_public_status"])
+    assert [
+        (item["candidate_id"], item["fact_hash"], item["source_status"], item["terminal_state"])
+        for item in catalog
+    ] == [
+        (item["candidate_id"], item["fact_hash"], item["status"], item["terminal_negative_state"])
+        for item in status["facts"]
+    ]
 
 
 def test_existing_zero_profile_canonical_bytes_are_unchanged() -> None:

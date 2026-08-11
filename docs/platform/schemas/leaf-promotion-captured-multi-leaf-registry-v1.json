@@ -4,6 +4,7 @@
   "profile": "CAPTURED_RUNTIME_MULTI_LEAF_V1",
   "private_schema": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-v1.schema.json",
   "public_schema": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-result-v1.schema.json",
+  "m7_public_status": "docs/platform/fixtures/candidate-fact-graph/v1/positive/live-public-status.json",
   "docs_eebus_source_commit": "ea2538bb24f3a13ef8c35624440b4830b618c48a",
   "candidate_catalog": [
     {"candidate_id":"m7-candidate-0001","fact_hash":"sha256:867157d98ac046e6bc09ae60b4a963e5f7c6d174f12d293b09cc339c7f9dd9a2","source_status":"WITHHELD","terminal_state":"CLOUD_ONLY","comparator_class":"NONE","semantic_path":null,"descriptor":null},
