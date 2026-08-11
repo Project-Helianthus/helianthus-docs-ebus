@@ -271,6 +271,10 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
             artifact_id="gateway:" + binary_hash,
             artifact_size_bytes=len(binary_path.read_bytes()),
         )
+        runtime["build_manifest"]["build_mode"] = "REPRODUCIBLE_GO_BUILD"
+        runtime["build_manifest_hash"] = validator.coexistence.digest(
+            validator.coexistence.BUILD_DOMAIN, runtime["build_manifest"]
+        )
     live_test.refresh_evidence_hash(validator.coexistence, evidence)
     m8_registry = load(
         ROOT / "docs/platform/schemas/multi-runtime-coexistence-registry-v1.json"
@@ -313,14 +317,18 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
         for item in evidence["runs"]
         if item["state"] == "EEBUS_CONNECTED_RAW_WITHHELD"
     )
+    leaf_process_ids = (
+        "process-leaf-" + "a" * 27,
+        "process-leaf-" + "b" * 27,
+    )
     window_bindings = (
         (
-            transition["before_process_instance_id"],
+            leaf_process_ids[0],
             transition["before_trust_state_hash"],
             transition["before_peer_binding_hash"],
         ),
         (
-            transition["after_process_instance_id"],
+            leaf_process_ids[1],
             transition["after_trust_state_hash"],
             transition["after_peer_binding_hash"],
         ),
@@ -379,9 +387,7 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
     }
     deployment_binding = {"source_commit": "9" * 40, "binary_hash": binary_hash}
     receipt_paths = []
-    for index, (window, run_item) in enumerate(
-        zip(campaign["windows"], (before_run, transition_run), strict=True)
-    ):
+    for index, window in enumerate(campaign["windows"]):
         receipt = {
             "contract": "helianthus.platform.leaf-promotion-capture-receipt.v1",
             "capture_campaign_id": campaign["provenance"]["capture_campaign_id"],
@@ -396,7 +402,6 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
             "window_evidence_hash": validator.digest(
                 validator.WINDOW_EVIDENCE_DOMAIN, window
             ),
-            "m8_run_id": run_item["run_id"],
             "m7_binding": m7_binding,
             "m8_binding": m8_binding,
             "deployment_binding": deployment_binding,
@@ -404,14 +409,14 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
             "restart_event": (
                 {
                     "event_type": "HA_ADDON_RESTART_COMPLETED",
-                    "event_id": transition["event_id"],
+                    "event_id": "leaf-restart-event-test",
                     "outcome": "COMPLETED",
                     "completed_at": "2026-08-11T10:02:00Z",
                     "before_process_instance_hash": validator._process_instance_hash(
-                        transition["before_process_instance_id"]
+                        leaf_process_ids[0]
                     ),
                     "after_process_instance_hash": validator._process_instance_hash(
-                        transition["after_process_instance_id"]
+                        leaf_process_ids[1]
                     ),
                 }
                 if index == 1
@@ -734,6 +739,9 @@ def test_live_cross_binding_rejects_component_splices(tmp_path: pathlib.Path) ->
         )
 
     validate()
+    assert campaign["windows"][0]["process_instance_hash"] != validator._process_instance_hash(
+        evidence["runs"][1]["provenance"]["process_instance_id"]
+    )
     spliced_m7 = copy.deepcopy(evidence)
     spliced_m7["m7_binding"]["graph_id"] = "dcfgv1:spliced-run"
     with pytest.raises(validator.ValidationFailure) as raised:
@@ -757,8 +765,19 @@ def test_live_cross_binding_rejects_component_splices(tmp_path: pathlib.Path) ->
         validate(candidate_evidence=spliced_runtime)
     assert raised.value.category == "live.deployment"
 
+    synthetic_runtime = copy.deepcopy(evidence)
+    for run_item in synthetic_runtime["runs"]:
+        runtime = run_item["provenance"]["runtime"]
+        runtime["build_manifest"]["build_mode"] = "SYNTHETIC_FIXTURE"
+        runtime["build_manifest_hash"] = validator.coexistence.digest(
+            validator.coexistence.BUILD_DOMAIN, runtime["build_manifest"]
+        )
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validate(candidate_evidence=synthetic_runtime)
+    assert raised.value.category == "live.deployment"
+
     spliced_window = copy.deepcopy(campaign)
-    spliced_window["windows"][1]["process_instance_hash"] = "sha256:" + "0" * 64
+    spliced_window["windows"][1]["trust_state_hash"] = "sha256:" + "0" * 64
     with pytest.raises(validator.ValidationFailure) as raised:
         validate(candidate_campaign=spliced_window)
     assert raised.value.category == "live.restart.binding"
@@ -804,13 +823,10 @@ def test_live_receipts_and_deployment_source_are_byte_bound(
             "artifact_digest": binary_hash,
             "artifact_size_bytes": len(binary_path.read_bytes()),
         },
-        "window_runs": ({"run_id": "run-pre"}, {"run_id": "run-post"}),
         "transition": transition,
     }
     receipt_paths = []
-    for index, (window, run_item) in enumerate(
-        zip(campaign["windows"], live_context["window_runs"], strict=True)
-    ):
+    for index, window in enumerate(campaign["windows"]):
         receipt = {
             "contract": "helianthus.platform.leaf-promotion-capture-receipt.v1",
             "capture_campaign_id": campaign["provenance"]["capture_campaign_id"],
@@ -825,7 +841,6 @@ def test_live_receipts_and_deployment_source_are_byte_bound(
             "window_evidence_hash": validator.digest(
                 validator.WINDOW_EVIDENCE_DOMAIN, window
             ),
-            "m8_run_id": run_item["run_id"],
             "m7_binding": live_context["m7_binding"],
             "m8_binding": live_context["m8_binding"],
             "deployment_binding": live_context["deployment_binding"],
