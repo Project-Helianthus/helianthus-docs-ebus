@@ -11,6 +11,7 @@
     "class": "SANITIZED_CONFORMANCE",
     "fixture_id": "leaf-promotion-captured-multi-leaf/v1/positive",
     "generator": "scripts/generate_captured_multi_leaf_promotion_fixture.py",
+    "capture_campaign_id": null,
     "capture_receipts": [],
     "deployment_source_commit": null,
     "deployment_source_hash": null,

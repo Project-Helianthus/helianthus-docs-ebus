@@ -25,7 +25,9 @@ PUBLIC = FIXTURE / "positive/public-result.json"
 NEGATIVE = FIXTURE / "negative"
 VALIDATOR = ROOT / "scripts/validate_captured_multi_leaf_promotion.py"
 GENERATOR = ROOT / "scripts/generate_captured_multi_leaf_promotion_fixture.py"
-REGISTRY_SHA256 = "7eae7ff101e53678d9564150be8b054d82f955dc515e61c126749971b22a445c"
+M7_FIXTURE = ROOT / "docs/platform/fixtures/candidate-fact-graph/v1/positive"
+M8_LIVE_TEST = ROOT / "tests/test_multi_runtime_live_coexistence_contract.py"
+REGISTRY_SHA256 = "d17a66da1919796f57ecd2a515fa4e538c6be8d00a24c8c7e5d38bce7f36e3cd"
 
 
 EXPECTED_NEGATIVE = {
@@ -141,6 +143,7 @@ def live_campaign(validator) -> dict:
         "class": "LIVE_CAPTURE",
         "fixture_id": None,
         "generator": None,
+        "capture_campaign_id": "live-campaign-test",
         "capture_receipts": ["sha256:" + "e" * 64, "sha256:" + "f" * 64],
         "deployment_source_commit": "1" * 40,
         "deployment_source_hash": "sha256:" + "8" * 64,
@@ -148,6 +151,316 @@ def live_campaign(validator) -> dict:
     }
     rehash_campaign(validator, campaign)
     return campaign
+
+
+def load_module(path: pathlib.Path, name: str):
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None and spec.loader is not None
+    value = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(value)
+    return value
+
+
+def generated_m7_bundle(validator, tmp_path: pathlib.Path, registry: dict) -> tuple:
+    graph = load(M7_FIXTURE / "graph.json")
+    templates = {
+        "CLOUD_ONLY": graph["facts"][0],
+        "NOT_TESTED": graph["facts"][4],
+        "RAW_ONLY": graph["facts"][1],
+    }
+    facts = []
+    for expected in registry["candidate_catalog"]:
+        template = (
+            templates[expected["terminal_state"]]
+            if expected["protocol_eligibility"] == "TERMINAL"
+            else templates["RAW_ONLY"]
+        )
+        fact = copy.deepcopy(template)
+        fact["candidate_id"] = expected["candidate_id"]
+        fact["proposed_path"] = (
+            "/candidates/generated/candidate_" + expected["candidate_id"][-4:]
+        )
+        fact["status"] = expected["source_status"]
+        fact["terminal_negative_state"] = expected["terminal_state"]
+        fact["fact_hash"] = "sha256:" + validator.candidate_schema.fact_hexdigest(
+            fact
+        )
+        facts.append(fact)
+    graph["facts"] = facts
+    graph_hash = validator.candidate_schema.graph_hexdigest(graph)
+    graph["graph_hash"] = "sha256:" + graph_hash
+    graph["graph_id"] = "dcfgv1:sha256:" + graph_hash
+    replay = validator.candidate_schema.replay(graph)
+    status = validator.status_projector.project(
+        graph,
+        replay,
+        "8bcba2107d10b149f984ac9546ea6427a9cda8a1",
+        "35d2eba256a77b6575a2b45c07e73f054ff74ced",
+    )
+    graph_path = write(tmp_path / "m7-graph.json", graph)
+    replay_path = write(tmp_path / "m7-replay.json", replay)
+    status_path = write(tmp_path / "m7-status.json", status)
+    return graph, replay, status, graph_path, replay_path, status_path
+
+
+def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
+    registry = load(REGISTRY)
+    graph, replay, status, graph_path, replay_path, status_path = generated_m7_bundle(
+        validator, tmp_path, registry
+    )
+    for item, fact in zip(registry["candidate_catalog"], graph["facts"], strict=True):
+        item["fact_hash"] = fact["fact_hash"]
+    registry["m7_public_status"] = str(status_path)
+    registry_path = write(tmp_path / "registry.json", registry)
+    registry_hash = validator.bytes_digest(registry_path.read_bytes())
+
+    live_test = load_module(M8_LIVE_TEST, "captured_multi_leaf_m8_live_test")
+    evidence = live_test.build_live_evidence(validator.coexistence)
+    status_raw = status_path.read_bytes()
+    evidence["m7_binding"].update(
+        {
+            "source_commit": status["source_commit"],
+            "docs_source_commit": status["docs_source_commit"],
+            "graph_contract": graph["contract"],
+            "graph_id": graph["graph_id"],
+            "graph_hash": graph["graph_hash"],
+            "replay_contract": replay["contract"],
+            "replay_id": replay["replay_id"],
+            "replay_hash": replay["replay_hash"],
+        }
+    )
+    evidence["m7_live_status"] = {
+        "contract": status["contract"],
+        "projection_id": status["projection_id"],
+        "projection_hash": status["projection_hash"],
+        "content_hash": validator.bytes_digest(status_raw),
+        "source_graph_id": graph["graph_id"],
+        "source_graph_hash": graph["graph_hash"],
+        "source_replay_id": replay["replay_id"],
+        "source_replay_hash": replay["replay_hash"],
+    }
+    m7_inputs = {
+        "m7:private-graph": (
+            validator.bytes_digest(graph_path.read_bytes()),
+            len(graph_path.read_bytes()),
+        ),
+        "m7:private-replay": (
+            validator.bytes_digest(replay_path.read_bytes()),
+            len(replay_path.read_bytes()),
+        ),
+        "m7:status-projection": (
+            validator.bytes_digest(status_raw),
+            len(status_raw),
+        ),
+    }
+    binary_path = tmp_path / "gateway.bin"
+    binary_path.write_bytes(b"generated-live-gateway")
+    binary_hash = validator.bytes_digest(binary_path.read_bytes())
+    for run_item in evidence["runs"]:
+        inputs = {
+            item["input_id"]: item
+            for item in run_item["provenance"]["immutable_inputs"]
+        }
+        for input_id, (input_hash, byte_length) in m7_inputs.items():
+            inputs[input_id].update(digest=input_hash, byte_length=byte_length)
+        runtime = run_item["provenance"]["runtime"]
+        runtime.update(
+            source_commit="9" * 40,
+            source_parent_commit=status["source_commit"],
+            artifact_digest=binary_hash,
+            artifact_id="gateway:" + binary_hash,
+            artifact_size_bytes=len(binary_path.read_bytes()),
+        )
+    live_test.refresh_evidence_hash(validator.coexistence, evidence)
+    m8_registry = load(
+        ROOT / "docs/platform/schemas/multi-runtime-coexistence-registry-v1.json"
+    )
+    report = validator.coexistence.report(copy.deepcopy(evidence), m8_registry)
+    evidence_path = write(tmp_path / "m8-evidence.json", evidence)
+    report_path = write(tmp_path / "m8-report.json", report)
+
+    campaign = live_campaign(validator)
+    for leaf, expected in zip(
+        campaign["candidates"], registry["candidate_catalog"], strict=True
+    ):
+        leaf["fact_hash"] = expected["fact_hash"]
+        if leaf["ebus_identity"] is not None:
+            leaf["ebus_identity"]["target_pseudonym"] = "target-" + "a" * 32
+            rehash_ebus_identity(validator, leaf["ebus_identity"])
+        if leaf["eebus_identity"] is not None:
+            suffix = leaf["candidate_id"][-4:]
+            leaf["eebus_identity"]["service_id"] = "service-live-" + suffix
+            leaf["eebus_identity"]["device_address"] = "device-live-" + suffix
+            rehash_eebus_identity(validator, leaf["eebus_identity"])
+        for assessment in leaf["assessments"]:
+            if assessment["ebus_sample"] is not None:
+                assessment["observed_ebus_identity_hash"] = leaf["ebus_identity"][
+                    "selector_hash"
+                ]
+            if assessment["eebus_sample"] is not None:
+                assessment["observed_eebus_identity_hash"] = leaf["eebus_identity"][
+                    "identity_hash"
+                ]
+
+    transition_run = next(
+        item
+        for item in evidence["runs"]
+        if item["state"] == "EEBUS_RESTART_PERSISTED"
+    )
+    transition = transition_run["state_evidence"]["restart_transition"]
+    before_run = next(
+        item
+        for item in evidence["runs"]
+        if item["state"] == "EEBUS_CONNECTED_RAW_WITHHELD"
+    )
+    window_bindings = (
+        (
+            transition["before_process_instance_id"],
+            transition["before_trust_state_hash"],
+            transition["before_peer_binding_hash"],
+        ),
+        (
+            transition["after_process_instance_id"],
+            transition["after_trust_state_hash"],
+            transition["after_peer_binding_hash"],
+        ),
+    )
+    for window, (process_id, trust_hash, peer_hash) in zip(
+        campaign["windows"], window_bindings, strict=True
+    ):
+        window["process_instance_hash"] = validator._process_instance_hash(process_id)
+        window["trust_state_hash"] = trust_hash
+        window["peer_binding_hash"] = peer_hash
+
+    campaign["source_bindings"].update(
+        registry_sha256=registry_hash,
+        m7_graph_id=graph["graph_id"],
+        m7_graph_hash=graph["graph_hash"],
+        m7_graph_bytes_hash=validator.bytes_digest(graph_path.read_bytes()),
+        m7_replay_id=replay["replay_id"],
+        m7_replay_hash=replay["replay_hash"],
+        m7_replay_bytes_hash=validator.bytes_digest(replay_path.read_bytes()),
+        m7_status_id=status["projection_id"],
+        m7_status_hash=status["projection_hash"],
+        m7_status_bytes_hash=validator.bytes_digest(status_raw),
+        m8_evidence_id=evidence["evidence_id"],
+        m8_evidence_hash=evidence["evidence_hash"],
+        m8_evidence_bytes_hash=validator.bytes_digest(evidence_path.read_bytes()),
+        m8_report_id=report["report_id"],
+        m8_report_hash=report["report_hash"],
+        m8_report_bytes_hash=validator.bytes_digest(report_path.read_bytes()),
+    )
+    source_receipt = {
+        "contract": "helianthus.platform.deployment-source-receipt.v1",
+        "source_commit": "9" * 40,
+        "binary_hash": binary_hash,
+    }
+    deployment_path = write(tmp_path / "deployment.json", source_receipt)
+    campaign["provenance"].update(
+        deployment_source_commit="9" * 40,
+        deployment_source_hash=validator.bytes_digest(deployment_path.read_bytes()),
+        deployment_binary_hash=binary_hash,
+    )
+    m7_binding = {
+        "graph_id": graph["graph_id"],
+        "graph_hash": graph["graph_hash"],
+        "replay_id": replay["replay_id"],
+        "replay_hash": replay["replay_hash"],
+        "status_id": status["projection_id"],
+        "status_hash": status["projection_hash"],
+        "source_commit": status["source_commit"],
+        "docs_source_commit": status["docs_source_commit"],
+    }
+    m8_binding = {
+        "evidence_id": evidence["evidence_id"],
+        "evidence_hash": evidence["evidence_hash"],
+        "report_id": report["report_id"],
+        "report_hash": report["report_hash"],
+    }
+    deployment_binding = {"source_commit": "9" * 40, "binary_hash": binary_hash}
+    receipt_paths = []
+    for index, (window, run_item) in enumerate(
+        zip(campaign["windows"], (before_run, transition_run), strict=True)
+    ):
+        receipt = {
+            "contract": "helianthus.platform.leaf-promotion-capture-receipt.v1",
+            "capture_campaign_id": campaign["provenance"]["capture_campaign_id"],
+            "window_id": window["window_id"],
+            "phase": window["phase"],
+            "capture_generation": window["capture_generation"],
+            "process_instance_hash": window["process_instance_hash"],
+            "local_identity_hash": window["local_identity_hash"],
+            "trust_state_hash": window["trust_state_hash"],
+            "peer_binding_hash": window["peer_binding_hash"],
+            "admitted_source": window["admitted_source"],
+            "window_evidence_hash": validator.digest(
+                validator.WINDOW_EVIDENCE_DOMAIN, window
+            ),
+            "m8_run_id": run_item["run_id"],
+            "m7_binding": m7_binding,
+            "m8_binding": m8_binding,
+            "deployment_binding": deployment_binding,
+            "captured_at": window["ended_at"],
+            "restart_event": (
+                {
+                    "event_type": "HA_ADDON_RESTART_COMPLETED",
+                    "event_id": transition["event_id"],
+                    "outcome": "COMPLETED",
+                    "completed_at": "2026-08-11T10:02:00Z",
+                    "before_process_instance_hash": validator._process_instance_hash(
+                        transition["before_process_instance_id"]
+                    ),
+                    "after_process_instance_hash": validator._process_instance_hash(
+                        transition["after_process_instance_id"]
+                    ),
+                }
+                if index == 1
+                else None
+            ),
+        }
+        receipt_paths.append(write(tmp_path / f"receipt-{index}.json", receipt))
+    campaign["provenance"]["capture_receipts"] = [
+        validator.bytes_digest(path.read_bytes()) for path in receipt_paths
+    ]
+    rehash_campaign(validator, campaign)
+    campaign_path = write(tmp_path / "live-campaign.json", campaign)
+    return {
+        "registry": registry_path,
+        "registry_hash": registry_hash,
+        "campaign": campaign_path,
+        "m7_graph": graph_path,
+        "m7_replay": replay_path,
+        "m7_status": status_path,
+        "m8_evidence": evidence_path,
+        "m8_report": report_path,
+        "receipts": receipt_paths,
+        "deployment": deployment_path,
+        "binary": binary_path,
+    }
+
+
+def live_cli_args(bundle: dict) -> list[str]:
+    args = [
+        "--registry",
+        str(bundle["registry"]),
+        "--m7-graph",
+        str(bundle["m7_graph"]),
+        "--m7-status",
+        str(bundle["m7_status"]),
+        "--m7-replay",
+        str(bundle["m7_replay"]),
+        "--m8-evidence",
+        str(bundle["m8_evidence"]),
+        "--m8-report",
+        str(bundle["m8_report"]),
+        "--deployment-source",
+        str(bundle["deployment"]),
+        "--deployment-binary",
+        str(bundle["binary"]),
+    ]
+    for receipt in bundle["receipts"]:
+        args.extend(("--capture-receipt", str(receipt)))
+    return args
 
 
 def promote_mapped_candidate(validator, campaign: dict, candidate_id: str) -> dict:
@@ -336,31 +649,213 @@ def test_live_cli_rejects_partial_source_bundle(tmp_path: pathlib.Path) -> None:
     assert (result.returncode, result.stdout) == (1, "live.sources.required\n")
 
 
+def test_generated_live_bundle_passes_public_cli_end_to_end(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    validator = module()
+    bundle = generated_live_bundle(validator, tmp_path)
+    monkeypatch.setattr(
+        validator, "PINNED_REGISTRY_SHA256", bundle["registry_hash"]
+    )
+    args = live_cli_args(bundle)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            str(VALIDATOR),
+            "derive-public",
+            "--input",
+            str(bundle["campaign"]),
+            *args,
+        ],
+    )
+    assert validator.main() == 0
+    derived = capsys.readouterr()
+    assert derived.err == ""
+    public_path = tmp_path / "live-public.json"
+    public_path.write_text(derived.out, encoding="utf-8")
+    public = load(public_path)
+    assert public["m9_consumer_gate"] == "READY_FOR_M9_PLANNING"
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            str(VALIDATOR),
+            "verify-public",
+            "--input",
+            str(public_path),
+            "--private-campaign",
+            str(bundle["campaign"]),
+            *args,
+        ],
+    )
+    assert validator.main() == 0
+    verified = capsys.readouterr()
+    assert (verified.out, verified.err) == ("PASS\n", "")
+
+
+def test_live_cross_binding_rejects_component_splices(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    bundle = generated_live_bundle(validator, tmp_path)
+    campaign = load(bundle["campaign"])
+    graph = load(bundle["m7_graph"])
+    replay = load(bundle["m7_replay"])
+    status = load(bundle["m7_status"])
+    evidence = load(bundle["m8_evidence"])
+    report = load(bundle["m8_report"])
+
+    def validate(candidate_campaign=campaign, candidate_evidence=evidence) -> None:
+        validator._validate_live_cross_bindings(
+            candidate_campaign,
+            graph,
+            bundle["m7_graph"].read_bytes(),
+            replay,
+            bundle["m7_replay"].read_bytes(),
+            status,
+            bundle["m7_status"].read_bytes(),
+            candidate_evidence,
+            report,
+        )
+
+    validate()
+    spliced_m7 = copy.deepcopy(evidence)
+    spliced_m7["m7_binding"]["graph_id"] = "dcfgv1:spliced-run"
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validate(candidate_evidence=spliced_m7)
+    assert raised.value.category == "live.sources.binding"
+
+    spliced_input = copy.deepcopy(evidence)
+    item = next(
+        value
+        for value in spliced_input["runs"][1]["provenance"]["immutable_inputs"]
+        if value["input_id"] == "m7:private-graph"
+    )
+    item["digest"] = "sha256:" + "f" * 64
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validate(candidate_evidence=spliced_input)
+    assert raised.value.category == "live.sources.binding"
+
+    spliced_runtime = copy.deepcopy(evidence)
+    spliced_runtime["runs"][1]["provenance"]["runtime"]["source_commit"] = "8" * 40
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validate(candidate_evidence=spliced_runtime)
+    assert raised.value.category == "live.deployment"
+
+    spliced_window = copy.deepcopy(campaign)
+    spliced_window["windows"][1]["process_instance_hash"] = "sha256:" + "0" * 64
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validate(candidate_campaign=spliced_window)
+    assert raised.value.category == "live.restart.binding"
+
+
 def test_live_receipts_and_deployment_source_are_byte_bound(
     tmp_path: pathlib.Path,
 ) -> None:
     validator = module()
     campaign = live_campaign(validator)
+    process_ids = ("process-" + "a" * 32, "process-" + "b" * 32)
+    transition = {
+        "event_id": "restart-event-live-test",
+        "before_process_instance_id": process_ids[0],
+        "after_process_instance_id": process_ids[1],
+        "before_trust_state_hash": "sha256:" + "4" * 64,
+        "after_trust_state_hash": "sha256:" + "4" * 64,
+        "before_peer_binding_hash": "sha256:" + "5" * 64,
+        "after_peer_binding_hash": "sha256:" + "5" * 64,
+    }
+    for index, window in enumerate(campaign["windows"]):
+        window["process_instance_hash"] = validator._process_instance_hash(
+            process_ids[index]
+        )
+        window["trust_state_hash"] = transition[
+            "before_trust_state_hash" if index == 0 else "after_trust_state_hash"
+        ]
+        window["peer_binding_hash"] = transition[
+            "before_peer_binding_hash" if index == 0 else "after_peer_binding_hash"
+        ]
+    binary_path = tmp_path / "gateway.bin"
+    binary_path.write_bytes(b"captured-gateway-binary")
+    binary_hash = validator.bytes_digest(binary_path.read_bytes())
+    live_context = {
+        "m7_binding": {"graph_id": "graph-live-test"},
+        "m8_binding": {"evidence_id": "evidence-live-test"},
+        "deployment_binding": {
+            "source_commit": campaign["provenance"]["deployment_source_commit"],
+            "binary_hash": binary_hash,
+        },
+        "runtime": {
+            "source_commit": campaign["provenance"]["deployment_source_commit"],
+            "artifact_digest": binary_hash,
+            "artifact_size_bytes": len(binary_path.read_bytes()),
+        },
+        "window_runs": ({"run_id": "run-pre"}, {"run_id": "run-post"}),
+        "transition": transition,
+    }
     receipt_paths = []
-    for window in campaign["windows"]:
+    for index, (window, run_item) in enumerate(
+        zip(campaign["windows"], live_context["window_runs"], strict=True)
+    ):
         receipt = {
             "contract": "helianthus.platform.leaf-promotion-capture-receipt.v1",
+            "capture_campaign_id": campaign["provenance"]["capture_campaign_id"],
             "window_id": window["window_id"],
             "phase": window["phase"],
             "capture_generation": window["capture_generation"],
             "process_instance_hash": window["process_instance_hash"],
+            "local_identity_hash": window["local_identity_hash"],
+            "trust_state_hash": window["trust_state_hash"],
+            "peer_binding_hash": window["peer_binding_hash"],
+            "admitted_source": window["admitted_source"],
+            "window_evidence_hash": validator.digest(
+                validator.WINDOW_EVIDENCE_DOMAIN, window
+            ),
+            "m8_run_id": run_item["run_id"],
+            "m7_binding": live_context["m7_binding"],
+            "m8_binding": live_context["m8_binding"],
+            "deployment_binding": live_context["deployment_binding"],
             "captured_at": window["ended_at"],
+            "restart_event": (
+                {
+                    "event_type": "HA_ADDON_RESTART_COMPLETED",
+                    "event_id": transition["event_id"],
+                    "outcome": "COMPLETED",
+                    "completed_at": "2026-08-11T10:02:00Z",
+                    "before_process_instance_hash": validator._process_instance_hash(
+                        process_ids[0]
+                    ),
+                    "after_process_instance_hash": validator._process_instance_hash(
+                        process_ids[1]
+                    ),
+                }
+                if index == 1
+                else None
+            ),
         }
         path = write(tmp_path / f"{window['window_id']}.json", receipt)
         receipt_paths.append(path)
     campaign["provenance"]["capture_receipts"] = [
         validator.bytes_digest(path.read_bytes()) for path in receipt_paths
     ]
-    validator._validate_capture_receipts(campaign, receipt_paths)
+    validator._validate_capture_receipts(campaign, receipt_paths, live_context)
 
-    binary_path = tmp_path / "gateway.bin"
-    binary_path.write_bytes(b"captured-gateway-binary")
-    binary_hash = validator.bytes_digest(binary_path.read_bytes())
+    post_receipt = load(receipt_paths[1])
+    post_receipt["restart_event"]["completed_at"] = campaign["windows"][1][
+        "started_at"
+    ]
+    write(receipt_paths[1], post_receipt)
+    campaign["provenance"]["capture_receipts"][1] = validator.bytes_digest(
+        receipt_paths[1].read_bytes()
+    )
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator._validate_capture_receipts(campaign, receipt_paths, live_context)
+    assert raised.value.category == "live.receipt"
+    post_receipt["restart_event"]["completed_at"] = "2026-08-11T10:02:00Z"
+    write(receipt_paths[1], post_receipt)
+    campaign["provenance"]["capture_receipts"][1] = validator.bytes_digest(
+        receipt_paths[1].read_bytes()
+    )
+
     source = {
         "contract": "helianthus.platform.deployment-source-receipt.v1",
         "source_commit": campaign["provenance"]["deployment_source_commit"],
@@ -371,12 +866,16 @@ def test_live_receipts_and_deployment_source_are_byte_bound(
         source_path.read_bytes()
     )
     campaign["provenance"]["deployment_binary_hash"] = binary_hash
-    validator._validate_deployment_source(campaign, source_path, binary_path)
+    validator._validate_deployment_source(
+        campaign, source_path, binary_path, live_context
+    )
 
     source["source_commit"] = "2" * 40
     write(source_path, source)
     with pytest.raises(validator.ValidationFailure) as raised:
-        validator._validate_deployment_source(campaign, source_path, binary_path)
+        validator._validate_deployment_source(
+            campaign, source_path, binary_path, live_context
+        )
     assert raised.value.category == "live.deployment"
 
 
@@ -544,6 +1043,39 @@ def test_enum_and_boolean_raw_pairs_are_catalog_mapped(tmp_path: pathlib.Path) -
     assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
 
 
+def test_enum_non_match_rejects_scaled_numeric_raw_alias(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    leaf = promote_mapped_candidate(validator, campaign, "m7-candidate-0007")
+    assessment = leaf["assessments"][0]
+    assessment["ebus_sample"]["raw_value"]["decimal"] = {
+        "number": 1,
+        "scale": 0,
+    }
+    assessment["ebus_sample"]["value"]["enum"] = "auto"
+    rehash_raw(validator, assessment["ebus_sample"])
+    assessment["eebus_sample"]["raw_value"]["decimal"] = {
+        "number": 20,
+        "scale": -1,
+    }
+    assessment["eebus_sample"]["value"]["enum"] = "off"
+    rehash_raw(validator, assessment["eebus_sample"])
+    assessment["comparator"]["outcome"] = "MISMATCH"
+    leaf.update(
+        decision="WITHHELD",
+        terminal_state="MISMATCH",
+        visibility="RAW_DEBUG_ONLY",
+        dossier_hash=None,
+    )
+    rehash_campaign(validator, campaign)
+    result = run(
+        "verify-private", write(tmp_path / "scaled-enum-non-match.json", campaign)
+    )
+    assert (result.returncode, result.stdout) == (1, "state.invalid\n")
+
+
 def test_numeric_rule_is_inclusive_and_catalog_owned(tmp_path: pathlib.Path) -> None:
     validator = module()
     campaign = load(PRIVATE)
@@ -694,6 +1226,28 @@ def test_each_declared_eligible_terminal_outcome_is_recomputed(
             write(tmp_path / f"relabelled-{outcome.lower()}.json", relabelled),
         )
         assert falsifier.returncode == 1, outcome
+
+
+def test_numeric_conflict_requires_semantically_distinct_decimal_values(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    campaign = observed_terminal_campaign(validator, "CONFLICT")
+    conflict_samples = promoted(load(PRIVATE))["assessments"][0]["conflict_samples"]
+    assert conflict_samples == []
+    assessment = candidate(campaign, "m7-candidate-0018")["assessments"][0]
+    first, second = assessment["conflict_samples"]
+    first_value = validator.decimal_value(first["value"]["decimal"])
+    decimal = second["value"]["decimal"]
+    decimal["number"] = int(first_value * 10)
+    decimal["scale"] = -1
+    second["raw_value"] = copy.deepcopy(second["value"])
+    rehash_raw(validator, second)
+    rehash_campaign(validator, campaign)
+    result = run(
+        "verify-private", write(tmp_path / "equal-decimal-conflict.json", campaign)
+    )
+    assert (result.returncode, result.stdout) == (1, "conflict.invalid\n")
 
 
 def test_numeric_bounds_are_inclusive_and_out_of_range_is_invalid(

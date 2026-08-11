@@ -31,7 +31,6 @@ M7_GRAPH_SCHEMA = SCHEMA_ROOT / "draft-candidate-fact-graph-v1.schema.json"
 M7_STATUS_SCHEMA = SCHEMA_ROOT / "draft-candidate-fact-public-status-v1.schema.json"
 M7_REPLAY_SCHEMA = SCHEMA_ROOT / "draft-candidate-fact-replay-v1.schema.json"
 M8_EVIDENCE_SCHEMA = SCHEMA_ROOT / "multi-runtime-coexistence-evidence-v1.schema.json"
-M8_REPORT_SCHEMA = SCHEMA_ROOT / "multi-runtime-coexistence-report-v1.schema.json"
 M8_REGISTRY = SCHEMA_ROOT / "multi-runtime-coexistence-registry-v1.json"
 
 CAMPAIGN_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:CAPTURED-MULTI-LEAF:V1\x00"
@@ -44,7 +43,9 @@ EBUS_SELECTOR_DOMAIN = b"HELIANTHUS:EBUS:B524-SELECTOR:V1\x00"
 RAW_VALUE_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:RAW-VALUE:V1\x00"
 MAPPING_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:MAPPING:V1\x00"
 PROVENANCE_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:PROVENANCE:V1\x00"
-PINNED_REGISTRY_SHA256 = "sha256:7eae7ff101e53678d9564150be8b054d82f955dc515e61c126749971b22a445c"
+WINDOW_EVIDENCE_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:CAPTURE-WINDOW:V1\x00"
+PROCESS_INSTANCE_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:PROCESS-INSTANCE:V1\x00"
+PINNED_REGISTRY_SHA256 = "sha256:d17a66da1919796f57ecd2a515fa4e538c6be8d00a24c8c7e5d38bce7f36e3cd"
 SAFE_INTEGER = 9_007_199_254_740_991
 MAX_INPUT_BYTES = 1_048_576
 MAX_LIVE_ARTIFACT_BYTES = 16_777_216
@@ -353,10 +354,9 @@ def _protocol_raw_value(value: dict[str, Any]) -> Any:
     raw = _raw_profile_value(value)
     if value["kind"] != "NUMERIC":
         return raw
-    numeric = decimal_value(raw)
-    if numeric != numeric.to_integral_value():
+    if raw["scale"] != 0:
         fail("comparator.invalid")
-    return int(numeric)
+    return raw["number"]
 
 
 def _protocol_mapping_matches(source: dict[str, Any], sample: dict[str, Any], normalized: Any) -> bool:
@@ -727,11 +727,22 @@ def _validate_conflict_samples(
         timestamp_ns(samples[0]["observed_at"])
         - timestamp_ns(samples[1]["observed_at"])
     )
-    if (
-        conflict_skew > capture_limits["max_skew_ns"]
-        or samples[0]["raw_hash"] == samples[1]["raw_hash"]
-        or samples[0]["value"] == samples[1]["value"]
-    ):
+    comparator_class = expected["comparator_class"]
+    if comparator_class == "NUMERIC_DECLARED_GRANULARITY":
+        same_value = _typed(samples[0]["value"], "NUMERIC") == _typed(
+            samples[1]["value"], "NUMERIC"
+        )
+    elif comparator_class == "ENUM_EXACT_MAPPING":
+        same_value = _typed(samples[0]["value"], "ENUM") == _typed(
+            samples[1]["value"], "ENUM"
+        )
+    elif comparator_class == "BOOLEAN_EXACT_MAPPING":
+        same_value = _typed(samples[0]["value"], "BOOLEAN") == _typed(
+            samples[1]["value"], "BOOLEAN"
+        )
+    else:
+        fail("conflict.invalid")
+    if conflict_skew > capture_limits["max_skew_ns"] or same_value:
         fail("conflict.invalid")
     return True
 
@@ -775,46 +786,280 @@ def _read_bounded_bytes(path: pathlib.Path, maximum: int, category: str) -> byte
     return raw
 
 
+def _process_instance_hash(process_instance_id: str) -> str:
+    return digest(
+        PROCESS_INSTANCE_DOMAIN, {"process_instance_id": process_instance_id}
+    )
+
+
+def _immutable_input(run: dict[str, Any], input_id: str) -> dict[str, Any]:
+    matches = [
+        item
+        for item in run["provenance"]["immutable_inputs"]
+        if item["input_id"] == input_id
+    ]
+    if len(matches) != 1:
+        fail("live.sources.binding")
+    return matches[0]
+
+
+def _validate_live_cross_bindings(
+    value: dict[str, Any],
+    graph: dict[str, Any],
+    graph_raw: bytes,
+    replay: dict[str, Any],
+    replay_raw: bytes,
+    status: dict[str, Any],
+    status_raw: bytes,
+    evidence: dict[str, Any],
+    report: dict[str, Any],
+) -> dict[str, Any]:
+    m7_binding = {
+        "source_commit": status["source_commit"],
+        "docs_source_commit": status["docs_source_commit"],
+        "graph_contract": graph["contract"],
+        "graph_id": graph["graph_id"],
+        "graph_hash": graph["graph_hash"],
+        "replay_contract": replay["contract"],
+        "replay_id": replay["replay_id"],
+        "replay_hash": replay["replay_hash"],
+    }
+    if any(evidence["m7_binding"].get(key) != item for key, item in m7_binding.items()):
+        fail("live.sources.binding")
+    expected_live_status = {
+        "contract": status["contract"],
+        "projection_id": status["projection_id"],
+        "projection_hash": status["projection_hash"],
+        "content_hash": bytes_digest(status_raw),
+        "source_graph_id": status["source_graph_id"],
+        "source_graph_hash": status["source_graph_hash"],
+        "source_replay_id": status["source_replay_id"],
+        "source_replay_hash": status["source_replay_hash"],
+    }
+    if (
+        status["source_graph_id"] != graph["graph_id"]
+        or status["source_graph_hash"] != graph["graph_hash"]
+        or status["source_replay_id"] != replay["replay_id"]
+        or status["source_replay_hash"] != replay["replay_hash"]
+        or evidence["m7_live_status"] != expected_live_status
+    ):
+        fail("live.sources.binding")
+    expected_report_m7 = {
+        "source_commit": status["source_commit"],
+        "docs_source_commit": status["docs_source_commit"],
+        "graph_id": graph["graph_id"],
+        "graph_hash": graph["graph_hash"],
+        "replay_id": replay["replay_id"],
+        "replay_hash": replay["replay_hash"],
+        "live_status_projection_id": status["projection_id"],
+        "live_status_projection_hash": status["projection_hash"],
+    }
+    if report["m7_binding"] != expected_report_m7:
+        fail("live.sources.binding")
+
+    expected_inputs = {
+        "m7:private-graph": (bytes_digest(graph_raw), len(graph_raw)),
+        "m7:private-replay": (bytes_digest(replay_raw), len(replay_raw)),
+        "m7:status-projection": (bytes_digest(status_raw), len(status_raw)),
+    }
+    for run in evidence["runs"]:
+        for input_id, (input_digest, byte_length) in expected_inputs.items():
+            item = _immutable_input(run, input_id)
+            if item["digest"] != input_digest or item["byte_length"] != byte_length:
+                fail("live.sources.binding")
+
+    transition_runs = [
+        run
+        for run in evidence["runs"]
+        if run["state_evidence"]["restart_transition"] is not None
+    ]
+    restart_runs = [
+        run for run in evidence["runs"] if run["state"] == "EEBUS_RESTART_PERSISTED"
+    ]
+    if (
+        len(transition_runs) != 1
+        or transition_runs != restart_runs
+        or transition_runs[0]["state_evidence"]["outcome"] != "RESTART_PERSISTED"
+    ):
+        fail("live.restart.binding")
+    restart_run = transition_runs[0]
+    transition = restart_run["state_evidence"]["restart_transition"]
+    before_runs = [
+        run
+        for run in evidence["runs"]
+        if run["state"] == "EEBUS_CONNECTED_RAW_WITHHELD"
+        and run["provenance"]["process_instance_id"]
+        == transition["before_process_instance_id"]
+    ]
+    if (
+        len(before_runs) != 1
+        or restart_run["provenance"]["process_instance_id"]
+        != transition["after_process_instance_id"]
+    ):
+        fail("live.restart.binding")
+    before_run = before_runs[0]
+    windows = value["windows"]
+    expected_window_bindings = (
+        {
+            "process_instance_hash": _process_instance_hash(
+                transition["before_process_instance_id"]
+            ),
+            "trust_state_hash": transition["before_trust_state_hash"],
+            "peer_binding_hash": transition["before_peer_binding_hash"],
+        },
+        {
+            "process_instance_hash": _process_instance_hash(
+                transition["after_process_instance_id"]
+            ),
+            "trust_state_hash": transition["after_trust_state_hash"],
+            "peer_binding_hash": transition["after_peer_binding_hash"],
+        },
+    )
+    for window, expected in zip(windows, expected_window_bindings, strict=True):
+        if any(window[key] != item for key, item in expected.items()):
+            fail("live.restart.binding")
+
+    runtime = restart_run["provenance"]["runtime"]
+    if (
+        any(
+            run["provenance"]["runtime"] != runtime
+            for run in evidence["runs"][1:]
+        )
+        or runtime["source_parent_commit"] != status["source_commit"]
+        or runtime["artifact_id"] != "gateway:" + runtime["artifact_digest"]
+    ):
+        fail("live.deployment")
+    return {
+        "m7_binding": {
+            "graph_id": graph["graph_id"],
+            "graph_hash": graph["graph_hash"],
+            "replay_id": replay["replay_id"],
+            "replay_hash": replay["replay_hash"],
+            "status_id": status["projection_id"],
+            "status_hash": status["projection_hash"],
+            "source_commit": status["source_commit"],
+            "docs_source_commit": status["docs_source_commit"],
+        },
+        "m8_binding": {
+            "evidence_id": evidence["evidence_id"],
+            "evidence_hash": evidence["evidence_hash"],
+            "report_id": report["report_id"],
+            "report_hash": report["report_hash"],
+        },
+        "deployment_binding": {
+            "source_commit": runtime["source_commit"],
+            "binary_hash": runtime["artifact_digest"],
+        },
+        "runtime": runtime,
+        "window_runs": (before_run, restart_run),
+        "transition": transition,
+    }
+
+
 def _validate_capture_receipts(
-    value: dict[str, Any], receipt_paths: list[pathlib.Path]
+    value: dict[str, Any],
+    receipt_paths: list[pathlib.Path],
+    live_context: dict[str, Any],
 ) -> None:
     if len(receipt_paths) != 2:
         fail("live.receipt")
-    windows = {window["window_id"]: window for window in value["windows"]}
-    observed: dict[str, str] = {}
-    for path in receipt_paths:
+    windows = value["windows"]
+    observed: list[str] = []
+    transition = live_context["transition"]
+    process_hashes = (
+        _process_instance_hash(transition["before_process_instance_id"]),
+        _process_instance_hash(transition["after_process_instance_id"]),
+    )
+    for index, (path, window, run) in enumerate(
+        zip(receipt_paths, windows, live_context["window_runs"], strict=True)
+    ):
         receipt, raw = load_json(path)
         if set(receipt) != {
             "contract",
+            "capture_campaign_id",
             "window_id",
             "phase",
             "capture_generation",
             "process_instance_hash",
+            "local_identity_hash",
+            "trust_state_hash",
+            "peer_binding_hash",
+            "admitted_source",
+            "window_evidence_hash",
+            "m8_run_id",
+            "m7_binding",
+            "m8_binding",
+            "deployment_binding",
             "captured_at",
+            "restart_event",
         } or receipt["contract"] != "helianthus.platform.leaf-promotion-capture-receipt.v1":
             fail("live.receipt")
         reject_secret_material(receipt)
-        window = windows.get(receipt["window_id"])
-        if window is None or any(
-            receipt[key] != window[key]
-            for key in ("phase", "capture_generation", "process_instance_hash")
+        if (
+            receipt["capture_campaign_id"]
+            != value["provenance"]["capture_campaign_id"]
+            or any(
+                receipt[key] != window[key]
+                for key in (
+                    "window_id",
+                    "phase",
+                    "capture_generation",
+                    "process_instance_hash",
+                    "local_identity_hash",
+                    "trust_state_hash",
+                    "peer_binding_hash",
+                    "admitted_source",
+                )
+            )
+            or receipt["window_evidence_hash"]
+            != digest(WINDOW_EVIDENCE_DOMAIN, window)
+            or receipt["m8_run_id"] != run["run_id"]
+            or receipt["m7_binding"] != live_context["m7_binding"]
+            or receipt["m8_binding"] != live_context["m8_binding"]
+            or receipt["deployment_binding"]
+            != live_context["deployment_binding"]
         ):
+            fail("live.receipt")
+        expected_restart = None
+        if index == 1:
+            expected_restart = {
+                "event_type": "HA_ADDON_RESTART_COMPLETED",
+                "event_id": transition["event_id"],
+                "outcome": "COMPLETED",
+                "before_process_instance_hash": process_hashes[0],
+                "after_process_instance_hash": process_hashes[1],
+            }
+            restart_event = receipt["restart_event"]
+            if (
+                not isinstance(restart_event, dict)
+                or set(restart_event) != set(expected_restart) | {"completed_at"}
+                or any(
+                    restart_event[key] != item
+                    for key, item in expected_restart.items()
+                )
+                or timestamp_ns(restart_event["completed_at"])
+                <= timestamp_ns(windows[0]["ended_at"])
+                or timestamp_ns(restart_event["completed_at"])
+                >= timestamp_ns(windows[1]["started_at"])
+            ):
+                fail("live.receipt")
+        elif receipt["restart_event"] is not None:
             fail("live.receipt")
         captured_at = timestamp_ns(receipt["captured_at"])
         if captured_at < timestamp_ns(window["started_at"]) or captured_at > timestamp_ns(
             window["ended_at"]
         ):
             fail("live.receipt")
-        observed[receipt["window_id"]] = bytes_digest(raw)
-    if set(observed) != set(windows):
-        fail("live.receipt")
-    expected = [observed[window["window_id"]] for window in value["windows"]]
-    if value["provenance"]["capture_receipts"] != expected:
+        observed.append(bytes_digest(raw))
+    if value["provenance"]["capture_receipts"] != observed:
         fail("live.receipt")
 
 
 def _validate_deployment_source(
-    value: dict[str, Any], source_path: pathlib.Path, binary_path: pathlib.Path
+    value: dict[str, Any],
+    source_path: pathlib.Path,
+    binary_path: pathlib.Path,
+    live_context: dict[str, Any],
 ) -> None:
     source, source_raw = load_json(source_path)
     binary_raw = _read_bounded_bytes(
@@ -827,9 +1072,13 @@ def _validate_deployment_source(
         fail("live.deployment")
     reject_secret_material(source)
     provenance = value["provenance"]
+    runtime = live_context["runtime"]
     if (
         source["source_commit"] != provenance["deployment_source_commit"]
+        or source["source_commit"] != runtime["source_commit"]
         or source["binary_hash"] != expected_binary
+        or source["binary_hash"] != runtime["artifact_digest"]
+        or len(binary_raw) != runtime["artifact_size_bytes"]
         or provenance["deployment_binary_hash"] != expected_binary
         or provenance["deployment_source_hash"] != bytes_digest(source_raw)
     ):
@@ -886,7 +1135,6 @@ def _validate_live_source_bundle(
     schema_validate(artifacts["m7_status"], M7_STATUS_SCHEMA, "live.m7")
     schema_validate(artifacts["m7_replay"], M7_REPLAY_SCHEMA, "live.m7")
     schema_validate(artifacts["m8_evidence"], M8_EVIDENCE_SCHEMA, "live.m8")
-    schema_validate(artifacts["m8_report"], M8_REPORT_SCHEMA, "live.m8")
     graph = artifacts["m7_graph"]
     replay = artifacts["m7_replay"]
     status = artifacts["m7_status"]
@@ -963,19 +1211,32 @@ def _validate_live_source_bundle(
         expected_bindings[name + "_bytes_hash"] = bytes_digest(raw_artifacts[name])
     if any(bindings.get(key) != expected for key, expected in expected_bindings.items()):
         fail("live.sources.binding")
+    live_context = _validate_live_cross_bindings(
+        value,
+        graph,
+        raw_artifacts["m7_graph"],
+        replay,
+        raw_artifacts["m7_replay"],
+        status,
+        raw_artifacts["m7_status"],
+        evidence,
+        report,
+    )
     receipt_paths = live_sources["capture_receipts"]
     if not isinstance(receipt_paths, list) or not all(
         isinstance(path, pathlib.Path) for path in receipt_paths
     ):
         fail("live.sources.required")
-    _validate_capture_receipts(value, receipt_paths)
     deployment_source = live_sources["deployment_source"]
     deployment_binary = live_sources["deployment_binary"]
     if not isinstance(deployment_source, pathlib.Path) or not isinstance(
         deployment_binary, pathlib.Path
     ):
         fail("live.sources.required")
-    _validate_deployment_source(value, deployment_source, deployment_binary)
+    _validate_deployment_source(
+        value, deployment_source, deployment_binary, live_context
+    )
+    _validate_capture_receipts(value, receipt_paths, live_context)
     _validate_non_synthetic_selectors(value)
 
 
@@ -1003,6 +1264,7 @@ def verify_private(
     elif (
         provenance["fixture_id"] is not None
         or provenance["generator"] is not None
+        or provenance["capture_campaign_id"] is None
         or len(provenance["capture_receipts"]) != 2
         or provenance["deployment_source_commit"] is None
         or provenance["deployment_source_hash"] is None
@@ -1037,6 +1299,7 @@ def verify_private(
         windows[0]["process_instance_hash"] == windows[1]["process_instance_hash"]
         or windows[0]["local_identity_hash"] != windows[1]["local_identity_hash"]
         or windows[0]["trust_state_hash"] != windows[1]["trust_state_hash"]
+        or windows[0]["peer_binding_hash"] != windows[1]["peer_binding_hash"]
         or windows[0]["admitted_source"] != windows[1]["admitted_source"]
     ):
         fail("window.restart")
