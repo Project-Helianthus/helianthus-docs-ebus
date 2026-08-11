@@ -244,7 +244,9 @@ not disconnection of the paired VR940 runtime.
 
 Every result binds all of the following:
 
-- exact gateway repository, 40-character source commit and parent commit;
+- exact gateway repository, 40-character source commit and milestone
+  predecessor commit; `source_parent_commit` names that frozen predecessor and
+  does not claim to be the source commit's first Git parent;
 - runtime artifact ID, byte digest, byte length, build manifest, and
   domain-separated build-manifest hash;
 - exact config payload and domain-separated config hash;

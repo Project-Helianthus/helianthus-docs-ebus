@@ -118,6 +118,12 @@ def rehash_public(validator, public: dict) -> None:
     )
 
 
+def full_binding_hash(redacted_id: str, fill: str) -> str:
+    prefix = "redacted:sha256:"
+    assert redacted_id.startswith(prefix) and len(redacted_id) == len(prefix) + 12
+    return "sha256:" + redacted_id[len(prefix) :] + fill * 52
+
+
 def rehash_ebus_identity(validator, identity: dict) -> None:
     identity["selector_hash"] = validator.digest(
         validator.EBUS_SELECTOR_DOMAIN,
@@ -319,13 +325,21 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
     window_bindings = (
         (
             leaf_process_ids[0],
-            transition["before_trust_state_hash"],
-            transition["before_peer_binding_hash"],
+            full_binding_hash(
+                transition["before_snapshot"]["trust_state_id"], "4"
+            ),
+            full_binding_hash(
+                transition["before_snapshot"]["peer_binding_id"], "5"
+            ),
         ),
         (
             leaf_process_ids[1],
-            transition["after_trust_state_hash"],
-            transition["after_peer_binding_hash"],
+            full_binding_hash(
+                transition["after_snapshot"]["trust_state_id"], "4"
+            ),
+            full_binding_hash(
+                transition["after_snapshot"]["peer_binding_id"], "5"
+            ),
         ),
     )
     for window, (process_id, trust_hash, peer_hash) in zip(
@@ -788,6 +802,14 @@ def test_live_cross_binding_rejects_component_splices(tmp_path: pathlib.Path) ->
     spliced_window["windows"][1]["trust_state_hash"] = "sha256:" + "0" * 64
     with pytest.raises(validator.ValidationFailure) as raised:
         validate(candidate_campaign=spliced_window)
+    assert raised.value.category == "live.restart.binding"
+
+    malformed_window = copy.deepcopy(campaign)
+    malformed_window["windows"][0]["peer_binding_hash"] = (
+        "redacted:sha256:" + "5" * 12
+    )
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validate(candidate_campaign=malformed_window)
     assert raised.value.category == "live.restart.binding"
 
 

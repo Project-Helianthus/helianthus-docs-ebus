@@ -155,7 +155,10 @@ graph/status/replay and the complete M8 coexistence evidence/report,
 are separate capture campaigns: their process-instance ids are expected to
 differ. They must nevertheless bind the same exact gateway source commit,
 binary digest and byte length, and the same persistent trust and peer
-identities. M8 must cover all eleven frozen protected views and all four
+identities. The PRIVATE_OPERATOR M8.5 digest binds to M8's public-redacted
+identity through its exact first twelve lowercase hexadecimal characters; the
+M8 transition still validates its own domain-separated trust and peer hashes.
+M8 must cover all eleven frozen protected views and all four
 captured-runtime states with `REPRODUCIBLE_BUILD`; a synthetic fixture or a
 narrower coexistence archive cannot substitute for that proof. A
 change to source identity, descriptor, unit/conversion, declared step,

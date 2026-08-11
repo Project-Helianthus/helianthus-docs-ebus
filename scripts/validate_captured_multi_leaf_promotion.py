@@ -801,6 +801,14 @@ def _process_instance_hash(process_instance_id: str) -> str:
     )
 
 
+def _redacted_binding_id(binding_hash: str) -> str:
+    if not isinstance(binding_hash, str) or not re.fullmatch(
+        r"sha256:[0-9a-f]{64}", binding_hash
+    ):
+        fail("live.restart.binding")
+    return "redacted:sha256:" + binding_hash[7:19]
+
+
 def _immutable_input(run: dict[str, Any], input_id: str) -> dict[str, Any]:
     matches = [
         item
@@ -917,16 +925,16 @@ def _validate_live_cross_bindings(
         fail("live.restart.binding")
     expected_window_bindings = (
         {
-            "trust_state_hash": transition["before_trust_state_hash"],
-            "peer_binding_hash": transition["before_peer_binding_hash"],
+            "trust_state_hash": transition["before_snapshot"]["trust_state_id"],
+            "peer_binding_hash": transition["before_snapshot"]["peer_binding_id"],
         },
         {
-            "trust_state_hash": transition["after_trust_state_hash"],
-            "peer_binding_hash": transition["after_peer_binding_hash"],
+            "trust_state_hash": transition["after_snapshot"]["trust_state_id"],
+            "peer_binding_hash": transition["after_snapshot"]["peer_binding_id"],
         },
     )
     for window, expected in zip(windows, expected_window_bindings, strict=True):
-        if any(window[key] != item for key, item in expected.items()):
+        if any(_redacted_binding_id(window[key]) != item for key, item in expected.items()):
             fail("live.restart.binding")
 
     try:
