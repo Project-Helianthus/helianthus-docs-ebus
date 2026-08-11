@@ -545,6 +545,9 @@ def test_registry_is_exact_and_contains_full_source_and_selector_profiles() -> N
     catalog = registry["candidate_catalog"]
     assert hashlib.sha256(REGISTRY.read_bytes()).hexdigest() == REGISTRY_SHA256
     assert validator.PINNED_REGISTRY_SHA256 == "sha256:" + REGISTRY_SHA256
+    page = PAGE.read_text(encoding="utf-8")
+    assert f"`{REGISTRY_SHA256}`" in page
+    assert f"`registry_sha256=sha256:{REGISTRY_SHA256}`" in page
     assert [item["candidate_id"] for item in catalog] == [f"m7-candidate-{index:04d}" for index in range(1, 19)]
     assert sum(item["protocol_eligibility"] == "TERMINAL" for item in catalog) == 4
     assert sum(item["protocol_eligibility"] == "ELIGIBLE" for item in catalog) == 11
@@ -610,6 +613,18 @@ def test_positive_subset_fixture_verifies_and_derives_byte_identically() -> None
     assert result["source_bindings"]["private_campaign_bytes_hash"] == "sha256:" + hashlib.sha256(PRIVATE.read_bytes()).hexdigest()
     assert result["counts"] == {"total": 18, "promoted": 1, "withheld": 17}
     assert result["m9_consumer_gate"] == "BLOCKED_CONFORMANCE_ONLY"
+
+
+def test_boolean_schema_version_aliases_are_rejected(tmp_path: pathlib.Path) -> None:
+    private = load(PRIVATE)
+    private["schema_version"] = True
+    result = run("verify-private", write(tmp_path / "private-boolean-version.json", private))
+    assert (result.returncode, result.stdout) == (1, "schema.private\n")
+
+    public = load(PUBLIC)
+    public["schema_version"] = True
+    result = run("verify-public", write(tmp_path / "public-boolean-version.json", public))
+    assert (result.returncode, result.stdout) == (1, "schema.public\n")
 
 
 def test_relabelled_private_campaign_requires_external_live_source_bundle(
@@ -1076,6 +1091,25 @@ def test_enum_non_match_rejects_scaled_numeric_raw_alias(
     assert (result.returncode, result.stdout) == (1, "state.invalid\n")
 
 
+def test_enum_raw_ids_reject_boolean_integer_aliases(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    leaf = candidate(campaign, "m7-candidate-0007")
+    for assessment in leaf["assessments"]:
+        sample = assessment["eebus_sample"]
+        sample["raw_value"] = {
+            "kind": "BOOLEAN",
+            "decimal": None,
+            "enum": None,
+            "boolean": True,
+        }
+        sample["value"]["enum"] = "on"
+        rehash_raw(validator, sample)
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "boolean-enum-id.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "comparator.invalid\n")
+
+
 def test_numeric_rule_is_inclusive_and_catalog_owned(tmp_path: pathlib.Path) -> None:
     validator = module()
     campaign = load(PRIVATE)
@@ -1403,6 +1437,7 @@ def test_secret_material_is_rejected_recursively_in_schema_allowed_strings(
         "-----BEGIN PRIVATE KEY-----secret-----END PRIVATE KEY-----",
         "Bearer abcdefghijklmnopqrstuvwxyz0123456789",
         "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvcGVyYXRvciJ9.abcdefghijklmnop",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
         "A" * 180,
         "trust_store=" + "Q" * 32,
     )

@@ -57,6 +57,9 @@ SECRET_MARKERS = re.compile(
 )
 JWT_TOKEN = re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
 LONG_ENCODED_SECRET = re.compile(r"^[A-Za-z0-9+/=_-]{160,}$")
+RAW_256_BIT_MATERIAL = re.compile(
+    r"^(?:[A-Fa-f0-9]{64}|[A-Za-z0-9+/]{43}=|[A-Za-z0-9_-]{43})$"
+)
 SYNTHETIC_SELECTOR = re.compile(r"(?i)(?:synthetic|fixture|sanitized|placeholder|dummy|opaque)")
 
 
@@ -128,6 +131,7 @@ def reject_secret_material(value: Any) -> None:
         if (
             SECRET_MARKERS.search(item)
             or JWT_TOKEN.search(item)
+            or RAW_256_BIT_MATERIAL.fullmatch(compact)
             or (LONG_ENCODED_SECRET.fullmatch(compact) and not item.startswith("sha256:"))
         ):
             fail("secret.material")
@@ -137,6 +141,10 @@ def canonical(value: Any) -> bytes:
     return json.dumps(
         value, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
     ).encode("utf-8")
+
+
+def json_exact_equal(left: Any, right: Any) -> bool:
+    return canonical(left) == canonical(right)
 
 
 def digest(domain: bytes, value: Any) -> str:
@@ -364,10 +372,8 @@ def _protocol_mapping_matches(source: dict[str, Any], sample: dict[str, Any], no
     if not isinstance(profile, dict) or not isinstance(profile.get("pairs"), list):
         return False
     raw = _protocol_raw_value(sample["raw_value"])
-    return any(
-        pair == {"raw": raw, "normalized": normalized}
-        for pair in profile["pairs"]
-    )
+    expected = {"raw": raw, "normalized": normalized}
+    return any(json_exact_equal(pair, expected) for pair in profile["pairs"])
 
 
 def _mapping_pair_matches(
@@ -378,10 +384,12 @@ def _mapping_pair_matches(
         return False
     ebus_raw = _raw_profile_value(ebus["raw_value"])
     eebus_raw = _raw_profile_value(eebus["raw_value"])
-    return any(
-        pair == {"ebus_raw": ebus_raw, "eebus_raw": eebus_raw, "normalized": normalized}
-        for pair in profile["pairs"]
-    )
+    observed = {
+        "ebus_raw": ebus_raw,
+        "eebus_raw": eebus_raw,
+        "normalized": normalized,
+    }
+    return any(json_exact_equal(pair, observed) for pair in profile["pairs"])
 
 
 def _catalog_sample_matches(
@@ -403,7 +411,8 @@ def _catalog_sample_matches(
     ebus_raw = _raw_profile_value(sample["raw_value"])
     profile = source["mapping_profile"]
     return any(
-        pair["ebus_raw"] == ebus_raw and pair["normalized"] == normalized
+        json_exact_equal(pair["ebus_raw"], ebus_raw)
+        and json_exact_equal(pair["normalized"], normalized)
         for pair in profile["pairs"]
     )
 

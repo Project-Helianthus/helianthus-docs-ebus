@@ -45,8 +45,8 @@ service/device/entity/feature selectors, and binds the complete result with
 `identity_hash`.
 
 The canonical registry is also an exact byte contract. Its raw SHA-256 is
-`7eae7ff101e53678d9564150be8b054d82f955dc515e61c126749971b22a445c`, exposed
-as `registry_sha256=sha256:7eae7ff101e53678d9564150be8b054d82f955dc515e61c126749971b22a445c`.
+`d17a66da1919796f57ecd2a515fa4e538c6be8d00a24c8c7e5d38bce7f36e3cd`, exposed
+as `registry_sha256=sha256:d17a66da1919796f57ecd2a515fa4e538c6be8d00a24c8c7e5d38bce7f36e3cd`.
 `--registry` may name a byte-identical copy; it cannot substitute tolerances,
 selectors, mappings, or an eeBUS source profile.
 
