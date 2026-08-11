@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import pathlib
@@ -16,7 +17,9 @@ from typing import Any
 SCRIPT_ROOT = pathlib.Path(__file__).resolve().parent
 if str(SCRIPT_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPT_ROOT))
-import validate_candidate_fact_graph as candidate_schema
+import validate_candidate_fact_graph as candidate_schema  # noqa: E402
+import project_candidate_fact_public_status as status_projector  # noqa: E402
+import validate_multi_runtime_coexistence as coexistence  # noqa: E402
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -24,6 +27,12 @@ SCHEMA_ROOT = ROOT / "docs/platform/schemas"
 DEFAULT_REGISTRY = SCHEMA_ROOT / "leaf-promotion-captured-multi-leaf-registry-v1.json"
 PRIVATE_SCHEMA = SCHEMA_ROOT / "leaf-promotion-captured-multi-leaf-v1.schema.json"
 PUBLIC_SCHEMA = SCHEMA_ROOT / "leaf-promotion-captured-multi-leaf-result-v1.schema.json"
+M7_GRAPH_SCHEMA = SCHEMA_ROOT / "draft-candidate-fact-graph-v1.schema.json"
+M7_STATUS_SCHEMA = SCHEMA_ROOT / "draft-candidate-fact-public-status-v1.schema.json"
+M7_REPLAY_SCHEMA = SCHEMA_ROOT / "draft-candidate-fact-replay-v1.schema.json"
+M8_EVIDENCE_SCHEMA = SCHEMA_ROOT / "multi-runtime-coexistence-evidence-v1.schema.json"
+M8_REPORT_SCHEMA = SCHEMA_ROOT / "multi-runtime-coexistence-report-v1.schema.json"
+M8_REGISTRY = SCHEMA_ROOT / "multi-runtime-coexistence-registry-v1.json"
 
 CAMPAIGN_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:CAPTURED-MULTI-LEAF:V1\x00"
 DOSSIER_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:CAPTURED-DOSSIER:V1\x00"
@@ -35,9 +44,19 @@ EBUS_SELECTOR_DOMAIN = b"HELIANTHUS:EBUS:B524-SELECTOR:V1\x00"
 RAW_VALUE_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:RAW-VALUE:V1\x00"
 MAPPING_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:MAPPING:V1\x00"
 PROVENANCE_DOMAIN = b"HELIANTHUS:LEAF-PROMOTION:PROVENANCE:V1\x00"
-PINNED_REGISTRY_SHA256 = "sha256:854eb51398c949f14bc905d1d26c906f37243e4a218b7e990734064944621f59"
+PINNED_REGISTRY_SHA256 = "sha256:7eae7ff101e53678d9564150be8b054d82f955dc515e61c126749971b22a445c"
 SAFE_INTEGER = 9_007_199_254_740_991
 MAX_INPUT_BYTES = 1_048_576
+MAX_LIVE_ARTIFACT_BYTES = 16_777_216
+MAX_DEPLOYMENT_BINARY_BYTES = 268_435_456
+SECRET_MARKERS = re.compile(
+    r"(?i)(?:-----BEGIN [^-]*(?:PRIVATE KEY|OPENSSH KEY)-----|"
+    r"\b(?:bearer|basic)\s+[A-Za-z0-9+/_.=-]{8,}|"
+    r"\b(?:private[_ -]?key|trust[_ -]?store|client[_ -]?secret)\s*[:=])"
+)
+JWT_TOKEN = re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
+LONG_ENCODED_SECRET = re.compile(r"^[A-Za-z0-9+/=_-]{160,}$")
+SYNTHETIC_SELECTOR = re.compile(r"(?i)(?:synthetic|fixture|sanitized|placeholder|dummy|opaque)")
 
 
 class ValidationFailure(Exception):
@@ -59,10 +78,12 @@ def _pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
-def load_json(path: pathlib.Path) -> tuple[dict[str, Any], bytes]:
+def load_json(
+    path: pathlib.Path, *, max_bytes: int = MAX_INPUT_BYTES
+) -> tuple[dict[str, Any], bytes]:
     try:
         raw = path.read_bytes()
-        if len(raw) > MAX_INPUT_BYTES or re.search(
+        if len(raw) > max_bytes or re.search(
             rb"(?<![0-9A-Za-z_])-0(?:[^0-9.]|$)", raw
         ):
             fail("json.syntax")
@@ -88,6 +109,27 @@ def load_json(path: pathlib.Path) -> tuple[dict[str, Any], bytes]:
     if not isinstance(value, dict):
         fail("json.syntax")
     return value, raw
+
+
+def _walk_strings(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        return [item for child in value.values() for item in _walk_strings(child)]
+    if isinstance(value, list):
+        return [item for child in value for item in _walk_strings(child)]
+    return []
+
+
+def reject_secret_material(value: Any) -> None:
+    for item in _walk_strings(value):
+        compact = re.sub(r"\s+", "", item)
+        if (
+            SECRET_MARKERS.search(item)
+            or JWT_TOKEN.search(item)
+            or (LONG_ENCODED_SECRET.fullmatch(compact) and not item.startswith("sha256:"))
+        ):
+            fail("secret.material")
 
 
 def canonical(value: Any) -> bytes:
@@ -181,8 +223,16 @@ def _typed(value: dict[str, Any], expected: str) -> Any:
     return value["boolean"]
 
 
-def _validate_sample(sample: dict[str, Any], source: str, window: dict[str, Any]) -> None:
-    if sample["source"] != source or not sample["valid"]:
+def _validate_sample(
+    sample: dict[str, Any],
+    source: str,
+    window: dict[str, Any],
+    *,
+    require_valid: bool = True,
+    require_generation: bool = True,
+    allow_stale: bool = False,
+) -> None:
+    if sample["source"] != source or (require_valid and not sample["valid"]):
         fail("sample.invalid")
     if sample["raw_hash"] != digest(RAW_VALUE_DOMAIN, sample["raw_value"]):
         fail("raw.binding")
@@ -194,14 +244,14 @@ def _validate_sample(sample: dict[str, Any], source: str, window: dict[str, Any]
         ):
             fail("raw.binding")
     observed = timestamp_ns(sample["observed_at"])
-    if observed < timestamp_ns(window["started_at"]) or observed > timestamp_ns(window["ended_at"]):
-        fail("sample.invalid")
-    if sample["capture_generation"] != window["capture_generation"]:
+    if observed > timestamp_ns(window["ended_at"]) or (
+        not allow_stale and observed < timestamp_ns(window["started_at"])
+    ):
         fail("sample.invalid")
     if source == "EBUS":
         if (
             sample["poll_id"] is None
-            or sample["poll_generation"] != window["ebus_poll_generation"]
+            or sample["poll_generation"] is None
             or sample["runtime_epoch"] is not None
             or sample["connection_generation"] is not None
         ):
@@ -210,10 +260,25 @@ def _validate_sample(sample: dict[str, Any], source: str, window: dict[str, Any]
         if (
             sample["poll_id"] is not None
             or sample["poll_generation"] is not None
-            or sample["runtime_epoch"] != window["eebus_runtime_epoch"]
-            or sample["connection_generation"] != window["connection_generation"]
+            or sample["runtime_epoch"] is None
+            or sample["connection_generation"] is None
         ):
             fail("sample.invalid")
+    if require_generation and not _sample_generation_matches(sample, source, window):
+        fail("sample.invalid")
+
+
+def _sample_generation_matches(
+    sample: dict[str, Any], source: str, window: dict[str, Any]
+) -> bool:
+    if sample["capture_generation"] != window["capture_generation"]:
+        return False
+    if source == "EBUS":
+        return sample["poll_generation"] == window["ebus_poll_generation"]
+    return (
+        sample["runtime_epoch"] == window["eebus_runtime_epoch"]
+        and sample["connection_generation"] == window["connection_generation"]
+    )
 
 
 def _converted(value: Decimal, conversion: dict[str, Any]) -> Decimal:
@@ -223,6 +288,46 @@ def _converted(value: Decimal, conversion: dict[str, Any]) -> Decimal:
         if decimal_value(conversion["scale"]) != Decimal(1) or decimal_value(conversion["offset"]) != Decimal(0):
             fail("comparator.invalid")
     return value * decimal_value(conversion["scale"]) + decimal_value(conversion["offset"])
+
+
+def _numeric_values_in_range(
+    expected: dict[str, Any], ebus: dict[str, Any], eebus: dict[str, Any]
+) -> tuple[Decimal, Decimal]:
+    source = expected["eebus_source"]
+    constraints = source["declared_constraints"]
+    minimum = decimal_value(constraints["minimum"])
+    maximum = decimal_value(constraints["maximum"])
+    if minimum is None or maximum is None or minimum > maximum:
+        fail("comparator.invalid")
+    left = _converted(_typed(ebus["value"], "NUMERIC"), source["conversion"])
+    right = _typed(eebus["value"], "NUMERIC")
+    if left < minimum or left > maximum or right < minimum or right > maximum:
+        fail("comparator.range")
+    return left, right
+
+
+def _numeric_values_are_in_range(
+    expected: dict[str, Any], ebus: dict[str, Any], eebus: dict[str, Any]
+) -> bool:
+    try:
+        _numeric_values_in_range(expected, ebus, eebus)
+        return True
+    except ValidationFailure as exc:
+        if exc.category == "comparator.range":
+            return False
+        raise
+
+
+def _numeric_sample_is_in_range(
+    expected: dict[str, Any], sample: dict[str, Any], sample_source: str
+) -> bool:
+    constraints = expected["eebus_source"]["declared_constraints"]
+    minimum = decimal_value(constraints["minimum"])
+    maximum = decimal_value(constraints["maximum"])
+    value = _typed(sample["value"], "NUMERIC")
+    if sample_source == "EBUS":
+        value = _converted(value, expected["eebus_source"]["conversion"])
+    return minimum <= value <= maximum
 
 
 def _expected_mapping_hash(expected: dict[str, Any]) -> str | None:
@@ -303,13 +408,43 @@ def _catalog_sample_matches(
     )
 
 
+def _catalog_sample_is_valid(
+    expected: dict[str, Any], sample: dict[str, Any], sample_source: str
+) -> bool:
+    try:
+        return _catalog_sample_matches(expected, sample, sample_source)
+    except ValidationFailure as exc:
+        if exc.category == "comparator.invalid":
+            return False
+        raise
+
+
+def _identity_observation(
+    assessment: dict[str, Any], candidate: dict[str, Any]
+) -> tuple[bool, bool]:
+    expected_ebus = candidate["ebus_identity"]["selector_hash"]
+    expected_eebus = candidate["eebus_identity"]["identity_hash"]
+    observed_ebus = assessment["observed_ebus_identity_hash"]
+    observed_eebus = assessment["observed_eebus_identity_hash"]
+    if (assessment["ebus_sample"] is None) != (observed_ebus is None):
+        fail("identity.binding")
+    if (assessment["eebus_sample"] is None) != (observed_eebus is None):
+        fail("identity.binding")
+    return observed_ebus == expected_ebus, observed_eebus == expected_eebus
+
+
 def _validate_match(
     assessment: dict[str, Any],
+    candidate: dict[str, Any],
     expected: dict[str, Any],
     window: dict[str, Any],
     capture_limits: dict[str, int],
 ) -> None:
     comparator_class = expected["comparator_class"]
+    if _identity_observation(assessment, candidate) != (True, True):
+        fail("identity.binding")
+    if assessment["conflict_samples"]:
+        fail("state.invalid")
     ebus, eebus = _validate_pair(assessment, window, capture_limits)
 
     comparator = assessment["comparator"]
@@ -325,8 +460,7 @@ def _validate_match(
             or step <= 0
         ):
             fail("comparator.invalid")
-        left = _converted(_typed(ebus["value"], "NUMERIC"), comparator["conversion"])
-        right = _typed(eebus["value"], "NUMERIC")
+        left, right = _numeric_values_in_range(expected, ebus, eebus)
         delta = abs(left - right)
         if decimal_value(comparator["delta"]) != delta or delta > step or comparator["mapping_hash"] is not None:
             fail("comparator.invalid")
@@ -431,6 +565,7 @@ def _validate_eebus_identity(identity: dict[str, Any], source: dict[str, Any]) -
 
 def _validate_non_match_assessment(
     assessment: dict[str, Any],
+    candidate: dict[str, Any],
     expected: dict[str, Any],
     window: dict[str, Any],
     capture_limits: dict[str, int],
@@ -469,46 +604,136 @@ def _validate_non_match_assessment(
             comparator["outcome"] != "MISSING"
             or assessment["skew_ns"] is not None
             or assessment["age_ns"] is not None
+            or comparator["delta"] is not None
+            or assessment["conflict_samples"]
         ):
             fail("state.invalid")
+        identity_matches = _identity_observation(assessment, candidate)
         if ebus is not None:
             _validate_sample(ebus, "EBUS", window)
-            if not _catalog_sample_matches(expected, ebus, "EBUS"):
+            if not identity_matches[0] or not _catalog_sample_matches(expected, ebus, "EBUS"):
                 fail("comparator.invalid")
         if eebus is not None:
             _validate_sample(eebus, "EEBUS", window)
-            if not _catalog_sample_matches(expected, eebus, "EEBUS"):
+            if not identity_matches[1] or not _catalog_sample_matches(expected, eebus, "EEBUS"):
                 fail("comparator.invalid")
         return
-    if comparator["outcome"] == "MISSING":
-        fail("state.invalid")
-    if comparator["outcome"] != "MISMATCH":
-        fail("state.invalid")
 
-    ebus, eebus = _validate_pair(assessment, window, capture_limits)
-    if not _catalog_sample_matches(expected, ebus, "EBUS") or not _catalog_sample_matches(
-        expected, eebus, "EEBUS"
-    ):
-        fail("comparator.invalid")
-
-    if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY":
-        step = decimal_value(comparator["declared_spine_step"])
-        left = _converted(_typed(ebus["value"], "NUMERIC"), comparator["conversion"])
-        right = _typed(eebus["value"], "NUMERIC")
-        delta = abs(left - right)
-        if decimal_value(comparator["delta"]) != delta or delta <= step:
-            fail("comparator.invalid")
-        return
-
-    expected_kind = (
-        "ENUM"
-        if expected["comparator_class"] == "ENUM_EXACT_MAPPING"
-        else "BOOLEAN"
+    _validate_sample(
+        ebus, "EBUS", window, require_valid=False, require_generation=False, allow_stale=True
     )
-    if _typed(ebus["value"], expected_kind) == _typed(
-        eebus["value"], expected_kind
+    _validate_sample(
+        eebus, "EEBUS", window, require_valid=False, require_generation=False, allow_stale=True
+    )
+    ebus_ns = timestamp_ns(ebus["observed_at"])
+    eebus_ns = timestamp_ns(eebus["observed_at"])
+    skew = abs(ebus_ns - eebus_ns)
+    age = max(
+        timestamp_ns(window["ended_at"]) - ebus_ns,
+        timestamp_ns(window["ended_at"]) - eebus_ns,
+    )
+    if assessment["skew_ns"] != skew or skew > assessment["max_skew_ns"]:
+        fail("sample.invalid")
+    if assessment["age_ns"] != age:
+        fail("sample.invalid")
+
+    identity_matches = _identity_observation(assessment, candidate)
+    generations_match = _sample_generation_matches(
+        ebus, "EBUS", window
+    ) and _sample_generation_matches(eebus, "EEBUS", window)
+    catalog_matches = _catalog_sample_is_valid(
+        expected, ebus, "EBUS"
+    ) and _catalog_sample_is_valid(expected, eebus, "EEBUS")
+    values_in_range = True
+    if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY" and catalog_matches:
+        values_in_range = _numeric_values_are_in_range(expected, ebus, eebus)
+    invalid = not ebus["valid"] or not eebus["valid"] or not catalog_matches or not values_in_range
+    stale = age > assessment["max_age_ns"]
+    conflict = _validate_conflict_samples(
+        assessment, candidate, expected, window, capture_limits
+    )
+
+    mismatch = False
+    computed_delta: Decimal | None = None
+    if not invalid:
+        if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY":
+            left, right = _numeric_values_in_range(expected, ebus, eebus)
+            computed_delta = abs(left - right)
+            mismatch = computed_delta > decimal_value(comparator["declared_spine_step"])
+        else:
+            expected_kind = (
+                "ENUM"
+                if expected["comparator_class"] == "ENUM_EXACT_MAPPING"
+                else "BOOLEAN"
+            )
+            mismatch = _typed(ebus["value"], expected_kind) != _typed(
+                eebus["value"], expected_kind
+            )
+
+    if identity_matches != (True, True):
+        computed = "IDENTITY_MISMATCH"
+    elif not generations_match:
+        computed = "GENERATION_CHANGED"
+    elif invalid:
+        computed = "INVALID"
+    elif stale:
+        computed = "STALE"
+    elif conflict:
+        computed = "CONFLICT"
+    elif mismatch:
+        computed = "MISMATCH"
+    else:
+        computed = "MATCH"
+    if comparator["outcome"] != computed or computed == "MATCH":
+        fail("state.invalid")
+    if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY":
+        if computed == "MISMATCH":
+            if decimal_value(comparator["delta"]) != computed_delta:
+                fail("comparator.invalid")
+        elif comparator["delta"] is not None:
+            fail("comparator.invalid")
+
+
+def _validate_conflict_samples(
+    assessment: dict[str, Any],
+    candidate: dict[str, Any],
+    expected: dict[str, Any],
+    window: dict[str, Any],
+    capture_limits: dict[str, int],
+) -> bool:
+    samples = assessment["conflict_samples"]
+    if not samples:
+        return False
+    if len(samples) != 2 or samples[0]["source"] != samples[1]["source"]:
+        fail("conflict.invalid")
+    source = samples[0]["source"]
+    source_key = "EBUS" if source == "EBUS" else "EEBUS"
+    identity_index = 0 if source_key == "EBUS" else 1
+    if not _identity_observation(assessment, candidate)[identity_index]:
+        fail("identity.binding")
+    for sample in samples:
+        _validate_sample(sample, source_key, window)
+        if not _catalog_sample_is_valid(expected, sample, source_key):
+            fail("conflict.invalid")
+        if (
+            expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY"
+            and not _numeric_sample_is_in_range(expected, sample, source_key)
+        ):
+            fail("conflict.invalid")
+        age = timestamp_ns(window["ended_at"]) - timestamp_ns(sample["observed_at"])
+        if age > capture_limits["max_age_ns"]:
+            fail("conflict.invalid")
+    conflict_skew = abs(
+        timestamp_ns(samples[0]["observed_at"])
+        - timestamp_ns(samples[1]["observed_at"])
+    )
+    if (
+        conflict_skew > capture_limits["max_skew_ns"]
+        or samples[0]["raw_hash"] == samples[1]["raw_hash"]
+        or samples[0]["value"] == samples[1]["value"]
     ):
-        fail("comparator.invalid")
+        fail("conflict.invalid")
+    return True
 
 
 def _derived_terminal(outcomes: list[str]) -> str | None:
@@ -540,7 +765,226 @@ def replay_hash(value: dict[str, Any]) -> str:
     )
 
 
-def verify_private(value: dict[str, Any], registry: dict[str, Any]) -> None:
+def _read_bounded_bytes(path: pathlib.Path, maximum: int, category: str) -> bytes:
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        fail(category)
+    if not raw or len(raw) > maximum:
+        fail(category)
+    return raw
+
+
+def _validate_capture_receipts(
+    value: dict[str, Any], receipt_paths: list[pathlib.Path]
+) -> None:
+    if len(receipt_paths) != 2:
+        fail("live.receipt")
+    windows = {window["window_id"]: window for window in value["windows"]}
+    observed: dict[str, str] = {}
+    for path in receipt_paths:
+        receipt, raw = load_json(path)
+        if set(receipt) != {
+            "contract",
+            "window_id",
+            "phase",
+            "capture_generation",
+            "process_instance_hash",
+            "captured_at",
+        } or receipt["contract"] != "helianthus.platform.leaf-promotion-capture-receipt.v1":
+            fail("live.receipt")
+        reject_secret_material(receipt)
+        window = windows.get(receipt["window_id"])
+        if window is None or any(
+            receipt[key] != window[key]
+            for key in ("phase", "capture_generation", "process_instance_hash")
+        ):
+            fail("live.receipt")
+        captured_at = timestamp_ns(receipt["captured_at"])
+        if captured_at < timestamp_ns(window["started_at"]) or captured_at > timestamp_ns(
+            window["ended_at"]
+        ):
+            fail("live.receipt")
+        observed[receipt["window_id"]] = bytes_digest(raw)
+    if set(observed) != set(windows):
+        fail("live.receipt")
+    expected = [observed[window["window_id"]] for window in value["windows"]]
+    if value["provenance"]["capture_receipts"] != expected:
+        fail("live.receipt")
+
+
+def _validate_deployment_source(
+    value: dict[str, Any], source_path: pathlib.Path, binary_path: pathlib.Path
+) -> None:
+    source, source_raw = load_json(source_path)
+    binary_raw = _read_bounded_bytes(
+        binary_path, MAX_DEPLOYMENT_BINARY_BYTES, "live.deployment"
+    )
+    expected_binary = bytes_digest(binary_raw)
+    if set(source) != {"contract", "source_commit", "binary_hash"} or source.get(
+        "contract"
+    ) != "helianthus.platform.deployment-source-receipt.v1":
+        fail("live.deployment")
+    reject_secret_material(source)
+    provenance = value["provenance"]
+    if (
+        source["source_commit"] != provenance["deployment_source_commit"]
+        or source["binary_hash"] != expected_binary
+        or provenance["deployment_binary_hash"] != expected_binary
+        or provenance["deployment_source_hash"] != bytes_digest(source_raw)
+    ):
+        fail("live.deployment")
+
+
+def _validate_non_synthetic_selectors(value: dict[str, Any]) -> None:
+    for candidate in value["candidates"]:
+        ebus = candidate["ebus_identity"]
+        eebus = candidate["eebus_identity"]
+        selectors: list[str] = []
+        if ebus is not None:
+            selectors.extend((ebus["target_pseudonym"], ebus["unit_scale_source"]))
+        if eebus is not None:
+            selectors.extend(
+                (
+                    eebus["service_id"],
+                    eebus["device_address"],
+                    eebus["entity_slot"],
+                    eebus["field_path"],
+                )
+            )
+        if any(SYNTHETIC_SELECTOR.search(selector) for selector in selectors):
+            fail("live.selector")
+
+
+def _validate_live_source_bundle(
+    value: dict[str, Any],
+    registry: dict[str, Any],
+    live_sources: dict[str, pathlib.Path | list[pathlib.Path]],
+) -> None:
+    required = {
+        "m7_graph",
+        "m7_status",
+        "m7_replay",
+        "m8_evidence",
+        "m8_report",
+        "capture_receipts",
+        "deployment_source",
+        "deployment_binary",
+    }
+    if set(live_sources) != required:
+        fail("live.sources.required")
+    artifacts: dict[str, dict[str, Any]] = {}
+    raw_artifacts: dict[str, bytes] = {}
+    for name in ("m7_graph", "m7_status", "m7_replay", "m8_evidence", "m8_report"):
+        path = live_sources[name]
+        if not isinstance(path, pathlib.Path):
+            fail("live.sources.required")
+        artifacts[name], raw_artifacts[name] = load_json(
+            path, max_bytes=MAX_LIVE_ARTIFACT_BYTES
+        )
+    schema_validate(artifacts["m7_graph"], M7_GRAPH_SCHEMA, "live.m7")
+    schema_validate(artifacts["m7_status"], M7_STATUS_SCHEMA, "live.m7")
+    schema_validate(artifacts["m7_replay"], M7_REPLAY_SCHEMA, "live.m7")
+    schema_validate(artifacts["m8_evidence"], M8_EVIDENCE_SCHEMA, "live.m8")
+    schema_validate(artifacts["m8_report"], M8_REPORT_SCHEMA, "live.m8")
+    graph = artifacts["m7_graph"]
+    replay = artifacts["m7_replay"]
+    status = artifacts["m7_status"]
+    try:
+        candidate_schema.check_hashes(graph)
+        if candidate_schema.replay(graph) != replay:
+            fail("live.m7")
+        projected = status_projector.project(
+            graph, replay, status["source_commit"], status["docs_source_commit"]
+        )
+    except (candidate_schema.Failure, status_projector.Failure, KeyError, TypeError, ValueError):
+        fail("live.m7")
+    if projected != status:
+        fail("live.m7")
+    expected_facts = [
+        {
+            "candidate_id": item["candidate_id"],
+            "status": item["source_status"],
+            "terminal_negative_state": item["terminal_state"],
+            "fact_hash": item["fact_hash"],
+        }
+        for item in registry["candidate_catalog"]
+    ]
+    if status["facts"] != expected_facts:
+        fail("live.m7")
+
+    evidence = artifacts["m8_evidence"]
+    report = artifacts["m8_report"]
+    m8_registry, m8_registry_raw = load_json(M8_REGISTRY)
+    try:
+        coexistence.check_limits(evidence, len(raw_artifacts["m8_evidence"]))
+        coexistence.check_registry(evidence, m8_registry, m8_registry_raw)
+        coexistence.check_config(evidence)
+        coexistence.check_auth_mask(evidence)
+        coexistence.check_clock(evidence)
+        coexistence.check_ordering(evidence, m8_registry)
+        coexistence.check_states(evidence, {"facts": status["facts"]})
+        coexistence.check_restart(evidence)
+        coexistence.check_view_coverage(evidence, m8_registry)
+        coexistence.check_normalization(evidence, m8_registry)
+        coexistence.check_payload_hashes(evidence, m8_registry)
+        coexistence.check_public_redaction(evidence)
+        coexistence.check_authority(evidence)
+        coexistence.check_scope(evidence, m8_registry)
+        coexistence.check_drift(evidence, m8_registry)
+        coexistence.check_rollback(evidence, m8_registry)
+        coexistence.check_evidence_hash(evidence)
+        derived_report = coexistence.report(copy.deepcopy(evidence), m8_registry)
+    except (coexistence.Failure, KeyError, TypeError, ValueError):
+        fail("live.m8")
+    if (
+        evidence["evidence_class"] != "CAPTURED_RUNTIME_EVIDENCE"
+        or not evidence["scope"]["live_vr940_claim"]
+        or report != derived_report
+        or report["verdict"] != "PASS"
+        or not report["rollback"]["exact_baseline_restored"]
+    ):
+        fail("live.m8")
+
+    bindings = value["source_bindings"]
+    expected_bindings = {
+        "m7_graph_id": graph["graph_id"],
+        "m7_graph_hash": graph["graph_hash"],
+        "m7_replay_id": replay["replay_id"],
+        "m7_replay_hash": replay["replay_hash"],
+        "m7_status_id": status["projection_id"],
+        "m7_status_hash": status["projection_hash"],
+        "m8_evidence_id": evidence["evidence_id"],
+        "m8_evidence_hash": evidence["evidence_hash"],
+        "m8_report_id": report["report_id"],
+        "m8_report_hash": report["report_hash"],
+    }
+    for name in ("m7_graph", "m7_status", "m7_replay", "m8_evidence", "m8_report"):
+        expected_bindings[name + "_bytes_hash"] = bytes_digest(raw_artifacts[name])
+    if any(bindings.get(key) != expected for key, expected in expected_bindings.items()):
+        fail("live.sources.binding")
+    receipt_paths = live_sources["capture_receipts"]
+    if not isinstance(receipt_paths, list) or not all(
+        isinstance(path, pathlib.Path) for path in receipt_paths
+    ):
+        fail("live.sources.required")
+    _validate_capture_receipts(value, receipt_paths)
+    deployment_source = live_sources["deployment_source"]
+    deployment_binary = live_sources["deployment_binary"]
+    if not isinstance(deployment_source, pathlib.Path) or not isinstance(
+        deployment_binary, pathlib.Path
+    ):
+        fail("live.sources.required")
+    _validate_deployment_source(value, deployment_source, deployment_binary)
+    _validate_non_synthetic_selectors(value)
+
+
+def verify_private(
+    value: dict[str, Any],
+    registry: dict[str, Any],
+    live_sources: dict[str, pathlib.Path | list[pathlib.Path]] | None = None,
+) -> None:
+    reject_secret_material(value)
     schema_validate(value, PRIVATE_SCHEMA, "schema.private")
     if (
         value["source_bindings"]["registry_sha256"] != PINNED_REGISTRY_SHA256
@@ -554,11 +998,14 @@ def verify_private(value: dict[str, Any], registry: dict[str, Any]) -> None:
     if value["evidence_mode"] == "SANITIZED_CONFORMANCE":
         if provenance != registry["sanitized_provenance"]:
             fail("provenance.binding")
+        if live_sources is not None:
+            fail("live.sources.unexpected")
     elif (
         provenance["fixture_id"] is not None
         or provenance["generator"] is not None
         or len(provenance["capture_receipts"]) != 2
         or provenance["deployment_source_commit"] is None
+        or provenance["deployment_source_hash"] is None
         or provenance["deployment_binary_hash"] is None
     ):
         fail("provenance.binding")
@@ -664,9 +1111,11 @@ def verify_private(value: dict[str, Any], registry: dict[str, Any]) -> None:
         for assessment in assessments:
             window = window_by_id[assessment["window_id"]]
             if assessment["comparator"]["outcome"] == "MATCH":
-                _validate_match(assessment, expected, window, capture_limits)
+                _validate_match(assessment, candidate, expected, window, capture_limits)
             else:
-                _validate_non_match_assessment(assessment, expected, window, capture_limits)
+                _validate_non_match_assessment(
+                    assessment, candidate, expected, window, capture_limits
+                )
 
         terminal = _derived_terminal(outcomes)
         if terminal is None:
@@ -694,6 +1143,10 @@ def verify_private(value: dict[str, Any], registry: dict[str, Any]) -> None:
     )
     if value["campaign_hash"] != expected_hash:
         fail("hash.campaign")
+    if value["evidence_mode"] == "LIVE_CAPTURE":
+        if live_sources is None:
+            fail("live.sources.required")
+        _validate_live_source_bundle(value, registry, live_sources)
 
 
 def _build_public(value: dict[str, Any], private_raw: bytes) -> dict[str, Any]:
@@ -733,9 +1186,15 @@ def _build_public(value: dict[str, Any], private_raw: bytes) -> dict[str, Any]:
             "registry_sha256": value["source_bindings"]["registry_sha256"],
             "docs_eebus_commit": value["source_bindings"]["docs_eebus_commit"],
             "m7_graph_hash": value["source_bindings"]["m7_graph_hash"],
+            "m7_graph_bytes_hash": value["source_bindings"]["m7_graph_bytes_hash"],
+            "m7_replay_hash": value["source_bindings"]["m7_replay_hash"],
+            "m7_replay_bytes_hash": value["source_bindings"]["m7_replay_bytes_hash"],
             "m7_status_hash": value["source_bindings"]["m7_status_hash"],
+            "m7_status_bytes_hash": value["source_bindings"]["m7_status_bytes_hash"],
             "m8_evidence_hash": value["source_bindings"]["m8_evidence_hash"],
+            "m8_evidence_bytes_hash": value["source_bindings"]["m8_evidence_bytes_hash"],
             "m8_report_hash": value["source_bindings"]["m8_report_hash"],
+            "m8_report_bytes_hash": value["source_bindings"]["m8_report_bytes_hash"],
             "replay_hash": value["source_bindings"]["replay_hash"],
             "campaign_hash": value["campaign_hash"],
             "private_campaign_bytes_hash": bytes_digest(private_raw),
@@ -754,9 +1213,12 @@ def _build_public(value: dict[str, Any], private_raw: bytes) -> dict[str, Any]:
 
 
 def derive_public(
-    value: dict[str, Any], registry: dict[str, Any], private_raw: bytes
+    value: dict[str, Any],
+    registry: dict[str, Any],
+    private_raw: bytes,
+    live_sources: dict[str, pathlib.Path | list[pathlib.Path]] | None = None,
 ) -> dict[str, Any]:
-    verify_private(value, registry)
+    verify_private(value, registry, live_sources)
     public = _build_public(value, private_raw)
     _verify_public_structure(public, registry)
     return public
@@ -775,6 +1237,7 @@ def _walk_keys(value: Any) -> list[str]:
 
 
 def _verify_public_structure(value: dict[str, Any], registry: dict[str, Any]) -> None:
+    reject_secret_material(value)
     schema_validate(value, PUBLIC_SCHEMA, "schema.public")
     catalog = registry["candidate_catalog"]
     if (
@@ -860,6 +1323,7 @@ def verify_public(
     registry: dict[str, Any],
     private_value: dict[str, Any] | None = None,
     private_raw: bytes | None = None,
+    live_sources: dict[str, pathlib.Path | list[pathlib.Path]] | None = None,
 ) -> None:
     _verify_public_structure(value, registry)
     if value["evidence_mode"] == "LIVE_CAPTURE" and (
@@ -869,9 +1333,30 @@ def verify_public(
     if (private_value is None) != (private_raw is None):
         fail("private.required")
     if private_value is not None and private_raw is not None:
-        verify_private(private_value, registry)
+        verify_private(private_value, registry, live_sources)
         if value != _build_public(private_value, private_raw):
             fail("private.binding")
+
+
+def _live_sources_from_args(
+    args: argparse.Namespace,
+) -> dict[str, pathlib.Path | list[pathlib.Path]] | None:
+    values = {
+        "m7_graph": args.m7_graph,
+        "m7_status": args.m7_status,
+        "m7_replay": args.m7_replay,
+        "m8_evidence": args.m8_evidence,
+        "m8_report": args.m8_report,
+        "capture_receipts": args.capture_receipt,
+        "deployment_source": args.deployment_source,
+        "deployment_binary": args.deployment_binary,
+    }
+    supplied = any(value not in (None, []) for value in values.values())
+    if not supplied:
+        return None
+    if any(value in (None, []) for value in values.values()) or len(args.capture_receipt) != 2:
+        fail("live.sources.required")
+    return values
 
 
 def main() -> int:
@@ -880,21 +1365,34 @@ def main() -> int:
     parser.add_argument("--input", required=True, type=pathlib.Path)
     parser.add_argument("--registry", type=pathlib.Path, default=DEFAULT_REGISTRY)
     parser.add_argument("--private-campaign", type=pathlib.Path)
+    parser.add_argument("--m7-graph", type=pathlib.Path)
+    parser.add_argument("--m7-status", type=pathlib.Path)
+    parser.add_argument("--m7-replay", type=pathlib.Path)
+    parser.add_argument("--m8-evidence", type=pathlib.Path)
+    parser.add_argument("--m8-report", type=pathlib.Path)
+    parser.add_argument("--capture-receipt", type=pathlib.Path, action="append", default=[])
+    parser.add_argument("--deployment-source", type=pathlib.Path)
+    parser.add_argument("--deployment-binary", type=pathlib.Path)
     args = parser.parse_args()
     try:
         value, raw = load_json(args.input)
         registry = registry_value(args.registry)
+        live_sources = _live_sources_from_args(args)
         if args.command == "verify-private":
-            verify_private(value, registry)
+            verify_private(value, registry, live_sources)
             print("PASS")
         elif args.command == "derive-public":
-            print(canonical(derive_public(value, registry, raw)).decode("utf-8"))
+            print(
+                canonical(derive_public(value, registry, raw, live_sources)).decode(
+                    "utf-8"
+                )
+            )
         else:
             private_value = None
             private_raw = None
             if args.private_campaign is not None:
                 private_value, private_raw = load_json(args.private_campaign)
-            verify_public(value, registry, private_value, private_raw)
+            verify_public(value, registry, private_value, private_raw, live_sources)
             print("PASS")
         return 0
     except ValidationFailure as exc:

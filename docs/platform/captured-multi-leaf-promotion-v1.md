@@ -28,8 +28,11 @@ candidate is not interchangeable even when its decoded value is equal.
 The derived `PUBLIC_REDACTED` result retains candidate ids, content hashes,
 decisions, terminal outcomes, and replay bindings, but no eBUS addresses or
 eeBUS device, entity, feature, service, path, SKI, or SHIP identity. Neither
-tier may contain private keys, PEM private material, tokens, trust-store bytes,
-or `candidate_ref`.
+tier may contain private keys, PEM private material, bearer/basic credentials,
+JWT-like tokens, encoded trust-store/private-key bytes, or `candidate_ref`.
+Validation recursively scans values as well as enforcing closed schema keys;
+operational SKI, SHIP ids, protocol addresses, and selectors are not treated as
+cryptographic secrets in the private operator tier.
 
 The eeBUS source contract is grounded by `helianthus-docs-eebus` commit
 `657a36d07e52570326384b757a5382a6789f641b`. For every protocol-present leaf,
@@ -42,8 +45,8 @@ service/device/entity/feature selectors, and binds the complete result with
 `identity_hash`.
 
 The canonical registry is also an exact byte contract. Its raw SHA-256 is
-`854eb51398c949f14bc905d1d26c906f37243e4a218b7e990734064944621f59`, exposed
-as `registry_sha256=sha256:854eb51398c949f14bc905d1d26c906f37243e4a218b7e990734064944621f59`.
+`7eae7ff101e53678d9564150be8b054d82f955dc515e61c126749971b22a445c`, exposed
+as `registry_sha256=sha256:7eae7ff101e53678d9564150be8b054d82f955dc515e61c126749971b22a445c`.
 `--registry` may name a byte-identical copy; it cannot substitute tolerances,
 selectors, mappings, or an eeBUS source profile.
 
@@ -78,6 +81,19 @@ terminal state. The four catalog-terminal rows retain their exact catalog state
 without assessments. The three capability-only rows retain exactly
 `NOT_COMPARABLE` without an eBUS identity or assessments.
 
+Each eligible assessment records the observed eBUS selector hash and eeBUS
+identity hash independently of the candidate's expected identities. A missing
+sample has a null observed identity for that source. `IDENTITY_MISMATCH` is
+recomputed from a non-null observed hash that differs from the bound candidate
+identity. `GENERATION_CHANGED` is recomputed from sample capture/poll/runtime/
+connection generations that differ from the window. `INVALID` requires an
+invalid sample, an unmapped protocol value, or a numeric value outside the
+declared range. `STALE` requires the recomputed age to exceed the maximum.
+`CONFLICT` requires two valid, fresh, same-source samples with different bound
+raw hashes and decoded values. `MISMATCH` is reached only after the preceding
+conditions are false and the comparator itself fails. A terminal label without
+the corresponding observed evidence is rejected.
+
 ## Comparator Rules
 
 Numeric leaves use `NUMERIC_DECLARED_GRANULARITY`. Each capture window binds:
@@ -97,9 +113,13 @@ Enum and boolean samples instead require the exact eeBUS raw-to-decoded pair
 and the exact catalog cross-protocol pair; rehashing a substituted raw value
 does not make it comparable.
 
-The SPINE-declared step must be finite, positive, equal to the protocol catalog
-entry, and present in the same hashed evidence. A campaign cannot enlarge its
-own tolerance. The inclusive match rule is:
+The SPINE-declared minimum, maximum, and step are catalog-owned. Both the
+converted eBUS value and the eeBUS value must fall inside the inclusive
+`[minimum, maximum]` range before either `MATCH` or `MISMATCH` can be asserted;
+an out-of-range or sentinel value derives `INVALID`. The step must be finite,
+positive, equal to the protocol catalog entry, and present in the same hashed
+evidence. A campaign cannot enlarge its own tolerance. The inclusive match
+rule is:
 
 ```text
 abs(convert(eBUS) - eeBUS) <= declared SPINE step
@@ -127,8 +147,9 @@ Each promoted leaf must pass in both windows with valid
 samples, identical source identity, bounded skew and age, and no generation
 change within a window.
 
-The campaign also binds the exact M7 graph/status, M8 coexistence evidence and
-report, `no_drift=true`, `rollback_exact=true`, and deterministic replay. A
+The campaign also binds the exact bytes and protocol ids/hashes of the M7
+graph/status/replay and M8 coexistence evidence/report, `no_drift=true`,
+`rollback_exact=true`, and deterministic replay. A
 change to source identity, descriptor, unit/conversion, declared step,
 generation, validity, comparator, coexistence proof, or replay hash requires a
 new dossier.
@@ -157,6 +178,21 @@ exact private input bytes from which it was derived. For `LIVE_CAPTURE`,
 private campaign against the pinned registry, recomputes the byte hash, and
 requires byte-for-object equality with a fresh deterministic public derivation.
 A standalone or relabeled public object therefore cannot open M9.
+
+`LIVE_CAPTURE` additionally requires the same external source bundle for
+`verify-private`, `derive-public`, and bound `verify-public`: `--m7-graph`,
+`--m7-status`, `--m7-replay`, `--m8-evidence`, `--m8-report`, exactly two
+`--capture-receipt` arguments in window order, `--deployment-source`, and
+`--deployment-binary`. The validator validates all five artifact schemas,
+their native ids/hashes and cross-bindings, the M7 status projection, the M8
+captured-runtime/PASS report, each exact artifact byte hash, each receipt's
+window/generation/process binding, the deployment source commit receipt, and
+the deployed binary hash. Known synthetic selector markers fail closed. The
+deployment source receipt is the closed JSON object
+`{contract,source_commit,binary_hash}`; each capture receipt is the closed JSON
+object `{contract,window_id,phase,capture_generation,process_instance_hash,
+captured_at}`. Omitting or substituting any input prevents LIVE derivation and
+M9 readiness.
 
 The repository fixture is `SANITIZED_CONFORMANCE`; its closed provenance names
 the canonical generator and fixture id, while all selector values are synthetic

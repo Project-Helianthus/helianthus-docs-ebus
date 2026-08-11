@@ -13,6 +13,7 @@
     "generator": "scripts/generate_captured_multi_leaf_promotion_fixture.py",
     "capture_receipts": [],
     "deployment_source_commit": null,
+    "deployment_source_hash": null,
     "deployment_binary_hash": null
   },
   "candidate_catalog": [

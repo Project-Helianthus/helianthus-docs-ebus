@@ -9,6 +9,8 @@ import pathlib
 import subprocess
 import sys
 
+import pytest
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PAGE = ROOT / "docs/platform/captured-multi-leaf-promotion-v1.md"
@@ -23,7 +25,7 @@ PUBLIC = FIXTURE / "positive/public-result.json"
 NEGATIVE = FIXTURE / "negative"
 VALIDATOR = ROOT / "scripts/validate_captured_multi_leaf_promotion.py"
 GENERATOR = ROOT / "scripts/generate_captured_multi_leaf_promotion_fixture.py"
-REGISTRY_SHA256 = "854eb51398c949f14bc905d1d26c906f37243e4a218b7e990734064944621f59"
+REGISTRY_SHA256 = "7eae7ff101e53678d9564150be8b054d82f955dc515e61c126749971b22a445c"
 
 
 EXPECTED_NEGATIVE = {
@@ -33,7 +35,7 @@ EXPECTED_NEGATIVE = {
     "generation-change.json": ("GENERATION_CHANGE", "sample.invalid"),
     "skew-exceeded.json": ("SKEW_EXCEEDED", "sample.invalid"),
     "stale-sample.json": ("STALE_SAMPLE", "sample.invalid"),
-    "missing-sample.json": ("MISSING_SAMPLE", "comparator.invalid"),
+    "missing-sample.json": ("MISSING_SAMPLE", "identity.binding"),
     "conflict-as-match.json": ("CONFLICT_AS_MATCH", "state.invalid"),
     "replay-drift.json": ("REPLAY_DRIFT", "hash.replay"),
     "public-identity-leak.json": ("PUBLIC_IDENTITY_LEAK", "schema.public"),
@@ -141,6 +143,7 @@ def live_campaign(validator) -> dict:
         "generator": None,
         "capture_receipts": ["sha256:" + "e" * 64, "sha256:" + "f" * 64],
         "deployment_source_commit": "1" * 40,
+        "deployment_source_hash": "sha256:" + "8" * 64,
         "deployment_binary_hash": "sha256:" + "9" * 64,
     }
     rehash_campaign(validator, campaign)
@@ -188,6 +191,12 @@ def promote_mapped_candidate(validator, campaign: dict, candidate_id: str) -> di
             ),
             "outcome": "MATCH",
         }
+        assessment["observed_ebus_identity_hash"] = leaf["ebus_identity"][
+            "selector_hash"
+        ]
+        assessment["observed_eebus_identity_hash"] = leaf["eebus_identity"][
+            "identity_hash"
+        ]
         leaf["assessments"].append(assessment)
     return leaf
 
@@ -290,23 +299,93 @@ def test_positive_subset_fixture_verifies_and_derives_byte_identically() -> None
     assert result["m9_consumer_gate"] == "BLOCKED_CONFORMANCE_ONLY"
 
 
-def test_live_public_requires_validated_byte_identical_private_campaign(tmp_path: pathlib.Path) -> None:
+def test_relabelled_private_campaign_requires_external_live_source_bundle(
+    tmp_path: pathlib.Path,
+) -> None:
     validator = module()
     private_path = write(tmp_path / "live-private.json", live_campaign(validator))
     derived = run("derive-public", private_path)
-    assert derived.returncode == 0
-    public_path = tmp_path / "live-public.json"
-    public_path.write_text(derived.stdout, encoding="utf-8")
+    assert (derived.returncode, derived.stdout) == (1, "live.sources.required\n")
+    verified = run("verify-private", private_path)
+    assert (verified.returncode, verified.stdout) == (
+        1,
+        "live.sources.required\n",
+    )
 
-    standalone = run("verify-public", public_path)
-    assert (standalone.returncode, standalone.stdout) == (1, "private.required\n")
-    bound = run("verify-public", public_path, private_campaign=private_path)
-    assert (bound.returncode, bound.stdout) == (0, "PASS\n")
 
-    byte_variant = tmp_path / "live-private-byte-variant.json"
-    byte_variant.write_bytes(private_path.read_bytes() + b"\n")
-    mismatch = run("verify-public", public_path, private_campaign=byte_variant)
-    assert (mismatch.returncode, mismatch.stdout) == (1, "private.binding\n")
+def test_live_cli_rejects_partial_source_bundle(tmp_path: pathlib.Path) -> None:
+    validator = module()
+    private_path = write(tmp_path / "live-private.json", live_campaign(validator))
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(VALIDATOR),
+            "derive-public",
+            "--input",
+            str(private_path),
+            "--registry",
+            str(REGISTRY),
+            "--m7-graph",
+            str(PRIVATE),
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout) == (1, "live.sources.required\n")
+
+
+def test_live_receipts_and_deployment_source_are_byte_bound(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    campaign = live_campaign(validator)
+    receipt_paths = []
+    for window in campaign["windows"]:
+        receipt = {
+            "contract": "helianthus.platform.leaf-promotion-capture-receipt.v1",
+            "window_id": window["window_id"],
+            "phase": window["phase"],
+            "capture_generation": window["capture_generation"],
+            "process_instance_hash": window["process_instance_hash"],
+            "captured_at": window["ended_at"],
+        }
+        path = write(tmp_path / f"{window['window_id']}.json", receipt)
+        receipt_paths.append(path)
+    campaign["provenance"]["capture_receipts"] = [
+        validator.bytes_digest(path.read_bytes()) for path in receipt_paths
+    ]
+    validator._validate_capture_receipts(campaign, receipt_paths)
+
+    binary_path = tmp_path / "gateway.bin"
+    binary_path.write_bytes(b"captured-gateway-binary")
+    binary_hash = validator.bytes_digest(binary_path.read_bytes())
+    source = {
+        "contract": "helianthus.platform.deployment-source-receipt.v1",
+        "source_commit": campaign["provenance"]["deployment_source_commit"],
+        "binary_hash": binary_hash,
+    }
+    source_path = write(tmp_path / "deployment-source.json", source)
+    campaign["provenance"]["deployment_source_hash"] = validator.bytes_digest(
+        source_path.read_bytes()
+    )
+    campaign["provenance"]["deployment_binary_hash"] = binary_hash
+    validator._validate_deployment_source(campaign, source_path, binary_path)
+
+    source["source_commit"] = "2" * 40
+    write(source_path, source)
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator._validate_deployment_source(campaign, source_path, binary_path)
+    assert raised.value.category == "live.deployment"
+
+
+def test_live_selector_gate_rejects_sanitized_fixture_selectors() -> None:
+    validator = module()
+    campaign = live_campaign(validator)
+    with pytest.raises(validator.ValidationFailure) as raised:
+        validator._validate_non_synthetic_selectors(campaign)
+    assert raised.value.category == "live.selector"
 
 
 def test_relabelled_public_cannot_open_m9(tmp_path: pathlib.Path) -> None:
@@ -494,7 +573,7 @@ def test_mismatch_is_recomputed_from_bound_values(tmp_path: pathlib.Path) -> Non
     )
     assert (fabricated.returncode, fabricated.stdout) == (
         1,
-        "comparator.invalid\n",
+        "state.invalid\n",
     )
 
     campaign = load(PRIVATE)
@@ -519,6 +598,166 @@ def test_mismatch_is_recomputed_from_bound_values(tmp_path: pathlib.Path) -> Non
     rehash_campaign(validator, campaign)
     observed = run("verify-private", write(tmp_path / "observed-mismatch.json", campaign))
     assert (observed.returncode, observed.stdout) == (0, "PASS\n")
+
+
+def observed_terminal_campaign(validator, outcome: str) -> dict:
+    campaign = load(PRIVATE)
+    leaf = promoted(campaign)
+    assessment = leaf["assessments"][0]
+    assessment["comparator"]["outcome"] = outcome
+    assessment["comparator"]["delta"] = None
+    if outcome == "MISSING":
+        assessment["ebus_sample"] = None
+        assessment["observed_ebus_identity_hash"] = None
+        assessment["skew_ns"] = None
+        assessment["age_ns"] = None
+    elif outcome == "IDENTITY_MISMATCH":
+        assessment["observed_ebus_identity_hash"] = "sha256:" + "f" * 64
+    elif outcome == "GENERATION_CHANGED":
+        assessment["eebus_sample"]["connection_generation"] += 1
+    elif outcome == "INVALID":
+        assessment["eebus_sample"]["valid"] = False
+    elif outcome == "STALE":
+        assessment["ebus_sample"]["observed_at"] = "2026-08-11T09:59:59.500000000Z"
+        assessment["eebus_sample"]["observed_at"] = "2026-08-11T09:59:59.600000000Z"
+        assessment["skew_ns"] = 100_000_000
+        assessment["age_ns"] = 10_500_000_000
+    elif outcome == "CONFLICT":
+        first = copy.deepcopy(assessment["eebus_sample"])
+        second = copy.deepcopy(first)
+        second["observed_at"] = "2026-08-11T10:00:05.200000000Z"
+        second["raw_value"] = {
+            "kind": "NUMERIC",
+            "decimal": {"number": 14, "scale": 0},
+            "enum": None,
+            "boolean": None,
+        }
+        second["value"] = copy.deepcopy(second["raw_value"])
+        rehash_raw(validator, second)
+        assessment["conflict_samples"] = [first, second]
+    elif outcome == "MISMATCH":
+        sample = assessment["eebus_sample"]
+        sample["raw_value"] = {
+            "kind": "NUMERIC",
+            "decimal": {"number": 14, "scale": 0},
+            "enum": None,
+            "boolean": None,
+        }
+        sample["value"] = copy.deepcopy(sample["raw_value"])
+        rehash_raw(validator, sample)
+        assessment["comparator"]["delta"] = {"number": 15, "scale": -1}
+    else:
+        raise AssertionError(outcome)
+    leaf.update(
+        decision="WITHHELD",
+        terminal_state=outcome,
+        visibility="RAW_DEBUG_ONLY",
+        dossier_hash=None,
+    )
+    rehash_campaign(validator, campaign)
+    return campaign
+
+
+def test_each_declared_eligible_terminal_outcome_is_recomputed(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    outcomes = (
+        "MISSING",
+        "IDENTITY_MISMATCH",
+        "GENERATION_CHANGED",
+        "INVALID",
+        "STALE",
+        "CONFLICT",
+        "MISMATCH",
+    )
+    for outcome in outcomes:
+        campaign = observed_terminal_campaign(validator, outcome)
+        result = run(
+            "verify-private",
+            write(tmp_path / f"observed-{outcome.lower()}.json", campaign),
+        )
+        assert (result.returncode, result.stdout) == (0, "PASS\n"), outcome
+
+        relabelled = load(PRIVATE)
+        leaf = promoted(relabelled)
+        leaf["assessments"][0]["comparator"]["outcome"] = outcome
+        leaf.update(
+            decision="WITHHELD",
+            terminal_state=outcome,
+            visibility="RAW_DEBUG_ONLY",
+            dossier_hash=None,
+        )
+        rehash_campaign(validator, relabelled)
+        falsifier = run(
+            "verify-private",
+            write(tmp_path / f"relabelled-{outcome.lower()}.json", relabelled),
+        )
+        assert falsifier.returncode == 1, outcome
+
+
+def test_numeric_bounds_are_inclusive_and_out_of_range_is_invalid(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    registry = load(REGISTRY)
+    expected = registry["candidate_catalog"][-1]
+    constraints = expected["eebus_source"]["declared_constraints"]
+    campaign = load(PRIVATE)
+    leaf = promoted(campaign)
+    for assessment, boundary in zip(
+        leaf["assessments"],
+        (constraints["minimum"], constraints["maximum"]),
+        strict=True,
+    ):
+        typed = {
+            "kind": "NUMERIC",
+            "decimal": copy.deepcopy(boundary),
+            "enum": None,
+            "boolean": None,
+        }
+        for key in ("ebus_sample", "eebus_sample"):
+            assessment[key]["raw_value"] = copy.deepcopy(typed)
+            assessment[key]["value"] = copy.deepcopy(typed)
+            rehash_raw(validator, assessment[key])
+        assessment["comparator"]["delta"] = {"number": 0, "scale": 0}
+    rehash_campaign(validator, campaign)
+    boundary_result = run(
+        "verify-private", write(tmp_path / "inclusive-bounds.json", campaign)
+    )
+    assert (boundary_result.returncode, boundary_result.stdout) == (0, "PASS\n")
+
+    campaign = load(PRIVATE)
+    leaf = promoted(campaign)
+    assessment = leaf["assessments"][0]
+    outside = copy.deepcopy(constraints["maximum"])
+    outside["number"] += 1
+    typed = {
+        "kind": "NUMERIC",
+        "decimal": outside,
+        "enum": None,
+        "boolean": None,
+    }
+    for key in ("ebus_sample", "eebus_sample"):
+        assessment[key]["raw_value"] = copy.deepcopy(typed)
+        assessment[key]["value"] = copy.deepcopy(typed)
+        rehash_raw(validator, assessment[key])
+    assessment["comparator"]["delta"] = {"number": 0, "scale": 0}
+    rehash_campaign(validator, campaign)
+    rejected = run("verify-private", write(tmp_path / "out-of-range-match.json", campaign))
+    assert (rejected.returncode, rejected.stdout) == (1, "comparator.range\n")
+
+    assessment["comparator"]["outcome"] = "INVALID"
+    assessment["comparator"]["delta"] = None
+    leaf.update(
+        decision="WITHHELD",
+        terminal_state="INVALID",
+        visibility="RAW_DEBUG_ONLY",
+        dossier_hash=None,
+    )
+    rehash_campaign(validator, campaign)
+    invalid = run("verify-private", write(tmp_path / "out-of-range-invalid.json", campaign))
+    assert (invalid.returncode, invalid.stdout) == (0, "PASS\n")
 
 
 def test_capture_limits_and_restart_generation_are_bound(tmp_path: pathlib.Path) -> None:
@@ -601,6 +840,32 @@ def test_public_redaction_and_private_schema_fail_closed(tmp_path: pathlib.Path)
     campaign["private_key"] = "forbidden"
     result = run("verify-private", write(tmp_path / "private-secret.json", campaign))
     assert (result.returncode, result.stdout) == (1, "schema.private\n")
+
+
+def test_secret_material_is_rejected_recursively_in_schema_allowed_strings(
+    tmp_path: pathlib.Path,
+) -> None:
+    payloads = (
+        "-----BEGIN PRIVATE KEY-----secret-----END PRIVATE KEY-----",
+        "Bearer abcdefghijklmnopqrstuvwxyz0123456789",
+        "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvcGVyYXRvciJ9.abcdefghijklmnop",
+        "A" * 180,
+        "trust_store=" + "Q" * 32,
+    )
+    for index, payload in enumerate(payloads):
+        campaign = load(PRIVATE)
+        candidate(campaign, "m7-candidate-0018")["eebus_identity"][
+            "service_id"
+        ] = payload
+        result = run(
+            "verify-private", write(tmp_path / f"private-secret-{index}.json", campaign)
+        )
+        assert (result.returncode, result.stdout) == (1, "secret.material\n")
+
+    public = load(PUBLIC)
+    public["provenance"]["binding_hash"] = payloads[0]
+    result = run("verify-public", write(tmp_path / "public-secret-value.json", public))
+    assert (result.returncode, result.stdout) == (1, "secret.material\n")
 
 
 def test_canonical_json_emits_unicode_as_utf8() -> None:
