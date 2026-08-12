@@ -1110,6 +1110,23 @@ def test_msp08_source_mcp_accepts_matching_structured_content() -> None:
     assert validator._source_inner_mcp(validator.canonical(envelope)) == inner
 
 
+def test_msp08_source_projection_rejects_type_ambiguous_structured_content() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    envelope = json.loads(payloads["ebus.semantic"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    envelope["result"]["structuredContent"] = deepcopy(inner)
+    envelope["result"]["structuredContent"]["data"]["planes"]["zones"][0][
+        "config"
+    ]["associated_circuit"] = True
+    payloads["ebus.semantic"] = validator.canonical(envelope)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+
+    assert str(error.value) == "provenance.source_capture"
+
+
 @pytest.mark.parametrize(
     "mutate",
     [
@@ -1423,7 +1440,15 @@ def test_msp08_source_projection_rejects_debug_address_alias_outside_admission()
 
 @pytest.mark.parametrize(
     "alias",
-    ["src_addr", "dstAddr", "peer_addrs", "source_addr_hash"],
+    [
+        "src_addr",
+        "dstAddr",
+        "peer_addrs",
+        "source_addr_hash",
+        "src_addr_value",
+        "dstAddrRaw",
+        "peer_addrs_list",
+    ],
 )
 def test_msp08_source_projection_rejects_uncontracted_abbreviated_address_alias(
     alias: str,
@@ -2744,6 +2769,9 @@ def test_msp08_public_export_rejects_secrets_and_stable_identity(
         ("dstAddr", 21),
         ("peer_addrs", [8, 21]),
         ("source_addr_hash", "sha256:" + "c" * 64),
+        ("src_addr_value", 127),
+        ("dstAddrRaw", 21),
+        ("peer_addrs_list", [8, 21]),
     ],
 )
 def test_msp08_public_export_rejects_abbreviated_address_alias(

@@ -1474,6 +1474,37 @@ def _read_bounded_regular_file(
             os.close(descriptor)
 
 
+def _source_json_equivalent(left: Any, right: Any) -> bool:
+    if isinstance(left, bool) or isinstance(right, bool):
+        return isinstance(left, bool) and isinstance(right, bool) and left is right
+    if isinstance(left, (int, decimal.Decimal)) or isinstance(
+        right, (int, decimal.Decimal)
+    ):
+        return (
+            isinstance(left, (int, decimal.Decimal))
+            and isinstance(right, (int, decimal.Decimal))
+            and _source_string_number(left) == _source_string_number(right)
+        )
+    if isinstance(left, dict) or isinstance(right, dict):
+        return (
+            isinstance(left, dict)
+            and isinstance(right, dict)
+            and set(left) == set(right)
+            and all(_source_json_equivalent(left[key], right[key]) for key in left)
+        )
+    if isinstance(left, list) or isinstance(right, list):
+        return (
+            isinstance(left, list)
+            and isinstance(right, list)
+            and len(left) == len(right)
+            and all(
+                _source_json_equivalent(left_item, right_item)
+                for left_item, right_item in zip(left, right, strict=True)
+            )
+        )
+    return type(left) is type(right) and left == right
+
+
 def _source_inner_mcp(raw: bytes) -> dict[str, Any]:
     envelope = _decode_source_json(raw, max_string_bytes=MAX_SOURCE_INPUT_BYTES)
     request_id = envelope.get("id") if isinstance(envelope, dict) else None
@@ -1509,7 +1540,9 @@ def _source_inner_mcp(raw: bytes) -> dict[str, Any]:
     value = _decode_source_json(content[0]["text"].encode("utf-8"))
     if not isinstance(value, dict):
         fail("provenance.source_capture")
-    if "structuredContent" in result and result["structuredContent"] != value:
+    if "structuredContent" in result and not _source_json_equivalent(
+        result["structuredContent"], value
+    ):
         fail("provenance.source_capture")
     return value
 
@@ -1723,6 +1756,10 @@ def _source_debug(value: Any, path: tuple[str, ...] = ()) -> Any:
                     fail("provenance.source_capture")
                 else:
                     projected[key] = OPAQUE_ADDRESS
+            elif key == "address_count" and path == ():
+                if not isinstance(item, int) or isinstance(item, bool) or item < 0:
+                    fail("provenance.source_capture")
+                projected[key] = item
             elif _is_public_address_key(key):
                 fail("provenance.source_capture")
             else:
@@ -3087,7 +3124,13 @@ def _is_public_address_key(key: Any) -> bool:
     if not isinstance(key, str):
         return False
     compact = _compact_key(key)
-    return compact.endswith(
+    tokenized = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
+    tokens = {
+        token.lower()
+        for token in re.split(r"[^A-Za-z0-9]+", tokenized)
+        if token
+    }
+    return bool(tokens & {"addr", "addrs", "address", "addresses"}) or compact.endswith(
         (
             "address",
             "addresses",
@@ -3342,6 +3385,12 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
         normalized_debug_keys = {
             _compact_key(key): key for key in SOURCE_DEBUG_ADDRESS_KEYS
         }
+        if "address_count" in debug_data and (
+            not isinstance(debug_data["address_count"], int)
+            or isinstance(debug_data["address_count"], bool)
+            or debug_data["address_count"] < 0
+        ):
+            return True
         for key, item in admission.items():
             canonical_key = normalized_debug_keys.get(_compact_key(key))
             if canonical_key is None:
@@ -3352,6 +3401,11 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
         allowed_address_keys = {
             *((id(device), "address") for device in mcp_devices),
             *((id(admission), key) for key in SOURCE_DEBUG_ADDRESS_KEYS if key in admission),
+            *(
+                ((id(debug_data), "address_count"),)
+                if "address_count" in debug_data
+                else ()
+            ),
         }
         if any(
             _contains_uncontracted_public_address_key(payload, allowed_address_keys)
