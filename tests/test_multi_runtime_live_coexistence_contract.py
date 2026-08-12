@@ -1099,6 +1099,8 @@ def test_msp08_private_runtime_binds_distinct_single_window_manifests(
         assert views["graphql.ebus.values"]["zones"][0]["name"] == semantic["zones"][0]["name"]
         assert views["ha.graphql.values"]["entities"][0]["target_temperature"] == "21.5"
         assert b"Zone 1" not in validator.canonical(views)
+        assert b"BAI00" not in validator.canonical(views)
+        assert b"VR_71" not in validator.canonical(views)
 
 
 def test_msp08_private_window_rejects_unprojectable_source_device(
@@ -1165,6 +1167,32 @@ def test_msp08_private_window_rejects_nonnumeric_graphql_temperature(
     run = evidence["runs"][0]
 
     with pytest.raises(Exception) as error:
+        validator._source_capture_binding(
+            manifests["before"],
+            roots["before"],
+            run["provenance"]["auth_scope"]["scope_hash"],
+            "PRE_RESTART",
+            run["provenance"]["process_instance_id"],
+            evidence["runs"][0]["capture_offset_ns"],
+            evidence["runs"][1]["capture_offset_ns"],
+            json.loads(manifests["before"])["captured_at"],
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_window_rejects_fractional_passthrough_without_traceback(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["graphql.values"]
+    raw = path.read_bytes().replace(b'"operatingMode":"auto"', b'"operatingMode":1.5')
+    path.write_bytes(raw)
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+    run = evidence["runs"][0]
+
+    with pytest.raises(validator.Failure) as error:
         validator._source_capture_binding(
             manifests["before"],
             roots["before"],

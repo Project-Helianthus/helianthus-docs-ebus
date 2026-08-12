@@ -1551,7 +1551,7 @@ def _source_device_projection(item: dict[str, Any]) -> dict[str, Any]:
         "address": _source_redacted(f"ebus-address:{address}"),
         "device_id": _source_redacted(f"ebus-device:{address}:{device_id}"),
         "manufacturer": manufacturer,
-        "model": device_id,
+        "model": _source_redacted(f"ebus-model:{device_id}"),
         "discovery_source": item.get("discovery_source") or "unknown",
         "verification_state": item.get("verification_state") or "unknown",
     }
@@ -1716,8 +1716,7 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
         process_source = inspect[0]["Id"] + "\x00" + inspect[0]["State"]["StartedAt"]
     except (KeyError, TypeError, AttributeError):
         fail("provenance.source_capture")
-    return {
-        "views": {
+    views = {
             "mcp.ebus.v1.responses": {
                 "contract": "ebus.v1",
                 "responses": [
@@ -1752,7 +1751,10 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
                 "schema_digest": "sha256:" + hashlib.sha256(canonical(schemas)).hexdigest(),
                 "version": 1,
             },
-        },
+        }
+    _source_reject_unprojected_decimals(views)
+    return {
+        "views": views,
         "process_instance_id": "process-"
         + hashlib.sha256(process_source.encode("utf-8")).hexdigest()[:32],
         "service_count": len(services["data"]["services"]),

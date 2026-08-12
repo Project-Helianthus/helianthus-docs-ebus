@@ -179,9 +179,12 @@ PRE and POST source windows require different manifest digests regardless of
 their claimed byte lengths. Source device rows are all-or-reject: a malformed
 address or missing identity cannot be omitted from the projection. Household
 zone labels are deterministic public pseudonyms, never copied from the private
-MCP or GraphQL source. Capture timestamps are derived exactly from the UTC wall
-anchor plus the monotonic nanosecond offset and retain up to nine fractional
-digits.
+MCP or GraphQL source; source device IDs and model labels are separately
+pseudonymized. Before return, the complete projected view tree is checked for
+unconsumed decimals, so a fractional pass-through field fails with
+`provenance.source_capture` rather than reaching canonical serialization.
+Capture timestamps are derived exactly from the UTC wall anchor plus the
+monotonic nanosecond offset and retain up to nine fractional digits.
 
 An MCP JSON-RPC envelope may carry a `content[0].text` string up to the bounded
 source-input ceiling. The verifier then decodes that string as JSON and applies
