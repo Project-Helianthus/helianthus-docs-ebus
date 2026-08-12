@@ -1531,21 +1531,25 @@ def _source_reject_unprojected_decimals(value: Any) -> None:
             _source_reject_unprojected_decimals(item)
 
 
-def _source_device_projection(item: dict[str, Any]) -> dict[str, Any]:
+def _source_device_projection(item: dict[str, Any]) -> dict[str, Any] | None:
     if not isinstance(item, dict):
         fail("provenance.source_capture")
     address = item.get("address")
     device_id = item.get("device_id")
     manufacturer = item.get("manufacturer")
+    verification_state = item.get("verification_state")
     if (
         not isinstance(address, int)
         or isinstance(address, bool)
         or not 0 <= address <= 255
         or not isinstance(device_id, str)
-        or not device_id
         or not isinstance(manufacturer, str)
-        or not manufacturer
+        or not isinstance(verification_state, str)
     ):
+        fail("provenance.source_capture")
+    if verification_state != "identity_confirmed":
+        return None
+    if not device_id or not manufacturer:
         fail("provenance.source_capture")
     return {
         "address": _source_redacted(f"ebus-address:{address}"),
@@ -1553,7 +1557,7 @@ def _source_device_projection(item: dict[str, Any]) -> dict[str, Any]:
         "manufacturer": manufacturer,
         "model": _source_redacted(f"ebus-model:{device_id}"),
         "discovery_source": item.get("discovery_source") or "unknown",
-        "verification_state": item.get("verification_state") or "unknown",
+        "verification_state": verification_state,
     }
 
 
@@ -1666,9 +1670,11 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
         source_devices = devices_response["data"]
         if not isinstance(source_devices, list):
             fail("provenance.source_capture")
-        devices = [_source_device_projection(item) for item in source_devices]
-        if len(devices) != len(source_devices):
-            fail("provenance.source_capture")
+        devices = [
+            projected
+            for item in source_devices
+            if (projected := _source_device_projection(item)) is not None
+        ]
         devices.sort(key=lambda item: item["address"])
         if not devices:
             fail("provenance.source_capture")
@@ -1724,7 +1730,7 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
                         "operation": "ebus.v1.registry.devices.list",
                         "result": {
                             "selection": {
-                                "criteria": "all_structurally_identified_devices_in_single_window",
+                                "criteria": "complete_identity_confirmed_devices_in_single_window",
                                 "selected_count": len(devices),
                             },
                             "devices": devices,
