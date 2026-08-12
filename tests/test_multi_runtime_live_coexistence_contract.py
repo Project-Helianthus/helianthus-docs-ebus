@@ -383,6 +383,9 @@ def build_live_evidence(validator) -> dict[str, object]:
             ha_device["via_device"] = validator._source_redacted(
                 "ha-via:" + device["device_id"]
             )
+        views["debug.ebus"]["payload"]["data"].setdefault("status", {})[
+            "admission"
+        ] = {key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS}
         run["run_id"] = f"msp08-run-{index + 1:02d}"
         run["state"] = states[index]
         run["capture_offset_ns"] = index * 1_000_000_000

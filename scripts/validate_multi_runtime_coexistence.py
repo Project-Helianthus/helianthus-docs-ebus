@@ -3096,7 +3096,26 @@ def _contains_uncontracted_public_address_key(
     return False
 
 
+PUBLIC_ADDRESS_DERIVED_IDENTITIES = frozenset(
+    _source_redacted(f"ebus-address:{address}") for address in range(256)
+)
+
+
+def _contains_public_address_derived_identity(value: Any) -> bool:
+    if isinstance(value, dict):
+        return any(
+            _contains_public_address_derived_identity(key)
+            or _contains_public_address_derived_identity(item)
+            for key, item in value.items()
+        )
+    if isinstance(value, list):
+        return any(_contains_public_address_derived_identity(item) for item in value)
+    return isinstance(value, str) and value in PUBLIC_ADDRESS_DERIVED_IDENTITIES
+
+
 def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
+    if _contains_public_address_derived_identity(evidence):
+        return True
     allowed_placeholder_count = 0
     runs = evidence.get("runs")
     if not isinstance(runs, list):
@@ -3276,8 +3295,17 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
         allowed_placeholder_count += sum(
             device.get("address") == OPAQUE_ADDRESS for device in mcp_devices
         )
-        admission = debug_data.get("status", {}).get("admission", {})
+        status = debug_data.get("status")
+        if status is None:
+            status = {}
+        if not isinstance(status, dict):
+            return True
+        admission = status.get("admission")
+        if admission is None:
+            admission = {}
         if not isinstance(admission, dict):
+            return True
+        if captured_runtime and not SOURCE_DEBUG_ADDRESS_KEYS.issubset(admission):
             return True
         normalized_debug_keys = {
             _compact_key(key): key for key in SOURCE_DEBUG_ADDRESS_KEYS

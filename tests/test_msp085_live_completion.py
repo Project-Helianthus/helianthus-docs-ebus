@@ -198,6 +198,7 @@ def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
     "target",
     [
         "auth_subject",
+        "auth_subject_address_hash",
         "uncontracted_mcp_address",
         "uncontracted_mcp_address_value_hash",
         "uncontracted_mcp_address_hash_alias",
@@ -215,9 +216,13 @@ def test_live_m8_canonical_verifier_rejects_opaque_address_outside_canonical_pat
     evidence = load(M8_EVIDENCE)
     for run in evidence["runs"]:
         views = {view["view_id"]: view for view in run["protected_views"]}
-        if target == "auth_subject":
+        if target in {"auth_subject", "auth_subject_address_hash"}:
             for view in views.values():
-                view["payload"]["meta"]["auth_subject"] = validator.OPAQUE_ADDRESS
+                view["payload"]["meta"]["auth_subject"] = (
+                    validator.OPAQUE_ADDRESS
+                    if target == "auth_subject"
+                    else validator._source_redacted("ebus-address:127")
+                )
         elif target in {
             "uncontracted_mcp_address",
             "uncontracted_mcp_address_value_hash",
@@ -330,6 +335,40 @@ def test_live_m8_verifier_rejects_noncanonical_response_results(
     refresh_public_evidence(validator, evidence)
 
     mutated = tmp_path / "noncanonical-mcp-result.json"
+    mutated.write_bytes(validator.canonical(evidence) + b"\n")
+    verified = verify_m8_public(mutated)
+    assert verified.returncode == 1
+    assert verified.stdout == "redaction.public\n"
+    assert verified.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "mutation", ["missing_alias", "empty_admission", "missing_admission"]
+)
+def test_live_m8_verifier_requires_canonical_debug_admission_aliases(
+    tmp_path: pathlib.Path, mutation: str,
+) -> None:
+    validator = load_module(
+        "msp085_live_admission_shape_validator",
+        ROOT / "scripts/validate_multi_runtime_coexistence.py",
+    )
+    evidence = load(M8_EVIDENCE)
+    for run in evidence["runs"]:
+        view = next(
+            view
+            for view in run["protected_views"]
+            if view["view_id"] == "debug.ebus"
+        )
+        status = view["payload"]["data"]["status"]
+        if mutation == "missing_alias":
+            status["admission"].pop("selected_source")
+        elif mutation == "empty_admission":
+            status["admission"] = {}
+        else:
+            status.pop("admission")
+    refresh_public_evidence(validator, evidence)
+
+    mutated = tmp_path / "noncanonical-debug-admission.json"
     mutated.write_bytes(validator.canonical(evidence) + b"\n")
     verified = verify_m8_public(mutated)
     assert verified.returncode == 1
