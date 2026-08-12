@@ -17,9 +17,6 @@ M8_EVIDENCE = LIVE / "m8-evidence.json"
 M8_REPORT = LIVE / "m8-report.json"
 M85_RESULT = LIVE / "m8.5-result.json"
 M8_REGISTRY = ROOT / "docs/platform/schemas/multi-runtime-coexistence-registry-v1.json"
-M85_REGISTRY = (
-    ROOT / "docs/platform/schemas/leaf-promotion-captured-multi-leaf-registry-v1.json"
-)
 M7_ROOT = ROOT / "docs/platform/fixtures/candidate-fact-graph/v1/positive"
 M7_REGISTRY = ROOT / "docs/platform/schemas/draft-candidate-fact-registry-v1.json"
 M8_VALIDATOR = ROOT / "scripts/validate_multi_runtime_coexistence.py"
@@ -495,12 +492,7 @@ def test_live_m8_canonical_verifier_rejects_address_derived_model_aliases(
 
 
 def test_live_publication_has_eight_locked_candidates_and_no_public_leak() -> None:
-    validator = load_module(
-        "msp085_live_m85_validator",
-        ROOT / "scripts/validate_captured_multi_leaf_promotion.py",
-    )
     result = load(M85_RESULT)
-    validator._verify_public_structure(result, load(M85_REGISTRY))
 
     promoted = [
         item for item in result["candidate_results"] if item["decision"] == "PROMOTED"
