@@ -199,7 +199,9 @@ def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
     [
         "auth_subject",
         "uncontracted_mcp_address",
-        "uncontracted_mcp_address_hash",
+        "uncontracted_mcp_address_value_hash",
+        "uncontracted_mcp_address_hash_alias",
+        "uncontracted_mcp_address_digest_alias",
         "uncontracted_debug_alias",
     ],
 )
@@ -218,14 +220,23 @@ def test_live_m8_canonical_verifier_rejects_opaque_address_outside_canonical_pat
                 view["payload"]["meta"]["auth_subject"] = validator.OPAQUE_ADDRESS
         elif target in {
             "uncontracted_mcp_address",
-            "uncontracted_mcp_address_hash",
+            "uncontracted_mcp_address_value_hash",
+            "uncontracted_mcp_address_hash_alias",
+            "uncontracted_mcp_address_digest_alias",
         }:
-            views["mcp.ebus.v1.responses"]["payload"]["data"]["uncontracted"] = {
-                "address": (
+            if target == "uncontracted_mcp_address_hash_alias":
+                key, value = "address_hash", "sha256:" + "a" * 64
+            elif target == "uncontracted_mcp_address_digest_alias":
+                key, value = "address_digest", "sha256:" + "b" * 64
+            else:
+                key = "address"
+                value = (
                     validator.OPAQUE_ADDRESS
                     if target == "uncontracted_mcp_address"
                     else validator._source_redacted("ebus-address:127")
                 )
+            views["mcp.ebus.v1.responses"]["payload"]["data"]["uncontracted"] = {
+                key: value
             }
         else:
             views["debug.ebus"]["payload"]["data"]["uncontracted"] = {
@@ -241,8 +252,11 @@ def test_live_m8_canonical_verifier_rejects_opaque_address_outside_canonical_pat
     assert verified.stderr == ""
 
 
-def test_live_m8_verifier_rejects_reordered_response_array_without_traceback(
-    tmp_path: pathlib.Path,
+@pytest.mark.parametrize(
+    "mutation", ["reordered", "missing", "null", "wrong_operation", "extra"]
+)
+def test_live_m8_verifier_rejects_malformed_response_array_without_traceback(
+    tmp_path: pathlib.Path, mutation: str,
 ) -> None:
     validator = load_module(
         "msp085_live_response_shape_validator",
@@ -255,7 +269,17 @@ def test_live_m8_verifier_rejects_reordered_response_array_without_traceback(
             for view in run["protected_views"]
             if view["view_id"] == "mcp.ebus.v1.responses"
         )
-        view["payload"]["data"]["responses"].reverse()
+        responses = view["payload"]["data"]["responses"]
+        if mutation == "reordered":
+            responses.reverse()
+        elif mutation == "missing":
+            responses.pop()
+        elif mutation == "null":
+            responses[1] = None
+        elif mutation == "wrong_operation":
+            responses[1]["operation"] = "ebus.v1.semantic.snapshot.list"
+        else:
+            responses.append({"operation": "ebus.v1.extra", "result": {}})
     refresh_public_evidence(validator, evidence)
 
     mutated = tmp_path / "reordered-mcp-responses.json"

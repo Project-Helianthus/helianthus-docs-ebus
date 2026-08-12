@@ -3047,7 +3047,18 @@ def _is_public_address_key(key: Any) -> bool:
     if not isinstance(key, str):
         return False
     compact = _compact_key(key)
-    return compact.endswith(("address", "addresses")) or compact in {
+    return compact.endswith(
+        (
+            "address",
+            "addresses",
+            "addresshash",
+            "addressdigest",
+            "addresssha256",
+            "addresseshash",
+            "addressesdigest",
+            "addressessha256",
+        )
+    ) or compact in {
         _compact_key(item) for item in SOURCE_DEBUG_ADDRESS_KEYS
     }
 
@@ -3100,16 +3111,30 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
         debug_data = debug_payload.get("data")
         if not all(isinstance(item, dict) for item in (mcp_data, ha_data, debug_data)):
             return True
+        captured_runtime = evidence.get("evidence_class") == "CAPTURED_RUNTIME_EVIDENCE"
         responses = mcp_data.get("responses")
-        if not isinstance(responses, list) or not responses:
-            return True
-        device_response = responses[0]
-        if (
-            not isinstance(device_response, dict)
-            or device_response.get("operation") != "ebus.v1.registry.devices.list"
-            or not isinstance(device_response.get("result"), dict)
+        expected_operations = (
+            (
+                "ebus.v1.registry.devices.list",
+                "ebus.v1.semantic.snapshot.get",
+            )
+            if captured_runtime
+            else ("ebus.v1.registry.devices.list",)
+        )
+        if not isinstance(responses, list) or len(responses) != len(
+            expected_operations
         ):
             return True
+        if any(
+            not isinstance(response, dict)
+            or response.get("operation") != operation
+            or not isinstance(response.get("result"), dict)
+            for response, operation in zip(
+                responses, expected_operations, strict=True
+            )
+        ):
+            return True
+        device_response = responses[0]
         mcp_devices = device_response["result"].get("devices")
         ha_devices = ha_data.get("devices")
         if (
@@ -3118,7 +3143,14 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
             or any(not isinstance(item, dict) for item in mcp_devices + ha_devices)
         ):
             return True
-        captured_runtime = evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
+        if captured_runtime:
+            semantic_result = responses[1]["result"]
+            if (
+                not isinstance(semantic_result.get("zones"), list)
+                or not isinstance(semantic_result.get("dhw"), dict)
+                or not isinstance(semantic_result.get("system_properties"), dict)
+            ):
+                return True
         if any(
             device.get("address") != OPAQUE_ADDRESS
             if captured_runtime

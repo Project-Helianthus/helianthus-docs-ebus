@@ -343,9 +343,22 @@ def build_live_evidence(validator) -> dict[str, object]:
     )
     for index, run in enumerate(selected):
         views = {view["view_id"]: view for view in run["protected_views"]}
-        devices = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"][0][
-            "result"
-        ]["devices"]
+        responses = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"]
+        devices = responses[0]["result"]["devices"]
+        responses.append(
+            {
+                "operation": "ebus.v1.semantic.snapshot.get",
+                "result": {
+                    "zones": [],
+                    "dhw": {"source": "ebus", "operating_mode": None, "preset": None},
+                    "system_properties": {
+                        "source": "ebus",
+                        "system_scheme": None,
+                        "module_configuration_vr71": None,
+                    },
+                },
+            }
+        )
         for device_index, device in enumerate(devices):
             device["address"] = validator.OPAQUE_ADDRESS
             device["device_id"] = validator._source_redacted(
