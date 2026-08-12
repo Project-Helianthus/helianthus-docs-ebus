@@ -1707,22 +1707,20 @@ def _source_debug(value: Any, path: tuple[str, ...] = ()) -> Any:
             for key in SOURCE_DEBUG_ADDRESS_KEYS:
                 projected.setdefault(key, None)
         elif path == ("status",):
-            admission = projected.get("admission")
-            if admission is None:
+            if "admission" not in projected:
                 projected["admission"] = {
                     key: None for key in SOURCE_DEBUG_ADDRESS_KEYS
                 }
-            elif not isinstance(admission, dict):
+            elif not isinstance(projected["admission"], dict):
                 fail("provenance.source_capture")
         elif path == ():
-            status = projected.get("status")
-            if status is None:
+            if "status" not in projected:
                 projected["status"] = {
                     "admission": {
                         key: None for key in SOURCE_DEBUG_ADDRESS_KEYS
                     }
                 }
-            elif not isinstance(status, dict):
+            elif not isinstance(projected["status"], dict):
                 fail("provenance.source_capture")
         return projected
     if isinstance(value, list):
@@ -3129,6 +3127,10 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
         debug_data = debug_payload.get("data")
         if not all(isinstance(item, dict) for item in (mcp_data, ha_data, debug_data)):
             return True
+        if set(mcp_data) != {"contract", "responses"} or mcp_data.get(
+            "contract"
+        ) != "ebus.v1":
+            return True
         captured_runtime = evidence.get("evidence_class") == "CAPTURED_RUNTIME_EVIDENCE"
         responses = mcp_data.get("responses")
         expected_operations = (
@@ -3145,6 +3147,7 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
             return True
         if any(
             not isinstance(response, dict)
+            or set(response) != {"operation", "result"}
             or response.get("operation") != operation
             or not isinstance(response.get("result"), dict)
             for response, operation in zip(
@@ -3153,22 +3156,116 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
         ):
             return True
         device_response = responses[0]
-        mcp_devices = device_response["result"].get("devices")
+        device_result = device_response["result"]
+        if captured_runtime:
+            if set(device_result) != {"devices", "selection"}:
+                return True
+            selection = device_result.get("selection")
+            if (
+                not isinstance(selection, dict)
+                or set(selection) != {"criteria", "selected_count"}
+                or selection.get("criteria")
+                != "complete_identity_confirmed_devices_in_single_window"
+            ):
+                return True
+        elif set(device_result) != {"devices"}:
+            return True
+        mcp_devices = device_result.get("devices")
         ha_devices = ha_data.get("devices")
         if (
             not isinstance(mcp_devices, list)
+            or not mcp_devices
             or not isinstance(ha_devices, list)
             or any(not isinstance(item, dict) for item in mcp_devices + ha_devices)
         ):
             return True
         if captured_runtime:
+            if (
+                selection["selected_count"] != len(mcp_devices)
+                or isinstance(selection["selected_count"], bool)
+            ):
+                return True
+            expected_device_keys = {
+                "address",
+                "device_id",
+                "discovery_source",
+                "manufacturer",
+                "model",
+                "verification_state",
+            }
+            if any(
+                set(device) != expected_device_keys
+                or device.get("discovery_source") != "active_confirmed"
+                or device.get("verification_state") != "identity_confirmed"
+                or not isinstance(device.get("manufacturer"), str)
+                or not device["manufacturer"]
+                for device in mcp_devices
+            ):
+                return True
             semantic_result = responses[1]["result"]
             if (
-                not isinstance(semantic_result.get("zones"), list)
+                set(semantic_result) != {"zones", "dhw", "system_properties"}
+                or not isinstance(semantic_result.get("zones"), list)
                 or not isinstance(semantic_result.get("dhw"), dict)
                 or not isinstance(semantic_result.get("system_properties"), dict)
             ):
                 return True
+            expected_zone_keys = {
+                "associated_circuit",
+                "id",
+                "name",
+                "operating_mode",
+                "preset",
+                "source",
+                "target_temp_c",
+            }
+            if any(
+                not isinstance(zone, dict)
+                or set(zone) != expected_zone_keys
+                or zone.get("source") != "ebus"
+                or any(
+                    value is not None and not isinstance(value, str)
+                    for key, value in zone.items()
+                    if key != "source"
+                )
+                for zone in semantic_result["zones"]
+            ):
+                return True
+            dhw = semantic_result["dhw"]
+            system_properties = semantic_result["system_properties"]
+            if (
+                set(dhw) != {"operating_mode", "preset", "source"}
+                or dhw.get("source") != "ebus"
+                or any(
+                    dhw[key] is not None and not isinstance(dhw[key], str)
+                    for key in ("operating_mode", "preset")
+                )
+                or set(system_properties)
+                != {"module_configuration_vr71", "source", "system_scheme"}
+                or system_properties.get("source") != "ebus"
+                or any(
+                    system_properties[key] is not None
+                    and not isinstance(system_properties[key], str)
+                    for key in ("module_configuration_vr71", "system_scheme")
+                )
+            ):
+                return True
+        elif any(
+            set(device) != {"address", "device_id", "manufacturer"}
+            or not isinstance(device.get("manufacturer"), str)
+            or not device["manufacturer"]
+            for device in mcp_devices
+        ):
+            return True
+        if set(ha_data) != {"devices"}:
+            return True
+        if captured_runtime and any(
+            set(device) != {"manufacturer", "model", "unique_id", "via_device"}
+            or not isinstance(device.get("manufacturer"), str)
+            or not isinstance(device.get("model"), str)
+            for device in ha_devices
+        ):
+            return True
         if any(
             device.get("address") != OPAQUE_ADDRESS
             if captured_runtime

@@ -344,7 +344,8 @@ def build_live_evidence(validator) -> dict[str, object]:
     for index, run in enumerate(selected):
         views = {view["view_id"]: view for view in run["protected_views"]}
         responses = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"]
-        devices = responses[0]["result"]["devices"]
+        device_result = responses[0]["result"]
+        devices = device_result["devices"]
         responses.append(
             {
                 "operation": "ebus.v1.semantic.snapshot.get",
@@ -364,9 +365,15 @@ def build_live_evidence(validator) -> dict[str, object]:
             device["device_id"] = validator._source_redacted(
                 f"ebus-device-ordinal:{device_index}"
             )
+            device["discovery_source"] = "active_confirmed"
             device["model"] = validator._source_redacted(
                 "ebus-model:" + device["device_id"]
             )
+            device["verification_state"] = "identity_confirmed"
+        device_result["selection"] = {
+            "criteria": "complete_identity_confirmed_devices_in_single_window",
+            "selected_count": len(devices),
+        }
         ha_devices = views["ha.identity"]["payload"]["data"]["devices"]
         for device, ha_device in zip(devices, ha_devices, strict=True):
             ha_device["model"] = device["model"]
@@ -1452,6 +1459,25 @@ def test_msp08_source_projection_synthesizes_missing_debug_container_as_null(
     assert projected["status"]["admission"] == {
         key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS
     }
+
+
+@pytest.mark.parametrize("container", ["status", "admission"])
+@pytest.mark.parametrize("invalid", [None, "invalid", []])
+def test_msp08_source_projection_rejects_present_invalid_debug_container(
+    container: str, invalid: object,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    if container == "status":
+        debug["status"] = invalid
+    else:
+        debug.setdefault("status", {})["admission"] = invalid
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
 
 
 def test_msp08_source_projection_uses_non_enumerable_device_address_placeholder() -> None:

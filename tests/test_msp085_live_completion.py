@@ -290,6 +290,53 @@ def test_live_m8_verifier_rejects_malformed_response_array_without_traceback(
     assert verified.stderr == ""
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "missing_selection",
+        "count_mismatch",
+        "empty_inventory",
+        "empty_semantic",
+        "extra_device_result_member",
+        "extra_semantic_member",
+    ],
+)
+def test_live_m8_verifier_rejects_noncanonical_response_results(
+    tmp_path: pathlib.Path, mutation: str,
+) -> None:
+    validator = load_module(
+        "msp085_live_result_shape_validator",
+        ROOT / "scripts/validate_multi_runtime_coexistence.py",
+    )
+    evidence = load(M8_EVIDENCE)
+    for run in evidence["runs"]:
+        views = {view["view_id"]: view for view in run["protected_views"]}
+        responses = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"]
+        device_result = responses[0]["result"]
+        semantic_result = responses[1]["result"]
+        if mutation == "missing_selection":
+            device_result.pop("selection")
+        elif mutation == "count_mismatch":
+            device_result["selection"]["selected_count"] += 1
+        elif mutation == "empty_inventory":
+            device_result["devices"] = []
+            views["ha.identity"]["payload"]["data"]["devices"] = []
+        elif mutation == "empty_semantic":
+            responses[1]["result"] = {}
+        elif mutation == "extra_device_result_member":
+            device_result["uncontracted"] = None
+        else:
+            semantic_result["uncontracted"] = None
+    refresh_public_evidence(validator, evidence)
+
+    mutated = tmp_path / "noncanonical-mcp-result.json"
+    mutated.write_bytes(validator.canonical(evidence) + b"\n")
+    verified = verify_m8_public(mutated)
+    assert verified.returncode == 1
+    assert verified.stdout == "redaction.public\n"
+    assert verified.stderr == ""
+
+
 def test_live_m8_canonical_verifier_rejects_duplicate_public_device_identity(
     tmp_path: pathlib.Path,
 ) -> None:
