@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import base64
 import copy
+import datetime as dt
 import hashlib
 import ipaddress
 import json
@@ -102,6 +103,24 @@ SOURCE_CAPTURE_INPUTS = {
     "container.inspect": "LOCAL_RUNTIME_ADMIN",
     "capture.timestamp": "LOCAL_CAPTURE_CLOCK",
 }
+SOURCE_CAPTURE_FILES = {
+    "tools.list": "tools-list.json",
+    "ebus.devices": "ebus-devices.json",
+    "ebus.semantic": "ebus-semantic.json",
+    "eebus.runtime": "eebus-runtime.json",
+    "eebus.services": "eebus-services.json",
+    "eebus.sessions": "eebus-sessions.json",
+    "eebus.pairing": "eebus-pairing.json",
+    "eebus.topology": "eebus-topology.json",
+    "graphql.schema": "graphql-schema.json",
+    "graphql.values": "graphql-values.json",
+    "portal.bootstrap": "portal-bootstrap.json",
+    "container.inspect": "container-inspect.json",
+    "capture.timestamp": "captured-at.txt",
+}
+SOURCE_CAPTURE_PHASES = {"before": "PRE_RESTART", "after": "POST_RESTART"}
+MAX_SOURCE_INPUT_BYTES = 2_097_152
+MAX_SOURCE_TOTAL_BYTES = 16_777_216
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
@@ -1296,24 +1315,367 @@ def check_runtime_identity(evidence: dict[str, Any]) -> None:
             fail("provenance.runtime")
 
 
-def _source_capture_binding(raw: bytes, auth_scope_hash: str) -> tuple[str, int]:
+def _decode_source_json(raw: bytes) -> Any:
+    def pairs(values: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in values:
+            if key in result:
+                fail("provenance.source_capture")
+            result[key] = value
+        return result
+
     try:
-        value = json.loads(raw)
-    except (json.JSONDecodeError, UnicodeDecodeError):
+        return json.loads(
+            raw.decode("utf-8"),
+            object_pairs_hook=pairs,
+            parse_int=lambda value: int(value),
+            parse_float=lambda _: fail("provenance.source_capture"),
+            parse_constant=lambda _: fail("provenance.source_capture"),
+        )
+    except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
         fail("provenance.source_capture")
+
+
+def _source_inner_mcp(raw: bytes) -> dict[str, Any]:
+    envelope = _decode_source_json(raw)
+    try:
+        content = envelope["result"]["content"]
+        if (
+            envelope["result"].get("isError") is not False
+            or len(content) != 1
+            or content[0]["type"] != "text"
+        ):
+            fail("provenance.source_capture")
+        value = _decode_source_json(content[0]["text"].encode("utf-8"))
+    except (KeyError, TypeError, AttributeError):
+        fail("provenance.source_capture")
+    if not isinstance(value, dict):
+        fail("provenance.source_capture")
+    return value
+
+
+def _source_redacted(value: Any) -> str:
+    return "redacted:sha256:" + hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:12]
+
+
+def _source_string_number(value: Any) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
+
+
+def _source_device_projection(item: dict[str, Any]) -> dict[str, Any] | None:
+    address = item.get("address")
+    device_id = item.get("device_id")
+    manufacturer = item.get("manufacturer")
+    if not isinstance(address, int) or not device_id or not manufacturer:
+        return None
+    return {
+        "address": _source_redacted(f"ebus-address:{address}"),
+        "device_id": _source_redacted(f"ebus-device:{address}:{device_id}"),
+        "manufacturer": manufacturer,
+        "model": device_id,
+        "discovery_source": item.get("discovery_source") or "unknown",
+        "verification_state": item.get("verification_state") or "unknown",
+    }
+
+
+def _source_semantic(snapshot: dict[str, Any]) -> dict[str, Any]:
+    planes = snapshot["data"]["planes"]
+    zones = []
+    for zone in planes.get("zones", []):
+        config = zone.get("config") or {}
+        zones.append(
+            {
+                "id": _source_redacted("semantic-zone:" + zone["id"]),
+                "name": zone.get("name") or "",
+                "source": "ebus",
+                "operating_mode": config.get("operating_mode"),
+                "preset": config.get("preset"),
+                "target_temp_c": _source_string_number(config.get("target_temp_c")),
+                "associated_circuit": _source_string_number(
+                    config.get("associated_circuit")
+                ),
+            }
+        )
+    zones.sort(key=lambda item: item["id"])
+    dhw_config = (planes.get("dhw") or {}).get("config") or {}
+    system_properties = (planes.get("system") or {}).get("properties") or {}
+    return {
+        "zones": zones,
+        "dhw": {
+            "source": "ebus",
+            "operating_mode": dhw_config.get("operating_mode"),
+            "preset": dhw_config.get("preset"),
+        },
+        "system_properties": {
+            "source": "ebus",
+            "system_scheme": _source_string_number(
+                system_properties.get("system_scheme")
+            ),
+            "module_configuration_vr71": _source_string_number(
+                system_properties.get("module_configuration_vr71")
+            ),
+        },
+    }
+
+
+def _source_graphql_schema(raw: dict[str, Any]) -> dict[str, Any]:
+    schema = raw["data"]["__schema"]
+    return {
+        "query_fields": sorted(item["name"] for item in schema["queryType"]["fields"]),
+        "mutation_fields": sorted(
+            item["name"] for item in schema["mutationType"]["fields"]
+        ),
+        "schema_version": 1,
+    }
+
+
+def _source_graphql_values(raw: dict[str, Any]) -> dict[str, Any]:
+    data = raw["data"]
+    zones = [
+        {
+            "id": _source_redacted("graphql-zone:" + zone["id"]),
+            "name": zone["name"],
+            "source": "ebus",
+            "operating_mode": zone["config"]["operatingMode"],
+            "target_temp_c": _source_string_number(zone["config"]["targetTempC"]),
+        }
+        for zone in data["zones"]
+    ]
+    zones.sort(key=lambda item: item["id"])
+    return {
+        "zones": zones,
+        "dhw": {
+            "source": "ebus",
+            "operating_mode": data["dhw"]["config"]["operatingMode"],
+        },
+    }
+
+
+def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
+    tools = _decode_source_json(inputs["tools.list"])
+    devices_response = _source_inner_mcp(inputs["ebus.devices"])
+    semantic_response = _source_inner_mcp(inputs["ebus.semantic"])
+    runtime = _source_inner_mcp(inputs["eebus.runtime"])
+    services = _source_inner_mcp(inputs["eebus.services"])
+    sessions = _source_inner_mcp(inputs["eebus.sessions"])
+    pairing = _source_inner_mcp(inputs["eebus.pairing"])
+    topology = _source_inner_mcp(inputs["eebus.topology"])
+    graph_schema = _decode_source_json(inputs["graphql.schema"])
+    graph_raw = _decode_source_json(inputs["graphql.values"])
+    portal_raw = _decode_source_json(inputs["portal.bootstrap"])
+    inspect = _decode_source_json(inputs["container.inspect"])
+    try:
+        listed_tools = tools["result"]["tools"]
+        by_name = {item["name"]: item for item in listed_tools}
+        if (
+            len(by_name) != len(listed_tools)
+            or any(name not in by_name for name in APPROVED_M8_TOOL_INVENTORY)
+        ):
+            fail("provenance.source_capture")
+        schemas = [
+            {"name": name, "inputSchema": by_name[name]["inputSchema"]}
+            for name in APPROVED_M8_EEBUS_TOOLS
+        ]
+        devices = [
+            projected
+            for item in devices_response["data"]
+            if (projected := _source_device_projection(item)) is not None
+        ]
+        devices.sort(key=lambda item: item["address"])
+        if not devices:
+            fail("provenance.source_capture")
+        semantic = _source_semantic(semantic_response)
+        graph_values = _source_graphql_values(graph_raw)
+        portal = {
+            "default_protocol": "ebus",
+            "sections": ["devices", "zones", "dhw", "energy"],
+            "enabled_capability_count": sum(
+                value is True for value in portal_raw["capabilities"].values()
+            ),
+            "ui_version": portal_raw["ui_version"],
+        }
+        ha_values = {
+            "entities": [
+                {
+                    "entity_id": _source_redacted("ha-zone:" + zone["id"]),
+                    "source": "ebus",
+                    "state": zone["operating_mode"],
+                    "target_temperature": zone["target_temp_c"],
+                }
+                for zone in graph_values["zones"]
+            ]
+        }
+        ha_identity = {
+            "devices": [
+                {
+                    "manufacturer": item["manufacturer"],
+                    "model": item["model"],
+                    "unique_id": _source_redacted("ha:" + item["device_id"]),
+                    "via_device": _source_redacted("ha-via:" + item["address"]),
+                }
+                for item in devices
+            ]
+        }
+        routes = [{"semantic_path": "/dhw/operating_mode", "source": "ebus"}]
+        routes.extend(
+            {
+                "semantic_path": f"/zones/{index + 1}/target_temperature",
+                "source": "ebus",
+            }
+            for index, _ in enumerate(graph_values["zones"])
+        )
+        leaves = [
+            {
+                "path": route["semantic_path"],
+                "promotion_state": "PROMOTED",
+                "source": "ebus",
+            }
+            for route in routes
+        ]
+        if (
+            runtime["data"]["state"] != "ready"
+            or not services["data"]["services"]
+            or not any(item.get("state") == "connected" for item in sessions["data"]["sessions"])
+            or not any(item.get("state") == "paired" for item in pairing["data"]["pairing"])
+            or not topology["data"]["devices"]
+            or not isinstance(inspect, list)
+            or len(inspect) != 1
+        ):
+            fail("provenance.source_capture")
+        process_source = inspect[0]["Id"] + "\x00" + inspect[0]["State"]["StartedAt"]
+    except (KeyError, TypeError, AttributeError):
+        fail("provenance.source_capture")
+    return {
+        "views": {
+            "mcp.ebus.v1.responses": {
+                "contract": "ebus.v1",
+                "responses": [
+                    {
+                        "operation": "ebus.v1.registry.devices.list",
+                        "result": {
+                            "selection": {
+                                "criteria": "all_structurally_identified_devices_in_single_window",
+                                "selected_count": len(devices),
+                            },
+                            "devices": devices,
+                        },
+                    },
+                    {
+                        "operation": "ebus.v1.semantic.snapshot.get",
+                        "result": semantic,
+                    },
+                ],
+            },
+            "mcp.tool.inventory": {"tools": APPROVED_M8_TOOL_INVENTORY},
+            "graphql.schema": _source_graphql_schema(graph_schema),
+            "graphql.ebus.values": graph_values,
+            "ha.graphql.values": ha_values,
+            "ha.identity": ha_identity,
+            "debug.ebus": {
+                "transport": "ENS",
+                "runtime_state": "running",
+                "registry_device_count": len(devices),
+                "last_frame": "redacted-live-frame",
+            },
+            "portal.ebus.bootstrap": portal,
+            "command.routing": {"fallback": None, "routes": routes},
+            "semantic.registry": {"authority": "ebus.promoted", "leaves": leaves},
+            "mcp.eebus.v1.contract": {
+                "namespace": "eebus.v1",
+                "public_v2": False,
+                "schema_digest": "sha256:" + hashlib.sha256(canonical(schemas)).hexdigest(),
+                "version": 1,
+            },
+        },
+        "process_instance_id": "process-"
+        + hashlib.sha256(process_source.encode("utf-8")).hexdigest()[:32],
+        "service_count": len(services["data"]["services"]),
+    }
+
+
+def _read_source_inputs(root: pathlib.Path, manifest: dict[str, Any]) -> dict[str, bytes]:
+    try:
+        if root.is_symlink():
+            fail("provenance.source_capture")
+        resolved_root = root.resolve(strict=True)
+    except OSError:
+        fail("provenance.source_capture")
+    if not resolved_root.is_dir():
+        fail("provenance.source_capture")
+    try:
+        if {item.name for item in resolved_root.iterdir()} != set(
+            SOURCE_CAPTURE_FILES.values()
+        ):
+            fail("provenance.source_capture")
+    except OSError:
+        fail("provenance.source_capture")
+    result: dict[str, bytes] = {}
+    total = 0
+    manifest_inputs = {item["input_id"]: item for item in manifest["inputs"]}
+    for input_id, relative in SOURCE_CAPTURE_FILES.items():
+        path = resolved_root / relative
+        try:
+            if path.is_symlink() or path.resolve(strict=True).parent != resolved_root:
+                fail("provenance.source_capture")
+            raw = path.read_bytes()
+        except OSError:
+            fail("provenance.source_capture")
+        total += len(raw)
+        if (
+            not raw
+            or len(raw) > MAX_SOURCE_INPUT_BYTES
+            or total > MAX_SOURCE_TOTAL_BYTES
+            or manifest_inputs[input_id]["digest"]
+            != "sha256:" + hashlib.sha256(raw).hexdigest()
+            or manifest_inputs[input_id]["byte_length"] != len(raw)
+        ):
+            fail("provenance.source_capture")
+        result[input_id] = raw
+    return result
+
+
+def _source_capture_binding(
+    raw: bytes,
+    root: pathlib.Path,
+    auth_scope_hash: str,
+    phase: str,
+    process_instance_id: str,
+    start_offset_ns: int,
+    end_offset_ns: int,
+    captured_at: str,
+) -> dict[str, Any]:
+    if not raw or len(raw) > MAX_SOURCE_INPUT_BYTES:
+        fail("provenance.source_capture")
+    value = _decode_source_json(raw)
     if not isinstance(value, dict) or set(value) != {
         "contract", "schema_version", "window_id", "window_scope",
-        "projection_policy", "auth_scope_hash", "inputs",
+        "phase", "projection_policy", "auth_scope_hash", "process_instance_id",
+        "capture_start_offset_ns", "capture_end_offset_ns", "captured_at", "inputs",
     }:
         fail("provenance.source_capture")
     if (
         value["contract"] != SOURCE_CAPTURE_CONTRACT
+        or not integer(value["schema_version"], 1)
         or value["schema_version"] != 1
         or not isinstance(value["window_id"], str)
         or not TOKEN_RE.fullmatch(value["window_id"])
         or value["window_scope"] != "SINGLE_WINDOW_ONLY"
+        or value["phase"] != phase
         or value["projection_policy"] != SOURCE_CAPTURE_POLICY
         or value["auth_scope_hash"] != auth_scope_hash
+        or value["process_instance_id"] != process_instance_id
+        or not integer(value["capture_start_offset_ns"])
+        or not integer(value["capture_end_offset_ns"])
+        or value["capture_start_offset_ns"] != start_offset_ns
+        or value["capture_end_offset_ns"] != end_offset_ns
+        or value["capture_start_offset_ns"] > value["capture_end_offset_ns"]
+        or not isinstance(value["captured_at"], str)
+        or not RFC3339_UTC_RE.fullmatch(value["captured_at"])
+        or value["captured_at"] != captured_at
         or not isinstance(value["inputs"], list)
     ):
         fail("provenance.source_capture")
@@ -1335,17 +1697,117 @@ def _source_capture_binding(raw: bytes, auth_scope_hash: str) -> tuple[str, int]
         observed.append((item["input_id"], item["auth_boundary"]))
     if observed != expected:
         fail("provenance.source_capture")
-    return "sha256:" + hashlib.sha256(raw).hexdigest(), len(raw)
+    inputs = _read_source_inputs(root, value)
+    try:
+        captured_at = inputs["capture.timestamp"].decode("utf-8").strip()
+    except UnicodeDecodeError:
+        fail("provenance.source_capture")
+    if captured_at != value["captured_at"]:
+        fail("provenance.source_capture")
+    projected = _source_project_views(inputs)
+    if projected["process_instance_id"] != process_instance_id:
+        fail("provenance.source_capture")
+    return {
+        "digest": "sha256:" + hashlib.sha256(raw).hexdigest(),
+        "byte_length": len(raw),
+        "window_id": value["window_id"],
+        "phase": value["phase"],
+        "captured_at": value["captured_at"],
+        **projected,
+    }
+
+
+def _capture_time_at(clock: dict[str, Any], offset_ns: int) -> str:
+    if offset_ns % 1_000 != 0:
+        fail("provenance.source_capture")
+    try:
+        anchor = dt.datetime.fromisoformat(
+            clock["wall_anchor_utc"].replace("Z", "+00:00")
+        )
+    except (KeyError, TypeError, ValueError):
+        fail("provenance.source_capture")
+    value = anchor + dt.timedelta(microseconds=offset_ns // 1_000)
+    return value.astimezone(dt.timezone.utc).isoformat(timespec="microseconds").replace(
+        "+00:00", "Z"
+    )
 
 
 def check_runtime(
     evidence: dict[str, Any],
     m7_inputs: dict[str, tuple[str, int]],
     source_manifests: dict[str, bytes | None] | None = None,
+    source_roots: dict[str, pathlib.Path | None] | None = None,
     *,
     require_private: bool = True,
 ) -> None:
     check_runtime_identity(evidence)
+    source_bindings: dict[str, dict[str, Any]] = {}
+    if evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE" and require_private:
+        groups = {"before": (0, 1), "after": (2, 3)}
+        for source_key, run_indexes in groups.items():
+            grouped = [evidence["runs"][index] for index in run_indexes]
+            auth_hashes = {
+                run["provenance"]["auth_scope"]["scope_hash"] for run in grouped
+            }
+            process_ids = {
+                run["provenance"]["process_instance_id"] for run in grouped
+            }
+            source_raw = (source_manifests or {}).get(source_key)
+            source_root = (source_roots or {}).get(source_key)
+            if (
+                len(auth_hashes) != 1
+                or len(process_ids) != 1
+                or source_raw is None
+                or source_root is None
+            ):
+                fail("provenance.source_capture")
+            source_bindings[source_key] = _source_capture_binding(
+                source_raw,
+                source_root,
+                auth_hashes.pop(),
+                SOURCE_CAPTURE_PHASES[source_key],
+                process_ids.pop(),
+                min(run["capture_offset_ns"] for run in grouped),
+                max(run["capture_offset_ns"] for run in grouped),
+                _capture_time_at(
+                    evidence["capture_clock"],
+                    min(run["capture_offset_ns"] for run in grouped),
+                ),
+            )
+        before = source_bindings["before"]
+        after = source_bindings["after"]
+        restart = evidence["runs"][2]["state_evidence"]["restart_transition"]
+        before_end = evidence["runs"][1]["capture_offset_ns"]
+        after_start = evidence["runs"][2]["capture_offset_ns"]
+        if (
+            before["digest"] == after["digest"]
+            or before["window_id"] == after["window_id"]
+            or before["captured_at"] == after["captured_at"]
+            or before_end >= after_start
+            or restart is None
+            or not before_end
+            < restart["process_event"]["observed_at_offset_ns"]
+            <= after_start
+        ):
+            fail("provenance.source_capture")
+    elif evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE":
+        public_bindings: dict[str, tuple[str, int]] = {}
+        for source_key, run_indexes in {"before": (0, 1), "after": (2, 3)}.items():
+            observed = set()
+            for index in run_indexes:
+                items = [
+                    item
+                    for item in evidence["runs"][index]["provenance"]["immutable_inputs"]
+                    if item.get("input_id") == SOURCE_CAPTURE_INPUT_ID
+                ]
+                if len(items) != 1:
+                    fail("provenance.source_capture")
+                observed.add((items[0].get("digest"), items[0].get("byte_length")))
+            if len(observed) != 1:
+                fail("provenance.source_capture")
+            public_bindings[source_key] = observed.pop()
+        if public_bindings["before"] == public_bindings["after"]:
+            fail("provenance.source_capture")
     for run in evidence["runs"]:
         views = {view["view_id"]: view for view in run["protected_views"]}
         expected = {
@@ -1379,14 +1841,21 @@ def check_runtime(
             source_key = "before" if run["state"] in {
                 "EEBUS_CONNECTED_BASELINE", "EEBUS_CONNECTED_RAW_WITHHELD"
             } else "after"
-            source_raw = (source_manifests or {}).get(source_key)
             if require_private:
-                if source_raw is None:
-                    fail("provenance.source_capture")
-                source_digest, source_length = _source_capture_binding(
-                    source_raw, run["provenance"]["auth_scope"]["scope_hash"]
+                source = source_bindings[source_key]
+                expected[SOURCE_CAPTURE_INPUT_ID] = (
+                    source["digest"], source["byte_length"]
                 )
-                expected[SOURCE_CAPTURE_INPUT_ID] = (source_digest, source_length)
+                if (
+                    source["service_count"] != run["state_evidence"]["service_count"]
+                    or set(source["views"]) != set(views)
+                    or any(
+                        canonical(views[view_id]["payload"]["data"])
+                        != canonical(source["views"][view_id])
+                        for view_id in views
+                    )
+                ):
+                    fail("provenance.source_capture")
             else:
                 candidates = [
                     item for item in run["provenance"]["immutable_inputs"]
@@ -2891,6 +3360,7 @@ def verify(
     *,
     require_private: bool = True,
     source_manifests: dict[str, bytes | None] | None = None,
+    source_roots: dict[str, pathlib.Path | None] | None = None,
 ) -> dict[str, Any]:
     schema_check(evidence)
     check_limits(evidence, raw_size)
@@ -2902,6 +3372,7 @@ def verify(
         evidence,
         m7_inputs,
         source_manifests,
+        source_roots,
         require_private=require_private,
     )
     check_config(evidence)
@@ -3046,6 +3517,8 @@ def main() -> int:
     )
     parser.add_argument("--before-source-manifest", type=pathlib.Path)
     parser.add_argument("--after-source-manifest", type=pathlib.Path)
+    parser.add_argument("--before-source-root", type=pathlib.Path)
+    parser.add_argument("--after-source-root", type=pathlib.Path)
     args = parser.parse_args()
     try:
         evidence, evidence_raw = load_json(args.evidence, "json.syntax", bounded=True)
@@ -3076,6 +3549,10 @@ def main() -> int:
                 if args.before_source_manifest is not None else None,
                 "after": args.after_source_manifest.read_bytes()
                 if args.after_source_manifest is not None else None,
+            },
+            source_roots={
+                "before": args.before_source_root,
+                "after": args.after_source_root,
             },
         )
         if args.command == "verify-public":

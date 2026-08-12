@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import importlib.util
 import json
@@ -536,41 +537,214 @@ def write_evidence(tmp_path: pathlib.Path, evidence: dict[str, object]) -> pathl
     return evidence_path
 
 
-def source_manifest(validator, auth_scope_hash: str, window_id: str = "window-before") -> bytes:
+def source_mcp(validator, data: object) -> bytes:
+    inner = {"data": data, "meta": {"contract": "test"}}
+    return validator.canonical(
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+                "isError": False,
+                "content": [
+                    {"type": "text", "text": validator.canonical(inner).decode("utf-8")}
+                ]
+            },
+        }
+    )
+
+
+def source_payloads(
+    validator, source_key: str, captured_at: str
+) -> dict[str, bytes]:
+    tools = [
+        {"name": name, "inputSchema": {"type": "object", "properties": {}}}
+        for name in [*validator.APPROVED_M8_TOOL_INVENTORY, "eebus.experimental.pairing.open"]
+    ]
+    devices = [
+        {
+            "address": 8,
+            "manufacturer": "Vaillant",
+            "device_id": "BAI00",
+            "discovery_source": "active_confirmed",
+            "verification_state": "identity_confirmed",
+        },
+        {
+            "address": 38,
+            "manufacturer": "Vaillant",
+            "device_id": "VR_71",
+            "discovery_source": "active_confirmed",
+            "verification_state": "identity_confirmed",
+        },
+    ]
+    semantic = {
+        "completed_planes": ["zones", "dhw", "system"],
+        "planes": {
+            "zones": [
+                {
+                    "id": "zone-1",
+                    "name": "Zone 1",
+                    "config": {
+                        "operating_mode": "auto",
+                        "preset": "comfort",
+                        "target_temp_c": 21,
+                        "associated_circuit": 1,
+                    },
+                }
+            ],
+            "dhw": {"config": {"operating_mode": "auto", "preset": "comfort"}},
+            "system": {
+                "properties": {"system_scheme": 8, "module_configuration_vr71": 3}
+            },
+        },
+    }
+    graph_values = {
+        "data": {
+            "zones": [
+                {
+                    "id": "zone-1",
+                    "name": "Zone 1",
+                    "config": {"operatingMode": "auto", "targetTempC": 21},
+                }
+            ],
+            "dhw": {"config": {"operatingMode": "auto"}},
+        }
+    }
+    return {
+        "tools.list": validator.canonical({"result": {"tools": tools}}),
+        "ebus.devices": source_mcp(validator, devices),
+        "ebus.semantic": source_mcp(validator, semantic),
+        "eebus.runtime": source_mcp(validator, {"state": "ready"}),
+        "eebus.services": source_mcp(validator, {"services": [{"id": "service-1"}]}),
+        "eebus.sessions": source_mcp(
+            validator, {"sessions": [{"id": "session-1", "state": "connected"}]}
+        ),
+        "eebus.pairing": source_mcp(
+            validator, {"pairing": [{"remote_ski": "test", "state": "paired"}]}
+        ),
+        "eebus.topology": source_mcp(
+            validator,
+            {"devices": [{"address": "test"}], "entities": [], "features": [], "usecases": []},
+        ),
+        "graphql.schema": validator.canonical(
+            {
+                "data": {
+                    "__schema": {
+                        "queryType": {"fields": [{"name": "zones"}, {"name": "dhw"}]},
+                        "mutationType": {"fields": [{"name": "setZone"}]},
+                    }
+                }
+            }
+        ),
+        "graphql.values": validator.canonical(graph_values),
+        "portal.bootstrap": validator.canonical(
+            {"capabilities": {"devices": True, "zones": True}, "ui_version": "test-v1"}
+        ),
+        "container.inspect": validator.canonical(
+            [
+                {
+                    "Id": "container-" + source_key,
+                    "State": {"StartedAt": captured_at},
+                }
+            ]
+        ),
+        "capture.timestamp": (captured_at + "\n").encode("utf-8"),
+    }
+
+
+def write_source_root(
+    validator, tmp_path: pathlib.Path, source_key: str, captured_at: str
+) -> tuple[pathlib.Path, dict[str, bytes], dict[str, object]]:
+    root = tmp_path / f"source-{source_key}"
+    root.mkdir()
+    payloads = source_payloads(validator, source_key, captured_at)
+    for input_id, raw in payloads.items():
+        (root / validator.SOURCE_CAPTURE_FILES[input_id]).write_bytes(raw)
+    return root, payloads, validator._source_project_views(payloads)
+
+
+def source_manifest(
+    validator,
+    payloads: dict[str, bytes],
+    *,
+    auth_scope_hash: str,
+    window_id: str,
+    phase: str,
+    process_instance_id: str,
+    capture_start_offset_ns: int,
+    capture_end_offset_ns: int,
+) -> bytes:
+    captured_at = payloads["capture.timestamp"].decode("utf-8").strip()
     value = {
         "contract": validator.SOURCE_CAPTURE_CONTRACT,
         "schema_version": 1,
         "window_id": window_id,
         "window_scope": "SINGLE_WINDOW_ONLY",
+        "phase": phase,
         "projection_policy": validator.SOURCE_CAPTURE_POLICY,
         "auth_scope_hash": auth_scope_hash,
+        "process_instance_id": process_instance_id,
+        "capture_start_offset_ns": capture_start_offset_ns,
+        "capture_end_offset_ns": capture_end_offset_ns,
+        "captured_at": captured_at,
         "inputs": [
             {
                 "input_id": input_id,
                 "auth_boundary": boundary,
-                "digest": "sha256:" + f"{index + 1:064x}",
-                "byte_length": index + 1,
+                "digest": "sha256:" + hashlib.sha256(payloads[input_id]).hexdigest(),
+                "byte_length": len(payloads[input_id]),
             }
-            for index, (input_id, boundary) in enumerate(
-                validator.SOURCE_CAPTURE_INPUTS.items()
-            )
+            for input_id, boundary in validator.SOURCE_CAPTURE_INPUTS.items()
         ],
     }
     return validator.canonical(value)
 
 
-def bind_source_manifests(validator, evidence: dict[str, object]) -> dict[str, bytes]:
+def bind_source_manifests(
+    validator, evidence: dict[str, object], tmp_path: pathlib.Path
+) -> tuple[dict[str, bytes], dict[str, pathlib.Path]]:
     manifests: dict[str, bytes] = {}
+    roots: dict[str, pathlib.Path] = {}
+    projections: dict[str, dict[str, object]] = {}
     for source_key, run_indexes in (("before", (0, 1)), ("after", (2, 3))):
+        start_offset = min(
+            evidence["runs"][index]["capture_offset_ns"] for index in run_indexes
+        )
+        anchor = dt.datetime.fromisoformat(
+            evidence["capture_clock"]["wall_anchor_utc"].replace("Z", "+00:00")
+        )
+        captured_at = (
+            anchor + dt.timedelta(microseconds=start_offset // 1_000)
+        ).astimezone(dt.timezone.utc).isoformat(timespec="microseconds").replace(
+            "+00:00", "Z"
+        )
+        root, payloads, projected = write_source_root(
+            validator, tmp_path, source_key, captured_at
+        )
+        roots[source_key] = root
+        projections[source_key] = projected
         scope_hashes = {
             evidence["runs"][index]["provenance"]["auth_scope"]["scope_hash"]
             for index in run_indexes
         }
         assert len(scope_hashes) == 1
+        process_instance_id = projected["process_instance_id"]
+        for index in run_indexes:
+            run = evidence["runs"][index]
+            run["provenance"]["process_instance_id"] = process_instance_id
+            run["state_evidence"]["service_count"] = projected["service_count"]
+            for view in run["protected_views"]:
+                view["payload"]["data"] = deepcopy(projected["views"][view["view_id"]])
         raw = source_manifest(
             validator,
-            scope_hashes.pop(),
+            payloads,
+            auth_scope_hash=scope_hashes.pop(),
             window_id=f"window-{source_key}",
+            phase=validator.SOURCE_CAPTURE_PHASES[source_key],
+            process_instance_id=process_instance_id,
+            capture_start_offset_ns=start_offset,
+            capture_end_offset_ns=max(
+                evidence["runs"][index]["capture_offset_ns"] for index in run_indexes
+            ),
         )
         binding = ("sha256:" + hashlib.sha256(raw).hexdigest(), len(raw))
         for index in run_indexes:
@@ -581,7 +755,33 @@ def bind_source_manifests(validator, evidence: dict[str, object]) -> dict[str, b
             )
             source["digest"], source["byte_length"] = binding
         manifests[source_key] = raw
-    return manifests
+    transition = evidence["runs"][2]["state_evidence"]["restart_transition"]
+    before_process = projections["before"]["process_instance_id"]
+    after_process = projections["after"]["process_instance_id"]
+    transition["before_process_instance_id"] = before_process
+    transition["after_process_instance_id"] = after_process
+    transition["process_event"]["before_process_instance_id"] = before_process
+    transition["process_event"]["after_process_instance_id"] = after_process
+    transition["before_snapshot"]["process_instance_id"] = before_process
+    transition["after_snapshot"]["process_instance_id"] = after_process
+    transition["session_event"]["process_instance_id"] = after_process
+    refresh_protected_views(validator, evidence)
+    for input_id, domain, field in (
+        ("restart:process-event", validator.RESTART_PROCESS_EVENT_DOMAIN, "process_event"),
+        ("restart:before-snapshot", validator.RESTART_SNAPSHOT_DOMAIN, "before_snapshot"),
+        ("restart:after-snapshot", validator.RESTART_SNAPSHOT_DOMAIN, "after_snapshot"),
+        ("restart:session-event", validator.RESTART_SESSION_EVENT_DOMAIN, "session_event"),
+    ):
+        item = next(
+            item
+            for item in evidence["runs"][2]["provenance"]["immutable_inputs"]
+            if item["input_id"] == input_id
+        )
+        value = transition[field]
+        item["digest"] = validator.digest(domain, value)
+        item["byte_length"] = len(validator.canonical(value))
+    refresh_evidence_hash(validator, evidence)
+    return manifests, roots
 
 
 def live_m7_inputs(validator, evidence: dict[str, object]) -> dict[str, tuple[str, int]]:
@@ -590,6 +790,32 @@ def live_m7_inputs(validator, evidence: dict[str, object]) -> dict[str, tuple[st
         for item in evidence["runs"][0]["provenance"]["immutable_inputs"]
         if item["input_id"].startswith("m7:")
     }
+
+
+def rebind_source_manifest(
+    validator,
+    evidence: dict[str, object],
+    source_key: str,
+    manifests: dict[str, bytes],
+    roots: dict[str, pathlib.Path],
+) -> None:
+    value = json.loads(manifests[source_key])
+    for item in value["inputs"]:
+        raw = (roots[source_key] / validator.SOURCE_CAPTURE_FILES[item["input_id"]]).read_bytes()
+        item["digest"] = "sha256:" + hashlib.sha256(raw).hexdigest()
+        item["byte_length"] = len(raw)
+    raw = validator.canonical(value)
+    manifests[source_key] = raw
+    binding = ("sha256:" + hashlib.sha256(raw).hexdigest(), len(raw))
+    run_indexes = (0, 1) if source_key == "before" else (2, 3)
+    for index in run_indexes:
+        source = next(
+            item
+            for item in evidence["runs"][index]["provenance"]["immutable_inputs"]
+            if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
+        )
+        source["digest"], source["byte_length"] = binding
+    refresh_evidence_hash(validator, evidence)
 
 
 def test_msp08_live_profile_validates_bound_m7_and_restart(
@@ -627,49 +853,116 @@ def test_msp08_live_public_evidence_requires_source_manifest_binding(
     assert (result.returncode, result.stdout) == (1, "provenance.source_capture\n")
 
 
-def test_msp08_source_manifest_binds_one_window_and_auth_scope() -> None:
+def test_msp08_live_public_evidence_rejects_reused_window_binding(
+    tmp_path: pathlib.Path,
+) -> None:
     validator = validator_module()
-    auth_hash = "sha256:" + "a" * 64
-    raw = source_manifest(validator, auth_hash)
-    assert validator._source_capture_binding(raw, auth_hash) == (
-        "sha256:" + hashlib.sha256(raw).hexdigest(),
-        len(raw),
+    evidence = build_live_evidence(validator)
+    before = next(
+        item
+        for item in evidence["runs"][0]["provenance"]["immutable_inputs"]
+        if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
     )
+    for run in evidence["runs"][2:]:
+        source = next(
+            item
+            for item in run["provenance"]["immutable_inputs"]
+            if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
+        )
+        source["digest"] = before["digest"]
+        source["byte_length"] = before["byte_length"]
+    refresh_evidence_hash(validator, evidence)
+    result = subprocess.run(
+        validator_command("verify", write_evidence(tmp_path, evidence)),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout) == (1, "provenance.source_capture\n")
+
+
+def test_msp08_source_manifest_binds_one_window_and_auth_scope(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    run = evidence["runs"][0]
+    raw = manifests["before"]
+    binding = validator._source_capture_binding(
+        raw,
+        roots["before"],
+        run["provenance"]["auth_scope"]["scope_hash"],
+        "PRE_RESTART",
+        run["provenance"]["process_instance_id"],
+        evidence["runs"][0]["capture_offset_ns"],
+        evidence["runs"][1]["capture_offset_ns"],
+        json.loads(raw)["captured_at"],
+    )
+    assert binding["digest"] == "sha256:" + hashlib.sha256(raw).hexdigest()
+    assert binding["byte_length"] == len(raw)
     value = json.loads(raw)
     value["window_scope"] = "PRE_AND_POST"
     with pytest.raises(Exception) as error:
-        validator._source_capture_binding(validator.canonical(value), auth_hash)
+        validator._source_capture_binding(
+            validator.canonical(value),
+            roots["before"],
+            run["provenance"]["auth_scope"]["scope_hash"],
+            "PRE_RESTART",
+            run["provenance"]["process_instance_id"],
+            evidence["runs"][0]["capture_offset_ns"],
+            evidence["runs"][1]["capture_offset_ns"],
+            json.loads(raw)["captured_at"],
+        )
     assert str(error.value) == "provenance.source_capture"
 
 
-def test_msp08_source_manifest_rejects_auth_boundary_drift() -> None:
-    validator = validator_module()
-    auth_hash = "sha256:" + "a" * 64
-    value = json.loads(source_manifest(validator, auth_hash))
-    value["inputs"][0]["auth_boundary"] = "OWNER_UNIX_MCP"
-    with pytest.raises(Exception) as error:
-        validator._source_capture_binding(validator.canonical(value), auth_hash)
-    assert str(error.value) == "provenance.source_capture"
-
-
-def test_msp08_private_runtime_binds_distinct_single_window_manifests() -> None:
+def test_msp08_source_manifest_rejects_auth_boundary_drift(
+    tmp_path: pathlib.Path,
+) -> None:
     validator = validator_module()
     evidence = build_live_evidence(validator)
-    manifests = bind_source_manifests(validator, evidence)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    run = evidence["runs"][0]
+    value = json.loads(manifests["before"])
+    value["inputs"][0]["auth_boundary"] = "OWNER_UNIX_MCP"
+    with pytest.raises(Exception) as error:
+        validator._source_capture_binding(
+            validator.canonical(value),
+            roots["before"],
+            run["provenance"]["auth_scope"]["scope_hash"],
+            "PRE_RESTART",
+            run["provenance"]["process_instance_id"],
+            evidence["runs"][0]["capture_offset_ns"],
+            evidence["runs"][1]["capture_offset_ns"],
+            json.loads(manifests["before"])["captured_at"],
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_binds_distinct_single_window_manifests(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
 
     assert manifests["before"] != manifests["after"]
     validator.check_runtime(
         evidence,
         live_m7_inputs(validator, evidence),
         manifests,
+        roots,
         require_private=True,
     )
 
 
-def test_msp08_private_runtime_requires_both_source_manifests() -> None:
+def test_msp08_private_runtime_requires_both_source_manifests(
+    tmp_path: pathlib.Path,
+) -> None:
     validator = validator_module()
     evidence = build_live_evidence(validator)
-    manifests = bind_source_manifests(validator, evidence)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
     manifests["after"] = None
 
     with pytest.raises(Exception) as error:
@@ -677,6 +970,114 @@ def test_msp08_private_runtime_requires_both_source_manifests() -> None:
             evidence,
             live_m7_inputs(validator, evidence),
             manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize("mutation", ["reuse", "swap"])
+def test_msp08_private_runtime_rejects_reused_or_swapped_windows(
+    tmp_path: pathlib.Path, mutation: str
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    if mutation == "reuse":
+        manifests["after"] = manifests["before"]
+        roots["after"] = roots["before"]
+    else:
+        manifests = {"before": manifests["after"], "after": manifests["before"]}
+        roots = {"before": roots["after"], "after": roots["before"]}
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_rejects_source_bytes_tampering(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["portal.bootstrap"]
+    path.write_bytes(path.read_bytes() + b"\n")
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_rejects_cross_window_device_intersection(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["ebus.devices"]
+    envelope = json.loads(path.read_bytes())
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"].append(
+        {
+            "address": 16,
+            "manufacturer": "Vaillant",
+            "device_id": "BASV2",
+            "discovery_source": "active_confirmed",
+            "verification_state": "identity_confirmed",
+        }
+    )
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    path.write_bytes(validator.canonical(envelope))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_rejects_dropped_or_hardcoded_projection(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    view = next(
+        item
+        for item in evidence["runs"][0]["protected_views"]
+        if item["view_id"] == "mcp.ebus.v1.responses"
+    )
+    view["payload"]["data"]["responses"][0]["result"]["devices"][0].pop(
+        "verification_state"
+    )
+    refresh_protected_views(validator, evidence)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
             require_private=True,
         )
     assert str(error.value) == "provenance.source_capture"

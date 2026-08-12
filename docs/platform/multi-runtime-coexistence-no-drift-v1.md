@@ -128,7 +128,9 @@ validate_multi_runtime_coexistence.py verify \
   --m7-terminal-source-bundle <public-source-terminal-bundle.json> \
   --m7-terminal-source-replay <public-source-terminal-source-replay.json> \
   --before-source-manifest <before-source-capture-manifest.json> \
-  --after-source-manifest <after-source-capture-manifest.json>
+  --after-source-manifest <after-source-capture-manifest.json> \
+  --before-source-root <private-before-source-directory> \
+  --after-source-root <private-after-source-directory>
 ```
 
 Replace `verify` with `report` to emit exact RFC 8785/JCS-subset report bytes.
@@ -146,13 +148,20 @@ Each source manifest has contract
 `helianthus.platform.multi-runtime-source-capture-manifest.v1`, declares
 `window_scope=SINGLE_WINDOW_ONLY` and
 `projection_policy=M8_PROTECTED_VIEWS_SINGLE_WINDOW_V1`, and binds the
-effective auth-scope hash. Its ordered inputs cover the public MCP tool list,
-complete selected eBUS responses, owner-UNIX eeBUS state inputs, GraphQL,
+effective auth-scope hash, PRE/POST phase, process instance, distinct window ID,
+capture interval, and source timestamp. Its ordered inputs cover the public MCP tool list,
+complete single-window eBUS responses, owner-UNIX eeBUS state inputs, GraphQL,
 Portal, container identity, and capture timestamp with the exact auth boundary,
-byte length, and SHA-256 of each source. A projector invocation receives one
-window only; consulting the opposite window, intersecting device sets, dropping
-fields after comparison, or hard-coding an observed result is invalid. The
-protected payloads must be produced independently before equality is tested.
+byte length, and SHA-256 of each source. Private verification reads every file
+from a fixed-name, no-symlink source root, recomputes those bindings, derives all
+eleven protected views with the closed reference projector, and compares each
+derived payload byte-for-byte with the corresponding evidence payload. A
+projector invocation receives one window only; consulting the opposite window,
+intersecting device sets, dropping fields after comparison, or hard-coding an
+observed result is invalid. Reused or swapped PRE/POST manifests, roots,
+processes, timestamps, or capture intervals fail closed before no-drift is
+evaluated. The protected payloads must be produced independently before
+equality is tested.
 
 The public M7 status projection is generated, never hand-authored:
 

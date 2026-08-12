@@ -413,8 +413,8 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
         runtime["build_manifest_hash"] = validator.coexistence.digest(
             validator.coexistence.BUILD_DOMAIN, runtime["build_manifest"]
         )
-    source_manifests = live_test.bind_source_manifests(
-        validator.coexistence, evidence
+    source_manifests, source_roots = live_test.bind_source_manifests(
+        validator.coexistence, evidence, tmp_path
     )
     source_manifest_paths = {
         source_key: tmp_path / f"m8-{source_key}-source-manifest.json"
@@ -594,6 +594,8 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
         "m8_report": report_path,
         "m8_before_source_manifest": source_manifest_paths["before"],
         "m8_after_source_manifest": source_manifest_paths["after"],
+        "m8_before_source_root": source_roots["before"],
+        "m8_after_source_root": source_roots["after"],
         "m8_trust_state_hash": campaign["windows"][0]["trust_state_hash"],
         "m8_peer_binding_hash": campaign["windows"][0]["peer_binding_hash"],
         "receipts": receipt_paths,
@@ -635,6 +637,10 @@ def live_cli_args(bundle: dict) -> list[str]:
         str(bundle["m8_before_source_manifest"]),
         "--m8-after-source-manifest",
         str(bundle["m8_after_source_manifest"]),
+        "--m8-before-source-root",
+        str(bundle["m8_before_source_root"]),
+        "--m8-after-source-root",
+        str(bundle["m8_after_source_root"]),
         "--m8-trust-state-hash",
         bundle["m8_trust_state_hash"],
         "--m8-peer-binding-hash",
@@ -667,6 +673,8 @@ def live_sources(bundle: dict) -> dict:
         "m8_report": bundle["m8_report"],
         "m8_before_source_manifest": bundle["m8_before_source_manifest"],
         "m8_after_source_manifest": bundle["m8_after_source_manifest"],
+        "m8_before_source_root": bundle["m8_before_source_root"],
+        "m8_after_source_root": bundle["m8_after_source_root"],
         "m8_trust_state_hash": bundle["m8_trust_state_hash"],
         "m8_peer_binding_hash": bundle["m8_peer_binding_hash"],
         "capture_receipts": bundle["receipts"],

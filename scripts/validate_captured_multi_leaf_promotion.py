@@ -1434,6 +1434,8 @@ def _validate_live_source_bundle(
         "m8_report",
         "m8_before_source_manifest",
         "m8_after_source_manifest",
+        "m8_before_source_root",
+        "m8_after_source_root",
         "m8_trust_state_hash",
         "m8_peer_binding_hash",
         "capture_receipts",
@@ -1519,6 +1521,10 @@ def _validate_live_source_bundle(
             m7_paths,
             require_private=True,
             source_manifests=source_manifests,
+            source_roots={
+                "before": live_sources["m8_before_source_root"],
+                "after": live_sources["m8_after_source_root"],
+            },
         )
         derived_report = coexistence.report(copy.deepcopy(evidence), m8_registry)
     except (coexistence.Failure, KeyError, TypeError, ValueError):
@@ -1975,6 +1981,8 @@ def _live_sources_from_args(
         "m8_report": args.m8_report,
         "m8_before_source_manifest": args.m8_before_source_manifest,
         "m8_after_source_manifest": args.m8_after_source_manifest,
+        "m8_before_source_root": args.m8_before_source_root,
+        "m8_after_source_root": args.m8_after_source_root,
         "m8_trust_state_hash": args.m8_trust_state_hash,
         "m8_peer_binding_hash": args.m8_peer_binding_hash,
         "capture_receipts": args.capture_receipt,
@@ -2010,6 +2018,8 @@ def main() -> int:
     parser.add_argument("--m8-report", type=pathlib.Path)
     parser.add_argument("--m8-before-source-manifest", type=pathlib.Path)
     parser.add_argument("--m8-after-source-manifest", type=pathlib.Path)
+    parser.add_argument("--m8-before-source-root", type=pathlib.Path)
+    parser.add_argument("--m8-after-source-root", type=pathlib.Path)
     parser.add_argument("--m8-trust-state-hash")
     parser.add_argument("--m8-peer-binding-hash")
     parser.add_argument("--capture-receipt", type=pathlib.Path, action="append", default=[])
