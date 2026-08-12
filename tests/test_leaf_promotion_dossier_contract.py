@@ -294,8 +294,8 @@ def test_machine_contract_and_registry_are_closed() -> None:
 def test_canonical_artifacts_match_current_m8_inventory_revision_exact_bytes() -> None:
     expected_sha256 = {
         REGISTRY: "ad33736c00aa2c3ecaac981606d25c064088c80cb72ca5389b83c5d9df40f6a3",
-        DOSSIER: "1f97fc824b88cd7a950488dd27a6cd26ffa7977a3355d3009de3759535ffb6c0",
-        RESULT: "a8175dd33822a3174d74c9fae9541a3af4ba6a7a9cc0572ab6796e0e9d979d0c",
+        DOSSIER: "3fc7ae3df923d9850451ac2518583136b1cb31fb32a41777168d0a4f5c89b3f2",
+        RESULT: "6a9b57cc3abd6c58ef8729ac503c54868bde831014532c631f27b04ad9322f93",
     }
     for path, expected in expected_sha256.items():
         assert hashlib.sha256(path.read_bytes()).hexdigest() == expected
@@ -551,7 +551,116 @@ def captured_cli_command(
         str(coexistence_root / "report.json"),
         "--m8-registry",
         str(PLATFORM_ROOT / "schemas/multi-runtime-coexistence-registry-v1.json"),
+        "--m8-before-source-manifest",
+        str(coexistence_root / "evidence.json"),
+        "--m8-after-source-manifest",
+        str(coexistence_root / "report.json"),
+        "--m8-before-source-root",
+        str(coexistence_root),
+        "--m8-after-source-root",
+        str(coexistence_root),
     ]
+
+
+def test_captured_derivation_forwards_m8_source_windows_unchanged(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = validator_module()
+    graph = {"graph": "verified"}
+    replay = {"replay": "verified"}
+    projected = {"projection": "verified"}
+    status = {"status": "verified"}
+    evidence = {"evidence": "verified"}
+    m8_registry = {"registry": "verified"}
+    report = {"report": "verified"}
+
+    def artifact(name: str, value: object) -> pathlib.Path:
+        return write_json(tmp_path / f"{name}.json", value)
+
+    paths = {
+        "graph": artifact("graph", graph),
+        "replay": artifact("replay", replay),
+        "m7_registry": artifact("m7-registry", {}),
+        "source_bundle": artifact("source-bundle", {}),
+        "source_replay": artifact("source-replay", {}),
+        "status": artifact("status", status),
+        "terminal_graph": artifact("terminal-graph", {}),
+        "terminal_replay": artifact("terminal-replay", {}),
+        "terminal_source_bundle": artifact("terminal-source-bundle", {}),
+        "terminal_source_replay": artifact("terminal-source-replay", {}),
+        "evidence": artifact("evidence", evidence),
+        "report": artifact("report", report),
+        "m8_registry": artifact("m8-registry", m8_registry),
+        "before_manifest": artifact("before-manifest", {}),
+        "after_manifest": artifact("after-manifest", {}),
+    }
+    paths["report"].write_bytes(module.canonical(report) + b"\n")
+    before_root = tmp_path / "before-root"
+    after_root = tmp_path / "after-root"
+    before_root.mkdir()
+    after_root.mkdir()
+    verified_raw = {
+        "graph": module.canonical(graph) + b"\n",
+        "replay": module.canonical(replay) + b"\n",
+    }
+    captured: dict[str, object] = {}
+
+    monkeypatch.setattr(
+        module.status_projector,
+        "load_verified_projection",
+        lambda **_kwargs: (projected, verified_raw),
+    )
+    monkeypatch.setattr(
+        module.status_projector,
+        "render",
+        lambda _value: paths["status"].read_bytes(),
+    )
+
+    def capture_verify(*_args: object, **kwargs: object) -> None:
+        captured.update(kwargs)
+
+    monkeypatch.setattr(module.coexistence, "verify", capture_verify)
+    monkeypatch.setattr(module.coexistence, "report", lambda *_args: report)
+    monkeypatch.setattr(module, "_captured_predecessor_check", lambda *_args: None)
+    monkeypatch.setattr(module, "_private_assessment", lambda *_args: {"assessment": True})
+    monkeypatch.setattr(module, "build_captured_result", lambda value: value)
+
+    result = module.derive_captured(
+        graph_path=paths["graph"],
+        replay_path=paths["replay"],
+        m7_registry_path=paths["m7_registry"],
+        source_bundle_path=paths["source_bundle"],
+        source_replay_path=paths["source_replay"],
+        status_path=paths["status"],
+        terminal_graph_path=paths["terminal_graph"],
+        terminal_replay_path=paths["terminal_replay"],
+        terminal_source_bundle_path=paths["terminal_source_bundle"],
+        terminal_source_replay_path=paths["terminal_source_replay"],
+        evidence_path=paths["evidence"],
+        report_path=paths["report"],
+        m8_registry_path=paths["m8_registry"],
+        m8_before_source_manifest_path=paths["before_manifest"],
+        m8_after_source_manifest_path=paths["after_manifest"],
+        m8_before_source_root=before_root,
+        m8_after_source_root=after_root,
+        promotion_registry={
+            "captured_runtime_predecessors": {
+                "m7_gateway_source_commit": "a" * 40,
+                "m7_docs_source_commit": "b" * 40,
+            }
+        },
+    )
+
+    assert result == {"assessment": True}
+    assert captured["require_private"] is True
+    assert captured["source_manifests"] == {
+        "before": paths["before_manifest"],
+        "after": paths["after_manifest"],
+    }
+    assert captured["source_roots"] == {
+        "before": before_root,
+        "after": after_root,
+    }
 
 
 def test_synthetic_inputs_cannot_substitute_for_captured_runtime() -> None:

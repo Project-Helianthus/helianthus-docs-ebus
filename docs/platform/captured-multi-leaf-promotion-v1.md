@@ -211,7 +211,9 @@ A standalone or relabeled public object therefore cannot open M9.
 `verify-private`, `derive-public`, and bound `verify-public`: `--m7-graph`,
 `--m7-status`, `--m7-replay`, `--m7-registry`, `--m7-source-bundle`,
 `--m7-source-replay`, all four corresponding `--m7-terminal-*` inputs,
-`--m8-evidence`, `--m8-report`, `--m8-trust-state-hash`,
+`--m8-evidence`, `--m8-report`, `--m8-before-source-manifest`,
+`--m8-after-source-manifest`, `--m8-before-source-root`,
+`--m8-after-source-root`, `--m8-trust-state-hash`,
 `--m8-peer-binding-hash`, exactly two `--capture-receipt` arguments in window
 order, `--deployment-source`, `--deployment-binary`, and
 `--deployment-source-tree`. The validator invokes the complete M8 verifier,

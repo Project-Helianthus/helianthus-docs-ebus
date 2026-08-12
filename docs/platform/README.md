@@ -50,8 +50,8 @@ Current platform contracts:
   MSP-08 closed EEBUS-G18 coexistence, protected-view no-drift, and rollback
   contract
 - [`leaf-promotion-dossier-lock-v1.md`](./leaf-promotion-dossier-lock-v1.md) -
-  MSP-085 M8.5 per-leaf dossier lock plus captured-runtime zero-promotion
-  assessment; current live facts create zero dossiers and keep M9 blocked
+  MSP-085 M8.5 per-leaf dossier lock; live completion remains withheld until
+  the corrected source-bound M8 no-drift capture passes
 - [`captured-multi-leaf-promotion-v1.md`](./captured-multi-leaf-promotion-v1.md) -
   additive unreleased-V1 profile for restart-separated, per-candidate live
   promotion evidence and deterministic public-redacted results

@@ -43,6 +43,22 @@
       "items": {"$ref": "#/$defs/Run"}
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"evidence_class": {"const": "SYNTHETIC_OFFLINE_FIXTURE"}},
+        "required": ["evidence_class"]
+      },
+      "then": {"properties": {"runs": {"minItems": 6, "maxItems": 6}}}
+    },
+    {
+      "if": {
+        "properties": {"evidence_class": {"const": "CAPTURED_RUNTIME_EVIDENCE"}},
+        "required": ["evidence_class"]
+      },
+      "then": {"properties": {"runs": {"minItems": 4, "maxItems": 4}}}
+    }
+  ],
   "$defs": {
     "Digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "SHA": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
@@ -156,7 +172,7 @@
     "Limits": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["max_evidence_bytes", "max_depth", "max_runs", "max_views_per_run", "max_inputs_per_run", "max_internal_facts_per_run", "max_payload_bytes", "max_string_bytes", "max_total_members", "max_total_list_items"],
+      "required": ["max_evidence_bytes", "max_depth", "max_runs", "max_views_per_run", "max_inputs_per_run", "max_internal_facts_per_run", "max_payload_bytes", "max_string_bytes", "max_total_members", "max_total_list_items", "max_source_input_bytes", "max_source_total_bytes"],
       "properties": {
         "max_evidence_bytes": {"type": "integer", "minimum": 1},
         "max_depth": {"type": "integer", "minimum": 1},
@@ -167,7 +183,9 @@
         "max_payload_bytes": {"type": "integer", "minimum": 1},
         "max_string_bytes": {"type": "integer", "minimum": 1},
         "max_total_members": {"type": "integer", "minimum": 1},
-        "max_total_list_items": {"type": "integer", "minimum": 1}
+        "max_total_list_items": {"type": "integer", "minimum": 1},
+        "max_source_input_bytes": {"const": 2097152},
+        "max_source_total_bytes": {"const": 16777216}
       }
     },
     "BuildManifest": {
@@ -234,7 +252,7 @@
       "required": ["input_id", "kind", "digest", "byte_length"],
       "properties": {
         "input_id": {"$ref": "#/$defs/Token"},
-        "kind": {"enum": ["PROTECTED_VIEW_PAYLOAD", "M7_GRAPH", "M7_REPLAY", "M7_REGISTRY", "M7_SOURCE_BUNDLE", "M7_SOURCE_REPLAY", "M7_TERMINAL_GRAPH", "M7_TERMINAL_REPLAY", "M7_TERMINAL_SOURCE_BUNDLE", "M7_TERMINAL_SOURCE_REPLAY", "M7_PRIVATE_GRAPH", "M7_PRIVATE_REPLAY", "M7_PRIVATE_SOURCE_BUNDLE", "M7_PRIVATE_SOURCE_REPLAY", "M7_PUBLIC_STATUS", "RESTART_PROCESS_EVENT", "RESTART_STATE_SNAPSHOT", "RESTART_SESSION_EVENT"]},
+        "kind": {"enum": ["PROTECTED_VIEW_PAYLOAD", "SOURCE_CAPTURE_MANIFEST", "M7_GRAPH", "M7_REPLAY", "M7_REGISTRY", "M7_SOURCE_BUNDLE", "M7_SOURCE_REPLAY", "M7_TERMINAL_GRAPH", "M7_TERMINAL_REPLAY", "M7_TERMINAL_SOURCE_BUNDLE", "M7_TERMINAL_SOURCE_REPLAY", "M7_PRIVATE_GRAPH", "M7_PRIVATE_REPLAY", "M7_PRIVATE_SOURCE_BUNDLE", "M7_PRIVATE_SOURCE_REPLAY", "M7_PUBLIC_STATUS", "RESTART_PROCESS_EVENT", "RESTART_STATE_SNAPSHOT", "RESTART_SESSION_EVENT"]},
         "digest": {"$ref": "#/$defs/Digest"},
         "byte_length": {"type": "integer", "minimum": 1, "maximum": 2097152}
       }
