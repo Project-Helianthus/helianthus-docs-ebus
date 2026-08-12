@@ -7,6 +7,7 @@ import argparse
 import base64
 import copy
 import datetime as dt
+import decimal
 import hashlib
 import ipaddress
 import json
@@ -129,6 +130,8 @@ SOURCE_CAPTURE_FILES = {
 SOURCE_CAPTURE_PHASES = {"before": "PRE_RESTART", "after": "POST_RESTART"}
 MAX_SOURCE_INPUT_BYTES = 2_097_152
 MAX_SOURCE_TOTAL_BYTES = 16_777_216
+MAX_SOURCE_DECIMAL_DIGITS = 128
+MAX_SOURCE_DECIMAL_EXPONENT = 1_024
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
@@ -1384,6 +1387,22 @@ def _decode_source_json(
             fail("provenance.source_capture")
         return parsed
 
+    def source_decimal(value: str) -> decimal.Decimal:
+        try:
+            parsed = decimal.Decimal(value)
+        except decimal.InvalidOperation:
+            fail("provenance.source_capture")
+        digits = parsed.as_tuple().digits
+        if (
+            not parsed.is_finite()
+            or len(digits) > MAX_SOURCE_DECIMAL_DIGITS
+            or abs(parsed.adjusted()) > MAX_SOURCE_DECIMAL_EXPONENT
+            or parsed.is_zero()
+            and parsed.is_signed()
+        ):
+            fail("provenance.source_capture")
+        return parsed
+
     def reject_non_scalar_unicode(value: Any) -> None:
         if isinstance(value, str):
             try:
@@ -1403,7 +1422,7 @@ def _decode_source_json(
             raw.decode("utf-8"),
             object_pairs_hook=pairs,
             parse_int=source_integer,
-            parse_float=lambda _: fail("provenance.source_capture"),
+            parse_float=source_decimal,
             parse_constant=lambda _: fail("provenance.source_capture"),
         )
     except (json.JSONDecodeError, UnicodeDecodeError, ValueError, RecursionError):
@@ -1476,7 +1495,21 @@ def _source_string_number(value: Any) -> str | None:
         return None
     if isinstance(value, bool):
         return "true" if value else "false"
+    if isinstance(value, decimal.Decimal):
+        return format(value.normalize(), "f")
     return str(value)
+
+
+def _source_reject_unprojected_decimals(value: Any) -> None:
+    if isinstance(value, decimal.Decimal):
+        fail("provenance.source_capture")
+    if isinstance(value, dict):
+        for key, item in value.items():
+            _source_reject_unprojected_decimals(key)
+            _source_reject_unprojected_decimals(item)
+    elif isinstance(value, list):
+        for item in value:
+            _source_reject_unprojected_decimals(item)
 
 
 def _source_device_projection(item: dict[str, Any]) -> dict[str, Any] | None:
@@ -1600,6 +1633,7 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             {"name": name, "inputSchema": by_name[name]["inputSchema"]}
             for name in APPROVED_M8_EEBUS_TOOLS
         ]
+        _source_reject_unprojected_decimals(schemas)
         devices = [
             projected
             for item in devices_response["data"]
@@ -1615,6 +1649,8 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             for value in (portal_raw, debug_raw, routes_raw, semantic_registry_raw)
         ):
             fail("provenance.source_capture")
+        for direct_view in (portal_raw, debug_raw, routes_raw, semantic_registry_raw):
+            _source_reject_unprojected_decimals(direct_view)
         ha_values = {
             "entities": [
                 {

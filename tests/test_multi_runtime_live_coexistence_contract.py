@@ -605,7 +605,7 @@ def source_payloads(
                     "config": {
                         "operating_mode": "auto",
                         "preset": "comfort",
-                        "target_temp_c": 21,
+                        "target_temp_c": 21.5,
                         "associated_circuit": 1,
                     },
                 }
@@ -622,7 +622,7 @@ def source_payloads(
                 {
                     "id": "zone-1",
                     "name": "Zone 1",
-                    "config": {"operatingMode": "auto", "targetTempC": 21},
+                    "config": {"operatingMode": "auto", "targetTempC": 21.5},
                 }
             ],
             "dhw": {"config": {"operatingMode": "auto"}},
@@ -979,6 +979,29 @@ def test_msp08_source_mcp_accepts_large_envelope_with_bounded_inner_values() -> 
     assert validator._source_inner_mcp(raw)["data"]["items"] == values
 
 
+def test_msp08_source_decimal_is_bounded_and_canonical() -> None:
+    validator = validator_module()
+    decoded = validator._decode_source_json(b'{"temperature":21.500}')
+
+    assert validator._source_string_number(decoded["temperature"]) == "21.5"
+
+
+@pytest.mark.parametrize(
+    "raw",
+    (
+        b'{"temperature":-0.0}',
+        b'{"temperature":1e1025}',
+        ('{"temperature":0.' + "1" * 129 + "}").encode("ascii"),
+    ),
+)
+def test_msp08_source_decimal_rejects_nonportable_bounds(raw: bytes) -> None:
+    validator = validator_module()
+
+    with pytest.raises(Exception) as error:
+        validator._decode_source_json(raw)
+    assert str(error.value) == "provenance.source_capture"
+
+
 def test_msp08_source_manifest_rejects_auth_boundary_drift(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -1017,6 +1040,15 @@ def test_msp08_private_runtime_binds_distinct_single_window_manifests(
         roots,
         require_private=True,
     )
+    for run_index in (0, 2):
+        views = {
+            view["view_id"]: view["payload"]["data"]
+            for view in evidence["runs"][run_index]["protected_views"]
+        }
+        semantic = views["mcp.ebus.v1.responses"]["responses"][1]["result"]
+        assert semantic["zones"][0]["target_temp_c"] == "21.5"
+        assert views["graphql.ebus.values"]["zones"][0]["target_temp_c"] == "21.5"
+        assert views["ha.graphql.values"]["entities"][0]["target_temperature"] == "21.5"
 
 
 def test_msp08_private_runtime_requires_both_source_manifests(
