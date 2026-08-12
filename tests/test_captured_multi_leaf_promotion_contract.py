@@ -35,7 +35,7 @@ M7_TERMINAL_REPLAY = M7_FIXTURE / "source-terminal-replay-result.json"
 M7_TERMINAL_SOURCE_BUNDLE = M7_FIXTURE / "source-terminal-bundle.json"
 M7_TERMINAL_SOURCE_REPLAY = M7_FIXTURE / "source-terminal-source-replay.json"
 M8_LIVE_TEST = ROOT / "tests/test_multi_runtime_live_coexistence_contract.py"
-DOCS_EEBUS_SOURCE_COMMIT = "8cad1269690255f6a4d9b5ad31897d7c72fadbfe"
+DOCS_EEBUS_SOURCE_COMMIT = "cb550789d8299ecb3389b7a89b53fff76d79fa0b"
 RETIRED_FACT_HASHES = {
     "m7-candidate-0001": "sha256:867157d98ac046e6bc09ae60b4a963e5f7c6d174f12d293b09cc339c7f9dd9a2",
     "m7-candidate-0002": "sha256:26df8fd76d3d2804c899a063766075a9cad25ad90cccfcde067c10b95cb793be",
