@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 import pathlib
+import subprocess
 import sys
 
 
@@ -17,6 +18,9 @@ M8_REGISTRY = ROOT / "docs/platform/schemas/multi-runtime-coexistence-registry-v
 M85_REGISTRY = (
     ROOT / "docs/platform/schemas/leaf-promotion-captured-multi-leaf-registry-v1.json"
 )
+M7_ROOT = ROOT / "docs/platform/fixtures/candidate-fact-graph/v1/positive"
+M7_REGISTRY = ROOT / "docs/platform/schemas/draft-candidate-fact-registry-v1.json"
+M8_VALIDATOR = ROOT / "scripts/validate_multi_runtime_coexistence.py"
 
 
 def load_module(name: str, path: pathlib.Path):
@@ -36,15 +40,44 @@ def sha256(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def verify_m8_public(evidence: pathlib.Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(M8_VALIDATOR),
+            "verify-public",
+            "--evidence",
+            str(evidence),
+            "--registry",
+            str(M8_REGISTRY),
+            "--m7-registry",
+            str(M7_REGISTRY),
+            "--m7-terminal-graph",
+            str(M7_ROOT / "source-terminal-graph.json"),
+            "--m7-terminal-replay",
+            str(M7_ROOT / "source-terminal-replay-result.json"),
+            "--m7-terminal-source-bundle",
+            str(M7_ROOT / "source-terminal-bundle.json"),
+            "--m7-terminal-source-replay",
+            str(M7_ROOT / "source-terminal-source-replay.json"),
+            "--m7-live-status",
+            str(M7_ROOT / "live-public-status.json"),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
 def test_live_publication_exact_bytes_and_m8_report() -> None:
     assert sha256(M8_EVIDENCE) == (
-        "1b898a5d1fa836576190cc83e82ebe01abdd54705f93dd25e95b3e594cfffd14"
+        "87741a9003b24102bda2698654726fe88ad4d0046a12abdf02583eac367c2724"
     )
     assert sha256(M8_REPORT) == (
-        "81dcdcffab5a4d7ddb9f784c6bc55a996ab4bf2bb5c3806b936351e96ee8a111"
+        "948419eeef4bb0c4ee68ee2705ac642bcc02a9f99a4e38589ced9cfe38b2e354"
     )
     assert sha256(M85_RESULT) == (
-        "cdfd6522e482ba083a5f3c964f95e953ea94e3d829321904be507952c767f460"
+        "7cbd4b1100066a39100cc31e51bb197e4c3d3ccee3114ddb5ba8517ca44512a2"
     )
 
     validator = load_module(
@@ -57,8 +90,28 @@ def test_live_publication_exact_bytes_and_m8_report() -> None:
     validator.schema_check(evidence)
     validator.check_limits(evidence, len(M8_EVIDENCE.read_bytes()))
     validator.check_public_redaction(evidence)
+    verified = verify_m8_public(M8_EVIDENCE)
+    assert (verified.returncode, verified.stdout, verified.stderr) == (
+        0,
+        "public-only-ok\n",
+        "",
+    )
     assert validator.report(copy.deepcopy(evidence), registry) == report
     assert report["verdict"] == "PASS"
+
+
+def test_live_m8_canonical_verifier_rejects_evidence_hash_mutation(
+    tmp_path: pathlib.Path,
+) -> None:
+    evidence = load(M8_EVIDENCE)
+    evidence["evidence_hash"] = "sha256:" + "0" * 64
+    mutated = tmp_path / "mutated-evidence.json"
+    mutated.write_text(json.dumps(evidence, separators=(",", ":")), encoding="utf-8")
+
+    verified = verify_m8_public(mutated)
+    assert verified.returncode == 1
+    assert verified.stdout == "hash.evidence\n"
+    assert verified.stderr == ""
 
 
 def test_live_publication_has_eight_locked_candidates_and_no_public_leak() -> None:

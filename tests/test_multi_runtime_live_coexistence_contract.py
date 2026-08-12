@@ -1224,6 +1224,39 @@ def test_msp08_source_projection_rejects_uncontracted_portal_version() -> None:
     assert str(error.value) == "provenance.source_capture"
 
 
+def test_msp08_source_projection_pseudonymizes_debug_address_aliases() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["status"] = {
+        "admission": {
+            "companion_target": 132,
+            "last_successful_source": 127,
+            "selected_source": 127,
+        }
+    }
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
+    admission = projected["status"]["admission"]
+    assert set(admission) == validator.SOURCE_DEBUG_ADDRESS_KEYS
+    assert all(
+        validator.REDACTED_ID_RE.fullmatch(value) for value in admission.values()
+    )
+
+
+@pytest.mark.parametrize(
+    "key",
+    ["companion_target", "last_successful_source", "selected_source"],
+)
+def test_msp08_public_redaction_rejects_debug_address_aliases(key: str) -> None:
+    validator = validator_module()
+    assert validator._contains_public_secret({key: 127})
+    assert not validator._contains_public_secret(
+        {key: "redacted:sha256:0123456789ab"}
+    )
+
+
 def test_msp08_source_projection_declares_and_excludes_volatile_schedule_leaves() -> None:
     validator = validator_module()
     payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")

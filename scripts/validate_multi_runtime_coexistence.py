@@ -382,13 +382,16 @@ PUBLIC_IDENTITY_HASH_ROOTS = frozenset(
 PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
     {
         "authsubject",
+        "companiontarget",
         "id",
         "ids",
         "ip",
         "ipv4",
         "ipv6",
+        "lastsuccessfulsource",
         "remoteshipid",
         "remoteski",
+        "selectedsource",
         "viadevice",
     }
     | {
@@ -1666,6 +1669,27 @@ def _source_portal(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+SOURCE_DEBUG_ADDRESS_KEYS = frozenset(
+    {"companion_target", "last_successful_source", "selected_source"}
+)
+
+
+def _source_debug(value: Any) -> Any:
+    if isinstance(value, dict):
+        projected = {}
+        for key, item in value.items():
+            if key in SOURCE_DEBUG_ADDRESS_KEYS:
+                if isinstance(item, bool) or not isinstance(item, (int, str)):
+                    fail("provenance.source_capture")
+                projected[key] = _source_redacted(f"ebus-debug:{key}:{item}")
+            else:
+                projected[key] = _source_debug(item)
+        return projected
+    if isinstance(value, list):
+        return [_source_debug(item) for item in value]
+    return copy.deepcopy(value)
+
+
 SCHEDULE_INDEX = r"(?:0|[1-9][0-9]*)"
 VOLATILE_SCHEDULE_LEAF = re.compile(
     rf"^/schedules/Programs/{SCHEDULE_INDEX}/Days/{SCHEDULE_INDEX}/"
@@ -1847,7 +1871,7 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             "graphql.ebus.values": graph_values,
             "ha.graphql.values": ha_values,
             "ha.identity": ha_identity,
-            "debug.ebus": debug_raw,
+            "debug.ebus": _source_debug(debug_raw),
             "portal.ebus.bootstrap": _source_portal(portal_raw),
             "command.routing": routes_raw,
             "semantic.registry": _source_semantic_registry(semantic_registry_raw),
