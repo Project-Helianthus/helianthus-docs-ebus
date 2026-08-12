@@ -71,13 +71,13 @@ def verify_m8_public(evidence: pathlib.Path) -> subprocess.CompletedProcess[str]
 
 def test_live_publication_exact_bytes_and_m8_report() -> None:
     assert sha256(M8_EVIDENCE) == (
-        "87741a9003b24102bda2698654726fe88ad4d0046a12abdf02583eac367c2724"
+        "a55a17eb24b965debf218dcb8e4d2b49d5bdde284aa642bea729c35d8acac789"
     )
     assert sha256(M8_REPORT) == (
-        "948419eeef4bb0c4ee68ee2705ac642bcc02a9f99a4e38589ced9cfe38b2e354"
+        "5266db89e4086e61b88d0242233bdffe7a05422efdacfeca4fb04e3239cc6457"
     )
     assert sha256(M85_RESULT) == (
-        "7cbd4b1100066a39100cc31e51bb197e4c3d3ccee3114ddb5ba8517ca44512a2"
+        "98c5b9a6dc176b64a7e56baeec31ba869ff4c24498804e79cd86678bd74c4f7e"
     )
 
     validator = load_module(

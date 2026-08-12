@@ -1240,9 +1240,7 @@ def test_msp08_source_projection_pseudonymizes_debug_address_aliases() -> None:
     projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
     admission = projected["status"]["admission"]
     assert set(admission) == validator.SOURCE_DEBUG_ADDRESS_KEYS
-    assert all(
-        validator.REDACTED_ID_RE.fullmatch(value) for value in admission.values()
-    )
+    assert set(admission.values()) == {validator.OPAQUE_ADDRESS}
 
 
 @pytest.mark.parametrize(
@@ -1252,9 +1250,7 @@ def test_msp08_source_projection_pseudonymizes_debug_address_aliases() -> None:
 def test_msp08_public_redaction_rejects_debug_address_aliases(key: str) -> None:
     validator = validator_module()
     assert validator._contains_public_secret({key: 127})
-    assert not validator._contains_public_secret(
-        {key: "redacted:sha256:0123456789ab"}
-    )
+    assert not validator._contains_public_secret({key: validator.OPAQUE_ADDRESS})
     assert not validator._contains_public_secret({key: None})
 
 
@@ -1271,6 +1267,18 @@ def test_msp08_source_projection_preserves_null_debug_address_aliases() -> None:
     assert projected["status"]["admission"] == {
         key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS
     }
+
+
+def test_msp08_source_projection_uses_non_enumerable_device_address_placeholder() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    projected = validator._source_project_views(payloads)["views"]
+    devices = projected["mcp.ebus.v1.responses"]["responses"][0]["result"][
+        "devices"
+    ]
+
+    assert {item["address"] for item in devices} == {validator.OPAQUE_ADDRESS}
+    assert devices[0]["device_id"] == validator._source_redacted("ebus-device:BAI00")
 
 
 def test_msp08_source_projection_declares_and_excludes_volatile_schedule_leaves() -> None:

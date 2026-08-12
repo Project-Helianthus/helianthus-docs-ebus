@@ -193,11 +193,14 @@ processes, timestamps, or capture intervals fail closed before no-drift is
 evaluated. The protected payloads must be produced independently before
 equality is tested.
 
-The protected public `debug.ebus` projection retains admission state but
-pseudonymizes the address-bearing `selected_source`, `last_successful_source`,
-and `companion_target` fields. These names are public-identity aliases: any raw
-numeric or textual value under one of them fails the public-redaction gate.
-Their declared absent state remains JSON `null`; it is not an identity value.
+The protected public projections retain admission and device state but replace
+every eBUS address with the constant, non-enumerable
+`redacted:opaque-address` placeholder. This includes device `address` and the
+address-bearing `selected_source`, `last_successful_source`, and
+`companion_target` fields. Device pseudonyms do not include the address in
+their hash input. Raw numeric or textual values under an address alias fail the
+public-redaction gate. The three admission fields' declared absent state
+remains JSON `null`; it is not an identity value.
 
 PRE and POST source windows require different manifest digests regardless of
 their claimed byte lengths. Every source device row remains bound in the raw

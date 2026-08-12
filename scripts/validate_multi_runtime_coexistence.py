@@ -159,6 +159,7 @@ MAC_RE = re.compile(
 )
 SKI_RE = re.compile(r"(?i)(?:^|[^0-9a-f])[0-9a-f]{40}(?:$|[^0-9a-f])")
 REDACTED_ID_RE = re.compile(r"^redacted:sha256:[0-9a-f]{12}$")
+OPAQUE_ADDRESS = "redacted:opaque-address"
 TOOL_NAME_RE = re.compile(r"^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$")
 CREDENTIAL_VALUE_RE = re.compile(
     r"(?i)\bauthorization\s*:\s*(?:bearer|basic)\s+[a-z0-9._~+/=-]+"
@@ -1571,8 +1572,8 @@ def _source_device_projection(item: dict[str, Any]) -> dict[str, Any] | None:
     if not device_id or not manufacturer:
         fail("provenance.source_capture")
     return {
-        "address": _source_redacted(f"ebus-address:{address}"),
-        "device_id": _source_redacted(f"ebus-device:{address}:{device_id}"),
+        "address": OPAQUE_ADDRESS,
+        "device_id": _source_redacted(f"ebus-device:{device_id}"),
         "manufacturer": manufacturer,
         "model": _source_redacted(f"ebus-model:{device_id}"),
         "discovery_source": discovery_source,
@@ -1685,7 +1686,7 @@ def _source_debug(value: Any) -> Any:
                 elif isinstance(item, bool) or not isinstance(item, (int, str)):
                     fail("provenance.source_capture")
                 else:
-                    projected[key] = _source_redacted(f"ebus-debug:{key}:{item}")
+                    projected[key] = OPAQUE_ADDRESS
             else:
                 projected[key] = _source_debug(item)
         return projected
@@ -2781,7 +2782,9 @@ def _valid_hash_like(value: Any) -> bool:
 def _valid_redacted_identity(value: Any) -> bool:
     if isinstance(value, list):
         return all(_valid_redacted_identity(item) for item in value)
-    return isinstance(value, str) and bool(REDACTED_ID_RE.fullmatch(value))
+    return isinstance(value, str) and bool(
+        REDACTED_ID_RE.fullmatch(value) or value == OPAQUE_ADDRESS
+    )
 
 
 def _contains_credential_value(value: str) -> bool:
