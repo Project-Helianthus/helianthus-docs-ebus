@@ -59,6 +59,9 @@ It also contains all nine stable raw eeBUS V1 tools, in canonical order:
 
 This is an exact V1 contract assertion, not a compatibility alias set. Missing,
 additional, stale, reordered, write-capable, legacy, or V2 entries fail closed.
+It is the complete protected inventory declared by this gate, not a copy of an
+operator endpoint's larger experimental inventory. Each listed tool must be
+derived independently from the effective boundary in every capture window.
 
 EEBUS-G18 is only the no-drift gate. G17 advertisement/discovery and trust
 evidence and G19 direct outbound VR940 TCP/TLS/WebSocket/SHIP and first SPINE
@@ -123,7 +126,9 @@ validate_multi_runtime_coexistence.py verify \
   --m7-terminal-graph <public-source-terminal-graph.json> \
   --m7-terminal-replay <public-source-terminal-replay.json> \
   --m7-terminal-source-bundle <public-source-terminal-bundle.json> \
-  --m7-terminal-source-replay <public-source-terminal-source-replay.json>
+  --m7-terminal-source-replay <public-source-terminal-source-replay.json> \
+  --before-source-manifest <before-source-capture-manifest.json> \
+  --after-source-manifest <after-source-capture-manifest.json>
 ```
 
 Replace `verify` with `report` to emit exact RFC 8785/JCS-subset report bytes.
@@ -131,8 +136,23 @@ Replace `verify` with `report` to emit exact RFC 8785/JCS-subset report bytes.
 partial report. For captured-runtime evidence, both commands require the
 private inputs, rederive the public status projection in-process, require exact
 bytes, and bind the private graph, replay, source bundle, and source replay as
-immutable inputs. `verify-public` accepts only the public terminal inputs and
-emits `public-only-ok`; it cannot emit a report or establish G18 PASS.
+immutable inputs. They also require both private source-capture manifests and
+bind their exact bytes as `source:capture-manifest` /
+`SOURCE_CAPTURE_MANIFEST`. `verify-public` checks that the public binding is
+well formed but cannot substitute for either private manifest; it emits
+`public-only-ok` and cannot establish G18 PASS.
+
+Each source manifest has contract
+`helianthus.platform.multi-runtime-source-capture-manifest.v1`, declares
+`window_scope=SINGLE_WINDOW_ONLY` and
+`projection_policy=M8_PROTECTED_VIEWS_SINGLE_WINDOW_V1`, and binds the
+effective auth-scope hash. Its ordered inputs cover the public MCP tool list,
+complete selected eBUS responses, owner-UNIX eeBUS state inputs, GraphQL,
+Portal, container identity, and capture timestamp with the exact auth boundary,
+byte length, and SHA-256 of each source. A projector invocation receives one
+window only; consulting the opposite window, intersecting device sets, dropping
+fields after comparison, or hard-coding an observed result is invalid. The
+protected payloads must be produced independently before equality is tested.
 
 The public M7 status projection is generated, never hand-authored:
 
@@ -163,8 +183,8 @@ order. A caller cannot select a subset.
 
 | View ID | Frozen meaning |
 | --- | --- |
-| `mcp.ebus.v1.responses` | Complete selected `ebus.v1` MCP responses |
-| `mcp.tool.inventory` | Existing MCP namespace/tool inventory |
+| `mcp.ebus.v1.responses` | Complete selected `ebus.v1` MCP responses; no post-hoc entity subset |
+| `mcp.tool.inventory` | Complete protected eleven-tool inventory derived at the effective boundary |
 | `graphql.schema` | GraphQL schema |
 | `graphql.ebus.values` | GraphQL eBUS values |
 | `ha.graphql.values` | HA-consumed GraphQL values |

@@ -50,14 +50,11 @@ Current platform contracts:
   MSP-08 closed EEBUS-G18 coexistence, protected-view no-drift, and rollback
   contract
 - [`leaf-promotion-dossier-lock-v1.md`](./leaf-promotion-dossier-lock-v1.md) -
-  MSP-085 M8.5 per-leaf dossier lock; the first official live campaign locks
-  three leaves and withholds fifteen, without exposing them to consumers
+  MSP-085 M8.5 per-leaf dossier lock; live completion remains withheld until
+  the corrected source-bound M8 no-drift capture passes
 - [`captured-multi-leaf-promotion-v1.md`](./captured-multi-leaf-promotion-v1.md) -
   additive unreleased-V1 profile for restart-separated, per-candidate live
   promotion evidence and deterministic public-redacted results
-- [`evidence/leaf-promotion-captured-multi-leaf/v1/live-vr940-0.6.37-20260812/README.md`](./evidence/leaf-promotion-captured-multi-leaf/v1/live-vr940-0.6.37-20260812/README.md) -
-  public-redacted completion record for the first official M8/M8.5 live run;
-  its result permits M9 planning only
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary

@@ -1432,6 +1432,8 @@ def _validate_live_source_bundle(
         "m7_terminal_source_replay",
         "m8_evidence",
         "m8_report",
+        "m8_before_source_manifest",
+        "m8_after_source_manifest",
         "m8_trust_state_hash",
         "m8_peer_binding_hash",
         "capture_receipts",
@@ -1497,6 +1499,17 @@ def _validate_live_source_bundle(
     }
     if not all(isinstance(path, pathlib.Path) for path in m7_paths.values()):
         fail("live.sources.required")
+    source_manifests: dict[str, bytes] = {}
+    for source_key, source_name in (
+        ("before", "m8_before_source_manifest"),
+        ("after", "m8_after_source_manifest"),
+    ):
+        source_path = live_sources[source_name]
+        if not isinstance(source_path, pathlib.Path):
+            fail("live.sources.required")
+        source_manifests[source_key] = _read_bounded_bytes(
+            source_path, MAX_LIVE_ARTIFACT_BYTES, "live.m8"
+        )
     try:
         coexistence.verify(
             evidence,
@@ -1505,6 +1518,7 @@ def _validate_live_source_bundle(
             m8_registry_raw,
             m7_paths,
             require_private=True,
+            source_manifests=source_manifests,
         )
         derived_report = coexistence.report(copy.deepcopy(evidence), m8_registry)
     except (coexistence.Failure, KeyError, TypeError, ValueError):
@@ -1959,6 +1973,8 @@ def _live_sources_from_args(
         "m7_terminal_source_replay": args.m7_terminal_source_replay,
         "m8_evidence": args.m8_evidence,
         "m8_report": args.m8_report,
+        "m8_before_source_manifest": args.m8_before_source_manifest,
+        "m8_after_source_manifest": args.m8_after_source_manifest,
         "m8_trust_state_hash": args.m8_trust_state_hash,
         "m8_peer_binding_hash": args.m8_peer_binding_hash,
         "capture_receipts": args.capture_receipt,
@@ -1992,6 +2008,8 @@ def main() -> int:
     parser.add_argument("--m7-terminal-source-replay", type=pathlib.Path)
     parser.add_argument("--m8-evidence", type=pathlib.Path)
     parser.add_argument("--m8-report", type=pathlib.Path)
+    parser.add_argument("--m8-before-source-manifest", type=pathlib.Path)
+    parser.add_argument("--m8-after-source-manifest", type=pathlib.Path)
     parser.add_argument("--m8-trust-state-hash")
     parser.add_argument("--m8-peer-binding-hash")
     parser.add_argument("--capture-receipt", type=pathlib.Path, action="append", default=[])

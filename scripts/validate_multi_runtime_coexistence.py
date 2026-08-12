@@ -83,6 +83,25 @@ APPROVED_M8_EEBUS_CONTRACT_FIELDS = {
     "schema_digest",
     "version",
 }
+SOURCE_CAPTURE_CONTRACT = "helianthus.platform.multi-runtime-source-capture-manifest.v1"
+SOURCE_CAPTURE_INPUT_ID = "source:capture-manifest"
+SOURCE_CAPTURE_INPUT_KIND = "SOURCE_CAPTURE_MANIFEST"
+SOURCE_CAPTURE_POLICY = "M8_PROTECTED_VIEWS_SINGLE_WINDOW_V1"
+SOURCE_CAPTURE_INPUTS = {
+    "tools.list": "PUBLIC_LOOPBACK_MCP",
+    "ebus.devices": "PUBLIC_LOOPBACK_MCP",
+    "ebus.semantic": "PUBLIC_LOOPBACK_MCP",
+    "eebus.runtime": "OWNER_UNIX_MCP",
+    "eebus.services": "OWNER_UNIX_MCP",
+    "eebus.sessions": "OWNER_UNIX_MCP",
+    "eebus.pairing": "OWNER_UNIX_MCP",
+    "eebus.topology": "OWNER_UNIX_MCP",
+    "graphql.schema": "PUBLIC_LOOPBACK_GRAPHQL",
+    "graphql.values": "PUBLIC_LOOPBACK_GRAPHQL",
+    "portal.bootstrap": "PUBLIC_LOOPBACK_HTTP",
+    "container.inspect": "LOCAL_RUNTIME_ADMIN",
+    "capture.timestamp": "LOCAL_CAPTURE_CLOCK",
+}
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
@@ -1277,7 +1296,55 @@ def check_runtime_identity(evidence: dict[str, Any]) -> None:
             fail("provenance.runtime")
 
 
-def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]]) -> None:
+def _source_capture_binding(raw: bytes, auth_scope_hash: str) -> tuple[str, int]:
+    try:
+        value = json.loads(raw)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        fail("provenance.source_capture")
+    if not isinstance(value, dict) or set(value) != {
+        "contract", "schema_version", "window_id", "window_scope",
+        "projection_policy", "auth_scope_hash", "inputs",
+    }:
+        fail("provenance.source_capture")
+    if (
+        value["contract"] != SOURCE_CAPTURE_CONTRACT
+        or value["schema_version"] != 1
+        or not isinstance(value["window_id"], str)
+        or not TOKEN_RE.fullmatch(value["window_id"])
+        or value["window_scope"] != "SINGLE_WINDOW_ONLY"
+        or value["projection_policy"] != SOURCE_CAPTURE_POLICY
+        or value["auth_scope_hash"] != auth_scope_hash
+        or not isinstance(value["inputs"], list)
+    ):
+        fail("provenance.source_capture")
+    expected = list(SOURCE_CAPTURE_INPUTS.items())
+    observed: list[tuple[str, str]] = []
+    for item in value["inputs"]:
+        if not isinstance(item, dict) or set(item) != {
+            "input_id", "auth_boundary", "digest", "byte_length",
+        }:
+            fail("provenance.source_capture")
+        if (
+            not isinstance(item["input_id"], str)
+            or not isinstance(item["auth_boundary"], str)
+            or not isinstance(item["digest"], str)
+            or not DIGEST_RE.fullmatch(item["digest"])
+            or not integer(item["byte_length"], 1)
+        ):
+            fail("provenance.source_capture")
+        observed.append((item["input_id"], item["auth_boundary"]))
+    if observed != expected:
+        fail("provenance.source_capture")
+    return "sha256:" + hashlib.sha256(raw).hexdigest(), len(raw)
+
+
+def check_runtime(
+    evidence: dict[str, Any],
+    m7_inputs: dict[str, tuple[str, int]],
+    source_manifests: dict[str, bytes | None] | None = None,
+    *,
+    require_private: bool = True,
+) -> None:
     check_runtime_identity(evidence)
     for run in evidence["runs"]:
         views = {view["view_id"]: view for view in run["protected_views"]}
@@ -1308,6 +1375,37 @@ def check_runtime(evidence: dict[str, Any], m7_inputs: dict[str, tuple[str, int]
         expected_kinds.update(
             {input_id: m7_kinds[input_id] for input_id in m7_inputs}
         )
+        if evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE":
+            source_key = "before" if run["state"] in {
+                "EEBUS_CONNECTED_BASELINE", "EEBUS_CONNECTED_RAW_WITHHELD"
+            } else "after"
+            source_raw = (source_manifests or {}).get(source_key)
+            if require_private:
+                if source_raw is None:
+                    fail("provenance.source_capture")
+                source_digest, source_length = _source_capture_binding(
+                    source_raw, run["provenance"]["auth_scope"]["scope_hash"]
+                )
+                expected[SOURCE_CAPTURE_INPUT_ID] = (source_digest, source_length)
+            else:
+                candidates = [
+                    item for item in run["provenance"]["immutable_inputs"]
+                    if item.get("input_id") == SOURCE_CAPTURE_INPUT_ID
+                ]
+                if len(candidates) != 1:
+                    fail("provenance.source_capture")
+                source = candidates[0]
+                if (
+                    source.get("kind") != SOURCE_CAPTURE_INPUT_KIND
+                    or not isinstance(source.get("digest"), str)
+                    or not DIGEST_RE.fullmatch(source["digest"])
+                    or not integer(source.get("byte_length"), 1)
+                ):
+                    fail("provenance.source_capture")
+                expected[SOURCE_CAPTURE_INPUT_ID] = (
+                    source["digest"], source["byte_length"]
+                )
+            expected_kinds[SOURCE_CAPTURE_INPUT_ID] = SOURCE_CAPTURE_INPUT_KIND
         transition = run["state_evidence"]["restart_transition"]
         if transition is not None:
             expected.update(
@@ -1432,6 +1530,7 @@ def check_ordering(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
                     "m7:private-source-bundle",
                     "m7:private-source-replay",
                     "m7:status-projection",
+                    SOURCE_CAPTURE_INPUT_ID,
                 ]
             )
         else:
@@ -2791,6 +2890,7 @@ def verify(
     m7_paths: dict[str, pathlib.Path | None],
     *,
     require_private: bool = True,
+    source_manifests: dict[str, bytes | None] | None = None,
 ) -> dict[str, Any]:
     schema_check(evidence)
     check_limits(evidence, raw_size)
@@ -2798,7 +2898,12 @@ def verify(
     graph, _, m7_inputs, source_graph = _verify_m7(
         evidence, registry, m7_paths, require_private=require_private
     )
-    check_runtime(evidence, m7_inputs)
+    check_runtime(
+        evidence,
+        m7_inputs,
+        source_manifests,
+        require_private=require_private,
+    )
     check_config(evidence)
     check_auth_mask(evidence)
     check_clock(evidence)
@@ -2939,6 +3044,8 @@ def main() -> int:
             / "docs/platform/fixtures/candidate-fact-graph/v1/positive/live-public-status.json"
         ),
     )
+    parser.add_argument("--before-source-manifest", type=pathlib.Path)
+    parser.add_argument("--after-source-manifest", type=pathlib.Path)
     args = parser.parse_args()
     try:
         evidence, evidence_raw = load_json(args.evidence, "json.syntax", bounded=True)
@@ -2964,6 +3071,12 @@ def main() -> int:
             registry_raw,
             m7_paths,
             require_private=args.command != "verify-public",
+            source_manifests={
+                "before": args.before_source_manifest.read_bytes()
+                if args.before_source_manifest is not None else None,
+                "after": args.after_source_manifest.read_bytes()
+                if args.after_source_manifest is not None else None,
+            },
         )
         if args.command == "verify-public":
             sys.stdout.write("public-only-ok\n")

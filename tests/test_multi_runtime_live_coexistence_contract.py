@@ -410,6 +410,12 @@ def build_live_evidence(validator) -> dict[str, object]:
                     "digest": evidence["m7_live_status"]["content_hash"],
                     "byte_length": len(M7_LIVE_STATUS.read_bytes()),
                 },
+                {
+                    "input_id": "source:capture-manifest",
+                    "kind": "SOURCE_CAPTURE_MANIFEST",
+                    "digest": "sha256:" + ("1" if index < 2 else "2") * 64,
+                    "byte_length": 1024,
+                },
             ]
         )
         if index == 2:
@@ -530,6 +536,62 @@ def write_evidence(tmp_path: pathlib.Path, evidence: dict[str, object]) -> pathl
     return evidence_path
 
 
+def source_manifest(validator, auth_scope_hash: str, window_id: str = "window-before") -> bytes:
+    value = {
+        "contract": validator.SOURCE_CAPTURE_CONTRACT,
+        "schema_version": 1,
+        "window_id": window_id,
+        "window_scope": "SINGLE_WINDOW_ONLY",
+        "projection_policy": validator.SOURCE_CAPTURE_POLICY,
+        "auth_scope_hash": auth_scope_hash,
+        "inputs": [
+            {
+                "input_id": input_id,
+                "auth_boundary": boundary,
+                "digest": "sha256:" + f"{index + 1:064x}",
+                "byte_length": index + 1,
+            }
+            for index, (input_id, boundary) in enumerate(
+                validator.SOURCE_CAPTURE_INPUTS.items()
+            )
+        ],
+    }
+    return validator.canonical(value)
+
+
+def bind_source_manifests(validator, evidence: dict[str, object]) -> dict[str, bytes]:
+    manifests: dict[str, bytes] = {}
+    for source_key, run_indexes in (("before", (0, 1)), ("after", (2, 3))):
+        scope_hashes = {
+            evidence["runs"][index]["provenance"]["auth_scope"]["scope_hash"]
+            for index in run_indexes
+        }
+        assert len(scope_hashes) == 1
+        raw = source_manifest(
+            validator,
+            scope_hashes.pop(),
+            window_id=f"window-{source_key}",
+        )
+        binding = ("sha256:" + hashlib.sha256(raw).hexdigest(), len(raw))
+        for index in run_indexes:
+            source = next(
+                item
+                for item in evidence["runs"][index]["provenance"]["immutable_inputs"]
+                if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
+            )
+            source["digest"], source["byte_length"] = binding
+        manifests[source_key] = raw
+    return manifests
+
+
+def live_m7_inputs(validator, evidence: dict[str, object]) -> dict[str, tuple[str, int]]:
+    return {
+        item["input_id"]: (item["digest"], item["byte_length"])
+        for item in evidence["runs"][0]["provenance"]["immutable_inputs"]
+        if item["input_id"].startswith("m7:")
+    }
+
+
 def test_msp08_live_profile_validates_bound_m7_and_restart(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -543,6 +605,81 @@ def test_msp08_live_profile_validates_bound_m7_and_restart(
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == "public-only-ok\n"
+
+
+def test_msp08_live_public_evidence_requires_source_manifest_binding(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    for run in evidence["runs"]:
+        run["provenance"]["immutable_inputs"] = [
+            item for item in run["provenance"]["immutable_inputs"]
+            if item["input_id"] != validator.SOURCE_CAPTURE_INPUT_ID
+        ]
+    refresh_evidence_hash(validator, evidence)
+    result = subprocess.run(
+        validator_command("verify", write_evidence(tmp_path, evidence)),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout) == (1, "provenance.source_capture\n")
+
+
+def test_msp08_source_manifest_binds_one_window_and_auth_scope() -> None:
+    validator = validator_module()
+    auth_hash = "sha256:" + "a" * 64
+    raw = source_manifest(validator, auth_hash)
+    assert validator._source_capture_binding(raw, auth_hash) == (
+        "sha256:" + hashlib.sha256(raw).hexdigest(),
+        len(raw),
+    )
+    value = json.loads(raw)
+    value["window_scope"] = "PRE_AND_POST"
+    with pytest.raises(Exception) as error:
+        validator._source_capture_binding(validator.canonical(value), auth_hash)
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_source_manifest_rejects_auth_boundary_drift() -> None:
+    validator = validator_module()
+    auth_hash = "sha256:" + "a" * 64
+    value = json.loads(source_manifest(validator, auth_hash))
+    value["inputs"][0]["auth_boundary"] = "OWNER_UNIX_MCP"
+    with pytest.raises(Exception) as error:
+        validator._source_capture_binding(validator.canonical(value), auth_hash)
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_binds_distinct_single_window_manifests() -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests = bind_source_manifests(validator, evidence)
+
+    assert manifests["before"] != manifests["after"]
+    validator.check_runtime(
+        evidence,
+        live_m7_inputs(validator, evidence),
+        manifests,
+        require_private=True,
+    )
+
+
+def test_msp08_private_runtime_requires_both_source_manifests() -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests = bind_source_manifests(validator, evidence)
+    manifests["after"] = None
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
 
 
 def test_msp08_live_profile_rejects_synthetic_build_mode(
