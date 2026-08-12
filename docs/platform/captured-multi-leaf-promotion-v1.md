@@ -10,21 +10,28 @@ consumer API, or semantic source-precedence policy. The existing
 
 ## Purpose And Ownership
 
-`CAPTURED_RUNTIME_MULTI_LEAF_V1` assesses the 18 M7 VR940 facts independently:
-11 protocol-comparable observations, three protocol-present observations that
-remain withheld without an eBUS capability source, and four terminal facts.
-Gateway owns synchronized
+`CAPTURED_RUNTIME_MULTI_LEAF_V1` preserves 22 provenance records: four
+immutable retired terminal non-leaves and 18 real semantic leaves. The real
+leaves are partitioned exactly into 11 cross-protocol equivalence leaves and
+seven eeBUS-native leaves. Gateway owns synchronized
 capture, source timestamps and generations, sample validity, comparator
 evidence, deterministic replay, and dossier assembly. Protocol-independent
 freshness, unavailable policy, source precedence, semantic registry ownership,
 GraphQL, Portal, Home Assistant, and command routing remain outside this gate.
 
 The exact captured protocol selectors exist only in the `PRIVATE_OPERATOR`
-campaign. Each eligible eBUS identity is family-discriminated as `B524` and
-binds the catalog-owned target address `0x15`, `(opcode, GG, II, RR)`, group
+campaign. Each cross-protocol eBUS identity is an exact `B524`/`B555` union.
+A `B524` identity binds the catalog-owned target address `0x15`,
+`(opcode, GG, II, RR)`, group
 meaning, instance gate, register category, and unit/scale source together with
-the captured target pseudonym and admitted source. A selector from another family or
-candidate is not interchangeable even when its decoded value is equal.
+the captured target pseudonym and admitted source. Candidate `0006` retains
+that primary B524 provenance but may instead capture one complete B555
+`TIMER_READ` identity: the active-controller target pseudonym, `BASV2`, `DHW`,
+slot `0`, `MONDAY`, `00:00:00`, `temp_slots_1_shared_setpoint`,
+`B555_DHW_TEMPERATURE_RAW_DIV10_C`, `timerSlot.temperature`, `degC`, and
+`dhw_temp_slots_1_mirrors_b524_setpoint`. B555 evidence is never serialized or
+hashed as B524 evidence. A selector from another family or candidate is not
+interchangeable even when its decoded value is equal.
 The derived `PUBLIC_REDACTED` result retains candidate ids, content hashes,
 decisions, terminal outcomes, and replay bindings, but no eBUS addresses or
 eeBUS device, entity, feature, service, path, SKI, or SHIP identity. Neither
@@ -34,32 +41,40 @@ Validation recursively scans values as well as enforcing closed schema keys;
 operational SKI, SHIP ids, protocol addresses, and selectors are not treated as
 cryptographic secrets in the private operator tier.
 
-The eeBUS source contract is grounded by `helianthus-docs-eebus` commit
-`657a36d07e52570326384b757a5382a6789f641b`. For every protocol-present leaf,
-the registry owns the entity slot and type, feature type and role, complete
-description/constraints/value function lists, field path, complete descriptor,
-unit, declared minimum/maximum/step, conversion, exact protocol mapping, and
-cross-protocol raw-pair mapping. The private eeBUS identity reproduces that
-whole profile, binds it with `source_profile_hash`, adds its captured native
-service/device/entity/feature selectors, and binds the complete result with
+The eeBUS source contract is temporarily grounded by the full PR-head commit
+`8cad1269690255f6a4d9b5ad31897d7c72fadbfe`; it will be repinned to the source
+inventory squash commit. That external binding owns only the SPINE source
+profile: entity slot and type, feature type and role, complete
+description/constraints/value function lists, field path, descriptor, unit,
+declared constraints, and exact SPINE raw mapping. This platform registry owns
+the semantic paths, historical hashes, 11/7 partition, validation modes,
+comparators, conversions, cross-protocol mappings, restart and promotion
+rules, and B555 fallback. The private eeBUS identity reproduces only the SPINE
+source profile, binds it with `source_profile_hash`, adds its captured native
+service/device/entity/feature selectors, and binds the complete identity with
 `identity_hash`.
 
+The four retired ids and fact hashes are verified against the prior published
+M8.5 result at `docs/platform/live/msp-085-0.6.38/m8.5-result.json`. They remain
+`RETIRED_TERMINAL_NOT_A_LEAF`, retain their historical `CLOUD_ONLY` or
+`NOT_TESTED` outcomes, and never enter the real-leaf promotion denominator.
+
 The canonical registry is also an exact byte contract. Its raw SHA-256 is
-`d17a66da1919796f57ecd2a515fa4e538c6be8d00a24c8c7e5d38bce7f36e3cd`, exposed
-as `registry_sha256=sha256:d17a66da1919796f57ecd2a515fa4e538c6be8d00a24c8c7e5d38bce7f36e3cd`.
+`0215794be6d6bd9eaa5aca41b13cbf4103f85a6a5c39755f0e5d818d09eaafb3`, exposed
+as `registry_sha256=sha256:0215794be6d6bd9eaa5aca41b13cbf4103f85a6a5c39755f0e5d818d09eaafb3`.
 `--registry` may name a byte-identical copy; it cannot substitute tolerances,
 selectors, mappings, or an eeBUS source profile.
 
 ## Candidate Classes
 
 The catalog is closed and ordered by `m7-candidate-0001` through
-`m7-candidate-0018`. Four facts are terminal: one `CLOUD_ONLY` fact and the
-unavailable B509, B524, and B555 facts. The remaining observations are seven
-numeric values, three operation-mode enums, and four booleans. Three of the
-booleans describe operation-mode changeability. Such a capability value
-describes capability, such as operation-mode changeability, is not inferred
-from a successful read or write. It remains `NOT_COMPARABLE` unless an exact
-eBUS capability source is captured.
+`m7-candidate-0022`. Records `0001`-`0004` are the four retired terminal
+non-leaves. Records `0005`-`0022` are 18 unique semantic paths. The exact
+cross-protocol set is `0005`, `0006`, `0007`, `0009`, `0010`, `0011`, `0012`,
+`0014`, `0015`, `0016`, and `0018`. The exact eeBUS-native set is `0008`,
+`0013`, `0017`, and `0019`-`0022`. The first three native leaves use
+`EEBUS_NATIVE_CAPABILITY`; the last four use `EEBUS_NATIVE_METADATA` and
+`STRING_EXACT_STABILITY`.
 
 Every candidate ends in exactly one of these states:
 
@@ -67,21 +82,22 @@ Every candidate ends in exactly one of these states:
   `visibility=LOCKED_NOT_EXPOSED`;
 - `WITHHELD` with one explicit terminal state: `CLOUD_ONLY`, `NOT_TESTED`,
   `MISSING`, `NOT_COMPARABLE`, `IDENTITY_MISMATCH`, `GENERATION_CHANGED`,
-  `INVALID`, `STALE`, `CONFLICT`, or `MISMATCH`.
+  `INVALID`, `STALE`, `CONFLICT`, `MISMATCH`, or `NATIVE_DRIFT`.
 
 A strict subset may be promoted. A withheld sibling does not invalidate an
 otherwise complete dossier, and a promoted sibling supplies no inherited
 identity, comparator, or evidence.
 
-Every `ELIGIBLE` candidate has exactly two assessments in window order. Two
+Every `CROSS_PROTOCOL_EQUIVALENCE` candidate has exactly two assessments in
+window order. Two
 `MATCH` outcomes derive `PROMOTED`; otherwise `WITHHELD` and its terminal state
 are derived from the first non-`MATCH` outcome in `PRE_RESTART`, then
 `POST_RESTART`, order. A campaign or public result cannot assert a different
 terminal state. The four catalog-terminal rows retain their exact catalog state
-without assessments. The three capability-only rows retain exactly
-`NOT_COMPARABLE` without an eBUS identity or assessments.
+without assessments. Native capability and metadata rows have no eBUS identity
+but do have exactly two eeBUS-only assessments.
 
-Each eligible assessment records the observed eBUS selector hash and eeBUS
+Each cross-protocol assessment records the observed eBUS selector hash and eeBUS
 identity hash independently of the candidate's expected identities. A missing
 sample has a null observed identity for that source. `IDENTITY_MISMATCH` is
 recomputed from a non-null observed hash that differs from the bound candidate
@@ -95,6 +111,20 @@ enum and boolean values use exact normalized equality. Distinct JSON decimal
 encodings of the same number do not establish a conflict. `MISMATCH` is reached only after the preceding
 conditions are false and the comparator itself fails. A terminal label without
 the corresponding observed evidence is rejected.
+
+Every `EEBUS_NATIVE` candidate also has exactly two assessments in window
+order, but each assessment contains only an eeBUS sample. An eBUS sample,
+observed eBUS identity, or claim of cross-protocol equality is invalid for this
+mode. The sample must bind the exact eeBUS identity, type, raw hash, unit,
+capture generation, runtime epoch, connection generation, and age. Capability
+values require the exact boolean SPINE raw mapping. Metadata values require a
+non-empty `STRING` typed raw and normalized value. PRE and POST normalized
+values must be byte-for-object equal. The outcomes are `NATIVE_VALID` and
+`NATIVE_DRIFT`; promotion requires exactly two `NATIVE_VALID` outcomes and
+exact PRE/POST stability. Any missing, invalid, stale, identity-mismatched,
+generation-mismatched, mistyped, or changed native sample terminates the leaf
+as `NATIVE_DRIFT`. This establishes restart stability, not eBUS equivalence or
+universal immutability across operating states.
 
 ## Comparator Rules
 
@@ -144,10 +174,12 @@ The campaign has exactly two ordered windows, `PRE_RESTART` and
 `POST_RESTART`, separated by a completed Home Assistant add-on restart. Their
 process-instance hashes must differ. The persistent local eeBUS identity hash,
 trust-state hash, admitted eBUS source, and exact candidate identity bindings
-must remain stable. Each eligible leaf has one assessment in both windows.
-Each promoted leaf must pass in both windows with valid
-samples, identical source identity, bounded skew and age, and no generation
-change within a window.
+must remain stable. Each real leaf has one assessment in both windows. Each
+promoted cross-protocol leaf must pass in both windows with two valid samples,
+identical source identities, bounded skew and age, and no generation change
+within a window. Each promoted native leaf must pass the corresponding exact
+identity, type, age, generation, and PRE/POST normalized-value stability checks
+with no eBUS sample.
 
 The campaign also binds the exact bytes and protocol ids/hashes of the M7
 graph/status/replay and the complete M8 coexistence evidence/report,
@@ -206,6 +238,11 @@ exact private input bytes from which it was derived. For `LIVE_CAPTURE`,
 private campaign against the pinned registry, recomputes the byte hash, and
 requires byte-for-object equality with a fresh deterministic public derivation.
 A standalone or relabeled public object therefore cannot open M9.
+Public counts are exactly `records=22`, `total=18`, and `retired=4`;
+`promoted` and `withheld` partition only the 18 real leaves. Candidate output
+contains ids, hashes, disposition and terminal/window outcomes, visibility,
+and dossier hashes. It contains no semantic paths, selectors, identities,
+addresses, raw values, metadata strings, or secrets.
 
 `LIVE_CAPTURE` additionally requires the same external source bundle for
 `verify-private`, `derive-public`, and bound `verify-public`: `--m7-graph`,
@@ -259,4 +296,6 @@ closed. This is an evidence binding, not an execution authorization mechanism.
 It proves positive subset derivation
 but cannot open M9. Only a private `LIVE_CAPTURE` campaign with at
 least one promoted leaf produces `READY_FOR_M9_PLANNING`. That state authorizes
-planning for the exact locked leaves only. It does not expose or route them.
+planning for the exact locked leaves only. Every promotion emitted by this
+contract remains `LOCKED_NOT_EXPOSED`; the contract never exposes, routes, or
+publishes an M9 consumer surface.

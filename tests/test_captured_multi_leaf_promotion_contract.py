@@ -35,7 +35,37 @@ M7_TERMINAL_REPLAY = M7_FIXTURE / "source-terminal-replay-result.json"
 M7_TERMINAL_SOURCE_BUNDLE = M7_FIXTURE / "source-terminal-bundle.json"
 M7_TERMINAL_SOURCE_REPLAY = M7_FIXTURE / "source-terminal-source-replay.json"
 M8_LIVE_TEST = ROOT / "tests/test_multi_runtime_live_coexistence_contract.py"
-REGISTRY_SHA256 = "d17a66da1919796f57ecd2a515fa4e538c6be8d00a24c8c7e5d38bce7f36e3cd"
+DOCS_EEBUS_SOURCE_COMMIT = "8cad1269690255f6a4d9b5ad31897d7c72fadbfe"
+RETIRED_FACT_HASHES = {
+    "m7-candidate-0001": "sha256:867157d98ac046e6bc09ae60b4a963e5f7c6d174f12d293b09cc339c7f9dd9a2",
+    "m7-candidate-0002": "sha256:26df8fd76d3d2804c899a063766075a9cad25ad90cccfcde067c10b95cb793be",
+    "m7-candidate-0003": "sha256:4f64a3fb317dee55c8838b2f5406976e3ba6e24f1c977cb141a0e1c1ed300911",
+    "m7-candidate-0004": "sha256:aae4e6db120c3ac922e9c981fd80041388c2e17cb099eadcddb34e61008e3490",
+}
+CROSS_PROTOCOL_IDS = {
+    "m7-candidate-0005",
+    "m7-candidate-0006",
+    "m7-candidate-0007",
+    "m7-candidate-0009",
+    "m7-candidate-0010",
+    "m7-candidate-0011",
+    "m7-candidate-0012",
+    "m7-candidate-0014",
+    "m7-candidate-0015",
+    "m7-candidate-0016",
+    "m7-candidate-0018",
+}
+NATIVE_CAPABILITY_IDS = {
+    "m7-candidate-0008",
+    "m7-candidate-0013",
+    "m7-candidate-0017",
+}
+NATIVE_METADATA_IDS = {
+    "m7-candidate-0019",
+    "m7-candidate-0020",
+    "m7-candidate-0021",
+    "m7-candidate-0022",
+}
 
 
 EXPECTED_NEGATIVE = {
@@ -103,7 +133,7 @@ def candidate(campaign: dict, candidate_id: str) -> dict:
 
 
 def promoted(campaign: dict) -> dict:
-    return next(item for item in campaign["candidates"] if item["decision"] == "PROMOTED")
+    return candidate(campaign, "m7-candidate-0018")
 
 
 def rehash_campaign(validator, campaign: dict) -> None:
@@ -133,8 +163,13 @@ def full_binding_hash(redacted_id: str, fill: str) -> str:
 
 
 def rehash_ebus_identity(validator, identity: dict) -> None:
+    domain = (
+        validator.EBUS_SELECTOR_DOMAIN
+        if identity["family"] == "B524"
+        else validator.EBUS_B555_SELECTOR_DOMAIN
+    )
     identity["selector_hash"] = validator.digest(
-        validator.EBUS_SELECTOR_DOMAIN,
+        domain,
         {key: value for key, value in identity.items() if key != "selector_hash"},
     )
 
@@ -277,11 +312,34 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
     for item, fact in zip(registry["candidate_catalog"], graph["facts"], strict=True):
         item["fact_hash"] = fact["fact_hash"]
     registry["m7_public_status"] = str(status_path)
+    history = load(ROOT / registry["retired_history_result"])
+    for item, fact in zip(
+        history["candidate_results"], graph["facts"][:18], strict=True
+    ):
+        item["candidate_id"] = fact["candidate_id"]
+        item["fact_hash"] = fact["fact_hash"]
+    history_path = write(tmp_path / "retired-history.json", history)
+    registry["retired_history_result"] = str(history_path)
     registry_path = write(tmp_path / "registry.json", registry)
     registry_hash = validator.bytes_digest(registry_path.read_bytes())
 
     live_test = load_module(M8_LIVE_TEST, "captured_multi_leaf_m8_live_test")
     evidence = live_test.build_live_evidence(validator.coexistence)
+    fact_summaries = validator.coexistence._fact_summaries(graph)
+    fact_counts = {
+        status: sum(item["status"] == status for item in fact_summaries)
+        for status in ("RAW_ONLY", "CANDIDATE", "CONFLICTED", "WITHHELD")
+    }
+    for run_item in evidence["runs"]:
+        state = run_item["state_evidence"]
+        if state["candidate_graph_enabled"]:
+            state.update(
+                raw_only_count=fact_counts["RAW_ONLY"],
+                candidate_count=fact_counts["CANDIDATE"],
+                conflict_count=fact_counts["CONFLICTED"],
+                withheld_count=fact_counts["WITHHELD"],
+                facts=copy.deepcopy(fact_summaries),
+            )
     status_raw = status_path.read_bytes()
     source_bundle_raw = M7_SOURCE_BUNDLE.read_bytes()
     source_replay_raw = M7_SOURCE_REPLAY.read_bytes()
@@ -760,13 +818,13 @@ def promote_mapped_candidate(validator, campaign: dict, candidate_id: str) -> di
         assessment = copy.deepcopy(template)
         assessment["window_id"] = window["window_id"]
         if is_enum:
-            ebus_raw = {"kind": "NUMERIC", "decimal": {"number": 0, "scale": 0}, "enum": None, "boolean": None}
-            eebus_raw = {"kind": "NUMERIC", "decimal": {"number": 2, "scale": 0}, "enum": None, "boolean": None}
-            decoded = {"kind": "ENUM", "decimal": None, "enum": "off", "boolean": None}
+            ebus_raw = {"kind": "NUMERIC", "decimal": {"number": 0, "scale": 0}, "enum": None, "boolean": None, "string": None}
+            eebus_raw = {"kind": "NUMERIC", "decimal": {"number": 2, "scale": 0}, "enum": None, "boolean": None, "string": None}
+            decoded = {"kind": "ENUM", "decimal": None, "enum": "off", "boolean": None, "string": None}
         else:
-            ebus_raw = {"kind": "NUMERIC", "decimal": {"number": 0, "scale": 0}, "enum": None, "boolean": None}
-            eebus_raw = {"kind": "BOOLEAN", "decimal": None, "enum": None, "boolean": False}
-            decoded = {"kind": "BOOLEAN", "decimal": None, "enum": None, "boolean": False}
+            ebus_raw = {"kind": "NUMERIC", "decimal": {"number": 0, "scale": 0}, "enum": None, "boolean": None, "string": None}
+            eebus_raw = {"kind": "BOOLEAN", "decimal": None, "enum": None, "boolean": False, "string": None}
+            decoded = {"kind": "BOOLEAN", "decimal": None, "enum": None, "boolean": False, "string": None}
         assessment["ebus_sample"]["raw_value"] = ebus_raw
         assessment["eebus_sample"]["raw_value"] = eebus_raw
         for key in ("ebus_sample", "eebus_sample"):
@@ -779,7 +837,7 @@ def promote_mapped_candidate(validator, campaign: dict, candidate_id: str) -> di
             "delta": None,
             "conversion": None,
             "mapping_hash": validator.digest(
-                validator.MAPPING_DOMAIN, expected["eebus_source"]["mapping_profile"]
+                validator.MAPPING_DOMAIN, expected["mapping_profile"]
             ),
             "outcome": "MATCH",
         }
@@ -800,9 +858,15 @@ def test_inventory_and_normative_boundaries() -> None:
     page = " ".join(PAGE.read_text(encoding="utf-8").split())
     for phrase in (
         "CAPTURED_RUNTIME_MULTI_LEAF_V1",
-        "18 M7 VR940 facts",
-        "11 protocol-comparable observations",
+        "22 provenance records",
+        "18 real semantic leaves",
+        "11 cross-protocol equivalence leaves",
+        "seven eeBUS-native leaves",
         "NUMERIC_DECLARED_GRANULARITY",
+        "STRING_EXACT_STABILITY",
+        "NATIVE_VALID",
+        "NATIVE_DRIFT",
+        "RETIRED_TERMINAL_NOT_A_LEAF",
         "abs(convert(eBUS) - eeBUS) <= declared SPINE step",
         "PRE_RESTART",
         "POST_RESTART",
@@ -817,7 +881,7 @@ def test_inventory_and_normative_boundaries() -> None:
         "deterministic closed-bundle consistency",
         "do not authenticate that the operator performed a capture",
         "first non-`MATCH` outcome",
-        "657a36d07e52570326384b757a5382a6789f641b",
+        DOCS_EEBUS_SOURCE_COMMIT,
     ):
         assert phrase in page
 
@@ -826,15 +890,34 @@ def test_registry_is_exact_and_contains_full_source_and_selector_profiles() -> N
     validator = module()
     registry = load(REGISTRY)
     catalog = registry["candidate_catalog"]
-    assert hashlib.sha256(REGISTRY.read_bytes()).hexdigest() == REGISTRY_SHA256
-    assert validator.PINNED_REGISTRY_SHA256 == "sha256:" + REGISTRY_SHA256
+    registry_sha256 = hashlib.sha256(REGISTRY.read_bytes()).hexdigest()
+    assert validator.PINNED_REGISTRY_SHA256 == "sha256:" + registry_sha256
     page = PAGE.read_text(encoding="utf-8")
-    assert f"`{REGISTRY_SHA256}`" in page
-    assert f"`registry_sha256=sha256:{REGISTRY_SHA256}`" in page
-    assert [item["candidate_id"] for item in catalog] == [f"m7-candidate-{index:04d}" for index in range(1, 19)]
+    assert f"`{registry_sha256}`" in page
+    assert f"`registry_sha256=sha256:{registry_sha256}`" in page
+    assert registry["docs_eebus_source_commit"] == DOCS_EEBUS_SOURCE_COMMIT
+    assert [item["candidate_id"] for item in catalog] == [f"m7-candidate-{index:04d}" for index in range(1, 23)]
     assert sum(item["protocol_eligibility"] == "TERMINAL" for item in catalog) == 4
-    assert sum(item["protocol_eligibility"] == "ELIGIBLE" for item in catalog) == 11
-    assert sum(item["protocol_eligibility"] == "WITHHOLD_NO_EBUS_CAPABILITY_SOURCE" for item in catalog) == 3
+    assert {
+        item["candidate_id"]
+        for item in catalog
+        if item["protocol_eligibility"] == "CROSS_PROTOCOL_EQUIVALENCE"
+    } == CROSS_PROTOCOL_IDS
+    assert {
+        item["candidate_id"]
+        for item in catalog
+        if item["protocol_eligibility"] == "EEBUS_NATIVE"
+    } == NATIVE_CAPABILITY_IDS | NATIVE_METADATA_IDS
+    assert {
+        item["candidate_id"]
+        for item in catalog
+        if item["validation_mode"] == "EEBUS_NATIVE_CAPABILITY"
+    } == NATIVE_CAPABILITY_IDS
+    assert {
+        item["candidate_id"]
+        for item in catalog
+        if item["validation_mode"] == "EEBUS_NATIVE_METADATA"
+    } == NATIVE_METADATA_IDS
     source_keys = {
         "entity_slot",
         "entity_type",
@@ -847,17 +930,23 @@ def test_registry_is_exact_and_contains_full_source_and_selector_profiles() -> N
         "descriptor",
         "unit",
         "declared_constraints",
-        "conversion",
         "exact_mapping",
-        "mapping_profile",
     }
     active = [item for item in catalog if item["eebus_source"] is not None]
-    assert len(active) == 14
+    assert len(active) == 18
     assert all(set(item["eebus_source"]) == source_keys for item in active)
-    eligible = [item for item in catalog if item["protocol_eligibility"] == "ELIGIBLE"]
-    assert all(item["ebus_selector"]["family"] == "B524" for item in eligible)
-    assert all(item["ebus_selector"]["target_address"] == 0x15 for item in eligible)
-    assert all(item["ebus_selector"] is None for item in catalog if item["protocol_eligibility"] != "ELIGIBLE")
+    comparable = [
+        item
+        for item in catalog
+        if item["protocol_eligibility"] == "CROSS_PROTOCOL_EQUIVALENCE"
+    ]
+    assert all(item["ebus_selector"]["family"] == "B524" for item in comparable)
+    assert all(item["ebus_selector"]["target_address"] == 0x15 for item in comparable)
+    assert all(
+        item["ebus_selector"] is None
+        for item in catalog
+        if item["protocol_eligibility"] != "CROSS_PROTOCOL_EQUIVALENCE"
+    )
     assert catalog[6]["eebus_source"]["description_functions"] == [
         "hvacSystemFunctionDescriptionListData",
         "hvacOperationModeDescriptionListData",
@@ -867,7 +956,66 @@ def test_registry_is_exact_and_contains_full_source_and_selector_profiles() -> N
         "hvacSystemFunctionListData",
         "hvacOverrunListData",
     ]
-    assert catalog[-1]["eebus_source"]["descriptor"]["scope_type"] == "outsideAirTemperature"
+    assert catalog[17]["eebus_source"]["descriptor"]["scope_type"] == "outsideAirTemperature"
+    assert all(
+        item["comparator_class"] == "STRING_EXACT_STABILITY"
+        for item in catalog[18:]
+    )
+
+
+def test_retired_records_are_immutable_non_leaves() -> None:
+    registry = load(REGISTRY)
+    private = load(PRIVATE)
+    public = load(PUBLIC)
+    for expected, private_record, public_record in zip(
+        registry["candidate_catalog"][:4],
+        private["candidates"][:4],
+        public["candidate_results"][:4],
+        strict=True,
+    ):
+        candidate_id = expected["candidate_id"]
+        assert expected["fact_hash"] == RETIRED_FACT_HASHES[candidate_id]
+        assert expected["retirement_state"] == "RETIRED_TERMINAL_NOT_A_LEAF"
+        assert expected["semantic_path"] is None
+        assert expected["validation_mode"] is None
+        for record in (private_record, public_record):
+            assert record["fact_hash"] == RETIRED_FACT_HASHES[candidate_id]
+            assert record["retirement_state"] == "RETIRED_TERMINAL_NOT_A_LEAF"
+            assert record["decision"] == "WITHHELD"
+            assert record["window_outcomes"] == [] if "window_outcomes" in record else record["assessments"] == []
+
+
+def test_real_leaf_paths_partition_and_b555_identity_are_exact() -> None:
+    registry = load(REGISTRY)
+    catalog = registry["candidate_catalog"]
+    real = catalog[4:]
+    assert len(real) == 18
+    assert len({item["semantic_path"] for item in real}) == 18
+    assert all(item["retirement_state"] is None for item in real)
+
+    fallback = next(
+        item for item in catalog if item["candidate_id"] == "m7-candidate-0006"
+    )["ebus_fallback"]
+    assert fallback == {
+        "family": "B555",
+        "operation": "TIMER_READ",
+        "target_pseudonym_rule": "active_controller_target_hash",
+        "device_family": "BASV2",
+        "schedule_program": "DHW",
+        "slot_index": 0,
+        "day_of_week": "MONDAY",
+        "time_identity": "00:00:00",
+        "operation_mode_context": "temp_slots_1_shared_setpoint",
+        "unit_scale_source": "B555_DHW_TEMPERATURE_RAW_DIV10_C",
+        "field_path": "timerSlot.temperature",
+        "unit": "degC",
+        "coupling_rule": "dhw_temp_slots_1_mirrors_b524_setpoint",
+    }
+    identity = candidate(load(PRIVATE), "m7-candidate-0006")["ebus_identity"]
+    assert identity["family"] == "B555"
+    assert all(identity[key] == value for key, value in fallback.items())
+    assert identity["target_pseudonym"] == "target-" + "1" * 32
+    assert not {"opcode", "GG", "II", "RR"} & set(identity)
 
 
 def test_registry_argument_accepts_only_canonical_bytes(tmp_path: pathlib.Path) -> None:
@@ -894,8 +1042,141 @@ def test_positive_subset_fixture_verifies_and_derives_byte_identically() -> None
     assert (bound.returncode, bound.stdout, bound.stderr) == (0, "PASS\n", "")
     result = load(PUBLIC)
     assert result["source_bindings"]["private_campaign_bytes_hash"] == "sha256:" + hashlib.sha256(PRIVATE.read_bytes()).hexdigest()
-    assert result["counts"] == {"total": 18, "promoted": 1, "withheld": 17}
+    assert result["counts"] == {
+        "records": 22,
+        "total": 18,
+        "retired": 4,
+        "promoted": 18,
+        "withheld": 0,
+    }
+    assert len(result["candidate_results"]) == 22
+    assert all(
+        item["visibility"] == "LOCKED_NOT_EXPOSED"
+        for item in result["candidate_results"][4:]
+    )
     assert result["m9_consumer_gate"] == "BLOCKED_CONFORMANCE_ONLY"
+
+
+def test_native_samples_are_eebus_only_typed_and_restart_stable() -> None:
+    campaign = load(PRIVATE)
+    native_ids = NATIVE_CAPABILITY_IDS | NATIVE_METADATA_IDS
+    for candidate_id in native_ids:
+        leaf = candidate(campaign, candidate_id)
+        assert leaf["validation_mode"].startswith("EEBUS_NATIVE_")
+        assert leaf["ebus_identity"] is None
+        assert leaf["decision"] == "PROMOTED"
+        assert leaf["terminal_state"] is None
+        assert len(leaf["assessments"]) == 2
+        values = []
+        for assessment in leaf["assessments"]:
+            assert assessment["ebus_sample"] is None
+            assert assessment["observed_ebus_identity_hash"] is None
+            assert assessment["eebus_sample"]["source"] == "EEBUS"
+            assert assessment["comparator"]["outcome"] == "NATIVE_VALID"
+            values.append(assessment["eebus_sample"]["value"])
+        assert values[0] == values[1]
+        expected_kind = "BOOLEAN" if candidate_id in NATIVE_CAPABILITY_IDS else "STRING"
+        assert all(value["kind"] == expected_kind for value in values)
+
+
+def test_native_string_stability_and_drift_are_recomputed(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    leaf = candidate(campaign, "m7-candidate-0019")
+    post = leaf["assessments"][1]
+    for key in ("raw_value", "value"):
+        post["eebus_sample"][key]["string"] = "sanitized-brand-v2"
+    rehash_raw(validator, post["eebus_sample"])
+    post["comparator"]["outcome"] = "NATIVE_DRIFT"
+    leaf.update(
+        decision="WITHHELD",
+        terminal_state="NATIVE_DRIFT",
+        visibility="RAW_DEBUG_ONLY",
+        dossier_hash=None,
+    )
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "native-drift.json", campaign))
+    assert (result.returncode, result.stdout) == (0, "PASS\n")
+
+    relabelled = load(PRIVATE)
+    post = candidate(relabelled, "m7-candidate-0019")["assessments"][1]
+    for key in ("raw_value", "value"):
+        post["eebus_sample"][key]["string"] = "sanitized-brand-v2"
+    rehash_raw(validator, post["eebus_sample"])
+    rehash_campaign(validator, relabelled)
+    result = run(
+        "verify-private", write(tmp_path / "native-drift-as-valid.json", relabelled)
+    )
+    assert (result.returncode, result.stdout) == (1, "state.invalid\n")
+
+    public = load(PUBLIC)
+    result_item = next(
+        item
+        for item in public["candidate_results"]
+        if item["candidate_id"] == "m7-candidate-0019"
+    )
+    result_item.update(
+        decision="WITHHELD",
+        terminal_state="NATIVE_DRIFT",
+        visibility="RAW_DEBUG_ONLY",
+        dossier_hash=None,
+        window_outcomes=["NATIVE_DRIFT", "NATIVE_VALID"],
+    )
+    public["counts"].update(promoted=17, withheld=1)
+    rehash_public(validator, public)
+    result = run(
+        "verify-public", write(tmp_path / "native-recovery-after-drift.json", public)
+    )
+    assert (result.returncode, result.stdout) == (1, "state.invalid\n")
+
+
+def test_native_identity_type_age_and_generation_are_exact(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    mutations = {
+        "identity": lambda assessment: assessment.update(
+            observed_eebus_identity_hash="sha256:" + "f" * 64
+        ),
+        "type": lambda assessment: assessment["eebus_sample"]["value"].update(
+            kind="BOOLEAN", string=None, boolean=True
+        ),
+        "age": lambda assessment: assessment.update(max_age_ns=1),
+        "generation": lambda assessment: assessment["eebus_sample"].update(
+            connection_generation=999
+        ),
+    }
+    for name, mutate_native in mutations.items():
+        campaign = load(PRIVATE)
+        assessment = candidate(campaign, "m7-candidate-0019")["assessments"][0]
+        mutate_native(assessment)
+        rehash_campaign(validator, campaign)
+        result = run(
+            "verify-private", write(tmp_path / f"native-{name}.json", campaign)
+        )
+        assert result.returncode == 1, name
+
+
+def test_public_redaction_excludes_private_metadata_values() -> None:
+    private = load(PRIVATE)
+    public_text = PUBLIC.read_text(encoding="utf-8")
+    metadata_values = {
+        candidate(private, candidate_id)["assessments"][0]["eebus_sample"]["value"][
+            "string"
+        ]
+        for candidate_id in NATIVE_METADATA_IDS
+    }
+    assert all(value and value not in public_text for value in metadata_values)
+    assert not {
+        "semantic_path",
+        "validation_mode",
+        "ebus_identity",
+        "eebus_identity",
+        "raw_value",
+        "value",
+    } & set().union(*(set(item) for item in load(PUBLIC)["candidate_results"]))
 
 
 def test_boolean_schema_version_aliases_are_rejected(tmp_path: pathlib.Path) -> None:
@@ -1736,7 +2017,7 @@ def test_eligible_terminal_state_is_derived_from_two_ordered_windows(tmp_path: p
     campaign = load(PRIVATE)
     registry = load(REGISTRY)
     for leaf, expected in zip(campaign["candidates"], registry["candidate_catalog"], strict=True):
-        if expected["protocol_eligibility"] == "ELIGIBLE":
+        if expected["protocol_eligibility"] != "TERMINAL":
             assert [item["window_id"] for item in leaf["assessments"]] == [
                 "window-pre-restart",
                 "window-post-restart",
@@ -1757,7 +2038,7 @@ def test_eligible_terminal_state_is_derived_from_two_ordered_windows(tmp_path: p
     assert (result.returncode, result.stdout) == (1, "state.invalid\n")
 
 
-def test_catalog_terminal_and_capability_exceptions_remain_exact(tmp_path: pathlib.Path) -> None:
+def test_catalog_terminal_records_remain_exact(tmp_path: pathlib.Path) -> None:
     validator = module()
     public = load(PUBLIC)
     terminal = public["candidate_results"][0]
@@ -1767,19 +2048,9 @@ def test_catalog_terminal_and_capability_exceptions_remain_exact(tmp_path: pathl
     assert (result.returncode, result.stdout) == (1, "candidate.catalog\n")
 
     public = load(PUBLIC)
-    capability = next(item for item in public["candidate_results"] if item["candidate_id"] == "m7-candidate-0008")
-    capability.update(
-        {
-            "decision": "PROMOTED",
-            "terminal_state": None,
-            "visibility": "LOCKED_NOT_EXPOSED",
-            "dossier_hash": "sha256:" + "e" * 64,
-            "window_outcomes": ["MATCH", "MATCH"],
-        }
-    )
-    public["counts"] = {"total": 18, "promoted": 2, "withheld": 16}
+    public["candidate_results"][0]["retirement_state"] = None
     rehash_public(validator, public)
-    result = run("verify-public", write(tmp_path / "capability-promoted.json", public))
+    result = run("verify-public", write(tmp_path / "terminal-unretired.json", public))
     assert (result.returncode, result.stdout) == (1, "candidate.catalog\n")
 
 
@@ -1799,6 +2070,14 @@ def test_b524_selector_family_and_catalog_tuple_are_bound(tmp_path: pathlib.Path
     rehash_ebus_identity(validator, identity)
     rehash_campaign(validator, campaign)
     result = run("verify-private", write(tmp_path / "family-substitution.json", campaign))
+    assert (result.returncode, result.stdout) == (1, "schema.private\n")
+
+    campaign = load(PRIVATE)
+    identity = candidate(campaign, "m7-candidate-0006")["ebus_identity"]
+    identity["family"] = "B524"
+    rehash_ebus_identity(validator, identity)
+    rehash_campaign(validator, campaign)
+    result = run("verify-private", write(tmp_path / "b555-mislabelled.json", campaign))
     assert (result.returncode, result.stdout) == (1, "schema.private\n")
 
 
@@ -1916,6 +2195,7 @@ def test_enum_raw_ids_reject_boolean_integer_aliases(tmp_path: pathlib.Path) -> 
             "decimal": None,
             "enum": None,
             "boolean": True,
+            "string": None,
         }
         sample["value"]["enum"] = "on"
         rehash_raw(validator, sample)
@@ -2011,6 +2291,7 @@ def observed_terminal_campaign(validator, outcome: str) -> dict:
             "decimal": {"number": 14, "scale": 0},
             "enum": None,
             "boolean": None,
+            "string": None,
         }
         second["value"] = copy.deepcopy(second["raw_value"])
         rehash_raw(validator, second)
@@ -2022,6 +2303,7 @@ def observed_terminal_campaign(validator, outcome: str) -> dict:
             "decimal": {"number": 14, "scale": 0},
             "enum": None,
             "boolean": None,
+            "string": None,
         }
         sample["value"] = copy.deepcopy(sample["raw_value"])
         rehash_raw(validator, sample)
@@ -2103,7 +2385,11 @@ def test_numeric_bounds_are_inclusive_and_out_of_range_is_invalid(
 ) -> None:
     validator = module()
     registry = load(REGISTRY)
-    expected = registry["candidate_catalog"][-1]
+    expected = next(
+        item
+        for item in registry["candidate_catalog"]
+        if item["candidate_id"] == "m7-candidate-0018"
+    )
     constraints = expected["eebus_source"]["declared_constraints"]
     campaign = load(PRIVATE)
     leaf = promoted(campaign)
@@ -2117,6 +2403,7 @@ def test_numeric_bounds_are_inclusive_and_out_of_range_is_invalid(
             "decimal": copy.deepcopy(boundary),
             "enum": None,
             "boolean": None,
+            "string": None,
         }
         for key in ("ebus_sample", "eebus_sample"):
             assessment[key]["raw_value"] = copy.deepcopy(typed)
@@ -2139,6 +2426,7 @@ def test_numeric_bounds_are_inclusive_and_out_of_range_is_invalid(
         "decimal": outside,
         "enum": None,
         "boolean": None,
+        "string": None,
     }
     for key in ("ebus_sample", "eebus_sample"):
         assessment[key]["raw_value"] = copy.deepcopy(typed)
