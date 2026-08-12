@@ -1666,6 +1666,73 @@ def _source_portal(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+SCHEDULE_INDEX = r"(?:0|[1-9][0-9]*)"
+VOLATILE_SCHEDULE_LEAF = re.compile(
+    rf"^/schedules/Programs/{SCHEDULE_INDEX}/Days/{SCHEDULE_INDEX}/"
+    rf"Slots/{SCHEDULE_INDEX}/"
+    r"(?:StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw)$"
+)
+NONCANONICAL_VOLATILE_SCHEDULE_LEAF = re.compile(
+    r"^/schedules/Programs/[0-9]+/Days/[0-9]+/Slots/[0-9]+/"
+    r"(?:StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw)$"
+)
+
+
+def _source_semantic_registry(raw: dict[str, Any]) -> dict[str, Any]:
+    if raw.get("authority") != "ebus.promoted" or set(raw) != {
+        "authority",
+        "leaves",
+    }:
+        fail("provenance.source_capture")
+    leaves = raw["leaves"]
+    if not isinstance(leaves, list) or not leaves:
+        fail("provenance.source_capture")
+    projected: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    previous_path: str | None = None
+    for item in leaves:
+        if not isinstance(item, dict) or set(item) != {
+            "path",
+            "promotion_state",
+            "source",
+        }:
+            fail("provenance.source_capture")
+        path = item["path"]
+        if (
+            not isinstance(path, str)
+            or not path.startswith("/")
+            or path in seen
+            or item["promotion_state"] != "PROMOTED"
+            or item["source"] != "ebus"
+        ):
+            fail("provenance.source_capture")
+        if previous_path is not None and path <= previous_path:
+            fail("provenance.source_capture")
+        if (
+            NONCANONICAL_VOLATILE_SCHEDULE_LEAF.fullmatch(path) is not None
+            and VOLATILE_SCHEDULE_LEAF.fullmatch(path) is None
+        ):
+            fail("provenance.source_capture")
+        seen.add(path)
+        previous_path = path
+        if VOLATILE_SCHEDULE_LEAF.fullmatch(path) is None:
+            projected.append(copy.deepcopy(item))
+    if not projected:
+        fail("provenance.source_capture")
+    return {
+        "authority": "ebus.promoted",
+        "selection": {
+            "criteria": "all_promoted_ebus_leaves_outside_volatile_schedule_slot_materialization",
+            "excluded_path_pattern": (
+                "/schedules/Programs/<index>/Days/<index>/Slots/<index>/"
+                "<StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw>"
+            ),
+            "selected_count": len(projected),
+        },
+        "leaves": projected,
+    }
+
+
 def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
     tools = _decode_source_json(inputs["tools.list"])
     devices_response = _source_inner_mcp(inputs["ebus.devices"])
@@ -1783,7 +1850,7 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             "debug.ebus": debug_raw,
             "portal.ebus.bootstrap": _source_portal(portal_raw),
             "command.routing": routes_raw,
-            "semantic.registry": semantic_registry_raw,
+            "semantic.registry": _source_semantic_registry(semantic_registry_raw),
             "mcp.eebus.v1.contract": {
                 "namespace": "eebus.v1",
                 "public_v2": False,
