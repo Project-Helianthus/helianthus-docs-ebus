@@ -170,8 +170,19 @@ Private verification opens every source as a bounded regular file from a
 fixed-name, no-symlink root, rejects devices such as FIFOs, recomputes every
 binding, derives all eleven protected views with the closed reference projector,
 and compares each derived payload byte-for-byte with the corresponding evidence
-payload. Debug, Portal, routing, and semantic-registry payloads are captured
-directly; they are not inferred from neighboring views. The complete protected
+payload. Debug, Portal, routing, and semantic-registry inputs are captured
+directly; they are not inferred from neighboring views. The complete raw
+semantic registry remains bound in the private source manifest. Its protected
+G18 view contains every promoted eBUS leaf except the exact indexed
+program/day/slot fields `StartHour`, `StartMinute`, `EndHour`, `EndMinute`,
+`TemperatureC`, and `TemperatureRaw`, whose materialization is transient cache
+state rather than a stable consumer contract. Other `/schedules/` leaves remain
+protected. Array indices use canonical decimal spelling (`0` or a non-zero
+digit followed by decimal digits); leading-zero forms fail closed. Raw leaf
+paths must arrive in strictly increasing bytewise order, so the projection
+cannot normalize an ordering regression. Every raw leaf is validated before that deterministic projection,
+and any non-excluded drift remains a
+terminal consumer-drift failure. The complete protected
 payload is source-bound: `data` comes from the projector, `meta.captured_at`
 comes from the manifest window, and `meta.auth_subject` is the deterministic
 public-redacted identifier of the manifest-bound effective auth scope. A
@@ -252,7 +263,7 @@ order. A caller cannot select a subset.
 | `debug.ebus` | Existing eBUS debug output |
 | `portal.ebus.bootstrap` | Portal bootstrap and eBUS projection |
 | `command.routing` | Existing command routing |
-| `semantic.registry` | Existing promoted semantic registry |
+| `semantic.registry` | Existing promoted eBUS registry outside the exact declared volatile program/day/slot field grammar |
 | `mcp.eebus.v1.contract` | Stable `eebus.v1` V1 contract |
 
 Every view binds its exact capture path, JSON media type, unmodified payload,
