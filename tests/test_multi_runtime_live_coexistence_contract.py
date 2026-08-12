@@ -1435,6 +1435,25 @@ def test_msp08_source_projection_synthesizes_missing_debug_aliases_as_null() -> 
     }
 
 
+@pytest.mark.parametrize("missing", ["admission", "status"])
+def test_msp08_source_projection_synthesizes_missing_debug_container_as_null(
+    missing: str,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    if missing == "status":
+        debug.pop("status", None)
+    else:
+        debug.setdefault("status", {}).pop("admission", None)
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
+    assert projected["status"]["admission"] == {
+        key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS
+    }
+
+
 def test_msp08_source_projection_uses_non_enumerable_device_address_placeholder() -> None:
     validator = validator_module()
     payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")

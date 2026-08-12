@@ -1706,6 +1706,24 @@ def _source_debug(value: Any, path: tuple[str, ...] = ()) -> Any:
         if path == ("status", "admission"):
             for key in SOURCE_DEBUG_ADDRESS_KEYS:
                 projected.setdefault(key, None)
+        elif path == ("status",):
+            admission = projected.get("admission")
+            if admission is None:
+                projected["admission"] = {
+                    key: None for key in SOURCE_DEBUG_ADDRESS_KEYS
+                }
+            elif not isinstance(admission, dict):
+                fail("provenance.source_capture")
+        elif path == ():
+            status = projected.get("status")
+            if status is None:
+                projected["status"] = {
+                    "admission": {
+                        key: None for key in SOURCE_DEBUG_ADDRESS_KEYS
+                    }
+                }
+            elif not isinstance(status, dict):
+                fail("provenance.source_capture")
         return projected
     if isinstance(value, list):
         return [_source_debug(item, path) for item in value]
