@@ -379,21 +379,22 @@ PUBLIC_IDENTITY_HASH_ROOTS = frozenset(
         "spine",
     }
 )
+NULLABLE_PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
+    {"companiontarget", "lastsuccessfulsource", "selectedsource"}
+)
 PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
     {
         "authsubject",
-        "companiontarget",
         "id",
         "ids",
         "ip",
         "ipv4",
         "ipv6",
-        "lastsuccessfulsource",
         "remoteshipid",
         "remoteski",
-        "selectedsource",
         "viadevice",
     }
+    | NULLABLE_PUBLIC_IDENTITY_COMPACT_NAMES
     | {
         prefix + suffix
         for prefix in PUBLIC_IDENTITY_PREFIXES
@@ -1679,9 +1680,12 @@ def _source_debug(value: Any) -> Any:
         projected = {}
         for key, item in value.items():
             if key in SOURCE_DEBUG_ADDRESS_KEYS:
-                if isinstance(item, bool) or not isinstance(item, (int, str)):
+                if item is None:
+                    projected[key] = None
+                elif isinstance(item, bool) or not isinstance(item, (int, str)):
                     fail("provenance.source_capture")
-                projected[key] = _source_redacted(f"ebus-debug:{key}:{item}")
+                else:
+                    projected[key] = _source_redacted(f"ebus-debug:{key}:{item}")
             else:
                 projected[key] = _source_debug(item)
         return projected
@@ -2960,6 +2964,8 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
                     or re.fullmatch(r"[a-z0-9.-]+:sha256:[0-9a-f]{64}", value)
                 )
             )
+        if normalized in NULLABLE_PUBLIC_IDENTITY_COMPACT_NAMES and value is None:
+            return False
         if _has_public_identity_key(key):
             return not _valid_redacted_identity(value)
         if normalized.endswith(("spinepath", "spinekind")):

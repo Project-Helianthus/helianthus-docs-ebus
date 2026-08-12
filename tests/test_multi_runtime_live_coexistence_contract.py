@@ -1255,6 +1255,22 @@ def test_msp08_public_redaction_rejects_debug_address_aliases(key: str) -> None:
     assert not validator._contains_public_secret(
         {key: "redacted:sha256:0123456789ab"}
     )
+    assert not validator._contains_public_secret({key: None})
+
+
+def test_msp08_source_projection_preserves_null_debug_address_aliases() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["status"] = {
+        "admission": {key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS}
+    }
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
+    assert projected["status"]["admission"] == {
+        key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS
+    }
 
 
 def test_msp08_source_projection_declares_and_excludes_volatile_schedule_leaves() -> None:

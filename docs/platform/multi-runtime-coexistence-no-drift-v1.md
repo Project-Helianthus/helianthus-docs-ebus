@@ -197,6 +197,7 @@ The protected public `debug.ebus` projection retains admission state but
 pseudonymizes the address-bearing `selected_source`, `last_successful_source`,
 and `companion_target` fields. These names are public-identity aliases: any raw
 numeric or textual value under one of them fails the public-redaction gate.
+Their declared absent state remains JSON `null`; it is not an identity value.
 
 PRE and POST source windows require different manifest digests regardless of
 their claimed byte lengths. Every source device row remains bound in the raw
