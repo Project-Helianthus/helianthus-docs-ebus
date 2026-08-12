@@ -1299,6 +1299,25 @@ def test_msp08_source_projection_uses_non_enumerable_device_address_placeholder(
     assert {item["address"] for item in devices} == {validator.OPAQUE_ADDRESS}
     assert devices[0]["device_id"] == validator._source_redacted("ebus-device:BAI00")
 
+    reversed_payloads = source_payloads(
+        validator, "before", "2026-08-12T08:00:00Z"
+    )
+    envelope = json.loads(reversed_payloads["ebus.devices"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"].reverse()
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    reversed_payloads["ebus.devices"] = validator.canonical(envelope)
+    reordered = validator._source_project_views(reversed_payloads)["views"]
+    assert reordered["mcp.ebus.v1.responses"] == projected[
+        "mcp.ebus.v1.responses"
+    ]
+    via_devices = {
+        item["via_device"] for item in projected["ha.identity"]["devices"]
+    }
+    assert len(via_devices) == len(devices)
+
 
 def test_msp08_source_projection_declares_and_excludes_volatile_schedule_leaves() -> None:
     validator = validator_module()

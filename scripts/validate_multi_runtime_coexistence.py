@@ -1799,12 +1799,13 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
         source_devices = devices_response["data"]
         if not isinstance(source_devices, list):
             fail("provenance.source_capture")
-        devices = [
-            projected
+        projected_devices = [
+            (item["address"], projected)
             for item in source_devices
             if (projected := _source_device_projection(item)) is not None
         ]
-        devices.sort(key=lambda item: item["address"])
+        projected_devices.sort(key=lambda item: item[0])
+        devices = [projected for _, projected in projected_devices]
         if not devices:
             fail("provenance.source_capture")
         semantic = _source_semantic(semantic_response)
@@ -1833,7 +1834,7 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
                     "manufacturer": item["manufacturer"],
                     "model": item["model"],
                     "unique_id": _source_redacted("ha:" + item["device_id"]),
-                    "via_device": _source_redacted("ha-via:" + item["address"]),
+                    "via_device": _source_redacted("ha-via:" + item["device_id"]),
                 }
                 for item in devices
             ]
@@ -3009,9 +3010,10 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
 def _contains_invalid_public_address(
     value: Any, keys: frozenset[str], *, nullable: bool = False
 ) -> bool:
+    normalized_keys = {_compact_key(key) for key in keys}
     if isinstance(value, dict):
         for key, item in value.items():
-            if key in keys and item != OPAQUE_ADDRESS and not (
+            if _compact_key(key) in normalized_keys and item != OPAQUE_ADDRESS and not (
                 nullable and item is None
             ):
                 return True

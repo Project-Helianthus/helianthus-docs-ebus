@@ -8,6 +8,8 @@ import pathlib
 import subprocess
 import sys
 
+import pytest
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LIVE = ROOT / "docs/platform/live/msp-085-0.6.38"
@@ -104,13 +106,13 @@ def refresh_public_evidence(validator, evidence: dict[str, object]) -> None:
 
 def test_live_publication_exact_bytes_and_m8_report() -> None:
     assert sha256(M8_EVIDENCE) == (
-        "a55a17eb24b965debf218dcb8e4d2b49d5bdde284aa642bea729c35d8acac789"
+        "861c94987a361707c4b38642322e6fd4d1952c690fc8e49c687da5e85a67a2a2"
     )
     assert sha256(M8_REPORT) == (
-        "5266db89e4086e61b88d0242233bdffe7a05422efdacfeca4fb04e3239cc6457"
+        "dd6e38b66e1b42f204069acf7f3515b772f77eb4848f8bb62ef3112c4e4deaa1"
     )
     assert sha256(M85_RESULT) == (
-        "98c5b9a6dc176b64a7e56baeec31ba869ff4c24498804e79cd86678bd74c4f7e"
+        "585ba6c2bf3f7eb9d6833e6b204a8d72a6baf0023a11d1bb863b3d6ad9ed5e91"
     )
 
     validator = load_module(
@@ -147,8 +149,19 @@ def test_live_m8_canonical_verifier_rejects_evidence_hash_mutation(
     assert verified.stderr == ""
 
 
+@pytest.mark.parametrize(
+    ("device_address", "admission_alias"),
+    [
+        (True, None),
+        (False, "selected-source"),
+        (False, "lastSuccessfulSource"),
+        (False, "companion target"),
+    ],
+)
 def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
     tmp_path: pathlib.Path,
+    device_address: bool,
+    admission_alias: str | None,
 ) -> None:
     validator = load_module(
         "msp085_live_address_validator",
@@ -161,9 +174,11 @@ def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
         devices = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"][0][
             "result"
         ]["devices"]
-        devices[0]["address"] = enumerable
+        if device_address:
+            devices[0]["address"] = enumerable
         admission = views["debug.ebus"]["payload"]["data"]["status"]["admission"]
-        admission["selected_source"] = enumerable
+        if admission_alias is not None:
+            admission[admission_alias] = enumerable
     refresh_public_evidence(validator, evidence)
 
     mutated = tmp_path / "enumerable-address-evidence.json"
