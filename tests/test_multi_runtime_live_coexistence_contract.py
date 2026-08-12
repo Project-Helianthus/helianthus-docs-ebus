@@ -4,9 +4,11 @@ import datetime as dt
 import hashlib
 import importlib.util
 import json
+import os
 import pathlib
 import subprocess
 import sys
+import time
 from copy import deepcopy
 
 import pytest
@@ -558,7 +560,7 @@ def source_payloads(
 ) -> dict[str, bytes]:
     tools = [
         {"name": name, "inputSchema": {"type": "object", "properties": {}}}
-        for name in [*validator.APPROVED_M8_TOOL_INVENTORY, "eebus.experimental.pairing.open"]
+        for name in validator.APPROVED_M8_TOOL_INVENTORY
     ]
     devices = [
         {
@@ -609,10 +611,36 @@ def source_payloads(
             "dhw": {"config": {"operatingMode": "auto"}},
         }
     }
+    routes = {
+        "fallback": None,
+        "routes": [
+            {"semantic_path": "/dhw/operating_mode", "source": "ebus"},
+            {"semantic_path": "/zones/1/target_temperature", "source": "ebus"},
+        ],
+    }
+    semantic_registry = {
+        "authority": "ebus.promoted",
+        "leaves": [
+            {
+                "path": item["semantic_path"],
+                "promotion_state": "PROMOTED",
+                "source": item["source"],
+            }
+            for item in routes["routes"]
+        ],
+    }
     return {
         "tools.list": validator.canonical({"result": {"tools": tools}}),
         "ebus.devices": source_mcp(validator, devices),
         "ebus.semantic": source_mcp(validator, semantic),
+        "ebus.debug": validator.canonical(
+            {
+                "transport": "ENS",
+                "runtime_state": "running",
+                "registry_device_count": len(devices),
+                "last_frame": "redacted-live-frame",
+            }
+        ),
         "eebus.runtime": source_mcp(validator, {"state": "ready"}),
         "eebus.services": source_mcp(validator, {"services": [{"id": "service-1"}]}),
         "eebus.sessions": source_mcp(
@@ -639,6 +667,8 @@ def source_payloads(
         "portal.bootstrap": validator.canonical(
             {"capabilities": {"devices": True, "zones": True}, "ui_version": "test-v1"}
         ),
+        "command.routing": validator.canonical(routes),
+        "semantic.registry": validator.canonical(semantic_registry),
         "container.inspect": validator.canonical(
             [
                 {
@@ -1019,6 +1049,152 @@ def test_msp08_private_runtime_rejects_source_bytes_tampering(
             require_private=True,
         )
     assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    "tool_mutation",
+    ["extra_v2", "extra_write", "reordered"],
+)
+def test_msp08_private_runtime_requires_exact_scoped_tool_inventory(
+    tmp_path: pathlib.Path, tool_mutation: str
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["tools.list"]
+    value = json.loads(path.read_bytes())
+    tools = value["result"]["tools"]
+    if tool_mutation == "extra_v2":
+        tools.append(
+            {
+                "name": "eebus.v2.runtime.status.get",
+                "inputSchema": {"type": "object", "properties": {}},
+            }
+        )
+    elif tool_mutation == "extra_write":
+        tools.append(
+            {
+                "name": "eebus.v1.features.write",
+                "inputSchema": {"type": "object", "properties": {}},
+            }
+        )
+    else:
+        tools[0], tools[1] = tools[1], tools[0]
+    path.write_bytes(validator.canonical(value))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    ("input_id", "replacement"),
+    [
+        ("portal.bootstrap", {"capabilities": {}, "ui_version": "contradiction"}),
+        ("ebus.debug", {"runtime_state": "stopped"}),
+        ("command.routing", {"fallback": "eebus", "routes": []}),
+        ("semantic.registry", {"authority": "eebus", "leaves": []}),
+    ],
+)
+def test_msp08_private_runtime_rejects_direct_view_contradiction(
+    tmp_path: pathlib.Path, input_id: str, replacement: dict[str, object]
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES[input_id]
+    path.write_bytes(validator.canonical(replacement))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    [b"{}", b"[]", b'{"data":{},"data":{}}'],
+)
+def test_msp08_private_runtime_rejects_malformed_source_shape_without_traceback(
+    tmp_path: pathlib.Path, malformed: bytes
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["graphql.schema"]
+    path.write_bytes(malformed)
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_rejects_excessive_source_nesting_by_precedence(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    depth = validator.HARD_LIMITS["max_depth"] + 1
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["portal.bootstrap"]
+    path.write_bytes(("[" * depth + "0" + "]" * depth).encode("ascii"))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "limits.exceeded"
+
+
+def test_msp08_source_reader_rejects_oversize_fifo_and_symlink_without_blocking(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    regular = tmp_path / "regular.json"
+    regular.write_bytes(b"{}")
+    oversized = tmp_path / "oversized.json"
+    with oversized.open("wb") as stream:
+        stream.truncate(validator.MAX_SOURCE_INPUT_BYTES + 1)
+    fifo = tmp_path / "capture.fifo"
+    os.mkfifo(fifo)
+    symlink = tmp_path / "capture-link.json"
+    symlink.symlink_to(regular)
+
+    for path in (oversized, fifo, symlink):
+        started = time.monotonic()
+        with pytest.raises(Exception) as error:
+            validator._read_bounded_regular_file(
+                path,
+                validator.MAX_SOURCE_INPUT_BYTES,
+                "provenance.source_capture",
+            )
+        assert str(error.value) == "provenance.source_capture"
+        assert time.monotonic() - started < 1.0
 
 
 def test_msp08_private_runtime_rejects_cross_window_device_intersection(

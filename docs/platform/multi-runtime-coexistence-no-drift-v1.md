@@ -149,13 +149,20 @@ Each source manifest has contract
 `window_scope=SINGLE_WINDOW_ONLY` and
 `projection_policy=M8_PROTECTED_VIEWS_SINGLE_WINDOW_V1`, and binds the
 effective auth-scope hash, PRE/POST phase, process instance, distinct window ID,
-capture interval, and source timestamp. Its ordered inputs cover the public MCP tool list,
-complete single-window eBUS responses, owner-UNIX eeBUS state inputs, GraphQL,
-Portal, container identity, and capture timestamp with the exact auth boundary,
-byte length, and SHA-256 of each source. Private verification reads every file
-from a fixed-name, no-symlink source root, recomputes those bindings, derives all
-eleven protected views with the closed reference projector, and compares each
-derived payload byte-for-byte with the corresponding evidence payload. A
+capture interval, and source timestamp. Its sixteen ordered inputs cover the
+complete tool inventory visible at the effective read-only M8 test scope,
+complete single-window eBUS responses, the eBUS debug view, owner-UNIX eeBUS
+state inputs, GraphQL, Portal, command routing, semantic registry, container
+identity, and capture timestamp with the exact auth boundary, byte length, and
+SHA-256 of each source. The tool inventory must equal the frozen two `ebus.v1`
+plus nine `eebus.v1` read-only tools in canonical order; an extra write tool,
+experimental tool, V2 tool, duplicate, omission, or reordering fails closed.
+Private verification opens every source as a bounded regular file from a
+fixed-name, no-symlink root, rejects devices such as FIFOs, recomputes every
+binding, derives all eleven protected views with the closed reference projector,
+and compares each derived payload byte-for-byte with the corresponding evidence
+payload. Debug, Portal, routing, and semantic-registry payloads are captured
+directly; they are not inferred from neighboring views. A
 projector invocation receives one window only; consulting the opposite window,
 intersecting device sets, dropping fields after comparison, or hard-coding an
 observed result is invalid. Reused or swapped PRE/POST manifests, roots,
@@ -415,21 +422,22 @@ Validation stops at the first category in this exact order:
 4. `registry.binding`
 5. `provenance.m7`
 6. `provenance.runtime`
-7. `provenance.config`
-8. `provenance.auth_mask`
-9. `provenance.clock`
-10. `ordering.duplicate`
-11. `state.evidence`
-12. `view.coverage`
-13. `canonicalization.invalid`
-14. `hash.payload`
-15. `anti_leak.candidate`
-16. `redaction.public`
-17. `authority.ebus`
-18. `gate.scope`
-19. `drift.consumer`
-20. `rollback.drift`
-21. `hash.evidence`
+7. `provenance.source_capture`
+8. `provenance.config`
+9. `provenance.auth_mask`
+10. `provenance.clock`
+11. `ordering.duplicate`
+12. `state.evidence`
+13. `view.coverage`
+14. `canonicalization.invalid`
+15. `hash.payload`
+16. `anti_leak.candidate`
+17. `redaction.public`
+18. `authority.ebus`
+19. `gate.scope`
+20. `drift.consumer`
+21. `rollback.drift`
+22. `hash.evidence`
 
 Allocation-driving byte, nesting, string, member, and list limits run before
 recursive parsing by necessity. They still report `limits.exceeded`.
@@ -449,6 +457,8 @@ Validation emits no partial success or report.
 | `max_string_bytes` | 4,096 |
 | `max_total_members` | 65,536 |
 | `max_total_list_items` | 32,768 |
+| `max_source_input_bytes` | 2,097,152 |
+| `max_source_total_bytes` | 16,777,216 |
 
 The evidence declares these exact values and the verifier hard-codes the same
 ceilings. Raising, lowering, omitting, or exceeding a ceiling is invalid.
@@ -546,6 +556,9 @@ positive evidence and require one precedence category.
 | `MISSING_REQUIRED_VIEW` | `view.coverage` |
 | `NO_SERVICES_EMPTY_SUCCESS` | `state.evidence` |
 | `PUBLIC_V2_SURFACE` | `gate.scope` |
+| `SOURCE_CAPTURE_MALFORMED` | `provenance.source_capture` |
+| `SOURCE_CAPTURE_RESOURCE_LIMIT` | `limits.exceeded` |
+| `SOURCE_CAPTURE_UNSAFE_FILE` | `provenance.source_capture` |
 | `RESOURCE_LIMIT_EXCEEDED` | `limits.exceeded` |
 | `ROLLBACK_DRIFT` | `rollback.drift` |
 | `RUNTIME_ARTIFACT_MISMATCH` | `provenance.runtime` |

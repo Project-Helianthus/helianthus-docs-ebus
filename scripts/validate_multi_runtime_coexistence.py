@@ -10,8 +10,10 @@ import datetime as dt
 import hashlib
 import ipaddress
 import json
+import os
 import pathlib
 import re
+import stat
 import sys
 from typing import Any
 
@@ -89,9 +91,10 @@ SOURCE_CAPTURE_INPUT_ID = "source:capture-manifest"
 SOURCE_CAPTURE_INPUT_KIND = "SOURCE_CAPTURE_MANIFEST"
 SOURCE_CAPTURE_POLICY = "M8_PROTECTED_VIEWS_SINGLE_WINDOW_V1"
 SOURCE_CAPTURE_INPUTS = {
-    "tools.list": "PUBLIC_LOOPBACK_MCP",
+    "tools.list": "READ_ONLY_TEST_MCP",
     "ebus.devices": "PUBLIC_LOOPBACK_MCP",
     "ebus.semantic": "PUBLIC_LOOPBACK_MCP",
+    "ebus.debug": "READ_ONLY_TEST_MCP",
     "eebus.runtime": "OWNER_UNIX_MCP",
     "eebus.services": "OWNER_UNIX_MCP",
     "eebus.sessions": "OWNER_UNIX_MCP",
@@ -100,6 +103,8 @@ SOURCE_CAPTURE_INPUTS = {
     "graphql.schema": "PUBLIC_LOOPBACK_GRAPHQL",
     "graphql.values": "PUBLIC_LOOPBACK_GRAPHQL",
     "portal.bootstrap": "PUBLIC_LOOPBACK_HTTP",
+    "command.routing": "LOCAL_RUNTIME_OBSERVATION",
+    "semantic.registry": "LOCAL_RUNTIME_OBSERVATION",
     "container.inspect": "LOCAL_RUNTIME_ADMIN",
     "capture.timestamp": "LOCAL_CAPTURE_CLOCK",
 }
@@ -107,6 +112,7 @@ SOURCE_CAPTURE_FILES = {
     "tools.list": "tools-list.json",
     "ebus.devices": "ebus-devices.json",
     "ebus.semantic": "ebus-semantic.json",
+    "ebus.debug": "ebus-debug.json",
     "eebus.runtime": "eebus-runtime.json",
     "eebus.services": "eebus-services.json",
     "eebus.sessions": "eebus-sessions.json",
@@ -115,6 +121,8 @@ SOURCE_CAPTURE_FILES = {
     "graphql.schema": "graphql-schema.json",
     "graphql.values": "graphql-values.json",
     "portal.bootstrap": "portal-bootstrap.json",
+    "command.routing": "command-routing.json",
+    "semantic.registry": "semantic-registry.json",
     "container.inspect": "container-inspect.json",
     "capture.timestamp": "captured-at.txt",
 }
@@ -1316,6 +1324,7 @@ def check_runtime_identity(evidence: dict[str, Any]) -> None:
 
 
 def _decode_source_json(raw: bytes) -> Any:
+    _bounded_preflight(raw)
     def pairs(values: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in values:
@@ -1332,8 +1341,39 @@ def _decode_source_json(raw: bytes) -> Any:
             parse_float=lambda _: fail("provenance.source_capture"),
             parse_constant=lambda _: fail("provenance.source_capture"),
         )
-    except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+    except (json.JSONDecodeError, UnicodeDecodeError, ValueError, RecursionError):
         fail("provenance.source_capture")
+
+
+def _read_bounded_regular_file(
+    path: pathlib.Path, maximum: int, category: str
+) -> bytes:
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = -1
+    try:
+        descriptor = os.open(path, flags)
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_size <= 0 or info.st_size > maximum:
+            fail(category)
+        chunks: list[bytes] = []
+        remaining = info.st_size
+        while remaining:
+            chunk = os.read(descriptor, min(65_536, remaining))
+            if not chunk:
+                fail(category)
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        if os.read(descriptor, 1):
+            fail(category)
+        raw = b"".join(chunks)
+        if not raw or len(raw) != info.st_size:
+            fail(category)
+        return raw
+    except OSError:
+        fail(category)
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
 
 
 def _source_inner_mcp(raw: bytes) -> dict[str, Any]:
@@ -1429,7 +1469,6 @@ def _source_graphql_schema(raw: dict[str, Any]) -> dict[str, Any]:
         "mutation_fields": sorted(
             item["name"] for item in schema["mutationType"]["fields"]
         ),
-        "schema_version": 1,
     }
 
 
@@ -1467,13 +1506,17 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
     graph_schema = _decode_source_json(inputs["graphql.schema"])
     graph_raw = _decode_source_json(inputs["graphql.values"])
     portal_raw = _decode_source_json(inputs["portal.bootstrap"])
+    debug_raw = _decode_source_json(inputs["ebus.debug"])
+    routes_raw = _decode_source_json(inputs["command.routing"])
+    semantic_registry_raw = _decode_source_json(inputs["semantic.registry"])
     inspect = _decode_source_json(inputs["container.inspect"])
     try:
         listed_tools = tools["result"]["tools"]
         by_name = {item["name"]: item for item in listed_tools}
         if (
             len(by_name) != len(listed_tools)
-            or any(name not in by_name for name in APPROVED_M8_TOOL_INVENTORY)
+            or [item["name"] for item in listed_tools]
+            != APPROVED_M8_TOOL_INVENTORY
         ):
             fail("provenance.source_capture")
         schemas = [
@@ -1490,14 +1533,11 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             fail("provenance.source_capture")
         semantic = _source_semantic(semantic_response)
         graph_values = _source_graphql_values(graph_raw)
-        portal = {
-            "default_protocol": "ebus",
-            "sections": ["devices", "zones", "dhw", "energy"],
-            "enabled_capability_count": sum(
-                value is True for value in portal_raw["capabilities"].values()
-            ),
-            "ui_version": portal_raw["ui_version"],
-        }
+        if not all(
+            isinstance(value, dict)
+            for value in (portal_raw, debug_raw, routes_raw, semantic_registry_raw)
+        ):
+            fail("provenance.source_capture")
         ha_values = {
             "entities": [
                 {
@@ -1520,22 +1560,6 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
                 for item in devices
             ]
         }
-        routes = [{"semantic_path": "/dhw/operating_mode", "source": "ebus"}]
-        routes.extend(
-            {
-                "semantic_path": f"/zones/{index + 1}/target_temperature",
-                "source": "ebus",
-            }
-            for index, _ in enumerate(graph_values["zones"])
-        )
-        leaves = [
-            {
-                "path": route["semantic_path"],
-                "promotion_state": "PROMOTED",
-                "source": "ebus",
-            }
-            for route in routes
-        ]
         if (
             runtime["data"]["state"] != "ready"
             or not services["data"]["services"]
@@ -1575,15 +1599,10 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             "graphql.ebus.values": graph_values,
             "ha.graphql.values": ha_values,
             "ha.identity": ha_identity,
-            "debug.ebus": {
-                "transport": "ENS",
-                "runtime_state": "running",
-                "registry_device_count": len(devices),
-                "last_frame": "redacted-live-frame",
-            },
-            "portal.ebus.bootstrap": portal,
-            "command.routing": {"fallback": None, "routes": routes},
-            "semantic.registry": {"authority": "ebus.promoted", "leaves": leaves},
+            "debug.ebus": debug_raw,
+            "portal.ebus.bootstrap": portal_raw,
+            "command.routing": routes_raw,
+            "semantic.registry": semantic_registry_raw,
             "mcp.eebus.v1.contract": {
                 "namespace": "eebus.v1",
                 "public_v2": False,
@@ -1621,14 +1640,14 @@ def _read_source_inputs(root: pathlib.Path, manifest: dict[str, Any]) -> dict[st
         try:
             if path.is_symlink() or path.resolve(strict=True).parent != resolved_root:
                 fail("provenance.source_capture")
-            raw = path.read_bytes()
+            raw = _read_bounded_regular_file(
+                path, MAX_SOURCE_INPUT_BYTES, "provenance.source_capture"
+            )
         except OSError:
             fail("provenance.source_capture")
         total += len(raw)
         if (
-            not raw
-            or len(raw) > MAX_SOURCE_INPUT_BYTES
-            or total > MAX_SOURCE_TOTAL_BYTES
+            total > MAX_SOURCE_TOTAL_BYTES
             or manifest_inputs[input_id]["digest"]
             != "sha256:" + hashlib.sha256(raw).hexdigest()
             or manifest_inputs[input_id]["byte_length"] != len(raw)
@@ -1704,7 +1723,12 @@ def _source_capture_binding(
         fail("provenance.source_capture")
     if captured_at != value["captured_at"]:
         fail("provenance.source_capture")
-    projected = _source_project_views(inputs)
+    try:
+        projected = _source_project_views(inputs)
+    except Failure:
+        raise
+    except (KeyError, TypeError, AttributeError, IndexError, ValueError):
+        fail("provenance.source_capture")
     if projected["process_instance_id"] != process_instance_id:
         fail("provenance.source_capture")
     return {
@@ -3545,9 +3569,17 @@ def main() -> int:
             m7_paths,
             require_private=args.command != "verify-public",
             source_manifests={
-                "before": args.before_source_manifest.read_bytes()
+                "before": _read_bounded_regular_file(
+                    args.before_source_manifest,
+                    MAX_SOURCE_INPUT_BYTES,
+                    "provenance.source_capture",
+                )
                 if args.before_source_manifest is not None else None,
-                "after": args.after_source_manifest.read_bytes()
+                "after": _read_bounded_regular_file(
+                    args.after_source_manifest,
+                    MAX_SOURCE_INPUT_BYTES,
+                    "provenance.source_capture",
+                )
                 if args.after_source_manifest is not None else None,
             },
             source_roots={

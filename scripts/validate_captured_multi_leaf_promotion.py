@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import re
+import stat
 import subprocess
 import sys
 import tempfile
@@ -89,8 +90,8 @@ def load_json(
     path: pathlib.Path, *, max_bytes: int = MAX_INPUT_BYTES
 ) -> tuple[dict[str, Any], bytes]:
     try:
-        raw = path.read_bytes()
-        if len(raw) > max_bytes or re.search(
+        raw = _read_bounded_bytes(path, max_bytes, "json.syntax")
+        if re.search(
             rb"(?<![0-9A-Za-z_])-0(?:[^0-9.]|$)", raw
         ):
             fail("json.syntax")
@@ -111,7 +112,7 @@ def load_json(
         )
     except ValidationFailure:
         raise
-    except (OSError, UnicodeError, json.JSONDecodeError):
+    except (OSError, UnicodeError, json.JSONDecodeError, RecursionError):
         fail("json.syntax")
     if not isinstance(value, dict):
         fail("json.syntax")
@@ -789,11 +790,30 @@ def replay_hash(value: dict[str, Any]) -> str:
 
 
 def _read_bounded_bytes(path: pathlib.Path, maximum: int, category: str) -> bytes:
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = -1
     try:
-        raw = path.read_bytes()
+        descriptor = os.open(path, flags)
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_size <= 0 or info.st_size > maximum:
+            fail(category)
+        chunks: list[bytes] = []
+        remaining = info.st_size
+        while remaining:
+            chunk = os.read(descriptor, min(65_536, remaining))
+            if not chunk:
+                fail(category)
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        if os.read(descriptor, 1):
+            fail(category)
+        raw = b"".join(chunks)
     except OSError:
         fail(category)
-    if not raw or len(raw) > maximum:
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+    if not raw or len(raw) != info.st_size:
         fail(category)
     return raw
 

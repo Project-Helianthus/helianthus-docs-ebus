@@ -8,6 +8,7 @@ import os
 import pathlib
 import subprocess
 import sys
+import time
 
 import pytest
 
@@ -1351,6 +1352,30 @@ def test_reproducible_build_allows_versioned_module_replacement() -> None:
     validator._reject_local_module_replacements(
         b'{"Replace":[{"New":{"Path":"example.invalid/new","Version":"v1.2.3"}}]}'
     )
+
+
+def test_live_artifact_reader_rejects_oversize_fifo_and_symlink_without_blocking(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    regular = tmp_path / "regular.json"
+    regular.write_bytes(b"{}")
+    oversized = tmp_path / "oversized.json"
+    with oversized.open("wb") as stream:
+        stream.truncate(validator.MAX_INPUT_BYTES + 1)
+    fifo = tmp_path / "artifact.fifo"
+    os.mkfifo(fifo)
+    symlink = tmp_path / "artifact-link.json"
+    symlink.symlink_to(regular)
+
+    for path in (oversized, fifo, symlink):
+        started = time.monotonic()
+        with pytest.raises(validator.ValidationFailure) as raised:
+            validator._read_bounded_bytes(
+                path, validator.MAX_INPUT_BYTES, "live.source_capture"
+            )
+        assert raised.value.category == "live.source_capture"
+        assert time.monotonic() - started < 1.0
 
 
 def test_reproducible_build_rejects_tracked_external_go_symlink(
