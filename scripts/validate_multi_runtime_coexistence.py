@@ -1723,6 +1723,8 @@ def _source_debug(value: Any, path: tuple[str, ...] = ()) -> Any:
                     fail("provenance.source_capture")
                 else:
                     projected[key] = OPAQUE_ADDRESS
+            elif _is_public_address_key(key):
+                fail("provenance.source_capture")
             else:
                 projected[key] = _source_debug(item, path + (key,))
         if path == ("status", "admission"):
@@ -3095,6 +3097,14 @@ def _is_public_address_key(key: Any) -> bool:
             "addresseshash",
             "addressesdigest",
             "addressessha256",
+            "addr",
+            "addrs",
+            "addrhash",
+            "addrdigest",
+            "addrsha256",
+            "addrshash",
+            "addrsdigest",
+            "addrssha256",
         )
     ) or compact in {
         _compact_key(item) for item in SOURCE_DEBUG_ADDRESS_KEYS

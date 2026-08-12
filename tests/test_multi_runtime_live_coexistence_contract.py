@@ -1421,6 +1421,25 @@ def test_msp08_source_projection_rejects_debug_address_alias_outside_admission()
     assert str(error.value) == "provenance.source_capture"
 
 
+@pytest.mark.parametrize(
+    "alias",
+    ["src_addr", "dstAddr", "peer_addrs", "source_addr_hash"],
+)
+def test_msp08_source_projection_rejects_uncontracted_abbreviated_address_alias(
+    alias: str,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug.setdefault("status", {}).setdefault("admission", {})[alias] = 127
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+
+    assert str(error.value) == "provenance.source_capture"
+
+
 @pytest.mark.parametrize("invalid_address", [-1, 256, 999, "-1", "256", "0x100", "device-a"])
 def test_msp08_source_projection_rejects_invalid_debug_address_aliases(
     invalid_address: object,
@@ -2716,6 +2735,42 @@ def test_msp08_public_export_rejects_secrets_and_stable_identity(
     )
     assert result.returncode == 1
     assert result.stdout == "redaction.public\n"
+
+
+@pytest.mark.parametrize(
+    ("alias", "value"),
+    [
+        ("src_addr", 127),
+        ("dstAddr", 21),
+        ("peer_addrs", [8, 21]),
+        ("source_addr_hash", "sha256:" + "c" * 64),
+    ],
+)
+def test_msp08_public_export_rejects_abbreviated_address_alias(
+    tmp_path: pathlib.Path, alias: str, value: object
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    for run in evidence["runs"]:
+        view = next(
+            view for view in run["protected_views"] if view["view_id"] == "debug.ebus"
+        )
+        view["payload"]["data"]["status"]["admission"][alias] = value
+    refresh_protected_views(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
+
+    result = subprocess.run(
+        validator_command("verify", evidence_path),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "redaction.public\n",
+        "",
+    )
 
 
 def test_msp08_public_export_allows_boolean_auth_policy_metadata(
