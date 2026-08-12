@@ -1260,6 +1260,45 @@ def test_msp08_source_projection_declares_and_excludes_volatile_schedule_leaves(
 
 
 @pytest.mark.parametrize(
+    "mutation",
+    [
+        {"source": "eebus"},
+        {"promotion_state": "CANDIDATE"},
+        {"path": "relative/path"},
+    ],
+)
+def test_msp08_source_projection_rejects_malformed_semantic_leaf(
+    mutation: dict[str, str],
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    registry = json.loads(payloads["semantic.registry"])
+    registry["leaves"][0].update(mutation)
+    payloads["semantic.registry"] = validator.canonical(registry)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_source_projection_preserves_non_schedule_leaf_drift() -> None:
+    validator = validator_module()
+    before = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    after = source_payloads(validator, "after", "2026-08-12T08:05:00Z")
+    registry = json.loads(after["semantic.registry"])
+    registry["leaves"][0]["path"] = "/dhw/non_schedule_drift"
+    after["semantic.registry"] = validator.canonical(registry)
+
+    before_view = validator._source_project_views(before)["views"][
+        "semantic.registry"
+    ]
+    after_view = validator._source_project_views(after)["views"][
+        "semantic.registry"
+    ]
+    assert validator.canonical(before_view) != validator.canonical(after_view)
+
+
+@pytest.mark.parametrize(
     ("field", "value"),
     [
         ("discovery_source", "unexpected_source"),
