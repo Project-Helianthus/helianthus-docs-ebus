@@ -2180,8 +2180,8 @@ def test_capture_limits_and_restart_generation_are_bound(tmp_path: pathlib.Path)
 def test_zero_profile_canonical_bytes_match_current_m8_inventory_revision() -> None:
     expected = {
         "leaf-promotion-registry-v1.json": "ad33736c00aa2c3ecaac981606d25c064088c80cb72ca5389b83c5d9df40f6a3",
-        "../fixtures/leaf-promotion-dossier/v1/positive/dossier.json": "1f97fc824b88cd7a950488dd27a6cd26ffa7977a3355d3009de3759535ffb6c0",
-        "../fixtures/leaf-promotion-dossier/v1/positive/result.json": "a8175dd33822a3174d74c9fae9541a3af4ba6a7a9cc0572ab6796e0e9d979d0c",
+        "../fixtures/leaf-promotion-dossier/v1/positive/dossier.json": "3fc7ae3df923d9850451ac2518583136b1cb31fb32a41777168d0a4f5c89b3f2",
+        "../fixtures/leaf-promotion-dossier/v1/positive/result.json": "6a9b57cc3abd6c58ef8729ac503c54868bde831014532c631f27b04ad9322f93",
     }
     for relative, expected_hash in expected.items():
         assert hashlib.sha256((SCHEMA_ROOT / relative).resolve().read_bytes()).hexdigest() == expected_hash

@@ -56,7 +56,7 @@ EVIDENCE_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-EVIDENCE:V1"
 REPORT_DOMAIN = b"HELIANTHUS:MULTI-RUNTIME-COEXISTENCE-REPORT:V1"
 SAFE_INTEGER = 9_007_199_254_740_991
 BASELINE_SOURCE_SHA = "ff511b035b85aef6123fb0853bb3d2f3af6fc01e"
-EXPECTED_REGISTRY_SHA256 = "8fab50c488cf99a5f6c29cb8cddc41df9728b5c5edde99e3c1e58d13c9f8407b"
+EXPECTED_REGISTRY_SHA256 = "17220f67c625feaa9c0c05ba4d34c9533fb4297537318736836bf031ff86ed48"
 READ_ONLY_PERMISSIONS = [
     "read:ebus",
     "read:eebus-v1-contract",
@@ -468,7 +468,33 @@ HARD_LIMITS = {
     "max_string_bytes": 4_096,
     "max_total_members": 65_536,
     "max_total_list_items": 32_768,
+    "max_source_input_bytes": MAX_SOURCE_INPUT_BYTES,
+    "max_source_total_bytes": MAX_SOURCE_TOTAL_BYTES,
 }
+VALIDATION_PRECEDENCE = [
+    "json.syntax",
+    "limits.exceeded",
+    "schema.evidence",
+    "registry.binding",
+    "provenance.m7",
+    "provenance.runtime",
+    "provenance.source_capture",
+    "provenance.config",
+    "provenance.auth_mask",
+    "provenance.clock",
+    "ordering.duplicate",
+    "state.evidence",
+    "view.coverage",
+    "canonicalization.invalid",
+    "hash.payload",
+    "anti_leak.candidate",
+    "redaction.public",
+    "authority.ebus",
+    "gate.scope",
+    "drift.consumer",
+    "rollback.drift",
+    "hash.evidence",
+]
 
 
 class Failure(Exception):
@@ -492,8 +518,15 @@ def digest(domain: bytes, value: Any) -> str:
     return "sha256:" + hashlib.sha256(domain + b"\0" + canonical(value)).hexdigest()
 
 
-def _bounded_preflight(raw: bytes) -> None:
-    if len(raw) > HARD_LIMITS["max_evidence_bytes"]:
+def _bounded_preflight(
+    raw: bytes,
+    *,
+    max_bytes: int | None = None,
+    max_string_bytes: int | None = None,
+) -> None:
+    byte_limit = max_bytes or HARD_LIMITS["max_evidence_bytes"]
+    string_limit = max_string_bytes or HARD_LIMITS["max_string_bytes"]
+    if len(raw) > byte_limit:
         fail("limits.exceeded")
     depth = 0
     members = 0
@@ -513,7 +546,7 @@ def _bounded_preflight(raw: bytes) -> None:
                 in_string = False
             else:
                 string_bytes += 1
-            if string_bytes > HARD_LIMITS["max_string_bytes"]:
+            if string_bytes > string_limit:
                 fail("limits.exceeded")
             continue
         if byte == 0x22:
@@ -914,6 +947,7 @@ def check_registry(evidence: dict[str, Any], registry: Any, raw: bytes) -> None:
         registry["contract"] != REGISTRY_CONTRACT
         or registry["version"] != 1
         or registry["limits"] != HARD_LIMITS
+        or registry["validation_precedence"] != VALIDATION_PRECEDENCE
         or evidence["registry"]
         != {"contract": REGISTRY_CONTRACT, "version": 1, "digest": expected_digest}
     ):
@@ -1325,8 +1359,14 @@ def check_runtime_identity(evidence: dict[str, Any]) -> None:
             fail("provenance.runtime")
 
 
-def _decode_source_json(raw: bytes) -> Any:
-    _bounded_preflight(raw)
+def _decode_source_json(
+    raw: bytes, *, max_string_bytes: int | None = None
+) -> Any:
+    _bounded_preflight(
+        raw,
+        max_bytes=MAX_SOURCE_INPUT_BYTES,
+        max_string_bytes=max_string_bytes,
+    )
     if re.search(rb"(?<![0-9A-Za-z_])-0(?:[^0-9.]|$)", raw):
         fail("provenance.source_capture")
 
@@ -1410,7 +1450,7 @@ def _read_bounded_regular_file(
 
 
 def _source_inner_mcp(raw: bytes) -> dict[str, Any]:
-    envelope = _decode_source_json(raw)
+    envelope = _decode_source_json(raw, max_string_bytes=MAX_SOURCE_INPUT_BYTES)
     try:
         content = envelope["result"]["content"]
         if (

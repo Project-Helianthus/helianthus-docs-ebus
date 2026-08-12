@@ -172,7 +172,7 @@
     "Limits": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["max_evidence_bytes", "max_depth", "max_runs", "max_views_per_run", "max_inputs_per_run", "max_internal_facts_per_run", "max_payload_bytes", "max_string_bytes", "max_total_members", "max_total_list_items"],
+      "required": ["max_evidence_bytes", "max_depth", "max_runs", "max_views_per_run", "max_inputs_per_run", "max_internal_facts_per_run", "max_payload_bytes", "max_string_bytes", "max_total_members", "max_total_list_items", "max_source_input_bytes", "max_source_total_bytes"],
       "properties": {
         "max_evidence_bytes": {"type": "integer", "minimum": 1},
         "max_depth": {"type": "integer", "minimum": 1},
@@ -183,7 +183,9 @@
         "max_payload_bytes": {"type": "integer", "minimum": 1},
         "max_string_bytes": {"type": "integer", "minimum": 1},
         "max_total_members": {"type": "integer", "minimum": 1},
-        "max_total_list_items": {"type": "integer", "minimum": 1}
+        "max_total_list_items": {"type": "integer", "minimum": 1},
+        "max_source_input_bytes": {"const": 2097152},
+        "max_source_total_bytes": {"const": 16777216}
       }
     },
     "BuildManifest": {

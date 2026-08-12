@@ -175,6 +175,12 @@ processes, timestamps, or capture intervals fail closed before no-drift is
 evaluated. The protected payloads must be produced independently before
 equality is tested.
 
+An MCP JSON-RPC envelope may carry a `content[0].text` string up to the bounded
+source-input ceiling. The verifier then decodes that string as JSON and applies
+the ordinary 4,096-byte per-string, depth, member, and list limits independently
+to the inner payload. This permits current multi-kilobyte topology responses
+without allowing an unbounded semantic scalar.
+
 The public M7 status projection is generated, never hand-authored:
 
 ```text

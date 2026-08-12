@@ -180,6 +180,23 @@ def test_msp08_inventory_matches_the_complete_stable_v1_contract() -> None:
     ]
 
 
+def test_msp08_machine_contract_matches_verifier_precedence_and_limits() -> None:
+    validator = validator_module()
+    registry = load(REGISTRY)
+    schema = load(EVIDENCE_SCHEMA)
+    limits = schema["$defs"]["Limits"]
+
+    assert registry["validation_precedence"] == validator.VALIDATION_PRECEDENCE
+    assert registry["limits"] == validator.HARD_LIMITS
+    assert set(limits["required"]) == set(validator.HARD_LIMITS)
+    assert limits["properties"]["max_source_input_bytes"]["const"] == (
+        validator.MAX_SOURCE_INPUT_BYTES
+    )
+    assert limits["properties"]["max_source_total_bytes"]["const"] == (
+        validator.MAX_SOURCE_TOTAL_BYTES
+    )
+
+
 @pytest.mark.parametrize("mutation", ["missing", "stale", "reordered", "write"])
 def test_msp08_live_inventory_drift_fails_closed(
     tmp_path: pathlib.Path, mutation: str
@@ -949,6 +966,17 @@ def test_msp08_source_manifest_binds_one_window_and_auth_scope(
             json.loads(raw)["captured_at"],
         )
     assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_source_mcp_accepts_large_envelope_with_bounded_inner_values() -> None:
+    validator = validator_module()
+    values = [{"id": f"item-{index:04d}", "state": "visible"} for index in range(300)]
+    raw = source_mcp(validator, {"items": values})
+
+    assert len(json.loads(raw)["result"]["content"][0]["text"].encode("utf-8")) > (
+        validator.HARD_LIMITS["max_string_bytes"]
+    )
+    assert validator._source_inner_mcp(raw)["data"]["items"] == values
 
 
 def test_msp08_source_manifest_rejects_auth_boundary_drift(
