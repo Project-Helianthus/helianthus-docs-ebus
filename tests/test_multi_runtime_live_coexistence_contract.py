@@ -180,6 +180,19 @@ def test_msp08_inventory_matches_the_complete_stable_v1_contract() -> None:
     ]
 
 
+def test_msp08_read_only_scope_separates_inventory_from_call_authority() -> None:
+    page = " ".join(PAGE.read_text(encoding="utf-8").split())
+
+    for phrase in (
+        "Inventory visibility does not grant call authority.",
+        "seven eeBUS observation tools",
+        "`eebus.v1.snapshot.capture`",
+        "`eebus.v1.snapshot.drop`",
+        "must fail before snapshot-store creation, lookup, or deletion",
+    ):
+        assert phrase in page
+
+
 def test_msp08_machine_contract_matches_verifier_precedence_and_limits() -> None:
     validator = validator_module()
     registry = load(REGISTRY)

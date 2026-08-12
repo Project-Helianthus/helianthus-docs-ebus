@@ -150,15 +150,22 @@ Each source manifest has contract
 `projection_policy=M8_PROTECTED_VIEWS_SINGLE_WINDOW_V1`, and binds the
 effective auth-scope hash, PRE/POST phase, process instance, distinct window ID,
 capture interval, and source timestamp. Its sixteen ordered inputs cover the
-complete tool inventory visible at the effective read-only M8 test scope,
+complete stable tool inventory visible at the effective read-only M8 test scope,
 complete single-window eBUS responses, the eBUS debug view, owner-UNIX eeBUS
 state inputs, GraphQL, Portal, command routing, semantic registry, container
 identity, and capture timestamp with the exact auth boundary, byte length, and
 SHA-256 of each source. The tool inventory must equal the frozen two `ebus.v1`
-plus nine `eebus.v1` read-only tools in canonical order; an extra write tool,
+plus nine stable `eebus.v1` tools in canonical order; an extra write tool,
 experimental tool, V2 tool, duplicate, omission, reordering, or paginated
 continuation fails closed. The capture is valid only when `tools/list` proves
 the complete effective-scope inventory in one terminal response.
+Inventory visibility does not grant call authority. The M8 scope may call only
+the two eBUS observation tools and the seven eeBUS observation tools. The
+stable lifecycle tools `eebus.v1.snapshot.capture` and
+`eebus.v1.snapshot.drop` remain visible so contract drift is detectable, but a
+`tools/call` request for either must fail before snapshot-store creation,
+lookup, or deletion. In particular, `snapshot.drop` cannot destroy evidence
+through the read-only scope.
 Private verification opens every source as a bounded regular file from a
 fixed-name, no-symlink root, rejects devices such as FIFOs, recomputes every
 binding, derives all eleven protected views with the closed reference projector,
