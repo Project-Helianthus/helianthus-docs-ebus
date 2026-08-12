@@ -1819,18 +1819,11 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             if (projected := _source_device_projection(item)) is not None
         ]
         projected_devices.sort(key=lambda item: item[0])
-        device_id_totals: dict[str, int] = {}
-        for _, source_device_id, _ in projected_devices:
-            device_id_totals[source_device_id] = device_id_totals.get(source_device_id, 0) + 1
-        device_id_occurrences: dict[str, int] = {}
         devices = []
-        for _, source_device_id, projected in projected_devices:
-            occurrence = device_id_occurrences.get(source_device_id, 0)
-            device_id_occurrences[source_device_id] = occurrence + 1
-            if device_id_totals[source_device_id] > 1:
-                projected["device_id"] = _source_redacted(
-                    f"ebus-device:{source_device_id}:occurrence:{occurrence}"
-                )
+        for index, (_, _, projected) in enumerate(projected_devices):
+            projected["device_id"] = _source_redacted(
+                f"ebus-device-ordinal:{index}"
+            )
             devices.append(projected)
         if not devices:
             fail("provenance.source_capture")
@@ -3072,11 +3065,21 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
         device_ids = [item.get("device_id") for item in mcp_devices]
         ha_unique_ids = [item.get("unique_id") for item in ha_devices]
         ha_via_devices = [item.get("via_device") for item in ha_devices]
+        expected_device_ids = [
+            _source_redacted(f"ebus-device-ordinal:{index}")
+            for index in range(len(mcp_devices))
+        ]
         if (
             len(mcp_devices) != len(ha_devices)
+            or device_ids != expected_device_ids
             or any(
                 len(set(values)) != len(values)
                 for values in (device_ids, ha_unique_ids, ha_via_devices)
+            )
+            or any(
+                ha_device.get("unique_id")
+                != _source_redacted("ha:" + mcp_device["device_id"])
+                for mcp_device, ha_device in zip(mcp_devices, ha_devices, strict=True)
             )
             or any(
                 ha_device.get("via_device")

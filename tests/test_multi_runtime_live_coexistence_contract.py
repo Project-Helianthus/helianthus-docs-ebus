@@ -304,10 +304,16 @@ def build_live_evidence(validator) -> dict[str, object]:
         devices = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"][0][
             "result"
         ]["devices"]
-        for device in devices:
+        for device_index, device in enumerate(devices):
             device["address"] = validator.OPAQUE_ADDRESS
+            device["device_id"] = validator._source_redacted(
+                f"ebus-device-ordinal:{device_index}"
+            )
         ha_devices = views["ha.identity"]["payload"]["data"]["devices"]
         for device, ha_device in zip(devices, ha_devices, strict=True):
+            ha_device["unique_id"] = validator._source_redacted(
+                "ha:" + device["device_id"]
+            )
             ha_device["via_device"] = validator._source_redacted(
                 "ha-via:" + device["device_id"]
             )
@@ -1364,7 +1370,10 @@ def test_msp08_source_projection_uses_non_enumerable_device_address_placeholder(
     ]
 
     assert {item["address"] for item in devices} == {validator.OPAQUE_ADDRESS}
-    assert devices[0]["device_id"] == validator._source_redacted("ebus-device:BAI00")
+    assert [item["device_id"] for item in devices] == [
+        validator._source_redacted(f"ebus-device-ordinal:{index}")
+        for index in range(len(devices))
+    ]
 
     reversed_payloads = source_payloads(
         validator, "before", "2026-08-12T08:00:00Z"

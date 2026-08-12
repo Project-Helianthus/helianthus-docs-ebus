@@ -106,13 +106,13 @@ def refresh_public_evidence(validator, evidence: dict[str, object]) -> None:
 
 def test_live_publication_exact_bytes_and_m8_report() -> None:
     assert sha256(M8_EVIDENCE) == (
-        "861c94987a361707c4b38642322e6fd4d1952c690fc8e49c687da5e85a67a2a2"
+        "a14fec7d2f4c268f997ff2940b0bc36aeacddc0fb34c91f31235b4976b7159bf"
     )
     assert sha256(M8_REPORT) == (
-        "dd6e38b66e1b42f204069acf7f3515b772f77eb4848f8bb62ef3112c4e4deaa1"
+        "5c4809ab22c1326ee13a689813d977ba8348a2f3084ca42089e674e2310a470c"
     )
     assert sha256(M85_RESULT) == (
-        "585ba6c2bf3f7eb9d6833e6b204a8d72a6baf0023a11d1bb863b3d6ad9ed5e91"
+        "b80c1a8b7320e9637f6268660d7a67b14399f35b8af63cff3f07b3a5dae2ce03"
     )
 
     validator = load_module(
@@ -249,6 +249,39 @@ def test_live_m8_canonical_verifier_rejects_duplicate_public_device_identity(
     refresh_public_evidence(validator, evidence)
 
     mutated = tmp_path / "duplicate-public-device-evidence.json"
+    mutated.write_bytes(validator.canonical(evidence) + b"\n")
+    verified = verify_m8_public(mutated)
+    assert verified.returncode == 1
+    assert verified.stdout == "redaction.public\n"
+    assert verified.stderr == ""
+
+
+def test_live_m8_canonical_verifier_rejects_address_derived_device_identities(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = load_module(
+        "msp085_live_address_identity_validator",
+        ROOT / "scripts/validate_multi_runtime_coexistence.py",
+    )
+    evidence = load(M8_EVIDENCE)
+    for run in evidence["runs"]:
+        views = {view["view_id"]: view for view in run["protected_views"]}
+        devices = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"][0][
+            "result"
+        ]["devices"]
+        ha_devices = views["ha.identity"]["payload"]["data"]["devices"]
+        for index, (device, ha_device) in enumerate(
+            zip(devices, ha_devices, strict=True)
+        ):
+            device_id = validator._source_redacted(f"ebus-address:{index}")
+            device["device_id"] = device_id
+            ha_device["unique_id"] = validator._source_redacted("ha:" + device_id)
+            ha_device["via_device"] = validator._source_redacted(
+                "ha-via:" + device_id
+            )
+    refresh_public_evidence(validator, evidence)
+
+    mutated = tmp_path / "address-derived-device-identities.json"
     mutated.write_bytes(validator.canonical(evidence) + b"\n")
     verified = verify_m8_public(mutated)
     assert verified.returncode == 1
