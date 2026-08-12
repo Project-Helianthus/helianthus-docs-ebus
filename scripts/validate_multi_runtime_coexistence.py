@@ -1703,6 +1703,9 @@ def _source_debug(value: Any, path: tuple[str, ...] = ()) -> Any:
                     projected[key] = OPAQUE_ADDRESS
             else:
                 projected[key] = _source_debug(item, path + (key,))
+        if path == ("status", "admission"):
+            for key in SOURCE_DEBUG_ADDRESS_KEYS:
+                projected.setdefault(key, None)
         return projected
     if isinstance(value, list):
         return [_source_debug(item, path) for item in value]
@@ -3045,9 +3048,17 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
             "result"
         ]["devices"]
         ha_devices = views["ha.identity"]["data"]["devices"]
-        if any(device.get("address") != OPAQUE_ADDRESS for device in mcp_devices):
+        captured_runtime = evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
+        if any(
+            device.get("address") != OPAQUE_ADDRESS
+            if captured_runtime
+            else not _valid_redacted_identity(device.get("address"))
+            for device in mcp_devices
+        ):
             return True
-        allowed_placeholder_count += len(mcp_devices)
+        allowed_placeholder_count += sum(
+            device.get("address") == OPAQUE_ADDRESS for device in mcp_devices
+        )
         debug_data = views["debug.ebus"]["data"]
         admission = debug_data.get("status", {}).get("admission", {})
         if not isinstance(admission, dict):
@@ -3062,6 +3073,8 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
             if key != canonical_key or item not in (None, OPAQUE_ADDRESS):
                 return True
             allowed_placeholder_count += int(item == OPAQUE_ADDRESS)
+        if not captured_runtime:
+            continue
         device_ids = [item.get("device_id") for item in mcp_devices]
         ha_unique_ids = [item.get("unique_id") for item in ha_devices]
         ha_via_devices = [item.get("via_device") for item in ha_devices]
@@ -3094,9 +3107,8 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
 def check_public_redaction(evidence: dict[str, Any]) -> None:
     if evidence["export_tier"] != "PUBLIC_REDACTED":
         fail("redaction.public")
-    if _contains_public_secret(evidence) or (
-        evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
-        and _contains_enumerable_public_address(evidence)
+    if _contains_enumerable_public_address(evidence) or _contains_public_secret(
+        evidence
     ):
         fail("redaction.public")
 

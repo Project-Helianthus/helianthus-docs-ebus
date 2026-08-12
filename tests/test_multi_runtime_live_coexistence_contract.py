@@ -180,6 +180,48 @@ def test_msp08_inventory_matches_the_complete_stable_v1_contract() -> None:
     ]
 
 
+def test_msp08_synthetic_public_rejects_opaque_address_as_auth_identity(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = load(SYNTHETIC_EVIDENCE)
+    for run in evidence["runs"]:
+        for view in run["protected_views"]:
+            view["payload"]["meta"]["auth_subject"] = validator.OPAQUE_ADDRESS
+    refresh_protected_views(validator, evidence)
+    path = write_evidence(tmp_path, evidence)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(VALIDATOR),
+            "verify-public",
+            "--evidence",
+            str(path),
+            "--registry",
+            str(REGISTRY),
+            "--m7-graph",
+            str(M7_SYNTHETIC_GRAPH),
+            "--m7-replay",
+            str(M7_SYNTHETIC_REPLAY),
+            "--m7-registry",
+            str(M7_REGISTRY),
+            "--m7-source-bundle",
+            str(M7_SYNTHETIC_SOURCE_BUNDLE),
+            "--m7-source-replay",
+            str(M7_SYNTHETIC_SOURCE_REPLAY),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "redaction.public\n",
+        "",
+    )
+
+
 def test_msp08_read_only_scope_separates_inventory_from_call_authority() -> None:
     page = " ".join(PAGE.read_text(encoding="utf-8").split())
 
@@ -1358,6 +1400,21 @@ def test_msp08_source_projection_preserves_null_debug_address_aliases() -> None:
     projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
     assert projected["status"]["admission"] == {
         key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS
+    }
+
+
+def test_msp08_source_projection_synthesizes_missing_debug_aliases_as_null() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["status"] = {"admission": {"selected_source": 127}}
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
+    assert projected["status"]["admission"] == {
+        "companion_target": None,
+        "last_successful_source": None,
+        "selected_source": validator.OPAQUE_ADDRESS,
     }
 
 
