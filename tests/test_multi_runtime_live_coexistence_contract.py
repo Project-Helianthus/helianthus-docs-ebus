@@ -1242,6 +1242,7 @@ def test_msp08_source_projection_declares_and_excludes_volatile_schedule_leaves(
             },
         ]
     )
+    registry["leaves"].sort(key=lambda item: item["path"])
     payloads["semantic.registry"] = validator.canonical(registry)
 
     projected = validator._source_project_views(payloads)["views"][
@@ -1314,12 +1315,73 @@ def test_msp08_source_projection_preserves_stable_schedule_leaf_drift() -> None:
     after_registry["leaves"].append(
         {"path": "/schedules/disabled", "promotion_state": "PROMOTED", "source": "ebus"}
     )
+    before_registry["leaves"].sort(key=lambda item: item["path"])
+    after_registry["leaves"].sort(key=lambda item: item["path"])
     before["semantic.registry"] = validator.canonical(before_registry)
     after["semantic.registry"] = validator.canonical(after_registry)
 
     before_view = validator._source_project_views(before)["views"]["semantic.registry"]
     after_view = validator._source_project_views(after)["views"]["semantic.registry"]
     assert validator.canonical(before_view) != validator.canonical(after_view)
+
+
+def test_msp08_source_projection_rejects_reordered_semantic_leaves() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    registry = json.loads(payloads["semantic.registry"])
+    registry["leaves"].reverse()
+    payloads["semantic.registry"] = validator.canonical(registry)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    "terminal",
+    [
+        "StartHour",
+        "StartMinute",
+        "EndHour",
+        "EndMinute",
+        "TemperatureC",
+        "TemperatureRaw",
+    ],
+)
+def test_msp08_source_projection_excludes_each_canonical_volatile_terminal(
+    terminal: str,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    registry = json.loads(payloads["semantic.registry"])
+    path = f"/schedules/Programs/1/Days/0/Slots/2/{terminal}"
+    registry["leaves"].append(
+        {"path": path, "promotion_state": "PROMOTED", "source": "ebus"}
+    )
+    registry["leaves"].sort(key=lambda item: item["path"])
+    payloads["semantic.registry"] = validator.canonical(registry)
+
+    projected = validator._source_project_views(payloads)["views"]["semantic.registry"]
+    assert path not in {item["path"] for item in projected["leaves"]}
+
+
+def test_msp08_source_projection_rejects_noncanonical_schedule_index() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    registry = json.loads(payloads["semantic.registry"])
+    registry["leaves"].append(
+        {
+            "path": "/schedules/Programs/01/Days/0/Slots/0/StartHour",
+            "promotion_state": "PROMOTED",
+            "source": "ebus",
+        }
+    )
+    registry["leaves"].sort(key=lambda item: item["path"])
+    payloads["semantic.registry"] = validator.canonical(registry)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
 
 
 def test_msp08_source_projection_rejects_duplicate_semantic_leaf() -> None:

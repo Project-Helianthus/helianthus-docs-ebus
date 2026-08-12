@@ -1666,7 +1666,13 @@ def _source_portal(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+SCHEDULE_INDEX = r"(?:0|[1-9][0-9]*)"
 VOLATILE_SCHEDULE_LEAF = re.compile(
+    rf"^/schedules/Programs/{SCHEDULE_INDEX}/Days/{SCHEDULE_INDEX}/"
+    rf"Slots/{SCHEDULE_INDEX}/"
+    r"(?:StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw)$"
+)
+NONCANONICAL_VOLATILE_SCHEDULE_LEAF = re.compile(
     r"^/schedules/Programs/[0-9]+/Days/[0-9]+/Slots/[0-9]+/"
     r"(?:StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw)$"
 )
@@ -1683,6 +1689,7 @@ def _source_semantic_registry(raw: dict[str, Any]) -> dict[str, Any]:
         fail("provenance.source_capture")
     projected: list[dict[str, Any]] = []
     seen: set[str] = set()
+    previous_path: str | None = None
     for item in leaves:
         if not isinstance(item, dict) or set(item) != {
             "path",
@@ -1699,10 +1706,17 @@ def _source_semantic_registry(raw: dict[str, Any]) -> dict[str, Any]:
             or item["source"] != "ebus"
         ):
             fail("provenance.source_capture")
+        if previous_path is not None and path <= previous_path:
+            fail("provenance.source_capture")
+        if (
+            NONCANONICAL_VOLATILE_SCHEDULE_LEAF.fullmatch(path) is not None
+            and VOLATILE_SCHEDULE_LEAF.fullmatch(path) is None
+        ):
+            fail("provenance.source_capture")
         seen.add(path)
+        previous_path = path
         if VOLATILE_SCHEDULE_LEAF.fullmatch(path) is None:
             projected.append(copy.deepcopy(item))
-    projected.sort(key=lambda item: item["path"])
     if not projected:
         fail("provenance.source_capture")
     return {

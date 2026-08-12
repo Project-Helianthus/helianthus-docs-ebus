@@ -177,7 +177,10 @@ G18 view contains every promoted eBUS leaf except the exact indexed
 program/day/slot fields `StartHour`, `StartMinute`, `EndHour`, `EndMinute`,
 `TemperatureC`, and `TemperatureRaw`, whose materialization is transient cache
 state rather than a stable consumer contract. Other `/schedules/` leaves remain
-protected. Every raw leaf is validated before that deterministic projection,
+protected. Array indices use canonical decimal spelling (`0` or a non-zero
+digit followed by decimal digits); leading-zero forms fail closed. Raw leaf
+paths must arrive in strictly increasing bytewise order, so the projection
+cannot normalize an ordering regression. Every raw leaf is validated before that deterministic projection,
 and any non-excluded drift remains a
 terminal consumer-drift failure. The complete protected
 payload is source-bound: `data` comes from the projector, `meta.captured_at`
