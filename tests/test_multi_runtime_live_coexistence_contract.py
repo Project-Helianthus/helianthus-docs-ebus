@@ -351,8 +351,12 @@ def build_live_evidence(validator) -> dict[str, object]:
             device["device_id"] = validator._source_redacted(
                 f"ebus-device-ordinal:{device_index}"
             )
+            device["model"] = validator._source_redacted(
+                "ebus-model:" + device["device_id"]
+            )
         ha_devices = views["ha.identity"]["payload"]["data"]["devices"]
         for device, ha_device in zip(devices, ha_devices, strict=True):
+            ha_device["model"] = device["model"]
             ha_device["unique_id"] = validator._source_redacted(
                 "ha:" + device["device_id"]
             )
@@ -1430,6 +1434,10 @@ def test_msp08_source_projection_uses_non_enumerable_device_address_placeholder(
     assert [item["device_id"] for item in devices] == [
         validator._source_redacted(f"ebus-device-ordinal:{index}")
         for index in range(len(devices))
+    ]
+    assert [item["model"] for item in devices] == [
+        validator._source_redacted("ebus-model:" + item["device_id"])
+        for item in devices
     ]
 
     reversed_payloads = source_payloads(

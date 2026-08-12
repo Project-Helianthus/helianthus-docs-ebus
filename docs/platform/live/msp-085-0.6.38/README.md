@@ -9,17 +9,17 @@ gateway commit was
 The source-bound M8 verifier returned `PASS` after the restart-separated PRE
 and POST captures. The M8 evidence and report are:
 
-- evidence ID `mrcv1:sha256:67b7ded6a64e07e2da8f714c2ef905d9debc615bef6ef35dd515e322e6cf2317`;
-- report ID `mrcrv1:sha256:5f44c5e3cfe731d0b8ce7140cb1784098916786bc3eea83e549e50b5dc1e5060`;
+- evidence ID `mrcv1:sha256:341a5b3b83c838174fe4fed3e2bdcf7df5d8a688403e5e66276637960b3543e9`;
+- report ID `mrcrv1:sha256:ce81b3ad6cf113aca11ee6cd7a620275dae41ae50e6b50057693176959b58894`;
 - exact evidence bytes SHA-256
-  `a14fec7d2f4c268f997ff2940b0bc36aeacddc0fb34c91f31235b4976b7159bf`;
+  `9959206059a091a3805ab87e6dab6db753672c4fe03b453496260be2fb02b7c5`;
 - exact report bytes SHA-256
-  `5c4809ab22c1326ee13a689813d977ba8348a2f3084ca42089e674e2310a470c`.
+  `f211ab24f3718af21d6f414385f1554dacf654b610fb4f5b7695d57b0743424d`.
 
 The bound M8.5 verifier returned `PASS`. Its public result has SHA-256
-`b80c1a8b7320e9637f6268660d7a67b14399f35b8af63cff3f07b3a5dae2ce03`
+`a0b41745f675e234f11729b2730bd640f04b673d4b8c97e3d0b56cc74ddb5b1e`
 and result hash
-`sha256:1c2b518dd044c32fb4d3a05b3510e7a747c5b8ebb670d87f911d26024f769219`.
+`sha256:3c3c76f6a0541806fe808ea7438b6291736e53a97562f4879dca42612148109b`.
 It records `VALID_PROMOTION_LOCK`, `8` promoted candidates, `10` withheld
 candidates, and `READY_FOR_M9_PLANNING`.
 

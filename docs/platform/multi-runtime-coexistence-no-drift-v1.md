@@ -199,11 +199,12 @@ every eBUS address with the constant, non-enumerable
 address-bearing `selected_source`, `last_successful_source`, and
 `companion_target` fields. Device pseudonyms are derived from the ordinal in
 the stable projected device list, never from the address or a caller-selected
-identity. The public verifier recomputes every device pseudonym and its exact HA
-`unique_id` and `via_device` derivatives. Raw numeric or textual values under
-an address alias, address-derived pseudonyms, and caller-chosen identity hashes
-fail the public-redaction gate. The three admission fields' declared absent
-state remains JSON `null`; it is not an identity value.
+identity. The public verifier recomputes every device pseudonym, its public
+model alias, and its exact HA `model`, `unique_id`, and `via_device`
+derivatives. Raw numeric or textual values under an address alias,
+address-derived pseudonyms, and caller-chosen identity hashes fail the
+public-redaction gate. The three admission fields' declared absent state remains
+JSON `null`; it is not an identity value.
 
 PRE and POST source windows require different manifest digests regardless of
 their claimed byte lengths. Every source device row remains bound in the raw

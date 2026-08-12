@@ -1827,6 +1827,9 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             projected["device_id"] = _source_redacted(
                 f"ebus-device-ordinal:{index}"
             )
+            projected["model"] = _source_redacted(
+                "ebus-model:" + projected["device_id"]
+            )
             devices.append(projected)
         if not devices:
             fail("provenance.source_capture")
@@ -3082,9 +3085,15 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
             _source_redacted(f"ebus-device-ordinal:{index}")
             for index in range(len(mcp_devices))
         ]
+        expected_models = [
+            _source_redacted("ebus-model:" + device_id)
+            for device_id in expected_device_ids
+        ]
         if (
             len(mcp_devices) != len(ha_devices)
             or device_ids != expected_device_ids
+            or [item.get("model") for item in mcp_devices] != expected_models
+            or [item.get("model") for item in ha_devices] != expected_models
             or any(
                 len(set(values)) != len(values)
                 for values in (device_ids, ha_unique_ids, ha_via_devices)
