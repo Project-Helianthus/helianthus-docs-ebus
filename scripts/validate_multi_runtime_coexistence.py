@@ -3043,14 +3043,81 @@ def _count_exact_value(value: Any, expected: Any) -> int:
     return int(value == expected)
 
 
+def _is_public_address_key(key: Any) -> bool:
+    if not isinstance(key, str):
+        return False
+    compact = _compact_key(key)
+    return compact.endswith(("address", "addresses")) or compact in {
+        _compact_key(item) for item in SOURCE_DEBUG_ADDRESS_KEYS
+    }
+
+
+def _contains_uncontracted_public_address_key(
+    value: Any, allowed: set[tuple[int, str]]
+) -> bool:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if _is_public_address_key(key) and (id(value), key) not in allowed:
+                return True
+            if _contains_uncontracted_public_address_key(item, allowed):
+                return True
+        return False
+    if isinstance(value, list):
+        return any(
+            _contains_uncontracted_public_address_key(item, allowed) for item in value
+        )
+    return False
+
+
 def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
     allowed_placeholder_count = 0
-    for run in evidence["runs"]:
-        views = {view["view_id"]: view["payload"] for view in run["protected_views"]}
-        mcp_devices = views["mcp.ebus.v1.responses"]["data"]["responses"][0][
-            "result"
-        ]["devices"]
-        ha_devices = views["ha.identity"]["data"]["devices"]
+    runs = evidence.get("runs")
+    if not isinstance(runs, list):
+        return True
+    for run in runs:
+        if not isinstance(run, dict) or not isinstance(
+            run.get("protected_views"), list
+        ):
+            return True
+        views: dict[str, dict[str, Any]] = {}
+        for view in run["protected_views"]:
+            if (
+                not isinstance(view, dict)
+                or not isinstance(view.get("view_id"), str)
+                or not isinstance(view.get("payload"), dict)
+                or view["view_id"] in views
+            ):
+                return True
+            views[view["view_id"]] = view["payload"]
+
+        mcp_payload = views.get("mcp.ebus.v1.responses")
+        ha_payload = views.get("ha.identity")
+        debug_payload = views.get("debug.ebus")
+        if not all(isinstance(item, dict) for item in (mcp_payload, ha_payload, debug_payload)):
+            return True
+        mcp_data = mcp_payload.get("data")
+        ha_data = ha_payload.get("data")
+        debug_data = debug_payload.get("data")
+        if not all(isinstance(item, dict) for item in (mcp_data, ha_data, debug_data)):
+            return True
+        responses = mcp_data.get("responses")
+        if not isinstance(responses, list) or not responses:
+            return True
+        device_response = responses[0]
+        if (
+            not isinstance(device_response, dict)
+            or device_response.get("operation") != "ebus.v1.registry.devices.list"
+            or not isinstance(device_response.get("result"), dict)
+        ):
+            return True
+        mcp_devices = device_response["result"].get("devices")
+        ha_devices = ha_data.get("devices")
+        if (
+            not isinstance(mcp_devices, list)
+            or not isinstance(ha_devices, list)
+            or any(not isinstance(item, dict) for item in mcp_devices + ha_devices)
+        ):
+            return True
         captured_runtime = evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
         if any(
             device.get("address") != OPAQUE_ADDRESS
@@ -3062,7 +3129,6 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
         allowed_placeholder_count += sum(
             device.get("address") == OPAQUE_ADDRESS for device in mcp_devices
         )
-        debug_data = views["debug.ebus"]["data"]
         admission = debug_data.get("status", {}).get("admission", {})
         if not isinstance(admission, dict):
             return True
@@ -3076,6 +3142,15 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
             if key != canonical_key or item not in (None, OPAQUE_ADDRESS):
                 return True
             allowed_placeholder_count += int(item == OPAQUE_ADDRESS)
+        allowed_address_keys = {
+            *((id(device), "address") for device in mcp_devices),
+            *((id(admission), key) for key in SOURCE_DEBUG_ADDRESS_KEYS if key in admission),
+        }
+        if any(
+            _contains_uncontracted_public_address_key(payload, allowed_address_keys)
+            for payload in views.values()
+        ):
+            return True
         if not captured_runtime:
             continue
         device_ids = [item.get("device_id") for item in mcp_devices]

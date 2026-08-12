@@ -196,7 +196,12 @@ def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
 
 @pytest.mark.parametrize(
     "target",
-    ["auth_subject", "uncontracted_mcp_address", "uncontracted_debug_alias"],
+    [
+        "auth_subject",
+        "uncontracted_mcp_address",
+        "uncontracted_mcp_address_hash",
+        "uncontracted_debug_alias",
+    ],
 )
 def test_live_m8_canonical_verifier_rejects_opaque_address_outside_canonical_paths(
     tmp_path: pathlib.Path, target: str,
@@ -211,9 +216,16 @@ def test_live_m8_canonical_verifier_rejects_opaque_address_outside_canonical_pat
         if target == "auth_subject":
             for view in views.values():
                 view["payload"]["meta"]["auth_subject"] = validator.OPAQUE_ADDRESS
-        elif target == "uncontracted_mcp_address":
+        elif target in {
+            "uncontracted_mcp_address",
+            "uncontracted_mcp_address_hash",
+        }:
             views["mcp.ebus.v1.responses"]["payload"]["data"]["uncontracted"] = {
-                "address": validator.OPAQUE_ADDRESS
+                "address": (
+                    validator.OPAQUE_ADDRESS
+                    if target == "uncontracted_mcp_address"
+                    else validator._source_redacted("ebus-address:127")
+                )
             }
         else:
             views["debug.ebus"]["payload"]["data"]["uncontracted"] = {
@@ -222,6 +234,31 @@ def test_live_m8_canonical_verifier_rejects_opaque_address_outside_canonical_pat
     refresh_public_evidence(validator, evidence)
 
     mutated = tmp_path / "misplaced-opaque-address-evidence.json"
+    mutated.write_bytes(validator.canonical(evidence) + b"\n")
+    verified = verify_m8_public(mutated)
+    assert verified.returncode == 1
+    assert verified.stdout == "redaction.public\n"
+    assert verified.stderr == ""
+
+
+def test_live_m8_verifier_rejects_reordered_response_array_without_traceback(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = load_module(
+        "msp085_live_response_shape_validator",
+        ROOT / "scripts/validate_multi_runtime_coexistence.py",
+    )
+    evidence = load(M8_EVIDENCE)
+    for run in evidence["runs"]:
+        view = next(
+            view
+            for view in run["protected_views"]
+            if view["view_id"] == "mcp.ebus.v1.responses"
+        )
+        view["payload"]["data"]["responses"].reverse()
+    refresh_public_evidence(validator, evidence)
+
+    mutated = tmp_path / "reordered-mcp-responses.json"
     mutated.write_bytes(validator.canonical(evidence) + b"\n")
     verified = verify_m8_public(mutated)
     assert verified.returncode == 1
