@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import importlib.util
 import json
+import os
 import pathlib
 import subprocess
 import sys
+import time
 from copy import deepcopy
 
 import pytest
@@ -175,6 +178,23 @@ def test_msp08_inventory_matches_the_complete_stable_v1_contract() -> None:
         *EXPECTED_EBUS_TOOLS,
         *EXPECTED_EEBUS_TOOLS,
     ]
+
+
+def test_msp08_machine_contract_matches_verifier_precedence_and_limits() -> None:
+    validator = validator_module()
+    registry = load(REGISTRY)
+    schema = load(EVIDENCE_SCHEMA)
+    limits = schema["$defs"]["Limits"]
+
+    assert registry["validation_precedence"] == validator.VALIDATION_PRECEDENCE
+    assert registry["limits"] == validator.HARD_LIMITS
+    assert set(limits["required"]) == set(validator.HARD_LIMITS)
+    assert limits["properties"]["max_source_input_bytes"]["const"] == (
+        validator.MAX_SOURCE_INPUT_BYTES
+    )
+    assert limits["properties"]["max_source_total_bytes"]["const"] == (
+        validator.MAX_SOURCE_TOTAL_BYTES
+    )
 
 
 @pytest.mark.parametrize("mutation", ["missing", "stale", "reordered", "write"])
@@ -410,6 +430,12 @@ def build_live_evidence(validator) -> dict[str, object]:
                     "digest": evidence["m7_live_status"]["content_hash"],
                     "byte_length": len(M7_LIVE_STATUS.read_bytes()),
                 },
+                {
+                    "input_id": "source:capture-manifest",
+                    "kind": "SOURCE_CAPTURE_MANIFEST",
+                    "digest": "sha256:" + ("1" if index < 2 else "2") * 64,
+                    "byte_length": 1024,
+                },
             ]
         )
         if index == 2:
@@ -530,6 +556,314 @@ def write_evidence(tmp_path: pathlib.Path, evidence: dict[str, object]) -> pathl
     return evidence_path
 
 
+def source_mcp(validator, data: object) -> bytes:
+    inner = {"data": data, "meta": {"contract": "test"}}
+    return validator.canonical(
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+                "isError": False,
+                "content": [
+                    {"type": "text", "text": validator.canonical(inner).decode("utf-8")}
+                ]
+            },
+        }
+    )
+
+
+def source_payloads(
+    validator, source_key: str, captured_at: str
+) -> dict[str, bytes]:
+    tools = [
+        {"name": name, "inputSchema": {"type": "object", "properties": {}}}
+        for name in validator.APPROVED_M8_TOOL_INVENTORY
+    ]
+    devices = [
+        {
+            "address": 8,
+            "manufacturer": "Vaillant",
+            "device_id": "BAI00",
+            "discovery_source": "active_confirmed",
+            "verification_state": "identity_confirmed",
+        },
+        {
+            "address": 38,
+            "manufacturer": "Vaillant",
+            "device_id": "VR_71",
+            "discovery_source": "active_confirmed",
+            "verification_state": "identity_confirmed",
+        },
+    ]
+    semantic = {
+        "completed_planes": ["zones", "dhw", "system"],
+        "planes": {
+            "zones": [
+                {
+                    "id": "zone-1",
+                    "name": "Zone 1",
+                    "config": {
+                        "operating_mode": "auto",
+                        "preset": "comfort",
+                        "target_temp_c": 21.5,
+                        "associated_circuit": 1,
+                    },
+                }
+            ],
+            "dhw": {"config": {"operating_mode": "auto", "preset": "comfort"}},
+            "system": {
+                "properties": {"system_scheme": 8, "module_configuration_vr71": 3}
+            },
+        },
+    }
+    graph_values = {
+        "data": {
+            "zones": [
+                {
+                    "id": "zone-1",
+                    "name": "Zone 1",
+                    "config": {"operatingMode": "auto", "targetTempC": 21.5},
+                }
+            ],
+            "dhw": {"config": {"operatingMode": "auto"}},
+        }
+    }
+    routes = {
+        "fallback": None,
+        "routes": [
+            {"semantic_path": "/dhw/operating_mode", "source": "ebus"},
+            {"semantic_path": "/zones/1/target_temperature", "source": "ebus"},
+        ],
+    }
+    semantic_registry = {
+        "authority": "ebus.promoted",
+        "leaves": [
+            {
+                "path": item["semantic_path"],
+                "promotion_state": "PROMOTED",
+                "source": item["source"],
+            }
+            for item in routes["routes"]
+        ],
+    }
+    return {
+        "tools.list": validator.canonical({"result": {"tools": tools}}),
+        "ebus.devices": source_mcp(validator, devices),
+        "ebus.semantic": source_mcp(validator, semantic),
+        "ebus.debug": validator.canonical(
+            {
+                "transport": "ENS",
+                "runtime_state": "running",
+                "registry_device_count": len(devices),
+                "last_frame": "redacted-live-frame",
+            }
+        ),
+        "eebus.runtime": source_mcp(validator, {"state": "ready"}),
+        "eebus.services": source_mcp(validator, {"services": [{"id": "service-1"}]}),
+        "eebus.sessions": source_mcp(
+            validator, {"sessions": [{"id": "session-1", "state": "connected"}]}
+        ),
+        "eebus.pairing": source_mcp(
+            validator, {"pairing": [{"remote_ski": "test", "state": "paired"}]}
+        ),
+        "eebus.topology": source_mcp(
+            validator,
+            {"devices": [{"address": "test"}], "entities": [], "features": [], "usecases": []},
+        ),
+        "graphql.schema": validator.canonical(
+            {
+                "data": {
+                    "__schema": {
+                        "queryType": {"fields": [{"name": "zones"}, {"name": "dhw"}]},
+                        "mutationType": {"fields": [{"name": "setZone"}]},
+                    }
+                }
+            }
+        ),
+        "graphql.values": validator.canonical(graph_values),
+        "portal.bootstrap": validator.canonical(
+            {"capabilities": {"devices": True, "zones": True}, "ui_version": "test-v1"}
+        ),
+        "command.routing": validator.canonical(routes),
+        "semantic.registry": validator.canonical(semantic_registry),
+        "container.inspect": validator.canonical(
+            [
+                {
+                    "Id": "container-" + source_key,
+                    "State": {"StartedAt": captured_at},
+                }
+            ]
+        ),
+        "capture.timestamp": (captured_at + "\n").encode("utf-8"),
+    }
+
+
+def write_source_root(
+    validator, tmp_path: pathlib.Path, source_key: str, captured_at: str
+) -> tuple[pathlib.Path, dict[str, bytes], dict[str, object]]:
+    root = tmp_path / f"source-{source_key}"
+    root.mkdir()
+    payloads = source_payloads(validator, source_key, captured_at)
+    for input_id, raw in payloads.items():
+        (root / validator.SOURCE_CAPTURE_FILES[input_id]).write_bytes(raw)
+    return root, payloads, validator._source_project_views(payloads)
+
+
+def source_manifest(
+    validator,
+    payloads: dict[str, bytes],
+    *,
+    auth_scope_hash: str,
+    window_id: str,
+    phase: str,
+    process_instance_id: str,
+    capture_start_offset_ns: int,
+    capture_end_offset_ns: int,
+) -> bytes:
+    captured_at = payloads["capture.timestamp"].decode("utf-8").strip()
+    value = {
+        "contract": validator.SOURCE_CAPTURE_CONTRACT,
+        "schema_version": 1,
+        "window_id": window_id,
+        "window_scope": "SINGLE_WINDOW_ONLY",
+        "phase": phase,
+        "projection_policy": validator.SOURCE_CAPTURE_POLICY,
+        "auth_scope_hash": auth_scope_hash,
+        "process_instance_id": process_instance_id,
+        "capture_start_offset_ns": capture_start_offset_ns,
+        "capture_end_offset_ns": capture_end_offset_ns,
+        "captured_at": captured_at,
+        "inputs": [
+            {
+                "input_id": input_id,
+                "auth_boundary": boundary,
+                "digest": "sha256:" + hashlib.sha256(payloads[input_id]).hexdigest(),
+                "byte_length": len(payloads[input_id]),
+            }
+            for input_id, boundary in validator.SOURCE_CAPTURE_INPUTS.items()
+        ],
+    }
+    return validator.canonical(value)
+
+
+def bind_source_manifests(
+    validator, evidence: dict[str, object], tmp_path: pathlib.Path
+) -> tuple[dict[str, bytes], dict[str, pathlib.Path]]:
+    manifests: dict[str, bytes] = {}
+    roots: dict[str, pathlib.Path] = {}
+    projections: dict[str, dict[str, object]] = {}
+    for source_key, run_indexes in (("before", (0, 1)), ("after", (2, 3))):
+        start_offset = min(
+            evidence["runs"][index]["capture_offset_ns"] for index in run_indexes
+        )
+        captured_at = validator._capture_time_at(
+            evidence["capture_clock"], start_offset
+        )
+        root, payloads, projected = write_source_root(
+            validator, tmp_path, source_key, captured_at
+        )
+        roots[source_key] = root
+        projections[source_key] = projected
+        scope_hashes = {
+            evidence["runs"][index]["provenance"]["auth_scope"]["scope_hash"]
+            for index in run_indexes
+        }
+        assert len(scope_hashes) == 1
+        scope_hash = scope_hashes.pop()
+        process_instance_id = projected["process_instance_id"]
+        bound_payloads = validator._source_bound_payloads(
+            projected["views"], captured_at, scope_hash
+        )
+        for index in run_indexes:
+            run = evidence["runs"][index]
+            run["provenance"]["process_instance_id"] = process_instance_id
+            run["state_evidence"]["service_count"] = projected["service_count"]
+            for view in run["protected_views"]:
+                view["payload"] = deepcopy(bound_payloads[view["view_id"]])
+        raw = source_manifest(
+            validator,
+            payloads,
+            auth_scope_hash=scope_hash,
+            window_id=f"window-{source_key}",
+            phase=validator.SOURCE_CAPTURE_PHASES[source_key],
+            process_instance_id=process_instance_id,
+            capture_start_offset_ns=start_offset,
+            capture_end_offset_ns=max(
+                evidence["runs"][index]["capture_offset_ns"] for index in run_indexes
+            ),
+        )
+        binding = ("sha256:" + hashlib.sha256(raw).hexdigest(), len(raw))
+        for index in run_indexes:
+            source = next(
+                item
+                for item in evidence["runs"][index]["provenance"]["immutable_inputs"]
+                if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
+            )
+            source["digest"], source["byte_length"] = binding
+        manifests[source_key] = raw
+    transition = evidence["runs"][2]["state_evidence"]["restart_transition"]
+    before_process = projections["before"]["process_instance_id"]
+    after_process = projections["after"]["process_instance_id"]
+    transition["before_process_instance_id"] = before_process
+    transition["after_process_instance_id"] = after_process
+    transition["process_event"]["before_process_instance_id"] = before_process
+    transition["process_event"]["after_process_instance_id"] = after_process
+    transition["before_snapshot"]["process_instance_id"] = before_process
+    transition["after_snapshot"]["process_instance_id"] = after_process
+    transition["session_event"]["process_instance_id"] = after_process
+    refresh_protected_views(validator, evidence)
+    for input_id, domain, field in (
+        ("restart:process-event", validator.RESTART_PROCESS_EVENT_DOMAIN, "process_event"),
+        ("restart:before-snapshot", validator.RESTART_SNAPSHOT_DOMAIN, "before_snapshot"),
+        ("restart:after-snapshot", validator.RESTART_SNAPSHOT_DOMAIN, "after_snapshot"),
+        ("restart:session-event", validator.RESTART_SESSION_EVENT_DOMAIN, "session_event"),
+    ):
+        item = next(
+            item
+            for item in evidence["runs"][2]["provenance"]["immutable_inputs"]
+            if item["input_id"] == input_id
+        )
+        value = transition[field]
+        item["digest"] = validator.digest(domain, value)
+        item["byte_length"] = len(validator.canonical(value))
+    refresh_evidence_hash(validator, evidence)
+    return manifests, roots
+
+
+def live_m7_inputs(validator, evidence: dict[str, object]) -> dict[str, tuple[str, int]]:
+    return {
+        item["input_id"]: (item["digest"], item["byte_length"])
+        for item in evidence["runs"][0]["provenance"]["immutable_inputs"]
+        if item["input_id"].startswith("m7:")
+    }
+
+
+def rebind_source_manifest(
+    validator,
+    evidence: dict[str, object],
+    source_key: str,
+    manifests: dict[str, bytes],
+    roots: dict[str, pathlib.Path],
+) -> None:
+    value = json.loads(manifests[source_key])
+    for item in value["inputs"]:
+        raw = (roots[source_key] / validator.SOURCE_CAPTURE_FILES[item["input_id"]]).read_bytes()
+        item["digest"] = "sha256:" + hashlib.sha256(raw).hexdigest()
+        item["byte_length"] = len(raw)
+    raw = validator.canonical(value)
+    manifests[source_key] = raw
+    binding = ("sha256:" + hashlib.sha256(raw).hexdigest(), len(raw))
+    run_indexes = (0, 1) if source_key == "before" else (2, 3)
+    for index in run_indexes:
+        source = next(
+            item
+            for item in evidence["runs"][index]["provenance"]["immutable_inputs"]
+            if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
+        )
+        source["digest"], source["byte_length"] = binding
+    refresh_evidence_hash(validator, evidence)
+
+
 def test_msp08_live_profile_validates_bound_m7_and_restart(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -543,6 +877,684 @@ def test_msp08_live_profile_validates_bound_m7_and_restart(
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == "public-only-ok\n"
+
+
+def test_msp08_live_public_evidence_requires_source_manifest_binding(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    for run in evidence["runs"]:
+        run["provenance"]["immutable_inputs"] = [
+            item for item in run["provenance"]["immutable_inputs"]
+            if item["input_id"] != validator.SOURCE_CAPTURE_INPUT_ID
+        ]
+    refresh_evidence_hash(validator, evidence)
+    result = subprocess.run(
+        validator_command("verify", write_evidence(tmp_path, evidence)),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout) == (1, "provenance.source_capture\n")
+
+
+def test_msp08_live_public_evidence_rejects_reused_window_binding(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    before = next(
+        item
+        for item in evidence["runs"][0]["provenance"]["immutable_inputs"]
+        if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
+    )
+    for run in evidence["runs"][2:]:
+        source = next(
+            item
+            for item in run["provenance"]["immutable_inputs"]
+            if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
+        )
+        source["digest"] = before["digest"]
+        source["byte_length"] = before["byte_length"]
+    refresh_evidence_hash(validator, evidence)
+    result = subprocess.run(
+        validator_command("verify", write_evidence(tmp_path, evidence)),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout) == (1, "provenance.source_capture\n")
+
+
+def test_msp08_live_public_evidence_rejects_same_digest_with_different_length(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    before = next(
+        item
+        for item in evidence["runs"][0]["provenance"]["immutable_inputs"]
+        if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
+    )
+    for run in evidence["runs"][2:]:
+        source = next(
+            item
+            for item in run["provenance"]["immutable_inputs"]
+            if item["input_id"] == validator.SOURCE_CAPTURE_INPUT_ID
+        )
+        source["digest"] = before["digest"]
+        source["byte_length"] = before["byte_length"] + 1
+    refresh_evidence_hash(validator, evidence)
+    result = subprocess.run(
+        validator_command("verify", write_evidence(tmp_path, evidence)),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout) == (1, "provenance.source_capture\n")
+
+
+def test_msp08_source_manifest_binds_one_window_and_auth_scope(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    run = evidence["runs"][0]
+    raw = manifests["before"]
+    binding = validator._source_capture_binding(
+        raw,
+        roots["before"],
+        run["provenance"]["auth_scope"]["scope_hash"],
+        "PRE_RESTART",
+        run["provenance"]["process_instance_id"],
+        evidence["runs"][0]["capture_offset_ns"],
+        evidence["runs"][1]["capture_offset_ns"],
+        json.loads(raw)["captured_at"],
+    )
+    assert binding["digest"] == "sha256:" + hashlib.sha256(raw).hexdigest()
+    assert binding["byte_length"] == len(raw)
+    value = json.loads(raw)
+    value["window_scope"] = "PRE_AND_POST"
+    with pytest.raises(Exception) as error:
+        validator._source_capture_binding(
+            validator.canonical(value),
+            roots["before"],
+            run["provenance"]["auth_scope"]["scope_hash"],
+            "PRE_RESTART",
+            run["provenance"]["process_instance_id"],
+            evidence["runs"][0]["capture_offset_ns"],
+            evidence["runs"][1]["capture_offset_ns"],
+            json.loads(raw)["captured_at"],
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_source_mcp_accepts_large_envelope_with_bounded_inner_values() -> None:
+    validator = validator_module()
+    values = [{"id": f"item-{index:04d}", "state": "visible"} for index in range(300)]
+    raw = source_mcp(validator, {"items": values})
+
+    assert len(json.loads(raw)["result"]["content"][0]["text"].encode("utf-8")) > (
+        validator.HARD_LIMITS["max_string_bytes"]
+    )
+    assert validator._source_inner_mcp(raw)["data"]["items"] == values
+
+
+def test_msp08_source_decimal_is_bounded_and_canonical() -> None:
+    validator = validator_module()
+    decoded = validator._decode_source_json(b'{"temperature":21.500}')
+
+    assert validator._source_string_number(decoded["temperature"]) == "21.5"
+
+
+def test_msp08_source_decimal_preserves_long_mcp_and_graphql_values() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-11T10:00:00Z")
+    exact = b"12345678901234567890123456789.5"
+    for source in ("ebus.semantic", "graphql.values"):
+        payloads[source] = payloads[source].replace(b"21.5", exact)
+
+    projected = validator._source_project_views(payloads)["views"]
+    semantic = projected["mcp.ebus.v1.responses"]["responses"][1]["result"]
+    expected = exact.decode("ascii")
+    assert semantic["zones"][0]["target_temp_c"] == expected
+    assert projected["graphql.ebus.values"]["zones"][0]["target_temp_c"] == expected
+    assert projected["ha.graphql.values"]["entities"][0]["target_temperature"] == expected
+
+
+def test_msp08_source_decimal_canonicalizes_zero_independent_of_context() -> None:
+    validator = validator_module()
+    with validator.decimal.localcontext() as context:
+        context.prec = 2
+        for raw in (b"0", b"0.0", b"0e3", b"0.000e-100"):
+            decoded = validator._decode_source_json(b'{"value":' + raw + b"}")
+            assert validator._source_string_number(decoded["value"]) == "0"
+
+
+@pytest.mark.parametrize(
+    "raw",
+    (
+        b'{"temperature":-0.0}',
+        b'{"temperature":1e1025}',
+        ('{"temperature":0.' + "1" * 129 + "}").encode("ascii"),
+    ),
+)
+def test_msp08_source_decimal_rejects_nonportable_bounds(raw: bytes) -> None:
+    validator = validator_module()
+
+    with pytest.raises(Exception) as error:
+        validator._decode_source_json(raw)
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_source_manifest_rejects_auth_boundary_drift(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    run = evidence["runs"][0]
+    value = json.loads(manifests["before"])
+    value["inputs"][0]["auth_boundary"] = "OWNER_UNIX_MCP"
+    with pytest.raises(Exception) as error:
+        validator._source_capture_binding(
+            validator.canonical(value),
+            roots["before"],
+            run["provenance"]["auth_scope"]["scope_hash"],
+            "PRE_RESTART",
+            run["provenance"]["process_instance_id"],
+            evidence["runs"][0]["capture_offset_ns"],
+            evidence["runs"][1]["capture_offset_ns"],
+            json.loads(manifests["before"])["captured_at"],
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_binds_distinct_single_window_manifests(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+
+    assert manifests["before"] != manifests["after"]
+    validator.check_runtime(
+        evidence,
+        live_m7_inputs(validator, evidence),
+        manifests,
+        roots,
+        require_private=True,
+    )
+    for run_index in (0, 2):
+        views = {
+            view["view_id"]: view["payload"]["data"]
+            for view in evidence["runs"][run_index]["protected_views"]
+        }
+        semantic = views["mcp.ebus.v1.responses"]["responses"][1]["result"]
+        assert semantic["zones"][0]["target_temp_c"] == "21.5"
+        assert semantic["zones"][0]["name"].startswith("redacted:sha256:")
+        assert views["graphql.ebus.values"]["zones"][0]["target_temp_c"] == "21.5"
+        assert views["graphql.ebus.values"]["zones"][0]["name"] == semantic["zones"][0]["name"]
+        assert views["ha.graphql.values"]["entities"][0]["target_temperature"] == "21.5"
+        assert b"Zone 1" not in validator.canonical(views)
+        assert b"BAI00" not in validator.canonical(views)
+        assert b"VR_71" not in validator.canonical(views)
+
+
+def test_msp08_private_window_rejects_unprojectable_source_device(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["ebus.devices"]
+    envelope = json.loads(path.read_bytes())
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"][0]["address"] = "8"
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    path.write_bytes(validator.canonical(envelope))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+    run = evidence["runs"][0]
+
+    with pytest.raises(Exception) as error:
+        validator._source_capture_binding(
+            manifests["before"],
+            roots["before"],
+            run["provenance"]["auth_scope"]["scope_hash"],
+            "PRE_RESTART",
+            run["provenance"]["process_instance_id"],
+            evidence["runs"][0]["capture_offset_ns"],
+            evidence["runs"][1]["capture_offset_ns"],
+            json.loads(manifests["before"])["captured_at"],
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_accepts_nanosecond_window_offset(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    evidence["runs"][0]["capture_offset_ns"] = 1
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+
+    assert json.loads(manifests["before"])["captured_at"].endswith(".000000001Z")
+    validator.check_runtime(
+        evidence,
+        live_m7_inputs(validator, evidence),
+        manifests,
+        roots,
+        require_private=True,
+    )
+
+
+@pytest.mark.parametrize("invalid", ({"x": 1}, [21], True, "21.5"))
+def test_msp08_private_window_rejects_nonnumeric_graphql_temperature(
+    tmp_path: pathlib.Path, invalid: object
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["graphql.values"]
+    value = json.loads(path.read_bytes())
+    value["data"]["zones"][0]["config"]["targetTempC"] = invalid
+    path.write_bytes(validator.canonical(value))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+    run = evidence["runs"][0]
+
+    with pytest.raises(Exception) as error:
+        validator._source_capture_binding(
+            manifests["before"],
+            roots["before"],
+            run["provenance"]["auth_scope"]["scope_hash"],
+            "PRE_RESTART",
+            run["provenance"]["process_instance_id"],
+            evidence["runs"][0]["capture_offset_ns"],
+            evidence["runs"][1]["capture_offset_ns"],
+            json.loads(manifests["before"])["captured_at"],
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_window_rejects_fractional_passthrough_without_traceback(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["graphql.values"]
+    raw = path.read_bytes().replace(b'"operatingMode":"auto"', b'"operatingMode":1.5')
+    path.write_bytes(raw)
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+    run = evidence["runs"][0]
+
+    with pytest.raises(validator.Failure) as error:
+        validator._source_capture_binding(
+            manifests["before"],
+            roots["before"],
+            run["provenance"]["auth_scope"]["scope_hash"],
+            "PRE_RESTART",
+            run["provenance"]["process_instance_id"],
+            evidence["runs"][0]["capture_offset_ns"],
+            evidence["runs"][1]["capture_offset_ns"],
+            json.loads(manifests["before"])["captured_at"],
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_requires_both_source_manifests(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    manifests["after"] = None
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_reports_manifest_size_limit(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    oversized = tmp_path / "oversized-manifest.json"
+    with oversized.open("wb") as stream:
+        stream.truncate(validator.MAX_SOURCE_INPUT_BYTES + 1)
+    manifests["before"] = oversized
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "limits.exceeded"
+
+
+@pytest.mark.parametrize("mutation", ["reuse", "swap"])
+def test_msp08_private_runtime_rejects_reused_or_swapped_windows(
+    tmp_path: pathlib.Path, mutation: str
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    if mutation == "reuse":
+        manifests["after"] = manifests["before"]
+        roots["after"] = roots["before"]
+    else:
+        manifests = {"before": manifests["after"], "after": manifests["before"]}
+        roots = {"before": roots["after"], "after": roots["before"]}
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_rejects_source_bytes_tampering(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["portal.bootstrap"]
+    path.write_bytes(path.read_bytes() + b"\n")
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    "tool_mutation",
+    ["extra_v2", "extra_write", "reordered", "paginated"],
+)
+def test_msp08_private_runtime_requires_exact_scoped_tool_inventory(
+    tmp_path: pathlib.Path, tool_mutation: str
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["tools.list"]
+    value = json.loads(path.read_bytes())
+    tools = value["result"]["tools"]
+    if tool_mutation == "extra_v2":
+        tools.append(
+            {
+                "name": "eebus.v2.runtime.status.get",
+                "inputSchema": {"type": "object", "properties": {}},
+            }
+        )
+    elif tool_mutation == "extra_write":
+        tools.append(
+            {
+                "name": "eebus.v1.features.write",
+                "inputSchema": {"type": "object", "properties": {}},
+            }
+        )
+    elif tool_mutation == "reordered":
+        tools[0], tools[1] = tools[1], tools[0]
+    else:
+        value["result"]["nextCursor"] = "page-with-write-tool"
+    path.write_bytes(validator.canonical(value))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    ("input_id", "replacement"),
+    [
+        ("portal.bootstrap", {"capabilities": {}, "ui_version": "contradiction"}),
+        ("ebus.debug", {"runtime_state": "stopped"}),
+        ("command.routing", {"fallback": "eebus", "routes": []}),
+        ("semantic.registry", {"authority": "eebus", "leaves": []}),
+    ],
+)
+def test_msp08_private_runtime_rejects_direct_view_contradiction(
+    tmp_path: pathlib.Path, input_id: str, replacement: dict[str, object]
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES[input_id]
+    path.write_bytes(validator.canonical(replacement))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize("metadata_field", ["captured_at", "auth_subject"])
+def test_msp08_private_runtime_binds_complete_payload_metadata(
+    tmp_path: pathlib.Path, metadata_field: str
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    view = evidence["runs"][0]["protected_views"][0]
+    view["payload"]["meta"][metadata_field] = (
+        json.loads(manifests["after"])["captured_at"]
+        if metadata_field == "captured_at"
+        else "redacted:sha256:ffffffffffff"
+    )
+    refresh_protected_views(validator, evidence)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    [b"{}", b"[]", b'{"data":{},"data":{}}', b'{"value":"\\ud800"}'],
+)
+def test_msp08_private_runtime_rejects_malformed_source_shape_without_traceback(
+    tmp_path: pathlib.Path, malformed: bytes
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["graphql.schema"]
+    path.write_bytes(malformed)
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_rejects_excessive_source_nesting_by_precedence(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    depth = validator.HARD_LIMITS["max_depth"] + 1
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["portal.bootstrap"]
+    path.write_bytes(("[" * depth + "0" + "]" * depth).encode("ascii"))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "limits.exceeded"
+
+
+def test_msp08_source_reader_rejects_oversize_fifo_and_symlink_without_blocking(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    regular = tmp_path / "regular.json"
+    regular.write_bytes(b"{}")
+    oversized = tmp_path / "oversized.json"
+    with oversized.open("wb") as stream:
+        stream.truncate(validator.MAX_SOURCE_INPUT_BYTES + 1)
+    fifo = tmp_path / "capture.fifo"
+    os.mkfifo(fifo)
+    symlink = tmp_path / "capture-link.json"
+    symlink.symlink_to(regular)
+
+    for path, expected in (
+        (oversized, "limits.exceeded"),
+        (fifo, "provenance.source_capture"),
+        (symlink, "provenance.source_capture"),
+    ):
+        started = time.monotonic()
+        with pytest.raises(Exception) as error:
+            validator._read_bounded_regular_file(
+                path,
+                validator.MAX_SOURCE_INPUT_BYTES,
+                "provenance.source_capture",
+                limit_category="limits.exceeded",
+            )
+        assert str(error.value) == expected
+        assert time.monotonic() - started < 1.0
+
+
+def test_msp08_source_reader_rejects_aggregate_limit(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    root = tmp_path / "source-root"
+    root.mkdir()
+    raw = b"x" * (validator.MAX_SOURCE_TOTAL_BYTES // len(validator.SOURCE_CAPTURE_FILES) + 1)
+    inputs = []
+    for input_id, filename in validator.SOURCE_CAPTURE_FILES.items():
+        (root / filename).write_bytes(raw)
+        inputs.append(
+            {
+                "input_id": input_id,
+                "auth_boundary": validator.SOURCE_CAPTURE_INPUTS[input_id],
+                "digest": "sha256:" + hashlib.sha256(raw).hexdigest(),
+                "byte_length": len(raw),
+            }
+        )
+
+    with pytest.raises(Exception) as error:
+        validator._read_source_inputs(root, {"inputs": inputs})
+    assert str(error.value) == "limits.exceeded"
+
+
+def test_msp08_private_runtime_rejects_cross_window_device_intersection(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["ebus.devices"]
+    envelope = json.loads(path.read_bytes())
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"].append(
+        {
+            "address": 16,
+            "manufacturer": "Vaillant",
+            "device_id": "BASV2",
+            "discovery_source": "active_confirmed",
+            "verification_state": "identity_confirmed",
+        }
+    )
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    path.write_bytes(validator.canonical(envelope))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_private_runtime_rejects_dropped_or_hardcoded_projection(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    view = next(
+        item
+        for item in evidence["runs"][0]["protected_views"]
+        if item["view_id"] == "mcp.ebus.v1.responses"
+    )
+    view["payload"]["data"]["responses"][0]["result"]["devices"][0].pop(
+        "verification_state"
+    )
+    refresh_protected_views(validator, evidence)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
 
 
 def test_msp08_live_profile_rejects_synthetic_build_mode(
@@ -599,6 +1611,94 @@ def test_msp08_live_report_refuses_public_only_inputs(tmp_path: pathlib.Path) ->
     )
     assert result.returncode == 1
     assert result.stdout == "provenance.m7\n"
+
+
+def test_msp08_m7_precedence_runs_before_source_manifest_io(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    evidence["m7_binding"]["graph_hash"] = "sha256:" + "0" * 64
+    refresh_evidence_hash(validator, evidence)
+    missing = tmp_path / "missing-source-manifest.json"
+    result = subprocess.run(
+        [
+            *validator_command("report", write_evidence(tmp_path, evidence)),
+            "--before-source-manifest",
+            str(missing),
+            "--after-source-manifest",
+            str(missing),
+            "--before-source-root",
+            str(tmp_path),
+            "--after-source-root",
+            str(tmp_path),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "provenance.m7\n",
+        "",
+    )
+
+
+def test_msp08_runtime_precedence_runs_before_source_manifest_io(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    evidence["runs"][0]["provenance"]["immutable_inputs"][0]["digest"] = (
+        "sha256:" + "0" * 64
+    )
+    missing = tmp_path / "missing-source-manifest.json"
+    manifests = {"before": missing, "after": missing}
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.runtime"
+
+
+@pytest.mark.parametrize("run_count", [1, 2, 3, 5])
+def test_msp08_live_cardinality_fails_schema_without_traceback(
+    tmp_path: pathlib.Path, run_count: int
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    if run_count < 4:
+        evidence["runs"] = evidence["runs"][:run_count]
+    else:
+        extra = deepcopy(evidence["runs"][-1])
+        extra["run_id"] = "msp08-run-extra"
+        extra["capture_offset_ns"] += 1_000_000_000
+        evidence["runs"].append(extra)
+    refresh_evidence_hash(validator, evidence)
+    result = subprocess.run(
+        validator_command("verify", write_evidence(tmp_path, evidence)),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "schema.evidence\n",
+        "",
+    )
+    schema_result = subprocess.run(
+        ["jv", str(EVIDENCE_SCHEMA), str(write_evidence(tmp_path, evidence))],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert schema_result.returncode != 0
 
 
 def test_msp08_live_public_status_projection_is_redacted_and_schema_valid(

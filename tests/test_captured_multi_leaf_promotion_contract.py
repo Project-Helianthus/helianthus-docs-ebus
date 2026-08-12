@@ -8,6 +8,7 @@ import os
 import pathlib
 import subprocess
 import sys
+import time
 
 import pytest
 
@@ -413,6 +414,15 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
         runtime["build_manifest_hash"] = validator.coexistence.digest(
             validator.coexistence.BUILD_DOMAIN, runtime["build_manifest"]
         )
+    source_manifests, source_roots = live_test.bind_source_manifests(
+        validator.coexistence, evidence, tmp_path
+    )
+    source_manifest_paths = {
+        source_key: tmp_path / f"m8-{source_key}-source-manifest.json"
+        for source_key in source_manifests
+    }
+    for source_key, path in source_manifest_paths.items():
+        path.write_bytes(source_manifests[source_key])
     live_test.refresh_evidence_hash(validator.coexistence, evidence)
     report = validator.coexistence.report(copy.deepcopy(evidence), m8_registry)
     evidence_path = write(tmp_path / "m8-evidence.json", evidence)
@@ -583,6 +593,10 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
         "m7_terminal_source_replay": M7_TERMINAL_SOURCE_REPLAY,
         "m8_evidence": evidence_path,
         "m8_report": report_path,
+        "m8_before_source_manifest": source_manifest_paths["before"],
+        "m8_after_source_manifest": source_manifest_paths["after"],
+        "m8_before_source_root": source_roots["before"],
+        "m8_after_source_root": source_roots["after"],
         "m8_trust_state_hash": campaign["windows"][0]["trust_state_hash"],
         "m8_peer_binding_hash": campaign["windows"][0]["peer_binding_hash"],
         "receipts": receipt_paths,
@@ -620,6 +634,14 @@ def live_cli_args(bundle: dict) -> list[str]:
         str(bundle["m8_evidence"]),
         "--m8-report",
         str(bundle["m8_report"]),
+        "--m8-before-source-manifest",
+        str(bundle["m8_before_source_manifest"]),
+        "--m8-after-source-manifest",
+        str(bundle["m8_after_source_manifest"]),
+        "--m8-before-source-root",
+        str(bundle["m8_before_source_root"]),
+        "--m8-after-source-root",
+        str(bundle["m8_after_source_root"]),
         "--m8-trust-state-hash",
         bundle["m8_trust_state_hash"],
         "--m8-peer-binding-hash",
@@ -650,6 +672,10 @@ def live_sources(bundle: dict) -> dict:
         "m7_terminal_source_replay": bundle["m7_terminal_source_replay"],
         "m8_evidence": bundle["m8_evidence"],
         "m8_report": bundle["m8_report"],
+        "m8_before_source_manifest": bundle["m8_before_source_manifest"],
+        "m8_after_source_manifest": bundle["m8_after_source_manifest"],
+        "m8_before_source_root": bundle["m8_before_source_root"],
+        "m8_after_source_root": bundle["m8_after_source_root"],
         "m8_trust_state_hash": bundle["m8_trust_state_hash"],
         "m8_peer_binding_hash": bundle["m8_peer_binding_hash"],
         "capture_receipts": bundle["receipts"],
@@ -1067,6 +1093,32 @@ def test_full_live_verifier_rejects_synthetic_m8_baseline_only(
     assert raised.value.category == "live.m8"
 
 
+def test_m85_forwards_m8_source_paths_without_preloading(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    validator = module()
+    bundle = generated_live_bundle(validator, tmp_path)
+    monkeypatch.setattr(
+        validator, "PINNED_REGISTRY_SHA256", bundle["registry_hash"]
+    )
+    observed: dict[str, pathlib.Path] = {}
+    original = validator.coexistence.verify
+
+    def verify_with_path_assertion(*args, **kwargs):
+        observed.update(kwargs["source_manifests"])
+        assert all(isinstance(path, pathlib.Path) for path in observed.values())
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(validator.coexistence, "verify", verify_with_path_assertion)
+    campaign, _ = validator.load_json(bundle["campaign"])
+    registry = validator.registry_value(bundle["registry"])
+    validator.verify_private(campaign, registry, live_sources(bundle))
+    assert observed == {
+        "before": bundle["m8_before_source_manifest"],
+        "after": bundle["m8_after_source_manifest"],
+    }
+
+
 def test_full_live_verifier_rejects_forged_terminal_source_binding(
     tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1326,6 +1378,30 @@ def test_reproducible_build_allows_versioned_module_replacement() -> None:
     validator._reject_local_module_replacements(
         b'{"Replace":[{"New":{"Path":"example.invalid/new","Version":"v1.2.3"}}]}'
     )
+
+
+def test_live_artifact_reader_rejects_oversize_fifo_and_symlink_without_blocking(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = module()
+    regular = tmp_path / "regular.json"
+    regular.write_bytes(b"{}")
+    oversized = tmp_path / "oversized.json"
+    with oversized.open("wb") as stream:
+        stream.truncate(validator.MAX_INPUT_BYTES + 1)
+    fifo = tmp_path / "artifact.fifo"
+    os.mkfifo(fifo)
+    symlink = tmp_path / "artifact-link.json"
+    symlink.symlink_to(regular)
+
+    for path in (oversized, fifo, symlink):
+        started = time.monotonic()
+        with pytest.raises(validator.ValidationFailure) as raised:
+            validator._read_bounded_bytes(
+                path, validator.MAX_INPUT_BYTES, "live.source_capture"
+            )
+        assert raised.value.category == "live.source_capture"
+        assert time.monotonic() - started < 1.0
 
 
 def test_reproducible_build_rejects_tracked_external_go_symlink(
@@ -2104,8 +2180,8 @@ def test_capture_limits_and_restart_generation_are_bound(tmp_path: pathlib.Path)
 def test_zero_profile_canonical_bytes_match_current_m8_inventory_revision() -> None:
     expected = {
         "leaf-promotion-registry-v1.json": "ad33736c00aa2c3ecaac981606d25c064088c80cb72ca5389b83c5d9df40f6a3",
-        "../fixtures/leaf-promotion-dossier/v1/positive/dossier.json": "1f97fc824b88cd7a950488dd27a6cd26ffa7977a3355d3009de3759535ffb6c0",
-        "../fixtures/leaf-promotion-dossier/v1/positive/result.json": "a8175dd33822a3174d74c9fae9541a3af4ba6a7a9cc0572ab6796e0e9d979d0c",
+        "../fixtures/leaf-promotion-dossier/v1/positive/dossier.json": "3fc7ae3df923d9850451ac2518583136b1cb31fb32a41777168d0a4f5c89b3f2",
+        "../fixtures/leaf-promotion-dossier/v1/positive/result.json": "6a9b57cc3abd6c58ef8729ac503c54868bde831014532c631f27b04ad9322f93",
     }
     for relative, expected_hash in expected.items():
         assert hashlib.sha256((SCHEMA_ROOT / relative).resolve().read_bytes()).hexdigest() == expected_hash

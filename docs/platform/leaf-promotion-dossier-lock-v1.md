@@ -97,13 +97,20 @@ validate_leaf_promotion_dossier.py derive-captured \
   --m7-terminal-source-replay <public-terminal-source-replay.json> \
   --m8-evidence <captured-public-redacted-evidence.json> \
   --m8-report <captured-public-redacted-report.json> \
-  --m8-registry <multi-runtime-coexistence-registry-v1.json>
+  --m8-registry <multi-runtime-coexistence-registry-v1.json> \
+  --m8-before-source-manifest <private-before-source-capture-manifest.json> \
+  --m8-after-source-manifest <private-after-source-capture-manifest.json> \
+  --m8-before-source-root <private-before-source-directory> \
+  --m8-after-source-root <private-after-source-directory>
 ```
 
 The command invokes the canonical synchronized-evidence, candidate-graph,
 public-status, and M8 coexistence validators. It regenerates both M7 replay and
 M8 report and requires exact equality. A caller-authored status or report
-cannot substitute. The private assessment exists only in process and has
+cannot substitute. The captured path also forwards both private source-capture
+manifests and their roots unchanged to the M8 verifier, which revalidates their
+phase, process, authorization, time-window, and payload bindings. The private
+assessment exists only in process and has
 `export_tier=PRIVATE_OPERATOR`; the generator persists only the derived
 `PUBLIC_REDACTED` result. The repository intentionally contains a profile
 fixture, not a fabricated captured live result.

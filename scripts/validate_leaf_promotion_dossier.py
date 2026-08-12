@@ -609,6 +609,10 @@ def derive_captured(
     evidence_path: pathlib.Path,
     report_path: pathlib.Path,
     m8_registry_path: pathlib.Path,
+    m8_before_source_manifest_path: pathlib.Path,
+    m8_after_source_manifest_path: pathlib.Path,
+    m8_before_source_root: pathlib.Path,
+    m8_after_source_root: pathlib.Path,
     promotion_registry: dict[str, Any],
 ) -> dict[str, Any]:
     predecessor = promotion_registry["captured_runtime_predecessors"]
@@ -659,6 +663,14 @@ def derive_captured(
                 m8_registry_raw,
                 m7_paths,
                 require_private=True,
+                source_manifests={
+                    "before": m8_before_source_manifest_path,
+                    "after": m8_after_source_manifest_path,
+                },
+                source_roots={
+                    "before": m8_before_source_root,
+                    "after": m8_after_source_root,
+                },
             )
         report, report_raw = coexistence.load_json(
             report_path, "captured.coexistence", bounded=True
@@ -1102,6 +1114,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--m8-evidence", type=pathlib.Path)
     parser.add_argument("--m8-report", type=pathlib.Path)
     parser.add_argument("--m8-registry", type=pathlib.Path)
+    parser.add_argument("--m8-before-source-manifest", type=pathlib.Path)
+    parser.add_argument("--m8-after-source-manifest", type=pathlib.Path)
+    parser.add_argument("--m8-before-source-root", type=pathlib.Path)
+    parser.add_argument("--m8-after-source-root", type=pathlib.Path)
     args = parser.parse_args(argv)
     try:
         if args.command == "derive-captured":
@@ -1119,6 +1135,10 @@ def main(argv: list[str] | None = None) -> int:
                 "m8_evidence",
                 "m8_report",
                 "m8_registry",
+                "m8_before_source_manifest",
+                "m8_after_source_manifest",
+                "m8_before_source_root",
+                "m8_after_source_root",
             )
             if any(getattr(args, name) is None for name in names):
                 fail("captured.arguments")
@@ -1138,6 +1158,10 @@ def main(argv: list[str] | None = None) -> int:
                 evidence_path=args.m8_evidence,
                 report_path=args.m8_report,
                 m8_registry_path=args.m8_registry,
+                m8_before_source_manifest_path=args.m8_before_source_manifest,
+                m8_after_source_manifest_path=args.m8_after_source_manifest,
+                m8_before_source_root=args.m8_before_source_root,
+                m8_after_source_root=args.m8_after_source_root,
                 promotion_registry=registry,
             )
             print(canonical(result).decode("utf-8"))

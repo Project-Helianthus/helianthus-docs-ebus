@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import re
+import stat
 import subprocess
 import sys
 import tempfile
@@ -89,8 +90,8 @@ def load_json(
     path: pathlib.Path, *, max_bytes: int = MAX_INPUT_BYTES
 ) -> tuple[dict[str, Any], bytes]:
     try:
-        raw = path.read_bytes()
-        if len(raw) > max_bytes or re.search(
+        raw = _read_bounded_bytes(path, max_bytes, "json.syntax")
+        if re.search(
             rb"(?<![0-9A-Za-z_])-0(?:[^0-9.]|$)", raw
         ):
             fail("json.syntax")
@@ -111,7 +112,7 @@ def load_json(
         )
     except ValidationFailure:
         raise
-    except (OSError, UnicodeError, json.JSONDecodeError):
+    except (OSError, UnicodeError, json.JSONDecodeError, RecursionError):
         fail("json.syntax")
     if not isinstance(value, dict):
         fail("json.syntax")
@@ -789,11 +790,30 @@ def replay_hash(value: dict[str, Any]) -> str:
 
 
 def _read_bounded_bytes(path: pathlib.Path, maximum: int, category: str) -> bytes:
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = -1
     try:
-        raw = path.read_bytes()
+        descriptor = os.open(path, flags)
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_size <= 0 or info.st_size > maximum:
+            fail(category)
+        chunks: list[bytes] = []
+        remaining = info.st_size
+        while remaining:
+            chunk = os.read(descriptor, min(65_536, remaining))
+            if not chunk:
+                fail(category)
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        if os.read(descriptor, 1):
+            fail(category)
+        raw = b"".join(chunks)
     except OSError:
         fail(category)
-    if not raw or len(raw) > maximum:
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+    if not raw or len(raw) != info.st_size:
         fail(category)
     return raw
 
@@ -1432,6 +1452,10 @@ def _validate_live_source_bundle(
         "m7_terminal_source_replay",
         "m8_evidence",
         "m8_report",
+        "m8_before_source_manifest",
+        "m8_after_source_manifest",
+        "m8_before_source_root",
+        "m8_after_source_root",
         "m8_trust_state_hash",
         "m8_peer_binding_hash",
         "capture_receipts",
@@ -1497,6 +1521,15 @@ def _validate_live_source_bundle(
     }
     if not all(isinstance(path, pathlib.Path) for path in m7_paths.values()):
         fail("live.sources.required")
+    source_manifests: dict[str, pathlib.Path] = {}
+    for source_key, source_name in (
+        ("before", "m8_before_source_manifest"),
+        ("after", "m8_after_source_manifest"),
+    ):
+        source_path = live_sources[source_name]
+        if not isinstance(source_path, pathlib.Path):
+            fail("live.sources.required")
+        source_manifests[source_key] = source_path
     try:
         coexistence.verify(
             evidence,
@@ -1505,6 +1538,11 @@ def _validate_live_source_bundle(
             m8_registry_raw,
             m7_paths,
             require_private=True,
+            source_manifests=source_manifests,
+            source_roots={
+                "before": live_sources["m8_before_source_root"],
+                "after": live_sources["m8_after_source_root"],
+            },
         )
         derived_report = coexistence.report(copy.deepcopy(evidence), m8_registry)
     except (coexistence.Failure, KeyError, TypeError, ValueError):
@@ -1959,6 +1997,10 @@ def _live_sources_from_args(
         "m7_terminal_source_replay": args.m7_terminal_source_replay,
         "m8_evidence": args.m8_evidence,
         "m8_report": args.m8_report,
+        "m8_before_source_manifest": args.m8_before_source_manifest,
+        "m8_after_source_manifest": args.m8_after_source_manifest,
+        "m8_before_source_root": args.m8_before_source_root,
+        "m8_after_source_root": args.m8_after_source_root,
         "m8_trust_state_hash": args.m8_trust_state_hash,
         "m8_peer_binding_hash": args.m8_peer_binding_hash,
         "capture_receipts": args.capture_receipt,
@@ -1992,6 +2034,10 @@ def main() -> int:
     parser.add_argument("--m7-terminal-source-replay", type=pathlib.Path)
     parser.add_argument("--m8-evidence", type=pathlib.Path)
     parser.add_argument("--m8-report", type=pathlib.Path)
+    parser.add_argument("--m8-before-source-manifest", type=pathlib.Path)
+    parser.add_argument("--m8-after-source-manifest", type=pathlib.Path)
+    parser.add_argument("--m8-before-source-root", type=pathlib.Path)
+    parser.add_argument("--m8-after-source-root", type=pathlib.Path)
     parser.add_argument("--m8-trust-state-hash")
     parser.add_argument("--m8-peer-binding-hash")
     parser.add_argument("--capture-receipt", type=pathlib.Path, action="append", default=[])

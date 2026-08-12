@@ -59,6 +59,9 @@ It also contains all nine stable raw eeBUS V1 tools, in canonical order:
 
 This is an exact V1 contract assertion, not a compatibility alias set. Missing,
 additional, stale, reordered, write-capable, legacy, or V2 entries fail closed.
+It is the complete protected inventory declared by this gate, not a copy of an
+operator endpoint's larger experimental inventory. Each listed tool must be
+derived independently from the effective boundary in every capture window.
 
 EEBUS-G18 is only the no-drift gate. G17 advertisement/discovery and trust
 evidence and G19 direct outbound VR940 TCP/TLS/WebSocket/SHIP and first SPINE
@@ -123,7 +126,11 @@ validate_multi_runtime_coexistence.py verify \
   --m7-terminal-graph <public-source-terminal-graph.json> \
   --m7-terminal-replay <public-source-terminal-replay.json> \
   --m7-terminal-source-bundle <public-source-terminal-bundle.json> \
-  --m7-terminal-source-replay <public-source-terminal-source-replay.json>
+  --m7-terminal-source-replay <public-source-terminal-source-replay.json> \
+  --before-source-manifest <before-source-capture-manifest.json> \
+  --after-source-manifest <after-source-capture-manifest.json> \
+  --before-source-root <private-before-source-directory> \
+  --after-source-root <private-after-source-directory>
 ```
 
 Replace `verify` with `report` to emit exact RFC 8785/JCS-subset report bytes.
@@ -131,8 +138,69 @@ Replace `verify` with `report` to emit exact RFC 8785/JCS-subset report bytes.
 partial report. For captured-runtime evidence, both commands require the
 private inputs, rederive the public status projection in-process, require exact
 bytes, and bind the private graph, replay, source bundle, and source replay as
-immutable inputs. `verify-public` accepts only the public terminal inputs and
-emits `public-only-ok`; it cannot emit a report or establish G18 PASS.
+immutable inputs. They also require both private source-capture manifests and
+bind their exact bytes as `source:capture-manifest` /
+`SOURCE_CAPTURE_MANIFEST`. `verify-public` checks that the public binding is
+well formed but cannot substitute for either private manifest; it emits
+`public-only-ok` and cannot establish G18 PASS.
+
+Each source manifest has contract
+`helianthus.platform.multi-runtime-source-capture-manifest.v1`, declares
+`window_scope=SINGLE_WINDOW_ONLY` and
+`projection_policy=M8_PROTECTED_VIEWS_SINGLE_WINDOW_V1`, and binds the
+effective auth-scope hash, PRE/POST phase, process instance, distinct window ID,
+capture interval, and source timestamp. Its sixteen ordered inputs cover the
+complete tool inventory visible at the effective read-only M8 test scope,
+complete single-window eBUS responses, the eBUS debug view, owner-UNIX eeBUS
+state inputs, GraphQL, Portal, command routing, semantic registry, container
+identity, and capture timestamp with the exact auth boundary, byte length, and
+SHA-256 of each source. The tool inventory must equal the frozen two `ebus.v1`
+plus nine `eebus.v1` read-only tools in canonical order; an extra write tool,
+experimental tool, V2 tool, duplicate, omission, reordering, or paginated
+continuation fails closed. The capture is valid only when `tools/list` proves
+the complete effective-scope inventory in one terminal response.
+Private verification opens every source as a bounded regular file from a
+fixed-name, no-symlink root, rejects devices such as FIFOs, recomputes every
+binding, derives all eleven protected views with the closed reference projector,
+and compares each derived payload byte-for-byte with the corresponding evidence
+payload. Debug, Portal, routing, and semantic-registry payloads are captured
+directly; they are not inferred from neighboring views. The complete protected
+payload is source-bound: `data` comes from the projector, `meta.captured_at`
+comes from the manifest window, and `meta.auth_subject` is the deterministic
+public-redacted identifier of the manifest-bound effective auth scope. A
+projector invocation receives one window only; consulting the opposite window,
+intersecting device sets, dropping fields after comparison, or hard-coding an
+observed result is invalid. Reused or swapped PRE/POST manifests, roots,
+processes, timestamps, or capture intervals fail closed before no-drift is
+evaluated. The protected payloads must be produced independently before
+equality is tested.
+
+PRE and POST source windows require different manifest digests regardless of
+their claimed byte lengths. Source device rows are all-or-reject: a malformed
+address or missing identity cannot be omitted from the projection. Household
+zone labels are deterministic public pseudonyms, never copied from the private
+MCP or GraphQL source; source device IDs and model labels are separately
+pseudonymized. Before return, the complete projected view tree is checked for
+unconsumed decimals, so a fractional pass-through field fails with
+`provenance.source_capture` rather than reaching canonical serialization.
+Capture timestamps are derived exactly from the UTC wall anchor plus the
+monotonic nanosecond offset and retain up to nine fractional digits.
+
+An MCP JSON-RPC envelope may carry a `content[0].text` string up to the bounded
+source-input ceiling. The verifier then decodes that string as JSON and applies
+the ordinary 4,096-byte per-string, depth, member, and list limits independently
+to the inner payload. This permits current multi-kilobyte topology responses
+without allowing an unbounded semantic scalar.
+
+Private MCP and GraphQL numeric source fields that the closed projector maps to
+numeric strings are parsed as exact decimals, with at most 128 significant
+digits and an absolute adjusted exponent of at most 1,024. Formatting is
+context-independent fixed-point, removes insignificant fractional zeroes, and
+never passes through a binary float; every positive zero form maps to `0`, and
+negative zero is rejected. These fields accept only JSON integer, decimal, or
+`null` values; booleans, strings, arrays, and objects fail closed. A fractional
+number in a direct/unmodified protected view is not silently transformed and
+fails `provenance.source_capture`.
 
 The public M7 status projection is generated, never hand-authored:
 
@@ -163,8 +231,8 @@ order. A caller cannot select a subset.
 
 | View ID | Frozen meaning |
 | --- | --- |
-| `mcp.ebus.v1.responses` | Complete selected `ebus.v1` MCP responses |
-| `mcp.tool.inventory` | Existing MCP namespace/tool inventory |
+| `mcp.ebus.v1.responses` | Complete selected `ebus.v1` MCP responses; no post-hoc entity subset |
+| `mcp.tool.inventory` | Complete protected eleven-tool inventory derived at the effective boundary |
 | `graphql.schema` | GraphQL schema |
 | `graphql.ebus.values` | GraphQL eBUS values |
 | `ha.graphql.values` | HA-consumed GraphQL values |
@@ -386,24 +454,29 @@ Validation stops at the first category in this exact order:
 4. `registry.binding`
 5. `provenance.m7`
 6. `provenance.runtime`
-7. `provenance.config`
-8. `provenance.auth_mask`
-9. `provenance.clock`
-10. `ordering.duplicate`
-11. `state.evidence`
-12. `view.coverage`
-13. `canonicalization.invalid`
-14. `hash.payload`
-15. `anti_leak.candidate`
-16. `redaction.public`
-17. `authority.ebus`
-18. `gate.scope`
-19. `drift.consumer`
-20. `rollback.drift`
-21. `hash.evidence`
+7. `provenance.source_capture`
+8. `provenance.config`
+9. `provenance.auth_mask`
+10. `provenance.clock`
+11. `ordering.duplicate`
+12. `state.evidence`
+13. `view.coverage`
+14. `canonicalization.invalid`
+15. `hash.payload`
+16. `anti_leak.candidate`
+17. `redaction.public`
+18. `authority.ebus`
+19. `gate.scope`
+20. `drift.consumer`
+21. `rollback.drift`
+22. `hash.evidence`
 
 Allocation-driving byte, nesting, string, member, and list limits run before
 recursive parsing by necessity. They still report `limits.exceeded`.
+Source-manifest paths are not opened until step 7 and all immutable runtime
+inputs have passed, so a missing, unsafe, or oversized source cannot mask an
+earlier schema, registry, M7, or runtime failure. Captured-runtime evidence has
+exactly four ordered runs; synthetic evidence has exactly six.
 Validation emits no partial success or report.
 
 ## Resource Bounds
@@ -420,6 +493,8 @@ Validation emits no partial success or report.
 | `max_string_bytes` | 4,096 |
 | `max_total_members` | 65,536 |
 | `max_total_list_items` | 32,768 |
+| `max_source_input_bytes` | 2,097,152 |
+| `max_source_total_bytes` | 16,777,216 |
 
 The evidence declares these exact values and the verifier hard-codes the same
 ceilings. Raising, lowering, omitting, or exceeding a ceiling is invalid.
@@ -517,6 +592,9 @@ positive evidence and require one precedence category.
 | `MISSING_REQUIRED_VIEW` | `view.coverage` |
 | `NO_SERVICES_EMPTY_SUCCESS` | `state.evidence` |
 | `PUBLIC_V2_SURFACE` | `gate.scope` |
+| `SOURCE_CAPTURE_MALFORMED` | `provenance.source_capture` |
+| `SOURCE_CAPTURE_RESOURCE_LIMIT` | `limits.exceeded` |
+| `SOURCE_CAPTURE_UNSAFE_FILE` | `provenance.source_capture` |
 | `RESOURCE_LIMIT_EXCEEDED` | `limits.exceeded` |
 | `ROLLBACK_DRIFT` | `rollback.drift` |
 | `RUNTIME_ARTIFACT_MISMATCH` | `provenance.runtime` |
