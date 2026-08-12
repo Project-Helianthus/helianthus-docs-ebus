@@ -757,17 +757,21 @@ def bind_source_manifests(
             for index in run_indexes
         }
         assert len(scope_hashes) == 1
+        scope_hash = scope_hashes.pop()
         process_instance_id = projected["process_instance_id"]
+        bound_payloads = validator._source_bound_payloads(
+            projected["views"], captured_at, scope_hash
+        )
         for index in run_indexes:
             run = evidence["runs"][index]
             run["provenance"]["process_instance_id"] = process_instance_id
             run["state_evidence"]["service_count"] = projected["service_count"]
             for view in run["protected_views"]:
-                view["payload"]["data"] = deepcopy(projected["views"][view["view_id"]])
+                view["payload"] = deepcopy(bound_payloads[view["view_id"]])
         raw = source_manifest(
             validator,
             payloads,
-            auth_scope_hash=scope_hashes.pop(),
+            auth_scope_hash=scope_hash,
             window_id=f"window-{source_key}",
             phase=validator.SOURCE_CAPTURE_PHASES[source_key],
             process_instance_id=process_instance_id,
@@ -1006,6 +1010,28 @@ def test_msp08_private_runtime_requires_both_source_manifests(
     assert str(error.value) == "provenance.source_capture"
 
 
+def test_msp08_private_runtime_reports_manifest_size_limit(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    oversized = tmp_path / "oversized-manifest.json"
+    with oversized.open("wb") as stream:
+        stream.truncate(validator.MAX_SOURCE_INPUT_BYTES + 1)
+    manifests["before"] = oversized
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "limits.exceeded"
+
+
 @pytest.mark.parametrize("mutation", ["reuse", "swap"])
 def test_msp08_private_runtime_rejects_reused_or_swapped_windows(
     tmp_path: pathlib.Path, mutation: str
@@ -1124,9 +1150,35 @@ def test_msp08_private_runtime_rejects_direct_view_contradiction(
     assert str(error.value) == "provenance.source_capture"
 
 
+@pytest.mark.parametrize("metadata_field", ["captured_at", "auth_subject"])
+def test_msp08_private_runtime_binds_complete_payload_metadata(
+    tmp_path: pathlib.Path, metadata_field: str
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    view = evidence["runs"][0]["protected_views"][0]
+    view["payload"]["meta"][metadata_field] = (
+        json.loads(manifests["after"])["captured_at"]
+        if metadata_field == "captured_at"
+        else "redacted:sha256:ffffffffffff"
+    )
+    refresh_protected_views(validator, evidence)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
 @pytest.mark.parametrize(
     "malformed",
-    [b"{}", b"[]", b'{"data":{},"data":{}}'],
+    [b"{}", b"[]", b'{"data":{},"data":{}}', b'{"value":"\\ud800"}'],
 )
 def test_msp08_private_runtime_rejects_malformed_source_shape_without_traceback(
     tmp_path: pathlib.Path, malformed: bytes
@@ -1185,16 +1237,45 @@ def test_msp08_source_reader_rejects_oversize_fifo_and_symlink_without_blocking(
     symlink = tmp_path / "capture-link.json"
     symlink.symlink_to(regular)
 
-    for path in (oversized, fifo, symlink):
+    for path, expected in (
+        (oversized, "limits.exceeded"),
+        (fifo, "provenance.source_capture"),
+        (symlink, "provenance.source_capture"),
+    ):
         started = time.monotonic()
         with pytest.raises(Exception) as error:
             validator._read_bounded_regular_file(
                 path,
                 validator.MAX_SOURCE_INPUT_BYTES,
                 "provenance.source_capture",
+                limit_category="limits.exceeded",
             )
-        assert str(error.value) == "provenance.source_capture"
+        assert str(error.value) == expected
         assert time.monotonic() - started < 1.0
+
+
+def test_msp08_source_reader_rejects_aggregate_limit(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    root = tmp_path / "source-root"
+    root.mkdir()
+    raw = b"x" * (validator.MAX_SOURCE_TOTAL_BYTES // len(validator.SOURCE_CAPTURE_FILES) + 1)
+    inputs = []
+    for input_id, filename in validator.SOURCE_CAPTURE_FILES.items():
+        (root / filename).write_bytes(raw)
+        inputs.append(
+            {
+                "input_id": input_id,
+                "auth_boundary": validator.SOURCE_CAPTURE_INPUTS[input_id],
+                "digest": "sha256:" + hashlib.sha256(raw).hexdigest(),
+                "byte_length": len(raw),
+            }
+        )
+
+    with pytest.raises(Exception) as error:
+        validator._read_source_inputs(root, {"inputs": inputs})
+    assert str(error.value) == "limits.exceeded"
 
 
 def test_msp08_private_runtime_rejects_cross_window_device_intersection(
@@ -1313,6 +1394,37 @@ def test_msp08_live_report_refuses_public_only_inputs(tmp_path: pathlib.Path) ->
     )
     assert result.returncode == 1
     assert result.stdout == "provenance.m7\n"
+
+
+def test_msp08_m7_precedence_runs_before_source_manifest_io(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    evidence["m7_binding"]["graph_hash"] = "sha256:" + "0" * 64
+    refresh_evidence_hash(validator, evidence)
+    missing = tmp_path / "missing-source-manifest.json"
+    result = subprocess.run(
+        [
+            *validator_command("report", write_evidence(tmp_path, evidence)),
+            "--before-source-manifest",
+            str(missing),
+            "--after-source-manifest",
+            str(missing),
+            "--before-source-root",
+            str(tmp_path),
+            "--after-source-root",
+            str(tmp_path),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "provenance.m7\n",
+        "",
+    )
 
 
 def test_msp08_live_public_status_projection_is_redacted_and_schema_valid(

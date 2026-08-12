@@ -1325,6 +1325,9 @@ def check_runtime_identity(evidence: dict[str, Any]) -> None:
 
 def _decode_source_json(raw: bytes) -> Any:
     _bounded_preflight(raw)
+    if re.search(rb"(?<![0-9A-Za-z_])-0(?:[^0-9.]|$)", raw):
+        fail("provenance.source_capture")
+
     def pairs(values: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in values:
@@ -1333,28 +1336,56 @@ def _decode_source_json(raw: bytes) -> Any:
             result[key] = value
         return result
 
+    def source_integer(value: str) -> int:
+        parsed = int(value)
+        if abs(parsed) > SAFE_INTEGER:
+            fail("provenance.source_capture")
+        return parsed
+
+    def reject_non_scalar_unicode(value: Any) -> None:
+        if isinstance(value, str):
+            try:
+                value.encode("utf-8")
+            except UnicodeEncodeError:
+                fail("provenance.source_capture")
+        elif isinstance(value, dict):
+            for key, item in value.items():
+                reject_non_scalar_unicode(key)
+                reject_non_scalar_unicode(item)
+        elif isinstance(value, list):
+            for item in value:
+                reject_non_scalar_unicode(item)
+
     try:
-        return json.loads(
+        value = json.loads(
             raw.decode("utf-8"),
             object_pairs_hook=pairs,
-            parse_int=lambda value: int(value),
+            parse_int=source_integer,
             parse_float=lambda _: fail("provenance.source_capture"),
             parse_constant=lambda _: fail("provenance.source_capture"),
         )
     except (json.JSONDecodeError, UnicodeDecodeError, ValueError, RecursionError):
         fail("provenance.source_capture")
+    reject_non_scalar_unicode(value)
+    return value
 
 
 def _read_bounded_regular_file(
-    path: pathlib.Path, maximum: int, category: str
+    path: pathlib.Path,
+    maximum: int,
+    category: str,
+    *,
+    limit_category: str | None = None,
 ) -> bytes:
     flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
     descriptor = -1
     try:
         descriptor = os.open(path, flags)
         info = os.fstat(descriptor)
-        if not stat.S_ISREG(info.st_mode) or info.st_size <= 0 or info.st_size > maximum:
+        if not stat.S_ISREG(info.st_mode) or info.st_size <= 0:
             fail(category)
+        if info.st_size > maximum:
+            fail(limit_category or category)
         chunks: list[bytes] = []
         remaining = info.st_size
         while remaining:
@@ -1616,6 +1647,22 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
     }
 
 
+def _source_bound_payloads(
+    views: dict[str, Any], captured_at: str, auth_scope_hash: str
+) -> dict[str, dict[str, Any]]:
+    auth_subject = _source_redacted("auth-scope:" + auth_scope_hash)
+    return {
+        view_id: {
+            "data": value,
+            "meta": {
+                "auth_subject": auth_subject,
+                "captured_at": captured_at,
+            },
+        }
+        for view_id, value in views.items()
+    }
+
+
 def _read_source_inputs(root: pathlib.Path, manifest: dict[str, Any]) -> dict[str, bytes]:
     try:
         if root.is_symlink():
@@ -1641,14 +1688,18 @@ def _read_source_inputs(root: pathlib.Path, manifest: dict[str, Any]) -> dict[st
             if path.is_symlink() or path.resolve(strict=True).parent != resolved_root:
                 fail("provenance.source_capture")
             raw = _read_bounded_regular_file(
-                path, MAX_SOURCE_INPUT_BYTES, "provenance.source_capture"
+                path,
+                MAX_SOURCE_INPUT_BYTES,
+                "provenance.source_capture",
+                limit_category="limits.exceeded",
             )
         except OSError:
             fail("provenance.source_capture")
         total += len(raw)
+        if total > MAX_SOURCE_TOTAL_BYTES:
+            fail("limits.exceeded")
         if (
-            total > MAX_SOURCE_TOTAL_BYTES
-            or manifest_inputs[input_id]["digest"]
+            manifest_inputs[input_id]["digest"]
             != "sha256:" + hashlib.sha256(raw).hexdigest()
             or manifest_inputs[input_id]["byte_length"] != len(raw)
         ):
@@ -1667,8 +1718,10 @@ def _source_capture_binding(
     end_offset_ns: int,
     captured_at: str,
 ) -> dict[str, Any]:
-    if not raw or len(raw) > MAX_SOURCE_INPUT_BYTES:
+    if not raw:
         fail("provenance.source_capture")
+    if len(raw) > MAX_SOURCE_INPUT_BYTES:
+        fail("limits.exceeded")
     value = _decode_source_json(raw)
     if not isinstance(value, dict) or set(value) != {
         "contract", "schema_version", "window_id", "window_scope",
@@ -1737,6 +1790,10 @@ def _source_capture_binding(
         "window_id": value["window_id"],
         "phase": value["phase"],
         "captured_at": value["captured_at"],
+        "auth_scope_hash": value["auth_scope_hash"],
+        "payloads": _source_bound_payloads(
+            projected["views"], value["captured_at"], value["auth_scope_hash"]
+        ),
         **projected,
     }
 
@@ -1759,7 +1816,7 @@ def _capture_time_at(clock: dict[str, Any], offset_ns: int) -> str:
 def check_runtime(
     evidence: dict[str, Any],
     m7_inputs: dict[str, tuple[str, int]],
-    source_manifests: dict[str, bytes | None] | None = None,
+    source_manifests: dict[str, bytes | pathlib.Path | None] | None = None,
     source_roots: dict[str, pathlib.Path | None] | None = None,
     *,
     require_private: bool = True,
@@ -1776,15 +1833,25 @@ def check_runtime(
             process_ids = {
                 run["provenance"]["process_instance_id"] for run in grouped
             }
-            source_raw = (source_manifests or {}).get(source_key)
+            source_input = (source_manifests or {}).get(source_key)
             source_root = (source_roots or {}).get(source_key)
             if (
                 len(auth_hashes) != 1
                 or len(process_ids) != 1
-                or source_raw is None
+                or source_input is None
                 or source_root is None
             ):
                 fail("provenance.source_capture")
+            source_raw = (
+                _read_bounded_regular_file(
+                    source_input,
+                    MAX_SOURCE_INPUT_BYTES,
+                    "provenance.source_capture",
+                    limit_category="limits.exceeded",
+                )
+                if isinstance(source_input, pathlib.Path)
+                else source_input
+            )
             source_bindings[source_key] = _source_capture_binding(
                 source_raw,
                 source_root,
@@ -1872,10 +1939,10 @@ def check_runtime(
                 )
                 if (
                     source["service_count"] != run["state_evidence"]["service_count"]
-                    or set(source["views"]) != set(views)
+                    or set(source["payloads"]) != set(views)
                     or any(
-                        canonical(views[view_id]["payload"]["data"])
-                        != canonical(source["views"][view_id])
+                        canonical(views[view_id]["payload"])
+                        != canonical(source["payloads"][view_id])
                         for view_id in views
                     )
                 ):
@@ -3569,18 +3636,8 @@ def main() -> int:
             m7_paths,
             require_private=args.command != "verify-public",
             source_manifests={
-                "before": _read_bounded_regular_file(
-                    args.before_source_manifest,
-                    MAX_SOURCE_INPUT_BYTES,
-                    "provenance.source_capture",
-                )
-                if args.before_source_manifest is not None else None,
-                "after": _read_bounded_regular_file(
-                    args.after_source_manifest,
-                    MAX_SOURCE_INPUT_BYTES,
-                    "provenance.source_capture",
-                )
-                if args.after_source_manifest is not None else None,
+                "before": args.before_source_manifest,
+                "after": args.after_source_manifest,
             },
             source_roots={
                 "before": args.before_source_root,

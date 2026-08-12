@@ -162,7 +162,10 @@ fixed-name, no-symlink root, rejects devices such as FIFOs, recomputes every
 binding, derives all eleven protected views with the closed reference projector,
 and compares each derived payload byte-for-byte with the corresponding evidence
 payload. Debug, Portal, routing, and semantic-registry payloads are captured
-directly; they are not inferred from neighboring views. A
+directly; they are not inferred from neighboring views. The complete protected
+payload is source-bound: `data` comes from the projector, `meta.captured_at`
+comes from the manifest window, and `meta.auth_subject` is the deterministic
+public-redacted identifier of the manifest-bound effective auth scope. A
 projector invocation receives one window only; consulting the opposite window,
 intersecting device sets, dropping fields after comparison, or hard-coding an
 observed result is invalid. Reused or swapped PRE/POST manifests, roots,
@@ -441,6 +444,8 @@ Validation stops at the first category in this exact order:
 
 Allocation-driving byte, nesting, string, member, and list limits run before
 recursive parsing by necessity. They still report `limits.exceeded`.
+Source-manifest paths are not opened until step 7, so a missing, unsafe, or
+oversized source cannot mask an earlier schema, registry, M7, or runtime failure.
 Validation emits no partial success or report.
 
 ## Resource Bounds
