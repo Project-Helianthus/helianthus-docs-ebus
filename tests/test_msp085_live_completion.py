@@ -69,6 +69,39 @@ def verify_m8_public(evidence: pathlib.Path) -> subprocess.CompletedProcess[str]
     )
 
 
+def refresh_public_evidence(validator, evidence: dict[str, object]) -> None:
+    registry = load(M8_REGISTRY)
+    rules = {rule["view_id"]: rule for rule in registry["view_rules"]}
+    for run in evidence["runs"]:
+        inputs = {
+            item["input_id"]: item for item in run["provenance"]["immutable_inputs"]
+        }
+        for view in run["protected_views"]:
+            normalized = validator.normalized_payload(
+                view["payload"], rules[view["view_id"]], evidence["normalization"]
+            )
+            view["raw_payload_hash"] = validator.digest(
+                validator.RAW_PAYLOAD_DOMAIN, view["payload"]
+            )
+            view["shape_hash"] = validator.digest(
+                validator.SHAPE_DOMAIN, validator.payload_shape(view["payload"])
+            )
+            view["canonical_payload_hash"] = validator.digest(
+                validator.CANONICAL_PAYLOAD_DOMAIN, normalized
+            )
+            immutable = inputs["view:" + view["view_id"]]
+            immutable["digest"] = view["raw_payload_hash"]
+            immutable["byte_length"] = len(validator.canonical(view["payload"]))
+    evidence_view = {
+        key: value
+        for key, value in evidence.items()
+        if key not in {"evidence_id", "evidence_hash"}
+    }
+    evidence_hash = validator.digest(validator.EVIDENCE_DOMAIN, evidence_view)
+    evidence["evidence_hash"] = evidence_hash
+    evidence["evidence_id"] = "mrcv1:" + evidence_hash
+
+
 def test_live_publication_exact_bytes_and_m8_report() -> None:
     assert sha256(M8_EVIDENCE) == (
         "a55a17eb24b965debf218dcb8e4d2b49d5bdde284aa642bea729c35d8acac789"
@@ -111,6 +144,33 @@ def test_live_m8_canonical_verifier_rejects_evidence_hash_mutation(
     verified = verify_m8_public(mutated)
     assert verified.returncode == 1
     assert verified.stdout == "hash.evidence\n"
+    assert verified.stderr == ""
+
+
+def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = load_module(
+        "msp085_live_address_validator",
+        ROOT / "scripts/validate_multi_runtime_coexistence.py",
+    )
+    evidence = load(M8_EVIDENCE)
+    enumerable = "redacted:sha256:0123456789ab"
+    for run in evidence["runs"]:
+        views = {view["view_id"]: view for view in run["protected_views"]}
+        devices = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"][0][
+            "result"
+        ]["devices"]
+        devices[0]["address"] = enumerable
+        admission = views["debug.ebus"]["payload"]["data"]["status"]["admission"]
+        admission["selected_source"] = enumerable
+    refresh_public_evidence(validator, evidence)
+
+    mutated = tmp_path / "enumerable-address-evidence.json"
+    mutated.write_bytes(validator.canonical(evidence) + b"\n")
+    verified = verify_m8_public(mutated)
+    assert verified.returncode == 1
+    assert verified.stdout == "redaction.public\n"
     assert verified.stderr == ""
 
 

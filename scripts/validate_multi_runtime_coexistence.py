@@ -3006,10 +3006,45 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     )
 
 
+def _contains_invalid_public_address(
+    value: Any, keys: frozenset[str], *, nullable: bool = False
+) -> bool:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key in keys and item != OPAQUE_ADDRESS and not (
+                nullable and item is None
+            ):
+                return True
+            if _contains_invalid_public_address(item, keys, nullable=nullable):
+                return True
+        return False
+    if isinstance(value, list):
+        return any(
+            _contains_invalid_public_address(item, keys, nullable=nullable)
+            for item in value
+        )
+    return False
+
+
+def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
+    for run in evidence["runs"]:
+        views = {view["view_id"]: view["payload"] for view in run["protected_views"]}
+        if _contains_invalid_public_address(
+            views["mcp.ebus.v1.responses"], frozenset({"address"})
+        ) or _contains_invalid_public_address(
+            views["debug.ebus"], SOURCE_DEBUG_ADDRESS_KEYS, nullable=True
+        ):
+            return True
+    return False
+
+
 def check_public_redaction(evidence: dict[str, Any]) -> None:
     if evidence["export_tier"] != "PUBLIC_REDACTED":
         fail("redaction.public")
-    if _contains_public_secret(evidence):
+    if _contains_public_secret(evidence) or (
+        evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
+        and _contains_enumerable_public_address(evidence)
+    ):
         fail("redaction.public")
 
 

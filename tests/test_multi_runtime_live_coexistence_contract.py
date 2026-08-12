@@ -300,6 +300,12 @@ def build_live_evidence(validator) -> dict[str, object]:
         "redacted:sha256:" + "f" * 12,
     )
     for index, run in enumerate(selected):
+        views = {view["view_id"]: view for view in run["protected_views"]}
+        devices = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"][0][
+            "result"
+        ]["devices"]
+        for device in devices:
+            device["address"] = validator.OPAQUE_ADDRESS
         run["run_id"] = f"msp08-run-{index + 1:02d}"
         run["state"] = states[index]
         run["capture_offset_ns"] = index * 1_000_000_000
@@ -489,7 +495,7 @@ def build_live_evidence(validator) -> dict[str, object]:
                     }
                 )
     evidence["runs"] = selected
-    refresh_evidence_hash(validator, evidence)
+    refresh_protected_views(validator, evidence)
     return evidence
 
 
@@ -1252,6 +1258,19 @@ def test_msp08_public_redaction_rejects_debug_address_aliases(key: str) -> None:
     assert validator._contains_public_secret({key: 127})
     assert not validator._contains_public_secret({key: validator.OPAQUE_ADDRESS})
     assert not validator._contains_public_secret({key: None})
+
+    evidence = build_live_evidence(validator)
+    debug = next(
+        view
+        for view in evidence["runs"][0]["protected_views"]
+        if view["view_id"] == "debug.ebus"
+    )
+    debug["payload"]["data"].setdefault("status", {}).setdefault(
+        "admission", {}
+    )[key] = "redacted:sha256:0123456789ab"
+    with pytest.raises(Exception) as error:
+        validator.check_public_redaction(evidence)
+    assert str(error.value) == "redaction.public"
 
 
 def test_msp08_source_projection_preserves_null_debug_address_aliases() -> None:
