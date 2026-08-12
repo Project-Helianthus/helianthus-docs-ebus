@@ -42,19 +42,46 @@ def typed_numeric(number: int, scale: int) -> dict[str, object]:
         "decimal": {"number": number, "scale": scale},
         "enum": None,
         "boolean": None,
+        "string": None,
     }
 
 
 def typed_enum(value: str) -> dict[str, object]:
-    return {"kind": "ENUM", "decimal": None, "enum": value, "boolean": None}
+    return {
+        "kind": "ENUM",
+        "decimal": None,
+        "enum": value,
+        "boolean": None,
+        "string": None,
+    }
 
 
 def typed_boolean(value: bool) -> dict[str, object]:
-    return {"kind": "BOOLEAN", "decimal": None, "enum": None, "boolean": value}
+    return {
+        "kind": "BOOLEAN",
+        "decimal": None,
+        "enum": None,
+        "boolean": value,
+        "string": None,
+    }
+
+
+def typed_string(value: str) -> dict[str, object]:
+    return {
+        "kind": "STRING",
+        "decimal": None,
+        "enum": None,
+        "boolean": None,
+        "string": value,
+    }
 
 
 def ebus_identity(module, candidate: dict[str, Any]) -> dict[str, Any]:
-    selector = candidate["ebus_selector"]
+    selector = (
+        candidate["ebus_fallback"]
+        if candidate["candidate_id"] == "m7-candidate-0006"
+        else candidate["ebus_selector"]
+    )
     assert isinstance(selector, dict)
     identity = {
         **selector,
@@ -63,8 +90,13 @@ def ebus_identity(module, candidate: dict[str, Any]) -> dict[str, Any]:
         "source_address": 253,
         "selector_hash": sha("0"),
     }
+    domain = (
+        module.EBUS_SELECTOR_DOMAIN
+        if identity["family"] == "B524"
+        else module.EBUS_B555_SELECTOR_DOMAIN
+    )
     identity["selector_hash"] = module.digest(
-        module.EBUS_SELECTOR_DOMAIN,
+        domain,
         {key: value for key, value in identity.items() if key != "selector_hash"},
     )
     return identity
@@ -127,7 +159,7 @@ def comparator(module, expected: dict[str, Any], outcome: str) -> dict[str, Any]
             "class": expected["comparator_class"],
             "declared_spine_step": source["declared_constraints"]["step"],
             "delta": None,
-            "conversion": source["conversion"],
+            "conversion": expected["conversion"],
             "mapping_hash": None,
             "outcome": outcome,
         }
@@ -136,30 +168,150 @@ def comparator(module, expected: dict[str, Any], outcome: str) -> dict[str, Any]
         "declared_spine_step": None,
         "delta": None,
         "conversion": None,
-        "mapping_hash": module.digest(module.MAPPING_DOMAIN, source["mapping_profile"]),
+        "mapping_hash": module.digest(module.MAPPING_DOMAIN, expected["mapping_profile"]),
         "outcome": outcome,
     }
 
 
-def missing_eebus_sample(
+def cross_values(
+    expected: dict[str, Any], position: int
+) -> tuple[dict[str, object], dict[str, object], dict[str, object], dict[str, object], dict[str, int] | None]:
+    candidate_id = expected["candidate_id"]
+    if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY":
+        if candidate_id == "m7-candidate-0018":
+            ebus = typed_numeric(125 if position == 0 else 13, -1 if position == 0 else 0)
+            eebus = typed_numeric(13 if position == 0 else 135, 0 if position == 0 else -1)
+            delta = {"number": 5, "scale": -1}
+        else:
+            values = {
+                "m7-candidate-0005": (45, 0),
+                "m7-candidate-0006": (55, 0),
+                "m7-candidate-0010": (21, 0),
+                "m7-candidate-0011": (21, 0),
+                "m7-candidate-0014": (22, 0),
+                "m7-candidate-0015": (22, 0),
+            }
+            number, scale = values[candidate_id]
+            ebus = typed_numeric(number, scale)
+            eebus = typed_numeric(number, scale)
+            delta = {"number": 0, "scale": 0}
+        return ebus, ebus, eebus, eebus, delta
+    if expected["comparator_class"] == "ENUM_EXACT_MAPPING":
+        decoded = typed_enum("off")
+        return typed_numeric(0, 0), decoded, typed_numeric(2, 0), decoded, None
+    decoded = typed_boolean(False)
+    return typed_numeric(0, 0), decoded, typed_boolean(False), decoded, None
+
+
+def native_value(expected: dict[str, Any]) -> dict[str, object]:
+    if expected["validation_mode"] == "EEBUS_NATIVE_CAPABILITY":
+        return typed_boolean(False)
+    values = {
+        "m7-candidate-0019": "sanitized-brand-v1",
+        "m7-candidate-0020": "sanitized-vendor-v1",
+        "m7-candidate-0021": "sanitized-zone-one",
+        "m7-candidate-0022": "sanitized-zone-two",
+    }
+    return typed_string(values[expected["candidate_id"]])
+
+
+def cross_assessment(
     module,
+    registry: dict[str, Any],
     expected: dict[str, Any],
-    window: dict[str, object],
-    timestamp: str,
-    suffix: str,
-) -> dict[str, object]:
+    candidate: dict[str, Any],
+    window: dict[str, Any],
+    position: int,
+) -> dict[str, Any]:
+    prefix = "2026-08-11T10:00:05" if position == 0 else "2026-08-11T10:05:05"
+    suffix = expected["candidate_id"][-4:] + ("-pre" if position == 0 else "-post")
+    ebus_raw, ebus_value, eebus_raw, eebus_value, delta = cross_values(
+        expected, position
+    )
+    comparison = comparator(module, expected, "MATCH")
+    comparison["delta"] = delta
     source = expected["eebus_source"]
     assert isinstance(source, dict)
-    if expected["comparator_class"] == "NUMERIC_DECLARED_GRANULARITY":
-        raw = typed_numeric(20, 0)
-        value = typed_numeric(20, 0)
-    elif expected["comparator_class"] == "ENUM_EXACT_MAPPING":
-        raw = typed_numeric(2, 0)
-        value = typed_enum("off")
-    else:
-        raw = typed_boolean(False)
-        value = typed_boolean(False)
-    return sample(module, "EEBUS", timestamp, raw, value, source["unit"], window, suffix)
+    return {
+        "window_id": window["window_id"],
+        "ebus_sample": sample(
+            module,
+            "EBUS",
+            prefix + "Z",
+            ebus_raw,
+            ebus_value,
+            expected["conversion"]["source_unit"]
+            if expected["conversion"] is not None
+            else source["unit"],
+            window,
+            suffix,
+        ),
+        "eebus_sample": sample(
+            module,
+            "EEBUS",
+            prefix + ".100000000Z",
+            eebus_raw,
+            eebus_value,
+            source["unit"],
+            window,
+            suffix,
+        ),
+        "observed_ebus_identity_hash": candidate["ebus_identity"]["selector_hash"],
+        "observed_eebus_identity_hash": candidate["eebus_identity"]["identity_hash"],
+        "conflict_samples": [],
+        "skew_ns": 100_000_000,
+        "max_skew_ns": registry["capture_limits"]["max_skew_ns"],
+        "age_ns": 5_000_000_000,
+        "max_age_ns": registry["capture_limits"]["max_age_ns"],
+        "comparator": comparison,
+    }
+
+
+def native_assessment(
+    module,
+    registry: dict[str, Any],
+    expected: dict[str, Any],
+    candidate: dict[str, Any],
+    window: dict[str, Any],
+    position: int,
+) -> dict[str, Any]:
+    prefix = "2026-08-11T10:00:05" if position == 0 else "2026-08-11T10:05:05"
+    suffix = expected["candidate_id"][-4:] + ("-pre" if position == 0 else "-post")
+    value = native_value(expected)
+    mapping_hash = (
+        module.digest(module.MAPPING_DOMAIN, expected["eebus_source"]["exact_mapping"])
+        if expected["validation_mode"] == "EEBUS_NATIVE_CAPABILITY"
+        else None
+    )
+    return {
+        "window_id": window["window_id"],
+        "ebus_sample": None,
+        "eebus_sample": sample(
+            module,
+            "EEBUS",
+            prefix + ".100000000Z",
+            value,
+            value,
+            expected["eebus_source"]["unit"],
+            window,
+            suffix,
+        ),
+        "observed_ebus_identity_hash": None,
+        "observed_eebus_identity_hash": candidate["eebus_identity"]["identity_hash"],
+        "conflict_samples": [],
+        "skew_ns": None,
+        "max_skew_ns": registry["capture_limits"]["max_skew_ns"],
+        "age_ns": 4_900_000_000,
+        "max_age_ns": registry["capture_limits"]["max_age_ns"],
+        "comparator": {
+            "class": expected["comparator_class"],
+            "declared_spine_step": None,
+            "delta": None,
+            "conversion": None,
+            "mapping_hash": mapping_hash,
+            "outcome": "NATIVE_VALID",
+        },
+    }
 
 
 def build_campaign(module, registry: dict[str, Any]) -> dict[str, Any]:
@@ -205,7 +357,9 @@ def build_campaign(module, registry: dict[str, Any]) -> dict[str, Any]:
             "candidate_id": expected["candidate_id"],
             "fact_hash": expected["fact_hash"],
             "source_status": expected["source_status"],
+            "retirement_state": expected["retirement_state"],
             "semantic_path": expected["semantic_path"],
+            "validation_mode": expected["validation_mode"],
             "comparator_class": expected["comparator_class"],
             "ebus_identity": None,
             "eebus_identity": None,
@@ -215,92 +369,33 @@ def build_campaign(module, registry: dict[str, Any]) -> dict[str, Any]:
             "visibility": "RAW_DEBUG_ONLY",
             "dossier_hash": None,
         }
-        if expected["protocol_eligibility"] != "TERMINAL":
-            candidate["eebus_identity"] = eebus_identity(module, expected)
-        if expected["protocol_eligibility"] == "WITHHOLD_NO_EBUS_CAPABILITY_SOURCE":
-            candidate["terminal_state"] = "NOT_COMPARABLE"
-        elif expected["protocol_eligibility"] == "ELIGIBLE":
-            candidate["ebus_identity"] = ebus_identity(module, expected)
-            candidate["terminal_state"] = "MISSING"
-            for position, window in enumerate(windows):
-                prefix = "2026-08-11T10:00:05" if position == 0 else "2026-08-11T10:05:05"
-                candidate["assessments"].append(
-                    {
-                        "window_id": window["window_id"],
-                        "ebus_sample": None,
-                        "eebus_sample": missing_eebus_sample(
-                            module,
-                            expected,
-                            window,
-                            prefix + ".100000000Z",
-                            "pre" if position == 0 else "post",
-                        ),
-                        "observed_ebus_identity_hash": None,
-                        "observed_eebus_identity_hash": candidate["eebus_identity"][
-                            "identity_hash"
-                        ],
-                        "conflict_samples": [],
-                        "skew_ns": None,
-                        "max_skew_ns": registry["capture_limits"]["max_skew_ns"],
-                        "age_ns": None,
-                        "max_age_ns": registry["capture_limits"]["max_age_ns"],
-                        "comparator": comparator(module, expected, "MISSING"),
-                    }
-                )
-        candidates.append(candidate)
+        if expected["protocol_eligibility"] == "TERMINAL":
+            candidates.append(candidate)
+            continue
 
-    promoted = candidates[-1]
-    promoted_expected = registry["candidate_catalog"][-1]
-    promoted["decision"] = "PROMOTED"
-    promoted["terminal_state"] = None
-    promoted["visibility"] = "LOCKED_NOT_EXPOSED"
-    promoted["assessments"] = []
-    for position, window in enumerate(windows):
-        prefix = "2026-08-11T10:00:05" if position == 0 else "2026-08-11T10:05:05"
-        ebus_value = typed_numeric(125 if position == 0 else 13, -1 if position == 0 else 0)
-        eebus_value = typed_numeric(13 if position == 0 else 135, 0 if position == 0 else -1)
-        promoted_comparator = comparator(module, promoted_expected, "MATCH")
-        promoted_comparator["delta"] = {"number": 5, "scale": -1}
-        promoted["assessments"].append(
-            {
-                "window_id": window["window_id"],
-                "ebus_sample": sample(
-                    module,
-                    "EBUS",
-                    prefix + "Z",
-                    ebus_value,
-                    ebus_value,
-                    "degC",
-                    window,
-                    "pre" if position == 0 else "post",
-                ),
-                "eebus_sample": sample(
-                    module,
-                    "EEBUS",
-                    prefix + ".100000000Z",
-                    eebus_value,
-                    eebus_value,
-                    "degC",
-                    window,
-                    "pre" if position == 0 else "post",
-                ),
-                "observed_ebus_identity_hash": promoted["ebus_identity"][
-                    "selector_hash"
-                ],
-                "observed_eebus_identity_hash": promoted["eebus_identity"][
-                    "identity_hash"
-                ],
-                "conflict_samples": [],
-                "skew_ns": 100_000_000,
-                "max_skew_ns": registry["capture_limits"]["max_skew_ns"],
-                "age_ns": 5_000_000_000,
-                "max_age_ns": registry["capture_limits"]["max_age_ns"],
-                "comparator": promoted_comparator,
-            }
+        candidate["eebus_identity"] = eebus_identity(module, expected)
+        candidate["decision"] = "PROMOTED"
+        candidate["terminal_state"] = None
+        candidate["visibility"] = "LOCKED_NOT_EXPOSED"
+        if expected["protocol_eligibility"] == "CROSS_PROTOCOL_EQUIVALENCE":
+            candidate["ebus_identity"] = ebus_identity(module, expected)
+            candidate["assessments"] = [
+                cross_assessment(
+                    module, registry, expected, candidate, window, position
+                )
+                for position, window in enumerate(windows)
+            ]
+        else:
+            candidate["assessments"] = [
+                native_assessment(
+                    module, registry, expected, candidate, window, position
+                )
+                for position, window in enumerate(windows)
+            ]
+        candidate["dossier_hash"] = module.digest(
+            module.DOSSIER_DOMAIN, module._candidate_payload(candidate)
         )
-    promoted["dossier_hash"] = module.digest(
-        module.DOSSIER_DOMAIN, module._candidate_payload(promoted)
-    )
+        candidates.append(candidate)
 
     campaign = {
         "contract": "helianthus.platform.leaf-promotion-captured-multi-leaf.v1",
