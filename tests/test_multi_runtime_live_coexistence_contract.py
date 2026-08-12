@@ -695,7 +695,7 @@ def source_payloads(
         ),
         "graphql.values": validator.canonical(graph_values),
         "portal.bootstrap": validator.canonical(
-            {"capabilities": {"devices": True, "zones": True}, "ui_version": "test-v1"}
+            {"capabilities": {"devices": True, "zones": True}, "ui_version": "m0"}
         ),
         "command.routing": validator.canonical(routes),
         "semantic.registry": validator.canonical(semantic_registry),
@@ -1208,10 +1208,20 @@ def test_msp08_source_projection_reduces_portal_bootstrap_to_public_summary() ->
         "default_protocol": "ebus",
         "sections": ["devices", "zones", "dhw", "energy"],
         "enabled_capability_count": 2,
-        "ui_version": "test-v1",
+        "ui_version": "m0",
     }
     assert "endpoints" not in portal
     assert not validator._contains_public_secret(portal)
+
+
+def test_msp08_source_projection_rejects_uncontracted_portal_version() -> None:
+    validator = validator_module()
+
+    with pytest.raises(Exception) as error:
+        validator._source_portal(
+            {"capabilities": {"devices": True}, "ui_version": "resident-name"}
+        )
+    assert str(error.value) == "provenance.source_capture"
 
 
 @pytest.mark.parametrize(

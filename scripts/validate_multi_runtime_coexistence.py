@@ -1655,15 +1655,14 @@ def _source_portal(raw: dict[str, Any]) -> dict[str, Any]:
         not isinstance(capabilities, dict)
         or not capabilities
         or any(not isinstance(value, bool) for value in capabilities.values())
-        or not isinstance(ui_version, str)
-        or not ui_version
+        or ui_version != "m0"
     ):
         fail("provenance.source_capture")
     return {
         "default_protocol": "ebus",
         "sections": ["devices", "zones", "dhw", "energy"],
         "enabled_capability_count": sum(capabilities.values()),
-        "ui_version": ui_version,
+        "ui_version": "m0",
     }
 
 
