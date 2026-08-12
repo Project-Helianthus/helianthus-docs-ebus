@@ -1001,6 +1001,15 @@ def test_msp08_source_decimal_preserves_long_mcp_and_graphql_values() -> None:
     assert projected["ha.graphql.values"]["entities"][0]["target_temperature"] == expected
 
 
+def test_msp08_source_decimal_canonicalizes_zero_independent_of_context() -> None:
+    validator = validator_module()
+    with validator.decimal.localcontext() as context:
+        context.prec = 2
+        for raw in (b"0", b"0.0", b"0e3", b"0.000e-100"):
+            decoded = validator._decode_source_json(b'{"value":' + raw + b"}")
+            assert validator._source_string_number(decoded["value"]) == "0"
+
+
 @pytest.mark.parametrize(
     "raw",
     (
@@ -1064,6 +1073,34 @@ def test_msp08_private_runtime_binds_distinct_single_window_manifests(
         assert semantic["zones"][0]["target_temp_c"] == "21.5"
         assert views["graphql.ebus.values"]["zones"][0]["target_temp_c"] == "21.5"
         assert views["ha.graphql.values"]["entities"][0]["target_temperature"] == "21.5"
+
+
+@pytest.mark.parametrize("invalid", ({"x": 1}, [21], True, "21.5"))
+def test_msp08_private_window_rejects_nonnumeric_graphql_temperature(
+    tmp_path: pathlib.Path, invalid: object
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["graphql.values"]
+    value = json.loads(path.read_bytes())
+    value["data"]["zones"][0]["config"]["targetTempC"] = invalid
+    path.write_bytes(validator.canonical(value))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+    run = evidence["runs"][0]
+
+    with pytest.raises(Exception) as error:
+        validator._source_capture_binding(
+            manifests["before"],
+            roots["before"],
+            run["provenance"]["auth_scope"]["scope_hash"],
+            "PRE_RESTART",
+            run["provenance"]["process_instance_id"],
+            evidence["runs"][0]["capture_offset_ns"],
+            evidence["runs"][1]["capture_offset_ns"],
+            json.loads(manifests["before"])["captured_at"],
+        )
+    assert str(error.value) == "provenance.source_capture"
 
 
 def test_msp08_private_runtime_requires_both_source_manifests(

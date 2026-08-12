@@ -1494,8 +1494,12 @@ def _source_string_number(value: Any) -> str | None:
     if value is None:
         return None
     if isinstance(value, bool):
-        return "true" if value else "false"
+        fail("provenance.source_capture")
+    if isinstance(value, int):
+        return str(value)
     if isinstance(value, decimal.Decimal):
+        if value.is_zero():
+            return "0"
         sign, digits, exponent = value.as_tuple()
         coefficient = "".join(str(digit) for digit in digits)
         if exponent >= 0:
@@ -1511,7 +1515,7 @@ def _source_string_number(value: Any) -> str | None:
         if rendered == "":
             rendered = "0"
         return ("-" if sign else "") + rendered
-    return str(value)
+    fail("provenance.source_capture")
 
 
 def _source_reject_unprojected_decimals(value: Any) -> None:

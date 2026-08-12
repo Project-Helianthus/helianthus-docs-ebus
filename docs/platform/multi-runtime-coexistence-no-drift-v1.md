@@ -185,7 +185,9 @@ Private MCP and GraphQL numeric source fields that the closed projector maps to
 numeric strings are parsed as exact decimals, with at most 128 significant
 digits and an absolute adjusted exponent of at most 1,024. Formatting is
 context-independent fixed-point, removes insignificant fractional zeroes, and
-never passes through a binary float; negative zero is rejected. A fractional
+never passes through a binary float; every positive zero form maps to `0`, and
+negative zero is rejected. These fields accept only JSON integer, decimal, or
+`null` values; booleans, strings, arrays, and objects fail closed. A fractional
 number in a direct/unmodified protected view is not silently transformed and
 fails `provenance.source_capture`.
 
