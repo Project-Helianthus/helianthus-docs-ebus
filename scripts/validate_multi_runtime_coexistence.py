@@ -1531,12 +1531,21 @@ def _source_reject_unprojected_decimals(value: Any) -> None:
             _source_reject_unprojected_decimals(item)
 
 
+SOURCE_DISCOVERY_STATES = frozenset(
+    {"passive_observed", "static_seed", "active_confirmed"}
+)
+SOURCE_VERIFICATION_STATES = frozenset(
+    {"candidate", "corroborated_pending", "identity_confirmed"}
+)
+
+
 def _source_device_projection(item: dict[str, Any]) -> dict[str, Any] | None:
     if not isinstance(item, dict):
         fail("provenance.source_capture")
     address = item.get("address")
     device_id = item.get("device_id")
     manufacturer = item.get("manufacturer")
+    discovery_source = item.get("discovery_source")
     verification_state = item.get("verification_state")
     if (
         not isinstance(address, int)
@@ -1544,7 +1553,13 @@ def _source_device_projection(item: dict[str, Any]) -> dict[str, Any] | None:
         or not 0 <= address <= 255
         or not isinstance(device_id, str)
         or not isinstance(manufacturer, str)
-        or not isinstance(verification_state, str)
+    ):
+        fail("provenance.source_capture")
+    if discovery_source is None and verification_state is None:
+        return None
+    if (
+        discovery_source not in SOURCE_DISCOVERY_STATES
+        or verification_state not in SOURCE_VERIFICATION_STATES
     ):
         fail("provenance.source_capture")
     if verification_state != "identity_confirmed":
@@ -1556,7 +1571,7 @@ def _source_device_projection(item: dict[str, Any]) -> dict[str, Any] | None:
         "device_id": _source_redacted(f"ebus-device:{address}:{device_id}"),
         "manufacturer": manufacturer,
         "model": _source_redacted(f"ebus-model:{device_id}"),
-        "discovery_source": item.get("discovery_source") or "unknown",
+        "discovery_source": discovery_source,
         "verification_state": verification_state,
     }
 
@@ -1630,6 +1645,25 @@ def _source_graphql_values(raw: dict[str, Any]) -> dict[str, Any]:
             "source": "ebus",
             "operating_mode": data["dhw"]["config"]["operatingMode"],
         },
+    }
+
+
+def _source_portal(raw: dict[str, Any]) -> dict[str, Any]:
+    capabilities = raw.get("capabilities")
+    ui_version = raw.get("ui_version")
+    if (
+        not isinstance(capabilities, dict)
+        or not capabilities
+        or any(not isinstance(value, bool) for value in capabilities.values())
+        or not isinstance(ui_version, str)
+        or not ui_version
+    ):
+        fail("provenance.source_capture")
+    return {
+        "default_protocol": "ebus",
+        "sections": ["devices", "zones", "dhw", "energy"],
+        "enabled_capability_count": sum(capabilities.values()),
+        "ui_version": ui_version,
     }
 
 
@@ -1748,7 +1782,7 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             "ha.graphql.values": ha_values,
             "ha.identity": ha_identity,
             "debug.ebus": debug_raw,
-            "portal.ebus.bootstrap": portal_raw,
+            "portal.ebus.bootstrap": _source_portal(portal_raw),
             "command.routing": routes_raw,
             "semantic.registry": semantic_registry_raw,
             "mcp.eebus.v1.contract": {
