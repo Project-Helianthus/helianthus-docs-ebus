@@ -150,17 +150,18 @@ def test_live_m8_canonical_verifier_rejects_evidence_hash_mutation(
 
 
 @pytest.mark.parametrize(
-    ("device_address", "admission_alias"),
+    ("target", "admission_alias"),
     [
-        (True, None),
-        (False, "selected-source"),
-        (False, "lastSuccessfulSource"),
-        (False, "companion target"),
+        ("device_address", None),
+        ("admission_alias", "selected-source"),
+        ("admission_alias", "lastSuccessfulSource"),
+        ("admission_alias", "companion target"),
+        ("via_device", None),
     ],
 )
 def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
     tmp_path: pathlib.Path,
-    device_address: bool,
+    target: str,
     admission_alias: str | None,
 ) -> None:
     validator = load_module(
@@ -174,11 +175,15 @@ def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
         devices = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"][0][
             "result"
         ]["devices"]
-        if device_address:
+        if target == "device_address":
             devices[0]["address"] = enumerable
         admission = views["debug.ebus"]["payload"]["data"]["status"]["admission"]
         if admission_alias is not None:
             admission[admission_alias] = enumerable
+        if target == "via_device":
+            views["ha.identity"]["payload"]["data"]["devices"][0][
+                "via_device"
+            ] = enumerable
     refresh_public_evidence(validator, evidence)
 
     mutated = tmp_path / "enumerable-address-evidence.json"

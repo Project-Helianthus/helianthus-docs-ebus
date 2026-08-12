@@ -3031,10 +3031,20 @@ def _contains_invalid_public_address(
 def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
     for run in evidence["runs"]:
         views = {view["view_id"]: view["payload"] for view in run["protected_views"]}
+        mcp_devices = views["mcp.ebus.v1.responses"]["data"]["responses"][0][
+            "result"
+        ]["devices"]
+        ha_devices = views["ha.identity"]["data"]["devices"]
         if _contains_invalid_public_address(
             views["mcp.ebus.v1.responses"], frozenset({"address"})
         ) or _contains_invalid_public_address(
             views["debug.ebus"], SOURCE_DEBUG_ADDRESS_KEYS, nullable=True
+        ):
+            return True
+        if len(mcp_devices) != len(ha_devices) or any(
+            ha_device.get("via_device")
+            != _source_redacted("ha-via:" + mcp_device["device_id"])
+            for mcp_device, ha_device in zip(mcp_devices, ha_devices, strict=True)
         ):
             return True
     return False

@@ -306,6 +306,11 @@ def build_live_evidence(validator) -> dict[str, object]:
         ]["devices"]
         for device in devices:
             device["address"] = validator.OPAQUE_ADDRESS
+        ha_devices = views["ha.identity"]["payload"]["data"]["devices"]
+        for device, ha_device in zip(devices, ha_devices, strict=True):
+            ha_device["via_device"] = validator._source_redacted(
+                "ha-via:" + device["device_id"]
+            )
         run["run_id"] = f"msp08-run-{index + 1:02d}"
         run["state"] = states[index]
         run["capture_offset_ns"] = index * 1_000_000_000
