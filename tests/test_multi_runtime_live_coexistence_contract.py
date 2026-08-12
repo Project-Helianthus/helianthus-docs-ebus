@@ -180,6 +180,48 @@ def test_msp08_inventory_matches_the_complete_stable_v1_contract() -> None:
     ]
 
 
+def test_msp08_synthetic_public_rejects_opaque_address_as_auth_identity(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = load(SYNTHETIC_EVIDENCE)
+    for run in evidence["runs"]:
+        for view in run["protected_views"]:
+            view["payload"]["meta"]["auth_subject"] = validator.OPAQUE_ADDRESS
+    refresh_protected_views(validator, evidence)
+    path = write_evidence(tmp_path, evidence)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(VALIDATOR),
+            "verify-public",
+            "--evidence",
+            str(path),
+            "--registry",
+            str(REGISTRY),
+            "--m7-graph",
+            str(M7_SYNTHETIC_GRAPH),
+            "--m7-replay",
+            str(M7_SYNTHETIC_REPLAY),
+            "--m7-registry",
+            str(M7_REGISTRY),
+            "--m7-source-bundle",
+            str(M7_SYNTHETIC_SOURCE_BUNDLE),
+            "--m7-source-replay",
+            str(M7_SYNTHETIC_SOURCE_REPLAY),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "redaction.public\n",
+        "",
+    )
+
+
 def test_msp08_read_only_scope_separates_inventory_from_call_authority() -> None:
     page = " ".join(PAGE.read_text(encoding="utf-8").split())
 
@@ -300,6 +342,50 @@ def build_live_evidence(validator) -> dict[str, object]:
         "redacted:sha256:" + "f" * 12,
     )
     for index, run in enumerate(selected):
+        views = {view["view_id"]: view for view in run["protected_views"]}
+        responses = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"]
+        device_result = responses[0]["result"]
+        devices = device_result["devices"]
+        responses.append(
+            {
+                "operation": "ebus.v1.semantic.snapshot.get",
+                "result": {
+                    "zones": [],
+                    "dhw": {"source": "ebus", "operating_mode": None, "preset": None},
+                    "system_properties": {
+                        "source": "ebus",
+                        "system_scheme": None,
+                        "module_configuration_vr71": None,
+                    },
+                },
+            }
+        )
+        for device_index, device in enumerate(devices):
+            device["address"] = validator.OPAQUE_ADDRESS
+            device["device_id"] = validator._source_redacted(
+                f"ebus-device-ordinal:{device_index}"
+            )
+            device["discovery_source"] = "active_confirmed"
+            device["model"] = validator._source_redacted(
+                "ebus-model:" + device["device_id"]
+            )
+            device["verification_state"] = "identity_confirmed"
+        device_result["selection"] = {
+            "criteria": "complete_identity_confirmed_devices_in_single_window",
+            "selected_count": len(devices),
+        }
+        ha_devices = views["ha.identity"]["payload"]["data"]["devices"]
+        for device, ha_device in zip(devices, ha_devices, strict=True):
+            ha_device["model"] = device["model"]
+            ha_device["unique_id"] = validator._source_redacted(
+                "ha:" + device["device_id"]
+            )
+            ha_device["via_device"] = validator._source_redacted(
+                "ha-via:" + device["device_id"]
+            )
+        views["debug.ebus"]["payload"]["data"].setdefault("status", {})[
+            "admission"
+        ] = {key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS}
         run["run_id"] = f"msp08-run-{index + 1:02d}"
         run["state"] = states[index]
         run["capture_offset_ns"] = index * 1_000_000_000
@@ -489,7 +575,7 @@ def build_live_evidence(validator) -> dict[str, object]:
                     }
                 )
     evidence["runs"] = selected
-    refresh_evidence_hash(validator, evidence)
+    refresh_protected_views(validator, evidence)
     return evidence
 
 
@@ -1015,6 +1101,74 @@ def test_msp08_source_mcp_accepts_large_envelope_with_bounded_inner_values() -> 
     assert validator._source_inner_mcp(raw)["data"]["items"] == values
 
 
+def test_msp08_source_mcp_accepts_matching_structured_content() -> None:
+    validator = validator_module()
+    inner = {"data": {"temperature": 21.5}, "meta": {"contract": "test"}}
+    envelope = json.loads(source_mcp(validator, inner["data"]))
+    envelope["result"]["structuredContent"] = inner
+
+    assert validator._source_inner_mcp(validator.canonical(envelope)) == inner
+
+
+def test_msp08_source_projection_rejects_type_ambiguous_structured_content() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    envelope = json.loads(payloads["ebus.semantic"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    envelope["result"]["structuredContent"] = deepcopy(inner)
+    envelope["result"]["structuredContent"]["data"]["planes"]["zones"][0][
+        "config"
+    ]["associated_circuit"] = True
+    payloads["ebus.semantic"] = validator.canonical(envelope)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda envelope: envelope.update({"unexpected": True}),
+        lambda envelope: envelope.update({"error": {"code": -1}}),
+        lambda envelope: envelope.update({"jsonrpc": "1.0"}),
+        lambda envelope: envelope.update({"id": None}),
+        lambda envelope: envelope["result"].update({"unexpected": True}),
+        lambda envelope: envelope["result"]["content"].append(
+            {"type": "text", "text": "{}"}
+        ),
+        lambda envelope: envelope["result"]["content"][0].update({"unexpected": True}),
+        lambda envelope: envelope["result"]["content"][0].update({"type": "image"}),
+        lambda envelope: envelope["result"].update(
+            {"structuredContent": {"data": {"items": ["contradiction"]}}}
+        ),
+        lambda envelope: envelope["result"].update({"structuredContent": None}),
+    ],
+    ids=[
+        "top-level-member",
+        "result-and-error",
+        "wrong-jsonrpc-version",
+        "null-id",
+        "result-member",
+        "multiple-content-items",
+        "content-member",
+        "non-text-content",
+        "divergent-structured-content",
+        "null-structured-content",
+    ],
+)
+def test_msp08_source_mcp_rejects_ambiguous_envelopes(mutate) -> None:
+    validator = validator_module()
+    envelope = json.loads(source_mcp(validator, {"items": ["captured"]}))
+    mutate(envelope)
+
+    with pytest.raises(Exception) as error:
+        validator._source_inner_mcp(validator.canonical(envelope))
+
+    assert str(error.value) == "provenance.source_capture"
+
+
 def test_msp08_source_decimal_is_bounded_and_canonical() -> None:
     validator = validator_module()
     decoded = validator._decode_source_json(b'{"temperature":21.500}')
@@ -1147,6 +1301,35 @@ def test_msp08_private_window_rejects_unprojectable_source_device(
     assert str(error.value) == "provenance.source_capture"
 
 
+def test_msp08_private_runtime_rejects_invalid_debug_address_alias(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["ebus.debug"]
+    debug = json.loads(path.read_bytes())
+    debug["status"] = {
+        "admission": {
+            "companion_target": 132,
+            "last_successful_source": 127,
+            "selected_source": 999,
+        }
+    }
+    path.write_bytes(validator.canonical(debug))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
 def test_msp08_source_projection_retains_passive_incomplete_devices_only_in_raw_input() -> None:
     validator = validator_module()
     payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
@@ -1222,6 +1405,247 @@ def test_msp08_source_projection_rejects_uncontracted_portal_version() -> None:
             {"capabilities": {"devices": True}, "ui_version": "resident-name"}
         )
     assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_source_projection_pseudonymizes_debug_address_aliases() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["status"] = {
+        "admission": {
+            "companion_target": 132,
+            "last_successful_source": 127,
+            "selected_source": 127,
+        }
+    }
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
+    admission = projected["status"]["admission"]
+    assert set(admission) == validator.SOURCE_DEBUG_ADDRESS_KEYS
+    assert set(admission.values()) == {validator.OPAQUE_ADDRESS}
+
+
+def test_msp08_source_projection_rejects_debug_address_alias_outside_admission() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["uncontracted"] = {"selected_source": 127}
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    "alias",
+    [
+        "src_addr",
+        "dstAddr",
+        "peer_addrs",
+        "source_addr_hash",
+        "src_addr_value",
+        "dstAddrRaw",
+        "peer_addrs_list",
+    ],
+)
+def test_msp08_source_projection_rejects_uncontracted_abbreviated_address_alias(
+    alias: str,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug.setdefault("status", {}).setdefault("admission", {})[alias] = 127
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize("invalid_address", [-1, 256, 999, "-1", "256", "0x100", "device-a"])
+def test_msp08_source_projection_rejects_invalid_debug_address_aliases(
+    invalid_address: object,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["status"] = {
+        "admission": {
+            "companion_target": 132,
+            "last_successful_source": 127,
+            "selected_source": invalid_address,
+        }
+    }
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    "key",
+    ["companion_target", "last_successful_source", "selected_source"],
+)
+def test_msp08_public_redaction_rejects_debug_address_aliases(key: str) -> None:
+    validator = validator_module()
+    assert validator._contains_public_secret({key: 127})
+    assert not validator._contains_public_secret({key: validator.OPAQUE_ADDRESS})
+    assert not validator._contains_public_secret({key: None})
+
+    evidence = build_live_evidence(validator)
+    debug = next(
+        view
+        for view in evidence["runs"][0]["protected_views"]
+        if view["view_id"] == "debug.ebus"
+    )
+    debug["payload"]["data"].setdefault("status", {}).setdefault(
+        "admission", {}
+    )[key] = "redacted:sha256:0123456789ab"
+    with pytest.raises(Exception) as error:
+        validator.check_public_redaction(evidence)
+    assert str(error.value) == "redaction.public"
+
+
+def test_msp08_source_projection_preserves_null_debug_address_aliases() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["status"] = {
+        "admission": {key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS}
+    }
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
+    assert projected["status"]["admission"] == {
+        key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS
+    }
+
+
+def test_msp08_source_projection_synthesizes_missing_debug_aliases_as_null() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["status"] = {"admission": {"selected_source": 127}}
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
+    assert projected["status"]["admission"] == {
+        "companion_target": None,
+        "last_successful_source": None,
+        "selected_source": validator.OPAQUE_ADDRESS,
+    }
+
+
+@pytest.mark.parametrize("missing", ["admission", "status"])
+def test_msp08_source_projection_synthesizes_missing_debug_container_as_null(
+    missing: str,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    if missing == "status":
+        debug.pop("status", None)
+    else:
+        debug.setdefault("status", {}).pop("admission", None)
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    projected = validator._source_project_views(payloads)["views"]["debug.ebus"]
+    assert projected["status"]["admission"] == {
+        key: None for key in validator.SOURCE_DEBUG_ADDRESS_KEYS
+    }
+
+
+@pytest.mark.parametrize("container", ["status", "admission"])
+@pytest.mark.parametrize("invalid", [None, "invalid", []])
+def test_msp08_source_projection_rejects_present_invalid_debug_container(
+    container: str, invalid: object,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    if container == "status":
+        debug["status"] = invalid
+    else:
+        debug.setdefault("status", {})["admission"] = invalid
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_source_projection_uses_non_enumerable_device_address_placeholder() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    projected = validator._source_project_views(payloads)["views"]
+    devices = projected["mcp.ebus.v1.responses"]["responses"][0]["result"][
+        "devices"
+    ]
+
+    assert {item["address"] for item in devices} == {validator.OPAQUE_ADDRESS}
+    assert [item["device_id"] for item in devices] == [
+        validator._source_redacted(f"ebus-device-ordinal:{index}")
+        for index in range(len(devices))
+    ]
+    assert [item["model"] for item in devices] == [
+        validator._source_redacted("ebus-model:" + item["device_id"])
+        for item in devices
+    ]
+
+    reversed_payloads = source_payloads(
+        validator, "before", "2026-08-12T08:00:00Z"
+    )
+    envelope = json.loads(reversed_payloads["ebus.devices"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"].reverse()
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    reversed_payloads["ebus.devices"] = validator.canonical(envelope)
+    reordered = validator._source_project_views(reversed_payloads)["views"]
+    assert reordered["mcp.ebus.v1.responses"] == projected[
+        "mcp.ebus.v1.responses"
+    ]
+    via_devices = {
+        item["via_device"] for item in projected["ha.identity"]["devices"]
+    }
+    assert len(via_devices) == len(devices)
+
+
+def test_msp08_source_projection_preserves_duplicate_device_id_multiplicity() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    envelope = json.loads(payloads["ebus.devices"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"][1]["device_id"] = inner["data"][0]["device_id"]
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    payloads["ebus.devices"] = validator.canonical(envelope)
+
+    projected = validator._source_project_views(payloads)["views"]
+    devices = projected["mcp.ebus.v1.responses"]["responses"][0]["result"][
+        "devices"
+    ]
+    ha_devices = projected["ha.identity"]["devices"]
+    assert len({item["device_id"] for item in devices}) == 2
+    assert len({item["unique_id"] for item in ha_devices}) == 2
+    assert len({item["via_device"] for item in ha_devices}) == 2
+
+    inner["data"].reverse()
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    payloads["ebus.devices"] = validator.canonical(envelope)
+    reordered = validator._source_project_views(payloads)["views"]
+    assert reordered["mcp.ebus.v1.responses"] == projected[
+        "mcp.ebus.v1.responses"
+    ]
+    assert reordered["ha.identity"] == projected["ha.identity"]
 
 
 def test_msp08_source_projection_declares_and_excludes_volatile_schedule_leaves() -> None:
@@ -2336,6 +2760,45 @@ def test_msp08_public_export_rejects_secrets_and_stable_identity(
     )
     assert result.returncode == 1
     assert result.stdout == "redaction.public\n"
+
+
+@pytest.mark.parametrize(
+    ("alias", "value"),
+    [
+        ("src_addr", 127),
+        ("dstAddr", 21),
+        ("peer_addrs", [8, 21]),
+        ("source_addr_hash", "sha256:" + "c" * 64),
+        ("src_addr_value", 127),
+        ("dstAddrRaw", 21),
+        ("peer_addrs_list", [8, 21]),
+    ],
+)
+def test_msp08_public_export_rejects_abbreviated_address_alias(
+    tmp_path: pathlib.Path, alias: str, value: object
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    for run in evidence["runs"]:
+        view = next(
+            view for view in run["protected_views"] if view["view_id"] == "debug.ebus"
+        )
+        view["payload"]["data"]["status"]["admission"][alias] = value
+    refresh_protected_views(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
+
+    result = subprocess.run(
+        validator_command("verify", evidence_path),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "redaction.public\n",
+        "",
+    )
 
 
 def test_msp08_public_export_allows_boolean_auth_policy_metadata(
