@@ -695,7 +695,7 @@ def source_payloads(
         ),
         "graphql.values": validator.canonical(graph_values),
         "portal.bootstrap": validator.canonical(
-            {"capabilities": {"devices": True, "zones": True}, "ui_version": "test-v1"}
+            {"capabilities": {"devices": True, "zones": True}, "ui_version": "m0"}
         ),
         "command.routing": validator.canonical(routes),
         "semantic.registry": validator.canonical(semantic_registry),
@@ -1144,6 +1144,137 @@ def test_msp08_private_window_rejects_unprojectable_source_device(
             evidence["runs"][1]["capture_offset_ns"],
             json.loads(manifests["before"])["captured_at"],
         )
+    assert str(error.value) == "provenance.source_capture"
+
+
+def test_msp08_source_projection_retains_passive_incomplete_devices_only_in_raw_input() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    envelope = json.loads(payloads["ebus.devices"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"].append(
+        {
+            "address": 3,
+            "manufacturer": "",
+            "device_id": "",
+            "discovery_source": "passive_observed",
+            "verification_state": "corroborated_pending",
+        }
+    )
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    payloads["ebus.devices"] = validator.canonical(envelope)
+
+    projected = validator._source_project_views(payloads)
+    devices = projected["views"]["mcp.ebus.v1.responses"]["responses"][0][
+        "result"
+    ]
+    assert devices["selection"] == {
+        "criteria": "complete_identity_confirmed_devices_in_single_window",
+        "selected_count": 2,
+    }
+    assert len(devices["devices"]) == 2
+    assert len(projected["views"]["ha.identity"]["devices"]) == 2
+
+
+def test_msp08_source_projection_retains_unlabelled_no_slot_device_only_in_raw_input() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    envelope = json.loads(payloads["ebus.devices"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"].append({"address": 3, "manufacturer": "", "device_id": ""})
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    payloads["ebus.devices"] = validator.canonical(envelope)
+
+    projected = validator._source_project_views(payloads)
+    mcp_devices = projected["views"]["mcp.ebus.v1.responses"]["responses"][0][
+        "result"
+    ]["devices"]
+    ha_devices = projected["views"]["ha.identity"]["devices"]
+    assert len(mcp_devices) == 2
+    assert len(ha_devices) == 2
+
+
+def test_msp08_source_projection_reduces_portal_bootstrap_to_public_summary() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    projected = validator._source_project_views(payloads)
+    portal = projected["views"]["portal.ebus.bootstrap"]
+
+    assert portal == {
+        "default_protocol": "ebus",
+        "sections": ["devices", "zones", "dhw", "energy"],
+        "enabled_capability_count": 2,
+        "ui_version": "m0",
+    }
+    assert "endpoints" not in portal
+    assert not validator._contains_public_secret(portal)
+
+
+def test_msp08_source_projection_rejects_uncontracted_portal_version() -> None:
+    validator = validator_module()
+
+    with pytest.raises(Exception) as error:
+        validator._source_portal(
+            {"capabilities": {"devices": True}, "ui_version": "resident-name"}
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("discovery_source", "unexpected_source"),
+        ("verification_state", "unexpected_state"),
+    ],
+)
+def test_msp08_source_projection_rejects_unknown_device_state(
+    field: str,
+    value: str,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    envelope = json.loads(payloads["ebus.devices"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"][0][field] = value
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    payloads["ebus.devices"] = validator.canonical(envelope)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
+
+
+@pytest.mark.parametrize("confirmed_count", [0, 1])
+def test_msp08_source_projection_rejects_missing_confirmed_identity(
+    confirmed_count: int,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    envelope = json.loads(payloads["ebus.devices"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    if confirmed_count == 0:
+        for item in inner["data"]:
+            item.update(
+                manufacturer="",
+                device_id="",
+                discovery_source="passive_observed",
+                verification_state="corroborated_pending",
+            )
+    else:
+        inner["data"][0]["device_id"] = ""
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    payloads["ebus.devices"] = validator.canonical(envelope)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
     assert str(error.value) == "provenance.source_capture"
 
 

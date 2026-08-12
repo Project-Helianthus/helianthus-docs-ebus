@@ -183,11 +183,16 @@ evaluated. The protected payloads must be produced independently before
 equality is tested.
 
 PRE and POST source windows require different manifest digests regardless of
-their claimed byte lengths. Source device rows are all-or-reject: a malformed
-address or missing identity cannot be omitted from the projection. Household
-zone labels are deterministic public pseudonyms, never copied from the private
-MCP or GraphQL source; source device IDs and model labels are separately
-pseudonymized. Before return, the complete projected view tree is checked for
+their claimed byte lengths. Every source device row remains bound in the raw
+private root and manifest. The stable identity projection selects only rows
+whose runtime state is `identity_confirmed` and whose manufacturer and device
+ID are complete. Incomplete passive observations such as
+`corroborated_pending` addresses are retained as raw evidence but are not
+promoted into a stable device identity. A malformed address, a confirmed row
+with missing identity, or a window with no complete confirmed identity fails
+closed. Household zone labels are deterministic public pseudonyms, never
+copied from the private MCP or GraphQL source; source device IDs and model
+labels are separately pseudonymized. Before return, the complete projected view tree is checked for
 unconsumed decimals, so a fractional pass-through field fails with
 `provenance.source_capture` rather than reaching canonical serialization.
 Capture timestamps are derived exactly from the UTC wall anchor plus the
