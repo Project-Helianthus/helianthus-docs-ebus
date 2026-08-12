@@ -173,10 +173,12 @@ and compares each derived payload byte-for-byte with the corresponding evidence
 payload. Debug, Portal, routing, and semantic-registry inputs are captured
 directly; they are not inferred from neighboring views. The complete raw
 semantic registry remains bound in the private source manifest. Its protected
-G18 view contains every promoted eBUS leaf except the explicitly declared
-`/schedules/` prefix, whose program/day slot materialization is transient cache
-state rather than a stable consumer contract. Every raw leaf is validated
-before that deterministic projection, and any non-schedule drift remains a
+G18 view contains every promoted eBUS leaf except the exact indexed
+program/day/slot fields `StartHour`, `StartMinute`, `EndHour`, `EndMinute`,
+`TemperatureC`, and `TemperatureRaw`, whose materialization is transient cache
+state rather than a stable consumer contract. Other `/schedules/` leaves remain
+protected. Every raw leaf is validated before that deterministic projection,
+and any non-excluded drift remains a
 terminal consumer-drift failure. The complete protected
 payload is source-bound: `data` comes from the projector, `meta.captured_at`
 comes from the manifest window, and `meta.auth_subject` is the deterministic
@@ -258,7 +260,7 @@ order. A caller cannot select a subset.
 | `debug.ebus` | Existing eBUS debug output |
 | `portal.ebus.bootstrap` | Portal bootstrap and eBUS projection |
 | `command.routing` | Existing command routing |
-| `semantic.registry` | Existing promoted eBUS registry outside explicitly declared volatile `/schedules/` cache materialization |
+| `semantic.registry` | Existing promoted eBUS registry outside the exact declared volatile program/day/slot field grammar |
 | `mcp.eebus.v1.contract` | Stable `eebus.v1` V1 contract |
 
 Every view binds its exact capture path, JSON media type, unmodified payload,

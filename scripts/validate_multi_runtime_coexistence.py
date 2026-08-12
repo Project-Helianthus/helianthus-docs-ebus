@@ -1666,6 +1666,12 @@ def _source_portal(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+VOLATILE_SCHEDULE_LEAF = re.compile(
+    r"^/schedules/Programs/[0-9]+/Days/[0-9]+/Slots/[0-9]+/"
+    r"(?:StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw)$"
+)
+
+
 def _source_semantic_registry(raw: dict[str, Any]) -> dict[str, Any]:
     if raw.get("authority") != "ebus.promoted" or set(raw) != {
         "authority",
@@ -1694,7 +1700,7 @@ def _source_semantic_registry(raw: dict[str, Any]) -> dict[str, Any]:
         ):
             fail("provenance.source_capture")
         seen.add(path)
-        if not path.startswith("/schedules/"):
+        if VOLATILE_SCHEDULE_LEAF.fullmatch(path) is None:
             projected.append(copy.deepcopy(item))
     projected.sort(key=lambda item: item["path"])
     if not projected:
@@ -1702,8 +1708,11 @@ def _source_semantic_registry(raw: dict[str, Any]) -> dict[str, Any]:
     return {
         "authority": "ebus.promoted",
         "selection": {
-            "criteria": "all_promoted_ebus_leaves_outside_volatile_schedule_materialization",
-            "excluded_prefixes": ["/schedules/"],
+            "criteria": "all_promoted_ebus_leaves_outside_volatile_schedule_slot_materialization",
+            "excluded_path_pattern": (
+                "/schedules/Programs/<index>/Days/<index>/Slots/<index>/"
+                "<StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw>"
+            ),
             "selected_count": len(projected),
         },
         "leaves": projected,
