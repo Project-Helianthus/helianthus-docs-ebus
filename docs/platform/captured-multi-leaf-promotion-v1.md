@@ -42,7 +42,7 @@ operational SKI, SHIP ids, protocol addresses, and selectors are not treated as
 cryptographic secrets in the private operator tier.
 
 The eeBUS source contract is temporarily grounded by the full PR-head commit
-`cb550789d8299ecb3389b7a89b53fff76d79fa0b`; it will be repinned to the source
+`3576a14edbe08aeb757b9e53a03fb6e5be387dfe`; it will be repinned to the source
 inventory squash commit. That external binding owns only the SPINE source
 profile: entity slot and type, feature type and role, complete
 description/constraints/value function lists, field path, descriptor, unit,
@@ -60,8 +60,8 @@ M8.5 result at `docs/platform/live/msp-085-0.6.38/m8.5-result.json`. They remain
 `NOT_TESTED` outcomes, and never enter the real-leaf promotion denominator.
 
 The canonical registry is also an exact byte contract. Its raw SHA-256 is
-`fd11c68fc94e3b63eaa0c8b20aa2a6989042458e1e8faf0c1432b1a93391b474`, exposed
-as `registry_sha256=sha256:fd11c68fc94e3b63eaa0c8b20aa2a6989042458e1e8faf0c1432b1a93391b474`.
+`3dc531dddb3464c75aca42ccf914d98c7c3e872a2ad925229f2a207586e14b11`, exposed
+as `registry_sha256=sha256:3dc531dddb3464c75aca42ccf914d98c7c3e872a2ad925229f2a207586e14b11`.
 `--registry` may name a byte-identical copy; it cannot substitute tolerances,
 selectors, mappings, or an eeBUS source profile.
 
