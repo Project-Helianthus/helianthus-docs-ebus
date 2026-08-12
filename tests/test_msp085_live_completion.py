@@ -194,8 +194,12 @@ def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
     assert verified.stderr == ""
 
 
-def test_live_m8_canonical_verifier_rejects_opaque_address_outside_address_fields(
-    tmp_path: pathlib.Path,
+@pytest.mark.parametrize(
+    "target",
+    ["auth_subject", "uncontracted_mcp_address", "uncontracted_debug_alias"],
+)
+def test_live_m8_canonical_verifier_rejects_opaque_address_outside_canonical_paths(
+    tmp_path: pathlib.Path, target: str,
 ) -> None:
     validator = load_module(
         "msp085_live_opaque_scope_validator",
@@ -203,8 +207,18 @@ def test_live_m8_canonical_verifier_rejects_opaque_address_outside_address_field
     )
     evidence = load(M8_EVIDENCE)
     for run in evidence["runs"]:
-        for view in run["protected_views"]:
-            view["payload"]["meta"]["auth_subject"] = validator.OPAQUE_ADDRESS
+        views = {view["view_id"]: view for view in run["protected_views"]}
+        if target == "auth_subject":
+            for view in views.values():
+                view["payload"]["meta"]["auth_subject"] = validator.OPAQUE_ADDRESS
+        elif target == "uncontracted_mcp_address":
+            views["mcp.ebus.v1.responses"]["payload"]["data"]["uncontracted"] = {
+                "address": validator.OPAQUE_ADDRESS
+            }
+        else:
+            views["debug.ebus"]["payload"]["data"]["uncontracted"] = {
+                "selected_source": validator.OPAQUE_ADDRESS
+            }
     refresh_public_evidence(validator, evidence)
 
     mutated = tmp_path / "misplaced-opaque-address-evidence.json"

@@ -1688,11 +1688,13 @@ def _source_debug_address_valid(value: Any) -> bool:
     return False
 
 
-def _source_debug(value: Any) -> Any:
+def _source_debug(value: Any, path: tuple[str, ...] = ()) -> Any:
     if isinstance(value, dict):
         projected = {}
         for key, item in value.items():
             if key in SOURCE_DEBUG_ADDRESS_KEYS:
+                if path != ("status", "admission"):
+                    fail("provenance.source_capture")
                 if item is None:
                     projected[key] = None
                 elif not _source_debug_address_valid(item):
@@ -1700,10 +1702,10 @@ def _source_debug(value: Any) -> Any:
                 else:
                     projected[key] = OPAQUE_ADDRESS
             else:
-                projected[key] = _source_debug(item)
+                projected[key] = _source_debug(item, path + (key,))
         return projected
     if isinstance(value, list):
-        return [_source_debug(item) for item in value]
+        return [_source_debug(item, path) for item in value]
     return copy.deepcopy(value)
 
 
@@ -3031,27 +3033,6 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     )
 
 
-def _contains_invalid_public_address(
-    value: Any, keys: frozenset[str], *, nullable: bool = False
-) -> bool:
-    normalized_keys = {_compact_key(key) for key in keys}
-    if isinstance(value, dict):
-        for key, item in value.items():
-            if _compact_key(key) in normalized_keys and item != OPAQUE_ADDRESS and not (
-                nullable and item is None
-            ):
-                return True
-            if _contains_invalid_public_address(item, keys, nullable=nullable):
-                return True
-        return False
-    if isinstance(value, list):
-        return any(
-            _contains_invalid_public_address(item, keys, nullable=nullable)
-            for item in value
-        )
-    return False
-
-
 def _count_exact_value(value: Any, expected: Any) -> int:
     if isinstance(value, dict):
         return sum(
@@ -3063,19 +3044,6 @@ def _count_exact_value(value: Any, expected: Any) -> int:
     return int(value == expected)
 
 
-def _count_address_placeholders(value: Any, keys: frozenset[str]) -> int:
-    normalized_keys = {_compact_key(key) for key in keys}
-    if isinstance(value, dict):
-        return sum(
-            int(_compact_key(key) in normalized_keys and item == OPAQUE_ADDRESS)
-            + _count_address_placeholders(item, keys)
-            for key, item in value.items()
-        )
-    if isinstance(value, list):
-        return sum(_count_address_placeholders(item, keys) for item in value)
-    return 0
-
-
 def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
     allowed_placeholder_count = 0
     for run in evidence["runs"]:
@@ -3084,18 +3052,23 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
             "result"
         ]["devices"]
         ha_devices = views["ha.identity"]["data"]["devices"]
-        if _contains_invalid_public_address(
-            views["mcp.ebus.v1.responses"], frozenset({"address"})
-        ) or _contains_invalid_public_address(
-            views["debug.ebus"], SOURCE_DEBUG_ADDRESS_KEYS, nullable=True
-        ):
+        if any(device.get("address") != OPAQUE_ADDRESS for device in mcp_devices):
             return True
-        allowed_placeholder_count += _count_address_placeholders(
-            views["mcp.ebus.v1.responses"], frozenset({"address"})
-        )
-        allowed_placeholder_count += _count_address_placeholders(
-            views["debug.ebus"], SOURCE_DEBUG_ADDRESS_KEYS
-        )
+        allowed_placeholder_count += len(mcp_devices)
+        debug_data = views["debug.ebus"]["data"]
+        admission = debug_data.get("status", {}).get("admission", {})
+        if not isinstance(admission, dict):
+            return True
+        normalized_debug_keys = {
+            _compact_key(key): key for key in SOURCE_DEBUG_ADDRESS_KEYS
+        }
+        for key, item in admission.items():
+            canonical_key = normalized_debug_keys.get(_compact_key(key))
+            if canonical_key is None:
+                continue
+            if key != canonical_key or item not in (None, OPAQUE_ADDRESS):
+                return True
+            allowed_placeholder_count += int(item == OPAQUE_ADDRESS)
         device_ids = [item.get("device_id") for item in mcp_devices]
         ha_unique_ids = [item.get("unique_id") for item in ha_devices]
         ha_via_devices = [item.get("via_device") for item in ha_devices]

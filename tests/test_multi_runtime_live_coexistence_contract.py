@@ -1283,6 +1283,18 @@ def test_msp08_source_projection_pseudonymizes_debug_address_aliases() -> None:
     assert set(admission.values()) == {validator.OPAQUE_ADDRESS}
 
 
+def test_msp08_source_projection_rejects_debug_address_alias_outside_admission() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["uncontracted"] = {"selected_source": 127}
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
+
+
 @pytest.mark.parametrize("invalid_address", [-1, 256, 999, "-1", "256", "0x100", "device-a"])
 def test_msp08_source_projection_rejects_invalid_debug_address_aliases(
     invalid_address: object,
