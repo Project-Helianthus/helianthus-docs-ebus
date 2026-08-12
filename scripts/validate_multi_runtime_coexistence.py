@@ -159,6 +159,7 @@ MAC_RE = re.compile(
 )
 SKI_RE = re.compile(r"(?i)(?:^|[^0-9a-f])[0-9a-f]{40}(?:$|[^0-9a-f])")
 REDACTED_ID_RE = re.compile(r"^redacted:sha256:[0-9a-f]{12}$")
+OPAQUE_ADDRESS = "redacted:opaque-address"
 TOOL_NAME_RE = re.compile(r"^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$")
 CREDENTIAL_VALUE_RE = re.compile(
     r"(?i)\bauthorization\s*:\s*(?:bearer|basic)\s+[a-z0-9._~+/=-]+"
@@ -379,6 +380,9 @@ PUBLIC_IDENTITY_HASH_ROOTS = frozenset(
         "spine",
     }
 )
+NULLABLE_PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
+    {"companiontarget", "lastsuccessfulsource", "selectedsource"}
+)
 PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
     {
         "authsubject",
@@ -391,6 +395,7 @@ PUBLIC_IDENTITY_COMPACT_NAMES = frozenset(
         "remoteski",
         "viadevice",
     }
+    | NULLABLE_PUBLIC_IDENTITY_COMPACT_NAMES
     | {
         prefix + suffix
         for prefix in PUBLIC_IDENTITY_PREFIXES
@@ -1469,20 +1474,75 @@ def _read_bounded_regular_file(
             os.close(descriptor)
 
 
+def _source_json_equivalent(left: Any, right: Any) -> bool:
+    if isinstance(left, bool) or isinstance(right, bool):
+        return isinstance(left, bool) and isinstance(right, bool) and left is right
+    if isinstance(left, (int, decimal.Decimal)) or isinstance(
+        right, (int, decimal.Decimal)
+    ):
+        return (
+            isinstance(left, (int, decimal.Decimal))
+            and isinstance(right, (int, decimal.Decimal))
+            and _source_string_number(left) == _source_string_number(right)
+        )
+    if isinstance(left, dict) or isinstance(right, dict):
+        return (
+            isinstance(left, dict)
+            and isinstance(right, dict)
+            and set(left) == set(right)
+            and all(_source_json_equivalent(left[key], right[key]) for key in left)
+        )
+    if isinstance(left, list) or isinstance(right, list):
+        return (
+            isinstance(left, list)
+            and isinstance(right, list)
+            and len(left) == len(right)
+            and all(
+                _source_json_equivalent(left_item, right_item)
+                for left_item, right_item in zip(left, right, strict=True)
+            )
+        )
+    return type(left) is type(right) and left == right
+
+
 def _source_inner_mcp(raw: bytes) -> dict[str, Any]:
     envelope = _decode_source_json(raw, max_string_bytes=MAX_SOURCE_INPUT_BYTES)
-    try:
-        content = envelope["result"]["content"]
-        if (
-            envelope["result"].get("isError") is not False
-            or len(content) != 1
-            or content[0]["type"] != "text"
-        ):
-            fail("provenance.source_capture")
-        value = _decode_source_json(content[0]["text"].encode("utf-8"))
-    except (KeyError, TypeError, AttributeError):
+    request_id = envelope.get("id") if isinstance(envelope, dict) else None
+    if (
+        not isinstance(envelope, dict)
+        or set(envelope) != {"jsonrpc", "id", "result"}
+        or envelope["jsonrpc"] != "2.0"
+        or isinstance(request_id, bool)
+        or not isinstance(request_id, (int, str))
+        or isinstance(request_id, str)
+        and not request_id
+    ):
         fail("provenance.source_capture")
+
+    result = envelope["result"]
+    if not isinstance(result, dict) or set(result) not in (
+        {"content", "isError"},
+        {"content", "isError", "structuredContent"},
+    ):
+        fail("provenance.source_capture")
+    content = result["content"]
+    if (
+        result["isError"] is not False
+        or not isinstance(content, list)
+        or len(content) != 1
+        or not isinstance(content[0], dict)
+        or set(content[0]) != {"type", "text"}
+        or content[0]["type"] != "text"
+        or not isinstance(content[0]["text"], str)
+    ):
+        fail("provenance.source_capture")
+
+    value = _decode_source_json(content[0]["text"].encode("utf-8"))
     if not isinstance(value, dict):
+        fail("provenance.source_capture")
+    if "structuredContent" in result and not _source_json_equivalent(
+        result["structuredContent"], value
+    ):
         fail("provenance.source_capture")
     return value
 
@@ -1567,8 +1627,8 @@ def _source_device_projection(item: dict[str, Any]) -> dict[str, Any] | None:
     if not device_id or not manufacturer:
         fail("provenance.source_capture")
     return {
-        "address": _source_redacted(f"ebus-address:{address}"),
-        "device_id": _source_redacted(f"ebus-device:{address}:{device_id}"),
+        "address": OPAQUE_ADDRESS,
+        "device_id": _source_redacted(f"ebus-device:{device_id}"),
         "manufacturer": manufacturer,
         "model": _source_redacted(f"ebus-model:{device_id}"),
         "discovery_source": discovery_source,
@@ -1664,6 +1724,69 @@ def _source_portal(raw: dict[str, Any]) -> dict[str, Any]:
         "enabled_capability_count": sum(capabilities.values()),
         "ui_version": "m0",
     }
+
+
+SOURCE_DEBUG_ADDRESS_KEYS = frozenset(
+    {"companion_target", "last_successful_source", "selected_source"}
+)
+
+
+def _source_debug_address_valid(value: Any) -> bool:
+    if isinstance(value, int) and not isinstance(value, bool):
+        return 0 <= value <= 255
+    if not isinstance(value, str):
+        return False
+    if re.fullmatch(r"0[xX][0-9a-fA-F]{1,2}", value):
+        return int(value, 16) <= 255
+    if re.fullmatch(r"(?:0|[1-9][0-9]{0,2})", value):
+        return int(value, 10) <= 255
+    return False
+
+
+def _source_debug(value: Any, path: tuple[str, ...] = ()) -> Any:
+    if isinstance(value, dict):
+        projected = {}
+        for key, item in value.items():
+            if key in SOURCE_DEBUG_ADDRESS_KEYS:
+                if path != ("status", "admission"):
+                    fail("provenance.source_capture")
+                if item is None:
+                    projected[key] = None
+                elif not _source_debug_address_valid(item):
+                    fail("provenance.source_capture")
+                else:
+                    projected[key] = OPAQUE_ADDRESS
+            elif key == "address_count" and path == ():
+                if not isinstance(item, int) or isinstance(item, bool) or item < 0:
+                    fail("provenance.source_capture")
+                projected[key] = item
+            elif _is_public_address_key(key):
+                fail("provenance.source_capture")
+            else:
+                projected[key] = _source_debug(item, path + (key,))
+        if path == ("status", "admission"):
+            for key in SOURCE_DEBUG_ADDRESS_KEYS:
+                projected.setdefault(key, None)
+        elif path == ("status",):
+            if "admission" not in projected:
+                projected["admission"] = {
+                    key: None for key in SOURCE_DEBUG_ADDRESS_KEYS
+                }
+            elif not isinstance(projected["admission"], dict):
+                fail("provenance.source_capture")
+        elif path == ():
+            if "status" not in projected:
+                projected["status"] = {
+                    "admission": {
+                        key: None for key in SOURCE_DEBUG_ADDRESS_KEYS
+                    }
+                }
+            elif not isinstance(projected["status"], dict):
+                fail("provenance.source_capture")
+        return projected
+    if isinstance(value, list):
+        return [_source_debug(item, path) for item in value]
+    return copy.deepcopy(value)
 
 
 SCHEDULE_INDEX = r"(?:0|[1-9][0-9]*)"
@@ -1770,12 +1893,21 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
         source_devices = devices_response["data"]
         if not isinstance(source_devices, list):
             fail("provenance.source_capture")
-        devices = [
-            projected
+        projected_devices = [
+            (item["address"], item["device_id"], projected)
             for item in source_devices
             if (projected := _source_device_projection(item)) is not None
         ]
-        devices.sort(key=lambda item: item["address"])
+        projected_devices.sort(key=lambda item: item[0])
+        devices = []
+        for index, (_, _, projected) in enumerate(projected_devices):
+            projected["device_id"] = _source_redacted(
+                f"ebus-device-ordinal:{index}"
+            )
+            projected["model"] = _source_redacted(
+                "ebus-model:" + projected["device_id"]
+            )
+            devices.append(projected)
         if not devices:
             fail("provenance.source_capture")
         semantic = _source_semantic(semantic_response)
@@ -1804,7 +1936,7 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
                     "manufacturer": item["manufacturer"],
                     "model": item["model"],
                     "unique_id": _source_redacted("ha:" + item["device_id"]),
-                    "via_device": _source_redacted("ha-via:" + item["address"]),
+                    "via_device": _source_redacted("ha-via:" + item["device_id"]),
                 }
                 for item in devices
             ]
@@ -1847,7 +1979,7 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             "graphql.ebus.values": graph_values,
             "ha.graphql.values": ha_values,
             "ha.identity": ha_identity,
-            "debug.ebus": debug_raw,
+            "debug.ebus": _source_debug(debug_raw),
             "portal.ebus.bootstrap": _source_portal(portal_raw),
             "command.routing": routes_raw,
             "semantic.registry": _source_semantic_registry(semantic_registry_raw),
@@ -2753,7 +2885,9 @@ def _valid_hash_like(value: Any) -> bool:
 def _valid_redacted_identity(value: Any) -> bool:
     if isinstance(value, list):
         return all(_valid_redacted_identity(item) for item in value)
-    return isinstance(value, str) and bool(REDACTED_ID_RE.fullmatch(value))
+    return isinstance(value, str) and bool(
+        REDACTED_ID_RE.fullmatch(value) or value == OPAQUE_ADDRESS
+    )
 
 
 def _contains_credential_value(value: str) -> bool:
@@ -2936,6 +3070,8 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
                     or re.fullmatch(r"[a-z0-9.-]+:sha256:[0-9a-f]{64}", value)
                 )
             )
+        if normalized in NULLABLE_PUBLIC_IDENTITY_COMPACT_NAMES and value is None:
+            return False
         if _has_public_identity_key(key):
             return not _valid_redacted_identity(value)
         if normalized.endswith(("spinepath", "spinekind")):
@@ -2973,10 +3109,352 @@ def _contains_public_secret(value: Any, key: str | None = None) -> bool:
     )
 
 
+def _count_exact_value(value: Any, expected: Any) -> int:
+    if isinstance(value, dict):
+        return sum(
+            _count_exact_value(key, expected) + _count_exact_value(item, expected)
+            for key, item in value.items()
+        )
+    if isinstance(value, list):
+        return sum(_count_exact_value(item, expected) for item in value)
+    return int(value == expected)
+
+
+def _is_public_address_key(key: Any) -> bool:
+    if not isinstance(key, str):
+        return False
+    compact = _compact_key(key)
+    tokenized = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
+    tokens = {
+        token.lower()
+        for token in re.split(r"[^A-Za-z0-9]+", tokenized)
+        if token
+    }
+    return bool(tokens & {"addr", "addrs", "address", "addresses"}) or compact.endswith(
+        (
+            "address",
+            "addresses",
+            "addresshash",
+            "addressdigest",
+            "addresssha256",
+            "addresseshash",
+            "addressesdigest",
+            "addressessha256",
+            "addr",
+            "addrs",
+            "addrhash",
+            "addrdigest",
+            "addrsha256",
+            "addrshash",
+            "addrsdigest",
+            "addrssha256",
+        )
+    ) or compact in {
+        _compact_key(item) for item in SOURCE_DEBUG_ADDRESS_KEYS
+    }
+
+
+def _contains_uncontracted_public_address_key(
+    value: Any, allowed: set[tuple[int, str]]
+) -> bool:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if _is_public_address_key(key) and (id(value), key) not in allowed:
+                return True
+            if _contains_uncontracted_public_address_key(item, allowed):
+                return True
+        return False
+    if isinstance(value, list):
+        return any(
+            _contains_uncontracted_public_address_key(item, allowed) for item in value
+        )
+    return False
+
+
+PUBLIC_ADDRESS_DERIVED_IDENTITIES = frozenset(
+    _source_redacted(f"ebus-address:{address}") for address in range(256)
+)
+
+
+def _contains_public_address_derived_identity(value: Any) -> bool:
+    if isinstance(value, dict):
+        return any(
+            _contains_public_address_derived_identity(key)
+            or _contains_public_address_derived_identity(item)
+            for key, item in value.items()
+        )
+    if isinstance(value, list):
+        return any(_contains_public_address_derived_identity(item) for item in value)
+    return isinstance(value, str) and value in PUBLIC_ADDRESS_DERIVED_IDENTITIES
+
+
+def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
+    if _contains_public_address_derived_identity(evidence):
+        return True
+    allowed_placeholder_count = 0
+    runs = evidence.get("runs")
+    if not isinstance(runs, list):
+        return True
+    for run in runs:
+        if not isinstance(run, dict) or not isinstance(
+            run.get("protected_views"), list
+        ):
+            return True
+        views: dict[str, dict[str, Any]] = {}
+        for view in run["protected_views"]:
+            if (
+                not isinstance(view, dict)
+                or not isinstance(view.get("view_id"), str)
+                or not isinstance(view.get("payload"), dict)
+                or view["view_id"] in views
+            ):
+                return True
+            views[view["view_id"]] = view["payload"]
+
+        mcp_payload = views.get("mcp.ebus.v1.responses")
+        ha_payload = views.get("ha.identity")
+        debug_payload = views.get("debug.ebus")
+        if not all(isinstance(item, dict) for item in (mcp_payload, ha_payload, debug_payload)):
+            return True
+        mcp_data = mcp_payload.get("data")
+        ha_data = ha_payload.get("data")
+        debug_data = debug_payload.get("data")
+        if not all(isinstance(item, dict) for item in (mcp_data, ha_data, debug_data)):
+            return True
+        if set(mcp_data) != {"contract", "responses"} or mcp_data.get(
+            "contract"
+        ) != "ebus.v1":
+            return True
+        captured_runtime = evidence.get("evidence_class") == "CAPTURED_RUNTIME_EVIDENCE"
+        responses = mcp_data.get("responses")
+        expected_operations = (
+            (
+                "ebus.v1.registry.devices.list",
+                "ebus.v1.semantic.snapshot.get",
+            )
+            if captured_runtime
+            else ("ebus.v1.registry.devices.list",)
+        )
+        if not isinstance(responses, list) or len(responses) != len(
+            expected_operations
+        ):
+            return True
+        if any(
+            not isinstance(response, dict)
+            or set(response) != {"operation", "result"}
+            or response.get("operation") != operation
+            or not isinstance(response.get("result"), dict)
+            for response, operation in zip(
+                responses, expected_operations, strict=True
+            )
+        ):
+            return True
+        device_response = responses[0]
+        device_result = device_response["result"]
+        if captured_runtime:
+            if set(device_result) != {"devices", "selection"}:
+                return True
+            selection = device_result.get("selection")
+            if (
+                not isinstance(selection, dict)
+                or set(selection) != {"criteria", "selected_count"}
+                or selection.get("criteria")
+                != "complete_identity_confirmed_devices_in_single_window"
+            ):
+                return True
+        elif set(device_result) != {"devices"}:
+            return True
+        mcp_devices = device_result.get("devices")
+        ha_devices = ha_data.get("devices")
+        if (
+            not isinstance(mcp_devices, list)
+            or not mcp_devices
+            or not isinstance(ha_devices, list)
+            or any(not isinstance(item, dict) for item in mcp_devices + ha_devices)
+        ):
+            return True
+        if captured_runtime:
+            if (
+                selection["selected_count"] != len(mcp_devices)
+                or isinstance(selection["selected_count"], bool)
+            ):
+                return True
+            expected_device_keys = {
+                "address",
+                "device_id",
+                "discovery_source",
+                "manufacturer",
+                "model",
+                "verification_state",
+            }
+            if any(
+                set(device) != expected_device_keys
+                or device.get("discovery_source") not in SOURCE_DISCOVERY_STATES
+                or device.get("verification_state") != "identity_confirmed"
+                or not isinstance(device.get("manufacturer"), str)
+                or not device["manufacturer"]
+                for device in mcp_devices
+            ):
+                return True
+            semantic_result = responses[1]["result"]
+            if (
+                set(semantic_result) != {"zones", "dhw", "system_properties"}
+                or not isinstance(semantic_result.get("zones"), list)
+                or not isinstance(semantic_result.get("dhw"), dict)
+                or not isinstance(semantic_result.get("system_properties"), dict)
+            ):
+                return True
+            expected_zone_keys = {
+                "associated_circuit",
+                "id",
+                "name",
+                "operating_mode",
+                "preset",
+                "source",
+                "target_temp_c",
+            }
+            if any(
+                not isinstance(zone, dict)
+                or set(zone) != expected_zone_keys
+                or zone.get("source") != "ebus"
+                or any(
+                    value is not None and not isinstance(value, str)
+                    for key, value in zone.items()
+                    if key != "source"
+                )
+                for zone in semantic_result["zones"]
+            ):
+                return True
+            dhw = semantic_result["dhw"]
+            system_properties = semantic_result["system_properties"]
+            if (
+                set(dhw) != {"operating_mode", "preset", "source"}
+                or dhw.get("source") != "ebus"
+                or any(
+                    dhw[key] is not None and not isinstance(dhw[key], str)
+                    for key in ("operating_mode", "preset")
+                )
+                or set(system_properties)
+                != {"module_configuration_vr71", "source", "system_scheme"}
+                or system_properties.get("source") != "ebus"
+                or any(
+                    system_properties[key] is not None
+                    and not isinstance(system_properties[key], str)
+                    for key in ("module_configuration_vr71", "system_scheme")
+                )
+            ):
+                return True
+        elif any(
+            set(device) != {"address", "device_id", "manufacturer"}
+            or not isinstance(device.get("manufacturer"), str)
+            or not device["manufacturer"]
+            for device in mcp_devices
+        ):
+            return True
+        if set(ha_data) != {"devices"}:
+            return True
+        if captured_runtime and any(
+            set(device) != {"manufacturer", "model", "unique_id", "via_device"}
+            or not isinstance(device.get("manufacturer"), str)
+            or not isinstance(device.get("model"), str)
+            for device in ha_devices
+        ):
+            return True
+        if any(
+            device.get("address") != OPAQUE_ADDRESS
+            if captured_runtime
+            else not _valid_redacted_identity(device.get("address"))
+            for device in mcp_devices
+        ):
+            return True
+        allowed_placeholder_count += sum(
+            device.get("address") == OPAQUE_ADDRESS for device in mcp_devices
+        )
+        status = debug_data.get("status")
+        if status is None:
+            status = {}
+        if not isinstance(status, dict):
+            return True
+        admission = status.get("admission")
+        if admission is None:
+            admission = {}
+        if not isinstance(admission, dict):
+            return True
+        if captured_runtime and not SOURCE_DEBUG_ADDRESS_KEYS.issubset(admission):
+            return True
+        normalized_debug_keys = {
+            _compact_key(key): key for key in SOURCE_DEBUG_ADDRESS_KEYS
+        }
+        if "address_count" in debug_data and (
+            not isinstance(debug_data["address_count"], int)
+            or isinstance(debug_data["address_count"], bool)
+            or debug_data["address_count"] < 0
+        ):
+            return True
+        for key, item in admission.items():
+            canonical_key = normalized_debug_keys.get(_compact_key(key))
+            if canonical_key is None:
+                continue
+            if key != canonical_key or item not in (None, OPAQUE_ADDRESS):
+                return True
+            allowed_placeholder_count += int(item == OPAQUE_ADDRESS)
+        allowed_address_keys = {
+            *((id(device), "address") for device in mcp_devices),
+            *((id(admission), key) for key in SOURCE_DEBUG_ADDRESS_KEYS if key in admission),
+            *(
+                ((id(debug_data), "address_count"),)
+                if "address_count" in debug_data
+                else ()
+            ),
+        }
+        if any(
+            _contains_uncontracted_public_address_key(payload, allowed_address_keys)
+            for payload in views.values()
+        ):
+            return True
+        if not captured_runtime:
+            continue
+        device_ids = [item.get("device_id") for item in mcp_devices]
+        ha_unique_ids = [item.get("unique_id") for item in ha_devices]
+        ha_via_devices = [item.get("via_device") for item in ha_devices]
+        expected_device_ids = [
+            _source_redacted(f"ebus-device-ordinal:{index}")
+            for index in range(len(mcp_devices))
+        ]
+        expected_models = [
+            _source_redacted("ebus-model:" + device_id)
+            for device_id in expected_device_ids
+        ]
+        if (
+            len(mcp_devices) != len(ha_devices)
+            or device_ids != expected_device_ids
+            or [item.get("model") for item in mcp_devices] != expected_models
+            or [item.get("model") for item in ha_devices] != expected_models
+            or any(
+                len(set(values)) != len(values)
+                for values in (device_ids, ha_unique_ids, ha_via_devices)
+            )
+            or any(
+                ha_device.get("unique_id")
+                != _source_redacted("ha:" + mcp_device["device_id"])
+                for mcp_device, ha_device in zip(mcp_devices, ha_devices, strict=True)
+            )
+            or any(
+                ha_device.get("via_device")
+                != _source_redacted("ha-via:" + mcp_device["device_id"])
+                for mcp_device, ha_device in zip(mcp_devices, ha_devices, strict=True)
+            )
+        ):
+            return True
+    return _count_exact_value(evidence, OPAQUE_ADDRESS) != allowed_placeholder_count
+
+
 def check_public_redaction(evidence: dict[str, Any]) -> None:
     if evidence["export_tier"] != "PUBLIC_REDACTED":
         fail("redaction.public")
-    if _contains_public_secret(evidence):
+    if _contains_enumerable_public_address(evidence) or _contains_public_secret(
+        evidence
+    ):
         fail("redaction.public")
 
 
