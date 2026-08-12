@@ -1224,6 +1224,41 @@ def test_msp08_source_projection_rejects_uncontracted_portal_version() -> None:
     assert str(error.value) == "provenance.source_capture"
 
 
+def test_msp08_source_projection_declares_and_excludes_volatile_schedule_leaves() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    registry = json.loads(payloads["semantic.registry"])
+    registry["leaves"].extend(
+        [
+            {
+                "path": "/schedules/Programs/1/Days/0/Slots/0/StartHour",
+                "promotion_state": "PROMOTED",
+                "source": "ebus",
+            },
+            {
+                "path": "/schedules/Programs/2/Days/4/Slots/0/EndMinute",
+                "promotion_state": "PROMOTED",
+                "source": "ebus",
+            },
+        ]
+    )
+    payloads["semantic.registry"] = validator.canonical(registry)
+
+    projected = validator._source_project_views(payloads)["views"][
+        "semantic.registry"
+    ]
+    assert projected["authority"] == "ebus.promoted"
+    assert projected["selection"] == {
+        "criteria": "all_promoted_ebus_leaves_outside_volatile_schedule_materialization",
+        "excluded_prefixes": ["/schedules/"],
+        "selected_count": 2,
+    }
+    assert len(projected["leaves"]) == 2
+    assert all(
+        not item["path"].startswith("/schedules/") for item in projected["leaves"]
+    )
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [
