@@ -43,6 +43,22 @@
       "items": {"$ref": "#/$defs/Run"}
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"evidence_class": {"const": "SYNTHETIC_OFFLINE_FIXTURE"}},
+        "required": ["evidence_class"]
+      },
+      "then": {"properties": {"runs": {"minItems": 6, "maxItems": 6}}}
+    },
+    {
+      "if": {
+        "properties": {"evidence_class": {"const": "CAPTURED_RUNTIME_EVIDENCE"}},
+        "required": ["evidence_class"]
+      },
+      "then": {"properties": {"runs": {"minItems": 4, "maxItems": 4}}}
+    }
+  ],
   "$defs": {
     "Digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "SHA": {"type": "string", "pattern": "^[0-9a-f]{40}$"},

@@ -1093,6 +1093,32 @@ def test_full_live_verifier_rejects_synthetic_m8_baseline_only(
     assert raised.value.category == "live.m8"
 
 
+def test_m85_forwards_m8_source_paths_without_preloading(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    validator = module()
+    bundle = generated_live_bundle(validator, tmp_path)
+    monkeypatch.setattr(
+        validator, "PINNED_REGISTRY_SHA256", bundle["registry_hash"]
+    )
+    observed: dict[str, pathlib.Path] = {}
+    original = validator.coexistence.verify
+
+    def verify_with_path_assertion(*args, **kwargs):
+        observed.update(kwargs["source_manifests"])
+        assert all(isinstance(path, pathlib.Path) for path in observed.values())
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(validator.coexistence, "verify", verify_with_path_assertion)
+    campaign, _ = validator.load_json(bundle["campaign"])
+    registry = validator.registry_value(bundle["registry"])
+    validator.verify_private(campaign, registry, live_sources(bundle))
+    assert observed == {
+        "before": bundle["m8_before_source_manifest"],
+        "after": bundle["m8_after_source_manifest"],
+    }
+
+
 def test_full_live_verifier_rejects_forged_terminal_source_binding(
     tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -669,6 +669,8 @@ def schema_check(evidence: Any) -> None:
         or not isinstance(evidence["evidence_hash"], str)
         or not DIGEST_RE.fullmatch(evidence["evidence_hash"])
         or not isinstance(evidence["runs"], list)
+        or len(evidence["runs"])
+        != (4 if evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE" else 6)
     ):
         fail("schema.evidence")
     exact(evidence["registry"], {"contract", "version", "digest"})
@@ -1542,6 +1544,10 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
     semantic_registry_raw = _decode_source_json(inputs["semantic.registry"])
     inspect = _decode_source_json(inputs["container.inspect"])
     try:
+        if not isinstance(tools.get("result"), dict) or set(tools["result"]) != {
+            "tools"
+        }:
+            fail("provenance.source_capture")
         listed_tools = tools["result"]["tools"]
         by_name = {item["name"]: item for item in listed_tools}
         if (
@@ -1822,84 +1828,12 @@ def check_runtime(
     require_private: bool = True,
 ) -> None:
     check_runtime_identity(evidence)
-    source_bindings: dict[str, dict[str, Any]] = {}
-    if evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE" and require_private:
-        groups = {"before": (0, 1), "after": (2, 3)}
-        for source_key, run_indexes in groups.items():
-            grouped = [evidence["runs"][index] for index in run_indexes]
-            auth_hashes = {
-                run["provenance"]["auth_scope"]["scope_hash"] for run in grouped
-            }
-            process_ids = {
-                run["provenance"]["process_instance_id"] for run in grouped
-            }
-            source_input = (source_manifests or {}).get(source_key)
-            source_root = (source_roots or {}).get(source_key)
-            if (
-                len(auth_hashes) != 1
-                or len(process_ids) != 1
-                or source_input is None
-                or source_root is None
-            ):
-                fail("provenance.source_capture")
-            source_raw = (
-                _read_bounded_regular_file(
-                    source_input,
-                    MAX_SOURCE_INPUT_BYTES,
-                    "provenance.source_capture",
-                    limit_category="limits.exceeded",
-                )
-                if isinstance(source_input, pathlib.Path)
-                else source_input
-            )
-            source_bindings[source_key] = _source_capture_binding(
-                source_raw,
-                source_root,
-                auth_hashes.pop(),
-                SOURCE_CAPTURE_PHASES[source_key],
-                process_ids.pop(),
-                min(run["capture_offset_ns"] for run in grouped),
-                max(run["capture_offset_ns"] for run in grouped),
-                _capture_time_at(
-                    evidence["capture_clock"],
-                    min(run["capture_offset_ns"] for run in grouped),
-                ),
-            )
-        before = source_bindings["before"]
-        after = source_bindings["after"]
-        restart = evidence["runs"][2]["state_evidence"]["restart_transition"]
-        before_end = evidence["runs"][1]["capture_offset_ns"]
-        after_start = evidence["runs"][2]["capture_offset_ns"]
-        if (
-            before["digest"] == after["digest"]
-            or before["window_id"] == after["window_id"]
-            or before["captured_at"] == after["captured_at"]
-            or before_end >= after_start
-            or restart is None
-            or not before_end
-            < restart["process_event"]["observed_at_offset_ns"]
-            <= after_start
-        ):
-            fail("provenance.source_capture")
-    elif evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE":
-        public_bindings: dict[str, tuple[str, int]] = {}
-        for source_key, run_indexes in {"before": (0, 1), "after": (2, 3)}.items():
-            observed = set()
-            for index in run_indexes:
-                items = [
-                    item
-                    for item in evidence["runs"][index]["provenance"]["immutable_inputs"]
-                    if item.get("input_id") == SOURCE_CAPTURE_INPUT_ID
-                ]
-                if len(items) != 1:
-                    fail("provenance.source_capture")
-                observed.add((items[0].get("digest"), items[0].get("byte_length")))
-            if len(observed) != 1:
-                fail("provenance.source_capture")
-            public_bindings[source_key] = observed.pop()
-        if public_bindings["before"] == public_bindings["after"]:
-            fail("provenance.source_capture")
-    for run in evidence["runs"]:
+    live = evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
+    if live and len(evidence["runs"]) != 4:
+        fail("schema.evidence")
+    observed_source_bindings: dict[int, tuple[str, int]] = {}
+    source_binding_invalid = False
+    for run_index, run in enumerate(evidence["runs"]):
         views = {view["view_id"]: view for view in run["protected_views"]}
         expected = {
             f"view:{view_id}": (view["raw_payload_hash"], len(canonical(view["payload"])))
@@ -1928,32 +1862,14 @@ def check_runtime(
         expected_kinds.update(
             {input_id: m7_kinds[input_id] for input_id in m7_inputs}
         )
-        if evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE":
-            source_key = "before" if run["state"] in {
-                "EEBUS_CONNECTED_BASELINE", "EEBUS_CONNECTED_RAW_WITHHELD"
-            } else "after"
-            if require_private:
-                source = source_bindings[source_key]
-                expected[SOURCE_CAPTURE_INPUT_ID] = (
-                    source["digest"], source["byte_length"]
-                )
-                if (
-                    source["service_count"] != run["state_evidence"]["service_count"]
-                    or set(source["payloads"]) != set(views)
-                    or any(
-                        canonical(views[view_id]["payload"])
-                        != canonical(source["payloads"][view_id])
-                        for view_id in views
-                    )
-                ):
-                    fail("provenance.source_capture")
+        if live:
+            candidates = [
+                item for item in run["provenance"]["immutable_inputs"]
+                if item.get("input_id") == SOURCE_CAPTURE_INPUT_ID
+            ]
+            if len(candidates) != 1:
+                source_binding_invalid = True
             else:
-                candidates = [
-                    item for item in run["provenance"]["immutable_inputs"]
-                    if item.get("input_id") == SOURCE_CAPTURE_INPUT_ID
-                ]
-                if len(candidates) != 1:
-                    fail("provenance.source_capture")
                 source = candidates[0]
                 if (
                     source.get("kind") != SOURCE_CAPTURE_INPUT_KIND
@@ -1961,11 +1877,11 @@ def check_runtime(
                     or not DIGEST_RE.fullmatch(source["digest"])
                     or not integer(source.get("byte_length"), 1)
                 ):
-                    fail("provenance.source_capture")
-                expected[SOURCE_CAPTURE_INPUT_ID] = (
-                    source["digest"], source["byte_length"]
-                )
-            expected_kinds[SOURCE_CAPTURE_INPUT_ID] = SOURCE_CAPTURE_INPUT_KIND
+                    source_binding_invalid = True
+                else:
+                    observed_source_bindings[run_index] = (
+                        source["digest"], source["byte_length"]
+                    )
         transition = run["state_evidence"]["restart_transition"]
         if transition is not None:
             expected.update(
@@ -1999,13 +1915,105 @@ def check_runtime(
         actual = {
             item["input_id"]: (item["digest"], item["byte_length"])
             for item in run["provenance"]["immutable_inputs"]
+            if item["input_id"] != SOURCE_CAPTURE_INPUT_ID
         }
         actual_kinds = {
             item["input_id"]: item["kind"]
             for item in run["provenance"]["immutable_inputs"]
+            if item["input_id"] != SOURCE_CAPTURE_INPUT_ID
         }
         if actual != expected or actual_kinds != expected_kinds:
             fail("provenance.runtime")
+
+    if not live:
+        return
+    if source_binding_invalid or len(observed_source_bindings) != len(evidence["runs"]):
+        fail("provenance.source_capture")
+    groups = {"before": (0, 1), "after": (2, 3)}
+    public_bindings: dict[str, tuple[str, int]] = {}
+    for source_key, run_indexes in groups.items():
+        observed = {observed_source_bindings[index] for index in run_indexes}
+        if len(observed) != 1:
+            fail("provenance.source_capture")
+        public_bindings[source_key] = observed.pop()
+    if public_bindings["before"] == public_bindings["after"]:
+        fail("provenance.source_capture")
+    if not require_private:
+        return
+
+    source_bindings: dict[str, dict[str, Any]] = {}
+    for source_key, run_indexes in groups.items():
+        grouped = [evidence["runs"][index] for index in run_indexes]
+        auth_hashes = {
+            run["provenance"]["auth_scope"]["scope_hash"] for run in grouped
+        }
+        process_ids = {
+            run["provenance"]["process_instance_id"] for run in grouped
+        }
+        source_input = (source_manifests or {}).get(source_key)
+        source_root = (source_roots or {}).get(source_key)
+        if (
+            len(auth_hashes) != 1
+            or len(process_ids) != 1
+            or source_input is None
+            or source_root is None
+        ):
+            fail("provenance.source_capture")
+        source_raw = (
+            _read_bounded_regular_file(
+                source_input,
+                MAX_SOURCE_INPUT_BYTES,
+                "provenance.source_capture",
+                limit_category="limits.exceeded",
+            )
+            if isinstance(source_input, pathlib.Path)
+            else source_input
+        )
+        source_bindings[source_key] = _source_capture_binding(
+            source_raw,
+            source_root,
+            auth_hashes.pop(),
+            SOURCE_CAPTURE_PHASES[source_key],
+            process_ids.pop(),
+            min(run["capture_offset_ns"] for run in grouped),
+            max(run["capture_offset_ns"] for run in grouped),
+            _capture_time_at(
+                evidence["capture_clock"],
+                min(run["capture_offset_ns"] for run in grouped),
+            ),
+        )
+    before = source_bindings["before"]
+    after = source_bindings["after"]
+    restart = evidence["runs"][2]["state_evidence"]["restart_transition"]
+    before_end = evidence["runs"][1]["capture_offset_ns"]
+    after_start = evidence["runs"][2]["capture_offset_ns"]
+    if (
+        before["digest"] == after["digest"]
+        or before["window_id"] == after["window_id"]
+        or before["captured_at"] == after["captured_at"]
+        or before_end >= after_start
+        or restart is None
+        or not before_end
+        < restart["process_event"]["observed_at_offset_ns"]
+        <= after_start
+    ):
+        fail("provenance.source_capture")
+    for run_index, run in enumerate(evidence["runs"]):
+        source_key = "before" if run_index < 2 else "after"
+        source = source_bindings[source_key]
+        views = {view["view_id"]: view for view in run["protected_views"]}
+        if (
+            (source["digest"], source["byte_length"])
+            != observed_source_bindings[run_index]
+            or source["service_count"] != run["state_evidence"]["service_count"]
+            or set(source["payloads"]) != set(views)
+            or any(
+                canonical(views[view_id]["payload"])
+                != canonical(source["payloads"][view_id])
+                for view_id in views
+            )
+        ):
+            fail("provenance.source_capture")
 
 
 def check_config(evidence: dict[str, Any]) -> None:

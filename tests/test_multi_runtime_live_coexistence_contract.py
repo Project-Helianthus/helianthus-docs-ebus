@@ -1079,7 +1079,7 @@ def test_msp08_private_runtime_rejects_source_bytes_tampering(
 
 @pytest.mark.parametrize(
     "tool_mutation",
-    ["extra_v2", "extra_write", "reordered"],
+    ["extra_v2", "extra_write", "reordered", "paginated"],
 )
 def test_msp08_private_runtime_requires_exact_scoped_tool_inventory(
     tmp_path: pathlib.Path, tool_mutation: str
@@ -1104,8 +1104,10 @@ def test_msp08_private_runtime_requires_exact_scoped_tool_inventory(
                 "inputSchema": {"type": "object", "properties": {}},
             }
         )
-    else:
+    elif tool_mutation == "reordered":
         tools[0], tools[1] = tools[1], tools[0]
+    else:
+        value["result"]["nextCursor"] = "page-with-write-tool"
     path.write_bytes(validator.canonical(value))
     rebind_source_manifest(validator, evidence, "before", manifests, roots)
 
@@ -1425,6 +1427,63 @@ def test_msp08_m7_precedence_runs_before_source_manifest_io(
         "provenance.m7\n",
         "",
     )
+
+
+def test_msp08_runtime_precedence_runs_before_source_manifest_io(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    evidence["runs"][0]["provenance"]["immutable_inputs"][0]["digest"] = (
+        "sha256:" + "0" * 64
+    )
+    missing = tmp_path / "missing-source-manifest.json"
+    manifests = {"before": missing, "after": missing}
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.runtime"
+
+
+@pytest.mark.parametrize("run_count", [1, 2, 3, 5])
+def test_msp08_live_cardinality_fails_schema_without_traceback(
+    tmp_path: pathlib.Path, run_count: int
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    if run_count < 4:
+        evidence["runs"] = evidence["runs"][:run_count]
+    else:
+        extra = deepcopy(evidence["runs"][-1])
+        extra["run_id"] = "msp08-run-extra"
+        extra["capture_offset_ns"] += 1_000_000_000
+        evidence["runs"].append(extra)
+    refresh_evidence_hash(validator, evidence)
+    result = subprocess.run(
+        validator_command("verify", write_evidence(tmp_path, evidence)),
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (
+        1,
+        "schema.evidence\n",
+        "",
+    )
+    schema_result = subprocess.run(
+        ["jv", str(EVIDENCE_SCHEMA), str(write_evidence(tmp_path, evidence))],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert schema_result.returncode != 0
 
 
 def test_msp08_live_public_status_projection_is_redacted_and_schema_valid(

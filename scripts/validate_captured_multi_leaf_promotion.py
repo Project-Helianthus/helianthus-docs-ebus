@@ -1521,7 +1521,7 @@ def _validate_live_source_bundle(
     }
     if not all(isinstance(path, pathlib.Path) for path in m7_paths.values()):
         fail("live.sources.required")
-    source_manifests: dict[str, bytes] = {}
+    source_manifests: dict[str, pathlib.Path] = {}
     for source_key, source_name in (
         ("before", "m8_before_source_manifest"),
         ("after", "m8_after_source_manifest"),
@@ -1529,9 +1529,7 @@ def _validate_live_source_bundle(
         source_path = live_sources[source_name]
         if not isinstance(source_path, pathlib.Path):
             fail("live.sources.required")
-        source_manifests[source_key] = _read_bounded_bytes(
-            source_path, MAX_LIVE_ARTIFACT_BYTES, "live.m8"
-        )
+        source_manifests[source_key] = source_path
     try:
         coexistence.verify(
             evidence,

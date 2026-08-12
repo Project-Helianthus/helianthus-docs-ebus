@@ -156,7 +156,9 @@ state inputs, GraphQL, Portal, command routing, semantic registry, container
 identity, and capture timestamp with the exact auth boundary, byte length, and
 SHA-256 of each source. The tool inventory must equal the frozen two `ebus.v1`
 plus nine `eebus.v1` read-only tools in canonical order; an extra write tool,
-experimental tool, V2 tool, duplicate, omission, or reordering fails closed.
+experimental tool, V2 tool, duplicate, omission, reordering, or paginated
+continuation fails closed. The capture is valid only when `tools/list` proves
+the complete effective-scope inventory in one terminal response.
 Private verification opens every source as a bounded regular file from a
 fixed-name, no-symlink root, rejects devices such as FIFOs, recomputes every
 binding, derives all eleven protected views with the closed reference projector,
@@ -444,8 +446,10 @@ Validation stops at the first category in this exact order:
 
 Allocation-driving byte, nesting, string, member, and list limits run before
 recursive parsing by necessity. They still report `limits.exceeded`.
-Source-manifest paths are not opened until step 7, so a missing, unsafe, or
-oversized source cannot mask an earlier schema, registry, M7, or runtime failure.
+Source-manifest paths are not opened until step 7 and all immutable runtime
+inputs have passed, so a missing, unsafe, or oversized source cannot mask an
+earlier schema, registry, M7, or runtime failure. Captured-runtime evidence has
+exactly four ordered runs; synthetic evidence has exactly six.
 Validation emits no partial success or report.
 
 ## Resource Bounds
