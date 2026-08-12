@@ -175,6 +175,14 @@ processes, timestamps, or capture intervals fail closed before no-drift is
 evaluated. The protected payloads must be produced independently before
 equality is tested.
 
+PRE and POST source windows require different manifest digests regardless of
+their claimed byte lengths. Source device rows are all-or-reject: a malformed
+address or missing identity cannot be omitted from the projection. Household
+zone labels are deterministic public pseudonyms, never copied from the private
+MCP or GraphQL source. Capture timestamps are derived exactly from the UTC wall
+anchor plus the monotonic nanosecond offset and retain up to nine fractional
+digits.
+
 An MCP JSON-RPC envelope may carry a `content[0].text` string up to the bounded
 source-input ceiling. The verifier then decodes that string as JSON and applies
 the ordinary 4,096-byte per-string, depth, member, and list limits independently

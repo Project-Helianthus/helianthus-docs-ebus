@@ -136,7 +136,8 @@ DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 TOKEN_RE = re.compile(r"^[\x20-\x7e]+$")
 RFC3339_UTC_RE = re.compile(
-    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?Z$"
+    r"^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})"
+    r"(?:\.([0-9]{1,9}))?Z$"
 )
 PRIVATE_KEY_RE = re.compile(
     r"-----BEGIN (?:[A-Z0-9]+(?: [A-Z0-9]+)* )?PRIVATE KEY-----",
@@ -1530,12 +1531,22 @@ def _source_reject_unprojected_decimals(value: Any) -> None:
             _source_reject_unprojected_decimals(item)
 
 
-def _source_device_projection(item: dict[str, Any]) -> dict[str, Any] | None:
+def _source_device_projection(item: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(item, dict):
+        fail("provenance.source_capture")
     address = item.get("address")
     device_id = item.get("device_id")
     manufacturer = item.get("manufacturer")
-    if not isinstance(address, int) or not device_id or not manufacturer:
-        return None
+    if (
+        not isinstance(address, int)
+        or isinstance(address, bool)
+        or not 0 <= address <= 255
+        or not isinstance(device_id, str)
+        or not device_id
+        or not isinstance(manufacturer, str)
+        or not manufacturer
+    ):
+        fail("provenance.source_capture")
     return {
         "address": _source_redacted(f"ebus-address:{address}"),
         "device_id": _source_redacted(f"ebus-device:{address}:{device_id}"),
@@ -1554,7 +1565,7 @@ def _source_semantic(snapshot: dict[str, Any]) -> dict[str, Any]:
         zones.append(
             {
                 "id": _source_redacted("semantic-zone:" + zone["id"]),
-                "name": zone.get("name") or "",
+                "name": _source_redacted("zone-name:" + (zone.get("name") or "")),
                 "source": "ebus",
                 "operating_mode": config.get("operating_mode"),
                 "preset": config.get("preset"),
@@ -1601,7 +1612,7 @@ def _source_graphql_values(raw: dict[str, Any]) -> dict[str, Any]:
     zones = [
         {
             "id": _source_redacted("graphql-zone:" + zone["id"]),
-            "name": zone["name"],
+            "name": _source_redacted("zone-name:" + zone["name"]),
             "source": "ebus",
             "operating_mode": zone["config"]["operatingMode"],
             "target_temp_c": _source_string_number(zone["config"]["targetTempC"]),
@@ -1652,11 +1663,12 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             for name in APPROVED_M8_EEBUS_TOOLS
         ]
         _source_reject_unprojected_decimals(schemas)
-        devices = [
-            projected
-            for item in devices_response["data"]
-            if (projected := _source_device_projection(item)) is not None
-        ]
+        source_devices = devices_response["data"]
+        if not isinstance(source_devices, list):
+            fail("provenance.source_capture")
+        devices = [_source_device_projection(item) for item in source_devices]
+        if len(devices) != len(source_devices):
+            fail("provenance.source_capture")
         devices.sort(key=lambda item: item["address"])
         if not devices:
             fail("provenance.source_capture")
@@ -1899,18 +1911,23 @@ def _source_capture_binding(
 
 
 def _capture_time_at(clock: dict[str, Any], offset_ns: int) -> str:
-    if offset_ns % 1_000 != 0:
-        fail("provenance.source_capture")
     try:
-        anchor = dt.datetime.fromisoformat(
-            clock["wall_anchor_utc"].replace("Z", "+00:00")
-        )
-    except (KeyError, TypeError, ValueError):
+        match = RFC3339_UTC_RE.fullmatch(clock["wall_anchor_utc"])
+        if match is None or not integer(offset_ns):
+            fail("provenance.source_capture")
+        anchor = dt.datetime.strptime(
+            match.group(1), "%Y-%m-%dT%H:%M:%S"
+        ).replace(tzinfo=dt.timezone.utc)
+        anchor_ns = int((match.group(2) or "0").ljust(9, "0"))
+        added_seconds, added_ns = divmod(offset_ns, 1_000_000_000)
+        carry, nanoseconds = divmod(anchor_ns + added_ns, 1_000_000_000)
+        instant = anchor + dt.timedelta(seconds=added_seconds + carry)
+    except (KeyError, TypeError, ValueError, OverflowError):
         fail("provenance.source_capture")
-    value = anchor + dt.timedelta(microseconds=offset_ns // 1_000)
-    return value.astimezone(dt.timezone.utc).isoformat(timespec="microseconds").replace(
-        "+00:00", "Z"
-    )
+    rendered = instant.strftime("%Y-%m-%dT%H:%M:%S")
+    if nanoseconds:
+        rendered += "." + f"{nanoseconds:09d}".rstrip("0")
+    return rendered + "Z"
 
 
 def check_runtime(
@@ -2030,7 +2047,7 @@ def check_runtime(
         if len(observed) != 1:
             fail("provenance.source_capture")
         public_bindings[source_key] = observed.pop()
-    if public_bindings["before"] == public_bindings["after"]:
+    if public_bindings["before"][0] == public_bindings["after"][0]:
         fail("provenance.source_capture")
     if not require_private:
         return
