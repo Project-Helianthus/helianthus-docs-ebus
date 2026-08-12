@@ -376,6 +376,34 @@ def test_live_m8_verifier_requires_canonical_debug_admission_aliases(
     assert verified.stderr == ""
 
 
+@pytest.mark.parametrize("discovery_source", ["passive_observed", "static_seed"])
+def test_live_m8_verifier_accepts_confirmed_devices_from_supported_discovery_sources(
+    tmp_path: pathlib.Path, discovery_source: str,
+) -> None:
+    validator = load_module(
+        "msp085_live_discovery_source_validator",
+        ROOT / "scripts/validate_multi_runtime_coexistence.py",
+    )
+    evidence = load(M8_EVIDENCE)
+    for run in evidence["runs"]:
+        view = next(
+            view
+            for view in run["protected_views"]
+            if view["view_id"] == "mcp.ebus.v1.responses"
+        )
+        view["payload"]["data"]["responses"][0]["result"]["devices"][0][
+            "discovery_source"
+        ] = discovery_source
+    refresh_public_evidence(validator, evidence)
+
+    mutated = tmp_path / "supported-discovery-source.json"
+    mutated.write_bytes(validator.canonical(evidence) + b"\n")
+    verified = verify_m8_public(mutated)
+    assert verified.returncode == 0
+    assert verified.stdout == "public-only-ok\n"
+    assert verified.stderr == ""
+
+
 def test_live_m8_canonical_verifier_rejects_duplicate_public_device_identity(
     tmp_path: pathlib.Path,
 ) -> None:

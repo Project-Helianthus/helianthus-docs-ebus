@@ -3214,7 +3214,7 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
             }
             if any(
                 set(device) != expected_device_keys
-                or device.get("discovery_source") != "active_confirmed"
+                or device.get("discovery_source") not in SOURCE_DISCOVERY_STATES
                 or device.get("verification_state") != "identity_confirmed"
                 or not isinstance(device.get("manufacturer"), str)
                 or not device["manufacturer"]
