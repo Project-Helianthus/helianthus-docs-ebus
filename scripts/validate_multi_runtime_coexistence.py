@@ -1496,7 +1496,21 @@ def _source_string_number(value: Any) -> str | None:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, decimal.Decimal):
-        return format(value.normalize(), "f")
+        sign, digits, exponent = value.as_tuple()
+        coefficient = "".join(str(digit) for digit in digits)
+        if exponent >= 0:
+            rendered = coefficient + "0" * exponent
+        else:
+            point = len(coefficient) + exponent
+            rendered = (
+                coefficient[:point] + "." + coefficient[point:]
+                if point > 0
+                else "0." + "0" * -point + coefficient
+            )
+            rendered = rendered.rstrip("0").rstrip(".")
+        if rendered == "":
+            rendered = "0"
+        return ("-" if sign else "") + rendered
     return str(value)
 
 

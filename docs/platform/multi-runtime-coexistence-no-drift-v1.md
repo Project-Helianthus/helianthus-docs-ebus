@@ -181,6 +181,14 @@ the ordinary 4,096-byte per-string, depth, member, and list limits independently
 to the inner payload. This permits current multi-kilobyte topology responses
 without allowing an unbounded semantic scalar.
 
+Private MCP and GraphQL numeric source fields that the closed projector maps to
+numeric strings are parsed as exact decimals, with at most 128 significant
+digits and an absolute adjusted exponent of at most 1,024. Formatting is
+context-independent fixed-point, removes insignificant fractional zeroes, and
+never passes through a binary float; negative zero is rejected. A fractional
+number in a direct/unmodified protected view is not silently transformed and
+fails `provenance.source_capture`.
+
 The public M7 status projection is generated, never hand-authored:
 
 ```text

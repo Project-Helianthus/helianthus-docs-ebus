@@ -986,6 +986,21 @@ def test_msp08_source_decimal_is_bounded_and_canonical() -> None:
     assert validator._source_string_number(decoded["temperature"]) == "21.5"
 
 
+def test_msp08_source_decimal_preserves_long_mcp_and_graphql_values() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-11T10:00:00Z")
+    exact = b"12345678901234567890123456789.5"
+    for source in ("ebus.semantic", "graphql.values"):
+        payloads[source] = payloads[source].replace(b"21.5", exact)
+
+    projected = validator._source_project_views(payloads)["views"]
+    semantic = projected["mcp.ebus.v1.responses"]["responses"][1]["result"]
+    expected = exact.decode("ascii")
+    assert semantic["zones"][0]["target_temp_c"] == expected
+    assert projected["graphql.ebus.values"]["zones"][0]["target_temp_c"] == expected
+    assert projected["ha.graphql.values"]["entities"][0]["target_temperature"] == expected
+
+
 @pytest.mark.parametrize(
     "raw",
     (
