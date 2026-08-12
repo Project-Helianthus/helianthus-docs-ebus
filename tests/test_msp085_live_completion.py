@@ -194,6 +194,54 @@ def test_live_m8_canonical_verifier_rejects_enumerable_address_hashes(
     assert verified.stderr == ""
 
 
+def test_live_m8_canonical_verifier_rejects_opaque_address_outside_address_fields(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = load_module(
+        "msp085_live_opaque_scope_validator",
+        ROOT / "scripts/validate_multi_runtime_coexistence.py",
+    )
+    evidence = load(M8_EVIDENCE)
+    for run in evidence["runs"]:
+        for view in run["protected_views"]:
+            view["payload"]["meta"]["auth_subject"] = validator.OPAQUE_ADDRESS
+    refresh_public_evidence(validator, evidence)
+
+    mutated = tmp_path / "misplaced-opaque-address-evidence.json"
+    mutated.write_bytes(validator.canonical(evidence) + b"\n")
+    verified = verify_m8_public(mutated)
+    assert verified.returncode == 1
+    assert verified.stdout == "redaction.public\n"
+    assert verified.stderr == ""
+
+
+def test_live_m8_canonical_verifier_rejects_duplicate_public_device_identity(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = load_module(
+        "msp085_live_duplicate_identity_validator",
+        ROOT / "scripts/validate_multi_runtime_coexistence.py",
+    )
+    evidence = load(M8_EVIDENCE)
+    for run in evidence["runs"]:
+        views = {view["view_id"]: view for view in run["protected_views"]}
+        devices = views["mcp.ebus.v1.responses"]["payload"]["data"]["responses"][0][
+            "result"
+        ]["devices"]
+        ha_devices = views["ha.identity"]["payload"]["data"]["devices"]
+        devices[1]["device_id"] = devices[0]["device_id"]
+        ha_devices[1]["unique_id"] = ha_devices[0]["unique_id"]
+        ha_devices[1]["via_device"] = ha_devices[0]["via_device"]
+    refresh_public_evidence(validator, evidence)
+
+    mutated = tmp_path / "duplicate-public-device-evidence.json"
+    mutated.write_bytes(validator.canonical(evidence) + b"\n")
+    verified = verify_m8_public(mutated)
+    assert verified.returncode == 1
+    assert verified.stdout == "redaction.public\n"
+    assert verified.stderr == ""
+
+
 def test_live_publication_has_eight_locked_candidates_and_no_public_leak() -> None:
     validator = load_module(
         "msp085_live_m85_validator",

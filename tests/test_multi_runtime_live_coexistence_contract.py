@@ -1158,6 +1158,35 @@ def test_msp08_private_window_rejects_unprojectable_source_device(
     assert str(error.value) == "provenance.source_capture"
 
 
+def test_msp08_private_runtime_rejects_invalid_debug_address_alias(
+    tmp_path: pathlib.Path,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    manifests, roots = bind_source_manifests(validator, evidence, tmp_path)
+    path = roots["before"] / validator.SOURCE_CAPTURE_FILES["ebus.debug"]
+    debug = json.loads(path.read_bytes())
+    debug["status"] = {
+        "admission": {
+            "companion_target": 132,
+            "last_successful_source": 127,
+            "selected_source": 999,
+        }
+    }
+    path.write_bytes(validator.canonical(debug))
+    rebind_source_manifest(validator, evidence, "before", manifests, roots)
+
+    with pytest.raises(Exception) as error:
+        validator.check_runtime(
+            evidence,
+            live_m7_inputs(validator, evidence),
+            manifests,
+            roots,
+            require_private=True,
+        )
+    assert str(error.value) == "provenance.source_capture"
+
+
 def test_msp08_source_projection_retains_passive_incomplete_devices_only_in_raw_input() -> None:
     validator = validator_module()
     payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
@@ -1254,6 +1283,27 @@ def test_msp08_source_projection_pseudonymizes_debug_address_aliases() -> None:
     assert set(admission.values()) == {validator.OPAQUE_ADDRESS}
 
 
+@pytest.mark.parametrize("invalid_address", [-1, 256, 999, "-1", "256", "0x100", "device-a"])
+def test_msp08_source_projection_rejects_invalid_debug_address_aliases(
+    invalid_address: object,
+) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    debug = json.loads(payloads["ebus.debug"])
+    debug["status"] = {
+        "admission": {
+            "companion_target": 132,
+            "last_successful_source": 127,
+            "selected_source": invalid_address,
+        }
+    }
+    payloads["ebus.debug"] = validator.canonical(debug)
+
+    with pytest.raises(Exception) as error:
+        validator._source_project_views(payloads)
+    assert str(error.value) == "provenance.source_capture"
+
+
 @pytest.mark.parametrize(
     "key",
     ["companion_target", "last_successful_source", "selected_source"],
@@ -1322,6 +1372,38 @@ def test_msp08_source_projection_uses_non_enumerable_device_address_placeholder(
         item["via_device"] for item in projected["ha.identity"]["devices"]
     }
     assert len(via_devices) == len(devices)
+
+
+def test_msp08_source_projection_preserves_duplicate_device_id_multiplicity() -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    envelope = json.loads(payloads["ebus.devices"])
+    inner = json.loads(envelope["result"]["content"][0]["text"])
+    inner["data"][1]["device_id"] = inner["data"][0]["device_id"]
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    payloads["ebus.devices"] = validator.canonical(envelope)
+
+    projected = validator._source_project_views(payloads)["views"]
+    devices = projected["mcp.ebus.v1.responses"]["responses"][0]["result"][
+        "devices"
+    ]
+    ha_devices = projected["ha.identity"]["devices"]
+    assert len({item["device_id"] for item in devices}) == 2
+    assert len({item["unique_id"] for item in ha_devices}) == 2
+    assert len({item["via_device"] for item in ha_devices}) == 2
+
+    inner["data"].reverse()
+    envelope["result"]["content"][0]["text"] = validator.canonical(inner).decode(
+        "utf-8"
+    )
+    payloads["ebus.devices"] = validator.canonical(envelope)
+    reordered = validator._source_project_views(payloads)["views"]
+    assert reordered["mcp.ebus.v1.responses"] == projected[
+        "mcp.ebus.v1.responses"
+    ]
+    assert reordered["ha.identity"] == projected["ha.identity"]
 
 
 def test_msp08_source_projection_declares_and_excludes_volatile_schedule_leaves() -> None:

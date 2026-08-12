@@ -1676,6 +1676,18 @@ SOURCE_DEBUG_ADDRESS_KEYS = frozenset(
 )
 
 
+def _source_debug_address_valid(value: Any) -> bool:
+    if isinstance(value, int) and not isinstance(value, bool):
+        return 0 <= value <= 255
+    if not isinstance(value, str):
+        return False
+    if re.fullmatch(r"0[xX][0-9a-fA-F]{1,2}", value):
+        return int(value, 16) <= 255
+    if re.fullmatch(r"(?:0|[1-9][0-9]{0,2})", value):
+        return int(value, 10) <= 255
+    return False
+
+
 def _source_debug(value: Any) -> Any:
     if isinstance(value, dict):
         projected = {}
@@ -1683,7 +1695,7 @@ def _source_debug(value: Any) -> Any:
             if key in SOURCE_DEBUG_ADDRESS_KEYS:
                 if item is None:
                     projected[key] = None
-                elif isinstance(item, bool) or not isinstance(item, (int, str)):
+                elif not _source_debug_address_valid(item):
                     fail("provenance.source_capture")
                 else:
                     projected[key] = OPAQUE_ADDRESS
@@ -1800,12 +1812,24 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
         if not isinstance(source_devices, list):
             fail("provenance.source_capture")
         projected_devices = [
-            (item["address"], projected)
+            (item["address"], item["device_id"], projected)
             for item in source_devices
             if (projected := _source_device_projection(item)) is not None
         ]
         projected_devices.sort(key=lambda item: item[0])
-        devices = [projected for _, projected in projected_devices]
+        device_id_totals: dict[str, int] = {}
+        for _, source_device_id, _ in projected_devices:
+            device_id_totals[source_device_id] = device_id_totals.get(source_device_id, 0) + 1
+        device_id_occurrences: dict[str, int] = {}
+        devices = []
+        for _, source_device_id, projected in projected_devices:
+            occurrence = device_id_occurrences.get(source_device_id, 0)
+            device_id_occurrences[source_device_id] = occurrence + 1
+            if device_id_totals[source_device_id] > 1:
+                projected["device_id"] = _source_redacted(
+                    f"ebus-device:{source_device_id}:occurrence:{occurrence}"
+                )
+            devices.append(projected)
         if not devices:
             fail("provenance.source_capture")
         semantic = _source_semantic(semantic_response)
@@ -3028,7 +3052,32 @@ def _contains_invalid_public_address(
     return False
 
 
+def _count_exact_value(value: Any, expected: Any) -> int:
+    if isinstance(value, dict):
+        return sum(
+            _count_exact_value(key, expected) + _count_exact_value(item, expected)
+            for key, item in value.items()
+        )
+    if isinstance(value, list):
+        return sum(_count_exact_value(item, expected) for item in value)
+    return int(value == expected)
+
+
+def _count_address_placeholders(value: Any, keys: frozenset[str]) -> int:
+    normalized_keys = {_compact_key(key) for key in keys}
+    if isinstance(value, dict):
+        return sum(
+            int(_compact_key(key) in normalized_keys and item == OPAQUE_ADDRESS)
+            + _count_address_placeholders(item, keys)
+            for key, item in value.items()
+        )
+    if isinstance(value, list):
+        return sum(_count_address_placeholders(item, keys) for item in value)
+    return 0
+
+
 def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
+    allowed_placeholder_count = 0
     for run in evidence["runs"]:
         views = {view["view_id"]: view["payload"] for view in run["protected_views"]}
         mcp_devices = views["mcp.ebus.v1.responses"]["data"]["responses"][0][
@@ -3041,13 +3090,29 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
             views["debug.ebus"], SOURCE_DEBUG_ADDRESS_KEYS, nullable=True
         ):
             return True
-        if len(mcp_devices) != len(ha_devices) or any(
-            ha_device.get("via_device")
-            != _source_redacted("ha-via:" + mcp_device["device_id"])
-            for mcp_device, ha_device in zip(mcp_devices, ha_devices, strict=True)
+        allowed_placeholder_count += _count_address_placeholders(
+            views["mcp.ebus.v1.responses"], frozenset({"address"})
+        )
+        allowed_placeholder_count += _count_address_placeholders(
+            views["debug.ebus"], SOURCE_DEBUG_ADDRESS_KEYS
+        )
+        device_ids = [item.get("device_id") for item in mcp_devices]
+        ha_unique_ids = [item.get("unique_id") for item in ha_devices]
+        ha_via_devices = [item.get("via_device") for item in ha_devices]
+        if (
+            len(mcp_devices) != len(ha_devices)
+            or any(
+                len(set(values)) != len(values)
+                for values in (device_ids, ha_unique_ids, ha_via_devices)
+            )
+            or any(
+                ha_device.get("via_device")
+                != _source_redacted("ha-via:" + mcp_device["device_id"])
+                for mcp_device, ha_device in zip(mcp_devices, ha_devices, strict=True)
+            )
         ):
             return True
-    return False
+    return _count_exact_value(evidence, OPAQUE_ADDRESS) != allowed_placeholder_count
 
 
 def check_public_redaction(evidence: dict[str, Any]) -> None:
