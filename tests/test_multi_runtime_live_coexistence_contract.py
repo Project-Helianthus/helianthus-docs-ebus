@@ -1101,6 +1101,57 @@ def test_msp08_source_mcp_accepts_large_envelope_with_bounded_inner_values() -> 
     assert validator._source_inner_mcp(raw)["data"]["items"] == values
 
 
+def test_msp08_source_mcp_accepts_matching_structured_content() -> None:
+    validator = validator_module()
+    inner = {"data": {"temperature": 21.5}, "meta": {"contract": "test"}}
+    envelope = json.loads(source_mcp(validator, inner["data"]))
+    envelope["result"]["structuredContent"] = inner
+
+    assert validator._source_inner_mcp(validator.canonical(envelope)) == inner
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda envelope: envelope.update({"unexpected": True}),
+        lambda envelope: envelope.update({"error": {"code": -1}}),
+        lambda envelope: envelope.update({"jsonrpc": "1.0"}),
+        lambda envelope: envelope.update({"id": None}),
+        lambda envelope: envelope["result"].update({"unexpected": True}),
+        lambda envelope: envelope["result"]["content"].append(
+            {"type": "text", "text": "{}"}
+        ),
+        lambda envelope: envelope["result"]["content"][0].update({"unexpected": True}),
+        lambda envelope: envelope["result"]["content"][0].update({"type": "image"}),
+        lambda envelope: envelope["result"].update(
+            {"structuredContent": {"data": {"items": ["contradiction"]}}}
+        ),
+        lambda envelope: envelope["result"].update({"structuredContent": None}),
+    ],
+    ids=[
+        "top-level-member",
+        "result-and-error",
+        "wrong-jsonrpc-version",
+        "null-id",
+        "result-member",
+        "multiple-content-items",
+        "content-member",
+        "non-text-content",
+        "divergent-structured-content",
+        "null-structured-content",
+    ],
+)
+def test_msp08_source_mcp_rejects_ambiguous_envelopes(mutate) -> None:
+    validator = validator_module()
+    envelope = json.loads(source_mcp(validator, {"items": ["captured"]}))
+    mutate(envelope)
+
+    with pytest.raises(Exception) as error:
+        validator._source_inner_mcp(validator.canonical(envelope))
+
+    assert str(error.value) == "provenance.source_capture"
+
+
 def test_msp08_source_decimal_is_bounded_and_canonical() -> None:
     validator = validator_module()
     decoded = validator._decode_source_json(b'{"temperature":21.500}')

@@ -1476,18 +1476,40 @@ def _read_bounded_regular_file(
 
 def _source_inner_mcp(raw: bytes) -> dict[str, Any]:
     envelope = _decode_source_json(raw, max_string_bytes=MAX_SOURCE_INPUT_BYTES)
-    try:
-        content = envelope["result"]["content"]
-        if (
-            envelope["result"].get("isError") is not False
-            or len(content) != 1
-            or content[0]["type"] != "text"
-        ):
-            fail("provenance.source_capture")
-        value = _decode_source_json(content[0]["text"].encode("utf-8"))
-    except (KeyError, TypeError, AttributeError):
+    request_id = envelope.get("id") if isinstance(envelope, dict) else None
+    if (
+        not isinstance(envelope, dict)
+        or set(envelope) != {"jsonrpc", "id", "result"}
+        or envelope["jsonrpc"] != "2.0"
+        or isinstance(request_id, bool)
+        or not isinstance(request_id, (int, str))
+        or isinstance(request_id, str)
+        and not request_id
+    ):
         fail("provenance.source_capture")
+
+    result = envelope["result"]
+    if not isinstance(result, dict) or set(result) not in (
+        {"content", "isError"},
+        {"content", "isError", "structuredContent"},
+    ):
+        fail("provenance.source_capture")
+    content = result["content"]
+    if (
+        result["isError"] is not False
+        or not isinstance(content, list)
+        or len(content) != 1
+        or not isinstance(content[0], dict)
+        or set(content[0]) != {"type", "text"}
+        or content[0]["type"] != "text"
+        or not isinstance(content[0]["text"], str)
+    ):
+        fail("provenance.source_capture")
+
+    value = _decode_source_json(content[0]["text"].encode("utf-8"))
     if not isinstance(value, dict):
+        fail("provenance.source_capture")
+    if "structuredContent" in result and result["structuredContent"] != value:
         fail("provenance.source_capture")
     return value
 
