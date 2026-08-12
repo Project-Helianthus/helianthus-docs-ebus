@@ -41,9 +41,8 @@ Validation recursively scans values as well as enforcing closed schema keys;
 operational SKI, SHIP ids, protocol addresses, and selectors are not treated as
 cryptographic secrets in the private operator tier.
 
-The eeBUS source contract is temporarily grounded by the full PR-head commit
-`3576a14edbe08aeb757b9e53a03fb6e5be387dfe`; it will be repinned to the source
-inventory squash commit. That external binding owns only the SPINE source
+The eeBUS source contract is grounded by the merged source-inventory squash
+commit `ed5354421ddf0a2005f496e3fd65675990032b5e`. That external binding owns only the SPINE source
 profile: entity slot and type, feature type and role, complete
 description/constraints/value function lists, field path, descriptor, unit,
 declared constraints, and exact SPINE raw mapping. This platform registry owns
@@ -60,8 +59,8 @@ M8.5 result at `docs/platform/live/msp-085-0.6.38/m8.5-result.json`. They remain
 `NOT_TESTED` outcomes, and never enter the real-leaf promotion denominator.
 
 The canonical registry is also an exact byte contract. Its raw SHA-256 is
-`3dc531dddb3464c75aca42ccf914d98c7c3e872a2ad925229f2a207586e14b11`, exposed
-as `registry_sha256=sha256:3dc531dddb3464c75aca42ccf914d98c7c3e872a2ad925229f2a207586e14b11`.
+`00ceefc05439e9aec5830b640661cdc6be2b503f9365eed437e3dbffdf6d0678`, exposed
+as `registry_sha256=sha256:00ceefc05439e9aec5830b640661cdc6be2b503f9365eed437e3dbffdf6d0678`.
 `--registry` may name a byte-identical copy; it cannot substitute tolerances,
 selectors, mappings, or an eeBUS source profile.
 

@@ -6,7 +6,7 @@
   "public_schema": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-result-v1.schema.json",
   "m7_public_status": "docs/platform/fixtures/candidate-fact-graph/v1/positive/live-public-status.json",
   "retired_history_result": "docs/platform/live/msp-085-0.6.38/m8.5-result.json",
-  "docs_eebus_source_commit": "3576a14edbe08aeb757b9e53a03fb6e5be387dfe",
+  "docs_eebus_source_commit": "ed5354421ddf0a2005f496e3fd65675990032b5e",
   "capture_limits": {"max_skew_ns":1000000000,"max_age_ns":10000000000},
   "sanitized_provenance": {
     "class": "SANITIZED_CONFORMANCE",
