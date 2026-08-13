@@ -172,14 +172,20 @@ Response fields:
 - `circuits`: optional circuit list (`index`, `circuit_type`, `has_mixer`, `state`, `config`, `managing_device`)
 - `radio_devices`: optional radio-device list (per-slot semantic RF data)
 - `fm5_semantic_mode`: optional FM5 semantic mode string
-- `fm5_semantic_degraded_reason`: explicit closed reason when FM5 evidence
+- `fm5_semantic_degraded_reason`: **post-M9 target field, pending gateway
+  implementation**; explicit closed reason when FM5 evidence
   exists but coherent interpretation is unavailable; it is supplied by the
   shared semantic provider and is never inferred by Portal
-- `fm5_semantic_evidence_revision`: opaque revision binding mode and reason to
-  one acquisition result
+- `fm5_semantic_evidence_revision`: **post-M9 target field, pending gateway
+  implementation**; opaque revision binding mode and reason to one acquisition
+  result
 - `solar`: optional solar semantic object
 - `cylinders`: optional cylinder list
 - `captured_utc`: RFC3339 UTC timestamp
+
+The example below shows the target response after the post-M9 gateway
+implementation; the two target FM5 fields are not claims about current runtime
+availability.
 
 Energy freshness/provenance metadata (`GW-13` freeze):
 

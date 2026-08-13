@@ -543,6 +543,8 @@ type CircuitConfig {
 
 ### FM5 Interpretation Verdict
 
+**Status:** Pending gateway implementation.
+
 After the additive MCP `ebus.v1.semantic.fm5_interpretation.get` contract is
 implemented, GraphQL exposes the same provider-owned result without
 recalculation:

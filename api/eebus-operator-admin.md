@@ -122,9 +122,12 @@ currently interpretable semantic profile, or the exact acquisition/configuration
 failure category that prevented interpretation. The runtime must not collapse
 an acquisition or configuration failure into an unexplained `GPIO_ONLY`.
 
-The additive `ebus.v1.semantic.fm5_interpretation.get` MCP tool exposes the
-provider tuple first. GraphQL `fm5Interpretation`, Portal, and Home Assistant
-then consume that same tuple. They may format the reason but may not recalculate
+The post-M9 implementation sequence adds
+`ebus.v1.semantic.fm5_interpretation.get` first; GraphQL
+`fm5Interpretation`, Portal, and Home Assistant then consume that same tuple.
+These additive surfaces are pending until their corresponding gateway and
+consumer PRs merge; this docs gate freezes the target contract, not current
+runtime availability. Consumers may format the reason but may not recalculate
 it. The pre-existing `ebus.v1.semantic.fm5_mode.get` scalar stays stable but is
 not sufficient to diagnose degradation. A failed refresh does not publish zero
 solar/cylinder values or silently erase last-known data; freshness and the

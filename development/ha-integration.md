@@ -146,13 +146,15 @@ open the fixed owner Portal path without identity, token, action authority,
 query, or fragment data. Protocol-specific action and identity semantics remain
 in the canonical `helianthus-docs-eebus` documents linked by that boundary.
 
-For FM5 diagnostics the integration reads GraphQL `fm5Interpretation { mode
-degradedReason evidenceRevision }`. The diagnostic entity exposes the gateway-
-supplied mode and sanitized reason and uses the revision only to keep one
-coherent update; it does not derive a reason from missing solar/cylinder values
-or from the legacy mode scalar. `GPIO_ONLY` without a closed reason is an
-invalid response and enters integration repair/degraded state rather than being
-shown as a healthy configuration.
+After the pending GraphQL contract and the corresponding HA PR are implemented,
+FM5 diagnostics read `fm5Interpretation { mode degradedReason
+evidenceRevision }`. This is a target contract, not current integration
+availability. The diagnostic entity exposes the gateway-supplied mode and
+sanitized reason and uses the revision only to keep one coherent update; it does
+not derive a reason from missing solar/cylinder values or from the legacy mode
+scalar. `GPIO_ONLY` without a closed reason is an invalid response and enters
+integration repair/degraded state rather than being shown as a healthy
+configuration.
 
 ## Device Tree
 

@@ -137,9 +137,15 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
         "`ebus.v1.semantic.fm5_interpretation.get`",
         "`mode`, `degraded_reason`, and `evidence_revision`",
         "no v2 tool or legacy alias is introduced",
+        "not part of the implemented surface above until the gateway implementation PR merges",
     ):
         assert required in mcp
+    implemented_mcp = MCP.read_text(encoding="utf-8").split(
+        "## Semantic Payload Notes", maxsplit=1
+    )[0]
+    assert "ebus.v1.semantic.fm5_interpretation.get" not in implemented_mcp
     for required in (
+        "Status:** Pending gateway implementation",
         "fm5Interpretation: Fm5Interpretation!",
         "degradedReason: Fm5SemanticDegradedReason",
         "evidenceRevision: String!",
@@ -148,8 +154,18 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
         assert required in graphql
     for required in (
         "candidate-free gateway projection",
+        "pending GraphQL contract",
+        "target contract, not current integration availability",
         "fm5Interpretation { mode degradedReason evidenceRevision }",
         "does not derive a reason",
         "`GPIO_ONLY` without a closed reason is an invalid response",
     ):
         assert required in ha
+
+
+def test_target_portal_fields_do_not_claim_current_availability() -> None:
+    contract = _normalized(CONTRACT)
+    portal = _normalized(PORTAL)
+    assert "These additive surfaces are pending" in contract
+    assert "post-M9 target field, pending gateway implementation" in portal
+    assert "not claims about current runtime availability" in portal
