@@ -260,9 +260,9 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training says the `Solar circuit` screen is shown only for `VR 71 = 1, 2`. In `Circuito solar 1`, the multiMATIC training documents solar pump, collector, and solar tank parameters under VR 71-based systems. This strongly supports the family gate for solar-capable VR 71 configurations. |
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `GATEWAY_POLICY` for the publication gate; `PROFILE` for the documented solar-capable VR71 configurations |
-| Evaluation rule | `publishFM5Semantic()` publishes `solar` only when `fm5SemanticMode == INTERPRETED`; otherwise it clears the family |
-| Fallback / unknown behavior | No partial solar contract is exposed for `GPIO_ONLY` |
-| Published effect | `solar` is either fully present or absent |
+| Evaluation rule | A coherent `INTERPRETED` acquisition may create or update `solar`. A transient `GPIO_ONLY` reason (`CONTROLLER_UNREACHABLE`, `CONFIGURATION_UNAVAILABLE`, `SOLAR_ACQUISITION_FAILED`, `CYLINDER_ACQUISITION_FAILED`, `EVIDENCE_STALE`, or `INCOHERENT_ACQUISITION`) retains the last coherent solar snapshot without updating it; the mode/reason/revision verdict marks it non-current. `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family because the structural gate is no longer admissible. |
+| Fallback / unknown behavior | No partial or synthetic solar snapshot is created for `GPIO_ONLY`. Transient failure may retain only an already coherent snapshot and must not present it as a new live acquisition. |
+| Published effect | `solar` is newly published only from coherent interpretation, retained read-only across transient acquisition degradation, or absent after a structural withdrawal. |
 | Evidence status | `PROVEN` |
 | Code anchors | `readSolarSnapshot()`, `publishFM5Semantic()` |
 
@@ -278,9 +278,9 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training states `Solar accumulator 1 if VR 71 = 2, solar accumulator 1 and solar accumulator 2 if VR 71 = 1`. In `Deposito solar 1` and the ACS/accumulator sections, the multiMATIC training documents solar tank and accumulator parameters under VR 71-based solar configurations. This supports using the FM5/VR71 tuple as the family gate for cylinder-related solar storage semantics. |
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `GATEWAY_POLICY` for the publication gate; `PROFILE` for the documented accumulator-capable VR71 configurations |
-| Evaluation rule | `publishFM5Semantic()` publishes cylinder instances only when `fm5SemanticMode == INTERPRETED`; otherwise it clears the family |
-| Fallback / unknown behavior | No synthetic “potential cylinders” family is exposed when FM5 is not interpreted |
-| Published effect | `cylinders[]` is absent outside interpreted FM5 mode |
+| Evaluation rule | A coherent `INTERPRETED` acquisition may create/update cylinder instances. A transient `GPIO_ONLY` reason retains the last coherent instance set without updating it; the verdict marks it non-current. `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family because the structural gate is no longer admissible. |
+| Fallback / unknown behavior | No synthetic “potential cylinders” family is exposed. Transient failure may retain only previously coherent instances and must not manufacture or zero an instance. |
+| Published effect | `cylinders[]` is newly published only from coherent interpretation, retained read-only across transient acquisition degradation, or absent after a structural withdrawal. |
 | Evidence status | `PROVEN` |
 | Code anchors | `refreshFM5Semantic()`, `publishFM5Semantic()` |
 

@@ -6,6 +6,7 @@ CONTRACT = ROOT / "api" / "eebus-operator-admin.md"
 PORTAL = ROOT / "api" / "portal.md"
 DECISIONS = ROOT / "architecture" / "decisions.md"
 B524 = ROOT / "architecture" / "b524-structural-decisions.md"
+B524_MAPPING = ROOT / "architecture" / "b524-semantic-mapping.md"
 GRAPHQL = ROOT / "api" / "graphql.md"
 MCP = ROOT / "api" / "mcp.md"
 HA = ROOT / "development" / "ha-integration.md"
@@ -93,8 +94,19 @@ def test_existing_fm5_authority_uses_the_provider_verdict() -> None:
         "may not become an unexplained `GPIO_ONLY`",
         "`fm5SemanticDegradedReason`",
         "`fm5SemanticEvidenceRevision`",
+        "retains the last coherent solar snapshot without updating it",
+        "retains the last coherent instance set without updating it",
+        "`ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family",
     ):
         assert required in text
+    mapping = _normalized(B524_MAPPING)
+    for required in (
+        "A transient acquisition degradation retains only the last coherent snapshot",
+        "it is not a new live sample",
+        "does not update or zero it",
+        "mode/reason/revision result",
+    ):
+        assert required in mapping
 
 
 def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
