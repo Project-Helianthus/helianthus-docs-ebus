@@ -541,6 +541,49 @@ type CircuitConfig {
 
 `vr71CircuitStartIndex` is intentionally absent from the canonical GraphQL contract. Circuit ownership is modeled explicitly on each `circuits[]` item via `managingDevice`, not through a global FM5 threshold.
 
+### FM5 Interpretation Verdict
+
+**Status:** Pending gateway implementation.
+
+After the additive MCP `ebus.v1.semantic.fm5_interpretation.get` contract is
+implemented, GraphQL exposes the same provider-owned result without
+recalculation:
+
+```graphql
+type Query {
+  fm5Interpretation: Fm5Interpretation!
+}
+
+type Fm5Interpretation {
+  mode: Fm5SemanticMode!
+  degradedReason: Fm5SemanticDegradedReason
+  evidenceRevision: String!
+}
+
+enum Fm5SemanticMode {
+  INTERPRETED
+  GPIO_ONLY
+  ABSENT
+}
+
+enum Fm5SemanticDegradedReason {
+  CONTROLLER_UNREACHABLE
+  CONFIGURATION_UNAVAILABLE
+  CONFIGURATION_NOT_INTERPRETABLE
+  SOLAR_ACQUISITION_FAILED
+  CYLINDER_ACQUISITION_FAILED
+  EVIDENCE_STALE
+  INCOHERENT_ACQUISITION
+}
+```
+
+`degradedReason` is null only for `INTERPRETED` and `ABSENT`; every
+`GPIO_ONLY` result carries one reason. `evidenceRevision` binds all fields to
+one acquisition result. Existing `fm5SemanticMode` remains stable for current
+consumers but does not authorize a client to infer degradation. The canonical
+shared behavior and reason precedence are defined in
+[`eebus-operator-admin.md`](./eebus-operator-admin.md).
+
 The architectural rationale and the full B524 evidence trail for structure/ownership decisions are documented in:
 
 - [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md)

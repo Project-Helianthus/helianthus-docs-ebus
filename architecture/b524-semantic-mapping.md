@@ -158,9 +158,12 @@ Semantics:
 
 Gated by `fm5_config<=2`. Source registers come from GG=0x04 (solar circuit).
 When FM5 evidence exists but the runtime cannot safely interpret FM5-backed
-solar semantics, the MCP plane remains non-null and returns an empty typed
-object. Consumers must treat that as known absent/non-interpreted, not as a
-zero-valued solar measurement.
+solar semantics, the MCP plane remains non-null. If no prior coherent snapshot
+exists, it returns an empty typed object. A transient acquisition degradation
+retains only the last coherent snapshot and pairs it with the provider-owned
+FM5 degraded verdict; it is not a new live sample. `ABSENT` or a known
+non-interpretable configuration withdraws prior structural data. Consumers
+must never treat an empty or retained object as a zero-valued solar measurement.
 
 ## `ebus.v1.semantic.cylinders.get`
 
@@ -170,9 +173,11 @@ Publication gate:
 - Entire family is gated by `fm5_config<=2`.
 - Individual instances are published only when `GG=0x05 RR=0x0004` (`cylinder_temperature`) is live and decodable for that instance.
 - Config-only responses from `GG=0x05 RR=0x0001..0x0003` do not imply a real cylinder and must not create `cylinders[]` entries.
-- When FM5 is absent or GPIO-only, the MCP plane remains non-null and returns
-  `[]`. Consumers must treat this as known absent/non-interpreted rather than
-  unknown data.
+- When no prior coherent instance exists, FM5 absence or GPIO-only structural
+  withdrawal returns `[]`. A transient GPIO-only acquisition reason retains
+  only the last coherent instance set, paired with the same degraded verdict,
+  and does not update or zero it. Consumers distinguish retention from current
+  data through the mode/reason/revision result.
 
 | Semantic Path | B524 | Type |
 |---------------|------|------|

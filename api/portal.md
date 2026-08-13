@@ -29,6 +29,17 @@ This page owns the frozen Portal-specific observe-first contract after merged
 - Versioned endpoint paths (`/api/v1`) for forward evolution.
 - Runtime is Go-only; frontend assets are embedded in the gateway binary.
 
+## eeBUS Owner Workbench
+
+The post-M9 shared consumer isolation, FM5 degraded interpretation, and single
+release-version authority are frozen in
+[`eebus-operator-admin.md`](./eebus-operator-admin.md). Protocol-specific
+operator routes and browser semantics remain exclusively in the linked
+`helianthus-docs-eebus` canonical documents. Portal uses the gateway boundary
+and never reads the eeBUS trust store or owner-only operator socket directly.
+Home Assistant receives sanitized status and a fixed Portal link, not pairing
+authority.
+
 ## Core Endpoints
 
 ### `GET /portal/api/v1/health`
@@ -161,9 +172,20 @@ Response fields:
 - `circuits`: optional circuit list (`index`, `circuit_type`, `has_mixer`, `state`, `config`, `managing_device`)
 - `radio_devices`: optional radio-device list (per-slot semantic RF data)
 - `fm5_semantic_mode`: optional FM5 semantic mode string
+- `fm5_semantic_degraded_reason`: **post-M9 target field, pending gateway
+  implementation**; explicit closed reason when FM5 evidence
+  exists but coherent interpretation is unavailable; it is supplied by the
+  shared semantic provider and is never inferred by Portal
+- `fm5_semantic_evidence_revision`: **post-M9 target field, pending gateway
+  implementation**; opaque revision binding mode and reason to one acquisition
+  result
 - `solar`: optional solar semantic object
 - `cylinders`: optional cylinder list
 - `captured_utc`: RFC3339 UTC timestamp
+
+The example below shows the target response after the post-M9 gateway
+implementation; the two target FM5 fields are not claims about current runtime
+availability.
 
 Energy freshness/provenance metadata (`GW-13` freeze):
 
@@ -298,6 +320,8 @@ Example response:
     }
   ],
   "fm5_semantic_mode": "INTERPRETED",
+  "fm5_semantic_degraded_reason": null,
+  "fm5_semantic_evidence_revision": "opaque-acquisition-revision",
   "solar": {
     "collector_temperature_c": 62.5,
     "return_temperature_c": 45.1,

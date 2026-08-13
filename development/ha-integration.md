@@ -135,6 +135,27 @@ Optional HA helper bindings can drive schedule mode:
   - format: `schedule.dhw_name`
   - When helper turns `on`, integration sets DHW op-mode to `auto`
 
+## eeBUS And FM5 Diagnostics
+
+Home Assistant consumes the sanitized, candidate-free gateway projection from
+the boundary defined in
+[`../api/eebus-operator-admin.md`](../api/eebus-operator-admin.md). It never
+receives a pairing mutation grant, operator-only identity, raw protocol payload,
+trust-store access, or operator-socket access. Pairing/untrust repair actions
+open the fixed owner Portal path without identity, token, action authority,
+query, or fragment data. Protocol-specific action and identity semantics remain
+in the canonical `helianthus-docs-eebus` documents linked by that boundary.
+
+After the pending GraphQL contract and the corresponding HA PR are implemented,
+FM5 diagnostics read `fm5Interpretation { mode degradedReason
+evidenceRevision }`. This is a target contract, not current integration
+availability. The diagnostic entity exposes the gateway-supplied mode and
+sanitized reason and uses the revision only to keep one coherent update; it does
+not derive a reason from missing solar/cylinder values or from the legacy mode
+scalar. `GPIO_ONLY` without a closed reason is an invalid response and enters
+integration repair/degraded state rather than being shown as a healthy
+configuration.
+
 ## Device Tree
 
 The integration materializes this hierarchy in HA device registry:
