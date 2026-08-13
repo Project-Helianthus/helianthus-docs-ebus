@@ -54,10 +54,20 @@ fields carry the eleven cross-protocol leaves. M9A adds only these fields:
 | `system.gateway_brand` | `String` | nullable | `/system/gateway_brand` |
 | `system.gateway_vendor` | `String` | nullable | `/system/gateway_vendor` |
 
-The two zone capability rows share one schema field and are distinguished by
-the existing stable zone ids `zone_1` and `zone_2`. Zone names already use
-`zones[].name`. All new names are snake_case only because this is an initial,
-unreleased surface; no compatibility aliases are needed.
+The zone rows share schema fields and are bound by a closed identity map:
+semantic `zone_1` targets the existing GraphQL id `zone-1`, and semantic
+`zone_2` targets `zone-2`. The projection must not rename or duplicate a zone.
+Code tests and GraphQL snapshots must prove that the pre-M9 ids remain exact.
+
+The two promoted eeBUS `userLabel` leaves do not replace the existing non-null
+`zones[].name`. They project to nullable `zones[].config.source_label` only
+after the transform `STABLE_ZONE_PSEUDONYM`. The transform ignores the raw
+label bytes and emits `Zone 1` for `zone-1` and `Zone 2` for `zone-2`; no
+caller-selected salt, hash, or label text participates. This preserves the
+fact that an eeBUS label exists for the promoted semantic path without
+disclosing household naming. The raw `userLabel` remains owner-only MCP data.
+All new names are snake_case only because this is an initial, unreleased
+surface; no compatibility aliases are needed.
 
 Null means no current producer supplied the field. Numeric values use GraphQL
 `Float` after the exact decimal normalization already locked by MSP-085.
@@ -67,12 +77,11 @@ unit convention used by the existing semantic API.
 ## Public Safety
 
 GraphQL, Portal, and Home Assistant may contain semantic paths, normalized
-values, units, and the public device/zone labels represented by promoted
-metadata leaves. They must not contain:
+values, units, and deterministic zone pseudonyms. They must not contain:
 
 - candidate ids, dossier hashes, `candidate_ref`, or promotion internals;
 - SKI, SHIP id, certificate material, or trust-store bytes;
-- SPINE device/entity/feature addresses or function payloads;
+- SPINE device/entity/feature addresses, raw `userLabel`, or function payloads;
 - eBUS selectors, source addresses, or raw frames;
 - private keys, tokens, or other cryptographic secrets.
 
@@ -89,8 +98,9 @@ REST payloads.
 Home Assistant preserves existing config-entry, device, zone, climate, water
 heater, and sensor unique ids. Cross-protocol leaves enrich existing semantic
 entities through `FILL_MISSING_ONLY`; they do not create protocol-prefixed
-duplicates. Gateway brand/vendor and zone labels are metadata, not standalone
-entities. Capability booleans are diagnostic attributes until a separately
+duplicates. Gateway brand/vendor and the deterministic source-label pseudonym
+are metadata, not standalone entities; the existing zone `name` and identity
+remain unchanged. Capability booleans are diagnostic attributes until a separately
 approved command contract exists. `overrun_active` may be a read-only binary
 sensor because it is an observed state, not a command.
 
@@ -103,7 +113,8 @@ M9 is complete only when:
 - eeBUS disconnect removes only overlay-owned values;
 - pre-M9 eBUS GraphQL, Portal, and Home Assistant snapshots remain unchanged
   where eBUS already supplied a value;
+- `zone-1` and `zone-2` remain the only two target identities, and raw
+  `userLabel` values are absent from every public snapshot;
 - Portal and Home Assistant consume GraphQL, never owner-only MCP;
 - add-on restart preserves eeBUS trust and restores the promoted projection;
 - code-repository tests enforce the manifest and public anti-leak boundary.
-

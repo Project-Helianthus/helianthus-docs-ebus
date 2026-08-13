@@ -55,12 +55,34 @@ def test_m9_manifest_public_surface_is_semantic_only() -> None:
     assert "private_key" in forbidden
 
     for leaf in manifest["leaves"]:
-        assert set(leaf) == {
+        expected = {
             "semantic_path",
             "value_kind",
             "unit",
             "graphql_path",
             "producer_class",
         }
+        if leaf["semantic_path"].endswith("/name"):
+            expected.add("public_transform")
+            assert leaf["public_transform"] == "STABLE_ZONE_PSEUDONYM"
+        assert set(leaf) == expected
         assert not (set(leaf) & forbidden)
 
+
+def test_m9_zone_identity_and_household_label_redaction_are_closed() -> None:
+    leaves = {
+        leaf["semantic_path"]: leaf
+        for leaf in _load(MANIFEST)["leaves"]
+        if leaf["semantic_path"].startswith("/zones/")
+    }
+
+    for semantic_id, graphql_id in (("zone_1", "zone-1"), ("zone_2", "zone-2")):
+        prefix = f"/zones/{semantic_id}"
+        selected = [leaf for path, leaf in leaves.items() if path.startswith(prefix + "/")]
+        assert len(selected) == 5
+        assert all(f"zones[id={graphql_id}]" in leaf["graphql_path"] for leaf in selected)
+
+        label = leaves[f"{prefix}/name"]
+        assert label["graphql_path"] == f"zones[id={graphql_id}].config.source_label"
+        assert label["public_transform"] == "STABLE_ZONE_PSEUDONYM"
+        assert label["graphql_path"] != f"zones[id={graphql_id}].name"
