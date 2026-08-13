@@ -1,0 +1,77 @@
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CONTRACT = ROOT / "api" / "eebus-operator-admin.md"
+PORTAL = ROOT / "api" / "portal.md"
+DECISIONS = ROOT / "architecture" / "decisions.md"
+
+
+def _normalized(path: Path) -> str:
+    return " ".join(path.read_text(encoding="utf-8").split())
+
+
+def test_shared_operator_boundary_is_closed_and_consumer_safe() -> None:
+    text = _normalized(CONTRACT)
+    for required in (
+        "canonical protocol-specific contract remains exclusively in",
+        "`eebus.v1.*` remains the only eeBUS MCP namespace",
+        "all `/admin/eebus/v1/*` reads and mutations fail closed",
+        "authentication and authorization run before object resolution",
+        "session-bound CSRF token",
+        "strict Origin/Referer",
+        "bounded `Idempotency-Key`",
+        "Home Assistant receives no mutation grant",
+        "Portal and Home Assistant never read the trust store",
+        "owner-only operator socket",
+        "private keys, tokens, private PEM, trust-store bytes",
+        "must not enter `ebus.v1`, GraphQL semantic fields, or the semantic registry",
+    ):
+        assert required in text
+
+
+def test_ship_and_spine_views_preserve_raw_operator_inspection() -> None:
+    text = _normalized(CONTRACT)
+    for required in (
+        "`trusted`, `connected`, `discovered`, and `candidate`",
+        "device/entity/feature/use-case tree",
+        "one immutable raw snapshot",
+        "lossless canonical raw payload",
+        "fixed bounded server page size",
+        "one device, eleven entities, twenty features",
+        "derived live acceptance target",
+        "complete 40-character lowercase certificate short identifier",
+        "No discovery event, page load, reconnect, or Home Assistant action",
+    ):
+        assert required in text
+
+
+def test_fm5_mode_cannot_hide_failed_interpretation() -> None:
+    text = _normalized(CONTRACT)
+    for required in (
+        "`INTERPRETED`, `GPIO_ONLY`, and `ABSENT`",
+        "`fm5_semantic_degraded_reason`",
+        "`CONTROLLER_UNREACHABLE`",
+        "`CONFIGURATION_UNAVAILABLE`",
+        "`CONFIGURATION_NOT_INTERPRETABLE`",
+        "`SOLAR_ACQUISITION_FAILED`",
+        "`CYLINDER_ACQUISITION_FAILED`",
+        "must not collapse an acquisition or configuration failure into an unexplained `GPIO_ONLY`",
+        "reason is `null` only for `INTERPRETED` and `ABSENT`",
+    ):
+        assert required in text
+
+
+def test_version_has_one_runtime_build_source_and_portal_links_contract() -> None:
+    contract = _normalized(CONTRACT)
+    portal = _normalized(PORTAL)
+    decisions = _normalized(DECISIONS)
+    for required in (
+        "single injected build-time release version",
+        "runtime health, Portal health, and add-on package metadata",
+        "hard-coded fallback release number is forbidden",
+        "startup fails closed for a release artifact whose injected version is empty or mismatched",
+    ):
+        assert required in contract
+    assert "[`eebus-operator-admin.md`](./eebus-operator-admin.md)" in portal
+    assert "ADR-028: Post-M9 operator boundary, FM5 degradation, and version authority" in decisions
