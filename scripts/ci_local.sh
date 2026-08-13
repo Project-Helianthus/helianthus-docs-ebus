@@ -165,7 +165,8 @@ python3 -m pytest -q tests/test_msp085_final_18_leaf_completion.py
 echo "==> check Modbus M1/M2 companion contract"
 python3 -m pytest -q \
   tests/test_modbus_companion_contract.py \
-  tests/test_modbus_trusted_revision.py
+  tests/test_modbus_trusted_revision.py \
+  tests/test_modbus_v1_mcp_contract.py
 python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
 if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
   python3 scripts/validate_modbus_companion.py \

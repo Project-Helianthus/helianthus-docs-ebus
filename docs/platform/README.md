@@ -25,6 +25,8 @@ Current platform contracts:
 - [`modbus-foundation-profile-contract-v1.md`](./modbus-foundation-profile-contract-v1.md) -
   normative M1 transport and M2 profile-registry contract for phase-one
   read-only Modbus
+- [`../../api/modbus-v1-mcp.md`](../../api/modbus-v1-mcp.md) - bounded M4-02
+  raw/profile MCP contract, redaction, source-observation envelope, and limits
 - [`fronius-sunspec-evidence-v1.md`](./fronius-sunspec-evidence-v1.md) -
   FMV3-M3-01 evidence packet and FMV3-M3-03 `STANDARD_ONLY` completion for
   bounded synthetic fixtures and the Fronius SunSpec admission boundary
