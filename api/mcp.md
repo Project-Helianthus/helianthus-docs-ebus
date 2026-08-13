@@ -4,6 +4,11 @@ The cross-protocol bounded Modbus V1 surface is specified separately in
 [`modbus-v1-mcp.md`](./modbus-v1-mcp.md). It remains raw/profile evidence and
 does not publish canonical PV semantics.
 
+The disabled-by-default add-on configuration, protected endpoint-file,
+health, and bounded recovery contract is specified in
+[`modbus-v1-addon-runtime.md`](./modbus-v1-addon-runtime.md). It does not
+qualify a live device or extend the MCP schema.
+
 ## Current Status
 
 The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
