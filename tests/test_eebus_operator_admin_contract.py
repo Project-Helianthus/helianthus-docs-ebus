@@ -7,6 +7,8 @@ PORTAL = ROOT / "api" / "portal.md"
 DECISIONS = ROOT / "architecture" / "decisions.md"
 B524 = ROOT / "architecture" / "b524-structural-decisions.md"
 B524_MAPPING = ROOT / "architecture" / "b524-semantic-mapping.md"
+FSM_MAP = ROOT / "architecture" / "semantic-structure-fsm-map.md"
+CONFIG_GATES = ROOT / "architecture" / "semantic-configuration-gates.md"
 GRAPHQL = ROOT / "api" / "graphql.md"
 MCP = ROOT / "api" / "mcp.md"
 HA = ROOT / "development" / "ha-integration.md"
@@ -112,6 +114,16 @@ def test_existing_fm5_authority_uses_the_provider_verdict() -> None:
         "mode/reason/revision result",
     ):
         assert required in mapping
+    fsm_map = _normalized(FSM_MAP)
+    gates = _normalized(CONFIG_GATES)
+    for text in (fsm_map, gates):
+        for required in (
+            "transient `GPIO_ONLY` acquisition reason retains the last coherent",
+            "`ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws",
+            "without updating or zeroing it",
+        ):
+            assert required in text
+    assert "only instances with live temperature evidence are published" not in gates
 
 
 def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
