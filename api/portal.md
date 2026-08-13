@@ -29,6 +29,16 @@ This page owns the frozen Portal-specific observe-first contract after merged
 - Versioned endpoint paths (`/api/v1`) for forward evolution.
 - Runtime is Go-only; frontend assets are embedded in the gateway binary.
 
+## eeBUS Owner Workbench
+
+The post-M9 authenticated owner boundary, SHIP partner browser, lazy SPINE
+tree, FM5 degraded interpretation, and single release-version authority are
+frozen in [`eebus-operator-admin.md`](./eebus-operator-admin.md). Those routes
+are deliberately separate from the read-only Portal API described below.
+Portal uses the gateway boundary and never reads the eeBUS trust store or
+owner-only operator socket directly. Home Assistant receives sanitized status
+and a fixed Portal link, not pairing authority.
+
 ## Core Endpoints
 
 ### `GET /portal/api/v1/health`
@@ -161,6 +171,11 @@ Response fields:
 - `circuits`: optional circuit list (`index`, `circuit_type`, `has_mixer`, `state`, `config`, `managing_device`)
 - `radio_devices`: optional radio-device list (per-slot semantic RF data)
 - `fm5_semantic_mode`: optional FM5 semantic mode string
+- `fm5_semantic_degraded_reason`: explicit closed reason when FM5 evidence
+  exists but coherent interpretation is unavailable; it is supplied by the
+  shared semantic provider and is never inferred by Portal
+- `fm5_semantic_evidence_revision`: opaque revision binding mode and reason to
+  one acquisition result
 - `solar`: optional solar semantic object
 - `cylinders`: optional cylinder list
 - `captured_utc`: RFC3339 UTC timestamp
