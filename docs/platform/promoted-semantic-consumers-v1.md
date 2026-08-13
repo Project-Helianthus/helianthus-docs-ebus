@@ -104,6 +104,15 @@ remain unchanged. Capability booleans are diagnostic attributes until a separate
 approved command contract exists. `overrun_active` may be a read-only binary
 sensor because it is an observed state, not a command.
 
+Zone-parent resolution preserves device continuity across a temporarily sparse
+eBUS radio inventory. A live radio match is authoritative. If no live match is
+available for a zone whose mapping selects a radio controller, Home Assistant
+may retain the Helianthus radio parent already attached to that climate entity.
+This fallback cannot create a parent for a new unresolved zone, use a non-radio
+device, or override a mapping that no longer selects radio control. When a
+complete live inventory later resolves a different physical parent, the live
+mapping replaces the retained one and the config entry reloads for re-parenting.
+
 ## Acceptance
 
 M9 is complete only when:
