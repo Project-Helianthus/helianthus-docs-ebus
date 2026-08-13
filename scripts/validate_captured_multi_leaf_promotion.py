@@ -1147,12 +1147,12 @@ def _validate_reproducible_build(
         cwd=source_tree,
         env=git_environment,
     )
+    canonical_remote = _decode_build_output(remote, "utf-8").strip()
     if (
         _decode_build_output(head, "ascii").strip() != runtime["source_commit"]
         or pathlib.Path(_decode_build_output(root, "utf-8").strip()).resolve()
         != source_tree
-        or _decode_build_output(remote, "utf-8").strip()
-        not in {
+        or canonical_remote not in {
             "https://github.com/Project-Helianthus/helianthus-ebusgateway",
             "https://github.com/Project-Helianthus/helianthus-ebusgateway.git",
             "git@github.com:Project-Helianthus/helianthus-ebusgateway.git",
@@ -1218,6 +1218,15 @@ def _validate_reproducible_build(
         )
         _run_build_command(
             ["git", "checkout", "--detach", runtime["source_commit"]],
+            cwd=materialized,
+            env=git_environment,
+        )
+        # A local verification clone inherits a filesystem origin, which changes
+        # the Go module version embedded in the binary. Restore the already
+        # allowlisted source origin before rebuilding so byte comparison models
+        # the production clone without introducing a network dependency.
+        _run_build_command(
+            ["git", "remote", "set-url", "origin", canonical_remote],
             cwd=materialized,
             env=git_environment,
         )
@@ -1677,6 +1686,11 @@ def _validate_live_source_bundle(
         fail("live.m7")
     if projected != status:
         fail("live.m7")
+    m7_predecessor_ids = {
+        f"m7-candidate-{index:04d}" for index in range(1, 19)
+    }
+    if {item["candidate_id"] for item in status["facts"]} != m7_predecessor_ids:
+        fail("live.m7")
     expected_facts = [
         {
             "candidate_id": item["candidate_id"],
@@ -1685,6 +1699,7 @@ def _validate_live_source_bundle(
             "fact_hash": item["fact_hash"],
         }
         for item in registry["candidate_catalog"]
+        if item["candidate_id"] in m7_predecessor_ids
     ]
     if status["facts"] != expected_facts:
         fail("live.m7")

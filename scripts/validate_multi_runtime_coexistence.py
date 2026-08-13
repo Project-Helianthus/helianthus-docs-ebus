@@ -763,17 +763,17 @@ def schema_check(evidence: Any) -> None:
             "clock_hash",
         },
     )
-    exact(
-        evidence["normalization"],
-        {
+    normalization_keys = {
             "profile_id",
             "canonicalization",
             "timestamp_replacement",
             "mask_replacement",
             "view_rules",
             "profile_digest",
-        },
-    )
+        }
+    if "semantic_registry_projection" in evidence["normalization"]:
+        normalization_keys.add("semantic_registry_projection")
+    exact(evidence["normalization"], normalization_keys)
     exact(evidence["limits"], set(HARD_LIMITS))
     for rule in evidence["normalization"]["view_rules"]:
         exact(rule, {"view_id", "capture_path", "timestamp_pointers", "mask_pointers"})
@@ -1800,8 +1800,35 @@ NONCANONICAL_VOLATILE_SCHEDULE_LEAF = re.compile(
     r"(?:StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw)$"
 )
 
+M85_CROSS_PROTOCOL_EBUS_CORE_V1 = (
+    "/dhw/Config/OperatingMode",
+    "/dhw/Config/Preset",
+    "/dhw/State/CurrentTempC",
+    "/dhw/State/SpecialFunction",
+    "/system/Properties/SystemScheme",
+    "/zones/0/Config/OperatingMode",
+    "/zones/0/Config/TargetTempC",
+    "/zones/0/State/CurrentTempC",
+    "/zones/1/Config/OperatingMode",
+    "/zones/1/Config/TargetTempC",
+    "/zones/1/State/CurrentTempC",
+)
+M85_CROSS_PROTOCOL_EBUS_CORE_V1_SET = set(M85_CROSS_PROTOCOL_EBUS_CORE_V1)
+SEMANTIC_REGISTRY_PROJECTION_LEGACY = (
+    "all_promoted_ebus_leaves_outside_volatile_schedule_slot_materialization"
+)
+SEMANTIC_REGISTRY_PROJECTION_M85_CORE = "fixed_m85_cross_protocol_ebus_core_v1"
+LEGACY_PROJECTION_EVIDENCE_IDS = frozenset(
+    {
+        "mrcv1:sha256:341a5b3b83c838174fe4fed3e2bdcf7df5d8a688403e5e66276637960b3543e9",
+    }
+)
 
-def _source_semantic_registry(raw: dict[str, Any]) -> dict[str, Any]:
+
+def _source_semantic_registry(
+    raw: dict[str, Any],
+    projection_profile: str = SEMANTIC_REGISTRY_PROJECTION_M85_CORE,
+) -> dict[str, Any]:
     if raw.get("authority") != "ebus.promoted" or set(raw) != {
         "authority",
         "leaves",
@@ -1838,25 +1865,43 @@ def _source_semantic_registry(raw: dict[str, Any]) -> dict[str, Any]:
             fail("provenance.source_capture")
         seen.add(path)
         previous_path = path
-        if VOLATILE_SCHEDULE_LEAF.fullmatch(path) is None:
+        if (
+            projection_profile == SEMANTIC_REGISTRY_PROJECTION_LEGACY
+            and VOLATILE_SCHEDULE_LEAF.fullmatch(path) is None
+        ) or (
+            projection_profile == SEMANTIC_REGISTRY_PROJECTION_M85_CORE
+            and path in M85_CROSS_PROTOCOL_EBUS_CORE_V1_SET
+        ):
             projected.append(copy.deepcopy(item))
-    if not projected:
+    if projection_profile == SEMANTIC_REGISTRY_PROJECTION_M85_CORE and tuple(
+        item["path"] for item in projected
+    ) != M85_CROSS_PROTOCOL_EBUS_CORE_V1:
         fail("provenance.source_capture")
+    if projection_profile not in {
+        SEMANTIC_REGISTRY_PROJECTION_LEGACY,
+        SEMANTIC_REGISTRY_PROJECTION_M85_CORE,
+    } or not projected:
+        fail("provenance.source_capture")
+    selection = {
+        "criteria": projection_profile,
+        "selected_count": len(projected),
+    }
+    if projection_profile == SEMANTIC_REGISTRY_PROJECTION_LEGACY:
+        selection["excluded_path_pattern"] = (
+            "/schedules/Programs/<index>/Days/<index>/Slots/<index>/"
+            "<StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw>"
+        )
     return {
         "authority": "ebus.promoted",
-        "selection": {
-            "criteria": "all_promoted_ebus_leaves_outside_volatile_schedule_slot_materialization",
-            "excluded_path_pattern": (
-                "/schedules/Programs/<index>/Days/<index>/Slots/<index>/"
-                "<StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw>"
-            ),
-            "selected_count": len(projected),
-        },
+        "selection": selection,
         "leaves": projected,
     }
 
 
-def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
+def _source_project_views(
+    inputs: dict[str, bytes],
+    semantic_registry_projection: str = SEMANTIC_REGISTRY_PROJECTION_M85_CORE,
+) -> dict[str, Any]:
     tools = _decode_source_json(inputs["tools.list"])
     devices_response = _source_inner_mcp(inputs["ebus.devices"])
     semantic_response = _source_inner_mcp(inputs["ebus.semantic"])
@@ -1982,7 +2027,9 @@ def _source_project_views(inputs: dict[str, bytes]) -> dict[str, Any]:
             "debug.ebus": _source_debug(debug_raw),
             "portal.ebus.bootstrap": _source_portal(portal_raw),
             "command.routing": routes_raw,
-            "semantic.registry": _source_semantic_registry(semantic_registry_raw),
+            "semantic.registry": _source_semantic_registry(
+                semantic_registry_raw, semantic_registry_projection
+            ),
             "mcp.eebus.v1.contract": {
                 "namespace": "eebus.v1",
                 "public_v2": False,
@@ -2069,6 +2116,7 @@ def _source_capture_binding(
     start_offset_ns: int,
     end_offset_ns: int,
     captured_at: str,
+    semantic_registry_projection: str = SEMANTIC_REGISTRY_PROJECTION_M85_CORE,
 ) -> dict[str, Any]:
     if not raw:
         fail("provenance.source_capture")
@@ -2129,7 +2177,7 @@ def _source_capture_binding(
     if captured_at != value["captured_at"]:
         fail("provenance.source_capture")
     try:
-        projected = _source_project_views(inputs)
+        projected = _source_project_views(inputs, semantic_registry_projection)
     except Failure:
         raise
     except (KeyError, TypeError, AttributeError, IndexError, ValueError):
@@ -2331,6 +2379,10 @@ def check_runtime(
             _capture_time_at(
                 evidence["capture_clock"],
                 min(run["capture_offset_ns"] for run in grouped),
+            ),
+            evidence["normalization"].get(
+                "semantic_registry_projection",
+                SEMANTIC_REGISTRY_PROJECTION_LEGACY,
             ),
         )
     before = source_bindings["before"]
@@ -2691,12 +2743,19 @@ def payload_shape(value: Any) -> Any:
 
 def check_normalization(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
     profile = evidence["normalization"]
+    projection = profile.get(
+        "semantic_registry_projection", SEMANTIC_REGISTRY_PROJECTION_LEGACY
+    )
     if (
         profile["profile_id"] != "multi-runtime-coexistence-no-drift-v1"
         or profile["canonicalization"] != "RFC8785_JCS_INTEGER_SUBSET"
         or profile["timestamp_replacement"] != "<TIMESTAMP>"
         or profile["mask_replacement"] != "<MASKED>"
         or profile["view_rules"] != registry["view_rules"]
+        or projection not in {
+            SEMANTIC_REGISTRY_PROJECTION_LEGACY,
+            SEMANTIC_REGISTRY_PROJECTION_M85_CORE,
+        }
     ):
         fail("canonicalization.invalid")
 
@@ -3976,6 +4035,18 @@ def _contains_eebus_write_surface(
 
 
 def check_authority(evidence: dict[str, Any]) -> None:
+    declared_projection = evidence["normalization"].get(
+        "semantic_registry_projection"
+    )
+    if (
+        declared_projection is None
+        and evidence["evidence_class"] == "CAPTURED_RUNTIME_EVIDENCE"
+        and evidence["evidence_id"] not in LEGACY_PROJECTION_EVIDENCE_IDS
+    ):
+        fail("authority.ebus")
+    projection = evidence["normalization"].get(
+        "semantic_registry_projection", SEMANTIC_REGISTRY_PROJECTION_LEGACY
+    )
     for run in evidence["runs"][:-1]:
         registry_view = next(
             view for view in run["protected_views"] if view["view_id"] == "semantic.registry"
@@ -3996,6 +4067,33 @@ def check_authority(evidence: dict[str, Any]) -> None:
             for leaf in registry_data["leaves"]
         ):
             fail("authority.ebus")
+        paths = tuple(leaf.get("path") for leaf in registry_data["leaves"])
+        selection = registry_data.get("selection")
+        if projection == SEMANTIC_REGISTRY_PROJECTION_M85_CORE:
+            if selection != {
+                "criteria": SEMANTIC_REGISTRY_PROJECTION_M85_CORE,
+                "selected_count": len(M85_CROSS_PROTOCOL_EBUS_CORE_V1),
+            } or paths != M85_CROSS_PROTOCOL_EBUS_CORE_V1:
+                fail("authority.ebus")
+        elif projection == SEMANTIC_REGISTRY_PROJECTION_LEGACY:
+            expected_selection = {
+                "criteria": SEMANTIC_REGISTRY_PROJECTION_LEGACY,
+                "excluded_path_pattern": (
+                    "/schedules/Programs/<index>/Days/<index>/Slots/<index>/"
+                    "<StartHour|StartMinute|EndHour|EndMinute|TemperatureC|TemperatureRaw>"
+                ),
+                "selected_count": len(paths),
+            }
+            selection_valid = selection == expected_selection or (
+                evidence["evidence_class"] == "SYNTHETIC_OFFLINE_FIXTURE"
+                and selection is None
+            )
+            if not paths or not selection_valid or any(
+                not isinstance(path, str)
+                or VOLATILE_SCHEDULE_LEAF.fullmatch(path) is not None
+                for path in paths
+            ):
+                fail("authority.ebus")
         if _contains_eebus_authority(routes_data) or any(
             route["source"] != "ebus" for route in routes_data["routes"]
         ):

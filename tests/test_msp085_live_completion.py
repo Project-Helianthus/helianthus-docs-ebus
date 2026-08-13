@@ -69,6 +69,22 @@ def verify_m8_public(evidence: pathlib.Path) -> subprocess.CompletedProcess[str]
 
 
 def refresh_public_evidence(validator, evidence: dict[str, object]) -> None:
+    if "semantic_registry_projection" not in evidence["normalization"]:
+        evidence["normalization"]["semantic_registry_projection"] = (
+            validator.SEMANTIC_REGISTRY_PROJECTION_LEGACY
+        )
+        profile_view = {
+            key: value
+            for key, value in evidence["normalization"].items()
+            if key != "profile_digest"
+        }
+        evidence["normalization"]["profile_digest"] = validator.digest(
+            validator.PROFILE_DOMAIN, profile_view
+        )
+        for run in evidence["runs"]:
+            run["provenance"]["mask_scope_digest"] = evidence["normalization"][
+                "profile_digest"
+            ]
     registry = load(M8_REGISTRY)
     rules = {rule["view_id"]: rule for rule in registry["view_rules"]}
     for run in evidence["runs"]:
@@ -117,6 +133,7 @@ def test_live_publication_exact_bytes_and_m8_report() -> None:
         ROOT / "scripts/validate_multi_runtime_coexistence.py",
     )
     evidence = load(M8_EVIDENCE)
+    assert "semantic_registry_projection" not in evidence["normalization"]
     report = load(M8_REPORT)
     registry = load(M8_REGISTRY)
     validator.schema_check(evidence)

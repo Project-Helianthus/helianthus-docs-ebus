@@ -75,6 +75,13 @@ cross-protocol set is `0005`, `0006`, `0007`, `0009`, `0010`, `0011`, `0012`,
 `EEBUS_NATIVE_CAPABILITY`; the last four use `EEBUS_NATIVE_METADATA` and
 `STRING_EXACT_STABILITY`.
 
+The immutable M7 predecessor graph and public status contain exactly records
+`0001`-`0018`, the catalog that existed when M7 closed. Records `0019`-`0022`
+are the four eeBUS-native metadata leaves introduced by this M8.5 contract and
+are therefore bound by the M8.5 registry, source profile, and two live windows,
+not retroactively inserted into M7 evidence. The live verifier rejects any
+other omission or addition in the M7 predecessor set.
+
 Every candidate ends in exactly one of these states:
 
 - `PROMOTED` with `terminal_state=null` and

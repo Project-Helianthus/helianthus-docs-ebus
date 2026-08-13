@@ -218,7 +218,7 @@ def generated_m7_bundle(validator, tmp_path: pathlib.Path, registry: dict) -> tu
         "RAW_ONLY": graph["facts"][1],
     }
     facts = []
-    for expected in registry["candidate_catalog"]:
+    for expected in registry["candidate_catalog"][:18]:
         template = (
             templates[expected["terminal_state"]]
             if expected["protocol_eligibility"] == "TERMINAL"
@@ -309,7 +309,9 @@ def generated_live_bundle(validator, tmp_path: pathlib.Path) -> dict:
     graph, replay, status, graph_path, replay_path, status_path = generated_m7_bundle(
         validator, tmp_path, registry
     )
-    for item, fact in zip(registry["candidate_catalog"], graph["facts"], strict=True):
+    for item, fact in zip(
+        registry["candidate_catalog"][:18], graph["facts"], strict=True
+    ):
         item["fact_hash"] = fact["fact_hash"]
     registry["m7_public_status"] = str(status_path)
     history = load(ROOT / registry["retired_history_result"])
