@@ -107,12 +107,18 @@ sensor because it is an observed state, not a command.
 Zone-parent resolution preserves device continuity across a temporarily sparse
 eBUS radio inventory. A live radio match is authoritative. If no live match is
 available for a zone whose mapping selects a radio controller, Home Assistant
-may retain only that same config entry and climate entity's previously
-live-validated Helianthus radio parent, and only while the radio mapping remains
-the startup-validated value. This fallback cannot create a parent for a new
-unresolved zone, use a non-radio device, or override a changed mapping. When a
-later live radio match resolves a different physical parent, the live mapping
-replaces the retained one and the config entry reloads for re-parenting.
+may retain only a persisted binding for that same config entry, climate unique
+id, Helianthus radio identifier, and validating radio mapping. The unreleased
+pre-V1 migration may seed this binding once from an existing association because
+the prior implementation could attach a climate to a radio device only after a
+live match. Later reloads must use the persisted mapping rather than infer a new
+one from registry attachment. Retention is allowed only when the coordinator
+explicitly marks the current inventory snapshot incomplete; a complete snapshot
+with no match leaves the zone unresolved. The fallback cannot create a parent
+for a new unresolved zone, use a non-radio device, or override a changed mapping.
+When a later live radio match resolves a different physical parent, the live
+mapping replaces and persists over the retained one before the config entry
+reloads for re-parenting.
 
 ## Acceptance
 
