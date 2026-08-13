@@ -166,7 +166,8 @@ echo "==> check Modbus M1/M2 companion contract"
 python3 -m pytest -q \
   tests/test_modbus_companion_contract.py \
   tests/test_modbus_trusted_revision.py \
-  tests/test_modbus_v1_mcp_contract.py
+  tests/test_modbus_v1_mcp_contract.py \
+  tests/test_modbus_v1_addon_runtime_contract.py
 python3 -m pytest -q tests/test_eebus_operator_admin_contract.py
 python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
 if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
