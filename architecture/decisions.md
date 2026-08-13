@@ -489,3 +489,37 @@ The merge is idempotent: repeated runs produce identical device/entity sets.
 - F4: Set `deviceClassAddress` to None → P2 fails → no merge.
 
 **Consequences:** The HA device registry accurately reflects physical topology — one device per physical entity. B524 connectivity status is surfaced on the physical device without creating duplicate shadow devices. The rule is safe by construction: it can only merge when all four predicates independently confirm the identity match.
+
+## ADR-028: Post-M9 operator boundary, FM5 degradation, and version authority
+
+**Status:** Accepted
+
+**Context:** The M9 eeBUS rollout established read-only runtime and consumer
+surfaces, but it did not provide a gateway-authenticated owner workflow for
+pairing or raw protocol browsing. Live post-M9 evidence also showed that the
+FM5 decision tree could report `GPIO_ONLY` when interpretation prerequisites
+had failed, and that Portal could display a stale hard-coded gateway version
+instead of the add-on release version.
+
+**Decision:** Adopt the shared contract in
+[`../api/eebus-operator-admin.md`](../api/eebus-operator-admin.md):
+
+- all pairing reads/actions use the gateway-owned authenticated admin boundary;
+- Portal is the only mutation UX and Home Assistant remains candidate-free and
+  read-only, with a fixed owner link;
+- authorized raw protocol data remains lossless behind the gateway boundary
+  and never enters eBUS or protocol-neutral semantic surfaces;
+- FM5 publishes one provider-owned mode/reason/revision tuple, so acquisition
+  failure cannot masquerade as an unexplained `GPIO_ONLY` value; and
+- one injected release-version input produces add-on metadata, image identity,
+  runtime build information, and Portal health output, with mismatch denied
+  before listeners start.
+
+Protocol-specific SHIP/SPINE, certificate, and trust semantics remain owned
+exclusively by `helianthus-docs-eebus`.
+
+**Consequences:** Pairing mutations are explicit, authenticated, CSRF-safe, and
+fail closed. Portal and Home Assistant do not acquire store/socket ownership.
+Operators retain authorized raw inspection without secret export. FM5
+degradation is behavioral and testable, and release surfaces cannot drift to
+independent version constants.

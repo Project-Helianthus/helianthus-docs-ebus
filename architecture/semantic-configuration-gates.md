@@ -45,8 +45,8 @@ The authoritative rule-by-rule source remains the decision catalog:
 | Circuit ownership gate | `SD-09` | `systemScheme`, `moduleConfigurationVR71`, `fm5SemanticMode` | `managingDevice` explicit or `UNKNOWN` | Mixed `LAB` / `PROFILE` / `UNKNOWN` |
 | Device slot inclusion gate | `SD-10` | `GG=0x09/0x0A/0x0C/0x0E/0x0F` OP=0x06 `device_connected` (RR=0x0001); GG=0x0C also admits `slot_mode=inventory` when identity evidence exists | Remote device slot published | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
 | FM5 interpretation gate | `SD-11` | VR71 config + radio/FM5 evidence + solar/cylinder readability | `fm5SemanticMode` | Mixed `GATEWAY_POLICY` + `PROFILE` |
-| Solar family gate | `SD-12` | `fm5SemanticMode` + `GG=0x04` readability | `solar` family published/cleared | Mixed `GATEWAY_POLICY` + `PROFILE` |
-| Cylinder family gate | `SD-13` | `fm5SemanticMode` + `GG=0x05` readability | `cylinders[]` family published/cleared | Mixed `GATEWAY_POLICY` + `PROFILE` |
+| Solar family gate | `SD-12` | FM5 mode/reason/revision verdict + `GG=0x04` readability | `solar` created/updated, retained unchanged on transient degradation, or structurally withdrawn | Mixed `GATEWAY_POLICY` + `PROFILE` |
+| Cylinder family gate | `SD-13` | FM5 mode/reason/revision verdict + `GG=0x05` readability | `cylinders[]` created/updated, retained unchanged on transient degradation, or structurally withdrawn | Mixed `GATEWAY_POLICY` + `PROFILE` |
 | Individual cylinder gate | `SD-14` | `GG=0x05 RR=0x0004` (`temperatureC`) | Individual cylinder instance published/omitted | `GATEWAY_POLICY` |
 
 ## B524 Semantic Root Gate
@@ -155,29 +155,40 @@ See:
 ## Solar Gate
 
 - Primary inputs:
-  - `fm5SemanticMode`
+  - the provider-owned FM5 mode/reason/revision verdict
   - `GG=0x04` solar readability
 - Structural effect:
-  - publishes or clears the `solar` family as a whole
+  - a coherent `INTERPRETED` acquisition creates or updates `solar`
+  - a transient `GPIO_ONLY` acquisition reason retains the last coherent
+    snapshot without updating or zeroing it
+  - `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the
+    family
 - Current contract:
-  - no partial `solar` family in non-interpreted FM5 mode
+  - no partial or synthetic `solar` family is created in non-interpreted mode;
+    if no coherent snapshot exists, the typed object remains empty
 
 ## Cylinder Gates
 
 ### Cylinder family gate
 
 - Primary inputs:
-  - `fm5SemanticMode`
+  - the provider-owned FM5 mode/reason/revision verdict
   - `GG=0x05` family readability
 - Structural effect:
-  - publishes or clears the `cylinders[]` family
+  - a coherent `INTERPRETED` acquisition creates or updates `cylinders[]`
+  - a transient `GPIO_ONLY` acquisition reason retains the last coherent
+    instance set without updating or zeroing it
+  - `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the
+    family
 
 ### Individual cylinder gate
 
 - Primary evidence:
   - `GG=0x05 RR=0x0004` (`temperatureC`)
 - Structural effect:
-  - only instances with live temperature evidence are published
+  - a new or updated instance requires live temperature evidence
+  - transient family degradation may retain only a previously coherent
+    instance; it cannot create an instance from stale or config-only evidence
 - Important:
   - config-only payloads do not create cylinder instances in the current gateway contract
 

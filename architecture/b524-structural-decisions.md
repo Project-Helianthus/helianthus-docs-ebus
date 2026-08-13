@@ -242,11 +242,11 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Supporting statement | In `4.3.1 VR 71 Main Connection Center`, the VRC 720 training gives explicit VR 71 configuration meanings: `1` and `2` are solar-related, `3` is "3x mixer circuit", and `6` is `allSTOR exclusive`. In `Installer Level -- Solar Circuit`, it also documents that the solar circuit is shown only for `VR 71 = 1, 2`. This materially strengthens the semantic interpretation of the FM5 tuple, but does not prove all possible controller/profile combinations beyond the documented configurations. |
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `GATEWAY_POLICY` for the current decision tree; `PROFILE` for the documented VR71 configuration meanings; unvalidated controller tuples remain `UNKNOWN` |
-| Evaluation rule | `deriveFM5SemanticMode()` returns `INTERPRETED` only when controller is reachable, `module_configuration_vr71 <= 2`, solar is readable, and cylinders are readable; if not interpreted but FM5 evidence exists, mode is `GPIO_ONLY`; otherwise `ABSENT` |
-| Fallback / unknown behavior | `module_configuration_vr71 <= 2` is currently used as the family gate; broader meaning on other controller profiles is not yet proven |
-| Published effect | Controls `fm5SemanticMode` and gates publication of `solar`, `cylinders`, and FM5-backed circuit ownership |
+| Evaluation rule | The provider returns one mode/reason/revision verdict. `INTERPRETED` requires a reachable controller, a current interpretable configuration, and coherent solar/cylinder acquisition. FM5 evidence without safe interpretation returns `GPIO_ONLY` plus exactly one closed reason identifying configuration, acquisition, stale-evidence, or generation failure. Only no admissible FM5 evidence returns `ABSENT`. |
+| Fallback / unknown behavior | A known configuration outside the currently interpretable profile reports `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE`. Failed configuration, solar, or cylinder reads report their distinct reason; they may not become an unexplained `GPIO_ONLY`. The full closed reason and precedence contract is [`../api/eebus-operator-admin.md#fm5-behavioral-verdict`](../api/eebus-operator-admin.md#fm5-behavioral-verdict). |
+| Published effect | Controls `fm5SemanticMode`, `fm5SemanticDegradedReason`, `fm5SemanticEvidenceRevision`, and gates publication of `solar`, `cylinders`, and FM5-backed circuit ownership. |
 | Evidence status | `PROVEN` for the implemented decision tree, `UNKNOWN` for unvalidated controller tuples |
-| Code anchors | `refreshFM5Semantic()`, `deriveFM5SemanticMode()`, `publishFM5Semantic()` |
+| Code anchors | `refreshFM5Semantic()`, provider-owned verdict derivation, `publishFM5Semantic()` |
 
 ## B524-SD-12 — Solar Family Publication Gate
 
@@ -260,9 +260,9 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training says the `Solar circuit` screen is shown only for `VR 71 = 1, 2`. In `Circuito solar 1`, the multiMATIC training documents solar pump, collector, and solar tank parameters under VR 71-based systems. This strongly supports the family gate for solar-capable VR 71 configurations. |
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `GATEWAY_POLICY` for the publication gate; `PROFILE` for the documented solar-capable VR71 configurations |
-| Evaluation rule | `publishFM5Semantic()` publishes `solar` only when `fm5SemanticMode == INTERPRETED`; otherwise it clears the family |
-| Fallback / unknown behavior | No partial solar contract is exposed for `GPIO_ONLY` |
-| Published effect | `solar` is either fully present or absent |
+| Evaluation rule | A coherent `INTERPRETED` acquisition may create or update `solar`. A transient `GPIO_ONLY` reason (`CONTROLLER_UNREACHABLE`, `CONFIGURATION_UNAVAILABLE`, `SOLAR_ACQUISITION_FAILED`, `CYLINDER_ACQUISITION_FAILED`, `EVIDENCE_STALE`, or `INCOHERENT_ACQUISITION`) retains the last coherent solar snapshot without updating it; the mode/reason/revision verdict marks it non-current. `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family because the structural gate is no longer admissible. |
+| Fallback / unknown behavior | No partial or synthetic solar snapshot is created for `GPIO_ONLY`. Transient failure may retain only an already coherent snapshot and must not present it as a new live acquisition. |
+| Published effect | `solar` is newly published only from coherent interpretation, retained read-only across transient acquisition degradation, or absent after a structural withdrawal. |
 | Evidence status | `PROVEN` |
 | Code anchors | `readSolarSnapshot()`, `publishFM5Semantic()` |
 
@@ -278,9 +278,9 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training states `Solar accumulator 1 if VR 71 = 2, solar accumulator 1 and solar accumulator 2 if VR 71 = 1`. In `Deposito solar 1` and the ACS/accumulator sections, the multiMATIC training documents solar tank and accumulator parameters under VR 71-based solar configurations. This supports using the FM5/VR71 tuple as the family gate for cylinder-related solar storage semantics. |
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `GATEWAY_POLICY` for the publication gate; `PROFILE` for the documented accumulator-capable VR71 configurations |
-| Evaluation rule | `publishFM5Semantic()` publishes cylinder instances only when `fm5SemanticMode == INTERPRETED`; otherwise it clears the family |
-| Fallback / unknown behavior | No synthetic “potential cylinders” family is exposed when FM5 is not interpreted |
-| Published effect | `cylinders[]` is absent outside interpreted FM5 mode |
+| Evaluation rule | A coherent `INTERPRETED` acquisition may create/update cylinder instances. A transient `GPIO_ONLY` reason retains the last coherent instance set without updating it; the verdict marks it non-current. `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family because the structural gate is no longer admissible. |
+| Fallback / unknown behavior | No synthetic “potential cylinders” family is exposed. Transient failure may retain only previously coherent instances and must not manufacture or zero an instance. |
+| Published effect | `cylinders[]` is newly published only from coherent interpretation, retained read-only across transient acquisition degradation, or absent after a structural withdrawal. |
 | Evidence status | `PROVEN` |
 | Code anchors | `refreshFM5Semantic()`, `publishFM5Semantic()` |
 
@@ -293,12 +293,12 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `Installer Level -- Solar Circuit` |
-| Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training constrains cardinality at configuration level (`solar accumulator 1` vs `1 and 2` depending on VR 71 config), but it does not document a "config-only cylinder" publication concept. The gateway's stronger rule that a cylinder must have live `temperatureC` evidence remains the actual semantic proof path. |
+| Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training constrains cardinality at configuration level (`solar accumulator 1` vs `1 and 2` depending on VR 71 config), but it does not document a "config-only cylinder" publication concept. The gateway's stronger rule that creating or updating a cylinder requires live `temperatureC` evidence remains the actual semantic proof path. |
 | Constraint strength | `NON_AUTHORITATIVE` |
 | Scope of validity | `GATEWAY_POLICY` |
-| Evaluation rule | `hasLiveCylinderEvidence()` requires a decodable `temperatureC`; config-only payloads do not create a cylinder instance |
-| Fallback / unknown behavior | Gateway does not publish “config-only cylinders” as maybe-present |
-| Published effect | `Cylinder 2`-style ghost instances do not appear unless live temperature evidence exists |
+| Evaluation rule | `hasLiveCylinderEvidence()` requires a decodable `temperatureC` to create or update an instance; config-only payloads do not create one. During an SD-13 transient `GPIO_ONLY` acquisition reason, an already coherent instance may be retained unchanged without satisfying a new live-temperature read. |
+| Fallback / unknown behavior | Gateway does not publish “config-only cylinders” as maybe-present. Retention is limited to an instance previously proven coherent and does not refresh its values. |
+| Published effect | `Cylinder 2`-style ghost instances do not appear from config-only evidence; a real prior instance can remain non-current during explicit transient degradation and is withdrawn with its family under the SD-13 structural conditions. |
 | Evidence status | `PROVEN` |
 | Code anchors | `readCylinderSnapshots()`, `hasLiveCylinderEvidence()`, `publishFM5Semantic()` |
 
