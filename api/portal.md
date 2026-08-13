@@ -313,6 +313,8 @@ Example response:
     }
   ],
   "fm5_semantic_mode": "INTERPRETED",
+  "fm5_semantic_degraded_reason": null,
+  "fm5_semantic_evidence_revision": "opaque-acquisition-revision",
   "solar": {
     "collector_temperature_c": 62.5,
     "return_temperature_c": 45.1,

@@ -103,9 +103,11 @@ The closed modes remain `INTERPRETED`, `GPIO_ONLY`, and `ABSENT`:
 
 - `INTERPRETED` means the controller/configuration gate and every required
   acquisition for the currently selected FM5 family completed coherently.
-- `GPIO_ONLY` means live FM5 evidence exists but the current acquisition cannot
-  safely publish interpreted solar/cylinder semantics. Its mandatory reason
-  distinguishes a deliberate non-interpretable profile from a failed read.
+- `GPIO_ONLY` means current or retained admissible FM5 identity evidence exists
+  but the current acquisition cannot safely publish interpreted solar/cylinder
+  semantics. Its mandatory reason distinguishes a deliberate non-interpretable
+  profile from a failed read, including `CONTROLLER_UNREACHABLE` when only
+  retained evidence remains.
 - `ABSENT` means no current or retained admissible FM5 identity evidence exists.
 
 The closed degraded-reason set is:

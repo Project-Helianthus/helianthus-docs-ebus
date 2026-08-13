@@ -60,6 +60,8 @@ def test_fm5_mode_cannot_hide_failed_interpretation() -> None:
         "`CONFIGURATION_NOT_INTERPRETABLE`",
         "`SOLAR_ACQUISITION_FAILED`",
         "`CYLINDER_ACQUISITION_FAILED`",
+        "current or retained admissible FM5 identity evidence exists",
+        "`CONTROLLER_UNREACHABLE` when only retained evidence remains",
         "must not collapse an acquisition or configuration failure into an unexplained `GPIO_ONLY`",
         "reason is `null` only for `INTERPRETED` and `ABSENT`",
     ):
@@ -78,6 +80,8 @@ def test_version_has_one_runtime_build_source_and_portal_links_contract() -> Non
     ):
         assert required in contract
     assert "[`eebus-operator-admin.md`](./eebus-operator-admin.md)" in portal
+    assert '"fm5_semantic_degraded_reason": null' in portal
+    assert '"fm5_semantic_evidence_revision": "opaque-acquisition-revision"' in portal
     assert "ADR-028: Post-M9 operator boundary, FM5 degradation, and version authority" in decisions
 
 
