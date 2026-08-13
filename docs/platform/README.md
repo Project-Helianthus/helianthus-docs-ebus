@@ -54,9 +54,14 @@ Current platform contracts:
 - [`captured-multi-leaf-promotion-v1.md`](./captured-multi-leaf-promotion-v1.md) -
   additive unreleased-V1 profile for restart-separated, per-candidate live
   promotion evidence and deterministic public-redacted results
+- [`promoted-semantic-consumers-v1.md`](./promoted-semantic-consumers-v1.md) -
+  M9 GraphQL, Portal, Home Assistant, and add-on projection contract for the
+  exact eighteen locked semantic leaves
 - [`live/msp-085-0.6.38/`](./live/msp-085-0.6.38/) - final source-bound live
-  M8/M8.5 public-redacted outputs: `8` promoted, `10` withheld, with all
-  promoted candidates still `LOCKED_NOT_EXPOSED`
+  M8/M8.5 public-redacted intermediate outputs: `8` promoted and `10` withheld
+- [`live/msp-085-0.6.40/`](./live/msp-085-0.6.40/) - final source-bound live
+  M8/M8.5 public-redacted outputs: all `18` real leaves promoted, `0` withheld,
+  and all promoted leaves still `LOCKED_NOT_EXPOSED` before M9
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary
