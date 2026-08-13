@@ -1,5 +1,9 @@
 # MCP Endpoint
 
+The cross-protocol bounded Modbus V1 surface is specified separately in
+[`modbus-v1-mcp.md`](./modbus-v1-mcp.md). It remains raw/profile evidence and
+does not publish canonical PV semantics.
+
 ## Current Status
 
 The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
