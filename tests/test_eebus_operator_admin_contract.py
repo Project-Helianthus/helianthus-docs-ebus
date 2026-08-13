@@ -20,12 +20,13 @@ def test_shared_operator_boundary_is_closed_and_consumer_safe() -> None:
     text = _normalized(CONTRACT)
     for required in (
         "canonical protocol-specific contract remains exclusively in",
+        "post-m9-operator-pairing-browsers-v1.md",
+        "post-m9-operator-admin-v1.md",
+        "Those documents alone own protocol routes",
         "`eebus.v1.*` remains the only eeBUS MCP namespace",
-        "all `/admin/eebus/v1/*` reads and mutations fail closed",
+        "all operator reads and mutations fail closed",
         "authentication and authorization run before object resolution",
-        "session-bound CSRF token",
-        "strict Origin/Referer",
-        "bounded `Idempotency-Key`",
+        "CSRF-safe mutation admission",
         "Home Assistant receives no mutation grant",
         "Portal and Home Assistant never read the trust store",
         "owner-only operator socket",
@@ -35,18 +36,22 @@ def test_shared_operator_boundary_is_closed_and_consumer_safe() -> None:
         assert required in text
 
 
-def test_ship_and_spine_views_preserve_raw_operator_inspection() -> None:
+def test_protocol_contract_is_linked_not_duplicated() -> None:
     text = _normalized(CONTRACT)
-    for required in (
+    for forbidden in (
+        "/admin/eebus/v1/",
+        "admin_boundary_unavailable",
         "`trusted`, `connected`, `discovered`, and `candidate`",
+        "40-character lowercase certificate short identifier",
         "device/entity/feature/use-case tree",
-        "one immutable raw snapshot",
-        "lossless canonical raw payload",
-        "fixed bounded server page size",
+        "snapshot hash",
         "one device, eleven entities, twenty features",
-        "derived live acceptance target",
-        "complete 40-character lowercase certificate short identifier",
-        "No discovery event, page load, reconnect, or Home Assistant action",
+    ):
+        assert forbidden not in text
+    for required in (
+        "authorized inspection of lossless protocol-native data",
+        "canonical protocol documents own all tree shape",
+        "Home Assistant and public formatters receive no raw",
     ):
         assert required in text
 

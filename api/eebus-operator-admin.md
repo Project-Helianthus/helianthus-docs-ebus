@@ -1,28 +1,33 @@
-# eeBUS Operator Admin Boundary
+# Post-M9 Shared Consumer Boundary
 
 ## Scope And Canonical Ownership
 
-This page freezes the shared gateway, Portal, Home Assistant, FM5, and release-
-version responsibilities required by the post-M9 remediation. The canonical
-protocol-specific contract remains exclusively in
-`Project-Helianthus/helianthus-docs-eebus`, currently in the candidate
-architecture and API documents for post-M9 operator pairing and browsers. This
-page does not redefine SHIP, SPINE, certificate identity, trust persistence, or
-the eeBUS coordinator state machine.
+This page freezes only the shared gateway, Portal, Home Assistant, FM5, and
+release-version responsibilities required by the post-M9 remediation. The
+canonical protocol-specific contract remains exclusively in:
+
+- [`post-m9-operator-pairing-browsers-v1.md`](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/main/architecture/_candidate/post-m9-operator-pairing-browsers-v1.md)
+- [`post-m9-operator-admin-v1.md`](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/main/api/_candidate/post-m9-operator-admin-v1.md)
+
+Those documents alone own protocol routes, partner views, certificate and OOB
+identity, raw-tree traversal, error vocabulary, persistence, and coordinator
+state-machine semantics. This page must not restate them; if a shared consumer
+rule conflicts with either canonical document, the protocol repository wins for
+that protocol concern.
 
 `eebus.v1.*` remains the only eeBUS MCP namespace. It stays read-only. There is
 no v2 namespace, compatibility alias, public pairing tool, GraphQL mutation, or
-Portal-private copy of raw protocol truth. Pairing actions use the separately
-authenticated gateway admin HTTP boundary under `/admin/eebus/v1/`.
+Portal-private copy of raw protocol truth. Operator mutations use the
+separately authenticated gateway admin boundary defined by the canonical API.
 
 ## Shared Ownership Boundary
 
 | Component | Shared responsibility | Forbidden responsibility |
 | --- | --- | --- |
-| eeBUS runtime/coordinator | Native discovery, selected observation, connection generation, candidate lifecycle, trust commit/revoke, reconnect, and raw topology. | Browser or Home Assistant authentication; semantic eBUS projection. |
-| Gateway | Authenticated admin routing, authorization, CSRF enforcement, bounded idempotency/state revision, sanitized audit outcomes, and typed coordinator calls. | Parsing trust-store bytes in an HTTP handler; inventing a second pairing FSM or raw topology. |
-| Portal | Owner-only pairing workbench, SHIP partner views, OOB comparison, controlled action submission, and lazy raw SPINE rendering. | Direct filesystem/store access, direct socket access, implicit trust, or semantic promotion of raw data. |
-| Home Assistant | Candidate-free sanitized status, setup/options/repair presentation, and a fixed link to the owner Portal. | Candidate identity, raw SPINE, any pairing mutation or delegated authority. |
+| eeBUS runtime/coordinator | All protocol-native discovery, identity, connection, trust, persistence, and raw-topology behavior defined by the canonical protocol documents. | Browser or Home Assistant authentication; semantic eBUS projection. |
+| Gateway | Authentication, authorization, CSRF enforcement, replay-safe action admission, sanitized audit outcomes, and typed coordinator calls. | Parsing trust-store bytes in an HTTP handler; inventing a second protocol state machine or raw topology. |
+| Portal | Owner-only rendering and controlled action submission through the gateway boundary. | Direct filesystem/store access, direct socket access, implicit trust, or semantic promotion of raw data. |
+| Home Assistant | Sanitized status, setup/options/repair presentation, and a fixed link to the owner Portal. | Operator-only identity, raw protocol data, any pairing mutation, or delegated authority. |
 
 Portal and Home Assistant never read the trust store, its bytes, or the
 owner-only operator socket. They are clients of the gateway boundary. Only the
@@ -32,17 +37,16 @@ not expose private socket framing or store representations.
 ## Authentication And Mutation Safety
 
 When the corresponding authenticated boundary cannot be established, all
-`/admin/eebus/v1/*` reads and mutations fail closed with
-`admin_boundary_unavailable`. No unauthenticated admin status fallback exists;
-authentication and authorization run before object resolution, request-body
-processing that could disclose object existence, or coordinator invocation.
+operator reads and mutations fail closed. No unauthenticated admin-status
+fallback exists; authentication and authorization run before object resolution,
+request-body processing that could disclose object existence, or coordinator
+invocation. Route and error-code definitions remain in the canonical API.
 
-The Portal profile requires an owner-authenticated same-origin session, a
-session-bound CSRF token, strict Origin/Referer validation, JSON content type,
-an action-specific scope, the last observed state revision, and a bounded
-`Idempotency-Key`. Unknown or duplicate fields and stale bindings are rejected
-without an effect. Reusing an idempotency key with different bindings is a
-closed conflict, not a second attempt.
+The Portal profile requires an owner-authenticated same-origin session and
+CSRF-safe mutation admission. The gateway rejects unauthorized, cross-origin,
+stale, malformed, or replay-conflicting actions without invoking the protocol
+runtime. The canonical API owns the concrete request fields and admission
+vocabulary.
 
 Home Assistant uses a non-cookie, least-privilege credential bound to one
 config entry. Ambient browser cookies and browser-origin use of that credential
@@ -51,39 +55,21 @@ view, trust authority, credential exchange, or authority-bearing deep link.
 Actions that require pairing or untrust open a fixed Portal path; the owner
 authenticates and performs the action there.
 
-Audit records contain an opaque request reference, principal class, action,
-idempotency outcome, prior/resulting state class, time, and sanitized reason.
 Responses, audit data, logs, metrics, traces, crash data, URLs, and shareable
 evidence exclude private keys, tokens, private PEM, trust-store bytes,
-credentials, candidate nonces, private paths, and raw operator-socket frames.
+credentials, private paths, and raw operator-socket frames. Concrete audit and
+redaction fields remain owned by the canonical protocol API.
 
-## SHIP Partner And SPINE Browser Projection
+## Raw Operator Inspection Isolation
 
-Portal displays the four independent SHIP views `trusted`, `connected`,
-`discovered`, and `candidate`. The gateway preserves their distinct source
-facts and never infers durable trust from discovery or a live connection.
-Complete operational identity and endpoint data are owner-only; public or HA
-formatters redact or omit them.
-
-The pairing workbench compares the complete 40-character lowercase certificate
-short identifier obtained from the TLS-bound candidate with an independent OOB
-source. No discovery event, page load, reconnect, or Home Assistant action may
-select, connect, trust, retry, or untrust a peer. Each mutation is an explicit
-owner action admitted by the current coordinator state and exact generation.
-
-The SPINE browser is a lazy device/entity/feature/use-case tree over one
-immutable raw snapshot. The shared gateway adapter wraps the lossless canonical
-raw payload only with tree identity, ordering, snapshot binding, and a fixed
-bounded server page size. Parent expansion and continuation remain bound to
-the same runtime, partner, authorization, mask tier, snapshot hash, and sort
-position. Unknown native values remain typed and inspectable by the authorized
-operator; they are never discarded or normalized into invented semantics.
-
-The final VR940 run checks the derived live acceptance target of one device,
-eleven entities, twenty features, and use-case claims. Those cardinalities are
-a derived live acceptance target, not a generic product or protocol guarantee.
-Raw SHIP/SPINE identities, addresses, claims, and opaque values must not enter
-`ebus.v1`, GraphQL semantic fields, or the semantic registry.
+The shared stack preserves authorized inspection of lossless protocol-native
+data through the gateway boundary. Portal may render that data but may not
+reinterpret unknown native values, infer semantic facts, or establish a second
+protocol truth source. Home Assistant and public formatters receive no raw or
+operator-only identity data. Raw protocol data must not enter `ebus.v1`,
+GraphQL semantic fields, or the semantic registry. The canonical protocol
+documents own all tree shape, paging, identity, action, and live-cardinality
+requirements.
 
 ## FM5 Behavioral Verdict
 
@@ -168,9 +154,9 @@ version authority.
 
 ## Acceptance And Isolation
 
-Implementation acceptance requires focused RED/GREEN tests for the admin
-boundary, CSRF and authorization denial, exact identity/generation binding,
-lazy lossless topology traversal, FM5 reason transitions, and version mismatch
-startup denial. Independent add-on and Home Assistant restarts must preserve
-only durable trust, rediscover/reconnect, and rebuild raw topology. Existing
-eBUS operation must remain functional throughout eeBUS discovery and reconnect.
+Implementation acceptance requires focused RED/GREEN tests for gateway-boundary
+isolation, CSRF and authorization denial, raw-data non-leakage, FM5 reason
+transitions, and version-mismatch startup denial. Protocol-specific identity,
+topology, persistence, reconnect, and live-cardinality acceptance comes only
+from the canonical protocol documents and the execution plan. Existing eBUS
+operation must remain functional throughout eeBUS activity.

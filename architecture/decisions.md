@@ -496,7 +496,7 @@ The merge is idempotent: repeated runs produce identical device/entity sets.
 
 **Context:** The M9 eeBUS rollout established read-only runtime and consumer
 surfaces, but it did not provide a gateway-authenticated owner workflow for
-pairing or raw SHIP/SPINE browsing. Live post-M9 evidence also showed that the
+pairing or raw protocol browsing. Live post-M9 evidence also showed that the
 FM5 decision tree could report `GPIO_ONLY` when interpretation prerequisites
 had failed, and that Portal could display a stale hard-coded gateway version
 instead of the add-on release version.
@@ -507,8 +507,8 @@ instead of the add-on release version.
 - all pairing reads/actions use the gateway-owned authenticated admin boundary;
 - Portal is the only mutation UX and Home Assistant remains candidate-free and
   read-only, with a fixed owner link;
-- raw topology is a lazy, lossless view of the canonical eeBUS raw snapshot and
-  never enters eBUS or protocol-neutral semantic surfaces;
+- authorized raw protocol data remains lossless behind the gateway boundary
+  and never enters eBUS or protocol-neutral semantic surfaces;
 - FM5 publishes one provider-owned mode/reason/revision tuple, so acquisition
   failure cannot masquerade as an unexplained `GPIO_ONLY` value; and
 - one injected release-version input produces add-on metadata, image identity,

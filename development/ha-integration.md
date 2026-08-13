@@ -140,10 +140,11 @@ Optional HA helper bindings can drive schedule mode:
 Home Assistant consumes the sanitized, candidate-free gateway projection from
 the boundary defined in
 [`../api/eebus-operator-admin.md`](../api/eebus-operator-admin.md). It never
-receives a pairing mutation grant, candidate identity, raw SPINE payload, trust
-store access, or operator-socket access. Pairing/untrust repair actions open the
-fixed owner Portal path without identity, token, action authority, query, or
-fragment data.
+receives a pairing mutation grant, operator-only identity, raw protocol payload,
+trust-store access, or operator-socket access. Pairing/untrust repair actions
+open the fixed owner Portal path without identity, token, action authority,
+query, or fragment data. Protocol-specific action and identity semantics remain
+in the canonical `helianthus-docs-eebus` documents linked by that boundary.
 
 For FM5 diagnostics the integration reads GraphQL `fm5Interpretation { mode
 degradedReason evidenceRevision }`. The diagnostic entity exposes the gateway-

@@ -31,13 +31,14 @@ This page owns the frozen Portal-specific observe-first contract after merged
 
 ## eeBUS Owner Workbench
 
-The post-M9 authenticated owner boundary, SHIP partner browser, lazy SPINE
-tree, FM5 degraded interpretation, and single release-version authority are
-frozen in [`eebus-operator-admin.md`](./eebus-operator-admin.md). Those routes
-are deliberately separate from the read-only Portal API described below.
-Portal uses the gateway boundary and never reads the eeBUS trust store or
-owner-only operator socket directly. Home Assistant receives sanitized status
-and a fixed Portal link, not pairing authority.
+The post-M9 shared consumer isolation, FM5 degraded interpretation, and single
+release-version authority are frozen in
+[`eebus-operator-admin.md`](./eebus-operator-admin.md). Protocol-specific
+operator routes and browser semantics remain exclusively in the linked
+`helianthus-docs-eebus` canonical documents. Portal uses the gateway boundary
+and never reads the eeBUS trust store or owner-only operator socket directly.
+Home Assistant receives sanitized status and a fixed Portal link, not pairing
+authority.
 
 ## Core Endpoints
 
