@@ -12,9 +12,11 @@ detector, activation, normalization, observation, and replay facts. The gateway
 only wires those owners into MCP and sanitizes deployment-local endpoint
 identities.
 
-M4-02 exposes the raw reader and the retained-profile reader. It does not run a
-detector, activate a profile, or poll hardware. Those producer operations remain
-in the separately authorized M4-04 live-smoke node. Consequently,
+M4-02 exposes the raw reader and the retained-profile reader. A caller-triggered
+raw request performs one bounded FC03 or FC04 transaction against the configured
+endpoint. M4-02 does not run a detector, activate a profile, start a background
+poller, or produce retained profile observations. Those producer operations
+remain in the separately authorized M4-04 live-smoke node. Consequently,
 `modbus.v1.profile.observation.get` returns `UNAVAILABLE` until an owning
 detector/poller records the exact requested profile/sample pair; it never
 fabricates a sample.

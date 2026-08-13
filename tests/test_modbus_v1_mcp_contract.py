@@ -20,6 +20,8 @@ class ModbusV1MCPContractTest(unittest.TestCase):
             "RETAINED_SOURCE_OBSERVATION",
             "helianthus-modbusreg",
             "M4-04",
+            "caller-triggered",
+            "does not run a detector, activate a profile, start a background",
             "does not derive canonical availability, freshness",
             "No GraphQL, Portal, Home Assistant",
         ):
