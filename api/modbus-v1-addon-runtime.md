@@ -59,9 +59,17 @@ atomically replaced where persistent observation is required.
 Before enabled launch, the wrapper verifies that the current gateway advertises
 the complete endpoint-file flag set: enable, endpoint-file, and dial-timeout.
 Partial support fails closed. The packaged previous gateway is checked
-independently for every non-Modbus option that fallback must preserve; fallback
-does not receive any Modbus flag. This prevents a recovery binary from silently
-dropping another enabled runtime capability.
+independently for non-Modbus options whose loss would invalidate the active
+runtime: the complete eeBUS flag set when eeBUS is enabled, an active adapter
+proxy listener, and explicit source-address override validation. Missing support
+for any of those required options fails closed. Fallback does not receive any
+Modbus flag.
+
+Three rollback-compatibility options are intentionally best-effort:
+`enable-static-seed-table`, `semantic-cache-path`, and
+`instance-guid-source`. Each is forwarded when the previous gateway advertises
+its flag and omitted otherwise. `FALLBACK_ACTIVE` therefore proves fallback
+liveness, not parity for these optional seed, cache, or provenance features.
 
 ## Health Contract
 
@@ -91,6 +99,15 @@ rather than reporting a stale success state.
 
 ## Bounded Recovery
 
+The closed recovery limits are:
+
+| Key | Value |
+| --- | --- |
+| `current_startup_attempts` | `3` |
+| `retry_delays_seconds` | `1,2` |
+| `startup_window_min_seconds` | `5` |
+| `startup_window_max_seconds` | `40` |
+
 Enabled startup gives the current gateway exactly three attempts. The startup
 window is derived from the dial timeout and bounded from five through forty
 seconds. An exit within that window produces `RECOVERY_RETRY` while attempts
@@ -99,9 +116,10 @@ not reclassified as a startup failure.
 
 After three startup failures, the endpoint file is removed before fallback and
 the previous gateway starts with Modbus disabled. It receives the admitted
-non-Modbus runtime configuration, but no endpoint-file or dial-timeout argument.
-The fallback reaches `FALLBACK_ACTIVE` only after surviving the startup window;
-any fallback exit is recorded as `FALLBACK_EXITED`.
+required non-Modbus runtime configuration plus the supported subset of the three
+best-effort rollback options, but no endpoint-file or dial-timeout argument. The
+fallback reaches `FALLBACK_ACTIVE` only after surviving the startup window; any
+fallback exit is recorded as `FALLBACK_EXITED`.
 
 ## Stop And Cleanup
 

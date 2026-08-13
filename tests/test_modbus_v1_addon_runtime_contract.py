@@ -77,6 +77,19 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
         recovery = text.split("## Bounded Recovery\n", 1)[1].split(
             "## Stop And Cleanup\n", 1
         )[0]
+        self.assertEqual(
+            re.findall(
+                r"^\| `([a-z_]+)` \| `([0-9,]+)` \|$",
+                recovery,
+                flags=re.MULTILINE,
+            ),
+            [
+                ("current_startup_attempts", "3"),
+                ("retry_delays_seconds", "1,2"),
+                ("startup_window_min_seconds", "5"),
+                ("startup_window_max_seconds", "40"),
+            ],
+        )
         normalized_recovery = " ".join(recovery.split())
         self.assertIn("exactly three attempts", normalized_recovery)
         self.assertIn(
@@ -85,6 +98,7 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
 
     def test_contract_freezes_secret_and_process_ownership(self) -> None:
         text = CONTRACT.read_text(encoding="utf-8")
+        normalized = " ".join(text.split())
         for required in (
             "never appears in process arguments",
             "never appears in environment variables",
@@ -94,8 +108,13 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
             "child process",
             "endpoint file is removed before fallback",
             "fail closed",
+            "enable-static-seed-table",
+            "semantic-cache-path",
+            "instance-guid-source",
+            "best-effort rollback options",
+            "FALLBACK_ACTIVE` therefore proves fallback liveness, not parity",
         ):
-            self.assertIn(required, text)
+            self.assertIn(required, normalized)
 
     def test_landing_pages_link_contract(self) -> None:
         self.assertIn(
