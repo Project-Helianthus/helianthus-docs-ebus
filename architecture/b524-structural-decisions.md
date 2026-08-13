@@ -242,11 +242,11 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Supporting statement | In `4.3.1 VR 71 Main Connection Center`, the VRC 720 training gives explicit VR 71 configuration meanings: `1` and `2` are solar-related, `3` is "3x mixer circuit", and `6` is `allSTOR exclusive`. In `Installer Level -- Solar Circuit`, it also documents that the solar circuit is shown only for `VR 71 = 1, 2`. This materially strengthens the semantic interpretation of the FM5 tuple, but does not prove all possible controller/profile combinations beyond the documented configurations. |
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `GATEWAY_POLICY` for the current decision tree; `PROFILE` for the documented VR71 configuration meanings; unvalidated controller tuples remain `UNKNOWN` |
-| Evaluation rule | `deriveFM5SemanticMode()` returns `INTERPRETED` only when controller is reachable, `module_configuration_vr71 <= 2`, solar is readable, and cylinders are readable; if not interpreted but FM5 evidence exists, mode is `GPIO_ONLY`; otherwise `ABSENT` |
-| Fallback / unknown behavior | `module_configuration_vr71 <= 2` is currently used as the family gate; broader meaning on other controller profiles is not yet proven |
-| Published effect | Controls `fm5SemanticMode` and gates publication of `solar`, `cylinders`, and FM5-backed circuit ownership |
+| Evaluation rule | The provider returns one mode/reason/revision verdict. `INTERPRETED` requires a reachable controller, a current interpretable configuration, and coherent solar/cylinder acquisition. FM5 evidence without safe interpretation returns `GPIO_ONLY` plus exactly one closed reason identifying configuration, acquisition, stale-evidence, or generation failure. Only no admissible FM5 evidence returns `ABSENT`. |
+| Fallback / unknown behavior | A known configuration outside the currently interpretable profile reports `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE`. Failed configuration, solar, or cylinder reads report their distinct reason; they may not become an unexplained `GPIO_ONLY`. The full closed reason and precedence contract is [`../api/eebus-operator-admin.md#fm5-behavioral-verdict`](../api/eebus-operator-admin.md#fm5-behavioral-verdict). |
+| Published effect | Controls `fm5SemanticMode`, `fm5SemanticDegradedReason`, `fm5SemanticEvidenceRevision`, and gates publication of `solar`, `cylinders`, and FM5-backed circuit ownership. |
 | Evidence status | `PROVEN` for the implemented decision tree, `UNKNOWN` for unvalidated controller tuples |
-| Code anchors | `refreshFM5Semantic()`, `deriveFM5SemanticMode()`, `publishFM5Semantic()` |
+| Code anchors | `refreshFM5Semantic()`, provider-owned verdict derivation, `publishFM5Semantic()` |
 
 ## B524-SD-12 — Solar Family Publication Gate
 

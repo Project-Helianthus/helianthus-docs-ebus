@@ -5,6 +5,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "api" / "eebus-operator-admin.md"
 PORTAL = ROOT / "api" / "portal.md"
 DECISIONS = ROOT / "architecture" / "decisions.md"
+B524 = ROOT / "architecture" / "b524-structural-decisions.md"
+GRAPHQL = ROOT / "api" / "graphql.md"
+MCP = ROOT / "api" / "mcp.md"
+HA = ROOT / "development" / "ha-integration.md"
 
 
 def _normalized(path: Path) -> str:
@@ -75,3 +79,41 @@ def test_version_has_one_runtime_build_source_and_portal_links_contract() -> Non
         assert required in contract
     assert "[`eebus-operator-admin.md`](./eebus-operator-admin.md)" in portal
     assert "ADR-028: Post-M9 operator boundary, FM5 degradation, and version authority" in decisions
+
+
+def test_existing_fm5_authority_uses_the_provider_verdict() -> None:
+    text = _normalized(B524)
+    for required in (
+        "one mode/reason/revision verdict",
+        "`GPIO_ONLY` plus exactly one closed reason",
+        "may not become an unexplained `GPIO_ONLY`",
+        "`fm5SemanticDegradedReason`",
+        "`fm5SemanticEvidenceRevision`",
+    ):
+        assert required in text
+
+
+def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
+    mcp = _normalized(MCP)
+    graphql = _normalized(GRAPHQL)
+    ha = _normalized(HA)
+    for required in (
+        "`ebus.v1.semantic.fm5_interpretation.get`",
+        "`mode`, `degraded_reason`, and `evidence_revision`",
+        "no v2 tool or legacy alias is introduced",
+    ):
+        assert required in mcp
+    for required in (
+        "fm5Interpretation: Fm5Interpretation!",
+        "degradedReason: Fm5SemanticDegradedReason",
+        "evidenceRevision: String!",
+        "Existing `fm5SemanticMode` remains stable",
+    ):
+        assert required in graphql
+    for required in (
+        "candidate-free gateway projection",
+        "fm5Interpretation { mode degradedReason evidenceRevision }",
+        "does not derive a reason",
+        "`GPIO_ONLY` without a closed reason is an invalid response",
+    ):
+        assert required in ha

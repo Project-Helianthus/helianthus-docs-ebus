@@ -103,9 +103,9 @@ The closed modes remain `INTERPRETED`, `GPIO_ONLY`, and `ABSENT`:
 
 - `INTERPRETED` means the controller/configuration gate and every required
   acquisition for the currently selected FM5 family completed coherently.
-- `GPIO_ONLY` means live FM5 evidence and a known configuration intentionally
-  select a supported non-interpreted/GPIO-only profile. It is not a catch-all
-  for failed reads.
+- `GPIO_ONLY` means live FM5 evidence exists but the current acquisition cannot
+  safely publish interpreted solar/cylinder semantics. Its mandatory reason
+  distinguishes a deliberate non-interpretable profile from a failed read.
 - `ABSENT` means no current or retained admissible FM5 identity evidence exists.
 
 The closed degraded-reason set is:
@@ -128,17 +128,20 @@ The named codes are `CONTROLLER_UNREACHABLE`, `CONFIGURATION_UNAVAILABLE`,
 Reason precedence follows the acquisition pipeline in the order above, except
 that `EVIDENCE_STALE` precedes family reads and `INCOHERENT_ACQUISITION` is the
 terminal catch for a generation mismatch. The reason is `null` only for
-`INTERPRETED` and `ABSENT`; a valid, deliberate `GPIO_ONLY` carries no failure
-but uses the explicit reason `CONFIGURATION_NOT_INTERPRETABLE` only when the
-configuration is known yet outside the currently interpretable semantic
-profile. The runtime must not collapse an acquisition or configuration failure
-into an unexplained `GPIO_ONLY`.
+`INTERPRETED` and `ABSENT`. `GPIO_ONLY` always carries exactly one reason:
+`CONFIGURATION_NOT_INTERPRETABLE` for a live, known configuration outside the
+currently interpretable semantic profile, or the exact acquisition/configuration
+failure category that prevented interpretation. The runtime must not collapse
+an acquisition or configuration failure into an unexplained `GPIO_ONLY`.
 
-Portal, GraphQL, MCP semantic status, and Home Assistant consume the same
-provider tuple. They may format the reason but may not recalculate it. A failed
-refresh does not publish zero solar/cylinder values or silently erase last-
-known data; freshness and the degraded reason remain explicit. Repair is
-behavioral at the acquisition/provider boundary, not a cosmetic Portal change.
+The additive `ebus.v1.semantic.fm5_interpretation.get` MCP tool exposes the
+provider tuple first. GraphQL `fm5Interpretation`, Portal, and Home Assistant
+then consume that same tuple. They may format the reason but may not recalculate
+it. The pre-existing `ebus.v1.semantic.fm5_mode.get` scalar stays stable but is
+not sufficient to diagnose degradation. A failed refresh does not publish zero
+solar/cylinder values or silently erase last-known data; freshness and the
+degraded reason remain explicit. Repair is behavioral at the acquisition/
+provider boundary, not a cosmetic Portal change.
 
 ## Single Release-Version Authority
 

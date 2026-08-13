@@ -365,6 +365,14 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
       publishable radio slots. `data: null` means the plane has not been
       published yet.
   - `ebus.v1.semantic.fm5_mode.get`
+    - stable scalar mode retained for existing consumers
+  - `ebus.v1.semantic.fm5_interpretation.get`
+    - additive authoritative FM5 verdict object containing exactly
+      `mode`, `degraded_reason`, and `evidence_revision`
+    - `degraded_reason` is null only for `INTERPRETED` and `ABSENT`; every
+      `GPIO_ONLY` result carries one closed provider-owned reason
+    - `evidence_revision` binds mode and reason to one acquisition result
+    - consumers must not infer the reason from empty solar/cylinder payloads
   - `ebus.v1.semantic.solar.get`
   - `ebus.v1.semantic.cylinders.get`
   - `ebus.v1.semantic.schedules.get`
@@ -387,6 +395,13 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
   - `ebus.invoke`
 
 ## Semantic Payload Notes
+
+`ebus.v1.semantic.fm5_interpretation.get` is the MCP-first post-M9 behavioral
+remediation. Its closed mode/reason semantics are frozen in
+[`eebus-operator-admin.md`](./eebus-operator-admin.md). It is additive within
+the single `ebus.v1.*` namespace; no v2 tool or legacy alias is introduced.
+The older `ebus.v1.semantic.fm5_mode.get` scalar retains its frozen response
+shape and is not a substitute for the degradation verdict.
 
 - `ebus.v1.semantic.circuits.get` exposes explicit per-circuit ownership as `managing_device`.
 - `managing_device.role` is always present and is one of `REGULATOR`, `FUNCTION_MODULE`, or `UNKNOWN`.
