@@ -18,6 +18,7 @@ class ModbusV1MCPContractTest(unittest.TestCase):
             "four raw MCP reads",
             "RESOURCE_EXHAUSTED",
             "RETAINED_SOURCE_OBSERVATION",
+            "endpoint_identity",
             "helianthus-modbusreg",
             "M4-04",
             "caller-triggered",

@@ -63,10 +63,12 @@ each bounded to 128 bytes. The result preserves:
   records and logical-view slice provenance; and
 - ordered exact replay views with wire-response IDs, offsets, and raw words.
 
-Every object key named `endpoint`, case-insensitively and at any nesting depth,
-is replaced with the deterministic SHA-256 endpoint reference before the MCP
-payload is emitted. Userinfo is forbidden by endpoint configuration, but this
-redaction still applies defensively to all retained provenance.
+Every string field whose key is endpoint-bearing, case-insensitively and at any
+nesting depth, is replaced with the deterministic SHA-256 endpoint reference
+before the MCP payload is emitted. This explicitly includes `endpoint`,
+`Endpoint`, and `endpoint_identity`. Userinfo is forbidden by endpoint
+configuration, but this redaction still applies defensively to all retained
+provenance.
 
 ## Envelope
 
