@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import unittest
 
 
@@ -26,7 +27,6 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
             "FALLBACK_EXITED",
             "EXITED_AFTER_STARTUP_WINDOW",
             "STOPPED",
-            "three",
             "current gateway",
             "previous gateway",
             "TERM",
@@ -36,6 +36,52 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
             "No GraphQL, Portal, Home Assistant",
         ):
             self.assertIn(required, text)
+
+    def test_health_and_recovery_sets_are_closed(self) -> None:
+        text = CONTRACT.read_text(encoding="utf-8")
+        health = text.split("## Health Contract\n", 1)[1].split(
+            "## Bounded Recovery\n", 1
+        )[0]
+        fields = re.search(
+            r"It contains only (.*?)\.\n", health, flags=re.DOTALL
+        )
+        self.assertIsNotNone(fields)
+        self.assertEqual(
+            re.findall(r"`([^`]+)`", fields.group(1)),
+            [
+                "contract",
+                "enabled",
+                "endpoint_ref",
+                "state",
+                "attempt",
+                "max_attempts",
+                "binary",
+                "reason",
+            ],
+        )
+        self.assertEqual(
+            re.findall(r"^\| `([A-Z_]+)` \|", health, flags=re.MULTILINE),
+            [
+                "DISABLED",
+                "CONFIG_VALIDATED",
+                "RUNNING",
+                "RECOVERY_RETRY",
+                "FALLBACK_STARTING",
+                "FALLBACK_ACTIVE",
+                "FALLBACK_EXITED",
+                "EXITED_AFTER_STARTUP_WINDOW",
+                "STOPPED",
+            ],
+        )
+
+        recovery = text.split("## Bounded Recovery\n", 1)[1].split(
+            "## Stop And Cleanup\n", 1
+        )[0]
+        normalized_recovery = " ".join(recovery.split())
+        self.assertIn("exactly three attempts", normalized_recovery)
+        self.assertIn(
+            "bounded from five through forty seconds", normalized_recovery
+        )
 
     def test_contract_freezes_secret_and_process_ownership(self) -> None:
         text = CONTRACT.read_text(encoding="utf-8")
