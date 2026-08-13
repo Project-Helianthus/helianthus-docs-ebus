@@ -293,12 +293,12 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `Installer Level -- Solar Circuit` |
-| Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training constrains cardinality at configuration level (`solar accumulator 1` vs `1 and 2` depending on VR 71 config), but it does not document a "config-only cylinder" publication concept. The gateway's stronger rule that a cylinder must have live `temperatureC` evidence remains the actual semantic proof path. |
+| Supporting statement | In `Installer Level -- Solar Circuit`, the VRC 720 training constrains cardinality at configuration level (`solar accumulator 1` vs `1 and 2` depending on VR 71 config), but it does not document a "config-only cylinder" publication concept. The gateway's stronger rule that creating or updating a cylinder requires live `temperatureC` evidence remains the actual semantic proof path. |
 | Constraint strength | `NON_AUTHORITATIVE` |
 | Scope of validity | `GATEWAY_POLICY` |
-| Evaluation rule | `hasLiveCylinderEvidence()` requires a decodable `temperatureC`; config-only payloads do not create a cylinder instance |
-| Fallback / unknown behavior | Gateway does not publish “config-only cylinders” as maybe-present |
-| Published effect | `Cylinder 2`-style ghost instances do not appear unless live temperature evidence exists |
+| Evaluation rule | `hasLiveCylinderEvidence()` requires a decodable `temperatureC` to create or update an instance; config-only payloads do not create one. During an SD-13 transient `GPIO_ONLY` acquisition reason, an already coherent instance may be retained unchanged without satisfying a new live-temperature read. |
+| Fallback / unknown behavior | Gateway does not publish “config-only cylinders” as maybe-present. Retention is limited to an instance previously proven coherent and does not refresh its values. |
+| Published effect | `Cylinder 2`-style ghost instances do not appear from config-only evidence; a real prior instance can remain non-current during explicit transient degradation and is withdrawn with its family under the SD-13 structural conditions. |
 | Evidence status | `PROVEN` |
 | Code anchors | `readCylinderSnapshots()`, `hasLiveCylinderEvidence()`, `publishFM5Semantic()` |
 
