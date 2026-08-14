@@ -176,20 +176,51 @@ class ModbusV1LiveQualificationContractTest(unittest.TestCase):
     def test_v2_has_closed_registry_reason_to_decision_mapping(self) -> None:
         record = registry_selected_v2_record()
         self.assertEqual(
-            record["decision_map"],
+            record["decision_precedence"],
+            ["capability", "flavor_only_if_capability_ADMITTED"],
+        )
+        self.assertEqual(
+            record["capability_decision_map"],
             {
                 "INVALID_CHAIN": "STOP",
                 "AMBIGUOUS_SOURCE": "NO_GO",
                 "SOURCE_ABSENT": "NO_GO",
                 "SOURCE_UNSUPPORTED": "NO_GO",
                 "INVALID_REQUIRED_FACT": "NO_GO",
-                "ADMITTED+MATCHED": "GO",
-                "ADMITTED+COMMON_IDENTITY_MISMATCH": "NO_GO",
-                "ADMITTED+FIRMWARE_MISMATCH": "NO_GO",
-                "ADMITTED+CHAIN_MISMATCH": "NO_GO",
-                "runtime_or_transport_error": "STOP",
+                "ADMITTED": "CONTINUE_FLAVOR",
             },
         )
+        self.assertEqual(
+            record["flavor_decision_map"],
+            {
+                "MATCHED": "GO",
+                "COMMON_IDENTITY_MISMATCH": "NO_GO",
+                "FIRMWARE_MISMATCH": "NO_GO",
+                "CHAIN_MISMATCH": "NO_GO",
+                "CAPABILITY_NOT_ADMITTED": "STOP_INCOHERENT",
+                "AMBIGUOUS_SOURCE": "STOP_INCOHERENT",
+            },
+        )
+        self.assertEqual(record["runtime_or_transport_error"], "STOP")
+
+        def resolve(capability: str, flavor: str) -> str:
+            capability_result = record["capability_decision_map"][capability]
+            if capability_result != "CONTINUE_FLAVOR":
+                return capability_result
+            flavor_result = record["flavor_decision_map"][flavor]
+            return "STOP" if flavor_result == "STOP_INCOHERENT" else flavor_result
+
+        for capability, flavor, expected in (
+            ("INVALID_CHAIN", "CAPABILITY_NOT_ADMITTED", "STOP"),
+            ("SOURCE_ABSENT", "CAPABILITY_NOT_ADMITTED", "NO_GO"),
+            ("AMBIGUOUS_SOURCE", "AMBIGUOUS_SOURCE", "NO_GO"),
+            ("ADMITTED", "MATCHED", "GO"),
+            ("ADMITTED", "COMMON_IDENTITY_MISMATCH", "NO_GO"),
+            ("ADMITTED", "FIRMWARE_MISMATCH", "NO_GO"),
+            ("ADMITTED", "CHAIN_MISMATCH", "NO_GO"),
+            ("ADMITTED", "CAPABILITY_NOT_ADMITTED", "STOP"),
+        ):
+            self.assertEqual(resolve(capability, flavor), expected)
         self.assertEqual(record["go_authority"], "qualification_evidence_only")
         self.assertFalse(record["support_claim"])
         self.assertFalse(record["live_result_published_here"])
