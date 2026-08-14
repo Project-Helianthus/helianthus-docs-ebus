@@ -55,6 +55,35 @@ def test_three_phase_monitoring_fact_set_and_source_selection_are_exact() -> Non
     assert "must not widen" in capability.lower()
 
 
+def test_capability_input_reasons_and_normalization_are_closed() -> None:
+    contract = text(CHAIN)
+    capability = contract[
+        contract.index("## Capability Profile") : contract.index("## Vendor Flavor")
+    ]
+    normalized = " ".join(capability.split())
+
+    for reason in (
+        "INVALID_CHAIN",
+        "AMBIGUOUS_SOURCE",
+        "SOURCE_ABSENT",
+        "SOURCE_UNSUPPORTED",
+        "INVALID_REQUIRED_FACT",
+        "ADMITTED",
+    ):
+        assert reason in capability
+
+    assert "complete `SunSpecChainSnapshot`" in capability
+    assert "exactly one consuming `FFFF/0` terminal" in normalized
+    assert "before typed decoding" in normalized
+    assert "original cloned typed `SunSpecValue`" in normalized
+    assert "no exponent notation" in normalized
+    assert "normalize positive or negative zero to `0`" in normalized
+    assert "ascending bit order" in normalized
+    assert "canonical unit string `none`" in normalized
+    assert "zero known-bit mask" in normalized
+    assert "only a zero value" in normalized
+
+
 def test_observed_fronius_flavor_is_exact_evidence_bounded_and_read_only() -> None:
     flavor = text(FLAVOR)
     normalized = " ".join(flavor.lower().split())
@@ -107,3 +136,24 @@ def test_flavor_mismatch_outcomes_are_fail_closed_and_indexed() -> None:
     assert "fronius-observed-flavor-v1.md" in text(MODBUS_README)
     assert "fronius-observed-flavor-v1.md" in chain
     assert "not an active\nFronius flavor" not in chain
+
+
+def test_fronius_flavor_reason_precedence_and_identity_inputs_are_exact() -> None:
+    flavor = text(FLAVOR)
+    normalized = " ".join(flavor.split())
+
+    ordered = [
+        "a capability `AMBIGUOUS_SOURCE` maps first",
+        "every other non-admitted capability maps to",
+        "Common manufacturer/model mismatch maps to",
+        "version mismatch maps to",
+        "ordered-chain mismatch maps to",
+        "otherwise the result is",
+    ]
+    positions = [normalized.index(value) for value in ordered]
+    assert positions == sorted(positions)
+    assert "exactly Common `Mn`, `Md`, and `Vr`" in normalized
+    assert "without trimming, case folding, prefixing" in normalized
+    assert "Common `SN`, `Opt`, and `DA`" in normalized
+    assert "are not flavor matching inputs" in normalized
+    assert "cannot be supplied separately to this evaluator" in normalized
