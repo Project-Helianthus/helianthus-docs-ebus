@@ -180,6 +180,11 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
     for required in (
         "gateway-owned eeBUS operator projection",
         "native pairing flow without an eeBUS-specific credential or reauthentication step",
+        "may receive bounded raw SPINE and complete comparison identity through the gateway boundary",
+        "does not persist it beyond the active view",
+        "does not promote it into semantic state",
+        "public or shareable output",
+        "trust-store access, operator-socket access, or transport ownership",
         "pending GraphQL contract",
         "target contract, not current integration availability",
         "fm5Interpretation { mode degradedReason evidenceRevision }",
@@ -188,6 +193,7 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
         "`GPIO_ONLY` with any reason other than `CONFIGURATION_NOT_INTERPRETABLE` is an invalid response",
     ):
         assert required in ha
+    assert "never receives raw protocol payload" not in ha
     assert "fm5Interpretation: Fm5Interpretation!" not in graphql
 
 
