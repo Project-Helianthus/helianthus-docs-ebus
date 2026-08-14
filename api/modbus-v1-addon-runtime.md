@@ -418,3 +418,57 @@ semantics, or release a private binding. FMV3-M4-05 still owns publication of
 the sanitized endpoint reference, Common identity, ordered chain, capability
 and flavor reasons, unknown occurrences, recovery outcome, and final live
 decision. This page contains no live result.
+
+## Registry-Selected V3 Successor
+
+The V2 record remains immutable for runs selecting exactly the V1 observed
+flavor. New runs against the currently observed chain use V3. V3 adds no
+model-ID rule and does not treat Model `123` as a vendor extension: the registry
+must dispatch it through the exact standard-core decoder key before evaluating
+one exact flavor contract.
+
+### Registry-Selected V3 Contract Record
+
+```json
+{
+  "contract": "helianthus.modbus-sunspec-live-qualification.v3",
+  "phase": "FMV3-M4-04",
+  "supersedes_for_new_runs": "helianthus.modbus-sunspec-live-qualification.v2",
+  "selection": {
+    "input": "complete_terminal_verified_SunSpecChainSnapshot",
+    "decoder_dispatch": "exact_registry_key",
+    "capability": "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "supported_flavors": [
+      "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
+      "sunspec.flavor.fronius.gen24.float.observed@1.1.0"
+    ],
+    "required_exact_match_count": 1,
+    "current_live_target": "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+    "hardcoded_model_id_rules": false
+  },
+  "model_123": {
+    "decoder_key": [123, 24, "sunspec.models@7abdf898-v1"],
+    "ownership": "standard_sunspec_core",
+    "access": "read_only_decode",
+    "writes_permitted": false
+  },
+  "go_authority": "qualification_evidence_only",
+  "support_claim": false,
+  "writes_permitted": false,
+  "m5_gate": "BLOCKED_UNTIL_DEPLOYED_EXACT_GO"
+}
+```
+
+V3 requires exactly one of the two closed flavor contracts to match. Zero
+matches is `NO_GO`; more than one match is incoherent and `STOP`. The current
+live target is V1.1, but V3 does not broaden either flavor or choose one by
+preference order. Model `123/L24` may be decoded read-only for typed retained
+facts and provenance; its upstream RW metadata does not permit FC06, FC16, or
+any other write operation.
+
+V3 retains V2's explicit opt-in, FC03-only acquisition, bounded reads and
+attempts, reconnect rules, categorical redaction, shutdown ordering, and
+operator-controlled rollback. FMV3-M4-05 remains the owner of sanitized live
+evidence. M5 remains blocked until the deployed exact gateway and registry
+combination returns `GO`; a preliminary or deployed `NO_GO` remains evidence
+but does not authorize semantic publication.
