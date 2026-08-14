@@ -551,7 +551,7 @@ recalculation:
 
 ```graphql
 type Query {
-  fm5Interpretation: Fm5Interpretation!
+  fm5Interpretation: Fm5Interpretation
 }
 
 type Fm5Interpretation {
@@ -576,6 +576,11 @@ enum Fm5SemanticDegradedReason {
   INCOHERENT_ACQUISITION
 }
 ```
+
+`fm5Interpretation` is nullable until the first coherent structural
+classification. A null value is the only bootstrap/unavailable
+representation and must not synthesize `GPIO_ONLY` or `ABSENT`. Once a verdict
+exists, its object fields remain non-null as shown above.
 
 `mode` is the last coherent structural classification and does not change on a
 transient acquisition failure. A healthy current `INTERPRETED` result and a

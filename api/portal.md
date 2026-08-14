@@ -37,8 +37,9 @@ release-version authority are frozen in
 operator routes and browser semantics remain exclusively in the linked
 `helianthus-docs-eebus` canonical documents. Portal uses the gateway boundary
 and never reads the eeBUS trust store or owner-only operator socket directly.
-Home Assistant receives sanitized status and a fixed Portal link, not pairing
-authority.
+Home Assistant uses the same gateway-owned pairing boundary. Portal and Home
+Assistant pairing remain functional without an eeBUS-specific authentication
+layer; neither consumer receives direct store, socket, or transport ownership.
 
 ## Core Endpoints
 
@@ -186,6 +187,11 @@ Response fields:
 The example below shows the target response after the post-M9 gateway
 implementation; the two target FM5 fields are not claims about current runtime
 availability.
+
+Before the first coherent structural classification, the semantic snapshot
+omits all three FM5 verdict fields until the first coherent structural
+classification. Portal presents acquisition as unavailable and does not infer
+`GPIO_ONLY` or `ABSENT` from missing fields.
 
 Energy freshness/provenance metadata (`GW-13` freeze):
 

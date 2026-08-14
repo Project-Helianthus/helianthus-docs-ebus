@@ -110,6 +110,12 @@ EVIDENCE_STALE
 INCOHERENT_ACQUISITION
 ```
 
+Before the first coherent structural classification there is no tuple to
+publish. MCP returns a null result, GraphQL exposes a nullable
+`fm5Interpretation`, and Portal omits the three optional FM5 verdict fields.
+Consumers represent this as acquisition unavailable; they do not manufacture
+`GPIO_ONLY`, `ABSENT`, a degraded reason, or an evidence revision.
+
 The named codes are `CONTROLLER_UNREACHABLE`, `CONFIGURATION_UNAVAILABLE`,
 `CONFIGURATION_NOT_INTERPRETABLE`, `SOLAR_ACQUISITION_FAILED`,
 `CYLINDER_ACQUISITION_FAILED`, `EVIDENCE_STALE`, and

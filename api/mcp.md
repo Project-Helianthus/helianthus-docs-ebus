@@ -398,7 +398,9 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
 
 `ebus.v1.semantic.fm5_interpretation.get` is the target MCP-first post-M9
 behavioral remediation and is not part of the implemented surface above until
-the gateway implementation PR merges. Its target object contains exactly
+the gateway implementation PR merges. The method returns `null` until the
+first coherent structural classification; it never fabricates `GPIO_ONLY` or
+`ABSENT` during bootstrap. Once available, its target object contains exactly
 `mode`, `degraded_reason`, and `evidence_revision`. Structural `mode` is the
 last coherent classification and does not change on a transient acquisition
 failure. A healthy current `INTERPRETED` result and a fresh coherent `ABSENT`

@@ -159,6 +159,11 @@ repair/degraded state rather than being shown as a healthy configuration. A
 transient acquisition reason retains the last coherent structural mode and is
 shown only as current acquisition health.
 
+Until the first coherent structural classification, GraphQL returns a null
+verdict. Home Assistant treats a null verdict as acquisition unavailable and
+does not create, retain, or infer a structural FM5 mode from other semantic
+objects.
+
 ## Device Tree
 
 The integration materializes this hierarchy in HA device registry:
