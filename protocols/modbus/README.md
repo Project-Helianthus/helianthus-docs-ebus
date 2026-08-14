@@ -8,6 +8,9 @@ They are covered by [`protocols/LICENSE`](../LICENSE), CC0-1.0.
 - [`../sunspec/sunspec-model-chain-v1.md`](../sunspec/sunspec-model-chain-v1.md)
   defines the implementation-neutral SunSpec model-chain and capability
   contract consumed above Modbus transport.
+- [`../sunspec/fronius-observed-flavor-v1.md`](../sunspec/fronius-observed-flavor-v1.md)
+  defines the exact observed Fronius flavor layered above a successfully
+  admitted standard capability.
 
 Helianthus scheduling, abandonment, provenance, profile, and qualification
 policy remains under `docs/platform/` and is not relicensed by this directory.

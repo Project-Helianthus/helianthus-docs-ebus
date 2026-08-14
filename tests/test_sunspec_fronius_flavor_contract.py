@@ -44,7 +44,7 @@ def test_three_phase_monitoring_fact_set_and_source_selection_are_exact() -> Non
     rows = re.findall(r"\| `([^`]+)` \| `([^`]+)` \|", capability)
     assert {f"{field}|{unit}" for field, unit in rows} == EXPECTED_FACTS
     assert "exactly one qualifying source occurrence" in capability
-    assert "`103/L50` or `113/L60`" in capability
+    assert re.search(r"(?:either )?`103/L50`\s+or `113/L60`", capability)
     assert "duplicate source occurrence" in capability
     assert "both encodings" in capability
     assert "ambiguous" in capability
@@ -56,6 +56,7 @@ def test_three_phase_monitoring_fact_set_and_source_selection_are_exact() -> Non
 
 def test_observed_fronius_flavor_is_exact_evidence_bounded_and_read_only() -> None:
     flavor = text(FLAVOR)
+    normalized = " ".join(flavor.lower().split())
 
     for value in (
         FLAVOR_ID,
@@ -83,7 +84,7 @@ def test_observed_fronius_flavor_is_exact_evidence_bounded_and_read_only() -> No
         "serial",
         "endpoint",
     ):
-        assert required in flavor.lower()
+        assert required in normalized
 
 
 def test_flavor_mismatch_outcomes_are_fail_closed_and_indexed() -> None:
@@ -99,4 +100,3 @@ def test_flavor_mismatch_outcomes_are_fail_closed_and_indexed() -> None:
 
     assert "fronius-observed-flavor-v1.md" in text(SUNSPEC_README)
     assert "fronius-observed-flavor-v1.md" in text(MODBUS_README)
-
