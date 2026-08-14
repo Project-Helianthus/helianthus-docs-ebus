@@ -55,6 +55,46 @@ def test_three_phase_monitoring_fact_set_and_source_selection_are_exact() -> Non
     assert "must not widen" in capability.lower()
 
 
+def test_capability_input_reasons_and_normalization_are_closed() -> None:
+    contract = text(CHAIN)
+    capability = contract[
+        contract.index("## Capability Profile") : contract.index("## Vendor Flavor")
+    ]
+    normalized = " ".join(capability.split())
+
+    for reason in (
+        "INVALID_CHAIN",
+        "AMBIGUOUS_SOURCE",
+        "SOURCE_ABSENT",
+        "SOURCE_UNSUPPORTED",
+        "INVALID_REQUIRED_FACT",
+        "ADMITTED",
+    ):
+        assert reason in capability
+
+    assert "complete `SunSpecChainSnapshot`" in capability
+    assert "exactly one consuming `FFFF/0` terminal" in normalized
+    assert "before typed decoding" in normalized
+    assert "original cloned typed `SunSpecValue`" in normalized
+    grammar = r"0|-?[1-9][0-9]*(?:\.[0-9]*[1-9])?|-?0\.[0-9]*[1-9]"
+    assert grammar in capability
+    for example in (
+        "`(12,-1)` and `(120,-2)` both produce `1.2`",
+        "`(-5,0)` produces `-5`",
+        "any zero coefficient produces `0`",
+        "`1.25` produces `1.25`",
+        "positive or negative zero produces `0`",
+    ):
+        assert example in normalized
+    assert "Exponent notation" in normalized
+    assert "leading zeroes on a nonzero integer part" in normalized
+    assert "redundant trailing fractional zeroes are forbidden" in normalized
+    assert "ascending bit order" in normalized
+    assert "canonical unit string `none`" in normalized
+    assert "zero known-bit mask" in normalized
+    assert "only a zero value" in normalized
+
+
 def test_observed_fronius_flavor_is_exact_evidence_bounded_and_read_only() -> None:
     flavor = text(FLAVOR)
     normalized = " ".join(flavor.lower().split())
@@ -107,3 +147,43 @@ def test_flavor_mismatch_outcomes_are_fail_closed_and_indexed() -> None:
     assert "fronius-observed-flavor-v1.md" in text(MODBUS_README)
     assert "fronius-observed-flavor-v1.md" in chain
     assert "not an active\nFronius flavor" not in chain
+
+
+def test_fronius_flavor_reason_precedence_and_identity_inputs_are_exact() -> None:
+    flavor = text(FLAVOR)
+    normalized = " ".join(flavor.split())
+
+    ordered = [
+        "a capability `AMBIGUOUS_SOURCE` maps first",
+        "every other non-admitted capability maps to",
+        "Common manufacturer/model mismatch maps to",
+        "version mismatch maps to",
+        "ordered-chain mismatch maps to",
+        "otherwise the result is",
+    ]
+    positions = [normalized.index(value) for value in ordered]
+    assert positions == sorted(positions)
+    assert "exactly Common `Mn`, `Md`, and `Vr`" in normalized
+    assert "without trimming, case folding, prefixing" in normalized
+    assert "Common `SN`, `Opt`, and `DA`" in normalized
+    assert "are not flavor matching inputs" in normalized
+    assert "cannot be supplied separately to this evaluator" in normalized
+
+
+def test_r3_flavor_explicitly_supersedes_only_historical_empty_vendor_logic() -> None:
+    evidence = text(ROOT / "docs/platform/fronius-sunspec-evidence-v1.md")
+    boundaries = text(ROOT / "docs/platform/modbus-multivendor-boundaries.md")
+    normalized = " ".join(evidence.split())
+
+    assert "At M3-03, the terminal conclusion was **`STANDARD_ONLY`**." in normalized
+    assert "exact historical M3-03 completion record" in normalized
+    assert "not a current inventory of later R3 code" in normalized
+    assert "supersede only that historical empty-vendor-logic boundary" in normalized
+    assert "Project-Helianthus/helianthus-ebusgateway#807" in normalized
+    assert "general detector hypothesis remains forbidden from production use" in normalized
+    assert "is not implemented by the R3 flavor evaluator" in normalized
+    assert "cannot activate or publish a device" in normalized
+    assert "historical terminal M3-03" in boundaries
+    assert "only after that capability is admitted from the same verified snapshot" in " ".join(
+        boundaries.split()
+    )

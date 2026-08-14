@@ -122,6 +122,31 @@ present and valid:
 | `inverter.events.1` | `none` |
 | `inverter.events.2` | `none` |
 
+The capability evaluator accepts the complete `SunSpecChainSnapshot`, not a
+caller-provided decoded-model list or detached identity values. Before source
+selection it reparses the snapshot raw words and requires the signature,
+checked nonzero model extents, exactly one consuming `FFFF/0` terminal, no
+trailing words, and exact agreement with every retained occurrence ordinal,
+wire key, raw words, header/payload offsets, and source-span word count. This
+verification creates no transport or acquisition authority.
+
+The capability decision has this closed reason set and precedence:
+
+1. `INVALID_CHAIN`: snapshot verification or Common-first/exactly-once decode
+   fails;
+2. `AMBIGUOUS_SOURCE`: more than one exact `103/L50` or `113/L60` occurrence
+   exists, including a duplicate of one encoding or one of each;
+3. `SOURCE_ABSENT`: no exact `103/L50` or `113/L60` occurrence exists;
+4. `SOURCE_UNSUPPORTED`: the one exact source lacks its exact admitted decoder
+   key or three-phase topology;
+5. `INVALID_REQUIRED_FACT`: the one admitted source lacks one exact required
+   field/unit pair or its required value fails the rules below;
+6. `ADMITTED`: all checks pass.
+
+Source counting occurs against the terminal-verified occurrence list before
+typed decoding. An unsupported wrong-length occurrence is retained but is not
+an exact source and does not make a separate exact source ambiguous.
+
 Admission requires exactly one qualifying source occurrence, either `103/L50`
 or `113/L60`, with three-phase topology. A duplicate source occurrence or a
 chain carrying both encodings is ambiguous and fails closed. The registry does
@@ -141,6 +166,33 @@ symbol in the pinned schema. A required bitfield is valid only when it has no
 unknown required bitfield bits. An unknown required enum symbol or unknown
 required bitfield bits therefore fails admission even though the decoder keeps
 the raw numeric value for diagnosis.
+
+Capability facts preserve their original cloned typed `SunSpecValue`, source
+decoder key, occurrence ordinal, raw words, source spans, and snapshot source
+views. Their additional encoding-neutral value uses this closed representation:
+
+- numeric values use the ASCII grammar
+  `0|-?[1-9][0-9]*(?:\.[0-9]*[1-9])?|-?0\.[0-9]*[1-9]`. An int+SF value
+  first computes the exact decimal `coefficient * 10^exponent` and serializes
+  that decimal under this grammar. For example, `(12,-1)` and `(120,-2)` both
+  produce `1.2`, `(-5,0)` produces `-5`, and any zero coefficient produces
+  `0`. A FLOAT value uses the shortest finite base-10 form under the same
+  grammar that round-trips to the same FLOAT32; for example `1.25` produces
+  `1.25`, and positive or negative zero produces `0`. Exponent notation,
+  leading zeroes on a nonzero integer part, a leading plus sign, a trailing
+  decimal point, and redundant trailing fractional zeroes are forbidden;
+- enums retain both the numeric code and the nonempty pinned symbol;
+- bitfields retain the numeric bits and pinned symbols in ascending bit order,
+  and require an unknown-bit mask of zero;
+- fields without a physical unit expose the canonical unit string `none`, not
+  an empty string.
+
+This normalization permits deterministic value comparison but does not claim
+equal precision, metrological accuracy, or original representation between
+Models 103 and 113. Optional facts are not copied into this capability. Under
+the pinned V1 schema, `inverter.events.2` has a zero known-bit mask, so only a
+zero value can satisfy that required fact; a future nonzero mapping needs a new
+pinned schema revision and capability version.
 
 No raw value becomes a capability merely because its model ID is known. Raw
 sentinel values, noncanonical NaN or infinity values, invalid scale factor

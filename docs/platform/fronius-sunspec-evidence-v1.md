@@ -103,28 +103,48 @@ maps, but their phase-one qualification is `UNKNOWN` until separately
 admitted and tested. Older Datamanager/SnapINverter products and all live
 installations are also `UNKNOWN`.
 
-The only current M3-03 conclusion is **`STANDARD_ONLY`**.
+At M3-03, the terminal conclusion was **`STANDARD_ONLY`**.
 The M3-02 implementation above contains all proven standard behavior, and this
 packet contains no evidence for a Fronius-specific delta or a product detector.
-No production Fronius overlay, detector, automatic product qualification, write capability, TCP production dependency, authorization effect, or runtime effect is admitted.
+No production Fronius overlay, detector, automatic product qualification,
+write capability, TCP production dependency, authorization effect, or runtime
+effect was admitted by that milestone.
 The companion completion record is
 [`Project-Helianthus/helianthus-modbusreg#12`](https://github.com/Project-Helianthus/helianthus-modbusreg/pull/12),
 whose completion schema is `helianthus.fmv3-m3-03-completion.v2`, version `2`.
 The merge SHA and PR link are provenance references only.
 The hard stop is before `FMV3-M4-01`.
 
+The immutable companion manifest and its `allowed_current_vendor_logic: []`
+field remain the exact historical M3-03 completion record; they are not a
+current inventory of later R3 code. The R3 contracts
+[`sunspec-model-chain-v1.md`](../../protocols/sunspec/sunspec-model-chain-v1.md)
+and
+[`fronius-observed-flavor-v1.md`](../../protocols/sunspec/fronius-observed-flavor-v1.md)
+supersede only that historical empty-vendor-logic boundary. They admit one
+experimental, read-only, exact post-capability classification evaluator backed
+by the sanitized observation in `Project-Helianthus/helianthus-ebusgateway#807`.
+That evaluator cannot activate acquisition, qualify a product automatically,
+publish a support claim, create a write path, or imply applicability beyond its
+exact identity and chain tuple.
+It is the separately implemented registry-selected outcome anticipated by this
+packet's earlier `future registry-selected outcome` boundary, with the narrower
+authority stated here.
+
 `FSS-C-007` remains a retained **`HYPOTHESIS`**: manufacturer, model, firmware,
-and package are candidate detector gates for future research. It is explicitly
-forbidden from production use, does not qualify any product automatically, and
-is not an unresolved M3-03 gate. The terminal `STANDARD_ONLY` disposition is
-therefore compatible with preserving this historical/evidentiary research
-claim.
+and package are candidate detector gates for future research. That general
+detector hypothesis remains forbidden from production use, does not qualify
+any product automatically, and is not implemented by the R3 flavor evaluator.
+The R3 evaluator instead requires an already admitted standard capability, an
+exact ordered chain, and the separately documented exact identity tuple; it
+does not consume the package gate or widen this historical claim.
 
 Issue #436 supersedes neither the synthetic fixtures nor this retained legacy
 qualification harness. It defines a generic model-chain contract separately.
-This packet is not a Fronius support claim, has no live result, and can only
-feed a future registry-selected outcome after separately implemented registry
-selection and admissible evidence.
+Issue #438 and its R3 addendum #440 add the exact evidence-bounded
+classification described above. This packet is not a Fronius support claim and
+has no live result or live qualification result; a flavor `MATCHED` decision
+alone cannot activate or publish a device.
 
 ## Synthetic fixtures
 
