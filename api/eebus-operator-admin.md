@@ -13,7 +13,9 @@ Those documents alone own protocol routes, partner views, certificate and OOB
 identity, raw-tree traversal, error vocabulary, persistence, and coordinator
 state-machine semantics. This page must not restate them; if a shared consumer
 rule conflicts with either canonical document, the protocol repository wins for
-that protocol concern.
+that protocol concern. The shared boundary recognizes canonical docs-eebus
+merge `6f8154011c36f4811db473fea03db8544ab488bc` for this correction without
+copying its protocol details here.
 
 `eebus.v1.*` remains the only eeBUS MCP namespace. It stays read-only. There is
 no v2 namespace, compatibility alias, public pairing tool, GraphQL mutation, or
@@ -60,13 +62,17 @@ redaction fields remain owned by the canonical protocol API.
 ## Raw Operator Inspection Isolation
 
 The shared stack preserves authorized inspection of lossless protocol-native
-data through the gateway boundary. Portal may render that data but may not
-reinterpret unknown native values, infer semantic facts, or establish a second
-protocol truth source. Home Assistant and public formatters receive no raw or
-operator-only identity data. Raw protocol data must not enter `ebus.v1`,
-GraphQL semantic fields, or the semantic registry. The canonical protocol
-documents own all tree shape, paging, identity, action, and live-cardinality
-requirements.
+data through the gateway boundary. Both Portal and Home Assistant host operator
+views may receive bounded raw SPINE and complete comparison identity through the
+gateway typed boundary. They may render that bounded inspection data but may not
+reinterpret unknown native values, infer semantic facts, retain it beyond the
+canonical bounded view lifetime, or establish a second protocol truth source.
+Public and shareable formatters receive no raw or operator-only identity data.
+Raw protocol data must not enter `ebus.v1`, GraphQL semantic fields, or the
+semantic registry. This does not grant either consumer direct trust-store or
+operator-socket access, or expose keys, tokens, private PEM, trust-store bytes,
+or private socket framing. The canonical protocol documents own all tree shape,
+paging, identity, action, and live-cardinality requirements.
 
 ## FM5 Behavioral Verdict
 
