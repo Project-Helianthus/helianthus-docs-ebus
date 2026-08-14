@@ -8,9 +8,13 @@ FMV3-M4-03. The bounded MCP data surface remains specified by
 ## Scope And Ownership
 
 The Home Assistant add-on owns option ingestion, protected endpoint
-materialization, child-process supervision, health publication, bounded
-startup recovery, and rollback to the packaged previous gateway. The current
-gateway owns Modbus endpoint-file consumption and read-only runtime behavior.
+materialization, child-process supervision, health publication, and bounded
+startup recovery with a fallback to the packaged previous gateway binary in the
+current add-on. The current gateway owns Modbus endpoint-file consumption,
+read-only runtime behavior, and qualification-result logging. A
+post-qualification rollback of a gateway/add-on pair is a separate,
+operator-controlled deployment procedure; it is not an automatic gateway or
+add-on-supervisor action.
 The transport and profile facts remain owned by `helianthus-modbus` and
 `helianthus-modbusreg` respectively.
 
@@ -217,8 +221,12 @@ the existing MCP retained-observation state, not canonical PV availability.
     "required_order": ["worker_cancel", "worker_join", "adapter_close"]
   },
   "rollback": {
+    "trigger": "explicit_operator_controlled_post_qualification_procedure",
     "disable_modbus_endpoint": true,
-    "restore": "prior_gateway_addon_pair"
+    "restore": "operator_selected_prior_gateway_addon_pair",
+    "automatic_on_stop_or_no_go": false,
+    "separate_from_startup_fallback": true,
+    "startup_fallback_parity": "not_guaranteed"
   },
   "live_evidence": {
     "owner_phase": "FMV3-M4-05",
@@ -263,8 +271,21 @@ separate add-on health contract's endpoint-reference field.
 
 ### Shutdown, Rollback, And Evidence Boundary
 
-Shutdown cancels and joins the worker before the adapter closes. Rollback
-disables the Modbus endpoint and restores the prior gateway/add-on pair.
+Shutdown cancels and joins the worker before the adapter closes. `STOP` and
+`NO_GO` are qualification decisions: the gateway records their categorical
+result and does not automatically disable the Modbus endpoint or restore a
+gateway/add-on pair. An operator may subsequently choose the separate
+post-qualification rollback procedure: disable the Modbus endpoint and select
+the prior gateway/add-on pair through the normal deployment controls. This
+procedure is explicit and operator-controlled; it is not a qualification-worker
+side effect.
+
+That procedure is distinct from the add-on's startup fallback. Startup fallback
+occurs only after the current gateway has exhausted its bounded startup attempts;
+the current add-on then starts its packaged previous gateway binary with Modbus
+disabled. It does not restore a prior add-on, and `FALLBACK_ACTIVE` proves only
+fallback liveness. It does not prove configuration or feature parity, including
+the three best-effort seed, cache, and provenance options described above.
 
 FMV3-M4-05, after FMV3-M4-04, owns publication of sanitized actual
 `endpoint_ref`, model, firmware, model-chain, and outcome evidence. This
