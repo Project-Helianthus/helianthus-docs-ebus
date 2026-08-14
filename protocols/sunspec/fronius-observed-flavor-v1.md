@@ -45,12 +45,14 @@ Raw model occurrences, canonical capability facts, and acquisition provenance
 remain owned by their original contracts. A mismatch never rewrites or drops
 them.
 
-## Defaults and deltas
+## Observed acquisition provenance and deltas
 
-The observed read-only defaults are FC03 holding-register reads, unit ID `1`,
-and normalized PDU offset `40000` for the SunSpec signature. They are flavor
-metadata for downstream acquisition configuration, not transport execution and
-not proof that every Fronius device uses them.
+The sanitized observation used FC03 holding-register reads, unit ID `1`, and
+normalized PDU offset `40000` for the SunSpec signature. These values are
+non-actionable provenance only. The flavor MUST NOT use them to construct a
+request, select a transport, configure acquisition, or activate runtime work;
+those decisions remain gateway-owned. They are not defaults and do not prove
+that another Fronius device uses the same acquisition parameters.
 
 This version has no documented quirk, no semantic override, no custom model,
 and no extension fact. Standard SunSpec decoders remain authoritative. The

@@ -42,6 +42,7 @@ def test_three_phase_monitoring_fact_set_and_source_selection_are_exact() -> Non
 
     assert CAPABILITY_ID in capability
     rows = re.findall(r"\| `([^`]+)` \| `([^`]+)` \|", capability)
+    assert len(rows) == 14
     assert {f"{field}|{unit}" for field, unit in rows} == EXPECTED_FACTS
     assert "exactly one qualifying source occurrence" in capability
     assert re.search(r"(?:either )?`103/L50`\s+or `113/L60`", capability)
@@ -81,6 +82,9 @@ def test_observed_fronius_flavor_is_exact_evidence_bounded_and_read_only() -> No
         "not a product-family support claim",
         "no semantic override",
         "no documented quirk",
+        "non-actionable provenance only",
+        "must not use them to construct a request",
+        "those decisions remain gateway-owned",
         "serial",
         "endpoint",
     ):
