@@ -18,6 +18,7 @@
       "pdf_url": "https://www.fronius.com/~/downloads/Solar%20Energy/Operating%20Instructions/42%2C0410%2C2649.pdf",
       "document_id": "42,0410,2649",
       "edition": "033-24022026",
+      "sha256": "aa1e69432472ae2f25075c01a651201f747ae0f9e85c8894dfa1f36883d06890",
       "publication_treatment": "independent_summary_only"
     },
     {
@@ -27,6 +28,7 @@
       "redirect_target": "gen24-modbus-api-external-docs.zip",
       "package_version": "1.2.7-2",
       "bundle_version": "GEN24 1.36.x",
+      "sha256": "dc4c5d49362ee0c9721f21886f17fa18497e54c4d92bb5cc2c50472deb266b55",
       "publication_treatment": "source_only_no_workbook_or_table_copy"
     },
     {
@@ -39,11 +41,10 @@
       "publication_treatment": "independent_summary_only"
     },
     {
-      "source_id": "sunspec-device-information-model-v1.1",
+      "source_id": "sunspec-device-information-model-v1.2",
       "kind": "official_standard_specification",
-      "url": "https://sunspec.org/wp-content/uploads/2025/01/SunSpec-Device-Information-Model-Specificiation-V1-1-final-1.pdf",
-      "version": "1.1",
-      "approved_on": "2022-05-09",
+      "version": "1.2",
+      "reference_only": true,
       "publication_treatment": "independent_summary_only"
     }
   ],
@@ -163,7 +164,7 @@
     {"claim_id": "FSS-C-002", "statement": "Model addresses are dynamic and require bounded chain discovery", "source_ids": ["fronius-manual-4204102649", "sunspec-models-7abdf898"], "fixture_ids": ["FSS-P-001", "FSS-N-001", "FSS-N-002", "FSS-N-003", "FSS-N-007"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
     {"claim_id": "FSS-C-003", "statement": "Phase one is FC03 read-only", "source_ids": ["fronius-manual-4204102649"], "fixture_ids": ["FSS-P-001"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
     {"claim_id": "FSS-C-004", "statement": "Common model 1 and int+SF inverter models 101, 102, and 103 are the M3-02 admission set", "source_ids": ["fronius-manual-4204102649", "fronius-register-package-1.2.7-2", "sunspec-models-7abdf898"], "fixture_ids": ["FSS-P-001", "FSS-P-002", "FSS-P-003", "FSS-P-004", "FSS-P-005"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
-    {"claim_id": "FSS-C-005", "statement": "The standard decoding contract includes signed int16, big-endian multi-register acc32, sunssf, and fixed-width strings", "source_ids": ["sunspec-models-7abdf898", "sunspec-device-information-model-v1.1"], "fixture_ids": ["FSS-P-002", "FSS-P-003", "FSS-P-004", "FSS-P-005", "FSS-N-004"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
+    {"claim_id": "FSS-C-005", "statement": "The standard decoding contract includes signed int16, big-endian multi-register acc32, sunssf, and fixed-width strings", "source_ids": ["sunspec-models-7abdf898", "sunspec-device-information-model-v1.2"], "fixture_ids": ["FSS-P-002", "FSS-P-003", "FSS-P-004", "FSS-P-005", "FSS-N-004"], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02"]},
     {"claim_id": "FSS-C-006", "statement": "GEN24 Primo/Symo ROW int+SF is documented for package 1.2.7-2 and bundle 1.36.x", "source_ids": ["fronius-register-package-1.2.7-2"], "fixture_ids": [], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": ["M3-02", "M3-03"]},
     {"claim_id": "FSS-C-007", "statement": "Manufacturer, model, firmware, and package are candidate Fronius detector gates for future research only", "source_ids": ["fronius-manual-4204102649", "fronius-register-package-1.2.7-2"], "fixture_ids": [], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2", "verto-tauro", "older-datamanager-snapinverter-live-hardware"], "disposition": "HYPOTHESIS", "production_use": "forbidden", "research_use": "future_research_only", "downstream_use": []},
     {"claim_id": "FSS-C-008", "statement": "Fronius inverter TCP acquisition uses unit ID 0x01, which is not a standard-profile input", "source_ids": ["fronius-manual-4204102649"], "fixture_ids": [], "applicability_ids": ["gen24-primo-symo-row-int-sf-1.2.7-2"], "disposition": "PROVEN", "downstream_use": []},

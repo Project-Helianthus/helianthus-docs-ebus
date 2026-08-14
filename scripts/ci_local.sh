@@ -171,6 +171,7 @@ python3 -m pytest -q \
   tests/test_modbus_v1_live_qualification_contract.py
 python3 -m pytest -q tests/test_eebus_operator_admin_contract.py
 python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
+python3 -m pytest -q tests/test_sunspec_model_chain_contract.py
 if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
   python3 scripts/validate_modbus_companion.py \
     --root . \

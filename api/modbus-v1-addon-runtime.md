@@ -156,6 +156,14 @@ It defines the allowed bounded qualification behavior before live evidence is
 published. It is not a claim that any endpoint, device, model, firmware, or
 smoke outcome has been observed.
 
+This #435 page remains a legacy qualification harness. It preserves the
+existing profile identity pair `sunspec.phase1` version `1.0.0` exactly and
+does not claim Fronius support, select a capability profile or vendor flavor,
+or publish a live result. The shorthand `sunspec.phase1@1.0.0` denotes that
+pair; it is not a replacement literal for `profile_id`.
+A future registry-selected outcome is outside this suspended gateway #808
+scope.
+
 ### Normative Contract Record
 
 The following closed record is normative. Terms such as `UNAVAILABLE` describe
@@ -175,6 +183,7 @@ the existing MCP retained-observation state, not canonical PV availability.
     "function_code": 3,
     "writes_permitted": false,
     "profile_id": "sunspec.phase1",
+    "profile_version": "1.0.0",
     "chain_qualification": "dynamic_bounded_existing_profile_contracts",
     "qualifications_per_attempt": 1,
     "per_read_timeout_seconds": 2,
@@ -243,9 +252,9 @@ The Modbus path remains disabled by default. The qualification worker starts
 only after the complete explicit Modbus opt-in has admitted the endpoint; an
 incomplete option set and the disabled path do not start it. It performs one
 dynamically bounded SunSpec chain qualification per permitted attempt, using
-the existing `sunspec.phase1` profile contracts. The fixed protocol surface is
-Modbus TCP, unit 1, and FC03. It is read-only: it never issues a write function
-and does not widen the profile contract.
+the existing `sunspec.phase1` version `1.0.0` profile contracts. The fixed
+protocol surface is Modbus TCP, unit 1, and FC03. It is read-only: it never
+issues a write function and does not widen the profile contract.
 
 Each read has a two-second bound. The total bound for each qualification attempt
 is thirty seconds, including the dynamically discovered chain reads.
