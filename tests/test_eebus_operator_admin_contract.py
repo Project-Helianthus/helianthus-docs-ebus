@@ -18,7 +18,7 @@ def _normalized(path: Path) -> str:
     return " ".join(path.read_text(encoding="utf-8").split())
 
 
-def test_shared_operator_boundary_is_closed_and_consumer_safe() -> None:
+def test_shared_operator_boundary_has_no_eebus_specific_authentication() -> None:
     text = _normalized(CONTRACT)
     for required in (
         "canonical protocol-specific contract remains exclusively in",
@@ -26,16 +26,24 @@ def test_shared_operator_boundary_is_closed_and_consumer_safe() -> None:
         "post-m9-operator-admin-v1.md",
         "Those documents alone own protocol routes",
         "`eebus.v1.*` remains the only eeBUS MCP namespace",
-        "all operator reads and mutations fail closed",
-        "authentication and authorization run before object resolution",
-        "CSRF-safe mutation admission",
-        "Home Assistant receives no mutation grant",
+        "introduces no eeBUS-specific login, session, cookie, CSRF token, owner credential, Home Assistant credential, or eeBUS reauthentication",
+        "Generic Portal and Home Assistant authentication remain out of scope",
+        "Pairing actions remain functional in both Portal and Home Assistant",
+        "gateway-owned typed API",
         "Portal and Home Assistant never read the trust store",
         "owner-only operator socket",
         "private keys, tokens, private PEM, trust-store bytes",
         "must not enter `ebus.v1`, GraphQL semantic fields, or the semantic registry",
     ):
         assert required in text
+    for forbidden in (
+        "owner-authenticated same-origin session",
+        "CSRF-safe mutation admission",
+        "Home Assistant uses a non-cookie, least-privilege credential",
+        "Home Assistant receives no mutation grant",
+        "Portal is the only mutation UX",
+    ):
+        assert forbidden not in text
 
 
 def test_protocol_contract_is_linked_not_duplicated() -> None:
@@ -58,7 +66,7 @@ def test_protocol_contract_is_linked_not_duplicated() -> None:
         assert required in text
 
 
-def test_fm5_mode_cannot_hide_failed_interpretation() -> None:
+def test_fm5_structural_mode_survives_transient_acquisition() -> None:
     text = _normalized(CONTRACT)
     for required in (
         "`INTERPRETED`, `GPIO_ONLY`, and `ABSENT`",
@@ -68,12 +76,17 @@ def test_fm5_mode_cannot_hide_failed_interpretation() -> None:
         "`CONFIGURATION_NOT_INTERPRETABLE`",
         "`SOLAR_ACQUISITION_FAILED`",
         "`CYLINDER_ACQUISITION_FAILED`",
-        "current or retained admissible FM5 identity evidence exists",
-        "`CONTROLLER_UNREACHABLE` when only retained evidence remains",
-        "must not collapse an acquisition or configuration failure into an unexplained `GPIO_ONLY`",
-        "reason is `null` only for `INTERPRETED` and `ABSENT`",
+        "Structural FM5 mode is independent from transient acquisition health",
+        "known coherent `INTERPRETED` baseline remains `INTERPRETED`",
+        "same corpus before and after eeBUS activation",
+        "transient acquisition failure never commits `GPIO_ONLY`",
+        "`GPIO_ONLY` requires fresh, coherent structural evidence",
+        "exactly `CONFIGURATION_NOT_INTERPRETABLE`",
+        "does not refresh, zero, or withdraw retained solar or cylinder values",
+        "fresh attempted-acquisition timestamps and source identity",
     ):
         assert required in text
+    assert "`CONTROLLER_UNREACHABLE` when only retained evidence remains" not in text
 
 
 def test_version_has_one_runtime_build_source_and_portal_links_contract() -> None:
@@ -97,17 +110,18 @@ def test_existing_fm5_authority_uses_the_provider_verdict() -> None:
     text = _normalized(B524)
     for required in (
         "one mode/reason/revision verdict",
-        "`GPIO_ONLY` plus exactly one closed reason",
-        "may not become an unexplained `GPIO_ONLY`",
+        "structural mode and acquisition health are independent",
+        "previous coherent `INTERPRETED` mode remains unchanged",
+        "`GPIO_ONLY` only from fresh coherent `CONFIGURATION_NOT_INTERPRETABLE` evidence",
         "device-registry identity mutations advance a monotonic observation generation",
         "final registry-generation comparison and semantic verdict commit execute in one registry read critical section",
         "writer linearizes either before both operations or after both operations",
-        "may not publish `INTERPRETED` from a detached registry snapshot",
+        "does not commit a structural verdict from a detached registry snapshot",
         "`fm5SemanticDegradedReason`",
         "`fm5SemanticEvidenceRevision`",
         "retains the last coherent solar snapshot without updating it",
         "retains the last coherent instance set without updating it",
-        "`ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family",
+        "fresh coherent `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family",
         "requires a decodable `temperatureC` to create or update an instance",
         "an already coherent instance may be retained unchanged",
         "does not refresh its values",
@@ -118,15 +132,15 @@ def test_existing_fm5_authority_uses_the_provider_verdict() -> None:
         "A transient acquisition degradation retains only the last coherent snapshot",
         "it is not a new live sample",
         "does not update or zero it",
-        "mode/reason/revision result",
+        "does not change the last coherent structural mode",
     ):
         assert required in mapping
     fsm_map = _normalized(FSM_MAP)
     gates = _normalized(CONFIG_GATES)
     for text in (fsm_map, gates):
         for required in (
-            "transient `GPIO_ONLY` acquisition reason retains the last coherent",
-            "`ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws",
+            "transient acquisition reason retains the last coherent",
+            "fresh coherent `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws",
             "without updating or zeroing it",
         ):
             assert required in text
@@ -157,12 +171,13 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
     ):
         assert required in graphql
     for required in (
-        "candidate-free gateway projection",
+        "gateway-owned eeBUS operator projection",
+        "native pairing flow without an eeBUS-specific credential or reauthentication step",
         "pending GraphQL contract",
         "target contract, not current integration availability",
         "fm5Interpretation { mode degradedReason evidenceRevision }",
         "does not derive a reason",
-        "`GPIO_ONLY` without a closed reason is an invalid response",
+        "`GPIO_ONLY` with any reason other than `CONFIGURATION_NOT_INTERPRETABLE` is an invalid response",
     ):
         assert required in ha
 
