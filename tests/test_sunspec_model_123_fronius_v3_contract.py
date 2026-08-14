@@ -78,7 +78,9 @@ def test_old_flavor_is_immutable_and_new_flavor_is_exact() -> None:
 
 
 def test_v3_selects_one_closed_registry_flavor_and_keeps_m5_blocked() -> None:
-    record = json_record_after(text(RUNTIME), "### Registry-Selected V3 Contract Record")
+    runtime = text(RUNTIME)
+    v2 = json_record_after(runtime, "### Registry-Selected V2 Contract Record")
+    record = json_record_after(runtime, "### Registry-Selected V3 Contract Record")
 
     assert record["contract"] == "helianthus.modbus-sunspec-live-qualification.v3"
     assert record["supersedes_for_new_runs"] == (
@@ -103,6 +105,23 @@ def test_v3_selects_one_closed_registry_flavor_and_keeps_m5_blocked() -> None:
     assert record["support_claim"] is False
     assert record["writes_permitted"] is False
     assert record["m5_gate"] == "BLOCKED_UNTIL_DEPLOYED_EXACT_GO"
+
+    for inherited in (
+        "activation",
+        "acquisition",
+        "decision_precedence",
+        "capability_decision_map",
+        "flavor_decision_map",
+        "runtime_or_transport_error",
+        "recovery",
+        "result",
+        "shutdown",
+        "go_authority",
+        "support_claim",
+        "live_result_published_here",
+        "writes_permitted",
+    ):
+        assert record[inherited] == v2[inherited]
 
 
 def test_new_flavor_is_indexed_without_replacing_v1() -> None:
