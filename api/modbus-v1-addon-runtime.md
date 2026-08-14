@@ -300,3 +300,105 @@ FMV3-M4-05, after FMV3-M4-04, owns publication of sanitized actual
 `endpoint_ref`, model, firmware, model-chain, and outcome evidence. This
 pre-live page deliberately contains none of that evidence and must not be read
 as a completed live-smoke claim.
+
+## Registry-Selected V2 Successor
+
+The V1 record above remains the immutable contract of suspended gateway PR
+`#808`. New qualification runs use the versioned V2 successor below. V2 does
+not reinterpret V1, and the historical statement that Model `113` was deferred
+under `sunspec.phase1@1.0.0` remains true for V1 only.
+
+V2 consumes the generic SunSpec model-chain, capability, and flavor contracts
+implemented by `helianthus-modbusreg v0.1.0`. It does not select a result from a
+gateway-owned model-ID range. In particular, Model `113` is neither an
+automatic `GO` nor an automatic `NO_GO`: the registry must validate the entire
+snapshot, admit the complete capability, and match the exact observed flavor.
+
+### Registry-Selected V2 Contract Record
+
+```json
+{
+  "contract": "helianthus.modbus-sunspec-live-qualification.v2",
+  "phase": "FMV3-M4-04",
+  "legacy_contract": "helianthus.modbus-sunspec-live-qualification.v1",
+  "supersedes_for_new_runs": "helianthus.modbus-sunspec-live-qualification.v1",
+  "registry_dependency": {
+    "module": "github.com/Project-Helianthus/helianthus-modbusreg",
+    "version": "v0.1.0",
+    "merge": "0567cac9db3749086c46f05b2c4c0a24c2371763"
+  },
+  "activation": {
+    "disabled_by_default": true,
+    "worker_start_condition": "complete_explicit_modbus_opt_in"
+  },
+  "acquisition": {
+    "transport": "modbus_tcp",
+    "unit_id": 1,
+    "function_code": 3,
+    "qualifications_per_attempt": 1,
+    "per_read_timeout_seconds": 2,
+    "attempt_timeout_seconds": 30
+  },
+  "selection": {
+    "input": "complete_terminal_verified_SunSpecChainSnapshot",
+    "decoder_dispatch": "exact_registry_key",
+    "capability": "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "required_flavor": "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
+    "hardcoded_model_id_rules": false
+  },
+  "decision_map": {
+    "INVALID_CHAIN": "STOP",
+    "AMBIGUOUS_SOURCE": "NO_GO",
+    "SOURCE_ABSENT": "NO_GO",
+    "SOURCE_UNSUPPORTED": "NO_GO",
+    "INVALID_REQUIRED_FACT": "NO_GO",
+    "ADMITTED+MATCHED": "GO",
+    "ADMITTED+COMMON_IDENTITY_MISMATCH": "NO_GO",
+    "ADMITTED+FIRMWARE_MISMATCH": "NO_GO",
+    "ADMITTED+CHAIN_MISMATCH": "NO_GO",
+    "runtime_or_transport_error": "STOP"
+  },
+  "recovery": {
+    "max_qualification_attempts": 2,
+    "retry_trigger": ["transport_error", "endpoint_reconnect_required"],
+    "endpoint_owned_backoff_reconnect_max": 1,
+    "final_attempt_requires_new": ["poll_generation_id", "deadline_identity"],
+    "periodic_retries": false
+  },
+  "result": {
+    "logs_and_results": "categorical_only",
+    "retained_on_go": ["capability_id", "capability_reason", "flavor_id", "flavor_reason", "sample_id"],
+    "raw_mcp_on_no_go": "USABLE",
+    "registry_observation_on_no_go": "UNAVAILABLE"
+  },
+  "shutdown": {
+    "required_order": ["worker_cancel", "worker_join", "adapter_close"]
+  },
+  "go_authority": "qualification_evidence_only",
+  "support_claim": false,
+  "live_result_published_here": false,
+  "writes_permitted": false
+}
+```
+
+### V2 Activation, Recovery, And Evidence Boundary
+
+V2 preserves V1's explicit opt-in, FC03-only reads, two-second read bound,
+thirty-second attempt bound, at-most-one reconnect, new generation identities
+for the final attempt, worker-cancel/join ordering, categorical redaction, and
+operator-controlled rollback. It adds no periodic polling and no retry after a
+completed qualification decision.
+
+`INVALID_CHAIN` and runtime or transport errors are `STOP` because no coherent
+semantic input exists. A complete chain whose capability cannot be admitted,
+or whose admitted capability does not match the exact required Fronius flavor,
+is `NO_GO`; raw MCP remains available, but no registry qualification
+observation is retained. Only capability `ADMITTED` together with flavor
+`MATCHED` is `GO` for this bounded test tuple.
+
+`GO` is qualification evidence only. It does not claim support for a product
+family, authorize writes or automatic activation, publish canonical PV
+semantics, or release a private binding. FMV3-M4-05 still owns publication of
+the sanitized endpoint reference, Common identity, ordered chain, capability
+and flavor reasons, unknown occurrences, recovery outcome, and final live
+decision. This page contains no live result.
