@@ -372,7 +372,7 @@ def test_source_pins_scope_and_dispositions_are_exact() -> None:
     assert by_id["fronius-manual-4204102649"]["url"] == "https://manuals.fronius.com/html/4204102649/en-US.html"
     assert by_id["fronius-register-package-1.2.7-2"]["package_version"] == "1.2.7-2"
     assert by_id["fronius-register-package-1.2.7-2"]["sha256"] == (
-        "dc4c5d49362ee0c9721f21886c17fa18497e54c4d92bb5cc2c50472deb266b55"
+        "dc4c5d49362ee0c9721f21886f17fa18497e54c4d92bb5cc2c50472deb266b55"
     )
     assert by_id["sunspec-models-7abdf898"]["commit"] == "7abdf8982d5364f8ae916deee18aac86c11be36d"
     assert by_id["sunspec-models-7abdf898"]["revision_date"] == "2026-04-22"

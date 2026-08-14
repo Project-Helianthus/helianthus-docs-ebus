@@ -28,7 +28,7 @@
       "redirect_target": "gen24-modbus-api-external-docs.zip",
       "package_version": "1.2.7-2",
       "bundle_version": "GEN24 1.36.x",
-      "sha256": "dc4c5d49362ee0c9721f21886c17fa18497e54c4d92bb5cc2c50472deb266b55",
+      "sha256": "dc4c5d49362ee0c9721f21886f17fa18497e54c4d92bb5cc2c50472deb266b55",
       "publication_treatment": "source_only_no_workbook_or_table_copy"
     },
     {

@@ -69,6 +69,14 @@ acquisition provenance includes the source logical view, request and wire
 response identities, endpoint/unit identity as supplied by the acquisition
 layer, receipt/generation identity, and each logical/slice offset and count.
 
+Structural retention does not itself grant semantic admission. Before typed
+interpretation, capability admission, or vendor-flavor evaluation, exactly one
+Common Model `1` at a supported length must be the first occurrence after the
+signature. A missing Common Model, an out-of-order Common Model, or a repeated
+Common Model fails semantic admission. The bounded raw chain and provenance may
+remain available for diagnosis, but it produces no typed observation,
+capability, or vendor flavor.
+
 The chain parser uses checked arithmetic. It rejects a bad signature, a
 nonterminal zero length, arithmetic overflow, an extent overrun, a malformed
 or missing end marker, a nonzero end-marker length, and trailing words after a

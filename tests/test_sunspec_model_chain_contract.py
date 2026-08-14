@@ -153,6 +153,17 @@ def test_model_chain_malformed_grammar_is_explicitly_fail_closed() -> None:
         in chain
     )
 
+    assert "exactly one\nCommon Model `1`" in chain
+    assert "must be the first occurrence after the\nsignature" in chain
+    for rejected in (
+        "missing Common Model",
+        "out-of-order Common Model",
+        "repeated\nCommon Model",
+    ):
+        assert rejected in chain
+    assert "fails semantic admission" in chain
+    assert "produces no typed observation,\ncapability, or vendor flavor" in chain
+
 
 def test_existing_fronius_material_is_legacy_only_and_points_to_registry_selection() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
@@ -160,6 +171,7 @@ def test_existing_fronius_material_is_legacy_only_and_points_to_registry_selecti
     boundaries = text(BOUNDARIES)
     qualification = text(QUALIFICATION)
     modbus_readme = text(MODBUS_README)
+    package_pin = manifest["sources"][1]["sha256"]
 
     assert manifest["m3_03_completion"]["disposition"] == "STANDARD_ONLY"
     assert "PENDING_M3_03" not in evidence
@@ -175,3 +187,6 @@ def test_existing_fronius_material_is_legacy_only_and_points_to_registry_selecti
     assert "legacy qualification harness" in qualification.lower()
     assert "does not claim Fronius support" in qualification
     assert "future registry-selected outcome" in qualification.lower()
+    assert package_pin == FRONIUS_PACKAGE_SHA256
+    assert FRONIUS_PACKAGE_SHA256 in evidence
+    assert FRONIUS_PACKAGE_SHA256 in text(CHAIN_CONTRACT)
