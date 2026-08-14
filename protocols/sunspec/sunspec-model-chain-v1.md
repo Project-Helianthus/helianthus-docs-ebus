@@ -40,7 +40,11 @@ The initial catalog is deliberately small and records only independently
 summarized identifiers, names, encodings, and declared lengths:
 
 - Model `1`, Common: standard length `L66`; `L65` is an evidence-backed
-  compatibility nuance, not a claim that L65 is the current standard.
+  compatibility shape, not a claim that L65 is the current standard. L65 is
+  admissible only through an explicitly registered `(1, 65, schema_revision)`
+  compatibility decoder key distinct from the standard L66 key. Without that
+  exact key, an L65 occurrence is raw-retained unsupported and cannot admit a
+  capability; no model-ID fallback is permitted.
 - Models `101`, `102`, and `103`, inverter integer plus scale-factor forms:
   `L50` each.
 - Models `111`, `112`, and `113`, inverter FLOAT forms: `L60` each.

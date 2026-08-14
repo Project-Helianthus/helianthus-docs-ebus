@@ -77,6 +77,11 @@ def test_contract_freezes_catalog_identity_retention_and_fail_closed_rules() -> 
     }
     assert re.search(r"Model `1`.*?standard length `L66`", catalog, re.DOTALL)
     assert re.search(r"Model `1`.*?`L65`.*?compatibility", catalog, re.DOTALL)
+    assert "(1, 65, schema_revision)" in catalog
+    assert "distinct from the standard L66 key" in catalog
+    assert "raw-retained unsupported" in catalog
+    assert "cannot admit a\n  capability" in catalog
+    assert "no model-ID fallback is permitted" in catalog
     assert re.search(r"Model `160`.*?`L = 8 \+ 20 \* N`", catalog, re.DOTALL)
 
     for required in (
