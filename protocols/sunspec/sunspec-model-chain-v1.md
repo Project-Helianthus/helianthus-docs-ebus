@@ -171,10 +171,16 @@ Capability facts preserve their original cloned typed `SunSpecValue`, source
 decoder key, occurrence ordinal, raw words, source spans, and snapshot source
 views. Their additional encoding-neutral value uses this closed representation:
 
-- numeric int+SF values render exact `coefficient * 10^exponent`; FLOAT values
-  render the shortest finite base-10 form that round-trips to the same FLOAT32;
-  both forms use no exponent notation, remove redundant fractional zeroes, and
-  normalize positive or negative zero to `0`;
+- numeric values use the ASCII grammar
+  `0|-?[1-9][0-9]*(?:\.[0-9]*[1-9])?|-?0\.[0-9]*[1-9]`. An int+SF value
+  first computes the exact decimal `coefficient * 10^exponent` and serializes
+  that decimal under this grammar. For example, `(12,-1)` and `(120,-2)` both
+  produce `1.2`, `(-5,0)` produces `-5`, and any zero coefficient produces
+  `0`. A FLOAT value uses the shortest finite base-10 form under the same
+  grammar that round-trips to the same FLOAT32; for example `1.25` produces
+  `1.25`, and positive or negative zero produces `0`. Exponent notation,
+  leading zeroes on a nonzero integer part, a leading plus sign, a trailing
+  decimal point, and redundant trailing fractional zeroes are forbidden;
 - enums retain both the numeric code and the nonempty pinned symbol;
 - bitfields retain the numeric bits and pinned symbols in ascending bit order,
   and require an unknown-bit mask of zero;

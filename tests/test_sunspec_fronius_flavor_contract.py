@@ -76,8 +76,19 @@ def test_capability_input_reasons_and_normalization_are_closed() -> None:
     assert "exactly one consuming `FFFF/0` terminal" in normalized
     assert "before typed decoding" in normalized
     assert "original cloned typed `SunSpecValue`" in normalized
-    assert "no exponent notation" in normalized
-    assert "normalize positive or negative zero to `0`" in normalized
+    grammar = r"0|-?[1-9][0-9]*(?:\.[0-9]*[1-9])?|-?0\.[0-9]*[1-9]"
+    assert grammar in capability
+    for example in (
+        "`(12,-1)` and `(120,-2)` both produce `1.2`",
+        "`(-5,0)` produces `-5`",
+        "any zero coefficient produces `0`",
+        "`1.25` produces `1.25`",
+        "positive or negative zero produces `0`",
+    ):
+        assert example in normalized
+    assert "Exponent notation" in normalized
+    assert "leading zeroes on a nonzero integer part" in normalized
+    assert "redundant trailing fractional zeroes are forbidden" in normalized
     assert "ascending bit order" in normalized
     assert "canonical unit string `none`" in normalized
     assert "zero known-bit mask" in normalized
@@ -157,3 +168,22 @@ def test_fronius_flavor_reason_precedence_and_identity_inputs_are_exact() -> Non
     assert "Common `SN`, `Opt`, and `DA`" in normalized
     assert "are not flavor matching inputs" in normalized
     assert "cannot be supplied separately to this evaluator" in normalized
+
+
+def test_r3_flavor_explicitly_supersedes_only_historical_empty_vendor_logic() -> None:
+    evidence = text(ROOT / "docs/platform/fronius-sunspec-evidence-v1.md")
+    boundaries = text(ROOT / "docs/platform/modbus-multivendor-boundaries.md")
+    normalized = " ".join(evidence.split())
+
+    assert "At M3-03, the terminal conclusion was **`STANDARD_ONLY`**." in normalized
+    assert "exact historical M3-03 completion record" in normalized
+    assert "not a current inventory of later R3 code" in normalized
+    assert "supersede only that historical empty-vendor-logic boundary" in normalized
+    assert "Project-Helianthus/helianthus-ebusgateway#807" in normalized
+    assert "general detector hypothesis remains forbidden from production use" in normalized
+    assert "is not implemented by the R3 flavor evaluator" in normalized
+    assert "cannot activate or publish a device" in normalized
+    assert "historical terminal M3-03" in boundaries
+    assert "only after that capability is admitted from the same verified snapshot" in " ".join(
+        boundaries.split()
+    )
