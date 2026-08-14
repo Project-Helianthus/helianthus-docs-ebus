@@ -8,9 +8,13 @@ FMV3-M4-03. The bounded MCP data surface remains specified by
 ## Scope And Ownership
 
 The Home Assistant add-on owns option ingestion, protected endpoint
-materialization, child-process supervision, health publication, bounded
-startup recovery, and rollback to the packaged previous gateway. The current
-gateway owns Modbus endpoint-file consumption and read-only runtime behavior.
+materialization, child-process supervision, health publication, and bounded
+startup recovery with a fallback to the packaged previous gateway binary in the
+current add-on. The current gateway owns Modbus endpoint-file consumption,
+read-only runtime behavior, and qualification-result logging. A
+post-qualification rollback of a gateway/add-on pair is a separate,
+operator-controlled deployment procedure; it is not an automatic gateway or
+add-on-supervisor action.
 The transport and profile facts remain owned by `helianthus-modbus` and
 `helianthus-modbusreg` respectively.
 
@@ -134,11 +138,156 @@ Normal process exit, validation failure, redactor failure, health failure, and
 signal handling all fail closed with respect to endpoint cleanup. No path may
 leave an endpoint file for the previous gateway or a later disabled restart.
 
-## Phase Boundary
+## M4-03 Phase Boundary
 
-This contract and its implementation tests use synthetic endpoints and fake
-processes. FMV3-M4-04 remains the hard stop for a real Fronius TCP read-only
-smoke, disconnect/reconnect proof, raw MCP parity, and recovery validation.
+The deployment and recovery contract above is FMV3-M4-03. Its implementation
+tests use synthetic endpoints and fake processes. FMV3-M4-04 is separately
+authorized for one bounded read-only qualification; the pre-live contract for
+that work follows. Neither section claims that a real-device smoke has passed.
 
 No GraphQL, Portal, Home Assistant semantic, Matter, eeBUS binding, canonical
 PV freshness, source-precedence, or Modbus write surface is introduced here.
+
+## FMV3-M4-04 Pre-Live SunSpec Qualification
+
+This is the public behavior contract for gateway PR
+[`#808`](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/808).
+It defines the allowed bounded qualification behavior before live evidence is
+published. It is not a claim that any endpoint, device, model, firmware, or
+smoke outcome has been observed.
+
+### Normative Contract Record
+
+The following closed record is normative. Terms such as `UNAVAILABLE` describe
+the existing MCP retained-observation state, not canonical PV availability.
+
+```json
+{
+  "contract": "helianthus.modbus-sunspec-live-qualification.v1",
+  "phase": "FMV3-M4-04",
+  "activation": {
+    "disabled_by_default": true,
+    "worker_start_condition": "complete_explicit_modbus_opt_in"
+  },
+  "acquisition": {
+    "transport": "modbus_tcp",
+    "unit_id": 1,
+    "function_code": 3,
+    "writes_permitted": false,
+    "profile_id": "sunspec.phase1",
+    "chain_qualification": "dynamic_bounded_existing_profile_contracts",
+    "qualifications_per_attempt": 1,
+    "per_read_timeout_seconds": 2,
+    "attempt_timeout_seconds": 30
+  },
+  "recovery": {
+    "max_qualification_attempts": 2,
+    "retry_trigger": ["transport_error", "endpoint_reconnect_required"],
+    "endpoint_owned_backoff_reconnect_max": 1,
+    "final_attempt_requires_new": ["poll_generation_id", "deadline_identity"],
+    "periodic_retries": false
+  },
+  "decision_map": {
+    "supported": {
+      "decision": "GO",
+      "profile_observation": "RETAINED"
+    },
+    "unsupported_or_deferred_model": {
+      "includes_model_ids": [113],
+      "decision": "NO_GO",
+      "raw_mcp": "USABLE",
+      "profile_observation": "UNAVAILABLE"
+    },
+    "incoherent_capture": {
+      "decision": "STOP"
+    },
+    "any_error": {
+      "decision": "STOP"
+    }
+  },
+  "result_redaction": {
+    "logs_and_results": "categorical_only",
+    "forbidden": [
+      "endpoint",
+      "raw_error",
+      "serial_payload",
+      "model_payload",
+      "firmware_payload",
+      "model_chain_payload",
+      "sample_payload"
+    ]
+  },
+  "shutdown": {
+    "required_order": ["worker_cancel", "worker_join", "adapter_close"]
+  },
+  "rollback": {
+    "trigger": "explicit_operator_controlled_post_qualification_procedure",
+    "disable_modbus_endpoint": true,
+    "restore": "operator_selected_prior_gateway_addon_pair",
+    "automatic_on_stop_or_no_go": false,
+    "separate_from_startup_fallback": true,
+    "startup_fallback_parity": "not_guaranteed"
+  },
+  "live_evidence": {
+    "owner_phase": "FMV3-M4-05",
+    "prerequisite_phase": "FMV3-M4-04",
+    "required_tuple": ["endpoint_ref", "model", "firmware", "model_chain", "outcome"],
+    "published_here": false
+  }
+}
+```
+
+### Activation And Acquisition
+
+The Modbus path remains disabled by default. The qualification worker starts
+only after the complete explicit Modbus opt-in has admitted the endpoint; an
+incomplete option set and the disabled path do not start it. It performs one
+dynamically bounded SunSpec chain qualification per permitted attempt, using
+the existing `sunspec.phase1` profile contracts. The fixed protocol surface is
+Modbus TCP, unit 1, and FC03. It is read-only: it never issues a write function
+and does not widen the profile contract.
+
+Each read has a two-second bound. The total bound for each qualification attempt
+is thirty seconds, including the dynamically discovered chain reads.
+
+### Recovery And Decisions
+
+There is an initial qualification attempt and at most one final attempt. The
+final attempt is allowed only when the first attempt has both a transport error
+and `ReconnectRequired` from the endpoint. In that case, the endpoint owns at
+most one backoff/reconnect; the final attempt receives new poll-generation and
+deadline identities. No third attempt, periodic retry, or retry for a
+qualification result is permitted.
+
+An admitted supported chain yields `GO` and retains the profile observation.
+An unsupported or deferred model, including model 113, yields `NO_GO`: raw MCP
+remains usable while the profile observation is intentionally `UNAVAILABLE`.
+An incoherent capture or any error yields `STOP`.
+
+Qualification logs and result records are categorical only. They must not
+contain an endpoint, raw error text, serial data, model data, firmware data,
+model-chain data, or sample payload. This scoped rule does not change the
+separate add-on health contract's endpoint-reference field.
+
+### Shutdown, Rollback, And Evidence Boundary
+
+Shutdown cancels and joins the worker before the adapter closes. `STOP` and
+`NO_GO` are qualification decisions: the gateway records their categorical
+result and does not automatically disable the Modbus endpoint or restore a
+gateway/add-on pair. An operator may subsequently choose the separate
+post-qualification rollback procedure: disable the Modbus endpoint and select
+the prior gateway/add-on pair through the normal deployment controls. This
+procedure is explicit and operator-controlled; it is not a qualification-worker
+side effect.
+
+That procedure is distinct from the add-on's startup fallback. Startup fallback
+occurs only after the current gateway has exhausted its bounded startup attempts;
+the current add-on then starts its packaged previous gateway binary with Modbus
+disabled. It does not restore a prior add-on, and `FALLBACK_ACTIVE` proves only
+fallback liveness. It does not prove configuration or feature parity, including
+the three best-effort seed, cache, and provenance options described above.
+
+FMV3-M4-05, after FMV3-M4-04, owns publication of sanitized actual
+`endpoint_ref`, model, firmware, model-chain, and outcome evidence. This
+pre-live page deliberately contains none of that evidence and must not be read
+as a completed live-smoke claim.
