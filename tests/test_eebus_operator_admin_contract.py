@@ -24,6 +24,7 @@ def test_shared_operator_boundary_has_no_eebus_specific_authentication() -> None
         "canonical protocol-specific contract remains exclusively in",
         "post-m9-operator-pairing-browsers-v1.md",
         "post-m9-operator-admin-v1.md",
+        "6f8154011c36f4811db473fea03db8544ab488bc",
         "Those documents alone own protocol routes",
         "`eebus.v1.*` remains the only eeBUS MCP namespace",
         "introduces no eeBUS-specific login, session, cookie, CSRF token, owner credential, Home Assistant credential, or eeBUS reauthentication",
@@ -42,6 +43,9 @@ def test_shared_operator_boundary_has_no_eebus_specific_authentication() -> None
         "Home Assistant uses a non-cookie, least-privilege credential",
         "Home Assistant receives no mutation grant",
         "Portal is the only mutation UX",
+        "Home Assistant and public formatters receive no raw",
+        "Home Assistant receives no raw or operator-only identity data",
+        "Portal-only topology contract",
     ):
         assert forbidden not in text
 
@@ -61,7 +65,8 @@ def test_protocol_contract_is_linked_not_duplicated() -> None:
     for required in (
         "authorized inspection of lossless protocol-native data",
         "canonical protocol documents own all tree shape",
-        "Home Assistant and public formatters receive no raw",
+        "Both Portal and Home Assistant host operator views may receive bounded raw SPINE and complete comparison identity through the gateway typed boundary",
+        "Public and shareable formatters receive no raw or operator-only identity data",
     ):
         assert required in text
 
