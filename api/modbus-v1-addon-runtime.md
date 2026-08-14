@@ -434,6 +434,18 @@ one exact flavor contract.
   "contract": "helianthus.modbus-sunspec-live-qualification.v3",
   "phase": "FMV3-M4-04",
   "supersedes_for_new_runs": "helianthus.modbus-sunspec-live-qualification.v2",
+  "activation": {
+    "disabled_by_default": true,
+    "worker_start_condition": "complete_explicit_modbus_opt_in"
+  },
+  "acquisition": {
+    "transport": "modbus_tcp",
+    "unit_id": 1,
+    "function_code": 3,
+    "qualifications_per_attempt": 1,
+    "per_read_timeout_seconds": 2,
+    "attempt_timeout_seconds": 30
+  },
   "selection": {
     "input": "complete_terminal_verified_SunSpecChainSnapshot",
     "decoder_dispatch": "exact_registry_key",
@@ -452,8 +464,46 @@ one exact flavor contract.
     "access": "read_only_decode",
     "writes_permitted": false
   },
+  "decision_precedence": [
+    "capability",
+    "flavor_only_if_capability_ADMITTED"
+  ],
+  "capability_decision_map": {
+    "INVALID_CHAIN": "STOP",
+    "AMBIGUOUS_SOURCE": "NO_GO",
+    "SOURCE_ABSENT": "NO_GO",
+    "SOURCE_UNSUPPORTED": "NO_GO",
+    "INVALID_REQUIRED_FACT": "NO_GO",
+    "ADMITTED": "CONTINUE_FLAVOR"
+  },
+  "flavor_decision_map": {
+    "MATCHED": "GO",
+    "COMMON_IDENTITY_MISMATCH": "NO_GO",
+    "FIRMWARE_MISMATCH": "NO_GO",
+    "CHAIN_MISMATCH": "NO_GO",
+    "CAPABILITY_NOT_ADMITTED": "STOP_INCOHERENT",
+    "AMBIGUOUS_SOURCE": "STOP_INCOHERENT"
+  },
+  "runtime_or_transport_error": "STOP",
+  "recovery": {
+    "max_qualification_attempts": 2,
+    "retry_trigger": ["transport_error", "endpoint_reconnect_required"],
+    "endpoint_owned_backoff_reconnect_max": 1,
+    "final_attempt_requires_new": ["poll_generation_id", "deadline_identity"],
+    "periodic_retries": false
+  },
+  "result": {
+    "logs_and_results": "categorical_only",
+    "retained_on_go": ["capability_id", "capability_reason", "flavor_id", "flavor_reason", "sample_id"],
+    "raw_mcp_on_no_go": "USABLE",
+    "registry_observation_on_no_go": "UNAVAILABLE"
+  },
+  "shutdown": {
+    "required_order": ["worker_cancel", "worker_join", "adapter_close"]
+  },
   "go_authority": "qualification_evidence_only",
   "support_claim": false,
+  "live_result_published_here": false,
   "writes_permitted": false,
   "m5_gate": "BLOCKED_UNTIL_DEPLOYED_EXACT_GO"
 }
