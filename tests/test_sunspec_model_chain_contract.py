@@ -73,6 +73,7 @@ def test_contract_freezes_catalog_identity_retention_and_fail_closed_rules() -> 
         120: {26},
         121: {30},
         122: {44},
+        123: {24},
         124: {24},
     }
     assert re.search(r"Model `1`.*?standard length `L66`", catalog, re.DOTALL)

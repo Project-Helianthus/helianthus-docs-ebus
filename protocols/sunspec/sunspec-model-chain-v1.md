@@ -51,6 +51,11 @@ summarized identifiers, names, encodings, and declared lengths:
 - Model `120`, Nameplate: `L26`.
 - Model `121`, Basic Settings: `L30`.
 - Model `122`, Measurements_Status: `L44`.
+- Model `123`, Immediate Controls: `L24`. Its exact decoder key is
+  `(123, 24, schema_revision)`. It belongs to standard SunSpec core and is not
+  a vendor custom model. Helianthus may provide a read-only decoder for
+  retained observation and diagnosis; upstream RW metadata creates no write
+  authority.
 - Model `124`, Storage / Basic Storage Controls: `L24`.
 - Model `160`, Multiple MPPT: `L = 8 + 20 * N`, where the occurrence carries
   its reported `N` and must prove that geometry against the declared length.
@@ -218,8 +223,12 @@ The separately documented
 [`fronius-observed-flavor-v1.md`](./fronius-observed-flavor-v1.md) contract uses
 the Fronius materials in the source boundary plus one sanitized public
 observation to define an exact, experimental flavor after capability admission.
-This model-chain contract does not itself activate that flavor, and neither
-contract records a live qualification or broad Fronius support result.
+The versioned
+[`fronius-observed-flavor-v1-1.md`](./fronius-observed-flavor-v1-1.md)
+successor records a second exact chain that includes standard Model `123/L24`;
+it does not reinterpret or widen V1. This model-chain contract does not itself
+activate either flavor, and none of these contracts records a completed live
+qualification or broad Fronius support result.
 
 ## Read/write boundary
 
