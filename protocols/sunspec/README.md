@@ -5,6 +5,9 @@ They are covered by [`protocols/LICENSE`](../LICENSE), CC0-1.0.
 
 - [`sunspec-model-chain-v1.md`](./sunspec-model-chain-v1.md) defines the
   SunSpec model-chain, retention, and capability-admission contract.
+- [`fronius-observed-flavor-v1.md`](./fronius-observed-flavor-v1.md) defines
+  the first exact, evidence-bounded and read-only vendor flavor layered after
+  capability admission.
 
 The page is an independently authored contract. It does not redistribute
 upstream specification text, model files, vendor manuals, or vendor register
