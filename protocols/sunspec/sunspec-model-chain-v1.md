@@ -162,10 +162,12 @@ only an evidence-backed delta, such as bounded applicability or a documented
 quirk; it cannot replace the ordered chain, select a decoder by model ID alone,
 or turn a capability into support for a vendor product.
 
-Fronius materials in the source boundary are provenance inputs, not an active
-Fronius flavor. A future registry-selected outcome may select a capability and
-then evaluate a vendor flavor under separately documented evidence. This
-contract records no Fronius activation, live qualification, or support result.
+The separately documented
+[`fronius-observed-flavor-v1.md`](./fronius-observed-flavor-v1.md) contract uses
+the Fronius materials in the source boundary plus one sanitized public
+observation to define an exact, experimental flavor after capability admission.
+This model-chain contract does not itself activate that flavor, and neither
+contract records a live qualification or broad Fronius support result.
 
 ## Read/write boundary
 

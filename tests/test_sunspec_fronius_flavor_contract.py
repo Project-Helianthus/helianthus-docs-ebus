@@ -89,6 +89,7 @@ def test_observed_fronius_flavor_is_exact_evidence_bounded_and_read_only() -> No
 
 def test_flavor_mismatch_outcomes_are_fail_closed_and_indexed() -> None:
     flavor = text(FLAVOR)
+    chain = text(CHAIN)
     for reason in (
         "CAPABILITY_NOT_ADMITTED",
         "COMMON_IDENTITY_MISMATCH",
@@ -100,3 +101,5 @@ def test_flavor_mismatch_outcomes_are_fail_closed_and_indexed() -> None:
 
     assert "fronius-observed-flavor-v1.md" in text(SUNSPEC_README)
     assert "fronius-observed-flavor-v1.md" in text(MODBUS_README)
+    assert "fronius-observed-flavor-v1.md" in chain
+    assert "not an active\nFronius flavor" not in chain
