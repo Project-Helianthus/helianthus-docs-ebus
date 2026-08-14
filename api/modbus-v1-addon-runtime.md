@@ -346,18 +346,27 @@ snapshot, admit the complete capability, and match the exact observed flavor.
     "required_flavor": "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
     "hardcoded_model_id_rules": false
   },
-  "decision_map": {
+  "decision_precedence": [
+    "capability",
+    "flavor_only_if_capability_ADMITTED"
+  ],
+  "capability_decision_map": {
     "INVALID_CHAIN": "STOP",
     "AMBIGUOUS_SOURCE": "NO_GO",
     "SOURCE_ABSENT": "NO_GO",
     "SOURCE_UNSUPPORTED": "NO_GO",
     "INVALID_REQUIRED_FACT": "NO_GO",
-    "ADMITTED+MATCHED": "GO",
-    "ADMITTED+COMMON_IDENTITY_MISMATCH": "NO_GO",
-    "ADMITTED+FIRMWARE_MISMATCH": "NO_GO",
-    "ADMITTED+CHAIN_MISMATCH": "NO_GO",
-    "runtime_or_transport_error": "STOP"
+    "ADMITTED": "CONTINUE_FLAVOR"
   },
+  "flavor_decision_map": {
+    "MATCHED": "GO",
+    "COMMON_IDENTITY_MISMATCH": "NO_GO",
+    "FIRMWARE_MISMATCH": "NO_GO",
+    "CHAIN_MISMATCH": "NO_GO",
+    "CAPABILITY_NOT_ADMITTED": "STOP_INCOHERENT",
+    "AMBIGUOUS_SOURCE": "STOP_INCOHERENT"
+  },
+  "runtime_or_transport_error": "STOP",
   "recovery": {
     "max_qualification_attempts": 2,
     "retry_trigger": ["transport_error", "endpoint_reconnect_required"],
@@ -389,12 +398,19 @@ for the final attempt, worker-cancel/join ordering, categorical redaction, and
 operator-controlled rollback. It adds no periodic polling and no retry after a
 completed qualification decision.
 
-`INVALID_CHAIN` and runtime or transport errors are `STOP` because no coherent
-semantic input exists. A complete chain whose capability cannot be admitted,
-or whose admitted capability does not match the exact required Fronius flavor,
-is `NO_GO`; raw MCP remains available, but no registry qualification
-observation is retained. Only capability `ADMITTED` together with flavor
-`MATCHED` is `GO` for this bounded test tuple.
+The capability result is evaluated first and is final unless it is `ADMITTED`.
+For every other capability reason, the flavor result is ignored and the
+capability decision map supplies the result. `INVALID_CHAIN` and runtime or
+transport errors are `STOP` because no coherent semantic input exists. Other
+non-admitted capability reasons are `NO_GO`; raw MCP remains available, but no
+registry qualification observation is retained.
+
+Only an `ADMITTED` capability proceeds to flavor evaluation. `MATCHED` is `GO`;
+an identity, firmware, or chain mismatch is `NO_GO`. A flavor result that says
+the capability was not admitted or that the source was ambiguous after the
+capability result was already `ADMITTED` is internally inconsistent and maps
+through `STOP_INCOHERENT` to `STOP`. Thus capability `ADMITTED` together with
+flavor `MATCHED` is the only `GO` for this bounded test tuple.
 
 `GO` is qualification evidence only. It does not claim support for a product
 family, authorize writes or automatic activation, publish canonical PV
