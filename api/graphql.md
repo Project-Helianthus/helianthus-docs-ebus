@@ -580,14 +580,16 @@ enum Fm5SemanticDegradedReason {
 `fm5Interpretation` is nullable until the first coherent structural
 classification. A null value is the only bootstrap/unavailable
 representation and must not synthesize `GPIO_ONLY` or `ABSENT`. Once a verdict
-exists, its object fields remain non-null as shown above.
+exists, only `mode` and `evidenceRevision` are non-null. `degradedReason`
+remains nullable and is null for healthy `INTERPRETED` and fresh coherent
+`ABSENT`. A degraded verdict carries one closed reason; `GPIO_ONLY` requires
+fresh coherent structural evidence and carries only
+`CONFIGURATION_NOT_INTERPRETABLE`.
 
 `mode` is the last coherent structural classification and does not change on a
 transient acquisition failure. A healthy current `INTERPRETED` result and a
-fresh coherent `ABSENT` result have null `degradedReason`. `GPIO_ONLY` requires
-fresh coherent structural evidence and carries only
-`CONFIGURATION_NOT_INTERPRETABLE`; a transient reason may accompany the
-unchanged retained mode and marks retained values non-current.
+fresh coherent `ABSENT` result have null `degradedReason`; a transient reason
+may accompany the unchanged retained mode and marks retained values non-current.
 `evidenceRevision` binds all fields to one acquisition result. Existing
 `fm5SemanticMode` remains stable for current consumers but does not authorize a
 client to infer degradation. The canonical shared behavior and reason
