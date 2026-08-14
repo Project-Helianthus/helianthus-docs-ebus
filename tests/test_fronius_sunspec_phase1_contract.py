@@ -363,14 +363,26 @@ def test_source_pins_scope_and_dispositions_are_exact() -> None:
         "fronius-manual-4204102649",
         "fronius-register-package-1.2.7-2",
         "sunspec-models-7abdf898",
-        "sunspec-device-information-model-v1.1",
+        "sunspec-device-information-model-v1.2",
     }
     assert by_id["fronius-manual-4204102649"]["edition"] == "033-24022026"
+    assert by_id["fronius-manual-4204102649"]["sha256"] == (
+        "aa1e69432472ae2f25075c01a651201f747ae0f9e85c8894dfa1f36883d06890"
+    )
     assert by_id["fronius-manual-4204102649"]["url"] == "https://manuals.fronius.com/html/4204102649/en-US.html"
     assert by_id["fronius-register-package-1.2.7-2"]["package_version"] == "1.2.7-2"
+    assert by_id["fronius-register-package-1.2.7-2"]["sha256"] == (
+        "dc4c5d49362ee0c9721f21886c17fa18497e54c4d92bb5cc2c50472deb266b55"
+    )
     assert by_id["sunspec-models-7abdf898"]["commit"] == "7abdf8982d5364f8ae916deee18aac86c11be36d"
     assert by_id["sunspec-models-7abdf898"]["revision_date"] == "2026-04-22"
-    assert by_id["sunspec-device-information-model-v1.1"]["version"] == "1.1"
+    assert by_id["sunspec-device-information-model-v1.2"] == {
+        "source_id": "sunspec-device-information-model-v1.2",
+        "kind": "official_standard_specification",
+        "version": "1.2",
+        "reference_only": True,
+        "publication_treatment": "independent_summary_only",
+    }
     assert manifest["schema"] == "helianthus.fronius-sunspec.phase1-evidence"
     assert manifest["version"] == 1
     assert manifest["issue"] == "Project-Helianthus/helianthus-docs-ebus#397"

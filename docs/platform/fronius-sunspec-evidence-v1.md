@@ -2,9 +2,8 @@
 
 ## Status and scope
 
-This is the `FMV3-M3-01` evidence packet for issue #397. It records the
-documentary boundary for the Fronius-oriented SunSpec profile in
-`helianthus-modbusreg`. Its companion manifest retains the
+This is the `FMV3-M3-01` evidence packet for issue #397. It records a legacy qualification harness and documentary boundary, not a Fronius-oriented support
+profile in `helianthus-modbusreg`. Its companion manifest retains the
 `helianthus.fronius-sunspec.phase1-evidence` schema and this packet's original
 provenance. A separate `m3_03_completion` object records the later issue #401
 terminal disposition. This packet is not a device qualification result, a live
@@ -17,7 +16,7 @@ Original, synthetic logical-word examples are under
 Their focused contract test is
 [`tests/test_fronius_sunspec_phase1_contract.py`](../../tests/test_fronius_sunspec_phase1_contract.py).
 
-This packet refines the evidence and profile boundary in
+This packet refines the evidence and legacy-harness boundary in
 [`modbus-multivendor-boundaries.md`](./modbus-multivendor-boundaries.md). The
 Modbus transport operation boundary remains authoritative in
 [`modbus-foundation-profile-contract-v1.md`](./modbus-foundation-profile-contract-v1.md)
@@ -27,10 +26,10 @@ and its CC0 wire companion; this packet does not redefine Modbus framing.
 
 | Source | Inspectable pin | What is used here | Publication treatment |
 | --- | --- | --- | --- |
-| Fronius *Modbus TCP & RTU* manual | document `42,0410,2649`, edition `033-24022026`; [HTML](https://manuals.fronius.com/html/4204102649/en-US.html), [PDF](https://www.fronius.com/~/downloads/Solar%20Energy/Operating%20Instructions/42%2C0410%2C2649.pdf) | SunSpec base and zero-based address normalization, dynamic chain discovery, FC03, TCP unit ID `0x01`, serial/TCP availability, model-mode families, and request pacing | Independently summarized; no manual pages, tables, or register rows copied |
-| Fronius current register package | [QR-link 0024](https://www.fronius.com/QR-link/0024), redirect target `gen24-modbus-api-external-docs.zip`, package `1.2.7-2` | GEN24 Primo/Symo ROW int+SF applicability, Common `1` reported length `65`, inverter `101`/`103` reported length `50`, `Fronius` manufacturer string, and end marker | Source-only. Workbook contents and proprietary register tables are not redistributed |
+| Fronius *Modbus TCP & RTU* manual | document `42,0410,2649`, edition `033-24022026`; [HTML](https://manuals.fronius.com/html/4204102649/en-US.html), [PDF](https://www.fronius.com/~/downloads/Solar%20Energy/Operating%20Instructions/42%2C0410%2C2649.pdf); PDF SHA-256 `aa1e69432472ae2f25075c01a651201f747ae0f9e85c8894dfa1f36883d06890` | SunSpec base and zero-based address normalization, dynamic chain discovery, FC03, TCP unit ID `0x01`, serial/TCP availability, model-mode families, and request pacing | Independently summarized; no manual pages, tables, or register rows copied |
+| Fronius current register package | [QR-link 0024](https://www.fronius.com/QR-link/0024), redirect target `gen24-modbus-api-external-docs.zip`, package `1.2.7-2`, ZIP SHA-256 `dc4c5d49362ee0c9721f21886c17fa18497e54c4d92bb5cc2c50472deb266b55` | GEN24 Primo/Symo ROW int+SF applicability, Common `1` reported length `65`, inverter `101`/`103` reported length `50`, `Fronius` manufacturer string, and end marker | Source-only. Workbook contents and proprietary register tables are not redistributed |
 | SunSpec Models | [github.com/sunspec/models](https://github.com/sunspec/models), commit `7abdf8982d5364f8ae916deee18aac86c11be36d` dated 2026-04-22, Apache-2.0 | Standard Common and inverter model identifiers, declared types, and end-sentinel convention | Independently summarized; model files are not copied |
-| SunSpec Device Information Model Specification | [approved version 1.1, 2022-05-09](https://sunspec.org/wp-content/uploads/2025/01/SunSpec-Device-Information-Model-Specificiation-V1-1-final-1.pdf) | Standard integer representation, multi-register ordering, scale-factor semantics, and fixed-width string rules | Independently summarized; specification pages and tables are not copied |
+| SunSpec Device Information Model Specification | version `1.2` reference | Standard integer representation, multi-register ordering, scale-factor semantics, and fixed-width string rules | Independently summarized; specification pages and tables are not copied |
 
 The package changelog ties `1.2.7-0` and `1.2.7-1` to GEN24 `1.36.x`; `1.2.7-2`
 fixes the Model `124` `OutWRte` unit reference. That is source qualification,
@@ -120,6 +119,12 @@ forbidden from production use, does not qualify any product automatically, and
 is not an unresolved M3-03 gate. The terminal `STANDARD_ONLY` disposition is
 therefore compatible with preserving this historical/evidentiary research
 claim.
+
+Issue #436 supersedes neither the synthetic fixtures nor this retained legacy
+qualification harness. It defines a generic model-chain contract separately.
+This packet is not a Fronius support claim, has no live result, and can only
+feed a future registry-selected outcome after separately implemented registry
+selection and admissible evidence.
 
 ## Synthetic fixtures
 

@@ -101,6 +101,7 @@ def test_existing_fronius_material_is_legacy_only_and_points_to_registry_selecti
 
     assert manifest["m3_03_completion"]["disposition"] == "STANDARD_ONLY"
     assert "PENDING_M3_03" not in evidence
+    assert "PENDING_M3_03" not in boundaries
     assert "legacy qualification harness" in evidence.lower()
     assert "future registry-selected outcome" in evidence.lower()
     assert "not a Fronius support claim" in evidence

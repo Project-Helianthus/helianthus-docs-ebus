@@ -156,6 +156,11 @@ It defines the allowed bounded qualification behavior before live evidence is
 published. It is not a claim that any endpoint, device, model, firmware, or
 smoke outcome has been observed.
 
+This #435 page remains a legacy qualification harness. It preserves the
+existing `sunspec.phase1` record exactly and does not claim Fronius support,
+select a capability profile or vendor flavor, or publish a live result. A
+future registry-selected outcome is outside this suspended gateway #808 scope.
+
 ### Normative Contract Record
 
 The following closed record is normative. Terms such as `UNAVAILABLE` describe
