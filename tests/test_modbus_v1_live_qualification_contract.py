@@ -102,8 +102,12 @@ class ModbusV1LiveQualificationContractTest(unittest.TestCase):
         self.assertEqual(
             record["rollback"],
             {
+                "trigger": "explicit_operator_controlled_post_qualification_procedure",
                 "disable_modbus_endpoint": True,
-                "restore": "prior_gateway_addon_pair",
+                "restore": "operator_selected_prior_gateway_addon_pair",
+                "automatic_on_stop_or_no_go": False,
+                "separate_from_startup_fallback": True,
+                "startup_fallback_parity": "not_guaranteed",
             },
         )
         self.assertEqual(
