@@ -109,4 +109,3 @@ def test_new_flavor_is_indexed_without_replacing_v1() -> None:
     index = text(README)
     assert "fronius-observed-flavor-v1.md" in index
     assert "fronius-observed-flavor-v1-1.md" in index
-
