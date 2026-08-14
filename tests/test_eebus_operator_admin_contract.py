@@ -174,9 +174,12 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
         "must not synthesize `GPIO_ONLY` or `ABSENT`",
         "degradedReason: Fm5SemanticDegradedReason",
         "evidenceRevision: String!",
+        "Once a verdict exists, only `mode` and `evidenceRevision` are non-null",
+        "`degradedReason` remains nullable and is null for healthy `INTERPRETED` and fresh coherent `ABSENT`",
         "Existing `fm5SemanticMode` remains stable",
     ):
         assert required in graphql
+    assert "its object fields remain non-null as shown above" not in graphql
     for required in (
         "gateway-owned eeBUS operator projection",
         "native pairing flow without an eeBUS-specific credential or reauthentication step",
