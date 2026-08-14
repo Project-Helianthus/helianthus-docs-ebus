@@ -161,7 +161,8 @@ When FM5 evidence exists but the runtime cannot safely interpret FM5-backed
 solar semantics, the MCP plane remains non-null. If no prior coherent snapshot
 exists, it returns an empty typed object. A transient acquisition degradation
 retains only the last coherent snapshot and pairs it with the provider-owned
-FM5 degraded verdict; it is not a new live sample. `ABSENT` or a known
+FM5 degraded reason/revision; it is not a new live sample and does not change
+the last coherent structural mode. Fresh coherent `ABSENT` or a known
 non-interpretable configuration withdraws prior structural data. Consumers
 must never treat an empty or retained object as a zero-valued solar measurement.
 
@@ -173,11 +174,12 @@ Publication gate:
 - Entire family is gated by `fm5_config<=2`.
 - Individual instances are published only when `GG=0x05 RR=0x0004` (`cylinder_temperature`) is live and decodable for that instance.
 - Config-only responses from `GG=0x05 RR=0x0001..0x0003` do not imply a real cylinder and must not create `cylinders[]` entries.
-- When no prior coherent instance exists, FM5 absence or GPIO-only structural
-  withdrawal returns `[]`. A transient GPIO-only acquisition reason retains
-  only the last coherent instance set, paired with the same degraded verdict,
-  and does not update or zero it. Consumers distinguish retention from current
-  data through the mode/reason/revision result.
+- When no prior coherent instance exists, a fresh coherent FM5 absence or
+  GPIO-only structural withdrawal returns `[]`. A transient acquisition reason
+  retains only the last coherent instance set, paired with the same degraded
+  reason/revision, does not change the last coherent structural mode, and does
+  not update or zero it. Consumers distinguish retention from current data
+  through the mode/reason/revision result.
 
 | Semantic Path | B524 | Type |
 |---------------|------|------|

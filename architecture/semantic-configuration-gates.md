@@ -159,10 +159,10 @@ See:
   - `GG=0x04` solar readability
 - Structural effect:
   - a coherent `INTERPRETED` acquisition creates or updates `solar`
-  - a transient `GPIO_ONLY` acquisition reason retains the last coherent
+  - a transient acquisition reason retains the last coherent
     snapshot without updating or zeroing it
-  - `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the
-    family
+  - fresh coherent `ABSENT` or
+    `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family
 - Current contract:
   - no partial or synthetic `solar` family is created in non-interpreted mode;
     if no coherent snapshot exists, the typed object remains empty
@@ -176,10 +176,10 @@ See:
   - `GG=0x05` family readability
 - Structural effect:
   - a coherent `INTERPRETED` acquisition creates or updates `cylinders[]`
-  - a transient `GPIO_ONLY` acquisition reason retains the last coherent
+  - a transient acquisition reason retains the last coherent
     instance set without updating or zeroing it
-  - `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the
-    family
+  - fresh coherent `ABSENT` or
+    `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family
 
 ### Individual cylinder gate
 
