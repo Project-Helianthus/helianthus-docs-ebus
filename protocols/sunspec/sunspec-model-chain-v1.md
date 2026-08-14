@@ -102,9 +102,31 @@ A **Capability Profile** is a separately versioned, encoding-neutral statement
 derived only from a complete valid model-chain occurrence set and valid typed
 facts. The initial profile identifier is
 `sunspec.inverter.three_phase.monitoring@1.0.0`. It may be satisfied by either
-Model `103` or Model `113` only when the complete minimum fact set declared by
-the eventual registry is present and valid; this page does not invent that fact
-set or claim an implementation exists.
+Model `103` or Model `113` only when the following complete minimum fact set is
+present and valid:
+
+| Canonical field ID | Unit |
+|---|---|
+| `inverter.ac.current.total` | `A` |
+| `inverter.ac.current.phase_a` | `A` |
+| `inverter.ac.current.phase_b` | `A` |
+| `inverter.ac.current.phase_c` | `A` |
+| `inverter.ac.voltage.phase_a` | `V` |
+| `inverter.ac.voltage.phase_b` | `V` |
+| `inverter.ac.voltage.phase_c` | `V` |
+| `inverter.ac.power.active` | `W` |
+| `inverter.ac.frequency` | `Hz` |
+| `inverter.ac.energy_lifetime` | `Wh` |
+| `inverter.temperature.cabinet` | `C` |
+| `inverter.operating_state` | `none` |
+| `inverter.events.1` | `none` |
+| `inverter.events.2` | `none` |
+
+Admission requires exactly one qualifying source occurrence, either `103/L50`
+or `113/L60`, with three-phase topology. A duplicate source occurrence or a
+chain carrying both encodings is ambiguous and fails closed. The registry does
+not pick the first or last occurrence and does not merge facts across source
+models.
 
 Model `103` and Model `113` are capability-equivalent only for that complete,
 valid minimum fact set: both decoders must emit the same canonical field IDs,
@@ -113,6 +135,12 @@ raw encodings and provenance. Capability equivalence does not assert equal
 precision or representation. A wrong model length, invalid encoding, sentinel,
 or non-finite value in any required fact fails admission rather than producing
 a partial or inferred capability.
+
+A required enum is valid for admission only when its numeric value has a known
+symbol in the pinned schema. A required bitfield is valid only when it has no
+unknown required bitfield bits. An unknown required enum symbol or unknown
+required bitfield bits therefore fails admission even though the decoder keeps
+the raw numeric value for diagnosis.
 
 No raw value becomes a capability merely because its model ID is known. Raw
 sentinel values, noncanonical NaN or infinity values, invalid scale factor
@@ -134,10 +162,12 @@ only an evidence-backed delta, such as bounded applicability or a documented
 quirk; it cannot replace the ordered chain, select a decoder by model ID alone,
 or turn a capability into support for a vendor product.
 
-Fronius materials in the source boundary are provenance inputs, not an active
-Fronius flavor. A future registry-selected outcome may select a capability and
-then evaluate a vendor flavor under separately documented evidence. This
-contract records no Fronius activation, live qualification, or support result.
+The separately documented
+[`fronius-observed-flavor-v1.md`](./fronius-observed-flavor-v1.md) contract uses
+the Fronius materials in the source boundary plus one sanitized public
+observation to define an exact, experimental flavor after capability admission.
+This model-chain contract does not itself activate that flavor, and neither
+contract records a live qualification or broad Fronius support result.
 
 ## Read/write boundary
 
