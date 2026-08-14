@@ -142,9 +142,14 @@ boundary defined in
 [`../api/eebus-operator-admin.md`](../api/eebus-operator-admin.md). It provides
 a native pairing flow without an eeBUS-specific credential or reauthentication
 step and submits only the closed typed actions owned by the gateway. It never
-receives raw protocol payload, trust-store access, operator-socket access,
-transport ownership, or a second pairing state machine. Protocol-specific
-action and identity semantics remain in the canonical
+changes the generic Home Assistant authentication or lifecycle, which remain
+outside the eeBUS contract. Home Assistant may receive bounded raw SPINE and
+complete comparison identity through the gateway boundary only. It uses that
+data only in active view/request memory, does not persist it beyond the active
+view, does not promote it into semantic state, and never includes it in public
+or shareable output. It never receives trust-store access, operator-socket
+access, or transport ownership, and it does not own a second pairing state
+machine. Protocol-specific action and identity semantics remain in the canonical
 `helianthus-docs-eebus` documents linked by that boundary.
 
 After the pending GraphQL contract and the corresponding HA PR are implemented,
