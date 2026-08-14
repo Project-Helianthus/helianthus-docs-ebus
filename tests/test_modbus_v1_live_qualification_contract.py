@@ -6,6 +6,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "api" / "modbus-v1-addon-runtime.md"
 RECORD_HEADING = "### Normative Contract Record\n\n"
+V2_RECORD_HEADING = "### Registry-Selected V2 Contract Record\n\n"
 
 
 def normative_record() -> dict:
@@ -15,6 +16,17 @@ def normative_record() -> dict:
     )[0]
     if section.count("```json\n") != 1:
         raise AssertionError("normative contract record must contain one JSON block")
+    payload = section.split("```json\n", 1)[1].split("\n```", 1)[0]
+    return json.loads(payload)
+
+
+def registry_selected_v2_record() -> dict:
+    text = CONTRACT.read_text(encoding="utf-8")
+    section = text.split(V2_RECORD_HEADING, 1)[1].split(
+        "### V2 Activation, Recovery, And Evidence Boundary\n", 1
+    )[0]
+    if section.count("```json\n") != 1:
+        raise AssertionError("V2 contract record must contain one JSON block")
     payload = section.split("```json\n", 1)[1].split("\n```", 1)[0]
     return json.loads(payload)
 
@@ -134,6 +146,85 @@ class ModbusV1LiveQualificationContractTest(unittest.TestCase):
                 "published_here": False,
             },
         )
+
+    def test_v2_uses_registry_capability_and_flavor_without_model_id_rules(self) -> None:
+        record = registry_selected_v2_record()
+        self.assertEqual(
+            record["contract"], "helianthus.modbus-sunspec-live-qualification.v2"
+        )
+        self.assertEqual(record["supersedes_for_new_runs"], record["legacy_contract"])
+        self.assertEqual(
+            record["registry_dependency"],
+            {
+                "module": "github.com/Project-Helianthus/helianthus-modbusreg",
+                "version": "v0.1.0",
+                "merge": "0567cac9db3749086c46f05b2c4c0a24c2371763",
+            },
+        )
+        self.assertEqual(
+            record["selection"],
+            {
+                "input": "complete_terminal_verified_SunSpecChainSnapshot",
+                "decoder_dispatch": "exact_registry_key",
+                "capability": "sunspec.inverter.three_phase.monitoring@1.0.0",
+                "required_flavor": "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
+                "hardcoded_model_id_rules": False,
+            },
+        )
+        self.assertNotIn("includes_model_ids", json.dumps(record))
+
+    def test_v2_has_closed_registry_reason_to_decision_mapping(self) -> None:
+        record = registry_selected_v2_record()
+        self.assertEqual(
+            record["decision_precedence"],
+            ["capability", "flavor_only_if_capability_ADMITTED"],
+        )
+        self.assertEqual(
+            record["capability_decision_map"],
+            {
+                "INVALID_CHAIN": "STOP",
+                "AMBIGUOUS_SOURCE": "NO_GO",
+                "SOURCE_ABSENT": "NO_GO",
+                "SOURCE_UNSUPPORTED": "NO_GO",
+                "INVALID_REQUIRED_FACT": "NO_GO",
+                "ADMITTED": "CONTINUE_FLAVOR",
+            },
+        )
+        self.assertEqual(
+            record["flavor_decision_map"],
+            {
+                "MATCHED": "GO",
+                "COMMON_IDENTITY_MISMATCH": "NO_GO",
+                "FIRMWARE_MISMATCH": "NO_GO",
+                "CHAIN_MISMATCH": "NO_GO",
+                "CAPABILITY_NOT_ADMITTED": "STOP_INCOHERENT",
+                "AMBIGUOUS_SOURCE": "STOP_INCOHERENT",
+            },
+        )
+        self.assertEqual(record["runtime_or_transport_error"], "STOP")
+
+        def resolve(capability: str, flavor: str) -> str:
+            capability_result = record["capability_decision_map"][capability]
+            if capability_result != "CONTINUE_FLAVOR":
+                return capability_result
+            flavor_result = record["flavor_decision_map"][flavor]
+            return "STOP" if flavor_result == "STOP_INCOHERENT" else flavor_result
+
+        for capability, flavor, expected in (
+            ("INVALID_CHAIN", "CAPABILITY_NOT_ADMITTED", "STOP"),
+            ("SOURCE_ABSENT", "CAPABILITY_NOT_ADMITTED", "NO_GO"),
+            ("AMBIGUOUS_SOURCE", "AMBIGUOUS_SOURCE", "NO_GO"),
+            ("ADMITTED", "MATCHED", "GO"),
+            ("ADMITTED", "COMMON_IDENTITY_MISMATCH", "NO_GO"),
+            ("ADMITTED", "FIRMWARE_MISMATCH", "NO_GO"),
+            ("ADMITTED", "CHAIN_MISMATCH", "NO_GO"),
+            ("ADMITTED", "CAPABILITY_NOT_ADMITTED", "STOP"),
+        ):
+            self.assertEqual(resolve(capability, flavor), expected)
+        self.assertEqual(record["go_authority"], "qualification_evidence_only")
+        self.assertFalse(record["support_claim"])
+        self.assertFalse(record["live_result_published_here"])
+        self.assertFalse(record["writes_permitted"])
 
 
 if __name__ == "__main__":
