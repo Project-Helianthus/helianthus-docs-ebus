@@ -41,6 +41,21 @@ categorical reasons without partial flavor facts:
 - `AMBIGUOUS_SOURCE`;
 - `MATCHED`.
 
+Evaluation uses the same complete snapshot as capability admission. Reason
+precedence is exact: a capability `AMBIGUOUS_SOURCE` maps first to flavor
+`AMBIGUOUS_SOURCE`; every other non-admitted capability maps to
+`CAPABILITY_NOT_ADMITTED`; then Common manufacturer/model mismatch maps to
+`COMMON_IDENTITY_MISMATCH`; version mismatch maps to `FIRMWARE_MISMATCH`;
+ordered-chain mismatch maps to `CHAIN_MISMATCH`; otherwise the result is
+`MATCHED`.
+
+The identity tuple contains exactly Common `Mn`, `Md`, and `Vr`, matched as the
+three strings above without trimming, case folding, prefixing, or version-range
+interpretation. Common `SN`, `Opt`, and `DA`, plus endpoint, unit ID, function,
+PDU offset, and other acquisition provenance are not flavor matching inputs.
+They remain retained by their owning raw/typed provenance contracts and cannot
+be supplied separately to this evaluator.
+
 Raw model occurrences, canonical capability facts, and acquisition provenance
 remain owned by their original contracts. A mismatch never rewrites or drops
 them.

@@ -89,13 +89,14 @@ applicability and detection dimensions inside Huawei profiles, not reasons to
 create separate repositories.
 
 [`fronius-sunspec-evidence-v1.md`](./fronius-sunspec-evidence-v1.md) records
-the current M3-01 Fronius documentary boundary. Its terminal M3-03 disposition
-is `STANDARD_ONLY`; the retained detector claim is a research `HYPOTHESIS`, not
-a Fronius overlay, activation, or support claim. The generic
+the M3-01 Fronius documentary boundary. Its historical terminal M3-03
+disposition is `STANDARD_ONLY`; the retained general detector claim remains a
+research `HYPOTHESIS`, not an activation or support claim. The generic
 [`SunSpec model-chain contract`](../../protocols/sunspec/sunspec-model-chain-v1.md)
 separates ordered model occurrences, capability profiles, and vendor flavors.
-Its initial `sunspec.inverter.three_phase.monitoring@1.0.0` profile has no write authority and a future registry-selected outcome is required before any
-vendor flavor can be evaluated.
+Its initial `sunspec.inverter.three_phase.monitoring@1.0.0` profile has no write authority. R3 permits the exact experimental Fronius observed flavor only after
+that capability is admitted from the same verified snapshot; the result cannot
+activate acquisition, qualify a product automatically, or publish support.
 
 Profiles are versioned and independently disableable. Failure or dispute in one
 profile must not change the shared runtime or silently alter another profile.

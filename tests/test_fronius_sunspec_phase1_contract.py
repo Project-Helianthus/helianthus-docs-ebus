@@ -174,15 +174,18 @@ def markdown_h2_section(text: str, heading: str) -> str:
 def m3_03_document_section_errors(section: str) -> list[str]:
     normalized = " ".join(section.split())
     required_semantics = [
-        "The only current M3-03 conclusion is **`STANDARD_ONLY`**.",
+        "At M3-03, the terminal conclusion was **`STANDARD_ONLY`**.",
         (
             "No production Fronius overlay, detector, automatic product "
             "qualification, write capability, TCP production dependency, "
-            "authorization effect, or runtime effect is admitted."
+            "authorization effect, or runtime effect was admitted by that milestone."
         ),
         "The hard stop is before `FMV3-M4-01`.",
         "`FSS-C-007` remains a retained **`HYPOTHESIS`**",
-        "forbidden from production use",
+        "general detector hypothesis remains forbidden from production use",
+        "exact historical M3-03 completion record",
+        "supersede only that historical empty-vendor-logic boundary",
+        "cannot activate or publish a device",
     ]
     errors = [
         f"missing:{wording}" for wording in required_semantics if wording not in normalized
