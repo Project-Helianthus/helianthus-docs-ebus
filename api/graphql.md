@@ -577,11 +577,16 @@ enum Fm5SemanticDegradedReason {
 }
 ```
 
-`degradedReason` is null only for `INTERPRETED` and `ABSENT`; every
-`GPIO_ONLY` result carries one reason. `evidenceRevision` binds all fields to
-one acquisition result. Existing `fm5SemanticMode` remains stable for current
-consumers but does not authorize a client to infer degradation. The canonical
-shared behavior and reason precedence are defined in
+`mode` is the last coherent structural classification and does not change on a
+transient acquisition failure. A healthy current `INTERPRETED` result and a
+fresh coherent `ABSENT` result have null `degradedReason`. `GPIO_ONLY` requires
+fresh coherent structural evidence and carries only
+`CONFIGURATION_NOT_INTERPRETABLE`; a transient reason may accompany the
+unchanged retained mode and marks retained values non-current.
+`evidenceRevision` binds all fields to one acquisition result. Existing
+`fm5SemanticMode` remains stable for current consumers but does not authorize a
+client to infer degradation. The canonical shared behavior and reason
+precedence are defined in
 [`eebus-operator-admin.md`](./eebus-operator-admin.md).
 
 The architectural rationale and the full B524 evidence trail for structure/ownership decisions are documented in:

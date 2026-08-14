@@ -18,42 +18,39 @@ that protocol concern.
 `eebus.v1.*` remains the only eeBUS MCP namespace. It stays read-only. There is
 no v2 namespace, compatibility alias, public pairing tool, GraphQL mutation, or
 Portal-private copy of raw protocol truth. Operator mutations use the
-separately authenticated gateway admin boundary defined by the canonical API.
+gateway-owned typed API defined by the canonical protocol contract.
 
 ## Shared Ownership Boundary
 
 | Component | Shared responsibility | Forbidden responsibility |
 | --- | --- | --- |
 | eeBUS runtime/coordinator | All protocol-native discovery, identity, connection, trust, persistence, and raw-topology behavior defined by the canonical protocol documents. | Browser or Home Assistant authentication; semantic eBUS projection. |
-| Gateway | Authentication, authorization, CSRF enforcement, replay-safe action admission, sanitized audit outcomes, and typed coordinator calls. | Parsing trust-store bytes in an HTTP handler; inventing a second protocol state machine or raw topology. |
-| Portal | Owner-only rendering and controlled action submission through the gateway boundary. | Direct filesystem/store access, direct socket access, implicit trust, or semantic promotion of raw data. |
-| Home Assistant | Sanitized status, setup/options/repair presentation, and a fixed link to the owner Portal. | Operator-only identity, raw protocol data, any pairing mutation, or delegated authority. |
+| Gateway | Bounded request validation, replay-safe action admission, sanitized audit outcomes, and typed coordinator calls. | Parsing trust-store bytes in an HTTP handler; inventing a second protocol state machine, raw topology, or eeBUS-specific authentication system. |
+| Portal | Full pairing and operator rendering through the gateway boundary. | Direct filesystem/store access, direct socket access, implicit trust, or semantic promotion of raw data. |
+| Home Assistant | Native pairing flow and sanitized status through the same gateway boundary. | Direct trust-store/socket access, transport ownership, automatic trust, or a second pairing state machine. |
 
 Portal and Home Assistant never read the trust store, its bytes, or the
 owner-only operator socket. They are clients of the gateway boundary. Only the
 gateway's typed adapter may reach the coordinator command boundary, and it may
 not expose private socket framing or store representations.
 
-## Authentication And Mutation Safety
+## Consumer Boundary And Mutation Safety
 
-When the corresponding authenticated boundary cannot be established, all
-operator reads and mutations fail closed. No unauthenticated admin-status
-fallback exists; authentication and authorization run before object resolution,
-request-body processing that could disclose object existence, or coordinator
-invocation. Route and error-code definitions remain in the canonical API.
+This contract introduces no eeBUS-specific login, session, cookie, CSRF token,
+owner credential, Home Assistant credential, or eeBUS reauthentication.
+Generic Portal and Home Assistant authentication remain out of scope and are
+neither replaced nor modified here. Pairing actions remain functional in both
+Portal and Home Assistant; their availability is not deferred until a future
+shared Portal login exists.
 
-The Portal profile requires an owner-authenticated same-origin session and
-CSRF-safe mutation admission. The gateway rejects unauthorized, cross-origin,
-stale, malformed, or replay-conflicting actions without invoking the protocol
-runtime. The canonical API owns the concrete request fields and admission
-vocabulary.
-
-Home Assistant uses a non-cookie, least-privilege credential bound to one
-config entry. Ambient browser cookies and browser-origin use of that credential
-are rejected. Home Assistant receives no mutation grant, candidate view, raw
-view, trust authority, credential exchange, or authority-bearing deep link.
-Actions that require pairing or untrust open a fixed Portal path; the owner
-authenticates and performs the action there.
+Both consumers submit the canonical closed action shapes to the gateway-owned
+typed API. The gateway still enforces method and content type, bounded bodies,
+exact state revision, idempotency binding, handle lifetime, exact OOB identity
+comparison, action ordering, and deterministic non-mutating rejection before
+coordinator invocation. Removing eeBUS-specific authentication does not allow
+discovery to authorize a dial, automatic trust, implicit persistence, direct
+store access, or a second pairing FSM. Route and error-code definitions remain
+in the canonical protocol API.
 
 Responses, audit data, logs, metrics, traces, crash data, URLs, and shareable
 evidence exclude private keys, tokens, private PEM, trust-store bytes,
@@ -73,8 +70,9 @@ requirements.
 
 ## FM5 Behavioral Verdict
 
-FM5 interpretation is one runtime result, not a UI label. The provider
-publishes the tuple:
+FM5 interpretation is one runtime result, not a UI label. Structural FM5 mode
+is independent from transient acquisition health. The provider publishes the
+tuple:
 
 ```text
 fm5_semantic_mode
@@ -85,16 +83,20 @@ fm5_semantic_evidence_revision
 The `fm5_semantic_degraded_reason` and
 `fm5_semantic_evidence_revision` fields are inseparable from the mode result.
 
-The closed modes remain `INTERPRETED`, `GPIO_ONLY`, and `ABSENT`:
+The closed structural modes remain `INTERPRETED`, `GPIO_ONLY`, and `ABSENT`:
 
-- `INTERPRETED` means the controller/configuration gate and every required
-  acquisition for the currently selected FM5 family completed coherently.
-- `GPIO_ONLY` means current or retained admissible FM5 identity evidence exists
-  but the current acquisition cannot safely publish interpreted solar/cylinder
-  semantics. Its mandatory reason distinguishes a deliberate non-interpretable
-  profile from a failed read, including `CONTROLLER_UNREACHABLE` when only
-  retained evidence remains.
-- `ABSENT` means no current or retained admissible FM5 identity evidence exists.
+- `INTERPRETED` means fresh coherent identity and configuration evidence
+  classified the selected FM5 family as structurally interpretable. A known
+  coherent `INTERPRETED` baseline remains `INTERPRETED` across a transient
+  controller, configuration, solar, cylinder, freshness, or generation
+  failure; retained values are not a new live acquisition.
+- `GPIO_ONLY` requires fresh, coherent structural evidence that the live
+  configuration is outside the interpreted FM5 profile. It carries exactly
+  `CONFIGURATION_NOT_INTERPRETABLE`; a failed read, missing controller snapshot,
+  stale observation, or generation race cannot create this mode.
+- `ABSENT` requires a fresh coherent structural observation with no admissible
+  FM5 identity. An incomplete or failed refresh does not prove absence and
+  does not replace the previous coherent mode.
 
 The closed degraded-reason set is:
 
@@ -115,12 +117,24 @@ The named codes are `CONTROLLER_UNREACHABLE`, `CONFIGURATION_UNAVAILABLE`,
 
 Reason precedence follows the acquisition pipeline in the order above, except
 that `EVIDENCE_STALE` precedes family reads and `INCOHERENT_ACQUISITION` is the
-terminal catch for a generation mismatch. The reason is `null` only for
-`INTERPRETED` and `ABSENT`. `GPIO_ONLY` always carries exactly one reason:
-`CONFIGURATION_NOT_INTERPRETABLE` for a live, known configuration outside the
-currently interpretable semantic profile, or the exact acquisition/configuration
-failure category that prevented interpretation. The runtime must not collapse
-an acquisition or configuration failure into an unexplained `GPIO_ONLY`.
+terminal catch for a generation mismatch. A healthy current `INTERPRETED`
+sample and a fresh coherent `ABSENT` result carry no degraded reason. A
+transient reason may accompany the unchanged previous coherent structural mode
+and retained data, but it never changes that mode by itself. `GPIO_ONLY`
+always carries exactly `CONFIGURATION_NOT_INTERPRETABLE`.
+
+`CONTROLLER_UNREACHABLE` requires one current bounded acquisition attempt with
+fresh attempted-acquisition timestamps and source identity. A neighbor-table
+entry, an old log line, retained periodicity, or an uncorrelated status snapshot
+is not such proof and must not be reported as a physical adapter outage. The
+same freshness and correlation rule applies to every acquisition reason.
+
+The gateway regression test uses the same corpus before and after eeBUS
+activation. Once that corpus has produced a coherent interpreted family, a
+transient acquisition failure never commits `GPIO_ONLY`; it retains the known
+coherent `INTERPRETED` baseline and does not refresh, zero, or withdraw retained
+solar or cylinder values. Only a later fresh coherent structural observation
+may change the structural mode.
 
 The post-M9 implementation sequence adds
 `ebus.v1.semantic.fm5_interpretation.get` first; GraphQL
@@ -158,8 +172,8 @@ version authority.
 ## Acceptance And Isolation
 
 Implementation acceptance requires focused RED/GREEN tests for gateway-boundary
-isolation, CSRF and authorization denial, raw-data non-leakage, FM5 reason
-transitions, and version-mismatch startup denial. Protocol-specific identity,
+isolation, request admission, raw-data non-leakage, the before-eeBUS/after-eeBUS
+FM5 corpus, reason transitions, and version-mismatch startup denial. Protocol-specific identity,
 topology, persistence, reconnect, and live-cardinality acceptance comes only
 from the canonical protocol documents and the execution plan. Existing eBUS
 operation must remain functional throughout eeBUS activity.

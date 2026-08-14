@@ -121,7 +121,7 @@ def test_existing_fm5_authority_uses_the_provider_verdict() -> None:
         "`fm5SemanticEvidenceRevision`",
         "retains the last coherent solar snapshot without updating it",
         "retains the last coherent instance set without updating it",
-        "fresh coherent `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family",
+        "Fresh coherent `ABSENT` or `GPIO_ONLY / CONFIGURATION_NOT_INTERPRETABLE` withdraws the family",
         "requires a decodable `temperatureC` to create or update an instance",
         "an already coherent instance may be retained unchanged",
         "does not refresh its values",

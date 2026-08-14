@@ -173,12 +173,12 @@ Response fields:
 - `radio_devices`: optional radio-device list (per-slot semantic RF data)
 - `fm5_semantic_mode`: optional FM5 semantic mode string
 - `fm5_semantic_degraded_reason`: **post-M9 target field, pending gateway
-  implementation**; explicit closed reason when FM5 evidence
-  exists but coherent interpretation is unavailable; it is supplied by the
-  shared semantic provider and is never inferred by Portal
+  implementation**; explicit closed acquisition-health reason supplied by the
+  shared semantic provider and never inferred by Portal; a transient reason
+  does not rewrite the last coherent structural mode
 - `fm5_semantic_evidence_revision`: **post-M9 target field, pending gateway
-  implementation**; opaque revision binding mode and reason to one acquisition
-  result
+  implementation**; opaque revision binding structural mode, acquisition
+  reason, and evidence to one result
 - `solar`: optional solar semantic object
 - `cylinders`: optional cylinder list
 - `captured_utc`: RFC3339 UTC timestamp

@@ -399,10 +399,13 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
 `ebus.v1.semantic.fm5_interpretation.get` is the target MCP-first post-M9
 behavioral remediation and is not part of the implemented surface above until
 the gateway implementation PR merges. Its target object contains exactly
-`mode`, `degraded_reason`, and `evidence_revision`; `degraded_reason` is null
-only for `INTERPRETED` and `ABSENT`, every `GPIO_ONLY` carries one closed
-provider-owned reason, and `evidence_revision` binds the tuple to one
-acquisition result. Consumers must not infer the reason from empty
+`mode`, `degraded_reason`, and `evidence_revision`. Structural `mode` is the
+last coherent classification and does not change on a transient acquisition
+failure. A healthy current `INTERPRETED` result and a fresh coherent `ABSENT`
+result have no reason; `GPIO_ONLY` carries only
+`CONFIGURATION_NOT_INTERPRETABLE`; a transient provider-owned reason may
+accompany the unchanged retained structural mode. `evidence_revision` binds
+the tuple to one acquisition result. Consumers must not infer the reason from empty
 solar/cylinder payloads. The closed mode/reason semantics are frozen in
 [`eebus-operator-admin.md`](./eebus-operator-admin.md). It is additive within
 the single `ebus.v1.*` namespace; no v2 tool or legacy alias is introduced.
