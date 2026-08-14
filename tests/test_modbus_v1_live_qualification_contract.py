@@ -20,6 +20,14 @@ def normative_record() -> dict:
 
 
 class ModbusV1LiveQualificationContractTest(unittest.TestCase):
+    def test_page_is_a_legacy_harness_not_a_fronius_or_live_support_claim(self) -> None:
+        text = CONTRACT.read_text(encoding="utf-8")
+
+        self.assertIn("legacy qualification harness", text.lower())
+        self.assertIn("does not claim Fronius support", text)
+        self.assertIn("future registry-selected outcome", text.lower())
+        self.assertIn("suspended gateway #808", text)
+
     def test_record_freezes_opt_in_read_only_bounds_and_recovery(self) -> None:
         record = normative_record()
         self.assertEqual(
@@ -41,6 +49,7 @@ class ModbusV1LiveQualificationContractTest(unittest.TestCase):
                 "function_code": 3,
                 "writes_permitted": False,
                 "profile_id": "sunspec.phase1",
+                "profile_version": "1.0.0",
                 "chain_qualification": "dynamic_bounded_existing_profile_contracts",
                 "qualifications_per_attempt": 1,
                 "per_read_timeout_seconds": 2,
