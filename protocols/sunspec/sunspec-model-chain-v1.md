@@ -94,6 +94,14 @@ Model `103` or Model `113` only when the complete minimum fact set declared by
 the eventual registry is present and valid; this page does not invent that fact
 set or claim an implementation exists.
 
+Model `103` and Model `113` are capability-equivalent only for that complete,
+valid minimum fact set: both decoders must emit the same canonical field IDs,
+units, and three-phase topology. They remain distinct decoder keys with distinct
+raw encodings and provenance. Capability equivalence does not assert equal
+precision or representation. A wrong model length, invalid encoding, sentinel,
+or non-finite value in any required fact fails admission rather than producing
+a partial or inferred capability.
+
 No raw value becomes a capability merely because its model ID is known. Raw
 sentinel values, noncanonical NaN or infinity values, invalid scale factor
 encodings, unknown enum values, unknown bitfield bits, malformed fixed-width

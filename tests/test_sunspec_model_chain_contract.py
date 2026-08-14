@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 
@@ -51,22 +52,34 @@ def test_sunspec_protocol_pages_define_the_model_chain_contract() -> None:
 def test_contract_freezes_catalog_identity_retention_and_fail_closed_rules() -> None:
     contract = text(CHAIN_CONTRACT)
 
+    catalog = contract[contract.index("## Model\n") : contract.index("## Model Chain")]
+    fixed_lengths: dict[int, set[int]] = {}
+    for model_group, length in re.findall(
+        r"Models? ((?:`\d+`(?:, and | and |, )?)+).*?`L(\d+)`",
+        catalog,
+        flags=re.DOTALL,
+    ):
+        for model_id in re.findall(r"`(\d+)`", model_group):
+            fixed_lengths.setdefault(int(model_id), set()).add(int(length))
+
+    assert fixed_lengths == {
+        1: {66},
+        101: {50},
+        102: {50},
+        103: {50},
+        111: {60},
+        112: {60},
+        113: {60},
+        120: {26},
+        121: {30},
+        122: {44},
+        124: {24},
+    }
+    assert re.search(r"Model `1`.*?standard length `L66`", catalog, re.DOTALL)
+    assert re.search(r"Model `1`.*?`L65`.*?compatibility", catalog, re.DOTALL)
+    assert re.search(r"Model `160`.*?`L = 8 \+ 20 \* N`", catalog, re.DOTALL)
+
     for required in (
-        "Common",
-        "L66",
-        "L65",
-        "101",
-        "102",
-        "103",
-        "111",
-        "112",
-        "113",
-        "120",
-        "121",
-        "122",
-        "124",
-        "160",
-        "8 + 20 * N",
         "(model_id, model_length, schema_revision)",
         "ordinal",
         "source span",
@@ -90,6 +103,33 @@ def test_contract_freezes_catalog_identity_retention_and_fail_closed_rules() -> 
     assert "L65" in contract and "compatibility" in contract.lower()
     assert "current standard" in contract.lower()
     assert "N mismatch" in contract
+
+
+def test_three_phase_capability_equivalence_is_semantic_and_fail_closed() -> None:
+    contract = text(CHAIN_CONTRACT)
+    capability = contract[
+        contract.index("## Capability Profile") : contract.index("## Vendor Flavor")
+    ]
+
+    assert CAPABILITY_ID in capability
+    assert re.search(r"Model `103` or Model `113`", capability)
+    assert "complete,\nvalid minimum fact set" in capability
+    assert "same canonical field IDs" in capability
+    assert "units" in capability
+    assert "three-phase topology" in capability
+    assert "distinct decoder keys" in capability
+    assert "distinct\nraw encodings and provenance" in capability
+    assert "does not assert equal\nprecision or representation" in capability
+
+    for rejected in (
+        "wrong model length",
+        "invalid encoding",
+        "sentinel",
+        "non-finite value",
+    ):
+        assert rejected in capability
+    assert "fails admission" in capability
+    assert "partial or inferred capability" in capability
 
 
 def test_existing_fronius_material_is_legacy_only_and_points_to_registry_selection() -> None:
