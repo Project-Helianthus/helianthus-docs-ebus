@@ -132,6 +132,28 @@ def test_three_phase_capability_equivalence_is_semantic_and_fail_closed() -> Non
     assert "partial or inferred capability" in capability
 
 
+def test_model_chain_malformed_grammar_is_explicitly_fail_closed() -> None:
+    contract = text(CHAIN_CONTRACT)
+    chain = contract[
+        contract.index("## Model Chain") : contract.index("## Capability Profile")
+    ]
+
+    for rejected in (
+        "bad signature",
+        "nonterminal zero length",
+        "arithmetic overflow",
+        "extent overrun",
+        "malformed\nor missing end marker",
+        "nonzero end-marker length",
+        "trailing words after a\nterminal end marker",
+    ):
+        assert rejected in chain
+    assert (
+        "do\nnot produce a valid chain, typed observation, capability, or vendor flavor"
+        in chain
+    )
+
+
 def test_existing_fronius_material_is_legacy_only_and_points_to_registry_selection() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     evidence = text(EVIDENCE)

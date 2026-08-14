@@ -49,6 +49,7 @@ class ModbusV1LiveQualificationContractTest(unittest.TestCase):
                 "function_code": 3,
                 "writes_permitted": False,
                 "profile_id": "sunspec.phase1",
+                "profile_version": "1.0.0",
                 "chain_qualification": "dynamic_bounded_existing_profile_contracts",
                 "qualifications_per_attempt": 1,
                 "per_read_timeout_seconds": 2,
