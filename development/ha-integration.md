@@ -137,14 +137,20 @@ Optional HA helper bindings can drive schedule mode:
 
 ## eeBUS And FM5 Diagnostics
 
-Home Assistant consumes the sanitized, candidate-free gateway projection from
-the boundary defined in
-[`../api/eebus-operator-admin.md`](../api/eebus-operator-admin.md). It never
-receives a pairing mutation grant, operator-only identity, raw protocol payload,
-trust-store access, or operator-socket access. Pairing/untrust repair actions
-open the fixed owner Portal path without identity, token, action authority,
-query, or fragment data. Protocol-specific action and identity semantics remain
-in the canonical `helianthus-docs-eebus` documents linked by that boundary.
+Home Assistant consumes the gateway-owned eeBUS operator projection from the
+boundary defined in
+[`../api/eebus-operator-admin.md`](../api/eebus-operator-admin.md). It provides
+a native pairing flow without an eeBUS-specific credential or reauthentication
+step and submits only the closed typed actions owned by the gateway. It never
+changes the generic Home Assistant authentication or lifecycle, which remain
+outside the eeBUS contract. Home Assistant may receive bounded raw SPINE and
+complete comparison identity through the gateway boundary only. It uses that
+data only in active view/request memory, does not persist it beyond the active
+view, does not promote it into semantic state, and never includes it in public
+or shareable output. It never receives trust-store access, operator-socket
+access, or transport ownership, and it does not own a second pairing state
+machine. Protocol-specific action and identity semantics remain in the canonical
+`helianthus-docs-eebus` documents linked by that boundary.
 
 After the pending GraphQL contract and the corresponding HA PR are implemented,
 FM5 diagnostics read `fm5Interpretation { mode degradedReason
@@ -152,9 +158,16 @@ evidenceRevision }`. This is a target contract, not current integration
 availability. The diagnostic entity exposes the gateway-supplied mode and
 sanitized reason and uses the revision only to keep one coherent update; it does
 not derive a reason from missing solar/cylinder values or from the legacy mode
-scalar. `GPIO_ONLY` without a closed reason is an invalid response and enters
-integration repair/degraded state rather than being shown as a healthy
-configuration.
+scalar. `GPIO_ONLY` with any reason other than
+`CONFIGURATION_NOT_INTERPRETABLE` is an invalid response and enters integration
+repair/degraded state rather than being shown as a healthy configuration. A
+transient acquisition reason retains the last coherent structural mode and is
+shown only as current acquisition health.
+
+Until the first coherent structural classification, GraphQL returns a null
+verdict. Home Assistant treats a null verdict as acquisition unavailable and
+does not create, retain, or infer a structural FM5 mode from other semantic
+objects.
 
 ## Device Tree
 

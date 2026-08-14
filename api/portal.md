@@ -37,8 +37,9 @@ release-version authority are frozen in
 operator routes and browser semantics remain exclusively in the linked
 `helianthus-docs-eebus` canonical documents. Portal uses the gateway boundary
 and never reads the eeBUS trust store or owner-only operator socket directly.
-Home Assistant receives sanitized status and a fixed Portal link, not pairing
-authority.
+Home Assistant uses the same gateway-owned pairing boundary. Portal and Home
+Assistant pairing remain functional without an eeBUS-specific authentication
+layer; neither consumer receives direct store, socket, or transport ownership.
 
 ## Core Endpoints
 
@@ -173,12 +174,12 @@ Response fields:
 - `radio_devices`: optional radio-device list (per-slot semantic RF data)
 - `fm5_semantic_mode`: optional FM5 semantic mode string
 - `fm5_semantic_degraded_reason`: **post-M9 target field, pending gateway
-  implementation**; explicit closed reason when FM5 evidence
-  exists but coherent interpretation is unavailable; it is supplied by the
-  shared semantic provider and is never inferred by Portal
+  implementation**; explicit closed acquisition-health reason supplied by the
+  shared semantic provider and never inferred by Portal; a transient reason
+  does not rewrite the last coherent structural mode
 - `fm5_semantic_evidence_revision`: **post-M9 target field, pending gateway
-  implementation**; opaque revision binding mode and reason to one acquisition
-  result
+  implementation**; opaque revision binding structural mode, acquisition
+  reason, and evidence to one result
 - `solar`: optional solar semantic object
 - `cylinders`: optional cylinder list
 - `captured_utc`: RFC3339 UTC timestamp
@@ -186,6 +187,11 @@ Response fields:
 The example below shows the target response after the post-M9 gateway
 implementation; the two target FM5 fields are not claims about current runtime
 availability.
+
+Before the first coherent structural classification, the semantic snapshot
+omits all three FM5 verdict fields until the first coherent structural
+classification. Portal presents acquisition as unavailable and does not infer
+`GPIO_ONLY` or `ABSENT` from missing fields.
 
 Energy freshness/provenance metadata (`GW-13` freeze):
 
