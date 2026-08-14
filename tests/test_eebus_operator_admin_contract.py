@@ -164,7 +164,9 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
     assert "ebus.v1.semantic.fm5_interpretation.get" not in implemented_mcp
     for required in (
         "Status:** Pending gateway implementation",
-        "fm5Interpretation: Fm5Interpretation!",
+        "fm5Interpretation: Fm5Interpretation",
+        "nullable until the first coherent structural classification",
+        "must not synthesize `GPIO_ONLY` or `ABSENT`",
         "degradedReason: Fm5SemanticDegradedReason",
         "evidenceRevision: String!",
         "Existing `fm5SemanticMode` remains stable",
@@ -177,9 +179,28 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
         "target contract, not current integration availability",
         "fm5Interpretation { mode degradedReason evidenceRevision }",
         "does not derive a reason",
+        "treats a null verdict as acquisition unavailable",
         "`GPIO_ONLY` with any reason other than `CONFIGURATION_NOT_INTERPRETABLE` is an invalid response",
     ):
         assert required in ha
+    assert "fm5Interpretation: Fm5Interpretation!" not in graphql
+
+
+def test_portal_and_mcp_keep_pairing_and_cold_start_fail_closed() -> None:
+    portal = _normalized(PORTAL)
+    mcp = _normalized(MCP)
+    for required in (
+        "Home Assistant uses the same gateway-owned pairing boundary",
+        "Portal and Home Assistant pairing remain functional",
+        "omits all three FM5 verdict fields until the first coherent structural classification",
+    ):
+        assert required in portal
+    assert "not pairing authority" not in portal
+    for required in (
+        "returns `null` until the first coherent structural classification",
+        "never fabricates `GPIO_ONLY` or `ABSENT` during bootstrap",
+    ):
+        assert required in mcp
 
 
 def test_target_portal_fields_do_not_claim_current_availability() -> None:
