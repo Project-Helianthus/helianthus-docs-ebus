@@ -67,6 +67,9 @@ Current platform contracts:
 - [`live/msp-085-0.6.40/`](./live/msp-085-0.6.40/) - final source-bound live
   M8/M8.5 public-redacted outputs: all `18` real leaves promoted, `0` withheld,
   and all promoted leaves still `LOCKED_NOT_EXPOSED` before M9
+- [`live/fronius-m4-04-0.6.46/`](./live/fronius-m4-04-0.6.46/) - sanitized
+  FMV3-M4-04 Fronius/SunSpec qualification evidence: registry-internal `GO`,
+  terminal `STOP_ENVIRONMENTAL`, completed rollback, and M5 still blocked
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary
