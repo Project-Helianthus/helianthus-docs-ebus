@@ -88,10 +88,10 @@ The closed state set is:
 | --- | --- |
 | `DISABLED` | Explicit inert path; the current gateway runs without Modbus flags. |
 | `CONFIG_VALIDATED` | Enabled configuration passed atomic admission for this current-gateway attempt. |
-| `RUNNING` | The current gateway survived its bounded startup window. |
+| `RUNNING` | The current gateway survived its bounded startup window and every required local listener passed the bounded readiness probe. |
 | `RECOVERY_RETRY` | A current-gateway attempt exited inside the startup window and another bounded attempt will start. |
 | `FALLBACK_STARTING` | All current attempts failed; the endpoint has been removed and the previous gateway is starting. |
-| `FALLBACK_ACTIVE` | The previous gateway survived the same startup window. |
+| `FALLBACK_ACTIVE` | The previous gateway survived the same startup window and every required local listener passed the bounded readiness probe. |
 | `FALLBACK_EXITED` | The fallback exited before or after its startup window; health must not remain falsely active. |
 | `EXITED_AFTER_STARTUP_WINDOW` | The current gateway exited after it had reached `RUNNING`; this is terminal and does not start fallback. |
 | `STOPPED` | A terminal operator or supervisor `TERM`/`INT` stop was observed. |
@@ -100,6 +100,21 @@ Health updates use a private `0600` temporary file, flush and sync it, then
 atomically replace the visible health file. A health-write failure is terminal:
 the supervisor stops and reaps owned processes and removes runtime material
 rather than reporting a stale success state.
+
+Process survival alone is not runtime readiness. The gateway HTTP listener is
+always required. The adapter-proxy listener is additionally required exactly
+when adapter-direct configuration supplies that listener. Probe targets are
+numeric IPv4 or bracketed IPv6 bind addresses with a port; wildcard bind
+addresses are probed through the corresponding loopback address. Hostnames are
+rejected so name resolution cannot escape the per-listener probe deadline.
+Every configured required listener must accept a TCP connection before an
+active health state is published.
+
+A current-gateway probe failure terminates and reaps the current child and its
+redactors, records reason `RUNTIME_NOT_READY`, and enters the existing bounded
+retry path. A fallback probe failure terminates and reaps the fallback, records
+`FALLBACK_EXITED` with reason `FALLBACK_RUNTIME_NOT_READY`, and is terminal.
+Neither failure may publish `RUNNING` or `FALLBACK_ACTIVE`.
 
 ## Bounded Recovery
 
@@ -114,16 +129,19 @@ The closed recovery limits are:
 
 Enabled startup gives the current gateway exactly three attempts. The startup
 window is derived from the dial timeout and bounded from five through forty
-seconds. An exit within that window produces `RECOVERY_RETRY` while attempts
-remain. An exit after the window produces `EXITED_AFTER_STARTUP_WINDOW` and is
-not reclassified as a startup failure.
+seconds. At the boundary, each required listener receives a bounded 250 ms TCP
+probe. An exit or readiness failure within that window produces
+`RECOVERY_RETRY` while attempts remain. An exit after a successful readiness
+transition produces `EXITED_AFTER_STARTUP_WINDOW` and is not reclassified as a
+startup failure.
 
 After three startup failures, the endpoint file is removed before fallback and
 the previous gateway starts with Modbus disabled. It receives the admitted
 required non-Modbus runtime configuration plus the supported subset of the three
 best-effort rollback options, but no endpoint-file or dial-timeout argument. The
-fallback reaches `FALLBACK_ACTIVE` only after surviving the startup window; any
-fallback exit is recorded as `FALLBACK_EXITED`.
+fallback reaches `FALLBACK_ACTIVE` only after surviving the startup window and
+passing the same required-listener probe. Any fallback exit or readiness
+failure is recorded as `FALLBACK_EXITED`.
 
 ## Stop And Cleanup
 
