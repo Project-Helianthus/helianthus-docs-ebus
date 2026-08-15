@@ -96,6 +96,23 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
             "bounded from five through forty seconds", normalized_recovery
         )
 
+    def test_active_health_requires_bounded_numeric_listener_readiness(self) -> None:
+        text = CONTRACT.read_text(encoding="utf-8")
+        normalized = " ".join(text.split())
+        for required in (
+            "Process survival alone is not runtime readiness",
+            "gateway HTTP listener is always required",
+            "adapter-proxy listener is additionally required exactly when adapter-direct",
+            "numeric IPv4 or bracketed IPv6 bind addresses",
+            "Hostnames are rejected",
+            "250 ms TCP probe",
+            "RUNTIME_NOT_READY",
+            "FALLBACK_RUNTIME_NOT_READY",
+            "Neither failure may publish `RUNNING` or `FALLBACK_ACTIVE`",
+            "terminates and reaps",
+        ):
+            self.assertIn(required, normalized)
+
     def test_contract_freezes_secret_and_process_ownership(self) -> None:
         text = CONTRACT.read_text(encoding="utf-8")
         normalized = " ".join(text.split())
