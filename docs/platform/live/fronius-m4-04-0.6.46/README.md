@@ -23,6 +23,9 @@ The bounded run used:
 
 The endpoint remained hidden. Acquisition was Modbus TCP unit `1`, FC03 only.
 Writes were forbidden and none were performed.
+The `endpoint_ref` is the stable pseudonymous correlator required by the
+current runtime contract. It is not an unlinkability or enumeration-resistance
+claim; changing that identifier scheme requires a separate contract revision.
 
 ## Registry Qualification
 

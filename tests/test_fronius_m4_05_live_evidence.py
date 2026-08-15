@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import ipaddress
 import re
 from pathlib import Path
 
@@ -23,9 +24,69 @@ EXPECTED_CHAIN = [
     (65535, 0),
 ]
 
+PRIVATE_IPV4 = re.compile(
+    r"\b(?:10|127|169\.254|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)"
+    r"\.\d{1,3}\.\d{1,3}\b"
+)
+IPV6_CANDIDATE = re.compile(
+    r"(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}"
+    r"(?![0-9A-Fa-f:])"
+)
+MAC_ADDRESS = re.compile(
+    r"\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b"
+    r"|\b(?:[0-9A-Fa-f]{4}\.){2}[0-9A-Fa-f]{4}\b"
+)
+
 
 def load_evidence() -> dict[str, object]:
     return json.loads(EVIDENCE.read_text(encoding="utf-8"))
+
+
+def contains_private_network_identifier(value: str) -> bool:
+    if PRIVATE_IPV4.search(value) or MAC_ADDRESS.search(value):
+        return True
+    for candidate in IPV6_CANDIDATE.findall(value):
+        try:
+            address = ipaddress.ip_address(candidate)
+        except ValueError:
+            continue
+        if address.is_private or address.is_link_local or address.is_loopback:
+            return True
+    return False
+
+
+def evidence_keys(value: object) -> set[str]:
+    if isinstance(value, dict):
+        return set(value) | {
+            nested
+            for child in value.values()
+            for nested in evidence_keys(child)
+        }
+    if isinstance(value, list):
+        return {nested for child in value for nested in evidence_keys(child)}
+    return set()
+
+
+def sensitive_key(key: str) -> bool:
+    normalized = key.lower()
+    if normalized in {"endpoint_ref", "endpoint_present"}:
+        return False
+    categories = (
+        "backup_slug",
+        "container",
+        "credential",
+        "endpoint",
+        "mac",
+        "password",
+        "process",
+        "raw_payload",
+        "raw_words",
+        "secret",
+        "serial_number",
+        "source_view",
+        "token",
+    )
+    return any(category in normalized for category in categories) or normalized == "pid"
 
 
 def test_live_evidence_keeps_internal_go_separate_from_terminal_stop() -> None:
@@ -72,6 +133,7 @@ def test_runtime_identity_chain_and_read_only_boundary_are_exact() -> None:
         "model": "Symo GEN24 10.0",
         "firmware": "1.41.11-1",
     }
+    assert re.fullmatch(r"sha256:[0-9a-f]{16}", evidence["target"]["endpoint_ref"])
     acquisition = evidence["acquisition"]
     assert acquisition["unit_id"] == 1
     assert acquisition["function_code"] == 3
@@ -154,36 +216,21 @@ def test_public_evidence_contains_no_private_operational_identifiers() -> None:
         EVIDENCE,
         PLATFORM_INDEX,
         ROOT / "scripts/ci_local.sh",
-        Path(__file__),
     )
     corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_files)
-    assert not re.search(
-        r"\b(?:10|127|169\.254|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\.\d{1,3}\.\d{1,3}\b",
-        corpus,
-    )
-    assert not re.search(r"\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\b", corpus)
+    assert not contains_private_network_identifier(corpus)
+    assert not any(sensitive_key(key) for key in evidence_keys(load_evidence()))
 
-    def keys(value: object) -> set[str]:
-        if isinstance(value, dict):
-            return set(value) | {
-                nested
-                for child in value.values()
-                for nested in keys(child)
-            }
-        if isinstance(value, list):
-            return {nested for child in value for nested in keys(child)}
-        return set()
 
-    forbidden_keys = {
-        "backup_slug",
-        "container_id",
-        "credential",
-        "mac_address",
-        "password",
-        "pid",
-        "process_id",
-        "raw_words",
-        "serial_number",
-        "source_views",
-    }
-    assert keys(load_evidence()).isdisjoint(forbidden_keys)
+def test_redaction_guards_cover_generic_sensitive_variants() -> None:
+    assert sensitive_key("runtime_secret_token")
+    assert sensitive_key("upstream_endpoint_address")
+    assert sensitive_key("captured_raw_payload_bytes")
+    assert sensitive_key("worker_process_identifier")
+    assert not sensitive_key("endpoint_ref")
+    assert not sensitive_key("endpoint_present")
+
+    assert contains_private_network_identifier("synthetic fd00::1")
+    assert contains_private_network_identifier("synthetic fe80::1")
+    assert contains_private_network_identifier("synthetic 02-00-00-00-00-01")
+    assert contains_private_network_identifier("synthetic 0200.0000.0001")
