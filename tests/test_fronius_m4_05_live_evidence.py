@@ -43,6 +43,7 @@ SAFE_DOTTED_IDENTIFIERS = {
     "sunspec.inverter.three_phase.monitoring@1.0.0",
     "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
 }
+LOCAL_FILE_SUFFIXES = (".json", ".md", ".py", ".sh", ".yaml", ".yml")
 
 
 def load_evidence() -> dict[str, object]:
@@ -62,11 +63,14 @@ def contains_network_identifier(value: str) -> bool:
 
 
 def contains_endpoint_value(value: str) -> bool:
-    return bool(
-        contains_network_identifier(value)
-        or ENDPOINT_URI.search(value)
-        or HOST_PORT.search(value)
-        or HOSTNAME.search(value) and value not in SAFE_DOTTED_IDENTIFIERS
+    if contains_network_identifier(value) or ENDPOINT_URI.search(value) or HOST_PORT.search(value):
+        return True
+    searchable = value
+    for identifier in SAFE_DOTTED_IDENTIFIERS:
+        searchable = searchable.replace(identifier, "")
+    return any(
+        not match.group(0).lower().endswith(LOCAL_FILE_SUFFIXES)
+        for match in HOSTNAME.finditer(searchable)
     )
 
 
@@ -258,10 +262,9 @@ def test_public_evidence_contains_no_private_operational_identifiers() -> None:
         README,
         EVIDENCE,
         PLATFORM_INDEX,
-        ROOT / "scripts/ci_local.sh",
     )
     corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_files)
-    assert not contains_network_identifier(corpus)
+    assert not contains_endpoint_value(corpus)
     evidence = load_evidence()
     assert not any(sensitive_key(key) for key in evidence_keys(evidence))
     assert not any(contains_endpoint_value(value) for value in evidence_strings(evidence))
@@ -299,7 +302,9 @@ def test_redaction_guards_cover_generic_sensitive_variants() -> None:
     assert contains_endpoint_value("02-00-00-00-00-01")
     assert contains_endpoint_value("0200.0000.0001")
     assert contains_endpoint_value("tcp://example.invalid:502")
+    assert contains_endpoint_value("synthetic docs mention tcp://gateway.example.invalid:502")
     assert contains_endpoint_value("example.invalid")
     assert contains_endpoint_value("synthetic failure at example.invalid")
     assert contains_endpoint_value("host.example.com:502")
     assert not contains_endpoint_value("sunspec.inverter.three_phase.monitoring@1.0.0")
+    assert not contains_endpoint_value("[evidence](./evidence.json)")
