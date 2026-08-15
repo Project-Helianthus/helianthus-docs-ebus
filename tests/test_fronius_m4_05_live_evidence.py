@@ -149,12 +149,19 @@ def test_follow_ups_are_separate_from_sunspec() -> None:
 
 
 def test_public_evidence_contains_no_private_operational_identifiers() -> None:
-    corpus = README.read_text(encoding="utf-8") + EVIDENCE.read_text(encoding="utf-8")
+    public_files = (
+        README,
+        EVIDENCE,
+        PLATFORM_INDEX,
+        ROOT / "scripts/ci_local.sh",
+        Path(__file__),
+    )
+    corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_files)
     forbidden_literals = (
-        "b930e982",
-        "10dcdb3f590d",
-        "392fd3ec2440",
-        "117206",
+        "b930" + "e982",
+        "10dcdb" + "3f590d",
+        "392fd3" + "ec2440",
+        "117" + "206",
     )
     assert not any(value in corpus for value in forbidden_literals)
     assert not re.search(
@@ -162,5 +169,10 @@ def test_public_evidence_contains_no_private_operational_identifiers() -> None:
         corpus,
     )
     assert not re.search(r"\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\b", corpus)
-    for forbidden_word in ("password", "credential", "serial_number", "raw_words"):
+    for forbidden_word in (
+        "pass" + "word",
+        "creden" + "tial",
+        "serial_" + "number",
+        "raw_" + "words",
+    ):
         assert f'"{forbidden_word}"' not in corpus
