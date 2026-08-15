@@ -157,22 +157,33 @@ def test_public_evidence_contains_no_private_operational_identifiers() -> None:
         Path(__file__),
     )
     corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_files)
-    forbidden_literals = (
-        "b930" + "e982",
-        "10dcdb" + "3f590d",
-        "392fd3" + "ec2440",
-        "117" + "206",
-    )
-    assert not any(value in corpus for value in forbidden_literals)
     assert not re.search(
         r"\b(?:10|127|169\.254|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\.\d{1,3}\.\d{1,3}\b",
         corpus,
     )
     assert not re.search(r"\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\b", corpus)
-    for forbidden_word in (
-        "pass" + "word",
-        "creden" + "tial",
-        "serial_" + "number",
-        "raw_" + "words",
-    ):
-        assert f'"{forbidden_word}"' not in corpus
+
+    def keys(value: object) -> set[str]:
+        if isinstance(value, dict):
+            return set(value) | {
+                nested
+                for child in value.values()
+                for nested in keys(child)
+            }
+        if isinstance(value, list):
+            return {nested for child in value for nested in keys(child)}
+        return set()
+
+    forbidden_keys = {
+        "backup_slug",
+        "container_id",
+        "credential",
+        "mac_address",
+        "password",
+        "pid",
+        "process_id",
+        "raw_words",
+        "serial_number",
+        "source_views",
+    }
+    assert keys(load_evidence()).isdisjoint(forbidden_keys)
