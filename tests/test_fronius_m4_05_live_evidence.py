@@ -24,10 +24,7 @@ EXPECTED_CHAIN = [
     (65535, 0),
 ]
 
-PRIVATE_IPV4 = re.compile(
-    r"\b(?:10|127|169\.254|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)"
-    r"\.\d{1,3}\.\d{1,3}\b"
-)
+IPV4_ADDRESS = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 IPV6_CANDIDATE = re.compile(
     r"(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}"
     r"(?![0-9A-Fa-f:])"
@@ -36,23 +33,41 @@ MAC_ADDRESS = re.compile(
     r"\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b"
     r"|\b(?:[0-9A-Fa-f]{4}\.){2}[0-9A-Fa-f]{4}\b"
 )
+ENDPOINT_URI = re.compile(r"\b(?:https?|tcp|udp)://[^\s/]+", re.IGNORECASE)
+HOST_PORT = re.compile(r"\b[a-z][a-z0-9.-]*:\d{1,5}\b", re.IGNORECASE)
+HOSTNAME = re.compile(
+    r"[a-z0-9](?:[a-z0-9-]{0,62}\.)+[a-z]{2,63}", re.IGNORECASE
+)
+SAFE_DOTTED_IDENTIFIERS = {
+    "helianthus.fronius-sunspec-m4-04-evidence.v1",
+    "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+}
 
 
 def load_evidence() -> dict[str, object]:
     return json.loads(EVIDENCE.read_text(encoding="utf-8"))
 
 
-def contains_private_network_identifier(value: str) -> bool:
-    if PRIVATE_IPV4.search(value) or MAC_ADDRESS.search(value):
+def contains_network_identifier(value: str) -> bool:
+    if IPV4_ADDRESS.search(value) or MAC_ADDRESS.search(value):
         return True
     for candidate in IPV6_CANDIDATE.findall(value):
         try:
             address = ipaddress.ip_address(candidate)
         except ValueError:
             continue
-        if address.is_private or address.is_link_local or address.is_loopback:
-            return True
+        return True
     return False
+
+
+def contains_endpoint_value(value: str) -> bool:
+    return bool(
+        contains_network_identifier(value)
+        or ENDPOINT_URI.search(value)
+        or HOST_PORT.search(value)
+        or HOSTNAME.search(value) and value not in SAFE_DOTTED_IDENTIFIERS
+    )
 
 
 def evidence_keys(value: object) -> set[str]:
@@ -65,6 +80,14 @@ def evidence_keys(value: object) -> set[str]:
     if isinstance(value, list):
         return {nested for child in value for nested in evidence_keys(child)}
     return set()
+
+
+def evidence_strings(value: object) -> list[str]:
+    if isinstance(value, dict):
+        return [nested for child in value.values() for nested in evidence_strings(child)]
+    if isinstance(value, list):
+        return [nested for child in value for nested in evidence_strings(child)]
+    return [value] if isinstance(value, str) else []
 
 
 def sensitive_key(key: str) -> bool:
@@ -84,7 +107,7 @@ def sensitive_key(key: str) -> bool:
     )
     if any(word.startswith(stem) for word in words for stem in forbidden_stems):
         return True
-    if words & {"address", "host", "ip", "mac", "pid", "port"}:
+    if words & {"address", "host", "ip", "key", "mac", "pid", "port"}:
         return True
     if "endpoint" in words:
         return True
@@ -238,8 +261,10 @@ def test_public_evidence_contains_no_private_operational_identifiers() -> None:
         ROOT / "scripts/ci_local.sh",
     )
     corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_files)
-    assert not contains_private_network_identifier(corpus)
-    assert not any(sensitive_key(key) for key in evidence_keys(load_evidence()))
+    assert not contains_network_identifier(corpus)
+    evidence = load_evidence()
+    assert not any(sensitive_key(key) for key in evidence_keys(evidence))
+    assert not any(contains_endpoint_value(value) for value in evidence_strings(evidence))
 
 
 def test_redaction_guards_cover_generic_sensitive_variants() -> None:
@@ -256,6 +281,9 @@ def test_redaction_guards_cover_generic_sensitive_variants() -> None:
         "device_serial",
         "captured_source_view",
         "session_token",
+        "api_key",
+        "private_key",
+        "backup_key",
         "sample_identity",
         "request_id",
         "pid",
@@ -266,7 +294,12 @@ def test_redaction_guards_cover_generic_sensitive_variants() -> None:
     assert not sensitive_key("backup_created")
     assert not sensitive_key("raw_mcp_parity")
 
-    assert contains_private_network_identifier("synthetic fd00::1")
-    assert contains_private_network_identifier("synthetic fe80::1")
-    assert contains_private_network_identifier("synthetic 02-00-00-00-00-01")
-    assert contains_private_network_identifier("synthetic 0200.0000.0001")
+    assert contains_endpoint_value("fd00::1")
+    assert contains_endpoint_value("fe80::1")
+    assert contains_endpoint_value("02-00-00-00-00-01")
+    assert contains_endpoint_value("0200.0000.0001")
+    assert contains_endpoint_value("tcp://example.invalid:502")
+    assert contains_endpoint_value("example.invalid")
+    assert contains_endpoint_value("synthetic failure at example.invalid")
+    assert contains_endpoint_value("host.example.com:502")
+    assert not contains_endpoint_value("sunspec.inverter.three_phase.monitoring@1.0.0")
