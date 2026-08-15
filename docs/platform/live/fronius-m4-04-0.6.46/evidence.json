@@ -1,0 +1,117 @@
+{
+  "contract": "helianthus.fronius-sunspec-m4-04-evidence.v1",
+  "evidence_class": "LIVE_RUNTIME_EVIDENCE",
+  "export_tier": "PUBLIC_REDACTED",
+  "phase": "FMV3-M4-04",
+  "publication_phase": "FMV3-M4-05",
+  "outcome": "STOP_ENVIRONMENTAL",
+  "runtime": {
+    "addon_release": "0.6.46",
+    "addon_merge": "eff3f910c5a96c1fc2a9d10a7eb9f618162340c7",
+    "gateway_merge": "53fe86d1beb656c8453a6213127ddddef83c887b",
+    "modbusreg_version": "v0.2.1",
+    "modbusreg_merge": "16a7dfbf8016750613d086fb98d10364953ea915",
+    "image_digest": "sha256:9169f41b1d15ccf989d182ad125239df682602d87f74c1665b42802b96cabfca"
+  },
+  "target": {
+    "endpoint_ref": "sha256:cc2d63775c6f0074",
+    "manufacturer": "Fronius",
+    "model": "Symo GEN24 10.0",
+    "firmware": "1.41.11-1"
+  },
+  "acquisition": {
+    "transport": "modbus_tcp",
+    "unit_id": 1,
+    "function_code": 3,
+    "writes_permitted": false,
+    "target_reachable_during_window": true,
+    "qualification_attempts_per_gateway_start": 1,
+    "gateway_start_attempts": 3,
+    "modbus_reconnect_attempted": false,
+    "recovered": false
+  },
+  "qualification": {
+    "internal_decision": "GO",
+    "category": "registry_match",
+    "capability_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "capability_reason": "ADMITTED",
+    "flavor_id": "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+    "flavor_reason": "MATCHED",
+    "chain": [
+      {"model_id": 1, "model_length": 65},
+      {"model_id": 113, "model_length": 60},
+      {"model_id": 120, "model_length": 26},
+      {"model_id": 121, "model_length": 30},
+      {"model_id": 122, "model_length": 44},
+      {"model_id": 123, "model_length": 24},
+      {"model_id": 160, "model_length": 88},
+      {"model_id": 124, "model_length": 24},
+      {"model_id": 65535, "model_length": 0}
+    ],
+    "unknown_blocks_publication": "WITHHELD_UNPROVEN",
+    "unknown_field_publication": "WITHHELD_UNPROVEN",
+    "support_claim": false
+  },
+  "observation_window": {
+    "runtime_started_at": "2026-08-15T12:30:26.546213562Z",
+    "bounded_snapshot_at": "2026-08-15T12:32:41Z",
+    "modbus_health": {
+      "state": "RUNNING",
+      "reason": "STARTUP_WINDOW_PASSED",
+      "attempt": 3,
+      "max_attempts": 3
+    },
+    "listeners": {
+      "eebus": "REACHABLE",
+      "gateway_http": "NOT_LISTENING",
+      "adapter_proxy": "NOT_LISTENING"
+    },
+    "dependency_observation": {
+      "role": "adapter_direct_dependency",
+      "route_present": true,
+      "neighbor_state": "UNRESOLVED",
+      "tcp_result": "TIMEOUT",
+      "physical_device_state": "NOT_CONCLUDED"
+    }
+  },
+  "acceptance": {
+    "qualified_opt_in_detection": "PASS_INTERNAL",
+    "bounded_polling": "PASS_INTERNAL",
+    "raw_mcp_parity": "NOT_OBSERVED",
+    "retained_profile_observation": "NOT_RETRIEVED",
+    "disconnect_reconnect_generation_integrity": "NOT_EXERCISED",
+    "no_writes": "PASS",
+    "no_gateway_regression": "NOT_PROVEN",
+    "final_decision": "STOP_ENVIRONMENTAL"
+  },
+  "rollback": {
+    "completed_at": "2026-08-15T12:33:33Z",
+    "backup_created": true,
+    "modbus_tcp_enabled": false,
+    "endpoint_present": false,
+    "health_state": "DISABLED",
+    "health_reason": "EXPLICIT_DISABLE"
+  },
+  "follow_ups": [
+    {
+      "id": "HEALTH_READINESS_MISMATCH",
+      "classification": "RUNTIME_READINESS",
+      "summary": "Modbus health reported RUNNING after the startup window while gateway HTTP and adapter-proxy listeners were absent.",
+      "attributed_to_sunspec": false
+    },
+    {
+      "id": "ENDPOINT_REDACTION_MISCLASSIFICATION",
+      "classification": "LOG_REDACTION",
+      "summary": "A non-Modbus adapter-direct endpoint was labeled as a Modbus endpoint by the log redactor.",
+      "attributed_to_sunspec": false
+    }
+  ],
+  "next_gate": {
+    "m5": "BLOCKED_UNTIL_DEPLOYED_EXACT_GO",
+    "rerun_requires": [
+      "adapter_direct_dependency_recovered",
+      "gateway_http_and_adapter_proxy_ready",
+      "fresh_retained_observation_and_raw_mcp_parity"
+    ]
+  }
+}
