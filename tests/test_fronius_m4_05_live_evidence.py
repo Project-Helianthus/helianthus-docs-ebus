@@ -71,22 +71,42 @@ def sensitive_key(key: str) -> bool:
     normalized = key.lower()
     if normalized in {"endpoint_ref", "endpoint_present"}:
         return False
-    categories = (
-        "backup_slug",
+    words = set(re.findall(r"[a-z0-9]+", normalized.replace("_", "-")))
+    forbidden_stems = (
         "container",
         "credential",
-        "endpoint",
-        "mac",
+        "hostname",
         "password",
         "process",
-        "raw_payload",
-        "raw_words",
         "secret",
-        "serial_number",
-        "source_view",
+        "serial",
         "token",
     )
-    return any(category in normalized for category in categories) or normalized == "pid"
+    if any(word.startswith(stem) for word in words for stem in forbidden_stems):
+        return True
+    if words & {"address", "host", "ip", "mac", "pid", "port"}:
+        return True
+    if "endpoint" in words:
+        return True
+    identifier_words = {"id", "identifier", "identity", "name", "path", "ref", "slug"}
+    if "backup" in words and words & identifier_words:
+        return True
+    if "raw" in words and words & {
+        "bytes",
+        "data",
+        "frame",
+        "payload",
+        "register",
+        "registers",
+        "word",
+        "words",
+    }:
+        return True
+    if {"source", "view"} <= words or {"source", "views"} <= words:
+        return True
+    if words & {"deadline", "poll", "request", "response", "sample"} and words & identifier_words:
+        return True
+    return False
 
 
 def test_live_evidence_keeps_internal_go_separate_from_terminal_stop() -> None:
@@ -223,12 +243,28 @@ def test_public_evidence_contains_no_private_operational_identifiers() -> None:
 
 
 def test_redaction_guards_cover_generic_sensitive_variants() -> None:
-    assert sensitive_key("runtime_secret_token")
-    assert sensitive_key("upstream_endpoint_address")
-    assert sensitive_key("captured_raw_payload_bytes")
-    assert sensitive_key("worker_process_identifier")
+    for key in (
+        "backup_identifier",
+        "gateway_container_ref",
+        "operator_credential",
+        "upstream_endpoint_address",
+        "device_mac",
+        "owner_password",
+        "worker_process_identifier",
+        "captured_raw_register_payload",
+        "runtime_secret",
+        "device_serial",
+        "captured_source_view",
+        "session_token",
+        "sample_identity",
+        "request_id",
+        "pid",
+    ):
+        assert sensitive_key(key), key
     assert not sensitive_key("endpoint_ref")
     assert not sensitive_key("endpoint_present")
+    assert not sensitive_key("backup_created")
+    assert not sensitive_key("raw_mcp_parity")
 
     assert contains_private_network_identifier("synthetic fd00::1")
     assert contains_private_network_identifier("synthetic fe80::1")
