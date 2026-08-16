@@ -10,6 +10,9 @@ ROOT = Path(__file__).resolve().parents[1]
 LIVE = ROOT / "docs/platform/live/fronius-m4-04-0.6.46"
 README = LIVE / "README.md"
 EVIDENCE = LIVE / "evidence.json"
+LIVE_0647 = ROOT / "docs/platform/live/fronius-m4-04-0.6.47"
+README_0647 = LIVE_0647 / "README.md"
+EVIDENCE_0647 = LIVE_0647 / "evidence.json"
 PLATFORM_INDEX = ROOT / "docs/platform/README.md"
 
 EXPECTED_CHAIN = [
@@ -48,6 +51,10 @@ LOCAL_FILE_SUFFIXES = (".json", ".md", ".py", ".sh", ".yaml", ".yml")
 
 def load_evidence() -> dict[str, object]:
     return json.loads(EVIDENCE.read_text(encoding="utf-8"))
+
+
+def load_evidence_0647() -> dict[str, object]:
+    return json.loads(EVIDENCE_0647.read_text(encoding="utf-8"))
 
 
 def contains_network_identifier(value: str) -> bool:
@@ -257,17 +264,115 @@ def test_follow_ups_are_separate_from_sunspec() -> None:
     assert "fronius-m4-04-0.6.46" in PLATFORM_INDEX.read_text(encoding="utf-8")
 
 
+def test_0647_rerun_keeps_registry_go_separate_from_terminal_stop() -> None:
+    evidence = load_evidence_0647()
+
+    assert evidence["contract"] == "helianthus.fronius-sunspec-m4-04-evidence.v1"
+    assert evidence["phase"] == "FMV3-M4-04"
+    assert evidence["publication_phase"] == "FMV3-M4-05"
+    assert evidence["outcome"] == "STOP_ENVIRONMENTAL"
+    assert evidence["runtime"] == {
+        "addon_release": "0.6.47",
+        "addon_merge": "176b00ccdd356514532a893e0eef83f173a68c3a",
+        "gateway_merge": "225f3d96fee3422bc565870f946af19fac42d471",
+        "modbusreg_version": "v0.2.1",
+        "modbusreg_merge": "16a7dfbf8016750613d086fb98d10364953ea915",
+        "image_digest": (
+            "sha256:9d79fed17e4ea682adae25ae00f667dc7277bf88f4e6635dd8561c74ac8828b6"
+        ),
+    }
+
+    acquisition = evidence["acquisition"]
+    assert acquisition["unit_id"] == 1
+    assert acquisition["function_code"] == 3
+    assert acquisition["writes_permitted"] is False
+    assert acquisition["qualification_attempts_per_gateway_start"] == 1
+    assert acquisition["gateway_starts_with_internal_go"] == "MULTIPLE_OBSERVED"
+    assert acquisition["modbus_reconnect_attempted"] is False
+
+    qualification = evidence["qualification"]
+    assert qualification["internal_decision"] == "GO"
+    assert qualification["category"] == "registry_match"
+    assert qualification["tuple_evidence"] == (
+        "REGISTRY_SELECTED_NOT_RAW_MCP_VERIFIED"
+    )
+    assert qualification["support_claim"] is False
+    chain = [
+        (entry["model_id"], entry["model_length"])
+        for entry in qualification["chain"]
+    ]
+    assert chain == EXPECTED_CHAIN
+    assert evidence["acceptance"]["raw_mcp_parity"] == "NOT_OBSERVED"
+    assert evidence["acceptance"]["retained_profile_observation"] == (
+        "NOT_RETRIEVED"
+    )
+    assert evidence["acceptance"]["final_decision"] == "STOP_ENVIRONMENTAL"
+
+
+def test_0647_readiness_redaction_and_rollback_are_exact() -> None:
+    evidence = load_evidence_0647()
+    window = evidence["observation_window"]
+
+    assert window["bounded_window_seconds"] == 130
+    assert window["readiness"] == {
+        "current_runtime": "NOT_READY",
+        "current_attempts_exhausted": True,
+        "false_running_published": False,
+        "fallback_active_published": False,
+    }
+    assert window["listeners"] == {
+        "gateway_http": "NOT_LISTENING",
+        "adapter_proxy": "NOT_LISTENING",
+    }
+    assert window["dependency_observation"]["physical_device_state"] == (
+        "NOT_CONCLUDED"
+    )
+
+    acceptance = evidence["acceptance"]
+    assert acceptance["readiness_regression"] == "PASS"
+    assert acceptance["redaction_regression"] == "PASS"
+    assert acceptance["no_gateway_regression"] == "NOT_PROVEN"
+    rollback = evidence["rollback"]
+    assert rollback["modbus_tcp_enabled"] is False
+    assert rollback["endpoint_present"] is False
+    assert rollback["health_state"] == "DISABLED"
+    assert rollback["health_reason"] == "EXPLICIT_DISABLE"
+
+    follow_ups = {item["id"]: item for item in evidence["follow_ups"]}
+    assert set(follow_ups) == {
+        "HEALTH_READINESS_MISMATCH",
+        "ENDPOINT_REDACTION_MISCLASSIFICATION",
+    }
+    assert all(
+        item["status"] == "LIVE_REGRESSION_PASS"
+        and item["attributed_to_sunspec"] is False
+        for item in follow_ups.values()
+    )
+    assert evidence["next_gate"]["m5"] == "BLOCKED_UNTIL_DEPLOYED_EXACT_GO"
+
+    readme = README_0647.read_text(encoding="utf-8")
+    assert "tuple is the registry-selected flavor contract" in readme
+    assert "did not independently compare raw MCP" in readme
+    assert "does not establish that the physical adapter was\ndown" in readme
+    assert "M5 remains `BLOCKED_UNTIL_DEPLOYED_EXACT_GO`" in readme
+    assert "fronius-m4-04-0.6.47" in PLATFORM_INDEX.read_text(encoding="utf-8")
+
+
 def test_public_evidence_contains_no_private_operational_identifiers() -> None:
     public_files = (
         README,
         EVIDENCE,
+        README_0647,
+        EVIDENCE_0647,
         PLATFORM_INDEX,
     )
     corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_files)
     assert not contains_endpoint_value(corpus)
-    evidence = load_evidence()
-    assert not any(sensitive_key(key) for key in evidence_keys(evidence))
-    assert not any(contains_endpoint_value(value) for value in evidence_strings(evidence))
+    for evidence in (load_evidence(), load_evidence_0647()):
+        assert not any(sensitive_key(key) for key in evidence_keys(evidence))
+        assert not any(
+            contains_endpoint_value(value) for value in evidence_strings(evidence)
+        )
 
 
 def test_redaction_guards_cover_generic_sensitive_variants() -> None:

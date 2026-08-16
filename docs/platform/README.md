@@ -70,6 +70,9 @@ Current platform contracts:
 - [`live/fronius-m4-04-0.6.46/`](./live/fronius-m4-04-0.6.46/) - sanitized
   FMV3-M4-04 Fronius/SunSpec qualification evidence: registry-internal `GO`,
   terminal `STOP_ENVIRONMENTAL`, completed rollback, and M5 still blocked
+- [`live/fronius-m4-04-0.6.47/`](./live/fronius-m4-04-0.6.47/) - immutable
+  read-only rerun evidence: registry-internal `GO`, readiness and endpoint
+  redaction regression passes, terminal `STOP_ENVIRONMENTAL`, and safe rollback
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary
