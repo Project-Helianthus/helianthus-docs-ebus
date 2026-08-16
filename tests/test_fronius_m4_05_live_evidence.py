@@ -42,11 +42,12 @@ HOSTNAME = re.compile(
     r"[a-z0-9](?:[a-z0-9-]{0,62}\.)+[a-z]{2,63}", re.IGNORECASE
 )
 ABSOLUTE_UNIX_PATH = re.compile(
-    r"(?<![A-Za-z0-9._:/-])/(?!\.\.?/)(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+"
+    r"(?<![A-Za-z0-9._:/-])/(?!/)(?:(?:\.\.?|[A-Za-z0-9._-]+)/)*"
+    r"[A-Za-z0-9._-]+"
 )
-ABSOLUTE_WINDOWS_PATH = re.compile(r"\b[A-Za-z]:\\(?:[^\\\r\n]+\\)*[^\\\r\n]+")
+ABSOLUTE_WINDOWS_PATH = re.compile(r"\b[A-Za-z]:[\\/][^\r\n]+")
 UNC_PATH = re.compile(r"(?:(?<!:)//|\\\\)[A-Za-z0-9._$-]+[\\/][^\s\r\n]+")
-FILE_URI = re.compile(r"\bfile:(?:/{1,3}|\\{1,2})", re.IGNORECASE)
+FILE_URI = re.compile(r"\bfile:", re.IGNORECASE)
 SAFE_DOTTED_IDENTIFIERS = {
     "helianthus.fronius-sunspec-m4-04-evidence.v1",
     "sunspec.inverter.three_phase.monitoring@1.0.0",
@@ -512,10 +513,14 @@ def test_redaction_guards_cover_generic_sensitive_variants() -> None:
 
     assert contains_private_path("/private/var/lib/addons/data")
     assert contains_private_path("/.config/helianthus/runtime.json")
+    assert contains_private_path("/./private/runtime/evidence.json")
+    assert contains_private_path("/../private/runtime/evidence.json")
     assert contains_private_path("captured at /mnt/data/runtime/evidence.json")
     assert contains_private_path(r"C:\Users\operator\evidence.json")
+    assert contains_private_path("C:/Users/operator/evidence.json")
     assert contains_private_path(r"\\host\share\evidence.json")
     assert contains_private_path("file:///C:/Users/operator/evidence.json")
+    assert contains_private_path("file:C:/Users/operator/evidence.json")
     assert contains_private_path("file://host/share/evidence.json")
     assert not contains_private_path("DISABLED / EXPLICIT_DISABLE")
     assert not contains_private_path("[evidence](./evidence.json)")
