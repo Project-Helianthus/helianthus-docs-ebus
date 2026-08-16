@@ -14,10 +14,28 @@
     "image_digest": "sha256:9d79fed17e4ea682adae25ae00f667dc7277bf88f4e6635dd8561c74ac8828b6"
   },
   "target": {
-    "endpoint_ref": "sha256:cc2d63775c6f0074",
-    "manufacturer": "Fronius",
-    "model": "Symo GEN24 10.0",
-    "firmware": "1.41.11-1"
+    "endpoint_ref": "sha256:cc2d63775c6f0074"
+  },
+  "prior_exact_target_reference": {
+    "basis": "PUBLIC_EVIDENCE_0_6_46",
+    "source_release": "0.6.46",
+    "identity": {
+      "manufacturer": "Fronius",
+      "model": "Symo GEN24 10.0",
+      "firmware": "1.41.11-1"
+    },
+    "flavor_id": "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+    "chain": [
+      {"model_id": 1, "model_length": 65},
+      {"model_id": 113, "model_length": 60},
+      {"model_id": 120, "model_length": 26},
+      {"model_id": 121, "model_length": 30},
+      {"model_id": 122, "model_length": 44},
+      {"model_id": 123, "model_length": 24},
+      {"model_id": 160, "model_length": 88},
+      {"model_id": 124, "model_length": 24},
+      {"model_id": 65535, "model_length": 0}
+    ]
   },
   "acquisition": {
     "transport": "modbus_tcp",
@@ -41,19 +59,6 @@
       "sunspec.flavor.fronius.gen24.float.observed@1.1.0"
     ],
     "selected_flavor_publication": "WITHHELD_NOT_LOGGED",
-    "reference_flavor_id": "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
-    "reference_tuple_basis": "PRIOR_EXACT_TARGET_EVIDENCE_0_6_46",
-    "reference_chain": [
-      {"model_id": 1, "model_length": 65},
-      {"model_id": 113, "model_length": 60},
-      {"model_id": 120, "model_length": 26},
-      {"model_id": 121, "model_length": 30},
-      {"model_id": 122, "model_length": 44},
-      {"model_id": 123, "model_length": 24},
-      {"model_id": 160, "model_length": 88},
-      {"model_id": 124, "model_length": 24},
-      {"model_id": 65535, "model_length": 0}
-    ],
     "unknown_blocks_publication": "WITHHELD_UNPROVEN",
     "unknown_field_publication": "WITHHELD_UNPROVEN",
     "support_claim": false

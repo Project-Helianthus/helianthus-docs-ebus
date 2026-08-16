@@ -42,9 +42,10 @@ HOSTNAME = re.compile(
     r"[a-z0-9](?:[a-z0-9-]{0,62}\.)+[a-z]{2,63}", re.IGNORECASE
 )
 ABSOLUTE_UNIX_PATH = re.compile(
-    r"(?<![A-Za-z0-9._-])/(?![/.])(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+"
+    r"(?<![A-Za-z0-9._:/-])/(?!\.\.?/)(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+"
 )
 ABSOLUTE_WINDOWS_PATH = re.compile(r"\b[A-Za-z]:\\(?:[^\\\r\n]+\\)*[^\\\r\n]+")
+UNC_PATH = re.compile(r"(?:(?<!:)//|\\\\)[A-Za-z0-9._$-]+[\\/][^\s\r\n]+")
 SAFE_DOTTED_IDENTIFIERS = {
     "helianthus.fronius-sunspec-m4-04-evidence.v1",
     "sunspec.inverter.three_phase.monitoring@1.0.0",
@@ -89,6 +90,7 @@ def contains_endpoint_value(value: str) -> bool:
 def contains_private_path(value: str) -> bool:
     return bool(
         ABSOLUTE_UNIX_PATH.search(value) or ABSOLUTE_WINDOWS_PATH.search(value)
+        or UNC_PATH.search(value)
     )
 
 
@@ -309,18 +311,24 @@ def test_0647_rerun_keeps_registry_go_separate_from_terminal_stop() -> None:
         "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
     ]
     assert qualification["selected_flavor_publication"] == "WITHHELD_NOT_LOGGED"
-    assert qualification["reference_flavor_id"] == (
-        "sunspec.flavor.fronius.gen24.float.observed@1.1.0"
-    )
-    assert qualification["reference_tuple_basis"] == (
-        "PRIOR_EXACT_TARGET_EVIDENCE_0_6_46"
-    )
     assert qualification["support_claim"] is False
+
+    prior = load_evidence()
+    reference = evidence["prior_exact_target_reference"]
+    assert evidence["target"] == {"endpoint_ref": prior["target"]["endpoint_ref"]}
+    assert reference["basis"] == "PUBLIC_EVIDENCE_0_6_46"
+    assert reference["source_release"] == prior["runtime"]["addon_release"]
+    assert reference["identity"] == {
+        key: prior["target"][key]
+        for key in ("manufacturer", "model", "firmware")
+    }
+    assert reference["flavor_id"] == prior["qualification"]["flavor_id"]
     chain = [
         (entry["model_id"], entry["model_length"])
-        for entry in qualification["reference_chain"]
+        for entry in reference["chain"]
     ]
     assert chain == EXPECTED_CHAIN
+    assert reference["chain"] == prior["qualification"]["chain"]
     assert evidence["acceptance"]["raw_mcp_parity"] == "NOT_OBSERVED"
     assert evidence["acceptance"]["retained_profile_observation"] == (
         "NOT_RETRIEVED"
@@ -439,7 +447,10 @@ def test_redaction_guards_cover_generic_sensitive_variants() -> None:
     assert not contains_endpoint_value("[evidence](./evidence.json)")
 
     assert contains_private_path("/private/var/lib/addons/data")
+    assert contains_private_path("/.config/helianthus/runtime.json")
     assert contains_private_path("captured at /mnt/data/runtime/evidence.json")
     assert contains_private_path(r"C:\Users\operator\evidence.json")
+    assert contains_private_path(r"\\host\share\evidence.json")
     assert not contains_private_path("DISABLED / EXPLICIT_DISABLE")
     assert not contains_private_path("[evidence](./evidence.json)")
+    assert not contains_private_path("https://example.invalid/public-evidence")
