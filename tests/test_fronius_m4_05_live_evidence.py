@@ -41,9 +41,14 @@ HOST_PORT = re.compile(r"\b[a-z][a-z0-9.-]*:\d{1,5}\b", re.IGNORECASE)
 HOSTNAME = re.compile(
     r"[a-z0-9](?:[a-z0-9-]{0,62}\.)+[a-z]{2,63}", re.IGNORECASE
 )
+ABSOLUTE_UNIX_PATH = re.compile(
+    r"(?<![A-Za-z0-9._-])/(?![/.])(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+"
+)
+ABSOLUTE_WINDOWS_PATH = re.compile(r"\b[A-Za-z]:\\(?:[^\\\r\n]+\\)*[^\\\r\n]+")
 SAFE_DOTTED_IDENTIFIERS = {
     "helianthus.fronius-sunspec-m4-04-evidence.v1",
     "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
     "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
 }
 LOCAL_FILE_SUFFIXES = (".json", ".md", ".py", ".sh", ".yaml", ".yml")
@@ -78,6 +83,12 @@ def contains_endpoint_value(value: str) -> bool:
     return any(
         not match.group(0).lower().endswith(LOCAL_FILE_SUFFIXES)
         for match in HOSTNAME.finditer(searchable)
+    )
+
+
+def contains_private_path(value: str) -> bool:
+    return bool(
+        ABSOLUTE_UNIX_PATH.search(value) or ABSOLUTE_WINDOWS_PATH.search(value)
     )
 
 
@@ -293,13 +304,21 @@ def test_0647_rerun_keeps_registry_go_separate_from_terminal_stop() -> None:
     qualification = evidence["qualification"]
     assert qualification["internal_decision"] == "GO"
     assert qualification["category"] == "registry_match"
-    assert qualification["tuple_evidence"] == (
-        "REGISTRY_SELECTED_NOT_RAW_MCP_VERIFIED"
+    assert qualification["supported_flavor_ids"] == [
+        "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
+        "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+    ]
+    assert qualification["selected_flavor_publication"] == "WITHHELD_NOT_LOGGED"
+    assert qualification["reference_flavor_id"] == (
+        "sunspec.flavor.fronius.gen24.float.observed@1.1.0"
+    )
+    assert qualification["reference_tuple_basis"] == (
+        "PRIOR_EXACT_TARGET_EVIDENCE_0_6_46"
     )
     assert qualification["support_claim"] is False
     chain = [
         (entry["model_id"], entry["model_length"])
-        for entry in qualification["chain"]
+        for entry in qualification["reference_chain"]
     ]
     assert chain == EXPECTED_CHAIN
     assert evidence["acceptance"]["raw_mcp_parity"] == "NOT_OBSERVED"
@@ -351,8 +370,9 @@ def test_0647_readiness_redaction_and_rollback_are_exact() -> None:
     assert evidence["next_gate"]["m5"] == "BLOCKED_UNTIL_DEPLOYED_EXACT_GO"
 
     readme = README_0647.read_text(encoding="utf-8")
-    assert "tuple is the registry-selected flavor contract" in readme
-    assert "did not independently compare raw MCP" in readme
+    assert "exact target reference retained" in readme
+    assert "public log did not expose which supported flavor" in readme
+    assert "did not independently compare\nraw MCP" in readme
     assert "does not establish that the physical adapter was\ndown" in readme
     assert "M5 remains `BLOCKED_UNTIL_DEPLOYED_EXACT_GO`" in readme
     assert "fronius-m4-04-0.6.47" in PLATFORM_INDEX.read_text(encoding="utf-8")
@@ -368,10 +388,14 @@ def test_public_evidence_contains_no_private_operational_identifiers() -> None:
     )
     corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_files)
     assert not contains_endpoint_value(corpus)
+    assert not contains_private_path(corpus)
     for evidence in (load_evidence(), load_evidence_0647()):
         assert not any(sensitive_key(key) for key in evidence_keys(evidence))
         assert not any(
             contains_endpoint_value(value) for value in evidence_strings(evidence)
+        )
+        assert not any(
+            contains_private_path(value) for value in evidence_strings(evidence)
         )
 
 
@@ -413,3 +437,9 @@ def test_redaction_guards_cover_generic_sensitive_variants() -> None:
     assert contains_endpoint_value("host.example.com:502")
     assert not contains_endpoint_value("sunspec.inverter.three_phase.monitoring@1.0.0")
     assert not contains_endpoint_value("[evidence](./evidence.json)")
+
+    assert contains_private_path("/private/var/lib/addons/data")
+    assert contains_private_path("captured at /mnt/data/runtime/evidence.json")
+    assert contains_private_path(r"C:\Users\operator\evidence.json")
+    assert not contains_private_path("DISABLED / EXPLICIT_DISABLE")
+    assert not contains_private_path("[evidence](./evidence.json)")

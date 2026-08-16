@@ -30,10 +30,14 @@ Writes were forbidden and none were performed.
 ## Registry Qualification
 
 Each observed current-runtime qualification completed on its first worker
-attempt as `GO`, category `registry_match`, without Modbus reconnect. The
-registry admitted `sunspec.inverter.three_phase.monitoring@1.0.0` and selected
-`sunspec.flavor.fronius.gen24.float.observed@1.1.0` for the closed reference
-tuple:
+attempt as `GO`, category `registry_match`, without Modbus reconnect. That
+decision proves admission of
+`sunspec.inverter.three_phase.monitoring@1.0.0` and selection of one supported
+Fronius observed flavor. The public log did not expose which supported flavor
+was selected.
+
+The exact target reference retained from the separately validated 0.6.46
+packet is:
 
 - manufacturer `Fronius`;
 - model `Symo GEN24 10.0`;
@@ -41,11 +45,12 @@ tuple:
 - ordered chain
   `1/65, 113/60, 120/26, 121/30, 122/44, 123/24, 160/88, 124/24, FFFF/0`.
 
-The tuple is the registry-selected flavor contract. The run did not retrieve a
-retained observation through MCP and did not independently compare raw MCP
-words. Unknown occurrences, field-level unknown retention, and raw parity are
-therefore `WITHHELD_UNPROVEN`; the tuple must not be read as an independently
-captured raw dump.
+That prior packet selected
+`sunspec.flavor.fronius.gen24.float.observed@1.1.0`. The 0.6.47 run did not
+retrieve a retained observation through MCP and did not independently compare
+raw MCP words. Its selected flavor, current chain, unknown occurrences,
+field-level unknown retention, and raw parity are therefore
+`WITHHELD_UNPROVEN`; the reference tuple must not be read as a current raw dump.
 
 The internal `GO` is only the registry-owned qualification result. It is not
 the final M4-04 decision.

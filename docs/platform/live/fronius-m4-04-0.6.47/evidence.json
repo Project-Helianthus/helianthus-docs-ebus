@@ -35,10 +35,15 @@
     "category": "registry_match",
     "capability_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
     "capability_reason": "ADMITTED",
-    "flavor_id": "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
     "flavor_reason": "MATCHED",
-    "tuple_evidence": "REGISTRY_SELECTED_NOT_RAW_MCP_VERIFIED",
-    "chain": [
+    "supported_flavor_ids": [
+      "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
+      "sunspec.flavor.fronius.gen24.float.observed@1.1.0"
+    ],
+    "selected_flavor_publication": "WITHHELD_NOT_LOGGED",
+    "reference_flavor_id": "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+    "reference_tuple_basis": "PRIOR_EXACT_TARGET_EVIDENCE_0_6_46",
+    "reference_chain": [
       {"model_id": 1, "model_length": 65},
       {"model_id": 113, "model_length": 60},
       {"model_id": 120, "model_length": 26},
