@@ -46,6 +46,7 @@ ABSOLUTE_UNIX_PATH = re.compile(
 )
 ABSOLUTE_WINDOWS_PATH = re.compile(r"\b[A-Za-z]:\\(?:[^\\\r\n]+\\)*[^\\\r\n]+")
 UNC_PATH = re.compile(r"(?:(?<!:)//|\\\\)[A-Za-z0-9._$-]+[\\/][^\s\r\n]+")
+FILE_URI = re.compile(r"\bfile:(?:/{1,3}|\\{1,2})", re.IGNORECASE)
 SAFE_DOTTED_IDENTIFIERS = {
     "helianthus.fronius-sunspec-m4-04-evidence.v1",
     "sunspec.inverter.three_phase.monitoring@1.0.0",
@@ -91,6 +92,7 @@ def contains_private_path(value: str) -> bool:
     return bool(
         ABSOLUTE_UNIX_PATH.search(value) or ABSOLUTE_WINDOWS_PATH.search(value)
         or UNC_PATH.search(value)
+        or FILE_URI.search(value)
     )
 
 
@@ -280,7 +282,27 @@ def test_follow_ups_are_separate_from_sunspec() -> None:
 def test_0647_rerun_keeps_registry_go_separate_from_terminal_stop() -> None:
     evidence = load_evidence_0647()
 
+    assert set(evidence) == {
+        "contract",
+        "evidence_class",
+        "export_tier",
+        "phase",
+        "publication_phase",
+        "outcome",
+        "runtime",
+        "target",
+        "prior_exact_target_reference",
+        "acquisition",
+        "qualification",
+        "observation_window",
+        "acceptance",
+        "rollback",
+        "follow_ups",
+        "next_gate",
+    }
     assert evidence["contract"] == "helianthus.fronius-sunspec-m4-04-evidence.v1"
+    assert evidence["evidence_class"] == "LIVE_RUNTIME_EVIDENCE"
+    assert evidence["export_tier"] == "PUBLIC_REDACTED"
     assert evidence["phase"] == "FMV3-M4-04"
     assert evidence["publication_phase"] == "FMV3-M4-05"
     assert evidence["outcome"] == "STOP_ENVIRONMENTAL"
@@ -295,87 +317,129 @@ def test_0647_rerun_keeps_registry_go_separate_from_terminal_stop() -> None:
         ),
     }
 
-    acquisition = evidence["acquisition"]
-    assert acquisition["unit_id"] == 1
-    assert acquisition["function_code"] == 3
-    assert acquisition["writes_permitted"] is False
-    assert acquisition["qualification_attempts_per_gateway_start"] == 1
-    assert acquisition["gateway_starts_with_internal_go"] == "MULTIPLE_OBSERVED"
-    assert acquisition["modbus_reconnect_attempted"] is False
+    assert evidence["acquisition"] == {
+        "transport": "modbus_tcp",
+        "unit_id": 1,
+        "function_code": 3,
+        "writes_permitted": False,
+        "target_reachable_during_window": True,
+        "qualification_attempts_per_gateway_start": 1,
+        "gateway_starts_with_internal_go": "MULTIPLE_OBSERVED",
+        "modbus_reconnect_attempted": False,
+        "recovered": False,
+    }
 
     qualification = evidence["qualification"]
-    assert qualification["internal_decision"] == "GO"
-    assert qualification["category"] == "registry_match"
-    assert qualification["supported_flavor_ids"] == [
-        "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
-        "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
-    ]
-    assert qualification["selected_flavor_publication"] == "WITHHELD_NOT_LOGGED"
-    assert qualification["support_claim"] is False
+    assert qualification == {
+        "internal_decision": "GO",
+        "category": "registry_match",
+        "capability_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+        "capability_reason": "ADMITTED",
+        "flavor_reason": "MATCHED",
+        "supported_flavor_ids": [
+            "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
+            "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+        ],
+        "selected_flavor_publication": "WITHHELD_NOT_LOGGED",
+        "unknown_blocks_publication": "WITHHELD_UNPROVEN",
+        "unknown_field_publication": "WITHHELD_UNPROVEN",
+        "support_claim": False,
+    }
 
     prior = load_evidence()
     reference = evidence["prior_exact_target_reference"]
     assert evidence["target"] == {"endpoint_ref": prior["target"]["endpoint_ref"]}
-    assert reference["basis"] == "PUBLIC_EVIDENCE_0_6_46"
-    assert reference["source_release"] == prior["runtime"]["addon_release"]
-    assert reference["identity"] == {
-        key: prior["target"][key]
-        for key in ("manufacturer", "model", "firmware")
+    assert reference == {
+        "basis": "PUBLIC_EVIDENCE_0_6_46",
+        "source_release": prior["runtime"]["addon_release"],
+        "identity": {
+            key: prior["target"][key]
+            for key in ("manufacturer", "model", "firmware")
+        },
+        "flavor_id": prior["qualification"]["flavor_id"],
+        "chain": prior["qualification"]["chain"],
     }
-    assert reference["flavor_id"] == prior["qualification"]["flavor_id"]
     chain = [
         (entry["model_id"], entry["model_length"])
         for entry in reference["chain"]
     ]
     assert chain == EXPECTED_CHAIN
-    assert reference["chain"] == prior["qualification"]["chain"]
-    assert evidence["acceptance"]["raw_mcp_parity"] == "NOT_OBSERVED"
-    assert evidence["acceptance"]["retained_profile_observation"] == (
-        "NOT_RETRIEVED"
-    )
-    assert evidence["acceptance"]["final_decision"] == "STOP_ENVIRONMENTAL"
 
 
 def test_0647_readiness_redaction_and_rollback_are_exact() -> None:
     evidence = load_evidence_0647()
     window = evidence["observation_window"]
 
-    assert window["bounded_window_seconds"] == 130
-    assert window["readiness"] == {
-        "current_runtime": "NOT_READY",
-        "current_attempts_exhausted": True,
-        "false_running_published": False,
-        "fallback_active_published": False,
+    assert window == {
+        "runtime_started_at": "2026-08-16T06:08:02.600862464Z",
+        "rollback_requested_at": "2026-08-16T06:10:11.947659322Z",
+        "bounded_window_seconds": 130,
+        "readiness": {
+            "current_runtime": "NOT_READY",
+            "current_attempts_exhausted": True,
+            "false_running_published": False,
+            "fallback_active_published": False,
+        },
+        "listeners": {
+            "gateway_http": "NOT_LISTENING",
+            "adapter_proxy": "NOT_LISTENING",
+        },
+        "dependency_observation": {
+            "role": "adapter_direct_dependency",
+            "runtime_path_state": "UNREACHABLE",
+            "tcp_result": "NO_ROUTE_FROM_RUNTIME_NAMESPACE",
+            "physical_device_state": "NOT_CONCLUDED",
+        },
     }
-    assert window["listeners"] == {
-        "gateway_http": "NOT_LISTENING",
-        "adapter_proxy": "NOT_LISTENING",
+    assert evidence["acceptance"] == {
+        "qualified_opt_in_detection": "PASS_INTERNAL",
+        "bounded_polling": "PASS_PER_WORKER",
+        "raw_mcp_parity": "NOT_OBSERVED",
+        "retained_profile_observation": "NOT_RETRIEVED",
+        "disconnect_reconnect_generation_integrity": "NOT_EXERCISED",
+        "no_writes": "PASS",
+        "readiness_regression": "PASS",
+        "redaction_regression": "PASS",
+        "no_gateway_regression": "NOT_PROVEN",
+        "final_decision": "STOP_ENVIRONMENTAL",
     }
-    assert window["dependency_observation"]["physical_device_state"] == (
-        "NOT_CONCLUDED"
-    )
-
-    acceptance = evidence["acceptance"]
-    assert acceptance["readiness_regression"] == "PASS"
-    assert acceptance["redaction_regression"] == "PASS"
-    assert acceptance["no_gateway_regression"] == "NOT_PROVEN"
-    rollback = evidence["rollback"]
-    assert rollback["modbus_tcp_enabled"] is False
-    assert rollback["endpoint_present"] is False
-    assert rollback["health_state"] == "DISABLED"
-    assert rollback["health_reason"] == "EXPLICIT_DISABLE"
-
-    follow_ups = {item["id"]: item for item in evidence["follow_ups"]}
-    assert set(follow_ups) == {
-        "HEALTH_READINESS_MISMATCH",
-        "ENDPOINT_REDACTION_MISCLASSIFICATION",
+    assert evidence["rollback"] == {
+        "completed_at": "2026-08-16T06:10:26Z",
+        "verified_at": "2026-08-16T06:13:09Z",
+        "backup_created": True,
+        "modbus_tcp_enabled": False,
+        "endpoint_present": False,
+        "health_state": "DISABLED",
+        "health_reason": "EXPLICIT_DISABLE",
     }
-    assert all(
-        item["status"] == "LIVE_REGRESSION_PASS"
-        and item["attributed_to_sunspec"] is False
-        for item in follow_ups.values()
-    )
-    assert evidence["next_gate"]["m5"] == "BLOCKED_UNTIL_DEPLOYED_EXACT_GO"
+    assert evidence["follow_ups"] == [
+        {
+            "id": "HEALTH_READINESS_MISMATCH",
+            "classification": "RUNTIME_READINESS",
+            "status": "LIVE_REGRESSION_PASS",
+            "summary": (
+                "The runtime did not publish RUNNING while required listeners were absent."
+            ),
+            "attributed_to_sunspec": False,
+        },
+        {
+            "id": "ENDPOINT_REDACTION_MISCLASSIFICATION",
+            "classification": "LOG_REDACTION",
+            "status": "LIVE_REGRESSION_PASS",
+            "summary": (
+                "The failed adapter dependency used the adapter-direct redaction category."
+            ),
+            "attributed_to_sunspec": False,
+        },
+    ]
+    assert evidence["next_gate"] == {
+        "m5": "BLOCKED_UNTIL_DEPLOYED_EXACT_GO",
+        "rerun_requires": [
+            "adapter_direct_runtime_path_reachable",
+            "gateway_http_and_adapter_proxy_ready",
+            "fresh_retained_observation_and_raw_mcp_parity",
+        ],
+    }
 
     readme = README_0647.read_text(encoding="utf-8")
     assert "exact target reference retained" in readme
@@ -451,6 +515,8 @@ def test_redaction_guards_cover_generic_sensitive_variants() -> None:
     assert contains_private_path("captured at /mnt/data/runtime/evidence.json")
     assert contains_private_path(r"C:\Users\operator\evidence.json")
     assert contains_private_path(r"\\host\share\evidence.json")
+    assert contains_private_path("file:///C:/Users/operator/evidence.json")
+    assert contains_private_path("file://host/share/evidence.json")
     assert not contains_private_path("DISABLED / EXPLICIT_DISABLE")
     assert not contains_private_path("[evidence](./evidence.json)")
     assert not contains_private_path("https://example.invalid/public-evidence")
