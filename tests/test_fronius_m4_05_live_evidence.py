@@ -10,6 +10,9 @@ ROOT = Path(__file__).resolve().parents[1]
 LIVE = ROOT / "docs/platform/live/fronius-m4-04-0.6.46"
 README = LIVE / "README.md"
 EVIDENCE = LIVE / "evidence.json"
+LIVE_0647 = ROOT / "docs/platform/live/fronius-m4-04-0.6.47"
+README_0647 = LIVE_0647 / "README.md"
+EVIDENCE_0647 = LIVE_0647 / "evidence.json"
 PLATFORM_INDEX = ROOT / "docs/platform/README.md"
 
 EXPECTED_CHAIN = [
@@ -38,9 +41,17 @@ HOST_PORT = re.compile(r"\b[a-z][a-z0-9.-]*:\d{1,5}\b", re.IGNORECASE)
 HOSTNAME = re.compile(
     r"[a-z0-9](?:[a-z0-9-]{0,62}\.)+[a-z]{2,63}", re.IGNORECASE
 )
+ABSOLUTE_UNIX_PATH = re.compile(
+    r"(?<![A-Za-z0-9._:/-])/(?!/)(?:(?:\.\.?|[A-Za-z0-9._-]+)/)*"
+    r"[A-Za-z0-9._-]+"
+)
+ABSOLUTE_WINDOWS_PATH = re.compile(r"\b[A-Za-z]:[\\/][^\r\n]+")
+UNC_PATH = re.compile(r"(?:(?<!:)//|\\\\)[A-Za-z0-9._$-]+[\\/][^\s\r\n]+")
+FILE_URI = re.compile(r"\bfile:", re.IGNORECASE)
 SAFE_DOTTED_IDENTIFIERS = {
     "helianthus.fronius-sunspec-m4-04-evidence.v1",
     "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
     "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
 }
 LOCAL_FILE_SUFFIXES = (".json", ".md", ".py", ".sh", ".yaml", ".yml")
@@ -48,6 +59,10 @@ LOCAL_FILE_SUFFIXES = (".json", ".md", ".py", ".sh", ".yaml", ".yml")
 
 def load_evidence() -> dict[str, object]:
     return json.loads(EVIDENCE.read_text(encoding="utf-8"))
+
+
+def load_evidence_0647() -> dict[str, object]:
+    return json.loads(EVIDENCE_0647.read_text(encoding="utf-8"))
 
 
 def contains_network_identifier(value: str) -> bool:
@@ -71,6 +86,14 @@ def contains_endpoint_value(value: str) -> bool:
     return any(
         not match.group(0).lower().endswith(LOCAL_FILE_SUFFIXES)
         for match in HOSTNAME.finditer(searchable)
+    )
+
+
+def contains_private_path(value: str) -> bool:
+    return bool(
+        ABSOLUTE_UNIX_PATH.search(value) or ABSOLUTE_WINDOWS_PATH.search(value)
+        or UNC_PATH.search(value)
+        or FILE_URI.search(value)
     )
 
 
@@ -257,17 +280,196 @@ def test_follow_ups_are_separate_from_sunspec() -> None:
     assert "fronius-m4-04-0.6.46" in PLATFORM_INDEX.read_text(encoding="utf-8")
 
 
+def test_0647_rerun_keeps_registry_go_separate_from_terminal_stop() -> None:
+    evidence = load_evidence_0647()
+
+    assert set(evidence) == {
+        "contract",
+        "evidence_class",
+        "export_tier",
+        "phase",
+        "publication_phase",
+        "outcome",
+        "runtime",
+        "target",
+        "prior_exact_target_reference",
+        "acquisition",
+        "qualification",
+        "observation_window",
+        "acceptance",
+        "rollback",
+        "follow_ups",
+        "next_gate",
+    }
+    assert evidence["contract"] == "helianthus.fronius-sunspec-m4-04-evidence.v1"
+    assert evidence["evidence_class"] == "LIVE_RUNTIME_EVIDENCE"
+    assert evidence["export_tier"] == "PUBLIC_REDACTED"
+    assert evidence["phase"] == "FMV3-M4-04"
+    assert evidence["publication_phase"] == "FMV3-M4-05"
+    assert evidence["outcome"] == "STOP_ENVIRONMENTAL"
+    assert evidence["runtime"] == {
+        "addon_release": "0.6.47",
+        "addon_merge": "176b00ccdd356514532a893e0eef83f173a68c3a",
+        "gateway_merge": "225f3d96fee3422bc565870f946af19fac42d471",
+        "modbusreg_version": "v0.2.1",
+        "modbusreg_merge": "16a7dfbf8016750613d086fb98d10364953ea915",
+        "image_digest": (
+            "sha256:9d79fed17e4ea682adae25ae00f667dc7277bf88f4e6635dd8561c74ac8828b6"
+        ),
+    }
+
+    assert evidence["acquisition"] == {
+        "transport": "modbus_tcp",
+        "unit_id": 1,
+        "function_code": 3,
+        "writes_permitted": False,
+        "target_reachable_during_window": True,
+        "qualification_attempts_per_gateway_start": 1,
+        "gateway_starts_with_internal_go": "MULTIPLE_OBSERVED",
+        "modbus_reconnect_attempted": False,
+        "recovered": False,
+    }
+
+    qualification = evidence["qualification"]
+    assert qualification == {
+        "internal_decision": "GO",
+        "category": "registry_match",
+        "capability_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+        "capability_reason": "ADMITTED",
+        "flavor_reason": "MATCHED",
+        "supported_flavor_ids": [
+            "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
+            "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+        ],
+        "selected_flavor_publication": "WITHHELD_NOT_LOGGED",
+        "unknown_blocks_publication": "WITHHELD_UNPROVEN",
+        "unknown_field_publication": "WITHHELD_UNPROVEN",
+        "support_claim": False,
+    }
+
+    prior = load_evidence()
+    reference = evidence["prior_exact_target_reference"]
+    assert evidence["target"] == {"endpoint_ref": prior["target"]["endpoint_ref"]}
+    assert reference == {
+        "basis": "PUBLIC_EVIDENCE_0_6_46",
+        "source_release": prior["runtime"]["addon_release"],
+        "identity": {
+            key: prior["target"][key]
+            for key in ("manufacturer", "model", "firmware")
+        },
+        "flavor_id": prior["qualification"]["flavor_id"],
+        "chain": prior["qualification"]["chain"],
+    }
+    chain = [
+        (entry["model_id"], entry["model_length"])
+        for entry in reference["chain"]
+    ]
+    assert chain == EXPECTED_CHAIN
+
+
+def test_0647_readiness_redaction_and_rollback_are_exact() -> None:
+    evidence = load_evidence_0647()
+    window = evidence["observation_window"]
+
+    assert window == {
+        "runtime_started_at": "2026-08-16T06:08:02.600862464Z",
+        "rollback_requested_at": "2026-08-16T06:10:11.947659322Z",
+        "bounded_window_seconds": 130,
+        "readiness": {
+            "current_runtime": "NOT_READY",
+            "current_attempts_exhausted": True,
+            "false_running_published": False,
+            "fallback_active_published": False,
+        },
+        "listeners": {
+            "gateway_http": "NOT_LISTENING",
+            "adapter_proxy": "NOT_LISTENING",
+        },
+        "dependency_observation": {
+            "role": "adapter_direct_dependency",
+            "runtime_path_state": "UNREACHABLE",
+            "tcp_result": "NO_ROUTE_FROM_RUNTIME_NAMESPACE",
+            "physical_device_state": "NOT_CONCLUDED",
+        },
+    }
+    assert evidence["acceptance"] == {
+        "qualified_opt_in_detection": "PASS_INTERNAL",
+        "bounded_polling": "PASS_PER_WORKER",
+        "raw_mcp_parity": "NOT_OBSERVED",
+        "retained_profile_observation": "NOT_RETRIEVED",
+        "disconnect_reconnect_generation_integrity": "NOT_EXERCISED",
+        "no_writes": "PASS",
+        "readiness_regression": "PASS",
+        "redaction_regression": "PASS",
+        "no_gateway_regression": "NOT_PROVEN",
+        "final_decision": "STOP_ENVIRONMENTAL",
+    }
+    assert evidence["rollback"] == {
+        "completed_at": "2026-08-16T06:10:26Z",
+        "verified_at": "2026-08-16T06:13:09Z",
+        "backup_created": True,
+        "modbus_tcp_enabled": False,
+        "endpoint_present": False,
+        "health_state": "DISABLED",
+        "health_reason": "EXPLICIT_DISABLE",
+    }
+    assert evidence["follow_ups"] == [
+        {
+            "id": "HEALTH_READINESS_MISMATCH",
+            "classification": "RUNTIME_READINESS",
+            "status": "LIVE_REGRESSION_PASS",
+            "summary": (
+                "The runtime did not publish RUNNING while required listeners were absent."
+            ),
+            "attributed_to_sunspec": False,
+        },
+        {
+            "id": "ENDPOINT_REDACTION_MISCLASSIFICATION",
+            "classification": "LOG_REDACTION",
+            "status": "LIVE_REGRESSION_PASS",
+            "summary": (
+                "The failed adapter dependency used the adapter-direct redaction category."
+            ),
+            "attributed_to_sunspec": False,
+        },
+    ]
+    assert evidence["next_gate"] == {
+        "m5": "BLOCKED_UNTIL_DEPLOYED_EXACT_GO",
+        "rerun_requires": [
+            "adapter_direct_runtime_path_reachable",
+            "gateway_http_and_adapter_proxy_ready",
+            "fresh_retained_observation_and_raw_mcp_parity",
+        ],
+    }
+
+    readme = README_0647.read_text(encoding="utf-8")
+    assert "exact target reference retained" in readme
+    assert "public log did not expose which supported flavor" in readme
+    assert "did not independently compare\nraw MCP" in readme
+    assert "does not establish that the physical adapter was\ndown" in readme
+    assert "M5 remains `BLOCKED_UNTIL_DEPLOYED_EXACT_GO`" in readme
+    assert "fronius-m4-04-0.6.47" in PLATFORM_INDEX.read_text(encoding="utf-8")
+
+
 def test_public_evidence_contains_no_private_operational_identifiers() -> None:
     public_files = (
         README,
         EVIDENCE,
+        README_0647,
+        EVIDENCE_0647,
         PLATFORM_INDEX,
     )
     corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_files)
     assert not contains_endpoint_value(corpus)
-    evidence = load_evidence()
-    assert not any(sensitive_key(key) for key in evidence_keys(evidence))
-    assert not any(contains_endpoint_value(value) for value in evidence_strings(evidence))
+    assert not contains_private_path(corpus)
+    for evidence in (load_evidence(), load_evidence_0647()):
+        assert not any(sensitive_key(key) for key in evidence_keys(evidence))
+        assert not any(
+            contains_endpoint_value(value) for value in evidence_strings(evidence)
+        )
+        assert not any(
+            contains_private_path(value) for value in evidence_strings(evidence)
+        )
 
 
 def test_redaction_guards_cover_generic_sensitive_variants() -> None:
@@ -308,3 +510,18 @@ def test_redaction_guards_cover_generic_sensitive_variants() -> None:
     assert contains_endpoint_value("host.example.com:502")
     assert not contains_endpoint_value("sunspec.inverter.three_phase.monitoring@1.0.0")
     assert not contains_endpoint_value("[evidence](./evidence.json)")
+
+    assert contains_private_path("/private/var/lib/addons/data")
+    assert contains_private_path("/.config/helianthus/runtime.json")
+    assert contains_private_path("/./private/runtime/evidence.json")
+    assert contains_private_path("/../private/runtime/evidence.json")
+    assert contains_private_path("captured at /mnt/data/runtime/evidence.json")
+    assert contains_private_path(r"C:\Users\operator\evidence.json")
+    assert contains_private_path("C:/Users/operator/evidence.json")
+    assert contains_private_path(r"\\host\share\evidence.json")
+    assert contains_private_path("file:///C:/Users/operator/evidence.json")
+    assert contains_private_path("file:C:/Users/operator/evidence.json")
+    assert contains_private_path("file://host/share/evidence.json")
+    assert not contains_private_path("DISABLED / EXPLICIT_DISABLE")
+    assert not contains_private_path("[evidence](./evidence.json)")
+    assert not contains_private_path("https://example.invalid/public-evidence")
