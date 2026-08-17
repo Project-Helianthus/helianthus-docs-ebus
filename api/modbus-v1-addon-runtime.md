@@ -172,9 +172,7 @@ the existing MCP retained-observation state, not canonical PV availability.
     "trigger": "explicit_operator_controlled_post_qualification_procedure",
     "disable_modbus_endpoint": true,
     "restore": "operator_selected_prior_gateway_addon_pair",
-    "automatic_on_stop_or_no_go": false,
-    "separate_from_startup_fallback": true,
-    "startup_fallback_parity": "not_guaranteed"
+    "automatic_on_stop_or_no_go": false
   },
   "live_evidence": {
     "owner_phase": "FMV3-M4-05",
