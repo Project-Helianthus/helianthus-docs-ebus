@@ -226,6 +226,7 @@ def validate_semantics(document, manifest, source_registry):
             errors.add("requested_output_source_binding")
 
     projection_ids = set()
+    mapped_fact_ids = set()
     for projection in document["projection_report"]:
         projection_id = (
             projection["source_ref"],
@@ -245,12 +246,17 @@ def validate_semantics(document, manifest, source_registry):
                 errors.add("projection_binding")
             elif projection["source_ref"] != observed[projected_key]["origin_ref"]:
                 errors.add("projection_source_binding")
+            if projected_key in mapped_fact_ids:
+                errors.add("projection_fact_uniqueness")
+            mapped_fact_ids.add(projected_key)
         elif projected_fact is not None or projection["dimensions"] is not None:
             errors.add("projection_binding")
         elif projection["source_ref"] != provenance["source_observation_ref"]:
             errors.add("projection_source_binding")
     if projection_ids != requested_output_ids:
         errors.add("projection_coverage")
+    if mapped_fact_ids != set(observed):
+        errors.add("projection_fact_coverage")
 
     return sorted(errors)
 

@@ -120,7 +120,7 @@
     },
     {
       "id": "conflicting_projection_outcome_for_same_output",
-      "mutation": {"op": "replace", "path": "/projection_report/1/requested_output_ref", "value": "sha256:bc3ae450a43db0d91f3f77c91bfe382c33d6b8983623321ce52de247ecc08a56"},
+      "mutation": {"op": "replace", "path": "/projection_report/1/requested_output_ref", "value": "sha256:0000000000000000000000000000000000000000000000000000000000000001"},
       "expected_rule": "projection_identity"
     },
     {
@@ -176,6 +176,14 @@
       "id": "partial_projection_report",
       "mutation": {"op": "remove", "path": "/projection_report/1"},
       "expected_rule": "projection_coverage"
+    },
+    {
+      "id": "published_fact_without_mapping",
+      "mutation": [
+        {"op": "remove", "path": "/requested_outputs/10"},
+        {"op": "remove", "path": "/projection_report/10"}
+      ],
+      "expected_rule": "projection_fact_coverage"
     }
   ]
 }

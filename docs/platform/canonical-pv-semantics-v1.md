@@ -111,8 +111,9 @@ requested_output_ref)` so conflicting outcomes cannot be order-dependent.
 `source_ref` must equal the admitted observation's `source_observation_ref`.
 The mandatory `requested_outputs` inventory contains the same complete identity
 set as `projection_report`; exactly one outcome is required for every requested
-output, so empty or partial loss accounting fails closed. Absence must not be
-silently converted to zero.
+output. Every published fact also has exactly one `MAPPED` row with its complete
+fact identity and `origin_ref`; empty, partial, surplus, or duplicate accounting
+fails closed. Absence must not be silently converted to zero.
 
 `source_provenance` describes the current acquisition. `origins[]` contains
 every exact source provenance record still referenced by a fact. A retained
