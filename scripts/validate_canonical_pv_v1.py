@@ -80,13 +80,6 @@ def validate_semantics(document, manifest):
         if isinstance(value, str)
     ):
         errors.add("provenance_redaction")
-    source_profiles = {
-        item["source_id"] for item in manifest["source_id_compatibility"]
-    }
-    if provenance["source_protocol"] not in manifest["source_protocols"]:
-        errors.add("provenance_binding")
-    if provenance["source_profile_id"] not in source_profiles:
-        errors.add("provenance_binding")
     expected_version = provenance["source_profile_id"].rsplit("@", 1)
     if len(expected_version) != 2 or expected_version[1] != provenance["source_profile_version"]:
         errors.add("provenance_binding")
@@ -137,6 +130,22 @@ def validate_semantics(document, manifest):
             errors.add("freshness_policy")
         if temporal["retain_until_monotonic_ns"] != expected_retain:
             errors.add("freshness_policy")
+        evaluated = document["evaluated_monotonic_ns"]
+        if fact["freshness"] == "FRESH" and not (
+            receipt <= evaluated < temporal["fresh_until_monotonic_ns"]
+        ):
+            errors.add("freshness_evaluation")
+        if fact["freshness"] == "STALE" and not (
+            temporal["fresh_until_monotonic_ns"]
+            <= evaluated
+            < temporal["retain_until_monotonic_ns"]
+        ):
+            errors.add("freshness_evaluation")
+        if (
+            fact["freshness"] == "EXPIRED"
+            and evaluated < temporal["retain_until_monotonic_ns"]
+        ):
+            errors.add("freshness_evaluation")
         if definition["accumulator"] != ("continuity" in fact):
             errors.add("continuity_evidence")
         state_pair = f'{fact["availability"]}/{fact["freshness"]}'

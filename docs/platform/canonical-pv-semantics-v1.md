@@ -60,9 +60,10 @@ These axes are not aliases and must not be collapsed into a single status.
 The only V1 availability/freshness pairs are `AVAILABLE/FRESH`,
 `AVAILABLE/STALE`, `UNAVAILABLE/EXPIRED`, and `UNSUPPORTED/EXPIRED`.
 
-Freshness is evaluated from monotonic receipt time. Source timestamps are
-evidence only and never drive expiry. V1 defines these versioned product-policy
-profiles in `helianthus-ebusreg`:
+Freshness is evaluated from monotonic receipt time against the envelope's
+`evaluated_monotonic_ns`; all monotonic values belong to the same runtime clock
+domain. Source timestamps are evidence only and never drive expiry. V1 defines
+these versioned product-policy profiles in `helianthus-ebusreg`:
 
 | Policy | Fresh through | Retain through |
 | --- | ---: | ---: |
@@ -89,9 +90,11 @@ order is never precedence.
 Canonical publication requires a source observation admitted by its owning
 profile registry. Provenance records the source protocol, profile identifier
 and version, source-validity state, source observation reference, source shadow
-reference, and evidence reference. Protocol and profile identifiers must be
-present in the canonical manifest and the profile version must match its
-versioned source ID. References are opaque hashes or handles.
+reference, source-registry reference, and evidence reference. Protocol and
+profile identifiers are source-registry-owned and extensible without changing
+canonical V1 facts; the profile version must match its versioned source ID, and
+the registry binding is an opaque digest. References are opaque hashes or
+handles.
 Endpoint addresses, credentials, raw Modbus words, and private fixture paths are
 forbidden from the canonical envelope.
 

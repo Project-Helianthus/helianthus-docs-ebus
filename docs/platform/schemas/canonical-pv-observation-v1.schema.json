@@ -9,6 +9,7 @@
     "asset_ref",
     "generation",
     "produced_at",
+    "evaluated_monotonic_ns",
     "facts",
     "source_time_state",
     "source_provenance",
@@ -20,6 +21,7 @@
     "asset_ref": {"type": "string", "pattern": "^pv-asset-[A-Za-z0-9_-]{1,96}$"},
     "generation": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
     "produced_at": {"type": "string", "format": "date-time"},
+    "evaluated_monotonic_ns": {"type": "integer", "minimum": 0},
     "facts": {
       "type": "array",
       "minItems": 1,
@@ -86,6 +88,16 @@
       "properties": {
         "kind": {"const": "decimal"},
         "coefficient": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"},
+        "scale": {"type": "integer", "minimum": -18, "maximum": 18}
+      }
+    },
+    "PositiveDecimalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "coefficient", "scale"],
+      "properties": {
+        "kind": {"const": "decimal"},
+        "coefficient": {"type": "string", "pattern": "^[1-9][0-9]*$"},
         "scale": {"type": "integer", "minimum": -18, "maximum": 18}
       }
     },
@@ -183,7 +195,7 @@
     "ContinuityRolloverV1": {
       "allOf": [
         {"$ref": "#/$defs/ContinuityBaseV1"},
-        {"properties": {"state": {"const": "ROLLOVER"}, "delta": {"$ref": "#/$defs/NonNegativeDecimalV1"}, "modulus": {"$ref": "#/$defs/NonNegativeDecimalV1"}, "evidence_ref": {"$ref": "#/$defs/DigestV1"}}}
+        {"properties": {"state": {"const": "ROLLOVER"}, "delta": {"$ref": "#/$defs/NonNegativeDecimalV1"}, "modulus": {"$ref": "#/$defs/PositiveDecimalV1"}, "evidence_ref": {"$ref": "#/$defs/DigestV1"}}}
       ]
     },
     "ContinuityResetV1": {
@@ -231,12 +243,13 @@
     "SourceProvenanceV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_protocol", "source_profile_id", "source_profile_version", "source_validity", "source_observation_ref", "source_shadow_ref", "evidence_ref"],
+      "required": ["source_protocol", "source_profile_id", "source_profile_version", "source_validity", "source_registry_ref", "source_observation_ref", "source_shadow_ref", "evidence_ref"],
       "properties": {
         "source_protocol": {"$ref": "#/$defs/SourceTokenV1"},
         "source_profile_id": {"$ref": "#/$defs/SourceTokenV1"},
         "source_profile_version": {"$ref": "#/$defs/VersionTokenV1"},
         "source_validity": {"const": "terminal_verified"},
+        "source_registry_ref": {"$ref": "#/$defs/DigestV1"},
         "source_observation_ref": {"$ref": "#/$defs/DigestV1"},
         "source_shadow_ref": {"$ref": "#/$defs/DigestV1"},
         "evidence_ref": {"$ref": "#/$defs/DigestV1"}

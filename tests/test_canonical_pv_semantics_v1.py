@@ -116,6 +116,38 @@ def test_manifest_closes_catalog_and_state_axes():
         "availability": ["AVAILABLE", "UNAVAILABLE", "UNSUPPORTED"],
         "freshness": ["FRESH", "STALE", "EXPIRED"],
     }
+    assert manifest["allowed_availability_freshness_pairs"] == [
+        "AVAILABLE/FRESH",
+        "AVAILABLE/STALE",
+        "UNAVAILABLE/EXPIRED",
+        "UNSUPPORTED/EXPIRED",
+    ]
+    assert manifest["value_domains"] == {
+        "pv.operating.state.v1": [
+            "UNKNOWN",
+            "OFF",
+            "STANDBY",
+            "STARTING",
+            "OPERATING",
+            "DERATED",
+            "FAULT",
+            "SHUTTING_DOWN",
+        ],
+        "pv.event.flags.v1": [
+            "GROUND_FAULT",
+            "DC_OVER_VOLTAGE",
+            "AC_DISCONNECT",
+            "DC_DISCONNECT",
+            "GRID_DISCONNECT",
+            "CABINET_OPEN",
+            "MANUAL_SHUTDOWN",
+            "OVER_TEMPERATURE",
+            "FREQUENCY_OUT_OF_RANGE",
+            "VOLTAGE_OUT_OF_RANGE",
+            "COMMUNICATION_FAULT",
+            "INTERNAL_FAULT",
+        ],
+    }
 
     allowed_units = set(manifest["units"])
     allowed_dimensions = set(manifest["dimensions"])
@@ -159,11 +191,13 @@ def test_freshness_and_counter_policy_are_registry_owned_and_fail_closed():
         (item["from"], item["event"], item["to"])
         for item in manifest["lifecycle"]["transitions"]
     }
-    assert (
-        "AVAILABLE/STALE",
-        "accepted_observation",
-        "AVAILABLE/FRESH",
-    ) in transitions
+    assert transitions == {
+        ("AVAILABLE/FRESH", "fresh_threshold_elapsed", "AVAILABLE/STALE"),
+        ("AVAILABLE/FRESH", "accepted_observation", "AVAILABLE/FRESH"),
+        ("AVAILABLE/STALE", "accepted_observation", "AVAILABLE/FRESH"),
+        ("AVAILABLE/STALE", "retain_threshold_elapsed", "UNAVAILABLE/EXPIRED"),
+        ("UNAVAILABLE/EXPIRED", "accepted_observation", "AVAILABLE/FRESH"),
+    }
 
     continuity = manifest["counter_continuity"]
     assert continuity["states"] == [
@@ -289,6 +323,18 @@ def test_scaled_accumulator_delta_uses_canonical_decimal():
         "modulus": None,
         "evidence_ref": None,
     }
+    accepted, output = schema_accepts(candidate)
+    assert accepted, output
+    assert not validate_semantics(candidate, manifest)
+
+
+def test_protocol_neutral_source_registry_binding():
+    manifest = load_json(MANIFEST)
+    candidate = copy.deepcopy(load_json(GOLDEN))
+    provenance = candidate["source_provenance"]
+    provenance["source_protocol"] = "eebus_spine"
+    provenance["source_profile_id"] = "eebus.pv.three_phase@1.0.0"
+    provenance["source_profile_version"] = "1.0.0"
     accepted, output = schema_accepts(candidate)
     assert accepted, output
     assert not validate_semantics(candidate, manifest)

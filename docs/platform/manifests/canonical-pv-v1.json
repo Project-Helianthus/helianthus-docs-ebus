@@ -42,6 +42,7 @@
   ],
   "lifecycle": {
     "clock": "monotonic_receipt_time",
+    "evaluation_clock_field": "evaluated_monotonic_ns",
     "source_time_drives_expiry": false,
     "transitions": [
       {"from": "AVAILABLE/FRESH", "event": "fresh_threshold_elapsed", "to": "AVAILABLE/STALE"},
@@ -69,6 +70,7 @@
       "source_profile_id",
       "source_profile_version",
       "source_validity",
+      "source_registry_ref",
       "source_observation_ref",
       "source_shadow_ref",
       "evidence_ref"
@@ -81,7 +83,6 @@
     "ambiguous_sources": "FAIL_CLOSED",
     "gateway_schedule_is_precedence": false
   },
-  "source_protocols": ["sunspec_modbus"],
   "value_domains": {
     "pv.operating.state.v1": [
       "UNKNOWN",
