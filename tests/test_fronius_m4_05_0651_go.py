@@ -1,0 +1,450 @@
+from __future__ import annotations
+
+import copy
+import json
+from pathlib import Path
+
+import pytest
+
+from test_fronius_m4_05_live_evidence import (
+    contains_endpoint_value,
+    contains_private_path,
+    evidence_keys,
+    evidence_strings,
+    sensitive_key,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+LIVE = ROOT / "docs/platform/live/fronius-m4-04-0.6.51"
+README = LIVE / "README.md"
+EVIDENCE = LIVE / "evidence.json"
+PLATFORM_INDEX = ROOT / "docs/platform/README.md"
+
+EXPECTED_CHAIN = [
+    (1, 65),
+    (113, 60),
+    (120, 26),
+    (121, 30),
+    (122, 44),
+    (123, 24),
+    (160, 88),
+    (124, 24),
+    (65535, 0),
+]
+
+TOP_LEVEL_KEYS = {
+    "contract",
+    "evidence_class",
+    "export_tier",
+    "phase",
+    "publication_phase",
+    "outcome",
+    "runtime",
+    "target",
+    "acquisition",
+    "qualification",
+    "recovery",
+    "acceptance",
+    "rollback",
+    "next_gate",
+}
+
+PUBLIC_TYPE_SCHEMA = {
+    "contract": str,
+    "evidence_class": str,
+    "export_tier": str,
+    "phase": str,
+    "publication_phase": str,
+    "outcome": str,
+    "runtime": {
+        "addon_release": str,
+        "addon_merge": str,
+        "gateway_merge": str,
+        "modbusreg_version": str,
+        "modbusreg_merge": str,
+        "image_digest": str,
+    },
+    "target": {
+        "endpoint_ref": str,
+        "manufacturer": str,
+        "model": str,
+        "firmware": str,
+    },
+    "acquisition": {
+        "transport": str,
+        "unit_id": int,
+        "function_code": int,
+        "writes_permitted": bool,
+        "bounded_raw_read_max_words": int,
+        "raw_reads_per_window": int,
+        "raw_read_window_milliseconds": int,
+    },
+    "qualification": {
+        "decision": str,
+        "category": str,
+        "capability_id": str,
+        "capability_reason": str,
+        "flavor_id": str,
+        "flavor_reason": str,
+        "source_validity": str,
+        "qualification_evidence_only": bool,
+        "support_claim": bool,
+        "canonical_semantics_claim": bool,
+        "consumer_support_claim": bool,
+        "chain": [{"model_id": int, "model_length": int}],
+        "admitted_occurrences": int,
+        "structural_unknown_blocks": [],
+        "field_unknown_retention": str,
+    },
+    "recovery": {
+        "fault_scope": str,
+        "blocked_request": {
+            "code": str,
+            "message": str,
+            "retriable": bool,
+            "endpoint_free": bool,
+            "failed_requests": int,
+            "reconnect_attempts": int,
+            "reconnect_attempt_limit": int,
+            "periodic_retries": int,
+        },
+        "initial_connection_generation": int,
+        "recovered_connection_generation": int,
+        "initial_transport_generation": int,
+        "recovered_transport_generation": int,
+        "same_signature_after_recovery": bool,
+        "retained_observation_byte_identical": bool,
+        "whole_gateway_restart": bool,
+        "fallback_started": bool,
+    },
+    "acceptance": {
+        "qualified_opt_in_detection": str,
+        "bounded_polling": str,
+        "raw_mcp_parity": str,
+        "retained_profile_observation": str,
+        "disconnect_reconnect_generation_integrity": str,
+        "coherent_provenance": str,
+        "no_writes": str,
+        "gateway_http_ready": str,
+        "adapter_proxy_ready": str,
+        "no_gateway_regression": str,
+        "final_decision": str,
+    },
+    "rollback": {
+        "backup_created": bool,
+        "required": bool,
+        "modbus_remained_enabled": bool,
+    },
+    "next_gate": {
+        "m5": str,
+        "semantic_implementation_requires": str,
+    },
+}
+
+
+def reject_duplicate_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def parse_public_evidence(text: str) -> dict[str, object]:
+    return json.loads(text, object_pairs_hook=reject_duplicate_pairs)
+
+
+def load_evidence() -> dict[str, object]:
+    return parse_public_evidence(EVIDENCE.read_text(encoding="utf-8"))
+
+
+def assert_recursive_type_shape(value: object, schema: object) -> None:
+    if isinstance(schema, type):
+        assert type(value) is schema
+        return
+    if isinstance(schema, dict):
+        assert type(value) is dict
+        assert set(value) == set(schema)
+        for key, child_schema in schema.items():
+            assert_recursive_type_shape(value[key], child_schema)
+        return
+    if isinstance(schema, list):
+        assert type(value) is list
+        if not schema:
+            assert value == []
+            return
+        assert len(schema) == 1
+        for child in value:
+            assert_recursive_type_shape(child, schema[0])
+        return
+    raise AssertionError(f"unsupported public schema node: {schema!r}")
+
+
+def assert_closed_public_shape(evidence: dict[str, object]) -> None:
+    assert_recursive_type_shape(evidence, PUBLIC_TYPE_SCHEMA)
+    assert set(evidence) == TOP_LEVEL_KEYS
+    assert set(evidence["runtime"]) == {
+        "addon_release",
+        "addon_merge",
+        "gateway_merge",
+        "modbusreg_version",
+        "modbusreg_merge",
+        "image_digest",
+    }
+    assert set(evidence["target"]) == {
+        "endpoint_ref",
+        "manufacturer",
+        "model",
+        "firmware",
+    }
+    assert set(evidence["acquisition"]) == {
+        "transport",
+        "unit_id",
+        "function_code",
+        "writes_permitted",
+        "bounded_raw_read_max_words",
+        "raw_reads_per_window",
+        "raw_read_window_milliseconds",
+    }
+    assert set(evidence["qualification"]) == {
+        "decision",
+        "category",
+        "capability_id",
+        "capability_reason",
+        "flavor_id",
+        "flavor_reason",
+        "source_validity",
+        "qualification_evidence_only",
+        "support_claim",
+        "canonical_semantics_claim",
+        "consumer_support_claim",
+        "chain",
+        "admitted_occurrences",
+        "structural_unknown_blocks",
+        "field_unknown_retention",
+    }
+    assert all(
+        set(item) == {"model_id", "model_length"}
+        for item in evidence["qualification"]["chain"]
+    )
+    assert set(evidence["recovery"]) == {
+        "fault_scope",
+        "blocked_request",
+        "initial_connection_generation",
+        "recovered_connection_generation",
+        "initial_transport_generation",
+        "recovered_transport_generation",
+        "same_signature_after_recovery",
+        "retained_observation_byte_identical",
+        "whole_gateway_restart",
+        "fallback_started",
+    }
+    assert set(evidence["recovery"]["blocked_request"]) == {
+        "code",
+        "message",
+        "retriable",
+        "endpoint_free",
+        "failed_requests",
+        "reconnect_attempts",
+        "reconnect_attempt_limit",
+        "periodic_retries",
+    }
+    assert set(evidence["acceptance"]) == {
+        "qualified_opt_in_detection",
+        "bounded_polling",
+        "raw_mcp_parity",
+        "retained_profile_observation",
+        "disconnect_reconnect_generation_integrity",
+        "coherent_provenance",
+        "no_writes",
+        "gateway_http_ready",
+        "adapter_proxy_ready",
+        "no_gateway_regression",
+        "final_decision",
+    }
+    assert set(evidence["rollback"]) == {
+        "backup_created",
+        "required",
+        "modbus_remained_enabled",
+    }
+    assert set(evidence["next_gate"]) == {
+        "m5",
+        "semantic_implementation_requires",
+    }
+
+
+def test_0651_exact_runtime_and_terminal_go() -> None:
+    evidence = load_evidence()
+    assert_closed_public_shape(evidence)
+    assert evidence["contract"] == "helianthus.fronius-sunspec-m4-04-evidence.v1"
+    assert evidence["evidence_class"] == "LIVE_RUNTIME_EVIDENCE"
+    assert evidence["export_tier"] == "PUBLIC_REDACTED"
+    assert evidence["phase"] == "FMV3-M4-04"
+    assert evidence["publication_phase"] == "FMV3-M4-05"
+    assert evidence["outcome"] == "GO"
+    assert evidence["runtime"] == {
+        "addon_release": "0.6.51",
+        "addon_merge": "8be32bc7f49f3000eba6074f12ca782e10425093",
+        "gateway_merge": "6f4aaa7a08eeffb655e5da0f6f6c2053e399a45b",
+        "modbusreg_version": "v0.2.1",
+        "modbusreg_merge": "16a7dfbf8016750613d086fb98d10364953ea915",
+        "image_digest": (
+            "sha256:876098e26a6b5f698d0f992f61a0784af8f677f4e3b96a424869fda9609eec6e"
+        ),
+    }
+    assert evidence["target"] == {
+        "endpoint_ref": "sha256:cc2d63775c6f0074",
+        "manufacturer": "Fronius",
+        "model": "Symo GEN24 10.0",
+        "firmware": "1.41.11-1",
+    }
+    assert evidence["acceptance"]["final_decision"] == "GO"
+    assert evidence["rollback"] == {
+        "backup_created": True,
+        "required": False,
+        "modbus_remained_enabled": True,
+    }
+    assert evidence["next_gate"] == {
+        "m5": "READY_FOR_FMV3-M5-02",
+        "semantic_implementation_requires": "FMV3-M5-02_MERGED",
+    }
+
+
+def test_0651_chain_unknown_retention_and_read_only_boundary() -> None:
+    evidence = load_evidence()
+    qualification = evidence["qualification"]
+    assert qualification["decision"] == "GO"
+    assert qualification["category"] == "registry_match"
+    assert qualification["capability_id"] == (
+        "sunspec.inverter.three_phase.monitoring@1.0.0"
+    )
+    assert qualification["capability_reason"] == "ADMITTED"
+    assert qualification["flavor_id"] == (
+        "sunspec.flavor.fronius.gen24.float.observed@1.1.0"
+    )
+    assert qualification["flavor_reason"] == "MATCHED"
+    assert qualification["source_validity"] == "terminal_verified"
+    assert qualification["qualification_evidence_only"] is True
+    assert qualification["support_claim"] is False
+    assert qualification["canonical_semantics_claim"] is False
+    assert qualification["consumer_support_claim"] is False
+    assert [
+        (item["model_id"], item["model_length"])
+        for item in qualification["chain"]
+    ] == EXPECTED_CHAIN
+    assert qualification["admitted_occurrences"] == 8
+    assert qualification["structural_unknown_blocks"] == []
+    assert qualification["field_unknown_retention"] == (
+        "PRESERVED_PRIVATE_NOT_PROMOTED"
+    )
+    assert evidence["acquisition"]["function_code"] == 3
+    assert evidence["acquisition"]["writes_permitted"] is False
+
+
+def test_0651_recovery_is_endpoint_free_and_generation_advancing() -> None:
+    recovery = load_evidence()["recovery"]
+    assert recovery["fault_scope"] == "TARGET_MODBUS_TCP_ONLY"
+    assert recovery["blocked_request"] == {
+        "code": "UNAVAILABLE",
+        "message": "modbus provider unavailable",
+        "retriable": True,
+        "endpoint_free": True,
+        "failed_requests": 1,
+        "reconnect_attempts": 1,
+        "reconnect_attempt_limit": 1,
+        "periodic_retries": 0,
+    }
+    assert recovery["initial_connection_generation"] == 1
+    assert recovery["recovered_connection_generation"] == 2
+    assert recovery["initial_transport_generation"] == 1
+    assert recovery["recovered_transport_generation"] == 2
+    assert recovery["same_signature_after_recovery"] is True
+    assert recovery["retained_observation_byte_identical"] is True
+    assert recovery["whole_gateway_restart"] is False
+    assert recovery["fallback_started"] is False
+
+
+def test_0651_acceptance_contract_is_complete() -> None:
+    evidence = load_evidence()
+    assert evidence["acquisition"] == {
+        "transport": "modbus_tcp",
+        "unit_id": 1,
+        "function_code": 3,
+        "writes_permitted": False,
+        "bounded_raw_read_max_words": 125,
+        "raw_reads_per_window": 4,
+        "raw_read_window_milliseconds": 1000,
+    }
+    assert evidence["acceptance"] == {
+        "qualified_opt_in_detection": "PASS",
+        "bounded_polling": "PASS",
+        "raw_mcp_parity": "PASS",
+        "retained_profile_observation": "PASS",
+        "disconnect_reconnect_generation_integrity": "PASS",
+        "coherent_provenance": "PASS",
+        "no_writes": "PASS",
+        "gateway_http_ready": "PASS",
+        "adapter_proxy_ready": "PASS",
+        "no_gateway_regression": "PASS",
+        "final_decision": "GO",
+    }
+
+
+def test_0651_publication_is_redacted_and_indexed() -> None:
+    evidence = load_evidence()
+    corpus = README.read_text(encoding="utf-8") + EVIDENCE.read_text(encoding="utf-8")
+    assert not contains_endpoint_value(corpus)
+    assert not contains_private_path(corpus)
+    safe_public_keys = {
+        "bounded_raw_read_max_words",
+        "endpoint_free",
+        "endpoint_ref",
+    }
+    assert not any(
+        sensitive_key(key)
+        for key in evidence_keys(evidence)
+        if key not in safe_public_keys
+    )
+    assert not any(
+        contains_endpoint_value(value) for value in evidence_strings(evidence)
+    )
+    assert not any(
+        contains_private_path(value) for value in evidence_strings(evidence)
+    )
+    assert "fronius-m4-04-0.6.51" in PLATFORM_INDEX.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    ("section", "field"),
+    [
+        ("qualification", "model_headers"),
+        ("qualification", "register_words"),
+        ("recovery", "raw_registers"),
+    ],
+)
+def test_0651_closed_shape_rejects_numeric_raw_fields(section: str, field: str) -> None:
+    mutated = copy.deepcopy(load_evidence())
+    mutated[section][field] = [1, 65, 113, 60]
+    with pytest.raises(AssertionError):
+        assert_closed_public_shape(mutated)
+
+
+def test_0651_parser_rejects_duplicate_key_numeric_raw_bypass() -> None:
+    original = EVIDENCE.read_text(encoding="utf-8")
+    duplicate = original.replace(
+        '  "qualification": {',
+        '  "qualification": {"register_words": [1, 65, 113, 60]},\n'
+        '  "qualification": {',
+        1,
+    )
+    with pytest.raises(ValueError, match=r"duplicate JSON key: qualification"):
+        parse_public_evidence(duplicate)
+
+
+def test_0651_closed_shape_rejects_numeric_raw_in_allowed_scalar() -> None:
+    mutated = copy.deepcopy(load_evidence())
+    mutated["target"]["firmware"] = [1, 65, 113, 60]
+    with pytest.raises(AssertionError):
+        assert_closed_public_shape(mutated)
