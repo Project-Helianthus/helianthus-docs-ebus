@@ -82,6 +82,7 @@ def test_0651_chain_unknown_retention_and_read_only_boundary() -> None:
 
 def test_0651_recovery_is_endpoint_free_and_generation_advancing() -> None:
     recovery = load_evidence()["recovery"]
+    assert recovery["fault_scope"] == "TARGET_MODBUS_TCP_ONLY"
     assert recovery["blocked_request"] == {
         "code": "UNAVAILABLE",
         "message": "modbus provider unavailable",
@@ -96,6 +97,32 @@ def test_0651_recovery_is_endpoint_free_and_generation_advancing() -> None:
     assert recovery["retained_observation_byte_identical"] is True
     assert recovery["whole_gateway_restart"] is False
     assert recovery["fallback_started"] is False
+
+
+def test_0651_acceptance_contract_is_complete() -> None:
+    evidence = load_evidence()
+    assert evidence["acquisition"] == {
+        "transport": "modbus_tcp",
+        "unit_id": 1,
+        "function_code": 3,
+        "writes_permitted": False,
+        "bounded_raw_read_max_words": 125,
+        "raw_reads_per_window": 4,
+        "raw_read_window_milliseconds": 1000,
+    }
+    assert evidence["acceptance"] == {
+        "qualified_opt_in_detection": "PASS",
+        "bounded_polling": "PASS",
+        "raw_mcp_parity": "PASS",
+        "retained_profile_observation": "PASS",
+        "disconnect_reconnect_generation_integrity": "PASS",
+        "coherent_provenance": "PASS",
+        "no_writes": "PASS",
+        "gateway_http_ready": "PASS",
+        "adapter_proxy_ready": "PASS",
+        "no_gateway_regression": "PASS",
+        "final_decision": "GO",
+    }
 
 
 def test_0651_publication_is_redacted_and_indexed() -> None:
