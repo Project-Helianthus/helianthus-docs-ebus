@@ -33,6 +33,18 @@ Current platform contracts:
 - [`fronius-sunspec-evidence-v1.md`](./fronius-sunspec-evidence-v1.md) -
   FMV3-M3-01 evidence packet and FMV3-M3-03 `STANDARD_ONLY` completion for
   bounded synthetic fixtures and the Fronius SunSpec admission boundary
+- [`canonical-pv-semantics-v1.md`](./canonical-pv-semantics-v1.md) -
+  FMV3-M5-02 pre-implementation canonical photovoltaic fact, lifecycle,
+  provenance, continuity, capability, and compatibility contract
+- [`manifests/canonical-pv-v1.json`](./manifests/canonical-pv-v1.json) -
+  closed machine-readable V1 catalog and three-phase capability inventory
+- [`schemas/canonical-pv-observation-v1.schema.json`](./schemas/canonical-pv-observation-v1.schema.json) -
+  recursively closed canonical observation envelope used by positive and
+  negative conformance fixtures
+- [`schemas/canonical-pv-source-registry-bindings-v1.schema.json`](./schemas/canonical-pv-source-registry-bindings-v1.schema.json) -
+  protocol-neutral resolver contract for source-owned admission bindings
+- [`../../scripts/validate_canonical_pv_v1.py`](../../scripts/validate_canonical_pv_v1.py) -
+  public manifest-aware schema and semantic conformance validator
 - [`manifests/modbus-foundation-profile-contract-v1.json`](./manifests/modbus-foundation-profile-contract-v1.json) -
   machine-readable M1/M2 companion inventory and downstream pin contract
 - [`opaque-runtime-acquisition-v1.md`](./opaque-runtime-acquisition-v1.md) -
