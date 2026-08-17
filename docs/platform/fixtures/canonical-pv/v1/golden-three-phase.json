@@ -4,24 +4,18 @@
   "generation": 7,
   "produced_at": "2026-08-17T13:45:00Z",
   "facts": [
-    {"fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": 7245, "scale": 0}, "unit": "W", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
-    {"fact_id": "pv.ac.frequency", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": 5001, "scale": -2}, "unit": "Hz", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
-    {"fact_id": "pv.ac.current", "dimensions": {"phase": "L1"}, "value": {"kind": "decimal", "coefficient": 1041, "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
-    {"fact_id": "pv.ac.current", "dimensions": {"phase": "L2"}, "value": {"kind": "decimal", "coefficient": 1038, "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
-    {"fact_id": "pv.ac.current", "dimensions": {"phase": "L3"}, "value": {"kind": "decimal", "coefficient": 1044, "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
-    {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L1"}, "value": {"kind": "decimal", "coefficient": 2314, "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
-    {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L2"}, "value": {"kind": "decimal", "coefficient": 2308, "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
-    {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L3"}, "value": {"kind": "decimal", "coefficient": 2311, "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
-    {"fact_id": "pv.energy.active_export_total", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": 18420573, "scale": 0}, "unit": "Wh", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "continuity": {"state": "BASELINE", "delta": null}},
-    {"fact_id": "pv.operating.state", "dimensions": {"scope": "total"}, "value": {"kind": "enum", "symbol": "OPERATING"}, "unit": "1", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"}
+    {"fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": "7245", "scale": 0}, "unit": "W", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
+    {"fact_id": "pv.ac.frequency", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": "5001", "scale": -2}, "unit": "Hz", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
+    {"fact_id": "pv.ac.current", "dimensions": {"phase": "L1"}, "value": {"kind": "decimal", "coefficient": "1041", "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
+    {"fact_id": "pv.ac.current", "dimensions": {"phase": "L2"}, "value": {"kind": "decimal", "coefficient": "1038", "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
+    {"fact_id": "pv.ac.current", "dimensions": {"phase": "L3"}, "value": {"kind": "decimal", "coefficient": "1044", "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
+    {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L1"}, "value": {"kind": "decimal", "coefficient": "2314", "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
+    {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L2"}, "value": {"kind": "decimal", "coefficient": "2308", "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
+    {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L3"}, "value": {"kind": "decimal", "coefficient": "2311", "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
+    {"fact_id": "pv.energy.active_export_total", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": "9007199254740993", "scale": 0}, "unit": "Wh", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1881234500000, "retain_until_monotonic_ns": 87381234500000, "freshness_policy": "pv.accumulator.v1"}, "continuity": {"state": "BASELINE", "delta": null, "modulus": null, "evidence_ref": null}},
+    {"fact_id": "pv.operating.state", "dimensions": {"scope": "total"}, "value": {"kind": "enum", "symbol": "OPERATING"}, "unit": "1", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1041234500000, "retain_until_monotonic_ns": 1581234500000, "freshness_policy": "pv.status.v1"}}
   ],
-  "temporal": {
-    "receipt_monotonic_ns": 981234500000,
-    "fresh_until_monotonic_ns": 1011234500000,
-    "retain_until_monotonic_ns": 1281234500000,
-    "freshness_policy": "pv.telemetry.fast.v1",
-    "source_time_state": "UNAVAILABLE"
-  },
+  "source_time_state": "UNAVAILABLE",
   "source_provenance": {
     "source_protocol": "sunspec_modbus",
     "source_profile_id": "sunspec.inverter.three_phase.monitoring@1.0.0",

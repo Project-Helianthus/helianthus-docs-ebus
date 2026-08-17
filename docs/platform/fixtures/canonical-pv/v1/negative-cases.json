@@ -1,0 +1,40 @@
+{
+  "fixture_contract": "helianthus.canonical-pv.negative-cases/v1",
+  "base": "golden-three-phase.json",
+  "cases": [
+    {
+      "id": "unknown_fact_field",
+      "mutation": {"op": "add", "path": "/facts/0/unexpected", "value": true},
+      "expected_rule": "schema_closed"
+    },
+    {
+      "id": "provenance_endpoint_leak",
+      "mutation": {"op": "add", "path": "/source_provenance/endpoint", "value": "example.invalid:502"},
+      "expected_rule": "schema_closed"
+    },
+    {
+      "id": "guessed_rollover_without_evidence",
+      "mutation": {
+        "op": "replace",
+        "path": "/facts/8/continuity",
+        "value": {"state": "ROLLOVER", "delta": "1", "modulus": null, "evidence_ref": null}
+      },
+      "expected_rule": "continuity_evidence"
+    },
+    {
+      "id": "satisfied_capability_missing_required_fact",
+      "mutation": {"op": "remove", "path": "/facts/7"},
+      "expected_rule": "capability_completeness"
+    },
+    {
+      "id": "invalid_phase_dimension",
+      "mutation": {"op": "replace", "path": "/facts/2/dimensions", "value": {"phase": "L4"}},
+      "expected_rule": "dimension_domain"
+    },
+    {
+      "id": "unknown_canonical_enum_symbol",
+      "mutation": {"op": "replace", "path": "/facts/9/value/symbol", "value": "SOURCE_VENDOR_MAGIC"},
+      "expected_rule": "value_domain"
+    }
+  ]
+}

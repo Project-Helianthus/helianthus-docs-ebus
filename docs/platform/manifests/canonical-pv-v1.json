@@ -8,16 +8,20 @@
     "decimal": {
       "fields": ["coefficient", "scale"],
       "meaning": "coefficient multiplied by ten raised to scale",
+      "coefficient_json_type": "canonical_integer_string",
+      "coefficient_pattern": "^-?(0|[1-9][0-9]*)$",
+      "scale_minimum": -18,
+      "scale_maximum": 18,
       "json_binary_float_forbidden": true
     }
   },
   "units": ["W", "VA", "var", "V", "A", "Hz", "Wh", "Cel", "1"],
   "dimensions": {
-    "scope": ["total", "phase", "phase_pair", "input", "sensor"],
+    "scope": ["total"],
     "phase": ["L1", "L2", "L3"],
     "phase_pair": ["L1_L2", "L2_L3", "L3_L1"],
-    "input_id": "opaque_nonempty_string",
-    "sensor_id": "opaque_nonempty_string"
+    "input_id": {"kind": "opaque_token", "pattern": "^[A-Za-z0-9._:-]+$", "max_length": 64},
+    "sensor_id": {"kind": "opaque_token", "pattern": "^[A-Za-z0-9._:-]+$", "max_length": 64}
   },
   "state_axes": {
     "quality": ["GOOD", "SUSPECT", "BAD"],
@@ -35,6 +39,8 @@
     "source_time_drives_expiry": false,
     "transitions": [
       {"from": "AVAILABLE/FRESH", "event": "fresh_threshold_elapsed", "to": "AVAILABLE/STALE"},
+      {"from": "AVAILABLE/FRESH", "event": "accepted_observation", "to": "AVAILABLE/FRESH"},
+      {"from": "AVAILABLE/STALE", "event": "accepted_observation", "to": "AVAILABLE/FRESH"},
       {"from": "AVAILABLE/STALE", "event": "retain_threshold_elapsed", "to": "UNAVAILABLE/EXPIRED"},
       {"from": "UNAVAILABLE/EXPIRED", "event": "accepted_observation", "to": "AVAILABLE/FRESH"}
     ],
@@ -66,6 +72,32 @@
     "ambiguous_sources": "FAIL_CLOSED",
     "gateway_schedule_is_precedence": false
   },
+  "value_domains": {
+    "pv.operating.state.v1": [
+      "UNKNOWN",
+      "OFF",
+      "STANDBY",
+      "STARTING",
+      "OPERATING",
+      "DERATED",
+      "FAULT",
+      "SHUTTING_DOWN"
+    ],
+    "pv.event.flags.v1": [
+      "GROUND_FAULT",
+      "DC_OVER_VOLTAGE",
+      "AC_DISCONNECT",
+      "DC_DISCONNECT",
+      "GRID_DISCONNECT",
+      "CABINET_OPEN",
+      "MANUAL_SHUTDOWN",
+      "OVER_TEMPERATURE",
+      "FREQUENCY_OUT_OF_RANGE",
+      "VOLTAGE_OUT_OF_RANGE",
+      "COMMUNICATION_FAULT",
+      "INTERNAL_FAULT"
+    ]
+  },
   "facts": [
     {"id": "pv.ac.power.active", "value_kind": "decimal", "unit": "W", "dimensions": ["scope"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
     {"id": "pv.ac.power.apparent", "value_kind": "decimal", "unit": "VA", "dimensions": ["scope"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
@@ -81,8 +113,8 @@
     {"id": "pv.dc.power.active", "value_kind": "decimal", "unit": "W", "dimensions": ["input_id"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
     {"id": "pv.dc.energy.active_total", "value_kind": "decimal", "unit": "Wh", "dimensions": ["input_id"], "freshness_policy": "pv.accumulator.v1", "accumulator": true},
     {"id": "pv.temperature", "value_kind": "decimal", "unit": "Cel", "dimensions": ["sensor_id"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
-    {"id": "pv.operating.state", "value_kind": "enum", "unit": "1", "dimensions": ["scope"], "freshness_policy": "pv.status.v1", "accumulator": false},
-    {"id": "pv.event.flags", "value_kind": "bitfield", "unit": "1", "dimensions": ["scope"], "freshness_policy": "pv.status.v1", "accumulator": false},
+    {"id": "pv.operating.state", "value_kind": "enum", "value_domain": "pv.operating.state.v1", "unit": "1", "dimensions": ["scope"], "freshness_policy": "pv.status.v1", "accumulator": false},
+    {"id": "pv.event.flags", "value_kind": "bitfield", "value_domain": "pv.event.flags.v1", "unit": "1", "dimensions": ["scope"], "freshness_policy": "pv.status.v1", "accumulator": false},
     {"id": "pv.rating.ac.active_power", "value_kind": "decimal", "unit": "W", "dimensions": ["scope"], "freshness_policy": "pv.rating.v1", "accumulator": false}
   ],
   "capability_packs": [
@@ -110,7 +142,7 @@
   "compatibility": {
     "immutable_within_v1": ["fact_id", "value_kind", "unit_meaning", "dimension_meaning", "enum_meaning", "lifecycle_transition"],
     "additive_optional_facts_allowed": true,
-    "unknown_enum_values_preserved": true,
+    "unknown_source_enum_values_preserved_in_source_shadow": true,
     "required_pack_member_change_requires_new_pack_id": true,
     "reinterpretation_requires_new_major_contract": true
   },

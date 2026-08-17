@@ -39,10 +39,12 @@ values are declared by the fact catalog.
 Each fact contains:
 
 - a typed value: exact decimal coefficient and base-10 scale, enum, or
-  bitfield; binary JSON floating-point values are forbidden;
+  bitfield; decimal coefficients are canonical integer strings and binary JSON
+  floating-point values are forbidden;
 - one canonical unit from `W`, `VA`, `var`, `V`, `A`, `Hz`, `Wh`, `Cel`, `1`;
 - independent `quality`, `availability`, and `freshness` axes;
-- receipt-based temporal data and the policy identifier that evaluated it;
+- per-fact receipt-based temporal data and the policy identifier that evaluated
+  it;
 - opaque source provenance references, never raw words or endpoint material;
 - continuity metadata when the fact is an accumulator.
 
@@ -68,10 +70,12 @@ profiles in `helianthus-ebusreg`:
 | `pv.rating.v1` | 86400 s | 2592000 s |
 
 A valid observation publishes `AVAILABLE/FRESH`. Passing the fresh threshold
-changes only freshness to `STALE`. Passing the retain threshold publishes
-`UNAVAILABLE/EXPIRED` while retaining identity and provenance. A source error
-must not wholesale-delete the prior observation. A later accepted observation
-may return to `AVAILABLE/FRESH` with a new generation.
+changes only freshness to `STALE`. A new accepted observation refreshes either
+`AVAILABLE/FRESH` or `AVAILABLE/STALE` to `AVAILABLE/FRESH`. Passing the retain
+threshold publishes `UNAVAILABLE/EXPIRED` while retaining identity and
+provenance. A source error must not wholesale-delete the prior observation. A
+later accepted observation may return to `AVAILABLE/FRESH` with a new
+generation.
 
 V1 binds one selected source observation to one update. If multiple eligible
 sources remain ambiguous, publication fails closed. Any future source
@@ -125,7 +129,8 @@ canonical facts are present with compatible units and dimensions.
 
 Within V1, fact IDs, value kinds, unit meanings, dimension meanings, enum
 meanings, and lifecycle transitions are immutable. Additive optional facts and
-enum values require compatible readers to preserve unknown values. Removing or
+enum values require compatible readers to retain unknown source values in the
+source shadow until a compatible canonical successor defines them. Removing or
 reinterpreting an existing fact, changing a required capability member, or
 changing a unit/dimension meaning requires a new major contract or capability
 pack identifier.
@@ -133,3 +138,10 @@ pack identifier.
 This contract grants no Modbus write authority and no Fronius support claim.
 Consumer rollout remains MCP semantic prototype, GraphQL parity, Portal, Home
 Assistant, and only then separately licensed private eeBUS/Matter bindings.
+
+The machine-readable catalog is
+[`manifests/canonical-pv-v1.json`](./manifests/canonical-pv-v1.json). The closed
+observation envelope is
+[`schemas/canonical-pv-observation-v1.schema.json`](./schemas/canonical-pv-observation-v1.schema.json),
+with positive and mutation-based negative fixtures under
+[`fixtures/canonical-pv/v1/`](./fixtures/canonical-pv/v1/).

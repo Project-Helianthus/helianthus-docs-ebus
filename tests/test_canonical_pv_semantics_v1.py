@@ -1,14 +1,22 @@
+import copy
 import json
 import re
+import subprocess
+import tempfile
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DOC = ROOT / "docs/platform/canonical-pv-semantics-v1.md"
 MANIFEST = ROOT / "docs/platform/manifests/canonical-pv-v1.json"
+SCHEMA = ROOT / "docs/platform/schemas/canonical-pv-observation-v1.schema.json"
 GOLDEN = (
     ROOT
     / "docs/platform/fixtures/canonical-pv/v1/golden-three-phase.json"
+)
+NEGATIVE = (
+    ROOT
+    / "docs/platform/fixtures/canonical-pv/v1/negative-cases.json"
 )
 
 
@@ -20,12 +28,103 @@ def fact_key(fact):
     return fact["fact_id"], tuple(sorted(fact["dimensions"].items()))
 
 
+def schema_accepts(document):
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as stream:
+        json.dump(document, stream)
+        stream.flush()
+        result = subprocess.run(
+            ["jv", str(SCHEMA), stream.name],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+    return result.returncode == 0, result.stdout + result.stderr
+
+
+def apply_mutation(document, mutation):
+    result = copy.deepcopy(document)
+    parts = [part.replace("~1", "/").replace("~0", "~") for part in mutation["path"].split("/")[1:]]
+    parent = result
+    for part in parts[:-1]:
+        parent = parent[int(part)] if isinstance(parent, list) else parent[part]
+    leaf = parts[-1]
+    if mutation["op"] == "remove":
+        if isinstance(parent, list):
+            parent.pop(int(leaf))
+        else:
+            del parent[leaf]
+    elif mutation["op"] in {"add", "replace"}:
+        if isinstance(parent, list):
+            parent[int(leaf)] = mutation["value"]
+        else:
+            parent[leaf] = mutation["value"]
+    else:
+        raise AssertionError(f"unsupported mutation operation: {mutation['op']}")
+    return result
+
+
+def semantic_errors(document, manifest):
+    errors = set()
+    catalog = {fact["id"]: fact for fact in manifest["facts"]}
+    policies = {policy["id"]: policy for policy in manifest["freshness_policies"]}
+    domains = manifest["value_domains"]
+    observed = set()
+    for fact in document["facts"]:
+        definition = catalog.get(fact["fact_id"])
+        if definition is None:
+            errors.add("catalog_closure")
+            continue
+        if set(fact["dimensions"]) != set(definition["dimensions"]):
+            errors.add("dimension_domain")
+        if fact["unit"] != definition["unit"]:
+            errors.add("catalog_closure")
+        if fact["value"]["kind"] != definition["value_kind"]:
+            errors.add("catalog_closure")
+        domain_id = definition.get("value_domain")
+        if domain_id:
+            symbols = (
+                [fact["value"]["symbol"]]
+                if fact["value"]["kind"] == "enum"
+                else fact["value"]["symbols"]
+            )
+            if not set(symbols) <= set(domains[domain_id]):
+                errors.add("value_domain")
+        temporal = fact["temporal"]
+        policy = policies[definition["freshness_policy"]]
+        if temporal["freshness_policy"] != policy["id"]:
+            errors.add("freshness_policy")
+        receipt = temporal["receipt_monotonic_ns"]
+        if temporal["fresh_until_monotonic_ns"] != receipt + policy["fresh_seconds"] * 1_000_000_000:
+            errors.add("freshness_policy")
+        if temporal["retain_until_monotonic_ns"] != receipt + policy["retain_seconds"] * 1_000_000_000:
+            errors.add("freshness_policy")
+        if definition["accumulator"] != ("continuity" in fact):
+            errors.add("continuity_evidence")
+        observed.add(fact_key(fact))
+
+    packs = {pack["id"]: pack for pack in manifest["capability_packs"]}
+    for capability in document["capabilities"]:
+        if capability["outcome"] != "SATISFIED":
+            continue
+        required = {
+            (item["fact_id"], tuple(sorted(item["dimensions"].items())))
+            for item in packs[capability["id"]]["required"]
+        }
+        if not required <= observed:
+            errors.add("capability_completeness")
+    return errors
+
+
 def test_manifest_closes_catalog_and_state_axes():
     manifest = load_json(MANIFEST)
     assert manifest["contract_id"] == "helianthus.canonical-pv/v1"
     assert manifest["status"] == "CANDIDATE_PRE_IMPLEMENTATION"
     assert manifest["owner"] == "helianthus-ebusreg"
     assert manifest["write_authority"] == "NONE"
+    decimal = manifest["value_encoding"]["decimal"]
+    assert decimal["coefficient_json_type"] == "canonical_integer_string"
+    assert decimal["scale_minimum"] == -18
+    assert decimal["scale_maximum"] == 18
 
     facts = {fact["id"]: fact for fact in manifest["facts"]}
     assert set(facts) == {
@@ -63,6 +162,8 @@ def test_manifest_closes_catalog_and_state_axes():
         assert set(fact["dimensions"]) <= allowed_dimensions
         assert fact["freshness_policy"] in policy_ids
         assert isinstance(fact["accumulator"], bool)
+        if fact["value_kind"] in {"enum", "bitfield"}:
+            assert fact["value_domain"] in manifest["value_domains"]
 
 
 def test_freshness_and_counter_policy_are_registry_owned_and_fail_closed():
@@ -90,6 +191,15 @@ def test_freshness_and_counter_policy_are_registry_owned_and_fail_closed():
         "ambiguous_sources": "FAIL_CLOSED",
         "gateway_schedule_is_precedence": False,
     }
+    transitions = {
+        (item["from"], item["event"], item["to"])
+        for item in manifest["lifecycle"]["transitions"]
+    }
+    assert (
+        "AVAILABLE/STALE",
+        "accepted_observation",
+        "AVAILABLE/FRESH",
+    ) in transitions
 
     continuity = manifest["counter_continuity"]
     assert continuity["states"] == [
@@ -148,17 +258,26 @@ def test_golden_fixture_satisfies_three_phase_capability():
         assert fact["freshness"] == "FRESH"
         if fact["value"]["kind"] == "decimal":
             assert set(fact["value"]) == {"kind", "coefficient", "scale"}
-            assert isinstance(fact["value"]["coefficient"], int)
+            assert re.fullmatch(r"-?(0|[1-9][0-9]*)", fact["value"]["coefficient"])
             assert isinstance(fact["value"]["scale"], int)
+    lifetime = next(
+        fact
+        for fact in golden["facts"]
+        if fact["fact_id"] == "pv.energy.active_export_total"
+    )
+    assert lifetime["value"]["coefficient"] == "9007199254740993"
+    assert int(lifetime["value"]["coefficient"]) > 2**53
 
 
 def test_golden_temporal_provenance_and_projection_are_closed():
     manifest = load_json(MANIFEST)
     golden = load_json(GOLDEN)
-    temporal = golden["temporal"]
-    assert temporal["receipt_monotonic_ns"] < temporal["fresh_until_monotonic_ns"]
-    assert temporal["fresh_until_monotonic_ns"] < temporal["retain_until_monotonic_ns"]
-    assert temporal["source_time_state"] == "UNAVAILABLE"
+    assert golden["source_time_state"] == "UNAVAILABLE"
+    assert not semantic_errors(golden, manifest)
+    for fact in golden["facts"]:
+        temporal = fact["temporal"]
+        assert temporal["receipt_monotonic_ns"] < temporal["fresh_until_monotonic_ns"]
+        assert temporal["fresh_until_monotonic_ns"] < temporal["retain_until_monotonic_ns"]
 
     provenance = golden["source_provenance"]
     assert set(provenance) == set(manifest["provenance"]["required"])
@@ -177,7 +296,52 @@ def test_golden_temporal_provenance_and_projection_are_closed():
         for fact in golden["facts"]
         if fact["fact_id"] == "pv.energy.active_export_total"
     )
-    assert accumulator["continuity"] == {"state": "BASELINE", "delta": None}
+    assert accumulator["continuity"] == {
+        "state": "BASELINE",
+        "delta": None,
+        "modulus": None,
+        "evidence_ref": None,
+    }
+
+
+def test_schema_is_recursive_closed_and_golden_validates():
+    schema = load_json(SCHEMA)
+
+    def visit(node):
+        if isinstance(node, dict):
+            if node.get("type") == "object":
+                assert node.get("additionalProperties") is False
+            for value in node.values():
+                visit(value)
+        elif isinstance(node, list):
+            for value in node:
+                visit(value)
+
+    visit(schema)
+    accepted, output = schema_accepts(load_json(GOLDEN))
+    assert accepted, output
+
+
+def test_negative_fixtures_are_rejected_by_declared_rule():
+    manifest = load_json(MANIFEST)
+    golden = load_json(GOLDEN)
+    negative = load_json(NEGATIVE)
+    assert negative["fixture_contract"] == "helianthus.canonical-pv.negative-cases/v1"
+    assert negative["base"] == GOLDEN.name
+    assert len(negative["cases"]) >= 6
+    assert len({case["id"] for case in negative["cases"]}) == len(negative["cases"])
+    for case in negative["cases"]:
+        assert set(case) == {"id", "mutation", "expected_rule"}
+        candidate = apply_mutation(golden, case["mutation"])
+        accepted, _ = schema_accepts(candidate)
+        if not accepted:
+            assert case["expected_rule"] in {
+                "schema_closed",
+                "continuity_evidence",
+                "dimension_domain",
+            }
+            continue
+        assert case["expected_rule"] in semantic_errors(candidate, manifest)
 
 
 def test_human_contract_preserves_ownership_and_private_boundary():

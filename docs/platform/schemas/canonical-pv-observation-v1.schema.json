@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.helianthus.local/schemas/canonical-pv-observation-v1.schema.json",
+  "title": "Helianthus Canonical PV Observation V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_id",
+    "asset_ref",
+    "generation",
+    "produced_at",
+    "facts",
+    "source_time_state",
+    "source_provenance",
+    "capabilities",
+    "projection_report"
+  ],
+  "properties": {
+    "contract_id": {"const": "helianthus.canonical-pv/v1"},
+    "asset_ref": {"$ref": "#/$defs/OpaqueTokenV1"},
+    "generation": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "produced_at": {"type": "string", "format": "date-time"},
+    "facts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/FactV1"}
+    },
+    "source_time_state": {"enum": ["UNAVAILABLE", "VALID", "INVALID"]},
+    "source_provenance": {"$ref": "#/$defs/SourceProvenanceV1"},
+    "capabilities": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/CapabilityV1"}
+    },
+    "projection_report": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {"$ref": "#/$defs/ProjectionV1"}
+    }
+  },
+  "$defs": {
+    "OpaqueTokenV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "SourceTokenV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:@-]+$"
+    },
+    "DigestV1": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "DecimalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "coefficient", "scale"],
+      "properties": {
+        "kind": {"const": "decimal"},
+        "coefficient": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)$"},
+        "scale": {"type": "integer", "minimum": -18, "maximum": 18}
+      }
+    },
+    "EnumV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "symbol"],
+      "properties": {
+        "kind": {"const": "enum"},
+        "symbol": {"$ref": "#/$defs/OpaqueTokenV1"}
+      }
+    },
+    "BitfieldV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "symbols"],
+      "properties": {
+        "kind": {"const": "bitfield"},
+        "symbols": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/OpaqueTokenV1"}
+        }
+      }
+    },
+    "DimensionsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "scope": {"const": "total"},
+        "phase": {"enum": ["L1", "L2", "L3"]},
+        "phase_pair": {"enum": ["L1_L2", "L2_L3", "L3_L1"]},
+        "input_id": {"$ref": "#/$defs/OpaqueTokenV1"},
+        "sensor_id": {"$ref": "#/$defs/OpaqueTokenV1"}
+      }
+    },
+    "TemporalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt_monotonic_ns",
+        "fresh_until_monotonic_ns",
+        "retain_until_monotonic_ns",
+        "freshness_policy"
+      ],
+      "properties": {
+        "receipt_monotonic_ns": {"type": "integer", "minimum": 0},
+        "fresh_until_monotonic_ns": {"type": "integer", "minimum": 0},
+        "retain_until_monotonic_ns": {"type": "integer", "minimum": 0},
+        "freshness_policy": {
+          "enum": [
+            "pv.telemetry.fast.v1",
+            "pv.status.v1",
+            "pv.accumulator.v1",
+            "pv.rating.v1"
+          ]
+        }
+      }
+    },
+    "ContinuityV1": {
+      "oneOf": [
+        {"$ref": "#/$defs/ContinuityBaselineV1"},
+        {"$ref": "#/$defs/ContinuityContiguousV1"},
+        {"$ref": "#/$defs/ContinuityRolloverV1"},
+        {"$ref": "#/$defs/ContinuityResetV1"},
+        {"$ref": "#/$defs/ContinuityDiscontinuityV1"}
+      ]
+    },
+    "ContinuityBaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "delta", "modulus", "evidence_ref"],
+      "properties": {
+        "state": {},
+        "delta": {},
+        "modulus": {},
+        "evidence_ref": {}
+      }
+    },
+    "ContinuityBaselineV1": {
+      "allOf": [
+        {"$ref": "#/$defs/ContinuityBaseV1"},
+        {"properties": {"state": {"const": "BASELINE"}, "delta": {"type": "null"}, "modulus": {"type": "null"}, "evidence_ref": {"type": "null"}}}
+      ]
+    },
+    "ContinuityContiguousV1": {
+      "allOf": [
+        {"$ref": "#/$defs/ContinuityBaseV1"},
+        {"properties": {"state": {"const": "CONTIGUOUS"}, "delta": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)$"}, "modulus": {"type": "null"}, "evidence_ref": {"type": "null"}}}
+      ]
+    },
+    "ContinuityRolloverV1": {
+      "allOf": [
+        {"$ref": "#/$defs/ContinuityBaseV1"},
+        {"properties": {"state": {"const": "ROLLOVER"}, "delta": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"}, "modulus": {"type": "string", "pattern": "^[1-9][0-9]*$"}, "evidence_ref": {"$ref": "#/$defs/DigestV1"}}}
+      ]
+    },
+    "ContinuityResetV1": {
+      "allOf": [
+        {"$ref": "#/$defs/ContinuityBaseV1"},
+        {"properties": {"state": {"const": "RESET"}, "delta": {"type": "null"}, "modulus": {"type": "null"}, "evidence_ref": {"$ref": "#/$defs/DigestV1"}}}
+      ]
+    },
+    "ContinuityDiscontinuityV1": {
+      "allOf": [
+        {"$ref": "#/$defs/ContinuityBaseV1"},
+        {"properties": {"state": {"const": "DISCONTINUITY"}, "delta": {"type": "null"}, "modulus": {"type": "null"}, "evidence_ref": {"oneOf": [{"$ref": "#/$defs/DigestV1"}, {"type": "null"}]}}}
+      ]
+    },
+    "FactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "dimensions",
+        "value",
+        "unit",
+        "quality",
+        "availability",
+        "freshness",
+        "temporal"
+      ],
+      "properties": {
+        "fact_id": {"type": "string", "pattern": "^pv\\.[a-z0-9_.]+$", "maxLength": 96},
+        "dimensions": {"$ref": "#/$defs/DimensionsV1"},
+        "value": {"oneOf": [{"$ref": "#/$defs/DecimalV1"}, {"$ref": "#/$defs/EnumV1"}, {"$ref": "#/$defs/BitfieldV1"}]},
+        "unit": {"enum": ["W", "VA", "var", "V", "A", "Hz", "Wh", "Cel", "1"]},
+        "quality": {"enum": ["GOOD", "SUSPECT", "BAD"]},
+        "availability": {"enum": ["AVAILABLE", "UNAVAILABLE", "UNSUPPORTED"]},
+        "freshness": {"enum": ["FRESH", "STALE", "EXPIRED"]},
+        "temporal": {"$ref": "#/$defs/TemporalV1"},
+        "continuity": {"$ref": "#/$defs/ContinuityV1"}
+      }
+    },
+    "SourceProvenanceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_protocol", "source_profile_id", "source_profile_version", "source_validity", "source_observation_ref", "source_shadow_ref", "evidence_ref"],
+      "properties": {
+        "source_protocol": {"$ref": "#/$defs/SourceTokenV1"},
+        "source_profile_id": {"$ref": "#/$defs/SourceTokenV1"},
+        "source_profile_version": {"$ref": "#/$defs/SourceTokenV1"},
+        "source_validity": {"enum": ["terminal_verified", "structural_only", "invalid"]},
+        "source_observation_ref": {"$ref": "#/$defs/DigestV1"},
+        "source_shadow_ref": {"$ref": "#/$defs/DigestV1"},
+        "evidence_ref": {"$ref": "#/$defs/DigestV1"}
+      }
+    },
+    "CapabilityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "outcome"],
+      "properties": {
+        "id": {"const": "helianthus.pv.inverter.three_phase.telemetry.v1"},
+        "outcome": {"enum": ["SATISFIED", "NOT_SATISFIED"]}
+      }
+    },
+    "ProjectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_path", "fact_id", "outcome"],
+      "properties": {
+        "source_path": {"type": "string", "minLength": 1, "maxLength": 256},
+        "fact_id": {"oneOf": [{"type": "string", "pattern": "^pv\\.[a-z0-9_.]+$"}, {"type": "null"}]},
+        "outcome": {"enum": ["MAPPED", "WITHHELD", "UNREPRESENTABLE"]}
+      }
+    }
+  }
+}
