@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 import unittest
 
 
@@ -8,7 +7,7 @@ CONTRACT = ROOT / "api" / "modbus-v1-addon-runtime.md"
 
 
 class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
-    def test_contract_freezes_configuration_recovery_and_stop_boundaries(self) -> None:
+    def test_contract_freezes_configuration_and_single_process_ownership(self) -> None:
         text = CONTRACT.read_text(encoding="utf-8")
         for required in (
             "modbus_tcp_enabled",
@@ -18,118 +17,45 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
             "atomic validation",
             "100 ms through 30 s",
             "0600",
-            "sha256:",
-            "helianthus.modbus-addon-health.v1",
-            "CONFIG_VALIDATED",
-            "RECOVERY_RETRY",
-            "FALLBACK_STARTING",
-            "FALLBACK_ACTIVE",
-            "FALLBACK_EXITED",
-            "EXITED_AFTER_STARTUP_WINDOW",
-            "STOPPED",
-            "current gateway",
-            "previous gateway",
+            "one direct launch",
+            "protocol-local",
+            "s6 -> exec helianthus-gateway",
+            "does not retain a parent shell",
+            "does not post-process stdout or stderr",
             "TERM",
             "INT",
-            "TERM/KILL/wait",
             "M4-04",
             "No GraphQL, Portal, Home Assistant",
         ):
             self.assertIn(required, text)
 
-    def test_health_and_recovery_sets_are_closed(self) -> None:
+    def test_removed_supervisor_machinery_stays_removed(self) -> None:
         text = CONTRACT.read_text(encoding="utf-8")
-        health = text.split("## Health Contract\n", 1)[1].split(
-            "## Bounded Recovery\n", 1
+        lifecycle = text.split("## Single Process Lifecycle\n", 1)[1].split(
+            "## M4-03 Phase Boundary\n", 1
         )[0]
-        fields = re.search(
-            r"It contains only (.*?)\.\n", health, flags=re.DOTALL
-        )
-        self.assertIsNotNone(fields)
-        self.assertEqual(
-            re.findall(r"`([^`]+)`", fields.group(1)),
-            [
-                "contract",
-                "enabled",
-                "endpoint_ref",
-                "state",
-                "attempt",
-                "max_attempts",
-                "binary",
-                "reason",
-            ],
-        )
-        self.assertEqual(
-            re.findall(r"^\| `([A-Z_]+)` \|", health, flags=re.MULTILINE),
-            [
-                "DISABLED",
-                "CONFIG_VALIDATED",
-                "RUNNING",
-                "RECOVERY_RETRY",
-                "FALLBACK_STARTING",
-                "FALLBACK_ACTIVE",
-                "FALLBACK_EXITED",
-                "EXITED_AFTER_STARTUP_WINDOW",
-                "STOPPED",
-            ],
-        )
-
-        recovery = text.split("## Bounded Recovery\n", 1)[1].split(
-            "## Stop And Cleanup\n", 1
-        )[0]
-        self.assertEqual(
-            re.findall(
-                r"^\| `([a-z_]+)` \| `([0-9,]+)` \|$",
-                recovery,
-                flags=re.MULTILINE,
-            ),
-            [
-                ("current_startup_attempts", "3"),
-                ("retry_delays_seconds", "1,2"),
-                ("startup_window_min_seconds", "5"),
-                ("startup_window_max_seconds", "40"),
-            ],
-        )
-        normalized_recovery = " ".join(recovery.split())
-        self.assertIn("exactly three attempts", normalized_recovery)
-        self.assertIn(
-            "bounded from five through forty seconds", normalized_recovery
-        )
-
-    def test_active_health_requires_bounded_numeric_listener_readiness(self) -> None:
-        text = CONTRACT.read_text(encoding="utf-8")
-        normalized = " ".join(text.split())
-        for required in (
-            "Process survival alone is not runtime readiness",
-            "gateway HTTP listener is always required",
-            "adapter-proxy listener is additionally required exactly when adapter-direct",
-            "numeric IPv4 or bracketed IPv6 bind addresses",
-            "Hostnames are rejected",
-            "250 ms TCP probe",
-            "RUNTIME_NOT_READY",
-            "FALLBACK_RUNTIME_NOT_READY",
-            "Neither failure may publish `RUNNING` or `FALLBACK_ACTIVE`",
-            "terminates and reaps",
+        for forbidden in (
+            "FALLBACK_ACTIVE",
+            "RECOVERY_RETRY",
+            "modbus-addon-health",
+            "redaction FIFO",
+            "previous gateway",
+            "startup window",
+            "readiness probe",
         ):
-            self.assertIn(required, normalized)
+            self.assertNotIn(forbidden, lifecycle)
 
-    def test_contract_freezes_secret_and_process_ownership(self) -> None:
+    def test_contract_freezes_endpoint_and_library_ownership(self) -> None:
         text = CONTRACT.read_text(encoding="utf-8")
         normalized = " ".join(text.split())
         for required in (
             "never appears in process arguments",
             "never appears in environment variables",
-            "private synchronized redaction pipes",
-            "validator",
-            "redactor",
-            "child process",
-            "endpoint file is removed before fallback",
-            "fail closed",
-            "enable-static-seed-table",
-            "semantic-cache-path",
-            "instance-guid-source",
-            "best-effort rollback options",
-            "FALLBACK_ACTIVE` therefore proves fallback liveness, not parity",
+            "sanitized by the component that owns the error",
+            "does not create redaction FIFOs",
+            "Generic reconnect behavior belongs to `helianthus-modbus`",
+            "belong to `helianthus-modbusreg`",
+            "Partial support fails closed before `exec`",
         ):
             self.assertIn(required, normalized)
 
