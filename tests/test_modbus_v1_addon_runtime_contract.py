@@ -60,16 +60,20 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
             self.assertIn(required, normalized)
 
     def test_landing_pages_link_contract(self) -> None:
-        self.assertIn(
-            "modbus-v1-addon-runtime.md",
-            (ROOT / "api" / "mcp.md").read_text(encoding="utf-8"),
+        mcp = (ROOT / "api" / "mcp.md").read_text(encoding="utf-8")
+        platform = (ROOT / "docs" / "platform" / "README.md").read_text(
+            encoding="utf-8"
         )
-        self.assertIn(
-            "../../api/modbus-v1-addon-runtime.md",
-            (ROOT / "docs" / "platform" / "README.md").read_text(
-                encoding="utf-8"
-            ),
-        )
+        self.assertIn("modbus-v1-addon-runtime.md", mcp)
+        self.assertIn("single direct gateway process lifecycle", mcp)
+        self.assertIn("../../api/modbus-v1-addon-runtime.md", platform)
+        self.assertIn("one direct gateway launch", platform)
+        for obsolete in (
+            "bounded recovery contract",
+            "previous-gateway fallback contract",
+        ):
+            self.assertNotIn(obsolete, mcp)
+            self.assertNotIn(obsolete, platform)
 
 
 if __name__ == "__main__":

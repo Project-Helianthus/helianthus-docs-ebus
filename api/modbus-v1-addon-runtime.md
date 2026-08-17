@@ -214,8 +214,8 @@ An incoherent capture or any error yields `STOP`.
 
 Qualification logs and result records are categorical only. They must not
 contain an endpoint, raw error text, serial data, model data, firmware data,
-model-chain data, or sample payload. This scoped rule does not change the
-separate add-on health contract's endpoint-reference field.
+model-chain data, or sample payload. Endpoint-bearing transport errors are
+sanitized by their owning runtime before logging.
 
 ### Shutdown, Rollback, And Evidence Boundary
 
@@ -227,13 +227,6 @@ post-qualification rollback procedure: disable the Modbus endpoint and select
 the prior gateway/add-on pair through the normal deployment controls. This
 procedure is explicit and operator-controlled; it is not a qualification-worker
 side effect.
-
-That procedure is distinct from the add-on's startup fallback. Startup fallback
-occurs only after the current gateway has exhausted its bounded startup attempts;
-the current add-on then starts its packaged previous gateway binary with Modbus
-disabled. It does not restore a prior add-on, and `FALLBACK_ACTIVE` proves only
-fallback liveness. It does not prove configuration or feature parity, including
-the three best-effort seed, cache, and provenance options described above.
 
 FMV3-M4-05, after FMV3-M4-04, owns publication of sanitized actual
 `endpoint_ref`, model, firmware, model-chain, and outcome evidence. This
