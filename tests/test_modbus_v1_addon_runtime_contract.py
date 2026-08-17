@@ -53,7 +53,9 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
             "does not create redaction FIFOs",
             "Generic reconnect behavior belongs to `helianthus-modbus`",
             "belong to `helianthus-modbusreg`",
+            "For enabled startup only",
             "Partial support fails closed before `exec`",
+            "Disabled startup does not inspect Modbus flag support",
         ):
             self.assertIn(required, normalized)
 

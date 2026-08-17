@@ -55,9 +55,11 @@ supervision mechanism.
 
 ## Capability Admission
 
-Before launch, the wrapper verifies that the current gateway advertises the
-complete endpoint-file flag set: enable, endpoint-file, and dial-timeout.
-Partial support fails closed before `exec`.
+For enabled startup only, the wrapper verifies that the current gateway
+advertises the complete endpoint-file flag set: enable, endpoint-file, and
+dial-timeout. Partial support fails closed before `exec`. Disabled startup does
+not inspect Modbus flag support and executes the shared gateway without Modbus
+arguments.
 
 ## Single Process Lifecycle
 
