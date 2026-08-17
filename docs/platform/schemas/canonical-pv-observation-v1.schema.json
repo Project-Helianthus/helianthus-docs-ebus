@@ -15,6 +15,7 @@
     "source_provenance",
     "origins",
     "capabilities",
+    "requested_outputs",
     "projection_report"
   ],
   "properties": {
@@ -45,8 +46,16 @@
       "uniqueItems": true,
       "items": {"$ref": "#/$defs/CapabilityV1"}
     },
+    "requested_outputs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/RequestedOutputV1"}
+    },
     "projection_report": {
       "type": "array",
+      "minItems": 1,
       "maxItems": 512,
       "items": {"$ref": "#/$defs/ProjectionV1"}
     }
@@ -273,6 +282,15 @@
       "properties": {
         "id": {"const": "helianthus.pv.inverter.three_phase.telemetry.v1"},
         "outcome": {"enum": ["SATISFIED", "NOT_SATISFIED"]}
+      }
+    },
+    "RequestedOutputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_ref", "requested_output_ref"],
+      "properties": {
+        "source_ref": {"$ref": "#/$defs/DigestV1"},
+        "requested_output_ref": {"$ref": "#/$defs/DigestV1"}
       }
     },
     "ProjectionV1": {

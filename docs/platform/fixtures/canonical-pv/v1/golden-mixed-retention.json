@@ -65,6 +65,10 @@
   "capabilities": [
     {"id": "helianthus.pv.inverter.three_phase.telemetry.v1", "outcome": "NOT_SATISFIED"}
   ],
+  "requested_outputs": [
+    {"source_ref": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "requested_output_ref": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
+    {"source_ref": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "requested_output_ref": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}
+  ],
   "projection_report": [
     {"source_ref": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "requested_output_ref": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "outcome": "MAPPED"},
     {"source_ref": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "requested_output_ref": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "fact_id": "pv.energy.active_export_total", "dimensions": {"scope": "total"}, "outcome": "MAPPED"}

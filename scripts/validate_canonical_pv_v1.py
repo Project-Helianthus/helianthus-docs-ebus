@@ -216,6 +216,15 @@ def validate_semantics(document, manifest, source_registry):
     if capability_ids != set(packs):
         errors.add("capability_inventory")
 
+    requested_output_ids = set()
+    for requested in document["requested_outputs"]:
+        requested_id = (requested["source_ref"], requested["requested_output_ref"])
+        if requested_id in requested_output_ids:
+            errors.add("requested_output_identity")
+        requested_output_ids.add(requested_id)
+        if requested["source_ref"] not in origins:
+            errors.add("requested_output_source_binding")
+
     projection_ids = set()
     for projection in document["projection_report"]:
         projection_id = (
@@ -240,6 +249,8 @@ def validate_semantics(document, manifest, source_registry):
             errors.add("projection_binding")
         elif projection["source_ref"] != provenance["source_observation_ref"]:
             errors.add("projection_source_binding")
+    if projection_ids != requested_output_ids:
+        errors.add("projection_coverage")
 
     return sorted(errors)
 

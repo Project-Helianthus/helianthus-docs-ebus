@@ -166,6 +166,16 @@
       "id": "fact_references_unknown_origin",
       "mutation": {"op": "replace", "path": "/facts/0/origin_ref", "value": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"},
       "expected_rule": "fact_origin_binding"
+    },
+    {
+      "id": "empty_projection_report",
+      "mutation": {"op": "replace", "path": "/projection_report", "value": []},
+      "expected_rule": "projection_coverage"
+    },
+    {
+      "id": "partial_projection_report",
+      "mutation": {"op": "remove", "path": "/projection_report/1"},
+      "expected_rule": "projection_coverage"
     }
   ]
 }
