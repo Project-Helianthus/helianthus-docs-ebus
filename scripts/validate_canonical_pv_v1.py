@@ -178,16 +178,21 @@ def validate_semantics(document, manifest, source_registry):
         if capability["id"] in capability_ids:
             errors.add("capability_uniqueness")
         capability_ids.add(capability["id"])
-        if capability["outcome"] != "SATISFIED":
-            continue
         required = {
             (item["fact_id"], tuple(sorted(item["dimensions"].items())))
             for item in packs[capability["id"]]["required"]
         }
-        if not required <= set(observed):
+        complete = required <= set(observed)
+        supported = complete and not any(
+            observed[key]["availability"] == "UNSUPPORTED" for key in required
+        )
+        expected_outcome = "SATISFIED" if supported else "NOT_SATISFIED"
+        if capability["outcome"] != expected_outcome:
+            errors.add("capability_outcome")
+        if capability["outcome"] == "SATISFIED" and not complete:
             errors.add("capability_completeness")
             continue
-        if any(observed[key]["availability"] == "UNSUPPORTED" for key in required):
+        if capability["outcome"] == "SATISFIED" and not supported:
             errors.add("capability_support_state")
 
     projection_ids = set()

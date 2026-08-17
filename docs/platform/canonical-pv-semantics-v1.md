@@ -141,7 +141,8 @@ and an admitted `1+113` chain can satisfy the same pack when all required
 canonical facts are present with compatible units and dimensions.
 Pack satisfaction is structural, not a freshness claim: a required fact may be
 `AVAILABLE` or retained `UNAVAILABLE`, but never `UNSUPPORTED`. Capability IDs
-are unique within an observation.
+are unique within an observation, and the reported outcome must equal the
+derived structural result in both directions.
 
 ## Compatibility
 

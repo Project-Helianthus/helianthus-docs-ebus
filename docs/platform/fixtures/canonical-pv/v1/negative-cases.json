@@ -151,6 +151,11 @@
       "id": "projection_uses_different_source_observation",
       "mutation": {"op": "replace", "path": "/projection_report/0/source_ref", "value": "sha256:ad9f5098de232350c85b3fe25fdbf102a3f2e8f4daffec5e5512ba1d110ca623"},
       "expected_rule": "projection_source_binding"
+    },
+    {
+      "id": "false_negative_capability_outcome",
+      "mutation": {"op": "replace", "path": "/capabilities/0/outcome", "value": "NOT_SATISFIED"},
+      "expected_rule": "capability_outcome"
     }
   ]
 }
