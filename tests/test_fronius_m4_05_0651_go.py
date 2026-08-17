@@ -294,7 +294,18 @@ def test_0651_exact_runtime_and_terminal_go() -> None:
             "sha256:876098e26a6b5f698d0f992f61a0784af8f677f4e3b96a424869fda9609eec6e"
         ),
     }
+    assert evidence["target"] == {
+        "endpoint_ref": "sha256:cc2d63775c6f0074",
+        "manufacturer": "Fronius",
+        "model": "Symo GEN24 10.0",
+        "firmware": "1.41.11-1",
+    }
     assert evidence["acceptance"]["final_decision"] == "GO"
+    assert evidence["rollback"] == {
+        "backup_created": True,
+        "required": False,
+        "modbus_remained_enabled": True,
+    }
     assert evidence["next_gate"] == {
         "m5": "READY_FOR_FMV3-M5-02",
         "semantic_implementation_requires": "FMV3-M5-02_MERGED",
@@ -304,6 +315,8 @@ def test_0651_exact_runtime_and_terminal_go() -> None:
 def test_0651_chain_unknown_retention_and_read_only_boundary() -> None:
     evidence = load_evidence()
     qualification = evidence["qualification"]
+    assert qualification["decision"] == "GO"
+    assert qualification["category"] == "registry_match"
     assert qualification["capability_id"] == (
         "sunspec.inverter.three_phase.monitoring@1.0.0"
     )
@@ -312,6 +325,7 @@ def test_0651_chain_unknown_retention_and_read_only_boundary() -> None:
         "sunspec.flavor.fronius.gen24.float.observed@1.1.0"
     )
     assert qualification["flavor_reason"] == "MATCHED"
+    assert qualification["source_validity"] == "terminal_verified"
     assert qualification["qualification_evidence_only"] is True
     assert qualification["support_claim"] is False
     assert qualification["canonical_semantics_claim"] is False
