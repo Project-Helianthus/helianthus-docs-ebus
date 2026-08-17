@@ -1,0 +1,119 @@
+{
+  "schema": "helianthus.canonical-pv.contract",
+  "schema_version": 1,
+  "contract_id": "helianthus.canonical-pv/v1",
+  "status": "CANDIDATE_PRE_IMPLEMENTATION",
+  "owner": "helianthus-ebusreg",
+  "value_encoding": {
+    "decimal": {
+      "fields": ["coefficient", "scale"],
+      "meaning": "coefficient multiplied by ten raised to scale",
+      "json_binary_float_forbidden": true
+    }
+  },
+  "units": ["W", "VA", "var", "V", "A", "Hz", "Wh", "Cel", "1"],
+  "dimensions": {
+    "scope": ["total", "phase", "phase_pair", "input", "sensor"],
+    "phase": ["L1", "L2", "L3"],
+    "phase_pair": ["L1_L2", "L2_L3", "L3_L1"],
+    "input_id": "opaque_nonempty_string",
+    "sensor_id": "opaque_nonempty_string"
+  },
+  "state_axes": {
+    "quality": ["GOOD", "SUSPECT", "BAD"],
+    "availability": ["AVAILABLE", "UNAVAILABLE", "UNSUPPORTED"],
+    "freshness": ["FRESH", "STALE", "EXPIRED"]
+  },
+  "freshness_policies": [
+    {"id": "pv.telemetry.fast.v1", "fresh_seconds": 30, "retain_seconds": 300},
+    {"id": "pv.status.v1", "fresh_seconds": 60, "retain_seconds": 600},
+    {"id": "pv.accumulator.v1", "fresh_seconds": 900, "retain_seconds": 86400},
+    {"id": "pv.rating.v1", "fresh_seconds": 86400, "retain_seconds": 2592000}
+  ],
+  "lifecycle": {
+    "clock": "monotonic_receipt_time",
+    "source_time_drives_expiry": false,
+    "transitions": [
+      {"from": "AVAILABLE/FRESH", "event": "fresh_threshold_elapsed", "to": "AVAILABLE/STALE"},
+      {"from": "AVAILABLE/STALE", "event": "retain_threshold_elapsed", "to": "UNAVAILABLE/EXPIRED"},
+      {"from": "UNAVAILABLE/EXPIRED", "event": "accepted_observation", "to": "AVAILABLE/FRESH"}
+    ],
+    "source_error_deletes_prior_observation": false
+  },
+  "counter_continuity": {
+    "states": ["BASELINE", "CONTIGUOUS", "ROLLOVER", "RESET", "DISCONTINUITY"],
+    "first_observation": "BASELINE_NO_DELTA",
+    "rollover_requires": ["explicit_source_modulus", "verified_boundary"],
+    "reset_requires": ["explicit_source_reset_evidence"],
+    "unexplained_decrease": "DISCONTINUITY_NO_DELTA",
+    "guessed_rollover_or_reset_forbidden": true
+  },
+  "provenance": {
+    "required": [
+      "source_protocol",
+      "source_profile_id",
+      "source_profile_version",
+      "source_validity",
+      "source_observation_ref",
+      "source_shadow_ref",
+      "evidence_ref"
+    ],
+    "forbidden": ["endpoint", "address", "credentials", "raw_words", "private_fixture_path"]
+  },
+  "source_binding": {
+    "version": 1,
+    "selected_sources_per_update": 1,
+    "ambiguous_sources": "FAIL_CLOSED",
+    "gateway_schedule_is_precedence": false
+  },
+  "facts": [
+    {"id": "pv.ac.power.active", "value_kind": "decimal", "unit": "W", "dimensions": ["scope"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.ac.power.apparent", "value_kind": "decimal", "unit": "VA", "dimensions": ["scope"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.ac.power.reactive", "value_kind": "decimal", "unit": "var", "dimensions": ["scope"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.ac.power_factor", "value_kind": "decimal", "unit": "1", "dimensions": ["scope"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.ac.frequency", "value_kind": "decimal", "unit": "Hz", "dimensions": ["scope"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.ac.current", "value_kind": "decimal", "unit": "A", "dimensions": ["phase"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.ac.voltage.line_to_neutral", "value_kind": "decimal", "unit": "V", "dimensions": ["phase"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.ac.voltage.line_to_line", "value_kind": "decimal", "unit": "V", "dimensions": ["phase_pair"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.energy.active_export_total", "value_kind": "decimal", "unit": "Wh", "dimensions": ["scope"], "freshness_policy": "pv.accumulator.v1", "accumulator": true},
+    {"id": "pv.dc.current", "value_kind": "decimal", "unit": "A", "dimensions": ["input_id"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.dc.voltage", "value_kind": "decimal", "unit": "V", "dimensions": ["input_id"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.dc.power.active", "value_kind": "decimal", "unit": "W", "dimensions": ["input_id"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.dc.energy.active_total", "value_kind": "decimal", "unit": "Wh", "dimensions": ["input_id"], "freshness_policy": "pv.accumulator.v1", "accumulator": true},
+    {"id": "pv.temperature", "value_kind": "decimal", "unit": "Cel", "dimensions": ["sensor_id"], "freshness_policy": "pv.telemetry.fast.v1", "accumulator": false},
+    {"id": "pv.operating.state", "value_kind": "enum", "unit": "1", "dimensions": ["scope"], "freshness_policy": "pv.status.v1", "accumulator": false},
+    {"id": "pv.event.flags", "value_kind": "bitfield", "unit": "1", "dimensions": ["scope"], "freshness_policy": "pv.status.v1", "accumulator": false},
+    {"id": "pv.rating.ac.active_power", "value_kind": "decimal", "unit": "W", "dimensions": ["scope"], "freshness_policy": "pv.rating.v1", "accumulator": false}
+  ],
+  "capability_packs": [
+    {
+      "id": "helianthus.pv.inverter.three_phase.telemetry.v1",
+      "required": [
+        {"fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}},
+        {"fact_id": "pv.ac.frequency", "dimensions": {"scope": "total"}},
+        {"fact_id": "pv.ac.current", "dimensions": {"phase": "L1"}},
+        {"fact_id": "pv.ac.current", "dimensions": {"phase": "L2"}},
+        {"fact_id": "pv.ac.current", "dimensions": {"phase": "L3"}},
+        {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L1"}},
+        {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L2"}},
+        {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L3"}},
+        {"fact_id": "pv.energy.active_export_total", "dimensions": {"scope": "total"}},
+        {"fact_id": "pv.operating.state", "dimensions": {"scope": "total"}}
+      ]
+    }
+  ],
+  "source_id_compatibility": [
+    {"source_id": "sunspec.phase1@1.0.0", "meaning": "historical_source_profile", "canonical_alias": null},
+    {"source_id": "sunspec.inverter.three_phase.monitoring@1.0.0", "meaning": "source_capability_profile", "canonical_alias": null}
+  ],
+  "projection_outcomes": ["MAPPED", "WITHHELD", "UNREPRESENTABLE"],
+  "compatibility": {
+    "immutable_within_v1": ["fact_id", "value_kind", "unit_meaning", "dimension_meaning", "enum_meaning", "lifecycle_transition"],
+    "additive_optional_facts_allowed": true,
+    "unknown_enum_values_preserved": true,
+    "required_pack_member_change_requires_new_pack_id": true,
+    "reinterpretation_requires_new_major_contract": true
+  },
+  "write_authority": "NONE",
+  "private_binding_ingress": "PUBLIC_GRAPHQL_M2M_V1_AFTER_SEPARATE_PROMOTION"
+}

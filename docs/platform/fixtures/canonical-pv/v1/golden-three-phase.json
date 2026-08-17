@@ -1,0 +1,41 @@
+{
+  "contract_id": "helianthus.canonical-pv/v1",
+  "asset_ref": "pv-asset-01",
+  "generation": 7,
+  "produced_at": "2026-08-17T13:45:00Z",
+  "facts": [
+    {"fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": 7245, "scale": 0}, "unit": "W", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
+    {"fact_id": "pv.ac.frequency", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": 5001, "scale": -2}, "unit": "Hz", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
+    {"fact_id": "pv.ac.current", "dimensions": {"phase": "L1"}, "value": {"kind": "decimal", "coefficient": 1041, "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
+    {"fact_id": "pv.ac.current", "dimensions": {"phase": "L2"}, "value": {"kind": "decimal", "coefficient": 1038, "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
+    {"fact_id": "pv.ac.current", "dimensions": {"phase": "L3"}, "value": {"kind": "decimal", "coefficient": 1044, "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
+    {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L1"}, "value": {"kind": "decimal", "coefficient": 2314, "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
+    {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L2"}, "value": {"kind": "decimal", "coefficient": 2308, "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
+    {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L3"}, "value": {"kind": "decimal", "coefficient": 2311, "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"},
+    {"fact_id": "pv.energy.active_export_total", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": 18420573, "scale": 0}, "unit": "Wh", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "continuity": {"state": "BASELINE", "delta": null}},
+    {"fact_id": "pv.operating.state", "dimensions": {"scope": "total"}, "value": {"kind": "enum", "symbol": "OPERATING"}, "unit": "1", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH"}
+  ],
+  "temporal": {
+    "receipt_monotonic_ns": 981234500000,
+    "fresh_until_monotonic_ns": 1011234500000,
+    "retain_until_monotonic_ns": 1281234500000,
+    "freshness_policy": "pv.telemetry.fast.v1",
+    "source_time_state": "UNAVAILABLE"
+  },
+  "source_provenance": {
+    "source_protocol": "sunspec_modbus",
+    "source_profile_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "source_profile_version": "1.0.0",
+    "source_validity": "terminal_verified",
+    "source_observation_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+    "source_shadow_ref": "sha256:97ea524e93a0ebd43eb72b20cafc953e703e10fa38844462d9146cf861d763c1",
+    "evidence_ref": "sha256:17bcd5fcf011c4765648386160629d99357a0a3e5bacfdb09b0bf98e8f890710"
+  },
+  "capabilities": [
+    {"id": "helianthus.pv.inverter.three_phase.telemetry.v1", "outcome": "SATISFIED"}
+  ],
+  "projection_report": [
+    {"source_path": "inverter.total_active_power", "fact_id": "pv.ac.power.active", "outcome": "MAPPED"},
+    {"source_path": "inverter.vendor_event_detail", "fact_id": null, "outcome": "WITHHELD"}
+  ]
+}
