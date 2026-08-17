@@ -1,0 +1,12 @@
+{
+  "contract": "helianthus.source-registry-bindings/v1",
+  "entries": [
+    {
+      "source_protocol": "sunspec_modbus",
+      "source_profile_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+      "source_profile_version": "1.0.0",
+      "source_validity": "terminal_verified",
+      "registry_ref": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750"
+    }
+  ]
+}

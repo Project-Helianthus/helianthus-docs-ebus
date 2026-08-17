@@ -32,7 +32,7 @@
     {"id": "helianthus.pv.inverter.three_phase.telemetry.v1", "outcome": "SATISFIED"}
   ],
   "projection_report": [
-    {"source_ref": "sha256:2f274825d756b963c44264b6b944322149913910c172388bbd3dfd39503d350f", "requested_output_ref": "sha256:bc3ae450a43db0d91f3f77c91bfe382c33d6b8983623321ce52de247ecc08a56", "fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "outcome": "MAPPED"},
-    {"source_ref": "sha256:2f274825d756b963c44264b6b944322149913910c172388bbd3dfd39503d350f", "requested_output_ref": "sha256:86bd307c4139464f9ab60d406ff5f918cc1d6fc8efb37503b0fd1a8eb28506ae", "fact_id": null, "dimensions": null, "outcome": "WITHHELD"}
+    {"source_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "requested_output_ref": "sha256:bc3ae450a43db0d91f3f77c91bfe382c33d6b8983623321ce52de247ecc08a56", "fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "outcome": "MAPPED"},
+    {"source_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "requested_output_ref": "sha256:86bd307c4139464f9ab60d406ff5f918cc1d6fc8efb37503b0fd1a8eb28506ae", "fact_id": null, "dimensions": null, "outcome": "WITHHELD"}
   ]
 }

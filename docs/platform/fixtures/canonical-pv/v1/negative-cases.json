@@ -141,6 +141,16 @@
         }
       },
       "expected_rule": "continuity_evidence"
+    },
+    {
+      "id": "arbitrary_source_registry_digest",
+      "mutation": {"op": "replace", "path": "/source_provenance/source_registry_ref", "value": "sha256:5eef33c48e7f28fdf14d8dd3bd6ccdb147260175581096f801287f7b52cb0242"},
+      "expected_rule": "provenance_binding"
+    },
+    {
+      "id": "projection_uses_different_source_observation",
+      "mutation": {"op": "replace", "path": "/projection_report/0/source_ref", "value": "sha256:ad9f5098de232350c85b3fe25fdbf102a3f2e8f4daffec5e5512ba1d110ca623"},
+      "expected_rule": "projection_source_binding"
     }
   ]
 }

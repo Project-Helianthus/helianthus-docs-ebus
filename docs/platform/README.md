@@ -41,6 +41,8 @@ Current platform contracts:
 - [`schemas/canonical-pv-observation-v1.schema.json`](./schemas/canonical-pv-observation-v1.schema.json) -
   recursively closed canonical observation envelope used by positive and
   negative conformance fixtures
+- [`schemas/canonical-pv-source-registry-bindings-v1.schema.json`](./schemas/canonical-pv-source-registry-bindings-v1.schema.json) -
+  protocol-neutral resolver contract for source-owned admission bindings
 - [`../../scripts/validate_canonical_pv_v1.py`](../../scripts/validate_canonical_pv_v1.py) -
   public manifest-aware schema and semantic conformance validator
 - [`manifests/modbus-foundation-profile-contract-v1.json`](./manifests/modbus-foundation-profile-contract-v1.json) -

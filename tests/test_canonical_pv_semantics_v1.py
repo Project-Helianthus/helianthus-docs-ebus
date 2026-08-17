@@ -13,6 +13,14 @@ ROOT = Path(__file__).resolve().parents[1]
 DOC = ROOT / "docs/platform/canonical-pv-semantics-v1.md"
 MANIFEST = ROOT / "docs/platform/manifests/canonical-pv-v1.json"
 SCHEMA = ROOT / "docs/platform/schemas/canonical-pv-observation-v1.schema.json"
+SOURCE_REGISTRY = (
+    ROOT
+    / "docs/platform/fixtures/canonical-pv/v1/source-registry-bindings.json"
+)
+SOURCE_REGISTRY_SCHEMA = (
+    ROOT
+    / "docs/platform/schemas/canonical-pv-source-registry-bindings-v1.schema.json"
+)
 GOLDEN = (
     ROOT
     / "docs/platform/fixtures/canonical-pv/v1/golden-three-phase.json"
@@ -187,17 +195,18 @@ def test_freshness_and_counter_policy_are_registry_owned_and_fail_closed():
         "ambiguous_sources": "FAIL_CLOSED",
         "gateway_schedule_is_precedence": False,
     }
-    transitions = {
+    transitions = [
         (item["from"], item["event"], item["to"])
         for item in manifest["lifecycle"]["transitions"]
-    }
-    assert transitions == {
+    ]
+    assert transitions == [
         ("AVAILABLE/FRESH", "fresh_threshold_elapsed", "AVAILABLE/STALE"),
         ("AVAILABLE/FRESH", "accepted_observation", "AVAILABLE/FRESH"),
         ("AVAILABLE/STALE", "accepted_observation", "AVAILABLE/FRESH"),
         ("AVAILABLE/STALE", "retain_threshold_elapsed", "UNAVAILABLE/EXPIRED"),
         ("UNAVAILABLE/EXPIRED", "accepted_observation", "AVAILABLE/FRESH"),
-    }
+    ]
+    assert len(transitions) == len(set(transitions))
 
     continuity = manifest["counter_continuity"]
     assert continuity["states"] == [
@@ -278,7 +287,7 @@ def test_golden_temporal_provenance_and_projection_are_closed():
     manifest = load_json(MANIFEST)
     golden = load_json(GOLDEN)
     assert golden["source_time_state"] == "UNAVAILABLE"
-    assert not validate_semantics(golden, manifest)
+    assert not validate_semantics(golden, manifest, load_json(SOURCE_REGISTRY))
     for fact in golden["facts"]:
         temporal = fact["temporal"]
         assert temporal["receipt_monotonic_ns"] < temporal["fresh_until_monotonic_ns"]
@@ -325,24 +334,33 @@ def test_scaled_accumulator_delta_uses_canonical_decimal():
     }
     accepted, output = schema_accepts(candidate)
     assert accepted, output
-    assert not validate_semantics(candidate, manifest)
+    assert not validate_semantics(candidate, manifest, load_json(SOURCE_REGISTRY))
 
 
 def test_protocol_neutral_source_registry_binding():
     manifest = load_json(MANIFEST)
+    source_registry = copy.deepcopy(load_json(SOURCE_REGISTRY))
     candidate = copy.deepcopy(load_json(GOLDEN))
     provenance = candidate["source_provenance"]
     provenance["source_protocol"] = "eebus_spine"
     provenance["source_profile_id"] = "eebus.pv.three_phase@1.0.0"
     provenance["source_profile_version"] = "1.0.0"
+    provenance["source_registry_ref"] = "sha256:cf17b95284984414c9d8ec13b5dde1e2dab5b12c81373436c5849669f61fc22a"
+    source_registry["entries"].append(
+        {
+            "source_protocol": "eebus_spine",
+            "source_profile_id": "eebus.pv.three_phase@1.0.0",
+            "source_profile_version": "1.0.0",
+            "source_validity": "terminal_verified",
+            "registry_ref": provenance["source_registry_ref"],
+        }
+    )
     accepted, output = schema_accepts(candidate)
     assert accepted, output
-    assert not validate_semantics(candidate, manifest)
+    assert not validate_semantics(candidate, manifest, source_registry)
 
 
 def test_schema_is_recursive_closed_and_golden_validates():
-    schema = load_json(SCHEMA)
-
     def visit(node):
         if isinstance(node, dict):
             if node.get("type") == "object":
@@ -353,7 +371,8 @@ def test_schema_is_recursive_closed_and_golden_validates():
             for value in node:
                 visit(value)
 
-    visit(schema)
+    visit(load_json(SCHEMA))
+    visit(load_json(SOURCE_REGISTRY_SCHEMA))
     accepted, output = schema_accepts(load_json(GOLDEN))
     assert accepted, output
 
@@ -369,6 +388,10 @@ def test_public_manifest_aware_validator_accepts_golden():
             str(MANIFEST),
             "--schema",
             str(SCHEMA),
+            "--source-registry",
+            str(SOURCE_REGISTRY),
+            "--source-registry-schema",
+            str(SOURCE_REGISTRY_SCHEMA),
         ],
         capture_output=True,
         check=False,
@@ -393,7 +416,13 @@ def test_negative_fixtures_are_rejected_by_declared_rule():
             json.dump(candidate, stream)
             stream.flush()
             with pytest.raises(ValidationError):
-                validate(Path(stream.name), MANIFEST, SCHEMA)
+                validate(
+                    Path(stream.name),
+                    MANIFEST,
+                    SCHEMA,
+                    SOURCE_REGISTRY,
+                    SOURCE_REGISTRY_SCHEMA,
+                )
         accepted, _ = schema_accepts(candidate)
         if not accepted:
             assert case["expected_rule"] in {
@@ -409,7 +438,11 @@ def test_negative_fixtures_are_rejected_by_declared_rule():
                 "capability_uniqueness",
             }
             continue
-        assert case["expected_rule"] in validate_semantics(candidate, manifest)
+        assert case["expected_rule"] in validate_semantics(
+            candidate,
+            manifest,
+            load_json(SOURCE_REGISTRY),
+        )
 
 
 def test_human_contract_preserves_ownership_and_private_boundary():

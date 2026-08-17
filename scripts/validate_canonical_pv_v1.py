@@ -39,6 +39,15 @@ def fact_key(fact):
     return fact["fact_id"], tuple(sorted(fact["dimensions"].items()))
 
 
+def source_key(source):
+    return (
+        source["source_protocol"],
+        source["source_profile_id"],
+        source["source_profile_version"],
+        source["source_validity"],
+    )
+
+
 def _looks_like_network_endpoint(value):
     candidate = value.strip("[]")
     try:
@@ -62,7 +71,7 @@ def validate_schema(document_path, schema_path):
         raise ValidationError("schema: " + (result.stdout + result.stderr).strip())
 
 
-def validate_semantics(document, manifest):
+def validate_semantics(document, manifest, source_registry):
     errors = set()
     catalog = {fact["id"]: fact for fact in manifest["facts"]}
     policies = {policy["id"]: policy for policy in manifest["freshness_policies"]}
@@ -82,6 +91,17 @@ def validate_semantics(document, manifest):
         errors.add("provenance_redaction")
     expected_version = provenance["source_profile_id"].rsplit("@", 1)
     if len(expected_version) != 2 or expected_version[1] != provenance["source_profile_version"]:
+        errors.add("provenance_binding")
+    registry_entries = {}
+    registry_refs = set()
+    for entry in source_registry["entries"]:
+        key = source_key(entry)
+        if key in registry_entries or entry["registry_ref"] in registry_refs:
+            errors.add("source_registry_uniqueness")
+        registry_entries[key] = entry["registry_ref"]
+        registry_refs.add(entry["registry_ref"])
+    expected_registry_ref = registry_entries.get(source_key(provenance))
+    if expected_registry_ref != provenance["source_registry_ref"]:
         errors.add("provenance_binding")
 
     for fact in document["facts"]:
@@ -172,6 +192,8 @@ def validate_semantics(document, manifest):
 
     projection_ids = set()
     for projection in document["projection_report"]:
+        if projection["source_ref"] != provenance["source_observation_ref"]:
+            errors.add("projection_source_binding")
         projection_id = (
             projection["source_ref"],
             projection["requested_output_ref"],
@@ -194,11 +216,19 @@ def validate_semantics(document, manifest):
     return sorted(errors)
 
 
-def validate(document_path, manifest_path, schema_path):
+def validate(
+    document_path,
+    manifest_path,
+    schema_path,
+    source_registry_path,
+    source_registry_schema_path,
+):
     validate_schema(document_path, schema_path)
+    validate_schema(source_registry_path, source_registry_schema_path)
     document = load_json(document_path)
     manifest = load_json(manifest_path)
-    errors = validate_semantics(document, manifest)
+    source_registry = load_json(source_registry_path)
+    errors = validate_semantics(document, manifest, source_registry)
     if errors:
         raise ValidationError("semantic: " + ", ".join(errors))
 
@@ -208,9 +238,17 @@ def main():
     parser.add_argument("--document", required=True, type=Path)
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--schema", required=True, type=Path)
+    parser.add_argument("--source-registry", required=True, type=Path)
+    parser.add_argument("--source-registry-schema", required=True, type=Path)
     args = parser.parse_args()
     try:
-        validate(args.document, args.manifest, args.schema)
+        validate(
+            args.document,
+            args.manifest,
+            args.schema,
+            args.source_registry,
+            args.source_registry_schema,
+        )
     except ValidationError as error:
         print(f"canonical_pv_v1_invalid: {error}", file=sys.stderr)
         return 1

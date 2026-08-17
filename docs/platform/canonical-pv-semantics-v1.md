@@ -93,8 +93,9 @@ and version, source-validity state, source observation reference, source shadow
 reference, source-registry reference, and evidence reference. Protocol and
 profile identifiers are source-registry-owned and extensible without changing
 canonical V1 facts; the profile version must match its versioned source ID, and
-the registry binding is an opaque digest. References are opaque hashes or
-handles.
+the registry binding is an opaque digest resolved against a required
+source-owned registry entry for the exact `(protocol, profile ID, profile
+version, validity)` tuple. References are opaque hashes or handles.
 Endpoint addresses, credentials, raw Modbus words, and private fixture paths are
 forbidden from the canonical envelope.
 
@@ -106,6 +107,7 @@ fact ID and dimensions matching the complete identity of a fact in the same
 observation, while the two loss outcomes require a null fact ID and null
 dimensions. Each row is uniquely identified by `(source_ref,
 requested_output_ref)` so conflicting outcomes cannot be order-dependent.
+`source_ref` must equal the admitted observation's `source_observation_ref`.
 Absence must not be silently converted to zero.
 
 ## Accumulator Continuity
@@ -161,3 +163,7 @@ observation envelope is
 [`schemas/canonical-pv-observation-v1.schema.json`](./schemas/canonical-pv-observation-v1.schema.json),
 with positive and mutation-based negative fixtures under
 [`fixtures/canonical-pv/v1/`](./fixtures/canonical-pv/v1/).
+The public validator requires a source-owned registry resolver conforming to
+[`schemas/canonical-pv-source-registry-bindings-v1.schema.json`](./schemas/canonical-pv-source-registry-bindings-v1.schema.json);
+the fixture directory contains only a conformance example, not a canonical
+protocol allowlist.
