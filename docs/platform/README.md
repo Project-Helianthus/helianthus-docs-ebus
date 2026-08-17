@@ -29,7 +29,7 @@ Current platform contracts:
   raw/profile MCP contract, redaction, source-observation envelope, and limits
 - [`../../api/modbus-v1-addon-runtime.md`](../../api/modbus-v1-addon-runtime.md) -
   FMV3-M4-03 disabled-by-default add-on configuration, protected endpoint-file,
-  health, bounded startup recovery, and previous-gateway fallback contract
+  one direct gateway launch, and protocol-local Modbus failure contract
 - [`fronius-sunspec-evidence-v1.md`](./fronius-sunspec-evidence-v1.md) -
   FMV3-M3-01 evidence packet and FMV3-M3-03 `STANDARD_ONLY` completion for
   bounded synthetic fixtures and the Fronius SunSpec admission boundary

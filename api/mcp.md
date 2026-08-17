@@ -4,8 +4,8 @@ The cross-protocol bounded Modbus V1 surface is specified separately in
 [`modbus-v1-mcp.md`](./modbus-v1-mcp.md). It remains raw/profile evidence and
 does not publish canonical PV semantics.
 
-The disabled-by-default add-on configuration, protected endpoint-file,
-health, and bounded recovery contract is specified in
+The disabled-by-default add-on configuration, protected endpoint-file, and
+single direct gateway process lifecycle are specified in
 [`modbus-v1-addon-runtime.md`](./modbus-v1-addon-runtime.md). It does not
 qualify a live device or extend the MCP schema.
 

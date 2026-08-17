@@ -1,22 +1,23 @@
 # Modbus V1 Add-on Runtime
 
-This page freezes the public deployment and recovery contract for the first
+This page freezes the public deployment contract for the first
 read-only Modbus TCP runtime. It is the documentation companion for
 FMV3-M4-03. The bounded MCP data surface remains specified by
 [`modbus-v1-mcp.md`](./modbus-v1-mcp.md).
 
 ## Scope And Ownership
 
-The Home Assistant add-on owns option ingestion, protected endpoint
-materialization, child-process supervision, health publication, and bounded
-startup recovery with a fallback to the packaged previous gateway binary in the
-current add-on. The current gateway owns Modbus endpoint-file consumption,
-read-only runtime behavior, and qualification-result logging. A
-post-qualification rollback of a gateway/add-on pair is a separate,
-operator-controlled deployment procedure; it is not an automatic gateway or
-add-on-supervisor action.
-The transport and profile facts remain owned by `helianthus-modbus` and
-`helianthus-modbusreg` respectively.
+The Home Assistant add-on owns option ingestion, validation, protected endpoint
+materialization, and one direct launch of the packaged current gateway. The
+wrapper is not a process supervisor. It does not own gateway readiness,
+protocol retries, log processing, fallback binaries, or health state machines.
+
+The gateway owns protocol composition and keeps eBUS, eeBUS, HTTP, and MCP
+independent from the optional Modbus runtime. A Modbus startup or reconnect
+failure is protocol-local: it may make Modbus unavailable, but it must not
+restart, replace, or terminate the shared gateway. Generic reconnect behavior
+belongs to `helianthus-modbus`; chain parsing, profiles, and vendor flavors
+belong to `helianthus-modbusreg`.
 
 The Modbus runtime is disabled by default and opt-in only. This contract does
 not qualify a real inverter, authorize a write function, or promote a PV
@@ -33,12 +34,12 @@ The add-on accepts these three options:
 | `modbus_tcp_dial_timeout` | Integer `ms` or `s` duration from 100 ms through 30 s; default `5s`. |
 
 Enabled startup uses atomic validation: all active options are parsed and
-admitted before a gateway child starts. A malformed options document or any
-invalid active field fails closed. Disabled startup does not validate retained
+admitted before the wrapper `exec`s the gateway. A malformed options document
+or any invalid active field fails closed. Disabled startup does not validate retained
 endpoint or timeout text, so an operator can always restore the inert path by
 setting `modbus_tcp_enabled=false`.
 
-## Endpoint And Redaction Boundary
+## Endpoint Boundary
 
 After successful enabled validation, the add-on atomically materializes the
 endpoint in a runtime directory with mode `0700` and a current-UID endpoint
@@ -46,120 +47,42 @@ file with mode `0600`. The endpoint never appears in process arguments and
 never appears in environment variables. The current gateway receives only the
 endpoint-file path and reads the value from that file.
 
-Logs and health expose only an `endpoint_ref` of the form
-`sha256:<16 lowercase hex>`. Current-gateway stdout and stderr pass through two
-private synchronized redaction pipes. Each redactor replaces the full endpoint,
-network location, and hostname before output can be published. A redactor setup,
-liveness, or cleanup failure terminates and reaps the child process and removes
-the endpoint instead of allowing unfiltered output.
-
-The validator, both redactor processes, the current gateway, and the fallback
-gateway are explicit supervisor-owned children. Temporary validator output,
-redaction FIFOs, ready files, health files, and endpoint files are private and
-atomically replaced where persistent observation is required.
+Endpoint-bearing errors are sanitized by the component that owns the error
+before they reach the logger. The add-on does not post-process stdout or stderr,
+does not create redaction FIFOs, and does not publish a Modbus-specific process
+health document. The endpoint file is runtime input, not an authorization or
+supervision mechanism.
 
 ## Capability Admission
 
-Before enabled launch, the wrapper verifies that the current gateway advertises
-the complete endpoint-file flag set: enable, endpoint-file, and dial-timeout.
-Partial support fails closed. The packaged previous gateway is checked
-independently for non-Modbus options whose loss would invalidate the active
-runtime: the complete eeBUS flag set when eeBUS is enabled, an active adapter
-proxy listener, and explicit source-address override validation. Missing support
-for any of those required options fails closed. Fallback does not receive any
-Modbus flag.
+For enabled startup only, the wrapper verifies that the current gateway
+advertises the complete endpoint-file flag set: enable, endpoint-file, and
+dial-timeout. Partial support fails closed before `exec`. Disabled startup does
+not inspect Modbus flag support and executes the shared gateway without Modbus
+arguments.
 
-Three rollback-compatibility options are intentionally best-effort:
-`enable-static-seed-table`, `semantic-cache-path`, and
-`instance-guid-source`. Each is forwarded when the previous gateway advertises
-its flag and omitted otherwise. `FALLBACK_ACTIVE` therefore proves fallback
-liveness, not parity for these optional seed, cache, or provenance features.
+## Single Process Lifecycle
 
-## Health Contract
+Enabled and disabled configurations converge on the same final operation:
 
-Health is a closed JSON object under contract
-`helianthus.modbus-addon-health.v1`. It contains only `contract`, `enabled`,
-`endpoint_ref`, `state`, `attempt`, `max_attempts`, `binary`, and `reason`.
-`binary` is `current` or `fallback`; the endpoint itself is never published.
+```text
+s6 -> exec helianthus-gateway
+```
 
-The closed state set is:
+When Modbus is disabled, the endpoint file is absent and no Modbus flag is
+passed. When enabled, the three admitted Modbus flags are appended to the same
+gateway argument vector. The wrapper then replaces itself with the current
+gateway. It does not retain a parent shell, launch log redactors, probe local
+listeners, retry the complete gateway, or start a previous binary.
 
-| State | Meaning |
-| --- | --- |
-| `DISABLED` | Explicit inert path; the current gateway runs without Modbus flags. |
-| `CONFIG_VALIDATED` | Enabled configuration passed atomic admission for this current-gateway attempt. |
-| `RUNNING` | The current gateway survived its bounded startup window and every required local listener passed the bounded readiness probe. |
-| `RECOVERY_RETRY` | A current-gateway attempt exited inside the startup window and another bounded attempt will start. |
-| `FALLBACK_STARTING` | All current attempts failed; the endpoint has been removed and the previous gateway is starting. |
-| `FALLBACK_ACTIVE` | The previous gateway survived the same startup window and every required local listener passed the bounded readiness probe. |
-| `FALLBACK_EXITED` | The fallback exited before or after its startup window; health must not remain falsely active. |
-| `EXITED_AFTER_STARTUP_WINDOW` | The current gateway exited after it had reached `RUNNING`; this is terminal and does not start fallback. |
-| `STOPPED` | A terminal operator or supervisor `TERM`/`INT` stop was observed. |
-
-Health updates use a private `0600` temporary file, flush and sync it, then
-atomically replace the visible health file. A health-write failure is terminal:
-the supervisor stops and reaps owned processes and removes runtime material
-rather than reporting a stale success state.
-
-Process survival alone is not runtime readiness. The gateway HTTP listener is
-always required. The adapter-proxy listener is additionally required exactly
-when adapter-direct configuration supplies that listener. Probe targets are
-numeric IPv4 or bracketed IPv6 bind addresses with a port; wildcard bind
-addresses are probed through the corresponding loopback address. Hostnames are
-rejected so name resolution cannot escape the per-listener probe deadline.
-Every configured required listener must accept a TCP connection before an
-active health state is published.
-
-A current-gateway probe failure terminates and reaps the current child and its
-redactors, records reason `RUNTIME_NOT_READY`, and enters the existing bounded
-retry path. A fallback probe failure terminates and reaps the fallback, records
-`FALLBACK_EXITED` with reason `FALLBACK_RUNTIME_NOT_READY`, and is terminal.
-Neither failure may publish `RUNNING` or `FALLBACK_ACTIVE`.
-
-## Bounded Recovery
-
-The closed recovery limits are:
-
-| Key | Value |
-| --- | --- |
-| `current_startup_attempts` | `3` |
-| `retry_delays_seconds` | `1,2` |
-| `startup_window_min_seconds` | `5` |
-| `startup_window_max_seconds` | `40` |
-
-Enabled startup gives the current gateway exactly three attempts. The startup
-window is derived from the dial timeout and bounded from five through forty
-seconds. At the boundary, each required listener receives a bounded 250 ms TCP
-probe. An exit or readiness failure within that window produces
-`RECOVERY_RETRY` while attempts remain. An exit after a successful readiness
-transition produces `EXITED_AFTER_STARTUP_WINDOW` and is not reclassified as a
-startup failure.
-
-After three startup failures, the endpoint file is removed before fallback and
-the previous gateway starts with Modbus disabled. It receives the admitted
-required non-Modbus runtime configuration plus the supported subset of the three
-best-effort rollback options, but no endpoint-file or dial-timeout argument. The
-fallback reaches `FALLBACK_ACTIVE` only after surviving the startup window and
-passing the same required-listener probe. Any fallback exit or readiness
-failure is recorded as `FALLBACK_EXITED`.
-
-## Stop And Cleanup
-
-`TERM` and `INT` are terminal during validation, disabled launch, current
-startup, retry sleep, redactor drain, and fallback. Signals received in the
-short spawn-to-PID-registration interval are deferred only until ownership is
-recorded, then forwarded immediately. The supervisor performs bounded
-`TERM/KILL/wait` cleanup, reaps every owned process, removes endpoint and
-redaction material, and prevents retries or fallback after a stop request.
-
-Normal process exit, validation failure, redactor failure, health failure, and
-signal handling all fail closed with respect to endpoint cleanup. No path may
-leave an endpoint file for the previous gateway or a later disabled restart.
+Rollback of an add-on or gateway release remains an explicit operator action.
+Normal `TERM` and `INT` handling belongs to s6 and the gateway process, matching
+the non-Modbus lifecycle.
 
 ## M4-03 Phase Boundary
 
-The deployment and recovery contract above is FMV3-M4-03. Its implementation
-tests use synthetic endpoints and fake processes. FMV3-M4-04 is separately
+The deployment contract above is FMV3-M4-03. Its implementation tests use
+synthetic endpoints. FMV3-M4-04 is separately
 authorized for one bounded read-only qualification; the pre-live contract for
 that work follows. Neither section claims that a real-device smoke has passed.
 
@@ -251,9 +174,7 @@ the existing MCP retained-observation state, not canonical PV availability.
     "trigger": "explicit_operator_controlled_post_qualification_procedure",
     "disable_modbus_endpoint": true,
     "restore": "operator_selected_prior_gateway_addon_pair",
-    "automatic_on_stop_or_no_go": false,
-    "separate_from_startup_fallback": true,
-    "startup_fallback_parity": "not_guaranteed"
+    "automatic_on_stop_or_no_go": false
   },
   "live_evidence": {
     "owner_phase": "FMV3-M4-05",
@@ -293,8 +214,8 @@ An incoherent capture or any error yields `STOP`.
 
 Qualification logs and result records are categorical only. They must not
 contain an endpoint, raw error text, serial data, model data, firmware data,
-model-chain data, or sample payload. This scoped rule does not change the
-separate add-on health contract's endpoint-reference field.
+model-chain data, or sample payload. Endpoint-bearing transport errors are
+sanitized by their owning runtime before logging.
 
 ### Shutdown, Rollback, And Evidence Boundary
 
@@ -306,13 +227,6 @@ post-qualification rollback procedure: disable the Modbus endpoint and select
 the prior gateway/add-on pair through the normal deployment controls. This
 procedure is explicit and operator-controlled; it is not a qualification-worker
 side effect.
-
-That procedure is distinct from the add-on's startup fallback. Startup fallback
-occurs only after the current gateway has exhausted its bounded startup attempts;
-the current add-on then starts its packaged previous gateway binary with Modbus
-disabled. It does not restore a prior add-on, and `FALLBACK_ACTIVE` proves only
-fallback liveness. It does not prove configuration or feature parity, including
-the three best-effort seed, cache, and provenance options described above.
 
 FMV3-M4-05, after FMV3-M4-04, owns publication of sanitized actual
 `endpoint_ref`, model, firmware, model-chain, and outcome evidence. This
