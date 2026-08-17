@@ -171,13 +171,18 @@ python3 -m pytest -q \
   tests/test_modbus_v1_live_qualification_contract.py \
   tests/test_fronius_m4_05_live_evidence.py \
   tests/test_fronius_m4_05_0651_go.py \
-  tests/test_canonical_pv_semantics_v1.py
+  tests/test_canonical_pv_semantics_v1.py \
+  tests/test_public_graphql_m2m_v1.py
 python3 scripts/validate_canonical_pv_v1.py \
   --document docs/platform/fixtures/canonical-pv/v1/golden-three-phase.json \
   --manifest docs/platform/manifests/canonical-pv-v1.json \
   --schema docs/platform/schemas/canonical-pv-observation-v1.schema.json \
   --source-registry docs/platform/fixtures/canonical-pv/v1/source-registry-bindings.json \
   --source-registry-schema docs/platform/schemas/canonical-pv-source-registry-bindings-v1.schema.json
+python3 scripts/validate_public_graphql_m2m_v1.py \
+  --manifest docs/platform/manifests/public-graphql-m2m-v1.json \
+  --canonical-manifest docs/platform/manifests/canonical-pv-v1.json \
+  --cases docs/platform/fixtures/public-graphql-m2m/v1/cases.json
 python3 scripts/validate_canonical_pv_v1.py \
   --document docs/platform/fixtures/canonical-pv/v1/golden-mixed-retention.json \
   --manifest docs/platform/manifests/canonical-pv-v1.json \

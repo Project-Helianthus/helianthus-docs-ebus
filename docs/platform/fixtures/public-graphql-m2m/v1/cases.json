@@ -1,0 +1,19 @@
+{
+  "contract_id": "PUBLIC_GRAPHQL_M2M_V1",
+  "positive": {
+    "request": {"contract_id": "PUBLIC_GRAPHQL_M2M_V1", "asset_ref": "pv-asset-01"},
+    "response": {"contract_id": "PUBLIC_GRAPHQL_M2M_V1", "canonical_contract_id": "helianthus.canonical-pv/v1", "asset_ref": "pv-asset-01", "generation": "17", "produced_at": "2026-08-17T19:22:35.7287976Z", "evaluated_monotonic_ns": "981234500000", "source_time_state": "UNAVAILABLE", "facts": [{"fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": "12345", "scale": -1}, "unit": "W", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "receipt_monotonic_ns": "981234500000", "fresh_until_monotonic_ns": "1011234500000", "retain_until_monotonic_ns": "1281234500000", "freshness_policy": "pv.telemetry.fast.v1", "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null}, {"fact_id": "pv.energy.active_export_total", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": "9007199254740993", "scale": 0}, "unit": "Wh", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "receipt_monotonic_ns": "981234500000", "fresh_until_monotonic_ns": "1881234500000", "retain_until_monotonic_ns": "87381234500000", "freshness_policy": "pv.accumulator.v1", "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": {"state": "BASELINE", "delta": null, "modulus": null, "evidence_ref": null}}, {"fact_id": "pv.operating.state", "dimensions": {"scope": "total"}, "value": {"kind": "enum", "symbol": "OPERATING"}, "unit": "1", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "receipt_monotonic_ns": "981234500000", "fresh_until_monotonic_ns": "1041234500000", "retain_until_monotonic_ns": "1581234500000", "freshness_policy": "pv.status.v1", "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null}], "capabilities": [{"id": "helianthus.pv.inverter.three_phase.telemetry.v1", "outcome": "SATISFIED"}], "provenance": [{"origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "evidence_ref": "sha256:17bcd5fcf011c4765648386160629d99357a0a3e5bacfdb09b0bf98e8f890710"}]}
+  },
+  "negative": [
+    {"id": "incompatible-contract", "path": "/request/contract_id", "value": "PUBLIC_GRAPHQL_M2M_V2", "error": "contract_negotiation"},
+    {"id": "raw-register-leak", "path": "/response/raw_registers", "value": [], "error": "forbidden_surface"},
+    {"id": "float-leak", "path": "/response/facts/0/value/coefficient", "value": 1234.5, "error": "decimal_encoding"},
+    {"id": "unknown-fact", "path": "/response/facts/0/fact_id", "value": "pv.future.fact", "error": "catalog"},
+    {"id": "unmatched-provenance", "path": "/response/facts/0/origin_ref", "value": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "error": "provenance"},
+    {"id": "bad-publication-time", "path": "/response/produced_at", "value": "not-a-time", "error": "time_identity"},
+    {"id": "bad-source-time-state", "path": "/response/source_time_state", "value": "GUESSED", "error": "source_time_state"},
+    {"id": "bad-dimension-domain", "path": "/response/facts/0/dimensions/scope", "value": "device", "error": "canonical_projection"},
+    {"id": "bad-state-pair", "path": "/response/facts/0/freshness", "value": "EXPIRED", "error": "state_axes"},
+    {"id": "bad-source-contract", "path": "/response/canonical_contract_id", "value": "helianthus.canonical-pv/v2", "error": "canonical_projection"}
+  ]
+}

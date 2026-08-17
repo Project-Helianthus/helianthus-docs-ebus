@@ -1,0 +1,52 @@
+"""The isolated public machine-to-machine V1 query surface."""
+type Query {
+  m2mCurrentSnapshot(request: M2MCurrentSnapshotRequest!): M2MCurrentSnapshot!
+}
+
+input M2MCurrentSnapshotRequest {
+  contractId: String!
+  assetRef: String!
+}
+
+type M2MCurrentSnapshot {
+  contractId: String!
+  canonicalContractId: String!
+  assetRef: String!
+  generation: String!
+  producedAt: String!
+  evaluatedMonotonicNs: String!
+  sourceTimeState: M2MSourceTimeState!
+  facts: [M2MFact!]!
+  capabilities: [M2MCapability!]!
+  provenance: [M2MOpaqueProvenance!]!
+}
+
+type M2MFact {
+  factId: String!
+  dimensions: [M2MDimension!]!
+  value: M2MValue!
+  unit: String!
+  quality: M2MQuality!
+  availability: M2MAvailability!
+  freshness: M2MFreshness!
+  receiptMonotonicNs: String!
+  freshUntilMonotonicNs: String!
+  retainUntilMonotonicNs: String!
+  freshnessPolicy: String!
+  originRef: String!
+  continuity: M2MContinuity
+}
+
+type M2MDimension { key: String!, value: String! }
+type M2MValue { kind: M2MValueKind!, coefficient: String, scale: Int, symbol: String, symbols: [String!] }
+type M2MContinuity { state: M2MContinuityState!, delta: M2MValue, modulus: M2MValue, evidenceRef: String }
+type M2MCapability { id: String!, outcome: M2MCapabilityOutcome! }
+type M2MOpaqueProvenance { originRef: String!, evidenceRef: String! }
+
+enum M2MValueKind { DECIMAL ENUM BITFIELD }
+enum M2MQuality { GOOD SUSPECT BAD }
+enum M2MAvailability { AVAILABLE UNAVAILABLE UNSUPPORTED }
+enum M2MFreshness { FRESH STALE EXPIRED }
+enum M2MSourceTimeState { UNAVAILABLE VALID INVALID }
+enum M2MContinuityState { BASELINE CONTIGUOUS ROLLOVER RESET DISCONTINUITY }
+enum M2MCapabilityOutcome { SATISFIED NOT_SATISFIED }
