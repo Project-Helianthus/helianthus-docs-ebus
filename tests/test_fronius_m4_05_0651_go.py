@@ -51,8 +51,21 @@ TOP_LEVEL_KEYS = {
 }
 
 
+def reject_duplicate_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def parse_public_evidence(text: str) -> dict[str, object]:
+    return json.loads(text, object_pairs_hook=reject_duplicate_pairs)
+
+
 def load_evidence() -> dict[str, object]:
-    return json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    return parse_public_evidence(EVIDENCE.read_text(encoding="utf-8"))
 
 
 def assert_closed_public_shape(evidence: dict[str, object]) -> None:
@@ -287,3 +300,15 @@ def test_0651_closed_shape_rejects_numeric_raw_fields(section: str, field: str) 
     mutated[section][field] = [1, 65, 113, 60]
     with pytest.raises(AssertionError):
         assert_closed_public_shape(mutated)
+
+
+def test_0651_parser_rejects_duplicate_key_numeric_raw_bypass() -> None:
+    original = EVIDENCE.read_text(encoding="utf-8")
+    duplicate = original.replace(
+        '  "qualification": {',
+        '  "qualification": {"register_words": [1, 65, 113, 60]},\n'
+        '  "qualification": {',
+        1,
+    )
+    with pytest.raises(ValueError, match=r"duplicate JSON key: qualification"):
+        parse_public_evidence(duplicate)
