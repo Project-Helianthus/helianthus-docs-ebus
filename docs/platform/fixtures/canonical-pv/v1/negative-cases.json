@@ -1,0 +1,197 @@
+{
+  "fixture_contract": "helianthus.canonical-pv.negative-cases/v1",
+  "base": "golden-three-phase.json",
+  "cases": [
+    {
+      "id": "unknown_fact_field",
+      "mutation": {"op": "add", "path": "/facts/0/unexpected", "value": true},
+      "expected_rule": "schema_closed"
+    },
+    {
+      "id": "provenance_endpoint_leak",
+      "mutation": {"op": "add", "path": "/source_provenance/endpoint", "value": "example.invalid:502"},
+      "expected_rule": "schema_closed"
+    },
+    {
+      "id": "guessed_rollover_without_evidence",
+      "mutation": {
+        "op": "replace",
+        "path": "/facts/8/continuity",
+        "value": {"state": "ROLLOVER", "delta": "1", "modulus": null, "evidence_ref": null}
+      },
+      "expected_rule": "continuity_evidence"
+    },
+    {
+      "id": "satisfied_capability_missing_required_fact",
+      "mutation": {"op": "remove", "path": "/facts/7"},
+      "expected_rule": "capability_completeness"
+    },
+    {
+      "id": "invalid_phase_dimension",
+      "mutation": {"op": "replace", "path": "/facts/2/dimensions", "value": {"phase": "L4"}},
+      "expected_rule": "dimension_domain"
+    },
+    {
+      "id": "unknown_canonical_enum_symbol",
+      "mutation": {"op": "replace", "path": "/facts/9/value/symbol", "value": "SOURCE_VENDOR_MAGIC"},
+      "expected_rule": "value_domain"
+    },
+    {
+      "id": "invalid_source_admission",
+      "mutation": {"op": "replace", "path": "/source_provenance/source_validity", "value": "invalid"},
+      "expected_rule": "source_admission"
+    },
+    {
+      "id": "unknown_fact_id",
+      "mutation": {"op": "replace", "path": "/facts/0/fact_id", "value": "pv.unlisted.metric"},
+      "expected_rule": "catalog_closure"
+    },
+    {
+      "id": "frequency_wrong_unit",
+      "mutation": {"op": "replace", "path": "/facts/1/unit", "value": "W"},
+      "expected_rule": "catalog_closure"
+    },
+    {
+      "id": "frequency_wrong_value_kind",
+      "mutation": {"op": "replace", "path": "/facts/1/value", "value": {"kind": "enum", "symbol": "UNKNOWN"}},
+      "expected_rule": "catalog_closure"
+    },
+    {
+      "id": "negative_contiguous_delta",
+      "mutation": {
+        "op": "replace",
+        "path": "/facts/8/continuity",
+        "value": {"state": "CONTIGUOUS", "delta": {"kind": "decimal", "coefficient": "-1", "scale": 0}, "modulus": null, "evidence_ref": null}
+      },
+      "expected_rule": "continuity_evidence"
+    },
+    {
+      "id": "mapped_projection_without_fact",
+      "mutation": {"op": "replace", "path": "/projection_report/0/fact_id", "value": null},
+      "expected_rule": "projection_binding"
+    },
+    {
+      "id": "mapped_projection_to_absent_fact",
+      "mutation": {"op": "replace", "path": "/projection_report/0/fact_id", "value": "pv.rating.ac.active_power"},
+      "expected_rule": "projection_binding"
+    },
+    {
+      "id": "projection_source_endpoint_leak",
+      "mutation": {"op": "replace", "path": "/projection_report/0/source_ref", "value": "tcp://example.invalid:502/holding-register/40000"},
+      "expected_rule": "projection_redaction"
+    },
+    {
+      "id": "mapped_projection_ambiguous_phase",
+      "mutation": {"op": "replace", "path": "/projection_report/0/fact_id", "value": "pv.ac.current"},
+      "expected_rule": "projection_binding"
+    },
+    {
+      "id": "provenance_private_ip_in_source_protocol",
+      "mutation": {"op": "replace", "path": "/source_provenance/source_protocol", "value": "192.168.100.21"},
+      "expected_rule": "provenance_redaction"
+    },
+    {
+      "id": "source_profile_version_mismatch",
+      "mutation": {"op": "replace", "path": "/source_provenance/source_profile_id", "value": "sunspec.unregistered@2.0.0"},
+      "expected_rule": "provenance_binding"
+    },
+    {
+      "id": "invalid_available_expired_pair",
+      "mutation": {"op": "replace", "path": "/facts/0/freshness", "value": "EXPIRED"},
+      "expected_rule": "lifecycle_state_pair"
+    },
+    {
+      "id": "satisfied_capability_with_unsupported_fact",
+      "mutation": [
+        {"op": "replace", "path": "/facts/0/availability", "value": "UNSUPPORTED"},
+        {"op": "replace", "path": "/facts/0/freshness", "value": "EXPIRED"}
+      ],
+      "expected_rule": "capability_support_state"
+    },
+    {
+      "id": "duplicate_capability_id",
+      "mutation": {"op": "add", "path": "/capabilities/-", "value": {"id": "helianthus.pv.inverter.three_phase.telemetry.v1", "outcome": "NOT_SATISFIED"}},
+      "expected_rule": "capability_uniqueness"
+    },
+    {
+      "id": "input_id_over_64_characters",
+      "mutation": {"op": "replace", "path": "/facts/10/dimensions/input_id", "value": "mppt-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "expected_rule": "dimension_domain"
+    },
+    {
+      "id": "conflicting_projection_outcome_for_same_output",
+      "mutation": {"op": "replace", "path": "/projection_report/1/requested_output_ref", "value": "sha256:0000000000000000000000000000000000000000000000000000000000000001"},
+      "expected_rule": "projection_identity"
+    },
+    {
+      "id": "fresh_fact_evaluated_after_retention",
+      "mutation": {"op": "replace", "path": "/evaluated_monotonic_ns", "value": 90000000000000},
+      "expected_rule": "freshness_evaluation"
+    },
+    {
+      "id": "rollover_with_zero_modulus",
+      "mutation": {
+        "op": "replace",
+        "path": "/facts/8/continuity",
+        "value": {
+          "state": "ROLLOVER",
+          "delta": {"kind": "decimal", "coefficient": "1", "scale": 0},
+          "modulus": {"kind": "decimal", "coefficient": "0", "scale": 0},
+          "evidence_ref": "sha256:15ad3760510a1ba7f17a7a6e5f9af36b8e7ec2e256f2b30772270b0c44f39b04"
+        }
+      },
+      "expected_rule": "continuity_evidence"
+    },
+    {
+      "id": "arbitrary_source_registry_digest",
+      "mutation": {"op": "replace", "path": "/source_provenance/source_registry_ref", "value": "sha256:5eef33c48e7f28fdf14d8dd3bd6ccdb147260175581096f801287f7b52cb0242"},
+      "expected_rule": "provenance_binding"
+    },
+    {
+      "id": "projection_uses_different_source_observation",
+      "mutation": {"op": "replace", "path": "/projection_report/0/source_ref", "value": "sha256:ad9f5098de232350c85b3fe25fdbf102a3f2e8f4daffec5e5512ba1d110ca623"},
+      "expected_rule": "projection_source_binding"
+    },
+    {
+      "id": "false_negative_capability_outcome",
+      "mutation": {"op": "replace", "path": "/capabilities/0/outcome", "value": "NOT_SATISFIED"},
+      "expected_rule": "capability_outcome"
+    },
+    {
+      "id": "missing_capability_inventory",
+      "mutation": {"op": "remove", "path": "/capabilities/0"},
+      "expected_rule": "capability_inventory"
+    },
+    {
+      "id": "fact_references_unknown_origin",
+      "mutation": {"op": "replace", "path": "/facts/0/origin_ref", "value": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"},
+      "expected_rule": "fact_origin_binding"
+    },
+    {
+      "id": "empty_projection_report",
+      "mutation": {"op": "replace", "path": "/projection_report", "value": []},
+      "expected_rule": "projection_coverage"
+    },
+    {
+      "id": "partial_projection_report",
+      "mutation": {"op": "remove", "path": "/projection_report/1"},
+      "expected_rule": "projection_coverage"
+    },
+    {
+      "id": "published_fact_without_mapping",
+      "mutation": [
+        {"op": "remove", "path": "/requested_outputs/10"},
+        {"op": "remove", "path": "/projection_report/10"}
+      ],
+      "expected_rule": "projection_fact_coverage"
+    },
+    {
+      "id": "endpoint_shaped_dimension_identity",
+      "mutation": [
+        {"op": "replace", "path": "/facts/10/dimensions/input_id", "value": "192.168.100.21"},
+        {"op": "replace", "path": "/projection_report/10/dimensions/input_id", "value": "192.168.100.21"}
+      ],
+      "expected_rule": "dimension_redaction"
+    }
+  ]
+}

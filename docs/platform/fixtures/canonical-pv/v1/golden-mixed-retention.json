@@ -1,0 +1,76 @@
+{
+  "contract_id": "helianthus.canonical-pv/v1",
+  "asset_ref": "pv-asset-mixed-01",
+  "generation": 8,
+  "produced_at": "2026-08-17T13:46:00Z",
+  "evaluated_monotonic_ns": 990000000000,
+  "facts": [
+    {
+      "fact_id": "pv.ac.power.active",
+      "origin_ref": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "dimensions": {"scope": "total"},
+      "value": {"kind": "decimal", "coefficient": "7310", "scale": 0},
+      "unit": "W",
+      "quality": "GOOD",
+      "availability": "AVAILABLE",
+      "freshness": "FRESH",
+      "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}
+    },
+    {
+      "fact_id": "pv.energy.active_export_total",
+      "origin_ref": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "dimensions": {"scope": "total"},
+      "value": {"kind": "decimal", "coefficient": "9007199254740993", "scale": 0},
+      "unit": "Wh",
+      "quality": "GOOD",
+      "availability": "AVAILABLE",
+      "freshness": "STALE",
+      "temporal": {"receipt_monotonic_ns": 0, "fresh_until_monotonic_ns": 900000000000, "retain_until_monotonic_ns": 86400000000000, "freshness_policy": "pv.accumulator.v1"},
+      "continuity": {"state": "BASELINE", "delta": null, "modulus": null, "evidence_ref": null}
+    }
+  ],
+  "source_time_state": "UNAVAILABLE",
+  "source_provenance": {
+    "source_protocol": "sunspec_modbus",
+    "source_profile_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "source_profile_version": "1.0.0",
+    "source_validity": "terminal_verified",
+    "source_registry_ref": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+    "source_observation_ref": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "source_shadow_ref": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "evidence_ref": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "origins": [
+    {
+      "source_protocol": "sunspec_modbus",
+      "source_profile_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+      "source_profile_version": "1.0.0",
+      "source_validity": "terminal_verified",
+      "source_registry_ref": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+      "source_observation_ref": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "source_shadow_ref": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "evidence_ref": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "source_protocol": "sunspec_modbus",
+      "source_profile_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+      "source_profile_version": "1.0.0",
+      "source_validity": "terminal_verified",
+      "source_registry_ref": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+      "source_observation_ref": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "source_shadow_ref": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "evidence_ref": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    }
+  ],
+  "capabilities": [
+    {"id": "helianthus.pv.inverter.three_phase.telemetry.v1", "outcome": "NOT_SATISFIED"}
+  ],
+  "requested_outputs": [
+    {"source_ref": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "requested_output_ref": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
+    {"source_ref": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "requested_output_ref": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}
+  ],
+  "projection_report": [
+    {"source_ref": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "requested_output_ref": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "outcome": "MAPPED"},
+    {"source_ref": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "requested_output_ref": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "fact_id": "pv.energy.active_export_total", "dimensions": {"scope": "total"}, "outcome": "MAPPED"}
+  ]
+}
