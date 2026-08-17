@@ -57,7 +57,11 @@
       "code": "UNAVAILABLE",
       "message": "modbus provider unavailable",
       "retriable": true,
-      "endpoint_free": true
+      "endpoint_free": true,
+      "failed_requests": 1,
+      "reconnect_attempts": 1,
+      "reconnect_attempt_limit": 1,
+      "periodic_retries": 0
     },
     "initial_connection_generation": 1,
     "recovered_connection_generation": 2,

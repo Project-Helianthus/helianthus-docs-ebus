@@ -1,8 +1,15 @@
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
+
+from test_fronius_m4_05_live_evidence import (
+    contains_endpoint_value,
+    contains_private_path,
+    evidence_keys,
+    evidence_strings,
+    sensitive_key,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,14 +33,6 @@ EXPECTED_CHAIN = [
 
 def load_evidence() -> dict[str, object]:
     return json.loads(EVIDENCE.read_text(encoding="utf-8"))
-
-
-def all_keys(value: object) -> set[str]:
-    if isinstance(value, dict):
-        return set(value) | {key for child in value.values() for key in all_keys(child)}
-    if isinstance(value, list):
-        return {key for child in value for key in all_keys(child)}
-    return set()
 
 
 def test_0651_exact_runtime_and_terminal_go() -> None:
@@ -88,6 +87,10 @@ def test_0651_recovery_is_endpoint_free_and_generation_advancing() -> None:
         "message": "modbus provider unavailable",
         "retriable": True,
         "endpoint_free": True,
+        "failed_requests": 1,
+        "reconnect_attempts": 1,
+        "reconnect_attempt_limit": 1,
+        "periodic_retries": 0,
     }
     assert recovery["initial_connection_generation"] == 1
     assert recovery["recovered_connection_generation"] == 2
@@ -128,21 +131,22 @@ def test_0651_acceptance_contract_is_complete() -> None:
 def test_0651_publication_is_redacted_and_indexed() -> None:
     evidence = load_evidence()
     corpus = README.read_text(encoding="utf-8") + EVIDENCE.read_text(encoding="utf-8")
-    assert not re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", corpus)
-    assert "tcp://" not in corpus.lower()
-    assert "private-evidence" not in corpus.lower()
-    forbidden_keys = {
-        "address",
-        "backup_id",
-        "backup_slug",
-        "container_id",
-        "endpoint",
-        "password",
-        "pid",
-        "process_id",
-        "raw_words",
-        "serial",
-        "source_views",
+    assert not contains_endpoint_value(corpus)
+    assert not contains_private_path(corpus)
+    safe_public_keys = {
+        "bounded_raw_read_max_words",
+        "endpoint_free",
+        "endpoint_ref",
     }
-    assert not (all_keys(evidence) & forbidden_keys)
+    assert not any(
+        sensitive_key(key)
+        for key in evidence_keys(evidence)
+        if key not in safe_public_keys
+    )
+    assert not any(
+        contains_endpoint_value(value) for value in evidence_strings(evidence)
+    )
+    assert not any(
+        contains_private_path(value) for value in evidence_strings(evidence)
+    )
     assert "fronius-m4-04-0.6.51" in PLATFORM_INDEX.read_text(encoding="utf-8")
