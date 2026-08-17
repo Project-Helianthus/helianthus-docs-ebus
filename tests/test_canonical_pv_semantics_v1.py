@@ -2,8 +2,11 @@ import copy
 import json
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +20,12 @@ GOLDEN = (
 NEGATIVE = (
     ROOT
     / "docs/platform/fixtures/canonical-pv/v1/negative-cases.json"
+)
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_canonical_pv_v1 import (  # noqa: E402
+    ValidationError,
+    validate,
+    validate_semantics,
 )
 
 
@@ -61,58 +70,6 @@ def apply_mutation(document, mutation):
     else:
         raise AssertionError(f"unsupported mutation operation: {mutation['op']}")
     return result
-
-
-def semantic_errors(document, manifest):
-    errors = set()
-    catalog = {fact["id"]: fact for fact in manifest["facts"]}
-    policies = {policy["id"]: policy for policy in manifest["freshness_policies"]}
-    domains = manifest["value_domains"]
-    observed = set()
-    for fact in document["facts"]:
-        definition = catalog.get(fact["fact_id"])
-        if definition is None:
-            errors.add("catalog_closure")
-            continue
-        if set(fact["dimensions"]) != set(definition["dimensions"]):
-            errors.add("dimension_domain")
-        if fact["unit"] != definition["unit"]:
-            errors.add("catalog_closure")
-        if fact["value"]["kind"] != definition["value_kind"]:
-            errors.add("catalog_closure")
-        domain_id = definition.get("value_domain")
-        if domain_id:
-            symbols = (
-                [fact["value"]["symbol"]]
-                if fact["value"]["kind"] == "enum"
-                else fact["value"]["symbols"]
-            )
-            if not set(symbols) <= set(domains[domain_id]):
-                errors.add("value_domain")
-        temporal = fact["temporal"]
-        policy = policies[definition["freshness_policy"]]
-        if temporal["freshness_policy"] != policy["id"]:
-            errors.add("freshness_policy")
-        receipt = temporal["receipt_monotonic_ns"]
-        if temporal["fresh_until_monotonic_ns"] != receipt + policy["fresh_seconds"] * 1_000_000_000:
-            errors.add("freshness_policy")
-        if temporal["retain_until_monotonic_ns"] != receipt + policy["retain_seconds"] * 1_000_000_000:
-            errors.add("freshness_policy")
-        if definition["accumulator"] != ("continuity" in fact):
-            errors.add("continuity_evidence")
-        observed.add(fact_key(fact))
-
-    packs = {pack["id"]: pack for pack in manifest["capability_packs"]}
-    for capability in document["capabilities"]:
-        if capability["outcome"] != "SATISFIED":
-            continue
-        required = {
-            (item["fact_id"], tuple(sorted(item["dimensions"].items())))
-            for item in packs[capability["id"]]["required"]
-        }
-        if not required <= observed:
-            errors.add("capability_completeness")
-    return errors
 
 
 def test_manifest_closes_catalog_and_state_axes():
@@ -273,7 +230,7 @@ def test_golden_temporal_provenance_and_projection_are_closed():
     manifest = load_json(MANIFEST)
     golden = load_json(GOLDEN)
     assert golden["source_time_state"] == "UNAVAILABLE"
-    assert not semantic_errors(golden, manifest)
+    assert not validate_semantics(golden, manifest)
     for fact in golden["facts"]:
         temporal = fact["temporal"]
         assert temporal["receipt_monotonic_ns"] < temporal["fresh_until_monotonic_ns"]
@@ -322,6 +279,26 @@ def test_schema_is_recursive_closed_and_golden_validates():
     assert accepted, output
 
 
+def test_public_manifest_aware_validator_accepts_golden():
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/validate_canonical_pv_v1.py"),
+            "--document",
+            str(GOLDEN),
+            "--manifest",
+            str(MANIFEST),
+            "--schema",
+            str(SCHEMA),
+        ],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout.strip() == "canonical_pv_v1_ok"
+
+
 def test_negative_fixtures_are_rejected_by_declared_rule():
     manifest = load_json(MANIFEST)
     golden = load_json(GOLDEN)
@@ -333,15 +310,23 @@ def test_negative_fixtures_are_rejected_by_declared_rule():
     for case in negative["cases"]:
         assert set(case) == {"id", "mutation", "expected_rule"}
         candidate = apply_mutation(golden, case["mutation"])
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as stream:
+            json.dump(candidate, stream)
+            stream.flush()
+            with pytest.raises(ValidationError):
+                validate(Path(stream.name), MANIFEST, SCHEMA)
         accepted, _ = schema_accepts(candidate)
         if not accepted:
             assert case["expected_rule"] in {
                 "schema_closed",
                 "continuity_evidence",
                 "dimension_domain",
+                "source_admission",
+                "projection_binding",
+                "projection_redaction",
             }
             continue
-        assert case["expected_rule"] in semantic_errors(candidate, manifest)
+        assert case["expected_rule"] in validate_semantics(candidate, manifest)
 
 
 def test_human_contract_preserves_ownership_and_private_boundary():

@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+import argparse
+import ipaddress
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+
+class ValidationError(ValueError):
+    pass
+
+
+def _pairs_no_duplicates(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValidationError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def load_json(path):
+    try:
+        with Path(path).open(encoding="utf-8") as stream:
+            return json.load(
+                stream,
+                object_pairs_hook=_pairs_no_duplicates,
+                parse_constant=lambda value: (_ for _ in ()).throw(
+                    ValidationError(f"non-finite JSON number: {value}")
+                ),
+            )
+    except (json.JSONDecodeError, OSError) as error:
+        raise ValidationError(str(error)) from error
+
+
+def fact_key(fact):
+    return fact["fact_id"], tuple(sorted(fact["dimensions"].items()))
+
+
+def _looks_like_network_endpoint(value):
+    candidate = value.strip("[]")
+    try:
+        ipaddress.ip_address(candidate)
+        return True
+    except ValueError:
+        pass
+    return bool(re.fullmatch(r"(?:tcp|udp|http|https)://.+", value, re.I))
+
+
+def validate_schema(document_path, schema_path):
+    result = subprocess.run(
+        ["jv", str(schema_path), str(document_path)],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if result.returncode:
+        raise ValidationError("schema: " + (result.stdout + result.stderr).strip())
+
+
+def validate_semantics(document, manifest):
+    errors = set()
+    catalog = {fact["id"]: fact for fact in manifest["facts"]}
+    policies = {policy["id"]: policy for policy in manifest["freshness_policies"]}
+    domains = manifest["value_domains"]
+    observed = set()
+
+    if _looks_like_network_endpoint(document["asset_ref"]):
+        errors.add("asset_ref_redaction")
+    if document["source_provenance"]["source_validity"] != "terminal_verified":
+        errors.add("source_admission")
+
+    for fact in document["facts"]:
+        definition = catalog.get(fact["fact_id"])
+        if definition is None:
+            errors.add("catalog_closure")
+            continue
+        key = fact_key(fact)
+        if key in observed:
+            errors.add("fact_identity_uniqueness")
+        observed.add(key)
+
+        if set(fact["dimensions"]) != set(definition["dimensions"]):
+            errors.add("dimension_domain")
+        if fact["unit"] != definition["unit"]:
+            errors.add("catalog_closure")
+        if fact["value"]["kind"] != definition["value_kind"]:
+            errors.add("catalog_closure")
+        domain_id = definition.get("value_domain")
+        if domain_id:
+            symbols = (
+                [fact["value"]["symbol"]]
+                if fact["value"]["kind"] == "enum"
+                else fact["value"]["symbols"]
+            )
+            if not set(symbols) <= set(domains[domain_id]):
+                errors.add("value_domain")
+
+        temporal = fact["temporal"]
+        policy = policies[definition["freshness_policy"]]
+        if temporal["freshness_policy"] != policy["id"]:
+            errors.add("freshness_policy")
+        receipt = temporal["receipt_monotonic_ns"]
+        expected_fresh = receipt + policy["fresh_seconds"] * 1_000_000_000
+        expected_retain = receipt + policy["retain_seconds"] * 1_000_000_000
+        if temporal["fresh_until_monotonic_ns"] != expected_fresh:
+            errors.add("freshness_policy")
+        if temporal["retain_until_monotonic_ns"] != expected_retain:
+            errors.add("freshness_policy")
+        if definition["accumulator"] != ("continuity" in fact):
+            errors.add("continuity_evidence")
+
+    packs = {pack["id"]: pack for pack in manifest["capability_packs"]}
+    for capability in document["capabilities"]:
+        if capability["outcome"] != "SATISFIED":
+            continue
+        required = {
+            (item["fact_id"], tuple(sorted(item["dimensions"].items())))
+            for item in packs[capability["id"]]["required"]
+        }
+        if not required <= observed:
+            errors.add("capability_completeness")
+
+    for projection in document["projection_report"]:
+        outcome = projection["outcome"]
+        projected_fact = projection["fact_id"]
+        if outcome == "MAPPED":
+            if projected_fact is None or not any(
+                fact_id == projected_fact for fact_id, _ in observed
+            ):
+                errors.add("projection_binding")
+        elif projected_fact is not None:
+            errors.add("projection_binding")
+
+    return sorted(errors)
+
+
+def validate(document_path, manifest_path, schema_path):
+    validate_schema(document_path, schema_path)
+    document = load_json(document_path)
+    manifest = load_json(manifest_path)
+    errors = validate_semantics(document, manifest)
+    if errors:
+        raise ValidationError("semantic: " + ", ".join(errors))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--document", required=True, type=Path)
+    parser.add_argument("--manifest", required=True, type=Path)
+    parser.add_argument("--schema", required=True, type=Path)
+    args = parser.parse_args()
+    try:
+        validate(args.document, args.manifest, args.schema)
+    except ValidationError as error:
+        print(f"canonical_pv_v1_invalid: {error}", file=sys.stderr)
+        return 1
+    print("canonical_pv_v1_ok")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

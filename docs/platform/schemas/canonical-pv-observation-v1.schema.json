@@ -17,7 +17,7 @@
   ],
   "properties": {
     "contract_id": {"const": "helianthus.canonical-pv/v1"},
-    "asset_ref": {"$ref": "#/$defs/OpaqueTokenV1"},
+    "asset_ref": {"type": "string", "pattern": "^pv-asset-[A-Za-z0-9_-]{1,96}$"},
     "generation": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
     "produced_at": {"type": "string", "format": "date-time"},
     "facts": {
@@ -155,7 +155,7 @@
     "ContinuityContiguousV1": {
       "allOf": [
         {"$ref": "#/$defs/ContinuityBaseV1"},
-        {"properties": {"state": {"const": "CONTIGUOUS"}, "delta": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)$"}, "modulus": {"type": "null"}, "evidence_ref": {"type": "null"}}}
+        {"properties": {"state": {"const": "CONTIGUOUS"}, "delta": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"}, "modulus": {"type": "null"}, "evidence_ref": {"type": "null"}}}
       ]
     },
     "ContinuityRolloverV1": {
@@ -209,7 +209,7 @@
         "source_protocol": {"$ref": "#/$defs/SourceTokenV1"},
         "source_profile_id": {"$ref": "#/$defs/SourceTokenV1"},
         "source_profile_version": {"$ref": "#/$defs/SourceTokenV1"},
-        "source_validity": {"enum": ["terminal_verified", "structural_only", "invalid"]},
+        "source_validity": {"const": "terminal_verified"},
         "source_observation_ref": {"$ref": "#/$defs/DigestV1"},
         "source_shadow_ref": {"$ref": "#/$defs/DigestV1"},
         "evidence_ref": {"$ref": "#/$defs/DigestV1"}
@@ -227,12 +227,26 @@
     "ProjectionV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_path", "fact_id", "outcome"],
+      "required": ["source_ref", "fact_id", "outcome"],
       "properties": {
-        "source_path": {"type": "string", "minLength": 1, "maxLength": 256},
+        "source_ref": {"$ref": "#/$defs/DigestV1"},
         "fact_id": {"oneOf": [{"type": "string", "pattern": "^pv\\.[a-z0-9_.]+$"}, {"type": "null"}]},
         "outcome": {"enum": ["MAPPED", "WITHHELD", "UNREPRESENTABLE"]}
-      }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "fact_id": {"type": "string", "pattern": "^pv\\.[a-z0-9_.]+$"},
+            "outcome": {"const": "MAPPED"}
+          }
+        },
+        {
+          "properties": {
+            "fact_id": {"type": "null"},
+            "outcome": {"enum": ["WITHHELD", "UNREPRESENTABLE"]}
+          }
+        }
+      ]
     }
   }
 }

@@ -35,6 +35,50 @@
       "id": "unknown_canonical_enum_symbol",
       "mutation": {"op": "replace", "path": "/facts/9/value/symbol", "value": "SOURCE_VENDOR_MAGIC"},
       "expected_rule": "value_domain"
+    },
+    {
+      "id": "invalid_source_admission",
+      "mutation": {"op": "replace", "path": "/source_provenance/source_validity", "value": "invalid"},
+      "expected_rule": "source_admission"
+    },
+    {
+      "id": "unknown_fact_id",
+      "mutation": {"op": "replace", "path": "/facts/0/fact_id", "value": "pv.unlisted.metric"},
+      "expected_rule": "catalog_closure"
+    },
+    {
+      "id": "frequency_wrong_unit",
+      "mutation": {"op": "replace", "path": "/facts/1/unit", "value": "W"},
+      "expected_rule": "catalog_closure"
+    },
+    {
+      "id": "frequency_wrong_value_kind",
+      "mutation": {"op": "replace", "path": "/facts/1/value", "value": {"kind": "enum", "symbol": "UNKNOWN"}},
+      "expected_rule": "catalog_closure"
+    },
+    {
+      "id": "negative_contiguous_delta",
+      "mutation": {
+        "op": "replace",
+        "path": "/facts/8/continuity",
+        "value": {"state": "CONTIGUOUS", "delta": "-1", "modulus": null, "evidence_ref": null}
+      },
+      "expected_rule": "continuity_evidence"
+    },
+    {
+      "id": "mapped_projection_without_fact",
+      "mutation": {"op": "replace", "path": "/projection_report/0/fact_id", "value": null},
+      "expected_rule": "projection_binding"
+    },
+    {
+      "id": "mapped_projection_to_absent_fact",
+      "mutation": {"op": "replace", "path": "/projection_report/0/fact_id", "value": "pv.rating.ac.active_power"},
+      "expected_rule": "projection_binding"
+    },
+    {
+      "id": "projection_source_endpoint_leak",
+      "mutation": {"op": "replace", "path": "/projection_report/0/source_ref", "value": "tcp://example.invalid:502/holding-register/40000"},
+      "expected_rule": "projection_redaction"
     }
   ]
 }

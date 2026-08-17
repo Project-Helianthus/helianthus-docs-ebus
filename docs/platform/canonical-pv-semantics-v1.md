@@ -93,8 +93,10 @@ forbidden from the canonical envelope.
 
 The source shadow remains source-owned and lossless enough for deterministic
 replay. Canonical projection records whether each requested output was
-`MAPPED`, `WITHHELD`, or `UNREPRESENTABLE`; absence must not be silently
-converted to zero.
+`MAPPED`, `WITHHELD`, or `UNREPRESENTABLE` against an opaque digest reference;
+it never publishes a register path or endpoint. `MAPPED` requires a non-null
+fact ID present in the same observation, while the two loss outcomes require a
+null fact ID. Absence must not be silently converted to zero.
 
 ## Accumulator Continuity
 

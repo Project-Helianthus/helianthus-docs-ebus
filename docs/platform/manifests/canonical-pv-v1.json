@@ -55,6 +55,7 @@
     "guessed_rollover_or_reset_forbidden": true
   },
   "provenance": {
+    "source_validity_required": "terminal_verified",
     "required": [
       "source_protocol",
       "source_profile_id",
