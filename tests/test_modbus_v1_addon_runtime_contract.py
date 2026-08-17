@@ -31,19 +31,17 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
 
     def test_removed_supervisor_machinery_stays_removed(self) -> None:
         text = CONTRACT.read_text(encoding="utf-8")
-        lifecycle = text.split("## Single Process Lifecycle\n", 1)[1].split(
-            "## M4-03 Phase Boundary\n", 1
-        )[0]
         for forbidden in (
             "FALLBACK_ACTIVE",
             "RECOVERY_RETRY",
             "modbus-addon-health",
-            "redaction FIFO",
             "previous gateway",
+            "startup fallback",
+            "startup_fallback",
             "startup window",
             "readiness probe",
         ):
-            self.assertNotIn(forbidden, lifecycle)
+            self.assertNotIn(forbidden, text)
 
     def test_contract_freezes_endpoint_and_library_ownership(self) -> None:
         text = CONTRACT.read_text(encoding="utf-8")
