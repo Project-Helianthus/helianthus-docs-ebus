@@ -13,8 +13,7 @@ topology to adapter-direct transport.
    - `adapter_direct_protocol: "enh"` or `"ens"` (default: `"enh"`)
    - `adapter_direct_address: "adapter.example.invalid:9999"` (your adapter's
      host and port)
-   - `proxy_profile: "disabled"` unless the gateway is intentionally using an
-     external proxy instead of adapter-direct mode
+   - `proxy_profile: "disabled"`
    - Optionally, `proxy_listen_addr: "127.0.0.1:19001"` to expose the
      gateway-integrated proxy listener for ebusd coexistence
 3. Restart the addon.
@@ -34,6 +33,16 @@ external proxy endpoint. It does not select the protocol used for the physical
 adapter-direct connection. A legacy scheme prefix in `adapter_direct_address`
 may be accepted as input syntax, but it does not override
 `adapter_direct_protocol`.
+
+Adapter-direct and an external proxy endpoint are mutually exclusive add-on
+configurations. To use an external proxy instead, disable adapter-direct and
+configure the proxy explicitly:
+
+```yaml
+adapter_direct_enabled: false
+proxy_profile: enh # or ens
+proxy_endpoint: proxy.example.invalid:9999
+```
 
 #### eBUS Adapter 3 (ENS)
 
@@ -57,26 +66,43 @@ using a single `exec`-based add-on wrapper does not remove this listener.
 ### Standalone Gateway Users
 
 1. Stop the gateway process.
-2. Change startup flags:
-   - Add: `--adapter-direct enh://boiler.local:9999`
-   - Optionally add: `--proxy-listen :19001` (enables proxy for non-gateway clients)
+2. Select the supported adapter-direct transport and exact address URI:
+
+   ```sh
+   # ENH
+   helianthus-gateway \
+     -transport adapter-direct \
+     -network tcp \
+     -address adapter-direct://adapter.example.invalid:9999
+
+   # ENS
+   helianthus-gateway \
+     -transport adapter-direct \
+     -network tcp \
+     -address adapter-direct-ens://adapter.example.invalid:9999
+   ```
+
+   Optionally add `-proxy-listen :19001` to expose the integrated proxy for
+   non-gateway clients.
 3. Start the gateway.
 4. Verify via MCP or GraphQL that semantic planes populate normally.
 
 ## Rollback (Adapter-Direct to Proxy-Based)
 
-1. Set `adapter_direct_enabled: false` (addon) or remove the `--adapter-direct`
-   flag (standalone).
-2. Restart the gateway or addon.
-3. The previous proxy-based topology is restored automatically; no additional
-   configuration changes are required.
+1. For the add-on, set `adapter_direct_enabled: false` and restore the previous
+   `transport`, `network`, and `address` values. If the previous topology used
+   an external adapter proxy, also restore `proxy_profile` and
+   `proxy_endpoint`.
+2. For a standalone gateway, replace `-transport adapter-direct` and its
+   adapter-direct address with the previous proxy transport and endpoint.
+3. Restart the gateway or addon.
 
 ## Notes
 
 - Zero-downtime migration is not required. A restart is acceptable and expected.
 - The eBUS continues to operate independently during the gateway restart window;
   no bus state is lost.
-- When `--proxy-listen` is configured, the standalone proxy remains available for
+- When `-proxy-listen` is configured, the standalone proxy remains available for
   non-gateway consumers (e.g. ebusd clients) even in adapter-direct mode.
 - The adapter-direct transport and proxy-based transport are mutually exclusive
   at the gateway level. Only one may be active at a time.
