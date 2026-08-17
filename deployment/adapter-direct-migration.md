@@ -34,6 +34,17 @@ adapter-direct connection. A legacy scheme prefix in `adapter_direct_address`
 may be accepted as input syntax, but it does not override
 `adapter_direct_protocol`.
 
+For upgrade compatibility, the add-on recognizes one explicit legacy state:
+adapter-direct is enabled, persisted options do not yet contain
+`adapter_direct_protocol`, `proxy_profile` is `enh` or `ens`, and
+`proxy_endpoint` is empty. The wrapper migrates that old profile value to the
+matching typed adapter protocol for the current startup and normalizes the
+effective proxy profile to `disabled`. Once `adapter_direct_protocol` exists in
+persisted options, it is authoritative even if a stale empty-endpoint profile
+remains. Save the typed selector and `proxy_profile: disabled` after upgrading.
+This compatibility rule does not probe the adapter and is not a protocol
+autodetection or fallback mechanism.
+
 Adapter-direct and an external proxy endpoint are mutually exclusive add-on
 configurations. To use an external proxy instead, disable adapter-direct and
 configure the proxy explicitly:
