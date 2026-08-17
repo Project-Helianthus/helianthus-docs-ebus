@@ -121,6 +121,8 @@ fails closed. Absence must not be silently converted to zero.
 every exact source provenance record still referenced by a fact. A retained
 fact keeps its prior `origin_ref` when a later partial acquisition updates only
 other facts; the root current source never rewrites retained provenance.
+Opaque dimension identifiers are also redacted identifiers and must not contain
+an IP address, URL, or host-and-port endpoint.
 
 ## Accumulator Continuity
 

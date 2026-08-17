@@ -184,6 +184,14 @@
         {"op": "remove", "path": "/projection_report/10"}
       ],
       "expected_rule": "projection_fact_coverage"
+    },
+    {
+      "id": "endpoint_shaped_dimension_identity",
+      "mutation": [
+        {"op": "replace", "path": "/facts/10/dimensions/input_id", "value": "192.168.100.21"},
+        {"op": "replace", "path": "/projection_report/10/dimensions/input_id", "value": "192.168.100.21"}
+      ],
+      "expected_rule": "dimension_redaction"
     }
   ]
 }

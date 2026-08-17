@@ -136,6 +136,8 @@ def validate_semantics(document, manifest, source_registry):
         if set(fact["dimensions"]) != set(definition["dimensions"]):
             errors.add("dimension_domain")
         for name, value in fact["dimensions"].items():
+            if _looks_like_network_endpoint(value):
+                errors.add("dimension_redaction")
             domain = manifest["dimensions"][name]
             if isinstance(domain, list) and value not in domain:
                 errors.add("dimension_domain")
