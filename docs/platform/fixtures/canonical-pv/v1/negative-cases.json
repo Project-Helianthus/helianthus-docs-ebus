@@ -156,6 +156,11 @@
       "id": "false_negative_capability_outcome",
       "mutation": {"op": "replace", "path": "/capabilities/0/outcome", "value": "NOT_SATISFIED"},
       "expected_rule": "capability_outcome"
+    },
+    {
+      "id": "missing_capability_inventory",
+      "mutation": {"op": "remove", "path": "/capabilities/0"},
+      "expected_rule": "capability_inventory"
     }
   ]
 }

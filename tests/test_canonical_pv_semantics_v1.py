@@ -436,6 +436,7 @@ def test_negative_fixtures_are_rejected_by_declared_rule():
                 "provenance_binding",
                 "lifecycle_state_pair",
                 "capability_uniqueness",
+                "capability_inventory",
             }
             continue
         assert case["expected_rule"] in validate_semantics(

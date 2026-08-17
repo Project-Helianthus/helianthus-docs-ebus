@@ -194,6 +194,8 @@ def validate_semantics(document, manifest, source_registry):
             continue
         if capability["outcome"] == "SATISFIED" and not supported:
             errors.add("capability_support_state")
+    if capability_ids != set(packs):
+        errors.add("capability_inventory")
 
     projection_ids = set()
     for projection in document["projection_report"]:

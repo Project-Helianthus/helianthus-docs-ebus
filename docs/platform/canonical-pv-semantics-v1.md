@@ -142,7 +142,8 @@ canonical facts are present with compatible units and dimensions.
 Pack satisfaction is structural, not a freshness claim: a required fact may be
 `AVAILABLE` or retained `UNAVAILABLE`, but never `UNSUPPORTED`. Capability IDs
 are unique within an observation, and the reported outcome must equal the
-derived structural result in both directions.
+derived structural result in both directions. Every capability pack declared
+by V1 appears exactly once, including a negative `NOT_SATISFIED` result.
 
 ## Compatibility
 
