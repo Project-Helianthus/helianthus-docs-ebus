@@ -87,7 +87,9 @@ order is never precedence.
 Canonical publication requires a source observation admitted by its owning
 profile registry. Provenance records the source protocol, profile identifier
 and version, source-validity state, source observation reference, source shadow
-reference, and evidence reference. References are opaque hashes or handles.
+reference, and evidence reference. Protocol and profile identifiers must be
+present in the canonical manifest and the profile version must match its
+versioned source ID. References are opaque hashes or handles.
 Endpoint addresses, credentials, raw Modbus words, and private fixture paths are
 forbidden from the canonical envelope.
 
@@ -95,8 +97,9 @@ The source shadow remains source-owned and lossless enough for deterministic
 replay. Canonical projection records whether each requested output was
 `MAPPED`, `WITHHELD`, or `UNREPRESENTABLE` against an opaque digest reference;
 it never publishes a register path or endpoint. `MAPPED` requires a non-null
-fact ID present in the same observation, while the two loss outcomes require a
-null fact ID. Absence must not be silently converted to zero.
+fact ID and dimensions matching the complete identity of a fact in the same
+observation, while the two loss outcomes require a null fact ID and null
+dimensions. Absence must not be silently converted to zero.
 
 ## Accumulator Continuity
 

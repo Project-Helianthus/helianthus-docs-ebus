@@ -324,6 +324,8 @@ def test_negative_fixtures_are_rejected_by_declared_rule():
                 "source_admission",
                 "projection_binding",
                 "projection_redaction",
+                "provenance_redaction",
+                "provenance_binding",
             }
             continue
         assert case["expected_rule"] in validate_semantics(candidate, manifest)

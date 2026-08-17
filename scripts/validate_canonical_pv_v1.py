@@ -46,7 +46,9 @@ def _looks_like_network_endpoint(value):
         return True
     except ValueError:
         pass
-    return bool(re.fullmatch(r"(?:tcp|udp|http|https)://.+", value, re.I))
+    if re.fullmatch(r"(?:tcp|udp|http|https)://.+", value, re.I):
+        return True
+    return bool(re.fullmatch(r"[^/\s]+:[0-9]{1,5}", value))
 
 
 def validate_schema(document_path, schema_path):
@@ -69,8 +71,25 @@ def validate_semantics(document, manifest):
 
     if _looks_like_network_endpoint(document["asset_ref"]):
         errors.add("asset_ref_redaction")
-    if document["source_provenance"]["source_validity"] != "terminal_verified":
+    provenance = document["source_provenance"]
+    if provenance["source_validity"] != "terminal_verified":
         errors.add("source_admission")
+    if any(
+        _looks_like_network_endpoint(value)
+        for value in provenance.values()
+        if isinstance(value, str)
+    ):
+        errors.add("provenance_redaction")
+    source_profiles = {
+        item["source_id"] for item in manifest["source_id_compatibility"]
+    }
+    if provenance["source_protocol"] not in manifest["source_protocols"]:
+        errors.add("provenance_binding")
+    if provenance["source_profile_id"] not in source_profiles:
+        errors.add("provenance_binding")
+    expected_version = provenance["source_profile_id"].rsplit("@", 1)
+    if len(expected_version) != 2 or expected_version[1] != provenance["source_profile_version"]:
+        errors.add("provenance_binding")
 
     for fact in document["facts"]:
         definition = catalog.get(fact["fact_id"])
@@ -127,11 +146,13 @@ def validate_semantics(document, manifest):
         outcome = projection["outcome"]
         projected_fact = projection["fact_id"]
         if outcome == "MAPPED":
-            if projected_fact is None or not any(
-                fact_id == projected_fact for fact_id, _ in observed
-            ):
+            projected_key = (
+                projected_fact,
+                tuple(sorted(projection["dimensions"].items())),
+            )
+            if projected_fact is None or projected_key not in observed:
                 errors.add("projection_binding")
-        elif projected_fact is not None:
+        elif projected_fact is not None or projection["dimensions"] is not None:
             errors.add("projection_binding")
 
     return sorted(errors)

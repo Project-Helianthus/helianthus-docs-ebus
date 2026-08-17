@@ -73,6 +73,7 @@
     "ambiguous_sources": "FAIL_CLOSED",
     "gateway_schedule_is_precedence": false
   },
+  "source_protocols": ["sunspec_modbus"],
   "value_domains": {
     "pv.operating.state.v1": [
       "UNKNOWN",

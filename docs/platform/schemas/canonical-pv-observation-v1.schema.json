@@ -51,7 +51,13 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 128,
-      "pattern": "^[A-Za-z0-9._:@-]+$"
+      "pattern": "^[A-Za-z][A-Za-z0-9._@-]*$"
+    },
+    "VersionTokenV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[0-9][0-9A-Za-z._-]*$"
     },
     "DigestV1": {
       "type": "string",
@@ -208,7 +214,7 @@
       "properties": {
         "source_protocol": {"$ref": "#/$defs/SourceTokenV1"},
         "source_profile_id": {"$ref": "#/$defs/SourceTokenV1"},
-        "source_profile_version": {"$ref": "#/$defs/SourceTokenV1"},
+        "source_profile_version": {"$ref": "#/$defs/VersionTokenV1"},
         "source_validity": {"const": "terminal_verified"},
         "source_observation_ref": {"$ref": "#/$defs/DigestV1"},
         "source_shadow_ref": {"$ref": "#/$defs/DigestV1"},
@@ -227,22 +233,25 @@
     "ProjectionV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_ref", "fact_id", "outcome"],
+      "required": ["source_ref", "fact_id", "dimensions", "outcome"],
       "properties": {
         "source_ref": {"$ref": "#/$defs/DigestV1"},
         "fact_id": {"oneOf": [{"type": "string", "pattern": "^pv\\.[a-z0-9_.]+$"}, {"type": "null"}]},
+        "dimensions": {"oneOf": [{"$ref": "#/$defs/DimensionsV1"}, {"type": "null"}]},
         "outcome": {"enum": ["MAPPED", "WITHHELD", "UNREPRESENTABLE"]}
       },
       "oneOf": [
         {
           "properties": {
             "fact_id": {"type": "string", "pattern": "^pv\\.[a-z0-9_.]+$"},
+            "dimensions": {"$ref": "#/$defs/DimensionsV1"},
             "outcome": {"const": "MAPPED"}
           }
         },
         {
           "properties": {
             "fact_id": {"type": "null"},
+            "dimensions": {"type": "null"},
             "outcome": {"enum": ["WITHHELD", "UNREPRESENTABLE"]}
           }
         }

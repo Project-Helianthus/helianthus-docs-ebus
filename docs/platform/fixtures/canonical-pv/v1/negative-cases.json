@@ -79,6 +79,21 @@
       "id": "projection_source_endpoint_leak",
       "mutation": {"op": "replace", "path": "/projection_report/0/source_ref", "value": "tcp://example.invalid:502/holding-register/40000"},
       "expected_rule": "projection_redaction"
+    },
+    {
+      "id": "mapped_projection_ambiguous_phase",
+      "mutation": {"op": "replace", "path": "/projection_report/0/fact_id", "value": "pv.ac.current"},
+      "expected_rule": "projection_binding"
+    },
+    {
+      "id": "provenance_private_ip_in_source_protocol",
+      "mutation": {"op": "replace", "path": "/source_provenance/source_protocol", "value": "192.168.100.21"},
+      "expected_rule": "provenance_redaction"
+    },
+    {
+      "id": "unregistered_source_profile",
+      "mutation": {"op": "replace", "path": "/source_provenance/source_profile_id", "value": "sunspec.unregistered@1.0.0"},
+      "expected_rule": "provenance_binding"
     }
   ]
 }
