@@ -34,8 +34,8 @@ The add-on accepts these three options:
 | `modbus_tcp_dial_timeout` | Integer `ms` or `s` duration from 100 ms through 30 s; default `5s`. |
 
 Enabled startup uses atomic validation: all active options are parsed and
-admitted before a gateway child starts. A malformed options document or any
-invalid active field fails closed. Disabled startup does not validate retained
+admitted before the wrapper `exec`s the gateway. A malformed options document
+or any invalid active field fails closed. Disabled startup does not validate retained
 endpoint or timeout text, so an operator can always restore the inert path by
 setting `modbus_tcp_enabled=false`.
 

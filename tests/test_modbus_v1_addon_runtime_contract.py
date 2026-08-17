@@ -50,6 +50,7 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
             "startup_fallback",
             "startup window",
             "readiness probe",
+            "gateway child",
         ):
             self.assertNotIn(forbidden, text)
 
