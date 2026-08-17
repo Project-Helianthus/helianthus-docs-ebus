@@ -28,6 +28,12 @@
     "availability": ["AVAILABLE", "UNAVAILABLE", "UNSUPPORTED"],
     "freshness": ["FRESH", "STALE", "EXPIRED"]
   },
+  "allowed_availability_freshness_pairs": [
+    "AVAILABLE/FRESH",
+    "AVAILABLE/STALE",
+    "UNAVAILABLE/EXPIRED",
+    "UNSUPPORTED/EXPIRED"
+  ],
   "freshness_policies": [
     {"id": "pv.telemetry.fast.v1", "fresh_seconds": 30, "retain_seconds": 300},
     {"id": "pv.status.v1", "fresh_seconds": 60, "retain_seconds": 600},
@@ -49,6 +55,8 @@
   "counter_continuity": {
     "states": ["BASELINE", "CONTIGUOUS", "ROLLOVER", "RESET", "DISCONTINUITY"],
     "first_observation": "BASELINE_NO_DELTA",
+    "delta_encoding": "canonical_decimal_in_fact_unit",
+    "modulus_encoding": "canonical_decimal_in_fact_unit",
     "rollover_requires": ["explicit_source_modulus", "verified_boundary"],
     "reset_requires": ["explicit_source_reset_evidence"],
     "unexplained_decrease": "DISCONTINUITY_NO_DELTA",
@@ -141,9 +149,10 @@
     {"source_id": "sunspec.inverter.three_phase.monitoring@1.0.0", "meaning": "source_capability_profile", "canonical_alias": null}
   ],
   "projection_outcomes": ["MAPPED", "WITHHELD", "UNREPRESENTABLE"],
+  "projection_identity": ["source_ref", "requested_output_ref"],
   "compatibility": {
     "immutable_within_v1": ["fact_id", "value_kind", "unit_meaning", "dimension_meaning", "enum_meaning", "lifecycle_transition"],
-    "additive_optional_facts_allowed": true,
+    "additive_optional_facts_allowed": false,
     "unknown_source_enum_values_preserved_in_source_shadow": true,
     "required_pack_member_change_requires_new_pack_id": true,
     "reinterpretation_requires_new_major_contract": true

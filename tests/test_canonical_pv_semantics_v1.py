@@ -52,23 +52,30 @@ def schema_accepts(document):
 
 def apply_mutation(document, mutation):
     result = copy.deepcopy(document)
-    parts = [part.replace("~1", "/").replace("~0", "~") for part in mutation["path"].split("/")[1:]]
-    parent = result
-    for part in parts[:-1]:
-        parent = parent[int(part)] if isinstance(parent, list) else parent[part]
-    leaf = parts[-1]
-    if mutation["op"] == "remove":
-        if isinstance(parent, list):
-            parent.pop(int(leaf))
+    mutations = mutation if isinstance(mutation, list) else [mutation]
+    for item in mutations:
+        parts = [
+            part.replace("~1", "/").replace("~0", "~")
+            for part in item["path"].split("/")[1:]
+        ]
+        parent = result
+        for part in parts[:-1]:
+            parent = parent[int(part)] if isinstance(parent, list) else parent[part]
+        leaf = parts[-1]
+        if item["op"] == "remove":
+            if isinstance(parent, list):
+                parent.pop(int(leaf))
+            else:
+                del parent[leaf]
+        elif item["op"] in {"add", "replace"}:
+            if isinstance(parent, list) and leaf == "-":
+                parent.append(item["value"])
+            elif isinstance(parent, list):
+                parent[int(leaf)] = item["value"]
+            else:
+                parent[leaf] = item["value"]
         else:
-            del parent[leaf]
-    elif mutation["op"] in {"add", "replace"}:
-        if isinstance(parent, list):
-            parent[int(leaf)] = mutation["value"]
-        else:
-            parent[leaf] = mutation["value"]
-    else:
-        raise AssertionError(f"unsupported mutation operation: {mutation['op']}")
+            raise AssertionError(f"unsupported mutation operation: {item['op']}")
     return result
 
 
@@ -185,6 +192,7 @@ def test_source_ids_are_not_silently_repurposed():
         manifest["compatibility"]["required_pack_member_change_requires_new_pack_id"]
         is True
     )
+    assert manifest["compatibility"]["additive_optional_facts_allowed"] is False
 
 
 def test_golden_fixture_satisfies_three_phase_capability():
@@ -224,6 +232,12 @@ def test_golden_fixture_satisfies_three_phase_capability():
     )
     assert lifetime["value"]["coefficient"] == "9007199254740993"
     assert int(lifetime["value"]["coefficient"]) > 2**53
+    dc_current = next(
+        fact
+        for fact in golden["facts"]
+        if fact["fact_id"] == "pv.dc.current"
+    )
+    assert len(dc_current["dimensions"]["input_id"]) == 64
 
 
 def test_golden_temporal_provenance_and_projection_are_closed():
@@ -259,6 +273,25 @@ def test_golden_temporal_provenance_and_projection_are_closed():
         "modulus": None,
         "evidence_ref": None,
     }
+
+
+def test_scaled_accumulator_delta_uses_canonical_decimal():
+    manifest = load_json(MANIFEST)
+    candidate = copy.deepcopy(load_json(GOLDEN))
+    accumulator = next(
+        fact
+        for fact in candidate["facts"]
+        if fact["fact_id"] == "pv.energy.active_export_total"
+    )
+    accumulator["continuity"] = {
+        "state": "CONTIGUOUS",
+        "delta": {"kind": "decimal", "coefficient": "1", "scale": -2},
+        "modulus": None,
+        "evidence_ref": None,
+    }
+    accepted, output = schema_accepts(candidate)
+    assert accepted, output
+    assert not validate_semantics(candidate, manifest)
 
 
 def test_schema_is_recursive_closed_and_golden_validates():
@@ -326,6 +359,8 @@ def test_negative_fixtures_are_rejected_by_declared_rule():
                 "projection_redaction",
                 "provenance_redaction",
                 "provenance_binding",
+                "lifecycle_state_pair",
+                "capability_uniqueness",
             }
             continue
         assert case["expected_rule"] in validate_semantics(candidate, manifest)

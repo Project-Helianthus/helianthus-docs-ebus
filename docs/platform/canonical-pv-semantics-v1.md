@@ -57,6 +57,8 @@ the canonical model or synthesized from unrelated source fields.
 Quality is `GOOD`, `SUSPECT`, or `BAD`. Availability is `AVAILABLE`,
 `UNAVAILABLE`, or `UNSUPPORTED`. Freshness is `FRESH`, `STALE`, or `EXPIRED`.
 These axes are not aliases and must not be collapsed into a single status.
+The only V1 availability/freshness pairs are `AVAILABLE/FRESH`,
+`AVAILABLE/STALE`, `UNAVAILABLE/EXPIRED`, and `UNSUPPORTED/EXPIRED`.
 
 Freshness is evaluated from monotonic receipt time. Source timestamps are
 evidence only and never drive expiry. V1 defines these versioned product-policy
@@ -99,7 +101,9 @@ replay. Canonical projection records whether each requested output was
 it never publishes a register path or endpoint. `MAPPED` requires a non-null
 fact ID and dimensions matching the complete identity of a fact in the same
 observation, while the two loss outcomes require a null fact ID and null
-dimensions. Absence must not be silently converted to zero.
+dimensions. Each row is uniquely identified by `(source_ref,
+requested_output_ref)` so conflicting outcomes cannot be order-dependent.
+Absence must not be silently converted to zero.
 
 ## Accumulator Continuity
 
@@ -114,7 +118,8 @@ Accumulator observations have exactly one continuity state:
   `DISCONTINUITY` with no inferred delta.
 
 The registry must never guess rollover or reset merely because a counter
-decreased.
+decreased. Delta and modulus use the same exact decimal representation and
+canonical unit as their fact, including an independent base-10 scale.
 
 ## Three-Phase Telemetry Capability
 
@@ -129,16 +134,19 @@ decreased.
 The pack is independent of wire encoding. An admitted SunSpec `1+103` chain
 and an admitted `1+113` chain can satisfy the same pack when all required
 canonical facts are present with compatible units and dimensions.
+Pack satisfaction is structural, not a freshness claim: a required fact may be
+`AVAILABLE` or retained `UNAVAILABLE`, but never `UNSUPPORTED`. Capability IDs
+are unique within an observation.
 
 ## Compatibility
 
-Within V1, fact IDs, value kinds, unit meanings, dimension meanings, enum
-meanings, and lifecycle transitions are immutable. Additive optional facts and
-enum values require compatible readers to retain unknown source values in the
-source shadow until a compatible canonical successor defines them. Removing or
-reinterpreting an existing fact, changing a required capability member, or
-changing a unit/dimension meaning requires a new major contract or capability
-pack identifier.
+Within V1, the fact catalog is closed: fact IDs, value kinds, unit meanings,
+dimension meanings, enum meanings, and lifecycle transitions are immutable and
+no additive facts or canonical enum values are accepted. Unknown source values
+remain only in the source shadow until a successor canonical contract defines
+them. Removing, adding, or reinterpreting a fact, changing a required
+capability member, or changing a unit/dimension meaning requires a new contract
+or capability pack identifier.
 
 This contract grants no Modbus write authority and no Fronius support claim.
 Consumer rollout remains MCP semantic prototype, GraphQL parity, Portal, Home

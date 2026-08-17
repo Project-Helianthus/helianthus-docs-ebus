@@ -61,7 +61,7 @@
       "mutation": {
         "op": "replace",
         "path": "/facts/8/continuity",
-        "value": {"state": "CONTIGUOUS", "delta": "-1", "modulus": null, "evidence_ref": null}
+        "value": {"state": "CONTIGUOUS", "delta": {"kind": "decimal", "coefficient": "-1", "scale": 0}, "modulus": null, "evidence_ref": null}
       },
       "expected_rule": "continuity_evidence"
     },
@@ -94,6 +94,34 @@
       "id": "unregistered_source_profile",
       "mutation": {"op": "replace", "path": "/source_provenance/source_profile_id", "value": "sunspec.unregistered@1.0.0"},
       "expected_rule": "provenance_binding"
+    },
+    {
+      "id": "invalid_available_expired_pair",
+      "mutation": {"op": "replace", "path": "/facts/0/freshness", "value": "EXPIRED"},
+      "expected_rule": "lifecycle_state_pair"
+    },
+    {
+      "id": "satisfied_capability_with_unsupported_fact",
+      "mutation": [
+        {"op": "replace", "path": "/facts/0/availability", "value": "UNSUPPORTED"},
+        {"op": "replace", "path": "/facts/0/freshness", "value": "EXPIRED"}
+      ],
+      "expected_rule": "capability_support_state"
+    },
+    {
+      "id": "duplicate_capability_id",
+      "mutation": {"op": "add", "path": "/capabilities/-", "value": {"id": "helianthus.pv.inverter.three_phase.telemetry.v1", "outcome": "NOT_SATISFIED"}},
+      "expected_rule": "capability_uniqueness"
+    },
+    {
+      "id": "input_id_over_64_characters",
+      "mutation": {"op": "replace", "path": "/facts/10/dimensions/input_id", "value": "mppt-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "expected_rule": "dimension_domain"
+    },
+    {
+      "id": "conflicting_projection_outcome_for_same_output",
+      "mutation": {"op": "replace", "path": "/projection_report/1/requested_output_ref", "value": "sha256:bc3ae450a43db0d91f3f77c91bfe382c33d6b8983623321ce52de247ecc08a56"},
+      "expected_rule": "projection_identity"
     }
   ]
 }

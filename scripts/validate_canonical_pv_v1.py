@@ -67,7 +67,7 @@ def validate_semantics(document, manifest):
     catalog = {fact["id"]: fact for fact in manifest["facts"]}
     policies = {policy["id"]: policy for policy in manifest["freshness_policies"]}
     domains = manifest["value_domains"]
-    observed = set()
+    observed = {}
 
     if _looks_like_network_endpoint(document["asset_ref"]):
         errors.add("asset_ref_redaction")
@@ -99,10 +99,19 @@ def validate_semantics(document, manifest):
         key = fact_key(fact)
         if key in observed:
             errors.add("fact_identity_uniqueness")
-        observed.add(key)
+        observed[key] = fact
 
         if set(fact["dimensions"]) != set(definition["dimensions"]):
             errors.add("dimension_domain")
+        for name, value in fact["dimensions"].items():
+            domain = manifest["dimensions"][name]
+            if isinstance(domain, list) and value not in domain:
+                errors.add("dimension_domain")
+            if isinstance(domain, dict):
+                if len(value) > domain["max_length"]:
+                    errors.add("dimension_domain")
+                if re.fullmatch(domain["pattern"], value) is None:
+                    errors.add("dimension_domain")
         if fact["unit"] != definition["unit"]:
             errors.add("catalog_closure")
         if fact["value"]["kind"] != definition["value_kind"]:
@@ -130,19 +139,37 @@ def validate_semantics(document, manifest):
             errors.add("freshness_policy")
         if definition["accumulator"] != ("continuity" in fact):
             errors.add("continuity_evidence")
+        state_pair = f'{fact["availability"]}/{fact["freshness"]}'
+        if state_pair not in manifest["allowed_availability_freshness_pairs"]:
+            errors.add("lifecycle_state_pair")
 
     packs = {pack["id"]: pack for pack in manifest["capability_packs"]}
+    capability_ids = set()
     for capability in document["capabilities"]:
+        if capability["id"] in capability_ids:
+            errors.add("capability_uniqueness")
+        capability_ids.add(capability["id"])
         if capability["outcome"] != "SATISFIED":
             continue
         required = {
             (item["fact_id"], tuple(sorted(item["dimensions"].items())))
             for item in packs[capability["id"]]["required"]
         }
-        if not required <= observed:
+        if not required <= set(observed):
             errors.add("capability_completeness")
+            continue
+        if any(observed[key]["availability"] == "UNSUPPORTED" for key in required):
+            errors.add("capability_support_state")
 
+    projection_ids = set()
     for projection in document["projection_report"]:
+        projection_id = (
+            projection["source_ref"],
+            projection["requested_output_ref"],
+        )
+        if projection_id in projection_ids:
+            errors.add("projection_identity")
+        projection_ids.add(projection_id)
         outcome = projection["outcome"]
         projected_fact = projection["fact_id"]
         if outcome == "MAPPED":

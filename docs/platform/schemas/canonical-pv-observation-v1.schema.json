@@ -30,7 +30,7 @@
     "source_provenance": {"$ref": "#/$defs/SourceProvenanceV1"},
     "capabilities": {
       "type": "array",
-      "maxItems": 32,
+      "maxItems": 1,
       "uniqueItems": true,
       "items": {"$ref": "#/$defs/CapabilityV1"}
     },
@@ -45,6 +45,12 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "DimensionTokenV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
       "pattern": "^[A-Za-z0-9._:-]+$"
     },
     "SourceTokenV1": {
@@ -70,6 +76,16 @@
       "properties": {
         "kind": {"const": "decimal"},
         "coefficient": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)$"},
+        "scale": {"type": "integer", "minimum": -18, "maximum": 18}
+      }
+    },
+    "NonNegativeDecimalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "coefficient", "scale"],
+      "properties": {
+        "kind": {"const": "decimal"},
+        "coefficient": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"},
         "scale": {"type": "integer", "minimum": -18, "maximum": 18}
       }
     },
@@ -105,8 +121,8 @@
         "scope": {"const": "total"},
         "phase": {"enum": ["L1", "L2", "L3"]},
         "phase_pair": {"enum": ["L1_L2", "L2_L3", "L3_L1"]},
-        "input_id": {"$ref": "#/$defs/OpaqueTokenV1"},
-        "sensor_id": {"$ref": "#/$defs/OpaqueTokenV1"}
+        "input_id": {"$ref": "#/$defs/DimensionTokenV1"},
+        "sensor_id": {"$ref": "#/$defs/DimensionTokenV1"}
       }
     },
     "TemporalV1": {
@@ -161,13 +177,13 @@
     "ContinuityContiguousV1": {
       "allOf": [
         {"$ref": "#/$defs/ContinuityBaseV1"},
-        {"properties": {"state": {"const": "CONTIGUOUS"}, "delta": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"}, "modulus": {"type": "null"}, "evidence_ref": {"type": "null"}}}
+        {"properties": {"state": {"const": "CONTIGUOUS"}, "delta": {"$ref": "#/$defs/NonNegativeDecimalV1"}, "modulus": {"type": "null"}, "evidence_ref": {"type": "null"}}}
       ]
     },
     "ContinuityRolloverV1": {
       "allOf": [
         {"$ref": "#/$defs/ContinuityBaseV1"},
-        {"properties": {"state": {"const": "ROLLOVER"}, "delta": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"}, "modulus": {"type": "string", "pattern": "^[1-9][0-9]*$"}, "evidence_ref": {"$ref": "#/$defs/DigestV1"}}}
+        {"properties": {"state": {"const": "ROLLOVER"}, "delta": {"$ref": "#/$defs/NonNegativeDecimalV1"}, "modulus": {"$ref": "#/$defs/NonNegativeDecimalV1"}, "evidence_ref": {"$ref": "#/$defs/DigestV1"}}}
       ]
     },
     "ContinuityResetV1": {
@@ -205,7 +221,12 @@
         "freshness": {"enum": ["FRESH", "STALE", "EXPIRED"]},
         "temporal": {"$ref": "#/$defs/TemporalV1"},
         "continuity": {"$ref": "#/$defs/ContinuityV1"}
-      }
+      },
+      "oneOf": [
+        {"properties": {"availability": {"const": "AVAILABLE"}, "freshness": {"enum": ["FRESH", "STALE"]}}},
+        {"properties": {"availability": {"const": "UNAVAILABLE"}, "freshness": {"const": "EXPIRED"}}},
+        {"properties": {"availability": {"const": "UNSUPPORTED"}, "freshness": {"const": "EXPIRED"}}}
+      ]
     },
     "SourceProvenanceV1": {
       "type": "object",
@@ -233,9 +254,10 @@
     "ProjectionV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_ref", "fact_id", "dimensions", "outcome"],
+      "required": ["source_ref", "requested_output_ref", "fact_id", "dimensions", "outcome"],
       "properties": {
         "source_ref": {"$ref": "#/$defs/DigestV1"},
+        "requested_output_ref": {"$ref": "#/$defs/DigestV1"},
         "fact_id": {"oneOf": [{"type": "string", "pattern": "^pv\\.[a-z0-9_.]+$"}, {"type": "null"}]},
         "dimensions": {"oneOf": [{"$ref": "#/$defs/DimensionsV1"}, {"type": "null"}]},
         "outcome": {"enum": ["MAPPED", "WITHHELD", "UNREPRESENTABLE"]}

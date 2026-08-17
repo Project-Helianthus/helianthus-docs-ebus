@@ -13,7 +13,8 @@
     {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L2"}, "value": {"kind": "decimal", "coefficient": "2308", "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
     {"fact_id": "pv.ac.voltage.line_to_neutral", "dimensions": {"phase": "L3"}, "value": {"kind": "decimal", "coefficient": "2311", "scale": -1}, "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}},
     {"fact_id": "pv.energy.active_export_total", "dimensions": {"scope": "total"}, "value": {"kind": "decimal", "coefficient": "9007199254740993", "scale": 0}, "unit": "Wh", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1881234500000, "retain_until_monotonic_ns": 87381234500000, "freshness_policy": "pv.accumulator.v1"}, "continuity": {"state": "BASELINE", "delta": null, "modulus": null, "evidence_ref": null}},
-    {"fact_id": "pv.operating.state", "dimensions": {"scope": "total"}, "value": {"kind": "enum", "symbol": "OPERATING"}, "unit": "1", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1041234500000, "retain_until_monotonic_ns": 1581234500000, "freshness_policy": "pv.status.v1"}}
+    {"fact_id": "pv.operating.state", "dimensions": {"scope": "total"}, "value": {"kind": "enum", "symbol": "OPERATING"}, "unit": "1", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1041234500000, "retain_until_monotonic_ns": 1581234500000, "freshness_policy": "pv.status.v1"}},
+    {"fact_id": "pv.dc.current", "dimensions": {"input_id": "mppt-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "value": {"kind": "decimal", "coefficient": "812", "scale": -2}, "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH", "temporal": {"receipt_monotonic_ns": 981234500000, "fresh_until_monotonic_ns": 1011234500000, "retain_until_monotonic_ns": 1281234500000, "freshness_policy": "pv.telemetry.fast.v1"}}
   ],
   "source_time_state": "UNAVAILABLE",
   "source_provenance": {
@@ -29,7 +30,7 @@
     {"id": "helianthus.pv.inverter.three_phase.telemetry.v1", "outcome": "SATISFIED"}
   ],
   "projection_report": [
-    {"source_ref": "sha256:2f274825d756b963c44264b6b944322149913910c172388bbd3dfd39503d350f", "fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "outcome": "MAPPED"},
-    {"source_ref": "sha256:6d1556d4d68333470470e528662a76e7a89bca4df573f96270cc5f5606e88d0d", "fact_id": null, "dimensions": null, "outcome": "WITHHELD"}
+    {"source_ref": "sha256:2f274825d756b963c44264b6b944322149913910c172388bbd3dfd39503d350f", "requested_output_ref": "sha256:bc3ae450a43db0d91f3f77c91bfe382c33d6b8983623321ce52de247ecc08a56", "fact_id": "pv.ac.power.active", "dimensions": {"scope": "total"}, "outcome": "MAPPED"},
+    {"source_ref": "sha256:2f274825d756b963c44264b6b944322149913910c172388bbd3dfd39503d350f", "requested_output_ref": "sha256:86bd307c4139464f9ab60d406ff5f918cc1d6fc8efb37503b0fd1a8eb28506ae", "fact_id": null, "dimensions": null, "outcome": "WITHHELD"}
   ]
 }
