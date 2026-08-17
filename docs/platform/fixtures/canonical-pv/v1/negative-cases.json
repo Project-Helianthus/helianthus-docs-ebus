@@ -161,6 +161,11 @@
       "id": "missing_capability_inventory",
       "mutation": {"op": "remove", "path": "/capabilities/0"},
       "expected_rule": "capability_inventory"
+    },
+    {
+      "id": "fact_references_unknown_origin",
+      "mutation": {"op": "replace", "path": "/facts/0/origin_ref", "value": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"},
+      "expected_rule": "fact_origin_binding"
     }
   ]
 }

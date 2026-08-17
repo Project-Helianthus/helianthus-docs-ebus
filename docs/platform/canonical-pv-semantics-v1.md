@@ -45,7 +45,8 @@ Each fact contains:
 - independent `quality`, `availability`, and `freshness` axes;
 - per-fact receipt-based temporal data and the policy identifier that evaluated
   it;
-- opaque source provenance references, never raw words or endpoint material;
+- an `origin_ref` into the observation's closed provenance table, never raw
+  words or endpoint material;
 - continuity metadata when the fact is an accumulator.
 
 The catalog is a rich union rather than a lowest-common-denominator schema.
@@ -109,6 +110,11 @@ dimensions. Each row is uniquely identified by `(source_ref,
 requested_output_ref)` so conflicting outcomes cannot be order-dependent.
 `source_ref` must equal the admitted observation's `source_observation_ref`.
 Absence must not be silently converted to zero.
+
+`source_provenance` describes the current acquisition. `origins[]` contains
+every exact source provenance record still referenced by a fact. A retained
+fact keeps its prior `origin_ref` when a later partial acquisition updates only
+other facts; the root current source never rewrites retained provenance.
 
 ## Accumulator Continuity
 

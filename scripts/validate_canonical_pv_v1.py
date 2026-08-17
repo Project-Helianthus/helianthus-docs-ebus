@@ -80,18 +80,6 @@ def validate_semantics(document, manifest, source_registry):
 
     if _looks_like_network_endpoint(document["asset_ref"]):
         errors.add("asset_ref_redaction")
-    provenance = document["source_provenance"]
-    if provenance["source_validity"] != "terminal_verified":
-        errors.add("source_admission")
-    if any(
-        _looks_like_network_endpoint(value)
-        for value in provenance.values()
-        if isinstance(value, str)
-    ):
-        errors.add("provenance_redaction")
-    expected_version = provenance["source_profile_id"].rsplit("@", 1)
-    if len(expected_version) != 2 or expected_version[1] != provenance["source_profile_version"]:
-        errors.add("provenance_binding")
     registry_entries = {}
     registry_refs = set()
     for entry in source_registry["entries"]:
@@ -100,9 +88,38 @@ def validate_semantics(document, manifest, source_registry):
             errors.add("source_registry_uniqueness")
         registry_entries[key] = entry["registry_ref"]
         registry_refs.add(entry["registry_ref"])
-    expected_registry_ref = registry_entries.get(source_key(provenance))
-    if expected_registry_ref != provenance["source_registry_ref"]:
-        errors.add("provenance_binding")
+
+    def validate_provenance(provenance):
+        if provenance["source_validity"] != "terminal_verified":
+            errors.add("source_admission")
+        if any(
+            _looks_like_network_endpoint(value)
+            for value in provenance.values()
+            if isinstance(value, str)
+        ):
+            errors.add("provenance_redaction")
+        expected_version = provenance["source_profile_id"].rsplit("@", 1)
+        if (
+            len(expected_version) != 2
+            or expected_version[1] != provenance["source_profile_version"]
+        ):
+            errors.add("provenance_binding")
+        expected_registry_ref = registry_entries.get(source_key(provenance))
+        if expected_registry_ref != provenance["source_registry_ref"]:
+            errors.add("provenance_binding")
+
+    provenance = document["source_provenance"]
+    validate_provenance(provenance)
+    origins = {}
+    for origin in document["origins"]:
+        validate_provenance(origin)
+        origin_ref = origin["source_observation_ref"]
+        if origin_ref in origins:
+            errors.add("origin_uniqueness")
+        origins[origin_ref] = origin
+    root_origin = origins.get(provenance["source_observation_ref"])
+    if root_origin != provenance:
+        errors.add("root_origin_binding")
 
     for fact in document["facts"]:
         definition = catalog.get(fact["fact_id"])
@@ -113,6 +130,8 @@ def validate_semantics(document, manifest, source_registry):
         if key in observed:
             errors.add("fact_identity_uniqueness")
         observed[key] = fact
+        if fact["origin_ref"] not in origins:
+            errors.add("fact_origin_binding")
 
         if set(fact["dimensions"]) != set(definition["dimensions"]):
             errors.add("dimension_domain")
@@ -199,8 +218,6 @@ def validate_semantics(document, manifest, source_registry):
 
     projection_ids = set()
     for projection in document["projection_report"]:
-        if projection["source_ref"] != provenance["source_observation_ref"]:
-            errors.add("projection_source_binding")
         projection_id = (
             projection["source_ref"],
             projection["requested_output_ref"],
@@ -217,8 +234,12 @@ def validate_semantics(document, manifest, source_registry):
             )
             if projected_fact is None or projected_key not in observed:
                 errors.add("projection_binding")
+            elif projection["source_ref"] != observed[projected_key]["origin_ref"]:
+                errors.add("projection_source_binding")
         elif projected_fact is not None or projection["dimensions"] is not None:
             errors.add("projection_binding")
+        elif projection["source_ref"] != provenance["source_observation_ref"]:
+            errors.add("projection_source_binding")
 
     return sorted(errors)
 

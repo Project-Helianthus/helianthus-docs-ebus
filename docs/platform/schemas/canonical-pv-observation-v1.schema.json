@@ -13,6 +13,7 @@
     "facts",
     "source_time_state",
     "source_provenance",
+    "origins",
     "capabilities",
     "projection_report"
   ],
@@ -30,6 +31,13 @@
     },
     "source_time_state": {"enum": ["UNAVAILABLE", "VALID", "INVALID"]},
     "source_provenance": {"$ref": "#/$defs/SourceProvenanceV1"},
+    "origins": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/SourceProvenanceV1"}
+    },
     "capabilities": {
       "type": "array",
       "minItems": 1,
@@ -216,6 +224,7 @@
       "additionalProperties": false,
       "required": [
         "fact_id",
+        "origin_ref",
         "dimensions",
         "value",
         "unit",
@@ -226,6 +235,7 @@
       ],
       "properties": {
         "fact_id": {"type": "string", "pattern": "^pv\\.[a-z0-9_.]+$", "maxLength": 96},
+        "origin_ref": {"$ref": "#/$defs/DigestV1"},
         "dimensions": {"$ref": "#/$defs/DimensionsV1"},
         "value": {"oneOf": [{"$ref": "#/$defs/DecimalV1"}, {"$ref": "#/$defs/EnumV1"}, {"$ref": "#/$defs/BitfieldV1"}]},
         "unit": {"enum": ["W", "VA", "var", "V", "A", "Hz", "Wh", "Cel", "1"]},

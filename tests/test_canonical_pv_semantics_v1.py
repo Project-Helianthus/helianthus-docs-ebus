@@ -25,6 +25,10 @@ GOLDEN = (
     ROOT
     / "docs/platform/fixtures/canonical-pv/v1/golden-three-phase.json"
 )
+MIXED = (
+    ROOT
+    / "docs/platform/fixtures/canonical-pv/v1/golden-mixed-retention.json"
+)
 NEGATIVE = (
     ROOT
     / "docs/platform/fixtures/canonical-pv/v1/negative-cases.json"
@@ -346,6 +350,7 @@ def test_protocol_neutral_source_registry_binding():
     provenance["source_profile_id"] = "eebus.pv.three_phase@1.0.0"
     provenance["source_profile_version"] = "1.0.0"
     provenance["source_registry_ref"] = "sha256:cf17b95284984414c9d8ec13b5dde1e2dab5b12c81373436c5849669f61fc22a"
+    candidate["origins"][0] = copy.deepcopy(provenance)
     source_registry["entries"].append(
         {
             "source_protocol": "eebus_spine",
@@ -358,6 +363,19 @@ def test_protocol_neutral_source_registry_binding():
     accepted, output = schema_accepts(candidate)
     assert accepted, output
     assert not validate_semantics(candidate, manifest, source_registry)
+
+
+def test_mixed_retention_preserves_fact_level_origins():
+    manifest = load_json(MANIFEST)
+    source_registry = load_json(SOURCE_REGISTRY)
+    mixed = load_json(MIXED)
+    accepted, output = schema_accepts(mixed)
+    assert accepted, output
+    assert not validate_semantics(mixed, manifest, source_registry)
+    facts = {fact["fact_id"]: fact for fact in mixed["facts"]}
+    assert facts["pv.ac.power.active"]["origin_ref"] == mixed["source_provenance"]["source_observation_ref"]
+    assert facts["pv.energy.active_export_total"]["origin_ref"] != facts["pv.ac.power.active"]["origin_ref"]
+    assert facts["pv.energy.active_export_total"]["freshness"] == "STALE"
 
 
 def test_schema_is_recursive_closed_and_golden_validates():
@@ -378,27 +396,28 @@ def test_schema_is_recursive_closed_and_golden_validates():
 
 
 def test_public_manifest_aware_validator_accepts_golden():
-    result = subprocess.run(
-        [
-            sys.executable,
-            str(ROOT / "scripts/validate_canonical_pv_v1.py"),
-            "--document",
-            str(GOLDEN),
-            "--manifest",
-            str(MANIFEST),
-            "--schema",
-            str(SCHEMA),
-            "--source-registry",
-            str(SOURCE_REGISTRY),
-            "--source-registry-schema",
-            str(SOURCE_REGISTRY_SCHEMA),
-        ],
-        capture_output=True,
-        check=False,
-        text=True,
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.strip() == "canonical_pv_v1_ok"
+    for document in (GOLDEN, MIXED):
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts/validate_canonical_pv_v1.py"),
+                "--document",
+                str(document),
+                "--manifest",
+                str(MANIFEST),
+                "--schema",
+                str(SCHEMA),
+                "--source-registry",
+                str(SOURCE_REGISTRY),
+                "--source-registry-schema",
+                str(SOURCE_REGISTRY_SCHEMA),
+            ],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert result.stdout.strip() == "canonical_pv_v1_ok"
 
 
 def test_negative_fixtures_are_rejected_by_declared_rule():
