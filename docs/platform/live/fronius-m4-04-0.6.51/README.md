@@ -1,9 +1,11 @@
 # Fronius M4-04 Live Qualification On 0.6.51
 
 This directory publishes the public-redacted `FMV3-M4-04` result under
-`FMV3-M4-05`. The terminal result is **`GO`** for the exact tested runtime,
-hardware, and profile tuple. It closes the read-only M4 qualification gate; it
-does not authorize Modbus writes or imply support for untested devices.
+`FMV3-M4-05`. The terminal result is **`GO`** for qualification evidence on the
+exact tested runtime, hardware, and profile tuple. It closes the read-only M4
+qualification gate only. It does not create a product-support claim, canonical
+PV semantics, consumer support, or authorization for Modbus writes, including
+for the tested device.
 
 The machine-readable record is [`evidence.json`](./evidence.json). It contains
 no network endpoint, private address, MAC address, serial number, credential,

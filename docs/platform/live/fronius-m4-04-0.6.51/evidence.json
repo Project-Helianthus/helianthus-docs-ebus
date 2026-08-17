@@ -36,6 +36,10 @@
     "flavor_id": "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
     "flavor_reason": "MATCHED",
     "source_validity": "terminal_verified",
+    "qualification_evidence_only": true,
+    "support_claim": false,
+    "canonical_semantics_claim": false,
+    "consumer_support_claim": false,
     "chain": [
       {"model_id": 1, "model_length": 65},
       {"model_id": 113, "model_length": 60},

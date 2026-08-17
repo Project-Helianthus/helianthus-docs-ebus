@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
+
+import pytest
 
 from test_fronius_m4_05_live_evidence import (
     contains_endpoint_value,
@@ -30,13 +33,128 @@ EXPECTED_CHAIN = [
     (65535, 0),
 ]
 
+TOP_LEVEL_KEYS = {
+    "contract",
+    "evidence_class",
+    "export_tier",
+    "phase",
+    "publication_phase",
+    "outcome",
+    "runtime",
+    "target",
+    "acquisition",
+    "qualification",
+    "recovery",
+    "acceptance",
+    "rollback",
+    "next_gate",
+}
+
 
 def load_evidence() -> dict[str, object]:
     return json.loads(EVIDENCE.read_text(encoding="utf-8"))
 
 
+def assert_closed_public_shape(evidence: dict[str, object]) -> None:
+    assert set(evidence) == TOP_LEVEL_KEYS
+    assert set(evidence["runtime"]) == {
+        "addon_release",
+        "addon_merge",
+        "gateway_merge",
+        "modbusreg_version",
+        "modbusreg_merge",
+        "image_digest",
+    }
+    assert set(evidence["target"]) == {
+        "endpoint_ref",
+        "manufacturer",
+        "model",
+        "firmware",
+    }
+    assert set(evidence["acquisition"]) == {
+        "transport",
+        "unit_id",
+        "function_code",
+        "writes_permitted",
+        "bounded_raw_read_max_words",
+        "raw_reads_per_window",
+        "raw_read_window_milliseconds",
+    }
+    assert set(evidence["qualification"]) == {
+        "decision",
+        "category",
+        "capability_id",
+        "capability_reason",
+        "flavor_id",
+        "flavor_reason",
+        "source_validity",
+        "qualification_evidence_only",
+        "support_claim",
+        "canonical_semantics_claim",
+        "consumer_support_claim",
+        "chain",
+        "admitted_occurrences",
+        "structural_unknown_blocks",
+        "field_unknown_retention",
+    }
+    assert all(
+        set(item) == {"model_id", "model_length"}
+        for item in evidence["qualification"]["chain"]
+    )
+    assert set(evidence["recovery"]) == {
+        "fault_scope",
+        "blocked_request",
+        "initial_connection_generation",
+        "recovered_connection_generation",
+        "initial_transport_generation",
+        "recovered_transport_generation",
+        "same_signature_after_recovery",
+        "retained_observation_byte_identical",
+        "whole_gateway_restart",
+        "fallback_started",
+    }
+    assert set(evidence["recovery"]["blocked_request"]) == {
+        "code",
+        "message",
+        "retriable",
+        "endpoint_free",
+        "failed_requests",
+        "reconnect_attempts",
+        "reconnect_attempt_limit",
+        "periodic_retries",
+    }
+    assert set(evidence["acceptance"]) == {
+        "qualified_opt_in_detection",
+        "bounded_polling",
+        "raw_mcp_parity",
+        "retained_profile_observation",
+        "disconnect_reconnect_generation_integrity",
+        "coherent_provenance",
+        "no_writes",
+        "gateway_http_ready",
+        "adapter_proxy_ready",
+        "no_gateway_regression",
+        "final_decision",
+    }
+    assert set(evidence["rollback"]) == {
+        "backup_created",
+        "required",
+        "modbus_remained_enabled",
+    }
+    assert set(evidence["next_gate"]) == {
+        "m5",
+        "semantic_implementation_requires",
+    }
+
+
 def test_0651_exact_runtime_and_terminal_go() -> None:
     evidence = load_evidence()
+    assert_closed_public_shape(evidence)
+    assert evidence["contract"] == "helianthus.fronius-sunspec-m4-04-evidence.v1"
+    assert evidence["evidence_class"] == "LIVE_RUNTIME_EVIDENCE"
+    assert evidence["export_tier"] == "PUBLIC_REDACTED"
+    assert evidence["phase"] == "FMV3-M4-04"
+    assert evidence["publication_phase"] == "FMV3-M4-05"
     assert evidence["outcome"] == "GO"
     assert evidence["runtime"] == {
         "addon_release": "0.6.51",
@@ -66,6 +184,10 @@ def test_0651_chain_unknown_retention_and_read_only_boundary() -> None:
         "sunspec.flavor.fronius.gen24.float.observed@1.1.0"
     )
     assert qualification["flavor_reason"] == "MATCHED"
+    assert qualification["qualification_evidence_only"] is True
+    assert qualification["support_claim"] is False
+    assert qualification["canonical_semantics_claim"] is False
+    assert qualification["consumer_support_claim"] is False
     assert [
         (item["model_id"], item["model_length"])
         for item in qualification["chain"]
@@ -150,3 +272,18 @@ def test_0651_publication_is_redacted_and_indexed() -> None:
         contains_private_path(value) for value in evidence_strings(evidence)
     )
     assert "fronius-m4-04-0.6.51" in PLATFORM_INDEX.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    ("section", "field"),
+    [
+        ("qualification", "model_headers"),
+        ("qualification", "register_words"),
+        ("recovery", "raw_registers"),
+    ],
+)
+def test_0651_closed_shape_rejects_numeric_raw_fields(section: str, field: str) -> None:
+    mutated = copy.deepcopy(load_evidence())
+    mutated[section][field] = [1, 65, 113, 60]
+    with pytest.raises(AssertionError):
+        assert_closed_public_shape(mutated)
