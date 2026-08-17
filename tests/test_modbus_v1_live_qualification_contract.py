@@ -127,8 +127,6 @@ class ModbusV1LiveQualificationContractTest(unittest.TestCase):
                 "disable_modbus_endpoint": True,
                 "restore": "operator_selected_prior_gateway_addon_pair",
                 "automatic_on_stop_or_no_go": False,
-                "separate_from_startup_fallback": True,
-                "startup_fallback_parity": "not_guaranteed",
             },
         )
         self.assertEqual(
