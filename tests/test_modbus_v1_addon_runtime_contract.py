@@ -31,6 +31,16 @@ class ModbusV1AddonRuntimeContractTest(unittest.TestCase):
 
     def test_removed_supervisor_machinery_stays_removed(self) -> None:
         text = CONTRACT.read_text(encoding="utf-8")
+        lifecycle = text.split("## Single Process Lifecycle\n", 1)[1].split(
+            "## M4-03 Phase Boundary\n", 1
+        )[0]
+        normalized_lifecycle = " ".join(lifecycle.split())
+        self.assertIn("s6 -> exec helianthus-gateway", normalized_lifecycle)
+        self.assertIn(
+            "It does not retain a parent shell, launch log redactors, probe local "
+            "listeners, retry the complete gateway, or start a previous binary.",
+            normalized_lifecycle,
+        )
         for forbidden in (
             "FALLBACK_ACTIVE",
             "RECOVERY_RETRY",
