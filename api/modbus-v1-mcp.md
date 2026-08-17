@@ -14,9 +14,10 @@ identities.
 
 M4-02 exposes the raw reader and the retained-profile reader. A caller-triggered
 raw request performs one bounded FC03 or FC04 transaction against the configured
-endpoint. M4-02 does not run a detector, activate a profile, start a background
-poller, or produce retained profile observations. Those producer operations
-remain in the separately authorized M4-04 live-smoke node. Consequently,
+endpoint, with the single bounded reconnect-and-retry exception defined below.
+M4-02 does not run a detector, activate a profile, start a background poller, or
+produce retained profile observations. Those producer operations remain in the
+separately authorized M4-04 live-smoke node. Consequently,
 `modbus.v1.profile.observation.get` returns `UNAVAILABLE` until an owning
 detector/poller records the exact requested profile/sample pair; it never
 fabricates a sample.
@@ -58,6 +59,26 @@ A successful raw `data` object is closed and contains exactly:
 | `poll_generation_id`, `deadline_identity` | integer | Positive opaque request identities |
 
 No other raw-result field is part of V1.
+
+#### Bounded transport recovery
+
+One admitted raw-read operation consumes exactly one raw MCP quota admission.
+When its first physical transaction fails with a retryable transport error and
+the transport owner reports that reconnect is required, the gateway may perform
+exactly one bounded reconnect followed by exactly one retry of the immutable
+admitted request. It does not consume a second caller quota admission, widen the
+deadline, change the unit/function/range, or perform a third transaction.
+
+On retry success, the returned words and provenance come exclusively from the
+successful retry. Its `connection_id` and `transport_generation` are newer than
+the failed connection generation; data or identities from the failed attempt
+must not be mixed into the result. If reconnect or the one retry fails, the
+operation terminates with a bounded `UNAVAILABLE` error. Validation failures,
+quota rejection, and provider errors that do not require reconnect are never
+retried by this rule.
+
+`modbus.v1.profile.observation.get` reads an immutable retained observation and
+does not reconnect to the Modbus endpoint or perform wire I/O.
 
 ### `modbus.v1.profile.observation.get`
 
@@ -112,6 +133,12 @@ rejection, `RESOURCE_EXHAUSTED` for quota rejection, or `UNAVAILABLE` for an
 owner/provider failure or an absent exact retained sample. The first is not
 retriable; the latter two are retriable. Successful and error envelopes never
 expose write authority.
+
+Every emitted error message is endpoint-free. An owner/provider failure uses a
+static bounded message and never copies a wrapped operating-system or network
+error into the envelope. No error message may contain an endpoint, host name,
+IP address, port, URL, userinfo, credential, or deployment-local path. Validation
+messages may identify the rejected input field or rule, but remain endpoint-free.
 
 Golden envelopes in the gateway lock deterministic key/array ordering and
 `data_hash` for both tools. No GraphQL, Portal, Home Assistant, Matter, eeBUS
