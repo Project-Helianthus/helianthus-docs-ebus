@@ -108,7 +108,9 @@ fact ID and dimensions matching the complete identity of a fact in the same
 observation, while the two loss outcomes require a null fact ID and null
 dimensions. Each row is uniquely identified by `(source_ref,
 requested_output_ref)` so conflicting outcomes cannot be order-dependent.
-`source_ref` must equal the admitted observation's `source_observation_ref`.
+For `MAPPED`, `source_ref` equals the mapped fact's `origin_ref`, which must
+resolve in `origins[]`. For `WITHHELD` and `UNREPRESENTABLE`, `source_ref` equals
+the current acquisition's `source_observation_ref`.
 The mandatory `requested_outputs` inventory contains the same complete identity
 set as `projection_report`; exactly one outcome is required for every requested
 output. Every published fact also has exactly one `MAPPED` row with its complete

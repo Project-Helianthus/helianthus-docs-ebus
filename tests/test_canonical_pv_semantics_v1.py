@@ -474,6 +474,8 @@ def test_human_contract_preserves_ownership_and_private_boundary():
         "binary JSON floating-point values are forbidden",
         "must never guess rollover or reset",
         "`MAPPED`, `WITHHELD`, or `UNREPRESENTABLE`",
+        "For `MAPPED`, `source_ref` equals the mapped fact's `origin_ref`",
+        "For `WITHHELD` and `UNREPRESENTABLE`, `source_ref` equals the current acquisition's `source_observation_ref`",
         "`PUBLIC_GRAPHQL_M2M_V1`",
         "no Fronius support claim",
     ]
