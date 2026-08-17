@@ -50,6 +50,98 @@ TOP_LEVEL_KEYS = {
     "next_gate",
 }
 
+PUBLIC_TYPE_SCHEMA = {
+    "contract": str,
+    "evidence_class": str,
+    "export_tier": str,
+    "phase": str,
+    "publication_phase": str,
+    "outcome": str,
+    "runtime": {
+        "addon_release": str,
+        "addon_merge": str,
+        "gateway_merge": str,
+        "modbusreg_version": str,
+        "modbusreg_merge": str,
+        "image_digest": str,
+    },
+    "target": {
+        "endpoint_ref": str,
+        "manufacturer": str,
+        "model": str,
+        "firmware": str,
+    },
+    "acquisition": {
+        "transport": str,
+        "unit_id": int,
+        "function_code": int,
+        "writes_permitted": bool,
+        "bounded_raw_read_max_words": int,
+        "raw_reads_per_window": int,
+        "raw_read_window_milliseconds": int,
+    },
+    "qualification": {
+        "decision": str,
+        "category": str,
+        "capability_id": str,
+        "capability_reason": str,
+        "flavor_id": str,
+        "flavor_reason": str,
+        "source_validity": str,
+        "qualification_evidence_only": bool,
+        "support_claim": bool,
+        "canonical_semantics_claim": bool,
+        "consumer_support_claim": bool,
+        "chain": [{"model_id": int, "model_length": int}],
+        "admitted_occurrences": int,
+        "structural_unknown_blocks": [],
+        "field_unknown_retention": str,
+    },
+    "recovery": {
+        "fault_scope": str,
+        "blocked_request": {
+            "code": str,
+            "message": str,
+            "retriable": bool,
+            "endpoint_free": bool,
+            "failed_requests": int,
+            "reconnect_attempts": int,
+            "reconnect_attempt_limit": int,
+            "periodic_retries": int,
+        },
+        "initial_connection_generation": int,
+        "recovered_connection_generation": int,
+        "initial_transport_generation": int,
+        "recovered_transport_generation": int,
+        "same_signature_after_recovery": bool,
+        "retained_observation_byte_identical": bool,
+        "whole_gateway_restart": bool,
+        "fallback_started": bool,
+    },
+    "acceptance": {
+        "qualified_opt_in_detection": str,
+        "bounded_polling": str,
+        "raw_mcp_parity": str,
+        "retained_profile_observation": str,
+        "disconnect_reconnect_generation_integrity": str,
+        "coherent_provenance": str,
+        "no_writes": str,
+        "gateway_http_ready": str,
+        "adapter_proxy_ready": str,
+        "no_gateway_regression": str,
+        "final_decision": str,
+    },
+    "rollback": {
+        "backup_created": bool,
+        "required": bool,
+        "modbus_remained_enabled": bool,
+    },
+    "next_gate": {
+        "m5": str,
+        "semantic_implementation_requires": str,
+    },
+}
+
 
 def reject_duplicate_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
     result: dict[str, object] = {}
@@ -68,7 +160,30 @@ def load_evidence() -> dict[str, object]:
     return parse_public_evidence(EVIDENCE.read_text(encoding="utf-8"))
 
 
+def assert_recursive_type_shape(value: object, schema: object) -> None:
+    if isinstance(schema, type):
+        assert type(value) is schema
+        return
+    if isinstance(schema, dict):
+        assert type(value) is dict
+        assert set(value) == set(schema)
+        for key, child_schema in schema.items():
+            assert_recursive_type_shape(value[key], child_schema)
+        return
+    if isinstance(schema, list):
+        assert type(value) is list
+        if not schema:
+            assert value == []
+            return
+        assert len(schema) == 1
+        for child in value:
+            assert_recursive_type_shape(child, schema[0])
+        return
+    raise AssertionError(f"unsupported public schema node: {schema!r}")
+
+
 def assert_closed_public_shape(evidence: dict[str, object]) -> None:
+    assert_recursive_type_shape(evidence, PUBLIC_TYPE_SCHEMA)
     assert set(evidence) == TOP_LEVEL_KEYS
     assert set(evidence["runtime"]) == {
         "addon_release",
@@ -312,3 +427,10 @@ def test_0651_parser_rejects_duplicate_key_numeric_raw_bypass() -> None:
     )
     with pytest.raises(ValueError, match=r"duplicate JSON key: qualification"):
         parse_public_evidence(duplicate)
+
+
+def test_0651_closed_shape_rejects_numeric_raw_in_allowed_scalar() -> None:
+    mutated = copy.deepcopy(load_evidence())
+    mutated["target"]["firmware"] = [1, 65, 113, 60]
+    with pytest.raises(AssertionError):
+        assert_closed_public_shape(mutated)
