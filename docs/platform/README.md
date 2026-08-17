@@ -73,6 +73,9 @@ Current platform contracts:
 - [`live/fronius-m4-04-0.6.47/`](./live/fronius-m4-04-0.6.47/) - immutable
   read-only rerun evidence: registry-internal `GO`, readiness and endpoint
   redaction regression passes, terminal `STOP_ENVIRONMENTAL`, and safe rollback
+- [`live/fronius-m4-04-0.6.51/`](./live/fronius-m4-04-0.6.51/) - exact deployed
+  read-only evidence: retained SunSpec and raw MCP parity, endpoint-free bounded
+  reconnect, generation advance without gateway restart, and terminal `GO`
 - [`eebus-ha-network-proof.md`](./eebus-ha-network-proof.md)
 - [`eebus-interop-smoke.md`](./eebus-interop-smoke.md) - canonical G01/G17/G19
   evidence, authority, redaction, and promotion boundary

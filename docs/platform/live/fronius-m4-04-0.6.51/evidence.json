@@ -1,0 +1,93 @@
+{
+  "contract": "helianthus.fronius-sunspec-m4-04-evidence.v1",
+  "evidence_class": "LIVE_RUNTIME_EVIDENCE",
+  "export_tier": "PUBLIC_REDACTED",
+  "phase": "FMV3-M4-04",
+  "publication_phase": "FMV3-M4-05",
+  "outcome": "GO",
+  "runtime": {
+    "addon_release": "0.6.51",
+    "addon_merge": "8be32bc7f49f3000eba6074f12ca782e10425093",
+    "gateway_merge": "6f4aaa7a08eeffb655e5da0f6f6c2053e399a45b",
+    "modbusreg_version": "v0.2.1",
+    "modbusreg_merge": "16a7dfbf8016750613d086fb98d10364953ea915",
+    "image_digest": "sha256:876098e26a6b5f698d0f992f61a0784af8f677f4e3b96a424869fda9609eec6e"
+  },
+  "target": {
+    "endpoint_ref": "sha256:cc2d63775c6f0074",
+    "manufacturer": "Fronius",
+    "model": "Symo GEN24 10.0",
+    "firmware": "1.41.11-1"
+  },
+  "acquisition": {
+    "transport": "modbus_tcp",
+    "unit_id": 1,
+    "function_code": 3,
+    "writes_permitted": false,
+    "bounded_raw_read_max_words": 125,
+    "raw_reads_per_window": 4,
+    "raw_read_window_milliseconds": 1000
+  },
+  "qualification": {
+    "decision": "GO",
+    "category": "registry_match",
+    "capability_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "capability_reason": "ADMITTED",
+    "flavor_id": "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+    "flavor_reason": "MATCHED",
+    "source_validity": "terminal_verified",
+    "chain": [
+      {"model_id": 1, "model_length": 65},
+      {"model_id": 113, "model_length": 60},
+      {"model_id": 120, "model_length": 26},
+      {"model_id": 121, "model_length": 30},
+      {"model_id": 122, "model_length": 44},
+      {"model_id": 123, "model_length": 24},
+      {"model_id": 160, "model_length": 88},
+      {"model_id": 124, "model_length": 24},
+      {"model_id": 65535, "model_length": 0}
+    ],
+    "admitted_occurrences": 8,
+    "structural_unknown_blocks": [],
+    "field_unknown_retention": "PRESERVED_PRIVATE_NOT_PROMOTED"
+  },
+  "recovery": {
+    "fault_scope": "TARGET_MODBUS_TCP_ONLY",
+    "blocked_request": {
+      "code": "UNAVAILABLE",
+      "message": "modbus provider unavailable",
+      "retriable": true,
+      "endpoint_free": true
+    },
+    "initial_connection_generation": 1,
+    "recovered_connection_generation": 2,
+    "initial_transport_generation": 1,
+    "recovered_transport_generation": 2,
+    "same_signature_after_recovery": true,
+    "retained_observation_byte_identical": true,
+    "whole_gateway_restart": false,
+    "fallback_started": false
+  },
+  "acceptance": {
+    "qualified_opt_in_detection": "PASS",
+    "bounded_polling": "PASS",
+    "raw_mcp_parity": "PASS",
+    "retained_profile_observation": "PASS",
+    "disconnect_reconnect_generation_integrity": "PASS",
+    "coherent_provenance": "PASS",
+    "no_writes": "PASS",
+    "gateway_http_ready": "PASS",
+    "adapter_proxy_ready": "PASS",
+    "no_gateway_regression": "PASS",
+    "final_decision": "GO"
+  },
+  "rollback": {
+    "backup_created": true,
+    "required": false,
+    "modbus_remained_enabled": true
+  },
+  "next_gate": {
+    "m5": "READY_FOR_FMV3-M5-02",
+    "semantic_implementation_requires": "FMV3-M5-02_MERGED"
+  }
+}
