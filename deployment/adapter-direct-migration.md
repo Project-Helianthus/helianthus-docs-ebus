@@ -14,7 +14,7 @@ topology to adapter-direct transport.
    - `adapter_direct_address: "adapter.example.invalid:9999"` (your adapter's
      host and port)
    - `proxy_profile: "disabled"`
-   - Optionally, `proxy_listen_addr: "127.0.0.1:19001"` to expose the
+   - Optionally, `proxy_listen_addr: "0.0.0.0:19001"` to expose the
      gateway-integrated proxy listener for ebusd coexistence
 3. Restart the addon.
 4. Verify via MCP: `zones.get`, `dhw.get`, `boiler_status.get` should all return
