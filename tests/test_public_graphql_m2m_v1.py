@@ -127,13 +127,40 @@ def test_accumulator_continuity_variants_are_closed():
         for item in candidate["response"]["facts"]
         if item["fact_id"] == "pv.energy.active_export_total"
     )
-    energy["continuity"] = {
-        "state": "ROLLOVER",
-        "delta": None,
-        "modulus": None,
-        "evidence_ref": None,
-    }
-    assert "continuity" in validate_case(candidate, manifest, canonical)
+    invalid = [
+        {"state": "BASELINE", "delta": {"kind": "DECIMAL", "coefficient": "1", "scale": 0}, "modulus": None, "evidence_ref": None},
+        {"state": "CONTIGUOUS", "delta": None, "modulus": None, "evidence_ref": None},
+        {"state": "ROLLOVER", "delta": {"kind": "DECIMAL", "coefficient": "1", "scale": 0}, "modulus": None, "evidence_ref": "sha256:" + "a" * 64},
+        {"state": "RESET", "delta": None, "modulus": None, "evidence_ref": None},
+        {"state": "DISCONTINUITY", "delta": {"kind": "DECIMAL", "coefficient": "1", "scale": 0}, "modulus": None, "evidence_ref": None},
+    ]
+    for continuity in invalid:
+        energy["continuity"] = continuity
+        assert "continuity" in validate_case(candidate, manifest, canonical)
+
+
+def test_freshness_transition_boundaries_are_exact():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(cases["positive"])
+    candidate["response"]["facts"] = [candidate["response"]["facts"][0]]
+    candidate["response"]["capabilities"][0]["outcome"] = "NOT_SATISFIED"
+    fact = candidate["response"]["facts"][0]
+    fresh_until = int(fact["fresh_until_monotonic_ns"])
+    retain_until = int(fact["retain_until_monotonic_ns"])
+
+    cases_to_check = [
+        (fresh_until - 1, "AVAILABLE", "FRESH"),
+        (fresh_until, "AVAILABLE", "STALE"),
+        (retain_until - 1, "AVAILABLE", "STALE"),
+        (retain_until, "UNAVAILABLE", "EXPIRED"),
+    ]
+    for evaluated, availability, freshness in cases_to_check:
+        candidate["response"]["evaluated_monotonic_ns"] = str(evaluated)
+        fact["availability"] = availability
+        fact["freshness"] = freshness
+        errors = validate_case(candidate, manifest, canonical)
+        assert "freshness_evaluation" not in errors
+        assert "state_axes" not in errors
 
 
 def test_empty_success_snapshot_is_rejected():

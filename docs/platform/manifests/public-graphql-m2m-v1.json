@@ -15,6 +15,7 @@
   "max_capabilities_per_snapshot": 1,
   "catalog_fact_ids": ["pv.ac.power.active", "pv.ac.power.apparent", "pv.ac.power.reactive", "pv.ac.power_factor", "pv.ac.frequency", "pv.ac.current", "pv.ac.voltage.line_to_neutral", "pv.ac.voltage.line_to_line", "pv.energy.active_export_total", "pv.dc.current", "pv.dc.voltage", "pv.dc.power.active", "pv.dc.energy.active_total", "pv.temperature", "pv.operating.state", "pv.event.flags", "pv.rating.ac.active_power"],
   "required_fact_fields": ["fact_id", "dimensions", "value", "unit", "quality", "availability", "freshness", "receipt_monotonic_ns", "fresh_until_monotonic_ns", "retain_until_monotonic_ns", "freshness_policy", "origin_ref", "continuity"],
+  "value_kind_mapping": {"decimal": "DECIMAL", "enum": "ENUM", "bitfield": "BITFIELD"},
   "required_response_fields": ["contract_id", "canonical_contract_id", "asset_ref", "generation", "produced_at", "evaluated_monotonic_ns", "source_time_state", "facts", "capabilities", "provenance"],
   "capability_fields": ["id", "outcome"],
   "opaque_provenance_fields": ["origin_ref", "evidence_ref"],

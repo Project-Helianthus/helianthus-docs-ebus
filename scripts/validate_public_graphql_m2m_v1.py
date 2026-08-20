@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import copy
 import datetime as dt
+import ipaddress
 import json
 import re
 import sys
@@ -14,6 +15,7 @@ DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)$")
 NONNEGATIVE_INTEGER = re.compile(r"0|[1-9][0-9]*$")
 SHA256 = re.compile(r"sha256:[0-9a-f]{64}$")
 TOKEN = re.compile(r"[A-Za-z0-9._:-]+$")
+ASSET = re.compile(r"pv-asset-[A-Za-z0-9_-]{1,96}$")
 FORBIDDEN = {"raw_registers", "source_shadow", "endpoint", "endpoints", "address", "credentials", "history"}
 
 
@@ -22,7 +24,21 @@ class ValidationError(Exception):
 
 
 def load_json(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
+    def no_duplicates(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValidationError(f"duplicate JSON key: {key}")
+            result[key] = value
+        return result
+
+    return json.loads(
+        path.read_text(encoding="utf-8"),
+        object_pairs_hook=no_duplicates,
+        parse_constant=lambda value: (_ for _ in ()).throw(
+            ValidationError(f"non-finite JSON number: {value}")
+        ),
+    )
 
 
 def _set_path(value, pointer, replacement):
@@ -59,6 +75,18 @@ def _valid_timestamp(value):
     return parsed.tzinfo is not None
 
 
+def _looks_like_network_endpoint(value):
+    candidate = value.strip("[]")
+    try:
+        ipaddress.ip_address(candidate)
+        return True
+    except ValueError:
+        pass
+    if re.fullmatch(r"(?:tcp|udp|http|https)://.+", value, re.I):
+        return True
+    return re.fullmatch(r"[^/\s]+:[0-9]{1,5}", value) is not None
+
+
 def _valid_dimensions(dimensions, definition):
     if not isinstance(dimensions, dict) or len(dimensions) != 1 or set(dimensions) != set(definition["dimensions"]):
         return False
@@ -69,13 +97,19 @@ def _valid_dimensions(dimensions, definition):
         return value in {"L1", "L2", "L3"}
     if key == "phase_pair":
         return value in {"L1_L2", "L2_L3", "L3_L1"}
-    return isinstance(value, str) and 1 <= len(value) <= 64 and TOKEN.fullmatch(value) is not None
+    return (
+        isinstance(value, str)
+        and 1 <= len(value) <= 64
+        and TOKEN.fullmatch(value) is not None
+        and not _looks_like_network_endpoint(value)
+    )
 
 
 def _valid_value(value, definition, canonical_manifest):
-    if not isinstance(value, dict) or value.get("kind") != definition["value_kind"]:
+    expected_kind = definition["value_kind"].upper()
+    if not isinstance(value, dict) or value.get("kind") != expected_kind:
         return False
-    if value["kind"] == "decimal":
+    if value["kind"] == "DECIMAL":
         return (
             set(value) == {"kind", "coefficient", "scale"}
             and isinstance(value["coefficient"], str)
@@ -85,7 +119,7 @@ def _valid_value(value, definition, canonical_manifest):
             and -18 <= value["scale"] <= 18
         )
     domain = canonical_manifest["value_domains"][definition["value_domain"]]
-    if value["kind"] == "enum":
+    if value["kind"] == "ENUM":
         return set(value) == {"kind", "symbol"} and value["symbol"] in domain
     return (
         set(value) == {"kind", "symbols"}
@@ -94,6 +128,40 @@ def _valid_value(value, definition, canonical_manifest):
         and len(value["symbols"]) == len(set(value["symbols"]))
         and all(symbol in domain for symbol in value["symbols"])
     )
+
+
+def _valid_continuity_decimal(value, *, positive=False):
+    if not isinstance(value, dict) or set(value) != {"kind", "coefficient", "scale"}:
+        return False
+    if value.get("kind") != "DECIMAL" or not isinstance(value.get("coefficient"), str):
+        return False
+    if (
+        DECIMAL.fullmatch(value["coefficient"]) is None
+        or not isinstance(value.get("scale"), int)
+        or isinstance(value["scale"], bool)
+        or not -18 <= value["scale"] <= 18
+    ):
+        return False
+    coefficient = int(value["coefficient"])
+    return coefficient > 0 if positive else coefficient >= 0
+
+
+def _valid_continuity(value):
+    if not isinstance(value, dict) or set(value) != {"state", "delta", "modulus", "evidence_ref"}:
+        return False
+    state = value.get("state")
+    delta, modulus, evidence = value.get("delta"), value.get("modulus"), value.get("evidence_ref")
+    if state == "BASELINE":
+        return delta is None and modulus is None and evidence is None
+    if state == "CONTIGUOUS":
+        return _valid_continuity_decimal(delta) and modulus is None and evidence is None
+    if state == "ROLLOVER":
+        return _valid_continuity_decimal(delta) and _valid_continuity_decimal(modulus, positive=True) and isinstance(evidence, str) and SHA256.fullmatch(evidence) is not None
+    if state == "RESET":
+        return delta is None and modulus is None and isinstance(evidence, str) and SHA256.fullmatch(evidence) is not None
+    if state == "DISCONTINUITY":
+        return delta is None and modulus is None and (evidence is None or isinstance(evidence, str) and SHA256.fullmatch(evidence) is not None)
+    return False
 
 
 def validate_case(case, manifest, canonical_manifest):
@@ -109,7 +177,12 @@ def validate_case(case, manifest, canonical_manifest):
         errors.add("response_fields")
     if response.get("canonical_contract_id") != canonical_manifest["contract_id"]:
         errors.add("canonical_projection")
-    if not isinstance(request.get("asset_ref"), str) or request["asset_ref"] != response.get("asset_ref"):
+    if (
+        not isinstance(request.get("asset_ref"), str)
+        or ASSET.fullmatch(request["asset_ref"]) is None
+        or _looks_like_network_endpoint(request["asset_ref"])
+        or request["asset_ref"] != response.get("asset_ref")
+    ):
         errors.add("asset")
     if not isinstance(response.get("generation"), str) or NONNEGATIVE_INTEGER.fullmatch(response["generation"]) is None:
         errors.add("time_identity")
@@ -123,7 +196,9 @@ def validate_case(case, manifest, canonical_manifest):
         errors.add("forbidden_surface")
     facts = response.get("facts", [])
     catalog = {fact["id"]: fact for fact in canonical_manifest["facts"]}
+    policies = {policy["id"]: policy for policy in canonical_manifest["freshness_policies"]}
     seen = set()
+    observed = {}
     origins = set()
     for fact in facts:
         if set(fact) != set(manifest["required_fact_fields"]):
@@ -134,6 +209,12 @@ def validate_case(case, manifest, canonical_manifest):
         if definition is None or fact["fact_id"] not in manifest["catalog_fact_ids"] or identity in seen:
             errors.add("catalog")
         seen.add(identity)
+        observed[identity] = fact
+        if any(
+            isinstance(value, str) and _looks_like_network_endpoint(value)
+            for value in fact["dimensions"].values()
+        ):
+            errors.add("dimension_redaction")
         if definition and (
             fact["unit"] != definition["unit"]
             or not _valid_dimensions(fact["dimensions"], definition)
@@ -150,26 +231,46 @@ def validate_case(case, manifest, canonical_manifest):
         temporal = [fact["receipt_monotonic_ns"], fact["fresh_until_monotonic_ns"], fact["retain_until_monotonic_ns"]]
         if any(not isinstance(item, str) or NONNEGATIVE_INTEGER.fullmatch(item) is None for item in temporal):
             errors.add("time_identity")
-        elif int(temporal[0]) > int(temporal[1]) or int(temporal[1]) >= int(temporal[2]):
-            errors.add("time_identity")
+        else:
+            receipt, fresh_until, retain_until = map(int, temporal)
+            evaluated = int(response["evaluated_monotonic_ns"])
+            if definition:
+                policy = policies[definition["freshness_policy"]]
+                if fresh_until != receipt + policy["fresh_seconds"] * 1_000_000_000 or retain_until != receipt + policy["retain_seconds"] * 1_000_000_000:
+                    errors.add("freshness_policy")
+            if fact["freshness"] == "FRESH" and not receipt <= evaluated < fresh_until:
+                errors.add("freshness_evaluation")
+            if fact["freshness"] == "STALE" and not fresh_until <= evaluated < retain_until:
+                errors.add("freshness_evaluation")
+            if fact["freshness"] == "EXPIRED" and evaluated < retain_until:
+                errors.add("freshness_evaluation")
         continuity = fact["continuity"]
         if definition and definition["accumulator"]:
-            if not isinstance(continuity, dict) or continuity.get("state") not in {"BASELINE", "CONTIGUOUS", "ROLLOVER", "RESET", "DISCONTINUITY"}:
+            if not _valid_continuity(continuity):
                 errors.add("continuity")
         elif continuity is not None:
             errors.add("continuity")
         if not SHA256.fullmatch(fact["origin_ref"]):
             errors.add("provenance")
         origins.add(fact["origin_ref"])
+    if not facts:
+        errors.add("empty_snapshot")
     if len(facts) > manifest["max_facts_per_snapshot"]:
         errors.add("bounded_snapshot")
     capabilities = response.get("capabilities", [])
     capability_ids = [item.get("id") for item in capabilities if isinstance(item, dict)]
-    if (
-        any(set(item) != set(manifest["capability_fields"]) or item["outcome"] not in {"SATISFIED", "NOT_SATISFIED"} for item in capabilities)
-        or capability_ids != [item["id"] for item in canonical_manifest["capability_packs"]]
-    ):
+    if any(set(item) != set(manifest["capability_fields"]) or item["outcome"] not in {"SATISFIED", "NOT_SATISFIED"} for item in capabilities) or capability_ids != [item["id"] for item in canonical_manifest["capability_packs"]]:
         errors.add("capability")
+    for capability, pack in zip(capabilities, canonical_manifest["capability_packs"]):
+        required = {
+            (item["fact_id"], tuple(sorted(item["dimensions"].items())))
+            for item in pack["required"]
+        }
+        complete = required <= set(observed)
+        supported = complete and not any(observed[key]["availability"] == "UNSUPPORTED" for key in required)
+        expected = "SATISFIED" if supported else "NOT_SATISFIED"
+        if capability.get("outcome") != expected:
+            errors.add("capability_outcome")
     if len(capabilities) > manifest["max_capabilities_per_snapshot"]:
         errors.add("bounded_snapshot")
     provenance = response.get("provenance", [])
@@ -177,6 +278,8 @@ def validate_case(case, manifest, canonical_manifest):
         errors.add("provenance")
     if origins != {item["origin_ref"] for item in provenance}:
         errors.add("provenance")
+    if not provenance:
+        errors.add("empty_snapshot")
     if len(provenance) > manifest["max_provenance_per_snapshot"]:
         errors.add("bounded_snapshot")
     return sorted(errors)

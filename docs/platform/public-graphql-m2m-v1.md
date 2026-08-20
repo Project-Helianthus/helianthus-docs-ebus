@@ -17,8 +17,11 @@ state, fact identity, exact decimal coefficient/scale, dimensions, unit,
 quality, availability, freshness, receipt temporal fields, freshness policy,
 continuity, capability outcome, and opaque provenance are preserved exactly.
 
-Decimals are not JSON numbers: coefficients are canonical integer strings and
-scale is a base-10 integer. Facts represented as unavailable remain explicitly
+GraphQL encodes the canonical value-kind discriminators as the closed enum
+mapping `decimal -> DECIMAL`, `enum -> ENUM`, and `bitfield -> BITFIELD`;
+bitfield values retain the canonical `symbols` field. Decimals are not JSON
+numbers: coefficients are canonical integer strings and scale is a base-10
+integer. Facts represented as unavailable remain explicitly
 unavailable, while absent catalog members are not synthesized as zero or
 inferred from another field. The public provenance table exposes at most 256
 opaque origin and evidence references. It never exposes source shadows,
