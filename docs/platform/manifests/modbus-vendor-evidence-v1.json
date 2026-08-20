@@ -3,9 +3,9 @@
   "milestone": "FMV3-M7-01",
   "support_claim": false,
   "runtime_allowlist": [
-    {"operation": "FC03", "function_code": 3, "table": "holding_registers"},
-    {"operation": "FC04", "function_code": 4, "table": "input_registers"},
-    {"operation": "FC2B_MEI_0E", "function_code": 43, "mei_type": 14}
+    {"operation": "FC03", "function_code": 3, "table": "holding_registers", "executable": false},
+    {"operation": "FC04", "function_code": 4, "table": "input_registers", "executable": false},
+    {"operation": "FC2B_MEI_0E", "function_code": 43, "mei_type": 14, "executable": false}
   ],
   "packets": [
     {
@@ -258,7 +258,7 @@
             {"operation": "FC03", "unit_id": 100, "offset": 37410, "quantity": 3, "encoding": "THREE_U16_BE", "purpose": "dongle_type_search_sequence", "address_normalization": {"table": "holding_registers", "document_notation": "zero_based_register_address", "document_base": 0, "formula": "pdu_offset=document_address", "document_address": 37410, "pdu_offset": 37410}, "executable": false}
           ],
           "detection_tuple": {"required": ["basic_mei_product_code_sdongle", "protocol_version_branch_match", "dongle_type_search_sequence_tuple", "structured_firmware_gate"], "forbidden_identity": ["search_status_only", "serial_number", "unit_100_readability_only"]},
-          "child_enumeration": {"operation": "FC2B_MEI_0E", "unit_id": "DOCUMENTARY_1_TO_247_TARGET_UNRESOLVED_FOR_TCP_GATEWAY", "read_device_id_code": 3, "start_object_id": 135, "count_object_id": 135, "first_child_object_id": 136, "max_children": 120, "limits": {"deadline_ms": 15000, "max_pages": 121, "max_objects": 121, "max_bytes": 32768}, "required_live_fixture": "unit100_plus_object135_through_modbus_tcp", "stability": "37411_search_completed_and_37412_before_after", "capacity_cross_check": "37429", "reject": ["search_in_progress", "sequence_changed", "count_mismatch", "unit_target_ambiguous"], "executable": false},
+          "child_enumeration": {"operation": "FC2B_MEI_0E", "unit_id": "DOCUMENTARY_1_TO_247_TARGET_UNRESOLVED_FOR_TCP_GATEWAY", "read_device_id_code": 3, "start_object_id": 135, "count_object_id": 135, "first_child_object_id": 136, "max_children": 120, "limits": {"deadline_ms": 15000, "max_pages": 121, "max_objects": 121, "max_bytes": 32768}, "required_live_fixture": "unit100_plus_object135_through_modbus_tcp", "stability": "37411_search_completed_and_37412_before_after", "capacity_cross_check": "37429", "reject": ["cursor_loop", "duplicate_object", "duplicate_device_id", "search_in_progress", "sequence_changed", "count_mismatch", "unit_target_ambiguous"], "executable": false},
           "missing_discriminators": ["sanitized_product_code_and_revision_fixture", "live_child_inventory_target_fixture"]
         },
         {

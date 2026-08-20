@@ -44,11 +44,13 @@ def test_every_detector_pdu_is_read_only_and_allowlisted():
         entry["function_code"] for entry in manifest["runtime_allowlist"]
     )
 
-    pdus = list(operation_records(manifest["packets"]))
+    pdus = list(operation_records(manifest))
     assert pdus
     for pdu in pdus:
         assert pdu["operation"] in allowlist
         assert pdu["executable"] is False
+        if "function_code" in pdu:
+            continue
         if pdu["operation"] in {"FC03", "FC04"}:
             assert 0 <= pdu["offset"] <= 65535
             assert 1 <= pdu["quantity"] <= 125
@@ -271,6 +273,10 @@ def test_huawei_child_inventory_and_transport_prerequisites_are_bounded():
     }
     assert sdongle["required_live_fixture"] == "unit100_plus_object135_through_modbus_tcp"
     assert "unit_target_ambiguous" in sdongle["reject"]
+    for inventory in (candidates[family]["child_enumeration"] for family in candidates):
+        assert {"cursor_loop", "duplicate_object", "duplicate_device_id", "count_mismatch"} <= set(
+            inventory["reject"]
+        )
 
 
 def test_public_pages_link_packets_and_preserve_safety_boundary():
