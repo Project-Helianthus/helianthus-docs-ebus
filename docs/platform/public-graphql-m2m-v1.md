@@ -23,8 +23,10 @@ mapping `decimal -> M2MDecimalValue`, `enum -> M2MEnumValue`, and `bitfield ->
 M2MBitfieldValue`; the concrete type is the discriminator, so an independent
 kind field cannot contradict its payload. Each fact also carries exactly one
 closed dimension variant: scope, phase, phase pair, input ID, or sensor ID.
-Counter continuity is a closed union of state-specific payloads, so a state
-cannot be paired with fields that are invalid for that state. Bitfield values
+Counter continuity is a closed union whose concrete type is the state
+discriminator; no independent multi-value state enum can contradict the member.
+The baseline member carries only a singleton marker, and every other member
+contains only its state-specific payload. Bitfield values
 retain the canonical `symbols` field. Decimals are not JSON numbers:
 coefficients are canonical integer strings and scale is a base-10 integer.
 Facts represented as unavailable remain explicitly unavailable, while absent
@@ -90,9 +92,9 @@ batching, aliases, named fragments, directives, introspection, GET,
 subscriptions, and multi-operation documents are rejected before resolver
 execution. Inline type conditions are allowed only to select the closed
 declared members of the closed value, dimension, continuity, and projection
-unions. The `__typename` meta-field is required only as the projection-outcome
-discriminator; schema/type introspection through `__schema` or `__type` remains
-forbidden. The response is limited to 1 MiB.
+unions. The `__typename` meta-field is required only as the closed continuity
+and projection-outcome discriminator; schema/type introspection through
+`__schema` or `__type` remains forbidden. The response is limited to 1 MiB.
 
 Before semantic decode, the HTTP JSON parser rejects duplicate object keys and
 any document nested deeper than 64 arrays/objects. Depth is bounded from raw
@@ -167,6 +169,12 @@ invalid HTTP envelopes map to `REQUEST_INVALID`; forbidden or non-canonical Grap
 `REQUEST_LIMIT_EXCEEDED`. Static message and path rules are identical to the
 semantic failures, so framework parser details and private input are never
 reflected to the client.
+
+For query-document failures, depth and selected-field limits are evaluated
+before forbidden features, canonical shape, and schema compatibility. The
+depth-limit conformance stimulus is schema-valid, so its
+`REQUEST_LIMIT_EXCEEDED` result cannot be explained by an unrelated schema
+failure.
 
 Conformance binds three wire request examples directly to their exact response
 envelopes: duplicate-key JSON to `REQUEST_INVALID`, an aliased query to

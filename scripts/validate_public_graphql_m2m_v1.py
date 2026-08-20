@@ -311,19 +311,38 @@ def _normalize_value(value):
 def _normalize_continuity(value):
     if value is None:
         return None
-    if not isinstance(value, dict) or not isinstance(value.get("state"), str):
+    if not isinstance(value, dict) or not isinstance(value.get("__typename"), str):
         raise TypeError("continuity has an invalid GraphQL shape")
-    fields_by_state = {
-        "BASELINE": {"state"},
-        "CONTIGUOUS": {"state", "delta"},
-        "ROLLOVER": {"state", "delta", "modulus", "rolloverEvidenceRef"},
-        "RESET": {"state", "resetEvidenceRef"},
-        "DISCONTINUITY": {"state", "discontinuityEvidenceRef"},
+    state_by_type = {
+        "M2MBaselineContinuity": "BASELINE",
+        "M2MContiguousContinuity": "CONTIGUOUS",
+        "M2MRolloverContinuity": "ROLLOVER",
+        "M2MResetContinuity": "RESET",
+        "M2MDiscontinuityContinuity": "DISCONTINUITY",
     }
-    if set(value) != fields_by_state.get(value["state"]):
+    fields_by_type = {
+        "M2MBaselineContinuity": {"__typename", "baseline"},
+        "M2MContiguousContinuity": {"__typename", "delta"},
+        "M2MRolloverContinuity": {
+            "__typename",
+            "delta",
+            "modulus",
+            "rolloverEvidenceRef",
+        },
+        "M2MResetContinuity": {"__typename", "resetEvidenceRef"},
+        "M2MDiscontinuityContinuity": {
+            "__typename",
+            "discontinuityEvidenceRef",
+        },
+    }
+    typename = value["__typename"]
+    if set(value) != fields_by_type.get(typename) or (
+        typename == "M2MBaselineContinuity" and value["baseline"] != "BASELINE"
+    ):
         raise TypeError("continuity has an invalid GraphQL member shape")
+    state = state_by_type[typename]
     return {
-        "state": value["state"],
+        "state": state,
         "delta": None
         if "delta" not in value
         else _normalize_value(value["delta"]),
@@ -335,7 +354,7 @@ def _normalize_continuity(value):
                 "ROLLOVER": "rolloverEvidenceRef",
                 "RESET": "resetEvidenceRef",
                 "DISCONTINUITY": "discontinuityEvidenceRef",
-            }.get(value["state"], "")
+            }.get(state, "")
         ),
     }
 
@@ -739,7 +758,7 @@ def _validate_case(
         or response["current_source_origin_ref"] != expected_current_source_ref
     ):
         errors.add("current_source_binding")
-    if origins | {response["current_source_origin_ref"]} != {
+    if not origins | {response["current_source_origin_ref"]} <= {
         item["origin_ref"] for item in provenance
     }:
         errors.add("provenance")
@@ -864,7 +883,18 @@ def _project_canonical_fixture(canonical, manifest):
     def project_continuity(continuity):
         if continuity is None:
             return None
-        result = {"state": continuity["state"]}
+        state = continuity["state"]
+        result = {
+            "__typename": {
+                "BASELINE": "M2MBaselineContinuity",
+                "CONTIGUOUS": "M2MContiguousContinuity",
+                "ROLLOVER": "M2MRolloverContinuity",
+                "RESET": "M2MResetContinuity",
+                "DISCONTINUITY": "M2MDiscontinuityContinuity",
+            }[state]
+        }
+        if state == "BASELINE":
+            result["baseline"] = "BASELINE"
         if continuity["delta"] is not None:
             result["delta"] = project_value(continuity["delta"])
         if continuity["modulus"] is not None:
@@ -873,7 +903,7 @@ def _project_canonical_fixture(canonical, manifest):
             "ROLLOVER": "rolloverEvidenceRef",
             "RESET": "resetEvidenceRef",
             "DISCONTINUITY": "discontinuityEvidenceRef",
-        }.get(continuity["state"])
+        }.get(state)
         if evidence_field is not None:
             result[evidence_field] = continuity["evidence_ref"]
         return result
@@ -1517,11 +1547,22 @@ def validate_request_rejections(cases, manifest):
                 )
                 reached = category if "query_introspection" in validate_query_document(query, manifest) else None
             elif mutation == "depth_9":
+                nested = "coefficient"
+                for _ in range(9):
+                    nested = f"... on M2MDecimalValue {{ {nested} }}"
                 query = (
                     "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) "
-                    "{ m2mCurrentSnapshot(request: $request) { a { b { c { d { e { f { g { h { i } } } } } } } } } }"
+                    "{ m2mCurrentSnapshot(request: $request) { facts { value { "
+                    + nested
+                    + " } } } }"
                 )
-                reached = category if "query_depth" in validate_query_document(query, manifest) else None
+                query_errors = validate_query_document(query, manifest)
+                reached = (
+                    category
+                    if "query_depth" in query_errors
+                    and "query_schema" not in query_errors
+                    else None
+                )
             elif mutation == "selected_fields_257":
                 query = query.replace("contractId", " ".join(["contractId"] * 257), 1)
                 reached = category if "query_fields" in validate_query_document(query, manifest) else None

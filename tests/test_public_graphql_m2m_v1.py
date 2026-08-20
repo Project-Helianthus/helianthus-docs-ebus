@@ -45,7 +45,7 @@ def test_manifest_is_locked_to_canonical_catalog_and_closed_public_surface():
     assert manifest["max_capabilities_per_snapshot"] == 1
     assert manifest["required_response_fields"] == ["contractId", "canonicalContractId", "assetRef", "generation", "producedAt", "evaluatedMonotonicNs", "sourceTimeState", "currentSourceOriginRef", "facts", "capabilities", "provenance", "requestedOutputs", "projectionReport"]
     assert manifest["operator_authority"] == ["dedicated_listener", "server_identity", "ca_and_trust_root", "client_certificate_issuance", "asset_allowlist", "rotation", "revocation"]
-    assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "schema_or_type_introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_closed_unions", "typename_for_closed_projection_union"]}
+    assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "schema_or_type_introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_closed_unions", "typename_for_closed_unions"]}
     assert manifest["error_contract"]["partial_snapshot_on_error"] is False
     assert manifest["credential_rotation"]["maximum_simultaneously_valid_certificates_per_principal"] == 2
     assert manifest["forbidden_surface"] == ["raw_registers", "source_shadow", "endpoints", "mutations", "subscriptions", "history", "unbounded_lists", "generic_graphql_fallback"]
@@ -943,7 +943,7 @@ def test_remaining_source_lexical_and_range_guards_are_exact():
         if item["factId"] == "pv.energy.active_export_total"
     )
     energy["continuity"] = {
-        "state": "CONTIGUOUS",
+        "__typename": "M2MContiguousContinuity",
         "delta": {"coefficient": "-0", "scale": 0},
     }
     assert "continuity" in validate_case(continuity, manifest, canonical)
@@ -1204,13 +1204,7 @@ def test_positive_fixture_is_an_executable_graphql_response():
                 return "M2MDecimalValue"
             return "M2MEnumValue" if "symbol" in value else "M2MBitfieldValue"
         if abstract_type.name == "M2MContinuity":
-            return {
-                "BASELINE": "M2MBaselineContinuity",
-                "CONTIGUOUS": "M2MContiguousContinuity",
-                "ROLLOVER": "M2MRolloverContinuity",
-                "RESET": "M2MResetContinuity",
-                "DISCONTINUITY": "M2MDiscontinuityContinuity",
-            }[value["state"]]
+            return value["__typename"]
         if abstract_type.name == "M2MProjectionReportEntry":
             return value["__typename"]
         raise AssertionError(f"unexpected abstract type: {abstract_type.name}")

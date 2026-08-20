@@ -51,11 +51,11 @@ type M2MDecimalValue { coefficient: String!, scale: Int! }
 type M2MEnumValue { symbol: String! }
 type M2MBitfieldValue { symbols: [String!]! }
 union M2MContinuity = M2MBaselineContinuity | M2MContiguousContinuity | M2MRolloverContinuity | M2MResetContinuity | M2MDiscontinuityContinuity
-type M2MBaselineContinuity { state: M2MContinuityState! }
-type M2MContiguousContinuity { state: M2MContinuityState!, delta: M2MDecimalValue! }
-type M2MRolloverContinuity { state: M2MContinuityState!, delta: M2MDecimalValue!, modulus: M2MDecimalValue!, rolloverEvidenceRef: String! }
-type M2MResetContinuity { state: M2MContinuityState!, resetEvidenceRef: String! }
-type M2MDiscontinuityContinuity { state: M2MContinuityState!, discontinuityEvidenceRef: String }
+type M2MBaselineContinuity { baseline: M2MBaselineMarker! }
+type M2MContiguousContinuity { delta: M2MDecimalValue! }
+type M2MRolloverContinuity { delta: M2MDecimalValue!, modulus: M2MDecimalValue!, rolloverEvidenceRef: String! }
+type M2MResetContinuity { resetEvidenceRef: String! }
+type M2MDiscontinuityContinuity { discontinuityEvidenceRef: String }
 type M2MCapability { id: String!, outcome: M2MCapabilityOutcome! }
 type M2MRequestedOutput { sourceRef: String!, requestedOutputRef: String! }
 union M2MProjectionReportEntry = M2MMappedProjectionReportEntry | M2MWithheldProjectionReportEntry | M2MUnrepresentableProjectionReportEntry
@@ -77,5 +77,5 @@ enum M2MQuality { GOOD SUSPECT BAD }
 enum M2MAvailability { AVAILABLE UNAVAILABLE UNSUPPORTED }
 enum M2MFreshness { FRESH STALE EXPIRED }
 enum M2MSourceTimeState { UNAVAILABLE VALID INVALID }
-enum M2MContinuityState { BASELINE CONTIGUOUS ROLLOVER RESET DISCONTINUITY }
+enum M2MBaselineMarker { BASELINE }
 enum M2MCapabilityOutcome { SATISFIED NOT_SATISFIED }

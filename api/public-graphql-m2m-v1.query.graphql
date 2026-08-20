@@ -19,14 +19,15 @@ query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {
       unit quality availability freshness receiptMonotonicNs
       freshUntilMonotonicNs retainUntilMonotonicNs freshnessPolicy originRef
       continuity {
-        ... on M2MBaselineContinuity { state }
-        ... on M2MContiguousContinuity { state delta { coefficient scale } }
+        __typename
+        ... on M2MBaselineContinuity { baseline }
+        ... on M2MContiguousContinuity { delta { coefficient scale } }
         ... on M2MRolloverContinuity {
-          state delta { coefficient scale } modulus { coefficient scale }
+          delta { coefficient scale } modulus { coefficient scale }
           rolloverEvidenceRef
         }
-        ... on M2MResetContinuity { state resetEvidenceRef }
-        ... on M2MDiscontinuityContinuity { state discontinuityEvidenceRef }
+        ... on M2MResetContinuity { resetEvidenceRef }
+        ... on M2MDiscontinuityContinuity { discontinuityEvidenceRef }
       }
     }
     capabilities { id outcome }
