@@ -111,14 +111,29 @@ def _set_path(value, pointer, replacement):
     return result
 
 
-def _walk_keys(value):
-    if isinstance(value, dict):
-        for key, child in value.items():
-            yield key
-            yield from _walk_keys(child)
-    elif isinstance(value, list):
-        for child in value:
-            yield from _walk_keys(child)
+def _walk_keys(value, *, max_depth=64):
+    stack = [(value, 0)]
+    while stack:
+        current, depth = stack.pop()
+        if depth > max_depth:
+            raise ValidationError("json depth exceeds conformance bound")
+        if isinstance(current, dict):
+            for key, child in current.items():
+                yield key
+                stack.append((child, depth + 1))
+        elif isinstance(current, list):
+            stack.extend((child, depth + 1) for child in current)
+
+
+def _compact_json_size(value):
+    return len(
+        json.dumps(
+            value,
+            ensure_ascii=True,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    )
 
 
 def _normalize_dimensions(value):
@@ -343,8 +358,12 @@ def _validate_case(case, manifest, canonical_manifest, source_registry):
         errors.add("time_identity")
     if response.get("source_time_state") not in {"UNAVAILABLE", "VALID", "INVALID"}:
         errors.add("source_time_state")
-    if any(key in FORBIDDEN for key in _walk_keys(case)):
-        errors.add("forbidden_surface")
+    try:
+        if any(key in FORBIDDEN for key in _walk_keys(case)):
+            errors.add("forbidden_surface")
+    except ValidationError:
+        errors.add("structural_shape")
+        return sorted(errors)
     facts = response.get("facts", [])
     catalog = {fact["id"]: fact for fact in canonical_manifest["facts"]}
     policies = {policy["id"]: policy for policy in canonical_manifest["freshness_policies"]}
@@ -538,8 +557,16 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
     response = data["m2mCurrentSnapshot"]
     if set(response) != set(manifest["required_response_fields"]):
         errors.add("response_fields")
-    if any(key in FORBIDDEN for key in _walk_keys(case)):
-        errors.add("forbidden_surface")
+    try:
+        if any(key in FORBIDDEN for key in _walk_keys(case)):
+            errors.add("forbidden_surface")
+    except ValidationError:
+        errors.add("structural_shape")
+        return sorted(errors)
+    if _compact_json_size(request_body) > manifest["request_bounds"]["max_body_bytes"]:
+        errors.add("request_bytes")
+    if _compact_json_size(response_body) > manifest["request_bounds"]["max_response_bytes"]:
+        errors.add("response_bytes")
     for field in ("facts", "capabilities", "provenance"):
         items = response.get(field, [])
         if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
@@ -562,6 +589,43 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
         return sorted(errors)
 
 
+def validate_error_envelopes(cases, manifest):
+    expected_codes = {
+        manifest["error_contract"]["contract_incompatible"],
+        manifest["error_contract"]["asset_forbidden"],
+        manifest["error_contract"]["asset_not_found"],
+        manifest["error_contract"]["source_unavailable"],
+    }
+    errors = cases.get("errors")
+    if (
+        not isinstance(errors, list)
+        or {item.get("code") for item in errors if isinstance(item, dict)}
+        != expected_codes
+    ):
+        raise ValidationError("error_envelope_codes")
+    for item in errors:
+        if set(item) != {"code", "response"} or not isinstance(
+            item["response"], dict
+        ):
+            raise ValidationError("error_envelope_shape")
+        response = item["response"]
+        expected_error = {
+            "message": manifest["error_contract"]["authenticated_error_message"],
+            "path": ["m2mCurrentSnapshot"],
+            "extensions": {"code": item["code"]},
+        }
+        if (
+            set(response) != {"status", "body"}
+            or type(response["status"]) is not int
+            or response["status"]
+            != manifest["error_contract"]["authenticated_graphql_http_status"]
+            or response["body"] != {"data": None, "errors": [expected_error]}
+            or _compact_json_size(response["body"])
+            > manifest["request_bounds"]["max_response_bytes"]
+        ):
+            raise ValidationError("error_envelope_shape")
+
+
 def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Path):
     manifest, canonical, cases = map(load_json, (manifest_path, canonical_manifest_path, cases_path))
     if manifest["source_contract"] != canonical["contract_id"] or manifest["catalog_fact_ids"] != [fact["id"] for fact in canonical["facts"]]:
@@ -573,6 +637,7 @@ def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Pat
         candidate = _set_path(cases["positive"], negative["path"], negative["value"])
         if negative["error"] not in validate_case(candidate, manifest, canonical):
             raise ValidationError("negative: " + negative["id"])
+    validate_error_envelopes(cases, manifest)
 
 
 def main():
@@ -587,6 +652,7 @@ def main():
         AttributeError,
         IndexError,
         KeyError,
+        RecursionError,
         TypeError,
         ValueError,
         ValidationError,

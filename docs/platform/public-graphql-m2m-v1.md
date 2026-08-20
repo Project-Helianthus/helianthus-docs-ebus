@@ -84,6 +84,14 @@ partial snapshot and never fall back to generic GraphQL. A retained stale or
 expired canonical snapshot is data, not a transport error, and keeps its
 canonical availability/freshness state.
 
+All four authenticated failures use HTTP status `200` and the same closed
+GraphQL error envelope: `data` is `null`; `errors` contains exactly one row with
+the constant message `M2M request failed`, path `m2mCurrentSnapshot`, and only
+the applicable code in `extensions.code`. This follows non-null root-field error
+propagation while preventing asset, source, or deployment details from leaking
+through messages. TLS/client-certificate rejection remains pre-HTTP and returns
+no GraphQL envelope.
+
 Credential rotation permits only the predecessor and replacement certificate
 during one operator-bounded overlap: issue replacement, verify it on the
 dedicated listener, then revoke the predecessor. Revocation is checked before

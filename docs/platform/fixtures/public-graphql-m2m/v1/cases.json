@@ -286,6 +286,88 @@
       }
     }
   },
+  "errors": [
+    {
+      "code": "CONTRACT_INCOMPATIBLE",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "CONTRACT_INCOMPATIBLE"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "ASSET_FORBIDDEN",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "ASSET_FORBIDDEN"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "ASSET_NOT_FOUND",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "ASSET_NOT_FOUND"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "SOURCE_UNAVAILABLE",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "SOURCE_UNAVAILABLE"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
   "negative": [
     {
       "id": "incompatible-contract",
