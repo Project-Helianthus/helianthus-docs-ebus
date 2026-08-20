@@ -7,6 +7,12 @@
     {"operation": "FC04", "function_code": 4, "table": "input_registers", "executable": false},
     {"operation": "FC2B_MEI_0E", "function_code": 43, "mei_type": 14, "executable": false}
   ],
+  "downstream_outcomes": [
+    {"milestone": "FMV3-M7-03", "repository": "Project-Helianthus/helianthus-modbusreg", "merge_sha": "5c76899f6e15c52110e14e33e0cc25fe2f3a452b", "profile": "growatt", "outcome": "NO_ADMISSIBLE_PROFILE", "artifact": "profiles/vendor/growatt/disposition.json"},
+    {"milestone": "FMV3-M7-04", "repository": "Project-Helianthus/helianthus-modbusreg", "merge_sha": "110fe6417b511d8cacfdf22fce5d3d5581672c32", "profile": "huawei.smartlogger", "outcome": "NO_ADMISSIBLE_PROFILE", "artifact": "profiles/vendor/huawei/smartlogger-disposition.json"},
+    {"milestone": "FMV3-M7-04", "repository": "Project-Helianthus/helianthus-modbusreg", "merge_sha": "110fe6417b511d8cacfdf22fce5d3d5581672c32", "profile": "huawei.sdongle", "outcome": "NO_ADMISSIBLE_PROFILE", "artifact": "profiles/vendor/huawei/sdongle-disposition.json"},
+    {"milestone": "FMV3-M7-04", "repository": "Project-Helianthus/helianthus-modbusreg", "merge_sha": "110fe6417b511d8cacfdf22fce5d3d5581672c32", "profile": "huawei.emma", "outcome": "NO_ADMISSIBLE_PROFILE", "artifact": "profiles/vendor/huawei/emma-disposition.json"}
+  ],
   "packets": [
     {
       "packet_id": "SUNSPEC-EXPANSION-V1",

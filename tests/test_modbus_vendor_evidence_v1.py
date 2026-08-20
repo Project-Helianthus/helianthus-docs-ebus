@@ -15,14 +15,13 @@ def test_mixed_catalog_runtime_contract_is_explicit_and_fail_closed():
     contract = " ".join(CONTRACT.read_text(encoding="utf-8").split())
     required = {
         "## Mixed-Catalog Selection Contract",
-        "`DetectionOptions.RequireExclusiveMatch`",
+        "requires exclusive selection",
         "qualified, active, default-enabled, and enabled",
         "`INSUFFICIENT_EVIDENCE` before score ranking",
         "regardless of candidate score, catalog order, or detector order",
         "`outcome=ambiguous`, `reason=multiple_matches`",
         "empty selected profile ID and version",
-        "When the option is unset",
-        "ranked detector behavior remains compatible and unchanged",
+        "never arbitrate between multiple eligible profiles",
         "Selection is stateless and does not mutate activation lifecycle",
         "Growatt, SmartLogger, S-Dongle, and EMMA",
         "`NO_ADMISSIBLE_PROFILE`",
@@ -46,7 +45,8 @@ def operation_records(value):
 def test_closed_packet_inventory_and_no_support_claim():
     manifest = load_manifest()
     assert set(manifest) == {
-        "contract_id", "milestone", "support_claim", "runtime_allowlist", "packets"
+        "contract_id", "milestone", "support_claim", "runtime_allowlist",
+        "downstream_outcomes", "packets",
     }
     assert manifest["contract_id"] == "helianthus.modbus-vendor-evidence/v1"
     assert manifest["milestone"] == "FMV3-M7-01"
@@ -55,6 +55,39 @@ def test_closed_packet_inventory_and_no_support_claim():
     assert set(packets) == {
         "SUNSPEC-EXPANSION-V1", "GROWATT-CANDIDATE-V1", "HUAWEI-GATEWAYS-V1"
     }
+
+
+def test_downstream_terminal_dispositions_are_exact_and_do_not_rewrite_intake():
+    manifest = load_manifest()
+    outcomes = manifest["downstream_outcomes"]
+    assert outcomes == [
+        {
+            "milestone": "FMV3-M7-03",
+            "repository": "Project-Helianthus/helianthus-modbusreg",
+            "merge_sha": "5c76899f6e15c52110e14e33e0cc25fe2f3a452b",
+            "profile": "growatt",
+            "outcome": "NO_ADMISSIBLE_PROFILE",
+            "artifact": "profiles/vendor/growatt/disposition.json",
+        },
+        *(
+            {
+                "milestone": "FMV3-M7-04",
+                "repository": "Project-Helianthus/helianthus-modbusreg",
+                "merge_sha": "110fe6417b511d8cacfdf22fce5d3d5581672c32",
+                "profile": profile,
+                "outcome": "NO_ADMISSIBLE_PROFILE",
+                "artifact": artifact,
+            }
+            for profile, artifact in (
+                ("huawei.smartlogger", "profiles/vendor/huawei/smartlogger-disposition.json"),
+                ("huawei.sdongle", "profiles/vendor/huawei/sdongle-disposition.json"),
+                ("huawei.emma", "profiles/vendor/huawei/emma-disposition.json"),
+            )
+        ),
+    ]
+    packets = {packet["packet_id"]: packet for packet in manifest["packets"]}
+    assert packets["GROWATT-CANDIDATE-V1"]["disposition"] == "HYPOTHESIS"
+    assert packets["HUAWEI-GATEWAYS-V1"]["disposition"] == "THREE_INDEPENDENT_CANDIDATES"
 
 
 def test_every_detector_pdu_is_read_only_and_allowlisted():
