@@ -4,6 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "docs/platform/manifests/public-graphql-m2m-v1.json"
 CANONICAL = ROOT / "docs/platform/manifests/canonical-pv-v1.json"
@@ -11,7 +13,11 @@ CASES = ROOT / "docs/platform/fixtures/public-graphql-m2m/v1/cases.json"
 SDL = ROOT / "api/public-graphql-m2m-v1.graphql"
 DOC = ROOT / "docs/platform/public-graphql-m2m-v1.md"
 sys.path.insert(0, str(ROOT / "scripts"))
-from validate_public_graphql_m2m_v1 import validate, validate_case  # noqa: E402
+from validate_public_graphql_m2m_v1 import (  # noqa: E402
+    ValidationError,
+    validate,
+    validate_case,
+)
 
 
 def load(path):
@@ -521,3 +527,31 @@ def test_request_rejection_fixtures_bind_input_class_to_exact_response():
         assert item["request"]["method"] == "POST"
         assert item["request"]["path"] == manifest["route"]
         assert item["response"] == envelopes[item["code"]]
+
+
+def test_error_envelope_mutations_are_rejected_end_to_end(tmp_path):
+    cases = load(CASES)
+    mutations = []
+
+    wrong_status = copy.deepcopy(cases)
+    wrong_status["errors"][0]["response"]["status"] = 418
+    mutations.append(wrong_status)
+
+    wrong_body = copy.deepcopy(cases)
+    wrong_body["errors"][0]["response"]["body"] = {"detail": "leak"}
+    mutations.append(wrong_body)
+
+    for field, value in (
+        ("message", "leak"),
+        ("path", ["other"]),
+        ("extensions", {"code": "WRONG"}),
+    ):
+        candidate = copy.deepcopy(cases)
+        candidate["errors"][0]["response"]["body"]["errors"][0][field] = value
+        mutations.append(candidate)
+
+    for index, candidate in enumerate(mutations):
+        candidate_path = tmp_path / f"invalid-error-{index}.json"
+        candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
+        with pytest.raises(ValidationError):
+            validate(MANIFEST, CANONICAL, candidate_path)
