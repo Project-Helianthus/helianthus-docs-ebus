@@ -90,14 +90,19 @@ nor access to canonical or source-owned internals.
 
 ## Conformance Assets
 
-The conformance boundary is the GraphQL operation payload, not an internal Go
-or canonical JSON struct. Fixtures therefore use the SDL's camelCase names,
-dimension lists, and concrete union-member payloads. The validator first applies
-one mandatory lossless mapping into canonical field names and value
-discriminators, then enforces the canonical catalog and lifecycle invariants.
-Unknown fields, duplicate dimension keys, incomplete union members, or a mapping
-that cannot be completed fail closed as structural errors; implementations may
-not substitute a private normalized fixture for this wire-shaped boundary.
+The conformance boundary is the complete GraphQL HTTP envelope, not an internal
+Go or canonical JSON struct. The positive request fixes `POST`, the route,
+`operationName`, the full query with inline selections for all three union
+members, and the variables object. Its paired response fixes HTTP status and the
+`data.m2mCurrentSnapshot` root. Payload fields use the SDL's camelCase names,
+dimension lists, and concrete union-member shapes.
+
+The validator checks that envelope and query before applying one mandatory
+lossless mapping into canonical field names and value discriminators, then
+enforces the canonical catalog and lifecycle invariants. Unknown fields,
+duplicate dimension keys, incomplete union members, or a mapping that cannot be
+completed fail closed; implementations may not substitute a private normalized
+fixture or resolver-only object for this wire-shaped boundary.
 
 - [SDL](../../api/public-graphql-m2m-v1.graphql)
 - [machine-readable manifest](./manifests/public-graphql-m2m-v1.json)

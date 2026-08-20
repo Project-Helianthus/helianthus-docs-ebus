@@ -23,12 +23,14 @@ FORBIDDEN = {
     "rawRegisters",
     "raw_registers",
     "sourceShadow",
+    "sourceShadowContents",
     "source_shadow",
     "endpoint",
     "endpoints",
     "address",
     "credentials",
     "history",
+    "privateFixturePath",
 }
 INTERNAL_RESPONSE_FIELDS = {
     "contract_id",
@@ -156,7 +158,8 @@ def _normalize_continuity(value):
 
 
 def _normalize_case(case):
-    request, response = case["request"], case["response"]
+    request = case["request"]["body"]["variables"]["request"]
+    response = case["response"]["body"]["data"]["m2mCurrentSnapshot"]
     facts = []
     for fact in response["facts"]:
         facts.append(
@@ -449,15 +452,53 @@ def _validate_case(case, manifest, canonical_manifest):
 
 
 def validate_case(case, manifest, canonical_manifest):
-    """Validate the GraphQL operation payload after a mandatory lossless mapping."""
+    """Validate the GraphQL HTTP envelope after a mandatory lossless mapping."""
     if not isinstance(case, dict):
         return ["structural_shape"]
-    request, response = case.get("request"), case.get("response")
-    if not isinstance(request, dict) or not isinstance(response, dict):
+    request_envelope, response_envelope = case.get("request"), case.get("response")
+    if not isinstance(request_envelope, dict) or not isinstance(response_envelope, dict):
         return ["structural_shape"]
     errors = set()
+    if (
+        set(request_envelope) != {"method", "path", "body"}
+        or request_envelope.get("method") != manifest["request_bounds"]["method"]
+        or request_envelope.get("path") != manifest["route"]
+        or not isinstance(request_envelope.get("body"), dict)
+    ):
+        errors.add("request_envelope")
+    request_body = request_envelope.get("body")
+    if not isinstance(request_body, dict):
+        errors.add("structural_shape")
+        return sorted(errors)
+    if set(request_body) != {"operationName", "query", "variables"}:
+        errors.add("request_envelope")
+    if (
+        request_body.get("operationName") != manifest["request_bounds"]["operation_name"]
+        or request_body.get("query") != manifest["conformance_query"]
+    ):
+        errors.add("query_shape")
+    variables = request_body.get("variables")
+    if not isinstance(variables, dict) or set(variables) != {"request"} or not isinstance(variables.get("request"), dict):
+        errors.add("structural_shape")
+        return sorted(errors)
+    request = variables["request"]
     if set(request) != {"contractId", "assetRef"}:
         errors.add("request_fields")
+    if (
+        set(response_envelope) != {"status", "body"}
+        or response_envelope.get("status") != 200
+        or not isinstance(response_envelope.get("body"), dict)
+    ):
+        errors.add("response_envelope")
+    response_body = response_envelope.get("body")
+    if not isinstance(response_body, dict) or set(response_body) != {"data"} or not isinstance(response_body.get("data"), dict):
+        errors.add("structural_shape")
+        return sorted(errors)
+    data = response_body["data"]
+    if set(data) != {"m2mCurrentSnapshot"} or not isinstance(data.get("m2mCurrentSnapshot"), dict):
+        errors.add("structural_shape")
+        return sorted(errors)
+    response = data["m2mCurrentSnapshot"]
     if set(response) != set(manifest["required_response_fields"]):
         errors.add("response_fields")
     if any(key in FORBIDDEN for key in _walk_keys(case)):
@@ -467,6 +508,12 @@ def validate_case(case, manifest, canonical_manifest):
         if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
             errors.add("structural_shape")
             return sorted(errors)
+    for fact in response["facts"]:
+        if set(fact) != set(manifest["required_fact_fields"]):
+            errors.add("fact_fields")
+    for item in response["provenance"]:
+        if set(item) != set(manifest["opaque_provenance_fields"]):
+            errors.add("provenance_fields")
     try:
         normalized = _normalize_case(case)
         errors.update(_validate_case(normalized, manifest, canonical_manifest))

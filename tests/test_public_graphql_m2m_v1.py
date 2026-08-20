@@ -18,6 +18,10 @@ def load(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def response_payload(case):
+    return case["response"]["body"]["data"]["m2mCurrentSnapshot"]
+
+
 def test_manifest_is_locked_to_canonical_catalog_and_closed_public_surface():
     manifest, canonical = load(MANIFEST), load(CANONICAL)
     assert manifest["route"] == "/graphql/m2m/v1"
@@ -83,13 +87,14 @@ def test_capability_outcome_is_derived_from_required_fact_identities():
     }
     observed = {
         (item["factId"], tuple(sorted((part["key"], part["value"]) for part in item["dimensions"])))
-        for item in cases["positive"]["response"]["facts"]
+        for item in response_payload(cases["positive"])["facts"]
     }
     assert required <= observed
     candidate = copy.deepcopy(cases["positive"])
-    candidate["response"]["facts"] = [
+    payload = response_payload(candidate)
+    payload["facts"] = [
         item
-        for item in candidate["response"]["facts"]
+        for item in payload["facts"]
         if not (
             item["factId"] == "pv.ac.current"
             and item["dimensions"] == [{"key": "phase", "value": "L3"}]
@@ -101,20 +106,21 @@ def test_capability_outcome_is_derived_from_required_fact_identities():
 def test_opaque_dimensions_reject_network_endpoints():
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     candidate = copy.deepcopy(cases["positive"])
-    fact = copy.deepcopy(candidate["response"]["facts"][0])
+    payload = response_payload(candidate)
+    fact = copy.deepcopy(payload["facts"][0])
     fact.update(
         factId="pv.dc.current",
         dimensions=[{"key": "input_id", "value": "192.168.1.1:502"}],
         unit="A",
     )
-    candidate["response"]["facts"].append(fact)
+    payload["facts"].append(fact)
     assert "dimension_redaction" in validate_case(candidate, manifest, canonical)
 
 
 def test_freshness_deadlines_and_state_follow_canonical_policy():
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     candidate = copy.deepcopy(cases["positive"])
-    fact = candidate["response"]["facts"][0]
+    fact = response_payload(candidate)["facts"][0]
     fact["freshUntilMonotonicNs"] = str(int(fact["receiptMonotonicNs"]) + 1)
     assert "freshness_policy" in validate_case(candidate, manifest, canonical)
 
@@ -124,7 +130,7 @@ def test_accumulator_continuity_variants_are_closed():
     candidate = copy.deepcopy(cases["positive"])
     energy = next(
         item
-        for item in candidate["response"]["facts"]
+        for item in response_payload(candidate)["facts"]
         if item["factId"] == "pv.energy.active_export_total"
     )
     invalid = [
@@ -142,9 +148,10 @@ def test_accumulator_continuity_variants_are_closed():
 def test_freshness_transition_boundaries_are_exact():
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     candidate = copy.deepcopy(cases["positive"])
-    candidate["response"]["facts"] = [candidate["response"]["facts"][0]]
-    candidate["response"]["capabilities"][0]["outcome"] = "NOT_SATISFIED"
-    fact = candidate["response"]["facts"][0]
+    payload = response_payload(candidate)
+    payload["facts"] = [payload["facts"][0]]
+    payload["capabilities"][0]["outcome"] = "NOT_SATISFIED"
+    fact = payload["facts"][0]
     fresh_until = int(fact["freshUntilMonotonicNs"])
     retain_until = int(fact["retainUntilMonotonicNs"])
 
@@ -155,7 +162,7 @@ def test_freshness_transition_boundaries_are_exact():
         (retain_until, "UNAVAILABLE", "EXPIRED"),
     ]
     for evaluated, availability, freshness in cases_to_check:
-        candidate["response"]["evaluatedMonotonicNs"] = str(evaluated)
+        payload["evaluatedMonotonicNs"] = str(evaluated)
         fact["availability"] = availability
         fact["freshness"] = freshness
         errors = validate_case(candidate, manifest, canonical)
@@ -166,9 +173,10 @@ def test_freshness_transition_boundaries_are_exact():
 def test_empty_success_snapshot_is_rejected():
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     candidate = copy.deepcopy(cases["positive"])
-    candidate["response"]["facts"] = []
-    candidate["response"]["provenance"] = []
-    candidate["response"]["capabilities"][0]["outcome"] = "NOT_SATISFIED"
+    payload = response_payload(candidate)
+    payload["facts"] = []
+    payload["provenance"] = []
+    payload["capabilities"][0]["outcome"] = "NOT_SATISFIED"
     assert "empty_snapshot" in validate_case(candidate, manifest, canonical)
 
 
@@ -212,7 +220,7 @@ def test_validator_fails_closed_on_wrong_json_container_types(tmp_path):
 def test_generation_is_a_positive_canonical_integer_string():
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     candidate = copy.deepcopy(cases["positive"])
-    candidate["response"]["generation"] = "0"
+    response_payload(candidate)["generation"] = "0"
     assert "time_identity" in validate_case(candidate, manifest, canonical)
 
 
@@ -264,7 +272,7 @@ def test_public_provenance_projects_safe_canonical_fields_and_declares_loss():
         if field != "originRef"
     }
     assert required == projected | set(manifest["provenance_projection_loss"])
-    assert set(cases["positive"]["response"]["provenance"][0]) == set(
+    assert set(response_payload(cases["positive"])["provenance"][0]) == set(
         manifest["opaque_provenance_fields"]
     )
 
