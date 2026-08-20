@@ -11,6 +11,8 @@ import re
 import sys
 from pathlib import Path
 
+from graphql import GraphQLError, build_schema, parse, validate as graphql_validate
+
 DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)$")
 NONNEGATIVE_INTEGER = re.compile(r"0|[1-9][0-9]*$")
 POSITIVE_INTEGER = re.compile(r"[1-9][0-9]*$")
@@ -20,6 +22,8 @@ SOURCE_TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9._@-]*$")
 VERSION_TOKEN = re.compile(r"[0-9][0-9A-Za-z._-]*$")
 ASSET = re.compile(r"pv-asset-[A-Za-z0-9_-]{1,96}$")
 ROOT = Path(__file__).resolve().parents[1]
+SDL_PATH = ROOT / "api/public-graphql-m2m-v1.graphql"
+GRAPHQL_SCHEMA = build_schema(SDL_PATH.read_text(encoding="utf-8"))
 FORBIDDEN = {
     "rawRegisters",
     "raw_registers",
@@ -163,6 +167,90 @@ def _compact_json_size(value):
             sort_keys=True,
         ).encode("utf-8")
     )
+
+
+def validate_query_document(query, manifest):
+    errors = set()
+    if not isinstance(query, str):
+        return ["query_syntax"]
+    try:
+        document = parse(query, no_location=True, max_tokens=4096)
+    except (GraphQLError, RecursionError):
+        return ["query_syntax"]
+
+    operations = [
+        definition
+        for definition in document.definitions
+        if definition.kind == "operation_definition"
+    ]
+    if (
+        len(operations) != 1
+        or len(document.definitions) != 1
+        or operations[0].operation.value != "query"
+        or operations[0].name is None
+        or operations[0].name.value != manifest["request_bounds"]["operation_name"]
+    ):
+        errors.add("query_operations")
+    if any(
+        definition.kind in {"fragment_definition", "fragment_spread"}
+        for definition in document.definitions
+    ):
+        errors.add("query_fragment")
+
+    selected_fields = 0
+    max_depth = 0
+    stack = [
+        (operation.selection_set, 0)
+        for operation in operations
+        if operation.selection_set is not None
+    ]
+    allowed_inline_types = {
+        "M2MDecimalValue",
+        "M2MEnumValue",
+        "M2MBitfieldValue",
+    }
+    while stack:
+        selection_set, parent_depth = stack.pop()
+        for selection in selection_set.selections:
+            if selection.kind == "field":
+                selected_fields += 1
+                depth = parent_depth + 1
+                max_depth = max(max_depth, depth)
+                if selection.alias is not None:
+                    errors.add("query_alias")
+                if selection.name.value.startswith("__"):
+                    errors.add("query_introspection")
+                if selection.directives:
+                    errors.add("query_directive")
+                if selection.selection_set is not None:
+                    stack.append((selection.selection_set, depth))
+            elif selection.kind == "fragment_spread":
+                errors.add("query_fragment")
+            elif selection.kind == "inline_fragment":
+                if selection.directives:
+                    errors.add("query_directive")
+                type_name = (
+                    selection.type_condition.name.value
+                    if selection.type_condition is not None
+                    else None
+                )
+                if type_name not in allowed_inline_types:
+                    errors.add("query_fragment")
+                stack.append((selection.selection_set, parent_depth))
+            else:
+                errors.add("query_syntax")
+    if selected_fields > manifest["request_bounds"]["max_selected_fields"]:
+        errors.add("query_fields")
+    if max_depth > manifest["request_bounds"]["max_query_depth"]:
+        errors.add("query_depth")
+    if any(operation.directives for operation in operations):
+        errors.add("query_directive")
+    try:
+        if graphql_validate(GRAPHQL_SCHEMA, document, max_errors=100):
+            errors.add("query_schema")
+    except RecursionError:
+        errors.add("query_schema")
+    return sorted(errors)
 
 
 def _normalize_dimensions(value):
@@ -628,6 +716,7 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
         or request_body.get("query") != manifest["conformance_query"]
     ):
         errors.add("query_shape")
+    errors.update(validate_query_document(request_body.get("query"), manifest))
     variables = request_body.get("variables")
     if not isinstance(variables, dict) or set(variables) != {"request"} or not isinstance(variables.get("request"), dict):
         errors.add("structural_shape")

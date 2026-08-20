@@ -1,6 +1,9 @@
 # Complete Python 3.12.10 CI lock. Pure-Python packages accept their universal
 # wheel and sdist; PyYAML accepts the GitHub Linux x86_64 and local macOS
 # x86_64/arm64 wheels plus the portable sdist.
+graphql-core==3.2.11 \
+    --hash=sha256:0b3e35ff41e9adba53021ab0cef475eb18f57c7f53f0f2ca55567fbf3c537ea0 \
+    --hash=sha256:e7e156d10beb127cab5c89ff0da71416fc73d27c484a4757d3b2d35633774802
 iniconfig==2.3.0 \
     --hash=sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12 \
     --hash=sha256:c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730
