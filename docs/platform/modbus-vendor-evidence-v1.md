@@ -53,3 +53,28 @@ reads and bounded extended-MEI cursor/wrap support. M7-04 then decides
 SmartLogger, S-Dongle, and EMMA independently. M7-05 proves deterministic
 mixed-catalog selection across those three families plus direct inverters. No
 later node may reinterpret this evidence as a support claim.
+
+## Mixed-Catalog Selection Contract
+
+FMV3-M7-05 uses the opt-in registry option
+`DetectionOptions.RequireExclusiveMatch` when independent family detectors
+feed one mixed primary catalog. Eligibility is evaluated before selection: a
+candidate must be qualified, active, default-enabled, and enabled by its
+detector declaration. Revoked, superseded, unqualified, default-off, disabled,
+or non-admitted candidates cannot participate in a positive match.
+
+With exclusive matching enabled, two or more positive candidates produce
+`INSUFFICIENT_EVIDENCE` before score ranking, regardless of candidate score,
+catalog order, or detector order. The durable registry decision is
+`outcome=ambiguous`, `reason=multiple_matches`, with empty selected profile ID
+and version. No first-match or highest-score priority is permitted. With no
+positive candidate the result remains `no_match`; with exactly one eligible
+positive candidate that profile may be selected. When the option is unset,
+the existing ranked detector behavior remains compatible and unchanged.
+
+Selection is stateless and does not mutate activation lifecycle. It only
+returns an immutable decision; activation remains a downstream responsibility.
+The current Growatt, SmartLogger, S-Dongle, and EMMA dispositions remain
+`NO_ADMISSIBLE_PROFILE` and absent from the production catalog. The Fronius
+GEN24 decision remains post-primary SunSpec flavor classification, not a
+competing mixed-catalog primary.

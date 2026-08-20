@@ -4,10 +4,32 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "docs/platform/manifests/modbus-vendor-evidence-v1.json"
+CONTRACT = ROOT / "docs/platform/modbus-vendor-evidence-v1.md"
 
 
 def load_manifest():
     return json.loads(MANIFEST.read_text(encoding="utf-8"))
+
+
+def test_mixed_catalog_runtime_contract_is_explicit_and_fail_closed():
+    contract = " ".join(CONTRACT.read_text(encoding="utf-8").split())
+    required = {
+        "## Mixed-Catalog Selection Contract",
+        "`DetectionOptions.RequireExclusiveMatch`",
+        "qualified, active, default-enabled, and enabled",
+        "`INSUFFICIENT_EVIDENCE` before score ranking",
+        "regardless of candidate score, catalog order, or detector order",
+        "`outcome=ambiguous`, `reason=multiple_matches`",
+        "empty selected profile ID and version",
+        "When the option is unset",
+        "ranked detector behavior remains compatible and unchanged",
+        "Selection is stateless and does not mutate activation lifecycle",
+        "Growatt, SmartLogger, S-Dongle, and EMMA",
+        "`NO_ADMISSIBLE_PROFILE`",
+        "post-primary SunSpec flavor classification",
+    }
+    missing = sorted(fragment for fragment in required if fragment not in contract)
+    assert not missing, missing
 
 
 def operation_records(value):
