@@ -73,3 +73,73 @@ def test_validator_cli_is_deterministic():
     result = subprocess.run([sys.executable, "scripts/validate_public_graphql_m2m_v1.py", "--manifest", str(MANIFEST), "--canonical-manifest", str(CANONICAL), "--cases", str(CASES)], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "public_graphql_m2m_v1_ok"
+
+
+def test_capability_outcome_is_derived_from_required_fact_identities():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    required = {
+        (item["fact_id"], tuple(sorted(item["dimensions"].items())))
+        for item in canonical["capability_packs"][0]["required"]
+    }
+    observed = {
+        (item["fact_id"], tuple(sorted(item["dimensions"].items())))
+        for item in cases["positive"]["response"]["facts"]
+    }
+    assert required <= observed
+    candidate = copy.deepcopy(cases["positive"])
+    candidate["response"]["facts"] = [
+        item
+        for item in candidate["response"]["facts"]
+        if not (
+            item["fact_id"] == "pv.ac.current"
+            and item["dimensions"] == {"phase": "L3"}
+        )
+    ]
+    assert "capability_outcome" in validate_case(candidate, manifest, canonical)
+
+
+def test_opaque_dimensions_reject_network_endpoints():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(cases["positive"])
+    fact = copy.deepcopy(candidate["response"]["facts"][0])
+    fact.update(
+        fact_id="pv.dc.current",
+        dimensions={"input_id": "192.168.1.1:502"},
+        unit="A",
+    )
+    candidate["response"]["facts"].append(fact)
+    assert "dimension_redaction" in validate_case(candidate, manifest, canonical)
+
+
+def test_freshness_deadlines_and_state_follow_canonical_policy():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(cases["positive"])
+    fact = candidate["response"]["facts"][0]
+    fact["fresh_until_monotonic_ns"] = str(int(fact["receipt_monotonic_ns"]) + 1)
+    assert "freshness_policy" in validate_case(candidate, manifest, canonical)
+
+
+def test_accumulator_continuity_variants_are_closed():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(cases["positive"])
+    energy = next(
+        item
+        for item in candidate["response"]["facts"]
+        if item["fact_id"] == "pv.energy.active_export_total"
+    )
+    energy["continuity"] = {
+        "state": "ROLLOVER",
+        "delta": None,
+        "modulus": None,
+        "evidence_ref": None,
+    }
+    assert "continuity" in validate_case(candidate, manifest, canonical)
+
+
+def test_empty_success_snapshot_is_rejected():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(cases["positive"])
+    candidate["response"]["facts"] = []
+    candidate["response"]["provenance"] = []
+    candidate["response"]["capabilities"][0]["outcome"] = "NOT_SATISFIED"
+    assert "empty_snapshot" in validate_case(candidate, manifest, canonical)
