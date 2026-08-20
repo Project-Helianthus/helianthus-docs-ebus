@@ -285,6 +285,27 @@ def validate_query_document(query, manifest):
     return sorted(errors)
 
 
+def classify_query_rejection(query, manifest):
+    errors = set(validate_query_document(query, manifest))
+    category_errors = {
+        "query_depth": {"query_depth"},
+        "selected_fields": {"query_fields"},
+        "forbidden_graphql_feature": {
+            "query_alias",
+            "query_directive",
+            "query_fragment",
+            "query_introspection",
+            "query_operations",
+            "query_syntax",
+        },
+        "query_shape": {"query_shape", "query_schema"},
+    }
+    for category in manifest["request_query_admission_precedence"]:
+        if errors & category_errors[category]:
+            return category, manifest["request_rejection_codes"][category]
+    return None, None
+
+
 def _normalize_dimensions(value):
     if not isinstance(value, dict) or len(value) != 1:
         raise TypeError("dimension must be exactly one closed GraphQL variant")
@@ -1532,20 +1553,19 @@ def validate_request_rejections(cases, manifest):
         else:
             mutation = stimulus.get("queryMutation") if set(stimulus) == {"queryMutation"} else None
             query = manifest["conformance_query"]
-            if mutation == "alias_root":
-                query = query.replace(
-                    "m2mCurrentSnapshot(request:",
-                    "snapshot: m2mCurrentSnapshot(request:",
-                    1,
+            if mutation == "reduced_selection":
+                query = (
+                    "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) "
+                    "{ m2mCurrentSnapshot(request: $request) { contractId } }"
                 )
-                reached = category if "query_alias" in validate_query_document(query, manifest) else None
+                reached, _ = classify_query_rejection(query, manifest)
             elif mutation == "introspection":
                 query = query.replace(
                     "m2mCurrentSnapshot(request:",
                     "__schema { queryType { name } } m2mCurrentSnapshot(request:",
                     1,
                 )
-                reached = category if "query_introspection" in validate_query_document(query, manifest) else None
+                reached, _ = classify_query_rejection(query, manifest)
             elif mutation == "depth_9":
                 nested = "coefficient"
                 for _ in range(9):
@@ -1556,16 +1576,10 @@ def validate_request_rejections(cases, manifest):
                     + nested
                     + " } } } }"
                 )
-                query_errors = validate_query_document(query, manifest)
-                reached = (
-                    category
-                    if "query_depth" in query_errors
-                    and "query_schema" not in query_errors
-                    else None
-                )
+                reached, _ = classify_query_rejection(query, manifest)
             elif mutation == "selected_fields_257":
                 query = query.replace("contractId", " ".join(["contractId"] * 257), 1)
-                reached = category if "query_fields" in validate_query_document(query, manifest) else None
+                reached, _ = classify_query_rejection(query, manifest)
             else:
                 reached = None
         if reached != category:

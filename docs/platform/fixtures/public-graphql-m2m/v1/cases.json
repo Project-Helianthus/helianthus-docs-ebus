@@ -649,7 +649,7 @@
       "category": "query_shape",
       "code": "QUERY_REJECTED",
       "stimulus": {
-        "queryMutation": "alias_root"
+        "queryMutation": "reduced_selection"
       },
       "responseCodeRef": "QUERY_REJECTED"
     },

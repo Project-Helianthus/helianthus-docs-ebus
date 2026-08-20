@@ -263,7 +263,6 @@
     "query_depth",
     "selected_fields",
     "forbidden_graphql_feature",
-    "query_shape",
-    "query_schema"
+    "query_shape"
   ]
 }
