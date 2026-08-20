@@ -676,6 +676,8 @@ def test_named_canonical_fixture_has_lossless_public_projection(tmp_path):
     assert projection["producedAt"] == "2026-08-17T13:46:00Z"
     assert len(projection["facts"]) == 2
     assert len(projection["provenance"]) == 2
+    assert len(projection["requestedOutputs"]) == 2
+    assert len(projection["projectionReport"]) == 2
 
     mutations = [
         ("generation", "9"),
@@ -687,6 +689,11 @@ def test_named_canonical_fixture_has_lossless_public_projection(tmp_path):
             "provenance.0.evidenceRef",
             "sha256:" + "e" * 64,
         ),
+        (
+            "requestedOutputs.0.requestedOutputRef",
+            "sha256:" + "a" * 64,
+        ),
+        ("projectionReport.0.outcome", "WITHHELD"),
     ]
     for index, (path, value) in enumerate(mutations):
         candidate = copy.deepcopy(cases)
@@ -713,6 +720,21 @@ def test_inline_fragments_count_toward_query_depth():
         + " } } } }"
     )
     assert "query_depth" in validate_query_document(query, manifest)
+
+
+def test_projection_accounting_is_in_the_closed_sdl_and_fixed_query():
+    manifest = load(MANIFEST)
+    sdl = SDL.read_text(encoding="utf-8")
+    assert "requestedOutputs: [M2MRequestedOutput!]!" in sdl
+    assert "projectionReport: [M2MProjectionReportEntry!]!" in sdl
+    assert "enum M2MProjectionOutcome { MAPPED WITHHELD UNREPRESENTABLE }" in sdl
+    assert "requestedOutputs { sourceRef requestedOutputRef }" in manifest[
+        "conformance_query"
+    ]
+    assert (
+        "projectionReport { sourceRef requestedOutputRef factId dimensions { key value } outcome }"
+        in manifest["conformance_query"]
+    )
 
 
 def test_graphql_ast_admission_enforces_syntax_schema_and_bounds():
