@@ -52,6 +52,7 @@ E2_CLEAN_ENTRY_IDS = (
 PINNED_CI_PYTHON = "3.12.10"
 PINNED_CI_PIP = "25.0.1"
 PINNED_CI_REQUIREMENTS = {
+    "graphql-core": "3.2.11",
     "iniconfig": "2.3.0",
     "markdown-it-py": "4.0.0",
     "mdurl": "0.1.2",
