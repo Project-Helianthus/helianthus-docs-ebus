@@ -17,6 +17,7 @@ DOC = ROOT / "docs/platform/public-graphql-m2m-v1.md"
 sys.path.insert(0, str(ROOT / "scripts"))
 from validate_public_graphql_m2m_v1 import (  # noqa: E402
     ValidationError,
+    classify_query_rejection,
     loads_json,
     validate,
     validate_case,
@@ -1176,13 +1177,16 @@ def test_depth_rejection_uses_schema_valid_stimulus_and_explicit_precedence():
     errors = validate_query_document(query, manifest)
     assert "query_depth" in errors
     assert "query_schema" not in errors
+    assert "query_shape" in errors
     assert manifest["request_query_admission_precedence"] == [
         "query_depth",
         "selected_fields",
         "forbidden_graphql_feature",
         "query_shape",
-        "query_schema",
     ]
+    category, code = classify_query_rejection(query, manifest)
+    assert category == "query_depth"
+    assert code == "REQUEST_LIMIT_EXCEEDED"
 
 
 def test_positive_fixture_is_an_executable_graphql_response():
