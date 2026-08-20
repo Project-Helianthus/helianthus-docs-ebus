@@ -44,7 +44,7 @@ def test_manifest_is_locked_to_canonical_catalog_and_closed_public_surface():
     assert manifest["max_capabilities_per_snapshot"] == 1
     assert manifest["required_response_fields"] == ["contractId", "canonicalContractId", "assetRef", "generation", "producedAt", "evaluatedMonotonicNs", "sourceTimeState", "currentSourceOriginRef", "facts", "capabilities", "provenance", "requestedOutputs", "projectionReport"]
     assert manifest["operator_authority"] == ["dedicated_listener", "server_identity", "ca_and_trust_root", "client_certificate_issuance", "asset_allowlist", "rotation", "revocation"]
-    assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_value_union"]}
+    assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_closed_unions"]}
     assert manifest["error_contract"]["partial_snapshot_on_error"] is False
     assert manifest["credential_rotation"]["maximum_simultaneously_valid_certificates_per_principal"] == 2
     assert manifest["forbidden_surface"] == ["raw_registers", "source_shadow", "endpoints", "mutations", "subscriptions", "history", "unbounded_lists", "generic_graphql_fallback"]
@@ -96,7 +96,18 @@ def test_capability_outcome_is_derived_from_required_fact_identities():
     }
     capability_payload = cases["capability_satisfied_projection"]
     observed = {
-        (item["factId"], tuple(sorted((part["key"], part["value"]) for part in item["dimensions"])))
+        (
+            item["factId"],
+            tuple(
+                sorted(
+                    (
+                        {"phasePair": "phase_pair", "inputId": "input_id", "sensorId": "sensor_id"}.get(key, key),
+                        value,
+                    )
+                    for key, value in item["dimension"].items()
+                )
+            ),
+        )
         for item in capability_payload["facts"]
     }
     assert required <= observed
@@ -116,7 +127,7 @@ def test_capability_outcome_is_derived_from_required_fact_identities():
         for item in payload["facts"]
         if not (
             item["factId"] == "pv.ac.current"
-            and item["dimensions"] == [{"key": "phase", "value": "L3"}]
+            and item["dimension"] == {"phase": "L3"}
         )
     ]
     assert "capability_outcome" in validate_case(candidate, manifest, canonical)
@@ -129,7 +140,7 @@ def test_opaque_dimensions_reject_network_endpoints():
     fact = copy.deepcopy(payload["facts"][0])
     fact.update(
         factId="pv.dc.current",
-        dimensions=[{"key": "input_id", "value": "192.168.1.1:502"}],
+        dimension={"inputId": "192.168.1.1:502"},
         unit="A",
     )
     payload["facts"].append(fact)
@@ -316,7 +327,7 @@ def test_fixture_is_the_graphql_http_envelope_wire_shape():
     fact = payload["facts"][0]
     assert set(fact) == set(manifest["required_fact_fields"])
     assert "factId" in fact and "fact_id" not in fact
-    assert fact["dimensions"] == [{"key": "scope", "value": "total"}]
+    assert fact["dimension"] == {"scope": "total"}
     assert set(fact["value"]) == {"coefficient", "scale"}
     assert "kind" not in fact["value"]
     provenance = payload["provenance"][0]
@@ -813,12 +824,10 @@ def test_projection_accounting_is_in_the_closed_sdl_and_fixed_query():
     assert "requestedOutputs: [M2MRequestedOutput!]!" in sdl
     assert "projectionReport: [M2MProjectionReportEntry!]!" in sdl
     assert "enum M2MProjectionOutcome { MAPPED WITHHELD UNREPRESENTABLE }" in sdl
-    assert "requestedOutputs { sourceRef requestedOutputRef }" in manifest[
-        "conformance_query"
-    ]
+    assert "requestedOutputs" in manifest["conformance_query"]
     assert (
-        "projectionReport { sourceRef requestedOutputRef factId dimensions { key value } outcome }"
-        in manifest["conformance_query"]
+        "projectionReport" in manifest["conformance_query"]
+        and "... on M2MScopeDimension" in manifest["conformance_query"]
     )
 
 
@@ -910,7 +919,7 @@ def test_remaining_source_lexical_and_range_guards_are_exact():
 
     endpoint = copy.deepcopy(cases["positive"])
     fact = response_payload(endpoint)["facts"][0]
-    fact.update(factId="pv.dc.current", dimensions=[{"key": "input_id", "value": "127.1"}], unit="A")
+    fact.update(factId="pv.dc.current", dimension={"inputId": "127.1"}, unit="A")
     assert "dimension_redaction" in validate_case(endpoint, manifest, canonical)
 
     kind = copy.deepcopy(cases["positive"])

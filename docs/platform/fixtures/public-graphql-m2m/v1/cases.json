@@ -6,7 +6,7 @@
       "path": "/graphql/m2m/v1",
       "body": {
         "operationName": "M2MCurrentSnapshot",
-        "query": "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) { m2mCurrentSnapshot(request: $request) { contractId canonicalContractId assetRef generation producedAt evaluatedMonotonicNs sourceTimeState currentSourceOriginRef facts { factId dimensions { key value } value { ... on M2MDecimalValue { coefficient scale } ... on M2MEnumValue { symbol } ... on M2MBitfieldValue { symbols } } unit quality availability freshness receiptMonotonicNs freshUntilMonotonicNs retainUntilMonotonicNs freshnessPolicy originRef continuity { state delta { coefficient scale } modulus { coefficient scale } evidenceRef } } capabilities { id outcome } provenance { originRef sourceProtocol sourceProfileId sourceProfileVersion sourceValidity sourceRegistryRef sourceObservationRef evidenceRef } requestedOutputs { sourceRef requestedOutputRef } projectionReport { sourceRef requestedOutputRef factId dimensions { key value } outcome } } }",
+        "query": "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {\n  m2mCurrentSnapshot(request: $request) {\n    contractId\n    canonicalContractId\n    assetRef\n    generation\n    producedAt\n    evaluatedMonotonicNs\n    sourceTimeState\n    currentSourceOriginRef\n    facts {\n      factId\n      dimension {\n        ... on M2MScopeDimension {\n          scope\n        }\n        ... on M2MPhaseDimension {\n          phase\n        }\n        ... on M2MPhasePairDimension {\n          phasePair\n        }\n        ... on M2MInputDimension {\n          inputId\n        }\n        ... on M2MSensorDimension {\n          sensorId\n        }\n      }\n      value {\n        ... on M2MDecimalValue {\n          coefficient\n          scale\n        }\n        ... on M2MEnumValue {\n          symbol\n        }\n        ... on M2MBitfieldValue {\n          symbols\n        }\n      }\n      unit\n      quality\n      availability\n      freshness\n      receiptMonotonicNs\n      freshUntilMonotonicNs\n      retainUntilMonotonicNs\n      freshnessPolicy\n      originRef\n      continuity {\n        ... on M2MBaselineContinuity {\n          state\n        }\n        ... on M2MContiguousContinuity {\n          state\n          delta {\n            coefficient\n            scale\n          }\n        }\n        ... on M2MRolloverContinuity {\n          state\n          delta {\n            coefficient\n            scale\n          }\n          modulus {\n            coefficient\n            scale\n          }\n          evidenceRef\n        }\n        ... on M2MResetContinuity {\n          state\n          evidenceRef\n        }\n        ... on M2MDiscontinuityContinuity {\n          state\n          evidenceRef\n        }\n      }\n    }\n    capabilities {\n      id\n      outcome\n    }\n    provenance {\n      originRef\n      sourceProtocol\n      sourceProfileId\n      sourceProfileVersion\n      sourceValidity\n      sourceRegistryRef\n      sourceObservationRef\n      evidenceRef\n    }\n    requestedOutputs {\n      sourceRef\n      requestedOutputRef\n    }\n    projectionReport {\n      sourceRef\n      requestedOutputRef\n      factId\n      dimension {\n        ... on M2MScopeDimension {\n          scope\n        }\n        ... on M2MPhaseDimension {\n          phase\n        }\n        ... on M2MPhasePairDimension {\n          phasePair\n        }\n        ... on M2MInputDimension {\n          inputId\n        }\n        ... on M2MSensorDimension {\n          sensorId\n        }\n      }\n      outcome\n    }\n  }\n}",
         "variables": {
           "request": {
             "contractId": "PUBLIC_GRAPHQL_M2M_V1",
@@ -14,7 +14,7 @@
           }
         }
       },
-      "rawBody": "{\"operationName\":\"M2MCurrentSnapshot\",\"query\":\"query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) { m2mCurrentSnapshot(request: $request) { contractId canonicalContractId assetRef generation producedAt evaluatedMonotonicNs sourceTimeState currentSourceOriginRef facts { factId dimensions { key value } value { ... on M2MDecimalValue { coefficient scale } ... on M2MEnumValue { symbol } ... on M2MBitfieldValue { symbols } } unit quality availability freshness receiptMonotonicNs freshUntilMonotonicNs retainUntilMonotonicNs freshnessPolicy originRef continuity { state delta { coefficient scale } modulus { coefficient scale } evidenceRef } } capabilities { id outcome } provenance { originRef sourceProtocol sourceProfileId sourceProfileVersion sourceValidity sourceRegistryRef sourceObservationRef evidenceRef } requestedOutputs { sourceRef requestedOutputRef } projectionReport { sourceRef requestedOutputRef factId dimensions { key value } outcome } } }\",\"variables\":{\"request\":{\"contractId\":\"PUBLIC_GRAPHQL_M2M_V1\",\"assetRef\":\"pv-asset-mixed-01\"}}}"
+      "rawBody": "{\"operationName\":\"M2MCurrentSnapshot\",\"query\":\"query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {\\n  m2mCurrentSnapshot(request: $request) {\\n    contractId\\n    canonicalContractId\\n    assetRef\\n    generation\\n    producedAt\\n    evaluatedMonotonicNs\\n    sourceTimeState\\n    currentSourceOriginRef\\n    facts {\\n      factId\\n      dimension {\\n        ... on M2MScopeDimension {\\n          scope\\n        }\\n        ... on M2MPhaseDimension {\\n          phase\\n        }\\n        ... on M2MPhasePairDimension {\\n          phasePair\\n        }\\n        ... on M2MInputDimension {\\n          inputId\\n        }\\n        ... on M2MSensorDimension {\\n          sensorId\\n        }\\n      }\\n      value {\\n        ... on M2MDecimalValue {\\n          coefficient\\n          scale\\n        }\\n        ... on M2MEnumValue {\\n          symbol\\n        }\\n        ... on M2MBitfieldValue {\\n          symbols\\n        }\\n      }\\n      unit\\n      quality\\n      availability\\n      freshness\\n      receiptMonotonicNs\\n      freshUntilMonotonicNs\\n      retainUntilMonotonicNs\\n      freshnessPolicy\\n      originRef\\n      continuity {\\n        ... on M2MBaselineContinuity {\\n          state\\n        }\\n        ... on M2MContiguousContinuity {\\n          state\\n          delta {\\n            coefficient\\n            scale\\n          }\\n        }\\n        ... on M2MRolloverContinuity {\\n          state\\n          delta {\\n            coefficient\\n            scale\\n          }\\n          modulus {\\n            coefficient\\n            scale\\n          }\\n          evidenceRef\\n        }\\n        ... on M2MResetContinuity {\\n          state\\n          evidenceRef\\n        }\\n        ... on M2MDiscontinuityContinuity {\\n          state\\n          evidenceRef\\n        }\\n      }\\n    }\\n    capabilities {\\n      id\\n      outcome\\n    }\\n    provenance {\\n      originRef\\n      sourceProtocol\\n      sourceProfileId\\n      sourceProfileVersion\\n      sourceValidity\\n      sourceRegistryRef\\n      sourceObservationRef\\n      evidenceRef\\n    }\\n    requestedOutputs {\\n      sourceRef\\n      requestedOutputRef\\n    }\\n    projectionReport {\\n      sourceRef\\n      requestedOutputRef\\n      factId\\n      dimension {\\n        ... on M2MScopeDimension {\\n          scope\\n        }\\n        ... on M2MPhaseDimension {\\n          phase\\n        }\\n        ... on M2MPhasePairDimension {\\n          phasePair\\n        }\\n        ... on M2MInputDimension {\\n          inputId\\n        }\\n        ... on M2MSensorDimension {\\n          sensorId\\n        }\\n      }\\n      outcome\\n    }\\n  }\\n}\",\"variables\":{\"request\":{\"contractId\":\"PUBLIC_GRAPHQL_M2M_V1\",\"assetRef\":\"pv-asset-mixed-01\"}}}"
     },
     "response": {
       "status": 200,
@@ -32,12 +32,6 @@
             "facts": [
               {
                 "factId": "pv.ac.power.active",
-                "dimensions": [
-                  {
-                    "key": "scope",
-                    "value": "total"
-                  }
-                ],
                 "value": {
                   "coefficient": "7310",
                   "scale": 0
@@ -51,16 +45,13 @@
                 "retainUntilMonotonicNs": "1281234500000",
                 "freshnessPolicy": "pv.telemetry.fast.v1",
                 "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-                "continuity": null
+                "continuity": null,
+                "dimension": {
+                  "scope": "total"
+                }
               },
               {
                 "factId": "pv.energy.active_export_total",
-                "dimensions": [
-                  {
-                    "key": "scope",
-                    "value": "total"
-                  }
-                ],
                 "value": {
                   "coefficient": "9007199254740993",
                   "scale": 0
@@ -79,6 +70,9 @@
                   "delta": null,
                   "modulus": null,
                   "evidenceRef": null
+                },
+                "dimension": {
+                  "scope": "total"
                 }
               }
             ],
@@ -125,25 +119,19 @@
                 "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "requestedOutputRef": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
                 "factId": "pv.ac.power.active",
-                "dimensions": [
-                  {
-                    "key": "scope",
-                    "value": "total"
-                  }
-                ],
-                "outcome": "MAPPED"
+                "outcome": "MAPPED",
+                "dimension": {
+                  "scope": "total"
+                }
               },
               {
                 "sourceRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
                 "requestedOutputRef": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
                 "factId": "pv.energy.active_export_total",
-                "dimensions": [
-                  {
-                    "key": "scope",
-                    "value": "total"
-                  }
-                ],
-                "outcome": "MAPPED"
+                "outcome": "MAPPED",
+                "dimension": {
+                  "scope": "total"
+                }
               }
             ]
           }
@@ -338,7 +326,7 @@
     },
     {
       "id": "bad-dimension-domain",
-      "path": "/response/body/data/m2mCurrentSnapshot/facts/0/dimensions/0/value",
+      "path": "/response/body/data/m2mCurrentSnapshot/facts/0/dimension/scope",
       "value": "device",
       "error": "canonical_projection"
     },
@@ -736,12 +724,6 @@
     "facts": [
       {
         "factId": "pv.ac.power.active",
-        "dimensions": [
-          {
-            "key": "scope",
-            "value": "total"
-          }
-        ],
         "value": {
           "coefficient": "12345",
           "scale": -1
@@ -755,16 +737,13 @@
         "retainUntilMonotonicNs": "1281234500000",
         "freshnessPolicy": "pv.telemetry.fast.v1",
         "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "continuity": null
+        "continuity": null,
+        "dimension": {
+          "scope": "total"
+        }
       },
       {
         "factId": "pv.ac.frequency",
-        "dimensions": [
-          {
-            "key": "scope",
-            "value": "total"
-          }
-        ],
         "value": {
           "coefficient": "5000",
           "scale": -2
@@ -778,16 +757,13 @@
         "retainUntilMonotonicNs": "1281234500000",
         "freshnessPolicy": "pv.telemetry.fast.v1",
         "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "continuity": null
+        "continuity": null,
+        "dimension": {
+          "scope": "total"
+        }
       },
       {
         "factId": "pv.ac.current",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L1"
-          }
-        ],
         "value": {
           "coefficient": "110",
           "scale": -2
@@ -801,16 +777,13 @@
         "retainUntilMonotonicNs": "1281234500000",
         "freshnessPolicy": "pv.telemetry.fast.v1",
         "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "continuity": null
+        "continuity": null,
+        "dimension": {
+          "phase": "L1"
+        }
       },
       {
         "factId": "pv.ac.current",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L2"
-          }
-        ],
         "value": {
           "coefficient": "120",
           "scale": -2
@@ -824,16 +797,13 @@
         "retainUntilMonotonicNs": "1281234500000",
         "freshnessPolicy": "pv.telemetry.fast.v1",
         "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "continuity": null
+        "continuity": null,
+        "dimension": {
+          "phase": "L2"
+        }
       },
       {
         "factId": "pv.ac.current",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L3"
-          }
-        ],
         "value": {
           "coefficient": "130",
           "scale": -2
@@ -847,16 +817,13 @@
         "retainUntilMonotonicNs": "1281234500000",
         "freshnessPolicy": "pv.telemetry.fast.v1",
         "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "continuity": null
+        "continuity": null,
+        "dimension": {
+          "phase": "L3"
+        }
       },
       {
         "factId": "pv.ac.voltage.line_to_neutral",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L1"
-          }
-        ],
         "value": {
           "coefficient": "2300",
           "scale": -1
@@ -870,16 +837,13 @@
         "retainUntilMonotonicNs": "1281234500000",
         "freshnessPolicy": "pv.telemetry.fast.v1",
         "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "continuity": null
+        "continuity": null,
+        "dimension": {
+          "phase": "L1"
+        }
       },
       {
         "factId": "pv.ac.voltage.line_to_neutral",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L2"
-          }
-        ],
         "value": {
           "coefficient": "2310",
           "scale": -1
@@ -893,16 +857,13 @@
         "retainUntilMonotonicNs": "1281234500000",
         "freshnessPolicy": "pv.telemetry.fast.v1",
         "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "continuity": null
+        "continuity": null,
+        "dimension": {
+          "phase": "L2"
+        }
       },
       {
         "factId": "pv.ac.voltage.line_to_neutral",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L3"
-          }
-        ],
         "value": {
           "coefficient": "2320",
           "scale": -1
@@ -916,16 +877,13 @@
         "retainUntilMonotonicNs": "1281234500000",
         "freshnessPolicy": "pv.telemetry.fast.v1",
         "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "continuity": null
+        "continuity": null,
+        "dimension": {
+          "phase": "L3"
+        }
       },
       {
         "factId": "pv.energy.active_export_total",
-        "dimensions": [
-          {
-            "key": "scope",
-            "value": "total"
-          }
-        ],
         "value": {
           "coefficient": "9007199254740993",
           "scale": 0
@@ -944,16 +902,13 @@
           "delta": null,
           "modulus": null,
           "evidenceRef": null
+        },
+        "dimension": {
+          "scope": "total"
         }
       },
       {
         "factId": "pv.operating.state",
-        "dimensions": [
-          {
-            "key": "scope",
-            "value": "total"
-          }
-        ],
         "value": {
           "symbol": "OPERATING"
         },
@@ -966,7 +921,10 @@
         "retainUntilMonotonicNs": "1581234500000",
         "freshnessPolicy": "pv.status.v1",
         "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "continuity": null
+        "continuity": null,
+        "dimension": {
+          "scope": "total"
+        }
       }
     ],
     "capabilities": [
@@ -1044,121 +1002,91 @@
         "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "requestedOutputRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
         "factId": "pv.ac.power.active",
-        "dimensions": [
-          {
-            "key": "scope",
-            "value": "total"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "scope": "total"
+        }
       },
       {
         "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "requestedOutputRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "factId": "pv.ac.frequency",
-        "dimensions": [
-          {
-            "key": "scope",
-            "value": "total"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "scope": "total"
+        }
       },
       {
         "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "requestedOutputRef": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
         "factId": "pv.ac.current",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L1"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "phase": "L1"
+        }
       },
       {
         "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "requestedOutputRef": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
         "factId": "pv.ac.current",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L2"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "phase": "L2"
+        }
       },
       {
         "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "requestedOutputRef": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
         "factId": "pv.ac.current",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L3"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "phase": "L3"
+        }
       },
       {
         "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "requestedOutputRef": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
         "factId": "pv.ac.voltage.line_to_neutral",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L1"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "phase": "L1"
+        }
       },
       {
         "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "requestedOutputRef": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
         "factId": "pv.ac.voltage.line_to_neutral",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L2"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "phase": "L2"
+        }
       },
       {
         "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "requestedOutputRef": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
         "factId": "pv.ac.voltage.line_to_neutral",
-        "dimensions": [
-          {
-            "key": "phase",
-            "value": "L3"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "phase": "L3"
+        }
       },
       {
         "sourceRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
         "requestedOutputRef": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
         "factId": "pv.energy.active_export_total",
-        "dimensions": [
-          {
-            "key": "scope",
-            "value": "total"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "scope": "total"
+        }
       },
       {
         "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "requestedOutputRef": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "factId": "pv.operating.state",
-        "dimensions": [
-          {
-            "key": "scope",
-            "value": "total"
-          }
-        ],
-        "outcome": "MAPPED"
+        "outcome": "MAPPED",
+        "dimension": {
+          "scope": "total"
+        }
       }
     ]
   }

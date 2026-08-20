@@ -11,7 +11,7 @@ import re
 import sys
 from pathlib import Path
 
-from graphql import GraphQLError, build_schema, parse, validate as graphql_validate
+from graphql import GraphQLError, build_schema, parse, print_ast, validate as graphql_validate
 
 DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)$")
 NONNEGATIVE_INTEGER = re.compile(r"0|[1-9][0-9]*$")
@@ -20,10 +20,16 @@ SHA256 = re.compile(r"sha256:[0-9a-f]{64}$")
 TOKEN = re.compile(r"[A-Za-z0-9._:-]+$")
 SOURCE_TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9._@-]*$")
 VERSION_TOKEN = re.compile(r"[0-9][0-9A-Za-z._-]*$")
+RFC3339 = re.compile(
+    r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
+    r"(?:\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+)
 ASSET = re.compile(r"pv-asset-[A-Za-z0-9_-]{1,96}$")
 ROOT = Path(__file__).resolve().parents[1]
 SDL_PATH = ROOT / "api/public-graphql-m2m-v1.graphql"
+QUERY_PATH = ROOT / "api/public-graphql-m2m-v1.query.graphql"
 GRAPHQL_SCHEMA = build_schema(SDL_PATH.read_text(encoding="utf-8"))
+CANONICAL_QUERY_DOCUMENT = parse(QUERY_PATH.read_text(encoding="utf-8"), no_location=True)
 FORBIDDEN = {
     "rawRegisters",
     "raw_registers",
@@ -76,6 +82,13 @@ INTERNAL_PROVENANCE_FIELDS = {
     "source_registry_ref",
     "source_observation_ref",
     "evidence_ref",
+}
+DIMENSION_WIRE_TO_CANONICAL = {
+    "scope": "scope",
+    "phase": "phase",
+    "phasePair": "phase_pair",
+    "inputId": "input_id",
+    "sensorId": "sensor_id",
 }
 
 
@@ -179,6 +192,8 @@ def validate_query_document(query, manifest):
         document = parse(query, no_location=True, max_tokens=4096)
     except (GraphQLError, RecursionError):
         return ["query_syntax"]
+    if print_ast(document) != print_ast(CANONICAL_QUERY_DOCUMENT):
+        errors.add("query_shape")
 
     operations = [
         definition
@@ -210,6 +225,16 @@ def validate_query_document(query, manifest):
         "M2MDecimalValue",
         "M2MEnumValue",
         "M2MBitfieldValue",
+        "M2MScopeDimension",
+        "M2MPhaseDimension",
+        "M2MPhasePairDimension",
+        "M2MInputDimension",
+        "M2MSensorDimension",
+        "M2MBaselineContinuity",
+        "M2MContiguousContinuity",
+        "M2MRolloverContinuity",
+        "M2MResetContinuity",
+        "M2MDiscontinuityContinuity",
     }
     while stack:
         selection_set, parent_depth = stack.pop()
@@ -258,17 +283,13 @@ def validate_query_document(query, manifest):
 
 
 def _normalize_dimensions(value):
-    if not isinstance(value, list) or not value:
-        raise TypeError("dimensions must be a non-empty GraphQL list")
-    dimensions = {}
-    for item in value:
-        if not isinstance(item, dict) or set(item) != {"key", "value"}:
-            raise TypeError("dimension must contain key and value")
-        key = item["key"]
-        if not isinstance(key, str) or key in dimensions:
-            raise ValueError("dimension keys must be unique strings")
-        dimensions[key] = item["value"]
-    return dimensions
+    if not isinstance(value, dict) or len(value) != 1:
+        raise TypeError("dimension must be exactly one closed GraphQL variant")
+    wire_key, dimension_value = next(iter(value.items()))
+    canonical_key = DIMENSION_WIRE_TO_CANONICAL.get(wire_key)
+    if canonical_key is None:
+        raise ValueError("unknown dimension variant")
+    return {canonical_key: dimension_value}
 
 
 def _normalize_value(value):
@@ -281,7 +302,7 @@ def _normalize_value(value):
         return {"kind": "ENUM", **value}
     if fields == {"symbols"}:
         return {"kind": "BITFIELD", **value}
-    return {"kind": "INVALID", **value}
+    return {"kind": "INVALID"}
 
 
 def _normalize_continuity(value):
@@ -305,7 +326,7 @@ def _normalize_case(case):
         facts.append(
             {
                 "fact_id": fact["factId"],
-                "dimensions": _normalize_dimensions(fact["dimensions"]),
+                "dimensions": _normalize_dimensions(fact["dimension"]),
                 "value": _normalize_value(fact["value"]),
                 "unit": fact["unit"],
                 "quality": fact["quality"],
@@ -345,8 +366,8 @@ def _normalize_case(case):
             "requested_output_ref": item["requestedOutputRef"],
             "fact_id": item["factId"],
             "dimensions": None
-            if item["dimensions"] is None
-            else _normalize_dimensions(item["dimensions"]),
+            if item["dimension"] is None
+            else _normalize_dimensions(item["dimension"]),
             "outcome": item["outcome"],
         }
         for item in response["projectionReport"]
@@ -375,7 +396,7 @@ def _normalize_case(case):
 
 
 def _valid_timestamp(value):
-    if not isinstance(value, str):
+    if not isinstance(value, str) or RFC3339.fullmatch(value) is None:
         return False
     try:
         parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -391,6 +412,8 @@ def _looks_like_network_endpoint(value):
         return True
     except ValueError:
         pass
+    if re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", candidate):
+        return True
     if re.fullmatch(r"(?:tcp|udp|http|https)://.+", value, re.I):
         return True
     return re.fullmatch(r"[^/\s]+:[0-9]{1,5}", value) is not None
@@ -451,8 +474,8 @@ def _valid_continuity_decimal(value, *, positive=False):
         or not -18 <= value["scale"] <= 18
     ):
         return False
-    coefficient = int(value["coefficient"])
-    return coefficient > 0 if positive else coefficient >= 0
+    lexical = POSITIVE_INTEGER if positive else NONNEGATIVE_INTEGER
+    return lexical.fullmatch(value["coefficient"]) is not None
 
 
 def _valid_continuity(value):
@@ -499,7 +522,11 @@ def _validate_case(
         or request["asset_ref"] != response.get("asset_ref")
     ):
         errors.add("asset")
-    if not isinstance(response.get("generation"), str) or POSITIVE_INTEGER.fullmatch(response["generation"]) is None:
+    if (
+        not isinstance(response.get("generation"), str)
+        or POSITIVE_INTEGER.fullmatch(response["generation"]) is None
+        or int(response["generation"]) > 9007199254740991
+    ):
         errors.add("time_identity")
     if not isinstance(response.get("evaluated_monotonic_ns"), str) or NONNEGATIVE_INTEGER.fullmatch(response["evaluated_monotonic_ns"]) is None:
         errors.add("time_identity")
@@ -601,10 +628,13 @@ def _validate_case(
     if any(
         set(item) != INTERNAL_PROVENANCE_FIELDS
         or not isinstance(item["source_protocol"], str)
+        or len(item["source_protocol"]) > 128
         or SOURCE_TOKEN.fullmatch(item["source_protocol"]) is None
         or not isinstance(item["source_profile_id"], str)
+        or len(item["source_profile_id"]) > 128
         or SOURCE_TOKEN.fullmatch(item["source_profile_id"]) is None
         or not isinstance(item["source_profile_version"], str)
+        or len(item["source_profile_version"]) > 64
         or VERSION_TOKEN.fullmatch(item["source_profile_version"]) is None
         or item["source_validity"] != canonical_manifest["provenance"]["source_validity_required"]
         or any(
@@ -652,7 +682,9 @@ def _validate_case(
         or response["current_source_origin_ref"] != expected_current_source_ref
     ):
         errors.add("current_source_binding")
-    if origins != {item["origin_ref"] for item in provenance}:
+    if origins | {response["current_source_origin_ref"]} != {
+        item["origin_ref"] for item in provenance
+    }:
         errors.add("provenance")
     if not provenance:
         errors.add("empty_snapshot")
@@ -719,6 +751,8 @@ def _validate_case(
                 or identity not in observed
                 or item["source_ref"] != observed[identity]["origin_ref"]
             ):
+                errors.add("projection_accounting")
+            if identity in mapped_identities:
                 errors.add("projection_accounting")
             mapped_identities.add(identity)
         elif (
@@ -790,10 +824,16 @@ def _project_canonical_fixture(canonical, manifest):
         facts.append(
             {
                 "factId": fact["fact_id"],
-                "dimensions": [
-                    {"key": key, "value": value}
-                    for key, value in sorted(fact["dimensions"].items())
-                ],
+                "dimension": {
+                    {
+                        "scope": "scope",
+                        "phase": "phase",
+                        "phase_pair": "phasePair",
+                        "input_id": "inputId",
+                        "sensor_id": "sensorId",
+                    }[key]: value
+                    for key, value in fact["dimensions"].items()
+                },
                 "value": project_value(fact["value"]),
                 "unit": fact["unit"],
                 "quality": fact["quality"],
@@ -848,12 +888,18 @@ def _project_canonical_fixture(canonical, manifest):
                 "sourceRef": item["source_ref"],
                 "requestedOutputRef": item["requested_output_ref"],
                 "factId": item["fact_id"],
-                "dimensions": None
+                "dimension": None
                 if item["dimensions"] is None
-                else [
-                    {"key": key, "value": value}
-                    for key, value in sorted(item["dimensions"].items())
-                ],
+                else {
+                    {
+                        "scope": "scope",
+                        "phase": "phase",
+                        "phase_pair": "phasePair",
+                        "input_id": "inputId",
+                        "sensor_id": "sensorId",
+                    }[key]: value
+                    for key, value in item["dimensions"].items()
+                },
                 "outcome": item["outcome"],
             }
             for item in canonical["projection_report"]
@@ -1280,6 +1326,36 @@ def validate_admission_sequences(cases, manifest):
             or (category != "client_isolation" and len(clients) != 1)
         ):
             raise ValidationError("admission_sequence_mapping")
+        if category == "client_isolation":
+            expected = [
+                ("mtls-principal-a", "i-a1", 0, "START", "ADMIT", None),
+                ("mtls-principal-b", "i-b1", 0, "START", "ADMIT", None),
+                (
+                    "mtls-principal-a",
+                    "i-a2",
+                    1,
+                    "START",
+                    "REJECT",
+                    "REQUEST_LIMIT_EXCEEDED",
+                ),
+                ("mtls-principal-a", "i-a1", 2, "COMPLETE", "COMPLETE", None),
+                ("mtls-principal-b", "i-b1", 2, "COMPLETE", "COMPLETE", None),
+                ("mtls-principal-a", "i-a3", 2, "START", "ADMIT", None),
+                ("mtls-principal-a", "i-a3", 2, "COMPLETE", "COMPLETE", None),
+            ]
+            actual = [
+                (
+                    event["clientRef"],
+                    event["requestId"],
+                    event["atMs"],
+                    event["action"],
+                    event["outcome"],
+                    event.get("code"),
+                )
+                for event in sequence["events"]
+            ]
+            if actual != expected:
+                raise ValidationError("admission_sequence_mapping")
 
 
 def validate_request_rejections(cases, manifest):

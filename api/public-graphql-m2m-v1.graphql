@@ -26,7 +26,7 @@ type M2MCurrentSnapshot {
 
 type M2MFact {
   factId: String!
-  dimensions: [M2MDimension!]!
+  dimension: M2MDimension!
   value: M2MValue!
   unit: String!
   quality: M2MQuality!
@@ -40,19 +40,29 @@ type M2MFact {
   continuity: M2MContinuity
 }
 
-type M2MDimension { key: String!, value: String! }
+union M2MDimension = M2MScopeDimension | M2MPhaseDimension | M2MPhasePairDimension | M2MInputDimension | M2MSensorDimension
+type M2MScopeDimension { scope: String! }
+type M2MPhaseDimension { phase: String! }
+type M2MPhasePairDimension { phasePair: String! }
+type M2MInputDimension { inputId: String! }
+type M2MSensorDimension { sensorId: String! }
 union M2MValue = M2MDecimalValue | M2MEnumValue | M2MBitfieldValue
 type M2MDecimalValue { coefficient: String!, scale: Int! }
 type M2MEnumValue { symbol: String! }
 type M2MBitfieldValue { symbols: [String!]! }
-type M2MContinuity { state: M2MContinuityState!, delta: M2MDecimalValue, modulus: M2MDecimalValue, evidenceRef: String }
+union M2MContinuity = M2MBaselineContinuity | M2MContiguousContinuity | M2MRolloverContinuity | M2MResetContinuity | M2MDiscontinuityContinuity
+type M2MBaselineContinuity { state: M2MContinuityState! }
+type M2MContiguousContinuity { state: M2MContinuityState!, delta: M2MDecimalValue! }
+type M2MRolloverContinuity { state: M2MContinuityState!, delta: M2MDecimalValue!, modulus: M2MDecimalValue!, evidenceRef: String }
+type M2MResetContinuity { state: M2MContinuityState!, evidenceRef: String }
+type M2MDiscontinuityContinuity { state: M2MContinuityState!, evidenceRef: String }
 type M2MCapability { id: String!, outcome: M2MCapabilityOutcome! }
 type M2MRequestedOutput { sourceRef: String!, requestedOutputRef: String! }
 type M2MProjectionReportEntry {
   sourceRef: String!
   requestedOutputRef: String!
   factId: String
-  dimensions: [M2MDimension!]
+  dimension: M2MDimension
   outcome: M2MProjectionOutcome!
 }
 type M2MOpaqueProvenance {

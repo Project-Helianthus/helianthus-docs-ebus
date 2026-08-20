@@ -1,0 +1,49 @@
+query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {
+  m2mCurrentSnapshot(request: $request) {
+    contractId canonicalContractId assetRef generation producedAt
+    evaluatedMonotonicNs sourceTimeState currentSourceOriginRef
+    facts {
+      factId
+      dimension {
+        ... on M2MScopeDimension { scope }
+        ... on M2MPhaseDimension { phase }
+        ... on M2MPhasePairDimension { phasePair }
+        ... on M2MInputDimension { inputId }
+        ... on M2MSensorDimension { sensorId }
+      }
+      value {
+        ... on M2MDecimalValue { coefficient scale }
+        ... on M2MEnumValue { symbol }
+        ... on M2MBitfieldValue { symbols }
+      }
+      unit quality availability freshness receiptMonotonicNs
+      freshUntilMonotonicNs retainUntilMonotonicNs freshnessPolicy originRef
+      continuity {
+        ... on M2MBaselineContinuity { state }
+        ... on M2MContiguousContinuity { state delta { coefficient scale } }
+        ... on M2MRolloverContinuity {
+          state delta { coefficient scale } modulus { coefficient scale } evidenceRef
+        }
+        ... on M2MResetContinuity { state evidenceRef }
+        ... on M2MDiscontinuityContinuity { state evidenceRef }
+      }
+    }
+    capabilities { id outcome }
+    provenance {
+      originRef sourceProtocol sourceProfileId sourceProfileVersion sourceValidity
+      sourceRegistryRef sourceObservationRef evidenceRef
+    }
+    requestedOutputs { sourceRef requestedOutputRef }
+    projectionReport {
+      sourceRef requestedOutputRef factId
+      dimension {
+        ... on M2MScopeDimension { scope }
+        ... on M2MPhaseDimension { phase }
+        ... on M2MPhasePairDimension { phasePair }
+        ... on M2MInputDimension { inputId }
+        ... on M2MSensorDimension { sensorId }
+      }
+      outcome
+    }
+  }
+}

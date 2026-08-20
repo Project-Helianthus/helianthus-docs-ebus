@@ -21,11 +21,15 @@ preserved exactly.
 GraphQL encodes the canonical value-kind discriminator as the closed union
 mapping `decimal -> M2MDecimalValue`, `enum -> M2MEnumValue`, and `bitfield ->
 M2MBitfieldValue`; the concrete type is the discriminator, so an independent
-kind field cannot contradict its payload. Bitfield values retain the canonical
-`symbols` field. Decimals are not JSON numbers: coefficients are canonical
-integer strings and scale is a base-10 integer. Facts represented as unavailable remain explicitly
-unavailable, while absent catalog members are not synthesized as zero or
-inferred from another field. The public provenance table exposes at most 256
+kind field cannot contradict its payload. Each fact also carries exactly one
+closed dimension variant: scope, phase, phase pair, input ID, or sensor ID.
+Counter continuity is a closed union of state-specific payloads, so a state
+cannot be paired with fields that are invalid for that state. Bitfield values
+retain the canonical `symbols` field. Decimals are not JSON numbers:
+coefficients are canonical integer strings and scale is a base-10 integer.
+Facts represented as unavailable remain explicitly unavailable, while absent
+catalog members are not synthesized as zero or inferred from another field.
+The public provenance table exposes at most 256
 rows containing opaque origin, source protocol/profile/version/validity,
 registry, observation, and evidence references. `source_shadow_ref` is the one
 explicit projection loss: it is classified as
@@ -62,8 +66,8 @@ The wire fields `requestedOutputs` and `projectionReport` preserve canonical
 projection accounting as opaque digest identities. Every requested identity has
 exactly one report row. `MAPPED` rows carry a non-null fact identity and bind
 `sourceRef` to that fact's `originRef`; `WITHHELD` and `UNREPRESENTABLE` carry
-null fact identity/dimensions and bind to the current source origin. The lists
-are closed, duplicate-free, and bounded to 256 rows each.
+null fact identity/dimension and bind to the current source origin. The lists
+are closed, duplicate-free, and bounded to 512 rows each.
 
 V1's catalog is closed. Any additive or breaking semantic change, including a
 new fact, enum value, dimension meaning, capability requirement, or lifecycle
@@ -84,8 +88,8 @@ request per client, and rate to one request per second with burst two. GraphQL
 batching, aliases, named fragments, directives, introspection, GET,
 subscriptions, and multi-operation documents are rejected before resolver
 execution. Inline type conditions are allowed only to select the closed
-decimal, enum, or bitfield member of the `M2MValue` union. The response is
-limited to 1 MiB.
+declared members of the closed value, dimension, and continuity unions. The
+response is limited to 1 MiB.
 
 Before semantic decode, the HTTP JSON parser rejects duplicate object keys and
 any document nested deeper than 64 arrays/objects. Depth is bounded from raw
@@ -181,10 +185,11 @@ nor access to canonical or source-owned internals.
 
 The conformance boundary is the complete GraphQL HTTP envelope, not an internal
 Go or canonical JSON struct. The positive request fixes `POST`, the route,
-`operationName`, the full query with inline selections for all three union
-members, and the variables object. Its paired response fixes HTTP status and the
-`data.m2mCurrentSnapshot` root. Payload fields use the SDL's camelCase names,
-dimension lists, and concrete union-member shapes.
+`operationName`, the independently stored canonical query AST with inline
+selections for every closed-union member, and the variables object. Its paired
+response fixes HTTP status and the `data.m2mCurrentSnapshot` root. Payload
+fields use the SDL's camelCase names, one concrete dimension variant per fact,
+and concrete union-member shapes.
 
 The validator checks that envelope and query before applying one mandatory
 lossless mapping into canonical field names and value discriminators, then
@@ -194,6 +199,7 @@ completed fail closed; implementations may not substitute a private normalized
 fixture or resolver-only object for this wire-shaped boundary.
 
 - [SDL](../../api/public-graphql-m2m-v1.graphql)
+- [canonical query](../../api/public-graphql-m2m-v1.query.graphql)
 - [machine-readable manifest](./manifests/public-graphql-m2m-v1.json)
 - [deterministic cases](./fixtures/public-graphql-m2m/v1/cases.json)
 - [`validate_public_graphql_m2m_v1.py`](../../scripts/validate_public_graphql_m2m_v1.py)
