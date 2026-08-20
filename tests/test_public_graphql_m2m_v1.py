@@ -15,6 +15,7 @@ DOC = ROOT / "docs/platform/public-graphql-m2m-v1.md"
 sys.path.insert(0, str(ROOT / "scripts"))
 from validate_public_graphql_m2m_v1 import (  # noqa: E402
     ValidationError,
+    loads_json,
     validate,
     validate_case,
     validate_query_document,
@@ -488,6 +489,7 @@ def test_request_rejection_classes_map_to_closed_error_codes():
     assert manifest["request_rejection_codes"] == {
         "malformed_json": "REQUEST_INVALID",
         "duplicate_json_key": "REQUEST_INVALID",
+        "json_depth": "REQUEST_INVALID",
         "request_envelope": "REQUEST_INVALID",
         "query_shape": "QUERY_REJECTED",
         "forbidden_graphql_feature": "QUERY_REJECTED",
@@ -508,6 +510,18 @@ def test_request_rejection_classes_map_to_closed_error_codes():
     oversized["request"]["body"]["padding"] = "x" * manifest["request_bounds"]["max_body_bytes"]
     assert "request_bytes" in validate_case(oversized, manifest, canonical)
     assert manifest["request_rejection_codes"]["request_body_bytes"] == "REQUEST_LIMIT_EXCEEDED"
+
+
+def test_json_depth_has_a_closed_sub_limit_wire_stimulus():
+    manifest, cases = load(MANIFEST), load(CASES)
+    item = next(
+        item for item in cases["request_rejections"] if item["category"] == "json_depth"
+    )
+    raw = item["stimulus"]["rawBody"]
+    assert len(raw.encode("utf-8")) < manifest["request_bounds"]["max_body_bytes"]
+    assert item["code"] == "REQUEST_INVALID"
+    with pytest.raises(ValidationError, match="depth"):
+        loads_json(raw, max_depth=manifest["json_admission"]["max_depth"])
 
 
 def test_raw_request_body_is_authoritative_and_bounded_before_decode():
