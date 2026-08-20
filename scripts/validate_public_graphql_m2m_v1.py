@@ -49,6 +49,8 @@ INTERNAL_RESPONSE_FIELDS = {
     "facts",
     "capabilities",
     "provenance",
+    "requested_outputs",
+    "projection_report",
 }
 INTERNAL_FACT_FIELDS = {
     "fact_id",
@@ -330,6 +332,25 @@ def _normalize_case(case):
         }
         for item in response["provenance"]
     ]
+    requested_outputs = [
+        {
+            "source_ref": item["sourceRef"],
+            "requested_output_ref": item["requestedOutputRef"],
+        }
+        for item in response["requestedOutputs"]
+    ]
+    projection_report = [
+        {
+            "source_ref": item["sourceRef"],
+            "requested_output_ref": item["requestedOutputRef"],
+            "fact_id": item["factId"],
+            "dimensions": None
+            if item["dimensions"] is None
+            else _normalize_dimensions(item["dimensions"]),
+            "outcome": item["outcome"],
+        }
+        for item in response["projectionReport"]
+    ]
     return {
         "request": {
             "contract_id": request["contractId"],
@@ -347,6 +368,8 @@ def _normalize_case(case):
             "facts": facts,
             "capabilities": copy.deepcopy(response["capabilities"]),
             "provenance": provenance,
+            "requested_outputs": requested_outputs,
+            "projection_report": projection_report,
         },
     }
 
@@ -635,6 +658,82 @@ def _validate_case(
         errors.add("empty_snapshot")
     if len(provenance) > manifest["max_provenance_per_snapshot"]:
         errors.add("bounded_snapshot")
+    requested_outputs = response.get("requested_outputs", [])
+    requested_identities = []
+    for item in requested_outputs:
+        if (
+            not isinstance(item, dict)
+            or set(item) != {"source_ref", "requested_output_ref"}
+            or any(
+                not isinstance(item[field], str)
+                or SHA256.fullmatch(item[field]) is None
+                for field in ("source_ref", "requested_output_ref")
+            )
+            or item["source_ref"] not in set(origin_refs)
+        ):
+            errors.add("projection_accounting")
+            continue
+        requested_identities.append(
+            (item["source_ref"], item["requested_output_ref"])
+        )
+    if (
+        len(requested_identities) != len(set(requested_identities))
+        or len(requested_outputs) > manifest["max_requested_outputs_per_snapshot"]
+    ):
+        errors.add("projection_accounting")
+    projection_report = response.get("projection_report", [])
+    projection_identities = []
+    mapped_identities = set()
+    for item in projection_report:
+        if (
+            not isinstance(item, dict)
+            or set(item)
+            != {
+                "source_ref",
+                "requested_output_ref",
+                "fact_id",
+                "dimensions",
+                "outcome",
+            }
+            or not isinstance(item["source_ref"], str)
+            or SHA256.fullmatch(item["source_ref"]) is None
+            or not isinstance(item["requested_output_ref"], str)
+            or SHA256.fullmatch(item["requested_output_ref"]) is None
+            or item["outcome"] not in canonical_manifest["projection_outcomes"]
+        ):
+            errors.add("projection_accounting")
+            continue
+        projection_identities.append(
+            (item["source_ref"], item["requested_output_ref"])
+        )
+        if item["outcome"] == "MAPPED":
+            identity = (
+                item["fact_id"],
+                tuple(sorted(item["dimensions"].items()))
+                if isinstance(item["dimensions"], dict)
+                else (),
+            )
+            if (
+                not isinstance(item["fact_id"], str)
+                or not isinstance(item["dimensions"], dict)
+                or identity not in observed
+                or item["source_ref"] != observed[identity]["origin_ref"]
+            ):
+                errors.add("projection_accounting")
+            mapped_identities.add(identity)
+        elif (
+            item["fact_id"] is not None
+            or item["dimensions"] is not None
+            or item["source_ref"] != response["current_source_origin_ref"]
+        ):
+            errors.add("projection_accounting")
+    if (
+        len(projection_identities) != len(set(projection_identities))
+        or set(projection_identities) != set(requested_identities)
+        or mapped_identities != set(observed)
+        or len(projection_report) > manifest["max_projection_report_per_snapshot"]
+    ):
+        errors.add("projection_accounting")
     return sorted(errors)
 
 
@@ -737,6 +836,28 @@ def _project_canonical_fixture(canonical, manifest):
         "facts": facts,
         "capabilities": copy.deepcopy(canonical["capabilities"]),
         "provenance": provenance,
+        "requestedOutputs": [
+            {
+                "sourceRef": item["source_ref"],
+                "requestedOutputRef": item["requested_output_ref"],
+            }
+            for item in canonical["requested_outputs"]
+        ],
+        "projectionReport": [
+            {
+                "sourceRef": item["source_ref"],
+                "requestedOutputRef": item["requested_output_ref"],
+                "factId": item["fact_id"],
+                "dimensions": None
+                if item["dimensions"] is None
+                else [
+                    {"key": key, "value": value}
+                    for key, value in sorted(item["dimensions"].items())
+                ],
+                "outcome": item["outcome"],
+            }
+            for item in canonical["projection_report"]
+        ],
     }
 
 
@@ -853,7 +974,13 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
         errors.add("request_bytes")
     if _compact_json_size(response_body) > manifest["request_bounds"]["max_response_bytes"]:
         errors.add("response_bytes")
-    for field in ("facts", "capabilities", "provenance"):
+    for field in (
+        "facts",
+        "capabilities",
+        "provenance",
+        "requestedOutputs",
+        "projectionReport",
+    ):
         items = response.get(field, [])
         if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
             errors.add("structural_shape")
@@ -864,6 +991,12 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
     for item in response["provenance"]:
         if set(item) != set(manifest["opaque_provenance_fields"]):
             errors.add("provenance_fields")
+    for item in response["requestedOutputs"]:
+        if set(item) != set(manifest["requested_output_fields"]):
+            errors.add("projection_accounting")
+    for item in response["projectionReport"]:
+        if set(item) != set(manifest["projection_report_fields"]):
+            errors.add("projection_accounting")
     try:
         normalized = _normalize_case(case)
         errors.update(

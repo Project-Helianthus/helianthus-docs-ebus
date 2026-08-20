@@ -40,7 +40,7 @@ def test_manifest_is_locked_to_canonical_catalog_and_closed_public_surface():
     assert manifest["max_facts_per_snapshot"] == 256
     assert manifest["max_provenance_per_snapshot"] == 256
     assert manifest["max_capabilities_per_snapshot"] == 1
-    assert manifest["required_response_fields"] == ["contractId", "canonicalContractId", "assetRef", "generation", "producedAt", "evaluatedMonotonicNs", "sourceTimeState", "currentSourceOriginRef", "facts", "capabilities", "provenance"]
+    assert manifest["required_response_fields"] == ["contractId", "canonicalContractId", "assetRef", "generation", "producedAt", "evaluatedMonotonicNs", "sourceTimeState", "currentSourceOriginRef", "facts", "capabilities", "provenance", "requestedOutputs", "projectionReport"]
     assert manifest["operator_authority"] == ["dedicated_listener", "server_identity", "ca_and_trust_root", "client_certificate_issuance", "asset_allowlist", "rotation", "revocation"]
     assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_value_union"]}
     assert manifest["error_contract"]["partial_snapshot_on_error"] is False
@@ -735,6 +735,38 @@ def test_projection_accounting_is_in_the_closed_sdl_and_fixed_query():
         "projectionReport { sourceRef requestedOutputRef factId dimensions { key value } outcome }"
         in manifest["conformance_query"]
     )
+
+
+def test_projection_accounting_rejects_partial_duplicate_and_misbound_rows():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    base = copy.deepcopy(cases["positive"])
+    payload = copy.deepcopy(cases["capability_satisfied_projection"])
+    base["response"]["body"]["data"]["m2mCurrentSnapshot"] = payload
+    base["request"]["body"]["variables"]["request"]["assetRef"] = payload[
+        "assetRef"
+    ]
+    base["request"]["rawBody"] = json.dumps(
+        base["request"]["body"], separators=(",", ":")
+    )
+
+    candidates = []
+    duplicate = copy.deepcopy(base)
+    response_payload(duplicate)["requestedOutputs"].append(
+        copy.deepcopy(response_payload(duplicate)["requestedOutputs"][0])
+    )
+    candidates.append(duplicate)
+    partial = copy.deepcopy(base)
+    response_payload(partial)["projectionReport"].pop()
+    candidates.append(partial)
+    misbound = copy.deepcopy(base)
+    response_payload(misbound)["projectionReport"][0]["sourceRef"] = "sha256:" + "f" * 64
+    candidates.append(misbound)
+    invalid_loss = copy.deepcopy(base)
+    response_payload(invalid_loss)["projectionReport"][0]["outcome"] = "WITHHELD"
+    candidates.append(invalid_loss)
+
+    for candidate in candidates:
+        assert "projection_accounting" in validate_case(candidate, manifest, canonical)
 
 
 def test_graphql_ast_admission_enforces_syntax_schema_and_bounds():

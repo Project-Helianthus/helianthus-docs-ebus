@@ -58,6 +58,13 @@ matching the one declared projection loss. A separate
 `capability_satisfied_projection` exercises the complete capability pack without
 weakening the golden-bound positive response.
 
+The wire fields `requestedOutputs` and `projectionReport` preserve canonical
+projection accounting as opaque digest identities. Every requested identity has
+exactly one report row. `MAPPED` rows carry a non-null fact identity and bind
+`sourceRef` to that fact's `originRef`; `WITHHELD` and `UNREPRESENTABLE` carry
+null fact identity/dimensions and bind to the current source origin. The lists
+are closed, duplicate-free, and bounded to 256 rows each.
+
 V1's catalog is closed. Any additive or breaking semantic change, including a
 new fact, enum value, dimension meaning, capability requirement, or lifecycle
 meaning, requires a successor contract identifier. The M2M route must reject
