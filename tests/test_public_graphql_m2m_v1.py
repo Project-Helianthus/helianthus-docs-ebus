@@ -1031,6 +1031,16 @@ def test_sdl_closes_dimension_and_continuity_variants_and_preserves_source_bound
     assert "union M2MDimension =" in sdl
     assert "continuity: M2MContinuity" in sdl
     assert "union M2MContinuity =" in sdl
+    assert (
+        "type M2MRolloverContinuity { state: M2MContinuityState!, "
+        "delta: M2MDecimalValue!, modulus: M2MDecimalValue!, evidenceRef: String! }"
+        in sdl
+    )
+    assert (
+        "type M2MResetContinuity { state: M2MContinuityState!, "
+        "evidenceRef: String! }"
+        in sdl
+    )
     assert manifest["max_requested_outputs_per_snapshot"] == 512
     assert manifest["max_projection_report_per_snapshot"] == 512
 
