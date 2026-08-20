@@ -375,7 +375,8 @@
           "pv-asset-01"
         ]
       },
-      "responseCodeRef": "CONTRACT_INCOMPATIBLE"
+      "responseCodeRef": "CONTRACT_INCOMPATIBLE",
+      "id": "contract-incompatible-isolated"
     },
     {
       "category": "asset_forbidden",
@@ -394,7 +395,8 @@
           "pv-asset-02"
         ]
       },
-      "responseCodeRef": "ASSET_FORBIDDEN"
+      "responseCodeRef": "ASSET_FORBIDDEN",
+      "id": "asset-forbidden-isolated"
     },
     {
       "category": "asset_not_found",
@@ -411,7 +413,8 @@
         "presentAssets": [],
         "snapshotAvailableAssets": []
       },
-      "responseCodeRef": "ASSET_NOT_FOUND"
+      "responseCodeRef": "ASSET_NOT_FOUND",
+      "id": "asset-not-found-isolated"
     },
     {
       "category": "source_unavailable",
@@ -430,86 +433,201 @@
         ],
         "snapshotAvailableAssets": []
       },
-      "responseCodeRef": "SOURCE_UNAVAILABLE"
+      "responseCodeRef": "SOURCE_UNAVAILABLE",
+      "id": "source-unavailable-isolated"
+    },
+    {
+      "id": "precedence-contract-before-asset",
+      "category": "contract_incompatible",
+      "code": "CONTRACT_INCOMPATIBLE",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V2",
+        "assetRef": "pv-asset-05"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [],
+        "presentAssets": [],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "CONTRACT_INCOMPATIBLE"
+    },
+    {
+      "id": "precedence-allowlist-before-existence",
+      "category": "asset_forbidden",
+      "code": "ASSET_FORBIDDEN",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-06"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [],
+        "presentAssets": [],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "ASSET_FORBIDDEN"
+    },
+    {
+      "id": "precedence-existence-before-source",
+      "category": "asset_not_found",
+      "code": "ASSET_NOT_FOUND",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-07"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [
+          "pv-asset-07"
+        ],
+        "presentAssets": [],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "ASSET_NOT_FOUND"
     }
   ],
   "admission_sequences": {
     "concurrency": {
       "id": "same-client-overlap-v1",
-      "clientRef": "mtls-principal-a",
       "events": [
         {
           "requestId": "c1",
           "atMs": 0,
           "action": "START",
-          "outcome": "ADMIT"
+          "outcome": "ADMIT",
+          "clientRef": "mtls-principal-a"
         },
         {
           "requestId": "c2",
           "atMs": 1,
           "action": "START",
           "outcome": "REJECT",
-          "code": "REQUEST_LIMIT_EXCEEDED"
+          "code": "REQUEST_LIMIT_EXCEEDED",
+          "clientRef": "mtls-principal-a"
         },
         {
           "requestId": "c1",
           "atMs": 2,
           "action": "COMPLETE",
-          "outcome": "COMPLETE"
+          "outcome": "COMPLETE",
+          "clientRef": "mtls-principal-a"
         }
       ]
     },
     "rate": {
       "id": "same-client-token-bucket-v1",
-      "clientRef": "mtls-principal-b",
       "events": [
         {
           "requestId": "r1",
           "atMs": 0,
           "action": "START",
-          "outcome": "ADMIT"
+          "outcome": "ADMIT",
+          "clientRef": "mtls-principal-b"
         },
         {
           "requestId": "r1",
           "atMs": 0,
           "action": "COMPLETE",
-          "outcome": "COMPLETE"
+          "outcome": "COMPLETE",
+          "clientRef": "mtls-principal-b"
         },
         {
           "requestId": "r2",
           "atMs": 0,
           "action": "START",
-          "outcome": "ADMIT"
+          "outcome": "ADMIT",
+          "clientRef": "mtls-principal-b"
         },
         {
           "requestId": "r2",
           "atMs": 0,
           "action": "COMPLETE",
-          "outcome": "COMPLETE"
+          "outcome": "COMPLETE",
+          "clientRef": "mtls-principal-b"
         },
         {
           "requestId": "r3",
           "atMs": 0,
           "action": "START",
           "outcome": "REJECT",
-          "code": "REQUEST_LIMIT_EXCEEDED"
+          "code": "REQUEST_LIMIT_EXCEEDED",
+          "clientRef": "mtls-principal-b"
         },
         {
           "requestId": "r4",
           "atMs": 999,
           "action": "START",
           "outcome": "REJECT",
-          "code": "REQUEST_LIMIT_EXCEEDED"
+          "code": "REQUEST_LIMIT_EXCEEDED",
+          "clientRef": "mtls-principal-b"
         },
         {
           "requestId": "r5",
           "atMs": 1000,
           "action": "START",
-          "outcome": "ADMIT"
+          "outcome": "ADMIT",
+          "clientRef": "mtls-principal-b"
         },
         {
           "requestId": "r5",
           "atMs": 1000,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE",
+          "clientRef": "mtls-principal-b"
+        }
+      ]
+    },
+    "client_isolation": {
+      "id": "two-principal-isolation-v1",
+      "events": [
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a1",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "clientRef": "mtls-principal-b",
+          "requestId": "i-b1",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a2",
+          "atMs": 1,
+          "action": "START",
+          "outcome": "REJECT",
+          "code": "REQUEST_LIMIT_EXCEEDED"
+        },
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a1",
+          "atMs": 2,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE"
+        },
+        {
+          "clientRef": "mtls-principal-b",
+          "requestId": "i-b1",
+          "atMs": 2,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE"
+        },
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a3",
+          "atMs": 2,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a3",
+          "atMs": 2,
           "action": "COMPLETE",
           "outcome": "COMPLETE"
         }

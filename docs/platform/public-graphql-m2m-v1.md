@@ -101,7 +101,10 @@ the bucket starts with two tokens, has capacity two, and refills one token every
 1000 ms. Fixture order breaks ties at the same timestamp. Rejected requests do
 not consume a token. The conformance fixture includes an overlapping request and
 a same-client burst/refill sequence, so concurrency and rate limits are
-executable contracts rather than prose-only limits.
+executable contracts rather than prose-only limits. A two-principal sequence
+requires simultaneous admission for distinct mTLS identities, then admits the
+first principal after its overlap rejection to prove both client isolation and
+non-consumption of a rate token.
 
 The request fixture retains both the exact UTF-8 `rawBody` and its decoded
 object. The validator measures `rawBody` before parsing, applies depth and
@@ -135,6 +138,8 @@ canonical availability/freshness state.
 Semantic admission is ordered: contract compatibility, asset allowlist, asset
 existence, then source-snapshot availability. Conformance binds each of the four
 reachable request plus server-state combinations to its exact response. It also
+contains an overlapping failure at every precedence boundary, so an earlier
+failure cannot leak a later asset/source decision. The fixture additionally
 binds every declared request-rejection category to an executable malformed
 body, envelope mutation, GraphQL AST mutation, wire-size stimulus, or logical
 client event sequence.

@@ -1061,19 +1061,27 @@ def validate_error_envelopes(cases, manifest):
 
 def validate_semantic_rejections(cases, manifest):
     expected = {
-        category: manifest["error_contract"][category]
-        for category in manifest["semantic_rejection_precedence"]
+        "contract-incompatible-isolated": "contract_incompatible",
+        "asset-forbidden-isolated": "asset_forbidden",
+        "asset-not-found-isolated": "asset_not_found",
+        "source-unavailable-isolated": "source_unavailable",
+        "precedence-contract-before-asset": "contract_incompatible",
+        "precedence-allowlist-before-existence": "asset_forbidden",
+        "precedence-existence-before-source": "asset_not_found",
     }
     items = cases.get("semantic_rejections")
     if (
         not isinstance(items, list)
         or len(items) != len(expected)
         or {
-            item.get("category"): item.get("code")
+            item.get("id"): (item.get("category"), item.get("code"))
             for item in items
             if isinstance(item, dict)
         }
-        != expected
+        != {
+            item_id: (category, manifest["error_contract"][category])
+            for item_id, category in expected.items()
+        }
     ):
         raise ValidationError("semantic_rejection_mapping")
     envelopes = {item["code"]: item["response"] for item in cases["errors"]}
@@ -1081,6 +1089,7 @@ def validate_semantic_rejections(cases, manifest):
         if set(item) != {
             "category",
             "code",
+            "id",
             "request",
             "serverState",
             "responseCodeRef",
@@ -1128,8 +1137,31 @@ def validate_semantic_rejections(cases, manifest):
             reached = "source_unavailable"
         else:
             reached = None
-        if reached != item["category"] or expected.get(reached) != item["code"]:
+        if (
+            reached != item["category"]
+            or manifest["error_contract"].get(reached) != item["code"]
+        ):
             raise ValidationError("semantic_rejection_mapping")
+        if item["id"] == "precedence-contract-before-asset" and not (
+            asset not in state["allowedAssets"]
+            and asset not in state["presentAssets"]
+            and asset not in state["snapshotAvailableAssets"]
+        ):
+            raise ValidationError("semantic_rejection_precedence")
+        if item["id"] == "precedence-allowlist-before-existence" and not (
+            request["contractId"] in manifest["contract_negotiation"]["accepted"]
+            and asset not in state["allowedAssets"]
+            and asset not in state["presentAssets"]
+            and asset not in state["snapshotAvailableAssets"]
+        ):
+            raise ValidationError("semantic_rejection_precedence")
+        if item["id"] == "precedence-existence-before-source" and not (
+            request["contractId"] in manifest["contract_negotiation"]["accepted"]
+            and asset in state["allowedAssets"]
+            and asset not in state["presentAssets"]
+            and asset not in state["snapshotAvailableAssets"]
+        ):
+            raise ValidationError("semantic_rejection_precedence")
 
 
 def validate_admission_sequences(cases, manifest):
@@ -1156,63 +1188,80 @@ def validate_admission_sequences(cases, manifest):
     }:
         raise ValidationError("admission_model")
     sequences = cases.get("admission_sequences")
-    if not isinstance(sequences, dict) or set(sequences) != {"concurrency", "rate"}:
+    if not isinstance(sequences, dict) or set(sequences) != {
+        "concurrency",
+        "rate",
+        "client_isolation",
+    }:
         raise ValidationError("admission_sequence_shape")
     expected_ids = {
         "concurrency": "same-client-overlap-v1",
         "rate": "same-client-token-bucket-v1",
+        "client_isolation": "two-principal-isolation-v1",
     }
     for category, sequence in sequences.items():
         if (
             not isinstance(sequence, dict)
-            or set(sequence) != {"id", "clientRef", "events"}
+            or set(sequence) != {"id", "events"}
             or sequence["id"] != expected_ids[category]
-            or not isinstance(sequence["clientRef"], str)
-            or not sequence["clientRef"]
             or not isinstance(sequence["events"], list)
             or not sequence["events"]
         ):
             raise ValidationError("admission_sequence_shape")
-        tokens = model["rate"]["initial_tokens"]
         capacity = model["rate"]["capacity"]
         refill = model["rate"]["refill_tokens"]
         interval = model["rate"]["refill_interval_ms"]
-        last_refill_ms = 0
         last_event_ms = -1
-        active = set()
+        clients = {}
         rejected = 0
         for event in sequence["events"]:
             if not isinstance(event, dict) or set(event) not in (
-                {"requestId", "atMs", "action", "outcome"},
-                {"requestId", "atMs", "action", "outcome", "code"},
+                {"clientRef", "requestId", "atMs", "action", "outcome"},
+                {"clientRef", "requestId", "atMs", "action", "outcome", "code"},
             ):
                 raise ValidationError("admission_sequence_shape")
+            client_ref = event["clientRef"]
             request_id = event["requestId"]
             at_ms = event["atMs"]
             if (
-                not isinstance(request_id, str)
+                not isinstance(client_ref, str)
+                or not client_ref
+                or not isinstance(request_id, str)
                 or not request_id
                 or type(at_ms) is not int
                 or at_ms < last_event_ms
             ):
                 raise ValidationError("admission_sequence_shape")
-            elapsed_intervals = (at_ms - last_refill_ms) // interval
+            state = clients.setdefault(
+                client_ref,
+                {
+                    "tokens": model["rate"]["initial_tokens"],
+                    "last_refill_ms": 0,
+                    "active": set(),
+                },
+            )
+            elapsed_intervals = (at_ms - state["last_refill_ms"]) // interval
             if elapsed_intervals > 0:
-                tokens = min(capacity, tokens + elapsed_intervals * refill)
-                last_refill_ms += elapsed_intervals * interval
+                state["tokens"] = min(
+                    capacity, state["tokens"] + elapsed_intervals * refill
+                )
+                state["last_refill_ms"] += elapsed_intervals * interval
             last_event_ms = at_ms
             if event["action"] == "COMPLETE":
                 if (
                     event["outcome"] != "COMPLETE"
                     or "code" in event
-                    or request_id not in active
+                    or request_id not in state["active"]
                 ):
                     raise ValidationError("admission_sequence_mapping")
-                active.remove(request_id)
+                state["active"].remove(request_id)
                 continue
-            if event["action"] != "START" or request_id in active:
+            if event["action"] != "START" or request_id in state["active"]:
                 raise ValidationError("admission_sequence_mapping")
-            should_reject = len(active) >= model["concurrency"]["maximum"] or tokens < 1
+            should_reject = (
+                len(state["active"]) >= model["concurrency"]["maximum"]
+                or state["tokens"] < 1
+            )
             if should_reject:
                 rejected += 1
                 if event.get("outcome") != "REJECT" or event.get("code") != manifest[
@@ -1222,9 +1271,14 @@ def validate_admission_sequences(cases, manifest):
             else:
                 if event.get("outcome") != "ADMIT" or "code" in event:
                     raise ValidationError("admission_sequence_mapping")
-                active.add(request_id)
-                tokens -= 1
-        if active or rejected == 0:
+                state["active"].add(request_id)
+                state["tokens"] -= 1
+        if (
+            any(state["active"] for state in clients.values())
+            or rejected == 0
+            or (category == "client_isolation" and len(clients) != 2)
+            or (category != "client_isolation" and len(clients) != 1)
+        ):
             raise ValidationError("admission_sequence_mapping")
 
 

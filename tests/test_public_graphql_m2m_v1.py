@@ -645,6 +645,37 @@ def test_semantic_rejections_bind_reachable_request_state_to_response(tmp_path):
         with pytest.raises(ValidationError):
             validate(MANIFEST, CANONICAL, candidate_path)
 
+    precedence_mutations = {
+        "precedence-contract-before-asset": lambda item: (
+            item["serverState"]["allowedAssets"].append(item["request"]["assetRef"]),
+            item["serverState"]["presentAssets"].append(item["request"]["assetRef"]),
+            item["serverState"]["snapshotAvailableAssets"].append(
+                item["request"]["assetRef"]
+            ),
+        ),
+        "precedence-allowlist-before-existence": lambda item: (
+            item["serverState"]["presentAssets"].append(item["request"]["assetRef"]),
+            item["serverState"]["snapshotAvailableAssets"].append(
+                item["request"]["assetRef"]
+            ),
+        ),
+        "precedence-existence-before-source": lambda item: item["serverState"][
+            "snapshotAvailableAssets"
+        ].append(item["request"]["assetRef"]),
+    }
+    for item_id, mutate in precedence_mutations.items():
+        candidate = copy.deepcopy(cases)
+        item = next(
+            binding
+            for binding in candidate["semantic_rejections"]
+            if binding["id"] == item_id
+        )
+        mutate(item)
+        candidate_path = tmp_path / f"non-overlap-{item_id}.json"
+        candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
+        with pytest.raises(ValidationError, match="semantic_rejection_precedence"):
+            validate(MANIFEST, CANONICAL, candidate_path)
+
 
 def test_every_request_rejection_has_executable_stimulus_and_limit_sequence(tmp_path):
     manifest, cases = load(MANIFEST), load(CASES)
@@ -694,6 +725,16 @@ def test_every_request_rejection_has_executable_stimulus_and_limit_sequence(tmp_
     )
     assert isolation[-2]["clientRef"] == "mtls-principal-a"
     assert isolation[-2]["outcome"] == "ADMIT"
+
+    for index in (1, len(isolation) - 2):
+        candidate = copy.deepcopy(cases)
+        event = candidate["admission_sequences"]["client_isolation"]["events"][index]
+        event["outcome"] = "REJECT"
+        event["code"] = "REQUEST_LIMIT_EXCEEDED"
+        candidate_path = tmp_path / f"global-or-token-consumption-{index}.json"
+        candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
+        with pytest.raises(ValidationError, match="admission_sequence_mapping"):
+            validate(MANIFEST, CANONICAL, candidate_path)
 
 
 def test_named_canonical_fixture_has_lossless_public_projection(tmp_path):
