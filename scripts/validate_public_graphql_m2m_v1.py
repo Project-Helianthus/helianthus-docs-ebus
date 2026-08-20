@@ -830,51 +830,266 @@ def validate_error_envelopes(cases, manifest):
             raise ValidationError("error_envelope_shape")
 
 
-def validate_request_rejections(cases, manifest):
+def validate_semantic_rejections(cases, manifest):
     expected = {
-        "json-admission": manifest["request_rejection_codes"]["duplicate_json_key"],
-        "query-shape": manifest["request_rejection_codes"]["query_shape"],
-        "request-limit": manifest["request_rejection_codes"]["request_body_bytes"],
+        category: manifest["error_contract"][category]
+        for category in manifest["semantic_rejection_precedence"]
     }
+    items = cases.get("semantic_rejections")
+    if (
+        not isinstance(items, list)
+        or len(items) != len(expected)
+        or {
+            item.get("category"): item.get("code")
+            for item in items
+            if isinstance(item, dict)
+        }
+        != expected
+    ):
+        raise ValidationError("semantic_rejection_mapping")
+    envelopes = {item["code"]: item["response"] for item in cases["errors"]}
+    for item in items:
+        if set(item) != {
+            "category",
+            "code",
+            "request",
+            "serverState",
+            "responseCodeRef",
+        }:
+            raise ValidationError("semantic_rejection_shape")
+        request = item["request"]
+        state = item["serverState"]
+        if (
+            not isinstance(request, dict)
+            or set(request) != {"contractId", "assetRef"}
+            or not isinstance(request["contractId"], str)
+            or not isinstance(request["assetRef"], str)
+            or ASSET.fullmatch(request["assetRef"]) is None
+            or not isinstance(state, dict)
+            or set(state)
+            != {
+                "authenticated",
+                "allowedAssets",
+                "presentAssets",
+                "snapshotAvailableAssets",
+            }
+            or state["authenticated"] is not True
+            or any(
+                not isinstance(values, list)
+                or len(values) != len(set(values))
+                or any(ASSET.fullmatch(value) is None for value in values)
+                for values in (
+                    state["allowedAssets"],
+                    state["presentAssets"],
+                    state["snapshotAvailableAssets"],
+                )
+            )
+            or item["responseCodeRef"] != item["code"]
+            or item["responseCodeRef"] not in envelopes
+        ):
+            raise ValidationError("semantic_rejection_shape")
+        asset = request["assetRef"]
+        if request["contractId"] not in manifest["contract_negotiation"]["accepted"]:
+            reached = "contract_incompatible"
+        elif asset not in state["allowedAssets"]:
+            reached = "asset_forbidden"
+        elif asset not in state["presentAssets"]:
+            reached = "asset_not_found"
+        elif asset not in state["snapshotAvailableAssets"]:
+            reached = "source_unavailable"
+        else:
+            reached = None
+        if reached != item["category"] or expected.get(reached) != item["code"]:
+            raise ValidationError("semantic_rejection_mapping")
+
+
+def validate_admission_sequences(cases, manifest):
+    model = manifest["admission_model"]
+    bounds = manifest["request_bounds"]
+    if model != {
+        "logical_client_identity": "MTLS_PRINCIPAL_FINGERPRINT",
+        "clock": "MONOTONIC_INTEGER_MILLISECONDS",
+        "same_timestamp_order": "FIXTURE_EVENT_ORDER",
+        "evaluation_order": ["concurrency", "rate"],
+        "rejected_request_consumes_rate_token": False,
+        "concurrency": {
+            "request_is_in_flight_from": "ADMIT",
+            "request_is_in_flight_until": "COMPLETE",
+            "maximum": bounds["max_concurrency_per_client"],
+        },
+        "rate": {
+            "algorithm": "TOKEN_BUCKET",
+            "initial_tokens": bounds["burst_per_client"],
+            "capacity": bounds["burst_per_client"],
+            "refill_tokens": bounds["requests_per_second_per_client"],
+            "refill_interval_ms": 1000,
+        },
+    }:
+        raise ValidationError("admission_model")
+    sequences = cases.get("admission_sequences")
+    if not isinstance(sequences, dict) or set(sequences) != {"concurrency", "rate"}:
+        raise ValidationError("admission_sequence_shape")
+    expected_ids = {
+        "concurrency": "same-client-overlap-v1",
+        "rate": "same-client-token-bucket-v1",
+    }
+    for category, sequence in sequences.items():
+        if (
+            not isinstance(sequence, dict)
+            or set(sequence) != {"id", "clientRef", "events"}
+            or sequence["id"] != expected_ids[category]
+            or not isinstance(sequence["clientRef"], str)
+            or not sequence["clientRef"]
+            or not isinstance(sequence["events"], list)
+            or not sequence["events"]
+        ):
+            raise ValidationError("admission_sequence_shape")
+        tokens = model["rate"]["initial_tokens"]
+        capacity = model["rate"]["capacity"]
+        refill = model["rate"]["refill_tokens"]
+        interval = model["rate"]["refill_interval_ms"]
+        last_refill_ms = 0
+        last_event_ms = -1
+        active = set()
+        rejected = 0
+        for event in sequence["events"]:
+            if not isinstance(event, dict) or set(event) not in (
+                {"requestId", "atMs", "action", "outcome"},
+                {"requestId", "atMs", "action", "outcome", "code"},
+            ):
+                raise ValidationError("admission_sequence_shape")
+            request_id = event["requestId"]
+            at_ms = event["atMs"]
+            if (
+                not isinstance(request_id, str)
+                or not request_id
+                or type(at_ms) is not int
+                or at_ms < last_event_ms
+            ):
+                raise ValidationError("admission_sequence_shape")
+            elapsed_intervals = (at_ms - last_refill_ms) // interval
+            if elapsed_intervals > 0:
+                tokens = min(capacity, tokens + elapsed_intervals * refill)
+                last_refill_ms += elapsed_intervals * interval
+            last_event_ms = at_ms
+            if event["action"] == "COMPLETE":
+                if (
+                    event["outcome"] != "COMPLETE"
+                    or "code" in event
+                    or request_id not in active
+                ):
+                    raise ValidationError("admission_sequence_mapping")
+                active.remove(request_id)
+                continue
+            if event["action"] != "START" or request_id in active:
+                raise ValidationError("admission_sequence_mapping")
+            should_reject = len(active) >= model["concurrency"]["maximum"] or tokens < 1
+            if should_reject:
+                rejected += 1
+                if event.get("outcome") != "REJECT" or event.get("code") != manifest[
+                    "error_contract"
+                ]["request_limit_exceeded"]:
+                    raise ValidationError("admission_sequence_mapping")
+            else:
+                if event.get("outcome") != "ADMIT" or "code" in event:
+                    raise ValidationError("admission_sequence_mapping")
+                active.add(request_id)
+                tokens -= 1
+        if active or rejected == 0:
+            raise ValidationError("admission_sequence_mapping")
+
+
+def validate_request_rejections(cases, manifest):
+    expected = manifest["request_rejection_codes"]
     items = cases.get("request_rejections")
     if (
         not isinstance(items, list)
         or len(items) != len(expected)
-        or {item.get("class"): item.get("code") for item in items if isinstance(item, dict)}
+        or {
+            item.get("category"): item.get("code")
+            for item in items
+            if isinstance(item, dict)
+        }
         != expected
     ):
         raise ValidationError("request_rejection_mapping")
     envelopes = {item["code"]: item["response"] for item in cases["errors"]}
+    sequences = cases["admission_sequences"]
     for item in items:
-        if set(item) != {"class", "code", "request", "response"}:
+        if set(item) != {"category", "code", "stimulus", "responseCodeRef"}:
             raise ValidationError("request_rejection_shape")
-        request = item["request"]
+        category = item["category"]
+        stimulus = item["stimulus"]
         if (
-            not isinstance(request, dict)
-            or set(request) != {"method", "path", "rawBody"}
-            or request["method"] != manifest["request_bounds"]["method"]
-            or request["path"] != manifest["route"]
-            or not isinstance(request["rawBody"], str)
-            or item["response"] != envelopes.get(item["code"])
+            not isinstance(stimulus, dict)
+            or item["responseCodeRef"] != item["code"]
+            or item["responseCodeRef"] not in envelopes
         ):
             raise ValidationError("request_rejection_shape")
-        raw = request["rawBody"]
-        if item["class"] == "json-admission":
+        if category in {"malformed_json", "duplicate_json_key"}:
+            if set(stimulus) != {"rawBody"} or not isinstance(stimulus["rawBody"], str):
+                raise ValidationError("request_rejection_shape")
             try:
-                loads_json(raw, max_depth=manifest["json_admission"]["max_depth"])
-            except (ValidationError, json.JSONDecodeError):
-                continue
+                loads_json(
+                    stimulus["rawBody"],
+                    max_depth=manifest["json_admission"]["max_depth"],
+                )
+            except json.JSONDecodeError:
+                reached = "malformed_json"
+            except ValidationError:
+                reached = "duplicate_json_key"
+            else:
+                reached = None
+        elif category == "request_envelope":
+            reached = (
+                category
+                if set(stimulus) == {"method"}
+                and stimulus["method"] != manifest["request_bounds"]["method"]
+                else None
+            )
+        elif category == "request_body_bytes":
+            reached = (
+                category
+                if set(stimulus) == {"prefixPaddingBytes"}
+                and type(stimulus["prefixPaddingBytes"]) is int
+                and stimulus["prefixPaddingBytes"]
+                + len(cases["positive"]["request"]["rawBody"].encode("utf-8"))
+                > manifest["request_bounds"]["max_body_bytes"]
+                else None
+            )
+        elif category in {"concurrency", "rate"}:
+            reached = (
+                category
+                if set(stimulus) == {"sequenceRef"}
+                and stimulus["sequenceRef"] == sequences[category]["id"]
+                else None
+            )
+        else:
+            mutation = stimulus.get("queryMutation") if set(stimulus) == {"queryMutation"} else None
+            query = manifest["conformance_query"]
+            if mutation == "alias_root":
+                query = query.replace(
+                    "m2mCurrentSnapshot(request:",
+                    "snapshot: m2mCurrentSnapshot(request:",
+                    1,
+                )
+                reached = category if "query_alias" in validate_query_document(query, manifest) else None
+            elif mutation == "introspection":
+                query = query.replace("contractId", "__typename contractId", 1)
+                reached = category if "query_introspection" in validate_query_document(query, manifest) else None
+            elif mutation == "depth_9":
+                query = (
+                    "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) "
+                    "{ m2mCurrentSnapshot(request: $request) { a { b { c { d { e { f { g { h { i } } } } } } } } } }"
+                )
+                reached = category if "query_depth" in validate_query_document(query, manifest) else None
+            elif mutation == "selected_fields_257":
+                query = query.replace("contractId", " ".join(["contractId"] * 257), 1)
+                reached = category if "query_fields" in validate_query_document(query, manifest) else None
+            else:
+                reached = None
+        if reached != category:
             raise ValidationError("request_rejection_mapping")
-        if item["class"] == "request-limit":
-            if len(raw.encode("utf-8")) > manifest["request_bounds"]["max_body_bytes"]:
-                continue
-            raise ValidationError("request_rejection_mapping")
-        decoded = loads_json(
-            raw, max_depth=manifest["json_admission"]["max_depth"]
-        )
-        if decoded.get("query") != manifest["conformance_query"]:
-            continue
-        raise ValidationError("request_rejection_mapping")
 
 
 def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Path):
@@ -892,6 +1107,8 @@ def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Pat
         if negative["error"] not in validate_case(candidate, manifest, canonical):
             raise ValidationError("negative: " + negative["id"])
     validate_error_envelopes(cases, manifest)
+    validate_semantic_rejections(cases, manifest)
+    validate_admission_sequences(cases, manifest)
     validate_request_rejections(cases, manifest)
 
 

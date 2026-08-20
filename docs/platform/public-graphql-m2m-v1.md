@@ -79,6 +79,15 @@ rather than resolved first-wins or last-wins. The same compact deterministic
 JSON encoding used by conformance enforces the 16 KiB request-body and 1 MiB
 response-body limits.
 
+The logical client is the authenticated mTLS principal fingerprint. Admission
+uses an integer monotonic-millisecond clock and evaluates concurrency before a
+token bucket. A request is in flight from admission until its terminal response;
+the bucket starts with two tokens, has capacity two, and refills one token every
+1000 ms. Fixture order breaks ties at the same timestamp. Rejected requests do
+not consume a token. The conformance fixture includes an overlapping request and
+a same-client burst/refill sequence, so concurrency and rate limits are
+executable contracts rather than prose-only limits.
+
 The request fixture retains both the exact UTF-8 `rawBody` and its decoded
 object. The validator measures `rawBody` before parsing, applies depth and
 duplicate-key admission to those bytes, and requires the decoded value to equal
@@ -108,7 +117,14 @@ partial snapshot and never fall back to generic GraphQL. A retained stale or
 expired canonical snapshot is data, not a transport error, and keeps its
 canonical availability/freshness state.
 
-The four authenticated semantic failures and three authenticated request
+Semantic admission is ordered: contract compatibility, asset allowlist, asset
+existence, then source-snapshot availability. Conformance binds each of the four
+reachable request plus server-state combinations to its exact response. It also
+binds every declared request-rejection category to an executable malformed
+body, envelope mutation, GraphQL AST mutation, wire-size stimulus, or logical
+client event sequence.
+
+The four authenticated semantic failures and ten authenticated request
 rejections use HTTP status `200` and the same closed GraphQL error envelope:
 `data` is `null`; `errors` contains exactly one row with
 the constant message `M2M request failed`, path `m2mCurrentSnapshot`, and only

@@ -513,20 +513,17 @@ def test_raw_request_body_is_authoritative_and_bounded_before_decode():
 
 def test_request_rejection_fixtures_bind_input_class_to_exact_response():
     manifest, cases = load(MANIFEST), load(CASES)
-    expected = {
-        "json-admission": "REQUEST_INVALID",
-        "query-shape": "QUERY_REJECTED",
-        "request-limit": "REQUEST_LIMIT_EXCEEDED",
-    }
+    expected = manifest["request_rejection_codes"]
     assert {
-        item["class"]: item["code"] for item in cases["request_rejections"]
+        item["category"]: item["code"] for item in cases["request_rejections"]
     } == expected
     envelopes = {item["code"]: item["response"] for item in cases["errors"]}
     for item in cases["request_rejections"]:
-        assert set(item["request"]) == {"method", "path", "rawBody"}
-        assert item["request"]["method"] == "POST"
-        assert item["request"]["path"] == manifest["route"]
-        assert item["response"] == envelopes[item["code"]]
+        assert set(item) == {"category", "code", "stimulus", "responseCodeRef"}
+        assert item["responseCodeRef"] == item["code"]
+        assert envelopes[item["responseCodeRef"]]["body"]["errors"][0][
+            "extensions"
+        ]["code"] == item["code"]
 
 
 def test_error_envelope_mutations_are_rejected_end_to_end(tmp_path):
@@ -590,9 +587,18 @@ def test_semantic_rejections_bind_reachable_request_state_to_response(tmp_path):
     assert {category: item["code"] for category, item in bindings.items()} == expected
     envelopes = {item["code"]: item["response"] for item in cases["errors"]}
     for item in bindings.values():
-        assert set(item) == {"category", "code", "request", "serverState", "response"}
+        assert set(item) == {
+            "category",
+            "code",
+            "request",
+            "serverState",
+            "responseCodeRef",
+        }
         assert set(item["request"]) == {"contractId", "assetRef"}
-        assert item["response"] == envelopes[item["code"]]
+        assert item["responseCodeRef"] == item["code"]
+        assert envelopes[item["responseCodeRef"]]["body"]["errors"][0][
+            "extensions"
+        ]["code"] == item["code"]
 
     reachable_mutations = {
         "contract_incompatible": lambda item: item["request"].update(

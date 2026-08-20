@@ -502,84 +502,247 @@
       "error": "canonical_projection"
     }
   ],
+  "semantic_rejections": [
+    {
+      "category": "contract_incompatible",
+      "code": "CONTRACT_INCOMPATIBLE",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V2",
+        "assetRef": "pv-asset-01"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [
+          "pv-asset-01"
+        ],
+        "presentAssets": [
+          "pv-asset-01"
+        ],
+        "snapshotAvailableAssets": [
+          "pv-asset-01"
+        ]
+      },
+      "responseCodeRef": "CONTRACT_INCOMPATIBLE"
+    },
+    {
+      "category": "asset_forbidden",
+      "code": "ASSET_FORBIDDEN",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-02"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [],
+        "presentAssets": [
+          "pv-asset-02"
+        ],
+        "snapshotAvailableAssets": [
+          "pv-asset-02"
+        ]
+      },
+      "responseCodeRef": "ASSET_FORBIDDEN"
+    },
+    {
+      "category": "asset_not_found",
+      "code": "ASSET_NOT_FOUND",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-03"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [
+          "pv-asset-03"
+        ],
+        "presentAssets": [],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "ASSET_NOT_FOUND"
+    },
+    {
+      "category": "source_unavailable",
+      "code": "SOURCE_UNAVAILABLE",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-04"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [
+          "pv-asset-04"
+        ],
+        "presentAssets": [
+          "pv-asset-04"
+        ],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "SOURCE_UNAVAILABLE"
+    }
+  ],
+  "admission_sequences": {
+    "concurrency": {
+      "id": "same-client-overlap-v1",
+      "clientRef": "mtls-principal-a",
+      "events": [
+        {
+          "requestId": "c1",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "requestId": "c2",
+          "atMs": 1,
+          "action": "START",
+          "outcome": "REJECT",
+          "code": "REQUEST_LIMIT_EXCEEDED"
+        },
+        {
+          "requestId": "c1",
+          "atMs": 2,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE"
+        }
+      ]
+    },
+    "rate": {
+      "id": "same-client-token-bucket-v1",
+      "clientRef": "mtls-principal-b",
+      "events": [
+        {
+          "requestId": "r1",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "requestId": "r1",
+          "atMs": 0,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE"
+        },
+        {
+          "requestId": "r2",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "requestId": "r2",
+          "atMs": 0,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE"
+        },
+        {
+          "requestId": "r3",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "REJECT",
+          "code": "REQUEST_LIMIT_EXCEEDED"
+        },
+        {
+          "requestId": "r4",
+          "atMs": 999,
+          "action": "START",
+          "outcome": "REJECT",
+          "code": "REQUEST_LIMIT_EXCEEDED"
+        },
+        {
+          "requestId": "r5",
+          "atMs": 1000,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "requestId": "r5",
+          "atMs": 1000,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE"
+        }
+      ]
+    }
+  },
   "request_rejections": [
     {
-      "class": "json-admission",
+      "category": "malformed_json",
       "code": "REQUEST_INVALID",
-      "request": {
-        "method": "POST",
-        "path": "/graphql/m2m/v1",
+      "stimulus": {
+        "rawBody": "{"
+      },
+      "responseCodeRef": "REQUEST_INVALID"
+    },
+    {
+      "category": "duplicate_json_key",
+      "code": "REQUEST_INVALID",
+      "stimulus": {
         "rawBody": "{\"contractId\":\"A\",\"contractId\":\"B\"}"
       },
-      "response": {
-        "status": 200,
-        "body": {
-          "data": null,
-          "errors": [
-            {
-              "message": "M2M request failed",
-              "path": [
-                "m2mCurrentSnapshot"
-              ],
-              "extensions": {
-                "code": "REQUEST_INVALID"
-              }
-            }
-          ]
-        }
-      }
+      "responseCodeRef": "REQUEST_INVALID"
     },
     {
-      "class": "query-shape",
+      "category": "request_envelope",
+      "code": "REQUEST_INVALID",
+      "stimulus": {
+        "method": "GET"
+      },
+      "responseCodeRef": "REQUEST_INVALID"
+    },
+    {
+      "category": "query_shape",
       "code": "QUERY_REJECTED",
-      "request": {
-        "method": "POST",
-        "path": "/graphql/m2m/v1",
-        "rawBody": "{\"operationName\":\"M2MCurrentSnapshot\",\"query\":\"query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) { snapshot: m2mCurrentSnapshot(request: $request) { contractId canonicalContractId assetRef generation producedAt evaluatedMonotonicNs sourceTimeState currentSourceOriginRef facts { factId dimensions { key value } value { ... on M2MDecimalValue { coefficient scale } ... on M2MEnumValue { symbol } ... on M2MBitfieldValue { symbols } } unit quality availability freshness receiptMonotonicNs freshUntilMonotonicNs retainUntilMonotonicNs freshnessPolicy originRef continuity { state delta { coefficient scale } modulus { coefficient scale } evidenceRef } } capabilities { id outcome } provenance { originRef sourceProtocol sourceProfileId sourceProfileVersion sourceValidity sourceRegistryRef sourceObservationRef evidenceRef } } }\",\"variables\":{\"request\":{\"contractId\":\"PUBLIC_GRAPHQL_M2M_V1\",\"assetRef\":\"pv-asset-01\"}}}"
+      "stimulus": {
+        "queryMutation": "alias_root"
       },
-      "response": {
-        "status": 200,
-        "body": {
-          "data": null,
-          "errors": [
-            {
-              "message": "M2M request failed",
-              "path": [
-                "m2mCurrentSnapshot"
-              ],
-              "extensions": {
-                "code": "QUERY_REJECTED"
-              }
-            }
-          ]
-        }
-      }
+      "responseCodeRef": "QUERY_REJECTED"
     },
     {
-      "class": "request-limit",
-      "code": "REQUEST_LIMIT_EXCEEDED",
-      "request": {
-        "method": "POST",
-        "path": "/graphql/m2m/v1",
-        "rawBody": "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 {\"operationName\":\"M2MCurrentSnapshot\",\"query\":\"query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) { m2mCurrentSnapshot(request: $request) { contractId canonicalContractId assetRef generation producedAt evaluatedMonotonicNs sourceTimeState currentSourceOriginRef facts { factId dimensions { key value } value { ... on M2MDecimalValue { coefficient scale } ... on M2MEnumValue { symbol } ... on M2MBitfieldValue { symbols } } unit quality availability freshness receiptMonotonicNs freshUntilMonotonicNs retainUntilMonotonicNs freshnessPolicy originRef continuity { state delta { coefficient scale } modulus { coefficient scale } evidenceRef } } capabilities { id outcome } provenance { originRef sourceProtocol sourceProfileId sourceProfileVersion sourceValidity sourceRegistryRef sourceObservationRef evidenceRef } } }\",\"variables\":{\"request\":{\"contractId\":\"PUBLIC_GRAPHQL_M2M_V1\",\"assetRef\":\"pv-asset-01\"}}}"
+      "category": "forbidden_graphql_feature",
+      "code": "QUERY_REJECTED",
+      "stimulus": {
+        "queryMutation": "introspection"
       },
-      "response": {
-        "status": 200,
-        "body": {
-          "data": null,
-          "errors": [
-            {
-              "message": "M2M request failed",
-              "path": [
-                "m2mCurrentSnapshot"
-              ],
-              "extensions": {
-                "code": "REQUEST_LIMIT_EXCEEDED"
-              }
-            }
-          ]
-        }
-      }
+      "responseCodeRef": "QUERY_REJECTED"
+    },
+    {
+      "category": "request_body_bytes",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "prefixPaddingBytes": 16385
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "query_depth",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "queryMutation": "depth_9"
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "selected_fields",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "queryMutation": "selected_fields_257"
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "concurrency",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "sequenceRef": "same-client-overlap-v1"
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "rate",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "sequenceRef": "same-client-token-bucket-v1"
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
     }
   ]
 }
