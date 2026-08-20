@@ -1033,12 +1033,13 @@ def test_sdl_closes_dimension_and_continuity_variants_and_preserves_source_bound
     assert "union M2MContinuity =" in sdl
     assert (
         "type M2MRolloverContinuity { state: M2MContinuityState!, "
-        "delta: M2MDecimalValue!, modulus: M2MDecimalValue!, evidenceRef: String! }"
+        "delta: M2MDecimalValue!, modulus: M2MDecimalValue!, "
+        "rolloverEvidenceRef: String! }"
         in sdl
     )
     assert (
         "type M2MResetContinuity { state: M2MContinuityState!, "
-        "evidenceRef: String! }"
+        "resetEvidenceRef: String! }"
         in sdl
     )
     assert manifest["max_requested_outputs_per_snapshot"] == 512
@@ -1087,10 +1088,11 @@ def test_continuity_union_fixtures_are_executable_member_shapes():
           ... on M2MBaselineContinuity { state }
           ... on M2MContiguousContinuity { state delta { coefficient scale } }
           ... on M2MRolloverContinuity {
-            state delta { coefficient scale } modulus { coefficient scale } evidenceRef
+            state delta { coefficient scale } modulus { coefficient scale }
+            rolloverEvidenceRef
           }
-          ... on M2MResetContinuity { state evidenceRef }
-          ... on M2MDiscontinuityContinuity { state evidenceRef }
+          ... on M2MResetContinuity { state resetEvidenceRef }
+          ... on M2MDiscontinuityContinuity { state discontinuityEvidenceRef }
         }
       }
     """
@@ -1106,16 +1108,16 @@ def test_continuity_union_fixtures_are_executable_member_shapes():
                 "state": "ROLLOVER",
                 "delta": {"coefficient": "1", "scale": 0},
                 "modulus": {"coefficient": "100", "scale": 0},
-                "evidenceRef": "sha256:" + "a" * 64,
+                    "rolloverEvidenceRef": "sha256:" + "a" * 64,
             },
         ),
         (
             "M2MResetContinuity",
-            {"state": "RESET", "evidenceRef": "sha256:" + "b" * 64},
+                {"state": "RESET", "resetEvidenceRef": "sha256:" + "b" * 64},
         ),
         (
             "M2MDiscontinuityContinuity",
-            {"state": "DISCONTINUITY", "evidenceRef": None},
+                {"state": "DISCONTINUITY", "discontinuityEvidenceRef": None},
         ),
     ]
     for typename, payload in variants:

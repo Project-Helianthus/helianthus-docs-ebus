@@ -316,9 +316,9 @@ def _normalize_continuity(value):
     fields_by_state = {
         "BASELINE": {"state"},
         "CONTIGUOUS": {"state", "delta"},
-        "ROLLOVER": {"state", "delta", "modulus", "evidenceRef"},
-        "RESET": {"state", "evidenceRef"},
-        "DISCONTINUITY": {"state", "evidenceRef"},
+        "ROLLOVER": {"state", "delta", "modulus", "rolloverEvidenceRef"},
+        "RESET": {"state", "resetEvidenceRef"},
+        "DISCONTINUITY": {"state", "discontinuityEvidenceRef"},
     }
     if set(value) != fields_by_state.get(value["state"]):
         raise TypeError("continuity has an invalid GraphQL member shape")
@@ -330,7 +330,13 @@ def _normalize_continuity(value):
         "modulus": None
         if "modulus" not in value
         else _normalize_value(value["modulus"]),
-        "evidence_ref": value.get("evidenceRef"),
+        "evidence_ref": value.get(
+            {
+                "ROLLOVER": "rolloverEvidenceRef",
+                "RESET": "resetEvidenceRef",
+                "DISCONTINUITY": "discontinuityEvidenceRef",
+            }.get(value["state"], "")
+        ),
     }
 
 
@@ -863,8 +869,13 @@ def _project_canonical_fixture(canonical, manifest):
             result["delta"] = project_value(continuity["delta"])
         if continuity["modulus"] is not None:
             result["modulus"] = project_value(continuity["modulus"])
-        if continuity["state"] in {"ROLLOVER", "RESET", "DISCONTINUITY"}:
-            result["evidenceRef"] = continuity["evidence_ref"]
+        evidence_field = {
+            "ROLLOVER": "rolloverEvidenceRef",
+            "RESET": "resetEvidenceRef",
+            "DISCONTINUITY": "discontinuityEvidenceRef",
+        }.get(continuity["state"])
+        if evidence_field is not None:
+            result[evidence_field] = continuity["evidence_ref"]
         return result
 
     facts = []

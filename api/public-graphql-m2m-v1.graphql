@@ -53,9 +53,9 @@ type M2MBitfieldValue { symbols: [String!]! }
 union M2MContinuity = M2MBaselineContinuity | M2MContiguousContinuity | M2MRolloverContinuity | M2MResetContinuity | M2MDiscontinuityContinuity
 type M2MBaselineContinuity { state: M2MContinuityState! }
 type M2MContiguousContinuity { state: M2MContinuityState!, delta: M2MDecimalValue! }
-type M2MRolloverContinuity { state: M2MContinuityState!, delta: M2MDecimalValue!, modulus: M2MDecimalValue!, evidenceRef: String }
-type M2MResetContinuity { state: M2MContinuityState!, evidenceRef: String }
-type M2MDiscontinuityContinuity { state: M2MContinuityState!, evidenceRef: String }
+type M2MRolloverContinuity { state: M2MContinuityState!, delta: M2MDecimalValue!, modulus: M2MDecimalValue!, rolloverEvidenceRef: String! }
+type M2MResetContinuity { state: M2MContinuityState!, resetEvidenceRef: String! }
+type M2MDiscontinuityContinuity { state: M2MContinuityState!, discontinuityEvidenceRef: String }
 type M2MCapability { id: String!, outcome: M2MCapabilityOutcome! }
 type M2MRequestedOutput { sourceRef: String!, requestedOutputRef: String! }
 union M2MProjectionReportEntry = M2MMappedProjectionReportEntry | M2MWithheldProjectionReportEntry | M2MUnrepresentableProjectionReportEntry
