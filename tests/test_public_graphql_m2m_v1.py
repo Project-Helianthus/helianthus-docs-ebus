@@ -336,3 +336,56 @@ def test_http_success_status_is_exact_integer_200():
     candidate = copy.deepcopy(cases["positive"])
     candidate["response"]["status"] = 200.0
     assert "response_envelope" in validate_case(candidate, manifest, canonical)
+
+
+def test_http_envelope_byte_bounds_are_enforced():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    oversized_response = copy.deepcopy(cases["positive"])
+    response_payload(oversized_response)["facts"][0]["value"]["coefficient"] = (
+        "1" * (manifest["request_bounds"]["max_response_bytes"] + 1)
+    )
+    assert "response_bytes" in validate_case(
+        oversized_response, manifest, canonical
+    )
+
+    oversized_request = copy.deepcopy(cases["positive"])
+    oversized_request["request"]["body"]["padding"] = (
+        "x" * manifest["request_bounds"]["max_body_bytes"]
+    )
+    assert "request_bytes" in validate_case(oversized_request, manifest, canonical)
+
+
+def test_deep_unknown_json_fails_closed_without_recursion_error():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(cases["positive"])
+    nested = {}
+    cursor = nested
+    for _ in range(1500):
+        cursor["nested"] = {}
+        cursor = cursor["nested"]
+    response_payload(candidate)["facts"][0]["unknown"] = nested
+    errors = validate_case(candidate, manifest, canonical)
+    assert "structural_shape" in errors
+
+
+def test_authenticated_errors_have_one_exact_graphql_envelope_each():
+    manifest, cases = load(MANIFEST), load(CASES)
+    expected = {
+        "CONTRACT_INCOMPATIBLE",
+        "ASSET_FORBIDDEN",
+        "ASSET_NOT_FOUND",
+        "SOURCE_UNAVAILABLE",
+    }
+    assert {item["code"] for item in cases["errors"]} == expected
+    for item in cases["errors"]:
+        response = item["response"]
+        assert response["status"] == 200
+        assert response["body"]["data"] is None
+        assert response["body"]["errors"] == [
+            {
+                "message": "M2M request failed",
+                "path": ["m2mCurrentSnapshot"],
+                "extensions": {"code": item["code"]},
+            }
+        ]
+    assert manifest["error_contract"]["authenticated_graphql_http_status"] == 200
