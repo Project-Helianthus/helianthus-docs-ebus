@@ -30,7 +30,10 @@ public lane.
 
 `PROFILE_CANDIDATE`, `DOCUMENTARY_CANDIDATE`, and `HYPOTHESIS` are not
 `PROFILE_ADMITTED`. Only M7-03 or M7-04 may record admission or a terminal
-non-admission after their own exact-head review.
+non-admission after their own exact-head review. The intake packet retains
+those candidate states; the manifest's `downstream_outcomes` section links the
+later terminal decisions to their exact repository merge and disposition
+artifact without rewriting the original evidence classification.
 
 ## Runtime Boundary
 
@@ -53,3 +56,29 @@ reads and bounded extended-MEI cursor/wrap support. M7-04 then decides
 SmartLogger, S-Dongle, and EMMA independently. M7-05 proves deterministic
 mixed-catalog selection across those three families plus direct inverters. No
 later node may reinterpret this evidence as a support claim.
+
+## Mixed-Catalog Selection Contract
+
+FMV3-M7-05 requires exclusive selection whenever independent family detectors
+feed one mixed primary catalog. Eligibility is evaluated before selection: a
+candidate must be qualified, active, default-enabled, and enabled by its
+detector declaration. Revoked, superseded, unqualified, default-off, disabled,
+or non-admitted candidates cannot participate in a positive match.
+
+With exclusive matching enabled, two or more positive candidates produce
+`INSUFFICIENT_EVIDENCE` before score ranking, regardless of candidate score,
+catalog order, or detector order. The durable registry decision is
+`outcome=ambiguous`, `reason=multiple_matches`, with empty selected profile ID
+and version. No first-match or highest-score priority is permitted. With no
+positive candidate the result remains `no_match`; with exactly one eligible
+positive candidate that profile may be selected. Score, priority,
+registration order, detector order, and vendor name never arbitrate between
+multiple eligible profiles.
+
+Selection is stateless and does not mutate activation lifecycle. It only
+returns an immutable decision; activation remains a downstream responsibility.
+The downstream M7-03 and M7-04 disposition artifacts currently record
+`NO_ADMISSIBLE_PROFILE` for Growatt, SmartLogger, S-Dongle, and EMMA, so those
+families remain absent from the production catalog. The Fronius GEN24 decision
+remains post-primary SunSpec flavor classification, not a competing
+mixed-catalog primary.
