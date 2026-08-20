@@ -422,6 +422,9 @@ def test_authenticated_errors_have_one_exact_graphql_envelope_each():
         "ASSET_FORBIDDEN",
         "ASSET_NOT_FOUND",
         "SOURCE_UNAVAILABLE",
+        "REQUEST_INVALID",
+        "QUERY_REJECTED",
+        "REQUEST_LIMIT_EXCEEDED",
     }
     assert {item["code"] for item in cases["errors"]} == expected
     for item in cases["errors"]:
@@ -436,3 +439,49 @@ def test_authenticated_errors_have_one_exact_graphql_envelope_each():
             }
         ]
     assert manifest["error_contract"]["authenticated_graphql_http_status"] == 200
+
+
+def test_mixed_retention_binds_one_current_source_origin():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    payload = response_payload(cases["positive"])
+    assert "currentSourceOriginRef" in manifest["required_response_fields"]
+    assert len(payload["provenance"]) == 2
+    assert payload["currentSourceOriginRef"] == payload["provenance"][0]["originRef"]
+    retained = next(
+        fact
+        for fact in payload["facts"]
+        if fact["factId"] == "pv.energy.active_export_total"
+    )
+    assert retained["originRef"] == payload["provenance"][1]["originRef"]
+    assert validate_case(cases["positive"], manifest, canonical) == []
+
+    candidate = copy.deepcopy(cases["positive"])
+    response_payload(candidate)["currentSourceOriginRef"] = "sha256:" + "f" * 64
+    assert "current_source_binding" in validate_case(candidate, manifest, canonical)
+
+
+def test_request_rejection_classes_map_to_closed_error_codes():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    assert manifest["request_rejection_codes"] == {
+        "malformed_json": "REQUEST_INVALID",
+        "duplicate_json_key": "REQUEST_INVALID",
+        "request_envelope": "REQUEST_INVALID",
+        "query_shape": "QUERY_REJECTED",
+        "forbidden_graphql_feature": "QUERY_REJECTED",
+        "request_body_bytes": "REQUEST_LIMIT_EXCEEDED",
+        "query_depth": "REQUEST_LIMIT_EXCEEDED",
+        "selected_fields": "REQUEST_LIMIT_EXCEEDED",
+        "concurrency": "REQUEST_LIMIT_EXCEEDED",
+        "rate": "REQUEST_LIMIT_EXCEEDED",
+    }
+    alias = copy.deepcopy(cases["positive"])
+    alias["request"]["body"]["query"] = alias["request"]["body"]["query"].replace(
+        "m2mCurrentSnapshot(request:", "snapshot: m2mCurrentSnapshot(request:", 1
+    )
+    assert "query_shape" in validate_case(alias, manifest, canonical)
+    assert manifest["request_rejection_codes"]["query_shape"] == "QUERY_REJECTED"
+
+    oversized = copy.deepcopy(cases["positive"])
+    oversized["request"]["body"]["padding"] = "x" * manifest["request_bounds"]["max_body_bytes"]
+    assert "request_bytes" in validate_case(oversized, manifest, canonical)
+    assert manifest["request_rejection_codes"]["request_body_bytes"] == "REQUEST_LIMIT_EXCEEDED"
