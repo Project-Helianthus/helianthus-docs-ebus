@@ -11,6 +11,7 @@ MANIFEST = ROOT / "docs/platform/manifests/public-graphql-m2m-v1.json"
 CANONICAL = ROOT / "docs/platform/manifests/canonical-pv-v1.json"
 CASES = ROOT / "docs/platform/fixtures/public-graphql-m2m/v1/cases.json"
 SDL = ROOT / "api/public-graphql-m2m-v1.graphql"
+QUERY = ROOT / "api/public-graphql-m2m-v1.query.graphql"
 DOC = ROOT / "docs/platform/public-graphql-m2m-v1.md"
 sys.path.insert(0, str(ROOT / "scripts"))
 from validate_public_graphql_m2m_v1 import (  # noqa: E402
@@ -894,3 +895,124 @@ def test_graphql_ast_admission_enforces_syntax_schema_and_bounds():
             candidate["request"]["body"], separators=(",", ":")
         )
         assert category in validate_case(candidate, candidate_manifest, canonical)
+
+
+def test_remaining_source_lexical_and_range_guards_are_exact():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+
+    generation = copy.deepcopy(cases["positive"])
+    response_payload(generation)["generation"] = "9007199254740992"
+    assert "time_identity" in validate_case(generation, manifest, canonical)
+
+    timestamp = copy.deepcopy(cases["positive"])
+    response_payload(timestamp)["producedAt"] = "2026-01-01 00:00:00+00:00"
+    assert "time_identity" in validate_case(timestamp, manifest, canonical)
+
+    endpoint = copy.deepcopy(cases["positive"])
+    fact = response_payload(endpoint)["facts"][0]
+    fact.update(factId="pv.dc.current", dimensions=[{"key": "input_id", "value": "127.1"}], unit="A")
+    assert "dimension_redaction" in validate_case(endpoint, manifest, canonical)
+
+    kind = copy.deepcopy(cases["positive"])
+    response_payload(kind)["facts"][0]["value"]["kind"] = "DECIMAL"
+    assert "decimal_encoding" in validate_case(kind, manifest, canonical)
+
+    continuity = copy.deepcopy(cases["positive"])
+    energy = next(
+        item
+        for item in response_payload(continuity)["facts"]
+        if item["factId"] == "pv.energy.active_export_total"
+    )
+    energy["continuity"] = {
+        "state": "CONTIGUOUS",
+        "delta": {"coefficient": "-0", "scale": 0},
+        "modulus": None,
+        "evidenceRef": None,
+    }
+    assert "continuity" in validate_case(continuity, manifest, canonical)
+
+
+def test_provenance_token_lengths_match_canonical_schema():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    source_registry = load(ROOT / manifest["source_registry_fixture"])
+    candidate = copy.deepcopy(cases["positive"])
+    row = response_payload(candidate)["provenance"][0]
+    long_protocol = "p" * 129
+    row["sourceProtocol"] = long_protocol
+    source_registry["entries"].append(
+        {
+            "source_protocol": long_protocol,
+            "source_profile_id": row["sourceProfileId"],
+            "source_profile_version": row["sourceProfileVersion"],
+            "source_validity": row["sourceValidity"],
+            "registry_ref": row["sourceRegistryRef"],
+        }
+    )
+    assert "provenance" in validate_case(
+        candidate, manifest, canonical, source_registry
+    )
+
+
+def test_current_origin_without_facts_is_valid_but_duplicate_mapping_is_not():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    current_only = copy.deepcopy(cases["positive"])
+    payload = response_payload(current_only)
+    retained = payload["facts"][1]["originRef"]
+    payload["facts"][0]["originRef"] = retained
+    payload["requestedOutputs"][0]["sourceRef"] = retained
+    payload["projectionReport"][0]["sourceRef"] = retained
+    errors = validate_case(current_only, manifest, canonical)
+    assert "provenance" not in errors
+    assert "current_source_binding" not in errors
+
+    duplicate = copy.deepcopy(cases["positive"])
+    payload = response_payload(duplicate)
+    requested = copy.deepcopy(payload["requestedOutputs"][0])
+    requested["requestedOutputRef"] = "sha256:" + "9" * 64
+    report = copy.deepcopy(payload["projectionReport"][0])
+    report["requestedOutputRef"] = requested["requestedOutputRef"]
+    payload["requestedOutputs"].append(requested)
+    payload["projectionReport"].append(report)
+    assert "projection_accounting" in validate_case(duplicate, manifest, canonical)
+
+
+def test_query_authority_and_isolation_shape_are_independent_of_mutable_fixture(tmp_path):
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    assert QUERY.is_file()
+    reduced_manifest = copy.deepcopy(manifest)
+    reduced_manifest["conformance_query"] = (
+        "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) "
+        "{ m2mCurrentSnapshot(request: $request) { contractId } }"
+    )
+    reduced = copy.deepcopy(cases["positive"])
+    reduced["request"]["body"]["query"] = reduced_manifest["conformance_query"]
+    reduced["request"]["rawBody"] = json.dumps(
+        reduced["request"]["body"], separators=(",", ":")
+    )
+    assert "query_shape" in validate_case(reduced, reduced_manifest, canonical)
+
+    sequential = copy.deepcopy(cases)
+    sequential["admission_sequences"]["client_isolation"]["events"] = [
+        {"clientRef": "mtls-principal-a", "requestId": "a1", "atMs": 0, "action": "START", "outcome": "ADMIT"},
+        {"clientRef": "mtls-principal-a", "requestId": "a2", "atMs": 1, "action": "START", "outcome": "REJECT", "code": "REQUEST_LIMIT_EXCEEDED"},
+        {"clientRef": "mtls-principal-a", "requestId": "a1", "atMs": 2, "action": "COMPLETE", "outcome": "COMPLETE"},
+        {"clientRef": "mtls-principal-a", "requestId": "a3", "atMs": 2, "action": "START", "outcome": "ADMIT"},
+        {"clientRef": "mtls-principal-a", "requestId": "a3", "atMs": 2, "action": "COMPLETE", "outcome": "COMPLETE"},
+        {"clientRef": "mtls-principal-b", "requestId": "b1", "atMs": 3, "action": "START", "outcome": "ADMIT"},
+        {"clientRef": "mtls-principal-b", "requestId": "b1", "atMs": 3, "action": "COMPLETE", "outcome": "COMPLETE"},
+    ]
+    sequential_path = tmp_path / "sequential-clients.json"
+    sequential_path.write_text(json.dumps(sequential), encoding="utf-8")
+    with pytest.raises(ValidationError, match="admission_sequence_mapping"):
+        validate(MANIFEST, CANONICAL, sequential_path)
+
+
+def test_sdl_closes_dimension_and_continuity_variants_and_preserves_source_bounds():
+    manifest = load(MANIFEST)
+    sdl = SDL.read_text(encoding="utf-8")
+    assert "dimension: M2MDimension!" in sdl
+    assert "union M2MDimension =" in sdl
+    assert "continuity: M2MContinuity" in sdl
+    assert "union M2MContinuity =" in sdl
+    assert manifest["max_requested_outputs_per_snapshot"] == 512
+    assert manifest["max_projection_report_per_snapshot"] == 512
