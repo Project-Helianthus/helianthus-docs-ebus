@@ -33,7 +33,7 @@ def test_manifest_is_locked_to_canonical_catalog_and_closed_public_surface():
     assert manifest["max_facts_per_snapshot"] == 256
     assert manifest["max_provenance_per_snapshot"] == 256
     assert manifest["max_capabilities_per_snapshot"] == 1
-    assert manifest["required_response_fields"] == ["contractId", "canonicalContractId", "assetRef", "generation", "producedAt", "evaluatedMonotonicNs", "sourceTimeState", "facts", "capabilities", "provenance"]
+    assert manifest["required_response_fields"] == ["contractId", "canonicalContractId", "assetRef", "generation", "producedAt", "evaluatedMonotonicNs", "sourceTimeState", "currentSourceOriginRef", "facts", "capabilities", "provenance"]
     assert manifest["operator_authority"] == ["dedicated_listener", "server_identity", "ca_and_trust_root", "client_certificate_issuance", "asset_allowlist", "rotation", "revocation"]
     assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_value_union"]}
     assert manifest["error_contract"]["partial_snapshot_on_error"] is False

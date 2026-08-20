@@ -41,6 +41,7 @@ INTERNAL_RESPONSE_FIELDS = {
     "produced_at",
     "evaluated_monotonic_ns",
     "source_time_state",
+    "current_source_origin_ref",
     "facts",
     "capabilities",
     "provenance",
@@ -248,6 +249,7 @@ def _normalize_case(case):
             "produced_at": response["producedAt"],
             "evaluated_monotonic_ns": response["evaluatedMonotonicNs"],
             "source_time_state": response["sourceTimeState"],
+            "current_source_origin_ref": response["currentSourceOriginRef"],
             "facts": facts,
             "capabilities": copy.deepcopy(response["capabilities"]),
             "provenance": provenance,
@@ -382,6 +384,11 @@ def _validate_case(case, manifest, canonical_manifest, source_registry):
         errors.add("time_identity")
     if response.get("source_time_state") not in {"UNAVAILABLE", "VALID", "INVALID"}:
         errors.add("source_time_state")
+    if (
+        not isinstance(response.get("current_source_origin_ref"), str)
+        or SHA256.fullmatch(response["current_source_origin_ref"]) is None
+    ):
+        errors.add("current_source_binding")
     try:
         if any(key in FORBIDDEN for key in _walk_keys(case)):
             errors.add("forbidden_surface")
@@ -517,6 +524,8 @@ def _validate_case(case, manifest, canonical_manifest, source_registry):
         origin_refs.append(item["origin_ref"])
     if len(origin_refs) != len(set(origin_refs)):
         errors.add("origin_uniqueness")
+    if origin_refs.count(response["current_source_origin_ref"]) != 1:
+        errors.add("current_source_binding")
     if origins != {item["origin_ref"] for item in provenance}:
         errors.add("provenance")
     if not provenance:
@@ -639,6 +648,9 @@ def validate_error_envelopes(cases, manifest):
         manifest["error_contract"]["asset_forbidden"],
         manifest["error_contract"]["asset_not_found"],
         manifest["error_contract"]["source_unavailable"],
+        manifest["error_contract"]["request_invalid"],
+        manifest["error_contract"]["query_rejected"],
+        manifest["error_contract"]["request_limit_exceeded"],
     }
     errors = cases.get("errors")
     if (

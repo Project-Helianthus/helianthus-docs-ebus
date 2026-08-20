@@ -6,7 +6,7 @@
       "path": "/graphql/m2m/v1",
       "body": {
         "operationName": "M2MCurrentSnapshot",
-        "query": "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) { m2mCurrentSnapshot(request: $request) { contractId canonicalContractId assetRef generation producedAt evaluatedMonotonicNs sourceTimeState facts { factId dimensions { key value } value { ... on M2MDecimalValue { coefficient scale } ... on M2MEnumValue { symbol } ... on M2MBitfieldValue { symbols } } unit quality availability freshness receiptMonotonicNs freshUntilMonotonicNs retainUntilMonotonicNs freshnessPolicy originRef continuity { state delta { coefficient scale } modulus { coefficient scale } evidenceRef } } capabilities { id outcome } provenance { originRef sourceProtocol sourceProfileId sourceProfileVersion sourceValidity sourceRegistryRef sourceObservationRef evidenceRef } } }",
+        "query": "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) { m2mCurrentSnapshot(request: $request) { contractId canonicalContractId assetRef generation producedAt evaluatedMonotonicNs sourceTimeState currentSourceOriginRef facts { factId dimensions { key value } value { ... on M2MDecimalValue { coefficient scale } ... on M2MEnumValue { symbol } ... on M2MBitfieldValue { symbols } } unit quality availability freshness receiptMonotonicNs freshUntilMonotonicNs retainUntilMonotonicNs freshnessPolicy originRef continuity { state delta { coefficient scale } modulus { coefficient scale } evidenceRef } } capabilities { id outcome } provenance { originRef sourceProtocol sourceProfileId sourceProfileVersion sourceValidity sourceRegistryRef sourceObservationRef evidenceRef } } }",
         "variables": {
           "request": {
             "contractId": "PUBLIC_GRAPHQL_M2M_V1",
@@ -27,6 +27,7 @@
             "producedAt": "2026-08-17T19:22:35.7287976Z",
             "evaluatedMonotonicNs": "981234500000",
             "sourceTimeState": "UNAVAILABLE",
+            "currentSourceOriginRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
             "facts": [
               {
                 "factId": "pv.ac.power.active",
@@ -48,7 +49,7 @@
                 "freshUntilMonotonicNs": "1011234500000",
                 "retainUntilMonotonicNs": "1281234500000",
                 "freshnessPolicy": "pv.telemetry.fast.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "continuity": null
               },
               {
@@ -71,7 +72,7 @@
                 "freshUntilMonotonicNs": "1011234500000",
                 "retainUntilMonotonicNs": "1281234500000",
                 "freshnessPolicy": "pv.telemetry.fast.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "continuity": null
               },
               {
@@ -94,7 +95,7 @@
                 "freshUntilMonotonicNs": "1011234500000",
                 "retainUntilMonotonicNs": "1281234500000",
                 "freshnessPolicy": "pv.telemetry.fast.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "continuity": null
               },
               {
@@ -117,7 +118,7 @@
                 "freshUntilMonotonicNs": "1011234500000",
                 "retainUntilMonotonicNs": "1281234500000",
                 "freshnessPolicy": "pv.telemetry.fast.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "continuity": null
               },
               {
@@ -140,7 +141,7 @@
                 "freshUntilMonotonicNs": "1011234500000",
                 "retainUntilMonotonicNs": "1281234500000",
                 "freshnessPolicy": "pv.telemetry.fast.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "continuity": null
               },
               {
@@ -163,7 +164,7 @@
                 "freshUntilMonotonicNs": "1011234500000",
                 "retainUntilMonotonicNs": "1281234500000",
                 "freshnessPolicy": "pv.telemetry.fast.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "continuity": null
               },
               {
@@ -186,7 +187,7 @@
                 "freshUntilMonotonicNs": "1011234500000",
                 "retainUntilMonotonicNs": "1281234500000",
                 "freshnessPolicy": "pv.telemetry.fast.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "continuity": null
               },
               {
@@ -209,7 +210,7 @@
                 "freshUntilMonotonicNs": "1011234500000",
                 "retainUntilMonotonicNs": "1281234500000",
                 "freshnessPolicy": "pv.telemetry.fast.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "continuity": null
               },
               {
@@ -232,7 +233,7 @@
                 "freshUntilMonotonicNs": "1881234500000",
                 "retainUntilMonotonicNs": "87381234500000",
                 "freshnessPolicy": "pv.accumulator.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
                 "continuity": {
                   "state": "BASELINE",
                   "delta": null,
@@ -259,7 +260,7 @@
                 "freshUntilMonotonicNs": "1041234500000",
                 "retainUntilMonotonicNs": "1581234500000",
                 "freshnessPolicy": "pv.status.v1",
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "continuity": null
               }
             ],
@@ -271,14 +272,24 @@
             ],
             "provenance": [
               {
-                "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
                 "sourceProtocol": "sunspec_modbus",
                 "sourceProfileId": "sunspec.inverter.three_phase.monitoring@1.0.0",
                 "sourceProfileVersion": "1.0.0",
                 "sourceValidity": "terminal_verified",
                 "sourceRegistryRef": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
-                "sourceObservationRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-                "evidenceRef": "sha256:17bcd5fcf011c4765648386160629d99357a0a3e5bacfdb09b0bf98e8f890710"
+                "sourceObservationRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+                "evidenceRef": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              {
+                "originRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "sourceProtocol": "sunspec_modbus",
+                "sourceProfileId": "sunspec.inverter.three_phase.monitoring@1.0.0",
+                "sourceProfileVersion": "1.0.0",
+                "sourceValidity": "terminal_verified",
+                "sourceRegistryRef": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+                "sourceObservationRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "evidenceRef": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
               }
             ]
           }
@@ -361,6 +372,66 @@
               ],
               "extensions": {
                 "code": "SOURCE_UNAVAILABLE"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "REQUEST_INVALID",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "REQUEST_INVALID"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "QUERY_REJECTED",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "QUERY_REJECTED"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "REQUEST_LIMIT_EXCEEDED"
               }
             }
           ]
