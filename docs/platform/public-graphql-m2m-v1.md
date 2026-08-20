@@ -61,6 +61,13 @@ execution. Inline type conditions are allowed only to select the closed
 decimal, enum, or bitfield member of the `M2MValue` union. The response is
 limited to 1 MiB.
 
+Before semantic decode, the HTTP JSON parser rejects duplicate object keys and
+any document nested deeper than 64 arrays/objects. Depth is bounded from raw
+bytes before recursive decoding; duplicate keys are rejected by the parser
+rather than resolved first-wins or last-wins. The same compact deterministic
+JSON encoding used by conformance enforces the 16 KiB request-body and 1 MiB
+response-body limits.
+
 The route is registered only on a dedicated TLS listener; it is absent from the
 generic HTTP listener that serves `/graphql` and subscriptions. The channel
 requires HTTPS with verified server identity and mandatory per-client mTLS.

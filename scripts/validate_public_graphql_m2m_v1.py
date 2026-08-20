@@ -20,9 +20,6 @@ SOURCE_TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9._@-]*$")
 VERSION_TOKEN = re.compile(r"[0-9][0-9A-Za-z._-]*$")
 ASSET = re.compile(r"pv-asset-[A-Za-z0-9_-]{1,96}$")
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_REGISTRY_PATH = (
-    ROOT / "docs/platform/fixtures/canonical-pv/v1/source-registry-bindings.json"
-)
 FORBIDDEN = {
     "rawRegisters",
     "raw_registers",
@@ -79,7 +76,32 @@ class ValidationError(Exception):
     pass
 
 
-def load_json(path: Path):
+def _validate_raw_json_depth(text, max_depth):
+    depth = 0
+    in_string = False
+    escaped = False
+    for character in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+        elif character in "[{":
+            depth += 1
+            if depth > max_depth:
+                raise ValidationError(
+                    f"JSON nesting exceeds max_depth={max_depth}"
+                )
+        elif character in "]}":
+            depth -= 1
+
+
+def load_json(path: Path, *, max_depth=64):
     def no_duplicates(pairs):
         result = {}
         for key, value in pairs:
@@ -88,8 +110,10 @@ def load_json(path: Path):
             result[key] = value
         return result
 
+    text = path.read_text(encoding="utf-8")
+    _validate_raw_json_depth(text, max_depth)
     return json.loads(
-        path.read_text(encoding="utf-8"),
+        text,
         object_pairs_hook=no_duplicates,
         parse_constant=lambda value: (_ for _ in ()).throw(
             ValidationError(f"non-finite JSON number: {value}")
@@ -502,6 +526,18 @@ def _validate_case(case, manifest, canonical_manifest, source_registry):
     return sorted(errors)
 
 
+def _load_source_registry(manifest):
+    relative = manifest.get("source_registry_fixture")
+    if not isinstance(relative, str):
+        raise ValidationError("source_registry_fixture")
+    path = (ROOT / relative).resolve()
+    try:
+        path.relative_to(ROOT)
+    except ValueError as error:
+        raise ValidationError("source_registry_fixture") from error
+    return load_json(path, max_depth=manifest["json_admission"]["max_depth"])
+
+
 def validate_case(case, manifest, canonical_manifest, source_registry=None):
     """Validate the GraphQL HTTP envelope after a mandatory lossless mapping."""
     if not isinstance(case, dict):
@@ -511,7 +547,10 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
         return ["structural_shape"]
     errors = set()
     if source_registry is None:
-        source_registry = load_json(SOURCE_REGISTRY_PATH)
+        try:
+            source_registry = _load_source_registry(manifest)
+        except (KeyError, OSError, TypeError, ValidationError):
+            return ["provenance_binding"]
     if source_registry.get("contract") != manifest["source_registry_contract"]:
         errors.add("provenance_binding")
     if (
@@ -558,7 +597,12 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
     if set(response) != set(manifest["required_response_fields"]):
         errors.add("response_fields")
     try:
-        if any(key in FORBIDDEN for key in _walk_keys(case)):
+        if any(
+            key in FORBIDDEN
+            for key in _walk_keys(
+                case, max_depth=manifest["json_admission"]["max_depth"]
+            )
+        ):
             errors.add("forbidden_surface")
     except ValidationError:
         errors.add("structural_shape")
@@ -627,7 +671,10 @@ def validate_error_envelopes(cases, manifest):
 
 
 def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Path):
-    manifest, canonical, cases = map(load_json, (manifest_path, canonical_manifest_path, cases_path))
+    manifest = load_json(manifest_path)
+    max_depth = manifest["json_admission"]["max_depth"]
+    canonical = load_json(canonical_manifest_path, max_depth=max_depth)
+    cases = load_json(cases_path, max_depth=max_depth)
     if manifest["source_contract"] != canonical["contract_id"] or manifest["catalog_fact_ids"] != [fact["id"] for fact in canonical["facts"]]:
         raise ValidationError("manifest_source_lock")
     errors = validate_case(cases["positive"], manifest, canonical)
@@ -652,6 +699,7 @@ def main():
         AttributeError,
         IndexError,
         KeyError,
+        OSError,
         RecursionError,
         TypeError,
         ValueError,

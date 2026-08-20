@@ -26,6 +26,7 @@
   "provenance_projection_loss": {"source_shadow_ref": "WITHHELD_SOURCE_SHADOW_REFERENCE"},
   "contract_negotiation": {"request_field": "contractId", "accepted": ["PUBLIC_GRAPHQL_M2M_V1"], "incompatible": "FAIL_CLOSED"},
   "request_bounds": {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_value_union"]},
+  "json_admission": {"max_depth": 64, "duplicate_keys": "REJECT_BEFORE_SEMANTIC_DECODE"},
   "transport_security": {"https": "VERIFIED_SERVER_IDENTITY_REQUIRED", "client_authentication": "MTLS_PER_CLIENT_REQUIRED", "forbidden_credentials": ["cookies", "shared_credentials", "interactive_credentials"]},
   "operator_authority": ["dedicated_listener", "server_identity", "ca_and_trust_root", "client_certificate_issuance", "asset_allowlist", "rotation", "revocation"],
   "recovery": {"unknown_revoked_expired_or_lost_client_certificate": "FAIL_CLOSED", "bad_server_identity": "FAIL_CLOSED", "incompatible_contract": "FAIL_CLOSED", "retry": "BOUNDED", "after_reconnect": "FRESH_FULL_SNAPSHOT", "monotonic_times_across_restart": "NOT_COMPARABLE"},
