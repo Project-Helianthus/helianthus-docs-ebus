@@ -993,6 +993,20 @@ def test_current_origin_without_facts_is_valid_but_duplicate_mapping_is_not():
     assert "projection_accounting" in validate_case(duplicate, manifest, canonical)
 
 
+def test_unreferenced_canonical_origin_is_preserved_without_becoming_required():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    source_registry = load(ROOT / manifest["source_registry_fixture"])
+    candidate = copy.deepcopy(cases["positive"])
+    extra = copy.deepcopy(response_payload(candidate)["provenance"][0])
+    extra["originRef"] = "sha256:" + "3" * 64
+    extra["sourceObservationRef"] = extra["originRef"]
+    extra["evidenceRef"] = "sha256:" + "4" * 64
+    response_payload(candidate)["provenance"].append(extra)
+    errors = validate_case(candidate, manifest, canonical, source_registry)
+    assert "provenance" not in errors
+    assert "current_source_binding" not in errors
+
+
 def test_query_authority_and_isolation_shape_are_independent_of_mutable_fixture(tmp_path):
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     assert QUERY.is_file()
@@ -1031,15 +1045,17 @@ def test_sdl_closes_dimension_and_continuity_variants_and_preserves_source_bound
     assert "union M2MDimension =" in sdl
     assert "continuity: M2MContinuity" in sdl
     assert "union M2MContinuity =" in sdl
+    assert "enum M2MContinuityState" not in sdl
+    assert "enum M2MBaselineMarker { BASELINE }" in sdl
+    assert "type M2MBaselineContinuity { baseline: M2MBaselineMarker! }" in sdl
+    assert "type M2MContiguousContinuity { delta: M2MDecimalValue! }" in sdl
     assert (
-        "type M2MRolloverContinuity { state: M2MContinuityState!, "
-        "delta: M2MDecimalValue!, modulus: M2MDecimalValue!, "
+        "type M2MRolloverContinuity { delta: M2MDecimalValue!, modulus: M2MDecimalValue!, "
         "rolloverEvidenceRef: String! }"
         in sdl
     )
     assert (
-        "type M2MResetContinuity { state: M2MContinuityState!, "
-        "resetEvidenceRef: String! }"
+        "type M2MResetContinuity { resetEvidenceRef: String! }"
         in sdl
     )
     assert manifest["max_requested_outputs_per_snapshot"] == 512
@@ -1076,7 +1092,10 @@ def test_continuity_union_fixtures_are_executable_member_shapes():
     cases = load(CASES)
     for fact in response_payload(cases["positive"])["facts"]:
         if fact["continuity"] is not None:
-            assert set(fact["continuity"]) == {"state"}
+            assert fact["continuity"] == {
+                "__typename": "M2MBaselineContinuity",
+                "baseline": "BASELINE",
+            }
 
     schema = build_schema(
         SDL.read_text(encoding="utf-8")
@@ -1085,27 +1104,34 @@ def test_continuity_union_fixtures_are_executable_member_shapes():
     query = """
       query {
         continuityProbe {
-          ... on M2MBaselineContinuity { state }
-          ... on M2MContiguousContinuity { state delta { coefficient scale } }
+          __typename
+          ... on M2MBaselineContinuity { baseline }
+          ... on M2MContiguousContinuity { delta { coefficient scale } }
           ... on M2MRolloverContinuity {
-            state delta { coefficient scale } modulus { coefficient scale }
+            delta { coefficient scale } modulus { coefficient scale }
             rolloverEvidenceRef
           }
-          ... on M2MResetContinuity { state resetEvidenceRef }
-          ... on M2MDiscontinuityContinuity { state discontinuityEvidenceRef }
+          ... on M2MResetContinuity { resetEvidenceRef }
+          ... on M2MDiscontinuityContinuity { discontinuityEvidenceRef }
         }
       }
     """
     variants = [
-        ("M2MBaselineContinuity", {"state": "BASELINE"}),
+        (
+            "M2MBaselineContinuity",
+            {"__typename": "M2MBaselineContinuity", "baseline": "BASELINE"},
+        ),
         (
             "M2MContiguousContinuity",
-            {"state": "CONTIGUOUS", "delta": {"coefficient": "1", "scale": 0}},
+            {
+                "__typename": "M2MContiguousContinuity",
+                "delta": {"coefficient": "1", "scale": 0},
+            },
         ),
         (
             "M2MRolloverContinuity",
             {
-                "state": "ROLLOVER",
+                "__typename": "M2MRolloverContinuity",
                 "delta": {"coefficient": "1", "scale": 0},
                 "modulus": {"coefficient": "100", "scale": 0},
                     "rolloverEvidenceRef": "sha256:" + "a" * 64,
@@ -1113,21 +1139,50 @@ def test_continuity_union_fixtures_are_executable_member_shapes():
         ),
         (
             "M2MResetContinuity",
-                {"state": "RESET", "resetEvidenceRef": "sha256:" + "b" * 64},
+            {
+                "__typename": "M2MResetContinuity",
+                "resetEvidenceRef": "sha256:" + "b" * 64,
+            },
         ),
         (
             "M2MDiscontinuityContinuity",
-                {"state": "DISCONTINUITY", "discontinuityEvidenceRef": None},
+            {
+                "__typename": "M2MDiscontinuityContinuity",
+                "discontinuityEvidenceRef": None,
+            },
         ),
     ]
     for typename, payload in variants:
         result = graphql_sync(
             schema,
             query,
-            root_value={"continuityProbe": {"__typename": typename, **payload}},
+            root_value={"continuityProbe": payload},
         )
         assert result.errors is None
         assert result.data == {"continuityProbe": payload}
+
+
+def test_depth_rejection_uses_schema_valid_stimulus_and_explicit_precedence():
+    manifest = load(MANIFEST)
+    nested = "coefficient"
+    for _ in range(9):
+        nested = f"... on M2MDecimalValue {{ {nested} }}"
+    query = (
+        "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) "
+        "{ m2mCurrentSnapshot(request: $request) { facts { value { "
+        + nested
+        + " } } } }"
+    )
+    errors = validate_query_document(query, manifest)
+    assert "query_depth" in errors
+    assert "query_schema" not in errors
+    assert manifest["request_query_admission_precedence"] == [
+        "query_depth",
+        "selected_fields",
+        "forbidden_graphql_feature",
+        "query_shape",
+        "query_schema",
+    ]
 
 
 def test_positive_fixture_is_an_executable_graphql_response():
