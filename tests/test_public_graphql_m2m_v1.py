@@ -312,3 +312,27 @@ def test_unknown_or_private_provenance_fields_fail_closed_before_normalization()
         row[field] = "must-not-pass"
         errors = validate_case(candidate, manifest, canonical)
         assert "provenance_fields" in errors or "forbidden_surface" in errors
+
+
+def test_provenance_is_bound_to_profile_version_registry_and_unique_origin():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    mutations = [
+        ("sourceProfileVersion", "2.0.0", "provenance_binding"),
+        ("sourceRegistryRef", "sha256:" + "a" * 64, "provenance_binding"),
+    ]
+    for field, value, category in mutations:
+        candidate = copy.deepcopy(cases["positive"])
+        response_payload(candidate)["provenance"][0][field] = value
+        assert category in validate_case(candidate, manifest, canonical)
+
+    duplicate = copy.deepcopy(cases["positive"])
+    rows = response_payload(duplicate)["provenance"]
+    rows.append(copy.deepcopy(rows[0]))
+    assert "origin_uniqueness" in validate_case(duplicate, manifest, canonical)
+
+
+def test_http_success_status_is_exact_integer_200():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(cases["positive"])
+    candidate["response"]["status"] = 200.0
+    assert "response_envelope" in validate_case(candidate, manifest, canonical)
