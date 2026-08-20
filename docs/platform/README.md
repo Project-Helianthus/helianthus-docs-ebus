@@ -36,6 +36,9 @@ Current platform contracts:
 - [`canonical-pv-semantics-v1.md`](./canonical-pv-semantics-v1.md) -
   FMV3-M5-02 pre-implementation canonical photovoltaic fact, lifecycle,
   provenance, continuity, capability, and compatibility contract
+- [`public-graphql-m2m-v1.md`](./public-graphql-m2m-v1.md) - FMV3-M5-09
+  isolated query-only public M2M snapshot contract sourced only from the
+  locked canonical photovoltaic V1 semantics
 - [`manifests/canonical-pv-v1.json`](./manifests/canonical-pv-v1.json) -
   closed machine-readable V1 catalog and three-phase capability inventory
 - [`schemas/canonical-pv-observation-v1.schema.json`](./schemas/canonical-pv-observation-v1.schema.json) -

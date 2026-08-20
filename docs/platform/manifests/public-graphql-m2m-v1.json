@@ -1,0 +1,268 @@
+{
+  "schema": "helianthus.public-graphql-m2m.contract",
+  "schema_version": 1,
+  "contract_id": "PUBLIC_GRAPHQL_M2M_V1",
+  "status": "CANDIDATE_PRE_IMPLEMENTATION",
+  "route": "/graphql/m2m/v1",
+  "source_contract": "helianthus.canonical-pv/v1",
+  "source_registry_contract": "helianthus.source-registry-bindings/v1",
+  "source_registry_fixture": "docs/platform/fixtures/canonical-pv/v1/source-registry-bindings.json",
+  "canonical_conformance_fixture": "docs/platform/fixtures/canonical-pv/v1/golden-mixed-retention.json",
+  "source_owner": "helianthus-ebusreg",
+  "operation": "m2mCurrentSnapshot",
+  "conformance_boundary": "GRAPHQL_HTTP_ENVELOPE",
+  "conformance_query": "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {\n  m2mCurrentSnapshot(request: $request) {\n    contractId\n    canonicalContractId\n    assetRef\n    generation\n    producedAt\n    evaluatedMonotonicNs\n    sourceTimeState\n    currentSourceOriginRef\n    facts {\n      factId\n      dimension {\n        ... on M2MScopeDimension {\n          scope\n        }\n        ... on M2MPhaseDimension {\n          phase\n        }\n        ... on M2MPhasePairDimension {\n          phasePair\n        }\n        ... on M2MInputDimension {\n          inputId\n        }\n        ... on M2MSensorDimension {\n          sensorId\n        }\n      }\n      value {\n        ... on M2MDecimalValue {\n          coefficient\n          scale\n        }\n        ... on M2MEnumValue {\n          symbol\n        }\n        ... on M2MBitfieldValue {\n          symbols\n        }\n      }\n      unit\n      quality\n      availability\n      freshness\n      receiptMonotonicNs\n      freshUntilMonotonicNs\n      retainUntilMonotonicNs\n      freshnessPolicy\n      originRef\n      continuity {\n        __typename\n        ... on M2MBaselineContinuity {\n          baseline\n        }\n        ... on M2MContiguousContinuity {\n          delta {\n            coefficient\n            scale\n          }\n        }\n        ... on M2MRolloverContinuity {\n          delta {\n            coefficient\n            scale\n          }\n          modulus {\n            coefficient\n            scale\n          }\n          rolloverEvidenceRef\n        }\n        ... on M2MResetContinuity {\n          resetEvidenceRef\n        }\n        ... on M2MDiscontinuityContinuity {\n          discontinuityEvidenceRef\n        }\n      }\n    }\n    capabilities {\n      id\n      outcome\n    }\n    provenance {\n      originRef\n      sourceProtocol\n      sourceProfileId\n      sourceProfileVersion\n      sourceValidity\n      sourceRegistryRef\n      sourceObservationRef\n      evidenceRef\n    }\n    requestedOutputs {\n      sourceRef\n      requestedOutputRef\n    }\n    projectionReport {\n      __typename\n      ... on M2MMappedProjectionReportEntry {\n        sourceRef\n        requestedOutputRef\n        factId\n        dimension {\n          ... on M2MScopeDimension {\n            scope\n          }\n          ... on M2MPhaseDimension {\n            phase\n          }\n          ... on M2MPhasePairDimension {\n            phasePair\n          }\n          ... on M2MInputDimension {\n            inputId\n          }\n          ... on M2MSensorDimension {\n            sensorId\n          }\n        }\n      }\n      ... on M2MWithheldProjectionReportEntry {\n        sourceRef\n        requestedOutputRef\n      }\n      ... on M2MUnrepresentableProjectionReportEntry {\n        sourceRef\n        requestedOutputRef\n      }\n    }\n  }\n}",
+  "dedicated_tls_listener": true,
+  "query_only": true,
+  "single_asset": true,
+  "max_facts_per_snapshot": 256,
+  "max_provenance_per_snapshot": 256,
+  "max_capabilities_per_snapshot": 1,
+  "max_requested_outputs_per_snapshot": 512,
+  "max_projection_report_per_snapshot": 512,
+  "catalog_fact_ids": [
+    "pv.ac.power.active",
+    "pv.ac.power.apparent",
+    "pv.ac.power.reactive",
+    "pv.ac.power_factor",
+    "pv.ac.frequency",
+    "pv.ac.current",
+    "pv.ac.voltage.line_to_neutral",
+    "pv.ac.voltage.line_to_line",
+    "pv.energy.active_export_total",
+    "pv.dc.current",
+    "pv.dc.voltage",
+    "pv.dc.power.active",
+    "pv.dc.energy.active_total",
+    "pv.temperature",
+    "pv.operating.state",
+    "pv.event.flags",
+    "pv.rating.ac.active_power"
+  ],
+  "required_fact_fields": [
+    "factId",
+    "dimension",
+    "value",
+    "unit",
+    "quality",
+    "availability",
+    "freshness",
+    "receiptMonotonicNs",
+    "freshUntilMonotonicNs",
+    "retainUntilMonotonicNs",
+    "freshnessPolicy",
+    "originRef",
+    "continuity"
+  ],
+  "value_kind_mapping": {
+    "decimal": "M2MDecimalValue",
+    "enum": "M2MEnumValue",
+    "bitfield": "M2MBitfieldValue"
+  },
+  "required_response_fields": [
+    "contractId",
+    "canonicalContractId",
+    "assetRef",
+    "generation",
+    "producedAt",
+    "evaluatedMonotonicNs",
+    "sourceTimeState",
+    "currentSourceOriginRef",
+    "facts",
+    "capabilities",
+    "provenance",
+    "requestedOutputs",
+    "projectionReport"
+  ],
+  "capability_fields": [
+    "id",
+    "outcome"
+  ],
+  "opaque_provenance_fields": [
+    "originRef",
+    "sourceProtocol",
+    "sourceProfileId",
+    "sourceProfileVersion",
+    "sourceValidity",
+    "sourceRegistryRef",
+    "sourceObservationRef",
+    "evidenceRef"
+  ],
+  "requested_output_fields": [
+    "sourceRef",
+    "requestedOutputRef"
+  ],
+  "provenance_projection_loss": {
+    "source_shadow_ref": "WITHHELD_SOURCE_SHADOW_REFERENCE"
+  },
+  "contract_negotiation": {
+    "request_field": "contractId",
+    "accepted": [
+      "PUBLIC_GRAPHQL_M2M_V1"
+    ],
+    "incompatible": "FAIL_CLOSED"
+  },
+  "request_bounds": {
+    "method": "POST",
+    "operation_name": "M2MCurrentSnapshot",
+    "max_body_bytes": 16384,
+    "max_query_depth": 8,
+    "max_selected_fields": 256,
+    "max_concurrency_per_client": 1,
+    "requests_per_second_per_client": 1,
+    "burst_per_client": 2,
+    "max_response_bytes": 1048576,
+    "forbidden_graphql_features": [
+      "batching",
+      "aliases",
+      "named_fragments",
+      "directives",
+      "schema_or_type_introspection",
+      "get",
+      "subscriptions",
+      "multiple_operations"
+    ],
+    "allowed_graphql_features": [
+      "inline_type_conditions_for_closed_unions",
+      "typename_for_closed_unions"
+    ]
+  },
+  "admission_model": {
+    "logical_client_identity": "MTLS_PRINCIPAL_FINGERPRINT",
+    "clock": "MONOTONIC_INTEGER_MILLISECONDS",
+    "same_timestamp_order": "FIXTURE_EVENT_ORDER",
+    "evaluation_order": [
+      "concurrency",
+      "rate"
+    ],
+    "rejected_request_consumes_rate_token": false,
+    "concurrency": {
+      "request_is_in_flight_from": "ADMIT",
+      "request_is_in_flight_until": "COMPLETE",
+      "maximum": 1
+    },
+    "rate": {
+      "algorithm": "TOKEN_BUCKET",
+      "initial_tokens": 2,
+      "capacity": 2,
+      "refill_tokens": 1,
+      "refill_interval_ms": 1000
+    }
+  },
+  "json_admission": {
+    "max_depth": 64,
+    "duplicate_keys": "REJECT_BEFORE_SEMANTIC_DECODE"
+  },
+  "request_rejection_codes": {
+    "malformed_json": "REQUEST_INVALID",
+    "duplicate_json_key": "REQUEST_INVALID",
+    "json_depth": "REQUEST_INVALID",
+    "request_envelope": "REQUEST_INVALID",
+    "query_shape": "QUERY_REJECTED",
+    "forbidden_graphql_feature": "QUERY_REJECTED",
+    "request_body_bytes": "REQUEST_LIMIT_EXCEEDED",
+    "query_depth": "REQUEST_LIMIT_EXCEEDED",
+    "selected_fields": "REQUEST_LIMIT_EXCEEDED",
+    "concurrency": "REQUEST_LIMIT_EXCEEDED",
+    "rate": "REQUEST_LIMIT_EXCEEDED"
+  },
+  "transport_security": {
+    "https": "VERIFIED_SERVER_IDENTITY_REQUIRED",
+    "client_authentication": "MTLS_PER_CLIENT_REQUIRED",
+    "forbidden_credentials": [
+      "cookies",
+      "shared_credentials",
+      "interactive_credentials"
+    ]
+  },
+  "operator_authority": [
+    "dedicated_listener",
+    "server_identity",
+    "ca_and_trust_root",
+    "client_certificate_issuance",
+    "asset_allowlist",
+    "rotation",
+    "revocation"
+  ],
+  "recovery": {
+    "unknown_revoked_expired_or_lost_client_certificate": "FAIL_CLOSED",
+    "bad_server_identity": "FAIL_CLOSED",
+    "incompatible_contract": "FAIL_CLOSED",
+    "retry": "BOUNDED",
+    "after_reconnect": "FRESH_FULL_SNAPSHOT",
+    "monotonic_times_across_restart": "NOT_COMPARABLE"
+  },
+  "error_contract": {
+    "contract_incompatible": "CONTRACT_INCOMPATIBLE",
+    "asset_forbidden": "ASSET_FORBIDDEN",
+    "asset_not_found": "ASSET_NOT_FOUND",
+    "source_unavailable": "SOURCE_UNAVAILABLE",
+    "request_invalid": "REQUEST_INVALID",
+    "query_rejected": "QUERY_REJECTED",
+    "request_limit_exceeded": "REQUEST_LIMIT_EXCEEDED",
+    "authenticated_graphql_http_status": 200,
+    "authenticated_error_message": "M2M request failed",
+    "authenticated_error_path": [
+      "m2mCurrentSnapshot"
+    ],
+    "data_on_error": null,
+    "partial_snapshot_on_error": false,
+    "generic_fallback": false
+  },
+  "semantic_rejection_precedence": [
+    "contract_incompatible",
+    "asset_forbidden",
+    "asset_not_found",
+    "source_unavailable"
+  ],
+  "credential_rotation": {
+    "maximum_simultaneously_valid_certificates_per_principal": 2,
+    "sequence": [
+      "issue_replacement",
+      "verify_replacement",
+      "revoke_predecessor"
+    ],
+    "revocation_checked_before_asset_authorization": true,
+    "lost_credential_recovery": "OPERATOR_ISSUED_REPLACEMENT_ONLY"
+  },
+  "forbidden_surface": [
+    "raw_registers",
+    "source_shadow",
+    "endpoints",
+    "mutations",
+    "subscriptions",
+    "history",
+    "unbounded_lists",
+    "generic_graphql_fallback"
+  ],
+  "compatibility": {
+    "catalog_closed": true,
+    "additive_or_breaking_change": "SUCCESSOR_CONTRACT_ID_REQUIRED"
+  },
+  "private_binding_ingress": "ONLY_PUBLIC_SEMANTIC_INGRESS",
+  "projection_report_fields_by_type": {
+    "M2MMappedProjectionReportEntry": [
+      "__typename",
+      "sourceRef",
+      "requestedOutputRef",
+      "factId",
+      "dimension"
+    ],
+    "M2MWithheldProjectionReportEntry": [
+      "__typename",
+      "sourceRef",
+      "requestedOutputRef"
+    ],
+    "M2MUnrepresentableProjectionReportEntry": [
+      "__typename",
+      "sourceRef",
+      "requestedOutputRef"
+    ]
+  },
+  "request_query_admission_precedence": [
+    "query_depth",
+    "selected_fields",
+    "forbidden_graphql_feature",
+    "query_shape"
+  ]
+}

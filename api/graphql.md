@@ -7,6 +7,11 @@ The GraphQL API is implemented and served by `cmd/gateway`. The gateway exposes:
 - `/graphql` for queries + mutations
 - `/graphql/subscriptions` for subscriptions over WebSocket or SSE
 
+The separately packaged [`PUBLIC_GRAPHQL_M2M_V1`](./public-graphql-m2m-v1.graphql)
+contract is pre-implementation and is not a fallback or alias for either route
+above. Its isolated `/graphql/m2m/v1` query-only surface is documented in
+[`docs/platform/public-graphql-m2m-v1.md`](../docs/platform/public-graphql-m2m-v1.md).
+
 ## Observe-First Contract Ownership
 
 This page owns the GraphQL-specific observe-first parity contract that is
