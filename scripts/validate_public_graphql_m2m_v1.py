@@ -19,6 +19,10 @@ TOKEN = re.compile(r"[A-Za-z0-9._:-]+$")
 SOURCE_TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9._@-]*$")
 VERSION_TOKEN = re.compile(r"[0-9][0-9A-Za-z._-]*$")
 ASSET = re.compile(r"pv-asset-[A-Za-z0-9_-]{1,96}$")
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_REGISTRY_PATH = (
+    ROOT / "docs/platform/fixtures/canonical-pv/v1/source-registry-bindings.json"
+)
 FORBIDDEN = {
     "rawRegisters",
     "raw_registers",
@@ -311,7 +315,7 @@ def _valid_continuity(value):
     return False
 
 
-def _validate_case(case, manifest, canonical_manifest):
+def _validate_case(case, manifest, canonical_manifest, source_registry):
     errors = set()
     request, response = case["request"], case["response"]
     if set(request) != {"contract_id", "asset_ref"}:
@@ -442,6 +446,34 @@ def _validate_case(case, manifest, canonical_manifest):
         for item in provenance
     ):
         errors.add("provenance")
+    registry_entries = {
+        (
+            item["source_protocol"],
+            item["source_profile_id"],
+            item["source_profile_version"],
+            item["source_validity"],
+        ): item["registry_ref"]
+        for item in source_registry["entries"]
+    }
+    origin_refs = []
+    for item in provenance:
+        profile_parts = item["source_profile_id"].rsplit("@", 1)
+        registry_key = (
+            item["source_protocol"],
+            item["source_profile_id"],
+            item["source_profile_version"],
+            item["source_validity"],
+        )
+        if (
+            len(profile_parts) != 2
+            or profile_parts[1] != item["source_profile_version"]
+            or registry_entries.get(registry_key) != item["source_registry_ref"]
+            or item["origin_ref"] != item["source_observation_ref"]
+        ):
+            errors.add("provenance_binding")
+        origin_refs.append(item["origin_ref"])
+    if len(origin_refs) != len(set(origin_refs)):
+        errors.add("origin_uniqueness")
     if origins != {item["origin_ref"] for item in provenance}:
         errors.add("provenance")
     if not provenance:
@@ -451,7 +483,7 @@ def _validate_case(case, manifest, canonical_manifest):
     return sorted(errors)
 
 
-def validate_case(case, manifest, canonical_manifest):
+def validate_case(case, manifest, canonical_manifest, source_registry=None):
     """Validate the GraphQL HTTP envelope after a mandatory lossless mapping."""
     if not isinstance(case, dict):
         return ["structural_shape"]
@@ -459,6 +491,10 @@ def validate_case(case, manifest, canonical_manifest):
     if not isinstance(request_envelope, dict) or not isinstance(response_envelope, dict):
         return ["structural_shape"]
     errors = set()
+    if source_registry is None:
+        source_registry = load_json(SOURCE_REGISTRY_PATH)
+    if source_registry.get("contract") != manifest["source_registry_contract"]:
+        errors.add("provenance_binding")
     if (
         set(request_envelope) != {"method", "path", "body"}
         or request_envelope.get("method") != manifest["request_bounds"]["method"]
@@ -486,6 +522,7 @@ def validate_case(case, manifest, canonical_manifest):
         errors.add("request_fields")
     if (
         set(response_envelope) != {"status", "body"}
+        or type(response_envelope.get("status")) is not int
         or response_envelope.get("status") != 200
         or not isinstance(response_envelope.get("body"), dict)
     ):
@@ -516,7 +553,9 @@ def validate_case(case, manifest, canonical_manifest):
             errors.add("provenance_fields")
     try:
         normalized = _normalize_case(case)
-        errors.update(_validate_case(normalized, manifest, canonical_manifest))
+        errors.update(
+            _validate_case(normalized, manifest, canonical_manifest, source_registry)
+        )
         return sorted(errors)
     except (AttributeError, IndexError, KeyError, TypeError, ValueError):
         errors.add("structural_shape")

@@ -33,6 +33,12 @@ explicit projection loss: it is classified as
 navigation handle into source-owned shadow data. It never exposes source-shadow
 content, registers, addresses, credentials, paths, or endpoints.
 
+Each public provenance row is admitted only when profile ID and version agree,
+the complete source identity resolves to the exact registry reference in
+`helianthus.source-registry-bindings/v1`, and `originRef` equals the canonical
+source observation reference. Origin references are unique within a snapshot;
+duplicate or unregistered origins fail closed.
+
 V1's catalog is closed. Any additive or breaking semantic change, including a
 new fact, enum value, dimension meaning, capability requirement, or lifecycle
 meaning, requires a successor contract identifier. The M2M route must reject

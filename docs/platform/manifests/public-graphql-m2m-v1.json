@@ -5,6 +5,8 @@
   "status": "CANDIDATE_PRE_IMPLEMENTATION",
   "route": "/graphql/m2m/v1",
   "source_contract": "helianthus.canonical-pv/v1",
+  "source_registry_contract": "helianthus.source-registry-bindings/v1",
+  "source_registry_fixture": "docs/platform/fixtures/canonical-pv/v1/source-registry-bindings.json",
   "source_owner": "helianthus-ebusreg",
   "operation": "m2mCurrentSnapshot",
   "conformance_boundary": "GRAPHQL_HTTP_ENVELOPE",
