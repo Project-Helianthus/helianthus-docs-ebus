@@ -86,6 +86,43 @@ sources remain ambiguous, publication fails closed. Any future source
 precedence policy requires a versioned canonical successor; gateway scheduling
 order is never precedence.
 
+## Production Acquisition Lifecycle
+
+The gateway production path is a continuous read-only acquisition owner, not a
+startup-only qualification harness. When Modbus and the admitted SunSpec
+capability are enabled, it performs one immediate bounded acquisition and then
+starts each later acquisition 15 seconds after the previous attempt finishes.
+Only one acquisition may be in flight. The complete acquisition cycle,
+including its one permitted reconnect and retry, has one shared 10-second
+deadline. Every wire attempt receives new positive poll-generation and
+deadline identities. Cancellation joins the worker before the Modbus adapter
+closes.
+
+The 10-second total cycle bound plus the 15-second post-cycle delay keeps
+consecutive successful receipts below the 30-second fresh window of
+`pv.telemetry.fast.v1`; a healthy source can therefore keep telemetry fresh
+without changing the registry-owned policy. A failed read, reconnect, decode,
+qualification, or publication attempt does not create a partial update and
+does not rewrite the current semantic slot. The prior accepted observation
+remains queryable and advances naturally through `FRESH`, `STALE`, and
+`EXPIRED` according to this contract. A later accepted acquisition publishes a
+new generation and returns its facts to `FRESH`.
+
+Current semantic publication and immutable diagnostic evidence have separate
+bounded ownership. The initial terminal qualification may remain addressable
+through the exact profile/sample MCP contract. Later periodic acquisitions
+replace only the current semantic slot for the same `asset_ref`; they do not
+consume, evict, alias, or overwrite the immutable retained-observation budget.
+An immutable-retention capacity limit therefore cannot stop healthy current
+publication. The current slot remains detached from callers and must still
+carry complete source provenance and projection accounting.
+
+No worker exists when Modbus is disabled. Every acquisition executes only the
+immutable bounded read plan admitted by the selected capability and flavor;
+the current Fronius phase-one plan is FC03-only. FC04 is unavailable unless a
+future versioned profile explicitly admits it. The worker never issues a
+Modbus write function or changes inverter configuration.
+
 ## Source Admission And Provenance
 
 Canonical publication requires a source observation admitted by its owning
