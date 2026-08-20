@@ -589,18 +589,25 @@ def test_closed_error_and_request_binding_cardinality_rejects_duplicates(tmp_pat
 def test_semantic_rejections_bind_reachable_request_state_to_response(tmp_path):
     manifest, cases = load(MANIFEST), load(CASES)
     expected = {
-        "contract_incompatible": "CONTRACT_INCOMPATIBLE",
-        "asset_forbidden": "ASSET_FORBIDDEN",
-        "asset_not_found": "ASSET_NOT_FOUND",
-        "source_unavailable": "SOURCE_UNAVAILABLE",
+        "contract-incompatible-isolated": ("contract_incompatible", "CONTRACT_INCOMPATIBLE"),
+        "asset-forbidden-isolated": ("asset_forbidden", "ASSET_FORBIDDEN"),
+        "asset-not-found-isolated": ("asset_not_found", "ASSET_NOT_FOUND"),
+        "source-unavailable-isolated": ("source_unavailable", "SOURCE_UNAVAILABLE"),
+        "precedence-contract-before-asset": ("contract_incompatible", "CONTRACT_INCOMPATIBLE"),
+        "precedence-allowlist-before-existence": ("asset_forbidden", "ASSET_FORBIDDEN"),
+        "precedence-existence-before-source": ("asset_not_found", "ASSET_NOT_FOUND"),
     }
-    bindings = {item["category"]: item for item in cases["semantic_rejections"]}
-    assert {category: item["code"] for category, item in bindings.items()} == expected
+    bindings = {item["id"]: item for item in cases["semantic_rejections"]}
+    assert {
+        item_id: (item["category"], item["code"])
+        for item_id, item in bindings.items()
+    } == expected
     envelopes = {item["code"]: item["response"] for item in cases["errors"]}
     for item in bindings.values():
         assert set(item) == {
             "category",
             "code",
+            "id",
             "request",
             "serverState",
             "responseCodeRef",
@@ -612,28 +619,28 @@ def test_semantic_rejections_bind_reachable_request_state_to_response(tmp_path):
         ]["code"] == item["code"]
 
     reachable_mutations = {
-        "contract_incompatible": lambda item: item["request"].update(
+        "contract-incompatible-isolated": lambda item: item["request"].update(
             contractId=manifest["contract_id"]
         ),
-        "asset_forbidden": lambda item: item["serverState"]["allowedAssets"].append(
+        "asset-forbidden-isolated": lambda item: item["serverState"]["allowedAssets"].append(
             item["request"]["assetRef"]
         ),
-        "asset_not_found": lambda item: item["serverState"]["presentAssets"].append(
+        "asset-not-found-isolated": lambda item: item["serverState"]["presentAssets"].append(
             item["request"]["assetRef"]
         ),
-        "source_unavailable": lambda item: item["serverState"][
+        "source-unavailable-isolated": lambda item: item["serverState"][
             "snapshotAvailableAssets"
         ].append(item["request"]["assetRef"]),
     }
-    for category, mutate in reachable_mutations.items():
+    for item_id, mutate in reachable_mutations.items():
         candidate = copy.deepcopy(cases)
         item = next(
             binding
             for binding in candidate["semantic_rejections"]
-            if binding["category"] == category
+            if binding["id"] == item_id
         )
         mutate(item)
-        candidate_path = tmp_path / f"unreachable-{category}.json"
+        candidate_path = tmp_path / f"unreachable-{item_id}.json"
         candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
         with pytest.raises(ValidationError):
             validate(MANIFEST, CANONICAL, candidate_path)
@@ -648,7 +655,11 @@ def test_every_request_rejection_has_executable_stimulus_and_limit_sequence(tmp_
     assert {
         category: item["code"] for category, item in bindings.items()
     } == manifest["request_rejection_codes"]
-    assert set(cases["admission_sequences"]) == {"concurrency", "rate"}
+    assert set(cases["admission_sequences"]) == {
+        "concurrency",
+        "rate",
+        "client_isolation",
+    }
     for category in ("concurrency", "rate"):
         sequence = cases["admission_sequences"][category]
         assert bindings[category]["stimulus"] == {"sequenceRef": sequence["id"]}
@@ -665,6 +676,24 @@ def test_every_request_rejection_has_executable_stimulus_and_limit_sequence(tmp_
         candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
         with pytest.raises(ValidationError):
             validate(MANIFEST, CANONICAL, candidate_path)
+
+    isolation = cases["admission_sequences"]["client_isolation"]["events"]
+    starts_at_zero = [
+        event
+        for event in isolation
+        if event["action"] == "START" and event["atMs"] == 0
+    ]
+    assert {(event["clientRef"], event["outcome"]) for event in starts_at_zero} == {
+        ("mtls-principal-a", "ADMIT"),
+        ("mtls-principal-b", "ADMIT"),
+    }
+    assert any(
+        event["clientRef"] == "mtls-principal-a"
+        and event["outcome"] == "REJECT"
+        for event in isolation
+    )
+    assert isolation[-2]["clientRef"] == "mtls-principal-a"
+    assert isolation[-2]["outcome"] == "ADMIT"
 
 
 def test_named_canonical_fixture_has_lossless_public_projection(tmp_path):
