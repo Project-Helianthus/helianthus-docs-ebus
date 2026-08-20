@@ -11,6 +11,12 @@ They are covered by [`protocols/LICENSE`](../LICENSE), CC0-1.0.
 - [`../sunspec/fronius-observed-flavor-v1.md`](../sunspec/fronius-observed-flavor-v1.md)
   defines the exact observed Fronius flavor layered above a successfully
   admitted standard capability.
+- [`growatt-candidate-evidence-v1.md`](./growatt-candidate-evidence-v1.md)
+  records a proprietary Growatt Modbus candidate without claiming SunSpec or
+  profile admission.
+- [`huawei-gateway-candidate-evidence-v1.md`](./huawei-gateway-candidate-evidence-v1.md)
+  separates SmartLogger, S-Dongle, and EMMA as independent first-class
+  evidence candidates with fail-closed overlap rules.
 
 Helianthus scheduling, abandonment, provenance, profile, and qualification
 policy remains under `docs/platform/` and is not relicensed by this directory.

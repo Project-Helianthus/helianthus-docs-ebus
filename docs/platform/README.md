@@ -33,6 +33,9 @@ Current platform contracts:
 - [`fronius-sunspec-evidence-v1.md`](./fronius-sunspec-evidence-v1.md) -
   FMV3-M3-01 evidence packet and FMV3-M3-03 `STANDARD_ONLY` completion for
   bounded synthetic fixtures and the Fronius SunSpec admission boundary
+- [`modbus-vendor-evidence-v1.md`](./modbus-vendor-evidence-v1.md) -
+  FMV3-M7-01 source, licensing, detector-allowlist, and non-admission boundary
+  for additional SunSpec, Growatt, and Huawei candidates
 - [`canonical-pv-semantics-v1.md`](./canonical-pv-semantics-v1.md) -
   FMV3-M5-02 pre-implementation canonical photovoltaic fact, lifecycle,
   provenance, continuity, capability, and compatibility contract
