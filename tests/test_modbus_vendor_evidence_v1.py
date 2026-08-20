@@ -243,15 +243,17 @@ def test_huawei_child_inventory_and_transport_prerequisites_are_bounded():
     }
     assert all(item["owner"] == "helianthus-modbus" for item in prerequisites.values())
     assert all(
-        item["status"] == "IMPLEMENTED_PENDING_CODE_MERGE"
+        item["status"] == "MERGED_AVAILABLE_FOR_REGISTRY_PIN"
         for item in prerequisites.values()
     )
     assert all(
         item["implementation"] == {
             "repository": "Project-Helianthus/helianthus-modbus",
             "pull_request": 18,
-            "exact_head": "4b37dd9be9563b8d28563e5c3d7a138b2ec50de3",
-            "availability": "NOT_ON_MAIN",
+            "premerge_head": "4b37dd9be9563b8d28563e5c3d7a138b2ec50de3",
+            "merge_sha": "c78030472c24f0f2b849fd30124611157a81f834",
+            "version": "v0.0.0-20260820212315-c78030472c24",
+            "availability": "ON_MAIN",
         }
         for item in prerequisites.values()
     )
