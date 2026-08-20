@@ -269,19 +269,38 @@ def test_public_provenance_projects_safe_canonical_fields_and_declares_loss():
     )
 
 
-def test_fixture_is_the_graphql_operation_payload_wire_shape():
+def test_fixture_is_the_graphql_http_envelope_wire_shape():
     manifest, cases = load(MANIFEST), load(CASES)
-    assert manifest["conformance_boundary"] == "GRAPHQL_OPERATION_PAYLOAD"
+    assert manifest["conformance_boundary"] == "GRAPHQL_HTTP_ENVELOPE"
     request = cases["positive"]["request"]
     response = cases["positive"]["response"]
-    assert set(request) == {"contractId", "assetRef"}
-    assert set(response) == set(manifest["required_response_fields"])
-    assert "canonicalContractId" in response and "canonical_contract_id" not in response
-    fact = response["facts"][0]
+    assert request["method"] == "POST" and request["path"] == manifest["route"]
+    assert set(request["body"]) == {"operationName", "query", "variables"}
+    assert request["body"]["operationName"] == "M2MCurrentSnapshot"
+    assert request["body"]["query"] == manifest["conformance_query"]
+    assert "... on M2MDecimalValue" in request["body"]["query"]
+    assert "... on M2MEnumValue" in request["body"]["query"]
+    assert "... on M2MBitfieldValue" in request["body"]["query"]
+    assert set(request["body"]["variables"]["request"]) == {"contractId", "assetRef"}
+    assert response["status"] == 200
+    payload = response["body"]["data"]["m2mCurrentSnapshot"]
+    assert set(payload) == set(manifest["required_response_fields"])
+    assert "canonicalContractId" in payload and "canonical_contract_id" not in payload
+    fact = payload["facts"][0]
     assert set(fact) == set(manifest["required_fact_fields"])
     assert "factId" in fact and "fact_id" not in fact
     assert fact["dimensions"] == [{"key": "scope", "value": "total"}]
     assert set(fact["value"]) == {"coefficient", "scale"}
     assert "kind" not in fact["value"]
-    provenance = response["provenance"][0]
+    provenance = payload["provenance"][0]
     assert "sourceProtocol" in provenance and "source_protocol" not in provenance
+
+
+def test_unknown_or_private_provenance_fields_fail_closed_before_normalization():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    for field in ("unexpected", "sourceShadowContents", "privateFixturePath"):
+        candidate = copy.deepcopy(cases["positive"])
+        row = candidate["response"]["body"]["data"]["m2mCurrentSnapshot"]["provenance"][0]
+        row[field] = "must-not-pass"
+        errors = validate_case(candidate, manifest, canonical)
+        assert "provenance_fields" in errors or "forbidden_surface" in errors
