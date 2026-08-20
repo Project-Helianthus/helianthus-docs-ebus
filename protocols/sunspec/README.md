@@ -11,6 +11,9 @@ They are covered by [`protocols/LICENSE`](../LICENSE), CC0-1.0.
 - [`fronius-observed-flavor-v1-1.md`](./fronius-observed-flavor-v1-1.md)
   defines a separate exact successor for the observed chain that includes
   standard Model `123/L24`; it does not replace or widen V1.
+- [`additional-model-evidence-v1.md`](./additional-model-evidence-v1.md)
+  records the FMV3-M7-01 manufacturer-neutral candidate sets and read-only
+  admission boundary for later standard-model expansion.
 
 The page is an independently authored contract. It does not redistribute
 upstream specification text, model files, vendor manuals, or vendor register

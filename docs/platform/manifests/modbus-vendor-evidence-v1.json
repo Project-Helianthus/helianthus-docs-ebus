@@ -1,0 +1,112 @@
+{
+  "contract_id": "helianthus.modbus-vendor-evidence/v1",
+  "milestone": "FMV3-M7-01",
+  "support_claim": false,
+  "runtime_allowlist": [
+    {"operation": "FC03", "function_code": 3, "table": "holding_registers"},
+    {"operation": "FC04", "function_code": 4, "table": "input_registers"},
+    {"operation": "FC2B_MEI_0E", "function_code": 43, "mei_type": 14}
+  ],
+  "packets": [
+    {
+      "packet_id": "SUNSPEC-EXPANSION-V1",
+      "protocol_family": "sunspec",
+      "disposition": "EVIDENCE_QUALIFIED",
+      "sources": [
+        {
+          "source_id": "sunspec-models-7abdf898",
+          "identity": "https://github.com/sunspec/models/tree/7abdf8982d5364f8ae916deee18aac86c11be36d",
+          "license": "Apache-2.0",
+          "redistributable": true,
+          "transformation": "independent model-set and admission summary",
+          "applicability": "standard models 125-145, 201-204, 211-214, and 302-308 at the pinned commit",
+          "sanitization": "no upstream model payload copied",
+          "code_mapping": "FMV3-M7-02 candidate standard decoders only"
+        }
+      ],
+      "detector_pdus": [
+        {"operation": "FC03", "unit_id": "configured", "offset": 40000, "quantity": 2, "purpose": "sunspec_signature", "executable": true}
+      ],
+      "candidates": [
+        {"candidate_id": "sunspec.meter.integer.v1", "model_ids": [201, 202, 203, 204], "status": "PROFILE_CANDIDATE"},
+        {"candidate_id": "sunspec.meter.float.v1", "model_ids": [211, 212, 213, 214], "status": "PROFILE_CANDIDATE"},
+        {"candidate_id": "sunspec.environmental.v1", "model_ids": [302, 303, 304, 305, 306, 307, 308], "status": "PROFILE_CANDIDATE"},
+        {"candidate_id": "sunspec.grid_controls.read_only.v1", "model_ids": [125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145], "status": "EVIDENCE_ONLY"}
+      ]
+    },
+    {
+      "packet_id": "GROWATT-CANDIDATE-V1",
+      "protocol_family": "growatt_proprietary_modbus",
+      "disposition": "HYPOTHESIS",
+      "sunspec_claim": false,
+      "sources": [
+        {
+          "source_id": "growatt-rtu-v1.24",
+          "identity": "sha256:fac88d609d74ff6b3c9c31ed65370d166d1fb17461e91b4b4855018fe232a320",
+          "license": "vendor-copyright-inspection-only",
+          "redistributable": false,
+          "transformation": "independent candidate identity summary; no register table copied",
+          "applicability": "documented MIN, MAX, MID, MAC, MOD, MIX, SPA, and SPH families; exact family unresolved",
+          "sanitization": "serial-number fields and vendor tables excluded",
+          "code_mapping": "FMV3-M7-03 admission decision only"
+        }
+      ],
+      "detector_pdus": [
+        {"operation": "FC03", "unit_id": "configured", "offset": 9, "quantity": 6, "purpose": "firmware_tuple", "executable": false},
+        {"operation": "FC03", "unit_id": "configured", "offset": 43, "quantity": 1, "purpose": "device_type_code", "executable": false},
+        {"operation": "FC03", "unit_id": "configured", "offset": 82, "quantity": 2, "purpose": "model_build_code", "executable": false},
+        {"operation": "FC03", "unit_id": "configured", "offset": 88, "quantity": 1, "purpose": "protocol_version", "executable": false}
+      ],
+      "address_normalization": "documentary_zero_based_hypothesis",
+      "admission": {"eligible": false, "next_node": "FMV3-M7-03", "required_outcome": "PROFILE_ADMITTED_OR_NO_ADMISSIBLE_PROFILE"}
+    },
+    {
+      "packet_id": "HUAWEI-GATEWAYS-V1",
+      "protocol_family": "huawei_proprietary_modbus",
+      "disposition": "MIXED_CANDIDATES",
+      "sources": [
+        {"source_id": "smartlogger-v54", "identity": "sha256:f00b197c84a581bfcaec95a1b6a959ab8f08c670a31ea3d27414f1f2b33bc794", "license": "vendor-copyright-inspection-only", "redistributable": false, "transformation": "independent function and identity summary", "applicability": "SmartLogger V300R024C10 document branch", "sanitization": "vendor tables, ESN, registration code, and writes excluded", "code_mapping": "FMV3-M7-04 SmartLogger admission input"},
+        {"source_id": "smartlogger-gates", "identity": "sha256:3b730d98c423be5965fd65788fb5e086337361e866e9266f38daea1c7be48e1c", "license": "operator-authored-analysis-of-vendor-sources", "redistributable": false, "transformation": "firmware applicability cross-reference", "applicability": "SmartLogger1000, SmartLogger2000, and SmartLogger3000 document revisions", "sanitization": "only revision and applicability conclusions retained", "code_mapping": "FMV3-M7-04 version-gate input"},
+        {"source_id": "sdongle-v01", "identity": "sha256:2806fac6a6176c3f815e8d8135f306b0bb585bcfed8770bfa822536fcf39ab1b", "license": "vendor-copyright-inspection-only", "redistributable": false, "transformation": "independent identity and applicability summary", "applicability": "SDongleA-05, SDongleB-03, and SDongleB-06 at V200R022C10 or later", "sanitization": "SN, IMEI, ICCID, registration key, carrier, and writes excluded", "code_mapping": "FMV3-M7-04 S-Dongle admission input"},
+        {"source_id": "sdongle-tcp-v05", "identity": "sha256:cc5b5c45e90d4607a6d79a4b5069632576731cb1165957bd120970a97ff45d47", "license": "vendor-copyright-inspection-only", "redistributable": false, "transformation": "minimum-version applicability summary", "applicability": "SDongleA-05 guide branch and documented inverter-side minimums", "sanitization": "configuration screenshots, network values, and credentials excluded", "code_mapping": "FMV3-M7-04 version-gate input"},
+        {"source_id": "d3vi1-huawei-solar-lib-research", "identity": "https://github.com/d3vi1/huawei-solar-lib/tree/9029a9e2320c3fb3295e2e4ce64adede55acac24", "license": "AGPL-3.0", "redistributable": true, "transformation": "research lead only; no code copied and no documentary authority", "applicability": "candidate SmartLogger, S-Dongle, EMMA, and direct-device probe order", "sanitization": "only commit identity and research conclusion retained", "code_mapping": "no direct mapping; documentary revalidation required"}
+      ],
+      "candidates": [
+        {
+          "candidate_id": "huawei.smartlogger.v1",
+          "gateway_kind": "SmartLogger",
+          "status": "HYPOTHESIS",
+          "eligible": false,
+          "firmware_gate": "document-revision and model specific; no synthetic minimum",
+          "detector_pdus": [
+            {"operation": "FC03", "unit_id": 0, "offset": 65521, "quantity": 1, "purpose": "device_list_change", "executable": false},
+            {"operation": "FC2B_MEI_0E", "unit_id": 0, "read_device_id_code": 1, "object_id": 0, "purpose": "basic_identity", "executable": false}
+          ],
+          "missing_discriminators": ["negative_overlap_with_emma", "model_and_firmware_tuple_fixture"]
+        },
+        {
+          "candidate_id": "huawei.sdongle.v1",
+          "gateway_kind": "S-Dongle",
+          "status": "DOCUMENTARY_CANDIDATE",
+          "eligible": false,
+          "firmware_gate": ["V200R022C10+ for interface-v01 families", "V100R001C00SPC124+ for the guide-v05 SDongleA-05 branch"],
+          "detector_pdus": [
+            {"operation": "FC2B_MEI_0E", "unit_id": 100, "read_device_id_code": 1, "object_id": 0, "purpose": "basic_identity", "executable": false},
+            {"operation": "FC03", "unit_id": 100, "offset": 30068, "quantity": 2, "purpose": "protocol_version", "executable": false},
+            {"operation": "FC03", "unit_id": 100, "offset": 37410, "quantity": 3, "purpose": "dongle_type_search_sequence", "executable": false}
+          ],
+          "missing_discriminators": ["sanitized_product_code_and_revision_fixture"]
+        },
+        {
+          "candidate_id": "huawei.emma.v1",
+          "gateway_kind": "EMMA",
+          "status": "UNKNOWN",
+          "eligible": false,
+          "firmware_gate": null,
+          "detector_pdus": [],
+          "missing_discriminators": ["authoritative_model_register_source", "negative_overlap_with_smartlogger", "firmware_applicability"]
+        }
+      ]
+    }
+  ]
+}
