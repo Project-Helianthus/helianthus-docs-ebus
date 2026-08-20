@@ -1309,7 +1309,7 @@ def validate_request_rejections(cases, manifest):
             or item["responseCodeRef"] not in envelopes
         ):
             raise ValidationError("request_rejection_shape")
-        if category in {"malformed_json", "duplicate_json_key"}:
+        if category in {"malformed_json", "duplicate_json_key", "json_depth"}:
             if set(stimulus) != {"rawBody"} or not isinstance(stimulus["rawBody"], str):
                 raise ValidationError("request_rejection_shape")
             try:
@@ -1319,8 +1319,12 @@ def validate_request_rejections(cases, manifest):
                 )
             except json.JSONDecodeError:
                 reached = "malformed_json"
-            except ValidationError:
-                reached = "duplicate_json_key"
+            except ValidationError as error:
+                reached = (
+                    "json_depth"
+                    if "nesting exceeds" in str(error)
+                    else "duplicate_json_key"
+                )
             else:
                 reached = None
         elif category == "request_envelope":

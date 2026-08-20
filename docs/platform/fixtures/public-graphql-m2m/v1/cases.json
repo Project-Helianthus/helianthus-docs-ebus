@@ -714,6 +714,14 @@
         "sequenceRef": "same-client-token-bucket-v1"
       },
       "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "json_depth",
+      "code": "REQUEST_INVALID",
+      "stimulus": {
+        "rawBody": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+      },
+      "responseCodeRef": "REQUEST_INVALID"
     }
   ],
   "capability_satisfied_projection": {

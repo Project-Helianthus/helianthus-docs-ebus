@@ -144,7 +144,7 @@ binds every declared request-rejection category to an executable malformed
 body, envelope mutation, GraphQL AST mutation, wire-size stimulus, or logical
 client event sequence.
 
-The four authenticated semantic failures and ten authenticated request
+The four authenticated semantic failures and eleven authenticated request
 rejections use HTTP status `200` and the same closed GraphQL error envelope:
 `data` is `null`; `errors` contains exactly one row with
 the constant message `M2M request failed`, path `m2mCurrentSnapshot`, and only
@@ -154,8 +154,8 @@ through messages. TLS/client-certificate rejection remains pre-HTTP and returns
 no GraphQL envelope.
 
 Authenticated request admission failures use the same envelope and add three
-closed codes. Malformed JSON, duplicate keys, and invalid HTTP envelopes map to
-`REQUEST_INVALID`; forbidden or non-canonical GraphQL query shapes map to
+closed codes. Malformed JSON, duplicate keys, raw JSON nesting above 64, and
+invalid HTTP envelopes map to `REQUEST_INVALID`; forbidden or non-canonical GraphQL query shapes map to
 `QUERY_REJECTED`; body/query/field/concurrency/rate bounds map to
 `REQUEST_LIMIT_EXCEEDED`. Static message and path rules are identical to the
 semantic failures, so framework parser details and private input are never
