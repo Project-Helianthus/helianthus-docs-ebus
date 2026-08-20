@@ -578,6 +578,78 @@ def test_closed_error_and_request_binding_cardinality_rejects_duplicates(tmp_pat
             validate(MANIFEST, CANONICAL, candidate_path)
 
 
+def test_semantic_rejections_bind_reachable_request_state_to_response(tmp_path):
+    manifest, cases = load(MANIFEST), load(CASES)
+    expected = {
+        "contract_incompatible": "CONTRACT_INCOMPATIBLE",
+        "asset_forbidden": "ASSET_FORBIDDEN",
+        "asset_not_found": "ASSET_NOT_FOUND",
+        "source_unavailable": "SOURCE_UNAVAILABLE",
+    }
+    bindings = {item["category"]: item for item in cases["semantic_rejections"]}
+    assert {category: item["code"] for category, item in bindings.items()} == expected
+    envelopes = {item["code"]: item["response"] for item in cases["errors"]}
+    for item in bindings.values():
+        assert set(item) == {"category", "code", "request", "serverState", "response"}
+        assert set(item["request"]) == {"contractId", "assetRef"}
+        assert item["response"] == envelopes[item["code"]]
+
+    reachable_mutations = {
+        "contract_incompatible": lambda item: item["request"].update(
+            contractId=manifest["contract_id"]
+        ),
+        "asset_forbidden": lambda item: item["serverState"]["allowedAssets"].append(
+            item["request"]["assetRef"]
+        ),
+        "asset_not_found": lambda item: item["serverState"]["presentAssets"].append(
+            item["request"]["assetRef"]
+        ),
+        "source_unavailable": lambda item: item["serverState"][
+            "snapshotAvailableAssets"
+        ].append(item["request"]["assetRef"]),
+    }
+    for category, mutate in reachable_mutations.items():
+        candidate = copy.deepcopy(cases)
+        item = next(
+            binding
+            for binding in candidate["semantic_rejections"]
+            if binding["category"] == category
+        )
+        mutate(item)
+        candidate_path = tmp_path / f"unreachable-{category}.json"
+        candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
+        with pytest.raises(ValidationError):
+            validate(MANIFEST, CANONICAL, candidate_path)
+
+
+def test_every_request_rejection_has_executable_stimulus_and_limit_sequence(tmp_path):
+    manifest, cases = load(MANIFEST), load(CASES)
+    bindings = {
+        item["category"]: item for item in cases["request_rejections"]
+    }
+    assert set(bindings) == set(manifest["request_rejection_codes"])
+    assert {
+        category: item["code"] for category, item in bindings.items()
+    } == manifest["request_rejection_codes"]
+    assert set(cases["admission_sequences"]) == {"concurrency", "rate"}
+    for category in ("concurrency", "rate"):
+        sequence = cases["admission_sequences"][category]
+        assert bindings[category]["stimulus"] == {"sequenceRef": sequence["id"]}
+        rejected = [event for event in sequence["events"] if event["outcome"] == "REJECT"]
+        assert rejected
+        assert all(event["code"] == "REQUEST_LIMIT_EXCEEDED" for event in rejected)
+
+        candidate = copy.deepcopy(cases)
+        candidate["admission_sequences"][category]["events"] = [
+            {**event, "outcome": "ADMIT"} if event["outcome"] == "REJECT" else event
+            for event in candidate["admission_sequences"][category]["events"]
+        ]
+        candidate_path = tmp_path / f"unbounded-{category}.json"
+        candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
+        with pytest.raises(ValidationError):
+            validate(MANIFEST, CANONICAL, candidate_path)
+
+
 def test_graphql_ast_admission_enforces_syntax_schema_and_bounds():
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     base = manifest["conformance_query"]
