@@ -1,0 +1,294 @@
+{
+  "contract_id": "helianthus.modbus-vendor-evidence/v1",
+  "milestone": "FMV3-M7-01",
+  "support_claim": false,
+  "runtime_allowlist": [
+    {"operation": "FC03", "function_code": 3, "table": "holding_registers", "executable": false},
+    {"operation": "FC04", "function_code": 4, "table": "input_registers", "executable": false},
+    {"operation": "FC2B_MEI_0E", "function_code": 43, "mei_type": 14, "executable": false}
+  ],
+  "packets": [
+    {
+      "packet_id": "SUNSPEC-EXPANSION-V1",
+      "protocol_family": "sunspec",
+      "disposition": "EVIDENCE_QUALIFIED",
+      "sources": [
+        {
+          "source_id": "sunspec-models-7abdf898",
+          "identity": "https://github.com/sunspec/models/tree/7abdf8982d5364f8ae916deee18aac86c11be36d",
+          "license": "Apache-2.0",
+          "redistributable": true,
+          "transformation": "independent model-set and admission summary",
+          "applicability": "standard models 125-145, 201-204, 211-214, and 302-308 at the pinned commit",
+          "sanitization": "no upstream model payload copied",
+          "code_mapping": "FMV3-M7-02 candidate standard decoders only"
+        }
+      ],
+      "detector_pdus": [
+        {"operation": "FC03", "unit_id": "configured", "offset": 40000, "quantity": 2, "purpose": "sunspec_signature_contract_reference", "executable": false}
+      ],
+      "candidates": [
+        {"candidate_id": "sunspec.meter.integer.v1", "model_ids": [201, 202, 203, 204], "status": "PROFILE_CANDIDATE"},
+        {"candidate_id": "sunspec.meter.float.v1", "model_ids": [211, 212, 213, 214], "status": "PROFILE_CANDIDATE"},
+        {"candidate_id": "sunspec.environmental.v1", "model_ids": [302, 303, 304, 305, 306, 307, 308], "status": "PROFILE_CANDIDATE"},
+        {"candidate_id": "sunspec.grid_controls.read_only.v1", "model_ids": [125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145], "status": "EVIDENCE_ONLY"}
+      ]
+    },
+    {
+      "packet_id": "GROWATT-CANDIDATE-V1",
+      "protocol_family": "growatt_proprietary_modbus",
+      "disposition": "HYPOTHESIS",
+      "sunspec_claim": false,
+      "sources": [
+        {
+          "source_id": "growatt-rtu-v1.24",
+          "identity": "sha256:fac88d609d74ff6b3c9c31ed65370d166d1fb17461e91b4b4855018fe232a320",
+          "license": "vendor-copyright-inspection-only",
+          "redistributable": false,
+          "transformation": "independent candidate identity summary; no register table copied",
+          "applicability": "documented MIN, MAX, MID, MAC, MOD, MIX, SPA, and SPH families; exact family unresolved",
+          "sanitization": "serial-number fields and vendor tables excluded",
+          "code_mapping": "FMV3-M7-03 admission decision only"
+        }
+      ],
+      "detector_pdus": [
+        {"operation": "FC03", "unit_id": "configured", "offset": 9, "quantity": 6, "purpose": "firmware_tuple", "executable": false},
+        {"operation": "FC03", "unit_id": "configured", "offset": 43, "quantity": 1, "purpose": "device_type_code", "executable": false},
+        {"operation": "FC03", "unit_id": "configured", "offset": 82, "quantity": 2, "purpose": "model_build_code", "executable": false},
+        {"operation": "FC03", "unit_id": "configured", "offset": 88, "quantity": 1, "purpose": "protocol_version", "executable": false}
+      ],
+      "address_normalization": "documentary_zero_based_hypothesis",
+      "admission": {"eligible": false, "next_node": "FMV3-M7-03", "required_outcome": "PROFILE_ADMITTED_OR_NO_ADMISSIBLE_PROFILE"}
+    },
+    {
+      "packet_id": "HUAWEI-GATEWAYS-V1",
+      "protocol_family": "huawei_proprietary_modbus",
+      "disposition": "THREE_INDEPENDENT_CANDIDATES",
+      "sources": [
+        {
+          "source_id": "smartlogger-v54",
+          "identity": "sha256:f00b197c84a581bfcaec95a1b6a959ab8f08c670a31ea3d27414f1f2b33bc794",
+          "evidence_class": "AUTHORITATIVE_VENDOR_DOCUMENT",
+          "license": "vendor-copyright-inspection-only",
+          "redistributable": false,
+          "transformation": "independent function and identity summary",
+          "applicability": "SmartLogger V300R024C10 document branch",
+          "sanitization": "vendor tables, ESN, registration code, and writes excluded",
+          "code_mapping": "FMV3-M7-04 SmartLogger admission input",
+          "provenance": {"title": "SmartLogger V300R024C10 ModBus Interface Definitions", "revision": "Issue 54", "published": "2026-02-06", "capture_ref": "operator-local-unpublished:tancabesti-docs/corpus/modbus-definitions/smartlogger-v300r024c10-modbus-interface-v54.md", "sha256": "f00b197c84a581bfcaec95a1b6a959ab8f08c670a31ea3d27414f1f2b33bc794", "source_material_sha256": "9e6447270668270969fd76db810ea5526b8f0fc6ab084093838dca3805fa3a29", "acquisition": "operator_local_conversion_of_vendor_pdf"}
+        },
+        {
+          "source_id": "smartlogger-gates",
+          "identity": "sha256:3b730d98c423be5965fd65788fb5e086337361e866e9266f38daea1c7be48e1c",
+          "evidence_class": "OPERATOR_ANALYSIS",
+          "license": "operator-authored-analysis-of-vendor-sources",
+          "redistributable": false,
+          "transformation": "firmware applicability cross-reference",
+          "applicability": "SmartLogger1000, SmartLogger2000, and SmartLogger3000 document revisions",
+          "sanitization": "only revision and applicability conclusions retained",
+          "code_mapping": "FMV3-M7-04 version-gate input",
+          "provenance": {"title": "SmartLogger Register Introduction Gate Table", "revision": "generated 2026-04-06", "published": null, "capture_ref": "operator-local-unpublished:tancabesti-docs/corpus/modbus-definitions/smartlogger-register-gate-table.md", "sha256": "3b730d98c423be5965fd65788fb5e086337361e866e9266f38daea1c7be48e1c", "source_material_sha256": null, "acquisition": "operator_authored_cross_revision_analysis"}
+        },
+        {
+          "source_id": "sdongle-v01",
+          "identity": "sha256:2806fac6a6176c3f815e8d8135f306b0bb585bcfed8770bfa822536fcf39ab1b",
+          "evidence_class": "AUTHORITATIVE_VENDOR_DOCUMENT",
+          "license": "vendor-copyright-inspection-only",
+          "redistributable": false,
+          "transformation": "independent identity and applicability summary",
+          "applicability": "SDongleA-05, SDongleB-03, and SDongleB-06 at V200R022C10 or later",
+          "sanitization": "SN, IMEI, ICCID, registration key, carrier, and writes excluded",
+          "code_mapping": "FMV3-M7-04 S-Dongle admission input",
+          "provenance": {"title": "SDongle V200R025C00SPC120 MODBUS Interface Definitions", "revision": "Issue 01", "published": "2025-12-23", "capture_ref": "operator-local-unpublished:tancabesti-docs/corpus/modbus-definitions/sdongle-v200r025c00spc120-modbus-interface-v01.md", "sha256": "2806fac6a6176c3f815e8d8135f306b0bb585bcfed8770bfa822536fcf39ab1b", "source_material_sha256": "bc47f30a4d566073dcc145a21c4d6e8a2189713cb67328dbe6c2d4dc93920b44", "acquisition": "operator_local_conversion_of_vendor_pdf"}
+        },
+        {
+          "source_id": "sdongle-tcp-v05",
+          "identity": "sha256:cc5b5c45e90d4607a6d79a4b5069632576731cb1165957bd120970a97ff45d47",
+          "evidence_class": "AUTHORITATIVE_VENDOR_DOCUMENT",
+          "license": "vendor-copyright-inspection-only",
+          "redistributable": false,
+          "transformation": "minimum-version applicability summary",
+          "applicability": "SDongleA-05 guide branch and documented inverter-side minimums",
+          "sanitization": "configuration screenshots, network values, and credentials excluded",
+          "code_mapping": "FMV3-M7-04 version-gate input",
+          "provenance": {"title": "SDongle MODBUS TCP Guide", "revision": "Issue 05", "published": "2025-01-08", "capture_ref": "operator-local-unpublished:tancabesti-docs/corpus/modbus-definitions/sdongle-modbus-tcp-guide-v05.md", "sha256": "cc5b5c45e90d4607a6d79a4b5069632576731cb1165957bd120970a97ff45d47", "source_material_sha256": "fc9ba2332bcea5f4b7a9f31f79ebe203fee6b4afe3dd3a2fa27b0b784e7a7189", "acquisition": "operator_local_conversion_of_vendor_pdf"}
+        },
+        {
+          "source_id": "sdongle-v100-v05",
+          "identity": "sha256:c1f2a9c93bbe28b4b595650ef22fb73a4829dcc1b8e9b779ff035c1da7d4e1a6",
+          "evidence_class": "AUTHORITATIVE_VENDOR_DOCUMENT",
+          "license": "vendor-copyright-inspection-only",
+          "redistributable": false,
+          "transformation": "independent V100 branch applicability summary",
+          "applicability": "SDongleA-05 V100R001C00 document branch",
+          "sanitization": "serials, credentials, screenshots, and writes excluded",
+          "code_mapping": "FMV3-M7-04 S-Dongle V100 gate input",
+          "provenance": {"title": "SDongleA V100R001C00 MODBUS Interface Definitions", "revision": "Issue 05", "published": null, "capture_ref": "operator-local-unpublished:tancabesti-docs/corpus/modbus-definitions/sdongleA-v100r001c00-modbus-interface-v05.md", "sha256": "c1f2a9c93bbe28b4b595650ef22fb73a4829dcc1b8e9b779ff035c1da7d4e1a6", "source_material_sha256": "7d80cf21f123f066bce8486e1b4a43d043bf63974576002b153718eee294680b", "acquisition": "operator_local_conversion_of_vendor_pdf"}
+        },
+        {
+          "source_id": "sdongle-v200r022-v02",
+          "identity": "sha256:6c9a1c44bfa668ddc088392108498fa801635ec5453805be5a40e373e62e151e",
+          "evidence_class": "AUTHORITATIVE_VENDOR_DOCUMENT",
+          "license": "vendor-copyright-inspection-only",
+          "redistributable": false,
+          "transformation": "independent V200R022 branch applicability summary",
+          "applicability": "SDongleA-05 and SDongleB-06 V200R022C10 document branch",
+          "sanitization": "serials, credentials, vendor tables, and writes excluded",
+          "code_mapping": "FMV3-M7-04 S-Dongle V200R022 gate input",
+          "provenance": {"title": "SDongle V200R022CC10 MODBUS Interface Definitions", "revision": "Issue 02", "published": null, "capture_ref": "operator-local-unpublished:tancabesti-docs/corpus/modbus-definitions/sdongle-v200r022cc10-modbus-interface-v02.md", "sha256": "6c9a1c44bfa668ddc088392108498fa801635ec5453805be5a40e373e62e151e", "source_material_sha256": "e212c864accf5bf1112510479d03942bfd83dac3e2dcf0b85742c6a3ef6c13ba", "acquisition": "operator_local_conversion_of_vendor_pdf"}
+        },
+        {
+          "source_id": "emma-r024",
+          "identity": "sha256:7a989d2b8d031582ce1fad5766c0168b47b5a4ba2cf96dbd65085590d3308a5e",
+          "evidence_class": "AUTHORITATIVE_VENDOR_DOCUMENT",
+          "license": "vendor-copyright-inspection-only",
+          "redistributable": false,
+          "transformation": "independent identity, inventory, and applicability summary",
+          "applicability": "EMMA at SmartHEMS V100R024C00SPC100 or later",
+          "sanitization": "vendor tables, device serials, writes, and credentials excluded",
+          "code_mapping": "FMV3-M7-04 EMMA R024 admission input",
+          "provenance": {"title": "SmartHEMS V100R024C00 MODBUS Interface Definitions", "revision": "Issue 01", "published": "2024-07-15", "capture_ref": "community-mirror:https://www.photovoltaikforum.com/core/attachment/479611-smarthems-v100r024c00-modbus-interface-definitions-pdf/", "sha256": "7a989d2b8d031582ce1fad5766c0168b47b5a4ba2cf96dbd65085590d3308a5e", "source_material_sha256": "7a989d2b8d031582ce1fad5766c0168b47b5a4ba2cf96dbd65085590d3308a5e", "acquisition": "third_party_mirror_of_huawei_authored_pdf"}
+        },
+        {
+          "source_id": "emma-r025",
+          "identity": "sha256:89bafd5f74ef7516daeb4d5de0d4212245080d1d6d1b03d7482854d0fe5244ce",
+          "evidence_class": "AUTHORITATIVE_VENDOR_DOCUMENT",
+          "license": "vendor-copyright-inspection-only",
+          "redistributable": false,
+          "transformation": "independent identity, inventory, and applicability summary",
+          "applicability": "EMMA at SmartHEMS V100R025C00SPC102 or later",
+          "sanitization": "vendor tables, device serials, writes, and credentials excluded",
+          "code_mapping": "FMV3-M7-04 EMMA R025 admission input",
+          "provenance": {"title": "SmartHEMS V100R025C00SPC102 MODBUS Interface Definitions", "revision": "document footer 2025-08-14", "published": "2025-08-14", "capture_ref": "community-mirror:https://www.photovoltaikforum.com/core/file-download/524633/", "sha256": "89bafd5f74ef7516daeb4d5de0d4212245080d1d6d1b03d7482854d0fe5244ce", "source_material_sha256": "89bafd5f74ef7516daeb4d5de0d4212245080d1d6d1b03d7482854d0fe5244ce", "acquisition": "third_party_mirror_of_huawei_authored_pdf"}
+        },
+        {
+          "source_id": "wlcrs-huawei-solar-lib-research",
+          "identity": "https://github.com/wlcrs/huawei-solar-lib/tree/7927a68d30d86078c1366a4acae7887bc47e62da",
+          "evidence_class": "RND_CODE_LEAD",
+          "license": "AGPL-3.0",
+          "redistributable": true,
+          "transformation": "research lead only; no code or tables copied and no documentary authority",
+          "applicability": "candidate SmartLogger, S-Dongle, EMMA, and direct-device probe order",
+          "sanitization": "only commit identity and independently revalidated design conclusions retained",
+          "code_mapping": "no direct mapping; clean-room implementation requires vendor-source revalidation",
+          "provenance": {"title": "wlcrs/huawei-solar-lib develop", "revision": "7927a68d30d86078c1366a4acae7887bc47e62da", "published": null, "capture_ref": "https://github.com/wlcrs/huawei-solar-lib/tree/7927a68d30d86078c1366a4acae7887bc47e62da", "sha256": null, "source_material_sha256": null, "acquisition": "public_git_research_snapshot"}
+        },
+        {
+          "source_id": "emma-tancabesti-live-history",
+          "identity": "sha256:83facb284525650300e91e716d44336147233badd80376d74e6bc8ea0b1bfbb3",
+          "evidence_class": "HISTORICAL_LIVE_EVIDENCE",
+          "license": "operator-owned-private-evidence",
+          "redistributable": false,
+          "transformation": "sanitized statement of unit zero and telemetry block reachability",
+          "applicability": "Tancabesti EMMA observation on 2026-07-01 and 2026-07-02",
+          "sanitization": "endpoint, serials, credentials, and raw values excluded",
+          "code_mapping": "does not qualify the EMMA detector",
+          "provenance": {"title": "AP-802 EMMA exporter deploy evidence", "revision": "local historical issue", "published": null, "capture_ref": "operator-local-unpublished:tancabesti-automation/monitoring/tancabesti/issues/ap802-emma-exporter-docker-deploy-blocker.md", "sha256": "83facb284525650300e91e716d44336147233badd80376d74e6bc8ea0b1bfbb3", "source_material_sha256": "83facb284525650300e91e716d44336147233badd80376d74e6bc8ea0b1bfbb3", "acquisition": "operator_live_read_only_capture"}
+        },
+        {
+          "source_id": "smartlogger-tancabesti-live-history",
+          "identity": "sha256:a44d30a760d9ee5ad1880d347a89668b69f652b8f0a83341a8356aec283e0221",
+          "evidence_class": "HISTORICAL_LIVE_EVIDENCE",
+          "license": "operator-owned-private-evidence",
+          "redistributable": false,
+          "transformation": "sanitized statement of SmartLogger and child address reachability",
+          "applicability": "Tancabesti SmartLogger snapshot with eight addressed children",
+          "sanitization": "endpoint, serials, credentials, and raw payload excluded",
+          "code_mapping": "does not qualify MEI child enumeration",
+          "provenance": {"title": "SmartLogger live snapshot summary", "revision": "2026-03-22T13:50:34Z", "published": null, "capture_ref": "operator-local-unpublished:tancabesti-normalized/native/smartlogger/smartlogger-live-snapshot-20260322T135034Z-summary.json", "sha256": "a44d30a760d9ee5ad1880d347a89668b69f652b8f0a83341a8356aec283e0221", "source_material_sha256": "a44d30a760d9ee5ad1880d347a89668b69f652b8f0a83341a8356aec283e0221", "acquisition": "operator_live_read_only_capture"}
+        }
+      ],
+      "transport_prerequisites": [
+        {"requirement_id": "modbus.unit-id-zero.v1", "owner": "helianthus-modbus", "status": "BLOCKED", "acceptance": "FC03, FC04, and FC2B permit explicitly configured unit_id=0 without treating it as broadcast write authority"},
+        {"requirement_id": "modbus.mei-vendor-cursor.v1", "owner": "helianthus-modbus", "status": "BLOCKED", "acceptance": "FC2B/MEI 0x0E permits ReadDevId=0x03 with initial object_id=0x87 under bounded traversal"},
+        {"requirement_id": "modbus.mei-object-wrap.v1", "owner": "helianthus-modbus", "status": "BLOCKED", "acceptance": "bounded traversal accepts documented 0xFF to 0x00 wrap while rejecting loops, duplicate objects, count mismatch, and unbounded pages"}
+      ],
+      "mutual_exclusion": {"required": true, "families": ["SmartLogger", "S-Dongle", "EMMA", "DirectInverter"], "multiple_positive_outcome": "INSUFFICIENT_EVIDENCE", "first_match_priority": false},
+      "candidates": [
+        {
+          "candidate_id": "huawei.smartlogger.v1",
+          "gateway_kind": "SmartLogger",
+          "status": "DOCUMENTARY_CANDIDATE",
+          "eligible": false,
+          "evidence_sources": {"authoritative": ["smartlogger-v54"], "analysis": ["smartlogger-gates"], "rnd": ["wlcrs-huawei-solar-lib-research"], "live": ["smartlogger-tancabesti-live-history"]},
+          "firmware_gates": [
+            {"gate_id": "issues-01-25", "source_ids": ["smartlogger-gates"], "model_families": ["SL1000", "SL2000", "SL3000"], "document_issues": {"min": 1, "max": 25}, "source_document_branch": "UNSPECIFIED_HISTORICAL", "device_revision_rule": {"mode": "NO_RUNTIME_ADMISSION", "parsed_minimum": {"state": "NOT_DOCUMENTED"}, "allowed_exact": []}, "status": "DOCUMENTED_BASELINE_ONLY", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "issue-26", "source_ids": ["smartlogger-gates"], "model_families": ["SL2000", "SL3000"], "document_issues": {"min": 26, "max": 26}, "source_document_branch": "V200R002C10", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 200, "r": 2, "c": 10, "spc": 100}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "issue-27", "source_ids": ["smartlogger-gates"], "model_families": ["SL1000", "SL2000", "SL3000"], "document_issues": {"min": 27, "max": 27}, "source_document_branch": "V100R001C00", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 100, "r": 1, "c": 0, "spc": 113}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "issues-29-30", "source_ids": ["smartlogger-gates"], "model_families": ["SL2000", "SL3000"], "document_issues": {"min": 29, "max": 30}, "source_document_branch": "V200R002C20", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 200, "r": 2, "c": 20, "spc": 0}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "issue-32", "source_ids": ["smartlogger-gates"], "model_families": ["SL1000", "SL2000", "SL3000"], "document_issues": {"min": 32, "max": 32}, "source_document_branch": "V100R001C00", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 100, "r": 1, "c": 0, "spc": 118}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "issue-33", "source_ids": ["smartlogger-gates"], "model_families": ["SL2000", "SL3000"], "document_issues": {"min": 33, "max": 33}, "source_document_branch": "V200R002C20", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 200, "r": 2, "c": 20, "spc": 118}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "issues-34-37", "source_ids": ["smartlogger-gates"], "model_families": ["SL3000"], "document_issues": {"min": 34, "max": 37}, "source_document_branch": "V300R001C00", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 300, "r": 1, "c": 0, "spc": 0}, "allowed_exact": []}, "status": "DOCUMENTED_WITH_OTHER_MODELS_UNKNOWN", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "spc191-spc210", "source_ids": ["smartlogger-v54", "smartlogger-gates"], "model_families": ["SL3000"], "document_issues": {"min": 49, "max": 52}, "source_document_branch": "V300R024C10", "device_revision_rule": {"mode": "EXACT_PARALLEL_BRANCH_MEMBERSHIP", "parsed_minimum": {"state": "NOT_APPLICABLE"}, "allowed_exact": [{"v": 300, "r": 24, "c": 10, "spc": 191, "document_issue": 52}, {"v": 300, "r": 24, "c": 10, "spc": 210, "document_issue": 49}]}, "status": "PARALLEL_BRANCHES_NOT_ORDERABLE", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"}
+          ],
+          "ambiguity_outcome": "NO_ADMISSIBLE_PROFILE",
+          "negative_gate_fixtures": [
+            {"fixture_id": "smartlogger-unknown-v300r024-spc200", "reported": {"v": 300, "r": 24, "c": 10, "spc": 200}, "expected": "NO_ADMISSIBLE_PROFILE", "reason": "not an allowed parallel branch"},
+            {"fixture_id": "smartlogger-cross-branch-v300r025", "reported": {"v": 300, "r": 25, "c": 10, "spc": 0}, "expected": "NO_ADMISSIBLE_PROFILE", "reason": "branch absent from this candidate evidence"}
+          ],
+          "detector_pdus": [
+            {"operation": "FC03", "unit_id": 0, "offset": 65521, "quantity": 1, "encoding": "U16_BE", "purpose": "device_list_change", "address_normalization": {"table": "holding_registers", "document_notation": "zero_based_register_address", "document_base": 0, "formula": "pdu_offset=document_address", "document_address": 65521, "pdu_offset": 65521}, "executable": false},
+            {"operation": "FC2B_MEI_0E", "unit_id": 0, "read_device_id_code": 1, "object_id": 0, "purpose": "basic_identity", "executable": false}
+          ],
+          "detection_tuple": {"required": ["device_list_change_readable", "mei_child_inventory_self_entry_model_smartlogger", "structured_firmware_gate"], "forbidden_identity": ["writable_device_name_65524", "esn_only", "basic_mei_only"]},
+          "child_enumeration": {"operation": "FC2B_MEI_0E", "unit_id": 0, "read_device_id_code": 3, "start_object_id": 135, "count_object_id": 135, "first_child_object_id": 136, "wrap_after_object_id": 255, "wrap_to_object_id": 0, "max_children": 247, "limits": {"deadline_ms": 15000, "max_pages": 248, "max_objects": 248, "max_bytes": 65536}, "device_id_range": [0, 247], "required_fields": ["model", "software", "interface_protocol", "device_id", "product_type"], "private_identity_field": "esn_digest", "stability": "read_65521_before_and_after", "reject": ["cursor_loop", "duplicate_object", "duplicate_device_id", "count_mismatch", "sequence_changed"], "executable": false},
+          "missing_discriminators": ["negative_overlap_with_emma", "sanitized_self_entry_and_firmware_fixture"]
+        },
+        {
+          "candidate_id": "huawei.sdongle.v1",
+          "gateway_kind": "S-Dongle",
+          "status": "DOCUMENTARY_CANDIDATE",
+          "eligible": false,
+          "evidence_sources": {"authoritative": ["sdongle-v100-v05", "sdongle-v200r022-v02", "sdongle-v01", "sdongle-tcp-v05"], "analysis": [], "rnd": ["wlcrs-huawei-solar-lib-research"], "live": []},
+          "firmware_gates": [
+            {"gate_id": "v100-interface", "source_ids": ["sdongle-v100-v05"], "model_families": ["SDongleA-05"], "document_issues": {"min": 5, "max": 5}, "source_document_branch": "V100R001C00", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 100, "r": 1, "c": 0, "spc": 100}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "v100-modbus-tcp", "source_ids": ["sdongle-tcp-v05"], "model_families": ["SDongleA-05"], "document_issues": {"min": 5, "max": 5}, "source_document_branch": "V100R001C00", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 100, "r": 1, "c": 0, "spc": 124}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "v200r022-interface", "source_ids": ["sdongle-v200r022-v02"], "model_families": ["SDongleA-05", "SDongleB-06"], "document_issues": {"min": 2, "max": 2}, "source_document_branch": "V200R022C10", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 200, "r": 22, "c": 10, "spc": 0}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "v200r025-spc120-interface", "source_ids": ["sdongle-v01"], "model_families": ["SDongleA-05", "SDongleB-03", "SDongleB-06"], "document_issues": {"min": 1, "max": 1}, "source_document_branch": "V200R025C00SPC120", "device_revision_rule": {"mode": "DOCUMENT_COMPATIBILITY_MINIMUM_WITH_EXPLICIT_SOURCE_BRANCH", "parsed_minimum": {"v": 200, "r": 22, "c": 10, "spc": 0}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "protocol-d5", "source_ids": ["sdongle-v01"], "model_families": ["SDongleA-05", "SDongleB-03", "SDongleB-06"], "document_issues": {"min": 1, "max": 1}, "source_document_branch": "PROTOCOL_D", "device_revision_rule": {"mode": "DECODED_PROTOCOL_TUPLE_GTE", "parsed_minimum": {"major": 5, "minor": 0}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"}
+          ],
+          "ambiguity_outcome": "NO_ADMISSIBLE_PROFILE",
+          "negative_gate_fixtures": [
+            {"fixture_id": "sdongle-cross-branch-v200r023", "reported": {"v": 200, "r": 23, "c": 10, "spc": 0}, "expected": "NO_ADMISSIBLE_PROFILE", "reason": "no matching source document branch"},
+            {"fixture_id": "sdongle-v100-below-tcp-minimum", "reported": {"v": 100, "r": 1, "c": 0, "spc": 123}, "expected": "NO_ADMISSIBLE_PROFILE", "reason": "below documented Modbus TCP minimum"}
+          ],
+          "detector_pdus": [
+            {"operation": "FC2B_MEI_0E", "unit_id": 100, "read_device_id_code": 1, "object_id": 0, "purpose": "basic_identity", "executable": false},
+            {"operation": "FC03", "unit_id": 100, "offset": 30068, "quantity": 2, "encoding": "U32_BE_MSW_FIRST", "purpose": "protocol_version", "address_normalization": {"table": "holding_registers", "document_notation": "zero_based_register_address", "document_base": 0, "formula": "pdu_offset=document_address", "document_address": 30068, "pdu_offset": 30068}, "executable": false},
+            {"operation": "FC03", "unit_id": 100, "offset": 37410, "quantity": 3, "encoding": "THREE_U16_BE", "purpose": "dongle_type_search_sequence", "address_normalization": {"table": "holding_registers", "document_notation": "zero_based_register_address", "document_base": 0, "formula": "pdu_offset=document_address", "document_address": 37410, "pdu_offset": 37410}, "executable": false}
+          ],
+          "detection_tuple": {"required": ["basic_mei_product_code_sdongle", "protocol_version_branch_match", "dongle_type_search_sequence_tuple", "structured_firmware_gate"], "forbidden_identity": ["search_status_only", "serial_number", "unit_100_readability_only"]},
+          "child_enumeration": {"operation": "FC2B_MEI_0E", "unit_id": "DOCUMENTARY_1_TO_247_TARGET_UNRESOLVED_FOR_TCP_GATEWAY", "read_device_id_code": 3, "start_object_id": 135, "count_object_id": 135, "first_child_object_id": 136, "max_children": 120, "limits": {"deadline_ms": 15000, "max_pages": 121, "max_objects": 121, "max_bytes": 32768}, "required_live_fixture": "unit100_plus_object135_through_modbus_tcp", "stability": "37411_search_completed_and_37412_before_after", "capacity_cross_check": "37429", "reject": ["cursor_loop", "duplicate_object", "duplicate_device_id", "search_in_progress", "sequence_changed", "count_mismatch", "unit_target_ambiguous"], "executable": false},
+          "missing_discriminators": ["sanitized_product_code_and_revision_fixture", "live_child_inventory_target_fixture"]
+        },
+        {
+          "candidate_id": "huawei.emma.v1",
+          "gateway_kind": "EMMA",
+          "status": "DOCUMENTARY_CANDIDATE",
+          "eligible": false,
+          "evidence_sources": {"authoritative": ["emma-r024", "emma-r025"], "analysis": [], "rnd": ["wlcrs-huawei-solar-lib-research"], "live": ["emma-tancabesti-live-history"]},
+          "firmware_gates": [
+            {"gate_id": "emma-r024", "source_ids": ["emma-r024"], "model_families": ["EMMA"], "document_issues": {"min": 1, "max": 1}, "source_document_branch": "V100R024C00", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 100, "r": 24, "c": 0, "spc": 100}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"},
+            {"gate_id": "emma-r025", "source_ids": ["emma-r025"], "model_families": ["EMMA"], "document_issues": {"min": 1, "max": 1}, "source_document_branch": "V100R025C00", "device_revision_rule": {"mode": "STRUCTURED_TUPLE_GTE_WITHIN_EXACT_BRANCH", "parsed_minimum": {"v": 100, "r": 25, "c": 0, "spc": 102}, "allowed_exact": []}, "status": "DOCUMENTED", "unknown_outcome": "NO_ADMISSIBLE_PROFILE"}
+          ],
+          "protocol_gate": {"status": "NOT_ESTABLISHED", "example_only": "P1.15-D1.0", "admission_use": false},
+          "ambiguity_outcome": "NO_ADMISSIBLE_PROFILE",
+          "negative_gate_fixtures": [
+            {"fixture_id": "emma-cross-branch-r026", "reported": {"v": 100, "r": 26, "c": 0, "spc": 0}, "expected": "NO_ADMISSIBLE_PROFILE", "reason": "branch absent from authoritative evidence"},
+            {"fixture_id": "emma-r025-below-minimum", "reported": {"v": 100, "r": 25, "c": 0, "spc": 101}, "expected": "NO_ADMISSIBLE_PROFILE", "reason": "below documented R025 minimum"}
+          ],
+          "detector_pdus": [
+            {"operation": "FC03", "unit_id": 0, "offset": 30000, "quantity": 15, "encoding": "ASCII_30_BYTES", "purpose": "offering_name", "address_normalization": {"table": "holding_registers", "document_notation": "zero_based_register_address", "document_base": 0, "formula": "pdu_offset=document_address", "document_address": 30000, "pdu_offset": 30000}, "executable": false},
+            {"operation": "FC03", "unit_id": 0, "offset": 30222, "quantity": 20, "encoding": "ASCII_40_BYTES", "purpose": "model", "address_normalization": {"table": "holding_registers", "document_notation": "zero_based_register_address", "document_base": 0, "formula": "pdu_offset=document_address", "document_address": 30222, "pdu_offset": 30222}, "executable": false},
+            {"operation": "FC03", "unit_id": 0, "offset": 30035, "quantity": 15, "encoding": "ASCII_30_BYTES", "purpose": "software_version", "address_normalization": {"table": "holding_registers", "document_notation": "zero_based_register_address", "document_base": 0, "formula": "pdu_offset=document_address", "document_address": 30035, "pdu_offset": 30035}, "executable": false},
+            {"operation": "FC2B_MEI_0E", "unit_id": 0, "read_device_id_code": 1, "object_id": 0, "purpose": "basic_identity", "executable": false}
+          ],
+          "detection_tuple": {"required": ["offering_name", "model_emma_family", "software_version_branch_match", "mei_child_inventory_self_entry_device_id_zero_product_type_hems"], "forbidden_identity": ["serial_number_30015", "model_register_readability_only", "basic_mei_only", "smarthems_prefix_without_fixture"]},
+          "child_enumeration": {"operation": "FC2B_MEI_0E", "unit_id": 0, "read_device_id_code": 3, "start_object_id": 135, "count_object_id": 135, "first_child_object_id": 136, "wrap_after_object_id": 255, "wrap_to_object_id": 0, "max_children": 247, "limits": {"deadline_ms": 15000, "max_pages": 248, "max_objects": 248, "max_bytes": 65536}, "device_id_range": [0, 247], "required_fields": ["model", "software", "interface_protocol", "device_id", "product_type"], "private_identity_field": "esn_digest", "stability": "30801_30804_30811_30812_before_after_then_periodic_bounded_refresh", "reject": ["cursor_loop", "duplicate_object", "duplicate_device_id", "count_mismatch", "presence_or_count_changed"], "executable": false},
+          "live_status": {"confirmed": ["unit_id_zero", "telemetry_blocks_31639_31690_30801_30812_41214_41215"], "not_confirmed": ["detector_tuple", "basic_mei", "child_inventory", "firmware_protocol_tuple", "negative_overlap_with_smartlogger"]},
+          "missing_discriminators": ["sanitized_model_software_self_entry_fixture", "negative_overlap_with_smartlogger", "live_mei_child_inventory_fixture"]
+        }
+      ]
+    }
+  ]
+}

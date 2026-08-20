@@ -172,6 +172,7 @@ python3 -m pytest -q \
   tests/test_fronius_m4_05_live_evidence.py \
   tests/test_fronius_m4_05_0651_go.py \
   tests/test_fronius_m5_continuous_acquisition.py \
+  tests/test_modbus_vendor_evidence_v1.py \
   tests/test_canonical_pv_semantics_v1.py \
   tests/test_public_graphql_m2m_v1.py
 python3 scripts/validate_canonical_pv_v1.py \
