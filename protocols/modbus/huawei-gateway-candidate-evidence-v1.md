@@ -58,7 +58,10 @@ universal detector.
 SmartLogger firmware gates are tuples of model family, release branch, SPC,
 document issue, and protocol. `SPC210/Issue 49` and `SPC191/Issue 52` are
 parallel branches, not an ordered numeric sequence. Unknown model/branch
-combinations fail closed.
+combinations fail closed. Runtime comparison first parses `V`, `R`, `C`, and
+`SPC` components, then compares only inside an exact admitted branch. Historical
+baseline issues without a documented runtime minimum are evidence-only and
+cannot match a runtime revision.
 
 Child inventory uses FC2B/MEI `0x0E`, ReadDevId `0x03`, Object `0x87`: object
 `0x87` is count and subsequent objects describe children. A snapshot is accepted
@@ -130,6 +133,12 @@ it. Parent-child provenance includes gateway identity, inventory generation,
 child routing address, model/product type, source revision, and raw evidence.
 Disappearance/reappearance changes lifecycle state without silently reusing a
 different child's identity.
+
+The evidence contract fixes a `15000 ms` total deadline. SmartLogger and EMMA
+allow at most `248` pages, `248` objects, and `65536` response bytes. The
+currently documented S-Dongle path allows at most `121` pages, `121` objects,
+and `32768` bytes. Reaching any limit is `INSUFFICIENT_EVIDENCE`, never a
+partial successful inventory.
 
 EMMA has no documented change-sequence counter. Its `30801` inverter count,
 `30804` charger count, and `30811/30812` presence flags must remain stable around

@@ -10,6 +10,17 @@ def load_manifest():
     return json.loads(MANIFEST.read_text(encoding="utf-8"))
 
 
+def operation_records(value):
+    if isinstance(value, dict):
+        if "operation" in value:
+            yield value
+        for child in value.values():
+            yield from operation_records(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from operation_records(child)
+
+
 def test_closed_packet_inventory_and_no_support_claim():
     manifest = load_manifest()
     assert set(manifest) == {
@@ -33,11 +44,7 @@ def test_every_detector_pdu_is_read_only_and_allowlisted():
         entry["function_code"] for entry in manifest["runtime_allowlist"]
     )
 
-    pdus = []
-    for packet in manifest["packets"]:
-        pdus.extend(packet.get("detector_pdus", []))
-        for candidate in packet.get("candidates", []):
-            pdus.extend(candidate.get("detector_pdus", []))
+    pdus = list(operation_records(manifest["packets"]))
     assert pdus
     for pdu in pdus:
         assert pdu["operation"] in allowlist
@@ -46,8 +53,11 @@ def test_every_detector_pdu_is_read_only_and_allowlisted():
             assert 0 <= pdu["offset"] <= 65535
             assert 1 <= pdu["quantity"] <= 125
         else:
-            assert pdu["read_device_id_code"] == 1
-            assert pdu["object_id"] == 0
+            assert pdu["read_device_id_code"] in {1, 3}
+            if pdu["read_device_id_code"] == 1:
+                assert pdu["object_id"] == 0
+            else:
+                assert pdu["start_object_id"] == 0x87
 
 
 def test_sources_record_license_transformation_and_redistribution_state():
@@ -174,14 +184,50 @@ def test_huawei_version_gates_and_provenance_are_structured():
         assert candidate["firmware_gates"]
         for gate in candidate["firmware_gates"]:
             assert set(gate) == {
-                "gate_id", "model_families", "release_branch", "comparator", "minimum", "status",
+                "gate_id", "source_ids", "model_families", "document_issues",
+                "source_document_branch", "device_revision_rule", "status", "unknown_outcome",
             }
             assert gate["gate_id"]
+            assert gate["source_ids"]
+            assert all(source_id in source_map for source_id in gate["source_ids"])
             assert gate["model_families"]
-            assert gate["release_branch"]
-            assert gate["comparator"]
+            assert gate["document_issues"]["min"] <= gate["document_issues"]["max"]
+            assert gate["source_document_branch"]
+            rule = gate["device_revision_rule"]
+            assert set(rule) == {"mode", "parsed_minimum", "allowed_exact"}
+            assert rule["mode"]
+            assert rule["parsed_minimum"] is not None
             assert gate["status"]
+            assert gate["unknown_outcome"] == "NO_ADMISSIBLE_PROFILE"
         assert candidate["evidence_sources"]["authoritative"]
+        assert candidate["negative_gate_fixtures"]
+        assert all(
+            fixture["expected"] == "NO_ADMISSIBLE_PROFILE"
+            for fixture in candidate["negative_gate_fixtures"]
+        )
+
+    candidates = {candidate["gateway_kind"]: candidate for candidate in huawei["candidates"]}
+    smartlogger_parallel = next(
+        gate for gate in candidates["SmartLogger"]["firmware_gates"]
+        if gate["gate_id"] == "spc191-spc210"
+    )
+    assert smartlogger_parallel["device_revision_rule"]["mode"] == (
+        "EXACT_PARALLEL_BRANCH_MEMBERSHIP"
+    )
+    assert {item["spc"] for item in smartlogger_parallel["device_revision_rule"]["allowed_exact"]} == {
+        191, 210
+    }
+    assert 200 not in {
+        item["spc"] for item in smartlogger_parallel["device_revision_rule"]["allowed_exact"]
+    }
+    sdongle_spc120 = next(
+        gate for gate in candidates["S-Dongle"]["firmware_gates"]
+        if gate["gate_id"] == "v200r025-spc120-interface"
+    )
+    assert sdongle_spc120["source_document_branch"] == "V200R025C00SPC120"
+    assert sdongle_spc120["device_revision_rule"]["parsed_minimum"] == {
+        "v": 200, "r": 22, "c": 10, "spc": 0,
+    }
 
 
 def test_huawei_child_inventory_and_transport_prerequisites_are_bounded():
@@ -199,16 +245,30 @@ def test_huawei_child_inventory_and_transport_prerequisites_are_bounded():
     candidates = {candidate["gateway_kind"]: candidate for candidate in huawei["candidates"]}
     for family in ("SmartLogger", "EMMA"):
         inventory = candidates[family]["child_enumeration"]
+        assert inventory["executable"] is False
         assert inventory["unit_id"] == 0
         assert inventory["read_device_id_code"] == 3
         assert inventory["start_object_id"] == 0x87
         assert inventory["wrap_after_object_id"] == 0xFF
         assert inventory["wrap_to_object_id"] == 0
         assert inventory["max_children"] == 247
+        assert inventory["limits"] == {
+            "deadline_ms": 15000,
+            "max_pages": 248,
+            "max_objects": 248,
+            "max_bytes": 65536,
+        }
         assert "cursor_loop" in inventory["reject"]
         assert "count_mismatch" in inventory["reject"]
 
     sdongle = candidates["S-Dongle"]["child_enumeration"]
+    assert sdongle["executable"] is False
+    assert sdongle["limits"] == {
+        "deadline_ms": 15000,
+        "max_pages": 121,
+        "max_objects": 121,
+        "max_bytes": 32768,
+    }
     assert sdongle["required_live_fixture"] == "unit100_plus_object135_through_modbus_tcp"
     assert "unit_target_ambiguous" in sdongle["reject"]
 
