@@ -255,3 +255,21 @@ def test_public_provenance_projects_safe_canonical_fields_and_declares_loss():
     assert set(cases["positive"]["response"]["provenance"][0]) == set(
         manifest["opaque_provenance_fields"]
     )
+
+
+def test_fixture_is_the_graphql_operation_payload_wire_shape():
+    manifest, cases = load(MANIFEST), load(CASES)
+    assert manifest["conformance_boundary"] == "GRAPHQL_OPERATION_PAYLOAD"
+    request = cases["positive"]["request"]
+    response = cases["positive"]["response"]
+    assert set(request) == {"contractId", "assetRef"}
+    assert set(response) == set(manifest["required_response_fields"])
+    assert "canonicalContractId" in response and "canonical_contract_id" not in response
+    fact = response["facts"][0]
+    assert set(fact) == set(manifest["required_fact_fields"])
+    assert "factId" in fact and "fact_id" not in fact
+    assert fact["dimensions"] == [{"key": "scope", "value": "total"}]
+    assert set(fact["value"]) == {"coefficient", "scale"}
+    assert "kind" not in fact["value"]
+    provenance = response["provenance"][0]
+    assert "sourceProtocol" in provenance and "source_protocol" not in provenance
