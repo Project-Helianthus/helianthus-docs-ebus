@@ -709,6 +709,7 @@ def validate_error_envelopes(cases, manifest):
     errors = cases.get("errors")
     if (
         not isinstance(errors, list)
+        or len(errors) != len(expected_codes)
         or {item.get("code") for item in errors if isinstance(item, dict)}
         != expected_codes
     ):
@@ -749,6 +750,7 @@ def validate_request_rejections(cases, manifest):
     items = cases.get("request_rejections")
     if (
         not isinstance(items, list)
+        or len(items) != len(expected)
         or {item.get("class"): item.get("code") for item in items if isinstance(item, dict)}
         != expected
     ):
