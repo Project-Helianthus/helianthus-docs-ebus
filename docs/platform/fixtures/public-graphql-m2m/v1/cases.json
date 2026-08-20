@@ -1,0 +1,1089 @@
+{
+  "contract_id": "PUBLIC_GRAPHQL_M2M_V1",
+  "positive": {
+    "request": {
+      "method": "POST",
+      "path": "/graphql/m2m/v1",
+      "body": {
+        "operationName": "M2MCurrentSnapshot",
+        "query": "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {\n  m2mCurrentSnapshot(request: $request) {\n    contractId\n    canonicalContractId\n    assetRef\n    generation\n    producedAt\n    evaluatedMonotonicNs\n    sourceTimeState\n    currentSourceOriginRef\n    facts {\n      factId\n      dimension {\n        ... on M2MScopeDimension {\n          scope\n        }\n        ... on M2MPhaseDimension {\n          phase\n        }\n        ... on M2MPhasePairDimension {\n          phasePair\n        }\n        ... on M2MInputDimension {\n          inputId\n        }\n        ... on M2MSensorDimension {\n          sensorId\n        }\n      }\n      value {\n        ... on M2MDecimalValue {\n          coefficient\n          scale\n        }\n        ... on M2MEnumValue {\n          symbol\n        }\n        ... on M2MBitfieldValue {\n          symbols\n        }\n      }\n      unit\n      quality\n      availability\n      freshness\n      receiptMonotonicNs\n      freshUntilMonotonicNs\n      retainUntilMonotonicNs\n      freshnessPolicy\n      originRef\n      continuity {\n        __typename\n        ... on M2MBaselineContinuity {\n          baseline\n        }\n        ... on M2MContiguousContinuity {\n          delta {\n            coefficient\n            scale\n          }\n        }\n        ... on M2MRolloverContinuity {\n          delta {\n            coefficient\n            scale\n          }\n          modulus {\n            coefficient\n            scale\n          }\n          rolloverEvidenceRef\n        }\n        ... on M2MResetContinuity {\n          resetEvidenceRef\n        }\n        ... on M2MDiscontinuityContinuity {\n          discontinuityEvidenceRef\n        }\n      }\n    }\n    capabilities {\n      id\n      outcome\n    }\n    provenance {\n      originRef\n      sourceProtocol\n      sourceProfileId\n      sourceProfileVersion\n      sourceValidity\n      sourceRegistryRef\n      sourceObservationRef\n      evidenceRef\n    }\n    requestedOutputs {\n      sourceRef\n      requestedOutputRef\n    }\n    projectionReport {\n      __typename\n      ... on M2MMappedProjectionReportEntry {\n        sourceRef\n        requestedOutputRef\n        factId\n        dimension {\n          ... on M2MScopeDimension {\n            scope\n          }\n          ... on M2MPhaseDimension {\n            phase\n          }\n          ... on M2MPhasePairDimension {\n            phasePair\n          }\n          ... on M2MInputDimension {\n            inputId\n          }\n          ... on M2MSensorDimension {\n            sensorId\n          }\n        }\n      }\n      ... on M2MWithheldProjectionReportEntry {\n        sourceRef\n        requestedOutputRef\n      }\n      ... on M2MUnrepresentableProjectionReportEntry {\n        sourceRef\n        requestedOutputRef\n      }\n    }\n  }\n}",
+        "variables": {
+          "request": {
+            "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+            "assetRef": "pv-asset-mixed-01"
+          }
+        }
+      },
+      "rawBody": "{\"operationName\":\"M2MCurrentSnapshot\",\"query\":\"query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {\\n  m2mCurrentSnapshot(request: $request) {\\n    contractId\\n    canonicalContractId\\n    assetRef\\n    generation\\n    producedAt\\n    evaluatedMonotonicNs\\n    sourceTimeState\\n    currentSourceOriginRef\\n    facts {\\n      factId\\n      dimension {\\n        ... on M2MScopeDimension {\\n          scope\\n        }\\n        ... on M2MPhaseDimension {\\n          phase\\n        }\\n        ... on M2MPhasePairDimension {\\n          phasePair\\n        }\\n        ... on M2MInputDimension {\\n          inputId\\n        }\\n        ... on M2MSensorDimension {\\n          sensorId\\n        }\\n      }\\n      value {\\n        ... on M2MDecimalValue {\\n          coefficient\\n          scale\\n        }\\n        ... on M2MEnumValue {\\n          symbol\\n        }\\n        ... on M2MBitfieldValue {\\n          symbols\\n        }\\n      }\\n      unit\\n      quality\\n      availability\\n      freshness\\n      receiptMonotonicNs\\n      freshUntilMonotonicNs\\n      retainUntilMonotonicNs\\n      freshnessPolicy\\n      originRef\\n      continuity {\\n        __typename\\n        ... on M2MBaselineContinuity {\\n          baseline\\n        }\\n        ... on M2MContiguousContinuity {\\n          delta {\\n            coefficient\\n            scale\\n          }\\n        }\\n        ... on M2MRolloverContinuity {\\n          delta {\\n            coefficient\\n            scale\\n          }\\n          modulus {\\n            coefficient\\n            scale\\n          }\\n          rolloverEvidenceRef\\n        }\\n        ... on M2MResetContinuity {\\n          resetEvidenceRef\\n        }\\n        ... on M2MDiscontinuityContinuity {\\n          discontinuityEvidenceRef\\n        }\\n      }\\n    }\\n    capabilities {\\n      id\\n      outcome\\n    }\\n    provenance {\\n      originRef\\n      sourceProtocol\\n      sourceProfileId\\n      sourceProfileVersion\\n      sourceValidity\\n      sourceRegistryRef\\n      sourceObservationRef\\n      evidenceRef\\n    }\\n    requestedOutputs {\\n      sourceRef\\n      requestedOutputRef\\n    }\\n    projectionReport {\\n      __typename\\n      ... on M2MMappedProjectionReportEntry {\\n        sourceRef\\n        requestedOutputRef\\n        factId\\n        dimension {\\n          ... on M2MScopeDimension {\\n            scope\\n          }\\n          ... on M2MPhaseDimension {\\n            phase\\n          }\\n          ... on M2MPhasePairDimension {\\n            phasePair\\n          }\\n          ... on M2MInputDimension {\\n            inputId\\n          }\\n          ... on M2MSensorDimension {\\n            sensorId\\n          }\\n        }\\n      }\\n      ... on M2MWithheldProjectionReportEntry {\\n        sourceRef\\n        requestedOutputRef\\n      }\\n      ... on M2MUnrepresentableProjectionReportEntry {\\n        sourceRef\\n        requestedOutputRef\\n      }\\n    }\\n  }\\n}\",\"variables\":{\"request\":{\"contractId\":\"PUBLIC_GRAPHQL_M2M_V1\",\"assetRef\":\"pv-asset-mixed-01\"}}}"
+    },
+    "response": {
+      "status": 200,
+      "body": {
+        "data": {
+          "m2mCurrentSnapshot": {
+            "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+            "canonicalContractId": "helianthus.canonical-pv/v1",
+            "assetRef": "pv-asset-mixed-01",
+            "generation": "8",
+            "producedAt": "2026-08-17T13:46:00Z",
+            "evaluatedMonotonicNs": "990000000000",
+            "sourceTimeState": "UNAVAILABLE",
+            "currentSourceOriginRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "facts": [
+              {
+                "factId": "pv.ac.power.active",
+                "value": {
+                  "coefficient": "7310",
+                  "scale": 0
+                },
+                "unit": "W",
+                "quality": "GOOD",
+                "availability": "AVAILABLE",
+                "freshness": "FRESH",
+                "receiptMonotonicNs": "981234500000",
+                "freshUntilMonotonicNs": "1011234500000",
+                "retainUntilMonotonicNs": "1281234500000",
+                "freshnessPolicy": "pv.telemetry.fast.v1",
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+                "continuity": null,
+                "dimension": {
+                  "scope": "total"
+                }
+              },
+              {
+                "factId": "pv.energy.active_export_total",
+                "value": {
+                  "coefficient": "9007199254740993",
+                  "scale": 0
+                },
+                "unit": "Wh",
+                "quality": "GOOD",
+                "availability": "AVAILABLE",
+                "freshness": "STALE",
+                "receiptMonotonicNs": "0",
+                "freshUntilMonotonicNs": "900000000000",
+                "retainUntilMonotonicNs": "86400000000000",
+                "freshnessPolicy": "pv.accumulator.v1",
+                "originRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "continuity": {
+                  "__typename": "M2MBaselineContinuity",
+                  "baseline": "BASELINE"
+                },
+                "dimension": {
+                  "scope": "total"
+                }
+              }
+            ],
+            "capabilities": [
+              {
+                "id": "helianthus.pv.inverter.three_phase.telemetry.v1",
+                "outcome": "NOT_SATISFIED"
+              }
+            ],
+            "provenance": [
+              {
+                "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+                "sourceProtocol": "sunspec_modbus",
+                "sourceProfileId": "sunspec.inverter.three_phase.monitoring@1.0.0",
+                "sourceProfileVersion": "1.0.0",
+                "sourceValidity": "terminal_verified",
+                "sourceRegistryRef": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+                "sourceObservationRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+                "evidenceRef": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              {
+                "originRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "sourceProtocol": "sunspec_modbus",
+                "sourceProfileId": "sunspec.inverter.three_phase.monitoring@1.0.0",
+                "sourceProfileVersion": "1.0.0",
+                "sourceValidity": "terminal_verified",
+                "sourceRegistryRef": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+                "sourceObservationRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "evidenceRef": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              }
+            ],
+            "requestedOutputs": [
+              {
+                "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+                "requestedOutputRef": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              {
+                "sourceRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "requestedOutputRef": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+              }
+            ],
+            "projectionReport": [
+              {
+                "__typename": "M2MMappedProjectionReportEntry",
+                "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+                "requestedOutputRef": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                "factId": "pv.ac.power.active",
+                "dimension": {
+                  "scope": "total"
+                }
+              },
+              {
+                "__typename": "M2MMappedProjectionReportEntry",
+                "sourceRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "requestedOutputRef": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "factId": "pv.energy.active_export_total",
+                "dimension": {
+                  "scope": "total"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "errors": [
+    {
+      "code": "CONTRACT_INCOMPATIBLE",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "CONTRACT_INCOMPATIBLE"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "ASSET_FORBIDDEN",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "ASSET_FORBIDDEN"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "ASSET_NOT_FOUND",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "ASSET_NOT_FOUND"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "SOURCE_UNAVAILABLE",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "SOURCE_UNAVAILABLE"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "REQUEST_INVALID",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "REQUEST_INVALID"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "QUERY_REJECTED",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "QUERY_REJECTED"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": null,
+          "errors": [
+            {
+              "message": "M2M request failed",
+              "path": [
+                "m2mCurrentSnapshot"
+              ],
+              "extensions": {
+                "code": "REQUEST_LIMIT_EXCEEDED"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "negative": [
+    {
+      "id": "incompatible-contract",
+      "path": "/request/body/variables/request/contractId",
+      "value": "PUBLIC_GRAPHQL_M2M_V2",
+      "error": "contract_negotiation"
+    },
+    {
+      "id": "raw-register-leak",
+      "path": "/response/body/data/m2mCurrentSnapshot/rawRegisters",
+      "value": [],
+      "error": "forbidden_surface"
+    },
+    {
+      "id": "float-leak",
+      "path": "/response/body/data/m2mCurrentSnapshot/facts/0/value/coefficient",
+      "value": 1234.5,
+      "error": "decimal_encoding"
+    },
+    {
+      "id": "unknown-fact",
+      "path": "/response/body/data/m2mCurrentSnapshot/facts/0/factId",
+      "value": "pv.future.fact",
+      "error": "catalog"
+    },
+    {
+      "id": "unmatched-provenance",
+      "path": "/response/body/data/m2mCurrentSnapshot/facts/0/originRef",
+      "value": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "error": "provenance"
+    },
+    {
+      "id": "bad-publication-time",
+      "path": "/response/body/data/m2mCurrentSnapshot/producedAt",
+      "value": "not-a-time",
+      "error": "time_identity"
+    },
+    {
+      "id": "bad-source-time-state",
+      "path": "/response/body/data/m2mCurrentSnapshot/sourceTimeState",
+      "value": "GUESSED",
+      "error": "source_time_state"
+    },
+    {
+      "id": "bad-dimension-domain",
+      "path": "/response/body/data/m2mCurrentSnapshot/facts/0/dimension/scope",
+      "value": "device",
+      "error": "canonical_projection"
+    },
+    {
+      "id": "bad-state-pair",
+      "path": "/response/body/data/m2mCurrentSnapshot/facts/0/freshness",
+      "value": "EXPIRED",
+      "error": "state_axes"
+    },
+    {
+      "id": "bad-source-contract",
+      "path": "/response/body/data/m2mCurrentSnapshot/canonicalContractId",
+      "value": "helianthus.canonical-pv/v2",
+      "error": "canonical_projection"
+    }
+  ],
+  "semantic_rejections": [
+    {
+      "category": "contract_incompatible",
+      "code": "CONTRACT_INCOMPATIBLE",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V2",
+        "assetRef": "pv-asset-01"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [
+          "pv-asset-01"
+        ],
+        "presentAssets": [
+          "pv-asset-01"
+        ],
+        "snapshotAvailableAssets": [
+          "pv-asset-01"
+        ]
+      },
+      "responseCodeRef": "CONTRACT_INCOMPATIBLE",
+      "id": "contract-incompatible-isolated"
+    },
+    {
+      "category": "asset_forbidden",
+      "code": "ASSET_FORBIDDEN",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-02"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [],
+        "presentAssets": [
+          "pv-asset-02"
+        ],
+        "snapshotAvailableAssets": [
+          "pv-asset-02"
+        ]
+      },
+      "responseCodeRef": "ASSET_FORBIDDEN",
+      "id": "asset-forbidden-isolated"
+    },
+    {
+      "category": "asset_not_found",
+      "code": "ASSET_NOT_FOUND",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-03"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [
+          "pv-asset-03"
+        ],
+        "presentAssets": [],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "ASSET_NOT_FOUND",
+      "id": "asset-not-found-isolated"
+    },
+    {
+      "category": "source_unavailable",
+      "code": "SOURCE_UNAVAILABLE",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-04"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [
+          "pv-asset-04"
+        ],
+        "presentAssets": [
+          "pv-asset-04"
+        ],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "SOURCE_UNAVAILABLE",
+      "id": "source-unavailable-isolated"
+    },
+    {
+      "id": "precedence-contract-before-asset",
+      "category": "contract_incompatible",
+      "code": "CONTRACT_INCOMPATIBLE",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V2",
+        "assetRef": "pv-asset-05"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [],
+        "presentAssets": [],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "CONTRACT_INCOMPATIBLE"
+    },
+    {
+      "id": "precedence-allowlist-before-existence",
+      "category": "asset_forbidden",
+      "code": "ASSET_FORBIDDEN",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-06"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [],
+        "presentAssets": [],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "ASSET_FORBIDDEN"
+    },
+    {
+      "id": "precedence-existence-before-source",
+      "category": "asset_not_found",
+      "code": "ASSET_NOT_FOUND",
+      "request": {
+        "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+        "assetRef": "pv-asset-07"
+      },
+      "serverState": {
+        "authenticated": true,
+        "allowedAssets": [
+          "pv-asset-07"
+        ],
+        "presentAssets": [],
+        "snapshotAvailableAssets": []
+      },
+      "responseCodeRef": "ASSET_NOT_FOUND"
+    }
+  ],
+  "admission_sequences": {
+    "concurrency": {
+      "id": "same-client-overlap-v1",
+      "events": [
+        {
+          "requestId": "c1",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT",
+          "clientRef": "mtls-principal-a"
+        },
+        {
+          "requestId": "c2",
+          "atMs": 1,
+          "action": "START",
+          "outcome": "REJECT",
+          "code": "REQUEST_LIMIT_EXCEEDED",
+          "clientRef": "mtls-principal-a"
+        },
+        {
+          "requestId": "c1",
+          "atMs": 2,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE",
+          "clientRef": "mtls-principal-a"
+        }
+      ]
+    },
+    "rate": {
+      "id": "same-client-token-bucket-v1",
+      "events": [
+        {
+          "requestId": "r1",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT",
+          "clientRef": "mtls-principal-b"
+        },
+        {
+          "requestId": "r1",
+          "atMs": 0,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE",
+          "clientRef": "mtls-principal-b"
+        },
+        {
+          "requestId": "r2",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT",
+          "clientRef": "mtls-principal-b"
+        },
+        {
+          "requestId": "r2",
+          "atMs": 0,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE",
+          "clientRef": "mtls-principal-b"
+        },
+        {
+          "requestId": "r3",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "REJECT",
+          "code": "REQUEST_LIMIT_EXCEEDED",
+          "clientRef": "mtls-principal-b"
+        },
+        {
+          "requestId": "r4",
+          "atMs": 999,
+          "action": "START",
+          "outcome": "REJECT",
+          "code": "REQUEST_LIMIT_EXCEEDED",
+          "clientRef": "mtls-principal-b"
+        },
+        {
+          "requestId": "r5",
+          "atMs": 1000,
+          "action": "START",
+          "outcome": "ADMIT",
+          "clientRef": "mtls-principal-b"
+        },
+        {
+          "requestId": "r5",
+          "atMs": 1000,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE",
+          "clientRef": "mtls-principal-b"
+        }
+      ]
+    },
+    "client_isolation": {
+      "id": "two-principal-isolation-v1",
+      "events": [
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a1",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "clientRef": "mtls-principal-b",
+          "requestId": "i-b1",
+          "atMs": 0,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a2",
+          "atMs": 1,
+          "action": "START",
+          "outcome": "REJECT",
+          "code": "REQUEST_LIMIT_EXCEEDED"
+        },
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a1",
+          "atMs": 2,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE"
+        },
+        {
+          "clientRef": "mtls-principal-b",
+          "requestId": "i-b1",
+          "atMs": 2,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE"
+        },
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a3",
+          "atMs": 2,
+          "action": "START",
+          "outcome": "ADMIT"
+        },
+        {
+          "clientRef": "mtls-principal-a",
+          "requestId": "i-a3",
+          "atMs": 2,
+          "action": "COMPLETE",
+          "outcome": "COMPLETE"
+        }
+      ]
+    }
+  },
+  "request_rejections": [
+    {
+      "category": "malformed_json",
+      "code": "REQUEST_INVALID",
+      "stimulus": {
+        "rawBody": "{"
+      },
+      "responseCodeRef": "REQUEST_INVALID"
+    },
+    {
+      "category": "duplicate_json_key",
+      "code": "REQUEST_INVALID",
+      "stimulus": {
+        "rawBody": "{\"contractId\":\"A\",\"contractId\":\"B\"}"
+      },
+      "responseCodeRef": "REQUEST_INVALID"
+    },
+    {
+      "category": "request_envelope",
+      "code": "REQUEST_INVALID",
+      "stimulus": {
+        "method": "GET"
+      },
+      "responseCodeRef": "REQUEST_INVALID"
+    },
+    {
+      "category": "query_shape",
+      "code": "QUERY_REJECTED",
+      "stimulus": {
+        "queryMutation": "reduced_selection"
+      },
+      "responseCodeRef": "QUERY_REJECTED"
+    },
+    {
+      "category": "forbidden_graphql_feature",
+      "code": "QUERY_REJECTED",
+      "stimulus": {
+        "queryMutation": "introspection"
+      },
+      "responseCodeRef": "QUERY_REJECTED"
+    },
+    {
+      "category": "request_body_bytes",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "prefixPaddingBytes": 16385
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "query_depth",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "queryMutation": "depth_9"
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "selected_fields",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "queryMutation": "selected_fields_257"
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "concurrency",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "sequenceRef": "same-client-overlap-v1"
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "rate",
+      "code": "REQUEST_LIMIT_EXCEEDED",
+      "stimulus": {
+        "sequenceRef": "same-client-token-bucket-v1"
+      },
+      "responseCodeRef": "REQUEST_LIMIT_EXCEEDED"
+    },
+    {
+      "category": "json_depth",
+      "code": "REQUEST_INVALID",
+      "stimulus": {
+        "rawBody": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+      },
+      "responseCodeRef": "REQUEST_INVALID"
+    }
+  ],
+  "capability_satisfied_projection": {
+    "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+    "canonicalContractId": "helianthus.canonical-pv/v1",
+    "assetRef": "pv-asset-01",
+    "generation": "17",
+    "producedAt": "2026-08-17T19:22:35.7287976Z",
+    "evaluatedMonotonicNs": "981234500000",
+    "sourceTimeState": "UNAVAILABLE",
+    "currentSourceOriginRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "facts": [
+      {
+        "factId": "pv.ac.power.active",
+        "value": {
+          "coefficient": "12345",
+          "scale": -1
+        },
+        "unit": "W",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1011234500000",
+        "retainUntilMonotonicNs": "1281234500000",
+        "freshnessPolicy": "pv.telemetry.fast.v1",
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "continuity": null,
+        "dimension": {
+          "scope": "total"
+        }
+      },
+      {
+        "factId": "pv.ac.frequency",
+        "value": {
+          "coefficient": "5000",
+          "scale": -2
+        },
+        "unit": "Hz",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1011234500000",
+        "retainUntilMonotonicNs": "1281234500000",
+        "freshnessPolicy": "pv.telemetry.fast.v1",
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "continuity": null,
+        "dimension": {
+          "scope": "total"
+        }
+      },
+      {
+        "factId": "pv.ac.current",
+        "value": {
+          "coefficient": "110",
+          "scale": -2
+        },
+        "unit": "A",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1011234500000",
+        "retainUntilMonotonicNs": "1281234500000",
+        "freshnessPolicy": "pv.telemetry.fast.v1",
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "continuity": null,
+        "dimension": {
+          "phase": "L1"
+        }
+      },
+      {
+        "factId": "pv.ac.current",
+        "value": {
+          "coefficient": "120",
+          "scale": -2
+        },
+        "unit": "A",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1011234500000",
+        "retainUntilMonotonicNs": "1281234500000",
+        "freshnessPolicy": "pv.telemetry.fast.v1",
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "continuity": null,
+        "dimension": {
+          "phase": "L2"
+        }
+      },
+      {
+        "factId": "pv.ac.current",
+        "value": {
+          "coefficient": "130",
+          "scale": -2
+        },
+        "unit": "A",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1011234500000",
+        "retainUntilMonotonicNs": "1281234500000",
+        "freshnessPolicy": "pv.telemetry.fast.v1",
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "continuity": null,
+        "dimension": {
+          "phase": "L3"
+        }
+      },
+      {
+        "factId": "pv.ac.voltage.line_to_neutral",
+        "value": {
+          "coefficient": "2300",
+          "scale": -1
+        },
+        "unit": "V",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1011234500000",
+        "retainUntilMonotonicNs": "1281234500000",
+        "freshnessPolicy": "pv.telemetry.fast.v1",
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "continuity": null,
+        "dimension": {
+          "phase": "L1"
+        }
+      },
+      {
+        "factId": "pv.ac.voltage.line_to_neutral",
+        "value": {
+          "coefficient": "2310",
+          "scale": -1
+        },
+        "unit": "V",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1011234500000",
+        "retainUntilMonotonicNs": "1281234500000",
+        "freshnessPolicy": "pv.telemetry.fast.v1",
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "continuity": null,
+        "dimension": {
+          "phase": "L2"
+        }
+      },
+      {
+        "factId": "pv.ac.voltage.line_to_neutral",
+        "value": {
+          "coefficient": "2320",
+          "scale": -1
+        },
+        "unit": "V",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1011234500000",
+        "retainUntilMonotonicNs": "1281234500000",
+        "freshnessPolicy": "pv.telemetry.fast.v1",
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "continuity": null,
+        "dimension": {
+          "phase": "L3"
+        }
+      },
+      {
+        "factId": "pv.energy.active_export_total",
+        "value": {
+          "coefficient": "9007199254740993",
+          "scale": 0
+        },
+        "unit": "Wh",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1881234500000",
+        "retainUntilMonotonicNs": "87381234500000",
+        "freshnessPolicy": "pv.accumulator.v1",
+        "originRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "continuity": {
+          "__typename": "M2MBaselineContinuity",
+          "baseline": "BASELINE"
+        },
+        "dimension": {
+          "scope": "total"
+        }
+      },
+      {
+        "factId": "pv.operating.state",
+        "value": {
+          "symbol": "OPERATING"
+        },
+        "unit": "1",
+        "quality": "GOOD",
+        "availability": "AVAILABLE",
+        "freshness": "FRESH",
+        "receiptMonotonicNs": "981234500000",
+        "freshUntilMonotonicNs": "1041234500000",
+        "retainUntilMonotonicNs": "1581234500000",
+        "freshnessPolicy": "pv.status.v1",
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "continuity": null,
+        "dimension": {
+          "scope": "total"
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "id": "helianthus.pv.inverter.three_phase.telemetry.v1",
+        "outcome": "SATISFIED"
+      }
+    ],
+    "provenance": [
+      {
+        "originRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "sourceProtocol": "sunspec_modbus",
+        "sourceProfileId": "sunspec.inverter.three_phase.monitoring@1.0.0",
+        "sourceProfileVersion": "1.0.0",
+        "sourceValidity": "terminal_verified",
+        "sourceRegistryRef": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+        "sourceObservationRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "evidenceRef": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      {
+        "originRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceProtocol": "sunspec_modbus",
+        "sourceProfileId": "sunspec.inverter.three_phase.monitoring@1.0.0",
+        "sourceProfileVersion": "1.0.0",
+        "sourceValidity": "terminal_verified",
+        "sourceRegistryRef": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+        "sourceObservationRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "evidenceRef": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      }
+    ],
+    "requestedOutputs": [
+      {
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      {
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      {
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      {
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      {
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+      },
+      {
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      {
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+      },
+      {
+        "sourceRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "requestedOutputRef": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+      },
+      {
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "projectionReport": [
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "factId": "pv.ac.power.active",
+        "dimension": {
+          "scope": "total"
+        }
+      },
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "factId": "pv.ac.frequency",
+        "dimension": {
+          "scope": "total"
+        }
+      },
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "factId": "pv.ac.current",
+        "dimension": {
+          "phase": "L1"
+        }
+      },
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "factId": "pv.ac.current",
+        "dimension": {
+          "phase": "L2"
+        }
+      },
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        "factId": "pv.ac.current",
+        "dimension": {
+          "phase": "L3"
+        }
+      },
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "factId": "pv.ac.voltage.line_to_neutral",
+        "dimension": {
+          "phase": "L1"
+        }
+      },
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        "factId": "pv.ac.voltage.line_to_neutral",
+        "dimension": {
+          "phase": "L2"
+        }
+      },
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "factId": "pv.ac.voltage.line_to_neutral",
+        "dimension": {
+          "phase": "L3"
+        }
+      },
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "requestedOutputRef": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+        "factId": "pv.energy.active_export_total",
+        "dimension": {
+          "scope": "total"
+        }
+      },
+      {
+        "__typename": "M2MMappedProjectionReportEntry",
+        "sourceRef": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "requestedOutputRef": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "factId": "pv.operating.state",
+        "dimension": {
+          "scope": "total"
+        }
+      }
+    ]
+  }
+}
