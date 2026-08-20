@@ -50,6 +50,12 @@ The conformance case is rooted in the canonical
 snapshot's `source_provenance.source_observation_ref`, not merely any unique row
 present in the public table.
 
+The fixture also contains a dedicated `canonical_projection` payload generated
+losslessly from that named golden. Root identity/time, facts, lifecycle,
+capability outcome, and every provenance field are byte-value equivalent after
+the documented wire-name and integer-string mapping. The sole omitted canonical
+field is `source_shadow_ref`, matching the one declared projection loss.
+
 V1's catalog is closed. Any additive or breaking semantic change, including a
 new fact, enum value, dimension meaning, capability requirement, or lifecycle
 meaning, requires a successor contract identifier. The M2M route must reject

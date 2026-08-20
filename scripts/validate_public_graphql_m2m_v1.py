@@ -227,6 +227,8 @@ def validate_query_document(query, manifest):
             elif selection.kind == "fragment_spread":
                 errors.add("query_fragment")
             elif selection.kind == "inline_fragment":
+                fragment_depth = parent_depth + 1
+                max_depth = max(max_depth, fragment_depth)
                 if selection.directives:
                     errors.add("query_directive")
                 type_name = (
@@ -236,7 +238,7 @@ def validate_query_document(query, manifest):
                 )
                 if type_name not in allowed_inline_types:
                     errors.add("query_fragment")
-                stack.append((selection.selection_set, parent_depth))
+                stack.append((selection.selection_set, fragment_depth))
             else:
                 errors.add("query_syntax")
     if selected_fields > manifest["request_bounds"]["max_selected_fields"]:
@@ -658,6 +660,94 @@ def _load_canonical_conformance_fixture(manifest):
     except ValueError as error:
         raise ValidationError("canonical_conformance_fixture") from error
     return load_json(path, max_depth=manifest["json_admission"]["max_depth"])
+
+
+def _project_canonical_fixture(canonical, manifest):
+    if manifest.get("provenance_projection_loss") != {
+        "source_shadow_ref": "WITHHELD_SOURCE_SHADOW_REFERENCE"
+    }:
+        raise ValidationError("canonical_fixture_parity")
+
+    def project_value(value):
+        return {key: copy.deepcopy(item) for key, item in value.items() if key != "kind"}
+
+    def project_continuity(continuity):
+        if continuity is None:
+            return None
+        return {
+            "state": continuity["state"],
+            "delta": None
+            if continuity["delta"] is None
+            else project_value(continuity["delta"]),
+            "modulus": None
+            if continuity["modulus"] is None
+            else project_value(continuity["modulus"]),
+            "evidenceRef": continuity["evidence_ref"],
+        }
+
+    facts = []
+    for fact in canonical["facts"]:
+        temporal = fact["temporal"]
+        facts.append(
+            {
+                "factId": fact["fact_id"],
+                "dimensions": [
+                    {"key": key, "value": value}
+                    for key, value in sorted(fact["dimensions"].items())
+                ],
+                "value": project_value(fact["value"]),
+                "unit": fact["unit"],
+                "quality": fact["quality"],
+                "availability": fact["availability"],
+                "freshness": fact["freshness"],
+                "receiptMonotonicNs": str(temporal["receipt_monotonic_ns"]),
+                "freshUntilMonotonicNs": str(temporal["fresh_until_monotonic_ns"]),
+                "retainUntilMonotonicNs": str(temporal["retain_until_monotonic_ns"]),
+                "freshnessPolicy": temporal["freshness_policy"],
+                "originRef": fact["origin_ref"],
+                "continuity": project_continuity(fact.get("continuity")),
+            }
+        )
+
+    provenance = []
+    for origin in canonical["origins"]:
+        provenance.append(
+            {
+                "originRef": origin["source_observation_ref"],
+                "sourceProtocol": origin["source_protocol"],
+                "sourceProfileId": origin["source_profile_id"],
+                "sourceProfileVersion": origin["source_profile_version"],
+                "sourceValidity": origin["source_validity"],
+                "sourceRegistryRef": origin["source_registry_ref"],
+                "sourceObservationRef": origin["source_observation_ref"],
+                "evidenceRef": origin["evidence_ref"],
+            }
+        )
+    return {
+        "contractId": manifest["contract_id"],
+        "canonicalContractId": canonical["contract_id"],
+        "assetRef": canonical["asset_ref"],
+        "generation": str(canonical["generation"]),
+        "producedAt": canonical["produced_at"],
+        "evaluatedMonotonicNs": str(canonical["evaluated_monotonic_ns"]),
+        "sourceTimeState": canonical["source_time_state"],
+        "currentSourceOriginRef": canonical["source_provenance"][
+            "source_observation_ref"
+        ],
+        "facts": facts,
+        "capabilities": copy.deepcopy(canonical["capabilities"]),
+        "provenance": provenance,
+    }
+
+
+def validate_canonical_fixture_projection(cases, manifest):
+    try:
+        canonical = _load_canonical_conformance_fixture(manifest)
+        expected = _project_canonical_fixture(canonical, manifest)
+    except (KeyError, OSError, TypeError, ValidationError) as error:
+        raise ValidationError("canonical_fixture_parity") from error
+    if cases.get("canonical_projection") != expected:
+        raise ValidationError("canonical_fixture_parity")
 
 
 def validate_case(case, manifest, canonical_manifest, source_registry=None):
@@ -1099,6 +1189,7 @@ def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Pat
     cases = load_json(cases_path, max_depth=max_depth)
     if manifest["source_contract"] != canonical["contract_id"] or manifest["catalog_fact_ids"] != [fact["id"] for fact in canonical["facts"]]:
         raise ValidationError("manifest_source_lock")
+    validate_canonical_fixture_projection(cases, manifest)
     errors = validate_case(cases["positive"], manifest, canonical)
     if errors:
         raise ValidationError("positive: " + ", ".join(errors))
