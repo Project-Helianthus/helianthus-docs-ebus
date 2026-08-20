@@ -163,11 +163,21 @@ together. Any pairwise detector collision remains fail-closed.
 
 ## Transport Prerequisite
 
-The current `helianthus-modbus` runtime blocks `unit_id=0`, vendor extended-MEI
-start object `0x87`, and documented `0xFF -> 0x00` continuation. These must be
-implemented vendor-neutrally in the transport library, with bounded traversal
-and transport gates, before FMV3-M7-04. `helianthus-modbusreg` must not build
-frames or duplicate transport parsing.
+The standard `helianthus-modbus` Device Identification traversal remains
+strict: it starts at object `0`, requires the basic objects, and does not wrap.
+Transport PR [#18](https://github.com/Project-Helianthus/helianthus-modbus/pull/18)
+at exact candidate HEAD
+`4b37dd9be9563b8d28563e5c3d7a138b2ec50de3` adds separate vendor-neutral,
+read-only primitives for response-bearing Modbus TCP `unit_id=0` and a bounded
+extended code-03 stream starting at object `0x87`. That extended stream permits
+one documented `0xFF -> 0x00` continuation and rejects loops, duplicate objects,
+and partial publication. RTU unit `0` remains a rejected response-bearing read.
+
+The prerequisite is `IMPLEMENTED_PENDING_CODE_MERGE`, not available on
+`helianthus-modbus` main. FMV3-M7-04 remains blocked until that exact candidate
+is squash-merged and `helianthus-modbusreg` pins the resulting main commit.
+`helianthus-modbusreg` must not build frames or duplicate transport parsing,
+and this candidate implementation does not admit any Huawei profile.
 
 ## Safety
 

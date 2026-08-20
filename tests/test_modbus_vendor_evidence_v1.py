@@ -242,7 +242,24 @@ def test_huawei_child_inventory_and_transport_prerequisites_are_bounded():
         "modbus.unit-id-zero.v1", "modbus.mei-vendor-cursor.v1", "modbus.mei-object-wrap.v1"
     }
     assert all(item["owner"] == "helianthus-modbus" for item in prerequisites.values())
-    assert all(item["status"] == "BLOCKED" for item in prerequisites.values())
+    assert all(
+        item["status"] == "IMPLEMENTED_PENDING_CODE_MERGE"
+        for item in prerequisites.values()
+    )
+    assert all(
+        item["implementation"] == {
+            "repository": "Project-Helianthus/helianthus-modbus",
+            "pull_request": 18,
+            "exact_head": "4b37dd9be9563b8d28563e5c3d7a138b2ec50de3",
+            "availability": "NOT_ON_MAIN",
+        }
+        for item in prerequisites.values()
+    )
+    cursor_acceptance = prerequisites["modbus.mei-vendor-cursor.v1"]["acceptance"]
+    wrap_acceptance = prerequisites["modbus.mei-object-wrap.v1"]["acceptance"]
+    assert "separate FC2B/MEI" in cursor_acceptance
+    assert "standard traversal remains strict" in cursor_acceptance
+    assert "separate bounded extended traversal" in wrap_acceptance
 
     candidates = {candidate["gateway_kind"]: candidate for candidate in huawei["candidates"]}
     for family in ("SmartLogger", "EMMA"):
