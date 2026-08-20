@@ -35,15 +35,19 @@ query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {
     }
     requestedOutputs { sourceRef requestedOutputRef }
     projectionReport {
-      sourceRef requestedOutputRef factId
-      dimension {
-        ... on M2MScopeDimension { scope }
-        ... on M2MPhaseDimension { phase }
-        ... on M2MPhasePairDimension { phasePair }
-        ... on M2MInputDimension { inputId }
-        ... on M2MSensorDimension { sensorId }
+      __typename
+      ... on M2MMappedProjectionReportEntry {
+        sourceRef requestedOutputRef factId
+        dimension {
+          ... on M2MScopeDimension { scope }
+          ... on M2MPhaseDimension { phase }
+          ... on M2MPhasePairDimension { phasePair }
+          ... on M2MInputDimension { inputId }
+          ... on M2MSensorDimension { sensorId }
+        }
       }
-      outcome
+      ... on M2MWithheldProjectionReportEntry { sourceRef requestedOutputRef }
+      ... on M2MUnrepresentableProjectionReportEntry { sourceRef requestedOutputRef }
     }
   }
 }

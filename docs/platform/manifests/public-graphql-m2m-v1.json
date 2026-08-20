@@ -11,7 +11,7 @@
   "source_owner": "helianthus-ebusreg",
   "operation": "m2mCurrentSnapshot",
   "conformance_boundary": "GRAPHQL_HTTP_ENVELOPE",
-  "conformance_query": "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {\n  m2mCurrentSnapshot(request: $request) {\n    contractId\n    canonicalContractId\n    assetRef\n    generation\n    producedAt\n    evaluatedMonotonicNs\n    sourceTimeState\n    currentSourceOriginRef\n    facts {\n      factId\n      dimension {\n        ... on M2MScopeDimension {\n          scope\n        }\n        ... on M2MPhaseDimension {\n          phase\n        }\n        ... on M2MPhasePairDimension {\n          phasePair\n        }\n        ... on M2MInputDimension {\n          inputId\n        }\n        ... on M2MSensorDimension {\n          sensorId\n        }\n      }\n      value {\n        ... on M2MDecimalValue {\n          coefficient\n          scale\n        }\n        ... on M2MEnumValue {\n          symbol\n        }\n        ... on M2MBitfieldValue {\n          symbols\n        }\n      }\n      unit\n      quality\n      availability\n      freshness\n      receiptMonotonicNs\n      freshUntilMonotonicNs\n      retainUntilMonotonicNs\n      freshnessPolicy\n      originRef\n      continuity {\n        ... on M2MBaselineContinuity {\n          state\n        }\n        ... on M2MContiguousContinuity {\n          state\n          delta {\n            coefficient\n            scale\n          }\n        }\n        ... on M2MRolloverContinuity {\n          state\n          delta {\n            coefficient\n            scale\n          }\n          modulus {\n            coefficient\n            scale\n          }\n          evidenceRef\n        }\n        ... on M2MResetContinuity {\n          state\n          evidenceRef\n        }\n        ... on M2MDiscontinuityContinuity {\n          state\n          evidenceRef\n        }\n      }\n    }\n    capabilities {\n      id\n      outcome\n    }\n    provenance {\n      originRef\n      sourceProtocol\n      sourceProfileId\n      sourceProfileVersion\n      sourceValidity\n      sourceRegistryRef\n      sourceObservationRef\n      evidenceRef\n    }\n    requestedOutputs {\n      sourceRef\n      requestedOutputRef\n    }\n    projectionReport {\n      sourceRef\n      requestedOutputRef\n      factId\n      dimension {\n        ... on M2MScopeDimension {\n          scope\n        }\n        ... on M2MPhaseDimension {\n          phase\n        }\n        ... on M2MPhasePairDimension {\n          phasePair\n        }\n        ... on M2MInputDimension {\n          inputId\n        }\n        ... on M2MSensorDimension {\n          sensorId\n        }\n      }\n      outcome\n    }\n  }\n}",
+  "conformance_query": "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) {\n  m2mCurrentSnapshot(request: $request) {\n    contractId\n    canonicalContractId\n    assetRef\n    generation\n    producedAt\n    evaluatedMonotonicNs\n    sourceTimeState\n    currentSourceOriginRef\n    facts {\n      factId\n      dimension {\n        ... on M2MScopeDimension {\n          scope\n        }\n        ... on M2MPhaseDimension {\n          phase\n        }\n        ... on M2MPhasePairDimension {\n          phasePair\n        }\n        ... on M2MInputDimension {\n          inputId\n        }\n        ... on M2MSensorDimension {\n          sensorId\n        }\n      }\n      value {\n        ... on M2MDecimalValue {\n          coefficient\n          scale\n        }\n        ... on M2MEnumValue {\n          symbol\n        }\n        ... on M2MBitfieldValue {\n          symbols\n        }\n      }\n      unit\n      quality\n      availability\n      freshness\n      receiptMonotonicNs\n      freshUntilMonotonicNs\n      retainUntilMonotonicNs\n      freshnessPolicy\n      originRef\n      continuity {\n        ... on M2MBaselineContinuity {\n          state\n        }\n        ... on M2MContiguousContinuity {\n          state\n          delta {\n            coefficient\n            scale\n          }\n        }\n        ... on M2MRolloverContinuity {\n          state\n          delta {\n            coefficient\n            scale\n          }\n          modulus {\n            coefficient\n            scale\n          }\n          evidenceRef\n        }\n        ... on M2MResetContinuity {\n          state\n          evidenceRef\n        }\n        ... on M2MDiscontinuityContinuity {\n          state\n          evidenceRef\n        }\n      }\n    }\n    capabilities {\n      id\n      outcome\n    }\n    provenance {\n      originRef\n      sourceProtocol\n      sourceProfileId\n      sourceProfileVersion\n      sourceValidity\n      sourceRegistryRef\n      sourceObservationRef\n      evidenceRef\n    }\n    requestedOutputs {\n      sourceRef\n      requestedOutputRef\n    }\n    projectionReport {\n      __typename\n      ... on M2MMappedProjectionReportEntry {\n        sourceRef\n        requestedOutputRef\n        factId\n        dimension {\n          ... on M2MScopeDimension {\n            scope\n          }\n          ... on M2MPhaseDimension {\n            phase\n          }\n          ... on M2MPhasePairDimension {\n            phasePair\n          }\n          ... on M2MInputDimension {\n            inputId\n          }\n          ... on M2MSensorDimension {\n            sensorId\n          }\n        }\n      }\n      ... on M2MWithheldProjectionReportEntry {\n        sourceRef\n        requestedOutputRef\n      }\n      ... on M2MUnrepresentableProjectionReportEntry {\n        sourceRef\n        requestedOutputRef\n      }\n    }\n  }\n}",
   "dedicated_tls_listener": true,
   "query_only": true,
   "single_asset": true,
@@ -92,13 +92,6 @@
     "sourceRef",
     "requestedOutputRef"
   ],
-  "projection_report_fields": [
-    "sourceRef",
-    "requestedOutputRef",
-    "factId",
-    "dimension",
-    "outcome"
-  ],
   "provenance_projection_loss": {
     "source_shadow_ref": "WITHHELD_SOURCE_SHADOW_REFERENCE"
   },
@@ -124,13 +117,14 @@
       "aliases",
       "named_fragments",
       "directives",
-      "introspection",
+      "schema_or_type_introspection",
       "get",
       "subscriptions",
       "multiple_operations"
     ],
     "allowed_graphql_features": [
-      "inline_type_conditions_for_closed_unions"
+      "inline_type_conditions_for_closed_unions",
+      "typename_for_closed_projection_union"
     ]
   },
   "admission_model": {
@@ -245,5 +239,24 @@
     "catalog_closed": true,
     "additive_or_breaking_change": "SUCCESSOR_CONTRACT_ID_REQUIRED"
   },
-  "private_binding_ingress": "ONLY_PUBLIC_SEMANTIC_INGRESS"
+  "private_binding_ingress": "ONLY_PUBLIC_SEMANTIC_INGRESS",
+  "projection_report_fields_by_type": {
+    "M2MMappedProjectionReportEntry": [
+      "__typename",
+      "sourceRef",
+      "requestedOutputRef",
+      "factId",
+      "dimension"
+    ],
+    "M2MWithheldProjectionReportEntry": [
+      "__typename",
+      "sourceRef",
+      "requestedOutputRef"
+    ],
+    "M2MUnrepresentableProjectionReportEntry": [
+      "__typename",
+      "sourceRef",
+      "requestedOutputRef"
+    ]
+  }
 }

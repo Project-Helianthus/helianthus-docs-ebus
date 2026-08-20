@@ -45,7 +45,7 @@ def test_manifest_is_locked_to_canonical_catalog_and_closed_public_surface():
     assert manifest["max_capabilities_per_snapshot"] == 1
     assert manifest["required_response_fields"] == ["contractId", "canonicalContractId", "assetRef", "generation", "producedAt", "evaluatedMonotonicNs", "sourceTimeState", "currentSourceOriginRef", "facts", "capabilities", "provenance", "requestedOutputs", "projectionReport"]
     assert manifest["operator_authority"] == ["dedicated_listener", "server_identity", "ca_and_trust_root", "client_certificate_issuance", "asset_allowlist", "rotation", "revocation"]
-    assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_closed_unions"]}
+    assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "schema_or_type_introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_closed_unions", "typename_for_closed_projection_union"]}
     assert manifest["error_contract"]["partial_snapshot_on_error"] is False
     assert manifest["credential_rotation"]["maximum_simultaneously_valid_certificates_per_principal"] == 2
     assert manifest["forbidden_surface"] == ["raw_registers", "source_shadow", "endpoints", "mutations", "subscriptions", "history", "unbounded_lists", "generic_graphql_fallback"]
@@ -173,7 +173,7 @@ def test_accumulator_continuity_variants_are_closed():
     ]
     for continuity in invalid:
         energy["continuity"] = continuity
-        assert "continuity" in validate_case(candidate, manifest, canonical)
+        assert "structural_shape" in validate_case(candidate, manifest, canonical)
 
 
 def test_freshness_transition_boundaries_are_exact():
@@ -790,7 +790,7 @@ def test_named_canonical_fixture_has_lossless_public_projection(tmp_path):
             "requestedOutputs.0.requestedOutputRef",
             "sha256:" + "a" * 64,
         ),
-        ("projectionReport.0.outcome", "WITHHELD"),
+        ("projectionReport.0.__typename", "M2MWithheldProjectionReportEntry"),
     ]
     for index, (path, value) in enumerate(mutations):
         candidate = copy.deepcopy(cases)
@@ -824,7 +824,7 @@ def test_projection_accounting_is_in_the_closed_sdl_and_fixed_query():
     sdl = SDL.read_text(encoding="utf-8")
     assert "requestedOutputs: [M2MRequestedOutput!]!" in sdl
     assert "projectionReport: [M2MProjectionReportEntry!]!" in sdl
-    assert "enum M2MProjectionOutcome { MAPPED WITHHELD UNREPRESENTABLE }" in sdl
+    assert "union M2MProjectionReportEntry =" in sdl
     assert "requestedOutputs" in manifest["conformance_query"]
     assert (
         "projectionReport" in manifest["conformance_query"]
@@ -857,7 +857,9 @@ def test_projection_accounting_rejects_partial_duplicate_and_misbound_rows():
     response_payload(misbound)["projectionReport"][0]["sourceRef"] = "sha256:" + "f" * 64
     candidates.append(misbound)
     invalid_loss = copy.deepcopy(base)
-    response_payload(invalid_loss)["projectionReport"][0]["outcome"] = "WITHHELD"
+    response_payload(invalid_loss)["projectionReport"][0]["__typename"] = (
+        "M2MWithheldProjectionReportEntry"
+    )
     candidates.append(invalid_loss)
 
     for candidate in candidates:
@@ -884,7 +886,14 @@ def test_graphql_ast_admission_enforces_syntax_schema_and_bounds():
             "query_fragment",
         ),
         (base.replace("contractId", "contractId @skip(if: true)", 1), "query_directive"),
-        (base.replace("contractId", "__typename contractId", 1), "query_introspection"),
+            (
+                base.replace(
+                    "m2mCurrentSnapshot(request:",
+                    "__schema { queryType { name } } m2mCurrentSnapshot(request:",
+                    1,
+                ),
+                "query_introspection",
+            ),
         (base + " query Other { __typename }", "query_operations"),
         (
             base.replace("contractId", " ".join(["contractId"] * 257), 1),
@@ -936,8 +945,6 @@ def test_remaining_source_lexical_and_range_guards_are_exact():
     energy["continuity"] = {
         "state": "CONTIGUOUS",
         "delta": {"coefficient": "-0", "scale": 0},
-        "modulus": None,
-        "evidenceRef": None,
     }
     assert "continuity" in validate_case(continuity, manifest, canonical)
 
@@ -1109,6 +1116,47 @@ def test_continuity_union_fixtures_are_executable_member_shapes():
         )
         assert result.errors is None
         assert result.data == {"continuityProbe": payload}
+
+
+def test_positive_fixture_is_an_executable_graphql_response():
+    cases = load(CASES)
+    payload = response_payload(cases["positive"])
+    schema = build_schema(SDL.read_text(encoding="utf-8"))
+
+    def resolve_abstract_type(value, _info, abstract_type):
+        if abstract_type.name == "M2MDimension":
+            return {
+                "scope": "M2MScopeDimension",
+                "phase": "M2MPhaseDimension",
+                "phasePair": "M2MPhasePairDimension",
+                "inputId": "M2MInputDimension",
+                "sensorId": "M2MSensorDimension",
+            }[next(iter(value))]
+        if abstract_type.name == "M2MValue":
+            if "coefficient" in value:
+                return "M2MDecimalValue"
+            return "M2MEnumValue" if "symbol" in value else "M2MBitfieldValue"
+        if abstract_type.name == "M2MContinuity":
+            return {
+                "BASELINE": "M2MBaselineContinuity",
+                "CONTIGUOUS": "M2MContiguousContinuity",
+                "ROLLOVER": "M2MRolloverContinuity",
+                "RESET": "M2MResetContinuity",
+                "DISCONTINUITY": "M2MDiscontinuityContinuity",
+            }[value["state"]]
+        if abstract_type.name == "M2MProjectionReportEntry":
+            return value["__typename"]
+        raise AssertionError(f"unexpected abstract type: {abstract_type.name}")
+
+    result = graphql_sync(
+        schema,
+        QUERY.read_text(encoding="utf-8"),
+        root_value={"m2mCurrentSnapshot": payload},
+        variable_values=cases["positive"]["request"]["body"]["variables"],
+        type_resolver=resolve_abstract_type,
+    )
+    assert result.errors is None
+    assert result.data == {"m2mCurrentSnapshot": payload}
 
 
 @pytest.mark.parametrize("legacy_address", ["2130706433", "0x7f000001", "0x7f.0.0.1"])

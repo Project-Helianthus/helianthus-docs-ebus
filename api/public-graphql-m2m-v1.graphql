@@ -58,13 +58,10 @@ type M2MResetContinuity { state: M2MContinuityState!, evidenceRef: String }
 type M2MDiscontinuityContinuity { state: M2MContinuityState!, evidenceRef: String }
 type M2MCapability { id: String!, outcome: M2MCapabilityOutcome! }
 type M2MRequestedOutput { sourceRef: String!, requestedOutputRef: String! }
-type M2MProjectionReportEntry {
-  sourceRef: String!
-  requestedOutputRef: String!
-  factId: String
-  dimension: M2MDimension
-  outcome: M2MProjectionOutcome!
-}
+union M2MProjectionReportEntry = M2MMappedProjectionReportEntry | M2MWithheldProjectionReportEntry | M2MUnrepresentableProjectionReportEntry
+type M2MMappedProjectionReportEntry { sourceRef: String!, requestedOutputRef: String!, factId: String!, dimension: M2MDimension! }
+type M2MWithheldProjectionReportEntry { sourceRef: String!, requestedOutputRef: String! }
+type M2MUnrepresentableProjectionReportEntry { sourceRef: String!, requestedOutputRef: String! }
 type M2MOpaqueProvenance {
   originRef: String!
   sourceProtocol: String!
@@ -82,4 +79,3 @@ enum M2MFreshness { FRESH STALE EXPIRED }
 enum M2MSourceTimeState { UNAVAILABLE VALID INVALID }
 enum M2MContinuityState { BASELINE CONTIGUOUS ROLLOVER RESET DISCONTINUITY }
 enum M2MCapabilityOutcome { SATISFIED NOT_SATISFIED }
-enum M2MProjectionOutcome { MAPPED WITHHELD UNREPRESENTABLE }

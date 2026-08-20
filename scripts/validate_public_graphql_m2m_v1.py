@@ -235,6 +235,9 @@ def validate_query_document(query, manifest):
         "M2MRolloverContinuity",
         "M2MResetContinuity",
         "M2MDiscontinuityContinuity",
+        "M2MMappedProjectionReportEntry",
+        "M2MWithheldProjectionReportEntry",
+        "M2MUnrepresentableProjectionReportEntry",
     }
     while stack:
         selection_set, parent_depth = stack.pop()
@@ -245,7 +248,7 @@ def validate_query_document(query, manifest):
                 max_depth = max(max_depth, depth)
                 if selection.alias is not None:
                     errors.add("query_alias")
-                if selection.name.value.startswith("__"):
+                if selection.name.value.startswith("__") and selection.name.value != "__typename":
                     errors.add("query_introspection")
                 if selection.directives:
                     errors.add("query_directive")
@@ -308,13 +311,45 @@ def _normalize_value(value):
 def _normalize_continuity(value):
     if value is None:
         return None
-    if not isinstance(value, dict) or set(value) != {"state", "delta", "modulus", "evidenceRef"}:
+    if not isinstance(value, dict) or not isinstance(value.get("state"), str):
         raise TypeError("continuity has an invalid GraphQL shape")
+    fields_by_state = {
+        "BASELINE": {"state"},
+        "CONTIGUOUS": {"state", "delta"},
+        "ROLLOVER": {"state", "delta", "modulus", "evidenceRef"},
+        "RESET": {"state", "evidenceRef"},
+        "DISCONTINUITY": {"state", "evidenceRef"},
+    }
+    if set(value) != fields_by_state.get(value["state"]):
+        raise TypeError("continuity has an invalid GraphQL member shape")
     return {
         "state": value["state"],
-        "delta": None if value["delta"] is None else _normalize_value(value["delta"]),
-        "modulus": None if value["modulus"] is None else _normalize_value(value["modulus"]),
-        "evidence_ref": value["evidenceRef"],
+        "delta": None
+        if "delta" not in value
+        else _normalize_value(value["delta"]),
+        "modulus": None
+        if "modulus" not in value
+        else _normalize_value(value["modulus"]),
+        "evidence_ref": value.get("evidenceRef"),
+    }
+
+
+def _normalize_projection_report_item(item):
+    typename = item["__typename"]
+    outcome_by_type = {
+        "M2MMappedProjectionReportEntry": "MAPPED",
+        "M2MWithheldProjectionReportEntry": "WITHHELD",
+        "M2MUnrepresentableProjectionReportEntry": "UNREPRESENTABLE",
+    }
+    outcome = outcome_by_type[typename]
+    return {
+        "source_ref": item["sourceRef"],
+        "requested_output_ref": item["requestedOutputRef"],
+        "fact_id": item["factId"] if outcome == "MAPPED" else None,
+        "dimensions": _normalize_dimensions(item["dimension"])
+        if outcome == "MAPPED"
+        else None,
+        "outcome": outcome,
     }
 
 
@@ -361,15 +396,7 @@ def _normalize_case(case):
         for item in response["requestedOutputs"]
     ]
     projection_report = [
-        {
-            "source_ref": item["sourceRef"],
-            "requested_output_ref": item["requestedOutputRef"],
-            "fact_id": item["factId"],
-            "dimensions": None
-            if item["dimension"] is None
-            else _normalize_dimensions(item["dimension"]),
-            "outcome": item["outcome"],
-        }
+        _normalize_projection_report_item(item)
         for item in response["projectionReport"]
     ]
     return {
@@ -412,6 +439,30 @@ def _looks_like_network_endpoint(value):
         return True
     except ValueError:
         pass
+    components = candidate.split(".")
+    if 1 <= len(components) <= 4:
+        try:
+            parsed = []
+            for component in components:
+                if not component:
+                    raise ValueError
+                if component.lower().startswith("0x"):
+                    parsed.append(int(component[2:], 16))
+                elif len(component) > 1 and component.startswith("0"):
+                    parsed.append(int(component, 8))
+                else:
+                    parsed.append(int(component, 10))
+            maxima = {
+                1: (0xFFFFFFFF,),
+                2: (0xFF, 0xFFFFFF),
+                3: (0xFF, 0xFF, 0xFFFF),
+                4: (0xFF, 0xFF, 0xFF, 0xFF),
+            }[len(parsed)]
+            if all(0 <= part <= maximum for part, maximum in zip(parsed, maxima)):
+                if len(parsed) > 1 or parsed[0] > 0xFF or candidate.lower().startswith("0x"):
+                    return True
+        except ValueError:
+            pass
     if re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", candidate):
         return True
     if re.fullmatch(r"(?:tcp|udp|http|https)://.+", value, re.I):
@@ -807,16 +858,14 @@ def _project_canonical_fixture(canonical, manifest):
     def project_continuity(continuity):
         if continuity is None:
             return None
-        return {
-            "state": continuity["state"],
-            "delta": None
-            if continuity["delta"] is None
-            else project_value(continuity["delta"]),
-            "modulus": None
-            if continuity["modulus"] is None
-            else project_value(continuity["modulus"]),
-            "evidenceRef": continuity["evidence_ref"],
-        }
+        result = {"state": continuity["state"]}
+        if continuity["delta"] is not None:
+            result["delta"] = project_value(continuity["delta"])
+        if continuity["modulus"] is not None:
+            result["modulus"] = project_value(continuity["modulus"])
+        if continuity["state"] in {"ROLLOVER", "RESET", "DISCONTINUITY"}:
+            result["evidenceRef"] = continuity["evidence_ref"]
+        return result
 
     facts = []
     for fact in canonical["facts"]:
@@ -885,22 +934,30 @@ def _project_canonical_fixture(canonical, manifest):
         ],
         "projectionReport": [
             {
+                "__typename": {
+                    "MAPPED": "M2MMappedProjectionReportEntry",
+                    "WITHHELD": "M2MWithheldProjectionReportEntry",
+                    "UNREPRESENTABLE": "M2MUnrepresentableProjectionReportEntry",
+                }[item["outcome"]],
                 "sourceRef": item["source_ref"],
                 "requestedOutputRef": item["requested_output_ref"],
-                "factId": item["fact_id"],
-                "dimension": None
-                if item["dimensions"] is None
-                else {
+                **(
                     {
-                        "scope": "scope",
-                        "phase": "phase",
-                        "phase_pair": "phasePair",
-                        "input_id": "inputId",
-                        "sensor_id": "sensorId",
-                    }[key]: value
-                    for key, value in item["dimensions"].items()
-                },
-                "outcome": item["outcome"],
+                        "factId": item["fact_id"],
+                        "dimension": {
+                            {
+                                "scope": "scope",
+                                "phase": "phase",
+                                "phase_pair": "phasePair",
+                                "input_id": "inputId",
+                                "sensor_id": "sensorId",
+                            }[key]: value
+                            for key, value in item["dimensions"].items()
+                        },
+                    }
+                    if item["outcome"] == "MAPPED"
+                    else {}
+                ),
             }
             for item in canonical["projection_report"]
         ],
@@ -1041,7 +1098,11 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
         if set(item) != set(manifest["requested_output_fields"]):
             errors.add("projection_accounting")
     for item in response["projectionReport"]:
-        if set(item) != set(manifest["projection_report_fields"]):
+        typename = item.get("__typename")
+        expected_fields = manifest["projection_report_fields_by_type"].get(
+            typename
+        )
+        if expected_fields is None or set(item) != set(expected_fields):
             errors.add("projection_accounting")
     try:
         normalized = _normalize_case(case)
@@ -1438,7 +1499,11 @@ def validate_request_rejections(cases, manifest):
                 )
                 reached = category if "query_alias" in validate_query_document(query, manifest) else None
             elif mutation == "introspection":
-                query = query.replace("contractId", "__typename contractId", 1)
+                query = query.replace(
+                    "m2mCurrentSnapshot(request:",
+                    "__schema { queryType { name } } m2mCurrentSnapshot(request:",
+                    1,
+                )
                 reached = category if "query_introspection" in validate_query_document(query, manifest) else None
             elif mutation == "depth_9":
                 query = (

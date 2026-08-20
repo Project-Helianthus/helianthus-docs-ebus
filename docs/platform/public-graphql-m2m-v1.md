@@ -64,10 +64,11 @@ weakening the golden-bound positive response.
 
 The wire fields `requestedOutputs` and `projectionReport` preserve canonical
 projection accounting as opaque digest identities. Every requested identity has
-exactly one report row. `MAPPED` rows carry a non-null fact identity and bind
-`sourceRef` to that fact's `originRef`; `WITHHELD` and `UNREPRESENTABLE` carry
-null fact identity/dimension and bind to the current source origin. The lists
-are closed, duplicate-free, and bounded to 512 rows each.
+exactly one report row. The report is a closed outcome-specific union: mapped
+members carry a non-null fact identity and bind `sourceRef` to that fact's
+`originRef`; withheld and unrepresentable members cannot carry fact identity or
+dimension fields and bind to the current source origin. The lists are closed,
+duplicate-free, and bounded to 512 rows each.
 
 V1's catalog is closed. Any additive or breaking semantic change, including a
 new fact, enum value, dimension meaning, capability requirement, or lifecycle
@@ -88,8 +89,10 @@ request per client, and rate to one request per second with burst two. GraphQL
 batching, aliases, named fragments, directives, introspection, GET,
 subscriptions, and multi-operation documents are rejected before resolver
 execution. Inline type conditions are allowed only to select the closed
-declared members of the closed value, dimension, and continuity unions. The
-response is limited to 1 MiB.
+declared members of the closed value, dimension, continuity, and projection
+unions. The `__typename` meta-field is required only as the projection-outcome
+discriminator; schema/type introspection through `__schema` or `__type` remains
+forbidden. The response is limited to 1 MiB.
 
 Before semantic decode, the HTTP JSON parser rejects duplicate object keys and
 any document nested deeper than 64 arrays/objects. Depth is bounded from raw
