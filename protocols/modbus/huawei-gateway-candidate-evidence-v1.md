@@ -166,18 +166,18 @@ together. Any pairwise detector collision remains fail-closed.
 The standard `helianthus-modbus` Device Identification traversal remains
 strict: it starts at object `0`, requires the basic objects, and does not wrap.
 Transport PR [#18](https://github.com/Project-Helianthus/helianthus-modbus/pull/18)
-at exact candidate HEAD
-`4b37dd9be9563b8d28563e5c3d7a138b2ec50de3` adds separate vendor-neutral,
+was squash-merged at
+`c78030472c24f0f2b849fd30124611157a81f834` and is available as
+`v0.0.0-20260820212315-c78030472c24`. It adds separate vendor-neutral,
 read-only primitives for response-bearing Modbus TCP `unit_id=0` and a bounded
 extended code-03 stream starting at object `0x87`. That extended stream permits
 one documented `0xFF -> 0x00` continuation and rejects loops, duplicate objects,
 and partial publication. RTU unit `0` remains a rejected response-bearing read.
 
-The prerequisite is `IMPLEMENTED_PENDING_CODE_MERGE`, not available on
-`helianthus-modbus` main. FMV3-M7-04 remains blocked until that exact candidate
-is squash-merged and `helianthus-modbusreg` pins the resulting main commit.
-`helianthus-modbusreg` must not build frames or duplicate transport parsing,
-and this candidate implementation does not admit any Huawei profile.
+The prerequisite is `MERGED_AVAILABLE_FOR_REGISTRY_PIN`. FMV3-M7-04 may pin
+that exact merge, but transport capability does not make any documentary PDU
+executable and does not admit any Huawei profile. `helianthus-modbusreg` must
+not build frames or duplicate transport parsing.
 
 ## Safety
 
