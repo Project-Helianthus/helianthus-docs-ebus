@@ -458,6 +458,12 @@ def test_mixed_retention_binds_one_current_source_origin():
     candidate = copy.deepcopy(cases["positive"])
     response_payload(candidate)["currentSourceOriginRef"] = "sha256:" + "f" * 64
     assert "current_source_binding" in validate_case(candidate, manifest, canonical)
+    retained_ref = response_payload(cases["positive"])["provenance"][1]["originRef"]
+    retained_as_current = copy.deepcopy(cases["positive"])
+    response_payload(retained_as_current)["currentSourceOriginRef"] = retained_ref
+    assert "current_source_binding" in validate_case(
+        retained_as_current, manifest, canonical
+    )
 
 
 def test_request_rejection_classes_map_to_closed_error_codes():
@@ -485,3 +491,33 @@ def test_request_rejection_classes_map_to_closed_error_codes():
     oversized["request"]["body"]["padding"] = "x" * manifest["request_bounds"]["max_body_bytes"]
     assert "request_bytes" in validate_case(oversized, manifest, canonical)
     assert manifest["request_rejection_codes"]["request_body_bytes"] == "REQUEST_LIMIT_EXCEEDED"
+
+
+def test_raw_request_body_is_authoritative_and_bounded_before_decode():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    request = cases["positive"]["request"]
+    assert json.loads(request["rawBody"]) == request["body"]
+    oversized = copy.deepcopy(cases["positive"])
+    oversized["request"]["rawBody"] = (
+        " " * (manifest["request_bounds"]["max_body_bytes"] + 1)
+        + oversized["request"]["rawBody"]
+    )
+    assert "request_bytes" in validate_case(oversized, manifest, canonical)
+
+
+def test_request_rejection_fixtures_bind_input_class_to_exact_response():
+    manifest, cases = load(MANIFEST), load(CASES)
+    expected = {
+        "json-admission": "REQUEST_INVALID",
+        "query-shape": "QUERY_REJECTED",
+        "request-limit": "REQUEST_LIMIT_EXCEEDED",
+    }
+    assert {
+        item["class"]: item["code"] for item in cases["request_rejections"]
+    } == expected
+    envelopes = {item["code"]: item["response"] for item in cases["errors"]}
+    for item in cases["request_rejections"]:
+        assert set(item["request"]) == {"method", "path", "rawBody"}
+        assert item["request"]["method"] == "POST"
+        assert item["request"]["path"] == manifest["route"]
+        assert item["response"] == envelopes[item["code"]]
