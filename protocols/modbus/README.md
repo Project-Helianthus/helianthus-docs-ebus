@@ -15,7 +15,8 @@ They are covered by [`protocols/LICENSE`](../LICENSE), CC0-1.0.
   records a proprietary Growatt Modbus candidate without claiming SunSpec or
   profile admission.
 - [`huawei-gateway-candidate-evidence-v1.md`](./huawei-gateway-candidate-evidence-v1.md)
-  separates SmartLogger, S-Dongle, and unresolved EMMA evidence.
+  separates SmartLogger, S-Dongle, and EMMA as independent first-class
+  evidence candidates with fail-closed overlap rules.
 
 Helianthus scheduling, abandonment, provenance, profile, and qualification
 policy remains under `docs/platform/` and is not relicensed by this directory.
