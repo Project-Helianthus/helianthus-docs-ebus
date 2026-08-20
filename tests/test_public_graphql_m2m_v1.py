@@ -555,3 +555,24 @@ def test_error_envelope_mutations_are_rejected_end_to_end(tmp_path):
         candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
         with pytest.raises(ValidationError):
             validate(MANIFEST, CANONICAL, candidate_path)
+
+
+def test_closed_error_and_request_binding_cardinality_rejects_duplicates(tmp_path):
+    cases = load(CASES)
+    duplicates = []
+
+    duplicate_error = copy.deepcopy(cases)
+    duplicate_error["errors"].append(copy.deepcopy(duplicate_error["errors"][0]))
+    duplicates.append(duplicate_error)
+
+    duplicate_binding = copy.deepcopy(cases)
+    duplicate_binding["request_rejections"].append(
+        copy.deepcopy(duplicate_binding["request_rejections"][0])
+    )
+    duplicates.append(duplicate_binding)
+
+    for index, candidate in enumerate(duplicates):
+        candidate_path = tmp_path / f"duplicate-closed-entry-{index}.json"
+        candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
+        with pytest.raises(ValidationError):
+            validate(MANIFEST, CANONICAL, candidate_path)
