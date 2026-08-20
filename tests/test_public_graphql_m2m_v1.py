@@ -659,8 +659,11 @@ def test_every_request_rejection_has_executable_stimulus_and_limit_sequence(tmp_
 
 def test_named_canonical_fixture_has_lossless_public_projection(tmp_path):
     cases = load(CASES)
-    projection = cases["canonical_projection"]
+    projection = response_payload(cases["positive"])
     assert projection["canonicalContractId"] == "helianthus.canonical-pv/v1"
+    assert projection["assetRef"] == "pv-asset-mixed-01"
+    assert projection["generation"] == "8"
+    assert projection["producedAt"] == "2026-08-17T13:46:00Z"
     assert len(projection["facts"]) == 2
     assert len(projection["provenance"]) == 2
 
@@ -668,10 +671,16 @@ def test_named_canonical_fixture_has_lossless_public_projection(tmp_path):
         ("generation", "9"),
         ("producedAt", "2026-08-17T13:46:01Z"),
         ("facts.0.value.coefficient", "7311"),
+        ("facts.0.freshUntilMonotonicNs", "1011234500001"),
+        ("capabilities.0.outcome", "SATISFIED"),
+        (
+            "provenance.0.evidenceRef",
+            "sha256:" + "e" * 64,
+        ),
     ]
     for index, (path, value) in enumerate(mutations):
         candidate = copy.deepcopy(cases)
-        target = candidate["canonical_projection"]
+        target = response_payload(candidate["positive"])
         parts = path.split(".")
         for part in parts[:-1]:
             target = target[int(part)] if part.isdigit() else target[part]
