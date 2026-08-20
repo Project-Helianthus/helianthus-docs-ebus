@@ -29,7 +29,7 @@ def test_manifest_is_locked_to_canonical_catalog_and_closed_public_surface():
     assert manifest["max_facts_per_snapshot"] == 256
     assert manifest["max_provenance_per_snapshot"] == 256
     assert manifest["max_capabilities_per_snapshot"] == 1
-    assert manifest["required_response_fields"] == ["contract_id", "canonical_contract_id", "asset_ref", "generation", "produced_at", "evaluated_monotonic_ns", "source_time_state", "facts", "capabilities", "provenance"]
+    assert manifest["required_response_fields"] == ["contractId", "canonicalContractId", "assetRef", "generation", "producedAt", "evaluatedMonotonicNs", "sourceTimeState", "facts", "capabilities", "provenance"]
     assert manifest["operator_authority"] == ["dedicated_listener", "server_identity", "ca_and_trust_root", "client_certificate_issuance", "asset_allowlist", "rotation", "revocation"]
     assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_value_union"]}
     assert manifest["error_contract"]["partial_snapshot_on_error"] is False
@@ -82,7 +82,7 @@ def test_capability_outcome_is_derived_from_required_fact_identities():
         for item in canonical["capability_packs"][0]["required"]
     }
     observed = {
-        (item["fact_id"], tuple(sorted(item["dimensions"].items())))
+        (item["factId"], tuple(sorted((part["key"], part["value"]) for part in item["dimensions"])))
         for item in cases["positive"]["response"]["facts"]
     }
     assert required <= observed
@@ -91,8 +91,8 @@ def test_capability_outcome_is_derived_from_required_fact_identities():
         item
         for item in candidate["response"]["facts"]
         if not (
-            item["fact_id"] == "pv.ac.current"
-            and item["dimensions"] == {"phase": "L3"}
+            item["factId"] == "pv.ac.current"
+            and item["dimensions"] == [{"key": "phase", "value": "L3"}]
         )
     ]
     assert "capability_outcome" in validate_case(candidate, manifest, canonical)
@@ -103,8 +103,8 @@ def test_opaque_dimensions_reject_network_endpoints():
     candidate = copy.deepcopy(cases["positive"])
     fact = copy.deepcopy(candidate["response"]["facts"][0])
     fact.update(
-        fact_id="pv.dc.current",
-        dimensions={"input_id": "192.168.1.1:502"},
+        factId="pv.dc.current",
+        dimensions=[{"key": "input_id", "value": "192.168.1.1:502"}],
         unit="A",
     )
     candidate["response"]["facts"].append(fact)
@@ -115,7 +115,7 @@ def test_freshness_deadlines_and_state_follow_canonical_policy():
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     candidate = copy.deepcopy(cases["positive"])
     fact = candidate["response"]["facts"][0]
-    fact["fresh_until_monotonic_ns"] = str(int(fact["receipt_monotonic_ns"]) + 1)
+    fact["freshUntilMonotonicNs"] = str(int(fact["receiptMonotonicNs"]) + 1)
     assert "freshness_policy" in validate_case(candidate, manifest, canonical)
 
 
@@ -125,14 +125,14 @@ def test_accumulator_continuity_variants_are_closed():
     energy = next(
         item
         for item in candidate["response"]["facts"]
-        if item["fact_id"] == "pv.energy.active_export_total"
+        if item["factId"] == "pv.energy.active_export_total"
     )
     invalid = [
-        {"state": "BASELINE", "delta": {"kind": "DECIMAL", "coefficient": "1", "scale": 0}, "modulus": None, "evidence_ref": None},
-        {"state": "CONTIGUOUS", "delta": None, "modulus": None, "evidence_ref": None},
-        {"state": "ROLLOVER", "delta": {"kind": "DECIMAL", "coefficient": "1", "scale": 0}, "modulus": None, "evidence_ref": "sha256:" + "a" * 64},
-        {"state": "RESET", "delta": None, "modulus": None, "evidence_ref": None},
-        {"state": "DISCONTINUITY", "delta": {"kind": "DECIMAL", "coefficient": "1", "scale": 0}, "modulus": None, "evidence_ref": None},
+        {"state": "BASELINE", "delta": {"coefficient": "1", "scale": 0}, "modulus": None, "evidenceRef": None},
+        {"state": "CONTIGUOUS", "delta": None, "modulus": None, "evidenceRef": None},
+        {"state": "ROLLOVER", "delta": {"coefficient": "1", "scale": 0}, "modulus": None, "evidenceRef": "sha256:" + "a" * 64},
+        {"state": "RESET", "delta": None, "modulus": None, "evidenceRef": None},
+        {"state": "DISCONTINUITY", "delta": {"coefficient": "1", "scale": 0}, "modulus": None, "evidenceRef": None},
     ]
     for continuity in invalid:
         energy["continuity"] = continuity
@@ -145,8 +145,8 @@ def test_freshness_transition_boundaries_are_exact():
     candidate["response"]["facts"] = [candidate["response"]["facts"][0]]
     candidate["response"]["capabilities"][0]["outcome"] = "NOT_SATISFIED"
     fact = candidate["response"]["facts"][0]
-    fresh_until = int(fact["fresh_until_monotonic_ns"])
-    retain_until = int(fact["retain_until_monotonic_ns"])
+    fresh_until = int(fact["freshUntilMonotonicNs"])
+    retain_until = int(fact["retainUntilMonotonicNs"])
 
     cases_to_check = [
         (fresh_until - 1, "AVAILABLE", "FRESH"),
@@ -155,7 +155,7 @@ def test_freshness_transition_boundaries_are_exact():
         (retain_until, "UNAVAILABLE", "EXPIRED"),
     ]
     for evaluated, availability, freshness in cases_to_check:
-        candidate["response"]["evaluated_monotonic_ns"] = str(evaluated)
+        candidate["response"]["evaluatedMonotonicNs"] = str(evaluated)
         fact["availability"] = availability
         fact["freshness"] = freshness
         errors = validate_case(candidate, manifest, canonical)
@@ -237,21 +237,33 @@ def test_public_provenance_projects_safe_canonical_fields_and_declares_loss():
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     required = set(canonical["provenance"]["required"])
     assert set(manifest["opaque_provenance_fields"]) == {
-        "origin_ref",
-        "source_protocol",
-        "source_profile_id",
-        "source_profile_version",
-        "source_validity",
-        "source_registry_ref",
-        "source_observation_ref",
-        "evidence_ref",
+        "originRef",
+        "sourceProtocol",
+        "sourceProfileId",
+        "sourceProfileVersion",
+        "sourceValidity",
+        "sourceRegistryRef",
+        "sourceObservationRef",
+        "evidenceRef",
     }
     assert manifest["provenance_projection_loss"] == {
         "source_shadow_ref": "WITHHELD_SOURCE_SHADOW_REFERENCE"
     }
-    assert required == (
-        set(manifest["opaque_provenance_fields"]) - {"origin_ref"}
-    ) | set(manifest["provenance_projection_loss"])
+    public_to_canonical = {
+        "sourceProtocol": "source_protocol",
+        "sourceProfileId": "source_profile_id",
+        "sourceProfileVersion": "source_profile_version",
+        "sourceValidity": "source_validity",
+        "sourceRegistryRef": "source_registry_ref",
+        "sourceObservationRef": "source_observation_ref",
+        "evidenceRef": "evidence_ref",
+    }
+    projected = {
+        public_to_canonical[field]
+        for field in manifest["opaque_provenance_fields"]
+        if field != "originRef"
+    }
+    assert required == projected | set(manifest["provenance_projection_loss"])
     assert set(cases["positive"]["response"]["provenance"][0]) == set(
         manifest["opaque_provenance_fields"]
     )

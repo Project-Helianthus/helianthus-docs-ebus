@@ -19,7 +19,54 @@ TOKEN = re.compile(r"[A-Za-z0-9._:-]+$")
 SOURCE_TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9._@-]*$")
 VERSION_TOKEN = re.compile(r"[0-9][0-9A-Za-z._-]*$")
 ASSET = re.compile(r"pv-asset-[A-Za-z0-9_-]{1,96}$")
-FORBIDDEN = {"raw_registers", "source_shadow", "endpoint", "endpoints", "address", "credentials", "history"}
+FORBIDDEN = {
+    "rawRegisters",
+    "raw_registers",
+    "sourceShadow",
+    "source_shadow",
+    "endpoint",
+    "endpoints",
+    "address",
+    "credentials",
+    "history",
+}
+INTERNAL_RESPONSE_FIELDS = {
+    "contract_id",
+    "canonical_contract_id",
+    "asset_ref",
+    "generation",
+    "produced_at",
+    "evaluated_monotonic_ns",
+    "source_time_state",
+    "facts",
+    "capabilities",
+    "provenance",
+}
+INTERNAL_FACT_FIELDS = {
+    "fact_id",
+    "dimensions",
+    "value",
+    "unit",
+    "quality",
+    "availability",
+    "freshness",
+    "receipt_monotonic_ns",
+    "fresh_until_monotonic_ns",
+    "retain_until_monotonic_ns",
+    "freshness_policy",
+    "origin_ref",
+    "continuity",
+}
+INTERNAL_PROVENANCE_FIELDS = {
+    "origin_ref",
+    "source_protocol",
+    "source_profile_id",
+    "source_profile_version",
+    "source_validity",
+    "source_registry_ref",
+    "source_observation_ref",
+    "evidence_ref",
+}
 
 
 class ValidationError(Exception):
@@ -66,6 +113,100 @@ def _walk_keys(value):
     elif isinstance(value, list):
         for child in value:
             yield from _walk_keys(child)
+
+
+def _normalize_dimensions(value):
+    if not isinstance(value, list) or not value:
+        raise TypeError("dimensions must be a non-empty GraphQL list")
+    dimensions = {}
+    for item in value:
+        if not isinstance(item, dict) or set(item) != {"key", "value"}:
+            raise TypeError("dimension must contain key and value")
+        key = item["key"]
+        if not isinstance(key, str) or key in dimensions:
+            raise ValueError("dimension keys must be unique strings")
+        dimensions[key] = item["value"]
+    return dimensions
+
+
+def _normalize_value(value):
+    if not isinstance(value, dict):
+        raise TypeError("value must be an object")
+    fields = set(value)
+    if fields == {"coefficient", "scale"}:
+        return {"kind": "DECIMAL", **value}
+    if fields == {"symbol"}:
+        return {"kind": "ENUM", **value}
+    if fields == {"symbols"}:
+        return {"kind": "BITFIELD", **value}
+    return {"kind": "INVALID", **value}
+
+
+def _normalize_continuity(value):
+    if value is None:
+        return None
+    if not isinstance(value, dict) or set(value) != {"state", "delta", "modulus", "evidenceRef"}:
+        raise TypeError("continuity has an invalid GraphQL shape")
+    return {
+        "state": value["state"],
+        "delta": None if value["delta"] is None else _normalize_value(value["delta"]),
+        "modulus": None if value["modulus"] is None else _normalize_value(value["modulus"]),
+        "evidence_ref": value["evidenceRef"],
+    }
+
+
+def _normalize_case(case):
+    request, response = case["request"], case["response"]
+    facts = []
+    for fact in response["facts"]:
+        facts.append(
+            {
+                "fact_id": fact["factId"],
+                "dimensions": _normalize_dimensions(fact["dimensions"]),
+                "value": _normalize_value(fact["value"]),
+                "unit": fact["unit"],
+                "quality": fact["quality"],
+                "availability": fact["availability"],
+                "freshness": fact["freshness"],
+                "receipt_monotonic_ns": fact["receiptMonotonicNs"],
+                "fresh_until_monotonic_ns": fact["freshUntilMonotonicNs"],
+                "retain_until_monotonic_ns": fact["retainUntilMonotonicNs"],
+                "freshness_policy": fact["freshnessPolicy"],
+                "origin_ref": fact["originRef"],
+                "continuity": _normalize_continuity(fact["continuity"]),
+            }
+        )
+    provenance = [
+        {
+            "origin_ref": item["originRef"],
+            "source_protocol": item["sourceProtocol"],
+            "source_profile_id": item["sourceProfileId"],
+            "source_profile_version": item["sourceProfileVersion"],
+            "source_validity": item["sourceValidity"],
+            "source_registry_ref": item["sourceRegistryRef"],
+            "source_observation_ref": item["sourceObservationRef"],
+            "evidence_ref": item["evidenceRef"],
+        }
+        for item in response["provenance"]
+    ]
+    return {
+        "request": {
+            "contract_id": request["contractId"],
+            "asset_ref": request["assetRef"],
+        },
+        "response": {
+            "contract_id": response["contractId"],
+            "canonical_contract_id": response["canonicalContractId"],
+            "asset_ref": response["assetRef"],
+            "generation": response["generation"],
+            "produced_at": response["producedAt"],
+            "evaluated_monotonic_ns": response["evaluatedMonotonicNs"],
+            "source_time_state": response["sourceTimeState"],
+            "facts": facts,
+            "capabilities": copy.deepcopy(response["capabilities"]),
+            "provenance": provenance,
+        },
+    }
 
 
 def _valid_timestamp(value):
@@ -176,7 +317,7 @@ def _validate_case(case, manifest, canonical_manifest):
         errors.add("contract_negotiation")
     if response.get("contract_id") != request.get("contract_id"):
         errors.add("contract_negotiation")
-    if set(response) != set(manifest["required_response_fields"]):
+    if set(response) != INTERNAL_RESPONSE_FIELDS:
         errors.add("response_fields")
     if response.get("canonical_contract_id") != canonical_manifest["contract_id"]:
         errors.add("canonical_projection")
@@ -204,7 +345,7 @@ def _validate_case(case, manifest, canonical_manifest):
     observed = {}
     origins = set()
     for fact in facts:
-        if set(fact) != set(manifest["required_fact_fields"]):
+        if set(fact) != INTERNAL_FACT_FIELDS:
             errors.add("fact_fields")
             continue
         definition = catalog.get(fact["fact_id"])
@@ -278,7 +419,7 @@ def _validate_case(case, manifest, canonical_manifest):
         errors.add("bounded_snapshot")
     provenance = response.get("provenance", [])
     if any(
-        set(item) != set(manifest["opaque_provenance_fields"])
+        set(item) != INTERNAL_PROVENANCE_FIELDS
         or not isinstance(item["source_protocol"], str)
         or SOURCE_TOKEN.fullmatch(item["source_protocol"]) is None
         or not isinstance(item["source_profile_id"], str)
@@ -308,20 +449,31 @@ def _validate_case(case, manifest, canonical_manifest):
 
 
 def validate_case(case, manifest, canonical_manifest):
-    """Return deterministic categories for every JSON value, including bad shapes."""
+    """Validate the GraphQL operation payload after a mandatory lossless mapping."""
     if not isinstance(case, dict):
         return ["structural_shape"]
     request, response = case.get("request"), case.get("response")
     if not isinstance(request, dict) or not isinstance(response, dict):
         return ["structural_shape"]
+    errors = set()
+    if set(request) != {"contractId", "assetRef"}:
+        errors.add("request_fields")
+    if set(response) != set(manifest["required_response_fields"]):
+        errors.add("response_fields")
+    if any(key in FORBIDDEN for key in _walk_keys(case)):
+        errors.add("forbidden_surface")
     for field in ("facts", "capabilities", "provenance"):
         items = response.get(field, [])
         if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
-            return ["structural_shape"]
+            errors.add("structural_shape")
+            return sorted(errors)
     try:
-        return _validate_case(case, manifest, canonical_manifest)
+        normalized = _normalize_case(case)
+        errors.update(_validate_case(normalized, manifest, canonical_manifest))
+        return sorted(errors)
     except (AttributeError, IndexError, KeyError, TypeError, ValueError):
-        return ["structural_shape"]
+        errors.add("structural_shape")
+        return sorted(errors)
 
 
 def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Path):

@@ -2,271 +2,118 @@
   "contract_id": "PUBLIC_GRAPHQL_M2M_V1",
   "positive": {
     "request": {
-      "contract_id": "PUBLIC_GRAPHQL_M2M_V1",
-      "asset_ref": "pv-asset-01"
+      "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+      "assetRef": "pv-asset-01"
     },
     "response": {
-      "contract_id": "PUBLIC_GRAPHQL_M2M_V1",
-      "canonical_contract_id": "helianthus.canonical-pv/v1",
-      "asset_ref": "pv-asset-01",
+      "contractId": "PUBLIC_GRAPHQL_M2M_V1",
+      "canonicalContractId": "helianthus.canonical-pv/v1",
+      "assetRef": "pv-asset-01",
       "generation": "17",
-      "produced_at": "2026-08-17T19:22:35.7287976Z",
-      "evaluated_monotonic_ns": "981234500000",
-      "source_time_state": "UNAVAILABLE",
+      "producedAt": "2026-08-17T19:22:35.7287976Z",
+      "evaluatedMonotonicNs": "981234500000",
+      "sourceTimeState": "UNAVAILABLE",
       "facts": [
         {
-          "fact_id": "pv.ac.power.active",
-          "dimensions": {
-            "scope": "total"
-          },
-          "value": {
-            "kind": "DECIMAL",
-            "coefficient": "12345",
-            "scale": -1
-          },
-          "unit": "W",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1011234500000",
-          "retain_until_monotonic_ns": "1281234500000",
-          "freshness_policy": "pv.telemetry.fast.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+          "factId": "pv.ac.power.active",
+          "dimensions": [{"key": "scope", "value": "total"}],
+          "value": {"coefficient": "12345", "scale": -1},
+          "unit": "W", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1011234500000", "retainUntilMonotonicNs": "1281234500000",
+          "freshnessPolicy": "pv.telemetry.fast.v1",
+          "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
           "continuity": null
         },
         {
-          "fact_id": "pv.ac.frequency",
-          "dimensions": {"scope": "total"},
-          "value": {"kind": "DECIMAL", "coefficient": "5000", "scale": -2},
-          "unit": "Hz",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1011234500000",
-          "retain_until_monotonic_ns": "1281234500000",
-          "freshness_policy": "pv.telemetry.fast.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "continuity": null
+          "factId": "pv.ac.frequency", "dimensions": [{"key": "scope", "value": "total"}],
+          "value": {"coefficient": "5000", "scale": -2},
+          "unit": "Hz", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1011234500000", "retainUntilMonotonicNs": "1281234500000",
+          "freshnessPolicy": "pv.telemetry.fast.v1", "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null
         },
         {
-          "fact_id": "pv.ac.current",
-          "dimensions": {"phase": "L1"},
-          "value": {"kind": "DECIMAL", "coefficient": "110", "scale": -2},
-          "unit": "A",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1011234500000",
-          "retain_until_monotonic_ns": "1281234500000",
-          "freshness_policy": "pv.telemetry.fast.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "continuity": null
+          "factId": "pv.ac.current", "dimensions": [{"key": "phase", "value": "L1"}],
+          "value": {"coefficient": "110", "scale": -2},
+          "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1011234500000", "retainUntilMonotonicNs": "1281234500000",
+          "freshnessPolicy": "pv.telemetry.fast.v1", "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null
         },
         {
-          "fact_id": "pv.ac.current",
-          "dimensions": {"phase": "L2"},
-          "value": {"kind": "DECIMAL", "coefficient": "120", "scale": -2},
-          "unit": "A",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1011234500000",
-          "retain_until_monotonic_ns": "1281234500000",
-          "freshness_policy": "pv.telemetry.fast.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "continuity": null
+          "factId": "pv.ac.current", "dimensions": [{"key": "phase", "value": "L2"}],
+          "value": {"coefficient": "120", "scale": -2},
+          "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1011234500000", "retainUntilMonotonicNs": "1281234500000",
+          "freshnessPolicy": "pv.telemetry.fast.v1", "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null
         },
         {
-          "fact_id": "pv.ac.current",
-          "dimensions": {"phase": "L3"},
-          "value": {"kind": "DECIMAL", "coefficient": "130", "scale": -2},
-          "unit": "A",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1011234500000",
-          "retain_until_monotonic_ns": "1281234500000",
-          "freshness_policy": "pv.telemetry.fast.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "continuity": null
+          "factId": "pv.ac.current", "dimensions": [{"key": "phase", "value": "L3"}],
+          "value": {"coefficient": "130", "scale": -2},
+          "unit": "A", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1011234500000", "retainUntilMonotonicNs": "1281234500000",
+          "freshnessPolicy": "pv.telemetry.fast.v1", "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null
         },
         {
-          "fact_id": "pv.ac.voltage.line_to_neutral",
-          "dimensions": {"phase": "L1"},
-          "value": {"kind": "DECIMAL", "coefficient": "2300", "scale": -1},
-          "unit": "V",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1011234500000",
-          "retain_until_monotonic_ns": "1281234500000",
-          "freshness_policy": "pv.telemetry.fast.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "continuity": null
+          "factId": "pv.ac.voltage.line_to_neutral", "dimensions": [{"key": "phase", "value": "L1"}],
+          "value": {"coefficient": "2300", "scale": -1},
+          "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1011234500000", "retainUntilMonotonicNs": "1281234500000",
+          "freshnessPolicy": "pv.telemetry.fast.v1", "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null
         },
         {
-          "fact_id": "pv.ac.voltage.line_to_neutral",
-          "dimensions": {"phase": "L2"},
-          "value": {"kind": "DECIMAL", "coefficient": "2310", "scale": -1},
-          "unit": "V",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1011234500000",
-          "retain_until_monotonic_ns": "1281234500000",
-          "freshness_policy": "pv.telemetry.fast.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "continuity": null
+          "factId": "pv.ac.voltage.line_to_neutral", "dimensions": [{"key": "phase", "value": "L2"}],
+          "value": {"coefficient": "2310", "scale": -1},
+          "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1011234500000", "retainUntilMonotonicNs": "1281234500000",
+          "freshnessPolicy": "pv.telemetry.fast.v1", "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null
         },
         {
-          "fact_id": "pv.ac.voltage.line_to_neutral",
-          "dimensions": {"phase": "L3"},
-          "value": {"kind": "DECIMAL", "coefficient": "2320", "scale": -1},
-          "unit": "V",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1011234500000",
-          "retain_until_monotonic_ns": "1281234500000",
-          "freshness_policy": "pv.telemetry.fast.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "continuity": null
+          "factId": "pv.ac.voltage.line_to_neutral", "dimensions": [{"key": "phase", "value": "L3"}],
+          "value": {"coefficient": "2320", "scale": -1},
+          "unit": "V", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1011234500000", "retainUntilMonotonicNs": "1281234500000",
+          "freshnessPolicy": "pv.telemetry.fast.v1", "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null
         },
         {
-          "fact_id": "pv.energy.active_export_total",
-          "dimensions": {
-            "scope": "total"
-          },
-          "value": {
-            "kind": "DECIMAL",
-            "coefficient": "9007199254740993",
-            "scale": 0
-          },
-          "unit": "Wh",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1881234500000",
-          "retain_until_monotonic_ns": "87381234500000",
-          "freshness_policy": "pv.accumulator.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "continuity": {
-            "state": "BASELINE",
-            "delta": null,
-            "modulus": null,
-            "evidence_ref": null
-          }
+          "factId": "pv.energy.active_export_total", "dimensions": [{"key": "scope", "value": "total"}],
+          "value": {"coefficient": "9007199254740993", "scale": 0},
+          "unit": "Wh", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1881234500000", "retainUntilMonotonicNs": "87381234500000",
+          "freshnessPolicy": "pv.accumulator.v1", "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+          "continuity": {"state": "BASELINE", "delta": null, "modulus": null, "evidenceRef": null}
         },
         {
-          "fact_id": "pv.operating.state",
-          "dimensions": {
-            "scope": "total"
-          },
-          "value": {
-            "kind": "ENUM",
-            "symbol": "OPERATING"
-          },
-          "unit": "1",
-          "quality": "GOOD",
-          "availability": "AVAILABLE",
-          "freshness": "FRESH",
-          "receipt_monotonic_ns": "981234500000",
-          "fresh_until_monotonic_ns": "1041234500000",
-          "retain_until_monotonic_ns": "1581234500000",
-          "freshness_policy": "pv.status.v1",
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "continuity": null
+          "factId": "pv.operating.state", "dimensions": [{"key": "scope", "value": "total"}],
+          "value": {"symbol": "OPERATING"},
+          "unit": "1", "quality": "GOOD", "availability": "AVAILABLE", "freshness": "FRESH",
+          "receiptMonotonicNs": "981234500000", "freshUntilMonotonicNs": "1041234500000", "retainUntilMonotonicNs": "1581234500000",
+          "freshnessPolicy": "pv.status.v1", "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0", "continuity": null
         }
       ],
-      "capabilities": [
-        {
-          "id": "helianthus.pv.inverter.three_phase.telemetry.v1",
-          "outcome": "SATISFIED"
-        }
-      ],
+      "capabilities": [{"id": "helianthus.pv.inverter.three_phase.telemetry.v1", "outcome": "SATISFIED"}],
       "provenance": [
         {
-          "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "source_protocol": "sunspec_modbus",
-          "source_profile_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
-          "source_profile_version": "1.0.0",
-          "source_validity": "terminal_verified",
-          "source_registry_ref": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
-          "source_observation_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
-          "evidence_ref": "sha256:17bcd5fcf011c4765648386160629d99357a0a3e5bacfdb09b0bf98e8f890710"
+          "originRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+          "sourceProtocol": "sunspec_modbus",
+          "sourceProfileId": "sunspec.inverter.three_phase.monitoring@1.0.0",
+          "sourceProfileVersion": "1.0.0",
+          "sourceValidity": "terminal_verified",
+          "sourceRegistryRef": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+          "sourceObservationRef": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+          "evidenceRef": "sha256:17bcd5fcf011c4765648386160629d99357a0a3e5bacfdb09b0bf98e8f890710"
         }
       ]
     }
   },
   "negative": [
-    {
-      "id": "incompatible-contract",
-      "path": "/request/contract_id",
-      "value": "PUBLIC_GRAPHQL_M2M_V2",
-      "error": "contract_negotiation"
-    },
-    {
-      "id": "raw-register-leak",
-      "path": "/response/raw_registers",
-      "value": [],
-      "error": "forbidden_surface"
-    },
-    {
-      "id": "float-leak",
-      "path": "/response/facts/0/value/coefficient",
-      "value": 1234.5,
-      "error": "decimal_encoding"
-    },
-    {
-      "id": "unknown-fact",
-      "path": "/response/facts/0/fact_id",
-      "value": "pv.future.fact",
-      "error": "catalog"
-    },
-    {
-      "id": "unmatched-provenance",
-      "path": "/response/facts/0/origin_ref",
-      "value": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "error": "provenance"
-    },
-    {
-      "id": "bad-publication-time",
-      "path": "/response/produced_at",
-      "value": "not-a-time",
-      "error": "time_identity"
-    },
-    {
-      "id": "bad-source-time-state",
-      "path": "/response/source_time_state",
-      "value": "GUESSED",
-      "error": "source_time_state"
-    },
-    {
-      "id": "bad-dimension-domain",
-      "path": "/response/facts/0/dimensions/scope",
-      "value": "device",
-      "error": "canonical_projection"
-    },
-    {
-      "id": "bad-state-pair",
-      "path": "/response/facts/0/freshness",
-      "value": "EXPIRED",
-      "error": "state_axes"
-    },
-    {
-      "id": "bad-source-contract",
-      "path": "/response/canonical_contract_id",
-      "value": "helianthus.canonical-pv/v2",
-      "error": "canonical_projection"
-    }
+    {"id": "incompatible-contract", "path": "/request/contractId", "value": "PUBLIC_GRAPHQL_M2M_V2", "error": "contract_negotiation"},
+    {"id": "raw-register-leak", "path": "/response/rawRegisters", "value": [], "error": "forbidden_surface"},
+    {"id": "float-leak", "path": "/response/facts/0/value/coefficient", "value": 1234.5, "error": "decimal_encoding"},
+    {"id": "unknown-fact", "path": "/response/facts/0/factId", "value": "pv.future.fact", "error": "catalog"},
+    {"id": "unmatched-provenance", "path": "/response/facts/0/originRef", "value": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "error": "provenance"},
+    {"id": "bad-publication-time", "path": "/response/producedAt", "value": "not-a-time", "error": "time_identity"},
+    {"id": "bad-source-time-state", "path": "/response/sourceTimeState", "value": "GUESSED", "error": "source_time_state"},
+    {"id": "bad-dimension-domain", "path": "/response/facts/0/dimensions/0/value", "value": "device", "error": "canonical_projection"},
+    {"id": "bad-state-pair", "path": "/response/facts/0/freshness", "value": "EXPIRED", "error": "state_axes"},
+    {"id": "bad-source-contract", "path": "/response/canonicalContractId", "value": "helianthus.canonical-pv/v2", "error": "canonical_projection"}
   ]
 }
