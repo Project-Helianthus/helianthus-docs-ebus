@@ -17,6 +17,7 @@ from validate_public_graphql_m2m_v1 import (  # noqa: E402
     ValidationError,
     validate,
     validate_case,
+    validate_query_document,
 )
 
 
@@ -654,6 +655,45 @@ def test_every_request_rejection_has_executable_stimulus_and_limit_sequence(tmp_
         candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
         with pytest.raises(ValidationError):
             validate(MANIFEST, CANONICAL, candidate_path)
+
+
+def test_named_canonical_fixture_has_lossless_public_projection(tmp_path):
+    cases = load(CASES)
+    projection = cases["canonical_projection"]
+    assert projection["canonicalContractId"] == "helianthus.canonical-pv/v1"
+    assert len(projection["facts"]) == 2
+    assert len(projection["provenance"]) == 2
+
+    mutations = [
+        ("generation", "9"),
+        ("producedAt", "2026-08-17T13:46:01Z"),
+        ("facts.0.value.coefficient", "7311"),
+    ]
+    for index, (path, value) in enumerate(mutations):
+        candidate = copy.deepcopy(cases)
+        target = candidate["canonical_projection"]
+        parts = path.split(".")
+        for part in parts[:-1]:
+            target = target[int(part)] if part.isdigit() else target[part]
+        target[parts[-1]] = value
+        candidate_path = tmp_path / f"canonical-parity-{index}.json"
+        candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
+        with pytest.raises(ValidationError, match="canonical_fixture_parity"):
+            validate(MANIFEST, CANONICAL, candidate_path)
+
+
+def test_inline_fragments_count_toward_query_depth():
+    manifest = load(MANIFEST)
+    nested = "coefficient"
+    for _ in range(9):
+        nested = f"... on M2MDecimalValue {{ {nested} }}"
+    query = (
+        "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) "
+        "{ m2mCurrentSnapshot(request: $request) { facts { value { "
+        + nested
+        + " } } } }"
+    )
+    assert "query_depth" in validate_query_document(query, manifest)
 
 
 def test_graphql_ast_admission_enforces_syntax_schema_and_bounds():
