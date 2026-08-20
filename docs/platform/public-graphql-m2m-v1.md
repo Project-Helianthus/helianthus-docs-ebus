@@ -15,17 +15,23 @@ identifies both `PUBLIC_GRAPHQL_M2M_V1` and its exact
 source contract `helianthus.canonical-pv/v1`. Publication time, source-time
 state, fact identity, exact decimal coefficient/scale, dimensions, unit,
 quality, availability, freshness, receipt temporal fields, freshness policy,
-continuity, capability outcome, and opaque provenance are preserved exactly.
+continuity, capability outcome, and the public-safe provenance members are
+preserved exactly.
 
-GraphQL encodes the canonical value-kind discriminators as the closed enum
-mapping `decimal -> DECIMAL`, `enum -> ENUM`, and `bitfield -> BITFIELD`;
-bitfield values retain the canonical `symbols` field. Decimals are not JSON
-numbers: coefficients are canonical integer strings and scale is a base-10
-integer. Facts represented as unavailable remain explicitly
+GraphQL encodes the canonical value-kind discriminator as the closed union
+mapping `decimal -> M2MDecimalValue`, `enum -> M2MEnumValue`, and `bitfield ->
+M2MBitfieldValue`; the concrete type is the discriminator, so an independent
+kind field cannot contradict its payload. Bitfield values retain the canonical
+`symbols` field. Decimals are not JSON numbers: coefficients are canonical
+integer strings and scale is a base-10 integer. Facts represented as unavailable remain explicitly
 unavailable, while absent catalog members are not synthesized as zero or
 inferred from another field. The public provenance table exposes at most 256
-opaque origin and evidence references. It never exposes source shadows,
-protocol fields, registers, addresses, credentials, paths, or endpoints.
+rows containing opaque origin, source protocol/profile/version/validity,
+registry, observation, and evidence references. `source_shadow_ref` is the one
+explicit projection loss: it is classified as
+`WITHHELD_SOURCE_SHADOW_REFERENCE` because the public route must not provide a
+navigation handle into source-owned shadow data. It never exposes source-shadow
+content, registers, addresses, credentials, paths, or endpoints.
 
 V1's catalog is closed. Any additive or breaking semantic change, including a
 new fact, enum value, dimension meaning, capability requirement, or lifecycle
@@ -43,9 +49,11 @@ The wire surface accepts POST only, one operation named
 `M2MCurrentSnapshot`, one asset, and one current snapshot. The request body is
 limited to 16 KiB, query depth to 8, selected fields to 256, concurrency to one
 request per client, and rate to one request per second with burst two. GraphQL
-batching, aliases, fragments, directives, introspection, GET, subscriptions,
-and multi-operation documents are rejected before resolver execution. The
-response is limited to 1 MiB.
+batching, aliases, named fragments, directives, introspection, GET,
+subscriptions, and multi-operation documents are rejected before resolver
+execution. Inline type conditions are allowed only to select the closed
+decimal, enum, or bitfield member of the `M2MValue` union. The response is
+limited to 1 MiB.
 
 The route is registered only on a dedicated TLS listener; it is absent from the
 generic HTTP listener that serves `/graphql` and subscriptions. The channel

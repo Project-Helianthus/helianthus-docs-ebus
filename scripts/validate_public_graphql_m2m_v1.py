@@ -13,8 +13,11 @@ from pathlib import Path
 
 DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)$")
 NONNEGATIVE_INTEGER = re.compile(r"0|[1-9][0-9]*$")
+POSITIVE_INTEGER = re.compile(r"[1-9][0-9]*$")
 SHA256 = re.compile(r"sha256:[0-9a-f]{64}$")
 TOKEN = re.compile(r"[A-Za-z0-9._:-]+$")
+SOURCE_TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9._@-]*$")
+VERSION_TOKEN = re.compile(r"[0-9][0-9A-Za-z._-]*$")
 ASSET = re.compile(r"pv-asset-[A-Za-z0-9_-]{1,96}$")
 FORBIDDEN = {"raw_registers", "source_shadow", "endpoint", "endpoints", "address", "credentials", "history"}
 
@@ -164,7 +167,7 @@ def _valid_continuity(value):
     return False
 
 
-def validate_case(case, manifest, canonical_manifest):
+def _validate_case(case, manifest, canonical_manifest):
     errors = set()
     request, response = case["request"], case["response"]
     if set(request) != {"contract_id", "asset_ref"}:
@@ -184,7 +187,7 @@ def validate_case(case, manifest, canonical_manifest):
         or request["asset_ref"] != response.get("asset_ref")
     ):
         errors.add("asset")
-    if not isinstance(response.get("generation"), str) or NONNEGATIVE_INTEGER.fullmatch(response["generation"]) is None:
+    if not isinstance(response.get("generation"), str) or POSITIVE_INTEGER.fullmatch(response["generation"]) is None:
         errors.add("time_identity")
     if not isinstance(response.get("evaluated_monotonic_ns"), str) or NONNEGATIVE_INTEGER.fullmatch(response["evaluated_monotonic_ns"]) is None:
         errors.add("time_identity")
@@ -274,7 +277,26 @@ def validate_case(case, manifest, canonical_manifest):
     if len(capabilities) > manifest["max_capabilities_per_snapshot"]:
         errors.add("bounded_snapshot")
     provenance = response.get("provenance", [])
-    if any(set(item) != set(manifest["opaque_provenance_fields"]) or not SHA256.fullmatch(item["origin_ref"]) or not SHA256.fullmatch(item["evidence_ref"]) for item in provenance):
+    if any(
+        set(item) != set(manifest["opaque_provenance_fields"])
+        or not isinstance(item["source_protocol"], str)
+        or SOURCE_TOKEN.fullmatch(item["source_protocol"]) is None
+        or not isinstance(item["source_profile_id"], str)
+        or SOURCE_TOKEN.fullmatch(item["source_profile_id"]) is None
+        or not isinstance(item["source_profile_version"], str)
+        or VERSION_TOKEN.fullmatch(item["source_profile_version"]) is None
+        or item["source_validity"] != canonical_manifest["provenance"]["source_validity_required"]
+        or any(
+            not isinstance(item[field], str) or SHA256.fullmatch(item[field]) is None
+            for field in (
+                "origin_ref",
+                "source_registry_ref",
+                "source_observation_ref",
+                "evidence_ref",
+            )
+        )
+        for item in provenance
+    ):
         errors.add("provenance")
     if origins != {item["origin_ref"] for item in provenance}:
         errors.add("provenance")
@@ -283,6 +305,23 @@ def validate_case(case, manifest, canonical_manifest):
     if len(provenance) > manifest["max_provenance_per_snapshot"]:
         errors.add("bounded_snapshot")
     return sorted(errors)
+
+
+def validate_case(case, manifest, canonical_manifest):
+    """Return deterministic categories for every JSON value, including bad shapes."""
+    if not isinstance(case, dict):
+        return ["structural_shape"]
+    request, response = case.get("request"), case.get("response")
+    if not isinstance(request, dict) or not isinstance(response, dict):
+        return ["structural_shape"]
+    for field in ("facts", "capabilities", "provenance"):
+        items = response.get(field, [])
+        if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
+            return ["structural_shape"]
+    try:
+        return _validate_case(case, manifest, canonical_manifest)
+    except (AttributeError, IndexError, KeyError, TypeError, ValueError):
+        return ["structural_shape"]
 
 
 def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Path):
@@ -306,7 +345,15 @@ def main():
     args = parser.parse_args()
     try:
         validate(args.manifest, args.canonical_manifest, args.cases)
-    except (ValidationError, KeyError, TypeError, json.JSONDecodeError) as error:
+    except (
+        AttributeError,
+        IndexError,
+        KeyError,
+        TypeError,
+        ValueError,
+        ValidationError,
+        json.JSONDecodeError,
+    ) as error:
         print(f"public_graphql_m2m_v1_invalid: {error}", file=sys.stderr)
         return 1
     print("public_graphql_m2m_v1_ok")

@@ -38,12 +38,23 @@ type M2MFact {
 }
 
 type M2MDimension { key: String!, value: String! }
-type M2MValue { kind: M2MValueKind!, coefficient: String, scale: Int, symbol: String, symbols: [String!] }
-type M2MContinuity { state: M2MContinuityState!, delta: M2MValue, modulus: M2MValue, evidenceRef: String }
+union M2MValue = M2MDecimalValue | M2MEnumValue | M2MBitfieldValue
+type M2MDecimalValue { coefficient: String!, scale: Int! }
+type M2MEnumValue { symbol: String! }
+type M2MBitfieldValue { symbols: [String!]! }
+type M2MContinuity { state: M2MContinuityState!, delta: M2MDecimalValue, modulus: M2MDecimalValue, evidenceRef: String }
 type M2MCapability { id: String!, outcome: M2MCapabilityOutcome! }
-type M2MOpaqueProvenance { originRef: String!, evidenceRef: String! }
+type M2MOpaqueProvenance {
+  originRef: String!
+  sourceProtocol: String!
+  sourceProfileId: String!
+  sourceProfileVersion: String!
+  sourceValidity: String!
+  sourceRegistryRef: String!
+  sourceObservationRef: String!
+  evidenceRef: String!
+}
 
-enum M2MValueKind { DECIMAL ENUM BITFIELD }
 enum M2MQuality { GOOD SUSPECT BAD }
 enum M2MAvailability { AVAILABLE UNAVAILABLE UNSUPPORTED }
 enum M2MFreshness { FRESH STALE EXPIRED }

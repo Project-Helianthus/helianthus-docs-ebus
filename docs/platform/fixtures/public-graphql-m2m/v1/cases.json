@@ -196,6 +196,12 @@
       "provenance": [
         {
           "origin_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
+          "source_protocol": "sunspec_modbus",
+          "source_profile_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+          "source_profile_version": "1.0.0",
+          "source_validity": "terminal_verified",
+          "source_registry_ref": "sha256:e21d5d4914fba2249c68cc147243c22f89cc9e1f2be71e4565a3950f31e94750",
+          "source_observation_ref": "sha256:4f0e8553c4958ff2b16f7f8f9798b1150c99f40f94637540767cf9340b02ecf0",
           "evidence_ref": "sha256:17bcd5fcf011c4765648386160629d99357a0a3e5bacfdb09b0bf98e8f890710"
         }
       ]

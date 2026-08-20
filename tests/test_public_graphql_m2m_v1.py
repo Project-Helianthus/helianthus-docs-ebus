@@ -31,7 +31,7 @@ def test_manifest_is_locked_to_canonical_catalog_and_closed_public_surface():
     assert manifest["max_capabilities_per_snapshot"] == 1
     assert manifest["required_response_fields"] == ["contract_id", "canonical_contract_id", "asset_ref", "generation", "produced_at", "evaluated_monotonic_ns", "source_time_state", "facts", "capabilities", "provenance"]
     assert manifest["operator_authority"] == ["dedicated_listener", "server_identity", "ca_and_trust_root", "client_certificate_issuance", "asset_allowlist", "rotation", "revocation"]
-    assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "fragments", "directives", "introspection", "get", "subscriptions", "multiple_operations"]}
+    assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_value_union"]}
     assert manifest["error_contract"]["partial_snapshot_on_error"] is False
     assert manifest["credential_rotation"]["maximum_simultaneously_valid_certificates_per_principal"] == 2
     assert manifest["forbidden_surface"] == ["raw_registers", "source_shadow", "endpoints", "mutations", "subscriptions", "history", "unbounded_lists", "generic_graphql_fallback"]
@@ -220,10 +220,17 @@ def test_sdl_uses_closed_non_null_value_variants():
     sdl = SDL.read_text(encoding="utf-8")
     assert "value: M2MValue!" in sdl
     assert "union M2MValue = M2MDecimalValue | M2MEnumValue | M2MBitfieldValue" in sdl
-    assert "type M2MDecimalValue { kind: M2MValueKind!, coefficient: String!, scale: Int! }" in sdl
-    assert "type M2MEnumValue { kind: M2MValueKind!, symbol: String! }" in sdl
-    assert "type M2MBitfieldValue { kind: M2MValueKind!, symbols: [String!]! }" in sdl
+    assert "type M2MDecimalValue { coefficient: String!, scale: Int! }" in sdl
+    assert "type M2MEnumValue { symbol: String! }" in sdl
+    assert "type M2MBitfieldValue { symbols: [String!]! }" in sdl
     assert "type M2MValue {" not in sdl
+    assert "M2MValueKind" not in sdl
+    manifest = load(MANIFEST)
+    assert manifest["value_kind_mapping"] == {
+        "decimal": "M2MDecimalValue",
+        "enum": "M2MEnumValue",
+        "bitfield": "M2MBitfieldValue",
+    }
 
 
 def test_public_provenance_projects_safe_canonical_fields_and_declares_loss():
