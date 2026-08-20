@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from graphql import build_schema, graphql_sync
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "docs/platform/manifests/public-graphql-m2m-v1.json"
@@ -1025,3 +1026,102 @@ def test_sdl_closes_dimension_and_continuity_variants_and_preserves_source_bound
     assert "union M2MContinuity =" in sdl
     assert manifest["max_requested_outputs_per_snapshot"] == 512
     assert manifest["max_projection_report_per_snapshot"] == 512
+
+
+def test_sdl_closes_projection_report_outcome_payloads():
+    sdl = SDL.read_text(encoding="utf-8")
+    query = QUERY.read_text(encoding="utf-8")
+    assert (
+        "union M2MProjectionReportEntry = M2MMappedProjectionReportEntry | "
+        "M2MWithheldProjectionReportEntry | M2MUnrepresentableProjectionReportEntry"
+        in sdl
+    )
+    assert (
+        "type M2MMappedProjectionReportEntry { sourceRef: String!, "
+        "requestedOutputRef: String!, factId: String!, dimension: M2MDimension! }"
+        in sdl
+    )
+    assert (
+        "type M2MWithheldProjectionReportEntry { sourceRef: String!, "
+        "requestedOutputRef: String! }"
+        in sdl
+    )
+    assert (
+        "type M2MUnrepresentableProjectionReportEntry { sourceRef: String!, "
+        "requestedOutputRef: String! }"
+        in sdl
+    )
+    assert "__typename" in query
+
+
+def test_continuity_union_fixtures_are_executable_member_shapes():
+    cases = load(CASES)
+    for fact in response_payload(cases["positive"])["facts"]:
+        if fact["continuity"] is not None:
+            assert set(fact["continuity"]) == {"state"}
+
+    schema = build_schema(
+        SDL.read_text(encoding="utf-8")
+        + "\nextend type Query { continuityProbe: M2MContinuity }\n"
+    )
+    query = """
+      query {
+        continuityProbe {
+          ... on M2MBaselineContinuity { state }
+          ... on M2MContiguousContinuity { state delta { coefficient scale } }
+          ... on M2MRolloverContinuity {
+            state delta { coefficient scale } modulus { coefficient scale } evidenceRef
+          }
+          ... on M2MResetContinuity { state evidenceRef }
+          ... on M2MDiscontinuityContinuity { state evidenceRef }
+        }
+      }
+    """
+    variants = [
+        ("M2MBaselineContinuity", {"state": "BASELINE"}),
+        (
+            "M2MContiguousContinuity",
+            {"state": "CONTIGUOUS", "delta": {"coefficient": "1", "scale": 0}},
+        ),
+        (
+            "M2MRolloverContinuity",
+            {
+                "state": "ROLLOVER",
+                "delta": {"coefficient": "1", "scale": 0},
+                "modulus": {"coefficient": "100", "scale": 0},
+                "evidenceRef": "sha256:" + "a" * 64,
+            },
+        ),
+        (
+            "M2MResetContinuity",
+            {"state": "RESET", "evidenceRef": "sha256:" + "b" * 64},
+        ),
+        (
+            "M2MDiscontinuityContinuity",
+            {"state": "DISCONTINUITY", "evidenceRef": None},
+        ),
+    ]
+    for typename, payload in variants:
+        result = graphql_sync(
+            schema,
+            query,
+            root_value={"continuityProbe": {"__typename": typename, **payload}},
+        )
+        assert result.errors is None
+        assert result.data == {"continuityProbe": payload}
+
+
+@pytest.mark.parametrize("legacy_address", ["2130706433", "0x7f000001", "0x7f.0.0.1"])
+def test_opaque_dimensions_reject_legacy_ipv4_forms(legacy_address):
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(cases["positive"])
+    payload = response_payload(candidate)
+    fact = payload["facts"][0]
+    fact.update(
+        factId="pv.dc.current",
+        dimension={"inputId": legacy_address},
+        unit="A",
+    )
+    report = payload["projectionReport"][0]
+    report.update(factId="pv.dc.current", dimension={"inputId": legacy_address})
+    assert "dimension_redaction" in validate_case(candidate, manifest, canonical)
