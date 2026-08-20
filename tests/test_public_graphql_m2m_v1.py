@@ -368,6 +368,53 @@ def test_deep_unknown_json_fails_closed_without_recursion_error():
     assert "structural_shape" in errors
 
 
+def test_raw_json_admission_rejects_depth_and_duplicate_keys(tmp_path):
+    manifest = load(MANIFEST)
+    assert manifest["json_admission"] == {
+        "max_depth": 64,
+        "duplicate_keys": "REJECT_BEFORE_SEMANTIC_DECODE",
+    }
+    common = [
+        sys.executable,
+        "scripts/validate_public_graphql_m2m_v1.py",
+        "--manifest",
+        str(MANIFEST),
+        "--canonical-manifest",
+        str(CANONICAL),
+        "--cases",
+    ]
+
+    deep_path = tmp_path / "deep.json"
+    depth = manifest["json_admission"]["max_depth"] + 1
+    deep_path.write_text('{"nested":' * depth + "null" + "}" * depth, encoding="utf-8")
+    deep = subprocess.run(common + [str(deep_path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert deep.returncode == 1
+    assert "JSON nesting exceeds max_depth=64" in deep.stderr
+    assert "Traceback" not in deep.stderr
+
+    duplicate_path = tmp_path / "duplicate.json"
+    raw = CASES.read_text(encoding="utf-8")
+    duplicate = raw.replace(
+        '"contractId": "PUBLIC_GRAPHQL_M2M_V1",',
+        '"contractId": "PUBLIC_GRAPHQL_M2M_V1", "contractId": "PUBLIC_GRAPHQL_M2M_V2",',
+        1,
+    )
+    duplicate_path.write_text(duplicate, encoding="utf-8")
+    duplicate_result = subprocess.run(common + [str(duplicate_path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert duplicate_result.returncode == 1
+    assert "duplicate JSON key: contractId" in duplicate_result.stderr
+    assert "Traceback" not in duplicate_result.stderr
+
+
+def test_source_registry_fixture_path_is_manifest_authority():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(manifest)
+    candidate["source_registry_fixture"] = "docs/platform/fixtures/does-not-exist.json"
+    assert "provenance_binding" in validate_case(
+        cases["positive"], candidate, canonical
+    )
+
+
 def test_authenticated_errors_have_one_exact_graphql_envelope_each():
     manifest, cases = load(MANIFEST), load(CASES)
     expected = {
