@@ -718,6 +718,26 @@ def validate_error_envelopes(cases, manifest):
             item["response"], dict
         ):
             raise ValidationError("error_envelope_shape")
+        response = item["response"]
+        expected_error = {
+            "message": manifest["error_contract"]["authenticated_error_message"],
+            "path": manifest["error_contract"]["authenticated_error_path"],
+            "extensions": {"code": item["code"]},
+        }
+        if (
+            set(response) != {"status", "body"}
+            or type(response["status"]) is not int
+            or response["status"]
+            != manifest["error_contract"]["authenticated_graphql_http_status"]
+            or response["body"]
+            != {
+                "data": manifest["error_contract"]["data_on_error"],
+                "errors": [expected_error],
+            }
+            or _compact_json_size(response["body"])
+            > manifest["request_bounds"]["max_response_bytes"]
+        ):
+            raise ValidationError("error_envelope_shape")
 
 
 def validate_request_rejections(cases, manifest):
@@ -764,22 +784,6 @@ def validate_request_rejections(cases, manifest):
         if decoded.get("query") != manifest["conformance_query"]:
             continue
         raise ValidationError("request_rejection_mapping")
-        response = item["response"]
-        expected_error = {
-            "message": manifest["error_contract"]["authenticated_error_message"],
-            "path": ["m2mCurrentSnapshot"],
-            "extensions": {"code": item["code"]},
-        }
-        if (
-            set(response) != {"status", "body"}
-            or type(response["status"]) is not int
-            or response["status"]
-            != manifest["error_contract"]["authenticated_graphql_http_status"]
-            or response["body"] != {"data": None, "errors": [expected_error]}
-            or _compact_json_size(response["body"])
-            > manifest["request_bounds"]["max_response_bytes"]
-        ):
-            raise ValidationError("error_envelope_shape")
 
 
 def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Path):
