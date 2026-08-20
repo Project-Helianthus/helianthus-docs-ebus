@@ -576,3 +576,46 @@ def test_closed_error_and_request_binding_cardinality_rejects_duplicates(tmp_pat
         candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
         with pytest.raises(ValidationError):
             validate(MANIFEST, CANONICAL, candidate_path)
+
+
+def test_graphql_ast_admission_enforces_syntax_schema_and_bounds():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    base = manifest["conformance_query"]
+    mutations = [
+        ("this is not GraphQL", "query_syntax"),
+        (
+            base.replace(
+                "m2mCurrentSnapshot(request:",
+                "snapshot: m2mCurrentSnapshot(request:",
+                1,
+            ),
+            "query_alias",
+        ),
+        (
+            "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) "
+            "{ m2mCurrentSnapshot(request: $request) { ...SnapshotFields } } "
+            "fragment SnapshotFields on M2MCurrentSnapshot { contractId }",
+            "query_fragment",
+        ),
+        (base.replace("contractId", "contractId @skip(if: true)", 1), "query_directive"),
+        (base.replace("contractId", "__typename contractId", 1), "query_introspection"),
+        (base + " query Other { __typename }", "query_operations"),
+        (
+            base.replace("contractId", " ".join(["contractId"] * 257), 1),
+            "query_fields",
+        ),
+        (
+            "query M2MCurrentSnapshot($request: M2MCurrentSnapshotRequest!) "
+            "{ m2mCurrentSnapshot(request: $request) { a { b { c { d { e { f { g { h { i } } } } } } } } } }",
+            "query_depth",
+        ),
+    ]
+    for query, category in mutations:
+        candidate_manifest = copy.deepcopy(manifest)
+        candidate_manifest["conformance_query"] = query
+        candidate = copy.deepcopy(cases["positive"])
+        candidate["request"]["body"]["query"] = query
+        candidate["request"]["rawBody"] = json.dumps(
+            candidate["request"]["body"], separators=(",", ":")
+        )
+        assert category in validate_case(candidate, candidate_manifest, canonical)
