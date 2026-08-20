@@ -103,6 +103,11 @@ def _validate_raw_json_depth(text, max_depth):
 
 
 def load_json(path: Path, *, max_depth=64):
+    text = path.read_text(encoding="utf-8")
+    return loads_json(text, max_depth=max_depth)
+
+
+def loads_json(text, *, max_depth=64):
     def no_duplicates(pairs):
         result = {}
         for key, value in pairs:
@@ -111,7 +116,6 @@ def load_json(path: Path, *, max_depth=64):
             result[key] = value
         return result
 
-    text = path.read_text(encoding="utf-8")
     _validate_raw_json_depth(text, max_depth)
     return json.loads(
         text,
@@ -356,7 +360,13 @@ def _valid_continuity(value):
     return False
 
 
-def _validate_case(case, manifest, canonical_manifest, source_registry):
+def _validate_case(
+    case,
+    manifest,
+    canonical_manifest,
+    source_registry,
+    expected_current_source_ref,
+):
     errors = set()
     request, response = case["request"], case["response"]
     if set(request) != {"contract_id", "asset_ref"}:
@@ -524,7 +534,10 @@ def _validate_case(case, manifest, canonical_manifest, source_registry):
         origin_refs.append(item["origin_ref"])
     if len(origin_refs) != len(set(origin_refs)):
         errors.add("origin_uniqueness")
-    if origin_refs.count(response["current_source_origin_ref"]) != 1:
+    if (
+        origin_refs.count(response["current_source_origin_ref"]) != 1
+        or response["current_source_origin_ref"] != expected_current_source_ref
+    ):
         errors.add("current_source_binding")
     if origins != {item["origin_ref"] for item in provenance}:
         errors.add("provenance")
@@ -547,6 +560,18 @@ def _load_source_registry(manifest):
     return load_json(path, max_depth=manifest["json_admission"]["max_depth"])
 
 
+def _load_canonical_conformance_fixture(manifest):
+    relative = manifest.get("canonical_conformance_fixture")
+    if not isinstance(relative, str):
+        raise ValidationError("canonical_conformance_fixture")
+    path = (ROOT / relative).resolve()
+    try:
+        path.relative_to(ROOT)
+    except ValueError as error:
+        raise ValidationError("canonical_conformance_fixture") from error
+    return load_json(path, max_depth=manifest["json_admission"]["max_depth"])
+
+
 def validate_case(case, manifest, canonical_manifest, source_registry=None):
     """Validate the GraphQL HTTP envelope after a mandatory lossless mapping."""
     if not isinstance(case, dict):
@@ -560,10 +585,17 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
             source_registry = _load_source_registry(manifest)
         except (KeyError, OSError, TypeError, ValidationError):
             return ["provenance_binding"]
+    try:
+        canonical_fixture = _load_canonical_conformance_fixture(manifest)
+        expected_current_source_ref = canonical_fixture["source_provenance"][
+            "source_observation_ref"
+        ]
+    except (KeyError, OSError, TypeError, ValidationError):
+        return ["current_source_binding"]
     if source_registry.get("contract") != manifest["source_registry_contract"]:
         errors.add("provenance_binding")
     if (
-        set(request_envelope) != {"method", "path", "body"}
+        set(request_envelope) != {"method", "path", "rawBody", "body"}
         or request_envelope.get("method") != manifest["request_bounds"]["method"]
         or request_envelope.get("path") != manifest["route"]
         or not isinstance(request_envelope.get("body"), dict)
@@ -573,6 +605,22 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
     if not isinstance(request_body, dict):
         errors.add("structural_shape")
         return sorted(errors)
+    raw_request_body = request_envelope.get("rawBody")
+    if not isinstance(raw_request_body, str):
+        errors.add("request_envelope")
+        return sorted(errors)
+    if len(raw_request_body.encode("utf-8")) > manifest["request_bounds"]["max_body_bytes"]:
+        errors.add("request_bytes")
+    try:
+        decoded_raw_body = loads_json(
+            raw_request_body,
+            max_depth=manifest["json_admission"]["max_depth"],
+        )
+    except (TypeError, ValidationError, json.JSONDecodeError):
+        errors.add("request_envelope")
+        return sorted(errors)
+    if decoded_raw_body != request_body:
+        errors.add("request_envelope")
     if set(request_body) != {"operationName", "query", "variables"}:
         errors.add("request_envelope")
     if (
@@ -634,7 +682,13 @@ def validate_case(case, manifest, canonical_manifest, source_registry=None):
     try:
         normalized = _normalize_case(case)
         errors.update(
-            _validate_case(normalized, manifest, canonical_manifest, source_registry)
+            _validate_case(
+                normalized,
+                manifest,
+                canonical_manifest,
+                source_registry,
+                expected_current_source_ref,
+            )
         )
         return sorted(errors)
     except (AttributeError, IndexError, KeyError, TypeError, ValueError):
@@ -664,6 +718,52 @@ def validate_error_envelopes(cases, manifest):
             item["response"], dict
         ):
             raise ValidationError("error_envelope_shape")
+
+
+def validate_request_rejections(cases, manifest):
+    expected = {
+        "json-admission": manifest["request_rejection_codes"]["duplicate_json_key"],
+        "query-shape": manifest["request_rejection_codes"]["query_shape"],
+        "request-limit": manifest["request_rejection_codes"]["request_body_bytes"],
+    }
+    items = cases.get("request_rejections")
+    if (
+        not isinstance(items, list)
+        or {item.get("class"): item.get("code") for item in items if isinstance(item, dict)}
+        != expected
+    ):
+        raise ValidationError("request_rejection_mapping")
+    envelopes = {item["code"]: item["response"] for item in cases["errors"]}
+    for item in items:
+        if set(item) != {"class", "code", "request", "response"}:
+            raise ValidationError("request_rejection_shape")
+        request = item["request"]
+        if (
+            not isinstance(request, dict)
+            or set(request) != {"method", "path", "rawBody"}
+            or request["method"] != manifest["request_bounds"]["method"]
+            or request["path"] != manifest["route"]
+            or not isinstance(request["rawBody"], str)
+            or item["response"] != envelopes.get(item["code"])
+        ):
+            raise ValidationError("request_rejection_shape")
+        raw = request["rawBody"]
+        if item["class"] == "json-admission":
+            try:
+                loads_json(raw, max_depth=manifest["json_admission"]["max_depth"])
+            except (ValidationError, json.JSONDecodeError):
+                continue
+            raise ValidationError("request_rejection_mapping")
+        if item["class"] == "request-limit":
+            if len(raw.encode("utf-8")) > manifest["request_bounds"]["max_body_bytes"]:
+                continue
+            raise ValidationError("request_rejection_mapping")
+        decoded = loads_json(
+            raw, max_depth=manifest["json_admission"]["max_depth"]
+        )
+        if decoded.get("query") != manifest["conformance_query"]:
+            continue
+        raise ValidationError("request_rejection_mapping")
         response = item["response"]
         expected_error = {
             "message": manifest["error_contract"]["authenticated_error_message"],
@@ -697,6 +797,7 @@ def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Pat
         if negative["error"] not in validate_case(candidate, manifest, canonical):
             raise ValidationError("negative: " + negative["id"])
     validate_error_envelopes(cases, manifest)
+    validate_request_rejections(cases, manifest)
 
 
 def main():

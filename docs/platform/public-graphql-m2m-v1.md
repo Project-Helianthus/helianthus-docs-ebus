@@ -45,6 +45,11 @@ refer to other rows when retained values originate in older acquisitions, so a
 mixed-retention snapshot preserves both current-source identity and per-fact
 origin without ambiguity.
 
+The conformance case is rooted in the canonical
+`golden-mixed-retention.json`: the current reference must equal that canonical
+snapshot's `source_provenance.source_observation_ref`, not merely any unique row
+present in the public table.
+
 V1's catalog is closed. Any additive or breaking semantic change, including a
 new fact, enum value, dimension meaning, capability requirement, or lifecycle
 meaning, requires a successor contract identifier. The M2M route must reject
@@ -73,6 +78,12 @@ bytes before recursive decoding; duplicate keys are rejected by the parser
 rather than resolved first-wins or last-wins. The same compact deterministic
 JSON encoding used by conformance enforces the 16 KiB request-body and 1 MiB
 response-body limits.
+
+The request fixture retains both the exact UTF-8 `rawBody` and its decoded
+object. The validator measures `rawBody` before parsing, applies depth and
+duplicate-key admission to those bytes, and requires the decoded value to equal
+the documented body. Whitespace or alternate encoding cannot bypass the 16 KiB
+wire limit.
 
 The route is registered only on a dedicated TLS listener; it is absent from the
 generic HTTP listener that serves `/graphql` and subscriptions. The channel
@@ -113,6 +124,12 @@ closed codes. Malformed JSON, duplicate keys, and invalid HTTP envelopes map to
 `REQUEST_LIMIT_EXCEEDED`. Static message and path rules are identical to the
 semantic failures, so framework parser details and private input are never
 reflected to the client.
+
+Conformance binds three wire request examples directly to their exact response
+envelopes: duplicate-key JSON to `REQUEST_INVALID`, an aliased query to
+`QUERY_REJECTED`, and a raw body over 16 KiB to
+`REQUEST_LIMIT_EXCEEDED`. Implementations must preserve these input-to-output
+bindings rather than validating request and error examples independently.
 
 Credential rotation permits only the predecessor and replacement certificate
 during one operator-bounded overlap: issue replacement, verify it on the
