@@ -92,12 +92,22 @@ def test_capability_outcome_is_derived_from_required_fact_identities():
         (item["fact_id"], tuple(sorted(item["dimensions"].items())))
         for item in canonical["capability_packs"][0]["required"]
     }
+    capability_payload = cases["capability_satisfied_projection"]
     observed = {
         (item["factId"], tuple(sorted((part["key"], part["value"]) for part in item["dimensions"])))
-        for item in response_payload(cases["positive"])["facts"]
+        for item in capability_payload["facts"]
     }
     assert required <= observed
     candidate = copy.deepcopy(cases["positive"])
+    candidate["response"]["body"]["data"]["m2mCurrentSnapshot"] = copy.deepcopy(
+        capability_payload
+    )
+    candidate["request"]["body"]["variables"]["request"]["assetRef"] = (
+        capability_payload["assetRef"]
+    )
+    candidate["request"]["rawBody"] = json.dumps(
+        candidate["request"]["body"], separators=(",", ":")
+    )
     payload = response_payload(candidate)
     payload["facts"] = [
         item

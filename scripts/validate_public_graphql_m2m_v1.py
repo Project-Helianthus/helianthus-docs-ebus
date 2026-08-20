@@ -746,7 +746,13 @@ def validate_canonical_fixture_projection(cases, manifest):
         expected = _project_canonical_fixture(canonical, manifest)
     except (KeyError, OSError, TypeError, ValidationError) as error:
         raise ValidationError("canonical_fixture_parity") from error
-    if cases.get("canonical_projection") != expected:
+    try:
+        actual = cases["positive"]["response"]["body"]["data"][
+            "m2mCurrentSnapshot"
+        ]
+    except (KeyError, TypeError):
+        raise ValidationError("canonical_fixture_parity")
+    if actual != expected:
         raise ValidationError("canonical_fixture_parity")
 
 
@@ -1193,6 +1199,27 @@ def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Pat
     errors = validate_case(cases["positive"], manifest, canonical)
     if errors:
         raise ValidationError("positive: " + ", ".join(errors))
+    try:
+        capability_case = copy.deepcopy(cases["positive"])
+        capability_payload = copy.deepcopy(cases["capability_satisfied_projection"])
+        capability_case["response"]["body"]["data"][
+            "m2mCurrentSnapshot"
+        ] = capability_payload
+        capability_case["request"]["body"]["variables"]["request"][
+            "assetRef"
+        ] = capability_payload["assetRef"]
+        capability_case["request"]["rawBody"] = json.dumps(
+            capability_case["request"]["body"],
+            ensure_ascii=True,
+            separators=(",", ":"),
+        )
+    except (KeyError, TypeError):
+        raise ValidationError("capability_satisfied_projection")
+    capability_errors = validate_case(capability_case, manifest, canonical)
+    if capability_errors:
+        raise ValidationError(
+            "capability_satisfied_projection: " + ", ".join(capability_errors)
+        )
     for negative in cases["negative"]:
         candidate = _set_path(cases["positive"], negative["path"], negative["value"])
         if negative["error"] not in validate_case(candidate, manifest, canonical):
