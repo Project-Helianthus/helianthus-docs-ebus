@@ -170,3 +170,81 @@ def test_empty_success_snapshot_is_rejected():
     candidate["response"]["provenance"] = []
     candidate["response"]["capabilities"][0]["outcome"] = "NOT_SATISFIED"
     assert "empty_snapshot" in validate_case(candidate, manifest, canonical)
+
+
+def test_validator_fails_closed_on_wrong_json_container_types(tmp_path):
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    malformed = [
+        [],
+        {"request": [], "response": {}},
+        {"request": {}, "response": []},
+        {"request": {}, "response": {"facts": [None]}},
+        {"request": {}, "response": {"facts": ["not-an-object"]}},
+    ]
+    for candidate in malformed:
+        assert "structural_shape" in validate_case(candidate, manifest, canonical)
+
+    invalid_cases = copy.deepcopy(cases)
+    invalid_cases["positive"]["response"] = []
+    invalid_path = tmp_path / "invalid-cases.json"
+    invalid_path.write_text(json.dumps(invalid_cases), encoding="utf-8")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/validate_public_graphql_m2m_v1.py",
+            "--manifest",
+            str(MANIFEST),
+            "--canonical-manifest",
+            str(CANONICAL),
+            "--cases",
+            str(invalid_path),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert result.stderr.startswith("public_graphql_m2m_v1_invalid:")
+    assert "Traceback" not in result.stderr
+
+
+def test_generation_is_a_positive_canonical_integer_string():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    candidate = copy.deepcopy(cases["positive"])
+    candidate["response"]["generation"] = "0"
+    assert "time_identity" in validate_case(candidate, manifest, canonical)
+
+
+def test_sdl_uses_closed_non_null_value_variants():
+    sdl = SDL.read_text(encoding="utf-8")
+    assert "value: M2MValue!" in sdl
+    assert "union M2MValue = M2MDecimalValue | M2MEnumValue | M2MBitfieldValue" in sdl
+    assert "type M2MDecimalValue { kind: M2MValueKind!, coefficient: String!, scale: Int! }" in sdl
+    assert "type M2MEnumValue { kind: M2MValueKind!, symbol: String! }" in sdl
+    assert "type M2MBitfieldValue { kind: M2MValueKind!, symbols: [String!]! }" in sdl
+    assert "type M2MValue {" not in sdl
+
+
+def test_public_provenance_projects_safe_canonical_fields_and_declares_loss():
+    manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
+    required = set(canonical["provenance"]["required"])
+    assert set(manifest["opaque_provenance_fields"]) == {
+        "origin_ref",
+        "source_protocol",
+        "source_profile_id",
+        "source_profile_version",
+        "source_validity",
+        "source_registry_ref",
+        "source_observation_ref",
+        "evidence_ref",
+    }
+    assert manifest["provenance_projection_loss"] == {
+        "source_shadow_ref": "WITHHELD_SOURCE_SHADOW_REFERENCE"
+    }
+    assert required == (
+        set(manifest["opaque_provenance_fields"]) - {"origin_ref"}
+    ) | set(manifest["provenance_projection_loss"])
+    assert set(cases["positive"]["response"]["provenance"][0]) == set(
+        manifest["opaque_provenance_fields"]
+    )
