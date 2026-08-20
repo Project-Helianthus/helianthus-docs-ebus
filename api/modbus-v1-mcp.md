@@ -141,5 +141,24 @@ IP address, port, URL, userinfo, credential, or deployment-local path. Validatio
 messages may identify the rejected input field or rule, but remain endpoint-free.
 
 Golden envelopes in the gateway lock deterministic key/array ordering and
-`data_hash` for both tools. No GraphQL, Portal, Home Assistant, Matter, eeBUS
-binding, canonical PV semantic, or Modbus write surface is introduced here.
+`data_hash` for both tools. At the M4-02 publication boundary: No GraphQL,
+Portal, Home Assistant, Matter, eeBUS binding, canonical PV semantic, or Modbus
+write surface is introduced here. The later M5-06 target below reuses the
+already-published raw operation without changing that historical boundary.
+
+## FMV3-M5-06 Portal Reuse Target
+
+The future Portal raw diagnostic route does not define another Modbus reader.
+It invokes the same closed `modbus.v1.raw.read` operation core in process, so
+MCP and Portal share argument validation, provider/deadline/reconnect behavior,
+the four-reads-per-second runtime quota, result envelope, endpoint hashing, and
+static error redaction. The fifth combined MCP-or-Portal request in one window
+is `RESOURCE_EXHAUSTED` before wire I/O.
+
+Portal supplies only `unit_id`, `function`, `offset`, and `quantity`. It cannot
+select an endpoint, MCP tool name, profile, credential, write operation, or
+unbounded range. The generic Portal deployment boundary authenticates browser
+access; this reuse adds no Modbus-specific credential and is disabled by
+default when that boundary is absent. Portal adds a sanitized audit event but
+does not copy returned words, wire bytes, request bodies, endpoints, secrets,
+certificate bytes, or private paths into logs or retained Portal stores.

@@ -862,6 +862,61 @@ Response includes:
 - feature mapping summary
 - deprecation gates list
 
+## FMV3-M5-06 PV And Modbus Portal Boundary
+
+The two routes in this section are the pre-implementation target for the
+FMV3-M5-06 gateway companion. They are unavailable until that companion is
+merged and are disabled independently by default.
+
+Portal does not receive a second PV semantic model. The browser calls
+`GET /portal/api/v1/semantic/pv/current` with no query parameters or request
+body. A gateway-owned backend-for-frontend then sends the exact fixed
+`M2MCurrentSnapshot` POST to the dedicated `/graphql/m2m/v1` listener over
+TLS 1.3 with verified server identity and a distinct client certificate. The
+asset reference is deployment configuration, not browser input. The route
+forwards the closed GraphQL success or error envelope without falling back to
+the generic GraphQL route, a direct canonical provider, MCP, or Modbus.
+
+The browser never receives a private key, certificate bytes, CA bytes, M2M
+listener address, asset allowlist, or arbitrary GraphQL input. The semantic PV
+panel polls no faster than once every five seconds and renders canonical
+quality, availability, freshness, exact decimal values, dimensions,
+continuity, and projection losses without inferring missing values.
+
+Raw diagnostics use the separate
+`POST /portal/api/v1/explorer/modbus/raw-read` route. Its JSON body is limited
+to 4 KiB and contains exactly:
+
+```json
+{"unit_id":1,"function":3,"offset":40069,"quantity":2}
+```
+
+The route accepts no endpoint, tool name, profile, asset, credential, or write
+function. It invokes the same `modbus.v1.raw.read` core used by MCP, preserving
+the FC03/FC04, unit, range, deadline, reconnect, resource, redaction, envelope,
+and shared four-reads-per-second limits. Portal cannot create a second quota or
+call the Modbus adapter directly. Raw words and wire bytes remain only in this
+diagnostic response and never enter semantic GraphQL, semantic Portal state,
+snapshots, sessions, search, timeline, or browser persistence.
+
+Browser-to-Portal authentication remains the generic deployment boundary, for
+example Home Assistant ingress. FMV3-M5-06 adds no Modbus-specific login,
+bearer token, cookie, certificate, or browser secret. A deployment without a
+generic authenticated Portal boundary must keep the raw route disabled.
+
+Every admitted, rejected, exhausted, or failed raw request emits one bounded
+audit event with request ID, surface, fixed MCP tool ID, numeric unit/function/
+range, outcome, static error code, duration, and endpoint reference when one is
+available. Audit output excludes returned words, wire bytes, request bodies,
+network endpoints, credentials, certificate material, and private paths.
+
+The bootstrap advertises separate `semantic_pv` and `modbus_raw_diagnostic`
+capabilities. Disabling semantic PV hides its panel and returns `404` without
+stopping `/graphql/m2m/v1`. Disabling raw diagnostics hides its panel and
+returns `404` without removing `/mcp`. All four enablement combinations are
+valid, and neither route changes transport, device configuration, or write
+authority.
+
 ## Portal Quick Probes
 
 Use these commands against a local gateway instance (`:8080`) to verify portal API behavior:
@@ -906,7 +961,9 @@ Production runtime does not require Node.js. Node is only required when regenera
 
 ## Security Defaults
 
-- Portal API accepts `GET` only.
+- Portal API accepts `GET` except for explicitly documented closed operator
+  routes. FMV3-M5-06 adds only the bounded raw-read POST above; it cannot write
+  device state.
 - CORS remains same-origin by default.
 - No mutating/invoke actions are exposed by portal routes.
 - Snapshot capture/retention mutate only internal portal memory, not bus/device state.

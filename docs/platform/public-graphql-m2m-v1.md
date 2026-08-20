@@ -192,6 +192,28 @@ This route is the only public semantic ingress permitted for future private
 eeBUS or Matter bindings. It grants neither a private binding implementation
 nor access to canonical or source-owned internals.
 
+## Portal BFF Consumer Target
+
+FMV3-M5-06 treats Portal as one fixed least-privilege M2M client. Browser code
+does not call this listener and never receives its client private key,
+certificate, CA material, listener address, or asset identity. Instead, the
+gateway Portal backend uses a distinct deployment-owned client certificate to
+send the exact canonical query over TLS 1.3 to the already-running dedicated
+listener. It verifies the configured server identity and fixes one configured
+asset reference server-side.
+
+The backend forwards this contract's closed success or error envelope without
+a second semantic DTO, query rewrite, direct canonical-provider call, generic
+GraphQL fallback, or cache merge. Missing, untrusted, revoked, or denied client
+credentials and wrong server identity remain terminal M2M failures. The Portal
+panel surfaces those failures and canonical stale/unavailable values as-is.
+
+This BFF is not another ingress to `PUBLIC_GRAPHQL_M2M_V1`: it is an mTLS client
+of the dedicated route. The generic Portal listener does not mount the M2M
+handler, accept arbitrary GraphQL, or proxy raw registers. Portal raw Modbus
+diagnostics remain a separate bounded MCP-backed route and cannot add fields,
+arguments, unions, errors, or capabilities to this SDL or manifest.
+
 ## Conformance Assets
 
 The conformance boundary is the complete GraphQL HTTP envelope, not an internal
