@@ -149,6 +149,27 @@ def test_retry_stop_restart_and_runtime_override_semantics() -> None:
         assert required in text
 
 
+def test_transport_close_channels_have_explicit_owner_and_fresh_proof_budget() -> None:
+    api = _normalized(API)
+    architecture = _normalized(ARCHITECTURE)
+    for required in (
+        "`DriverRuntime` is the sole sender to `CloseRequest`",
+        "adapter owns the `CloseRequest` receiver and close worker",
+        "adapter closes `Closed` only after its resources and adapter-owned closer retire",
+        "never invokes an arbitrary manager callback or starts a manager cleanup goroutine",
+        "closed or invalid `CloseRequest` is a lifecycle ownership violation",
+    ):
+        assert required in api
+    for required in (
+        "two separately bounded phases",
+        "fresh close-request/proof budget",
+        "drain budget plus a fresh close/proof budget",
+        "drain timeout with proven closure returns `STOP_TIMEOUT` without quarantine",
+        "unproven close quarantines the process epoch",
+    ):
+        assert required in architecture
+
+
 def test_addon_validation_and_fatal_boundary_are_closed() -> None:
     architecture = _normalized(ARCHITECTURE)
     addon = _normalized(MODBUS_ADDON)
