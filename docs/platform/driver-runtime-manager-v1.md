@@ -160,6 +160,16 @@ adapter closure proof enters safety quarantine. The driver enters `FAILED` and
 a new start is rejected until process restart; timeout is not permission to
 terminate the gateway or another driver or to run two instances.
 
+An actively executing admitted lease callback is active transport use. If its
+drain expires while that callback is active, the runtime boundedly returns
+`CLOSE_UNCONFIRMED` safety quarantine: it must not send `CloseRequest` and
+must not close beneath `RawTransport`. That quarantine blocks replacement, so
+the runtime cannot construct or admit another transport generation underneath
+the callback. A fresh `CloseRequest` and close proof may run only when no
+callback actively uses the transport. An abandoned non-invoking lease is not
+active transport use; after its drain expires, adapter-proven closure may yield
+a proven `STOP_TIMEOUT` outcome; that outcome is restartable.
+
 Stop and restart perform atomic effective-capability withdrawal under the same
 lock used by every provider invocation. The manager empties the effective set
 before it publishes `STOPPING`; work racing after that point is blocked before

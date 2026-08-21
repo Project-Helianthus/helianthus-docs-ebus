@@ -299,6 +299,16 @@ may accept a later manual start under normal configuration and retry-budget
 rules. Consumers must use the flag and categorical reason; they must not treat
 every `FAILED` state as a safety quarantine.
 
+An actively executing admitted lease callback is active transport use. If its
+drain expires while that callback is active, the runtime boundedly returns
+`CLOSE_UNCONFIRMED` safety quarantine: it must not send `CloseRequest` and
+must not close beneath `RawTransport`. That quarantine blocks replacement, so
+the runtime cannot construct or admit another transport generation underneath
+the callback. A fresh `CloseRequest` and close proof may run only when no
+callback actively uses the transport. An abandoned non-invoking lease is not
+active transport use; after its drain expires, adapter-proven closure may yield
+a proven `STOP_TIMEOUT` outcome; that outcome is restartable.
+
 The initial response is admission-bounded. Consumers observe progress through
 `drivers.v1.list`, correlating `active_operation_id`, `last_operation`, and
 revision. Cancellation of the caller's request does not detach an unowned

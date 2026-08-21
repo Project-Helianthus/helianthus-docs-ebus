@@ -105,7 +105,8 @@ def test_active_callback_timeout_never_closes_beneath_raw_transport() -> None:
         "blocks replacement",
         "fresh `CloseRequest` and close proof may run only when no callback actively uses the transport",
         "abandoned non-invoking lease",
-        "proven `STOP_TIMEOUT` outcome is restartable",
+        "a proven `STOP_TIMEOUT` outcome",
+        "outcome is restartable",
     ):
         assert required in api
         assert required in architecture
