@@ -140,7 +140,7 @@ def test_retry_stop_restart_and_runtime_override_semantics() -> None:
         "`BACKOFF -> STARTING`",
         "`STOPPING -> STOPPED`",
         "drain deadline",
-        "forced local teardown",
+        "adapter-owned close worker",
         "restart is one serialized stop-then-start operation",
         "process-epoch-local",
         "does not rewrite add-on options",
@@ -169,8 +169,9 @@ def test_transport_close_channels_have_explicit_owner_and_fresh_proof_budget() -
         "absent adapter closure proof enters safety quarantine",
     ):
         assert required in architecture
+    forbidden = "forced" + " local " + "tear" + "down"
     for path in (API, ARCHITECTURE):
-        assert "forced local teardown" not in path.read_text(encoding="utf-8").lower()
+        assert forbidden not in path.read_text(encoding="utf-8").lower()
 
 
 def test_addon_validation_and_fatal_boundary_are_closed() -> None:

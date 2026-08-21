@@ -132,8 +132,8 @@ rejected by conformance fixtures until a later version adds them.
 | `CAPABILITY_DEGRADED` | The provider safely serves only its declared degraded subset. |
 | `RETRY_SCHEDULED` | A retryable failure entered bounded backoff. |
 | `RETRY_EXHAUSTED` | The process-epoch retry budget ended. |
-| `STOP_TIMEOUT` | Bounded drain expired and forced local teardown ran. |
-| `CLOSE_UNCONFIRMED` | Forced local teardown could not prove that the old provider closed. |
+| `STOP_TIMEOUT` | Bounded drain expired; the adapter-owned close worker then proved that the old provider closed. |
+| `CLOSE_UNCONFIRMED` | The adapter-owned close worker did not provide proof that the old provider closed. |
 | `INTERNAL_ERROR` | A secret-free manager/provider invariant failed. |
 
 `retryable` is true only for `DEPENDENCY_UNAVAILABLE`, `RUNTIME_NOT_READY`, or
@@ -166,10 +166,11 @@ previous effective set as invocation authority.
 
 The eBUS transport seam is a data-only lifecycle handshake. `DriverRuntime` is
 the sole sender to `CloseRequest`; the adapter owns the `CloseRequest` receiver
-and close worker. After accepting its one request, the adapter stops or finishes
-its own bounded protocol work. The adapter closes `Closed` only after its
-resources and adapter-owned closer retire. `Closed` is therefore closure proof,
-not permission for the runtime to invoke a closer itself.
+and close worker, which remains adapter-owned. After accepting its one request,
+the adapter stops or finishes its own bounded protocol work. The adapter-owned
+close worker fulfills this responsibility: the adapter closes `Closed` only
+after its resources and adapter-owned closer retire. `Closed` is therefore
+closure proof, not permission for the runtime to invoke a closer itself.
 
 The runtime selects only on this request/proof pair. It never invokes an
 arbitrary manager callback or starts a manager cleanup goroutine. The adapter
@@ -266,8 +267,8 @@ succeeds.
 
 ### Unproven-close Safety Quarantine
 
-If the drain deadline expires but forced local teardown proves closure, the
-snapshot may converge to `STOPPED` with `STOP_TIMEOUT`,
+If the drain deadline expires but the adapter-owned close worker proves closure,
+the snapshot may converge to `STOPPED` with `STOP_TIMEOUT`,
 `"safety_quarantined": false`, and empty effective capabilities. If closure
 cannot be proven, the snapshot instead contains:
 
