@@ -94,6 +94,23 @@ def test_unproven_close_enters_process_epoch_safety_quarantine() -> None:
         assert required in architecture
 
 
+def test_active_callback_timeout_never_closes_beneath_raw_transport() -> None:
+    api = _normalized(API)
+    architecture = _normalized(ARCHITECTURE)
+    for required in (
+        "actively executing admitted lease callback",
+        "must not send `CloseRequest`",
+        "must not close beneath `RawTransport`",
+        "boundedly returns `CLOSE_UNCONFIRMED` safety quarantine",
+        "blocks replacement",
+        "fresh `CloseRequest` and close proof may run only when no callback actively uses the transport",
+        "abandoned non-invoking lease",
+        "proven `STOP_TIMEOUT` outcome is restartable",
+    ):
+        assert required in api
+        assert required in architecture
+
+
 def test_operation_concurrency_idempotency_and_audit() -> None:
     text = _normalized(API)
     for required in (
