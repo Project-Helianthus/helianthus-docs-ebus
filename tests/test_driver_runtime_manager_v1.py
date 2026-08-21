@@ -98,12 +98,15 @@ def test_active_callback_timeout_never_closes_beneath_raw_transport() -> None:
     api = _normalized(API)
     architecture = _normalized(ARCHITECTURE)
     for required in (
+        "two separately bounded phases",
+        "second phase is permitted only when the first phase reaches zero active callbacks",
+        "`STOP_TIMEOUT` is possible only when drain expiry leaves zero active callbacks",
+        "An active-callback drain expiry bypasses the second phase entirely",
+        "emits no `CloseRequest`",
+        "immediately enters `CLOSE_UNCONFIRMED` safety quarantine",
         "actively executing admitted lease callback",
-        "must not send `CloseRequest`",
         "must not close beneath `RawTransport`",
-        "boundedly returns `CLOSE_UNCONFIRMED` safety quarantine",
         "blocks replacement",
-        "fresh `CloseRequest` and close proof may run only when no callback actively uses the transport",
         "abandoned non-invoking lease",
         "a proven `STOP_TIMEOUT` outcome",
         "outcome is restartable",
