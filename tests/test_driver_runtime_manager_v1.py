@@ -28,6 +28,8 @@ def test_closed_driver_snapshot_v1_vocabulary() -> None:
         "`revision`",
         "`attempt`",
         "`capabilities`",
+        "`effective_capabilities`",
+        "`safety_quarantined`",
     ):
         assert required in text
 
@@ -46,6 +48,50 @@ def test_snapshot_invariants_are_explicit() -> None:
         "capabilities are immutable for one generation",
     ):
         assert required in text
+
+
+def test_effective_capability_withdrawal_is_atomic_with_stop() -> None:
+    api = _normalized(API)
+    architecture = _normalized(ARCHITECTURE)
+    for required in (
+        "effective capabilities are the currently admitted subset",
+        "subset of `capabilities`",
+        "empty in `DISABLED`, `STOPPED`, `STARTING`, `BACKOFF`, `STOPPING`, and `FAILED`",
+        "same per-driver admission lock",
+        "withdraws all effective capabilities before publishing `STOPPING`",
+        "no provider invocation can be admitted after withdrawal",
+    ):
+        assert required in api
+    for required in (
+        "atomic effective-capability withdrawal",
+        "blocked before provider invocation",
+        "stop/restart withdrawal race",
+    ):
+        assert required in architecture
+
+
+def test_unproven_close_enters_process_epoch_safety_quarantine() -> None:
+    api = _normalized(API)
+    architecture = _normalized(ARCHITECTURE)
+    for required in (
+        '"safety_quarantined": true',
+        "`CLOSE_UNCONFIRMED`",
+        "`SAFETY_QUARANTINED`",
+        "observed state is `FAILED`",
+        "effective capabilities are empty",
+        "manual start and restart",
+        "automatic retry",
+        "provider construction",
+        "until process restart",
+    ):
+        assert required in api
+    for required in (
+        "ordinary recoverable `FAILED`",
+        "does not set `safety_quarantined`",
+        "unproven-close safety quarantine",
+        "cannot be cleared by an API operation",
+    ):
+        assert required in architecture
 
 
 def test_operation_concurrency_idempotency_and_audit() -> None:
