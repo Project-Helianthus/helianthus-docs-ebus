@@ -1,0 +1,155 @@
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+ARCHITECTURE = ROOT / "docs" / "platform" / "driver-runtime-manager-v1.md"
+API = ROOT / "api" / "driver-runtime-v1.md"
+PORTAL = ROOT / "api" / "portal.md"
+MODBUS_ADDON = ROOT / "api" / "modbus-v1-addon-runtime.md"
+PLATFORM_INDEX = ROOT / "docs" / "platform" / "README.md"
+
+
+def _normalized(path: Path) -> str:
+    return " ".join(path.read_text(encoding="utf-8").split())
+
+
+def test_closed_driver_snapshot_v1_vocabulary() -> None:
+    text = _normalized(API)
+    for required in (
+        "DriverSnapshotV1",
+        "`ebus.primary`",
+        "`modbus.tcp.default`",
+        "`eebus.primary`",
+        "`RUNNING`, `STOPPED`",
+        "`DISABLED`, `STOPPED`, `STARTING`, `RUNNING`, `DEGRADED`, `BACKOFF`, `STOPPING`, `FAILED`",
+        "`reason`",
+        "`retry`",
+        "`generation`",
+        "`revision`",
+        "`attempt`",
+        "`capabilities`",
+    ):
+        assert required in text
+
+
+def test_snapshot_invariants_are_explicit() -> None:
+    text = _normalized(API)
+    for required in (
+        "desired state is operator intent",
+        "observed state is runtime fact",
+        "monotonically increases",
+        "generation changes only when a new driver instance is admitted",
+        "revision changes on every externally visible snapshot mutation",
+        "attempt is scoped to one generation",
+        "reason is a closed categorical value",
+        "endpoint, credential, raw transport error, or protocol payload",
+        "capabilities are immutable for one generation",
+    ):
+        assert required in text
+
+
+def test_operation_concurrency_idempotency_and_audit() -> None:
+    text = _normalized(API)
+    for required in (
+        "`drivers.v1.list`",
+        "`drivers.v1.start`",
+        "`drivers.v1.stop`",
+        "`drivers.v1.restart`",
+        "one operation is active per driver",
+        "same idempotency key",
+        "same operation result",
+        "different intent",
+        "`CONFLICT`",
+        "stable `UNAVAILABLE`",
+        "one audit record",
+        "request ID",
+        "operation ID",
+        "before and after revision",
+        "never contains an endpoint, credential, raw error, or protocol payload",
+    ):
+        assert required in text
+
+
+def test_nonfatal_process_and_driver_readiness_boundary() -> None:
+    text = _normalized(ARCHITECTURE)
+    for required in (
+        "Process readiness is not driver readiness",
+        "protocol-local startup failure never terminates the shared gateway",
+        "HTTP, MCP, GraphQL, and the operator surface remain available",
+        "stable unavailable provider",
+        "`FAILED` or `BACKOFF`",
+        "At least one failed driver does not make process readiness fail",
+        "global-fatal boundary",
+    ):
+        assert required in text
+
+
+def test_retry_stop_restart_and_runtime_override_semantics() -> None:
+    text = _normalized(ARCHITECTURE)
+    for required in (
+        "bounded exponential backoff",
+        "retry budget",
+        "`STARTING -> RUNNING`",
+        "`STARTING -> BACKOFF`",
+        "`BACKOFF -> STARTING`",
+        "`STOPPING -> STOPPED`",
+        "drain deadline",
+        "forced local teardown",
+        "restart is one serialized stop-then-start operation",
+        "process-epoch-local",
+        "does not rewrite add-on options",
+        "does not survive a gateway process restart",
+    ):
+        assert required in text
+
+
+def test_addon_validation_and_fatal_boundary_are_closed() -> None:
+    architecture = _normalized(ARCHITECTURE)
+    addon = _normalized(MODBUS_ADDON)
+    for required in (
+        "validates each enabled driver's own configuration independently",
+        "invalid driver-local configuration disables only that driver",
+        "global process inputs",
+        "packaged binary integrity",
+        "unreadable global configuration document",
+        "global-fatal",
+    ):
+        assert required in architecture
+    for required in (
+        "DriverManager V1 successor",
+        "driver-local Modbus validation failure",
+        "must not prevent the gateway process from starting",
+    ):
+        assert required in addon
+
+
+def test_rollout_is_mcp_first_and_one_release_acceptance_is_explicit() -> None:
+    text = _normalized(ARCHITECTURE)
+    for required in (
+        "MCP prototype",
+        "GraphQL parity",
+        "Portal rollout",
+        "Home Assistant rollout",
+        "one consolidated add-on release",
+        "one multi-architecture build",
+        "one CI/CD publication",
+        "all three driver IDs",
+        "startup failure injection",
+        "process remains ready",
+    ):
+        assert required in text
+
+
+def test_portal_and_platform_indexes_link_the_contract() -> None:
+    portal = _normalized(PORTAL)
+    platform = _normalized(PLATFORM_INDEX)
+    for required in (
+        "[`driver-runtime-v1.md`](./driver-runtime-v1.md)",
+        "Portal is a consumer, not lifecycle authority",
+    ):
+        assert required in portal
+    for required in (
+        "[`driver-runtime-manager-v1.md`](./driver-runtime-manager-v1.md)",
+        "[`../../api/driver-runtime-v1.md`](../../api/driver-runtime-v1.md)",
+    ):
+        assert required in platform
