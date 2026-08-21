@@ -29,6 +29,22 @@ This page owns the frozen Portal-specific observe-first contract after merged
 - Versioned endpoint paths (`/api/v1`) for forward evolution.
 - Runtime is Go-only; frontend assets are embedded in the gateway binary.
 
+## Driver Runtime Control Target
+
+The generic runtime-control target is frozen in
+[`driver-runtime-v1.md`](./driver-runtime-v1.md). Portal is a consumer, not
+lifecycle authority: it renders gateway-owned `DriverSnapshotV1` records and
+invokes the gateway-owned start, stop, and restart operations only after their
+MCP contract is stable and GraphQL parity has merged. It does not create an
+independent driver FSM, edit add-on options, retain endpoints or credentials,
+or call a protocol adapter directly.
+
+This is a post-MCP target and does not claim that driver-control Portal routes
+or controls are implemented in the current endpoint inventory below. When the
+consumer rollout occurs, capability discovery must hide unsupported controls
+without hiding the stable driver snapshot or its categorical unavailable
+state.
+
 ## eeBUS Owner Workbench
 
 The post-M9 shared consumer isolation, FM5 degraded interpretation, and single
