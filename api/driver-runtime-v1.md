@@ -162,6 +162,28 @@ This admission rule applies to MCP, GraphQL, Portal, Home Assistant, semantic
 pollers, discovery, and protocol-specific diagnostics. No consumer may cache a
 previous effective set as invocation authority.
 
+### eBUS Transport Close Handshake
+
+The eBUS transport seam is a data-only lifecycle handshake. `DriverRuntime` is
+the sole sender to `CloseRequest`; the adapter owns the `CloseRequest` receiver
+and close worker. After accepting its one request, the adapter stops or finishes
+its own bounded protocol work. The adapter closes `Closed` only after its
+resources and adapter-owned closer retire. `Closed` is therefore closure proof,
+not permission for the runtime to invoke a closer itself.
+
+The runtime selects only on this request/proof pair. It never invokes an
+arbitrary manager callback or starts a manager cleanup goroutine. The adapter
+remains responsible for the worker, connections, listeners, and any
+protocol-local teardown it needs to retire before proving closure.
+
+The lifecycle handle must have a sendable `CloseRequest` and an open `Closed`
+proof channel when admitted. A closed or invalid `CloseRequest` is a lifecycle
+ownership violation: it is caught as failed close proof rather than permitted to
+panic the process. A request that no adapter worker accepts before its deadline,
+or an accepted request without a subsequent `Closed` proof, is likewise an
+unproven close and follows the safety-quarantine rule below. The runtime does
+not retry a close send in a background goroutine.
+
 ## `drivers.v1.list`
 
 `drivers.v1.list` accepts no arguments and returns all three snapshots ordered

@@ -136,14 +136,30 @@ no longer current.
 ## Stop, Drain, And Restart
 
 Stop first commits desired `STOPPED`, cancels admission and retry work, and
-enters `STOPPING`. The provider receives one drain deadline. It must stop new
-protocol work, cancel or finish bounded in-flight work, close listeners and
-connections, and join owned goroutines. If the drain deadline expires, the
-manager performs forced local teardown and publishes `STOP_TIMEOUT`. It enters
-`STOPPED` only after teardown completion is confirmed. If the old instance
-cannot be proven closed, the driver enters `FAILED`, the generation is
-quarantined, and a new start is rejected until process restart; timeout is not
-permission to terminate the gateway or another driver or to run two instances.
+enters `STOPPING`. Teardown has two separately bounded phases. The first uses a
+drain budget for work admitted before withdrawal. The second has a fresh
+close-request/proof budget: the runtime sends one data-only close request and
+waits for adapter-owned closure proof. The total stop bound is the drain budget
+plus a fresh close/proof budget, plus ordinary scheduler latency; exhausting the
+drain budget does not consume the close/proof budget.
+
+The adapter owns the close worker, listeners, connections, and protocol-local
+goroutines. The runtime is only the sender of the close request and observer of
+the proof; it has no arbitrary close callback and starts no manager cleanup
+goroutine. There is no arbitrary manager forced local teardown: the
+adapter-owned close worker performs its own teardown and closes its `Closed`
+proof channel only after it has retired those resources. A closed/invalid
+request channel, an unaccepted close request, or missing proof is an unproven
+close rather than a process panic.
+
+If the drain deadline expires but the fresh close-request/proof phase proves
+retirement, the stop completes as `STOPPED` with `STOP_TIMEOUT` and remains
+restartable. Put another way, a drain timeout with proven closure returns
+`STOP_TIMEOUT` without quarantine. If the close cannot be proven within the
+fresh proof phase, the driver enters `FAILED`; the unproven close quarantines
+the process epoch. A new start is rejected until process restart; timeout is
+not permission to terminate the gateway or another driver or to run two
+instances.
 
 Stop and restart perform atomic effective-capability withdrawal under the same
 lock used by every provider invocation. The manager empties the effective set
