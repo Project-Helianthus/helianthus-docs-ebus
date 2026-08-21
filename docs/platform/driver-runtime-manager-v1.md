@@ -137,11 +137,13 @@ no longer current.
 
 Stop first commits desired `STOPPED`, cancels admission and retry work, and
 enters `STOPPING`. Teardown has two separately bounded phases. The first uses a
-drain budget for work admitted before withdrawal. The second has a fresh
-close-request/proof budget: the runtime sends one data-only close request and
-waits for adapter-owned closure proof. The total stop bound is the drain budget
-plus a fresh close/proof budget, plus ordinary scheduler latency; exhausting the
-drain budget does not consume the close/proof budget.
+drain deadline and budget for work admitted before withdrawal. The second phase
+is permitted only when the first phase reaches zero active callbacks. It then
+has a fresh close-request/proof budget: the runtime sends one data-only
+`CloseRequest` and waits for adapter-owned closure proof. The total stop bound
+on that path is the drain budget plus a fresh close/proof budget, plus ordinary
+scheduler latency. A zero-callback drain expiry does not consume the
+close/proof budget.
 
 The adapter owns the close worker, listeners, connections, and protocol-local
 goroutines. The runtime is only the sender of the close request and observer of
@@ -152,13 +154,25 @@ proof channel only after it has retired those resources. A closed/invalid
 request channel, an unaccepted close request, or missing proof is an unproven
 close rather than a process panic.
 
-If the drain deadline expires but the fresh close-request/proof phase proves
-retirement, the stop completes as `STOPPED` with `STOP_TIMEOUT` and remains
-restartable. The manager reports `STOP_TIMEOUT` only after adapter-proven
-closure. If the close cannot be proven within the fresh proof phase, absent
-adapter closure proof enters safety quarantine. The driver enters `FAILED` and
-a new start is rejected until process restart; timeout is not permission to
-terminate the gateway or another driver or to run two instances.
+`STOP_TIMEOUT` is possible only when drain expiry leaves zero active callbacks.
+If that zero-callback drain expiry enters the fresh close-request/proof phase
+and proves retirement, the stop completes as `STOPPED` with `STOP_TIMEOUT` and
+remains restartable. The manager reports `STOP_TIMEOUT` only after
+adapter-proven closure. If the close cannot be proven within the fresh proof
+phase, absent adapter closure proof enters safety quarantine. The driver enters
+`FAILED` and a new start is rejected until process restart; timeout is not
+permission to terminate the gateway or another driver or to run two instances.
+
+An actively executing admitted lease callback is active transport use. If its
+drain expires while that callback is active, the drain has expired with active
+transport use. An active-callback drain expiry bypasses the second phase
+entirely. The runtime emits no `CloseRequest`, must
+not close beneath `RawTransport`, and immediately enters `CLOSE_UNCONFIRMED`
+safety quarantine. That quarantine blocks replacement, so the runtime cannot
+construct or admit another transport generation underneath the callback. An
+abandoned non-invoking lease is not active transport use; its zero-callback
+drain expiry can take the second-phase proof path and yield a proven
+`STOP_TIMEOUT` outcome; that outcome is restartable.
 
 Stop and restart perform atomic effective-capability withdrawal under the same
 lock used by every provider invocation. The manager empties the effective set

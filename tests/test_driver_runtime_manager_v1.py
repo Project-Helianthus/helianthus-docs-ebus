@@ -94,6 +94,27 @@ def test_unproven_close_enters_process_epoch_safety_quarantine() -> None:
         assert required in architecture
 
 
+def test_active_callback_timeout_never_closes_beneath_raw_transport() -> None:
+    api = _normalized(API)
+    architecture = _normalized(ARCHITECTURE)
+    for required in (
+        "two separately bounded phases",
+        "second phase is permitted only when the first phase reaches zero active callbacks",
+        "`STOP_TIMEOUT` is possible only when drain expiry leaves zero active callbacks",
+        "An active-callback drain expiry bypasses the second phase entirely",
+        "emits no `CloseRequest`",
+        "immediately enters `CLOSE_UNCONFIRMED` safety quarantine",
+        "actively executing admitted lease callback",
+        "must not close beneath `RawTransport`",
+        "blocks replacement",
+        "abandoned non-invoking lease",
+        "a proven `STOP_TIMEOUT` outcome",
+        "outcome is restartable",
+    ):
+        assert required in api
+        assert required in architecture
+
+
 def test_operation_concurrency_idempotency_and_audit() -> None:
     text = _normalized(API)
     for required in (
