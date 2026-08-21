@@ -267,10 +267,19 @@ succeeds.
 
 ### Unproven-close Safety Quarantine
 
-If the drain deadline expires but the adapter-owned close worker proves closure,
-the snapshot may converge to `STOPPED` with `STOP_TIMEOUT`,
-`"safety_quarantined": false`, and empty effective capabilities. If closure
-cannot be proven, the snapshot instead contains:
+Stop teardown has two separately bounded phases. The first drains work admitted
+before withdrawal. The second phase is permitted only when the first phase
+reaches zero active callbacks; it sends `CloseRequest` and waits for
+adapter-owned closure proof. An active-callback drain expiry bypasses the
+second phase entirely: the runtime emits no `CloseRequest`, must not close
+beneath `RawTransport`, and immediately enters `CLOSE_UNCONFIRMED` safety
+quarantine.
+
+`STOP_TIMEOUT` is possible only when drain expiry leaves zero active callbacks.
+On that path, adapter-proven closure during the second phase may converge to
+`STOPPED` with `STOP_TIMEOUT`, `"safety_quarantined": false`, and empty
+effective capabilities. If closure cannot be proven, the snapshot instead
+contains:
 
 ```json
 {
@@ -299,15 +308,12 @@ may accept a later manual start under normal configuration and retry-budget
 rules. Consumers must use the flag and categorical reason; they must not treat
 every `FAILED` state as a safety quarantine.
 
-An actively executing admitted lease callback is active transport use. If its
-drain expires while that callback is active, the runtime boundedly returns
-`CLOSE_UNCONFIRMED` safety quarantine: it must not send `CloseRequest` and
-must not close beneath `RawTransport`. That quarantine blocks replacement, so
-the runtime cannot construct or admit another transport generation underneath
-the callback. A fresh `CloseRequest` and close proof may run only when no
-callback actively uses the transport. An abandoned non-invoking lease is not
-active transport use; after its drain expires, adapter-proven closure may yield
-a proven `STOP_TIMEOUT` outcome; that outcome is restartable.
+An actively executing admitted lease callback is active transport use. Its
+immediate `CLOSE_UNCONFIRMED` safety quarantine blocks replacement, so the
+runtime cannot construct or admit another transport generation underneath the
+callback. An abandoned non-invoking lease is not active transport use; its
+zero-callback drain expiry can take the second-phase proof path and yield a
+proven `STOP_TIMEOUT` outcome; that outcome is restartable.
 
 The initial response is admission-bounded. Consumers observe progress through
 `drivers.v1.list`, correlating `active_operation_id`, `last_operation`, and
