@@ -31,7 +31,8 @@ registry projection, trust ownership, Modbus profile selection, or bus writes.
 driver provider owns only its protocol-local construction, connection,
 readiness, retryable error classification, drain, and teardown operations. The
 manager serializes lifecycle intent, retains the public snapshot, applies
-retry policy, and publishes categorical audit evidence.
+retry policy, owns atomic effective-capability admission, and publishes
+categorical audit evidence.
 
 The add-on owns option ingestion and validation. It passes one independently
 classified descriptor per driver to the gateway. The add-on does not run three
@@ -109,6 +110,9 @@ The normative textual forms include `STARTING -> RUNNING`,
 `DEGRADED` means the provider is admitted and offers a documented subset of
 its capabilities; it is not a synonym for disconnected or failed. A provider
 that cannot safely serve its advertised capability uses `BACKOFF` or `FAILED`.
+Static generation capabilities describe the provider contract. Effective
+capabilities describe the subset currently admitted for invocation and are
+empty outside `RUNNING` and `DEGRADED`.
 
 ## Retry And Recovery
 
@@ -140,6 +144,26 @@ manager performs forced local teardown and publishes `STOP_TIMEOUT`. It enters
 cannot be proven closed, the driver enters `FAILED`, the generation is
 quarantined, and a new start is rejected until process restart; timeout is not
 permission to terminate the gateway or another driver or to run two instances.
+
+Stop and restart perform atomic effective-capability withdrawal under the same
+lock used by every provider invocation. The manager empties the effective set
+before it publishes `STOPPING`; work racing after that point is blocked before
+provider invocation, while work admitted earlier belongs to the bounded drain.
+Provider callbacks with stale generation or operation correlation cannot
+restore an effective capability.
+
+An unproven-close safety quarantine is represented by observed `FAILED`, reason
+`CLOSE_UNCONFIRMED`, an empty effective set, the `safety_quarantined` flag, and
+operation outcome `SAFETY_QUARANTINED`. It blocks manual start/restart,
+automatic retry, provider construction, and generation advance for the rest of
+the process epoch. It cannot be cleared by an API operation, configuration
+reload, timer, or late callback. Only process restart creates a manager without
+that in-memory quarantine.
+
+This is distinct from ordinary recoverable `FAILED`, which does not set
+`safety_quarantined` and may admit a later manual start. A drain timeout whose
+forced teardown proves closure may reach `STOPPED` with `STOP_TIMEOUT`; it does
+not falsely enter quarantine.
 
 restart is one serialized stop-then-start operation. It is not two consumer
 requests and cannot be interleaved with another lifecycle command. A successful
@@ -227,6 +251,12 @@ pair:
   effect;
 - retry budget, drain timeout, stable unavailable-provider, and stale callback
   races behave as specified;
+- a deterministic stop/restart withdrawal race proves that post-withdrawal
+  work is blocked before provider invocation and no stale callback restores
+  admission;
+- an unproven-close fixture enters process-epoch quarantine, invokes no new
+  constructor through start, restart, or retry, and remains distinct from
+  ordinary recoverable failure;
 - a process restart discards runtime overrides and restores configuration
   intent;
 - MCP, GraphQL, Portal, and Home Assistant expose parity at their respective

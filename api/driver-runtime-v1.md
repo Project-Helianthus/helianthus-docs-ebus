@@ -41,7 +41,8 @@ in place of a catalog ID.
 Every list item and mutation response uses the following closed shape:
 
 The lifecycle evidence fields are `reason`, `retry`, `generation`, `revision`,
-`attempt`, and `capabilities`.
+`attempt`, `capabilities`, `effective_capabilities`, and
+`safety_quarantined`.
 
 ```json
 {
@@ -62,6 +63,8 @@ The lifecycle evidence fields are `reason`, `retry`, `generation`, `revision`,
   "revision": 29,
   "attempt": 2,
   "capabilities": ["DISCOVERY", "READ", "PAIRING", "TOPOLOGY"],
+  "effective_capabilities": [],
+  "safety_quarantined": false,
   "active_operation_id": null,
   "last_operation": {
     "operation_id": "drvop_01",
@@ -96,7 +99,13 @@ rejected by conformance fixtures until a later version adds them.
   `eligible`, `budget_remaining`, and `not_before_utc` are mutually coherent;
   a non-eligible retry has no deadline.
 - capabilities are immutable for one generation, sorted, and derived from the
-  admitted provider. A capability change requires a new generation.
+  admitted provider. A static capability change requires a new generation.
+- effective capabilities are the currently admitted subset of `capabilities`.
+  They are sorted, duplicate-free, and empty in `DISABLED`, `STOPPED`,
+  `STARTING`, `BACKOFF`, `STOPPING`, and `FAILED`. `RUNNING` exposes the full
+  static set; `DEGRADED` exposes a documented non-empty proper subset.
+- `safety_quarantined` is true only after the manager cannot prove that an old
+  provider instance closed. It is false for ordinary recoverable failures.
 - `active_operation_id` is non-null only while one operation owns the driver.
 - `last_operation` is null before the first terminal operation. It retains
   only categorical correlation for the current process epoch.
@@ -124,19 +133,34 @@ rejected by conformance fixtures until a later version adds them.
 | `RETRY_SCHEDULED` | A retryable failure entered bounded backoff. |
 | `RETRY_EXHAUSTED` | The process-epoch retry budget ended. |
 | `STOP_TIMEOUT` | Bounded drain expired and forced local teardown ran. |
+| `CLOSE_UNCONFIRMED` | Forced local teardown could not prove that the old provider closed. |
 | `INTERNAL_ERROR` | A secret-free manager/provider invariant failed. |
 
 `retryable` is true only for `DEPENDENCY_UNAVAILABLE`, `RUNTIME_NOT_READY`, or
 `RETRY_SCHEDULED` while policy budget remains. Consumers do not infer retry
 eligibility from the string alone; they use the explicit boolean and `retry`.
 
-### Closed Capability Codes
+### Closed Capability Codes And Admission
 
 V1 capability tokens are `DISCOVERY`, `READ`, `WRITE`, `PAIRING`, `TOPOLOGY`,
 `RAW_EVIDENCE`, and `SEMANTIC_PROJECTION`. Capability presence describes what
 the admitted generation can support; authorization and observed readiness are
 separate. In particular, `WRITE` never grants a consumer permission to issue a
 protocol write.
+
+Every gateway path that can invoke a provider admits the invocation through
+the manager's same per-driver admission lock. Admission checks the current
+generation and requires the requested capability in `effective_capabilities`.
+Start publishes effective capabilities only with its atomic transition to
+`RUNNING` or `DEGRADED`. Stop or restart withdraws all effective capabilities
+before publishing `STOPPING` in that same critical section. A request racing
+after the withdrawal is blocked before provider invocation. Work admitted
+before withdrawal is tracked as in-flight work and is owned by the bounded
+drain. Therefore no provider invocation can be admitted after withdrawal.
+
+This admission rule applies to MCP, GraphQL, Portal, Home Assistant, semantic
+pollers, discovery, and protocol-specific diagnostics. No consumer may cache a
+previous effective set as invocation authority.
 
 ## `drivers.v1.list`
 
@@ -195,7 +219,8 @@ Every tool returns a closed `DriverOperationV1` envelope:
 The closed dispositions are `ACCEPTED`, `REPLAYED`, `NOOP`, `CONFLICT`, and
 `UNAVAILABLE`. Terminal outcomes are `SUCCEEDED`, `ALREADY_IN_STATE`,
 `RETRY_SCHEDULED`, `STOP_TIMEOUT`, `DRIVER_NOT_FOUND`, `DRIVER_BUSY`,
-`PROVIDER_UNAVAILABLE`, `INVALID_REQUEST`, and `INTERNAL_ERROR`.
+`PROVIDER_UNAVAILABLE`, `SAFETY_QUARANTINED`, `INVALID_REQUEST`, and
+`INTERNAL_ERROR`.
 
 The placeholder snapshot above represents the required `DriverSnapshotV1`
 object. An implementation never returns an open or empty snapshot object.
@@ -216,6 +241,40 @@ Start on an already running driver and stop on an already stopped/disabled
 driver return `NOOP` / `ALREADY_IN_STATE`; they do not advance generation.
 Restart is never reduced to that no-op and creates one new generation when it
 succeeds.
+
+### Unproven-close Safety Quarantine
+
+If the drain deadline expires but forced local teardown proves closure, the
+snapshot may converge to `STOPPED` with `STOP_TIMEOUT`,
+`"safety_quarantined": false`, and empty effective capabilities. If closure
+cannot be proven, the snapshot instead contains:
+
+```json
+{
+  "observed_state": "FAILED",
+  "reason": {"code": "CLOSE_UNCONFIRMED", "retryable": false},
+  "effective_capabilities": [],
+  "safety_quarantined": true,
+  "last_operation": {
+    "operation_id": "drvop_02",
+    "kind": "STOP",
+    "outcome": "SAFETY_QUARANTINED"
+  }
+}
+```
+
+The complete snapshot retains every other required `DriverSnapshotV1` field;
+the fragment shows the quarantine-specific values. While quarantined, observed
+state is `FAILED`, effective capabilities are empty, and manual start and
+restart return `UNAVAILABLE` / `SAFETY_QUARANTINED`. Automatic retry, provider
+construction, capability admission, and generation advance are blocked until
+process restart. No API operation, configuration reload, callback, or elapsed
+time clears the flag in the current process epoch.
+
+An ordinary recoverable `FAILED` snapshot has `safety_quarantined=false` and
+may accept a later manual start under normal configuration and retry-budget
+rules. Consumers must use the flag and categorical reason; they must not treat
+every `FAILED` state as a safety quarantine.
 
 The initial response is admission-bounded. Consumers observe progress through
 `drivers.v1.list`, correlating `active_operation_id`, `last_operation`, and
