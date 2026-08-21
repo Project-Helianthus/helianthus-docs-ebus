@@ -30,6 +30,11 @@ Current platform contracts:
 - [`../../api/modbus-v1-addon-runtime.md`](../../api/modbus-v1-addon-runtime.md) -
   FMV3-M4-03 disabled-by-default add-on configuration, protected endpoint-file,
   one direct gateway launch, and protocol-local Modbus failure contract
+- [`driver-runtime-manager-v1.md`](./driver-runtime-manager-v1.md) - target
+  protocol-neutral lifecycle, readiness, retry, isolation, add-on validation,
+  and one-release acceptance contract for eBUS, Modbus TCP, and eeBUS
+- [`../../api/driver-runtime-v1.md`](../../api/driver-runtime-v1.md) - target
+  MCP-first `DriverSnapshotV1` and list/start/stop/restart operation contract
 - [`fronius-sunspec-evidence-v1.md`](./fronius-sunspec-evidence-v1.md) -
   FMV3-M3-01 evidence packet and FMV3-M3-03 `STANDARD_ONLY` completion for
   bounded synthetic fixtures and the Fronius SunSpec admission boundary

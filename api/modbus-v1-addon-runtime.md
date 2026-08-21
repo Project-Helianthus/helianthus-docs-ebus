@@ -19,6 +19,22 @@ restart, replace, or terminate the shared gateway. Generic reconnect behavior
 belongs to `helianthus-modbus`; chain parsing, profiles, and vendor flavors
 belong to `helianthus-modbusreg`.
 
+### DriverManager V1 Successor Boundary
+
+The single-process packaging contract on this page remains the implemented
+FMV3-M4-03 baseline. Its generic runtime successor is frozen in
+[`driver-runtime-v1.md`](./driver-runtime-v1.md) and
+[`../docs/platform/driver-runtime-manager-v1.md`](../docs/platform/driver-runtime-manager-v1.md).
+Under that pending DriverManager V1 successor, a driver-local Modbus validation
+failure must not prevent the gateway process from starting. The add-on will
+classify the Modbus descriptor independently and the gateway will retain a
+stable unavailable snapshot while eBUS, eeBUS, HTTP, and MCP continue.
+
+This successor wording does not retroactively claim that current released
+wrappers accept invalid active Modbus options, and it does not weaken endpoint
+validation or secret-file ownership. It defines the required convergence for
+the consolidated DriverManager release.
+
 The Modbus runtime is disabled by default and opt-in only. This contract does
 not qualify a real inverter, authorize a write function, or promote a PV
 semantic field.
