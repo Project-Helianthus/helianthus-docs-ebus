@@ -158,16 +158,19 @@ def test_transport_close_channels_have_explicit_owner_and_fresh_proof_budget() -
         "adapter closes `Closed` only after its resources and adapter-owned closer retire",
         "never invokes an arbitrary manager callback or starts a manager cleanup goroutine",
         "closed or invalid `CloseRequest` is a lifecycle ownership violation",
+        "adapter-owned close worker",
     ):
         assert required in api
     for required in (
         "two separately bounded phases",
         "fresh close-request/proof budget",
         "drain budget plus a fresh close/proof budget",
-        "drain timeout with proven closure returns `STOP_TIMEOUT` without quarantine",
-        "unproven close quarantines the process epoch",
+        "`STOP_TIMEOUT` only after adapter-proven closure",
+        "absent adapter closure proof enters safety quarantine",
     ):
         assert required in architecture
+    for path in (API, ARCHITECTURE):
+        assert "forced local teardown" not in path.read_text(encoding="utf-8").lower()
 
 
 def test_addon_validation_and_fatal_boundary_are_closed() -> None:
