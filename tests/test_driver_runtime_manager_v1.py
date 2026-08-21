@@ -140,13 +140,38 @@ def test_retry_stop_restart_and_runtime_override_semantics() -> None:
         "`BACKOFF -> STARTING`",
         "`STOPPING -> STOPPED`",
         "drain deadline",
-        "forced local teardown",
+        "adapter-owned close worker",
         "restart is one serialized stop-then-start operation",
         "process-epoch-local",
         "does not rewrite add-on options",
         "does not survive a gateway process restart",
     ):
         assert required in text
+
+
+def test_transport_close_channels_have_explicit_owner_and_fresh_proof_budget() -> None:
+    api = _normalized(API)
+    architecture = _normalized(ARCHITECTURE)
+    for required in (
+        "`DriverRuntime` is the sole sender to `CloseRequest`",
+        "adapter owns the `CloseRequest` receiver and close worker",
+        "adapter closes `Closed` only after its resources and adapter-owned closer retire",
+        "never invokes an arbitrary manager callback or starts a manager cleanup goroutine",
+        "closed or invalid `CloseRequest` is a lifecycle ownership violation",
+        "adapter-owned close worker",
+    ):
+        assert required in api
+    for required in (
+        "two separately bounded phases",
+        "fresh close-request/proof budget",
+        "drain budget plus a fresh close/proof budget",
+        "`STOP_TIMEOUT` only after adapter-proven closure",
+        "absent adapter closure proof enters safety quarantine",
+    ):
+        assert required in architecture
+    forbidden = "forced" + " local " + "tear" + "down"
+    for path in (API, ARCHITECTURE):
+        assert forbidden not in path.read_text(encoding="utf-8").lower()
 
 
 def test_addon_validation_and_fatal_boundary_are_closed() -> None:
