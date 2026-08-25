@@ -876,8 +876,10 @@ scan contract is:
   and `raw_len` beside the convenience `default_float`; raw data remains the
   authoritative exploration evidence.
 - `GET /portal/api/v1/explorer/scans/current/stream` returns
-  `text/event-stream`. Each `data:` event contains the complete current scan
-  state, and the stream closes after `done`, `cancelled`, or `error`.
+  `text/event-stream`. The server always emits the complete current scan state
+  as the initial `data:` event. It closes immediately when that initial state is
+  `idle`, `done`, `cancelled`, or `error`; an active stream closes when a later
+  event reaches `done`, `cancelled`, or `error`.
 - `GET /portal/api/v1/explorer/read/b524`, `/read/b509`, and `/read/scanid`
   provide focused read-only operations.
 
