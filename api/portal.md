@@ -864,13 +864,16 @@ distinct from the standalone `helianthus-vrc-explorer` project. The current
 scan contract is:
 
 - `POST /portal/api/v1/explorer/scans` starts one B524 or B509 scan from a JSON
-  request containing `kind`, `target`, and the applicable bounded range fields;
-  success returns HTTP 202 with `{"status":"started"}`.
+  request containing `kind`, `target`, and the applicable client-selected range
+  fields; success returns HTTP 202 with `{"status":"started"}`. The current
+  server does not impose a smaller scan-range maximum beyond each field's wire
+  type, so callers must keep ranges proportionate to the intended read workload.
 - `GET /portal/api/v1/explorer/scans/current` returns the current
   `ExplorerScanState`; `DELETE` on the same route cancels an active scan.
 - `GET /portal/api/v1/explorer/scans/current/results?offset=0&limit=100`
-  returns a bounded page. Each register result preserves `raw_hex` and
-  `raw_len` beside the convenience `default_float`; raw data remains the
+  returns the requested page. A positive `limit` is currently client-selected
+  and has no separate server-side cap. Each register result preserves `raw_hex`
+  and `raw_len` beside the convenience `default_float`; raw data remains the
   authoritative exploration evidence.
 - `GET /portal/api/v1/explorer/scans/current/stream` returns
   `text/event-stream`. Each `data:` event contains the complete current scan
