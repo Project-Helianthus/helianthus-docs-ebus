@@ -114,8 +114,7 @@ Example response:
     "session_save": "/portal/api/v1/sessions/save",
     "session_load": "/portal/api/v1/sessions/load",
     "issue_draft": "/portal/api/v1/issues/draft",
-    "issue_export": "/portal/api/v1/issues/export",
-    "vrc_migration": "/portal/api/v1/deprecation/vrc-explorer"
+    "issue_export": "/portal/api/v1/issues/export"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -888,23 +887,6 @@ The implementation and executable HTTP contract tests are public in
 and
 [`portal/explorer_test.go`](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/portal/explorer_test.go).
 
-### `GET /portal/api/v1/deprecation/vrc-explorer`
-
-This legacy compatibility path returns workflow-boundary metadata for selected
-internal gateway workflows. The route name does not declare the lifecycle of
-the standalone project: VRC Explorer is not deprecated and remains a
-community-facing eBUS and `ebusd` tool.
-
-Response metadata describes:
-- VRC Explorer's active standalone/community position
-- Portal adoption scope for selected internal gateway workflows
-- the workflow guide URL
-- workflow mapping and validation guidance
-
-Older gateway payloads may expose deprecation-oriented field names or values.
-Those fields are obsolete product-policy wording and must not be interpreted as
-deprecating VRC Explorer itself.
-
 ## FMV3-M5-06 PV And Modbus Portal Boundary
 
 The two routes in this section are the pre-implementation target for the
@@ -985,7 +967,6 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/save?name=investigation-
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/load?id=sess-1'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/issues/draft?title=Mapping+Candidate'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/issues/export?title=Mapping+Candidate'
-curl -fsS 'http://127.0.0.1:8080/portal/api/v1/deprecation/vrc-explorer'
 ```
 
 ## Portal Asset Build and Drift Check
