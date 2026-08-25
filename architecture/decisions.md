@@ -360,7 +360,7 @@ See [MCP-first Development Model](mcp-first-development.md).
 
 **Status:** Accepted
 
-**Context:** `helianthus-vrc-explorer` (Python) provided useful reverse-engineering workflows, but Helianthus runtime is Go-first. We need a dynamic portal that exposes multiple runtime views (functional planes, projections, semantic contract, and raw traces) without moving semantic logic into Home Assistant.
+**Context:** `helianthus-vrc-explorer` (Python) provides useful standalone and community-facing reverse-engineering workflows. The Helianthus runtime is Go-first and also needs a dynamic portal that exposes gateway-native views (functional planes, projections, semantic contract, and raw traces) without moving semantic logic into Home Assistant.
 
 **Decision:**
 
@@ -370,7 +370,7 @@ See [MCP-first Development Model](mcp-first-development.md).
 - Use evidence-first workflow in the portal: investigation context, provenance, and exportable issue bundles are first-class outcomes.
 - Keep runtime Node-free: frontend assets are built at build-time and embedded in gateway binaries via Go `embed`.
 
-**Consequences:** Helianthus gains a native, production-aligned portal that can replace VRC-Explorer incrementally, while preserving architectural layering and minimizing operational complexity.
+**Consequences:** Helianthus gains a native, production-aligned portal for selected internal gateway workflows while preserving architectural layering and minimizing operational complexity. VRC Explorer is not deprecated or replaced by this decision; it remains a standalone, community-facing eBUS and `ebusd` exploration tool.
 
 ## ADR-024: Shared deterministic primitives for MCP invoke and hashing workflows
 

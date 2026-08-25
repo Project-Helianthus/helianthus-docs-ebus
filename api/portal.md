@@ -857,26 +857,35 @@ Response includes:
 - `evidence`
 - `filename_hint`
 
-### VRC Explorer Endpoints (`/portal/api/v1/explorer/...`)
+### Gateway Explorer Endpoints (`/portal/api/v1/explorer/...`)
 
-The VRC Explorer is served under the Portal API namespace. Key sub-endpoints:
+Portal's gateway-native explorer is served under this API namespace. It is
+distinct from the standalone `helianthus-vrc-explorer` project. Key
+sub-endpoints:
 
 - `GET /portal/api/v1/explorer/` -- Explorer UI shell (interactive B524 register explorer for scanning groups, instances, and registers on discovered devices).
 - `GET /portal/api/v1/explorer/scan` -- Initiates a B524 scan. Returns SSE progress events during the scan.
 - `GET /portal/api/v1/explorer/results` -- Returns scan results (group/instance/register data with client-side typecasting).
 
-See the VRC Explorer documentation for scan workflow, SSE progress, and client-side typecasting details.
+See the gateway explorer documentation for scan workflow, SSE progress, and
+client-side typecasting details.
 
 ### `GET /portal/api/v1/deprecation/vrc-explorer`
 
-Returns deprecation and migration metadata for VRC-Explorer transition.
+This legacy compatibility path returns workflow-boundary metadata for selected
+internal gateway workflows. The route name does not declare the lifecycle of
+the standalone project: VRC Explorer is not deprecated and remains a
+community-facing eBUS and `ebusd` tool.
 
-Response includes:
-- `status` (`deprecated`)
-- replacement metadata (`Helianthus Portal`)
-- migration doc URL
-- feature mapping summary
-- deprecation gates list
+Response metadata describes:
+- VRC Explorer's active standalone/community position
+- Portal adoption scope for selected internal gateway workflows
+- the workflow guide URL
+- workflow mapping and validation guidance
+
+Older gateway payloads may expose deprecation-oriented field names or values.
+Those fields are obsolete product-policy wording and must not be interpreted as
+deprecating VRC Explorer itself.
 
 ## FMV3-M5-06 PV And Modbus Portal Boundary
 
