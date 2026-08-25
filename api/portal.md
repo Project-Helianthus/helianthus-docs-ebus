@@ -114,8 +114,7 @@ Example response:
     "session_save": "/portal/api/v1/sessions/save",
     "session_load": "/portal/api/v1/sessions/load",
     "issue_draft": "/portal/api/v1/issues/draft",
-    "issue_export": "/portal/api/v1/issues/export",
-    "vrc_migration": "/portal/api/v1/deprecation/vrc-explorer"
+    "issue_export": "/portal/api/v1/issues/export"
   },
   "limits": {
     "max_events_per_second": 200,
@@ -857,26 +856,36 @@ Response includes:
 - `evidence`
 - `filename_hint`
 
-### VRC Explorer Endpoints (`/portal/api/v1/explorer/...`)
+### Gateway Explorer Endpoints (`/portal/api/v1/explorer/...`)
 
-The VRC Explorer is served under the Portal API namespace. Key sub-endpoints:
+Portal's gateway-native explorer is served under this API namespace. It is
+distinct from the standalone `helianthus-vrc-explorer` project. The current
+scan contract is:
 
-- `GET /portal/api/v1/explorer/` -- Explorer UI shell (interactive B524 register explorer for scanning groups, instances, and registers on discovered devices).
-- `GET /portal/api/v1/explorer/scan` -- Initiates a B524 scan. Returns SSE progress events during the scan.
-- `GET /portal/api/v1/explorer/results` -- Returns scan results (group/instance/register data with client-side typecasting).
+- `POST /portal/api/v1/explorer/scans` starts one B524 or B509 scan from a JSON
+  request containing `kind`, `target`, and the applicable client-selected range
+  fields; success returns HTTP 202 with `{"status":"started"}`. The current
+  server does not impose a smaller scan-range maximum beyond each field's wire
+  type, so callers must keep ranges proportionate to the intended read workload.
+- `GET /portal/api/v1/explorer/scans/current` returns the current
+  `ExplorerScanState`; `DELETE` on the same route cancels an active scan.
+- `GET /portal/api/v1/explorer/scans/current/results?offset=0&limit=100`
+  returns the requested page. A positive `limit` is currently client-selected
+  and has no separate server-side cap. Each register result preserves `raw_hex`
+  and `raw_len` beside the convenience `default_float`; raw data remains the
+  authoritative exploration evidence.
+- `GET /portal/api/v1/explorer/scans/current/stream` returns
+  `text/event-stream`. The server always emits the complete current scan state
+  as the initial `data:` event. It closes immediately when that initial state is
+  `idle`, `done`, `cancelled`, or `error`; an active stream closes when a later
+  event reaches `done`, `cancelled`, or `error`.
+- `GET /portal/api/v1/explorer/read/b524`, `/read/b509`, and `/read/scanid`
+  provide focused read-only operations.
 
-See the VRC Explorer documentation for scan workflow, SSE progress, and client-side typecasting details.
-
-### `GET /portal/api/v1/deprecation/vrc-explorer`
-
-Returns deprecation and migration metadata for VRC-Explorer transition.
-
-Response includes:
-- `status` (`deprecated`)
-- replacement metadata (`Helianthus Portal`)
-- migration doc URL
-- feature mapping summary
-- deprecation gates list
+The implementation and executable HTTP contract tests are public in
+[`portal/explorer.go`](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/portal/explorer.go)
+and
+[`portal/explorer_test.go`](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/portal/explorer_test.go).
 
 ## FMV3-M5-06 PV And Modbus Portal Boundary
 
@@ -958,7 +967,6 @@ curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/save?name=investigation-
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/sessions/load?id=sess-1'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/issues/draft?title=Mapping+Candidate'
 curl -fsS 'http://127.0.0.1:8080/portal/api/v1/issues/export?title=Mapping+Candidate'
-curl -fsS 'http://127.0.0.1:8080/portal/api/v1/deprecation/vrc-explorer'
 ```
 
 ## Portal Asset Build and Drift Check
