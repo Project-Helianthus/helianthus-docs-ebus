@@ -17,6 +17,11 @@ that protocol concern. The shared boundary recognizes canonical docs-eebus
 merge `6f8154011c36f4811db473fea03db8544ab488bc` for this correction without
 copying its protocol details here.
 
+For a stable external-integrator map of the already merged northbound boundary,
+see [eeBUS Northbound External-Integrator Boundary](./eebus-northbound-integrator-reference.md).
+It does not promote the protocol repository's candidate documents or define
+pairing actions.
+
 `eebus.v1.*` remains the only eeBUS MCP namespace. It stays read-only. There is
 no v2 namespace, compatibility alias, public pairing tool, GraphQL mutation, or
 Portal-private copy of raw protocol truth. Operator mutations use the
