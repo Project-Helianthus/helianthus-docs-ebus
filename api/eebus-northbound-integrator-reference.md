@@ -47,11 +47,12 @@ MCP is the first northbound development surface; GraphQL and consumer rollout
 follow only after a fact is stable and promoted. The historical raw-first and
 per-leaf promotion boundary is documented in
 [eeBUS Raw-First Platform Contract](../docs/platform/eebus-raw-first-contract.md).
-The existing MCP, GraphQL, Portal, and shared consumer contracts remain the
-authoritative surface-specific references:
+The following documents are the authoritative references for the eeBUS API
+ownership and the promoted consumer fields. The API reference does not itself
+claim runtime availability; capability discovery remains authoritative.
 
-- [MCP](./mcp.md)
-- [GraphQL](./graphql.md)
+- [eeBUS API Surface v1](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/main/api/api-surface-v1.md)
+- [Promoted GraphQL, Portal, and Home Assistant semantic consumers](../docs/platform/promoted-semantic-consumers-v1.md)
 - [Portal](./portal.md)
 - [Shared consumer boundary](./eebus-operator-admin.md)
 
