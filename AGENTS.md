@@ -49,7 +49,7 @@ and ownership visible.
 1. Keep work scoped to one issue and one `issue/<id>-<slug>` branch based on
    current `origin/main`.
 2. Keep at most one active implementation PR for this repository. Use
-   squash-and-merge only when a merge is explicitly requested and all gates are
+   squash-and-merge when the current task scope reaches merge and all gates are
    green.
 3. Documentation-only work does not require RED-first TDD. Add or update
    validators when a mechanically enforceable contract changes.
@@ -58,8 +58,10 @@ and ownership visible.
 5. Review material claims against the evidence rules above. Resolve P0-P2
    findings and rerun review against the exact current HEAD; triage lower
    severities without misreporting them as blockers.
-6. Do not merge, deploy, mutate live equipment, publish secrets, or expand into
-   another repository unless the operator explicitly requested that boundary.
+6. Stop at the requested boundary. Deployment, live-equipment mutation,
+   credential handling, destructive actions, or expansion into another
+   repository require explicit scope and, where sensitive, confirmation at
+   action time.
 
 ## VRC Explorer And Portal Boundary
 
