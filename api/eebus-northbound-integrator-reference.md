@@ -17,7 +17,9 @@ replace it with a new protocol contract.
 SHIP answers relationship questions: whether a partner is discovered or
 trusted, and whether its transport session is connected. SPINE answers
 topology questions: the device/entity/feature/use-case tree observed for the
-current connected partner generation. Neither state implies the other.
+current connected partner generation. SHIP state alone does not prove that a
+usable SPINE topology is available; a current SPINE tree is observed through
+the SHIP connection generation that produced it.
 
 | Observed condition | Integrator-visible meaning | SPINE browsing result |
 | --- | --- | --- |
@@ -25,10 +27,12 @@ current connected partner generation. Neither state implies the other.
 | Trusted but disconnected | Trust persists, but there is no current SHIP session. This is a connection state, not a missing or revoked trust record. | Do not treat the partner as browseable, reuse an earlier raw tree as current, or infer semantic availability. Present the disconnected state through the existing typed boundary. |
 | Connected topology unavailable | A session exists, but a usable current-generation topology is not available. | Show topology as unavailable; do not substitute an old raw snapshot or synthesize a tree. |
 
-SPINE browsing is connected-only and read-only. Raw topology belongs to the
-connection generation that produced it. A disconnect or a new generation does
-not preserve the previous tree as the current tree. This is distinct from
-retained, independently promoted semantic facts.
+SPINE browsing is connected-only and read-only. An integrator must not treat
+an unavailable browser as a current raw tree or semantic availability. The
+canonical protocol owner defines raw-topology traversal, snapshot, and
+generation-lifecycle semantics; this cross-surface reference defines none of
+those semantics. Retained, independently promoted semantic facts remain a
+separate concern.
 
 ## Surface Map
 
