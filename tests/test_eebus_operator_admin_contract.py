@@ -50,6 +50,17 @@ def test_shared_operator_boundary_has_no_eebus_specific_authentication() -> None
         assert forbidden not in text
 
 
+def test_operator_admin_boundary_is_host_local_without_eebus_credentials() -> None:
+    text = _normalized(CONTRACT)
+    for required in (
+        "host-local transport peer",
+        "rejects a non-local transport peer before it reads or invokes the typed coordinator boundary",
+        "not an eeBUS-specific authentication mechanism",
+        "A remote consumer does not call this HTTP boundary directly",
+    ):
+        assert required in text
+
+
 def test_protocol_contract_is_linked_not_duplicated() -> None:
     text = _normalized(CONTRACT)
     for forbidden in (
