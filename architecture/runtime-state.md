@@ -1,7 +1,7 @@
 # Runtime State File
 
 Status: Normative
-Plan: `runtime-state-w19-26.locked`
+Plan: `runtime-state-w19-26.implementing`
 Plan-SHA256: `5f723d7122dd24c81357dc7adb640cbdb805679a5d91c8b8dedcbe6ef60edede`
 Decision references: AD01..AD27
 
@@ -404,9 +404,9 @@ The script performs a **two-stage** check per file:
 ## References
 
 - Plan canonical:
-  [`runtime-state-w19-26.locked/00-canonical.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/runtime-state-w19-26.locked/00-canonical.md).
+  [`runtime-state-w19-26.implementing/00-canonical.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/runtime-state-w19-26.implementing/00-canonical.md).
 - Decision matrix:
-  [`runtime-state-w19-26.locked/11-decision-matrix.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/runtime-state-w19-26.locked/11-decision-matrix.md)
+  [`runtime-state-w19-26.implementing/11-decision-matrix.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/runtime-state-w19-26.implementing/11-decision-matrix.md)
   (AD01..AD27).
 - Adjacent locked plans:
   [`instance-identity-rediscovery.maintenance`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/instance-identity-rediscovery.maintenance/00-canonical.md)
