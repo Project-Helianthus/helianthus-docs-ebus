@@ -5,7 +5,7 @@
 #   make ci-local              # full local CI suite (ci_local.sh)
 #
 # Plans referenced:
-#   - runtime-state-w19-26.locked (validate-schemas: AD05/AD22 acceptance)
+#   - runtime-state-w19-26.implementing (validate-schemas: AD05/AD22 acceptance)
 
 PLATFORM_TOOLCHAIN_MODE ?= supported
 

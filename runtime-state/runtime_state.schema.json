@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/runtime-state/runtime_state.schema.json",
   "title": "Helianthus Runtime State File",
-  "description": "Schema for /data/runtime_state.json. Plan: runtime-state-w19-26.locked. v1 namespaces: meta + ebus.{self, known_bus_members[]}. Sole writer = gateway. See architecture/runtime-state.md for normative documentation.",
+  "description": "Schema for /data/runtime_state.json. Plan: runtime-state-w19-26.implementing. v1 namespaces: meta + ebus.{self, known_bus_members[]}. Sole writer = gateway. See architecture/runtime-state.md for normative documentation.",
   "type": "object",
   "required": [
     "schema_version",
