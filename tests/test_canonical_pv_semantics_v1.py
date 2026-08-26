@@ -341,6 +341,31 @@ def test_scaled_accumulator_delta_uses_canonical_decimal():
     assert not validate_semantics(candidate, manifest, load_json(SOURCE_REGISTRY))
 
 
+def test_unsorted_bitfield_symbols_are_rejected_for_canonical_encoding():
+    manifest = copy.deepcopy(load_json(MANIFEST))
+    candidate = copy.deepcopy(load_json(GOLDEN))
+    definition = next(
+        fact
+        for fact in manifest["facts"]
+        if fact["id"] == "pv.operating.state"
+    )
+    definition["value_kind"] = "bitfield"
+    definition["value_domain"] = "pv.event.flags.v1"
+    fact = next(
+        fact for fact in candidate["facts"] if fact["fact_id"] == "pv.operating.state"
+    )
+    fact["value"] = {
+        "kind": "bitfield",
+        "symbols": ["INTERNAL_FAULT", "AC_DISCONNECT"],
+    }
+
+    accepted, output = schema_accepts(candidate)
+    assert accepted, output
+    assert "bitfield_symbol_order" in validate_semantics(
+        candidate, manifest, load_json(SOURCE_REGISTRY)
+    )
+
+
 def test_protocol_neutral_source_registry_binding():
     manifest = load_json(MANIFEST)
     source_registry = copy.deepcopy(load_json(SOURCE_REGISTRY))
@@ -472,6 +497,7 @@ def test_human_contract_preserves_ownership_and_private_boundary():
         "`helianthus-ebusreg` owns the canonical fact identity",
         "gateway scheduling order is never precedence",
         "binary JSON floating-point values are forbidden",
+        "bitfield symbols are lexicographically ascending",
         "must never guess rollover or reset",
         "`MAPPED`, `WITHHELD`, or `UNREPRESENTABLE`",
         "For `MAPPED`, `source_ref` equals the mapped fact's `origin_ref`",
