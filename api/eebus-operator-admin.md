@@ -59,6 +59,20 @@ discovery to authorize a dial, automatic trust, implicit persistence, direct
 store access, or a second pairing FSM. Route and error-code definitions remain
 in the canonical protocol API.
 
+## Host-local HTTP Access
+
+The credential-free operator-admin HTTP boundary accepts only a host-local
+transport peer. It rejects a non-local transport peer before it reads or
+invokes the typed coordinator boundary, including for status and inspection
+requests. This is a host-local transport boundary, not an eeBUS-specific
+authentication mechanism.
+
+A remote consumer does not call this HTTP boundary directly. A deployment that
+needs a remote consumer supplies a separately owned shared access boundary or
+host-local relay; its identity and authorization contract is outside this
+eeBUS-specific API. That boundary must not grant direct trust-store or
+operator-socket access.
+
 Responses, audit data, logs, metrics, traces, crash data, URLs, and shareable
 evidence exclude private keys, tokens, private PEM, trust-store bytes,
 credentials, private paths, and raw operator-socket frames. Concrete audit and
