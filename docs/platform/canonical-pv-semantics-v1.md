@@ -49,6 +49,11 @@ Each fact contains:
   words or endpoint material;
 - continuity metadata when the fact is an accumulator.
 
+For a bitfield, symbols are unique members of its declared value domain and
+bitfield symbols are lexicographically ascending. The array order is part of
+the canonical representation: producers must sort before snapshot or hashing,
+and consumers must reject an otherwise-valid envelope with a different order.
+
 The catalog is a rich union rather than a lowest-common-denominator schema.
 Facts absent from one protocol remain unavailable; they are not discarded from
 the canonical model or synthesized from unrelated source fields.
