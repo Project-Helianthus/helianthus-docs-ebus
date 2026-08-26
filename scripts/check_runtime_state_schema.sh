@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Validate runtime_state.schema.json against fixtures using
-# santhosh-tekuri/jsonschema/cmd/jv. Plan: runtime-state-w19-26.locked AD05/AD22.
+# santhosh-tekuri/jsonschema/cmd/jv. Plan: runtime-state-w19-26.implementing AD05/AD22.
 #
 # Two-stage check per file:
 #   1. JSON Schema (jv) — types, ranges, regex, required, enum, format-assert,
