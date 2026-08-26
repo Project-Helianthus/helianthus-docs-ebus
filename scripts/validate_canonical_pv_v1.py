@@ -159,6 +159,8 @@ def validate_semantics(document, manifest, source_registry):
             )
             if not set(symbols) <= set(domains[domain_id]):
                 errors.add("value_domain")
+            if fact["value"]["kind"] == "bitfield" and symbols != sorted(symbols):
+                errors.add("bitfield_symbol_order")
 
         temporal = fact["temporal"]
         policy = policies[definition["freshness_policy"]]
