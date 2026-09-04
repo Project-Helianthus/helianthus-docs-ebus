@@ -137,9 +137,9 @@ starts with separate `0xFF/0x04` and `0xF1/0xF6` groups, then supplies model
 observations and serial enrichment in different orders.
 
 The registry preserves those existing groups during compatible model-only
-updates. When stable identity lookup matches another entry and the previous
-group has no conflicting identity or complete model signature, it joins the
-whole group. Each address retains its slot, role, discovery and verification
+updates. When stable identity lookup matches another compatible entry and the
+previous group has no conflicting identity or complete model signature, it joins
+the whole group. Each address retains its slot, role, discovery and verification
 state, and original observation timestamp; identity enrichment updates the
 address actually observed without making every companion actively confirmed.
 
@@ -148,10 +148,16 @@ updated address may move. The previous device's other addresses remain with it.
 Two devices with the same model signature and different serials retain their
 separate, already-established groups.
 
+If an observation on a known address selects another entry by stable key but
+contradicts that entry on another supplied stable field, the registry does not
+apply that identity enrichment. For example, a matching serial with a conflicting
+MAC leaves both existing groups and the destination's known MAC unchanged.
+Later compatible evidence can still join the groups.
+
 Implementation evidence:
 
-- [Registry registration and group transfer at the fix revision](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/6c42f9f0d5804ad0e8a6da4b9edb5480ab2a733b/registry/registry_registration.go).
-- [Offline ordering, partial-identity and distinct-device regression tests](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/6c42f9f0d5804ad0e8a6da4b9edb5480ab2a733b/registry/identity_enrichment_alias_test.go).
+- [Registry registration and group transfer at the fix revision](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/f4120cc03193bb1d3fce21047ef3ef4ffa3719b5/registry/registry_registration.go).
+- [Offline ordering, partial-identity and distinct-device regression tests](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/f4120cc03193bb1d3fce21047ef3ef4ffa3719b5/registry/identity_enrichment_alias_test.go).
 - [Implementation change and validation record](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/156).
 
 These tests establish registry consistency after alias and identity observations
