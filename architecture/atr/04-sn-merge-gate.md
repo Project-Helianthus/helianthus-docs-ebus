@@ -41,3 +41,11 @@ operator can distinguish sentinel SN values from genuine identity mismatches.
 The denylist is normative because Vaillant firmware is known to emit serial
 number sentinels for inactive-register and uninitialized cases. A denied
 sentinel MUST be treated as non-identity-bearing data, not as merge proof.
+
+## Registry Implementation Evidence
+
+For consistency of already-established address groups during identity updates,
+see [Registry Alias-Group Preservation](../regulator-identity-enrichment.md#registry-alias-group-preservation).
+That note is based on a specific implementation revision and offline regression
+tests. It is not proof that this historical Phase-B qualification proposal was
+activated or that an installed device satisfies its wire-evidence prerequisites.
