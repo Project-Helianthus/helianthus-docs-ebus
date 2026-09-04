@@ -126,6 +126,40 @@ This was wrong. Examples:
 
 These may still be useful as enrichment or hints, but they must not remain the structural gate for semantic discovery.
 
+## Registry Alias-Group Preservation
+
+**Evidence status: Proven implementation behavior at the linked revision;
+hardware qualification remains Unknown from this evidence.**
+
+Identity enrichment can arrive after the caller has already associated two
+addresses with one registry entry. For example, the synthetic VR940f regression
+starts with separate `0xFF/0x04` and `0xF1/0xF6` groups, then supplies model
+observations and serial enrichment in different orders.
+
+The registry preserves those existing groups during compatible model-only
+updates. When stable identity lookup matches another entry and the previous
+group has no conflicting identity or complete model signature, it joins the
+whole group. Each address retains its slot, role, discovery and verification
+state, and original observation timestamp; identity enrichment updates the
+address actually observed without making every companion actively confirmed.
+
+If the new stable identity conflicts with the previous device, only the
+updated address may move. The previous device's other addresses remain with it.
+Two devices with the same model signature and different serials retain their
+separate, already-established groups.
+
+Implementation evidence:
+
+- [Registry registration and group transfer at the fix revision](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/6c42f9f0d5804ad0e8a6da4b9edb5480ab2a733b/registry/registry_registration.go).
+- [Offline ordering, partial-identity and distinct-device regression tests](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/6c42f9f0d5804ad0e8a6da4b9edb5480ab2a733b/registry/identity_enrichment_alias_test.go).
+- [Implementation change and validation record](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/156).
+
+These tests establish registry consistency after alias and identity observations
+have been supplied. They do not establish a device's wire identity or companion
+relationships. The [historical Phase-B SN merge gate](atr/04-sn-merge-gate.md)
+is a separate qualification proposal; this offline regression is not evidence
+that the proposal was activated or that its wire prerequisites were met.
+
 ## Cross-Links
 
 - Semantic root discovery: [`b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
