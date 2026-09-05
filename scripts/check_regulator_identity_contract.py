@@ -1,214 +1,144 @@
 #!/usr/bin/env python3
-"""Keep the public qualified-identity contract synchronized across its docs."""
+"""Validate the bounded public qualified-identity policy and its references."""
 
 from __future__ import annotations
 
 import argparse
+import json
 import pathlib
-import re
 import sys
 
 
 class CheckError(Exception):
-    """Raised when a required public-contract statement is absent."""
+    """Raised when the canonical policy or a required public reference is invalid."""
 
 
-def normalize_whitespace(value: str) -> str:
-    return " ".join(value.split())
+POLICY_PATH = pathlib.Path("architecture/regulator-qualified-identity-policy.json")
+POLICY_VERSION = 1
+TRIPLE_MEMBERS = ["Manufacturer", "DeviceID", "SerialNumber"]
+SENTINEL_SERIALS = ["0", "0x00000000", "0xFFFFFFFF", "0x7FFFFFFF"]
+SENTINEL_RECOGNITION = {
+    "scope": "named_hexadecimal_sentinels_only",
+    "case": "insensitive",
+    "prefix": "optional_single_0x",
+    "leading_zeros": "ignore",
+    "ordinary_serials": "never_parse_or_rewrite",
+}
+
+REQUIRED_DOCUMENT_REFERENCES = {
+    pathlib.Path("architecture/regulator-identity-enrichment.md"): "[qualified-identity policy](regulator-qualified-identity-policy.json)",
+    pathlib.Path("architecture/atr/04-sn-merge-gate.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
+    pathlib.Path("architecture/overview.md"): "[qualified-identity policy](./regulator-qualified-identity-policy.json)",
+    pathlib.Path("api/graphql.md"): "[qualified-identity policy](../architecture/regulator-qualified-identity-policy.json)",
+}
 
 
-def require(text: str, path: pathlib.Path, fragment: str) -> None:
-    if normalize_whitespace(fragment) not in normalize_whitespace(text):
-        raise CheckError(f"{path}: missing required qualified-identity contract fragment: {fragment!r}")
+def require_keys(value: object, context: str, keys: set[str]) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise CheckError(f"{context}: expected object")
+    actual = set(value)
+    if actual != keys:
+        missing = sorted(keys - actual)
+        unknown = sorted(actual - keys)
+        raise CheckError(f"{context}: expected exact fields; missing={missing}, unknown={unknown}")
+    return value
 
 
-def forbid(text: str, path: pathlib.Path, fragment: str) -> None:
-    if fragment in text:
-        raise CheckError(f"{path}: forbidden legacy identity-merge wording remains: {fragment!r}")
+def require_value(value: object, expected: object, context: str) -> None:
+    if value != expected or type(value) is not type(expected):
+        raise CheckError(f"{context}: expected {expected!r}, got {value!r}")
 
 
-# Each recognized affirmative token excludes an immediately following
-# semantic negation.  Clauses are normalized before these patterns run, so
-# this covers source case and whitespace variants without parsing permissions
-# beyond the bounded qualified-identity rules below.
-PERMISSION = (
-    r"(?:(?:may|can|must)(?!\s+(?:not|never)\b)|"
-    r"is permitted(?!\s+(?:(?:to\s+)?(?:not|never))\b)(?:\s+to)?)"
-)
+def validate_policy(policy: object, path: pathlib.Path) -> None:
+    root = require_keys(
+        policy,
+        str(path),
+        {"schema_version", "scope", "identity", "normalization", "topology", "confirmation", "enrichment", "provenance"},
+    )
+    require_value(root["schema_version"], POLICY_VERSION, f"{path}.schema_version")
+    require_value(root["scope"], "cross_address_qualified_identity", f"{path}.scope")
 
-# This is deliberately a small, contract-specific contradiction check rather
-# than a natural-language policy parser.  Each pattern is applied to a bounded
-# Markdown paragraph/sentence after whitespace and case normalization.  It
-# rejects an affirmative exception to one of the six qualified-identity rules;
-# the required normative wording remains checked below.
-CONTRADICTORY_PERMISSIONS = (
-    (
-        "serial-only merge",
-        re.compile(
-            rf"\bserial(?:-only)?(?:\s+(?:match|alone))?\s+{PERMISSION}"
-            r"(?:\s+\w+){0,8}\s+merge(?:\s+\w+){0,4}\s+independent\s+addresses\b"
-        ),
-    ),
-    (
-        "partial-triple merge",
-        re.compile(
-            rf"\b(?:empty|partial)(?:\s+\w+){{0,2}}\s+triples?\b"
-            rf"(?:\s+\w+){{0,6}}\s+{PERMISSION}(?:\s+\w+){{0,8}}\s+"
-            r"(?:merge|establish|create)(?:\s+\w+){0,5}\s+"
-            r"(?:independent\s+addresses|(?:cross-address\s+)?stable\s+identity\s+key)\b"
-        ),
-    ),
-    (
-        "sentinel identity proof",
-        re.compile(
-            rf"\bsentinel(?:\s+\w+){{0,4}}\s+{PERMISSION}(?:\s+\w+){{0,8}}\s+"
-            r"(?:identity\s+proof|cross-address\s+merge|stable\s+identity(?:\s+key)?)\b"
-        ),
-    ),
-    (
-        "topology alias identity promotion",
-        re.compile(
-            rf"\btopology\s+alias(?:ing)?(?:\s+\w+){{0,5}}\s+{PERMISSION}"
-            r"(?:\s+\w+){0,8}\s+(?:stable\s+identity|cross-address\s+identity\s+merge|"
-            r"cross-address\s+stable\s+identity\s+key)\b"
-        ),
-    ),
-    (
-        "same-address partial-enrichment merge",
-        re.compile(
-            rf"\bsame-address\s+partial\s+enrichment(?:\s+\w+){{0,5}}\s+{PERMISSION}"
-            r"(?:\s+\w+){0,8}\s+merge(?:\s+\w+){0,4}\s+independent\s+addresses\b"
-        ),
-    ),
-    (
-        "confirmation provenance rewrite",
-        re.compile(
-            rf"\bidentity\s+confirmation(?:\s+\w+){{0,5}}\s+{PERMISSION}"
-            r"(?:\s+\w+){0,8}\s+(?:rewrite|replace|change)(?:\s+\w+){0,5}\s+"
-            r"(?:static_seed|passive_observed|provenance|source\s+labels?)\b"
-        ),
-    ),
-    (
-        "GraphQL legacy manufacturer-plus-serial-or-MAC merge",
-        re.compile(
-            rf"\b(?:shared\s+)?manufacturer\s*\+\s*"
-            r"(?:serial(?:\s+number)?|mac(?:\s+address)?)\b"
-            rf"(?:\s+\w+){{0,8}}\s+{PERMISSION}(?:\s+\w+){{0,8}}\s+"
-            r"merge\s+faces\b(?:\s+\w+){0,10}\s+deviceid\s+(?:values?\s+)?differ\b"
-        ),
-    ),
-    (
-        "active-scan confirmation as cross-address identity",
-        re.compile(
-            rf"\bactive\s+scan(?:\s+\w+){{0,8}}\s+{PERMISSION}"
-            r"(?:\s+\w+){0,8}\s+(?:establish|create|prove)(?:\s+\w+){0,5}\s+"
-            r"cross-address\s+stable\s+identity\b"
-        ),
-    ),
-    (
-        "active-scan confirmation blocked by complete-triple gate",
-        re.compile(
-            r"\b(?:a\s+)?static\s+candidate\s+(?:becomes|may\s+become)\s+"
-            r"identity_confirmed\s+only\s+after\s+(?:a\s+)?complete\s+qualified\s+observation\b"
-        ),
-    ),
-    (
-        "selector punctuation identity collapse",
-        re.compile(
-            rf"\bvr_71\s+and\s+vr71\b(?:\s+\w+){{0,8}}\s+{PERMISSION}"
-            r"(?:\s+\w+){0,8}\s+(?:equal|same|equivalent)\b"
-        ),
-    ),
-    (
-        "registry NUL-padding removal",
-        re.compile(
-            rf"\bregistry(?:\s+identity)?\s+normalizer(?:\s+\w+){{0,6}}\s+{PERMISSION}"
-            r"(?:\s+\w+){0,8}\s+(?:remove|strip)\s+(?:nul|nuls|nul-padding)\b"
-        ),
-    ),
-)
+    identity = require_keys(
+        root["identity"],
+        f"{path}.identity",
+        {
+            "members",
+            "match",
+            "empty_or_partial",
+            "named_sentinel_serials",
+            "sentinel_recognition",
+            "sentinel_serials",
+            "non_qualifying_signals",
+        },
+    )
+    require_value(identity["members"], TRIPLE_MEMBERS, f"{path}.identity.members")
+    require_value(identity["match"], "exact_normalized_triple", f"{path}.identity.match")
+    require_value(identity["empty_or_partial"], "not_qualified", f"{path}.identity.empty_or_partial")
+    require_value(identity["named_sentinel_serials"], SENTINEL_SERIALS, f"{path}.identity.named_sentinel_serials")
+    require_value(identity["sentinel_recognition"], SENTINEL_RECOGNITION, f"{path}.identity.sentinel_recognition")
+    require_value(identity["sentinel_serials"], "not_qualified", f"{path}.identity.sentinel_serials")
+    require_value(
+        identity["non_qualifying_signals"],
+        ["serial", "mac", "model", "topology", "address_cooccurrence"],
+        f"{path}.identity.non_qualifying_signals",
+    )
 
+    normalization = require_keys(
+        root["normalization"], f"{path}.normalization", {"fixed_width_device_id_decoder", "registry"}
+    )
+    require_value(
+        normalization["fixed_width_device_id_decoder"],
+        ["remove_terminal_nul", "remove_terminal_ascii_space"],
+        f"{path}.normalization.fixed_width_device_id_decoder",
+    )
+    registry = require_keys(
+        normalization["registry"],
+        f"{path}.normalization.registry",
+        {"members", "outer_unicode_whitespace", "case", "internal_whitespace", "internal_punctuation", "deviceid_vr_71_vs_vr71"},
+    )
+    require_value(registry["members"], TRIPLE_MEMBERS, f"{path}.normalization.registry.members")
+    require_value(registry["outer_unicode_whitespace"], "trim", f"{path}.normalization.registry.outer_unicode_whitespace")
+    require_value(registry["case"], "uppercase", f"{path}.normalization.registry.case")
+    require_value(registry["internal_whitespace"], "preserve", f"{path}.normalization.registry.internal_whitespace")
+    require_value(registry["internal_punctuation"], "preserve", f"{path}.normalization.registry.internal_punctuation")
+    require_value(registry["deviceid_vr_71_vs_vr71"], "distinct", f"{path}.normalization.registry.deviceid_vr_71_vs_vr71")
 
-def contract_clauses(text: str) -> tuple[str, ...]:
-    """Return normalized, bounded prose clauses for contradiction checks."""
-    paragraphs = re.split(r"\n\s*\n", text)
-    clauses = []
-    for paragraph in paragraphs:
-        normalized = normalize_whitespace(paragraph).casefold()
-        clauses.extend(re.split(r"(?<=[.!?])\s+", normalized))
-    return tuple(clause for clause in clauses if clause)
+    topology = require_keys(root["topology"], f"{path}.topology", {"allowed_grouping_evidence", "cross_address_identity_proof"})
+    require_value(topology["allowed_grouping_evidence"], ["source_target", "canonical_companion"], f"{path}.topology.allowed_grouping_evidence")
+    require_value(topology["cross_address_identity_proof"], False, f"{path}.topology.cross_address_identity_proof")
 
+    confirmation = require_keys(root["confirmation"], f"{path}.confirmation", {"session", "per_face", "active_confirmation"})
+    require_value(confirmation["session"], "current", f"{path}.confirmation.session")
+    require_value(confirmation["per_face"], True, f"{path}.confirmation.per_face")
+    require_value(
+        confirmation["active_confirmation"],
+        "allowed_without_cross_address_qualification",
+        f"{path}.confirmation.active_confirmation",
+    )
 
-def reject_contradictory_permissions(text: str, path: pathlib.Path) -> None:
-    for clause in contract_clauses(text):
-        for rule, pattern in CONTRADICTORY_PERMISSIONS:
-            if pattern.search(clause):
-                raise CheckError(f"{path}: contradictory qualified-identity permission for {rule}: {clause!r}")
+    enrichment = require_keys(root["enrichment"], f"{path}.enrichment", {"scope", "last_known_good", "cross_address_identity"})
+    require_value(enrichment["scope"], "same_address", f"{path}.enrichment.scope")
+    require_value(enrichment["last_known_good"], "retain", f"{path}.enrichment.last_known_good")
+    require_value(enrichment["cross_address_identity"], "not_qualified", f"{path}.enrichment.cross_address_identity")
+
+    provenance = require_keys(root["provenance"], f"{path}.provenance", {"per_face", "static_seed", "passive_observed"})
+    require_value(provenance["per_face"], "retain", f"{path}.provenance.per_face")
+    require_value(provenance["static_seed"], "preserve", f"{path}.provenance.static_seed")
+    require_value(provenance["passive_observed"], "preserve", f"{path}.provenance.passive_observed")
 
 
 def validate_documents(root: pathlib.Path) -> None:
-    enrichment_path = root / "architecture/regulator-identity-enrichment.md"
-    atr_path = root / "architecture/atr/04-sn-merge-gate.md"
-    overview_path = root / "architecture/overview.md"
-    graphql_path = root / "api/graphql.md"
-    enrichment = enrichment_path.read_text(encoding="utf-8")
-    atr = atr_path.read_text(encoding="utf-8")
-    overview = overview_path.read_text(encoding="utf-8")
-    graphql = graphql_path.read_text(encoding="utf-8")
+    policy_path = root / POLICY_PATH
+    try:
+        policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise CheckError(f"{policy_path}: invalid JSON: {exc.msg}") from exc
+    validate_policy(policy, policy_path)
 
-    for path, text in (
-        (enrichment_path, enrichment),
-        (atr_path, atr),
-        (overview_path, overview),
-        (graphql_path, graphql),
-    ):
-        reject_contradictory_permissions(text, path)
-
-    for fragment in (
-        "A cross-address identity merge requires an exact normalized\n"
-        "  `(Manufacturer, DeviceID, SerialNumber)` triple.",
-        "Empty or partial triples create no cross-address stable\nidentity key.",
-        "`0`,\n`0x00000000`, `0xFFFFFFFF`, or `0x7FFFFFFF`.",
-        "Only while recognizing those\nhexadecimal sentinels, case is ignored, one optional `0x` prefix is accepted,\nand leading zeros are ignored.",
-        "That narrow recognition rule MUST NOT parse,\nrewrite, or otherwise reinterpret ordinary product serial formats.",
-        "Explicit topology aliasing based on source/target or canonical-companion\n  evidence MAY group faces before a qualified identity exists. It is not a\n  cross-address identity merge.",
-        "Partial enrichment of an already-known address MAY retain last-known-good\nfields for that same address. It MUST NOT establish a cross-address stable\nidentity key or merge independent addresses.",
-        "a serial-only match, a\nMAC-only match, or a matching model signature alone MUST NOT merge independent\naddresses.",
-        "A current-session active scan MAY promote that\nface to `active_confirmed`/`identity_confirmed` without establishing a\ncross-address stable identity.",
-        "Identity\nconfirmation MUST NOT rewrite a face's `static_seed` or `passive_observed`\nsource label.",
-        "## Canonical Qualified-Identity Normalization",
-        "The registry identity normalizer then applies the same operation separately to\n`Manufacturer`, `DeviceID`, and `SerialNumber`: trim leading and trailing\nUnicode whitespace and fold case to uppercase. It preserves internal whitespace\nand punctuation in every member. In particular, `VR_71` and `VR71` are distinct\n`DeviceID` values; a selector, display, or `productCode` naming convention does\nnot collapse them for cross-address identity.",
-        "For a fixed-width native `DeviceID`, the decoder removes only terminal NUL\n(`0x00`) and ASCII-space (`0x20`) padding before constructing `DeviceInfo`.",
-    ):
-        require(enrichment, enrichment_path, fragment)
-
-    for fragment in (
-        "Cross-address identity merge is permitted only when the exact normalized\n`(Manufacturer, DeviceID, SerialNumber)` triple matches.",
-        "Empty or partial triples create no\ncross-address stable identity key.",
-        "`SerialNumber` MUST NOT be a sentinel value: `0`, `0x00000000`,\n`0xFFFFFFFF`, or `0x7FFFFFFF`.",
-        "This exception MUST NOT parse, rewrite, or otherwise\nreinterpret ordinary product serial formats.",
-        "serial alone, MAC alone, model signature alone, companion\nrelation alone, or address co-occurrence alone.",
-        "Explicit topology aliasing based on source/target or canonical-companion\nevidence is separate from identity merge",
-        "A current-session\nactive scan MAY promote that face to `active_confirmed`/`identity_confirmed`\nwithout establishing a cross-address stable identity.",
-        "it MUST NOT rewrite `static_seed` or `passive_observed` source labels.",
-        "Before equality, the decoder removes only terminal NUL (`0x00`) and ASCII-space\n(`0x20`) padding from a fixed-width native `DeviceID`; the registry does not\nremove NUL padding. It then separately trims leading/trailing Unicode whitespace\nand folds case to uppercase for `Manufacturer`, `DeviceID`, and `SerialNumber`,\nwhile preserving internal whitespace and punctuation. Thus `VR_71` and `VR71`\nremain distinct `DeviceID` values; selector or display naming does not create an\nidentity equivalence.",
-    ):
-        require(atr, atr_path, fragment)
-
-    require(
-        overview,
-        overview_path,
-        "Cross-address identity merge requires an exact normalized `(Manufacturer,\nDeviceID, SerialNumber)` triple; an empty or partial triple creates no stable\nidentity key.",
-    )
-    forbid(overview, overview_path, "DeviceID` is not part of the serial/MAC identity key")
-
-    for fragment in (
-        "Explicit topology alias evidence (source/target or canonical-companion) MAY group\nfaces, but it does not create or prove a cross-address stable identity.",
-        "A cross-address identity merge is permitted only when the exact normalized\n`(Manufacturer, DeviceID, SerialNumber)` triple matches.",
-        "A shared manufacturer\n+ serial number or manufacturer + MAC address MUST NOT merge independent faces,\nand a differing `deviceId` cannot satisfy that exact triple.",
-        "Before that exact\ncomparison, fixed-width native `DeviceID` decoding removes only terminal NUL\n(`0x00`) and ASCII-space (`0x20`) padding; the registry separately trims outer\nUnicode whitespace and folds case for all three members while preserving\ninternal punctuation. `VR_71` and `VR71` therefore remain distinct; a GraphQL\nselector, display label, or product code does not create identity equivalence.",
-    ):
-        require(graphql, graphql_path, fragment)
+    for relative, reference in REQUIRED_DOCUMENT_REFERENCES.items():
+        path = root / relative
+        if reference not in path.read_text(encoding="utf-8"):
+            raise CheckError(f"{path}: missing required canonical policy reference: {reference!r}")
 
 
 def main() -> int:
@@ -220,7 +150,7 @@ def main() -> int:
     except (CheckError, OSError) as exc:
         print(exc, file=sys.stderr)
         return 1
-    print("Qualified identity documentation contract passed.")
+    print("Qualified identity policy and public references passed.")
     return 0
 
 

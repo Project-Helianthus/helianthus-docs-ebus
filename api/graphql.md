@@ -648,6 +648,9 @@ Address semantics:
   Unicode whitespace and folds case for all three members while preserving
   internal punctuation. `VR_71` and `VR71` therefore remain distinct; a GraphQL
   selector, display label, or product code does not create identity equivalence.
+  The canonical machine-readable companion is the public
+  [qualified-identity policy](../architecture/regulator-qualified-identity-policy.json);
+  this API page retains its explanatory consumer contract.
 
 ### Service Status Notes
 

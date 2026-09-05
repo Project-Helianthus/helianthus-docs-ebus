@@ -149,6 +149,11 @@ canonicalization contract, not proof of a native eBUS identity.** Every member
 is canonicalized independently before equality decides whether the triple is
 an exact match.
 
+The machine-readable canonical companion is the public
+[qualified-identity policy](regulator-qualified-identity-policy.json). It is a
+small, closed documentation contract for this qualified-identity boundary; this
+page retains the explanatory architecture and evidence context.
+
 For a fixed-width native `DeviceID`, the decoder removes only terminal NUL
 (`0x00`) and ASCII-space (`0x20`) padding before constructing `DeviceInfo`.
 It does not remove leading or embedded bytes. This is the decoder-to-registry

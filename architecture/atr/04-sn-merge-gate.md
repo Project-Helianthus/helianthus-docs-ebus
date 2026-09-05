@@ -16,6 +16,10 @@ merging from this gate.
 
 ## Merge Predicate
 
+The public [qualified-identity policy](../regulator-qualified-identity-policy.json)
+is the canonical machine-readable companion for this gate. This page remains
+the explanatory normative architecture reference.
+
 Cross-address identity merge is permitted only when the exact normalized
 `(Manufacturer, DeviceID, SerialNumber)` triple matches. All three members
 MUST be present and non-empty. Empty or partial triples create no

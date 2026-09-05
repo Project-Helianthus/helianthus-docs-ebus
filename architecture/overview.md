@@ -162,7 +162,9 @@ identity key. Source/target or canonical-companion topology evidence may group
 faces before that qualified triple exists, but it is not identity merge. See
 [Regulator Identity Enrichment](./regulator-identity-enrichment.md#registry-alias-group-and-identity-qualification)
 for sentinel treatment, same-address enrichment, and provenance-preserving
-identity confirmation.
+identity confirmation. The closed, machine-readable
+[qualified-identity policy](./regulator-qualified-identity-policy.json) is the
+canonical companion for this public contract.
 
 A DeviceEntry does not directly expose behavior; instead, **PlaneProviders** match against the DeviceInfo (manufacturer, device ID, HW/SW versions, and stable identifiers when available) and **create one or more Planes** that represent distinct semantic views of that same device (e.g., heating, DHW, system).
 

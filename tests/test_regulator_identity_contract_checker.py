@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import pathlib
-import re
 import shutil
 
 import pytest
@@ -10,6 +10,7 @@ import pytest
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 CHECKER_PATH = REPO_ROOT / "scripts/check_regulator_identity_contract.py"
+POLICY_RELATIVE = pathlib.Path("architecture/regulator-qualified-identity-policy.json")
 
 
 def load_checker():
@@ -21,292 +22,147 @@ def load_checker():
     return module
 
 
-def copy_contract_docs(destination: pathlib.Path) -> None:
+def copy_contract_material(destination: pathlib.Path) -> None:
     for relative in (
-        "architecture/regulator-identity-enrichment.md",
-        "architecture/atr/04-sn-merge-gate.md",
-        "architecture/overview.md",
-        "api/graphql.md",
+        POLICY_RELATIVE,
+        pathlib.Path("architecture/regulator-identity-enrichment.md"),
+        pathlib.Path("architecture/atr/04-sn-merge-gate.md"),
+        pathlib.Path("architecture/overview.md"),
+        pathlib.Path("api/graphql.md"),
     ):
         target = destination / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPO_ROOT / relative, target)
 
 
-def test_qualified_identity_contract_accepts_current_docs(tmp_path: pathlib.Path) -> None:
+def read_policy(root: pathlib.Path) -> dict[str, object]:
+    return json.loads((root / POLICY_RELATIVE).read_text(encoding="utf-8"))
+
+
+def write_policy(root: pathlib.Path, policy: dict[str, object]) -> None:
+    (root / POLICY_RELATIVE).write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
+
+
+def test_qualified_identity_policy_accepts_current_public_contract(tmp_path: pathlib.Path) -> None:
     checker = load_checker()
-    copy_contract_docs(tmp_path)
+    copy_contract_material(tmp_path)
 
     checker.validate_documents(tmp_path)
 
 
-def test_qualified_identity_contract_rejects_serial_only_merge_wording(tmp_path: pathlib.Path) -> None:
+def test_qualified_identity_policy_preserves_triple_and_normalization_rules(tmp_path: pathlib.Path) -> None:
     checker = load_checker()
-    copy_contract_docs(tmp_path)
-    path = tmp_path / "architecture/regulator-identity-enrichment.md"
-    text = path.read_text(encoding="utf-8")
-    path.write_text(
-        text.replace(
-            "a serial-only match, a\nMAC-only match, or a matching model signature alone MUST NOT merge independent\naddresses.",
-            "a serial-only match may merge independent addresses.",
-            1,
-        ),
-        encoding="utf-8",
-    )
+    copy_contract_material(tmp_path)
 
-    with pytest.raises(checker.CheckError, match="serial-only"):
-        checker.validate_documents(tmp_path)
-
-
-@pytest.mark.parametrize(
-    ("rule", "relative", "contradiction"),
-    (
-        ("serial-only", "architecture/regulator-identity-enrichment.md", "A serial-only match MAY merge independent addresses."),
-        ("partial-triple", "architecture/regulator-identity-enrichment.md", "A partial triple MAY merge independent addresses."),
-        ("sentinel", "architecture/regulator-identity-enrichment.md", "A sentinel SerialNumber MAY serve as identity proof for a cross-address merge."),
-        ("topology-alias", "architecture/regulator-identity-enrichment.md", "A topology alias MAY become a stable identity for independent addresses."),
-        ("same-address-enrichment", "architecture/regulator-identity-enrichment.md", "Same-address partial enrichment MAY merge independent addresses."),
-        ("provenance", "architecture/regulator-identity-enrichment.md", "Identity confirmation MAY rewrite static_seed provenance."),
-        ("serial-only", "architecture/atr/04-sn-merge-gate.md", "Serial alone MAY merge independent addresses."),
-        ("partial-triple", "architecture/atr/04-sn-merge-gate.md", "A partial triple MAY merge independent addresses."),
-        ("sentinel", "architecture/atr/04-sn-merge-gate.md", "A sentinel SerialNumber MAY serve as identity proof for a cross-address merge."),
-        ("topology-alias", "architecture/atr/04-sn-merge-gate.md", "A topology alias MAY become a stable identity for independent addresses."),
-        ("same-address-enrichment", "architecture/atr/04-sn-merge-gate.md", "Same-address partial enrichment MAY merge independent addresses."),
-        ("provenance", "architecture/atr/04-sn-merge-gate.md", "Identity confirmation MAY rewrite passive_observed provenance."),
-        ("partial-triple", "architecture/overview.md", "A partial triple MAY merge independent addresses."),
-        ("topology-alias", "architecture/overview.md", "A topology alias MAY become a stable identity for independent addresses."),
-    ),
-)
-def test_qualified_identity_contract_rejects_additive_permissions(
-    tmp_path: pathlib.Path, rule: str, relative: str, contradiction: str
-) -> None:
-    checker = load_checker()
-    copy_contract_docs(tmp_path)
-    path = tmp_path / relative
-    path.write_text(path.read_text(encoding="utf-8") + f"\n\n{contradiction}\n", encoding="utf-8")
-
-    expected_rule = {
-        "same-address-enrichment": r"same-address.*enrichment",
-    }.get(rule, rule.replace("-", "[- ]"))
-    with pytest.raises(checker.CheckError, match=expected_rule):
-        checker.validate_documents(tmp_path)
-
-
-@pytest.mark.parametrize(
-    ("relative", "required_fragment"),
-    (
-        (
-            "api/graphql.md",
-            "A cross-address identity merge is permitted only when the exact normalized\n"
-            "  `(Manufacturer, DeviceID, SerialNumber)` triple matches.",
-        ),
-        (
-            "architecture/regulator-identity-enrichment.md",
-            "A current-session active scan MAY promote that\n"
-            "face to `active_confirmed`/`identity_confirmed` without establishing a\n"
-            "cross-address stable identity.",
-        ),
-        (
-            "architecture/atr/04-sn-merge-gate.md",
-            "A current-session\n"
-            "active scan MAY promote that face to `active_confirmed`/`identity_confirmed`\n"
-            "without establishing a cross-address stable identity.",
-        ),
-    ),
-)
-def test_qualified_identity_contract_rejects_deleted_new_boundary(
-    tmp_path: pathlib.Path, relative: str, required_fragment: str
-) -> None:
-    checker = load_checker()
-    copy_contract_docs(tmp_path)
-    path = tmp_path / relative
-    path.write_text(path.read_text(encoding="utf-8").replace(required_fragment, "", 1), encoding="utf-8")
-
-    with pytest.raises(checker.CheckError, match="missing required"):
-        checker.validate_documents(tmp_path)
-
-
-@pytest.mark.parametrize(
-    ("rule", "relative", "contradiction"),
-    (
-        (
-            "GraphQL legacy manufacturer-plus-serial-or-MAC merge",
-            "api/graphql.md",
-            "A shared manufacturer + serial number MAY merge faces even when DeviceID values differ.",
-        ),
-        (
-            "GraphQL legacy manufacturer-plus-serial-or-MAC merge",
-            "api/graphql.md",
-            "A shared manufacturer + MAC address MAY merge faces even when DeviceID values differ.",
-        ),
-        (
-            "active-scan confirmation as cross-address identity",
-            "architecture/regulator-identity-enrichment.md",
-            "An active scan MAY establish a cross-address stable identity.",
-        ),
-        (
-            "active-scan confirmation blocked by complete-triple gate",
-            "architecture/atr/04-sn-merge-gate.md",
-            "A static candidate becomes identity_confirmed only after a complete qualified observation.",
-        ),
-    ),
-)
-def test_qualified_identity_contract_rejects_new_additive_contradictions(
-    tmp_path: pathlib.Path, rule: str, relative: str, contradiction: str
-) -> None:
-    checker = load_checker()
-    copy_contract_docs(tmp_path)
-    path = tmp_path / relative
-    path.write_text(path.read_text(encoding="utf-8") + f"\n\n{contradiction}\n", encoding="utf-8")
-
-    with pytest.raises(checker.CheckError, match=re.escape(rule)):
-        checker.validate_documents(tmp_path)
-
-
-@pytest.mark.parametrize(
-    ("relative", "required_fragment"),
-    (
-        (
-            "architecture/regulator-identity-enrichment.md",
-            "## Canonical Qualified-Identity Normalization",
-        ),
-        (
-            "architecture/atr/04-sn-merge-gate.md",
-            "Before equality, the decoder removes only terminal NUL (`0x00`) and ASCII-space\n"
-            "(`0x20`) padding from a fixed-width native `DeviceID`; the registry does not\n"
-            "remove NUL padding.",
-        ),
-        (
-            "api/graphql.md",
-            "exported as model/provider metadata for the canonical entry. Before that exact\n"
-            "  comparison, fixed-width native `DeviceID` decoding removes only terminal NUL\n"
-            "  (`0x00`) and ASCII-space (`0x20`) padding; the registry separately trims outer\n"
-            "  Unicode whitespace and folds case for all three members while preserving\n"
-            "  internal punctuation. `VR_71` and `VR71` therefore remain distinct; a GraphQL\n"
-            "  selector, display label, or product code does not create identity equivalence.",
-        ),
-    ),
-)
-def test_qualified_identity_contract_rejects_deleted_normalization_boundary(
-    tmp_path: pathlib.Path, relative: str, required_fragment: str
-) -> None:
-    checker = load_checker()
-    copy_contract_docs(tmp_path)
-    path = tmp_path / relative
-    path.write_text(path.read_text(encoding="utf-8").replace(required_fragment, "", 1), encoding="utf-8")
-
-    with pytest.raises(checker.CheckError, match="missing required"):
-        checker.validate_documents(tmp_path)
-
-
-@pytest.mark.parametrize(
-    ("rule", "relative", "contradiction"),
-    (
-        (
-            "selector punctuation identity collapse",
-            "architecture/regulator-identity-enrichment.md",
-            "VR_71 and VR71 MAY compare equal for a cross-address merge.",
-        ),
-        (
-            "registry NUL-padding removal",
-            "architecture/atr/04-sn-merge-gate.md",
-            "The registry identity normalizer MAY remove NUL padding.",
-        ),
-    ),
-)
-def test_qualified_identity_contract_rejects_normalization_overreach(
-    tmp_path: pathlib.Path, rule: str, relative: str, contradiction: str
-) -> None:
-    checker = load_checker()
-    copy_contract_docs(tmp_path)
-    path = tmp_path / relative
-    path.write_text(path.read_text(encoding="utf-8") + f"\n\n{contradiction}\n", encoding="utf-8")
-
-    with pytest.raises(checker.CheckError, match=re.escape(rule)):
-        checker.validate_documents(tmp_path)
-
-
-@pytest.mark.parametrize(
-    ("relative", "compatible_prohibition"),
-    (
-        (
-            "architecture/regulator-identity-enrichment.md",
-            "Serial alone MUST never merge independent addresses.",
-        ),
-        (
-            "architecture/atr/04-sn-merge-gate.md",
-            "Identity confirmation MUST never rewrite static_seed provenance.",
-        ),
-    ),
-)
-def test_qualified_identity_contract_accepts_must_never_prohibitions(
-    tmp_path: pathlib.Path, relative: str, compatible_prohibition: str
-) -> None:
-    checker = load_checker()
-    copy_contract_docs(tmp_path)
-    path = tmp_path / relative
-    path.write_text(path.read_text(encoding="utf-8") + f"\n\n{compatible_prohibition}\n", encoding="utf-8")
-
+    policy = read_policy(tmp_path)
+    assert policy["identity"] == {
+        "members": ["Manufacturer", "DeviceID", "SerialNumber"],
+        "match": "exact_normalized_triple",
+        "empty_or_partial": "not_qualified",
+        "named_sentinel_serials": ["0", "0x00000000", "0xFFFFFFFF", "0x7FFFFFFF"],
+        "sentinel_recognition": {
+            "scope": "named_hexadecimal_sentinels_only",
+            "case": "insensitive",
+            "prefix": "optional_single_0x",
+            "leading_zeros": "ignore",
+            "ordinary_serials": "never_parse_or_rewrite",
+        },
+        "sentinel_serials": "not_qualified",
+        "non_qualifying_signals": ["serial", "mac", "model", "topology", "address_cooccurrence"],
+    }
+    assert policy["normalization"] == {
+        "fixed_width_device_id_decoder": ["remove_terminal_nul", "remove_terminal_ascii_space"],
+        "registry": {
+            "members": ["Manufacturer", "DeviceID", "SerialNumber"],
+            "outer_unicode_whitespace": "trim",
+            "case": "uppercase",
+            "internal_whitespace": "preserve",
+            "internal_punctuation": "preserve",
+            "deviceid_vr_71_vs_vr71": "distinct",
+        },
+    }
     checker.validate_documents(tmp_path)
 
 
+def remove_identity_match(policy: dict[str, object]) -> None:
+    del policy["identity"]["match"]  # type: ignore[index]
+
+
+def add_unknown_identity_field(policy: dict[str, object]) -> None:
+    policy["identity"]["alternate_match"] = "serial_only"  # type: ignore[index]
+
+
+def change_members_to_string(policy: dict[str, object]) -> None:
+    policy["identity"]["members"] = "Manufacturer,DeviceID,SerialNumber"  # type: ignore[index]
+
+
+def alter_qualification_rule(policy: dict[str, object]) -> None:
+    policy["identity"]["match"] = "serial_only"  # type: ignore[index]
+
+
+def alter_normalization_rule(policy: dict[str, object]) -> None:
+    policy["normalization"]["registry"]["internal_punctuation"] = "remove"  # type: ignore[index]
+
+
+def alter_sentinel_recognition_rule(policy: dict[str, object]) -> None:
+    policy["identity"]["sentinel_recognition"]["ordinary_serials"] = "parse"  # type: ignore[index]
+
+
+def alter_provenance_rule(policy: dict[str, object]) -> None:
+    policy["provenance"]["static_seed"] = "rewrite"  # type: ignore[index]
+
+
 @pytest.mark.parametrize(
-    "permission",
+    ("mutate", "error"),
     (
-        "MAY",
-        "can",
-        "is permitted to",
-        "MUST",
+        (remove_identity_match, "identity: expected exact fields"),
+        (add_unknown_identity_field, "identity: expected exact fields"),
+        (change_members_to_string, "identity.members"),
+        (alter_qualification_rule, "identity.match"),
+        (alter_normalization_rule, "normalization.registry.internal_punctuation"),
+        (alter_sentinel_recognition_rule, "identity.sentinel_recognition"),
+        (alter_provenance_rule, "provenance.static_seed"),
     ),
 )
-def test_qualified_identity_contract_rejects_affirmative_permission_tokens(
-    tmp_path: pathlib.Path, permission: str
+def test_qualified_identity_policy_rejects_structured_mutations(
+    tmp_path: pathlib.Path, mutate, error: str
 ) -> None:
     checker = load_checker()
-    copy_contract_docs(tmp_path)
-    path = tmp_path / "architecture/regulator-identity-enrichment.md"
-    path.write_text(
-        path.read_text(encoding="utf-8") + f"\n\nSerial alone {permission} merge independent addresses.\n",
-        encoding="utf-8",
-    )
+    copy_contract_material(tmp_path)
+    policy = read_policy(tmp_path)
+    mutate(policy)
+    write_policy(tmp_path, policy)
 
-    with pytest.raises(checker.CheckError, match="serial-only"):
+    with pytest.raises(checker.CheckError, match=error):
         checker.validate_documents(tmp_path)
 
 
 @pytest.mark.parametrize(
-    ("relative", "compatible_prohibition"),
+    "relative",
     (
-        (
-            "architecture/regulator-identity-enrichment.md",
-            "Serial alone MAY NOT merge independent addresses.",
-        ),
-        (
-            "architecture/atr/04-sn-merge-gate.md",
-            "A sentinel serial MAY never serve as identity proof.",
-        ),
-        (
-            "architecture/regulator-identity-enrichment.md",
-            "Serial alone can\tNEVER merge independent addresses.",
-        ),
-        (
-            "architecture/regulator-identity-enrichment.md",
-            "Serial alone is permitted to NOT merge independent addresses.",
-        ),
-        (
-            "architecture/regulator-identity-enrichment.md",
-            "Serial alone MUST not merge independent addresses.",
-        ),
+        pathlib.Path("architecture/regulator-identity-enrichment.md"),
+        pathlib.Path("architecture/atr/04-sn-merge-gate.md"),
+        pathlib.Path("architecture/overview.md"),
+        pathlib.Path("api/graphql.md"),
     ),
 )
-def test_qualified_identity_contract_accepts_negated_permission_tokens(
-    tmp_path: pathlib.Path, relative: str, compatible_prohibition: str
+def test_qualified_identity_policy_requires_synchronized_public_reference(
+    tmp_path: pathlib.Path, relative: pathlib.Path
 ) -> None:
     checker = load_checker()
-    copy_contract_docs(tmp_path)
+    copy_contract_material(tmp_path)
     path = tmp_path / relative
-    path.write_text(
-        path.read_text(encoding="utf-8") + f"\n\n{compatible_prohibition}\n", encoding="utf-8"
-    )
+    reference = checker.REQUIRED_DOCUMENT_REFERENCES[relative]
+    path.write_text(path.read_text(encoding="utf-8").replace(reference, "", 1), encoding="utf-8")
 
-    checker.validate_documents(tmp_path)
+    with pytest.raises(checker.CheckError, match="missing required canonical policy reference"):
+        checker.validate_documents(tmp_path)
+
+
+def test_qualified_identity_policy_rejects_invalid_json(tmp_path: pathlib.Path) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    (tmp_path / POLICY_RELATIVE).write_text("{", encoding="utf-8")
+
+    with pytest.raises(checker.CheckError, match="invalid JSON"):
+        checker.validate_documents(tmp_path)
