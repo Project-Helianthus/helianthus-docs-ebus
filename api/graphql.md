@@ -636,7 +636,18 @@ Address semantics:
 - `address` is the canonical primary eBUS address for the physical device node.
 - `addresses` contains canonical + alias faces observed for that same device.
 - `device(address:)`, `planes(address:)`, and `methods(address:, plane:)` accept either the canonical address or any alias address from `addresses`.
-- Alias grouping uses stable physical identifiers when available. A shared manufacturer + serial number or manufacturer + MAC address can merge faces even when their eBUS `deviceId` values differ; `deviceId` remains exported as model/provider metadata for the canonical entry.
+- Explicit topology alias evidence (source/target or canonical-companion) MAY group
+  faces, but it does not create or prove a cross-address stable identity.
+  A cross-address identity merge is permitted only when the exact normalized
+  `(Manufacturer, DeviceID, SerialNumber)` triple matches. A shared manufacturer
+  + serial number or manufacturer + MAC address MUST NOT merge independent faces,
+  and a differing `deviceId` cannot satisfy that exact triple. `deviceId` remains
+  exported as model/provider metadata for the canonical entry. Before that exact
+  comparison, fixed-width native `DeviceID` decoding removes only terminal NUL
+  (`0x00`) and ASCII-space (`0x20`) padding; the registry separately trims outer
+  Unicode whitespace and folds case for all three members while preserving
+  internal punctuation. `VR_71` and `VR71` therefore remain distinct; a GraphQL
+  selector, display label, or product code does not create identity equivalence.
 
 ### Service Status Notes
 

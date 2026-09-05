@@ -142,6 +142,33 @@ explicit topology evidence has grouped faces. The two mechanisms are separate:
   present and non-empty. Empty or partial triples create no cross-address stable
   identity key.
 
+## Canonical Qualified-Identity Normalization
+
+**Contract status: Normative registry behavior. This is an implementation
+canonicalization contract, not proof of a native eBUS identity.** Every member
+is canonicalized independently before equality decides whether the triple is
+an exact match.
+
+For a fixed-width native `DeviceID`, the decoder removes only terminal NUL
+(`0x00`) and ASCII-space (`0x20`) padding before constructing `DeviceInfo`.
+It does not remove leading or embedded bytes. This is the decoder-to-registry
+boundary: the registry normalizer does not remove NUL padding from a value that
+reaches it. The observed `STR:*` decoder convention documents trailing NUL
+padding removal in [`ebusd-csv.md`](../types/ebusd-csv.md#type-specs).
+
+The registry identity normalizer then applies the same operation separately to
+`Manufacturer`, `DeviceID`, and `SerialNumber`: trim leading and trailing
+Unicode whitespace and fold case to uppercase. It preserves internal whitespace
+and punctuation in every member. In particular, `VR_71` and `VR71` are distinct
+`DeviceID` values; a selector, display, or `productCode` naming convention does
+not collapse them for cross-address identity. The implementation evidence is
+[`registry/identity.go` at the issue-159 start
+commit](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/c12c864b1773c00f6ead4f360e9b4f42d3930659/registry/identity.go).
+
+The serial sentinel recognition below is a separate, narrow denylist. It does
+not add punctuation removal, product-name equivalence, or any other identity
+equivalence rule to this canonicalization.
+
 `SerialNumber` is not qualified when it is a sentinel value: `0`,
 `0x00000000`, `0xFFFFFFFF`, or `0x7FFFFFFF`. Only while recognizing those
 hexadecimal sentinels, case is ignored, one optional `0x` prefix is accepted,
@@ -158,12 +185,15 @@ known fields remain unchanged until qualified, non-conflicting evidence is
 available.
 
 Each face retains its discovery provenance, role, verification state, and
-original observation timestamp. A static candidate becomes
-`identity_confirmed` only after a complete qualified observation. Identity
-confirmation MUST NOT rewrite a face's `static_seed` or `passive_observed`
-source label. A qualified observation may confirm faces already grouped by
-explicit topology evidence, but it does not turn topology evidence into an
-identity merge.
+original observation timestamp. A current-session active scan MAY promote that
+face to `active_confirmed`/`identity_confirmed` without establishing a
+cross-address stable identity. The directed `0x07/0x04` identification response
+used by that existing active-scan contract carries manufacturer, `DeviceID`, and
+software/hardware versions, not `SerialNumber`; it is per-face verification,
+not the qualified cross-address merge evidence. Identity confirmation MUST NOT
+rewrite a face's `static_seed` or `passive_observed` source label. A qualified
+observation may confirm faces already grouped by explicit topology evidence,
+but it does not turn topology evidence into an identity merge.
 
 This contract concerns registry behavior only. It does not make a device's wire
 identity, a source/target relationship, or a companion relationship Proven.

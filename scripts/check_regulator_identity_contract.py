@@ -27,7 +27,7 @@ def forbid(text: str, path: pathlib.Path, fragment: str) -> None:
         raise CheckError(f"{path}: forbidden legacy identity-merge wording remains: {fragment!r}")
 
 
-PERMISSION = r"(?:may|can|is permitted(?:\s+to)?|must(?!\s+not))"
+PERMISSION = r"(?:may|can|is permitted(?:\s+to)?|must(?!\s+(?:not|never)))"
 
 # This is deliberately a small, contract-specific contradiction check rather
 # than a natural-language policy parser.  Each pattern is applied to a bounded
@@ -81,6 +81,44 @@ CONTRADICTORY_PERMISSIONS = (
             r"(?:static_seed|passive_observed|provenance|source\s+labels?)\b"
         ),
     ),
+    (
+        "GraphQL legacy manufacturer-plus-serial-or-MAC merge",
+        re.compile(
+            rf"\b(?:shared\s+)?manufacturer\s*\+\s*"
+            r"(?:serial(?:\s+number)?|mac(?:\s+address)?)\b"
+            rf"(?:\s+\w+){{0,8}}\s+{PERMISSION}(?:\s+\w+){{0,8}}\s+"
+            r"merge\s+faces\b(?:\s+\w+){0,10}\s+deviceid\s+(?:values?\s+)?differ\b"
+        ),
+    ),
+    (
+        "active-scan confirmation as cross-address identity",
+        re.compile(
+            rf"\bactive\s+scan(?:\s+\w+){{0,8}}\s+{PERMISSION}"
+            r"(?:\s+\w+){0,8}\s+(?:establish|create|prove)(?:\s+\w+){0,5}\s+"
+            r"cross-address\s+stable\s+identity\b"
+        ),
+    ),
+    (
+        "active-scan confirmation blocked by complete-triple gate",
+        re.compile(
+            r"\b(?:a\s+)?static\s+candidate\s+(?:becomes|may\s+become)\s+"
+            r"identity_confirmed\s+only\s+after\s+(?:a\s+)?complete\s+qualified\s+observation\b"
+        ),
+    ),
+    (
+        "selector punctuation identity collapse",
+        re.compile(
+            rf"\bvr_71\s+and\s+vr71\b(?:\s+\w+){{0,8}}\s+{PERMISSION}"
+            r"(?:\s+\w+){0,8}\s+(?:equal|same|equivalent)\b"
+        ),
+    ),
+    (
+        "registry NUL-padding removal",
+        re.compile(
+            rf"\bregistry(?:\s+identity)?\s+normalizer(?:\s+\w+){{0,6}}\s+{PERMISSION}"
+            r"(?:\s+\w+){0,8}\s+(?:remove|strip)\s+(?:nul|nuls|nul-padding)\b"
+        ),
+    ),
 )
 
 
@@ -105,14 +143,17 @@ def validate_documents(root: pathlib.Path) -> None:
     enrichment_path = root / "architecture/regulator-identity-enrichment.md"
     atr_path = root / "architecture/atr/04-sn-merge-gate.md"
     overview_path = root / "architecture/overview.md"
+    graphql_path = root / "api/graphql.md"
     enrichment = enrichment_path.read_text(encoding="utf-8")
     atr = atr_path.read_text(encoding="utf-8")
     overview = overview_path.read_text(encoding="utf-8")
+    graphql = graphql_path.read_text(encoding="utf-8")
 
     for path, text in (
         (enrichment_path, enrichment),
         (atr_path, atr),
         (overview_path, overview),
+        (graphql_path, graphql),
     ):
         reject_contradictory_permissions(text, path)
 
@@ -126,8 +167,11 @@ def validate_documents(root: pathlib.Path) -> None:
         "Explicit topology aliasing based on source/target or canonical-companion\n  evidence MAY group faces before a qualified identity exists. It is not a\n  cross-address identity merge.",
         "Partial enrichment of an already-known address MAY retain last-known-good\nfields for that same address. It MUST NOT establish a cross-address stable\nidentity key or merge independent addresses.",
         "a serial-only match, a\nMAC-only match, or a matching model signature alone MUST NOT merge independent\naddresses.",
-        "A static candidate becomes\n`identity_confirmed` only after a complete qualified observation.",
+        "A current-session active scan MAY promote that\nface to `active_confirmed`/`identity_confirmed` without establishing a\ncross-address stable identity.",
         "Identity\nconfirmation MUST NOT rewrite a face's `static_seed` or `passive_observed`\nsource label.",
+        "## Canonical Qualified-Identity Normalization",
+        "The registry identity normalizer then applies the same operation separately to\n`Manufacturer`, `DeviceID`, and `SerialNumber`: trim leading and trailing\nUnicode whitespace and fold case to uppercase. It preserves internal whitespace\nand punctuation in every member. In particular, `VR_71` and `VR71` are distinct\n`DeviceID` values; a selector, display, or `productCode` naming convention does\nnot collapse them for cross-address identity.",
+        "For a fixed-width native `DeviceID`, the decoder removes only terminal NUL\n(`0x00`) and ASCII-space (`0x20`) padding before constructing `DeviceInfo`.",
     ):
         require(enrichment, enrichment_path, fragment)
 
@@ -138,8 +182,9 @@ def validate_documents(root: pathlib.Path) -> None:
         "This exception MUST NOT parse, rewrite, or otherwise\nreinterpret ordinary product serial formats.",
         "serial alone, MAC alone, model signature alone, companion\nrelation alone, or address co-occurrence alone.",
         "Explicit topology aliasing based on source/target or canonical-companion\nevidence is separate from identity merge",
-        "A static\ncandidate becomes `identity_confirmed` only after a complete qualified\nobservation.",
+        "A current-session\nactive scan MAY promote that face to `active_confirmed`/`identity_confirmed`\nwithout establishing a cross-address stable identity.",
         "it MUST NOT rewrite `static_seed` or `passive_observed` source labels.",
+        "Before equality, the decoder removes only terminal NUL (`0x00`) and ASCII-space\n(`0x20`) padding from a fixed-width native `DeviceID`; the registry does not\nremove NUL padding. It then separately trims leading/trailing Unicode whitespace\nand folds case to uppercase for `Manufacturer`, `DeviceID`, and `SerialNumber`,\nwhile preserving internal whitespace and punctuation. Thus `VR_71` and `VR71`\nremain distinct `DeviceID` values; selector or display naming does not create an\nidentity equivalence.",
     ):
         require(atr, atr_path, fragment)
 
@@ -149,6 +194,14 @@ def validate_documents(root: pathlib.Path) -> None:
         "Cross-address identity merge requires an exact normalized `(Manufacturer,\nDeviceID, SerialNumber)` triple; an empty or partial triple creates no stable\nidentity key.",
     )
     forbid(overview, overview_path, "DeviceID` is not part of the serial/MAC identity key")
+
+    for fragment in (
+        "Explicit topology alias evidence (source/target or canonical-companion) MAY group\nfaces, but it does not create or prove a cross-address stable identity.",
+        "A cross-address identity merge is permitted only when the exact normalized\n`(Manufacturer, DeviceID, SerialNumber)` triple matches.",
+        "A shared manufacturer\n+ serial number or manufacturer + MAC address MUST NOT merge independent faces,\nand a differing `deviceId` cannot satisfy that exact triple.",
+        "Before that exact\ncomparison, fixed-width native `DeviceID` decoding removes only terminal NUL\n(`0x00`) and ASCII-space (`0x20`) padding; the registry separately trims outer\nUnicode whitespace and folds case for all three members while preserving\ninternal punctuation. `VR_71` and `VR71` therefore remain distinct; a GraphQL\nselector, display label, or product code does not create identity equivalence.",
+    ):
+        require(graphql, graphql_path, fragment)
 
 
 def main() -> int:

@@ -21,6 +21,15 @@ Cross-address identity merge is permitted only when the exact normalized
 MUST be present and non-empty. Empty or partial triples create no
 cross-address stable identity key.
 
+Before equality, the decoder removes only terminal NUL (`0x00`) and ASCII-space
+(`0x20`) padding from a fixed-width native `DeviceID`; the registry does not
+remove NUL padding. It then separately trims leading/trailing Unicode whitespace
+and folds case to uppercase for `Manufacturer`, `DeviceID`, and `SerialNumber`,
+while preserving internal whitespace and punctuation. Thus `VR_71` and `VR71`
+remain distinct `DeviceID` values; selector or display naming does not create an
+identity equivalence. This is the canonical registry implementation boundary,
+not a native wire-identity claim.
+
 `SerialNumber` MUST NOT be a sentinel value: `0`, `0x00000000`,
 `0xFFFFFFFF`, or `0x7FFFFFFF`. Only while recognizing those hexadecimal
 sentinels, case is ignored, one optional `0x` prefix is accepted, and leading
@@ -48,10 +57,14 @@ operator can distinguish sentinel SN values from genuine identity mismatches.
 ## Enrichment and Provenance
 
 Partial enrichment of a known address MAY retain last-known-good fields for
-that address, but it MUST NOT establish cross-address identity. A static
-candidate becomes `identity_confirmed` only after a complete qualified
-observation. Identity confirmation MUST preserve per-face discovery provenance:
-it MUST NOT rewrite `static_seed` or `passive_observed` source labels.
+that address, but it MUST NOT establish cross-address identity. A current-session
+active scan MAY promote that face to `active_confirmed`/`identity_confirmed`
+without establishing a cross-address stable identity. The existing directed
+`0x07/0x04` identification response verifies that face with manufacturer,
+`DeviceID`, and software/hardware versions, but has no `SerialNumber`; it does
+not satisfy the cross-address merge predicate. Identity confirmation MUST
+preserve per-face discovery provenance: it MUST NOT rewrite `static_seed` or
+`passive_observed` source labels.
 
 ## Sentinel Treatment
 
