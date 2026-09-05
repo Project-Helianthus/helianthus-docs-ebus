@@ -126,45 +126,49 @@ This was wrong. Examples:
 
 These may still be useful as enrichment or hints, but they must not remain the structural gate for semantic discovery.
 
-## Registry Alias-Group Preservation
+## Registry Alias-Group and Identity Qualification
 
-**Evidence status: Proven implementation behavior at the linked revision;
-hardware qualification remains Unknown from this evidence.**
+**Contract status: Normative registry behavior. This section does not establish
+an eBUS wire identity or a companion relationship.**
 
-Identity enrichment can arrive after the caller has already associated two
-addresses with one registry entry. For example, the synthetic VR940f regression
-starts with separate `0xFF/0x04` and `0xF1/0xF6` groups, then supplies model
-observations and serial enrichment in different orders.
+Identity enrichment can arrive after an address has been observed or after
+explicit topology evidence has grouped faces. The two mechanisms are separate:
 
-The registry preserves those existing groups during compatible model-only
-updates. When stable identity lookup matches another compatible entry and the
-previous group has no conflicting identity or complete model signature, it joins
-the whole group. Each address retains its slot, role, discovery and verification
-state, and original observation timestamp; identity enrichment updates the
-address actually observed without making every companion actively confirmed.
+- Explicit topology aliasing based on source/target or canonical-companion
+  evidence MAY group faces before a qualified identity exists. It is not a
+  cross-address identity merge.
+- A cross-address identity merge requires an exact normalized
+  `(Manufacturer, DeviceID, SerialNumber)` triple. All three members MUST be
+  present and non-empty. Empty or partial triples create no cross-address stable
+  identity key.
 
-If the new stable identity conflicts with the previous device, only the
-updated address may move. The previous device's other addresses remain with it.
-Two devices with the same model signature and different serials retain their
-separate, already-established groups.
+`SerialNumber` is not qualified when it is a sentinel value: `0`,
+`0x00000000`, `0xFFFFFFFF`, or `0x7FFFFFFF`. Only while recognizing those
+hexadecimal sentinels, case is ignored, one optional `0x` prefix is accepted,
+and leading zeros are ignored. That narrow recognition rule MUST NOT parse,
+rewrite, or otherwise reinterpret ordinary product serial formats.
 
-If an observation on a known address selects another entry by stable key but
-contradicts that entry on another supplied stable field, the registry does not
-apply that identity enrichment. For example, a matching serial with a conflicting
-MAC leaves both existing groups and the destination's known MAC unchanged.
-Later compatible evidence can still join the groups.
+Partial enrichment of an already-known address MAY retain last-known-good
+fields for that same address. It MUST NOT establish a cross-address stable
+identity key or merge independent addresses. Likewise, a serial-only match, a
+MAC-only match, or a matching model signature alone MUST NOT merge independent
+addresses. If an observation carries a matching serial but a conflicting MAC,
+it MUST NOT select or merge another entry; both independent groups and their
+known fields remain unchanged until qualified, non-conflicting evidence is
+available.
 
-Implementation evidence:
+Each face retains its discovery provenance, role, verification state, and
+original observation timestamp. A static candidate becomes
+`identity_confirmed` only after a complete qualified observation. Identity
+confirmation MUST NOT rewrite a face's `static_seed` or `passive_observed`
+source label. A qualified observation may confirm faces already grouped by
+explicit topology evidence, but it does not turn topology evidence into an
+identity merge.
 
-- [Registry registration and group transfer at the fix revision](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/f4120cc03193bb1d3fce21047ef3ef4ffa3719b5/registry/registry_registration.go).
-- [Offline ordering, partial-identity and distinct-device regression tests](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/f4120cc03193bb1d3fce21047ef3ef4ffa3719b5/registry/identity_enrichment_alias_test.go).
-- [Implementation change and validation record](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/156).
-
-These tests establish registry consistency after alias and identity observations
-have been supplied. They do not establish a device's wire identity or companion
-relationships. The [historical Phase-B SN merge gate](atr/04-sn-merge-gate.md)
-is a separate qualification proposal; this offline regression is not evidence
-that the proposal was activated or that its wire prerequisites were met.
+This contract concerns registry behavior only. It does not make a device's wire
+identity, a source/target relationship, or a companion relationship Proven.
+For the corresponding ATR contract, see
+[Qualified Identity Merge Gate](atr/04-sn-merge-gate.md).
 
 ## Cross-Links
 
