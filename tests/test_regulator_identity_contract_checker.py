@@ -248,3 +248,65 @@ def test_qualified_identity_contract_accepts_must_never_prohibitions(
     path.write_text(path.read_text(encoding="utf-8") + f"\n\n{compatible_prohibition}\n", encoding="utf-8")
 
     checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "permission",
+    (
+        "MAY",
+        "can",
+        "is permitted to",
+        "MUST",
+    ),
+)
+def test_qualified_identity_contract_rejects_affirmative_permission_tokens(
+    tmp_path: pathlib.Path, permission: str
+) -> None:
+    checker = load_checker()
+    copy_contract_docs(tmp_path)
+    path = tmp_path / "architecture/regulator-identity-enrichment.md"
+    path.write_text(
+        path.read_text(encoding="utf-8") + f"\n\nSerial alone {permission} merge independent addresses.\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(checker.CheckError, match="serial-only"):
+        checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("relative", "compatible_prohibition"),
+    (
+        (
+            "architecture/regulator-identity-enrichment.md",
+            "Serial alone MAY NOT merge independent addresses.",
+        ),
+        (
+            "architecture/atr/04-sn-merge-gate.md",
+            "A sentinel serial MAY never serve as identity proof.",
+        ),
+        (
+            "architecture/regulator-identity-enrichment.md",
+            "Serial alone can\tNEVER merge independent addresses.",
+        ),
+        (
+            "architecture/regulator-identity-enrichment.md",
+            "Serial alone is permitted to NOT merge independent addresses.",
+        ),
+        (
+            "architecture/regulator-identity-enrichment.md",
+            "Serial alone MUST not merge independent addresses.",
+        ),
+    ),
+)
+def test_qualified_identity_contract_accepts_negated_permission_tokens(
+    tmp_path: pathlib.Path, relative: str, compatible_prohibition: str
+) -> None:
+    checker = load_checker()
+    copy_contract_docs(tmp_path)
+    path = tmp_path / relative
+    path.write_text(
+        path.read_text(encoding="utf-8") + f"\n\n{compatible_prohibition}\n", encoding="utf-8"
+    )
+
+    checker.validate_documents(tmp_path)

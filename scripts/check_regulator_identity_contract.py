@@ -27,7 +27,14 @@ def forbid(text: str, path: pathlib.Path, fragment: str) -> None:
         raise CheckError(f"{path}: forbidden legacy identity-merge wording remains: {fragment!r}")
 
 
-PERMISSION = r"(?:may|can|is permitted(?:\s+to)?|must(?!\s+(?:not|never)))"
+# Each recognized affirmative token excludes an immediately following
+# semantic negation.  Clauses are normalized before these patterns run, so
+# this covers source case and whitespace variants without parsing permissions
+# beyond the bounded qualified-identity rules below.
+PERMISSION = (
+    r"(?:(?:may|can|must)(?!\s+(?:not|never)\b)|"
+    r"is permitted(?!\s+(?:(?:to\s+)?(?:not|never))\b)(?:\s+to)?)"
+)
 
 # This is deliberately a small, contract-specific contradiction check rather
 # than a natural-language policy parser.  Each pattern is applied to a bounded
