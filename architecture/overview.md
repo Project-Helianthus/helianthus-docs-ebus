@@ -156,7 +156,15 @@ The registry layer treats each physical eBUS device as a **DeviceEntry** discove
 
 During scan, Helianthus treats the response source as canonical when available, but still retains the queried target as an alias face when source and target differ. This avoids losing valid faces (for example, a SOL00-style `0xEC` target) when multiple targets answer with the same source identity.
 
-When stable enrichment later supplies a serial number or MAC address, that stable identifier becomes the physical-device identity key together with manufacturer. `DeviceID` is not part of the serial/MAC identity key: the same physical regulator can present different role-specific device IDs on different eBUS faces. During a cross-entry merge, the existing canonical entry keeps its `DeviceID` for provider matching and exported metadata; ordinary same-entry updates can still correct a stale `DeviceID`.
+Cross-address identity merge requires an exact normalized `(Manufacturer,
+DeviceID, SerialNumber)` triple; an empty or partial triple creates no stable
+identity key. Source/target or canonical-companion topology evidence may group
+faces before that qualified triple exists, but it is not identity merge. See
+[Regulator Identity Enrichment](./regulator-identity-enrichment.md#registry-alias-group-and-identity-qualification)
+for sentinel treatment, same-address enrichment, and provenance-preserving
+identity confirmation. The closed, machine-readable
+[qualified-identity policy](./regulator-qualified-identity-policy.json) is the
+canonical companion for this public contract.
 
 A DeviceEntry does not directly expose behavior; instead, **PlaneProviders** match against the DeviceInfo (manufacturer, device ID, HW/SW versions, and stable identifiers when available) and **create one or more Planes** that represent distinct semantic views of that same device (e.g., heating, DHW, system).
 

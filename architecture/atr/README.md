@@ -26,7 +26,8 @@ NM discovery semantics remain in [`../nm-discovery.md`](../nm-discovery.md) and
   the frame-position-aware insertion gate, including `0xFF` disambiguation,
   positive-ACK-only insertion, and corroboration requirements.
 - [`04-sn-merge-gate.md`](./04-sn-merge-gate.md): forward-references the
-  Phase B serial-number merge gate and its sentinel denylist.
+  Phase B qualified-identity triple merge gate, sentinel denylist, and
+  provenance-preserving confirmation rule.
 - [`05-static-seed-provenance.md`](./05-static-seed-provenance.md): documents
   static seed semantics, feature-flag policy, provenance, and the initial
   Vaillant seed set.

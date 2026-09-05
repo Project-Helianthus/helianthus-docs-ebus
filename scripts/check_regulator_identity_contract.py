@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""Validate the bounded public qualified-identity policy and its references."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import pathlib
+import sys
+
+
+class CheckError(Exception):
+    """Raised when the canonical policy or a required public reference is invalid."""
+
+
+POLICY_PATH = pathlib.Path("architecture/regulator-qualified-identity-policy.json")
+POLICY_VERSION = 1
+TRIPLE_MEMBERS = ["Manufacturer", "DeviceID", "SerialNumber"]
+SENTINEL_SERIALS = ["0", "0x00000000", "0xFFFFFFFF", "0x7FFFFFFF"]
+SENTINEL_RECOGNITION = {
+    "scope": "named_hexadecimal_sentinels_only",
+    "case": "insensitive",
+    "prefix": "optional_single_0x",
+    "leading_zeros": "ignore",
+    "ordinary_serials": "never_parse_or_rewrite",
+}
+
+REQUIRED_DOCUMENT_REFERENCES = {
+    pathlib.Path("architecture/regulator-identity-enrichment.md"): "[qualified-identity policy](regulator-qualified-identity-policy.json)",
+    pathlib.Path("architecture/atr/04-sn-merge-gate.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
+    pathlib.Path("architecture/overview.md"): "[qualified-identity policy](./regulator-qualified-identity-policy.json)",
+    pathlib.Path("api/graphql.md"): "[qualified-identity policy](../architecture/regulator-qualified-identity-policy.json)",
+}
+
+
+def require_keys(value: object, context: str, keys: set[str]) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise CheckError(f"{context}: expected object")
+    actual = set(value)
+    if actual != keys:
+        missing = sorted(keys - actual)
+        unknown = sorted(actual - keys)
+        raise CheckError(f"{context}: expected exact fields; missing={missing}, unknown={unknown}")
+    return value
+
+
+def require_value(value: object, expected: object, context: str) -> None:
+    if value != expected or type(value) is not type(expected):
+        raise CheckError(f"{context}: expected {expected!r}, got {value!r}")
+
+
+def validate_policy(policy: object, path: pathlib.Path) -> None:
+    root = require_keys(
+        policy,
+        str(path),
+        {"schema_version", "scope", "identity", "normalization", "topology", "confirmation", "enrichment", "provenance"},
+    )
+    require_value(root["schema_version"], POLICY_VERSION, f"{path}.schema_version")
+    require_value(root["scope"], "cross_address_qualified_identity", f"{path}.scope")
+
+    identity = require_keys(
+        root["identity"],
+        f"{path}.identity",
+        {
+            "members",
+            "match",
+            "empty_or_partial",
+            "named_sentinel_serials",
+            "sentinel_recognition",
+            "sentinel_serials",
+            "non_qualifying_signals",
+        },
+    )
+    require_value(identity["members"], TRIPLE_MEMBERS, f"{path}.identity.members")
+    require_value(identity["match"], "exact_normalized_triple", f"{path}.identity.match")
+    require_value(identity["empty_or_partial"], "not_qualified", f"{path}.identity.empty_or_partial")
+    require_value(identity["named_sentinel_serials"], SENTINEL_SERIALS, f"{path}.identity.named_sentinel_serials")
+    require_value(identity["sentinel_recognition"], SENTINEL_RECOGNITION, f"{path}.identity.sentinel_recognition")
+    require_value(identity["sentinel_serials"], "not_qualified", f"{path}.identity.sentinel_serials")
+    require_value(
+        identity["non_qualifying_signals"],
+        ["serial", "mac", "model", "topology", "address_cooccurrence"],
+        f"{path}.identity.non_qualifying_signals",
+    )
+
+    normalization = require_keys(
+        root["normalization"], f"{path}.normalization", {"fixed_width_device_id_decoder", "registry"}
+    )
+    require_value(
+        normalization["fixed_width_device_id_decoder"],
+        ["remove_terminal_nul", "remove_terminal_ascii_space"],
+        f"{path}.normalization.fixed_width_device_id_decoder",
+    )
+    registry = require_keys(
+        normalization["registry"],
+        f"{path}.normalization.registry",
+        {"members", "outer_unicode_whitespace", "case", "internal_whitespace", "internal_punctuation", "deviceid_vr_71_vs_vr71"},
+    )
+    require_value(registry["members"], TRIPLE_MEMBERS, f"{path}.normalization.registry.members")
+    require_value(registry["outer_unicode_whitespace"], "trim", f"{path}.normalization.registry.outer_unicode_whitespace")
+    require_value(registry["case"], "uppercase", f"{path}.normalization.registry.case")
+    require_value(registry["internal_whitespace"], "preserve", f"{path}.normalization.registry.internal_whitespace")
+    require_value(registry["internal_punctuation"], "preserve", f"{path}.normalization.registry.internal_punctuation")
+    require_value(registry["deviceid_vr_71_vs_vr71"], "distinct", f"{path}.normalization.registry.deviceid_vr_71_vs_vr71")
+
+    topology = require_keys(root["topology"], f"{path}.topology", {"allowed_grouping_evidence", "cross_address_identity_proof"})
+    require_value(topology["allowed_grouping_evidence"], ["source_target", "canonical_companion"], f"{path}.topology.allowed_grouping_evidence")
+    require_value(topology["cross_address_identity_proof"], False, f"{path}.topology.cross_address_identity_proof")
+
+    confirmation = require_keys(root["confirmation"], f"{path}.confirmation", {"session", "per_face", "active_confirmation"})
+    require_value(confirmation["session"], "current", f"{path}.confirmation.session")
+    require_value(confirmation["per_face"], True, f"{path}.confirmation.per_face")
+    require_value(
+        confirmation["active_confirmation"],
+        "allowed_without_cross_address_qualification",
+        f"{path}.confirmation.active_confirmation",
+    )
+
+    enrichment = require_keys(root["enrichment"], f"{path}.enrichment", {"scope", "last_known_good", "cross_address_identity"})
+    require_value(enrichment["scope"], "same_address", f"{path}.enrichment.scope")
+    require_value(enrichment["last_known_good"], "retain", f"{path}.enrichment.last_known_good")
+    require_value(enrichment["cross_address_identity"], "not_qualified", f"{path}.enrichment.cross_address_identity")
+
+    provenance = require_keys(root["provenance"], f"{path}.provenance", {"per_face", "static_seed", "passive_observed"})
+    require_value(provenance["per_face"], "retain", f"{path}.provenance.per_face")
+    require_value(provenance["static_seed"], "preserve", f"{path}.provenance.static_seed")
+    require_value(provenance["passive_observed"], "preserve", f"{path}.provenance.passive_observed")
+
+
+def validate_documents(root: pathlib.Path) -> None:
+    policy_path = root / POLICY_PATH
+    try:
+        policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise CheckError(f"{policy_path}: invalid JSON: {exc.msg}") from exc
+    validate_policy(policy, policy_path)
+
+    for relative, reference in REQUIRED_DOCUMENT_REFERENCES.items():
+        path = root / relative
+        if reference not in path.read_text(encoding="utf-8"):
+            raise CheckError(f"{path}: missing required canonical policy reference: {reference!r}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=pathlib.Path, default=pathlib.Path(__file__).resolve().parents[1])
+    args = parser.parse_args()
+    try:
+        validate_documents(args.root)
+    except (CheckError, OSError) as exc:
+        print(exc, file=sys.stderr)
+        return 1
+    print("Qualified identity policy and public references passed.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
