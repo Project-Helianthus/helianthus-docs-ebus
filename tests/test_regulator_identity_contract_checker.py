@@ -54,3 +54,37 @@ def test_qualified_identity_contract_rejects_serial_only_merge_wording(tmp_path:
 
     with pytest.raises(checker.CheckError, match="serial-only"):
         checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("rule", "relative", "contradiction"),
+    (
+        ("serial-only", "architecture/regulator-identity-enrichment.md", "A serial-only match MAY merge independent addresses."),
+        ("partial-triple", "architecture/regulator-identity-enrichment.md", "A partial triple MAY merge independent addresses."),
+        ("sentinel", "architecture/regulator-identity-enrichment.md", "A sentinel SerialNumber MAY serve as identity proof for a cross-address merge."),
+        ("topology-alias", "architecture/regulator-identity-enrichment.md", "A topology alias MAY become a stable identity for independent addresses."),
+        ("same-address-enrichment", "architecture/regulator-identity-enrichment.md", "Same-address partial enrichment MAY merge independent addresses."),
+        ("provenance", "architecture/regulator-identity-enrichment.md", "Identity confirmation MAY rewrite static_seed provenance."),
+        ("serial-only", "architecture/atr/04-sn-merge-gate.md", "Serial alone MAY merge independent addresses."),
+        ("partial-triple", "architecture/atr/04-sn-merge-gate.md", "A partial triple MAY merge independent addresses."),
+        ("sentinel", "architecture/atr/04-sn-merge-gate.md", "A sentinel SerialNumber MAY serve as identity proof for a cross-address merge."),
+        ("topology-alias", "architecture/atr/04-sn-merge-gate.md", "A topology alias MAY become a stable identity for independent addresses."),
+        ("same-address-enrichment", "architecture/atr/04-sn-merge-gate.md", "Same-address partial enrichment MAY merge independent addresses."),
+        ("provenance", "architecture/atr/04-sn-merge-gate.md", "Identity confirmation MAY rewrite passive_observed provenance."),
+        ("partial-triple", "architecture/overview.md", "A partial triple MAY merge independent addresses."),
+        ("topology-alias", "architecture/overview.md", "A topology alias MAY become a stable identity for independent addresses."),
+    ),
+)
+def test_qualified_identity_contract_rejects_additive_permissions(
+    tmp_path: pathlib.Path, rule: str, relative: str, contradiction: str
+) -> None:
+    checker = load_checker()
+    copy_contract_docs(tmp_path)
+    path = tmp_path / relative
+    path.write_text(path.read_text(encoding="utf-8") + f"\n\n{contradiction}\n", encoding="utf-8")
+
+    expected_rule = {
+        "same-address-enrichment": r"same-address.*enrichment",
+    }.get(rule, rule.replace("-", "[- ]"))
+    with pytest.raises(checker.CheckError, match=expected_rule):
+        checker.validate_documents(tmp_path)
