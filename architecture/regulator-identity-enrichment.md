@@ -126,45 +126,84 @@ This was wrong. Examples:
 
 These may still be useful as enrichment or hints, but they must not remain the structural gate for semantic discovery.
 
-## Registry Alias-Group Preservation
+## Registry Alias-Group and Identity Qualification
 
-**Evidence status: Proven implementation behavior at the linked revision;
-hardware qualification remains Unknown from this evidence.**
+**Contract status: Normative registry behavior. This section does not establish
+an eBUS wire identity or a companion relationship.**
 
-Identity enrichment can arrive after the caller has already associated two
-addresses with one registry entry. For example, the synthetic VR940f regression
-starts with separate `0xFF/0x04` and `0xF1/0xF6` groups, then supplies model
-observations and serial enrichment in different orders.
+Identity enrichment can arrive after an address has been observed or after
+explicit topology evidence has grouped faces. The two mechanisms are separate:
 
-The registry preserves those existing groups during compatible model-only
-updates. When stable identity lookup matches another compatible entry and the
-previous group has no conflicting identity or complete model signature, it joins
-the whole group. Each address retains its slot, role, discovery and verification
-state, and original observation timestamp; identity enrichment updates the
-address actually observed without making every companion actively confirmed.
+- Explicit topology aliasing based on source/target or canonical-companion
+  evidence MAY group faces before a qualified identity exists. It is not a
+  cross-address identity merge.
+- A cross-address identity merge requires an exact normalized
+  `(Manufacturer, DeviceID, SerialNumber)` triple. All three members MUST be
+  present and non-empty. Empty or partial triples create no cross-address stable
+  identity key.
 
-If the new stable identity conflicts with the previous device, only the
-updated address may move. The previous device's other addresses remain with it.
-Two devices with the same model signature and different serials retain their
-separate, already-established groups.
+## Canonical Qualified-Identity Normalization
 
-If an observation on a known address selects another entry by stable key but
-contradicts that entry on another supplied stable field, the registry does not
-apply that identity enrichment. For example, a matching serial with a conflicting
-MAC leaves both existing groups and the destination's known MAC unchanged.
-Later compatible evidence can still join the groups.
+**Contract status: Normative registry behavior. This is an implementation
+canonicalization contract, not proof of a native eBUS identity.** Every member
+is canonicalized independently before equality decides whether the triple is
+an exact match.
 
-Implementation evidence:
+The machine-readable canonical companion is the public
+[qualified-identity policy](regulator-qualified-identity-policy.json). It is a
+small, closed documentation contract for this qualified-identity boundary; this
+page retains the explanatory architecture and evidence context.
 
-- [Registry registration and group transfer at the fix revision](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/f4120cc03193bb1d3fce21047ef3ef4ffa3719b5/registry/registry_registration.go).
-- [Offline ordering, partial-identity and distinct-device regression tests](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/f4120cc03193bb1d3fce21047ef3ef4ffa3719b5/registry/identity_enrichment_alias_test.go).
-- [Implementation change and validation record](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/156).
+For a fixed-width native `DeviceID`, the decoder removes only terminal NUL
+(`0x00`) and ASCII-space (`0x20`) padding before constructing `DeviceInfo`.
+It does not remove leading or embedded bytes. This is the decoder-to-registry
+boundary: the registry normalizer does not remove NUL padding from a value that
+reaches it. The observed `STR:*` decoder convention documents trailing NUL
+padding removal in [`ebusd-csv.md`](../types/ebusd-csv.md#type-specs).
 
-These tests establish registry consistency after alias and identity observations
-have been supplied. They do not establish a device's wire identity or companion
-relationships. The [historical Phase-B SN merge gate](atr/04-sn-merge-gate.md)
-is a separate qualification proposal; this offline regression is not evidence
-that the proposal was activated or that its wire prerequisites were met.
+The registry identity normalizer then applies the same operation separately to
+`Manufacturer`, `DeviceID`, and `SerialNumber`: trim leading and trailing
+Unicode whitespace and fold case to uppercase. It preserves internal whitespace
+and punctuation in every member. In particular, `VR_71` and `VR71` are distinct
+`DeviceID` values; a selector, display, or `productCode` naming convention does
+not collapse them for cross-address identity. The implementation evidence is
+[`registry/identity.go` at the issue-159 start
+commit](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/c12c864b1773c00f6ead4f360e9b4f42d3930659/registry/identity.go).
+
+The serial sentinel recognition below is a separate, narrow denylist. It does
+not add punctuation removal, product-name equivalence, or any other identity
+equivalence rule to this canonicalization.
+
+`SerialNumber` is not qualified when it is a sentinel value: `0`,
+`0x00000000`, `0xFFFFFFFF`, or `0x7FFFFFFF`. Only while recognizing those
+hexadecimal sentinels, case is ignored, one optional `0x` prefix is accepted,
+and leading zeros are ignored. That narrow recognition rule MUST NOT parse,
+rewrite, or otherwise reinterpret ordinary product serial formats.
+
+Partial enrichment of an already-known address MAY retain last-known-good
+fields for that same address. It MUST NOT establish a cross-address stable
+identity key or merge independent addresses. Likewise, a serial-only match, a
+MAC-only match, or a matching model signature alone MUST NOT merge independent
+addresses. If an observation carries a matching serial but a conflicting MAC,
+it MUST NOT select or merge another entry; both independent groups and their
+known fields remain unchanged until qualified, non-conflicting evidence is
+available.
+
+Each face retains its discovery provenance, role, verification state, and
+original observation timestamp. A current-session active scan MAY promote that
+face to `active_confirmed`/`identity_confirmed` without establishing a
+cross-address stable identity. The directed `0x07/0x04` identification response
+used by that existing active-scan contract carries manufacturer, `DeviceID`, and
+software/hardware versions, not `SerialNumber`; it is per-face verification,
+not the qualified cross-address merge evidence. Identity confirmation MUST NOT
+rewrite a face's `static_seed` or `passive_observed` source label. A qualified
+observation may confirm faces already grouped by explicit topology evidence,
+but it does not turn topology evidence into an identity merge.
+
+This contract concerns registry behavior only. It does not make a device's wire
+identity, a source/target relationship, or a companion relationship Proven.
+For the corresponding ATR contract, see
+[Qualified Identity Merge Gate](atr/04-sn-merge-gate.md).
 
 ## Cross-Links
 

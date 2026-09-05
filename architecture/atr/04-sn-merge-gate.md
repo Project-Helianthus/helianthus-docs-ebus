@@ -1,4 +1,4 @@
-# SN Merge Gate
+# Qualified Identity Merge Gate
 
 Status: Normative
 Plan: address-table-registry-w19-26
@@ -16,15 +16,37 @@ merging from this gate.
 
 ## Merge Predicate
 
-Pointer-merging two slots onto one `DeviceEntry` is permitted only when all of
-the following are true:
+The public [qualified-identity policy](../regulator-qualified-identity-policy.json)
+is the canonical machine-readable companion for this gate. This page remains
+the explanatory normative architecture reference.
 
-- `(Manufacturer, DeviceID, SerialNumber)` matches exactly.
-- `SerialNumber` is not in the denylist
-  `{0x00000000, 0xFFFFFFFF, 0x7FFFFFFF}`.
+Cross-address identity merge is permitted only when the exact normalized
+`(Manufacturer, DeviceID, SerialNumber)` triple matches. All three members
+MUST be present and non-empty. Empty or partial triples create no
+cross-address stable identity key.
 
-An implementation MUST NOT merge on manufacturer alone, device ID alone,
-companion relation alone, or address co-occurrence alone.
+Before equality, the decoder removes only terminal NUL (`0x00`) and ASCII-space
+(`0x20`) padding from a fixed-width native `DeviceID`; the registry does not
+remove NUL padding. It then separately trims leading/trailing Unicode whitespace
+and folds case to uppercase for `Manufacturer`, `DeviceID`, and `SerialNumber`,
+while preserving internal whitespace and punctuation. Thus `VR_71` and `VR71`
+remain distinct `DeviceID` values; selector or display naming does not create an
+identity equivalence. This is the canonical registry implementation boundary,
+not a native wire-identity claim.
+
+`SerialNumber` MUST NOT be a sentinel value: `0`, `0x00000000`,
+`0xFFFFFFFF`, or `0x7FFFFFFF`. Only while recognizing those hexadecimal
+sentinels, case is ignored, one optional `0x` prefix is accepted, and leading
+zeros are ignored. This exception MUST NOT parse, rewrite, or otherwise
+reinterpret ordinary product serial formats.
+
+An implementation MUST NOT merge independent addresses on manufacturer alone,
+device ID alone, serial alone, MAC alone, model signature alone, companion
+relation alone, or address co-occurrence alone.
+
+Explicit topology aliasing based on source/target or canonical-companion
+evidence is separate from identity merge and MAY group faces before a qualified
+triple exists. It MUST NOT create a cross-address stable identity key.
 
 ## Gate-Fail Behavior
 
@@ -36,16 +58,28 @@ When the gate fails, the implementation MUST:
 The warning SHOULD include both addresses and the rejection reason so the
 operator can distinguish sentinel SN values from genuine identity mismatches.
 
-## Sentinel Rationale
+## Enrichment and Provenance
 
-The denylist is normative because Vaillant firmware is known to emit serial
-number sentinels for inactive-register and uninitialized cases. A denied
-sentinel MUST be treated as non-identity-bearing data, not as merge proof.
+Partial enrichment of a known address MAY retain last-known-good fields for
+that address, but it MUST NOT establish cross-address identity. A current-session
+active scan MAY promote that face to `active_confirmed`/`identity_confirmed`
+without establishing a cross-address stable identity. The existing directed
+`0x07/0x04` identification response verifies that face with manufacturer,
+`DeviceID`, and software/hardware versions, but has no `SerialNumber`; it does
+not satisfy the cross-address merge predicate. Identity confirmation MUST
+preserve per-face discovery provenance: it MUST NOT rewrite `static_seed` or
+`passive_observed` source labels.
+
+## Sentinel Treatment
+
+A denied sentinel is non-identity-bearing data, not merge proof. The denylist
+is a registry safety rule; it does not assert a wire-level meaning for a value
+outside the qualified-identity decision.
 
 ## Registry Implementation Evidence
 
-For consistency of already-established address groups during identity updates,
-see [Registry Alias-Group Preservation](../regulator-identity-enrichment.md#registry-alias-group-preservation).
-That note is based on a specific implementation revision and offline regression
-tests. It is not proof that this historical Phase-B qualification proposal was
-activated or that an installed device satisfies its wire-evidence prerequisites.
+For the public separation of topology grouping, identity qualification, and
+per-face provenance, see [Registry Alias-Group and Identity
+Qualification](../regulator-identity-enrichment.md#registry-alias-group-and-identity-qualification).
+The registry contract is not proof that an installed device satisfies a
+wire-evidence prerequisite.
