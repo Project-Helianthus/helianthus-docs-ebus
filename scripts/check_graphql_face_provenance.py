@@ -224,6 +224,18 @@ def _mask_markdown_fences(text: str) -> str:
     return "".join(masked)
 
 
+def _mask_html_comments(text: str) -> str:
+    """Mask non-rendered Markdown HTML comments."""
+    return re.sub(
+        r"<!--.*?(?:-->|$)",
+        lambda match: "".join(
+            "\n" if character == "\n" else " " for character in match.group(0)
+        ),
+        text,
+        flags=re.S,
+    )
+
+
 def _mcp_device_section(text: str) -> str:
     inventory = _heading_section(text, "## Implemented Surface", "implemented surface")
     masked_inventory = _mask_markdown_fences(inventory)
@@ -243,9 +255,10 @@ def _mcp_device_section(text: str) -> str:
 
 
 def _validate_pins(section: str, *, surface: str) -> None:
-    if tuple(re.findall(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", section)) != PINS:
+    visible = _mask_html_comments(section)
+    if tuple(re.findall(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", visible)) != PINS:
         raise CheckError(f"{surface} provenance pins differ")
-    normalized = re.sub(r"\s+", " ", section)
+    normalized = re.sub(r"\s+", " ", visible)
     required = (
         f"reviewed gateway HEAD `{GATEWAY_REVIEWED_HEAD}`",
         f"reviewed and merge tree is identical at `{GATEWAY_REVIEWED_MERGE_TREE}`",
@@ -289,7 +302,15 @@ def validate_text(text: str, atr: str) -> None:
     all_fields = [field for _, _, block in _device_blocks(text) for field in _device_fields(block)]
     current_fields = _device_fields(masked_body)
     for name in ("discoverySource", "verificationState"):
-        if all_fields.count(name) != 1 or current_fields.count(name) != 1 or body.count(f"  {name}: String\n") != 1:
+        declarations = re.findall(
+            rf"(?m)^[ \t]*{re.escape(name)}[ \t]*:[ \t]*(String)(!?)[ \t]*$",
+            masked_body,
+        )
+        if (
+            all_fields.count(name) != 1
+            or current_fields.count(name) != 1
+            or declarations != [("String", "")]
+        ):
             raise CheckError("current Device must declare exact nullable camel-case fields")
 
     if text.count(HEADING) != 1:

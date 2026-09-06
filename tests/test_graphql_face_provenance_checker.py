@@ -83,6 +83,34 @@ def test_rejects_missing_or_non_nullable_current_fields() -> None:
     rejects(doc_old="  verificationState: String\n", doc_new="  verificationState: String!\n")
 
 
+def test_rejects_nullable_spelling_hidden_in_description() -> None:
+    replacement = (
+        '  """Example:  discoverySource: String"""\n'
+        "  discoverySource: String!\n"
+    )
+    rejects(doc_old="  discoverySource: String\n", doc_new=replacement)
+
+
+def hide_pin_paragraph(text: str) -> str:
+    first = text.index(CHECKER.GATEWAY_REVIEWED_HEAD)
+    start = text.rfind("\n", 0, first) + 1
+    last = text.index(CHECKER.REGISTRY_DEPENDENCY)
+    end = text.find("\n", last)
+    end = len(text) if end < 0 else end + 1
+    return text[:start] + "<!--\n" + text[start:end] + "-->\n" + text[end:]
+
+
+def test_rejects_graphql_pins_hidden_in_html_comment() -> None:
+    doc, atr = texts()
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(hide_pin_paragraph(doc), atr)
+
+
+def test_rejects_mcp_pins_hidden_in_html_comment() -> None:
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_mcp_text(hide_pin_paragraph(mcp_text()))
+
+
 def test_rejects_appended_stale_pending_section() -> None:
     doc, atr = texts()
     stale = """
