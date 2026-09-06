@@ -144,6 +144,7 @@ def test_rejects_duplicate_current_types_heading() -> None:
     (
         "discoverySource:String!",
         "\tverificationState:String!",
+        "  discoverySource(format: Boolean): String!",
     ),
 )
 def test_rejects_whitespace_equivalent_duplicate_fields(duplicate: str) -> None:
@@ -152,6 +153,15 @@ def test_rejects_whitespace_equivalent_duplicate_fields(duplicate: str) -> None:
     assert marker in doc
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc.replace(marker, duplicate + "\n" + marker, 1), atr)
+
+
+def test_rejects_duplicate_mcp_devices_get_entry() -> None:
+    text = mcp_text() + (
+        "\n  - `ebus.v1.registry.devices.get`\n"
+        "    - JSON response items carry `discovery_source` fields and it is always `active_confirmed`.\n"
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_mcp_text(text)
 
 
 def test_rejects_obsolete_atr_spelling() -> None:

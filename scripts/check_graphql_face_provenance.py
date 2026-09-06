@@ -87,6 +87,9 @@ def _current_types_section(text: str) -> str:
 
 def _mcp_device_section(text: str) -> str:
     start_marker = "  - `ebus.v1.registry.devices.get`\n"
+    markers = re.findall(r"^[ \t]*-[ \t]+`ebus\.v1\.registry\.devices\.get`[ \t]*$", text, re.M)
+    if len(markers) != 1:
+        raise CheckError("MCP registry devices.get entry must appear exactly once")
     start = text.find(start_marker)
     if start < 0:
         raise CheckError("MCP registry devices.get section missing")
@@ -141,8 +144,12 @@ def validate_text(text: str, atr: str) -> None:
         raise CheckError("current Device definition missing")
     body = current.group("body")
     for name in ("discoverySource", "verificationState"):
-        declarations = re.findall(rf"\b{re.escape(name)}\s*:\s*([^\s#}}]+)", body)
-        if declarations != ["String"] or body.count(f"  {name}: String\n") != 1:
+        declarations = re.findall(
+            rf"^[ \t]*{re.escape(name)}\s*(?:\([^)]*\)\s*)?:",
+            body,
+            re.M,
+        )
+        if len(declarations) != 1 or body.count(f"  {name}: String\n") != 1:
             raise CheckError("current Device must declare exact nullable camel-case fields")
 
     if text.count(HEADING) != 1:
