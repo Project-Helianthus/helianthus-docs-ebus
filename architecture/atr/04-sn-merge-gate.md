@@ -16,7 +16,7 @@ merging from this gate.
 
 ## Merge Predicate
 
-The public [qualified-identity policy](../regulator-qualified-identity-policy.json)
+The public schema-v2 [qualified-identity policy](../regulator-qualified-identity-policy.json)
 is the canonical machine-readable companion for this gate. This page remains
 the explanatory normative architecture reference.
 
@@ -69,6 +69,33 @@ without establishing a cross-address stable identity. The existing directed
 not satisfy the cross-address merge predicate. Identity confirmation MUST
 preserve per-face discovery provenance: it MUST NOT rewrite `static_seed` or
 `passive_observed` source labels.
+
+## Exact-Address Consumer-Witness Boundary
+
+The policy's `consumer_witness` value is separate from this cross-address merge
+predicate. A valid witness binds one exact address to the current qualified
+identity authority, direct-observation provenance, immutable state, and
+nonzero registry observation and proof generations. The authority is the
+complete normalized `(Manufacturer, DeviceID, SerialNumber)` triple, not a
+field label or partial identity. The registry alone produces it from a direct
+complete observation at that exact address.
+
+At consumer decision time, its lookup, validation, and use are one atomic
+registry boundary: the supplied authority, observation generation, and proof
+generation MUST equal the current registry state for that exact
+address/authority pair. Positive integers or a cached `current: true` flag are
+not enough. A replacement, retirement, or a conflict in any supplied triple
+member makes the prior immutable value unavailable/not-current until a fresh
+direct complete observation produces a new witness. A witness issued for one
+address cannot be substituted for another.
+
+A directed `0x07/0x04` reply can confirm its responding face in the current
+session without a serial number; it is not a qualified cross-address identity
+witness. Observable nonempty fields, `identity_confirmed`, topology aliases or
+propagated confirmation, `static_seed`, `passive_observed`, caller assertions,
+and last-known-good data cannot manufacture one. This boundary does not alter
+the merge predicate or permit an identity merge without the complete normalized
+triple.
 
 ## Sentinel Treatment
 

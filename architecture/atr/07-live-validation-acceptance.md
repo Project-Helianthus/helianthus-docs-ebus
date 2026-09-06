@@ -76,12 +76,22 @@ Expected: NO entry at address 0xFF UNLESS a separate frame-start observation of 
 Procedure: gateway sends frames from admitted source 0x7F. Query GraphQL.
 Expected: NO entry at address 0x7F. (0x7F is initiator-capable; if accidentally inserted, it would surface.)
 
-### N5 — Single corroboration does NOT companion-insert
+<!-- qualified-identity-policy:atr07-acceptance:begin same_source_positive_ack_plus_current_exact_address_witness -->
+The public schema-v2 [qualified-identity policy](../regulator-qualified-identity-policy.json) is the canonical machine-readable companion for this deterministic acceptance block.
 
-Procedure: send a single frame triggering 0xF1 master observation (one ACK from a 0xF1-sourced request). Query GraphQL within 1 second.
-Expected: NO entry at address 0xF6 (companion of 0xF1) — corroboration window not yet closed.
+### N5 — Single corroboration does NOT companion-insert without a current witness
 
-After observation window (default 5s) + second corroborating observation: 0xF6 entry MUST appear (P1 fires). N5 is the "before-second" check.
+Procedure (no-current-witness negative): apply one complete positive-ACK observation for source `0xF1` in the deterministic acceptance fixture while no current registry-adjudicated exact-address qualified witness is available for `0xF1`.
+Expected: `slot[0xF6]` remains absent. This is the one-ACK negative; it has no claim about a separately qualified current witness.
+
+Procedure (current-qualified positive): apply one ACK plus a registry-adjudicated current exact-address qualified witness for `0xF1`; the ACK observation is complete and positive for source `0xF1`.
+Expected: the companion `slot[0xF6]` MUST appear under the one-ACK alternative.
+
+Procedure (stale/invalid/unavailable negatives): repeat the current-qualified fixture with a frozen witness descriptor that is replaced, retired, conflicted, invalid, or unavailable at the atomic registry lookup/validation/use current result.
+Expected: `slot[0xF6]` remains absent in every negative fixture. A frozen descriptor is not itself the current result: no cached `current: true`, topology, `static_seed`, `passive_observed`, caller assertion, last-known-good data, per-face `0x07/0x04` reply without serial, or witness for another address may qualify.
+
+The registry-produced direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` witness must match the exact source address, authority, observation generation, and proof generation in the atomic registry lookup/validation/use current result. The independent two-ACK route remains independent of identity evidence: after the observation window (default 5s) plus a second corroborating positive ACK, `slot[0xF6]` MUST appear without a witness.
+<!-- qualified-identity-policy:atr07-acceptance:end same_source_positive_ack_plus_current_exact_address_witness -->
 
 ## HA Consumer Compatibility
 
