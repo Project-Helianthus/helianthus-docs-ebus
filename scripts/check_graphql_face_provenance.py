@@ -126,11 +126,10 @@ def validate_text(text: str, atr: str) -> None:
     if current is None:
         raise CheckError("current Device definition missing")
     body = current.group("body")
-    for field in ("  discoverySource: String\n", "  verificationState: String\n"):
-        if body.count(field) != 1:
+    for name in ("discoverySource", "verificationState"):
+        declarations = re.findall(rf"\b{re.escape(name)}\s*:\s*([^\s#}}]+)", body)
+        if declarations != ["String"] or body.count(f"  {name}: String\n") != 1:
             raise CheckError("current Device must declare exact nullable camel-case fields")
-    if re.search(r"^  (?:discoverySource|verificationState): (?!String$)", body, re.M):
-        raise CheckError("current Device provenance fields must be nullable String")
 
     if text.count(HEADING) != 1:
         raise CheckError("current provenance heading must appear exactly once")
@@ -139,10 +138,15 @@ def validate_text(text: str, atr: str) -> None:
         "pending gateway #939/#940 implementation",
         "is not present\nin the current gateway schema",
         "future camel-case fields",
-        "extend type Device",
     )
     if any(fragment in text for fragment in stale):
         raise CheckError("stale pending provenance status remains")
+    if re.search(
+        r"\bextend\s+type\s+Device\s*\{[^}]*(?:\bdiscoverySource|\bverificationState)\s*:",
+        text,
+        re.S,
+    ):
+        raise CheckError("stale pending provenance extension remains")
     section = _section(text)
     if "The current gateway schema exposes the nullable camel-case fields" not in section:
         raise CheckError("current provenance status missing")

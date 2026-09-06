@@ -108,6 +108,26 @@ def test_rejects_duplicate_current_provenance_heading() -> None:
         CHECKER.validate_text(doc + "\n" + CHECKER.HEADING + "\n", atr)
 
 
+def test_accepts_unrelated_device_extension() -> None:
+    doc, atr = texts()
+    CHECKER.validate_text(doc + "\nextend type Device { firmwareLabel: String }\n", atr)
+
+
+@pytest.mark.parametrize(
+    "duplicate",
+    (
+        "discoverySource:String!",
+        "\tverificationState:String!",
+    ),
+)
+def test_rejects_whitespace_equivalent_duplicate_fields(duplicate: str) -> None:
+    doc, atr = texts()
+    marker = "  manufacturer: String!"
+    assert marker in doc
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(doc.replace(marker, duplicate + "\n" + marker, 1), atr)
+
+
 def test_rejects_obsolete_atr_spelling() -> None:
     rejects(
         atr_old="verificationState=corroborated_pending`",
