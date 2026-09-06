@@ -162,7 +162,7 @@ identity key. Source/target or canonical-companion topology evidence may group
 faces before that qualified triple exists, but it is not identity merge. See
 [Regulator Identity Enrichment](./regulator-identity-enrichment.md#registry-alias-group-and-identity-qualification)
 for sentinel treatment, same-address enrichment, and provenance-preserving
-identity confirmation. The closed, machine-readable
+identity confirmation. The closed, machine-readable schema-v2
 [qualified-identity policy](./regulator-qualified-identity-policy.json) is the
 canonical companion for this public contract.
 

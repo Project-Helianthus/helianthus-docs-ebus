@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "scope": "cross_address_qualified_identity",
+  "identity": {
+    "members": ["Manufacturer", "DeviceID", "SerialNumber"],
+    "match": "exact_normalized_triple",
+    "empty_or_partial": "not_qualified",
+    "named_sentinel_serials": ["0", "0x00000000", "0xFFFFFFFF", "0x7FFFFFFF"],
+    "sentinel_recognition": {
+      "scope": "named_hexadecimal_sentinels_only",
+      "case": "insensitive",
+      "prefix": "optional_single_0x",
+      "leading_zeros": "ignore",
+      "ordinary_serials": "never_parse_or_rewrite"
+    },
+    "sentinel_serials": "not_qualified",
+    "non_qualifying_signals": ["serial", "mac", "model", "topology", "address_cooccurrence"]
+  },
+  "normalization": {
+    "fixed_width_device_id_decoder": ["remove_terminal_nul", "remove_terminal_ascii_space"],
+    "registry": {
+      "members": ["Manufacturer", "DeviceID", "SerialNumber"],
+      "outer_unicode_whitespace": "trim",
+      "case": "uppercase",
+      "internal_whitespace": "preserve",
+      "internal_punctuation": "preserve",
+      "deviceid_vr_71_vs_vr71": "distinct"
+    }
+  },
+  "topology": {
+    "allowed_grouping_evidence": ["source_target", "canonical_companion"],
+    "cross_address_identity_proof": false
+  },
+  "confirmation": {
+    "session": "current",
+    "per_face": true,
+    "active_confirmation": "allowed_without_cross_address_qualification"
+  },
+  "enrichment": {
+    "scope": "same_address",
+    "last_known_good": "retain",
+    "cross_address_identity": "not_qualified"
+  },
+  "provenance": {
+    "per_face": "retain",
+    "static_seed": "preserve",
+    "passive_observed": "preserve"
+  }
+}

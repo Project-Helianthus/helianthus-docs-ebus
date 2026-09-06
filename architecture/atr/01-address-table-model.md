@@ -77,12 +77,30 @@ nil -> candidate -> corroborated -> identity_confirmed
 - `candidate` means the slot exists but has only seed-level or other
   low-confidence evidence.
 - `corroborated` means at least two independent observations or one
-  observation plus one coherent identity reply have established the slot per
-  AD05.
+  same-source positive-ACK observation plus a current exact-address consumer
+  witness have established the slot per AD05.
 - `identity_confirmed` means the slot is tied to a coherent device identity.
 
 An implementation MUST NOT downgrade a slot from a stronger state to a weaker
 state because of later lower-confidence evidence.
+
+## Companion Corroboration
+
+The public schema-v2 [qualified-identity policy](../regulator-qualified-identity-policy.json)
+is the canonical machine-readable companion for the witness alternative. The
+two-ACK path in [ACK/NACK Insertion Rules](03-ack-nack-insertion-rules.md)
+remains independent: two positive ACK observations at least `N` seconds apart
+are sufficient without identity evidence.
+
+<!-- qualified-identity-policy:begin same_source_positive_ack_plus_current_exact_address_witness -->
+For the one-ACK alternative, the registry MUST use only a current consumer witness for that same exact source address. The witness is registry-produced from a direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` observation. At the atomic registry lookup/validation/use boundary, its address, authority, observation generation, and proof generation MUST equal the current registry state.
+
+A positive generation or cached `current: true` flag alone MUST NOT satisfy this gate. Replacement, retirement, or a conflict makes the prior witness unavailable/not-current until a fresh direct complete normalized observation produces a new witness.
+
+A generic coherent identity reply, `identity_confirmed`, a topology alias or propagated confirmation, `static_seed`, `passive_observed`, caller assertion, last-known-good data, visible fields, or a directed `0x07/0x04` reply alone MUST NOT serve as witness authority. Directed `0x07/0x04` remains per-face confirmation without serial, and a witness for another address MUST NOT substitute.
+
+When a complete positive ACK and this current exact-address consumer witness satisfy the one-ACK alternative, the implementation MUST insert `slot[companion(ZZ)]` with passive provenance.
+<!-- qualified-identity-policy:end same_source_positive_ack_plus_current_exact_address_witness -->
 
 ## Array Semantics
 

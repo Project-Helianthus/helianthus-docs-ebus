@@ -150,9 +150,24 @@ is canonicalized independently before equality decides whether the triple is
 an exact match.
 
 The machine-readable canonical companion is the public
-[qualified-identity policy](regulator-qualified-identity-policy.json). It is a
-small, closed documentation contract for this qualified-identity boundary; this
+[qualified-identity policy](regulator-qualified-identity-policy.json), currently
+schema version 2. It is a small, closed documentation contract for this
+qualified-identity boundary; this
 page retains the explanatory architecture and evidence context.
+
+## Schema Version and Historical V1 Boundary
+
+The canonical path publishes the expanded **schema version 2** policy. Current
+repository references consume that v2 shape, including its required `instance`
+and `consumer_witness` sections. This is a breaking replacement for a consumer
+pinned to the historical v1 policy; it is never described as v1-compatible.
+
+Version 1 remains the accepted historical cross-address qualified-identity
+policy: its closed root has no `instance` or `consumer_witness` section. A v1
+reader must reject the v2 shape, and the current v2 checker rejects an expanded
+shape labelled v1. The historical fixture exists only to identify and regress
+that accepted v1 rule; this documentation publishes no migration runtime or
+general compatibility engine.
 
 For a fixed-width native `DeviceID`, the decoder removes only terminal NUL
 (`0x00`) and ASCII-space (`0x20`) padding before constructing `DeviceInfo`.
@@ -199,6 +214,40 @@ not the qualified cross-address merge evidence. Identity confirmation MUST NOT
 rewrite a face's `static_seed` or `passive_observed` source label. A qualified
 observation may confirm faces already grouped by explicit topology evidence,
 but it does not turn topology evidence into an identity merge.
+
+## Exact-Address Consumer Witness
+
+**Contract status: Normative registry behavior. This is not an eBUS wire
+identity claim or a general attestation system.** A consumer witness is a small,
+value-typed registry value for one exact address. Its required fields and closed
+values are defined by the `consumer_witness` section of the
+[qualified-identity policy](regulator-qualified-identity-policy.json).
+
+The registry alone produces an immutable witness from a direct complete
+observation at that exact address. It binds that address to the complete
+normalized `(Manufacturer, DeviceID, SerialNumber)` authority, not merely a
+field label or partial value, and retains direct-observation provenance. It
+MUST carry nonzero registry observation and proof generations.
+
+Currentness is not a cached `current: true` field. At consumer decision time,
+the lookup, validation, and use form one atomic registry boundary: the supplied
+witness authority, observation generation, and proof generation MUST equal the
+current registry state for that exact address and complete normalized triple
+authority. Positive generation values alone are insufficient. Replacement,
+retirement, or a conflict in any supplied triple member makes a prior immutable
+witness unavailable/not-current until a fresh direct complete observation
+produces a new witness. A witness for another address cannot substitute.
+
+Observable nonempty fields, `identity_confirmed`, a topology alias or
+topology-propagated confirmation, `static_seed`, `passive_observed`, caller
+assertions, and last-known-good data are not consumer witnesses. A directed
+`0x07/0x04` reply may confirm its responding face in the current session without
+a serial number, but it is not a qualified cross-address identity witness.
+
+The public implementation at
+[`helianthus-ebusreg@e118b9a90bd7ee4035cf108571fbe86b2de020bd`](https://github.com/Project-Helianthus/helianthus-ebusreg/tree/e118b9a90bd7ee4035cf108571fbe86b2de020bd)
+is compatibility input only. It neither proves a native eBUS identity nor
+replaces this public registry contract.
 
 This contract concerns registry behavior only. It does not make a device's wire
 identity, a source/target relationship, or a companion relationship Proven.
