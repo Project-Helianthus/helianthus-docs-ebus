@@ -83,10 +83,12 @@ For the one-ACK alternative, the registry MUST use only a current consumer witne
 A positive generation or cached `current: true` flag alone MUST NOT satisfy this gate. Replacement, retirement, or a conflict makes the prior witness unavailable/not-current until a fresh direct complete normalized observation produces a new witness.
 
 A generic coherent identity reply, `identity_confirmed`, a topology alias or propagated confirmation, `static_seed`, `passive_observed`, caller assertion, last-known-good data, visible fields, or a directed `0x07/0x04` reply alone MUST NOT serve as witness authority. Directed `0x07/0x04` remains per-face confirmation without serial, and a witness for another address MUST NOT substitute.
+
+When a complete positive ACK and this current exact-address consumer witness satisfy the one-ACK alternative, the implementation MUST insert `slot[companion(ZZ)]` with passive provenance.
 <!-- qualified-identity-policy:end same_source_positive_ack_plus_current_exact_address_witness -->
 
 Until that gate passes, `slot[companion(ZZ)]` MUST remain absent. After the
-gate passes, the companion slot MAY be inserted with passive provenance.
+gate passes, the companion slot MUST be inserted with passive provenance.
 
 ## Summary Rules
 

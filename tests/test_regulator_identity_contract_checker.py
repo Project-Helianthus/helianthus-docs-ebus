@@ -108,6 +108,7 @@ def test_qualified_identity_policy_preserves_triple_and_normalization_rules(tmp_
     assert witness["currentness"] == checker.CONSUMER_WITNESS_CURRENTNESS  # type: ignore[index]
     assert witness["stale_on"] == ["replacement", "retirement", "conflict"]  # type: ignore[index]
     assert witness["companion_corroboration"] == "same_source_positive_ack_plus_current_exact_address_witness"  # type: ignore[index]
+    assert witness["companion_insertion"] == "must_insert"  # type: ignore[index]
     fixtures = witness["validation_fixtures"]  # type: ignore[index]
     assert {fixture["name"] for fixture in fixtures} == checker.CONSUMER_WITNESS_FIXTURE_NAMES
     assert [fixture["name"] for fixture in fixtures if fixture["current"]] == ["current_exact_address"]
@@ -390,6 +391,10 @@ def remove_retirement_fixture(policy: dict[str, object]) -> None:
     fixtures[:] = [fixture for fixture in fixtures if fixture["name"] != "cached_after_retirement"]
 
 
+def make_one_ack_current_witness_insertion_optional(policy: dict[str, object]) -> None:
+    policy["consumer_witness"]["companion_insertion"] = "may_insert"  # type: ignore[index]
+
+
 @pytest.mark.parametrize("non_witness_input", ("topology_alias", "last_known_good", "directed_07_04_reply"))
 def test_qualified_identity_policy_rejects_consumer_witness_input_misuse(
     tmp_path: pathlib.Path, non_witness_input: str
@@ -420,6 +425,7 @@ def test_qualified_identity_policy_rejects_consumer_witness_input_misuse(
         (allow_unknown_current_registry_availability, "consumer_witness.current_registry_state.allowed_values"),
         (remove_atomic_currentness, "consumer_witness: expected exact fields"),
         (alter_registry_production, "consumer_witness.production"),
+        (make_one_ack_current_witness_insertion_optional, "consumer_witness.companion_insertion"),
         (accept_cached_replacement, "validation_fixtures.*current"),
         (remove_retirement_fixture, "expected exact fixture names"),
     ),
@@ -504,6 +510,31 @@ def test_qualified_identity_policy_rejects_reverted_atr_normative_block(
         "MUST equal the current registry state.", "MAY rely on cached witness state."
     )
     path.write_text(path.read_text(encoding="utf-8").replace(block, reverted), encoding="utf-8")
+
+    with pytest.raises(checker.CheckError, match="missing required qualified-identity normative block"):
+        checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "relative",
+    (
+        pathlib.Path("architecture/atr/01-address-table-model.md"),
+        pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
+    ),
+)
+def test_qualified_identity_policy_rejects_optional_one_ack_current_witness_companion_insertion(
+    tmp_path: pathlib.Path, relative: pathlib.Path
+) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    path = tmp_path / relative
+    policy = read_policy(tmp_path)
+    block = checker.required_atr_normative_block(policy["consumer_witness"])
+    required = "the implementation MUST insert `slot[companion(ZZ)]` with passive provenance."
+    assert required in block
+    text = path.read_text(encoding="utf-8")
+    assert block in text
+    path.write_text(text.replace(block, block.replace(required, required.replace("MUST", "MAY"))), encoding="utf-8")
 
     with pytest.raises(checker.CheckError, match="missing required qualified-identity normative block"):
         checker.validate_documents(tmp_path)

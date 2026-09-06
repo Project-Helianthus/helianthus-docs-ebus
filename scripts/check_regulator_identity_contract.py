@@ -109,6 +109,7 @@ CONSUMER_WITNESS_NON_WITNESS_INPUTS = [
     "last_known_good",
     "directed_07_04_reply",
 ]
+CONSUMER_WITNESS_COMPANION_INSERTION = "must_insert"
 TRIPLE_AUTHORITY_FIELDS = {"Manufacturer", "DeviceID", "SerialNumber"}
 WITNESS_INSTANCE_FIELDS = set(CONSUMER_WITNESS_REQUIRED_FIELDS)
 CURRENT_REGISTRY_STATE_FIELDS = set(CURRENT_REGISTRY_STATE_REQUIRED_FIELDS)
@@ -356,6 +357,7 @@ def validate_current_v2_policy(policy: object, path: pathlib.Path) -> None:
             "stale_on",
             "non_witness_inputs",
             "companion_corroboration",
+            "companion_insertion",
             "validation_fixtures",
         },
     )
@@ -413,6 +415,11 @@ def validate_current_v2_policy(policy: object, path: pathlib.Path) -> None:
         consumer_witness["companion_corroboration"],
         "same_source_positive_ack_plus_current_exact_address_witness",
         f"{path}.consumer_witness.companion_corroboration",
+    )
+    require_value(
+        consumer_witness["companion_insertion"],
+        CONSUMER_WITNESS_COMPANION_INSERTION,
+        f"{path}.consumer_witness.companion_insertion",
     )
     validate_consumer_witness_fixtures(
         consumer_witness["validation_fixtures"], f"{path}.consumer_witness.validation_fixtures"
@@ -525,6 +532,8 @@ For the one-ACK alternative, the registry MUST use only a current consumer witne
 A positive generation or cached `current: true` flag alone MUST NOT satisfy this gate. Replacement, retirement, or a conflict makes the prior witness unavailable/not-current until a fresh direct complete normalized observation produces a new witness.
 
 A generic coherent identity reply, `identity_confirmed`, a topology alias or propagated confirmation, `static_seed`, `passive_observed`, caller assertion, last-known-good data, visible fields, or a directed `0x07/0x04` reply alone MUST NOT serve as witness authority. Directed `0x07/0x04` remains per-face confirmation without serial, and a witness for another address MUST NOT substitute.
+
+When a complete positive ACK and this current exact-address consumer witness satisfy the one-ACK alternative, the implementation MUST insert `slot[companion(ZZ)]` with passive provenance.
 <!-- qualified-identity-policy:end {selector} -->"""
 
 

@@ -115,6 +115,7 @@
       "directed_07_04_reply"
     ],
     "companion_corroboration": "same_source_positive_ack_plus_current_exact_address_witness",
+    "companion_insertion": "must_insert",
     "validation_fixtures": [
       {
         "name": "current_exact_address",
