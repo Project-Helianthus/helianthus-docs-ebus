@@ -36,7 +36,7 @@ def rejects(doc_old: str | None = None, doc_new: str = "", atr_old: str | None =
         CHECKER.validate_text(doc, atr)
 
 
-def test_accepts_pending_independent_label_contract() -> None:
+def test_accepts_current_independent_label_contract() -> None:
     CHECKER.validate_text(*texts())
     CHECKER.validate_mcp_text(mcp_text())
 
@@ -66,15 +66,20 @@ def test_accepts_pending_independent_label_contract() -> None:
         ("both\nfields resolve to GraphQL `null`", "both fields resolve to empty strings"),
         ("A slotless entry remains visible through\n`devices` and `device(address:)`", "A slotless entry is excluded."),
         ("This matches MCP, which omits both\nsnake-case provenance members for the same slotless condition.", "MCP behavior is unrelated."),
+        ("The current gateway schema exposes", "The future gateway schema will expose"),
+        (CHECKER.GATEWAY_REVIEWED_HEAD, "0" * 40),
+        (CHECKER.GATEWAY_REVIEWED_MERGE_TREE, "1" * 40),
+        (CHECKER.GATEWAY_MAIN_MERGE, "2" * 40),
+        (CHECKER.REGISTRY_DEPENDENCY, "3" * 40),
     ),
 )
 def test_rejects_document_contract_mutations(old: str, new: str) -> None:
     rejects(doc_old=old, doc_new=new)
 
 
-def test_rejects_pending_fields_in_current_schema() -> None:
-    old = "  manufacturer: String!"
-    rejects(doc_old=old, doc_new="  discoverySource: String!\n  manufacturer: String!")
+def test_rejects_missing_or_non_nullable_current_fields() -> None:
+    rejects(doc_old="  discoverySource: String\n")
+    rejects(doc_old="  verificationState: String\n", doc_new="  verificationState: String!\n")
 
 
 def test_rejects_obsolete_atr_spelling() -> None:
@@ -92,5 +97,21 @@ def test_rejects_mcp_source_rewrite_rule() -> None:
         "Verification advancement rewrites every source to `active_confirmed`.",
         1,
     )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_mcp_text(mutated)
+
+
+@pytest.mark.parametrize(
+    "pin",
+    (
+        CHECKER.GATEWAY_REVIEWED_HEAD,
+        CHECKER.GATEWAY_REVIEWED_MERGE_TREE,
+        CHECKER.GATEWAY_MAIN_MERGE,
+        CHECKER.REGISTRY_DEPENDENCY,
+    ),
+)
+def test_rejects_wrong_mcp_runtime_or_dependency_pin(pin: str) -> None:
+    text = mcp_text()
+    mutated = text.replace(pin, "f" * 40, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(mutated)

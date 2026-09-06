@@ -316,6 +316,8 @@ type BusPeriodicityEntry {
 type Device {
   address: Int!
   addresses: [Int!]!
+  discoverySource: String
+  verificationState: String
   manufacturer: String!
   deviceId: String!
   serialNumber: String
@@ -544,21 +546,19 @@ type CircuitConfig {
 }
 ```
 
-### Pending gateway #939/#940 implementation: Device Face Discovery Provenance
+### Current Device Face Discovery Provenance
 
-This extension is pending gateway #939/#940 implementation and is not present
-in the current gateway schema. The future camel-case fields are exactly
+The current gateway schema exposes the nullable camel-case fields
 `Device.discoverySource` and `Device.verificationState`. They are independent
 label dimensions. Valid non-null values are the Cartesian product of the
 separately allowed source and state sets; no source label determines or
 restricts the state label.
 
-```graphql
-extend type Device {
-  discoverySource: String
-  verificationState: String
-}
-```
+This current contract is implemented at reviewed gateway HEAD
+`77b898633672e123a05d39a3cf46398cce2d72ab`. The reviewed and merge tree is
+identical at `bb8f59fed4be68104d8ab206f55f7f32ea33e031`; the accepted squash
+merge on gateway `main` is `f5cd9c51c60bdf422e8fc1b5690fbde52a393be3`; and the
+accepted registry dependency is `e24532a50caa00c113751b98b88239e045d731e8`.
 
 Allowed `discoverySource` labels:
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the bounded pending GraphQL device-face provenance contract."""
+"""Validate the current GraphQL and MCP device-face provenance contract."""
 from __future__ import annotations
 
 import pathlib
@@ -10,13 +10,23 @@ import sys
 DOC = pathlib.Path("api/graphql.md")
 MCP = pathlib.Path("api/mcp.md")
 ATR = pathlib.Path("architecture/atr/07-live-validation-acceptance.md")
-HEADING = "### Pending gateway #939/#940 implementation: Device Face Discovery Provenance"
+HEADING = "### Current Device Face Discovery Provenance"
 SOURCES = ("static_seed", "passive_observed", "active_confirmed")
 STATES = ("candidate", "corroborated_pending", "identity_confirmed")
 INITIAL = (
     ("static_seed", "candidate"),
     ("passive_observed", "corroborated_pending"),
     ("active_confirmed", "identity_confirmed"),
+)
+GATEWAY_REVIEWED_HEAD = "77b898633672e123a05d39a3cf46398cce2d72ab"
+GATEWAY_REVIEWED_MERGE_TREE = "bb8f59fed4be68104d8ab206f55f7f32ea33e031"
+GATEWAY_MAIN_MERGE = "f5cd9c51c60bdf422e8fc1b5690fbde52a393be3"
+REGISTRY_DEPENDENCY = "e24532a50caa00c113751b98b88239e045d731e8"
+PINS = (
+    GATEWAY_REVIEWED_HEAD,
+    GATEWAY_REVIEWED_MERGE_TREE,
+    GATEWAY_MAIN_MERGE,
+    REGISTRY_DEPENDENCY,
 )
 INDEPENDENCE = (
     "Valid non-null values are the Cartesian product of the\n"
@@ -59,9 +69,33 @@ class CheckError(ValueError):
 def _section(text: str) -> str:
     start = text.find(HEADING)
     if start < 0:
-        raise CheckError("pending implementation heading missing")
+        raise CheckError("current implementation heading missing")
     end = text.find("\n### ", start + len(HEADING))
     return text[start : end if end >= 0 else None]
+
+
+def _mcp_device_section(text: str) -> str:
+    start_marker = "  - `ebus.v1.registry.devices.get`\n"
+    start = text.find(start_marker)
+    if start < 0:
+        raise CheckError("MCP registry devices.get section missing")
+    end = text.find("\n  - `", start + len(start_marker))
+    return text[start : end if end >= 0 else None]
+
+
+def _validate_pins(section: str, *, surface: str) -> None:
+    if tuple(re.findall(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", section)) != PINS:
+        raise CheckError(f"{surface} provenance pins differ")
+    normalized = re.sub(r"\s+", " ", section)
+    required = (
+        f"reviewed gateway HEAD `{GATEWAY_REVIEWED_HEAD}`",
+        f"reviewed and merge tree is identical at `{GATEWAY_REVIEWED_MERGE_TREE}`",
+        f"gateway `main` is `{GATEWAY_MAIN_MERGE}`",
+        f"accepted registry dependency is `{REGISTRY_DEPENDENCY}`",
+    )
+    for fragment in required:
+        if fragment not in normalized:
+            raise CheckError(f"{surface} provenance pin meaning missing: {fragment!r}")
 
 
 def _single_column(section: str, title: str) -> tuple[str, ...]:
@@ -91,15 +125,26 @@ def validate_text(text: str, atr: str) -> None:
     current = re.search(r"### Types \(Current\).*?^type Device \{\n(?P<body>.*?)^\}", text, re.M | re.S)
     if current is None:
         raise CheckError("current Device definition missing")
-    if "discoverySource:" in current.group("body") or "verificationState:" in current.group("body"):
-        raise CheckError("pending fields leaked into Types Current")
+    body = current.group("body")
+    for field in ("  discoverySource: String\n", "  verificationState: String\n"):
+        if body.count(field) != 1:
+            raise CheckError("current Device must declare exact nullable camel-case fields")
+    if re.search(r"^  (?:discoverySource|verificationState): (?!String$)", body, re.M):
+        raise CheckError("current Device provenance fields must be nullable String")
 
     section = _section(text)
-    pending_type = "extend type Device {\n  discoverySource: String\n  verificationState: String\n}"
-    if section.count(pending_type) != 1:
-        raise CheckError("pending Device extension must declare exact camel-case fields")
-    if "is not present\nin the current gateway schema" not in section:
-        raise CheckError("docs-first pending status missing")
+    stale = (
+        "Pending gateway #939/#940 implementation",
+        "pending gateway #939/#940 implementation",
+        "is not present\nin the current gateway schema",
+        "future camel-case fields",
+        "extend type Device",
+    )
+    if any(fragment in section for fragment in stale):
+        raise CheckError("stale pending provenance status remains")
+    if "The current gateway schema exposes the nullable camel-case fields" not in section:
+        raise CheckError("current provenance status missing")
+    _validate_pins(section, surface="GraphQL")
     if _single_column(section, "discoverySource") != SOURCES:
         raise CheckError("discoverySource label set differs")
     if _single_column(section, "verificationState") != STATES:
@@ -135,10 +180,20 @@ def validate_text(text: str, atr: str) -> None:
 
 
 def validate_mcp_text(text: str) -> None:
-    if MCP_SOURCE_RETENTION not in text:
-        raise CheckError("MCP source-retention rule missing")
-    obsolete = "active scan (→ `active_confirmed/identity_confirmed`)"
-    if obsolete in text:
+    section = _mcp_device_section(text)
+    _validate_pins(section, surface="MCP")
+    required = (
+        "JSON response items carry `discovery_source` and\n      `verification_state` fields",
+        "`passive_observed | static_seed | active_confirmed`",
+        "`candidate | corroborated_pending | identity_confirmed`",
+        "Both are omitted when the registry has no slot record for the\n      address.",
+        "For `devices.list` the labels reflect the entry's\n      canonical primary address; for `devices.get(address=X)` the labels\n      reflect the queried address X.",
+        MCP_SOURCE_RETENTION,
+    )
+    for fragment in required:
+        if fragment not in section:
+            raise CheckError(f"required MCP provenance rule missing: {fragment!r}")
+    if "active scan (→ `active_confirmed/identity_confirmed`)" in section:
         raise CheckError("MCP source-rewrite rule remains")
 
 
@@ -149,7 +204,7 @@ def main() -> int:
     except CheckError as error:
         print(f"graphql_face_provenance_error: {error}", file=sys.stderr)
         return 1
-    print("graphql_face_provenance_ok sources=3 states=3 initial=3 pending=1")
+    print("graphql_face_provenance_ok sources=3 states=3 initial=3 current=1")
     return 0
 
 
