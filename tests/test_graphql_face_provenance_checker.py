@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import pathlib
+import re
 
 import pytest
 
@@ -111,6 +112,17 @@ def test_rejects_duplicate_current_provenance_heading() -> None:
 def test_accepts_unrelated_device_extension() -> None:
     doc, atr = texts()
     CHECKER.validate_text(doc + "\nextend type Device { firmwareLabel: String }\n", atr)
+
+
+def test_rejects_device_definition_moved_out_of_current_types() -> None:
+    doc, atr = texts()
+    current = CHECKER._current_types_section(doc)
+    match = re.search(r"^type Device \{\n.*?^\}\n", current, re.M | re.S)
+    assert match is not None
+    device = match.group(0)
+    moved = doc.replace(device, "", 1) + "\n### Historical Device example\n\n```graphql\n" + device + "```\n"
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(moved, atr)
 
 
 @pytest.mark.parametrize(

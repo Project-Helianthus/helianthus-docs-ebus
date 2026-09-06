@@ -74,6 +74,15 @@ def _section(text: str) -> str:
     return text[start : end if end >= 0 else None]
 
 
+def _current_types_section(text: str) -> str:
+    heading = "### Types (Current)"
+    start = text.find(heading)
+    if start < 0:
+        raise CheckError("current types heading missing")
+    end = text.find("\n### ", start + len(heading))
+    return text[start : end if end >= 0 else None]
+
+
 def _mcp_device_section(text: str) -> str:
     start_marker = "  - `ebus.v1.registry.devices.get`\n"
     start = text.find(start_marker)
@@ -122,7 +131,7 @@ def _initial_pairs(section: str) -> tuple[tuple[str, str], ...]:
 
 
 def validate_text(text: str, atr: str) -> None:
-    current = re.search(r"### Types \(Current\).*?^type Device \{\n(?P<body>.*?)^\}", text, re.M | re.S)
+    current = re.search(r"^type Device \{\n(?P<body>.*?)^\}", _current_types_section(text), re.M | re.S)
     if current is None:
         raise CheckError("current Device definition missing")
     body = current.group("body")
