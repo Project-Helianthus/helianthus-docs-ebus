@@ -36,6 +36,40 @@
     "per_face": true,
     "active_confirmation": "allowed_without_cross_address_qualification"
   },
+  "consumer_witness": {
+    "kind": "qualified_identity_consumer_witness_v1",
+    "required_fields": [
+      "address",
+      "identity_authority",
+      "observation_provenance",
+      "current",
+      "immutable",
+      "registry_observation_generation",
+      "registry_proof_generation"
+    ],
+    "allowed_values": {
+      "address": ["exact_address"],
+      "identity_authority": ["current_qualified_identity"],
+      "observation_provenance": ["direct_observation"],
+      "current": [true],
+      "immutable": [true],
+      "registry_observation_generation": ["positive_integer"],
+      "registry_proof_generation": ["positive_integer"]
+    },
+    "stale_on": ["replacement", "retirement", "conflict"],
+    "non_witness_inputs": [
+      "observable_nonempty_fields",
+      "identity_confirmed",
+      "topology_alias",
+      "topology_propagated_confirmation",
+      "static_seed",
+      "passive_observed",
+      "caller_assertion",
+      "last_known_good",
+      "directed_07_04_reply"
+    ],
+    "companion_corroboration": "same_source_positive_ack_plus_current_exact_address_witness"
+  },
   "enrichment": {
     "scope": "same_address",
     "last_known_good": "retain",

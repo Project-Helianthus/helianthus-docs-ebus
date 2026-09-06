@@ -26,6 +26,7 @@ def copy_contract_material(destination: pathlib.Path) -> None:
     for relative in (
         POLICY_RELATIVE,
         pathlib.Path("architecture/regulator-identity-enrichment.md"),
+        pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
         pathlib.Path("architecture/atr/04-sn-merge-gate.md"),
         pathlib.Path("architecture/overview.md"),
         pathlib.Path("api/graphql.md"),
@@ -81,6 +82,40 @@ def test_qualified_identity_policy_preserves_triple_and_normalization_rules(tmp_
             "deviceid_vr_71_vs_vr71": "distinct",
         },
     }
+    assert policy["consumer_witness"] == {
+        "kind": "qualified_identity_consumer_witness_v1",
+        "required_fields": [
+            "address",
+            "identity_authority",
+            "observation_provenance",
+            "current",
+            "immutable",
+            "registry_observation_generation",
+            "registry_proof_generation",
+        ],
+        "allowed_values": {
+            "address": ["exact_address"],
+            "identity_authority": ["current_qualified_identity"],
+            "observation_provenance": ["direct_observation"],
+            "current": [True],
+            "immutable": [True],
+            "registry_observation_generation": ["positive_integer"],
+            "registry_proof_generation": ["positive_integer"],
+        },
+        "stale_on": ["replacement", "retirement", "conflict"],
+        "non_witness_inputs": [
+            "observable_nonempty_fields",
+            "identity_confirmed",
+            "topology_alias",
+            "topology_propagated_confirmation",
+            "static_seed",
+            "passive_observed",
+            "caller_assertion",
+            "last_known_good",
+            "directed_07_04_reply",
+        ],
+        "companion_corroboration": "same_source_positive_ack_plus_current_exact_address_witness",
+    }
     checker.validate_documents(tmp_path)
 
 
@@ -112,6 +147,32 @@ def alter_provenance_rule(policy: dict[str, object]) -> None:
     policy["provenance"]["static_seed"] = "rewrite"  # type: ignore[index]
 
 
+def remove_consumer_witness_member(policy: dict[str, object]) -> None:
+    policy["consumer_witness"]["required_fields"].remove("immutable")  # type: ignore[index]
+
+
+def change_consumer_witness_closed_value(policy: dict[str, object]) -> None:
+    policy["consumer_witness"]["allowed_values"]["observation_provenance"] = ["caller_assertion"]  # type: ignore[index]
+
+
+def allow_zero_consumer_witness_generation(policy: dict[str, object]) -> None:
+    policy["consumer_witness"]["allowed_values"]["registry_observation_generation"] = ["zero_or_positive_integer"]  # type: ignore[index]
+
+
+@pytest.mark.parametrize("non_witness_input", ("topology_alias", "last_known_good", "directed_07_04_reply"))
+def test_qualified_identity_policy_rejects_consumer_witness_input_misuse(
+    tmp_path: pathlib.Path, non_witness_input: str
+) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    policy = read_policy(tmp_path)
+    policy["consumer_witness"]["non_witness_inputs"].remove(non_witness_input)  # type: ignore[index]
+    write_policy(tmp_path, policy)
+
+    with pytest.raises(checker.CheckError, match="consumer_witness.non_witness_inputs"):
+        checker.validate_documents(tmp_path)
+
+
 @pytest.mark.parametrize(
     ("mutate", "error"),
     (
@@ -122,6 +183,9 @@ def alter_provenance_rule(policy: dict[str, object]) -> None:
         (alter_normalization_rule, "normalization.registry.internal_punctuation"),
         (alter_sentinel_recognition_rule, "identity.sentinel_recognition"),
         (alter_provenance_rule, "provenance.static_seed"),
+        (remove_consumer_witness_member, "consumer_witness.required_fields"),
+        (change_consumer_witness_closed_value, "consumer_witness.allowed_values"),
+        (allow_zero_consumer_witness_generation, "consumer_witness.allowed_values"),
     ),
 )
 def test_qualified_identity_policy_rejects_structured_mutations(
@@ -141,6 +205,7 @@ def test_qualified_identity_policy_rejects_structured_mutations(
     "relative",
     (
         pathlib.Path("architecture/regulator-identity-enrichment.md"),
+        pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
         pathlib.Path("architecture/atr/04-sn-merge-gate.md"),
         pathlib.Path("architecture/overview.md"),
         pathlib.Path("api/graphql.md"),
@@ -153,7 +218,7 @@ def test_qualified_identity_policy_requires_synchronized_public_reference(
     copy_contract_material(tmp_path)
     path = tmp_path / relative
     reference = checker.REQUIRED_DOCUMENT_REFERENCES[relative]
-    path.write_text(path.read_text(encoding="utf-8").replace(reference, "", 1), encoding="utf-8")
+    path.write_text(path.read_text(encoding="utf-8").replace(reference, ""), encoding="utf-8")
 
     with pytest.raises(checker.CheckError, match="missing required canonical policy reference"):
         checker.validate_documents(tmp_path)

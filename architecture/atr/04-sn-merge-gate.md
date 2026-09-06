@@ -70,6 +70,22 @@ not satisfy the cross-address merge predicate. Identity confirmation MUST
 preserve per-face discovery provenance: it MUST NOT rewrite `static_seed` or
 `passive_observed` source labels.
 
+## Exact-Address Consumer-Witness Boundary
+
+The policy's `consumer_witness` value is separate from this cross-address merge
+predicate. A valid witness binds one exact address to the current qualified
+identity authority, direct-observation provenance, immutable current state, and
+nonzero registry observation and proof generations. It becomes stale on
+replacement, retirement, or conflict.
+
+A directed `0x07/0x04` reply can confirm its responding face in the current
+session without a serial number; it is not a qualified cross-address identity
+witness. Observable nonempty fields, `identity_confirmed`, topology aliases or
+propagated confirmation, `static_seed`, `passive_observed`, caller assertions,
+and last-known-good data cannot manufacture one. This boundary does not alter
+the merge predicate or permit an identity merge without the complete normalized
+triple.
+
 ## Sentinel Treatment
 
 A denied sentinel is non-identity-bearing data, not merge proof. The denylist

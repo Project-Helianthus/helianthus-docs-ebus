@@ -68,7 +68,17 @@ positive ACK.
 The corroboration gate MUST require one of:
 
 - two positive ACK observations at least `N` seconds apart; or
-- one positive ACK observation plus one coherent identity reply.
+- one positive ACK observation plus a current exact-address consumer witness
+  for that same source.
+
+The two-ACK path remains independent of identity evidence. The consumer-witness
+path is not satisfied by observable nonempty fields, `identity_confirmed`, a
+topology alias or propagated confirmation, `static_seed`, `passive_observed`,
+caller assertions, last-known-good data, or a directed `0x07/0x04` reply. The
+public [qualified-identity policy](../regulator-qualified-identity-policy.json)
+defines the small, closed witness value; this insertion rule does not introduce
+a general attestation, secret, timestamp authority, transport mapping, or
+alternate runtime.
 
 Until that gate passes, `slot[companion(ZZ)]` MUST remain absent. After the
 gate passes, the companion slot MAY be inserted with passive provenance.

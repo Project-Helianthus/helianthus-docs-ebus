@@ -200,6 +200,31 @@ rewrite a face's `static_seed` or `passive_observed` source label. A qualified
 observation may confirm faces already grouped by explicit topology evidence,
 but it does not turn topology evidence into an identity merge.
 
+## Exact-Address Consumer Witness
+
+**Contract status: Normative registry behavior. This is not an eBUS wire
+identity claim or a general attestation system.** A consumer witness is a small,
+value-typed registry value for one exact address. Its required fields and closed
+values are defined by the `consumer_witness` section of the
+[qualified-identity policy](regulator-qualified-identity-policy.json).
+
+The witness MUST be current and immutable, bind to the current qualified
+identity authority, and retain direct-observation provenance. It MUST carry
+nonzero registry observation and proof generations. A replacement, retirement,
+or conflict makes a prior-generation witness stale; a consumer therefore cannot
+reuse it as current evidence.
+
+Observable nonempty fields, `identity_confirmed`, a topology alias or
+topology-propagated confirmation, `static_seed`, `passive_observed`, caller
+assertions, and last-known-good data are not consumer witnesses. A directed
+`0x07/0x04` reply may confirm its responding face in the current session without
+a serial number, but it is not a qualified cross-address identity witness.
+
+The public implementation at
+[`helianthus-ebusreg@e118b9a90bd7ee4035cf108571fbe86b2de020bd`](https://github.com/Project-Helianthus/helianthus-ebusreg/tree/e118b9a90bd7ee4035cf108571fbe86b2de020bd)
+is compatibility input only. It neither proves a native eBUS identity nor
+replaces this public registry contract.
+
 This contract concerns registry behavior only. It does not make a device's wire
 identity, a source/target relationship, or a companion relationship Proven.
 For the corresponding ATR contract, see

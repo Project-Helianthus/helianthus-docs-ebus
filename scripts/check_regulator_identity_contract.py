@@ -24,9 +24,39 @@ SENTINEL_RECOGNITION = {
     "leading_zeros": "ignore",
     "ordinary_serials": "never_parse_or_rewrite",
 }
+CONSUMER_WITNESS_REQUIRED_FIELDS = [
+    "address",
+    "identity_authority",
+    "observation_provenance",
+    "current",
+    "immutable",
+    "registry_observation_generation",
+    "registry_proof_generation",
+]
+CONSUMER_WITNESS_ALLOWED_VALUES = {
+    "address": ["exact_address"],
+    "identity_authority": ["current_qualified_identity"],
+    "observation_provenance": ["direct_observation"],
+    "current": [True],
+    "immutable": [True],
+    "registry_observation_generation": ["positive_integer"],
+    "registry_proof_generation": ["positive_integer"],
+}
+CONSUMER_WITNESS_NON_WITNESS_INPUTS = [
+    "observable_nonempty_fields",
+    "identity_confirmed",
+    "topology_alias",
+    "topology_propagated_confirmation",
+    "static_seed",
+    "passive_observed",
+    "caller_assertion",
+    "last_known_good",
+    "directed_07_04_reply",
+]
 
 REQUIRED_DOCUMENT_REFERENCES = {
     pathlib.Path("architecture/regulator-identity-enrichment.md"): "[qualified-identity policy](regulator-qualified-identity-policy.json)",
+    pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/atr/04-sn-merge-gate.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/overview.md"): "[qualified-identity policy](./regulator-qualified-identity-policy.json)",
     pathlib.Path("api/graphql.md"): "[qualified-identity policy](../architecture/regulator-qualified-identity-policy.json)",
@@ -53,7 +83,17 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
     root = require_keys(
         policy,
         str(path),
-        {"schema_version", "scope", "identity", "normalization", "topology", "confirmation", "enrichment", "provenance"},
+        {
+            "schema_version",
+            "scope",
+            "identity",
+            "normalization",
+            "topology",
+            "confirmation",
+            "consumer_witness",
+            "enrichment",
+            "provenance",
+        },
     )
     require_value(root["schema_version"], POLICY_VERSION, f"{path}.schema_version")
     require_value(root["scope"], "cross_address_qualified_identity", f"{path}.scope")
@@ -114,6 +154,42 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
         confirmation["active_confirmation"],
         "allowed_without_cross_address_qualification",
         f"{path}.confirmation.active_confirmation",
+    )
+
+    consumer_witness = require_keys(
+        root["consumer_witness"],
+        f"{path}.consumer_witness",
+        {"kind", "required_fields", "allowed_values", "stale_on", "non_witness_inputs", "companion_corroboration"},
+    )
+    require_value(
+        consumer_witness["kind"],
+        "qualified_identity_consumer_witness_v1",
+        f"{path}.consumer_witness.kind",
+    )
+    require_value(
+        consumer_witness["required_fields"],
+        CONSUMER_WITNESS_REQUIRED_FIELDS,
+        f"{path}.consumer_witness.required_fields",
+    )
+    require_value(
+        consumer_witness["allowed_values"],
+        CONSUMER_WITNESS_ALLOWED_VALUES,
+        f"{path}.consumer_witness.allowed_values",
+    )
+    require_value(
+        consumer_witness["stale_on"],
+        ["replacement", "retirement", "conflict"],
+        f"{path}.consumer_witness.stale_on",
+    )
+    require_value(
+        consumer_witness["non_witness_inputs"],
+        CONSUMER_WITNESS_NON_WITNESS_INPUTS,
+        f"{path}.consumer_witness.non_witness_inputs",
+    )
+    require_value(
+        consumer_witness["companion_corroboration"],
+        "same_source_positive_ack_plus_current_exact_address_witness",
+        f"{path}.consumer_witness.companion_corroboration",
     )
 
     enrichment = require_keys(root["enrichment"], f"{path}.enrichment", {"scope", "last_known_good", "cross_address_identity"})
