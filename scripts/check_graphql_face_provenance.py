@@ -71,11 +71,12 @@ def _section(text: str) -> str:
 
 
 def _heading_section(text: str, heading: str, label: str) -> str:
-    matches = list(re.finditer(rf"(?m)^{re.escape(heading)}[ \t]*$", text))
+    masked_text = _mask_markdown_fences(text)
+    matches = list(re.finditer(rf"(?m)^{re.escape(heading)}[ \t]*$", masked_text))
     if len(matches) != 1:
         raise CheckError(f"{label} heading must appear exactly once")
     start = matches[0].start()
-    remainder = text[matches[0].end() :]
+    remainder = masked_text[matches[0].end() :]
     level = len(heading) - len(heading.lstrip("#"))
     end = re.search(rf"(?m)^#{{1,{level}}}[ \t]+", remainder)
     return text[start : matches[0].end() + (end.start() if end else len(remainder))]
@@ -344,17 +345,16 @@ def validate_text(text: str, atr: str) -> None:
         ):
             raise CheckError("current Device must declare exact nullable camel-case fields")
 
-    if visible_text.count(HEADING) != 1:
-        raise CheckError("current provenance heading must appear exactly once")
+    section = _section(visible_text)
     stale = (
         "Pending gateway #939/#940 implementation",
         "pending gateway #939/#940 implementation",
-        "is not present\nin the current gateway schema",
+        "is not present in the current gateway schema",
         "future camel-case fields",
     )
-    if any(fragment in visible_text for fragment in stale):
+    normalized_visible = re.sub(r"\s+", " ", visible_text)
+    if any(re.sub(r"\s+", " ", fragment) in normalized_visible for fragment in stale):
         raise CheckError("stale pending provenance status remains")
-    section = _section(visible_text)
     if "The current gateway schema exposes the nullable camel-case fields" not in section:
         raise CheckError("current provenance status missing")
     _validate_pins(section, surface="GraphQL")

@@ -192,6 +192,31 @@ def test_rejects_duplicate_current_provenance_heading() -> None:
         CHECKER.validate_text(doc + "\n" + CHECKER.HEADING + "\n", atr)
 
 
+def test_rejects_fenced_example_as_current_provenance_heading() -> None:
+    doc, atr = texts()
+    replacement = f"```markdown\n{CHECKER.HEADING}\n```"
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(doc.replace(CHECKER.HEADING, replacement, 1), atr)
+
+
+def test_accepts_fenced_example_beside_real_provenance_heading() -> None:
+    doc, atr = texts()
+    CHECKER.validate_text(doc + f"\n```markdown\n{CHECKER.HEADING}\n```\n", atr)
+
+
+@pytest.mark.parametrize(
+    "stale",
+    (
+        "is not present in the current gateway schema",
+        "is\nnot\tpresent   in\n the current\tgateway schema",
+    ),
+)
+def test_rejects_stale_gateway_sentence_after_whitespace_reflow(stale: str) -> None:
+    doc, atr = texts()
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(doc + "\n" + stale + "\n", atr)
+
+
 def test_accepts_unrelated_device_extension() -> None:
     doc, atr = texts()
     CHECKER.validate_text(doc + "\nextend type Device { firmwareLabel: String }\n", atr)
