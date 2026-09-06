@@ -49,12 +49,35 @@
     ],
     "allowed_values": {
       "address": ["exact_address"],
-      "identity_authority": ["current_qualified_identity"],
+      "identity_authority": ["complete_normalized_triple_authority"],
       "observation_provenance": ["direct_observation"],
       "current": [true],
       "immutable": [true],
       "registry_observation_generation": ["positive_integer"],
       "registry_proof_generation": ["positive_integer"]
+    },
+    "production": {
+      "producer": "registry",
+      "source": "direct_complete_normalized_triple_observation",
+      "bound_to": [
+        "exact_address",
+        "complete_normalized_triple_authority",
+        "registry_observation_generation",
+        "registry_proof_generation"
+      ],
+      "result": "immutable"
+    },
+    "currentness": {
+      "consumer_boundary": "atomic_registry_lookup_validation_use",
+      "registry_state_scope": "exact_address_and_complete_normalized_triple_authority",
+      "supplied_must_equal_current": [
+        "address",
+        "identity_authority",
+        "registry_observation_generation",
+        "registry_proof_generation"
+      ],
+      "positive_generations_or_cached_current_flag": "insufficient",
+      "unavailable_until": "fresh_direct_complete_normalized_triple_observation"
     },
     "stale_on": ["replacement", "retirement", "conflict"],
     "non_witness_inputs": [
@@ -68,7 +91,233 @@
       "last_known_good",
       "directed_07_04_reply"
     ],
-    "companion_corroboration": "same_source_positive_ack_plus_current_exact_address_witness"
+    "companion_corroboration": "same_source_positive_ack_plus_current_exact_address_witness",
+    "validation_fixtures": [
+      {
+        "name": "current_exact_address",
+        "witness": {
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "observation_provenance": "direct_observation",
+          "current": true,
+          "immutable": true,
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current_registry_state": {
+          "availability": "available",
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current": true
+      },
+      {
+        "name": "cached_after_replacement",
+        "witness": {
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "observation_provenance": "direct_observation",
+          "current": true,
+          "immutable": true,
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current_registry_state": {
+          "availability": "available",
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_72",
+            "SerialNumber": "SN-2"
+          },
+          "registry_observation_generation": 8,
+          "registry_proof_generation": 12
+        },
+        "current": false
+      },
+      {
+        "name": "cached_after_retirement",
+        "witness": {
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "observation_provenance": "direct_observation",
+          "current": true,
+          "immutable": true,
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current_registry_state": {
+          "availability": "retired",
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current": false
+      },
+      {
+        "name": "cached_after_supplied_triple_conflict",
+        "witness": {
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "observation_provenance": "direct_observation",
+          "current": true,
+          "immutable": true,
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current_registry_state": {
+          "availability": "conflict",
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-2"
+          },
+          "registry_observation_generation": 8,
+          "registry_proof_generation": 12
+        },
+        "current": false
+      },
+      {
+        "name": "observation_generation_mismatch",
+        "witness": {
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "observation_provenance": "direct_observation",
+          "current": true,
+          "immutable": true,
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current_registry_state": {
+          "availability": "available",
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "registry_observation_generation": 8,
+          "registry_proof_generation": 11
+        },
+        "current": false
+      },
+      {
+        "name": "proof_generation_mismatch",
+        "witness": {
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "observation_provenance": "direct_observation",
+          "current": true,
+          "immutable": true,
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current_registry_state": {
+          "availability": "available",
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 12
+        },
+        "current": false
+      },
+      {
+        "name": "authority_substitution",
+        "witness": {
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "observation_provenance": "direct_observation",
+          "current": true,
+          "immutable": true,
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current_registry_state": {
+          "availability": "available",
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_72",
+            "SerialNumber": "SN-1"
+          },
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current": false
+      },
+      {
+        "name": "address_substitution",
+        "witness": {
+          "address": "0x11",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "observation_provenance": "direct_observation",
+          "current": true,
+          "immutable": true,
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current_registry_state": {
+          "availability": "available",
+          "address": "0x10",
+          "identity_authority": {
+            "Manufacturer": "ACME",
+            "DeviceID": "VR_71",
+            "SerialNumber": "SN-1"
+          },
+          "registry_observation_generation": 7,
+          "registry_proof_generation": 11
+        },
+        "current": false
+      }
+    ]
   },
   "enrichment": {
     "scope": "same_address",

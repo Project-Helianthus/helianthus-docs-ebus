@@ -80,6 +80,18 @@ defines the small, closed witness value; this insertion rule does not introduce
 a general attestation, secret, timestamp authority, transport mapping, or
 alternate runtime.
 
+At the consumer decision, lookup, validation, and use of that value MUST form
+the policy's atomic registry boundary. The supplied witness authority,
+observation generation, and proof generation MUST equal the current registry
+state for the same exact source address and complete normalized triple
+authority. A positive generation or cached `current: true` flag alone does not
+satisfy this gate. Replacement, retirement, or a conflict in any supplied
+triple member makes the prior witness unavailable/not-current until a fresh
+direct complete observation produces a new witness; a witness for another
+address cannot substitute.
+
+<!-- qualified-identity-policy: same_source_positive_ack_plus_current_exact_address_witness -->
+
 Until that gate passes, `slot[companion(ZZ)]` MUST remain absent. After the
 gate passes, the companion slot MAY be inserted with passive provenance.
 

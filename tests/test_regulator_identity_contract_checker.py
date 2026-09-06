@@ -26,6 +26,7 @@ def copy_contract_material(destination: pathlib.Path) -> None:
     for relative in (
         POLICY_RELATIVE,
         pathlib.Path("architecture/regulator-identity-enrichment.md"),
+        pathlib.Path("architecture/atr/01-address-table-model.md"),
         pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
         pathlib.Path("architecture/atr/04-sn-merge-gate.md"),
         pathlib.Path("architecture/overview.md"),
@@ -82,40 +83,16 @@ def test_qualified_identity_policy_preserves_triple_and_normalization_rules(tmp_
             "deviceid_vr_71_vs_vr71": "distinct",
         },
     }
-    assert policy["consumer_witness"] == {
-        "kind": "qualified_identity_consumer_witness_v1",
-        "required_fields": [
-            "address",
-            "identity_authority",
-            "observation_provenance",
-            "current",
-            "immutable",
-            "registry_observation_generation",
-            "registry_proof_generation",
-        ],
-        "allowed_values": {
-            "address": ["exact_address"],
-            "identity_authority": ["current_qualified_identity"],
-            "observation_provenance": ["direct_observation"],
-            "current": [True],
-            "immutable": [True],
-            "registry_observation_generation": ["positive_integer"],
-            "registry_proof_generation": ["positive_integer"],
-        },
-        "stale_on": ["replacement", "retirement", "conflict"],
-        "non_witness_inputs": [
-            "observable_nonempty_fields",
-            "identity_confirmed",
-            "topology_alias",
-            "topology_propagated_confirmation",
-            "static_seed",
-            "passive_observed",
-            "caller_assertion",
-            "last_known_good",
-            "directed_07_04_reply",
-        ],
-        "companion_corroboration": "same_source_positive_ack_plus_current_exact_address_witness",
-    }
+    witness = policy["consumer_witness"]
+    assert witness["kind"] == "qualified_identity_consumer_witness_v1"  # type: ignore[index]
+    assert witness["allowed_values"] == checker.CONSUMER_WITNESS_ALLOWED_VALUES  # type: ignore[index]
+    assert witness["production"] == checker.CONSUMER_WITNESS_PRODUCTION  # type: ignore[index]
+    assert witness["currentness"] == checker.CONSUMER_WITNESS_CURRENTNESS  # type: ignore[index]
+    assert witness["stale_on"] == ["replacement", "retirement", "conflict"]  # type: ignore[index]
+    assert witness["companion_corroboration"] == "same_source_positive_ack_plus_current_exact_address_witness"  # type: ignore[index]
+    fixtures = witness["validation_fixtures"]  # type: ignore[index]
+    assert {fixture["name"] for fixture in fixtures} == checker.CONSUMER_WITNESS_FIXTURE_NAMES
+    assert [fixture["name"] for fixture in fixtures if fixture["current"]] == ["current_exact_address"]
     checker.validate_documents(tmp_path)
 
 
@@ -159,6 +136,24 @@ def allow_zero_consumer_witness_generation(policy: dict[str, object]) -> None:
     policy["consumer_witness"]["allowed_values"]["registry_observation_generation"] = ["zero_or_positive_integer"]  # type: ignore[index]
 
 
+def remove_atomic_currentness(policy: dict[str, object]) -> None:
+    del policy["consumer_witness"]["currentness"]  # type: ignore[index]
+
+
+def alter_registry_production(policy: dict[str, object]) -> None:
+    policy["consumer_witness"]["production"]["producer"] = "caller"  # type: ignore[index]
+
+
+def accept_cached_replacement(policy: dict[str, object]) -> None:
+    fixtures = policy["consumer_witness"]["validation_fixtures"]  # type: ignore[index]
+    next(fixture for fixture in fixtures if fixture["name"] == "cached_after_replacement")["current"] = True
+
+
+def remove_retirement_fixture(policy: dict[str, object]) -> None:
+    fixtures = policy["consumer_witness"]["validation_fixtures"]  # type: ignore[index]
+    fixtures[:] = [fixture for fixture in fixtures if fixture["name"] != "cached_after_retirement"]
+
+
 @pytest.mark.parametrize("non_witness_input", ("topology_alias", "last_known_good", "directed_07_04_reply"))
 def test_qualified_identity_policy_rejects_consumer_witness_input_misuse(
     tmp_path: pathlib.Path, non_witness_input: str
@@ -186,6 +181,10 @@ def test_qualified_identity_policy_rejects_consumer_witness_input_misuse(
         (remove_consumer_witness_member, "consumer_witness.required_fields"),
         (change_consumer_witness_closed_value, "consumer_witness.allowed_values"),
         (allow_zero_consumer_witness_generation, "consumer_witness.allowed_values"),
+        (remove_atomic_currentness, "consumer_witness: expected exact fields"),
+        (alter_registry_production, "consumer_witness.production"),
+        (accept_cached_replacement, "validation_fixtures.*current"),
+        (remove_retirement_fixture, "expected exact fixture names"),
     ),
 )
 def test_qualified_identity_policy_rejects_structured_mutations(
@@ -205,6 +204,7 @@ def test_qualified_identity_policy_rejects_structured_mutations(
     "relative",
     (
         pathlib.Path("architecture/regulator-identity-enrichment.md"),
+        pathlib.Path("architecture/atr/01-address-table-model.md"),
         pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
         pathlib.Path("architecture/atr/04-sn-merge-gate.md"),
         pathlib.Path("architecture/overview.md"),
@@ -222,6 +222,42 @@ def test_qualified_identity_policy_requires_synchronized_public_reference(
 
     with pytest.raises(checker.CheckError, match="missing required canonical policy reference"):
         checker.validate_documents(tmp_path)
+
+
+def test_qualified_identity_policy_requires_atr01_synchronized_statement(tmp_path: pathlib.Path) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    relative = pathlib.Path("architecture/atr/01-address-table-model.md")
+    path = tmp_path / relative
+    marker = f"<!-- qualified-identity-policy: {checker.REQUIRED_ATR_SYNCHRONIZATION[relative]} -->"
+    path.write_text(path.read_text(encoding="utf-8").replace(marker, ""), encoding="utf-8")
+
+    with pytest.raises(checker.CheckError, match="missing required qualified-identity synchronization marker"):
+        checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "fixture_name",
+    (
+        "cached_after_replacement",
+        "cached_after_retirement",
+        "cached_after_supplied_triple_conflict",
+        "observation_generation_mismatch",
+        "proof_generation_mismatch",
+        "authority_substitution",
+        "address_substitution",
+    ),
+)
+def test_qualified_identity_policy_rejects_each_stale_or_substituted_witness_fixture(
+    tmp_path: pathlib.Path, fixture_name: str
+) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    policy = read_policy(tmp_path)
+    fixtures = policy["consumer_witness"]["validation_fixtures"]  # type: ignore[index]
+    fixture = next(item for item in fixtures if item["name"] == fixture_name)
+
+    assert checker.consumer_witness_is_current(fixture["witness"], fixture["current_registry_state"]) is False
 
 
 def test_qualified_identity_policy_rejects_invalid_json(tmp_path: pathlib.Path) -> None:

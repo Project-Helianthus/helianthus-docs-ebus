@@ -77,12 +77,36 @@ nil -> candidate -> corroborated -> identity_confirmed
 - `candidate` means the slot exists but has only seed-level or other
   low-confidence evidence.
 - `corroborated` means at least two independent observations or one
-  observation plus one coherent identity reply have established the slot per
-  AD05.
+  same-source positive-ACK observation plus a current exact-address consumer
+  witness have established the slot per AD05.
 - `identity_confirmed` means the slot is tied to a coherent device identity.
 
 An implementation MUST NOT downgrade a slot from a stronger state to a weaker
 state because of later lower-confidence evidence.
+
+## Companion Corroboration
+
+The public [qualified-identity policy](../regulator-qualified-identity-policy.json)
+is the canonical machine-readable companion for the witness alternative. The
+two-ACK path in [ACK/NACK Insertion Rules](03-ack-nack-insertion-rules.md)
+remains independent: two positive ACK observations at least `N` seconds apart
+are sufficient without identity evidence.
+
+For the one-ACK alternative, the registry MUST use only a current consumer
+witness for that same exact source address. The witness is registry-produced
+from a direct complete normalized `(Manufacturer, DeviceID, SerialNumber)`
+observation. At the atomic registry lookup/validation-use boundary for the
+consumer decision, its authority, observation generation, and proof generation
+MUST equal the current registry state for that exact address and authority.
+
+A generic coherent identity reply, `identity_confirmed`, or a directed
+`0x07/0x04` reply alone is not the witness alternative: the directed reply has
+no serial and remains per-face confirmation. Topology aliases/grouping,
+`static_seed`, `passive_observed`, last-known-good, caller assertions, and
+visible fields are not witness authority. A witness for another address cannot
+substitute.
+
+<!-- qualified-identity-policy: same_source_positive_ack_plus_current_exact_address_witness -->
 
 ## Array Semantics
 

@@ -35,12 +35,35 @@ CONSUMER_WITNESS_REQUIRED_FIELDS = [
 ]
 CONSUMER_WITNESS_ALLOWED_VALUES = {
     "address": ["exact_address"],
-    "identity_authority": ["current_qualified_identity"],
+    "identity_authority": ["complete_normalized_triple_authority"],
     "observation_provenance": ["direct_observation"],
     "current": [True],
     "immutable": [True],
     "registry_observation_generation": ["positive_integer"],
     "registry_proof_generation": ["positive_integer"],
+}
+CONSUMER_WITNESS_PRODUCTION = {
+    "producer": "registry",
+    "source": "direct_complete_normalized_triple_observation",
+    "bound_to": [
+        "exact_address",
+        "complete_normalized_triple_authority",
+        "registry_observation_generation",
+        "registry_proof_generation",
+    ],
+    "result": "immutable",
+}
+CONSUMER_WITNESS_CURRENTNESS = {
+    "consumer_boundary": "atomic_registry_lookup_validation_use",
+    "registry_state_scope": "exact_address_and_complete_normalized_triple_authority",
+    "supplied_must_equal_current": [
+        "address",
+        "identity_authority",
+        "registry_observation_generation",
+        "registry_proof_generation",
+    ],
+    "positive_generations_or_cached_current_flag": "insufficient",
+    "unavailable_until": "fresh_direct_complete_normalized_triple_observation",
 }
 CONSUMER_WITNESS_NON_WITNESS_INPUTS = [
     "observable_nonempty_fields",
@@ -53,13 +76,38 @@ CONSUMER_WITNESS_NON_WITNESS_INPUTS = [
     "last_known_good",
     "directed_07_04_reply",
 ]
+TRIPLE_AUTHORITY_FIELDS = {"Manufacturer", "DeviceID", "SerialNumber"}
+WITNESS_INSTANCE_FIELDS = set(CONSUMER_WITNESS_REQUIRED_FIELDS)
+CURRENT_REGISTRY_STATE_FIELDS = {
+    "availability",
+    "address",
+    "identity_authority",
+    "registry_observation_generation",
+    "registry_proof_generation",
+}
+WITNESS_FIXTURE_FIELDS = {"name", "witness", "current_registry_state", "current"}
+CONSUMER_WITNESS_FIXTURE_NAMES = {
+    "current_exact_address",
+    "cached_after_replacement",
+    "cached_after_retirement",
+    "cached_after_supplied_triple_conflict",
+    "observation_generation_mismatch",
+    "proof_generation_mismatch",
+    "authority_substitution",
+    "address_substitution",
+}
 
 REQUIRED_DOCUMENT_REFERENCES = {
     pathlib.Path("architecture/regulator-identity-enrichment.md"): "[qualified-identity policy](regulator-qualified-identity-policy.json)",
+    pathlib.Path("architecture/atr/01-address-table-model.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/atr/04-sn-merge-gate.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/overview.md"): "[qualified-identity policy](./regulator-qualified-identity-policy.json)",
     pathlib.Path("api/graphql.md"): "[qualified-identity policy](../architecture/regulator-qualified-identity-policy.json)",
+}
+REQUIRED_ATR_SYNCHRONIZATION = {
+    pathlib.Path("architecture/atr/01-address-table-model.md"): "same_source_positive_ack_plus_current_exact_address_witness",
+    pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"): "same_source_positive_ack_plus_current_exact_address_witness",
 }
 
 
@@ -77,6 +125,62 @@ def require_keys(value: object, context: str, keys: set[str]) -> dict[str, objec
 def require_value(value: object, expected: object, context: str) -> None:
     if value != expected or type(value) is not type(expected):
         raise CheckError(f"{context}: expected {expected!r}, got {value!r}")
+
+
+def require_complete_authority(value: object, context: str) -> dict[str, object]:
+    authority = require_keys(value, context, TRIPLE_AUTHORITY_FIELDS)
+    for member in TRIPLE_MEMBERS:
+        if not isinstance(authority[member], str) or not authority[member]:
+            raise CheckError(f"{context}.{member}: expected non-empty normalized member")
+    return authority
+
+
+def require_positive_integer(value: object, context: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise CheckError(f"{context}: expected positive integer")
+    return value
+
+
+def consumer_witness_is_current(witness_value: object, current_state_value: object) -> bool:
+    """Evaluate the closed witness/current-registry equality relation."""
+    witness = require_keys(witness_value, "consumer witness", WITNESS_INSTANCE_FIELDS)
+    current_state = require_keys(current_state_value, "current registry state", CURRENT_REGISTRY_STATE_FIELDS)
+    require_complete_authority(witness["identity_authority"], "consumer witness.identity_authority")
+    require_complete_authority(current_state["identity_authority"], "current registry state.identity_authority")
+    require_positive_integer(witness["registry_observation_generation"], "consumer witness.registry_observation_generation")
+    require_positive_integer(witness["registry_proof_generation"], "consumer witness.registry_proof_generation")
+    require_positive_integer(current_state["registry_observation_generation"], "current registry state.registry_observation_generation")
+    require_positive_integer(current_state["registry_proof_generation"], "current registry state.registry_proof_generation")
+    return (
+        witness["observation_provenance"] == "direct_observation"
+        and witness["current"] is True
+        and witness["immutable"] is True
+        and current_state["availability"] == "available"
+        and witness["address"] == current_state["address"]
+        and witness["identity_authority"] == current_state["identity_authority"]
+        and witness["registry_observation_generation"] == current_state["registry_observation_generation"]
+        and witness["registry_proof_generation"] == current_state["registry_proof_generation"]
+    )
+
+
+def validate_consumer_witness_fixtures(value: object, context: str) -> None:
+    if not isinstance(value, list) or not value:
+        raise CheckError(f"{context}: expected non-empty list")
+    names: set[str] = set()
+    for index, fixture_value in enumerate(value):
+        fixture = require_keys(fixture_value, f"{context}[{index}]", WITNESS_FIXTURE_FIELDS)
+        name = fixture["name"]
+        if not isinstance(name, str) or not name or name in names:
+            raise CheckError(f"{context}[{index}].name: expected unique non-empty string")
+        names.add(name)
+        if type(fixture["current"]) is not bool:
+            raise CheckError(f"{context}[{index}].current: expected boolean")
+        actual = consumer_witness_is_current(fixture["witness"], fixture["current_registry_state"])
+        require_value(actual, fixture["current"], f"{context}[{index}].current")
+    if names != CONSUMER_WITNESS_FIXTURE_NAMES:
+        missing = sorted(CONSUMER_WITNESS_FIXTURE_NAMES - names)
+        unknown = sorted(names - CONSUMER_WITNESS_FIXTURE_NAMES)
+        raise CheckError(f"{context}: expected exact fixture names; missing={missing}, unknown={unknown}")
 
 
 def validate_policy(policy: object, path: pathlib.Path) -> None:
@@ -159,7 +263,17 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
     consumer_witness = require_keys(
         root["consumer_witness"],
         f"{path}.consumer_witness",
-        {"kind", "required_fields", "allowed_values", "stale_on", "non_witness_inputs", "companion_corroboration"},
+        {
+            "kind",
+            "required_fields",
+            "allowed_values",
+            "production",
+            "currentness",
+            "stale_on",
+            "non_witness_inputs",
+            "companion_corroboration",
+            "validation_fixtures",
+        },
     )
     require_value(
         consumer_witness["kind"],
@@ -177,6 +291,16 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
         f"{path}.consumer_witness.allowed_values",
     )
     require_value(
+        consumer_witness["production"],
+        CONSUMER_WITNESS_PRODUCTION,
+        f"{path}.consumer_witness.production",
+    )
+    require_value(
+        consumer_witness["currentness"],
+        CONSUMER_WITNESS_CURRENTNESS,
+        f"{path}.consumer_witness.currentness",
+    )
+    require_value(
         consumer_witness["stale_on"],
         ["replacement", "retirement", "conflict"],
         f"{path}.consumer_witness.stale_on",
@@ -190,6 +314,9 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
         consumer_witness["companion_corroboration"],
         "same_source_positive_ack_plus_current_exact_address_witness",
         f"{path}.consumer_witness.companion_corroboration",
+    )
+    validate_consumer_witness_fixtures(
+        consumer_witness["validation_fixtures"], f"{path}.consumer_witness.validation_fixtures"
     )
 
     enrichment = require_keys(root["enrichment"], f"{path}.enrichment", {"scope", "last_known_good", "cross_address_identity"})
@@ -215,6 +342,12 @@ def validate_documents(root: pathlib.Path) -> None:
         path = root / relative
         if reference not in path.read_text(encoding="utf-8"):
             raise CheckError(f"{path}: missing required canonical policy reference: {reference!r}")
+
+    for relative, policy_value in REQUIRED_ATR_SYNCHRONIZATION.items():
+        path = root / relative
+        marker = f"<!-- qualified-identity-policy: {policy_value} -->"
+        if marker not in path.read_text(encoding="utf-8"):
+            raise CheckError(f"{path}: missing required qualified-identity synchronization marker: {marker!r}")
 
 
 def main() -> int:

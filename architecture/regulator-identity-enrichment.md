@@ -208,11 +208,20 @@ value-typed registry value for one exact address. Its required fields and closed
 values are defined by the `consumer_witness` section of the
 [qualified-identity policy](regulator-qualified-identity-policy.json).
 
-The witness MUST be current and immutable, bind to the current qualified
-identity authority, and retain direct-observation provenance. It MUST carry
-nonzero registry observation and proof generations. A replacement, retirement,
-or conflict makes a prior-generation witness stale; a consumer therefore cannot
-reuse it as current evidence.
+The registry alone produces an immutable witness from a direct complete
+observation at that exact address. It binds that address to the complete
+normalized `(Manufacturer, DeviceID, SerialNumber)` authority, not merely a
+field label or partial value, and retains direct-observation provenance. It
+MUST carry nonzero registry observation and proof generations.
+
+Currentness is not a cached `current: true` field. At consumer decision time,
+the lookup, validation, and use form one atomic registry boundary: the supplied
+witness authority, observation generation, and proof generation MUST equal the
+current registry state for that exact address and complete normalized triple
+authority. Positive generation values alone are insufficient. Replacement,
+retirement, or a conflict in any supplied triple member makes a prior immutable
+witness unavailable/not-current until a fresh direct complete observation
+produces a new witness. A witness for another address cannot substitute.
 
 Observable nonempty fields, `identity_confirmed`, a topology alias or
 topology-propagated confirmation, `static_seed`, `passive_observed`, caller

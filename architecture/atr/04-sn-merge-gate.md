@@ -74,9 +74,20 @@ preserve per-face discovery provenance: it MUST NOT rewrite `static_seed` or
 
 The policy's `consumer_witness` value is separate from this cross-address merge
 predicate. A valid witness binds one exact address to the current qualified
-identity authority, direct-observation provenance, immutable current state, and
-nonzero registry observation and proof generations. It becomes stale on
-replacement, retirement, or conflict.
+identity authority, direct-observation provenance, immutable state, and
+nonzero registry observation and proof generations. The authority is the
+complete normalized `(Manufacturer, DeviceID, SerialNumber)` triple, not a
+field label or partial identity. The registry alone produces it from a direct
+complete observation at that exact address.
+
+At consumer decision time, its lookup, validation, and use are one atomic
+registry boundary: the supplied authority, observation generation, and proof
+generation MUST equal the current registry state for that exact
+address/authority pair. Positive integers or a cached `current: true` flag are
+not enough. A replacement, retirement, or a conflict in any supplied triple
+member makes the prior immutable value unavailable/not-current until a fresh
+direct complete observation produces a new witness. A witness issued for one
+address cannot be substituted for another.
 
 A directed `0x07/0x04` reply can confirm its responding face in the current
 session without a serial number; it is not a qualified cross-address identity
