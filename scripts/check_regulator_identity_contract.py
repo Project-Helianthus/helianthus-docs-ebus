@@ -140,6 +140,7 @@ REQUIRED_ATR_NORMATIVE_BLOCKS = {
 }
 ATR07_ACCEPTANCE_PATH = pathlib.Path("architecture/atr/07-live-validation-acceptance.md")
 VERSION_BOUNDARY_PATH = pathlib.Path("architecture/regulator-identity-enrichment.md")
+REGISTRY_API_REFERENCE_PATH = pathlib.Path("architecture/regulator-identity-enrichment.md")
 REQUIRED_VERSION_BOUNDARY_WORDING = (
     "The canonical path publishes the expanded **schema version 2** policy.",
     "repository references consume that v2 shape, including its required `instance`\n"
@@ -533,8 +534,20 @@ A positive generation or cached `current: true` flag alone MUST NOT satisfy this
 
 A generic coherent identity reply, `identity_confirmed`, a topology alias or propagated confirmation, `static_seed`, `passive_observed`, caller assertion, last-known-good data, visible fields, or a directed `0x07/0x04` reply alone MUST NOT serve as witness authority. Directed `0x07/0x04` remains per-face confirmation without serial, and a witness for another address MUST NOT substitute.
 
-When a complete positive ACK and this current exact-address consumer witness satisfy the one-ACK alternative, the implementation MUST insert `slot[companion(ZZ)]` with passive provenance.
+`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` remains the read-locked operation for bounded non-registry derived-state commits; its callback MUST NOT call `DeviceRegistry` methods. `DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` is the state-changing operation: the registry MUST derive the canonical companion from `source` and, in one write-critical section, MUST validate the current exact-source direct complete normalized witness and passive target companion-slot admission, then MUST commit `slot[companion(ZZ)]` with passive provenance. No caller-supplied companion, lock upgrade, or unlock/relock check-then-use is permitted; replacement, retirement, or conflict cannot interleave between successful validation and the committed passive slot.
 <!-- qualified-identity-policy:end {selector} -->"""
+
+
+def required_registry_api_reference_block(consumer_witness: dict[str, object]) -> str:
+    """Return the public registry API-role boundary for the policy selector."""
+    selector = consumer_witness["companion_corroboration"]
+    return f"""<!-- qualified-identity-policy:registry-api:begin {selector} -->
+`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` remains the read-locked operation for bounded non-registry derived-state commits. Its callback MUST NOT call `DeviceRegistry` methods; it cannot lock-upgrade or use an unlock/relock check-then-use sequence.
+
+`DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` is the state-changing operation. The registry MUST derive the canonical companion from `source` and MUST atomically validate the current exact-source direct complete normalized witness plus passive target companion-slot admission in one write-critical section. It MUST NOT accept a caller-supplied companion. Replacement, retirement, or conflict cannot interleave between successful validation and the committed passive slot.
+
+This records one registry admission decision. It does not prove wire identity, create attestation authority, perform I/O, make topology an identity proof, or close gateway, M7, or physical acceptance criteria.
+<!-- qualified-identity-policy:registry-api:end {selector} -->"""
 
 
 def required_atr07_acceptance_block(consumer_witness: dict[str, object]) -> str:
@@ -548,13 +561,13 @@ The public schema-v2 [qualified-identity policy](../regulator-qualified-identity
 Procedure (no-current-witness negative): apply one complete positive-ACK observation for source `0xF1` in the deterministic acceptance fixture while no current registry-adjudicated exact-address qualified witness is available for `0xF1`.
 Expected: `slot[0xF6]` remains absent. This is the one-ACK negative; it has no claim about a separately qualified current witness.
 
-Procedure (current-qualified positive): apply one ACK plus a registry-adjudicated current exact-address qualified witness for `0xF1`; the ACK observation is complete and positive for source `0xF1`.
+Procedure (current-qualified positive): apply one ACK plus a registry-adjudicated current exact-address qualified witness for `0xF1`; the ACK observation is complete and positive for source `0xF1`. The state-changing `DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` MUST derive the companion and MUST atomically validate that witness with passive target companion-slot admission in one write-critical section.
 Expected: the companion `slot[0xF6]` MUST appear under the one-ACK alternative.
 
 Procedure (stale/invalid/unavailable negatives): repeat the current-qualified fixture with a frozen witness descriptor that is replaced, retired, conflicted, invalid, or unavailable at the atomic registry lookup/validation/use current result.
 Expected: `slot[0xF6]` remains absent in every negative fixture. A frozen descriptor is not itself the current result: no cached `current: true`, topology, `static_seed`, `passive_observed`, caller assertion, last-known-good data, per-face `0x07/0x04` reply without serial, or witness for another address may qualify.
 
-The registry-produced direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` witness must match the exact source address, authority, observation generation, and proof generation in the atomic registry lookup/validation/use current result. The independent two-ACK route remains independent of identity evidence: after the observation window (default 5s) plus a second corroborating positive ACK, `slot[0xF6]` MUST appear without a witness.
+The registry-produced direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` witness must match the exact source address, authority, observation generation, and proof generation in the atomic registry lookup/validation/use current result. `DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` remains the read-locked operation for bounded non-registry derived-state commits and its callback MUST NOT call `DeviceRegistry` methods. No caller-supplied companion, lock upgrade, or unlock/relock check-then-use may separate successful validation from the committed passive slot. The independent two-ACK route remains independent of identity evidence: after the observation window (default 5s) plus a second corroborating positive ACK, `slot[0xF6]` MUST appear without a witness.
 <!-- qualified-identity-policy:atr07-acceptance:end {selector} -->"""
 
 
@@ -584,6 +597,11 @@ def validate_documents(root: pathlib.Path) -> None:
         path = root / relative
         if normative_block not in path.read_text(encoding="utf-8"):
             raise CheckError(f"{path}: missing required qualified-identity normative block")
+
+    registry_api_block = required_registry_api_reference_block(consumer_witness)
+    registry_api_path = root / REGISTRY_API_REFERENCE_PATH
+    if registry_api_block not in registry_api_path.read_text(encoding="utf-8"):
+        raise CheckError(f"{registry_api_path}: missing required qualified-identity registry API reference block")
 
     atr07_block = required_atr07_acceptance_block(consumer_witness)
     atr07_path = root / ATR07_ACCEPTANCE_PATH
