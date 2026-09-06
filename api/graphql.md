@@ -473,9 +473,11 @@ type BoilerDiagnostics {
   deactivationsIFC: Int
   deactivationsTemplimiter: Int
 }
+```
 
 Boiler field provenance is documented in [`protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md). The current contract is hybrid: direct BAI00 B509 is authoritative for most boiler fields, while a small set of controller-mirrored B524 values still feed `dhwTemperatureC`, `dhwTargetTemperatureC`, `dhwOperatingMode`, and `heatingStatusRaw`.
 
+```graphql
 type SystemStatus {
   state: SystemState
   config: SystemConfig
@@ -547,6 +549,8 @@ type CircuitConfig {
 ```
 
 ### Current Device Face Discovery Provenance
+
+**Conclusion: Proven.**
 
 The current gateway schema exposes the nullable camel-case fields
 `Device.discoverySource` and `Device.verificationState`. They are independent

@@ -6,6 +6,9 @@ import pathlib
 import re
 import sys
 
+from graphql import GraphQLError, parse
+from markdown_it import MarkdownIt
+
 
 DOC = pathlib.Path("api/graphql.md")
 MCP = pathlib.Path("api/mcp.md")
@@ -28,6 +31,9 @@ PINS = (
     GATEWAY_MAIN_MERGE,
     REGISTRY_DEPENDENCY,
 )
+PROVEN_CONCLUSION = "Conclusion: Proven."
+MARKDOWN = MarkdownIt("commonmark")
+TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
 INDEPENDENCE = (
     "Valid non-null values are the Cartesian product of the\n"
     "separately allowed source and state sets; no source label determines or\n"
@@ -66,20 +72,50 @@ class CheckError(ValueError):
     """The public GraphQL provenance contract is missing or inconsistent."""
 
 
+def _inline_text(token: object) -> str:
+    children = getattr(token, "children", None) or ()
+    return "".join(
+        child.content
+        for child in children
+        if child.type in ("text", "code_inline", "image")
+    )
+
+
 def _section(text: str) -> str:
     return _heading_section(text, HEADING, "current implementation")
 
 
 def _heading_section(text: str, heading: str, label: str) -> str:
-    masked_text = _mask_markdown_fences(text)
-    matches = list(re.finditer(rf"(?m)^{re.escape(heading)}[ \t]*$", masked_text))
+    start, end = _heading_section_bounds(text, heading, label)
+    return text[start:end]
+
+
+def _heading_section_bounds(text: str, heading: str, label: str) -> tuple[int, int]:
+    level = len(heading) - len(heading.lstrip("#"))
+    title = heading[level:].strip()
+    tokens = MARKDOWN.parse(text)
+    matches = [
+        index
+        for index, token in enumerate(tokens[:-1])
+        if token.type == "heading_open"
+        and token.level == 0
+        and token.tag == f"h{level}"
+        and tokens[index + 1].type == "inline"
+        and _inline_text(tokens[index + 1]) == title
+    ]
     if len(matches) != 1:
         raise CheckError(f"{label} heading must appear exactly once")
-    start = matches[0].start()
-    remainder = masked_text[matches[0].end() :]
-    level = len(heading) - len(heading.lstrip("#"))
-    end = re.search(rf"(?m)^#{{1,{level}}}[ \t]+", remainder)
-    return text[start : matches[0].end() + (end.start() if end else len(remainder))]
+    heading_token = tokens[matches[0]]
+    assert heading_token.map is not None
+    start_line = heading_token.map[0]
+    end_line = len(text.splitlines())
+    for token in tokens[matches[0] + 1 :]:
+        if token.type == "heading_open" and token.level == 0 and int(token.tag[1:]) <= level:
+            assert token.map is not None
+            end_line = token.map[0]
+            break
+    offsets = _line_offsets(text)
+    return offsets[start_line], offsets[end_line]
 
 
 def _current_types_section(text: str) -> str:
@@ -133,27 +169,63 @@ def _mask_graphql_literals(text: str) -> str:
     return "".join(masked)
 
 
-def _device_blocks(text: str) -> list[tuple[bool, str, str]]:
-    """Return Device definition/extension bodies with GraphQL nesting honored."""
-    masked = _mask_graphql_literals(text)
-    pattern = re.compile(r"(?<![`A-Za-z0-9_])(?:(extend)\s+)?type\s+Device\b(?!`)")
-    blocks: list[tuple[bool, str, str]] = []
+def _current_graphql_blocks(types_current: str) -> tuple[str, ...]:
+    """Return each fenced GraphQL block inside the current Types section."""
+    return tuple(
+        token.content
+        for token in MARKDOWN.parse(types_current)
+        if token.type == "fence"
+        and token.level == 0
+        and token.info.strip().split(maxsplit=1)
+        and token.info.strip().split(maxsplit=1)[0].lower() == "graphql"
+    )
+
+
+def _device_blocks(text: str, *, graphql_literals: bool = True) -> list[tuple[bool, str, str, str]]:
+    """Return full Device declarations and bodies with GraphQL nesting honored."""
+    masked = _mask_graphql_literals(text) if graphql_literals else text
+    ignored = r"[ \t\r\n]+"
+    pattern = re.compile(rf"(?<![`A-Za-z0-9_])(?:(extend){ignored})?type{ignored}Device\b(?!`)")
+    blocks: list[tuple[bool, str, str, str]] = []
     for match in pattern.finditer(masked):
         parens = brackets = 0
         body_start = -1
         position = match.end()
-        definition = re.compile(
-            r"(?:(?:extend)\s+)?(?:schema|scalar|type|interface|union|enum|input|directive)\b"
-        )
+        definition_words = {
+            "schema", "scalar", "type", "interface", "union", "enum", "input",
+            "directive", "query", "mutation", "subscription", "fragment",
+        }
+        in_implements = False
+        implements_expect_name = False
+        directive_expect_name = False
         while position < len(masked):
-            if (
-                parens == 0
-                and brackets == 0
-                and (position == 0 or masked[position - 1] not in "@_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
-                and definition.match(masked, position)
-            ):
-                break
             character = masked[position]
+            if parens == 0 and brackets == 0:
+                if character == "@":
+                    in_implements = False
+                    directive_expect_name = True
+                    position += 1
+                    continue
+                if character == "&" and in_implements:
+                    implements_expect_name = True
+                    position += 1
+                    continue
+                name = re.match(r"[A-Za-z_][A-Za-z0-9_]*", masked[position:])
+                if name is not None:
+                    value = name.group(0)
+                    if implements_expect_name:
+                        implements_expect_name = False
+                    elif directive_expect_name:
+                        directive_expect_name = False
+                    elif value == "implements":
+                        in_implements = True
+                        implements_expect_name = True
+                    else:
+                        in_implements = False
+                        if value in definition_words:
+                            break
+                    position += len(value)
+                    continue
             if character == "(":
                 parens += 1
             elif character == ")" and parens:
@@ -179,36 +251,13 @@ def _device_blocks(text: str) -> list[tuple[bool, str, str]]:
         if depth:
             continue
         body_end = position - 1
-        blocks.append((bool(match.group(1)), text[body_start + 1 : body_end], masked[body_start + 1 : body_end]))
+        blocks.append((
+            bool(match.group(1)),
+            text[match.start() : position],
+            text[body_start + 1 : body_end],
+            masked[body_start + 1 : body_end],
+        ))
     return blocks
-
-
-def _device_field_tokens(masked_body: str) -> tuple[tuple[str, str, bool], ...]:
-    """Return top-level field name/type/nullability from ignored-token-free input."""
-    tokens = list(re.finditer(r"[A-Za-z_][A-Za-z0-9_]*|[(){}\[\]:!]", masked_body))
-    parens = brackets = braces = 0
-    fields: list[tuple[str, str, bool]] = []
-    for index, token in enumerate(tokens):
-        value = token.group(0)
-        if value == "(":
-            parens += 1
-        elif value == ")" and parens:
-            parens -= 1
-        elif value == "[":
-            brackets += 1
-        elif value == "]" and brackets:
-            brackets -= 1
-        elif value == "{":
-            braces += 1
-        elif value == "}" and braces:
-            braces -= 1
-        elif parens == 0 and brackets == 0 and braces == 0 and re.match(r"^[A-Za-z_]", value):
-            following = tokens[index + 1].group(0) if index + 1 < len(tokens) else ""
-            if following == ":":
-                type_name = tokens[index + 2].group(0) if index + 2 < len(tokens) else ""
-                nullable = index + 3 >= len(tokens) or tokens[index + 3].group(0) != "!"
-                fields.append((value, type_name, nullable))
-    return tuple(fields)
 
 
 def _device_fields(masked_body: str) -> tuple[str, ...]:
@@ -236,70 +285,160 @@ def _device_fields(masked_body: str) -> tuple[str, ...]:
     return tuple(fields)
 
 
+def _prose_device_blocks(text: str) -> list[tuple[bool, str, str, str]]:
+    """Find visible declarations without letting earlier prose alter GraphQL lexing."""
+    blocks = _device_blocks(text, graphql_literals=False)
+    for candidate in re.finditer(r"\b(?:extend|type)\b", text):
+        blocks.extend(_device_blocks(text[candidate.start() :]))
+    return blocks
+
+
 def _mask_markdown_fences(text: str) -> str:
-    """Mask fenced code blocks while preserving offsets/newlines."""
-    masked: list[str] = []
-    fence_character = ""
-    fence_length = 0
-    for line in text.splitlines(keepends=True):
-        marker = re.match(r"^[ \t]*([~`]{3,})", line)
-        closer = re.match(r"^[ \t]*([~`]{3,})[ \t]*(?:\r?\n)?$", line)
-        is_open = not fence_character and marker is not None
-        is_close = (
-            bool(fence_character)
-            and closer is not None
-            and closer.group(1)[0] == fence_character
-            and len(closer.group(1)) >= fence_length
-        )
-        if fence_character or is_open:
-            masked.append("".join("\n" if character == "\n" else " " for character in line))
-        else:
-            masked.append(line)
-        if is_open:
-            fence_character = marker.group(1)[0]
-            fence_length = len(marker.group(1))
-        elif is_close:
-            fence_character = ""
-            fence_length = 0
+    """Mask CommonMark fenced and indented code while preserving offsets/newlines."""
+    masked = list(text)
+    offsets = _line_offsets(text)
+    for token in MARKDOWN.parse(text):
+        if token.type not in ("fence", "code_block") or token.map is None:
+            continue
+        start, end = offsets[token.map[0]], offsets[token.map[1]]
+        for position in range(start, end):
+            if masked[position] not in "\r\n":
+                masked[position] = " "
     return "".join(masked)
 
 
-def _mask_html_comments(text: str) -> str:
-    """Mask non-rendered Markdown HTML comments."""
-    return re.sub(
-        r"<!--.*?(?:-->|$)",
-        lambda match: "".join(
-            "\n" if character == "\n" else " " for character in match.group(0)
-        ),
+def _visible_markdown_text(
+    text: str,
+    *,
+    include_inline_code: bool = False,
+    allowed_levels: set[int] | None = None,
+    reject_html: bool = False,
+    include_html_blocks: bool = False,
+) -> str:
+    """Return rendered text while excluding code and raw HTML containers."""
+    return "".join(_visible_markdown_spans(
         text,
-        flags=re.S,
-    )
+        include_inline_code=include_inline_code,
+        allowed_levels=allowed_levels,
+        reject_html=reject_html,
+        include_html_blocks=include_html_blocks,
+    ))
+
+
+def _visible_markdown_spans(
+    text: str,
+    *,
+    include_inline_code: bool = False,
+    allowed_levels: set[int] | None = None,
+    reject_html: bool = False,
+    include_html_blocks: bool = False,
+) -> tuple[str, ...]:
+    """Return independent rendered prose spans so literal state cannot leak."""
+    visible: list[str] = []
+    for token in MARKDOWN.parse(text):
+        if reject_html and token.type == "html_block":
+            raise CheckError("public contract must not depend on raw HTML")
+        if include_html_blocks and token.type == "html_block" and not token.content.lstrip().startswith("<!--"):
+            visible.append(token.content + "\n")
+            continue
+        if (
+            token.type != "inline"
+            or token.children is None
+            or (allowed_levels is not None and token.level not in allowed_levels)
+        ):
+            continue
+        span: list[str] = []
+        for child in token.children:
+            if reject_html and child.type == "html_inline":
+                raise CheckError("public contract must not depend on raw HTML")
+            if child.type == "text":
+                span.append(child.content)
+            elif child.type == "image":
+                span.append(child.content)
+            elif child.type == "code_inline" and include_inline_code:
+                span.append("`" + child.content + "`")
+            elif child.type in ("softbreak", "hardbreak"):
+                span.append("\n")
+        visible.append("".join(span) + "\n")
+    return tuple(visible)
+
+
+def _line_offsets(text: str) -> list[int]:
+    """Return character offsets for every CommonMark line boundary."""
+    offsets = [0]
+    for line in text.splitlines(keepends=True):
+        offsets.append(offsets[-1] + len(line))
+    if offsets[-1] < len(text):
+        offsets.append(len(text))
+    return offsets
 
 
 def _mcp_device_section(text: str) -> str:
-    text = _mask_html_comments(text)
     inventory = _heading_section(text, "## Implemented Surface", "implemented surface")
-    masked_inventory = _mask_markdown_fences(inventory)
-    entries = list(re.finditer(
-        r"(?m)^  (?:[-+*]|[0-9]+[.)])[ \t]+`ebus\.v1\.registry\.devices\.get`[^\n]*$",
-        masked_inventory,
-    ))
-    if len(entries) != 1:
-        raise CheckError("MCP registry devices.get entry must appear exactly once")
-    start = entries[0].start()
-    if inventory[start : entries[0].end()].strip() != "- `ebus.v1.registry.devices.get`":
-        raise CheckError("MCP registry devices.get section missing")
-    remainder = masked_inventory[entries[0].end() :]
-    next_entry = re.search(
-        r"(?m)^  (?:[-+*]|[0-9]+[.)])[ \t]+`",
-        remainder,
-    )
-    end = entries[0].end() + (next_entry.start() if next_entry else len(remainder))
-    return inventory[start:end]
+    # Raw HTML has no stable Markdown token identity. Reject it in the tool
+    # inventory so code-styled aliases cannot evade whole-inventory uniqueness.
+    _visible_markdown_text(inventory, reject_html=True)
+    core = _list_item(inventory, "Core stable (`ebus.v1.*`)", level=1)
+    list_label = "`ebus.v1.registry.devices.list`"
+    if len(_list_items(inventory, list_label, level=None)) != 1:
+        raise CheckError("MCP registry devices.list must appear once in Implemented Surface")
+    list_entries = _list_items(core, list_label, level=3)
+    if len(list_entries) != 1 or _first_list_label(list_entries[0]) != list_label:
+        raise CheckError("MCP registry devices.list must appear once under Core stable")
+    get_label = "`ebus.v1.registry.devices.get`"
+    if len(_list_items(inventory, get_label, level=None)) != 1:
+        raise CheckError("MCP registry devices.get must appear once in Implemented Surface")
+    entries = _list_items(core, get_label, level=3)
+    if len(entries) != 1 or _first_list_label(entries[0]) != get_label:
+        raise CheckError("MCP registry devices.get must appear once under Core stable")
+    return entries[0]
+
+
+def _list_items(text: str, label: str, *, level: int | None) -> tuple[str, ...]:
+    """Return list items whose own first paragraph exactly matches ``label``."""
+    lines = text.splitlines(keepends=True)
+    matches: list[str] = []
+    tokens = MARKDOWN.parse(text)
+    for index, token in enumerate(tokens):
+        if token.type != "list_item_open" or (level is not None and token.level != level) or token.map is None:
+            continue
+        item_level = token.level
+        for child in tokens[index + 1 :]:
+            if child.type == "list_item_close" and child.level == item_level:
+                break
+            if child.type == "inline" and child.level == item_level + 2:
+                matches_label = child.content == label
+                if label.startswith("`") and label.endswith("`") and child.children:
+                    tool = label[1:-1]
+                    matches_label = any(
+                        part.type == "code_inline" and part.content == tool
+                        for part in child.children
+                    )
+                    rendered = _inline_text(child)
+                    matches_label = matches_label or re.search(
+                        rf"(?<![A-Za-z0-9_.-]){re.escape(tool)}(?![A-Za-z0-9_.-])",
+                        rendered,
+                    ) is not None
+                if matches_label:
+                    matches.append("".join(lines[token.map[0] : token.map[1]]))
+                break
+    return tuple(matches)
+
+
+def _first_list_label(text: str) -> str:
+    inline = next((token for token in MARKDOWN.parse(text) if token.type == "inline"), None)
+    return "" if inline is None else inline.content
+
+
+def _list_item(text: str, label: str, *, level: int) -> str:
+    matches = _list_items(text, label, level=level)
+    if len(matches) != 1:
+        raise CheckError(f"MCP {label} list item must appear exactly once")
+    return matches[0]
 
 
 def _validate_pins(section: str, *, surface: str) -> None:
-    visible = _mask_html_comments(section)
+    visible = section
     if tuple(re.findall(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", visible)) != PINS:
         raise CheckError(f"{surface} provenance pins differ")
     normalized = re.sub(r"\s+", " ", visible)
@@ -314,68 +453,203 @@ def _validate_pins(section: str, *, surface: str) -> None:
             raise CheckError(f"{surface} provenance pin meaning missing: {fragment!r}")
 
 
+def _contains_fragment(section: str, fragment: str) -> bool:
+    """Match prose by rendered words rather than Markdown source indentation."""
+    return re.sub(r"\s+", " ", fragment).strip() in re.sub(r"\s+", " ", section).strip()
+
+
+def _validate_proven_conclusion(section: str, *, surface: str) -> None:
+    conclusions = tuple(re.findall(r"\bConclusion:\s*(Proven|Hypothesis|Unknown)\.", section))
+    if conclusions != ("Proven",):
+        raise CheckError(f"{surface} provenance conclusion must be Proven only")
+
+
 def _single_column(section: str, title: str) -> tuple[str, ...]:
-    match = re.search(
-        rf"Allowed `{re.escape(title)}` labels:\n\n\| label \|\n\|---\|\n"
-        r"(?P<rows>(?:\| `[^`]+` \|\n)+)",
+    rows = _top_level_table_after(
         section,
+        f"Allowed `{title}` labels:",
+        ("label",),
+        f"{title} label",
     )
-    if match is None:
-        raise CheckError(f"{title} label table missing")
-    return tuple(re.findall(r"\| `([^`]+)` \|", match.group("rows")))
+    return tuple(row[0] for row in rows)
 
 
 def _initial_pairs(section: str) -> tuple[tuple[str, str], ...]:
-    match = re.search(
-        r"Typical initial combinations are examples, not an exhaustive pairing rule:\n\n"
-        r"\| `discoverySource` \| `verificationState` \|\n\|---\|---\|\n"
-        r"(?P<rows>(?:\| `[^`]+` \| `[^`]+` \|\n)+)",
+    rows = _top_level_table_after(
         section,
+        "Typical initial combinations are examples, not an exhaustive pairing rule:",
+        ("`discoverySource`", "`verificationState`"),
+        "initial combination",
     )
-    if match is None:
-        raise CheckError("initial combination table missing")
-    return tuple(re.findall(r"\| `([^`]+)` \| `([^`]+)` \|", match.group("rows")))
+    return tuple((row[0], row[1]) for row in rows)
+
+
+def _top_level_table_after(
+    section: str,
+    prompt: str,
+    headers: tuple[str, ...],
+    label: str,
+) -> tuple[tuple[str, ...], ...]:
+    """Return code-span cells from one top-level table after an exact prompt."""
+    tokens = TABLE_MARKDOWN.parse(section)
+    starts = [
+        index + 2
+        for index, token in enumerate(tokens)
+        if index > 0
+        and index + 2 < len(tokens)
+        and token.type == "inline"
+        and token.level == 1
+        and token.content == prompt
+        and tokens[index - 1].type == "paragraph_open"
+        and tokens[index - 1].level == 0
+        and tokens[index + 1].type == "paragraph_close"
+        and tokens[index + 1].level == 0
+        and tokens[index + 2].type == "table_open"
+        and tokens[index + 2].level == 0
+    ]
+    if len(starts) != 1:
+        raise CheckError(f"{label} table missing or not top-level")
+
+    rows: list[list[tuple[str, object]]] = []
+    current: list[tuple[str, object]] | None = None
+    cell_tag: str | None = None
+    for token in tokens[starts[0] + 1 :]:
+        if token.type == "table_close" and token.level == 0:
+            break
+        if token.type == "tr_open":
+            current = []
+        elif token.type in ("th_open", "td_open"):
+            cell_tag = token.tag
+        elif token.type == "inline" and current is not None and cell_tag is not None:
+            current.append((cell_tag, token))
+            cell_tag = None
+        elif token.type == "tr_close" and current is not None:
+            rows.append(current)
+            current = None
+
+    if not rows or tuple(cell[1].content for cell in rows[0]) != headers:
+        raise CheckError(f"{label} table header differs")
+    if any(cell[0] != "th" for cell in rows[0]):
+        raise CheckError(f"{label} table header differs")
+
+    values: list[tuple[str, ...]] = []
+    for row in rows[1:]:
+        if len(row) != len(headers) or any(cell[0] != "td" for cell in row):
+            raise CheckError(f"{label} table row differs")
+        parsed: list[str] = []
+        for _, token in row:
+            children = getattr(token, "children", None) or ()
+            if len(children) != 1 or children[0].type != "code_inline":
+                raise CheckError(f"{label} table values must be code labels")
+            parsed.append(children[0].content)
+        values.append(tuple(parsed))
+    return tuple(values)
 
 
 def validate_text(text: str, atr: str) -> None:
-    visible_text = _mask_html_comments(text)
-    types_current = _current_types_section(visible_text)
-    current_blocks = [block for block in _device_blocks(types_current) if not block[0]]
+    # Public contract checks are source-stable only when visible prose is
+    # represented by Markdown tokens rather than browser-decoded raw HTML.
+    _visible_markdown_text(text, reject_html=True)
+    visible_text = text
+    current_start, current_end = _heading_section_bounds(
+        visible_text,
+        "### Types (Current)",
+        "current types",
+    )
+    types_current = visible_text[current_start:current_end]
+    current_graphql_blocks = _current_graphql_blocks(types_current)
+    current_sdl = "\n".join(current_graphql_blocks)
+    if "<!--" in _mask_graphql_literals(current_sdl):
+        raise CheckError("current GraphQL SDL contains HTML comment syntax")
+    current_blocks = [
+        block
+        for graphql_block in current_graphql_blocks
+        for block in _device_blocks(graphql_block)
+        if not block[0]
+    ]
     if len(current_blocks) != 1:
         raise CheckError("current types must contain exactly one Device definition")
-    body, masked_body = current_blocks[0][1], current_blocks[0][2]
-    all_fields = [field for _, _, block in _device_blocks(visible_text) for field in _device_fields(block)]
-    current_fields = _device_fields(masked_body)
-    current_declarations = _device_field_tokens(masked_body)
+    documents = []
+    for graphql_block in current_graphql_blocks:
+        try:
+            documents.append(parse(graphql_block))
+        except GraphQLError as error:
+            raise CheckError(f"current GraphQL fence is invalid: {error.message}") from error
+    device_definitions = [
+        definition
+        for document in documents
+        for definition in document.definitions
+        if definition.kind == "object_type_definition" and definition.name.value == "Device"
+    ]
+    if len(device_definitions) != 1:
+        raise CheckError("current types must contain exactly one Device definition")
+    prose_spans = (
+        _visible_markdown_spans(visible_text[:current_start], include_html_blocks=True)
+        + _visible_markdown_spans(types_current, include_html_blocks=True)
+        + _visible_markdown_spans(visible_text[current_end:], include_html_blocks=True)
+    )
+    all_fields = [
+        field
+        for span in prose_spans
+        for _, _, _, block in _prose_device_blocks(span)
+        for field in _device_fields(block)
+    ]
+    all_fields.extend(
+        field
+        for graphql_block in current_graphql_blocks
+        for _, _, _, block in _device_blocks(graphql_block)
+        for field in _device_fields(block)
+    )
+    device_fields = [
+        field
+        for document in documents
+        for definition in document.definitions
+        if definition.kind in ("object_type_definition", "object_type_extension")
+        and definition.name.value == "Device"
+        for field in (definition.fields or ())
+    ]
     for name in ("discoverySource", "verificationState"):
-        declarations = [entry for entry in current_declarations if entry[0] == name]
+        declarations = [field for field in device_fields if field.name.value == name]
         if (
             all_fields.count(name) != 1
-            or current_fields.count(name) != 1
-            or declarations != [(name, "String", True)]
+            or len(declarations) != 1
+            or declarations[0].arguments
+            or declarations[0].type.kind != "named_type"
+            or declarations[0].type.name.value != "String"
         ):
             raise CheckError("current Device must declare exact nullable camel-case fields")
 
-    section = _section(visible_text)
+    section = _visible_markdown_text(
+        _section(visible_text),
+        include_inline_code=True,
+        allowed_levels={1},
+        reject_html=True,
+    )
     stale = (
         "Pending gateway #939/#940 implementation",
         "pending gateway #939/#940 implementation",
         "is not present in the current gateway schema",
         "future camel-case fields",
     )
-    normalized_visible = re.sub(r"\s+", " ", visible_text)
+    normalized_visible = re.sub(
+        r"\s+",
+        " ",
+        _visible_markdown_text(visible_text, include_inline_code=True),
+    )
     if any(re.sub(r"\s+", " ", fragment) in normalized_visible for fragment in stale):
         raise CheckError("stale pending provenance status remains")
-    if "The current gateway schema exposes the nullable camel-case fields" not in section:
+    if not _contains_fragment(section, "The current gateway schema exposes the nullable camel-case fields"):
         raise CheckError("current provenance status missing")
+    _validate_proven_conclusion(section, surface="GraphQL")
     _validate_pins(section, surface="GraphQL")
-    if _single_column(section, "discoverySource") != SOURCES:
+    source_section = _mask_markdown_fences(_section(visible_text))
+    if _single_column(source_section, "discoverySource") != SOURCES:
         raise CheckError("discoverySource label set differs")
-    if _single_column(section, "verificationState") != STATES:
+    if _single_column(source_section, "verificationState") != STATES:
         raise CheckError("verificationState label set differs")
-    if _initial_pairs(section) != INITIAL:
+    if _initial_pairs(source_section) != INITIAL:
         raise CheckError("initial combination examples differ")
-    if INDEPENDENCE not in section:
+    if not _contains_fragment(section, INDEPENDENCE):
         raise CheckError("independent source/state invariant missing")
 
     required = (
@@ -394,7 +668,7 @@ def validate_text(text: str, atr: str) -> None:
         NON_PROOF,
     )
     for fragment in required:
-        if fragment not in section:
+        if not _contains_fragment(section, fragment):
             raise CheckError(f"required provenance rule missing: {fragment!r}")
 
     obsolete = "verificationState=corroborated`"
@@ -404,7 +678,13 @@ def validate_text(text: str, atr: str) -> None:
 
 
 def validate_mcp_text(text: str) -> None:
-    section = _mcp_device_section(text)
+    _visible_markdown_text(text, reject_html=True)
+    section = _visible_markdown_text(
+        _mcp_device_section(text),
+        include_inline_code=True,
+        reject_html=True,
+    )
+    _validate_proven_conclusion(section, surface="MCP")
     _validate_pins(section, surface="MCP")
     required = (
         "JSON response items carry `discovery_source` and\n      `verification_state` fields",
@@ -415,9 +695,12 @@ def validate_mcp_text(text: str) -> None:
         MCP_SOURCE_RETENTION,
     )
     for fragment in required:
-        if fragment not in section:
+        if not _contains_fragment(section, fragment):
             raise CheckError(f"required MCP provenance rule missing: {fragment!r}")
-    if re.search(r"active\s+scan\s*\(\s*→\s*`active_confirmed\s*/\s*identity_confirmed`\s*\)", text):
+    if re.search(
+        r"active\s+scan\s*\(\s*→\s*`active_confirmed\s*/\s*identity_confirmed`\s*\)",
+        _visible_markdown_text(text, include_inline_code=True),
+    ):
         raise CheckError("MCP source-rewrite rule remains")
 
 

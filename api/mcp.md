@@ -338,6 +338,7 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
   - `ebus.v1.adapter_info.get`
   - `ebus.v1.registry.devices.list`
   - `ebus.v1.registry.devices.get`
+    - **Conclusion: Proven.**
     - JSON response items carry `discovery_source` and
       `verification_state` fields (P3.5). `discovery_source` is one of
       `passive_observed | static_seed | active_confirmed`;
