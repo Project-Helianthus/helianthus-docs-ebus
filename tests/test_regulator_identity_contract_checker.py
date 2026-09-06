@@ -30,6 +30,7 @@ def copy_contract_material(destination: pathlib.Path) -> None:
         pathlib.Path("architecture/atr/01-address-table-model.md"),
         pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
         pathlib.Path("architecture/atr/04-sn-merge-gate.md"),
+        pathlib.Path("architecture/atr/07-live-validation-acceptance.md"),
         pathlib.Path("architecture/overview.md"),
         pathlib.Path("api/graphql.md"),
     ):
@@ -364,6 +365,7 @@ def test_qualified_identity_policy_rejects_structured_mutations(
         pathlib.Path("architecture/atr/01-address-table-model.md"),
         pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
         pathlib.Path("architecture/atr/04-sn-merge-gate.md"),
+        pathlib.Path("architecture/atr/07-live-validation-acceptance.md"),
         pathlib.Path("architecture/overview.md"),
         pathlib.Path("api/graphql.md"),
     ),
@@ -425,6 +427,60 @@ def test_qualified_identity_policy_rejects_reverted_atr_normative_block(
     path.write_text(path.read_text(encoding="utf-8").replace(block, reverted), encoding="utf-8")
 
     with pytest.raises(checker.CheckError, match="missing required qualified-identity normative block"):
+        checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("required", "replacement"),
+    (
+        (
+            "no current registry-adjudicated exact-address qualified witness is available",
+            "a cached current flag is available",
+        ),
+        (
+            "Expected: the companion `slot[0xF6]` MUST appear under the one-ACK alternative.",
+            "Expected: the companion `slot[0xF6]` MAY appear under the one-ACK alternative.",
+        ),
+        (
+            "replaced, retired, conflicted, invalid, or unavailable",
+            "replaced only",
+        ),
+        (
+            "The independent two-ACK route remains independent of identity evidence: after the observation window (default 5s) plus a second corroborating positive ACK, `slot[0xF6]` MUST appear without a witness.",
+            "The two-ACK route requires identity evidence.",
+        ),
+        (
+            "atomic registry lookup/validation/use current result",
+            "cached `current: true` result",
+        ),
+        (
+            "per-face `0x07/0x04` reply without serial",
+            "per-face `0x07/0x04` reply with serial",
+        ),
+    ),
+    ids=(
+        "no-current-witness-negative",
+        "current-qualified-positive",
+        "stale-invalid-unavailable-negatives",
+        "two-ack-independent",
+        "atomic-current-result",
+        "per-face-without-serial",
+    ),
+)
+def test_qualified_identity_policy_rejects_atr07_substantive_acceptance_drift(
+    tmp_path: pathlib.Path, required: str, replacement: str
+) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    policy = read_policy(tmp_path)
+    block = checker.required_atr07_acceptance_block(policy["consumer_witness"])
+    path = tmp_path / "architecture/atr/07-live-validation-acceptance.md"
+    text = path.read_text(encoding="utf-8")
+    assert block in text
+    assert required in block
+    path.write_text(text.replace(block, block.replace(required, replacement), 1), encoding="utf-8")
+
+    with pytest.raises(checker.CheckError, match="missing required ATR07 qualified-identity acceptance block"):
         checker.validate_documents(tmp_path)
 
 

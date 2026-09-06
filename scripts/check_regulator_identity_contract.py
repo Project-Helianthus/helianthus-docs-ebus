@@ -117,6 +117,7 @@ REQUIRED_DOCUMENT_REFERENCES = {
     pathlib.Path("architecture/atr/01-address-table-model.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/atr/04-sn-merge-gate.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
+    pathlib.Path("architecture/atr/07-live-validation-acceptance.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/overview.md"): "[qualified-identity policy](./regulator-qualified-identity-policy.json)",
     pathlib.Path("api/graphql.md"): "[qualified-identity policy](../architecture/regulator-qualified-identity-policy.json)",
 }
@@ -124,6 +125,7 @@ REQUIRED_ATR_NORMATIVE_BLOCKS = {
     pathlib.Path("architecture/atr/01-address-table-model.md"),
     pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
 }
+ATR07_ACCEPTANCE_PATH = pathlib.Path("architecture/atr/07-live-validation-acceptance.md")
 
 
 def require_keys(value: object, context: str, keys: set[str]) -> dict[str, object]:
@@ -419,6 +421,27 @@ A generic coherent identity reply, `identity_confirmed`, a topology alias or pro
 <!-- qualified-identity-policy:end {selector} -->"""
 
 
+def required_atr07_acceptance_block(consumer_witness: dict[str, object]) -> str:
+    """Return ATR07's closed deterministic acceptance block for the policy selector."""
+    selector = consumer_witness["companion_corroboration"]
+    return f"""<!-- qualified-identity-policy:atr07-acceptance:begin {selector} -->
+The public [qualified-identity policy](../regulator-qualified-identity-policy.json) is the canonical machine-readable companion for this deterministic acceptance block.
+
+### N5 — Single corroboration does NOT companion-insert without a current witness
+
+Procedure (no-current-witness negative): apply one complete positive-ACK observation for source `0xF1` in the deterministic acceptance fixture while no current registry-adjudicated exact-address qualified witness is available for `0xF1`.
+Expected: `slot[0xF6]` remains absent. This is the one-ACK negative; it has no claim about a separately qualified current witness.
+
+Procedure (current-qualified positive): apply one ACK plus a registry-adjudicated current exact-address qualified witness for `0xF1`; the ACK observation is complete and positive for source `0xF1`.
+Expected: the companion `slot[0xF6]` MUST appear under the one-ACK alternative.
+
+Procedure (stale/invalid/unavailable negatives): repeat the current-qualified fixture with a frozen witness descriptor that is replaced, retired, conflicted, invalid, or unavailable at the atomic registry lookup/validation/use current result.
+Expected: `slot[0xF6]` remains absent in every negative fixture. A frozen descriptor is not itself the current result: no cached `current: true`, topology, `static_seed`, `passive_observed`, caller assertion, last-known-good data, per-face `0x07/0x04` reply without serial, or witness for another address may qualify.
+
+The registry-produced direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` witness must match the exact source address, authority, observation generation, and proof generation in the atomic registry lookup/validation/use current result. The independent two-ACK route remains independent of identity evidence: after the observation window (default 5s) plus a second corroborating positive ACK, `slot[0xF6]` MUST appear without a witness.
+<!-- qualified-identity-policy:atr07-acceptance:end {selector} -->"""
+
+
 def validate_documents(root: pathlib.Path) -> None:
     policy_path = root / POLICY_PATH
     try:
@@ -440,6 +463,11 @@ def validate_documents(root: pathlib.Path) -> None:
         path = root / relative
         if normative_block not in path.read_text(encoding="utf-8"):
             raise CheckError(f"{path}: missing required qualified-identity normative block")
+
+    atr07_block = required_atr07_acceptance_block(consumer_witness)
+    atr07_path = root / ATR07_ACCEPTANCE_PATH
+    if atr07_block not in atr07_path.read_text(encoding="utf-8"):
+        raise CheckError(f"{atr07_path}: missing required ATR07 qualified-identity acceptance block")
 
 
 def main() -> int:
