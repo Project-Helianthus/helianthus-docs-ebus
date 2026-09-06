@@ -261,6 +261,8 @@ For the corresponding ATR contract, see
 
 `DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` is the state-changing operation. The registry MUST derive the canonical companion from `source` and MUST atomically validate the current exact-source direct complete normalized witness plus passive target companion-slot admission in one write-critical section. It MUST NOT accept a caller-supplied companion. Replacement, retirement, or conflict cannot interleave between successful validation and the committed passive slot.
 
+The accepted registry implementation is [`registry/admit_passive_companion.go` at `7971e0ab21c55414beb52ab84d6b38b25e27f37d`](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/7971e0ab21c55414beb52ab84d6b38b25e27f37d/registry/admit_passive_companion.go).
+
 This records one registry admission decision. It does not prove wire identity, create attestation authority, perform I/O, make topology an identity proof, or close gateway, M7, or physical acceptance criteria.
 <!-- qualified-identity-policy:registry-api:end same_source_positive_ack_plus_current_exact_address_witness -->
 
