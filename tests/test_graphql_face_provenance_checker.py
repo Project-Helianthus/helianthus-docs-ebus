@@ -111,6 +111,36 @@ def test_rejects_mcp_pins_hidden_in_html_comment() -> None:
         CHECKER.validate_mcp_text(hide_pin_paragraph(mcp_text()))
 
 
+def test_rejects_mcp_rule_hidden_in_html_comment() -> None:
+    text = mcp_text()
+    assert CHECKER.MCP_SOURCE_RETENTION in text
+    hidden = text.replace(
+        CHECKER.MCP_SOURCE_RETENTION,
+        "<!--\n" + CHECKER.MCP_SOURCE_RETENTION + "\n-->",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_mcp_text(hidden)
+
+
+@pytest.mark.parametrize("scope", ("block", "fields"))
+def test_rejects_current_schema_hidden_in_html_comment(scope: str) -> None:
+    doc, atr = texts()
+    if scope == "block":
+        current = CHECKER._current_types_section(doc)
+        match = re.search(r"^type Device \{\n.*?^\}\n", current, re.M | re.S)
+        assert match is not None
+        hidden = match.group(0)
+    else:
+        hidden = "  discoverySource: String\n  verificationState: String\n"
+        assert hidden in doc
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(
+            doc.replace(hidden, "<!--\n" + hidden + "-->\n", 1),
+            atr,
+        )
+
+
 def test_rejects_appended_stale_pending_section() -> None:
     doc, atr = texts()
     stale = """
@@ -272,6 +302,17 @@ def test_accepts_indented_non_inventory_mcp_example() -> None:
             1,
         )
     )
+
+
+@pytest.mark.parametrize("marker", ("*", "+", "1."))
+def test_mcp_section_stops_at_supported_sibling_markers(marker: str) -> None:
+    sibling = "  - `ebus.v1.registry.planes.list`"
+    text = mcp_text().replace(
+        sibling,
+        f"  {marker} `ebus.v1.registry.planes.list`",
+        1,
+    )
+    assert "ebus.v1.registry.planes.list" not in CHECKER._mcp_device_section(text)
 
 
 def test_rejects_obsolete_atr_spelling() -> None:

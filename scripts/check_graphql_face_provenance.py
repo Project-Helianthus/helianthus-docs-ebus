@@ -237,6 +237,7 @@ def _mask_html_comments(text: str) -> str:
 
 
 def _mcp_device_section(text: str) -> str:
+    text = _mask_html_comments(text)
     inventory = _heading_section(text, "## Implemented Surface", "implemented surface")
     masked_inventory = _mask_markdown_fences(inventory)
     entries = list(re.finditer(
@@ -249,7 +250,10 @@ def _mcp_device_section(text: str) -> str:
     if inventory[start : entries[0].end()].strip() != "- `ebus.v1.registry.devices.get`":
         raise CheckError("MCP registry devices.get section missing")
     remainder = masked_inventory[entries[0].end() :]
-    next_entry = re.search(r"(?m)^  - `", remainder)
+    next_entry = re.search(
+        r"(?m)^  (?:[-+*]|[0-9]+[.)])[ \t]+`",
+        remainder,
+    )
     end = entries[0].end() + (next_entry.start() if next_entry else len(remainder))
     return inventory[start:end]
 
@@ -294,12 +298,13 @@ def _initial_pairs(section: str) -> tuple[tuple[str, str], ...]:
 
 
 def validate_text(text: str, atr: str) -> None:
-    types_current = _current_types_section(text)
+    visible_text = _mask_html_comments(text)
+    types_current = _current_types_section(visible_text)
     current_blocks = [block for block in _device_blocks(types_current) if not block[0]]
     if len(current_blocks) != 1:
         raise CheckError("current types must contain exactly one Device definition")
     body, masked_body = current_blocks[0][1], current_blocks[0][2]
-    all_fields = [field for _, _, block in _device_blocks(text) for field in _device_fields(block)]
+    all_fields = [field for _, _, block in _device_blocks(visible_text) for field in _device_fields(block)]
     current_fields = _device_fields(masked_body)
     for name in ("discoverySource", "verificationState"):
         declarations = re.findall(
@@ -313,7 +318,7 @@ def validate_text(text: str, atr: str) -> None:
         ):
             raise CheckError("current Device must declare exact nullable camel-case fields")
 
-    if text.count(HEADING) != 1:
+    if visible_text.count(HEADING) != 1:
         raise CheckError("current provenance heading must appear exactly once")
     stale = (
         "Pending gateway #939/#940 implementation",
@@ -321,9 +326,9 @@ def validate_text(text: str, atr: str) -> None:
         "is not present\nin the current gateway schema",
         "future camel-case fields",
     )
-    if any(fragment in text for fragment in stale):
+    if any(fragment in visible_text for fragment in stale):
         raise CheckError("stale pending provenance status remains")
-    section = _section(text)
+    section = _section(visible_text)
     if "The current gateway schema exposes the nullable camel-case fields" not in section:
         raise CheckError("current provenance status missing")
     _validate_pins(section, surface="GraphQL")
