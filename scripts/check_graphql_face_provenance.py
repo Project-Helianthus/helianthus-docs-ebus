@@ -76,7 +76,8 @@ def _heading_section(text: str, heading: str, label: str) -> str:
         raise CheckError(f"{label} heading must appear exactly once")
     start = matches[0].start()
     remainder = text[matches[0].end() :]
-    end = re.search(r"(?m)^#{1,3}[ \t]+", remainder)
+    level = len(heading) - len(heading.lstrip("#"))
+    end = re.search(rf"(?m)^#{{1,{level}}}[ \t]+", remainder)
     return text[start : matches[0].end() + (end.start() if end else len(remainder))]
 
 
@@ -125,6 +126,8 @@ def _mask_graphql_literals(text: str) -> str:
                 masked[position] = " "
             index = end
             continue
+        if text[index] == ",":
+            masked[index] = " "
         index += 1
     return "".join(masked)
 
@@ -194,19 +197,49 @@ def _device_fields(masked_body: str) -> tuple[str, ...]:
     return tuple(fields)
 
 
+def _mask_markdown_fences(text: str) -> str:
+    """Mask fenced code blocks while preserving offsets/newlines."""
+    masked: list[str] = []
+    fence_character = ""
+    fence_length = 0
+    for line in text.splitlines(keepends=True):
+        marker = re.match(r"^[ \t]*([~`]{3,})", line)
+        is_open = not fence_character and marker is not None
+        is_close = (
+            bool(fence_character)
+            and marker is not None
+            and marker.group(1)[0] == fence_character
+            and len(marker.group(1)) >= fence_length
+        )
+        if fence_character or is_open:
+            masked.append("".join("\n" if character == "\n" else " " for character in line))
+        else:
+            masked.append(line)
+        if is_open:
+            fence_character = marker.group(1)[0]
+            fence_length = len(marker.group(1))
+        elif is_close:
+            fence_character = ""
+            fence_length = 0
+    return "".join(masked)
+
+
 def _mcp_device_section(text: str) -> str:
-    start_marker = "  - `ebus.v1.registry.devices.get`\n"
-    entries = re.findall(
+    inventory = _heading_section(text, "## Implemented Surface", "implemented surface")
+    masked_inventory = _mask_markdown_fences(inventory)
+    entries = list(re.finditer(
         r"(?m)^[ \t]*(?:[-+*]|[0-9]+[.)])[ \t]+`ebus\.v1\.registry\.devices\.get`[^\n]*$",
-        text,
-    )
+        masked_inventory,
+    ))
     if len(entries) != 1:
         raise CheckError("MCP registry devices.get entry must appear exactly once")
-    start = text.find(start_marker)
-    if start < 0:
+    start = entries[0].start()
+    if inventory[start : entries[0].end()].strip() != "- `ebus.v1.registry.devices.get`":
         raise CheckError("MCP registry devices.get section missing")
-    end = text.find("\n  - `", start + len(start_marker))
-    return text[start : end if end >= 0 else None]
+    remainder = masked_inventory[entries[0].end() :]
+    next_entry = re.search(r"(?m)^  - `", remainder)
+    end = entries[0].end() + (next_entry.start() if next_entry else len(remainder))
+    return inventory[start:end]
 
 
 def _validate_pins(section: str, *, surface: str) -> None:
