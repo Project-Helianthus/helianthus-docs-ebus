@@ -114,6 +114,11 @@ def test_accepts_unrelated_device_extension() -> None:
     CHECKER.validate_text(doc + "\nextend type Device { firmwareLabel: String }\n", atr)
 
 
+def test_accepts_same_field_name_on_unrelated_type() -> None:
+    doc, atr = texts()
+    CHECKER.validate_text(doc + "\ntype Other { discoverySource: String }\n", atr)
+
+
 def test_rejects_device_definition_moved_out_of_current_types() -> None:
     doc, atr = texts()
     current = CHECKER._current_types_section(doc)
@@ -138,6 +143,8 @@ def test_rejects_duplicate_device_definition_in_current_types() -> None:
     (
         "type Device implements Node { discoverySource: String! }",
         "type Device @key(fields: \"address\") { verificationState: String! }",
+        "type\n  Device { firmwareLabel: String }",
+        "type # ignored GraphQL comment\n Device { firmwareLabel: String }",
     ),
 )
 def test_rejects_decorated_duplicate_device_definition(declaration: str) -> None:
@@ -153,6 +160,19 @@ def test_rejects_duplicate_current_types_heading() -> None:
         CHECKER.validate_text(doc + "\n### Types (Current)\n", atr)
 
 
+def test_rejects_device_moved_below_higher_level_heading() -> None:
+    doc, atr = texts()
+    current = CHECKER._current_types_section(doc)
+    match = re.search(r"^type Device \{\n.*?^\}\n", current, re.M | re.S)
+    assert match is not None
+    device = match.group(0)
+    moved = doc.replace(device, "", 1)
+    insertion = moved.index("\n### Current Device Face Discovery Provenance")
+    moved = moved[:insertion] + "\n## Historical schema\n\n```graphql\n" + device + "```\n" + moved[insertion:]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(moved, atr)
+
+
 @pytest.mark.parametrize(
     "duplicate",
     (
@@ -160,6 +180,7 @@ def test_rejects_duplicate_current_types_heading() -> None:
         "\tverificationState:String!",
         "  discoverySource(format: Boolean): String!",
         '  discoverySource(format: String = ")"): String!',
+        "  discoverySource # ignored GraphQL comment\n  : String!",
     ),
 )
 def test_rejects_whitespace_equivalent_duplicate_fields(duplicate: str) -> None:
@@ -176,6 +197,7 @@ def test_rejects_whitespace_equivalent_duplicate_fields(duplicate: str) -> None:
         "extend type Device { discoverySource(format: Boolean): String! }",
         "extend type Device implements Node { discoverySource(format: Boolean): String! }",
         "extend type Device @key(fields: \"address\") { verificationState: String! }",
+        "extend type # ignored GraphQL comment\n Device { discoverySource # ignored\n : String! }",
     ),
 )
 def test_rejects_argument_bearing_provenance_extension(extension: str) -> None:
@@ -196,6 +218,10 @@ def test_rejects_duplicate_mcp_devices_get_entry(entry: str) -> None:
     text = mcp_text() + "\n" + entry + "\n    - provenance is always active_confirmed.\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(text)
+
+
+def test_accepts_non_inventory_mcp_tool_reference() -> None:
+    CHECKER.validate_mcp_text(mcp_text() + "\nSee `ebus.v1.registry.devices.get` for the current tool.\n")
 
 
 def test_rejects_obsolete_atr_spelling() -> None:
@@ -219,6 +245,12 @@ def test_rejects_mcp_source_rewrite_rule() -> None:
 
 def test_rejects_mcp_source_rewrite_outside_devices_get_entry() -> None:
     text = mcp_text() + "\nactive scan (→ `active_confirmed/identity_confirmed`)\n"
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_mcp_text(text)
+
+
+def test_rejects_whitespace_variant_mcp_source_rewrite() -> None:
+    text = mcp_text() + "\nactive  scan ( → `active_confirmed / identity_confirmed` )\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(text)
 

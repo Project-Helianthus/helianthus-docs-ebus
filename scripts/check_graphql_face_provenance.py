@@ -67,27 +67,140 @@ class CheckError(ValueError):
 
 
 def _section(text: str) -> str:
-    start = text.find(HEADING)
-    if start < 0:
-        raise CheckError("current implementation heading missing")
-    end = text.find("\n### ", start + len(HEADING))
-    return text[start : end if end >= 0 else None]
+    return _heading_section(text, HEADING, "current implementation")
+
+
+def _heading_section(text: str, heading: str, label: str) -> str:
+    matches = list(re.finditer(rf"(?m)^{re.escape(heading)}[ \t]*$", text))
+    if len(matches) != 1:
+        raise CheckError(f"{label} heading must appear exactly once")
+    start = matches[0].start()
+    remainder = text[matches[0].end() :]
+    end = re.search(r"(?m)^#{1,3}[ \t]+", remainder)
+    return text[start : matches[0].end() + (end.start() if end else len(remainder))]
 
 
 def _current_types_section(text: str) -> str:
-    heading = "### Types (Current)"
-    if text.count(heading) != 1:
-        raise CheckError("current types heading must appear exactly once")
-    start = text.find(heading)
-    if start < 0:
-        raise CheckError("current types heading missing")
-    end = text.find("\n### ", start + len(heading))
-    return text[start : end if end >= 0 else None]
+    return _heading_section(text, "### Types (Current)", "current types")
+
+
+def _mask_graphql_literals(text: str) -> str:
+    """Mask GraphQL strings and comments while preserving offsets/newlines."""
+    masked = list(text)
+    index = 0
+    while index < len(text):
+        if text.startswith('"""', index):
+            end = index + 3
+            while end < len(text):
+                if text.startswith('\\"""', end):
+                    end += 4
+                    continue
+                if text.startswith('"""', end):
+                    end += 3
+                    break
+                end += 1
+            for position in range(index, min(end, len(text))):
+                if masked[position] != "\n":
+                    masked[position] = " "
+            index = end
+            continue
+        if text[index] == '"':
+            end = index + 1
+            while end < len(text):
+                if text[end] == "\\":
+                    end += 2
+                    continue
+                end += 1
+                if text[end - 1] == '"':
+                    break
+            for position in range(index, min(end, len(text))):
+                if masked[position] != "\n":
+                    masked[position] = " "
+            index = end
+            continue
+        if text[index] == "#":
+            end = text.find("\n", index)
+            end = len(text) if end < 0 else end
+            for position in range(index, end):
+                masked[position] = " "
+            index = end
+            continue
+        index += 1
+    return "".join(masked)
+
+
+def _device_blocks(text: str) -> list[tuple[bool, str, str]]:
+    """Return Device definition/extension bodies with GraphQL nesting honored."""
+    masked = _mask_graphql_literals(text)
+    pattern = re.compile(r"(?<![`A-Za-z0-9_])(?:(extend)\s+)?type\s+Device\b(?!`)")
+    blocks: list[tuple[bool, str, str]] = []
+    for match in pattern.finditer(masked):
+        parens = brackets = 0
+        body_start = -1
+        position = match.end()
+        while position < len(masked):
+            character = masked[position]
+            if character == "(":
+                parens += 1
+            elif character == ")" and parens:
+                parens -= 1
+            elif character == "[":
+                brackets += 1
+            elif character == "]" and brackets:
+                brackets -= 1
+            elif character == "{" and parens == 0 and brackets == 0:
+                body_start = position
+                break
+            position += 1
+        if body_start < 0:
+            continue
+        depth = 1
+        position = body_start + 1
+        while position < len(masked) and depth:
+            if masked[position] == "{":
+                depth += 1
+            elif masked[position] == "}":
+                depth -= 1
+            position += 1
+        if depth:
+            continue
+        body_end = position - 1
+        blocks.append((bool(match.group(1)), text[body_start + 1 : body_end], masked[body_start + 1 : body_end]))
+    return blocks
+
+
+def _device_fields(masked_body: str) -> tuple[str, ...]:
+    tokens = list(re.finditer(r"[A-Za-z_][A-Za-z0-9_]*|[(){}\[\]:]", masked_body))
+    parens = brackets = braces = 0
+    fields: list[str] = []
+    for index, token in enumerate(tokens):
+        value = token.group(0)
+        if value == "(":
+            parens += 1
+        elif value == ")" and parens:
+            parens -= 1
+        elif value == "[":
+            brackets += 1
+        elif value == "]" and brackets:
+            brackets -= 1
+        elif value == "{":
+            braces += 1
+        elif value == "}" and braces:
+            braces -= 1
+        elif parens == 0 and brackets == 0 and braces == 0 and re.match(r"^[A-Za-z_]", value):
+            following = tokens[index + 1].group(0) if index + 1 < len(tokens) else ""
+            if following in ("(", ":"):
+                fields.append(value)
+    return tuple(fields)
 
 
 def _mcp_device_section(text: str) -> str:
     start_marker = "  - `ebus.v1.registry.devices.get`\n"
-    if text.count("`ebus.v1.registry.devices.get`") != 1:
+    entries = re.findall(
+        r"(?m)^[ \t]*(?:[-+*]|[0-9]+[.)])[ \t]+`ebus\.v1\.registry\.devices\.get`[^\n]*$",
+        text,
+    )
+    if len(entries) != 1:
         raise CheckError("MCP registry devices.get entry must appear exactly once")
     start = text.find(start_marker)
     if start < 0:
@@ -136,15 +249,14 @@ def _initial_pairs(section: str) -> tuple[tuple[str, str], ...]:
 
 def validate_text(text: str, atr: str) -> None:
     types_current = _current_types_section(text)
-    if len(re.findall(r"^[ \t]*type[ \t]+Device\b", types_current, re.M)) != 1:
+    current_blocks = [block for block in _device_blocks(types_current) if not block[0]]
+    if len(current_blocks) != 1:
         raise CheckError("current types must contain exactly one Device definition")
-    current = re.search(r"^type Device \{\n(?P<body>.*?)^\}", types_current, re.M | re.S)
-    if current is None:
-        raise CheckError("current Device definition missing")
-    body = current.group("body")
+    body, masked_body = current_blocks[0][1], current_blocks[0][2]
+    all_fields = [field for _, _, block in _device_blocks(text) for field in _device_fields(block)]
+    current_fields = _device_fields(masked_body)
     for name in ("discoverySource", "verificationState"):
-        declarations = re.findall(rf"\b{re.escape(name)}(?=[ \t]*(?:\(|:))", text)
-        if len(declarations) != 1 or body.count(f"  {name}: String\n") != 1:
+        if all_fields.count(name) != 1 or current_fields.count(name) != 1 or body.count(f"  {name}: String\n") != 1:
             raise CheckError("current Device must declare exact nullable camel-case fields")
 
     if text.count(HEADING) != 1:
@@ -209,7 +321,7 @@ def validate_mcp_text(text: str) -> None:
     for fragment in required:
         if fragment not in section:
             raise CheckError(f"required MCP provenance rule missing: {fragment!r}")
-    if "active scan (→ `active_confirmed/identity_confirmed`)" in text:
+    if re.search(r"active\s+scan\s*\(\s*→\s*`active_confirmed\s*/\s*identity_confirmed`\s*\)", text):
         raise CheckError("MCP source-rewrite rule remains")
 
 
