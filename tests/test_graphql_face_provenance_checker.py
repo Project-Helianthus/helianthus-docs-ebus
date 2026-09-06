@@ -204,6 +204,18 @@ def test_accepts_fenced_example_beside_real_provenance_heading() -> None:
     CHECKER.validate_text(doc + f"\n```markdown\n{CHECKER.HEADING}\n```\n", atr)
 
 
+def test_rejects_heading_behind_invalid_fence_closer() -> None:
+    doc, atr = texts()
+    replacement = f"```markdown\n{CHECKER.HEADING}\n``` trailing text"
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(doc.replace(CHECKER.HEADING, replacement, 1), atr)
+
+
+def test_accepts_heading_after_complete_fence_closer() -> None:
+    doc, atr = texts()
+    CHECKER.validate_text(doc + "\n```graphql info string\nexample\n```   \n", atr)
+
+
 @pytest.mark.parametrize(
     "stale",
     (
@@ -220,6 +232,28 @@ def test_rejects_stale_gateway_sentence_after_whitespace_reflow(stale: str) -> N
 def test_accepts_unrelated_device_extension() -> None:
     doc, atr = texts()
     CHECKER.validate_text(doc + "\nextend type Device { firmwareLabel: String }\n", atr)
+
+
+def test_accepts_directive_only_device_extension_before_other_definition() -> None:
+    doc, atr = texts()
+    CHECKER.validate_text(
+        doc + "\nextend type Device @tag\ntype Other { discoverySource: String }\n",
+        atr,
+    )
+
+
+@pytest.mark.parametrize(
+    "following",
+    (
+        "type Other { discoverySource: String }",
+        "interface Other { discoverySource: String }",
+        "enum Other { discoverySource }",
+        "input Other { discoverySource: String }",
+    ),
+)
+def test_directive_only_device_extension_stops_at_any_following_definition(following: str) -> None:
+    doc, atr = texts()
+    CHECKER.validate_text(doc + "\nextend type Device @tag " + following + "\n", atr)
 
 
 def test_accepts_same_field_name_on_unrelated_type() -> None:

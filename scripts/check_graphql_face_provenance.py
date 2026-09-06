@@ -142,7 +142,17 @@ def _device_blocks(text: str) -> list[tuple[bool, str, str]]:
         parens = brackets = 0
         body_start = -1
         position = match.end()
+        definition = re.compile(
+            r"(?:(?:extend)\s+)?(?:schema|scalar|type|interface|union|enum|input|directive)\b"
+        )
         while position < len(masked):
+            if (
+                parens == 0
+                and brackets == 0
+                and (position == 0 or masked[position - 1] not in "@_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+                and definition.match(masked, position)
+            ):
+                break
             character = masked[position]
             if character == "(":
                 parens += 1
@@ -233,12 +243,13 @@ def _mask_markdown_fences(text: str) -> str:
     fence_length = 0
     for line in text.splitlines(keepends=True):
         marker = re.match(r"^[ \t]*([~`]{3,})", line)
+        closer = re.match(r"^[ \t]*([~`]{3,})[ \t]*(?:\r?\n)?$", line)
         is_open = not fence_character and marker is not None
         is_close = (
             bool(fence_character)
-            and marker is not None
-            and marker.group(1)[0] == fence_character
-            and len(marker.group(1)) >= fence_length
+            and closer is not None
+            and closer.group(1)[0] == fence_character
+            and len(closer.group(1)) >= fence_length
         )
         if fence_character or is_open:
             masked.append("".join("\n" if character == "\n" else " " for character in line))
