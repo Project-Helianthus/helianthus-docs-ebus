@@ -126,7 +126,7 @@ def _mask_graphql_literals(text: str) -> str:
                 masked[position] = " "
             index = end
             continue
-        if text[index] == ",":
+        if text[index] in (",", "\ufeff"):
             masked[index] = " "
         index += 1
     return "".join(masked)
@@ -228,7 +228,7 @@ def _mcp_device_section(text: str) -> str:
     inventory = _heading_section(text, "## Implemented Surface", "implemented surface")
     masked_inventory = _mask_markdown_fences(inventory)
     entries = list(re.finditer(
-        r"(?m)^[ \t]*(?:[-+*]|[0-9]+[.)])[ \t]+`ebus\.v1\.registry\.devices\.get`[^\n]*$",
+        r"(?m)^  (?:[-+*]|[0-9]+[.)])[ \t]+`ebus\.v1\.registry\.devices\.get`[^\n]*$",
         masked_inventory,
     ))
     if len(entries) != 1:

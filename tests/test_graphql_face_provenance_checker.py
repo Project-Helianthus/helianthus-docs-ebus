@@ -146,6 +146,7 @@ def test_rejects_duplicate_device_definition_in_current_types() -> None:
         "type\n  Device { firmwareLabel: String }",
         "type # ignored GraphQL comment\n Device { firmwareLabel: String }",
         "type, Device { firmwareLabel: String }",
+        "type\ufeffDevice { firmwareLabel: String }",
     ),
 )
 def test_rejects_decorated_duplicate_device_definition(declaration: str) -> None:
@@ -200,6 +201,7 @@ def test_rejects_whitespace_equivalent_duplicate_fields(duplicate: str) -> None:
         "extend type Device @key(fields: \"address\") { verificationState: String! }",
         "extend type # ignored GraphQL comment\n Device { discoverySource # ignored\n : String! }",
         "extend, type, Device { discoverySource: String! }",
+        "extend\ufefftype\ufeffDevice { discoverySource: String! }",
     ),
 )
 def test_rejects_argument_bearing_provenance_extension(extension: str) -> None:
@@ -230,6 +232,17 @@ def test_accepts_non_inventory_mcp_tool_reference() -> None:
 def test_accepts_fenced_non_inventory_mcp_example() -> None:
     CHECKER.validate_mcp_text(
         mcp_text() + "\n```text\n- `ebus.v1.registry.devices.get`\n```\n"
+    )
+
+
+def test_accepts_indented_non_inventory_mcp_example() -> None:
+    heading = "## Implemented Surface\n"
+    CHECKER.validate_mcp_text(
+        mcp_text().replace(
+            heading,
+            heading + "\n    - `ebus.v1.registry.devices.get`\n",
+            1,
+        )
     )
 
 
