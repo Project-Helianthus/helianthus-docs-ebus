@@ -254,6 +254,16 @@ identity, a source/target relationship, or a companion relationship Proven.
 For the corresponding ATR contract, see
 [Qualified Identity Merge Gate](atr/04-sn-merge-gate.md).
 
+## Atomic Passive Companion Admission API Roles
+
+<!-- qualified-identity-policy:registry-api:begin same_source_positive_ack_plus_current_exact_address_witness -->
+`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` remains the read-locked operation for bounded non-registry derived-state commits. Its callback MUST NOT call `DeviceRegistry` methods; it cannot lock-upgrade or use an unlock/relock check-then-use sequence.
+
+`DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` is the state-changing operation. The registry MUST derive the canonical companion from `source` and MUST atomically validate the current exact-source direct complete normalized witness plus passive target companion-slot admission in one write-critical section. It MUST NOT accept a caller-supplied companion. Replacement, retirement, or conflict cannot interleave between successful validation and the committed passive slot.
+
+This records one registry admission decision. It does not prove wire identity, create attestation authority, perform I/O, make topology an identity proof, or close gateway, M7, or physical acceptance criteria.
+<!-- qualified-identity-policy:registry-api:end same_source_positive_ack_plus_current_exact_address_witness -->
+
 ## Cross-Links
 
 - Semantic root discovery: [`b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)

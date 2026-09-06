@@ -99,7 +99,7 @@ A positive generation or cached `current: true` flag alone MUST NOT satisfy this
 
 A generic coherent identity reply, `identity_confirmed`, a topology alias or propagated confirmation, `static_seed`, `passive_observed`, caller assertion, last-known-good data, visible fields, or a directed `0x07/0x04` reply alone MUST NOT serve as witness authority. Directed `0x07/0x04` remains per-face confirmation without serial, and a witness for another address MUST NOT substitute.
 
-When a complete positive ACK and this current exact-address consumer witness satisfy the one-ACK alternative, the implementation MUST insert `slot[companion(ZZ)]` with passive provenance.
+`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` remains the read-locked operation for bounded non-registry derived-state commits; its callback MUST NOT call `DeviceRegistry` methods. `DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` is the state-changing operation: the registry MUST derive the canonical companion from `source` and, in one write-critical section, MUST validate the current exact-source direct complete normalized witness and passive target companion-slot admission, then MUST commit `slot[companion(ZZ)]` with passive provenance. No caller-supplied companion, lock upgrade, or unlock/relock check-then-use is permitted; replacement, retirement, or conflict cannot interleave between successful validation and the committed passive slot.
 <!-- qualified-identity-policy:end same_source_positive_ack_plus_current_exact_address_witness -->
 
 ## Array Semantics
