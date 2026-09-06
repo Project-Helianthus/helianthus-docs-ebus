@@ -83,6 +83,31 @@ def test_rejects_missing_or_non_nullable_current_fields() -> None:
     rejects(doc_old="  verificationState: String\n", doc_new="  verificationState: String!\n")
 
 
+@pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        ("  discoverySource: String\n", "  discoverySource:\n    String\n"),
+        ("  verificationState: String\n", "  verificationState: # ignored token\n    String\n"),
+    ),
+)
+def test_accepts_nullable_fields_across_ignored_tokens(old: str, new: str) -> None:
+    doc, atr = texts()
+    assert old in doc
+    CHECKER.validate_text(doc.replace(old, new, 1), atr)
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        ("  discoverySource: String\n", "  discoverySource:\n    String!\n"),
+        ("  verificationState: String\n", "  verificationState:\n    Boolean\n"),
+        ("  verificationState: String\n", "  verificationState:\n    [String]\n"),
+    ),
+)
+def test_rejects_non_nullable_or_non_string_tokenized_fields(old: str, new: str) -> None:
+    rejects(doc_old=old, doc_new=new)
+
+
 def test_rejects_nullable_spelling_hidden_in_description() -> None:
     replacement = (
         '  """Example:  discoverySource: String"""\n'

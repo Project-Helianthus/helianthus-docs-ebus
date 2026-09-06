@@ -172,8 +172,36 @@ def _device_blocks(text: str) -> list[tuple[bool, str, str]]:
     return blocks
 
 
+def _device_field_tokens(masked_body: str) -> tuple[tuple[str, str, bool], ...]:
+    """Return top-level field name/type/nullability from ignored-token-free input."""
+    tokens = list(re.finditer(r"[A-Za-z_][A-Za-z0-9_]*|[(){}\[\]:!]", masked_body))
+    parens = brackets = braces = 0
+    fields: list[tuple[str, str, bool]] = []
+    for index, token in enumerate(tokens):
+        value = token.group(0)
+        if value == "(":
+            parens += 1
+        elif value == ")" and parens:
+            parens -= 1
+        elif value == "[":
+            brackets += 1
+        elif value == "]" and brackets:
+            brackets -= 1
+        elif value == "{":
+            braces += 1
+        elif value == "}" and braces:
+            braces -= 1
+        elif parens == 0 and brackets == 0 and braces == 0 and re.match(r"^[A-Za-z_]", value):
+            following = tokens[index + 1].group(0) if index + 1 < len(tokens) else ""
+            if following == ":":
+                type_name = tokens[index + 2].group(0) if index + 2 < len(tokens) else ""
+                nullable = index + 3 >= len(tokens) or tokens[index + 3].group(0) != "!"
+                fields.append((value, type_name, nullable))
+    return tuple(fields)
+
+
 def _device_fields(masked_body: str) -> tuple[str, ...]:
-    tokens = list(re.finditer(r"[A-Za-z_][A-Za-z0-9_]*|[(){}\[\]:]", masked_body))
+    tokens = list(re.finditer(r"[A-Za-z_][A-Za-z0-9_]*|[(){}\[\]:!]", masked_body))
     parens = brackets = braces = 0
     fields: list[str] = []
     for index, token in enumerate(tokens):
@@ -306,15 +334,13 @@ def validate_text(text: str, atr: str) -> None:
     body, masked_body = current_blocks[0][1], current_blocks[0][2]
     all_fields = [field for _, _, block in _device_blocks(visible_text) for field in _device_fields(block)]
     current_fields = _device_fields(masked_body)
+    current_declarations = _device_field_tokens(masked_body)
     for name in ("discoverySource", "verificationState"):
-        declarations = re.findall(
-            rf"(?m)^[ \t]*{re.escape(name)}[ \t]*:[ \t]*(String)(!?)[ \t]*$",
-            masked_body,
-        )
+        declarations = [entry for entry in current_declarations if entry[0] == name]
         if (
             all_fields.count(name) != 1
             or current_fields.count(name) != 1
-            or declarations != [("String", "")]
+            or declarations != [(name, "String", True)]
         ):
             raise CheckError("current Device must declare exact nullable camel-case fields")
 
