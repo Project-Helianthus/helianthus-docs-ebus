@@ -132,7 +132,8 @@ def validate_text(text: str, atr: str) -> None:
     if re.search(r"^  (?:discoverySource|verificationState): (?!String$)", body, re.M):
         raise CheckError("current Device provenance fields must be nullable String")
 
-    section = _section(text)
+    if text.count(HEADING) != 1:
+        raise CheckError("current provenance heading must appear exactly once")
     stale = (
         "Pending gateway #939/#940 implementation",
         "pending gateway #939/#940 implementation",
@@ -140,8 +141,9 @@ def validate_text(text: str, atr: str) -> None:
         "future camel-case fields",
         "extend type Device",
     )
-    if any(fragment in section for fragment in stale):
+    if any(fragment in text for fragment in stale):
         raise CheckError("stale pending provenance status remains")
+    section = _section(text)
     if "The current gateway schema exposes the nullable camel-case fields" not in section:
         raise CheckError("current provenance status missing")
     _validate_pins(section, surface="GraphQL")

@@ -82,6 +82,32 @@ def test_rejects_missing_or_non_nullable_current_fields() -> None:
     rejects(doc_old="  verificationState: String\n", doc_new="  verificationState: String!\n")
 
 
+def test_rejects_appended_stale_pending_section() -> None:
+    doc, atr = texts()
+    stale = """
+
+### Pending gateway #939/#940 implementation: Device Face Discovery Provenance
+
+This extension is pending gateway #939/#940 implementation and is not present
+in the current gateway schema. The future camel-case fields are exactly:
+
+```graphql
+extend type Device {
+  discoverySource: String
+  verificationState: String
+}
+```
+"""
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(doc + stale, atr)
+
+
+def test_rejects_duplicate_current_provenance_heading() -> None:
+    doc, atr = texts()
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(doc + "\n" + CHECKER.HEADING + "\n", atr)
+
+
 def test_rejects_obsolete_atr_spelling() -> None:
     rejects(
         atr_old="verificationState=corroborated_pending`",
