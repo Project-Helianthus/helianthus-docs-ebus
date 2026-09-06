@@ -579,6 +579,37 @@ def test_qualified_identity_policy_rejects_registry_api_role_or_atomicity_drift(
     ("required", "replacement"),
     (
         (
+            "The accepted registry implementation is [`registry/admit_passive_companion.go` at `7971e0ab21c55414beb52ab84d6b38b25e27f37d`]",
+            "",
+        ),
+        (
+            "7971e0ab21c55414beb52ab84d6b38b25e27f37d",
+            "a451a6be2d2b3631e3ee5435e6b0b5f02946749d",
+        ),
+    ),
+    ids=("missing-runtime-pin", "altered-runtime-revision"),
+)
+def test_qualified_identity_policy_rejects_missing_or_altered_registry_runtime_pin(
+    tmp_path: pathlib.Path, required: str, replacement: str
+) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    policy = read_policy(tmp_path)
+    block = checker.required_registry_api_reference_block(policy["consumer_witness"])
+    path = tmp_path / "architecture/regulator-identity-enrichment.md"
+    text = path.read_text(encoding="utf-8")
+    assert block in text
+    assert required in block
+    path.write_text(text.replace(block, block.replace(required, replacement), 1), encoding="utf-8")
+
+    with pytest.raises(checker.CheckError, match="missing required qualified-identity registry API reference block"):
+        checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("required", "replacement"),
+    (
+        (
             "`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` remains the read-locked operation",
             "`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` may change registry state",
         ),
