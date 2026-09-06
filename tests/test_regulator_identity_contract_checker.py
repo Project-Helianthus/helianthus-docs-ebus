@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import pathlib
 import shutil
@@ -12,6 +13,12 @@ import pytest
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 CHECKER_PATH = REPO_ROOT / "scripts/check_regulator_identity_contract.py"
 POLICY_RELATIVE = pathlib.Path("architecture/regulator-qualified-identity-policy.json")
+HISTORICAL_V1_FIXTURE_RELATIVE = pathlib.Path(
+    "tests/fixtures/regulator-qualified-identity-policy/accepted-base-v1.json"
+)
+ACCEPTED_BASE = "7993385c7f07b37dd7fa1d7dae67a49bddb17443"
+ACCEPTED_BASE_V1_BLOB = "46b38fbb7920bed511eeee057a4df9eff3de7d14"
+ACCEPTED_BASE_V1_SHA256 = "886dd57e72c46805ac762f0150b9ff8ee59970a594665cb9ea80c9aeb48f97ae"
 
 
 def load_checker():
@@ -41,6 +48,10 @@ def copy_contract_material(destination: pathlib.Path) -> None:
 
 def read_policy(root: pathlib.Path) -> dict[str, object]:
     return json.loads((root / POLICY_RELATIVE).read_text(encoding="utf-8"))
+
+
+def read_historical_v1_fixture() -> dict[str, object]:
+    return json.loads((REPO_ROOT / HISTORICAL_V1_FIXTURE_RELATIVE).read_text(encoding="utf-8"))
 
 
 def write_policy(root: pathlib.Path, policy: dict[str, object]) -> None:
@@ -87,7 +98,7 @@ def test_qualified_identity_policy_preserves_triple_and_normalization_rules(tmp_
         },
     }
     witness = policy["consumer_witness"]
-    assert witness["kind"] == "qualified_identity_consumer_witness_v1"  # type: ignore[index]
+    assert witness["kind"] == "qualified_identity_consumer_witness_v2"  # type: ignore[index]
     assert witness["allowed_values"] == checker.CONSUMER_WITNESS_ALLOWED_VALUES  # type: ignore[index]
     assert witness["current_registry_state"] == {  # type: ignore[index]
         "required_fields": checker.CURRENT_REGISTRY_STATE_REQUIRED_FIELDS,
@@ -101,6 +112,74 @@ def test_qualified_identity_policy_preserves_triple_and_normalization_rules(tmp_
     assert {fixture["name"] for fixture in fixtures} == checker.CONSUMER_WITNESS_FIXTURE_NAMES
     assert [fixture["name"] for fixture in fixtures if fixture["current"]] == ["current_exact_address"]
     checker.validate_documents(tmp_path)
+
+
+def test_historical_v1_fixture_is_exact_accepted_base_policy() -> None:
+    historical_bytes = (REPO_ROOT / HISTORICAL_V1_FIXTURE_RELATIVE).read_bytes()
+    git_blob = hashlib.sha1(
+        f"blob {len(historical_bytes)}\0".encode("ascii") + historical_bytes,
+        usedforsecurity=False,
+    ).hexdigest()
+
+    assert ACCEPTED_BASE == "7993385c7f07b37dd7fa1d7dae67a49bddb17443"
+    assert git_blob == ACCEPTED_BASE_V1_BLOB
+    assert hashlib.sha256(historical_bytes).hexdigest() == ACCEPTED_BASE_V1_SHA256
+
+
+def test_schema_version_dispatch_accepts_only_its_own_closed_shape() -> None:
+    checker = load_checker()
+    current_v2 = read_policy(REPO_ROOT)
+    historical_v1 = read_historical_v1_fixture()
+
+    checker.validate_policy_versioned(historical_v1, HISTORICAL_V1_FIXTURE_RELATIVE)
+    checker.validate_policy_versioned(current_v2, POLICY_RELATIVE)
+
+    with pytest.raises(checker.CheckError, match=r"missing=\['consumer_witness', 'instance'\]"):
+        checker.validate_current_v2_policy(historical_v1, HISTORICAL_V1_FIXTURE_RELATIVE)
+    with pytest.raises(checker.CheckError, match=r"expected exact fields; missing=\[\], unknown=\['consumer_witness', 'instance'\]"):
+        checker.validate_historical_v1_policy(current_v2, POLICY_RELATIVE)
+
+
+def test_current_v2_checker_rejects_expanded_shape_mislabeled_v1() -> None:
+    checker = load_checker()
+    expanded_v1 = read_policy(REPO_ROOT)
+    expanded_v1["schema_version"] = 1
+
+    with pytest.raises(checker.CheckError, match="expected 2"):
+        checker.validate_current_v2_policy(expanded_v1, POLICY_RELATIVE)
+    with pytest.raises(checker.CheckError, match=r"unknown=\['consumer_witness', 'instance'\]"):
+        checker.validate_policy_versioned(expanded_v1, POLICY_RELATIVE)
+
+
+def test_current_v2_checker_rejects_historical_shape_mislabeled_v2() -> None:
+    checker = load_checker()
+    historical_v2 = read_historical_v1_fixture()
+    historical_v2["schema_version"] = 2
+
+    with pytest.raises(checker.CheckError, match=r"missing=\['consumer_witness', 'instance'\]"):
+        checker.validate_policy_versioned(historical_v2, HISTORICAL_V1_FIXTURE_RELATIVE)
+
+
+@pytest.mark.parametrize(
+    ("schema_version", "error"),
+    (
+        (0, "unsupported schema version 0"),
+        (3, "unsupported schema version 3"),
+        (True, "expected integer schema version"),
+        ("2", "expected integer schema version"),
+        (2.0, "expected integer schema version"),
+        (1.5, "expected integer schema version"),
+    ),
+)
+def test_schema_version_dispatch_rejects_unsupported_boolean_and_nonintegral_versions(
+    schema_version: object, error: str
+) -> None:
+    checker = load_checker()
+    policy = read_policy(REPO_ROOT)
+    policy["schema_version"] = schema_version
+
+    with pytest.raises(checker.CheckError, match=error):
+        checker.validate_policy_versioned(policy, POLICY_RELATIVE)
 
 
 def current_witness_pair() -> tuple[dict[str, object], dict[str, object]]:

@@ -86,7 +86,7 @@ state because of later lower-confidence evidence.
 
 ## Companion Corroboration
 
-The public [qualified-identity policy](../regulator-qualified-identity-policy.json)
+The public schema-v2 [qualified-identity policy](../regulator-qualified-identity-policy.json)
 is the canonical machine-readable companion for the witness alternative. The
 two-ACK path in [ACK/NACK Insertion Rules](03-ack-nack-insertion-rules.md)
 remains independent: two positive ACK observations at least `N` seconds apart

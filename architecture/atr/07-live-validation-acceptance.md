@@ -77,7 +77,7 @@ Procedure: gateway sends frames from admitted source 0x7F. Query GraphQL.
 Expected: NO entry at address 0x7F. (0x7F is initiator-capable; if accidentally inserted, it would surface.)
 
 <!-- qualified-identity-policy:atr07-acceptance:begin same_source_positive_ack_plus_current_exact_address_witness -->
-The public [qualified-identity policy](../regulator-qualified-identity-policy.json) is the canonical machine-readable companion for this deterministic acceptance block.
+The public schema-v2 [qualified-identity policy](../regulator-qualified-identity-policy.json) is the canonical machine-readable companion for this deterministic acceptance block.
 
 ### N5 — Single corroboration does NOT companion-insert without a current witness
 

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "scope": "cross_address_qualified_identity",
   "instance": {
     "address": {
@@ -44,7 +44,7 @@
     "active_confirmation": "allowed_without_cross_address_qualification"
   },
   "consumer_witness": {
-    "kind": "qualified_identity_consumer_witness_v1",
+    "kind": "qualified_identity_consumer_witness_v2",
     "required_fields": [
       "address",
       "identity_authority",

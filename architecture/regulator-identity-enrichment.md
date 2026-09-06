@@ -150,9 +150,24 @@ is canonicalized independently before equality decides whether the triple is
 an exact match.
 
 The machine-readable canonical companion is the public
-[qualified-identity policy](regulator-qualified-identity-policy.json). It is a
-small, closed documentation contract for this qualified-identity boundary; this
+[qualified-identity policy](regulator-qualified-identity-policy.json), currently
+schema version 2. It is a small, closed documentation contract for this
+qualified-identity boundary; this
 page retains the explanatory architecture and evidence context.
+
+## Schema Version and Historical V1 Boundary
+
+The canonical path publishes the expanded **schema version 2** policy. Current
+repository references consume that v2 shape, including its required `instance`
+and `consumer_witness` sections. This is a breaking replacement for a consumer
+pinned to the historical v1 policy; it is never described as v1-compatible.
+
+Version 1 remains the accepted historical cross-address qualified-identity
+policy: its closed root has no `instance` or `consumer_witness` section. A v1
+reader must reject the v2 shape, and the current v2 checker rejects an expanded
+shape labelled v1. The historical fixture exists only to identify and regress
+that accepted v1 rule; this documentation publishes no migration runtime or
+general compatibility engine.
 
 For a fixed-width native `DeviceID`, the decoder removes only terminal NUL
 (`0x00`) and ASCII-space (`0x20`) padding before constructing `DeviceInfo`.

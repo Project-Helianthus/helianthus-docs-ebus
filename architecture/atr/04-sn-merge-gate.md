@@ -16,7 +16,7 @@ merging from this gate.
 
 ## Merge Predicate
 
-The public [qualified-identity policy](../regulator-qualified-identity-policy.json)
+The public schema-v2 [qualified-identity policy](../regulator-qualified-identity-policy.json)
 is the canonical machine-readable companion for this gate. This page remains
 the explanatory normative architecture reference.
 

@@ -71,7 +71,7 @@ The corroboration gate MUST require one of:
 - one positive ACK observation plus a current exact-address consumer witness
   for that same source.
 
-The two-ACK path remains independent of identity evidence. The public
+The two-ACK path remains independent of identity evidence. The public schema-v2
 [qualified-identity policy](../regulator-qualified-identity-policy.json)
 defines the small, closed witness value; this insertion rule does not introduce
 a general attestation, secret, timestamp authority, transport mapping, or

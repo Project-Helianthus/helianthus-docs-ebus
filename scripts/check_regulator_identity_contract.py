@@ -14,7 +14,19 @@ class CheckError(Exception):
 
 
 POLICY_PATH = pathlib.Path("architecture/regulator-qualified-identity-policy.json")
-POLICY_VERSION = 1
+HISTORICAL_POLICY_VERSION = 1
+CURRENT_POLICY_VERSION = 2
+V1_POLICY_FIELDS = {
+    "schema_version",
+    "scope",
+    "identity",
+    "normalization",
+    "topology",
+    "confirmation",
+    "enrichment",
+    "provenance",
+}
+V2_POLICY_FIELDS = V1_POLICY_FIELDS | {"instance", "consumer_witness"}
 TRIPLE_MEMBERS = ["Manufacturer", "DeviceID", "SerialNumber"]
 SENTINEL_SERIALS = ["0", "0x00000000", "0xFFFFFFFF", "0x7FFFFFFF"]
 SENTINEL_RECOGNITION = {
@@ -126,6 +138,16 @@ REQUIRED_ATR_NORMATIVE_BLOCKS = {
     pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
 }
 ATR07_ACCEPTANCE_PATH = pathlib.Path("architecture/atr/07-live-validation-acceptance.md")
+VERSION_BOUNDARY_PATH = pathlib.Path("architecture/regulator-identity-enrichment.md")
+REQUIRED_VERSION_BOUNDARY_WORDING = (
+    "The canonical path publishes the expanded **schema version 2** policy.",
+    "repository references consume that v2 shape, including its required `instance`\n"
+    "and `consumer_witness` sections.",
+    "it is never described as v1-compatible.",
+    "policy: its closed root has no `instance` or `consumer_witness` section.",
+    "A v1\nreader must reject the v2 shape, and the current v2 checker rejects an expanded\nshape labelled v1.",
+    "no migration runtime or\ngeneral compatibility engine.",
+)
 
 
 def require_keys(value: object, context: str, keys: set[str]) -> dict[str, object]:
@@ -142,6 +164,14 @@ def require_keys(value: object, context: str, keys: set[str]) -> dict[str, objec
 def require_value(value: object, expected: object, context: str) -> None:
     if value != expected or type(value) is not type(expected):
         raise CheckError(f"{context}: expected {expected!r}, got {value!r}")
+
+
+def require_supported_schema_version(value: object, context: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise CheckError(f"{context}: expected integer schema version")
+    if value not in {HISTORICAL_POLICY_VERSION, CURRENT_POLICY_VERSION}:
+        raise CheckError(f"{context}: unsupported schema version {value!r}")
+    return value
 
 
 def require_complete_authority(value: object, context: str) -> dict[str, object]:
@@ -244,24 +274,14 @@ def validate_consumer_witness_fixtures(value: object, context: str) -> None:
         raise CheckError(f"{context}: expected exact fixture names; missing={missing}, unknown={unknown}")
 
 
-def validate_policy(policy: object, path: pathlib.Path) -> None:
+def validate_current_v2_policy(policy: object, path: pathlib.Path) -> None:
     root = require_keys(
         policy,
         str(path),
-        {
-            "schema_version",
-            "scope",
-            "instance",
-            "identity",
-            "normalization",
-            "topology",
-            "confirmation",
-            "consumer_witness",
-            "enrichment",
-            "provenance",
-        },
+        V2_POLICY_FIELDS,
     )
-    require_value(root["schema_version"], POLICY_VERSION, f"{path}.schema_version")
+    require_supported_schema_version(root["schema_version"], f"{path}.schema_version")
+    require_value(root["schema_version"], CURRENT_POLICY_VERSION, f"{path}.schema_version")
     require_value(root["scope"], "cross_address_qualified_identity", f"{path}.scope")
     require_value(root["instance"], CONSUMER_WITNESS_INSTANCE, f"{path}.instance")
 
@@ -341,7 +361,7 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
     )
     require_value(
         consumer_witness["kind"],
-        "qualified_identity_consumer_witness_v1",
+        "qualified_identity_consumer_witness_v2",
         f"{path}.consumer_witness.kind",
     )
     require_value(
@@ -409,6 +429,93 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
     require_value(provenance["passive_observed"], "preserve", f"{path}.provenance.passive_observed")
 
 
+def validate_historical_v1_policy(policy: object, path: pathlib.Path) -> None:
+    """Validate the accepted historical v1 closed shape without v2 additions."""
+    root = require_keys(policy, str(path), V1_POLICY_FIELDS)
+    require_supported_schema_version(root["schema_version"], f"{path}.schema_version")
+    require_value(root["schema_version"], HISTORICAL_POLICY_VERSION, f"{path}.schema_version")
+    require_value(root["scope"], "cross_address_qualified_identity", f"{path}.scope")
+
+    identity = require_keys(
+        root["identity"],
+        f"{path}.identity",
+        {
+            "members",
+            "match",
+            "empty_or_partial",
+            "named_sentinel_serials",
+            "sentinel_recognition",
+            "sentinel_serials",
+            "non_qualifying_signals",
+        },
+    )
+    require_value(identity["members"], TRIPLE_MEMBERS, f"{path}.identity.members")
+    require_value(identity["match"], "exact_normalized_triple", f"{path}.identity.match")
+    require_value(identity["empty_or_partial"], "not_qualified", f"{path}.identity.empty_or_partial")
+    require_value(identity["named_sentinel_serials"], SENTINEL_SERIALS, f"{path}.identity.named_sentinel_serials")
+    require_value(identity["sentinel_recognition"], SENTINEL_RECOGNITION, f"{path}.identity.sentinel_recognition")
+    require_value(identity["sentinel_serials"], "not_qualified", f"{path}.identity.sentinel_serials")
+    require_value(
+        identity["non_qualifying_signals"],
+        ["serial", "mac", "model", "topology", "address_cooccurrence"],
+        f"{path}.identity.non_qualifying_signals",
+    )
+
+    normalization = require_keys(
+        root["normalization"], f"{path}.normalization", {"fixed_width_device_id_decoder", "registry"}
+    )
+    require_value(
+        normalization["fixed_width_device_id_decoder"],
+        ["remove_terminal_nul", "remove_terminal_ascii_space"],
+        f"{path}.normalization.fixed_width_device_id_decoder",
+    )
+    registry = require_keys(
+        normalization["registry"],
+        f"{path}.normalization.registry",
+        {"members", "outer_unicode_whitespace", "case", "internal_whitespace", "internal_punctuation", "deviceid_vr_71_vs_vr71"},
+    )
+    require_value(registry["members"], TRIPLE_MEMBERS, f"{path}.normalization.registry.members")
+    require_value(registry["outer_unicode_whitespace"], "trim", f"{path}.normalization.registry.outer_unicode_whitespace")
+    require_value(registry["case"], "uppercase", f"{path}.normalization.registry.case")
+    require_value(registry["internal_whitespace"], "preserve", f"{path}.normalization.registry.internal_whitespace")
+    require_value(registry["internal_punctuation"], "preserve", f"{path}.normalization.registry.internal_punctuation")
+    require_value(registry["deviceid_vr_71_vs_vr71"], "distinct", f"{path}.normalization.registry.deviceid_vr_71_vs_vr71")
+
+    topology = require_keys(root["topology"], f"{path}.topology", {"allowed_grouping_evidence", "cross_address_identity_proof"})
+    require_value(topology["allowed_grouping_evidence"], ["source_target", "canonical_companion"], f"{path}.topology.allowed_grouping_evidence")
+    require_value(topology["cross_address_identity_proof"], False, f"{path}.topology.cross_address_identity_proof")
+
+    confirmation = require_keys(root["confirmation"], f"{path}.confirmation", {"session", "per_face", "active_confirmation"})
+    require_value(confirmation["session"], "current", f"{path}.confirmation.session")
+    require_value(confirmation["per_face"], True, f"{path}.confirmation.per_face")
+    require_value(
+        confirmation["active_confirmation"],
+        "allowed_without_cross_address_qualification",
+        f"{path}.confirmation.active_confirmation",
+    )
+
+    enrichment = require_keys(root["enrichment"], f"{path}.enrichment", {"scope", "last_known_good", "cross_address_identity"})
+    require_value(enrichment["scope"], "same_address", f"{path}.enrichment.scope")
+    require_value(enrichment["last_known_good"], "retain", f"{path}.enrichment.last_known_good")
+    require_value(enrichment["cross_address_identity"], "not_qualified", f"{path}.enrichment.cross_address_identity")
+
+    provenance = require_keys(root["provenance"], f"{path}.provenance", {"per_face", "static_seed", "passive_observed"})
+    require_value(provenance["per_face"], "retain", f"{path}.provenance.per_face")
+    require_value(provenance["static_seed"], "preserve", f"{path}.provenance.static_seed")
+    require_value(provenance["passive_observed"], "preserve", f"{path}.provenance.passive_observed")
+
+
+def validate_policy_versioned(policy: object, path: pathlib.Path) -> None:
+    """Dispatch only between the accepted historical v1 and current v2 shapes."""
+    if not isinstance(policy, dict):
+        raise CheckError(f"{path}: expected object")
+    version = require_supported_schema_version(policy.get("schema_version"), f"{path}.schema_version")
+    if version == HISTORICAL_POLICY_VERSION:
+        validate_historical_v1_policy(policy, path)
+        return
+    validate_current_v2_policy(policy, path)
+
+
 def required_atr_normative_block(consumer_witness: dict[str, object]) -> str:
     """Return the bounded ATR block synchronized to the validated policy selector."""
     selector = consumer_witness["companion_corroboration"]
@@ -425,7 +532,7 @@ def required_atr07_acceptance_block(consumer_witness: dict[str, object]) -> str:
     """Return ATR07's closed deterministic acceptance block for the policy selector."""
     selector = consumer_witness["companion_corroboration"]
     return f"""<!-- qualified-identity-policy:atr07-acceptance:begin {selector} -->
-The public [qualified-identity policy](../regulator-qualified-identity-policy.json) is the canonical machine-readable companion for this deterministic acceptance block.
+The public schema-v2 [qualified-identity policy](../regulator-qualified-identity-policy.json) is the canonical machine-readable companion for this deterministic acceptance block.
 
 ### N5 — Single corroboration does NOT companion-insert without a current witness
 
@@ -448,12 +555,17 @@ def validate_documents(root: pathlib.Path) -> None:
         policy = json.loads(policy_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise CheckError(f"{policy_path}: invalid JSON: {exc.msg}") from exc
-    validate_policy(policy, policy_path)
+    validate_current_v2_policy(policy, policy_path)
 
     for relative, reference in REQUIRED_DOCUMENT_REFERENCES.items():
         path = root / relative
         if reference not in path.read_text(encoding="utf-8"):
             raise CheckError(f"{path}: missing required canonical policy reference: {reference!r}")
+
+    version_boundary = (root / VERSION_BOUNDARY_PATH).read_text(encoding="utf-8")
+    for wording in REQUIRED_VERSION_BOUNDARY_WORDING:
+        if wording not in version_boundary:
+            raise CheckError(f"{root / VERSION_BOUNDARY_PATH}: missing required v2 version-boundary wording")
 
     consumer_witness = policy["consumer_witness"]
     if not isinstance(consumer_witness, dict):
