@@ -76,6 +76,8 @@ def _section(text: str) -> str:
 
 def _current_types_section(text: str) -> str:
     heading = "### Types (Current)"
+    if text.count(heading) != 1:
+        raise CheckError("current types heading must appear exactly once")
     start = text.find(heading)
     if start < 0:
         raise CheckError("current types heading missing")
@@ -131,7 +133,10 @@ def _initial_pairs(section: str) -> tuple[tuple[str, str], ...]:
 
 
 def validate_text(text: str, atr: str) -> None:
-    current = re.search(r"^type Device \{\n(?P<body>.*?)^\}", _current_types_section(text), re.M | re.S)
+    types_current = _current_types_section(text)
+    if len(re.findall(r"^[ \t]*type\s+Device\s*\{", types_current, re.M)) != 1:
+        raise CheckError("current types must contain exactly one Device definition")
+    current = re.search(r"^type Device \{\n(?P<body>.*?)^\}", types_current, re.M | re.S)
     if current is None:
         raise CheckError("current Device definition missing")
     body = current.group("body")

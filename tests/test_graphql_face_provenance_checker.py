@@ -125,6 +125,20 @@ def test_rejects_device_definition_moved_out_of_current_types() -> None:
         CHECKER.validate_text(moved, atr)
 
 
+def test_rejects_duplicate_device_definition_in_current_types() -> None:
+    doc, atr = texts()
+    next_heading = doc.index("\n### ", doc.index("### Types (Current)") + 1)
+    duplicate = "\ntype Device {\n  discoverySource: String!\n}\n"
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(doc[:next_heading] + duplicate + doc[next_heading:], atr)
+
+
+def test_rejects_duplicate_current_types_heading() -> None:
+    doc, atr = texts()
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(doc + "\n### Types (Current)\n", atr)
+
+
 @pytest.mark.parametrize(
     "duplicate",
     (
