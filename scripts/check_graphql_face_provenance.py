@@ -87,8 +87,7 @@ def _current_types_section(text: str) -> str:
 
 def _mcp_device_section(text: str) -> str:
     start_marker = "  - `ebus.v1.registry.devices.get`\n"
-    markers = re.findall(r"^[ \t]*-[ \t]+`ebus\.v1\.registry\.devices\.get`[ \t]*$", text, re.M)
-    if len(markers) != 1:
+    if text.count("`ebus.v1.registry.devices.get`") != 1:
         raise CheckError("MCP registry devices.get entry must appear exactly once")
     start = text.find(start_marker)
     if start < 0:
@@ -144,11 +143,7 @@ def validate_text(text: str, atr: str) -> None:
         raise CheckError("current Device definition missing")
     body = current.group("body")
     for name in ("discoverySource", "verificationState"):
-        declarations = re.findall(
-            rf"^[ \t]*{re.escape(name)}\s*(?:\([^)]*\)\s*)?:",
-            body,
-            re.M,
-        )
+        declarations = re.findall(rf"^[ \t]*{re.escape(name)}(?=[ \t]*(?:\(|:))", text, re.M)
         if len(declarations) != 1 or body.count(f"  {name}: String\n") != 1:
             raise CheckError("current Device must declare exact nullable camel-case fields")
 
@@ -162,12 +157,6 @@ def validate_text(text: str, atr: str) -> None:
     )
     if any(fragment in text for fragment in stale):
         raise CheckError("stale pending provenance status remains")
-    if re.search(
-        r"\bextend\s+type\s+Device\s*\{[^}]*(?:\bdiscoverySource|\bverificationState)\s*:",
-        text,
-        re.S,
-    ):
-        raise CheckError("stale pending provenance extension remains")
     section = _section(text)
     if "The current gateway schema exposes the nullable camel-case fields" not in section:
         raise CheckError("current provenance status missing")
