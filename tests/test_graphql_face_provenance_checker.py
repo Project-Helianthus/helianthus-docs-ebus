@@ -133,6 +133,20 @@ def test_rejects_duplicate_device_definition_in_current_types() -> None:
         CHECKER.validate_text(doc[:next_heading] + duplicate + doc[next_heading:], atr)
 
 
+@pytest.mark.parametrize(
+    "declaration",
+    (
+        "type Device implements Node { discoverySource: String! }",
+        "type Device @key(fields: \"address\") { verificationState: String! }",
+    ),
+)
+def test_rejects_decorated_duplicate_device_definition(declaration: str) -> None:
+    doc, atr = texts()
+    next_heading = doc.index("\n### ", doc.index("### Types (Current)") + 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(doc[:next_heading] + "\n" + declaration + "\n" + doc[next_heading:], atr)
+
+
 def test_rejects_duplicate_current_types_heading() -> None:
     doc, atr = texts()
     with pytest.raises(CHECKER.CheckError):
@@ -156,11 +170,18 @@ def test_rejects_whitespace_equivalent_duplicate_fields(duplicate: str) -> None:
         CHECKER.validate_text(doc.replace(marker, duplicate + "\n" + marker, 1), atr)
 
 
-def test_rejects_argument_bearing_provenance_extension() -> None:
+@pytest.mark.parametrize(
+    "extension",
+    (
+        "extend type Device { discoverySource(format: Boolean): String! }",
+        "extend type Device implements Node { discoverySource(format: Boolean): String! }",
+        "extend type Device @key(fields: \"address\") { verificationState: String! }",
+    ),
+)
+def test_rejects_argument_bearing_provenance_extension(extension: str) -> None:
     doc, atr = texts()
-    extension = "\nextend type Device {\n  discoverySource(format: Boolean): String!\n}\n"
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_text(doc + extension, atr)
+        CHECKER.validate_text(doc + "\n" + extension + "\n", atr)
 
 
 @pytest.mark.parametrize(
@@ -194,6 +215,12 @@ def test_rejects_mcp_source_rewrite_rule() -> None:
     )
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(mutated)
+
+
+def test_rejects_mcp_source_rewrite_outside_devices_get_entry() -> None:
+    text = mcp_text() + "\nactive scan (→ `active_confirmed/identity_confirmed`)\n"
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_mcp_text(text)
 
 
 @pytest.mark.parametrize(

@@ -136,14 +136,14 @@ def _initial_pairs(section: str) -> tuple[tuple[str, str], ...]:
 
 def validate_text(text: str, atr: str) -> None:
     types_current = _current_types_section(text)
-    if len(re.findall(r"^[ \t]*type\s+Device\s*\{", types_current, re.M)) != 1:
+    if len(re.findall(r"^[ \t]*type[ \t]+Device\b", types_current, re.M)) != 1:
         raise CheckError("current types must contain exactly one Device definition")
     current = re.search(r"^type Device \{\n(?P<body>.*?)^\}", types_current, re.M | re.S)
     if current is None:
         raise CheckError("current Device definition missing")
     body = current.group("body")
     for name in ("discoverySource", "verificationState"):
-        declarations = re.findall(rf"^[ \t]*{re.escape(name)}(?=[ \t]*(?:\(|:))", text, re.M)
+        declarations = re.findall(rf"\b{re.escape(name)}(?=[ \t]*(?:\(|:))", text)
         if len(declarations) != 1 or body.count(f"  {name}: String\n") != 1:
             raise CheckError("current Device must declare exact nullable camel-case fields")
 
@@ -209,7 +209,7 @@ def validate_mcp_text(text: str) -> None:
     for fragment in required:
         if fragment not in section:
             raise CheckError(f"required MCP provenance rule missing: {fragment!r}")
-    if "active scan (→ `active_confirmed/identity_confirmed`)" in section:
+    if "active scan (→ `active_confirmed/identity_confirmed`)" in text:
         raise CheckError("MCP source-rewrite rule remains")
 
 
