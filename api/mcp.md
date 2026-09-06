@@ -345,18 +345,21 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
       `candidate | corroborated_pending | identity_confirmed`.
       Both are omitted when the registry has no slot record for the
       address. For `devices.list` the labels reflect the entry's
-      primary address; for `devices.get(address=X)` the labels
-      reflect the queried address X — important for merged entries
-      whose aliases may be at different DiscoverySource levels (e.g.
-      NETX3's broadcast face `0x04` stays at `static_seed/candidate`
-      while the `0xF1` face advances to
-      `active_confirmed/identity_confirmed` via active scan).
+      canonical primary address; for `devices.get(address=X)` the labels
+      reflect the queried address X. Each face retains its original
+      discovery source when verification advances: a static-seeded face
+      remains `static_seed`, a passively discovered face remains
+      `passive_observed`, and `active_confirmed` applies only when active
+      discovery created that face. Passive corroboration may advance the
+      independent verification state to `corroborated_pending`; identity
+      confirmation may advance it to `identity_confirmed`. Neither event
+      rewrites `discovery_source`.
       Per the
       [`05-static-seed-provenance`](../architecture/atr/05-static-seed-provenance.md)
       ATR, addresses planted by the productids static seed table MUST
-      surface as `static_seed/candidate` until corroborated by passive
-      observation (→ `corroborated_pending`) or identity-confirmed by
-      active scan (→ `active_confirmed/identity_confirmed`).
+      initially surface as `static_seed/candidate`. Passive or active
+      verification changes only `verification_state`; it MUST NOT rewrite
+      the face's `static_seed` discovery source.
   - `ebus.v1.registry.planes.list`
   - `ebus.v1.registry.methods.list`
   - `ebus.v1.semantic.zones.get`
