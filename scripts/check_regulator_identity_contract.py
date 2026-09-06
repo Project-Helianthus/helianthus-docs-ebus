@@ -24,6 +24,13 @@ SENTINEL_RECOGNITION = {
     "leading_zeros": "ignore",
     "ordinary_serials": "never_parse_or_rewrite",
 }
+CONSUMER_WITNESS_INSTANCE = {
+    "address": {
+        "representation": "0xNN_uppercase_hexadecimal_byte",
+        "domain": ["AddressClassMaster", "AddressClassSlave"],
+        "canonical_source": "architecture/ebus_standard/12-address-table.md#ebus-256-byte-address-taxonomy-v1",
+    }
+}
 CONSUMER_WITNESS_REQUIRED_FIELDS = [
     "address",
     "identity_authority",
@@ -39,6 +46,20 @@ CONSUMER_WITNESS_ALLOWED_VALUES = {
     "observation_provenance": ["direct_observation"],
     "current": [True],
     "immutable": [True],
+    "registry_observation_generation": ["positive_integer"],
+    "registry_proof_generation": ["positive_integer"],
+}
+CURRENT_REGISTRY_STATE_REQUIRED_FIELDS = [
+    "availability",
+    "address",
+    "identity_authority",
+    "registry_observation_generation",
+    "registry_proof_generation",
+]
+CURRENT_REGISTRY_STATE_ALLOWED_VALUES = {
+    "availability": ["available", "retired", "conflict"],
+    "address": ["exact_address"],
+    "identity_authority": ["complete_normalized_triple_authority"],
     "registry_observation_generation": ["positive_integer"],
     "registry_proof_generation": ["positive_integer"],
 }
@@ -78,13 +99,7 @@ CONSUMER_WITNESS_NON_WITNESS_INPUTS = [
 ]
 TRIPLE_AUTHORITY_FIELDS = {"Manufacturer", "DeviceID", "SerialNumber"}
 WITNESS_INSTANCE_FIELDS = set(CONSUMER_WITNESS_REQUIRED_FIELDS)
-CURRENT_REGISTRY_STATE_FIELDS = {
-    "availability",
-    "address",
-    "identity_authority",
-    "registry_observation_generation",
-    "registry_proof_generation",
-}
+CURRENT_REGISTRY_STATE_FIELDS = set(CURRENT_REGISTRY_STATE_REQUIRED_FIELDS)
 WITNESS_FIXTURE_FIELDS = {"name", "witness", "current_registry_state", "current"}
 CONSUMER_WITNESS_FIXTURE_NAMES = {
     "current_exact_address",
@@ -105,9 +120,9 @@ REQUIRED_DOCUMENT_REFERENCES = {
     pathlib.Path("architecture/overview.md"): "[qualified-identity policy](./regulator-qualified-identity-policy.json)",
     pathlib.Path("api/graphql.md"): "[qualified-identity policy](../architecture/regulator-qualified-identity-policy.json)",
 }
-REQUIRED_ATR_SYNCHRONIZATION = {
-    pathlib.Path("architecture/atr/01-address-table-model.md"): "same_source_positive_ack_plus_current_exact_address_witness",
-    pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"): "same_source_positive_ack_plus_current_exact_address_witness",
+REQUIRED_ATR_NORMATIVE_BLOCKS = {
+    pathlib.Path("architecture/atr/01-address-table-model.md"),
+    pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
 }
 
 
@@ -132,7 +147,38 @@ def require_complete_authority(value: object, context: str) -> dict[str, object]
     for member in TRIPLE_MEMBERS:
         if not isinstance(authority[member], str) or not authority[member]:
             raise CheckError(f"{context}.{member}: expected non-empty normalized member")
+    if is_named_sentinel_serial(authority["SerialNumber"]):
+        raise CheckError(f"{context}.SerialNumber: sentinel serial is not qualified")
+    for member in TRIPLE_MEMBERS:
+        if authority[member].strip() != authority[member] or authority[member].upper() != authority[member]:
+            raise CheckError(f"{context}.{member}: expected already-normalized registry member")
+        if member == "DeviceID" and authority[member].rstrip("\x00 ") != authority[member]:
+            raise CheckError(f"{context}.{member}: expected fixed-width padding already removed")
     return authority
+
+
+def is_named_sentinel_serial(value: str) -> bool:
+    """Recognize only the policy's named hexadecimal sentinels without rewriting a serial."""
+    candidate = value
+    if candidate[:2].casefold() == "0x":
+        candidate = candidate[2:]
+    if not candidate or any(character not in "0123456789abcdefABCDEF" for character in candidate):
+        return False
+    canonical_hex = candidate.lstrip("0") or "0"
+    return canonical_hex.upper() in {"0", "FFFFFFFF", "7FFFFFFF"}
+
+
+def require_canonical_ebus_unicast_address(value: object, context: str) -> str:
+    if (
+        not isinstance(value, str)
+        or len(value) != 4
+        or not value.startswith("0x")
+        or any(character not in "0123456789ABCDEF" for character in value[2:])
+    ):
+        raise CheckError(f"{context}: expected canonical eBUS unicast address 0xNN")
+    if int(value[2:], 16) in {0xA9, 0xAA, 0xFE}:
+        raise CheckError(f"{context}: expected AddressClassMaster or AddressClassSlave")
+    return value
 
 
 def require_positive_integer(value: object, context: str) -> int:
@@ -141,21 +187,34 @@ def require_positive_integer(value: object, context: str) -> int:
     return value
 
 
-def consumer_witness_is_current(witness_value: object, current_state_value: object) -> bool:
-    """Evaluate the closed witness/current-registry equality relation."""
+def validate_consumer_witness_instance(witness_value: object, current_state_value: object) -> tuple[dict[str, object], dict[str, object]]:
+    """Validate the complete closed witness/current-registry pair schema and domains."""
     witness = require_keys(witness_value, "consumer witness", WITNESS_INSTANCE_FIELDS)
     current_state = require_keys(current_state_value, "current registry state", CURRENT_REGISTRY_STATE_FIELDS)
+    require_canonical_ebus_unicast_address(witness["address"], "consumer witness.address")
+    require_canonical_ebus_unicast_address(current_state["address"], "current registry state.address")
     require_complete_authority(witness["identity_authority"], "consumer witness.identity_authority")
     require_complete_authority(current_state["identity_authority"], "current registry state.identity_authority")
     require_positive_integer(witness["registry_observation_generation"], "consumer witness.registry_observation_generation")
     require_positive_integer(witness["registry_proof_generation"], "consumer witness.registry_proof_generation")
     require_positive_integer(current_state["registry_observation_generation"], "current registry state.registry_observation_generation")
     require_positive_integer(current_state["registry_proof_generation"], "current registry state.registry_proof_generation")
+    require_value(witness["observation_provenance"], "direct_observation", "consumer witness.observation_provenance")
+    require_value(witness["current"], True, "consumer witness.current")
+    require_value(witness["immutable"], True, "consumer witness.immutable")
+    if current_state["availability"] not in CURRENT_REGISTRY_STATE_ALLOWED_VALUES["availability"]:
+        raise CheckError(
+            "current registry state.availability: expected one of "
+            f"{CURRENT_REGISTRY_STATE_ALLOWED_VALUES['availability']!r}"
+        )
+    return witness, current_state
+
+
+def consumer_witness_is_current(witness_value: object, current_state_value: object) -> bool:
+    """Evaluate the closed witness/current-registry equality relation."""
+    witness, current_state = validate_consumer_witness_instance(witness_value, current_state_value)
     return (
-        witness["observation_provenance"] == "direct_observation"
-        and witness["current"] is True
-        and witness["immutable"] is True
-        and current_state["availability"] == "available"
+        current_state["availability"] == "available"
         and witness["address"] == current_state["address"]
         and witness["identity_authority"] == current_state["identity_authority"]
         and witness["registry_observation_generation"] == current_state["registry_observation_generation"]
@@ -190,6 +249,7 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
         {
             "schema_version",
             "scope",
+            "instance",
             "identity",
             "normalization",
             "topology",
@@ -201,6 +261,7 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
     )
     require_value(root["schema_version"], POLICY_VERSION, f"{path}.schema_version")
     require_value(root["scope"], "cross_address_qualified_identity", f"{path}.scope")
+    require_value(root["instance"], CONSUMER_WITNESS_INSTANCE, f"{path}.instance")
 
     identity = require_keys(
         root["identity"],
@@ -267,6 +328,7 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
             "kind",
             "required_fields",
             "allowed_values",
+            "current_registry_state",
             "production",
             "currentness",
             "stale_on",
@@ -289,6 +351,21 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
         consumer_witness["allowed_values"],
         CONSUMER_WITNESS_ALLOWED_VALUES,
         f"{path}.consumer_witness.allowed_values",
+    )
+    current_registry_state = require_keys(
+        consumer_witness["current_registry_state"],
+        f"{path}.consumer_witness.current_registry_state",
+        {"required_fields", "allowed_values"},
+    )
+    require_value(
+        current_registry_state["required_fields"],
+        CURRENT_REGISTRY_STATE_REQUIRED_FIELDS,
+        f"{path}.consumer_witness.current_registry_state.required_fields",
+    )
+    require_value(
+        current_registry_state["allowed_values"],
+        CURRENT_REGISTRY_STATE_ALLOWED_VALUES,
+        f"{path}.consumer_witness.current_registry_state.allowed_values",
     )
     require_value(
         consumer_witness["production"],
@@ -330,6 +407,18 @@ def validate_policy(policy: object, path: pathlib.Path) -> None:
     require_value(provenance["passive_observed"], "preserve", f"{path}.provenance.passive_observed")
 
 
+def required_atr_normative_block(consumer_witness: dict[str, object]) -> str:
+    """Return the bounded ATR block synchronized to the validated policy selector."""
+    selector = consumer_witness["companion_corroboration"]
+    return f"""<!-- qualified-identity-policy:begin {selector} -->
+For the one-ACK alternative, the registry MUST use only a current consumer witness for that same exact source address. The witness is registry-produced from a direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` observation. At the atomic registry lookup/validation/use boundary, its address, authority, observation generation, and proof generation MUST equal the current registry state.
+
+A positive generation or cached `current: true` flag alone MUST NOT satisfy this gate. Replacement, retirement, or a conflict makes the prior witness unavailable/not-current until a fresh direct complete normalized observation produces a new witness.
+
+A generic coherent identity reply, `identity_confirmed`, a topology alias or propagated confirmation, `static_seed`, `passive_observed`, caller assertion, last-known-good data, visible fields, or a directed `0x07/0x04` reply alone MUST NOT serve as witness authority. Directed `0x07/0x04` remains per-face confirmation without serial, and a witness for another address MUST NOT substitute.
+<!-- qualified-identity-policy:end {selector} -->"""
+
+
 def validate_documents(root: pathlib.Path) -> None:
     policy_path = root / POLICY_PATH
     try:
@@ -343,11 +432,14 @@ def validate_documents(root: pathlib.Path) -> None:
         if reference not in path.read_text(encoding="utf-8"):
             raise CheckError(f"{path}: missing required canonical policy reference: {reference!r}")
 
-    for relative, policy_value in REQUIRED_ATR_SYNCHRONIZATION.items():
+    consumer_witness = policy["consumer_witness"]
+    if not isinstance(consumer_witness, dict):
+        raise CheckError(f"{policy_path}.consumer_witness: expected object")
+    normative_block = required_atr_normative_block(consumer_witness)
+    for relative in REQUIRED_ATR_NORMATIVE_BLOCKS:
         path = root / relative
-        marker = f"<!-- qualified-identity-policy: {policy_value} -->"
-        if marker not in path.read_text(encoding="utf-8"):
-            raise CheckError(f"{path}: missing required qualified-identity synchronization marker: {marker!r}")
+        if normative_block not in path.read_text(encoding="utf-8"):
+            raise CheckError(f"{path}: missing required qualified-identity normative block")
 
 
 def main() -> int:

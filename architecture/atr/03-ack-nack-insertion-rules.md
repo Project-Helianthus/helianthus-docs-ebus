@@ -71,26 +71,19 @@ The corroboration gate MUST require one of:
 - one positive ACK observation plus a current exact-address consumer witness
   for that same source.
 
-The two-ACK path remains independent of identity evidence. The consumer-witness
-path is not satisfied by observable nonempty fields, `identity_confirmed`, a
-topology alias or propagated confirmation, `static_seed`, `passive_observed`,
-caller assertions, last-known-good data, or a directed `0x07/0x04` reply. The
-public [qualified-identity policy](../regulator-qualified-identity-policy.json)
+The two-ACK path remains independent of identity evidence. The public
+[qualified-identity policy](../regulator-qualified-identity-policy.json)
 defines the small, closed witness value; this insertion rule does not introduce
 a general attestation, secret, timestamp authority, transport mapping, or
 alternate runtime.
 
-At the consumer decision, lookup, validation, and use of that value MUST form
-the policy's atomic registry boundary. The supplied witness authority,
-observation generation, and proof generation MUST equal the current registry
-state for the same exact source address and complete normalized triple
-authority. A positive generation or cached `current: true` flag alone does not
-satisfy this gate. Replacement, retirement, or a conflict in any supplied
-triple member makes the prior witness unavailable/not-current until a fresh
-direct complete observation produces a new witness; a witness for another
-address cannot substitute.
+<!-- qualified-identity-policy:begin same_source_positive_ack_plus_current_exact_address_witness -->
+For the one-ACK alternative, the registry MUST use only a current consumer witness for that same exact source address. The witness is registry-produced from a direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` observation. At the atomic registry lookup/validation/use boundary, its address, authority, observation generation, and proof generation MUST equal the current registry state.
 
-<!-- qualified-identity-policy: same_source_positive_ack_plus_current_exact_address_witness -->
+A positive generation or cached `current: true` flag alone MUST NOT satisfy this gate. Replacement, retirement, or a conflict makes the prior witness unavailable/not-current until a fresh direct complete normalized observation produces a new witness.
+
+A generic coherent identity reply, `identity_confirmed`, a topology alias or propagated confirmation, `static_seed`, `passive_observed`, caller assertion, last-known-good data, visible fields, or a directed `0x07/0x04` reply alone MUST NOT serve as witness authority. Directed `0x07/0x04` remains per-face confirmation without serial, and a witness for another address MUST NOT substitute.
+<!-- qualified-identity-policy:end same_source_positive_ack_plus_current_exact_address_witness -->
 
 Until that gate passes, `slot[companion(ZZ)]` MUST remain absent. After the
 gate passes, the companion slot MAY be inserted with passive provenance.

@@ -92,21 +92,13 @@ two-ACK path in [ACK/NACK Insertion Rules](03-ack-nack-insertion-rules.md)
 remains independent: two positive ACK observations at least `N` seconds apart
 are sufficient without identity evidence.
 
-For the one-ACK alternative, the registry MUST use only a current consumer
-witness for that same exact source address. The witness is registry-produced
-from a direct complete normalized `(Manufacturer, DeviceID, SerialNumber)`
-observation. At the atomic registry lookup/validation-use boundary for the
-consumer decision, its authority, observation generation, and proof generation
-MUST equal the current registry state for that exact address and authority.
+<!-- qualified-identity-policy:begin same_source_positive_ack_plus_current_exact_address_witness -->
+For the one-ACK alternative, the registry MUST use only a current consumer witness for that same exact source address. The witness is registry-produced from a direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` observation. At the atomic registry lookup/validation/use boundary, its address, authority, observation generation, and proof generation MUST equal the current registry state.
 
-A generic coherent identity reply, `identity_confirmed`, or a directed
-`0x07/0x04` reply alone is not the witness alternative: the directed reply has
-no serial and remains per-face confirmation. Topology aliases/grouping,
-`static_seed`, `passive_observed`, last-known-good, caller assertions, and
-visible fields are not witness authority. A witness for another address cannot
-substitute.
+A positive generation or cached `current: true` flag alone MUST NOT satisfy this gate. Replacement, retirement, or a conflict makes the prior witness unavailable/not-current until a fresh direct complete normalized observation produces a new witness.
 
-<!-- qualified-identity-policy: same_source_positive_ack_plus_current_exact_address_witness -->
+A generic coherent identity reply, `identity_confirmed`, a topology alias or propagated confirmation, `static_seed`, `passive_observed`, caller assertion, last-known-good data, visible fields, or a directed `0x07/0x04` reply alone MUST NOT serve as witness authority. Directed `0x07/0x04` remains per-face confirmation without serial, and a witness for another address MUST NOT substitute.
+<!-- qualified-identity-policy:end same_source_positive_ack_plus_current_exact_address_witness -->
 
 ## Array Semantics
 

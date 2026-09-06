@@ -4,6 +4,7 @@ import importlib.util
 import json
 import pathlib
 import shutil
+from copy import deepcopy
 
 import pytest
 
@@ -57,6 +58,7 @@ def test_qualified_identity_policy_preserves_triple_and_normalization_rules(tmp_
     copy_contract_material(tmp_path)
 
     policy = read_policy(tmp_path)
+    assert policy["instance"] == checker.CONSUMER_WITNESS_INSTANCE
     assert policy["identity"] == {
         "members": ["Manufacturer", "DeviceID", "SerialNumber"],
         "match": "exact_normalized_triple",
@@ -86,6 +88,10 @@ def test_qualified_identity_policy_preserves_triple_and_normalization_rules(tmp_
     witness = policy["consumer_witness"]
     assert witness["kind"] == "qualified_identity_consumer_witness_v1"  # type: ignore[index]
     assert witness["allowed_values"] == checker.CONSUMER_WITNESS_ALLOWED_VALUES  # type: ignore[index]
+    assert witness["current_registry_state"] == {  # type: ignore[index]
+        "required_fields": checker.CURRENT_REGISTRY_STATE_REQUIRED_FIELDS,
+        "allowed_values": checker.CURRENT_REGISTRY_STATE_ALLOWED_VALUES,
+    }
     assert witness["production"] == checker.CONSUMER_WITNESS_PRODUCTION  # type: ignore[index]
     assert witness["currentness"] == checker.CONSUMER_WITNESS_CURRENTNESS  # type: ignore[index]
     assert witness["stale_on"] == ["replacement", "retirement", "conflict"]  # type: ignore[index]
@@ -94,6 +100,152 @@ def test_qualified_identity_policy_preserves_triple_and_normalization_rules(tmp_
     assert {fixture["name"] for fixture in fixtures} == checker.CONSUMER_WITNESS_FIXTURE_NAMES
     assert [fixture["name"] for fixture in fixtures if fixture["current"]] == ["current_exact_address"]
     checker.validate_documents(tmp_path)
+
+
+def current_witness_pair() -> tuple[dict[str, object], dict[str, object]]:
+    authority: dict[str, object] = {
+        "Manufacturer": "ACME",
+        "DeviceID": "VR_71",
+        "SerialNumber": "SN-1",
+    }
+    return (
+        {
+            "address": "0x10",
+            "identity_authority": authority,
+            "observation_provenance": "direct_observation",
+            "current": True,
+            "immutable": True,
+            "registry_observation_generation": 7,
+            "registry_proof_generation": 11,
+        },
+        {
+            "availability": "available",
+            "address": "0x10",
+            "identity_authority": deepcopy(authority),
+            "registry_observation_generation": 7,
+            "registry_proof_generation": 11,
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "address",
+    (
+        [],
+        16,
+        "not-an-ebus-address",
+        "0x1",
+        "0X10",
+        "0x100",
+        "0xA9",
+        "0xAA",
+        "0xFE",
+    ),
+)
+def test_consumer_witness_rejects_noncanonical_or_nonunicast_addresses(address: object) -> None:
+    checker = load_checker()
+    witness, current_state = current_witness_pair()
+    witness["address"] = address
+    current_state["address"] = deepcopy(address)
+
+    with pytest.raises(checker.CheckError, match="address"):
+        checker.consumer_witness_is_current(witness, current_state)
+
+
+@pytest.mark.parametrize(
+    ("member", "value"),
+    (
+        ("Manufacturer", "\u2003ACME\u2003"),
+        ("Manufacturer", "acme"),
+        ("DeviceID", "VR_71 "),
+        ("DeviceID", "vr_71"),
+        ("DeviceID", "VR_71\x00"),
+        ("SerialNumber", "SN-1 "),
+        ("SerialNumber", "sn-1"),
+    ),
+)
+def test_consumer_witness_rejects_non_normalized_authority_members(member: str, value: str) -> None:
+    checker = load_checker()
+    witness, current_state = current_witness_pair()
+    witness["identity_authority"][member] = value  # type: ignore[index]
+    current_state["identity_authority"][member] = value  # type: ignore[index]
+
+    with pytest.raises(checker.CheckError, match="already-normalized|fixed-width"):
+        checker.consumer_witness_is_current(witness, current_state)
+
+
+def test_consumer_witness_preserves_internal_punctuation_as_distinct_identity() -> None:
+    checker = load_checker()
+    witness, current_state = current_witness_pair()
+    current_state["identity_authority"]["DeviceID"] = "VR71"  # type: ignore[index]
+
+    assert checker.consumer_witness_is_current(witness, current_state) is False
+
+
+@pytest.mark.parametrize("serial", ("0", "0x00000000", "0xFFFFFFFF", "0x7FFFFFFF"))
+def test_consumer_witness_rejects_each_named_sentinel_serial(serial: str) -> None:
+    checker = load_checker()
+    witness, current_state = current_witness_pair()
+    witness["identity_authority"]["SerialNumber"] = serial  # type: ignore[index]
+    current_state["identity_authority"]["SerialNumber"] = serial  # type: ignore[index]
+
+    with pytest.raises(checker.CheckError, match="sentinel serial"):
+        checker.consumer_witness_is_current(witness, current_state)
+
+
+@pytest.mark.parametrize(
+    "serial",
+    (
+        "000",
+        "0X00000000",
+        "ffffffff",
+        "00000000FFFFFFFF",
+        "0X000000007fffffff",
+    ),
+)
+def test_named_sentinel_recognition_is_case_insensitive_with_optional_prefix_and_leading_zeroes(serial: str) -> None:
+    checker = load_checker()
+
+    assert checker.is_named_sentinel_serial(serial) is True
+
+
+def test_consumer_witness_preserves_ordinary_serial_spelling_without_parsing_or_rewriting() -> None:
+    checker = load_checker()
+    witness, current_state = current_witness_pair()
+    witness["identity_authority"]["SerialNumber"] = "000A1"  # type: ignore[index]
+    current_state["identity_authority"]["SerialNumber"] = "000A1"  # type: ignore[index]
+
+    assert checker.consumer_witness_is_current(witness, current_state) is True
+    assert witness["identity_authority"]["SerialNumber"] == "000A1"  # type: ignore[index]
+    assert current_state["identity_authority"]["SerialNumber"] == "000A1"  # type: ignore[index]
+
+
+@pytest.mark.parametrize(
+    "fixture_name",
+    (
+        "current_exact_address",
+        "cached_after_replacement",
+        "cached_after_retirement",
+        "cached_after_supplied_triple_conflict",
+        "observation_generation_mismatch",
+        "proof_generation_mismatch",
+        "authority_substitution",
+        "address_substitution",
+    ),
+)
+def test_every_fixture_validates_closed_witness_domains_before_currentness(
+    tmp_path: pathlib.Path, fixture_name: str
+) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    policy = read_policy(tmp_path)
+    fixtures = policy["consumer_witness"]["validation_fixtures"]  # type: ignore[index]
+    fixture = next(item for item in fixtures if item["name"] == fixture_name)
+    fixture["witness"]["observation_provenance"] = "caller_assertion"
+    write_policy(tmp_path, policy)
+
+    with pytest.raises(checker.CheckError, match="consumer witness.observation_provenance"):
+        checker.validate_documents(tmp_path)
 
 
 def remove_identity_match(policy: dict[str, object]) -> None:
@@ -134,6 +286,10 @@ def change_consumer_witness_closed_value(policy: dict[str, object]) -> None:
 
 def allow_zero_consumer_witness_generation(policy: dict[str, object]) -> None:
     policy["consumer_witness"]["allowed_values"]["registry_observation_generation"] = ["zero_or_positive_integer"]  # type: ignore[index]
+
+
+def allow_unknown_current_registry_availability(policy: dict[str, object]) -> None:
+    policy["consumer_witness"]["current_registry_state"]["allowed_values"]["availability"] = ["available", "unknown"]  # type: ignore[index]
 
 
 def remove_atomic_currentness(policy: dict[str, object]) -> None:
@@ -181,6 +337,7 @@ def test_qualified_identity_policy_rejects_consumer_witness_input_misuse(
         (remove_consumer_witness_member, "consumer_witness.required_fields"),
         (change_consumer_witness_closed_value, "consumer_witness.allowed_values"),
         (allow_zero_consumer_witness_generation, "consumer_witness.allowed_values"),
+        (allow_unknown_current_registry_availability, "consumer_witness.current_registry_state.allowed_values"),
         (remove_atomic_currentness, "consumer_witness: expected exact fields"),
         (alter_registry_production, "consumer_witness.production"),
         (accept_cached_replacement, "validation_fixtures.*current"),
@@ -224,15 +381,50 @@ def test_qualified_identity_policy_requires_synchronized_public_reference(
         checker.validate_documents(tmp_path)
 
 
-def test_qualified_identity_policy_requires_atr01_synchronized_statement(tmp_path: pathlib.Path) -> None:
+@pytest.mark.parametrize(
+    "relative",
+    (
+        pathlib.Path("architecture/atr/01-address-table-model.md"),
+        pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
+    ),
+)
+def test_qualified_identity_policy_requires_complete_atr_normative_block(
+    tmp_path: pathlib.Path, relative: pathlib.Path
+) -> None:
     checker = load_checker()
     copy_contract_material(tmp_path)
-    relative = pathlib.Path("architecture/atr/01-address-table-model.md")
     path = tmp_path / relative
-    marker = f"<!-- qualified-identity-policy: {checker.REQUIRED_ATR_SYNCHRONIZATION[relative]} -->"
-    path.write_text(path.read_text(encoding="utf-8").replace(marker, ""), encoding="utf-8")
+    policy = read_policy(tmp_path)
+    block = checker.required_atr_normative_block(policy["consumer_witness"])
+    begin, *body, end = block.splitlines()
+    assert body
+    path.write_text(path.read_text(encoding="utf-8").replace(block, f"{begin}\n{end}"), encoding="utf-8")
 
-    with pytest.raises(checker.CheckError, match="missing required qualified-identity synchronization marker"):
+    with pytest.raises(checker.CheckError, match="missing required qualified-identity normative block"):
+        checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "relative",
+    (
+        pathlib.Path("architecture/atr/01-address-table-model.md"),
+        pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
+    ),
+)
+def test_qualified_identity_policy_rejects_reverted_atr_normative_block(
+    tmp_path: pathlib.Path, relative: pathlib.Path
+) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    path = tmp_path / relative
+    policy = read_policy(tmp_path)
+    block = checker.required_atr_normative_block(policy["consumer_witness"])
+    reverted = block.replace(
+        "MUST equal the current registry state.", "MAY rely on cached witness state."
+    )
+    path.write_text(path.read_text(encoding="utf-8").replace(block, reverted), encoding="utf-8")
+
+    with pytest.raises(checker.CheckError, match="missing required qualified-identity normative block"):
         checker.validate_documents(tmp_path)
 
 

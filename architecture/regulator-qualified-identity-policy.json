@@ -1,6 +1,13 @@
 {
   "schema_version": 1,
   "scope": "cross_address_qualified_identity",
+  "instance": {
+    "address": {
+      "representation": "0xNN_uppercase_hexadecimal_byte",
+      "domain": ["AddressClassMaster", "AddressClassSlave"],
+      "canonical_source": "architecture/ebus_standard/12-address-table.md#ebus-256-byte-address-taxonomy-v1"
+    }
+  },
   "identity": {
     "members": ["Manufacturer", "DeviceID", "SerialNumber"],
     "match": "exact_normalized_triple",
@@ -55,6 +62,22 @@
       "immutable": [true],
       "registry_observation_generation": ["positive_integer"],
       "registry_proof_generation": ["positive_integer"]
+    },
+    "current_registry_state": {
+      "required_fields": [
+        "availability",
+        "address",
+        "identity_authority",
+        "registry_observation_generation",
+        "registry_proof_generation"
+      ],
+      "allowed_values": {
+        "availability": ["available", "retired", "conflict"],
+        "address": ["exact_address"],
+        "identity_authority": ["complete_normalized_triple_authority"],
+        "registry_observation_generation": ["positive_integer"],
+        "registry_proof_generation": ["positive_integer"]
+      }
     },
     "production": {
       "producer": "registry",
