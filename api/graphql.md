@@ -544,6 +544,80 @@ type CircuitConfig {
 }
 ```
 
+### Pending gateway #939/#940 implementation: Device Face Discovery Provenance
+
+This extension is pending gateway #939/#940 implementation and is not present
+in the current gateway schema. The future camel-case fields are exactly
+`Device.discoverySource` and `Device.verificationState`. They are independent
+label dimensions. Valid non-null values are the Cartesian product of the
+separately allowed source and state sets; no source label determines or
+restricts the state label.
+
+```graphql
+extend type Device {
+  discoverySource: String
+  verificationState: String
+}
+```
+
+Allowed `discoverySource` labels:
+
+| label |
+|---|
+| `static_seed` |
+| `passive_observed` |
+| `active_confirmed` |
+
+Allowed `verificationState` labels:
+
+| label |
+|---|
+| `candidate` |
+| `corroborated_pending` |
+| `identity_confirmed` |
+
+When a registry device has no address-slot record for the selected face, both
+fields resolve to GraphQL `null`. `null` is the absence representation, not a
+fourth source or verification label. A slotless entry remains visible through
+`devices` and `device(address:)`; the absence of provenance does not invalidate
+its canonical identity or address fields. This matches MCP, which omits both
+snake-case provenance members for the same slotless condition.
+
+Typical initial combinations are examples, not an exhaustive pairing rule:
+
+| `discoverySource` | `verificationState` |
+|---|---|
+| `static_seed` | `candidate` |
+| `passive_observed` | `corroborated_pending` |
+| `active_confirmed` | `identity_confirmed` |
+
+The accepted registry rule requires `discoverySource` to preserve the original
+native discovery source. Verification advancement MUST NOT rewrite
+`static_seed` or `passive_observed` to `active_confirmed`. Retained
+`static_seed` / `identity_confirmed` and `passive_observed` / `identity_confirmed`
+forms are valid. Invalid labels remain rejected.
+
+`devices` selects the face at each device's canonical primary `address`.
+`device(address:)`
+accepts a canonical address or an alias address and projects that queried
+canonical or alias face's discovery provenance. In either selection, the
+returned device identity remains canonical and `address` remains the canonical
+primary address. `device(address:)` returns `null` for an unknown address.
+
+```graphql
+type Query {
+  devices: [Device!]!
+  device(address: Int!): Device
+}
+```
+
+Topology alias grouping, qualified cross-address identity, native observation,
+and per-face discovery provenance are distinct records. Topology grouping does
+not prove identity; only the documented qualified identity rule may establish a
+cross-address identity. A discovery source or verification state does not prove
+a supported device, current qualification, stable cross-address identity, or
+live behavior.
+
 `vr71CircuitStartIndex` is intentionally absent from the canonical GraphQL contract. Circuit ownership is modeled explicitly on each `circuits[]` item via `managingDevice`, not through a global FM5 threshold.
 
 ### FM5 Interpretation Verdict

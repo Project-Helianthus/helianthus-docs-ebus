@@ -22,7 +22,7 @@ Procedure:
 - Deploy gateway; let it run ≥10 minutes during normal NETX3 polling activity
 - Query GraphQL `{ devices { address discoverySource verificationState } }`
 
-Expected: device with `address=0xF6 (246) discoverySource=passive_observed verificationState=corroborated`.
+Expected: device with `address=0xF6 (246) discoverySource=passive_observed verificationState=corroborated_pending`.
 
 Provenance: NETX3's master 0xF1 emits frames during normal operation; Phase A's M3+M4 derives companion (0xF1 → 0xF6) and inserts slot[0xF6] after second corroborating observation.
 
