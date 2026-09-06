@@ -84,13 +84,13 @@ The public schema-v2 [qualified-identity policy](../regulator-qualified-identity
 Procedure (no-current-witness negative): apply one complete positive-ACK observation for source `0xF1` in the deterministic acceptance fixture while no current registry-adjudicated exact-address qualified witness is available for `0xF1`.
 Expected: `slot[0xF6]` remains absent. This is the one-ACK negative; it has no claim about a separately qualified current witness.
 
-Procedure (current-qualified positive): apply one ACK plus a registry-adjudicated current exact-address qualified witness for `0xF1`; the ACK observation is complete and positive for source `0xF1`.
+Procedure (current-qualified positive): apply one ACK plus a registry-adjudicated current exact-address qualified witness for `0xF1`; the ACK observation is complete and positive for source `0xF1`. The state-changing `DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` MUST derive the companion and MUST atomically validate that witness with passive target companion-slot admission in one write-critical section.
 Expected: the companion `slot[0xF6]` MUST appear under the one-ACK alternative.
 
 Procedure (stale/invalid/unavailable negatives): repeat the current-qualified fixture with a frozen witness descriptor that is replaced, retired, conflicted, invalid, or unavailable at the atomic registry lookup/validation/use current result.
 Expected: `slot[0xF6]` remains absent in every negative fixture. A frozen descriptor is not itself the current result: no cached `current: true`, topology, `static_seed`, `passive_observed`, caller assertion, last-known-good data, per-face `0x07/0x04` reply without serial, or witness for another address may qualify.
 
-The registry-produced direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` witness must match the exact source address, authority, observation generation, and proof generation in the atomic registry lookup/validation/use current result. The independent two-ACK route remains independent of identity evidence: after the observation window (default 5s) plus a second corroborating positive ACK, `slot[0xF6]` MUST appear without a witness.
+The registry-produced direct complete normalized `(Manufacturer, DeviceID, SerialNumber)` witness must match the exact source address, authority, observation generation, and proof generation in the atomic registry lookup/validation/use current result. `DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` remains the read-locked operation for bounded non-registry derived-state commits and its callback MUST NOT call `DeviceRegistry` methods. No caller-supplied companion, lock upgrade, or unlock/relock check-then-use may separate successful validation from the committed passive slot. The independent two-ACK route remains independent of identity evidence: after the observation window (default 5s) plus a second corroborating positive ACK, `slot[0xF6]` MUST appear without a witness.
 <!-- qualified-identity-policy:atr07-acceptance:end same_source_positive_ack_plus_current_exact_address_witness -->
 
 ## HA Consumer Compatibility

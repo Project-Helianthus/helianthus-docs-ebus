@@ -530,11 +530,88 @@ def test_qualified_identity_policy_rejects_optional_one_ack_current_witness_comp
     path = tmp_path / relative
     policy = read_policy(tmp_path)
     block = checker.required_atr_normative_block(policy["consumer_witness"])
-    required = "the implementation MUST insert `slot[companion(ZZ)]` with passive provenance."
+    required = "then MUST commit `slot[companion(ZZ)]` with passive provenance."
     assert required in block
     text = path.read_text(encoding="utf-8")
     assert block in text
     path.write_text(text.replace(block, block.replace(required, required.replace("MUST", "MAY"))), encoding="utf-8")
+
+    with pytest.raises(checker.CheckError, match="missing required qualified-identity normative block"):
+        checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("required", "replacement"),
+    (
+        (
+            "`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` remains the read-locked operation",
+            "`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` is the state-changing operation",
+        ),
+        (
+            "`DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` is the state-changing operation",
+            "`DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` is a read-only operation",
+        ),
+        (
+            "MUST atomically validate the current exact-source direct complete normalized witness plus passive target companion-slot admission in one write-critical section",
+            "validates the witness before a separate companion-slot admission",
+        ),
+    ),
+    ids=("read-locked-witness-role", "state-changing-admission-role", "write-critical-atomicity"),
+)
+def test_qualified_identity_policy_rejects_registry_api_role_or_atomicity_drift(
+    tmp_path: pathlib.Path, required: str, replacement: str
+) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    policy = read_policy(tmp_path)
+    block = checker.required_registry_api_reference_block(policy["consumer_witness"])
+    path = tmp_path / "architecture/regulator-identity-enrichment.md"
+    text = path.read_text(encoding="utf-8")
+    assert block in text
+    assert required in block
+    path.write_text(text.replace(block, block.replace(required, replacement), 1), encoding="utf-8")
+
+    with pytest.raises(checker.CheckError, match="missing required qualified-identity registry API reference block"):
+        checker.validate_documents(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("required", "replacement"),
+    (
+        (
+            "`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` remains the read-locked operation",
+            "`DeviceRegistry.WithCurrentQualifiedIdentityWitness(address, callback)` may change registry state",
+        ),
+        (
+            "`DeviceRegistry.AdmitPassiveCompanionWithCurrentQualifiedIdentityWitness(source, observedAt)` is the state-changing operation",
+            "a caller-supplied companion is the state-changing operation",
+        ),
+        (
+            "in one write-critical section",
+            "after an unlock/relock check-then-use sequence",
+        ),
+    ),
+    ids=("read-locked-witness-role", "state-changing-admission-role", "write-critical-atomicity"),
+)
+@pytest.mark.parametrize(
+    "relative",
+    (
+        pathlib.Path("architecture/atr/01-address-table-model.md"),
+        pathlib.Path("architecture/atr/03-ack-nack-insertion-rules.md"),
+    ),
+)
+def test_qualified_identity_policy_rejects_atr_api_role_or_atomicity_drift(
+    tmp_path: pathlib.Path, relative: pathlib.Path, required: str, replacement: str
+) -> None:
+    checker = load_checker()
+    copy_contract_material(tmp_path)
+    policy = read_policy(tmp_path)
+    block = checker.required_atr_normative_block(policy["consumer_witness"])
+    path = tmp_path / relative
+    text = path.read_text(encoding="utf-8")
+    assert block in text
+    assert required in block
+    path.write_text(text.replace(block, block.replace(required, replacement), 1), encoding="utf-8")
 
     with pytest.raises(checker.CheckError, match="missing required qualified-identity normative block"):
         checker.validate_documents(tmp_path)
