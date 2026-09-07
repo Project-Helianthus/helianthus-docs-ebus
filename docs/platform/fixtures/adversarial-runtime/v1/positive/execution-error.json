@@ -40,7 +40,8 @@
         "minimum_live_epoch_delta": 2,
         "zones_required": true,
         "dhw_required": true,
-        "maximum_collisions_delta": 5
+        "maximum_collisions_delta": 5,
+        "maximum_recovery_ms": 90000
       },
       "action": {
         "events": [
@@ -109,7 +110,8 @@
         "minimum_live_epoch_delta": 2,
         "zones_required": true,
         "dhw_required": false,
-        "maximum_collisions_delta": 20
+        "maximum_collisions_delta": 20,
+        "maximum_recovery_ms": 120000
       },
       "action": {
         "events": [
@@ -239,7 +241,8 @@
         "minimum_live_epoch_delta": 2,
         "zones_required": true,
         "dhw_required": false,
-        "maximum_collisions_delta": 10
+        "maximum_collisions_delta": 10,
+        "maximum_recovery_ms": 90000
       },
       "action": {
         "events": [
@@ -362,7 +365,8 @@
         "minimum_live_epoch_delta": 2,
         "zones_required": true,
         "dhw_required": true,
-        "maximum_collisions_delta": 5
+        "maximum_collisions_delta": 5,
+        "maximum_recovery_ms": 120000
       },
       "action": {
         "events": [

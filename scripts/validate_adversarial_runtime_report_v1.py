@@ -141,6 +141,7 @@ def _validate_catalog(definition, errors):
         "duration_limit_ms": 180000,
         "trigger_kind": expected["trigger_kind"],
         "recovery_target": expected["recovery_target"],
+        "maximum_recovery_ms": expected["maximum_recovery_ms"],
         "minimum_live_epoch_delta": 2,
         "zones_required": expected["zones_required"],
         "dhw_required": expected["dhw_required"],

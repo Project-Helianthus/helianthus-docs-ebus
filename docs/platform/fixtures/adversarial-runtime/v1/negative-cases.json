@@ -410,6 +410,22 @@
           }
         }
       ]
+    },
+    {
+      "id": "forged_definition_maximum_recovery",
+      "expect": "semantic",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/scenarios/0/definition/maximum_recovery_ms",
+          "value": 120000
+        },
+        {
+          "op": "replace",
+          "path": "/scenarios/0/evaluation/recovery/maximum_ms",
+          "value": 120000
+        }
+      ]
     }
   ]
 }

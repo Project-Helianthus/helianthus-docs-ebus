@@ -201,6 +201,7 @@
         "duration_limit_ms",
         "trigger_kind",
         "recovery_target",
+        "maximum_recovery_ms",
         "minimum_live_epoch_delta",
         "zones_required",
         "dhw_required",
@@ -250,6 +251,12 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 20
+        },
+        "maximum_recovery_ms": {
+          "enum": [
+            90000,
+            120000
+          ]
         }
       }
     },

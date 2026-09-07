@@ -35,6 +35,11 @@ ADV-01 means the HA consumer restarts while the gateway stays up. It does not re
 
 The fixed event orders are: ADV-01 `restart_requested`, `consumer_stopped`, `consumer_started`, `ha_consumer_synchronized`; ADV-02 `reset_requested`, `reset_started`, `transport_unavailable`, `transport_available`, `gateway_live_ready`; ADV-03 `partition_requested`, `partition_active`, `partition_cleared`, `gateway_live_ready`; ADV-04 `isolated_cache_staged`, `runtime_started`, `gateway_live_ready`. Events are only `fixture` or `observer` sourced.
 
+Each definition serializes the canonical duration, maximum recovery, minimum
+live-epoch delta, zone/DHW requirements, and maximum collision delta. Evaluation
+repeats those values only as recomputable evidence; it cannot redefine a scenario
+threshold.
+
 A passing run keeps the full 180000 ms observation window, with scheduling error at most 1000 ms. Duration and snapshot timing use the scenario aggregate bound. Recovery uses the sum of its anchor-event and recovery-event bounds, so it passes only if `observed_ms + anchor_error_bound_ms + recovery_event_error_bound_ms <= maximum_ms`; each endpoint bound is 0..1000 ms. Baseline/end snapshots must use one `counter_epoch`; a changed epoch or negative delta is an execution error. The fixed snapshots contain counter epoch, timestamp/offset, documented startup FSM phase (`BOOT_INIT`, `CACHE_LOADED_STALE`, `LIVE_WARMUP`, `LIVE_READY`, or `DEGRADED`), live epoch, collision total, zone count, and DHW presence. The validator recomputes duration, action, recovery, live epoch, zones, DHW, collisions, outcome, summary, and verdict.
 
 For an evaluated result, baseline capture is bound to scenario start and end

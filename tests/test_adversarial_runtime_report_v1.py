@@ -202,6 +202,14 @@ def test_startup_phase_is_the_documented_closed_fsm_enum(tmp_path):
     candidate = load(POSITIVE)
     candidate["scenarios"][3]["metrics"]["baseline"]["semantic_startup_current_phase"] = "VENDOR_MAGIC"
     assert "schema" in validate_candidate(tmp_path, candidate)
+
+
+def test_definition_maximum_recovery_is_canonical_even_if_evaluation_is_forged(tmp_path):
+    candidate = load(POSITIVE)
+    scenario = candidate["scenarios"][0]
+    scenario["definition"]["maximum_recovery_ms"] = 120000
+    scenario["evaluation"]["recovery"]["maximum_ms"] = 120000
+    assert "scenario_catalog" in validate_candidate(tmp_path, candidate)
     candidate = load(POSITIVE)
     candidate["scenarios"][0]["metrics"]["end"].update(offset_ms=179999, captured_at="2026-09-07T12:02:59.999Z")
     assert "snapshot_window" in validate_candidate(tmp_path, candidate)
