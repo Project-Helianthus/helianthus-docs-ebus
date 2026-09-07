@@ -463,12 +463,14 @@ def test_result_variant_shapes_and_producer_subject_pairings_fail_closed(tmp_pat
     candidate["scenarios"][0]["action"]["events"][0]["source"] = "observer"
     assert "schema" in validate_candidate(tmp_path, candidate)
 
+    gateway_path = tmp_path / "gateway-report.json"
+    gateway_path.write_bytes(POSITIVE.read_bytes())
     ha_offline = load(POSITIVE)
     producer = ha_offline["provenance"]["producer"]
-    producer.update(repository="Project-Helianthus/helianthus-ha-integration", component="ha-adversarial-harness", build_kind="ha-harness", input_gateway_report_sha256="3" * 64)
+    producer.update(repository="Project-Helianthus/helianthus-ha-integration", component="ha-adversarial-harness", build_kind="ha-harness", input_gateway_report_sha256=hashlib.sha256(gateway_path.read_bytes()).hexdigest())
     path = tmp_path / "ha-offline.json"
     path.write_text(json.dumps(ha_offline), encoding="utf-8")
-    validate_path(path)
+    validate_path(path, gateway_path)
     ha_offline["provenance"]["producer"]["input_gateway_report_sha256"] = None
     assert "semantic: producer_subject_pairing" in validate_candidate(tmp_path, ha_offline)
 
@@ -514,16 +516,18 @@ def test_offline_fixture_case_selection_projection_and_ha_input_digest_are_fail_
     with pytest.raises(ValidationError, match="fixture event_projection"):
         validator._validate_fixture_projection(report, case, driver)
 
+    gateway_path = tmp_path / "gateway-report.json"
+    gateway_path.write_bytes(POSITIVE.read_bytes())
     report = load(POSITIVE)
     report["provenance"]["producer"].update(
         repository="Project-Helianthus/helianthus-ha-integration",
         component="ha-adversarial-harness",
         build_kind="ha-harness",
-        input_gateway_report_sha256="3" * 64,
+        input_gateway_report_sha256=hashlib.sha256(gateway_path.read_bytes()).hexdigest(),
     )
     path = tmp_path / "ha-offline.json"
     path.write_text(json.dumps(report), encoding="utf-8")
-    validate_path(path)
+    validate_path(path, gateway_path)
     report["provenance"]["producer"]["input_gateway_report_sha256"] = None
     assert "semantic: producer_subject_pairing" in validate_candidate(tmp_path, report)
 
@@ -535,3 +539,117 @@ def test_v1_schema_rejects_live_mode_and_gateway_binary_subject(tmp_path):
     report = load(POSITIVE)
     report["provenance"]["subject"]["artifact_kind"] = "gateway-binary"
     assert "schema" in validate_candidate(tmp_path, report)
+
+
+def test_ha_input_gateway_report_is_byte_bound_and_gateway_produced(tmp_path):
+    gateway_path = tmp_path / "gateway.json"
+    gateway_path.write_bytes(POSITIVE.read_bytes())
+    report = load(POSITIVE)
+    report["provenance"]["producer"].update(
+        repository="Project-Helianthus/helianthus-ha-integration",
+        component="ha-adversarial-harness",
+        build_kind="ha-harness",
+        input_gateway_report_sha256=hashlib.sha256(gateway_path.read_bytes()).hexdigest(),
+    )
+    ha_path = tmp_path / "ha.json"
+    ha_path.write_text(json.dumps(report), encoding="utf-8")
+    validate_path(ha_path, gateway_path)
+    result = subprocess.run([sys.executable, str(VALIDATOR), "--input-gateway-report", str(gateway_path), str(ha_path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 0, result.stderr
+    with pytest.raises(ValidationError, match="gateway input required"):
+        validate_path(ha_path)
+    gateway_path.write_bytes(b"not a gateway report")
+    with pytest.raises(ValidationError, match="gateway input digest mismatch"):
+        validate_path(ha_path, gateway_path)
+    with pytest.raises(ValidationError, match="gateway input is only valid"):
+        validate_path(POSITIVE, POSITIVE)
+
+
+def test_driver_run_id_and_per_artifact_size_bounds_are_fail_closed(tmp_path, monkeypatch):
+    import shutil
+
+    fixture_root = tmp_path / "fixture-set"
+    shutil.copytree(FIXTURE_MANIFEST.parent, fixture_root)
+    manifest_path = fixture_root / "fixture-input-manifest.json"
+    manifest = load(manifest_path)
+    driver_path = fixture_root / "inputs/offline-all-pass.json"
+    driver = load(driver_path)
+    driver["run_id"] = "00000000-0000-4000-8000-000000000099"
+    driver_path.write_text(json.dumps(driver), encoding="utf-8")
+    for artifact in manifest["artifacts"]:
+        raw = (fixture_root / artifact["path"]).read_bytes()
+        artifact["size_bytes"] = len(raw)
+        artifact["sha256"] = hashlib.sha256(raw).hexdigest()
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    report = load(POSITIVE)
+    digest = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    report["provenance"]["fixture_set_sha256"] = digest
+    report["provenance"]["subject"]["artifact_sha256"] = digest
+    monkeypatch.setattr(validator, "FIXTURE_MANIFEST", manifest_path)
+    assert "fixture run_id_projection" in validate_candidate(tmp_path, report)
+
+    duplicate = load(fixture_root / "inputs/evaluated-fail.json")
+    duplicate["run_id"] = driver["run_id"]
+    (fixture_root / "inputs/evaluated-fail.json").write_text(json.dumps(duplicate), encoding="utf-8")
+    for artifact in manifest["artifacts"]:
+        raw = (fixture_root / artifact["path"]).read_bytes()
+        artifact["size_bytes"] = len(raw)
+        artifact["sha256"] = hashlib.sha256(raw).hexdigest()
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    digest = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    report["provenance"]["fixture_set_sha256"] = digest
+    report["provenance"]["subject"]["artifact_sha256"] = digest
+    assert "fixture manifest_case" in validate_candidate(tmp_path, report)
+
+
+def test_schema_errors_do_not_disclose_checkout_paths(tmp_path):
+    report = load(POSITIVE)
+    report["execution"]["mode"] = "operator-live"
+    path = tmp_path / "invalid.json"
+    path.write_text(json.dumps(report), encoding="utf-8")
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 1
+    assert "schema validation failed" in result.stderr
+    assert str(ROOT) not in result.stderr
+    with pytest.raises(ValidationError, match="schema validation failed"):
+        validator.validate_schema_bytes(b"{}", validator.FIXTURE_SCHEMA)
+
+
+def test_manifest_enforces_max_bytes_for_driver_and_cache_artifacts(tmp_path, monkeypatch):
+    import shutil
+
+    def refresh(root, manifest):
+        for artifact in manifest["artifacts"]:
+            raw = (root / artifact["path"]).read_bytes()
+            artifact["size_bytes"] = len(raw)
+            artifact["sha256"] = hashlib.sha256(raw).hexdigest()
+        path = root / "fixture-input-manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        report = load(POSITIVE)
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        report["provenance"]["fixture_set_sha256"] = digest
+        report["provenance"]["subject"]["artifact_sha256"] = digest
+        return path, report
+
+    root = tmp_path / "maximum"
+    shutil.copytree(FIXTURE_MANIFEST.parent, root)
+    manifest = load(root / "fixture-input-manifest.json")
+    cache = root / "inputs/offline-all-pass-adv04-cache.bin"
+    cache.write_bytes(b"x" * validator.MAX_BYTES)
+    manifest_path, report = refresh(root, manifest)
+    monkeypatch.setattr(validator, "FIXTURE_MANIFEST", manifest_path)
+    path = tmp_path / "maximum-cache.json"
+    path.write_text(json.dumps(report), encoding="utf-8")
+    validate_path(path)
+
+    for role, relative in (("cache", "inputs/offline-all-pass-adv04-cache.bin"), ("driver", "inputs/offline-all-pass.json")):
+        root = tmp_path / f"oversize-{role}"
+        shutil.copytree(FIXTURE_MANIFEST.parent, root)
+        target = root / relative
+        if role == "driver":
+            target.write_bytes(target.read_bytes() + b" " * (validator.MAX_BYTES + 1 - target.stat().st_size))
+        else:
+            target.write_bytes(b"x" * (validator.MAX_BYTES + 1))
+        manifest_path, report = refresh(root, load(root / "fixture-input-manifest.json"))
+        monkeypatch.setattr(validator, "FIXTURE_MANIFEST", manifest_path)
+        assert "fixture manifest_artifact" in validate_candidate(tmp_path, report)

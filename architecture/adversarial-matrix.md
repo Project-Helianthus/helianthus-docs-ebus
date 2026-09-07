@@ -22,9 +22,12 @@ either gateway `internal/adversarial` / `go-test-binary`, or HA integration
 `ha-adversarial-harness` / `ha-harness`, with its own commit and build digest.
 Every action event is fixture sourced. Gateway production has a null input-report
 digest; HA production requires the SHA-256 of the exact gateway-report bytes it
-consumed. `fixture_set_sha256` equals the fixture subject digest, and required
-`fixture_case_id` selects one deterministic input driver. All other pairings are
-rejected.
+consumed. HA validation receives that report through `--input-gateway-report`,
+hashes its raw bytes before parsing, then requires a valid gateway-produced
+offline report with the same subject, fixture-set digest, and case. Gateway
+reports reject that option. `fixture_set_sha256` equals the fixture subject
+digest, and required `fixture_case_id` selects one deterministic input driver.
+All other pairings are rejected.
 
 ## Canonical suite
 
@@ -130,14 +133,18 @@ is a closed, content-addressed set of deterministic public inputs. Its ordered
 artifact list records each driver/cache path, role, exact byte size, and SHA-256;
 its ordered cases select one driver and its declared resources. The validator
 rejects path escapes, symlinks, changed sizes or bytes, unknown cases, driver
-schema drift, resource mismatches, and report values that are not the selected
-driver's deterministic projection. ADV-04 cache files are small synthetic public
-payloads used only in the isolated fixture sandbox. They are never production
-caches or live evidence.
+schema drift, resource mismatches, duplicate case run IDs, and report values
+that are not the selected driver's deterministic projection. A driver carries
+the canonical UUIDv4 `run_id`, which must match the report. Every input is at
+most 1 MiB and the complete referenced set is at most 4 MiB. ADV-04 cache files
+are small synthetic public payloads used only in the isolated fixture sandbox.
+They are never production caches or live evidence.
 
 ```sh
 python3 scripts/validate_adversarial_runtime_report_v1.py \
   docs/platform/fixtures/adversarial-runtime/v1/positive/offline-all-pass.json
+python3 scripts/validate_adversarial_runtime_report_v1.py \
+  --input-gateway-report gateway-report.json ha-produced-report.json
 python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py
 ```
 

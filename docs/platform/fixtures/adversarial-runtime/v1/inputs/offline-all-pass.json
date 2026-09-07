@@ -6,6 +6,7 @@
     "version": 1
   },
   "fixture_case_id": "offline-all-pass",
+  "run_id": "00000000-0000-4000-8000-000000000001",
   "scenarios": [
     {
       "scenario_id": "ADV-01",

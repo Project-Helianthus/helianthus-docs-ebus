@@ -9,6 +9,7 @@
     "schema_version",
     "suite",
     "fixture_case_id",
+    "run_id",
     "scenarios"
   ],
   "properties": {
@@ -301,6 +302,11 @@
           }
         }
       }
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "maxLength": 36
     }
   }
 }

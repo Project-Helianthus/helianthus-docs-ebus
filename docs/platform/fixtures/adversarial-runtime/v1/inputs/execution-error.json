@@ -6,6 +6,7 @@
     "version": 1
   },
   "fixture_case_id": "execution-error",
+  "run_id": "00000000-0000-4000-8000-000000000003",
   "scenarios": [
     {
       "scenario_id": "ADV-01",

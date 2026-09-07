@@ -17,7 +17,7 @@
       "commit": "ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532",
       "source_tree": "clean",
       "artifact_kind": "gateway-fixture-set",
-      "artifact_sha256": "4a8a2ce3000cb3d6c88ab290180bb71ed3392f0aff098b7576012a44f0bc26ee"
+      "artifact_sha256": "d7fbe89d068b1b5c0d41fe51176d9e9263a441ee0ed752c9e8cae794f5a8346a"
     },
     "producer": {
       "repository": "Project-Helianthus/helianthus-ebusgateway",
@@ -27,7 +27,7 @@
       "build_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
       "input_gateway_report_sha256": null
     },
-    "fixture_set_sha256": "4a8a2ce3000cb3d6c88ab290180bb71ed3392f0aff098b7576012a44f0bc26ee",
+    "fixture_set_sha256": "d7fbe89d068b1b5c0d41fe51176d9e9263a441ee0ed752c9e8cae794f5a8346a",
     "fixture_case_id": "evaluated-fail"
   },
   "scenarios": [

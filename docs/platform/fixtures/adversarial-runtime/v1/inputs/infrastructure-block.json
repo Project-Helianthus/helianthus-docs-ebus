@@ -6,6 +6,7 @@
     "version": 1
   },
   "fixture_case_id": "infrastructure-block",
+  "run_id": "00000000-0000-4000-8000-000000000004",
   "scenarios": [
     {
       "scenario_id": "ADV-01",
