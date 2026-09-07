@@ -158,6 +158,28 @@ def test_sdl_rejects_deprecated_required_enum_state(tmp_path: Path) -> None:
     assert validate_sdl(mutated) == ["sdl_enum_deprecated"]
 
 
+def test_sdl_rejects_undeclared_extra_query_root_field(tmp_path: Path) -> None:
+    mutated = tmp_path / "extra-query-field.graphql"
+    mutated.write_text(
+        SDL.read_text(encoding="utf-8").replace(
+            "  vaillant_regulator_capability: VaillantRegulatorCapability!\n}",
+            "  vaillant_regulator_capability: VaillantRegulatorCapability!\n  extra_root: Boolean!\n}",
+        ),
+        encoding="utf-8",
+    )
+    assert validate_sdl(mutated) == ["sdl_query_fields"]
+
+
+def test_sdl_rejects_configured_mutation_operation(tmp_path: Path) -> None:
+    mutated = tmp_path / "mutation-operation.graphql"
+    mutated.write_text(
+        SDL.read_text(encoding="utf-8")
+        + "\ntype Mutation { undeclared: Boolean! }\nschema { query: Query mutation: Mutation }\n",
+        encoding="utf-8",
+    )
+    assert validate_sdl(mutated) == ["sdl_operations"]
+
+
 def test_validator_cli_is_deterministic() -> None:
     result = subprocess.run([sys.executable, "scripts/validate_vaillant_regulator_capability_api_v1.py"], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
