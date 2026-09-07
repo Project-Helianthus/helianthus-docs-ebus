@@ -338,11 +338,18 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
   - `ebus.v1.adapter_info.get`
   - `ebus.v1.registry.devices.list`
   - `ebus.v1.registry.devices.get`
+    - **Conclusion: Proven.**
     - JSON response items carry `discovery_source` and
       `verification_state` fields (P3.5). `discovery_source` is one of
       `passive_observed | static_seed | active_confirmed`;
       `verification_state` is one of
       `candidate | corroborated_pending | identity_confirmed`.
+      This current MCP provenance contract is implemented at reviewed gateway
+      HEAD `77b898633672e123a05d39a3cf46398cce2d72ab`. The reviewed and merge
+      tree is identical at `bb8f59fed4be68104d8ab206f55f7f32ea33e031`; the
+      accepted squash merge on gateway `main` is
+      `f5cd9c51c60bdf422e8fc1b5690fbde52a393be3`; and the accepted registry
+      dependency is `e24532a50caa00c113751b98b88239e045d731e8`.
       Both are omitted when the registry has no slot record for the
       address. For `devices.list` the labels reflect the entry's
       canonical primary address; for `devices.get(address=X)` the labels
