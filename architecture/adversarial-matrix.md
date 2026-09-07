@@ -2,7 +2,15 @@
 
 This is the immutable public `adversarial-runtime-report-v1` contract for gateway #198 and HA integration #105. It is evidence only: it neither executes a trigger nor authorizes a live action.
 
-Gateway main at `ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532` has definitions, report counting, JSON writing, and unit tests. It has no trigger, observer, baseline/end capture, recovery measurement, or threshold executor. It is therefore **definition/serialization-only** until gateway #198 is accepted. The fixtures here are offline contract evidence, not HA, adapter, network, or hardware evidence.
+**Proven (exact repository source inspection):** gateway main at
+`ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532` contains only scenario
+definitions, report counting, JSON writing, and unit tests under
+[`internal/adversarial`](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532/internal/adversarial).
+That exact tree has no trigger, observer, baseline/end capture, recovery
+measurement, or threshold executor. The gateway is therefore
+**definition/serialization-only** until gateway #198 is accepted. The fixtures
+here are offline contract evidence, not HA, adapter, network, or hardware
+evidence.
 
 ## Exact artifact
 
