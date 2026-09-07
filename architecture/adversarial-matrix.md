@@ -139,7 +139,9 @@ that are not the selected driver's deterministic projection. A driver carries
 the canonical UUIDv4 `run_id`, which must match the report. Every input is at
 most 1 MiB and the complete referenced set is at most 4 MiB. ADV-04 cache files
 are small synthetic public payloads used only in the isolated fixture sandbox.
-They are never production caches or live evidence.
+They are never production caches or live evidence. Repository attributes pin
+fixture JSON to LF and treat fixture `.bin` payloads as binary so checkout
+configuration cannot rewrite content-addressed bytes.
 
 ```sh
 python3 scripts/validate_adversarial_runtime_report_v1.py \

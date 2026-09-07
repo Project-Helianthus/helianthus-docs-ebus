@@ -86,6 +86,25 @@ def test_canonical_offline_report_passes_schema_and_recomputed_semantics():
     assert load(FIXTURE_MANIFEST)["purpose"] == "deterministic synthetic offline executor inputs; not live evidence"
 
 
+def test_content_addressed_fixture_checkout_bytes_are_platform_stable():
+    paths = sorted((ROOT / "docs/platform/fixtures/adversarial-runtime/v1").rglob("*"))
+    paths = [str(path.relative_to(ROOT)) for path in paths if path.suffix in {".json", ".bin"}]
+    result = subprocess.run(
+        ["git", "check-attr", "-z", "text", "eol", "--", *paths],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+    )
+    fields = result.stdout.decode("utf-8").split("\0")
+    attributes = {(fields[index], fields[index + 1]): fields[index + 2] for index in range(0, len(fields) - 1, 3)}
+    for path in paths:
+        if path.endswith(".json"):
+            assert attributes[(path, "text")] == "set"
+            assert attributes[(path, "eol")] == "lf"
+        else:
+            assert attributes[(path, "text")] == "unset"
+
+
 def test_valid_result_variants_and_mixed_evaluated_failure_recompute_summary():
     for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK):
         validate_path(path)
