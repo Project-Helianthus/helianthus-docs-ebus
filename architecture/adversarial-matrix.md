@@ -42,6 +42,10 @@ threshold.
 
 A passing run keeps the full 180000 ms observation window, with scheduling error at most 1000 ms. Duration and snapshot timing use the scenario aggregate bound. Recovery uses the sum of its anchor-event and recovery-event bounds, so it passes only if `observed_ms + anchor_error_bound_ms + recovery_event_error_bound_ms <= maximum_ms`; each endpoint bound is 0..1000 ms. Baseline/end snapshots must use one `counter_epoch`; a changed epoch or negative delta is an execution error. The fixed snapshots contain counter epoch, timestamp/offset, documented startup FSM phase (`BOOT_INIT`, `CACHE_LOADED_STALE`, `LIVE_WARMUP`, `LIVE_READY`, or `DEGRADED`), live epoch, collision total, zone count, and DHW presence. The validator recomputes duration, action, recovery, live epoch, zones, DHW, collisions, outcome, summary, and verdict.
 
+Startup phase is also scenario-bound: ADV-01, ADV-02, and ADV-03 require
+`LIVE_READY` at both snapshots. ADV-04 requires `BOOT_INIT` at baseline and
+`LIVE_READY` at end, proving the isolated boot path begins before cache load.
+
 For an evaluated result, baseline capture is bound to scenario start and end
 capture to scenario end, each within the declared aggregate timing uncertainty.
 This prevents a short favorable tail from standing in for the full observation

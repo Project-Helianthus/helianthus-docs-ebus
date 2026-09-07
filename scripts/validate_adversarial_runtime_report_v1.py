@@ -28,6 +28,8 @@ CATALOG = {
         "zones_required": True,
         "dhw_required": True,
         "maximum_collisions_delta": 5,
+        "baseline_phase": "LIVE_READY",
+        "end_phase": "LIVE_READY",
         "events": ["restart_requested", "consumer_stopped", "consumer_started", "ha_consumer_synchronized"],
         "anchor": "consumer_stopped",
         "recovery_event": "ha_consumer_synchronized",
@@ -40,6 +42,8 @@ CATALOG = {
         "zones_required": True,
         "dhw_required": False,
         "maximum_collisions_delta": 20,
+        "baseline_phase": "LIVE_READY",
+        "end_phase": "LIVE_READY",
         "events": ["reset_requested", "reset_started", "transport_unavailable", "transport_available", "gateway_live_ready"],
         "anchor": "reset_started",
         "recovery_event": "gateway_live_ready",
@@ -52,6 +56,8 @@ CATALOG = {
         "zones_required": True,
         "dhw_required": False,
         "maximum_collisions_delta": 10,
+        "baseline_phase": "LIVE_READY",
+        "end_phase": "LIVE_READY",
         "events": ["partition_requested", "partition_active", "partition_cleared", "gateway_live_ready"],
         "anchor": "partition_cleared",
         "recovery_event": "gateway_live_ready",
@@ -64,6 +70,8 @@ CATALOG = {
         "zones_required": True,
         "dhw_required": True,
         "maximum_collisions_delta": 5,
+        "baseline_phase": "BOOT_INIT",
+        "end_phase": "LIVE_READY",
         "events": ["isolated_cache_staged", "runtime_started", "gateway_live_ready"],
         "anchor": "runtime_started",
         "recovery_event": "gateway_live_ready",
@@ -92,6 +100,12 @@ def _non_finite_number(value):
     raise ValidationError(f"non-finite JSON number: {value}")
 
 
+def _bounded_integer(value):
+    if len(value.lstrip("-")) > 16:
+        raise ValidationError("JSON integer token exceeds 16 digits")
+    return int(value)
+
+
 def load_report(path: Path):
     raw = path.read_bytes()
     if len(raw) > MAX_BYTES:
@@ -104,11 +118,14 @@ def load_report(path: Path):
         return json.loads(
             text,
             object_pairs_hook=_no_duplicates,
+            parse_int=_bounded_integer,
             parse_float=_non_integer_number,
             parse_constant=_non_finite_number,
         )
-    except json.JSONDecodeError as error:
-        raise ValidationError(f"malformed JSON: {error.msg}") from error
+    except ValidationError:
+        raise
+    except (json.JSONDecodeError, ValueError, RecursionError) as error:
+        raise ValidationError(f"malformed JSON: {error}") from error
 
 
 def _stamp(value):
@@ -219,6 +236,8 @@ def _validate_evaluated(scenario, expected, errors):
                 _error(errors, "partition_duration")
 
     baseline, finish, delta = metrics["baseline"], metrics["end"], metrics["delta"]
+    if baseline["semantic_startup_current_phase"] != expected["baseline_phase"] or finish["semantic_startup_current_phase"] != expected["end_phase"]:
+        _error(errors, "startup_phase")
     if baseline["counter_epoch"] != finish["counter_epoch"]:
         _error(errors, "counter_epoch")
     for snap in (baseline, finish):

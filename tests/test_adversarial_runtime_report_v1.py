@@ -204,6 +204,33 @@ def test_startup_phase_is_the_documented_closed_fsm_enum(tmp_path):
     assert "schema" in validate_candidate(tmp_path, candidate)
 
 
+def test_startup_phase_is_bound_to_each_canonical_scenario(tmp_path):
+    candidate = load(POSITIVE)
+    candidate["scenarios"][3]["metrics"]["baseline"]["semantic_startup_current_phase"] = "LIVE_READY"
+    assert "startup_phase" in validate_candidate(tmp_path, candidate)
+    candidate = load(POSITIVE)
+    candidate["scenarios"][0]["metrics"]["end"]["semantic_startup_current_phase"] = "DEGRADED"
+    assert "startup_phase" in validate_candidate(tmp_path, candidate)
+
+
+def test_cli_normalizes_integer_digit_limit_value_error(tmp_path):
+    path = tmp_path / "too-many-digits.json"
+    path.write_text('{"value":' + ('9' * 5000) + '}', encoding="utf-8")
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 1
+    assert "adversarial_runtime_report_v1_invalid" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_cli_normalizes_deep_nesting_recursion_error(tmp_path):
+    path = tmp_path / "deep-nesting.json"
+    path.write_text("[" * 2000 + "0" + "]" * 2000, encoding="utf-8")
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 1
+    assert "adversarial_runtime_report_v1_invalid" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
 def test_definition_maximum_recovery_is_canonical_even_if_evaluation_is_forged(tmp_path):
     candidate = load(POSITIVE)
     scenario = candidate["scenarios"][0]
