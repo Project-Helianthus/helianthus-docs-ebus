@@ -13,6 +13,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "docs/platform/schemas/adversarial-runtime-report-v1.schema.json"
+SCHEMA_ID = "https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-report-v1.schema.json"
+SUITE_ID = "helianthus.adversarial.ADV01-04"
 FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
 MAX_BYTES = 1024 * 1024
 TS_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -205,6 +207,8 @@ def _validate_evaluated(scenario, expected, errors):
             _error(errors, "wall_monotonic_binding")
     if baseline["offset_ms"] > finish["offset_ms"] or finish["offset_ms"] > timing["elapsed_ms"]:
         _error(errors, "snapshot_order")
+    if abs(baseline["offset_ms"]) > timing["error_bound_ms"] or abs(finish["offset_ms"] - timing["elapsed_ms"]) > timing["error_bound_ms"]:
+        _error(errors, "snapshot_window")
     live_delta = finish["semantic_live_epoch"] - baseline["semantic_live_epoch"]
     collision_delta = finish["semantic_bus_collisions_total"] - baseline["semantic_bus_collisions_total"]
     if live_delta < 0 or collision_delta < 0:
@@ -255,6 +259,8 @@ def validate_semantics(report):
     errors = set()
     try:
         execution = report["execution"]
+        if report["$schema"] != SCHEMA_ID or report["schema_version"] != 1 or report["suite"] != {"id": SUITE_ID, "version": 1}:
+            _error(errors, "contract_identity")
         if _stamp(execution["completed_at"]) < _stamp(execution["started_at"]):
             _error(errors, "execution_order")
         provenance = report["provenance"]
@@ -358,15 +364,15 @@ def validate_semantics(report):
     return sorted(errors)
 
 
-def validate_schema(path: Path, schema: Path):
-    result = subprocess.run(["jv", str(schema), str(path)], text=True, capture_output=True, check=False)
+def validate_schema(path: Path):
+    result = subprocess.run(["jv", str(SCHEMA), str(path)], text=True, capture_output=True, check=False)
     if result.returncode:
         raise ValidationError("schema: " + (result.stdout + result.stderr).strip())
 
 
-def validate_path(path: Path, schema: Path = SCHEMA):
+def validate_path(path: Path):
     report = load_report(path)
-    validate_schema(path, schema)
+    validate_schema(path)
     errors = validate_semantics(report)
     if errors:
         raise ValidationError("semantic: " + ",".join(errors))
@@ -375,10 +381,9 @@ def validate_path(path: Path, schema: Path = SCHEMA):
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("report", type=Path)
-    parser.add_argument("--schema", type=Path, default=SCHEMA)
     args = parser.parse_args(argv)
     try:
-        validate_path(args.report, args.schema)
+        validate_path(args.report)
     except ValidationError as error:
         print(f"adversarial_runtime_report_v1_invalid: {error}", file=sys.stderr)
         return 1

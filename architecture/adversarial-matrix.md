@@ -37,6 +37,13 @@ The fixed event orders are: ADV-01 `restart_requested`, `consumer_stopped`, `con
 
 A passing run keeps the full 180000 ms observation window, with scheduling error at most 1000 ms. Recovery passes only if `observed_ms + error_bound_ms <= maximum_ms`; bounds are 0..1000 ms. Baseline/end snapshots must use one `counter_epoch`; a changed epoch or negative delta is an execution error. The fixed snapshots contain counter epoch, timestamp/offset, phase, live epoch, collision total, zone count, and DHW presence. The validator recomputes duration, action, recovery, live epoch, zones, DHW, collisions, outcome, summary, and verdict.
 
+For an evaluated result, baseline capture is bound to scenario start and end
+capture to scenario end, each within the declared aggregate timing uncertainty.
+This prevents a short favorable tail from standing in for the full observation
+window. The validator always uses the canonical schema bundled with this contract:
+there is no public schema override, and it independently checks the exact schema
+URI, schema version 1, suite ID, and suite version before gate semantics.
+
 The executor is serial. The canonical report binds ADV-01 to 12:00–12:03,
 ADV-02 to 12:03–12:06, ADV-03 to 12:06–12:09, and ADV-04 to 12:09–12:12
 UTC. The first scenario starts at the run anchor, each next scenario starts at

@@ -18,7 +18,7 @@ INFRASTRUCTURE_BLOCK = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/pos
 NEGATIVE = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/negative-cases.json"
 FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
 sys.path.insert(0, str(ROOT / "scripts"))
-from validate_adversarial_runtime_report_v1 import ValidationError, load_report, validate_path  # noqa: E402
+from validate_adversarial_runtime_report_v1 import ValidationError, load_report, validate_path, validate_semantics  # noqa: E402
 
 
 def load(path):
@@ -157,6 +157,28 @@ def test_action_sequences_are_bounded_prefixes_and_block_is_pre_action_only(tmp_
     candidate = load(INFRASTRUCTURE_BLOCK)
     candidate["scenarios"][0]["errors"] = [{"phase": "observer", "code": "observer_failed"}]
     assert "schema" in validate_candidate(tmp_path, candidate)
+
+
+def test_evaluated_snapshots_cover_full_window_with_declared_uncertainty(tmp_path):
+    candidate = load(POSITIVE)
+    candidate["scenarios"][0]["metrics"]["baseline"].update(offset_ms=1, captured_at="2026-09-07T12:00:00.001Z")
+    assert "snapshot_window" in validate_candidate(tmp_path, candidate)
+    candidate = load(POSITIVE)
+    candidate["scenarios"][0]["metrics"]["end"].update(offset_ms=179999, captured_at="2026-09-07T12:02:59.999Z")
+    assert "snapshot_window" in validate_candidate(tmp_path, candidate)
+
+
+def test_canonical_identity_cannot_be_bypassed_with_permissive_schema(tmp_path):
+    candidate = load(POSITIVE)
+    candidate["$schema"] = "https://example.invalid/permissive.json"
+    candidate["schema_version"] = 2
+    assert "contract_identity" in validate_semantics(candidate)
+    report = tmp_path / "version-2.json"
+    permissive = tmp_path / "permissive.json"
+    report.write_text(json.dumps(candidate), encoding="utf-8")
+    permissive.write_text('{"type":"object"}', encoding="utf-8")
+    result = subprocess.run([sys.executable, str(VALIDATOR), "--schema", str(permissive), str(report)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode != 0
 
 
 def test_result_variant_shapes_and_producer_subject_pairings_fail_closed(tmp_path):
