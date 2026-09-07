@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from graphql import build_schema
+from graphql import build_schema, parse
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "docs/platform/manifests/vaillant-regulator-capability-api-v1.json"
@@ -32,6 +32,10 @@ EXPECTED_CONSUMER_CONSTRAINT_KEYS = {
     "forbidden_inference_inputs",
     "absence_grace_part_of_field",
     "none_and_unknown_need_settled_removal_signal",
+}
+EXPECTED_SDL_DEFINITIONS = {
+    ("object_type_definition", "Query"),
+    ("enum_type_definition", "VaillantRegulatorCapability"),
 }
 EXPECTED_CATALOG_STATES = {
     "NONE",
@@ -189,13 +193,20 @@ def validate(manifest: dict, cases: dict) -> list[str]:
 
 
 def validate_sdl(sdl_path: Path = SDL) -> list[str]:
-    schema = build_schema(sdl_path.read_text(encoding="utf-8"))
+    sdl = sdl_path.read_text(encoding="utf-8")
+    schema = build_schema(sdl)
     query = schema.query_type
     enum = schema.get_type("VaillantRegulatorCapability")
     if query is None or query.name != "Query":
         return ["sdl_query_root"]
     if schema.mutation_type is not None or schema.subscription_type is not None:
         return ["sdl_operations"]
+    definitions = {
+        (definition.kind, getattr(getattr(definition, "name", None), "value", None))
+        for definition in parse(sdl).definitions
+    }
+    if len(definitions) != len(EXPECTED_SDL_DEFINITIONS) or definitions != EXPECTED_SDL_DEFINITIONS:
+        return ["sdl_definitions"]
     if enum is None:
         return ["sdl_missing_type"]
     if set(query.fields) != {"vaillant_regulator_capability"}:

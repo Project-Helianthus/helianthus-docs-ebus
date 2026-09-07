@@ -218,6 +218,18 @@ def test_sdl_rejects_configured_mutation_operation(tmp_path: Path) -> None:
     assert validate_sdl(mutated) == ["sdl_operations"]
 
 
+def test_sdl_rejects_undeclared_type_directive_and_extension(tmp_path: Path) -> None:
+    mutations = (
+        "\ntype Undeclared { value: Boolean! }\n",
+        "\ndirective @undeclared on FIELD_DEFINITION\n",
+        "\nextend type Query { undeclared: Boolean! }\n",
+    )
+    for index, addition in enumerate(mutations):
+        mutated = tmp_path / f"undeclared-{index}.graphql"
+        mutated.write_text(SDL.read_text(encoding="utf-8") + addition, encoding="utf-8")
+        assert validate_sdl(mutated) == ["sdl_definitions"]
+
+
 def test_validator_cli_is_deterministic() -> None:
     result = subprocess.run([sys.executable, "scripts/validate_vaillant_regulator_capability_api_v1.py"], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
