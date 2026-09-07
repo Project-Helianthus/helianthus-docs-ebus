@@ -169,6 +169,8 @@ def validate_sdl(sdl_path: Path = SDL) -> list[str]:
         return ["sdl_root"]
     if field.args:
         return ["sdl_arguments"]
+    if field.deprecation_reason is not None:
+        return ["sdl_deprecated"]
     if set(enum.values) != EXPECTED_STATES:
         return ["sdl_enum"]
     return []

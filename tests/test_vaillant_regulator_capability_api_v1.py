@@ -134,6 +134,18 @@ def test_sdl_rejects_redirected_configured_query_root(tmp_path: Path) -> None:
     assert validate_sdl(mutated) == ["sdl_query_root"]
 
 
+def test_sdl_rejects_deprecated_public_root(tmp_path: Path) -> None:
+    mutated = tmp_path / "deprecated.graphql"
+    mutated.write_text(
+        SDL.read_text(encoding="utf-8").replace(
+            "vaillant_regulator_capability: VaillantRegulatorCapability!",
+            "vaillant_regulator_capability: VaillantRegulatorCapability! @deprecated(reason: \"test\")",
+        ),
+        encoding="utf-8",
+    )
+    assert validate_sdl(mutated) == ["sdl_deprecated"]
+
+
 def test_validator_cli_is_deterministic() -> None:
     result = subprocess.run([sys.executable, "scripts/validate_vaillant_regulator_capability_api_v1.py"], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
