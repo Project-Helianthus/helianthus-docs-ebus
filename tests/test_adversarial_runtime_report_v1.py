@@ -232,6 +232,36 @@ def test_cli_normalizes_deep_nesting_recursion_error(tmp_path):
     assert "Traceback" not in result.stderr
 
 
+def test_report_read_failures_are_normalized_and_bounded(tmp_path, monkeypatch):
+    missing = tmp_path / "missing-report.json"
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(missing)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 1
+    assert "report read failed" in result.stderr
+    assert str(missing) not in result.stderr and "Traceback" not in result.stderr
+
+    directory = tmp_path / "report-directory"
+    directory.mkdir()
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(directory)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 1
+    assert "report read failed" in result.stderr and "Traceback" not in result.stderr
+
+    oversized = tmp_path / "oversized-report.json"
+    oversized.write_bytes(b" " * (1024 * 1024 + 1))
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(oversized)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 1
+    assert "report exceeds" in result.stderr and "Traceback" not in result.stderr
+
+    monkeypatch.setattr(validator.os, "open", lambda *_args, **_kwargs: (_ for _ in ()).throw(PermissionError()))
+    with pytest.raises(ValidationError, match="report read failed"):
+        validator.read_report_bytes(POSITIVE)
+
+
+def test_missing_schema_validator_is_normalized(monkeypatch):
+    monkeypatch.setattr(validator.subprocess, "run", lambda *_args, **_kwargs: (_ for _ in ()).throw(FileNotFoundError()))
+    with pytest.raises(ValidationError, match="schema validator unavailable"):
+        validator.validate_schema_bytes(b"{}")
+
+
 def test_definition_maximum_recovery_is_canonical_even_if_evaluation_is_forged(tmp_path):
     candidate = load(POSITIVE)
     scenario = candidate["scenarios"][0]

@@ -10,6 +10,11 @@ Gateway main at `ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532` has definitions, repo
 
 All objects are closed with `additionalProperties: false`. Before schema validation the deterministic parser rejects invalid UTF-8, duplicate names, non-integer or non-finite numbers, and reports larger than 1 MiB. Counters, offsets, and durations are non-negative integers below `2^53`; every wire duration uses `*_ms`. Wall times use the exact `YYYY-MM-DDTHH:mm:ss.sssZ` form. The injected monotonic clock controls ordering and recovery. Each event/snapshot timestamp equals the scenario anchor plus its offset within 1 ms; wall-clock changes cannot alter a verdict.
 
+The validator opens only a regular report file, reads at most 1 MiB plus one
+byte from that descriptor, and parses/schema-validates/semantically evaluates
+that one byte snapshot. Read or schema-validator launch failures are normalized
+as invalid artifacts without exposing caller paths.
+
 Provenance is a closed `subject` plus `producer` pair. The subject is always the
 gateway, with its commit, source-tree state, `gateway-fixture-set` or
 `gateway-binary` kind, and artifact SHA-256. The producer is either gateway

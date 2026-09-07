@@ -6,6 +6,8 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -127,8 +129,24 @@ def parse_report_bytes(raw: bytes):
         raise ValidationError(f"malformed JSON: {error}") from error
 
 
+def read_report_bytes(path: Path):
+    fd = None
+    try:
+        fd = os.open(path, os.O_RDONLY)
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise ValidationError("report read failed")
+        with os.fdopen(fd, "rb") as stream:
+            fd = None
+            return stream.read(MAX_BYTES + 1)
+    except OSError as error:
+        raise ValidationError("report read failed") from error
+    finally:
+        if fd is not None:
+            os.close(fd)
+
+
 def load_report(path: Path):
-    return parse_report_bytes(path.read_bytes())
+    return parse_report_bytes(read_report_bytes(path))
 
 
 def _stamp(value):
@@ -404,13 +422,16 @@ def validate_semantics(report):
 
 
 def validate_schema_bytes(raw: bytes):
-    result = subprocess.run(["jv", str(SCHEMA), "-"], input=raw, capture_output=True, check=False)
+    try:
+        result = subprocess.run(["jv", str(SCHEMA), "-"], input=raw, capture_output=True, check=False)
+    except OSError as error:
+        raise ValidationError("schema validator unavailable") from error
     if result.returncode:
         raise ValidationError("schema: " + (result.stdout + result.stderr).decode("utf-8", "replace").strip())
 
 
 def validate_path(path: Path):
-    raw = path.read_bytes()
+    raw = read_report_bytes(path)
     report = parse_report_bytes(raw)
     validate_schema_bytes(raw)
     errors = validate_semantics(report)
