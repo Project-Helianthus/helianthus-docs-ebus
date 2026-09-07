@@ -6,7 +6,7 @@ Gateway main at `ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532` has definitions, repo
 
 ## Exact artifact
 
-[`adversarial-runtime-report-v1.schema.json`](../docs/platform/schemas/adversarial-runtime-report-v1.schema.json) is the sole v1 schema. Its exact identifier is `https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-report-v1.schema.json`. Consumers accept only that schema, `schema_version: 1`, suite ID `helianthus.adversarial.ADV01-04`, and suite version `1`. A changed threshold or scenario increments suite version; a changed required field, unit, outcome, or interpretation creates a new schema major.
+[`adversarial-runtime-report-v1.schema.json`](../docs/platform/schemas/adversarial-runtime-report-v1.schema.json) is the v1 report schema. Its exact identifier is `https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-report-v1.schema.json`; the selected input is separately checked against [`adversarial-runtime-offline-fixture-v1.schema.json`](../docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json). Consumers accept only report schema version `1`, suite ID `helianthus.adversarial.ADV01-04`, and suite version `1`. A changed threshold or scenario increments suite version; a changed required field, unit, outcome, or interpretation creates a new schema major.
 
 All objects are closed with `additionalProperties: false`. Before schema validation the deterministic parser rejects invalid UTF-8, duplicate names, non-integer or non-finite numbers, and reports larger than 1 MiB. Counters, offsets, and durations are non-negative integers below `2^53`; every wire duration uses `*_ms`. Wall times use the exact `YYYY-MM-DDTHH:mm:ss.sssZ` form. The injected monotonic clock controls ordering and recovery. Each event/snapshot timestamp equals the scenario anchor plus its offset within 1 ms; wall-clock changes cannot alter a verdict.
 
@@ -15,17 +15,16 @@ descriptor, reads at most 1 MiB plus one byte, and parses/schema-validates/
 semantically evaluates that one byte snapshot. Read or schema-validator launch
 failures are normalized as invalid artifacts without exposing caller paths.
 
-Provenance is a closed `subject` plus `producer` pair. The subject is always the
-gateway, with its commit, source-tree state, `gateway-fixture-set` or
-`gateway-binary` kind, and artifact SHA-256. The producer is either gateway
-`internal/adversarial` / `go-test-binary`, or HA integration
+Provenance is a closed `subject` plus `producer` pair. V1 is offline-fixture
+only: the subject is always the gateway, with its commit, source-tree state,
+`gateway-fixture-set` kind, and the fixture-manifest SHA-256. The producer is
+either gateway `internal/adversarial` / `go-test-binary`, or HA integration
 `ha-adversarial-harness` / `ha-harness`, with its own commit and build digest.
-Gateway production is only offline against a fixture-set subject and every event
-is fixture sourced. HA offline requires a fixture-set subject plus an input
-gateway-report SHA-256; HA operator-live requires a gateway-binary subject, null
-input digest, and observer-sourced action evidence. `fixture_set_sha256` equals
-the fixture subject digest and is null for a binary subject. All other pairings
-are rejected.
+Every action event is fixture sourced. Gateway production has a null input-report
+digest; HA production requires the SHA-256 of the exact gateway-report bytes it
+consumed. `fixture_set_sha256` equals the fixture subject digest, and required
+`fixture_case_id` selects one deterministic input driver. All other pairings are
+rejected.
 
 ## Canonical suite
 
@@ -38,7 +37,7 @@ are rejected.
 
 ADV-01 means the HA consumer restarts while the gateway stays up. It does not restart the gateway add-on. ADV-03 records `partition_active` and `partition_cleared`, and requires `abs(observed_ms - 60000) + partition_active_error_bound_ms + partition_cleared_error_bound_ms <= 1000`; recovery begins only after clearing the partition. ADV-04 takes its baseline from the newly constructed instrumented runtime before cache load. It never modifies production cache.
 
-The fixed event orders are: ADV-01 `restart_requested`, `consumer_stopped`, `consumer_started`, `ha_consumer_synchronized`; ADV-02 `reset_requested`, `reset_started`, `transport_unavailable`, `transport_available`, `gateway_live_ready`; ADV-03 `partition_requested`, `partition_active`, `partition_cleared`, `gateway_live_ready`; ADV-04 `isolated_cache_staged`, `runtime_started`, `gateway_live_ready`. Events are only `fixture` or `observer` sourced.
+The fixed event orders are: ADV-01 `restart_requested`, `consumer_stopped`, `consumer_started`, `ha_consumer_synchronized`; ADV-02 `reset_requested`, `reset_started`, `transport_unavailable`, `transport_available`, `gateway_live_ready`; ADV-03 `partition_requested`, `partition_active`, `partition_cleared`, `gateway_live_ready`; ADV-04 `isolated_cache_staged`, `runtime_started`, `gateway_live_ready`. V1 events are fixture sourced.
 
 Each definition serializes the canonical duration, maximum recovery, minimum
 live-epoch delta, zone/DHW requirements, and maximum collision delta. Evaluation
@@ -117,9 +116,9 @@ Allowed error phases are `precondition`, `trigger`, `observer`, `evaluation`, an
 
 ## Ownership and privacy
 
-Gateway #198 owns the serial offline executor with immutable catalog, injected clock, typed trigger, and read-only observer. The default build may register fixture/sandbox triggers only. HA #105 owns the consumer restart/synchronization observer and consumes this artifact without importing gateway code.
+Gateway #198 owns the serial offline executor with immutable catalog, injected clock, typed fixture trigger, and read-only fixture observer. The default build may register fixture/sandbox triggers only. HA #105 consumes the gateway artifact without importing gateway code.
 
-`execution.mode` is `offline-fixture` or `operator-live`; it records evidence and cannot select/configure/authorize a trigger. Offline reports include a public fixture-manifest digest and live reports set it null. Any live restart, adapter reset, partition, damaged-state boot, or physical test requires separate action-time confirmation.
+`execution.mode` is `offline-fixture` in v1. It records evidence and cannot select, configure, or authorize a trigger. `operator-live`, gateway binaries, observer-sourced actions, and rig fields are deferred to a new schema major with a sanitized public evidence bundle and its own validator. Any live restart, adapter reset, partition, damaged-state boot, or physical test requires separate action-time confirmation.
 
 The public contract carries no credentials, tokens, hostnames, addresses, interfaces, serials, device fingerprints, paths, account data, raw captures, logs, command lines, or private evidence hashes.
 
@@ -127,9 +126,14 @@ The public contract carries no credentials, tokens, hostnames, addresses, interf
 
 [`offline-all-pass.json`](../docs/platform/fixtures/adversarial-runtime/v1/positive/offline-all-pass.json) is the canonical all-pass report. [`negative-cases.json`](../docs/platform/fixtures/adversarial-runtime/v1/negative-cases.json) carries weakening mutations.
 [`fixture-input-manifest.json`](../docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json)
-is the canonical public fixture-input manifest; its exact byte SHA-256 is bound
-to the fixture-subject provenance. These documentation fixtures are hypothetical
-contract vectors and never execution evidence.
+is a closed, content-addressed set of deterministic public inputs. Its ordered
+artifact list records each driver/cache path, role, exact byte size, and SHA-256;
+its ordered cases select one driver and its declared resources. The validator
+rejects path escapes, symlinks, changed sizes or bytes, unknown cases, driver
+schema drift, resource mismatches, and report values that are not the selected
+driver's deterministic projection. ADV-04 cache files are small synthetic public
+payloads used only in the isolated fixture sandbox. They are never production
+caches or live evidence.
 
 ```sh
 python3 scripts/validate_adversarial_runtime_report_v1.py \
@@ -137,7 +141,7 @@ python3 scripts/validate_adversarial_runtime_report_v1.py \
 python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py
 ```
 
-Tests cover malformed JSON, invalid UTF-8, duplicate keys, size and integer limits, versions, closed fields, missing/duplicate/order-drift scenarios, thresholds, wall/monotonic mismatch, counter reset/decrease, timing uncertainty, partial evidence, improper infrastructure downgrade, unauthorized xfail, forged summary, dirty provenance, and all three result variants.
+Tests cover malformed JSON, invalid UTF-8, duplicate keys, size and integer limits, versions, closed fields, missing/duplicate/order-drift scenarios, thresholds, wall/monotonic mismatch, counter reset/decrease, timing uncertainty, partial evidence, improper infrastructure downgrade, unauthorized xfail, forged summary, dirty provenance, fixture content/path/case/projection binding, and all three result variants.
 
 - Gateway executor owner: `helianthus-ebusgateway` #198.
 - HA consumer/harness owner: `helianthus-ha-integration` #105.

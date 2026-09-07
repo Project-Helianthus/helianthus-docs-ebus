@@ -7,6 +7,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import stat
 import subprocess
 import sys
@@ -18,7 +19,10 @@ SCHEMA = ROOT / "docs/platform/schemas/adversarial-runtime-report-v1.schema.json
 SCHEMA_ID = "https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-report-v1.schema.json"
 SUITE_ID = "helianthus.adversarial.ADV01-04"
 FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
+FIXTURE_SCHEMA = ROOT / "docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json"
+FIXTURE_SCHEMA_ID = "https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json"
 MAX_BYTES = 1024 * 1024
+MAX_FIXTURE_BYTES = 4 * 1024 * 1024
 TS_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 CATALOG = {
@@ -116,13 +120,13 @@ def _bounded_integer(value):
     return int(value)
 
 
-def parse_report_bytes(raw: bytes):
+def parse_json_bytes(raw: bytes, label: str):
     if len(raw) > MAX_BYTES:
-        raise ValidationError(f"report exceeds {MAX_BYTES} bytes")
+        raise ValidationError(f"{label} exceeds {MAX_BYTES} bytes")
     try:
         text = raw.decode("utf-8", "strict")
     except UnicodeDecodeError as error:
-        raise ValidationError("report is not valid UTF-8") from error
+        raise ValidationError(f"{label} is not valid UTF-8") from error
     try:
         return json.loads(
             text,
@@ -134,10 +138,14 @@ def parse_report_bytes(raw: bytes):
     except ValidationError:
         raise
     except (json.JSONDecodeError, ValueError, RecursionError) as error:
-        raise ValidationError(f"malformed JSON: {error}") from error
+        raise ValidationError(f"malformed {label} JSON: {error}") from error
 
 
-def read_report_bytes(path: Path):
+def parse_report_bytes(raw: bytes):
+    return parse_json_bytes(raw, "report")
+
+
+def read_regular_bytes(path: Path, limit: int, label: str):
     fd = None
     try:
         flags = os.O_RDONLY | os.O_NONBLOCK
@@ -147,15 +155,19 @@ def read_report_bytes(path: Path):
             flags |= os.O_NOFOLLOW
         fd = os.open(path, flags)
         if not stat.S_ISREG(os.fstat(fd).st_mode):
-            raise ValidationError("report read failed")
+            raise ValidationError(f"{label} read failed")
         with os.fdopen(fd, "rb") as stream:
             fd = None
-            return stream.read(MAX_BYTES + 1)
+            return stream.read(limit + 1)
     except OSError as error:
-        raise ValidationError("report read failed") from error
+        raise ValidationError(f"{label} read failed") from error
     finally:
         if fd is not None:
             os.close(fd)
+
+
+def read_report_bytes(path: Path):
+    return read_regular_bytes(path, MAX_BYTES, "report")
 
 
 def load_report(path: Path):
@@ -340,6 +352,175 @@ def _validate_evaluated(scenario, expected, errors):
         _error(errors, "evaluated_outcome")
 
 
+def _fixture_error(rule):
+    raise ValidationError(f"fixture {rule}")
+
+
+def _closed_object(value, required):
+    return isinstance(value, dict) and set(value) == set(required)
+
+
+def _fixture_identifier(value):
+    return isinstance(value, str) and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", value) is not None and len(value) <= 64
+
+
+def _fixture_path(relative):
+    if not isinstance(relative, str) or not relative or "\\" in relative or "\x00" in relative:
+        _fixture_error("artifact_path")
+    parts = relative.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        _fixture_error("artifact_path")
+    root = FIXTURE_MANIFEST.parent
+    candidate = root
+    for part in parts:
+        candidate /= part
+        if candidate.is_symlink():
+            _fixture_error("artifact_path")
+    try:
+        candidate.resolve().relative_to(root.resolve())
+    except ValueError:
+        _fixture_error("artifact_path")
+    return candidate
+
+
+def _project_fixture_snapshot(snapshot, start):
+    if snapshot is None:
+        return None
+    result = dict(snapshot)
+    result["captured_at"] = _fixture_timestamp(start + dt.timedelta(milliseconds=snapshot["offset_ms"]))
+    return result
+
+
+def _fixture_timestamp(value):
+    return value.strftime("%Y-%m-%dT%H:%M:%S.") + f"{value.microsecond // 1000:03d}Z"
+
+
+def _project_fixture_events(events, start):
+    return [
+        {
+            "kind": event["kind"],
+            "source": "fixture",
+            "at": _fixture_timestamp(start + dt.timedelta(milliseconds=event["offset_ms"])),
+            "offset_ms": event["offset_ms"],
+            "error_bound_ms": event["error_bound_ms"],
+        }
+        for event in events
+    ]
+
+
+def _validate_fixture_projection(report, case, driver):
+    if driver["fixture_case_id"] != case["case_id"] or driver["suite"] != {"id": SUITE_ID, "version": 1}:
+        _fixture_error("case_binding")
+    scenarios = driver["scenarios"]
+    if [item["scenario_id"] for item in scenarios] != list(CATALOG):
+        _fixture_error("driver_catalog")
+    if len(scenarios) != len(report["scenarios"]):
+        _fixture_error("driver_projection")
+    manifest_resources = case["resource_artifact_ids"]
+    seen_resources = []
+    for report_scenario, driver_scenario in zip(report["scenarios"], scenarios):
+        scenario_id = report_scenario["definition"]["scenario_id"]
+        expected = CATALOG.get(scenario_id)
+        if expected is None or driver_scenario["scenario_id"] != scenario_id or driver_scenario["trigger_kind"] != expected["trigger_kind"]:
+            _fixture_error("driver_catalog")
+        precondition = driver_scenario["precondition"]
+        unavailable = not precondition["available"]
+        resources = driver_scenario["resource_artifact_ids"]
+        seen_resources.extend(resources)
+        reaches_cache = any(event["kind"] == "isolated_cache_staged" for event in driver_scenario["events"])
+        if scenario_id == "ADV-04" and reaches_cache:
+            if len(resources) != 1:
+                _fixture_error("driver_resources")
+        elif resources:
+            _fixture_error("driver_resources")
+        if unavailable:
+            if precondition["unavailable_reason"] not in expected["infrastructure_reasons"] or driver_scenario["events"] or driver_scenario["observations"] != {"baseline": None, "end": None} or driver_scenario["terminal_error"] is not None or resources:
+                _fixture_error("driver_precondition")
+            expected_errors = [{"phase": "precondition", "code": "precondition_unavailable"}]
+            expected_reason = precondition["unavailable_reason"]
+        else:
+            if precondition["unavailable_reason"] is not None:
+                _fixture_error("driver_precondition")
+            expected_errors = [] if driver_scenario["terminal_error"] is None else [driver_scenario["terminal_error"]]
+            expected_reason = None
+        start = _stamp(report_scenario["timing"]["scenario_started_at"])
+        if report_scenario["action"]["events"] != _project_fixture_events(driver_scenario["events"], start):
+            _fixture_error("event_projection")
+        observations = driver_scenario["observations"]
+        if report_scenario["metrics"]["baseline"] != _project_fixture_snapshot(observations["baseline"], start) or report_scenario["metrics"]["end"] != _project_fixture_snapshot(observations["end"], start):
+            _fixture_error("observation_projection")
+        if report_scenario["errors"] != expected_errors or report_scenario["infrastructure_reason"] != expected_reason:
+            _fixture_error("terminal_projection")
+    if seen_resources != manifest_resources or len(set(seen_resources)) != len(seen_resources):
+        _fixture_error("case_resources")
+
+
+def load_fixture_inputs(report):
+    manifest_raw = read_regular_bytes(FIXTURE_MANIFEST, MAX_BYTES, "fixture manifest")
+    manifest = parse_json_bytes(manifest_raw, "fixture manifest")
+    required = {"fixture_contract", "suite", "purpose", "artifacts", "cases"}
+    if not _closed_object(manifest, required) or manifest["fixture_contract"] != "helianthus.adversarial-runtime.fixture-set/v1" or manifest["suite"] != {"id": SUITE_ID, "version": 1} or manifest["purpose"] != "deterministic synthetic offline executor inputs; not live evidence":
+        _fixture_error("manifest_shape")
+    artifact_keys = {"artifact_id", "role", "path", "media_type", "size_bytes", "sha256"}
+    case_keys = {"case_id", "driver_artifact_id", "resource_artifact_ids"}
+    artifacts = manifest["artifacts"]
+    cases = manifest["cases"]
+    if not isinstance(artifacts, list) or not isinstance(cases, list) or not artifacts or not cases:
+        _fixture_error("manifest_shape")
+    artifact_ids = []
+    paths = []
+    artifacts_by_id = {}
+    total = 0
+    for artifact in artifacts:
+        if not _closed_object(artifact, artifact_keys) or artifact["role"] not in {"scenario-driver", "cache-image"} or not _fixture_identifier(artifact["artifact_id"]) or not isinstance(artifact["size_bytes"], int) or artifact["size_bytes"] < 0 or not isinstance(artifact["sha256"], str) or re.fullmatch(r"[0-9a-f]{64}", artifact["sha256"]) is None:
+            _fixture_error("manifest_artifact")
+        expected_media = "application/json" if artifact["role"] == "scenario-driver" else "application/octet-stream"
+        if artifact["media_type"] != expected_media:
+            _fixture_error("manifest_artifact")
+        artifact_ids.append(artifact["artifact_id"])
+        paths.append(artifact["path"])
+        raw = read_regular_bytes(_fixture_path(artifact["path"]), MAX_BYTES, "fixture artifact")
+        if len(raw) != artifact["size_bytes"] or hashlib.sha256(raw).hexdigest() != artifact["sha256"]:
+            _fixture_error("artifact_digest")
+        total += len(raw)
+        artifacts_by_id[artifact["artifact_id"]] = (artifact, raw)
+    if artifact_ids != sorted(artifact_ids) or len(set(artifact_ids)) != len(artifact_ids) or len(set(paths)) != len(paths) or total > MAX_FIXTURE_BYTES:
+        _fixture_error("manifest_artifact")
+    case_ids = []
+    cases_by_id = {}
+    for case in cases:
+        if not _closed_object(case, case_keys) or not _fixture_identifier(case["case_id"]) or not isinstance(case["resource_artifact_ids"], list):
+            _fixture_error("manifest_case")
+        case_ids.append(case["case_id"])
+        driver = artifacts_by_id.get(case["driver_artifact_id"])
+        if driver is None or driver[0]["role"] != "scenario-driver" or case["driver_artifact_id"] != f"driver-{case['case_id']}" or any(not _fixture_identifier(resource) or resource not in artifacts_by_id or artifacts_by_id[resource][0]["role"] != "cache-image" for resource in case["resource_artifact_ids"]):
+            _fixture_error("manifest_case")
+        if len(set(case["resource_artifact_ids"])) != len(case["resource_artifact_ids"]):
+            _fixture_error("manifest_case")
+        cases_by_id[case["case_id"]] = case
+    if case_ids != sorted(case_ids) or len(set(case_ids)) != len(case_ids):
+        _fixture_error("manifest_case")
+    declared_artifacts = {case["driver_artifact_id"] for case in cases} | {resource for case in cases for resource in case["resource_artifact_ids"]}
+    if declared_artifacts != set(artifacts_by_id):
+        _fixture_error("manifest_case")
+    provenance = report["provenance"]
+    digest = hashlib.sha256(manifest_raw).hexdigest()
+    if provenance["fixture_set_sha256"] != digest or provenance["subject"]["artifact_sha256"] != digest:
+        _fixture_error("manifest_digest")
+    case = cases_by_id.get(provenance["fixture_case_id"])
+    if case is None:
+        _fixture_error("case_binding")
+    driver_artifact, driver_raw = artifacts_by_id[case["driver_artifact_id"]]
+    driver = parse_json_bytes(driver_raw, "fixture driver")
+    validate_schema_bytes(driver_raw, FIXTURE_SCHEMA)
+    return case, driver
+
+
+def validate_fixture_inputs(report):
+    case, driver = load_fixture_inputs(report)
+    _validate_fixture_projection(report, case, driver)
+
+
 def validate_semantics(report):
     errors = set()
     try:
@@ -353,31 +534,18 @@ def validate_semantics(report):
         producer = provenance["producer"]
         if subject["source_tree"] == "dirty" and report["summary"]["verdict"] == "pass":
             _error(errors, "dirty_provenance_pass")
+        if execution["mode"] != "offline-fixture" or subject["artifact_kind"] != "gateway-fixture-set" or any(any(event["source"] != "fixture" for event in item["action"]["events"]) for item in report["scenarios"]):
+            _error(errors, "producer_subject_pairing")
         is_gateway_producer = producer["repository"] == "Project-Helianthus/helianthus-ebusgateway"
         is_ha_producer = producer["repository"] == "Project-Helianthus/helianthus-ha-integration"
         if is_gateway_producer:
-            if (producer["component"], producer["build_kind"], execution["mode"], subject["artifact_kind"], producer["input_gateway_report_sha256"]) != ("internal/adversarial", "go-test-binary", "offline-fixture", "gateway-fixture-set", None):
-                _error(errors, "producer_subject_pairing")
-            if any(any(event["source"] != "fixture" for event in item["action"]["events"]) for item in report["scenarios"]):
+            if (producer["component"], producer["build_kind"], producer["input_gateway_report_sha256"]) != ("internal/adversarial", "go-test-binary", None):
                 _error(errors, "producer_subject_pairing")
         elif is_ha_producer:
-            if (producer["component"], producer["build_kind"]) != ("ha-adversarial-harness", "ha-harness"):
+            if (producer["component"], producer["build_kind"]) != ("ha-adversarial-harness", "ha-harness") or producer["input_gateway_report_sha256"] is None:
                 _error(errors, "producer_subject_pairing")
-            if execution["mode"] == "offline-fixture":
-                if subject["artifact_kind"] != "gateway-fixture-set" or producer["input_gateway_report_sha256"] is None or any(any(event["source"] != "fixture" for event in item["action"]["events"]) for item in report["scenarios"]):
-                    _error(errors, "producer_subject_pairing")
-            elif execution["mode"] == "operator-live":
-                if subject["artifact_kind"] != "gateway-binary" or producer["input_gateway_report_sha256"] is not None:
-                    _error(errors, "producer_subject_pairing")
-                if any(any(event["source"] != "observer" for event in item["action"]["events"]) for item in report["scenarios"]):
-                    _error(errors, "producer_subject_pairing")
         else:
             _error(errors, "producer_subject_pairing")
-        fixture_digest = hashlib.sha256(FIXTURE_MANIFEST.read_bytes()).hexdigest()
-        if subject["artifact_kind"] == "gateway-fixture-set" and (provenance["fixture_set_sha256"] != subject["artifact_sha256"] or subject["artifact_sha256"] != fixture_digest):
-            _error(errors, "fixture_subject_binding")
-        if subject["artifact_kind"] == "gateway-binary" and provenance["fixture_set_sha256"] is not None:
-            _error(errors, "fixture_subject_binding")
         scenarios = report["scenarios"]
         run_start = _stamp(execution["started_at"])
         run_end = _stamp(execution["completed_at"])
@@ -511,9 +679,9 @@ def validate_semantics(report):
     return sorted(errors)
 
 
-def validate_schema_bytes(raw: bytes):
+def validate_schema_bytes(raw: bytes, schema: Path = SCHEMA):
     try:
-        result = subprocess.run(["jv", str(SCHEMA), "-"], input=raw, capture_output=True, check=False)
+        result = subprocess.run(["jv", str(schema), "-"], input=raw, capture_output=True, check=False)
     except OSError as error:
         raise ValidationError("schema validator unavailable") from error
     if result.returncode:
@@ -524,9 +692,11 @@ def validate_path(path: Path):
     raw = read_report_bytes(path)
     report = parse_report_bytes(raw)
     validate_schema_bytes(raw)
+    case, driver = load_fixture_inputs(report)
     errors = validate_semantics(report)
     if errors:
         raise ValidationError("semantic: " + ",".join(errors))
+    _validate_fixture_projection(report, case, driver)
 
 
 def main(argv=None):

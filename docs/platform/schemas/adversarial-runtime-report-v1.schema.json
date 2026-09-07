@@ -41,56 +41,6 @@
       "$ref": "#/$defs/Summary"
     }
   },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "execution": {
-            "properties": {
-              "mode": {
-                "const": "offline-fixture"
-              }
-            }
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "provenance": {
-            "properties": {
-              "fixture_set_sha256": {
-                "$ref": "#/$defs/Sha256"
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "execution": {
-            "properties": {
-              "mode": {
-                "const": "operator-live"
-              }
-            }
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "provenance": {
-            "properties": {
-              "fixture_set_sha256": {
-                "type": "null"
-              }
-            }
-          }
-        }
-      }
-    }
-  ],
   "$defs": {
     "SafeInteger": {
       "type": "integer",
@@ -147,10 +97,7 @@
       ],
       "properties": {
         "mode": {
-          "enum": [
-            "offline-fixture",
-            "operator-live"
-          ]
+          "const": "offline-fixture"
         },
         "run_id": {
           "type": "string",
@@ -171,7 +118,8 @@
       "required": [
         "subject",
         "producer",
-        "fixture_set_sha256"
+        "fixture_set_sha256",
+        "fixture_case_id"
       ],
       "properties": {
         "subject": {
@@ -181,14 +129,13 @@
           "$ref": "#/$defs/Producer"
         },
         "fixture_set_sha256": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/Sha256"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/Sha256"
+        },
+        "fixture_case_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "minLength": 1,
+          "maxLength": 48
         }
       }
     },
@@ -290,10 +237,7 @@
           ]
         },
         "source": {
-          "enum": [
-            "fixture",
-            "observer"
-          ]
+          "const": "fixture"
         },
         "at": {
           "$ref": "#/$defs/Timestamp"
@@ -989,10 +933,7 @@
           ]
         },
         "artifact_kind": {
-          "enum": [
-            "gateway-fixture-set",
-            "gateway-binary"
-          ]
+          "const": "gateway-fixture-set"
         },
         "artifact_sha256": {
           "$ref": "#/$defs/Sha256"

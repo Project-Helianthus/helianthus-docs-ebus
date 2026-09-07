@@ -17,7 +17,7 @@
       "commit": "ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532",
       "source_tree": "clean",
       "artifact_kind": "gateway-fixture-set",
-      "artifact_sha256": "51e870fae0fbf33f50bd802d97b0bcb979a4cdb0fe1534b7e8b07baf9be2b60f"
+      "artifact_sha256": "4a8a2ce3000cb3d6c88ab290180bb71ed3392f0aff098b7576012a44f0bc26ee"
     },
     "producer": {
       "repository": "Project-Helianthus/helianthus-ebusgateway",
@@ -27,7 +27,8 @@
       "build_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
       "input_gateway_report_sha256": null
     },
-    "fixture_set_sha256": "51e870fae0fbf33f50bd802d97b0bcb979a4cdb0fe1534b7e8b07baf9be2b60f"
+    "fixture_set_sha256": "4a8a2ce3000cb3d6c88ab290180bb71ed3392f0aff098b7576012a44f0bc26ee",
+    "fixture_case_id": "offline-all-pass"
   },
   "scenarios": [
     {

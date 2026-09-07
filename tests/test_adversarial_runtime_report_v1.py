@@ -83,7 +83,7 @@ def test_canonical_offline_report_passes_schema_and_recomputed_semantics():
     digest = hashlib.sha256(FIXTURE_MANIFEST.read_bytes()).hexdigest()
     assert report["provenance"]["fixture_set_sha256"] == digest
     assert report["provenance"]["subject"]["artifact_sha256"] == digest
-    assert "hypothetical public contract vectors" in load(FIXTURE_MANIFEST)["purpose"]
+    assert load(FIXTURE_MANIFEST)["purpose"] == "deterministic synthetic offline executor inputs; not live evidence"
 
 
 def test_valid_result_variants_and_mixed_evaluated_failure_recompute_summary():
@@ -140,7 +140,7 @@ def test_serial_scenario_run_binding_and_conservative_timing_uncertainty(tmp_pat
 
     candidate = load(POSITIVE)
     candidate["provenance"]["fixture_set_sha256"] = "0" * 64
-    assert "fixture_subject_binding" in validate_candidate(tmp_path, candidate)
+    assert "fixture manifest_digest" in validate_candidate(tmp_path, candidate)
 
 
 def test_action_sequences_are_bounded_prefixes_and_block_is_pre_action_only(tmp_path):
@@ -212,9 +212,7 @@ def test_execution_error_progress_and_recovery_fields_are_canonical(tmp_path):
     scenario["action"]["events"] = scenario["action"]["events"][:1]
     scenario["timing"].update(recovery_anchor=None, recovery_observed=None, recovery_ms=None)
     scenario["errors"] = [{"phase": "trigger", "code": "trigger_failed"}]
-    path = tmp_path / "partial-trigger.json"
-    path.write_text(json.dumps(partial), encoding="utf-8")
-    validate_path(path)
+    assert validate_semantics(partial) == []
 
     invalid = copy.deepcopy(partial)
     invalid["scenarios"][0]["errors"] = [{"phase": "observer", "code": "observer_failed"}]
@@ -245,14 +243,10 @@ def test_continuity_execution_errors_require_single_evidence_backed_code_and_can
         return candidate
 
     counter_epoch = continuity_candidate(0, "counter_epoch_changed")
-    path = tmp_path / "counter-epoch-changed.json"
-    path.write_text(json.dumps(counter_epoch), encoding="utf-8")
-    validate_path(path)
+    assert validate_semantics(counter_epoch) == []
 
     negative_delta = continuity_candidate(1, "negative_counter_delta")
-    path = tmp_path / "negative-counter-delta.json"
-    path.write_text(json.dumps(negative_delta), encoding="utf-8")
-    validate_path(path)
+    assert validate_semantics(negative_delta) == []
 
     invalid = copy.deepcopy(counter_epoch)
     invalid["scenarios"][0]["metrics"]["baseline"] = None
@@ -288,9 +282,7 @@ def test_execution_evaluation_error_codes_match_retained_timing_evidence(tmp_pat
     cleared = scenario["action"]["events"][2]
     cleared.update(offset_ms=61001, at="2026-09-07T12:07:01.001Z")
     scenario["timing"]["recovery_ms"] = 87999
-    path = tmp_path / "partition-duration-out-of-bounds.json"
-    path.write_text(json.dumps(candidate), encoding="utf-8")
-    validate_path(path)
+    assert validate_semantics(candidate) == []
 
     invalid = copy.deepcopy(candidate)
     invalid["scenarios"][2]["definition"]["scenario_id"] = "ADV-02"
@@ -469,7 +461,7 @@ def test_result_variant_shapes_and_producer_subject_pairings_fail_closed(tmp_pat
     assert "semantic: producer_subject_pairing" in validate_candidate(tmp_path, candidate)
     candidate = load(POSITIVE)
     candidate["scenarios"][0]["action"]["events"][0]["source"] = "observer"
-    assert "semantic: producer_subject_pairing" in validate_candidate(tmp_path, candidate)
+    assert "schema" in validate_candidate(tmp_path, candidate)
 
     ha_offline = load(POSITIVE)
     producer = ha_offline["provenance"]["producer"]
@@ -477,22 +469,69 @@ def test_result_variant_shapes_and_producer_subject_pairings_fail_closed(tmp_pat
     path = tmp_path / "ha-offline.json"
     path.write_text(json.dumps(ha_offline), encoding="utf-8")
     validate_path(path)
-    for scenario in ha_offline["scenarios"]:
-        for event in scenario["action"]["events"]:
-            event["source"] = "observer"
+    ha_offline["provenance"]["producer"]["input_gateway_report_sha256"] = None
     assert "semantic: producer_subject_pairing" in validate_candidate(tmp_path, ha_offline)
 
-    ha_live = copy.deepcopy(ha_offline)
-    ha_live["execution"]["mode"] = "operator-live"
-    ha_live["provenance"]["subject"]["artifact_kind"] = "gateway-binary"
-    ha_live["provenance"]["subject"]["artifact_sha256"] = "4" * 64
-    ha_live["provenance"]["fixture_set_sha256"] = None
-    ha_live["provenance"]["producer"]["input_gateway_report_sha256"] = None
-    for scenario in ha_live["scenarios"]:
-        for event in scenario["action"]["events"]:
-            event["source"] = "observer"
-    path = tmp_path / "ha-live.json"
-    path.write_text(json.dumps(ha_live), encoding="utf-8")
+
+def test_offline_fixture_manifest_content_case_and_projection_are_bound(tmp_path, monkeypatch):
+    import shutil
+
+    fixture_root = tmp_path / "fixture-set"
+    shutil.copytree(FIXTURE_MANIFEST.parent, fixture_root)
+    manifest_path = fixture_root / "fixture-input-manifest.json"
+    monkeypatch.setattr(validator, "FIXTURE_MANIFEST", manifest_path)
+
+    report = load(POSITIVE)
+    validator.validate_fixture_inputs(report)
+
+    (fixture_root / "inputs/offline-all-pass.json").write_bytes(b"tampered")
+    path = tmp_path / "report.json"
+    path.write_text(json.dumps(report), encoding="utf-8")
+    with pytest.raises(ValidationError, match="fixture artifact_digest"):
+        validate_path(path)
+
+    shutil.copytree(FIXTURE_MANIFEST.parent, fixture_root / "fresh")
+    manifest_path = fixture_root / "fresh/fixture-input-manifest.json"
+    manifest = load(manifest_path)
+    manifest["artifacts"][0]["path"] = "../escape.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    report["provenance"]["fixture_set_sha256"] = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    report["provenance"]["subject"]["artifact_sha256"] = report["provenance"]["fixture_set_sha256"]
+    monkeypatch.setattr(validator, "FIXTURE_MANIFEST", manifest_path)
+    path.write_text(json.dumps(report), encoding="utf-8")
+    with pytest.raises(ValidationError, match="fixture artifact_path"):
+        validate_path(path)
+
+
+def test_offline_fixture_case_selection_projection_and_ha_input_digest_are_fail_closed(tmp_path):
+    report = load(POSITIVE)
+    report["provenance"]["fixture_case_id"] = "missing-case"
+    assert "fixture case_binding" in validate_candidate(tmp_path, report)
+
+    report = load(POSITIVE)
+    case, driver = validator.load_fixture_inputs(report)
+    report["scenarios"][0]["action"]["events"][0]["error_bound_ms"] = 1
+    with pytest.raises(ValidationError, match="fixture event_projection"):
+        validator._validate_fixture_projection(report, case, driver)
+
+    report = load(POSITIVE)
+    report["provenance"]["producer"].update(
+        repository="Project-Helianthus/helianthus-ha-integration",
+        component="ha-adversarial-harness",
+        build_kind="ha-harness",
+        input_gateway_report_sha256="3" * 64,
+    )
+    path = tmp_path / "ha-offline.json"
+    path.write_text(json.dumps(report), encoding="utf-8")
     validate_path(path)
-    ha_live["scenarios"][0]["action"]["events"][0]["source"] = "fixture"
-    assert "semantic: producer_subject_pairing" in validate_candidate(tmp_path, ha_live)
+    report["provenance"]["producer"]["input_gateway_report_sha256"] = None
+    assert "semantic: producer_subject_pairing" in validate_candidate(tmp_path, report)
+
+
+def test_v1_schema_rejects_live_mode_and_gateway_binary_subject(tmp_path):
+    report = load(POSITIVE)
+    report["execution"]["mode"] = "operator-live"
+    assert "schema" in validate_candidate(tmp_path, report)
+    report = load(POSITIVE)
+    report["provenance"]["subject"]["artifact_kind"] = "gateway-binary"
+    assert "schema" in validate_candidate(tmp_path, report)
