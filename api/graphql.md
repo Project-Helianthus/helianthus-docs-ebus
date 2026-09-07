@@ -14,8 +14,9 @@ above. Its isolated `/graphql/m2m/v1` query-only surface is documented in
 
 The additive Vaillant-only regulator capability root is specified in
 [`vaillant-regulator-capability-v1.md`](./vaillant-regulator-capability-v1.md).
-It is a target contract for gateway #946, not evidence that this root is already
-deployed or a gateway-wide/cross-protocol regulator aggregate.
+It is a target contract for open gateway #947, not evidence that this root is
+already deployed or a gateway-wide/cross-protocol regulator aggregate. The
+documentation gate is accepted before #947 merges.
 
 ## Observe-First Contract Ownership
 

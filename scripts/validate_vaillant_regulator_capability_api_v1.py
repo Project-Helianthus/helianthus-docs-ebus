@@ -41,9 +41,9 @@ EXPECTED_PRECEDENCE = {
 EXPECTED_SOURCES = {
     "gateway": {
         "repository": "Project-Helianthus/helianthus-ebusgateway",
-        "revision": "f52c08405e48609fb05ae8b231d1530bcfb46094",
+        "revision": "5130817a50c5fc289f7425f7febfb9407f7f55aa",
         "issues": [193, 194, 946],
-        "pull_requests": [211, 212],
+        "pull_requests": [211, 212, 947],
     },
     "ebusreg": {
         "repository": "Project-Helianthus/helianthus-ebusreg",
@@ -150,8 +150,8 @@ def validate(manifest: dict, cases: dict) -> list[str]:
     return errors
 
 
-def validate_sdl() -> list[str]:
-    schema = build_schema(SDL.read_text(encoding="utf-8"))
+def validate_sdl(sdl_path: Path = SDL) -> list[str]:
+    schema = build_schema(sdl_path.read_text(encoding="utf-8"))
     query = schema.get_type("Query")
     enum = schema.get_type("VaillantRegulatorCapability")
     if query is None or enum is None:
@@ -159,6 +159,8 @@ def validate_sdl() -> list[str]:
     field = query.fields.get("vaillant_regulator_capability")
     if field is None or str(field.type) != "VaillantRegulatorCapability!":
         return ["sdl_root"]
+    if field.args:
+        return ["sdl_arguments"]
     if set(enum.values) != EXPECTED_STATES:
         return ["sdl_enum"]
     return []

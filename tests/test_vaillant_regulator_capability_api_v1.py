@@ -12,6 +12,7 @@ CASES = ROOT / "docs/platform/fixtures/vaillant-regulator-capability-api-v1/case
 sys.path.insert(0, str(ROOT / "scripts"))
 from validate_vaillant_regulator_capability_api_v1 import (  # noqa: E402
     ValidationError,
+    SDL,
     resolve,
     validate,
     validate_sdl,
@@ -79,6 +80,7 @@ def test_validator_rejects_source_coordinate_mutations() -> None:
     manifest, cases = load(MANIFEST), load(CASES)
     mutations = (
         ("gateway", "repository", "other/gateway"),
+        ("gateway", "revision", "0" * 40),
         ("gateway", "issues", [193]),
         ("gateway", "pull_requests", [211]),
         ("ebusreg", "historical_controller_capability_merge", "0" * 40),
@@ -98,6 +100,18 @@ def test_validator_rejects_duplicated_or_missing_fixture_cases() -> None:
     missing = copy.deepcopy(cases)
     missing["negative"] = missing["negative"][:-1]
     assert "negative_cases" in validate(manifest, missing)
+
+
+def test_sdl_rejects_required_root_argument(tmp_path: Path) -> None:
+    mutated = tmp_path / "mutated.graphql"
+    mutated.write_text(
+        SDL.read_text(encoding="utf-8").replace(
+            "vaillant_regulator_capability: VaillantRegulatorCapability!",
+            "vaillant_regulator_capability(required: Boolean!): VaillantRegulatorCapability!",
+        ),
+        encoding="utf-8",
+    )
+    assert validate_sdl(mutated) == ["sdl_arguments"]
 
 
 def test_validator_cli_is_deterministic() -> None:

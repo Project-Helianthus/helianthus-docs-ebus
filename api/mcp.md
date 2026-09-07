@@ -16,9 +16,10 @@ The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
 The target additive Vaillant-only
 `ebus.v1.runtime.status.get.data.vaillant_regulator_capability` member is
 specified in [`vaillant-regulator-capability-v1.md`](./vaillant-regulator-capability-v1.md).
-It remains absent from the implemented-surface inventory until gateway #946
-merges; an older or missing `vaillant_regulator_capability` member maps to
-consumer `UNKNOWN`. It does not imply a gateway-wide or cross-protocol result.
+It remains absent from the implemented-surface inventory until open gateway #947
+merges after the documentation gate; an older or missing
+`vaillant_regulator_capability` member maps to consumer `UNKNOWN`. It does not
+imply a gateway-wide or cross-protocol result.
 
 ## Observe-First Bus MCP Contract (`DOC-06`)
 

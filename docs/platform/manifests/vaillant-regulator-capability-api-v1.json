@@ -41,9 +41,9 @@
   "sources": {
     "gateway": {
       "repository": "Project-Helianthus/helianthus-ebusgateway",
-      "revision": "f52c08405e48609fb05ae8b231d1530bcfb46094",
+      "revision": "5130817a50c5fc289f7425f7febfb9407f7f55aa",
       "issues": [193, 194, 946],
-      "pull_requests": [211, 212]
+      "pull_requests": [211, 212, 947]
     },
     "ebusreg": {
       "repository": "Project-Helianthus/helianthus-ebusreg",

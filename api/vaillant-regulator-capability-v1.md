@@ -1,7 +1,9 @@
 # Vaillant Regulator Capability API V1
 
-**Status:** Target additive public contract; gateway implementation is owned by
-[helianthus-ebusgateway#946](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/946).
+**Status:** Target additive public contract. The implementation candidate is
+[helianthus-ebusgateway#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947),
+which owns [gateway issue #946](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/946).
+PR #947 is open; this page is not a claim that the implementation is merged.
 
 This contract publishes one Vaillant catalog-derived eBUS capability for consumers. It
 does not expose product catalog rows, device roles, native frames, or a
@@ -66,7 +68,9 @@ not need a settled-removal signal.
 ## Evidence and ownership
 
 The defining gateway revision is
-[`f52c08405e48609fb05ae8b231d1530bcfb46094`](https://github.com/Project-Helianthus/helianthus-ebusgateway/commit/f52c08405e48609fb05ae8b231d1530bcfb46094).
+[`5130817a50c5fc289f7425f7febfb9407f7f55aa`](https://github.com/Project-Helianthus/helianthus-ebusgateway/commit/5130817a50c5fc289f7425f7febfb9407f7f55aa),
+the current head of open gateway [#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947).
+The coordinated documentation gate must be accepted before #947 merges.
 It uses accepted `helianthus-ebusreg`
 [`e24532a50caa00c113751b98b88239e045d731e8`](https://github.com/Project-Helianthus/helianthus-ebusreg/commit/e24532a50caa00c113751b98b88239e045d731e8)
 and retains the historical `ControllerCapability` dependency introduced by
@@ -79,7 +83,8 @@ through [#211](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull
 established catalog-only derivation. Gateway
 [#194](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/194)
 through [#212](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/212)
-owns re-detection and absence grace. This documentation issue is
+owns re-detection and absence grace; gateway [#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947)
+implements this additive public projection. This documentation issue is
 [#511](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/511);
 the first consumer is Home Assistant
 [#101](https://github.com/Project-Helianthus/helianthus-ha-integration/issues/101).
