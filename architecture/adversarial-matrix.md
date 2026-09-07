@@ -31,7 +31,7 @@ are rejected.
 | ADV-03 | Partition gateway-to-adapter transport for 60000 ms; `partition_cleared` | `gateway_live_ready` | 180000 ms | 90000 ms | >= 2 | required | not required | <= 10 |
 | ADV-04 | Fresh isolated gateway boot with corrupted/truncated cache fixture; `runtime_started` | `gateway_live_ready` | 180000 ms | 120000 ms | >= 2 | required | required | <= 5 |
 
-ADV-01 means the HA consumer restarts while the gateway stays up. It does not restart the gateway add-on. ADV-03 records `partition_active` and `partition_cleared`, and requires `abs(observed_ms - 60000) + error_bound_ms <= 1000`; recovery begins only after clearing the partition. ADV-04 takes its baseline from the newly constructed instrumented runtime before cache load. It never modifies production cache.
+ADV-01 means the HA consumer restarts while the gateway stays up. It does not restart the gateway add-on. ADV-03 records `partition_active` and `partition_cleared`, and requires `abs(observed_ms - 60000) + partition_active_error_bound_ms + partition_cleared_error_bound_ms <= 1000`; recovery begins only after clearing the partition. ADV-04 takes its baseline from the newly constructed instrumented runtime before cache load. It never modifies production cache.
 
 The fixed event orders are: ADV-01 `restart_requested`, `consumer_stopped`, `consumer_started`, `ha_consumer_synchronized`; ADV-02 `reset_requested`, `reset_started`, `transport_unavailable`, `transport_available`, `gateway_live_ready`; ADV-03 `partition_requested`, `partition_active`, `partition_cleared`, `gateway_live_ready`; ADV-04 `isolated_cache_staged`, `runtime_started`, `gateway_live_ready`. Events are only `fixture` or `observer` sourced.
 
@@ -50,9 +50,9 @@ UTC. The first scenario starts at the run anchor, each next scenario starts at
 the prior scenario end, and the last scenario ends at the run completion anchor.
 Overlap, a gap, or an outer run-boundary forgery invalidates the artifact.
 Aggregate scenario timing uncertainty is at least every event uncertainty and
-equals evaluated duration uncertainty. Recovery uncertainty is instead the sum
-of its two endpoint bounds. The partition duration calculation uses the scenario
-aggregate; a smaller evaluation bound cannot turn a boundary failure into a pass.
+equals evaluated duration uncertainty. Recovery and partition-duration
+uncertainty are each the sum of their two endpoint bounds. A smaller evaluation
+bound cannot turn a boundary failure into a pass.
 
 Every nonempty action sequence is the canonical ordered prefix for its scenario:
 an evaluated result carries the full sequence, while an execution-error may carry

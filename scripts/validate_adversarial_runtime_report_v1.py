@@ -119,7 +119,10 @@ def _stamp(value):
 
 
 def _same_timestamp(anchor, offset_ms, observed):
-    expected = anchor + dt.timedelta(milliseconds=offset_ms)
+    try:
+        expected = anchor + dt.timedelta(milliseconds=offset_ms)
+    except OverflowError as error:
+        raise ValidationError("timestamp offset overflows supported datetime range") from error
     return abs((expected - _stamp(observed)).total_seconds() * 1000) <= 1
 
 
@@ -149,7 +152,7 @@ def _validate_catalog(definition, errors):
     return expected
 
 
-def _event_offsets(events, start, errors):
+def _event_offsets(events, start, errors, *, elapsed_ms=None):
     offsets = {}
     previous = -1
     for event in events:
@@ -159,6 +162,9 @@ def _event_offsets(events, start, errors):
             _error(errors, "action_order")
         previous = offset
         offsets[kind] = offset
+        if elapsed_ms is not None and offset > elapsed_ms:
+            _error(errors, "action_bounds")
+            continue
         if not _same_timestamp(start, offset, event["at"]):
             _error(errors, "wall_monotonic_binding")
     return offsets
@@ -178,7 +184,7 @@ def _validate_evaluated(scenario, expected, errors):
     kinds = [event["kind"] for event in events]
     if kinds != expected["events"]:
         _error(errors, "action_semantics")
-    offsets = _event_offsets(events, start, errors)
+    offsets = _event_offsets(events, start, errors, elapsed_ms=timing["elapsed_ms"])
     if timing["error_bound_ms"] < max((event["error_bound_ms"] for event in events), default=0):
         _error(errors, "timing_error_bound")
     anchor = expected["anchor"]
@@ -202,8 +208,14 @@ def _validate_evaluated(scenario, expected, errors):
     if definition["scenario_id"] == "ADV-03":
         if "partition_active" not in offsets or "partition_cleared" not in offsets:
             _error(errors, "partition_duration")
-        elif abs(offsets["partition_cleared"] - offsets["partition_active"] - 60000) + timing["error_bound_ms"] > 1000:
-            _error(errors, "partition_duration")
+        else:
+            event_by_kind = {event["kind"]: event for event in events}
+            partition_error_bound_ms = (
+                event_by_kind["partition_active"]["error_bound_ms"]
+                + event_by_kind["partition_cleared"]["error_bound_ms"]
+            )
+            if abs(offsets["partition_cleared"] - offsets["partition_active"] - 60000) + partition_error_bound_ms > 1000:
+                _error(errors, "partition_duration")
 
     baseline, finish, delta = metrics["baseline"], metrics["end"], metrics["delta"]
     if baseline["counter_epoch"] != finish["counter_epoch"]:
@@ -285,7 +297,7 @@ def validate_semantics(report):
             if (producer["component"], producer["build_kind"]) != ("ha-adversarial-harness", "ha-harness"):
                 _error(errors, "producer_subject_pairing")
             if execution["mode"] == "offline-fixture":
-                if subject["artifact_kind"] != "gateway-fixture-set" or producer["input_gateway_report_sha256"] is None:
+                if subject["artifact_kind"] != "gateway-fixture-set" or producer["input_gateway_report_sha256"] is None or any(any(event["source"] != "fixture" for event in item["action"]["events"]) for item in report["scenarios"]):
                     _error(errors, "producer_subject_pairing")
             elif execution["mode"] == "operator-live":
                 if subject["artifact_kind"] != "gateway-binary" or producer["input_gateway_report_sha256"] is not None:
@@ -333,9 +345,7 @@ def validate_semantics(report):
             event_kinds = [event["kind"] for event in events]
             if event_kinds != expected["events"][: len(events)]:
                 _error(scenario_errors, "action_prefix")
-            _event_offsets(events, start, scenario_errors)
-            if any(event["offset_ms"] > timing["elapsed_ms"] for event in events):
-                _error(scenario_errors, "action_bounds")
+            _event_offsets(events, start, scenario_errors, elapsed_ms=timing["elapsed_ms"])
             if kind == "evaluated":
                 if scenario["errors"] or any(scenario["metrics"][field] is None for field in ("baseline", "end", "delta")) or scenario["evaluation"] is None:
                     _error(scenario_errors, "evaluated_shape")

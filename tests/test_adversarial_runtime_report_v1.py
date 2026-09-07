@@ -177,6 +177,27 @@ def test_recovery_uncertainty_sums_anchor_and_observation_bounds(tmp_path):
     assert "recovery_decision" in validate_candidate(tmp_path, candidate)
 
 
+def test_partition_uncertainty_sums_its_two_endpoint_bounds(tmp_path):
+    candidate = load(POSITIVE)
+    scenario = candidate["scenarios"][2]
+    scenario["action"]["events"][1]["error_bound_ms"] = 1000
+    scenario["action"]["events"][2]["error_bound_ms"] = 1000
+    scenario["timing"]["error_bound_ms"] = 1000
+    scenario["evaluation"]["duration"]["error_bound_ms"] = 1000
+    assert "action_decision" in validate_candidate(tmp_path, candidate)
+
+
+def test_cli_rejects_safe_integer_offset_without_traceback(tmp_path):
+    candidate = load(POSITIVE)
+    candidate["scenarios"][0]["action"]["events"][0]["offset_ms"] = 9007199254740991
+    path = tmp_path / "huge-offset.json"
+    path.write_text(json.dumps(candidate), encoding="utf-8")
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 1
+    assert "adversarial_runtime_report_v1_invalid" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
 def test_startup_phase_is_the_documented_closed_fsm_enum(tmp_path):
     candidate = load(POSITIVE)
     candidate["scenarios"][3]["metrics"]["baseline"]["semantic_startup_current_phase"] = "VENDOR_MAGIC"
@@ -216,6 +237,10 @@ def test_result_variant_shapes_and_producer_subject_pairings_fail_closed(tmp_pat
     path = tmp_path / "ha-offline.json"
     path.write_text(json.dumps(ha_offline), encoding="utf-8")
     validate_path(path)
+    for scenario in ha_offline["scenarios"]:
+        for event in scenario["action"]["events"]:
+            event["source"] = "observer"
+    assert "semantic: producer_subject_pairing" in validate_candidate(tmp_path, ha_offline)
 
     ha_live = copy.deepcopy(ha_offline)
     ha_live["execution"]["mode"] = "operator-live"
