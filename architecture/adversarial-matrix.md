@@ -1,119 +1,90 @@
 # Adversarial Runtime Matrix
 
-This page documents the adversarial runtime scenarios used to validate gateway resilience under failure conditions.
+This is the immutable public `adversarial-runtime-report-v1` contract for gateway #198 and HA integration #105. It is evidence only: it neither executes a trigger nor authorizes a live action.
 
-## Overview
+Gateway main at `ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532` has definitions, report counting, JSON writing, and unit tests. It has no trigger, observer, baseline/end capture, recovery measurement, or threshold executor. It is therefore **definition/serialization-only** until gateway #198 is accepted. The fixtures here are offline contract evidence, not HA, adapter, network, or hardware evidence.
 
-The adversarial matrix defines a set of chaos-like runtime scenarios, each with explicit durations and pass/fail thresholds. Scenarios are executed against a live gateway+HA stack during smoke testing. The framework is standalone and testable without hardware — scenario definitions and report generation are unit-tested independently.
+## Exact artifact
 
-## Threshold Semantics
+[`adversarial-runtime-report-v1.schema.json`](../docs/platform/schemas/adversarial-runtime-report-v1.schema.json) is the sole v1 schema. Its exact identifier is `https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-report-v1.schema.json`. Consumers accept only that schema, `schema_version: 1`, suite ID `helianthus.adversarial.ADV01-04`, and suite version `1`. A changed threshold or scenario increments suite version; a changed required field, unit, outcome, or interpretation creates a new schema major.
 
-All counter-based thresholds (`MinLiveEpoch`, `MaxCollisions`) are evaluated as **deltas** from a baseline snapshot taken at scenario start. The runner captures `expvar` values before injecting the adverse event and computes the delta at evaluation time. This prevents monotonic counter accumulation across scenarios from producing false passes or fails.
+All objects are closed with `additionalProperties: false`. Before schema validation the deterministic parser rejects invalid UTF-8, duplicate names, non-integer or non-finite numbers, and reports larger than 1 MiB. Counters, offsets, and durations are non-negative integers below `2^53`; every wire duration uses `*_ms`. Wall times use the exact `YYYY-MM-DDTHH:mm:ss.sssZ` form. The injected monotonic clock controls ordering and recovery. Each event/snapshot timestamp equals the scenario anchor plus its offset within 1 ms; wall-clock changes cannot alter a verdict.
 
-## Scenario Matrix
+Provenance is a closed `subject` plus `producer` pair. The subject is always the
+gateway, with its commit, source-tree state, `gateway-fixture-set` or
+`gateway-binary` kind, and artifact SHA-256. The producer is either gateway
+`internal/adversarial` / `go-test-binary`, or HA integration
+`ha-adversarial-harness` / `ha-harness`, with its own commit and build digest.
+Gateway production is only offline against a fixture-set subject and every event
+is fixture sourced. HA offline requires a fixture-set subject plus an input
+gateway-report SHA-256; HA operator-live requires a gateway-binary subject, null
+input digest, and observer-sourced action evidence. `fixture_set_sha256` equals
+the fixture subject digest and is null for a binary subject. All other pairings
+are rejected.
 
-| ID | Name | Duration | Max Recovery | Min Live Epoch Δ | Zones Required | DHW Required | Max Collisions Δ |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| ADV-01 | HA restart while gateway stable | 3m | 90s | 2 | yes | yes | 5 |
-| ADV-02 | Bus reset mid-flight | 3m | 120s | 2 | yes | no | 20 |
-| ADV-03 | 60s partition and recovery | 3m | 90s | 2 | yes | no | 10 |
-| ADV-04 | Cache corruption boot path | 3m | 120s | 2 | yes | yes | 5 |
+## Canonical suite
 
-### ADV-01: HA Restart While Gateway Stable
+| ID | Trigger and recovery anchor | Target | Duration | Max recovery | Epoch delta | Zones | DHW | Collision delta |
+| --- | --- | --- | ---: | ---: | ---: | --- | --- | ---: |
+| ADV-01 | Restart HA Core/integration consumer while gateway remains stable; `consumer_stopped` | `ha_consumer_synchronized` | 180000 ms | 90000 ms | >= 2 | required | required | <= 5 |
+| ADV-02 | Reset eBUS adapter while polling; `reset_started` | `gateway_live_ready` | 180000 ms | 120000 ms | >= 2 | required | not required | <= 20 |
+| ADV-03 | Partition gateway-to-adapter transport for 60000 ms; `partition_cleared` | `gateway_live_ready` | 180000 ms | 90000 ms | >= 2 | required | not required | <= 10 |
+| ADV-04 | Fresh isolated gateway boot with corrupted/truncated cache fixture; `runtime_started` | `gateway_live_ready` | 180000 ms | 120000 ms | >= 2 | required | required | <= 5 |
 
-**Trigger:** Gateway is in LIVE_READY, HA supervisor restarts the add-on container.
+ADV-01 means the HA consumer restarts while the gateway stays up. It does not restart the gateway add-on. ADV-03 records `partition_active` and `partition_cleared`, and requires `abs(observed_ms - 60000) + error_bound_ms <= 1000`; recovery begins only after clearing the partition. ADV-04 takes its baseline from the newly constructed instrumented runtime before cache load. It never modifies production cache.
 
-**Rationale:** The most common adverse event in production. The gateway must recover from a clean restart and reach LIVE_READY within 90 seconds, with both zone and DHW data available.
+The fixed event orders are: ADV-01 `restart_requested`, `consumer_stopped`, `consumer_started`, `ha_consumer_synchronized`; ADV-02 `reset_requested`, `reset_started`, `transport_unavailable`, `transport_available`, `gateway_live_ready`; ADV-03 `partition_requested`, `partition_active`, `partition_cleared`, `gateway_live_ready`; ADV-04 `isolated_cache_staged`, `runtime_started`, `gateway_live_ready`. Events are only `fixture` or `observer` sourced.
 
-**Why DHW required:** A clean HA restart preserves the semantic cache, so DHW data should survive via cache hydration.
+A passing run keeps the full 180000 ms observation window, with scheduling error at most 1000 ms. Recovery passes only if `observed_ms + error_bound_ms <= maximum_ms`; bounds are 0..1000 ms. Baseline/end snapshots must use one `counter_epoch`; a changed epoch or negative delta is an execution error. The fixed snapshots contain counter epoch, timestamp/offset, phase, live epoch, collision total, zone count, and DHW presence. The validator recomputes duration, action, recovery, live epoch, zones, DHW, collisions, outcome, summary, and verdict.
 
-### ADV-02: Bus Reset Mid-Flight
+The executor is serial. The canonical report binds ADV-01 to 12:00–12:03,
+ADV-02 to 12:03–12:06, ADV-03 to 12:06–12:09, and ADV-04 to 12:09–12:12
+UTC. The first scenario starts at the run anchor, each next scenario starts at
+the prior scenario end, and the last scenario ends at the run completion anchor.
+Overlap, a gap, or an outer run-boundary forgery invalidates the artifact.
+Aggregate scenario timing uncertainty is at least every event uncertainty and
+must equal both evaluated duration and recovery uncertainty. The partition
+duration calculation uses that aggregate; a smaller evaluation bound cannot turn
+a boundary failure into a pass.
 
-**Trigger:** The eBUS adapter is power-cycled while the gateway is actively polling.
+Every nonempty action sequence is the canonical ordered prefix for its scenario:
+an evaluated result carries the full sequence, while an execution-error may carry
+only the prefix reached before failure. Event offsets and derived timestamps are
+monotonic and remain within the scenario elapsed window. An infrastructure block
+has no events and only the pre-action normalized error
+`precondition` / `precondition_unavailable`; a trigger or observer error is not
+an infrastructure block.
 
-**Rationale:** Adapter power loss causes the bus connection to drop. The read circuit breaker should trip, suppress failing reads, and recover when the adapter comes back. Higher collision tolerance (20) accounts for bus arbitration noise during adapter reboot.
+## Result variants and precedence
 
-**Why DHW not required:** The bus outage may exceed the DHW stale TTL (10 minutes), causing DHW to expire before the bus recovers.
+An `evaluated` result has complete non-null metrics and evaluation, empty errors, and `pass` only if every recomputed decision passes; otherwise it is `fail`. An `execution-error` has `fail`, at least one normalized error, and null non-evaluated fields. An `infrastructure-block` has `blocked-infra`, a closed infrastructure reason, null non-evaluated fields, and proves no adverse action began. An observer failure after any adverse action is an execution error, never an infrastructure block.
 
-### ADV-03: 60s Network Partition and Recovery
+Allowed error phases are `precondition`, `trigger`, `observer`, `evaluation`, and `artifact`. Codes are closed: `precondition_unavailable`, `trigger_rejected`, `trigger_timeout`, `trigger_failed`, `observer_timeout`, `observer_failed`, `counter_epoch_changed`, `negative_counter_delta`, `timing_uncertainty_exceeded`, `action_duration_out_of_bounds`, and `evidence_incomplete`. Suite v1 names no expected limitation, so `xfail` is invalid. Parser/schema rejection outranks semantics; report precedence is `fail`, then `blocked-infra`, then `pass`. Summary is recomputed with total four, unknown zero, and xfailed zero. Dirty provenance is representable but cannot yield a passing consumer gate.
 
-**Trigger:** Network partition for 60 seconds between the gateway and the eBUS adapter, then recovery.
+## Ownership and privacy
 
-**Rationale:** Network partitions cause the gateway to enter DEGRADED state via the boot live timeout. After recovery, the startup FSM must reach LIVE_READY again.
+Gateway #198 owns the serial offline executor with immutable catalog, injected clock, typed trigger, and read-only observer. The default build may register fixture/sandbox triggers only. HA #105 owns the consumer restart/synchronization observer and consumes this artifact without importing gateway code.
 
-**Why DHW not required:** The 60-second partition may overlap with DHW stale expiry, depending on when the last DHW update occurred.
+`execution.mode` is `offline-fixture` or `operator-live`; it records evidence and cannot select/configure/authorize a trigger. Offline reports include a public fixture-manifest digest and live reports set it null. Any live restart, adapter reset, partition, damaged-state boot, or physical test requires separate action-time confirmation.
 
-### ADV-04: Cache Corruption Boot Path
+The public contract carries no credentials, tokens, hostnames, addresses, interfaces, serials, device fingerprints, paths, account data, raw captures, logs, command lines, or private evidence hashes.
 
-**Trigger:** Gateway boots with a corrupted or truncated `semantic_cache.json`.
+## Offline validation
 
-**Rationale:** Cache corruption tests the cold-boot path where no stale data is available. The gateway must reach LIVE_READY purely from live bus data within 120 seconds.
+[`offline-all-pass.json`](../docs/platform/fixtures/adversarial-runtime/v1/positive/offline-all-pass.json) is the canonical all-pass report. [`negative-cases.json`](../docs/platform/fixtures/adversarial-runtime/v1/negative-cases.json) carries weakening mutations.
+[`fixture-input-manifest.json`](../docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json)
+is the canonical public fixture-input manifest; its exact byte SHA-256 is bound
+to the fixture-subject provenance. These documentation fixtures are hypothetical
+contract vectors and never execution evidence.
 
-**Why DHW required:** With no cache, DHW must be populated from live bus data. If the bus is healthy, DHW should appear within the recovery window.
-
-## Verdict Outcomes
-
-| Outcome | Meaning |
-| --- | --- |
-| `pass` | All thresholds met within the scenario duration |
-| `fail` | One or more thresholds violated |
-| `xfail` | Expected failure — known limitation documented in the scenario |
-| `blocked-infra` | Infrastructure prevented execution (e.g., adapter not connected) |
-
-## Report Format
-
-The adversarial report is a JSON artifact consumed by the tester gate:
-
-```json
-{
-  "generated_at": "2026-02-26T12:00:00Z",
-  "scenarios": [
-    {
-      "scenario_id": "ADV-01",
-      "name": "HA restart while gateway stable",
-      "outcome": "pass",
-      "duration": "1m30s",
-      "metrics": {
-        "live_epoch": 3,
-        "collisions": 1
-      }
-    }
-  ],
-  "summary": {
-    "total": 4,
-    "passed": 3,
-    "failed": 0,
-    "xfailed": 1,
-    "blocked": 0,
-    "unknown": 0
-  }
-}
+```sh
+python3 scripts/validate_adversarial_runtime_report_v1.py \
+  docs/platform/fixtures/adversarial-runtime/v1/positive/offline-all-pass.json
+python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py
 ```
 
-The summary maintains the invariant: `total == passed + failed + xfailed + blocked + unknown`.
+Tests cover malformed JSON, invalid UTF-8, duplicate keys, size and integer limits, versions, closed fields, missing/duplicate/order-drift scenarios, thresholds, wall/monotonic mismatch, counter reset/decrease, timing uncertainty, partial evidence, improper infrastructure downgrade, unauthorized xfail, forged summary, dirty provenance, and all three result variants.
 
-## Observe-First Validation Note
-
-This page documents the current adversarial runtime scenarios only. It does not
-yet freeze dedicated observe-first scenarios, report fields, or proof artifacts
-beyond the thresholds and report format above.
-
-Current factual references:
-
-- bus observability and passive-capability signals:
-  [`observability.md`](./observability.md)
-- transport caveats that decide passive-capable vs unavailable topologies:
-  [`../deployment/full-stack.md#passive-observe-first-transport-contract`](../deployment/full-stack.md#passive-observe-first-transport-contract)
-- canonical end-to-end smoke order:
-  [`../development/end-to-end-smoke.md`](../development/end-to-end-smoke.md)
-- topology matrix runner:
-  [`../development/smoke-matrix.md`](../development/smoke-matrix.md)
-
-## Cross-Links
-
-- Scenario definitions: `internal/adversarial/scenarios.go`
-- Report generation: `internal/adversarial/report.go`
-- Startup FSM: [`architecture/startup-semantic-fsm.md`](./startup-semantic-fsm.md)
-- DHW freshness: [`architecture/dhw-freshness-fsm.md`](./dhw-freshness-fsm.md)
-- Observability: [`architecture/observability.md`](./observability.md)
-- Read circuit breaker: [`architecture/semantic-read-circuit-breaker.md`](./semantic-read-circuit-breaker.md)
+- Gateway executor owner: `helianthus-ebusgateway` #198.
+- HA consumer/harness owner: `helianthus-ha-integration` #105.
+- [Startup FSM](./startup-semantic-fsm.md), [DHW freshness](./dhw-freshness-fsm.md), and [observability](./observability.md) remain the corresponding semantic references.

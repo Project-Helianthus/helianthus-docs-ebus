@@ -150,6 +150,11 @@ echo "==> check qualified identity documentation contract"
 python3 scripts/check_regulator_identity_contract.py
 python3 -m pytest -q tests/test_regulator_identity_contract_checker.py
 
+echo "==> check adversarial runtime report v1 contract"
+python3 scripts/validate_adversarial_runtime_report_v1.py \
+  docs/platform/fixtures/adversarial-runtime/v1/positive/offline-all-pass.json
+python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py
+
 echo "==> check Vaillant regulator capability API contract"
 python3 scripts/validate_vaillant_regulator_capability_api_v1.py
 python3 -m pytest -q tests/test_vaillant_regulator_capability_api_v1.py

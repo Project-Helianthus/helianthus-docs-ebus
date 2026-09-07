@@ -1,0 +1,11 @@
+{
+  "fixture_contract": "helianthus.adversarial-runtime.fixture-input-manifest/v1",
+  "suite": {"id": "helianthus.adversarial.ADV01-04", "version": 1},
+  "purpose": "hypothetical public contract vectors; not execution evidence",
+  "inputs": [
+    {"scenario_id": "ADV-01", "kind": "ha_consumer_restart"},
+    {"scenario_id": "ADV-02", "kind": "adapter_reset"},
+    {"scenario_id": "ADV-03", "kind": "transport_partition"},
+    {"scenario_id": "ADV-04", "kind": "isolated_corrupt_cache_boot"}
+  ]
+}
