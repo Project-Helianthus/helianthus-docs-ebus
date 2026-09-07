@@ -147,6 +147,7 @@
                     ],
                     "properties": {
                       "counter_epoch": {
+                        "description": "Deterministic case-scoped synthetic counter identity; meaningful only within this fixture scenario and not across reports.",
                         "type": "string",
                         "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
                         "maxLength": 36
@@ -206,6 +207,7 @@
                     ],
                     "properties": {
                       "counter_epoch": {
+                        "description": "Deterministic case-scoped synthetic counter identity; meaningful only within this fixture scenario and not across reports.",
                         "type": "string",
                         "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
                         "maxLength": 36
@@ -304,6 +306,7 @@
       }
     },
     "run_id": {
+      "description": "Deterministic case-scoped synthetic fixture identity; reuse denotes the same fixture evidence, not an independent runtime run.",
       "type": "string",
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
       "maxLength": 36
