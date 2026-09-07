@@ -1,9 +1,10 @@
 # Vaillant Regulator Capability API V1
 
-**Status:** Target additive public contract. The implementation candidate is
-[helianthus-ebusgateway#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947),
+**Status:** Target additive public contract. The reviewed implementation
+candidate is [helianthus-ebusgateway#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947),
 which owns [gateway issue #946](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/946).
-PR #947 is open; this page is not a claim that the implementation is merged.
+PR #947 remains open; this page is not a claim that the implementation is
+merged or deployed.
 
 This contract publishes one Vaillant catalog-derived eBUS capability for consumers. It
 does not expose product catalog rows, device roles, native frames, or a
@@ -70,9 +71,11 @@ not need a settled-removal signal.
 ## Evidence and ownership
 
 The defining gateway revision is
-[`5130817a50c5fc289f7425f7febfb9407f7f55aa`](https://github.com/Project-Helianthus/helianthus-ebusgateway/commit/5130817a50c5fc289f7425f7febfb9407f7f55aa),
-the current head of open gateway [#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947).
-The coordinated documentation gate must be accepted before #947 merges.
+[`76d66a60b2895b3392bba798a5f690a1d73daa1f`](https://github.com/Project-Helianthus/helianthus-ebusgateway/commit/76d66a60b2895b3392bba798a5f690a1d73daa1f),
+the independently reviewed head of open gateway
+[#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947).
+Its review returned `NO_BLOCKING_FINDINGS`; #947 remains open and the
+coordinated documentation gate must be accepted before it merges.
 It uses accepted `helianthus-ebusreg`
 [`e24532a50caa00c113751b98b88239e045d731e8`](https://github.com/Project-Helianthus/helianthus-ebusreg/commit/e24532a50caa00c113751b98b88239e045d731e8)
 and retains the historical `ControllerCapability` dependency introduced by

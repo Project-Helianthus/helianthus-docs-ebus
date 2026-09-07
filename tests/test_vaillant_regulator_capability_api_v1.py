@@ -118,6 +118,7 @@ def test_validator_rejects_source_coordinate_mutations() -> None:
     manifest, cases = load(MANIFEST), load(CASES)
     mutations = (
         ("gateway", "repository", "other/gateway"),
+        ("gateway", "revision", "5130817a50c5fc289f7425f7febfb9407f7f55aa"),
         ("gateway", "revision", "0" * 40),
         ("gateway", "issues", [193]),
         ("gateway", "pull_requests", [211]),
