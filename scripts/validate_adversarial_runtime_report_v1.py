@@ -188,8 +188,14 @@ def _validate_evaluated(scenario, expected, errors):
     if anchor not in offsets or recovery_event not in offsets:
         _error(errors, "action_semantics")
         recovery_ms = None
+        recovery_error_bound_ms = None
     else:
         recovery_ms = offsets[recovery_event] - offsets[anchor]
+        event_by_kind = {event["kind"]: event for event in events}
+        recovery_error_bound_ms = (
+            event_by_kind[anchor]["error_bound_ms"]
+            + event_by_kind[recovery_event]["error_bound_ms"]
+        )
     if recovery_ms is None or timing["recovery_ms"] != recovery_ms:
         _error(errors, "recovery_measurement")
 
@@ -223,12 +229,12 @@ def _validate_evaluated(scenario, expected, errors):
     zones = evaluation["zones"]
     dhw = evaluation["dhw"]
     collisions = evaluation["collisions"]
-    if duration["error_bound_ms"] != timing["error_bound_ms"] or recovery["error_bound_ms"] != timing["error_bound_ms"]:
+    if duration["error_bound_ms"] != timing["error_bound_ms"] or recovery["error_bound_ms"] != recovery_error_bound_ms:
         _error(errors, "timing_error_bound")
     expected_decisions = {
         "duration": abs(timing["elapsed_ms"] - 180000) + timing["error_bound_ms"] <= 1000,
         "action": not {"action_semantics", "partition_duration"} & errors,
-        "recovery": recovery_ms is not None and recovery_ms + timing["error_bound_ms"] <= expected["maximum_recovery_ms"],
+        "recovery": recovery_ms is not None and recovery_ms + recovery_error_bound_ms <= expected["maximum_recovery_ms"],
         "live_epoch": live_delta >= 2,
         "zones": (not expected["zones_required"]) or finish["semantic_zone_count"] > 0,
         "dhw": (not expected["dhw_required"]) or finish["semantic_dhw_present"],

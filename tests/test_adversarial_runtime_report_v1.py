@@ -163,6 +163,24 @@ def test_evaluated_snapshots_cover_full_window_with_declared_uncertainty(tmp_pat
     candidate = load(POSITIVE)
     candidate["scenarios"][0]["metrics"]["baseline"].update(offset_ms=1, captured_at="2026-09-07T12:00:00.001Z")
     assert "snapshot_window" in validate_candidate(tmp_path, candidate)
+
+
+def test_recovery_uncertainty_sums_anchor_and_observation_bounds(tmp_path):
+    candidate = load(POSITIVE)
+    scenario = candidate["scenarios"][0]
+    scenario["action"]["events"][1]["error_bound_ms"] = 1000
+    scenario["action"]["events"][3].update(offset_ms=90000, at="2026-09-07T12:01:30.000Z", error_bound_ms=1000)
+    scenario["timing"]["error_bound_ms"] = 1000
+    scenario["timing"]["recovery_ms"] = 89000
+    scenario["evaluation"]["duration"]["error_bound_ms"] = 1000
+    scenario["evaluation"]["recovery"].update(observed_ms=89000, error_bound_ms=2000, passed=True)
+    assert "recovery_decision" in validate_candidate(tmp_path, candidate)
+
+
+def test_startup_phase_is_the_documented_closed_fsm_enum(tmp_path):
+    candidate = load(POSITIVE)
+    candidate["scenarios"][3]["metrics"]["baseline"]["semantic_startup_current_phase"] = "VENDOR_MAGIC"
+    assert "schema" in validate_candidate(tmp_path, candidate)
     candidate = load(POSITIVE)
     candidate["scenarios"][0]["metrics"]["end"].update(offset_ms=179999, captured_at="2026-09-07T12:02:59.999Z")
     assert "snapshot_window" in validate_candidate(tmp_path, candidate)

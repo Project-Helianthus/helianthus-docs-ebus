@@ -457,7 +457,7 @@
           "counter_epoch": "epoch-2",
           "captured_at": "2026-09-07T12:09:00.000Z",
           "offset_ms": 0,
-          "semantic_startup_current_phase": "BOOTING",
+          "semantic_startup_current_phase": "BOOT_INIT",
           "semantic_live_epoch": 0,
           "semantic_bus_collisions_total": 0,
           "semantic_zone_count": 0,

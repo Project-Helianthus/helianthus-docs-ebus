@@ -398,9 +398,13 @@
           "$ref": "#/$defs/Milliseconds"
         },
         "semantic_startup_current_phase": {
-          "type": "string",
-          "pattern": "^[A-Z][A-Z0-9_]{0,63}$",
-          "maxLength": 64
+          "enum": [
+            "BOOT_INIT",
+            "CACHE_LOADED_STALE",
+            "LIVE_WARMUP",
+            "LIVE_READY",
+            "DEGRADED"
+          ]
         },
         "semantic_live_epoch": {
           "$ref": "#/$defs/SafeInteger"
@@ -579,7 +583,7 @@
         "error_bound_ms": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 1000
+          "maximum": 2000
         },
         "passed": {
           "type": "boolean"
