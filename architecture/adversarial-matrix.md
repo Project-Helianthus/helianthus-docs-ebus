@@ -3,14 +3,16 @@
 This is the immutable public `adversarial-runtime-report-v1` contract for gateway #198 and HA integration #105. It is evidence only: it neither executes a trigger nor authorizes a live action.
 
 **Proven (exact repository source inspection):** gateway main at
-`ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532` contains only scenario
-definitions, report counting, JSON writing, and unit tests under
-[`internal/adversarial`](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532/internal/adversarial).
-That exact tree has no trigger, observer, baseline/end capture, recovery
-measurement, or threshold executor. The gateway is therefore
-**definition/serialization-only** until gateway #198 is accepted. The fixtures
-here are offline contract evidence, not HA, adapter, network, or hardware
-evidence.
+`ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532` contains an
+[`internal/adversarial`](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532/internal/adversarial)
+package with only scenario definitions, report counting, JSON writing,
+and unit tests. That exact package has no trigger, observer, baseline/end
+capture, recovery measurement, or threshold executor, so it is
+**definition/serialization-only**. [Gateway issue #198](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/198)
+owns adding the offline executor against this contract. This package-scoped
+finding makes no repository-wide claim about unrelated trigger mechanisms. The
+fixtures here are offline contract evidence, not HA, adapter, network, or
+hardware evidence.
 
 ## Exact artifact
 
