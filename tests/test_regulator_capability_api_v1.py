@@ -40,6 +40,16 @@ def test_validator_rejects_missing_field_compatibility_or_heuristic_reintroducti
     assert "consumer_constraints" in validate(heuristic, cases)
 
 
+def test_validator_rejects_deleted_or_replaced_precedence() -> None:
+    manifest, cases = load(MANIFEST), load(CASES)
+    deleted = copy.deepcopy(manifest)
+    del deleted["precedence"]
+    assert "precedence" in validate(deleted, cases)
+    replaced = copy.deepcopy(manifest)
+    replaced["precedence"] = {"present": "any_identity", "none": "empty_inventory", "unknown": []}
+    assert "precedence" in validate(replaced, cases)
+
+
 def test_validator_cli_is_deterministic() -> None:
     result = subprocess.run([sys.executable, "scripts/validate_regulator_capability_api_v1.py"], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr

@@ -17,6 +17,15 @@ EXPECTED_STATES = {"UNKNOWN", "NONE", "PRESENT"}
 EXPECTED_FORBIDDEN_INPUTS = {"basv_prefix", "vrc_prefix", "display_name", "per_device_role"}
 EXPECTED_GATEWAY_REVISION = "f52c08405e48609fb05ae8b231d1530bcfb46094"
 EXPECTED_EBUSREG_REVISION = "e24532a50caa00c113751b98b88239e045d731e8"
+EXPECTED_PRECEDENCE = {
+    "present": "any_vaillant_identity_catalog_classified_regulator",
+    "none": "at_least_one_vaillant_identity_and_all_relevant_identities_catalog_known_non_regulator",
+    "unknown": [
+        "catalog_failure",
+        "no_vaillant_inventory",
+        "unclassified_vaillant_identity_without_present",
+    ],
+}
 
 
 class ValidationError(ValueError):
@@ -62,6 +71,8 @@ def validate(manifest: dict, cases: dict) -> list[str]:
         errors.append("mcp")
     if manifest.get("semantic_snapshot") != {"object": "runtime_status", "field": "regulator_capability"}:
         errors.append("semantic_snapshot")
+    if manifest.get("precedence") != EXPECTED_PRECEDENCE:
+        errors.append("precedence")
     defaults = manifest.get("defaults")
     if not isinstance(defaults, dict) or set(defaults.values()) != {"UNKNOWN"} or set(defaults) != {"provider_unwired", "provider_failure", "missing_or_older_gateway_field"}:
         errors.append("defaults")
