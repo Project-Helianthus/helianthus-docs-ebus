@@ -78,6 +78,14 @@ has no events and only the pre-action normalized error
 `precondition` / `precondition_unavailable`; a trigger or observer error is not
 an infrastructure block.
 
+For `execution-error`, precondition errors are invalid because no adverse action
+was executed. Trigger errors require the initial request/staging prefix; observer
+errors require adverse action progress and may occur after the full sequence;
+evaluation and artifact errors require the full canonical sequence. Until both
+canonical recovery endpoints are present, `recovery_anchor`,
+`recovery_observed`, and `recovery_ms` are all `null`. Once both exist, their
+names and the offset delta are exact canonical values.
+
 The first adverse request/staging event is bound to scenario start within the
 declared timing uncertainty; it cannot be deferred to the end of a passing
 window. Every result kind binds `scenario_ended_at` to

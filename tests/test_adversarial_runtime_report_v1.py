@@ -176,6 +176,26 @@ def test_infrastructure_reason_is_scenario_specific(tmp_path):
     assert "infrastructure_block_precedence" in validate_candidate(tmp_path, candidate)
 
 
+def test_execution_error_progress_and_recovery_fields_are_canonical(tmp_path):
+    partial = load(EXECUTION_ERROR)
+    scenario = partial["scenarios"][0]
+    scenario["action"]["events"] = scenario["action"]["events"][:1]
+    scenario["timing"].update(recovery_anchor=None, recovery_observed=None, recovery_ms=None)
+    scenario["errors"] = [{"phase": "trigger", "code": "trigger_failed"}]
+    path = tmp_path / "partial-trigger.json"
+    path.write_text(json.dumps(partial), encoding="utf-8")
+    validate_path(path)
+
+    invalid = copy.deepcopy(partial)
+    invalid["scenarios"][0]["errors"] = [{"phase": "observer", "code": "observer_failed"}]
+    invalid["scenarios"][0]["action"]["events"] = []
+    assert "execution_error_progress" in validate_candidate(tmp_path, invalid)
+
+    invalid = copy.deepcopy(partial)
+    invalid["scenarios"][0]["timing"].update(recovery_anchor="consumer_stopped", recovery_observed="ha_consumer_synchronized", recovery_ms=88000)
+    assert "recovery_fields" in validate_candidate(tmp_path, invalid)
+
+
 def test_evaluated_snapshots_cover_full_window_with_declared_uncertainty(tmp_path):
     candidate = load(POSITIVE)
     candidate["scenarios"][0]["metrics"]["baseline"].update(offset_ms=1, captured_at="2026-09-07T12:00:00.001Z")

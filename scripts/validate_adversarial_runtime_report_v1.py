@@ -218,6 +218,19 @@ def _event_offsets(events, start, errors, *, elapsed_ms=None):
     return offsets
 
 
+def _validate_recovery_fields(timing, events, expected, errors):
+    by_kind = {event["kind"]: event for event in events}
+    anchor = expected["anchor"]
+    observed = expected["recovery_event"]
+    if anchor not in by_kind or observed not in by_kind:
+        if any(timing[field] is not None for field in ("recovery_anchor", "recovery_observed", "recovery_ms")):
+            _error(errors, "recovery_fields")
+        return
+    recovery_ms = by_kind[observed]["offset_ms"] - by_kind[anchor]["offset_ms"]
+    if (timing["recovery_anchor"], timing["recovery_observed"], timing["recovery_ms"]) != (anchor, observed, recovery_ms):
+        _error(errors, "recovery_fields")
+
+
 def _validate_evaluated(scenario, expected, errors):
     definition = scenario["definition"]
     timing = scenario["timing"]
@@ -400,6 +413,7 @@ def validate_semantics(report):
             _event_offsets(events, start, scenario_errors, elapsed_ms=timing["elapsed_ms"])
             if events and events[0]["offset_ms"] > timing["error_bound_ms"]:
                 _error(scenario_errors, "action_start")
+            _validate_recovery_fields(timing, events, expected, scenario_errors)
             if kind == "evaluated":
                 if scenario["errors"] or any(scenario["metrics"][field] is None for field in ("baseline", "end", "delta")) or scenario["evaluation"] is None:
                     _error(scenario_errors, "evaluated_shape")
@@ -410,6 +424,17 @@ def validate_semantics(report):
             elif kind == "execution-error":
                 if scenario["outcome"] != "fail" or not scenario["errors"] or scenario["evaluation"] is not None or any(scenario["metrics"][field] is not None for field in ("baseline", "end", "delta")):
                     _error(scenario_errors, "execution_error_precedence")
+                complete = len(events) == len(expected["events"])
+                for error in scenario["errors"]:
+                    phase, code = error["phase"], error["code"]
+                    valid = (
+                        (phase == "trigger" and code in {"trigger_rejected", "trigger_timeout", "trigger_failed"} and len(events) >= 1)
+                        or (phase == "observer" and code in {"observer_timeout", "observer_failed"} and len(events) >= 1)
+                        or (phase == "evaluation" and code in {"counter_epoch_changed", "negative_counter_delta", "timing_uncertainty_exceeded", "action_duration_out_of_bounds", "evidence_incomplete"} and complete)
+                        or (phase == "artifact" and code == "evidence_incomplete" and complete)
+                    )
+                    if not valid:
+                        _error(scenario_errors, "execution_error_progress")
             else:
                 _error(scenario_errors, "result_kind")
             errors.update(scenario_errors)
