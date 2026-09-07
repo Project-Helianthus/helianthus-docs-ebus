@@ -96,8 +96,8 @@ other error are invalid. All other execution-error codes keep every metric field
 null.
 
 The first adverse request/staging event is bound to scenario start within the
-declared timing uncertainty, and the actual adverse transition must occur no
-later than 1000 ms after scenario start. The transition events are
+declared timing uncertainty, and the actual adverse transition offset plus its
+event uncertainty must be no greater than 1000 ms after scenario start. The transition events are
 `consumer_stopped`, `reset_started`, `partition_active`, and `runtime_started`
 for ADV-01 through ADV-04 respectively; they cannot be deferred to the end of a
 passing window. Observer errors require that transition to have occurred. Every

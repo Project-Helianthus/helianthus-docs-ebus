@@ -185,6 +185,14 @@ def test_actual_adverse_transition_is_bound_to_scenario_start(tmp_path):
         )[scenario_index]
         assert "action_activation" in validate_candidate(tmp_path, candidate)
 
+    candidate = load(POSITIVE)
+    activation = candidate["scenarios"][0]["action"]["events"][1]
+    activation["error_bound_ms"] = 1
+    candidate["scenarios"][0]["timing"]["error_bound_ms"] = 1
+    candidate["scenarios"][0]["evaluation"]["duration"]["error_bound_ms"] = 1
+    candidate["scenarios"][0]["evaluation"]["recovery"]["error_bound_ms"] = 1
+    assert "action_activation" in validate_candidate(tmp_path, candidate)
+
     candidate = load(EXECUTION_ERROR)
     scenario = candidate["scenarios"][0]
     scenario["action"]["events"] = scenario["action"]["events"][:1]

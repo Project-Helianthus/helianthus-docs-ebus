@@ -419,8 +419,10 @@ def validate_semantics(report):
                 _error(scenario_errors, "action_start")
             event_by_kind = {event["kind"]: event for event in events}
             activation_event = expected["activation_event"]
-            if activation_event in event_by_kind and event_by_kind[activation_event]["offset_ms"] > 1000:
-                _error(scenario_errors, "action_activation")
+            if activation_event in event_by_kind:
+                activation = event_by_kind[activation_event]
+                if activation["offset_ms"] + activation["error_bound_ms"] > 1000:
+                    _error(scenario_errors, "action_activation")
             _validate_recovery_fields(timing, events, expected, scenario_errors)
             if kind == "evaluated":
                 if scenario["errors"] or any(scenario["metrics"][field] is None for field in ("baseline", "end", "delta")) or scenario["evaluation"] is None:
