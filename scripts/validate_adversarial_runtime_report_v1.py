@@ -422,7 +422,30 @@ def validate_semantics(report):
                 if events or scenario["outcome"] != "blocked-infra" or scenario["errors"] != [{"phase": "precondition", "code": "precondition_unavailable"}] or scenario["infrastructure_reason"] not in expected["infrastructure_reasons"] or scenario["evaluation"] is not None or any(scenario["metrics"][field] is not None for field in ("baseline", "end", "delta")) or any(timing[field] is not None for field in ("recovery_anchor", "recovery_observed", "recovery_ms")):
                     _error(scenario_errors, "infrastructure_block_precedence")
             elif kind == "execution-error":
-                if scenario["outcome"] != "fail" or not scenario["errors"] or scenario["evaluation"] is not None or any(scenario["metrics"][field] is not None for field in ("baseline", "end", "delta")):
+                continuity_error = (
+                    len(scenario["errors"]) == 1
+                    and scenario["errors"][0]["phase"] == "evaluation"
+                    and scenario["errors"][0]["code"] in {"counter_epoch_changed", "negative_counter_delta"}
+                )
+                metrics = scenario["metrics"]
+                if scenario["outcome"] != "fail" or not scenario["errors"] or scenario["evaluation"] is not None or metrics["delta"] is not None:
+                    _error(scenario_errors, "execution_error_precedence")
+                if continuity_error:
+                    baseline, finish = metrics["baseline"], metrics["end"]
+                    if baseline is None or finish is None:
+                        _error(scenario_errors, "continuity_error_evidence")
+                    else:
+                        for snapshot in (baseline, finish):
+                            if not _same_timestamp(start, snapshot["offset_ms"], snapshot["captured_at"]):
+                                _error(scenario_errors, "continuity_error_evidence")
+                        if baseline["offset_ms"] > finish["offset_ms"] or finish["offset_ms"] > timing["elapsed_ms"] or abs(baseline["offset_ms"]) > timing["error_bound_ms"] or abs(finish["offset_ms"] - timing["elapsed_ms"]) > timing["error_bound_ms"]:
+                            _error(scenario_errors, "continuity_error_evidence")
+                        code = scenario["errors"][0]["code"]
+                        if code == "counter_epoch_changed" and baseline["counter_epoch"] == finish["counter_epoch"]:
+                            _error(scenario_errors, "continuity_error_evidence")
+                        if code == "negative_counter_delta" and (baseline["counter_epoch"] != finish["counter_epoch"] or (finish["semantic_live_epoch"] >= baseline["semantic_live_epoch"] and finish["semantic_bus_collisions_total"] >= baseline["semantic_bus_collisions_total"])):
+                            _error(scenario_errors, "continuity_error_evidence")
+                elif metrics["baseline"] is not None or metrics["end"] is not None:
                     _error(scenario_errors, "execution_error_precedence")
                 complete = len(events) == len(expected["events"])
                 for error in scenario["errors"]:

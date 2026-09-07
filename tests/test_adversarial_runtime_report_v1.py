@@ -200,6 +200,25 @@ def test_execution_error_progress_and_recovery_fields_are_canonical(tmp_path):
     assert "execution_error_progress" in validate_candidate(tmp_path, invalid)
 
 
+def test_continuity_execution_errors_retain_only_required_snapshot_evidence(tmp_path):
+    candidate = load(EXECUTION_ERROR)
+    scenario = candidate["scenarios"][0]
+    source = load(POSITIVE)["scenarios"][0]["metrics"]
+    scenario["metrics"] = {"baseline": copy.deepcopy(source["baseline"]), "end": copy.deepcopy(source["end"]), "delta": None}
+    scenario["metrics"]["end"]["counter_epoch"] = "00000000-0000-4000-8000-000000000099"
+    scenario["errors"] = [{"phase": "evaluation", "code": "counter_epoch_changed"}]
+    path = tmp_path / "counter-epoch-changed.json"
+    path.write_text(json.dumps(candidate), encoding="utf-8")
+    validate_path(path)
+
+    invalid = copy.deepcopy(candidate)
+    invalid["scenarios"][0]["metrics"]["baseline"] = None
+    assert "continuity_error_evidence" in validate_candidate(tmp_path, invalid)
+    invalid = copy.deepcopy(candidate)
+    invalid["scenarios"][0]["metrics"]["end"]["counter_epoch"] = invalid["scenarios"][0]["metrics"]["baseline"]["counter_epoch"]
+    assert "continuity_error_evidence" in validate_candidate(tmp_path, invalid)
+
+
 def test_evaluated_snapshots_cover_full_window_with_declared_uncertainty(tmp_path):
     candidate = load(POSITIVE)
     candidate["scenarios"][0]["metrics"]["baseline"].update(offset_ms=1, captured_at="2026-09-07T12:00:00.001Z")

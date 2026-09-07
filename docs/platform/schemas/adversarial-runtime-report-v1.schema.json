@@ -824,12 +824,6 @@
               },
               "metrics": {
                 "properties": {
-                  "baseline": {
-                    "type": "null"
-                  },
-                  "end": {
-                    "type": "null"
-                  },
                   "delta": {
                     "type": "null"
                   }

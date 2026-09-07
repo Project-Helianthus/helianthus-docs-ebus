@@ -86,6 +86,12 @@ canonical recovery endpoints are present, `recovery_anchor`,
 `recovery_observed`, and `recovery_ms` are all `null`. Once both exist, their
 names and the offset delta are exact canonical values.
 
+`counter_epoch_changed` and `negative_counter_delta` are the only execution
+errors that retain metric snapshots. They require non-null baseline and end
+snapshots, null `delta` and `evaluation`, and the normal timestamp/order/window
+checks. The former proves differing epochs; the latter proves one same-epoch
+counter decrease. All other execution-error codes keep every metric field null.
+
 The first adverse request/staging event is bound to scenario start within the
 declared timing uncertainty; it cannot be deferred to the end of a passing
 window. Every result kind binds `scenario_ended_at` to
