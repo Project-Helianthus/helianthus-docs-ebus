@@ -195,6 +195,10 @@ def test_execution_error_progress_and_recovery_fields_are_canonical(tmp_path):
     invalid["scenarios"][0]["timing"].update(recovery_anchor="consumer_stopped", recovery_observed="ha_consumer_synchronized", recovery_ms=88000)
     assert "recovery_fields" in validate_candidate(tmp_path, invalid)
 
+    invalid = load(EXECUTION_ERROR)
+    invalid["scenarios"][0]["errors"] = [{"phase": "trigger", "code": "trigger_failed"}]
+    assert "execution_error_progress" in validate_candidate(tmp_path, invalid)
+
 
 def test_evaluated_snapshots_cover_full_window_with_declared_uncertainty(tmp_path):
     candidate = load(POSITIVE)

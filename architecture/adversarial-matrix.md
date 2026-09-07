@@ -79,7 +79,7 @@ has no events and only the pre-action normalized error
 an infrastructure block.
 
 For `execution-error`, precondition errors are invalid because no adverse action
-was executed. Trigger errors require the initial request/staging prefix; observer
+was executed. Trigger errors require exactly the first request/staging event; observer
 errors require adverse action progress and may occur after the full sequence;
 evaluation and artifact errors require the full canonical sequence. Until both
 canonical recovery endpoints are present, `recovery_anchor`,

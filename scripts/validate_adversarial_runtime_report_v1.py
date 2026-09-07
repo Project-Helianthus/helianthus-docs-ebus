@@ -428,7 +428,7 @@ def validate_semantics(report):
                 for error in scenario["errors"]:
                     phase, code = error["phase"], error["code"]
                     valid = (
-                        (phase == "trigger" and code in {"trigger_rejected", "trigger_timeout", "trigger_failed"} and len(events) >= 1)
+                        (phase == "trigger" and code in {"trigger_rejected", "trigger_timeout", "trigger_failed"} and len(events) == 1)
                         or (phase == "observer" and code in {"observer_timeout", "observer_failed"} and len(events) >= 1)
                         or (phase == "evaluation" and code in {"counter_epoch_changed", "negative_counter_delta", "timing_uncertainty_exceeded", "action_duration_out_of_bounds", "evidence_incomplete"} and complete)
                         or (phase == "artifact" and code == "evidence_incomplete" and complete)
