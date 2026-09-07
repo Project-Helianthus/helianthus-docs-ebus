@@ -1,0 +1,56 @@
+{
+  "contract_id": "REGULATOR_CAPABILITY_API_V1",
+  "contract_version": 1,
+  "graphql": {
+    "root_field": "regulator_capability",
+    "type": "RegulatorCapability!",
+    "enum": ["UNKNOWN", "NONE", "PRESENT"]
+  },
+  "mcp": {
+    "tool": "ebus.v1.runtime.status.get",
+    "data_field": "regulator_capability"
+  },
+  "semantic_snapshot": {
+    "object": "runtime_status",
+    "field": "regulator_capability"
+  },
+  "precedence": {
+    "present": "any_vaillant_identity_catalog_classified_regulator",
+    "none": "at_least_one_vaillant_identity_and_all_relevant_identities_catalog_known_non_regulator",
+    "unknown": [
+      "catalog_failure",
+      "no_vaillant_inventory",
+      "unclassified_vaillant_identity_without_present"
+    ]
+  },
+  "defaults": {
+    "provider_unwired": "UNKNOWN",
+    "provider_failure": "UNKNOWN",
+    "missing_or_older_gateway_field": "UNKNOWN"
+  },
+  "consumer_constraints": {
+    "forbidden_inference_inputs": ["basv_prefix", "vrc_prefix", "display_name", "per_device_role"],
+    "absence_grace_part_of_field": false,
+    "none_and_unknown_need_settled_removal_signal": false
+  },
+  "sources": {
+    "gateway": {
+      "repository": "Project-Helianthus/helianthus-ebusgateway",
+      "revision": "f52c08405e48609fb05ae8b231d1530bcfb46094",
+      "issues": [193, 194, 946],
+      "pull_requests": [211, 212]
+    },
+    "ebusreg": {
+      "repository": "Project-Helianthus/helianthus-ebusreg",
+      "revision": "e24532a50caa00c113751b98b88239e045d731e8",
+      "historical_controller_capability_merge": "ad503214d698ee5a0c58da2ce637a54dd714409b",
+      "issue": 97,
+      "pull_request": 98
+    },
+    "documentation_issue": 511,
+    "consumer": {
+      "repository": "Project-Helianthus/helianthus-ha-integration",
+      "issue": 101
+    }
+  }
+}

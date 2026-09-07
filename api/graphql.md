@@ -12,6 +12,10 @@ contract is pre-implementation and is not a fallback or alias for either route
 above. Its isolated `/graphql/m2m/v1` query-only surface is documented in
 [`docs/platform/public-graphql-m2m-v1.md`](../docs/platform/public-graphql-m2m-v1.md).
 
+The additive catalog-derived regulator capability root is specified in
+[`regulator-capability-v1.md`](./regulator-capability-v1.md). It is a target
+contract for gateway #946, not evidence that this root is already deployed.
+
 ## Observe-First Contract Ownership
 
 This page owns the GraphQL-specific observe-first parity contract that is

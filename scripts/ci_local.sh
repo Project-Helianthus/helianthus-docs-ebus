@@ -150,6 +150,10 @@ echo "==> check qualified identity documentation contract"
 python3 scripts/check_regulator_identity_contract.py
 python3 -m pytest -q tests/test_regulator_identity_contract_checker.py
 
+echo "==> check regulator capability API contract"
+python3 scripts/validate_regulator_capability_api_v1.py
+python3 -m pytest -q tests/test_regulator_capability_api_v1.py
+
 echo "==> check GraphQL device-face provenance contract"
 python3 scripts/check_graphql_face_provenance.py
 python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
