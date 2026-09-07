@@ -170,6 +170,28 @@ def test_action_start_timing_and_result_timing_binding_are_fail_closed(tmp_path)
     assert "timing_binding" in validate_candidate(tmp_path, candidate)
 
 
+def test_actual_adverse_transition_is_bound_to_scenario_start(tmp_path):
+    activation_indexes = (1, 1, 1, 1)
+    for scenario_index, event_index in enumerate(activation_indexes):
+        candidate = load(POSITIVE)
+        scenario = candidate["scenarios"][scenario_index]
+        event = scenario["action"]["events"][event_index]
+        event.update(offset_ms=120000, at=scenario["timing"]["scenario_started_at"])
+        event["at"] = (
+            "2026-09-07T12:02:00.000Z",
+            "2026-09-07T12:05:00.000Z",
+            "2026-09-07T12:08:00.000Z",
+            "2026-09-07T12:11:00.000Z",
+        )[scenario_index]
+        assert "action_activation" in validate_candidate(tmp_path, candidate)
+
+    candidate = load(EXECUTION_ERROR)
+    scenario = candidate["scenarios"][0]
+    scenario["action"]["events"] = scenario["action"]["events"][:1]
+    scenario["timing"].update(recovery_anchor=None, recovery_observed=None, recovery_ms=None)
+    assert "execution_error_progress" in validate_candidate(tmp_path, candidate)
+
+
 def test_infrastructure_reason_is_scenario_specific(tmp_path):
     candidate = load(INFRASTRUCTURE_BLOCK)
     candidate["scenarios"][0]["infrastructure_reason"] = "adapter_control_unavailable"

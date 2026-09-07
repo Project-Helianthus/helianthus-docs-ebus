@@ -34,6 +34,7 @@ CATALOG = {
         "end_phase": "LIVE_READY",
         "infrastructure_reasons": {"ha_harness_unavailable", "observer_unavailable"},
         "events": ["restart_requested", "consumer_stopped", "consumer_started", "ha_consumer_synchronized"],
+        "activation_event": "consumer_stopped",
         "anchor": "consumer_stopped",
         "recovery_event": "ha_consumer_synchronized",
     },
@@ -49,6 +50,7 @@ CATALOG = {
         "end_phase": "LIVE_READY",
         "infrastructure_reasons": {"adapter_control_unavailable", "observer_unavailable"},
         "events": ["reset_requested", "reset_started", "transport_unavailable", "transport_available", "gateway_live_ready"],
+        "activation_event": "reset_started",
         "anchor": "reset_started",
         "recovery_event": "gateway_live_ready",
     },
@@ -64,6 +66,7 @@ CATALOG = {
         "end_phase": "LIVE_READY",
         "infrastructure_reasons": {"network_fault_injector_unavailable", "observer_unavailable"},
         "events": ["partition_requested", "partition_active", "partition_cleared", "gateway_live_ready"],
+        "activation_event": "partition_active",
         "anchor": "partition_cleared",
         "recovery_event": "gateway_live_ready",
     },
@@ -79,6 +82,7 @@ CATALOG = {
         "end_phase": "LIVE_READY",
         "infrastructure_reasons": {"isolated_cache_sandbox_unavailable", "observer_unavailable"},
         "events": ["isolated_cache_staged", "runtime_started", "gateway_live_ready"],
+        "activation_event": "runtime_started",
         "anchor": "runtime_started",
         "recovery_event": "gateway_live_ready",
     },
@@ -413,6 +417,10 @@ def validate_semantics(report):
             _event_offsets(events, start, scenario_errors, elapsed_ms=timing["elapsed_ms"])
             if events and events[0]["offset_ms"] > timing["error_bound_ms"]:
                 _error(scenario_errors, "action_start")
+            event_by_kind = {event["kind"]: event for event in events}
+            activation_event = expected["activation_event"]
+            if activation_event in event_by_kind and event_by_kind[activation_event]["offset_ms"] > 1000:
+                _error(scenario_errors, "action_activation")
             _validate_recovery_fields(timing, events, expected, scenario_errors)
             if kind == "evaluated":
                 if scenario["errors"] or any(scenario["metrics"][field] is None for field in ("baseline", "end", "delta")) or scenario["evaluation"] is None:
@@ -456,7 +464,6 @@ def validate_semantics(report):
                 elif metrics["baseline"] is not None or metrics["end"] is not None:
                     _error(scenario_errors, "execution_error_precedence")
                 complete = len(events) == len(expected["events"])
-                event_by_kind = {event["kind"]: event for event in events}
                 partition_out_of_bounds = False
                 if scenario["definition"]["scenario_id"] == "ADV-03" and {"partition_active", "partition_cleared"} <= event_by_kind.keys():
                     active = event_by_kind["partition_active"]
@@ -471,7 +478,7 @@ def validate_semantics(report):
                     phase, code = error["phase"], error["code"]
                     valid = (
                         (phase == "trigger" and code in {"trigger_rejected", "trigger_timeout", "trigger_failed"} and len(events) == 1)
-                        or (phase == "observer" and code in {"observer_timeout", "observer_failed"} and len(events) >= 1)
+                        or (phase == "observer" and code in {"observer_timeout", "observer_failed"} and activation_event in event_by_kind)
                         or (phase == "evaluation" and code in {"counter_epoch_changed", "negative_counter_delta", "evidence_incomplete"} and complete)
                         or (phase == "evaluation" and code == "action_duration_out_of_bounds" and complete and partition_out_of_bounds)
                         or (phase == "artifact" and code == "evidence_incomplete" and complete)

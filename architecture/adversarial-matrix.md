@@ -96,8 +96,12 @@ other error are invalid. All other execution-error codes keep every metric field
 null.
 
 The first adverse request/staging event is bound to scenario start within the
-declared timing uncertainty; it cannot be deferred to the end of a passing
-window. Every result kind binds `scenario_ended_at` to
+declared timing uncertainty, and the actual adverse transition must occur no
+later than 1000 ms after scenario start. The transition events are
+`consumer_stopped`, `reset_started`, `partition_active`, and `runtime_started`
+for ADV-01 through ADV-04 respectively; they cannot be deferred to the end of a
+passing window. Observer errors require that transition to have occurred. Every
+result kind binds `scenario_ended_at` to
 `scenario_started_at + elapsed_ms` before result dispatch. Infrastructure reasons
 are closed per scenario: ADV-01 permits `ha_harness_unavailable` or
 `observer_unavailable`; ADV-02 permits `adapter_control_unavailable` or
