@@ -102,6 +102,16 @@ def test_validator_rejects_duplicated_or_missing_fixture_cases() -> None:
     assert "negative_cases" in validate(manifest, missing)
 
 
+def test_validator_rejects_boolean_versions() -> None:
+    manifest, cases = load(MANIFEST), load(CASES)
+    boolean_contract = copy.deepcopy(manifest)
+    boolean_contract["contract_version"] = True
+    assert "identity" in validate(boolean_contract, cases)
+    boolean_schema = copy.deepcopy(cases)
+    boolean_schema["schema_version"] = True
+    assert "case_schema" in validate(manifest, boolean_schema)
+
+
 def test_sdl_rejects_required_root_argument(tmp_path: Path) -> None:
     mutated = tmp_path / "mutated.graphql"
     mutated.write_text(
@@ -112,6 +122,16 @@ def test_sdl_rejects_required_root_argument(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     assert validate_sdl(mutated) == ["sdl_arguments"]
+
+
+def test_sdl_rejects_redirected_configured_query_root(tmp_path: Path) -> None:
+    mutated = tmp_path / "redirected.graphql"
+    mutated.write_text(
+        SDL.read_text(encoding="utf-8")
+        + "\nschema { query: Root }\ntype Root { placeholder: String! }\n",
+        encoding="utf-8",
+    )
+    assert validate_sdl(mutated) == ["sdl_query_root"]
 
 
 def test_validator_cli_is_deterministic() -> None:

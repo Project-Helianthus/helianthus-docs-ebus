@@ -111,7 +111,12 @@ def resolve(states: list[str]) -> str:
 
 def validate(manifest: dict, cases: dict) -> list[str]:
     errors: list[str] = []
-    if manifest.get("contract_id") != "VAILLANT_REGULATOR_CAPABILITY_API_V1" or manifest.get("contract_version") != 1:
+    contract_version = manifest.get("contract_version")
+    if (
+        manifest.get("contract_id") != "VAILLANT_REGULATOR_CAPABILITY_API_V1"
+        or type(contract_version) is not int
+        or contract_version != 1
+    ):
         errors.append("identity")
     graphql = manifest.get("graphql")
     if graphql != {"root_field": "vaillant_regulator_capability", "type": "VaillantRegulatorCapability!", "enum": ["UNKNOWN", "NONE", "PRESENT"]}:
@@ -132,7 +137,8 @@ def validate(manifest: dict, cases: dict) -> list[str]:
         errors.append("consumer_constraints")
     if manifest.get("sources") != EXPECTED_SOURCES:
         errors.append("sources")
-    if cases.get("schema_version") != 1:
+    schema_version = cases.get("schema_version")
+    if type(schema_version) is not int or schema_version != 1:
         errors.append("case_schema")
     positive = cases.get("positive")
     if positive != EXPECTED_POSITIVE_CASES:
@@ -152,9 +158,11 @@ def validate(manifest: dict, cases: dict) -> list[str]:
 
 def validate_sdl(sdl_path: Path = SDL) -> list[str]:
     schema = build_schema(sdl_path.read_text(encoding="utf-8"))
-    query = schema.get_type("Query")
+    query = schema.query_type
     enum = schema.get_type("VaillantRegulatorCapability")
-    if query is None or enum is None:
+    if query is None or query.name != "Query":
+        return ["sdl_query_root"]
+    if enum is None:
         return ["sdl_missing_type"]
     field = query.fields.get("vaillant_regulator_capability")
     if field is None or str(field.type) != "VaillantRegulatorCapability!":
