@@ -132,7 +132,12 @@ def parse_report_bytes(raw: bytes):
 def read_report_bytes(path: Path):
     fd = None
     try:
-        fd = os.open(path, os.O_RDONLY)
+        flags = os.O_RDONLY | os.O_NONBLOCK
+        if hasattr(os, "O_CLOEXEC"):
+            flags |= os.O_CLOEXEC
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        fd = os.open(path, flags)
         if not stat.S_ISREG(os.fstat(fd).st_mode):
             raise ValidationError("report read failed")
         with os.fdopen(fd, "rb") as stream:

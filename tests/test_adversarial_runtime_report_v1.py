@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -254,6 +255,15 @@ def test_report_read_failures_are_normalized_and_bounded(tmp_path, monkeypatch):
     monkeypatch.setattr(validator.os, "open", lambda *_args, **_kwargs: (_ for _ in ()).throw(PermissionError()))
     with pytest.raises(ValidationError, match="report read failed"):
         validator.read_report_bytes(POSITIVE)
+
+
+def test_fifo_report_path_rejects_promptly_without_traceback(tmp_path):
+    fifo = tmp_path / "report.fifo"
+    os.mkfifo(fifo)
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(fifo)], cwd=ROOT, text=True, capture_output=True, check=False, timeout=1)
+    assert result.returncode == 1
+    assert "report read failed" in result.stderr
+    assert "Traceback" not in result.stderr
 
 
 def test_missing_schema_validator_is_normalized(monkeypatch):
