@@ -15,8 +15,15 @@ SDL = ROOT / "api/vaillant-regulator-capability-v1.graphql"
 
 EXPECTED_STATES = {"UNKNOWN", "NONE", "PRESENT"}
 EXPECTED_FORBIDDEN_INPUTS = {"basv_prefix", "vrc_prefix", "display_name", "per_device_role"}
-EXPECTED_GATEWAY_REVISION = "f52c08405e48609fb05ae8b231d1530bcfb46094"
-EXPECTED_EBUSREG_REVISION = "e24532a50caa00c113751b98b88239e045d731e8"
+EXPECTED_CATALOG_STATES = {
+    "NONE",
+    "UNKNOWN",
+    "PRESENT",
+    "CATALOG_FAILURE",
+    "PROVIDER_UNWIRED",
+    "PROVIDER_FAILURE",
+    "MISSING_FIELD",
+}
 EXPECTED_SCOPE = {
     "protocol_vendor": "vaillant",
     "gateway_wide": False,
@@ -31,6 +38,41 @@ EXPECTED_PRECEDENCE = {
         "unclassified_vaillant_identity_without_present",
     ],
 }
+EXPECTED_SOURCES = {
+    "gateway": {
+        "repository": "Project-Helianthus/helianthus-ebusgateway",
+        "revision": "f52c08405e48609fb05ae8b231d1530bcfb46094",
+        "issues": [193, 194, 946],
+        "pull_requests": [211, 212],
+    },
+    "ebusreg": {
+        "repository": "Project-Helianthus/helianthus-ebusreg",
+        "revision": "e24532a50caa00c113751b98b88239e045d731e8",
+        "historical_controller_capability_merge": "ad503214d698ee5a0c58da2ce637a54dd714409b",
+        "issue": 97,
+        "pull_request": 98,
+    },
+    "documentation_issue": 511,
+    "consumer": {
+        "repository": "Project-Helianthus/helianthus-ha-integration",
+        "issue": 101,
+    },
+}
+EXPECTED_POSITIVE_CASES = [
+    {"name": "present_wins_over_unknown", "catalog_states": ["NONE", "UNKNOWN", "PRESENT"], "result": "PRESENT"},
+    {"name": "none_requires_known_non_regulator_inventory", "catalog_states": ["NONE", "NONE"], "result": "NONE"},
+    {"name": "unclassified_identity_is_unknown", "catalog_states": ["NONE", "UNKNOWN"], "result": "UNKNOWN"},
+    {"name": "empty_inventory_is_unknown", "catalog_states": [], "result": "UNKNOWN"},
+    {"name": "catalog_failure_is_unknown", "catalog_states": ["CATALOG_FAILURE"], "result": "UNKNOWN"},
+    {"name": "unwired_provider_is_unknown", "catalog_states": ["PROVIDER_UNWIRED"], "result": "UNKNOWN"},
+    {"name": "provider_failure_is_unknown", "catalog_states": ["PROVIDER_FAILURE"], "result": "UNKNOWN"},
+    {"name": "older_gateway_field_is_unknown", "catalog_states": ["MISSING_FIELD"], "result": "UNKNOWN"},
+]
+EXPECTED_NEGATIVE_CASES = [
+    {"name": "no_identity_is_not_none", "catalog_states": [], "forbidden_result": "NONE"},
+    {"name": "unknown_is_not_none", "catalog_states": ["NONE", "UNKNOWN"], "forbidden_result": "NONE"},
+    {"name": "name_or_role_is_not_input", "forbidden_inputs": ["basv_prefix", "vrc_prefix", "display_name", "per_device_role"]},
+]
 
 
 class ValidationError(ValueError):
@@ -56,9 +98,11 @@ def load(path: Path) -> dict:
 
 
 def resolve(states: list[str]) -> str:
+    if not isinstance(states, list) or any(state not in EXPECTED_CATALOG_STATES for state in states):
+        raise ValidationError(f"unsupported catalog state sequence: {states!r}")
     if any(state == "PRESENT" for state in states):
         return "PRESENT"
-    if not states or any(state in {"UNKNOWN", "CATALOG_FAILURE", "PROVIDER_UNWIRED", "MISSING_FIELD"} for state in states):
+    if not states or any(state in {"UNKNOWN", "CATALOG_FAILURE", "PROVIDER_UNWIRED", "PROVIDER_FAILURE", "MISSING_FIELD"} for state in states):
         return "UNKNOWN"
     if all(state == "NONE" for state in states):
         return "NONE"
@@ -86,26 +130,19 @@ def validate(manifest: dict, cases: dict) -> list[str]:
     constraints = manifest.get("consumer_constraints")
     if not isinstance(constraints, dict) or set(constraints.get("forbidden_inference_inputs", [])) != EXPECTED_FORBIDDEN_INPUTS or constraints.get("absence_grace_part_of_field") is not False or constraints.get("none_and_unknown_need_settled_removal_signal") is not False:
         errors.append("consumer_constraints")
-    sources = manifest.get("sources")
-    if not isinstance(sources, dict) or sources.get("gateway", {}).get("revision") != EXPECTED_GATEWAY_REVISION or sources.get("ebusreg", {}).get("revision") != EXPECTED_EBUSREG_REVISION or sources.get("documentation_issue") != 511 or sources.get("consumer", {}).get("issue") != 101:
+    if manifest.get("sources") != EXPECTED_SOURCES:
         errors.append("sources")
     if cases.get("schema_version") != 1:
         errors.append("case_schema")
     positive = cases.get("positive")
-    if not isinstance(positive, list) or len(positive) != 7:
+    if positive != EXPECTED_POSITIVE_CASES:
         errors.append("positive_cases")
-    else:
-        for case in positive:
-            if not isinstance(case, dict) or resolve(case.get("catalog_states", [])) != case.get("result") or case.get("result") not in EXPECTED_STATES:
-                errors.append("positive_case_result")
-                break
+    elif any(resolve(case["catalog_states"]) != case["result"] for case in positive):
+        errors.append("positive_case_result")
     negative = cases.get("negative")
-    if not isinstance(negative, list) or len(negative) != 3:
+    if negative != EXPECTED_NEGATIVE_CASES:
         errors.append("negative_cases")
     else:
-        forbidden = next((case.get("forbidden_inputs") for case in negative if "forbidden_inputs" in case), None)
-        if set(forbidden or []) != EXPECTED_FORBIDDEN_INPUTS:
-            errors.append("negative_forbidden_inputs")
         for case in negative:
             if "forbidden_result" in case and resolve(case.get("catalog_states", [])) == case["forbidden_result"]:
                 errors.append("negative_case_result")

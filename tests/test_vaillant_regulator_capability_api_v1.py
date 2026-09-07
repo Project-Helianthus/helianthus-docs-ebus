@@ -10,7 +10,12 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "docs/platform/manifests/vaillant-regulator-capability-api-v1.json"
 CASES = ROOT / "docs/platform/fixtures/vaillant-regulator-capability-api-v1/cases.json"
 sys.path.insert(0, str(ROOT / "scripts"))
-from validate_vaillant_regulator_capability_api_v1 import resolve, validate, validate_sdl  # noqa: E402
+from validate_vaillant_regulator_capability_api_v1 import (  # noqa: E402
+    ValidationError,
+    resolve,
+    validate,
+    validate_sdl,
+)
 
 
 def load(path: Path) -> dict:
@@ -28,6 +33,16 @@ def test_precedence_is_catalog_only_and_present_wins() -> None:
     assert resolve([]) == "UNKNOWN"
     assert resolve(["NONE", "UNKNOWN"]) == "UNKNOWN"
     assert resolve(["CATALOG_FAILURE"]) == "UNKNOWN"
+    assert resolve(["PROVIDER_FAILURE"]) == "UNKNOWN"
+
+
+def test_resolve_rejects_unknown_catalog_tokens_before_precedence() -> None:
+    for states in (["PRESENT", "TYPO"], ["UNKNOWN", "TYPO"]):
+        try:
+            resolve(states)
+        except ValidationError:
+            continue
+        raise AssertionError(f"unsupported states accepted: {states!r}")
 
 
 def test_validator_rejects_missing_field_compatibility_or_heuristic_reintroduction() -> None:
@@ -58,6 +73,31 @@ def test_validator_rejects_gateway_wide_or_cross_protocol_scope() -> None:
     cross_protocol = copy.deepcopy(manifest)
     cross_protocol["scope"]["cross_protocol"] = True
     assert "scope" in validate(cross_protocol, cases)
+
+
+def test_validator_rejects_source_coordinate_mutations() -> None:
+    manifest, cases = load(MANIFEST), load(CASES)
+    mutations = (
+        ("gateway", "repository", "other/gateway"),
+        ("gateway", "issues", [193]),
+        ("gateway", "pull_requests", [211]),
+        ("ebusreg", "historical_controller_capability_merge", "0" * 40),
+        ("consumer", "repository", "other/consumer"),
+    )
+    for section, key, value in mutations:
+        candidate = copy.deepcopy(manifest)
+        candidate["sources"][section][key] = value
+        assert "sources" in validate(candidate, cases)
+
+
+def test_validator_rejects_duplicated_or_missing_fixture_cases() -> None:
+    manifest, cases = load(MANIFEST), load(CASES)
+    duplicated = copy.deepcopy(cases)
+    duplicated["positive"] = [copy.deepcopy(cases["positive"][0]) for _ in cases["positive"]]
+    assert "positive_cases" in validate(manifest, duplicated)
+    missing = copy.deepcopy(cases)
+    missing["negative"] = missing["negative"][:-1]
+    assert "negative_cases" in validate(manifest, missing)
 
 
 def test_validator_cli_is_deterministic() -> None:
