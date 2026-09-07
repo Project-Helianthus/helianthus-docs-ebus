@@ -71,6 +71,29 @@ def test_validator_requires_closed_forbidden_inference_input_list() -> None:
         assert "consumer_constraints" in validate(candidate, cases)
 
 
+def test_validator_requires_complete_consumer_constraints_object() -> None:
+    manifest, cases = load(MANIFEST), load(CASES)
+    extra = copy.deepcopy(manifest)
+    extra["consumer_constraints"]["allowed_inference_inputs"] = []
+    assert "consumer_constraints" in validate(extra, cases)
+    deleted = copy.deepcopy(manifest)
+    del deleted["consumer_constraints"]["absence_grace_part_of_field"]
+    assert "consumer_constraints" in validate(deleted, cases)
+    type_drift = copy.deepcopy(manifest)
+    type_drift["consumer_constraints"]["absence_grace_part_of_field"] = "false"
+    assert "consumer_constraints" in validate(type_drift, cases)
+
+
+def test_validator_rejects_undeclared_top_level_machine_keys() -> None:
+    manifest, cases = load(MANIFEST), load(CASES)
+    extra_manifest = copy.deepcopy(manifest)
+    extra_manifest["undeclared"] = True
+    assert "manifest_shape" in validate(extra_manifest, cases)
+    extra_cases = copy.deepcopy(cases)
+    extra_cases["undeclared"] = True
+    assert "case_shape" in validate(manifest, extra_cases)
+
+
 def test_validator_rejects_deleted_or_replaced_precedence() -> None:
     manifest, cases = load(MANIFEST), load(CASES)
     deleted = copy.deepcopy(manifest)

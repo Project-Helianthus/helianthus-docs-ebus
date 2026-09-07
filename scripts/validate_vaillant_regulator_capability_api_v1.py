@@ -15,6 +15,24 @@ SDL = ROOT / "api/vaillant-regulator-capability-v1.graphql"
 
 EXPECTED_STATES = {"UNKNOWN", "NONE", "PRESENT"}
 EXPECTED_FORBIDDEN_INPUTS = {"basv_prefix", "vrc_prefix", "display_name", "per_device_role"}
+EXPECTED_MANIFEST_KEYS = {
+    "contract_id",
+    "contract_version",
+    "graphql",
+    "mcp",
+    "semantic_snapshot",
+    "precedence",
+    "defaults",
+    "consumer_constraints",
+    "scope",
+    "sources",
+}
+EXPECTED_CASES_KEYS = {"schema_version", "positive", "negative"}
+EXPECTED_CONSUMER_CONSTRAINT_KEYS = {
+    "forbidden_inference_inputs",
+    "absence_grace_part_of_field",
+    "none_and_unknown_need_settled_removal_signal",
+}
 EXPECTED_CATALOG_STATES = {
     "NONE",
     "UNKNOWN",
@@ -111,6 +129,10 @@ def resolve(states: list[str]) -> str:
 
 def validate(manifest: dict, cases: dict) -> list[str]:
     errors: list[str] = []
+    if set(manifest) != EXPECTED_MANIFEST_KEYS:
+        errors.append("manifest_shape")
+    if set(cases) != EXPECTED_CASES_KEYS:
+        errors.append("case_shape")
     contract_version = manifest.get("contract_version")
     if (
         manifest.get("contract_id") != "VAILLANT_REGULATOR_CAPABILITY_API_V1"
@@ -136,6 +158,7 @@ def validate(manifest: dict, cases: dict) -> list[str]:
     forbidden_inputs = constraints.get("forbidden_inference_inputs") if isinstance(constraints, dict) else None
     if (
         not isinstance(constraints, dict)
+        or set(constraints) != EXPECTED_CONSUMER_CONSTRAINT_KEYS
         or not isinstance(forbidden_inputs, list)
         or len(forbidden_inputs) != len(EXPECTED_FORBIDDEN_INPUTS)
         or any(type(item) is not str for item in forbidden_inputs)
