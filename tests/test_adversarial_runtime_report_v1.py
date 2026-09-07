@@ -241,6 +241,36 @@ def test_continuity_execution_errors_require_single_evidence_backed_code_and_can
         assert "continuity_error_evidence" in validate_candidate(tmp_path, invalid)
 
 
+def test_execution_evaluation_error_codes_match_retained_timing_evidence(tmp_path):
+    candidate = load(POSITIVE)
+    scenario = candidate["scenarios"][2]
+    scenario.update(
+        result_kind="execution-error",
+        outcome="fail",
+        evaluation=None,
+        errors=[{"phase": "evaluation", "code": "action_duration_out_of_bounds"}],
+    )
+    scenario["metrics"] = {"baseline": None, "end": None, "delta": None}
+    candidate["summary"] = {"total": 4, "passed": 3, "failed": 1, "xfailed": 0, "blocked": 0, "unknown": 0, "verdict": "fail"}
+
+    assert "execution_error_progress" in validate_candidate(tmp_path, candidate)
+
+    cleared = scenario["action"]["events"][2]
+    cleared.update(offset_ms=61001, at="2026-09-07T12:07:01.001Z")
+    scenario["timing"]["recovery_ms"] = 87999
+    path = tmp_path / "partition-duration-out-of-bounds.json"
+    path.write_text(json.dumps(candidate), encoding="utf-8")
+    validate_path(path)
+
+    invalid = copy.deepcopy(candidate)
+    invalid["scenarios"][2]["definition"]["scenario_id"] = "ADV-02"
+    assert "scenario_catalog" in validate_candidate(tmp_path, invalid)
+
+    invalid = load(EXECUTION_ERROR)
+    invalid["scenarios"][0]["errors"] = [{"phase": "evaluation", "code": "timing_uncertainty_exceeded"}]
+    assert "schema" in validate_candidate(tmp_path, invalid)
+
+
 def test_evaluated_snapshots_cover_full_window_with_declared_uncertainty(tmp_path):
     candidate = load(POSITIVE)
     candidate["scenarios"][0]["metrics"]["baseline"].update(offset_ms=1, captured_at="2026-09-07T12:00:00.001Z")

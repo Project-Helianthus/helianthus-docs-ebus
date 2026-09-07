@@ -684,7 +684,6 @@
             "observer_failed",
             "counter_epoch_changed",
             "negative_counter_delta",
-            "timing_uncertainty_exceeded",
             "action_duration_out_of_bounds",
             "evidence_incomplete"
           ]

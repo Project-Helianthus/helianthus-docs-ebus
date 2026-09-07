@@ -456,12 +456,24 @@ def validate_semantics(report):
                 elif metrics["baseline"] is not None or metrics["end"] is not None:
                     _error(scenario_errors, "execution_error_precedence")
                 complete = len(events) == len(expected["events"])
+                event_by_kind = {event["kind"]: event for event in events}
+                partition_out_of_bounds = False
+                if scenario["definition"]["scenario_id"] == "ADV-03" and {"partition_active", "partition_cleared"} <= event_by_kind.keys():
+                    active = event_by_kind["partition_active"]
+                    cleared = event_by_kind["partition_cleared"]
+                    partition_out_of_bounds = (
+                        abs(cleared["offset_ms"] - active["offset_ms"] - 60000)
+                        + active["error_bound_ms"]
+                        + cleared["error_bound_ms"]
+                        > 1000
+                    )
                 for error in scenario["errors"]:
                     phase, code = error["phase"], error["code"]
                     valid = (
                         (phase == "trigger" and code in {"trigger_rejected", "trigger_timeout", "trigger_failed"} and len(events) == 1)
                         or (phase == "observer" and code in {"observer_timeout", "observer_failed"} and len(events) >= 1)
-                        or (phase == "evaluation" and code in {"counter_epoch_changed", "negative_counter_delta", "timing_uncertainty_exceeded", "action_duration_out_of_bounds", "evidence_incomplete"} and complete)
+                        or (phase == "evaluation" and code in {"counter_epoch_changed", "negative_counter_delta", "evidence_incomplete"} and complete)
+                        or (phase == "evaluation" and code == "action_duration_out_of_bounds" and complete and partition_out_of_bounds)
                         or (phase == "artifact" and code == "evidence_incomplete" and complete)
                     )
                     if not valid:
