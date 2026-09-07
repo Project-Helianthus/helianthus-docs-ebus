@@ -200,23 +200,45 @@ def test_execution_error_progress_and_recovery_fields_are_canonical(tmp_path):
     assert "execution_error_progress" in validate_candidate(tmp_path, invalid)
 
 
-def test_continuity_execution_errors_retain_only_required_snapshot_evidence(tmp_path):
-    candidate = load(EXECUTION_ERROR)
-    scenario = candidate["scenarios"][0]
-    source = load(POSITIVE)["scenarios"][0]["metrics"]
-    scenario["metrics"] = {"baseline": copy.deepcopy(source["baseline"]), "end": copy.deepcopy(source["end"]), "delta": None}
-    scenario["metrics"]["end"]["counter_epoch"] = "00000000-0000-4000-8000-000000000099"
-    scenario["errors"] = [{"phase": "evaluation", "code": "counter_epoch_changed"}]
+def test_continuity_execution_errors_require_single_evidence_backed_code_and_canonical_phases(tmp_path):
+    def continuity_candidate(index, code):
+        candidate = load(EXECUTION_ERROR)
+        candidate["scenarios"][0] = copy.deepcopy(load(POSITIVE)["scenarios"][0])
+        scenario = candidate["scenarios"][index]
+        source = load(POSITIVE)["scenarios"][index]["metrics"]
+        scenario.update(result_kind="execution-error", outcome="fail", evaluation=None, errors=[{"phase": "evaluation", "code": code}])
+        scenario["metrics"] = {"baseline": copy.deepcopy(source["baseline"]), "end": copy.deepcopy(source["end"]), "delta": None}
+        if code == "counter_epoch_changed":
+            scenario["metrics"]["end"]["counter_epoch"] = "00000000-0000-4000-8000-000000000099"
+        else:
+            scenario["metrics"]["end"]["semantic_live_epoch"] = scenario["metrics"]["baseline"]["semantic_live_epoch"] - 1
+        return candidate
+
+    counter_epoch = continuity_candidate(0, "counter_epoch_changed")
     path = tmp_path / "counter-epoch-changed.json"
-    path.write_text(json.dumps(candidate), encoding="utf-8")
+    path.write_text(json.dumps(counter_epoch), encoding="utf-8")
     validate_path(path)
 
-    invalid = copy.deepcopy(candidate)
+    negative_delta = continuity_candidate(1, "negative_counter_delta")
+    path = tmp_path / "negative-counter-delta.json"
+    path.write_text(json.dumps(negative_delta), encoding="utf-8")
+    validate_path(path)
+
+    invalid = copy.deepcopy(counter_epoch)
     invalid["scenarios"][0]["metrics"]["baseline"] = None
     assert "continuity_error_evidence" in validate_candidate(tmp_path, invalid)
-    invalid = copy.deepcopy(candidate)
+    invalid = copy.deepcopy(counter_epoch)
     invalid["scenarios"][0]["metrics"]["end"]["counter_epoch"] = invalid["scenarios"][0]["metrics"]["baseline"]["counter_epoch"]
     assert "continuity_error_evidence" in validate_candidate(tmp_path, invalid)
+
+    mixed = load(EXECUTION_ERROR)
+    mixed["scenarios"][0]["errors"].append({"phase": "evaluation", "code": "counter_epoch_changed"})
+    assert "execution_error_precedence" in validate_candidate(tmp_path, mixed)
+
+    for index in range(4):
+        invalid = continuity_candidate(index, "counter_epoch_changed")
+        invalid["scenarios"][index]["metrics"]["baseline"]["semantic_startup_current_phase"] = "LIVE_READY" if index == 3 else "DEGRADED"
+        assert "continuity_error_evidence" in validate_candidate(tmp_path, invalid)
 
 
 def test_evaluated_snapshots_cover_full_window_with_declared_uncertainty(tmp_path):

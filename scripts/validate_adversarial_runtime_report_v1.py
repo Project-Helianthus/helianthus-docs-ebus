@@ -427,6 +427,10 @@ def validate_semantics(report):
                     and scenario["errors"][0]["phase"] == "evaluation"
                     and scenario["errors"][0]["code"] in {"counter_epoch_changed", "negative_counter_delta"}
                 )
+                contains_continuity_code = any(
+                    error["code"] in {"counter_epoch_changed", "negative_counter_delta"}
+                    for error in scenario["errors"]
+                )
                 metrics = scenario["metrics"]
                 if scenario["outcome"] != "fail" or not scenario["errors"] or scenario["evaluation"] is not None or metrics["delta"] is not None:
                     _error(scenario_errors, "execution_error_precedence")
@@ -440,11 +444,15 @@ def validate_semantics(report):
                                 _error(scenario_errors, "continuity_error_evidence")
                         if baseline["offset_ms"] > finish["offset_ms"] or finish["offset_ms"] > timing["elapsed_ms"] or abs(baseline["offset_ms"]) > timing["error_bound_ms"] or abs(finish["offset_ms"] - timing["elapsed_ms"]) > timing["error_bound_ms"]:
                             _error(scenario_errors, "continuity_error_evidence")
+                        if baseline["semantic_startup_current_phase"] != expected["baseline_phase"] or finish["semantic_startup_current_phase"] != expected["end_phase"]:
+                            _error(scenario_errors, "continuity_error_evidence")
                         code = scenario["errors"][0]["code"]
                         if code == "counter_epoch_changed" and baseline["counter_epoch"] == finish["counter_epoch"]:
                             _error(scenario_errors, "continuity_error_evidence")
                         if code == "negative_counter_delta" and (baseline["counter_epoch"] != finish["counter_epoch"] or (finish["semantic_live_epoch"] >= baseline["semantic_live_epoch"] and finish["semantic_bus_collisions_total"] >= baseline["semantic_bus_collisions_total"])):
                             _error(scenario_errors, "continuity_error_evidence")
+                elif contains_continuity_code and not continuity_error:
+                    _error(scenario_errors, "execution_error_precedence")
                 elif metrics["baseline"] is not None or metrics["end"] is not None:
                     _error(scenario_errors, "execution_error_precedence")
                 complete = len(events) == len(expected["events"])
