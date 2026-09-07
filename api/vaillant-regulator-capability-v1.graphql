@@ -1,0 +1,11 @@
+"""The Vaillant catalog-derived regulator capability available to public consumers."""
+enum VaillantRegulatorCapability {
+  UNKNOWN
+  NONE
+  PRESENT
+}
+
+"""Additive excerpt from the gateway's existing Query type."""
+type Query {
+  vaillant_regulator_capability: VaillantRegulatorCapability!
+}

@@ -7,10 +7,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "docs/platform/manifests/regulator-capability-api-v1.json"
-CASES = ROOT / "docs/platform/fixtures/regulator-capability-api-v1/cases.json"
+MANIFEST = ROOT / "docs/platform/manifests/vaillant-regulator-capability-api-v1.json"
+CASES = ROOT / "docs/platform/fixtures/vaillant-regulator-capability-api-v1/cases.json"
 sys.path.insert(0, str(ROOT / "scripts"))
-from validate_regulator_capability_api_v1 import resolve, validate, validate_sdl  # noqa: E402
+from validate_vaillant_regulator_capability_api_v1 import resolve, validate, validate_sdl  # noqa: E402
 
 
 def load(path: Path) -> dict:
@@ -50,7 +50,17 @@ def test_validator_rejects_deleted_or_replaced_precedence() -> None:
     assert "precedence" in validate(replaced, cases)
 
 
+def test_validator_rejects_gateway_wide_or_cross_protocol_scope() -> None:
+    manifest, cases = load(MANIFEST), load(CASES)
+    gateway_wide = copy.deepcopy(manifest)
+    gateway_wide["scope"]["gateway_wide"] = True
+    assert "scope" in validate(gateway_wide, cases)
+    cross_protocol = copy.deepcopy(manifest)
+    cross_protocol["scope"]["cross_protocol"] = True
+    assert "scope" in validate(cross_protocol, cases)
+
+
 def test_validator_cli_is_deterministic() -> None:
-    result = subprocess.run([sys.executable, "scripts/validate_regulator_capability_api_v1.py"], cwd=ROOT, text=True, capture_output=True, check=False)
+    result = subprocess.run([sys.executable, "scripts/validate_vaillant_regulator_capability_api_v1.py"], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "regulator_capability_api_v1_ok"
+    assert result.stdout.strip() == "vaillant_regulator_capability_api_v1_ok"

@@ -1,18 +1,18 @@
 {
-  "contract_id": "REGULATOR_CAPABILITY_API_V1",
+  "contract_id": "VAILLANT_REGULATOR_CAPABILITY_API_V1",
   "contract_version": 1,
   "graphql": {
-    "root_field": "regulator_capability",
-    "type": "RegulatorCapability!",
+    "root_field": "vaillant_regulator_capability",
+    "type": "VaillantRegulatorCapability!",
     "enum": ["UNKNOWN", "NONE", "PRESENT"]
   },
   "mcp": {
     "tool": "ebus.v1.runtime.status.get",
-    "data_field": "regulator_capability"
+    "data_field": "vaillant_regulator_capability"
   },
   "semantic_snapshot": {
     "object": "runtime_status",
-    "field": "regulator_capability"
+    "field": "vaillant_regulator_capability"
   },
   "precedence": {
     "present": "any_vaillant_identity_catalog_classified_regulator",
@@ -32,6 +32,11 @@
     "forbidden_inference_inputs": ["basv_prefix", "vrc_prefix", "display_name", "per_device_role"],
     "absence_grace_part_of_field": false,
     "none_and_unknown_need_settled_removal_signal": false
+  },
+  "scope": {
+    "protocol_vendor": "vaillant",
+    "gateway_wide": false,
+    "cross_protocol": false
   },
   "sources": {
     "gateway": {

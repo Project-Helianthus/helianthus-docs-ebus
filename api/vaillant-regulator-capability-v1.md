@@ -1,12 +1,16 @@
-# Canonical Regulator Capability API V1
+# Vaillant Regulator Capability API V1
 
 **Status:** Target additive public contract; gateway implementation is owned by
 [helianthus-ebusgateway#946](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/946).
 
-This contract publishes one catalog-derived eBUS capability for consumers. It
+This contract publishes one Vaillant catalog-derived eBUS capability for consumers. It
 does not expose product catalog rows, device roles, native frames, or a
 controller address. The machine-readable companion is
-[`regulator-capability-api-v1.json`](../docs/platform/manifests/regulator-capability-api-v1.json).
+[`vaillant-regulator-capability-api-v1.json`](../docs/platform/manifests/vaillant-regulator-capability-api-v1.json).
+
+This is not a gateway-wide regulator aggregate and not a cross-protocol result.
+Only Vaillant identities classified by the accepted Vaillant product catalog
+participate in the result.
 
 ## Public surfaces
 
@@ -14,10 +18,10 @@ The gateway's existing GraphQL `Query` gains this non-null root field:
 
 ```graphql
 type Query {
-  regulator_capability: RegulatorCapability!
+  vaillant_regulator_capability: VaillantRegulatorCapability!
 }
 
-enum RegulatorCapability {
+enum VaillantRegulatorCapability {
   UNKNOWN
   NONE
   PRESENT
@@ -25,19 +29,19 @@ enum RegulatorCapability {
 ```
 
 The matching MCP response member is
-`ebus.v1.runtime.status.get.data.regulator_capability`. The semantic snapshot
-uses the same value at `runtime_status.regulator_capability`. All three surfaces
+`ebus.v1.runtime.status.get.data.vaillant_regulator_capability`. The semantic snapshot
+uses the same value at `runtime_status.vaillant_regulator_capability`. All three surfaces
 are one provider-owned result; GraphQL, MCP, and snapshot consumers must not
 recalculate it.
 
 Examples:
 
 ```json
-{"data":{"regulator_capability":"PRESENT"}}
+{"data":{"vaillant_regulator_capability":"PRESENT"}}
 ```
 
 ```json
-{"data":{"regulator_capability":"UNKNOWN"}}
+{"data":{"vaillant_regulator_capability":"UNKNOWN"}}
 ```
 
 ## Closed result and precedence
@@ -49,8 +53,8 @@ Vaillant inventory, or any unclassified Vaillant identity when no regulator is
 present.
 
 An unwired or failing provider returns `UNKNOWN`. An older gateway or a missing
-member is interpreted by a consumer as `UNKNOWN`, preserving the V1 API and
-runner compatibility boundary.
+`vaillant_regulator_capability` member is interpreted by a consumer as
+`UNKNOWN`, preserving the V1 API and runner compatibility boundary.
 
 Consumers MUST NOT infer this result from BASV/VRC prefixes, display names, or
 per-device roles. Those are not inputs to the public result.
