@@ -610,6 +610,8 @@ def validate_semantics(report):
             events = scenario["action"]["events"]
             timing = scenario["timing"]
             start = _stamp(timing["scenario_started_at"])
+            if timing["elapsed_ms"] > scenario["definition"]["duration_limit_ms"]:
+                _error(scenario_errors, "duration_limit")
             event_kinds = [event["kind"] for event in events]
             if event_kinds != expected["events"][: len(events)]:
                 _error(scenario_errors, "action_prefix")

@@ -170,6 +170,14 @@ def test_action_start_timing_and_result_timing_binding_are_fail_closed(tmp_path)
     assert "timing_binding" in validate_candidate(tmp_path, candidate)
 
 
+@pytest.mark.parametrize("source", (POSITIVE, EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK))
+def test_every_result_variant_respects_the_canonical_duration_limit(source):
+    candidate = load(source)
+    scenario = candidate["scenarios"][0]
+    scenario["timing"].update(elapsed_ms=180001, scenario_ended_at="2026-09-07T12:03:00.001Z")
+    assert "duration_limit" in validate_semantics(candidate)
+
+
 def test_actual_adverse_transition_is_bound_to_scenario_start(tmp_path):
     activation_indexes = (1, 1, 1, 1)
     for scenario_index, event_index in enumerate(activation_indexes):

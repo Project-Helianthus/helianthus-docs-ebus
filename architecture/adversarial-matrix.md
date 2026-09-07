@@ -104,7 +104,8 @@ event uncertainty must be no greater than 1000 ms after scenario start. The tran
 for ADV-01 through ADV-04 respectively; they cannot be deferred to the end of a
 passing window. Observer errors require that transition to have occurred. Every
 result kind binds `scenario_ended_at` to
-`scenario_started_at + elapsed_ms` before result dispatch. Infrastructure reasons
+`scenario_started_at + elapsed_ms` before result dispatch, and every result kind
+caps `elapsed_ms` at its canonical `duration_limit_ms`. Infrastructure reasons
 are closed per scenario: ADV-01 permits `ha_harness_unavailable` or
 `observer_unavailable`; ADV-02 permits `adapter_control_unavailable` or
 `observer_unavailable`; ADV-03 permits `network_fault_injector_unavailable` or
