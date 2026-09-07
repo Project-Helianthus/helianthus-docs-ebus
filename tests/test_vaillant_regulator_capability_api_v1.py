@@ -56,6 +56,21 @@ def test_validator_rejects_missing_field_compatibility_or_heuristic_reintroducti
     assert "consumer_constraints" in validate(heuristic, cases)
 
 
+def test_validator_requires_closed_forbidden_inference_input_list() -> None:
+    manifest, cases = load(MANIFEST), load(CASES)
+    mutations = (
+        {"basv_prefix": True},
+        ["basv_prefix", "basv_prefix", "display_name", "per_device_role"],
+        ["basv_prefix", "vrc_prefix", "display_name"],
+        ["basv_prefix", "vrc_prefix", "display_name", "per_device_role", "extra"],
+        ["basv_prefix", "vrc_prefix", "display_name", 1],
+    )
+    for forbidden_inputs in mutations:
+        candidate = copy.deepcopy(manifest)
+        candidate["consumer_constraints"]["forbidden_inference_inputs"] = forbidden_inputs
+        assert "consumer_constraints" in validate(candidate, cases)
+
+
 def test_validator_rejects_deleted_or_replaced_precedence() -> None:
     manifest, cases = load(MANIFEST), load(CASES)
     deleted = copy.deepcopy(manifest)

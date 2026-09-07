@@ -11,8 +11,9 @@ controller address. The machine-readable companion is
 [`vaillant-regulator-capability-api-v1.json`](../docs/platform/manifests/vaillant-regulator-capability-api-v1.json).
 
 This is not a gateway-wide regulator aggregate and not a cross-protocol result.
-Only Vaillant identities classified by the accepted Vaillant product catalog
-participate in the result.
+Every detected Vaillant identity participates in the result through the accepted
+Vaillant product catalog; an identity that the catalog cannot classify is not
+discarded.
 
 ## Public surfaces
 
@@ -48,11 +49,12 @@ Examples:
 
 ## Closed result and precedence
 
-`PRESENT` wins when any Vaillant identity is catalog-classified as a regulator.
-`NONE` requires at least one Vaillant identity and every relevant identity to
-be catalog-known non-regulator. `UNKNOWN` is returned for catalog failure, no
-Vaillant inventory, or any unclassified Vaillant identity when no regulator is
-present.
+`PRESENT` wins when any detected Vaillant identity is catalog-classified as a
+regulator. `NONE` requires at least one detected Vaillant identity and every
+detected identity to be catalog-known non-regulator. `UNKNOWN` is returned for
+catalog failure, no Vaillant inventory, or a catalog lookup miss for any
+detected Vaillant identity when no regulator is present. Therefore an
+unclassified detected identity cannot be discarded to produce `NONE`.
 
 An unwired or failing provider returns `UNKNOWN`. An older gateway or a missing
 `vaillant_regulator_capability` member is interpreted by a consumer as

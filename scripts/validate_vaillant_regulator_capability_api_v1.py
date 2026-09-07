@@ -31,11 +31,11 @@ EXPECTED_SCOPE = {
 }
 EXPECTED_PRECEDENCE = {
     "present": "any_vaillant_identity_catalog_classified_regulator",
-    "none": "at_least_one_vaillant_identity_and_all_relevant_identities_catalog_known_non_regulator",
+    "none": "at_least_one_detected_vaillant_identity_and_every_detected_identity_catalog_known_non_regulator",
     "unknown": [
         "catalog_failure",
         "no_vaillant_inventory",
-        "unclassified_vaillant_identity_without_present",
+        "catalog_lookup_miss_for_detected_vaillant_identity_without_present",
     ],
 }
 EXPECTED_SOURCES = {
@@ -61,7 +61,7 @@ EXPECTED_SOURCES = {
 EXPECTED_POSITIVE_CASES = [
     {"name": "present_wins_over_unknown", "catalog_states": ["NONE", "UNKNOWN", "PRESENT"], "result": "PRESENT"},
     {"name": "none_requires_known_non_regulator_inventory", "catalog_states": ["NONE", "NONE"], "result": "NONE"},
-    {"name": "unclassified_identity_is_unknown", "catalog_states": ["NONE", "UNKNOWN"], "result": "UNKNOWN"},
+    {"name": "catalog_lookup_miss_is_unknown", "catalog_states": ["NONE", "UNKNOWN"], "result": "UNKNOWN"},
     {"name": "empty_inventory_is_unknown", "catalog_states": [], "result": "UNKNOWN"},
     {"name": "catalog_failure_is_unknown", "catalog_states": ["CATALOG_FAILURE"], "result": "UNKNOWN"},
     {"name": "unwired_provider_is_unknown", "catalog_states": ["PROVIDER_UNWIRED"], "result": "UNKNOWN"},
@@ -70,7 +70,7 @@ EXPECTED_POSITIVE_CASES = [
 ]
 EXPECTED_NEGATIVE_CASES = [
     {"name": "no_identity_is_not_none", "catalog_states": [], "forbidden_result": "NONE"},
-    {"name": "unknown_is_not_none", "catalog_states": ["NONE", "UNKNOWN"], "forbidden_result": "NONE"},
+    {"name": "catalog_lookup_miss_is_not_none", "catalog_states": ["NONE", "UNKNOWN"], "forbidden_result": "NONE"},
     {"name": "name_or_role_is_not_input", "forbidden_inputs": ["basv_prefix", "vrc_prefix", "display_name", "per_device_role"]},
 ]
 
@@ -133,7 +133,16 @@ def validate(manifest: dict, cases: dict) -> list[str]:
     if not isinstance(defaults, dict) or set(defaults.values()) != {"UNKNOWN"} or set(defaults) != {"provider_unwired", "provider_failure", "missing_or_older_gateway_field"}:
         errors.append("defaults")
     constraints = manifest.get("consumer_constraints")
-    if not isinstance(constraints, dict) or set(constraints.get("forbidden_inference_inputs", [])) != EXPECTED_FORBIDDEN_INPUTS or constraints.get("absence_grace_part_of_field") is not False or constraints.get("none_and_unknown_need_settled_removal_signal") is not False:
+    forbidden_inputs = constraints.get("forbidden_inference_inputs") if isinstance(constraints, dict) else None
+    if (
+        not isinstance(constraints, dict)
+        or not isinstance(forbidden_inputs, list)
+        or len(forbidden_inputs) != len(EXPECTED_FORBIDDEN_INPUTS)
+        or any(type(item) is not str for item in forbidden_inputs)
+        or set(forbidden_inputs) != EXPECTED_FORBIDDEN_INPUTS
+        or constraints.get("absence_grace_part_of_field") is not False
+        or constraints.get("none_and_unknown_need_settled_removal_signal") is not False
+    ):
         errors.append("consumer_constraints")
     if manifest.get("sources") != EXPECTED_SOURCES:
         errors.append("sources")

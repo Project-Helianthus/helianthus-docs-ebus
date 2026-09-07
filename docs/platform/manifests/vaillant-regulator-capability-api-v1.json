@@ -16,11 +16,11 @@
   },
   "precedence": {
     "present": "any_vaillant_identity_catalog_classified_regulator",
-    "none": "at_least_one_vaillant_identity_and_all_relevant_identities_catalog_known_non_regulator",
+    "none": "at_least_one_detected_vaillant_identity_and_every_detected_identity_catalog_known_non_regulator",
     "unknown": [
       "catalog_failure",
       "no_vaillant_inventory",
-      "unclassified_vaillant_identity_without_present"
+      "catalog_lookup_miss_for_detected_vaillant_identity_without_present"
     ]
   },
   "defaults": {
