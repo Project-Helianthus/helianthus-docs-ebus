@@ -106,8 +106,7 @@ def _bounded_integer(value):
     return int(value)
 
 
-def load_report(path: Path):
-    raw = path.read_bytes()
+def parse_report_bytes(raw: bytes):
     if len(raw) > MAX_BYTES:
         raise ValidationError(f"report exceeds {MAX_BYTES} bytes")
     try:
@@ -126,6 +125,10 @@ def load_report(path: Path):
         raise
     except (json.JSONDecodeError, ValueError, RecursionError) as error:
         raise ValidationError(f"malformed JSON: {error}") from error
+
+
+def load_report(path: Path):
+    return parse_report_bytes(path.read_bytes())
 
 
 def _stamp(value):
@@ -400,15 +403,16 @@ def validate_semantics(report):
     return sorted(errors)
 
 
-def validate_schema(path: Path):
-    result = subprocess.run(["jv", str(SCHEMA), str(path)], text=True, capture_output=True, check=False)
+def validate_schema_bytes(raw: bytes):
+    result = subprocess.run(["jv", str(SCHEMA), "-"], input=raw, capture_output=True, check=False)
     if result.returncode:
-        raise ValidationError("schema: " + (result.stdout + result.stderr).strip())
+        raise ValidationError("schema: " + (result.stdout + result.stderr).decode("utf-8", "replace").strip())
 
 
 def validate_path(path: Path):
-    report = load_report(path)
-    validate_schema(path)
+    raw = path.read_bytes()
+    report = parse_report_bytes(raw)
+    validate_schema_bytes(raw)
     errors = validate_semantics(report)
     if errors:
         raise ValidationError("semantic: " + ",".join(errors))

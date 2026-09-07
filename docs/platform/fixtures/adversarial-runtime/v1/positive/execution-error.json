@@ -163,7 +163,7 @@
       },
       "metrics": {
         "baseline": {
-          "counter_epoch": "epoch-1",
+          "counter_epoch": "00000000-0000-4000-8000-000000000002",
           "captured_at": "2026-09-07T12:03:00.000Z",
           "offset_ms": 0,
           "semantic_startup_current_phase": "LIVE_READY",
@@ -173,7 +173,7 @@
           "semantic_dhw_present": false
         },
         "end": {
-          "counter_epoch": "epoch-1",
+          "counter_epoch": "00000000-0000-4000-8000-000000000002",
           "captured_at": "2026-09-07T12:06:00.000Z",
           "offset_ms": 180000,
           "semantic_startup_current_phase": "LIVE_READY",
@@ -287,7 +287,7 @@
       },
       "metrics": {
         "baseline": {
-          "counter_epoch": "epoch-1",
+          "counter_epoch": "00000000-0000-4000-8000-000000000003",
           "captured_at": "2026-09-07T12:06:00.000Z",
           "offset_ms": 0,
           "semantic_startup_current_phase": "LIVE_READY",
@@ -297,7 +297,7 @@
           "semantic_dhw_present": false
         },
         "end": {
-          "counter_epoch": "epoch-1",
+          "counter_epoch": "00000000-0000-4000-8000-000000000003",
           "captured_at": "2026-09-07T12:09:00.000Z",
           "offset_ms": 180000,
           "semantic_startup_current_phase": "LIVE_READY",
@@ -404,7 +404,7 @@
       },
       "metrics": {
         "baseline": {
-          "counter_epoch": "epoch-2",
+          "counter_epoch": "00000000-0000-4000-8000-000000000004",
           "captured_at": "2026-09-07T12:09:00.000Z",
           "offset_ms": 0,
           "semantic_startup_current_phase": "BOOT_INIT",
@@ -414,7 +414,7 @@
           "semantic_dhw_present": false
         },
         "end": {
-          "counter_epoch": "epoch-2",
+          "counter_epoch": "00000000-0000-4000-8000-000000000004",
           "captured_at": "2026-09-07T12:12:00.000Z",
           "offset_ms": 180000,
           "semantic_startup_current_phase": "LIVE_READY",

@@ -45,6 +45,8 @@ A passing run keeps the full 180000 ms observation window, with scheduling error
 Startup phase is also scenario-bound: ADV-01, ADV-02, and ADV-03 require
 `LIVE_READY` at both snapshots. ADV-04 requires `BOOT_INIT` at baseline and
 `LIVE_READY` at end, proving the isolated boot path begins before cache load.
+`counter_epoch` is a freshly generated lowercase UUIDv4 per run-local counter
+epoch. It is opaque and independent of serials, hosts, devices, or accounts.
 
 For an evaluated result, baseline capture is bound to scenario start and end
 capture to scenario end, each within the declared aggregate timing uncertainty.

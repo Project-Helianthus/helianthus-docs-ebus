@@ -107,7 +107,7 @@
         {
           "op": "replace",
           "path": "/scenarios/0/metrics/end/counter_epoch",
-          "value": "epoch-2"
+          "value": "00000000-0000-4000-8000-000000000099"
         }
       ]
     },

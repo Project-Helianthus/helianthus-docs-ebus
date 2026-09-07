@@ -18,6 +18,7 @@ INFRASTRUCTURE_BLOCK = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/pos
 NEGATIVE = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/negative-cases.json"
 FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
 sys.path.insert(0, str(ROOT / "scripts"))
+import validate_adversarial_runtime_report_v1 as validator  # noqa: E402
 from validate_adversarial_runtime_report_v1 import ValidationError, load_report, validate_path, validate_semantics  # noqa: E402
 
 
@@ -237,6 +238,30 @@ def test_definition_maximum_recovery_is_canonical_even_if_evaluation_is_forged(t
     scenario["definition"]["maximum_recovery_ms"] = 120000
     scenario["evaluation"]["recovery"]["maximum_ms"] = 120000
     assert "scenario_catalog" in validate_candidate(tmp_path, candidate)
+
+
+def test_counter_epoch_is_opaque_uuidv4_not_serial_shaped(tmp_path):
+    candidate = load(POSITIVE)
+    for scenario in candidate["scenarios"]:
+        scenario["metrics"]["baseline"]["counter_epoch"] = "VR921-SERIAL-1234567890"
+        scenario["metrics"]["end"]["counter_epoch"] = "VR921-SERIAL-1234567890"
+    assert "schema" in validate_candidate(tmp_path, candidate)
+
+
+def test_schema_and_semantics_use_one_read_snapshot_despite_path_replacement(tmp_path, monkeypatch):
+    path = tmp_path / "report.json"
+    path.write_text(POSITIVE.read_text(encoding="utf-8"), encoding="utf-8")
+    forged = load(POSITIVE)
+    forged["summary"]["passed"] = 3
+    real_run = validator.subprocess.run
+
+    def replacing_run(*args, **kwargs):
+        path.write_text(json.dumps(forged), encoding="utf-8")
+        return real_run(*args, **kwargs)
+
+    monkeypatch.setattr(validator.subprocess, "run", replacing_run)
+    validator.validate_path(path)
+    assert "summary_accounting" in validator.validate_semantics(load(path))
     candidate = load(POSITIVE)
     candidate["scenarios"][0]["metrics"]["end"].update(offset_ms=179999, captured_at="2026-09-07T12:02:59.999Z")
     assert "snapshot_window" in validate_candidate(tmp_path, candidate)
