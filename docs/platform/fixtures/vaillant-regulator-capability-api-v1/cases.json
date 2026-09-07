@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "positive": [
+    {"name": "present_wins_over_unknown", "catalog_states": ["NONE", "UNKNOWN", "PRESENT"], "result": "PRESENT"},
+    {"name": "none_requires_known_non_regulator_inventory", "catalog_states": ["NONE", "NONE"], "result": "NONE"},
+    {"name": "catalog_lookup_miss_is_unknown", "catalog_states": ["NONE", "UNKNOWN"], "result": "UNKNOWN"},
+    {"name": "empty_inventory_is_unknown", "catalog_states": [], "result": "UNKNOWN"},
+    {"name": "catalog_failure_is_unknown", "catalog_states": ["CATALOG_FAILURE"], "result": "UNKNOWN"},
+    {"name": "unwired_provider_is_unknown", "catalog_states": ["PROVIDER_UNWIRED"], "result": "UNKNOWN"},
+    {"name": "provider_failure_is_unknown", "catalog_states": ["PROVIDER_FAILURE"], "result": "UNKNOWN"},
+    {"name": "older_gateway_field_is_unknown", "catalog_states": ["MISSING_FIELD"], "result": "UNKNOWN"}
+  ],
+  "negative": [
+    {"name": "no_identity_is_not_none", "catalog_states": [], "forbidden_result": "NONE"},
+    {"name": "catalog_lookup_miss_is_not_none", "catalog_states": ["NONE", "UNKNOWN"], "forbidden_result": "NONE"},
+    {"name": "name_or_role_is_not_input", "forbidden_inputs": ["basv_prefix", "vrc_prefix", "display_name", "per_device_role"]}
+  ]
+}
