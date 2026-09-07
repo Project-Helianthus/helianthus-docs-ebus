@@ -161,6 +161,21 @@ def test_action_sequences_are_bounded_prefixes_and_block_is_pre_action_only(tmp_
     assert "schema" in validate_candidate(tmp_path, candidate)
 
 
+def test_action_start_timing_and_result_timing_binding_are_fail_closed(tmp_path):
+    candidate = load(POSITIVE)
+    candidate["scenarios"][0]["action"]["events"][0].update(offset_ms=179000, at="2026-09-07T12:02:59.000Z")
+    assert "action_start" in validate_candidate(tmp_path, candidate)
+    candidate = load(EXECUTION_ERROR)
+    candidate["scenarios"][0]["timing"]["scenario_ended_at"] = "2026-09-07T12:02:59.998Z"
+    assert "timing_binding" in validate_candidate(tmp_path, candidate)
+
+
+def test_infrastructure_reason_is_scenario_specific(tmp_path):
+    candidate = load(INFRASTRUCTURE_BLOCK)
+    candidate["scenarios"][0]["infrastructure_reason"] = "adapter_control_unavailable"
+    assert "infrastructure_block_precedence" in validate_candidate(tmp_path, candidate)
+
+
 def test_evaluated_snapshots_cover_full_window_with_declared_uncertainty(tmp_path):
     candidate = load(POSITIVE)
     candidate["scenarios"][0]["metrics"]["baseline"].update(offset_ms=1, captured_at="2026-09-07T12:00:00.001Z")

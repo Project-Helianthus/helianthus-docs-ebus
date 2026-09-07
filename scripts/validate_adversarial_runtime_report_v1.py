@@ -32,6 +32,7 @@ CATALOG = {
         "maximum_collisions_delta": 5,
         "baseline_phase": "LIVE_READY",
         "end_phase": "LIVE_READY",
+        "infrastructure_reasons": {"ha_harness_unavailable", "observer_unavailable"},
         "events": ["restart_requested", "consumer_stopped", "consumer_started", "ha_consumer_synchronized"],
         "anchor": "consumer_stopped",
         "recovery_event": "ha_consumer_synchronized",
@@ -46,6 +47,7 @@ CATALOG = {
         "maximum_collisions_delta": 20,
         "baseline_phase": "LIVE_READY",
         "end_phase": "LIVE_READY",
+        "infrastructure_reasons": {"adapter_control_unavailable", "observer_unavailable"},
         "events": ["reset_requested", "reset_started", "transport_unavailable", "transport_available", "gateway_live_ready"],
         "anchor": "reset_started",
         "recovery_event": "gateway_live_ready",
@@ -60,6 +62,7 @@ CATALOG = {
         "maximum_collisions_delta": 10,
         "baseline_phase": "LIVE_READY",
         "end_phase": "LIVE_READY",
+        "infrastructure_reasons": {"network_fault_injector_unavailable", "observer_unavailable"},
         "events": ["partition_requested", "partition_active", "partition_cleared", "gateway_live_ready"],
         "anchor": "partition_cleared",
         "recovery_event": "gateway_live_ready",
@@ -74,6 +77,7 @@ CATALOG = {
         "maximum_collisions_delta": 5,
         "baseline_phase": "BOOT_INIT",
         "end_phase": "LIVE_READY",
+        "infrastructure_reasons": {"isolated_cache_sandbox_unavailable", "observer_unavailable"},
         "events": ["isolated_cache_staged", "runtime_started", "gateway_live_ready"],
         "anchor": "runtime_started",
         "recovery_event": "gateway_live_ready",
@@ -364,6 +368,8 @@ def validate_semantics(report):
         for index, scenario in enumerate(scenarios):
             scenario_start = _stamp(scenario["timing"]["scenario_started_at"])
             scenario_end = _stamp(scenario["timing"]["scenario_ended_at"])
+            if not _same_timestamp(scenario_start, scenario["timing"]["elapsed_ms"], scenario["timing"]["scenario_ended_at"]):
+                _error(errors, "timing_binding")
             if scenario_start < run_start or scenario_end > run_end or scenario_end < scenario_start:
                 _error(errors, "scenario_run_containment")
             if (index == 0 and scenario_start != run_start) or (index == len(scenarios) - 1 and scenario_end != run_end):
@@ -392,12 +398,14 @@ def validate_semantics(report):
             if event_kinds != expected["events"][: len(events)]:
                 _error(scenario_errors, "action_prefix")
             _event_offsets(events, start, scenario_errors, elapsed_ms=timing["elapsed_ms"])
+            if events and events[0]["offset_ms"] > timing["error_bound_ms"]:
+                _error(scenario_errors, "action_start")
             if kind == "evaluated":
                 if scenario["errors"] or any(scenario["metrics"][field] is None for field in ("baseline", "end", "delta")) or scenario["evaluation"] is None:
                     _error(scenario_errors, "evaluated_shape")
                 _validate_evaluated(scenario, expected, scenario_errors)
             elif kind == "infrastructure-block":
-                if events or scenario["outcome"] != "blocked-infra" or scenario["errors"] != [{"phase": "precondition", "code": "precondition_unavailable"}] or scenario["evaluation"] is not None or any(scenario["metrics"][field] is not None for field in ("baseline", "end", "delta")) or any(timing[field] is not None for field in ("recovery_anchor", "recovery_observed", "recovery_ms")):
+                if events or scenario["outcome"] != "blocked-infra" or scenario["errors"] != [{"phase": "precondition", "code": "precondition_unavailable"}] or scenario["infrastructure_reason"] not in expected["infrastructure_reasons"] or scenario["evaluation"] is not None or any(scenario["metrics"][field] is not None for field in ("baseline", "end", "delta")) or any(timing[field] is not None for field in ("recovery_anchor", "recovery_observed", "recovery_ms")):
                     _error(scenario_errors, "infrastructure_block_precedence")
             elif kind == "execution-error":
                 if scenario["outcome"] != "fail" or not scenario["errors"] or scenario["evaluation"] is not None or any(scenario["metrics"][field] is not None for field in ("baseline", "end", "delta")):

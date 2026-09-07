@@ -78,6 +78,16 @@ has no events and only the pre-action normalized error
 `precondition` / `precondition_unavailable`; a trigger or observer error is not
 an infrastructure block.
 
+The first adverse request/staging event is bound to scenario start within the
+declared timing uncertainty; it cannot be deferred to the end of a passing
+window. Every result kind binds `scenario_ended_at` to
+`scenario_started_at + elapsed_ms` before result dispatch. Infrastructure reasons
+are closed per scenario: ADV-01 permits `ha_harness_unavailable` or
+`observer_unavailable`; ADV-02 permits `adapter_control_unavailable` or
+`observer_unavailable`; ADV-03 permits `network_fault_injector_unavailable` or
+`observer_unavailable`; ADV-04 permits `isolated_cache_sandbox_unavailable` or
+`observer_unavailable`.
+
 ## Result variants and precedence
 
 An `evaluated` result has complete non-null metrics and evaluation, empty errors, and `pass` only if every recomputed decision passes; otherwise it is `fail`. An `execution-error` has `fail`, at least one normalized error, and null non-evaluated fields. An `infrastructure-block` has `blocked-infra`, a closed infrastructure reason, null non-evaluated fields, and proves no adverse action began. An observer failure after any adverse action is an execution error, never an infrastructure block.
