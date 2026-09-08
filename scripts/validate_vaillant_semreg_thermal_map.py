@@ -78,8 +78,8 @@ def validate_index(index: object) -> None:
             "instance": "0x00", "register": EXPECTED_SELECTORS.get(legacy),
             "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720",
             "request_direction": "initiator_to_target", "value_direction": "target_to_initiator",
-            "wire_type": "f32_le", "unit": "degC",
         }, f"{legacy}: native_selector")
+        require(row.get("native_value"), {"wire_type": "f32_le", "unit": "degC"}, f"{legacy}: native_value")
 
         fact, dimension_value, disposition, loss = EXPECTED_FACTS.get(legacy, (None, None, None, None))
         require(row.get("semreg_fact"), fact, f"{legacy}: semreg_fact")
@@ -90,6 +90,8 @@ def validate_index(index: object) -> None:
             if disposition == "exact" else None
         )
         require(row.get("dimensions"), expected_dimensions, f"{legacy}: dimensions")
+        expected_semreg_value = {"kind": "quantity", "unit": "unit.celsius"} if disposition == "exact" else None
+        require(row.get("semreg_value"), expected_semreg_value, f"{legacy}: semreg_value")
     if set(by_legacy) != set(EXPECTED_SELECTORS):
         raise CheckError("mapping inventory differs from the closed three-row contract")
 
@@ -102,6 +104,18 @@ def validate_index(index: object) -> None:
         "op06_gg00_rr0015_substitutable_for_system_flow": False,
         "b509_substitutable_for_b524_rows": False,
     }, "native_distinctions")
+    require(index.get("lifecycle"), {
+        "retained_native_observation": {
+            "received_at": {"unix_nanoseconds": "1720000000000000000", "clock_id": "clock.utc", "uncertainty_ns": "1000000"},
+            "receipt_monotonic": {"clock_epoch_id": "clock-epoch:gateway-1", "nanoseconds": "1000000000"},
+        },
+        "caller_evaluation_context": {
+            "evaluated_at": {"unix_nanoseconds": "1720000005000000000", "clock_id": "clock.utc", "uncertainty_ns": "1000000"},
+            "evaluate_monotonic": {"clock_epoch_id": "clock-epoch:gateway-1", "nanoseconds": "6000000000"},
+        },
+        "evaluation_cannot_overwrite_receipt": True,
+        "freshness_axis": "elapsed_monotonic",
+    }, "lifecycle")
 
 
 def main() -> int:

@@ -63,11 +63,11 @@ is binding evidence and is not a hard-coded address in this public mapping. It
 does not generalize B524 float byte order: HMU destination `0x08` is
 big-endian and is not a substitute for these rows.
 
-| Legacy system field | Native read tuple | Wire value and native unit | SemReg field | Exact FactKey dimension | Disposition |
-| --- | --- | --- | --- | --- | --- |
-| `state.outdoor_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0073` | IEEE-754 `f32` little-endian, `°C` | `thermal.measurement.air_temperature` | `thermal.dimension.temperature=temperature:outdoor_air` | **Exact, read-only candidate.** The value is an instantaneous outdoor-air observation when the qualified binding admits it. |
-| `state.system_flow_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x004B` | IEEE-754 `f32` little-endian, `°C` | `thermal.measurement.water_temperature` | `thermal.dimension.temperature=temperature:system_flow` | **Exact, read-only candidate.** The value is the controller system-flow observation when the qualified binding admits it. |
-| `state.outdoor_temperature_avg24h` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0095` | IEEE-754 `f32` little-endian, `°C`; rounded average updated every three hours | — | — | **Withheld.** It is a rolling aggregate, not an instantaneous `thermal.measurement.air_temperature` value. No aggregate/window fact is defined by this mapping. |
+| Legacy system field | Native read tuple | Native wire value / unit | SemReg field | Exact FactKey dimension | SemReg quantity unit | Disposition |
+| --- | --- | --- | --- | --- | --- | --- |
+| `state.outdoor_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0073` | IEEE-754 `f32` little-endian / `degC` | `thermal.measurement.air_temperature` | `thermal.dimension.temperature=temperature:outdoor_air` | `unit.celsius` | **Exact, read-only candidate.** The value is an instantaneous outdoor-air observation when the qualified binding admits it. |
+| `state.system_flow_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x004B` | IEEE-754 `f32` little-endian / `degC` | `thermal.measurement.water_temperature` | `thermal.dimension.temperature=temperature:system_flow` | `unit.celsius` | **Exact, read-only candidate.** The value is the controller system-flow observation when the qualified binding admits it. |
+| `state.outdoor_temperature_avg24h` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0095` | IEEE-754 `f32` little-endian / `degC`; rounded average updated every three hours | — | — | — | **Withheld.** It is a rolling aggregate, not an instantaneous `thermal.measurement.air_temperature` value. No aggregate/window fact is defined by this mapping. |
 
 `thermal.dimension.system` is **not** a FactKey dimension for either mapped
 temperature. The FactKeys are exactly
@@ -75,6 +75,12 @@ temperature. The FactKeys are exactly
 `thermal.dimension.temperature=temperature:system_flow`. The qualified asset
 and `thermal.service.system` identity are separate runtime service/binding
 metadata; neither is inferred from a public zone, GraphQL, or display ID.
+
+The typed lifecycle vector preserves `received_at` and `receipt_monotonic` from
+the retained native observation. A caller supplies the separate delayed
+evaluation context (`evaluated_at` and `evaluate_monotonic`); it cannot replace
+receipt fields. Freshness uses elapsed monotonic time on these axes. The checked
+vector deliberately has distinct receipt and evaluation values (`R != E`).
 
 ### Native boundaries and non-claims
 

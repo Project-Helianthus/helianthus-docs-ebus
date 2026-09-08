@@ -12,24 +12,30 @@
   "mappings": [
     {
       "legacy_system_field": "state.outdoor_temperature",
-      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0073", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator", "wire_type": "f32_le", "unit": "degC"},
+      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0073", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
+      "native_value": {"wire_type": "f32_le", "unit": "degC"},
       "semreg_fact": "thermal.measurement.air_temperature",
+      "semreg_value": {"kind": "quantity", "unit": "unit.celsius"},
       "dimensions": {"thermal.dimension.temperature": "temperature:outdoor_air"},
       "disposition": "exact",
       "loss": null
     },
     {
       "legacy_system_field": "state.system_flow_temperature",
-      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x004B", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator", "wire_type": "f32_le", "unit": "degC"},
+      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x004B", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
+      "native_value": {"wire_type": "f32_le", "unit": "degC"},
       "semreg_fact": "thermal.measurement.water_temperature",
+      "semreg_value": {"kind": "quantity", "unit": "unit.celsius"},
       "dimensions": {"thermal.dimension.temperature": "temperature:system_flow"},
       "disposition": "exact",
       "loss": null
     },
     {
       "legacy_system_field": "state.outdoor_temperature_avg24h",
-      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0095", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator", "wire_type": "f32_le", "unit": "degC"},
+      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0095", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
+      "native_value": {"wire_type": "f32_le", "unit": "degC"},
       "semreg_fact": null,
+      "semreg_value": null,
       "dimensions": null,
       "disposition": "withheld",
       "loss": "rolling_average_window_unrepresentable"
@@ -38,6 +44,18 @@
   "native_distinctions": {
     "op06_gg00_rr0015_substitutable_for_system_flow": false,
     "b509_substitutable_for_b524_rows": false
+  },
+  "lifecycle": {
+    "retained_native_observation": {
+      "received_at": {"unix_nanoseconds": "1720000000000000000", "clock_id": "clock.utc", "uncertainty_ns": "1000000"},
+      "receipt_monotonic": {"clock_epoch_id": "clock-epoch:gateway-1", "nanoseconds": "1000000000"}
+    },
+    "caller_evaluation_context": {
+      "evaluated_at": {"unix_nanoseconds": "1720000005000000000", "clock_id": "clock.utc", "uncertainty_ns": "1000000"},
+      "evaluate_monotonic": {"clock_epoch_id": "clock-epoch:gateway-1", "nanoseconds": "6000000000"}
+    },
+    "evaluation_cannot_overwrite_receipt": true,
+    "freshness_axis": "elapsed_monotonic"
   },
   "nonclaims": {
     "write_route_established": false,
