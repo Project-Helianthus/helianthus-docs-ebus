@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "contract_id": "helianthus.docs.ebus.b524-semreg-thermal/v1",
+  "scope": "read_only_candidate_mapping",
+  "pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"},
+  "applicability": {
+    "qualified_binding_required": true,
+    "generalizes_to_other_controllers": false,
+    "generalizes_to_other_products": false,
+    "generalizes_to_other_firmware": false
+  },
+  "mappings": [
+    {
+      "legacy_system_field": "state.outdoor_temperature",
+      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0073", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator", "wire_type": "f32_le", "unit": "degC"},
+      "semreg_fact": "thermal.measurement.air_temperature",
+      "dimensions": {"thermal.dimension.temperature": "temperature:outdoor_air"},
+      "disposition": "exact",
+      "loss": null
+    },
+    {
+      "legacy_system_field": "state.system_flow_temperature",
+      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x004B", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator", "wire_type": "f32_le", "unit": "degC"},
+      "semreg_fact": "thermal.measurement.water_temperature",
+      "dimensions": {"thermal.dimension.temperature": "temperature:system_flow"},
+      "disposition": "exact",
+      "loss": null
+    },
+    {
+      "legacy_system_field": "state.outdoor_temperature_avg24h",
+      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0095", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator", "wire_type": "f32_le", "unit": "degC"},
+      "semreg_fact": null,
+      "dimensions": null,
+      "disposition": "withheld",
+      "loss": "rolling_average_window_unrepresentable"
+    }
+  ],
+  "native_distinctions": {
+    "op06_gg00_rr0015_substitutable_for_system_flow": false,
+    "b509_substitutable_for_b524_rows": false
+  },
+  "nonclaims": {
+    "write_route_established": false,
+    "operation_authority_established": false,
+    "topology_established": false,
+    "full_portal_descriptor_established": false,
+    "prometheus_output_established": false,
+    "eebus_output_established": false,
+    "matter_output_established": false,
+    "hardware_qualification_established": false
+  }
+}

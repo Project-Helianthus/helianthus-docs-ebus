@@ -39,6 +39,64 @@ Source: `refreshSystem()` in `semantic_vaillant.go`
 | `properties.system_scheme` | GG=0x00, RR=0x0036 | u16 |
 | `properties.module_configuration_vr71` | GG=0x00, RR=0x002F | u16 |
 
+## SemReg thermal v1 read-only Vaillant mapping
+
+**Contract revision:** [`helianthus.docs.ebus.b524-semreg-thermal/v1`](./fixtures/vaillant-semreg-thermal-map-v1.json).
+
+This narrow, read-only mapping documents two B524 controller observations for a
+future qualified gateway binding. The linked typed index is the mechanically
+checked source for exact selectors, facts, dimensions, dispositions, loss,
+applicability, native distinctions, and non-claims. This text explains those
+boundaries without enabling a gateway surface.
+
+Each row uses the complete native selector. `PB=0xB5`, `SB=0x24`, and
+`OP=0x02` identify a B524 local-controller read. `II=0x00` is the current
+`regulatorInstance` used by the gateway poller. A qualified runtime binding
+must retain its own asset, service, source, source epoch, driver generation,
+evidence reference, qualification, freshness, and semantic revision. Those
+identities are separate from the FactKey dimensions below.
+
+The `f32` little-endian decoding in this contract is limited to a request from
+the qualified initiator to controller destination `0x15`, followed by a value
+from target to initiator, for the BASV2/CTLV2/VRC720 family. The initiator QQ
+is binding evidence and is not a hard-coded address in this public mapping. It
+does not generalize B524 float byte order: HMU destination `0x08` is
+big-endian and is not a substitute for these rows.
+
+| Legacy system field | Native read tuple | Wire value and native unit | SemReg field | Exact FactKey dimension | Disposition |
+| --- | --- | --- | --- | --- | --- |
+| `state.outdoor_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0073` | IEEE-754 `f32` little-endian, `°C` | `thermal.measurement.air_temperature` | `thermal.dimension.temperature=temperature:outdoor_air` | **Exact, read-only candidate.** The value is an instantaneous outdoor-air observation when the qualified binding admits it. |
+| `state.system_flow_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x004B` | IEEE-754 `f32` little-endian, `°C` | `thermal.measurement.water_temperature` | `thermal.dimension.temperature=temperature:system_flow` | **Exact, read-only candidate.** The value is the controller system-flow observation when the qualified binding admits it. |
+| `state.outdoor_temperature_avg24h` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0095` | IEEE-754 `f32` little-endian, `°C`; rounded average updated every three hours | — | — | **Withheld.** It is a rolling aggregate, not an instantaneous `thermal.measurement.air_temperature` value. No aggregate/window fact is defined by this mapping. |
+
+`thermal.dimension.system` is **not** a FactKey dimension for either mapped
+temperature. The FactKeys are exactly
+`thermal.dimension.temperature=temperature:outdoor_air` and
+`thermal.dimension.temperature=temperature:system_flow`. The qualified asset
+and `thermal.service.system` identity are separate runtime service/binding
+metadata; neither is inferred from a public zone, GraphQL, or display ID.
+
+### Native boundaries and non-claims
+
+- `OP=0x06, GG=0x00, RR=0x0015` is a different controller-side primary
+  heat-source mirror and is not a substitute for `OP=0x02, GG=0x00,
+  RR=0x004B`.
+- B509 is a different `PB/SB` service family and is not evidence for either
+  B524 row. The B509 boiler flow-temperature path remains separately owned.
+- The rows do not establish a write route, operation authority, topology,
+  multi-zone identity, full `thermal.service.system` capability, full Portal
+  descriptor, Prometheus metric, eeBUS output, Matter output, deployment, or
+  hardware qualification.
+- A malformed, unavailable, stale, conflicting, or unqualified observation is
+  not a fallback trigger. A consuming runtime must preserve the native evidence
+  and publish an explicit unavailable, withheld, or loss disposition under its
+  own accepted lifecycle policy.
+
+The B524 register catalog identifies `0x004B` and `0x0073` as read-only
+controller values and `0x0095` as a rounded three-hour-updated average. That
+evidence supports only the exact rows above. It does not widen this mapping to
+other B524 groups, instances, opcodes, or device families.
+
 ## `ebus.v1.semantic.circuits.get`
 
 Source: `refreshCircuits()` in `semantic_vaillant.go`
