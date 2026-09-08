@@ -40,6 +40,7 @@
     "trimpath": true,
     "build_kind": "go-test-binary",
     "build_id": "UTM8sZqduP_tJrptJhHe/dWf71Xywt3sqkqTnGk3B/hFmKt63ZZPtvXsk-d_n5/kpJN19ggggM0B3p3S6QO",
+    "artifact_path": "docs/platform/fixtures/adversarial-runtime/v1/producer/gateway-adversarial-darwin-arm64-go1.26.2.test",
     "size_bytes": 6059426,
     "sha256": "fc8993b6b0532a219534e557dfd8c7ee0974fe1402e14c8e7787f9cdb488d4d1"
   },

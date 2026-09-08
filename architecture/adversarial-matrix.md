@@ -10,6 +10,10 @@ the first revision containing its byte-identical manifest with SHA-256
 The same clean public revision produced these reports with a `go-test-binary`
 whose SHA-256 is
 `fc8993b6b0532a219534e557dfd8c7ee0974fe1402e14c8e7787f9cdb488d4d1`.
+The exact 6,059,426-byte [darwin/arm64 Go 1.26.2 producer executable](../docs/platform/fixtures/adversarial-runtime/v1/producer/gateway-adversarial-darwin-arm64-go1.26.2.test)
+is retained as a binary fixture, so the digest is directly verifiable without
+reconstructing the build host environment. A scan of its strings found no
+private workspace path.
 Two full clean clones with tags fetched, each detached at that exact revision,
 produced byte-identical binaries and byte-identical reports. The closed [producer build evidence](../docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json)
 records the exact source tree, command arguments, toolchain, VCS metadata,

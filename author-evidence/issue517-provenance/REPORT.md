@@ -17,6 +17,11 @@ gateway revision, built the same test executable with:
 
 Both executables were byte-identical, size `6059426`, with SHA-256
 `fc8993b6b0532a219534e557dfd8c7ee0974fe1402e14c8e7787f9cdb488d4d1`.
+That exact executable is retained at
+`docs/platform/fixtures/adversarial-runtime/v1/producer/gateway-adversarial-darwin-arm64-go1.26.2.test`
+as a binary fixture. Its bytes, size and digest are validated directly, so the
+provenance claim does not depend on reconstructing an unstated build-host
+environment. A strings scan found no private workspace path.
 The exact toolchain, target, module version, VCS revision/time/dirty bit, build
 ID, command arguments, environment, source tree, reproduction result and report
 hashes are captured in the closed machine-readable
@@ -52,9 +57,12 @@ identity and the checked-in report bytes.
   outside-checkout invocation still used unresolved generic paths. The record
   now defines absolute base-directory requirements and an exact argv for every
   build and report case.
+- RED for the exact executable P2: the build-record test failed because the
+  declared binary artifact path and bytes were absent; it now hashes the retained
+  6,059,426-byte executable directly and binds its digest to every report.
 - Each of the four checked-in positive reports passes
   `scripts/validate_adversarial_runtime_report_v1.py`.
-- `PLATFORM_M625_DOCS_EEBUS_ROOT=/tmp/docs-eebus-m625-cedf238 PLATFORM_M625_EXECUTION_PLANS_ROOT=/tmp/plans-m625-fb384ab ./scripts/ci_local.sh`: pass after the correction, 1970 passed, 395 expected deselected, exit 0; log SHA-256 `2e561292c4d1b4907e8630a6e26764114c3600b8e18ce9682bec2d1d163d08cc`.
+- `PLATFORM_M625_DOCS_EEBUS_ROOT=/tmp/docs-eebus-m625-cedf238 PLATFORM_M625_EXECUTION_PLANS_ROOT=/tmp/plans-m625-fb384ab ./scripts/ci_local.sh`: pass after the correction, 1970 passed, 395 expected deselected, exit 0; log SHA-256 `3fd325f21404e35d7f0593e5cfc711d31997919dc98ae96504ef55005345aedb`.
 - `git diff --check`: pass.
 
 The checker binds field-level provenance for the checked-in gateway fixture

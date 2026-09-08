@@ -19,6 +19,7 @@ INFRASTRUCTURE_BLOCK = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/pos
 NEGATIVE = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/negative-cases.json"
 FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
 PRODUCER_BUILD_EVIDENCE = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json"
+PRODUCER_BINARY = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/producer/gateway-adversarial-darwin-arm64-go1.26.2.test"
 sys.path.insert(0, str(ROOT / "scripts"))
 import validate_adversarial_runtime_report_v1 as validator  # noqa: E402
 from validate_adversarial_runtime_report_v1 import ValidationError, load_report, validate_path, validate_semantics  # noqa: E402
@@ -89,7 +90,7 @@ def test_canonical_offline_report_passes_schema_and_recomputed_semantics():
 
 def test_content_addressed_fixture_checkout_bytes_are_platform_stable():
     paths = sorted((ROOT / "docs/platform/fixtures/adversarial-runtime/v1").rglob("*"))
-    paths = [str(path.relative_to(ROOT)) for path in paths if path.suffix in {".json", ".bin"}]
+    paths = [str(path.relative_to(ROOT)) for path in paths if path.suffix in {".json", ".bin", ".test"}]
     result = subprocess.run(
         ["git", "check-attr", "-z", "text", "eol", "--", *paths],
         cwd=ROOT,
@@ -127,7 +128,7 @@ def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
         "command", "environment", "working_directory", "working_package", "toolchain", "goos",
         "goarch", "goarm64", "cgo_enabled", "module_path", "module_version",
         "vcs_time", "vcs_revision", "vcs_modified", "trimpath", "build_kind",
-        "build_id", "size_bytes", "sha256",
+        "build_id", "artifact_path", "size_bytes", "sha256",
     }
     assert build["command"] == ["go", "test", "-c", "-trimpath", "-buildvcs=true", "-o", "${ARTIFACT_ROOT}/producer.test", "./internal/adversarial"]
     assert build["environment"] == {"GOWORK": "off"}
@@ -136,6 +137,10 @@ def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
     assert build["vcs_revision"] == evidence["source"]["commit"]
     assert build["vcs_modified"] is False and build["trimpath"] is True
     assert build["sha256"] == validator.CANONICAL_GATEWAY_FIXTURE_PRODUCER["build_sha256"]
+    assert build["artifact_path"] == str(PRODUCER_BINARY.relative_to(ROOT))
+    binary = PRODUCER_BINARY.read_bytes()
+    assert len(binary) == build["size_bytes"]
+    assert hashlib.sha256(binary).hexdigest() == build["sha256"]
     reproduction = evidence["reproduction"]
     assert set(reproduction) == {"clean_clone_count", "byte_identical", "binary_sha256"}
     assert reproduction == {
