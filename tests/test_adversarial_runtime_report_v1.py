@@ -268,6 +268,27 @@ def test_canonical_positive_path_rejects_ha_wrapper(tmp_path, monkeypatch):
         validate_path(canonical_path, gateway_path)
 
 
+def test_canonical_path_decision_is_bound_before_validation_callbacks(tmp_path, monkeypatch):
+    candidate = load(POSITIVE)
+    candidate["provenance"]["subject"]["commit"] = "1" * 40
+    candidate["provenance"]["producer"]["commit"] = "1" * 40
+    canonical_path = tmp_path / "canonical-positive.json"
+    canonical_path.write_text(json.dumps(candidate), encoding="utf-8")
+    replacement = tmp_path / "replacement.json"
+    replacement.write_text(json.dumps(candidate), encoding="utf-8")
+    monkeypatch.setattr(validator, "CANONICAL_POSITIVE_PATHS", {canonical_path.resolve()})
+    real_validate_schema = validator.validate_schema_bytes
+
+    def replace_path_after_schema(raw, schema=validator.SCHEMA):
+        real_validate_schema(raw, schema)
+        canonical_path.unlink()
+        canonical_path.symlink_to(replacement)
+
+    monkeypatch.setattr(validator, "validate_schema_bytes", replace_path_after_schema)
+    with pytest.raises(ValidationError, match="canonical fixture subject provenance mismatch"):
+        validate_path(canonical_path)
+
+
 def test_checked_in_gateway_result_variants_share_canonical_provenance_without_report_allowlisting():
     expected_subject = load(POSITIVE)["provenance"]["subject"]
     expected_producer = load(POSITIVE)["provenance"]["producer"]

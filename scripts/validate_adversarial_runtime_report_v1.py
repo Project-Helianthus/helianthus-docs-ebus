@@ -758,6 +758,7 @@ def validate_schema_bytes(raw: bytes, schema: Path = SCHEMA):
 
 
 def validate_path(path: Path, input_gateway_report: Path | None = None):
+    is_canonical_positive = path.resolve() in CANONICAL_POSITIVE_PATHS
     raw = read_report_bytes(path)
     report = parse_report_bytes(raw)
     validate_schema_bytes(raw)
@@ -766,7 +767,7 @@ def validate_path(path: Path, input_gateway_report: Path | None = None):
     if errors:
         raise ValidationError("semantic: " + ",".join(errors))
     _validate_fixture_projection(report, case, driver)
-    if path.resolve() in CANONICAL_POSITIVE_PATHS:
+    if is_canonical_positive:
         validate_canonical_gateway_fixture_provenance(report)
     is_ha = report["provenance"]["producer"]["repository"] == "Project-Helianthus/helianthus-ha-integration"
     if is_ha:
