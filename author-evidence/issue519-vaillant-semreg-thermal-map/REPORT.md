@@ -75,4 +75,5 @@ runtime-state negative fixtures, deployment wording and NM service-name gates
 also passed.
 
 No credential handling, live device action, or hardware action was performed.
-The correction is ready for the authorized commit and push to the existing PR branch.
+This report accompanies the corrected PR branch; GitHub is authoritative for
+its current commit, checks, review, and merge state.
