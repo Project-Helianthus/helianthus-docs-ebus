@@ -19,12 +19,13 @@
       "-trimpath",
       "-buildvcs=true",
       "-o",
-      "<output>",
+      "${ARTIFACT_ROOT}/producer.test",
       "./internal/adversarial"
     ],
     "environment": {
       "GOWORK": "off"
     },
+    "working_directory": "${SOURCE_ROOT}",
     "working_package": "./internal/adversarial",
     "toolchain": "go1.26.2",
     "goos": "darwin",
@@ -51,40 +52,63 @@
     ]
   },
   "generation": {
-    "argv": [
-      "<producer-binary>",
-      "-test.run=^TestCompiledPublisherHelper$",
-      "--",
-      "<input-driver>",
-      "<output-report>"
-    ],
-    "environment_overrides": {
-      "PATH": "<empty-directory>"
+    "base_directories": {
+      "SOURCE_ROOT": "absolute full clean clone at source.commit with tags fetched",
+      "ARTIFACT_ROOT": "absolute new artifact directory outside SOURCE_ROOT",
+      "RUN_ROOT": "absolute new working directory outside SOURCE_ROOT",
+      "EMPTY_PATH_ROOT": "absolute empty directory"
     },
-    "working_directory": "<outside-source-checkout>",
+    "environment_overrides": {
+      "PATH": "${EMPTY_PATH_ROOT}"
+    },
+    "working_directory": "${RUN_ROOT}",
     "cases": [
       {
         "case_id": "evaluated-fail",
-        "input": "internal/adversarial/fixtures/v1/inputs/evaluated-fail.json",
-        "output": "docs/platform/fixtures/adversarial-runtime/v1/positive/evaluated-fail.json",
+        "argv": [
+          "${ARTIFACT_ROOT}/producer.test",
+          "-test.run=^TestCompiledPublisherHelper$",
+          "--",
+          "${SOURCE_ROOT}/internal/adversarial/fixtures/v1/inputs/evaluated-fail.json",
+          "${ARTIFACT_ROOT}/reports/evaluated-fail.json"
+        ],
+        "published_output": "docs/platform/fixtures/adversarial-runtime/v1/positive/evaluated-fail.json",
         "output_sha256": "1e4981bcf5e5b0b645365e7dbb1c1aa9e724de90024af997122a16184583126f"
       },
       {
         "case_id": "execution-error",
-        "input": "internal/adversarial/fixtures/v1/inputs/execution-error.json",
-        "output": "docs/platform/fixtures/adversarial-runtime/v1/positive/execution-error.json",
+        "argv": [
+          "${ARTIFACT_ROOT}/producer.test",
+          "-test.run=^TestCompiledPublisherHelper$",
+          "--",
+          "${SOURCE_ROOT}/internal/adversarial/fixtures/v1/inputs/execution-error.json",
+          "${ARTIFACT_ROOT}/reports/execution-error.json"
+        ],
+        "published_output": "docs/platform/fixtures/adversarial-runtime/v1/positive/execution-error.json",
         "output_sha256": "76efea7d94d912c03a78cacc9518176590e0d696eaa01f23b52fb88a237ae34c"
       },
       {
         "case_id": "infrastructure-block",
-        "input": "internal/adversarial/fixtures/v1/inputs/infrastructure-block.json",
-        "output": "docs/platform/fixtures/adversarial-runtime/v1/positive/infrastructure-block.json",
+        "argv": [
+          "${ARTIFACT_ROOT}/producer.test",
+          "-test.run=^TestCompiledPublisherHelper$",
+          "--",
+          "${SOURCE_ROOT}/internal/adversarial/fixtures/v1/inputs/infrastructure-block.json",
+          "${ARTIFACT_ROOT}/reports/infrastructure-block.json"
+        ],
+        "published_output": "docs/platform/fixtures/adversarial-runtime/v1/positive/infrastructure-block.json",
         "output_sha256": "d48f81a8844bf3b7ed76b54aff80aa155e56308eeecffa0b1cac3645ca376f6a"
       },
       {
         "case_id": "offline-all-pass",
-        "input": "internal/adversarial/fixtures/v1/inputs/offline-all-pass.json",
-        "output": "docs/platform/fixtures/adversarial-runtime/v1/positive/offline-all-pass.json",
+        "argv": [
+          "${ARTIFACT_ROOT}/producer.test",
+          "-test.run=^TestCompiledPublisherHelper$",
+          "--",
+          "${SOURCE_ROOT}/internal/adversarial/fixtures/v1/inputs/offline-all-pass.json",
+          "${ARTIFACT_ROOT}/reports/offline-all-pass.json"
+        ],
+        "published_output": "docs/platform/fixtures/adversarial-runtime/v1/positive/offline-all-pass.json",
         "output_sha256": "a9e556de71473a716dbce8c6e462cdb314bf92b91d1cbf9a13fc1cf1511a547d"
       }
     ]

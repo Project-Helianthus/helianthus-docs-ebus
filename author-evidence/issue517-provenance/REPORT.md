@@ -21,10 +21,12 @@ The exact toolchain, target, module version, VCS revision/time/dirty bit, build
 ID, command arguments, environment, source tree, reproduction result and report
 hashes are captured in the closed machine-readable
 `docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json`.
-That record also captures the exact compiled-helper argv, the empty `PATH`
-override, the requirement to run outside the source checkout, and every source
-driver to output-report mapping. The two clean-clone report generations used
-that invocation and produced byte-identical outputs.
+That record also defines four named absolute base directories for the clean
+source, artifacts, outside-checkout run directory and empty `PATH`. Every build
+and per-case report argv is expressed against those bases, including the exact
+source driver and retained output. The two clean-clone report generations used
+that invocation and produced byte-identical outputs without publishing private
+filesystem paths.
 The repository tests reject drift between this record, the canonical validator
 identity and the checked-in report bytes.
 
@@ -46,9 +48,13 @@ identity and the checked-in report bytes.
   failed only because it was not the checked-in producer revision. Exact pinning
   now applies to the four checked-in positive paths and the HA gateway input;
   normal public v1 validation accepts the valid noncanonical gateway report.
+- RED for the replayability P2: the focused record test failed because the
+  outside-checkout invocation still used unresolved generic paths. The record
+  now defines absolute base-directory requirements and an exact argv for every
+  build and report case.
 - Each of the four checked-in positive reports passes
   `scripts/validate_adversarial_runtime_report_v1.py`.
-- `PLATFORM_M625_DOCS_EEBUS_ROOT=/tmp/docs-eebus-m625-cedf238 PLATFORM_M625_EXECUTION_PLANS_ROOT=/tmp/plans-m625-fb384ab ./scripts/ci_local.sh`: pass after the correction, 1970 passed, 395 expected deselected, exit 0; log SHA-256 `ea022d1e0f60eab471b752de279ff0890a954d6e38fc0582cdab499860b6c8ea`.
+- `PLATFORM_M625_DOCS_EEBUS_ROOT=/tmp/docs-eebus-m625-cedf238 PLATFORM_M625_EXECUTION_PLANS_ROOT=/tmp/plans-m625-fb384ab ./scripts/ci_local.sh`: pass after the correction, 1970 passed, 395 expected deselected, exit 0; log SHA-256 `2e561292c4d1b4907e8630a6e26764114c3600b8e18ce9682bec2d1d163d08cc`.
 - `git diff --check`: pass.
 
 The checker binds field-level provenance for the checked-in gateway fixture

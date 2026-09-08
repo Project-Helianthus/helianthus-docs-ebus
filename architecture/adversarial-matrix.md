@@ -14,8 +14,11 @@ Two full clean clones with tags fetched, each detached at that exact revision,
 produced byte-identical binaries and byte-identical reports. The closed [producer build evidence](../docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json)
 records the exact source tree, command arguments, toolchain, VCS metadata,
 build ID and binary digest. It also records the exact compiled-helper argv,
-empty-PATH override, outside-checkout working-directory constraint and the
-input/output mapping and digest for each report. `subject.commit` identifies the
+named absolute source/artifact/run/empty-PATH base directories,
+outside-checkout working-directory constraint and the input/output mapping and
+digest for each report. Resolving those four bases makes every build and report
+argv directly replayable without publishing a contributor's filesystem paths.
+`subject.commit` identifies the
 immutable fixture evidence; `producer.commit` and `producer.build_sha256`
 identify the clean binary that materialized a report. [Gateway
 issue #198](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/198)

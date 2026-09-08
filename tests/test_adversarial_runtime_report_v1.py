@@ -124,13 +124,14 @@ def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
     }
     build = evidence["build"]
     assert set(build) == {
-        "command", "environment", "working_package", "toolchain", "goos",
+        "command", "environment", "working_directory", "working_package", "toolchain", "goos",
         "goarch", "goarm64", "cgo_enabled", "module_path", "module_version",
         "vcs_time", "vcs_revision", "vcs_modified", "trimpath", "build_kind",
         "build_id", "size_bytes", "sha256",
     }
-    assert build["command"] == ["go", "test", "-c", "-trimpath", "-buildvcs=true", "-o", "<output>", "./internal/adversarial"]
+    assert build["command"] == ["go", "test", "-c", "-trimpath", "-buildvcs=true", "-o", "${ARTIFACT_ROOT}/producer.test", "./internal/adversarial"]
     assert build["environment"] == {"GOWORK": "off"}
+    assert build["working_directory"] == "${SOURCE_ROOT}"
     assert build["working_package"] == "./internal/adversarial"
     assert build["vcs_revision"] == evidence["source"]["commit"]
     assert build["vcs_modified"] is False and build["trimpath"] is True
@@ -143,13 +144,15 @@ def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
         "binary_sha256": [build["sha256"], build["sha256"]],
     }
     generation = evidence["generation"]
-    assert set(generation) == {"argv", "environment_overrides", "working_directory", "cases"}
-    assert generation["argv"] == [
-        "<producer-binary>", "-test.run=^TestCompiledPublisherHelper$", "--",
-        "<input-driver>", "<output-report>",
-    ]
-    assert generation["environment_overrides"] == {"PATH": "<empty-directory>"}
-    assert generation["working_directory"] == "<outside-source-checkout>"
+    assert set(generation) == {"base_directories", "environment_overrides", "working_directory", "cases"}
+    assert generation["base_directories"] == {
+        "SOURCE_ROOT": "absolute full clean clone at source.commit with tags fetched",
+        "ARTIFACT_ROOT": "absolute new artifact directory outside SOURCE_ROOT",
+        "RUN_ROOT": "absolute new working directory outside SOURCE_ROOT",
+        "EMPTY_PATH_ROOT": "absolute empty directory",
+    }
+    assert generation["environment_overrides"] == {"PATH": "${EMPTY_PATH_ROOT}"}
+    assert generation["working_directory"] == "${RUN_ROOT}"
     assert [case["case_id"] for case in generation["cases"]] == [
         "evaluated-fail", "execution-error", "infrastructure-block", "offline-all-pass",
     ]
@@ -159,10 +162,14 @@ def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
     }
     assert evidence["reports"] == expected_reports
     for case in generation["cases"]:
-        assert set(case) == {"case_id", "input", "output", "output_sha256"}
+        assert set(case) == {"case_id", "argv", "published_output", "output_sha256"}
         name = case["case_id"] + ".json"
-        assert case["input"] == f"internal/adversarial/fixtures/v1/inputs/{name}"
-        assert case["output"] == f"docs/platform/fixtures/adversarial-runtime/v1/positive/{name}"
+        assert case["argv"] == [
+            "${ARTIFACT_ROOT}/producer.test", "-test.run=^TestCompiledPublisherHelper$", "--",
+            f"${{SOURCE_ROOT}}/internal/adversarial/fixtures/v1/inputs/{name}",
+            f"${{ARTIFACT_ROOT}}/reports/{name}",
+        ]
+        assert case["published_output"] == f"docs/platform/fixtures/adversarial-runtime/v1/positive/{name}"
         assert case["output_sha256"] == expected_reports[name]
     for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK, POSITIVE):
         report = load(path)
