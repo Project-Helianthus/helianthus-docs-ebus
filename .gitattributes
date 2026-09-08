@@ -1,2 +1,3 @@
 docs/platform/fixtures/adversarial-runtime/v1/**/*.json text eol=lf
 docs/platform/fixtures/adversarial-runtime/v1/**/*.bin binary
+docs/platform/fixtures/adversarial-runtime/v1/producer/*.test binary
