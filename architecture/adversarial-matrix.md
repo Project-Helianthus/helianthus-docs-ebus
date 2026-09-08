@@ -4,16 +4,18 @@ This is the immutable public `adversarial-runtime-report-v1` contract for gatewa
 
 **Proven (exact repository source inspection):** the public fixture corpus is
 anchored by gateway commit
-[`eaa5b890871a74b1d01cbe0cd90449fb86c28ce9`](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/eaa5b890871a74b1d01cbe0cd90449fb86c28ce9),
+[`936edbe873f35a8bad3763223dba9566154574d6`](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/936edbe873f35a8bad3763223dba9566154574d6),
 the first revision containing its byte-identical manifest with SHA-256
 `d7fbe89d068b1b5c0d41fe51176d9e9263a441ee0ed752c9e8cae794f5a8346a`.
-Gateway clean source commit
-[`3cbae8e2c46e2a819c9d4caaf57ebdd54c4b518f`](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/3cbae8e2c46e2a819c9d4caaf57ebdd54c4b518f)
-produced these reports with its exact `go-test-binary` SHA-256
-`e66f701ccf5b57611bf9cd54c5f3e00c6988fd9e07d766e4821eb4f3c61ccadf`.
-`subject.commit` therefore identifies the immutable fixture evidence, while
-`producer.commit` and `producer.build_sha256` identify the clean binary that
-materialized a report. They are intentionally different identities. [Gateway
+The same clean public revision produced these reports with a `go-test-binary`
+whose SHA-256 is
+`fc8993b6b0532a219534e557dfd8c7ee0974fe1402e14c8e7787f9cdb488d4d1`.
+Two detached clean clones produced byte-identical binaries and byte-identical
+reports. The closed [producer build evidence](../docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json)
+records the exact source tree, command arguments, toolchain, VCS metadata,
+build ID, binary digest, and report digests. `subject.commit` identifies the
+immutable fixture evidence; `producer.commit` and `producer.build_sha256`
+identify the clean binary that materialized a report. [Gateway
 issue #198](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/198)
 owns that publisher. The fixtures here are offline contract evidence, not HA,
 adapter, network, or hardware evidence.

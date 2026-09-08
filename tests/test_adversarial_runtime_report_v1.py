@@ -18,6 +18,7 @@ EXECUTION_ERROR = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/positive
 INFRASTRUCTURE_BLOCK = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/positive/infrastructure-block.json"
 NEGATIVE = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/negative-cases.json"
 FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
+PRODUCER_BUILD_EVIDENCE = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json"
 sys.path.insert(0, str(ROOT / "scripts"))
 import validate_adversarial_runtime_report_v1 as validator  # noqa: E402
 from validate_adversarial_runtime_report_v1 import ValidationError, load_report, validate_path, validate_semantics  # noqa: E402
@@ -103,6 +104,49 @@ def test_content_addressed_fixture_checkout_bytes_are_platform_stable():
             assert attributes[(path, "eol")] == "lf"
         else:
             assert attributes[(path, "text")] == "unset"
+
+
+def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
+    evidence = load(PRODUCER_BUILD_EVIDENCE)
+    assert set(evidence) == {"schema", "source", "build", "reproduction", "reports"}
+    assert evidence["schema"] == "helianthus.gateway.adversarial-producer-build/v1"
+    assert set(evidence["source"]) == {"repository", "commit", "tree", "state"}
+    assert evidence["source"] == {
+        "repository": "Project-Helianthus/helianthus-ebusgateway",
+        "commit": "936edbe873f35a8bad3763223dba9566154574d6",
+        "tree": "d59bdfe02b9ad1168fe8d7ba2aff275f87ef06fd",
+        "state": "clean",
+    }
+    build = evidence["build"]
+    assert set(build) == {
+        "command", "environment", "working_package", "toolchain", "goos",
+        "goarch", "goarm64", "cgo_enabled", "module_path", "module_version",
+        "vcs_time", "vcs_revision", "vcs_modified", "trimpath", "build_kind",
+        "build_id", "size_bytes", "sha256",
+    }
+    assert build["command"] == ["go", "test", "-c", "-trimpath", "-buildvcs=true", "-o", "<output>", "./internal/adversarial"]
+    assert build["environment"] == {"GOWORK": "off"}
+    assert build["working_package"] == "./internal/adversarial"
+    assert build["vcs_revision"] == evidence["source"]["commit"]
+    assert build["vcs_modified"] is False and build["trimpath"] is True
+    assert build["sha256"] == validator.CANONICAL_GATEWAY_FIXTURE_PRODUCER["build_sha256"]
+    reproduction = evidence["reproduction"]
+    assert set(reproduction) == {"clean_clone_count", "byte_identical", "binary_sha256"}
+    assert reproduction == {
+        "clean_clone_count": 2,
+        "byte_identical": True,
+        "binary_sha256": [build["sha256"], build["sha256"]],
+    }
+    expected_reports = {
+        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK, POSITIVE)
+    }
+    assert evidence["reports"] == expected_reports
+    for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK, POSITIVE):
+        report = load(path)
+        assert report["provenance"]["subject"]["commit"] == evidence["source"]["commit"]
+        assert report["provenance"]["producer"]["commit"] == evidence["source"]["commit"]
+        assert report["provenance"]["producer"]["build_sha256"] == build["sha256"]
 
 
 def test_valid_result_variants_and_mixed_evaluated_failure_recompute_summary():

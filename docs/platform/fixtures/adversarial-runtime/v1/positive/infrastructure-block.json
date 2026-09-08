@@ -14,17 +14,17 @@
   "provenance": {
     "subject": {
       "repository": "Project-Helianthus/helianthus-ebusgateway",
-      "commit": "eaa5b890871a74b1d01cbe0cd90449fb86c28ce9",
+      "commit": "936edbe873f35a8bad3763223dba9566154574d6",
       "source_tree": "clean",
       "artifact_kind": "gateway-fixture-set",
       "artifact_sha256": "d7fbe89d068b1b5c0d41fe51176d9e9263a441ee0ed752c9e8cae794f5a8346a"
     },
     "producer": {
       "repository": "Project-Helianthus/helianthus-ebusgateway",
-      "commit": "3cbae8e2c46e2a819c9d4caaf57ebdd54c4b518f",
+      "commit": "936edbe873f35a8bad3763223dba9566154574d6",
       "component": "internal/adversarial",
       "build_kind": "go-test-binary",
-      "build_sha256": "e66f701ccf5b57611bf9cd54c5f3e00c6988fd9e07d766e4821eb4f3c61ccadf",
+      "build_sha256": "fc8993b6b0532a219534e557dfd8c7ee0974fe1402e14c8e7787f9cdb488d4d1",
       "input_gateway_report_sha256": null
     },
     "fixture_set_sha256": "d7fbe89d068b1b5c0d41fe51176d9e9263a441ee0ed752c9e8cae794f5a8346a",
