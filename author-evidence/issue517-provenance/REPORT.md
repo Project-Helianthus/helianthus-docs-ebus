@@ -10,8 +10,8 @@ immutable fixture subject and the authenticated producer source.
 
 ## Reproducible producer evidence
 
-Two independent clean detached clones of the public gateway revision built the
-same test executable with:
+Two independent full clean clones with tags fetched, each detached at the public
+gateway revision, built the same test executable with:
 
 `GOWORK=off go test -c -trimpath -buildvcs=true -o <output> ./internal/adversarial`
 
@@ -38,13 +38,17 @@ identity and the checked-in report bytes.
 
 ## Validation
 
-- `python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py`: 46 passed.
+- `python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py`: 47 passed.
 - RED for the late report-generation P2: the focused build-record test failed
   because the record had no `generation` member; it passes with the closed
   invocation and per-case input/output mapping.
+- RED for the exact-pin scope P2: an otherwise valid later clean gateway report
+  failed only because it was not the checked-in producer revision. Exact pinning
+  now applies to the four checked-in positive paths and the HA gateway input;
+  normal public v1 validation accepts the valid noncanonical gateway report.
 - Each of the four checked-in positive reports passes
   `scripts/validate_adversarial_runtime_report_v1.py`.
-- `PLATFORM_M625_DOCS_EEBUS_ROOT=/tmp/docs-eebus-m625-cedf238 PLATFORM_M625_EXECUTION_PLANS_ROOT=/tmp/plans-m625-fb384ab ./scripts/ci_local.sh`: pass after the correction, 1969 passed, 395 expected deselected, exit 0; log SHA-256 `745a3fd4988ff51991ef54747e314a2b88bb1f28c1dc570c60f3d3bcd4706ce3`.
+- `PLATFORM_M625_DOCS_EEBUS_ROOT=/tmp/docs-eebus-m625-cedf238 PLATFORM_M625_EXECUTION_PLANS_ROOT=/tmp/plans-m625-fb384ab ./scripts/ci_local.sh`: pass after the correction, 1970 passed, 395 expected deselected, exit 0; log SHA-256 `ea022d1e0f60eab471b752de279ff0890a954d6e38fc0582cdab499860b6c8ea`.
 - `git diff --check`: pass.
 
 The checker binds field-level provenance for the checked-in gateway fixture

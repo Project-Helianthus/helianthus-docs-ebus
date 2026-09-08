@@ -6,6 +6,11 @@
     "tree": "d59bdfe02b9ad1168fe8d7ba2aff275f87ef06fd",
     "state": "clean"
   },
+  "source_preparation": {
+    "clone": "full",
+    "tags_required": true,
+    "checkout": "detached exact source commit"
+  },
   "build": {
     "command": [
       "go",

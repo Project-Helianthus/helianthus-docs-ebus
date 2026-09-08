@@ -19,7 +19,8 @@ SCHEMA = ROOT / "docs/platform/schemas/adversarial-runtime-report-v1.schema.json
 SCHEMA_ID = "https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-report-v1.schema.json"
 SUITE_ID = "helianthus.adversarial.ADV01-04"
 FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
-CANONICAL_FIXTURE_MANIFEST = FIXTURE_MANIFEST
+CANONICAL_POSITIVE_ROOT = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/positive"
+CANONICAL_POSITIVE_PATHS = frozenset((CANONICAL_POSITIVE_ROOT / f"{name}.json").resolve() for name in ("evaluated-fail", "execution-error", "infrastructure-block", "offline-all-pass"))
 FIXTURE_SCHEMA = ROOT / "docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json"
 FIXTURE_SCHEMA_ID = "https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json"
 MAX_BYTES = 1024 * 1024
@@ -555,8 +556,6 @@ def validate_canonical_gateway_fixture_provenance(report):
     entire runtime report. Dynamic timestamps and all valid v1 result forms
     continue through the normal semantic and fixture-projection checks.
     """
-    if FIXTURE_MANIFEST != CANONICAL_FIXTURE_MANIFEST:
-        return
     provenance = report["provenance"]
     if provenance["producer"]["repository"] != CANONICAL_GATEWAY_FIXTURE_PRODUCER["repository"]:
         return
@@ -769,7 +768,8 @@ def validate_path(path: Path, input_gateway_report: Path | None = None):
     if errors:
         raise ValidationError("semantic: " + ",".join(errors))
     _validate_fixture_projection(report, case, driver)
-    validate_canonical_gateway_fixture_provenance(report)
+    if path.resolve() in CANONICAL_POSITIVE_PATHS:
+        validate_canonical_gateway_fixture_provenance(report)
     is_ha = report["provenance"]["producer"]["repository"] == "Project-Helianthus/helianthus-ha-integration"
     if is_ha:
         if input_gateway_report is None:

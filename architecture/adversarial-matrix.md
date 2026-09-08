@@ -10,8 +10,8 @@ the first revision containing its byte-identical manifest with SHA-256
 The same clean public revision produced these reports with a `go-test-binary`
 whose SHA-256 is
 `fc8993b6b0532a219534e557dfd8c7ee0974fe1402e14c8e7787f9cdb488d4d1`.
-Two detached clean clones produced byte-identical binaries and byte-identical
-reports. The closed [producer build evidence](../docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json)
+Two full clean clones with tags fetched, each detached at that exact revision,
+produced byte-identical binaries and byte-identical reports. The closed [producer build evidence](../docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json)
 records the exact source tree, command arguments, toolchain, VCS metadata,
 build ID and binary digest. It also records the exact compiled-helper argv,
 empty-PATH override, outside-checkout working-directory constraint and the
@@ -37,10 +37,13 @@ Provenance is a closed `subject` plus `producer` pair. V1 is offline-fixture
 only: the subject is always the gateway, with its commit, source-tree state,
 `gateway-fixture-set` kind, and the fixture-manifest SHA-256. For the checked-in
 gateway fixtures, the validator requires the exact subject corpus and the exact
-clean report producer stated above, field by field. It does not hash-allowlist a
-whole report: timestamps, valid seam/continuity variants, and the v1 result/error
-forms remain subject to the existing schema, semantic, and input-projection
-checks. The producer is
+clean report producer stated above, field by field. This exact pin applies when
+validating the four checked-in positive paths and when HA supplies its exact
+gateway input. A gateway report at any other path uses the reusable v1 schema,
+semantic and fixture-projection contract and may identify a later clean
+producer. The validator does not hash-allowlist a whole report: timestamps,
+valid seam/continuity variants, and the v1 result/error forms remain subject to
+the existing schema, semantic, and input-projection checks. The producer is
 either gateway `internal/adversarial` / `go-test-binary`, or HA integration
 `ha-adversarial-harness` / `ha-harness`, with its own commit and build digest.
 Every action event is fixture sourced. Gateway production has a null input-report

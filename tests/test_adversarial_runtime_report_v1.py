@@ -108,7 +108,7 @@ def test_content_addressed_fixture_checkout_bytes_are_platform_stable():
 
 def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
     evidence = load(PRODUCER_BUILD_EVIDENCE)
-    assert set(evidence) == {"schema", "source", "build", "reproduction", "generation", "reports"}
+    assert set(evidence) == {"schema", "source", "source_preparation", "build", "reproduction", "generation", "reports"}
     assert evidence["schema"] == "helianthus.gateway.adversarial-producer-build/v1"
     assert set(evidence["source"]) == {"repository", "commit", "tree", "state"}
     assert evidence["source"] == {
@@ -116,6 +116,11 @@ def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
         "commit": "936edbe873f35a8bad3763223dba9566154574d6",
         "tree": "d59bdfe02b9ad1168fe8d7ba2aff275f87ef06fd",
         "state": "clean",
+    }
+    assert evidence["source_preparation"] == {
+        "clone": "full",
+        "tags_required": True,
+        "checkout": "detached exact source commit",
     }
     build = evidence["build"]
     assert set(build) == {
@@ -206,15 +211,31 @@ def test_report_rejects_dirty_provenance_for_a_passing_gate(tmp_path):
 def test_canonical_gateway_fixture_provenance_rejects_wrong_subject_producer_and_digest(tmp_path):
     subject = load(POSITIVE)
     subject["provenance"]["subject"]["commit"] = "0" * 40
-    assert "canonical fixture subject provenance" in validate_candidate(tmp_path, subject)
+    with pytest.raises(ValidationError, match="canonical fixture subject provenance"):
+        validator.validate_canonical_gateway_fixture_provenance(subject)
 
     producer = load(POSITIVE)
     producer["provenance"]["producer"]["commit"] = "0" * 40
-    assert "canonical fixture producer provenance" in validate_candidate(tmp_path, producer)
+    with pytest.raises(ValidationError, match="canonical fixture producer provenance"):
+        validator.validate_canonical_gateway_fixture_provenance(producer)
 
     digest = load(POSITIVE)
     digest["provenance"]["producer"]["build_sha256"] = "0" * 64
-    assert "canonical fixture producer provenance" in validate_candidate(tmp_path, digest)
+    with pytest.raises(ValidationError, match="canonical fixture producer provenance"):
+        validator.validate_canonical_gateway_fixture_provenance(digest)
+
+
+def test_noncanonical_gateway_report_uses_normal_public_contract(tmp_path):
+    candidate = load(POSITIVE)
+    candidate["provenance"]["subject"]["commit"] = "1" * 40
+    candidate["provenance"]["producer"]["commit"] = "1" * 40
+    path = tmp_path / "later-clean-gateway-report.json"
+    path.write_text(json.dumps(candidate), encoding="utf-8")
+    validate_path(path)
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 0, result.stderr
+    with pytest.raises(ValidationError, match="canonical fixture subject provenance mismatch"):
+        validator.validate_canonical_gateway_fixture_provenance(candidate)
 
 
 def test_checked_in_gateway_result_variants_share_canonical_provenance_without_report_allowlisting():
