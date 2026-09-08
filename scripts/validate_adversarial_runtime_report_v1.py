@@ -577,6 +577,7 @@ def validate_gateway_input(path: Path, report):
     if errors:
         raise ValidationError("gateway input semantic validation failed")
     _validate_fixture_projection(gateway_report, case, driver)
+    validate_canonical_gateway_fixture_provenance(gateway_report)
     producer = gateway_report["provenance"]["producer"]
     if (producer["repository"], producer["component"], producer["build_kind"], producer["input_gateway_report_sha256"]) != (
         "Project-Helianthus/helianthus-ebusgateway",

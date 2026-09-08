@@ -616,6 +616,34 @@ def test_ha_input_gateway_report_is_byte_bound_and_gateway_produced(tmp_path):
         validate_path(POSITIVE, POSITIVE)
 
 
+def test_ha_gateway_input_requires_canonical_gateway_provenance(tmp_path):
+    mutations = (
+        ("subject_commit", lambda report: report["provenance"]["subject"].update(commit="0" * 40)),
+        ("producer_commit", lambda report: report["provenance"]["producer"].update(commit="0" * 40)),
+        ("producer_build", lambda report: report["provenance"]["producer"].update(build_sha256="0" * 64)),
+    )
+    for name, mutate_gateway in mutations:
+        gateway = load(POSITIVE)
+        mutate_gateway(gateway)
+        gateway_path = tmp_path / f"gateway-{name}.json"
+        gateway_path.write_text(json.dumps(gateway), encoding="utf-8")
+
+        ha = load(POSITIVE)
+        ha["provenance"]["subject"] = copy.deepcopy(gateway["provenance"]["subject"])
+        ha["provenance"]["fixture_set_sha256"] = gateway["provenance"]["fixture_set_sha256"]
+        ha["provenance"]["fixture_case_id"] = gateway["provenance"]["fixture_case_id"]
+        ha["provenance"]["producer"].update(
+            repository="Project-Helianthus/helianthus-ha-integration",
+            component="ha-adversarial-harness",
+            build_kind="ha-harness",
+            input_gateway_report_sha256=hashlib.sha256(gateway_path.read_bytes()).hexdigest(),
+        )
+        ha_path = tmp_path / f"ha-{name}.json"
+        ha_path.write_text(json.dumps(ha), encoding="utf-8")
+        with pytest.raises(ValidationError, match="canonical fixture .* provenance mismatch"):
+            validate_path(ha_path, gateway_path)
+
+
 def test_driver_run_id_and_per_artifact_size_bounds_are_fail_closed(tmp_path, monkeypatch):
     import shutil
 
