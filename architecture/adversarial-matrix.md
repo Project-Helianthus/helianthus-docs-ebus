@@ -13,7 +13,9 @@ whose SHA-256 is
 Two detached clean clones produced byte-identical binaries and byte-identical
 reports. The closed [producer build evidence](../docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json)
 records the exact source tree, command arguments, toolchain, VCS metadata,
-build ID, binary digest, and report digests. `subject.commit` identifies the
+build ID and binary digest. It also records the exact compiled-helper argv,
+empty-PATH override, outside-checkout working-directory constraint and the
+input/output mapping and digest for each report. `subject.commit` identifies the
 immutable fixture evidence; `producer.commit` and `producer.build_sha256`
 identify the clean binary that materialized a report. [Gateway
 issue #198](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/198)

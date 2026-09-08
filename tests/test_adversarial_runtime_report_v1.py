@@ -108,7 +108,7 @@ def test_content_addressed_fixture_checkout_bytes_are_platform_stable():
 
 def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
     evidence = load(PRODUCER_BUILD_EVIDENCE)
-    assert set(evidence) == {"schema", "source", "build", "reproduction", "reports"}
+    assert set(evidence) == {"schema", "source", "build", "reproduction", "generation", "reports"}
     assert evidence["schema"] == "helianthus.gateway.adversarial-producer-build/v1"
     assert set(evidence["source"]) == {"repository", "commit", "tree", "state"}
     assert evidence["source"] == {
@@ -137,11 +137,28 @@ def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
         "byte_identical": True,
         "binary_sha256": [build["sha256"], build["sha256"]],
     }
+    generation = evidence["generation"]
+    assert set(generation) == {"argv", "environment_overrides", "working_directory", "cases"}
+    assert generation["argv"] == [
+        "<producer-binary>", "-test.run=^TestCompiledPublisherHelper$", "--",
+        "<input-driver>", "<output-report>",
+    ]
+    assert generation["environment_overrides"] == {"PATH": "<empty-directory>"}
+    assert generation["working_directory"] == "<outside-source-checkout>"
+    assert [case["case_id"] for case in generation["cases"]] == [
+        "evaluated-fail", "execution-error", "infrastructure-block", "offline-all-pass",
+    ]
     expected_reports = {
         path.name: hashlib.sha256(path.read_bytes()).hexdigest()
         for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK, POSITIVE)
     }
     assert evidence["reports"] == expected_reports
+    for case in generation["cases"]:
+        assert set(case) == {"case_id", "input", "output", "output_sha256"}
+        name = case["case_id"] + ".json"
+        assert case["input"] == f"internal/adversarial/fixtures/v1/inputs/{name}"
+        assert case["output"] == f"docs/platform/fixtures/adversarial-runtime/v1/positive/{name}"
+        assert case["output_sha256"] == expected_reports[name]
     for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK, POSITIVE):
         report = load(path)
         assert report["provenance"]["subject"]["commit"] == evidence["source"]["commit"]

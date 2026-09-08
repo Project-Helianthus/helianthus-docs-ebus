@@ -21,6 +21,10 @@ The exact toolchain, target, module version, VCS revision/time/dirty bit, build
 ID, command arguments, environment, source tree, reproduction result and report
 hashes are captured in the closed machine-readable
 `docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json`.
+That record also captures the exact compiled-helper argv, the empty `PATH`
+override, the requirement to run outside the source checkout, and every source
+driver to output-report mapping. The two clean-clone report generations used
+that invocation and produced byte-identical outputs.
 The repository tests reject drift between this record, the canonical validator
 identity and the checked-in report bytes.
 
@@ -35,9 +39,12 @@ identity and the checked-in report bytes.
 ## Validation
 
 - `python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py`: 46 passed.
+- RED for the late report-generation P2: the focused build-record test failed
+  because the record had no `generation` member; it passes with the closed
+  invocation and per-case input/output mapping.
 - Each of the four checked-in positive reports passes
   `scripts/validate_adversarial_runtime_report_v1.py`.
-- `PLATFORM_M625_DOCS_EEBUS_ROOT=/tmp/docs-eebus-m625-cedf238 PLATFORM_M625_EXECUTION_PLANS_ROOT=/tmp/plans-m625-fb384ab ./scripts/ci_local.sh`: pass, 1969 passed, 395 expected deselected, exit 0; log SHA-256 `e73c018e105833d3ff1cc684b0c04b650cb138bc105a4cd9952168636bcb1929`.
+- `PLATFORM_M625_DOCS_EEBUS_ROOT=/tmp/docs-eebus-m625-cedf238 PLATFORM_M625_EXECUTION_PLANS_ROOT=/tmp/plans-m625-fb384ab ./scripts/ci_local.sh`: pass after the correction, 1969 passed, 395 expected deselected, exit 0; log SHA-256 `745a3fd4988ff51991ef54747e314a2b88bb1f28c1dc570c60f3d3bcd4706ce3`.
 - `git diff --check`: pass.
 
 The checker binds field-level provenance for the checked-in gateway fixture
