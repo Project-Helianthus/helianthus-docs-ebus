@@ -2,17 +2,21 @@
 
 This is the immutable public `adversarial-runtime-report-v1` contract for gateway #198 and HA integration #105. It is evidence only: it neither executes a trigger nor authorizes a live action.
 
-**Proven (exact repository source inspection):** gateway main at
-`ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532` contains an
-[`internal/adversarial`](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/ae85c5d91bd8e9dc1c9fe122de7eaa05dcd6c532/internal/adversarial)
-package with only scenario definitions, report counting, JSON writing,
-and unit tests. That exact package has no trigger, observer, baseline/end
-capture, recovery measurement, or threshold executor, so it is
-**definition/serialization-only**. [Gateway issue #198](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/198)
-owns adding the offline executor against this contract. This package-scoped
-finding makes no repository-wide claim about unrelated trigger mechanisms. The
-fixtures here are offline contract evidence, not HA, adapter, network, or
-hardware evidence.
+**Proven (exact repository source inspection):** the public fixture corpus is
+anchored by gateway commit
+[`eaa5b890871a74b1d01cbe0cd90449fb86c28ce9`](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/eaa5b890871a74b1d01cbe0cd90449fb86c28ce9),
+the first revision containing its byte-identical manifest with SHA-256
+`d7fbe89d068b1b5c0d41fe51176d9e9263a441ee0ed752c9e8cae794f5a8346a`.
+Gateway clean source commit
+[`3cbae8e2c46e2a819c9d4caaf57ebdd54c4b518f`](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/3cbae8e2c46e2a819c9d4caaf57ebdd54c4b518f)
+produced these reports with its exact `go-test-binary` SHA-256
+`e66f701ccf5b57611bf9cd54c5f3e00c6988fd9e07d766e4821eb4f3c61ccadf`.
+`subject.commit` therefore identifies the immutable fixture evidence, while
+`producer.commit` and `producer.build_sha256` identify the clean binary that
+materialized a report. They are intentionally different identities. [Gateway
+issue #198](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/198)
+owns that publisher. The fixtures here are offline contract evidence, not HA,
+adapter, network, or hardware evidence.
 
 ## Exact artifact
 
@@ -27,7 +31,12 @@ failures are normalized as invalid artifacts without exposing caller paths.
 
 Provenance is a closed `subject` plus `producer` pair. V1 is offline-fixture
 only: the subject is always the gateway, with its commit, source-tree state,
-`gateway-fixture-set` kind, and the fixture-manifest SHA-256. The producer is
+`gateway-fixture-set` kind, and the fixture-manifest SHA-256. For the checked-in
+gateway fixtures, the validator requires the exact subject corpus and the exact
+clean report producer stated above, field by field. It does not hash-allowlist a
+whole report: timestamps, valid seam/continuity variants, and the v1 result/error
+forms remain subject to the existing schema, semantic, and input-projection
+checks. The producer is
 either gateway `internal/adversarial` / `go-test-binary`, or HA integration
 `ha-adversarial-harness` / `ha-harness`, with its own commit and build digest.
 Every action event is fixture sourced. Gateway production has a null input-report

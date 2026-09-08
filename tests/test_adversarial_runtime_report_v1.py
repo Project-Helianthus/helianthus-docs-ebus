@@ -142,6 +142,30 @@ def test_report_rejects_dirty_provenance_for_a_passing_gate(tmp_path):
     assert "dirty_provenance_pass" in validate_candidate(tmp_path, candidate)
 
 
+def test_canonical_gateway_fixture_provenance_rejects_wrong_subject_producer_and_digest(tmp_path):
+    subject = load(POSITIVE)
+    subject["provenance"]["subject"]["commit"] = "0" * 40
+    assert "canonical fixture subject provenance" in validate_candidate(tmp_path, subject)
+
+    producer = load(POSITIVE)
+    producer["provenance"]["producer"]["commit"] = "0" * 40
+    assert "canonical fixture producer provenance" in validate_candidate(tmp_path, producer)
+
+    digest = load(POSITIVE)
+    digest["provenance"]["producer"]["build_sha256"] = "0" * 64
+    assert "canonical fixture producer provenance" in validate_candidate(tmp_path, digest)
+
+
+def test_checked_in_gateway_result_variants_share_canonical_provenance_without_report_allowlisting():
+    expected_subject = load(POSITIVE)["provenance"]["subject"]
+    expected_producer = load(POSITIVE)["provenance"]["producer"]
+    for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK):
+        report = load(path)
+        assert report["provenance"]["subject"] == expected_subject
+        assert report["provenance"]["producer"] == expected_producer
+        assert report["provenance"]["fixture_case_id"] == path.stem
+
+
 def test_serial_scenario_run_binding_and_conservative_timing_uncertainty(tmp_path):
     candidate = load(POSITIVE)
     candidate["scenarios"][1]["timing"]["scenario_started_at"] = "2026-09-07T12:02:59.000Z"
