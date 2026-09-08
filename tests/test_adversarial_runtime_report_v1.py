@@ -18,6 +18,8 @@ EXECUTION_ERROR = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/positive
 INFRASTRUCTURE_BLOCK = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/positive/infrastructure-block.json"
 NEGATIVE = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/negative-cases.json"
 FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
+PRODUCER_BUILD_EVIDENCE = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/producer-build-evidence.json"
+PRODUCER_BINARY = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/producer/gateway-adversarial-darwin-arm64-go1.26.2.test"
 sys.path.insert(0, str(ROOT / "scripts"))
 import validate_adversarial_runtime_report_v1 as validator  # noqa: E402
 from validate_adversarial_runtime_report_v1 import ValidationError, load_report, validate_path, validate_semantics  # noqa: E402
@@ -88,7 +90,7 @@ def test_canonical_offline_report_passes_schema_and_recomputed_semantics():
 
 def test_content_addressed_fixture_checkout_bytes_are_platform_stable():
     paths = sorted((ROOT / "docs/platform/fixtures/adversarial-runtime/v1").rglob("*"))
-    paths = [str(path.relative_to(ROOT)) for path in paths if path.suffix in {".json", ".bin"}]
+    paths = [str(path.relative_to(ROOT)) for path in paths if path.suffix in {".json", ".bin", ".test"}]
     result = subprocess.run(
         ["git", "check-attr", "-z", "text", "eol", "--", *paths],
         cwd=ROOT,
@@ -103,6 +105,82 @@ def test_content_addressed_fixture_checkout_bytes_are_platform_stable():
             assert attributes[(path, "eol")] == "lf"
         else:
             assert attributes[(path, "text")] == "unset"
+
+
+def test_producer_build_evidence_is_closed_reproducible_and_binds_reports():
+    evidence = load(PRODUCER_BUILD_EVIDENCE)
+    assert set(evidence) == {"schema", "source", "source_preparation", "build", "reproduction", "generation", "reports"}
+    assert evidence["schema"] == "helianthus.gateway.adversarial-producer-build/v1"
+    assert set(evidence["source"]) == {"repository", "commit", "tree", "state"}
+    assert evidence["source"] == {
+        "repository": "Project-Helianthus/helianthus-ebusgateway",
+        "commit": "936edbe873f35a8bad3763223dba9566154574d6",
+        "tree": "d59bdfe02b9ad1168fe8d7ba2aff275f87ef06fd",
+        "state": "clean",
+    }
+    assert evidence["source_preparation"] == {
+        "clone": "full",
+        "tags_required": True,
+        "checkout": "detached exact source commit",
+    }
+    build = evidence["build"]
+    assert set(build) == {
+        "command", "environment", "working_directory", "working_package", "toolchain", "goos",
+        "goarch", "goarm64", "cgo_enabled", "module_path", "module_version",
+        "vcs_time", "vcs_revision", "vcs_modified", "trimpath", "build_kind",
+        "build_id", "artifact_path", "size_bytes", "sha256",
+    }
+    assert build["command"] == ["go", "test", "-c", "-trimpath", "-buildvcs=true", "-o", "${ARTIFACT_ROOT}/producer.test", "./internal/adversarial"]
+    assert build["environment"] == {"GOWORK": "off"}
+    assert build["working_directory"] == "${SOURCE_ROOT}"
+    assert build["working_package"] == "./internal/adversarial"
+    assert build["vcs_revision"] == evidence["source"]["commit"]
+    assert build["vcs_modified"] is False and build["trimpath"] is True
+    assert build["sha256"] == validator.CANONICAL_GATEWAY_FIXTURE_PRODUCER["build_sha256"]
+    assert build["artifact_path"] == str(PRODUCER_BINARY.relative_to(ROOT))
+    binary = PRODUCER_BINARY.read_bytes()
+    assert len(binary) == build["size_bytes"]
+    assert hashlib.sha256(binary).hexdigest() == build["sha256"]
+    reproduction = evidence["reproduction"]
+    assert set(reproduction) == {"clean_clone_count", "byte_identical", "binary_sha256"}
+    assert reproduction == {
+        "clean_clone_count": 2,
+        "byte_identical": True,
+        "binary_sha256": [build["sha256"], build["sha256"]],
+    }
+    generation = evidence["generation"]
+    assert set(generation) == {"base_directories", "environment_overrides", "working_directory", "cases"}
+    assert generation["base_directories"] == {
+        "SOURCE_ROOT": "absolute full clean clone at source.commit with tags fetched",
+        "ARTIFACT_ROOT": "absolute new artifact directory outside SOURCE_ROOT",
+        "RUN_ROOT": "absolute new working directory outside SOURCE_ROOT",
+        "EMPTY_PATH_ROOT": "absolute empty directory",
+    }
+    assert generation["environment_overrides"] == {"PATH": "${EMPTY_PATH_ROOT}"}
+    assert generation["working_directory"] == "${RUN_ROOT}"
+    assert [case["case_id"] for case in generation["cases"]] == [
+        "evaluated-fail", "execution-error", "infrastructure-block", "offline-all-pass",
+    ]
+    expected_reports = {
+        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK, POSITIVE)
+    }
+    assert evidence["reports"] == expected_reports
+    for case in generation["cases"]:
+        assert set(case) == {"case_id", "argv", "published_output", "output_sha256"}
+        name = case["case_id"] + ".json"
+        assert case["argv"] == [
+            "${ARTIFACT_ROOT}/producer.test", "-test.run=^TestCompiledPublisherHelper$", "--",
+            f"${{SOURCE_ROOT}}/internal/adversarial/fixtures/v1/inputs/{name}",
+            f"${{ARTIFACT_ROOT}}/reports/{name}",
+        ]
+        assert case["published_output"] == f"docs/platform/fixtures/adversarial-runtime/v1/positive/{name}"
+        assert case["output_sha256"] == expected_reports[name]
+    for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK, POSITIVE):
+        report = load(path)
+        assert report["provenance"]["subject"]["commit"] == evidence["source"]["commit"]
+        assert report["provenance"]["producer"]["commit"] == evidence["source"]["commit"]
+        assert report["provenance"]["producer"]["build_sha256"] == build["sha256"]
 
 
 def test_valid_result_variants_and_mixed_evaluated_failure_recompute_summary():
@@ -140,6 +218,85 @@ def test_report_rejects_dirty_provenance_for_a_passing_gate(tmp_path):
     candidate = load(POSITIVE)
     candidate["provenance"]["subject"]["source_tree"] = "dirty"
     assert "dirty_provenance_pass" in validate_candidate(tmp_path, candidate)
+
+
+def test_canonical_gateway_fixture_provenance_rejects_wrong_subject_producer_and_digest(tmp_path):
+    subject = load(POSITIVE)
+    subject["provenance"]["subject"]["commit"] = "0" * 40
+    with pytest.raises(ValidationError, match="canonical fixture subject provenance"):
+        validator.validate_canonical_gateway_fixture_provenance(subject)
+
+    producer = load(POSITIVE)
+    producer["provenance"]["producer"]["commit"] = "0" * 40
+    with pytest.raises(ValidationError, match="canonical fixture producer provenance"):
+        validator.validate_canonical_gateway_fixture_provenance(producer)
+
+    digest = load(POSITIVE)
+    digest["provenance"]["producer"]["build_sha256"] = "0" * 64
+    with pytest.raises(ValidationError, match="canonical fixture producer provenance"):
+        validator.validate_canonical_gateway_fixture_provenance(digest)
+
+
+def test_noncanonical_gateway_report_uses_normal_public_contract(tmp_path):
+    candidate = load(POSITIVE)
+    candidate["provenance"]["subject"]["commit"] = "1" * 40
+    candidate["provenance"]["producer"]["commit"] = "1" * 40
+    path = tmp_path / "later-clean-gateway-report.json"
+    path.write_text(json.dumps(candidate), encoding="utf-8")
+    validate_path(path)
+    result = subprocess.run([sys.executable, str(VALIDATOR), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 0, result.stderr
+    with pytest.raises(ValidationError, match="canonical fixture subject provenance mismatch"):
+        validator.validate_canonical_gateway_fixture_provenance(candidate)
+
+
+def test_canonical_positive_path_rejects_ha_wrapper(tmp_path, monkeypatch):
+    gateway_path = tmp_path / "gateway.json"
+    gateway_path.write_bytes(POSITIVE.read_bytes())
+    report = load(POSITIVE)
+    report["provenance"]["producer"].update(
+        repository="Project-Helianthus/helianthus-ha-integration",
+        component="ha-adversarial-harness",
+        build_kind="ha-harness",
+        input_gateway_report_sha256=hashlib.sha256(gateway_path.read_bytes()).hexdigest(),
+    )
+    canonical_path = tmp_path / "canonical-positive.json"
+    canonical_path.write_text(json.dumps(report), encoding="utf-8")
+    monkeypatch.setattr(validator, "CANONICAL_POSITIVE_PATHS", {canonical_path.resolve()})
+
+    with pytest.raises(ValidationError, match="canonical fixture producer provenance mismatch"):
+        validate_path(canonical_path, gateway_path)
+
+
+def test_canonical_path_decision_is_bound_before_validation_callbacks(tmp_path, monkeypatch):
+    candidate = load(POSITIVE)
+    candidate["provenance"]["subject"]["commit"] = "1" * 40
+    candidate["provenance"]["producer"]["commit"] = "1" * 40
+    canonical_path = tmp_path / "canonical-positive.json"
+    canonical_path.write_text(json.dumps(candidate), encoding="utf-8")
+    replacement = tmp_path / "replacement.json"
+    replacement.write_text(json.dumps(candidate), encoding="utf-8")
+    monkeypatch.setattr(validator, "CANONICAL_POSITIVE_PATHS", {canonical_path.resolve()})
+    real_validate_schema = validator.validate_schema_bytes
+
+    def replace_path_after_schema(raw, schema=validator.SCHEMA):
+        real_validate_schema(raw, schema)
+        canonical_path.unlink()
+        canonical_path.symlink_to(replacement)
+
+    monkeypatch.setattr(validator, "validate_schema_bytes", replace_path_after_schema)
+    with pytest.raises(ValidationError, match="canonical fixture subject provenance mismatch"):
+        validate_path(canonical_path)
+
+
+def test_checked_in_gateway_result_variants_share_canonical_provenance_without_report_allowlisting():
+    expected_subject = load(POSITIVE)["provenance"]["subject"]
+    expected_producer = load(POSITIVE)["provenance"]["producer"]
+    for path in (EVALUATED_FAIL, EXECUTION_ERROR, INFRASTRUCTURE_BLOCK):
+        report = load(path)
+        assert report["provenance"]["subject"] == expected_subject
+        assert report["provenance"]["producer"] == expected_producer
+        assert report["provenance"]["fixture_case_id"] == path.stem
 
 
 def test_serial_scenario_run_binding_and_conservative_timing_uncertainty(tmp_path):
@@ -590,6 +747,34 @@ def test_ha_input_gateway_report_is_byte_bound_and_gateway_produced(tmp_path):
         validate_path(ha_path, gateway_path)
     with pytest.raises(ValidationError, match="gateway input is only valid"):
         validate_path(POSITIVE, POSITIVE)
+
+
+def test_ha_gateway_input_requires_canonical_gateway_provenance(tmp_path):
+    mutations = (
+        ("subject_commit", lambda report: report["provenance"]["subject"].update(commit="0" * 40)),
+        ("producer_commit", lambda report: report["provenance"]["producer"].update(commit="0" * 40)),
+        ("producer_build", lambda report: report["provenance"]["producer"].update(build_sha256="0" * 64)),
+    )
+    for name, mutate_gateway in mutations:
+        gateway = load(POSITIVE)
+        mutate_gateway(gateway)
+        gateway_path = tmp_path / f"gateway-{name}.json"
+        gateway_path.write_text(json.dumps(gateway), encoding="utf-8")
+
+        ha = load(POSITIVE)
+        ha["provenance"]["subject"] = copy.deepcopy(gateway["provenance"]["subject"])
+        ha["provenance"]["fixture_set_sha256"] = gateway["provenance"]["fixture_set_sha256"]
+        ha["provenance"]["fixture_case_id"] = gateway["provenance"]["fixture_case_id"]
+        ha["provenance"]["producer"].update(
+            repository="Project-Helianthus/helianthus-ha-integration",
+            component="ha-adversarial-harness",
+            build_kind="ha-harness",
+            input_gateway_report_sha256=hashlib.sha256(gateway_path.read_bytes()).hexdigest(),
+        )
+        ha_path = tmp_path / f"ha-{name}.json"
+        ha_path.write_text(json.dumps(ha), encoding="utf-8")
+        with pytest.raises(ValidationError, match="canonical fixture .* provenance mismatch"):
+            validate_path(ha_path, gateway_path)
 
 
 def test_driver_run_id_and_per_artifact_size_bounds_are_fail_closed(tmp_path, monkeypatch):

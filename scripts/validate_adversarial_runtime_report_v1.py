@@ -19,11 +19,32 @@ SCHEMA = ROOT / "docs/platform/schemas/adversarial-runtime-report-v1.schema.json
 SCHEMA_ID = "https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-report-v1.schema.json"
 SUITE_ID = "helianthus.adversarial.ADV01-04"
 FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
+CANONICAL_POSITIVE_ROOT = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/positive"
+CANONICAL_POSITIVE_PATHS = frozenset((CANONICAL_POSITIVE_ROOT / f"{name}.json").resolve() for name in ("evaluated-fail", "execution-error", "infrastructure-block", "offline-all-pass"))
 FIXTURE_SCHEMA = ROOT / "docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json"
 FIXTURE_SCHEMA_ID = "https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json"
 MAX_BYTES = 1024 * 1024
 MAX_FIXTURE_BYTES = 4 * 1024 * 1024
 TS_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+# These identities apply to the checked-in gateway-produced fixture corpus. They
+# deliberately do not constrain timestamps, scenario seam values, or arbitrary
+# reports which only use the v1 schema and semantic validator.
+CANONICAL_FIXTURE_SUBJECT = {
+    "repository": "Project-Helianthus/helianthus-ebusgateway",
+    "commit": "936edbe873f35a8bad3763223dba9566154574d6",
+    "source_tree": "clean",
+    "artifact_kind": "gateway-fixture-set",
+    "artifact_sha256": "d7fbe89d068b1b5c0d41fe51176d9e9263a441ee0ed752c9e8cae794f5a8346a",
+}
+CANONICAL_GATEWAY_FIXTURE_PRODUCER = {
+    "repository": "Project-Helianthus/helianthus-ebusgateway",
+    "commit": "936edbe873f35a8bad3763223dba9566154574d6",
+    "component": "internal/adversarial",
+    "build_kind": "go-test-binary",
+    "build_sha256": "fc8993b6b0532a219534e557dfd8c7ee0974fe1402e14c8e7787f9cdb488d4d1",
+    "input_gateway_report_sha256": None,
+}
 
 CATALOG = {
     "ADV-01": {
@@ -528,6 +549,20 @@ def validate_fixture_inputs(report):
     _validate_fixture_projection(report, case, driver)
 
 
+def validate_canonical_gateway_fixture_provenance(report):
+    """Bind public gateway fixtures to their inspectable subject and producer.
+
+    This is field-level provenance validation, not a digest allowlist for an
+    entire runtime report. Dynamic timestamps and all valid v1 result forms
+    continue through the normal semantic and fixture-projection checks.
+    """
+    provenance = report["provenance"]
+    if provenance["subject"] != CANONICAL_FIXTURE_SUBJECT:
+        raise ValidationError("canonical fixture subject provenance mismatch")
+    if provenance["producer"] != CANONICAL_GATEWAY_FIXTURE_PRODUCER:
+        raise ValidationError("canonical fixture producer provenance mismatch")
+
+
 def validate_gateway_input(path: Path, report):
     raw = read_report_bytes(path)
     if hashlib.sha256(raw).hexdigest() != report["provenance"]["producer"]["input_gateway_report_sha256"]:
@@ -539,6 +574,7 @@ def validate_gateway_input(path: Path, report):
     if errors:
         raise ValidationError("gateway input semantic validation failed")
     _validate_fixture_projection(gateway_report, case, driver)
+    validate_canonical_gateway_fixture_provenance(gateway_report)
     producer = gateway_report["provenance"]["producer"]
     if (producer["repository"], producer["component"], producer["build_kind"], producer["input_gateway_report_sha256"]) != (
         "Project-Helianthus/helianthus-ebusgateway",
@@ -722,6 +758,7 @@ def validate_schema_bytes(raw: bytes, schema: Path = SCHEMA):
 
 
 def validate_path(path: Path, input_gateway_report: Path | None = None):
+    is_canonical_positive = path.resolve() in CANONICAL_POSITIVE_PATHS
     raw = read_report_bytes(path)
     report = parse_report_bytes(raw)
     validate_schema_bytes(raw)
@@ -730,6 +767,8 @@ def validate_path(path: Path, input_gateway_report: Path | None = None):
     if errors:
         raise ValidationError("semantic: " + ",".join(errors))
     _validate_fixture_projection(report, case, driver)
+    if is_canonical_positive:
+        validate_canonical_gateway_fixture_provenance(report)
     is_ha = report["provenance"]["producer"]["repository"] == "Project-Helianthus/helianthus-ha-integration"
     if is_ha:
         if input_gateway_report is None:
