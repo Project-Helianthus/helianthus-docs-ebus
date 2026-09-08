@@ -557,8 +557,6 @@ def validate_canonical_gateway_fixture_provenance(report):
     continue through the normal semantic and fixture-projection checks.
     """
     provenance = report["provenance"]
-    if provenance["producer"]["repository"] != CANONICAL_GATEWAY_FIXTURE_PRODUCER["repository"]:
-        return
     if provenance["subject"] != CANONICAL_FIXTURE_SUBJECT:
         raise ValidationError("canonical fixture subject provenance mismatch")
     if provenance["producer"] != CANONICAL_GATEWAY_FIXTURE_PRODUCER:

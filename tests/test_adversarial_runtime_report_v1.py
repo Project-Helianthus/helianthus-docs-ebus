@@ -250,6 +250,24 @@ def test_noncanonical_gateway_report_uses_normal_public_contract(tmp_path):
         validator.validate_canonical_gateway_fixture_provenance(candidate)
 
 
+def test_canonical_positive_path_rejects_ha_wrapper(tmp_path, monkeypatch):
+    gateway_path = tmp_path / "gateway.json"
+    gateway_path.write_bytes(POSITIVE.read_bytes())
+    report = load(POSITIVE)
+    report["provenance"]["producer"].update(
+        repository="Project-Helianthus/helianthus-ha-integration",
+        component="ha-adversarial-harness",
+        build_kind="ha-harness",
+        input_gateway_report_sha256=hashlib.sha256(gateway_path.read_bytes()).hexdigest(),
+    )
+    canonical_path = tmp_path / "canonical-positive.json"
+    canonical_path.write_text(json.dumps(report), encoding="utf-8")
+    monkeypatch.setattr(validator, "CANONICAL_POSITIVE_PATHS", {canonical_path.resolve()})
+
+    with pytest.raises(ValidationError, match="canonical fixture producer provenance mismatch"):
+        validate_path(canonical_path, gateway_path)
+
+
 def test_checked_in_gateway_result_variants_share_canonical_provenance_without_report_allowlisting():
     expected_subject = load(POSITIVE)["provenance"]["subject"]
     expected_producer = load(POSITIVE)["provenance"]["producer"]
