@@ -23,41 +23,50 @@ def thermal() -> dict[str, object]:
     return json.loads((ROOT / "architecture/fixtures/vaillant-semreg-thermal-map-v1.json").read_text())
 
 
-def test_accepts_exact_observed_tuple() -> None:
+def test_accepts_unproven_evidence_gap() -> None:
     CHECKER.validate_fixture(fixture(), thermal())
 
 
 @pytest.mark.parametrize(
-    ("path", "value"),
+    ("field", "value"),
     (
-        (("direct_identification", "software_version"), "0508"),
-        (("direct_identification", "hardware_version"), "1705"),
-        (("direct_identification", "target_address"), "0x08"),
-        (("direct_identification", "manufacturer_wire_byte"), "0x19"),
+        ("canonical_url", "https://invalid.example/artifact"),
+        ("revision", "f" * 40),
+        ("path", "protocols/vaillant/not-the-artifact.md"),
+        ("sha256", "a" * 64),
     ),
 )
-def test_rejects_unsupported_or_address_mismatch(path: tuple[str, str], value: str) -> None:
+def test_rejects_hostile_artifact_substitution(field: str, value: str) -> None:
     candidate = deepcopy(fixture())
-    candidate[path[0]][path[1]] = value  # type: ignore[index]
+    candidate["context_artifact"][field] = value  # type: ignore[index]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(candidate, thermal())
 
 
-@pytest.mark.parametrize("member", ("manufacturer", "device_id", "serial_number"))
-def test_rejects_missing_or_sentinel_authority_rule(member: str) -> None:
+def test_rejects_claiming_direct_evidence_or_runtime_authority() -> None:
     candidate = deepcopy(fixture())
-    candidate["required_current_authority"]["complete_identity_witness"].remove(member)  # type: ignore[index]
+    candidate["evidence_status"] = "proven"  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+    candidate = deepcopy(fixture())
+    candidate["qualified_use_permitted"] = True  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+    candidate = deepcopy(fixture())
+    candidate["direct_identification_evidence"] = {"invented": True}  # type: ignore[index]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(candidate, thermal())
 
 
-def test_rejects_evidence_or_thermal_binding_tampering() -> None:
+def test_rejects_transition_or_thermal_binding_ambiguity() -> None:
     candidate = deepcopy(fixture())
-    candidate["native_evidence"]["sha256"] = "a" * 64  # type: ignore[index]
+    candidate["transition_contract"]["valid_direct_conflicting_observation"] = "reject_without_mutation"  # type: ignore[index]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(candidate, thermal())
 
     changed_thermal = deepcopy(thermal())
-    changed_thermal["qualification"]["rule_revision"] = "wrong"  # type: ignore[index]
+    changed_thermal["qualification"]["runtime_qualification_permitted"] = True  # type: ignore[index]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(fixture(), changed_thermal)

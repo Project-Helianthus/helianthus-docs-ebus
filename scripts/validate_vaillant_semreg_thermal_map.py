@@ -60,9 +60,11 @@ def validate_index(index: object) -> None:
     }, "applicability")
     require(index.get("qualification"), {
         "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
-        "rule_revision": "vaillant-controller-qualification/v1",
+        "revision": "vaillant-controller-qualification-evidence-gap/v1",
         "fixture": "architecture/fixtures/vaillant-controller-qualification-v1.json",
+        "evidence_status": "unproven",
         "qualified_binding_required": True,
+        "runtime_qualification_permitted": False,
     }, "qualification")
 
     mappings = index.get("mappings")

@@ -1,45 +1,43 @@
-# Vaillant controller qualification v1
+# Vaillant controller qualification evidence gap v1
 
-This is the native, read-only applicability rule for the accepted B524 thermal
-mapping. It is deliberately one observed tuple, rather than a family claim.
+The accepted B524 thermal mapping remains native and read-only, but it has no
+publishable direct Identification artifact that can qualify a controller for
+runtime use. Therefore this document is an evidence-gap record, not an
+applicability rule and not a documentation gate for registry authority.
 
-## Direct `0x07/0x04` observation
+## What the public artifact establishes
 
-The target is the directly observed eBUS address `0x15`. The Identification
-response is the standard `0x07/0x04` response: manufacturer byte, five-byte
-ASCII device identifier, then two opaque software bytes and two opaque hardware
-bytes. The exact rule is:
+The exact public artifact named and hashed in
+`architecture/fixtures/vaillant-controller-qualification-v1.json` is the B555
+timer protocol document at repository revision
+`055738bbad31f5cfe7fcd87bffc16bc09e021571`. Its validation-environment
+summary records BASV2 at address `0x15`, HW `1704`, and SW `0507`.
 
-| Field | Required normalized value | Wire evidence |
-| --- | --- | --- |
-| Manufacturer | `VAILLANT` | `0xB5` |
-| Device ID | `BASV2` | ASCII after trimming padding |
-| Software version | `0507` | two identification bytes, rendered as uppercase hex |
-| Hardware version | `1704` | two identification bytes, rendered as uppercase hex |
-| Address | `0x15` | response source and queried target agree |
+It does not contain a directed `0x07/0x04` request and response, the complete
+Identification payload, or the raw `0xB5` manufacturer byte for that BASV2
+tuple. The generic service documents the Identification layout and the
+Vaillant manufacturer byte, but does not connect those facts to this exact
+controller observation. No range, family, product, firmware, or hardware
+qualification follows from the summary.
 
-The source document records the BASV2 (VRC720f/2) observation at address
-`0x15`, HW `1704`, and SW `0507`. Its byte digest and immutable source link are
-in the checked fixture. `0xB5` is the observed Vaillant manufacturer byte in
-the public `0x07/0x04` service contract. The registry still requires its
-separate current complete manufacturer/device/serial witness; Identification
-does not itself carry a serial number.
+## Required evidence before qualification
 
-The accepted B524 thermal map references this rule and cannot be applied until
-the registry supplies a current qualified result for this exact tuple. No rule
-is inferred for another BASV variant, CTLV device, controller family member,
-firmware, hardware revision, address, or a value derived from B524 data.
+A future rule needs a public, sanitized, reproducible artifact that shows the
+same exact address in directed `0x07/0x04` request and response context and
+contains raw manufacturer, device-ID, software, and hardware members. It must
+also bind an immutable canonical repository URL, repository revision, path,
+and digest. The registry separately needs a current complete
+manufacturer/device/serial witness; a direct Identification payload has no
+serial field.
 
-## Current-use and retirement boundary
+Until that artifact exists, `qualified_use_permitted` is false. The B524 map
+may not obtain a registry qualification, SemReg source/binding, gateway
+publication, consumer state, operation authority, or live qualification from
+this record.
 
-The registry result binds the direct address, complete current identity witness,
-observation and proof generations, observation time, this rule revision, and
-the immutable native evidence reference/digest. Missing, sentinel, malformed,
-unsupported, or conflicting members reject without changing a current result.
-A matching sparse refresh may retain an already direct proof; it cannot combine
-last-known-good fields into a new proof.
+## Transition boundary
 
-The result retires when identity is replaced, the address splits, an observation
-conflicts, the underlying proof retires, or an applicable product/software/
-hardware member changes. It grants no write, operation, SemReg, gateway, live,
-or physical qualification authority.
+Malformed or incomplete candidate input is rejected without mutation. A valid,
+direct current observation that conflicts with an already-qualified proof must
+atomically retire that proof. A matching sparse refresh may retain an existing
+direct proof, but cannot construct one from last-known-good fields.

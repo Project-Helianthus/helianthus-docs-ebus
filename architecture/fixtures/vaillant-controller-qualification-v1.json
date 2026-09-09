@@ -1,42 +1,40 @@
 {
   "schema_version": 1,
   "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
-  "rule_revision": "vaillant-controller-qualification/v1",
-  "scope": "native_read_only_current_use_qualification",
-  "direct_identification": {
-    "service": {"primary": "0x07", "secondary": "0x04"},
-    "target_address": "0x15",
-    "manufacturer_wire_byte": "0xB5",
-    "manufacturer_normalized": "VAILLANT",
-    "device_id": "BASV2",
-    "software_version": "0507",
-    "hardware_version": "1704",
-    "normalization": "trim_ascii_padding_then_uppercase"
+  "revision": "vaillant-controller-qualification-evidence-gap/v1",
+  "scope": "native_read_only_qualification_evidence_gap",
+  "evidence_status": "unproven",
+  "qualified_use_permitted": false,
+  "direct_identification_evidence": null,
+  "context_artifact": {
+    "repository": "Project-Helianthus/helianthus-docs-ebus",
+    "revision": "055738bbad31f5cfe7fcd87bffc16bc09e021571",
+    "path": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+    "canonical_url": "https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/055738bbad31f5cfe7fcd87bffc16bc09e021571/protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+    "sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff",
+    "establishes": ["BASV2 validation-environment summary", "address 0x15", "software 0507", "hardware 1704"],
+    "does_not_establish": ["direct 0x07/0x04 request", "direct 0x07/0x04 response", "raw manufacturer byte for this tuple", "registry qualification authority"]
   },
-  "required_current_authority": {
-    "complete_identity_witness": ["manufacturer", "device_id", "serial_number"],
-    "direct_observation_only": true,
-    "no_last_known_good_composite": true,
-    "reject": ["missing", "sentinel", "malformed", "unsupported", "conflicting"]
+  "required_for_future_qualification": {
+    "direct_identification": {"primary": "0x07", "secondary": "0x04"},
+    "same_exact_address_request_and_response": true,
+    "raw_members": ["manufacturer", "device_id", "software_version", "hardware_version"],
+    "complete_current_identity_witness": ["manufacturer", "device_id", "serial_number"],
+    "immutable_public_artifact_reference_and_digest": true
   },
-  "native_evidence": {
-    "kind": "protocol.observation",
-    "reference": "https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/055738bbad31f5cfe7fcd87bffc16bc09e021571/protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
-    "sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff"
+  "transition_contract": {
+    "malformed_or_incomplete_input": "reject_without_mutation",
+    "valid_direct_conflicting_observation": "retire_current_qualification_atomically",
+    "sparse_matching_refresh": "may_retain_existing_direct_proof"
   },
   "thermal_mapping": {
     "contract_id": "helianthus.docs.ebus.b524-semreg-thermal/v1",
     "fixture": "architecture/fixtures/vaillant-semreg-thermal-map-v1.json",
     "qualified_binding_required": true
   },
-  "lifecycle": {
-    "retire_on": ["identity_replacement", "address_split", "conflicting_observation", "proof_retirement", "product_or_version_change"],
-    "sparse_matching_refresh_retains_direct_proof": true
-  },
   "nonclaims": {
+    "controller_or_firmware_tuple_qualified": false,
     "controller_family_range_qualified": false,
-    "other_product_qualified": false,
-    "other_software_or_hardware_qualified": false,
     "write_or_operation_authority": false,
     "live_or_physical_qualification": false
   }
