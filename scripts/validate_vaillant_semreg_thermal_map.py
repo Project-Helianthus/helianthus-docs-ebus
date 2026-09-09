@@ -62,7 +62,7 @@ def validate_index(index: object) -> None:
         "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
         "revision": "vaillant-controller-qualification-evidence-gap/v1",
         "fixture": "architecture/fixtures/vaillant-controller-qualification-v1.json",
-        "evidence_status": "unproven",
+        "evidence_status": "Unknown",
         "qualified_binding_required": True,
         "runtime_qualification_permitted": False,
     }, "qualification")

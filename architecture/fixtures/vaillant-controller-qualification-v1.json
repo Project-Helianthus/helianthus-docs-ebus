@@ -3,7 +3,7 @@
   "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
   "revision": "vaillant-controller-qualification-evidence-gap/v1",
   "scope": "native_read_only_qualification_evidence_gap",
-  "evidence_status": "unproven",
+  "evidence_status": "Unknown",
   "qualified_use_permitted": false,
   "direct_identification_evidence": null,
   "context_artifact": {
@@ -14,6 +14,10 @@
     "sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff",
     "establishes": ["BASV2 validation-environment summary", "address 0x15", "software 0507", "hardware 1704"],
     "does_not_establish": ["direct 0x07/0x04 request", "direct 0x07/0x04 response", "raw manufacturer byte for this tuple", "registry qualification authority"]
+  },
+  "materialized_artifact": {
+    "path": "architecture/fixtures/evidence/vaillant-b555-timer-protocol-055738bb.md",
+    "sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff"
   },
   "required_for_future_qualification": {
     "direct_identification": {"primary": "0x07", "secondary": "0x04"},

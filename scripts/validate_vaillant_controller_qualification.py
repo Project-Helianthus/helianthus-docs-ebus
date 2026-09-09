@@ -18,6 +18,10 @@ ARTIFACT = {
     "establishes": ["BASV2 validation-environment summary", "address 0x15", "software 0507", "hardware 1704"],
     "does_not_establish": ["direct 0x07/0x04 request", "direct 0x07/0x04 response", "raw manufacturer byte for this tuple", "registry qualification authority"],
 }
+MATERIALIZED_ARTIFACT = {
+    "path": "architecture/fixtures/evidence/vaillant-b555-timer-protocol-055738bb.md",
+    "sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff",
+}
 
 
 class CheckError(ValueError):
@@ -30,12 +34,10 @@ def require(value: object, expected: object, label: str) -> None:
 
 
 def artifact_bytes() -> bytes:
-    # The artifact is selected by the fixture's exact path after the fixture
-    # has been compared to ARTIFACT in full. The expected digest is fixed
-    # independently, so a changed checkout file cannot be accepted by merely
-    # updating a fixture field. Reading the checked-out path also works in the
-    # shallow PR checkout where the pinned historical tree is unavailable.
-    return Path(ARTIFACT["path"]).read_bytes()
+    # This checked-in byte copy is materialized from ARTIFACT's exact pinned
+    # repository revision and path. It remains available in shallow CI after
+    # the moving source document changes in a later checkout.
+    return Path(MATERIALIZED_ARTIFACT["path"]).read_bytes()
 
 
 def validate_fixture(value: object, thermal: object) -> None:
@@ -45,11 +47,12 @@ def validate_fixture(value: object, thermal: object) -> None:
     require(value.get("contract_id"), "helianthus.docs.ebus.vaillant-controller-qualification/v1", "contract_id")
     require(value.get("revision"), "vaillant-controller-qualification-evidence-gap/v1", "revision")
     require(value.get("scope"), "native_read_only_qualification_evidence_gap", "scope")
-    require(value.get("evidence_status"), "unproven", "evidence_status")
+    require(value.get("evidence_status"), "Unknown", "evidence_status")
     require(value.get("qualified_use_permitted"), False, "qualified_use_permitted")
     require(value.get("direct_identification_evidence"), None, "direct_identification_evidence")
     require(value.get("context_artifact"), ARTIFACT, "context_artifact")
-    if hashlib.sha256(artifact_bytes()).hexdigest() != ARTIFACT["sha256"]:
+    require(value.get("materialized_artifact"), MATERIALIZED_ARTIFACT, "materialized_artifact")
+    if hashlib.sha256(artifact_bytes()).hexdigest() != MATERIALIZED_ARTIFACT["sha256"]:
         raise CheckError("context artifact digest")
     require(value.get("required_for_future_qualification"), {
         "direct_identification": {"primary": "0x07", "secondary": "0x04"},
@@ -72,7 +75,7 @@ def validate_fixture(value: object, thermal: object) -> None:
         "contract_id": value["contract_id"],
         "revision": value["revision"],
         "fixture": "architecture/fixtures/vaillant-controller-qualification-v1.json",
-        "evidence_status": "unproven",
+        "evidence_status": "Unknown",
         "qualified_binding_required": True,
         "runtime_qualification_permitted": False,
     }, "thermal qualification binding")

@@ -2,7 +2,7 @@
 
 The accepted B524 thermal mapping remains native and read-only, but it has no
 publishable direct Identification artifact that can qualify a controller for
-runtime use. Therefore this document is an evidence-gap record, not an
+runtime use. Its evidence conclusion is `Unknown`; this document is an evidence-gap record, not an
 applicability rule and not a documentation gate for registry authority.
 
 ## What the public artifact establishes

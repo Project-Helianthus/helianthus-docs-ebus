@@ -23,7 +23,7 @@ def thermal() -> dict[str, object]:
     return json.loads((ROOT / "architecture/fixtures/vaillant-semreg-thermal-map-v1.json").read_text())
 
 
-def test_accepts_unproven_evidence_gap() -> None:
+def test_accepts_unknown_evidence_gap() -> None:
     CHECKER.validate_fixture(fixture(), thermal())
 
 
@@ -49,9 +49,34 @@ def test_rejects_digest_mismatch_for_the_exact_artifact(monkeypatch: pytest.Monk
         CHECKER.validate_fixture(fixture(), thermal())
 
 
+def test_rejects_materialized_artifact_path_or_digest_substitution() -> None:
+    candidate = deepcopy(fixture())
+    candidate["materialized_artifact"]["path"] = "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md"  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+    candidate = deepcopy(fixture())
+    candidate["materialized_artifact"]["sha256"] = "a" * 64  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+
+def test_pinned_blob_validation_does_not_read_the_moving_source(monkeypatch: pytest.MonkeyPatch) -> None:
+    original_read_bytes = Path.read_bytes
+    moving_source = Path(CHECKER.ARTIFACT["path"])
+
+    def reject_moving_source(path: Path) -> bytes:
+        if path == moving_source:
+            raise AssertionError("validator read moving source bytes")
+        return original_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", reject_moving_source)
+    CHECKER.validate_fixture(fixture(), thermal())
+
+
 def test_rejects_claiming_direct_evidence_or_runtime_authority() -> None:
     candidate = deepcopy(fixture())
-    candidate["evidence_status"] = "proven"  # type: ignore[index]
+    candidate["evidence_status"] = "Proven"  # type: ignore[index]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(candidate, thermal())
 
