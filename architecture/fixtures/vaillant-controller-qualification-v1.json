@@ -19,6 +19,16 @@
     "path": "architecture/fixtures/evidence/vaillant-b555-timer-protocol-055738bb.md",
     "sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff"
   },
+  "materialized_relative_targets": [
+    {
+      "relative_path": "./ebus-vaillant-B524.md",
+      "materialized_path": "architecture/fixtures/evidence/ebus-vaillant-B524.md",
+      "repository": "Project-Helianthus/helianthus-docs-ebus",
+      "revision": "055738bbad31f5cfe7fcd87bffc16bc09e021571",
+      "source_path": "protocols/vaillant/ebus-vaillant-B524.md",
+      "sha256": "f675d3555eedc28850e22ded753aad8c3e5e989132fb85eb3563f63cfdbec89c"
+    }
+  ],
   "required_for_future_qualification": {
     "direct_identification": {"primary": "0x07", "secondary": "0x04"},
     "same_exact_address_request_and_response": true,

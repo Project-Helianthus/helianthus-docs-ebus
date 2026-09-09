@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import re
 
 
 FIXTURE = Path("architecture/fixtures/vaillant-controller-qualification-v1.json")
@@ -22,6 +23,14 @@ MATERIALIZED_ARTIFACT = {
     "path": "architecture/fixtures/evidence/vaillant-b555-timer-protocol-055738bb.md",
     "sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff",
 }
+MATERIALIZED_RELATIVE_TARGETS = [{
+    "relative_path": "./ebus-vaillant-B524.md",
+    "materialized_path": "architecture/fixtures/evidence/ebus-vaillant-B524.md",
+    "repository": "Project-Helianthus/helianthus-docs-ebus",
+    "revision": "055738bbad31f5cfe7fcd87bffc16bc09e021571",
+    "source_path": "protocols/vaillant/ebus-vaillant-B524.md",
+    "sha256": "f675d3555eedc28850e22ded753aad8c3e5e989132fb85eb3563f63cfdbec89c",
+}]
 
 
 class CheckError(ValueError):
@@ -40,6 +49,23 @@ def artifact_bytes() -> bytes:
     return Path(MATERIALIZED_ARTIFACT["path"]).read_bytes()
 
 
+def validate_materialized_relative_links() -> None:
+    snapshot = Path(MATERIALIZED_ARTIFACT["path"])
+    links = re.findall(r"\]\((\./[^)#]+)(?:#[^)]+)?\)", artifact_bytes().decode("utf-8"))
+    expected_paths = [target["relative_path"] for target in MATERIALIZED_RELATIVE_TARGETS]
+    if not links or any(link not in expected_paths for link in links):
+        raise CheckError("materialized snapshot relative links")
+    for target in MATERIALIZED_RELATIVE_TARGETS:
+        if target["relative_path"] not in links:
+            raise CheckError("missing materialized relative target")
+        resolved = (snapshot.parent / target["relative_path"]).resolve()
+        expected = Path(target["materialized_path"]).resolve()
+        if resolved != expected or not resolved.is_file():
+            raise CheckError("materialized relative target path")
+        if hashlib.sha256(resolved.read_bytes()).hexdigest() != target["sha256"]:
+            raise CheckError("materialized relative target digest")
+
+
 def validate_fixture(value: object, thermal: object) -> None:
     if not isinstance(value, dict) or not isinstance(thermal, dict):
         raise CheckError("fixtures must be objects")
@@ -52,8 +78,10 @@ def validate_fixture(value: object, thermal: object) -> None:
     require(value.get("direct_identification_evidence"), None, "direct_identification_evidence")
     require(value.get("context_artifact"), ARTIFACT, "context_artifact")
     require(value.get("materialized_artifact"), MATERIALIZED_ARTIFACT, "materialized_artifact")
+    require(value.get("materialized_relative_targets"), MATERIALIZED_RELATIVE_TARGETS, "materialized_relative_targets")
     if hashlib.sha256(artifact_bytes()).hexdigest() != MATERIALIZED_ARTIFACT["sha256"]:
         raise CheckError("context artifact digest")
+    validate_materialized_relative_links()
     require(value.get("required_for_future_qualification"), {
         "direct_identification": {"primary": "0x07", "secondary": "0x04"},
         "same_exact_address_request_and_response": True,

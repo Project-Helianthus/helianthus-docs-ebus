@@ -13,6 +13,12 @@ timer protocol document at repository revision
 `055738bbad31f5cfe7fcd87bffc16bc09e021571`. Its validation-environment
 summary records BASV2 at address `0x15`, HW `1704`, and SW `0507`.
 
+The byte-identical snapshot retains four relative B524 references. Their exact
+same-revision target is separately materialized beside the snapshot, with its
+source path and digest recorded in the fixture. The validator enumerates every
+relative snapshot link and verifies that its local target resolves to those
+pinned bytes.
+
 It does not contain a directed `0x07/0x04` request and response, the complete
 Identification payload, or the raw `0xB5` manufacturer byte for that BASV2
 tuple. The generic service documents the Identification layout and the

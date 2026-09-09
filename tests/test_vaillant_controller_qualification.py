@@ -4,6 +4,7 @@ from copy import deepcopy
 import importlib.util
 import json
 from pathlib import Path
+import re
 
 import pytest
 
@@ -72,6 +73,28 @@ def test_pinned_blob_validation_does_not_read_the_moving_source(monkeypatch: pyt
 
     monkeypatch.setattr(Path, "read_bytes", reject_moving_source)
     CHECKER.validate_fixture(fixture(), thermal())
+
+
+def test_enumerates_all_snapshot_relative_links_and_pinned_target_bytes() -> None:
+    snapshot = Path(CHECKER.MATERIALIZED_ARTIFACT["path"]).read_text()
+    links = re.findall(r"\]\((\./[^)#]+)(?:#[^)]+)?\)", snapshot)
+    assert links == ["./ebus-vaillant-B524.md"] * 4
+    CHECKER.validate_materialized_relative_links()
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("materialized_path", "architecture/fixtures/evidence/not-the-target.md"),
+        ("sha256", "a" * 64),
+        ("source_path", "protocols/vaillant/not-the-target.md"),
+    ),
+)
+def test_rejects_pinned_relative_target_substitution(field: str, value: str) -> None:
+    candidate = deepcopy(fixture())
+    candidate["materialized_relative_targets"][0][field] = value  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
 
 
 def test_rejects_claiming_direct_evidence_or_runtime_authority() -> None:
