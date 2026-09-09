@@ -58,6 +58,12 @@ def validate_index(index: object) -> None:
         "generalizes_to_other_products": False,
         "generalizes_to_other_firmware": False,
     }, "applicability")
+    require(index.get("qualification"), {
+        "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
+        "rule_revision": "vaillant-controller-qualification/v1",
+        "fixture": "architecture/fixtures/vaillant-controller-qualification-v1.json",
+        "qualified_binding_required": True,
+    }, "qualification")
 
     mappings = index.get("mappings")
     if not isinstance(mappings, list) or len(mappings) != 3:

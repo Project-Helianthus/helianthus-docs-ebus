@@ -9,6 +9,12 @@
     "generalizes_to_other_products": false,
     "generalizes_to_other_firmware": false
   },
+  "qualification": {
+    "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
+    "rule_revision": "vaillant-controller-qualification/v1",
+    "fixture": "architecture/fixtures/vaillant-controller-qualification-v1.json",
+    "qualified_binding_required": true
+  },
   "mappings": [
     {
       "legacy_system_field": "state.outdoor_temperature",
