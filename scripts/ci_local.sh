@@ -158,6 +158,10 @@ python3 -m pytest -q tests/test_vaillant_semreg_thermal_map.py
   GOWORK=off go test -mod=readonly ./...
 )
 
+echo "==> check Vaillant controller qualification contract"
+python3 scripts/validate_vaillant_controller_qualification.py
+python3 -m pytest -q tests/test_vaillant_controller_qualification.py
+
 echo "==> check adversarial runtime report v1 contract"
 for report in docs/platform/fixtures/adversarial-runtime/v1/positive/*.json; do
   python3 scripts/validate_adversarial_runtime_report_v1.py "$report"

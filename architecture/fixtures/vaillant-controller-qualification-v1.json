@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
+  "revision": "vaillant-controller-qualification-evidence-gap/v1",
+  "scope": "native_read_only_qualification_evidence_gap",
+  "evidence_status": "Unknown",
+  "qualified_use_permitted": false,
+  "direct_identification_evidence": null,
+  "context_receipt": {
+    "path": "architecture/fixtures/vaillant-controller-context-receipt-v1.json",
+    "sha256": "45c49efa12526add9d6f1a975c37b9a159cf081b0925cca9476193c244d58f0a",
+    "sha256_path": "architecture/fixtures/vaillant-controller-context-receipt-v1.sha256"
+  },
+  "required_for_future_qualification": {
+    "direct_identification": {"primary": "0x07", "secondary": "0x04"},
+    "same_exact_address_request_and_response": true,
+    "raw_members": ["manufacturer", "device_id", "software_version", "hardware_version"],
+    "complete_current_identity_witness": ["manufacturer", "device_id", "serial_number"],
+    "immutable_public_artifact_reference_and_digest": true
+  },
+  "transition_contract": {
+    "malformed_or_incomplete_input": "reject_without_mutation",
+    "valid_direct_conflicting_observation": "retire_current_qualification_atomically",
+    "sparse_matching_refresh": "may_retain_existing_direct_proof"
+  },
+  "thermal_mapping": {
+    "contract_id": "helianthus.docs.ebus.b524-semreg-thermal/v1",
+    "fixture": "architecture/fixtures/vaillant-semreg-thermal-map-v1.json",
+    "qualified_binding_required": true
+  },
+  "nonclaims": {
+    "controller_or_firmware_tuple_qualified": false,
+    "controller_family_range_qualified": false,
+    "write_or_operation_authority": false,
+    "live_or_physical_qualification": false
+  }
+}
