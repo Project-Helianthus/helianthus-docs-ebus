@@ -7,17 +7,14 @@ applicability rule and not a documentation gate for registry authority.
 
 ## What the public artifact establishes
 
-The exact public artifact named and hashed in
-`architecture/fixtures/vaillant-controller-qualification-v1.json` is the B555
-timer protocol document at repository revision
-`055738bbad31f5cfe7fcd87bffc16bc09e021571`. Its validation-environment
-summary records BASV2 at address `0x15`, HW `1704`, and SW `0507`.
-
-The byte-identical snapshot retains four relative B524 references. Their exact
-same-revision target is separately materialized beside the snapshot, with its
-source path and digest recorded in the fixture. The validator enumerates every
-relative snapshot link and verifies that its local target resolves to those
-pinned bytes.
+The checked-in context receipt named and hashed in
+`architecture/fixtures/vaillant-controller-qualification-v1.json` records the
+small extracted context: BASV2 at address `0x15`, HW `1704`, and SW `0507`.
+It binds the canonical public repository, revision, path, source lines, and
+blob digest of the B555 source without duplicating that protocol document.
+The receipt has no relative links. Its validator reads only the receipt and its
+SHA-256 sidecar, so it does not retrieve the URL, require old Git history, or
+depend on a moving source checkout.
 
 It does not contain a directed `0x07/0x04` request and response, the complete
 Identification payload, or the raw `0xB5` manufacturer byte for that BASV2

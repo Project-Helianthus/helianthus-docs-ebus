@@ -4,7 +4,6 @@ from copy import deepcopy
 import importlib.util
 import json
 from pathlib import Path
-import re
 
 import pytest
 
@@ -26,75 +25,46 @@ def thermal() -> dict[str, object]:
 
 def test_accepts_unknown_evidence_gap() -> None:
     CHECKER.validate_fixture(fixture(), thermal())
+    assert b"](" not in CHECKER.receipt_bytes()
 
 
 @pytest.mark.parametrize(
     ("field", "value"),
-    (
-        ("canonical_url", "https://invalid.example/artifact"),
-        ("revision", "f" * 40),
-        ("path", "protocols/vaillant/not-the-artifact.md"),
-        ("sha256", "a" * 64),
-    ),
+    (("path", "architecture/fixtures/not-the-receipt.json"), ("sha256", "a" * 64), ("sha256_path", "architecture/fixtures/not-the-receipt.sha256")),
 )
-def test_rejects_hostile_artifact_substitution(field: str, value: str) -> None:
+def test_rejects_hostile_receipt_substitution(field: str, value: str) -> None:
     candidate = deepcopy(fixture())
-    candidate["context_artifact"][field] = value  # type: ignore[index]
+    candidate["context_receipt"][field] = value  # type: ignore[index]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(candidate, thermal())
 
 
-def test_rejects_digest_mismatch_for_the_exact_artifact(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(CHECKER, "artifact_bytes", lambda: b"not the pinned artifact")
+def test_rejects_digest_mismatch_for_the_exact_receipt(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(CHECKER, "receipt_bytes", lambda: b"not the pinned receipt")
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(fixture(), thermal())
 
 
-def test_rejects_materialized_artifact_path_or_digest_substitution() -> None:
-    candidate = deepcopy(fixture())
-    candidate["materialized_artifact"]["path"] = "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md"  # type: ignore[index]
+def test_rejects_receipt_provenance_or_sidecar_substitution(monkeypatch: pytest.MonkeyPatch) -> None:
+    original_receipt_bytes = CHECKER.receipt_bytes
+    receipt = deepcopy(CHECKER.RECEIPT)
+    receipt["canonical_upstream"]["revision"] = "f" * 40
+    monkeypatch.setattr(CHECKER, "receipt_bytes", lambda: json.dumps(receipt).encode())
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_fixture(candidate, thermal())
+        CHECKER.validate_fixture(fixture(), thermal())
 
-    candidate = deepcopy(fixture())
-    candidate["materialized_artifact"]["sha256"] = "a" * 64  # type: ignore[index]
+    sidecar = Path(CHECKER.CONTEXT_RECEIPT["sha256_path"])
+    original_read_text = Path.read_text
+
+    def bad_sidecar(path: Path, *args: object, **kwargs: object) -> str:
+        if path == sidecar:
+            return "a" * 64 + "  wrong.json\n"
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", bad_sidecar)
+    monkeypatch.setattr(CHECKER, "receipt_bytes", original_receipt_bytes)
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_fixture(candidate, thermal())
-
-
-def test_pinned_blob_validation_does_not_read_the_moving_source(monkeypatch: pytest.MonkeyPatch) -> None:
-    original_read_bytes = Path.read_bytes
-    moving_source = Path(CHECKER.ARTIFACT["path"])
-
-    def reject_moving_source(path: Path) -> bytes:
-        if path == moving_source:
-            raise AssertionError("validator read moving source bytes")
-        return original_read_bytes(path)
-
-    monkeypatch.setattr(Path, "read_bytes", reject_moving_source)
-    CHECKER.validate_fixture(fixture(), thermal())
-
-
-def test_enumerates_all_snapshot_relative_links_and_pinned_target_bytes() -> None:
-    snapshot = Path(CHECKER.MATERIALIZED_ARTIFACT["path"]).read_text()
-    links = re.findall(r"\]\((\./[^)#]+)(?:#[^)]+)?\)", snapshot)
-    assert links == ["./ebus-vaillant-B524.md"] * 4
-    CHECKER.validate_materialized_relative_links()
-
-
-@pytest.mark.parametrize(
-    ("field", "value"),
-    (
-        ("materialized_path", "architecture/fixtures/evidence/not-the-target.md"),
-        ("sha256", "a" * 64),
-        ("source_path", "protocols/vaillant/not-the-target.md"),
-    ),
-)
-def test_rejects_pinned_relative_target_substitution(field: str, value: str) -> None:
-    candidate = deepcopy(fixture())
-    candidate["materialized_relative_targets"][0][field] = value  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_fixture(candidate, thermal())
+        CHECKER.validate_fixture(fixture(), thermal())
 
 
 def test_rejects_claiming_direct_evidence_or_runtime_authority() -> None:

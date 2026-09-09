@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "receipt_id": "helianthus.docs.ebus.vaillant-controller-context/v1",
+  "conclusion": "Unknown",
+  "receipt_status": "context_only_not_direct_identification",
+  "direct_identification_evidence": null,
+  "canonical_upstream": {
+    "repository": "Project-Helianthus/helianthus-docs-ebus",
+    "revision": "055738bbad31f5cfe7fcd87bffc16bc09e021571",
+    "path": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+    "lines": "28-37",
+    "blob_sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff",
+    "canonical_url": "https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/055738bbad31f5cfe7fcd87bffc16bc09e021571/protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+    "canonical_url_status": "upstream metadata only; this receipt validator does not retrieve network or Git history"
+  },
+  "extracted_context": {
+    "address": "0x15",
+    "device_id": "BASV2",
+    "software_version": "0507",
+    "hardware_version": "1704"
+  },
+  "does_not_establish": ["direct 0x07/0x04 request", "direct 0x07/0x04 response", "raw manufacturer byte for this tuple", "registry qualification authority"]
+}

@@ -6,29 +6,11 @@
   "evidence_status": "Unknown",
   "qualified_use_permitted": false,
   "direct_identification_evidence": null,
-  "context_artifact": {
-    "repository": "Project-Helianthus/helianthus-docs-ebus",
-    "revision": "055738bbad31f5cfe7fcd87bffc16bc09e021571",
-    "path": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
-    "canonical_url": "https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/055738bbad31f5cfe7fcd87bffc16bc09e021571/protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
-    "sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff",
-    "establishes": ["BASV2 validation-environment summary", "address 0x15", "software 0507", "hardware 1704"],
-    "does_not_establish": ["direct 0x07/0x04 request", "direct 0x07/0x04 response", "raw manufacturer byte for this tuple", "registry qualification authority"]
+  "context_receipt": {
+    "path": "architecture/fixtures/vaillant-controller-context-receipt-v1.json",
+    "sha256": "45c49efa12526add9d6f1a975c37b9a159cf081b0925cca9476193c244d58f0a",
+    "sha256_path": "architecture/fixtures/vaillant-controller-context-receipt-v1.sha256"
   },
-  "materialized_artifact": {
-    "path": "architecture/fixtures/evidence/vaillant-b555-timer-protocol-055738bb.md",
-    "sha256": "2eff947174e4eb163b8e38f5eb93deb795491ec084e3e89ebc1dcdb7431e12ff"
-  },
-  "materialized_relative_targets": [
-    {
-      "relative_path": "./ebus-vaillant-B524.md",
-      "materialized_path": "architecture/fixtures/evidence/ebus-vaillant-B524.md",
-      "repository": "Project-Helianthus/helianthus-docs-ebus",
-      "revision": "055738bbad31f5cfe7fcd87bffc16bc09e021571",
-      "source_path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "sha256": "f675d3555eedc28850e22ded753aad8c3e5e989132fb85eb3563f63cfdbec89c"
-    }
-  ],
   "required_for_future_qualification": {
     "direct_identification": {"primary": "0x07", "secondary": "0x04"},
     "same_exact_address_request_and_response": true,
