@@ -150,6 +150,14 @@ echo "==> check qualified identity documentation contract"
 python3 scripts/check_regulator_identity_contract.py
 python3 -m pytest -q tests/test_regulator_identity_contract_checker.py
 
+echo "==> check Vaillant SemReg thermal mapping contract"
+python3 scripts/validate_vaillant_semreg_thermal_map.py
+python3 -m pytest -q tests/test_vaillant_semreg_thermal_map.py
+(
+  cd tests/semreg_thermal_map_contract
+  GOWORK=off go test -mod=readonly ./...
+)
+
 echo "==> check adversarial runtime report v1 contract"
 for report in docs/platform/fixtures/adversarial-runtime/v1/positive/*.json; do
   python3 scripts/validate_adversarial_runtime_report_v1.py "$report"
