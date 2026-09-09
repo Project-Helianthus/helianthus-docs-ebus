@@ -43,6 +43,12 @@ def test_rejects_hostile_artifact_substitution(field: str, value: str) -> None:
         CHECKER.validate_fixture(candidate, thermal())
 
 
+def test_rejects_digest_mismatch_for_the_exact_artifact(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(CHECKER, "artifact_bytes", lambda: b"not the pinned artifact")
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(fixture(), thermal())
+
+
 def test_rejects_claiming_direct_evidence_or_runtime_authority() -> None:
     candidate = deepcopy(fixture())
     candidate["evidence_status"] = "proven"  # type: ignore[index]

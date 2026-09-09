@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-import subprocess
 
 
 FIXTURE = Path("architecture/fixtures/vaillant-controller-qualification-v1.json")
@@ -31,7 +30,12 @@ def require(value: object, expected: object, label: str) -> None:
 
 
 def artifact_bytes() -> bytes:
-    return subprocess.check_output(["git", "show", f"{ARTIFACT['revision']}:{ARTIFACT['path']}"])
+    # The artifact is selected by the fixture's exact path after the fixture
+    # has been compared to ARTIFACT in full. The expected digest is fixed
+    # independently, so a changed checkout file cannot be accepted by merely
+    # updating a fixture field. Reading the checked-out path also works in the
+    # shallow PR checkout where the pinned historical tree is unavailable.
+    return Path(ARTIFACT["path"]).read_bytes()
 
 
 def validate_fixture(value: object, thermal: object) -> None:
@@ -83,7 +87,7 @@ def validate_fixture(value: object, thermal: object) -> None:
 def main() -> int:
     try:
         validate_fixture(json.loads(FIXTURE.read_text()), json.loads(THERMAL.read_text()))
-    except (OSError, subprocess.CalledProcessError, json.JSONDecodeError, CheckError) as error:
+    except (OSError, json.JSONDecodeError, CheckError) as error:
         print(f"Vaillant controller qualification evidence-gap failed: {error}")
         return 1
     print("Vaillant controller qualification evidence-gap passed.")
