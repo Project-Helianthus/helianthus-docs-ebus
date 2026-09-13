@@ -664,7 +664,7 @@ any row is an automatic merge-gate block.
 | 4 | reconnect, before first post-reconnect dispatch | `UNKNOWN` (NOT sticky `AVAILABLE`) | reset to `UNKNOWN` regardless of pre-disconnect state |
 | 5 | reconnect, post-first-success-after-reconnect | `AVAILABLE` | n/a |
 | 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known | n/a |
-| 7 | held-session epoch refresh | `Refreshing` session state; all live-monitor operations are `SESSION_BUSY` until `Active` or `Idle` | n/a |
+| 7 | held-session epoch refresh; session status `Refreshing` | `UNKNOWN` (temporary; not sticky `AVAILABLE`) | all live-monitor operations are `SESSION_BUSY`; the `Refreshing` strip is status-only, with no B503 card, tabs, or operations admitted until capability returns `AVAILABLE` |
 | 8 | stale in-flight completion across epoch rollover | n/a — frame discarded | reply/NAK/timeout from epoch N arriving after reconnect to epoch N+1 MUST be discarded; MUST NOT mutate capability to `AVAILABLE`; MUST NOT satisfy any post-reconnect waiter |
 
 **Forbidden states** (M6 tests assert absence):

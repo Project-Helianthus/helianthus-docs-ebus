@@ -23,6 +23,11 @@ RECONNECT_SECTION_START = "### 7.5 Reconnect handling"
 RECONNECT_SECTION_END = "### 7.6 30s idle-timeout semantics"
 INSTALL_WRITE_SECTION_START = "## 9. Install-Writes Non-Exposure (v1 invariant)"
 INSTALL_WRITE_SECTION_END = "## 10. F.xxx Decimal Caveat (LOCAL_CAPTURE only)"
+CAPABILITY_TRUTH_TABLE_SECTION_START = "### 12.5 Capability-signal 8-state truth table (mirror of AD18) <a id=\"capability-truth-table\"></a>"
+CAPABILITY_TRUTH_TABLE_SECTION_END = "**Forbidden states** (M6 tests assert absence):"
+CAPABILITY_TRUTH_TABLE_HEADER = (
+    "#", "State", "Capability output", "Stale-frame discipline",
+)
 M2B_GRAPHQL = (
     "`M2b_GATEWAY_GRAPHQL`",
     "`helianthus-ebusgateway`",
@@ -41,6 +46,27 @@ M3_PORTAL = (
 )
 INSTALL_WRITE_NON_EXPOSURE = (
     "> **`02 01` and `02 02` MUST NOT be exposed on any public surface in v1.**"
+)
+REFRESHING_CAPABILITY_TRUTH_ROW = (
+    "7",
+    "held-session epoch refresh; session status `Refreshing`",
+    "`UNKNOWN` (temporary; not sticky `AVAILABLE`)",
+    "all live-monitor operations are `SESSION_BUSY`; the `Refreshing` strip is "
+    "status-only, with no B503 card, tabs, or operations admitted until capability "
+    "returns `AVAILABLE`",
+)
+AFFIRMATIVE_INSTALL_WRITE_EXPOSURE = (
+    re.compile(
+        r"\b(?:the\s+)?(?:public\s+)?(?:GraphQL|MCP|portal)(?:\s+surface)?\s+"
+        r"(?:MAY|MUST|CAN)\s+(?:expose|publish|offer)\s+`?02\s+01`?\s+"
+        r"(?:and|or)\s+`?02\s+02`?\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:the\s+)?public\s+surface\s+(?:MAY|MUST|CAN)\s+"
+        r"(?:expose|publish|offer)\s+`?02\s+01`?\s+(?:and|or)\s+`?02\s+02`?\b",
+        re.IGNORECASE,
+    ),
 )
 CURRENT_PUBLIC_SESSION_AUTHORITY = (
     "**Current public session authority.** The five-state public session contract in\n"
@@ -151,8 +177,10 @@ def _parse_table_row(line: str) -> tuple[str, ...] | None:
     return tuple(cell.strip() for cell in line.strip("|").split("|"))
 
 
-def _is_markdown_table_delimiter(row: tuple[str, ...] | None) -> bool:
-    return row is not None and len(row) == len(MILESTONE_TABLE_HEADER) and all(
+def _is_markdown_table_delimiter(
+    row: tuple[str, ...] | None, column_count: int = len(MILESTONE_TABLE_HEADER)
+) -> bool:
+    return row is not None and len(row) == column_count and all(
         MARKDOWN_TABLE_DELIMITER_CELL.fullmatch(cell) is not None for cell in row
     )
 
@@ -195,6 +223,38 @@ def _milestone_table(text: str) -> tuple[tuple[str, ...], ...]:
         rows.append(row)
     if not rows:
         raise CheckError("missing §14 B503 milestone table rows")
+    return tuple(rows)
+
+
+def _capability_truth_table_rows(text: str) -> tuple[tuple[str, ...], ...]:
+    section = _section(
+        text, CAPABILITY_TRUTH_TABLE_SECTION_START, CAPABILITY_TRUTH_TABLE_SECTION_END
+    )
+    lines = section.splitlines()
+    try:
+        header_index = next(
+            index
+            for index, line in enumerate(lines)
+            if _parse_table_row(line) == CAPABILITY_TRUTH_TABLE_HEADER
+        )
+    except StopIteration as exc:
+        raise CheckError("missing §12.5 capability truth-table header") from exc
+    separator_index = header_index + 1
+    if separator_index >= len(lines) or not _is_markdown_table_delimiter(
+        _parse_table_row(lines[separator_index]), len(CAPABILITY_TRUTH_TABLE_HEADER)
+    ):
+        raise CheckError("missing §12.5 capability truth-table separator")
+
+    rows: list[tuple[str, ...]] = []
+    for line in lines[separator_index + 1 :]:
+        row = _parse_table_row(line)
+        if row is None:
+            break
+        if len(row) != len(CAPABILITY_TRUTH_TABLE_HEADER):
+            raise CheckError(f"invalid §12.5 capability truth-table row: {line!r}")
+        rows.append(row)
+    if not rows:
+        raise CheckError("missing §12.5 capability truth-table rows")
     return tuple(rows)
 
 
@@ -279,6 +339,13 @@ def validate_text(text: str) -> None:
             f"missing required §9 B503 public non-exposure fragment: "
             f"{INSTALL_WRITE_NON_EXPOSURE!r}"
         )
+    for pattern in AFFIRMATIVE_INSTALL_WRITE_EXPOSURE:
+        if pattern.search(install_write_section):
+            raise CheckError("affirmative §9 B503 installation-write exposure")
+
+    truth_rows = _capability_truth_table_rows(text)
+    if [row for row in truth_rows if row[0] == "7"] != [REFRESHING_CAPABILITY_TRUTH_ROW]:
+        raise CheckError("missing exact §12.5 held-session refresh truth-table row")
 
 
 def main() -> int:

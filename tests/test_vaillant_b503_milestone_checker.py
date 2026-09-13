@@ -55,6 +55,56 @@ def test_rejects_install_write_non_exposure_copied_outside_normative_section() -
 
 
 @pytest.mark.parametrize(
+    "clause",
+    (
+        "The public GraphQL surface MAY expose `02 01` and `02 02`.",
+        "The public surface CAN publish `02 01` or `02 02`.",
+    ),
+)
+def test_rejects_affirmative_install_write_exposure_inside_normative_section(
+    clause: str,
+) -> None:
+    text = contract().replace(
+        CHECKER.INSTALL_WRITE_SECTION_END,
+        f"{clause}\n\n{CHECKER.INSTALL_WRITE_SECTION_END}",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_accepts_negative_install_write_non_exposure_inside_normative_section() -> None:
+    clause = "The public GraphQL surface MUST NOT expose `02 01` and `02 02`."
+    text = contract().replace(
+        CHECKER.INSTALL_WRITE_SECTION_END,
+        f"{clause}\n\n{CHECKER.INSTALL_WRITE_SECTION_END}",
+        1,
+    )
+    CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        (
+            "`UNKNOWN` (temporary; not sticky `AVAILABLE`)",
+            "`AVAILABLE`",
+        ),
+        (
+            "no B503 card, tabs, or operations admitted until capability returns `AVAILABLE`",
+            "B503 card and tabs remain admitted while capability is `UNKNOWN`",
+        ),
+    ),
+)
+def test_rejects_refresh_truth_row_without_unknown_capability_or_status_only_admission(
+    old: str, new: str
+) -> None:
+    text = contract().replace(old, new, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
     "replacement",
     (
         "four stable states: `Idle`, `Enabling`, `Active`, and `Disabled`.",
