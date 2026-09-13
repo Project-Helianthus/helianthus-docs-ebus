@@ -193,6 +193,8 @@ stateDiagram-v2
     [*] --> IDLE
     IDLE --> ENABLING: enable request (MCP)
     ENABLING --> ACTIVE: enable ACK on bus
+    ENABLING --> IDLE: canceled before enable frame emission
+    ENABLING --> DISABLED: terminal enable failure after emission
     ENABLING --> IDLE: epoch advance; stale enable discarded
     ACTIVE --> ACTIVE: periodic read during session
     ACTIVE --> DISABLED: explicit disable
@@ -235,7 +237,7 @@ Rules (normative):
 | DISABLE | full `session_key` must match the active session | A current-owner DISABLE that detects epoch advance remains pending as the triggering request; every subsequent DISABLE while `REFRESHING`, or a request from a non-owner, returns `SESSION_BUSY` |
 | READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE`; a READ that detects epoch advance remains pending as the triggering request, and every subsequent live-monitor operation while `REFRESHING` is `SESSION_BUSY` |
 | Epoch advance while `ACTIVE` owner remains held | old epoch key authorizes only the bounded refresh for an admitted READ or current-owner DISABLE | → `REFRESHING`; refresh once per §7.3; success atomically rebinds the same issuer token and target to the returned current transport epoch before dispatching the triggering operation exactly once; ENABLE is never a refresh trigger |
-| Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard stale enable ACK/NAK/timeout; explicit new Enable required |
+| Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
 
 The `issuer_token` is opaque to clients; it MUST NOT be derived from
 user-visible identifiers, and MUST be sufficient entropy that a second
@@ -264,8 +266,10 @@ access.
 |---|---|---|---|
 | `IDLE` | enable request, no owner | `ENABLING` | emit enable frame after poll-quiesce |
 | `ENABLING` | enable ACK received | `ACTIVE` | start 30s idle timer; arm reads |
-| `ENABLING` | ACK timeout / NAK | `DISABLED` | (see release rule below) |
-| `ENABLING` | epoch advance detected | `IDLE` | release ownership gate; discard stale enable ACK/NAK/timeout; explicit new Enable required |
+| `ENABLING` | `ctx.Done` before enable-frame emission | `IDLE` | cancel the queued frame, release the ownership gate, and clear the pending attempt; no native disable is emitted |
+| `ENABLING` | `ctx.Done` after enable-frame emission / ACK timeout / CRC mismatch / bus-arbitration timeout / any other ambiguous terminal failure | `DISABLED` | emit exactly one defensive native disable after quiesce, release the owner on entry, and complete cleanup to `IDLE`; return the original exact failure outcome |
+| `ENABLING` | NAK | `DISABLED` | release the owner on entry and complete cleanup to `IDLE` without a defensive disable because NAK proves the enable was rejected |
+| `ENABLING` | epoch advance detected | `IDLE` | release ownership gate; discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
 | `ACTIVE` | read request | `ACTIVE` | reset idle timer |
 | `ACTIVE` | explicit disable | `DISABLED` | emit disable frame after quiesce |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable frame after quiesce |
@@ -282,7 +286,8 @@ access.
 transition. It is released exactly once on a terminal transition from a
 held-owner state: on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or
 `REFRESHING`, on the direct `REFRESHING → IDLE` refresh-failure path,
-or on the direct `ENABLING → IDLE` epoch-advance path. The "any" transitions
+or on either direct `ENABLING → IDLE` path (cancellation before frame emission
+or epoch advance). The "any" transitions
 (transport disconnect, gateway restart) release the mutex only when FSM was in
 a held-owner state at the time the event fired; if the FSM was already `IDLE`
 or `DISABLED` (no owner), no release occurs. The `DISABLED → IDLE` transition
@@ -331,15 +336,19 @@ It is a session-status value, not a sixth `B503Availability` reason:
 Downstream contract tests (M2a, M2b, M3) MUST assert the five stable session
 states and MUST reject `Disabled` paired with `owned:true`.
 
-When a locally token-owning consumer leaves a target or navigates away while
-its session is `Enabling`, it MUST register cleanup for that enable attempt.
-Successful enable completion supplies the issuer token and dispatches exactly
-one target/token disable. Any enable attempt that does not complete successfully
-with an issuer token—including `ctx.Done` before bus turnaround, ACK timeout,
-NAK, CRC mismatch, bus-arbitration timeout, epoch-advance discard,
-transport disconnect, gateway restart, or any other terminal failure—clears that
-registration without a disable before any later enable is admitted; a
-registration MUST NOT transfer to a later session.
+When a consumer leaves a target or navigates away while its locally initiated
+enable is pending, it MUST register cleanup under the exact
+`(targetAddress, localEnableAttemptID, presentationEpoch)` tuple. The consumer
+allocates a fresh opaque `localEnableAttemptID` before dispatch and never reuses
+it. Successful
+completion of that same attempt supplies the issuer token and dispatches
+exactly one target/token disable. Any other completion—including `ctx.Done`
+before bus turnaround, ACK timeout, NAK, CRC mismatch, bus-arbitration timeout,
+epoch-advance discard, transport disconnect, gateway restart, or any other
+terminal failure—clears that registration without issuing a client disable
+before any later enable is admitted. The registration MUST NOT transfer to a
+later attempt or session. Gateway may separately emit the single defensive
+native disable required by the §6.3 terminal-failure transition.
 
 When a locally token-owning consumer leaves a target or navigates away while
 its session is `Refreshing`, it MUST queue that target/token disable without

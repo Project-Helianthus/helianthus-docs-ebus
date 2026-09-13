@@ -311,7 +311,7 @@ def test_rejects_ambiguous_triggering_refresh_request_outcome(
 @pytest.mark.parametrize(
     "required_failure",
     (
-        "`ctx.Done` before bus turnaround",
+        "`ctx.Done`\nbefore bus turnaround",
         "ACK timeout",
         "NAK",
         "CRC mismatch",
@@ -319,7 +319,7 @@ def test_rejects_ambiguous_triggering_refresh_request_outcome(
         "epoch-advance discard",
         "transport disconnect",
         "gateway restart",
-        "or any other terminal failure",
+        "or any other\nterminal failure",
     ),
 )
 def test_rejects_incomplete_enabling_cleanup_failure_set(
@@ -334,6 +334,24 @@ def test_rejects_incomplete_enabling_cleanup_failure_set(
         CHECKER.validate_text(
             text.replace(CHECKER.ENABLING_CLEANUP_CONTRACT, replacement, 1)
         )
+
+
+@pytest.mark.parametrize(
+    "required_fragment",
+    (
+        CHECKER.ENABLING_CANCEL_DIAGRAM,
+        CHECKER.ENABLING_FAILURE_DIAGRAM,
+        CHECKER.ENABLING_CANCEL_TRANSITION,
+        CHECKER.ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
+        CHECKER.ENABLING_NAK_TRANSITION,
+        CHECKER.ENABLING_DIRECT_IDLE_LOCK,
+    ),
+)
+def test_rejects_missing_terminal_enabling_transition(required_fragment: str) -> None:
+    text = contract()
+    assert required_fragment in text
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text.replace(required_fragment, "omitted", 1))
 
 
 @pytest.mark.parametrize(
@@ -352,7 +370,7 @@ def test_rejects_incomplete_enabling_cleanup_failure_set(
             "| `ENABLING` | epoch advance detected | `REFRESHING` | refresh once |",
         ),
         (
-            CHECKER.ENABLING_EPOCH_LOCK,
+            CHECKER.ENABLING_DIRECT_IDLE_LOCK,
             "the direct `ENABLING → REFRESHING` epoch-advance path",
         ),
     ),

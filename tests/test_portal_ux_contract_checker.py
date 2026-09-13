@@ -92,7 +92,7 @@ def test_accepts_current_portal_ux_contract() -> None:
          "base `SESSION_BUSY` presentation identifies another client."),
         ("`vaillantErrorsHistory(targetAddress:limit:)`", "`vaillantErrorsHistory()`"),
         ("`vaillantLiveMonitorSession(targetAddress:)`", "`vaillantLiveMonitorSession()`"),
-        ("On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE` or `REFRESHING`.",
+        (CHECKER.B503_TARGET_CLEANUP_SCOPE,
          "Target-switch cleanup is optional."),
         (CHECKER.B503_ENABLING_CLEANUP,
          "An ENABLING prior target waits for passive timeout."),
@@ -191,6 +191,39 @@ def test_rejects_installation_selector_even_in_prose() -> None:
     rejects_target_insertion(
         "A preset is clearly available; 0201, query=reset, and action = delete are prose."
     )
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    (
+        "The B503 pane exposes a Reset button.",
+        "Add a Clear history control.",
+        "A Delete link is rendered.",
+        "The pane provides a ClearServiceHistory action.",
+        "The pane has a Reset button.",
+        "A Clear history control is available.",
+        "Users can click the Delete link.",
+        "The Reset control appears in the menu.",
+        "The pane exposes a Re**set** button.",
+        "The pane exposes a Re&#115;et button.",
+        "The pane does not expose a Reset button, but it renders a Delete link.",
+    ),
+)
+def test_rejects_affirmative_plain_markdown_control(snippet: str) -> None:
+    rejects_target_insertion(snippet)
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    (
+        "The B503 pane does not expose a Reset button.",
+        "The B503 pane exposes no Reset button.",
+        "No Reset control is rendered.",
+        "Resetting the presentation model is not a device control.",
+    ),
+)
+def test_accepts_negative_or_non_control_plain_markdown(snippet: str) -> None:
+    accepts_target_insertion(snippet)
 
 
 @pytest.mark.parametrize(

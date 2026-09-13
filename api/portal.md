@@ -128,17 +128,23 @@ Changing target atomically invalidates the active target-bound presentation:
 capability, current errors/service, history, live-monitor strip, and pending
 completion must not bleed into the new target. On every target switch, before
 admitting the new target presentation, the browser begins targeted cleanup for
-each prior target that it locally owns and whose session is `ENABLING` or
-`ACTIVE` or `REFRESHING`. An `ACTIVE` prior target receives an immediate target-specific
-disable using its locally held issuer token. For an `ENABLING` prior target,
-the browser registers that same target-specific disable at switch time and
-dispatches it immediately when the locally initiated enable completes with its
-issuer token. If that enable does not complete successfully with an issuer
-token—including cancellation before bus turnaround, ACK timeout, NAK,
-CRC mismatch, bus-arbitration timeout, epoch-advance discard, transport disconnect,
-gateway restart, or any other terminal failure—the browser clears the registered
-target cleanup without a disable before it may admit any later enable; the
-registration never transfers to a later session.
+each prior target whose session is `ACTIVE` or `REFRESHING` and for which it
+holds a local issuer token, plus each `ENABLING` prior target for which it owns
+the locally initiated pending enable attempt.
+An `ACTIVE` prior target receives an immediate target-specific
+disable using its locally held issuer token. For an
+`ENABLING` prior target, the browser registers cleanup at switch time under the
+exact `(targetAddress, localEnableAttemptID, presentationEpoch)` tuple and
+uses a fresh browser-local opaque `localEnableAttemptID` allocated before
+dispatch and never reused. It
+dispatches a target-specific disable immediately only when that same attempt
+completes successfully with its issuer token. If that attempt does not complete
+successfully with an issuer token—including cancellation before bus turnaround,
+ACK timeout, NAK, CRC mismatch, bus-arbitration timeout, epoch-advance discard,
+transport disconnect, gateway restart, or any other terminal failure—the
+browser clears the registration without issuing a client disable before it may
+admit any later enable; the registration never transfers to a later attempt or
+session.
 
 For a `REFRESHING` prior target, the browser queues that
 same token-bound disable without invoking an operation while Refreshing is busy;

@@ -92,15 +92,26 @@ B503_REFRESHING_CLEANUP = (
     "the browser clears the queued pair without issuing a second disable."
 )
 B503_ENABLING_CLEANUP = (
-    "For an `ENABLING` prior target,\n"
-    "the browser registers that same target-specific disable at switch time and\n"
-    "dispatches it immediately when the locally initiated enable completes with its\n"
-    "issuer token. If that enable does not complete successfully with an issuer\n"
-    "token—including cancellation before bus turnaround, ACK timeout, NAK,\n"
-    "CRC mismatch, bus-arbitration timeout, epoch-advance discard, transport disconnect,\n"
-    "gateway restart, or any other terminal failure—the browser clears the registered\n"
-    "target cleanup without a disable before it may admit any later enable; the\n"
-    "registration never transfers to a later session."
+    "For an\n"
+    "`ENABLING` prior target, the browser registers cleanup at switch time under the\n"
+    "exact `(targetAddress, localEnableAttemptID, presentationEpoch)` tuple and\n"
+    "uses a fresh browser-local opaque `localEnableAttemptID` allocated before\n"
+    "dispatch and never reused. It\n"
+    "dispatches a target-specific disable immediately only when that same attempt\n"
+    "completes successfully with its issuer token. If that attempt does not complete\n"
+    "successfully with an issuer token—including cancellation before bus turnaround,\n"
+    "ACK timeout, NAK, CRC mismatch, bus-arbitration timeout, epoch-advance discard,\n"
+    "transport disconnect, gateway restart, or any other terminal failure—the\n"
+    "browser clears the registration without issuing a client disable before it may\n"
+    "admit any later enable; the registration never transfers to a later attempt or\n"
+    "session."
+)
+B503_TARGET_CLEANUP_SCOPE = (
+    "On every target switch, before\n"
+    "admitting the new target presentation, the browser begins targeted cleanup for\n"
+    "each prior target whose session is `ACTIVE` or `REFRESHING` and for which it\n"
+    "holds a local issuer token, plus each `ENABLING` prior target for which it owns\n"
+    "the locally initiated pending enable attempt."
 )
 B503_REFRESHING_UNKNOWN_STRIP = (
     "When a selected target has Gateway session state `Refreshing` with `owned:true`,\n"
@@ -184,7 +195,7 @@ REQUIRED = (
     'data-testid="b503-session-state-label"',
     B503_SESSION_STATE_CONTRACT,
     "base `SESSION_BUSY` presentation is neutral.",
-    "On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE` or `REFRESHING`.",
+    B503_TARGET_CLEANUP_SCOPE,
     "An `ACTIVE` prior target receives an immediate target-specific\ndisable using its locally held issuer token.",
     B503_ENABLING_CLEANUP,
     B503_REFRESHING_CLEANUP,
@@ -229,6 +240,22 @@ DOM_SELECTOR_TOKEN = re.compile(
     r"(?<![0-9])(?:0x)?02[\s_:-]*(?:0x)?0[12](?![0-9])", re.IGNORECASE
 )
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
+PLAIN_CONTROL_NOUN = re.compile(
+    r"\b(?:button|control|link|action|command|selector|menu|item|affordance)\b",
+    re.IGNORECASE,
+)
+PLAIN_AFFIRMATIVE_CONTROL_VERB = re.compile(
+    r"\b(?:expose(?:s|d)?|render(?:s|ed)?|show(?:s|ed)?|offer(?:s|ed)?|"
+    r"provide(?:s|d)?|include(?:s|d)?|add(?:s|ed)?|display(?:s|ed)?|"
+    r"present(?:s|ed)?|create(?:s|d)?|support(?:s|ed)?|allow(?:s|ed)?|"
+    r"enable(?:s|d)?|contain(?:s|ed)?|feature(?:s|d)?|list(?:s|ed)?|"
+    r"publish(?:es|ed)?|surface(?:s|d)?|exist(?:s|ed)?|appear(?:s|ed)?|"
+    r"use(?:s|d)?|click(?:s|ed)?|has|have|available|visible)\b",
+    re.IGNORECASE,
+)
+PLAIN_CONTROL_CLAUSE_BOUNDARY = re.compile(
+    r"\s*(?:;|\bbut\b|\bhowever\b)\s*", re.IGNORECASE
+)
 COMPACT_PROHIBITED_COMMAND = re.compile(
     r"^(?:"
     r"(?:b503|vaillant)(?:clear(?!ance|ly|fix)|delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
@@ -447,6 +474,54 @@ def _rendered_children(children: list[object] | None) -> str:
     return "".join(rendered)
 
 
+def _plain_rendered_children(children: list[object] | None) -> str:
+    rendered: list[str] = []
+    for child in children or ():
+        if child.type in ("text", "text_special"):
+            rendered.append(child.content)
+        elif child.type in ("softbreak", "hardbreak"):
+            rendered.append("\n")
+    return "".join(rendered)
+
+
+def _affirmative_control_verb(clause: str) -> re.Match[str] | None:
+    for match in PLAIN_AFFIRMATIVE_CONTROL_VERB.finditer(clause):
+        prefix = clause[: match.start()].casefold()
+        suffix = clause[match.end() :].casefold()
+        if re.search(
+            r"(?:do|does|did|must|shall|may|can|is|are|was|were)\s+not\s+$",
+            prefix,
+        ):
+            continue
+        if re.search(r"\bnever\s+$", prefix):
+            continue
+        if re.match(r"\s+no\b", suffix):
+            continue
+        if re.match(r"^\s*no\b", clause, re.IGNORECASE):
+            continue
+        return match
+    return None
+
+
+def _reject_affirmative_plain_markdown_controls(document: str) -> None:
+    for inline in _target_inline_tokens(document):
+        plain = _plain_rendered_children(inline.children)
+        for sentence in re.split(r"(?<=[.!?])\s+", plain):
+            for clause in PLAIN_CONTROL_CLAUSE_BOUNDARY.split(sentence):
+                if not clause or PLAIN_CONTROL_NOUN.search(clause) is None:
+                    continue
+                if not (
+                    (_identifier_tokens(clause) & FORBIDDEN_B503_DOM_COMMAND_TOKENS)
+                    or _compact_prohibited_command_tokens(clause)
+                ):
+                    continue
+                if _affirmative_control_verb(clause) is not None:
+                    raise CheckError(
+                        "api/portal.md: affirmative plain-Markdown description "
+                        f"exposes a prohibited B503 control: {clause!r}"
+                    )
+
+
 def _markdown_dom_references(document: str) -> list[tuple[str, str]]:
     references: list[tuple[str, str]] = []
     for inline in _target_inline_tokens(document):
@@ -587,6 +662,7 @@ def validate_text(text: str) -> None:
     _reject_unapproved_route_surface_paragraphs(text)
     _reject_installation_selectors_in_target(text)
     _reject_prohibited_dom_references(target, text)
+    _reject_affirmative_plain_markdown_controls(text)
     expected_availability_rows = list(AVAILABILITY_ROWS.values())
     if _availability_table_rows(target) != expected_availability_rows:
         raise CheckError(

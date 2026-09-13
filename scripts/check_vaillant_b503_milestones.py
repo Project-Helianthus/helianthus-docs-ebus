@@ -119,15 +119,19 @@ REFRESHING_CLEANUP_CONTRACT = (
     "without issuing a second disable."
 )
 ENABLING_CLEANUP_CONTRACT = (
-    "When a locally token-owning consumer leaves a target or navigates away while\n"
-    "its session is `Enabling`, it MUST register cleanup for that enable attempt.\n"
-    "Successful enable completion supplies the issuer token and dispatches exactly\n"
-    "one target/token disable. Any enable attempt that does not complete successfully\n"
-    "with an issuer token—including `ctx.Done` before bus turnaround, ACK timeout,\n"
-    "NAK, CRC mismatch, bus-arbitration timeout, epoch-advance discard,\n"
-    "transport disconnect, gateway restart, or any other terminal failure—clears that\n"
-    "registration without a disable before any later enable is admitted; a\n"
-    "registration MUST NOT transfer to a later session."
+    "When a consumer leaves a target or navigates away while its locally initiated\n"
+    "enable is pending, it MUST register cleanup under the exact\n"
+    "`(targetAddress, localEnableAttemptID, presentationEpoch)` tuple. The consumer\n"
+    "allocates a fresh opaque `localEnableAttemptID` before dispatch and never reuses\n"
+    "it. Successful\n"
+    "completion of that same attempt supplies the issuer token and dispatches\n"
+    "exactly one target/token disable. Any other completion—including `ctx.Done`\n"
+    "before bus turnaround, ACK timeout, NAK, CRC mismatch, bus-arbitration timeout,\n"
+    "epoch-advance discard, transport disconnect, gateway restart, or any other\n"
+    "terminal failure—clears that registration without issuing a client disable\n"
+    "before any later enable is admitted. The registration MUST NOT transfer to a\n"
+    "later attempt or session. Gateway may separately emit the single defensive\n"
+    "native disable required by the §6.3 terminal-failure transition."
 )
 REFRESHING_UNKNOWN_STRIP_CONTRACT = (
     "During a held `Refreshing` epoch, the\n"
@@ -206,13 +210,40 @@ HELD_OWNER_DISABLED_RELEASE = (
 ENABLING_EPOCH_DIAGRAM = "ENABLING --> IDLE: epoch advance; stale enable discarded"
 ENABLING_EPOCH_OPERATION = (
     "| Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard "
-    "stale enable ACK/NAK/timeout; explicit new Enable required |"
+    "every stale completion or failure outcome from that enable attempt; explicit "
+    "new Enable required |"
 )
 ENABLING_EPOCH_TRANSITION = (
     "| `ENABLING` | epoch advance detected | `IDLE` | release ownership gate; "
-    "discard stale enable ACK/NAK/timeout; explicit new Enable required |"
+    "discard every stale completion or failure outcome from that enable attempt; "
+    "explicit new Enable required |"
 )
 ENABLING_EPOCH_LOCK = "the direct `ENABLING → IDLE` epoch-advance path"
+ENABLING_CANCEL_DIAGRAM = "ENABLING --> IDLE: canceled before enable frame emission"
+ENABLING_FAILURE_DIAGRAM = (
+    "ENABLING --> DISABLED: terminal enable failure after emission"
+)
+ENABLING_CANCEL_TRANSITION = (
+    "| `ENABLING` | `ctx.Done` before enable-frame emission | `IDLE` | cancel the "
+    "queued frame, release the ownership gate, and clear the pending attempt; no "
+    "native disable is emitted |"
+)
+ENABLING_AMBIGUOUS_FAILURE_TRANSITION = (
+    "| `ENABLING` | `ctx.Done` after enable-frame emission / ACK timeout / CRC "
+    "mismatch / bus-arbitration timeout / any other ambiguous terminal failure | "
+    "`DISABLED` | emit exactly one defensive native disable after quiesce, release "
+    "the owner on entry, and complete cleanup to `IDLE`; return the original exact "
+    "failure outcome |"
+)
+ENABLING_NAK_TRANSITION = (
+    "| `ENABLING` | NAK | `DISABLED` | release the owner on entry and complete "
+    "cleanup to `IDLE` without a defensive disable because NAK proves the enable "
+    "was rejected |"
+)
+ENABLING_DIRECT_IDLE_LOCK = (
+    "on either direct `ENABLING → IDLE` path (cancellation before frame emission\n"
+    "or epoch advance)"
+)
 FORBIDDEN_REFRESH_FAILURE_CONTRADICTIONS = (
     "REFRESHING --> DISABLED: refresh failure releases gate",
     "on entry to `DISABLED` from a\nheld-owner state",
@@ -355,6 +386,12 @@ def validate_text(text: str) -> None:
         REFRESH_FAILURE_TRANSITION,
         REFRESH_FAILURE_LOCK,
         HELD_OWNER_DISABLED_RELEASE,
+        ENABLING_CANCEL_DIAGRAM,
+        ENABLING_FAILURE_DIAGRAM,
+        ENABLING_CANCEL_TRANSITION,
+        ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
+        ENABLING_NAK_TRANSITION,
+        ENABLING_DIRECT_IDLE_LOCK,
     ):
         if fragment not in session_section:
             raise CheckError(
@@ -372,7 +409,6 @@ def validate_text(text: str) -> None:
         ENABLING_EPOCH_DIAGRAM,
         ENABLING_EPOCH_OPERATION,
         ENABLING_EPOCH_TRANSITION,
-        ENABLING_EPOCH_LOCK,
     ):
         if fragment not in session_section:
             raise CheckError(
