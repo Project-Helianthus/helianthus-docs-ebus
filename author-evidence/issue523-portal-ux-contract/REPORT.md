@@ -47,6 +47,8 @@ hardware work, or SemReg cutover.
 | Compact-DOM correction tree | `104dc4ca894775d63bef6faee327d62d02f91c28` |
 | Inline/fallback correction commit | `97d57f5bef3f8563845ecb40d9081a4a2719a396` |
 | Inline/fallback correction tree | `6c80b04f54fb5f4b37c0fbbcd93e6fc2d186da51` |
+| Inline-selector correction commit | `89d8e1e6ea5e91f1e180a417d1fa7b8d97b55718` |
+| Inline-selector correction tree | `fa96702d6b0a0125440f0ebbef13b22b938dbd17` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -95,6 +97,9 @@ hardware work, or SemReg cutover.
   non-DOM Markdown assignments remain outside that extraction. A bounded
   main-GraphQL contradiction matcher rejects affirmative REST, MCP, native-I/O,
   or other-route fallback clauses.
+- The selector tokenizer accepts an optional `0x` prefix on each byte, and
+  inline-code extraction audits every DOM-relevant assignment in a
+  multi-attribute fragment while ignoring unrelated assignments.
 - The DOM audit also parses element names and visible text, so prohibited
   command tokens cannot move into a custom-element name, button label, or
   accessibility content.
@@ -125,7 +130,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 99 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 105 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -136,14 +141,15 @@ hardware work, or SemReg cutover.
   accessibility, reconnect/error, or frontend-epoch guarantees. The same
   regression matrix accepts command-word substrings, benign camelCase
   identifiers, compact preset/clearance controls, longer numeric identifiers,
-  raw Markdown assignments, negative fallback language, and ordinary prose.
+  raw Markdown assignments, safe multi-attribute inline fragments, negative
+  fallback language, and ordinary prose.
 
 ## Validation
 
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 99 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 105 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
@@ -204,6 +210,10 @@ The complete compact-DOM correction CI log for commit `b189903` is
 The complete inline/fallback correction CI log for commit `97d57f5` is
 `/tmp/docs523-inline-fallback-97d57f5-ci.log`, SHA-256
 `1e72ea3c7e62fd67b4cb8dfcaecf4abcb1008cc03c47ae8588e79fe4235a3f06`.
+
+The complete inline-selector correction CI log for commit `89d8e1e` is
+`/tmp/docs523-inline-selector-89d8e1e-ci.log`, SHA-256
+`ce61ca7d741e70db89043af29d88a3da59ab05b1ac38e6f9104d3ba431e4d1ad`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
