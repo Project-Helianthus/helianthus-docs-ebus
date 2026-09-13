@@ -71,9 +71,11 @@ hardware work, or SemReg cutover.
 | Refresh-disconnect correction tree | `1055b42939f1c9cba82764aa989e75177354c673` |
 | Final pin/DOM-prefix correction commit | `80efd4b74d7650481f1ebbcc0da62e4f17dcd505` |
 | Final pin/DOM-prefix correction tree | `e0a73e0039dfb6226f42c51c0231902d58267acb` |
+| Intermediate full-CI Gateway-pin correction commit | `9290dd797287a4e0ec68ecda656def4f22fce074` |
+| Intermediate full-CI Gateway-pin correction tree | `78da165c7ebc41af9b8d5b3e5f0012dc2986623b` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
-| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open intermediate source contract `9c1324ecf55597d26dc7da7e33af0468e14fc8be`, evidence head `c95ff19284c4e3d03fcbd2e7e05b4f22d8f6aeaf` |
+| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged source contract `4bdb42000fe8b3f4a582327a7df0e59b0a0438e9`, evidence head `0a13aa9ee2a23213b78591112084bf038a3f179a`, evidence tree `df7cce34f2af58447cea41c755d44c5bb68da5aa` |
 
 ## Delivered contract
 
@@ -161,8 +163,10 @@ hardware work, or SemReg cutover.
   ownership gate and makes every live-monitor operation busy; success returns
   `Active`, failure releases the gate and returns `Idle`, and `Disabled` is
   never emitted with `owned:true`. This follows Gateway #975's current source
-  contract `9c1324ecf55597d26dc7da7e33af0468e14fc8be` and evidence head
-  `c95ff19284c4e3d03fcbd2e7e05b4f22d8f6aeaf`; #975 is open, intermediate,
+  contract `4bdb42000fe8b3f4a582327a7df0e59b0a0438e9` and evidence head
+  `0a13aa9ee2a23213b78591112084bf038a3f179a` (tree
+  `df7cce34f2af58447cea41c755d44c5bb68da5aa`); #975 is open, intermediate,
+  unmerged,
   and is not claimed final or merged.
 - Canonical validation scopes M2b/M3 rows to the parsed §14 table and the
   `02 01`/`02 02` non-exposure invariant to normative §9. Its mutations reject
@@ -333,6 +337,11 @@ The complete Refresh-disconnect correction CI log for commit `1eff870` is
 The complete final pin/DOM-prefix correction CI log for commit `80efd4b` is
 `/tmp/docs523-final-pin-80efd4b-ci.log`, SHA-256
 `e960b2bac36fffee0aeb163d5f791e28055dbeeebac540e9207c603bb2c19c64`.
+It passed with 137 Portal checker tests and 20 canonical B503 milestone tests.
+
+The complete intermediate full-CI Gateway-pin correction log for commit
+`9290dd7` is `/tmp/docs523-final-gateway-pin-9290dd7-ci.log`, SHA-256
+`8409583e5529b0d9851061f41a6c48fdbd2d8aef6d6411a3b40e1d535d139411`.
 It passed with 137 Portal checker tests and 20 canonical B503 milestone tests.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
