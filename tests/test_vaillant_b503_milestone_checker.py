@@ -82,6 +82,16 @@ def test_rejects_session_state_contradiction_inside_normative_section(
         CHECKER.validate_text(text)
 
 
+def test_rejects_missing_current_public_session_authority_in_status_section() -> None:
+    text = contract().replace(
+        CHECKER.CURRENT_PUBLIC_SESSION_AUTHORITY,
+        "The amendment-1 plan remains authority for every public FSM.",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     ("clause", "replacement"),
     (
@@ -136,6 +146,35 @@ def test_rejects_refresh_failure_diagram_or_lock_contradiction(
     old: str, new: str
 ) -> None:
     text = contract().replace(old, new, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    ("fragment", "replacement"),
+    (
+        (
+            CHECKER.ENABLING_EPOCH_DIAGRAM,
+            "ENABLING --> REFRESHING: epoch advance",
+        ),
+        (
+            CHECKER.ENABLING_EPOCH_OPERATION,
+            "| Epoch advance under any handle | — | held handle → `REFRESHING`; refresh once per §7.3 |",
+        ),
+        (
+            CHECKER.ENABLING_EPOCH_TRANSITION,
+            "| `ENABLING` | epoch advance detected | `REFRESHING` | refresh once |",
+        ),
+        (
+            CHECKER.ENABLING_EPOCH_LOCK,
+            "the direct `ENABLING → REFRESHING` epoch-advance path",
+        ),
+    ),
+)
+def test_rejects_ambiguous_enabling_epoch_advance_contract(
+    fragment: str, replacement: str
+) -> None:
+    text = contract().replace(fragment, replacement, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 

@@ -27,11 +27,20 @@ model, error model, and public-surface normalization rules are frozen for v1.
 
 Amendment-1 (2026-04-25) keeps the v1 wire/safety surface unchanged and
 extends the document with the production dispatcher contract in §12
-(plan AD16 + AD18). The amendment is additive: no v1 selector, FSM, or
-public enum is altered.
+(plan AD16 + AD18). The amendment is additive within that archived amendment:
+no v1 selector, wire shape, or invoke-safety classification is altered.
 
-Changes to this document require a new plan revision and a corresponding
-doc-gate PR before any downstream code change may land.
+**Current public session authority.** The five-state public session contract in
+§6–§8 is governed by this document's current doc-gate revision (docs-ebus#523)
+and supersedes prior public session-presentation vocabulary here. The
+amendment-1 plan SHA remains traceability evidence for its original §12 scope;
+it is not authority to retain a superseded public FSM vocabulary. This current
+contract does not add a compatibility state, route, or fallback.
+
+Changes to plan-owned selectors, wire shape, or invoke-safety classification
+require a new plan revision and corresponding doc-gate PR. A correction limited
+to the current public session contract requires its own doc-gate PR and current
+source evidence; it does not claim or create execution-plan state.
 
 Evidence labels used throughout:
 
@@ -181,6 +190,7 @@ stateDiagram-v2
     [*] --> IDLE
     IDLE --> ENABLING: enable request (MCP)
     ENABLING --> ACTIVE: enable ACK on bus
+    ENABLING --> IDLE: epoch advance; stale enable discarded
     ACTIVE --> ACTIVE: periodic read during session
     ACTIVE --> DISABLED: explicit disable
     ACTIVE --> DISABLED: 30s idle timer
@@ -220,7 +230,8 @@ Rules (normative):
 | ENABLE | none (new claim) | succeeds iff FSM is `IDLE`; if any session is already `ENABLING`/`ACTIVE`/`REFRESHING` → `SESSION_BUSY` |
 | DISABLE | full `session_key` must match the active session | `SESSION_BUSY` while `REFRESHING`, or when caller does not own the session — prevents session hijacking between clients on the same transport |
 | READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE`; all live-monitor operations are `SESSION_BUSY` while `REFRESHING` |
-| Epoch advance under any handle | — | held handle → `REFRESHING`; refresh once per §7.3 |
+| Epoch advance while `ACTIVE` owner remains held | — | → `REFRESHING`; refresh once per §7.3 |
+| Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard stale enable ACK/NAK/timeout; explicit new Enable required |
 
 The `issuer_token` is opaque to clients; it MUST NOT be derived from
 user-visible identifiers, and MUST be sufficient entropy that a second
@@ -241,6 +252,7 @@ access.
 | `IDLE` | enable request, no owner | `ENABLING` | emit enable frame after poll-quiesce |
 | `ENABLING` | enable ACK received | `ACTIVE` | start 30s idle timer; arm reads |
 | `ENABLING` | ACK timeout / NAK | `DISABLED` | (see release rule below) |
+| `ENABLING` | epoch advance detected | `IDLE` | release ownership gate; discard stale enable ACK/NAK/timeout; explicit new Enable required |
 | `ACTIVE` | read request | `ACTIVE` | reset idle timer |
 | `ACTIVE` | explicit disable | `DISABLED` | emit disable frame after quiesce |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable frame after quiesce |
@@ -254,8 +266,7 @@ access.
 **Lock lifecycle (single assignment, owner-conditional):**
 `liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
 transition. It is released exactly once on a terminal transition from a
-held-owner state: on entry to `DISABLED` from `ENABLING` or `ACTIVE`, or on
-the direct `REFRESHING → IDLE` refresh-failure path. The "any" transitions
+held-owner state: on entry to `DISABLED` from `ENABLING` or `ACTIVE`, on the direct `REFRESHING → IDLE` refresh-failure path, or on the direct `ENABLING → IDLE` epoch-advance path. The "any" transitions
 (transport disconnect, gateway restart) release the mutex only when FSM was in
 a held-owner state at the time the event fired; if the FSM was already `IDLE`
 or `DISABLED` (no owner), no release occurs. The `DISABLED → IDLE` transition

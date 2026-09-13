@@ -8,6 +8,8 @@ import sys
 
 
 DOC = pathlib.Path("protocols/vaillant/ebus-vaillant-B503.md")
+STATUS_SECTION_START = "## 1. Status"
+STATUS_SECTION_END = "## 2. Wire Shape"
 MILESTONE_HEADING = "## 14. Companion Links (downstream code milestones)"
 MILESTONE_TABLE_HEADER = ("Milestone", "Repo", "Artefact")
 MARKDOWN_TABLE_DELIMITER_CELL = re.compile(r"^:?-{3,}:?$")
@@ -39,6 +41,18 @@ M3_PORTAL = (
 )
 INSTALL_WRITE_NON_EXPOSURE = (
     "> **`02 01` and `02 02` MUST NOT be exposed on any public surface in v1.**"
+)
+CURRENT_PUBLIC_SESSION_AUTHORITY = (
+    "**Current public session authority.** The five-state public session contract in\n"
+    "§6–§8 is governed by this document's current doc-gate revision (docs-ebus#523)\n"
+    "and supersedes prior public session-presentation vocabulary here. The\n"
+    "amendment-1 plan SHA remains traceability evidence for its original §12 scope;\n"
+    "it is not authority to retain a superseded public FSM vocabulary. This current\n"
+    "contract does not add a compatibility state, route, or fallback.\n\n"
+    "Changes to plan-owned selectors, wire shape, or invoke-safety classification\n"
+    "require a new plan revision and corresponding doc-gate PR. A correction limited\n"
+    "to the current public session contract requires its own doc-gate PR and current\n"
+    "source evidence; it does not claim or create execution-plan state."
 )
 SESSION_STATE_CONTRACT = (
     "five stable states: `Idle`, `Enabling`, `Active`, `Refreshing`, and `Disabled`.\n"
@@ -91,9 +105,23 @@ REFRESH_FAILURE_TRANSITION = (
     "surface the Gateway-supplied failure outcome |"
 )
 REFRESH_FAILURE_LOCK = "the direct `REFRESHING → IDLE` refresh-failure path"
+ENABLING_EPOCH_DIAGRAM = "ENABLING --> IDLE: epoch advance; stale enable discarded"
+ENABLING_EPOCH_OPERATION = (
+    "| Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard "
+    "stale enable ACK/NAK/timeout; explicit new Enable required |"
+)
+ENABLING_EPOCH_TRANSITION = (
+    "| `ENABLING` | epoch advance detected | `IDLE` | release ownership gate; "
+    "discard stale enable ACK/NAK/timeout; explicit new Enable required |"
+)
+ENABLING_EPOCH_LOCK = "the direct `ENABLING → IDLE` epoch-advance path"
 FORBIDDEN_REFRESH_FAILURE_CONTRADICTIONS = (
     "REFRESHING --> DISABLED: refresh failure releases gate",
     "on entry to `DISABLED` from a\nheld-owner state",
+)
+FORBIDDEN_ENABLING_EPOCH_CONTRADICTIONS = (
+    "ENABLING --> REFRESHING: epoch advance",
+    "| `ENABLING` | epoch advance detected | `REFRESHING` |",
 )
 FORBIDDEN_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
@@ -177,6 +205,10 @@ def _require_exact_row(rows: tuple[tuple[str, ...], ...], expected: tuple[str, .
 
 
 def validate_text(text: str) -> None:
+    status_section = _section(text, STATUS_SECTION_START, STATUS_SECTION_END)
+    if CURRENT_PUBLIC_SESSION_AUTHORITY not in status_section:
+        raise CheckError("missing current public session authority in §1")
+
     session_section = _section(text, SESSION_SECTION_START, SESSION_SECTION_END)
     if SESSION_STATE_CONTRACT not in session_section:
         raise CheckError("missing five-state B503 session contract in §6.1")
@@ -199,6 +231,21 @@ def validate_text(text: str) -> None:
     for fragment in FORBIDDEN_SESSION_STATE_CLAUSES:
         if fragment in session_section:
             raise CheckError(f"forbidden §6 B503 session-state contradiction: {fragment!r}")
+    for fragment in (
+        ENABLING_EPOCH_DIAGRAM,
+        ENABLING_EPOCH_OPERATION,
+        ENABLING_EPOCH_TRANSITION,
+        ENABLING_EPOCH_LOCK,
+    ):
+        if fragment not in session_section:
+            raise CheckError(
+                f"missing coherent ENABLING epoch-advance contract in §6: {fragment!r}"
+            )
+    for fragment in FORBIDDEN_ENABLING_EPOCH_CONTRADICTIONS:
+        if fragment in session_section:
+            raise CheckError(
+                f"forbidden ENABLING epoch-advance contradiction in §6: {fragment!r}"
+            )
 
     refreshing_public_section = _section(
         text, REFRESHING_PUBLIC_SECTION_START, REFRESHING_PUBLIC_SECTION_END
