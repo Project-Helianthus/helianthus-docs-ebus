@@ -41,6 +41,8 @@ hardware work, or SemReg cutover.
 | Operation/DOM correction tree | `527f08a54649b2f6424ca06bbbb48863e726b3d0` |
 | Structured-DOM correction commit | `c655a54f82ed422f9c6ec6c97e067bcb478e5d24` |
 | Structured-DOM correction tree | `96a395b5266aca820265637cb6388218551c09c0` |
+| Parsed-component correction commit | `2ac1ecdea7f14b617b0e4beb3039d09357a82b8d` |
+| Parsed-component correction tree | `56a0298bf2473e69a1fe0fb9f03aaa79d7aad262` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -74,12 +76,12 @@ hardware work, or SemReg cutover.
   projection-card admission to `AVAILABLE` only, and binds History to typed
   B503 GraphQL records for the selected target while prohibiting label or
   retained-aggregate inference.
-- Every parsed DOM attribute value is structurally inspected. Protected
-  installation selectors are normalized across spaced, `0x`-prefixed, compact,
-  and hyphenated hexadecimal forms, including embedded `id`, `value`,
-  `data-testid`, and `hidden` values. Command words are matched as exact
-  attribute-value tokens after camelCase and PascalCase segmentation, leaving
-  harmless prose and substrings untouched.
+- Every parsed DOM component is structurally inspected: tag name, attribute
+  name, attribute value, and combined descendant text. Protected installation
+  selectors are normalized across spaced, `0x`-prefixed, compact, and
+  hyphenated hexadecimal forms. Command words are matched as exact component
+  tokens after camelCase and PascalCase segmentation, leaving harmless prose,
+  substrings, and raw Markdown assignments untouched.
 - The DOM audit also parses element names and visible text, so prohibited
   command tokens cannot move into a custom-element name, button label, or
   accessibility content.
@@ -92,8 +94,9 @@ hardware work, or SemReg cutover.
   browser action replay or route switching, and target-address plus frontend
   epoch fencing of asynchronous completions.
 - Capability/reconnect transitions render the new Gateway availability state;
-  selected-target dispatch timeout/NAK/CRC errors instead render structured
-  `UPSTREAM_RPC_FAILED` alongside unchanged last-known availability.
+  pre-turnaround context cancellation renders `UPSTREAM_TIMEOUT`, while
+  bus/arbitration timeout, NAK, and CRC render `UPSTREAM_RPC_FAILED`; both
+  retain last-known availability.
 - The canonical B503 milestone rows now preserve diagnostic read-only GraphQL
   and Portal behavior while admitting only the existing §6 live-monitor
   enable/disable session action and session strip. A dedicated gate rejects the
@@ -109,25 +112,25 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 75 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 80 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
   implementation language, vendor branching, lost action-time confirmation,
   expanded availability tables, projection-card admission outside `AVAILABLE`,
   and untyped or inferred History semantics, including normalized protected
-  selectors in every DOM attribute reference, exact command tokens in
-  attributes, element names, visible text, or accessibility content, and
-  missing accessibility, reconnect/error, or frontend-epoch guarantees. The
-  same regression matrix accepts command-word substrings, benign camelCase
-  identifiers, longer numeric identifiers, and ordinary prose.
+  selectors and exact command tokens in every parsed DOM component, and missing
+  accessibility, reconnect/error, or frontend-epoch guarantees. The same
+  regression matrix accepts command-word substrings, benign camelCase
+  identifiers, longer numeric identifiers, raw Markdown assignments, and
+  ordinary prose.
 
 ## Validation
 
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 75 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 80 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
@@ -176,6 +179,10 @@ The complete operation/DOM correction CI log for commit `2243c1d` is
 The complete structured-DOM correction CI log for commit `c655a54` is
 `/tmp/docs523-dom-structure-c655a54-ci.log`, SHA-256
 `7416e15cc53c3eb1747d42e5142d86bd98a25efde12f20453790b105b7dc832b`.
+
+The complete parsed-component correction CI log for commit `2ac1ecd` is
+`/tmp/docs523-dom-components-2ac1ecd-ci.log`, SHA-256
+`139c3ec7f2fd3ffdeccaaee3f66fd9c8a6859d7cf9861c8b4c867cfa321b1b18`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
