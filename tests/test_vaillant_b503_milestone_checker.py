@@ -253,6 +253,35 @@ def test_rejects_refresh_failure_diagram_or_lock_contradiction(
 
 
 @pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        (
+            "triggering request remains pending during refresh; after successful rebind,\n"
+            "  Gateway dispatches that request's native operation exactly once",
+            "triggering request returns SESSION_BUSY while refresh proceeds",
+        ),
+        (
+            "Every subsequent bus-facing live-monitor\n"
+            "  operation during refresh returns `SESSION_BUSY`.",
+            "Every live-monitor request remains pending during refresh.",
+        ),
+        (
+            "return the exact Gateway-supplied failure to the triggering request without\n"
+            "  dispatching its native operation.",
+            "retry the triggering native operation after refresh failure.",
+        ),
+    ),
+)
+def test_rejects_ambiguous_triggering_refresh_request_outcome(
+    old: str, new: str
+) -> None:
+    text = contract()
+    assert old in text
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text.replace(old, new, 1))
+
+
+@pytest.mark.parametrize(
     ("fragment", "replacement"),
     (
         (

@@ -164,12 +164,15 @@ parsers or authorization inputs. Tests must also retain
 `data-testid="b503-session-state-label"` for the Gateway-owned live-monitor
 session strip. The strip states are `Idle`, `Enabling`, `Active`, and
 `Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the
-ownership gate and all bus-facing live-monitor reads/actions are busy. The
-status-only `vaillantCapabilities(targetAddress:)` and
+ownership gate; the already-admitted triggering request remains pending and
+new bus-facing live-monitor reads/actions are busy. Status-only
+`vaillantCapabilities(targetAddress:)` and
 `vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe
-availability and session completion. Refresh success returns `Active`; refresh
-failure releases the gate and returns `Idle`. `Disabled` is never reported with
-`owned:true`. `Disabled` with `owned:false` maps only an
+availability and session completion. Refresh success returns `Active` and
+completes the triggering request with exactly one native operation result;
+refresh failure releases the gate, returns `Idle`, and completes that request
+with the exact Gateway failure without dispatching its native operation.
+`Disabled` is never reported with `owned:true`. `Disabled` with `owned:false` maps only an
 explicit operator or configuration disable; enable failure, the 30-second idle
 timeout, transport disconnect, and gateway restart map to `Idle` with
 `owned:false` after cleanup.
@@ -180,7 +183,8 @@ rule as target switching.
 
 Refresh success revalidates only a surviving authenticated current-owner
 token/target/epoch handle and returns it to `Active`; it is continuation, not
-reconstruction or auto-resume. After restart, a lost owner handle, or an
+reconstruction or auto-resume. The pending triggering request then completes
+from exactly one dispatch using the rebound key. After restart, a lost owner handle, or an
 absent/invalid current issuer token, Gateway does not reconstruct the session
 and the client must issue a new explicit Enable.
 A terminal transport disconnect releases ownership to `Idle`; a later reconnect
@@ -189,9 +193,9 @@ client Enable.
 
 When a selected target has Gateway session state `Refreshing` with `owned:true`,
 the session strip remains observable alongside temporarily `UNKNOWN` capability.
-It is status-only: the section-projection card, B503 tabs, and every bus-facing
-B503 read/action remain unavailable until capability is `AVAILABLE` again. Only
-the status-only `vaillantCapabilities(targetAddress:)` and
+It is status-only: the section-projection card, B503 tabs, and every new
+bus-facing B503 read/action remain unavailable until capability is `AVAILABLE`
+again. Only the status-only `vaillantCapabilities(targetAddress:)` and
 `vaillantLiveMonitorSession(targetAddress:)` queries remain available; no other
 operation gains permission.
 

@@ -63,12 +63,15 @@ B503_FRONTEND_EPOCH_ROLLOVER = (
 B503_SESSION_STATE_CONTRACT = (
     "The strip states are `Idle`, `Enabling`, `Active`, and\n"
     "`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\n"
-    "ownership gate and all bus-facing live-monitor reads/actions are busy. The\n"
-    "status-only `vaillantCapabilities(targetAddress:)` and\n"
+    "ownership gate; the already-admitted triggering request remains pending and\n"
+    "new bus-facing live-monitor reads/actions are busy. Status-only\n"
+    "`vaillantCapabilities(targetAddress:)` and\n"
     "`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\n"
-    "availability and session completion. Refresh success returns `Active`; refresh\n"
-    "failure releases the gate and returns `Idle`. `Disabled` is never reported with\n"
-    "`owned:true`."
+    "availability and session completion. Refresh success returns `Active` and\n"
+    "completes the triggering request with exactly one native operation result;\n"
+    "refresh failure releases the gate, returns `Idle`, and completes that request\n"
+    "with the exact Gateway failure without dispatching its native operation.\n"
+    "`Disabled` is never reported with `owned:true`."
 )
 B503_DISABLED_PUBLIC_MAPPING = (
     "`Disabled` with `owned:false` maps only an\n"
@@ -85,16 +88,17 @@ B503_REFRESHING_CLEANUP = (
 B503_REFRESHING_UNKNOWN_STRIP = (
     "When a selected target has Gateway session state `Refreshing` with `owned:true`,\n"
     "the session strip remains observable alongside temporarily `UNKNOWN` capability.\n"
-    "It is status-only: the section-projection card, B503 tabs, and every bus-facing\n"
-    "B503 read/action remain unavailable until capability is `AVAILABLE` again. Only\n"
-    "the status-only `vaillantCapabilities(targetAddress:)` and\n"
+    "It is status-only: the section-projection card, B503 tabs, and every new\n"
+    "bus-facing B503 read/action remain unavailable until capability is `AVAILABLE`\n"
+    "again. Only the status-only `vaillantCapabilities(targetAddress:)` and\n"
     "`vaillantLiveMonitorSession(targetAddress:)` queries remain available; no other\n"
     "operation gains permission."
 )
 B503_REFRESH_CONTINUATION = (
     "Refresh success revalidates only a surviving authenticated current-owner\n"
     "token/target/epoch handle and returns it to `Active`; it is continuation, not\n"
-    "reconstruction or auto-resume. After restart, a lost owner handle, or an\n"
+    "reconstruction or auto-resume. The pending triggering request then completes\n"
+    "from exactly one dispatch using the rebound key. After restart, a lost owner handle, or an\n"
     "absent/invalid current issuer token, Gateway does not reconstruct the session\n"
     "and the client must issue a new explicit Enable.\n"
     "A terminal transport disconnect releases ownership to `Idle`; a later reconnect\n"

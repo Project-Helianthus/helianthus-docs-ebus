@@ -71,9 +71,11 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
     "7",
     "held-session epoch refresh; session status `Refreshing`",
     "`UNKNOWN` (temporary; not sticky `AVAILABLE`)",
-    "all live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` "
-    "and `vaillantLiveMonitorSession` status queries remain admitted, with no B503 "
-    "card, tabs, bus-facing reads, or actions until capability returns `AVAILABLE`",
+    "triggering request remains pending and is dispatched exactly once only after "
+    "successful rebind; subsequent live-monitor operations are `SESSION_BUSY`; only "
+    "`vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain "
+    "admitted, with no B503 card, tabs, bus-facing reads, or actions until capability "
+    "returns `AVAILABLE`",
 )
 CURRENT_PUBLIC_SESSION_AUTHORITY = (
     "**Current public session authority.** The five-state public session contract in\n"
@@ -89,10 +91,12 @@ CURRENT_PUBLIC_SESSION_AUTHORITY = (
 )
 SESSION_STATE_CONTRACT = (
     "five stable states: `Idle`, `Enabling`, `Active`, `Refreshing`, and `Disabled`.\n"
-    "`Refreshing` means an epoch refresh holds the ownership gate and all\n"
-    "live-monitor operations are busy. Refresh success returns `Active`; refresh\n"
-    "failure releases the gate and returns `Idle`. `Disabled` is never reported with\n"
-    "`owned:true`."
+    "`Refreshing` means an epoch refresh holds the ownership gate. The already\n"
+    "admitted triggering request remains pending; subsequent bus-facing live-monitor\n"
+    "operations are busy. Refresh success returns `Active` and dispatches the\n"
+    "triggering request exactly once; refresh failure releases the gate, returns\n"
+    "`Idle`, and returns the exact Gateway-supplied failure to that request.\n"
+    "`Disabled` is never reported with `owned:true`."
 )
 DISABLED_PUBLIC_MAPPING = (
     "**Stable public `Disabled` mapping:** `Disabled` with `owned:false` represents\n"
@@ -122,8 +126,15 @@ REFRESH_SUCCESS_CONTINUATION = (
     "  old epoch-N key authorizes only that refresh. Gateway atomically installs the\n"
     "  returned current `transport_key` for epoch N+1 with the same issuer token and\n"
     "  target before returning to `Active`; every epoch-N completion is fenced. This\n"
-    "  is continuation, not reconstruction or auto-resume. On refresh failure, no\n"
-    "  rebound key is installed: release the ownership gate and return to `Idle`."
+    "  is continuation, not reconstruction or auto-resume. The already-admitted\n"
+    "  triggering request remains pending during refresh; after successful rebind,\n"
+    "  Gateway dispatches that request's native operation exactly once using the\n"
+    "  rebound key and returns its exact outcome. This one dispatch consumes the\n"
+    "  request's only retry budget. Every subsequent bus-facing live-monitor\n"
+    "  operation during refresh returns `SESSION_BUSY`. On refresh failure, no\n"
+    "  rebound key is installed: release the ownership gate, return to `Idle`, and\n"
+    "  return the exact Gateway-supplied failure to the triggering request without\n"
+    "  dispatching its native operation."
 )
 REFRESH_OWNER_REBINDING = (
     "On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes\n"
@@ -148,7 +159,8 @@ REFRESHING_DISCONNECT_FENCE = (
 REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
 REFRESH_FAILURE_TRANSITION = (
     "| `REFRESHING` | refresh failure | `IDLE` | release ownership gate; "
-    "surface the Gateway-supplied failure outcome |"
+    "return the exact Gateway-supplied failure outcome to the triggering request; "
+    "do not dispatch its native operation |"
 )
 REFRESH_FAILURE_LOCK = "the direct `REFRESHING → IDLE` refresh-failure path"
 HELD_OWNER_DISABLED_RELEASE = (
