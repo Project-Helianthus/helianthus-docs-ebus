@@ -240,15 +240,11 @@ DOM_SELECTOR_TOKEN = re.compile(
     r"(?<![0-9])(?:0x)?02[\s_:-]*(?:0x)?0[12](?![0-9])", re.IGNORECASE
 )
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
-PLAIN_CONTROL_NOUN = re.compile(
-    r"\b(?:button|control|link|action|command|selector|menu|item|affordance)\b",
-    re.IGNORECASE,
-)
 PLAIN_AFFIRMATIVE_CONTROL_VERB = re.compile(
     r"\b(?:expose(?:s|d)?|render(?:s|ed)?|show(?:s|ed)?|offer(?:s|ed)?|"
     r"provide(?:s|d)?|include(?:s|d)?|add(?:s|ed)?|display(?:s|ed)?|"
     r"present(?:s|ed)?|create(?:s|d)?|support(?:s|ed)?|allow(?:s|ed)?|"
-    r"enable(?:s|d)?|contain(?:s|ed)?|feature(?:s|d)?|list(?:s|ed)?|"
+    r"contain(?:s|ed)?|feature(?:s|d)?|list(?:s|ed)?|"
     r"publish(?:es|ed)?|surface(?:s|d)?|exist(?:s|ed)?|appear(?:s|ed)?|"
     r"use(?:s|d)?|click(?:s|ed)?|has|have|available|visible)\b",
     re.IGNORECASE,
@@ -508,7 +504,7 @@ def _reject_affirmative_plain_markdown_controls(document: str) -> None:
         plain = _plain_rendered_children(inline.children)
         for sentence in re.split(r"(?<=[.!?])\s+", plain):
             for clause in PLAIN_CONTROL_CLAUSE_BOUNDARY.split(sentence):
-                if not clause or PLAIN_CONTROL_NOUN.search(clause) is None:
+                if not clause:
                     continue
                 if not (
                     (_identifier_tokens(clause) & FORBIDDEN_B503_DOM_COMMAND_TOKENS)

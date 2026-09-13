@@ -204,6 +204,7 @@ def test_rejects_installation_selector_even_in_prose() -> None:
         "A Clear history control is available.",
         "Users can click the Delete link.",
         "The Reset control appears in the menu.",
+        "The pane exposes Reset.",
         "The pane exposes a Re**set** button.",
         "The pane exposes a Re&#115;et button.",
         "The pane does not expose a Reset button, but it renders a Delete link.",
