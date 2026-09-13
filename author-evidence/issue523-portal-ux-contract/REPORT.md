@@ -69,9 +69,11 @@ hardware work, or SemReg cutover.
 | Refresh-continuation correction tree | `4cc8850408fdcd6599416d46e569ec4f93a2a0da` |
 | Refresh-disconnect correction commit | `1eff8709e522652914cd4913e3a7ed73570f33b9` |
 | Refresh-disconnect correction tree | `1055b42939f1c9cba82764aa989e75177354c673` |
+| Final pin/DOM-prefix correction commit | `80efd4b74d7650481f1ebbcc0da62e4f17dcd505` |
+| Final pin/DOM-prefix correction tree | `e0a73e0039dfb6226f42c51c0231902d58267acb` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
-| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open intermediate source contract `0e49b3019bfbfc438b1141a08f6c2872a2e21142`, evidence head `76ac4262bbda9fcaeb2846b56a46997d7dd07980` |
+| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open intermediate source contract `9c1324ecf55597d26dc7da7e33af0468e14fc8be`, evidence head `c95ff19284c4e3d03fcbd2e7e05b4f22d8f6aeaf` |
 
 ## Delivered contract
 
@@ -109,8 +111,8 @@ hardware work, or SemReg cutover.
   hyphenated hexadecimal forms. Command words are matched as exact component
   tokens after camelCase and PascalCase segmentation, leaving harmless prose,
   substrings, and raw Markdown assignments untouched.
-- Compact controls are normalized only as full unambiguous B503 command forms,
-  with an optional `b503` prefix and arbitrary identifier suffix.
+- Compact controls are normalized only as full unambiguous B503 or Vaillant
+  command forms, with the component prefix and arbitrary identifier suffix.
   Protected selector sequences use decimal-digit boundaries, so identifier
   suffix letters are covered while longer numeric identifiers remain benign.
 - A backticked fragment is classified as DOM when it contains a DOM-relevant
@@ -159,8 +161,8 @@ hardware work, or SemReg cutover.
   ownership gate and makes every live-monitor operation busy; success returns
   `Active`, failure releases the gate and returns `Idle`, and `Disabled` is
   never emitted with `owned:true`. This follows Gateway #975's current source
-  contract `0e49b3019bfbfc438b1141a08f6c2872a2e21142` and evidence head
-  `76ac4262bbda9fcaeb2846b56a46997d7dd07980`; #975 is open, intermediate,
+  contract `9c1324ecf55597d26dc7da7e33af0468e14fc8be` and evidence head
+  `c95ff19284c4e3d03fcbd2e7e05b4f22d8f6aeaf`; #975 is open, intermediate,
   and is not claimed final or merged.
 - Canonical validation scopes M2b/M3 rows to the parsed §14 table and the
   `02 01`/`02 02` non-exposure invariant to normative §9. Its mutations reject
@@ -202,7 +204,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 133 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 137 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -210,7 +212,8 @@ hardware work, or SemReg cutover.
   expanded availability tables, projection-card admission outside `AVAILABLE`,
   and untyped or inferred History semantics, including normalized protected
   selectors and exact command tokens in every parsed DOM component, and missing
-  accessibility, reconnect/error, or frontend-epoch guarantees. The same
+  accessibility, reconnect/error, frontend-epoch guarantees, or compact
+  Vaillant-prefixed clear/reset controls. The same
   regression matrix accepts command-word substrings, benign camelCase
   identifiers, compact preset/clearance controls, longer numeric identifiers,
   raw Markdown assignments, safe multi-attribute inline fragments, negative
@@ -221,7 +224,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 133 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 137 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 20 tests |
 | `git diff --check` | PASS |
@@ -326,6 +329,11 @@ The complete Refresh-continuation correction CI log for commit `daf010c` is
 The complete Refresh-disconnect correction CI log for commit `1eff870` is
 `/tmp/docs523-refresh-disconnect-1eff870-ci.log`, SHA-256
 `3d97cf9ce5e4ab057e87a02aa144be3b558c328980858ea0586f7464309624d5`.
+
+The complete final pin/DOM-prefix correction CI log for commit `80efd4b` is
+`/tmp/docs523-final-pin-80efd4b-ci.log`, SHA-256
+`e960b2bac36fffee0aeb163d5f791e28055dbeeebac540e9207c603bb2c19c64`.
+It passed with 137 Portal checker tests and 20 canonical B503 milestone tests.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
