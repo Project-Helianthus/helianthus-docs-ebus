@@ -55,6 +55,8 @@ hardware work, or SemReg cutover.
 | Compact/fallback correction tree | `c9bb9a04f338b21f66e7af01833050e58ec15a64` |
 | Clear-control correction commit | `11b80226ce940e9c16a75c7272fc8e3fe2f7557c` |
 | Clear-control correction tree | `0f4529e1fc46d6d657fca1ad36f3eb65407d02ed` |
+| Mixed-inline-DOM correction commit | `004d16cd7181d6fe6dea7a42b3168d4f02bb5756` |
+| Mixed-inline-DOM correction tree | `2c41ce0f16887d1b52e9d1f67079e5eef0f51175` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -94,13 +96,15 @@ hardware work, or SemReg cutover.
   hyphenated hexadecimal forms. Command words are matched as exact component
   tokens after camelCase and PascalCase segmentation, leaving harmless prose,
   substrings, and raw Markdown assignments untouched.
-- Compact controls are normalized only as full known B503 command forms, with
-  an optional `b503` prefix and recognised button/action/control suffix.
+- Compact controls are normalized only as full unambiguous B503 command forms,
+  with an optional `b503` prefix and arbitrary identifier suffix.
   Protected selector sequences use decimal-digit boundaries, so identifier
   suffix letters are covered while longer numeric identifiers remain benign.
-- Backticked standalone DOM attributes use the same audit when their names are
-  DOM-relevant (`id`, `data-*`, `aria-*`, `role`, and related names);
-  non-DOM Markdown assignments remain outside that extraction. A bounded
+- A backticked fragment is classified as DOM when it contains a DOM-relevant
+  attribute (`id`, `data-*`, `aria-*`, `role`, and related names); once
+  classified, every parsed attribute, including standard event attributes, uses
+  the same audit. Non-DOM Markdown assignments remain outside that extraction.
+  A bounded
   main-GraphQL contradiction matcher rejects affirmative REST, MCP, native-I/O,
   or other-route fallback clauses.
 - That matcher also rejects bounded direct `falls back to` and `use … instead`
@@ -144,7 +148,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 116 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 119 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -163,7 +167,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 116 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 119 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
@@ -240,6 +244,10 @@ The complete compact/fallback correction CI log for commit `dd063de` is
 The complete clear-control correction CI log for commit `11b8022` is
 `/tmp/docs523-clear-controls-11b8022-ci.log`, SHA-256
 `a030e3da06beede86ef5522e2f11368afa4d4557cb52378468fae6ea14c09027`.
+
+The complete mixed-inline-DOM correction CI log for commit `004d16c` is
+`/tmp/docs523-inline-dom-mixed-004d16c-ci.log`, SHA-256
+`4e89e6116f29e9d77b32bc26228d5edc12652bb74004caef570d32e59e5b2f33`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
