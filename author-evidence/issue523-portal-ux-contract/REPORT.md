@@ -59,8 +59,11 @@ hardware work, or SemReg cutover.
 | Mixed-inline-DOM correction tree | `2c41ce0f16887d1b52e9d1f67079e5eef0f51175` |
 | Milestone-scope correction commit | `4bd7c212d7f526ef63c5d1bb04056e7cc6d1cd28` |
 | Milestone-scope correction tree | `929887fa2796436a0066387bc356fd4aa1e22bf1` |
+| Refreshing-state correction commit | `bc33609e3b696d7e4707b82752fef57ac1602327` |
+| Refreshing-state correction tree | `c95c106e9ccb71bcba742b498522ff40899c98fc` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
+| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open source contract `35c41c9253a9ece7474f674eef38d431e936de0d`, evidence head `0eb01249fe89a3163b1c45ee6370bd79aee4ac04` |
 
 ## Delivered contract
 
@@ -143,6 +146,19 @@ hardware work, or SemReg cutover.
   milestone table and requires the exact M2b and M3 three-cell rows there, so
   copied fragments outside that table or in another milestone row cannot
   satisfy the contract.
+- Portal and canonical B503 session wording now define exactly `Idle`,
+  `Enabling`, `Active`, `Refreshing`, and `Disabled`. `Refreshing` holds the
+  ownership gate and makes every live-monitor operation busy; success returns
+  `Active`, failure releases the gate and returns `Idle`, and `Disabled` is
+  never emitted with `owned:true`. This follows Gateway #975's current source
+  contract `35c41c9253a9ece7474f674eef38d431e936de0d` and evidence head
+  `0eb01249fe89a3163b1c45ee6370bd79aee4ac04`; #975 is open and is not claimed
+  merged.
+- Canonical validation scopes M2b/M3 rows to the parsed §14 table and the
+  `02 01`/`02 02` non-exposure invariant to normative §9. Its mutations reject
+  copied text outside those scopes and unsafe five-state contradictions; Portal
+  DOM controls retain benign `clearfix` identifiers while rejecting unambiguous
+  clear controls.
 - The main B503 GraphQL route also names graduated
   `vaillantErrorsHistory(targetAddress:limit:)` and
   `vaillantLiveMonitorSession(targetAddress:)` operations.
@@ -172,9 +188,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 119 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 124 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 5 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 11 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -257,6 +273,10 @@ The complete mixed-inline-DOM correction CI log for commit `004d16c` is
 The complete milestone-scope correction CI log for commit `4bd7c21` is
 `/tmp/docs523-milestone-scope-4bd7c21-ci.log`, SHA-256
 `430eb0cbb495eb01d388623dcba72a85fd102c266ba2c13696fa991cbaae4cb8`.
+
+The complete Refreshing-state correction CI log for commit `bc33609` is
+`/tmp/docs523-refreshing-bc33609-ci.log`, SHA-256
+`8a428048da100d509574fa22fbe839f33aed2bc263a9938d53eba3c84092e90f`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
