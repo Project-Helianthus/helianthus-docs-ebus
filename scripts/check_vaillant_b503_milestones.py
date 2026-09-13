@@ -59,11 +59,13 @@ AFFIRMATIVE_INSTALL_WRITE_EXPOSURE = (
     re.compile(
         r"\b(?:the\s+)?(?:public\s+)?(?:GraphQL|MCP|portal|Home\s+Assistant|HA|API)"
         r"\b[^.\n]{0,48}?\b"
-        r"(?:MAY|MUST|CAN)\s+(?:expose|publish|offer)\s+`?02\s+0[12]`?\b",
+        r"(?:MAY|MUST|CAN|SHOULD|SHALL|WILL)\s+"
+        r"(?:expose|publish|offer)\s+`?02\s+0[12]`?\b",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\b(?:the\s+)?public\s+surface\s+(?:MAY|MUST|CAN)\s+"
+        r"\b(?:the\s+)?public\s+surface\s+"
+        r"(?:MAY|MUST|CAN|SHOULD|SHALL|WILL)\s+"
         r"(?:expose|publish|offer)\s+`?02\s+0[12]`?\b",
         re.IGNORECASE,
     ),

@@ -67,6 +67,9 @@ def test_rejects_install_write_non_exposure_copied_outside_normative_section() -
         "The public GraphQL mutation MAY expose 02 01.",
         "MCP tools MAY expose 02 02.",
         "Portal controls MAY expose 02 01.",
+        "Portal SHOULD expose 02 01.",
+        "The public GraphQL surface SHALL publish 02 02.",
+        "Home Assistant WILL offer 02 01.",
     ),
 )
 def test_rejects_affirmative_install_write_exposure_inside_normative_section(
