@@ -7,14 +7,18 @@ import sys
 
 
 DOC = pathlib.Path("api/portal.md")
+TARGET_START = "## Contribution-Driven Portal Contract V1 (INT-10 Target)"
+TARGET_END = "## Observe-First Contract Ownership"
 
 REQUIRED = (
-    "## Contribution-Driven Portal Contract V1 (INT-10 Target)",
+    TARGET_START,
     "Gateway #552 is open;",
     "`helianthus.gateway.portal-catalog/v1`",
+    "The browser obtains the catalog read model only through `POST /graphql/portal/v1`\nand the fixed `PortalCatalogV1` operation.",
     "`POST /graphql/portal/v1`",
     "`PortalCatalogV1`",
     "`PortalActionInvokeV1`",
+    "No B503 operation is admitted on this route.",
     "no REST compatibility shim, no alternate Portal API\nroute, no dual semantic publication, and no direct MCP/native fallback.",
     "does not use a central vendor switch or an arbitrary-English parser",
     "`Thermal/HVAC`, `PV`, `Storage/BMS`, `EVSE`, and\n`Infrastructure`",
@@ -31,6 +35,9 @@ REQUIRED = (
     "`vaillantErrorHistory(targetAddress:index:)`",
     "`vaillantServiceHistory(targetAddress:index:)`",
     "`vaillantLiveMonitor(action:issuerToken:targetAddress:)`",
+    "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
+    "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
+    "does not expand the\naccepted #974 catalog/action endpoint.",
     "`M8-TGT-01`, `M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "`EXPIRED` is\ninternal-only",
     'data-testid="b503-state-available"',
@@ -42,11 +49,16 @@ REQUIRED = (
     'data-testid="b503-session-state-label"',
     'data-testid="b503-session-owned-by-other"',
     '`Idle`, `Enabling`, `Active`, and\n`Disabled`',
+    "base `SESSION_BUSY` presentation is neutral.",
+    "only when Gateway supplies a\npositive `foreign_owner` session disposition.",
+    "Lifecycle ambiguity or an absent\ndisposition leaves that node absent; an absent local token never proves a\nforeign owner.",
     'data-role="vaillant-b503-tab-history"',
     'data-role="projection-b503-card"',
     'data-testid="b503-install-writes-banner"',
     'id="b503-ad02-tooltip-anchor"',
-    "real installation/device write still needs action-time operator confirmation.",
+    "generic AD02 installation-write warning",
+    "It exposes no device command name, selector\nname, or control.",
+    "real installation/device write still needs action-time\noperator confirmation.",
     "scripts/check_portal_ux_contract.py",
 )
 
@@ -57,9 +69,32 @@ FORBIDDEN = (
     "Gateway #552 is complete",
 )
 
+FORBIDDEN_B503_DOM_VOCABULARY = (
+    "clear",
+    "delete",
+    "reset",
+    "clearerrorhistory",
+    "clearservicehistory",
+    "clear error history",
+    "clear service history",
+    "clear_error_history",
+    "clear_service_history",
+    "02 01",
+    "02 02",
+)
+
 
 class CheckError(ValueError):
     """The public Portal contract is missing a required safety boundary."""
+
+
+def _target_section(text: str) -> str:
+    try:
+        start = text.index(TARGET_START)
+        end = text.index(TARGET_END, start)
+    except ValueError as exc:
+        raise CheckError("api/portal.md: INT-10 target section boundary missing") from exc
+    return text[start:end]
 
 
 def validate_text(text: str) -> None:
@@ -69,6 +104,10 @@ def validate_text(text: str) -> None:
     for fragment in FORBIDDEN:
         if fragment in text:
             raise CheckError(f"api/portal.md: forbidden stale or premature wording: {fragment!r}")
+    target = _target_section(text).lower()
+    for token in FORBIDDEN_B503_DOM_VOCABULARY:
+        if token in target:
+            raise CheckError(f"api/portal.md: prohibited B503 DOM vocabulary: {token!r}")
 
 
 def main() -> int:

@@ -29,9 +29,10 @@ INT-10 B503 presentation.
 
 ### Fixed catalog and rendering boundary
 
-The browser obtains this read model only through `POST /graphql/portal/v1` and
-the fixed `PortalCatalogV1` operation. The only action operation on that route
-is `PortalActionInvokeV1`; it is governed by the action-admission rules below.
+The browser obtains the catalog read model only through `POST /graphql/portal/v1`
+and the fixed `PortalCatalogV1` operation. The only action operation on that
+route is `PortalActionInvokeV1`; it is governed by the action-admission rules
+below. No B503 operation is admitted on this route.
 For this B503 UX there is no REST compatibility shim, no alternate Portal API
 route, no dual semantic publication, and no direct MCP/native fallback.
 The host does not use a central vendor switch or an arbitrary-English parser to
@@ -103,7 +104,10 @@ The `Vaillant B503` card is a contribution-driven section-projection card. It
 appears only for an admitted selected resource whose B503 capability state is
 `AVAILABLE`; it identifies the selected target and enters the B503 perspective
 without creating another B503 data model. Target selection is resource-scoped.
-Every B503 GraphQL request carries that selected `targetAddress`:
+Every target-bearing B503 read or session request uses only the main public
+`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP
+graduation/parity contract. These operations are not `PortalCatalogV1` or
+`PortalActionInvokeV1` operations, and they do not call `/graphql/portal/v1`:
 
 - `vaillantCapabilities(targetAddress:)`
 - `vaillantErrors(targetAddress:)`
@@ -111,6 +115,12 @@ Every B503 GraphQL request carries that selected `targetAddress`:
 - `vaillantErrorHistory(targetAddress:index:)`
 - `vaillantServiceHistory(targetAddress:index:)`
 - `vaillantLiveMonitor(action:issuerToken:targetAddress:)`
+
+The catalog/action route and the B503 route are an exclusive operation-to-route
+split, not a fallback or compatibility shim. The B503 route does not expand the
+accepted #974 catalog/action endpoint. If either fixed route is unavailable,
+the UI renders the Gateway-supplied unavailable state and does not try the
+other route, REST, MCP, or native I/O.
 
 Changing target atomically invalidates the active target-bound presentation:
 capability, current errors/service, history, live-monitor strip, and pending
@@ -128,7 +138,7 @@ internal-only and is never a sixth browser state.
 | `AVAILABLE` | `data-testid="b503-state-available"` | Render admitted B503 tabs and the session strip for the selected target. |
 | `NOT_SUPPORTED` | `data-testid="b503-state-not-supported"` | State that the selected target does not support the B503 surface; do not infer a value. |
 | `TRANSPORT_DOWN` | `data-testid="b503-state-transport-down"` | State that transport is unavailable and offer only a retry/reconnect hint. |
-| `SESSION_BUSY` | `data-testid="b503-state-session-busy"` | State that another client owns the live-monitor session; do not claim local ownership. |
+| `SESSION_BUSY` | `data-testid="b503-state-session-busy"` | State neutrally that bounded ownership-or-lifecycle contention makes the session busy; do not infer a foreign owner. |
 | `UNKNOWN` | `data-testid="b503-state-unknown"` | State that capability is undetermined; do not equate it with unsupported. |
 
 The selectors above are stable browser-test identifiers, never locale-dependent
@@ -137,8 +147,12 @@ parsers or authorization inputs. Tests must also retain
 `data-testid="b503-session-state-label"`, and
 `data-testid="b503-session-owned-by-other"` for the Gateway-owned live-monitor
 ownership/session strip. The strip states are `Idle`, `Enabling`, `Active`, and
-`Disabled`. Leaving the B503 perspective disables each session locally owned
-by the browser; it must not disable a session owned by another client.
+`Disabled`. The base `SESSION_BUSY` presentation is neutral. The
+`b503-session-owned-by-other` node appears only when Gateway supplies a
+positive `foreign_owner` session disposition. Lifecycle ambiguity or an absent
+disposition leaves that node absent; an absent local token never proves a
+foreign owner. Leaving the B503 perspective disables each session locally owned
+by the browser; it must not disable a session with positive foreign ownership.
 
 The available state includes Errors, Service, History, and Live-Monitor tabs.
 The History tab uses the typed B503 history GraphQL records for the selected
@@ -146,12 +160,12 @@ target and has `data-role="vaillant-b503-tab-history"`; it does not infer
 history from labels or retained aggregate data. The section-projection card
 uses `data-role="projection-b503-card"` only for `AVAILABLE` B503 capability.
 
-The B503 section permanently displays the AD02 installation-write warning with
+The B503 section permanently displays the generic AD02 installation-write warning with
 `data-testid="b503-install-writes-banner"` and tooltip anchor
-`id="b503-ad02-tooltip-anchor"`. It says that `Clearerrorhistory` and
-`Clearservicehistory` are installation writes omitted from this browser
-surface. The banner neither creates an action nor changes authorization. Any
-real installation/device write still needs action-time operator confirmation.
+`id="b503-ad02-tooltip-anchor"`. It exposes no device command name, selector
+name, or control. The banner neither creates an action nor changes
+authorization. Any real installation/device write still needs action-time
+operator confirmation.
 
 ### Required implementation checks
 
@@ -161,8 +175,8 @@ AD02 banner, keyboard/accessibility, reconnect/error, and frontend epoch
 rollover. The stable B503 selectors and contract wording are checked in this
 repository by `scripts/check_portal_ux_contract.py` and
 `tests/test_portal_ux_contract_checker.py`. Those checks reject missing states
-or selectors, compatibility/fallback wording, absent source/authorization
-boundaries, and a claim that #552 is implemented.
+or selectors, B503 command vocabulary, compatibility/fallback wording, absent
+source/authorization boundaries, and a claim that #552 is implemented.
 
 This documentation gate is based on Gateway contribution contract
 [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972)
