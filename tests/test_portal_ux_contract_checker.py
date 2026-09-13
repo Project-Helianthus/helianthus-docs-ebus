@@ -208,6 +208,25 @@ def test_accepts_benign_prose_after_void_dom_element(snippet: str) -> None:
 @pytest.mark.parametrize(
     "snippet",
     (
+        '<a href="#re%73et">Read</a>',
+        '<a href="#02%2001">Read</a>',
+        '<img src="clear%73ervicehistory.svg">',
+        inline_code('href="#re%73et"'),
+        inline_code('src="02%2001.svg"'),
+    ),
+)
+def test_rejects_percent_encoded_html_url_attribute_control(snippet: str) -> None:
+    rejects_target_insertion(snippet)
+
+
+def test_accepts_safe_percent_encoded_html_url_attribute() -> None:
+    accepts_target_insertion('<a href="#status%20details">Read</a>')
+    accepts_target_insertion(inline_code('src="topology%20view.svg"'))
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    (
         "[Reset](#reset)",
         "[Clear history](../history)",
         "![Reset](reset.svg)",

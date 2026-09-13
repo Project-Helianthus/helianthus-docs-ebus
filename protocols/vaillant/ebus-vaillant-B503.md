@@ -335,7 +335,10 @@ When a locally token-owning consumer leaves a target or navigates away while
 its session is `Refreshing`, it MUST queue that target/token disable without
 invoking the busy operation. After successful refresh reaches `Active`, it
 dispatches the queued disable; after refresh failure reaches `Idle`, it clears
-the queued pair without a disable. During a held `Refreshing` epoch, the
+the queued pair without a disable. If the triggering request was itself the
+current-owner DISABLE and succeeds through `Disabled` cleanup to `Idle`, that
+single disable satisfies the queued cleanup: the consumer clears the pair
+without issuing a second disable. During a held `Refreshing` epoch, the
 session strip remains observable alongside temporarily `UNKNOWN` capability,
 but it is status-only: only `vaillantCapabilities` and
 `vaillantLiveMonitorSession` remain admitted so the client can observe

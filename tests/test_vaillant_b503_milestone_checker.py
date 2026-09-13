@@ -286,6 +286,13 @@ def test_rejects_refresh_failure_diagram_or_lock_contradiction(
             "  dispatching its native operation.",
             "retry the triggering native operation after refresh failure.",
         ),
+        (
+            "If the triggering request was itself the\n"
+            "current-owner DISABLE and succeeds through `Disabled` cleanup to `Idle`, that\n"
+            "single disable satisfies the queued cleanup: the consumer clears the pair\n"
+            "without issuing a second disable.",
+            "A successful triggering DISABLE leaves the queued cleanup pair pending.",
+        ),
     ),
 )
 def test_rejects_ambiguous_triggering_refresh_request_outcome(

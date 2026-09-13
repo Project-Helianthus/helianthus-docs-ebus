@@ -86,7 +86,10 @@ B503_REFRESHING_CLEANUP = (
     "For a `REFRESHING` prior target, the browser queues that\n"
     "same token-bound disable without invoking an operation while Refreshing is busy;\n"
     "after refresh succeeds to `Active`, it dispatches the queued disable, and after\n"
-    "refresh failure returns `Idle`, it clears the queued pair without a disable."
+    "refresh failure returns `Idle`, it clears the queued pair without a disable.\n"
+    "If the triggering request was already the current-owner disable and succeeds\n"
+    "through `Disabled` cleanup to `Idle`, that single disable satisfies cleanup;\n"
+    "the browser clears the queued pair without issuing a second disable."
 )
 B503_REFRESHING_UNKNOWN_STRIP = (
     "When a selected target has Gateway session state `Refreshing` with `owned:true`,\n"
@@ -228,8 +231,11 @@ INLINE_CODE_ATTRIBUTE = re.compile(
     r"(?:\"([^\"]*)\"|'([^']*)'|([^\s]+))"
 )
 DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
-    r"^(?:id|class|for|hidden|name|role|title|value|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+|on[a-z][A-Za-z0-9_:.-]*)$",
+    r"^(?:id|class|for|hidden|name|role|title|value|href|src|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+|on[a-z][A-Za-z0-9_:.-]*)$",
     re.IGNORECASE,
+)
+HTML_URL_ATTRIBUTE_NAMES = frozenset(
+    ("href", "src", "action", "formaction", "poster", "cite", "data")
 )
 HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
@@ -387,6 +393,13 @@ def _reject_prohibited_dom_component(context: str, value: str) -> None:
     _reject_prohibited_command_tokens(context, value)
 
 
+def _decoded_dom_attribute_value(attribute: str, value: str) -> str:
+    decoded = unescape(value)
+    if attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES:
+        decoded = unquote(decoded)
+    return decoded
+
+
 def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | None]], list[str]]]:
     parser = _DOMSnippetParser()
     parser.feed(target)
@@ -527,7 +540,8 @@ def _reject_prohibited_dom_references(target: str, document: str) -> None:
     for attribute, value in _inline_code_dom_attributes(target):
         _reject_prohibited_dom_component("inline-code attribute name", attribute)
         _reject_prohibited_dom_component(
-            f"inline-code attribute value for {attribute}", value
+            f"inline-code attribute value for {attribute}",
+            _decoded_dom_attribute_value(attribute, value),
         )
     for tag, attrs, text in _parsed_dom_elements(target):
         _reject_prohibited_dom_component("element name", tag)
@@ -535,7 +549,8 @@ def _reject_prohibited_dom_references(target: str, document: str) -> None:
             _reject_prohibited_dom_component("attribute name", attribute)
             if value is not None:
                 _reject_prohibited_dom_component(
-                    f"attribute value for {attribute}", value
+                    f"attribute value for {attribute}",
+                    _decoded_dom_attribute_value(attribute, value),
                 )
         _reject_prohibited_dom_component("element text", "".join(text))
 

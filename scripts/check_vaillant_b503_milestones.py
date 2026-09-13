@@ -113,7 +113,10 @@ REFRESHING_CLEANUP_CONTRACT = (
     "its session is `Refreshing`, it MUST queue that target/token disable without\n"
     "invoking the busy operation. After successful refresh reaches `Active`, it\n"
     "dispatches the queued disable; after refresh failure reaches `Idle`, it clears\n"
-    "the queued pair without a disable."
+    "the queued pair without a disable. If the triggering request was itself the\n"
+    "current-owner DISABLE and succeeds through `Disabled` cleanup to `Idle`, that\n"
+    "single disable satisfies the queued cleanup: the consumer clears the pair\n"
+    "without issuing a second disable."
 )
 REFRESHING_UNKNOWN_STRIP_CONTRACT = (
     "During a held `Refreshing` epoch, the\n"

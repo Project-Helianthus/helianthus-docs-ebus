@@ -137,6 +137,9 @@ issuer token. For a `REFRESHING` prior target, the browser queues that
 same token-bound disable without invoking an operation while Refreshing is busy;
 after refresh succeeds to `Active`, it dispatches the queued disable, and after
 refresh failure returns `Idle`, it clears the queued pair without a disable.
+If the triggering request was already the current-owner disable and succeeds
+through `Disabled` cleanup to `Idle`, that single disable satisfies cleanup;
+the browser clears the queued pair without issuing a second disable.
 This is switch-time cleanup, never passive timeout cleanup.
 
 Any late enable completion after a switch follows the same prior-target cleanup
