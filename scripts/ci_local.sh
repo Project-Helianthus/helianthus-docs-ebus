@@ -179,6 +179,10 @@ echo "==> check GraphQL device-face provenance contract"
 python3 scripts/check_graphql_face_provenance.py
 python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
 
+echo "==> check contribution-driven Portal UX contract"
+python3 scripts/check_portal_ux_contract.py
+python3 -m pytest -q tests/test_portal_ux_contract_checker.py
+
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py
 python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow

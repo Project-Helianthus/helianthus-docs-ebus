@@ -8,6 +8,169 @@ Portal API is exposed by `helianthus-ebusgateway` as an additive HTTP surface.
 - Versioned API base: `/portal/api/v1`
 - Current UX is capability-driven (status cards + enabled sections) and does not expose milestone placeholder labels.
 
+## Contribution-Driven Portal Contract V1 (INT-10 Target)
+
+This section freezes the public browser contract required for the Vaillant B503
+part of Gateway [#552](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/552).
+It is a **target contract**. Gateway #552 is open; this document does not claim
+that its B503 rendering, generated assets, or production browser tests have
+been implemented or validated on a device.
+
+`helianthus-ebusgateway` is the platform owner of the Portal host, the
+immutable `helianthus.gateway.portal-catalog/v1` read model, catalog/action
+admission, provider lifecycle, rendering, navigation cleanup, and the fixed
+browser transport. Portal consumes accepted driver contributions and SemReg
+records. It neither creates an upstream semantic record nor interprets native
+eBUS evidence.
+
+The historical `/portal/api/v1/*` endpoints documented below remain their own
+endpoint contracts. They are not a transport or semantic fallback for this
+INT-10 B503 presentation.
+
+### Fixed catalog and rendering boundary
+
+The browser obtains this read model only through `POST /graphql/portal/v1` and
+the fixed `PortalCatalogV1` operation. The only action operation on that route
+is `PortalActionInvokeV1`; it is governed by the action-admission rules below.
+For this B503 UX there is no REST compatibility shim, no alternate Portal API
+route, no dual semantic publication, and no direct MCP/native fallback.
+The host does not use a central vendor switch or an arbitrary-English parser to
+recover a contribution, field state, or action meaning.
+
+The catalog is a Gateway-composed, immutable snapshot. Its five domain entries
+are exactly `Thermal/HVAC`, `PV`, `Storage/BMS`, `EVSE`, and
+`Infrastructure`. A domain without an admitted contribution is truthfully
+absent or unavailable; a missing field is never displayed as zero. A valid new
+fixture contribution must render through the same generic catalog path. It
+must not require a vendor switch, a product branch, or compatibility logic in
+central bootstrap or rendering code.
+
+One accepted contribution identity is the full tuple
+`(driver_id, manifest_id, manifest_version)`. The browser joins a contribution
+to its resource and capability using that exact identity; a manifest ID alone
+is insufficient. The host canonicalizes accepted descriptors and rejects a
+conflicting digest for the same identity/version into quarantine. Rejection or
+withdrawal of one contribution cannot make a different admitted contribution
+disappear.
+
+The gateway catalog carries a `catalog_revision`, `catalog_digest`,
+`evaluation_instant`, and caller `authorization_scope`. It binds each accepted
+contribution to its descriptor digest, lifecycle/source generation, installation
+and resource context, capability, SemReg snapshot and semantic revision. These
+are presentation inputs, not proof that the browser qualified a device or read
+a native frame.
+
+### Records, truth, and action admission
+
+Every rendered field is identified by its contribution identity, resource ID,
+field ID, exact SemReg field `DefinitionRef`, service `DefinitionRef`,
+capability `DefinitionRef`, and canonical-unit `DefinitionRef`. A B503 card
+can display only a field admitted through this chain. It must show the
+Gateway-supplied lifecycle, freshness, projection-loss, quality, and provenance
+state; it cannot reconstruct any of them from a label, a historical aggregate,
+or a raw MCP response.
+
+Accepted source records and accepted semantic records remain distinct from the
+browser presentation state. The browser may render their admitted outcome, but
+it cannot promote a source, qualification, topology, field value, or native
+evidence from its own state.
+
+The UI preserves `unavailable`, `stale`, `conflict`, `partial`, `unknown`,
+`unsupported`, `withdrawn`, `withheld`, and `invalid-contribution` as distinct
+states. `partial` retains valid sibling fields. A retained value remains
+explicitly non-current when its freshness or quality says so. Native B503
+identity, qualification, evidence, dispatch, acknowledgement, readback, retry
+fencing, and installation safety remain with their owning protocol and Gateway
+components.
+
+An action is identified by the same contribution/resource/capability chain,
+its action ID, operation `DefinitionRef`, service/capability/argument/effect
+`DefinitionRef`s, and the catalog revision/digest that presented it. Discovery
+permission controls visibility: without it, no action node, identifier, label,
+count, tooltip, or explanatory text is present. Invoke permission alone does
+not enable an action.
+
+Before invocation, Gateway revalidates the request-bound caller,
+catalog revision/digest claim, contribution identity/digest, resource and
+capability, semantic snapshot/revision, binding, source epoch/generation,
+typed preconditions, route, deadline, and idempotency key. A previously visible
+or enabled action does not grant authority. The browser has no authority to
+turn a B503 banner, a cached catalog, or a translated label into an action.
+
+### Vaillant B503 target contract
+
+The `Vaillant B503` card is a contribution-driven section-projection card. It
+appears only for an admitted selected resource whose B503 capability state is
+`AVAILABLE`; it identifies the selected target and enters the B503 perspective
+without creating another B503 data model. Target selection is resource-scoped.
+Every B503 GraphQL request carries that selected `targetAddress`:
+
+- `vaillantCapabilities(targetAddress:)`
+- `vaillantErrors(targetAddress:)`
+- `vaillantServiceCurrent(targetAddress:)`
+- `vaillantErrorHistory(targetAddress:index:)`
+- `vaillantServiceHistory(targetAddress:index:)`
+- `vaillantLiveMonitor(action:issuerToken:targetAddress:)`
+
+Changing target atomically invalidates the active target-bound presentation:
+capability, current errors/service, history, live-monitor strip, and pending
+completion must not bleed into the new target. Any late completion is discarded
+for the newly selected target. If a local session becomes owned for the prior
+target after such a change, the host sends a targeted disable for that prior
+target and retains no active presentation for the new one. The B503 target
+tests are named `M8-TGT-01`, `M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`.
+
+`B503Availability` has exactly these five public reasons. `EXPIRED` is
+internal-only and is never a sixth browser state.
+
+| Reason | Stable selector | Required presentation truth |
+|---|---|---|
+| `AVAILABLE` | `data-testid="b503-state-available"` | Render admitted B503 tabs and the session strip for the selected target. |
+| `NOT_SUPPORTED` | `data-testid="b503-state-not-supported"` | State that the selected target does not support the B503 surface; do not infer a value. |
+| `TRANSPORT_DOWN` | `data-testid="b503-state-transport-down"` | State that transport is unavailable and offer only a retry/reconnect hint. |
+| `SESSION_BUSY` | `data-testid="b503-state-session-busy"` | State that another client owns the live-monitor session; do not claim local ownership. |
+| `UNKNOWN` | `data-testid="b503-state-unknown"` | State that capability is undetermined; do not equate it with unsupported. |
+
+The selectors above are stable browser-test identifiers, never locale-dependent
+parsers or authorization inputs. Tests must also retain
+`data-testid="b503-session-strip"`,
+`data-testid="b503-session-state-label"`, and
+`data-testid="b503-session-owned-by-other"` for the Gateway-owned live-monitor
+ownership/session strip. The strip states are `Idle`, `Enabling`, `Active`, and
+`Disabled`. Leaving the B503 perspective disables each session locally owned
+by the browser; it must not disable a session owned by another client.
+
+The available state includes Errors, Service, History, and Live-Monitor tabs.
+The History tab uses the typed B503 history GraphQL records for the selected
+target and has `data-role="vaillant-b503-tab-history"`; it does not infer
+history from labels or retained aggregate data. The section-projection card
+uses `data-role="projection-b503-card"` only for `AVAILABLE` B503 capability.
+
+The B503 section permanently displays the AD02 installation-write warning with
+`data-testid="b503-install-writes-banner"` and tooltip anchor
+`id="b503-ad02-tooltip-anchor"`. It says that `Clearerrorhistory` and
+`Clearservicehistory` are installation writes omitted from this browser
+surface. The banner neither creates an action nor changes authorization. Any
+real installation/device write still needs action-time operator confirmation.
+
+### Required implementation checks
+
+Gateway #552 must mechanically check the five rows above, target invalidation,
+projection card admission, session ownership/nav-away cleanup, typed history,
+AD02 banner, keyboard/accessibility, reconnect/error, and frontend epoch
+rollover. The stable B503 selectors and contract wording are checked in this
+repository by `scripts/check_portal_ux_contract.py` and
+`tests/test_portal_ux_contract_checker.py`. Those checks reject missing states
+or selectors, compatibility/fallback wording, absent source/authorization
+boundaries, and a claim that #552 is implemented.
+
+This documentation gate is based on Gateway contribution contract
+[#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972)
+and production catalog/action admission
+[#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974).
+It does not close Gateway #552, the wider INT-10 parent, SemReg cutover, or
+physical validation.
+
 ## Observe-First Contract Ownership
 
 This page owns the frozen Portal-specific observe-first contract after merged
