@@ -75,6 +75,13 @@ AFFIRMATIVE_INSTALL_WRITE_EXPOSURE = (
         + INSTALL_WRITE_SELECTOR_PATTERN,
         re.IGNORECASE,
     ),
+    re.compile(
+        INSTALL_WRITE_SELECTOR_PATTERN
+        + r"\s+(?:MAY|MUST|CAN|SHOULD|SHALL|WILL)\s+be\s+"
+        r"(?:exposed|published|offered)\s+by\s+(?:the\s+)?(?:public\s+)?"
+        r"(?:GraphQL|MCP|portal|Home\s+Assistant|HA|API)\b",
+        re.IGNORECASE,
+    ),
 )
 CURRENT_PUBLIC_SESSION_AUTHORITY = (
     "**Current public session authority.** The five-state public session contract in\n"

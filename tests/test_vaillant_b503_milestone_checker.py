@@ -74,6 +74,9 @@ def test_rejects_install_write_non_exposure_copied_outside_normative_section() -
         "Portal MUST expose 0202.",
         "GraphQL MUST expose selector 02-01.",
         "MCP SHOULD publish selector `02/02`.",
+        "`02 01` SHOULD be exposed by Portal.",
+        "0202 SHALL be published by the public GraphQL surface.",
+        "selector 02-01 WILL be offered by Home Assistant.",
     ),
 )
 def test_rejects_affirmative_install_write_exposure_inside_normative_section(
@@ -93,6 +96,13 @@ def test_accepts_negative_install_write_non_exposure_inside_normative_section() 
     text = contract().replace(
         CHECKER.INSTALL_WRITE_SECTION_END,
         f"{clause}\n\n{CHECKER.INSTALL_WRITE_SECTION_END}",
+        1,
+    )
+    CHECKER.validate_text(text)
+    negative_passive = "`02 01` MUST NOT be exposed by Portal."
+    text = contract().replace(
+        CHECKER.INSTALL_WRITE_SECTION_END,
+        f"{negative_passive}\n\n{CHECKER.INSTALL_WRITE_SECTION_END}",
         1,
     )
     CHECKER.validate_text(text)

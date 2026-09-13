@@ -219,7 +219,13 @@ MARKDOWN_INLINE_LINK = re.compile(
     r"!?\[([^\]\n]*)\]\(([^)\n]*)\)", re.IGNORECASE
 )
 MARKDOWN_REFERENCE_LINK = re.compile(
-    r"!?\[([^\]\n]*)\]\[([^\]\n]+)\]", re.IGNORECASE
+    r"!?\[([^\]\n]+)\]\[([^\]\n]*)\]", re.IGNORECASE
+)
+MARKDOWN_REFERENCE_DEFINITION = re.compile(
+    r"(?m)^[ \t]{0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]+)>|(\S+))"
+)
+MARKDOWN_SHORTCUT_REFERENCE = re.compile(
+    r"!?\[([^\]\n]+)\](?![\[(]|[ \t]*:)", re.IGNORECASE
 )
 DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
     r"^(?:id|class|for|hidden|name|role|title|value|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+|on[a-z][A-Za-z0-9_:.-]*)$",
@@ -389,12 +395,29 @@ def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | N
     return parser.elements
 
 
+def _markdown_reference_key(value: str) -> str:
+    return re.sub(r"\s+", " ", value.strip()).casefold()
+
+
 def _markdown_dom_references(target: str) -> list[tuple[str, str]]:
     references: list[tuple[str, str]] = []
-    for pattern in (MARKDOWN_INLINE_LINK, MARKDOWN_REFERENCE_LINK):
-        for match in pattern.finditer(target):
-            references.append(("Markdown link/image label", match.group(1)))
-            references.append(("Markdown link/image destination", match.group(2)))
+    definitions = {
+        _markdown_reference_key(match.group(1)): match.group(2) or match.group(3)
+        for match in MARKDOWN_REFERENCE_DEFINITION.finditer(target)
+    }
+    for match in MARKDOWN_INLINE_LINK.finditer(target):
+        references.append(("Markdown link/image label", match.group(1)))
+        references.append(("Markdown link/image destination", match.group(2)))
+    for match in MARKDOWN_REFERENCE_LINK.finditer(target):
+        key = _markdown_reference_key(match.group(2) or match.group(1))
+        if key in definitions:
+            references.append(("Markdown reference link/image label", match.group(1)))
+            references.append(("Markdown reference destination", definitions[key]))
+    for match in MARKDOWN_SHORTCUT_REFERENCE.finditer(target):
+        key = _markdown_reference_key(match.group(1))
+        if key in definitions:
+            references.append(("Markdown shortcut link/image label", match.group(1)))
+            references.append(("Markdown shortcut destination", definitions[key]))
     return references
 
 
