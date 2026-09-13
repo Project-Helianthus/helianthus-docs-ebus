@@ -65,9 +65,11 @@ hardware work, or SemReg cutover.
 | Refreshing-release correction tree | `9a7ff14c9a4d7c4a7100adb20069fb5619d5875c` |
 | Refreshing-cleanup correction commit | `11345ecc3ff0362a5a210ccc1352d852928f4745` |
 | Refreshing-cleanup correction tree | `2b439ed0be045d204e38a7fdbff16441b08a3540` |
+| Refresh-continuation correction commit | `daf010c90f50d245b2a2886c2be73dd8a0690c59` |
+| Refresh-continuation correction tree | `4cc8850408fdcd6599416d46e569ec4f93a2a0da` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
-| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open source contract `59f9604b4da26b4e518b8cc8575ead0b48ba39f6`, evidence head `79285e6f1938eb2f39e813465e9d6a541687e9e5` |
+| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open source contract `95bebcd2c7e28941674e238767b0e8cdfd47cdc2`, evidence head `6cf54b9ae918356a1c2a22d76a0a483e75473ae3` |
 
 ## Delivered contract
 
@@ -155,8 +157,8 @@ hardware work, or SemReg cutover.
   ownership gate and makes every live-monitor operation busy; success returns
   `Active`, failure releases the gate and returns `Idle`, and `Disabled` is
   never emitted with `owned:true`. This follows Gateway #975's current source
-  contract `59f9604b4da26b4e518b8cc8575ead0b48ba39f6` and evidence head
-  `79285e6f1938eb2f39e813465e9d6a541687e9e5`; #975 is open and is not claimed
+  contract `95bebcd2c7e28941674e238767b0e8cdfd47cdc2` and evidence head
+  `6cf54b9ae918356a1c2a22d76a0a483e75473ae3`; #975 is open and is not claimed
   merged.
 - Canonical validation scopes M2b/M3 rows to the parsed §14 table and the
   `02 01`/`02 02` non-exposure invariant to normative §9. Its mutations reject
@@ -177,6 +179,12 @@ hardware work, or SemReg cutover.
   tabs, or B503 operation. Public `Disabled` is explicit operator/configuration
   disable with `owned:false`; enable failure, idle timeout, disconnect, and
   restart clean up to public `Idle` with `owned:false`.
+- Refresh success continues only a surviving authenticated current owner by
+  revalidating its token, target, and epoch; it never reconstructs a session.
+  Restart, lost ownership, or an absent/invalid issuer token require a new
+  explicit client Enable. The structured DOM parser treats standard HTML void
+  elements as leaves, so subsequent benign prose remains outside their
+  descendant text audit while real DOM command references still reject.
 - The main B503 GraphQL route also names graduated
   `vaillantErrorsHistory(targetAddress:limit:)` and
   `vaillantLiveMonitorSession(targetAddress:)` operations.
@@ -187,7 +195,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 127 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 131 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -206,9 +214,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 127 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 131 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 17 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 19 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -303,6 +311,10 @@ The complete Refreshing-release correction CI log for commit `409f828` is
 The complete Refreshing-cleanup correction CI log for commit `11345ec` is
 `/tmp/docs523-refreshing-cleanup-11345ec-ci.log`, SHA-256
 `c924245e23e87d2246b1abf9b0058fd6e059aa6f674aa99bc0a99cdd5951c0fa`.
+
+The complete Refresh-continuation correction CI log for commit `daf010c` is
+`/tmp/docs523-refresh-continuation-daf010c-ci.log`, SHA-256
+`fdca7a25d02f97afa1309d05ec4b56730838374f20353241f05a98357299fdb8`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
