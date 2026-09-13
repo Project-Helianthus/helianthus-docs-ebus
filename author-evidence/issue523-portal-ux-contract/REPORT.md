@@ -27,6 +27,8 @@ hardware work, or SemReg cutover.
 | Target-section correction tree | `0af507bd9404d7ac91533798eacb9e1e2e0797b5` |
 | Transition-safety correction commit | `9daf69ae1890499fe7101311ea7af4f544c39f95` |
 | Transition-safety correction tree | `3da596c61881c39df85f548c9bc0aabf4e717df9` |
+| B503-invariants correction commit | `33a30863066674c707451326cf87123881260df8` |
+| B503-invariants correction tree | `a981911c0aecaf967d24b9233fac22714ad8ffe6` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -55,6 +57,11 @@ hardware work, or SemReg cutover.
   live-monitor strip, and pending-completion presentation; a late completion
   cannot mutate the new target; and navigation away uses the same
   locally-token-bound cleanup rule.
+- The availability table is parsed as one exact structured five-row set; it
+  rejects any extra, duplicate, or custom `EXPIRED` row. The checker also binds
+  projection-card admission to `AVAILABLE` only, and binds History to typed
+  B503 GraphQL records for the selected target while prohibiting label or
+  retained-aggregate inference.
 - The main B503 GraphQL route also names graduated
   `vaillantErrorsHistory(targetAddress:limit:)` and
   `vaillantLiveMonitorSession(targetAddress:)` operations.
@@ -65,19 +72,20 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 39 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 45 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
-  implementation language, vendor branching, and lost action-time
-  confirmation.
+  implementation language, vendor branching, lost action-time confirmation,
+  expanded availability tables, projection-card admission outside `AVAILABLE`,
+  and untyped or inferred History semantics.
 
 ## Validation
 
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 39 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 45 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -96,6 +104,10 @@ The complete target-section correction CI log for commit `e3fa1b5` is
 The complete transition-safety correction CI log for commit `9daf69a` is
 `/tmp/docs523-transition-9daf69a-ci.log`, SHA-256
 `ea7fde928983049d15fad9372b649cdcb22abc0ee913c10fe1ead4bd6cdb1e05`.
+
+The complete B503-invariants correction CI log for commit `33a3086` is
+`/tmp/docs523-b503-invariants-33a3086-ci.log`, SHA-256
+`4108f9f1ff4ad3c70ab5f11f13d12e609d1c7f251f9cd6dc6d0d6f8d81959c15`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
