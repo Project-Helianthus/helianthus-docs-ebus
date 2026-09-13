@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `6c6b2df97fb0c060445f31440f6b2bc195cb230b` |
-| Final validated contract tree | `9d5758271de53f99b169c29706d5708c66ac80b9` |
-| Final contract validation | Complete configured CI PASS; 186 Portal checker tests and 66 canonical B503 milestone tests; log SHA-256 `14cb64af27aa99ea6d2a9c3fb7cc235de02fc322d33270eb2ffad091c16c7be3` |
+| Final validated contract commit | `9e0bd883bef57e37e078b2391e8866eb3e8afcf5` |
+| Final validated contract tree | `2fb14698e74fec4254114e2e0081f96731d2f4de` |
+| Final contract validation | Complete configured CI PASS; 192 Portal checker tests and 67 canonical B503 milestone tests; log SHA-256 `4eea58bf94fd816ba1cef91462e662e21fa05294591a0d51cd36ea9c55c5eb5b` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -262,7 +262,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 186 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 192 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -282,9 +282,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 186 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 192 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 66 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 67 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -570,6 +570,18 @@ current-owner DISABLE dispatches once after quiesce and completes
 `Disabled`-to-`Idle` cleanup; four diagram/transition mutations enforce the
 operation-dependent terminal state. The following evidence-only commit records
 this immutable contract revision.
+
+The complete queued-cleanup and HTML URL-attribute correction CI log is
+`wave12/ci/docs524-9e0bd88-ci-full.log`, SHA-256
+`4eea58bf94fd816ba1cef91462e662e21fa05294591a0d51cd36ea9c55c5eb5b`.
+It validated final contract commit
+`9e0bd883bef57e37e078b2391e8866eb3e8afcf5`, tree
+`2fb14698e74fec4254114e2e0081f96731d2f4de`, with 192 Portal checker tests and
+67 canonical B503 milestone tests. A successful triggering current-owner
+DISABLE clears any matching queued cleanup without a second write. URL-bearing
+literal-HTML and documented inline `href`/`src` attributes are percent-decoded
+before audit, while non-DOM assignments retain their safe control behavior. The
+following evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
