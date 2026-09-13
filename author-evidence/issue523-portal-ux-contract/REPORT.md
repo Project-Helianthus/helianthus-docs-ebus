@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `1f393d6df96a50fb7350dbccff2f1ac00ec39b86` |
-| Final validated contract tree | `44ffc6e070b38591a6e52a730525720cdd6bfd79` |
-| Final contract validation | Complete configured CI PASS; 207 Portal checker tests and 77 canonical B503 milestone tests; log SHA-256 `d3adbe59366ebb811e674ab5248dd206c33205835b03bfa8485abff795841e21` |
+| Final validated contract commit | `cc86adf5371fa5b85f51350a517ee0d5157efa78` |
+| Final validated contract tree | `b9b25d28b78c36f30846df6a3692bd504644b534` |
+| Final contract validation | Complete configured CI PASS; 222 Portal checker tests and 83 canonical B503 milestone tests; log SHA-256 `7a25669f4730d094526a8dfd6db3f02a7db48c39d2267fc7e46360e6028b7a98` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -104,6 +104,8 @@ hardware work, or SemReg cutover.
 | Failed-enable cleanup correction tree | `04182ccbbc83723bbcefb941828afac077078d7a` |
 | Complete enable-failure/URL-attribute correction commit | `1f393d6df96a50fb7350dbccff2f1ac00ec39b86` |
 | Complete enable-failure/URL-attribute correction tree | `44ffc6e070b38591a6e52a730525720cdd6bfd79` |
+| Pending-enable FSM/plain-control correction commit | `cc86adf5371fa5b85f51350a517ee0d5157efa78` |
+| Pending-enable FSM/plain-control correction tree | `b9b25d28b78c36f30846df6a3692bd504644b534` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -266,7 +268,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 207 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 222 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -286,9 +288,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 207 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 222 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 77 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 83 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -615,6 +617,22 @@ recognizes every URL-bearing attribute already handled by literal HTML, includin
 `action`, `formaction`, `poster`, `cite`, and `data`; encoded and direct unsafe
 destinations reject while safe destinations remain accepted. The following
 evidence-only commit records this immutable contract revision.
+
+The complete pending-enable FSM and plain-control correction CI log is
+`wave12/ci/docs524-enabling-fsm-plain-controls-ci.log`, SHA-256
+`7a25669f4730d094526a8dfd6db3f02a7db48c39d2267fc7e46360e6028b7a98`.
+It validated contract commit
+`cc86adf5371fa5b85f51350a517ee0d5157efa78`, tree
+`b9b25d28b78c36f30846df6a3692bd504644b534`, with 222 Portal checker tests and
+83 canonical B503 milestone tests. Pending-enable cleanup is keyed by a fresh,
+never-reused local attempt ID plus target and presentation epoch. The FSM now
+separates cancellation before frame emission, proven NAK, ambiguous failures
+after emission, epoch discard, and disconnect/restart, with exact release and
+single defensive-disable behavior. Rendered plain Markdown is checked for
+affirmative declarations of prohibited command controls, including formatted
+and entity-decoded spellings, while explicit negative safety wording and benign
+presentation prose remain accepted. The following evidence-only commit records
+this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
