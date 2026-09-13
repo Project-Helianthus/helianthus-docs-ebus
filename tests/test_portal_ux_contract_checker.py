@@ -33,6 +33,11 @@ def rejects_target_insertion(token: str) -> None:
         CHECKER.validate_text(text.replace(CHECKER.TARGET_END, f"{token}\n\n{CHECKER.TARGET_END}", 1))
 
 
+def rejects_text(text: str) -> None:
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_accepts_current_portal_ux_contract() -> None:
     CHECKER.validate_text(contract())
 
@@ -62,10 +67,14 @@ def test_accepts_current_portal_ux_contract() -> None:
          "B503 may fall back to the catalog route."),
         ("base `SESSION_BUSY` presentation is neutral.",
          "base `SESSION_BUSY` presentation identifies another client."),
-        ("positive `foreign_owner` session disposition.",
-         "an absent local token."),
-        ("Lifecycle ambiguity or an absent\ndisposition leaves that node absent; an absent local token never proves a\nforeign owner.",
-         "Lifecycle ambiguity renders the foreign-owner node."),
+        ("`vaillantErrorsHistory(targetAddress:limit:)`", "`vaillantErrorsHistory()`"),
+        ("`vaillantLiveMonitorSession(targetAddress:)`", "`vaillantLiveMonitorSession()`"),
+        ("On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE`.",
+         "Target-switch cleanup is optional."),
+        ("For an `ENABLING` prior target,\nthe browser registers that same target-specific disable at switch time and\ndispatches it immediately when the locally initiated enable completes with its\nissuer token.",
+         "An ENABLING prior target waits for passive timeout."),
+        ("never disables a gate-held session without a\nlocally held issuer token.",
+         "disables a gate-held session based only on owned."),
     ),
 )
 def test_rejects_contract_regressions(old: str, new: str) -> None:
@@ -75,3 +84,27 @@ def test_rejects_contract_regressions(old: str, new: str) -> None:
 @pytest.mark.parametrize("token", CHECKER.FORBIDDEN_B503_DOM_VOCABULARY)
 def test_rejects_b503_command_vocabulary(token: str) -> None:
     rejects_target_insertion(token)
+
+
+def test_rejects_availability_selector_swap() -> None:
+    not_supported = CHECKER.AVAILABILITY_ROWS["NOT_SUPPORTED"]
+    wrong = not_supported.replace(
+        'b503-state-not-supported', 'b503-state-transport-down'
+    )
+    rejects_text(contract().replace(not_supported, wrong, 1))
+
+
+def test_rejects_availability_row_moved_outside_target_section() -> None:
+    row = CHECKER.AVAILABILITY_ROWS["TRANSPORT_DOWN"]
+    text = contract().replace(row, "", 1)
+    text = text.replace(CHECKER.TARGET_END, f"{CHECKER.TARGET_END}\n\n{row}", 1)
+    rejects_text(text)
+
+
+def test_rejects_availability_presentation_mismatch() -> None:
+    row = CHECKER.AVAILABILITY_ROWS["UNKNOWN"]
+    wrong = row.replace(
+        "State that capability is undetermined; do not equate it with unsupported.",
+        "State that transport is unavailable and offer only a retry/reconnect hint.",
+    )
+    rejects_text(contract().replace(row, wrong, 1))

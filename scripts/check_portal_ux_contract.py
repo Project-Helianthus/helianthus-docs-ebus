@@ -10,6 +10,14 @@ DOC = pathlib.Path("api/portal.md")
 TARGET_START = "## Contribution-Driven Portal Contract V1 (INT-10 Target)"
 TARGET_END = "## Observe-First Contract Ownership"
 
+AVAILABILITY_ROWS = {
+    "AVAILABLE": "| `AVAILABLE` | `data-testid=\"b503-state-available\"` | Render admitted B503 tabs and the session strip for the selected target. |",
+    "NOT_SUPPORTED": "| `NOT_SUPPORTED` | `data-testid=\"b503-state-not-supported\"` | State that the selected target does not support the B503 surface; do not infer a value. |",
+    "TRANSPORT_DOWN": "| `TRANSPORT_DOWN` | `data-testid=\"b503-state-transport-down\"` | State that transport is unavailable and offer only a retry/reconnect hint. |",
+    "SESSION_BUSY": "| `SESSION_BUSY` | `data-testid=\"b503-state-session-busy\"` | State neutrally that bounded ownership-or-lifecycle contention makes the session busy; do not infer a foreign owner. |",
+    "UNKNOWN": "| `UNKNOWN` | `data-testid=\"b503-state-unknown\"` | State that capability is undetermined; do not equate it with unsupported. |",
+}
+
 REQUIRED = (
     TARGET_START,
     "Gateway #552 is open;",
@@ -33,12 +41,14 @@ REQUIRED = (
     "`vaillantErrors(targetAddress:)`",
     "`vaillantServiceCurrent(targetAddress:)`",
     "`vaillantErrorHistory(targetAddress:index:)`",
+    "`vaillantErrorsHistory(targetAddress:limit:)`",
     "`vaillantServiceHistory(targetAddress:index:)`",
     "`vaillantLiveMonitor(action:issuerToken:targetAddress:)`",
+    "`vaillantLiveMonitorSession(targetAddress:)`",
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
-    "`M8-TGT-01`, `M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
+    "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "`EXPIRED` is\ninternal-only",
     'data-testid="b503-state-available"',
     'data-testid="b503-state-not-supported"',
@@ -47,11 +57,15 @@ REQUIRED = (
     'data-testid="b503-state-unknown"',
     'data-testid="b503-session-strip"',
     'data-testid="b503-session-state-label"',
-    'data-testid="b503-session-owned-by-other"',
     '`Idle`, `Enabling`, `Active`, and\n`Disabled`',
     "base `SESSION_BUSY` presentation is neutral.",
-    "only when Gateway supplies a\npositive `foreign_owner` session disposition.",
-    "Lifecycle ambiguity or an absent\ndisposition leaves that node absent; an absent local token never proves a\nforeign owner.",
+    "On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE`.",
+    "An `ACTIVE` prior target receives an immediate target-specific\ndisable using its locally held issuer token.",
+    "For an `ENABLING` prior target,\nthe browser registers that same target-specific disable at switch time and\ndispatches it immediately when the locally initiated enable completes with its\nissuer token.",
+    "This is switch-time cleanup, never passive timeout cleanup.",
+    "Gateway's session view exposes only `state`\nand opaque `owned`: `owned` means that the Gateway session gate is held, not\nwhich client holds it.",
+    "never derives a foreign owner from `owned`\nor from an absent local token.",
+    "never disables a gate-held session without a\nlocally held issuer token.",
     'data-role="vaillant-b503-tab-history"',
     'data-role="projection-b503-card"',
     'data-testid="b503-install-writes-banner"',
@@ -108,6 +122,12 @@ def validate_text(text: str) -> None:
     for token in FORBIDDEN_B503_DOM_VOCABULARY:
         if token in target:
             raise CheckError(f"api/portal.md: prohibited B503 DOM vocabulary: {token!r}")
+    for reason, row in AVAILABILITY_ROWS.items():
+        if target.count(row.lower()) != 1:
+            raise CheckError(
+                f"api/portal.md: {reason} availability row must appear exactly once "
+                "inside the INT-10 target section with its selector and presentation text"
+            )
 
 
 def main() -> int:

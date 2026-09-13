@@ -113,8 +113,10 @@ graduation/parity contract. These operations are not `PortalCatalogV1` or
 - `vaillantErrors(targetAddress:)`
 - `vaillantServiceCurrent(targetAddress:)`
 - `vaillantErrorHistory(targetAddress:index:)`
+- `vaillantErrorsHistory(targetAddress:limit:)`
 - `vaillantServiceHistory(targetAddress:index:)`
 - `vaillantLiveMonitor(action:issuerToken:targetAddress:)`
+- `vaillantLiveMonitorSession(targetAddress:)`
 
 The catalog/action route and the B503 route are an exclusive operation-to-route
 split, not a fallback or compatibility shim. The B503 route does not expand the
@@ -124,11 +126,22 @@ other route, REST, MCP, or native I/O.
 
 Changing target atomically invalidates the active target-bound presentation:
 capability, current errors/service, history, live-monitor strip, and pending
-completion must not bleed into the new target. Any late completion is discarded
-for the newly selected target. If a local session becomes owned for the prior
-target after such a change, the host sends a targeted disable for that prior
-target and retains no active presentation for the new one. The B503 target
-tests are named `M8-TGT-01`, `M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`.
+completion must not bleed into the new target. On every target switch, before
+admitting the new target presentation, the browser begins targeted cleanup for
+each prior target that it locally owns and whose session is `ENABLING` or
+`ACTIVE`. An `ACTIVE` prior target receives an immediate target-specific
+disable using its locally held issuer token. For an `ENABLING` prior target,
+the browser registers that same target-specific disable at switch time and
+dispatches it immediately when the locally initiated enable completes with its
+issuer token. This is switch-time cleanup, never passive timeout cleanup.
+
+Any late enable completion after a switch follows the same prior-target cleanup
+and cannot mutate the new target. Gateway's session view exposes only `state`
+and opaque `owned`: `owned` means that the Gateway session gate is held, not
+which client holds it. The browser never derives a foreign owner from `owned`
+or from an absent local token. It never disables a gate-held session without a
+locally held issuer token. The B503 target tests are named `M8-TGT-01`,
+`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`.
 
 `B503Availability` has exactly these five public reasons. `EXPIRED` is
 internal-only and is never a sixth browser state.
@@ -144,15 +157,12 @@ internal-only and is never a sixth browser state.
 The selectors above are stable browser-test identifiers, never locale-dependent
 parsers or authorization inputs. Tests must also retain
 `data-testid="b503-session-strip"`,
-`data-testid="b503-session-state-label"`, and
-`data-testid="b503-session-owned-by-other"` for the Gateway-owned live-monitor
-ownership/session strip. The strip states are `Idle`, `Enabling`, `Active`, and
-`Disabled`. The base `SESSION_BUSY` presentation is neutral. The
-`b503-session-owned-by-other` node appears only when Gateway supplies a
-positive `foreign_owner` session disposition. Lifecycle ambiguity or an absent
-disposition leaves that node absent; an absent local token never proves a
-foreign owner. Leaving the B503 perspective disables each session locally owned
-by the browser; it must not disable a session with positive foreign ownership.
+`data-testid="b503-session-state-label"` for the Gateway-owned live-monitor
+session strip. The strip states are `Idle`, `Enabling`, `Active`, and
+`Disabled`. The base `SESSION_BUSY` presentation is neutral. The strip may
+show that the Gateway session gate is held, but must not identify another
+client. Leaving the B503 perspective uses the same locally-token-bound cleanup
+rule as target switching.
 
 The available state includes Errors, Service, History, and Live-Monitor tabs.
 The History tab uses the typed B503 history GraphQL records for the selected
