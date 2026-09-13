@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `957028d4dbfd426db4132fa93d2742c3fc22d126` |
-| Final validated contract tree | `f82e9a5b86f6403a4aeb61ae1e28cad6fc2c68f1` |
-| Final contract validation | Complete configured CI PASS; 228 Portal checker tests and 83 canonical B503 milestone tests; log SHA-256 `0b877264dbecdeaa6a6109664043d9974ff9c44115d63ab5213c55e5c0c9dffc` |
+| Final validated contract commit | `8df962d228fab7c30067204f185a3ea98d13bb8e` |
+| Final validated contract tree | `d20fdc25c218687aa212d9f9dc1b7c3ffa21329b` |
+| Final contract validation | Complete configured CI PASS; 232 Portal checker tests and 83 canonical B503 milestone tests; log SHA-256 `95987c6c91e256ca77f8cbbf340dc757cb7f1d69de39ba7f0d74702190169e07` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -110,6 +110,8 @@ hardware work, or SemReg cutover.
 | Plain-control shorthand correction tree | `1c481f3046486a11b13eb3be8b0798f5e2c97e79` |
 | Existential-control correction commit | `957028d4dbfd426db4132fa93d2742c3fc22d126` |
 | Existential-control correction tree | `f82e9a5b86f6403a4aeb61ae1e28cad6fc2c68f1` |
+| Inline-command prose correction commit | `8df962d228fab7c30067204f185a3ea98d13bb8e` |
+| Inline-command prose correction tree | `d20fdc25c218687aa212d9f9dc1b7c3ffa21329b` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -272,7 +274,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 228 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 232 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -292,7 +294,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 228 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 232 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 83 tests |
 | `git diff --check` | PASS |
@@ -659,6 +661,17 @@ It validated contract commit
 as `There MUST be a Reset button` now reject, while `MUST NOT be`, `is absent`,
 `is prohibited`, and benign non-command copular prose remain accepted. The
 following evidence-only commit records this immutable contract revision.
+
+The complete inline-command prose correction CI log is
+`wave12/ci/docs524-inline-command-prose-ci.log`, SHA-256
+`95987c6c91e256ca77f8cbbf340dc757cb7f1d69de39ba7f0d74702190169e07`.
+It validated contract commit
+`8df962d228fab7c30067204f185a3ea98d13bb8e`, tree
+`d20fdc25c218687aa212d9f9dc1b7c3ffa21329b`, with 232 Portal checker tests and
+83 canonical B503 milestone tests. The affirmative prose audit includes inline
+code command names and capability/operation/service/feature nouns, while
+contracted or explicit negative forms remain accepted. The following
+evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
