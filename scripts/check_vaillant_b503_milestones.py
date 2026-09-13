@@ -58,7 +58,7 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
 AFFIRMATIVE_INSTALL_WRITE_EXPOSURE = (
     re.compile(
         r"\b(?:the\s+)?(?:public\s+)?(?:GraphQL|MCP|portal|Home\s+Assistant|HA|API)"
-        r"(?:\s+(?:surface|UI|service|services|API))?\s+"
+        r"\b[^.\n]{0,48}?\b"
         r"(?:MAY|MUST|CAN)\s+(?:expose|publish|offer)\s+`?02\s+0[12]`?\b",
         re.IGNORECASE,
     ),

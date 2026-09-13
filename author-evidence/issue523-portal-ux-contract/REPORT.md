@@ -267,7 +267,7 @@ hardware work, or SemReg cutover.
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
 | `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 138 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 38 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 41 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -421,6 +421,11 @@ The complete canonical status-query, public-surface, and owner-key rebinding
 correction CI log is `/tmp/docs523-canonical-refresh-rebind-ci.log`, SHA-256
 `54ccbf30f8684ea5b4bc9dc79599b09f153b546e0a38181c56e00c53715ba425`.
 It passed with 138 Portal checker tests and 38 canonical B503 milestone tests.
+
+The complete qualified-public-surface correction CI log is
+`/tmp/docs523-qualified-surface-ci.log.log`, SHA-256
+`e4e8134127b0f9e2cfd2e15d47b1eb0dd90dd9fa866f4733541efe4dc530c6e4`.
+It passed with 138 Portal checker tests and 41 canonical B503 milestone tests.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
