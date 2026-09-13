@@ -53,6 +53,10 @@ def with_availability_row(row: str) -> str:
     return text.replace(marker, f"\n{row}{marker}", 1)
 
 
+def dom_with_attribute(attribute: str) -> str:
+    return f"<span {attribute}></span>"
+
+
 def test_accepts_current_portal_ux_contract() -> None:
     CHECKER.validate_text(contract())
 
@@ -116,7 +120,7 @@ def test_rejects_contract_regressions(old: str, new: str) -> None:
     ),
 )
 def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -> None:
-    rejects_target_insertion(attribute)
+    rejects_target_insertion(dom_with_attribute(attribute))
 
 
 @pytest.mark.parametrize(
@@ -134,7 +138,7 @@ def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -
     ),
 )
 def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute: str) -> None:
-    rejects_target_insertion(attribute)
+    rejects_target_insertion(dom_with_attribute(attribute))
 
 
 @pytest.mark.parametrize(
@@ -152,11 +156,13 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
     ),
 )
 def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:
-    accepts_target_insertion(attribute)
+    accepts_target_insertion(dom_with_attribute(attribute))
 
 
 def test_accepts_harmless_prose_outside_dom_attribute_references() -> None:
-    accepts_target_insertion("A preset is clearly available; 0201 here is prose.")
+    accepts_target_insertion(
+        "A preset is clearly available; 0201, query=reset, and action = delete are prose."
+    )
 
 
 @pytest.mark.parametrize(
@@ -185,6 +191,18 @@ def test_rejects_prohibited_command_in_dom_element_name_or_content(snippet: str)
 )
 def test_accepts_benign_dom_element_name_or_content(snippet: str) -> None:
     accepts_target_insertion(snippet)
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    (
+        "<b503-0201-button></b503-0201-button>",
+        "<span>02 01</span>",
+        '<button selector-0201="safe">Read</button>',
+    ),
+)
+def test_rejects_protected_selector_in_every_parsed_dom_component(snippet: str) -> None:
+    rejects_target_insertion(snippet)
 
 
 def test_rejects_availability_selector_swap() -> None:
@@ -264,7 +282,7 @@ def test_rejects_history_label_or_aggregate_inference() -> None:
             "The browser may retry or preserve B503 state after reconnect.",
         ),
         (
-            CHECKER.B503_FIELD_OPERATION_ERROR,
+            CHECKER.B503_FIELD_OPERATION_ERRORS,
             "Field operation errors clear B503 availability.",
         ),
         (
@@ -277,6 +295,17 @@ def test_rejects_missing_b503_accessibility_error_or_epoch_clause(
     clause: str, replacement: str
 ) -> None:
     rejects(clause, replacement)
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        ("structured `UPSTREAM_TIMEOUT`", "structured `UPSTREAM_RPC_FAILED`"),
+        ("structured `UPSTREAM_RPC_FAILED`", "structured `UPSTREAM_TIMEOUT`"),
+    ),
+)
+def test_rejects_collapsed_b503_timeout_error_mapping(old: str, new: str) -> None:
+    rejects(old, new)
 
 
 def test_rejects_int10_safety_fragment_moved_beyond_target_section() -> None:

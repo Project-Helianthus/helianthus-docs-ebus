@@ -43,11 +43,13 @@ B503_CAPABILITY_RECONNECT = (
     "`AVAILABLE`, replays a session enable/disable action, nor changes route; it\n"
     "may re-query only the selected target after Gateway publishes a new state."
 )
-B503_FIELD_OPERATION_ERROR = (
-    "On a selected-target dispatch timeout, NAK, or CRC failure, the browser renders\n"
-    "the Gateway-supplied structured `UPSTREAM_RPC_FAILED` alongside the unchanged\n"
-    "last-known B503 availability. It does not turn that field-operation error into\n"
-    "`TRANSPORT_DOWN` or invalidate capability."
+B503_FIELD_OPERATION_ERRORS = (
+    "On a selected-target context cancellation before bus turnaround, the browser\n"
+    "renders the Gateway-supplied structured `UPSTREAM_TIMEOUT` alongside the\n"
+    "unchanged last-known B503 availability. On a selected-target bus/arbitration\n"
+    "timeout, NAK, or CRC failure, it renders structured `UPSTREAM_RPC_FAILED`\n"
+    "alongside that same availability. Neither field-operation error becomes\n"
+    "`TRANSPORT_DOWN` or invalidates capability."
 )
 B503_FRONTEND_EPOCH_ROLLOVER = (
     "Each target-bound asynchronous request captures a frontend presentation epoch\n"
@@ -111,7 +113,7 @@ REQUIRED = (
     SELECTED_TARGET_TYPED_HISTORY,
     B503_KEYBOARD_ACCESSIBILITY,
     B503_CAPABILITY_RECONNECT,
-    B503_FIELD_OPERATION_ERROR,
+    B503_FIELD_OPERATION_ERRORS,
     B503_FRONTEND_EPOCH_ROLLOVER,
     'data-testid="b503-install-writes-banner"',
     'id="b503-ad02-tooltip-anchor"',
@@ -136,10 +138,6 @@ FORBIDDEN_B503_DOM_COMMAND_TOKENS = frozenset((
     "clearservicehistory",
 ))
 FORBIDDEN_INSTALLATION_SELECTORS = frozenset(("0201", "0202"))
-DOM_ATTRIBUTE_REFERENCE = re.compile(
-    r"\b([A-Za-z_:][A-Za-z0-9_:.-]*)\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^\s`>]+))",
-    re.IGNORECASE,
-)
 DOM_SELECTOR_TOKEN = re.compile(
     r"(?<![0-9a-f])(?:0x)?02[\s_:-]*0[12](?![0-9a-f])", re.IGNORECASE
 )
@@ -237,13 +235,13 @@ def _reject_prohibited_command_tokens(context: str, value: str) -> None:
         )
 
 
-def _reject_prohibited_attribute_reference(attribute: str, value: str) -> None:
+def _reject_prohibited_dom_component(context: str, value: str) -> None:
     if _selector_tokens(value) & FORBIDDEN_INSTALLATION_SELECTORS:
         raise CheckError(
-            "api/portal.md: prohibited B503 installation selector in DOM attribute "
-            f"reference: {attribute}={value!r}"
+            "api/portal.md: prohibited B503 installation selector in DOM "
+            f"{context}: {value!r}"
         )
-    _reject_prohibited_command_tokens(f"attribute reference {attribute}", value)
+    _reject_prohibited_command_tokens(context, value)
 
 
 def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | None]], list[str]]]:
@@ -254,16 +252,15 @@ def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | N
 
 
 def _reject_prohibited_dom_references(target: str) -> None:
-    for match in DOM_ATTRIBUTE_REFERENCE.finditer(target):
-        attribute = match.group(1)
-        value = next(group for group in match.groups()[1:] if group is not None)
-        _reject_prohibited_attribute_reference(attribute, value)
     for tag, attrs, text in _parsed_dom_elements(target):
-        _reject_prohibited_command_tokens("element name", tag)
+        _reject_prohibited_dom_component("element name", tag)
         for attribute, value in attrs:
+            _reject_prohibited_dom_component("attribute name", attribute)
             if value is not None:
-                _reject_prohibited_attribute_reference(attribute, value)
-        _reject_prohibited_command_tokens("element text", "".join(text))
+                _reject_prohibited_dom_component(
+                    f"attribute value for {attribute}", value
+                )
+        _reject_prohibited_dom_component("element text", "".join(text))
 
 
 def validate_text(text: str) -> None:
