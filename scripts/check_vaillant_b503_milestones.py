@@ -15,6 +15,10 @@ SESSION_SECTION_START = "## 6. Live-Monitor Session"
 SESSION_SECTION_END = "## 7. Gateway Operational Contract"
 REFRESHING_PUBLIC_SECTION_START = "#### 7.1.1 Refreshing session state (public)"
 REFRESHING_PUBLIC_SECTION_END = "### 7.2 Quiesce timing bounds (normative)"
+REFRESH_SECTION_START = "### 7.3 Retry and refresh"
+REFRESH_SECTION_END = "### 7.4 Ownership release"
+RECONNECT_SECTION_START = "### 7.5 Reconnect handling"
+RECONNECT_SECTION_END = "### 7.6 30s idle-timeout semantics"
 INSTALL_WRITE_SECTION_START = "## 9. Install-Writes Non-Exposure (v1 invariant)"
 INSTALL_WRITE_SECTION_END = "## 10. F.xxx Decimal Caveat (LOCAL_CAPTURE only)"
 M2B_GRAPHQL = (
@@ -63,6 +67,18 @@ REFRESHING_UNKNOWN_STRIP_CONTRACT = (
     "session strip remains observable alongside temporarily `UNKNOWN` capability,\n"
     "but it is status-only: no B503 card, tabs, or operations are admitted until\n"
     "capability returns `AVAILABLE`."
+)
+REFRESH_SUCCESS_CONTINUATION = (
+    "On refresh success for a surviving authenticated current-owner handle →\n"
+    "  revalidate that same token/target/epoch ownership and return to `Active`;\n"
+    "  this is continuation, not reconstruction or auto-resume. On refresh failure\n"
+    "  → release the ownership gate and return to `Idle`."
+)
+NO_AUTO_RESUME_RECONSTRUCTION = (
+    "Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost\n"
+    "  owner handle, or an absent/invalid current issuer token; each requires an\n"
+    "  explicit new client Enable. The surviving authenticated current-owner refresh\n"
+    "  path in §7.3 is the only continuation allowed across an epoch advance."
 )
 REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
 REFRESH_FAILURE_TRANSITION = (
@@ -187,6 +203,13 @@ def validate_text(text: str) -> None:
             raise CheckError(
                 f"missing public Refreshing consumer contract in §7.1.1: {fragment!r}"
             )
+
+    refresh_section = _section(text, REFRESH_SECTION_START, REFRESH_SECTION_END)
+    if REFRESH_SUCCESS_CONTINUATION not in refresh_section:
+        raise CheckError("missing authenticated Refreshing continuation contract in §7.3")
+    reconnect_section = _section(text, RECONNECT_SECTION_START, RECONNECT_SECTION_END)
+    if NO_AUTO_RESUME_RECONSTRUCTION not in reconnect_section:
+        raise CheckError("missing no-reconstruction boundary in §7.5")
 
     rows = _milestone_table(text)
     for expected in (M2B_GRAPHQL, M3_PORTAL):

@@ -97,6 +97,14 @@ def test_rejects_session_state_contradiction_inside_normative_section(
             CHECKER.REFRESHING_UNKNOWN_STRIP_CONTRACT,
             "Unknown capability hides the session strip.",
         ),
+        (
+            CHECKER.REFRESH_SUCCESS_CONTINUATION,
+            "Refresh success always reconstructs an Active session.",
+        ),
+        (
+            CHECKER.NO_AUTO_RESUME_RECONSTRUCTION,
+            "Every reconnect resumes without an explicit Enable.",
+        ),
     ),
 )
 def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(

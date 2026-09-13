@@ -329,8 +329,10 @@ live-monitor enable and disable frame. Bounds:
 
 - Maximum **1 refresh attempt** per epoch advance. No recursive or unbounded
   retries.
-- On refresh success → return to `Active`; on refresh failure → release the
-  ownership gate and return to `Idle`.
+- On refresh success for a surviving authenticated current-owner handle →
+  revalidate that same token/target/epoch ownership and return to `Active`;
+  this is continuation, not reconstruction or auto-resume. On refresh failure
+  → release the ownership gate and return to `Idle`.
 - On refresh revealing `TRANSPORT_DOWN` or `UNKNOWN` → surface that value
   literally (§11). It MUST NOT be collapsed into `SESSION_BUSY`.
 - No infinite reconnect loops. Reconnect is driven by the transport layer, not
@@ -360,8 +362,10 @@ event fires**; they are no-ops when the FSM is already `IDLE` or
 - On reconnect, the `transport_incarnation_epoch` advances. Any surviving owner
   handle from the prior incarnation enters `Refreshing` on next touch.
 - The resolver applies the §7.3 refresh-once policy.
-- The gateway MUST NOT auto-resume a live-monitor session across transport
-  incarnations. A new enable from the client is required.
+- Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost
+  owner handle, or an absent/invalid current issuer token; each requires an
+  explicit new client Enable. The surviving authenticated current-owner refresh
+  path in §7.3 is the only continuation allowed across an epoch advance.
 
 ### 7.6 30s idle-timeout semantics
 

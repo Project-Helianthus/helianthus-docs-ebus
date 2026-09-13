@@ -190,6 +190,18 @@ def test_accepts_harmless_prose_outside_dom_attribute_references() -> None:
 
 
 @pytest.mark.parametrize(
+    "snippet",
+    (
+        '<input aria-label="Search">The distinction is clear.',
+        '<img alt="Topology">The distinction is clear.',
+        "<br>The distinction is clear.",
+    ),
+)
+def test_accepts_benign_prose_after_void_dom_element(snippet: str) -> None:
+    accepts_target_insertion(snippet)
+
+
+@pytest.mark.parametrize(
     "attribute",
     (
         'data-testid="b503-reset"',
@@ -398,6 +410,10 @@ def test_rejects_incomplete_b503_refreshing_state_contract(
         (
             CHECKER.B503_DISABLED_PUBLIC_MAPPING,
             "Disabled maps every cleanup path regardless of ownership.",
+        ),
+        (
+            CHECKER.B503_REFRESH_CONTINUATION,
+            "Every reconnect reconstructs an active session without a client Enable.",
         ),
     ),
 )

@@ -82,6 +82,13 @@ B503_REFRESHING_UNKNOWN_STRIP = (
     "It is status-only: the section-projection card, B503 tabs, and every B503\n"
     "operation remain unavailable until capability is `AVAILABLE` again."
 )
+B503_REFRESH_CONTINUATION = (
+    "Refresh success revalidates only a surviving authenticated current-owner\n"
+    "token/target/epoch handle and returns it to `Active`; it is continuation, not\n"
+    "reconstruction or auto-resume. After restart, a lost owner handle, or an\n"
+    "absent/invalid current issuer token, Gateway does not reconstruct the session\n"
+    "and the client must issue a new explicit Enable."
+)
 FORBIDDEN_B503_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
     "`Disabled` may be reported with `owned:true`.",
@@ -117,7 +124,7 @@ REQUIRED = (
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
-    "source contract commit `59f9604b4da26b4e518b8cc8575ead0b48ba39f6` and evidence\nhead `79285e6f1938eb2f39e813465e9d6a541687e9e5`; #975 remains open and this\ndocumentation does not claim it is merged.",
+    "source contract commit `95bebcd2c7e28941674e238767b0e8cdfd47cdc2` and evidence\nhead `6cf54b9ae918356a1c2a22d76a0a483e75473ae3`; #975 remains open and this\ndocumentation does not claim it is merged.",
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
@@ -148,6 +155,7 @@ REQUIRED = (
     B503_FRONTEND_EPOCH_ROLLOVER,
     B503_DISABLED_PUBLIC_MAPPING,
     B503_REFRESHING_UNKNOWN_STRIP,
+    B503_REFRESH_CONTINUATION,
     'data-testid="b503-install-writes-banner"',
     'id="b503-ad02-tooltip-anchor"',
     "generic AD02 installation-write warning",
@@ -191,6 +199,10 @@ DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
     r"^(?:id|class|for|hidden|name|role|title|value|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+)$",
     re.IGNORECASE,
 )
+HTML_VOID_ELEMENTS = frozenset((
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
+    "meta", "param", "source", "track", "wbr",
+))
 B503_FALLBACK_CONTRADICTIONS = (
     re.compile(
         r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)? "
@@ -233,7 +245,8 @@ class _DOMSnippetParser(HTMLParser):
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         element = (tag, attrs, [])
         self.elements.append(element)
-        self._stack.append(element)
+        if tag.lower() not in HTML_VOID_ELEMENTS:
+            self._stack.append(element)
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         self.elements.append((tag, attrs, []))

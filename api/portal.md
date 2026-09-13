@@ -174,6 +174,12 @@ The strip may show that the Gateway session gate is held, but must not identify
 another client. Leaving the B503 perspective uses the same locally-token-bound cleanup
 rule as target switching.
 
+Refresh success revalidates only a surviving authenticated current-owner
+token/target/epoch handle and returns it to `Active`; it is continuation, not
+reconstruction or auto-resume. After restart, a lost owner handle, or an
+absent/invalid current issuer token, Gateway does not reconstruct the session
+and the client must issue a new explicit Enable.
+
 When a selected target has Gateway session state `Refreshing` with `owned:true`,
 the session strip remains observable alongside temporarily `UNKNOWN` capability.
 It is status-only: the section-projection card, B503 tabs, and every B503
@@ -232,8 +238,8 @@ and production catalog/action admission
 [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974).
 The five-state session wording follows Gateway
 [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975)
-source contract commit `59f9604b4da26b4e518b8cc8575ead0b48ba39f6` and evidence
-head `79285e6f1938eb2f39e813465e9d6a541687e9e5`; #975 remains open and this
+source contract commit `95bebcd2c7e28941674e238767b0e8cdfd47cdc2` and evidence
+head `6cf54b9ae918356a1c2a22d76a0a483e75473ae3`; #975 remains open and this
 documentation does not claim it is merged.
 It does not close Gateway #552, the wider INT-10 parent, SemReg cutover, or
 physical validation.
