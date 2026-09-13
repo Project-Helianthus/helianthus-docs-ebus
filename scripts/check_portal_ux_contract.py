@@ -36,11 +36,17 @@ B503_KEYBOARD_ACCESSIBILITY = (
     "and End move tab focus, while Enter and Space select the focused tab. The\n"
     "session strip is a named `role=\"status\"` for the selected target."
 )
-B503_RECONNECT_ERROR = (
-    "On a B503 GraphQL error or transport reconnect, the browser renders only the\n"
-    "Gateway-supplied error or availability state. It neither preserves\n"
+B503_CAPABILITY_RECONNECT = (
+    "On a Gateway capability transition or transport reconnect, the browser renders\n"
+    "only the Gateway-supplied availability state. It neither preserves\n"
     "`AVAILABLE`, replays a session enable/disable action, nor changes route; it\n"
     "may re-query only the selected target after Gateway publishes a new state."
+)
+B503_FIELD_OPERATION_ERROR = (
+    "On a selected-target dispatch timeout, NAK, or CRC failure, the browser renders\n"
+    "the Gateway-supplied structured `UPSTREAM_RPC_FAILED` alongside the unchanged\n"
+    "last-known B503 availability. It does not turn that field-operation error into\n"
+    "`TRANSPORT_DOWN` or invalidate capability."
 )
 B503_FRONTEND_EPOCH_ROLLOVER = (
     "Each target-bound asynchronous request captures a frontend presentation epoch\n"
@@ -103,7 +109,8 @@ REQUIRED = (
     PROJECTION_CARD_ADMISSION,
     SELECTED_TARGET_TYPED_HISTORY,
     B503_KEYBOARD_ACCESSIBILITY,
-    B503_RECONNECT_ERROR,
+    B503_CAPABILITY_RECONNECT,
+    B503_FIELD_OPERATION_ERROR,
     B503_FRONTEND_EPOCH_ROLLOVER,
     'data-testid="b503-install-writes-banner"',
     'id="b503-ad02-tooltip-anchor"',
@@ -136,6 +143,11 @@ DOM_SELECTOR_TOKEN = re.compile(
     r"(?<![0-9a-f])(?:0x)?02[\s_:-]*0[12](?![0-9a-f])", re.IGNORECASE
 )
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
+DOM_ELEMENT_TAG = re.compile(r"</?([A-Za-z][A-Za-z0-9:-]*)\b[^>]*>", re.IGNORECASE)
+DOM_ELEMENT_TEXT = re.compile(
+    r"<([A-Za-z][A-Za-z0-9:-]*)\b[^>]*>([^<>]+)</\1\s*>",
+    re.IGNORECASE,
+)
 
 
 class CheckError(ValueError):
@@ -183,6 +195,15 @@ def _identifier_tokens(value: str) -> set[str]:
     return {token.lower() for token in DOM_COMMAND_TOKEN.findall(segmented)}
 
 
+def _reject_prohibited_command_tokens(context: str, value: str) -> None:
+    prohibited_commands = _identifier_tokens(value) & FORBIDDEN_B503_DOM_COMMAND_TOKENS
+    if prohibited_commands:
+        raise CheckError(
+            "api/portal.md: prohibited B503 command token in DOM "
+            f"{context}: {value!r}"
+        )
+
+
 def _reject_prohibited_dom_references(target: str) -> None:
     for match in DOM_ATTRIBUTE_REFERENCE.finditer(target):
         attribute = match.group(1)
@@ -194,13 +215,11 @@ def _reject_prohibited_dom_references(target: str) -> None:
                     "api/portal.md: prohibited B503 installation selector in DOM attribute "
                     f"reference: {attribute}={value!r}"
                 )
-        command_tokens = _identifier_tokens(value)
-        prohibited_commands = command_tokens & FORBIDDEN_B503_DOM_COMMAND_TOKENS
-        if prohibited_commands:
-            raise CheckError(
-                "api/portal.md: prohibited B503 command token in DOM attribute "
-                f"reference: {attribute}={value!r}"
-            )
+        _reject_prohibited_command_tokens(f"attribute reference {attribute}", value)
+    for match in DOM_ELEMENT_TAG.finditer(target):
+        _reject_prohibited_command_tokens("element name", match.group(1))
+    for match in DOM_ELEMENT_TEXT.finditer(target):
+        _reject_prohibited_command_tokens("element text", match.group(2))
 
 
 def validate_text(text: str) -> None:

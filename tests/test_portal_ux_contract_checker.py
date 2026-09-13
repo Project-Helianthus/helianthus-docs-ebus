@@ -156,6 +156,31 @@ def test_accepts_harmless_prose_outside_dom_attribute_references() -> None:
     accepts_target_insertion("A preset is clearly available; 0201 here is prose.")
 
 
+@pytest.mark.parametrize(
+    "snippet",
+    (
+        "<button>Reset</button>",
+        "<b503-reset-button>",
+        '<button aria-label="Clear error history">Read</button>',
+        "<span>Delete</span>",
+    ),
+)
+def test_rejects_prohibited_command_in_dom_element_name_or_content(snippet: str) -> None:
+    rejects_target_insertion(snippet)
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    (
+        "<b503-preset-button>",
+        "<button>Clearly available</button>",
+        '<span aria-label="Clearance">Read</span>',
+    ),
+)
+def test_accepts_benign_dom_element_name_or_content(snippet: str) -> None:
+    accepts_target_insertion(snippet)
+
+
 def test_rejects_availability_selector_swap() -> None:
     not_supported = CHECKER.AVAILABILITY_ROWS["NOT_SUPPORTED"]
     wrong = not_supported.replace(
@@ -229,8 +254,12 @@ def test_rejects_history_label_or_aggregate_inference() -> None:
             "B503 accessibility follows generic browser behavior.",
         ),
         (
-            CHECKER.B503_RECONNECT_ERROR,
+            CHECKER.B503_CAPABILITY_RECONNECT,
             "The browser may retry or preserve B503 state after reconnect.",
+        ),
+        (
+            CHECKER.B503_FIELD_OPERATION_ERROR,
+            "Field operation errors clear B503 availability.",
         ),
         (
             CHECKER.B503_FRONTEND_EPOCH_ROLLOVER,
@@ -238,7 +267,7 @@ def test_rejects_history_label_or_aggregate_inference() -> None:
         ),
     ),
 )
-def test_rejects_missing_b503_accessibility_reconnect_or_epoch_clause(
+def test_rejects_missing_b503_accessibility_error_or_epoch_clause(
     clause: str, replacement: str
 ) -> None:
     rejects(clause, replacement)

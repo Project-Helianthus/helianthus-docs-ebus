@@ -170,10 +170,15 @@ Live-Monitor. Each tab exposes `aria-selected`; ArrowLeft, ArrowRight, Home,
 and End move tab focus, while Enter and Space select the focused tab. The
 session strip is a named `role="status"` for the selected target.
 
-On a B503 GraphQL error or transport reconnect, the browser renders only the
-Gateway-supplied error or availability state. It neither preserves
+On a Gateway capability transition or transport reconnect, the browser renders
+only the Gateway-supplied availability state. It neither preserves
 `AVAILABLE`, replays a session enable/disable action, nor changes route; it
 may re-query only the selected target after Gateway publishes a new state.
+
+On a selected-target dispatch timeout, NAK, or CRC failure, the browser renders
+the Gateway-supplied structured `UPSTREAM_RPC_FAILED` alongside the unchanged
+last-known B503 availability. It does not turn that field-operation error into
+`TRANSPORT_DOWN` or invalidate capability.
 
 Each target-bound asynchronous request captures a frontend presentation epoch
 at dispatch. Target switch, B503 navigation-away, and reconnect advance that
