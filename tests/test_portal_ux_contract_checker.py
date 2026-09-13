@@ -110,6 +110,9 @@ def test_rejects_contract_regressions(old: str, new: str) -> None:
         'data-testid="b503-reset"',
         'hidden="clearerrorhistory"',
         'aria-label="clearservicehistory"',
+        'data-command="ClearErrorHistoryAction"',
+        'id="b503ResetButton"',
+        'aria-label="DeleteServiceHistory"',
     ),
 )
 def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -> None:
@@ -141,6 +144,8 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
         'data-other="0x0203"',
         'id="b503-clearance"',
         'title="preset clearly available"',
+        'id="b503PresetButton"',
+        'title="clearlyAvailable"',
     ),
 )
 def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:

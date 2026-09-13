@@ -177,6 +177,12 @@ def _normalized_hex_selector(value: str) -> str | None:
     return None
 
 
+def _identifier_tokens(value: str) -> set[str]:
+    segmented = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", value)
+    segmented = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", " ", segmented)
+    return {token.lower() for token in DOM_COMMAND_TOKEN.findall(segmented)}
+
+
 def _reject_prohibited_dom_references(target: str) -> None:
     for match in DOM_ATTRIBUTE_REFERENCE.finditer(target):
         attribute = match.group(1)
@@ -188,9 +194,7 @@ def _reject_prohibited_dom_references(target: str) -> None:
                     "api/portal.md: prohibited B503 installation selector in DOM attribute "
                     f"reference: {attribute}={value!r}"
                 )
-        command_tokens = {
-            token.lower() for token in DOM_COMMAND_TOKEN.findall(value)
-        }
+        command_tokens = _identifier_tokens(value)
         prohibited_commands = command_tokens & FORBIDDEN_B503_DOM_COMMAND_TOKENS
         if prohibited_commands:
             raise CheckError(
