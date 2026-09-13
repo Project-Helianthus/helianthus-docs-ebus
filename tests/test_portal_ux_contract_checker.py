@@ -123,6 +123,8 @@ def test_rejects_contract_regressions(old: str, new: str) -> None:
         'aria-label="DeleteServiceHistory"',
         'id="resetbutton"',
         'id="clearerrorhistorybutton"',
+        'id="b503resetlink"',
+        'id="b503resetmenuitem"',
     ),
 )
 def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -> None:
@@ -167,6 +169,7 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
         'id="x_02020control"',
         'id="presetbutton"',
         'id="clearancebutton"',
+        'id="b503presetlink"',
     ),
 )
 def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:
@@ -270,6 +273,7 @@ def test_rejects_protected_selector_in_every_parsed_dom_component(snippet: str) 
         "main GraphQL failure allows the other route.",
         "main GraphQL falls back to REST.",
         "main GraphQL failure: use MCP instead.",
+        "main GraphQL uses REST as a fallback.",
     ),
 )
 def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> None:
@@ -279,6 +283,7 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
 def test_accepts_negative_b503_main_graphql_fallback_clause() -> None:
     accepts_target_insertion("main GraphQL failure does not allow REST fallback.")
     accepts_target_insertion("main GraphQL does not fall back to REST.")
+    accepts_target_insertion("main GraphQL does not use REST as a fallback.")
 
 
 def test_rejects_availability_selector_swap() -> None:

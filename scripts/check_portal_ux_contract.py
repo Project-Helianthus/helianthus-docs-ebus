@@ -143,8 +143,10 @@ DOM_SELECTOR_TOKEN = re.compile(
 )
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
 COMPACT_PROHIBITED_COMMAND = re.compile(
-    r"^(?:b503)?(?:clear(?:errorhistory|servicehistory)?|delete|reset)"
-    r"(?:button|action|control)?$",
+    r"^(?:"
+    r"b503(?:delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
+    r"|(?:clearerrorhistory|clearservicehistory|delete|reset)[a-z0-9]*"
+    r")$",
     re.IGNORECASE,
 )
 INLINE_CODE_FRAGMENT = re.compile(r"\x60([^\x60\n]+)\x60")
@@ -174,6 +176,12 @@ B503_FALLBACK_CONTRADICTIONS = (
         r"(?: failure| fails| is unavailable)?[,:; ]+"
         r"(?:the browser )?(?:may )?use "
         r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route) instead\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)? uses "
+        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route) "
+        r"as a fallback\b",
         re.IGNORECASE,
     ),
 )
