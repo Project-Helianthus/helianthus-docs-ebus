@@ -33,6 +33,8 @@ hardware work, or SemReg cutover.
 | Selector-normalization correction tree | `7c198991457975b42dcecc05fbb597e6421be5a7` |
 | B503-boundaries correction commit | `dedf448ed98aaec456f9503198184ecc8c9744a0` |
 | B503-boundaries correction tree | `de950cd6df8a010e0c9cc957bc9f516c2b566913` |
+| DOM-reference correction commit | `371ada15aace19293f7fa1896707d1b563a45b2d` |
+| DOM-reference correction tree | `5782442ed96b09083f927b5ada103e056fed316a` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -66,10 +68,11 @@ hardware work, or SemReg cutover.
   projection-card admission to `AVAILABLE` only, and binds History to typed
   B503 GraphQL records for the selected target while prohibiting label or
   retained-aggregate inference.
-- DOM `data-selector` and `data-command` values are structurally normalized
-  before comparison, so the prohibited installation selectors are rejected in
-  spaced, `0x`-prefixed, compact, or hyphenated hexadecimal forms without
-  scanning unrelated prose or attributes.
+- Every parsed DOM attribute value is structurally inspected. Protected
+  installation selectors are normalized across spaced, `0x`-prefixed, compact,
+  and hyphenated hexadecimal forms, including embedded `id`, `value`,
+  `data-testid`, and `hidden` values. Command words are matched as exact
+  attribute-value tokens, leaving harmless prose and substrings untouched.
 - The target section mechanically requires named keyboard-accessible B503 tabs
   and session status, Gateway-owned reconnect/error presentation without
   browser action replay or route switching, and target-address plus frontend
@@ -96,8 +99,9 @@ hardware work, or SemReg cutover.
   implementation language, vendor branching, lost action-time confirmation,
   expanded availability tables, projection-card admission outside `AVAILABLE`,
   and untyped or inferred History semantics, including normalized protected
-  selectors in relevant DOM attribute references, or missing accessibility,
-  reconnect/error, and frontend-epoch guarantees.
+  selectors in every DOM attribute reference, exact command tokens, and missing
+  accessibility, reconnect/error, or frontend-epoch guarantees. The same
+  regression matrix accepts command-word substrings and ordinary prose.
 
 ## Validation
 
@@ -137,6 +141,10 @@ The complete selector-normalization correction CI log for commit `a237d04` is
 The complete B503-boundaries correction CI log for commit `dedf448` is
 `/tmp/docs523-b503-boundaries-dedf448-ci.log`, SHA-256
 `6eb5390369cc66343886fc567a28184ea9e377b222d0362cb87acc252763fab0`.
+
+The complete DOM-reference correction CI log for commit `371ada1` is
+`/tmp/docs523-dom-references-371ada1-ci.log`, SHA-256
+`27fab771dea88fe79d826a010912ad8bfa5f2275cef49e21de05a2a61c9ad2f7`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
