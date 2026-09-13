@@ -8,6 +8,8 @@ import pathlib
 import re
 import sys
 
+from markdown_it import MarkdownIt
+
 
 DOC = pathlib.Path("api/portal.md")
 TARGET_START = "## Contribution-Driven Portal Contract V1 (INT-10 Target)"
@@ -216,19 +218,6 @@ INLINE_CODE_ATTRIBUTE = re.compile(
     r"(?<![A-Za-z0-9_:.-])([A-Za-z_:][A-Za-z0-9_:.-]*)\s*=\s*"
     r"(?:\"([^\"]*)\"|'([^']*)'|([^\s]+))"
 )
-MARKDOWN_INLINE_LINK = re.compile(
-    r"!?\[([^\]\n]*)\]\(([^)\n]*)\)", re.IGNORECASE
-)
-MARKDOWN_REFERENCE_LINK = re.compile(
-    r"!?\[([^\]\n]+)\]\[([^\]\n]*)\]", re.IGNORECASE
-)
-MARKDOWN_REFERENCE_DEFINITION = re.compile(
-    r"(?m)^[ \t]{0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]+)>|(\S+))"
-    r"(?:[ \t]+(?:\"([^\"\n]*)\"|'([^'\n]*)'|\(([^)\n]*)\)))?[ \t]*$"
-)
-MARKDOWN_SHORTCUT_REFERENCE = re.compile(
-    r"!?\[([^\]\n]+)\](?![\[(]|[ \t]*:)", re.IGNORECASE
-)
 DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
     r"^(?:id|class|for|hidden|name|role|title|value|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+|on[a-z][A-Za-z0-9_:.-]*)$",
     re.IGNORECASE,
@@ -237,49 +226,47 @@ HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
     "meta", "param", "source", "track", "wbr",
 ))
-B503_FALLBACK_CONTRADICTIONS = (
-    re.compile(
-        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)? "
-        r"(?:failure|fails|is unavailable) (?:allows|allowing|may use) "
-        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)?(?: failure)? "
-        r"(?:falls?|falling) back to "
-        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)?"
-        r"(?: failure| fails| is unavailable)?[,:; ]+"
-        r"(?:the browser )?(?:may )?use "
-        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route) instead\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)? uses "
-        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route) "
-        r"as a fallback\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\b(?:if|when|after) (?:the )?main "
-        r"(?:GraphQL|\x60POST /graphql\x60)(?: route)? "
-        r"(?:fails|is unavailable|has failed)[,:; ]+"
-        r"(?:the browser )?(?:retries?|switches?|reroutes?|routes?) "
-        r"(?:via|to|through) "
-        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)? "
-        r"(?:failure[,:; ]+)?(?:retries?|switches?|reroutes?|routes?) "
-        r"(?:via|to|through) "
-        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route)\b",
-        re.IGNORECASE,
-    ),
+B503_ROUTE_SURFACE_MARKERS = (
+    "rest",
+    "mcp",
+    "native i/o",
+    "/graphql/portal/v1",
+    "portalcatalogv1",
+    "portalactioninvokev1",
+    "post /graphql",
+    "other route",
 )
+B503_ROUTE_SURFACE_PARAGRAPHS = (
+    "The browser obtains the catalog read model only through `POST /graphql/portal/v1`\n"
+    "and the fixed `PortalCatalogV1` operation. The only action operation on that\n"
+    "route is `PortalActionInvokeV1`; it is governed by the action-admission rules\n"
+    "below. No B503 operation is admitted on this route.\n"
+    "For this B503 UX there is no REST compatibility shim, no alternate Portal API\n"
+    "route, no dual semantic publication, and no direct MCP/native fallback.\n"
+    "The host does not use a central vendor switch or an arbitrary-English parser to\n"
+    "recover a contribution, field state, or action meaning.",
+    "Every rendered field is identified by its contribution identity, resource ID,\n"
+    "field ID, exact SemReg field `DefinitionRef`, service `DefinitionRef`,\n"
+    "capability `DefinitionRef`, and canonical-unit `DefinitionRef`. A B503 card\n"
+    "can display only a field admitted through this chain. It must show the\n"
+    "Gateway-supplied lifecycle, freshness, projection-loss, quality, and provenance\n"
+    "state; it cannot reconstruct any of them from a label, a historical aggregate,\n"
+    "or a raw MCP response.",
+    "The `Vaillant B503` card is a contribution-driven section-projection card. It\n"
+    "appears only for an admitted selected resource whose B503 capability state is\n"
+    "`AVAILABLE`; it identifies the selected target and enters the B503 perspective\n"
+    "without creating another B503 data model. Target selection is resource-scoped.\n"
+    "Every target-bearing B503 read or session request uses only the main public\n"
+    "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\n"
+    "graduation/parity contract. These operations are not `PortalCatalogV1` or\n"
+    "`PortalActionInvokeV1` operations, and they do not call `/graphql/portal/v1`:",
+    "The catalog/action route and the B503 route are an exclusive operation-to-route\n"
+    "split, not a fallback or compatibility shim. The B503 route does not expand the\n"
+    "accepted #974 catalog/action endpoint. If either fixed route is unavailable,\n"
+    "the UI renders the Gateway-supplied unavailable state and does not try the\n"
+    "other route, REST, MCP, or native I/O.",
+)
+MARKDOWN = MarkdownIt("commonmark")
 
 
 class CheckError(ValueError):
@@ -398,39 +385,109 @@ def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | N
     return parser.elements
 
 
-def _markdown_reference_key(value: str) -> str:
-    return re.sub(r"\s+", " ", value.strip()).casefold()
+def _target_inline_tokens(document: str) -> list[object]:
+    """Parse once so CommonMark resolves document-scoped references correctly."""
+    start = document.index(TARGET_START)
+    end = document.index(TARGET_END, start)
+    start_line = document.count("\n", 0, start)
+    end_line = document.count("\n", 0, end)
+    return [
+        token
+        for token in MARKDOWN.parse(document)
+        if token.type == "inline"
+        and token.map is not None
+        and start_line <= token.map[0] < end_line
+    ]
 
 
-def _markdown_dom_references(target: str, document: str) -> list[tuple[str, str]]:
+def _rendered_children(children: list[object] | None) -> str:
+    rendered: list[str] = []
+    for child in children or ():
+        if child.type in ("text", "text_special", "code_inline"):
+            rendered.append(child.content)
+        elif child.type == "image":
+            rendered.append(_rendered_children(child.children))
+        elif child.type in ("softbreak", "hardbreak"):
+            rendered.append("\n")
+        # Formatting and raw HTML tags have no rendered text of their own. Text
+        # nested between raw inline tags is emitted as adjacent text tokens.
+    return "".join(rendered)
+
+
+def _markdown_dom_references(document: str) -> list[tuple[str, str]]:
     references: list[tuple[str, str]] = []
-    definitions: dict[str, tuple[str, str | None]] = {}
-    for match in MARKDOWN_REFERENCE_DEFINITION.finditer(document):
-        destination = match.group(2) or match.group(3)
-        title = next(
-            (value for value in match.groups()[3:] if value is not None), None
-        )
-        definitions[_markdown_reference_key(match.group(1))] = (destination, title)
-    for match in MARKDOWN_INLINE_LINK.finditer(target):
-        references.append(("Markdown link/image label", match.group(1)))
-        references.append(("Markdown link/image destination", match.group(2)))
-    for match in MARKDOWN_REFERENCE_LINK.finditer(target):
-        key = _markdown_reference_key(match.group(2) or match.group(1))
-        if key in definitions:
-            destination, title = definitions[key]
-            references.append(("Markdown reference link/image label", match.group(1)))
-            references.append(("Markdown reference destination", destination))
-            if title is not None:
-                references.append(("Markdown reference title", title))
-    for match in MARKDOWN_SHORTCUT_REFERENCE.finditer(target):
-        key = _markdown_reference_key(match.group(1))
-        if key in definitions:
-            destination, title = definitions[key]
-            references.append(("Markdown shortcut link/image label", match.group(1)))
-            references.append(("Markdown shortcut destination", destination))
-            if title is not None:
-                references.append(("Markdown shortcut title", title))
+    for inline in _target_inline_tokens(document):
+        children = inline.children or ()
+        link_labels: list[list[str]] = []
+        for child in children:
+            if child.type == "link_open":
+                link_labels.append([])
+                references.append(("Markdown link destination", child.attrGet("href") or ""))
+                title = child.attrGet("title")
+                if title is not None:
+                    references.append(("Markdown link title", title))
+                continue
+            if child.type == "link_close":
+                if link_labels:
+                    references.append(("Markdown link label", "".join(link_labels.pop())))
+                continue
+            if child.type == "image":
+                references.append(("Markdown image alt", _rendered_children(child.children)))
+                references.append(("Markdown image destination", child.attrGet("src") or ""))
+                title = child.attrGet("title")
+                if title is not None:
+                    references.append(("Markdown image title", title))
+            if link_labels:
+                link_labels[-1].append(_rendered_children([child]))
     return references
+
+
+def _normalized_rendered(value: str) -> str:
+    return " ".join(value.split()).casefold()
+
+
+def _normalized_commonmark_paragraph(value: str) -> str:
+    inlines = [token for token in MARKDOWN.parse(value) if token.type == "inline"]
+    if len(inlines) != 1:
+        raise AssertionError("frozen route surface must be exactly one paragraph")
+    return _normalized_rendered(_rendered_children(inlines[0].children))
+
+
+def _mentions_route_surface(value: str) -> bool:
+    return (
+        re.search(r"\b(?:REST|MCP)\b", value, re.IGNORECASE) is not None
+        or any(
+            marker in value.casefold()
+            for marker in B503_ROUTE_SURFACE_MARKERS[2:]
+        )
+    )
+
+
+def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
+    expected = [
+        _normalized_commonmark_paragraph(value)
+        for value in B503_ROUTE_SURFACE_PARAGRAPHS
+    ]
+    found: list[str] = []
+    for inline in _target_inline_tokens(document):
+        visible = _rendered_children(inline.children)
+        if _mentions_route_surface(visible):
+            found.append(_normalized_rendered(visible))
+    if found != expected:
+        raise CheckError(
+            "api/portal.md: B503 route surfaces must remain confined to the four "
+            "frozen route/provenance paragraphs"
+        )
+
+
+def _reject_installation_selectors_in_target(document: str) -> None:
+    for inline in _target_inline_tokens(document):
+        rendered = _rendered_children(inline.children)
+        if _selector_tokens(unescape(rendered)) & FORBIDDEN_INSTALLATION_SELECTORS:
+            raise CheckError(
+                "api/portal.md: B503 installation selectors 0201/0202 must not "
+                "appear in the public target section"
+            )
 
 
 def _inline_code_dom_attributes(target: str) -> list[tuple[str, str]]:
@@ -452,7 +509,7 @@ def _inline_code_dom_attributes(target: str) -> list[tuple[str, str]]:
 
 
 def _reject_prohibited_dom_references(target: str, document: str) -> None:
-    for context, value in _markdown_dom_references(target, document):
+    for context, value in _markdown_dom_references(document):
         _reject_prohibited_dom_component(context, value)
     for attribute, value in _inline_code_dom_attributes(target):
         _reject_prohibited_dom_component("inline-code attribute name", attribute)
@@ -487,11 +544,8 @@ def validate_text(text: str) -> None:
                 "api/portal.md: forbidden B503 session-state contradiction: "
                 f"{fragment!r}"
             )
-    for contradiction in B503_FALLBACK_CONTRADICTIONS:
-        if contradiction.search(target):
-            raise CheckError(
-                "api/portal.md: affirmative B503 main-GraphQL fallback contradiction"
-            )
+    _reject_unapproved_route_surface_paragraphs(text)
+    _reject_installation_selectors_in_target(text)
     _reject_prohibited_dom_references(target, text)
     expected_availability_rows = list(AVAILABILITY_ROWS.values())
     if _availability_table_rows(target) != expected_availability_rows:

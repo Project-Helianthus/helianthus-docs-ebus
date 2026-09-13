@@ -77,6 +77,12 @@ def test_rejects_install_write_non_exposure_copied_outside_normative_section() -
         "`02 01` SHOULD be exposed by Portal.",
         "0202 SHALL be published by the public GraphQL surface.",
         "selector 02-01 WILL be offered by Home Assistant.",
+        "Portal MUST make selector 02 01 available.",
+        "GraphQL SHALL surface 0202.",
+        "MCP MUST provide a control for 02-02.",
+        "`02 01` SHOULD be made available through Portal.",
+        "0202 WILL be supported by Home Assistant.",
+        "Portal permits exposing 02 01.",
     ),
 )
 def test_rejects_affirmative_install_write_exposure_inside_normative_section(
@@ -91,21 +97,21 @@ def test_rejects_affirmative_install_write_exposure_inside_normative_section(
         CHECKER.validate_text(text)
 
 
-def test_accepts_negative_install_write_non_exposure_inside_normative_section() -> None:
-    clause = "The public GraphQL surface MUST NOT expose `02 01` and `02 02`."
+@pytest.mark.parametrize(
+    "clause",
+    (
+        "The public GraphQL surface MUST NOT expose `02 01` and `02 02`.",
+        "`02 01` MUST NOT be exposed by Portal.",
+    ),
+)
+def test_rejects_duplicate_noncanonical_install_write_clause(clause: str) -> None:
     text = contract().replace(
         CHECKER.INSTALL_WRITE_SECTION_END,
         f"{clause}\n\n{CHECKER.INSTALL_WRITE_SECTION_END}",
         1,
     )
-    CHECKER.validate_text(text)
-    negative_passive = "`02 01` MUST NOT be exposed by Portal."
-    text = contract().replace(
-        CHECKER.INSTALL_WRITE_SECTION_END,
-        f"{negative_passive}\n\n{CHECKER.INSTALL_WRITE_SECTION_END}",
-        1,
-    )
-    CHECKER.validate_text(text)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
 
 
 @pytest.mark.parametrize(

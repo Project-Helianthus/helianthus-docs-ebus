@@ -47,9 +47,25 @@ M3_PORTAL = (
 INSTALL_WRITE_NON_EXPOSURE = (
     "> **`02 01` and `02 02` MUST NOT be exposed on any public surface in v1.**"
 )
-INSTALL_WRITE_SELECTOR_PATTERN = (
-    r"(?<![0-9A-Za-z])`?(?:0x)?02(?:\s*[-_/:]\s*|\s+)?"
-    r"(?:0x)?0[12]`?(?![0-9A-Za-z])"
+INSTALL_WRITE_SECTION = (
+    "## 9. Install-Writes Non-Exposure (v1 invariant)\n\n"
+    "`Clearerrorhistory` (selector `02 01`) and `Clearservicehistory` (selector\n"
+    "`02 02`) are classified `INSTALL_WRITE` (§4) and are subject to the following\n"
+    "normative v1 invariant:\n\n"
+    "> **`02 01` and `02 02` MUST NOT be exposed on any public surface in v1.**\n"
+    "> This includes, without exception, MCP tools, GraphQL mutations, portal UI\n"
+    "> affordances (including hidden / feature-flagged DOM), and Home Assistant\n"
+    "> services.\n\n"
+    "Enforcement:\n\n"
+    "- `M2a_GATEWAY_MCP` acceptance includes a negative test asserting no MCP tool\n"
+    "  exists for these selectors.\n"
+    "- `M2b_GATEWAY_GRAPHQL` acceptance includes a schema introspection diff\n"
+    "  asserting no mutation exists for these selectors.\n"
+    "- `M3_PORTAL` acceptance includes a DOM audit scanning for any element\n"
+    "  referencing `clear`, `delete`, or `reset` keywords in the B503 pane.\n\n"
+    "Any future exposure of these selectors requires a **separate plan** and a new\n"
+    "doc-gate PR per `AGENTS.md §8.4`, including installer-mode authentication\n"
+    "design and isolated-hardware bench evidence.\n\n"
 )
 REFRESHING_CAPABILITY_TRUTH_ROW = (
     "7",
@@ -58,30 +74,6 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
     "all live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` "
     "and `vaillantLiveMonitorSession` status queries remain admitted, with no B503 "
     "card, tabs, bus-facing reads, or actions until capability returns `AVAILABLE`",
-)
-AFFIRMATIVE_INSTALL_WRITE_EXPOSURE = (
-    re.compile(
-        r"\b(?:the\s+)?(?:public\s+)?(?:GraphQL|MCP|portal|Home\s+Assistant|HA|API)"
-        r"\b[^.\n]{0,48}?\b"
-        r"(?:MAY|MUST|CAN|SHOULD|SHALL|WILL)\s+"
-        r"(?:expose|publish|offer)\s+(?:selector\s+)?"
-        + INSTALL_WRITE_SELECTOR_PATTERN,
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\b(?:the\s+)?public\s+surface\s+"
-        r"(?:MAY|MUST|CAN|SHOULD|SHALL|WILL)\s+"
-        r"(?:expose|publish|offer)\s+(?:selector\s+)?"
-        + INSTALL_WRITE_SELECTOR_PATTERN,
-        re.IGNORECASE,
-    ),
-    re.compile(
-        INSTALL_WRITE_SELECTOR_PATTERN
-        + r"\s+(?:MAY|MUST|CAN|SHOULD|SHALL|WILL)\s+be\s+"
-        r"(?:exposed|published|offered)\s+by\s+(?:the\s+)?(?:public\s+)?"
-        r"(?:GraphQL|MCP|portal|Home\s+Assistant|HA|API)\b",
-        re.IGNORECASE,
-    ),
 )
 CURRENT_PUBLIC_SESSION_AUTHORITY = (
     "**Current public session authority.** The five-state public session contract in\n"
@@ -364,14 +356,11 @@ def validate_text(text: str) -> None:
     install_write_section = _section(
         text, INSTALL_WRITE_SECTION_START, INSTALL_WRITE_SECTION_END
     )
-    if INSTALL_WRITE_NON_EXPOSURE not in install_write_section:
+    if install_write_section != INSTALL_WRITE_SECTION:
         raise CheckError(
-            f"missing required §9 B503 public non-exposure fragment: "
-            f"{INSTALL_WRITE_NON_EXPOSURE!r}"
+            "§9 B503 installation-write classification, prohibition, enforcement, "
+            "and future-plan boundary must remain exact"
         )
-    for pattern in AFFIRMATIVE_INSTALL_WRITE_EXPOSURE:
-        if pattern.search(install_write_section):
-            raise CheckError("affirmative §9 B503 installation-write exposure")
 
     truth_rows = _capability_truth_table_rows(text)
     if [row for row in truth_rows if row[0] == "7"] != [REFRESHING_CAPABILITY_TRUTH_ROW]:

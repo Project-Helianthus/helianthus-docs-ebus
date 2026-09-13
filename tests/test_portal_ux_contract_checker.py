@@ -187,8 +187,8 @@ def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> No
     accepts_target_insertion(dom_with_attribute(attribute))
 
 
-def test_accepts_harmless_prose_outside_dom_attribute_references() -> None:
-    accepts_target_insertion(
+def test_rejects_installation_selector_even_in_prose() -> None:
+    rejects_target_insertion(
         "A preset is clearly available; 0201, query=reset, and action = delete are prose."
     )
 
@@ -233,6 +233,22 @@ def test_accepts_safe_markdown_link_and_image() -> None:
         "[Details][] [Topology]\n\n[Details]: #details\n[Topology]: topology.svg"
     )
     accepts_target_insertion("[Read stat&#x75;s](#status)")
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    (
+        "[Re<i></i>set](#safe)",
+        "![02<i></i>01](safe.svg)",
+        "[Read](https://example.test/(safe)/reset)",
+        "[Read][duplicate]\n\n[duplicate]: #safe \"Reset\"\n[duplicate]: #safe",
+        "[Read][multiline]\n\n[multiline]: #safe\n  \"Reset\"",
+    ),
+)
+def test_commonmark_ast_rejects_renderer_equivalent_control_bypass(
+    snippet: str,
+) -> None:
+    rejects_target_insertion(snippet)
 
 
 @pytest.mark.parametrize(
@@ -408,14 +424,37 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
     rejects_target_insertion(clause)
 
 
-def test_accepts_negative_b503_main_graphql_fallback_clause() -> None:
-    accepts_target_insertion("main GraphQL failure does not allow REST fallback.")
-    accepts_target_insertion("main GraphQL does not fall back to REST.")
-    accepts_target_insertion("main GraphQL does not use REST as a fallback.")
-    accepts_target_insertion(
-        "If the main GraphQL route fails, the browser does not retry via REST."
-    )
-    accepts_target_insertion("main GraphQL does not switch to MCP.")
+@pytest.mark.parametrize(
+    "clause",
+    (
+        "main GraphQL failure does not allow REST fallback.",
+        "main GraphQL does not fall back to REST.",
+        "main GraphQL does not use REST as a fallback.",
+        "If the main GraphQL route fails, the browser does not retry via REST.",
+        "main GraphQL does not switch to MCP.",
+        "main GraphQL fails over to REST.",
+        "main GraphQL retries via `REST`.",
+        "main GraphQL switches from `POST /graphql` to `POST /graphql/portal/v1`.",
+        "main GraphQL retries through `PortalCatalogV1`.",
+        "main GraphQL is rerouted through MCP.",
+        "main GraphQL uses `PortalActionInvokeV1` after failure.",
+    ),
+)
+def test_rejects_any_extra_b503_route_surface_clause(clause: str) -> None:
+    rejects_target_insertion(clause)
+
+
+@pytest.mark.parametrize(
+    "clause",
+    (
+        "Portal MUST make selector 02 01 available.",
+        "GraphQL SHALL surface 0202.",
+        "MCP MUST provide a control for 02-02.",
+        "`02 01` SHOULD be made available through Portal.",
+    ),
+)
+def test_rejects_installation_selector_in_every_normative_form(clause: str) -> None:
+    rejects_target_insertion(clause)
 
 
 def test_rejects_availability_selector_swap() -> None:
