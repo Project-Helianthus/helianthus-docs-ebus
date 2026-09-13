@@ -73,8 +73,14 @@ def test_accepts_current_portal_ux_contract() -> None:
          "Target-switch cleanup is optional."),
         ("For an `ENABLING` prior target,\nthe browser registers that same target-specific disable at switch time and\ndispatches it immediately when the locally initiated enable completes with its\nissuer token.",
          "An ENABLING prior target waits for passive timeout."),
+        ("Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
+         "Target changes retain current presentation state."),
+        ("Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
+         "Late completion behavior is unspecified."),
         ("never disables a gate-held session without a\nlocally held issuer token.",
          "disables a gate-held session based only on owned."),
+        ("Leaving the B503 perspective uses the same locally-token-bound cleanup\nrule as target switching.",
+         "Leaving the B503 perspective retains the session."),
     ),
 )
 def test_rejects_contract_regressions(old: str, new: str) -> None:
