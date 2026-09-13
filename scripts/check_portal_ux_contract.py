@@ -304,12 +304,18 @@ def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | N
 def _inline_code_dom_attributes(target: str) -> list[tuple[str, str]]:
     attributes: list[tuple[str, str]] = []
     for fragment in INLINE_CODE_FRAGMENT.findall(target):
-        for match in INLINE_CODE_ATTRIBUTE.finditer(fragment):
-            attribute = match.group(1)
-            if DOM_RELEVANT_ATTRIBUTE_NAME.fullmatch(attribute) is None:
-                continue
-            value = next(group for group in match.groups()[1:] if group is not None)
-            attributes.append((attribute, value))
+        parsed = [
+            (
+                match.group(1),
+                next(group for group in match.groups()[1:] if group is not None),
+            )
+            for match in INLINE_CODE_ATTRIBUTE.finditer(fragment)
+        ]
+        if any(
+            DOM_RELEVANT_ATTRIBUTE_NAME.fullmatch(attribute) is not None
+            for attribute, _ in parsed
+        ):
+            attributes.extend(parsed)
     return attributes
 
 

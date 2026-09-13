@@ -212,7 +212,9 @@ def test_rejects_dom_relevant_attribute_inside_multi_attribute_inline_code(
     rejects_target_insertion(inline_code(fragment))
 
 
-@pytest.mark.parametrize("fragment", ("query=reset", "action = delete"))
+@pytest.mark.parametrize(
+    "fragment", ('query=reset onclick="reset()"', "action = delete")
+)
 def test_accepts_non_dom_inline_code_assignment(fragment: str) -> None:
     accepts_target_insertion(inline_code(fragment))
 
@@ -220,12 +222,24 @@ def test_accepts_non_dom_inline_code_assignment(fragment: str) -> None:
 @pytest.mark.parametrize(
     "fragment",
     (
-        'query=reset title="safe"',
-        'data-testid="b503-safe" aria-label="Preset"',
+        'query=preview title="safe"',
+        'data-testid="b503-safe" onclick="preview()"',
     ),
 )
 def test_accepts_safe_multi_attribute_inline_code(fragment: str) -> None:
     accepts_target_insertion(inline_code(fragment))
+
+
+@pytest.mark.parametrize(
+    "fragment",
+    (
+        'data-testid="b503-safe" onclick="reset()"',
+        'aria-label="safe" oncommand="delete()"',
+        'title="safe" data-command="02-01"',
+    ),
+)
+def test_rejects_every_attribute_after_inline_dom_marker(fragment: str) -> None:
+    rejects_target_insertion(inline_code(fragment))
 
 
 @pytest.mark.parametrize(
