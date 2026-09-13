@@ -23,6 +23,8 @@ hardware work, or SemReg cutover.
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
 | Availability/switch correction commit | `5f5868c38e7c2ca9af69ac9b76dcb7dd606c7c4d` |
 | Availability/switch correction tree | `063cdb2118e68ddf4be5602cbd249b3c3cdcd8bd` |
+| Target-section correction commit | `e3fa1b544b5a83f540da0f2e49289e27b11db170` |
+| Target-section correction tree | `0af507bd9404d7ac91533798eacb9e1e2e0797b5` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -49,10 +51,14 @@ hardware work, or SemReg cutover.
 - The main B503 GraphQL route also names graduated
   `vaillantErrorsHistory(targetAddress:limit:)` and
   `vaillantLiveMonitorSession(targetAddress:)` operations.
+- Every required INT-10 fragment is checked only within that target section;
+  globally forbidden stale implementation wording remains checked over the
+  whole document. The 36th regression moves a safety fragment after
+  `TARGET_END` and requires rejection.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 35 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 36 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -64,7 +70,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 35 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 36 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -75,6 +81,10 @@ The complete correction-CI log for corrected contract commit `5443075` is
 The complete availability/switch correction CI log for commit `5f5868c` is
 `/tmp/docs523-row-switch-5f5868c-ci.log`, SHA-256
 `8b1b9e5d6e2d9f918024950937f35365fa41cb493c69e656ce72c1be3eba1eb5`.
+
+The complete target-section correction CI log for commit `e3fa1b5` is
+`/tmp/docs523-target-scope-e3fa1b5-ci.log`, SHA-256
+`7dd787ac56083380913980b9d3a84242ca772bfe3e24fbb7f0d451c889f5d32b`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
