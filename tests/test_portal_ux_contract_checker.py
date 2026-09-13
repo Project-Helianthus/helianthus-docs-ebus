@@ -175,6 +175,8 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
         'id="b503presetlink"',
         'id="b503clearance"',
         'id="clearlyAvailable"',
+        'id="clearfix"',
+        'id="clearfixbutton"',
     ),
 )
 def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:
@@ -368,6 +370,23 @@ def test_rejects_history_label_or_aggregate_inference() -> None:
         CHECKER.SELECTED_TARGET_TYPED_HISTORY,
         "The History tab may infer history from labels or retained aggregate data.",
     )
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "The strip states are `Idle`, `Enabling`, `Active`, and `Disabled`.",
+    ),
+)
+def test_rejects_incomplete_b503_refreshing_state_contract(
+    replacement: str,
+) -> None:
+    rejects(CHECKER.B503_SESSION_STATE_CONTRACT, replacement)
+
+
+@pytest.mark.parametrize("clause", CHECKER.FORBIDDEN_B503_SESSION_STATE_CLAUSES)
+def test_rejects_unsafe_b503_refreshing_state_contradiction(clause: str) -> None:
+    rejects_target_insertion(clause)
 
 
 @pytest.mark.parametrize(

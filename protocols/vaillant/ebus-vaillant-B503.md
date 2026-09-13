@@ -169,9 +169,12 @@ governing how this decimal is surfaced to consumers.
 ### 6.1 State machine (plan AD04)
 
 The gateway runs a single-owner FSM per transport incarnation for selector
-`00 03` (HMU `LiveMonitorMain`). `EXPIRED` is an **internal** sub-state
-emitted only after the transport epoch advances under an in-flight owner
-handle; it MUST NOT appear on any public surface (§7.1.1, §8, §11).
+`00 03` (HMU `LiveMonitorMain`). The public session observation has exactly
+five stable states: `Idle`, `Enabling`, `Active`, `Refreshing`, and `Disabled`.
+`Refreshing` means an epoch refresh holds the ownership gate and all
+live-monitor operations are busy. Refresh success returns `Active`; refresh
+failure releases the gate and returns `Idle`. `Disabled` is never reported with
+`owned:true`.
 
 ```mermaid
 stateDiagram-v2
@@ -183,13 +186,13 @@ stateDiagram-v2
     ACTIVE --> DISABLED: 30s idle timer
     DISABLED --> IDLE: owner cleanup complete
 
-    ACTIVE --> EXPIRED: reconnect / epoch mismatch
-    EXPIRED --> ACTIVE: resolver refresh + retry (success)
-    EXPIRED --> DISABLED: refresh reveals TRANSPORT_DOWN
-    EXPIRED --> DISABLED: refresh reveals UNKNOWN
+    ACTIVE --> REFRESHING: reconnect / epoch refresh
+    REFRESHING --> ACTIVE: refresh succeeds
+    REFRESHING --> DISABLED: refresh failure releases gate
 
-    note right of EXPIRED
-      Internal-only. Never surfaced publicly.
+    note right of REFRESHING
+      Stable public session state; ownership gate held.
+      All live-monitor operations are busy.
       Retry budget: exactly 1 per request.
     end note
 ```
@@ -214,10 +217,10 @@ Rules (normative):
 
 | Operation | Required key match | Outcome on mismatch |
 |---|---|---|
-| ENABLE | none (new claim) | succeeds iff FSM is `IDLE`; if any session already `ENABLING`/`ACTIVE`/`EXPIRED` under a different `issuer_token` → `SESSION_BUSY` |
-| DISABLE | full `session_key` must match the active session | `SESSION_BUSY` (caller does not own the session) — prevents session hijacking between clients on the same transport |
-| READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE` — physically there is only one data stream on the bus; denying reads to non-owning clients would serve no safety purpose |
-| Epoch advance under any handle | — | handle → `EXPIRED` (internal); resolver refresh per §7.3 |
+| ENABLE | none (new claim) | succeeds iff FSM is `IDLE`; if any session is already `ENABLING`/`ACTIVE`/`REFRESHING` → `SESSION_BUSY` |
+| DISABLE | full `session_key` must match the active session | `SESSION_BUSY` while `REFRESHING`, or when caller does not own the session — prevents session hijacking between clients on the same transport |
+| READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE`; all live-monitor operations are `SESSION_BUSY` while `REFRESHING` |
+| Epoch advance under any handle | — | held handle → `REFRESHING`; refresh once per §7.3 |
 
 The `issuer_token` is opaque to clients; it MUST NOT be derived from
 user-visible identifiers, and MUST be sufficient entropy that a second
@@ -241,19 +244,18 @@ access.
 | `ACTIVE` | read request | `ACTIVE` | reset idle timer |
 | `ACTIVE` | explicit disable | `DISABLED` | emit disable frame after quiesce |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable frame after quiesce |
-| `ACTIVE` | epoch advance detected | `EXPIRED` | internal; trigger refresh-once |
-| `EXPIRED` | refresh succeeds | `ACTIVE` | resume; retry budget consumed |
-| `EXPIRED` | refresh → `TRANSPORT_DOWN` | `DISABLED` | surface `TRANSPORT_DOWN` (NOT `SESSION_BUSY`) |
-| `EXPIRED` | refresh → `UNKNOWN` | `DISABLED` | surface `UNKNOWN` (NOT `SESSION_BUSY`) |
+| `ACTIVE` | epoch advance detected | `REFRESHING` | ownership gate remains held; all live-monitor operations are busy |
+| `REFRESHING` | refresh succeeds | `ACTIVE` | resume; retry budget consumed |
+| `REFRESHING` | refresh failure | `IDLE` | release ownership gate; surface the Gateway-supplied failure outcome |
 | `DISABLED` | owner cleanup complete | `IDLE` | session may be re-claimed by any client |
 | any | transport disconnect | `DISABLED` | owner cleanup |
-| any | gateway restart | `DISABLED` | owner cleanup; session state is NOT recoverable across restart (no EXPIRED refresh path — restart destroys all handles) |
+| any | gateway restart | `DISABLED` | owner cleanup; session state is not recoverable across restart because restart destroys all handles |
 
 **Lock lifecycle (single assignment, owner-conditional):**
 `liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
 transition. It is released exactly once **on entry to `DISABLED` from a
 held-owner state** — i.e., when the source state is `ENABLING`, `ACTIVE`,
-or `EXPIRED`. The "any" transitions (transport disconnect, gateway
+or `REFRESHING`. The "any" transitions (transport disconnect, gateway
 restart) release the mutex only when FSM was in a held-owner state at the
 time the event fired; if the FSM was already `IDLE` or `DISABLED` (no
 owner), no release occurs. The `DISABLED → IDLE` transition does NOT
@@ -280,18 +282,19 @@ public `B503Availability` enum (§11) or map onto it:
 | `BUSY` (`SESSION_BUSY`) | Live-monitor session already claimed under a different `issuer_token`, OR bounded lifecycle/contention ambiguity. | Another client holds the session (ENABLE/DISABLE mismatch per §6.2); genuine contention that is not transport loss. |
 | `UNAVAILABLE` (`TRANSPORT_DOWN` / `UNKNOWN` / `NOT_SUPPORTED`) | Capability is not currently usable; distinguish reason per public enum (§11). | Transport disconnected; gateway has not yet determined availability; device class does not implement B503. |
 
-#### 7.1.1 Internal-only state (NOT public)
+#### 7.1.1 Refreshing session state (public)
 
-`EXPIRED` is a gateway-internal FSM sub-state (§6.1) and MUST NOT appear
-in any public MCP / GraphQL / portal / HA surface. It exists only inside
-the gateway and is consumed by the resolver refresh-once policy (§7.3):
+`Refreshing` is the stable Gateway-owned session observation for an epoch
+refresh (§6.1). It holds the ownership gate while the refresh runs, and all
+live-monitor operations surface `SESSION_BUSY` during that interval. It is a
+session-status value, not a sixth `B503Availability` reason:
 
-| Internal value | Where it lives | Public exposure |
+| Session value | Where it surfaces | Ownership and outcome |
 |---|---|---|
-| `EXPIRED` | gateway FSM only | **forbidden** — surfaces as `AVAILABLE` (after successful refresh), `BUSY`, or `UNAVAILABLE` per §8 normalization |
+| `Refreshing` | Gateway session status, GraphQL, and portal strip | `owned:true`; refresh success → `Active`; refresh failure releases the gate → `Idle` |
 
-Downstream contract tests (M2a, M2b) MUST assert that no public response
-ever carries `EXPIRED`; any such surface is a gateway bug.
+Downstream contract tests (M2a, M2b, M3) MUST assert the five stable session
+states and MUST reject `Disabled` paired with `owned:true`.
 
 ### 7.2 Quiesce timing bounds (normative)
 
@@ -308,9 +311,10 @@ live-monitor enable and disable frame. Bounds:
 
 ### 7.3 Retry and refresh
 
-- Maximum **1 auto-retry per request** on `EXPIRED`. No recursive or unbounded
+- Maximum **1 refresh attempt** per epoch advance. No recursive or unbounded
   retries.
-- On refresh success → retry once; then surface the retry outcome.
+- On refresh success → return to `Active`; on refresh failure → release the
+  ownership gate and return to `Idle`.
 - On refresh revealing `TRANSPORT_DOWN` or `UNKNOWN` → surface that value
   literally (§11). It MUST NOT be collapsed into `SESSION_BUSY`.
 - No infinite reconnect loops. Reconnect is driven by the transport layer, not
@@ -338,7 +342,7 @@ event fires**; they are no-ops when the FSM is already `IDLE` or
 ### 7.5 Reconnect handling
 
 - On reconnect, the `transport_incarnation_epoch` advances. Any surviving owner
-  handle from the prior incarnation is `EXPIRED` (internal) on next touch.
+  handle from the prior incarnation enters `Refreshing` on next touch.
 - The resolver applies the §7.3 refresh-once policy.
 - The gateway MUST NOT auto-resume a live-monitor session across transport
   incarnations. A new enable from the client is required.
@@ -374,8 +378,8 @@ The stable API (GraphQL `B503Availability` enum + MCP error code) exposes:
 - `SESSION_BUSY`
 - `UNKNOWN`
 
-`EXPIRED` is not a member of this enum and never appears in any public
-payload. See §8 for the normative normalization rules and §11 for the GraphQL
+`Refreshing` is a session-status value and not a member of this availability
+enum. See §8 for the normative normalization rules and §11 for the GraphQL
 capability-signal contract.
 
 ## 8. Public Normalization Rules
@@ -383,12 +387,13 @@ capability-signal contract.
 The following rules are normative and binding on every downstream consumer
 path (MCP resolvers, GraphQL resolvers, HA integration, portal).
 
-1. **EXPIRED is internal-only.** Internal state `EXPIRED` MUST NOT appear in
-   any public-facing enum, error model, or payload exposed to downstream
-   consumers (MCP, GraphQL, portal, Home Assistant).
-2. **Refresh-once on EXPIRED.** On `EXPIRED` detected inside a resolver, the
-   resolver MUST auto-refresh session state and retry the operation
-   **exactly once**.
+1. **Refreshing is session-specific.** `Refreshing` appears only in the stable
+   session observation, never as a sixth availability reason or as a substitute
+   for a Gateway error outcome.
+2. **Refresh once.** On epoch advance with a held session, Gateway transitions
+   to `Refreshing` and makes exactly one refresh attempt; live-monitor
+   operations are `SESSION_BUSY` until it returns to `Active` or releases to
+   `Idle`.
 3. **No collapse of transport/unknown outcomes.** After refresh, if the
    capability query reveals `TRANSPORT_DOWN` or `UNKNOWN`, those outcomes MUST
    be surfaced literally. They MUST NOT be collapsed into `SESSION_BUSY`.
@@ -477,7 +482,8 @@ enum B503Availability {
 }
 ```
 
-`EXPIRED` is **not** a member of this enum, per §8.
+`Refreshing` is a session-status value, not a member of this availability enum,
+per §8.
 
 ## 12. Production dispatcher contract
 
@@ -623,7 +629,7 @@ any row is an automatic merge-gate block.
 | 4 | reconnect, before first post-reconnect dispatch | `UNKNOWN` (NOT sticky `AVAILABLE`) | reset to `UNKNOWN` regardless of pre-disconnect state |
 | 5 | reconnect, post-first-success-after-reconnect | `AVAILABLE` | n/a |
 | 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known | n/a |
-| 7 | session-expiry detected | `EXPIRED` internal → AD14 1-retry → `AVAILABLE` OR `TRANSPORT_DOWN` literal | n/a |
+| 7 | held-session epoch refresh | `Refreshing` session state; all live-monitor operations are `SESSION_BUSY` until `Active` or `Idle` | n/a |
 | 8 | stale in-flight completion across epoch rollover | n/a — frame discarded | reply/NAK/timeout from epoch N arriving after reconnect to epoch N+1 MUST be discarded; MUST NOT mutate capability to `AVAILABLE`; MUST NOT satisfy any post-reconnect waiter |
 
 **Forbidden states** (M6 tests assert absence):
@@ -632,8 +638,8 @@ any row is an automatic merge-gate block.
 - premature `AVAILABLE` before the first real dispatch;
 - silent fallback to `UNKNOWN` once `TRANSPORT_DOWN` is knowable.
 
-`EXPIRED` remains gateway-internal per §7.1.1 and §8; row 7 above describes
-the internal sub-state, not a public capability value.
+`Refreshing` remains a session-status state per §7.1.1 and §8; row 7 above
+does not add a public capability value.
 
 ### 12.6 Lock acquisition order invariant <a id="lock-order"></a>
 
@@ -717,8 +723,8 @@ The evidence labels defined in §1 are used throughout. In particular:
 | `M1_DECODER` | `helianthus-ebusgo` | `protocol/vaillant/b503` decoder package + invoke-safety enum |
 | `M2a_GATEWAY_MCP` | `helianthus-ebusgateway` | MCP tools `ebus.v1.vaillant.errors.get`, `.errors.history.get`, `.service.current.get`, `.service.history.get`, `.live_monitor.get` |
 | `M5_TRANSPORT_MATRIX` | `helianthus-ebusgateway` | `matrix/M6a-vaillant-b503.md` — adapter-direct + `ebusd_tcp` (+ `ebusd_serial` if lab-available) |
-| `M2b_GATEWAY_GRAPHQL` | `helianthus-ebusgateway` | GraphQL diagnostic read-only parity + `vaillantCapabilities.b503` signal; only the bounded `vaillantLiveMonitor` session enable/disable action through the §6 FSM |
-| `M3_PORTAL` | `helianthus-ebusgateway` | Vaillant pane (errors / service / live-monitor diagnostic reads) plus Gateway-owned live-monitor session strip and only the bounded session enable/disable action through the §6 FSM |
+| `M2b_GATEWAY_GRAPHQL` | `helianthus-ebusgateway` | GraphQL diagnostic read-only parity + `vaillantCapabilities.b503` signal and five-state `vaillantLiveMonitor` session status (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`); only the bounded session enable/disable action through the §6 FSM |
+| `M3_PORTAL` | `helianthus-ebusgateway` | Vaillant pane (errors / service / live-monitor diagnostic reads) plus Gateway-owned five-state live-monitor session strip (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`) and only the bounded session enable/disable action through the §6 FSM |
 | `M4_HA` | `helianthus-ha-integration` | diagnostic sensor `boiler_active_error` + `error_history` attribute, capability-signal-gated |
 | `M6_DISPATCHER_BRIDGE` (amendment-1) | `helianthus-ebusgateway` | production `RawFrameDispatcher` replacing `b503StubDispatcher{}` injection in `cmd/gateway/vaillant_b503_wiring.go`; contract per §12 (PR ref: TBD) |
 

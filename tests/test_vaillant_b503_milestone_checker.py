@@ -47,12 +47,49 @@ def test_rejects_missing_install_write_non_exposure() -> None:
         CHECKER.validate_text(text)
 
 
-def test_rejects_required_m2b_row_copied_after_milestone_table() -> None:
+def test_rejects_install_write_non_exposure_copied_outside_normative_section() -> None:
+    text = contract().replace(CHECKER.INSTALL_WRITE_NON_EXPOSURE, "", 1)
+    text += f"\n{CHECKER.INSTALL_WRITE_NON_EXPOSURE}\n"
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "four stable states: `Idle`, `Enabling`, `Active`, and `Disabled`.",
+        "`Disabled` may be reported with `owned:true`.",
+    ),
+)
+def test_rejects_missing_refreshing_or_disabled_ownership_contract(
+    replacement: str,
+) -> None:
+    text = contract().replace(CHECKER.SESSION_STATE_CONTRACT, replacement, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize("clause", CHECKER.FORBIDDEN_SESSION_STATE_CLAUSES)
+def test_rejects_session_state_contradiction_inside_normative_section(
+    clause: str,
+) -> None:
     text = contract().replace(
-        table_row(CHECKER.M2B_GRAPHQL),
-        "| `M2b_GATEWAY_GRAPHQL` | `helianthus-ebusgateway` | stale row |",
+        CHECKER.SESSION_SECTION_END,
+        f"{clause}\n\n{CHECKER.SESSION_SECTION_END}",
         1,
-    ) + f"\n{table_row(CHECKER.M2B_GRAPHQL)}\n"
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize("expected", (CHECKER.M2B_GRAPHQL, CHECKER.M3_PORTAL))
+def test_rejects_required_milestone_row_copied_after_milestone_table(
+    expected: tuple[str, ...],
+) -> None:
+    stale_row = (expected[0], expected[1], "stale row")
+    text = contract().replace(
+        table_row(expected), table_row(stale_row), 1
+    ) + f"\n{table_row(expected)}\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 

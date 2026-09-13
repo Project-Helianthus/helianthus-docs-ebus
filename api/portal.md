@@ -159,9 +159,12 @@ parsers or authorization inputs. Tests must also retain
 `data-testid="b503-session-strip"`,
 `data-testid="b503-session-state-label"` for the Gateway-owned live-monitor
 session strip. The strip states are `Idle`, `Enabling`, `Active`, and
-`Disabled`. The base `SESSION_BUSY` presentation is neutral. The strip may
-show that the Gateway session gate is held, but must not identify another
-client. Leaving the B503 perspective uses the same locally-token-bound cleanup
+`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the
+ownership gate and all live-monitor operations are busy. Refresh success returns
+`Active`; refresh failure releases the gate and returns `Idle`. `Disabled` is
+never reported with `owned:true`. The base `SESSION_BUSY` presentation is neutral.
+The strip may show that the Gateway session gate is held, but must not identify
+another client. Leaving the B503 perspective uses the same locally-token-bound cleanup
 rule as target switching.
 
 The selected-target B503 tabs expose a `role="tablist"` with one named
@@ -215,6 +218,11 @@ This documentation gate is based on Gateway contribution contract
 [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972)
 and production catalog/action admission
 [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974).
+The five-state session wording follows Gateway
+[#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975)
+source contract commit `35c41c9253a9ece7474f674eef38d431e936de0d` and evidence
+head `0eb01249fe89a3163b1c45ee6370bd79aee4ac04`; #975 remains open and this
+documentation does not claim it is merged.
 It does not close Gateway #552, the wider INT-10 parent, SemReg cutover, or
 physical validation.
 

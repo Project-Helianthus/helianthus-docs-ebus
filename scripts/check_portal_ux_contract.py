@@ -57,6 +57,17 @@ B503_FRONTEND_EPOCH_ROLLOVER = (
     "epoch; a completion may mutate presentation only when both its target address\n"
     "and captured epoch still match, otherwise it is discarded."
 )
+B503_SESSION_STATE_CONTRACT = (
+    "The strip states are `Idle`, `Enabling`, `Active`, and\n"
+    "`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\n"
+    "ownership gate and all live-monitor operations are busy. Refresh success returns\n"
+    "`Active`; refresh failure releases the gate and returns `Idle`. `Disabled` is\n"
+    "never reported with `owned:true`."
+)
+FORBIDDEN_B503_SESSION_STATE_CLAUSES = (
+    "`Refreshing` may accept live-monitor operations.",
+    "`Disabled` may be reported with `owned:true`.",
+)
 
 REQUIRED = (
     TARGET_START,
@@ -88,6 +99,7 @@ REQUIRED = (
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
+    "source contract commit `35c41c9253a9ece7474f674eef38d431e936de0d` and evidence\nhead `0eb01249fe89a3163b1c45ee6370bd79aee4ac04`; #975 remains open and this\ndocumentation does not claim it is merged.",
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
@@ -99,7 +111,7 @@ REQUIRED = (
     'data-testid="b503-state-unknown"',
     'data-testid="b503-session-strip"',
     'data-testid="b503-session-state-label"',
-    '`Idle`, `Enabling`, `Active`, and\n`Disabled`',
+    B503_SESSION_STATE_CONTRACT,
     "base `SESSION_BUSY` presentation is neutral.",
     "On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE`.",
     "An `ACTIVE` prior target receives an immediate target-specific\ndisable using its locally held issuer token.",
@@ -144,8 +156,8 @@ DOM_SELECTOR_TOKEN = re.compile(
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
 COMPACT_PROHIBITED_COMMAND = re.compile(
     r"^(?:"
-    r"b503(?:clear(?!ance|ly)|delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
-    r"|(?:clear(?!ance|ly)|clearerrorhistory|clearservicehistory|delete|reset)[a-z0-9]*"
+    r"b503(?:clear(?!ance|ly|fix)|delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
+    r"|(?:clear(?!ance|ly|fix)|clearerrorhistory|clearservicehistory|delete|reset)[a-z0-9]*"
     r")$",
     re.IGNORECASE,
 )
@@ -347,6 +359,12 @@ def validate_text(text: str) -> None:
     for fragment in FORBIDDEN:
         if fragment in text:
             raise CheckError(f"api/portal.md: forbidden stale or premature wording: {fragment!r}")
+    for fragment in FORBIDDEN_B503_SESSION_STATE_CLAUSES:
+        if fragment in target:
+            raise CheckError(
+                "api/portal.md: forbidden B503 session-state contradiction: "
+                f"{fragment!r}"
+            )
     for contradiction in B503_FALLBACK_CONTRADICTIONS:
         if contradiction.search(target):
             raise CheckError(
