@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `67755252a53ceabe4a91025d1642e48d964c2d3c` |
-| Final validated contract tree | `173ee01f90b7b13a5d27c86ef0f2c78bc7a01534` |
-| Final contract validation | Complete configured CI PASS; 156 Portal checker tests and 51 canonical B503 milestone tests; log SHA-256 `6b15ce405bcaf1d6696492b456250c8e3d79cf8f636ecc2ad694c391f6b4f8d1` |
+| Final validated contract commit | `a797a7de248cb081230827062f364c8621e6b584` |
+| Final validated contract tree | `0b883557779b1c5fb31d16dde23fc82b45216201` |
+| Final contract validation | Complete configured CI PASS; 160 Portal checker tests and 51 canonical B503 milestone tests; log SHA-256 `6ba4ea933f81a0ee72d1fba96d6d41b763267c551789aff8bfeda6fb36cc9687` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -96,6 +96,8 @@ hardware work, or SemReg cutover.
 | Reference-control/passive-exposure correction tree | `379307cec7b5da493c3db6ccd3b2d992840235d6` |
 | Markdown-entity decoding correction commit | `67755252a53ceabe4a91025d1642e48d964c2d3c` |
 | Markdown-entity decoding correction tree | `173ee01f90b7b13a5d27c86ef0f2c78bc7a01534` |
+| Document-scoped reference correction commit | `a797a7de248cb081230827062f364c8621e6b584` |
+| Document-scoped reference correction tree | `0b883557779b1c5fb31d16dde23fc82b45216201` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -278,7 +280,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 156 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 160 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 51 tests |
 | `git diff --check` | PASS |
@@ -460,6 +462,16 @@ It validated final contract commit
 `8a0744211be6e69bebb56474836a38bee998b389`, tree
 `bb8cf8c8a84937d942897594d9dc5e333f971071`, with 138 Portal checker tests and
 48 canonical B503 milestone tests. The following evidence-only commit records
+that immutable contract revision and does not change the documented contract,
+checkers, or tests.
+
+The complete document-scoped Markdown-reference correction CI log is
+`wave12/ci/docs524-a797a7d-ci-local.log`, SHA-256
+`6ba4ea933f81a0ee72d1fba96d6d41b763267c551789aff8bfeda6fb36cc9687`.
+It validated final contract commit
+`a797a7de248cb081230827062f364c8621e6b584`, tree
+`0b883557779b1c5fb31d16dde23fc82b45216201`, with 160 Portal checker tests and
+51 canonical B503 milestone tests. The following evidence-only commit records
 that immutable contract revision and does not change the documented contract,
 checkers, or tests.
 
