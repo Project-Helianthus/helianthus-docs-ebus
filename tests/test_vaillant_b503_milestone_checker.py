@@ -70,6 +70,10 @@ def test_rejects_install_write_non_exposure_copied_outside_normative_section() -
         "Portal SHOULD expose 02 01.",
         "The public GraphQL surface SHALL publish 02 02.",
         "Home Assistant WILL offer 02 01.",
+        "Portal MUST expose 0x02 0x01.",
+        "Portal MUST expose 0202.",
+        "GraphQL MUST expose selector 02-01.",
+        "MCP SHOULD publish selector `02/02`.",
     ),
 )
 def test_rejects_affirmative_install_write_exposure_inside_normative_section(

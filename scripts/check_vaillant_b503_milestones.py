@@ -47,6 +47,10 @@ M3_PORTAL = (
 INSTALL_WRITE_NON_EXPOSURE = (
     "> **`02 01` and `02 02` MUST NOT be exposed on any public surface in v1.**"
 )
+INSTALL_WRITE_SELECTOR_PATTERN = (
+    r"(?<![0-9A-Za-z])`?(?:0x)?02(?:\s*[-_/:]\s*|\s+)?"
+    r"(?:0x)?0[12]`?(?![0-9A-Za-z])"
+)
 REFRESHING_CAPABILITY_TRUTH_ROW = (
     "7",
     "held-session epoch refresh; session status `Refreshing`",
@@ -60,13 +64,15 @@ AFFIRMATIVE_INSTALL_WRITE_EXPOSURE = (
         r"\b(?:the\s+)?(?:public\s+)?(?:GraphQL|MCP|portal|Home\s+Assistant|HA|API)"
         r"\b[^.\n]{0,48}?\b"
         r"(?:MAY|MUST|CAN|SHOULD|SHALL|WILL)\s+"
-        r"(?:expose|publish|offer)\s+`?02\s+0[12]`?\b",
+        r"(?:expose|publish|offer)\s+(?:selector\s+)?"
+        + INSTALL_WRITE_SELECTOR_PATTERN,
         re.IGNORECASE,
     ),
     re.compile(
         r"\b(?:the\s+)?public\s+surface\s+"
         r"(?:MAY|MUST|CAN|SHOULD|SHALL|WILL)\s+"
-        r"(?:expose|publish|offer)\s+`?02\s+0[12]`?\b",
+        r"(?:expose|publish|offer)\s+(?:selector\s+)?"
+        + INSTALL_WRITE_SELECTOR_PATTERN,
         re.IGNORECASE,
     ),
 )
