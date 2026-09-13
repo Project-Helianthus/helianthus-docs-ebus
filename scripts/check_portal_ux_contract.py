@@ -240,13 +240,17 @@ DOM_SELECTOR_TOKEN = re.compile(
     r"(?<![0-9])(?:0x)?02[\s_:-]*(?:0x)?0[12](?![0-9])", re.IGNORECASE
 )
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
+PLAIN_CONTROL_NOUN = re.compile(
+    r"\b(?:button|control|link|action|command|selector|menu|item|affordance)\b",
+    re.IGNORECASE,
+)
 PLAIN_AFFIRMATIVE_CONTROL_VERB = re.compile(
     r"\b(?:expose(?:s|d)?|render(?:s|ed)?|show(?:s|ed)?|offer(?:s|ed)?|"
     r"provide(?:s|d)?|include(?:s|d)?|add(?:s|ed)?|display(?:s|ed)?|"
     r"present(?:s|ed)?|create(?:s|d)?|support(?:s|ed)?|allow(?:s|ed)?|"
     r"contain(?:s|ed)?|feature(?:s|d)?|list(?:s|ed)?|"
     r"publish(?:es|ed)?|surface(?:s|d)?|exist(?:s|ed)?|appear(?:s|ed)?|"
-    r"use(?:s|d)?|click(?:s|ed)?|has|have|available|visible)\b",
+    r"use(?:s|d)?|click(?:s|ed)?|has|have|be|is|are|available|visible)\b",
     re.IGNORECASE,
 )
 PLAIN_CONTROL_CLAUSE_BOUNDARY = re.compile(
@@ -493,7 +497,18 @@ def _affirmative_control_verb(clause: str) -> re.Match[str] | None:
             continue
         if re.match(r"\s+no\b", suffix):
             continue
+        if re.match(
+            r"\s+(?:not|absent|unavailable|unsupported|hidden|disabled|"
+            r"prohibited|forbidden)\b",
+            suffix,
+        ):
+            continue
         if re.match(r"^\s*no\b", clause, re.IGNORECASE):
+            continue
+        if (
+            match.group(0).casefold() in {"be", "is", "are"}
+            and PLAIN_CONTROL_NOUN.search(clause) is None
+        ):
             continue
         return match
     return None
