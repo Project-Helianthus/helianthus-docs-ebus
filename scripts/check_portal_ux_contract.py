@@ -144,8 +144,8 @@ DOM_SELECTOR_TOKEN = re.compile(
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
 COMPACT_PROHIBITED_COMMAND = re.compile(
     r"^(?:"
-    r"b503(?:delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
-    r"|(?:clearerrorhistory|clearservicehistory|delete|reset)[a-z0-9]*"
+    r"b503(?:clear(?!ance|ly)|delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
+    r"|(?:clear(?!ance|ly)|clearerrorhistory|clearservicehistory|delete|reset)[a-z0-9]*"
     r")$",
     re.IGNORECASE,
 )

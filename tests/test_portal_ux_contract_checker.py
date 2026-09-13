@@ -125,6 +125,9 @@ def test_rejects_contract_regressions(old: str, new: str) -> None:
         'id="clearerrorhistorybutton"',
         'id="b503resetlink"',
         'id="b503resetmenuitem"',
+        'id="b503clearbutton"',
+        'id="clearbutton"',
+        'id="clearlink"',
     ),
 )
 def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -> None:
@@ -170,6 +173,8 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
         'id="presetbutton"',
         'id="clearancebutton"',
         'id="b503presetlink"',
+        'id="b503clearance"',
+        'id="clearlyAvailable"',
     ),
 )
 def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:
