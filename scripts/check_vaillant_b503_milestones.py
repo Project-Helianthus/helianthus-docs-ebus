@@ -71,11 +71,12 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
     "7",
     "held-session epoch refresh; session status `Refreshing`",
     "`UNKNOWN` (temporary; not sticky `AVAILABLE`)",
-    "triggering request remains pending and is dispatched exactly once only after "
-    "successful rebind; subsequent live-monitor operations are `SESSION_BUSY`; only "
-    "`vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain "
-    "admitted, with no B503 card, tabs, bus-facing reads, or actions until capability "
-    "returns `AVAILABLE`",
+    "triggering READ or current-owner DISABLE remains pending and is dispatched "
+    "exactly once only after successful rebind; READ returns to `Active`, DISABLE "
+    "completes cleanup to `Idle`, and subsequent live-monitor operations are "
+    "`SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` "
+    "status queries remain admitted, with no B503 card, tabs, bus-facing reads, or "
+    "actions until capability returns `AVAILABLE`",
 )
 CURRENT_PUBLIC_SESSION_AUTHORITY = (
     "**Current public session authority.** The five-state public session contract in\n"
@@ -93,9 +94,10 @@ SESSION_STATE_CONTRACT = (
     "five stable states: `Idle`, `Enabling`, `Active`, `Refreshing`, and `Disabled`.\n"
     "`Refreshing` means an epoch refresh holds the ownership gate. The already\n"
     "admitted triggering request remains pending; subsequent bus-facing live-monitor\n"
-    "operations are busy. Refresh success returns `Active` and dispatches the\n"
-    "triggering request exactly once; refresh failure releases the gate, returns\n"
-    "`Idle`, and returns the exact Gateway-supplied failure to that request.\n"
+    "operations are busy. Refresh success dispatches a triggering read exactly once\n"
+    "and returns `Active`, or dispatches a triggering current-owner disable exactly\n"
+    "once and completes owner cleanup to `Idle`. Refresh failure releases the gate,\n"
+    "returns `Idle`, and returns the exact Gateway-supplied failure to that request.\n"
     "`Disabled` is never reported with `owned:true`."
 )
 DISABLED_PUBLIC_MAPPING = (
@@ -129,9 +131,12 @@ REFRESH_SUCCESS_CONTINUATION = (
     "  is continuation, not reconstruction or auto-resume. The already-admitted\n"
     "  triggering request remains pending during refresh; after successful rebind,\n"
     "  Gateway dispatches that request's native operation exactly once using the\n"
-    "  rebound key and returns its exact outcome. This one dispatch consumes the\n"
-    "  request's only retry budget. Every subsequent bus-facing live-monitor\n"
-    "  operation during refresh returns `SESSION_BUSY`. On refresh failure, no\n"
+    "  rebound key and returns its exact outcome. A triggering READ retains the\n"
+    "  owner in `Active`; a triggering current-owner DISABLE emits its disable after\n"
+    "  quiesce, enters `Disabled`, and completes owner cleanup to `Idle`. ENABLE is\n"
+    "  never a refresh trigger. This one dispatch consumes the request's only retry\n"
+    "  budget. Every subsequent bus-facing live-monitor operation during refresh\n"
+    "  returns `SESSION_BUSY`. On refresh failure, no\n"
     "  rebound key is installed: release the ownership gate, return to `Idle`, and\n"
     "  return the exact Gateway-supplied failure to the triggering request without\n"
     "  dispatching its native operation."
@@ -141,9 +146,10 @@ REFRESH_OWNER_REBINDING = (
     "only the one bounded refresh attempt. A successful refresh returns the current\n"
     "`transport_key` for epoch N+1. Gateway MUST atomically replace the owner key\n"
     "with `(transport_key[N+1], same issuer_token)` while retaining the same target,\n"
-    "then enter `ACTIVE`. Completions and control requests still bound to epoch N are\n"
-    "stale and MUST NOT satisfy, disable, extend, or mutate the rebound session. If\n"
-    "refresh fails, no rebound key is installed and the owner is released to `IDLE`."
+    "then dispatch the admitted triggering operation exactly once. Completions and\n"
+    "control requests still bound to epoch N are stale and MUST NOT satisfy, disable,\n"
+    "extend, or mutate the rebound session. If refresh fails, no rebound key is\n"
+    "installed and the owner is released to `IDLE`."
 )
 NO_AUTO_RESUME_RECONSTRUCTION = (
     "Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost\n"
@@ -157,6 +163,23 @@ REFRESHING_DISCONNECT_FENCE = (
     "  enter `Refreshing`, and requires a new explicit client Enable."
 )
 REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
+REFRESH_READ_DIAGRAM = "REFRESHING --> ACTIVE: refresh succeeds; triggering READ once"
+REFRESH_DISABLE_DIAGRAM = (
+    "REFRESHING --> DISABLED: refresh succeeds; triggering DISABLE once"
+)
+REFRESH_READ_TRANSITION = (
+    "| `REFRESHING` | refresh succeeds for triggering READ | `ACTIVE` | atomically "
+    "rebind the owner from epoch N to the returned current `transport_key` at N+1, "
+    "retaining the same issuer token and target; fence every epoch-N completion; "
+    "dispatch READ exactly once using the rebound key, return its outcome, and "
+    "retain the owner |"
+)
+REFRESH_DISABLE_TRANSITION = (
+    "| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE | "
+    "`DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, "
+    "emit disable exactly once after quiesce using the rebound key, return its "
+    "outcome, and complete owner cleanup to `IDLE` |"
+)
 REFRESH_FAILURE_TRANSITION = (
     "| `REFRESHING` | refresh failure | `IDLE` | release ownership gate; "
     "return the exact Gateway-supplied failure outcome to the triggering request; "
@@ -311,6 +334,10 @@ def validate_text(text: str) -> None:
         raise CheckError("missing stable public Disabled mapping in §6")
     for fragment in (
         REFRESH_FAILURE_DIAGRAM,
+        REFRESH_READ_DIAGRAM,
+        REFRESH_DISABLE_DIAGRAM,
+        REFRESH_READ_TRANSITION,
+        REFRESH_DISABLE_TRANSITION,
         REFRESH_FAILURE_TRANSITION,
         REFRESH_FAILURE_LOCK,
         HELD_OWNER_DISABLED_RELEASE,

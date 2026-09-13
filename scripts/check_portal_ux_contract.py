@@ -7,6 +7,7 @@ from html.parser import HTMLParser
 import pathlib
 import re
 import sys
+from urllib.parse import unquote
 
 from markdown_it import MarkdownIt
 
@@ -68,7 +69,9 @@ B503_SESSION_STATE_CONTRACT = (
     "`vaillantCapabilities(targetAddress:)` and\n"
     "`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\n"
     "availability and session completion. Refresh success returns `Active` and\n"
-    "completes the triggering request with exactly one native operation result;\n"
+    "completes a triggering read with exactly one native operation result, or\n"
+    "completes a triggering current-owner disable through `Disabled` cleanup to\n"
+    "`Idle`;\n"
     "refresh failure releases the gate, returns `Idle`, and completes that request\n"
     "with the exact Gateway failure without dispatching its native operation.\n"
     "`Disabled` is never reported with `owned:true`."
@@ -98,7 +101,9 @@ B503_REFRESH_CONTINUATION = (
     "Refresh success revalidates only a surviving authenticated current-owner\n"
     "token/target/epoch handle and returns it to `Active`; it is continuation, not\n"
     "reconstruction or auto-resume. The pending triggering request then completes\n"
-    "from exactly one dispatch using the rebound key. After restart, a lost owner handle, or an\n"
+    "from exactly one dispatch using the rebound key: a read returns to `Active`,\n"
+    "while a current-owner disable completes cleanup to `Idle`. After restart, a lost owner\n"
+    "handle, or an\n"
     "absent/invalid current issuer token, Gateway does not reconstruct the session\n"
     "and the client must issue a new explicit Enable.\n"
     "A terminal transport disconnect releases ownership to `Idle`; a later reconnect\n"
@@ -426,7 +431,9 @@ def _markdown_dom_references(document: str) -> list[tuple[str, str]]:
         for child in children:
             if child.type == "link_open":
                 link_labels.append([])
-                references.append(("Markdown link destination", child.attrGet("href") or ""))
+                references.append(
+                    ("Markdown link destination", unquote(child.attrGet("href") or ""))
+                )
                 title = child.attrGet("title")
                 if title is not None:
                     references.append(("Markdown link title", title))
@@ -437,7 +444,9 @@ def _markdown_dom_references(document: str) -> list[tuple[str, str]]:
                 continue
             if child.type == "image":
                 references.append(("Markdown image alt", _rendered_children(child.children)))
-                references.append(("Markdown image destination", child.attrGet("src") or ""))
+                references.append(
+                    ("Markdown image destination", unquote(child.attrGet("src") or ""))
+                )
                 title = child.attrGet("title")
                 if title is not None:
                     references.append(("Markdown image title", title))

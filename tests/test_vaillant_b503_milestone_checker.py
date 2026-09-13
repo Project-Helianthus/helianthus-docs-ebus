@@ -242,6 +242,22 @@ def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
             CHECKER.HELD_OWNER_DISABLED_RELEASE,
             "on entry to `DISABLED` from `ENABLING` or `ACTIVE`",
         ),
+        (
+            CHECKER.REFRESH_READ_DIAGRAM,
+            "REFRESHING --> ACTIVE: refresh succeeds; request outcome unspecified",
+        ),
+        (
+            CHECKER.REFRESH_DISABLE_DIAGRAM,
+            "REFRESHING --> ACTIVE: refresh succeeds; triggering DISABLE once",
+        ),
+        (
+            CHECKER.REFRESH_READ_TRANSITION,
+            "| `REFRESHING` | refresh succeeds | `ACTIVE` | retry budget consumed |",
+        ),
+        (
+            CHECKER.REFRESH_DISABLE_TRANSITION,
+            "| `REFRESHING` | refresh succeeds for DISABLE | `ACTIVE` | dispatch disable |",
+        ),
     ),
 )
 def test_rejects_refresh_failure_diagram_or_lock_contradiction(
@@ -261,8 +277,8 @@ def test_rejects_refresh_failure_diagram_or_lock_contradiction(
             "triggering request returns SESSION_BUSY while refresh proceeds",
         ),
         (
-            "Every subsequent bus-facing live-monitor\n"
-            "  operation during refresh returns `SESSION_BUSY`.",
+            "Every subsequent bus-facing live-monitor operation during refresh\n"
+            "  returns `SESSION_BUSY`.",
             "Every live-monitor request remains pending during refresh.",
         ),
         (

@@ -169,7 +169,9 @@ new bus-facing live-monitor reads/actions are busy. Status-only
 `vaillantCapabilities(targetAddress:)` and
 `vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe
 availability and session completion. Refresh success returns `Active` and
-completes the triggering request with exactly one native operation result;
+completes a triggering read with exactly one native operation result, or
+completes a triggering current-owner disable through `Disabled` cleanup to
+`Idle`;
 refresh failure releases the gate, returns `Idle`, and completes that request
 with the exact Gateway failure without dispatching its native operation.
 `Disabled` is never reported with `owned:true`. `Disabled` with `owned:false` maps only an
@@ -184,7 +186,9 @@ rule as target switching.
 Refresh success revalidates only a surviving authenticated current-owner
 token/target/epoch handle and returns it to `Active`; it is continuation, not
 reconstruction or auto-resume. The pending triggering request then completes
-from exactly one dispatch using the rebound key. After restart, a lost owner handle, or an
+from exactly one dispatch using the rebound key: a read returns to `Active`,
+while a current-owner disable completes cleanup to `Idle`. After restart, a lost owner
+handle, or an
 absent/invalid current issuer token, Gateway does not reconstruct the session
 and the client must issue a new explicit Enable.
 A terminal transport disconnect releases ownership to `Idle`; a later reconnect

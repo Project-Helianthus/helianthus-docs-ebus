@@ -182,9 +182,10 @@ The gateway runs a single-owner FSM per transport incarnation for selector
 five stable states: `Idle`, `Enabling`, `Active`, `Refreshing`, and `Disabled`.
 `Refreshing` means an epoch refresh holds the ownership gate. The already
 admitted triggering request remains pending; subsequent bus-facing live-monitor
-operations are busy. Refresh success returns `Active` and dispatches the
-triggering request exactly once; refresh failure releases the gate, returns
-`Idle`, and returns the exact Gateway-supplied failure to that request.
+operations are busy. Refresh success dispatches a triggering read exactly once
+and returns `Active`, or dispatches a triggering current-owner disable exactly
+once and completes owner cleanup to `Idle`. Refresh failure releases the gate,
+returns `Idle`, and returns the exact Gateway-supplied failure to that request.
 `Disabled` is never reported with `owned:true`.
 
 ```mermaid
@@ -199,13 +200,14 @@ stateDiagram-v2
     DISABLED --> IDLE: owner cleanup complete
 
     ACTIVE --> REFRESHING: epoch advance while owner remains held
-    REFRESHING --> ACTIVE: refresh succeeds
+    REFRESHING --> ACTIVE: refresh succeeds; triggering READ once
+    REFRESHING --> DISABLED: refresh succeeds; triggering DISABLE once
     REFRESHING --> IDLE: refresh failure releases gate
 
     note right of REFRESHING
       Stable public session state; ownership gate held.
       Triggering request remains pending; later operations are busy.
-      After successful rebind, dispatch the trigger exactly once.
+      After successful rebind, dispatch READ or DISABLE exactly once.
     end note
 ```
 
@@ -230,9 +232,9 @@ Rules (normative):
 | Operation | Required key match | Outcome on mismatch |
 |---|---|---|
 | ENABLE | none (new claim) | succeeds iff FSM is `IDLE`; if any session is already `ENABLING`/`ACTIVE`/`REFRESHING` → `SESSION_BUSY` |
-| DISABLE | full `session_key` must match the active session | `SESSION_BUSY` while `REFRESHING`, or when caller does not own the session — prevents session hijacking between clients on the same transport |
-| READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE`; while `REFRESHING`, the already-admitted triggering request remains pending and every subsequent live-monitor operation is `SESSION_BUSY` |
-| Epoch advance while `ACTIVE` owner remains held | old epoch key authorizes only the bounded refresh | → `REFRESHING`; refresh once per §7.3; success atomically rebinds the same issuer token and target to the returned current transport epoch before `ACTIVE` |
+| DISABLE | full `session_key` must match the active session | A current-owner DISABLE that detects epoch advance remains pending as the triggering request; every subsequent DISABLE while `REFRESHING`, or a request from a non-owner, returns `SESSION_BUSY` |
+| READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE`; a READ that detects epoch advance remains pending as the triggering request, and every subsequent live-monitor operation while `REFRESHING` is `SESSION_BUSY` |
+| Epoch advance while `ACTIVE` owner remains held | old epoch key authorizes only the bounded refresh for an admitted READ or current-owner DISABLE | → `REFRESHING`; refresh once per §7.3; success atomically rebinds the same issuer token and target to the returned current transport epoch before dispatching the triggering operation exactly once; ENABLE is never a refresh trigger |
 | Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard stale enable ACK/NAK/timeout; explicit new Enable required |
 
 The `issuer_token` is opaque to clients; it MUST NOT be derived from
@@ -245,9 +247,10 @@ On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes
 only the one bounded refresh attempt. A successful refresh returns the current
 `transport_key` for epoch N+1. Gateway MUST atomically replace the owner key
 with `(transport_key[N+1], same issuer_token)` while retaining the same target,
-then enter `ACTIVE`. Completions and control requests still bound to epoch N are
-stale and MUST NOT satisfy, disable, extend, or mutate the rebound session. If
-refresh fails, no rebound key is installed and the owner is released to `IDLE`.
+then dispatch the admitted triggering operation exactly once. Completions and
+control requests still bound to epoch N are stale and MUST NOT satisfy, disable,
+extend, or mutate the rebound session. If refresh fails, no rebound key is
+installed and the owner is released to `IDLE`.
 
 This refines plan AD04's baseline `(adapter_instance_id,
 transport_incarnation_epoch)` with a client-scoped control token. The
@@ -267,7 +270,8 @@ access.
 | `ACTIVE` | explicit disable | `DISABLED` | emit disable frame after quiesce |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable frame after quiesce |
 | `ACTIVE` | admitted request detects epoch advance | `REFRESHING` | ownership gate remains held; triggering request remains pending; subsequent live-monitor operations are busy |
-| `REFRESHING` | refresh succeeds | `ACTIVE` | atomically rebind the owner from epoch N to the returned current `transport_key` at N+1, retaining the same issuer token and target; fence every epoch-N completion; dispatch the triggering request exactly once using the rebound key and return its outcome |
+| `REFRESHING` | refresh succeeds for triggering READ | `ACTIVE` | atomically rebind the owner from epoch N to the returned current `transport_key` at N+1, retaining the same issuer token and target; fence every epoch-N completion; dispatch READ exactly once using the rebound key, return its outcome, and retain the owner |
+| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit disable exactly once after quiesce using the rebound key, return its outcome, and complete owner cleanup to `IDLE` |
 | `REFRESHING` | refresh failure | `IDLE` | release ownership gate; return the exact Gateway-supplied failure outcome to the triggering request; do not dispatch its native operation |
 | `DISABLED` | owner cleanup complete | `IDLE` | session may be re-claimed by any client |
 | any | transport disconnect | `DISABLED` | owner cleanup |
@@ -316,9 +320,9 @@ public `B503Availability` enum (§11) or map onto it:
 
 `Refreshing` is the stable Gateway-owned session observation for an epoch
 refresh (§6.1). It holds the ownership gate while the already-admitted
-triggering request remains pending. Every subsequent bus-facing live-monitor
-operation surfaces `SESSION_BUSY` during that interval. It is a session-status
-value, not a sixth `B503Availability` reason:
+triggering READ or current-owner DISABLE remains pending. Every subsequent
+bus-facing live-monitor operation surfaces `SESSION_BUSY` during that interval.
+It is a session-status value, not a sixth `B503Availability` reason:
 
 | Session value | Where it surfaces | Ownership and outcome |
 |---|---|---|
@@ -362,9 +366,12 @@ live-monitor enable and disable frame. Bounds:
   is continuation, not reconstruction or auto-resume. The already-admitted
   triggering request remains pending during refresh; after successful rebind,
   Gateway dispatches that request's native operation exactly once using the
-  rebound key and returns its exact outcome. This one dispatch consumes the
-  request's only retry budget. Every subsequent bus-facing live-monitor
-  operation during refresh returns `SESSION_BUSY`. On refresh failure, no
+  rebound key and returns its exact outcome. A triggering READ retains the
+  owner in `Active`; a triggering current-owner DISABLE emits its disable after
+  quiesce, enters `Disabled`, and completes owner cleanup to `Idle`. ENABLE is
+  never a refresh trigger. This one dispatch consumes the request's only retry
+  budget. Every subsequent bus-facing live-monitor operation during refresh
+  returns `SESSION_BUSY`. On refresh failure, no
   rebound key is installed: release the ownership gate, return to `Idle`, and
   return the exact Gateway-supplied failure to the triggering request without
   dispatching its native operation.
@@ -451,9 +458,10 @@ path (MCP resolvers, GraphQL resolvers, HA integration, portal).
    for a Gateway error outcome.
 2. **Refresh once.** On epoch advance with a held session, Gateway transitions
    to `Refreshing` and makes exactly one refresh attempt. The already-admitted
-   triggering request remains pending and is dispatched exactly once only after
-   successful rebind; subsequent bus-facing live-monitor operations are
-   `SESSION_BUSY` until Gateway returns to `Active` or releases to `Idle`.
+   triggering READ or current-owner DISABLE remains pending and is dispatched
+   exactly once only after successful rebind. READ returns Gateway to `Active`;
+   DISABLE completes the normal `Disabled` cleanup to `Idle`. Subsequent
+   bus-facing live-monitor operations are `SESSION_BUSY` during refresh.
 3. **No collapse of transport/unknown outcomes.** After refresh, if the
    capability query reveals `TRANSPORT_DOWN` or `UNKNOWN`, those outcomes MUST
    be surfaced literally. They MUST NOT be collapsed into `SESSION_BUSY`.
@@ -689,7 +697,7 @@ any row is an automatic merge-gate block.
 | 4 | reconnect, before first post-reconnect dispatch | `UNKNOWN` (NOT sticky `AVAILABLE`) | reset to `UNKNOWN` regardless of pre-disconnect state |
 | 5 | reconnect, post-first-success-after-reconnect | `AVAILABLE` | n/a |
 | 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known | n/a |
-| 7 | held-session epoch refresh; session status `Refreshing` | `UNKNOWN` (temporary; not sticky `AVAILABLE`) | triggering request remains pending and is dispatched exactly once only after successful rebind; subsequent live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain admitted, with no B503 card, tabs, bus-facing reads, or actions until capability returns `AVAILABLE` |
+| 7 | held-session epoch refresh; session status `Refreshing` | `UNKNOWN` (temporary; not sticky `AVAILABLE`) | triggering READ or current-owner DISABLE remains pending and is dispatched exactly once only after successful rebind; READ returns to `Active`, DISABLE completes cleanup to `Idle`, and subsequent live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain admitted, with no B503 card, tabs, bus-facing reads, or actions until capability returns `AVAILABLE` |
 | 8 | stale in-flight completion across epoch rollover | n/a — frame discarded | reply/NAK/timeout from epoch N arriving after reconnect to epoch N+1 MUST be discarded; MUST NOT mutate capability to `AVAILABLE`; MUST NOT satisfy any post-reconnect waiter |
 
 **Forbidden states** (M6 tests assert absence):
