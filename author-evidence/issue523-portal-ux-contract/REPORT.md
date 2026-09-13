@@ -16,8 +16,11 @@ hardware work, or SemReg cutover.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
-| Validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
+| Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
+| Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
+| Final validated contract commit | `5804a06e4c7e8ee0208fd0a22107aed5199f2ad3` |
+| Final validated contract tree | `310e6ff7dbb1ba04ef41cbbb2e90b26cfd78923e` |
+| Final contract validation | Complete configured CI PASS; 138 Portal checker tests and 41 canonical B503 milestone tests; log SHA-256 `e4e8134127b0f9e2cfd2e15d47b1eb0dd90dd9fa866f4733541efe4dc530c6e4` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -426,6 +429,11 @@ The complete qualified-public-surface correction CI log is
 `/tmp/docs523-qualified-surface-ci.log.log`, SHA-256
 `e4e8134127b0f9e2cfd2e15d47b1eb0dd90dd9fa866f4733541efe4dc530c6e4`.
 It passed with 138 Portal checker tests and 41 canonical B503 milestone tests.
+That complete run validated final contract commit
+`5804a06e4c7e8ee0208fd0a22107aed5199f2ad3`, tree
+`310e6ff7dbb1ba04ef41cbbb2e90b26cfd78923e`. The subsequent correction changes
+only this evidence report so that the final contract revision and its results
+are explicit; it does not change the documented contract, checkers, or tests.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
