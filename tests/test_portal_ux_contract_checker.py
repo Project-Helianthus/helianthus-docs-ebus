@@ -206,6 +206,24 @@ def test_accepts_benign_prose_after_void_dom_element(snippet: str) -> None:
 
 
 @pytest.mark.parametrize(
+    "snippet",
+    (
+        "[Reset](#reset)",
+        "[Clear history](../history)",
+        "![Reset](reset.svg)",
+        "[Read status](#clearservicehistory)",
+        "[Clear history][clear-history]",
+    ),
+)
+def test_rejects_prohibited_markdown_link_or_image_control(snippet: str) -> None:
+    rejects_target_insertion(snippet)
+
+
+def test_accepts_safe_markdown_link_and_image() -> None:
+    accepts_target_insertion("[Read status](#status) ![Topology](topology.svg)")
+
+
+@pytest.mark.parametrize(
     "attribute",
     (
         'data-testid="b503-reset"',
@@ -318,6 +336,10 @@ def test_rejects_protected_selector_in_every_parsed_dom_component(snippet: str) 
         "main GraphQL falls back to REST.",
         "main GraphQL failure: use MCP instead.",
         "main GraphQL uses REST as a fallback.",
+        "If the main GraphQL route fails, the browser retries via REST.",
+        "When main GraphQL is unavailable, the browser switches to MCP.",
+        "After main GraphQL has failed, the browser reroutes through native I/O.",
+        "main GraphQL failure: routes via the other route.",
     ),
 )
 def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> None:
@@ -328,6 +350,10 @@ def test_accepts_negative_b503_main_graphql_fallback_clause() -> None:
     accepts_target_insertion("main GraphQL failure does not allow REST fallback.")
     accepts_target_insertion("main GraphQL does not fall back to REST.")
     accepts_target_insertion("main GraphQL does not use REST as a fallback.")
+    accepts_target_insertion(
+        "If the main GraphQL route fails, the browser does not retry via REST."
+    )
+    accepts_target_insertion("main GraphQL does not switch to MCP.")
 
 
 def test_rejects_availability_selector_swap() -> None:

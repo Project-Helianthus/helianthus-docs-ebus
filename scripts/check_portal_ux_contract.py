@@ -215,6 +215,12 @@ INLINE_CODE_ATTRIBUTE = re.compile(
     r"(?<![A-Za-z0-9_:.-])([A-Za-z_:][A-Za-z0-9_:.-]*)\s*=\s*"
     r"(?:\"([^\"]*)\"|'([^']*)'|([^\s]+))"
 )
+MARKDOWN_INLINE_LINK = re.compile(
+    r"!?\[([^\]\n]*)\]\(([^)\n]*)\)", re.IGNORECASE
+)
+MARKDOWN_REFERENCE_LINK = re.compile(
+    r"!?\[([^\]\n]*)\]\[([^\]\n]+)\]", re.IGNORECASE
+)
 DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
     r"^(?:id|class|for|hidden|name|role|title|value|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+|on[a-z][A-Za-z0-9_:.-]*)$",
     re.IGNORECASE,
@@ -247,6 +253,22 @@ B503_FALLBACK_CONTRADICTIONS = (
         r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)? uses "
         r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route) "
         r"as a fallback\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:if|when|after) (?:the )?main "
+        r"(?:GraphQL|\x60POST /graphql\x60)(?: route)? "
+        r"(?:fails|is unavailable|has failed)[,:; ]+"
+        r"(?:the browser )?(?:retries?|switches?|reroutes?|routes?) "
+        r"(?:via|to|through) "
+        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)? "
+        r"(?:failure[,:; ]+)?(?:retries?|switches?|reroutes?|routes?) "
+        r"(?:via|to|through) "
+        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route)\b",
         re.IGNORECASE,
     ),
 )
@@ -367,6 +389,15 @@ def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | N
     return parser.elements
 
 
+def _markdown_dom_references(target: str) -> list[tuple[str, str]]:
+    references: list[tuple[str, str]] = []
+    for pattern in (MARKDOWN_INLINE_LINK, MARKDOWN_REFERENCE_LINK):
+        for match in pattern.finditer(target):
+            references.append(("Markdown link/image label", match.group(1)))
+            references.append(("Markdown link/image destination", match.group(2)))
+    return references
+
+
 def _inline_code_dom_attributes(target: str) -> list[tuple[str, str]]:
     attributes: list[tuple[str, str]] = []
     for fragment in INLINE_CODE_FRAGMENT.findall(target):
@@ -386,6 +417,8 @@ def _inline_code_dom_attributes(target: str) -> list[tuple[str, str]]:
 
 
 def _reject_prohibited_dom_references(target: str) -> None:
+    for context, value in _markdown_dom_references(target):
+        _reject_prohibited_dom_component(context, value)
     for attribute, value in _inline_code_dom_attributes(target):
         _reject_prohibited_dom_component("inline-code attribute name", attribute)
         _reject_prohibited_dom_component(
