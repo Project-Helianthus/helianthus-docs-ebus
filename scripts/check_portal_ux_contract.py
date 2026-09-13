@@ -127,7 +127,7 @@ REQUIRED = (
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
-    "source contract commit `0e49b3019bfbfc438b1141a08f6c2872a2e21142` and current open\nevidence head `76ac4262bbda9fcaeb2846b56a46997d7dd07980`; #975 remains open,\nis not claimed final or merged, and this documentation does not claim it is\nmerged.",
+    "source contract commit `9c1324ecf55597d26dc7da7e33af0468e14fc8be` and current open\nevidence head `c95ff19284c4e3d03fcbd2e7e05b4f22d8f6aeaf`; #975 remains open,\nintermediate, and unmerged, and this documentation does not claim it is\nmerged.",
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
@@ -188,7 +188,7 @@ DOM_SELECTOR_TOKEN = re.compile(
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
 COMPACT_PROHIBITED_COMMAND = re.compile(
     r"^(?:"
-    r"b503(?:clear(?!ance|ly|fix)|delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
+    r"(?:b503|vaillant)(?:clear(?!ance|ly|fix)|delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
     r"|(?:clear(?!ance|ly|fix)|clearerrorhistory|clearservicehistory|delete|reset)[a-z0-9]*"
     r")$",
     re.IGNORECASE,

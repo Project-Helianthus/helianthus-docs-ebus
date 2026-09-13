@@ -128,6 +128,8 @@ def test_rejects_contract_regressions(old: str, new: str) -> None:
         'id="b503clearbutton"',
         'id="clearbutton"',
         'id="clearlink"',
+        'id="vaillantresetbutton"',
+        'id="vaillantclearbutton"',
     ),
 )
 def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -> None:
@@ -177,6 +179,8 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
         'id="clearlyAvailable"',
         'id="clearfix"',
         'id="clearfixbutton"',
+        'id="vaillantpresetbutton"',
+        'id="vaillantclearfixbutton"',
     ),
 )
 def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:
