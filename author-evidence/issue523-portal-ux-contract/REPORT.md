@@ -262,7 +262,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 137 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 183 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -270,21 +270,21 @@ hardware work, or SemReg cutover.
   expanded availability tables, projection-card admission outside `AVAILABLE`,
   and untyped or inferred History semantics, including normalized protected
   selectors and exact command tokens in every parsed DOM component, and missing
-  accessibility, reconnect/error, frontend-epoch guarantees, or compact
-  Vaillant-prefixed clear/reset controls. The same
-  regression matrix accepts command-word substrings, benign camelCase
-  identifiers, compact preset/clearance controls, longer numeric identifiers,
-  raw Markdown assignments, safe multi-attribute inline fragments, negative
-  fallback language, and ordinary prose.
+  accessibility, reconnect/error, frontend-epoch guarantees, compact
+  Vaillant-prefixed clear/reset controls, rendered CommonMark controls, or any
+  extra route-surface paragraph. The same regression matrix accepts benign
+  command-word substrings, preset/clearance controls, longer numeric
+  identifiers, safe Markdown links/images, non-DOM assignments, and safe
+  multi-attribute inline fragments.
 
 ## Validation
 
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 164 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 183 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 51 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 58 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
