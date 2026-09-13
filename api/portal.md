@@ -129,11 +129,15 @@ capability, current errors/service, history, live-monitor strip, and pending
 completion must not bleed into the new target. On every target switch, before
 admitting the new target presentation, the browser begins targeted cleanup for
 each prior target that it locally owns and whose session is `ENABLING` or
-`ACTIVE`. An `ACTIVE` prior target receives an immediate target-specific
+`ACTIVE` or `REFRESHING`. An `ACTIVE` prior target receives an immediate target-specific
 disable using its locally held issuer token. For an `ENABLING` prior target,
 the browser registers that same target-specific disable at switch time and
 dispatches it immediately when the locally initiated enable completes with its
-issuer token. This is switch-time cleanup, never passive timeout cleanup.
+issuer token. For a `REFRESHING` prior target, the browser queues that
+same token-bound disable without invoking an operation while Refreshing is busy;
+after refresh succeeds to `Active`, it dispatches the queued disable, and after
+refresh failure returns `Idle`, it clears the queued pair without a disable.
+This is switch-time cleanup, never passive timeout cleanup.
 
 Any late enable completion after a switch follows the same prior-target cleanup
 and cannot mutate the new target. Gateway's session view exposes only `state`
@@ -162,10 +166,18 @@ session strip. The strip states are `Idle`, `Enabling`, `Active`, and
 `Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the
 ownership gate and all live-monitor operations are busy. Refresh success returns
 `Active`; refresh failure releases the gate and returns `Idle`. `Disabled` is
-never reported with `owned:true`. The base `SESSION_BUSY` presentation is neutral.
+never reported with `owned:true`. `Disabled` with `owned:false` maps only an
+explicit operator or configuration disable; enable failure, the 30-second idle
+timeout, transport disconnect, and gateway restart map to `Idle` with
+`owned:false` after cleanup. The base `SESSION_BUSY` presentation is neutral.
 The strip may show that the Gateway session gate is held, but must not identify
 another client. Leaving the B503 perspective uses the same locally-token-bound cleanup
 rule as target switching.
+
+When a selected target has Gateway session state `Refreshing` with `owned:true`,
+the session strip remains observable alongside temporarily `UNKNOWN` capability.
+It is status-only: the section-projection card, B503 tabs, and every B503
+operation remain unavailable until capability is `AVAILABLE` again.
 
 The selected-target B503 tabs expose a `role="tablist"` with one named
 `role="tab"` and matching `role="tabpanel"` for Errors, Service, History, and
@@ -220,8 +232,8 @@ and production catalog/action admission
 [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974).
 The five-state session wording follows Gateway
 [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975)
-source contract commit `35c41c9253a9ece7474f674eef38d431e936de0d` and evidence
-head `0eb01249fe89a3163b1c45ee6370bd79aee4ac04`; #975 remains open and this
+source contract commit `59f9604b4da26b4e518b8cc8575ead0b48ba39f6` and evidence
+head `79285e6f1938eb2f39e813465e9d6a541687e9e5`; #975 remains open and this
 documentation does not claim it is merged.
 It does not close Gateway #552, the wider INT-10 parent, SemReg cutover, or
 physical validation.

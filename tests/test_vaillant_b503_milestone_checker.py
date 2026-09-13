@@ -83,6 +83,31 @@ def test_rejects_session_state_contradiction_inside_normative_section(
 
 
 @pytest.mark.parametrize(
+    ("clause", "replacement"),
+    (
+        (
+            CHECKER.DISABLED_PUBLIC_MAPPING,
+            "Disabled maps all cleanup outcomes without a public distinction.",
+        ),
+        (
+            CHECKER.REFRESHING_CLEANUP_CONTRACT,
+            "Refreshing ownership needs no queued cleanup.",
+        ),
+        (
+            CHECKER.REFRESHING_UNKNOWN_STRIP_CONTRACT,
+            "Unknown capability hides the session strip.",
+        ),
+    ),
+)
+def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
+    clause: str, replacement: str
+) -> None:
+    text = contract().replace(clause, replacement, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
     ("old", "new"),
     (
         (

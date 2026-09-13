@@ -64,6 +64,24 @@ B503_SESSION_STATE_CONTRACT = (
     "`Active`; refresh failure releases the gate and returns `Idle`. `Disabled` is\n"
     "never reported with `owned:true`."
 )
+B503_DISABLED_PUBLIC_MAPPING = (
+    "`Disabled` with `owned:false` maps only an\n"
+    "explicit operator or configuration disable; enable failure, the 30-second idle\n"
+    "timeout, transport disconnect, and gateway restart map to `Idle` with\n"
+    "`owned:false` after cleanup."
+)
+B503_REFRESHING_CLEANUP = (
+    "For a `REFRESHING` prior target, the browser queues that\n"
+    "same token-bound disable without invoking an operation while Refreshing is busy;\n"
+    "after refresh succeeds to `Active`, it dispatches the queued disable, and after\n"
+    "refresh failure returns `Idle`, it clears the queued pair without a disable."
+)
+B503_REFRESHING_UNKNOWN_STRIP = (
+    "When a selected target has Gateway session state `Refreshing` with `owned:true`,\n"
+    "the session strip remains observable alongside temporarily `UNKNOWN` capability.\n"
+    "It is status-only: the section-projection card, B503 tabs, and every B503\n"
+    "operation remain unavailable until capability is `AVAILABLE` again."
+)
 FORBIDDEN_B503_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
     "`Disabled` may be reported with `owned:true`.",
@@ -99,7 +117,7 @@ REQUIRED = (
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
-    "source contract commit `35c41c9253a9ece7474f674eef38d431e936de0d` and evidence\nhead `0eb01249fe89a3163b1c45ee6370bd79aee4ac04`; #975 remains open and this\ndocumentation does not claim it is merged.",
+    "source contract commit `59f9604b4da26b4e518b8cc8575ead0b48ba39f6` and evidence\nhead `79285e6f1938eb2f39e813465e9d6a541687e9e5`; #975 remains open and this\ndocumentation does not claim it is merged.",
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
@@ -113,9 +131,10 @@ REQUIRED = (
     'data-testid="b503-session-state-label"',
     B503_SESSION_STATE_CONTRACT,
     "base `SESSION_BUSY` presentation is neutral.",
-    "On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE`.",
+    "On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE` or `REFRESHING`.",
     "An `ACTIVE` prior target receives an immediate target-specific\ndisable using its locally held issuer token.",
     "For an `ENABLING` prior target,\nthe browser registers that same target-specific disable at switch time and\ndispatches it immediately when the locally initiated enable completes with its\nissuer token.",
+    B503_REFRESHING_CLEANUP,
     "This is switch-time cleanup, never passive timeout cleanup.",
     "Gateway's session view exposes only `state`\nand opaque `owned`: `owned` means that the Gateway session gate is held, not\nwhich client holds it.",
     "never derives a foreign owner from `owned`\nor from an absent local token.",
@@ -127,6 +146,8 @@ REQUIRED = (
     B503_CAPABILITY_RECONNECT,
     B503_FIELD_OPERATION_ERRORS,
     B503_FRONTEND_EPOCH_ROLLOVER,
+    B503_DISABLED_PUBLIC_MAPPING,
+    B503_REFRESHING_UNKNOWN_STRIP,
     'data-testid="b503-install-writes-banner"',
     'id="b503-ad02-tooltip-anchor"',
     "generic AD02 installation-write warning",

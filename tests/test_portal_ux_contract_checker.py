@@ -92,7 +92,7 @@ def test_accepts_current_portal_ux_contract() -> None:
          "base `SESSION_BUSY` presentation identifies another client."),
         ("`vaillantErrorsHistory(targetAddress:limit:)`", "`vaillantErrorsHistory()`"),
         ("`vaillantLiveMonitorSession(targetAddress:)`", "`vaillantLiveMonitorSession()`"),
-        ("On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE`.",
+        ("On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE` or `REFRESHING`.",
          "Target-switch cleanup is optional."),
         ("For an `ENABLING` prior target,\nthe browser registers that same target-specific disable at switch time and\ndispatches it immediately when the locally initiated enable completes with its\nissuer token.",
          "An ENABLING prior target waits for passive timeout."),
@@ -382,6 +382,29 @@ def test_rejects_incomplete_b503_refreshing_state_contract(
     replacement: str,
 ) -> None:
     rejects(CHECKER.B503_SESSION_STATE_CONTRACT, replacement)
+
+
+@pytest.mark.parametrize(
+    ("clause", "replacement"),
+    (
+        (
+            CHECKER.B503_REFRESHING_CLEANUP,
+            "Refreshing cleanup is optional after target switch or navigation.",
+        ),
+        (
+            CHECKER.B503_REFRESHING_UNKNOWN_STRIP,
+            "UNKNOWN capability hides the session strip and all B503 content.",
+        ),
+        (
+            CHECKER.B503_DISABLED_PUBLIC_MAPPING,
+            "Disabled maps every cleanup path regardless of ownership.",
+        ),
+    ),
+)
+def test_rejects_missing_refreshing_cleanup_strip_or_disabled_mapping(
+    clause: str, replacement: str
+) -> None:
+    rejects(clause, replacement)
 
 
 @pytest.mark.parametrize("clause", CHECKER.FORBIDDEN_B503_SESSION_STATE_CLAUSES)

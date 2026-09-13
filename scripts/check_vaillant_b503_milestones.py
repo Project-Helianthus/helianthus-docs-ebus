@@ -13,6 +13,8 @@ MILESTONE_TABLE_HEADER = ("Milestone", "Repo", "Artefact")
 MARKDOWN_TABLE_DELIMITER_CELL = re.compile(r"^:?-{3,}:?$")
 SESSION_SECTION_START = "## 6. Live-Monitor Session"
 SESSION_SECTION_END = "## 7. Gateway Operational Contract"
+REFRESHING_PUBLIC_SECTION_START = "#### 7.1.1 Refreshing session state (public)"
+REFRESHING_PUBLIC_SECTION_END = "### 7.2 Quiesce timing bounds (normative)"
 INSTALL_WRITE_SECTION_START = "## 9. Install-Writes Non-Exposure (v1 invariant)"
 INSTALL_WRITE_SECTION_END = "## 10. F.xxx Decimal Caveat (LOCAL_CAPTURE only)"
 M2B_GRAPHQL = (
@@ -40,6 +42,27 @@ SESSION_STATE_CONTRACT = (
     "live-monitor operations are busy. Refresh success returns `Active`; refresh\n"
     "failure releases the gate and returns `Idle`. `Disabled` is never reported with\n"
     "`owned:true`."
+)
+DISABLED_PUBLIC_MAPPING = (
+    "**Stable public `Disabled` mapping:** `Disabled` with `owned:false` represents\n"
+    "only an explicit operator or configuration disable. Enable failure, the 30s\n"
+    "idle timeout, transport disconnect, and gateway restart may traverse the\n"
+    "internal cleanup path through `DISABLED`, but their stable public session\n"
+    "observation is `Idle` with `owned:false` after cleanup. `Disabled` is never\n"
+    "reported with `owned:true`."
+)
+REFRESHING_CLEANUP_CONTRACT = (
+    "When a locally token-owning consumer leaves a target or navigates away while\n"
+    "its session is `Refreshing`, it MUST queue that target/token disable without\n"
+    "invoking the busy operation. After successful refresh reaches `Active`, it\n"
+    "dispatches the queued disable; after refresh failure reaches `Idle`, it clears\n"
+    "the queued pair without a disable."
+)
+REFRESHING_UNKNOWN_STRIP_CONTRACT = (
+    "During a held `Refreshing` epoch, the\n"
+    "session strip remains observable alongside temporarily `UNKNOWN` capability,\n"
+    "but it is status-only: no B503 card, tabs, or operations are admitted until\n"
+    "capability returns `AVAILABLE`."
 )
 REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
 REFRESH_FAILURE_TRANSITION = (
@@ -136,6 +159,8 @@ def validate_text(text: str) -> None:
     session_section = _section(text, SESSION_SECTION_START, SESSION_SECTION_END)
     if SESSION_STATE_CONTRACT not in session_section:
         raise CheckError("missing five-state B503 session contract in §6.1")
+    if DISABLED_PUBLIC_MAPPING not in session_section:
+        raise CheckError("missing stable public Disabled mapping in §6")
     for fragment in (
         REFRESH_FAILURE_DIAGRAM,
         REFRESH_FAILURE_TRANSITION,
@@ -153,6 +178,15 @@ def validate_text(text: str) -> None:
     for fragment in FORBIDDEN_SESSION_STATE_CLAUSES:
         if fragment in session_section:
             raise CheckError(f"forbidden §6 B503 session-state contradiction: {fragment!r}")
+
+    refreshing_public_section = _section(
+        text, REFRESHING_PUBLIC_SECTION_START, REFRESHING_PUBLIC_SECTION_END
+    )
+    for fragment in (REFRESHING_CLEANUP_CONTRACT, REFRESHING_UNKNOWN_STRIP_CONTRACT):
+        if fragment not in refreshing_public_section:
+            raise CheckError(
+                f"missing public Refreshing consumer contract in §7.1.1: {fragment!r}"
+            )
 
     rows = _milestone_table(text)
     for expected in (M2B_GRAPHQL, M3_PORTAL):

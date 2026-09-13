@@ -260,12 +260,17 @@ the direct `REFRESHING → IDLE` refresh-failure path. The "any" transitions
 a held-owner state at the time the event fired; if the FSM was already `IDLE`
 or `DISABLED` (no owner), no release occurs. The `DISABLED → IDLE` transition
 does NOT release the mutex; it only marks the session slot as re-claimable
-after cleanup completes. `Disabled` is reserved for explicit operator or
-configuration disable handling and is never reported with `owned:true`.
-Implementations MUST NOT release the mutex at any other transition, and MUST
-NOT attempt a release when no owner is held. This keeps the release
-single-sourced, owner-conditional, and free of double-unlock panics on
-timeout/NAK paths or disconnect-while-idle events.
+after cleanup completes. Implementations MUST NOT release the mutex at any
+other transition, and MUST NOT attempt a release when no owner is held. This
+keeps the release single-sourced, owner-conditional, and free of double-unlock
+panics on timeout/NAK paths or disconnect-while-idle events.
+
+**Stable public `Disabled` mapping:** `Disabled` with `owned:false` represents
+only an explicit operator or configuration disable. Enable failure, the 30s
+idle timeout, transport disconnect, and gateway restart may traverse the
+internal cleanup path through `DISABLED`, but their stable public session
+observation is `Idle` with `owned:false` after cleanup. `Disabled` is never
+reported with `owned:true`.
 
 ## 7. Gateway Operational Contract
 
@@ -297,6 +302,15 @@ session-status value, not a sixth `B503Availability` reason:
 
 Downstream contract tests (M2a, M2b, M3) MUST assert the five stable session
 states and MUST reject `Disabled` paired with `owned:true`.
+
+When a locally token-owning consumer leaves a target or navigates away while
+its session is `Refreshing`, it MUST queue that target/token disable without
+invoking the busy operation. After successful refresh reaches `Active`, it
+dispatches the queued disable; after refresh failure reaches `Idle`, it clears
+the queued pair without a disable. During a held `Refreshing` epoch, the
+session strip remains observable alongside temporarily `UNKNOWN` capability,
+but it is status-only: no B503 card, tabs, or operations are admitted until
+capability returns `AVAILABLE`.
 
 ### 7.2 Quiesce timing bounds (normative)
 
