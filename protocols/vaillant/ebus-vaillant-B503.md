@@ -334,10 +334,12 @@ states and MUST reject `Disabled` paired with `owned:true`.
 When a locally token-owning consumer leaves a target or navigates away while
 its session is `Enabling`, it MUST register cleanup for that enable attempt.
 Successful enable completion supplies the issuer token and dispatches exactly
-one target/token disable. ACK timeout, NAK, epoch-advance discard, transport
-disconnect, or gateway restart instead clears that registration without a
-disable before any later enable is admitted; a registration MUST NOT transfer
-to a later session.
+one target/token disable. Any enable attempt that does not complete successfully
+with an issuer token—including `ctx.Done` before bus turnaround, ACK timeout,
+NAK, CRC mismatch, bus-arbitration timeout, epoch-advance discard,
+transport disconnect, gateway restart, or any other terminal failure—clears that
+registration without a disable before any later enable is admitted; a
+registration MUST NOT transfer to a later session.
 
 When a locally token-owning consumer leaves a target or navigates away while
 its session is `Refreshing`, it MUST queue that target/token disable without

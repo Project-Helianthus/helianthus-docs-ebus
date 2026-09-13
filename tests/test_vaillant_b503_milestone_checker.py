@@ -309,6 +309,34 @@ def test_rejects_ambiguous_triggering_refresh_request_outcome(
 
 
 @pytest.mark.parametrize(
+    "required_failure",
+    (
+        "`ctx.Done` before bus turnaround",
+        "ACK timeout",
+        "NAK",
+        "CRC mismatch",
+        "bus-arbitration timeout",
+        "epoch-advance discard",
+        "transport disconnect",
+        "gateway restart",
+        "or any other terminal failure",
+    ),
+)
+def test_rejects_incomplete_enabling_cleanup_failure_set(
+    required_failure: str,
+) -> None:
+    text = contract()
+    assert CHECKER.ENABLING_CLEANUP_CONTRACT in text
+    replacement = CHECKER.ENABLING_CLEANUP_CONTRACT.replace(
+        required_failure, "omitted failure"
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(
+            text.replace(CHECKER.ENABLING_CLEANUP_CONTRACT, replacement, 1)
+        )
+
+
+@pytest.mark.parametrize(
     ("fragment", "replacement"),
     (
         (

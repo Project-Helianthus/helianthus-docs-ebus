@@ -133,10 +133,12 @@ each prior target that it locally owns and whose session is `ENABLING` or
 disable using its locally held issuer token. For an `ENABLING` prior target,
 the browser registers that same target-specific disable at switch time and
 dispatches it immediately when the locally initiated enable completes with its
-issuer token. If that enable instead terminates by ACK timeout, NAK, epoch
-advance discard, transport disconnect, or gateway restart, the browser clears
-the registered target cleanup without a disable before it may admit any later
-enable; the registration never transfers to a later session.
+issuer token. If that enable does not complete successfully with an issuer
+token—including cancellation before bus turnaround, ACK timeout, NAK,
+CRC mismatch, bus-arbitration timeout, epoch-advance discard, transport disconnect,
+gateway restart, or any other terminal failure—the browser clears the registered
+target cleanup without a disable before it may admit any later enable; the
+registration never transfers to a later session.
 
 For a `REFRESHING` prior target, the browser queues that
 same token-bound disable without invoking an operation while Refreshing is busy;

@@ -213,6 +213,11 @@ def test_accepts_benign_prose_after_void_dom_element(snippet: str) -> None:
         '<img src="clear%73ervicehistory.svg">',
         inline_code('href="#re%73et"'),
         inline_code('src="02%2001.svg"'),
+        inline_code('action="/clear"'),
+        inline_code('formaction="#re%73et"'),
+        inline_code('poster="02%2001.png"'),
+        inline_code('cite="/delete"'),
+        inline_code('data="/clearservicehistory"'),
     ),
 )
 def test_rejects_percent_encoded_html_url_attribute_control(snippet: str) -> None:
@@ -222,6 +227,8 @@ def test_rejects_percent_encoded_html_url_attribute_control(snippet: str) -> Non
 def test_accepts_safe_percent_encoded_html_url_attribute() -> None:
     accepts_target_insertion('<a href="#status%20details">Read</a>')
     accepts_target_insertion(inline_code('src="topology%20view.svg"'))
+    for attribute in ("action", "formaction", "poster", "cite", "data"):
+        accepts_target_insertion(inline_code(f'{attribute}="/status%20details"'))
 
 
 @pytest.mark.parametrize(
@@ -349,7 +356,7 @@ def test_rejects_dom_relevant_attribute_inside_multi_attribute_inline_code(
 
 
 @pytest.mark.parametrize(
-    "fragment", ("query=reset", "action = delete")
+    "fragment", ("query=reset", "operation = delete")
 )
 def test_accepts_non_dom_inline_code_assignment(fragment: str) -> None:
     accepts_target_insertion(inline_code(fragment))
@@ -589,6 +596,29 @@ def test_rejects_missing_refreshing_cleanup_strip_or_disabled_mapping(
     clause: str, replacement: str
 ) -> None:
     rejects(clause, replacement)
+
+
+@pytest.mark.parametrize(
+    "required_failure",
+    (
+        "cancellation before bus turnaround",
+        "ACK timeout",
+        "NAK",
+        "CRC mismatch",
+        "bus-arbitration timeout",
+        "epoch-advance discard",
+        "transport disconnect",
+        "gateway restart",
+        "or any other terminal failure",
+    ),
+)
+def test_rejects_incomplete_enabling_cleanup_failure_set(
+    required_failure: str,
+) -> None:
+    rejects(
+        CHECKER.B503_ENABLING_CLEANUP,
+        CHECKER.B503_ENABLING_CLEANUP.replace(required_failure, "omitted failure"),
+    )
 
 
 @pytest.mark.parametrize("clause", CHECKER.FORBIDDEN_B503_SESSION_STATE_CLAUSES)

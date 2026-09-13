@@ -122,10 +122,12 @@ ENABLING_CLEANUP_CONTRACT = (
     "When a locally token-owning consumer leaves a target or navigates away while\n"
     "its session is `Enabling`, it MUST register cleanup for that enable attempt.\n"
     "Successful enable completion supplies the issuer token and dispatches exactly\n"
-    "one target/token disable. ACK timeout, NAK, epoch-advance discard, transport\n"
-    "disconnect, or gateway restart instead clears that registration without a\n"
-    "disable before any later enable is admitted; a registration MUST NOT transfer\n"
-    "to a later session."
+    "one target/token disable. Any enable attempt that does not complete successfully\n"
+    "with an issuer token—including `ctx.Done` before bus turnaround, ACK timeout,\n"
+    "NAK, CRC mismatch, bus-arbitration timeout, epoch-advance discard,\n"
+    "transport disconnect, gateway restart, or any other terminal failure—clears that\n"
+    "registration without a disable before any later enable is admitted; a\n"
+    "registration MUST NOT transfer to a later session."
 )
 REFRESHING_UNKNOWN_STRIP_CONTRACT = (
     "During a held `Refreshing` epoch, the\n"

@@ -95,10 +95,12 @@ B503_ENABLING_CLEANUP = (
     "For an `ENABLING` prior target,\n"
     "the browser registers that same target-specific disable at switch time and\n"
     "dispatches it immediately when the locally initiated enable completes with its\n"
-    "issuer token. If that enable instead terminates by ACK timeout, NAK, epoch\n"
-    "advance discard, transport disconnect, or gateway restart, the browser clears\n"
-    "the registered target cleanup without a disable before it may admit any later\n"
-    "enable; the registration never transfers to a later session."
+    "issuer token. If that enable does not complete successfully with an issuer\n"
+    "token—including cancellation before bus turnaround, ACK timeout, NAK,\n"
+    "CRC mismatch, bus-arbitration timeout, epoch-advance discard, transport disconnect,\n"
+    "gateway restart, or any other terminal failure—the browser clears the registered\n"
+    "target cleanup without a disable before it may admit any later enable; the\n"
+    "registration never transfers to a later session."
 )
 B503_REFRESHING_UNKNOWN_STRIP = (
     "When a selected target has Gateway session state `Refreshing` with `owned:true`,\n"
@@ -537,6 +539,7 @@ def _inline_code_dom_attributes(target: str) -> list[tuple[str, str]]:
         ]
         if any(
             DOM_RELEVANT_ATTRIBUTE_NAME.fullmatch(attribute) is not None
+            or attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
             for attribute, _ in parsed
         ):
             attributes.extend(parsed)
