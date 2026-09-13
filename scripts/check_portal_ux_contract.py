@@ -91,6 +91,15 @@ B503_REFRESHING_CLEANUP = (
     "through `Disabled` cleanup to `Idle`, that single disable satisfies cleanup;\n"
     "the browser clears the queued pair without issuing a second disable."
 )
+B503_ENABLING_CLEANUP = (
+    "For an `ENABLING` prior target,\n"
+    "the browser registers that same target-specific disable at switch time and\n"
+    "dispatches it immediately when the locally initiated enable completes with its\n"
+    "issuer token. If that enable instead terminates by ACK timeout, NAK, epoch\n"
+    "advance discard, transport disconnect, or gateway restart, the browser clears\n"
+    "the registered target cleanup without a disable before it may admit any later\n"
+    "enable; the registration never transfers to a later session."
+)
 B503_REFRESHING_UNKNOWN_STRIP = (
     "When a selected target has Gateway session state `Refreshing` with `owned:true`,\n"
     "the session strip remains observable alongside temporarily `UNKNOWN` capability.\n"
@@ -175,7 +184,7 @@ REQUIRED = (
     "base `SESSION_BUSY` presentation is neutral.",
     "On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE` or `REFRESHING`.",
     "An `ACTIVE` prior target receives an immediate target-specific\ndisable using its locally held issuer token.",
-    "For an `ENABLING` prior target,\nthe browser registers that same target-specific disable at switch time and\ndispatches it immediately when the locally initiated enable completes with its\nissuer token.",
+    B503_ENABLING_CLEANUP,
     B503_REFRESHING_CLEANUP,
     "This is switch-time cleanup, never passive timeout cleanup.",
     "Gateway's session view exposes only `state`\nand opaque `owned`: `owned` means that the Gateway session gate is held, not\nwhich client holds it.",

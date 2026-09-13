@@ -332,6 +332,14 @@ Downstream contract tests (M2a, M2b, M3) MUST assert the five stable session
 states and MUST reject `Disabled` paired with `owned:true`.
 
 When a locally token-owning consumer leaves a target or navigates away while
+its session is `Enabling`, it MUST register cleanup for that enable attempt.
+Successful enable completion supplies the issuer token and dispatches exactly
+one target/token disable. ACK timeout, NAK, epoch-advance discard, transport
+disconnect, or gateway restart instead clears that registration without a
+disable before any later enable is admitted; a registration MUST NOT transfer
+to a later session.
+
+When a locally token-owning consumer leaves a target or navigates away while
 its session is `Refreshing`, it MUST queue that target/token disable without
 invoking the busy operation. After successful refresh reaches `Active`, it
 dispatches the queued disable; after refresh failure reaches `Idle`, it clears

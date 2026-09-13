@@ -94,7 +94,7 @@ def test_accepts_current_portal_ux_contract() -> None:
         ("`vaillantLiveMonitorSession(targetAddress:)`", "`vaillantLiveMonitorSession()`"),
         ("On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target that it locally owns and whose session is `ENABLING` or\n`ACTIVE` or `REFRESHING`.",
          "Target-switch cleanup is optional."),
-        ("For an `ENABLING` prior target,\nthe browser registers that same target-specific disable at switch time and\ndispatches it immediately when the locally initiated enable completes with its\nissuer token.",
+        (CHECKER.B503_ENABLING_CLEANUP,
          "An ENABLING prior target waits for passive timeout."),
         ("Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
          "Target changes retain current presentation state."),
@@ -562,6 +562,10 @@ def test_rejects_incomplete_b503_refreshing_state_contract(
         (
             CHECKER.B503_REFRESHING_CLEANUP,
             "Refreshing cleanup is optional after target switch or navigation.",
+        ),
+        (
+            CHECKER.B503_ENABLING_CLEANUP,
+            "A failed prior-target enable leaves its cleanup registered for the next session.",
         ),
         (
             CHECKER.B503_REFRESHING_UNKNOWN_STRIP,

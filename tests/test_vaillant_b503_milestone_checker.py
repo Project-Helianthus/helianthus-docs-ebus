@@ -293,6 +293,10 @@ def test_rejects_refresh_failure_diagram_or_lock_contradiction(
             "without issuing a second disable.",
             "A successful triggering DISABLE leaves the queued cleanup pair pending.",
         ),
+        (
+            CHECKER.ENABLING_CLEANUP_CONTRACT,
+            "A failed enable may leave cleanup registered for a later session.",
+        ),
     ),
 )
 def test_rejects_ambiguous_triggering_refresh_request_outcome(

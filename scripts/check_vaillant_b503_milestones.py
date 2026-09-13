@@ -118,6 +118,15 @@ REFRESHING_CLEANUP_CONTRACT = (
     "single disable satisfies the queued cleanup: the consumer clears the pair\n"
     "without issuing a second disable."
 )
+ENABLING_CLEANUP_CONTRACT = (
+    "When a locally token-owning consumer leaves a target or navigates away while\n"
+    "its session is `Enabling`, it MUST register cleanup for that enable attempt.\n"
+    "Successful enable completion supplies the issuer token and dispatches exactly\n"
+    "one target/token disable. ACK timeout, NAK, epoch-advance discard, transport\n"
+    "disconnect, or gateway restart instead clears that registration without a\n"
+    "disable before any later enable is admitted; a registration MUST NOT transfer\n"
+    "to a later session."
+)
 REFRESHING_UNKNOWN_STRIP_CONTRACT = (
     "During a held `Refreshing` epoch, the\n"
     "session strip remains observable alongside temporarily `UNKNOWN` capability,\n"
@@ -378,7 +387,11 @@ def validate_text(text: str) -> None:
     refreshing_public_section = _section(
         text, REFRESHING_PUBLIC_SECTION_START, REFRESHING_PUBLIC_SECTION_END
     )
-    for fragment in (REFRESHING_CLEANUP_CONTRACT, REFRESHING_UNKNOWN_STRIP_CONTRACT):
+    for fragment in (
+        ENABLING_CLEANUP_CONTRACT,
+        REFRESHING_CLEANUP_CONTRACT,
+        REFRESHING_UNKNOWN_STRIP_CONTRACT,
+    ):
         if fragment not in refreshing_public_section:
             raise CheckError(
                 f"missing public Refreshing consumer contract in §7.1.1: {fragment!r}"
