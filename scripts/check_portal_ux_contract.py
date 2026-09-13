@@ -139,12 +139,14 @@ FORBIDDEN_B503_DOM_COMMAND_TOKENS = frozenset((
 ))
 FORBIDDEN_INSTALLATION_SELECTORS = frozenset(("0201", "0202"))
 DOM_SELECTOR_TOKEN = re.compile(
-    r"(?<![0-9a-f])(?:0x)?02[\s_:-]*0[12](?![0-9a-f])", re.IGNORECASE
-)
-DOM_IDENTIFIER_SELECTOR_TOKEN = re.compile(
-    r"(?:^|(?<=[a-z]))(020[12])(?=[A-Z]|$)", re.IGNORECASE
+    r"(?<![0-9])(?:0x)?02[\s_:-]*0[12](?![0-9])", re.IGNORECASE
 )
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
+COMPACT_PROHIBITED_COMMAND = re.compile(
+    r"^(?:b503)?(?:clear(?:errorhistory|servicehistory)?|delete|reset)"
+    r"(?:button|action|control)?$",
+    re.IGNORECASE,
+)
 
 
 class CheckError(ValueError):
@@ -222,12 +224,23 @@ def _selector_tokens(value: str) -> set[str]:
         _normalized_hex_selector(match.group(0))
         for match in DOM_SELECTOR_TOKEN.finditer(value)
     }
-    tokens.update(match.group(1) for match in DOM_IDENTIFIER_SELECTOR_TOKEN.finditer(value))
     return {token for token in tokens if token is not None}
 
 
+def _compact_prohibited_command_tokens(value: str) -> set[str]:
+    candidates = _identifier_tokens(value)
+    candidates.add(re.sub(r"[^a-z0-9]", "", value.lower()))
+    return {
+        candidate
+        for candidate in candidates
+        if COMPACT_PROHIBITED_COMMAND.fullmatch(candidate)
+    }
+
+
 def _reject_prohibited_command_tokens(context: str, value: str) -> None:
-    prohibited_commands = _identifier_tokens(value) & FORBIDDEN_B503_DOM_COMMAND_TOKENS
+    prohibited_commands = (
+        _identifier_tokens(value) & FORBIDDEN_B503_DOM_COMMAND_TOKENS
+    ) | _compact_prohibited_command_tokens(value)
     if prohibited_commands:
         raise CheckError(
             "api/portal.md: prohibited B503 command token in DOM "

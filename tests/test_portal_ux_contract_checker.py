@@ -117,6 +117,8 @@ def test_rejects_contract_regressions(old: str, new: str) -> None:
         'data-command="ClearErrorHistoryAction"',
         'id="b503ResetButton"',
         'aria-label="DeleteServiceHistory"',
+        'id="resetbutton"',
+        'id="clearerrorhistorybutton"',
     ),
 )
 def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -> None:
@@ -135,6 +137,8 @@ def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -
         'data-other="0x0202"',
         'id="b503Selector0201Button"',
         'id="b503Selector0202Control"',
+        'id="b503-0201button"',
+        'id="x_0202control"',
     ),
 )
 def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute: str) -> None:
@@ -153,6 +157,10 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
         'id="b503PresetButton"',
         'title="clearlyAvailable"',
         'id="b503Selector02010Button"',
+        'id="b503-02010button"',
+        'id="x_02020control"',
+        'id="presetbutton"',
+        'id="clearancebutton"',
     ),
 )
 def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:
@@ -174,6 +182,7 @@ def test_accepts_harmless_prose_outside_dom_attribute_references() -> None:
         "<span>Delete</span>",
         "<button>Clear <strong>error history</strong></button>",
         "<button><span>Re</span><span>set</span></button>",
+        "<B503ClearErrorHistoryButton></B503ClearErrorHistoryButton>",
     ),
 )
 def test_rejects_prohibited_command_in_dom_element_name_or_content(snippet: str) -> None:
