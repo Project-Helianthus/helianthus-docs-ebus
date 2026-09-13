@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import pathlib
+import re
 import sys
 
 
 DOC = pathlib.Path("protocols/vaillant/ebus-vaillant-B503.md")
 MILESTONE_HEADING = "## 14. Companion Links (downstream code milestones)"
 MILESTONE_TABLE_HEADER = ("Milestone", "Repo", "Artefact")
-SESSION_SECTION_START = "### 6.1 State machine (plan AD04)"
-SESSION_SECTION_END = "### 6.2 Ownership key"
+MARKDOWN_TABLE_DELIMITER_CELL = re.compile(r"^:?-{3,}:?$")
+SESSION_SECTION_START = "## 6. Live-Monitor Session"
+SESSION_SECTION_END = "## 7. Gateway Operational Contract"
 INSTALL_WRITE_SECTION_START = "## 9. Install-Writes Non-Exposure (v1 invariant)"
 INSTALL_WRITE_SECTION_END = "## 10. F.xxx Decimal Caveat (LOCAL_CAPTURE only)"
 M2B_GRAPHQL = (
@@ -38,6 +40,16 @@ SESSION_STATE_CONTRACT = (
     "live-monitor operations are busy. Refresh success returns `Active`; refresh\n"
     "failure releases the gate and returns `Idle`. `Disabled` is never reported with\n"
     "`owned:true`."
+)
+REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
+REFRESH_FAILURE_TRANSITION = (
+    "| `REFRESHING` | refresh failure | `IDLE` | release ownership gate; "
+    "surface the Gateway-supplied failure outcome |"
+)
+REFRESH_FAILURE_LOCK = "the direct `REFRESHING → IDLE` refresh-failure path"
+FORBIDDEN_REFRESH_FAILURE_CONTRADICTIONS = (
+    "REFRESHING --> DISABLED: refresh failure releases gate",
+    "on entry to `DISABLED` from a\nheld-owner state",
 )
 FORBIDDEN_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
@@ -67,6 +79,12 @@ def _parse_table_row(line: str) -> tuple[str, ...] | None:
     return tuple(cell.strip() for cell in line.strip("|").split("|"))
 
 
+def _is_markdown_table_delimiter(row: tuple[str, ...] | None) -> bool:
+    return row is not None and len(row) == len(MILESTONE_TABLE_HEADER) and all(
+        MARKDOWN_TABLE_DELIMITER_CELL.fullmatch(cell) is not None for cell in row
+    )
+
+
 def _section(text: str, start_marker: str, end_marker: str) -> str:
     try:
         start = text.index(start_marker)
@@ -90,7 +108,9 @@ def _milestone_table(text: str) -> tuple[tuple[str, ...], ...]:
     if header_index >= len(lines) or _parse_table_row(lines[header_index]) != MILESTONE_TABLE_HEADER:
         raise CheckError("missing §14 B503 milestone table header")
     separator_index = header_index + 1
-    if separator_index >= len(lines) or _parse_table_row(lines[separator_index]) is None:
+    if separator_index >= len(lines) or not _is_markdown_table_delimiter(
+        _parse_table_row(lines[separator_index])
+    ):
         raise CheckError("missing §14 B503 milestone table separator")
 
     rows: list[tuple[str, ...]] = []
@@ -116,6 +136,20 @@ def validate_text(text: str) -> None:
     session_section = _section(text, SESSION_SECTION_START, SESSION_SECTION_END)
     if SESSION_STATE_CONTRACT not in session_section:
         raise CheckError("missing five-state B503 session contract in §6.1")
+    for fragment in (
+        REFRESH_FAILURE_DIAGRAM,
+        REFRESH_FAILURE_TRANSITION,
+        REFRESH_FAILURE_LOCK,
+    ):
+        if fragment not in session_section:
+            raise CheckError(
+                f"missing coherent B503 Refreshing failure contract in §6.1: {fragment!r}"
+            )
+    for fragment in FORBIDDEN_REFRESH_FAILURE_CONTRADICTIONS:
+        if fragment in session_section:
+            raise CheckError(
+                f"forbidden B503 Refreshing failure contradiction in §6.1: {fragment!r}"
+            )
     for fragment in FORBIDDEN_SESSION_STATE_CLAUSES:
         if fragment in session_section:
             raise CheckError(f"forbidden §6 B503 session-state contradiction: {fragment!r}")

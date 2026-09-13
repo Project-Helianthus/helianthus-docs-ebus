@@ -82,6 +82,42 @@ def test_rejects_session_state_contradiction_inside_normative_section(
         CHECKER.validate_text(text)
 
 
+@pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        (
+            CHECKER.REFRESH_FAILURE_DIAGRAM,
+            "REFRESHING --> DISABLED: refresh failure releases gate",
+        ),
+        (
+            CHECKER.REFRESH_FAILURE_LOCK,
+            "only on entry to `DISABLED` from a held-owner state",
+        ),
+    ),
+)
+def test_rejects_refresh_failure_diagram_or_lock_contradiction(
+    old: str, new: str
+) -> None:
+    text = contract().replace(old, new, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_rejects_non_delimiter_milestone_table_separator() -> None:
+    table_start = (
+        f"{CHECKER.MILESTONE_HEADING}\n\n"
+        "| Milestone | Repo | Artefact |\n"
+        "|---|---|---|"
+    )
+    text = contract().replace(
+        table_start,
+        table_start.removesuffix("|---|---|") + "| bad | bad | bad |",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize("expected", (CHECKER.M2B_GRAPHQL, CHECKER.M3_PORTAL))
 def test_rejects_required_milestone_row_copied_after_milestone_table(
     expected: tuple[str, ...],

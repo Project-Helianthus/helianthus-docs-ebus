@@ -188,7 +188,7 @@ stateDiagram-v2
 
     ACTIVE --> REFRESHING: reconnect / epoch refresh
     REFRESHING --> ACTIVE: refresh succeeds
-    REFRESHING --> DISABLED: refresh failure releases gate
+    REFRESHING --> IDLE: refresh failure releases gate
 
     note right of REFRESHING
       Stable public session state; ownership gate held.
@@ -253,17 +253,19 @@ access.
 
 **Lock lifecycle (single assignment, owner-conditional):**
 `liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
-transition. It is released exactly once **on entry to `DISABLED` from a
-held-owner state** — i.e., when the source state is `ENABLING`, `ACTIVE`,
-or `REFRESHING`. The "any" transitions (transport disconnect, gateway
-restart) release the mutex only when FSM was in a held-owner state at the
-time the event fired; if the FSM was already `IDLE` or `DISABLED` (no
-owner), no release occurs. The `DISABLED → IDLE` transition does NOT
-release the mutex; it only marks the session slot as re-claimable after
-cleanup completes. Implementations MUST NOT release the mutex at any
-other transition, and MUST NOT attempt a release when no owner is held.
-This keeps the release single-sourced, owner-conditional, and free of
-double-unlock panics on timeout/NAK paths or disconnect-while-idle events.
+transition. It is released exactly once on a terminal transition from a
+held-owner state: on entry to `DISABLED` from `ENABLING` or `ACTIVE`, or on
+the direct `REFRESHING → IDLE` refresh-failure path. The "any" transitions
+(transport disconnect, gateway restart) release the mutex only when FSM was in
+a held-owner state at the time the event fired; if the FSM was already `IDLE`
+or `DISABLED` (no owner), no release occurs. The `DISABLED → IDLE` transition
+does NOT release the mutex; it only marks the session slot as re-claimable
+after cleanup completes. `Disabled` is reserved for explicit operator or
+configuration disable handling and is never reported with `owned:true`.
+Implementations MUST NOT release the mutex at any other transition, and MUST
+NOT attempt a release when no owner is held. This keeps the release
+single-sourced, owner-conditional, and free of double-unlock panics on
+timeout/NAK paths or disconnect-while-idle events.
 
 ## 7. Gateway Operational Contract
 
