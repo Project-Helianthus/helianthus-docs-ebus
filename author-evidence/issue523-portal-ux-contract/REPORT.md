@@ -31,6 +31,8 @@ hardware work, or SemReg cutover.
 | B503-invariants correction tree | `a981911c0aecaf967d24b9233fac22714ad8ffe6` |
 | Selector-normalization correction commit | `a237d04241c7f996cad2c8429b711f31ee76a073` |
 | Selector-normalization correction tree | `7c198991457975b42dcecc05fbb597e6421be5a7` |
+| B503-boundaries correction commit | `dedf448ed98aaec456f9503198184ecc8c9744a0` |
+| B503-boundaries correction tree | `de950cd6df8a010e0c9cc957bc9f516c2b566913` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -68,6 +70,15 @@ hardware work, or SemReg cutover.
   before comparison, so the prohibited installation selectors are rejected in
   spaced, `0x`-prefixed, compact, or hyphenated hexadecimal forms without
   scanning unrelated prose or attributes.
+- The target section mechanically requires named keyboard-accessible B503 tabs
+  and session status, Gateway-owned reconnect/error presentation without
+  browser action replay or route switching, and target-address plus frontend
+  epoch fencing of asynchronous completions.
+- The canonical B503 milestone rows now preserve diagnostic read-only GraphQL
+  and Portal behavior while admitting only the existing §6 live-monitor
+  enable/disable session action and session strip. A dedicated gate rejects the
+  earlier all-read-only contradiction and removal of the `02 01`/`02 02`
+  install-write non-exposure invariant.
 - The main B503 GraphQL route also names graduated
   `vaillantErrorsHistory(targetAddress:limit:)` and
   `vaillantLiveMonitorSession(targetAddress:)` operations.
@@ -78,21 +89,24 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 53 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 56 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
   implementation language, vendor branching, lost action-time confirmation,
   expanded availability tables, projection-card admission outside `AVAILABLE`,
   and untyped or inferred History semantics, including normalized protected
-  selectors in relevant DOM attribute references.
+  selectors in relevant DOM attribute references, or missing accessibility,
+  reconnect/error, and frontend-epoch guarantees.
 
 ## Validation
 
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 53 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 56 tests |
+| `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -119,6 +133,10 @@ The complete B503-invariants correction CI log for commit `33a3086` is
 The complete selector-normalization correction CI log for commit `a237d04` is
 `/tmp/docs523-selector-normalization-a237d04-ci.log`, SHA-256
 `2f5c6158a02b2a179de3ad3ae9e952e519987762fe430ddb9aaa4deb02b8f354`.
+
+The complete B503-boundaries correction CI log for commit `dedf448` is
+`/tmp/docs523-b503-boundaries-dedf448-ci.log`, SHA-256
+`6eb5390369cc66343886fc567a28184ea9e377b222d0362cb87acc252763fab0`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
