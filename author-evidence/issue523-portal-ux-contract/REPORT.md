@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `61eb49232a77611194e78a60733133b2ebfbf7e4` |
-| Final validated contract tree | `201c7b19407570193da8ffb91fda043f6a919970` |
-| Final contract validation | Complete configured CI PASS; 183 Portal checker tests and 58 canonical B503 milestone tests; log SHA-256 `2c68901f294cc13d344ea06d9db73c567c1a8b71781cf291ddc2578b8976da7a` |
+| Final validated contract commit | `4441cc2b9e7b4d6e9c3b14bf13226330b60f335e` |
+| Final validated contract tree | `6cefda746e00c0af9f0dfaf6735248dc5c3dd6c7` |
+| Final contract validation | Complete configured CI PASS; 183 Portal checker tests and 59 canonical B503 milestone tests; log SHA-256 `75e97b473a8b377fb9efb30ac849e21f3d5a46422f7cabb856ebccae5fb5d49a` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -284,7 +284,7 @@ hardware work, or SemReg cutover.
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
 | `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 183 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 58 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 59 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -531,6 +531,17 @@ fail-closed only because the required M6.25 roots were absent (log SHA-256
 `65eb3081369cea93f6c3bdddde13a680f91fe3d417d8d81468f8fcca503eff30`);
 no failure was reclassified or omitted. The following evidence-only commit
 records this immutable contract revision.
+
+The complete Refreshing-disconnect release correction CI log is
+`wave12/ci/docs524-4441cc2-ci-full.log`, SHA-256
+`75e97b473a8b377fb9efb30ac849e21f3d5a46422f7cabb856ebccae5fb5d49a`.
+It validated final contract commit
+`4441cc2b9e7b4d6e9c3b14bf13226330b60f335e`, tree
+`6cefda746e00c0af9f0dfaf6735248dc5c3dd6c7`, with 183 Portal checker tests and
+59 canonical B503 milestone tests. The lock-lifecycle list now names
+`REFRESHING` among the held-owner states that release exactly once on entry to
+`DISABLED`, and a mutation test rejects its omission. The following
+evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
