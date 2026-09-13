@@ -112,18 +112,22 @@ def _target_section(text: str) -> str:
 
 
 def validate_text(text: str) -> None:
+    target = _target_section(text)
     for fragment in REQUIRED:
-        if fragment not in text:
-            raise CheckError(f"api/portal.md: missing required contract fragment: {fragment!r}")
+        if fragment not in target:
+            raise CheckError(
+                "api/portal.md: missing required INT-10 target contract fragment: "
+                f"{fragment!r}"
+            )
     for fragment in FORBIDDEN:
         if fragment in text:
             raise CheckError(f"api/portal.md: forbidden stale or premature wording: {fragment!r}")
-    target = _target_section(text).lower()
+    target_lower = target.lower()
     for token in FORBIDDEN_B503_DOM_VOCABULARY:
-        if token in target:
+        if token in target_lower:
             raise CheckError(f"api/portal.md: prohibited B503 DOM vocabulary: {token!r}")
     for reason, row in AVAILABILITY_ROWS.items():
-        if target.count(row.lower()) != 1:
+        if target_lower.count(row.lower()) != 1:
             raise CheckError(
                 f"api/portal.md: {reason} availability row must appear exactly once "
                 "inside the INT-10 target section with its selector and presentation text"

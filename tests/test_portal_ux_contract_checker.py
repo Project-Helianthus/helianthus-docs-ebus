@@ -108,3 +108,10 @@ def test_rejects_availability_presentation_mismatch() -> None:
         "State that transport is unavailable and offer only a retry/reconnect hint.",
     )
     rejects_text(contract().replace(row, wrong, 1))
+
+
+def test_rejects_int10_safety_fragment_moved_beyond_target_section() -> None:
+    fragment = "no direct MCP/native fallback."
+    text = contract().replace(fragment, "", 1)
+    text = text.replace(CHECKER.TARGET_END, f"{CHECKER.TARGET_END}\n\n{fragment}", 1)
+    rejects_text(text)
