@@ -85,7 +85,7 @@ hardware work, or SemReg cutover.
 | Refresh-status/individual-selector exposure correction tree | `243f1b93fc869b06ed9c6d5c30604c30ab1173df` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
-| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`, evidence tree `67282530decb29ce8428836f9a758bdb27bc9628` |
+| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
 
 ## Delivered contract
 
@@ -173,8 +173,8 @@ hardware work, or SemReg cutover.
   ownership gate and makes every live-monitor operation busy; success returns
   `Active`, failure releases the gate and returns `Idle`, and `Disabled` is
   never emitted with `owned:true`. This follows Gateway #975's current source
-  contract and evidence head `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`
-  (tree `67282530decb29ce8428836f9a758bdb27bc9628`); #975 is open, intermediate,
+  contract and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`
+  (tree `598884b896ce75e30f24fcab1a0fa6db0b82f022`); #975 is open, intermediate,
   unmerged,
   and is not claimed final or merged.
 - §1 now identifies the archived amendment-1 plan SHA as traceability for its
@@ -375,11 +375,10 @@ The complete intermediate full-CI Gateway-pin correction log for commit
 `8409583e5529b0d9851061f41a6c48fdbd2d8aef6d6411a3b40e1d535d139411`.
 It passed with 137 Portal checker tests and 20 canonical B503 milestone tests.
 
-Gateway #975 history reconciles `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`
-as the current functional commit (`fix(portal): requalify after pending B503
-cleanup`) and current open PR head, directly following the earlier functional
-commit `9985f7d73dfabb44d645335a08065e9397907fb3`. Therefore this intermediate
-pin deliberately uses `34a2c06` as both functional source and evidence head;
+Gateway #975 history reconciles `a39d43fbeaf8d745222b85649ebb8494203163f0`
+as the current functional commit (`fix(portal): preserve B503 pane across discovery`) and current open PR head, directly following the earlier functional
+commit `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`. Therefore this intermediate
+pin deliberately uses `a39d43f` as both functional source and evidence head;
 it does not claim a merge or final acceptance.
 
 The complete intermediate source-reconciliation CI log for commit `002fae3` is
@@ -405,6 +404,11 @@ It passed with 137 Portal checker tests and 30 canonical B503 milestone tests.
 The complete refresh-status/individual-selector exposure correction CI log for
 commit `7fc07a7` is `/tmp/docs523-refresh-status-7fc07a7-ci.log`, SHA-256
 `ec560a5115f991968314b7081030d014c4948f0d0b6a300e4f1d59e3c83f2015`.
+It passed with 138 Portal checker tests and 32 canonical B503 milestone tests.
+
+The complete final Gateway `a39d43f` source/evidence repin CI log is
+`/tmp/docs523-final-a39d43f-pin-ci.log`, SHA-256
+`79139a1aeb54bfee496c98ddee564a77e423a665f41970712decea9a6c02ecbd`.
 It passed with 138 Portal checker tests and 32 canonical B503 milestone tests.
 
 The read-only M6.25 inputs were verified clean and detached before CI:

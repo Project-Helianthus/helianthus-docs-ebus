@@ -248,8 +248,8 @@ and production catalog/action admission
 [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974).
 The five-state session wording follows Gateway
 [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975)
-source contract commit `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c` and current open
-evidence head `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`; #975 remains open,
+source contract commit `a39d43fbeaf8d745222b85649ebb8494203163f0` and current open
+evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`; #975 remains open,
 intermediate, and unmerged, and this documentation does not claim it is
 merged.
 It does not close Gateway #552, the wider INT-10 parent, SemReg cutover, or
