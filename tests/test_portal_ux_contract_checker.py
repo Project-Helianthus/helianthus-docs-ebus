@@ -217,6 +217,10 @@ def test_accepts_benign_prose_after_void_dom_element(snippet: str) -> None:
         "[Clear history]\n\n[Clear history]: /history",
         "![Reset][]\n\n[Reset]: image.svg",
         "[Read status][safe]\n\n[safe]: #clearservicehistory",
+        "[Re&#x73;et](#safe)",
+        "[selector 02&#x20;01](#safe)",
+        "[Read status](#cl&#x65;ar)",
+        "[Re&#115;et][]\n\n[Re&#115;et]: #status",
     ),
 )
 def test_rejects_prohibited_markdown_link_or_image_control(snippet: str) -> None:
@@ -228,6 +232,7 @@ def test_accepts_safe_markdown_link_and_image() -> None:
         "[Read status](#status) ![Topology](topology.svg)\n\n"
         "[Details][] [Topology]\n\n[Details]: #details\n[Topology]: topology.svg"
     )
+    accepts_target_insertion("[Read stat&#x75;s](#status)")
 
 
 @pytest.mark.parametrize(

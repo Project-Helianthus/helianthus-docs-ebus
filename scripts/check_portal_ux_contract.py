@@ -2,6 +2,7 @@
 """Validate the public INT-10 Portal and Vaillant B503 target contract."""
 from __future__ import annotations
 
+from html import unescape
 from html.parser import HTMLParser
 import pathlib
 import re
@@ -380,6 +381,7 @@ def _reject_prohibited_command_tokens(context: str, value: str) -> None:
 
 
 def _reject_prohibited_dom_component(context: str, value: str) -> None:
+    value = unescape(value)
     if _selector_tokens(value) & FORBIDDEN_INSTALLATION_SELECTORS:
         raise CheckError(
             "api/portal.md: prohibited B503 installation selector in DOM "
