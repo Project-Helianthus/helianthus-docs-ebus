@@ -147,6 +147,22 @@ COMPACT_PROHIBITED_COMMAND = re.compile(
     r"(?:button|action|control)?$",
     re.IGNORECASE,
 )
+INLINE_CODE_FRAGMENT = re.compile(r"\x60([^\x60\n]+)\x60")
+INLINE_CODE_ATTRIBUTE = re.compile(
+    r"^\s*([A-Za-z_:][A-Za-z0-9_:.-]*)\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^\s]+))\s*$"
+)
+DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
+    r"^(?:id|class|for|hidden|name|role|title|value|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+)$",
+    re.IGNORECASE,
+)
+B503_FALLBACK_CONTRADICTIONS = (
+    re.compile(
+        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)? "
+        r"(?:failure|fails|is unavailable) (?:allows|allowing|may use) "
+        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route)\b",
+        re.IGNORECASE,
+    ),
+)
 
 
 class CheckError(ValueError):
@@ -264,7 +280,26 @@ def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | N
     return parser.elements
 
 
+def _inline_code_dom_attributes(target: str) -> list[tuple[str, str]]:
+    attributes: list[tuple[str, str]] = []
+    for fragment in INLINE_CODE_FRAGMENT.findall(target):
+        match = INLINE_CODE_ATTRIBUTE.fullmatch(fragment)
+        if match is None:
+            continue
+        attribute = match.group(1)
+        if DOM_RELEVANT_ATTRIBUTE_NAME.fullmatch(attribute) is None:
+            continue
+        value = next(group for group in match.groups()[1:] if group is not None)
+        attributes.append((attribute, value))
+    return attributes
+
+
 def _reject_prohibited_dom_references(target: str) -> None:
+    for attribute, value in _inline_code_dom_attributes(target):
+        _reject_prohibited_dom_component("inline-code attribute name", attribute)
+        _reject_prohibited_dom_component(
+            f"inline-code attribute value for {attribute}", value
+        )
     for tag, attrs, text in _parsed_dom_elements(target):
         _reject_prohibited_dom_component("element name", tag)
         for attribute, value in attrs:
@@ -287,6 +322,11 @@ def validate_text(text: str) -> None:
     for fragment in FORBIDDEN:
         if fragment in text:
             raise CheckError(f"api/portal.md: forbidden stale or premature wording: {fragment!r}")
+    for contradiction in B503_FALLBACK_CONTRADICTIONS:
+        if contradiction.search(target):
+            raise CheckError(
+                "api/portal.md: affirmative B503 main-GraphQL fallback contradiction"
+            )
     _reject_prohibited_dom_references(target)
     expected_availability_rows = list(AVAILABILITY_ROWS.values())
     if _availability_table_rows(target) != expected_availability_rows:

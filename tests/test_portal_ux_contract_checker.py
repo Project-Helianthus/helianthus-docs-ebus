@@ -57,6 +57,10 @@ def dom_with_attribute(attribute: str) -> str:
     return f"<span {attribute}></span>"
 
 
+def inline_code(fragment: str) -> str:
+    return f"{chr(96)}{fragment}{chr(96)}"
+
+
 def test_accepts_current_portal_ux_contract() -> None:
     CHECKER.validate_text(contract())
 
@@ -174,6 +178,23 @@ def test_accepts_harmless_prose_outside_dom_attribute_references() -> None:
 
 
 @pytest.mark.parametrize(
+    "attribute",
+    (
+        'data-testid="b503-reset"',
+        'id="b503-0201"',
+        'aria-label="ClearErrorHistoryAction"',
+    ),
+)
+def test_rejects_dom_relevant_inline_code_attribute(attribute: str) -> None:
+    rejects_target_insertion(inline_code(attribute))
+
+
+@pytest.mark.parametrize("fragment", ("query=reset", "action = delete"))
+def test_accepts_non_dom_inline_code_assignment(fragment: str) -> None:
+    accepts_target_insertion(inline_code(fragment))
+
+
+@pytest.mark.parametrize(
     "snippet",
     (
         "<button>Reset</button>",
@@ -212,6 +233,23 @@ def test_accepts_benign_dom_element_name_or_content(snippet: str) -> None:
 )
 def test_rejects_protected_selector_in_every_parsed_dom_component(snippet: str) -> None:
     rejects_target_insertion(snippet)
+
+
+@pytest.mark.parametrize(
+    "clause",
+    (
+        "main GraphQL failure allows REST fallback.",
+        "main GraphQL failure may use MCP fallback.",
+        "main GraphQL is unavailable allowing native I/O.",
+        "main GraphQL failure allows the other route.",
+    ),
+)
+def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> None:
+    rejects_target_insertion(clause)
+
+
+def test_accepts_negative_b503_main_graphql_fallback_clause() -> None:
+    accepts_target_insertion("main GraphQL failure does not allow REST fallback.")
 
 
 def test_rejects_availability_selector_swap() -> None:
