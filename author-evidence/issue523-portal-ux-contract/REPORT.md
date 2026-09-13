@@ -39,6 +39,8 @@ hardware work, or SemReg cutover.
 | DOM-identifier correction tree | `71552aeb3c829e306797fab0f939e0651ce87245` |
 | Operation/DOM correction commit | `2243c1dbe868d87aaf0a078996dcc0b43cfd2857` |
 | Operation/DOM correction tree | `527f08a54649b2f6424ca06bbbb48863e726b3d0` |
+| Structured-DOM correction commit | `c655a54f82ed422f9c6ec6c97e067bcb478e5d24` |
+| Structured-DOM correction tree | `96a395b5266aca820265637cb6388218551c09c0` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -78,9 +80,13 @@ hardware work, or SemReg cutover.
   `data-testid`, and `hidden` values. Command words are matched as exact
   attribute-value tokens after camelCase and PascalCase segmentation, leaving
   harmless prose and substrings untouched.
-- The DOM audit also parses element names and direct visible text, so prohibited
+- The DOM audit also parses element names and visible text, so prohibited
   command tokens cannot move into a custom-element name, button label, or
   accessibility content.
+- A standard-library structured DOM parser now combines each element's
+  descendant text and attributes. The selector audit also recognizes protected
+  four-digit values at camel/Pascal identifier boundaries without matching
+  longer numeric identifiers.
 - The target section mechanically requires named keyboard-accessible B503 tabs
   and session status, Gateway-owned reconnect/error presentation without
   browser action replay or route switching, and target-address plus frontend
@@ -103,7 +109,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 69 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 75 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -114,14 +120,14 @@ hardware work, or SemReg cutover.
   attributes, element names, visible text, or accessibility content, and
   missing accessibility, reconnect/error, or frontend-epoch guarantees. The
   same regression matrix accepts command-word substrings, benign camelCase
-  identifiers, and ordinary prose.
+  identifiers, longer numeric identifiers, and ordinary prose.
 
 ## Validation
 
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 69 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 75 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
@@ -166,6 +172,10 @@ The complete DOM-identifier correction CI log for commit `86b7ccc` is
 The complete operation/DOM correction CI log for commit `2243c1d` is
 `/tmp/docs523-operation-dom-2243c1d-ci.log`, SHA-256
 `30de17637d7827c602a875b34f383b251b15b692bf83b6ef81760173db6c4db2`.
+
+The complete structured-DOM correction CI log for commit `c655a54` is
+`/tmp/docs523-dom-structure-c655a54-ci.log`, SHA-256
+`7416e15cc53c3eb1747d42e5142d86bd98a25efde12f20453790b105b7dc832b`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
