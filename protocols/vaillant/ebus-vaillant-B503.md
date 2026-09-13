@@ -230,7 +230,7 @@ Rules (normative):
 | ENABLE | none (new claim) | succeeds iff FSM is `IDLE`; if any session is already `ENABLING`/`ACTIVE`/`REFRESHING` → `SESSION_BUSY` |
 | DISABLE | full `session_key` must match the active session | `SESSION_BUSY` while `REFRESHING`, or when caller does not own the session — prevents session hijacking between clients on the same transport |
 | READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE`; all live-monitor operations are `SESSION_BUSY` while `REFRESHING` |
-| Epoch advance while `ACTIVE` owner remains held | — | → `REFRESHING`; refresh once per §7.3 |
+| Epoch advance while `ACTIVE` owner remains held | old epoch key authorizes only the bounded refresh | → `REFRESHING`; refresh once per §7.3; success atomically rebinds the same issuer token and target to the returned current transport epoch before `ACTIVE` |
 | Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard stale enable ACK/NAK/timeout; explicit new Enable required |
 
 The `issuer_token` is opaque to clients; it MUST NOT be derived from
@@ -238,6 +238,14 @@ user-visible identifiers, and MUST be sufficient entropy that a second
 client cannot forge another client's token (e.g., gateway-internal UUID or
 cryptographic nonce). Clients obtain their token from the ENABLE response
 envelope and return it in subsequent DISABLE calls.
+
+On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes
+only the one bounded refresh attempt. A successful refresh returns the current
+`transport_key` for epoch N+1. Gateway MUST atomically replace the owner key
+with `(transport_key[N+1], same issuer_token)` while retaining the same target,
+then enter `ACTIVE`. Completions and control requests still bound to epoch N are
+stale and MUST NOT satisfy, disable, extend, or mutate the rebound session. If
+refresh fails, no rebound key is installed and the owner is released to `IDLE`.
 
 This refines plan AD04's baseline `(adapter_instance_id,
 transport_incarnation_epoch)` with a client-scoped control token. The
@@ -257,7 +265,7 @@ access.
 | `ACTIVE` | explicit disable | `DISABLED` | emit disable frame after quiesce |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable frame after quiesce |
 | `ACTIVE` | epoch advance detected | `REFRESHING` | ownership gate remains held; all live-monitor operations are busy |
-| `REFRESHING` | refresh succeeds | `ACTIVE` | resume; retry budget consumed |
+| `REFRESHING` | refresh succeeds | `ACTIVE` | atomically rebind the owner from epoch N to the returned current `transport_key` at N+1, retaining the same issuer token and target; fence every epoch-N completion; retry budget consumed |
 | `REFRESHING` | refresh failure | `IDLE` | release ownership gate; surface the Gateway-supplied failure outcome |
 | `DISABLED` | owner cleanup complete | `IDLE` | session may be re-claimed by any client |
 | any | transport disconnect | `DISABLED` | owner cleanup |
@@ -320,7 +328,9 @@ invoking the busy operation. After successful refresh reaches `Active`, it
 dispatches the queued disable; after refresh failure reaches `Idle`, it clears
 the queued pair without a disable. During a held `Refreshing` epoch, the
 session strip remains observable alongside temporarily `UNKNOWN` capability,
-but it is status-only: no B503 card, tabs, or operations are admitted until
+but it is status-only: only `vaillantCapabilities` and
+`vaillantLiveMonitorSession` remain admitted so the client can observe
+completion. No B503 card, tabs, bus-facing reads, or actions are admitted until
 capability returns `AVAILABLE`.
 
 ### 7.2 Quiesce timing bounds (normative)
@@ -340,10 +350,12 @@ live-monitor enable and disable frame. Bounds:
 
 - Maximum **1 refresh attempt** per epoch advance. No recursive or unbounded
   retries.
-- On refresh success for a surviving authenticated current-owner handle →
-  revalidate that same token/target/epoch ownership and return to `Active`;
-  this is continuation, not reconstruction or auto-resume. On refresh failure
-  → release the ownership gate and return to `Idle`.
+- On refresh success for a surviving authenticated current-owner handle, the
+  old epoch-N key authorizes only that refresh. Gateway atomically installs the
+  returned current `transport_key` for epoch N+1 with the same issuer token and
+  target before returning to `Active`; every epoch-N completion is fenced. This
+  is continuation, not reconstruction or auto-resume. On refresh failure, no
+  rebound key is installed: release the ownership gate and return to `Idle`.
 - On refresh revealing `TRANSPORT_DOWN` or `UNKNOWN` → surface that value
   literally (§11). It MUST NOT be collapsed into `SESSION_BUSY`.
 - No infinite reconnect loops. Reconnect is driven by the transport layer, not
@@ -664,7 +676,7 @@ any row is an automatic merge-gate block.
 | 4 | reconnect, before first post-reconnect dispatch | `UNKNOWN` (NOT sticky `AVAILABLE`) | reset to `UNKNOWN` regardless of pre-disconnect state |
 | 5 | reconnect, post-first-success-after-reconnect | `AVAILABLE` | n/a |
 | 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known | n/a |
-| 7 | held-session epoch refresh; session status `Refreshing` | `UNKNOWN` (temporary; not sticky `AVAILABLE`) | all live-monitor operations are `SESSION_BUSY`; the `Refreshing` strip is status-only, with no B503 card, tabs, or operations admitted until capability returns `AVAILABLE` |
+| 7 | held-session epoch refresh; session status `Refreshing` | `UNKNOWN` (temporary; not sticky `AVAILABLE`) | all live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain admitted, with no B503 card, tabs, bus-facing reads, or actions until capability returns `AVAILABLE` |
 | 8 | stale in-flight completion across epoch rollover | n/a — frame discarded | reply/NAK/timeout from epoch N arriving after reconnect to epoch N+1 MUST be discarded; MUST NOT mutate capability to `AVAILABLE`; MUST NOT satisfy any post-reconnect waiter |
 
 **Forbidden states** (M6 tests assert absence):

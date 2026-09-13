@@ -186,12 +186,14 @@ hardware work, or SemReg cutover.
   enters `Refreshing`. The canonical gate requires the matching diagram,
   operation row, transition row, and lock-lifecycle clause.
 - §12.5 row 7 now separates temporary `UNKNOWN` capability from the
-  `Refreshing` session status. Its strip is status-only, so no card, tabs, or
-  operation is admitted until capability returns `AVAILABLE`; a structured
-  row mutation rejects stale `AVAILABLE` or premature admission.
+  `Refreshing` session status. Its strip is status-only: only capability and
+  session-status queries remain admitted; no card, tabs, bus-facing reads, or
+  actions are admitted until capability returns `AVAILABLE`. A structured row
+  mutation rejects stale `AVAILABLE`, removal of status polling, or premature
+  bus-facing admission.
 - §9 keeps its exact non-exposure invariant and rejects bounded affirmative
-  GraphQL/MCP/Portal installation-write clauses, while accepting explicit
-  negative safety wording.
+  GraphQL/MCP/Portal/Home Assistant/HA/public-API installation-write clauses,
+  while accepting explicit negative safety wording.
 - The `Refreshing` strip may make only status-only
   `vaillantCapabilities(targetAddress:)` and
   `vaillantLiveMonitorSession(targetAddress:)` queries to observe completion
@@ -199,6 +201,10 @@ hardware work, or SemReg cutover.
   operation gains permission.
 - The §9 checker now rejects affirmative public exposure of either `02 01` or
   `02 02` independently, while preserving explicit negative safety clauses.
+- Refresh success atomically rebinds the surviving owner's transport key from
+  epoch N to the returned epoch N+1 while preserving the issuer token and
+  target. Epoch-N completions cannot satisfy, disable, extend, or mutate the
+  rebound session; failed refresh installs no new key and releases the owner.
 - Canonical validation scopes M2b/M3 rows to the parsed §14 table and the
   `02 01`/`02 02` non-exposure invariant to normative §9. Its mutations reject
   copied text outside those scopes and unsafe five-state contradictions; Portal
@@ -261,7 +267,7 @@ hardware work, or SemReg cutover.
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
 | `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 138 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 32 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 38 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -410,6 +416,11 @@ The complete final Gateway `a39d43f` source/evidence repin CI log is
 `/tmp/docs523-final-a39d43f-pin-ci.log`, SHA-256
 `79139a1aeb54bfee496c98ddee564a77e423a665f41970712decea9a6c02ecbd`.
 It passed with 138 Portal checker tests and 32 canonical B503 milestone tests.
+
+The complete canonical status-query, public-surface, and owner-key rebinding
+correction CI log is `/tmp/docs523-canonical-refresh-rebind-ci.log`, SHA-256
+`54ccbf30f8684ea5b4bc9dc79599b09f153b546e0a38181c56e00c53715ba425`.
+It passed with 138 Portal checker tests and 38 canonical B503 milestone tests.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 

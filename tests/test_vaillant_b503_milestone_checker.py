@@ -61,6 +61,9 @@ def test_rejects_install_write_non_exposure_copied_outside_normative_section() -
         "The public surface CAN publish `02 01` or `02 02`.",
         "The public GraphQL surface MAY expose 02 01.",
         "The Portal surface CAN offer 02 02.",
+        "Home Assistant MAY expose 02 01.",
+        "HA services CAN publish 02 02.",
+        "The public API MAY expose 02 01.",
     ),
 )
 def test_rejects_affirmative_install_write_exposure_inside_normative_section(
@@ -93,7 +96,11 @@ def test_accepts_negative_install_write_non_exposure_inside_normative_section() 
             "`AVAILABLE`",
         ),
         (
-            "no B503 card, tabs, or operations admitted until capability returns `AVAILABLE`",
+            "only `vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain admitted",
+            "no status query remains admitted",
+        ),
+        (
+            "no B503 card, tabs, bus-facing reads, or actions until capability returns `AVAILABLE`",
             "B503 card and tabs remain admitted while capability is `UNKNOWN`",
         ),
     ),
@@ -140,6 +147,19 @@ def test_rejects_missing_current_public_session_authority_in_status_section() ->
         "The amendment-1 plan remains authority for every public FSM.",
         1,
     )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "The old session key remains authoritative after an epoch advance.",
+        "Gateway silently changes the epoch without fencing old completions.",
+    ),
+)
+def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> None:
+    text = contract().replace(CHECKER.REFRESH_OWNER_REBINDING, replacement, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 

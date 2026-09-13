@@ -51,13 +51,14 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
     "7",
     "held-session epoch refresh; session status `Refreshing`",
     "`UNKNOWN` (temporary; not sticky `AVAILABLE`)",
-    "all live-monitor operations are `SESSION_BUSY`; the `Refreshing` strip is "
-    "status-only, with no B503 card, tabs, or operations admitted until capability "
-    "returns `AVAILABLE`",
+    "all live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` "
+    "and `vaillantLiveMonitorSession` status queries remain admitted, with no B503 "
+    "card, tabs, bus-facing reads, or actions until capability returns `AVAILABLE`",
 )
 AFFIRMATIVE_INSTALL_WRITE_EXPOSURE = (
     re.compile(
-        r"\b(?:the\s+)?(?:public\s+)?(?:GraphQL|MCP|portal)(?:\s+surface)?\s+"
+        r"\b(?:the\s+)?(?:public\s+)?(?:GraphQL|MCP|portal|Home\s+Assistant|HA|API)"
+        r"(?:\s+(?:surface|UI|service|services|API))?\s+"
         r"(?:MAY|MUST|CAN)\s+(?:expose|publish|offer)\s+`?02\s+0[12]`?\b",
         re.IGNORECASE,
     ),
@@ -104,14 +105,27 @@ REFRESHING_CLEANUP_CONTRACT = (
 REFRESHING_UNKNOWN_STRIP_CONTRACT = (
     "During a held `Refreshing` epoch, the\n"
     "session strip remains observable alongside temporarily `UNKNOWN` capability,\n"
-    "but it is status-only: no B503 card, tabs, or operations are admitted until\n"
+    "but it is status-only: only `vaillantCapabilities` and\n"
+    "`vaillantLiveMonitorSession` remain admitted so the client can observe\n"
+    "completion. No B503 card, tabs, bus-facing reads, or actions are admitted until\n"
     "capability returns `AVAILABLE`."
 )
 REFRESH_SUCCESS_CONTINUATION = (
-    "On refresh success for a surviving authenticated current-owner handle →\n"
-    "  revalidate that same token/target/epoch ownership and return to `Active`;\n"
-    "  this is continuation, not reconstruction or auto-resume. On refresh failure\n"
-    "  → release the ownership gate and return to `Idle`."
+    "On refresh success for a surviving authenticated current-owner handle, the\n"
+    "  old epoch-N key authorizes only that refresh. Gateway atomically installs the\n"
+    "  returned current `transport_key` for epoch N+1 with the same issuer token and\n"
+    "  target before returning to `Active`; every epoch-N completion is fenced. This\n"
+    "  is continuation, not reconstruction or auto-resume. On refresh failure, no\n"
+    "  rebound key is installed: release the ownership gate and return to `Idle`."
+)
+REFRESH_OWNER_REBINDING = (
+    "On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes\n"
+    "only the one bounded refresh attempt. A successful refresh returns the current\n"
+    "`transport_key` for epoch N+1. Gateway MUST atomically replace the owner key\n"
+    "with `(transport_key[N+1], same issuer_token)` while retaining the same target,\n"
+    "then enter `ACTIVE`. Completions and control requests still bound to epoch N are\n"
+    "stale and MUST NOT satisfy, disable, extend, or mutate the rebound session. If\n"
+    "refresh fails, no rebound key is installed and the owner is released to `IDLE`."
 )
 NO_AUTO_RESUME_RECONSTRUCTION = (
     "Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost\n"
@@ -305,6 +319,8 @@ def validate_text(text: str) -> None:
             raise CheckError(
                 f"forbidden ENABLING epoch-advance contradiction in §6: {fragment!r}"
             )
+    if REFRESH_OWNER_REBINDING not in session_section:
+        raise CheckError("missing atomic owner-key epoch rebinding contract in §6.2")
 
     refreshing_public_section = _section(
         text, REFRESHING_PUBLIC_SECTION_START, REFRESHING_PUBLIC_SECTION_END
