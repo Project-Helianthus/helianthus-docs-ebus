@@ -261,6 +261,31 @@ def test_accepts_safe_target_reference_resolved_outside_target_section() -> None
 
 
 @pytest.mark.parametrize(
+    "title",
+    ('"Reset"', "'Clear history'", "(selector 02 01)"),
+)
+def test_rejects_prohibited_document_scoped_reference_title(title: str) -> None:
+    text = contract().replace(
+        CHECKER.TARGET_END,
+        f"[Read status][outside]\n\n{CHECKER.TARGET_END}",
+        1,
+    )
+    text += f"\n[outside]: #status {title}\n"
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_accepts_safe_document_scoped_reference_title() -> None:
+    text = contract().replace(
+        CHECKER.TARGET_END,
+        f"[Read status][outside]\n\n{CHECKER.TARGET_END}",
+        1,
+    )
+    text += '\n[outside]: #status "Current status"\n'
+    CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
     "attribute",
     (
         'data-testid="b503-reset"',

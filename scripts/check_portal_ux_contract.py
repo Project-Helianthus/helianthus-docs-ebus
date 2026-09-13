@@ -224,6 +224,7 @@ MARKDOWN_REFERENCE_LINK = re.compile(
 )
 MARKDOWN_REFERENCE_DEFINITION = re.compile(
     r"(?m)^[ \t]{0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]+)>|(\S+))"
+    r"(?:[ \t]+(?:\"([^\"\n]*)\"|'([^'\n]*)'|\(([^)\n]*)\)))?[ \t]*$"
 )
 MARKDOWN_SHORTCUT_REFERENCE = re.compile(
     r"!?\[([^\]\n]+)\](?![\[(]|[ \t]*:)", re.IGNORECASE
@@ -403,23 +404,32 @@ def _markdown_reference_key(value: str) -> str:
 
 def _markdown_dom_references(target: str, document: str) -> list[tuple[str, str]]:
     references: list[tuple[str, str]] = []
-    definitions = {
-        _markdown_reference_key(match.group(1)): match.group(2) or match.group(3)
-        for match in MARKDOWN_REFERENCE_DEFINITION.finditer(document)
-    }
+    definitions: dict[str, tuple[str, str | None]] = {}
+    for match in MARKDOWN_REFERENCE_DEFINITION.finditer(document):
+        destination = match.group(2) or match.group(3)
+        title = next(
+            (value for value in match.groups()[3:] if value is not None), None
+        )
+        definitions[_markdown_reference_key(match.group(1))] = (destination, title)
     for match in MARKDOWN_INLINE_LINK.finditer(target):
         references.append(("Markdown link/image label", match.group(1)))
         references.append(("Markdown link/image destination", match.group(2)))
     for match in MARKDOWN_REFERENCE_LINK.finditer(target):
         key = _markdown_reference_key(match.group(2) or match.group(1))
         if key in definitions:
+            destination, title = definitions[key]
             references.append(("Markdown reference link/image label", match.group(1)))
-            references.append(("Markdown reference destination", definitions[key]))
+            references.append(("Markdown reference destination", destination))
+            if title is not None:
+                references.append(("Markdown reference title", title))
     for match in MARKDOWN_SHORTCUT_REFERENCE.finditer(target):
         key = _markdown_reference_key(match.group(1))
         if key in definitions:
+            destination, title = definitions[key]
             references.append(("Markdown shortcut link/image label", match.group(1)))
-            references.append(("Markdown shortcut destination", definitions[key]))
+            references.append(("Markdown shortcut destination", destination))
+            if title is not None:
+                references.append(("Markdown shortcut title", title))
     return references
 
 
