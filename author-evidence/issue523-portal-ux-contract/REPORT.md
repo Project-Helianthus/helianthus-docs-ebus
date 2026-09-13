@@ -43,6 +43,8 @@ hardware work, or SemReg cutover.
 | Structured-DOM correction tree | `96a395b5266aca820265637cb6388218551c09c0` |
 | Parsed-component correction commit | `2ac1ecdea7f14b617b0e4beb3039d09357a82b8d` |
 | Parsed-component correction tree | `56a0298bf2473e69a1fe0fb9f03aaa79d7aad262` |
+| Compact-DOM correction commit | `b1899038f17803264a5b3c438f04aea834f4cf99` |
+| Compact-DOM correction tree | `104dc4ca894775d63bef6faee327d62d02f91c28` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -82,6 +84,10 @@ hardware work, or SemReg cutover.
   hyphenated hexadecimal forms. Command words are matched as exact component
   tokens after camelCase and PascalCase segmentation, leaving harmless prose,
   substrings, and raw Markdown assignments untouched.
+- Compact controls are normalized only as full known B503 command forms, with
+  an optional `b503` prefix and recognised button/action/control suffix.
+  Protected selector sequences use decimal-digit boundaries, so identifier
+  suffix letters are covered while longer numeric identifiers remain benign.
 - The DOM audit also parses element names and visible text, so prohibited
   command tokens cannot move into a custom-element name, button label, or
   accessibility content.
@@ -112,7 +118,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 80 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 89 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -122,15 +128,15 @@ hardware work, or SemReg cutover.
   selectors and exact command tokens in every parsed DOM component, and missing
   accessibility, reconnect/error, or frontend-epoch guarantees. The same
   regression matrix accepts command-word substrings, benign camelCase
-  identifiers, longer numeric identifiers, raw Markdown assignments, and
-  ordinary prose.
+  identifiers, compact preset/clearance controls, longer numeric identifiers,
+  raw Markdown assignments, and ordinary prose.
 
 ## Validation
 
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 80 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 89 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
@@ -183,6 +189,10 @@ The complete structured-DOM correction CI log for commit `c655a54` is
 The complete parsed-component correction CI log for commit `2ac1ecd` is
 `/tmp/docs523-dom-components-2ac1ecd-ci.log`, SHA-256
 `139c3ec7f2fd3ffdeccaaee3f66fd9c8a6859d7cf9861c8b4c867cfa321b1b18`.
+
+The complete compact-DOM correction CI log for commit `b189903` is
+`/tmp/docs523-compact-dom-b189903-ci.log`, SHA-256
+`5f71dbe48dc44ea8fb511227e53cb5f72cc8c70f5c4a697dbf02557641b343ff`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
