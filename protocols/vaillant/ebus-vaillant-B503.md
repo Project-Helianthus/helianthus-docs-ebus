@@ -186,7 +186,7 @@ stateDiagram-v2
     ACTIVE --> DISABLED: 30s idle timer
     DISABLED --> IDLE: owner cleanup complete
 
-    ACTIVE --> REFRESHING: reconnect / epoch refresh
+    ACTIVE --> REFRESHING: epoch advance while owner remains held
     REFRESHING --> ACTIVE: refresh succeeds
     REFRESHING --> IDLE: refresh failure releases gate
 
@@ -360,8 +360,12 @@ event fires**; they are no-ops when the FSM is already `IDLE` or
 ### 7.5 Reconnect handling
 
 - On reconnect, the `transport_incarnation_epoch` advances. Any surviving owner
-  handle from the prior incarnation enters `Refreshing` on next touch.
+  handle that remains held without a §7.4 transport-disconnect cleanup enters
+  `Refreshing` on next touch.
 - The resolver applies the §7.3 refresh-once policy.
+- A terminal transport disconnect follows §7.4: it releases the owner and
+  reaches `Idle`. A later reconnect therefore begins without an owner, does not
+  enter `Refreshing`, and requires a new explicit client Enable.
 - Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost
   owner handle, or an absent/invalid current issuer token; each requires an
   explicit new client Enable. The surviving authenticated current-owner refresh

@@ -105,6 +105,10 @@ def test_rejects_session_state_contradiction_inside_normative_section(
             CHECKER.NO_AUTO_RESUME_RECONSTRUCTION,
             "Every reconnect resumes without an explicit Enable.",
         ),
+        (
+            CHECKER.REFRESHING_DISCONNECT_FENCE,
+            "A later reconnect enters Refreshing after every transport disconnect.",
+        ),
     ),
 )
 def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(

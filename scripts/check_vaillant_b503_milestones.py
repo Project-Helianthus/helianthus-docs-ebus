@@ -80,6 +80,11 @@ NO_AUTO_RESUME_RECONSTRUCTION = (
     "  explicit new client Enable. The surviving authenticated current-owner refresh\n"
     "  path in §7.3 is the only continuation allowed across an epoch advance."
 )
+REFRESHING_DISCONNECT_FENCE = (
+    "A terminal transport disconnect follows §7.4: it releases the owner and\n"
+    "  reaches `Idle`. A later reconnect therefore begins without an owner, does not\n"
+    "  enter `Refreshing`, and requires a new explicit client Enable."
+)
 REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
 REFRESH_FAILURE_TRANSITION = (
     "| `REFRESHING` | refresh failure | `IDLE` | release ownership gate; "
@@ -210,6 +215,8 @@ def validate_text(text: str) -> None:
     reconnect_section = _section(text, RECONNECT_SECTION_START, RECONNECT_SECTION_END)
     if NO_AUTO_RESUME_RECONSTRUCTION not in reconnect_section:
         raise CheckError("missing no-reconstruction boundary in §7.5")
+    if REFRESHING_DISCONNECT_FENCE not in reconnect_section:
+        raise CheckError("missing Refreshing disconnect fence in §7.5")
 
     rows = _milestone_table(text)
     for expected in (M2B_GRAPHQL, M3_PORTAL):

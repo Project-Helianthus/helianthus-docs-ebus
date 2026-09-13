@@ -179,6 +179,9 @@ token/target/epoch handle and returns it to `Active`; it is continuation, not
 reconstruction or auto-resume. After restart, a lost owner handle, or an
 absent/invalid current issuer token, Gateway does not reconstruct the session
 and the client must issue a new explicit Enable.
+A terminal transport disconnect releases ownership to `Idle`; a later reconnect
+therefore has no owner, does not enter `Refreshing`, and also requires explicit
+client Enable.
 
 When a selected target has Gateway session state `Refreshing` with `owned:true`,
 the session strip remains observable alongside temporarily `UNKNOWN` capability.
@@ -238,9 +241,10 @@ and production catalog/action admission
 [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974).
 The five-state session wording follows Gateway
 [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975)
-source contract commit `95bebcd2c7e28941674e238767b0e8cdfd47cdc2` and evidence
-head `6cf54b9ae918356a1c2a22d76a0a483e75473ae3`; #975 remains open and this
-documentation does not claim it is merged.
+source contract commit `0e49b3019bfbfc438b1141a08f6c2872a2e21142` and current open
+evidence head `76ac4262bbda9fcaeb2846b56a46997d7dd07980`; #975 remains open,
+is not claimed final or merged, and this documentation does not claim it is
+merged.
 It does not close Gateway #552, the wider INT-10 parent, SemReg cutover, or
 physical validation.
 

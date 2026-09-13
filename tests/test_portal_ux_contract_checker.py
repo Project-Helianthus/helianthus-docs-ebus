@@ -227,10 +227,17 @@ def test_rejects_dom_relevant_attribute_inside_multi_attribute_inline_code(
 
 
 @pytest.mark.parametrize(
-    "fragment", ('query=reset onclick="reset()"', "action = delete")
+    "fragment", ("query=reset", "action = delete")
 )
 def test_accepts_non_dom_inline_code_assignment(fragment: str) -> None:
     accepts_target_insertion(inline_code(fragment))
+
+
+@pytest.mark.parametrize(
+    "fragment", ('onclick="reset()"', 'onkeydown="clearErrorHistory()"')
+)
+def test_rejects_standalone_event_handler_inline_code(fragment: str) -> None:
+    rejects_target_insertion(inline_code(fragment))
 
 
 @pytest.mark.parametrize(

@@ -87,7 +87,10 @@ B503_REFRESH_CONTINUATION = (
     "token/target/epoch handle and returns it to `Active`; it is continuation, not\n"
     "reconstruction or auto-resume. After restart, a lost owner handle, or an\n"
     "absent/invalid current issuer token, Gateway does not reconstruct the session\n"
-    "and the client must issue a new explicit Enable."
+    "and the client must issue a new explicit Enable.\n"
+    "A terminal transport disconnect releases ownership to `Idle`; a later reconnect\n"
+    "therefore has no owner, does not enter `Refreshing`, and also requires explicit\n"
+    "client Enable."
 )
 FORBIDDEN_B503_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
@@ -124,7 +127,7 @@ REQUIRED = (
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
-    "source contract commit `95bebcd2c7e28941674e238767b0e8cdfd47cdc2` and evidence\nhead `6cf54b9ae918356a1c2a22d76a0a483e75473ae3`; #975 remains open and this\ndocumentation does not claim it is merged.",
+    "source contract commit `0e49b3019bfbfc438b1141a08f6c2872a2e21142` and current open\nevidence head `76ac4262bbda9fcaeb2846b56a46997d7dd07980`; #975 remains open,\nis not claimed final or merged, and this documentation does not claim it is\nmerged.",
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
@@ -196,7 +199,7 @@ INLINE_CODE_ATTRIBUTE = re.compile(
     r"(?:\"([^\"]*)\"|'([^']*)'|([^\s]+))"
 )
 DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
-    r"^(?:id|class|for|hidden|name|role|title|value|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+)$",
+    r"^(?:id|class|for|hidden|name|role|title|value|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+|on[a-z][A-Za-z0-9_:.-]*)$",
     re.IGNORECASE,
 )
 HTML_VOID_ELEMENTS = frozenset((
