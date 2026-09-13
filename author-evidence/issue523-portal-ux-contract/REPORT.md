@@ -57,6 +57,8 @@ hardware work, or SemReg cutover.
 | Clear-control correction tree | `0f4529e1fc46d6d657fca1ad36f3eb65407d02ed` |
 | Mixed-inline-DOM correction commit | `004d16cd7181d6fe6dea7a42b3168d4f02bb5756` |
 | Mixed-inline-DOM correction tree | `2c41ce0f16887d1b52e9d1f67079e5eef0f51175` |
+| Milestone-scope correction commit | `4bd7c212d7f526ef63c5d1bb04056e7cc6d1cd28` |
+| Milestone-scope correction tree | `929887fa2796436a0066387bc356fd4aa1e22bf1` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -137,7 +139,10 @@ hardware work, or SemReg cutover.
   and Portal behavior while admitting only the existing §6 live-monitor
   enable/disable session action and session strip. A dedicated gate rejects the
   earlier all-read-only contradiction and removal of the `02 01`/`02 02`
-  install-write non-exposure invariant.
+  install-write non-exposure invariant. The gate parses only the §14 companion
+  milestone table and requires the exact M2b and M3 three-cell rows there, so
+  copied fragments outside that table or in another milestone row cannot
+  satisfy the contract.
 - The main B503 GraphQL route also names graduated
   `vaillantErrorsHistory(targetAddress:limit:)` and
   `vaillantLiveMonitorSession(targetAddress:)` operations.
@@ -169,7 +174,7 @@ hardware work, or SemReg cutover.
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
 | `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 119 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 5 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -248,6 +253,10 @@ The complete clear-control correction CI log for commit `11b8022` is
 The complete mixed-inline-DOM correction CI log for commit `004d16c` is
 `/tmp/docs523-inline-dom-mixed-004d16c-ci.log`, SHA-256
 `4e89e6116f29e9d77b32bc26228d5edc12652bb74004caef570d32e59e5b2f33`.
+
+The complete milestone-scope correction CI log for commit `4bd7c21` is
+`/tmp/docs523-milestone-scope-4bd7c21-ci.log`, SHA-256
+`430eb0cbb495eb01d388623dcba72a85fd102c266ba2c13696fa991cbaae4cb8`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
