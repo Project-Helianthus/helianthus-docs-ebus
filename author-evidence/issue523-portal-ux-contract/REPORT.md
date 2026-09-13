@@ -45,6 +45,8 @@ hardware work, or SemReg cutover.
 | Parsed-component correction tree | `56a0298bf2473e69a1fe0fb9f03aaa79d7aad262` |
 | Compact-DOM correction commit | `b1899038f17803264a5b3c438f04aea834f4cf99` |
 | Compact-DOM correction tree | `104dc4ca894775d63bef6faee327d62d02f91c28` |
+| Inline/fallback correction commit | `97d57f5bef3f8563845ecb40d9081a4a2719a396` |
+| Inline/fallback correction tree | `6c80b04f54fb5f4b37c0fbbcd93e6fc2d186da51` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -88,6 +90,11 @@ hardware work, or SemReg cutover.
   an optional `b503` prefix and recognised button/action/control suffix.
   Protected selector sequences use decimal-digit boundaries, so identifier
   suffix letters are covered while longer numeric identifiers remain benign.
+- Backticked standalone DOM attributes use the same audit when their names are
+  DOM-relevant (`id`, `data-*`, `aria-*`, `role`, and related names);
+  non-DOM Markdown assignments remain outside that extraction. A bounded
+  main-GraphQL contradiction matcher rejects affirmative REST, MCP, native-I/O,
+  or other-route fallback clauses.
 - The DOM audit also parses element names and visible text, so prohibited
   command tokens cannot move into a custom-element name, button label, or
   accessibility content.
@@ -118,7 +125,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 89 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 99 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -129,14 +136,14 @@ hardware work, or SemReg cutover.
   accessibility, reconnect/error, or frontend-epoch guarantees. The same
   regression matrix accepts command-word substrings, benign camelCase
   identifiers, compact preset/clearance controls, longer numeric identifiers,
-  raw Markdown assignments, and ordinary prose.
+  raw Markdown assignments, negative fallback language, and ordinary prose.
 
 ## Validation
 
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 89 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 99 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
@@ -193,6 +200,10 @@ The complete parsed-component correction CI log for commit `2ac1ecd` is
 The complete compact-DOM correction CI log for commit `b189903` is
 `/tmp/docs523-compact-dom-b189903-ci.log`, SHA-256
 `5f71dbe48dc44ea8fb511227e53cb5f72cc8c70f5c4a697dbf02557641b343ff`.
+
+The complete inline/fallback correction CI log for commit `97d57f5` is
+`/tmp/docs523-inline-fallback-97d57f5-ci.log`, SHA-256
+`1e72ea3c7e62fd67b4cb8dfcaecf4abcb1008cc03c47ae8588e79fe4235a3f06`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
