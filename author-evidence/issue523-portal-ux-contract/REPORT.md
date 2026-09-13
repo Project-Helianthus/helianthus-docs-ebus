@@ -49,6 +49,8 @@ hardware work, or SemReg cutover.
 | Inline/fallback correction tree | `6c80b04f54fb5f4b37c0fbbcd93e6fc2d186da51` |
 | Inline-selector correction commit | `89d8e1e6ea5e91f1e180a417d1fa7b8d97b55718` |
 | Inline-selector correction tree | `fa96702d6b0a0125440f0ebbef13b22b938dbd17` |
+| Direct-fallback correction commit | `e776a246107fc14c81595fd58f0de8db0c84cb7c` |
+| Direct-fallback correction tree | `201f1c0ea241844b58d56745d37fde60b2a2d294` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -97,6 +99,8 @@ hardware work, or SemReg cutover.
   non-DOM Markdown assignments remain outside that extraction. A bounded
   main-GraphQL contradiction matcher rejects affirmative REST, MCP, native-I/O,
   or other-route fallback clauses.
+- That matcher also rejects bounded direct `falls back to` and `use … instead`
+  contradictions, while retaining explicit negative fallback wording.
 - The selector tokenizer accepts an optional `0x` prefix on each byte, and
   inline-code extraction audits every DOM-relevant assignment in a
   multi-attribute fragment while ignoring unrelated assignments.
@@ -130,7 +134,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 105 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 107 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -149,7 +153,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 105 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 107 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
@@ -214,6 +218,10 @@ The complete inline/fallback correction CI log for commit `97d57f5` is
 The complete inline-selector correction CI log for commit `89d8e1e` is
 `/tmp/docs523-inline-selector-89d8e1e-ci.log`, SHA-256
 `ce61ca7d741e70db89043af29d88a3da59ab05b1ac38e6f9104d3ba431e4d1ad`.
+
+The complete direct-fallback correction CI log for commit `e776a24` is
+`/tmp/docs523-direct-fallback-e776a24-ci.log`, SHA-256
+`fd260e69121e0df92e978443944f042a2cc509abd082a5b75587061cf174ea92`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
