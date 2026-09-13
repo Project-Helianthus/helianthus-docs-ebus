@@ -35,6 +35,8 @@ hardware work, or SemReg cutover.
 | B503-boundaries correction tree | `de950cd6df8a010e0c9cc957bc9f516c2b566913` |
 | DOM-reference correction commit | `371ada15aace19293f7fa1896707d1b563a45b2d` |
 | DOM-reference correction tree | `5782442ed96b09083f927b5ada103e056fed316a` |
+| DOM-identifier correction commit | `86b7ccc9e4e120bf3a85b4632d8225de6af04bab` |
+| DOM-identifier correction tree | `71552aeb3c829e306797fab0f939e0651ce87245` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -72,7 +74,8 @@ hardware work, or SemReg cutover.
   installation selectors are normalized across spaced, `0x`-prefixed, compact,
   and hyphenated hexadecimal forms, including embedded `id`, `value`,
   `data-testid`, and `hidden` values. Command words are matched as exact
-  attribute-value tokens, leaving harmless prose and substrings untouched.
+  attribute-value tokens after camelCase and PascalCase segmentation, leaving
+  harmless prose and substrings untouched.
 - The target section mechanically requires named keyboard-accessible B503 tabs
   and session status, Gateway-owned reconnect/error presentation without
   browser action replay or route switching, and target-address plus frontend
@@ -92,7 +95,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 56 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 61 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -101,14 +104,15 @@ hardware work, or SemReg cutover.
   and untyped or inferred History semantics, including normalized protected
   selectors in every DOM attribute reference, exact command tokens, and missing
   accessibility, reconnect/error, or frontend-epoch guarantees. The same
-  regression matrix accepts command-word substrings and ordinary prose.
+  regression matrix accepts command-word substrings, benign camelCase
+  identifiers, and ordinary prose.
 
 ## Validation
 
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 56 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 61 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
@@ -145,6 +149,10 @@ The complete B503-boundaries correction CI log for commit `dedf448` is
 The complete DOM-reference correction CI log for commit `371ada1` is
 `/tmp/docs523-dom-references-371ada1-ci.log`, SHA-256
 `27fab771dea88fe79d826a010912ad8bfa5f2275cef49e21de05a2a61c9ad2f7`.
+
+The complete DOM-identifier correction CI log for commit `86b7ccc` is
+`/tmp/docs523-dom-identifiers-86b7ccc-ci.log`, SHA-256
+`895fde3ba3e4ffa349c00a781084be11767dabd6493ed917b73ac8c6984368a0`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
