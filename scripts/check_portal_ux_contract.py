@@ -163,6 +163,19 @@ B503_FALLBACK_CONTRADICTIONS = (
         r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route)\b",
         re.IGNORECASE,
     ),
+    re.compile(
+        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)?(?: failure)? "
+        r"(?:falls?|falling) back to "
+        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bmain (?:GraphQL|\x60POST /graphql\x60)(?: route)?"
+        r"(?: failure| fails| is unavailable)?[,:; ]+"
+        r"(?:the browser )?(?:may )?use "
+        r"(?:REST(?: fallback)?|MCP(?: fallback)?|native I/O|the other route) instead\b",
+        re.IGNORECASE,
+    ),
 )
 
 

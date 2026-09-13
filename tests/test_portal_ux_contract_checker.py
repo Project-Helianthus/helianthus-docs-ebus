@@ -268,6 +268,8 @@ def test_rejects_protected_selector_in_every_parsed_dom_component(snippet: str) 
         "main GraphQL failure may use MCP fallback.",
         "main GraphQL is unavailable allowing native I/O.",
         "main GraphQL failure allows the other route.",
+        "main GraphQL falls back to REST.",
+        "main GraphQL failure: use MCP instead.",
     ),
 )
 def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> None:
@@ -276,6 +278,7 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
 
 def test_accepts_negative_b503_main_graphql_fallback_clause() -> None:
     accepts_target_insertion("main GraphQL failure does not allow REST fallback.")
+    accepts_target_insertion("main GraphQL does not fall back to REST.")
 
 
 def test_rejects_availability_selector_swap() -> None:
