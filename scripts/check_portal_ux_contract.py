@@ -60,9 +60,12 @@ B503_FRONTEND_EPOCH_ROLLOVER = (
 B503_SESSION_STATE_CONTRACT = (
     "The strip states are `Idle`, `Enabling`, `Active`, and\n"
     "`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\n"
-    "ownership gate and all live-monitor operations are busy. Refresh success returns\n"
-    "`Active`; refresh failure releases the gate and returns `Idle`. `Disabled` is\n"
-    "never reported with `owned:true`."
+    "ownership gate and all bus-facing live-monitor reads/actions are busy. The\n"
+    "status-only `vaillantCapabilities(targetAddress:)` and\n"
+    "`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\n"
+    "availability and session completion. Refresh success returns `Active`; refresh\n"
+    "failure releases the gate and returns `Idle`. `Disabled` is never reported with\n"
+    "`owned:true`."
 )
 B503_DISABLED_PUBLIC_MAPPING = (
     "`Disabled` with `owned:false` maps only an\n"
@@ -79,8 +82,11 @@ B503_REFRESHING_CLEANUP = (
 B503_REFRESHING_UNKNOWN_STRIP = (
     "When a selected target has Gateway session state `Refreshing` with `owned:true`,\n"
     "the session strip remains observable alongside temporarily `UNKNOWN` capability.\n"
-    "It is status-only: the section-projection card, B503 tabs, and every B503\n"
-    "operation remain unavailable until capability is `AVAILABLE` again."
+    "It is status-only: the section-projection card, B503 tabs, and every bus-facing\n"
+    "B503 read/action remain unavailable until capability is `AVAILABLE` again. Only\n"
+    "the status-only `vaillantCapabilities(targetAddress:)` and\n"
+    "`vaillantLiveMonitorSession(targetAddress:)` queries remain available; no other\n"
+    "operation gains permission."
 )
 B503_REFRESH_CONTINUATION = (
     "Refresh success revalidates only a surviving authenticated current-owner\n"
@@ -95,6 +101,16 @@ B503_REFRESH_CONTINUATION = (
 FORBIDDEN_B503_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
     "`Disabled` may be reported with `owned:true`.",
+)
+B503_MAIN_ROUTE_OPERATIONS = (
+    "- `vaillantCapabilities(targetAddress:)`\n"
+    "- `vaillantErrors(targetAddress:)`\n"
+    "- `vaillantServiceCurrent(targetAddress:)`\n"
+    "- `vaillantErrorHistory(targetAddress:index:)`\n"
+    "- `vaillantErrorsHistory(targetAddress:limit:)`\n"
+    "- `vaillantServiceHistory(targetAddress:index:)`\n"
+    "- `vaillantLiveMonitor(action:issuerToken:targetAddress:)`\n"
+    "- `vaillantLiveMonitorSession(targetAddress:)`"
 )
 
 REQUIRED = (
@@ -116,6 +132,7 @@ REQUIRED = (
     "Accepted source records and accepted semantic records remain distinct from the\nbrowser presentation state.",
     "Discovery\npermission controls visibility",
     "revalidates the request-bound caller,\ncatalog revision/digest claim, contribution identity/digest, resource and\ncapability, semantic snapshot/revision, binding, source epoch/generation,\ntyped preconditions, route, deadline, and idempotency key.",
+    B503_MAIN_ROUTE_OPERATIONS,
     "`vaillantCapabilities(targetAddress:)`",
     "`vaillantErrors(targetAddress:)`",
     "`vaillantServiceCurrent(targetAddress:)`",
@@ -127,7 +144,7 @@ REQUIRED = (
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
-    "source contract commit `9985f7d73dfabb44d645335a08065e9397907fb3` and current open\nevidence head `9985f7d73dfabb44d645335a08065e9397907fb3`; #975 remains open,\nintermediate, and unmerged, and this documentation does not claim it is\nmerged.",
+    "source contract commit `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c` and current open\nevidence head `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`; #975 remains open,\nintermediate, and unmerged, and this documentation does not claim it is\nmerged.",
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",

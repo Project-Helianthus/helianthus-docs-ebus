@@ -164,12 +164,16 @@ parsers or authorization inputs. Tests must also retain
 `data-testid="b503-session-state-label"` for the Gateway-owned live-monitor
 session strip. The strip states are `Idle`, `Enabling`, `Active`, and
 `Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the
-ownership gate and all live-monitor operations are busy. Refresh success returns
-`Active`; refresh failure releases the gate and returns `Idle`. `Disabled` is
-never reported with `owned:true`. `Disabled` with `owned:false` maps only an
+ownership gate and all bus-facing live-monitor reads/actions are busy. The
+status-only `vaillantCapabilities(targetAddress:)` and
+`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe
+availability and session completion. Refresh success returns `Active`; refresh
+failure releases the gate and returns `Idle`. `Disabled` is never reported with
+`owned:true`. `Disabled` with `owned:false` maps only an
 explicit operator or configuration disable; enable failure, the 30-second idle
 timeout, transport disconnect, and gateway restart map to `Idle` with
-`owned:false` after cleanup. The base `SESSION_BUSY` presentation is neutral.
+`owned:false` after cleanup.
+The base `SESSION_BUSY` presentation is neutral.
 The strip may show that the Gateway session gate is held, but must not identify
 another client. Leaving the B503 perspective uses the same locally-token-bound cleanup
 rule as target switching.
@@ -185,8 +189,11 @@ client Enable.
 
 When a selected target has Gateway session state `Refreshing` with `owned:true`,
 the session strip remains observable alongside temporarily `UNKNOWN` capability.
-It is status-only: the section-projection card, B503 tabs, and every B503
-operation remain unavailable until capability is `AVAILABLE` again.
+It is status-only: the section-projection card, B503 tabs, and every bus-facing
+B503 read/action remain unavailable until capability is `AVAILABLE` again. Only
+the status-only `vaillantCapabilities(targetAddress:)` and
+`vaillantLiveMonitorSession(targetAddress:)` queries remain available; no other
+operation gains permission.
 
 The selected-target B503 tabs expose a `role="tablist"` with one named
 `role="tab"` and matching `role="tabpanel"` for Errors, Service, History, and
@@ -241,8 +248,8 @@ and production catalog/action admission
 [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974).
 The five-state session wording follows Gateway
 [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975)
-source contract commit `9985f7d73dfabb44d645335a08065e9397907fb3` and current open
-evidence head `9985f7d73dfabb44d645335a08065e9397907fb3`; #975 remains open,
+source contract commit `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c` and current open
+evidence head `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`; #975 remains open,
 intermediate, and unmerged, and this documentation does not claim it is
 merged.
 It does not close Gateway #552, the wider INT-10 parent, SemReg cutover, or

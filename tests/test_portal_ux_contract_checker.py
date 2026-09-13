@@ -419,6 +419,10 @@ def test_rejects_incomplete_b503_refreshing_state_contract(
             "UNKNOWN capability hides the session strip and all B503 content.",
         ),
         (
+            CHECKER.B503_SESSION_STATE_CONTRACT,
+            "Refreshing blocks every B503 operation, including status queries.",
+        ),
+        (
             CHECKER.B503_DISABLED_PUBLIC_MAPPING,
             "Disabled maps every cleanup path regardless of ownership.",
         ),

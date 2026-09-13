@@ -58,13 +58,12 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
 AFFIRMATIVE_INSTALL_WRITE_EXPOSURE = (
     re.compile(
         r"\b(?:the\s+)?(?:public\s+)?(?:GraphQL|MCP|portal)(?:\s+surface)?\s+"
-        r"(?:MAY|MUST|CAN)\s+(?:expose|publish|offer)\s+`?02\s+01`?\s+"
-        r"(?:and|or)\s+`?02\s+02`?\b",
+        r"(?:MAY|MUST|CAN)\s+(?:expose|publish|offer)\s+`?02\s+0[12]`?\b",
         re.IGNORECASE,
     ),
     re.compile(
         r"\b(?:the\s+)?public\s+surface\s+(?:MAY|MUST|CAN)\s+"
-        r"(?:expose|publish|offer)\s+`?02\s+01`?\s+(?:and|or)\s+`?02\s+02`?\b",
+        r"(?:expose|publish|offer)\s+`?02\s+0[12]`?\b",
         re.IGNORECASE,
     ),
 )

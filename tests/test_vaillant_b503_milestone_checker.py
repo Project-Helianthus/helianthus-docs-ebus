@@ -59,6 +59,8 @@ def test_rejects_install_write_non_exposure_copied_outside_normative_section() -
     (
         "The public GraphQL surface MAY expose `02 01` and `02 02`.",
         "The public surface CAN publish `02 01` or `02 02`.",
+        "The public GraphQL surface MAY expose 02 01.",
+        "The Portal surface CAN offer 02 02.",
     ),
 )
 def test_rejects_affirmative_install_write_exposure_inside_normative_section(
