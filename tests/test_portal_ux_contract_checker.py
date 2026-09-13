@@ -143,6 +143,8 @@ def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -
         'id="b503Selector0202Control"',
         'id="b503-0201button"',
         'id="x_0202control"',
+        'id="0x02 0x01"',
+        'data-command="0x02-0x02"',
     ),
 )
 def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute: str) -> None:
@@ -189,8 +191,32 @@ def test_rejects_dom_relevant_inline_code_attribute(attribute: str) -> None:
     rejects_target_insertion(inline_code(attribute))
 
 
+@pytest.mark.parametrize(
+    "fragment",
+    (
+        'title="safe" aria-label="Reset"',
+        'title="safe" data-command="0x02-0x02"',
+    ),
+)
+def test_rejects_dom_relevant_attribute_inside_multi_attribute_inline_code(
+    fragment: str,
+) -> None:
+    rejects_target_insertion(inline_code(fragment))
+
+
 @pytest.mark.parametrize("fragment", ("query=reset", "action = delete"))
 def test_accepts_non_dom_inline_code_assignment(fragment: str) -> None:
+    accepts_target_insertion(inline_code(fragment))
+
+
+@pytest.mark.parametrize(
+    "fragment",
+    (
+        'query=reset title="safe"',
+        'data-testid="b503-safe" aria-label="Preset"',
+    ),
+)
+def test_accepts_safe_multi_attribute_inline_code(fragment: str) -> None:
     accepts_target_insertion(inline_code(fragment))
 
 

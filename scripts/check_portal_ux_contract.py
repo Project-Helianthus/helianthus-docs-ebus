@@ -139,7 +139,7 @@ FORBIDDEN_B503_DOM_COMMAND_TOKENS = frozenset((
 ))
 FORBIDDEN_INSTALLATION_SELECTORS = frozenset(("0201", "0202"))
 DOM_SELECTOR_TOKEN = re.compile(
-    r"(?<![0-9])(?:0x)?02[\s_:-]*0[12](?![0-9])", re.IGNORECASE
+    r"(?<![0-9])(?:0x)?02[\s_:-]*(?:0x)?0[12](?![0-9])", re.IGNORECASE
 )
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
 COMPACT_PROHIBITED_COMMAND = re.compile(
@@ -149,7 +149,8 @@ COMPACT_PROHIBITED_COMMAND = re.compile(
 )
 INLINE_CODE_FRAGMENT = re.compile(r"\x60([^\x60\n]+)\x60")
 INLINE_CODE_ATTRIBUTE = re.compile(
-    r"^\s*([A-Za-z_:][A-Za-z0-9_:.-]*)\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^\s]+))\s*$"
+    r"(?<![A-Za-z0-9_:.-])([A-Za-z_:][A-Za-z0-9_:.-]*)\s*=\s*"
+    r"(?:\"([^\"]*)\"|'([^']*)'|([^\s]+))"
 )
 DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
     r"^(?:id|class|for|hidden|name|role|title|value|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+)$",
@@ -222,8 +223,7 @@ def _availability_table_rows(target: str) -> list[str]:
 
 def _normalized_hex_selector(value: str) -> str | None:
     normalized = re.sub(r"[\s_:-]", "", value.lower())
-    if normalized.startswith("0x"):
-        normalized = normalized[2:]
+    normalized = normalized.replace("0x", "")
     if re.fullmatch(r"[0-9a-f]+", normalized):
         return normalized
     return None
@@ -283,14 +283,12 @@ def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | N
 def _inline_code_dom_attributes(target: str) -> list[tuple[str, str]]:
     attributes: list[tuple[str, str]] = []
     for fragment in INLINE_CODE_FRAGMENT.findall(target):
-        match = INLINE_CODE_ATTRIBUTE.fullmatch(fragment)
-        if match is None:
-            continue
-        attribute = match.group(1)
-        if DOM_RELEVANT_ATTRIBUTE_NAME.fullmatch(attribute) is None:
-            continue
-        value = next(group for group in match.groups()[1:] if group is not None)
-        attributes.append((attribute, value))
+        for match in INLINE_CODE_ATTRIBUTE.finditer(fragment):
+            attribute = match.group(1)
+            if DOM_RELEVANT_ATTRIBUTE_NAME.fullmatch(attribute) is None:
+                continue
+            value = next(group for group in match.groups()[1:] if group is not None)
+            attributes.append((attribute, value))
     return attributes
 
 
