@@ -241,7 +241,8 @@ DOM_SELECTOR_TOKEN = re.compile(
 )
 DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
 PLAIN_CONTROL_NOUN = re.compile(
-    r"\b(?:button|control|link|action|command|selector|menu|item|affordance)\b",
+    r"\b(?:button|control|link|action|command|selector|menu|item|affordance|"
+    r"capability|operation|service|feature)\b",
     re.IGNORECASE,
 )
 PLAIN_AFFIRMATIVE_CONTROL_VERB = re.compile(
@@ -477,7 +478,7 @@ def _rendered_children(children: list[object] | None) -> str:
 def _plain_rendered_children(children: list[object] | None) -> str:
     rendered: list[str] = []
     for child in children or ():
-        if child.type in ("text", "text_special"):
+        if child.type in ("text", "text_special", "code_inline"):
             rendered.append(child.content)
         elif child.type in ("softbreak", "hardbreak"):
             rendered.append("\n")
@@ -490,6 +491,12 @@ def _affirmative_control_verb(clause: str) -> re.Match[str] | None:
         suffix = clause[match.end() :].casefold()
         if re.search(
             r"(?:do|does|did|must|shall|may|can|is|are|was|were)\s+not\s+$",
+            prefix,
+        ):
+            continue
+        if re.search(
+            r"(?:(?:do|does|did|is|are|was|were|can|must|shall|may)n['’]t|"
+            r"cannot)\s+$",
             prefix,
         ):
             continue
