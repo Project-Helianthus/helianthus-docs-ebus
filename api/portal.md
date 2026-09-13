@@ -164,6 +164,22 @@ show that the Gateway session gate is held, but must not identify another
 client. Leaving the B503 perspective uses the same locally-token-bound cleanup
 rule as target switching.
 
+The selected-target B503 tabs expose a `role="tablist"` with one named
+`role="tab"` and matching `role="tabpanel"` for Errors, Service, History, and
+Live-Monitor. Each tab exposes `aria-selected`; ArrowLeft, ArrowRight, Home,
+and End move tab focus, while Enter and Space select the focused tab. The
+session strip is a named `role="status"` for the selected target.
+
+On a B503 GraphQL error or transport reconnect, the browser renders only the
+Gateway-supplied error or availability state. It neither preserves
+`AVAILABLE`, replays a session enable/disable action, nor changes route; it
+may re-query only the selected target after Gateway publishes a new state.
+
+Each target-bound asynchronous request captures a frontend presentation epoch
+at dispatch. Target switch, B503 navigation-away, and reconnect advance that
+epoch; a completion may mutate presentation only when both its target address
+and captured epoch still match, otherwise it is discarded.
+
 The available state includes Errors, Service, History, and Live-Monitor tabs.
 The History tab uses the typed B503 history GraphQL records for the selected
 target and has `data-role="vaillant-b503-tab-history"`; it does not infer

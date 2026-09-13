@@ -29,6 +29,25 @@ SELECTED_TARGET_TYPED_HISTORY = (
     "target and has `data-role=\"vaillant-b503-tab-history\"`; it does not infer\n"
     "history from labels or retained aggregate data."
 )
+B503_KEYBOARD_ACCESSIBILITY = (
+    "The selected-target B503 tabs expose a `role=\"tablist\"` with one named\n"
+    "`role=\"tab\"` and matching `role=\"tabpanel\"` for Errors, Service, History, and\n"
+    "Live-Monitor. Each tab exposes `aria-selected`; ArrowLeft, ArrowRight, Home,\n"
+    "and End move tab focus, while Enter and Space select the focused tab. The\n"
+    "session strip is a named `role=\"status\"` for the selected target."
+)
+B503_RECONNECT_ERROR = (
+    "On a B503 GraphQL error or transport reconnect, the browser renders only the\n"
+    "Gateway-supplied error or availability state. It neither preserves\n"
+    "`AVAILABLE`, replays a session enable/disable action, nor changes route; it\n"
+    "may re-query only the selected target after Gateway publishes a new state."
+)
+B503_FRONTEND_EPOCH_ROLLOVER = (
+    "Each target-bound asynchronous request captures a frontend presentation epoch\n"
+    "at dispatch. Target switch, B503 navigation-away, and reconnect advance that\n"
+    "epoch; a completion may mutate presentation only when both its target address\n"
+    "and captured epoch still match, otherwise it is discarded."
+)
 
 REQUIRED = (
     TARGET_START,
@@ -83,6 +102,9 @@ REQUIRED = (
     "Leaving the B503 perspective uses the same locally-token-bound cleanup\nrule as target switching.",
     PROJECTION_CARD_ADMISSION,
     SELECTED_TARGET_TYPED_HISTORY,
+    B503_KEYBOARD_ACCESSIBILITY,
+    B503_RECONNECT_ERROR,
+    B503_FRONTEND_EPOCH_ROLLOVER,
     'data-testid="b503-install-writes-banner"',
     'id="b503-ad02-tooltip-anchor"',
     "generic AD02 installation-write warning",

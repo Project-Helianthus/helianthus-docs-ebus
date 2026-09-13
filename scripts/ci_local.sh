@@ -183,6 +183,10 @@ echo "==> check contribution-driven Portal UX contract"
 python3 scripts/check_portal_ux_contract.py
 python3 -m pytest -q tests/test_portal_ux_contract_checker.py
 
+echo "==> check Vaillant B503 milestone contract"
+python3 scripts/check_vaillant_b503_milestones.py
+python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
+
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py
 python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow

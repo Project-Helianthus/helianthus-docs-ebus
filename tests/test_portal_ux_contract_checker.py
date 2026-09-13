@@ -200,6 +200,29 @@ def test_rejects_history_label_or_aggregate_inference() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("clause", "replacement"),
+    (
+        (
+            CHECKER.B503_KEYBOARD_ACCESSIBILITY,
+            "B503 accessibility follows generic browser behavior.",
+        ),
+        (
+            CHECKER.B503_RECONNECT_ERROR,
+            "The browser may retry or preserve B503 state after reconnect.",
+        ),
+        (
+            CHECKER.B503_FRONTEND_EPOCH_ROLLOVER,
+            "Asynchronous completion always updates the current B503 view.",
+        ),
+    ),
+)
+def test_rejects_missing_b503_accessibility_reconnect_or_epoch_clause(
+    clause: str, replacement: str
+) -> None:
+    rejects(clause, replacement)
+
+
 def test_rejects_int10_safety_fragment_moved_beyond_target_section() -> None:
     fragment = "no direct MCP/native fallback."
     text = contract().replace(fragment, "", 1)
