@@ -53,6 +53,8 @@ hardware work, or SemReg cutover.
 | Direct-fallback correction tree | `201f1c0ea241844b58d56745d37fde60b2a2d294` |
 | Compact/fallback correction commit | `dd063de608bbd36835a37872fec741f8d38efc0c` |
 | Compact/fallback correction tree | `c9bb9a04f338b21f66e7af01833050e58ec15a64` |
+| Clear-control correction commit | `11b80226ce940e9c16a75c7272fc8e3fe2f7557c` |
+| Clear-control correction tree | `0f4529e1fc46d6d657fca1ad36f3eb65407d02ed` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 
@@ -107,6 +109,8 @@ hardware work, or SemReg cutover.
   reset/delete/history-clear command prefixes, preserving benign `preset` and
   `clearance` names. The fallback matcher also rejects direct declarative
   `uses … as a fallback` clauses.
+- Standalone compact clear controls now reject unambiguous arbitrary suffixes
+  while retaining the lexical benign `clearance` and `clearly` prefixes.
 - The selector tokenizer accepts an optional `0x` prefix on each byte, and
   inline-code extraction audits every DOM-relevant assignment in a
   multi-attribute fragment while ignoring unrelated assignments.
@@ -140,7 +144,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 111 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 116 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -159,7 +163,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 111 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 116 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 3 tests |
 | `git diff --check` | PASS |
@@ -232,6 +236,10 @@ The complete direct-fallback correction CI log for commit `e776a24` is
 The complete compact/fallback correction CI log for commit `dd063de` is
 `/tmp/docs523-compact-fallback-dd063de-ci.log`, SHA-256
 `47ae8e25f500f0124f8e6a3cb3e4212578fbd8ede396e6e64345fb466f2efbf4`.
+
+The complete clear-control correction CI log for commit `11b8022` is
+`/tmp/docs523-clear-controls-11b8022-ci.log`, SHA-256
+`a030e3da06beede86ef5522e2f11368afa4d4557cb52378468fae6ea14c09027`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
