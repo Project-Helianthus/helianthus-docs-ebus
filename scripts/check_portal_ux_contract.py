@@ -127,7 +127,7 @@ REQUIRED = (
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
-    "source contract commit `4bdb42000fe8b3f4a582327a7df0e59b0a0438e9` and current open\nevidence head `0a13aa9ee2a23213b78591112084bf038a3f179a`; #975 remains open,\nintermediate, and unmerged, and this documentation does not claim it is\nmerged.",
+    "source contract commit `a08f145ce00b9365a20181eca9d6a32e207f9c6d` and current open\nevidence head `a08f145ce00b9365a20181eca9d6a32e207f9c6d`; #975 remains open,\nintermediate, and unmerged, and this documentation does not claim it is\nmerged.",
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
