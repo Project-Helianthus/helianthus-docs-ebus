@@ -38,6 +38,13 @@ def rejects_text(text: str) -> None:
         CHECKER.validate_text(text)
 
 
+def with_availability_row(row: str) -> str:
+    text = contract()
+    marker = "\n\nThe selectors above are stable browser-test identifiers"
+    assert marker in text
+    return text.replace(marker, f"\n{row}{marker}", 1)
+
+
 def test_accepts_current_portal_ux_contract() -> None:
     CHECKER.validate_text(contract())
 
@@ -114,6 +121,47 @@ def test_rejects_availability_presentation_mismatch() -> None:
         "State that transport is unavailable and offer only a retry/reconnect hint.",
     )
     rejects_text(contract().replace(row, wrong, 1))
+
+
+def test_rejects_extra_availability_row() -> None:
+    rejects_text(
+        with_availability_row(
+            '| `FUTURE` | `data-testid="b503-state-future"` | Custom future state. |'
+        )
+    )
+
+
+def test_rejects_duplicate_availability_row() -> None:
+    rejects_text(with_availability_row(CHECKER.AVAILABILITY_ROWS["AVAILABLE"]))
+
+
+def test_rejects_custom_expired_availability_row() -> None:
+    rejects_text(
+        with_availability_row(
+            '| `EXPIRED` | `data-testid="b503-state-expired"` | Render expired B503 state. |'
+        )
+    )
+
+
+def test_rejects_projection_card_admission_beyond_available() -> None:
+    rejects(
+        CHECKER.PROJECTION_CARD_ADMISSION,
+        'The section-projection card uses `data-role="projection-b503-card"` for any B503 state.',
+    )
+
+
+def test_rejects_history_without_selected_target_typed_records() -> None:
+    rejects(
+        CHECKER.SELECTED_TARGET_TYPED_HISTORY,
+        'The History tab has `data-role="vaillant-b503-tab-history"`.',
+    )
+
+
+def test_rejects_history_label_or_aggregate_inference() -> None:
+    rejects(
+        CHECKER.SELECTED_TARGET_TYPED_HISTORY,
+        "The History tab may infer history from labels or retained aggregate data.",
+    )
 
 
 def test_rejects_int10_safety_fragment_moved_beyond_target_section() -> None:

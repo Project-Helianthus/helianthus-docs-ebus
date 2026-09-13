@@ -17,6 +17,17 @@ AVAILABILITY_ROWS = {
     "SESSION_BUSY": "| `SESSION_BUSY` | `data-testid=\"b503-state-session-busy\"` | State neutrally that bounded ownership-or-lifecycle contention makes the session busy; do not infer a foreign owner. |",
     "UNKNOWN": "| `UNKNOWN` | `data-testid=\"b503-state-unknown\"` | State that capability is undetermined; do not equate it with unsupported. |",
 }
+AVAILABILITY_TABLE_HEADER = "| Reason | Stable selector | Required presentation truth |"
+AVAILABILITY_TABLE_SEPARATOR = "|---|---|---|"
+PROJECTION_CARD_ADMISSION = (
+    "The section-projection card\n"
+    "uses `data-role=\"projection-b503-card\"` only for `AVAILABLE` B503 capability."
+)
+SELECTED_TARGET_TYPED_HISTORY = (
+    "The History tab uses the typed B503 history GraphQL records for the selected\n"
+    "target and has `data-role=\"vaillant-b503-tab-history\"`; it does not infer\n"
+    "history from labels or retained aggregate data."
+)
 
 REQUIRED = (
     TARGET_START,
@@ -69,8 +80,8 @@ REQUIRED = (
     "never derives a foreign owner from `owned`\nor from an absent local token.",
     "never disables a gate-held session without a\nlocally held issuer token.",
     "Leaving the B503 perspective uses the same locally-token-bound cleanup\nrule as target switching.",
-    'data-role="vaillant-b503-tab-history"',
-    'data-role="projection-b503-card"',
+    PROJECTION_CARD_ADMISSION,
+    SELECTED_TARGET_TYPED_HISTORY,
     'data-testid="b503-install-writes-banner"',
     'id="b503-ad02-tooltip-anchor"',
     "generic AD02 installation-write warning",
@@ -114,6 +125,23 @@ def _target_section(text: str) -> str:
     return text[start:end]
 
 
+def _availability_table_rows(target: str) -> list[str]:
+    lines = target.splitlines()
+    try:
+        header_index = lines.index(AVAILABILITY_TABLE_HEADER)
+    except ValueError as exc:
+        raise CheckError("api/portal.md: B503 availability table header missing") from exc
+    if header_index + 1 >= len(lines) or lines[header_index + 1] != AVAILABILITY_TABLE_SEPARATOR:
+        raise CheckError("api/portal.md: B503 availability table separator missing")
+
+    rows: list[str] = []
+    for line in lines[header_index + 2 :]:
+        if not line.startswith("|"):
+            break
+        rows.append(line)
+    return rows
+
+
 def validate_text(text: str) -> None:
     target = _target_section(text)
     for fragment in REQUIRED:
@@ -129,12 +157,12 @@ def validate_text(text: str) -> None:
     for token in FORBIDDEN_B503_DOM_VOCABULARY:
         if token in target_lower:
             raise CheckError(f"api/portal.md: prohibited B503 DOM vocabulary: {token!r}")
-    for reason, row in AVAILABILITY_ROWS.items():
-        if target_lower.count(row.lower()) != 1:
-            raise CheckError(
-                f"api/portal.md: {reason} availability row must appear exactly once "
-                "inside the INT-10 target section with its selector and presentation text"
-            )
+    expected_availability_rows = list(AVAILABILITY_ROWS.values())
+    if _availability_table_rows(target) != expected_availability_rows:
+        raise CheckError(
+            "api/portal.md: B503 availability table must contain exactly the five "
+            "frozen reason/selector/presentation rows, with no duplicates or extra rows"
+        )
 
 
 def main() -> int:
