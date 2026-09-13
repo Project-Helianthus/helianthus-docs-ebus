@@ -129,6 +129,8 @@ def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -
         'data-selector="02 01"',
         'data-command="02-02"',
         'data-other="0x0202"',
+        'id="b503Selector0201Button"',
+        'id="b503Selector0202Control"',
     ),
 )
 def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute: str) -> None:
@@ -146,6 +148,7 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
         'title="preset clearly available"',
         'id="b503PresetButton"',
         'title="clearlyAvailable"',
+        'id="b503Selector02010Button"',
     ),
 )
 def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:
@@ -163,6 +166,8 @@ def test_accepts_harmless_prose_outside_dom_attribute_references() -> None:
         "<b503-reset-button>",
         '<button aria-label="Clear error history">Read</button>',
         "<span>Delete</span>",
+        "<button>Clear <strong>error history</strong></button>",
+        "<button><span>Re</span><span>set</span></button>",
     ),
 )
 def test_rejects_prohibited_command_in_dom_element_name_or_content(snippet: str) -> None:
@@ -175,6 +180,7 @@ def test_rejects_prohibited_command_in_dom_element_name_or_content(snippet: str)
         "<b503-preset-button>",
         "<button>Clearly available</button>",
         '<span aria-label="Clearance">Read</span>',
+        "<button><span>Pre</span><span>set</span></button>",
     ),
 )
 def test_accepts_benign_dom_element_name_or_content(snippet: str) -> None:

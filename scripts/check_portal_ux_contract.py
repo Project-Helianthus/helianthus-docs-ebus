@@ -2,6 +2,7 @@
 """Validate the public INT-10 Portal and Vaillant B503 target contract."""
 from __future__ import annotations
 
+from html.parser import HTMLParser
 import pathlib
 import re
 import sys
@@ -142,16 +143,39 @@ DOM_ATTRIBUTE_REFERENCE = re.compile(
 DOM_SELECTOR_TOKEN = re.compile(
     r"(?<![0-9a-f])(?:0x)?02[\s_:-]*0[12](?![0-9a-f])", re.IGNORECASE
 )
-DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
-DOM_ELEMENT_TAG = re.compile(r"</?([A-Za-z][A-Za-z0-9:-]*)\b[^>]*>", re.IGNORECASE)
-DOM_ELEMENT_TEXT = re.compile(
-    r"<([A-Za-z][A-Za-z0-9:-]*)\b[^>]*>([^<>]+)</\1\s*>",
-    re.IGNORECASE,
+DOM_IDENTIFIER_SELECTOR_TOKEN = re.compile(
+    r"(?:^|(?<=[a-z]))(020[12])(?=[A-Z]|$)", re.IGNORECASE
 )
+DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
 
 
 class CheckError(ValueError):
     """The public Portal contract is missing a required safety boundary."""
+
+
+class _DOMSnippetParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.elements: list[tuple[str, list[tuple[str, str | None]], list[str]]] = []
+        self._stack: list[tuple[str, list[tuple[str, str | None]], list[str]]] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        element = (tag, attrs, [])
+        self.elements.append(element)
+        self._stack.append(element)
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.elements.append((tag, attrs, []))
+
+    def handle_endtag(self, tag: str) -> None:
+        for index in range(len(self._stack) - 1, -1, -1):
+            if self._stack[index][0] == tag:
+                del self._stack[index:]
+                return
+
+    def handle_data(self, data: str) -> None:
+        for _, _, text in self._stack:
+            text.append(data)
 
 
 def _target_section(text: str) -> str:
@@ -195,6 +219,15 @@ def _identifier_tokens(value: str) -> set[str]:
     return {token.lower() for token in DOM_COMMAND_TOKEN.findall(segmented)}
 
 
+def _selector_tokens(value: str) -> set[str]:
+    tokens = {
+        _normalized_hex_selector(match.group(0))
+        for match in DOM_SELECTOR_TOKEN.finditer(value)
+    }
+    tokens.update(match.group(1) for match in DOM_IDENTIFIER_SELECTOR_TOKEN.finditer(value))
+    return {token for token in tokens if token is not None}
+
+
 def _reject_prohibited_command_tokens(context: str, value: str) -> None:
     prohibited_commands = _identifier_tokens(value) & FORBIDDEN_B503_DOM_COMMAND_TOKENS
     if prohibited_commands:
@@ -204,22 +237,33 @@ def _reject_prohibited_command_tokens(context: str, value: str) -> None:
         )
 
 
+def _reject_prohibited_attribute_reference(attribute: str, value: str) -> None:
+    if _selector_tokens(value) & FORBIDDEN_INSTALLATION_SELECTORS:
+        raise CheckError(
+            "api/portal.md: prohibited B503 installation selector in DOM attribute "
+            f"reference: {attribute}={value!r}"
+        )
+    _reject_prohibited_command_tokens(f"attribute reference {attribute}", value)
+
+
+def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | None]], list[str]]]:
+    parser = _DOMSnippetParser()
+    parser.feed(target)
+    parser.close()
+    return parser.elements
+
+
 def _reject_prohibited_dom_references(target: str) -> None:
     for match in DOM_ATTRIBUTE_REFERENCE.finditer(target):
         attribute = match.group(1)
         value = next(group for group in match.groups()[1:] if group is not None)
-        for selector_match in DOM_SELECTOR_TOKEN.finditer(value):
-            normalized = _normalized_hex_selector(selector_match.group(0))
-            if normalized in FORBIDDEN_INSTALLATION_SELECTORS:
-                raise CheckError(
-                    "api/portal.md: prohibited B503 installation selector in DOM attribute "
-                    f"reference: {attribute}={value!r}"
-                )
-        _reject_prohibited_command_tokens(f"attribute reference {attribute}", value)
-    for match in DOM_ELEMENT_TAG.finditer(target):
-        _reject_prohibited_command_tokens("element name", match.group(1))
-    for match in DOM_ELEMENT_TEXT.finditer(target):
-        _reject_prohibited_command_tokens("element text", match.group(2))
+        _reject_prohibited_attribute_reference(attribute, value)
+    for tag, attrs, text in _parsed_dom_elements(target):
+        _reject_prohibited_command_tokens("element name", tag)
+        for attribute, value in attrs:
+            if value is not None:
+                _reject_prohibited_attribute_reference(attribute, value)
+        _reject_prohibited_command_tokens("element text", "".join(text))
 
 
 def validate_text(text: str) -> None:
