@@ -81,9 +81,11 @@ hardware work, or SemReg cutover.
 | Session-authority/epoch-transition correction tree | `294b3b5f23743b88ab1e79b59e4b837415b0e256` |
 | Refresh-availability/install-write exposure correction commit | `460f60fa6d37bbf125b95175b76c253bb2a80117` |
 | Refresh-availability/install-write exposure correction tree | `a44e4aa4943b05b436be9e916421bc7f8514cbaf` |
+| Refresh-status/individual-selector exposure correction commit | `7fc07a78b4d814b07ce0dc5a39a2cbe759aea4ee` |
+| Refresh-status/individual-selector exposure correction tree | `243f1b93fc869b06ed9c6d5c30604c30ab1173df` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
-| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `9985f7d73dfabb44d645335a08065e9397907fb3`, evidence tree `11fe7398af628cb649ebf93d73c79290e8671a6b` |
+| Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`, evidence tree `67282530decb29ce8428836f9a758bdb27bc9628` |
 
 ## Delivered contract
 
@@ -171,8 +173,8 @@ hardware work, or SemReg cutover.
   ownership gate and makes every live-monitor operation busy; success returns
   `Active`, failure releases the gate and returns `Idle`, and `Disabled` is
   never emitted with `owned:true`. This follows Gateway #975's current source
-  contract and evidence head `9985f7d73dfabb44d645335a08065e9397907fb3`
-  (tree `11fe7398af628cb649ebf93d73c79290e8671a6b`); #975 is open, intermediate,
+  contract and evidence head `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`
+  (tree `67282530decb29ce8428836f9a758bdb27bc9628`); #975 is open, intermediate,
   unmerged,
   and is not claimed final or merged.
 - §1 now identifies the archived amendment-1 plan SHA as traceability for its
@@ -190,6 +192,13 @@ hardware work, or SemReg cutover.
 - §9 keeps its exact non-exposure invariant and rejects bounded affirmative
   GraphQL/MCP/Portal installation-write clauses, while accepting explicit
   negative safety wording.
+- The `Refreshing` strip may make only status-only
+  `vaillantCapabilities(targetAddress:)` and
+  `vaillantLiveMonitorSession(targetAddress:)` queries to observe completion
+  and capability recovery. Bus-facing reads/actions remain busy, and no other
+  operation gains permission.
+- The §9 checker now rejects affirmative public exposure of either `02 01` or
+  `02 02` independently, while preserving explicit negative safety clauses.
 - Canonical validation scopes M2b/M3 rows to the parsed §14 table and the
   `02 01`/`02 02` non-exposure invariant to normative §9. Its mutations reject
   copied text outside those scopes and unsafe five-state contradictions; Portal
@@ -250,9 +259,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 137 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 138 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 30 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 32 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -366,11 +375,11 @@ The complete intermediate full-CI Gateway-pin correction log for commit
 `8409583e5529b0d9851061f41a6c48fdbd2d8aef6d6411a3b40e1d535d139411`.
 It passed with 137 Portal checker tests and 20 canonical B503 milestone tests.
 
-Gateway #975 history reconciles `9985f7d73dfabb44d645335a08065e9397907fb3`
-as the current functional commit (`fix(portal): requalify B503 after detached
+Gateway #975 history reconciles `34a2c06c2f0dce85c95b3995c6be7776ecc5f35c`
+as the current functional commit (`fix(portal): requalify after pending B503
 cleanup`) and current open PR head, directly following the earlier functional
-commit `59001405d541d4d8de48403c5827411ac48dcede`. Therefore this intermediate
-pin deliberately uses `9985f7d` as both functional source and evidence head;
+commit `9985f7d73dfabb44d645335a08065e9397907fb3`. Therefore this intermediate
+pin deliberately uses `34a2c06` as both functional source and evidence head;
 it does not claim a merge or final acceptance.
 
 The complete intermediate source-reconciliation CI log for commit `002fae3` is
@@ -392,6 +401,11 @@ The complete refresh-availability/install-write exposure correction CI log for
 commit `460f60f` is `/tmp/docs523-refresh-availability-460f60f-ci.log`, SHA-256
 `5f1d03f318074629efa2a99e97de246309f50b1136f35944b18e11b0c64951f4`.
 It passed with 137 Portal checker tests and 30 canonical B503 milestone tests.
+
+The complete refresh-status/individual-selector exposure correction CI log for
+commit `7fc07a7` is `/tmp/docs523-refresh-status-7fc07a7-ci.log`, SHA-256
+`ec560a5115f991968314b7081030d014c4948f0d0b6a300e4f1d59e3c83f2015`.
+It passed with 138 Portal checker tests and 32 canonical B503 milestone tests.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
