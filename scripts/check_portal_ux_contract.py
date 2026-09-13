@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pathlib
+import re
 import sys
 
 
@@ -107,8 +108,11 @@ FORBIDDEN_B503_DOM_VOCABULARY = (
     "clear service history",
     "clear_error_history",
     "clear_service_history",
-    "02 01",
-    "02 02",
+)
+FORBIDDEN_INSTALLATION_SELECTORS = frozenset(("0201", "0202"))
+DOM_ATTRIBUTE_REFERENCE = re.compile(
+    r"\bdata-(?:selector|command)\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^\s`>]+))",
+    re.IGNORECASE,
 )
 
 
@@ -142,6 +146,26 @@ def _availability_table_rows(target: str) -> list[str]:
     return rows
 
 
+def _normalized_hex_selector(value: str) -> str | None:
+    normalized = re.sub(r"[\s_:-]", "", value.lower())
+    if normalized.startswith("0x"):
+        normalized = normalized[2:]
+    if re.fullmatch(r"[0-9a-f]+", normalized):
+        return normalized
+    return None
+
+
+def _reject_installation_selector_dom_references(target: str) -> None:
+    for match in DOM_ATTRIBUTE_REFERENCE.finditer(target):
+        value = next(group for group in match.groups() if group is not None)
+        normalized = _normalized_hex_selector(value)
+        if normalized in FORBIDDEN_INSTALLATION_SELECTORS:
+            raise CheckError(
+                "api/portal.md: prohibited B503 installation selector in DOM attribute "
+                f"reference: {match.group(0)!r}"
+            )
+
+
 def validate_text(text: str) -> None:
     target = _target_section(text)
     for fragment in REQUIRED:
@@ -157,6 +181,7 @@ def validate_text(text: str) -> None:
     for token in FORBIDDEN_B503_DOM_VOCABULARY:
         if token in target_lower:
             raise CheckError(f"api/portal.md: prohibited B503 DOM vocabulary: {token!r}")
+    _reject_installation_selector_dom_references(target)
     expected_availability_rows = list(AVAILABILITY_ROWS.values())
     if _availability_table_rows(target) != expected_availability_rows:
         raise CheckError(

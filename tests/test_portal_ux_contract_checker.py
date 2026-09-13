@@ -38,6 +38,14 @@ def rejects_text(text: str) -> None:
         CHECKER.validate_text(text)
 
 
+def accepts_target_insertion(fragment: str) -> None:
+    text = contract()
+    assert CHECKER.TARGET_END in text
+    CHECKER.validate_text(
+        text.replace(CHECKER.TARGET_END, f"{fragment}\n\n{CHECKER.TARGET_END}", 1)
+    )
+
+
 def with_availability_row(row: str) -> str:
     text = contract()
     marker = "\n\nThe selectors above are stable browser-test identifiers"
@@ -97,6 +105,34 @@ def test_rejects_contract_regressions(old: str, new: str) -> None:
 @pytest.mark.parametrize("token", CHECKER.FORBIDDEN_B503_DOM_VOCABULARY)
 def test_rejects_b503_command_vocabulary(token: str) -> None:
     rejects_target_insertion(token)
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    (
+        'data-selector="0x0201"',
+        'data-command="0x0202"',
+        'data-command="0201"',
+        'data-selector="0202"',
+        'data-selector="02-01"',
+        'data-command="02-02"',
+    ),
+)
+def test_rejects_normalized_installation_selector_dom_reference(attribute: str) -> None:
+    rejects_target_insertion(attribute)
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    (
+        'data-selector="0x0203"',
+        'data-command="0203"',
+        'data-selector="02-03"',
+        'data-other="0x0201"',
+    ),
+)
+def test_accepts_non_installation_or_non_selector_dom_reference(attribute: str) -> None:
+    accepts_target_insertion(attribute)
 
 
 def test_rejects_availability_selector_swap() -> None:
