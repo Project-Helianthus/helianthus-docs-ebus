@@ -401,11 +401,11 @@ def _markdown_reference_key(value: str) -> str:
     return re.sub(r"\s+", " ", value.strip()).casefold()
 
 
-def _markdown_dom_references(target: str) -> list[tuple[str, str]]:
+def _markdown_dom_references(target: str, document: str) -> list[tuple[str, str]]:
     references: list[tuple[str, str]] = []
     definitions = {
         _markdown_reference_key(match.group(1)): match.group(2) or match.group(3)
-        for match in MARKDOWN_REFERENCE_DEFINITION.finditer(target)
+        for match in MARKDOWN_REFERENCE_DEFINITION.finditer(document)
     }
     for match in MARKDOWN_INLINE_LINK.finditer(target):
         references.append(("Markdown link/image label", match.group(1)))
@@ -441,8 +441,8 @@ def _inline_code_dom_attributes(target: str) -> list[tuple[str, str]]:
     return attributes
 
 
-def _reject_prohibited_dom_references(target: str) -> None:
-    for context, value in _markdown_dom_references(target):
+def _reject_prohibited_dom_references(target: str, document: str) -> None:
+    for context, value in _markdown_dom_references(target, document):
         _reject_prohibited_dom_component(context, value)
     for attribute, value in _inline_code_dom_attributes(target):
         _reject_prohibited_dom_component("inline-code attribute name", attribute)
@@ -482,7 +482,7 @@ def validate_text(text: str) -> None:
             raise CheckError(
                 "api/portal.md: affirmative B503 main-GraphQL fallback contradiction"
             )
-    _reject_prohibited_dom_references(target)
+    _reject_prohibited_dom_references(target, text)
     expected_availability_rows = list(AVAILABILITY_ROWS.values())
     if _availability_table_rows(target) != expected_availability_rows:
         raise CheckError(

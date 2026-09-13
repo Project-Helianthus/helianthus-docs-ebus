@@ -236,6 +236,31 @@ def test_accepts_safe_markdown_link_and_image() -> None:
 
 
 @pytest.mark.parametrize(
+    "label",
+    ("Reset", "Clear history", "selector 02 01"),
+)
+def test_rejects_target_reference_resolved_outside_target_section(label: str) -> None:
+    text = contract().replace(
+        CHECKER.TARGET_END,
+        f"[{label}][outside]\n\n{CHECKER.TARGET_END}",
+        1,
+    )
+    text += "\n[outside]: #safe\n"
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_accepts_safe_target_reference_resolved_outside_target_section() -> None:
+    text = contract().replace(
+        CHECKER.TARGET_END,
+        f"[Read status][outside]\n\n{CHECKER.TARGET_END}",
+        1,
+    )
+    text += "\n[outside]: #status\n"
+    CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
     "attribute",
     (
         'data-testid="b503-reset"',
