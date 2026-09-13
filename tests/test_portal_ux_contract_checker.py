@@ -102,23 +102,33 @@ def test_rejects_contract_regressions(old: str, new: str) -> None:
     rejects(old, new)
 
 
-@pytest.mark.parametrize("token", CHECKER.FORBIDDEN_B503_DOM_VOCABULARY)
-def test_rejects_b503_command_vocabulary(token: str) -> None:
-    rejects_target_insertion(token)
+@pytest.mark.parametrize(
+    "attribute",
+    (
+        'id="b503-clear"',
+        'value="delete"',
+        'data-testid="b503-reset"',
+        'hidden="clearerrorhistory"',
+        'aria-label="clearservicehistory"',
+    ),
+)
+def test_rejects_exact_b503_command_token_in_any_dom_attribute(attribute: str) -> None:
+    rejects_target_insertion(attribute)
 
 
 @pytest.mark.parametrize(
     "attribute",
     (
-        'data-selector="0x0201"',
-        'data-command="0x0202"',
-        'data-command="0201"',
-        'data-selector="0202"',
-        'data-selector="02-01"',
+        'id="b503-0201"',
+        'value="02-01"',
+        'data-testid="b503-selector-0x0201"',
+        'hidden="0202"',
+        'data-selector="02 01"',
         'data-command="02-02"',
+        'data-other="0x0202"',
     ),
 )
-def test_rejects_normalized_installation_selector_dom_reference(attribute: str) -> None:
+def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute: str) -> None:
     rejects_target_insertion(attribute)
 
 
@@ -128,11 +138,17 @@ def test_rejects_normalized_installation_selector_dom_reference(attribute: str) 
         'data-selector="0x0203"',
         'data-command="0203"',
         'data-selector="02-03"',
-        'data-other="0x0201"',
+        'data-other="0x0203"',
+        'id="b503-clearance"',
+        'title="preset clearly available"',
     ),
 )
-def test_accepts_non_installation_or_non_selector_dom_reference(attribute: str) -> None:
+def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:
     accepts_target_insertion(attribute)
+
+
+def test_accepts_harmless_prose_outside_dom_attribute_references() -> None:
+    accepts_target_insertion("A preset is clearly available; 0201 here is prose.")
 
 
 def test_rejects_availability_selector_swap() -> None:

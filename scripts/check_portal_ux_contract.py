@@ -120,22 +120,22 @@ FORBIDDEN = (
     "Gateway #552 is complete",
 )
 
-FORBIDDEN_B503_DOM_VOCABULARY = (
+FORBIDDEN_B503_DOM_COMMAND_TOKENS = frozenset((
     "clear",
     "delete",
     "reset",
     "clearerrorhistory",
     "clearservicehistory",
-    "clear error history",
-    "clear service history",
-    "clear_error_history",
-    "clear_service_history",
-)
+))
 FORBIDDEN_INSTALLATION_SELECTORS = frozenset(("0201", "0202"))
 DOM_ATTRIBUTE_REFERENCE = re.compile(
-    r"\bdata-(?:selector|command)\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^\s`>]+))",
+    r"\b([A-Za-z_:][A-Za-z0-9_:.-]*)\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^\s`>]+))",
     re.IGNORECASE,
 )
+DOM_SELECTOR_TOKEN = re.compile(
+    r"(?<![0-9a-f])(?:0x)?02[\s_:-]*0[12](?![0-9a-f])", re.IGNORECASE
+)
+DOM_COMMAND_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
 
 
 class CheckError(ValueError):
@@ -177,14 +177,25 @@ def _normalized_hex_selector(value: str) -> str | None:
     return None
 
 
-def _reject_installation_selector_dom_references(target: str) -> None:
+def _reject_prohibited_dom_references(target: str) -> None:
     for match in DOM_ATTRIBUTE_REFERENCE.finditer(target):
-        value = next(group for group in match.groups() if group is not None)
-        normalized = _normalized_hex_selector(value)
-        if normalized in FORBIDDEN_INSTALLATION_SELECTORS:
+        attribute = match.group(1)
+        value = next(group for group in match.groups()[1:] if group is not None)
+        for selector_match in DOM_SELECTOR_TOKEN.finditer(value):
+            normalized = _normalized_hex_selector(selector_match.group(0))
+            if normalized in FORBIDDEN_INSTALLATION_SELECTORS:
+                raise CheckError(
+                    "api/portal.md: prohibited B503 installation selector in DOM attribute "
+                    f"reference: {attribute}={value!r}"
+                )
+        command_tokens = {
+            token.lower() for token in DOM_COMMAND_TOKEN.findall(value)
+        }
+        prohibited_commands = command_tokens & FORBIDDEN_B503_DOM_COMMAND_TOKENS
+        if prohibited_commands:
             raise CheckError(
-                "api/portal.md: prohibited B503 installation selector in DOM attribute "
-                f"reference: {match.group(0)!r}"
+                "api/portal.md: prohibited B503 command token in DOM attribute "
+                f"reference: {attribute}={value!r}"
             )
 
 
@@ -199,11 +210,7 @@ def validate_text(text: str) -> None:
     for fragment in FORBIDDEN:
         if fragment in text:
             raise CheckError(f"api/portal.md: forbidden stale or premature wording: {fragment!r}")
-    target_lower = target.lower()
-    for token in FORBIDDEN_B503_DOM_VOCABULARY:
-        if token in target_lower:
-            raise CheckError(f"api/portal.md: prohibited B503 DOM vocabulary: {token!r}")
-    _reject_installation_selector_dom_references(target)
+    _reject_prohibited_dom_references(target)
     expected_availability_rows = list(AVAILABILITY_ROWS.values())
     if _availability_table_rows(target) != expected_availability_rows:
         raise CheckError(
