@@ -274,7 +274,9 @@ access.
 **Lock lifecycle (single assignment, owner-conditional):**
 `liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
 transition. It is released exactly once on a terminal transition from a
-held-owner state: on entry to `DISABLED` from `ENABLING` or `ACTIVE`, on the direct `REFRESHING → IDLE` refresh-failure path, or on the direct `ENABLING → IDLE` epoch-advance path. The "any" transitions
+held-owner state: on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or
+`REFRESHING`, on the direct `REFRESHING → IDLE` refresh-failure path,
+or on the direct `ENABLING → IDLE` epoch-advance path. The "any" transitions
 (transport disconnect, gateway restart) release the mutex only when FSM was in
 a held-owner state at the time the event fired; if the FSM was already `IDLE`
 or `DISABLED` (no owner), no release occurs. The `DISABLED → IDLE` transition

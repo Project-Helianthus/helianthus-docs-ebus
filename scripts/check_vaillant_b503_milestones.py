@@ -151,6 +151,9 @@ REFRESH_FAILURE_TRANSITION = (
     "surface the Gateway-supplied failure outcome |"
 )
 REFRESH_FAILURE_LOCK = "the direct `REFRESHING → IDLE` refresh-failure path"
+HELD_OWNER_DISABLED_RELEASE = (
+    "on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or\n`REFRESHING`"
+)
 ENABLING_EPOCH_DIAGRAM = "ENABLING --> IDLE: epoch advance; stale enable discarded"
 ENABLING_EPOCH_OPERATION = (
     "| Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard "
@@ -298,6 +301,7 @@ def validate_text(text: str) -> None:
         REFRESH_FAILURE_DIAGRAM,
         REFRESH_FAILURE_TRANSITION,
         REFRESH_FAILURE_LOCK,
+        HELD_OWNER_DISABLED_RELEASE,
     ):
         if fragment not in session_section:
             raise CheckError(

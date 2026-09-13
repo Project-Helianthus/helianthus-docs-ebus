@@ -238,6 +238,10 @@ def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
             CHECKER.REFRESH_FAILURE_LOCK,
             "only on entry to `DISABLED` from a held-owner state",
         ),
+        (
+            CHECKER.HELD_OWNER_DISABLED_RELEASE,
+            "on entry to `DISABLED` from `ENABLING` or `ACTIVE`",
+        ),
     ),
 )
 def test_rejects_refresh_failure_diagram_or_lock_contradiction(
