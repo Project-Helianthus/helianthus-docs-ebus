@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `d80a2ef5fca1d4bf1f98de1d6763cd36d8ea13e2` |
-| Final validated contract tree | `a068f04e630340f2c56858b8387fd428991323a4` |
-| Final contract validation | Complete configured CI PASS; 275 Portal checker tests and 125 canonical B503 milestone tests; lead-local log SHA-256 `1010811cf9614214399d29f7f3eae8da685b8bf67e1f29c32aa7b17a04bc370c`; [hosted exact-head CI](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34816043273) |
+| Final validated contract commit | `940a3988cffd70c8cba4aae99119b9785f7dce97` |
+| Final validated contract tree | `8c7e244eea701846d75a004b6fe062f7b6480b57` |
+| Final contract validation | Complete configured CI PASS; 280 Portal checker tests and 133 canonical B503 milestone tests; lead-local log SHA-256 `f805fb53fb642e74e4c372589f87aee29520e319aa4a38f1e14b9eac76375c0e`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -331,7 +331,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 275 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 280 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -351,9 +351,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 275 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 280 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 125 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 133 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -1142,6 +1142,23 @@ an explicit separately operator-authorized target-specific recovery remains a
 positive case. The focused canonical checker passes 128 tests and the Portal
 checker remains 280/280. Complete configured CI passed with lead-local log
 SHA-256 `76f49e122181ed86a1da81c5360bb883aad623fa8c31279744fd689e6a9bf07d`.
+
+The fresh independent review of exact
+`0be1941e38e753554f3b4f1bf80078359712e0c1`, tree
+`024e376ff5489f7f9463d10d280bc2493275e4ce`, verified both preceding P2
+corrections and found one analogous canonical-checker P2: the required
+five-state `SESSION_STATE_CONTRACT` could still be hidden in `<template>`.
+Its report has SHA-256
+`4d372fc2141d1615276cc8892f206a83fa6018713f846e840b06abd0706d91d5`.
+Commit `940a3988cffd70c8cba4aae99119b9785f7dce97`, tree
+`8c7e244eea701846d75a004b6fe062f7b6480b57`, applies the same bounded visible
+contract extraction to every canonical required fragment. Comment and
+`head`/`script`/`style`/`template` mutations reject; a visible `div` remains a
+positive case. The canonical checker passes 133 tests and the Portal checker
+passes 280. Complete configured CI passed with lead-local log SHA-256
+`f805fb53fb642e74e4c372589f87aee29520e319aa4a38f1e14b9eac76375c0e`.
+The report's current-state table and validation counts now identify this
+functional head instead of the earlier `d80a2ef` state.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
