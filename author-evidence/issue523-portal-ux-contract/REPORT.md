@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `ac28f2cba5370c97dd9483f607ed980d6efe90d1` |
-| Latest functional correction tree | `2f9dcc163cb0b55ade3287efac159fec38320020` |
-| Focused validation | Portal 301 PASS; canonical B503 172 PASS; combined 473 PASS |
+| Latest functional correction commit | `e514194192c8b8e7b6ecb7b96f4c458200ba2405` |
+| Latest functional correction tree | `0d8ea7015d10f7d85db1b73d0e4170fba80705fa` |
+| Focused validation | Portal 304 PASS; canonical B503 176 PASS; combined 480 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 473/473 PASS;
-- Portal checker: 301/301 PASS;
-- canonical B503 checker: 172/172 PASS;
+- combined focused suite: 480/480 PASS;
+- Portal checker: 304/304 PASS;
+- canonical B503 checker: 176/176 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -282,6 +282,24 @@ Functional commit `ac28f2cba5370c97dd9483f607ed980d6efe90d1`, tree
 Portal availability table and includes `xlink:href` in entity/percent-decoded
 URL-bearing attributes. Focused mutations reject both exact bypasses while
 retaining unrelated visible HTML destinations.
+
+The fresh independent review at candidate
+`f7d091e41d0f91f6301cf584ea71e69b7afa33bf`, tree
+`f8ae4304e7d25bdc7c6f777e4bef72a1687d74a2`, returned two P2s. The phrase
+“explicit operator disable” could conflate a current-owner native session
+DISABLE, which presents `Idle` with cleanup, with the out-of-band
+administrative/configuration-disabled condition that presents `Disabled`.
+Both validators also treated required clauses inside a closed `<dialog>` as
+reader-visible. The report is
+`wave12/review/docs524-f7d091e-final-independent/REPORT.md`, SHA-256
+`e1cfb4591ff3de7f8c2ebc61a2b95806291d41ed63004b4811fc0247bc030338`.
+Functional commit `e514194192c8b8e7b6ecb7b96f4c458200ba2405`, tree
+`0d8ea7015d10f7d85db1b73d0e4170fba80705fa`, makes the two events disjoint:
+the current-owner session action always presents `Idle`/`owned:false` with
+retained cleanup and `UNKNOWN`, while only a Gateway-supplied out-of-band
+administrative/configuration-disabled condition presents
+`Disabled`/`owned:false` and emits no B503 operation. Both visibility parsers
+now reject required content in a closed dialog while accepting `<dialog open>`.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
