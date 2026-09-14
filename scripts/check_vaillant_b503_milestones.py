@@ -115,7 +115,9 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
     "held-session epoch refresh; session status `Refreshing`",
     "`UNKNOWN` (temporary; not sticky `AVAILABLE`)",
     "triggering READ or current-owner DISABLE remains pending and is dispatched "
-    "exactly once only after successful rebind; READ returns to `Active`, DISABLE "
+    "exactly once only after successful rebind; READ returns to `Active` only if "
+    "its dispatch completes without transport disconnect, while a disconnect "
+    "releases ownership into `DISABLED`; DISABLE "
     "releases ownership and completes cleanup to `Idle` only after a valid ACK, and subsequent live-monitor operations are "
     "`SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` "
     "status queries remain admitted, with no B503 card, tabs, bus-facing reads, or "
@@ -187,8 +189,11 @@ SESSION_STATE_CONTRACT = (
     "`Refreshing` means an epoch refresh holds the ownership gate. The already\n"
     "admitted triggering request remains pending; subsequent bus-facing live-monitor\n"
     "operations are busy. Refresh success dispatches a triggering read exactly once\n"
-    "and returns `Active`, or dispatches a triggering current-owner disable exactly\n"
-    "once. Only a valid disable ACK completes owner cleanup to `Idle`; any other\n"
+    "and returns `Active` only when that dispatch completes without a transport\n"
+    "disconnect; a disconnect follows the any-transport-disconnect transition below\n"
+    "and releases the owner. Refresh success may instead dispatch a triggering\n"
+    "current-owner disable exactly once. Only a valid disable ACK completes owner\n"
+    "cleanup to `Idle`; any other\n"
     "disable outcome retains fail-closed cleanup. Refresh failure releases the gate,\n"
     "enters internal `DISABLED`, retains a Gateway cleanup obligation, and returns\n"
     "the exact Gateway-supplied failure to that request; its public session\n"
@@ -249,7 +254,9 @@ REFRESH_SUCCESS_CONTINUATION = (
     "  triggering request remains pending during refresh; after successful rebind,\n"
     "  Gateway dispatches that request's native operation exactly once using the\n"
     "  rebound key and returns its exact outcome. A triggering READ retains the\n"
-    "  owner in `Active`; a triggering current-owner DISABLE emits its disable after\n"
+    "  owner in `Active` only when its dispatch completes without transport\n"
+    "  disconnect; a disconnect follows the `any` disconnect transition and releases\n"
+    "  the owner into `DISABLED`. A triggering current-owner DISABLE emits its disable after\n"
     "  quiesce and enters `Disabled`. A valid disable ACK completes owner cleanup to\n"
     "  `Idle`. Any other disable outcome returns exactly, releases the owner, retains\n"
     "  a process-local defensive-cleanup obligation, publishes capability `UNKNOWN`,\n"
@@ -421,7 +428,9 @@ NORMALIZED_REFRESH_DISABLE_CONTRACT = (
     "2. **Refresh once.** On epoch advance with a held session, Gateway transitions\n"
     "   to `Refreshing` and makes exactly one refresh attempt. The already-admitted\n"
     "   triggering READ or current-owner DISABLE remains pending and is dispatched\n"
-    "   exactly once only after successful rebind. READ returns Gateway to `Active`;\n"
+    "   exactly once only after successful rebind. READ returns Gateway to `Active`\n"
+    "   only when its dispatch completes without transport disconnect; a disconnect\n"
+    "   releases the owner under the `any` disconnect transition.\n"
     "   DISABLE releases ownership and completes the normal `Disabled` cleanup to\n"
     "   `Idle` only after a valid disable ACK. Any other disable outcome retains the\n"
     "   §7.4 process-local cleanup obligation, publishes capability `UNKNOWN`, admits\n"
@@ -433,7 +442,9 @@ NORMALIZED_REFRESH_DISABLE_CONTRACT = (
 REFRESH_FAILURE_DIAGRAM = (
     "REFRESHING --> DISABLED: refresh failure retains cleanup"
 )
-REFRESH_READ_DIAGRAM = "REFRESHING --> ACTIVE: refresh succeeds; triggering READ once"
+REFRESH_READ_DIAGRAM = (
+    "REFRESHING --> ACTIVE: refresh succeeds; triggering READ completes without disconnect"
+)
 REFRESH_DISABLE_DIAGRAM = (
     "REFRESHING --> DISABLED: refresh succeeds; triggering DISABLE once"
 )
@@ -441,11 +452,13 @@ UNCONFIRMED_CLEANUP_DIAGRAM = (
     "DISABLED --> DISABLED: cleanup lacks valid disable ACK; fail closed"
 )
 REFRESH_READ_TRANSITION = (
-    "| `REFRESHING` | refresh succeeds for triggering READ | `ACTIVE` | atomically "
-    "rebind the owner from epoch N to the returned current `transport_key` at N+1, "
+    "| `REFRESHING` | refresh succeeds for triggering READ; dispatched READ "
+    "completes without transport disconnect | `ACTIVE` | atomically rebind the "
+    "owner from epoch N to the returned current `transport_key` at N+1, "
     "retaining the same issuer token and target; fence every epoch-N completion; "
     "dispatch READ exactly once using the rebound key, return its outcome, and "
-    "retain the owner |"
+    "retain the owner; any transport disconnect instead follows the `any` disconnect "
+    "row and releases the owner into `DISABLED` |"
 )
 REFRESH_DISABLE_TRANSITION = (
     "| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; valid "
@@ -704,8 +717,6 @@ def _rendered_contract_source(text: str) -> str:
                 elif child.type in {"softbreak", "hardbreak"}:
                     parts.append("\n")
                 elif child.type == "html_inline":
-                    parts.append(child.content)
-                elif child.type == "image":
                     parts.append(child.content)
             parts.append("\n")
     return _visible_contract_source("".join(parts))
