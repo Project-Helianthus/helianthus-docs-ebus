@@ -526,6 +526,21 @@ FORBIDDEN_ENABLING_EPOCH_CONTRADICTIONS = (
     "ENABLING --> REFRESHING: epoch advance",
     "| `ENABLING` | epoch advance detected | `REFRESHING` |",
 )
+RESTART_AUTOMATIC_WRITE_CONTRADICTION_PATTERNS = (
+    re.compile(
+        r"(?<!not )(?<!never )\bautomatically\s+"
+        r"(?:emit|dispatch|send|issue|perform|enable|disable)\w*\b"
+        r"[^.\n]{0,120}\bB503\b[^.\n]{0,80}\brestart\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\brestart\b[^.\n]{0,120}\bGateway\b[^.\n]{0,40}"
+        r"(?<!not )(?<!never )\bautomatically\s+"
+        r"(?:emit|dispatch|send|issue|perform|enable|disable)\w*\b"
+        r"[^.\n]{0,80}\bB503\b",
+        re.IGNORECASE,
+    ),
+)
 FORBIDDEN_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
     "`Disabled` may be reported with `owned:true`.",
@@ -773,6 +788,13 @@ def validate_text(text: str) -> None:
         raise CheckError("missing Refreshing disconnect fence in §7.5")
     if RESTART_CLEANUP_FENCE not in reconnect_section:
         raise CheckError("missing bounded per-target restart cleanup fence in §7.5")
+    for pattern in RESTART_AUTOMATIC_WRITE_CONTRADICTION_PATTERNS:
+        match = pattern.search(reconnect_section)
+        if match is not None:
+            raise CheckError(
+                "forbidden automatic B503 restart write contradiction in §7.5: "
+                f"{match.group(0)!r}"
+            )
     idle_timeout_section = _section(
         text, IDLE_TIMEOUT_SECTION_START, IDLE_TIMEOUT_SECTION_END
     )
