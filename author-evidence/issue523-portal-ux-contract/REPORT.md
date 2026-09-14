@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `c26685f168ba27a7c82f581812090e3948688167` |
-| Final validated contract tree | `88fcab524e05b7eba6773443a9976798e9fc5193` |
-| Final contract validation | Complete configured CI PASS; 245 Portal checker tests and 89 canonical B503 milestone tests; log SHA-256 `4810098e5cae57299d62d3a3fceb6de7e2448027f7c0eeed38a5e9ae085ff7ff` |
+| Final validated contract commit | `12658921c5e2763dd689a1c8781399c2c598ae78` |
+| Final validated contract tree | `99a02087d83211f49f6cd11d1930af371f226925` |
+| Final contract validation | Complete configured CI PASS; 249 Portal checker tests and 100 canonical B503 milestone tests; log SHA-256 `85e6f52e6d20c680d8ea9e67117d7d9c01923b700476c669886465be9bcb0ad4` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -120,6 +120,8 @@ hardware work, or SemReg cutover.
 | Disconnect-cleanup/double-negative correction tree | `891d197b98679da0dcbedc6a5ec8406a4daaee3f` |
 | Literal-HTML route-destination correction commit | `c26685f168ba27a7c82f581812090e3948688167` |
 | Literal-HTML route-destination correction tree | `88fcab524e05b7eba6773443a9976798e9fc5193` |
+| Confirmed-cleanup/fail-closed correction commit | `12658921c5e2763dd689a1c8781399c2c598ae78` |
+| Confirmed-cleanup/fail-closed correction tree | `99a02087d83211f49f6cd11d1930af371f226925` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -272,7 +274,7 @@ hardware work, or SemReg cutover.
   have reached the wire without confirmed disable completion, Gateway retains a
   process-local, operation-ineligible cleanup obligation and blocks B503 use on
   reconnect until one bounded target-specific defensive disable reaches a
-  confirmed terminal outcome. Standalone inline event-handler attributes are
+  valid disable ACK. Standalone inline event-handler attributes are
   classified as DOM and audited like every other protected component.
 - The main B503 GraphQL route also names graduated
   `vaillantErrorsHistory(targetAddress:limit:)` and
@@ -284,7 +286,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 245 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 249 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -304,9 +306,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 245 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 249 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 89 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 100 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -736,6 +738,22 @@ percent-decoded and included in the fixed-route audit, so a link or form action
 cannot authorize `/portal/api/v1/*` as a fallback while ordinary non-route HTML
 destinations remain accepted. The following evidence-only commit records this
 immutable contract revision.
+
+The complete confirmed-cleanup and fail-closed correction CI log is
+`wave12/ci/docs524-cleanup-ack-ci.log`, SHA-256
+`85e6f52e6d20c680d8ea9e67117d7d9c01923b700476c669886465be9bcb0ad4`.
+It validated contract commit
+`12658921c5e2763dd689a1c8781399c2c598ae78`, tree
+`99a02087d83211f49f6cd11d1930af371f226925`, with 249 Portal checker tests and
+100 canonical B503 milestone tests. Only a valid native disable ACK proves
+cleanup success. Every other defensive-disable outcome keeps the internal FSM
+fail-closed in `DISABLED`, retains a process-local operation-ineligible cleanup
+obligation, publishes capability `UNKNOWN`, admits no Enable, and permits no
+same-epoch retry. A refreshed current-owner DISABLE has the same split outcome.
+Both validators also reject supported declarative contradictions that allow
+live-monitor operations during `Refreshing` or pair `Disabled` with
+`owned:true`. The following evidence-only commit records this immutable
+contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
