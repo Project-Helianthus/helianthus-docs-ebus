@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `07373de4ad8063dd40a0b0cff4692df052b0fa87` |
-| Final validated contract tree | `e143a8076639ca214ab3ff6fad30131b37aebcd8` |
-| Final contract validation | Complete configured CI PASS; 272 Portal checker tests and 122 canonical B503 milestone tests; lead-local log SHA-256 `3982e5ffea285c742cc2ee45e7a632b7338a0de51cc473f5448e80995826d5ac`; [hosted exact-head CI](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34812670233) |
+| Final validated contract commit | `867752765469c1cbb110d439dac362de81abed4c` |
+| Final validated contract tree | `93a24a9c09280fcf4c78d96f9542d61ed8883fba` |
+| Final contract validation | Complete configured CI PASS; 272 Portal checker tests and 122 canonical B503 milestone tests; lead-local log SHA-256 `a27db08c0ed2f2c66b6fd574231769e1586807a65f99c1bf850e0ccc36f0b0b3`; [hosted exact-head CI](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34814066846) |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -1068,6 +1068,20 @@ The public findings are the [rendered REQUIRED contract](https://github.com/Proj
 [focused count](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002521558),
 and [public evidence](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002521562)
 threads. The following evidence-only commit records this revision.
+
+The exact `07373de4ad8063dd40a0b0cff4692df052b0fa87` GitHub review found one
+P2 contradiction in capability truth row 3. An ACTIVE-session disconnect may
+have left a native session without a valid disable ACK, so the retained cleanup
+obligation requires public capability `UNKNOWN`; only the in-flight caller
+receives `TRANSPORT_DOWN`. Commit
+`867752765469c1cbb110d439dac362de81abed4c`, tree
+`93a24a9c09280fcf4c78d96f9542d61ed8883fba`, corrects the canonical row, its
+checker tuple, and the unsafe-row mutation. Complete configured CI passes with
+272 Portal and 122 B503 tests, lead-local log SHA-256
+`a27db08c0ed2f2c66b6fd574231769e1586807a65f99c1bf850e0ccc36f0b0b3`, and the
+[hosted exact-head run](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34814066846).
+The public finding is the [ACTIVE-disconnect capability thread](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002649630).
+The following evidence-only commit records this revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
