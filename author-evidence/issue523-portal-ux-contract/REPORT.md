@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `f7254aa660b7bd9c76741f04b835d7e04aeb6c76` |
-| Latest functional correction tree | `8933a9491279cb7f4bb2267d4f5a8470ea8a8f07` |
-| Focused validation | Portal 309 PASS; canonical B503 182 PASS; combined 491 PASS |
+| Latest functional correction commit | `e0b3078099d23ea5d8fcc798e6d8a8fe35a1f4c8` |
+| Latest functional correction tree | `5f233f2c6aba3fa48c9fb01d1f942f823ec11cc6` |
+| Focused validation | Portal 311 PASS; canonical B503 185 PASS; combined 496 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 484/484 PASS;
-- Portal checker: 305/305 PASS;
-- canonical B503 checker: 179/179 PASS;
+- combined focused suite: 496/496 PASS;
+- Portal checker: 311/311 PASS;
+- canonical B503 checker: 185/185 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -334,6 +334,25 @@ event-handler names such as `preview()`. Both visibility parsers now treat
 iframe fallback content as inert. Exact mutations cover literal and encoded
 event-handler destinations, required clauses, the Portal availability table,
 and the canonical capability and milestone tables.
+
+The fresh independent review of candidate
+`1c632b81b9b56bec3139a3738fa96a73f98cf9f1`, tree
+`bbda906750a7442d047f33d032635e8d912e144a`, returned
+`NO_BLOCKING_FINDINGS` after reproducing both corrections and the retained
+settlement/reconnect/transport-down probes. Its report is
+`wave12/review/docs524-1c632b8-final-independent/REPORT.md`, SHA-256
+`cd1eaa1001810cd4ef0cb5acb7418f3367df45ffc271b0d5a903f29dd770df9f`.
+The mandatory later feedback refresh then found one additional same-class P2:
+an `<object>` element could supply fallback prose or tables even though a
+successfully loaded resource replaces that content. Functional commit
+`e0b3078099d23ea5d8fcc798e6d8a8fe35a1f4c8`, tree
+`5f233f2c6aba3fa48c9fb01d1f942f823ec11cc6`, makes object fallback inert in
+both bounded visibility parsers. Exact mutations cover required prose plus the
+Portal availability and canonical capability/milestone tables. The same
+feedback refresh identified stale 305/179/484 counts in this report; they now
+record the current 311/185/496 focused run. The final evidence commit remains
+self-referential, so its exact SHA/tree and immutable complete-CI log identity
+are bound externally in the PR body and fresh independent review bundle.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
