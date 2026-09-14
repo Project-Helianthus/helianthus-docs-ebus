@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `6fee72aa8e309b9eea98761ea691f44eb42d4c95` |
-| Latest functional correction tree | `d0b76e4c1f59e6f9a95b350ea377b891abea6d93` |
-| Focused validation | Portal 292 PASS; canonical B503 161 PASS; combined 453 PASS |
+| Latest functional correction commit | `da22da61cfd194537a9a4837fb9ab49fe19d3ec4` |
+| Latest functional correction tree | `188463fcf3fc53725afd0b0aba9aa2caf2781b34` |
+| Focused validation | Portal 295 PASS; canonical B503 162 PASS; combined 457 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -52,6 +52,9 @@ The Portal contract defines:
   switch;
 - selected-target and frontend-epoch fencing for every B503 result;
 - all five B503 availability and session states with stable selectors;
+- an `Active` same-browser token-owner exception that retains only its session
+  strip and READ/DISABLE controls while capability remains `UNKNOWN`, without a
+  second Enable or admission for any other `UNKNOWN` presentation;
 - contribution-gated projection, bounded history, session strip, target/nav-away
   cleanup, and AD02 installation-write warning;
 - no public exposure of the `02 01` or `02 02` installation selectors;
@@ -130,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 453/453 PASS;
-- Portal checker: 292/292 PASS;
-- canonical B503 checker: 161/161 PASS;
+- combined focused suite: 457/457 PASS;
+- Portal checker: 295/295 PASS;
+- canonical B503 checker: 162/162 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -187,6 +190,20 @@ bounded contradiction patterns for explicit disable-ACK settlement and
 enable-NAK re-admission claims. Insertion mutations for the reported ACK to
 `DISABLED` row and both settlement clauses reject. This remains a structured
 FSM/settlement check, not an arbitrary-English parser.
+
+The subsequent hosted review at candidate
+`5f375889a42334fe92d32fb788ce55ff9b77d624` found one P1 integration defect:
+the successful ACK transition kept a current owner in `Active` with capability
+`UNKNOWN`, but the Portal's prior `AVAILABLE`-only rendering removed that
+owner's controls immediately. The public finding is
+[the Active-owner control thread](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4008117718).
+Functional commit `da22da61cfd194537a9a4837fb9ab49fe19d3ec4`,
+tree `188463fcf3fc53725afd0b0aba9aa2caf2781b34`, retains the already-mounted
+same-target session strip plus READ/DISABLE controls only while the browser
+holds the exact current token and Gateway reports `Active`/`owned:true`. It
+admits no second Enable, general tabs, new projection entry, or any other
+`UNKNOWN` target/session. Portal and canonical validators require that bounded
+exception and reject its removal or expansion.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
