@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `5beaf211577b7a2152e52c33723c8e84367faa44` |
-| Final validated contract tree | `9c51be0c508cb1cb475f6b63683b6a4c79669236` |
-| Final contract validation | Complete configured CI PASS; 257 Portal checker tests and 107 canonical B503 milestone tests; log SHA-256 `d938f497865a3e65c0f785dae83c18a3796fa0a8a4e5832548a2b04d962faf6d` |
+| Final validated contract commit | `2e1590604020e638a4dc37d7fe0aeb50f977566b` |
+| Final validated contract tree | `51a7fdc8d5f89fb448df1ee35f1419ef8941395a` |
+| Final contract validation | Complete configured CI PASS; 258 Portal checker tests and 108 canonical B503 milestone tests; log SHA-256 `023403abf2bca47989f3c725dcb632b72093a0183596eb83f0c9e0c1eec22bdb` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -132,6 +132,8 @@ hardware work, or SemReg cutover.
 | No-EXPIRED-state correction tree | `c3d8b7eafd46b15e225f5ab1702ca5341474a1e8` |
 | Refresh-failure cleanup correction commit | `5beaf211577b7a2152e52c33723c8e84367faa44` |
 | Refresh-failure cleanup correction tree | `9c51be0c508cb1cb475f6b63683b6a4c79669236` |
+| Cleanup-aware truth-table/enabled-state correction commit | `2e1590604020e638a4dc37d7fe0aeb50f977566b` |
+| Cleanup-aware truth-table/enabled-state correction tree | `51a7fdc8d5f89fb448df1ee35f1419ef8941395a` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -830,6 +832,20 @@ the exact unavailable capability is preserved, and Enable remains blocked.
 Portal clears only its browser cleanup pair and does not issue a second client
 disable. The following evidence-only commit records this immutable contract
 revision.
+
+The complete cleanup-aware truth-table and enabled-state correction CI log is
+`wave12/ci/docs524-truth-row-remain-ci.log`, SHA-256
+`023403abf2bca47989f3c725dcb632b72093a0183596eb83f0c9e0c1eec22bdb`.
+It validated contract commit
+`2e1590604020e638a4dc37d7fe0aeb50f977566b`, tree
+`51a7fdc8d5f89fb448df1ee35f1419ef8941395a`, with 258 Portal checker tests and
+108 canonical B503 milestone tests. Truth-table row 6 now preserves last-known
+capability only for operations that create no cleanup obligation; disable or
+refresh failure publishes `UNKNOWN`, retains the Gateway cleanup identity, and
+admits no Enable. The plain-Markdown audit rejects an affirmative enabled state
+such as a Reset button that “shall remain enabled” while accepting direct
+requirements that prohibited controls remain disabled. The following
+evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
