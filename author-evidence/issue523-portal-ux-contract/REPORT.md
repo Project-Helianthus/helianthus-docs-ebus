@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `dc3aaf582ac62bb7e1beea3879514aa1ec4a483f` |
-| Final validated contract tree | `891d197b98679da0dcbedc6a5ec8406a4daaee3f` |
-| Final contract validation | Complete configured CI PASS; 242 Portal checker tests and 89 canonical B503 milestone tests; log SHA-256 `0f272df69d83eb30bb7553bd90a46aaf9430c164d264e1c5b88cff7eeacdc4b5` |
+| Final validated contract commit | `c26685f168ba27a7c82f581812090e3948688167` |
+| Final validated contract tree | `88fcab524e05b7eba6773443a9976798e9fc5193` |
+| Final contract validation | Complete configured CI PASS; 245 Portal checker tests and 89 canonical B503 milestone tests; log SHA-256 `4810098e5cae57299d62d3a3fceb6de7e2448027f7c0eeed38a5e9ae085ff7ff` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -118,6 +118,8 @@ hardware work, or SemReg cutover.
 | Concrete-route audit correction tree | `af4790b58d985cf6d8bd6aa616566d8ae6d5156a` |
 | Disconnect-cleanup/double-negative correction commit | `dc3aaf582ac62bb7e1beea3879514aa1ec4a483f` |
 | Disconnect-cleanup/double-negative correction tree | `891d197b98679da0dcbedc6a5ec8406a4daaee3f` |
+| Literal-HTML route-destination correction commit | `c26685f168ba27a7c82f581812090e3948688167` |
+| Literal-HTML route-destination correction tree | `88fcab524e05b7eba6773443a9976798e9fc5193` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -282,7 +284,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 242 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 245 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -302,7 +304,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 242 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 245 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 89 tests |
 | `git diff --check` | PASS |
@@ -722,6 +724,18 @@ Markdown checker also rejects affirmative double-negative exposure such as a
 Reset button that “MUST NOT be hidden”, while accepting direct requirements
 that the control remain hidden or disabled. The following evidence-only commit
 records this immutable contract revision.
+
+The complete literal-HTML route-destination correction CI log is
+`wave12/ci/docs524-literal-html-route-ci.log`, SHA-256
+`4810098e5cae57299d62d3a3fceb6de7e2448027f7c0eeed38a5e9ae085ff7ff`.
+It validated contract commit
+`c26685f168ba27a7c82f581812090e3948688167`, tree
+`88fcab524e05b7eba6773443a9976798e9fc5193`, with 245 Portal checker tests and
+89 canonical B503 milestone tests. URL-bearing literal-HTML attributes are now
+percent-decoded and included in the fixed-route audit, so a link or form action
+cannot authorize `/portal/api/v1/*` as a fallback while ordinary non-route HTML
+destinations remain accepted. The following evidence-only commit records this
+immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
