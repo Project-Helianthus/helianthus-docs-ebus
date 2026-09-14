@@ -541,6 +541,7 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
         '<meta HTTP-EQUIV="Refresh" content="0; URL=/portal/api/v%31/projection/devices">',
         "<div style=\"background-image:url('/portal/api/v1/projection/devices')\">state</div>",
         '<style>@import "/portal/api/v%31/projection/devices";</style>',
+        r'''<div style="background:url('/portal\2f api/v1/projection/devices')">state</div>''',
         "Fallback:\n\n```text\nGET /portal/api/v1/projection/devices\n```",
     ),
 )
@@ -558,6 +559,9 @@ def test_accepts_unrelated_literal_html_destination() -> None:
     )
     accepts_target_insertion(
         '<div style="background-image:url(https://example.invalid/help.png)">Help</div>'
+    )
+    accepts_target_insertion(
+        r'''<div style="background:url('https\3a //example.invalid/help.png')">Help</div>'''
     )
 
 

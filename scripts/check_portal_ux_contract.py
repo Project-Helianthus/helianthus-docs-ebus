@@ -693,8 +693,25 @@ def _mentions_route_surface(value: str) -> bool:
     )
 
 
+def _decode_css_escapes(value: str) -> str:
+    def replace(match: re.Match[str]) -> str:
+        hexadecimal = match.group(1)
+        if hexadecimal is None:
+            return match.group(2)
+        codepoint = int(hexadecimal, 16)
+        if codepoint == 0 or codepoint > 0x10FFFF or 0xD800 <= codepoint <= 0xDFFF:
+            return "\uFFFD"
+        return chr(codepoint)
+
+    return re.sub(
+        r"\\(?:([0-9a-fA-F]{1,6})(?:[ \t\r\n\f]|\r\n)?|([^\r\n\f]))",
+        replace,
+        value,
+    )
+
+
 def _css_route_destinations(value: str) -> list[str]:
-    css = unescape(value)
+    css = _decode_css_escapes(unescape(value))
     destinations = [
         unquote(match.group(2).strip())
         for match in re.finditer(
