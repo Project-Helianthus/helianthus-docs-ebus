@@ -310,7 +310,7 @@ HTML_VOID_ELEMENTS = frozenset((
     "meta", "param", "source", "track", "wbr",
 ))
 NON_RENDERING_CONTAINERS = frozenset(
-    ("head", "iframe", "pre", "script", "style", "template")
+    ("head", "iframe", "object", "pre", "script", "style", "template")
 )
 B503_ROUTE_SURFACE_MARKERS = (
     "rest",

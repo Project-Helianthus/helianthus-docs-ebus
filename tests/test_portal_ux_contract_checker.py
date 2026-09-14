@@ -504,7 +504,8 @@ def test_rejects_availability_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
-def test_rejects_availability_table_stored_as_iframe_fallback() -> None:
+@pytest.mark.parametrize("container", ("iframe", "object"))
+def test_rejects_availability_table_stored_as_html_fallback(container: str) -> None:
     table = "\n".join(
         (
             CHECKER.AVAILABILITY_TABLE_HEADER,
@@ -512,7 +513,7 @@ def test_rejects_availability_table_stored_as_iframe_fallback() -> None:
             *CHECKER.AVAILABILITY_ROWS.values(),
         )
     )
-    text = contract().replace(table, f"<iframe>\n{table}\n</iframe>", 1)
+    text = contract().replace(table, f"<{container}>\n{table}\n</{container}>", 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 
