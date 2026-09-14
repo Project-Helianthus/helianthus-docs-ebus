@@ -1395,6 +1395,35 @@ accepted; image labels alone reject. Portal is 286/286, canonical B503 remains
 148/148, and complete configured CI passed with log SHA-256
 `a5fd8b7b51413404e86042afa562a61ccfb3aa76170f512acad63b0cfdadf6a2`.
 
+The later exact-HEAD review at `02a9eaea19bc7f085647af3063cf24f1d826e8f1`
+identified two additional P2 defects. Required clauses hidden by inline
+`display:none` or `visibility:hidden` styles could still satisfy the rendered
+contract gate, and the B503 contract treated a disable ACK or enable NAK as
+proof of native session settlement without publishable native evidence. The
+style correction excludes standard `hidden`, case-insensitive `display:none`,
+and `visibility:hidden` forms in both declared checkers.
+
+The Board approved the conservative 0.7 settlement behavior. ACK, NAK,
+timeouts, CRC errors, arbitration failures, and disconnects remain exact native
+outcomes; none proves that the native B503 session stopped or was never
+created. After any emitted Enable or disabling operation with unproven
+settlement, Gateway retains fail-closed cleanup, publishes capability
+`UNKNOWN`, denies re-Enable, and performs no automatic reconnect or restart
+write. The Portal exposes no maintenance recovery control. Deferred public
+issue [#525](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/525)
+owns later command-specific settlement evidence and any coordinated contract,
+runtime, and consumer revision; it is not a blocker for this conservative 0.7
+behavior and authorizes no physical work.
+
+The B503 and Portal validators now require those exact current clauses and
+reject ACK/NAK-as-settlement, automatic or operator-authorized restart recovery
+wording in the current contract, unsafe cleanup release, hidden declared
+anchors, and the prior availability transitions. Their combined focused suite
+passes 443/443 (Portal 289, B503 154), and `git diff --check` passes. Complete
+configured CI also passed on the final functional tree before commit; the
+lead-owned immutable exact-HEAD log is recorded outside this repository after
+the final commit.
+
 The read-only M6.25 inputs were verified clean and detached before CI:
 
 - docs-eeBUS `cedf238e34f879815ba773e9cd76b2b31c2822a3`, tree
@@ -1410,7 +1439,8 @@ physical smoke gate applies to this documentation/checker-only change.
 
 ## Stop boundary
 
-The correction is committed on the existing PR branch. No merge, issue, or
-Project state change was made. The branch is pushed for a fresh exact-HEAD
-review; normal remote checks and that review remain required before any merge
-decision.
+The correction remains on the existing issue/PR branch. A fresh exact-HEAD
+independent review, current hosted checks, complete feedback reconciliation,
+and ordinary merge/readback are required before acceptance. No live equipment,
+credential, deployment, or physical action belongs to this documentation
+change.

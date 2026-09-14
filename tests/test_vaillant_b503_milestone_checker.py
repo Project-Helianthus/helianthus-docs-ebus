@@ -331,7 +331,7 @@ def test_rejects_duplicate_noncanonical_install_write_clause(clause: str) -> Non
     ("old", "new"),
     (
         (
-            "`UNKNOWN` (temporary; not sticky `AVAILABLE`)",
+            "`UNKNOWN` (temporary during refresh; remains `UNKNOWN` after any triggering DISABLE)",
             "`AVAILABLE`",
         ),
         (
@@ -339,8 +339,8 @@ def test_rejects_duplicate_noncanonical_install_write_clause(clause: str) -> Non
             "no status query remains admitted",
         ),
         (
-            "no B503 card, tabs, bus-facing reads, or actions until capability returns `AVAILABLE`",
-            "B503 card and tabs remain admitted while capability is `UNKNOWN`",
+            "retains fail-closed cleanup, and admits no Enable",
+            "clears cleanup and admits Enable",
         ),
     ),
 )
@@ -368,12 +368,13 @@ def test_rejects_missing_refreshing_or_disabled_ownership_contract(
 
 
 def test_rejects_ambiguous_refreshed_disable_failure_layering() -> None:
-    precise = (
-        "the internal state remains `DISABLED` and does not enter\n"
-        "  internal `IDLE`, while the public session observation is `Idle` with\n"
-        "  `owned:false`; capability remains `UNKNOWN` and Enable remains unavailable"
+    precise = CHECKER.REFRESH_DISABLE_TRANSITION
+    ambiguous = precise.replace(
+        "retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` "
+        "as process-local cleanup, publish `UNKNOWN`, and admit no Enable",
+        "clear cleanup and admit Enable",
     )
-    ambiguous = "it does not enter `Idle`"
+    assert ambiguous != precise
     text = contract().replace(precise, ambiguous, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
@@ -536,7 +537,7 @@ def test_rejects_automatic_b503_write_after_restart(
         CHECKER.validate_text(text)
 
 
-def test_accepts_operator_authorized_target_specific_restart_recovery() -> None:
+def test_rejects_operator_authorized_target_specific_restart_recovery() -> None:
     text = contract().replace(
         CHECKER.RECONNECT_SECTION_END,
         "After restart, separately operator-authorized target-specific recovery "
@@ -544,7 +545,8 @@ def test_accepts_operator_authorized_target_specific_restart_recovery() -> None:
         f"{CHECKER.RECONNECT_SECTION_END}",
         1,
     )
-    CHECKER.validate_text(text)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
 
 
 @pytest.mark.parametrize(
@@ -568,21 +570,44 @@ def test_rejects_missing_valid_ack_cleanup_in_later_normative_sections(
         CHECKER.validate_text(text)
 
 
-def test_rejects_refresh_failure_capability_other_than_unknown() -> None:
+@pytest.mark.parametrize(
+    "unsafe_settlement",
+    (
+        "A valid disable ACK proves settlement and clears cleanup.",
+        "An enable NAK proves that no native session exists and admits Enable.",
+    ),
+)
+def test_rejects_ack_or_nak_as_session_settlement(
+    unsafe_settlement: str,
+) -> None:
     text = contract().replace(
-        "capability is `UNKNOWN`, and no Enable is admitted",
-        "capability remains `TRANSPORT_DOWN`, and no Enable is admitted",
+        CHECKER.CONFIRMED_CLEANUP_DEFINITION,
+        unsafe_settlement,
         1,
     )
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 
 
-def test_rejects_terminal_non_ack_reconnect_cleanup() -> None:
-    replacement = CHECKER.REFRESHING_DISCONNECT_FENCE.replace(
-        "Only a valid\n  disable ACK clears the obligation",
-        "A confirmed\n  terminal cleanup clears the obligation",
+def test_rejects_refresh_failure_capability_other_than_unknown() -> None:
+    current = contract()
+    old = CHECKER.REFRESH_FAILURE_CAPABILITY_PRECEDENCE
+    assert old in current
+    text = current.replace(
+        old,
+        "On refresh failure, publish `TRANSPORT_DOWN` and admit Enable.",
+        1,
     )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_rejects_terminal_outcome_as_reconnect_settlement() -> None:
+    replacement = CHECKER.REFRESHING_DISCONNECT_FENCE.replace(
+        "and waits for a future accepted settlement contract.",
+        "and treats any terminal cleanup result as settlement.",
+    )
+    assert replacement != CHECKER.REFRESHING_DISCONNECT_FENCE
     text = contract().replace(CHECKER.REFRESHING_DISCONNECT_FENCE, replacement, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
@@ -590,9 +615,10 @@ def test_rejects_terminal_non_ack_reconnect_cleanup() -> None:
 
 def test_rejects_transport_down_as_reconnect_cleanup_capability() -> None:
     replacement = CHECKER.REFRESHING_DISCONNECT_FENCE.replace(
-        "leaves public B503 capability `UNKNOWN`",
-        "leaves public B503 capability `TRANSPORT_DOWN`",
+        "publishes `UNKNOWN`",
+        "publishes `TRANSPORT_DOWN`",
     )
+    assert replacement != CHECKER.REFRESHING_DISCONNECT_FENCE
     text = contract().replace(CHECKER.REFRESHING_DISCONNECT_FENCE, replacement, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
@@ -698,8 +724,8 @@ def test_rejects_install_write_contract_hidden_in_fenced_code() -> None:
         (
             CHECKER.DISCONNECT_TRANSITION,
             CHECKER.DISCONNECT_TRANSITION.replace(
-                "no valid disable ACK has confirmed cleanup success",
-                "no disable has a confirmed terminal outcome",
+                "publish `UNKNOWN`, and perform no automatic reconnect write",
+                "publish `AVAILABLE` and perform an automatic reconnect write",
             ),
         ),
         (
@@ -740,22 +766,25 @@ def test_rejects_declarative_session_state_contradictions(clause: str) -> None:
             "triggering request returns SESSION_BUSY while refresh proceeds",
         ),
         (
-            "Every subsequent bus-facing live-monitor operation during refresh\n"
-            "  returns `SESSION_BUSY`.",
-            "Every live-monitor request remains pending during refresh.",
+            table_row(CHECKER.REFRESHING_CAPABILITY_TRUTH_ROW),
+            table_row(CHECKER.REFRESHING_CAPABILITY_TRUTH_ROW).replace(
+                "subsequent live-monitor operations are `SESSION_BUSY`",
+                "subsequent live-monitor operations remain pending",
+            ),
         ),
         (
-            "and return the exact Gateway-supplied failure to the triggering\n"
-            "  request without dispatching its native operation.",
-            "retry the triggering native operation after refresh failure.",
+            CHECKER.REFRESH_FAILURE_TRANSITION,
+            CHECKER.REFRESH_FAILURE_TRANSITION.replace(
+                "return the exact Gateway-supplied failure without dispatching the triggering native operation",
+                "retry the triggering native operation after refresh failure",
+            ),
         ),
         (
-            "If the triggering request was itself the\n"
-            "current-owner DISABLE, that single disable is the only client dispatch. A valid\n"
-            "disable ACK completes `Disabled` cleanup to `Idle`; any other outcome returns\n"
-            "exactly and leaves the process-local defensive cleanup with Gateway. In both\n"
-            "cases the consumer clears the queued pair without issuing a second disable.",
-            "A successful triggering DISABLE leaves the queued cleanup pair pending.",
+            "Its\n"
+            "exact ACK, NAK, or failure outcome is returned and recorded, while Gateway\n"
+            "retains process-local fail-closed cleanup because the outcome alone does not\n"
+            "prove native settlement.",
+            "Any ACK or NAK clears Gateway cleanup.",
         ),
         (
             CHECKER.ENABLING_CLEANUP_CONTRACT,

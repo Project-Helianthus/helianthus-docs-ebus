@@ -652,9 +652,8 @@ def test_accepts_unrelated_literal_html_destination() -> None:
 
 def test_rejects_failed_triggering_disable_left_in_browser_queue() -> None:
     replacement = CHECKER.B503_REFRESHING_CLEANUP.replace(
-        "every other outcome returns exactly and leaves Gateway's\n"
-        "process-local defensive cleanup in force. In both cases the browser clears\n",
-        "every other outcome leaves the browser queued pair pending. Only success clears\n",
+        "The browser clears the queued pair without issuing a second disable.",
+        "The browser leaves the queued pair pending after a native failure.",
     )
     rejects(CHECKER.B503_REFRESHING_CLEANUP, replacement)
 

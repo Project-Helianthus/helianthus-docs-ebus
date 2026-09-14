@@ -152,10 +152,10 @@ after refresh succeeds to `Active`, it dispatches the queued disable. After
 refresh failure presents `Idle`, Gateway retains the process-local cleanup
 obligation. The browser clears the queued pair without a client disable.
 If the triggering request was already the current-owner disable, that single
-disable is the only client dispatch. A valid disable ACK completes `Disabled`
-cleanup to `Idle`; every other outcome returns exactly and leaves Gateway's
-process-local defensive cleanup in force. In both cases the browser clears
-the queued pair without issuing a second disable.
+disable is the only client dispatch. Gateway records and returns its exact ACK,
+NAK, or failure outcome, releases ownership, and retains process-local
+fail-closed cleanup because the outcome alone does not prove native settlement.
+The browser clears the queued pair without issuing a second disable.
 This is switch-time cleanup, never passive timeout cleanup.
 
 Any late enable completion after a switch follows the same prior-target cleanup
@@ -190,12 +190,13 @@ new bus-facing live-monitor reads/actions are busy. Status-only
 `vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe
 availability and session completion. Refresh success returns `Active` and
 completes a triggering read with exactly one native operation result, or
-dispatches a triggering current-owner disable exactly once; only a valid disable
-ACK completes its `Disabled` cleanup to `Idle`.
-Refresh failure releases the gate, presents session `Idle` with `owned:false`,
-retains Gateway's process-local cleanup obligation, and completes that request
-with the exact unavailable failure without dispatching its native operation;
-Enable remains unavailable.
+dispatches a triggering current-owner disable exactly once. Every disabling
+outcome is recorded and returned exactly, releases ownership, retains Gateway's
+process-local cleanup obligation, presents session `Idle` with `owned:false`,
+publishes capability `UNKNOWN`, and admits no Enable because ACK/NAK alone do
+not prove native settlement. Refresh failure follows the same public state and
+completes the triggering request with the exact unavailable failure without
+dispatching its native operation.
 `Disabled` is never reported with `owned:true`. `Disabled` with `owned:false` maps only an
 explicit operator or configuration disable; enable failure, the 30-second idle
 timeout, transport disconnect, and gateway restart map to `Idle` with
@@ -210,23 +211,21 @@ Refresh success revalidates only a surviving authenticated current-owner
 token/target/epoch handle and returns it to `Active`; it is continuation, not
 reconstruction or auto-resume. The pending triggering request then completes
 from exactly one dispatch using the rebound key: a read returns to `Active`,
-while a current-owner disable completes cleanup to `Idle` only after a valid
-disable ACK. Any other disable outcome releases the owner, retains only the
-Gateway's process-local defensive-cleanup obligation, and presents `Idle` with
-`owned:false` alongside capability `UNKNOWN`; Enable remains unavailable. After restart, a lost owner
-handle, or an
-absent/invalid current issuer token, Gateway does not reconstruct the session
-and the client must issue a new explicit Enable. After restart, each qualified
-target's live-monitor capability is `UNKNOWN`, Enable is unavailable, and
-Gateway emits no automatic B503 enable or disable. The Portal exposes no
-recovery control. Only a separately operator-authorized target-specific
-maintenance recovery outside public GraphQL/Portal v1 may issue one disable,
-with action-time confirmation; a valid disable ACK permits normal availability
-evaluation, while every other outcome remains fail-closed.
+while a current-owner disable records and returns its exact native outcome,
+releases the owner, retains Gateway's process-local defensive-cleanup
+obligation, and presents `Idle` with `owned:false` alongside capability
+`UNKNOWN`; Enable remains unavailable because ACK/NAK alone do not prove native
+settlement. After restart, a lost owner handle, or an absent/invalid current
+issuer token, Gateway does not reconstruct the session. Each qualified target's
+live-monitor capability is `UNKNOWN`, Enable is unavailable, and Gateway emits
+no automatic B503 enable or disable. The Portal exposes no recovery control.
+Current 0.7 defines no ACK/NAK-based maintenance path that restores
+availability; command-specific evidence and any revised recovery contract are
+deferred to docs-eBUS issue #525.
 A terminal transport disconnect releases ownership. A later reconnect has no
-owner and does not enter `Refreshing`; when defensive cleanup is pending, it
-must complete before capability can become `AVAILABLE` or a new explicit client
-Enable can be admitted.
+owner and does not enter `Refreshing`; when cleanup/session settlement is
+unproven, Gateway remains `UNKNOWN`, admits no Enable, and emits no automatic
+recovery write.
 
 When a selected target has Gateway session state `Refreshing` with `owned:true`,
 the session strip remains observable alongside temporarily `UNKNOWN` capability.

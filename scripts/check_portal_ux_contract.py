@@ -61,23 +61,7 @@ B503_FRONTEND_EPOCH_ROLLOVER = (
     "epoch; a completion may mutate presentation only when both its target address\n"
     "and captured epoch still match, otherwise it is discarded."
 )
-B503_SESSION_STATE_CONTRACT = (
-    "The strip states are `Idle`, `Enabling`, `Active`, and\n"
-    "`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\n"
-    "ownership gate; the already-admitted triggering request remains pending and\n"
-    "new bus-facing live-monitor reads/actions are busy. Status-only\n"
-    "`vaillantCapabilities(targetAddress:)` and\n"
-    "`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\n"
-    "availability and session completion. Refresh success returns `Active` and\n"
-    "completes a triggering read with exactly one native operation result, or\n"
-    "dispatches a triggering current-owner disable exactly once; only a valid disable\n"
-    "ACK completes its `Disabled` cleanup to `Idle`.\n"
-    "Refresh failure releases the gate, presents session `Idle` with `owned:false`,\n"
-    "retains Gateway's process-local cleanup obligation, and completes that request\n"
-    "with the exact unavailable failure without dispatching its native operation;\n"
-    "Enable remains unavailable.\n"
-    "`Disabled` is never reported with `owned:true`."
-)
+B503_SESSION_STATE_CONTRACT = "The strip states are `Idle`, `Enabling`, `Active`, and\n`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\nownership gate; the already-admitted triggering request remains pending and\nnew bus-facing live-monitor reads/actions are busy. Status-only\n`vaillantCapabilities(targetAddress:)` and\n`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\navailability and session completion. Refresh success returns `Active` and\ncompletes a triggering read with exactly one native operation result, or\ndispatches a triggering current-owner disable exactly once. Every disabling\noutcome is recorded and returned exactly, releases ownership, retains Gateway's\nprocess-local cleanup obligation, presents session `Idle` with `owned:false`,\npublishes capability `UNKNOWN`, and admits no Enable because ACK/NAK alone do\nnot prove native settlement. Refresh failure follows the same public state and\ncompletes the triggering request with the exact unavailable failure without\ndispatching its native operation.\n`Disabled` is never reported with `owned:true`."
 B503_DISABLED_PUBLIC_MAPPING = (
     "`Disabled` with `owned:false` maps only an\n"
     "explicit operator or configuration disable; enable failure, the 30-second idle\n"
@@ -85,18 +69,7 @@ B503_DISABLED_PUBLIC_MAPPING = (
     "`owned:false`; while cleanup is pending, capability remains unavailable and\n"
     "`Idle` does not admit Enable."
 )
-B503_REFRESHING_CLEANUP = (
-    "For a `REFRESHING` prior target, the browser queues that\n"
-    "same token-bound disable without invoking an operation while Refreshing is busy;\n"
-    "after refresh succeeds to `Active`, it dispatches the queued disable. After\n"
-    "refresh failure presents `Idle`, Gateway retains the process-local cleanup\n"
-    "obligation. The browser clears the queued pair without a client disable.\n"
-    "If the triggering request was already the current-owner disable, that single\n"
-    "disable is the only client dispatch. A valid disable ACK completes `Disabled`\n"
-    "cleanup to `Idle`; every other outcome returns exactly and leaves Gateway's\n"
-    "process-local defensive cleanup in force. In both cases the browser clears\n"
-    "the queued pair without issuing a second disable."
-)
+B503_REFRESHING_CLEANUP = 'For a `REFRESHING` prior target, the browser queues that\nsame token-bound disable without invoking an operation while Refreshing is busy;\nafter refresh succeeds to `Active`, it dispatches the queued disable. After\nrefresh failure presents `Idle`, Gateway retains the process-local cleanup\nobligation. The browser clears the queued pair without a client disable.\nIf the triggering request was already the current-owner disable, that single\ndisable is the only client dispatch. Gateway records and returns its exact ACK,\nNAK, or failure outcome, releases ownership, and retains process-local\nfail-closed cleanup because the outcome alone does not prove native settlement.\nThe browser clears the queued pair without issuing a second disable.'
 B503_ENABLING_CLEANUP = (
     "For an\n"
     "`ENABLING` prior target, the browser registers cleanup at switch time under the\n"
@@ -128,29 +101,7 @@ B503_REFRESHING_UNKNOWN_STRIP = (
     "`vaillantLiveMonitorSession(targetAddress:)` queries remain available; no other\n"
     "operation gains permission."
 )
-B503_REFRESH_CONTINUATION = (
-    "Refresh success revalidates only a surviving authenticated current-owner\n"
-    "token/target/epoch handle and returns it to `Active`; it is continuation, not\n"
-    "reconstruction or auto-resume. The pending triggering request then completes\n"
-    "from exactly one dispatch using the rebound key: a read returns to `Active`,\n"
-    "while a current-owner disable completes cleanup to `Idle` only after a valid\n"
-    "disable ACK. Any other disable outcome releases the owner, retains only the\n"
-    "Gateway's process-local defensive-cleanup obligation, and presents `Idle` with\n"
-    "`owned:false` alongside capability `UNKNOWN`; Enable remains unavailable. After restart, a lost owner\n"
-    "handle, or an\n"
-    "absent/invalid current issuer token, Gateway does not reconstruct the session\n"
-    "and the client must issue a new explicit Enable. After restart, each qualified\n"
-    "target's live-monitor capability is `UNKNOWN`, Enable is unavailable, and\n"
-    "Gateway emits no automatic B503 enable or disable. The Portal exposes no\n"
-    "recovery control. Only a separately operator-authorized target-specific\n"
-    "maintenance recovery outside public GraphQL/Portal v1 may issue one disable,\n"
-    "with action-time confirmation; a valid disable ACK permits normal availability\n"
-    "evaluation, while every other outcome remains fail-closed.\n"
-    "A terminal transport disconnect releases ownership. A later reconnect has no\n"
-    "owner and does not enter `Refreshing`; when defensive cleanup is pending, it\n"
-    "must complete before capability can become `AVAILABLE` or a new explicit client\n"
-    "Enable can be admitted."
-)
+B503_REFRESH_CONTINUATION = "Refresh success revalidates only a surviving authenticated current-owner\ntoken/target/epoch handle and returns it to `Active`; it is continuation, not\nreconstruction or auto-resume. The pending triggering request then completes\nfrom exactly one dispatch using the rebound key: a read returns to `Active`,\nwhile a current-owner disable records and returns its exact native outcome,\nreleases the owner, retains Gateway's process-local defensive-cleanup\nobligation, and presents `Idle` with `owned:false` alongside capability\n`UNKNOWN`; Enable remains unavailable because ACK/NAK alone do not prove native\nsettlement. After restart, a lost owner handle, or an absent/invalid current\nissuer token, Gateway does not reconstruct the session. Each qualified target's\nlive-monitor capability is `UNKNOWN`, Enable is unavailable, and Gateway emits\nno automatic B503 enable or disable. The Portal exposes no recovery control.\nCurrent 0.7 defines no ACK/NAK-based maintenance path that restores\navailability; command-specific evidence and any revised recovery contract are\ndeferred to docs-eBUS issue #525.\nA terminal transport disconnect releases ownership. A later reconnect has no\nowner and does not enter `Refreshing`; when cleanup/session settlement is\nunproven, Gateway remains `UNKNOWN`, admits no Enable, and emits no automatic\nrecovery write."
 FORBIDDEN_B503_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
     "`Disabled` may be reported with `owned:true`.",
