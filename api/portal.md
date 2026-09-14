@@ -247,10 +247,14 @@ recovery write.
 When a selected target has Gateway session state `Refreshing` with `owned:true`,
 the session strip remains observable alongside temporarily `UNKNOWN` capability.
 It is status-only: the section-projection card, B503 tabs, and every new
-bus-facing B503 read/action remain unavailable until capability is `AVAILABLE`
-again. Only the status-only `vaillantCapabilities(targetAddress:)` and
-`vaillantLiveMonitorSession(targetAddress:)` queries remain available; no other
-operation gains permission.
+bus-facing B503 read/action remain unavailable while Gateway reports
+`Refreshing`. Only the status-only `vaillantCapabilities(targetAddress:)` and
+`vaillantLiveMonitorSession(targetAddress:)` queries remain available during
+that state. If the triggering READ succeeds and rebinds the same target and
+issuer token into `Active` with `owned:true`, the bounded current-owner
+READ/DISABLE exception above resumes immediately under `UNKNOWN`; it does not
+wait for `AVAILABLE` and does not extend to a different target, token, or
+general `UNKNOWN` presentation.
 
 The selected-target B503 tabs expose a `role="tablist"` with one named
 `role="tab"` and matching `role="tabpanel"` for Errors, Service, History, and

@@ -522,6 +522,39 @@ def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
         CHECKER.validate_text(text)
 
 
+def test_rejects_available_prerequisite_for_post_refresh_owner_controls() -> None:
+    replacement = CHECKER.REFRESHING_UNKNOWN_STRIP_CONTRACT.replace(
+        "resumes immediately\nunder `UNKNOWN`; it does not wait for `AVAILABLE`",
+        "remains blocked until capability returns `AVAILABLE`",
+    )
+    assert replacement != CHECKER.REFRESHING_UNKNOWN_STRIP_CONTRACT
+    text = contract().replace(CHECKER.REFRESHING_UNKNOWN_STRIP_CONTRACT, replacement, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        (
+            CHECKER.ACTIVE_READ_TRANSITION,
+            "| `ACTIVE` | read request | `ACTIVE` | reset idle timer |",
+        ),
+        (
+            CHECKER.ACTIVE_READ_FAILURE_TRANSITION,
+            CHECKER.ACTIVE_READ_FAILURE_TRANSITION.replace(
+                "do not reset the idle timer",
+                "reset the idle timer",
+            ),
+        ),
+    ),
+)
+def test_rejects_idle_timer_reset_before_success(old: str, new: str) -> None:
+    text = contract().replace(old, new, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_ambiguous_configuration_disabled_restart_mapping() -> None:
     text = contract().replace(
         "A still-effective explicit\noperator or configuration disable takes precedence across Gateway restart",

@@ -781,6 +781,25 @@ def test_rejects_missing_active_unknown_current_owner_exception(
     rejects(CHECKER.B503_ACTIVE_UNKNOWN_OWNER, replacement)
 
 
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        CHECKER.B503_REFRESHING_UNKNOWN_STRIP.replace(
+            "resumes immediately under `UNKNOWN`; it does not\nwait for `AVAILABLE`",
+            "remains unavailable until capability is `AVAILABLE`",
+        ),
+        CHECKER.B503_REFRESHING_UNKNOWN_STRIP.replace(
+            "the same target and\nissuer token",
+            "any target or issuer token",
+        ),
+    ),
+)
+def test_rejects_stranded_or_unbound_post_refresh_owner_controls(
+    replacement: str,
+) -> None:
+    rejects(CHECKER.B503_REFRESHING_UNKNOWN_STRIP, replacement)
+
+
 def test_rejects_history_without_selected_target_typed_records() -> None:
     rejects(
         CHECKER.SELECTED_TARGET_TYPED_HISTORY,

@@ -293,7 +293,8 @@ access.
 | `ENABLING` | `ctx.Done` / NAK / timeout / CRC mismatch / bus-arbitration failure / any other non-ACK terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; NAK and any defensive-disable ACK/NAK outcome do not prove settlement |
 | `ENABLING` | epoch advance detected before enable-frame emission | `IDLE` | cancel the queued frame, release ownership, and discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
 | `ENABLING` | epoch advance detected after enable-frame emission | `DISABLED` | fence every stale completion, issue at most one defensive disable after quiesce during the admitted lifecycle, record its exact native outcome, release ownership, retain fail-closed cleanup, publish `UNKNOWN`, and admit no Enable |
-| `ACTIVE` | read request | `ACTIVE` | reset idle timer |
+| `ACTIVE` | successful read completes | `ACTIVE` | return the exact native result and reset the idle timer |
+| `ACTIVE` | read NAK / timeout / CRC mismatch / bus-arbitration failure / other non-disconnect failure | `ACTIVE` | return the exact native failure and do not reset the idle timer |
 | `ACTIVE` | explicit disable; any ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; the outcome does not prove settlement |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable once after quiesce, record the exact outcome, release the owner, retain process-local cleanup, publish `UNKNOWN`, and admit no Enable |
 | `ACTIVE` | admitted request detects epoch advance | `REFRESHING` | ownership gate remains held; triggering request remains pending; subsequent live-monitor operations are busy |
@@ -403,8 +404,12 @@ During a held `Refreshing` epoch, the
 session strip remains observable alongside temporarily `UNKNOWN` capability,
 but it is status-only: only `vaillantCapabilities` and
 `vaillantLiveMonitorSession` remain admitted so the client can observe
-completion. No B503 card, tabs, bus-facing reads, or actions are admitted until
-capability returns `AVAILABLE`.
+completion. No B503 card, general tabs, bus-facing reads, or actions are
+admitted while Gateway reports `Refreshing`. If the triggering READ succeeds
+and rebinds the same target and issuer token into `Active` with `owned:true`,
+the bounded current-owner READ/DISABLE exception above resumes immediately
+under `UNKNOWN`; it does not wait for `AVAILABLE` and does not extend to a
+different target, token, or general `UNKNOWN` presentation.
 
 ### 7.2 Quiesce timing bounds (normative)
 

@@ -191,8 +191,12 @@ REFRESHING_UNKNOWN_STRIP_CONTRACT = (
     "session strip remains observable alongside temporarily `UNKNOWN` capability,\n"
     "but it is status-only: only `vaillantCapabilities` and\n"
     "`vaillantLiveMonitorSession` remain admitted so the client can observe\n"
-    "completion. No B503 card, tabs, bus-facing reads, or actions are admitted until\n"
-    "capability returns `AVAILABLE`."
+    "completion. No B503 card, general tabs, bus-facing reads, or actions are\n"
+    "admitted while Gateway reports `Refreshing`. If the triggering READ succeeds\n"
+    "and rebinds the same target and issuer token into `Active` with `owned:true`,\n"
+    "the bounded current-owner READ/DISABLE exception above resumes immediately\n"
+    "under `UNKNOWN`; it does not wait for `AVAILABLE` and does not extend to a\n"
+    "different target, token, or general `UNKNOWN` presentation."
 )
 ACTIVE_UNKNOWN_OWNER_CONTRACT = (
     "After a successful Enable ACK, session is `Active` with `owned:true` while\n"
@@ -306,7 +310,8 @@ ENABLING_CANCEL_TRANSITION = (
 IDLE_ENABLE_TRANSITION = '| `IDLE` | enable request, no owner | `ENABLING` | emit enable frame after poll-quiesce |'
 ENABLING_ACK_TRANSITION = '| `ENABLING` | successful enable ACK received after frame emission | `ACTIVE` | record the exact ACK, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, start the 30s idle timer, arm reads for the current owner, publish `UNKNOWN`, and admit no second Enable; the ACK establishes the admitted operation outcome, not session settlement |'
 ENABLING_AMBIGUOUS_FAILURE_TRANSITION = '| `ENABLING` | `ctx.Done` / NAK / timeout / CRC mismatch / bus-arbitration failure / any other non-ACK terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; NAK and any defensive-disable ACK/NAK outcome do not prove settlement |'
-ACTIVE_READ_TRANSITION = '| `ACTIVE` | read request | `ACTIVE` | reset idle timer |'
+ACTIVE_READ_TRANSITION = '| `ACTIVE` | successful read completes | `ACTIVE` | return the exact native result and reset the idle timer |'
+ACTIVE_READ_FAILURE_TRANSITION = '| `ACTIVE` | read NAK / timeout / CRC mismatch / bus-arbitration failure / other non-disconnect failure | `ACTIVE` | return the exact native failure and do not reset the idle timer |'
 ACTIVE_IDLE_TRANSITION = '| `ACTIVE` | 30s idle | `DISABLED` | emit disable once after quiesce, record the exact outcome, release the owner, retain process-local cleanup, publish `UNKNOWN`, and admit no Enable |'
 ACTIVE_REFRESH_TRANSITION = '| `ACTIVE` | admitted request detects epoch advance | `REFRESHING` | ownership gate remains held; triggering request remains pending; subsequent live-monitor operations are busy |'
 IDLE_DISCONNECT_TRANSITION = '| `IDLE` | transport disconnect, no owner or cleanup obligation | `IDLE` | change no session state and release no mutex; publish `TRANSPORT_DOWN` while disconnected; after reconnect require a new explicit Enable and perform no automatic B503 write |'
@@ -325,6 +330,7 @@ SESSION_TRANSITION_ROWS = (
     ENABLING_EPOCH_PRE_TRANSITION,
     ENABLING_EPOCH_POST_TRANSITION,
     ACTIVE_READ_TRANSITION,
+    ACTIVE_READ_FAILURE_TRANSITION,
     EXPLICIT_DISABLE_CONFIRMED_TRANSITION,
     ACTIVE_IDLE_TRANSITION,
     ACTIVE_REFRESH_TRANSITION,

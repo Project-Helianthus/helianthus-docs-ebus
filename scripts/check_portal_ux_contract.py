@@ -106,10 +106,14 @@ B503_REFRESHING_UNKNOWN_STRIP = (
     "When a selected target has Gateway session state `Refreshing` with `owned:true`,\n"
     "the session strip remains observable alongside temporarily `UNKNOWN` capability.\n"
     "It is status-only: the section-projection card, B503 tabs, and every new\n"
-    "bus-facing B503 read/action remain unavailable until capability is `AVAILABLE`\n"
-    "again. Only the status-only `vaillantCapabilities(targetAddress:)` and\n"
-    "`vaillantLiveMonitorSession(targetAddress:)` queries remain available; no other\n"
-    "operation gains permission."
+    "bus-facing B503 read/action remain unavailable while Gateway reports\n"
+    "`Refreshing`. Only the status-only `vaillantCapabilities(targetAddress:)` and\n"
+    "`vaillantLiveMonitorSession(targetAddress:)` queries remain available during\n"
+    "that state. If the triggering READ succeeds and rebinds the same target and\n"
+    "issuer token into `Active` with `owned:true`, the bounded current-owner\n"
+    "READ/DISABLE exception above resumes immediately under `UNKNOWN`; it does not\n"
+    "wait for `AVAILABLE` and does not extend to a different target, token, or\n"
+    "general `UNKNOWN` presentation."
 )
 B503_ACTIVE_UNKNOWN_OWNER = (
     "After a successful Enable ACK, session is `Active` with `owned:true` while\n"
