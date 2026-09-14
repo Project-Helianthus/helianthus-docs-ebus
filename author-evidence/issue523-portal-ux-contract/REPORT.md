@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `9879a8d6f7c87c5f02e515243918d2ab000e6604` |
-| Final validated contract tree | `af4790b58d985cf6d8bd6aa616566d8ae6d5156a` |
-| Final contract validation | Complete configured CI PASS; 237 Portal checker tests and 86 canonical B503 milestone tests; log SHA-256 `b540f5359e96c4e480ea76a2f01754bf6d12e16fe67a025e326bb37735b844ac` |
+| Final validated contract commit | `dc3aaf582ac62bb7e1beea3879514aa1ec4a483f` |
+| Final validated contract tree | `891d197b98679da0dcbedc6a5ec8406a4daaee3f` |
+| Final contract validation | Complete configured CI PASS; 242 Portal checker tests and 89 canonical B503 milestone tests; log SHA-256 `0f272df69d83eb30bb7553bd90a46aaf9430c164d264e1c5b88cff7eeacdc4b5` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -116,6 +116,8 @@ hardware work, or SemReg cutover.
 | Route/epoch-split correction tree | `3a3741de0d5c69637f9563e7dd5fc1c3b9330591` |
 | Concrete-route audit correction commit | `9879a8d6f7c87c5f02e515243918d2ab000e6604` |
 | Concrete-route audit correction tree | `af4790b58d985cf6d8bd6aa616566d8ae6d5156a` |
+| Disconnect-cleanup/double-negative correction commit | `dc3aaf582ac62bb7e1beea3879514aa1ec4a483f` |
+| Disconnect-cleanup/double-negative correction tree | `891d197b98679da0dcbedc6a5ec8406a4daaee3f` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -264,10 +266,12 @@ hardware work, or SemReg cutover.
   elements as leaves, so subsequent benign prose remains outside their
   descendant text audit while real DOM command references still reject.
 - `Refreshing` is reachable only when an epoch advances while ownership remains
-  held. A terminal transport disconnect releases to `Idle`; its later reconnect
-  has no owner and requires explicit Enable. Standalone inline event-handler
-  attributes are classified as DOM and audited like every other protected
-  component.
+  held. A terminal transport disconnect releases the owner. When an enable may
+  have reached the wire without confirmed disable completion, Gateway retains a
+  process-local, operation-ineligible cleanup obligation and blocks B503 use on
+  reconnect until one bounded target-specific defensive disable reaches a
+  confirmed terminal outcome. Standalone inline event-handler attributes are
+  classified as DOM and audited like every other protected component.
 - The main B503 GraphQL route also names graduated
   `vaillantErrorsHistory(targetAddress:limit:)` and
   `vaillantLiveMonitorSession(targetAddress:)` operations.
@@ -278,7 +282,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 237 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 242 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -298,9 +302,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 237 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 242 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 86 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 89 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -702,6 +706,22 @@ route surface with or without a trailing slash, after percent decoding, and
 when carried in a resolved Markdown link or image destination. The one frozen
 negative historical-endpoint paragraph remains the only allowed occurrence.
 The following evidence-only commit records this immutable contract revision.
+
+The complete disconnect-cleanup and double-negative correction CI log is
+`wave12/ci/docs524-disconnect-double-negative-ci.log`, SHA-256
+`0f272df69d83eb30bb7553bd90a46aaf9430c164d264e1c5b88cff7eeacdc4b5`.
+It validated contract commit
+`dc3aaf582ac62bb7e1beea3879514aa1ec4a483f`, tree
+`891d197b98679da0dcbedc6a5ec8406a4daaee3f`, with 242 Portal checker tests and
+89 canonical B503 milestone tests. A disconnect after possible enable-frame
+emission retains only a process-local defensive-cleanup obligation. Reconnect
+does not publish the transport epoch as B503-usable or admit another Enable
+until one bounded target-specific disable reaches a confirmed terminal outcome;
+an ambiguous outcome retains the obligation and fails closed. The plain
+Markdown checker also rejects affirmative double-negative exposure such as a
+Reset button that “MUST NOT be hidden”, while accepting direct requirements
+that the control remain hidden or disabled. The following evidence-only commit
+records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
