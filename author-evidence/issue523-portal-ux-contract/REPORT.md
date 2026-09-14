@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `1cf593f47070d6c40da690aadb9b526ac41bac6a` |
-| Final validated contract tree | `bc7e5948991190168db7c4f2c3f010200b002cc4` |
-| Final contract validation | Complete configured CI PASS; 268 Portal checker tests and 121 canonical B503 milestone tests; log SHA-256 `fbeac8b42c17fd737e1016101e36d7401e889f45606c0bf9791d79593608676b` |
+| Final validated contract commit | `6beb5e3ce404938cb0c3b1603cc76f6e2171b746` |
+| Final validated contract tree | `a1bef004aa05737606eec73f0c121909a6ab0a66` |
+| Final contract validation | Complete configured CI PASS; 269 Portal checker tests and 121 canonical B503 milestone tests; log SHA-256 `2e153648712b8f745ea3d1252b33bae11aefb1dacc10b5100ce7b920ce054029` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -152,6 +152,8 @@ hardware work, or SemReg cutover.
 | Exact eight-row capability-table correction tree | `c09b196436a0ee07d79c0e6ef079d133ddcd14c4` |
 | Full-session/CSS-route audit correction commit | `1cf593f47070d6c40da690aadb9b526ac41bac6a` |
 | Full-session/CSS-route audit correction tree | `bc7e5948991190168db7c4f2c3f010200b002cc4` |
+| CSS-escape route audit correction commit | `6beb5e3ce404938cb0c3b1603cc76f6e2171b746` |
+| CSS-escape route audit correction tree | `a1bef004aa05737606eec73f0c121909a6ab0a66` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -341,7 +343,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 268 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 269 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 121 tests |
 | `git diff --check` | PASS |
@@ -1005,6 +1007,20 @@ checker tests and 121 canonical B503 milestone tests. Its log is
 `fbeac8b42c17fd737e1016101e36d7401e889f45606c0bf9791d79593608676b`. The
 exact thread capture is `wave12/review/docs524-32ce2a7-live-threads.json`,
 SHA-256 `fc4edcff4cb191b7549e02b9e415bcc3f429268978dbdee4d6868f15b78d5373`.
+The following evidence-only commit records this immutable contract revision.
+
+The exact `96e8b2fef7c8bc9db6648454aefd2485d3f0ba02` GitHub review found one
+P2: CSS hex escapes could hide a forbidden route. Functional commit
+`6beb5e3ce404938cb0c3b1603cc76f6e2171b746`, tree
+`a1bef004aa05737606eec73f0c121909a6ab0a66`, decodes one-to-six-digit CSS
+hex escapes with optional terminator whitespace, simple escapes, and invalid
+code-point replacement before URL comparison. The exact `\2f ` REST-route
+mutation rejects, while an escaped safe external URL remains accepted. Complete
+configured CI passes with 269 Portal checker tests and 121 canonical B503
+milestone tests. Its log is `wave12/ci/docs524-6beb5e3-css-escape-ci.log`,
+SHA-256 `2e153648712b8f745ea3d1252b33bae11aefb1dacc10b5100ce7b920ce054029`.
+The exact thread capture is `wave12/review/docs524-96e8b2f-live-threads.json`,
+SHA-256 `93fe0e0dbc096f0236d7a10d3298fef9e71c4c8a14631f7a856120d26ad06fb7`.
 The following evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
