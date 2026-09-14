@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `e80413e2d7096cbe7f0dda919a262113a550321b` |
-| Latest functional correction tree | `fcede5610f659103b692ff0fe70a4f659012374b` |
-| Focused validation | Portal 313 PASS; canonical B503 190 PASS; combined 503 PASS |
+| Latest functional correction commit | `bddc1084451152569f838c49dc7ee995fc6e96ef` |
+| Latest functional correction tree | `730299ddb8aadc3d69a87c730ca174dc4cb3e367` |
+| Focused validation | Portal 321 PASS; canonical B503 202 PASS; combined 523 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 503/503 PASS;
-- Portal checker: 313/313 PASS;
-- canonical B503 checker: 190/190 PASS;
+- combined focused suite: 523/523 PASS;
+- Portal checker: 321/321 PASS;
+- canonical B503 checker: 202/202 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -372,6 +372,24 @@ returns exact `TRANSPORT_DOWN`, releases ownership, retains cleanup/`UNKNOWN`,
 denies Enable, and is never retried; exactly-once applies only after the frame
 reaches emission. The ordered transition table and exact mutations cover both
 states, emission and reconnect-retry regressions.
+
+The fresh independent review of candidate
+`febc47857886e92db0cc6ba100ab656d9c6e35dc`, tree
+`c322cc8df58d1dd9789decc04206ad112aa08f0d`, returned
+`NO_BLOCKING_FINDINGS` with 503 focused tests. Its report is
+`wave12/review/docs524-febc478-final-independent/REPORT.md`, SHA-256
+`c1f26a430c0eded41f3be704c2ff07ae913048a92a9b9fabc383c9be779840fe`.
+The mandatory later feedback refresh found two final P2s in the same declared
+gate scope. Standard audio/video fallback could supply hidden contract text,
+and §7.6 said the timeout depended on absence of a read request even though the
+finite table correctly reset it only on successful reads. Functional commit
+`bddc1084451152569f838c49dc7ee995fc6e96ef`, tree
+`730299ddb8aadc3d69a87c730ca174dc4cb3e367`, excludes audio/video and the
+JavaScript-only `noscript` fallback from the bounded rendered source and treats
+closed `details` like closed `dialog` while retaining their open forms. It also
+defines the idle trigger as 30 seconds without a successful read. Exact
+mutations cover each fallback/table form, closed/open disclosure elements, and
+failed-read requests that must not postpone cleanup.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
