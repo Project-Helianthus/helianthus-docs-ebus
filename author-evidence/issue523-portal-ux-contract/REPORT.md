@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `bddc1084451152569f838c49dc7ee995fc6e96ef` |
-| Latest functional correction tree | `730299ddb8aadc3d69a87c730ca174dc4cb3e367` |
-| Focused validation | Portal 321 PASS; canonical B503 202 PASS; combined 523 PASS |
+| Latest functional correction commit | `a74a7c8143f7c7c4aa972692caf713ad7d1ad8d6` |
+| Latest functional correction tree | `e072c358b312dbb7b52ba2db03833db7213a5602` |
+| Focused validation | Portal 331 PASS; canonical B503 212 PASS; combined 543 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 523/523 PASS;
-- Portal checker: 321/321 PASS;
-- canonical B503 checker: 202/202 PASS;
+- combined focused suite: 543/543 PASS;
+- Portal checker: 331/331 PASS;
+- canonical B503 checker: 212/212 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -390,6 +390,23 @@ closed `details` like closed `dialog` while retaining their open forms. It also
 defines the idle trigger as 30 seconds without a successful read. Exact
 mutations cover each fallback/table form, closed/open disclosure elements, and
 failed-read requests that must not postpone cleanup.
+
+The fresh independent review of candidate
+`63301027d8b052f8892baa9dbd8ec1eb9138bcd2`, tree
+`0e5e452522db989469439dc5441beb21eb1987cc`, returned
+`NO_BLOCKING_FINDINGS` with 523 focused tests. Its report is
+`wave12/review/docs524-6330102-final-independent/REPORT.md`, SHA-256
+`ff9c9f792c5c7a6c61f14c601d525a7f51e60c8f23b814fa30f3be53c11f1b0d`.
+The mandatory later feedback refresh found two P2 visibility gaps. Repeated CSS
+declarations discarded `!important` priority, and non-rendering SVG `desc`
+metadata could supply a required anchor. Functional commit
+`a74a7c8143f7c7c4aa972692caf713ad7d1ad8d6`, tree
+`e072c358b312dbb7b52ba2db03833db7213a5602`, resolves each CSS property using
+its priority and source order, so a later non-important declaration cannot
+override an earlier important declaration while a later important declaration
+can. The bounded parser also excludes standard SVG `defs`, `desc`, `metadata`,
+and `title` containers while retaining visible SVG text. Exact mutations cover
+both priority directions and nested SVG metadata in both validators.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
