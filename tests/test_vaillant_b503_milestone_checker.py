@@ -192,6 +192,8 @@ def test_rejects_missing_current_public_session_authority_in_status_section() ->
     (
         "The old session key remains authoritative after an epoch advance.",
         "Gateway silently changes the epoch without fencing old completions.",
+        "If refresh fails, no rebound key is installed and the owner is released "
+        "to `IDLE`.",
     ),
 )
 def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> None:

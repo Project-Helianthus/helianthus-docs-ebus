@@ -264,7 +264,10 @@ with `(transport_key[N+1], same issuer_token)` while retaining the same target,
 then dispatch the admitted triggering operation exactly once. Completions and
 control requests still bound to epoch N are stale and MUST NOT satisfy, disable,
 extend, or mutate the rebound session. If refresh fails, no rebound key is
-installed and the owner is released to `IDLE`.
+installed; Gateway releases client ownership, retains a fresh Gateway-owned
+process-local cleanup obligation in internal `DISABLED`, presents public
+session `Idle` with `owned:false`, preserves the exact unavailable capability,
+and admits no Enable until cleanup succeeds.
 
 This refines plan AD04's baseline `(adapter_instance_id,
 transport_incarnation_epoch)` with a client-scoped control token. The

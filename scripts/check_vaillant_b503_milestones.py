@@ -194,7 +194,10 @@ REFRESH_OWNER_REBINDING = (
     "then dispatch the admitted triggering operation exactly once. Completions and\n"
     "control requests still bound to epoch N are stale and MUST NOT satisfy, disable,\n"
     "extend, or mutate the rebound session. If refresh fails, no rebound key is\n"
-    "installed and the owner is released to `IDLE`."
+    "installed; Gateway releases client ownership, retains a fresh Gateway-owned\n"
+    "process-local cleanup obligation in internal `DISABLED`, presents public\n"
+    "session `Idle` with `owned:false`, preserves the exact unavailable capability,\n"
+    "and admits no Enable until cleanup succeeds."
 )
 NO_AUTO_RESUME_RECONSTRUCTION = (
     "Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost\n"
