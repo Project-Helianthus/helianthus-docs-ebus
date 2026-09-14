@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `c9748c97ff105f8f7fe1ebd486d05e5baa94d61c` |
-| Latest functional correction tree | `12e2f895f2a961fb5a066ae65faf1757315d6d1c` |
-| Focused validation | Portal 305 PASS; canonical B503 179 PASS; combined 484 PASS |
+| Latest functional correction commit | `f7254aa660b7bd9c76741f04b835d7e04aeb6c76` |
+| Latest functional correction tree | `8933a9491279cb7f4bb2267d4f5a8470ea8a8f07` |
+| Focused validation | Portal 309 PASS; canonical B503 182 PASS; combined 491 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -316,6 +316,24 @@ case returns the exact Gateway result with no transition or emission. The
 Portal validator now derives its target bounds from rendered CommonMark H2
 tokens and uses those same bounds for inline, raw HTML, and fenced-content
 audits, so a fenced fake boundary cannot hide a later rendered control.
+
+The fresh independent review at candidate
+`80dbc7062bb6044033d94e948ecf5795243a0f76`, tree
+`9f44dee71e0eee0e2f9abdfbc110d8a487482f91`, returned two bounded P2
+validator bypasses. An executable HTML event-handler attribute could name a
+forbidden Portal REST destination without entering the fixed-route audit, and
+iframe fallback text could satisfy required prose or table anchors even though
+supporting browsers render the nested document rather than that fallback text.
+The report is `wave12/review/docs524-80dbc70-final-independent/REPORT.md`,
+SHA-256
+`6e95e30dda3667ef4f31429f12973f8e7b9927127a1e61daf7c232e2255540d4`.
+Functional commit `f7254aa660b7bd9c76741f04b835d7e04aeb6c76`, tree
+`8933a9491279cb7f4bb2267d4f5a8470ea8a8f07`, subjects `on*` attribute values
+to the same entity/percent-decoded fixed-route audit while retaining safe
+event-handler names such as `preview()`. Both visibility parsers now treat
+iframe fallback content as inert. Exact mutations cover literal and encoded
+event-handler destinations, required clauses, the Portal availability table,
+and the canonical capability and milestone tables.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
