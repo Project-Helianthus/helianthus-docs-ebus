@@ -474,10 +474,14 @@ including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
   emit an automatic B503 enable or disable. Each qualified target starts with
   live-monitor capability `UNKNOWN`, and Enable remains unavailable until the
   explicit operator-authorized target recovery in §7.5 succeeds.
-- If the FSM was already `IDLE` or `DISABLED` at disconnect/restart time,
-  these events are no-ops with respect to the mutex; no release is
-  attempted. A pre-existing defensive-cleanup obligation remains independent
-  of that mutex rule.
+- If the FSM was already `IDLE` or `DISABLED` at transport-disconnect time,
+  disconnect is a no-op with respect to the mutex; no release is attempted. A
+  pre-existing defensive-cleanup obligation remains across that disconnect,
+  independent of the mutex rule.
+- If the FSM was already `IDLE` or `DISABLED` at gateway-restart time, restart
+  is likewise a no-op with respect to the mutex. It still destroys every
+  pre-existing defensive-cleanup obligation and enforces the restart recovery
+  fence above; no prior cleanup attempt identity survives process restart.
 - `liveMonitorMu` is a **distinct** `sync.Mutex` from the B524 `readMu`.
   Acquisition order when both are needed: `liveMonitorMu` → (optional)
   `readMu`. The reverse order is forbidden.

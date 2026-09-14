@@ -1332,6 +1332,24 @@ The Portal checker passes 285 tests, the canonical checker passes 146 tests,
 and complete configured CI passes with lead-local log SHA-256
 `e6cc32111b65b639a3a740f866d3e0f9cb6c3af96f61fd66f62d85ebe1fbc85c`.
 
+The fresh independent review of exact
+`8118de4cc91b887d2618f1ce3382e1ebe53fa0a9`, tree
+`9d1b34d9c456acf1a37e72d5a48fac236bfc0a51`, returned
+`NO_BLOCKING_FINDINGS`; its report is
+`wave12/review/docs524-8118de4-final-independent/REPORT.md`, SHA-256
+`4d04034a4a9779c34a72ef2b944e8ae40787edb4f0190a46337bcda708f116fc`.
+The complete live-feedback refresh then captured one later GitHub P2 at that
+head: §7.4 said a defensive-cleanup obligation remains when either disconnect
+or gateway restart finds the FSM already `IDLE` or `DISABLED`, contradicting
+the adjacent restart rule that destroys every process-local cleanup tuple and
+enforces explicit target recovery. The correction now scopes retained cleanup
+to transport disconnects. Gateway restart remains a mutex no-op when there is
+no owner, but it destroys every old cleanup attempt identity and retains the
+restart recovery fence. The existing exact-fragment mutation now rejects the
+contradictory retained-after-restart form. The canonical checker passes 146
+tests, and complete configured CI passes with lead-local log SHA-256
+`8cc4f2bbb3e9ab4dd9b439a52cb5f90d0efc483310d6b10dad8439fd4d754152`.
+
 The read-only M6.25 inputs were verified clean and detached before CI:
 
 - docs-eeBUS `cedf238e34f879815ba773e9cd76b2b31c2822a3`, tree

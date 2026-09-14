@@ -444,7 +444,7 @@ def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> N
         ),
         (
             CHECKER.DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE,
-            "No-owner disconnect discards pending defensive cleanup.",
+            "No-owner disconnect discards pending defensive cleanup, while restart retains it.",
         ),
         (
             CHECKER.UNCONFIRMED_CLEANUP_OBLIGATION,

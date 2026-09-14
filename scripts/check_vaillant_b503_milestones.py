@@ -327,10 +327,14 @@ OWNER_CONDITIONAL_MUTEX_SCOPE = (
     "`DISABLED` makes the event a no-op only with respect to mutex release."
 )
 DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE = (
-    "- If the FSM was already `IDLE` or `DISABLED` at disconnect/restart time,\n"
-    "  these events are no-ops with respect to the mutex; no release is\n"
-    "  attempted. A pre-existing defensive-cleanup obligation remains independent\n"
-    "  of that mutex rule."
+    "- If the FSM was already `IDLE` or `DISABLED` at transport-disconnect time,\n"
+    "  disconnect is a no-op with respect to the mutex; no release is attempted. A\n"
+    "  pre-existing defensive-cleanup obligation remains across that disconnect,\n"
+    "  independent of the mutex rule.\n"
+    "- If the FSM was already `IDLE` or `DISABLED` at gateway-restart time, restart\n"
+    "  is likewise a no-op with respect to the mutex. It still destroys every\n"
+    "  pre-existing defensive-cleanup obligation and enforces the restart recovery\n"
+    "  fence above; no prior cleanup attempt identity survives process restart."
 )
 CONFIRMED_CLEANUP_DEFINITION = (
     "A **confirmed cleanup success** means a valid native disable ACK. A NAK,\n"
