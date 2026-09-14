@@ -127,17 +127,35 @@ B503_REFRESH_CONTINUATION = (
     "token/target/epoch handle and returns it to `Active`; it is continuation, not\n"
     "reconstruction or auto-resume. The pending triggering request then completes\n"
     "from exactly one dispatch using the rebound key: a read returns to `Active`,\n"
-    "while a current-owner disable completes cleanup to `Idle`. After restart, a lost owner\n"
+    "while a current-owner disable completes cleanup to `Idle` only after a valid\n"
+    "disable ACK. Any other disable outcome releases the owner, retains only the\n"
+    "Gateway's process-local defensive-cleanup obligation, and presents `Idle` with\n"
+    "`owned:false` alongside capability `UNKNOWN`; Enable remains unavailable. After restart, a lost owner\n"
     "handle, or an\n"
     "absent/invalid current issuer token, Gateway does not reconstruct the session\n"
     "and the client must issue a new explicit Enable.\n"
-    "A terminal transport disconnect releases ownership to `Idle`; a later reconnect\n"
-    "therefore has no owner, does not enter `Refreshing`, and also requires explicit\n"
-    "client Enable."
+    "A terminal transport disconnect releases ownership. A later reconnect has no\n"
+    "owner and does not enter `Refreshing`; when defensive cleanup is pending, it\n"
+    "must complete before capability can become `AVAILABLE` or a new explicit client\n"
+    "Enable can be admitted."
 )
 FORBIDDEN_B503_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
     "`Disabled` may be reported with `owned:true`.",
+)
+B503_SESSION_STATE_CONTRADICTION_PATTERNS = (
+    re.compile(
+        r"(?:`Refreshing`\s+(?:(?:may|can|must|shall)\s+)?"
+        r"(?:accept|allow|permit)s?\s+(?:new\s+|bus-facing\s+)?live-monitor operations?"
+        r"|live-monitor operations?\s+(?:are|remain)\s+"
+        r"(?:accepted|allowed|permitted)\s+(?:during|while)\s+`Refreshing`)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"`Disabled`\s+(?:(?:may|can|must|shall)\s+be\s+|is\s+)?"
+        r"(?:reported|rendered|published|returned)\s+with\s+`owned:true`",
+        re.IGNORECASE,
+    ),
 )
 B503_MAIN_ROUTE_OPERATIONS = (
     "- `vaillantCapabilities(targetAddress:)`\n"
@@ -723,6 +741,13 @@ def validate_text(text: str) -> None:
             raise CheckError(
                 "api/portal.md: forbidden B503 session-state contradiction: "
                 f"{fragment!r}"
+            )
+    for pattern in B503_SESSION_STATE_CONTRADICTION_PATTERNS:
+        match = pattern.search(target)
+        if match is not None:
+            raise CheckError(
+                "api/portal.md: forbidden declarative B503 session-state "
+                f"contradiction: {match.group(0)!r}"
             )
     _reject_unapproved_route_surface_paragraphs(text)
     _reject_installation_selectors_in_target(text)

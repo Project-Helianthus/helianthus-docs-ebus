@@ -203,13 +203,17 @@ Refresh success revalidates only a surviving authenticated current-owner
 token/target/epoch handle and returns it to `Active`; it is continuation, not
 reconstruction or auto-resume. The pending triggering request then completes
 from exactly one dispatch using the rebound key: a read returns to `Active`,
-while a current-owner disable completes cleanup to `Idle`. After restart, a lost owner
+while a current-owner disable completes cleanup to `Idle` only after a valid
+disable ACK. Any other disable outcome releases the owner, retains only the
+Gateway's process-local defensive-cleanup obligation, and presents `Idle` with
+`owned:false` alongside capability `UNKNOWN`; Enable remains unavailable. After restart, a lost owner
 handle, or an
 absent/invalid current issuer token, Gateway does not reconstruct the session
 and the client must issue a new explicit Enable.
-A terminal transport disconnect releases ownership to `Idle`; a later reconnect
-therefore has no owner, does not enter `Refreshing`, and also requires explicit
-client Enable.
+A terminal transport disconnect releases ownership. A later reconnect has no
+owner and does not enter `Refreshing`; when defensive cleanup is pending, it
+must complete before capability can become `AVAILABLE` or a new explicit client
+Enable can be admitted.
 
 When a selected target has Gateway session state `Refreshing` with `owned:true`,
 the session strip remains observable alongside temporarily `UNKNOWN` capability.

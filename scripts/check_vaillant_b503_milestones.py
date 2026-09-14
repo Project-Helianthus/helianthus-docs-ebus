@@ -75,7 +75,7 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
     "`UNKNOWN` (temporary; not sticky `AVAILABLE`)",
     "triggering READ or current-owner DISABLE remains pending and is dispatched "
     "exactly once only after successful rebind; READ returns to `Active`, DISABLE "
-    "completes cleanup to `Idle`, and subsequent live-monitor operations are "
+    "releases ownership and completes cleanup to `Idle` only after a valid ACK, and subsequent live-monitor operations are "
     "`SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` "
     "status queries remain admitted, with no B503 card, tabs, bus-facing reads, or "
     "actions until capability returns `AVAILABLE`",
@@ -98,7 +98,8 @@ SESSION_STATE_CONTRACT = (
     "admitted triggering request remains pending; subsequent bus-facing live-monitor\n"
     "operations are busy. Refresh success dispatches a triggering read exactly once\n"
     "and returns `Active`, or dispatches a triggering current-owner disable exactly\n"
-    "once and completes owner cleanup to `Idle`. Refresh failure releases the gate,\n"
+    "once. Only a valid disable ACK completes owner cleanup to `Idle`; any other\n"
+    "disable outcome retains fail-closed cleanup. Refresh failure releases the gate,\n"
     "returns `Idle`, and returns the exact Gateway-supplied failure to that request.\n"
     "`Disabled` is never reported with `owned:true`."
 )
@@ -107,8 +108,10 @@ DISABLED_PUBLIC_MAPPING = (
     "only an explicit operator or configuration disable. Enable failure, the 30s\n"
     "idle timeout, transport disconnect, and gateway restart may traverse the\n"
     "internal cleanup path through `DISABLED`, but their stable public session\n"
-    "observation is `Idle` with `owned:false` after cleanup. `Disabled` is never\n"
-    "reported with `owned:true`."
+    "observation is `Idle` with `owned:false`. While a process-local cleanup\n"
+    "obligation remains, capability is `UNKNOWN` and Enable is unavailable; `Idle`\n"
+    "does not make the internal slot re-claimable. `Disabled` is never reported with\n"
+    "`owned:true`."
 )
 REFRESHING_CLEANUP_CONTRACT = (
     "When a locally token-owning consumer leaves a target or navigates away while\n"
@@ -116,9 +119,10 @@ REFRESHING_CLEANUP_CONTRACT = (
     "invoking the busy operation. After successful refresh reaches `Active`, it\n"
     "dispatches the queued disable; after refresh failure reaches `Idle`, it clears\n"
     "the queued pair without a disable. If the triggering request was itself the\n"
-    "current-owner DISABLE and succeeds through `Disabled` cleanup to `Idle`, that\n"
-    "single disable satisfies the queued cleanup: the consumer clears the pair\n"
-    "without issuing a second disable."
+    "current-owner DISABLE, that single disable is the only client dispatch. A valid\n"
+    "disable ACK completes `Disabled` cleanup to `Idle`; any other outcome returns\n"
+    "exactly and leaves the process-local defensive cleanup with Gateway. In both\n"
+    "cases the consumer clears the queued pair without issuing a second disable."
 )
 ENABLING_CLEANUP_CONTRACT = (
     "When a consumer leaves a target or navigates away while its locally initiated\n"
@@ -153,7 +157,10 @@ REFRESH_SUCCESS_CONTINUATION = (
     "  Gateway dispatches that request's native operation exactly once using the\n"
     "  rebound key and returns its exact outcome. A triggering READ retains the\n"
     "  owner in `Active`; a triggering current-owner DISABLE emits its disable after\n"
-    "  quiesce, enters `Disabled`, and completes owner cleanup to `Idle`. ENABLE is\n"
+    "  quiesce and enters `Disabled`. A valid disable ACK completes owner cleanup to\n"
+    "  `Idle`. Any other disable outcome returns exactly, releases the owner, retains\n"
+    "  a process-local defensive-cleanup obligation, publishes capability `UNKNOWN`,\n"
+    "  and admits no Enable; it does not enter `Idle`. ENABLE is\n"
     "  never a refresh trigger. This one dispatch consumes the request's only retry\n"
     "  budget. Every subsequent bus-facing live-monitor operation during refresh\n"
     "  returns `SESSION_BUSY`. On refresh failure, no\n"
@@ -206,10 +213,33 @@ DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE = (
     "  attempted. A pre-existing defensive-cleanup obligation remains independent\n"
     "  of that mutex rule."
 )
+CONFIRMED_CLEANUP_DEFINITION = (
+    "A **confirmed cleanup success** means a valid native disable ACK. A NAK,\n"
+    "timeout, CRC mismatch, bus-arbitration failure, disconnect, or any other outcome\n"
+    "without that ACK does not prove that a possibly active device session stopped.\n"
+    "It therefore retains the applicable process-local defensive-cleanup obligation\n"
+    "and never makes the session slot re-claimable."
+)
+UNCONFIRMED_CLEANUP_OBLIGATION = (
+    "- A defensive disable clears its cleanup obligation only after a valid native\n"
+    "  disable ACK. A NAK, timeout, CRC mismatch, bus-arbitration failure,\n"
+    "  disconnect, or any other outcome without that ACK retains the target plus a\n"
+    "  fresh local cleanup ID and the attempted transport epoch as process-local,\n"
+    "  operation-ineligible cleanup state. Gateway publishes capability `UNKNOWN`,\n"
+    "  admits no Enable, and performs no retry in that transport epoch. The internal\n"
+    "  FSM remains `DISABLED`; a later transport epoch may attempt one bounded\n"
+    "  target-specific cleanup under §7.5."
+)
+CONFIRMED_CLEANUP_DIAGRAM = (
+    "DISABLED --> IDLE: enable NAK or valid disable ACK"
+)
 REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
 REFRESH_READ_DIAGRAM = "REFRESHING --> ACTIVE: refresh succeeds; triggering READ once"
 REFRESH_DISABLE_DIAGRAM = (
     "REFRESHING --> DISABLED: refresh succeeds; triggering DISABLE once"
+)
+UNCONFIRMED_CLEANUP_DIAGRAM = (
+    "DISABLED --> DISABLED: cleanup lacks valid disable ACK; fail closed"
 )
 REFRESH_READ_TRANSITION = (
     "| `REFRESHING` | refresh succeeds for triggering READ | `ACTIVE` | atomically "
@@ -219,10 +249,31 @@ REFRESH_READ_TRANSITION = (
     "retain the owner |"
 )
 REFRESH_DISABLE_TRANSITION = (
-    "| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE | "
-    "`DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, "
-    "emit disable exactly once after quiesce using the rebound key, return its "
-    "outcome, and complete owner cleanup to `IDLE` |"
+    "| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; valid "
+    "disable ACK | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N "
+    "completion, emit disable exactly once after quiesce using the rebound key, "
+    "return success, and complete owner cleanup to `IDLE` |"
+)
+REFRESH_DISABLE_UNCONFIRMED_TRANSITION = (
+    "| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; NAK / "
+    "timeout / CRC mismatch / bus-arbitration failure / disconnect / any other "
+    "outcome without a valid disable ACK | `DISABLED` | atomically rebind to the N+1 "
+    "key, fence every epoch-N completion, emit disable exactly once after quiesce "
+    "using the rebound key, return its exact outcome, release the owner, and retain "
+    "`(targetAddress, fresh localDisableCleanupID, transportEpoch[N+1])` only as the "
+    "process-local §7.4 defensive-cleanup obligation; do not enter `IDLE` |"
+)
+UNCONFIRMED_CLEANUP_TRANSITION = (
+    "| `DISABLED` | defensive disable has no valid ACK while transport remains "
+    "connected | `DISABLED` | retain the process-local §7.4 defensive-cleanup "
+    "obligation, publish capability `UNKNOWN`, admit no Enable, and perform no "
+    "same-epoch retry; only a later transport epoch may attempt one bounded cleanup "
+    "under §7.5 |"
+)
+CONFIRMED_CLEANUP_TRANSITION = (
+    "| `DISABLED` | enable NAK proves no device session, or valid disable ACK "
+    "confirms cleanup success | `IDLE` | clear any defensive-cleanup obligation; "
+    "session may be re-claimed by any client only when capability is `AVAILABLE` |"
 )
 REFRESH_FAILURE_TRANSITION = (
     "| `REFRESHING` | refresh failure | `IDLE` | release ownership gate; "
@@ -249,9 +300,10 @@ ENABLING_EPOCH_POST_OPERATION = (
     "| Epoch advance while `ENABLING`, after enable-frame emission | pending "
     "attempt identity and target remain Gateway-owned for cleanup only | → "
     "`DISABLED`; fence every stale completion, issue exactly one defensive disable "
-    "after quiesce on the current transport epoch, record its exact cleanup outcome "
-    "as native evidence, then complete cleanup to `IDLE`; no automatic retry or "
-    "active owner survives |"
+    "after quiesce on the current transport epoch, and record its exact cleanup "
+    "outcome as native evidence; a valid disable ACK completes cleanup to `IDLE`, "
+    "while any other outcome retains the §7.4 process-local obligation and remains "
+    "fail-closed in `DISABLED`; no automatic retry or active owner survives |"
 )
 ENABLING_EPOCH_PRE_TRANSITION = (
     "| `ENABLING` | epoch advance detected before enable-frame emission | `IDLE` | "
@@ -261,9 +313,10 @@ ENABLING_EPOCH_PRE_TRANSITION = (
 ENABLING_EPOCH_POST_TRANSITION = (
     "| `ENABLING` | epoch advance detected after enable-frame emission | "
     "`DISABLED` | fence every stale completion, issue exactly one defensive disable "
-    "after quiesce on the current transport epoch, record its exact cleanup outcome "
-    "as native evidence, then complete cleanup to `IDLE`; no automatic retry or "
-    "active owner survives |"
+    "after quiesce on the current transport epoch, and record its exact cleanup "
+    "outcome as native evidence; a valid disable ACK completes cleanup to `IDLE`, "
+    "while any other outcome retains the §7.4 process-local obligation and remains "
+    "fail-closed in `DISABLED`; no automatic retry or active owner survives |"
 )
 ENABLING_CANCEL_DIAGRAM = "ENABLING --> IDLE: canceled before enable frame emission"
 ENABLING_FAILURE_DIAGRAM = (
@@ -279,8 +332,8 @@ ENABLING_AMBIGUOUS_FAILURE_TRANSITION = (
     "mismatch / bus-arbitration timeout / any other ambiguous terminal failure | "
     "`DISABLED` | emit exactly one defensive native disable after quiesce, or queue "
     "it under §7.4 if transport disconnects first; release the owner on entry and "
-    "complete cleanup to `IDLE` only after the defensive cleanup reaches a confirmed "
-    "terminal outcome; return the original exact failure outcome |"
+    "complete cleanup to `IDLE` only after a valid disable ACK confirms cleanup "
+    "success; return the original exact failure outcome |"
 )
 DISCONNECT_TRANSITION = (
     "| any | transport disconnect | `DISABLED` | release any owner; if an enable "
@@ -308,6 +361,20 @@ FORBIDDEN_ENABLING_EPOCH_CONTRADICTIONS = (
 FORBIDDEN_SESSION_STATE_CLAUSES = (
     "`Refreshing` may accept live-monitor operations.",
     "`Disabled` may be reported with `owned:true`.",
+)
+SESSION_STATE_CONTRADICTION_PATTERNS = (
+    re.compile(
+        r"(?:`Refreshing`\s+(?:(?:may|can|must|shall)\s+)?"
+        r"(?:accept|allow|permit)s?\s+(?:new\s+|bus-facing\s+)?live-monitor operations?"
+        r"|live-monitor operations?\s+(?:are|remain)\s+"
+        r"(?:accepted|allowed|permitted)\s+(?:during|while)\s+`Refreshing`)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"`Disabled`\s+(?:(?:may|can|must|shall)\s+be\s+|is\s+)?"
+        r"(?:reported|rendered|published|returned)\s+with\s+`owned:true`",
+        re.IGNORECASE,
+    ),
 )
 FORBIDDEN_ALL_READ_ONLY_MILESTONES = (
     (
@@ -431,11 +498,17 @@ def validate_text(text: str) -> None:
     if DISABLED_PUBLIC_MAPPING not in session_section:
         raise CheckError("missing stable public Disabled mapping in §6")
     for fragment in (
+        CONFIRMED_CLEANUP_DEFINITION,
+        CONFIRMED_CLEANUP_DIAGRAM,
+        UNCONFIRMED_CLEANUP_DIAGRAM,
         REFRESH_FAILURE_DIAGRAM,
         REFRESH_READ_DIAGRAM,
         REFRESH_DISABLE_DIAGRAM,
         REFRESH_READ_TRANSITION,
         REFRESH_DISABLE_TRANSITION,
+        REFRESH_DISABLE_UNCONFIRMED_TRANSITION,
+        UNCONFIRMED_CLEANUP_TRANSITION,
+        CONFIRMED_CLEANUP_TRANSITION,
         REFRESH_FAILURE_TRANSITION,
         REFRESH_FAILURE_LOCK,
         HELD_OWNER_DISABLED_RELEASE,
@@ -459,6 +532,13 @@ def validate_text(text: str) -> None:
     for fragment in FORBIDDEN_SESSION_STATE_CLAUSES:
         if fragment in session_section:
             raise CheckError(f"forbidden §6 B503 session-state contradiction: {fragment!r}")
+    for pattern in SESSION_STATE_CONTRADICTION_PATTERNS:
+        match = pattern.search(session_section)
+        if match is not None:
+            raise CheckError(
+                "forbidden declarative §6 B503 session-state contradiction: "
+                f"{match.group(0)!r}"
+            )
     for fragment in (
         ENABLING_EPOCH_PRE_DIAGRAM,
         ENABLING_EPOCH_POST_DIAGRAM,
@@ -497,6 +577,7 @@ def validate_text(text: str) -> None:
         raise CheckError("missing authenticated Refreshing continuation contract in §7.3")
     release_section = _section(text, RELEASE_SECTION_START, RELEASE_SECTION_END)
     for fragment in (
+        UNCONFIRMED_CLEANUP_OBLIGATION,
         DISCONNECT_CLEANUP_OBLIGATION,
         DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE,
     ):

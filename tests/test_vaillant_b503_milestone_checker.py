@@ -225,6 +225,10 @@ def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> N
             CHECKER.DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE,
             "No-owner disconnect discards pending defensive cleanup.",
         ),
+        (
+            CHECKER.UNCONFIRMED_CLEANUP_OBLIGATION,
+            "Any terminal defensive-disable outcome clears cleanup.",
+        ),
     ),
 )
 def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
@@ -266,12 +270,51 @@ def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
             CHECKER.REFRESH_DISABLE_TRANSITION,
             "| `REFRESHING` | refresh succeeds for DISABLE | `ACTIVE` | dispatch disable |",
         ),
+        (
+            CHECKER.REFRESH_DISABLE_UNCONFIRMED_TRANSITION,
+            "| `REFRESHING` | disable outcome ambiguous | `IDLE` | release slot |",
+        ),
+        (
+            CHECKER.UNCONFIRMED_CLEANUP_TRANSITION,
+            "| `DISABLED` | cleanup times out | `IDLE` | admit Enable |",
+        ),
+        (
+            CHECKER.CONFIRMED_CLEANUP_TRANSITION,
+            "| `DISABLED` | any terminal result | `IDLE` | clear cleanup |",
+        ),
+        (
+            CHECKER.UNCONFIRMED_CLEANUP_DIAGRAM,
+            "DISABLED --> IDLE: cleanup lacks valid disable ACK",
+        ),
+        (
+            CHECKER.CONFIRMED_CLEANUP_DIAGRAM,
+            "DISABLED --> IDLE: any terminal cleanup outcome",
+        ),
+        (
+            CHECKER.CONFIRMED_CLEANUP_DEFINITION,
+            "Any terminal disable outcome clears cleanup.",
+        ),
     ),
 )
 def test_rejects_refresh_failure_diagram_or_lock_contradiction(
     old: str, new: str
 ) -> None:
     text = contract().replace(old, new, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    "clause",
+    (
+        "`Refreshing` accepts live-monitor operations.",
+        "Live-monitor operations are permitted while `Refreshing`.",
+        "`Disabled` is reported with `owned:true`.",
+        "`Disabled` can be rendered with `owned:true`.",
+    ),
+)
+def test_rejects_declarative_session_state_contradictions(clause: str) -> None:
+    text = contract().replace("### 6.2 Ownership key", clause + "\n\n### 6.2 Ownership key", 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 
@@ -296,9 +339,10 @@ def test_rejects_refresh_failure_diagram_or_lock_contradiction(
         ),
         (
             "If the triggering request was itself the\n"
-            "current-owner DISABLE and succeeds through `Disabled` cleanup to `Idle`, that\n"
-            "single disable satisfies the queued cleanup: the consumer clears the pair\n"
-            "without issuing a second disable.",
+            "current-owner DISABLE, that single disable is the only client dispatch. A valid\n"
+            "disable ACK completes `Disabled` cleanup to `Idle`; any other outcome returns\n"
+            "exactly and leaves the process-local defensive cleanup with Gateway. In both\n"
+            "cases the consumer clears the queued pair without issuing a second disable.",
             "A successful triggering DISABLE leaves the queued cleanup pair pending.",
         ),
         (

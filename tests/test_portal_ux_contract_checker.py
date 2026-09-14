@@ -695,6 +695,19 @@ def test_rejects_unsafe_b503_refreshing_state_contradiction(clause: str) -> None
 
 
 @pytest.mark.parametrize(
+    "clause",
+    (
+        "`Refreshing` accepts live-monitor operations.",
+        "Live-monitor operations are permitted while `Refreshing`.",
+        "`Disabled` is reported with `owned:true`.",
+        "`Disabled` can be rendered with `owned:true`.",
+    ),
+)
+def test_rejects_declarative_b503_session_state_contradiction(clause: str) -> None:
+    rejects_target_insertion(clause)
+
+
+@pytest.mark.parametrize(
     ("clause", "replacement"),
     (
         (
