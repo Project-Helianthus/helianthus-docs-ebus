@@ -425,6 +425,11 @@ def test_rejects_required_contract_clause_stored_only_in_html_attribute() -> Non
     rejects(clause, f'<div data-contract="{clause}"></div>')
 
 
+def test_rejects_required_contract_clause_stored_only_in_link_destination() -> None:
+    clause = "Gateway #552 is open;"
+    rejects(clause, f"[status](<{clause}>)")
+
+
 def test_rejects_availability_table_hidden_in_fenced_code() -> None:
     table = "\n".join(
         (

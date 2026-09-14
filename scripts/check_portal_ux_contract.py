@@ -474,15 +474,30 @@ def _visible_contract_source(target: str) -> str:
     return "".join(parser.parts)
 
 
-def _visible_prose_source(text: str) -> str:
-    """Remove CommonMark fenced and indented code while preserving line boundaries."""
-    lines = text.splitlines(keepends=True)
+def _rendered_contract_source(text: str) -> str:
+    """Reconstruct rendered CommonMark text without link/image metadata or code."""
+    parts: list[str] = []
     for token in MARKDOWN.parse(text):
-        if token.type not in {"fence", "code_block"} or token.map is None:
-            continue
-        for index in range(token.map[0], min(token.map[1], len(lines))):
-            lines[index] = "\n" if lines[index].endswith("\n") else ""
-    return "".join(lines)
+        if token.type == "heading_open":
+            parts.append("#" * int(token.tag[1:]) + " ")
+        elif token.type == "list_item_open":
+            parts.append("- ")
+        elif token.type == "html_block":
+            parts.extend((token.content, "\n"))
+        elif token.type == "inline":
+            for child in token.children or ():
+                if child.type == "text":
+                    parts.append(child.content)
+                elif child.type == "code_inline":
+                    parts.extend(("`", child.content, "`"))
+                elif child.type in {"softbreak", "hardbreak"}:
+                    parts.append("\n")
+                elif child.type == "html_inline":
+                    parts.append(child.content)
+                elif child.type == "image":
+                    parts.append(child.content)
+            parts.append("\n")
+    return _visible_contract_source("".join(parts))
 
 
 def _target_section(text: str) -> str:
@@ -1017,7 +1032,7 @@ def validate_text(text: str) -> None:
     # REQUIRED is deliberately limited to the frozen INT-10 contract. Content
     # inside comments or declared non-rendering HTML containers is not part of
     # the visible public contract.
-    rendered_target_source = _visible_contract_source(_visible_prose_source(target))
+    rendered_target_source = _rendered_contract_source(target)
     for fragment in REQUIRED:
         if fragment not in rendered_target_source:
             raise CheckError(
