@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `582d13460b340be45d2147fd07e9b91cb00c9469` |
-| Final validated contract tree | `dcc2aae71988777c2f80f2d18ed26c403acd4c90` |
-| Final contract validation | Complete configured CI PASS; 280 Portal checker tests and 139 canonical B503 milestone tests; lead-local log SHA-256 `e7c6696ed14f5c0fcf4235fc8d1b7068e55b9f2accd2578b946317117201ff5b`; hosted exact-head CI pending |
+| Final validated contract commit | `6c64d3c25015040e3b1b663fda6cab2d0e309e9e` |
+| Final validated contract tree | `dcc0b2b421964b98e78c204e3040d7adc314caa1` |
+| Final contract validation | Complete configured CI PASS; 280 Portal checker tests and 140 canonical B503 milestone tests; lead-local log SHA-256 `08be10a9db4295f69a0c2830c0c83b4c4d90e4de36bc1eca59e4f5de433c8425`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -353,7 +353,7 @@ hardware work, or SemReg cutover.
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
 | `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 280 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 139 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 140 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -1198,6 +1198,24 @@ example remains accepted. The canonical checker passes 139 tests, the Portal
 checker passes 280 tests, and complete configured CI passes with lead-local log
 SHA-256
 `e7c6696ed14f5c0fcf4235fc8d1b7068e55b9f2accd2578b946317117201ff5b`.
+
+The fresh independent review of exact
+`5d885014effaf84224cf6552f532b3428f12f729`, tree
+`8b2d37581a01497d1d549245036baf11564d7ab5`, verified the authority and
+fenced-code corrections and found one P2 in the same bounded visible-contract
+rule. A standard `<div hidden>` could contain the required five-state contract
+while the checker still passed. Its report is
+`wave12/review/docs524-5d88501-final-independent/REPORT.md`, SHA-256
+`21802d7d635f42634095d4237b01089c6086ad3677b4bedd892a26f3ba4534e7`.
+Commit `6c64d3c25015040e3b1b663fda6cab2d0e309e9e`, tree
+`dcc0b2b421964b98e78c204e3040d7adc314caa1`, excludes descendants of an
+HTML element carrying the standard Boolean `hidden` attribute from required
+visible contract text. The exact hidden-container mutation rejects and the
+ordinary visible `div` positive case remains accepted. This correction does not
+claim CSS, JavaScript, or arbitrary browser-layout analysis. The canonical
+checker passes 140 tests, the Portal checker passes 280 tests, and complete
+configured CI passes with lead-local log SHA-256
+`08be10a9db4295f69a0c2830c0c83b4c4d90e4de36bc1eca59e4f5de433c8425`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
