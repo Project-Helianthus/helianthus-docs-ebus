@@ -189,7 +189,10 @@ operations are busy. Refresh success dispatches a triggering read exactly once
 and returns `Active` only when that dispatch completes without a transport
 disconnect; a disconnect follows the any-transport-disconnect transition below
 and releases the owner. Refresh success may instead dispatch a triggering
-current-owner disable exactly once. Every disable result is recorded and
+current-owner disable exactly once after its frame reaches emission. A terminal
+disconnect while that request still waits for poll-quiesce emits no disable,
+returns `TRANSPORT_DOWN`, releases the owner, and retains fail-closed cleanup;
+it is never retried on reconnect. Every emitted disable result is recorded and
 returned exactly, but the result alone never establishes native session
 settlement. Refresh failure releases the gate, enters internal `DISABLED`,
 retains a Gateway cleanup obligation, and returns the exact Gateway-supplied
@@ -221,7 +224,7 @@ stateDiagram-v2
 
     ACTIVE --> REFRESHING: epoch advance while owner remains held
     REFRESHING --> ACTIVE: refresh succeeds; triggering READ completes without disconnect
-    REFRESHING --> DISABLED: refresh succeeds; triggering DISABLE once
+    REFRESHING --> DISABLED: refresh succeeds; DISABLE emitted or pre-emission disconnect
     REFRESHING --> DISABLED: refresh failure retains cleanup
     DISABLED --> DISABLED: native outcome recorded; settlement remains unproven
 
@@ -296,11 +299,13 @@ access.
 | `ENABLING` | epoch advance detected after enable-frame emission | `DISABLED` | fence every stale completion, issue at most one defensive disable after quiesce during the admitted lifecycle, record its exact native outcome, release ownership, retain fail-closed cleanup, publish `UNKNOWN`, and admit no Enable |
 | `ACTIVE` | successful read completes | `ACTIVE` | return the exact native result and reset the idle timer |
 | `ACTIVE` | read NAK / timeout / CRC mismatch / bus-arbitration failure / other non-disconnect failure | `ACTIVE` | return the exact native failure and do not reset the idle timer |
-| `ACTIVE` | current-owner session DISABLE action; any ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, present public `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable; this session action never produces public `Disabled`, and its outcome does not prove settlement |
+| `ACTIVE` | current-owner session DISABLE action; transport disconnect before disable-frame emission | `DISABLED` | emit no disable frame, record and return exact `TRANSPORT_DOWN`, release the owner, retain the existing `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)` as process-local cleanup, present public `Idle` with `owned:false`, publish `UNKNOWN`, admit no Enable, and perform no reconnect retry |
+| `ACTIVE` | current-owner session DISABLE action; any terminal native outcome after disable-frame emission | `DISABLED` | the disable frame was emitted exactly once after quiesce; record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, present public `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable; this session action never produces public `Disabled`, and its outcome does not prove settlement |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable once after quiesce, record the exact outcome, release the owner, retain process-local cleanup, publish `UNKNOWN`, and admit no Enable |
 | `ACTIVE` | admitted request detects epoch advance | `REFRESHING` | ownership gate remains held; triggering request remains pending; subsequent live-monitor operations are busy |
 | `REFRESHING` | refresh succeeds for triggering READ; dispatched READ completes without transport disconnect | `ACTIVE` | atomically rebind the owner from epoch N to the returned current `transport_key` at N+1, retaining the same issuer token and target; fence every epoch-N completion; dispatch READ exactly once using the rebound key, return its outcome, and retain the owner; any transport disconnect instead follows the `any` disconnect row and releases the owner into `DISABLED` |
-| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; any terminal native outcome | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; no outcome alone proves settlement |
+| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; transport disconnect before disable-frame emission | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit no disable frame, record and return exact `TRANSPORT_DOWN`, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` as process-local cleanup, publish `UNKNOWN`, admit no Enable, and perform no reconnect retry |
+| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; any terminal native outcome after disable-frame emission | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, the disable frame was emitted exactly once after quiesce; record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; no outcome alone proves settlement |
 | `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return the exact Gateway-supplied failure without dispatching the triggering native operation, retain `(targetAddress, fresh gatewayCleanupAttemptID, attemptedTransportEpoch)` as process-local cleanup, present public session `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable |
 | `DISABLED` | defensive-disable ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | retain process-local cleanup, record the exact outcome, publish `UNKNOWN`, admit no Enable, and perform no same-epoch or automatic reconnect/restart recovery; only a future accepted settlement contract may define re-claimability |
 | `IDLE` / `DISABLED` with no owner | Gateway reports an out-of-band administrative/configuration-disabled condition | `DISABLED` | emit no native B503 operation; present public `Disabled` with `owned:false`, block Enable, and retain any pre-existing cleanup/fence; this condition is distinct from the current-owner session DISABLE action |
@@ -397,14 +402,15 @@ native disable required by the §6.3 terminal-failure transition.
 When a locally token-owning consumer leaves a target or navigates away while
 its session is `Refreshing`, it MUST queue that target/token disable without
 invoking the busy operation. After successful refresh reaches `Active`, it
-dispatches the queued disable; after refresh failure releases ownership and
-presents `Idle`, it clears the browser queued pair without a client disable
-while Gateway retains the process-local cleanup obligation. If the triggering request was itself the
-current-owner DISABLE, that single disable is the only client dispatch. Its
-exact ACK, NAK, or failure outcome is returned and recorded, while Gateway
-retains process-local fail-closed cleanup because the outcome alone does not
-prove native settlement. The consumer clears the queued pair without issuing a
-second disable.
+dispatches the queued disable unless a terminal disconnect occurs before frame
+emission; that path emits no disable and returns exact `TRANSPORT_DOWN`. After
+refresh failure releases ownership and presents `Idle`, it clears the browser
+queued pair without a client disable while Gateway retains the process-local
+cleanup obligation. If the triggering request was itself the current-owner
+DISABLE, that admitted request is the only client dispatch. Its emitted native
+outcome, or its pre-emission `TRANSPORT_DOWN`, is returned and recorded exactly,
+while Gateway retains process-local fail-closed cleanup. The consumer clears
+the queued pair without issuing a second disable.
 During a held `Refreshing` epoch, the
 session strip remains observable alongside temporarily `UNKNOWN` capability,
 but it is status-only: only `vaillantCapabilities` and
@@ -429,6 +435,13 @@ live-monitor enable and disable frame. Bounds:
   `ebusd_tcp` transports is one B524 transaction window (validated in
   `M5_TRANSPORT_MATRIX`, artefact `matrix/M6a-vaillant-b503.md`).
 
+If the transport disconnects after a current-owner DISABLE is admitted but
+before its frame reaches emission, including while it waits for poll-quiesce,
+Gateway emits no disable frame and returns exact `TRANSPORT_DOWN`. It releases
+the owner, retains the existing fail-closed cleanup obligation, publishes
+`UNKNOWN`, admits no Enable, and never retries that write on reconnect. The
+exactly-once requirement begins only when the disable frame reaches emission.
+
 ### 7.3 Retry and refresh
 
 - Maximum **1 refresh attempt** per epoch advance. No recursive or unbounded
@@ -443,8 +456,12 @@ live-monitor enable and disable frame. Bounds:
   rebound key and returns its exact outcome. A triggering READ retains the
   owner in `Active` only when its dispatch completes without transport
   disconnect; a disconnect releases the owner into `DISABLED`. A triggering
-  current-owner DISABLE emits its disable after quiesce, records and returns the
-  exact native outcome, releases the owner, and remains in internal `DISABLED`.
+  current-owner DISABLE emits its disable exactly once after quiesce only when
+  the frame reaches emission, records and returns the exact native outcome,
+  releases the owner, and remains in internal `DISABLED`. A terminal disconnect
+  before emission instead emits no disable, returns exact `TRANSPORT_DOWN`,
+  releases the owner, retains fail-closed cleanup, and is not retried on
+  reconnect.
   ACK and NAK do not establish settlement: Gateway retains process-local
   cleanup, publishes `UNKNOWN`, and admits no Enable. ENABLE is never a refresh
   trigger. This dispatch consumes the request's only retry budget.
@@ -579,12 +596,15 @@ path (MCP resolvers, GraphQL resolvers, HA integration, portal).
    triggering READ or current-owner DISABLE remains pending and is dispatched
    exactly once only after successful rebind. READ returns Gateway to `Active`
    only when its dispatch completes without transport disconnect; a disconnect
-   releases the owner under the `any` disconnect transition. DISABLE records and
-   returns its exact native outcome, releases ownership, retains fail-closed
-   cleanup in internal `DISABLED`, publishes `UNKNOWN`, and admits no Enable.
-   Subsequent bus-facing live-monitor operations are `SESSION_BUSY` during
-   refresh. Refresh failure likewise releases client ownership but retains
-   Gateway cleanup, publishes `UNKNOWN`, and admits no Enable.
+   releases the owner under the `any` disconnect transition. DISABLE emits once
+   only after its frame reaches emission and records and returns its exact native
+   outcome. A disconnect before disable-frame emission emits no disable, returns
+   exact `TRANSPORT_DOWN`, and is not retried. Both paths release ownership,
+   retain fail-closed cleanup in internal `DISABLED`, publish `UNKNOWN`, and
+   admit no Enable. Subsequent bus-facing live-monitor operations are
+   `SESSION_BUSY` during refresh. Refresh failure likewise releases client
+   ownership but retains Gateway cleanup, publishes `UNKNOWN`, and admits no
+   Enable.
 3. **ACK/NAK never prove settlement.** ACK, NAK, timeout, CRC, arbitration, and
    disconnect remain exact native outcomes. No consumer may convert one of them
    into session re-claimability, `IDLE`, or `AVAILABLE` without a separately
@@ -827,7 +847,7 @@ merge-gate block.
 | 4 | reconnect, before first post-reconnect dispatch | `UNKNOWN` (NOT sticky `AVAILABLE`) | reset to `UNKNOWN` regardless of pre-disconnect state |
 | 5 | reconnect, post-first-success-after-reconnect; no cleanup obligation or unproven-session fence | `AVAILABLE` | diagnostic success alone never clears an unproven-session or restart fence |
 | 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known only when the operation creates no cleanup obligation; every post-emission Enable outcome and every disable/refresh failure that leaves settlement unproven publishes `UNKNOWN` per §6–§8 | cleanup-bearing outcomes retain the Gateway-owned attempt identity, admit no Enable, and never trigger automatic reconnect/restart recovery |
-| 7 | held-session epoch refresh; session status `Refreshing` | `UNKNOWN` (temporary during refresh; remains `UNKNOWN` after any triggering DISABLE) | triggering READ or current-owner DISABLE remains pending and is dispatched exactly once only after successful rebind; READ returns to `Active` only if its dispatch completes without transport disconnect, while a disconnect releases ownership into `DISABLED`; DISABLE records and returns its exact native outcome, releases ownership, retains fail-closed cleanup, and admits no Enable; subsequent live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain admitted |
+| 7 | held-session epoch refresh; session status `Refreshing` | `UNKNOWN` (temporary during refresh; remains `UNKNOWN` after any triggering DISABLE) | triggering READ or current-owner DISABLE remains pending until successful rebind; READ is dispatched exactly once and returns to `Active` only if it completes without transport disconnect; DISABLE is emitted exactly once only when its frame reaches emission, while pre-emission disconnect emits no disable and returns exact `TRANSPORT_DOWN`; both disconnect paths release ownership into `DISABLED`, retain fail-closed cleanup, and admit no Enable; subsequent live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain admitted |
 | 8 | stale in-flight completion across epoch rollover | n/a — frame discarded | reply/NAK/timeout from epoch N arriving after reconnect to epoch N+1 MUST be discarded; MUST NOT mutate capability to `AVAILABLE`; MUST NOT satisfy any post-reconnect waiter |
 
 **Forbidden states** (M6 tests assert absence):

@@ -504,7 +504,7 @@ def test_rejects_availability_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
-@pytest.mark.parametrize("container", ("iframe", "object"))
+@pytest.mark.parametrize("container", ("canvas", "iframe", "object"))
 def test_rejects_availability_table_stored_as_html_fallback(container: str) -> None:
     table = "\n".join(
         (

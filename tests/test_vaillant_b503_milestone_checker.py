@@ -368,7 +368,7 @@ def test_rejects_duplicate_noncanonical_install_write_clause(clause: str) -> Non
             "no status query remains admitted",
         ),
         (
-            "retains fail-closed cleanup, and admits no Enable",
+            "retain fail-closed cleanup, and admit no Enable",
             "clears cleanup and admits Enable",
         ),
     ),
@@ -608,6 +608,25 @@ def test_rejects_enable_without_connected_available_admission(old: str, new: str
 
 
 @pytest.mark.parametrize(
+    "transition",
+    (
+        CHECKER.EXPLICIT_DISABLE_PRE_EMISSION_DISCONNECT_TRANSITION,
+        CHECKER.REFRESH_DISABLE_PRE_EMISSION_DISCONNECT_TRANSITION,
+    ),
+)
+def test_rejects_disable_emission_or_retry_after_pre_emission_disconnect(
+    transition: str,
+) -> None:
+    for unsafe in (
+        transition.replace("emit no disable frame", "emit disable exactly once"),
+        transition.replace("perform no reconnect retry", "retry after reconnect"),
+    ):
+        text = contract().replace(transition, unsafe, 1)
+        with pytest.raises(CHECKER.CheckError):
+            CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
     ("old", "new"),
     (
         (
@@ -807,7 +826,7 @@ def test_rejects_capability_truth_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
-@pytest.mark.parametrize("container", ("iframe", "object"))
+@pytest.mark.parametrize("container", ("canvas", "iframe", "object"))
 def test_rejects_capability_truth_table_stored_as_html_fallback(
     container: str,
 ) -> None:
@@ -853,7 +872,7 @@ def test_rejects_milestone_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
-@pytest.mark.parametrize("container", ("iframe", "object"))
+@pytest.mark.parametrize("container", ("canvas", "iframe", "object"))
 def test_rejects_milestone_table_stored_as_html_fallback(container: str) -> None:
     current = contract()
     table = "\n".join(
@@ -1016,10 +1035,9 @@ def test_rejects_declarative_session_state_contradictions(clause: str) -> None:
             ),
         ),
         (
-            "Its\n"
-            "exact ACK, NAK, or failure outcome is returned and recorded, while Gateway\n"
-            "retains process-local fail-closed cleanup because the outcome alone does not\n"
-            "prove native settlement.",
+            "Its emitted native\n"
+            "outcome, or its pre-emission `TRANSPORT_DOWN`, is returned and recorded exactly,\n"
+            "while Gateway retains process-local fail-closed cleanup.",
             "Any ACK or NAK clears Gateway cleanup.",
         ),
         (

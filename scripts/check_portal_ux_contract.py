@@ -69,7 +69,7 @@ B503_FRONTEND_EPOCH_ROLLOVER = (
     "epoch; a completion may mutate presentation only when both its target address\n"
     "and captured epoch still match, otherwise it is discarded."
 )
-B503_SESSION_STATE_CONTRACT = "The strip states are `Idle`, `Enabling`, `Active`, and\n`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\nownership gate; the already-admitted triggering request remains pending and\nnew bus-facing live-monitor reads/actions are busy. Status-only\n`vaillantCapabilities(targetAddress:)` and\n`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\navailability and session completion. Refresh success returns `Active` and\ncompletes a triggering read with exactly one native operation result, or\ndispatches a triggering current-owner disable exactly once. Every disabling\noutcome is recorded and returned exactly, releases ownership, retains Gateway's\nprocess-local cleanup obligation, presents session `Idle` with `owned:false`,\npublishes capability `UNKNOWN`, and admits no Enable because ACK/NAK alone do\nnot prove native settlement. Refresh failure follows the same public state and\ncompletes the triggering request with the exact unavailable failure without\ndispatching its native operation.\n`Disabled` is never reported with `owned:true`."
+B503_SESSION_STATE_CONTRACT = "The strip states are `Idle`, `Enabling`, `Active`, and\n`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\nownership gate; the already-admitted triggering request remains pending and\nnew bus-facing live-monitor reads/actions are busy. Status-only\n`vaillantCapabilities(targetAddress:)` and\n`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\navailability and session completion. Refresh success returns `Active` and\ncompletes a triggering read with exactly one native operation result, or\ndispatches a triggering current-owner disable exactly once after its frame\nreaches emission. A terminal disconnect before disable-frame emission emits no\ndisable, returns exact `TRANSPORT_DOWN`, releases ownership, retains Gateway's\nprocess-local cleanup obligation, presents session `Idle` with `owned:false`,\npublishes capability `UNKNOWN`, admits no Enable, and is never retried on\nreconnect. Every emitted disable outcome is recorded and returned exactly and\nfollows the same fail-closed public state because ACK/NAK alone do not prove\nnative settlement. Refresh failure also follows that public state and completes\nthe triggering request with the exact unavailable failure without dispatching\nits native operation.\n`Disabled` is never reported with `owned:true`."
 B503_DISABLED_PUBLIC_MAPPING = (
     "`Disabled` with `owned:false`\n"
     "maps only an out-of-band administrative/configuration-disabled condition\n"
@@ -82,7 +82,7 @@ B503_DISABLED_PUBLIC_MAPPING = (
     "state map to `Idle` with `owned:false`. While cleanup is pending, capability\n"
     "remains unavailable and `Idle` does not admit Enable."
 )
-B503_REFRESHING_CLEANUP = 'For a `REFRESHING` prior target, the browser queues that\nsame token-bound disable without invoking an operation while Refreshing is busy;\nafter refresh succeeds to `Active`, it dispatches the queued disable. After\nrefresh failure presents `Idle`, Gateway retains the process-local cleanup\nobligation. The browser clears the queued pair without a client disable.\nIf the triggering request was already the current-owner disable, that single\ndisable is the only client dispatch. Gateway records and returns its exact ACK,\nNAK, or failure outcome, releases ownership, and retains process-local\nfail-closed cleanup because the outcome alone does not prove native settlement.\nThe browser clears the queued pair without issuing a second disable.'
+B503_REFRESHING_CLEANUP = 'For a `REFRESHING` prior target, the browser queues that\nsame token-bound disable without invoking an operation while Refreshing is busy;\nafter refresh succeeds to `Active`, it dispatches the queued disable unless a\nterminal disconnect occurs before frame emission. That path emits no disable\nand returns exact `TRANSPORT_DOWN`. After refresh failure presents `Idle`,\nGateway retains the process-local cleanup obligation. The browser clears the\nqueued pair without a client disable. If the triggering request was already the\ncurrent-owner disable, that admitted request is the only client dispatch.\nGateway records and returns its emitted native outcome, or its pre-emission\n`TRANSPORT_DOWN`, releases ownership, and retains process-local fail-closed\ncleanup. The browser clears the queued pair without issuing a second disable.'
 B503_ENABLING_CLEANUP = (
     "For an\n"
     "`ENABLING` prior target, the browser registers cleanup at switch time under the\n"
@@ -310,7 +310,7 @@ HTML_VOID_ELEMENTS = frozenset((
     "meta", "param", "source", "track", "wbr",
 ))
 NON_RENDERING_CONTAINERS = frozenset(
-    ("head", "iframe", "object", "pre", "script", "style", "template")
+    ("canvas", "head", "iframe", "object", "pre", "script", "style", "template")
 )
 B503_ROUTE_SURFACE_MARKERS = (
     "rest",

@@ -154,14 +154,15 @@ session.
 
 For a `REFRESHING` prior target, the browser queues that
 same token-bound disable without invoking an operation while Refreshing is busy;
-after refresh succeeds to `Active`, it dispatches the queued disable. After
-refresh failure presents `Idle`, Gateway retains the process-local cleanup
-obligation. The browser clears the queued pair without a client disable.
-If the triggering request was already the current-owner disable, that single
-disable is the only client dispatch. Gateway records and returns its exact ACK,
-NAK, or failure outcome, releases ownership, and retains process-local
-fail-closed cleanup because the outcome alone does not prove native settlement.
-The browser clears the queued pair without issuing a second disable.
+after refresh succeeds to `Active`, it dispatches the queued disable unless a
+terminal disconnect occurs before frame emission. That path emits no disable
+and returns exact `TRANSPORT_DOWN`. After refresh failure presents `Idle`,
+Gateway retains the process-local cleanup obligation. The browser clears the
+queued pair without a client disable. If the triggering request was already the
+current-owner disable, that admitted request is the only client dispatch.
+Gateway records and returns its emitted native outcome, or its pre-emission
+`TRANSPORT_DOWN`, releases ownership, and retains process-local fail-closed
+cleanup. The browser clears the queued pair without issuing a second disable.
 This is switch-time cleanup, never passive timeout cleanup.
 
 Any late enable completion after a switch follows the same prior-target cleanup
@@ -196,13 +197,16 @@ new bus-facing live-monitor reads/actions are busy. Status-only
 `vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe
 availability and session completion. Refresh success returns `Active` and
 completes a triggering read with exactly one native operation result, or
-dispatches a triggering current-owner disable exactly once. Every disabling
-outcome is recorded and returned exactly, releases ownership, retains Gateway's
+dispatches a triggering current-owner disable exactly once after its frame
+reaches emission. A terminal disconnect before disable-frame emission emits no
+disable, returns exact `TRANSPORT_DOWN`, releases ownership, retains Gateway's
 process-local cleanup obligation, presents session `Idle` with `owned:false`,
-publishes capability `UNKNOWN`, and admits no Enable because ACK/NAK alone do
-not prove native settlement. Refresh failure follows the same public state and
-completes the triggering request with the exact unavailable failure without
-dispatching its native operation.
+publishes capability `UNKNOWN`, admits no Enable, and is never retried on
+reconnect. Every emitted disable outcome is recorded and returned exactly and
+follows the same fail-closed public state because ACK/NAK alone do not prove
+native settlement. Refresh failure also follows that public state and completes
+the triggering request with the exact unavailable failure without dispatching
+its native operation.
 `Disabled` is never reported with `owned:true`. `Disabled` with `owned:false`
 maps only an out-of-band administrative/configuration-disabled condition
 supplied by Gateway. It is never the result of a current-owner live-monitor
