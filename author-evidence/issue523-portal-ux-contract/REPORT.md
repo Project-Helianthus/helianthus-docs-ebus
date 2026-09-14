@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `950519b3bf915c38fde23fc1594958a61e1fe951` |
-| Final validated contract tree | `9e1aa3b83b722fdaed31e2e9c71d1334e9e126cd` |
-| Final contract validation | Complete configured CI PASS; 285 Portal checker tests and 148 canonical B503 milestone tests; lead-local log SHA-256 `e57488bd87fd521125be4c40736779a1f120038663f04949091ed9a0cb08706f`; hosted exact-head CI pending |
+| Final validated contract commit | `28adf33ae8b9d2bef20c1451fb2070e03ecd593e` |
+| Final validated contract tree | `7c7fcc5d7d299503d6d114bc4b9aca19068dbbdd` |
+| Final contract validation | Complete configured CI PASS; 286 Portal checker tests and 148 canonical B503 milestone tests; lead-local log SHA-256 `a5fd8b7b51413404e86042afa562a61ccfb3aa76170f512acad63b0cfdadf6a2`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -351,7 +351,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 285 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 286 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 148 tests |
 | `git diff --check` | PASS |
@@ -1382,6 +1382,18 @@ image-alternative mutation rejects. The command table above records the actual
 148-test B503 result. Portal remains 285/285; complete configured CI passed
 with log SHA-256
 `e57488bd87fd521125be4c40736779a1f120038663f04949091ed9a0cb08706f`.
+
+The subsequent GitHub review of exact
+`7cdc655f40af9baa337ca3f8dfe8d78ad67b598f` found the corresponding Portal
+image-label P2: a required Portal clause could still be placed only in image
+alternative text. Functional commit
+`28adf33ae8b9d2bef20c1451fb2070e03ecd593e`, tree
+`7c7fcc5d7d299503d6d114bc4b9aca19068dbbdd`, excludes image tokens from the
+Portal rendered required-clause source and adds the same exact image-alt
+mutation used by the canonical checker. Visible required clauses remain
+accepted; image labels alone reject. Portal is 286/286, canonical B503 remains
+148/148, and complete configured CI passed with log SHA-256
+`a5fd8b7b51413404e86042afa562a61ccfb3aa76170f512acad63b0cfdadf6a2`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
