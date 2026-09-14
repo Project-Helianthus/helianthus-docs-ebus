@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `5dfd5f1087f2a71450f3701bb325caf7c91d6e21` |
-| Latest functional correction tree | `4a499a73f6930bd458861e69fe46b473b1941647` |
-| Focused validation | Portal 296 PASS; canonical B503 164 PASS; combined 460 PASS |
+| Latest functional correction commit | `edb9a70813231d096b067ac51b3ee8f1d52927c6` |
+| Latest functional correction tree | `a841847d2e053df4a431b0c2665bf4135c79401f` |
+| Focused validation | Portal 296 PASS; canonical B503 169 PASS; combined 465 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 460/460 PASS;
+- combined focused suite: 465/465 PASS;
 - Portal checker: 296/296 PASS;
-- canonical B503 checker: 164/164 PASS;
+- canonical B503 checker: 169/169 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -234,6 +234,23 @@ the still-effective explicit disable remains public `Disabled`/`owned:false`
 across restart; every other restart-derived cleanup state presents
 `Idle`/`owned:false`. Canonical and Portal mutation tests reject removal of
 that precedence.
+
+The fresh independent review at candidate
+`af11027151619591fe1cd8b864bc916eab9f9d6c`, tree
+`7b5b451830f11c824eeb27e12ae634d643e4de6d`, returned one P1 and one P2. The
+exact disconnect row sent an `IDLE` target with no owner or cleanup to
+`DISABLED`, contradicting the reconnect-ready `Idle` rule, and raw `<pre>`
+could wrap the exact Markdown truth or milestone table while the validator
+still treated it as a rendered table. The report is
+`wave12/review/docs524-af11027-final-independent/REPORT.md`, SHA-256
+`822025996071e445bc549f517b3f094a857f5c65e821be1f44bda21aba4ac6ae`.
+Functional commit `edb9a70813231d096b067ac51b3ee8f1d52927c6`, tree
+`a841847d2e053df4a431b0c2665bf4135c79401f`, splits disconnect behavior by
+state: `IDLE` without owner/cleanup remains `IDLE`, held-owner states enter
+`DISABLED` with cleanup, and existing `DISABLED` state retains its cleanup and
+fence. It also treats raw `<pre>` as code that cannot satisfy normative table
+extraction. Focused mutations cover both required tables and reject a
+cleanup-bearing reconnect to `IDLE`.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
