@@ -32,6 +32,10 @@ HTML_VOID_ELEMENTS = frozenset((
 MARKDOWN = MarkdownIt("commonmark")
 TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
 CSS_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
+CSS_LINE_CONTINUATION = re.compile(r"\\(?:\r\n|[\n\r\f])")
+CSS_ESCAPE = re.compile(
+    r"\\([0-9a-fA-F]{1,6})(?:\r\n|[ \t\r\n\f])?|\\([^\r\n\f0-9a-fA-F])"
+)
 SESSION_SECTION_START = "## 6. Live-Monitor Session"
 SESSION_SECTION_END = "## 7. Gateway Operational Contract"
 SESSION_TRANSITION_TABLE_START = "### 6.3 Transitions (normative)"
@@ -229,7 +233,7 @@ REFRESH_FAILURE_CAPABILITY_PRECEDENCE = (
 REFRESH_OWNER_REBINDING = 'On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes\nonly the one bounded refresh attempt. A successful refresh returns the current\n`transport_key` for epoch N+1. Gateway MUST atomically replace the owner key\nwith `(transport_key[N+1], same issuer_token)` while retaining the same target,\nthen dispatch the admitted triggering operation exactly once. Completions and\ncontrol requests still bound to epoch N are stale and MUST NOT satisfy, disable,\nextend, or mutate the rebound session. If refresh fails, no rebound key is\ninstalled; Gateway releases client ownership, retains a fresh Gateway-owned\nprocess-local cleanup obligation in internal `DISABLED`, presents public\nsession `Idle` with `owned:false`, publishes capability `UNKNOWN`,\nand admits no Enable while native settlement remains unproven.'
 NO_AUTO_RESUME_RECONSTRUCTION = '- Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost\n  owner handle, or an absent/invalid current issuer token. The surviving\n  authenticated current-owner refresh path in §7.3 is the only continuation\n  allowed across a non-terminal epoch advance.'
 REFRESHING_DISCONNECT_FENCE = '- A terminal transport disconnect follows §7.4: it releases any held owner and\n  does not enter `Refreshing` on reconnect. An `Idle` target with no owner or\n  cleanup obligation stays `Idle` through disconnect/reconnect and requires a\n  new explicit client Enable.\n- If cleanup/session settlement is unproven, the transport layer MUST NOT\n  publish the new epoch as B503-usable or admit Enable. Reconnect emits no\n  automatic B503 enable or disable. Gateway preserves the process-local target,\n  attempt, and prior epoch only as evidence/cleanup state, publishes `UNKNOWN`,\n  and waits for a future accepted settlement contract.'
-DISCONNECT_CLEANUP_OBLIGATION = '- On transport disconnect, Gateway transitions the FSM to `DISABLED` and, if an\n  owner was held, releases `liveMonitorMu`. If an Enable may have reached the\n  wire or settlement is otherwise unproven, Gateway retains\n  `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)` only as a\n  process-local cleanup obligation across transport reconnect. It carries no\n  issuer token, owner authority, session continuation, or operation eligibility\n  and cannot authorize an automatic reconnect write.'
+DISCONNECT_CLEANUP_OBLIGATION = '- An `ENABLING` disconnect before enable-frame emission cancels the queued frame,\n  returns exact `TRANSPORT_DOWN`, releases `liveMonitorMu`, clears the attempt,\n  retains no cleanup obligation, and returns directly to `IDLE`. Reconnect still\n  requires a new explicit Enable and emits no automatic B503 write.\n- After enable-frame emission, or from `ACTIVE` / `REFRESHING`, transport\n  disconnect transitions the FSM to `DISABLED` and releases `liveMonitorMu`.\n  If an Enable may have reached the wire or settlement is otherwise unproven, Gateway retains\n  `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)` only as a\n  process-local cleanup obligation across transport reconnect. It carries no\n  issuer token, owner authority, session continuation, or operation eligibility\n  and cannot authorize an automatic reconnect write.'
 OWNER_CONDITIONAL_MUTEX_SCOPE = (
     "Only release of `liveMonitorMu` is owner-conditional (§6.3 \"Lock lifecycle\"):\n"
     "it occurs only when an owner is held at the moment the event fires. Cleanup\n"
@@ -294,6 +298,12 @@ ENABLING_EPOCH_PRE_DIAGRAM = (
 ENABLING_EPOCH_POST_DIAGRAM = (
     "ENABLING --> DISABLED: epoch advance after enable frame emission"
 )
+ENABLING_DISCONNECT_PRE_DIAGRAM = (
+    "ENABLING --> IDLE: transport disconnect before enable frame emission"
+)
+ENABLING_DISCONNECT_POST_DIAGRAM = (
+    "ENABLING --> DISABLED: transport disconnect after enable frame emission"
+)
 ENABLING_EPOCH_PRE_OPERATION = (
     "| Epoch advance while `ENABLING`, before enable-frame emission | — | → "
     "`IDLE`; cancel the queued frame, release the gate, and discard every stale "
@@ -317,6 +327,8 @@ CODE_REQUIRED_FRAGMENTS = frozenset((
     REFRESH_DISABLE_DIAGRAM,
     ENABLING_EPOCH_PRE_DIAGRAM,
     ENABLING_EPOCH_POST_DIAGRAM,
+    ENABLING_DISCONNECT_PRE_DIAGRAM,
+    ENABLING_DISCONNECT_POST_DIAGRAM,
     ENABLING_CANCEL_DIAGRAM,
     ENABLING_FAILURE_DIAGRAM,
 ))
@@ -330,12 +342,13 @@ IDLE_ENABLE_TRANSITION = '| `IDLE` | enable request, no owner or cleanup/fence, 
 IDLE_ENABLE_REJECT_TRANSITION = '| `IDLE` | enable request while transport disconnected or capability is not `AVAILABLE` | `IDLE` | return the exact Gateway-supplied availability result and emit no enable frame |'
 ENABLING_ACK_TRANSITION = '| `ENABLING` | successful enable ACK received after frame emission | `ACTIVE` | record the exact ACK, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, start the 30s idle timer, arm reads for the current owner, publish `UNKNOWN`, and admit no second Enable; the ACK establishes the admitted operation outcome, not session settlement |'
 ENABLING_AMBIGUOUS_FAILURE_TRANSITION = '| `ENABLING` | `ctx.Done` / NAK / timeout / CRC mismatch / bus-arbitration failure / any other non-ACK terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; NAK and any defensive-disable ACK/NAK outcome do not prove settlement |'
+ENABLING_DISCONNECT_PRE_TRANSITION = '| `ENABLING` | transport disconnect before enable-frame emission | `IDLE` | cancel the queued frame, record and return exact `TRANSPORT_DOWN`, release the ownership gate, clear the pending attempt, and retain no cleanup obligation; after reconnect require a new explicit Enable |'
 ACTIVE_READ_TRANSITION = '| `ACTIVE` | successful read completes | `ACTIVE` | return the exact native result and reset the idle timer |'
 ACTIVE_READ_FAILURE_TRANSITION = '| `ACTIVE` | read NAK / timeout / CRC mismatch / bus-arbitration failure / other non-disconnect failure | `ACTIVE` | return the exact native failure and do not reset the idle timer |'
 ACTIVE_IDLE_TRANSITION = '| `ACTIVE` | 30s idle | `DISABLED` | emit disable once after quiesce, record the exact outcome, release the owner, retain process-local cleanup, publish `UNKNOWN`, and admit no Enable |'
 ACTIVE_REFRESH_TRANSITION = '| `ACTIVE` | admitted request detects epoch advance | `REFRESHING` | ownership gate remains held; triggering request remains pending; subsequent live-monitor operations are busy |'
 IDLE_DISCONNECT_TRANSITION = '| `IDLE` | transport disconnect, no owner or cleanup obligation | `IDLE` | change no session state and release no mutex; publish `TRANSPORT_DOWN` while disconnected; after reconnect require a new explicit Enable and perform no automatic B503 write |'
-DISCONNECT_TRANSITION = '| `ENABLING` / `ACTIVE` / `REFRESHING` | transport disconnect | `DISABLED` | release the owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |'
+DISCONNECT_TRANSITION = '| `ENABLING` after enable-frame emission / `ACTIVE` / `REFRESHING` | transport disconnect | `DISABLED` | release the owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |'
 DISABLED_DISCONNECT_TRANSITION = '| `DISABLED` | transport disconnect | `DISABLED` | change no session state and release no mutex; retain any existing cleanup obligation and its `UNKNOWN` fence; perform no automatic reconnect write |'
 CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN = (
     "- silent fallback to `UNKNOWN` from a knowable `TRANSPORT_DOWN` when no cleanup\n"
@@ -348,6 +361,7 @@ SESSION_TRANSITION_ROWS = (
     ENABLING_ACK_TRANSITION,
     ENABLING_CANCEL_TRANSITION,
     ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
+    ENABLING_DISCONNECT_PRE_TRANSITION,
     ENABLING_EPOCH_PRE_TRANSITION,
     ENABLING_EPOCH_POST_TRANSITION,
     ACTIVE_READ_TRANSITION,
@@ -368,8 +382,8 @@ SESSION_TRANSITION_ROWS = (
     RESTART_TRANSITION,
 )
 ENABLING_DIRECT_IDLE_LOCK = (
-    "on either direct `ENABLING → IDLE` path (cancellation or epoch advance before\n"
-    "frame emission)"
+    "on any direct `ENABLING → IDLE` path (cancellation, transport disconnect, or\n"
+    "epoch advance before frame emission)"
 )
 FORBIDDEN_REFRESH_FAILURE_CONTRADICTIONS = (
     "REFRESHING --> IDLE: refresh failure releases gate",
@@ -498,6 +512,20 @@ def _visible_contract_source(text: str) -> str:
     return "".join(parser.parts)
 
 
+def _decode_css_escapes(value: str) -> str:
+    value = CSS_LINE_CONTINUATION.sub("", value)
+
+    def replace(match: re.Match[str]) -> str:
+        if match.group(1) is None:
+            return match.group(2)
+        codepoint = int(match.group(1), 16)
+        if codepoint == 0 or 0xD800 <= codepoint <= 0xDFFF or codepoint > 0x10FFFF:
+            return "\N{REPLACEMENT CHARACTER}"
+        return chr(codepoint)
+
+    return CSS_ESCAPE.sub(replace, value)
+
+
 def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
     for name, value in attrs:
         if name.casefold() == "hidden":
@@ -508,6 +536,8 @@ def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
         for declaration in CSS_COMMENT.sub("", value).split(";"):
             property_name, separator, property_value = declaration.partition(":")
             if separator:
+                property_name = _decode_css_escapes(property_name)
+                property_value = _decode_css_escapes(property_value)
                 important = re.search(
                     r"\s*!important\s*$", property_value, re.IGNORECASE
                 ) is not None
@@ -770,9 +800,12 @@ def validate_text(text: str) -> None:
         ENABLE_ADMISSION_OPERATION,
         ENABLING_CANCEL_DIAGRAM,
         ENABLING_FAILURE_DIAGRAM,
+        ENABLING_DISCONNECT_PRE_DIAGRAM,
+        ENABLING_DISCONNECT_POST_DIAGRAM,
         ENABLING_ACK_TRANSITION,
         ENABLING_CANCEL_TRANSITION,
         ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
+        ENABLING_DISCONNECT_PRE_TRANSITION,
         ENABLING_NAK_TRANSITION,
         ENABLING_DIRECT_IDLE_LOCK,
         DISCONNECT_TRANSITION,

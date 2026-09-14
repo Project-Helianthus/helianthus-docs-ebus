@@ -216,6 +216,8 @@ stateDiagram-v2
     ENABLING --> ACTIVE: enable ACK on bus
     ENABLING --> IDLE: canceled before enable frame emission
     ENABLING --> DISABLED: terminal enable outcome after emission
+    ENABLING --> IDLE: transport disconnect before enable frame emission
+    ENABLING --> DISABLED: transport disconnect after enable frame emission
     ENABLING --> IDLE: epoch advance before enable frame emission
     ENABLING --> DISABLED: epoch advance after enable frame emission
     ACTIVE --> ACTIVE: periodic read during session
@@ -295,6 +297,7 @@ access.
 | `ENABLING` | successful enable ACK received after frame emission | `ACTIVE` | record the exact ACK, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, start the 30s idle timer, arm reads for the current owner, publish `UNKNOWN`, and admit no second Enable; the ACK establishes the admitted operation outcome, not session settlement |
 | `ENABLING` | `ctx.Done` before enable-frame emission | `IDLE` | cancel the queued frame, release the ownership gate, and clear the pending attempt; no native disable is emitted |
 | `ENABLING` | `ctx.Done` / NAK / timeout / CRC mismatch / bus-arbitration failure / any other non-ACK terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; NAK and any defensive-disable ACK/NAK outcome do not prove settlement |
+| `ENABLING` | transport disconnect before enable-frame emission | `IDLE` | cancel the queued frame, record and return exact `TRANSPORT_DOWN`, release the ownership gate, clear the pending attempt, and retain no cleanup obligation; after reconnect require a new explicit Enable |
 | `ENABLING` | epoch advance detected before enable-frame emission | `IDLE` | cancel the queued frame, release ownership, and discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
 | `ENABLING` | epoch advance detected after enable-frame emission | `DISABLED` | fence every stale completion, issue at most one defensive disable after quiesce during the admitted lifecycle, record its exact native outcome, release ownership, retain fail-closed cleanup, publish `UNKNOWN`, and admit no Enable |
 | `ACTIVE` | successful read completes | `ACTIVE` | return the exact native result and reset the idle timer |
@@ -310,7 +313,7 @@ access.
 | `DISABLED` | defensive-disable ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | retain process-local cleanup, record the exact outcome, publish `UNKNOWN`, admit no Enable, and perform no same-epoch or automatic reconnect/restart recovery; only a future accepted settlement contract may define re-claimability |
 | `IDLE` / `DISABLED` with no owner | Gateway reports an out-of-band administrative/configuration-disabled condition | `DISABLED` | emit no native B503 operation; present public `Disabled` with `owned:false`, block Enable, and retain any pre-existing cleanup/fence; this condition is distinct from the current-owner session DISABLE action |
 | `IDLE` | transport disconnect, no owner or cleanup obligation | `IDLE` | change no session state and release no mutex; publish `TRANSPORT_DOWN` while disconnected; after reconnect require a new explicit Enable and perform no automatic B503 write |
-| `ENABLING` / `ACTIVE` / `REFRESHING` | transport disconnect | `DISABLED` | release the owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |
+| `ENABLING` after enable-frame emission / `ACTIVE` / `REFRESHING` | transport disconnect | `DISABLED` | release the owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |
 | `DISABLED` | transport disconnect | `DISABLED` | change no session state and release no mutex; retain any existing cleanup obligation and its `UNKNOWN` fence; perform no automatic reconnect write |
 | any | gateway restart | `DISABLED` | release any owner and destroy every caller handle and process-local attempt identity; reconstruct no session, emit no automatic B503 enable or disable, and publish `UNKNOWN` for each qualified target; a still-effective out-of-band administrative/configuration-disabled condition presents public `Disabled` with `owned:false`, otherwise the restart-derived state presents public `Idle` with `owned:false`; admit no Enable under the current 0.7 contract |
 
@@ -318,8 +321,8 @@ access.
 `liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
 transition. It is released exactly once on a terminal transition from a
 held-owner state: on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or
-`REFRESHING`, or on either direct `ENABLING → IDLE` path (cancellation or epoch advance before
-frame emission). The "any" transitions
+`REFRESHING`, or on any direct `ENABLING → IDLE` path (cancellation, transport disconnect, or
+epoch advance before frame emission). The "any" transitions
 (transport disconnect, gateway restart) release the mutex only when FSM was in
 a held-owner state at the time the event fired; if the FSM was already `IDLE`
 or `DISABLED` (no owner), no release occurs. `DISABLED` with a cleanup
@@ -497,9 +500,13 @@ including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
   created and never reuses it. This opaque ID is internal to Gateway; it is not
   the browser-local `localEnableAttemptID`, is not supplied by a caller, and
   confers no owner or operation authority.
-- On transport disconnect, Gateway transitions the FSM to `DISABLED` and, if an
-  owner was held, releases `liveMonitorMu`. If an Enable may have reached the
-  wire or settlement is otherwise unproven, Gateway retains
+- An `ENABLING` disconnect before enable-frame emission cancels the queued frame,
+  returns exact `TRANSPORT_DOWN`, releases `liveMonitorMu`, clears the attempt,
+  retains no cleanup obligation, and returns directly to `IDLE`. Reconnect still
+  requires a new explicit Enable and emits no automatic B503 write.
+- After enable-frame emission, or from `ACTIVE` / `REFRESHING`, transport
+  disconnect transitions the FSM to `DISABLED` and releases `liveMonitorMu`.
+  If an Enable may have reached the wire or settlement is otherwise unproven, Gateway retains
   `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)` only as a
   process-local cleanup obligation across transport reconnect. It carries no
   issuer token, owner authority, session continuation, or operation eligibility

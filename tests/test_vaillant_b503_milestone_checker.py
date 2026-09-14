@@ -134,6 +134,8 @@ def test_rejects_five_state_contract_hidden_by_standard_html_attribute() -> None
         "display:none",
         "display:none/**/",
         "display:/**/none",
+        r"dis\70 lay:none",
+        r"display:n\6f ne",
         "DISPLAY: none",
         "visibility: hidden",
         "display:none!important",
@@ -1172,9 +1174,12 @@ def test_rejects_incomplete_enabling_cleanup_failure_set(
     (
         CHECKER.ENABLING_CANCEL_DIAGRAM,
         CHECKER.ENABLING_FAILURE_DIAGRAM,
+        CHECKER.ENABLING_DISCONNECT_PRE_DIAGRAM,
+        CHECKER.ENABLING_DISCONNECT_POST_DIAGRAM,
         CHECKER.ENABLING_ACK_TRANSITION,
         CHECKER.ENABLING_CANCEL_TRANSITION,
         CHECKER.ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
+        CHECKER.ENABLING_DISCONNECT_PRE_TRANSITION,
         CHECKER.ENABLING_NAK_TRANSITION,
         CHECKER.ENABLING_DIRECT_IDLE_LOCK,
         CHECKER.DISCONNECT_TRANSITION,
@@ -1185,6 +1190,21 @@ def test_rejects_missing_terminal_enabling_transition(required_fragment: str) ->
     assert required_fragment in text
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text.replace(required_fragment, "omitted", 1))
+
+
+@pytest.mark.parametrize(
+    "unsafe",
+    (
+        CHECKER.ENABLING_DISCONNECT_PRE_TRANSITION.replace("`IDLE`", "`DISABLED`", 1),
+        CHECKER.ENABLING_DISCONNECT_PRE_TRANSITION.replace(
+            "retain no cleanup obligation", "retain fail-closed cleanup"
+        ),
+    ),
+)
+def test_rejects_cleanup_after_pre_emission_enable_disconnect(unsafe: str) -> None:
+    text = contract().replace(CHECKER.ENABLING_DISCONNECT_PRE_TRANSITION, unsafe, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
 
 
 @pytest.mark.parametrize(

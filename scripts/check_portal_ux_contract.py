@@ -369,6 +369,10 @@ B503_ROUTE_SURFACE_PARAGRAPHS = (
 MARKDOWN = MarkdownIt("commonmark")
 TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
 CSS_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
+CSS_LINE_CONTINUATION = re.compile(r"\\(?:\r\n|[\n\r\f])")
+CSS_ESCAPE = re.compile(
+    r"\\([0-9a-fA-F]{1,6})(?:\r\n|[ \t\r\n\f])?|\\([^\r\n\f0-9a-fA-F])"
+)
 HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
 COMMONMARK_AUTOLINK = re.compile(
     r"<(?:https?://|mailto:)[^<>\s]+>", re.IGNORECASE
@@ -470,6 +474,20 @@ def _visible_contract_source(target: str) -> str:
     return "".join(parser.parts)
 
 
+def _decode_css_escapes(value: str) -> str:
+    value = CSS_LINE_CONTINUATION.sub("", value)
+
+    def replace(match: re.Match[str]) -> str:
+        if match.group(1) is None:
+            return match.group(2)
+        codepoint = int(match.group(1), 16)
+        if codepoint == 0 or 0xD800 <= codepoint <= 0xDFFF or codepoint > 0x10FFFF:
+            return "\N{REPLACEMENT CHARACTER}"
+        return chr(codepoint)
+
+    return CSS_ESCAPE.sub(replace, value)
+
+
 def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
     for name, value in attrs:
         if name.casefold() == "hidden":
@@ -480,6 +498,8 @@ def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
         for declaration in CSS_COMMENT.sub("", value).split(";"):
             property_name, separator, property_value = declaration.partition(":")
             if separator:
+                property_name = _decode_css_escapes(property_name)
+                property_value = _decode_css_escapes(property_value)
                 important = re.search(
                     r"\s*!important\s*$", property_value, re.IGNORECASE
                 ) is not None

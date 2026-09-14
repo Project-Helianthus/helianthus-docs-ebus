@@ -450,6 +450,8 @@ def test_rejects_required_contract_clause_hidden_by_standard_html_attribute() ->
         "display:none",
         "display:none/**/",
         "display:/**/none",
+        r"dis\70 lay:none",
+        r"display:n\6f ne",
         "DISPLAY: none",
         "visibility: hidden",
         "display:none!important",
