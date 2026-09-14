@@ -789,6 +789,13 @@ def validate_text(text: str) -> None:
                 "forbidden declarative §§6-8 B503 session-state contradiction: "
                 f"{match.group(0)!r}"
             )
+    for pattern in RESTART_AUTOMATIC_WRITE_CONTRADICTION_PATTERNS:
+        match = pattern.search(session_contract_scope)
+        if match is not None:
+            raise CheckError(
+                "forbidden automatic B503 restart write contradiction in §§6-8: "
+                f"{match.group(0)!r}"
+            )
     for fragment in (
         ENABLING_EPOCH_PRE_DIAGRAM,
         ENABLING_EPOCH_POST_DIAGRAM,
@@ -845,13 +852,6 @@ def validate_text(text: str) -> None:
         raise CheckError("missing Refreshing disconnect fence in §7.5")
     if RESTART_CLEANUP_FENCE not in reconnect_section:
         raise CheckError("missing bounded per-target restart cleanup fence in §7.5")
-    for pattern in RESTART_AUTOMATIC_WRITE_CONTRADICTION_PATTERNS:
-        match = pattern.search(reconnect_section)
-        if match is not None:
-            raise CheckError(
-                "forbidden automatic B503 restart write contradiction in §7.5: "
-                f"{match.group(0)!r}"
-            )
     idle_timeout_section = _section(
         text, IDLE_TIMEOUT_SECTION_START, IDLE_TIMEOUT_SECTION_END
     )

@@ -414,16 +414,28 @@ def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
 
 
 @pytest.mark.parametrize(
-    "clause",
+    ("section_end", "clause"),
     (
-        "Gateway automatically emits a B503 disable after every process restart.",
-        "After restart, Gateway automatically dispatches a B503 enable.",
+        (
+            CHECKER.SESSION_SECTION_END,
+            "Gateway automatically emits a B503 disable after every process restart.",
+        ),
+        (
+            CHECKER.RECONNECT_SECTION_END,
+            "After restart, Gateway automatically dispatches a B503 enable.",
+        ),
+        (
+            CHECKER.NORMALIZATION_SECTION_END,
+            "Gateway automatically emits a B503 disable after every process restart.",
+        ),
     ),
 )
-def test_rejects_automatic_b503_write_after_restart(clause: str) -> None:
+def test_rejects_automatic_b503_write_after_restart(
+    section_end: str, clause: str
+) -> None:
     text = contract().replace(
-        CHECKER.RECONNECT_SECTION_END,
-        f"{clause}\n\n{CHECKER.RECONNECT_SECTION_END}",
+        section_end,
+        f"{clause}\n\n{section_end}",
         1,
     )
     with pytest.raises(CHECKER.CheckError):
