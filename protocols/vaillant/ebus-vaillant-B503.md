@@ -497,7 +497,9 @@ including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
   for that reconnect attempt and records its exact native outcome. Only a valid
   disable ACK clears the obligation, publishes the epoch as usable, and
   reaches `Idle`; an ambiguous or transport failure retains the obligation,
-  leaves B503 `TRANSPORT_DOWN` or `UNKNOWN` as applicable, and admits no Enable.
+  leaves public B503 capability `UNKNOWN`, and admits no Enable. Return the
+  exact caller error, including `TRANSPORT_DOWN` where applicable, without
+  replacing that cleanup-bearing `UNKNOWN` capability.
   There is no retry within the same transport epoch; a later transport lifecycle
   attempt may execute one bounded cleanup again before publication.
 - After every Gateway process restart, enumerate the finite registry-qualified

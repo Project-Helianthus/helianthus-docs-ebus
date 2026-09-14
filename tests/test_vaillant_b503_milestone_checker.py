@@ -557,6 +557,16 @@ def test_rejects_terminal_non_ack_reconnect_cleanup() -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_transport_down_as_reconnect_cleanup_capability() -> None:
+    replacement = CHECKER.REFRESHING_DISCONNECT_FENCE.replace(
+        "leaves public B503 capability `UNKNOWN`",
+        "leaves public B503 capability `TRANSPORT_DOWN`",
+    )
+    text = contract().replace(CHECKER.REFRESHING_DISCONNECT_FENCE, replacement, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     ("old", "new"),
     (

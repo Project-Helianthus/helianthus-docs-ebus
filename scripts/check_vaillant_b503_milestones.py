@@ -304,7 +304,9 @@ REFRESHING_DISCONNECT_FENCE = (
     "  for that reconnect attempt and records its exact native outcome. Only a valid\n"
     "  disable ACK clears the obligation, publishes the epoch as usable, and\n"
     "  reaches `Idle`; an ambiguous or transport failure retains the obligation,\n"
-    "  leaves B503 `TRANSPORT_DOWN` or `UNKNOWN` as applicable, and admits no Enable.\n"
+    "  leaves public B503 capability `UNKNOWN`, and admits no Enable. Return the\n"
+    "  exact caller error, including `TRANSPORT_DOWN` where applicable, without\n"
+    "  replacing that cleanup-bearing `UNKNOWN` capability.\n"
     "  There is no retry within the same transport epoch; a later transport lifecycle\n"
     "  attempt may execute one bounded cleanup again before publication."
 )
