@@ -30,14 +30,17 @@ extends the document with the production dispatcher contract in §12
 (plan AD16 + AD18). The amendment is additive within that archived amendment:
 no v1 selector, wire shape, or invoke-safety classification is altered.
 
-**Current public session authority.** The five-state public session contract in
-§6–§8 is governed by this document's current doc-gate revision (docs-ebus#523)
-and supersedes prior public session-presentation vocabulary here. The
-amendment-1 plan SHA remains traceability evidence for its original §12 scope;
-it is not authority to retain a superseded public FSM vocabulary. This current
-contract does not add a compatibility state, route, or fallback.
+**Current public contract authority.** The five-state public session contract in
+§6–§8 and the exact eight-row public capability table in §12.5 are governed by
+this document's current doc-gate revision (docs-ebus#523). They supersede prior
+public session-presentation and capability-output wording where the archived
+amendment-1 plan differs. In particular, row 3 returns `TRANSPORT_DOWN` to the
+in-flight caller while retained cleanup publishes capability `UNKNOWN`. The
+amendment-1 plan SHA remains traceability evidence for its original dispatcher
+and stale-epoch design; it is not conflict authority for the current public
+contract. This revision does not add a compatibility state, route, or fallback.
 
-Changes to plan-owned selectors, wire shape, or invoke-safety classification
+Changes to plan-traced selectors, wire shape, or invoke-safety classification
 require a new plan revision and corresponding doc-gate PR. A correction limited
 to the current public session contract requires its own doc-gate PR and current
 source evidence; it does not claim or create execution-plan state.
@@ -669,10 +672,10 @@ amendment-1 and is the doc-gate companion for `M6_DISPATCHER_BRIDGE`
 (helianthus-ebusgateway). It mirrors plan decisions AD16 (production raw-frame
 dispatcher contract) and AD18 (capability-signal 8-state truth table +
 stale-epoch discipline) from plan canonical SHA
-`86495340799be9340dc191c371a49a958f65c357c76a1e0a2974502c8489b508`. The plan
-chunks `13-amendment-1-dispatcher-portal-ux.md` and `10-scope-decisions.md` are
-the canonical source; this section MUST NOT diverge. On conflict, the plan
-wins and this section is updated by a follow-up doc-gate PR.
+`86495340799be9340dc191c371a49a958f65c357c76a1e0a2974502c8489b508`. Those plan
+chunks are archived design traceability. This current public document is the
+normative implementation contract; §12.5 records the cleanup-aware capability
+refinement and its exact checker-backed eight-row parity surface.
 
 ### 12.1 Dispatcher path overview
 
@@ -791,12 +794,14 @@ Discriminator rules:
 
 ### 12.5 Capability-signal 8-state truth table (mirror of AD18) <a id="capability-truth-table"></a>
 
-The `vaillantCapabilities.b503` capability output (§11) follows the 8-state
-truth table below. The plan AD18 entry in
-`vaillant-b503-namespace-w17-26.implementing/10-scope-decisions.md` is the
-canonical source; this table mirrors it for doc-gate completeness. Each
-row is a separate `M6_DISPATCHER_BRIDGE` test target; missing-coverage on
-any row is an automatic merge-gate block.
+The `vaillantCapabilities.b503` capability output (§11) follows the exact
+eight-row table below. This current doc-gate revision is the public contract.
+The archived plan AD18 entry in
+`vaillant-b503-namespace-w17-26.implementing/10-scope-decisions.md` is retained
+as provenance for the initial dispatcher design; rows 2, 3, 5, 6, and 7 include
+the current cleanup/restart refinement. Each row is a separate
+`M6_DISPATCHER_BRIDGE` test target; missing coverage on any row is an automatic
+merge-gate block.
 
 | # | State | Capability output | Stale-frame discipline |
 |---|---|---|---|
@@ -876,12 +881,11 @@ and reply arrival, allowing a stale frame to satisfy a fresh waiter.
 
 ### 12.8 Companion test surface
 
-`M6_DISPATCHER_BRIDGE` acceptance lives in the plan
-(`13-amendment-1-dispatcher-portal-ux.md §M6`); §12.4–§12.7 are the
-assertion targets (error-mapping rows, 8 truth-table tests, 4 `M6-CONC-*`
-lock-tracer tests, stale-epoch in-flight completion test). On disagreement
-between this doc and the plan, the plan wins and a follow-up doc-gate PR
-realigns §12.
+The archived plan's `13-amendment-1-dispatcher-portal-ux.md §M6` identifies the
+original implementation milestone. This current document's §12.4–§12.7 are the
+normative assertion targets: error-mapping rows, the exact eight truth-table
+tests, four `M6-CONC-*` lock-tracer tests, and the stale-epoch in-flight
+completion test.
 
 ## 13. Evidence Labels (preserved)
 
@@ -921,10 +925,11 @@ their PR body.
   `896a82e720b33eefb449ea532570e0a962bfa76504519996825f13d92ec9bb28`; amendment-1
   supersedes it.
 - Amendment-1 chunk: [`13-amendment-1-dispatcher-portal-ux.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/vaillant-b503-namespace-w17-26.implementing/13-amendment-1-dispatcher-portal-ux.md)
-  — canonical source for §12 (M0b / M6 / M7 / M8).
+  — archived design provenance for §12 (M0b / M6 / M7 / M8).
 - Decision matrix: [`10-scope-decisions.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/vaillant-b503-namespace-w17-26.implementing/10-scope-decisions.md)
-  — canonical source for AD16 (production dispatcher contract) and AD18
-  (capability-signal 8-state truth table + stale-epoch discipline).
+  — archived design provenance for AD16 (production dispatcher contract) and
+  AD18 (initial capability-signal table + stale-epoch discipline); current
+  public outputs are owned by §12.5 above.
 - Meta-issue: [execution-plans#19](https://github.com/Project-Helianthus/helianthus-execution-plans/issues/19).
 - Doc-gate issue (v1.0): [docs-ebus#282](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/282).
 - Doc-gate issue (amendment-1 / M0b): [docs-ebus#288](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/288).

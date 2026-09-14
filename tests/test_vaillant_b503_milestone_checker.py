@@ -37,6 +37,16 @@ def test_rejects_five_state_contract_hidden_in_html_comment() -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_five_state_contract_hidden_in_fenced_code() -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f"```text\n{CHECKER.SESSION_STATE_CONTRACT}\n```",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize("container", sorted(CHECKER.NON_RENDERING_CONTAINERS))
 def test_rejects_five_state_contract_hidden_in_inert_html(container: str) -> None:
     text = contract().replace(
@@ -55,6 +65,27 @@ def test_accepts_five_state_contract_in_visible_html() -> None:
         1,
     )
     CHECKER.validate_text(text)
+
+
+def test_rejects_missing_current_capability_table_authority() -> None:
+    text = contract().replace(
+        CHECKER.CURRENT_CAPABILITY_TABLE_AUTHORITY,
+        "The archived plan AD18 entry is canonical and wins on conflict.",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize("clause", CHECKER.FORBIDDEN_PLAN_CONFLICT_AUTHORITY)
+def test_rejects_archived_plan_conflict_authority(clause: str) -> None:
+    text = contract().replace(
+        CHECKER.CAPABILITY_TRUTH_TABLE_SECTION_END,
+        f"{clause}.\n\n{CHECKER.CAPABILITY_TRUTH_TABLE_SECTION_END}",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
 
 
 @pytest.mark.parametrize(

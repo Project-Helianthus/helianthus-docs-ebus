@@ -7,6 +7,8 @@ import re
 import sys
 from html.parser import HTMLParser
 
+from markdown_it import MarkdownIt
+
 
 DOC = pathlib.Path("protocols/vaillant/ebus-vaillant-B503.md")
 STATUS_SECTION_START = "## 1. Status"
@@ -21,6 +23,7 @@ HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
     "meta", "param", "source", "track", "wbr",
 ))
+MARKDOWN = MarkdownIt("commonmark")
 SESSION_SECTION_START = "## 6. Live-Monitor Session"
 SESSION_SECTION_END = "## 7. Gateway Operational Contract"
 REFRESHING_PUBLIC_SECTION_START = "#### 7.1.1 Refreshing session state (public)"
@@ -150,16 +153,34 @@ CAPABILITY_TRUTH_ROWS = (
     STALE_EPOCH_COMPLETION_TRUTH_ROW,
 )
 CURRENT_PUBLIC_SESSION_AUTHORITY = (
-    "**Current public session authority.** The five-state public session contract in\n"
-    "§6–§8 is governed by this document's current doc-gate revision (docs-ebus#523)\n"
-    "and supersedes prior public session-presentation vocabulary here. The\n"
-    "amendment-1 plan SHA remains traceability evidence for its original §12 scope;\n"
-    "it is not authority to retain a superseded public FSM vocabulary. This current\n"
-    "contract does not add a compatibility state, route, or fallback.\n\n"
-    "Changes to plan-owned selectors, wire shape, or invoke-safety classification\n"
+    "**Current public contract authority.** The five-state public session contract in\n"
+    "§6–§8 and the exact eight-row public capability table in §12.5 are governed by\n"
+    "this document's current doc-gate revision (docs-ebus#523). They supersede prior\n"
+    "public session-presentation and capability-output wording where the archived\n"
+    "amendment-1 plan differs. In particular, row 3 returns `TRANSPORT_DOWN` to the\n"
+    "in-flight caller while retained cleanup publishes capability `UNKNOWN`. The\n"
+    "amendment-1 plan SHA remains traceability evidence for its original dispatcher\n"
+    "and stale-epoch design; it is not conflict authority for the current public\n"
+    "contract. This revision does not add a compatibility state, route, or fallback.\n\n"
+    "Changes to plan-traced selectors, wire shape, or invoke-safety classification\n"
     "require a new plan revision and corresponding doc-gate PR. A correction limited\n"
     "to the current public session contract requires its own doc-gate PR and current\n"
     "source evidence; it does not claim or create execution-plan state."
+)
+CURRENT_CAPABILITY_TABLE_AUTHORITY = (
+    "The `vaillantCapabilities.b503` capability output (§11) follows the exact\n"
+    "eight-row table below. This current doc-gate revision is the public contract.\n"
+    "The archived plan AD18 entry in\n"
+    "`vaillant-b503-namespace-w17-26.implementing/10-scope-decisions.md` is retained\n"
+    "as provenance for the initial dispatcher design; rows 2, 3, 5, 6, and 7 include\n"
+    "the current cleanup/restart refinement. Each row is a separate\n"
+    "`M6_DISPATCHER_BRIDGE` test target; missing coverage on any row is an automatic\n"
+    "merge-gate block."
+)
+FORBIDDEN_PLAN_CONFLICT_AUTHORITY = (
+    "On conflict, the plan wins",
+    "On disagreement between this doc and the plan, the plan wins",
+    "the canonical source; this table mirrors it for doc-gate completeness",
 )
 SESSION_STATE_CONTRACT = (
     "five stable states: `Idle`, `Enabling`, `Active`, `Refreshing`, and `Disabled`.\n"
@@ -493,6 +514,17 @@ ENABLING_CANCEL_DIAGRAM = "ENABLING --> IDLE: canceled before enable frame emiss
 ENABLING_FAILURE_DIAGRAM = (
     "ENABLING --> DISABLED: terminal enable failure after emission"
 )
+CODE_REQUIRED_FRAGMENTS = frozenset((
+    CONFIRMED_CLEANUP_DIAGRAM,
+    UNCONFIRMED_CLEANUP_DIAGRAM,
+    REFRESH_FAILURE_DIAGRAM,
+    REFRESH_READ_DIAGRAM,
+    REFRESH_DISABLE_DIAGRAM,
+    ENABLING_EPOCH_PRE_DIAGRAM,
+    ENABLING_EPOCH_POST_DIAGRAM,
+    ENABLING_CANCEL_DIAGRAM,
+    ENABLING_FAILURE_DIAGRAM,
+))
 ENABLING_CANCEL_TRANSITION = (
     "| `ENABLING` | `ctx.Done` before enable-frame emission | `IDLE` | cancel the "
     "queued frame, release the ownership gate, and clear the pending attempt; no "
@@ -634,6 +666,17 @@ def _visible_contract_source(text: str) -> str:
     return "".join(parser.parts)
 
 
+def _visible_prose_source(text: str) -> str:
+    """Remove CommonMark fenced and indented code while preserving line boundaries."""
+    lines = text.splitlines(keepends=True)
+    for token in MARKDOWN.parse(text):
+        if token.type not in {"fence", "code_block"} or token.map is None:
+            continue
+        for index in range(token.map[0], min(token.map[1], len(lines))):
+            lines[index] = "\n" if lines[index].endswith("\n") else ""
+    return "".join(lines)
+
+
 def _parse_table_row(line: str) -> tuple[str, ...] | None:
     if not line.startswith("|") or not line.endswith("|"):
         return None
@@ -731,17 +774,21 @@ def validate_text(text: str) -> None:
     # Exact milestone fragments must be present in rendered documentation.
     # Raw text hidden in a CommonMark HTML comment cannot satisfy the gate.
     text = _visible_contract_source(text)
-    status_section = _section(text, STATUS_SECTION_START, STATUS_SECTION_END)
+    prose_text = _visible_prose_source(text)
+    status_section = _section(prose_text, STATUS_SECTION_START, STATUS_SECTION_END)
     if CURRENT_PUBLIC_SESSION_AUTHORITY not in status_section:
         raise CheckError("missing current public session authority in §1")
 
     session_section = _section(text, SESSION_SECTION_START, SESSION_SECTION_END)
+    session_prose_section = _section(
+        prose_text, SESSION_SECTION_START, SESSION_SECTION_END
+    )
     session_contract_scope = _section(
         text, SESSION_SECTION_START, NORMALIZATION_SECTION_END
     )
-    if SESSION_STATE_CONTRACT not in session_section:
+    if SESSION_STATE_CONTRACT not in session_prose_section:
         raise CheckError("missing five-state B503 session contract in §6.1")
-    if DISABLED_PUBLIC_MAPPING not in session_section:
+    if DISABLED_PUBLIC_MAPPING not in session_prose_section:
         raise CheckError("missing stable public Disabled mapping in §6")
     for fragment in (
         CONFIRMED_CLEANUP_DEFINITION,
@@ -768,7 +815,12 @@ def validate_text(text: str) -> None:
         DISCONNECT_TRANSITION,
         RESTART_TRANSITION,
     ):
-        if fragment not in session_section:
+        required_scope = (
+            session_section
+            if fragment in CODE_REQUIRED_FRAGMENTS
+            else session_prose_section
+        )
+        if fragment not in required_scope:
             raise CheckError(
                 f"missing coherent B503 Refreshing failure contract in §6.1: {fragment!r}"
             )
@@ -804,7 +856,12 @@ def validate_text(text: str) -> None:
         ENABLING_EPOCH_PRE_TRANSITION,
         ENABLING_EPOCH_POST_TRANSITION,
     ):
-        if fragment not in session_section:
+        required_scope = (
+            session_section
+            if fragment in CODE_REQUIRED_FRAGMENTS
+            else session_prose_section
+        )
+        if fragment not in required_scope:
             raise CheckError(
                 f"missing coherent ENABLING epoch-advance contract in §6: {fragment!r}"
             )
@@ -813,11 +870,11 @@ def validate_text(text: str) -> None:
             raise CheckError(
                 f"forbidden ENABLING epoch-advance contradiction in §6: {fragment!r}"
             )
-    if REFRESH_OWNER_REBINDING not in session_section:
+    if REFRESH_OWNER_REBINDING not in session_prose_section:
         raise CheckError("missing atomic owner-key epoch rebinding contract in §6.2")
 
     refreshing_public_section = _section(
-        text, REFRESHING_PUBLIC_SECTION_START, REFRESHING_PUBLIC_SECTION_END
+        prose_text, REFRESHING_PUBLIC_SECTION_START, REFRESHING_PUBLIC_SECTION_END
     )
     for fragment in (
         ENABLING_CLEANUP_CONTRACT,
@@ -829,12 +886,12 @@ def validate_text(text: str) -> None:
                 f"missing public Refreshing consumer contract in §7.1.1: {fragment!r}"
             )
 
-    refresh_section = _section(text, REFRESH_SECTION_START, REFRESH_SECTION_END)
+    refresh_section = _section(prose_text, REFRESH_SECTION_START, REFRESH_SECTION_END)
     if REFRESH_SUCCESS_CONTINUATION not in refresh_section:
         raise CheckError("missing authenticated Refreshing continuation contract in §7.3")
     if REFRESH_FAILURE_CAPABILITY_PRECEDENCE not in refresh_section:
         raise CheckError("missing cleanup-aware refresh failure capability precedence")
-    release_section = _section(text, RELEASE_SECTION_START, RELEASE_SECTION_END)
+    release_section = _section(prose_text, RELEASE_SECTION_START, RELEASE_SECTION_END)
     for fragment in (
         OWNER_CONDITIONAL_MUTEX_SCOPE,
         UNCONFIRMED_CLEANUP_OBLIGATION,
@@ -845,7 +902,7 @@ def validate_text(text: str) -> None:
     ):
         if fragment not in release_section:
             raise CheckError("missing process-local disconnect cleanup obligation in §7.4")
-    reconnect_section = _section(text, RECONNECT_SECTION_START, RECONNECT_SECTION_END)
+    reconnect_section = _section(prose_text, RECONNECT_SECTION_START, RECONNECT_SECTION_END)
     if NO_AUTO_RESUME_RECONSTRUCTION not in reconnect_section:
         raise CheckError("missing no-reconstruction boundary in §7.5")
     if REFRESHING_DISCONNECT_FENCE not in reconnect_section:
@@ -853,12 +910,12 @@ def validate_text(text: str) -> None:
     if RESTART_CLEANUP_FENCE not in reconnect_section:
         raise CheckError("missing bounded per-target restart cleanup fence in §7.5")
     idle_timeout_section = _section(
-        text, IDLE_TIMEOUT_SECTION_START, IDLE_TIMEOUT_SECTION_END
+        prose_text, IDLE_TIMEOUT_SECTION_START, IDLE_TIMEOUT_SECTION_END
     )
     if IDLE_TIMEOUT_ACK_CONTRACT not in idle_timeout_section:
         raise CheckError("missing valid-ACK idle-timeout cleanup contract in §7.6")
     normalization_section = _section(
-        text, NORMALIZATION_SECTION_START, NORMALIZATION_SECTION_END
+        prose_text, NORMALIZATION_SECTION_START, NORMALIZATION_SECTION_END
     )
     if NORMALIZED_REFRESH_DISABLE_CONTRACT not in normalization_section:
         raise CheckError("missing fail-closed refreshed-DISABLE normalization in §8")
@@ -884,7 +941,17 @@ def validate_text(text: str) -> None:
             "§12.5 capability truth table must contain the exact ordered eight-row set; "
             f"got {truth_rows!r}"
         )
-    if CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN not in text:
+    truth_prose = _section(
+        prose_text,
+        CAPABILITY_TRUTH_TABLE_SECTION_START,
+        CAPABILITY_TRUTH_TABLE_SECTION_END,
+    )
+    if CURRENT_CAPABILITY_TABLE_AUTHORITY not in truth_prose:
+        raise CheckError("missing current public authority for all eight §12.5 rows")
+    for fragment in FORBIDDEN_PLAN_CONFLICT_AUTHORITY:
+        if fragment in text:
+            raise CheckError(f"forbidden archived-plan conflict authority: {fragment!r}")
+    if CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN not in prose_text:
         raise CheckError("missing cleanup-scoped TRANSPORT_DOWN/UNKNOWN precedence")
 
 
