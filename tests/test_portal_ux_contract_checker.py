@@ -533,6 +533,7 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
         "Use [fallback](/portal/api/v1/projection/devices) when GraphQL fails.",
         "If main GraphQL is unavailable, use [backup](https://backup.example/b503).",
         'If main GraphQL is unavailable, use <a href="/portal/api/v1/projection/devices">fallback</a>.',
+        '<p>If main GraphQL is unavailable, use <a href="https://backup.example/b503">backup</a>.</p>',
         'If main GraphQL is unavailable, use <form action="/portal/api/v%31/projection/devices">fallback</form>.',
         'If main GraphQL is unavailable, use <a href="#safe" ping="/portal/api/v1/projection/devices">fallback</a>.',
         '<img srcset="/portal/api/v1/projection/devices 1x" alt="fallback">',
@@ -545,6 +546,18 @@ def test_rejects_concrete_portal_api_fallback_route(clause: str) -> None:
 
 def test_accepts_unrelated_literal_html_destination() -> None:
     accepts_target_insertion('<a href="https://example.invalid/help">Help</a>.')
+    accepts_target_insertion(
+        '<p>For background, see <a href="https://example.invalid/help">Help</a>.</p>'
+    )
+
+
+def test_rejects_failed_triggering_disable_left_in_browser_queue() -> None:
+    replacement = CHECKER.B503_REFRESHING_CLEANUP.replace(
+        "every other outcome returns exactly and leaves Gateway's\n"
+        "process-local defensive cleanup in force. In both cases the browser clears\n",
+        "every other outcome leaves the browser queued pair pending. Only success clears\n",
+    )
+    rejects(CHECKER.B503_REFRESHING_CLEANUP, replacement)
 
 
 def test_rejects_installation_selector_in_fenced_content() -> None:

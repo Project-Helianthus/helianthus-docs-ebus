@@ -237,7 +237,7 @@ REFRESHING_DISCONNECT_FENCE = (
 DISCONNECT_CLEANUP_OBLIGATION = (
     "- On transport disconnect, the gateway MUST transition the FSM to\n"
     "  `DISABLED` and — if an owner was held — release `liveMonitorMu`. If an enable\n"
-    "  may have reached the wire and no disable has a confirmed terminal outcome,\n"
+    "  may have reached the wire and no valid disable ACK has confirmed cleanup success,\n"
     "  Gateway retains `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)`\n"
     "  only as a process-local defensive-cleanup obligation across transport\n"
     "  reconnect. It carries no issuer token, owner authority, session continuation,\n"
@@ -458,7 +458,7 @@ ENABLING_AMBIGUOUS_FAILURE_TRANSITION = (
 )
 DISCONNECT_TRANSITION = (
     "| any | transport disconnect | `DISABLED` | release any owner; if an enable "
-    "may have reached the wire and no disable has a confirmed terminal outcome, "
+    "may have reached the wire and no valid disable ACK has confirmed cleanup success, "
     "retain the target and attempt only as the process-local §7.4 "
     "defensive-cleanup obligation |"
 )

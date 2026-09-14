@@ -91,9 +91,11 @@ B503_REFRESHING_CLEANUP = (
     "after refresh succeeds to `Active`, it dispatches the queued disable. After\n"
     "refresh failure presents `Idle`, Gateway retains the process-local cleanup\n"
     "obligation. The browser clears the queued pair without a client disable.\n"
-    "If the triggering request was already the current-owner disable and succeeds\n"
-    "through `Disabled` cleanup to `Idle`, that single disable satisfies cleanup;\n"
-    "the browser clears the queued pair without issuing a second disable."
+    "If the triggering request was already the current-owner disable, that single\n"
+    "disable is the only client dispatch. A valid disable ACK completes `Disabled`\n"
+    "cleanup to `Idle`; every other outcome returns exactly and leaves Gateway's\n"
+    "process-local defensive cleanup in force. In both cases the browser clears\n"
+    "the queued pair without issuing a second disable."
 )
 B503_ENABLING_CLEANUP = (
     "For an\n"
@@ -513,6 +515,20 @@ def _target_inline_tokens(document: str) -> list[object]:
     ]
 
 
+def _target_html_blocks(document: str) -> list[str]:
+    start = document.index(TARGET_START)
+    end = document.index(TARGET_END, start)
+    start_line = document.count("\n", 0, start)
+    end_line = document.count("\n", 0, end)
+    return [
+        token.content
+        for token in MARKDOWN.parse(document)
+        if token.type == "html_block"
+        and token.map is not None
+        and start_line <= token.map[0] < end_line
+    ]
+
+
 def _target_fenced_contents(document: str) -> list[str]:
     start = document.index(TARGET_START)
     end = document.index(TARGET_END, start)
@@ -743,6 +759,19 @@ def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
             "api/portal.md: B503 route surfaces must remain confined to the five "
             "frozen route/provenance paragraphs"
         )
+    for block in _target_html_blocks(document):
+        elements = _parsed_dom_elements(block)
+        visible = " ".join("".join(text) for _, _, text in elements)
+        destinations = [
+            _decoded_dom_attribute_value(attribute, value)
+            for _, attrs, _ in elements
+            for attribute, value in attrs
+            if value is not None and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
+        ]
+        if _authorizes_url_fallback(visible, destinations):
+            raise CheckError(
+                "api/portal.md: arbitrary URL fallback is outside the fixed B503 routes"
+            )
     expected = [
         _normalized_commonmark_paragraph(value)
         for value in B503_ROUTE_SURFACE_PARAGRAPHS

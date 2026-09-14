@@ -378,6 +378,13 @@ def test_rejects_missing_valid_ack_cleanup_in_later_normative_sections(
             "| `ACTIVE` | explicit disable failure | `IDLE` | admit Enable |",
         ),
         (
+            CHECKER.DISCONNECT_TRANSITION,
+            CHECKER.DISCONNECT_TRANSITION.replace(
+                "no valid disable ACK has confirmed cleanup success",
+                "no disable has a confirmed terminal outcome",
+            ),
+        ),
+        (
             CHECKER.RESTART_TRANSITION,
             "| any | gateway restart | `IDLE` | publish AVAILABLE |",
         ),

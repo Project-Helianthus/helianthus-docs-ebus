@@ -151,9 +151,11 @@ same token-bound disable without invoking an operation while Refreshing is busy;
 after refresh succeeds to `Active`, it dispatches the queued disable. After
 refresh failure presents `Idle`, Gateway retains the process-local cleanup
 obligation. The browser clears the queued pair without a client disable.
-If the triggering request was already the current-owner disable and succeeds
-through `Disabled` cleanup to `Idle`, that single disable satisfies cleanup;
-the browser clears the queued pair without issuing a second disable.
+If the triggering request was already the current-owner disable, that single
+disable is the only client dispatch. A valid disable ACK completes `Disabled`
+cleanup to `Idle`; every other outcome returns exactly and leaves Gateway's
+process-local defensive cleanup in force. In both cases the browser clears
+the queued pair without issuing a second disable.
 This is switch-time cleanup, never passive timeout cleanup.
 
 Any late enable completion after a switch follows the same prior-target cleanup

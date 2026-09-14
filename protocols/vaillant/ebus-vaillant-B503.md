@@ -297,7 +297,7 @@ access.
 | `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return the exact Gateway-supplied failure outcome to the triggering request without dispatching its native operation, and retain `(targetAddress, fresh gatewayCleanupAttemptID, attemptedTransportEpoch)` as the process-local §7.4 cleanup obligation; public session is `Idle` with `owned:false`, capability remains the exact unavailable outcome, and no Enable is admitted |
 | `DISABLED` | defensive disable has no valid ACK while transport remains connected | `DISABLED` | retain the process-local §7.4 defensive-cleanup obligation, publish capability `UNKNOWN`, admit no Enable, and perform no same-epoch retry; only a later transport epoch may attempt one bounded cleanup under §7.5 |
 | `DISABLED` | enable NAK proves no device session, or valid disable ACK confirms cleanup success | `IDLE` | clear any defensive-cleanup obligation; session may be re-claimed by any client only when capability is `AVAILABLE` |
-| any | transport disconnect | `DISABLED` | release any owner; if an enable may have reached the wire and no disable has a confirmed terminal outcome, retain the target and attempt only as the process-local §7.4 defensive-cleanup obligation |
+| any | transport disconnect | `DISABLED` | release any owner; if an enable may have reached the wire and no valid disable ACK has confirmed cleanup success, retain the target and attempt only as the process-local §7.4 defensive-cleanup obligation |
 | any | gateway restart | `DISABLED` | release any owner and destroy every caller handle; reconstruct no session and emit no automatic B503 enable or disable; each qualified target's live-monitor capability stays `UNKNOWN` with no Enable until explicit operator-authorized target recovery under §7.5 |
 
 **Lock lifecycle (single assignment, owner-conditional):**
@@ -454,7 +454,7 @@ including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
   confers no owner or operation authority.
 - On transport disconnect, the gateway MUST transition the FSM to
   `DISABLED` and — if an owner was held — release `liveMonitorMu`. If an enable
-  may have reached the wire and no disable has a confirmed terminal outcome,
+  may have reached the wire and no valid disable ACK has confirmed cleanup success,
   Gateway retains `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)`
   only as a process-local defensive-cleanup obligation across transport
   reconnect. It carries no issuer token, owner authority, session continuation,
