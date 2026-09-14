@@ -39,8 +39,8 @@ def test_accepts_current_b503_milestone_contract() -> None:
             (
                 "3",
                 "disconnect during ACTIVE session",
-                "`AVAILABLE`",
-                "in-flight requests may complete against the new epoch",
+                "`TRANSPORT_DOWN` (literal)",
+                "in-flight requests fail `TRANSPORT_DOWN`; no late mutation",
             ),
         ),
         (

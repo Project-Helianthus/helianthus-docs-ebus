@@ -82,8 +82,8 @@ COLD_BOOT_TRUTH_ROW = (
 DISCONNECT_ACTIVE_TRUTH_ROW = (
     "3",
     "disconnect during ACTIVE session",
-    "`TRANSPORT_DOWN` (literal)",
-    "in-flight requests fail `TRANSPORT_DOWN`; no late mutation",
+    "`UNKNOWN` while the cleanup obligation remains",
+    "in-flight requests fail `TRANSPORT_DOWN`; retain defensive cleanup; no late mutation",
 )
 RECONNECT_PRE_DISPATCH_TRUTH_ROW = (
     "4",

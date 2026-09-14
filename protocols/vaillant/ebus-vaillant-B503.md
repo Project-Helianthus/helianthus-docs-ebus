@@ -800,7 +800,7 @@ any row is an automatic merge-gate block.
 |---|---|---|---|
 | 1 | cold-boot, no successful dispatch yet | `UNKNOWN` | n/a |
 | 2 | post-first-success steady state; no cleanup obligation and any restart fence cleared | `AVAILABLE` | diagnostic success alone never clears restart recovery |
-| 3 | disconnect during ACTIVE session | `TRANSPORT_DOWN` (literal) | in-flight requests fail `TRANSPORT_DOWN`; no late mutation |
+| 3 | disconnect during ACTIVE session | `UNKNOWN` while the cleanup obligation remains | in-flight requests fail `TRANSPORT_DOWN`; retain defensive cleanup; no late mutation |
 | 4 | reconnect, before first post-reconnect dispatch | `UNKNOWN` (NOT sticky `AVAILABLE`) | reset to `UNKNOWN` regardless of pre-disconnect state |
 | 5 | reconnect, post-first-success-after-reconnect; no cleanup obligation and any restart fence cleared | `AVAILABLE` | diagnostic success alone never clears restart recovery |
 | 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known only when the operation creates no cleanup obligation; any disable or refresh failure that retains cleanup publishes `UNKNOWN` per §6–§8 | cleanup-bearing outcomes retain the Gateway-owned attempt identity, admit no Enable, and follow the bounded later-epoch cleanup rule |
