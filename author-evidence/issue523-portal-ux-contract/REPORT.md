@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `dae38f0c29691b8031f1ae65735492b6972d97bb` |
-| Latest functional correction tree | `aff66f1c23ada497a17b3a2e0c9b4c6330d13c05` |
-| Focused validation | Portal 298 PASS; canonical B503 172 PASS; combined 470 PASS |
+| Latest functional correction commit | `ac28f2cba5370c97dd9483f607ed980d6efe90d1` |
+| Latest functional correction tree | `2f9dcc163cb0b55ade3287efac159fec38320020` |
+| Focused validation | Portal 301 PASS; canonical B503 172 PASS; combined 473 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,8 +133,8 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 470/470 PASS;
-- Portal checker: 298/298 PASS;
+- combined focused suite: 473/473 PASS;
+- Portal checker: 301/301 PASS;
 - canonical B503 checker: 172/172 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
@@ -268,6 +268,20 @@ target/token `Active` owner exception under `UNKNOWN` after a successful READ
 refresh. It also splits successful and failed READ rows so only success resets
 the idle timer. Mutations reject an `AVAILABLE` prerequisite, unbound
 target/token controls, generic request-time reset, and failed-read reset.
+
+The fresh independent review at candidate
+`8ac9df08bf5fb19768a6ba2dddafeb1d206c0da1`, tree
+`2efda7e965b341d6bf92ae8c05c61772bb32390e`, returned two P2 Portal-validator
+bypasses: a raw `<pre>` wrapper could still satisfy the required availability
+table, and an encoded SVG `xlink:href` could name a forbidden REST fallback
+without entering the fixed-route URL audit. The report is
+`wave12/review/docs524-8ac9df0-final-independent/REPORT.md`, SHA-256
+`e6728efa483ea0f31d4ea31a77f855b792fe861af6afb3256d6def361e53ce30`.
+Functional commit `ac28f2cba5370c97dd9483f607ed980d6efe90d1`, tree
+`2f9dcc163cb0b55ade3287efac159fec38320020`, makes raw `<pre>` inert for the
+Portal availability table and includes `xlink:href` in entity/percent-decoded
+URL-bearing attributes. Focused mutations reject both exact bypasses while
+retaining unrelated visible HTML destinations.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
