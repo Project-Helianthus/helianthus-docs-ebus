@@ -480,6 +480,17 @@ def _visible_contract_source(target: str) -> str:
     return "".join(parser.parts)
 
 
+def _visible_prose_source(text: str) -> str:
+    """Remove CommonMark fenced and indented code while preserving line boundaries."""
+    lines = text.splitlines(keepends=True)
+    for token in MARKDOWN.parse(text):
+        if token.type not in {"fence", "code_block"} or token.map is None:
+            continue
+        for index in range(token.map[0], min(token.map[1], len(lines))):
+            lines[index] = "\n" if lines[index].endswith("\n") else ""
+    return "".join(lines)
+
+
 def _target_section(text: str) -> str:
     try:
         start = text.index(TARGET_START)
@@ -1012,7 +1023,7 @@ def validate_text(text: str) -> None:
     # REQUIRED is deliberately limited to the frozen INT-10 contract. Content
     # inside comments or declared non-rendering HTML containers is not part of
     # the visible public contract.
-    rendered_target_source = _visible_contract_source(target)
+    rendered_target_source = _visible_contract_source(_visible_prose_source(target))
     for fragment in REQUIRED:
         if fragment not in rendered_target_source:
             raise CheckError(
@@ -1046,7 +1057,7 @@ def validate_text(text: str) -> None:
     _reject_prohibited_dom_references(target, text)
     _reject_affirmative_plain_markdown_controls(text)
     expected_availability_rows = list(AVAILABILITY_ROWS.values())
-    if _availability_table_rows(target) != expected_availability_rows:
+    if _availability_table_rows(rendered_target_source) != expected_availability_rows:
         raise CheckError(
             "api/portal.md: B503 availability table must contain exactly the five "
             "frozen reason/selector/presentation rows, with no duplicates or extra rows"

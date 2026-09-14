@@ -415,6 +415,24 @@ def test_rejects_required_contract_clause_hidden_by_standard_html_attribute() ->
         CHECKER.validate_text(text)
 
 
+def test_rejects_required_contract_clause_hidden_in_fenced_code() -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    rejects(clause, f"```text\n{clause}\n```")
+
+
+def test_rejects_availability_table_hidden_in_fenced_code() -> None:
+    table = "\n".join(
+        (
+            CHECKER.AVAILABILITY_TABLE_HEADER,
+            CHECKER.AVAILABILITY_TABLE_SEPARATOR,
+            *CHECKER.AVAILABILITY_ROWS.values(),
+        )
+    )
+    text = contract().replace(table, f"```text\n{table}\n```", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     "title",
     ('"Reset"', "'Clear history'", "(selector 02 01)"),
