@@ -193,6 +193,16 @@ REFRESHING_UNKNOWN_STRIP_CONTRACT = (
     "completion. No B503 card, tabs, bus-facing reads, or actions are admitted until\n"
     "capability returns `AVAILABLE`."
 )
+ACTIVE_UNKNOWN_OWNER_CONTRACT = (
+    "After a successful Enable ACK, session is `Active` with `owned:true` while\n"
+    "capability remains `UNKNOWN` because settlement is unproven. The consumer that\n"
+    "still holds the exact current issuer token for that target may retain the\n"
+    "session strip and dispatch only current-owner READ or DISABLE. It MUST NOT\n"
+    "admit a second Enable, general B503 tabs, a new projection entry, or those\n"
+    "controls for another `UNKNOWN` target/session. Target switch, navigation away,\n"
+    "ownership loss, or departure from `Active` removes this exception and follows\n"
+    "the cleanup contract below."
+)
 REFRESH_SUCCESS_CONTINUATION = "- On refresh success for a surviving authenticated current-owner handle, the\n  old epoch-N key authorizes only that refresh. Gateway atomically installs the\n  returned current `transport_key` for epoch N+1 with the same issuer token and\n  target before returning to `Active`; every epoch-N completion is fenced. This\n  is continuation, not reconstruction or auto-resume. The already-admitted\n  triggering request remains pending during refresh; after successful rebind,\n  Gateway dispatches that request's native operation exactly once using the\n  rebound key and returns its exact outcome. A triggering READ retains the\n  owner in `Active` only when its dispatch completes without transport\n  disconnect; a disconnect releases the owner into `DISABLED`. A triggering\n  current-owner DISABLE emits its disable after quiesce, records and returns the\n  exact native outcome, releases the owner, and remains in internal `DISABLED`.\n  ACK and NAK do not establish settlement: Gateway retains process-local\n  cleanup, publishes `UNKNOWN`, and admits no Enable. ENABLE is never a refresh\n  trigger. This dispatch consumes the request's only retry budget."
 REFRESH_FAILURE_CAPABILITY_PRECEDENCE = (
     "- On refresh failure, return the exact Gateway result—including\n"
@@ -765,6 +775,7 @@ def validate_text(text: str) -> None:
         ENABLING_CLEANUP_CONTRACT,
         REFRESHING_CLEANUP_CONTRACT,
         REFRESHING_UNKNOWN_STRIP_CONTRACT,
+        ACTIVE_UNKNOWN_OWNER_CONTRACT,
     ):
         if fragment not in refreshing_public_section:
             raise CheckError(

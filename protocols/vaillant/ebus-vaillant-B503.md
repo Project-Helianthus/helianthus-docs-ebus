@@ -359,6 +359,15 @@ It is a session-status value, not a sixth `B503Availability` reason:
 Downstream contract tests (M2a, M2b, M3) MUST assert the five stable session
 states and MUST reject `Disabled` paired with `owned:true`.
 
+After a successful Enable ACK, session is `Active` with `owned:true` while
+capability remains `UNKNOWN` because settlement is unproven. The consumer that
+still holds the exact current issuer token for that target may retain the
+session strip and dispatch only current-owner READ or DISABLE. It MUST NOT
+admit a second Enable, general B503 tabs, a new projection entry, or those
+controls for another `UNKNOWN` target/session. Target switch, navigation away,
+ownership loss, or departure from `Active` removes this exception and follows
+the cleanup contract below.
+
 When a consumer leaves a target or navigates away while its locally initiated
 enable is pending, it MUST register cleanup under the exact
 `(targetAddress, localEnableAttemptID, presentationEpoch)` tuple. The consumer

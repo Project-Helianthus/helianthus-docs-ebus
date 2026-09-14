@@ -101,9 +101,15 @@ turn a B503 banner, a cached catalog, or a translated label into an action.
 ### Vaillant B503 target contract
 
 The `Vaillant B503` card is a contribution-driven section-projection card. It
-appears only for an admitted selected resource whose B503 capability state is
-`AVAILABLE`; it identifies the selected target and enters the B503 perspective
-without creating another B503 data model. Target selection is resource-scoped.
+admits a new perspective only for an admitted selected resource whose B503
+capability state is `AVAILABLE`; it identifies the selected target and enters
+the B503 perspective without creating another B503 data model. After a locally
+initiated successful Enable ACK, the same target perspective remains mounted
+while session is `Active` with `owned:true`, capability is `UNKNOWN`, and the
+browser still holds that exact target's current issuer token. Only the session
+strip and current-owner live-monitor READ/DISABLE controls remain admitted;
+the browser admits no second Enable and no other `UNKNOWN` presentation gains
+B503 tabs or actions. Target selection is resource-scoped.
 Every target-bearing B503 read or session request uses only the main public
 `POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP
 graduation/parity contract. These operations are not `PortalCatalogV1` or
@@ -176,7 +182,7 @@ session state and MUST NOT be implemented as an internal or public sixth state.
 | `NOT_SUPPORTED` | `data-testid="b503-state-not-supported"` | State that the selected target does not support the B503 surface; do not infer a value. |
 | `TRANSPORT_DOWN` | `data-testid="b503-state-transport-down"` | State that transport is unavailable and offer only a retry/reconnect hint. |
 | `SESSION_BUSY` | `data-testid="b503-state-session-busy"` | State neutrally that bounded ownership-or-lifecycle contention makes the session busy; do not infer a foreign owner. |
-| `UNKNOWN` | `data-testid="b503-state-unknown"` | State that capability is undetermined; do not equate it with unsupported. |
+| `UNKNOWN` | `data-testid="b503-state-unknown"` | State that capability is undetermined; do not equate it with unsupported. Only the same-browser token-owning `Active` exception below retains its bounded session controls. |
 
 The selectors above are stable browser-test identifiers, never locale-dependent
 parsers or authorization inputs. Tests must also retain
@@ -202,6 +208,15 @@ explicit operator or configuration disable; enable failure, the 30-second idle
 timeout, transport disconnect, and gateway restart map to `Idle` with
 `owned:false`; while cleanup is pending, capability remains unavailable and
 `Idle` does not admit Enable.
+
+After a successful Enable ACK, session is `Active` with `owned:true` while
+capability remains `UNKNOWN` because settlement is unproven. If the browser
+still holds the exact current issuer token for that target, it keeps the named
+session strip and only the live-monitor READ and DISABLE controls mounted. It
+does not admit another Enable, general B503 tabs, a new projection entry, or
+those controls for any other `UNKNOWN` target/session. Target switch,
+navigation away, ownership loss, or session departure from `Active` removes
+this exception and follows the cleanup rules below.
 The base `SESSION_BUSY` presentation is neutral.
 The strip may show that the Gateway session gate is held, but must not identify
 another client. Leaving the B503 perspective uses the same locally-token-bound cleanup

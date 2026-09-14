@@ -767,6 +767,20 @@ def test_rejects_projection_card_admission_beyond_available() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "UNKNOWN capability hides every Active session control.",
+        "Any UNKNOWN target may render live-monitor controls.",
+        "An Active owner may issue another Enable while settlement is unknown.",
+    ),
+)
+def test_rejects_missing_active_unknown_current_owner_exception(
+    replacement: str,
+) -> None:
+    rejects(CHECKER.B503_ACTIVE_UNKNOWN_OWNER, replacement)
+
+
 def test_rejects_history_without_selected_target_typed_records() -> None:
     rejects(
         CHECKER.SELECTED_TARGET_TYPED_HISTORY,

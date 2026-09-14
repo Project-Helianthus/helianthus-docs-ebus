@@ -21,13 +21,21 @@ AVAILABILITY_ROWS = {
     "NOT_SUPPORTED": "| `NOT_SUPPORTED` | `data-testid=\"b503-state-not-supported\"` | State that the selected target does not support the B503 surface; do not infer a value. |",
     "TRANSPORT_DOWN": "| `TRANSPORT_DOWN` | `data-testid=\"b503-state-transport-down\"` | State that transport is unavailable and offer only a retry/reconnect hint. |",
     "SESSION_BUSY": "| `SESSION_BUSY` | `data-testid=\"b503-state-session-busy\"` | State neutrally that bounded ownership-or-lifecycle contention makes the session busy; do not infer a foreign owner. |",
-    "UNKNOWN": "| `UNKNOWN` | `data-testid=\"b503-state-unknown\"` | State that capability is undetermined; do not equate it with unsupported. |",
+    "UNKNOWN": "| `UNKNOWN` | `data-testid=\"b503-state-unknown\"` | State that capability is undetermined; do not equate it with unsupported. Only the same-browser token-owning `Active` exception below retains its bounded session controls. |",
 }
 AVAILABILITY_TABLE_HEADER = "| Reason | Stable selector | Required presentation truth |"
 AVAILABILITY_TABLE_SEPARATOR = "|---|---|---|"
 PROJECTION_CARD_ADMISSION = (
-    "The section-projection card\n"
-    "uses `data-role=\"projection-b503-card\"` only for `AVAILABLE` B503 capability."
+    "The `Vaillant B503` card is a contribution-driven section-projection card. It\n"
+    "admits a new perspective only for an admitted selected resource whose B503\n"
+    "capability state is `AVAILABLE`; it identifies the selected target and enters\n"
+    "the B503 perspective without creating another B503 data model. After a locally\n"
+    "initiated successful Enable ACK, the same target perspective remains mounted\n"
+    "while session is `Active` with `owned:true`, capability is `UNKNOWN`, and the\n"
+    "browser still holds that exact target's current issuer token. Only the session\n"
+    "strip and current-owner live-monitor READ/DISABLE controls remain admitted;\n"
+    "the browser admits no second Enable and no other `UNKNOWN` presentation gains\n"
+    "B503 tabs or actions. Target selection is resource-scoped."
 )
 SELECTED_TARGET_TYPED_HISTORY = (
     "The History tab uses the typed B503 history GraphQL records for the selected\n"
@@ -100,6 +108,16 @@ B503_REFRESHING_UNKNOWN_STRIP = (
     "again. Only the status-only `vaillantCapabilities(targetAddress:)` and\n"
     "`vaillantLiveMonitorSession(targetAddress:)` queries remain available; no other\n"
     "operation gains permission."
+)
+B503_ACTIVE_UNKNOWN_OWNER = (
+    "After a successful Enable ACK, session is `Active` with `owned:true` while\n"
+    "capability remains `UNKNOWN` because settlement is unproven. If the browser\n"
+    "still holds the exact current issuer token for that target, it keeps the named\n"
+    "session strip and only the live-monitor READ and DISABLE controls mounted. It\n"
+    "does not admit another Enable, general B503 tabs, a new projection entry, or\n"
+    "those controls for any other `UNKNOWN` target/session. Target switch,\n"
+    "navigation away, ownership loss, or session departure from `Active` removes\n"
+    "this exception and follows the cleanup rules below."
 )
 B503_REFRESH_CONTINUATION = "Refresh success revalidates only a surviving authenticated current-owner\ntoken/target/epoch handle and returns it to `Active`; it is continuation, not\nreconstruction or auto-resume. The pending triggering request then completes\nfrom exactly one dispatch using the rebound key: a read returns to `Active`,\nwhile a current-owner disable records and returns its exact native outcome,\nreleases the owner, retains Gateway's process-local defensive-cleanup\nobligation, and presents `Idle` with `owned:false` alongside capability\n`UNKNOWN`; Enable remains unavailable because ACK/NAK alone do not prove native\nsettlement. After restart, a lost owner handle, or an absent/invalid current\nissuer token, Gateway does not reconstruct the session. Each qualified target's\nlive-monitor capability is `UNKNOWN`, Enable is unavailable, and Gateway emits\nno automatic B503 enable or disable. The Portal exposes no recovery control.\nCurrent 0.7 defines no ACK/NAK-based maintenance path that restores\navailability; command-specific evidence and any revised recovery contract are\ndeferred to docs-eBUS issue #525.\nA terminal transport disconnect releases ownership. A later reconnect has no\nowner and does not enter `Refreshing`; when cleanup/session settlement is\nunproven, Gateway remains `UNKNOWN`, admits no Enable, and emits no automatic\nrecovery write."
 FORBIDDEN_B503_SESSION_STATE_CLAUSES = (
@@ -197,6 +215,7 @@ REQUIRED = (
     B503_FIELD_OPERATION_ERRORS,
     B503_FRONTEND_EPOCH_ROLLOVER,
     B503_DISABLED_PUBLIC_MAPPING,
+    B503_ACTIVE_UNKNOWN_OWNER,
     B503_REFRESHING_UNKNOWN_STRIP,
     B503_REFRESH_CONTINUATION,
     'data-testid="b503-install-writes-banner"',
@@ -313,9 +332,15 @@ B503_ROUTE_SURFACE_PARAGRAPHS = (
     "state; it cannot reconstruct any of them from a label, a historical aggregate,\n"
     "or a raw MCP response.",
     "The `Vaillant B503` card is a contribution-driven section-projection card. It\n"
-    "appears only for an admitted selected resource whose B503 capability state is\n"
-    "`AVAILABLE`; it identifies the selected target and enters the B503 perspective\n"
-    "without creating another B503 data model. Target selection is resource-scoped.\n"
+    "admits a new perspective only for an admitted selected resource whose B503\n"
+    "capability state is `AVAILABLE`; it identifies the selected target and enters\n"
+    "the B503 perspective without creating another B503 data model. After a locally\n"
+    "initiated successful Enable ACK, the same target perspective remains mounted\n"
+    "while session is `Active` with `owned:true`, capability is `UNKNOWN`, and the\n"
+    "browser still holds that exact target's current issuer token. Only the session\n"
+    "strip and current-owner live-monitor READ/DISABLE controls remain admitted;\n"
+    "the browser admits no second Enable and no other `UNKNOWN` presentation gains\n"
+    "B503 tabs or actions. Target selection is resource-scoped.\n"
     "Every target-bearing B503 read or session request uses only the main public\n"
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\n"
     "graduation/parity contract. These operations are not `PortalCatalogV1` or\n"

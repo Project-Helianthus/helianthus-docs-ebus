@@ -469,6 +469,10 @@ def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> N
             "Unknown capability hides the session strip.",
         ),
         (
+            CHECKER.ACTIVE_UNKNOWN_OWNER_CONTRACT,
+            "UNKNOWN capability hides every Active session control.",
+        ),
+        (
             CHECKER.REFRESH_SUCCESS_CONTINUATION,
             "Refresh success always reconstructs an Active session.",
         ),
