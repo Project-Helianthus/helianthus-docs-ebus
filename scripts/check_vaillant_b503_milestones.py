@@ -924,14 +924,14 @@ def validate_text(text: str) -> None:
     if NORMALIZED_REFRESH_DISABLE_CONTRACT not in normalization_section:
         raise CheckError("missing fail-closed refreshed-DISABLE normalization in §8")
 
-    rows = _milestone_table(text)
+    rows = _milestone_table(prose_text)
     for expected in (M2B_GRAPHQL, M3_PORTAL):
         _require_exact_row(rows, expected)
     for fragment in FORBIDDEN_ALL_READ_ONLY_MILESTONES:
         if fragment in rows:
             raise CheckError(f"forbidden all-read-only B503 milestone: {fragment!r}")
     install_write_section = _section(
-        text, INSTALL_WRITE_SECTION_START, INSTALL_WRITE_SECTION_END
+        prose_text, INSTALL_WRITE_SECTION_START, INSTALL_WRITE_SECTION_END
     )
     if install_write_section != INSTALL_WRITE_SECTION:
         raise CheckError(
@@ -939,7 +939,7 @@ def validate_text(text: str) -> None:
             "and future-plan boundary must remain exact"
         )
 
-    truth_rows = _capability_truth_table_rows(text)
+    truth_rows = _capability_truth_table_rows(prose_text)
     if truth_rows != CAPABILITY_TRUTH_ROWS:
         raise CheckError(
             "§12.5 capability truth table must contain the exact ordered eight-row set; "

@@ -567,6 +567,44 @@ def test_rejects_transport_down_as_reconnect_cleanup_capability() -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_capability_truth_table_hidden_in_fenced_code() -> None:
+    table = "\n".join(
+        (
+            table_row(CHECKER.CAPABILITY_TRUTH_TABLE_HEADER),
+            "|---|---|---|---|",
+            *(table_row(row) for row in CHECKER.CAPABILITY_TRUTH_ROWS),
+        )
+    )
+    text = contract().replace(table, f"```text\n{table}\n```", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_rejects_milestone_table_hidden_in_fenced_code() -> None:
+    current = contract()
+    table = "\n".join(
+        (
+            table_row(CHECKER.MILESTONE_TABLE_HEADER),
+            "|---|---|---|",
+            *(table_row(row) for row in CHECKER._milestone_table(current)),
+        )
+    )
+    assert table in current
+    text = current.replace(table, f"```text\n{table}\n```", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_rejects_install_write_contract_hidden_in_fenced_code() -> None:
+    text = contract().replace(
+        CHECKER.INSTALL_WRITE_SECTION,
+        f"```text\n{CHECKER.INSTALL_WRITE_SECTION}\n```",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     ("old", "new"),
     (
