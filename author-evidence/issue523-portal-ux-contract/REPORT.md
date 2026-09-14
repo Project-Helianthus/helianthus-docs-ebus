@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `da22da61cfd194537a9a4837fb9ab49fe19d3ec4` |
-| Latest functional correction tree | `188463fcf3fc53725afd0b0aba9aa2caf2781b34` |
-| Focused validation | Portal 295 PASS; canonical B503 162 PASS; combined 457 PASS |
+| Latest functional correction commit | `ad13fab39b5bb860abbf89d0948db0a3ccae5108` |
+| Latest functional correction tree | `8907f33365b3017b70d27b4296650ea656d3ceb1` |
+| Focused validation | Portal 295 PASS; canonical B503 163 PASS; combined 458 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 457/457 PASS;
+- combined focused suite: 458/458 PASS;
 - Portal checker: 295/295 PASS;
-- canonical B503 checker: 162/162 PASS;
+- canonical B503 checker: 163/163 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -204,6 +204,21 @@ holds the exact current token and Gateway reports `Active`/`owned:true`. It
 admits no second Enable, general tabs, new projection entry, or any other
 `UNKNOWN` target/session. Portal and canonical validators require that bounded
 exception and reject its removal or expansion.
+
+The fresh independent review at candidate
+`dcf2e45cf49fe6d90428c8787c35a10eac7b3413`, tree
+`3481d89df5f2297bb10aa449973e7b528b17f26c`, returned one P2: the
+post-emission epoch-advance operation row required exactly one defensive
+disable while the normative transition row permitted at most one during the
+admitted lifecycle. Its report is
+`wave12/review/docs524-dcf2e45-final-independent/REPORT.md`, SHA-256
+`039a917ba04f1997dea5a5ce658bd23f6a3a40774c1687ccc99644e1dc182c5a`.
+Functional commit `ad13fab39b5bb860abbf89d0948db0a3ccae5108`, tree
+`8907f33365b3017b70d27b4296650ea656d3ceb1`, aligns both rows on at most one
+defensive disable during the admitted lifecycle. This preserves the
+zero-write disconnect/restart rule when no write can be admitted and adds a
+regression that rejects reintroduction of the contradictory exactly-one
+requirement.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
