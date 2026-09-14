@@ -619,7 +619,25 @@ def _inline_route_destinations(children: list[object] | None) -> list[str]:
     return destinations
 
 
+def _literal_html_route_destinations(target: str) -> list[str]:
+    destinations: list[str] = []
+    for _, attrs, _ in _parsed_dom_elements(target):
+        for attribute, value in attrs:
+            if value is not None and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES:
+                destinations.append(_decoded_dom_attribute_value(attribute, value))
+    return destinations
+
+
 def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
+    target = _target_section(document)
+    if any(
+        _mentions_route_surface(destination)
+        for destination in _literal_html_route_destinations(target)
+    ):
+        raise CheckError(
+            "api/portal.md: B503 route surfaces must remain confined to the five "
+            "frozen route/provenance paragraphs"
+        )
     expected = [
         _normalized_commonmark_paragraph(value)
         for value in B503_ROUTE_SURFACE_PARAGRAPHS

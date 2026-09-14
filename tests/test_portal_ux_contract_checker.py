@@ -509,10 +509,16 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
         "Use GET /portal/api/v1 when the B503 route fails.",
         "Retry GET /portal/api/v%31/projection/devices.",
         "Use [fallback](/portal/api/v1/projection/devices) when GraphQL fails.",
+        'If main GraphQL is unavailable, use <a href="/portal/api/v1/projection/devices">fallback</a>.',
+        'If main GraphQL is unavailable, use <form action="/portal/api/v%31/projection/devices">fallback</form>.',
     ),
 )
 def test_rejects_concrete_portal_api_fallback_route(clause: str) -> None:
     rejects_target_insertion(clause)
+
+
+def test_accepts_unrelated_literal_html_destination() -> None:
+    accepts_target_insertion('<a href="https://example.invalid/help">Help</a>.')
 
 
 @pytest.mark.parametrize(
