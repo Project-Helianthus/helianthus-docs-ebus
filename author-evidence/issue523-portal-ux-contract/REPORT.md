@@ -1127,6 +1127,22 @@ detached public M6.25 inputs below; lead-local log SHA-256
 This remains a bounded documentation-contract check and does not claim to
 validate arbitrary browser code or prose.
 
+The fresh independent review of exact
+`7612f0809c1ac6ff67e9e02617a8ce20b7e61993`, tree
+`6409ec4f6ce8a05285eec81fae4255bb5eca8199`, verified the inert-container P2
+correction and found one new P2: §7.5 could append an affirmative automatic
+B503 disable after process restart while preserving every required fragment.
+Its report has SHA-256
+`f3399a7026dd92b9576d6908a9e4aa50a7fcb6efa3c71e042da003b6ae2d66b0`.
+Commit `006f81572d281b2ea07e1731210fd8b8afb35edb`, tree
+`21c9b9d701ab1073306b176dbd7b8e221f3e0ed8`, adds bounded §7.5 contradiction
+recognition for affirmative automatic B503 enable/disable writes around a
+restart. It rejects the exact reported sentence and the inverse-order form;
+an explicit separately operator-authorized target-specific recovery remains a
+positive case. The focused canonical checker passes 128 tests and the Portal
+checker remains 280/280. Complete configured CI passed with lead-local log
+SHA-256 `76f49e122181ed86a1da81c5360bb883aad623fa8c31279744fd689e6a9bf07d`.
+
 The read-only M6.25 inputs were verified clean and detached before CI:
 
 - docs-eeBUS `cedf238e34f879815ba773e9cd76b2b31c2822a3`, tree
