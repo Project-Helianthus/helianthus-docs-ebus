@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `867752765469c1cbb110d439dac362de81abed4c` |
-| Final validated contract tree | `93a24a9c09280fcf4c78d96f9542d61ed8883fba` |
-| Final contract validation | Complete configured CI PASS; 272 Portal checker tests and 122 canonical B503 milestone tests; lead-local log SHA-256 `a27db08c0ed2f2c66b6fd574231769e1586807a65f99c1bf850e0ccc36f0b0b3`; [hosted exact-head CI](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34814066846) |
+| Final validated contract commit | `d80a2ef5fca1d4bf1f98de1d6763cd36d8ea13e2` |
+| Final validated contract tree | `a068f04e630340f2c56858b8387fd428991323a4` |
+| Final contract validation | Complete configured CI PASS; 275 Portal checker tests and 125 canonical B503 milestone tests; lead-local log SHA-256 `1010811cf9614214399d29f7f3eae8da685b8bf67e1f29c32aa7b17a04bc370c`; [hosted exact-head CI](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34816043273) |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -331,7 +331,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 272 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 275 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -351,9 +351,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 272 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 275 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 122 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 125 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -1081,6 +1081,31 @@ checker tuple, and the unsafe-row mutation. Complete configured CI passes with
 `a27db08c0ed2f2c66b6fd574231769e1586807a65f99c1bf850e0ccc36f0b0b3`, and the
 [hosted exact-head run](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34814066846).
 The public finding is the [ACTIVE-disconnect capability thread](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002649630).
+The following evidence-only commit records this revision.
+
+The fresh independent review of exact
+`c1d7e1355a518a7337ba1b26155743878293c53b`, tree
+`ba5b673bd17449f00c22b0f503507d7404932c67`, found three P2 defects and one
+P3 evidence error. Cleanup-bearing refresh and disconnect paths gave
+incompatible `TRANSPORT_DOWN`/`UNKNOWN` capability precedence; the canonical
+checker accepted the five-state contract hidden in an HTML comment; and the
+Portal selector audit accepted compact `b5030201control` while rejecting an
+ISO date and misparsing a CommonMark autolink. The lead-local independent
+report has SHA-256
+`e4b7327294f3e3130c63a2e8561016c28b00ef4c0f4fb2e3120f0e982b20de47`.
+Commit `d80a2ef5fca1d4bf1f98de1d6763cd36d8ea13e2`, tree
+`a068f04e630340f2c56858b8387fd428991323a4`, makes the exact triggering caller
+receive its transport result while cleanup keeps capability `UNKNOWN`, removes
+CommonMark HTML comments before canonical fragment checks, and scopes compact
+selector recognition to B503/selector context while preserving ISO dates and
+autolinks. It also corrects the evidence count. Complete configured CI passes
+with 275 Portal and 125 B503 tests, lead-local log SHA-256
+`1010811cf9614214399d29f7f3eae8da685b8bf67e1f29c32aa7b17a04bc370c`, and the
+[hosted exact-head run](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34816043273).
+The independent opinion triaged the exact GitHub
+[`onerror` route allegation](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002796907)
+as nonblocking by design: this Markdown checker does not claim to execute or
+prove arbitrary Portal JavaScript. The thread was replied to and resolved.
 The following evidence-only commit records this revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
