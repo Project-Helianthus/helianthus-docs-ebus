@@ -133,7 +133,9 @@ B503_REFRESH_CONTINUATION = (
     "`owned:false` alongside capability `UNKNOWN`; Enable remains unavailable. After restart, a lost owner\n"
     "handle, or an\n"
     "absent/invalid current issuer token, Gateway does not reconstruct the session\n"
-    "and the client must issue a new explicit Enable.\n"
+    "and the client must issue a new explicit Enable. After restart that Enable is\n"
+    "admitted only after Gateway's bounded per-target startup cleanup completes and\n"
+    "the target returns to capability `AVAILABLE`.\n"
     "A terminal transport disconnect releases ownership. A later reconnect has no\n"
     "owner and does not enter `Refreshing`; when defensive cleanup is pending, it\n"
     "must complete before capability can become `AVAILABLE` or a new explicit client\n"
@@ -298,7 +300,10 @@ DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
     re.IGNORECASE,
 )
 HTML_URL_ATTRIBUTE_NAMES = frozenset(
-    ("href", "src", "action", "formaction", "poster", "cite", "data", "ping")
+    (
+        "href", "src", "srcset", "imagesrcset", "action", "formaction",
+        "poster", "cite", "data", "ping",
+    )
 )
 HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",

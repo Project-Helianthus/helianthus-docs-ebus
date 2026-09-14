@@ -185,8 +185,10 @@ REFRESH_OWNER_REBINDING = (
 NO_AUTO_RESUME_RECONSTRUCTION = (
     "Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost\n"
     "  owner handle, or an absent/invalid current issuer token; each requires an\n"
-    "  explicit new client Enable. The surviving authenticated current-owner refresh\n"
-    "  path in §7.3 is the only continuation allowed across an epoch advance."
+    "  explicit new client Enable. After restart that Enable is admitted only after\n"
+    "  the bounded per-target startup cleanup succeeds and capability is\n"
+    "  `AVAILABLE`. The surviving authenticated current-owner refresh path in §7.3\n"
+    "  is the only continuation allowed across an epoch advance."
 )
 REFRESHING_DISCONNECT_FENCE = (
     "A terminal transport disconnect follows §7.4: it releases the owner and does\n"
@@ -225,7 +227,8 @@ CONFIRMED_CLEANUP_DEFINITION = (
     "and never makes the session slot re-claimable."
 )
 UNCONFIRMED_CLEANUP_OBLIGATION = (
-    "- A defensive disable clears its cleanup obligation only after a valid native\n"
+    "- Every native disable used for explicit, idle-timeout, refreshed, or defensive\n"
+    "  cleanup clears its obligation only after a valid native\n"
     "  disable ACK. A NAK, timeout, CRC mismatch, bus-arbitration failure,\n"
     "  disconnect, or any other outcome without that ACK retains the target plus a\n"
     "  fresh Gateway-owned `gatewayCleanupAttemptID` and the attempted transport\n"
@@ -243,6 +246,40 @@ GATEWAY_CLEANUP_ATTEMPT_ID = (
 )
 CONFIRMED_CLEANUP_DIAGRAM = (
     "DISABLED --> IDLE: enable NAK or valid disable ACK"
+)
+EXPLICIT_DISABLE_CONFIRMED_TRANSITION = (
+    "| `ACTIVE` | explicit disable; valid disable ACK | `DISABLED` | emit disable "
+    "frame exactly once after quiesce, return success, release the owner, clear "
+    "cleanup, and complete to `IDLE` |"
+)
+EXPLICIT_DISABLE_UNCONFIRMED_TRANSITION = (
+    "| `ACTIVE` | explicit disable; NAK / timeout / CRC mismatch / "
+    "bus-arbitration failure / disconnect / any other outcome without a valid "
+    "disable ACK | `DISABLED` | emit disable frame exactly once after quiesce, "
+    "return its exact outcome, release the owner, retain `(targetAddress, fresh "
+    "gatewayCleanupAttemptID, currentTransportEpoch)` as the process-local §7.4 "
+    "cleanup obligation, and do not enter `IDLE` |"
+)
+RESTART_TRANSITION = (
+    "| any | gateway restart | `DISABLED` | release any owner and destroy every "
+    "caller handle; no session state is reconstructed, and §7.5 bounded restart "
+    "cleanup must succeed before any qualified B503 target becomes `AVAILABLE` |"
+)
+RESTART_RELEASE_CONTRACT = (
+    "- On gateway restart, the gateway MUST transition the FSM to `DISABLED`\n"
+    "  and — if an owner was held — release `liveMonitorMu`. No session or cleanup\n"
+    "  tuple persists across restart; the bounded per-target startup cleanup in §7.5\n"
+    "  replaces persistence and MUST finish before B503 availability is published."
+)
+RESTART_CLEANUP_FENCE = (
+    "- After every Gateway process restart, enumerate the finite registry-qualified\n"
+    "  B503 targets and, before publishing any one of them as `AVAILABLE`, issue\n"
+    "  exactly one target-specific defensive disable for that target after quiesce.\n"
+    "  Record the native outcome. A valid disable ACK permits that target's normal\n"
+    "  availability evaluation; any other outcome leaves it `UNKNOWN`, admits no\n"
+    "  Enable, and performs no retry in the same transport epoch. A later transport\n"
+    "  epoch may execute one bounded cleanup again. This startup fence reconstructs\n"
+    "  no caller handle or session and requires no persisted cleanup tuple."
 )
 IDLE_TIMEOUT_ACK_CONTRACT = (
     "- Idle disable transitions the **internal** FSM from `ACTIVE` to `DISABLED`.\n"
@@ -542,6 +579,8 @@ def validate_text(text: str) -> None:
         REFRESH_DISABLE_UNCONFIRMED_TRANSITION,
         UNCONFIRMED_CLEANUP_TRANSITION,
         CONFIRMED_CLEANUP_TRANSITION,
+        EXPLICIT_DISABLE_CONFIRMED_TRANSITION,
+        EXPLICIT_DISABLE_UNCONFIRMED_TRANSITION,
         REFRESH_FAILURE_TRANSITION,
         REFRESH_FAILURE_LOCK,
         HELD_OWNER_DISABLED_RELEASE,
@@ -552,6 +591,7 @@ def validate_text(text: str) -> None:
         ENABLING_NAK_TRANSITION,
         ENABLING_DIRECT_IDLE_LOCK,
         DISCONNECT_TRANSITION,
+        RESTART_TRANSITION,
     ):
         if fragment not in session_section:
             raise CheckError(
@@ -614,6 +654,7 @@ def validate_text(text: str) -> None:
         GATEWAY_CLEANUP_ATTEMPT_ID,
         DISCONNECT_CLEANUP_OBLIGATION,
         DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE,
+        RESTART_RELEASE_CONTRACT,
     ):
         if fragment not in release_section:
             raise CheckError("missing process-local disconnect cleanup obligation in §7.4")
@@ -622,6 +663,8 @@ def validate_text(text: str) -> None:
         raise CheckError("missing no-reconstruction boundary in §7.5")
     if REFRESHING_DISCONNECT_FENCE not in reconnect_section:
         raise CheckError("missing Refreshing disconnect fence in §7.5")
+    if RESTART_CLEANUP_FENCE not in reconnect_section:
+        raise CheckError("missing bounded per-target restart cleanup fence in §7.5")
     idle_timeout_section = _section(
         text, IDLE_TIMEOUT_SECTION_START, IDLE_TIMEOUT_SECTION_END
     )

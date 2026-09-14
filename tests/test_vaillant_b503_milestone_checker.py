@@ -233,6 +233,14 @@ def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> N
             CHECKER.GATEWAY_CLEANUP_ATTEMPT_ID,
             "Gateway reuses the browser-local cleanup identity.",
         ),
+        (
+            CHECKER.RESTART_RELEASE_CONTRACT,
+            "Gateway restart discards cleanup and immediately publishes AVAILABLE.",
+        ),
+        (
+            CHECKER.RESTART_CLEANUP_FENCE,
+            "Gateway restart performs no target cleanup before B503 availability.",
+        ),
     ),
 )
 def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
@@ -318,6 +326,18 @@ def test_rejects_missing_valid_ack_cleanup_in_later_normative_sections(
         (
             CHECKER.CONFIRMED_CLEANUP_DEFINITION,
             "Any terminal disable outcome clears cleanup.",
+        ),
+        (
+            CHECKER.EXPLICIT_DISABLE_CONFIRMED_TRANSITION,
+            "| `ACTIVE` | explicit disable | `IDLE` | return any outcome |",
+        ),
+        (
+            CHECKER.EXPLICIT_DISABLE_UNCONFIRMED_TRANSITION,
+            "| `ACTIVE` | explicit disable failure | `IDLE` | admit Enable |",
+        ),
+        (
+            CHECKER.RESTART_TRANSITION,
+            "| any | gateway restart | `IDLE` | publish AVAILABLE |",
         ),
     ),
 )
