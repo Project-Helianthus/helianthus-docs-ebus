@@ -23,6 +23,10 @@ RELEASE_SECTION_START = "### 7.4 Ownership release"
 RELEASE_SECTION_END = "### 7.5 Reconnect handling"
 RECONNECT_SECTION_START = "### 7.5 Reconnect handling"
 RECONNECT_SECTION_END = "### 7.6 30s idle-timeout semantics"
+IDLE_TIMEOUT_SECTION_START = "### 7.6 30s idle-timeout semantics"
+IDLE_TIMEOUT_SECTION_END = "### 7.7 Concurrency with B524"
+NORMALIZATION_SECTION_START = "## 8. Public Normalization Rules"
+NORMALIZATION_SECTION_END = "## 9. Install-Writes Non-Exposure (v1 invariant)"
 INSTALL_WRITE_SECTION_START = "## 9. Install-Writes Non-Exposure (v1 invariant)"
 INSTALL_WRITE_SECTION_END = "## 10. F.xxx Decimal Caveat (LOCAL_CAPTURE only)"
 CAPABILITY_TRUTH_TABLE_SECTION_START = "### 12.5 Capability-signal 8-state truth table (mirror of AD18) <a id=\"capability-truth-table\"></a>"
@@ -239,6 +243,28 @@ GATEWAY_CLEANUP_ATTEMPT_ID = (
 )
 CONFIRMED_CLEANUP_DIAGRAM = (
     "DISABLED --> IDLE: enable NAK or valid disable ACK"
+)
+IDLE_TIMEOUT_ACK_CONTRACT = (
+    "- Idle disable transitions the **internal** FSM from `ACTIVE` to `DISABLED`.\n"
+    "  A valid disable ACK clears cleanup, returns the internal FSM to `IDLE`, and\n"
+    "  keeps the **public capability signal** (§11) `AVAILABLE`; a later explicit\n"
+    "  request may then re-enter `ENABLING`. A NAK, timeout, CRC mismatch,\n"
+    "  bus-arbitration failure, disconnect, or any other outcome without that ACK\n"
+    "  follows §7.4: retain the process-local cleanup obligation, publish capability\n"
+    "  `UNKNOWN`, admit no Enable, and perform no same-epoch retry. Idle auto-disable\n"
+    "  MUST NOT be reported to consumers as `NOT_SUPPORTED`, which is reserved for\n"
+    "  \"device class does not implement B503\" (§11)."
+)
+NORMALIZED_REFRESH_DISABLE_CONTRACT = (
+    "2. **Refresh once.** On epoch advance with a held session, Gateway transitions\n"
+    "   to `Refreshing` and makes exactly one refresh attempt. The already-admitted\n"
+    "   triggering READ or current-owner DISABLE remains pending and is dispatched\n"
+    "   exactly once only after successful rebind. READ returns Gateway to `Active`;\n"
+    "   DISABLE releases ownership and completes the normal `Disabled` cleanup to\n"
+    "   `Idle` only after a valid disable ACK. Any other disable outcome retains the\n"
+    "   §7.4 process-local cleanup obligation, publishes capability `UNKNOWN`, admits\n"
+    "   no Enable, and returns its exact outcome. Subsequent bus-facing live-monitor\n"
+    "   operations are `SESSION_BUSY` during refresh."
 )
 REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
 REFRESH_READ_DIAGRAM = "REFRESHING --> ACTIVE: refresh succeeds; triggering READ once"
@@ -596,6 +622,16 @@ def validate_text(text: str) -> None:
         raise CheckError("missing no-reconstruction boundary in §7.5")
     if REFRESHING_DISCONNECT_FENCE not in reconnect_section:
         raise CheckError("missing Refreshing disconnect fence in §7.5")
+    idle_timeout_section = _section(
+        text, IDLE_TIMEOUT_SECTION_START, IDLE_TIMEOUT_SECTION_END
+    )
+    if IDLE_TIMEOUT_ACK_CONTRACT not in idle_timeout_section:
+        raise CheckError("missing valid-ACK idle-timeout cleanup contract in §7.6")
+    normalization_section = _section(
+        text, NORMALIZATION_SECTION_START, NORMALIZATION_SECTION_END
+    )
+    if NORMALIZED_REFRESH_DISABLE_CONTRACT not in normalization_section:
+        raise CheckError("missing fail-closed refreshed-DISABLE normalization in §8")
 
     rows = _milestone_table(text)
     for expected in (M2B_GRAPHQL, M3_PORTAL):

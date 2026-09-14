@@ -489,6 +489,20 @@ def _target_inline_tokens(document: str) -> list[object]:
     ]
 
 
+def _target_fenced_contents(document: str) -> list[str]:
+    start = document.index(TARGET_START)
+    end = document.index(TARGET_END, start)
+    start_line = document.count("\n", 0, start)
+    end_line = document.count("\n", 0, end)
+    return [
+        token.content
+        for token in MARKDOWN.parse(document)
+        if token.type in ("fence", "code_block")
+        and token.map is not None
+        and start_line <= token.map[0] < end_line
+    ]
+
+
 def _rendered_children(children: list[object] | None) -> str:
     rendered: list[str] = []
     for child in children or ():
@@ -651,6 +665,9 @@ def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
     if any(
         _mentions_route_surface(destination)
         for destination in _literal_html_route_destinations(target)
+    ) or any(
+        _mentions_route_surface(content)
+        for content in _target_fenced_contents(document)
     ):
         raise CheckError(
             "api/portal.md: B503 route surfaces must remain confined to the five "
@@ -682,6 +699,12 @@ def _reject_installation_selectors_in_target(document: str) -> None:
             raise CheckError(
                 "api/portal.md: B503 installation selectors 0201/0202 must not "
                 "appear in the public target section"
+            )
+    for content in _target_fenced_contents(document):
+        if _selector_tokens(unescape(content)) & FORBIDDEN_INSTALLATION_SELECTORS:
+            raise CheckError(
+                "api/portal.md: B503 installation selectors 0201/0202 must not "
+                "appear in fenced target-section content"
             )
 
 

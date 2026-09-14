@@ -512,6 +512,7 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
         'If main GraphQL is unavailable, use <a href="/portal/api/v1/projection/devices">fallback</a>.',
         'If main GraphQL is unavailable, use <form action="/portal/api/v%31/projection/devices">fallback</form>.',
         'If main GraphQL is unavailable, use <a href="#safe" ping="/portal/api/v1/projection/devices">fallback</a>.',
+        "Fallback:\n\n```text\nGET /portal/api/v1/projection/devices\n```",
     ),
 )
 def test_rejects_concrete_portal_api_fallback_route(clause: str) -> None:
@@ -520,6 +521,14 @@ def test_rejects_concrete_portal_api_fallback_route(clause: str) -> None:
 
 def test_accepts_unrelated_literal_html_destination() -> None:
     accepts_target_insertion('<a href="https://example.invalid/help">Help</a>.')
+
+
+def test_rejects_installation_selector_in_fenced_content() -> None:
+    rejects_target_insertion("Selector example:\n\n```text\n02 01\n```")
+
+
+def test_accepts_safe_fenced_content() -> None:
+    accepts_target_insertion("Status example:\n\n```text\navailability=UNKNOWN\n```")
 
 
 @pytest.mark.parametrize(

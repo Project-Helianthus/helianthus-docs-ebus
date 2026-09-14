@@ -489,11 +489,14 @@ event fires**; they are no-ops when the FSM is already `IDLE` or
   a disable frame (with quiesce) and transitions to `DISABLED`.
 - The 30s timer resets on every successful read.
 - Idle disable transitions the **internal** FSM from `ACTIVE` to `DISABLED`.
-  The **public capability signal** (§11) remains `AVAILABLE` throughout: idle
-  auto-disable is a session-lifecycle event, not a capability change. A client
-  that issues a new live-monitor request simply re-enters `ENABLING`. Idle
-  auto-disable MUST NOT be reported to consumers as `NOT_SUPPORTED`, which is
-  reserved for "device class does not implement B503" (§11).
+  A valid disable ACK clears cleanup, returns the internal FSM to `IDLE`, and
+  keeps the **public capability signal** (§11) `AVAILABLE`; a later explicit
+  request may then re-enter `ENABLING`. A NAK, timeout, CRC mismatch,
+  bus-arbitration failure, disconnect, or any other outcome without that ACK
+  follows §7.4: retain the process-local cleanup obligation, publish capability
+  `UNKNOWN`, admit no Enable, and perform no same-epoch retry. Idle auto-disable
+  MUST NOT be reported to consumers as `NOT_SUPPORTED`, which is reserved for
+  "device class does not implement B503" (§11).
 
 ### 7.7 Concurrency with B524
 
@@ -530,8 +533,11 @@ path (MCP resolvers, GraphQL resolvers, HA integration, portal).
    to `Refreshing` and makes exactly one refresh attempt. The already-admitted
    triggering READ or current-owner DISABLE remains pending and is dispatched
    exactly once only after successful rebind. READ returns Gateway to `Active`;
-   DISABLE completes the normal `Disabled` cleanup to `Idle`. Subsequent
-   bus-facing live-monitor operations are `SESSION_BUSY` during refresh.
+   DISABLE releases ownership and completes the normal `Disabled` cleanup to
+   `Idle` only after a valid disable ACK. Any other disable outcome retains the
+   §7.4 process-local cleanup obligation, publishes capability `UNKNOWN`, admits
+   no Enable, and returns its exact outcome. Subsequent bus-facing live-monitor
+   operations are `SESSION_BUSY` during refresh.
 3. **No collapse of transport/unknown outcomes.** After refresh, if the
    capability query reveals `TRANSPORT_DOWN` or `UNKNOWN`, those outcomes MUST
    be surfaced literally. They MUST NOT be collapsed into `SESSION_BUSY`.

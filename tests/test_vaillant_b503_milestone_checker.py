@@ -247,6 +247,27 @@ def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
     ("old", "new"),
     (
         (
+            CHECKER.IDLE_TIMEOUT_ACK_CONTRACT,
+            "Idle timeout always keeps capability AVAILABLE and admits Enable.",
+        ),
+        (
+            CHECKER.NORMALIZED_REFRESH_DISABLE_CONTRACT,
+            "A refreshed DISABLE always completes cleanup to Idle.",
+        ),
+    ),
+)
+def test_rejects_missing_valid_ack_cleanup_in_later_normative_sections(
+    old: str, new: str
+) -> None:
+    text = contract().replace(old, new, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        (
             CHECKER.REFRESH_FAILURE_DIAGRAM,
             "REFRESHING --> DISABLED: refresh failure releases gate",
         ),
