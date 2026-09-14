@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `edb9a70813231d096b067ac51b3ee8f1d52927c6` |
-| Latest functional correction tree | `a841847d2e053df4a431b0c2665bf4135c79401f` |
-| Focused validation | Portal 296 PASS; canonical B503 169 PASS; combined 465 PASS |
+| Latest functional correction commit | `dae38f0c29691b8031f1ae65735492b6972d97bb` |
+| Latest functional correction tree | `aff66f1c23ada497a17b3a2e0c9b4c6330d13c05` |
+| Focused validation | Portal 298 PASS; canonical B503 172 PASS; combined 470 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 465/465 PASS;
-- Portal checker: 296/296 PASS;
-- canonical B503 checker: 169/169 PASS;
+- combined focused suite: 470/470 PASS;
+- Portal checker: 298/298 PASS;
+- canonical B503 checker: 172/172 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -251,6 +251,23 @@ state: `IDLE` without owner/cleanup remains `IDLE`, held-owner states enter
 fence. It also treats raw `<pre>` as code that cannot satisfy normative table
 extraction. Focused mutations cover both required tables and reject a
 cleanup-bearing reconnect to `IDLE`.
+
+The fresh independent review at candidate
+`98fa69e75469bb959dc3919b6c40cec66e04051e`, tree
+`5b65a3f30aa08a127e11158a60874cc57557308a`, returned one P1 and one P2. The
+Portal's held-`Refreshing` rule incorrectly kept the same re-bound current
+owner's controls blocked until `AVAILABLE`, which never follows the approved
+conservative successful-READ path, and the exact transition table reset the
+idle timer for any READ request rather than only a successful completion. The
+report is `wave12/review/docs524-98fa69e-final-independent/REPORT.md`, SHA-256
+`a655fd33cefa8895dc84d6e66756446df7c5f8bc2649bfeac67c4096de6cd179`.
+Functional commit `dae38f0c29691b8031f1ae65735492b6972d97bb`, tree
+`aff66f1c23ada497a17b3a2e0c9b4c6330d13c05`, limits status-only blocking to
+the actual `Refreshing` state and immediately resumes the exact same
+target/token `Active` owner exception under `UNKNOWN` after a successful READ
+refresh. It also splits successful and failed READ rows so only success resets
+the idle timer. Mutations reject an `AVAILABLE` prerequisite, unbound
+target/token controls, generic request-time reset, and failed-read reset.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
