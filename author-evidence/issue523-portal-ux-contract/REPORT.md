@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `6c64d3c25015040e3b1b663fda6cab2d0e309e9e` |
-| Final validated contract tree | `dcc0b2b421964b98e78c204e3040d7adc314caa1` |
-| Final contract validation | Complete configured CI PASS; 280 Portal checker tests and 140 canonical B503 milestone tests; lead-local log SHA-256 `08be10a9db4295f69a0c2830c0c83b4c4d90e4de36bc1eca59e4f5de433c8425`; hosted exact-head CI pending |
+| Final validated contract commit | `070fe93fe15e3c0ec3b0ad2a4009031f086e5fdd` |
+| Final validated contract tree | `1630d58cda883373a6212c683d5ccebae682a98f` |
+| Final contract validation | Complete configured CI PASS; 281 Portal checker tests and 140 canonical B503 milestone tests; lead-local log SHA-256 `8ac2f7370179b8e81b8e7e0c2f4ce2ee9ae98a0c4df87a3474ea4d965276bd21`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -351,7 +351,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 280 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 281 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 140 tests |
 | `git diff --check` | PASS |
@@ -1216,6 +1216,24 @@ claim CSS, JavaScript, or arbitrary browser-layout analysis. The canonical
 checker passes 140 tests, the Portal checker passes 280 tests, and complete
 configured CI passes with lead-local log SHA-256
 `08be10a9db4295f69a0c2830c0c83b4c4d90e4de36bc1eca59e4f5de433c8425`.
+
+The fresh independent review of exact
+`bd7335828b41e42ac295ebcf4a51def625bae13c`, tree
+`92819ee210f94077a03f33c6ea46d56aeee2d674`, verified the canonical
+standard-`hidden` correction and found the parallel P2 in the Portal required
+contract extractor. The required frontend epoch rollover clause could be
+wrapped in `<div hidden>` while its gate stayed green. Its report is
+`wave12/review/docs524-bd73358-final-independent/REPORT.md`, SHA-256
+`114fcd21191eee3e5fd3d9c9cbd483df84bdd01a61990ffc2dc84965b158f4c3`.
+Commit `070fe93fe15e3c0ec3b0ad2a4009031f086e5fdd`, tree
+`1630d58cda883373a6212c683d5ccebae682a98f`, applies the same bounded
+standard-`hidden` descendant handling to Portal required contract text. The
+exact hidden-container mutation rejects and the visible `div` positive case
+remains accepted. This correction does not claim CSS, JavaScript, or arbitrary
+browser-layout analysis. The Portal checker passes 281 tests, the canonical
+checker passes 140 tests, and complete configured CI passes with lead-local log
+SHA-256
+`8ac2f7370179b8e81b8e7e0c2f4ce2ee9ae98a0c4df87a3474ea4d965276bd21`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
