@@ -67,6 +67,16 @@ def test_accepts_five_state_contract_in_visible_html() -> None:
     CHECKER.validate_text(text)
 
 
+def test_rejects_five_state_contract_hidden_by_standard_html_attribute() -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f"<div hidden>{CHECKER.SESSION_STATE_CONTRACT}</div>",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_missing_current_capability_table_authority() -> None:
     text = contract().replace(
         CHECKER.CURRENT_CAPABILITY_TABLE_AUTHORITY,
