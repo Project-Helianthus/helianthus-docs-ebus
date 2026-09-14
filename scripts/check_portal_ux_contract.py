@@ -309,7 +309,9 @@ HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
     "meta", "param", "source", "track", "wbr",
 ))
-NON_RENDERING_CONTAINERS = frozenset(("head", "pre", "script", "style", "template"))
+NON_RENDERING_CONTAINERS = frozenset(
+    ("head", "iframe", "pre", "script", "style", "template")
+)
 B503_ROUTE_SURFACE_MARKERS = (
     "rest",
     "mcp",
@@ -607,7 +609,11 @@ def _reject_prohibited_dom_component(context: str, value: str) -> None:
 
 def _decoded_dom_attribute_value(attribute: str, value: str) -> str:
     decoded = unescape(value)
-    if attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES:
+    normalized_attribute = attribute.casefold()
+    if (
+        normalized_attribute in HTML_URL_ATTRIBUTE_NAMES
+        or normalized_attribute.startswith("on")
+    ):
         decoded = unquote(decoded)
     return decoded
 
@@ -848,7 +854,11 @@ def _html_element_route_destinations(
     destinations = [
         _decoded_dom_attribute_value(attribute, value)
         for attribute, value in attrs
-        if value is not None and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
+        if value is not None
+        and (
+            attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
+            or attribute.casefold().startswith("on")
+        )
     ]
     for attribute, value in attrs:
         if value is None or attribute.casefold() != "srcdoc":

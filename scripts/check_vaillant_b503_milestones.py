@@ -18,7 +18,9 @@ MILESTONE_TABLE_HEADER = ("Milestone", "Repo", "Artefact")
 MARKDOWN_TABLE_DELIMITER_CELL = re.compile(r"^:?-{3,}:?$")
 HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
 COMMONMARK_AUTOLINK = re.compile(r"<(?:https?://|mailto:)[^<>\s]+>", re.IGNORECASE)
-NON_RENDERING_CONTAINERS = frozenset(("head", "pre", "script", "style", "template"))
+NON_RENDERING_CONTAINERS = frozenset(
+    ("head", "iframe", "pre", "script", "style", "template")
+)
 HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
     "meta", "param", "source", "track", "wbr",

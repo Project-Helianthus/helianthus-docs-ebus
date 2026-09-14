@@ -807,6 +807,19 @@ def test_rejects_capability_truth_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_capability_truth_table_stored_as_iframe_fallback() -> None:
+    table = "\n".join(
+        (
+            table_row(CHECKER.CAPABILITY_TRUTH_TABLE_HEADER),
+            "|---|---|---|---|",
+            *(table_row(row) for row in CHECKER.CAPABILITY_TRUTH_ROWS),
+        )
+    )
+    text = contract().replace(table, f"<iframe>\n{table}\n</iframe>", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_milestone_table_hidden_in_fenced_code() -> None:
     current = contract()
     table = "\n".join(
@@ -833,6 +846,21 @@ def test_rejects_milestone_table_wrapped_in_preformatted_html() -> None:
     )
     assert table in current
     text = current.replace(table, f"<pre>\n{table}\n</pre>", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_rejects_milestone_table_stored_as_iframe_fallback() -> None:
+    current = contract()
+    table = "\n".join(
+        (
+            table_row(CHECKER.MILESTONE_TABLE_HEADER),
+            "|---|---|---|",
+            *(table_row(row) for row in CHECKER._milestone_table(current)),
+        )
+    )
+    assert table in current
+    text = current.replace(table, f"<iframe>\n{table}\n</iframe>", 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 

@@ -504,6 +504,19 @@ def test_rejects_availability_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_availability_table_stored_as_iframe_fallback() -> None:
+    table = "\n".join(
+        (
+            CHECKER.AVAILABILITY_TABLE_HEADER,
+            CHECKER.AVAILABILITY_TABLE_SEPARATOR,
+            *CHECKER.AVAILABILITY_ROWS.values(),
+        )
+    )
+    text = contract().replace(table, f"<iframe>\n{table}\n</iframe>", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     "title",
     ('"Reset"', "'Clear history'", "(selector 02 01)"),
@@ -669,6 +682,8 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
         '<meta http-equiv="refresh" content="0;url=/portal/api/v1/projection/devices">',
         '<meta HTTP-EQUIV="Refresh" content="0; URL=/portal/api/v%31/projection/devices">',
         '<svg><a xlink:href="%2fportal%2fapi%2fv1%2fb503">Use this backup when GraphQL fails</a></svg>',
+        '<button onclick="location=\'/portal/api/v1/projection/devices\'">Use backup when GraphQL fails</button>',
+        '<button onclick="location=\'%2fportal%2fapi%2fv1/projection/devices\'">Use backup when GraphQL fails</button>',
         "<div style=\"background-image:url('/portal/api/v1/projection/devices')\">state</div>",
         '<style>@import "/portal/api/v%31/projection/devices";</style>',
         r'''<div style="background:url('/portal\2f api/v1/projection/devices')">state</div>''',
