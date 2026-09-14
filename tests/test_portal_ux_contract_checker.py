@@ -599,6 +599,7 @@ def test_accepts_safe_fenced_content() -> None:
         "main GraphQL fails over to REST.",
         "main GraphQL retries via `REST`.",
         "main GraphQL switches from `POST /graphql` to `POST /graphql/portal/v1`.",
+        "B503 requests may use `GET /graphql`.",
         "main GraphQL retries through `PortalCatalogV1`.",
         "main GraphQL is rerouted through MCP.",
         "main GraphQL uses `PortalActionInvokeV1` after failure.",

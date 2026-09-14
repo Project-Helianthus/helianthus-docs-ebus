@@ -338,7 +338,7 @@ B503_ROUTE_SURFACE_MARKERS = (
     "/graphql/portal/v1",
     "portalcatalogv1",
     "portalactioninvokev1",
-    "post /graphql",
+    "/graphql",
     "other route",
 )
 B503_ROUTE_SURFACE_PARAGRAPHS = (

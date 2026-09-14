@@ -241,9 +241,13 @@ hardware work, or SemReg cutover.
   satisfy the contract.
 - Portal and canonical B503 session wording now define exactly `Idle`,
   `Enabling`, `Active`, `Refreshing`, and `Disabled`. `Refreshing` holds the
-  ownership gate and makes every live-monitor operation busy; success returns
-  `Active`, failure releases the gate and returns `Idle`, and `Disabled` is
-  never emitted with `owned:true`. This follows Gateway #975's current source
+  ownership gate; the already-admitted triggering READ or current-owner DISABLE
+  remains pending while subsequent bus-facing operations are busy. Successful
+  READ refresh dispatches once and returns `Active`; successful current-owner
+  DISABLE refresh dispatches once and completes through cleanup to `Idle` only
+  after a valid disable ACK. Refresh failure releases the gate, retains Gateway
+  cleanup, and presents `Idle`; `Disabled` is never emitted with `owned:true`.
+  This follows Gateway #975's current source
   contract and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`
   (tree `598884b896ce75e30f24fcab1a0fa6db0b82f022`); #975 is open, intermediate,
   unmerged,
