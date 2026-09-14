@@ -310,7 +310,10 @@ HTML_VOID_ELEMENTS = frozenset((
     "meta", "param", "source", "track", "wbr",
 ))
 NON_RENDERING_CONTAINERS = frozenset(
-    ("canvas", "head", "iframe", "object", "pre", "script", "style", "template")
+    (
+        "audio", "canvas", "head", "iframe", "noscript", "object", "pre",
+        "script", "style", "template", "video",
+    )
 )
 B503_ROUTE_SURFACE_MARKERS = (
     "rest",
@@ -414,7 +417,7 @@ class _VisibleContractSourceParser(HTMLParser):
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         normalized = tag.casefold()
         hidden = _html_element_is_nonrendering(attrs) or (
-            normalized == "dialog"
+            normalized in {"details", "dialog"}
             and not any(name.casefold() == "open" for name, _ in attrs)
         )
         if self._inert_stack or normalized in NON_RENDERING_CONTAINERS or hidden:

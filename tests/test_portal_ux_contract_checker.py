@@ -98,14 +98,18 @@ def test_accepts_required_contract_clause_in_visible_html() -> None:
     CHECKER.validate_text(text.replace(clause, f"<div>{clause}</div>", 1))
 
 
-def test_closed_dialog_cannot_supply_required_contract_clause() -> None:
+@pytest.mark.parametrize("container", ("details", "dialog"))
+def test_closed_disclosure_cannot_supply_required_contract_clause(
+    container: str,
+) -> None:
     clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
-    rejects(clause, f"<dialog>{clause}</dialog>")
+    rejects(clause, f"<{container}>{clause}</{container}>")
 
 
-def test_open_dialog_can_supply_visible_contract_clause() -> None:
+@pytest.mark.parametrize("container", ("details", "dialog"))
+def test_open_disclosure_can_supply_visible_contract_clause(container: str) -> None:
     clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
-    text = contract().replace(clause, f"<dialog open>{clause}</dialog>", 1)
+    text = contract().replace(clause, f"<{container} open>{clause}</{container}>", 1)
     CHECKER.validate_text(text)
 
 
@@ -504,7 +508,9 @@ def test_rejects_availability_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
-@pytest.mark.parametrize("container", ("canvas", "iframe", "object"))
+@pytest.mark.parametrize(
+    "container", ("audio", "canvas", "iframe", "noscript", "object", "video")
+)
 def test_rejects_availability_table_stored_as_html_fallback(container: str) -> None:
     table = "\n".join(
         (

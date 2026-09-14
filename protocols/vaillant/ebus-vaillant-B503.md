@@ -549,7 +549,7 @@ including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
 
 ### 7.6 30s idle-timeout semantics
 
-- In `ACTIVE`, if no read request arrives within 30 seconds, Gateway emits a
+- In `ACTIVE`, after 30 seconds without a successful read, Gateway emits a
   disable frame once after quiesce and transitions to `DISABLED`.
 - The 30s timer resets on every successful read.
 - Gateway records the exact disable ACK, NAK, timeout, CRC, arbitration,

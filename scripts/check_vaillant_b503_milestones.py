@@ -19,7 +19,10 @@ MARKDOWN_TABLE_DELIMITER_CELL = re.compile(r"^:?-{3,}:?$")
 HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
 COMMONMARK_AUTOLINK = re.compile(r"<(?:https?://|mailto:)[^<>\s]+>", re.IGNORECASE)
 NON_RENDERING_CONTAINERS = frozenset(
-    ("canvas", "head", "iframe", "object", "pre", "script", "style", "template")
+    (
+        "audio", "canvas", "head", "iframe", "noscript", "object", "pre",
+        "script", "style", "template", "video",
+    )
 )
 HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
@@ -248,6 +251,10 @@ RESTART_TRANSITION = '| any | gateway restart | `DISABLED` | release any owner a
 RESTART_RELEASE_CONTRACT = '- On Gateway restart, Gateway transitions the FSM to `DISABLED` and, if an\n  owner was held, releases `liveMonitorMu`. No session or cleanup tuple persists\n  across restart. Because Gateway can no longer distinguish its pre-restart\n  session from a session owned by another bus client, it emits no automatic\n  B503 enable or disable. Each qualified target starts with live-monitor\n  capability `UNKNOWN`, and Enable remains unavailable under the current 0.7\n  contract.'
 RESTART_CLEANUP_FENCE = "- After every Gateway process restart, enumerate the finite registry-qualified\n  B503 targets, set each target's live-monitor capability to `UNKNOWN`, admit no\n  Enable, and emit no automatic B503 enable or disable. The Portal and GraphQL\n  v1 surfaces expose no recovery control. Current 0.7 defines no ACK/NAK-based\n  maintenance action that restores availability; later evidence and any changed\n  recovery contract belong to deferred issue #525."
 IDLE_TIMEOUT_ACK_CONTRACT = '- Gateway records the exact disable ACK, NAK, timeout, CRC, arbitration,\n  disconnect, or other outcome, releases the owner, retains process-local\n  cleanup, publishes `UNKNOWN`, and admits no Enable. No outcome alone returns\n  the internal FSM to `IDLE` or preserves public `AVAILABLE` because native\n  session settlement remains unproven. Idle auto-disable MUST NOT be reported as\n  `NOT_SUPPORTED`, which is reserved for "device class does not implement\n  B503" (§11).'
+IDLE_TIMEOUT_TRIGGER_CONTRACT = (
+    "- In `ACTIVE`, after 30 seconds without a successful read, Gateway emits a\n"
+    "  disable frame once after quiesce and transitions to `DISABLED`."
+)
 NORMALIZED_REFRESH_DISABLE_CONTRACT = '2. **Refresh once.** On epoch advance with a held session, Gateway transitions\n   to `Refreshing` and makes exactly one refresh attempt. The already-admitted\n   triggering READ or current-owner DISABLE remains pending and is dispatched\n   exactly once only after successful rebind. READ returns Gateway to `Active`\n   only when its dispatch completes without transport disconnect; a disconnect\n   releases the owner under the `any` disconnect transition. DISABLE emits once\n   only after its frame reaches emission and records and returns its exact native\n   outcome. A disconnect before disable-frame emission emits no disable, returns\n   exact `TRANSPORT_DOWN`, and is not retried. Both paths release ownership,\n   retain fail-closed cleanup in internal `DISABLED`, publish `UNKNOWN`, and\n   admit no Enable. Subsequent bus-facing live-monitor operations are\n   `SESSION_BUSY` during refresh. Refresh failure likewise releases client\n   ownership but retains Gateway cleanup, publishes `UNKNOWN`, and admits no\n   Enable.'
 REFRESH_FAILURE_DIAGRAM = (
     "REFRESHING --> DISABLED: refresh failure retains cleanup"
@@ -447,7 +454,7 @@ class _VisibleContractSourceParser(HTMLParser):
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         normalized = tag.casefold()
         hidden = _html_element_is_nonrendering(attrs) or (
-            normalized == "dialog"
+            normalized in {"details", "dialog"}
             and not any(name.casefold() == "open" for name, _ in attrs)
         )
         if self._inert_stack or normalized in NON_RENDERING_CONTAINERS or hidden:
@@ -837,8 +844,9 @@ def validate_text(text: str) -> None:
     idle_timeout_section = _section(
         prose_text, IDLE_TIMEOUT_SECTION_START, IDLE_TIMEOUT_SECTION_END
     )
-    if IDLE_TIMEOUT_ACK_CONTRACT not in idle_timeout_section:
-        raise CheckError("missing valid-ACK idle-timeout cleanup contract in §7.6")
+    for fragment in (IDLE_TIMEOUT_TRIGGER_CONTRACT, IDLE_TIMEOUT_ACK_CONTRACT):
+        if fragment not in idle_timeout_section:
+            raise CheckError("missing successful-read idle-timeout contract in §7.6")
     normalization_section = _section(
         prose_text, NORMALIZATION_SECTION_START, NORMALIZATION_SECTION_END
     )

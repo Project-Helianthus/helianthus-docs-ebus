@@ -97,20 +97,22 @@ def test_accepts_five_state_contract_in_visible_html() -> None:
     CHECKER.validate_text(text)
 
 
-def test_closed_dialog_cannot_supply_five_state_contract() -> None:
+@pytest.mark.parametrize("container", ("details", "dialog"))
+def test_closed_disclosure_cannot_supply_five_state_contract(container: str) -> None:
     text = contract().replace(
         CHECKER.SESSION_STATE_CONTRACT,
-        f"<dialog>{CHECKER.SESSION_STATE_CONTRACT}</dialog>",
+        f"<{container}>{CHECKER.SESSION_STATE_CONTRACT}</{container}>",
         1,
     )
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 
 
-def test_open_dialog_can_supply_five_state_contract() -> None:
+@pytest.mark.parametrize("container", ("details", "dialog"))
+def test_open_disclosure_can_supply_five_state_contract(container: str) -> None:
     text = contract().replace(
         CHECKER.SESSION_STATE_CONTRACT,
-        f"<dialog open>{CHECKER.SESSION_STATE_CONTRACT}</dialog>",
+        f"<{container} open>{CHECKER.SESSION_STATE_CONTRACT}</{container}>",
         1,
     )
     CHECKER.validate_text(text)
@@ -574,6 +576,15 @@ def test_rejects_idle_timer_reset_before_success(old: str, new: str) -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_idle_timeout_suppressed_by_failed_read_requests() -> None:
+    unsafe = CHECKER.IDLE_TIMEOUT_TRIGGER_CONTRACT.replace(
+        "without a successful read", "without a read request"
+    )
+    text = contract().replace(CHECKER.IDLE_TIMEOUT_TRIGGER_CONTRACT, unsafe, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_ambiguous_configuration_disabled_restart_mapping() -> None:
     text = contract().replace(
         "A still-effective\nout-of-band disabled condition takes precedence across Gateway restart",
@@ -826,7 +837,9 @@ def test_rejects_capability_truth_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
-@pytest.mark.parametrize("container", ("canvas", "iframe", "object"))
+@pytest.mark.parametrize(
+    "container", ("audio", "canvas", "iframe", "noscript", "object", "video")
+)
 def test_rejects_capability_truth_table_stored_as_html_fallback(
     container: str,
 ) -> None:
@@ -872,7 +885,9 @@ def test_rejects_milestone_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
-@pytest.mark.parametrize("container", ("canvas", "iframe", "object"))
+@pytest.mark.parametrize(
+    "container", ("audio", "canvas", "iframe", "noscript", "object", "video")
+)
 def test_rejects_milestone_table_stored_as_html_fallback(container: str) -> None:
     current = contract()
     table = "\n".join(
