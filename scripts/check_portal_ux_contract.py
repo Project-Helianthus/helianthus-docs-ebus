@@ -284,7 +284,7 @@ B503_ROUTE_SURFACE_MARKERS = (
     "rest",
     "mcp",
     "native i/o",
-    "/portal/api/v1/",
+    "/portal/api/v1",
     "/graphql/portal/v1",
     "portalcatalogv1",
     "portalactioninvokev1",
@@ -588,6 +588,7 @@ def _normalized_commonmark_paragraph(value: str) -> str:
 
 
 def _mentions_route_surface(value: str) -> bool:
+    value = unquote(value)
     return (
         re.search(r"\b(?:REST|MCP)\b", value, re.IGNORECASE) is not None
         or any(
@@ -595,6 +596,16 @@ def _mentions_route_surface(value: str) -> bool:
             for marker in B503_ROUTE_SURFACE_MARKERS[2:]
         )
     )
+
+
+def _inline_route_destinations(children: list[object] | None) -> list[str]:
+    destinations: list[str] = []
+    for child in children or ():
+        if child.type == "link_open":
+            destinations.append(child.attrGet("href") or "")
+        elif child.type == "image":
+            destinations.append(child.attrGet("src") or "")
+    return destinations
 
 
 def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
@@ -605,7 +616,10 @@ def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
     found: list[str] = []
     for inline in _target_inline_tokens(document):
         visible = _rendered_children(inline.children)
-        if _mentions_route_surface(visible):
+        if _mentions_route_surface(visible) or any(
+            _mentions_route_surface(destination)
+            for destination in _inline_route_destinations(inline.children)
+        ):
             found.append(_normalized_rendered(visible))
     if found != expected:
         raise CheckError(

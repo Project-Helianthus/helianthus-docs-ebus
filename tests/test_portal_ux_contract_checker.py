@@ -501,6 +501,9 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
     (
         "If main GraphQL is unavailable, retry GET /portal/api/v1/projection/devices.",
         "Use `/portal/api/v1/snapshots/latest` instead when the B503 route fails.",
+        "Use GET /portal/api/v1 when the B503 route fails.",
+        "Retry GET /portal/api/v%31/projection/devices.",
+        "Use [fallback](/portal/api/v1/projection/devices) when GraphQL fails.",
     ),
 )
 def test_rejects_concrete_portal_api_fallback_route(clause: str) -> None:
