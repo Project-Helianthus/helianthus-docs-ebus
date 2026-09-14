@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `ad13fab39b5bb860abbf89d0948db0a3ccae5108` |
-| Latest functional correction tree | `8907f33365b3017b70d27b4296650ea656d3ceb1` |
-| Focused validation | Portal 295 PASS; canonical B503 163 PASS; combined 458 PASS |
+| Latest functional correction commit | `5dfd5f1087f2a71450f3701bb325caf7c91d6e21` |
+| Latest functional correction tree | `4a499a73f6930bd458861e69fe46b473b1941647` |
+| Focused validation | Portal 296 PASS; canonical B503 164 PASS; combined 460 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 458/458 PASS;
-- Portal checker: 295/295 PASS;
-- canonical B503 checker: 163/163 PASS;
+- combined focused suite: 460/460 PASS;
+- Portal checker: 296/296 PASS;
+- canonical B503 checker: 164/164 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -219,6 +219,21 @@ defensive disable during the admitted lifecycle. This preserves the
 zero-write disconnect/restart rule when no write can be admitted and adds a
 regression that rejects reintroduction of the contradictory exactly-one
 requirement.
+
+The fresh independent review at candidate
+`7fe596f7048818a7f5ad4e1f19f440f1fc48bfee`, tree
+`e5134caae0aaa82336ae86b40c57a2dd86d49efd`, returned one P2: a target with a
+still-effective explicit operator or configuration disable could present
+either `Disabled` or the generic restart-derived `Idle` because no precedence
+was defined. Its report is
+`wave12/review/docs524-7fe596f-final-independent/REPORT.md`, SHA-256
+`4681578a91952f572a3b0a321b516f6c59c6d793021a80f2ac581a42f970473d`.
+Functional commit `5dfd5f1087f2a71450f3701bb325caf7c91d6e21`, tree
+`4a499a73f6930bd458861e69fe46b473b1941647`, defines the finite precedence:
+the still-effective explicit disable remains public `Disabled`/`owned:false`
+across restart; every other restart-derived cleanup state presents
+`Idle`/`owned:false`. Canonical and Portal mutation tests reject removal of
+that precedence.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
