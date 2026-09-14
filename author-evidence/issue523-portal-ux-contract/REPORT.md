@@ -24,11 +24,10 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `6cabada66b48034b532c23ef1435a8c321360cfb` |
-| Latest functional correction tree | `08453c9cc3eb46291ce219193ad0dcd9059823fe` |
-| Focused validation | Portal 292 PASS; canonical B503 158 PASS; combined 450 PASS |
-| Complete configured CI | PASS on exact functional commit `6cabada66b48034b532c23ef1435a8c321360cfb` |
-| Complete CI log | `wave12/ci/docs524-6cabada-functional-ci.log`, SHA-256 `b2c8f80d265427306832ce393a0eb16129d8cc47c5a254062a1ffbe6b8d30b59` |
+| Latest functional correction commit | `6fee72aa8e309b9eea98761ea691f44eb42d4c95` |
+| Latest functional correction tree | `d0b76e4c1f59e6f9a95b350ea377b891abea6d93` |
+| Focused validation | Portal 292 PASS; canonical B503 161 PASS; combined 453 PASS |
+| Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
 
@@ -131,9 +130,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 450/450 PASS;
+- combined focused suite: 453/453 PASS;
 - Portal checker: 292/292 PASS;
-- canonical B503 checker: 158/158 PASS;
+- canonical B503 checker: 161/161 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -165,14 +164,29 @@ The latest pre-correction independent review is:
 - SHA-256
   `6b81ba01e9b49d72c5b70c37c1d1053ed529a96e0e0612f442c261e187198add`.
 
-Those P2s are addressed by functional commit `6cabada66b48034b532c23ef1435a8c321360cfb`:
+Those P2s are addressed by functional commit
+`6fee72aa8e309b9eea98761ea691f44eb42d4c95` and this evidence update:
 
 1. the successful enable ACK guard is disjoint from the non-ACK emitted failure
    guard, with exact transition and mutation coverage;
 2. both hidden-style helpers normalize optional `!important` before comparing
    `display:none` and `visibility:hidden`;
-3. this report now records the current functional SHA/tree/test counts and
+3. this evidence update records the current functional SHA/tree/test counts and
    retains obsolete intermediate semantics only in Git history.
+
+The next independent review of exact
+`f6672dce6d24ab20b0250c0b595d9031ff4fe3ea`, tree
+`6620be1f0a50d884983521355faa831155ded4a6`, returned one P2: additive
+contradictory table rows or settlement clauses could coexist with all required
+safe anchors. Its report is
+`wave12/review/docs524-f6672dc-final-independent/REPORT.md`, SHA-256
+`da5c0131d590ab17d1031fcddf5dfa078a51ac19649abb5a90a5f35dee039ece`.
+Functional commit `6fee72aa8e309b9eea98761ea691f44eb42d4c95`
+closes that gap with an exact ordered finite §6.3 transition-table check and
+bounded contradiction patterns for explicit disable-ACK settlement and
+enable-NAK re-admission claims. Insertion mutations for the reported ACK to
+`DISABLED` row and both settlement clauses reject. This remains a structured
+FSM/settlement check, not an arbitrary-English parser.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
