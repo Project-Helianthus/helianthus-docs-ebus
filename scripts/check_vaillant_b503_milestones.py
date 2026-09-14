@@ -685,6 +685,64 @@ def _visible_prose_source(text: str) -> str:
     return "".join(lines)
 
 
+def _rendered_contract_source(text: str) -> str:
+    """Reconstruct rendered CommonMark text without link/image metadata or code."""
+    parts: list[str] = []
+    for token in MARKDOWN.parse(text):
+        if token.type == "heading_open":
+            parts.append("#" * int(token.tag[1:]) + " ")
+        elif token.type == "list_item_open":
+            parts.append("- ")
+        elif token.type == "html_block":
+            parts.extend((token.content, "\n"))
+        elif token.type == "inline":
+            for child in token.children or ():
+                if child.type == "text":
+                    parts.append(child.content)
+                elif child.type == "code_inline":
+                    parts.extend(("`", child.content, "`"))
+                elif child.type in {"softbreak", "hardbreak"}:
+                    parts.append("\n")
+                elif child.type == "html_inline":
+                    parts.append(child.content)
+                elif child.type == "image":
+                    parts.append(child.content)
+            parts.append("\n")
+    return _visible_contract_source("".join(parts))
+
+
+def _literal_anchor_values(value: object):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, tuple):
+        for item in value:
+            yield from _literal_anchor_values(item)
+
+
+def _normalized_rendered(text: str) -> str:
+    return " ".join(_rendered_contract_source(text).split())
+
+
+def _require_declared_literal_anchors_visible(prose_text: str, rendered_text: str) -> None:
+    """Require the checker's current literal anchors in reader-visible prose.
+
+    This is bounded to literal contract fragments already declared by this
+    checker. It does not attempt to prove arbitrary English semantics.
+    """
+    normalized_document = " ".join(rendered_text.split())
+    for name, value in globals().items():
+        if not name.isupper():
+            continue
+        for anchor in _literal_anchor_values(value):
+            if len(anchor) < 32 or anchor not in prose_text:
+                continue
+            normalized_anchor = _normalized_rendered(anchor)
+            if normalized_anchor and normalized_anchor not in normalized_document:
+                raise CheckError(
+                    f"declared contract anchor is not reader-visible: {name}"
+                )
+
+
 def _parse_table_row(line: str) -> tuple[str, ...] | None:
     if not line.startswith("|") or not line.endswith("|"):
         return None
@@ -783,6 +841,9 @@ def validate_text(text: str) -> None:
     # Raw text hidden in a CommonMark HTML comment cannot satisfy the gate.
     text = _visible_contract_source(text)
     prose_text = _visible_prose_source(text)
+    _require_declared_literal_anchors_visible(
+        prose_text, _rendered_contract_source(text)
+    )
     status_section = _section(prose_text, STATUS_SECTION_START, STATUS_SECTION_END)
     if CURRENT_PUBLIC_SESSION_AUTHORITY not in status_section:
         raise CheckError("missing current public session authority in §1")

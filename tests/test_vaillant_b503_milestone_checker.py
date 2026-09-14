@@ -57,6 +57,16 @@ def test_rejects_five_state_contract_stored_only_in_html_attribute() -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_five_state_contract_stored_only_in_markdown_link_title() -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f'[status](./contract "{CHECKER.SESSION_STATE_CONTRACT}")',
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize("container", sorted(CHECKER.NON_RENDERING_CONTAINERS))
 def test_rejects_five_state_contract_hidden_in_inert_html(container: str) -> None:
     text = contract().replace(
