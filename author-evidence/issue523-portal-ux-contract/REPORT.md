@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `1c6b429758df2d4e51350f23b08dde9296f76c94` |
-| Final validated contract tree | `bd916ce28c9506893c4d84b988ac521e12c37796` |
-| Final contract validation | Complete configured CI PASS; 262 Portal checker tests and 113 canonical B503 milestone tests; log SHA-256 `0139fdd2167786319df681654bd1b17e995cfd1506104e320949f0911bae2521` |
+| Final validated contract commit | `4a8fc91f484a0f73b8c341aedec72df4663bbfb0` |
+| Final validated contract tree | `17c32a576a3837841a0b5333c155866e764e2698` |
+| Final contract validation | Complete configured CI PASS; 264 Portal checker tests and 114 canonical B503 milestone tests; log SHA-256 `6e80d485e1af485d0b476fa1a57ae8b50f349f842bcfcecd955d12a8dde02d94` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -144,6 +144,8 @@ hardware work, or SemReg cutover.
 | Fenced-control correction tree | `de94ede3918d156057b57cc9b5f2f12df8b040f6` |
 | Restart-success truth-table correction commit | `1c6b429758df2d4e51350f23b08dde9296f76c94` |
 | Restart-success truth-table correction tree | `bd916ce28c9506893c4d84b988ac521e12c37796` |
+| Disconnect/browser-queue/block-HTML correction commit | `4a8fc91f484a0f73b8c341aedec72df4663bbfb0` |
+| Disconnect/browser-queue/block-HTML correction tree | `17c32a576a3837841a0b5333c155866e764e2698` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -333,9 +335,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 262 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 264 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 113 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 114 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -933,6 +935,27 @@ no cleanup obligation and a cleared restart fence; an ordinary diagnostic
 success alone cannot publish `AVAILABLE` or admit Enable after process restart.
 Both old unconditional-success rows reject as mutations. The following
 evidence-only commit records this immutable contract revision.
+
+The exact `038ee28a1d5636c0f11a9f6ec780a6031bbb1487` GitHub review then
+identified three additional P2 contradictions. Functional commit
+`4a8fc91f484a0f73b8c341aedec72df4663bbfb0`, tree
+`17c32a576a3837841a0b5333c155866e764e2698`, closes them together:
+transport disconnect retains cleanup unless a valid disable ACK confirmed
+success; a triggering current-owner DISABLE clears the browser queued pair after
+both success and every exact failure outcome while Gateway retains failed
+cleanup; and arbitrary URL fallback inspection includes visible text plus URL
+destinations from CommonMark `html_block` tokens. Mutation coverage restores
+each prior defect, and the positive block-HTML control keeps ordinary help links
+valid.
+
+The complete three-P2 correction CI log is
+`wave12/ci/docs524-4a8fc91-three-p2-ci.log`, SHA-256
+`6e80d485e1af485d0b476fa1a57ae8b50f349f842bcfcecd955d12a8dde02d94`. It
+passes the complete configured repository CI with 264 Portal checker tests and
+114 canonical B503 milestone tests. The exact review-thread capture is
+`wave12/review/docs524-038ee28-live-threads.json`, SHA-256
+`d4822eafe27b40f217a375c1c747e723b8fd4579366b323def4b9d7066b0e208`. The
+following evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
