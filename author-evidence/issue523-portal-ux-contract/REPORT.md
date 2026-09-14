@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `a24e0dc780b579d9d7a470c3be3aeb4b443c5847` |
-| Final validated contract tree | `e92918170d4b21926869a822501fab915f8967e5` |
-| Final contract validation | Complete configured CI PASS; 270 Portal checker tests and 121 canonical B503 milestone tests; log SHA-256 `5600e46cd79a30c28143dbb0d898090a90d65cf6a5f6930be83c2bff7639a925` |
+| Final validated contract commit | `115dbca45d01e9df9d9eb6cab868a2cb004b6acc` |
+| Final validated contract tree | `4bbe8268f83d1b9ffce464a427fb4376f8eb8a55` |
+| Final contract validation | Complete configured CI PASS; 271 Portal checker tests and 122 canonical B503 milestone tests; log SHA-256 `98395f4746ec54ef1181ad371a87471e038dfb75c0a553b547c5ebd89b169649` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -156,6 +156,8 @@ hardware work, or SemReg cutover.
 | CSS-escape route audit correction tree | `a1bef004aa05737606eec73f0c121909a6ab0a66` |
 | GraphQL-method/report-refresh correction commit | `a24e0dc780b579d9d7a470c3be3aeb4b443c5847` |
 | GraphQL-method/report-refresh correction tree | `e92918170d4b21926869a822501fab915f8967e5` |
+| Refresh-failure/srcdoc correction commit | `115dbca45d01e9df9d9eb6cab868a2cb004b6acc` |
+| Refresh-failure/srcdoc correction tree | `4bbe8268f83d1b9ffce464a427fb4376f8eb8a55` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -349,9 +351,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 270 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 271 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 121 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 122 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -1044,6 +1046,8 @@ tests and 121 canonical B503 milestone tests. Its log is
 exact thread capture is `wave12/review/docs524-3644a8c-live-threads.json`,
 SHA-256 `b03cf42cc41f0d4f85bd892170810aa9988ab748cb7e893881edfcf0e59fbe4a`.
 The following evidence-only commit records this immutable contract revision.
+
+The exact `fa291c49731e5a027fd7e90d3df67982e143af7c` GitHub review found two P2 defects. Commit `115dbca45d01e9df9d9eb6cab868a2cb004b6acc`, tree `4bbe8268f83d1b9ffce464a427fb4376f8eb8a55`, makes the exact caller error and public capability distinct on refresh failure: the caller receives the exact failure while retained cleanup publishes capability `UNKNOWN`. It also recursively audits nested `srcdoc` HTML to a fail-closed depth bound. Complete CI passes 271 Portal and 122 B503 tests; log `wave12/ci/docs524-115dbca-refresh-srcdoc-ci.log`, SHA-256 `98395f4746ec54ef1181ad371a87471e038dfb75c0a553b547c5ebd89b169649`. Exact threads: `wave12/review/docs524-fa291c4-live-threads.json`, SHA-256 `0e7042c7891e818770c4fcaa1a87884b6ba58597b2112163ef3bf8a9db9d3f39`. The following evidence-only commit records this revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
