@@ -284,6 +284,7 @@ B503_ROUTE_SURFACE_MARKERS = (
     "rest",
     "mcp",
     "native i/o",
+    "/portal/api/v1/",
     "/graphql/portal/v1",
     "portalcatalogv1",
     "portalactioninvokev1",
@@ -291,6 +292,9 @@ B503_ROUTE_SURFACE_MARKERS = (
     "other route",
 )
 B503_ROUTE_SURFACE_PARAGRAPHS = (
+    "The historical `/portal/api/v1/*` endpoints documented below remain their own\n"
+    "endpoint contracts. They are not a transport or semantic fallback for this\n"
+    "INT-10 B503 presentation.",
     "The browser obtains the catalog read model only through `POST /graphql/portal/v1`\n"
     "and the fixed `PortalCatalogV1` operation. The only action operation on that\n"
     "route is `PortalActionInvokeV1`; it is governed by the action-admission rules\n"
@@ -605,7 +609,7 @@ def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
             found.append(_normalized_rendered(visible))
     if found != expected:
         raise CheckError(
-            "api/portal.md: B503 route surfaces must remain confined to the four "
+            "api/portal.md: B503 route surfaces must remain confined to the five "
             "frozen route/provenance paragraphs"
         )
 

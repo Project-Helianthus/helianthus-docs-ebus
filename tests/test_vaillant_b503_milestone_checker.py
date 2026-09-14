@@ -358,16 +358,28 @@ def test_rejects_missing_terminal_enabling_transition(required_fragment: str) ->
     ("fragment", "replacement"),
     (
         (
-            CHECKER.ENABLING_EPOCH_DIAGRAM,
-            "ENABLING --> REFRESHING: epoch advance",
+            CHECKER.ENABLING_EPOCH_PRE_DIAGRAM,
+            "ENABLING --> REFRESHING: epoch advance before enable frame emission",
         ),
         (
-            CHECKER.ENABLING_EPOCH_OPERATION,
+            CHECKER.ENABLING_EPOCH_POST_DIAGRAM,
+            "ENABLING --> IDLE: epoch advance after enable frame emission",
+        ),
+        (
+            CHECKER.ENABLING_EPOCH_PRE_OPERATION,
             "| Epoch advance under any handle | — | held handle → `REFRESHING`; refresh once per §7.3 |",
         ),
         (
-            CHECKER.ENABLING_EPOCH_TRANSITION,
-            "| `ENABLING` | epoch advance detected | `REFRESHING` | refresh once |",
+            CHECKER.ENABLING_EPOCH_POST_OPERATION,
+            "| Epoch advance after emission | — | release directly to `IDLE` |",
+        ),
+        (
+            CHECKER.ENABLING_EPOCH_PRE_TRANSITION,
+            "| `ENABLING` | epoch advance before emission | `REFRESHING` | refresh once |",
+        ),
+        (
+            CHECKER.ENABLING_EPOCH_POST_TRANSITION,
+            "| `ENABLING` | epoch advance after emission | `IDLE` | discard completion |",
         ),
         (
             CHECKER.ENABLING_DIRECT_IDLE_LOCK,

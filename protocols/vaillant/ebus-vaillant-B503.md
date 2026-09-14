@@ -195,7 +195,8 @@ stateDiagram-v2
     ENABLING --> ACTIVE: enable ACK on bus
     ENABLING --> IDLE: canceled before enable frame emission
     ENABLING --> DISABLED: terminal enable failure after emission
-    ENABLING --> IDLE: epoch advance; stale enable discarded
+    ENABLING --> IDLE: epoch advance before enable frame emission
+    ENABLING --> DISABLED: epoch advance after enable frame emission
     ACTIVE --> ACTIVE: periodic read during session
     ACTIVE --> DISABLED: explicit disable
     ACTIVE --> DISABLED: 30s idle timer
@@ -237,7 +238,8 @@ Rules (normative):
 | DISABLE | full `session_key` must match the active session | A current-owner DISABLE that detects epoch advance remains pending as the triggering request; every subsequent DISABLE while `REFRESHING`, or a request from a non-owner, returns `SESSION_BUSY` |
 | READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE`; a READ that detects epoch advance remains pending as the triggering request, and every subsequent live-monitor operation while `REFRESHING` is `SESSION_BUSY` |
 | Epoch advance while `ACTIVE` owner remains held | old epoch key authorizes only the bounded refresh for an admitted READ or current-owner DISABLE | → `REFRESHING`; refresh once per §7.3; success atomically rebinds the same issuer token and target to the returned current transport epoch before dispatching the triggering operation exactly once; ENABLE is never a refresh trigger |
-| Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
+| Epoch advance while `ENABLING`, before enable-frame emission | — | → `IDLE`; cancel the queued frame, release the gate, and discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
+| Epoch advance while `ENABLING`, after enable-frame emission | pending attempt identity and target remain Gateway-owned for cleanup only | → `DISABLED`; fence every stale completion, issue exactly one defensive disable after quiesce on the current transport epoch, record its exact cleanup outcome as native evidence, then complete cleanup to `IDLE`; no automatic retry or active owner survives |
 
 The `issuer_token` is opaque to clients; it MUST NOT be derived from
 user-visible identifiers, and MUST be sufficient entropy that a second
@@ -269,7 +271,8 @@ access.
 | `ENABLING` | `ctx.Done` before enable-frame emission | `IDLE` | cancel the queued frame, release the ownership gate, and clear the pending attempt; no native disable is emitted |
 | `ENABLING` | `ctx.Done` after enable-frame emission / ACK timeout / CRC mismatch / bus-arbitration timeout / any other ambiguous terminal failure | `DISABLED` | emit exactly one defensive native disable after quiesce, release the owner on entry, and complete cleanup to `IDLE`; return the original exact failure outcome |
 | `ENABLING` | NAK | `DISABLED` | release the owner on entry and complete cleanup to `IDLE` without a defensive disable because NAK proves the enable was rejected |
-| `ENABLING` | epoch advance detected | `IDLE` | release ownership gate; discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
+| `ENABLING` | epoch advance detected before enable-frame emission | `IDLE` | cancel the queued frame, release ownership, and discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
+| `ENABLING` | epoch advance detected after enable-frame emission | `DISABLED` | fence every stale completion, issue exactly one defensive disable after quiesce on the current transport epoch, record its exact cleanup outcome as native evidence, then complete cleanup to `IDLE`; no automatic retry or active owner survives |
 | `ACTIVE` | read request | `ACTIVE` | reset idle timer |
 | `ACTIVE` | explicit disable | `DISABLED` | emit disable frame after quiesce |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable frame after quiesce |
@@ -286,8 +289,8 @@ access.
 transition. It is released exactly once on a terminal transition from a
 held-owner state: on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or
 `REFRESHING`, on the direct `REFRESHING → IDLE` refresh-failure path,
-or on either direct `ENABLING → IDLE` path (cancellation before frame emission
-or epoch advance). The "any" transitions
+or on either direct `ENABLING → IDLE` path (cancellation or epoch advance before
+frame emission). The "any" transitions
 (transport disconnect, gateway restart) release the mutex only when FSM was in
 a held-owner state at the time the event fired; if the FSM was already `IDLE`
 or `DISABLED` (no owner), no release occurs. The `DISABLED → IDLE` transition

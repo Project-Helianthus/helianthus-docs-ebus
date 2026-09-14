@@ -207,18 +207,38 @@ REFRESH_FAILURE_LOCK = "the direct `REFRESHING → IDLE` refresh-failure path"
 HELD_OWNER_DISABLED_RELEASE = (
     "on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or\n`REFRESHING`"
 )
-ENABLING_EPOCH_DIAGRAM = "ENABLING --> IDLE: epoch advance; stale enable discarded"
-ENABLING_EPOCH_OPERATION = (
-    "| Epoch advance while `ENABLING` | — | → `IDLE`; release gate and discard "
-    "every stale completion or failure outcome from that enable attempt; explicit "
-    "new Enable required |"
+ENABLING_EPOCH_PRE_DIAGRAM = (
+    "ENABLING --> IDLE: epoch advance before enable frame emission"
 )
-ENABLING_EPOCH_TRANSITION = (
-    "| `ENABLING` | epoch advance detected | `IDLE` | release ownership gate; "
-    "discard every stale completion or failure outcome from that enable attempt; "
-    "explicit new Enable required |"
+ENABLING_EPOCH_POST_DIAGRAM = (
+    "ENABLING --> DISABLED: epoch advance after enable frame emission"
 )
-ENABLING_EPOCH_LOCK = "the direct `ENABLING → IDLE` epoch-advance path"
+ENABLING_EPOCH_PRE_OPERATION = (
+    "| Epoch advance while `ENABLING`, before enable-frame emission | — | → "
+    "`IDLE`; cancel the queued frame, release the gate, and discard every stale "
+    "completion or failure outcome from that enable attempt; explicit new Enable "
+    "required |"
+)
+ENABLING_EPOCH_POST_OPERATION = (
+    "| Epoch advance while `ENABLING`, after enable-frame emission | pending "
+    "attempt identity and target remain Gateway-owned for cleanup only | → "
+    "`DISABLED`; fence every stale completion, issue exactly one defensive disable "
+    "after quiesce on the current transport epoch, record its exact cleanup outcome "
+    "as native evidence, then complete cleanup to `IDLE`; no automatic retry or "
+    "active owner survives |"
+)
+ENABLING_EPOCH_PRE_TRANSITION = (
+    "| `ENABLING` | epoch advance detected before enable-frame emission | `IDLE` | "
+    "cancel the queued frame, release ownership, and discard every stale completion "
+    "or failure outcome from that enable attempt; explicit new Enable required |"
+)
+ENABLING_EPOCH_POST_TRANSITION = (
+    "| `ENABLING` | epoch advance detected after enable-frame emission | "
+    "`DISABLED` | fence every stale completion, issue exactly one defensive disable "
+    "after quiesce on the current transport epoch, record its exact cleanup outcome "
+    "as native evidence, then complete cleanup to `IDLE`; no automatic retry or "
+    "active owner survives |"
+)
 ENABLING_CANCEL_DIAGRAM = "ENABLING --> IDLE: canceled before enable frame emission"
 ENABLING_FAILURE_DIAGRAM = (
     "ENABLING --> DISABLED: terminal enable failure after emission"
@@ -241,8 +261,8 @@ ENABLING_NAK_TRANSITION = (
     "was rejected |"
 )
 ENABLING_DIRECT_IDLE_LOCK = (
-    "on either direct `ENABLING → IDLE` path (cancellation before frame emission\n"
-    "or epoch advance)"
+    "on either direct `ENABLING → IDLE` path (cancellation or epoch advance before\n"
+    "frame emission)"
 )
 FORBIDDEN_REFRESH_FAILURE_CONTRADICTIONS = (
     "REFRESHING --> DISABLED: refresh failure releases gate",
@@ -406,9 +426,12 @@ def validate_text(text: str) -> None:
         if fragment in session_section:
             raise CheckError(f"forbidden §6 B503 session-state contradiction: {fragment!r}")
     for fragment in (
-        ENABLING_EPOCH_DIAGRAM,
-        ENABLING_EPOCH_OPERATION,
-        ENABLING_EPOCH_TRANSITION,
+        ENABLING_EPOCH_PRE_DIAGRAM,
+        ENABLING_EPOCH_POST_DIAGRAM,
+        ENABLING_EPOCH_PRE_OPERATION,
+        ENABLING_EPOCH_POST_OPERATION,
+        ENABLING_EPOCH_PRE_TRANSITION,
+        ENABLING_EPOCH_POST_TRANSITION,
     ):
         if fragment not in session_section:
             raise CheckError(

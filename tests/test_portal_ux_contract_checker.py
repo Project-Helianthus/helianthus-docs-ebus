@@ -499,6 +499,17 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
 @pytest.mark.parametrize(
     "clause",
     (
+        "If main GraphQL is unavailable, retry GET /portal/api/v1/projection/devices.",
+        "Use `/portal/api/v1/snapshots/latest` instead when the B503 route fails.",
+    ),
+)
+def test_rejects_concrete_portal_api_fallback_route(clause: str) -> None:
+    rejects_target_insertion(clause)
+
+
+@pytest.mark.parametrize(
+    "clause",
+    (
         "main GraphQL failure does not allow REST fallback.",
         "main GraphQL does not fall back to REST.",
         "main GraphQL does not use REST as a fallback.",
