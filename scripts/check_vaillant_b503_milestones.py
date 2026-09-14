@@ -20,8 +20,9 @@ HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
 COMMONMARK_AUTOLINK = re.compile(r"<(?:https?://|mailto:)[^<>\s]+>", re.IGNORECASE)
 NON_RENDERING_CONTAINERS = frozenset(
     (
-        "audio", "canvas", "head", "iframe", "noscript", "object", "pre",
-        "script", "style", "template", "video",
+        "audio", "canvas", "defs", "desc", "head", "iframe", "metadata",
+        "noscript", "object", "pre", "script", "style", "template", "title",
+        "video",
     )
 )
 HTML_VOID_ELEMENTS = frozenset((
@@ -501,15 +502,23 @@ def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
             return True
         if name.casefold() != "style" or value is None:
             continue
-        declarations = {}
+        declarations: dict[str, tuple[str, bool]] = {}
         for declaration in value.split(";"):
             property_name, separator, property_value = declaration.partition(":")
             if separator:
+                important = re.search(
+                    r"\s*!important\s*$", property_value, re.IGNORECASE
+                ) is not None
                 normalized_value = re.sub(
                     r"\s*!important\s*$", "", property_value.casefold()
                 ).strip()
-                declarations[property_name.strip().casefold()] = normalized_value
-        if declarations.get("display") == "none" or declarations.get("visibility") == "hidden":
+                normalized_name = property_name.strip().casefold()
+                prior = declarations.get(normalized_name)
+                if prior is None or important or not prior[1]:
+                    declarations[normalized_name] = (normalized_value, important)
+        if declarations.get("display", (None, False))[0] == "none" or declarations.get(
+            "visibility", (None, False)
+        )[0] == "hidden":
             return True
     return False
 

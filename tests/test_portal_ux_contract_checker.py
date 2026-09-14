@@ -453,6 +453,9 @@ def test_rejects_required_contract_clause_hidden_by_standard_html_attribute() ->
         "display:none!important",
         "display: none !IMPORTANT",
         "visibility:hidden !important",
+        "display:none!important;display:block",
+        "display:block;display:none!important",
+        "visibility:hidden!important;visibility:visible",
     ),
 )
 def test_rejects_required_contract_clause_hidden_by_inline_style(style: str) -> None:
@@ -460,6 +463,21 @@ def test_rejects_required_contract_clause_hidden_by_inline_style(style: str) -> 
     text = contract().replace(clause, f'<div style="{style}">{clause}</div>', 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    "style",
+    ("display:none;display:block!important", "display:none!important;display:block!important"),
+)
+def test_accepts_later_important_visible_inline_style(style: str) -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    text = contract().replace(clause, f'<div style="{style}">{clause}</div>', 1)
+    CHECKER.validate_text(text)
+
+
+def test_rejects_required_clause_stored_in_svg_metadata() -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    rejects(clause, f"<svg><desc>{clause}</desc><text>status</text></svg>")
 
 
 def test_rejects_required_contract_clause_hidden_in_fenced_code() -> None:

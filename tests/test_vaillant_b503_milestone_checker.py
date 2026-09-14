@@ -137,12 +137,38 @@ def test_rejects_five_state_contract_hidden_by_standard_html_attribute() -> None
         "display:none!important",
         "display: none !IMPORTANT",
         "visibility:hidden !important",
+        "display:none!important;display:block",
+        "display:block;display:none!important",
+        "visibility:hidden!important;visibility:visible",
     ),
 )
 def test_rejects_five_state_contract_hidden_by_inline_style(style: str) -> None:
     text = contract().replace(
         CHECKER.SESSION_STATE_CONTRACT,
         f'<div style="{style}">{CHECKER.SESSION_STATE_CONTRACT}</div>',
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    "style",
+    ("display:none;display:block!important", "display:none!important;display:block!important"),
+)
+def test_accepts_later_important_visible_inline_style(style: str) -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f'<div style="{style}">{CHECKER.SESSION_STATE_CONTRACT}</div>',
+        1,
+    )
+    CHECKER.validate_text(text)
+
+
+def test_rejects_five_state_contract_stored_in_svg_metadata() -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f"<svg><desc>{CHECKER.SESSION_STATE_CONTRACT}</desc><text>status</text></svg>",
         1,
     )
     with pytest.raises(CHECKER.CheckError):
