@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `170ba02a67e500c99bfef8408528b9c7a241a1b5` |
-| Final validated contract tree | `b119f41104bd2b75c3dca6de8c85504f26a8b77e` |
-| Final contract validation | Complete configured CI PASS; 285 Portal checker tests and 147 canonical B503 milestone tests; lead-local log SHA-256 `639b475cbcf8713f451043f152de14490a7d0f90e68e5264818e8d7bfae9010d`; hosted exact-head CI pending |
+| Final validated contract commit | `950519b3bf915c38fde23fc1594958a61e1fe951` |
+| Final validated contract tree | `9e1aa3b83b722fdaed31e2e9c71d1334e9e126cd` |
+| Final contract validation | Complete configured CI PASS; 285 Portal checker tests and 148 canonical B503 milestone tests; lead-local log SHA-256 `e57488bd87fd521125be4c40736779a1f120038663f04949091ed9a0cb08706f`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -353,7 +353,7 @@ hardware work, or SemReg cutover.
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
 | `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 285 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 146 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 148 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -1366,6 +1366,22 @@ visible contract passes. The summary table above now names this exact source
 commit/tree and its complete CI evidence. Portal remains 285/285; canonical
 B503 is 147/147; complete configured CI passed with log SHA-256
 `639b475cbcf8713f451043f152de14490a7d0f90e68e5264818e8d7bfae9010d`.
+
+The subsequent GitHub review of exact
+`bc4bb30efa11082e4fd75902559af3e2b981d7ba` found three P2 defects. The
+refreshed READ row retained `ACTIVE` even when that dispatched READ encountered
+a new transport disconnect, image alternative text could still supply a
+declared literal anchor, and the command table retained the prior 146-test
+count. Functional commit `950519b3bf915c38fde23fc1594958a61e1fe951`,
+tree `9e1aa3b83b722fdaed31e2e9c71d1334e9e126cd`, scopes the `REFRESHING → ACTIVE`
+READ outcome to a dispatch that completes without transport disconnect. A
+disconnect follows the global disconnect transition, releases the owner into
+internal `DISABLED`, and retains applicable cleanup. Declared literal anchors
+now exclude image tokens as well as link metadata and code; the exact
+image-alternative mutation rejects. The command table above records the actual
+148-test B503 result. Portal remains 285/285; complete configured CI passed
+with log SHA-256
+`e57488bd87fd521125be4c40736779a1f120038663f04949091ed9a0cb08706f`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
