@@ -559,6 +559,39 @@ def test_rejects_operator_authorized_target_specific_restart_recovery() -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_additional_ack_to_disabled_transition() -> None:
+    contradictory = (
+        "| `ENABLING` | ACK after enable-frame emission | `DISABLED` | "
+        "retain cleanup and admit no Enable |"
+    )
+    text = contract().replace(
+        CHECKER.SESSION_TRANSITION_TABLE_END,
+        f"{contradictory}\n\n{CHECKER.SESSION_TRANSITION_TABLE_END}",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    "contradictory",
+    (
+        "A valid disable ACK proves session settlement and clears cleanup.",
+        "An enable NAK proves that no native session exists and admits Enable.",
+    ),
+)
+def test_rejects_additive_ack_or_nak_settlement_contradiction(
+    contradictory: str,
+) -> None:
+    text = contract().replace(
+        CHECKER.SESSION_SECTION_END,
+        f"{contradictory}\n\n{CHECKER.SESSION_SECTION_END}",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     ("old", "new"),
     (

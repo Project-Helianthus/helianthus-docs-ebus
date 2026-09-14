@@ -26,6 +26,10 @@ HTML_VOID_ELEMENTS = frozenset((
 MARKDOWN = MarkdownIt("commonmark")
 SESSION_SECTION_START = "## 6. Live-Monitor Session"
 SESSION_SECTION_END = "## 7. Gateway Operational Contract"
+SESSION_TRANSITION_TABLE_START = "### 6.3 Transitions (normative)"
+SESSION_TRANSITION_TABLE_END = "**Lock lifecycle (single assignment, owner-conditional):**"
+SESSION_TRANSITION_TABLE_HEADER = "| From | Event | To | Side effect |"
+SESSION_TRANSITION_TABLE_SEPARATOR = "|---|---|---|---|"
 REFRESHING_PUBLIC_SECTION_START = "#### 7.1.1 Refreshing session state (public)"
 REFRESHING_PUBLIC_SECTION_END = "### 7.2 Quiesce timing bounds (normative)"
 REFRESH_SECTION_START = "### 7.3 Retry and refresh"
@@ -288,14 +292,36 @@ ENABLING_CANCEL_TRANSITION = (
     "queued frame, release the ownership gate, and clear the pending attempt; no "
     "native disable is emitted |"
 )
+IDLE_ENABLE_TRANSITION = '| `IDLE` | enable request, no owner | `ENABLING` | emit enable frame after poll-quiesce |'
 ENABLING_ACK_TRANSITION = '| `ENABLING` | successful enable ACK received after frame emission | `ACTIVE` | record the exact ACK, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, start the 30s idle timer, arm reads for the current owner, publish `UNKNOWN`, and admit no second Enable; the ACK establishes the admitted operation outcome, not session settlement |'
 ENABLING_AMBIGUOUS_FAILURE_TRANSITION = '| `ENABLING` | `ctx.Done` / NAK / timeout / CRC mismatch / bus-arbitration failure / any other non-ACK terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; NAK and any defensive-disable ACK/NAK outcome do not prove settlement |'
+ACTIVE_READ_TRANSITION = '| `ACTIVE` | read request | `ACTIVE` | reset idle timer |'
+ACTIVE_IDLE_TRANSITION = '| `ACTIVE` | 30s idle | `DISABLED` | emit disable once after quiesce, record the exact outcome, release the owner, retain process-local cleanup, publish `UNKNOWN`, and admit no Enable |'
+ACTIVE_REFRESH_TRANSITION = '| `ACTIVE` | admitted request detects epoch advance | `REFRESHING` | ownership gate remains held; triggering request remains pending; subsequent live-monitor operations are busy |'
 DISCONNECT_TRANSITION = '| any | transport disconnect | `DISABLED` | release any owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |'
 CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN = (
     "- silent fallback to `UNKNOWN` from a knowable `TRANSPORT_DOWN` when no cleanup\n"
     "  obligation remains."
 )
 ENABLING_NAK_TRANSITION = ENABLING_AMBIGUOUS_FAILURE_TRANSITION
+SESSION_TRANSITION_ROWS = (
+    IDLE_ENABLE_TRANSITION,
+    ENABLING_ACK_TRANSITION,
+    ENABLING_CANCEL_TRANSITION,
+    ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
+    ENABLING_EPOCH_PRE_TRANSITION,
+    ENABLING_EPOCH_POST_TRANSITION,
+    ACTIVE_READ_TRANSITION,
+    EXPLICIT_DISABLE_CONFIRMED_TRANSITION,
+    ACTIVE_IDLE_TRANSITION,
+    ACTIVE_REFRESH_TRANSITION,
+    REFRESH_READ_TRANSITION,
+    REFRESH_DISABLE_TRANSITION,
+    REFRESH_FAILURE_TRANSITION,
+    UNCONFIRMED_CLEANUP_TRANSITION,
+    DISCONNECT_TRANSITION,
+    RESTART_TRANSITION,
+)
 ENABLING_DIRECT_IDLE_LOCK = (
     "on either direct `ENABLING → IDLE` path (cancellation or epoch advance before\n"
     "frame emission)"
@@ -320,6 +346,21 @@ RESTART_AUTOMATIC_WRITE_CONTRADICTION_PATTERNS = (
         r"(?<!not )(?<!never )\bautomatically\s+"
         r"(?:emit|dispatch|send|issue|perform|enable|disable)\w*\b"
         r"[^.\n]{0,80}\bB503\b",
+        re.IGNORECASE,
+    ),
+)
+SETTLEMENT_CONTRADICTION_PATTERNS = (
+    re.compile(
+        r"\b(?:a\s+)?(?:valid\s+)?disable\s+ACK\b[^.\n]{0,80}"
+        r"\b(?:prove|proves|establish|establishes|confirm|confirms)\b"
+        r"[^.\n]{0,40}\b(?:native\s+)?session\s+settlement\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\benable\s+NAK\b[^.\n]{0,100}"
+        r"\b(?:prove|proves|establish|establishes|confirm|confirms)\b"
+        r"[^.\n]{0,100}\b(?:admit|admits|allow|allows|permit|permits|re-admit|re-admits)\b"
+        r"[^.\n]{0,20}\bEnable\b",
         re.IGNORECASE,
     ),
 )
@@ -611,6 +652,21 @@ def validate_text(text: str) -> None:
         raise CheckError("missing five-state B503 session contract in §6.1")
     if DISABLED_PUBLIC_MAPPING not in session_prose_section:
         raise CheckError("missing stable public Disabled mapping in §6")
+    transition_section = _section(
+        session_prose_section,
+        SESSION_TRANSITION_TABLE_START,
+        SESSION_TRANSITION_TABLE_END,
+    )
+    transition_lines = tuple(
+        line for line in transition_section.splitlines() if line.startswith("|")
+    )
+    expected_transition_lines = (
+        SESSION_TRANSITION_TABLE_HEADER,
+        SESSION_TRANSITION_TABLE_SEPARATOR,
+        *SESSION_TRANSITION_ROWS,
+    )
+    if transition_lines != expected_transition_lines:
+        raise CheckError("§6.3 must contain the exact ordered finite B503 transition table")
     for fragment in (
         CONFIRMED_CLEANUP_DEFINITION,
         CONFIRMED_CLEANUP_DIAGRAM,
@@ -668,6 +724,13 @@ def validate_text(text: str) -> None:
         if match is not None:
             raise CheckError(
                 "forbidden automatic B503 restart write contradiction in §§6-8: "
+                f"{match.group(0)!r}"
+            )
+    for pattern in SETTLEMENT_CONTRADICTION_PATTERNS:
+        match = pattern.search(session_contract_scope)
+        if match is not None:
+            raise CheckError(
+                "forbidden ACK/NAK session-settlement contradiction in §§6-8: "
                 f"{match.group(0)!r}"
             )
     for fragment in (
