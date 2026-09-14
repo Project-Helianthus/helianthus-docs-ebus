@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `8df962d228fab7c30067204f185a3ea98d13bb8e` |
-| Final validated contract tree | `d20fdc25c218687aa212d9f9dc1b7c3ffa21329b` |
-| Final contract validation | Complete configured CI PASS; 232 Portal checker tests and 83 canonical B503 milestone tests; log SHA-256 `95987c6c91e256ca77f8cbbf340dc757cb7f1d69de39ba7f0d74702190169e07` |
+| Final validated contract commit | `9e1d6e599f3eee51c74d5133e7e6e43b03680866` |
+| Final validated contract tree | `3a3741de0d5c69637f9563e7dd5fc1c3b9330591` |
+| Final contract validation | Complete configured CI PASS; 234 Portal checker tests and 86 canonical B503 milestone tests; log SHA-256 `880ac961a82f76f3a08a0d150b5820418aab59843881c39459ae3d4171ea06b2` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -112,6 +112,8 @@ hardware work, or SemReg cutover.
 | Existential-control correction tree | `f82e9a5b86f6403a4aeb61ae1e28cad6fc2c68f1` |
 | Inline-command prose correction commit | `8df962d228fab7c30067204f185a3ea98d13bb8e` |
 | Inline-command prose correction tree | `d20fdc25c218687aa212d9f9dc1b7c3ffa21329b` |
+| Route/epoch-split correction commit | `9e1d6e599f3eee51c74d5133e7e6e43b03680866` |
+| Route/epoch-split correction tree | `3a3741de0d5c69637f9563e7dd5fc1c3b9330591` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -274,7 +276,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 232 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 234 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -294,9 +296,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 232 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 234 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 83 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 86 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -672,6 +674,20 @@ It validated contract commit
 code command names and capability/operation/service/feature nouns, while
 contracted or explicit negative forms remain accepted. The following
 evidence-only commit records this immutable contract revision.
+
+The complete route-surface and epoch-split correction CI log is
+`wave12/ci/docs524-route-epoch-split-ci.log`, SHA-256
+`880ac961a82f76f3a08a0d150b5820418aab59843881c39459ae3d4171ea06b2`.
+It validated contract commit
+`9e1d6e599f3eee51c74d5133e7e6e43b03680866`, tree
+`3a3741de0d5c69637f9563e7dd5fc1c3b9330591`, with 234 Portal checker tests and
+86 canonical B503 milestone tests. Concrete `/portal/api/v1/*` paths are route
+surfaces, while the existing exact negative historical-endpoint paragraph
+remains allowed. Epoch advance during `Enabling` is split at frame emission:
+pre-emission cancels without a write; post-emission fences stale completions and
+issues exactly one defensive disable on the current transport epoch before
+cleanup, recording the exact cleanup outcome without automatic retry. The
+following evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
