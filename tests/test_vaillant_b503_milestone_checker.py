@@ -27,6 +27,37 @@ def test_accepts_current_b503_milestone_contract() -> None:
     CHECKER.validate_text(contract())
 
 
+def test_rejects_five_state_contract_hidden_in_html_comment() -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f"<!-- {CHECKER.SESSION_STATE_CONTRACT} -->",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    ("current", "unsafe"),
+    (
+        (
+            CHECKER.REFRESH_FAILURE_CAPABILITY_PRECEDENCE,
+            "- On refresh revealing `TRANSPORT_DOWN` or `UNKNOWN` → surface that value literally.",
+        ),
+        (
+            CHECKER.CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN,
+            "- silent fallback to `UNKNOWN` once `TRANSPORT_DOWN` is knowable.",
+        ),
+    ),
+)
+def test_rejects_cleanup_unaware_transport_down_precedence(
+    current: str, unsafe: str
+) -> None:
+    text = contract().replace(current, unsafe, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     ("current", "unsafe"),
     (

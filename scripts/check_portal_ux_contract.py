@@ -376,6 +376,13 @@ B503_ROUTE_SURFACE_PARAGRAPHS = (
 )
 MARKDOWN = MarkdownIt("commonmark")
 HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
+COMMONMARK_AUTOLINK = re.compile(
+    r"<(?:https?://|mailto:)[^<>\s]+>", re.IGNORECASE
+)
+ISO_DATE = re.compile(r"(?<![0-9])\d{4}-\d{2}-\d{2}(?![0-9])")
+COMPACT_B503_SELECTOR = re.compile(
+    r"(?:b503(?:selector)?|selector)020([12])(?![0-9])"
+)
 
 
 class CheckError(ValueError):
@@ -449,10 +456,15 @@ def _identifier_tokens(value: str) -> set[str]:
 
 
 def _selector_tokens(value: str) -> set[str]:
+    without_dates = ISO_DATE.sub("", value)
     tokens = {
         _normalized_hex_selector(match.group(0))
-        for match in DOM_SELECTOR_TOKEN.finditer(value)
+        for match in DOM_SELECTOR_TOKEN.finditer(without_dates)
     }
+    compact = re.sub(r"[^a-z0-9]", "", without_dates.casefold()).replace("0x", "")
+    tokens.update(
+        f"020{match.group(1)}" for match in COMPACT_B503_SELECTOR.finditer(compact)
+    )
     return {token for token in tokens if token is not None}
 
 
@@ -496,7 +508,9 @@ def _decoded_dom_attribute_value(attribute: str, value: str) -> str:
 
 def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | None]], list[str]]]:
     parser = _DOMSnippetParser()
-    parser.feed(target)
+    # HTMLParser treats CommonMark autolinks as unterminated HTML tags and then
+    # misclassifies following prose as descendant DOM text.
+    parser.feed(COMMONMARK_AUTOLINK.sub("", target))
     parser.close()
     return parser.elements
 

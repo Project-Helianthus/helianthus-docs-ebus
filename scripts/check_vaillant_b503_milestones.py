@@ -13,6 +13,7 @@ STATUS_SECTION_END = "## 2. Wire Shape"
 MILESTONE_HEADING = "## 14. Companion Links (downstream code milestones)"
 MILESTONE_TABLE_HEADER = ("Milestone", "Repo", "Artefact")
 MARKDOWN_TABLE_DELIMITER_CELL = re.compile(r"^:?-{3,}:?$")
+HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
 SESSION_SECTION_START = "## 6. Live-Monitor Session"
 SESSION_SECTION_END = "## 7. Gateway Operational Contract"
 REFRESHING_PUBLIC_SECTION_START = "#### 7.1.1 Refreshing session state (public)"
@@ -233,6 +234,12 @@ REFRESH_SUCCESS_CONTINUATION = (
     "  `owned:false`, and return the exact Gateway-supplied failure to the triggering\n"
     "  request without dispatching its native operation. Capability is\n"
     "  `UNKNOWN` and no Enable is admitted until cleanup succeeds."
+)
+REFRESH_FAILURE_CAPABILITY_PRECEDENCE = (
+    "- On refresh failure, return the exact Gateway result—including\n"
+    "  `TRANSPORT_DOWN` or `UNKNOWN`—to the triggering caller. While the resulting\n"
+    "  cleanup obligation remains, public capability is `UNKNOWN`; the exact caller\n"
+    "  result MUST NOT be collapsed into `SESSION_BUSY`."
 )
 REFRESH_OWNER_REBINDING = (
     "On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes\n"
@@ -498,6 +505,10 @@ DISCONNECT_TRANSITION = (
     "retain the target and attempt only as the process-local §7.4 "
     "defensive-cleanup obligation |"
 )
+CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN = (
+    "- silent fallback to `UNKNOWN` from a knowable `TRANSPORT_DOWN` when no cleanup\n"
+    "  obligation remains."
+)
 ENABLING_NAK_TRANSITION = (
     "| `ENABLING` | NAK | `DISABLED` | release the owner on entry and complete "
     "cleanup to `IDLE` without a defensive disable because NAK proves the enable "
@@ -645,6 +656,9 @@ def _require_exact_row(rows: tuple[tuple[str, ...], ...], expected: tuple[str, .
 
 
 def validate_text(text: str) -> None:
+    # Exact milestone fragments must be present in rendered documentation.
+    # Raw text hidden in a CommonMark HTML comment cannot satisfy the gate.
+    text = HTML_COMMENT.sub("", text)
     status_section = _section(text, STATUS_SECTION_START, STATUS_SECTION_END)
     if CURRENT_PUBLIC_SESSION_AUTHORITY not in status_section:
         raise CheckError("missing current public session authority in §1")
@@ -739,6 +753,8 @@ def validate_text(text: str) -> None:
     refresh_section = _section(text, REFRESH_SECTION_START, REFRESH_SECTION_END)
     if REFRESH_SUCCESS_CONTINUATION not in refresh_section:
         raise CheckError("missing authenticated Refreshing continuation contract in §7.3")
+    if REFRESH_FAILURE_CAPABILITY_PRECEDENCE not in refresh_section:
+        raise CheckError("missing cleanup-aware refresh failure capability precedence")
     release_section = _section(text, RELEASE_SECTION_START, RELEASE_SECTION_END)
     for fragment in (
         OWNER_CONDITIONAL_MUTEX_SCOPE,
@@ -789,6 +805,8 @@ def validate_text(text: str) -> None:
             "§12.5 capability truth table must contain the exact ordered eight-row set; "
             f"got {truth_rows!r}"
         )
+    if CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN not in text:
+        raise CheckError("missing cleanup-scoped TRANSPORT_DOWN/UNKNOWN precedence")
 
 
 def main() -> int:

@@ -183,6 +183,10 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
     rejects_target_insertion(dom_with_attribute(attribute))
 
 
+def test_rejects_compact_b503_installation_selector_context() -> None:
+    rejects_target_insertion('<button id="b5030201control">Read</button>')
+
+
 @pytest.mark.parametrize(
     "attribute",
     (
@@ -210,6 +214,16 @@ def test_rejects_normalized_installation_selector_in_any_dom_attribute(attribute
 )
 def test_accepts_safe_or_substring_dom_attribute_reference(attribute: str) -> None:
     accepts_target_insertion(dom_with_attribute(attribute))
+
+
+def test_accepts_iso_date_in_dom_attribute() -> None:
+    accepts_target_insertion('<time datetime="2026-02-01">Accepted</time>')
+
+
+def test_accepts_commonmark_autolink_followed_by_benign_prose() -> None:
+    accepts_target_insertion(
+        "<https://example.com>\n\nClear prose follows."
+    )
 
 
 def test_rejects_installation_selector_even_in_prose() -> None:

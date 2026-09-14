@@ -425,8 +425,10 @@ live-monitor enable and disable frame. Bounds:
   `owned:false`, and return the exact Gateway-supplied failure to the triggering
   request without dispatching its native operation. Capability is
   `UNKNOWN` and no Enable is admitted until cleanup succeeds.
-- On refresh revealing `TRANSPORT_DOWN` or `UNKNOWN` → surface that value
-  literally (§11). It MUST NOT be collapsed into `SESSION_BUSY`.
+- On refresh failure, return the exact Gateway result—including
+  `TRANSPORT_DOWN` or `UNKNOWN`—to the triggering caller. While the resulting
+  cleanup obligation remains, public capability is `UNKNOWN`; the exact caller
+  result MUST NOT be collapsed into `SESSION_BUSY`.
 - No infinite reconnect loops. Reconnect is driven by the transport layer, not
   by B503 resolvers.
 
@@ -811,7 +813,8 @@ any row is an automatic merge-gate block.
 
 - sticky `AVAILABLE` after transport loss;
 - premature `AVAILABLE` before the first real dispatch;
-- silent fallback to `UNKNOWN` once `TRANSPORT_DOWN` is knowable.
+- silent fallback to `UNKNOWN` from a knowable `TRANSPORT_DOWN` when no cleanup
+  obligation remains.
 
 `Refreshing` remains a session-status state per §7.1.1 and §8; row 7 above
 does not add a public capability value.
