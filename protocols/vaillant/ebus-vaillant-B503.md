@@ -27,11 +27,23 @@ model, error model, and public-surface normalization rules are frozen for v1.
 
 Amendment-1 (2026-04-25) keeps the v1 wire/safety surface unchanged and
 extends the document with the production dispatcher contract in §12
-(plan AD16 + AD18). The amendment is additive: no v1 selector, FSM, or
-public enum is altered.
+(plan AD16 + AD18). The amendment is additive within that archived amendment:
+no v1 selector, wire shape, or invoke-safety classification is altered.
 
-Changes to this document require a new plan revision and a corresponding
-doc-gate PR before any downstream code change may land.
+**Current public contract authority.** The five-state public session contract in
+§6–§8 and the exact eight-row public capability table in §12.5 are governed by
+this document's current doc-gate revision (docs-ebus#523). They supersede prior
+public session-presentation and capability-output wording where the archived
+amendment-1 plan differs. In particular, row 3 returns `TRANSPORT_DOWN` to the
+in-flight caller while retained cleanup publishes capability `UNKNOWN`. The
+amendment-1 plan SHA remains traceability evidence for its original dispatcher
+and stale-epoch design; it is not conflict authority for the current public
+contract. This revision does not add a compatibility state, route, or fallback.
+
+Changes to plan-traced selectors, wire shape, or invoke-safety classification
+require a new plan revision and corresponding doc-gate PR. A correction limited
+to the current public session contract requires its own doc-gate PR and current
+source evidence; it does not claim or create execution-plan state.
 
 Evidence labels used throughout:
 
@@ -169,28 +181,59 @@ governing how this decimal is surfaced to consumers.
 ### 6.1 State machine (plan AD04)
 
 The gateway runs a single-owner FSM per transport incarnation for selector
-`00 03` (HMU `LiveMonitorMain`). `EXPIRED` is an **internal** sub-state
-emitted only after the transport epoch advances under an in-flight owner
-handle; it MUST NOT appear on any public surface (§7.1.1, §8, §11).
+`00 03` (HMU `LiveMonitorMain`). The public session observation has exactly
+five stable states: `Idle`, `Enabling`, `Active`, `Refreshing`, and `Disabled`.
+`Refreshing` means an epoch refresh holds the ownership gate. The already
+admitted triggering request remains pending; subsequent bus-facing live-monitor
+operations are busy. Refresh success dispatches a triggering read exactly once
+and returns `Active` only when that dispatch completes without a transport
+disconnect; a disconnect follows the any-transport-disconnect transition below
+and releases the owner. Refresh success may instead dispatch a triggering
+current-owner disable exactly once after its frame reaches emission. A terminal
+disconnect while that request still waits for poll-quiesce emits no disable,
+returns `TRANSPORT_DOWN`, releases the owner, and retains fail-closed cleanup;
+it is never retried on reconnect. Every emitted disable result is recorded and
+returned exactly, but the result alone never establishes native session
+settlement. Refresh failure releases the gate, enters internal `DISABLED`,
+retains a Gateway cleanup obligation, and returns the exact Gateway-supplied
+failure to that request; its public session observation is `Idle` with
+`owned:false` and unavailable capability. `Disabled` is never reported with
+`owned:true`.
+
+An ACK or NAK is an exact native outcome, not proof that the device session
+stopped or was never created. After any emitted Enable, Gateway may use one
+bounded defensive disable during the same admitted lifecycle and records its
+outcome, but no current 0.7 outcome makes the session slot re-claimable. Gateway
+retains fail-closed cleanup, publishes capability `UNKNOWN`, and denies Enable
+until a separately evidenced native settlement observation exists. Current
+public evidence defines no such observation; its evidence and recovery contract
+are deferred to [issue #525](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/525).
 
 ```mermaid
 stateDiagram-v2
     [*] --> IDLE
     IDLE --> ENABLING: enable request (MCP)
     ENABLING --> ACTIVE: enable ACK on bus
+    ENABLING --> IDLE: canceled before enable frame emission
+    ENABLING --> DISABLED: terminal enable outcome after emission
+    ENABLING --> IDLE: transport disconnect before enable frame emission
+    ENABLING --> DISABLED: transport disconnect after enable frame emission
+    ENABLING --> IDLE: epoch advance before enable frame emission
+    ENABLING --> DISABLED: epoch advance after enable frame emission
     ACTIVE --> ACTIVE: periodic read during session
     ACTIVE --> DISABLED: explicit disable
     ACTIVE --> DISABLED: 30s idle timer
-    DISABLED --> IDLE: owner cleanup complete
 
-    ACTIVE --> EXPIRED: reconnect / epoch mismatch
-    EXPIRED --> ACTIVE: resolver refresh + retry (success)
-    EXPIRED --> DISABLED: refresh reveals TRANSPORT_DOWN
-    EXPIRED --> DISABLED: refresh reveals UNKNOWN
+    ACTIVE --> REFRESHING: epoch advance while owner remains held
+    REFRESHING --> ACTIVE: refresh succeeds; triggering READ completes without disconnect
+    REFRESHING --> DISABLED: refresh succeeds; DISABLE emitted or pre-emission disconnect
+    REFRESHING --> DISABLED: refresh failure retains cleanup
+    DISABLED --> DISABLED: native outcome recorded; settlement remains unproven
 
-    note right of EXPIRED
-      Internal-only. Never surfaced publicly.
-      Retry budget: exactly 1 per request.
+    note right of REFRESHING
+      Stable public session state; ownership gate held.
+      Triggering request remains pending; later operations are busy.
+      After successful rebind, dispatch READ or DISABLE exactly once.
     end note
 ```
 
@@ -214,16 +257,30 @@ Rules (normative):
 
 | Operation | Required key match | Outcome on mismatch |
 |---|---|---|
-| ENABLE | none (new claim) | succeeds iff FSM is `IDLE`; if any session already `ENABLING`/`ACTIVE`/`EXPIRED` under a different `issuer_token` → `SESSION_BUSY` |
-| DISABLE | full `session_key` must match the active session | `SESSION_BUSY` (caller does not own the session) — prevents session hijacking between clients on the same transport |
-| READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE` — physically there is only one data stream on the bus; denying reads to non-owning clients would serve no safety purpose |
-| Epoch advance under any handle | — | handle → `EXPIRED` (internal); resolver refresh per §7.3 |
+| ENABLE | none (new claim) | succeeds iff FSM is `IDLE`, no cleanup or restart fence exists for the target, capability is `AVAILABLE`, and transport is connected; if any session is already `ENABLING`/`ACTIVE`/`REFRESHING` → `SESSION_BUSY`; an ownerless `IDLE` target under `TRANSPORT_DOWN` returns that exact unavailable result with no state transition or emission |
+| DISABLE | full `session_key` must match the active session | A current-owner DISABLE that detects epoch advance remains pending as the triggering request; every subsequent DISABLE while `REFRESHING`, or a request from a non-owner, returns `SESSION_BUSY` |
+| READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE`; a READ that detects epoch advance remains pending as the triggering request, and every subsequent live-monitor operation while `REFRESHING` is `SESSION_BUSY` |
+| Epoch advance while `ACTIVE` owner remains held | old epoch key authorizes only the bounded refresh for an admitted READ or current-owner DISABLE | → `REFRESHING`; refresh once per §7.3; success atomically rebinds the same issuer token and target to the returned current transport epoch before dispatching the triggering operation exactly once; ENABLE is never a refresh trigger |
+| Epoch advance while `ENABLING`, before enable-frame emission | — | → `IDLE`; cancel the queued frame, release the gate, and discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
+| Epoch advance while `ENABLING`, after enable-frame emission | pending attempt identity and target remain Gateway-owned for cleanup only | → `DISABLED`; fence every stale completion, issue at most one defensive disable after quiesce during the admitted lifecycle, and record its exact native outcome; ACK and NAK do not settle the session, so the §7.4 process-local obligation remains fail-closed and no automatic retry or active owner survives |
 
 The `issuer_token` is opaque to clients; it MUST NOT be derived from
 user-visible identifiers, and MUST be sufficient entropy that a second
 client cannot forge another client's token (e.g., gateway-internal UUID or
 cryptographic nonce). Clients obtain their token from the ENABLE response
 envelope and return it in subsequent DISABLE calls.
+
+On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes
+only the one bounded refresh attempt. A successful refresh returns the current
+`transport_key` for epoch N+1. Gateway MUST atomically replace the owner key
+with `(transport_key[N+1], same issuer_token)` while retaining the same target,
+then dispatch the admitted triggering operation exactly once. Completions and
+control requests still bound to epoch N are stale and MUST NOT satisfy, disable,
+extend, or mutate the rebound session. If refresh fails, no rebound key is
+installed; Gateway releases client ownership, retains a fresh Gateway-owned
+process-local cleanup obligation in internal `DISABLED`, presents public
+session `Idle` with `owned:false`, publishes capability `UNKNOWN`,
+and admits no Enable while native settlement remains unproven.
 
 This refines plan AD04's baseline `(adapter_instance_id,
 transport_incarnation_epoch)` with a client-scoped control token. The
@@ -235,33 +292,60 @@ access.
 
 | From | Event | To | Side effect |
 |---|---|---|---|
-| `IDLE` | enable request, no owner | `ENABLING` | emit enable frame after poll-quiesce |
-| `ENABLING` | enable ACK received | `ACTIVE` | start 30s idle timer; arm reads |
-| `ENABLING` | ACK timeout / NAK | `DISABLED` | (see release rule below) |
-| `ACTIVE` | read request | `ACTIVE` | reset idle timer |
-| `ACTIVE` | explicit disable | `DISABLED` | emit disable frame after quiesce |
-| `ACTIVE` | 30s idle | `DISABLED` | emit disable frame after quiesce |
-| `ACTIVE` | epoch advance detected | `EXPIRED` | internal; trigger refresh-once |
-| `EXPIRED` | refresh succeeds | `ACTIVE` | resume; retry budget consumed |
-| `EXPIRED` | refresh → `TRANSPORT_DOWN` | `DISABLED` | surface `TRANSPORT_DOWN` (NOT `SESSION_BUSY`) |
-| `EXPIRED` | refresh → `UNKNOWN` | `DISABLED` | surface `UNKNOWN` (NOT `SESSION_BUSY`) |
-| `DISABLED` | owner cleanup complete | `IDLE` | session may be re-claimed by any client |
-| any | transport disconnect | `DISABLED` | owner cleanup |
-| any | gateway restart | `DISABLED` | owner cleanup; session state is NOT recoverable across restart (no EXPIRED refresh path — restart destroys all handles) |
+| `IDLE` | enable request, no owner or cleanup/fence, capability `AVAILABLE`, transport connected | `ENABLING` | emit enable frame after poll-quiesce |
+| `IDLE` | enable request while transport disconnected or capability is not `AVAILABLE` | `IDLE` | return the exact Gateway-supplied availability result and emit no enable frame |
+| `ENABLING` | successful enable ACK received after frame emission | `ACTIVE` | record the exact ACK, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, start the 30s idle timer, arm reads for the current owner, publish `UNKNOWN`, and admit no second Enable; the ACK establishes the admitted operation outcome, not session settlement |
+| `ENABLING` | `ctx.Done` before enable-frame emission | `IDLE` | cancel the queued frame, release the ownership gate, and clear the pending attempt; no native disable is emitted |
+| `ENABLING` | `ctx.Done` / NAK / timeout / CRC mismatch / bus-arbitration failure / any other non-ACK terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; NAK and any defensive-disable ACK/NAK outcome do not prove settlement |
+| `ENABLING` | transport disconnect before enable-frame emission | `IDLE` | cancel the queued frame, record and return exact `TRANSPORT_DOWN`, release the ownership gate, clear the pending attempt, and retain no cleanup obligation; after reconnect require a new explicit Enable |
+| `ENABLING` | epoch advance detected before enable-frame emission | `IDLE` | cancel the queued frame, release ownership, and discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
+| `ENABLING` | epoch advance detected after enable-frame emission | `DISABLED` | fence every stale completion, issue at most one defensive disable after quiesce during the admitted lifecycle, record its exact native outcome, release ownership, retain fail-closed cleanup, publish `UNKNOWN`, and admit no Enable |
+| `ACTIVE` | successful read completes | `ACTIVE` | return the exact native result and reset the idle timer |
+| `ACTIVE` | read NAK / timeout / CRC mismatch / bus-arbitration failure / other non-disconnect failure | `ACTIVE` | return the exact native failure and do not reset the idle timer |
+| `ACTIVE` | current-owner session DISABLE action; transport disconnect before disable-frame emission | `DISABLED` | emit no disable frame, record and return exact `TRANSPORT_DOWN`, release the owner, retain the existing `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)` as process-local cleanup, present public `Idle` with `owned:false`, publish `UNKNOWN`, admit no Enable, and perform no reconnect retry |
+| `ACTIVE` | current-owner session DISABLE action; any terminal native outcome after disable-frame emission | `DISABLED` | the disable frame was emitted exactly once after quiesce; record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, present public `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable; this session action never produces public `Disabled`, and its outcome does not prove settlement |
+| `ACTIVE` | 30s idle | `DISABLED` | emit disable once after quiesce, record the exact outcome, release the owner, retain process-local cleanup, publish `UNKNOWN`, and admit no Enable |
+| `ACTIVE` | admitted request detects epoch advance | `REFRESHING` | ownership gate remains held; triggering request remains pending; subsequent live-monitor operations are busy |
+| `REFRESHING` | refresh succeeds for triggering READ; dispatched READ completes without transport disconnect | `ACTIVE` | atomically rebind the owner from epoch N to the returned current `transport_key` at N+1, retaining the same issuer token and target; fence every epoch-N completion; dispatch READ exactly once using the rebound key, return its outcome, and retain the owner; any transport disconnect instead follows the `any` disconnect row and releases the owner into `DISABLED` |
+| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; transport disconnect before disable-frame emission | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit no disable frame, record and return exact `TRANSPORT_DOWN`, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` as process-local cleanup, publish `UNKNOWN`, admit no Enable, and perform no reconnect retry |
+| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; any terminal native outcome after disable-frame emission | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, the disable frame was emitted exactly once after quiesce; record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; no outcome alone proves settlement |
+| `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return the exact Gateway-supplied failure without dispatching the triggering native operation, retain `(targetAddress, fresh gatewayCleanupAttemptID, attemptedTransportEpoch)` as process-local cleanup, present public session `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable |
+| `DISABLED` | defensive-disable ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | retain process-local cleanup, record the exact outcome, publish `UNKNOWN`, admit no Enable, and perform no same-epoch or automatic reconnect/restart recovery; only a future accepted settlement contract may define re-claimability |
+| `IDLE` / `DISABLED` with no owner | Gateway reports an out-of-band administrative/configuration-disabled condition | `DISABLED` | emit no native B503 operation; present public `Disabled` with `owned:false`, block Enable, and retain any pre-existing cleanup/fence; this condition is distinct from the current-owner session DISABLE action |
+| `IDLE` | transport disconnect, no owner or cleanup obligation | `IDLE` | change no session state and release no mutex; publish `TRANSPORT_DOWN` while disconnected; after reconnect require a new explicit Enable and perform no automatic B503 write |
+| `ENABLING` after enable-frame emission / `ACTIVE` / `REFRESHING` | transport disconnect | `DISABLED` | release the owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |
+| `DISABLED` | transport disconnect | `DISABLED` | change no session state and release no mutex; retain any existing cleanup obligation and its `UNKNOWN` fence; perform no automatic reconnect write |
+| any | gateway restart | `DISABLED` | release any owner and destroy every caller handle and process-local attempt identity; reconstruct no session, emit no automatic B503 enable or disable, and publish `UNKNOWN` for each qualified target; a still-effective out-of-band administrative/configuration-disabled condition presents public `Disabled` with `owned:false`, otherwise the restart-derived state presents public `Idle` with `owned:false`; admit no Enable under the current 0.7 contract |
 
 **Lock lifecycle (single assignment, owner-conditional):**
 `liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
-transition. It is released exactly once **on entry to `DISABLED` from a
-held-owner state** — i.e., when the source state is `ENABLING`, `ACTIVE`,
-or `EXPIRED`. The "any" transitions (transport disconnect, gateway
-restart) release the mutex only when FSM was in a held-owner state at the
-time the event fired; if the FSM was already `IDLE` or `DISABLED` (no
-owner), no release occurs. The `DISABLED → IDLE` transition does NOT
-release the mutex; it only marks the session slot as re-claimable after
-cleanup completes. Implementations MUST NOT release the mutex at any
-other transition, and MUST NOT attempt a release when no owner is held.
-This keeps the release single-sourced, owner-conditional, and free of
-double-unlock panics on timeout/NAK paths or disconnect-while-idle events.
+transition. It is released exactly once on a terminal transition from a
+held-owner state: on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or
+`REFRESHING`, or on any direct `ENABLING → IDLE` path (cancellation, transport disconnect, or
+epoch advance before frame emission). The "any" transitions
+(transport disconnect, gateway restart) release the mutex only when FSM was in
+a held-owner state at the time the event fired; if the FSM was already `IDLE`
+or `DISABLED` (no owner), no release occurs. `DISABLED` with a cleanup
+obligation, an unproven-session fence, or an effective explicit disable has no
+current 0.7 transition to `IDLE`: no ACK or NAK makes the session slot
+re-claimable. An `IDLE` target with no owner or cleanup obligation remains
+`IDLE` across transport disconnect/reconnect. Implementations MUST NOT release the mutex at any
+other transition, and MUST NOT attempt a release when no owner is held. This
+keeps the release single-sourced, owner-conditional, and free of double-unlock
+panics on timeout/NAK paths or disconnect-while-idle events.
+
+**Stable public `Disabled` mapping:** `Disabled` with `owned:false` represents
+only an out-of-band administrative/configuration-disabled condition supplied
+by Gateway. It is never the result of a current-owner live-monitor session
+DISABLE action; every terminal outcome of that action presents public `Idle`
+with `owned:false`, retains cleanup, and publishes `UNKNOWN`. A still-effective
+out-of-band disabled condition takes precedence across Gateway restart and
+continues to present `Disabled` with `owned:false`. Enable failure, the 30s idle
+timeout, transport disconnect, and every other restart-derived internal cleanup
+path may traverse `DISABLED`, but their stable public session observation is
+`Idle` with `owned:false`. While a process-local cleanup obligation remains,
+capability is `UNKNOWN` and Enable is unavailable; `Idle` does not make the
+internal slot re-claimable. `Disabled` is never reported with `owned:true`.
 
 ## 7. Gateway Operational Contract
 
@@ -280,18 +364,66 @@ public `B503Availability` enum (§11) or map onto it:
 | `BUSY` (`SESSION_BUSY`) | Live-monitor session already claimed under a different `issuer_token`, OR bounded lifecycle/contention ambiguity. | Another client holds the session (ENABLE/DISABLE mismatch per §6.2); genuine contention that is not transport loss. |
 | `UNAVAILABLE` (`TRANSPORT_DOWN` / `UNKNOWN` / `NOT_SUPPORTED`) | Capability is not currently usable; distinguish reason per public enum (§11). | Transport disconnected; gateway has not yet determined availability; device class does not implement B503. |
 
-#### 7.1.1 Internal-only state (NOT public)
+#### 7.1.1 Refreshing session state (public)
 
-`EXPIRED` is a gateway-internal FSM sub-state (§6.1) and MUST NOT appear
-in any public MCP / GraphQL / portal / HA surface. It exists only inside
-the gateway and is consumed by the resolver refresh-once policy (§7.3):
+`Refreshing` is the stable Gateway-owned session observation for an epoch
+refresh (§6.1). It holds the ownership gate while the already-admitted
+triggering READ or current-owner DISABLE remains pending. Every subsequent
+bus-facing live-monitor operation surfaces `SESSION_BUSY` during that interval.
+It is a session-status value, not a sixth `B503Availability` reason:
 
-| Internal value | Where it lives | Public exposure |
+| Session value | Where it surfaces | Ownership and outcome |
 |---|---|---|
-| `EXPIRED` | gateway FSM only | **forbidden** — surfaces as `AVAILABLE` (after successful refresh), `BUSY`, or `UNAVAILABLE` per §8 normalization |
+| `Refreshing` | Gateway session status, GraphQL, and portal strip | `owned:true`; refresh success for READ → `Active`; refresh failure releases the gate, retains Gateway cleanup, and presents session `Idle`, `owned:false`, with capability `UNKNOWN`; a refreshed DISABLE releases ownership, records and returns its exact native outcome, and always retains fail-closed cleanup with session `Idle`, `owned:false`, capability `UNKNOWN`, and no Enable |
 
-Downstream contract tests (M2a, M2b) MUST assert that no public response
-ever carries `EXPIRED`; any such surface is a gateway bug.
+Downstream contract tests (M2a, M2b, M3) MUST assert the five stable session
+states and MUST reject `Disabled` paired with `owned:true`.
+
+After a successful Enable ACK, session is `Active` with `owned:true` while
+capability remains `UNKNOWN` because settlement is unproven. The consumer that
+still holds the exact current issuer token for that target may retain the
+session strip and dispatch only current-owner READ or DISABLE. It MUST NOT
+admit a second Enable, general B503 tabs, a new projection entry, or those
+controls for another `UNKNOWN` target/session. Target switch, navigation away,
+ownership loss, or departure from `Active` removes this exception and follows
+the cleanup contract below.
+
+When a consumer leaves a target or navigates away while its locally initiated
+enable is pending, it MUST register cleanup under the exact
+`(targetAddress, localEnableAttemptID, presentationEpoch)` tuple. The consumer
+allocates a fresh opaque `localEnableAttemptID` before dispatch and never reuses
+it. Successful
+completion of that same attempt supplies the issuer token and dispatches
+exactly one target/token disable. Any other completion—including `ctx.Done`
+before bus turnaround, ACK timeout, NAK, CRC mismatch, bus-arbitration timeout,
+epoch-advance discard, transport disconnect, gateway restart, or any other
+terminal failure—clears that registration without issuing a client disable
+before any later enable is admitted. The registration MUST NOT transfer to a
+later attempt or session. Gateway may separately emit the single defensive
+native disable required by the §6.3 terminal-failure transition.
+
+When a locally token-owning consumer leaves a target or navigates away while
+its session is `Refreshing`, it MUST queue that target/token disable without
+invoking the busy operation. After successful refresh reaches `Active`, it
+dispatches the queued disable unless a terminal disconnect occurs before frame
+emission; that path emits no disable and returns exact `TRANSPORT_DOWN`. After
+refresh failure releases ownership and presents `Idle`, it clears the browser
+queued pair without a client disable while Gateway retains the process-local
+cleanup obligation. If the triggering request was itself the current-owner
+DISABLE, that admitted request is the only client dispatch. Its emitted native
+outcome, or its pre-emission `TRANSPORT_DOWN`, is returned and recorded exactly,
+while Gateway retains process-local fail-closed cleanup. The consumer clears
+the queued pair without issuing a second disable.
+During a held `Refreshing` epoch, the
+session strip remains observable alongside temporarily `UNKNOWN` capability,
+but it is status-only: only `vaillantCapabilities` and
+`vaillantLiveMonitorSession` remain admitted so the client can observe
+completion. No B503 card, general tabs, bus-facing reads, or actions are
+admitted while Gateway reports `Refreshing`. If the triggering READ succeeds
+and rebinds the same target and issuer token into `Active` with `owned:true`,
+the bounded current-owner READ/DISABLE exception above resumes immediately
+under `UNKNOWN`; it does not wait for `AVAILABLE` and does not extend to a
+different target, token, or general `UNKNOWN` presentation.
 
 ### 7.2 Quiesce timing bounds (normative)
 
@@ -306,54 +438,134 @@ live-monitor enable and disable frame. Bounds:
   `ebusd_tcp` transports is one B524 transaction window (validated in
   `M5_TRANSPORT_MATRIX`, artefact `matrix/M6a-vaillant-b503.md`).
 
+If the transport disconnects after a current-owner DISABLE is admitted but
+before its frame reaches emission, including while it waits for poll-quiesce,
+Gateway emits no disable frame and returns exact `TRANSPORT_DOWN`. It releases
+the owner, retains the existing fail-closed cleanup obligation, publishes
+`UNKNOWN`, admits no Enable, and never retries that write on reconnect. The
+exactly-once requirement begins only when the disable frame reaches emission.
+
 ### 7.3 Retry and refresh
 
-- Maximum **1 auto-retry per request** on `EXPIRED`. No recursive or unbounded
+- Maximum **1 refresh attempt** per epoch advance. No recursive or unbounded
   retries.
-- On refresh success → retry once; then surface the retry outcome.
-- On refresh revealing `TRANSPORT_DOWN` or `UNKNOWN` → surface that value
-  literally (§11). It MUST NOT be collapsed into `SESSION_BUSY`.
+- On refresh success for a surviving authenticated current-owner handle, the
+  old epoch-N key authorizes only that refresh. Gateway atomically installs the
+  returned current `transport_key` for epoch N+1 with the same issuer token and
+  target before returning to `Active`; every epoch-N completion is fenced. This
+  is continuation, not reconstruction or auto-resume. The already-admitted
+  triggering request remains pending during refresh; after successful rebind,
+  Gateway dispatches that request's native operation exactly once using the
+  rebound key and returns its exact outcome. A triggering READ retains the
+  owner in `Active` only when its dispatch completes without transport
+  disconnect; a disconnect releases the owner into `DISABLED`. A triggering
+  current-owner DISABLE emits its disable exactly once after quiesce only when
+  the frame reaches emission, records and returns the exact native outcome,
+  releases the owner, and remains in internal `DISABLED`. A terminal disconnect
+  before emission instead emits no disable, returns exact `TRANSPORT_DOWN`,
+  releases the owner, retains fail-closed cleanup, and is not retried on
+  reconnect.
+  ACK and NAK do not establish settlement: Gateway retains process-local
+  cleanup, publishes `UNKNOWN`, and admits no Enable. ENABLE is never a refresh
+  trigger. This dispatch consumes the request's only retry budget.
+- Every subsequent bus-facing live-monitor operation during refresh returns
+  `SESSION_BUSY`. On refresh failure, no rebound key is installed: release the
+  ownership gate, retain a fresh Gateway-owned process-local cleanup obligation
+  in internal `DISABLED`, present public session `Idle` with `owned:false`, and
+  return the exact Gateway-supplied failure without dispatching the triggering
+  native operation. Capability is `UNKNOWN` and no Enable is admitted.
+- On refresh failure, return the exact Gateway result—including
+  `TRANSPORT_DOWN` or `UNKNOWN`—to the triggering caller. While the resulting
+  cleanup obligation remains, public capability is `UNKNOWN`; the exact caller
+  result MUST NOT be collapsed into `SESSION_BUSY`.
 - No infinite reconnect loops. Reconnect is driven by the transport layer, not
   by B503 resolvers.
 
 ### 7.4 Ownership release
 
-Release is owner-conditional (§6.3 "Lock lifecycle"). The release
-obligations below apply **only when an owner is held at the moment the
-event fires**; they are no-ops when the FSM is already `IDLE` or
-`DISABLED`:
+Only release of `liveMonitorMu` is owner-conditional (§6.3 "Lock lifecycle"):
+it occurs only when an owner is held at the moment the event fires. Cleanup
+obligations and their native outcomes remain effective after owner release,
+including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
+`DISABLED` makes the event a no-op only with respect to mutex release.
 
-- On transport disconnect, the gateway MUST transition the FSM to
-  `DISABLED` and — if an owner was held — release `liveMonitorMu`.
-- On gateway restart, the gateway MUST transition the FSM to `DISABLED`
-  and — if an owner was held — release `liveMonitorMu`. No state persists
-  across restart.
-- If the FSM was already `IDLE` or `DISABLED` at disconnect/restart time,
-  these events are no-ops with respect to the mutex; no release is
-  attempted.
+- Every native disable used for explicit, idle-timeout, refreshed, or defensive
+  cleanup records its exact ACK, NAK, timeout, CRC, arbitration, disconnect, or
+  other outcome. No such outcome alone clears the obligation or proves native
+  session settlement. Gateway retains the target plus a fresh Gateway-owned
+  `gatewayCleanupAttemptID` and attempted transport epoch as process-local,
+  operation-ineligible cleanup state, publishes `UNKNOWN`, admits no Enable,
+  and performs no same-epoch or automatic reconnect/restart recovery.
+- Gateway allocates `gatewayCleanupAttemptID` when the cleanup obligation is
+  created and never reuses it. This opaque ID is internal to Gateway; it is not
+  the browser-local `localEnableAttemptID`, is not supplied by a caller, and
+  confers no owner or operation authority.
+- An `ENABLING` disconnect before enable-frame emission cancels the queued frame,
+  returns exact `TRANSPORT_DOWN`, releases `liveMonitorMu`, clears the attempt,
+  retains no cleanup obligation, and returns directly to `IDLE`. Reconnect still
+  requires a new explicit Enable and emits no automatic B503 write.
+- After enable-frame emission, or from `ACTIVE` / `REFRESHING`, transport
+  disconnect transitions the FSM to `DISABLED` and releases `liveMonitorMu`.
+  If an Enable may have reached the wire or settlement is otherwise unproven, Gateway retains
+  `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)` only as a
+  process-local cleanup obligation across transport reconnect. It carries no
+  issuer token, owner authority, session continuation, or operation eligibility
+  and cannot authorize an automatic reconnect write.
+- On Gateway restart, Gateway transitions the FSM to `DISABLED` and, if an
+  owner was held, releases `liveMonitorMu`. No session or cleanup tuple persists
+  across restart. Because Gateway can no longer distinguish its pre-restart
+  session from a session owned by another bus client, it emits no automatic
+  B503 enable or disable. Each qualified target starts with live-monitor
+  capability `UNKNOWN`, and Enable remains unavailable under the current 0.7
+  contract.
+- If the FSM was already `IDLE` or `DISABLED` at transport-disconnect time,
+  disconnect is a no-op with respect to the mutex; no release is attempted. A
+  pre-existing cleanup obligation remains across that disconnect.
+- If the FSM was already `IDLE` or `DISABLED` at Gateway-restart time, restart
+  is likewise a no-op with respect to the mutex. It still destroys every
+  process-local cleanup attempt identity and enforces the per-target `UNKNOWN`
+  fence; no prior attempt identity survives process restart.
 - `liveMonitorMu` is a **distinct** `sync.Mutex` from the B524 `readMu`.
   Acquisition order when both are needed: `liveMonitorMu` → (optional)
   `readMu`. The reverse order is forbidden.
 
-### 7.5 Reconnect handling
+### 7.5 Reconnect and restart handling
 
-- On reconnect, the `transport_incarnation_epoch` advances. Any surviving owner
-  handle from the prior incarnation is `EXPIRED` (internal) on next touch.
-- The resolver applies the §7.3 refresh-once policy.
-- The gateway MUST NOT auto-resume a live-monitor session across transport
-  incarnations. A new enable from the client is required.
+- On reconnect, `transport_incarnation_epoch` advances. A surviving owner handle
+  that remains held without a terminal transport disconnect may enter
+  `Refreshing` on next touch and follows the bounded continuation in §7.3.
+- A terminal transport disconnect follows §7.4: it releases any held owner and
+  does not enter `Refreshing` on reconnect. An `Idle` target with no owner or
+  cleanup obligation stays `Idle` through disconnect/reconnect and requires a
+  new explicit client Enable.
+- If cleanup/session settlement is unproven, the transport layer MUST NOT
+  publish the new epoch as B503-usable or admit Enable. Reconnect emits no
+  automatic B503 enable or disable. Gateway preserves the process-local target,
+  attempt, and prior epoch only as evidence/cleanup state, publishes `UNKNOWN`,
+  and waits for a future accepted settlement contract.
+- After every Gateway process restart, enumerate the finite registry-qualified
+  B503 targets, set each target's live-monitor capability to `UNKNOWN`, admit no
+  Enable, and emit no automatic B503 enable or disable. The Portal and GraphQL
+  v1 surfaces expose no recovery control. Current 0.7 defines no ACK/NAK-based
+  maintenance action that restores availability; later evidence and any changed
+  recovery contract belong to deferred issue #525.
+- Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost
+  owner handle, or an absent/invalid current issuer token. The surviving
+  authenticated current-owner refresh path in §7.3 is the only continuation
+  allowed across a non-terminal epoch advance.
 
 ### 7.6 30s idle-timeout semantics
 
-- In `ACTIVE`, if no read request arrives within 30 seconds, the gateway emits
-  a disable frame (with quiesce) and transitions to `DISABLED`.
+- In `ACTIVE`, after 30 seconds without a successful read, Gateway emits a
+  disable frame once after quiesce and transitions to `DISABLED`.
 - The 30s timer resets on every successful read.
-- Idle disable transitions the **internal** FSM from `ACTIVE` to `DISABLED`.
-  The **public capability signal** (§11) remains `AVAILABLE` throughout: idle
-  auto-disable is a session-lifecycle event, not a capability change. A client
-  that issues a new live-monitor request simply re-enters `ENABLING`. Idle
-  auto-disable MUST NOT be reported to consumers as `NOT_SUPPORTED`, which is
-  reserved for "device class does not implement B503" (§11).
+- Gateway records the exact disable ACK, NAK, timeout, CRC, arbitration,
+  disconnect, or other outcome, releases the owner, retains process-local
+  cleanup, publishes `UNKNOWN`, and admits no Enable. No outcome alone returns
+  the internal FSM to `IDLE` or preserves public `AVAILABLE` because native
+  session settlement remains unproven. Idle auto-disable MUST NOT be reported as
+  `NOT_SUPPORTED`, which is reserved for "device class does not implement
+  B503" (§11).
 
 ### 7.7 Concurrency with B524
 
@@ -374,8 +586,8 @@ The stable API (GraphQL `B503Availability` enum + MCP error code) exposes:
 - `SESSION_BUSY`
 - `UNKNOWN`
 
-`EXPIRED` is not a member of this enum and never appears in any public
-payload. See §8 for the normative normalization rules and §11 for the GraphQL
+`Refreshing` is a session-status value and not a member of this availability
+enum. See §8 for the normative normalization rules and §11 for the GraphQL
 capability-signal contract.
 
 ## 8. Public Normalization Rules
@@ -383,20 +595,36 @@ capability-signal contract.
 The following rules are normative and binding on every downstream consumer
 path (MCP resolvers, GraphQL resolvers, HA integration, portal).
 
-1. **EXPIRED is internal-only.** Internal state `EXPIRED` MUST NOT appear in
-   any public-facing enum, error model, or payload exposed to downstream
-   consumers (MCP, GraphQL, portal, Home Assistant).
-2. **Refresh-once on EXPIRED.** On `EXPIRED` detected inside a resolver, the
-   resolver MUST auto-refresh session state and retry the operation
-   **exactly once**.
-3. **No collapse of transport/unknown outcomes.** After refresh, if the
+1. **Refreshing is session-specific.** `Refreshing` appears only in the stable
+   session observation, never as a sixth availability reason or as a substitute
+   for a Gateway error outcome.
+2. **Refresh once.** On epoch advance with a held session, Gateway transitions
+   to `Refreshing` and makes exactly one refresh attempt. The already-admitted
+   triggering READ or current-owner DISABLE remains pending and is dispatched
+   exactly once only after successful rebind. READ returns Gateway to `Active`
+   only when its dispatch completes without transport disconnect; a disconnect
+   releases the owner under the `any` disconnect transition. DISABLE emits once
+   only after its frame reaches emission and records and returns its exact native
+   outcome. A disconnect before disable-frame emission emits no disable, returns
+   exact `TRANSPORT_DOWN`, and is not retried. Both paths release ownership,
+   retain fail-closed cleanup in internal `DISABLED`, publish `UNKNOWN`, and
+   admit no Enable. Subsequent bus-facing live-monitor operations are
+   `SESSION_BUSY` during refresh. Refresh failure likewise releases client
+   ownership but retains Gateway cleanup, publishes `UNKNOWN`, and admits no
+   Enable.
+3. **ACK/NAK never prove settlement.** ACK, NAK, timeout, CRC, arbitration, and
+   disconnect remain exact native outcomes. No consumer may convert one of them
+   into session re-claimability, `IDLE`, or `AVAILABLE` without a separately
+   accepted command-specific settlement observation. Current 0.7 defines none.
+4. **No collapse of transport/unknown outcomes.** After refresh, if the
    capability query reveals `TRANSPORT_DOWN` or `UNKNOWN`, those outcomes MUST
    be surfaced literally. They MUST NOT be collapsed into `SESSION_BUSY`.
-4. **SESSION_BUSY is narrow.** `SESSION_BUSY` is reserved **only** for bounded
+5. **SESSION_BUSY is narrow.** `SESSION_BUSY` is reserved **only** for bounded
    lifecycle/contention ambiguity (another claimant, genuine in-flight
    contention). It is not a catch-all for unknown or transport failures.
-5. **Bounded retries.** Maximum 1 auto-retry per request. No infinite
-   reconnect loops. The transport layer owns reconnect; B503 resolvers do not.
+6. **Bounded retries.** Maximum 1 auto-retry per request. No infinite reconnect
+   loops and no automatic recovery write after terminal disconnect or restart.
+   The transport layer owns reconnect; B503 resolvers do not.
 
 ## 9. Install-Writes Non-Exposure (v1 invariant)
 
@@ -477,7 +705,8 @@ enum B503Availability {
 }
 ```
 
-`EXPIRED` is **not** a member of this enum, per §8.
+`Refreshing` is a session-status value, not a member of this availability enum,
+per §8.
 
 ## 12. Production dispatcher contract
 
@@ -486,10 +715,10 @@ amendment-1 and is the doc-gate companion for `M6_DISPATCHER_BRIDGE`
 (helianthus-ebusgateway). It mirrors plan decisions AD16 (production raw-frame
 dispatcher contract) and AD18 (capability-signal 8-state truth table +
 stale-epoch discipline) from plan canonical SHA
-`86495340799be9340dc191c371a49a958f65c357c76a1e0a2974502c8489b508`. The plan
-chunks `13-amendment-1-dispatcher-portal-ux.md` and `10-scope-decisions.md` are
-the canonical source; this section MUST NOT diverge. On conflict, the plan
-wins and this section is updated by a follow-up doc-gate PR.
+`86495340799be9340dc191c371a49a958f65c357c76a1e0a2974502c8489b508`. Those plan
+chunks are archived design traceability. This current public document is the
+normative implementation contract; §12.5 records the cleanup-aware capability
+refinement and its exact checker-backed eight-row parity surface.
 
 ### 12.1 Dispatcher path overview
 
@@ -608,32 +837,35 @@ Discriminator rules:
 
 ### 12.5 Capability-signal 8-state truth table (mirror of AD18) <a id="capability-truth-table"></a>
 
-The `vaillantCapabilities.b503` capability output (§11) follows the 8-state
-truth table below. The plan AD18 entry in
-`vaillant-b503-namespace-w17-26.implementing/10-scope-decisions.md` is the
-canonical source; this table mirrors it for doc-gate completeness. Each
-row is a separate `M6_DISPATCHER_BRIDGE` test target; missing-coverage on
-any row is an automatic merge-gate block.
+The `vaillantCapabilities.b503` capability output (§11) follows the exact
+eight-row table below. This current doc-gate revision is the public contract.
+The archived plan AD18 entry in
+`vaillant-b503-namespace-w17-26.implementing/10-scope-decisions.md` is retained
+as provenance for the initial dispatcher design; rows 2, 3, 5, 6, and 7 include
+the current cleanup/restart refinement. Each row is a separate
+`M6_DISPATCHER_BRIDGE` test target; missing coverage on any row is an automatic
+merge-gate block.
 
 | # | State | Capability output | Stale-frame discipline |
 |---|---|---|---|
 | 1 | cold-boot, no successful dispatch yet | `UNKNOWN` | n/a |
-| 2 | post-first-success steady state | `AVAILABLE` | n/a |
-| 3 | disconnect during ACTIVE session | `TRANSPORT_DOWN` (literal) | in-flight requests fail `TRANSPORT_DOWN`; no late mutation |
+| 2 | post-first-success steady state; no cleanup obligation or unproven-session fence | `AVAILABLE` | diagnostic success alone never clears an unproven-session or restart fence |
+| 3 | disconnect during ACTIVE session | `UNKNOWN` while the cleanup obligation remains | in-flight requests fail `TRANSPORT_DOWN`; retain defensive cleanup; no late mutation |
 | 4 | reconnect, before first post-reconnect dispatch | `UNKNOWN` (NOT sticky `AVAILABLE`) | reset to `UNKNOWN` regardless of pre-disconnect state |
-| 5 | reconnect, post-first-success-after-reconnect | `AVAILABLE` | n/a |
-| 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known | n/a |
-| 7 | session-expiry detected | `EXPIRED` internal → AD14 1-retry → `AVAILABLE` OR `TRANSPORT_DOWN` literal | n/a |
+| 5 | reconnect, post-first-success-after-reconnect; no cleanup obligation or unproven-session fence | `AVAILABLE` | diagnostic success alone never clears an unproven-session or restart fence |
+| 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known only when the operation creates no cleanup obligation; every post-emission Enable outcome and every disable/refresh failure that leaves settlement unproven publishes `UNKNOWN` per §6–§8 | cleanup-bearing outcomes retain the Gateway-owned attempt identity, admit no Enable, and never trigger automatic reconnect/restart recovery |
+| 7 | held-session epoch refresh; session status `Refreshing` | `UNKNOWN` (temporary during refresh; remains `UNKNOWN` after any triggering DISABLE) | triggering READ or current-owner DISABLE remains pending until successful rebind; READ is dispatched exactly once and returns to `Active` only if it completes without transport disconnect; DISABLE is emitted exactly once only when its frame reaches emission, while pre-emission disconnect emits no disable and returns exact `TRANSPORT_DOWN`; both disconnect paths release ownership into `DISABLED`, retain fail-closed cleanup, and admit no Enable; subsequent live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain admitted |
 | 8 | stale in-flight completion across epoch rollover | n/a — frame discarded | reply/NAK/timeout from epoch N arriving after reconnect to epoch N+1 MUST be discarded; MUST NOT mutate capability to `AVAILABLE`; MUST NOT satisfy any post-reconnect waiter |
 
 **Forbidden states** (M6 tests assert absence):
 
 - sticky `AVAILABLE` after transport loss;
 - premature `AVAILABLE` before the first real dispatch;
-- silent fallback to `UNKNOWN` once `TRANSPORT_DOWN` is knowable.
+- silent fallback to `UNKNOWN` from a knowable `TRANSPORT_DOWN` when no cleanup
+  obligation remains.
 
-`EXPIRED` remains gateway-internal per §7.1.1 and §8; row 7 above describes
-the internal sub-state, not a public capability value.
+`Refreshing` remains a session-status state per §7.1.1 and §8; row 7 above
+does not add a public capability value.
 
 ### 12.6 Lock acquisition order invariant <a id="lock-order"></a>
 
@@ -692,12 +924,11 @@ and reply arrival, allowing a stale frame to satisfy a fresh waiter.
 
 ### 12.8 Companion test surface
 
-`M6_DISPATCHER_BRIDGE` acceptance lives in the plan
-(`13-amendment-1-dispatcher-portal-ux.md §M6`); §12.4–§12.7 are the
-assertion targets (error-mapping rows, 8 truth-table tests, 4 `M6-CONC-*`
-lock-tracer tests, stale-epoch in-flight completion test). On disagreement
-between this doc and the plan, the plan wins and a follow-up doc-gate PR
-realigns §12.
+The archived plan's `13-amendment-1-dispatcher-portal-ux.md §M6` identifies the
+original implementation milestone. This current document's §12.4–§12.7 are the
+normative assertion targets: error-mapping rows, the exact eight truth-table
+tests, four `M6-CONC-*` lock-tracer tests, and the stale-epoch in-flight
+completion test.
 
 ## 13. Evidence Labels (preserved)
 
@@ -717,8 +948,8 @@ The evidence labels defined in §1 are used throughout. In particular:
 | `M1_DECODER` | `helianthus-ebusgo` | `protocol/vaillant/b503` decoder package + invoke-safety enum |
 | `M2a_GATEWAY_MCP` | `helianthus-ebusgateway` | MCP tools `ebus.v1.vaillant.errors.get`, `.errors.history.get`, `.service.current.get`, `.service.history.get`, `.live_monitor.get` |
 | `M5_TRANSPORT_MATRIX` | `helianthus-ebusgateway` | `matrix/M6a-vaillant-b503.md` — adapter-direct + `ebusd_tcp` (+ `ebusd_serial` if lab-available) |
-| `M2b_GATEWAY_GRAPHQL` | `helianthus-ebusgateway` | GraphQL read-only parity + `vaillantCapabilities.b503` signal |
-| `M3_PORTAL` | `helianthus-ebusgateway` | Vaillant pane (errors / service / live-monitor tabs, read-only) |
+| `M2b_GATEWAY_GRAPHQL` | `helianthus-ebusgateway` | GraphQL diagnostic read-only parity + `vaillantCapabilities.b503` signal and five-state `vaillantLiveMonitor` session status (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`); only the bounded session enable/disable action through the §6 FSM |
+| `M3_PORTAL` | `helianthus-ebusgateway` | Vaillant pane (errors / service / live-monitor diagnostic reads) plus Gateway-owned five-state live-monitor session strip (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`) and only the bounded session enable/disable action through the §6 FSM |
 | `M4_HA` | `helianthus-ha-integration` | diagnostic sensor `boiler_active_error` + `error_history` attribute, capability-signal-gated |
 | `M6_DISPATCHER_BRIDGE` (amendment-1) | `helianthus-ebusgateway` | production `RawFrameDispatcher` replacing `b503StubDispatcher{}` injection in `cmd/gateway/vaillant_b503_wiring.go`; contract per §12 (PR ref: TBD) |
 
@@ -737,10 +968,11 @@ their PR body.
   `896a82e720b33eefb449ea532570e0a962bfa76504519996825f13d92ec9bb28`; amendment-1
   supersedes it.
 - Amendment-1 chunk: [`13-amendment-1-dispatcher-portal-ux.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/vaillant-b503-namespace-w17-26.implementing/13-amendment-1-dispatcher-portal-ux.md)
-  — canonical source for §12 (M0b / M6 / M7 / M8).
+  — archived design provenance for §12 (M0b / M6 / M7 / M8).
 - Decision matrix: [`10-scope-decisions.md`](https://github.com/Project-Helianthus/helianthus-execution-plans/blob/main/vaillant-b503-namespace-w17-26.implementing/10-scope-decisions.md)
-  — canonical source for AD16 (production dispatcher contract) and AD18
-  (capability-signal 8-state truth table + stale-epoch discipline).
+  — archived design provenance for AD16 (production dispatcher contract) and
+  AD18 (initial capability-signal table + stale-epoch discipline); current
+  public outputs are owned by §12.5 above.
 - Meta-issue: [execution-plans#19](https://github.com/Project-Helianthus/helianthus-execution-plans/issues/19).
 - Doc-gate issue (v1.0): [docs-ebus#282](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/282).
 - Doc-gate issue (amendment-1 / M0b): [docs-ebus#288](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/288).
