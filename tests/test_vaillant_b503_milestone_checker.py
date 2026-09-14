@@ -522,6 +522,16 @@ def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
         CHECKER.validate_text(text)
 
 
+def test_rejects_ambiguous_configuration_disabled_restart_mapping() -> None:
+    text = contract().replace(
+        "A still-effective explicit\noperator or configuration disable takes precedence across Gateway restart",
+        "Gateway restart always presents Idle even when a configuration disable remains effective",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     ("section_end", "clause"),
     (

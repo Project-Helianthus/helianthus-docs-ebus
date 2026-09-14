@@ -203,11 +203,13 @@ publishes capability `UNKNOWN`, and admits no Enable because ACK/NAK alone do
 not prove native settlement. Refresh failure follows the same public state and
 completes the triggering request with the exact unavailable failure without
 dispatching its native operation.
-`Disabled` is never reported with `owned:true`. `Disabled` with `owned:false` maps only an
-explicit operator or configuration disable; enable failure, the 30-second idle
-timeout, transport disconnect, and gateway restart map to `Idle` with
-`owned:false`; while cleanup is pending, capability remains unavailable and
-`Idle` does not admit Enable.
+`Disabled` is never reported with `owned:true`. `Disabled` with `owned:false`
+maps only an explicit operator or configuration disable. A still-effective
+explicit operator or configuration disable takes precedence across Gateway
+restart and remains `Disabled` with `owned:false`; enable failure, the 30-second
+idle timeout, transport disconnect, and every other restart-derived cleanup
+state map to `Idle` with `owned:false`. While cleanup is pending, capability
+remains unavailable and `Idle` does not admit Enable.
 
 After a successful Enable ACK, session is `Active` with `owned:true` while
 capability remains `UNKNOWN` because settlement is unproven. If the browser

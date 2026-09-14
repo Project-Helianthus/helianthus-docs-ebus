@@ -842,6 +842,13 @@ def test_rejects_missing_refreshing_cleanup_strip_or_disabled_mapping(
     rejects(clause, replacement)
 
 
+def test_rejects_ambiguous_configuration_disabled_restart_mapping() -> None:
+    rejects(
+        "A still-effective\nexplicit operator or configuration disable takes precedence across Gateway\nrestart",
+        "Gateway restart always presents Idle even when a configuration disable remains effective",
+    )
+
+
 @pytest.mark.parametrize(
     "required_failure",
     (

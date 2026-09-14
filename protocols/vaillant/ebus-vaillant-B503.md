@@ -302,7 +302,7 @@ access.
 | `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return the exact Gateway-supplied failure without dispatching the triggering native operation, retain `(targetAddress, fresh gatewayCleanupAttemptID, attemptedTransportEpoch)` as process-local cleanup, present public session `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable |
 | `DISABLED` | defensive-disable ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | retain process-local cleanup, record the exact outcome, publish `UNKNOWN`, admit no Enable, and perform no same-epoch or automatic reconnect/restart recovery; only a future accepted settlement contract may define re-claimability |
 | any | transport disconnect | `DISABLED` | release any owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |
-| any | gateway restart | `DISABLED` | release any owner and destroy every caller handle and process-local attempt identity; reconstruct no session, emit no automatic B503 enable or disable, publish `UNKNOWN` for each qualified target, and admit no Enable under the current 0.7 contract |
+| any | gateway restart | `DISABLED` | release any owner and destroy every caller handle and process-local attempt identity; reconstruct no session, emit no automatic B503 enable or disable, and publish `UNKNOWN` for each qualified target; a still-effective explicit operator or configuration disable presents public `Disabled` with `owned:false`, otherwise the restart-derived state presents public `Idle` with `owned:false`; admit no Enable under the current 0.7 contract |
 
 **Lock lifecycle (single assignment, owner-conditional):**
 `liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
@@ -319,13 +319,14 @@ keeps the release single-sourced, owner-conditional, and free of double-unlock
 panics on timeout/NAK paths or disconnect-while-idle events.
 
 **Stable public `Disabled` mapping:** `Disabled` with `owned:false` represents
-only an explicit operator or configuration disable. Enable failure, the 30s
-idle timeout, transport disconnect, and gateway restart may traverse the
-internal cleanup path through `DISABLED`, but their stable public session
-observation is `Idle` with `owned:false`. While a process-local cleanup
-obligation remains, capability is `UNKNOWN` and Enable is unavailable; `Idle`
-does not make the internal slot re-claimable. `Disabled` is never reported with
-`owned:true`.
+only an explicit operator or configuration disable. A still-effective explicit
+operator or configuration disable takes precedence across Gateway restart and
+continues to present `Disabled` with `owned:false`. Enable failure, the 30s idle
+timeout, transport disconnect, and every other restart-derived internal cleanup
+path may traverse `DISABLED`, but their stable public session observation is
+`Idle` with `owned:false`. While a process-local cleanup obligation remains,
+capability is `UNKNOWN` and Enable is unavailable; `Idle` does not make the
+internal slot re-claimable. `Disabled` is never reported with `owned:true`.
 
 ## 7. Gateway Operational Contract
 

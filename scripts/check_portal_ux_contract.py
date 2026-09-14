@@ -71,11 +71,13 @@ B503_FRONTEND_EPOCH_ROLLOVER = (
 )
 B503_SESSION_STATE_CONTRACT = "The strip states are `Idle`, `Enabling`, `Active`, and\n`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\nownership gate; the already-admitted triggering request remains pending and\nnew bus-facing live-monitor reads/actions are busy. Status-only\n`vaillantCapabilities(targetAddress:)` and\n`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\navailability and session completion. Refresh success returns `Active` and\ncompletes a triggering read with exactly one native operation result, or\ndispatches a triggering current-owner disable exactly once. Every disabling\noutcome is recorded and returned exactly, releases ownership, retains Gateway's\nprocess-local cleanup obligation, presents session `Idle` with `owned:false`,\npublishes capability `UNKNOWN`, and admits no Enable because ACK/NAK alone do\nnot prove native settlement. Refresh failure follows the same public state and\ncompletes the triggering request with the exact unavailable failure without\ndispatching its native operation.\n`Disabled` is never reported with `owned:true`."
 B503_DISABLED_PUBLIC_MAPPING = (
-    "`Disabled` with `owned:false` maps only an\n"
-    "explicit operator or configuration disable; enable failure, the 30-second idle\n"
-    "timeout, transport disconnect, and gateway restart map to `Idle` with\n"
-    "`owned:false`; while cleanup is pending, capability remains unavailable and\n"
-    "`Idle` does not admit Enable."
+    "`Disabled` with `owned:false`\n"
+    "maps only an explicit operator or configuration disable. A still-effective\n"
+    "explicit operator or configuration disable takes precedence across Gateway\n"
+    "restart and remains `Disabled` with `owned:false`; enable failure, the 30-second\n"
+    "idle timeout, transport disconnect, and every other restart-derived cleanup\n"
+    "state map to `Idle` with `owned:false`. While cleanup is pending, capability\n"
+    "remains unavailable and `Idle` does not admit Enable."
 )
 B503_REFRESHING_CLEANUP = 'For a `REFRESHING` prior target, the browser queues that\nsame token-bound disable without invoking an operation while Refreshing is busy;\nafter refresh succeeds to `Active`, it dispatches the queued disable. After\nrefresh failure presents `Idle`, Gateway retains the process-local cleanup\nobligation. The browser clears the queued pair without a client disable.\nIf the triggering request was already the current-owner disable, that single\ndisable is the only client dispatch. Gateway records and returns its exact ACK,\nNAK, or failure outcome, releases ownership, and retains process-local\nfail-closed cleanup because the outcome alone does not prove native settlement.\nThe browser clears the queued pair without issuing a second disable.'
 B503_ENABLING_CLEANUP = (
