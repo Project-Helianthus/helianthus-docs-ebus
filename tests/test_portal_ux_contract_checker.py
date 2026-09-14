@@ -420,6 +420,11 @@ def test_rejects_required_contract_clause_hidden_in_fenced_code() -> None:
     rejects(clause, f"```text\n{clause}\n```")
 
 
+def test_rejects_required_contract_clause_stored_only_in_html_attribute() -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    rejects(clause, f'<div data-contract="{clause}"></div>')
+
+
 def test_rejects_availability_table_hidden_in_fenced_code() -> None:
     table = "\n".join(
         (

@@ -47,6 +47,16 @@ def test_rejects_five_state_contract_hidden_in_fenced_code() -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_five_state_contract_stored_only_in_html_attribute() -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f'<div data-contract="{CHECKER.SESSION_STATE_CONTRACT}"></div>',
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize("container", sorted(CHECKER.NON_RENDERING_CONTAINERS))
 def test_rejects_five_state_contract_hidden_in_inert_html(container: str) -> None:
     text = contract().replace(
@@ -322,6 +332,18 @@ def test_rejects_missing_refreshing_or_disabled_ownership_contract(
     replacement: str,
 ) -> None:
     text = contract().replace(CHECKER.SESSION_STATE_CONTRACT, replacement, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_rejects_ambiguous_refreshed_disable_failure_layering() -> None:
+    precise = (
+        "the internal state remains `DISABLED` and does not enter\n"
+        "  internal `IDLE`, while the public session observation is `Idle` with\n"
+        "  `owned:false`; capability remains `UNKNOWN` and Enable remains unavailable"
+    )
+    ambiguous = "it does not enter `Idle`"
+    text = contract().replace(precise, ambiguous, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 

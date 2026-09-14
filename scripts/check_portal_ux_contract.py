@@ -431,16 +431,11 @@ class _VisibleContractSourceParser(HTMLParser):
             if normalized not in HTML_VOID_ELEMENTS:
                 self._inert_stack.append(normalized)
             return
-        self.parts.append(self.get_starttag_text())
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        hidden = any(name.casefold() == "hidden" for name, _ in attrs)
-        if (
-            not self._inert_stack
-            and tag.casefold() not in NON_RENDERING_CONTAINERS
-            and not hidden
-        ):
-            self.parts.append(self.get_starttag_text())
+        # Opening tags and attribute values are metadata, not rendered prose.
+        # The raw target is audited separately for route/control/selector DOM.
+        return
 
     def handle_endtag(self, tag: str) -> None:
         normalized = tag.casefold()
@@ -450,7 +445,6 @@ class _VisibleContractSourceParser(HTMLParser):
                     del self._inert_stack[index:]
                     return
             return
-        self.parts.append(f"</{tag}>")
 
     def handle_data(self, data: str) -> None:
         if not self._inert_stack:

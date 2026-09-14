@@ -40,7 +40,7 @@ NORMALIZATION_SECTION_START = "## 8. Public Normalization Rules"
 NORMALIZATION_SECTION_END = "## 9. Install-Writes Non-Exposure (v1 invariant)"
 INSTALL_WRITE_SECTION_START = "## 9. Install-Writes Non-Exposure (v1 invariant)"
 INSTALL_WRITE_SECTION_END = "## 10. F.xxx Decimal Caveat (LOCAL_CAPTURE only)"
-CAPABILITY_TRUTH_TABLE_SECTION_START = "### 12.5 Capability-signal 8-state truth table (mirror of AD18) <a id=\"capability-truth-table\"></a>"
+CAPABILITY_TRUTH_TABLE_SECTION_START = "### 12.5 Capability-signal 8-state truth table (mirror of AD18)"
 CAPABILITY_TRUTH_TABLE_SECTION_END = "**Forbidden states** (M6 tests assert absence):"
 CAPABILITY_TRUTH_TABLE_HEADER = (
     "#", "State", "Capability output", "Stale-frame discipline",
@@ -253,7 +253,10 @@ REFRESH_SUCCESS_CONTINUATION = (
     "  quiesce and enters `Disabled`. A valid disable ACK completes owner cleanup to\n"
     "  `Idle`. Any other disable outcome returns exactly, releases the owner, retains\n"
     "  a process-local defensive-cleanup obligation, publishes capability `UNKNOWN`,\n"
-    "  and admits no Enable; it does not enter `Idle`. ENABLE is\n"
+    "  and admits no Enable; the internal state remains `DISABLED` and does not enter\n"
+    "  internal `IDLE`, while the public session observation is `Idle` with\n"
+    "  `owned:false`; capability remains `UNKNOWN` and Enable remains unavailable.\n"
+    "  ENABLE is\n"
     "  never a refresh trigger. This one dispatch consumes the request's only retry\n"
     "  budget. Every subsequent bus-facing live-monitor operation during refresh\n"
     "  returns `SESSION_BUSY`. On refresh failure, no rebound key is installed:\n"
@@ -631,16 +634,10 @@ class _VisibleContractSourceParser(HTMLParser):
             if normalized not in HTML_VOID_ELEMENTS:
                 self._inert_stack.append(normalized)
             return
-        self.parts.append(self.get_starttag_text())
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        hidden = any(name.casefold() == "hidden" for name, _ in attrs)
-        if (
-            not self._inert_stack
-            and tag.casefold() not in NON_RENDERING_CONTAINERS
-            and not hidden
-        ):
-            self.parts.append(self.get_starttag_text())
+        # Opening tags and attribute values are metadata, not rendered prose.
+        return
 
     def handle_endtag(self, tag: str) -> None:
         normalized = tag.casefold()
@@ -650,7 +647,6 @@ class _VisibleContractSourceParser(HTMLParser):
                     del self._inert_stack[index:]
                     return
             return
-        self.parts.append(f"</{tag}>")
 
     def handle_data(self, data: str) -> None:
         if not self._inert_stack:

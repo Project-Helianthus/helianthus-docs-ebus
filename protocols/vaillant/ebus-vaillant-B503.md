@@ -419,7 +419,10 @@ live-monitor enable and disable frame. Bounds:
   quiesce and enters `Disabled`. A valid disable ACK completes owner cleanup to
   `Idle`. Any other disable outcome returns exactly, releases the owner, retains
   a process-local defensive-cleanup obligation, publishes capability `UNKNOWN`,
-  and admits no Enable; it does not enter `Idle`. ENABLE is
+  and admits no Enable; the internal state remains `DISABLED` and does not enter
+  internal `IDLE`, while the public session observation is `Idle` with
+  `owned:false`; capability remains `UNKNOWN` and Enable remains unavailable.
+  ENABLE is
   never a refresh trigger. This one dispatch consumes the request's only retry
   budget. Every subsequent bus-facing live-monitor operation during refresh
   returns `SESSION_BUSY`. On refresh failure, no rebound key is installed:
