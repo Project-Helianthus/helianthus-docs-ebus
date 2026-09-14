@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `403bf5fa84e948ffec2ba16505fbdb62b574636e` |
-| Final validated contract tree | `4de508644bc1cc873206cb6173d955f25dfc387e` |
-| Final contract validation | Complete configured CI PASS; 261 Portal checker tests and 111 canonical B503 milestone tests; log SHA-256 `9f4dd1602a46b41caf3a030c432457c21622a0ed6188ab6c9c7d342b95907008` |
+| Final validated contract commit | `2ca70c91964edee20112bdb42b0cd8e240804c88` |
+| Final validated contract tree | `de94ede3918d156057b57cc9b5f2f12df8b040f6` |
+| Final contract validation | Complete configured CI PASS; 262 Portal checker tests and 111 canonical B503 milestone tests; log SHA-256 `0cc0efd9c1f237e891e33b0296026ce2e1b4ee09bca7bc6e02242051615bc5af` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -140,6 +140,8 @@ hardware work, or SemReg cutover.
 | Restart-recovery/route/control correction tree | `caa22b4d6407387e7ecf1b45fda748bec582457e` |
 | Owner-scope correction commit | `403bf5fa84e948ffec2ba16505fbdb62b574636e` |
 | Owner-scope correction tree | `4de508644bc1cc873206cb6173d955f25dfc387e` |
+| Fenced-control correction commit | `2ca70c91964edee20112bdb42b0cd8e240804c88` |
+| Fenced-control correction tree | `de94ede3918d156057b57cc9b5f2f12df8b040f6` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -309,7 +311,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 261 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 262 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -329,7 +331,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 261 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 262 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 111 tests |
 | `git diff --check` | PASS |
@@ -904,6 +906,18 @@ summary preserves both pre-emission `IDLE` and post-emission `DISABLED` epoch
 branches, describes refresh failure as retained internal cleanup with public
 `Idle`, uses target-contract language rather than claiming deployed Gateway
 behavior, and reports the final focused counts. The following evidence-only
+commit records this immutable contract revision.
+
+The complete fenced-control correction CI log is
+`wave12/ci/docs524-fenced-controls-ci.log`, SHA-256
+`0cc0efd9c1f237e891e33b0296026ce2e1b4ee09bca7bc6e02242051615bc5af`.
+It validated contract commit
+`2ca70c91964edee20112bdb42b0cd8e240804c88`, tree
+`de94ede3918d156057b57cc9b5f2f12df8b040f6`, with 262 Portal checker tests and
+111 canonical B503 milestone tests. Fenced and code-block prose now passes
+through the same affirmative prohibited-control analysis as rendered inline
+Markdown. A fenced `The Reset button is available.` mutation rejects, while the
+existing benign availability fence remains accepted. The following evidence-only
 commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
