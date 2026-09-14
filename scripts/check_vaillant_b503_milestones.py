@@ -650,6 +650,9 @@ def validate_text(text: str) -> None:
         raise CheckError("missing current public session authority in §1")
 
     session_section = _section(text, SESSION_SECTION_START, SESSION_SECTION_END)
+    session_contract_scope = _section(
+        text, SESSION_SECTION_START, NORMALIZATION_SECTION_END
+    )
     if SESSION_STATE_CONTRACT not in session_section:
         raise CheckError("missing five-state B503 session contract in §6.1")
     if DISABLED_PUBLIC_MAPPING not in session_section:
@@ -689,13 +692,15 @@ def validate_text(text: str) -> None:
                 f"forbidden B503 Refreshing failure contradiction in §6.1: {fragment!r}"
             )
     for fragment in FORBIDDEN_SESSION_STATE_CLAUSES:
-        if fragment in session_section:
-            raise CheckError(f"forbidden §6 B503 session-state contradiction: {fragment!r}")
+        if fragment in session_contract_scope:
+            raise CheckError(
+                f"forbidden §§6-8 B503 session-state contradiction: {fragment!r}"
+            )
     for pattern in SESSION_STATE_CONTRADICTION_PATTERNS:
-        match = pattern.search(session_section)
+        match = pattern.search(session_contract_scope)
         if match is not None:
             raise CheckError(
-                "forbidden declarative §6 B503 session-state contradiction: "
+                "forbidden declarative §§6-8 B503 session-state contradiction: "
                 f"{match.group(0)!r}"
             )
     for fragment in (

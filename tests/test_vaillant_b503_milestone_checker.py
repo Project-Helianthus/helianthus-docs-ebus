@@ -247,6 +247,27 @@ def test_rejects_session_state_contradiction_inside_normative_section(
         CHECKER.validate_text(text)
 
 
+@pytest.mark.parametrize(
+    ("section_end", "clause"),
+    (
+        (
+            CHECKER.REFRESHING_PUBLIC_SECTION_END,
+            "`Refreshing` accepts live-monitor operations.",
+        ),
+        (
+            CHECKER.NORMALIZATION_SECTION_END,
+            "`Disabled` is reported with `owned:true`.",
+        ),
+    ),
+)
+def test_rejects_session_state_contradiction_outside_section_six(
+    section_end: str, clause: str
+) -> None:
+    text = contract().replace(section_end, f"{clause}\n\n{section_end}", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_missing_current_public_session_authority_in_status_section() -> None:
     text = contract().replace(
         CHECKER.CURRENT_PUBLIC_SESSION_AUTHORITY,

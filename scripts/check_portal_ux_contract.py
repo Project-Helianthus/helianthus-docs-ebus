@@ -693,14 +693,36 @@ def _mentions_route_surface(value: str) -> bool:
     )
 
 
+def _css_route_destinations(value: str) -> list[str]:
+    css = unescape(value)
+    destinations = [
+        unquote(match.group(2).strip())
+        for match in re.finditer(
+            r"""url\(\s*(["']?)(.*?)\1\s*\)""", css, re.IGNORECASE
+        )
+    ]
+    destinations.extend(
+        unquote(match.group(2).strip())
+        for match in re.finditer(
+            r"""@import\s+(["'])(.*?)\1""", css, re.IGNORECASE
+        )
+    )
+    return destinations
+
+
 def _html_element_route_destinations(
-    tag: str, attrs: list[tuple[str, str | None]]
+    tag: str, attrs: list[tuple[str, str | None]], text: list[str]
 ) -> list[str]:
     destinations = [
         _decoded_dom_attribute_value(attribute, value)
         for attribute, value in attrs
         if value is not None and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
     ]
+    for attribute, value in attrs:
+        if value is not None and attribute.casefold() == "style":
+            destinations.extend(_css_route_destinations(value))
+    if tag.casefold() == "style":
+        destinations.extend(_css_route_destinations("".join(text)))
     attributes = {
         attribute.casefold(): value
         for attribute, value in attrs
@@ -732,8 +754,8 @@ def _inline_route_destinations(children: list[object] | None) -> list[str]:
         elif child.type == "image":
             destinations.append(child.attrGet("src") or "")
         elif child.type == "html_inline":
-            for tag, attrs, _ in _parsed_dom_elements(child.content):
-                destinations.extend(_html_element_route_destinations(tag, attrs))
+            for tag, attrs, text in _parsed_dom_elements(child.content):
+                destinations.extend(_html_element_route_destinations(tag, attrs, text))
     return destinations
 
 
@@ -763,8 +785,8 @@ def _authorizes_url_fallback(visible: str, destinations: list[str]) -> bool:
 
 def _literal_html_route_destinations(target: str) -> list[str]:
     destinations: list[str] = []
-    for tag, attrs, _ in _parsed_dom_elements(target):
-        destinations.extend(_html_element_route_destinations(tag, attrs))
+    for tag, attrs, text in _parsed_dom_elements(target):
+        destinations.extend(_html_element_route_destinations(tag, attrs, text))
     return destinations
 
 
@@ -786,8 +808,8 @@ def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
         visible = " ".join("".join(text) for _, _, text in elements)
         destinations = [
             destination
-            for tag, attrs, _ in elements
-            for destination in _html_element_route_destinations(tag, attrs)
+            for tag, attrs, text in elements
+            for destination in _html_element_route_destinations(tag, attrs, text)
         ]
         if _authorizes_url_fallback(visible, destinations):
             raise CheckError(
