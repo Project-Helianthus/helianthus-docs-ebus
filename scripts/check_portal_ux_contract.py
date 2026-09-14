@@ -298,7 +298,7 @@ DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
 )
 HTML_URL_ATTRIBUTE_NAMES = frozenset(
     (
-        "href", "src", "srcset", "imagesrcset", "action", "formaction",
+        "href", "xlink:href", "src", "srcset", "imagesrcset", "action", "formaction",
         "poster", "cite", "data", "ping",
     )
 )
@@ -306,7 +306,7 @@ HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
     "meta", "param", "source", "track", "wbr",
 ))
-NON_RENDERING_CONTAINERS = frozenset(("head", "script", "style", "template"))
+NON_RENDERING_CONTAINERS = frozenset(("head", "pre", "script", "style", "template"))
 B503_ROUTE_SURFACE_MARKERS = (
     "rest",
     "mcp",
