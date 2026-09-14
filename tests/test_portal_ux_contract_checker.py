@@ -430,6 +430,11 @@ def test_rejects_required_contract_clause_stored_only_in_link_destination() -> N
     rejects(clause, f"[status](<{clause}>)")
 
 
+def test_rejects_required_contract_clause_stored_only_in_image_alt() -> None:
+    clause = "Gateway #552 is open;"
+    rejects(clause, f"![{clause}](status.png)")
+
+
 def test_rejects_availability_table_hidden_in_fenced_code() -> None:
     table = "\n".join(
         (

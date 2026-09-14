@@ -494,8 +494,6 @@ def _rendered_contract_source(text: str) -> str:
                     parts.append("\n")
                 elif child.type == "html_inline":
                     parts.append(child.content)
-                elif child.type == "image":
-                    parts.append(child.content)
             parts.append("\n")
     return _visible_contract_source("".join(parts))
 
