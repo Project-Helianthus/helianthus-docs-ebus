@@ -426,14 +426,20 @@ class _VisibleContractSourceParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         normalized = tag.casefold()
-        if self._inert_stack or normalized in NON_RENDERING_CONTAINERS:
+        hidden = any(name.casefold() == "hidden" for name, _ in attrs)
+        if self._inert_stack or normalized in NON_RENDERING_CONTAINERS or hidden:
             if normalized not in HTML_VOID_ELEMENTS:
                 self._inert_stack.append(normalized)
             return
         self.parts.append(self.get_starttag_text())
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if not self._inert_stack and tag.casefold() not in NON_RENDERING_CONTAINERS:
+        hidden = any(name.casefold() == "hidden" for name, _ in attrs)
+        if (
+            not self._inert_stack
+            and tag.casefold() not in NON_RENDERING_CONTAINERS
+            and not hidden
+        ):
             self.parts.append(self.get_starttag_text())
 
     def handle_endtag(self, tag: str) -> None:

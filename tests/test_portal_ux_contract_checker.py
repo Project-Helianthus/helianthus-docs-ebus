@@ -408,6 +408,13 @@ def test_accepts_safe_target_reference_resolved_outside_target_section() -> None
     CHECKER.validate_text(text)
 
 
+def test_rejects_required_contract_clause_hidden_by_standard_html_attribute() -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    text = contract().replace(clause, f"<div hidden>{clause}</div>", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     "title",
     ('"Reset"', "'Clear history'", "(selector 02 01)"),
