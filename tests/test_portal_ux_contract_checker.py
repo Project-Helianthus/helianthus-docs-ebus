@@ -70,6 +70,20 @@ def test_rejects_required_contract_clause_hidden_in_html_comment() -> None:
     rejects(clause, f"<!-- {clause} -->")
 
 
+@pytest.mark.parametrize("container", sorted(CHECKER.NON_RENDERING_CONTAINERS))
+def test_rejects_required_contract_clause_hidden_in_inert_html(
+    container: str,
+) -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    rejects(clause, f"<{container}>{clause}</{container}>")
+
+
+def test_accepts_required_contract_clause_in_visible_html() -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    text = contract()
+    CHECKER.validate_text(text.replace(clause, f"<div>{clause}</div>", 1))
+
+
 def test_rejects_stale_internal_expired_state() -> None:
     rejects(
         CHECKER.B503_NO_EXPIRED_STATE,

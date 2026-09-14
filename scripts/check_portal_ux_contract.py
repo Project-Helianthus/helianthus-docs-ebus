@@ -330,6 +330,7 @@ HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
     "meta", "param", "source", "track", "wbr",
 ))
+NON_RENDERING_CONTAINERS = frozenset(("head", "script", "style", "template"))
 B503_ROUTE_SURFACE_MARKERS = (
     "rest",
     "mcp",
@@ -413,6 +414,64 @@ class _DOMSnippetParser(HTMLParser):
     def handle_data(self, data: str) -> None:
         for _, _, text in self._stack:
             text.append(data)
+
+
+class _VisibleContractSourceParser(HTMLParser):
+    """Retain source visible to a CommonMark reader, excluding inert HTML."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self.parts: list[str] = []
+        self._inert_stack: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        normalized = tag.casefold()
+        if self._inert_stack or normalized in NON_RENDERING_CONTAINERS:
+            if normalized not in HTML_VOID_ELEMENTS:
+                self._inert_stack.append(normalized)
+            return
+        self.parts.append(self.get_starttag_text())
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if not self._inert_stack and tag.casefold() not in NON_RENDERING_CONTAINERS:
+            self.parts.append(self.get_starttag_text())
+
+    def handle_endtag(self, tag: str) -> None:
+        normalized = tag.casefold()
+        if self._inert_stack:
+            for index in range(len(self._inert_stack) - 1, -1, -1):
+                if self._inert_stack[index] == normalized:
+                    del self._inert_stack[index:]
+                    return
+            return
+        self.parts.append(f"</{tag}>")
+
+    def handle_data(self, data: str) -> None:
+        if not self._inert_stack:
+            self.parts.append(data)
+
+    def handle_entityref(self, name: str) -> None:
+        if not self._inert_stack:
+            self.parts.append(f"&{name};")
+
+    def handle_charref(self, name: str) -> None:
+        if not self._inert_stack:
+            self.parts.append(f"&#{name};")
+
+    def handle_decl(self, decl: str) -> None:
+        if not self._inert_stack:
+            self.parts.append(f"<!{decl}>")
+
+    def handle_pi(self, data: str) -> None:
+        if not self._inert_stack:
+            self.parts.append(f"<?{data}>")
+
+
+def _visible_contract_source(target: str) -> str:
+    parser = _VisibleContractSourceParser()
+    parser.feed(COMMONMARK_AUTOLINK.sub("", target))
+    parser.close()
+    return "".join(parser.parts)
 
 
 def _target_section(text: str) -> str:
@@ -944,9 +1003,10 @@ def _reject_prohibited_dom_references(target: str, document: str) -> None:
 
 def validate_text(text: str) -> None:
     target = _target_section(text)
-    # REQUIRED is deliberately limited to the frozen INT-10 contract. A raw
-    # match inside an HTML comment is not part of the rendered public contract.
-    rendered_target_source = HTML_COMMENT.sub("", target)
+    # REQUIRED is deliberately limited to the frozen INT-10 contract. Content
+    # inside comments or declared non-rendering HTML containers is not part of
+    # the visible public contract.
+    rendered_target_source = _visible_contract_source(target)
     for fragment in REQUIRED:
         if fragment not in rendered_target_source:
             raise CheckError(
