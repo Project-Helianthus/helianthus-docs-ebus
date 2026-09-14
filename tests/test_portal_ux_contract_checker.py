@@ -65,6 +65,24 @@ def test_accepts_current_portal_ux_contract() -> None:
     CHECKER.validate_text(contract())
 
 
+def test_rejects_stale_internal_expired_state() -> None:
+    rejects(
+        CHECKER.B503_NO_EXPIRED_STATE,
+        "`EXPIRED` is internal-only and is never a public browser state.",
+    )
+
+
+@pytest.mark.parametrize(
+    "clause",
+    (
+        "`EXPIRED` is an internal session state.",
+        "Gateway may publish `EXPIRED` as a sixth availability reason.",
+    ),
+)
+def test_rejects_reintroduced_expired_state(clause: str) -> None:
+    rejects_target_insertion(clause)
+
+
 @pytest.mark.parametrize(
     ("old", "new"),
     (

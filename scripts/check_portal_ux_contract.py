@@ -169,6 +169,11 @@ B503_MAIN_ROUTE_OPERATIONS = (
     "- `vaillantLiveMonitor(action:issuerToken:targetAddress:)`\n"
     "- `vaillantLiveMonitorSession(targetAddress:)`"
 )
+B503_NO_EXPIRED_STATE = (
+    "`B503Availability` has exactly these five public reasons. `Refreshing` remains\n"
+    "only a session observation. `EXPIRED` is neither an availability reason nor a\n"
+    "session state and MUST NOT be implemented as an internal or public sixth state."
+)
 
 REQUIRED = (
     TARGET_START,
@@ -205,7 +210,7 @@ REQUIRED = (
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
-    "`EXPIRED` is\ninternal-only",
+    B503_NO_EXPIRED_STATE,
     'data-testid="b503-state-available"',
     'data-testid="b503-state-not-supported"',
     'data-testid="b503-state-transport-down"',
@@ -777,6 +782,12 @@ def validate_text(text: str) -> None:
                 "api/portal.md: forbidden declarative B503 session-state "
                 f"contradiction: {match.group(0)!r}"
             )
+    remaining_target = target.replace(B503_NO_EXPIRED_STATE, "", 1)
+    if re.search(r"\bEXPIRED\b", remaining_target, re.IGNORECASE) is not None:
+        raise CheckError(
+            "api/portal.md: EXPIRED must not be reintroduced as a B503 "
+            "availability or session state"
+        )
     _reject_unapproved_route_surface_paragraphs(text)
     _reject_installation_selectors_in_target(text)
     _reject_prohibited_dom_references(target, text)

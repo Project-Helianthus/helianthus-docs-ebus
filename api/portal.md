@@ -163,8 +163,9 @@ or from an absent local token. It never disables a gate-held session without a
 locally held issuer token. The B503 target tests are named `M8-TGT-01`,
 `M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`.
 
-`B503Availability` has exactly these five public reasons. `EXPIRED` is
-internal-only and is never a sixth browser state.
+`B503Availability` has exactly these five public reasons. `Refreshing` remains
+only a session observation. `EXPIRED` is neither an availability reason nor a
+session state and MUST NOT be implemented as an internal or public sixth state.
 
 | Reason | Stable selector | Required presentation truth |
 |---|---|---|
