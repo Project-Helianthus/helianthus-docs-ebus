@@ -587,33 +587,40 @@ def _affirmative_control_verb(clause: str) -> re.Match[str] | None:
     return None
 
 
+def _reject_affirmative_control_text(plain: str, context: str) -> None:
+    for sentence in re.split(r"(?<=[.!?])\s+", plain):
+        for clause in PLAIN_CONTROL_CLAUSE_BOUNDARY.split(sentence):
+            if not clause:
+                continue
+            if not (
+                (_identifier_tokens(clause) & FORBIDDEN_B503_DOM_COMMAND_TOKENS)
+                or _compact_prohibited_command_tokens(clause)
+            ):
+                continue
+            if PLAIN_AFFIRMATIVE_DOUBLE_NEGATIVE.search(clause) is not None:
+                raise CheckError(
+                    f"api/portal.md: double-negative {context} clause requires a "
+                    f"prohibited B503 control: {clause!r}"
+                )
+            if PLAIN_AFFIRMATIVE_ENABLED_STATE.search(clause) is not None:
+                raise CheckError(
+                    f"api/portal.md: enabled {context} state requires a prohibited "
+                    f"B503 control: {clause!r}"
+                )
+            if _affirmative_control_verb(clause) is not None:
+                raise CheckError(
+                    f"api/portal.md: affirmative {context} description exposes a "
+                    f"prohibited B503 control: {clause!r}"
+                )
+
+
 def _reject_affirmative_plain_markdown_controls(document: str) -> None:
     for inline in _target_inline_tokens(document):
-        plain = _plain_rendered_children(inline.children)
-        for sentence in re.split(r"(?<=[.!?])\s+", plain):
-            for clause in PLAIN_CONTROL_CLAUSE_BOUNDARY.split(sentence):
-                if not clause:
-                    continue
-                if not (
-                    (_identifier_tokens(clause) & FORBIDDEN_B503_DOM_COMMAND_TOKENS)
-                    or _compact_prohibited_command_tokens(clause)
-                ):
-                    continue
-                if PLAIN_AFFIRMATIVE_DOUBLE_NEGATIVE.search(clause) is not None:
-                    raise CheckError(
-                        "api/portal.md: double-negative plain-Markdown clause "
-                        f"requires a prohibited B503 control: {clause!r}"
-                    )
-                if PLAIN_AFFIRMATIVE_ENABLED_STATE.search(clause) is not None:
-                    raise CheckError(
-                        "api/portal.md: enabled plain-Markdown state requires a "
-                        f"prohibited B503 control: {clause!r}"
-                    )
-                if _affirmative_control_verb(clause) is not None:
-                    raise CheckError(
-                        "api/portal.md: affirmative plain-Markdown description "
-                        f"exposes a prohibited B503 control: {clause!r}"
-                    )
+        _reject_affirmative_control_text(
+            _plain_rendered_children(inline.children), "plain-Markdown"
+        )
+    for content in _target_fenced_contents(document):
+        _reject_affirmative_control_text(content, "fenced-content")
 
 
 def _markdown_dom_references(document: str) -> list[tuple[str, str]]:

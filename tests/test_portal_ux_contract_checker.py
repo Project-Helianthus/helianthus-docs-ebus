@@ -551,6 +551,12 @@ def test_rejects_installation_selector_in_fenced_content() -> None:
     rejects_target_insertion("Selector example:\n\n```text\n02 01\n```")
 
 
+def test_rejects_prohibited_control_in_fenced_content() -> None:
+    rejects_target_insertion(
+        "Normative control example:\n\n```text\nThe Reset button is available.\n```"
+    )
+
+
 def test_accepts_safe_fenced_content() -> None:
     accepts_target_insertion("Status example:\n\n```text\navailability=UNKNOWN\n```")
 
