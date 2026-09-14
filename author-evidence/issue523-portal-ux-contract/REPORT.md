@@ -418,6 +418,25 @@ The source reconciliation is preserved at
 SHA-256
 `1e57d8a80d8ba30ebeffe81262e711bc719692ca35a70797ff463f670bef260a`.
 
+The fresh independent review of candidate
+`e7c6635e5acdf6cad04caa5ac338c7f862894465`, tree
+`cdab4ec3f728cedb7876d0672141d77be3ddb3dc`, returned
+`NO_BLOCKING_FINDINGS` with 543 focused tests. Its report is
+`wave12/review/docs524-e7c6635-final-independent/REPORT.md`, SHA-256
+`3532ca8d36c1c61bc00821b2b715135d6c6accf27b2477763886dfd36a9c680d`.
+The mandatory later feedback refresh found two additional P2 checker bypasses.
+An exact pipe table inside a raw HTML block was reparsed as Markdown after tags
+were stripped, and CSS comments could split a hidden declaration such as
+`display:none/**/`. Functional commit
+`5adf0b77275f831d1f1d7185709ff83db0ea4f94`, tree
+`964740ebe8cd21eaad86c15d5c35c6aac3b2bae2`, requires the availability,
+transition, capability-truth, and milestone tables to exist as rendered table
+tokens in the original CommonMark context. Both bounded HTML visibility parsers
+also remove CSS comments before applying declaration priority and source order.
+Exact mutations cover raw-HTML wrapping of every frozen table and comment-split
+`display:none` forms. The corrected focused run is 551 tests: 334 Portal and
+217 canonical B503 tests, all passing.
+
 ## Remaining gate
 
 Commit and push this evidence update, rerun complete CI on that exact candidate,
