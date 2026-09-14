@@ -288,13 +288,14 @@ ENABLING_CANCEL_TRANSITION = (
     "queued frame, release the ownership gate, and clear the pending attempt; no "
     "native disable is emitted |"
 )
-ENABLING_AMBIGUOUS_FAILURE_TRANSITION = '| `ENABLING` | `ctx.Done` / ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / any other terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; ACK/NAK and the defensive-disable outcome do not prove settlement |'
+ENABLING_ACK_TRANSITION = '| `ENABLING` | successful enable ACK received after frame emission | `ACTIVE` | record the exact ACK, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, start the 30s idle timer, arm reads for the current owner, publish `UNKNOWN`, and admit no second Enable; the ACK establishes the admitted operation outcome, not session settlement |'
+ENABLING_AMBIGUOUS_FAILURE_TRANSITION = '| `ENABLING` | `ctx.Done` / NAK / timeout / CRC mismatch / bus-arbitration failure / any other non-ACK terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; NAK and any defensive-disable ACK/NAK outcome do not prove settlement |'
 DISCONNECT_TRANSITION = '| any | transport disconnect | `DISABLED` | release any owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |'
 CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN = (
     "- silent fallback to `UNKNOWN` from a knowable `TRANSPORT_DOWN` when no cleanup\n"
     "  obligation remains."
 )
-ENABLING_NAK_TRANSITION = '| `ENABLING` | `ctx.Done` / ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / any other terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; ACK/NAK and the defensive-disable outcome do not prove settlement |'
+ENABLING_NAK_TRANSITION = ENABLING_AMBIGUOUS_FAILURE_TRANSITION
 ENABLING_DIRECT_IDLE_LOCK = (
     "on either direct `ENABLING → IDLE` path (cancellation or epoch advance before\n"
     "frame emission)"
@@ -418,7 +419,10 @@ def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
         for declaration in value.split(";"):
             property_name, separator, property_value = declaration.partition(":")
             if separator:
-                declarations[property_name.strip().casefold()] = property_value.strip().casefold()
+                normalized_value = re.sub(
+                    r"\s*!important\s*$", "", property_value.casefold()
+                ).strip()
+                declarations[property_name.strip().casefold()] = normalized_value
         if declarations.get("display") == "none" or declarations.get("visibility") == "hidden":
             return True
     return False
@@ -625,6 +629,7 @@ def validate_text(text: str) -> None:
         HELD_OWNER_DISABLED_RELEASE,
         ENABLING_CANCEL_DIAGRAM,
         ENABLING_FAILURE_DIAGRAM,
+        ENABLING_ACK_TRANSITION,
         ENABLING_CANCEL_TRANSITION,
         ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
         ENABLING_NAK_TRANSITION,

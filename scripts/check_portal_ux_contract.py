@@ -435,7 +435,10 @@ def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
         for declaration in value.split(";"):
             property_name, separator, property_value = declaration.partition(":")
             if separator:
-                declarations[property_name.strip().casefold()] = property_value.strip().casefold()
+                normalized_value = re.sub(
+                    r"\s*!important\s*$", "", property_value.casefold()
+                ).strip()
+                declarations[property_name.strip().casefold()] = normalized_value
         if declarations.get("display") == "none" or declarations.get("visibility") == "hidden":
             return True
     return False

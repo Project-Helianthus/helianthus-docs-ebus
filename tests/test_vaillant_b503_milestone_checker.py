@@ -107,7 +107,17 @@ def test_rejects_five_state_contract_hidden_by_standard_html_attribute() -> None
         CHECKER.validate_text(text)
 
 
-@pytest.mark.parametrize("style", ("display:none", "DISPLAY: none", "visibility: hidden"))
+@pytest.mark.parametrize(
+    "style",
+    (
+        "display:none",
+        "DISPLAY: none",
+        "visibility: hidden",
+        "display:none!important",
+        "display: none !IMPORTANT",
+        "visibility:hidden !important",
+    ),
+)
 def test_rejects_five_state_contract_hidden_by_inline_style(style: str) -> None:
     text = contract().replace(
         CHECKER.SESSION_STATE_CONTRACT,
@@ -834,6 +844,7 @@ def test_rejects_incomplete_enabling_cleanup_failure_set(
     (
         CHECKER.ENABLING_CANCEL_DIAGRAM,
         CHECKER.ENABLING_FAILURE_DIAGRAM,
+        CHECKER.ENABLING_ACK_TRANSITION,
         CHECKER.ENABLING_CANCEL_TRANSITION,
         CHECKER.ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
         CHECKER.ENABLING_NAK_TRANSITION,

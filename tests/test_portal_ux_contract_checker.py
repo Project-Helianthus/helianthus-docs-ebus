@@ -415,7 +415,17 @@ def test_rejects_required_contract_clause_hidden_by_standard_html_attribute() ->
         CHECKER.validate_text(text)
 
 
-@pytest.mark.parametrize("style", ("display:none", "DISPLAY: none", "visibility: hidden"))
+@pytest.mark.parametrize(
+    "style",
+    (
+        "display:none",
+        "DISPLAY: none",
+        "visibility: hidden",
+        "display:none!important",
+        "display: none !IMPORTANT",
+        "visibility:hidden !important",
+    ),
+)
 def test_rejects_required_contract_clause_hidden_by_inline_style(style: str) -> None:
     clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
     text = contract().replace(clause, f'<div style="{style}">{clause}</div>', 1)
