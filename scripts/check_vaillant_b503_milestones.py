@@ -18,7 +18,7 @@ MILESTONE_TABLE_HEADER = ("Milestone", "Repo", "Artefact")
 MARKDOWN_TABLE_DELIMITER_CELL = re.compile(r"^:?-{3,}:?$")
 HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
 COMMONMARK_AUTOLINK = re.compile(r"<(?:https?://|mailto:)[^<>\s]+>", re.IGNORECASE)
-NON_RENDERING_CONTAINERS = frozenset(("head", "script", "style", "template"))
+NON_RENDERING_CONTAINERS = frozenset(("head", "pre", "script", "style", "template"))
 HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
     "meta", "param", "source", "track", "wbr",
@@ -213,7 +213,7 @@ REFRESH_FAILURE_CAPABILITY_PRECEDENCE = (
 )
 REFRESH_OWNER_REBINDING = 'On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes\nonly the one bounded refresh attempt. A successful refresh returns the current\n`transport_key` for epoch N+1. Gateway MUST atomically replace the owner key\nwith `(transport_key[N+1], same issuer_token)` while retaining the same target,\nthen dispatch the admitted triggering operation exactly once. Completions and\ncontrol requests still bound to epoch N are stale and MUST NOT satisfy, disable,\nextend, or mutate the rebound session. If refresh fails, no rebound key is\ninstalled; Gateway releases client ownership, retains a fresh Gateway-owned\nprocess-local cleanup obligation in internal `DISABLED`, presents public\nsession `Idle` with `owned:false`, publishes capability `UNKNOWN`,\nand admits no Enable while native settlement remains unproven.'
 NO_AUTO_RESUME_RECONSTRUCTION = '- Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost\n  owner handle, or an absent/invalid current issuer token. The surviving\n  authenticated current-owner refresh path in §7.3 is the only continuation\n  allowed across a non-terminal epoch advance.'
-REFRESHING_DISCONNECT_FENCE = '- A terminal transport disconnect follows §7.4: it releases the owner and does\n  not enter `Refreshing` on reconnect. If no cleanup obligation exists, the\n  later reconnect reaches `Idle` and requires a new explicit client Enable.\n- If cleanup/session settlement is unproven, the transport layer MUST NOT\n  publish the new epoch as B503-usable or admit Enable. Reconnect emits no\n  automatic B503 enable or disable. Gateway preserves the process-local target,\n  attempt, and prior epoch only as evidence/cleanup state, publishes `UNKNOWN`,\n  and waits for a future accepted settlement contract.'
+REFRESHING_DISCONNECT_FENCE = '- A terminal transport disconnect follows §7.4: it releases any held owner and\n  does not enter `Refreshing` on reconnect. An `Idle` target with no owner or\n  cleanup obligation stays `Idle` through disconnect/reconnect and requires a\n  new explicit client Enable.\n- If cleanup/session settlement is unproven, the transport layer MUST NOT\n  publish the new epoch as B503-usable or admit Enable. Reconnect emits no\n  automatic B503 enable or disable. Gateway preserves the process-local target,\n  attempt, and prior epoch only as evidence/cleanup state, publishes `UNKNOWN`,\n  and waits for a future accepted settlement contract.'
 DISCONNECT_CLEANUP_OBLIGATION = '- On transport disconnect, Gateway transitions the FSM to `DISABLED` and, if an\n  owner was held, releases `liveMonitorMu`. If an Enable may have reached the\n  wire or settlement is otherwise unproven, Gateway retains\n  `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)` only as a\n  process-local cleanup obligation across transport reconnect. It carries no\n  issuer token, owner authority, session continuation, or operation eligibility\n  and cannot authorize an automatic reconnect write.'
 OWNER_CONDITIONAL_MUTEX_SCOPE = (
     "Only release of `liveMonitorMu` is owner-conditional (§6.3 \"Lock lifecycle\"):\n"
@@ -309,7 +309,9 @@ ENABLING_AMBIGUOUS_FAILURE_TRANSITION = '| `ENABLING` | `ctx.Done` / NAK / timeo
 ACTIVE_READ_TRANSITION = '| `ACTIVE` | read request | `ACTIVE` | reset idle timer |'
 ACTIVE_IDLE_TRANSITION = '| `ACTIVE` | 30s idle | `DISABLED` | emit disable once after quiesce, record the exact outcome, release the owner, retain process-local cleanup, publish `UNKNOWN`, and admit no Enable |'
 ACTIVE_REFRESH_TRANSITION = '| `ACTIVE` | admitted request detects epoch advance | `REFRESHING` | ownership gate remains held; triggering request remains pending; subsequent live-monitor operations are busy |'
-DISCONNECT_TRANSITION = '| any | transport disconnect | `DISABLED` | release any owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |'
+IDLE_DISCONNECT_TRANSITION = '| `IDLE` | transport disconnect, no owner or cleanup obligation | `IDLE` | change no session state and release no mutex; publish `TRANSPORT_DOWN` while disconnected; after reconnect require a new explicit Enable and perform no automatic B503 write |'
+DISCONNECT_TRANSITION = '| `ENABLING` / `ACTIVE` / `REFRESHING` | transport disconnect | `DISABLED` | release the owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |'
+DISABLED_DISCONNECT_TRANSITION = '| `DISABLED` | transport disconnect | `DISABLED` | change no session state and release no mutex; retain any existing cleanup obligation and its `UNKNOWN` fence; perform no automatic reconnect write |'
 CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN = (
     "- silent fallback to `UNKNOWN` from a knowable `TRANSPORT_DOWN` when no cleanup\n"
     "  obligation remains."
@@ -330,7 +332,9 @@ SESSION_TRANSITION_ROWS = (
     REFRESH_DISABLE_TRANSITION,
     REFRESH_FAILURE_TRANSITION,
     UNCONFIRMED_CLEANUP_TRANSITION,
+    IDLE_DISCONNECT_TRANSITION,
     DISCONNECT_TRANSITION,
+    DISABLED_DISCONNECT_TRANSITION,
     RESTART_TRANSITION,
 )
 ENABLING_DIRECT_IDLE_LOCK = (

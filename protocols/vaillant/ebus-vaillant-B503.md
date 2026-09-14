@@ -301,7 +301,9 @@ access.
 | `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; any terminal native outcome | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; no outcome alone proves settlement |
 | `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return the exact Gateway-supplied failure without dispatching the triggering native operation, retain `(targetAddress, fresh gatewayCleanupAttemptID, attemptedTransportEpoch)` as process-local cleanup, present public session `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable |
 | `DISABLED` | defensive-disable ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | retain process-local cleanup, record the exact outcome, publish `UNKNOWN`, admit no Enable, and perform no same-epoch or automatic reconnect/restart recovery; only a future accepted settlement contract may define re-claimability |
-| any | transport disconnect | `DISABLED` | release any owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |
+| `IDLE` | transport disconnect, no owner or cleanup obligation | `IDLE` | change no session state and release no mutex; publish `TRANSPORT_DOWN` while disconnected; after reconnect require a new explicit Enable and perform no automatic B503 write |
+| `ENABLING` / `ACTIVE` / `REFRESHING` | transport disconnect | `DISABLED` | release the owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |
+| `DISABLED` | transport disconnect | `DISABLED` | change no session state and release no mutex; retain any existing cleanup obligation and its `UNKNOWN` fence; perform no automatic reconnect write |
 | any | gateway restart | `DISABLED` | release any owner and destroy every caller handle and process-local attempt identity; reconstruct no session, emit no automatic B503 enable or disable, and publish `UNKNOWN` for each qualified target; a still-effective explicit operator or configuration disable presents public `Disabled` with `owned:false`, otherwise the restart-derived state presents public `Idle` with `owned:false`; admit no Enable under the current 0.7 contract |
 
 **Lock lifecycle (single assignment, owner-conditional):**
@@ -312,8 +314,11 @@ held-owner state: on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or
 frame emission). The "any" transitions
 (transport disconnect, gateway restart) release the mutex only when FSM was in
 a held-owner state at the time the event fired; if the FSM was already `IDLE`
-or `DISABLED` (no owner), no release occurs. `DISABLED` has no current 0.7 transition to `IDLE`: no ACK or NAK makes the
-session slot re-claimable. Implementations MUST NOT release the mutex at any
+or `DISABLED` (no owner), no release occurs. `DISABLED` with a cleanup
+obligation, an unproven-session fence, or an effective explicit disable has no
+current 0.7 transition to `IDLE`: no ACK or NAK makes the session slot
+re-claimable. An `IDLE` target with no owner or cleanup obligation remains
+`IDLE` across transport disconnect/reconnect. Implementations MUST NOT release the mutex at any
 other transition, and MUST NOT attempt a release when no owner is held. This
 keeps the release single-sourced, owner-conditional, and free of double-unlock
 panics on timeout/NAK paths or disconnect-while-idle events.
@@ -495,9 +500,10 @@ including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
 - On reconnect, `transport_incarnation_epoch` advances. A surviving owner handle
   that remains held without a terminal transport disconnect may enter
   `Refreshing` on next touch and follows the bounded continuation in §7.3.
-- A terminal transport disconnect follows §7.4: it releases the owner and does
-  not enter `Refreshing` on reconnect. If no cleanup obligation exists, the
-  later reconnect reaches `Idle` and requires a new explicit client Enable.
+- A terminal transport disconnect follows §7.4: it releases any held owner and
+  does not enter `Refreshing` on reconnect. An `Idle` target with no owner or
+  cleanup obligation stays `Idle` through disconnect/reconnect and requires a
+  new explicit client Enable.
 - If cleanup/session settlement is unproven, the transport layer MUST NOT
   publish the new epoch as B503-usable or admit Enable. Reconnect emits no
   automatic B503 enable or disable. Gateway preserves the process-local target,
