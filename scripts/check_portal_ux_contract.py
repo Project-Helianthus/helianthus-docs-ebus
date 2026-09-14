@@ -693,6 +693,37 @@ def _mentions_route_surface(value: str) -> bool:
     )
 
 
+def _html_element_route_destinations(
+    tag: str, attrs: list[tuple[str, str | None]]
+) -> list[str]:
+    destinations = [
+        _decoded_dom_attribute_value(attribute, value)
+        for attribute, value in attrs
+        if value is not None and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
+    ]
+    attributes = {
+        attribute.casefold(): value
+        for attribute, value in attrs
+        if value is not None
+    }
+    if (
+        tag.casefold() == "meta"
+        and (attributes.get("http-equiv") or "").strip().casefold() == "refresh"
+    ):
+        content = unescape(attributes.get("content") or "")
+        match = re.search(r"(?:^|;)\s*url\s*=\s*(.+?)\s*$", content, re.IGNORECASE)
+        if match is not None:
+            destination = match.group(1).strip()
+            if (
+                len(destination) >= 2
+                and destination[0] == destination[-1]
+                and destination[0] in "\"'"
+            ):
+                destination = destination[1:-1]
+            destinations.append(unquote(destination))
+    return destinations
+
+
 def _inline_route_destinations(children: list[object] | None) -> list[str]:
     destinations: list[str] = []
     for child in children or ():
@@ -701,15 +732,8 @@ def _inline_route_destinations(children: list[object] | None) -> list[str]:
         elif child.type == "image":
             destinations.append(child.attrGet("src") or "")
         elif child.type == "html_inline":
-            for _, attrs, _ in _parsed_dom_elements(child.content):
-                for attribute, value in attrs:
-                    if (
-                        value is not None
-                        and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
-                    ):
-                        destinations.append(
-                            _decoded_dom_attribute_value(attribute, value)
-                        )
+            for tag, attrs, _ in _parsed_dom_elements(child.content):
+                destinations.extend(_html_element_route_destinations(tag, attrs))
     return destinations
 
 
@@ -739,10 +763,8 @@ def _authorizes_url_fallback(visible: str, destinations: list[str]) -> bool:
 
 def _literal_html_route_destinations(target: str) -> list[str]:
     destinations: list[str] = []
-    for _, attrs, _ in _parsed_dom_elements(target):
-        for attribute, value in attrs:
-            if value is not None and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES:
-                destinations.append(_decoded_dom_attribute_value(attribute, value))
+    for tag, attrs, _ in _parsed_dom_elements(target):
+        destinations.extend(_html_element_route_destinations(tag, attrs))
     return destinations
 
 
@@ -763,10 +785,9 @@ def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
         elements = _parsed_dom_elements(block)
         visible = " ".join("".join(text) for _, _, text in elements)
         destinations = [
-            _decoded_dom_attribute_value(attribute, value)
-            for _, attrs, _ in elements
-            for attribute, value in attrs
-            if value is not None and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
+            destination
+            for tag, attrs, _ in elements
+            for destination in _html_element_route_destinations(tag, attrs)
         ]
         if _authorizes_url_fallback(visible, destinations):
             raise CheckError(

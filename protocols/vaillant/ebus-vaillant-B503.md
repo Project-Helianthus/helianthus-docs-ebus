@@ -486,8 +486,8 @@ including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
 - If defensive cleanup is pending, the transport layer MUST NOT publish the new
   epoch as B503-usable or admit any Enable. After quiesce on the current
   transport epoch, Gateway issues exactly one target-specific defensive disable
-  for that reconnect attempt and records its exact native outcome. A confirmed
-  terminal cleanup clears the obligation, publishes the epoch as usable, and
+  for that reconnect attempt and records its exact native outcome. Only a valid
+  disable ACK clears the obligation, publishes the epoch as usable, and
   reaches `Idle`; an ambiguous or transport failure retains the obligation,
   leaves B503 `TRANSPORT_DOWN` or `UNKNOWN` as applicable, and admits no Enable.
   There is no retry within the same transport epoch; a later transport lifecycle

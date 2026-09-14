@@ -537,6 +537,8 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
         'If main GraphQL is unavailable, use <form action="/portal/api/v%31/projection/devices">fallback</form>.',
         'If main GraphQL is unavailable, use <a href="#safe" ping="/portal/api/v1/projection/devices">fallback</a>.',
         '<img srcset="/portal/api/v1/projection/devices 1x" alt="fallback">',
+        '<meta http-equiv="refresh" content="0;url=/portal/api/v1/projection/devices">',
+        '<meta HTTP-EQUIV="Refresh" content="0; URL=/portal/api/v%31/projection/devices">',
         "Fallback:\n\n```text\nGET /portal/api/v1/projection/devices\n```",
     ),
 )
@@ -548,6 +550,9 @@ def test_accepts_unrelated_literal_html_destination() -> None:
     accepts_target_insertion('<a href="https://example.invalid/help">Help</a>.')
     accepts_target_insertion(
         '<p>For background, see <a href="https://example.invalid/help">Help</a>.</p>'
+    )
+    accepts_target_insertion(
+        '<meta name="description" content="/portal/api/v1/projection/devices">'
     )
 
 

@@ -318,6 +318,16 @@ def test_rejects_missing_valid_ack_cleanup_in_later_normative_sections(
         CHECKER.validate_text(text)
 
 
+def test_rejects_terminal_non_ack_reconnect_cleanup() -> None:
+    replacement = CHECKER.REFRESHING_DISCONNECT_FENCE.replace(
+        "Only a valid\n  disable ACK clears the obligation",
+        "A confirmed\n  terminal cleanup clears the obligation",
+    )
+    text = contract().replace(CHECKER.REFRESHING_DISCONNECT_FENCE, replacement, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     ("old", "new"),
     (
