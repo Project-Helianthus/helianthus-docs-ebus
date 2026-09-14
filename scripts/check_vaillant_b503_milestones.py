@@ -5,6 +5,7 @@ from __future__ import annotations
 import pathlib
 import re
 import sys
+from html.parser import HTMLParser
 
 
 DOC = pathlib.Path("protocols/vaillant/ebus-vaillant-B503.md")
@@ -14,6 +15,12 @@ MILESTONE_HEADING = "## 14. Companion Links (downstream code milestones)"
 MILESTONE_TABLE_HEADER = ("Milestone", "Repo", "Artefact")
 MARKDOWN_TABLE_DELIMITER_CELL = re.compile(r"^:?-{3,}:?$")
 HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
+COMMONMARK_AUTOLINK = re.compile(r"<(?:https?://|mailto:)[^<>\s]+>", re.IGNORECASE)
+NON_RENDERING_CONTAINERS = frozenset(("head", "script", "style", "template"))
+HTML_VOID_ELEMENTS = frozenset((
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
+    "meta", "param", "source", "track", "wbr",
+))
 SESSION_SECTION_START = "## 6. Live-Monitor Session"
 SESSION_SECTION_END = "## 7. Gateway Operational Contract"
 REFRESHING_PUBLIC_SECTION_START = "#### 7.1.1 Refreshing session state (public)"
@@ -577,6 +584,56 @@ class CheckError(ValueError):
     """The canonical B503 milestone text contradicts the v1 session boundary."""
 
 
+class _VisibleContractSourceParser(HTMLParser):
+    """Retain contract source that is visible, excluding inert HTML content."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self.parts: list[str] = []
+        self._inert_stack: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        normalized = tag.casefold()
+        if self._inert_stack or normalized in NON_RENDERING_CONTAINERS:
+            if normalized not in HTML_VOID_ELEMENTS:
+                self._inert_stack.append(normalized)
+            return
+        self.parts.append(self.get_starttag_text())
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if not self._inert_stack and tag.casefold() not in NON_RENDERING_CONTAINERS:
+            self.parts.append(self.get_starttag_text())
+
+    def handle_endtag(self, tag: str) -> None:
+        normalized = tag.casefold()
+        if self._inert_stack:
+            for index in range(len(self._inert_stack) - 1, -1, -1):
+                if self._inert_stack[index] == normalized:
+                    del self._inert_stack[index:]
+                    return
+            return
+        self.parts.append(f"</{tag}>")
+
+    def handle_data(self, data: str) -> None:
+        if not self._inert_stack:
+            self.parts.append(data)
+
+    def handle_entityref(self, name: str) -> None:
+        if not self._inert_stack:
+            self.parts.append(f"&{name};")
+
+    def handle_charref(self, name: str) -> None:
+        if not self._inert_stack:
+            self.parts.append(f"&#{name};")
+
+
+def _visible_contract_source(text: str) -> str:
+    parser = _VisibleContractSourceParser()
+    parser.feed(COMMONMARK_AUTOLINK.sub("", text))
+    parser.close()
+    return "".join(parser.parts)
+
+
 def _parse_table_row(line: str) -> tuple[str, ...] | None:
     if not line.startswith("|") or not line.endswith("|"):
         return None
@@ -673,7 +730,7 @@ def _require_exact_row(rows: tuple[tuple[str, ...], ...], expected: tuple[str, .
 def validate_text(text: str) -> None:
     # Exact milestone fragments must be present in rendered documentation.
     # Raw text hidden in a CommonMark HTML comment cannot satisfy the gate.
-    text = HTML_COMMENT.sub("", text)
+    text = _visible_contract_source(text)
     status_section = _section(text, STATUS_SECTION_START, STATUS_SECTION_END)
     if CURRENT_PUBLIC_SESSION_AUTHORITY not in status_section:
         raise CheckError("missing current public session authority in §1")

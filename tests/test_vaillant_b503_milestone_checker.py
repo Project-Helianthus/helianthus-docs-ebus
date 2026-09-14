@@ -37,6 +37,26 @@ def test_rejects_five_state_contract_hidden_in_html_comment() -> None:
         CHECKER.validate_text(text)
 
 
+@pytest.mark.parametrize("container", sorted(CHECKER.NON_RENDERING_CONTAINERS))
+def test_rejects_five_state_contract_hidden_in_inert_html(container: str) -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f"<{container}>{CHECKER.SESSION_STATE_CONTRACT}</{container}>",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_accepts_five_state_contract_in_visible_html() -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f"<div>{CHECKER.SESSION_STATE_CONTRACT}</div>",
+        1,
+    )
+    CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     ("current", "unsafe"),
     (
