@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `e505261c95fc58f970042cc945518cde672f6160` |
-| Final validated contract tree | `1762fd6b0d34fcefa9eac0d250412a9127a4ffd3` |
-| Final contract validation | Complete configured CI PASS; 284 Portal checker tests and 143 canonical B503 milestone tests; lead-local log SHA-256 `ae6ba4513e7c5d18a1fcbdd429f06564e0138f6eb9440b7f607efcaf2f660d63`; hosted exact-head CI pending |
+| Final validated contract commit | `3375bcda9020e17a8acbfead465b972a09944433` |
+| Final validated contract tree | `f437b7b28f302abc25bb62391e26ba7febd6afe3` |
+| Final contract validation | Complete configured CI PASS; 285 Portal checker tests and 143 canonical B503 milestone tests; lead-local log SHA-256 `3b14ecd8570736fcfc3cf728b380167e862d8ee9a4b237c18805a3fe80a11e3b`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -351,7 +351,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 284 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 285 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 143 tests |
 | `git diff --check` | PASS |
@@ -1292,6 +1292,27 @@ cleanup-bearing capability. The precise regression rejects
 canonical checker passes 143 tests, and complete configured CI passes with
 lead-local log SHA-256
 `ae6ba4513e7c5d18a1fcbdd429f06564e0138f6eb9440b7f607efcaf2f660d63`.
+
+The fresh independent review of exact
+`72629de19cda8200ec0847d0948dcd0c178c7615`, tree
+`05f3f688a24b2142eededc6f8c4329613b0acfba`, returned
+`NO_BLOCKING_FINDINGS`; its report is
+`wave12/review/docs524-72629de-final-independent/REPORT.md`, SHA-256
+`1513025c89c49ebe992b9d954842ded423feeb74fc8f500a982117a112e15557`.
+The following complete live-feedback refresh then captured a new GitHub P2 at
+the same head: a required status sentence stored only as a Markdown link
+destination could satisfy the Portal required-fragment test while rendering
+only an unrelated link label. Functional commit
+`3375bcda9020e17a8acbfead465b972a09944433`, tree
+`f437b7b28f302abc25bb62391e26ba7febd6afe3`, reconstructs rendered CommonMark
+contract text from headings, list items, visible text, inline code, and visible
+HTML while excluding fenced/indented code plus link/image destinations and
+titles. The exact link-destination mutation rejects; every current required
+fragment and the five-row availability table remain accepted from their
+rendered content. The Portal checker passes 285 tests, the canonical checker
+passes 143 tests, and complete configured CI passes with lead-local log
+SHA-256
+`3b14ecd8570736fcfc3cf728b380167e862d8ee9a4b237c18805a3fe80a11e3b`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
