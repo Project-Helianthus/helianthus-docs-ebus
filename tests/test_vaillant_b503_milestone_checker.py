@@ -253,6 +253,10 @@ def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> N
             CHECKER.RESTART_CLEANUP_FENCE,
             "Gateway restart performs no target cleanup before B503 availability.",
         ),
+        (
+            CHECKER.RESTART_CLEANUP_FENCE,
+            "Gateway automatically disables every qualified B503 target after restart.",
+        ),
     ),
 )
 def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(

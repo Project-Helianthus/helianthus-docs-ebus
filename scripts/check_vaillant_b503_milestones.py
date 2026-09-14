@@ -203,9 +203,10 @@ NO_AUTO_RESUME_RECONSTRUCTION = (
     "Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost\n"
     "  owner handle, or an absent/invalid current issuer token; each requires an\n"
     "  explicit new client Enable. After restart that Enable is admitted only after\n"
-    "  the bounded per-target startup cleanup succeeds and capability is\n"
-    "  `AVAILABLE`. The surviving authenticated current-owner refresh path in §7.3\n"
-    "  is the only continuation allowed across an epoch advance."
+    "  the explicit operator-authorized target recovery succeeds and capability is\n"
+    "  `AVAILABLE`; Gateway never performs that recovery automatically. The surviving\n"
+    "  authenticated current-owner refresh path in §7.3 is the only continuation\n"
+    "  allowed across an epoch advance."
 )
 REFRESHING_DISCONNECT_FENCE = (
     "A terminal transport disconnect follows §7.4: it releases the owner and does\n"
@@ -279,24 +280,32 @@ EXPLICIT_DISABLE_UNCONFIRMED_TRANSITION = (
 )
 RESTART_TRANSITION = (
     "| any | gateway restart | `DISABLED` | release any owner and destroy every "
-    "caller handle; no session state is reconstructed, and §7.5 bounded restart "
-    "cleanup must succeed before any qualified B503 target becomes `AVAILABLE` |"
+    "caller handle; reconstruct no session and emit no automatic B503 enable or "
+    "disable; each qualified target's live-monitor capability stays `UNKNOWN` with "
+    "no Enable until explicit operator-authorized target recovery under §7.5 |"
 )
 RESTART_RELEASE_CONTRACT = (
     "- On gateway restart, the gateway MUST transition the FSM to `DISABLED`\n"
     "  and — if an owner was held — release `liveMonitorMu`. No session or cleanup\n"
-    "  tuple persists across restart; the bounded per-target startup cleanup in §7.5\n"
-    "  replaces persistence and MUST finish before B503 availability is published."
+    "  tuple persists across restart. Because Gateway can no longer distinguish its\n"
+    "  pre-restart session from a session owned by another bus client, it MUST NOT\n"
+    "  emit an automatic B503 enable or disable. Each qualified target starts with\n"
+    "  live-monitor capability `UNKNOWN`, and Enable remains unavailable until the\n"
+    "  explicit operator-authorized target recovery in §7.5 succeeds."
 )
 RESTART_CLEANUP_FENCE = (
     "- After every Gateway process restart, enumerate the finite registry-qualified\n"
-    "  B503 targets and, before publishing any one of them as `AVAILABLE`, issue\n"
-    "  exactly one target-specific defensive disable for that target after quiesce.\n"
-    "  Record the native outcome. A valid disable ACK permits that target's normal\n"
+    "  B503 targets, set each target's live-monitor capability to `UNKNOWN`, admit no\n"
+    "  Enable, and emit no automatic B503 enable or disable. For a selected target,\n"
+    "  only an explicit operator-authorized maintenance recovery may issue one\n"
+    "  target-specific disable after quiesce. That recovery is outside the public\n"
+    "  GraphQL and Portal v1 surfaces and requires action-time confirmation. Record\n"
+    "  the exact native outcome. A valid disable ACK permits that target's normal\n"
     "  availability evaluation; any other outcome leaves it `UNKNOWN`, admits no\n"
-    "  Enable, and performs no retry in the same transport epoch. A later transport\n"
-    "  epoch may execute one bounded cleanup again. This startup fence reconstructs\n"
-    "  no caller handle or session and requires no persisted cleanup tuple."
+    "  Enable, and performs no retry in the same transport epoch. Without explicit\n"
+    "  authorization, Gateway performs no write and the live-monitor capability\n"
+    "  remains unavailable. This fence reconstructs no caller handle or session and\n"
+    "  requires no persisted cleanup tuple."
 )
 IDLE_TIMEOUT_ACK_CONTRACT = (
     "- Idle disable transitions the **internal** FSM from `ACTIVE` to `DISABLED`.\n"

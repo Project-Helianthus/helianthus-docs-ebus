@@ -214,9 +214,13 @@ Gateway's process-local defensive-cleanup obligation, and presents `Idle` with
 `owned:false` alongside capability `UNKNOWN`; Enable remains unavailable. After restart, a lost owner
 handle, or an
 absent/invalid current issuer token, Gateway does not reconstruct the session
-and the client must issue a new explicit Enable. After restart that Enable is
-admitted only after Gateway's bounded per-target startup cleanup completes and
-the target returns to capability `AVAILABLE`.
+and the client must issue a new explicit Enable. After restart, each qualified
+target's live-monitor capability is `UNKNOWN`, Enable is unavailable, and
+Gateway emits no automatic B503 enable or disable. The Portal exposes no
+recovery control. Only a separately operator-authorized target-specific
+maintenance recovery outside public GraphQL/Portal v1 may issue one disable,
+with action-time confirmation; a valid disable ACK permits normal availability
+evaluation, while every other outcome remains fail-closed.
 A terminal transport disconnect releases ownership. A later reconnect has no
 owner and does not enter `Refreshing`; when defensive cleanup is pending, it
 must complete before capability can become `AVAILABLE` or a new explicit client

@@ -137,9 +137,13 @@ B503_REFRESH_CONTINUATION = (
     "`owned:false` alongside capability `UNKNOWN`; Enable remains unavailable. After restart, a lost owner\n"
     "handle, or an\n"
     "absent/invalid current issuer token, Gateway does not reconstruct the session\n"
-    "and the client must issue a new explicit Enable. After restart that Enable is\n"
-    "admitted only after Gateway's bounded per-target startup cleanup completes and\n"
-    "the target returns to capability `AVAILABLE`.\n"
+    "and the client must issue a new explicit Enable. After restart, each qualified\n"
+    "target's live-monitor capability is `UNKNOWN`, Enable is unavailable, and\n"
+    "Gateway emits no automatic B503 enable or disable. The Portal exposes no\n"
+    "recovery control. Only a separately operator-authorized target-specific\n"
+    "maintenance recovery outside public GraphQL/Portal v1 may issue one disable,\n"
+    "with action-time confirmation; a valid disable ACK permits normal availability\n"
+    "evaluation, while every other outcome remains fail-closed.\n"
     "A terminal transport disconnect releases ownership. A later reconnect has no\n"
     "owner and does not enter `Refreshing`; when defensive cleanup is pending, it\n"
     "must complete before capability can become `AVAILABLE` or a new explicit client\n"
@@ -280,7 +284,7 @@ PLAIN_AFFIRMATIVE_CONTROL_VERB = re.compile(
     r"present(?:s|ed)?|create(?:s|d)?|support(?:s|ed)?|allow(?:s|ed)?|"
     r"contain(?:s|ed)?|feature(?:s|d)?|list(?:s|ed)?|"
     r"publish(?:es|ed)?|surface(?:s|d)?|exist(?:s|ed)?|appear(?:s|ed)?|"
-    r"use(?:s|d)?|click(?:s|ed)?|"
+    r"use(?:s|d)?|click(?:s|ed)?|remain(?:s|ed)?|"
     r"has|have|be|is|are|available|visible)\b",
     re.IGNORECASE,
 )
@@ -673,7 +677,41 @@ def _inline_route_destinations(children: list[object] | None) -> list[str]:
             destinations.append(child.attrGet("href") or "")
         elif child.type == "image":
             destinations.append(child.attrGet("src") or "")
+        elif child.type == "html_inline":
+            for _, attrs, _ in _parsed_dom_elements(child.content):
+                for attribute, value in attrs:
+                    if (
+                        value is not None
+                        and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
+                    ):
+                        destinations.append(
+                            _decoded_dom_attribute_value(attribute, value)
+                        )
     return destinations
+
+
+def _authorizes_url_fallback(visible: str, destinations: list[str]) -> bool:
+    if not destinations:
+        return False
+    normalized = " ".join(visible.split())
+    has_failure = re.search(
+        r"\b(?:main\s+graphql|graphql|fixed\s+route|b503\s+route)\b.*"
+        r"\b(?:fail(?:s|ed|ure)?|unavailable)\b",
+        normalized,
+        re.IGNORECASE,
+    ) or re.search(
+        r"\b(?:fail(?:s|ed|ure)?|unavailable)\b.*"
+        r"\b(?:main\s+graphql|graphql|fixed\s+route|b503\s+route)\b",
+        normalized,
+        re.IGNORECASE,
+    )
+    has_fallback = re.search(
+        r"\b(?:use|uses|used|try|tries|retry|retries|fallback|backup|"
+        r"switch|switches|reroute|reroutes)\b",
+        normalized,
+        re.IGNORECASE,
+    )
+    return bool(has_failure and has_fallback)
 
 
 def _literal_html_route_destinations(target: str) -> list[str]:
@@ -705,9 +743,14 @@ def _reject_unapproved_route_surface_paragraphs(document: str) -> None:
     found: list[str] = []
     for inline in _target_inline_tokens(document):
         visible = _rendered_children(inline.children)
+        destinations = _inline_route_destinations(inline.children)
+        if _authorizes_url_fallback(visible, destinations):
+            raise CheckError(
+                "api/portal.md: arbitrary URL fallback is outside the fixed B503 routes"
+            )
         if _mentions_route_surface(visible) or any(
             _mentions_route_surface(destination)
-            for destination in _inline_route_destinations(inline.children)
+            for destination in destinations
         ):
             found.append(_normalized_rendered(visible))
     if found != expected:

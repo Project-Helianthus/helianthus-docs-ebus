@@ -298,7 +298,7 @@ access.
 | `DISABLED` | defensive disable has no valid ACK while transport remains connected | `DISABLED` | retain the process-local §7.4 defensive-cleanup obligation, publish capability `UNKNOWN`, admit no Enable, and perform no same-epoch retry; only a later transport epoch may attempt one bounded cleanup under §7.5 |
 | `DISABLED` | enable NAK proves no device session, or valid disable ACK confirms cleanup success | `IDLE` | clear any defensive-cleanup obligation; session may be re-claimed by any client only when capability is `AVAILABLE` |
 | any | transport disconnect | `DISABLED` | release any owner; if an enable may have reached the wire and no disable has a confirmed terminal outcome, retain the target and attempt only as the process-local §7.4 defensive-cleanup obligation |
-| any | gateway restart | `DISABLED` | release any owner and destroy every caller handle; no session state is reconstructed, and §7.5 bounded restart cleanup must succeed before any qualified B503 target becomes `AVAILABLE` |
+| any | gateway restart | `DISABLED` | release any owner and destroy every caller handle; reconstruct no session and emit no automatic B503 enable or disable; each qualified target's live-monitor capability stays `UNKNOWN` with no Enable until explicit operator-authorized target recovery under §7.5 |
 
 **Lock lifecycle (single assignment, owner-conditional):**
 `liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
@@ -460,8 +460,11 @@ event fires**; they are no-ops when the FSM is already `IDLE` or
   or operation eligibility and does not survive gateway process restart.
 - On gateway restart, the gateway MUST transition the FSM to `DISABLED`
   and — if an owner was held — release `liveMonitorMu`. No session or cleanup
-  tuple persists across restart; the bounded per-target startup cleanup in §7.5
-  replaces persistence and MUST finish before B503 availability is published.
+  tuple persists across restart. Because Gateway can no longer distinguish its
+  pre-restart session from a session owned by another bus client, it MUST NOT
+  emit an automatic B503 enable or disable. Each qualified target starts with
+  live-monitor capability `UNKNOWN`, and Enable remains unavailable until the
+  explicit operator-authorized target recovery in §7.5 succeeds.
 - If the FSM was already `IDLE` or `DISABLED` at disconnect/restart time,
   these events are no-ops with respect to the mutex; no release is
   attempted. A pre-existing defensive-cleanup obligation remains independent
@@ -489,19 +492,24 @@ event fires**; they are no-ops when the FSM is already `IDLE` or
   There is no retry within the same transport epoch; a later transport lifecycle
   attempt may execute one bounded cleanup again before publication.
 - After every Gateway process restart, enumerate the finite registry-qualified
-  B503 targets and, before publishing any one of them as `AVAILABLE`, issue
-  exactly one target-specific defensive disable for that target after quiesce.
-  Record the native outcome. A valid disable ACK permits that target's normal
+  B503 targets, set each target's live-monitor capability to `UNKNOWN`, admit no
+  Enable, and emit no automatic B503 enable or disable. For a selected target,
+  only an explicit operator-authorized maintenance recovery may issue one
+  target-specific disable after quiesce. That recovery is outside the public
+  GraphQL and Portal v1 surfaces and requires action-time confirmation. Record
+  the exact native outcome. A valid disable ACK permits that target's normal
   availability evaluation; any other outcome leaves it `UNKNOWN`, admits no
-  Enable, and performs no retry in the same transport epoch. A later transport
-  epoch may execute one bounded cleanup again. This startup fence reconstructs
-  no caller handle or session and requires no persisted cleanup tuple.
+  Enable, and performs no retry in the same transport epoch. Without explicit
+  authorization, Gateway performs no write and the live-monitor capability
+  remains unavailable. This fence reconstructs no caller handle or session and
+  requires no persisted cleanup tuple.
 - Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost
   owner handle, or an absent/invalid current issuer token; each requires an
   explicit new client Enable. After restart that Enable is admitted only after
-  the bounded per-target startup cleanup succeeds and capability is
-  `AVAILABLE`. The surviving authenticated current-owner refresh path in §7.3
-  is the only continuation allowed across an epoch advance.
+  the explicit operator-authorized target recovery succeeds and capability is
+  `AVAILABLE`; Gateway never performs that recovery automatically. The surviving
+  authenticated current-owner refresh path in §7.3 is the only continuation
+  allowed across an epoch advance.
 
 ### 7.6 30s idle-timeout semantics
 
