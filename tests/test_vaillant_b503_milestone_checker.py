@@ -27,6 +27,50 @@ def test_accepts_current_b503_milestone_contract() -> None:
     CHECKER.validate_text(contract())
 
 
+@pytest.mark.parametrize(
+    ("current", "unsafe"),
+    (
+        (
+            CHECKER.COLD_BOOT_TRUTH_ROW,
+            ("1", "cold-boot, no successful dispatch yet", "`AVAILABLE`", "n/a"),
+        ),
+        (
+            CHECKER.DISCONNECT_ACTIVE_TRUTH_ROW,
+            (
+                "3",
+                "disconnect during ACTIVE session",
+                "`AVAILABLE`",
+                "in-flight requests may complete against the new epoch",
+            ),
+        ),
+        (
+            CHECKER.RECONNECT_PRE_DISPATCH_TRUTH_ROW,
+            (
+                "4",
+                "reconnect, before first post-reconnect dispatch",
+                "`AVAILABLE`",
+                "retain the pre-disconnect state",
+            ),
+        ),
+        (
+            CHECKER.STALE_EPOCH_COMPLETION_TRUTH_ROW,
+            (
+                "8",
+                "stale in-flight completion across epoch rollover",
+                "`AVAILABLE`",
+                "epoch-N reply may satisfy a post-reconnect waiter",
+            ),
+        ),
+    ),
+)
+def test_rejects_unsafe_unchecked_capability_truth_rows(
+    current: tuple[str, ...], unsafe: tuple[str, ...]
+) -> None:
+    text = contract().replace(table_row(current), table_row(unsafe), 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_cleanup_unaware_dispatch_failure_truth_row() -> None:
     text = contract().replace(
         table_row(CHECKER.DISPATCH_FAILURE_TRUTH_ROW),

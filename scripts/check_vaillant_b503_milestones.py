@@ -73,6 +73,32 @@ INSTALL_WRITE_SECTION = (
     "doc-gate PR per `AGENTS.md §8.4`, including installer-mode authentication\n"
     "design and isolated-hardware bench evidence.\n\n"
 )
+COLD_BOOT_TRUTH_ROW = (
+    "1",
+    "cold-boot, no successful dispatch yet",
+    "`UNKNOWN`",
+    "n/a",
+)
+DISCONNECT_ACTIVE_TRUTH_ROW = (
+    "3",
+    "disconnect during ACTIVE session",
+    "`TRANSPORT_DOWN` (literal)",
+    "in-flight requests fail `TRANSPORT_DOWN`; no late mutation",
+)
+RECONNECT_PRE_DISPATCH_TRUTH_ROW = (
+    "4",
+    "reconnect, before first post-reconnect dispatch",
+    "`UNKNOWN` (NOT sticky `AVAILABLE`)",
+    "reset to `UNKNOWN` regardless of pre-disconnect state",
+)
+STALE_EPOCH_COMPLETION_TRUTH_ROW = (
+    "8",
+    "stale in-flight completion across epoch rollover",
+    "n/a — frame discarded",
+    "reply/NAK/timeout from epoch N arriving after reconnect to epoch N+1 MUST be "
+    "discarded; MUST NOT mutate capability to `AVAILABLE`; MUST NOT satisfy any "
+    "post-reconnect waiter",
+)
 REFRESHING_CAPABILITY_TRUTH_ROW = (
     "7",
     "held-session epoch refresh; session status `Refreshing`",
@@ -104,6 +130,16 @@ DISPATCH_FAILURE_TRUTH_ROW = (
     "retains cleanup publishes `UNKNOWN` per §6–§8",
     "cleanup-bearing outcomes retain the Gateway-owned attempt identity, admit no "
     "Enable, and follow the bounded later-epoch cleanup rule",
+)
+CAPABILITY_TRUTH_ROWS = (
+    COLD_BOOT_TRUTH_ROW,
+    STEADY_AVAILABLE_TRUTH_ROW,
+    DISCONNECT_ACTIVE_TRUTH_ROW,
+    RECONNECT_PRE_DISPATCH_TRUTH_ROW,
+    RECONNECT_AVAILABLE_TRUTH_ROW,
+    DISPATCH_FAILURE_TRUTH_ROW,
+    REFRESHING_CAPABILITY_TRUTH_ROW,
+    STALE_EPOCH_COMPLETION_TRUTH_ROW,
 )
 CURRENT_PUBLIC_SESSION_AUTHORITY = (
     "**Current public session authority.** The five-state public session contract in\n"
@@ -743,14 +779,11 @@ def validate_text(text: str) -> None:
         )
 
     truth_rows = _capability_truth_table_rows(text)
-    if [row for row in truth_rows if row[0] == "2"] != [STEADY_AVAILABLE_TRUTH_ROW]:
-        raise CheckError("missing restart-fenced steady AVAILABLE truth-table row")
-    if [row for row in truth_rows if row[0] == "5"] != [RECONNECT_AVAILABLE_TRUTH_ROW]:
-        raise CheckError("missing restart-fenced reconnect AVAILABLE truth-table row")
-    if [row for row in truth_rows if row[0] == "6"] != [DISPATCH_FAILURE_TRUTH_ROW]:
-        raise CheckError("missing exact cleanup-aware dispatch-failure truth-table row")
-    if [row for row in truth_rows if row[0] == "7"] != [REFRESHING_CAPABILITY_TRUTH_ROW]:
-        raise CheckError("missing exact §12.5 held-session refresh truth-table row")
+    if truth_rows != CAPABILITY_TRUTH_ROWS:
+        raise CheckError(
+            "§12.5 capability truth table must contain the exact ordered eight-row set; "
+            f"got {truth_rows!r}"
+        )
 
 
 def main() -> int:
