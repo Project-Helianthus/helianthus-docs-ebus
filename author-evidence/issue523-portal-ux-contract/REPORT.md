@@ -24,9 +24,9 @@ complete SemReg cutover, or release acceptance.
 | Branch | `issue/523-portal-ux-contract` |
 | Base commit | `6ce5c9f62690e1b9b18cb888f187ba7d89b845f0` |
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
-| Latest functional correction commit | `e514194192c8b8e7b6ecb7b96f4c458200ba2405` |
-| Latest functional correction tree | `0d8ea7015d10f7d85db1b73d0e4170fba80705fa` |
-| Focused validation | Portal 304 PASS; canonical B503 176 PASS; combined 480 PASS |
+| Latest functional correction commit | `c9748c97ff105f8f7fe1ebd486d05e5baa94d61c` |
+| Latest functional correction tree | `12e2f895f2a961fb5a066ae65faf1757315d6d1c` |
+| Focused validation | Portal 305 PASS; canonical B503 179 PASS; combined 484 PASS |
 | Complete configured CI | Rerun on the final evidence candidate after this report commit; the exact HEAD and immutable log hash are recorded in the PR body and independent review bundle |
 | Diff and syntax | `git diff --check` PASS; both Python validators compile |
 | Current review state | Fresh review is required after this evidence update is committed and pushed |
@@ -133,9 +133,9 @@ PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTI
 
 Results:
 
-- combined focused suite: 480/480 PASS;
-- Portal checker: 304/304 PASS;
-- canonical B503 checker: 176/176 PASS;
+- combined focused suite: 484/484 PASS;
+- Portal checker: 305/305 PASS;
+- canonical B503 checker: 179/179 PASS;
 - both checker CLIs: PASS;
 - complete configured repository CI: PASS;
 - `git diff --check`: PASS.
@@ -300,6 +300,22 @@ retained cleanup and `UNKNOWN`, while only a Gateway-supplied out-of-band
 administrative/configuration-disabled condition presents
 `Disabled`/`owned:false` and emits no B503 operation. Both visibility parsers
 now reject required content in a closed dialog while accepting `<dialog open>`.
+
+The fresh independent review at candidate
+`17bd2e08354691f2d98bd055c640f2c5f974a820`, tree
+`57b4002d27882191dc2a3128892f5551ef6be173`, returned two P2s. An ownerless
+`IDLE` target under `TRANSPORT_DOWN` could still satisfy the generic Enable
+row, and a fake target-end heading inside fenced code could truncate later
+Portal safety audits. The report is
+`wave12/review/docs524-17bd2e0-final-independent/REPORT.md`, SHA-256
+`44f68c90dd7f698876f0c4bbbda583dc9cb11bb1a7753ce39d83bb77102de7c1`.
+Functional commit `c9748c97ff105f8f7fe1ebd486d05e5baa94d61c`, tree
+`12e2f895f2a961fb5a066ae65faf1757315d6d1c`, requires ownerless, cleanup-free,
+connected `AVAILABLE` admission before `IDLE → ENABLING`; every unavailable
+case returns the exact Gateway result with no transition or emission. The
+Portal validator now derives its target bounds from rendered CommonMark H2
+tokens and uses those same bounds for inline, raw HTML, and fenced-content
+audits, so a fenced fake boundary cannot hide a later rendered control.
 
 The earlier independent evidence opinion that ACK/NAK settlement was unsupported
 is preserved at
