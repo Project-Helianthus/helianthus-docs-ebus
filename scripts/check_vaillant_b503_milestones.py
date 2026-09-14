@@ -648,7 +648,7 @@ class _VisibleContractSourceParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         normalized = tag.casefold()
-        hidden = any(name.casefold() == "hidden" for name, _ in attrs)
+        hidden = _html_element_is_nonrendering(attrs)
         if self._inert_stack or normalized in NON_RENDERING_CONTAINERS or hidden:
             if normalized not in HTML_VOID_ELEMENTS:
                 self._inert_stack.append(normalized)
@@ -685,6 +685,22 @@ def _visible_contract_source(text: str) -> str:
     parser.feed(COMMONMARK_AUTOLINK.sub("", text))
     parser.close()
     return "".join(parser.parts)
+
+
+def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
+    for name, value in attrs:
+        if name.casefold() == "hidden":
+            return True
+        if name.casefold() != "style" or value is None:
+            continue
+        declarations = {}
+        for declaration in value.split(";"):
+            property_name, separator, property_value = declaration.partition(":")
+            if separator:
+                declarations[property_name.strip().casefold()] = property_value.strip().casefold()
+        if declarations.get("display") == "none" or declarations.get("visibility") == "hidden":
+            return True
+    return False
 
 
 def _visible_prose_source(text: str) -> str:
