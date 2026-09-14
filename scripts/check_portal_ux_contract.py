@@ -298,7 +298,7 @@ DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
     re.IGNORECASE,
 )
 HTML_URL_ATTRIBUTE_NAMES = frozenset(
-    ("href", "src", "action", "formaction", "poster", "cite", "data")
+    ("href", "src", "action", "formaction", "poster", "cite", "data", "ping")
 )
 HTML_VOID_ELEMENTS = frozenset((
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link",

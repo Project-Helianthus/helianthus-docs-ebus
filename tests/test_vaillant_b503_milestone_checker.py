@@ -229,6 +229,10 @@ def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> N
             CHECKER.UNCONFIRMED_CLEANUP_OBLIGATION,
             "Any terminal defensive-disable outcome clears cleanup.",
         ),
+        (
+            CHECKER.GATEWAY_CLEANUP_ATTEMPT_ID,
+            "Gateway reuses the browser-local cleanup identity.",
+        ),
     ),
 )
 def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(

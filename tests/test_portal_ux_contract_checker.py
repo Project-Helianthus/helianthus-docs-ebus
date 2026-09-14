@@ -511,6 +511,7 @@ def test_rejects_affirmative_b503_main_graphql_fallback_clause(clause: str) -> N
         "Use [fallback](/portal/api/v1/projection/devices) when GraphQL fails.",
         'If main GraphQL is unavailable, use <a href="/portal/api/v1/projection/devices">fallback</a>.',
         'If main GraphQL is unavailable, use <form action="/portal/api/v%31/projection/devices">fallback</form>.',
+        'If main GraphQL is unavailable, use <a href="#safe" ping="/portal/api/v1/projection/devices">fallback</a>.',
     ),
 )
 def test_rejects_concrete_portal_api_fallback_route(clause: str) -> None:

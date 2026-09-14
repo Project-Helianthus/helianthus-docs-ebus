@@ -202,7 +202,7 @@ DISCONNECT_CLEANUP_OBLIGATION = (
     "- On transport disconnect, the gateway MUST transition the FSM to\n"
     "  `DISABLED` and — if an owner was held — release `liveMonitorMu`. If an enable\n"
     "  may have reached the wire and no disable has a confirmed terminal outcome,\n"
-    "  Gateway retains `(targetAddress, localEnableAttemptID, priorTransportEpoch)`\n"
+    "  Gateway retains `(targetAddress, gatewayCleanupAttemptID, priorTransportEpoch)`\n"
     "  only as a process-local defensive-cleanup obligation across transport\n"
     "  reconnect. It carries no issuer token, owner authority, session continuation,\n"
     "  or operation eligibility and does not survive gateway process restart."
@@ -224,11 +224,18 @@ UNCONFIRMED_CLEANUP_OBLIGATION = (
     "- A defensive disable clears its cleanup obligation only after a valid native\n"
     "  disable ACK. A NAK, timeout, CRC mismatch, bus-arbitration failure,\n"
     "  disconnect, or any other outcome without that ACK retains the target plus a\n"
-    "  fresh local cleanup ID and the attempted transport epoch as process-local,\n"
+    "  fresh Gateway-owned `gatewayCleanupAttemptID` and the attempted transport\n"
+    "  epoch as process-local,\n"
     "  operation-ineligible cleanup state. Gateway publishes capability `UNKNOWN`,\n"
     "  admits no Enable, and performs no retry in that transport epoch. The internal\n"
     "  FSM remains `DISABLED`; a later transport epoch may attempt one bounded\n"
     "  target-specific cleanup under §7.5."
+)
+GATEWAY_CLEANUP_ATTEMPT_ID = (
+    "- Gateway allocates `gatewayCleanupAttemptID` when the cleanup obligation is\n"
+    "  created and never reuses it. This opaque ID is internal to Gateway; it is not\n"
+    "  the browser-local `localEnableAttemptID`, is not supplied by a caller, and\n"
+    "  confers no owner or operation authority."
 )
 CONFIRMED_CLEANUP_DIAGRAM = (
     "DISABLED --> IDLE: enable NAK or valid disable ACK"
@@ -260,7 +267,7 @@ REFRESH_DISABLE_UNCONFIRMED_TRANSITION = (
     "outcome without a valid disable ACK | `DISABLED` | atomically rebind to the N+1 "
     "key, fence every epoch-N completion, emit disable exactly once after quiesce "
     "using the rebound key, return its exact outcome, release the owner, and retain "
-    "`(targetAddress, fresh localDisableCleanupID, transportEpoch[N+1])` only as the "
+    "`(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` only as the "
     "process-local §7.4 defensive-cleanup obligation; do not enter `IDLE` |"
 )
 UNCONFIRMED_CLEANUP_TRANSITION = (
@@ -578,6 +585,7 @@ def validate_text(text: str) -> None:
     release_section = _section(text, RELEASE_SECTION_START, RELEASE_SECTION_END)
     for fragment in (
         UNCONFIRMED_CLEANUP_OBLIGATION,
+        GATEWAY_CLEANUP_ATTEMPT_ID,
         DISCONNECT_CLEANUP_OBLIGATION,
         DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE,
     ):
