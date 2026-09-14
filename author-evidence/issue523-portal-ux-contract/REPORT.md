@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `ef5476f528d8fea9e5553465effd7e8126bf2939` |
-| Final validated contract tree | `89e3f7e81baa234f7972a738f0a47a56ec657cbb` |
-| Final contract validation | Complete configured CI PASS; 285 Portal checker tests and 146 canonical B503 milestone tests; lead-local log SHA-256 `e6cc32111b65b639a3a740f866d3e0f9cb6c3af96f61fd66f62d85ebe1fbc85c`; hosted exact-head CI pending |
+| Final validated contract commit | `170ba02a67e500c99bfef8408528b9c7a241a1b5` |
+| Final validated contract tree | `b119f41104bd2b75c3dca6de8c85504f26a8b77e` |
+| Final contract validation | Complete configured CI PASS; 285 Portal checker tests and 147 canonical B503 milestone tests; lead-local log SHA-256 `639b475cbcf8713f451043f152de14490a7d0f90e68e5264818e8d7bfae9010d`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -1349,6 +1349,23 @@ restart recovery fence. The existing exact-fragment mutation now rejects the
 contradictory retained-after-restart form. The canonical checker passes 146
 tests, and complete configured CI passes with lead-local log SHA-256
 `8cc4f2bbb3e9ab4dd9b439a52cb5f90d0efc483310d6b10dad8439fd4d754152`.
+
+The subsequent GitHub review of exact
+`fd7b9cfee4ae5d7a83dfeffe6267763dfe7f6c4c` found two P2 evidence defects. A
+required canonical literal such as the five-state session contract could still
+be placed only in CommonMark link metadata, and this report's summary table
+still called the older `ef5476f` tree the final validated contract. Functional
+commit `170ba02a67e500c99bfef8408528b9c7a241a1b5`, tree
+`b119f41104bd2b75c3dca6de8c85504f26a8b77e`, now verifies that every current
+long literal anchor already declared by the canonical checker also appears in
+reader-visible rendered CommonMark. Link destinations and titles, images,
+code blocks, and non-rendering HTML do not supply those anchors. This bounded
+mechanism does not claim to parse or prove arbitrary English. A multiline link
+title containing the exact session contract rejects, while the checked-in
+visible contract passes. The summary table above now names this exact source
+commit/tree and its complete CI evidence. Portal remains 285/285; canonical
+B503 is 147/147; complete configured CI passed with log SHA-256
+`639b475cbcf8713f451043f152de14490a7d0f90e68e5264818e8d7bfae9010d`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
