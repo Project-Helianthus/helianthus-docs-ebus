@@ -448,6 +448,8 @@ def test_rejects_required_contract_clause_hidden_by_standard_html_attribute() ->
     "style",
     (
         "display:none",
+        "display:none/**/",
+        "display:/**/none",
         "DISPLAY: none",
         "visibility: hidden",
         "display:none!important",
@@ -522,6 +524,19 @@ def test_rejects_availability_table_wrapped_in_preformatted_html() -> None:
         )
     )
     text = contract().replace(table, f"<pre>\n{table}\n</pre>", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_rejects_availability_table_wrapped_in_raw_html_block() -> None:
+    table = "\n".join(
+        (
+            CHECKER.AVAILABILITY_TABLE_HEADER,
+            CHECKER.AVAILABILITY_TABLE_SEPARATOR,
+            *CHECKER.AVAILABILITY_ROWS.values(),
+        )
+    )
+    text = contract().replace(table, f"<div>\n{table}\n</div>", 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 

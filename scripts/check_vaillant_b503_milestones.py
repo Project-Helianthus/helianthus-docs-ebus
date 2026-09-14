@@ -30,6 +30,8 @@ HTML_VOID_ELEMENTS = frozenset((
     "meta", "param", "source", "track", "wbr",
 ))
 MARKDOWN = MarkdownIt("commonmark")
+TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
+CSS_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
 SESSION_SECTION_START = "## 6. Live-Monitor Session"
 SESSION_SECTION_END = "## 7. Gateway Operational Contract"
 SESSION_TRANSITION_TABLE_START = "### 6.3 Transitions (normative)"
@@ -503,7 +505,7 @@ def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
         if name.casefold() != "style" or value is None:
             continue
         declarations: dict[str, tuple[str, bool]] = {}
-        for declaration in value.split(";"):
+        for declaration in CSS_COMMENT.sub("", value).split(";"):
             property_name, separator, property_value = declaration.partition(":")
             if separator:
                 important = re.search(
@@ -615,6 +617,20 @@ def _section(text: str, start_marker: str, end_marker: str) -> str:
     return text[start:end]
 
 
+def _require_genuine_markdown_table(text: str, header: str, label: str) -> None:
+    """Require an exact header to begin one table in original CommonMark context."""
+    header_lines = [
+        index for index, line in enumerate(text.splitlines()) if line == header
+    ]
+    table_starts = {
+        token.map[0]
+        for token in TABLE_MARKDOWN.parse(text)
+        if token.type == "table_open" and token.map is not None
+    }
+    if len(header_lines) != 1 or header_lines[0] not in table_starts:
+        raise CheckError(f"{label} must be one rendered Markdown table")
+
+
 def _milestone_table(text: str) -> tuple[tuple[str, ...], ...]:
     """Return only the §14 companion milestone table rows, excluding prose."""
     lines = text.splitlines()
@@ -686,6 +702,20 @@ def _require_exact_row(rows: tuple[tuple[str, ...], ...], expected: tuple[str, .
 def validate_text(text: str) -> None:
     # Exact milestone fragments must be present in rendered documentation.
     # Raw text hidden in a CommonMark HTML comment cannot satisfy the gate.
+    original_text = text
+    _require_genuine_markdown_table(
+        original_text, SESSION_TRANSITION_TABLE_HEADER, "§6.3 transition table"
+    )
+    _require_genuine_markdown_table(
+        original_text,
+        "| " + " | ".join(CAPABILITY_TRUTH_TABLE_HEADER) + " |",
+        "§12.5 capability truth table",
+    )
+    _require_genuine_markdown_table(
+        original_text,
+        "| " + " | ".join(MILESTONE_TABLE_HEADER) + " |",
+        "§14 milestone table",
+    )
     text = _visible_contract_source(text)
     prose_text = _visible_prose_source(text)
     _require_declared_literal_anchors_visible(

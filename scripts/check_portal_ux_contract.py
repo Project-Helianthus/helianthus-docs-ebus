@@ -367,6 +367,8 @@ B503_ROUTE_SURFACE_PARAGRAPHS = (
     "other route, REST, MCP, or native I/O.",
 )
 MARKDOWN = MarkdownIt("commonmark")
+TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
+CSS_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
 HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
 COMMONMARK_AUTOLINK = re.compile(
     r"<(?:https?://|mailto:)[^<>\s]+>", re.IGNORECASE
@@ -475,7 +477,7 @@ def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
         if name.casefold() != "style" or value is None:
             continue
         declarations: dict[str, tuple[str, bool]] = {}
-        for declaration in value.split(";"):
+        for declaration in CSS_COMMENT.sub("", value).split(";"):
             property_name, separator, property_value = declaration.partition(":")
             if separator:
                 important = re.search(
@@ -542,6 +544,26 @@ def _target_line_bounds(text: str) -> tuple[int, int]:
 def _target_section(text: str) -> str:
     start_line, end_line = _target_line_bounds(text)
     return "".join(text.splitlines(keepends=True)[start_line:end_line])
+
+
+def _require_genuine_availability_table(text: str) -> None:
+    """Require the frozen rows to be a Markdown table in the original document."""
+    start_line, end_line = _target_line_bounds(text)
+    lines = text.splitlines()
+    header_lines = [
+        index
+        for index in range(start_line, min(end_line, len(lines)))
+        if lines[index] == AVAILABILITY_TABLE_HEADER
+    ]
+    table_starts = {
+        token.map[0]
+        for token in TABLE_MARKDOWN.parse(text)
+        if token.type == "table_open" and token.map is not None
+    }
+    if len(header_lines) != 1 or header_lines[0] not in table_starts:
+        raise CheckError(
+            "api/portal.md: B503 availability rows must be one rendered Markdown table"
+        )
 
 
 def _availability_table_rows(target: str) -> list[str]:
@@ -1063,6 +1085,7 @@ def _reject_prohibited_dom_references(target: str, document: str) -> None:
 
 def validate_text(text: str) -> None:
     target = _target_section(text)
+    _require_genuine_availability_table(text)
     # REQUIRED is deliberately limited to the frozen INT-10 contract. Content
     # inside comments or declared non-rendering HTML containers is not part of
     # the visible public contract.

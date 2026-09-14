@@ -132,6 +132,8 @@ def test_rejects_five_state_contract_hidden_by_standard_html_attribute() -> None
     "style",
     (
         "display:none",
+        "display:none/**/",
+        "display:/**/none",
         "DISPLAY: none",
         "visibility: hidden",
         "display:none!important",
@@ -863,6 +865,19 @@ def test_rejects_capability_truth_table_wrapped_in_preformatted_html() -> None:
         CHECKER.validate_text(text)
 
 
+def test_rejects_capability_truth_table_wrapped_in_raw_html_block() -> None:
+    table = "\n".join(
+        (
+            table_row(CHECKER.CAPABILITY_TRUTH_TABLE_HEADER),
+            "|---|---|---|---|",
+            *(table_row(row) for row in CHECKER.CAPABILITY_TRUTH_ROWS),
+        )
+    )
+    text = contract().replace(table, f"<div>\n{table}\n</div>", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 @pytest.mark.parametrize(
     "container", ("audio", "canvas", "iframe", "noscript", "object", "video")
 )
@@ -907,6 +922,34 @@ def test_rejects_milestone_table_wrapped_in_preformatted_html() -> None:
     )
     assert table in current
     text = current.replace(table, f"<pre>\n{table}\n</pre>", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_rejects_milestone_table_wrapped_in_raw_html_block() -> None:
+    current = contract()
+    table = "\n".join(
+        (
+            table_row(CHECKER.MILESTONE_TABLE_HEADER),
+            "|---|---|---|",
+            *(table_row(row) for row in CHECKER._milestone_table(current)),
+        )
+    )
+    assert table in current
+    text = current.replace(table, f"<div>\n{table}\n</div>", 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_rejects_transition_table_wrapped_in_raw_html_block() -> None:
+    table = "\n".join(
+        (
+            CHECKER.SESSION_TRANSITION_TABLE_HEADER,
+            CHECKER.SESSION_TRANSITION_TABLE_SEPARATOR,
+            *CHECKER.SESSION_TRANSITION_ROWS,
+        )
+    )
+    text = contract().replace(table, f"<div>\n{table}\n</div>", 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 
