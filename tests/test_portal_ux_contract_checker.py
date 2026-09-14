@@ -65,6 +65,20 @@ def test_accepts_current_portal_ux_contract() -> None:
     CHECKER.validate_text(contract())
 
 
+def test_fenced_fake_target_end_cannot_truncate_later_dom_audit() -> None:
+    text = contract().replace(
+        CHECKER.TARGET_END,
+        (
+            f"```text\n{CHECKER.TARGET_END}\n```\n\n"
+            "<button>Reset</button>\n\n"
+            f"{CHECKER.TARGET_END}"
+        ),
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_required_contract_clause_hidden_in_html_comment() -> None:
     clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
     rejects(clause, f"<!-- {clause} -->")

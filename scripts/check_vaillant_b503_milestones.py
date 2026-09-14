@@ -311,7 +311,9 @@ ENABLING_CANCEL_TRANSITION = (
     "queued frame, release the ownership gate, and clear the pending attempt; no "
     "native disable is emitted |"
 )
-IDLE_ENABLE_TRANSITION = '| `IDLE` | enable request, no owner | `ENABLING` | emit enable frame after poll-quiesce |'
+ENABLE_ADMISSION_OPERATION = '| ENABLE | none (new claim) | succeeds iff FSM is `IDLE`, no cleanup or restart fence exists for the target, capability is `AVAILABLE`, and transport is connected; if any session is already `ENABLING`/`ACTIVE`/`REFRESHING` → `SESSION_BUSY`; an ownerless `IDLE` target under `TRANSPORT_DOWN` returns that exact unavailable result with no state transition or emission |'
+IDLE_ENABLE_TRANSITION = '| `IDLE` | enable request, no owner or cleanup/fence, capability `AVAILABLE`, transport connected | `ENABLING` | emit enable frame after poll-quiesce |'
+IDLE_ENABLE_REJECT_TRANSITION = '| `IDLE` | enable request while transport disconnected or capability is not `AVAILABLE` | `IDLE` | return the exact Gateway-supplied availability result and emit no enable frame |'
 ENABLING_ACK_TRANSITION = '| `ENABLING` | successful enable ACK received after frame emission | `ACTIVE` | record the exact ACK, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, start the 30s idle timer, arm reads for the current owner, publish `UNKNOWN`, and admit no second Enable; the ACK establishes the admitted operation outcome, not session settlement |'
 ENABLING_AMBIGUOUS_FAILURE_TRANSITION = '| `ENABLING` | `ctx.Done` / NAK / timeout / CRC mismatch / bus-arbitration failure / any other non-ACK terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; NAK and any defensive-disable ACK/NAK outcome do not prove settlement |'
 ACTIVE_READ_TRANSITION = '| `ACTIVE` | successful read completes | `ACTIVE` | return the exact native result and reset the idle timer |'
@@ -328,6 +330,7 @@ CLEANUP_SCOPED_TRANSPORT_DOWN_FORBIDDEN = (
 ENABLING_NAK_TRANSITION = ENABLING_AMBIGUOUS_FAILURE_TRANSITION
 SESSION_TRANSITION_ROWS = (
     IDLE_ENABLE_TRANSITION,
+    IDLE_ENABLE_REJECT_TRANSITION,
     ENABLING_ACK_TRANSITION,
     ENABLING_CANCEL_TRANSITION,
     ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
@@ -712,6 +715,7 @@ def validate_text(text: str) -> None:
         EXPLICIT_DISABLE_UNCONFIRMED_TRANSITION,
         REFRESH_FAILURE_TRANSITION,
         HELD_OWNER_DISABLED_RELEASE,
+        ENABLE_ADMISSION_OPERATION,
         ENABLING_CANCEL_DIAGRAM,
         ENABLING_FAILURE_DIAGRAM,
         ENABLING_ACK_TRANSITION,

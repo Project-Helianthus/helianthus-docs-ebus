@@ -588,6 +588,29 @@ def test_rejects_ambiguous_configuration_disabled_restart_mapping() -> None:
     ("old", "new"),
     (
         (
+            CHECKER.ENABLE_ADMISSION_OPERATION,
+            "| ENABLE | none (new claim) | succeeds iff FSM is `IDLE` |",
+        ),
+        (
+            CHECKER.IDLE_ENABLE_TRANSITION,
+            "| `IDLE` | enable request, no owner | `ENABLING` | emit enable frame |",
+        ),
+        (
+            CHECKER.IDLE_ENABLE_REJECT_TRANSITION,
+            "| `IDLE` | transport disconnected | `ENABLING` | try enable anyway |",
+        ),
+    ),
+)
+def test_rejects_enable_without_connected_available_admission(old: str, new: str) -> None:
+    text = contract().replace(old, new, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        (
             CHECKER.EXPLICIT_DISABLE_CONFIRMED_TRANSITION,
             CHECKER.EXPLICIT_DISABLE_CONFIRMED_TRANSITION.replace(
                 "this session action never produces public `Disabled`",

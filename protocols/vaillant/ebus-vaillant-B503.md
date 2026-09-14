@@ -252,7 +252,7 @@ Rules (normative):
 
 | Operation | Required key match | Outcome on mismatch |
 |---|---|---|
-| ENABLE | none (new claim) | succeeds iff FSM is `IDLE`; if any session is already `ENABLING`/`ACTIVE`/`REFRESHING` → `SESSION_BUSY` |
+| ENABLE | none (new claim) | succeeds iff FSM is `IDLE`, no cleanup or restart fence exists for the target, capability is `AVAILABLE`, and transport is connected; if any session is already `ENABLING`/`ACTIVE`/`REFRESHING` → `SESSION_BUSY`; an ownerless `IDLE` target under `TRANSPORT_DOWN` returns that exact unavailable result with no state transition or emission |
 | DISABLE | full `session_key` must match the active session | A current-owner DISABLE that detects epoch advance remains pending as the triggering request; every subsequent DISABLE while `REFRESHING`, or a request from a non-owner, returns `SESSION_BUSY` |
 | READ (`00 03`) | `transport_key` match; `issuer_token` ignored | Reads are permitted to any caller while a session is `ACTIVE`; a READ that detects epoch advance remains pending as the triggering request, and every subsequent live-monitor operation while `REFRESHING` is `SESSION_BUSY` |
 | Epoch advance while `ACTIVE` owner remains held | old epoch key authorizes only the bounded refresh for an admitted READ or current-owner DISABLE | → `REFRESHING`; refresh once per §7.3; success atomically rebinds the same issuer token and target to the returned current transport epoch before dispatching the triggering operation exactly once; ENABLE is never a refresh trigger |
@@ -287,7 +287,8 @@ access.
 
 | From | Event | To | Side effect |
 |---|---|---|---|
-| `IDLE` | enable request, no owner | `ENABLING` | emit enable frame after poll-quiesce |
+| `IDLE` | enable request, no owner or cleanup/fence, capability `AVAILABLE`, transport connected | `ENABLING` | emit enable frame after poll-quiesce |
+| `IDLE` | enable request while transport disconnected or capability is not `AVAILABLE` | `IDLE` | return the exact Gateway-supplied availability result and emit no enable frame |
 | `ENABLING` | successful enable ACK received after frame emission | `ACTIVE` | record the exact ACK, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, start the 30s idle timer, arm reads for the current owner, publish `UNKNOWN`, and admit no second Enable; the ACK establishes the admitted operation outcome, not session settlement |
 | `ENABLING` | `ctx.Done` before enable-frame emission | `IDLE` | cancel the queued frame, release the ownership gate, and clear the pending attempt; no native disable is emitted |
 | `ENABLING` | `ctx.Done` / NAK / timeout / CRC mismatch / bus-arbitration failure / any other non-ACK terminal outcome after enable-frame emission | `DISABLED` | record and return the exact native outcome, issue at most one defensive native disable after quiesce during the admitted lifecycle, release the owner on entry, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; NAK and any defensive-disable ACK/NAK outcome do not prove settlement |

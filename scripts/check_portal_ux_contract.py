@@ -505,13 +505,29 @@ def _rendered_contract_source(text: str) -> str:
     return _visible_contract_source("".join(parts))
 
 
+def _target_line_bounds(text: str) -> tuple[int, int]:
+    """Locate the target only from rendered CommonMark level-two headings."""
+    tokens = MARKDOWN.parse(text)
+    start_line: int | None = None
+    start_title = TARGET_START.removeprefix("## ")
+    end_title = TARGET_END.removeprefix("## ")
+    for index, token in enumerate(tokens[:-1]):
+        if token.type != "heading_open" or token.tag != "h2" or token.map is None:
+            continue
+        title = tokens[index + 1]
+        if title.type != "inline":
+            continue
+        if start_line is None and title.content == start_title:
+            start_line = token.map[0]
+            continue
+        if start_line is not None and title.content == end_title:
+            return start_line, token.map[0]
+    raise CheckError("api/portal.md: INT-10 rendered H2 section boundary missing")
+
+
 def _target_section(text: str) -> str:
-    try:
-        start = text.index(TARGET_START)
-        end = text.index(TARGET_END, start)
-    except ValueError as exc:
-        raise CheckError("api/portal.md: INT-10 target section boundary missing") from exc
-    return text[start:end]
+    start_line, end_line = _target_line_bounds(text)
+    return "".join(text.splitlines(keepends=True)[start_line:end_line])
 
 
 def _availability_table_rows(target: str) -> list[str]:
@@ -607,10 +623,7 @@ def _parsed_dom_elements(target: str) -> list[tuple[str, list[tuple[str, str | N
 
 def _target_inline_tokens(document: str) -> list[object]:
     """Parse once so CommonMark resolves document-scoped references correctly."""
-    start = document.index(TARGET_START)
-    end = document.index(TARGET_END, start)
-    start_line = document.count("\n", 0, start)
-    end_line = document.count("\n", 0, end)
+    start_line, end_line = _target_line_bounds(document)
     return [
         token
         for token in MARKDOWN.parse(document)
@@ -621,10 +634,7 @@ def _target_inline_tokens(document: str) -> list[object]:
 
 
 def _target_html_blocks(document: str) -> list[str]:
-    start = document.index(TARGET_START)
-    end = document.index(TARGET_END, start)
-    start_line = document.count("\n", 0, start)
-    end_line = document.count("\n", 0, end)
+    start_line, end_line = _target_line_bounds(document)
     return [
         token.content
         for token in MARKDOWN.parse(document)
@@ -635,10 +645,7 @@ def _target_html_blocks(document: str) -> list[str]:
 
 
 def _target_fenced_contents(document: str) -> list[str]:
-    start = document.index(TARGET_START)
-    end = document.index(TARGET_END, start)
-    start_line = document.count("\n", 0, start)
-    end_line = document.count("\n", 0, end)
+    start_line, end_line = _target_line_bounds(document)
     return [
         token.content
         for token in MARKDOWN.parse(document)
