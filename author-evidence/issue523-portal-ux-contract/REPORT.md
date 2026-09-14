@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `9f10593a149801e109506fdc55f459fb0c0c4643` |
-| Final validated contract tree | `caa22b4d6407387e7ecf1b45fda748bec582457e` |
-| Final contract validation | Complete configured CI PASS; 261 Portal checker tests and 110 canonical B503 milestone tests; log SHA-256 `4f33e8ca503d52995195220b774d83f8920cd97025d1b01736b92b501e0636fa` |
+| Final validated contract commit | `403bf5fa84e948ffec2ba16505fbdb62b574636e` |
+| Final validated contract tree | `4de508644bc1cc873206cb6173d955f25dfc387e` |
+| Final contract validation | Complete configured CI PASS; 261 Portal checker tests and 111 canonical B503 milestone tests; log SHA-256 `9f4dd1602a46b41caf3a030c432457c21622a0ed6188ab6c9c7d342b95907008` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -138,6 +138,8 @@ hardware work, or SemReg cutover.
 | Refresh-owner-key cleanup correction tree | `22f08e2b871dc21186812e28c9138aafb7d955fb` |
 | Restart-recovery/route/control correction commit | `9f10593a149801e109506fdc55f459fb0c0c4643` |
 | Restart-recovery/route/control correction tree | `caa22b4d6407387e7ecf1b45fda748bec582457e` |
+| Owner-scope correction commit | `403bf5fa84e948ffec2ba16505fbdb62b574636e` |
+| Owner-scope correction tree | `4de508644bc1cc873206cb6173d955f25dfc387e` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -236,10 +238,12 @@ hardware work, or SemReg cutover.
   original §12 scope, while this current docs-ebus#523 revision is authoritative
   for the five-state public session contract. It does not claim plan-state
   mutation or retain a compatibility state, route, or fallback.
-- An epoch advance while `ENABLING` deterministically transitions to `IDLE`,
-  releases the gate, and discards stale enable ACK/NAK/timeout; only `ACTIVE`
-  enters `Refreshing`. The canonical gate requires the matching diagram,
-  operation row, transition row, and lock-lifecycle clause.
+- An epoch advance while `ENABLING` splits at frame emission. Before emission it
+  transitions to `IDLE`, releases the gate, and discards stale completion. After
+  emission it enters internal `DISABLED`, fences stale completion, and retains
+  defensive cleanup until a valid disable ACK; only `ACTIVE` enters `Refreshing`.
+  The canonical gate requires the matching diagram, operation rows, transitions,
+  and lock-lifecycle clause.
 - §12.5 row 7 now separates temporary `UNKNOWN` capability from the
   `Refreshing` session status. Its strip is status-only: only capability and
   session-status queries remain admitted; no card, tabs, bus-facing reads, or
@@ -259,18 +263,21 @@ hardware work, or SemReg cutover.
 - Refresh success atomically rebinds the surviving owner's transport key from
   epoch N to the returned epoch N+1 while preserving the issuer token and
   target. Epoch-N completions cannot satisfy, disable, extend, or mutate the
-  rebound session; failed refresh installs no new key and releases the owner.
+  rebound session; failed refresh installs no new key, releases client ownership,
+  retains Gateway cleanup in internal `DISABLED`, preserves the exact unavailable
+  capability, and admits no Enable.
 - Canonical validation scopes M2b/M3 rows to the parsed §14 table and the
   `02 01`/`02 02` non-exposure invariant to normative §9. Its mutations reject
   copied text outside those scopes and unsafe five-state contradictions; Portal
   DOM controls retain benign `clearfix` identifiers while rejecting unambiguous
   clear controls.
 - The canonical diagram, transition table, and lock lifecycle now agree that a
-  failed `Refreshing` session releases ownership and transitions directly to
-  `Idle`; it never passes through an artificial `Disabled` state. `Disabled`
-  remains the explicit operator/configuration disable state and is never owned.
-  The table parser also requires a genuine Markdown delimiter row rather than
-  any three-cell content row.
+  failed `Refreshing` session releases client ownership, enters internal
+  `DISABLED`, retains Gateway cleanup, and presents public `Idle` with
+  `owned:false`; it does not make the slot re-claimable. Public `Disabled` remains
+  the explicit operator/configuration disable state and is never owned. The table
+  parser also requires a genuine Markdown delimiter row rather than any three-cell
+  content row.
 - Target change and navigation now queue a locally held `Refreshing`
   token/target disable until successful refresh reaches `Active`, then clear
   that queued pair without a disable if refresh releases to `Idle`. The
@@ -302,7 +309,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 257 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 261 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -322,9 +329,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 257 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 261 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 107 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 111 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -872,10 +879,10 @@ SHA-256
 It validated contract commit
 `9f10593a149801e109506fdc55f459fb0c0c4643`, tree
 `caa22b4d6407387e7ecf1b45fda748bec582457e`, with 261 Portal checker tests and
-110 canonical B503 milestone tests. Gateway no longer sends a blind disable to
-every qualified target after restart. It reconstructs no session, emits no
-automatic B503 enable or disable, and keeps live-monitor capability `UNKNOWN`
-with no Enable. Only a separately operator-authorized target recovery outside
+110 canonical B503 milestone tests. The target contract forbids Gateway from
+blindly disabling every qualified target after restart. It requires no session
+reconstruction or automatic B503 enable/disable and keeps live-monitor capability
+`UNKNOWN` with no Enable. Only a separately operator-authorized target recovery outside
 public GraphQL/Portal v1 may issue one bounded disable with action-time
 confirmation; without authorization there is no write. The Portal checker also
 rejects fallback semantics attached to arbitrary Markdown or inline-HTML URL
@@ -883,6 +890,21 @@ destinations and persistent visible controls such as a Reset button that
 “remains on screen”, while retaining unrelated documentation links and direct
 disabled-control requirements. The following evidence-only commit records this
 immutable contract revision.
+
+The complete owner-scope and report-consistency correction CI log is
+`wave12/ci/docs524-owner-scope-report-ci.log`, SHA-256
+`9f4dd1602a46b41caf3a030c432457c21622a0ed6188ab6c9c7d342b95907008`.
+It validated contract commit
+`403bf5fa84e948ffec2ba16505fbdb62b574636e`, tree
+`4de508644bc1cc873206cb6173d955f25dfc387e`, with 261 Portal checker tests and
+111 canonical B503 milestone tests. §7.4 now limits owner-conditional behavior
+to mutex release; cleanup obligations and native outcomes remain effective in
+internal `DISABLED` after client ownership has already been released. The final
+summary preserves both pre-emission `IDLE` and post-emission `DISABLED` epoch
+branches, describes refresh failure as retained internal cleanup with public
+`Idle`, uses target-contract language rather than claiming deployed Gateway
+behavior, and reports the final focused counts. The following evidence-only
+commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
