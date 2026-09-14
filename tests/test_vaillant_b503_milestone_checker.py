@@ -937,6 +937,19 @@ def test_rejects_ambiguous_enabling_epoch_advance_contract(
         CHECKER.validate_text(text)
 
 
+def test_rejects_exactly_one_post_epoch_defensive_disable() -> None:
+    text = contract().replace(
+        CHECKER.ENABLING_EPOCH_POST_OPERATION,
+        CHECKER.ENABLING_EPOCH_POST_OPERATION.replace(
+            "at most one defensive disable",
+            "exactly one defensive disable",
+        ),
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_non_delimiter_milestone_table_separator() -> None:
     table_start = (
         f"{CHECKER.MILESTONE_HEADING}\n\n"

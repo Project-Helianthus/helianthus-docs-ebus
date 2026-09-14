@@ -277,7 +277,7 @@ ENABLING_EPOCH_PRE_OPERATION = (
     "completion or failure outcome from that enable attempt; explicit new Enable "
     "required |"
 )
-ENABLING_EPOCH_POST_OPERATION = '| Epoch advance while `ENABLING`, after enable-frame emission | pending attempt identity and target remain Gateway-owned for cleanup only | → `DISABLED`; fence every stale completion, issue exactly one defensive disable after quiesce during the admitted lifecycle, and record its exact native outcome; ACK and NAK do not settle the session, so the §7.4 process-local obligation remains fail-closed and no automatic retry or active owner survives |'
+ENABLING_EPOCH_POST_OPERATION = '| Epoch advance while `ENABLING`, after enable-frame emission | pending attempt identity and target remain Gateway-owned for cleanup only | → `DISABLED`; fence every stale completion, issue at most one defensive disable after quiesce during the admitted lifecycle, and record its exact native outcome; ACK and NAK do not settle the session, so the §7.4 process-local obligation remains fail-closed and no automatic retry or active owner survives |'
 ENABLING_EPOCH_PRE_TRANSITION = (
     "| `ENABLING` | epoch advance detected before enable-frame emission | `IDLE` | "
     "cancel the queued frame, release ownership, and discard every stale completion "
