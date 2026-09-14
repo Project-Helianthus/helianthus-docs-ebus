@@ -97,6 +97,25 @@ def test_accepts_five_state_contract_in_visible_html() -> None:
     CHECKER.validate_text(text)
 
 
+def test_closed_dialog_cannot_supply_five_state_contract() -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f"<dialog>{CHECKER.SESSION_STATE_CONTRACT}</dialog>",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+def test_open_dialog_can_supply_five_state_contract() -> None:
+    text = contract().replace(
+        CHECKER.SESSION_STATE_CONTRACT,
+        f"<dialog open>{CHECKER.SESSION_STATE_CONTRACT}</dialog>",
+        1,
+    )
+    CHECKER.validate_text(text)
+
+
 def test_rejects_five_state_contract_hidden_by_standard_html_attribute() -> None:
     text = contract().replace(
         CHECKER.SESSION_STATE_CONTRACT,
@@ -557,10 +576,35 @@ def test_rejects_idle_timer_reset_before_success(old: str, new: str) -> None:
 
 def test_rejects_ambiguous_configuration_disabled_restart_mapping() -> None:
     text = contract().replace(
-        "A still-effective explicit\noperator or configuration disable takes precedence across Gateway restart",
+        "A still-effective\nout-of-band disabled condition takes precedence across Gateway restart",
         "Gateway restart always presents Idle even when a configuration disable remains effective",
         1,
     )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    (
+        (
+            CHECKER.EXPLICIT_DISABLE_CONFIRMED_TRANSITION,
+            CHECKER.EXPLICIT_DISABLE_CONFIRMED_TRANSITION.replace(
+                "this session action never produces public `Disabled`",
+                "this session action produces public `Disabled`",
+            ),
+        ),
+        (
+            CHECKER.ADMIN_DISABLED_TRANSITION,
+            CHECKER.ADMIN_DISABLED_TRANSITION.replace(
+                "this condition is distinct from the current-owner session DISABLE action",
+                "this condition is the current-owner session DISABLE action",
+            ),
+        ),
+    ),
+)
+def test_rejects_conflated_session_and_administrative_disable(old: str, new: str) -> None:
+    text = contract().replace(old, new, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
 

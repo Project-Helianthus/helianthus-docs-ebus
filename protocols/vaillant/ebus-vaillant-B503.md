@@ -295,17 +295,18 @@ access.
 | `ENABLING` | epoch advance detected after enable-frame emission | `DISABLED` | fence every stale completion, issue at most one defensive disable after quiesce during the admitted lifecycle, record its exact native outcome, release ownership, retain fail-closed cleanup, publish `UNKNOWN`, and admit no Enable |
 | `ACTIVE` | successful read completes | `ACTIVE` | return the exact native result and reset the idle timer |
 | `ACTIVE` | read NAK / timeout / CRC mismatch / bus-arbitration failure / other non-disconnect failure | `ACTIVE` | return the exact native failure and do not reset the idle timer |
-| `ACTIVE` | explicit disable; any ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; the outcome does not prove settlement |
+| `ACTIVE` | current-owner session DISABLE action; any ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, present public `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable; this session action never produces public `Disabled`, and its outcome does not prove settlement |
 | `ACTIVE` | 30s idle | `DISABLED` | emit disable once after quiesce, record the exact outcome, release the owner, retain process-local cleanup, publish `UNKNOWN`, and admit no Enable |
 | `ACTIVE` | admitted request detects epoch advance | `REFRESHING` | ownership gate remains held; triggering request remains pending; subsequent live-monitor operations are busy |
 | `REFRESHING` | refresh succeeds for triggering READ; dispatched READ completes without transport disconnect | `ACTIVE` | atomically rebind the owner from epoch N to the returned current `transport_key` at N+1, retaining the same issuer token and target; fence every epoch-N completion; dispatch READ exactly once using the rebound key, return its outcome, and retain the owner; any transport disconnect instead follows the `any` disconnect row and releases the owner into `DISABLED` |
 | `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; any terminal native outcome | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; no outcome alone proves settlement |
 | `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return the exact Gateway-supplied failure without dispatching the triggering native operation, retain `(targetAddress, fresh gatewayCleanupAttemptID, attemptedTransportEpoch)` as process-local cleanup, present public session `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable |
 | `DISABLED` | defensive-disable ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | retain process-local cleanup, record the exact outcome, publish `UNKNOWN`, admit no Enable, and perform no same-epoch or automatic reconnect/restart recovery; only a future accepted settlement contract may define re-claimability |
+| `IDLE` / `DISABLED` with no owner | Gateway reports an out-of-band administrative/configuration-disabled condition | `DISABLED` | emit no native B503 operation; present public `Disabled` with `owned:false`, block Enable, and retain any pre-existing cleanup/fence; this condition is distinct from the current-owner session DISABLE action |
 | `IDLE` | transport disconnect, no owner or cleanup obligation | `IDLE` | change no session state and release no mutex; publish `TRANSPORT_DOWN` while disconnected; after reconnect require a new explicit Enable and perform no automatic B503 write |
 | `ENABLING` / `ACTIVE` / `REFRESHING` | transport disconnect | `DISABLED` | release the owner; if an Enable may have reached the wire or settlement is otherwise unproven, retain the target and attempt identity only as process-local cleanup, publish `UNKNOWN`, and perform no automatic reconnect write |
 | `DISABLED` | transport disconnect | `DISABLED` | change no session state and release no mutex; retain any existing cleanup obligation and its `UNKNOWN` fence; perform no automatic reconnect write |
-| any | gateway restart | `DISABLED` | release any owner and destroy every caller handle and process-local attempt identity; reconstruct no session, emit no automatic B503 enable or disable, and publish `UNKNOWN` for each qualified target; a still-effective explicit operator or configuration disable presents public `Disabled` with `owned:false`, otherwise the restart-derived state presents public `Idle` with `owned:false`; admit no Enable under the current 0.7 contract |
+| any | gateway restart | `DISABLED` | release any owner and destroy every caller handle and process-local attempt identity; reconstruct no session, emit no automatic B503 enable or disable, and publish `UNKNOWN` for each qualified target; a still-effective out-of-band administrative/configuration-disabled condition presents public `Disabled` with `owned:false`, otherwise the restart-derived state presents public `Idle` with `owned:false`; admit no Enable under the current 0.7 contract |
 
 **Lock lifecycle (single assignment, owner-conditional):**
 `liveMonitorMu` is acquired exactly once on the `IDLE → ENABLING`
@@ -325,8 +326,11 @@ keeps the release single-sourced, owner-conditional, and free of double-unlock
 panics on timeout/NAK paths or disconnect-while-idle events.
 
 **Stable public `Disabled` mapping:** `Disabled` with `owned:false` represents
-only an explicit operator or configuration disable. A still-effective explicit
-operator or configuration disable takes precedence across Gateway restart and
+only an out-of-band administrative/configuration-disabled condition supplied
+by Gateway. It is never the result of a current-owner live-monitor session
+DISABLE action; every terminal outcome of that action presents public `Idle`
+with `owned:false`, retains cleanup, and publishes `UNKNOWN`. A still-effective
+out-of-band disabled condition takes precedence across Gateway restart and
 continues to present `Disabled` with `owned:false`. Enable failure, the 30s idle
 timeout, transport disconnect, and every other restart-derived internal cleanup
 path may traverse `DISABLED`, but their stable public session observation is

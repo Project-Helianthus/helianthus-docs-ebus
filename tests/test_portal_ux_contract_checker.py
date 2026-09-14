@@ -84,6 +84,17 @@ def test_accepts_required_contract_clause_in_visible_html() -> None:
     CHECKER.validate_text(text.replace(clause, f"<div>{clause}</div>", 1))
 
 
+def test_closed_dialog_cannot_supply_required_contract_clause() -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    rejects(clause, f"<dialog>{clause}</dialog>")
+
+
+def test_open_dialog_can_supply_visible_contract_clause() -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    text = contract().replace(clause, f"<dialog open>{clause}</dialog>", 1)
+    CHECKER.validate_text(text)
+
+
 def test_rejects_stale_internal_expired_state() -> None:
     rejects(
         CHECKER.B503_NO_EXPIRED_STATE,
@@ -877,8 +888,15 @@ def test_rejects_missing_refreshing_cleanup_strip_or_disabled_mapping(
 
 def test_rejects_ambiguous_configuration_disabled_restart_mapping() -> None:
     rejects(
-        "A still-effective\nexplicit operator or configuration disable takes precedence across Gateway\nrestart",
+        "A still-effective\nout-of-band disabled condition takes precedence across Gateway\nrestart",
         "Gateway restart always presents Idle even when a configuration disable remains effective",
+    )
+
+
+def test_rejects_session_disable_as_public_disabled_state() -> None:
+    rejects(
+        "It is never the result of a current-owner live-monitor\nsession DISABLE action",
+        "It is the result of a current-owner live-monitor session DISABLE action",
     )
 
 

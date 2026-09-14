@@ -204,8 +204,11 @@ not prove native settlement. Refresh failure follows the same public state and
 completes the triggering request with the exact unavailable failure without
 dispatching its native operation.
 `Disabled` is never reported with `owned:true`. `Disabled` with `owned:false`
-maps only an explicit operator or configuration disable. A still-effective
-explicit operator or configuration disable takes precedence across Gateway
+maps only an out-of-band administrative/configuration-disabled condition
+supplied by Gateway. It is never the result of a current-owner live-monitor
+session DISABLE action; every terminal outcome of that action presents `Idle`
+with `owned:false`, retains cleanup, and publishes `UNKNOWN`. A still-effective
+out-of-band disabled condition takes precedence across Gateway
 restart and remains `Disabled` with `owned:false`; enable failure, the 30-second
 idle timeout, transport disconnect, and every other restart-derived cleanup
 state map to `Idle` with `owned:false`. While cleanup is pending, capability

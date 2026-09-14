@@ -72,8 +72,11 @@ B503_FRONTEND_EPOCH_ROLLOVER = (
 B503_SESSION_STATE_CONTRACT = "The strip states are `Idle`, `Enabling`, `Active`, and\n`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\nownership gate; the already-admitted triggering request remains pending and\nnew bus-facing live-monitor reads/actions are busy. Status-only\n`vaillantCapabilities(targetAddress:)` and\n`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\navailability and session completion. Refresh success returns `Active` and\ncompletes a triggering read with exactly one native operation result, or\ndispatches a triggering current-owner disable exactly once. Every disabling\noutcome is recorded and returned exactly, releases ownership, retains Gateway's\nprocess-local cleanup obligation, presents session `Idle` with `owned:false`,\npublishes capability `UNKNOWN`, and admits no Enable because ACK/NAK alone do\nnot prove native settlement. Refresh failure follows the same public state and\ncompletes the triggering request with the exact unavailable failure without\ndispatching its native operation.\n`Disabled` is never reported with `owned:true`."
 B503_DISABLED_PUBLIC_MAPPING = (
     "`Disabled` with `owned:false`\n"
-    "maps only an explicit operator or configuration disable. A still-effective\n"
-    "explicit operator or configuration disable takes precedence across Gateway\n"
+    "maps only an out-of-band administrative/configuration-disabled condition\n"
+    "supplied by Gateway. It is never the result of a current-owner live-monitor\n"
+    "session DISABLE action; every terminal outcome of that action presents `Idle`\n"
+    "with `owned:false`, retains cleanup, and publishes `UNKNOWN`. A still-effective\n"
+    "out-of-band disabled condition takes precedence across Gateway\n"
     "restart and remains `Disabled` with `owned:false`; enable failure, the 30-second\n"
     "idle timeout, transport disconnect, and every other restart-derived cleanup\n"
     "state map to `Idle` with `owned:false`. While cleanup is pending, capability\n"
@@ -408,7 +411,10 @@ class _VisibleContractSourceParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         normalized = tag.casefold()
-        hidden = _html_element_is_nonrendering(attrs)
+        hidden = _html_element_is_nonrendering(attrs) or (
+            normalized == "dialog"
+            and not any(name.casefold() == "open" for name, _ in attrs)
+        )
         if self._inert_stack or normalized in NON_RENDERING_CONTAINERS or hidden:
             if normalized not in HTML_VOID_ELEMENTS:
                 self._inert_stack.append(normalized)

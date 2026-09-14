@@ -161,8 +161,11 @@ FORBIDDEN_PLAN_CONFLICT_AUTHORITY = (
 SESSION_STATE_CONTRACT = 'five stable states: `Idle`, `Enabling`, `Active`, `Refreshing`, and `Disabled`.\n`Refreshing` means an epoch refresh holds the ownership gate. The already\nadmitted triggering request remains pending; subsequent bus-facing live-monitor\noperations are busy. Refresh success dispatches a triggering read exactly once\nand returns `Active` only when that dispatch completes without a transport\ndisconnect; a disconnect follows the any-transport-disconnect transition below\nand releases the owner. Refresh success may instead dispatch a triggering\ncurrent-owner disable exactly once. Every disable result is recorded and\nreturned exactly, but the result alone never establishes native session\nsettlement. Refresh failure releases the gate, enters internal `DISABLED`,\nretains a Gateway cleanup obligation, and returns the exact Gateway-supplied\nfailure to that request; its public session observation is `Idle` with\n`owned:false` and unavailable capability. `Disabled` is never reported with\n`owned:true`.'
 DISABLED_PUBLIC_MAPPING = (
     "**Stable public `Disabled` mapping:** `Disabled` with `owned:false` represents\n"
-    "only an explicit operator or configuration disable. A still-effective explicit\n"
-    "operator or configuration disable takes precedence across Gateway restart and\n"
+    "only an out-of-band administrative/configuration-disabled condition supplied\n"
+    "by Gateway. It is never the result of a current-owner live-monitor session\n"
+    "DISABLE action; every terminal outcome of that action presents public `Idle`\n"
+    "with `owned:false`, retains cleanup, and publishes `UNKNOWN`. A still-effective\n"
+    "out-of-band disabled condition takes precedence across Gateway restart and\n"
     "continues to present `Disabled` with `owned:false`. Enable failure, the 30s idle\n"
     "timeout, transport disconnect, and every other restart-derived internal cleanup\n"
     "path may traverse `DISABLED`, but their stable public session observation is\n"
@@ -236,9 +239,9 @@ GATEWAY_CLEANUP_ATTEMPT_ID = (
     "  confers no owner or operation authority."
 )
 CONFIRMED_CLEANUP_DIAGRAM = 'DISABLED --> DISABLED: native outcome recorded; settlement remains unproven'
-EXPLICIT_DISABLE_CONFIRMED_TRANSITION = '| `ACTIVE` | explicit disable; any ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; the outcome does not prove settlement |'
-EXPLICIT_DISABLE_UNCONFIRMED_TRANSITION = '| `ACTIVE` | explicit disable; any ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; the outcome does not prove settlement |'
-RESTART_TRANSITION = '| any | gateway restart | `DISABLED` | release any owner and destroy every caller handle and process-local attempt identity; reconstruct no session, emit no automatic B503 enable or disable, and publish `UNKNOWN` for each qualified target; a still-effective explicit operator or configuration disable presents public `Disabled` with `owned:false`, otherwise the restart-derived state presents public `Idle` with `owned:false`; admit no Enable under the current 0.7 contract |'
+EXPLICIT_DISABLE_CONFIRMED_TRANSITION = '| `ACTIVE` | current-owner session DISABLE action; any ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, currentTransportEpoch)` as process-local cleanup, present public `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable; this session action never produces public `Disabled`, and its outcome does not prove settlement |'
+EXPLICIT_DISABLE_UNCONFIRMED_TRANSITION = EXPLICIT_DISABLE_CONFIRMED_TRANSITION
+RESTART_TRANSITION = '| any | gateway restart | `DISABLED` | release any owner and destroy every caller handle and process-local attempt identity; reconstruct no session, emit no automatic B503 enable or disable, and publish `UNKNOWN` for each qualified target; a still-effective out-of-band administrative/configuration-disabled condition presents public `Disabled` with `owned:false`, otherwise the restart-derived state presents public `Idle` with `owned:false`; admit no Enable under the current 0.7 contract |'
 RESTART_RELEASE_CONTRACT = '- On Gateway restart, Gateway transitions the FSM to `DISABLED` and, if an\n  owner was held, releases `liveMonitorMu`. No session or cleanup tuple persists\n  across restart. Because Gateway can no longer distinguish its pre-restart\n  session from a session owned by another bus client, it emits no automatic\n  B503 enable or disable. Each qualified target starts with live-monitor\n  capability `UNKNOWN`, and Enable remains unavailable under the current 0.7\n  contract.'
 RESTART_CLEANUP_FENCE = "- After every Gateway process restart, enumerate the finite registry-qualified\n  B503 targets, set each target's live-monitor capability to `UNKNOWN`, admit no\n  Enable, and emit no automatic B503 enable or disable. The Portal and GraphQL\n  v1 surfaces expose no recovery control. Current 0.7 defines no ACK/NAK-based\n  maintenance action that restores availability; later evidence and any changed\n  recovery contract belong to deferred issue #525."
 IDLE_TIMEOUT_ACK_CONTRACT = '- Gateway records the exact disable ACK, NAK, timeout, CRC, arbitration,\n  disconnect, or other outcome, releases the owner, retains process-local\n  cleanup, publishes `UNKNOWN`, and admits no Enable. No outcome alone returns\n  the internal FSM to `IDLE` or preserves public `AVAILABLE` because native\n  session settlement remains unproven. Idle auto-disable MUST NOT be reported as\n  `NOT_SUPPORTED`, which is reserved for "device class does not implement\n  B503" (§11).'
@@ -265,6 +268,7 @@ REFRESH_READ_TRANSITION = (
 REFRESH_DISABLE_TRANSITION = '| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; any terminal native outcome | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; no outcome alone proves settlement |'
 REFRESH_DISABLE_UNCONFIRMED_TRANSITION = '| `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; any terminal native outcome | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit disable exactly once after quiesce, record and return its exact outcome, release the owner, retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` as process-local cleanup, publish `UNKNOWN`, and admit no Enable; no outcome alone proves settlement |'
 UNCONFIRMED_CLEANUP_TRANSITION = '| `DISABLED` | defensive-disable ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | retain process-local cleanup, record the exact outcome, publish `UNKNOWN`, admit no Enable, and perform no same-epoch or automatic reconnect/restart recovery; only a future accepted settlement contract may define re-claimability |'
+ADMIN_DISABLED_TRANSITION = '| `IDLE` / `DISABLED` with no owner | Gateway reports an out-of-band administrative/configuration-disabled condition | `DISABLED` | emit no native B503 operation; present public `Disabled` with `owned:false`, block Enable, and retain any pre-existing cleanup/fence; this condition is distinct from the current-owner session DISABLE action |'
 CONFIRMED_CLEANUP_TRANSITION = '| `DISABLED` | defensive-disable ACK / NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / other outcome | `DISABLED` | retain process-local cleanup, record the exact outcome, publish `UNKNOWN`, admit no Enable, and perform no same-epoch or automatic reconnect/restart recovery; only a future accepted settlement contract may define re-claimability |'
 REFRESH_FAILURE_TRANSITION = '| `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return the exact Gateway-supplied failure without dispatching the triggering native operation, retain `(targetAddress, fresh gatewayCleanupAttemptID, attemptedTransportEpoch)` as process-local cleanup, present public session `Idle` with `owned:false`, publish `UNKNOWN`, and admit no Enable |'
 HELD_OWNER_DISABLED_RELEASE = (
@@ -338,6 +342,7 @@ SESSION_TRANSITION_ROWS = (
     REFRESH_DISABLE_TRANSITION,
     REFRESH_FAILURE_TRANSITION,
     UNCONFIRMED_CLEANUP_TRANSITION,
+    ADMIN_DISABLED_TRANSITION,
     IDLE_DISCONNECT_TRANSITION,
     DISCONNECT_TRANSITION,
     DISABLED_DISCONNECT_TRANSITION,
@@ -432,7 +437,10 @@ class _VisibleContractSourceParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         normalized = tag.casefold()
-        hidden = _html_element_is_nonrendering(attrs)
+        hidden = _html_element_is_nonrendering(attrs) or (
+            normalized == "dialog"
+            and not any(name.casefold() == "open" for name, _ in attrs)
+        )
         if self._inert_stack or normalized in NON_RENDERING_CONTAINERS or hidden:
             if normalized not in HTML_VOID_ELEMENTS:
                 self._inert_stack.append(normalized)
