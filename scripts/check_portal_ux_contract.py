@@ -728,13 +728,28 @@ def _css_route_destinations(value: str) -> list[str]:
 
 
 def _html_element_route_destinations(
-    tag: str, attrs: list[tuple[str, str | None]], text: list[str]
+    tag: str,
+    attrs: list[tuple[str, str | None]],
+    text: list[str],
+    depth: int = 0,
 ) -> list[str]:
     destinations = [
         _decoded_dom_attribute_value(attribute, value)
         for attribute, value in attrs
         if value is not None and attribute.casefold() in HTML_URL_ATTRIBUTE_NAMES
     ]
+    for attribute, value in attrs:
+        if value is None or attribute.casefold() != "srcdoc":
+            continue
+        if depth >= 8:
+            raise CheckError("api/portal.md: srcdoc nesting exceeds the route-audit bound")
+        embedded = unescape(value)
+        for child_tag, child_attrs, child_text in _parsed_dom_elements(embedded):
+            destinations.extend(
+                _html_element_route_destinations(
+                    child_tag, child_attrs, child_text, depth + 1
+                )
+            )
     for attribute, value in attrs:
         if value is not None and attribute.casefold() == "style":
             destinations.extend(_css_route_destinations(value))

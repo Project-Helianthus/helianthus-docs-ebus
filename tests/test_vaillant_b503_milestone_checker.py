@@ -383,6 +383,16 @@ def test_rejects_missing_valid_ack_cleanup_in_later_normative_sections(
         CHECKER.validate_text(text)
 
 
+def test_rejects_refresh_failure_capability_other_than_unknown() -> None:
+    text = contract().replace(
+        "capability is `UNKNOWN`, and no Enable is admitted",
+        "capability remains `TRANSPORT_DOWN`, and no Enable is admitted",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_terminal_non_ack_reconnect_cleanup() -> None:
     replacement = CHECKER.REFRESHING_DISCONNECT_FENCE.replace(
         "Only a valid\n  disable ACK clears the obligation",

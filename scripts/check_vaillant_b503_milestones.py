@@ -231,8 +231,8 @@ REFRESH_SUCCESS_CONTINUATION = (
     "  release the ownership gate, retain a fresh Gateway-owned process-local cleanup\n"
     "  obligation in internal `DISABLED`, present public session `Idle` with\n"
     "  `owned:false`, and return the exact Gateway-supplied failure to the triggering\n"
-    "  request without dispatching its native operation. Capability remains that\n"
-    "  exact unavailable outcome and no Enable is admitted until cleanup succeeds."
+    "  request without dispatching its native operation. Capability is\n"
+    "  `UNKNOWN` and no Enable is admitted until cleanup succeeds."
 )
 REFRESH_OWNER_REBINDING = (
     "On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes\n"
@@ -244,7 +244,7 @@ REFRESH_OWNER_REBINDING = (
     "extend, or mutate the rebound session. If refresh fails, no rebound key is\n"
     "installed; Gateway releases client ownership, retains a fresh Gateway-owned\n"
     "process-local cleanup obligation in internal `DISABLED`, presents public\n"
-    "session `Idle` with `owned:false`, preserves the exact unavailable capability,\n"
+    "session `Idle` with `owned:false`, publishes capability `UNKNOWN`,\n"
     "and admits no Enable until cleanup succeeds."
 )
 NO_AUTO_RESUME_RECONSTRUCTION = (
@@ -384,7 +384,7 @@ NORMALIZED_REFRESH_DISABLE_CONTRACT = (
     "   no Enable, and returns its exact outcome. Subsequent bus-facing live-monitor\n"
     "   operations are `SESSION_BUSY` during refresh. Refresh failure likewise\n"
     "   releases client ownership but retains Gateway cleanup in internal `DISABLED`,\n"
-    "   preserves the exact unavailable capability, and admits no Enable."
+    "   publishes capability `UNKNOWN`, and admits no Enable."
 )
 REFRESH_FAILURE_DIAGRAM = (
     "REFRESHING --> DISABLED: refresh failure retains cleanup"
@@ -436,7 +436,7 @@ REFRESH_FAILURE_TRANSITION = (
     "dispatching its native operation, and retain `(targetAddress, fresh "
     "gatewayCleanupAttemptID, attemptedTransportEpoch)` as the process-local §7.4 "
     "cleanup obligation; public session is `Idle` with `owned:false`, capability "
-    "remains the exact unavailable outcome, and no Enable is admitted |"
+    "is `UNKNOWN`, and no Enable is admitted |"
 )
 HELD_OWNER_DISABLED_RELEASE = (
     "on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or\n`REFRESHING`"

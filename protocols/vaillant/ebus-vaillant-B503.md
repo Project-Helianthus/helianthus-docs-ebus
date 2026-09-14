@@ -266,7 +266,7 @@ control requests still bound to epoch N are stale and MUST NOT satisfy, disable,
 extend, or mutate the rebound session. If refresh fails, no rebound key is
 installed; Gateway releases client ownership, retains a fresh Gateway-owned
 process-local cleanup obligation in internal `DISABLED`, presents public
-session `Idle` with `owned:false`, preserves the exact unavailable capability,
+session `Idle` with `owned:false`, publishes capability `UNKNOWN`,
 and admits no Enable until cleanup succeeds.
 
 This refines plan AD04's baseline `(adapter_instance_id,
@@ -294,7 +294,7 @@ access.
 | `REFRESHING` | refresh succeeds for triggering READ | `ACTIVE` | atomically rebind the owner from epoch N to the returned current `transport_key` at N+1, retaining the same issuer token and target; fence every epoch-N completion; dispatch READ exactly once using the rebound key, return its outcome, and retain the owner |
 | `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; valid disable ACK | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit disable exactly once after quiesce using the rebound key, return success, and complete owner cleanup to `IDLE` |
 | `REFRESHING` | refresh succeeds for triggering current-owner DISABLE; NAK / timeout / CRC mismatch / bus-arbitration failure / disconnect / any other outcome without a valid disable ACK | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit disable exactly once after quiesce using the rebound key, return its exact outcome, release the owner, and retain `(targetAddress, fresh gatewayCleanupAttemptID, transportEpoch[N+1])` only as the process-local §7.4 defensive-cleanup obligation; do not enter `IDLE` |
-| `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return the exact Gateway-supplied failure outcome to the triggering request without dispatching its native operation, and retain `(targetAddress, fresh gatewayCleanupAttemptID, attemptedTransportEpoch)` as the process-local §7.4 cleanup obligation; public session is `Idle` with `owned:false`, capability remains the exact unavailable outcome, and no Enable is admitted |
+| `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return the exact Gateway-supplied failure outcome to the triggering request without dispatching its native operation, and retain `(targetAddress, fresh gatewayCleanupAttemptID, attemptedTransportEpoch)` as the process-local §7.4 cleanup obligation; public session is `Idle` with `owned:false`, capability is `UNKNOWN`, and no Enable is admitted |
 | `DISABLED` | defensive disable has no valid ACK while transport remains connected | `DISABLED` | retain the process-local §7.4 defensive-cleanup obligation, publish capability `UNKNOWN`, admit no Enable, and perform no same-epoch retry; only a later transport epoch may attempt one bounded cleanup under §7.5 |
 | `DISABLED` | enable NAK proves no device session, or valid disable ACK confirms cleanup success | `IDLE` | clear any defensive-cleanup obligation; session may be re-claimed by any client only when capability is `AVAILABLE` |
 | any | transport disconnect | `DISABLED` | release any owner; if an enable may have reached the wire and no valid disable ACK has confirmed cleanup success, retain the target and attempt only as the process-local §7.4 defensive-cleanup obligation |
@@ -351,7 +351,7 @@ It is a session-status value, not a sixth `B503Availability` reason:
 
 | Session value | Where it surfaces | Ownership and outcome |
 |---|---|---|
-| `Refreshing` | Gateway session status, GraphQL, and portal strip | `owned:true`; refresh success for READ → `Active`; refresh failure releases the gate, retains Gateway cleanup, and presents session `Idle`, `owned:false`, with the exact unavailable capability; a refreshed DISABLE releases ownership and reaches `Idle` only after a valid disable ACK, otherwise Gateway retains fail-closed cleanup with session `Idle`, `owned:false`, and capability `UNKNOWN` |
+| `Refreshing` | Gateway session status, GraphQL, and portal strip | `owned:true`; refresh success for READ → `Active`; refresh failure releases the gate, retains Gateway cleanup, and presents session `Idle`, `owned:false`, with capability `UNKNOWN`; a refreshed DISABLE releases ownership and reaches `Idle` only after a valid disable ACK, otherwise Gateway retains fail-closed cleanup with session `Idle`, `owned:false`, and capability `UNKNOWN` |
 
 Downstream contract tests (M2a, M2b, M3) MUST assert the five stable session
 states and MUST reject `Disabled` paired with `owned:true`.
@@ -423,8 +423,8 @@ live-monitor enable and disable frame. Bounds:
   release the ownership gate, retain a fresh Gateway-owned process-local cleanup
   obligation in internal `DISABLED`, present public session `Idle` with
   `owned:false`, and return the exact Gateway-supplied failure to the triggering
-  request without dispatching its native operation. Capability remains that
-  exact unavailable outcome and no Enable is admitted until cleanup succeeds.
+  request without dispatching its native operation. Capability is
+  `UNKNOWN` and no Enable is admitted until cleanup succeeds.
 - On refresh revealing `TRANSPORT_DOWN` or `UNKNOWN` → surface that value
   literally (§11). It MUST NOT be collapsed into `SESSION_BUSY`.
 - No infinite reconnect loops. Reconnect is driven by the transport layer, not
@@ -568,7 +568,7 @@ path (MCP resolvers, GraphQL resolvers, HA integration, portal).
    no Enable, and returns its exact outcome. Subsequent bus-facing live-monitor
    operations are `SESSION_BUSY` during refresh. Refresh failure likewise
    releases client ownership but retains Gateway cleanup in internal `DISABLED`,
-   preserves the exact unavailable capability, and admits no Enable.
+   publishes capability `UNKNOWN`, and admits no Enable.
 3. **No collapse of transport/unknown outcomes.** After refresh, if the
    capability query reveals `TRANSPORT_DOWN` or `UNKNOWN`, those outcomes MUST
    be surfaced literally. They MUST NOT be collapsed into `SESSION_BUSY`.
