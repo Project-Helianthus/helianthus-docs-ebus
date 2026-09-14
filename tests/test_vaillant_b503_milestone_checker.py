@@ -280,10 +280,6 @@ def test_rejects_missing_valid_ack_cleanup_in_later_normative_sections(
             "REFRESHING --> DISABLED: refresh failure releases gate",
         ),
         (
-            CHECKER.REFRESH_FAILURE_LOCK,
-            "only on entry to `DISABLED` from a held-owner state",
-        ),
-        (
             CHECKER.HELD_OWNER_DISABLED_RELEASE,
             "on entry to `DISABLED` from `ENABLING` or `ACTIVE`",
         ),
@@ -378,8 +374,8 @@ def test_rejects_declarative_session_state_contradictions(clause: str) -> None:
             "Every live-monitor request remains pending during refresh.",
         ),
         (
-            "return the exact Gateway-supplied failure to the triggering request without\n"
-            "  dispatching its native operation.",
+            "and return the exact Gateway-supplied failure to the triggering\n"
+            "  request without dispatching its native operation.",
             "retry the triggering native operation after refresh failure.",
         ),
         (

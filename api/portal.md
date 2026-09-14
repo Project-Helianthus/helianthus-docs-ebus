@@ -148,8 +148,9 @@ session.
 
 For a `REFRESHING` prior target, the browser queues that
 same token-bound disable without invoking an operation while Refreshing is busy;
-after refresh succeeds to `Active`, it dispatches the queued disable, and after
-refresh failure returns `Idle`, it clears the queued pair without a disable.
+after refresh succeeds to `Active`, it dispatches the queued disable. After
+refresh failure presents `Idle`, Gateway retains the process-local cleanup
+obligation. The browser clears the queued pair without a client disable.
 If the triggering request was already the current-owner disable and succeeds
 through `Disabled` cleanup to `Idle`, that single disable satisfies cleanup;
 the browser clears the queued pair without issuing a second disable.
@@ -187,14 +188,17 @@ new bus-facing live-monitor reads/actions are busy. Status-only
 `vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe
 availability and session completion. Refresh success returns `Active` and
 completes a triggering read with exactly one native operation result, or
-completes a triggering current-owner disable through `Disabled` cleanup to
-`Idle`;
-refresh failure releases the gate, returns `Idle`, and completes that request
-with the exact Gateway failure without dispatching its native operation.
+dispatches a triggering current-owner disable exactly once; only a valid disable
+ACK completes its `Disabled` cleanup to `Idle`.
+Refresh failure releases the gate, presents session `Idle` with `owned:false`,
+retains Gateway's process-local cleanup obligation, and completes that request
+with the exact unavailable failure without dispatching its native operation;
+Enable remains unavailable.
 `Disabled` is never reported with `owned:true`. `Disabled` with `owned:false` maps only an
 explicit operator or configuration disable; enable failure, the 30-second idle
 timeout, transport disconnect, and gateway restart map to `Idle` with
-`owned:false` after cleanup.
+`owned:false`; while cleanup is pending, capability remains unavailable and
+`Idle` does not admit Enable.
 The base `SESSION_BUSY` presentation is neutral.
 The strip may show that the Gateway session gate is held, but must not identify
 another client. Leaving the B503 perspective uses the same locally-token-bound cleanup

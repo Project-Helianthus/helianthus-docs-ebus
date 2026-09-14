@@ -104,7 +104,9 @@ SESSION_STATE_CONTRACT = (
     "and returns `Active`, or dispatches a triggering current-owner disable exactly\n"
     "once. Only a valid disable ACK completes owner cleanup to `Idle`; any other\n"
     "disable outcome retains fail-closed cleanup. Refresh failure releases the gate,\n"
-    "returns `Idle`, and returns the exact Gateway-supplied failure to that request.\n"
+    "enters internal `DISABLED`, retains a Gateway cleanup obligation, and returns\n"
+    "the exact Gateway-supplied failure to that request; its public session\n"
+    "observation is `Idle` with `owned:false` and unavailable capability.\n"
     "`Disabled` is never reported with `owned:true`."
 )
 DISABLED_PUBLIC_MAPPING = (
@@ -121,8 +123,9 @@ REFRESHING_CLEANUP_CONTRACT = (
     "When a locally token-owning consumer leaves a target or navigates away while\n"
     "its session is `Refreshing`, it MUST queue that target/token disable without\n"
     "invoking the busy operation. After successful refresh reaches `Active`, it\n"
-    "dispatches the queued disable; after refresh failure reaches `Idle`, it clears\n"
-    "the queued pair without a disable. If the triggering request was itself the\n"
+    "dispatches the queued disable; after refresh failure releases ownership and\n"
+    "presents `Idle`, it clears the browser queued pair without a client disable\n"
+    "while Gateway retains the process-local cleanup obligation. If the triggering request was itself the\n"
     "current-owner DISABLE, that single disable is the only client dispatch. A valid\n"
     "disable ACK completes `Disabled` cleanup to `Idle`; any other outcome returns\n"
     "exactly and leaves the process-local defensive cleanup with Gateway. In both\n"
@@ -167,10 +170,12 @@ REFRESH_SUCCESS_CONTINUATION = (
     "  and admits no Enable; it does not enter `Idle`. ENABLE is\n"
     "  never a refresh trigger. This one dispatch consumes the request's only retry\n"
     "  budget. Every subsequent bus-facing live-monitor operation during refresh\n"
-    "  returns `SESSION_BUSY`. On refresh failure, no\n"
-    "  rebound key is installed: release the ownership gate, return to `Idle`, and\n"
-    "  return the exact Gateway-supplied failure to the triggering request without\n"
-    "  dispatching its native operation."
+    "  returns `SESSION_BUSY`. On refresh failure, no rebound key is installed:\n"
+    "  release the ownership gate, retain a fresh Gateway-owned process-local cleanup\n"
+    "  obligation in internal `DISABLED`, present public session `Idle` with\n"
+    "  `owned:false`, and return the exact Gateway-supplied failure to the triggering\n"
+    "  request without dispatching its native operation. Capability remains that\n"
+    "  exact unavailable outcome and no Enable is admitted until cleanup succeeds."
 )
 REFRESH_OWNER_REBINDING = (
     "On an `ACTIVE` epoch advance from N to N+1, the old `session_key` authorizes\n"
@@ -301,9 +306,13 @@ NORMALIZED_REFRESH_DISABLE_CONTRACT = (
     "   `Idle` only after a valid disable ACK. Any other disable outcome retains the\n"
     "   §7.4 process-local cleanup obligation, publishes capability `UNKNOWN`, admits\n"
     "   no Enable, and returns its exact outcome. Subsequent bus-facing live-monitor\n"
-    "   operations are `SESSION_BUSY` during refresh."
+    "   operations are `SESSION_BUSY` during refresh. Refresh failure likewise\n"
+    "   releases client ownership but retains Gateway cleanup in internal `DISABLED`,\n"
+    "   preserves the exact unavailable capability, and admits no Enable."
 )
-REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
+REFRESH_FAILURE_DIAGRAM = (
+    "REFRESHING --> DISABLED: refresh failure retains cleanup"
+)
 REFRESH_READ_DIAGRAM = "REFRESHING --> ACTIVE: refresh succeeds; triggering READ once"
 REFRESH_DISABLE_DIAGRAM = (
     "REFRESHING --> DISABLED: refresh succeeds; triggering DISABLE once"
@@ -346,11 +355,13 @@ CONFIRMED_CLEANUP_TRANSITION = (
     "session may be re-claimed by any client only when capability is `AVAILABLE` |"
 )
 REFRESH_FAILURE_TRANSITION = (
-    "| `REFRESHING` | refresh failure | `IDLE` | release ownership gate; "
-    "return the exact Gateway-supplied failure outcome to the triggering request; "
-    "do not dispatch its native operation |"
+    "| `REFRESHING` | refresh failure | `DISABLED` | release ownership gate, return "
+    "the exact Gateway-supplied failure outcome to the triggering request without "
+    "dispatching its native operation, and retain `(targetAddress, fresh "
+    "gatewayCleanupAttemptID, attemptedTransportEpoch)` as the process-local §7.4 "
+    "cleanup obligation; public session is `Idle` with `owned:false`, capability "
+    "remains the exact unavailable outcome, and no Enable is admitted |"
 )
-REFRESH_FAILURE_LOCK = "the direct `REFRESHING → IDLE` refresh-failure path"
 HELD_OWNER_DISABLED_RELEASE = (
     "on entry to `DISABLED` from `ENABLING`, `ACTIVE`, or\n`REFRESHING`"
 )
@@ -421,7 +432,7 @@ ENABLING_DIRECT_IDLE_LOCK = (
     "frame emission)"
 )
 FORBIDDEN_REFRESH_FAILURE_CONTRADICTIONS = (
-    "REFRESHING --> DISABLED: refresh failure releases gate",
+    "REFRESHING --> IDLE: refresh failure releases gate",
     "on entry to `DISABLED` from a\nheld-owner state",
 )
 FORBIDDEN_ENABLING_EPOCH_CONTRADICTIONS = (
@@ -582,7 +593,6 @@ def validate_text(text: str) -> None:
         EXPLICIT_DISABLE_CONFIRMED_TRANSITION,
         EXPLICIT_DISABLE_UNCONFIRMED_TRANSITION,
         REFRESH_FAILURE_TRANSITION,
-        REFRESH_FAILURE_LOCK,
         HELD_OWNER_DISABLED_RELEASE,
         ENABLING_CANCEL_DIAGRAM,
         ENABLING_FAILURE_DIAGRAM,
