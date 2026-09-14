@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `2ca70c91964edee20112bdb42b0cd8e240804c88` |
-| Final validated contract tree | `de94ede3918d156057b57cc9b5f2f12df8b040f6` |
-| Final contract validation | Complete configured CI PASS; 262 Portal checker tests and 111 canonical B503 milestone tests; log SHA-256 `0cc0efd9c1f237e891e33b0296026ce2e1b4ee09bca7bc6e02242051615bc5af` |
+| Final validated contract commit | `1c6b429758df2d4e51350f23b08dde9296f76c94` |
+| Final validated contract tree | `bd916ce28c9506893c4d84b988ac521e12c37796` |
+| Final contract validation | Complete configured CI PASS; 262 Portal checker tests and 113 canonical B503 milestone tests; log SHA-256 `0139fdd2167786319df681654bd1b17e995cfd1506104e320949f0911bae2521` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -142,6 +142,8 @@ hardware work, or SemReg cutover.
 | Owner-scope correction tree | `4de508644bc1cc873206cb6173d955f25dfc387e` |
 | Fenced-control correction commit | `2ca70c91964edee20112bdb42b0cd8e240804c88` |
 | Fenced-control correction tree | `de94ede3918d156057b57cc9b5f2f12df8b040f6` |
+| Restart-success truth-table correction commit | `1c6b429758df2d4e51350f23b08dde9296f76c94` |
+| Restart-success truth-table correction tree | `bd916ce28c9506893c4d84b988ac521e12c37796` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -333,7 +335,7 @@ hardware work, or SemReg cutover.
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
 | `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 262 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 111 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 113 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -919,6 +921,18 @@ through the same affirmative prohibited-control analysis as rendered inline
 Markdown. A fenced `The Reset button is available.` mutation rejects, while the
 existing benign availability fence remains accepted. The following evidence-only
 commit records this immutable contract revision.
+
+The complete restart-success truth-table correction CI log is
+`wave12/ci/docs524-restart-truth-success-ci.log`, SHA-256
+`0139fdd2167786319df681654bd1b17e995cfd1506104e320949f0911bae2521`.
+It validated contract commit
+`1c6b429758df2d4e51350f23b08dde9296f76c94`, tree
+`bd916ce28c9506893c4d84b988ac521e12c37796`, with 262 Portal checker tests and
+113 canonical B503 milestone tests. Truth-table success rows 2 and 5 now require
+no cleanup obligation and a cleared restart fence; an ordinary diagnostic
+success alone cannot publish `AVAILABLE` or admit Enable after process restart.
+Both old unconditional-success rows reject as mutations. The following
+evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
