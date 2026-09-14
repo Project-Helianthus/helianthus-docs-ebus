@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `e2fa7f4bdc13b1487fde2c16bd4cac1c04363178` |
-| Final validated contract tree | `2cfb0685c8288e0192f941e614bd6f2d7ca838fe` |
-| Final contract validation | Complete configured CI PASS; 284 Portal checker tests and 142 canonical B503 milestone tests; lead-local log SHA-256 `94d368f2d51d7c71318c923f075cccbdc2c7cc2294d06fc445895482e3b56559`; hosted exact-head CI pending |
+| Final validated contract commit | `e505261c95fc58f970042cc945518cde672f6160` |
+| Final validated contract tree | `1762fd6b0d34fcefa9eac0d250412a9127a4ffd3` |
+| Final contract validation | Complete configured CI PASS; 284 Portal checker tests and 143 canonical B503 milestone tests; lead-local log SHA-256 `ae6ba4513e7c5d18a1fcbdd429f06564e0138f6eb9440b7f607efcaf2f660d63`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -353,7 +353,7 @@ hardware work, or SemReg cutover.
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
 | `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 284 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 142 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 143 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -1273,6 +1273,25 @@ exact ambiguity mutation rejects. The Portal checker passes 284 tests, the
 canonical checker passes 142 tests, and complete configured CI passes with
 lead-local log SHA-256
 `94d368f2d51d7c71318c923f075cccbdc2c7cc2294d06fc445895482e3b56559`.
+
+The fresh independent review of exact
+`61f1bf20fa38d1cc840c2217843287457623d95f`, tree
+`4367493384ac270313341e4f8fbdf9da7d71d504`, verified the attribute and
+internal/public-layer corrections and found one P2 capability-precedence
+conflict. §7.5 allowed `TRANSPORT_DOWN` as the public capability after a failed
+reconnect cleanup even though the unconfirmed cleanup obligation remained and
+§7.4/§12.5 require `UNKNOWN`. Its report is
+`wave12/review/docs524-61f1bf2-final-independent/REPORT.md`, SHA-256
+`59e9ef7efad0cb231e14e270f351bad0d7d003dd19b6618c999fe93589a7e1d8`.
+Commit `e505261c95fc58f970042cc945518cde672f6160`, tree
+`1762fd6b0d34fcefa9eac0d250412a9127a4ffd3`, makes failed reconnect cleanup
+publish only B503 capability `UNKNOWN` until a valid disable ACK. Any applicable
+`TRANSPORT_DOWN` remains the exact caller result and cannot replace the
+cleanup-bearing capability. The precise regression rejects
+`TRANSPORT_DOWN` as that capability. The Portal checker passes 284 tests, the
+canonical checker passes 143 tests, and complete configured CI passes with
+lead-local log SHA-256
+`ae6ba4513e7c5d18a1fcbdd429f06564e0138f6eb9440b7f607efcaf2f660d63`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
