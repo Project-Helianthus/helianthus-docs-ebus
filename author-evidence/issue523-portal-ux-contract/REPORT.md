@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `dd93e12f53dc4740ea7b493717eae89daa4bf999` |
-| Final validated contract tree | `a27753545728cd12509e6ddd99e0f9141976ce8f` |
-| Final contract validation | Complete configured CI PASS; 250 Portal checker tests and 101 canonical B503 milestone tests; log SHA-256 `8a602b0acc178c5c66c22ab36db600479424942439a32506a2aa850273baedf8` |
+| Final validated contract commit | `de3e9b8242d6dade311d93c41b20d9ccad3e836c` |
+| Final validated contract tree | `6cce7503ef077da24963fec48dd758671cde4f88` |
+| Final contract validation | Complete configured CI PASS; 253 Portal checker tests and 103 canonical B503 milestone tests; log SHA-256 `8e9594f1ae3fe77c3bd1dd42515e3a0b29e3cdbf50e18f286d53fe11e3abb59a` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -124,6 +124,8 @@ hardware work, or SemReg cutover.
 | Confirmed-cleanup/fail-closed correction tree | `99a02087d83211f49f6cd11d1930af371f226925` |
 | Gateway-cleanup-identity/HTML-ping correction commit | `dd93e12f53dc4740ea7b493717eae89daa4bf999` |
 | Gateway-cleanup-identity/HTML-ping correction tree | `a27753545728cd12509e6ddd99e0f9141976ce8f` |
+| Idle-timeout/normalization/fenced-audit correction commit | `de3e9b8242d6dade311d93c41b20d9ccad3e836c` |
+| Idle-timeout/normalization/fenced-audit correction tree | `6cce7503ef077da24963fec48dd758671cde4f88` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -288,7 +290,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 250 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 253 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -308,9 +310,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 250 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 253 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 101 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 103 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -768,6 +770,19 @@ cleanup-attempt identity; it is distinct from the browser-local enable-attempt
 identity, is never caller-supplied, and carries no operation authority. The
 URL-bearing attribute audit also includes `ping`, so an activated anchor cannot
 request an alternate Portal API route while retaining a safe `href`. The
+following evidence-only commit records this immutable contract revision.
+
+The complete idle-timeout, normalization, and fenced-audit correction CI log
+is `wave12/ci/docs524-idle-normalization-fence-ci.log`, SHA-256
+`8e9594f1ae3fe77c3bd1dd42515e3a0b29e3cdbf50e18f286d53fe11e3abb59a`.
+It validated contract commit
+`de3e9b8242d6dade311d93c41b20d9ccad3e836c`, tree
+`6cce7503ef077da24963fec48dd758671cde4f88`, with 253 Portal checker tests and
+103 canonical B503 milestone tests. Idle-timeout and public-normalization rules
+now apply the same valid-ACK condition as the canonical cleanup transitions;
+unconfirmed disable remains `UNKNOWN` and cannot admit Enable. Fenced Markdown
+content in the target section is audited for alternate route surfaces and
+installation selectors, while benign fenced examples remain valid. The
 following evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
