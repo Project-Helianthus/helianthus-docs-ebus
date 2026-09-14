@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `f3584806c708915719ff649c256110dc7b709a7b` |
-| Final validated contract tree | `dfe89af7ed1e9c9db9979c5ca56fe1e23f6f7ab2` |
-| Final contract validation | Complete configured CI PASS; 283 Portal checker tests and 140 canonical B503 milestone tests; lead-local log SHA-256 `d7ce69bfaab91b8ae715165aff6ce9e850979081954b6628a40cbc59b968eb9b`; hosted exact-head CI pending |
+| Final validated contract commit | `e2fa7f4bdc13b1487fde2c16bd4cac1c04363178` |
+| Final validated contract tree | `2cfb0685c8288e0192f941e614bd6f2d7ca838fe` |
+| Final contract validation | Complete configured CI PASS; 284 Portal checker tests and 142 canonical B503 milestone tests; lead-local log SHA-256 `94d368f2d51d7c71318c923f075cccbdc2c7cc2294d06fc445895482e3b56559`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -351,9 +351,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 283 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 284 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 140 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 142 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -1251,6 +1251,28 @@ does not claim CSS, JavaScript, or arbitrary prose analysis. The Portal checker
 passes 283 tests, the canonical checker passes 140 tests, and complete
 configured CI passes with lead-local log SHA-256
 `d7ce69bfaab91b8ae715165aff6ce9e850979081954b6628a40cbc59b968eb9b`.
+
+The fresh independent review of exact
+`c0580450a1e97b3dd0d906e5b55f310f8fb63df1`, tree
+`197328eafb5a18ecfb0047874e750db5ad5d632c`, verified the non-code Portal
+repair and found two P2 defects. Both visible-contract parsers still admitted a
+required safety clause stored only in an HTML attribute, and §7.3's refreshed
+DISABLE failure sentence did not distinguish internal `DISABLED` from its
+public `Idle` observation. Its report is
+`wave12/review/docs524-c058045-final-independent/REPORT.md`, SHA-256
+`24a9893fc30a08e58999f8cd811cc8a347058487415d5e5083dfe47d724be753`.
+Commit `e2fa7f4bdc13b1487fde2c16bd4cac1c04363178`, tree
+`2cfb0685c8288e0192f941e614bd6f2d7ca838fe`, retains visible element text
+without treating opening tags or attribute values as public prose; raw Portal
+DOM remains audited separately for route, control, and selector references.
+Attribute-only Portal and canonical mutations reject while visible `div`
+positives pass. The refreshed current-owner DISABLE failure now remains
+internal `DISABLED`/not internal `IDLE`, presents public `Idle`, `owned:false`,
+keeps capability `UNKNOWN`, and leaves Enable unavailable until cleanup. An
+exact ambiguity mutation rejects. The Portal checker passes 284 tests, the
+canonical checker passes 142 tests, and complete configured CI passes with
+lead-local log SHA-256
+`94d368f2d51d7c71318c923f075cccbdc2c7cc2294d06fc445895482e3b56559`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
