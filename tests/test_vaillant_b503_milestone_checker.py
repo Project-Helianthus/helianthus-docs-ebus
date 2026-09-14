@@ -27,6 +27,16 @@ def test_accepts_current_b503_milestone_contract() -> None:
     CHECKER.validate_text(contract())
 
 
+def test_rejects_cleanup_unaware_dispatch_failure_truth_row() -> None:
+    text = contract().replace(
+        table_row(CHECKER.DISPATCH_FAILURE_TRUTH_ROW),
+        "| 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known | n/a |",
+        1,
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_old_all_read_only_milestone_contradiction() -> None:
     text = contract().replace(
         table_row(CHECKER.M2B_GRAPHQL),

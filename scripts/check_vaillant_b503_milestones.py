@@ -84,6 +84,15 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
     "status queries remain admitted, with no B503 card, tabs, bus-facing reads, or "
     "actions until capability returns `AVAILABLE`",
 )
+DISPATCH_FAILURE_TRUTH_ROW = (
+    "6",
+    "timeout/NAK/CRC during dispatch",
+    "`UPSTREAM_RPC_FAILED` to caller; capability stays last-known only when the "
+    "operation creates no cleanup obligation; any disable or refresh failure that "
+    "retains cleanup publishes `UNKNOWN` per §6–§8",
+    "cleanup-bearing outcomes retain the Gateway-owned attempt identity, admit no "
+    "Enable, and follow the bounded later-epoch cleanup rule",
+)
 CURRENT_PUBLIC_SESSION_AUTHORITY = (
     "**Current public session authority.** The five-state public session contract in\n"
     "§6–§8 is governed by this document's current doc-gate revision (docs-ebus#523)\n"
@@ -702,6 +711,8 @@ def validate_text(text: str) -> None:
         )
 
     truth_rows = _capability_truth_table_rows(text)
+    if [row for row in truth_rows if row[0] == "6"] != [DISPATCH_FAILURE_TRUTH_ROW]:
+        raise CheckError("missing exact cleanup-aware dispatch-failure truth-table row")
     if [row for row in truth_rows if row[0] == "7"] != [REFRESHING_CAPABILITY_TRUTH_ROW]:
         raise CheckError("missing exact §12.5 held-session refresh truth-table row")
 

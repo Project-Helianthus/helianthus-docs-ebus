@@ -232,6 +232,7 @@ def test_rejects_installation_selector_even_in_prose() -> None:
         "The Reset button MUST NOT be hidden.",
         "The Clear history control is not disabled.",
         "A Delete action isn't unavailable.",
+        "The Reset button shall remain enabled.",
         "The pane does not expose a Reset button, but it renders a Delete link.",
     ),
 )

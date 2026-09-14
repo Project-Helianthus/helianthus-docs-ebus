@@ -280,7 +280,8 @@ PLAIN_AFFIRMATIVE_CONTROL_VERB = re.compile(
     r"present(?:s|ed)?|create(?:s|d)?|support(?:s|ed)?|allow(?:s|ed)?|"
     r"contain(?:s|ed)?|feature(?:s|d)?|list(?:s|ed)?|"
     r"publish(?:es|ed)?|surface(?:s|d)?|exist(?:s|ed)?|appear(?:s|ed)?|"
-    r"use(?:s|d)?|click(?:s|ed)?|has|have|be|is|are|available|visible)\b",
+    r"use(?:s|d)?|click(?:s|ed)?|"
+    r"has|have|be|is|are|available|visible)\b",
     re.IGNORECASE,
 )
 PLAIN_CONTROL_CLAUSE_BOUNDARY = re.compile(
@@ -290,6 +291,11 @@ PLAIN_AFFIRMATIVE_DOUBLE_NEGATIVE = re.compile(
     r"\b(?:(?:must|shall|may|can|is|are|was|were)\s+(?:not|never)\s+"
     r"(?:be\s+|remain\s+)?|(?:is|are|was|were)n['’]t\s+)"
     r"(?:hidden|disabled|absent|unavailable|unsupported|prohibited|forbidden)\b",
+    re.IGNORECASE,
+)
+PLAIN_AFFIRMATIVE_ENABLED_STATE = re.compile(
+    r"\b(?:must|shall|may|can|will|is|are|was|were)\s+"
+    r"(?:be\s+|remain\s+)?enabled\b",
     re.IGNORECASE,
 )
 COMPACT_PROHIBITED_COMMAND = re.compile(
@@ -593,6 +599,11 @@ def _reject_affirmative_plain_markdown_controls(document: str) -> None:
                     raise CheckError(
                         "api/portal.md: double-negative plain-Markdown clause "
                         f"requires a prohibited B503 control: {clause!r}"
+                    )
+                if PLAIN_AFFIRMATIVE_ENABLED_STATE.search(clause) is not None:
+                    raise CheckError(
+                        "api/portal.md: enabled plain-Markdown state requires a "
+                        f"prohibited B503 control: {clause!r}"
                     )
                 if _affirmative_control_verb(clause) is not None:
                     raise CheckError(
