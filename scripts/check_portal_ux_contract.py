@@ -257,6 +257,12 @@ PLAIN_AFFIRMATIVE_CONTROL_VERB = re.compile(
 PLAIN_CONTROL_CLAUSE_BOUNDARY = re.compile(
     r"\s*(?:;|\bbut\b|\bhowever\b)\s*", re.IGNORECASE
 )
+PLAIN_AFFIRMATIVE_DOUBLE_NEGATIVE = re.compile(
+    r"\b(?:(?:must|shall|may|can|is|are|was|were)\s+(?:not|never)\s+"
+    r"(?:be\s+|remain\s+)?|(?:is|are|was|were)n['’]t\s+)"
+    r"(?:hidden|disabled|absent|unavailable|unsupported|prohibited|forbidden)\b",
+    re.IGNORECASE,
+)
 COMPACT_PROHIBITED_COMMAND = re.compile(
     r"^(?:"
     r"(?:b503|vaillant)(?:clear(?!ance|ly|fix)|delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
@@ -537,6 +543,11 @@ def _reject_affirmative_plain_markdown_controls(document: str) -> None:
                     or _compact_prohibited_command_tokens(clause)
                 ):
                     continue
+                if PLAIN_AFFIRMATIVE_DOUBLE_NEGATIVE.search(clause) is not None:
+                    raise CheckError(
+                        "api/portal.md: double-negative plain-Markdown clause "
+                        f"requires a prohibited B503 control: {clause!r}"
+                    )
                 if _affirmative_control_verb(clause) is not None:
                     raise CheckError(
                         "api/portal.md: affirmative plain-Markdown description "

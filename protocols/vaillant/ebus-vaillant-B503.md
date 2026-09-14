@@ -269,7 +269,7 @@ access.
 | `IDLE` | enable request, no owner | `ENABLING` | emit enable frame after poll-quiesce |
 | `ENABLING` | enable ACK received | `ACTIVE` | start 30s idle timer; arm reads |
 | `ENABLING` | `ctx.Done` before enable-frame emission | `IDLE` | cancel the queued frame, release the ownership gate, and clear the pending attempt; no native disable is emitted |
-| `ENABLING` | `ctx.Done` after enable-frame emission / ACK timeout / CRC mismatch / bus-arbitration timeout / any other ambiguous terminal failure | `DISABLED` | emit exactly one defensive native disable after quiesce, release the owner on entry, and complete cleanup to `IDLE`; return the original exact failure outcome |
+| `ENABLING` | `ctx.Done` after enable-frame emission / ACK timeout / CRC mismatch / bus-arbitration timeout / any other ambiguous terminal failure | `DISABLED` | emit exactly one defensive native disable after quiesce, or queue it under §7.4 if transport disconnects first; release the owner on entry and complete cleanup to `IDLE` only after the defensive cleanup reaches a confirmed terminal outcome; return the original exact failure outcome |
 | `ENABLING` | NAK | `DISABLED` | release the owner on entry and complete cleanup to `IDLE` without a defensive disable because NAK proves the enable was rejected |
 | `ENABLING` | epoch advance detected before enable-frame emission | `IDLE` | cancel the queued frame, release ownership, and discard every stale completion or failure outcome from that enable attempt; explicit new Enable required |
 | `ENABLING` | epoch advance detected after enable-frame emission | `DISABLED` | fence every stale completion, issue exactly one defensive disable after quiesce on the current transport epoch, record its exact cleanup outcome as native evidence, then complete cleanup to `IDLE`; no automatic retry or active owner survives |
@@ -281,7 +281,7 @@ access.
 | `REFRESHING` | refresh succeeds for triggering current-owner DISABLE | `DISABLED` | atomically rebind to the N+1 key, fence every epoch-N completion, emit disable exactly once after quiesce using the rebound key, return its outcome, and complete owner cleanup to `IDLE` |
 | `REFRESHING` | refresh failure | `IDLE` | release ownership gate; return the exact Gateway-supplied failure outcome to the triggering request; do not dispatch its native operation |
 | `DISABLED` | owner cleanup complete | `IDLE` | session may be re-claimed by any client |
-| any | transport disconnect | `DISABLED` | owner cleanup |
+| any | transport disconnect | `DISABLED` | release any owner; if an enable may have reached the wire and no disable has a confirmed terminal outcome, retain the target and attempt only as the process-local §7.4 defensive-cleanup obligation |
 | any | gateway restart | `DISABLED` | owner cleanup; session state is not recoverable across restart because restart destroys all handles |
 
 **Lock lifecycle (single assignment, owner-conditional):**
@@ -413,13 +413,19 @@ event fires**; they are no-ops when the FSM is already `IDLE` or
 `DISABLED`:
 
 - On transport disconnect, the gateway MUST transition the FSM to
-  `DISABLED` and — if an owner was held — release `liveMonitorMu`.
+  `DISABLED` and — if an owner was held — release `liveMonitorMu`. If an enable
+  may have reached the wire and no disable has a confirmed terminal outcome,
+  Gateway retains `(targetAddress, localEnableAttemptID, priorTransportEpoch)`
+  only as a process-local defensive-cleanup obligation across transport
+  reconnect. It carries no issuer token, owner authority, session continuation,
+  or operation eligibility and does not survive gateway process restart.
 - On gateway restart, the gateway MUST transition the FSM to `DISABLED`
   and — if an owner was held — release `liveMonitorMu`. No state persists
   across restart.
 - If the FSM was already `IDLE` or `DISABLED` at disconnect/restart time,
   these events are no-ops with respect to the mutex; no release is
-  attempted.
+  attempted. A pre-existing defensive-cleanup obligation remains independent
+  of that mutex rule.
 - `liveMonitorMu` is a **distinct** `sync.Mutex` from the B524 `readMu`.
   Acquisition order when both are needed: `liveMonitorMu` → (optional)
   `readMu`. The reverse order is forbidden.
@@ -430,9 +436,18 @@ event fires**; they are no-ops when the FSM is already `IDLE` or
   handle that remains held without a §7.4 transport-disconnect cleanup enters
   `Refreshing` on next touch.
 - The resolver applies the §7.3 refresh-once policy.
-- A terminal transport disconnect follows §7.4: it releases the owner and
-  reaches `Idle`. A later reconnect therefore begins without an owner, does not
-  enter `Refreshing`, and requires a new explicit client Enable.
+- A terminal transport disconnect follows §7.4: it releases the owner and does
+  not enter `Refreshing` on reconnect. If no defensive cleanup is pending, the
+  later reconnect reaches `Idle` and requires a new explicit client Enable.
+- If defensive cleanup is pending, the transport layer MUST NOT publish the new
+  epoch as B503-usable or admit any Enable. After quiesce on the current
+  transport epoch, Gateway issues exactly one target-specific defensive disable
+  for that reconnect attempt and records its exact native outcome. A confirmed
+  terminal cleanup clears the obligation, publishes the epoch as usable, and
+  reaches `Idle`; an ambiguous or transport failure retains the obligation,
+  leaves B503 `TRANSPORT_DOWN` or `UNKNOWN` as applicable, and admits no Enable.
+  There is no retry within the same transport epoch; a later transport lifecycle
+  attempt may execute one bounded cleanup again before publication.
 - Gateway MUST NOT reconstruct or auto-resume a session after restart, a lost
   owner handle, or an absent/invalid current issuer token; each requires an
   explicit new client Enable. The surviving authenticated current-owner refresh

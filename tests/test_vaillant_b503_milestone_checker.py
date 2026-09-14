@@ -217,6 +217,14 @@ def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> N
             CHECKER.REFRESHING_DISCONNECT_FENCE,
             "A later reconnect enters Refreshing after every transport disconnect.",
         ),
+        (
+            CHECKER.DISCONNECT_CLEANUP_OBLIGATION,
+            "Transport disconnect drops every pending cleanup obligation.",
+        ),
+        (
+            CHECKER.DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE,
+            "No-owner disconnect discards pending defensive cleanup.",
+        ),
     ),
 )
 def test_rejects_missing_disabled_mapping_or_refreshing_consumer_contract(
@@ -345,6 +353,7 @@ def test_rejects_incomplete_enabling_cleanup_failure_set(
         CHECKER.ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
         CHECKER.ENABLING_NAK_TRANSITION,
         CHECKER.ENABLING_DIRECT_IDLE_LOCK,
+        CHECKER.DISCONNECT_TRANSITION,
     ),
 )
 def test_rejects_missing_terminal_enabling_transition(required_fragment: str) -> None:

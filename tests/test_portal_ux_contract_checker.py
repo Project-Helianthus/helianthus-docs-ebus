@@ -211,6 +211,9 @@ def test_rejects_installation_selector_even_in_prose() -> None:
         "The pane exposes a Re&#115;et button.",
         "The pane exposes a `Reset` button.",
         "A Reset capability is required.",
+        "The Reset button MUST NOT be hidden.",
+        "The Clear history control is not disabled.",
+        "A Delete action isn't unavailable.",
         "The pane does not expose a Reset button, but it renders a Delete link.",
     ),
 )
@@ -229,6 +232,8 @@ def test_rejects_affirmative_plain_markdown_control(snippet: str) -> None:
         "A Clear history action is prohibited.",
         "The pane doesn't expose a Reset button.",
         "The pane cannot expose a Reset button.",
+        "The Reset button MUST be hidden.",
+        "The Clear history control MUST remain disabled.",
         "Resetting the presentation model is not a device control.",
     ),
 )

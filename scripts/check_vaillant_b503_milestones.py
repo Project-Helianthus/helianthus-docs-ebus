@@ -19,6 +19,8 @@ REFRESHING_PUBLIC_SECTION_START = "#### 7.1.1 Refreshing session state (public)"
 REFRESHING_PUBLIC_SECTION_END = "### 7.2 Quiesce timing bounds (normative)"
 REFRESH_SECTION_START = "### 7.3 Retry and refresh"
 REFRESH_SECTION_END = "### 7.4 Ownership release"
+RELEASE_SECTION_START = "### 7.4 Ownership release"
+RELEASE_SECTION_END = "### 7.5 Reconnect handling"
 RECONNECT_SECTION_START = "### 7.5 Reconnect handling"
 RECONNECT_SECTION_END = "### 7.6 30s idle-timeout semantics"
 INSTALL_WRITE_SECTION_START = "## 9. Install-Writes Non-Exposure (v1 invariant)"
@@ -176,9 +178,33 @@ NO_AUTO_RESUME_RECONSTRUCTION = (
     "  path in §7.3 is the only continuation allowed across an epoch advance."
 )
 REFRESHING_DISCONNECT_FENCE = (
-    "A terminal transport disconnect follows §7.4: it releases the owner and\n"
-    "  reaches `Idle`. A later reconnect therefore begins without an owner, does not\n"
-    "  enter `Refreshing`, and requires a new explicit client Enable."
+    "A terminal transport disconnect follows §7.4: it releases the owner and does\n"
+    "  not enter `Refreshing` on reconnect. If no defensive cleanup is pending, the\n"
+    "  later reconnect reaches `Idle` and requires a new explicit client Enable.\n"
+    "- If defensive cleanup is pending, the transport layer MUST NOT publish the new\n"
+    "  epoch as B503-usable or admit any Enable. After quiesce on the current\n"
+    "  transport epoch, Gateway issues exactly one target-specific defensive disable\n"
+    "  for that reconnect attempt and records its exact native outcome. A confirmed\n"
+    "  terminal cleanup clears the obligation, publishes the epoch as usable, and\n"
+    "  reaches `Idle`; an ambiguous or transport failure retains the obligation,\n"
+    "  leaves B503 `TRANSPORT_DOWN` or `UNKNOWN` as applicable, and admits no Enable.\n"
+    "  There is no retry within the same transport epoch; a later transport lifecycle\n"
+    "  attempt may execute one bounded cleanup again before publication."
+)
+DISCONNECT_CLEANUP_OBLIGATION = (
+    "- On transport disconnect, the gateway MUST transition the FSM to\n"
+    "  `DISABLED` and — if an owner was held — release `liveMonitorMu`. If an enable\n"
+    "  may have reached the wire and no disable has a confirmed terminal outcome,\n"
+    "  Gateway retains `(targetAddress, localEnableAttemptID, priorTransportEpoch)`\n"
+    "  only as a process-local defensive-cleanup obligation across transport\n"
+    "  reconnect. It carries no issuer token, owner authority, session continuation,\n"
+    "  or operation eligibility and does not survive gateway process restart."
+)
+DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE = (
+    "- If the FSM was already `IDLE` or `DISABLED` at disconnect/restart time,\n"
+    "  these events are no-ops with respect to the mutex; no release is\n"
+    "  attempted. A pre-existing defensive-cleanup obligation remains independent\n"
+    "  of that mutex rule."
 )
 REFRESH_FAILURE_DIAGRAM = "REFRESHING --> IDLE: refresh failure releases gate"
 REFRESH_READ_DIAGRAM = "REFRESHING --> ACTIVE: refresh succeeds; triggering READ once"
@@ -251,9 +277,16 @@ ENABLING_CANCEL_TRANSITION = (
 ENABLING_AMBIGUOUS_FAILURE_TRANSITION = (
     "| `ENABLING` | `ctx.Done` after enable-frame emission / ACK timeout / CRC "
     "mismatch / bus-arbitration timeout / any other ambiguous terminal failure | "
-    "`DISABLED` | emit exactly one defensive native disable after quiesce, release "
-    "the owner on entry, and complete cleanup to `IDLE`; return the original exact "
-    "failure outcome |"
+    "`DISABLED` | emit exactly one defensive native disable after quiesce, or queue "
+    "it under §7.4 if transport disconnects first; release the owner on entry and "
+    "complete cleanup to `IDLE` only after the defensive cleanup reaches a confirmed "
+    "terminal outcome; return the original exact failure outcome |"
+)
+DISCONNECT_TRANSITION = (
+    "| any | transport disconnect | `DISABLED` | release any owner; if an enable "
+    "may have reached the wire and no disable has a confirmed terminal outcome, "
+    "retain the target and attempt only as the process-local §7.4 "
+    "defensive-cleanup obligation |"
 )
 ENABLING_NAK_TRANSITION = (
     "| `ENABLING` | NAK | `DISABLED` | release the owner on entry and complete "
@@ -412,6 +445,7 @@ def validate_text(text: str) -> None:
         ENABLING_AMBIGUOUS_FAILURE_TRANSITION,
         ENABLING_NAK_TRANSITION,
         ENABLING_DIRECT_IDLE_LOCK,
+        DISCONNECT_TRANSITION,
     ):
         if fragment not in session_section:
             raise CheckError(
@@ -461,6 +495,13 @@ def validate_text(text: str) -> None:
     refresh_section = _section(text, REFRESH_SECTION_START, REFRESH_SECTION_END)
     if REFRESH_SUCCESS_CONTINUATION not in refresh_section:
         raise CheckError("missing authenticated Refreshing continuation contract in §7.3")
+    release_section = _section(text, RELEASE_SECTION_START, RELEASE_SECTION_END)
+    for fragment in (
+        DISCONNECT_CLEANUP_OBLIGATION,
+        DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE,
+    ):
+        if fragment not in release_section:
+            raise CheckError("missing process-local disconnect cleanup obligation in §7.4")
     reconnect_section = _section(text, RECONNECT_SECTION_START, RECONNECT_SECTION_END)
     if NO_AUTO_RESUME_RECONSTRUCTION not in reconnect_section:
         raise CheckError("missing no-reconstruction boundary in §7.5")
