@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `2fec42e431e88ebaf8d60e45f597a7f89ddc4a94` |
-| Final validated contract tree | `4c2b2154a75fbfbaf9f7c4e350d72091d9ecb6bc` |
-| Final contract validation | Complete configured CI PASS; 280 Portal checker tests and 134 canonical B503 milestone tests; lead-local log SHA-256 `86579a3eccedaa67581fc27949f6dd0f5d414c09a786d76c91b5754f7890fd18`; hosted exact-head CI pending |
+| Final validated contract commit | `582d13460b340be45d2147fd07e9b91cb00c9469` |
+| Final validated contract tree | `dcc2aae71988777c2f80f2d18ed26c403acd4c90` |
+| Final contract validation | Complete configured CI PASS; 280 Portal checker tests and 139 canonical B503 milestone tests; lead-local log SHA-256 `e7c6696ed14f5c0fcf4235fc8d1b7068e55b9f2accd2578b946317117201ff5b`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -353,7 +353,7 @@ hardware work, or SemReg cutover.
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
 | `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 280 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 134 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 139 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -1175,6 +1175,29 @@ operator-authorized target-specific recovery remains accepted. The canonical
 checker passes 134 tests and the Portal checker passes 280. Complete configured
 CI passed with lead-local log SHA-256
 `86579a3eccedaa67581fc27949f6dd0f5d414c09a786d76c91b5754f7890fd18`.
+
+The fresh independent review of exact
+`40e943f720956d100e54950967d235d0c2b3319c`, tree
+`2cef0e3115766fe8dbe391fe826aaa523399646a`, verified the earlier corrections
+and found two P2 defects in the declared public contract. The document still
+assigned conflict authority to an archived execution-plan revision whose
+historical disconnect outcome differs from the current retained-cleanup rule,
+and the canonical checker could satisfy the required session-state contract
+from a fenced code block. Its report is
+`wave12/review/docs524-40e943f-final-independent/REPORT.md`, SHA-256
+`b0bd1d20f2af6d89df753772878e5405b6f74526b8b95773f9e547541f151358`.
+Commit `582d13460b340be45d2147fd07e9b91cb00c9469`, tree
+`dcc2aae71988777c2f80f2d18ed26c403acd4c90`, makes this current public
+docs-ebus revision authoritative for the normative session contract and the
+exact eight-row capability table. The archived plan remains traceability only.
+The checker now compares all eight current rows, rejects the obsolete
+plan-conflict authority, and excludes CommonMark fenced/code blocks from prose
+requirements while checking the required Mermaid fragments separately against
+visible source. Exact unsafe mutations reject and a valid noncanonical fenced
+example remains accepted. The canonical checker passes 139 tests, the Portal
+checker passes 280 tests, and complete configured CI passes with lead-local log
+SHA-256
+`e7c6696ed14f5c0fcf4235fc8d1b7068e55b9f2accd2578b946317117201ff5b`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
