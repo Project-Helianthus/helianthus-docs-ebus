@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `070fe93fe15e3c0ec3b0ad2a4009031f086e5fdd` |
-| Final validated contract tree | `1630d58cda883373a6212c683d5ccebae682a98f` |
-| Final contract validation | Complete configured CI PASS; 281 Portal checker tests and 140 canonical B503 milestone tests; lead-local log SHA-256 `8ac2f7370179b8e81b8e7e0c2f4ce2ee9ae98a0c4df87a3474ea4d965276bd21`; hosted exact-head CI pending |
+| Final validated contract commit | `f3584806c708915719ff649c256110dc7b709a7b` |
+| Final validated contract tree | `dfe89af7ed1e9c9db9979c5ca56fe1e23f6f7ab2` |
+| Final contract validation | Complete configured CI PASS; 283 Portal checker tests and 140 canonical B503 milestone tests; lead-local log SHA-256 `d7ce69bfaab91b8ae715165aff6ce9e850979081954b6628a40cbc59b968eb9b`; hosted exact-head CI pending |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -351,7 +351,7 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 281 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 283 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
 | `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 140 tests |
 | `git diff --check` | PASS |
@@ -1234,6 +1234,23 @@ browser-layout analysis. The Portal checker passes 281 tests, the canonical
 checker passes 140 tests, and complete configured CI passes with lead-local log
 SHA-256
 `8ac2f7370179b8e81b8e7e0c2f4ce2ee9ae98a0c4df87a3474ea4d965276bd21`.
+
+The fresh independent review of exact
+`ded2882482fc94deccf81a16b67fcab687763591`, tree
+`efd3d5138ddb49a42076997036d1c248db5f0db0`, verified both standard-`hidden`
+corrections and found one P2 in Portal CommonMark visibility. A required
+frontend-epoch clause or the exact five-row availability table could be moved
+into fenced code while the Portal gate stayed green. Its report is
+`wave12/review/docs524-ded2882-final-independent/REPORT.md`, SHA-256
+`30b7483414471b8a31c44b0ae9b540c2a3166c6ba65198fa4f7c4df7e677df93`.
+Commit `f3584806c708915719ff649c256110dc7b709a7b`, tree
+`dfe89af7ed1e9c9db9979c5ca56fe1e23f6f7ab2`, checks both required Portal
+fragments and its exact availability table against visible non-code CommonMark
+source. Exact fenced-clause and fenced-table mutations reject. This correction
+does not claim CSS, JavaScript, or arbitrary prose analysis. The Portal checker
+passes 283 tests, the canonical checker passes 140 tests, and complete
+configured CI passes with lead-local log SHA-256
+`d7ce69bfaab91b8ae715165aff6ce9e850979081954b6628a40cbc59b968eb9b`.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
