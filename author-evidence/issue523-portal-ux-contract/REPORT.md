@@ -1108,6 +1108,25 @@ as nonblocking by design: this Markdown checker does not claim to execute or
 prove arbitrary Portal JavaScript. The thread was replied to and resolved.
 The following evidence-only commit records this revision.
 
+The fresh independent review of exact
+`fe7f74b4f1051d7c2829a8a40b52df33cd69e02f`, tree
+`d4dbd51476833bbb300246ba3a2bd614cd123712`, verified the preceding three P2
+corrections and found one new P2: a frozen REQUIRED lifecycle clause could be
+moved into inert `<template>` content while raw substring matching still
+passed. Its report has SHA-256
+`37752589cf1b038b9dfe9cadb4e3d48e187fac4161daf8205d60e83e43f7fd14`.
+Commit `8c00f0cbcbd91d25727c55656f787669bd84f499`, tree
+`13c9d4bce6eef8e137b0e5e37c2d8b3ab0937308`, limits the correction to the
+frozen REQUIRED clauses: it excludes comments and declared non-rendering HTML
+containers (`head`, `script`, `style`, and `template`) while retaining visible
+HTML prose. Exact inert-container mutations and a positive visible-container
+case pass; the focused Portal checker now passes 280 tests and the canonical
+B503 checker passes 125. Complete configured CI passed with the verified
+detached public M6.25 inputs below; lead-local log SHA-256
+`4fddb8edd81233cfb3b044139eaf7211c63144a60db2aa10d669803255ce6d74`.
+This remains a bounded documentation-contract check and does not claim to
+validate arbitrary browser code or prose.
+
 The read-only M6.25 inputs were verified clean and detached before CI:
 
 - docs-eeBUS `cedf238e34f879815ba773e9cd76b2b31c2822a3`, tree
