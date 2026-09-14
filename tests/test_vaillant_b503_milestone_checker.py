@@ -37,6 +37,32 @@ def test_rejects_cleanup_unaware_dispatch_failure_truth_row() -> None:
         CHECKER.validate_text(text)
 
 
+@pytest.mark.parametrize(
+    ("current", "unsafe"),
+    (
+        (
+            CHECKER.STEADY_AVAILABLE_TRUTH_ROW,
+            ("2", "post-first-success steady state", "`AVAILABLE`", "n/a"),
+        ),
+        (
+            CHECKER.RECONNECT_AVAILABLE_TRUTH_ROW,
+            (
+                "5",
+                "reconnect, post-first-success-after-reconnect",
+                "`AVAILABLE`",
+                "n/a",
+            ),
+        ),
+    ),
+)
+def test_rejects_available_before_restart_fence_clearance(
+    current: tuple[str, ...], unsafe: tuple[str, ...]
+) -> None:
+    text = contract().replace(table_row(current), table_row(unsafe), 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text)
+
+
 def test_rejects_old_all_read_only_milestone_contradiction() -> None:
     text = contract().replace(
         table_row(CHECKER.M2B_GRAPHQL),

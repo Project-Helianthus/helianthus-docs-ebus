@@ -84,6 +84,18 @@ REFRESHING_CAPABILITY_TRUTH_ROW = (
     "status queries remain admitted, with no B503 card, tabs, bus-facing reads, or "
     "actions until capability returns `AVAILABLE`",
 )
+STEADY_AVAILABLE_TRUTH_ROW = (
+    "2",
+    "post-first-success steady state; no cleanup obligation and any restart fence cleared",
+    "`AVAILABLE`",
+    "diagnostic success alone never clears restart recovery",
+)
+RECONNECT_AVAILABLE_TRUTH_ROW = (
+    "5",
+    "reconnect, post-first-success-after-reconnect; no cleanup obligation and any restart fence cleared",
+    "`AVAILABLE`",
+    "diagnostic success alone never clears restart recovery",
+)
 DISPATCH_FAILURE_TRUTH_ROW = (
     "6",
     "timeout/NAK/CRC during dispatch",
@@ -731,6 +743,10 @@ def validate_text(text: str) -> None:
         )
 
     truth_rows = _capability_truth_table_rows(text)
+    if [row for row in truth_rows if row[0] == "2"] != [STEADY_AVAILABLE_TRUTH_ROW]:
+        raise CheckError("missing restart-fenced steady AVAILABLE truth-table row")
+    if [row for row in truth_rows if row[0] == "5"] != [RECONNECT_AVAILABLE_TRUTH_ROW]:
+        raise CheckError("missing restart-fenced reconnect AVAILABLE truth-table row")
     if [row for row in truth_rows if row[0] == "6"] != [DISPATCH_FAILURE_TRUTH_ROW]:
         raise CheckError("missing exact cleanup-aware dispatch-failure truth-table row")
     if [row for row in truth_rows if row[0] == "7"] != [REFRESHING_CAPABILITY_TRUTH_ROW]:

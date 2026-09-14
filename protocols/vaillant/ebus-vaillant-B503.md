@@ -799,10 +799,10 @@ any row is an automatic merge-gate block.
 | # | State | Capability output | Stale-frame discipline |
 |---|---|---|---|
 | 1 | cold-boot, no successful dispatch yet | `UNKNOWN` | n/a |
-| 2 | post-first-success steady state | `AVAILABLE` | n/a |
+| 2 | post-first-success steady state; no cleanup obligation and any restart fence cleared | `AVAILABLE` | diagnostic success alone never clears restart recovery |
 | 3 | disconnect during ACTIVE session | `TRANSPORT_DOWN` (literal) | in-flight requests fail `TRANSPORT_DOWN`; no late mutation |
 | 4 | reconnect, before first post-reconnect dispatch | `UNKNOWN` (NOT sticky `AVAILABLE`) | reset to `UNKNOWN` regardless of pre-disconnect state |
-| 5 | reconnect, post-first-success-after-reconnect | `AVAILABLE` | n/a |
+| 5 | reconnect, post-first-success-after-reconnect; no cleanup obligation and any restart fence cleared | `AVAILABLE` | diagnostic success alone never clears restart recovery |
 | 6 | timeout/NAK/CRC during dispatch | `UPSTREAM_RPC_FAILED` to caller; capability stays last-known only when the operation creates no cleanup obligation; any disable or refresh failure that retains cleanup publishes `UNKNOWN` per §6–§8 | cleanup-bearing outcomes retain the Gateway-owned attempt identity, admit no Enable, and follow the bounded later-epoch cleanup rule |
 | 7 | held-session epoch refresh; session status `Refreshing` | `UNKNOWN` (temporary; not sticky `AVAILABLE`) | triggering READ or current-owner DISABLE remains pending and is dispatched exactly once only after successful rebind; READ returns to `Active`, DISABLE releases ownership and completes cleanup to `Idle` only after a valid ACK, and subsequent live-monitor operations are `SESSION_BUSY`; only `vaillantCapabilities` and `vaillantLiveMonitorSession` status queries remain admitted, with no B503 card, tabs, bus-facing reads, or actions until capability returns `AVAILABLE` |
 | 8 | stale in-flight completion across epoch rollover | n/a — frame discarded | reply/NAK/timeout from epoch N arriving after reconnect to epoch N+1 MUST be discarded; MUST NOT mutate capability to `AVAILABLE`; MUST NOT satisfy any post-reconnect waiter |
