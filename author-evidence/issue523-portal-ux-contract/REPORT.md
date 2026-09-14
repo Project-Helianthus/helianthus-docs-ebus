@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `115dbca45d01e9df9d9eb6cab868a2cb004b6acc` |
-| Final validated contract tree | `4bbe8268f83d1b9ffce464a427fb4376f8eb8a55` |
-| Final contract validation | Complete configured CI PASS; 271 Portal checker tests and 122 canonical B503 milestone tests; log SHA-256 `98395f4746ec54ef1181ad371a87471e038dfb75c0a553b547c5ebd89b169649` |
+| Final validated contract commit | `07373de4ad8063dd40a0b0cff4692df052b0fa87` |
+| Final validated contract tree | `e143a8076639ca214ab3ff6fad30131b37aebcd8` |
+| Final contract validation | Complete configured CI PASS; 272 Portal checker tests and 122 canonical B503 milestone tests; lead-local log SHA-256 `3982e5ffea285c742cc2ee45e7a632b7338a0de51cc473f5448e80995826d5ac`; [hosted exact-head CI](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34812670233) |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -1050,6 +1050,24 @@ SHA-256 `b03cf42cc41f0d4f85bd892170810aa9988ab748cb7e893881edfcf0e59fbe4a`.
 The following evidence-only commit records this immutable contract revision.
 
 The exact `fa291c49731e5a027fd7e90d3df67982e143af7c` GitHub review found two P2 defects. Commit `115dbca45d01e9df9d9eb6cab868a2cb004b6acc`, tree `4bbe8268f83d1b9ffce464a427fb4376f8eb8a55`, makes the exact caller error and public capability distinct on refresh failure: the caller receives the exact failure while retained cleanup publishes capability `UNKNOWN`. It also recursively audits nested `srcdoc` HTML to a fail-closed depth bound. Complete CI passes 271 Portal and 122 B503 tests. The lead-local CI log has SHA-256 `98395f4746ec54ef1181ad371a87471e038dfb75c0a553b547c5ebd89b169649`; the public [exact-head hosted CI](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34810915397) independently reran the repository gate. The public review findings are the [refresh-failure thread](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002456623) and [nested-srcdoc thread](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002456631). The following evidence-only commit records this revision.
+
+The exact `2fbbd9c4b4d96d983f6bc5403e6b3f5526c79d99` GitHub review found four
+P2 defects: a REQUIRED fragment hidden in an HTML comment could satisfy the
+gate; the delivered-state summary retained a stale capability result and test
+count; and its newest evidence paths were lead-local rather than public links.
+Commit `07373de4ad8063dd40a0b0cff4692df052b0fa87`, tree
+`e143a8076639ca214ab3ff6fad30131b37aebcd8`, removes CommonMark HTML comments
+before checking the declared REQUIRED fragments and adds the hidden-clause
+mutation. The report publishes capability `UNKNOWN` during retained cleanup,
+reports 272 Portal and 122 B503 tests, and links GitHub-hosted evidence. Complete
+configured CI passed with lead-local log SHA-256
+`3982e5ffea285c742cc2ee45e7a632b7338a0de51cc473f5448e80995826d5ac` and the
+[hosted exact-head run](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34812670233).
+The public findings are the [rendered REQUIRED contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002521547),
+[refresh result](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002521552),
+[focused count](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002521558),
+and [public evidence](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002521562)
+threads. The following evidence-only commit records this revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
