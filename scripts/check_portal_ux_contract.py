@@ -375,6 +375,7 @@ B503_ROUTE_SURFACE_PARAGRAPHS = (
     "other route, REST, MCP, or native I/O.",
 )
 MARKDOWN = MarkdownIt("commonmark")
+HTML_COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
 
 
 class CheckError(ValueError):
@@ -929,8 +930,11 @@ def _reject_prohibited_dom_references(target: str, document: str) -> None:
 
 def validate_text(text: str) -> None:
     target = _target_section(text)
+    # REQUIRED is deliberately limited to the frozen INT-10 contract. A raw
+    # match inside an HTML comment is not part of the rendered public contract.
+    rendered_target_source = HTML_COMMENT.sub("", target)
     for fragment in REQUIRED:
-        if fragment not in target:
+        if fragment not in rendered_target_source:
             raise CheckError(
                 "api/portal.md: missing required INT-10 target contract fragment: "
                 f"{fragment!r}"

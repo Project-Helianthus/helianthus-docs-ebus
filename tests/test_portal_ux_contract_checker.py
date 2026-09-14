@@ -65,6 +65,11 @@ def test_accepts_current_portal_ux_contract() -> None:
     CHECKER.validate_text(contract())
 
 
+def test_rejects_required_contract_clause_hidden_in_html_comment() -> None:
+    clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER
+    rejects(clause, f"<!-- {clause} -->")
+
+
 def test_rejects_stale_internal_expired_state() -> None:
     rejects(
         CHECKER.B503_NO_EXPIRED_STATE,

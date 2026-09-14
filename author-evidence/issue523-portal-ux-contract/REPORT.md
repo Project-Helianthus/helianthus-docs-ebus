@@ -331,7 +331,7 @@ hardware work, or SemReg cutover.
 - It excludes REST and native-MCP fallbacks, dual publication, central vendor
   branching, arbitrary-English parsing, browser-derived evidence, and banner-
   derived action authority.
-- `scripts/check_portal_ux_contract.py` and its 262 tests reject missing stable
+- `scripts/check_portal_ux_contract.py` and its 272 tests reject missing stable
   selectors, every prohibited B503 command/selector token, route absence or
   fallback, swapped/moved/mismatched availability rows, unsafe target-switch
   cleanup, missing source/authorization boundaries, premature #552
@@ -861,7 +861,8 @@ It validated contract commit
 107 canonical B503 milestone tests. A Gateway refresh failure now releases
 caller ownership while retaining a fresh Gateway-owned process-local cleanup
 obligation in internal `DISABLED`; public session is `Idle` with `owned:false`,
-the exact unavailable capability is preserved, and Enable remains blocked.
+publishes capability `UNKNOWN`, and Enable remains blocked while the caller
+receives the exact unavailable failure.
 Portal clears only its browser cleanup pair and does not issue a second client
 disable. The following evidence-only commit records this immutable contract
 revision.
@@ -889,8 +890,9 @@ It validated contract commit
 109 canonical B503 milestone tests. The owner-key rule now agrees with the
 transition table: a refresh failure installs no rebound key, releases client
 ownership, retains fresh Gateway-owned cleanup in internal `DISABLED`, presents
-public `Idle` with `owned:false`, preserves the exact unavailable capability,
-and admits no Enable until cleanup succeeds. The mutation suite rejects the
+public `Idle` with `owned:false`, publishes capability `UNKNOWN` while the
+caller receives the exact unavailable failure, and admits no Enable until cleanup
+succeeds. The mutation suite rejects the
 former direct release to re-claimable `IDLE`. The following evidence-only
 commit records this immutable contract revision.
 
@@ -1047,7 +1049,7 @@ exact thread capture is `wave12/review/docs524-3644a8c-live-threads.json`,
 SHA-256 `b03cf42cc41f0d4f85bd892170810aa9988ab748cb7e893881edfcf0e59fbe4a`.
 The following evidence-only commit records this immutable contract revision.
 
-The exact `fa291c49731e5a027fd7e90d3df67982e143af7c` GitHub review found two P2 defects. Commit `115dbca45d01e9df9d9eb6cab868a2cb004b6acc`, tree `4bbe8268f83d1b9ffce464a427fb4376f8eb8a55`, makes the exact caller error and public capability distinct on refresh failure: the caller receives the exact failure while retained cleanup publishes capability `UNKNOWN`. It also recursively audits nested `srcdoc` HTML to a fail-closed depth bound. Complete CI passes 271 Portal and 122 B503 tests; log `wave12/ci/docs524-115dbca-refresh-srcdoc-ci.log`, SHA-256 `98395f4746ec54ef1181ad371a87471e038dfb75c0a553b547c5ebd89b169649`. Exact threads: `wave12/review/docs524-fa291c4-live-threads.json`, SHA-256 `0e7042c7891e818770c4fcaa1a87884b6ba58597b2112163ef3bf8a9db9d3f39`. The following evidence-only commit records this revision.
+The exact `fa291c49731e5a027fd7e90d3df67982e143af7c` GitHub review found two P2 defects. Commit `115dbca45d01e9df9d9eb6cab868a2cb004b6acc`, tree `4bbe8268f83d1b9ffce464a427fb4376f8eb8a55`, makes the exact caller error and public capability distinct on refresh failure: the caller receives the exact failure while retained cleanup publishes capability `UNKNOWN`. It also recursively audits nested `srcdoc` HTML to a fail-closed depth bound. Complete CI passes 271 Portal and 122 B503 tests. The lead-local CI log has SHA-256 `98395f4746ec54ef1181ad371a87471e038dfb75c0a553b547c5ebd89b169649`; the public [exact-head hosted CI](https://github.com/Project-Helianthus/helianthus-docs-ebus/actions/runs/34810915397) independently reran the repository gate. The public review findings are the [refresh-failure thread](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002456623) and [nested-srcdoc thread](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/524#discussion_r4002456631). The following evidence-only commit records this revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
 
