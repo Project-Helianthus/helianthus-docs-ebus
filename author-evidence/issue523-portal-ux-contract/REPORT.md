@@ -437,6 +437,26 @@ Exact mutations cover raw-HTML wrapping of every frozen table and comment-split
 `display:none` forms. The corrected focused run is 551 tests: 334 Portal and
 217 canonical B503 tests, all passing.
 
+The fresh independent review of candidate
+`784b6de9345b20c3feda7ed0f497a160c0d3df01`, tree
+`f62882eff61cbeced8f5931500fa7135a4d73be5`, returned
+`NO_BLOCKING_FINDINGS` with 551 focused tests. Its report is
+`wave12/review/docs524-784b6de-final-independent/REPORT.md`, SHA-256
+`8c286680ba7b3c07013545d35733e223872a9b562496265438bb01500a91c670`.
+The mandatory later feedback refresh found two additional blocking defects.
+The catch-all transport-disconnect row moved a definitively un-emitted Enable
+attempt to fail-closed cleanup even though no native session could exist, and
+CSS identifier escapes could hide a required clause from the visibility gate.
+Functional commit `2ffdd1991836f07c26cc8cbe33617d5388c2f90d`, tree
+`3ed42fad53e51cd26b8219605b011991300dc511`, returns a pre-emission
+`ENABLING` disconnect directly to `IDLE` with exact `TRANSPORT_DOWN`, no cleanup,
+and an explicit new Enable after reconnect; post-emission and held-session
+disconnects retain the conservative `DISABLED`/`UNKNOWN` fence. Both validators
+now decode bounded CSS escapes in property names and values before applying
+priority/source order. Exact regressions cover both disconnect branches,
+cleanup absence, and escaped `display`/`none` forms. The corrected focused run
+is 560 tests: 336 Portal and 224 canonical B503 tests, all passing.
+
 ## Remaining gate
 
 Commit and push this evidence update, rerun complete CI on that exact candidate,
