@@ -18,9 +18,9 @@ hardware work, or SemReg cutover.
 | Base tree | `2f60febe5760a895b31f10c6f8129f97e7d0b008` |
 | Initial validated contract commit | `9a60d74a665a38a945a9f997dbc98e77885630ab` |
 | Initial validated contract tree | `6f867c796d095e7d090c2eb683b3f66cbcbc0a94` |
-| Final validated contract commit | `f9e9814e6eb321c7b9f21e5a2abb5c698820166e` |
-| Final validated contract tree | `c09b196436a0ee07d79c0e6ef079d133ddcd14c4` |
-| Final contract validation | Complete configured CI PASS; 266 Portal checker tests and 119 canonical B503 milestone tests; log SHA-256 `c08706a488474d8ca473d9ebf96e4b37dae20c066bf7920767e4bba07546e786` |
+| Final validated contract commit | `1cf593f47070d6c40da690aadb9b526ac41bac6a` |
+| Final validated contract tree | `bc7e5948991190168db7c4f2c3f010200b002cc4` |
+| Final contract validation | Complete configured CI PASS; 268 Portal checker tests and 121 canonical B503 milestone tests; log SHA-256 `fbeac8b42c17fd737e1016101e36d7401e889f45606c0bf9791d79593608676b` |
 | Blocking review report | `docs524-0f2c935-independent/REPORT.md`, SHA-256 `70d3f392472bab8e48808d3ae9d13c772bd69556aba5ab02664548ab667b3a8f` |
 | Corrected contract commit | `5443075355407e05d588c476b92679843a30c7ad` |
 | Corrected contract tree | `41e62cd0a3bfaeede159355af881abd561e26343` |
@@ -150,6 +150,8 @@ hardware work, or SemReg cutover.
 | Reconnect-ACK/meta-refresh correction tree | `e1f60e94d36a2189c30d90e734db5ddbb4439c7e` |
 | Exact eight-row capability-table correction commit | `f9e9814e6eb321c7b9f21e5a2abb5c698820166e` |
 | Exact eight-row capability-table correction tree | `c09b196436a0ee07d79c0e6ef079d133ddcd14c4` |
+| Full-session/CSS-route audit correction commit | `1cf593f47070d6c40da690aadb9b526ac41bac6a` |
+| Full-session/CSS-route audit correction tree | `bc7e5948991190168db7c4f2c3f010200b002cc4` |
 | Gateway contribution dependency | [#972](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/972), merge `0828afa6221197c01cca85abc2344d2b41899b92` |
 | Gateway catalog/action dependency | [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974), merge `34c8a5d8a5444a7f5a8d6350c7b1258af665bb0a` |
 | Gateway session-state dependency | [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975), open/intermediate/unmerged functional source and evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`, evidence tree `598884b896ce75e30f24fcab1a0fa6db0b82f022` |
@@ -339,9 +341,9 @@ hardware work, or SemReg cutover.
 | Command | Result |
 |---|---|
 | `python3 scripts/check_portal_ux_contract.py` | PASS |
-| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 266 tests |
+| `python3 -m pytest -q tests/test_portal_ux_contract_checker.py` | PASS: 268 tests |
 | `python3 scripts/check_vaillant_b503_milestones.py` | PASS |
-| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 119 tests |
+| `python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py` | PASS: 121 tests |
 | `git diff --check` | PASS |
 | `PLATFORM_M625_DOCS_EEBUS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/docs-eebus-m625-81cd' PLATFORM_M625_EXECUTION_PLANS_ROOT='/Users/razvan/Desktop/Helianthus Project/work/helianthus-stabilization-20260904/wave11/read/plans-m625-4e15' ./scripts/ci_local.sh` | PASS, exit 0 |
 
@@ -988,6 +990,21 @@ milestone tests. Its log is `wave12/ci/docs524-f9e9814-eight-row-ci.log`,
 SHA-256 `c08706a488474d8ca473d9ebf96e4b37dae20c066bf7920767e4bba07546e786`.
 The exact thread capture is `wave12/review/docs524-d424b5e-live-threads.json`,
 SHA-256 `d49c1ef02ad5636f263eaa33a4b6ecc8933063240d1077acf30fd8d393b8ca04`.
+The following evidence-only commit records this immutable contract revision.
+
+The exact `32ce2a7f170fa7ef5e8ce3aa560d7f6572b67c0d` GitHub review found two
+P2 audit gaps. Functional commit `1cf593f47070d6c40da690aadb9b526ac41bac6a`,
+tree `bc7e5948991190168db7c4f2c3f010200b002cc4`, scans declarative session-state
+contradictions across the complete normative §§6–8 scope and extracts CSS
+`url()` and `@import` destinations from style attributes and style elements.
+Mutations put the prohibited `Refreshing` and `Disabled` statements in §§7 and
+8, exercise literal and percent-encoded REST CSS URLs, and retain a safe external
+CSS URL as a positive control. The complete configured CI passes with 268 Portal
+checker tests and 121 canonical B503 milestone tests. Its log is
+`wave12/ci/docs524-1cf593f-session-css-ci.log`, SHA-256
+`fbeac8b42c17fd737e1016101e36d7401e889f45606c0bf9791d79593608676b`. The
+exact thread capture is `wave12/review/docs524-32ce2a7-live-threads.json`,
+SHA-256 `fc4edcff4cb191b7549e02b9e415bcc3f429268978dbdee4d6868f15b78d5373`.
 The following evidence-only commit records this immutable contract revision.
 
 The read-only M6.25 inputs were verified clean and detached before CI:
