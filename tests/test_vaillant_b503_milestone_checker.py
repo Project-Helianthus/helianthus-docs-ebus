@@ -206,6 +206,10 @@ def test_rejects_missing_atomic_owner_key_epoch_rebinding(replacement: str) -> N
     ("clause", "replacement"),
     (
         (
+            CHECKER.OWNER_CONDITIONAL_MUTEX_SCOPE,
+            "All cleanup obligations are no-ops after the owner is released.",
+        ),
+        (
             CHECKER.DISABLED_PUBLIC_MAPPING,
             "Disabled maps all cleanup outcomes without a public distinction.",
         ),

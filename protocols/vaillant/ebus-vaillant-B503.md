@@ -432,10 +432,11 @@ live-monitor enable and disable frame. Bounds:
 
 ### 7.4 Ownership release
 
-Release is owner-conditional (§6.3 "Lock lifecycle"). The release
-obligations below apply **only when an owner is held at the moment the
-event fires**; they are no-ops when the FSM is already `IDLE` or
-`DISABLED`:
+Only release of `liveMonitorMu` is owner-conditional (§6.3 "Lock lifecycle"):
+it occurs only when an owner is held at the moment the event fires. Cleanup
+obligations and their native outcomes remain effective after owner release,
+including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
+`DISABLED` makes the event a no-op only with respect to mutex release.
 
 - Every native disable used for explicit, idle-timeout, refreshed, or defensive
   cleanup clears its obligation only after a valid native

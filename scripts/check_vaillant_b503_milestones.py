@@ -231,6 +231,13 @@ DISCONNECT_CLEANUP_OBLIGATION = (
     "  reconnect. It carries no issuer token, owner authority, session continuation,\n"
     "  or operation eligibility and does not survive gateway process restart."
 )
+OWNER_CONDITIONAL_MUTEX_SCOPE = (
+    "Only release of `liveMonitorMu` is owner-conditional (§6.3 \"Lock lifecycle\"):\n"
+    "it occurs only when an owner is held at the moment the event fires. Cleanup\n"
+    "obligations and their native outcomes remain effective after owner release,\n"
+    "including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or\n"
+    "`DISABLED` makes the event a no-op only with respect to mutex release."
+)
 DISCONNECT_CLEANUP_MUTEX_INDEPENDENCE = (
     "- If the FSM was already `IDLE` or `DISABLED` at disconnect/restart time,\n"
     "  these events are no-ops with respect to the mutex; no release is\n"
@@ -681,6 +688,7 @@ def validate_text(text: str) -> None:
         raise CheckError("missing authenticated Refreshing continuation contract in §7.3")
     release_section = _section(text, RELEASE_SECTION_START, RELEASE_SECTION_END)
     for fragment in (
+        OWNER_CONDITIONAL_MUTEX_SCOPE,
         UNCONFIRMED_CLEANUP_OBLIGATION,
         GATEWAY_CLEANUP_ATTEMPT_ID,
         DISCONNECT_CLEANUP_OBLIGATION,
