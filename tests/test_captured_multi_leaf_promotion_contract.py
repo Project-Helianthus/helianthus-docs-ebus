@@ -1134,6 +1134,27 @@ def test_native_string_stability_and_drift_are_recomputed(
     assert (result.returncode, result.stdout) == (1, "state.invalid\n")
 
 
+def test_native_sample_before_window_cannot_be_marked_valid(
+) -> None:
+    validator = module()
+    campaign = load(PRIVATE)
+    campaign["windows"][1]["started_at"] = "2026-08-11T10:05:06Z"
+    registry = load(REGISTRY)
+    expected = next(
+        item
+        for item in registry["candidate_catalog"]
+        if item["candidate_id"] == "m7-candidate-0019"
+    )
+    with pytest.raises(validator.ValidationFailure) as exc:
+        validator._validate_native_assessments(
+            candidate(campaign, "m7-candidate-0019"),
+            expected,
+            campaign["windows"],
+            registry["capture_limits"],
+        )
+    assert exc.value.category == "state.invalid"
+
+
 def test_native_identity_type_age_and_generation_are_exact(
     tmp_path: pathlib.Path,
 ) -> None:
