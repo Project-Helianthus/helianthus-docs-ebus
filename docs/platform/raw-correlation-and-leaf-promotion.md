@@ -110,13 +110,14 @@ register families, target devices, and schedule namespaces.
 
 | Family | Required identity fields |
 | --- | --- |
-| B509 | target address, target device/product identity when known, register family, register id, unit/scale source, and whether the value is authoritative or mirror/fallback evidence. |
+| B509 | target address, target device/product identity, register family, register id, unit/scale source, and whether the value is authoritative or mirror/fallback evidence. |
 | B524 | full opcode-scoped tuple `(opcode, GG, II, RR)`, target/source address context, group meaning, instance gate, register category, and unit/scale source. |
 | B555 | device family, schedule/program identity, slot/day/time identity when applicable, operation mode context, and unit/scale source. |
 | Other | protocol family, address/device context, exact read identity, unit/scale source, and evidence status. |
 
 If a family-specific field is unavailable, the candidate remains `draft` or is
 `rejected`; it cannot be locked with a generic "register identity" placeholder.
+At target address `0x08`, device/product identity is mandatory before locking because the B509 register space has known cross-product collisions.
 
 ### Hash And Replay Comparability
 
