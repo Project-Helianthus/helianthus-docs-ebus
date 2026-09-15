@@ -118,6 +118,8 @@ register families, target devices, and schedule namespaces.
 If a family-specific field is unavailable, the candidate remains `draft` or is
 `rejected`; it cannot be locked with a generic "register identity" placeholder.
 At target address `0x08`, device/product identity is mandatory before locking because the B509 register space has known cross-product collisions.
+The [collision table and evidence](../../protocols/vaillant/ebus-vaillant-B509.md#device-type-gate-register-address-collision)
+define the product-specific interpretation boundary.
 
 ### Hash And Replay Comparability
 
