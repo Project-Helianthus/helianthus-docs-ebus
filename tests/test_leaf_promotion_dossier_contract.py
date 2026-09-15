@@ -17,6 +17,7 @@ PLATFORM_ROOT = REPO_ROOT / "docs/platform"
 SCHEMA_ROOT = PLATFORM_ROOT / "schemas"
 FIXTURE_ROOT = PLATFORM_ROOT / "fixtures/leaf-promotion-dossier/v1"
 PAGE = PLATFORM_ROOT / "leaf-promotion-dossier-lock-v1.md"
+RAW_CORRELATION_PAGE = PLATFORM_ROOT / "raw-correlation-and-leaf-promotion.md"
 README = PLATFORM_ROOT / "README.md"
 SCHEMA = SCHEMA_ROOT / "leaf-promotion-dossier-v1.schema.json"
 RESULT_SCHEMA = SCHEMA_ROOT / "leaf-promotion-lock-result-v1.schema.json"
@@ -76,6 +77,15 @@ EXPECTED_CAPTURED_NEGATIVE = {
     "wrong-m7-predecessor.json": "captured.predecessor",
     "wrong-m8-predecessor.json": "captured.predecessor",
 }
+
+
+def test_b509_collision_identity_is_mandatory_before_locking() -> None:
+    text = RAW_CORRELATION_PAGE.read_text(encoding="utf-8")
+    assert (
+        "At target address `0x08`, device/product identity is mandatory before "
+        "locking because the B509 register space has known cross-product collisions."
+        in text
+    )
 
 
 def load_json(path: pathlib.Path) -> dict[str, object]:

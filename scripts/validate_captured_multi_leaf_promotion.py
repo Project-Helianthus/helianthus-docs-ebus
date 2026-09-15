@@ -729,6 +729,8 @@ def _validate_native_assessments(
                 observed_identity == candidate["eebus_identity"]["identity_hash"]
                 and sample["valid"]
                 and _sample_generation_matches(sample, "EEBUS", window)
+                and timestamp_ns(sample["observed_at"])
+                >= timestamp_ns(window["started_at"])
                 and age <= assessment["max_age_ns"]
                 and catalog_valid
             )

@@ -454,12 +454,15 @@ def test_rejects_required_contract_clause_hidden_by_standard_html_attribute() ->
         r"display:n\6f ne",
         "DISPLAY: none",
         "visibility: hidden",
+        "visibility: collapse",
         "display:none!important",
         "display: none !IMPORTANT",
         "visibility:hidden !important",
+        "visibility:collapse !important",
         "display:none!important;display:block",
         "display:block;display:none!important",
         "visibility:hidden!important;visibility:visible",
+        "visibility:collapse!important;visibility:visible",
     ),
 )
 def test_rejects_required_contract_clause_hidden_by_inline_style(style: str) -> None:
@@ -471,7 +474,12 @@ def test_rejects_required_contract_clause_hidden_by_inline_style(style: str) -> 
 
 @pytest.mark.parametrize(
     "style",
-    ("display:none;display:block!important", "display:none!important;display:block!important"),
+    (
+        "display:none;display:block!important",
+        "display:none!important;display:block!important",
+        "visibility:collapse;visibility:visible!important",
+        "visibility:collapse!important;visibility:visible!important",
+    ),
 )
 def test_accepts_later_important_visible_inline_style(style: str) -> None:
     clause = CHECKER.B503_FRONTEND_EPOCH_ROLLOVER

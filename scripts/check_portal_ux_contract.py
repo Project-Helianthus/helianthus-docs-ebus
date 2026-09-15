@@ -512,7 +512,7 @@ def _html_element_is_nonrendering(attrs: list[tuple[str, str | None]]) -> bool:
                     declarations[normalized_name] = (normalized_value, important)
         if declarations.get("display", (None, False))[0] == "none" or declarations.get(
             "visibility", (None, False)
-        )[0] == "hidden":
+        )[0] in {"hidden", "collapse"}:
             return True
     return False
 

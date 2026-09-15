@@ -138,12 +138,15 @@ def test_rejects_five_state_contract_hidden_by_standard_html_attribute() -> None
         r"display:n\6f ne",
         "DISPLAY: none",
         "visibility: hidden",
+        "visibility: collapse",
         "display:none!important",
         "display: none !IMPORTANT",
         "visibility:hidden !important",
+        "visibility:collapse !important",
         "display:none!important;display:block",
         "display:block;display:none!important",
         "visibility:hidden!important;visibility:visible",
+        "visibility:collapse!important;visibility:visible",
     ),
 )
 def test_rejects_five_state_contract_hidden_by_inline_style(style: str) -> None:
@@ -158,7 +161,12 @@ def test_rejects_five_state_contract_hidden_by_inline_style(style: str) -> None:
 
 @pytest.mark.parametrize(
     "style",
-    ("display:none;display:block!important", "display:none!important;display:block!important"),
+    (
+        "display:none;display:block!important",
+        "display:none!important;display:block!important",
+        "visibility:collapse;visibility:visible!important",
+        "visibility:collapse!important;visibility:visible!important",
+    ),
 )
 def test_accepts_later_important_visible_inline_style(style: str) -> None:
     text = contract().replace(
@@ -646,6 +654,19 @@ def test_rejects_enable_without_connected_available_admission(old: str, new: str
     text = contract().replace(old, new, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
+
+
+def test_requires_disabled_enable_rejection_without_native_emission() -> None:
+    expected = (
+        "| `DISABLED` | enable request | `DISABLED` | emit no native B503 operation; "
+        "retain every cleanup, restart, or administrative fence; return the exact "
+        "current Gateway-supplied unavailable capability (`UNKNOWN` for cleanup or "
+        "restart uncertainty) |"
+    )
+    text = contract()
+    assert expected in text
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(text.replace(expected, "", 1))
 
 
 @pytest.mark.parametrize(
