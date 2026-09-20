@@ -49,8 +49,8 @@ contract lives in [`../api/watch-summary.md`](../api/watch-summary.md).
   runtime lacks true wire timestamps.
 - Whole-bus passive capability state remains explicit even when bounded
   retained history still exists.
-- B524 `state_default` behavior remains descriptor-backed/policy-backed; this
-  document does not permit request-shape-only promotion semantics.
+- B509/B524 `state_default` behavior remains descriptor-backed/policy-backed;
+  this document does not permit request-shape-only promotion semantics.
 - Retained-active fallback is architectural evidence reuse, not a standalone
   selector heuristic.
 
@@ -70,25 +70,41 @@ baseline for observe-first watch behavior:
 
 ### Runtime Outcome Classes
 
-At architecture level, passive adjudication outcomes are distinct:
+At architecture level, passive adjudication outcomes are distinct. For the
+current B509/B524 contract, value-bearing passive direct apply is permitted
+only for normalized `state_default` after every descriptor and correlation
+guard below succeeds. `record/invalidate` remains distinct from direct state
+application. Other outcomes are observability-only: they can retain bounded
+evidence and diagnostics, but do not update the passive shadow or emit typed
+passive facts.
 
-- direct-apply-eligible paths (`state_default`, `config_opt_in`,
-  `energy_merge_only`) are runtime third-party eligible under the family-policy
-  verdict
-- `record/invalidate` paths are runtime third-party eligible without implying
-  direct state application
-- observability-only paths are retained for evidence and diagnostics but do not
-  imply runtime application
+### B509/B524 Descriptor-Backed Rule
 
-### B524 Descriptor-Backed Rule
+For B509 and B524, a value-bearing passive observation can update passive
+shadow state only if it matches an active normalized canonical descriptor for
+the same key, whose state class is `state`, correlation is
+`request_response`, and normalized policy is `state_default`. The active
+descriptor is the authority; the observed request shape is not a selector.
 
-For B524, `state_default` eligibility is descriptor-backed and policy-backed.
-`catalog_miss`, inactive keys, config keys, write/timer forms, or mismatched
-policy evidence do not become `state_default` eligible.
+`catalog_miss`, inactive keys, canonical-key mismatch, `never`,
+`energy_merge_only`, `unknown`, configuration state, configuration mismatch,
+and write/timer forms stay observability-only. They cannot update passive
+shadow state.
 
-Retained-active fallback wording in this document is bounded to retained active
-fingerprints that already carry compatible policy evidence; it is not a
-request-shape override.
+Retained-active fallback is bounded to active fingerprints that already carry
+the same compatible normalized descriptor evidence. It cannot create,
+reactivate, or replace a descriptor, state class, correlation, or policy.
+
+`config_opt_in` and its stable summary labels/flag vocabulary are reserved for
+a separately implemented and accepted end-to-end runtime path. Until then the
+normalized outcome is `not_applicable`; it cannot permit a passive
+configuration or shadow update. Observe-first feature-flag normalization
+remains authoritative before this policy is evaluated.
+
+Gateway [issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
+and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992)
+are pending implementation evidence for this rule, not proof of merge or
+runtime qualification.
 
 ## Degraded Behavior
 
@@ -174,6 +190,9 @@ Shared architecture invariants:
   invalidation/write epochs
 - feature-flag normalization remains authoritative for direct-apply eligibility
   and shadow enablement semantics
+- pending B509/B524 direct apply is fail-closed: only an active normalized
+  canonical `state` descriptor with `request_response` and `state_default` may
+  update passive shadow; all other policy outcomes remain observability-only
 
 ## Busy-Time and Timing Model
 

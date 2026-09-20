@@ -2,8 +2,13 @@
 
 ## Current Status
 
-The shared watch-summary surface is implemented on gateway `main` and frozen in
-this `DOC-09` lane against merged M5 behavior.
+The shared watch-summary surface below records the frozen `DOC-09` v1 shape and
+its historical M5 implementation evidence. The stricter B509/B524 passive
+policy described in this revision is documentation-gated: gateway
+[issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
+and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992)
+are pending implementation evidence. They do not establish a merged runtime
+contract or a supported passive-state update path.
 
 Freeze anchors:
 
@@ -203,6 +208,42 @@ value/error is returned.
   ([graphql/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/graphql/watch_summary.go),
   [mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server.go),
   [mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server_test.go)).
+
+## Pending B509/B524 Passive-Update Policy
+
+This is a fail-closed policy contract for value-bearing passive observations.
+It applies separately to B509 and B524. A passive observation may update a
+passive shadow only when all of the following match an active normalized
+canonical descriptor for the same canonical key:
+
+1. the descriptor is active;
+2. its state class is `state`;
+3. its correlation is `request_response`; and
+4. its normalized direct-apply policy is `state_default`.
+
+The match is not a request-shape shortcut. It includes the normalized canonical
+descriptor, state class, correlation, and policy after observe-first feature
+flags have been normalized. Retained active evidence may corroborate that
+already-matching descriptor; it cannot create, reactivate, or substitute one.
+
+`catalog_miss`, inactive descriptors, canonical-key mismatch, `never`,
+`energy_merge_only`, `unknown`, configuration state or configuration mismatch
+remain observability-only. They may be retained as bounded evidence and exposed
+for diagnostics, but cannot update passive shadow state or become typed passive
+facts.
+
+`config_opt_in`, the stable summary labels (`config_eligible`,
+`config_ineligible`, and `config_master_off`), and the normalized flag
+vocabulary remain reserved v1 vocabulary. Until a separately implemented and
+accepted end-to-end runtime path exists, `config_opt_in` evaluates as
+`not_applicable`; it cannot enable a configuration update through the passive
+shadow. This reservation does not weaken feature-flag normalization.
+
+The pending gateway work is tracked by
+[issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
+and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992).
+Neither link is evidence that the policy has merged or been physically
+qualified.
 
 ## Explicit Non-Scope (DOC-09)
 
