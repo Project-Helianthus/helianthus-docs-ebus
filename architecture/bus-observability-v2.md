@@ -99,7 +99,7 @@ reactivate, or replace a descriptor, state class, correlation, or policy.
 a separately implemented and accepted end-to-end runtime path. Until then the
 normalized outcome is `not_applicable`; it cannot permit a passive
 configuration or shadow update. Observe-first feature-flag normalization
-remains authoritative before this policy is evaluated.
+remains authoritative before policy evaluation.
 
 Gateway implementation tracking:
 [issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)

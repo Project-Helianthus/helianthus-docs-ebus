@@ -21,6 +21,9 @@ EXCLUDED_VALUE_BEARING_PATHS = (
     "configuration state",
     "configuration mismatch",
 )
+FEATURE_FLAG_NORMALIZATION = (
+    "Observe-first feature-flag normalization remains authoritative before policy evaluation."
+)
 
 
 def texts() -> tuple[str, ...]:
@@ -36,6 +39,13 @@ def require_exclusions(documents: tuple[str, ...]) -> None:
         value = normalized(text)
         for token in EXCLUDED_VALUE_BEARING_PATHS:
             assert token in value, f"{document.name} omits excluded path {token}"
+
+
+def require_feature_flag_normalization(documents: tuple[str, ...]) -> None:
+    for document, text in zip(DOCUMENTS, documents, strict=True):
+        assert FEATURE_FLAG_NORMALIZATION in normalized(text), (
+            f"{document.name} omits feature-flag normalization"
+        )
 
 
 def test_b509_b524_passive_update_policy_is_fail_closed() -> None:
@@ -68,7 +78,22 @@ def test_config_opt_in_is_reserved_and_not_applicable_until_accepted() -> None:
         assert "`config_opt_in`" in value
         assert "`not_applicable`" in value
         assert "separately implemented and accepted end-to-end runtime path" in value
-    assert "feature-flag normalization" in "\n".join(texts())
+    require_feature_flag_normalization(texts())
+
+
+@pytest.mark.parametrize("index", range(len(DOCUMENTS)))
+def test_policy_rejects_feature_flag_normalization_omitted_from_one_document(
+    index: int,
+) -> None:
+    current = list(texts())
+    current[index] = normalized(current[index])
+    assert FEATURE_FLAG_NORMALIZATION in current[index]
+    current[index] = current[index].replace(FEATURE_FLAG_NORMALIZATION, "", 1)
+    with pytest.raises(
+        AssertionError,
+        match=f"{DOCUMENTS[index].name} omits feature-flag normalization",
+    ):
+        require_feature_flag_normalization(tuple(current))
 
 
 def test_gateway_tracking_is_not_status_evidence() -> None:

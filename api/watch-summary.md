@@ -238,7 +238,8 @@ facts.
 vocabulary remain reserved v1 vocabulary. Until a separately implemented and
 accepted end-to-end runtime path exists, `config_opt_in` evaluates as
 `not_applicable`; it cannot enable a configuration update through the passive
-shadow. This reservation does not weaken feature-flag normalization.
+shadow. Observe-first feature-flag normalization remains authoritative before
+policy evaluation.
 
 Gateway implementation tracking:
 [issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)

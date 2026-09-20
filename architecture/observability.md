@@ -89,9 +89,9 @@ implementation status. At architecture level:
 - `config_opt_in`, its stable summary labels, and flag vocabulary remain
   reserved. Their normalized outcome is `not_applicable` until a separately
   implemented and accepted end-to-end runtime path exists
-- observe-first feature flags are normalized before every policy decision;
-  request-shape heuristics alone are insufficient to promote B509/B524 entries
-  to `state_default`
+- Observe-first feature-flag normalization remains authoritative before policy
+  evaluation. Request-shape heuristics alone are insufficient to promote
+  B509/B524 entries to `state_default`
 
 ### M5 Deferral
 
