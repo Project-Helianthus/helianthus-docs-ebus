@@ -70,8 +70,8 @@ baseline for observe-first watch behavior:
 
 ### Runtime Outcome Classes
 
-At architecture level, passive adjudication outcomes are distinct. For the
-current B509/B524 contract, value-bearing passive direct apply is permitted
+At architecture level, passive adjudication outcomes are distinct. Under the
+B509/B524 contract, value-bearing passive direct apply is permitted
 only for normalized `state_default` after every descriptor and correlation
 guard below succeeds. `record/invalidate` remains distinct from direct state
 application. Other outcomes are observability-only: they can retain bounded
@@ -101,10 +101,12 @@ normalized outcome is `not_applicable`; it cannot permit a passive
 configuration or shadow update. Observe-first feature-flag normalization
 remains authoritative before this policy is evaluated.
 
-Gateway [issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
-and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992)
-are pending implementation evidence for this rule, not proof of merge or
-runtime qualification.
+Gateway implementation tracking:
+[issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
+and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992).
+These links and this documentation alone do not establish merge or runtime
+qualification; current GitHub state and merged gateway code establish
+implementation status.
 
 ## Degraded Behavior
 
@@ -190,7 +192,7 @@ Shared architecture invariants:
   invalidation/write epochs
 - feature-flag normalization remains authoritative for direct-apply eligibility
   and shadow enablement semantics
-- pending B509/B524 direct apply is fail-closed: only an active normalized
+- B509/B524 direct apply is fail-closed: only an active normalized
   canonical `state` descriptor with `request_response` and `state_default` may
   update passive shadow; all other policy outcomes remain observability-only
 

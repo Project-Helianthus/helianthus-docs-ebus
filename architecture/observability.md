@@ -61,11 +61,12 @@ This page documents the runtime observability signals currently emitted by `heli
 ## M4 Observe-First Watch Notes
 
 The merged M4 watch stack (`GW-06..GW-09`) introduces policy-carried passive
-adjudication behavior. The B509/B524 hardening tracked by gateway
+adjudication behavior. B509/B524 gateway implementation tracking:
 [issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
-and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992)
-is pending implementation evidence and does not claim that either item is
-merged or qualified. At architecture level:
+and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992).
+These links and this documentation alone do not establish merge or runtime
+qualification; current GitHub state and merged gateway code establish
+implementation status. At architecture level:
 
 - family-policy verdicts flow into runtime adjudication, not only into
   fingerprint hashing

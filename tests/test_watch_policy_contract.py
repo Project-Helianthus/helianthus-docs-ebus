@@ -51,9 +51,11 @@ def test_config_opt_in_is_reserved_and_not_applicable_until_accepted() -> None:
     assert "feature-flag normalization" in "\n".join(texts())
 
 
-def test_gateway_work_is_pending_evidence_not_merge_proof() -> None:
+def test_gateway_tracking_is_not_status_evidence() -> None:
     for text in texts():
         value = normalized(text)
         assert "helianthus-ebusgateway/issues/982" in value
         assert "helianthus-ebusgateway/pull/992" in value
-        assert "pending implementation evidence" in value
+        assert "documentation alone do not establish merge or runtime qualification" in value
+        assert "current GitHub state and merged gateway code establish implementation status" in value
+        assert "pending implementation evidence" not in value

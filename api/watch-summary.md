@@ -4,11 +4,12 @@
 
 The shared watch-summary surface below records the frozen `DOC-09` v1 shape and
 its historical M5 implementation evidence. The stricter B509/B524 passive
-policy described in this revision is documentation-gated: gateway
+policy below is normative. Gateway
 [issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
 and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992)
-are pending implementation evidence. They do not establish a merged runtime
-contract or a supported passive-state update path.
+track its gateway implementation. These links and this documentation alone do
+not establish merge or runtime qualification; current GitHub state and merged
+gateway code establish implementation status.
 
 Freeze anchors:
 
@@ -209,7 +210,7 @@ value/error is returned.
   [mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server.go),
   [mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server_test.go)).
 
-## Pending B509/B524 Passive-Update Policy
+## B509/B524 Passive-Update Policy
 
 This is a fail-closed policy contract for value-bearing passive observations.
 It applies separately to B509 and B524. A passive observation may update a
@@ -239,11 +240,12 @@ accepted end-to-end runtime path exists, `config_opt_in` evaluates as
 `not_applicable`; it cannot enable a configuration update through the passive
 shadow. This reservation does not weaken feature-flag normalization.
 
-The pending gateway work is tracked by
+Gateway implementation tracking:
 [issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
 and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992).
-Neither link is evidence that the policy has merged or been physically
-qualified.
+These links and this documentation alone do not establish merge or runtime
+qualification; current GitHub state and merged gateway code establish
+implementation status.
 
 ## Explicit Non-Scope (DOC-09)
 
