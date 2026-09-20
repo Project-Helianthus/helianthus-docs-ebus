@@ -61,22 +61,37 @@ This page documents the runtime observability signals currently emitted by `heli
 ## M4 Observe-First Watch Notes
 
 The merged M4 watch stack (`GW-06..GW-09`) introduces policy-carried passive
-adjudication behavior. At architecture level:
+adjudication behavior. B509/B524 gateway implementation tracking:
+[issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
+and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992).
+These links and this documentation alone do not establish merge or runtime
+qualification; current GitHub state and merged gateway code establish
+implementation status. At architecture level:
 
 - family-policy verdicts flow into runtime adjudication, not only into
   fingerprint hashing
-- direct-apply-eligible policies and record/invalidate policies are both
-  runtime third-party eligible, but with different runtime semantics
+- `state_default` passive shadow application is available only through the
+  B509/B524 descriptor-and-correlation guard; record/invalidate remains a
+  separate runtime action
 - observability-only adjudication remains explicit and does not imply runtime
   application
 
-### B524 Policy Guardrails
+### B509/B524 Policy Guardrails
 
-- `state_default` wording is descriptor-backed and policy-backed
+- passive state direct apply requires a matching active normalized canonical
+  descriptor, state class `state`, `request_response` correlation, and
+  normalized `state_default` policy
 - retained-active fallback is conservative and depends on retained active
-  fingerprint policy evidence (`request_response + state_default`)
-- request-shape heuristics alone are not sufficient to promote B524 entries to
-  `state_default`
+  fingerprint policy evidence; it cannot replace any required match
+- `catalog_miss`, inactive descriptor, canonical-key mismatch, `never`,
+  `energy_merge_only`, `unknown`, configuration state, and configuration
+  mismatch are observability-only and cannot update passive shadow
+- `config_opt_in`, its stable summary labels, and flag vocabulary remain
+  reserved. Their normalized outcome is `not_applicable` until a separately
+  implemented and accepted end-to-end runtime path exists
+- Observe-first feature-flag normalization remains authoritative before policy
+  evaluation. Request-shape heuristics alone are insufficient to promote
+  B509/B524 entries to `state_default`
 
 ### M5 Deferral
 
