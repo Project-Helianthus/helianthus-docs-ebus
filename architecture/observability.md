@@ -83,7 +83,7 @@ implementation status. At architecture level:
   normalized `state_default` policy
 - retained-active fallback is conservative and depends on retained active
   fingerprint policy evidence; it cannot replace any required match
-- `catalog_miss`, inactive/key-mismatched descriptors, `never`,
+- `catalog_miss`, inactive descriptor, canonical-key mismatch, `never`,
   `energy_merge_only`, `unknown`, configuration state, and configuration
   mismatch are observability-only and cannot update passive shadow
 - `config_opt_in`, its stable summary labels, and flag vocabulary remain

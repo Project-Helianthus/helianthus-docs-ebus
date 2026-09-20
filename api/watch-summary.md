@@ -227,8 +227,8 @@ descriptor, state class, correlation, and policy after observe-first feature
 flags have been normalized. Retained active evidence may corroborate that
 already-matching descriptor; it cannot create, reactivate, or substitute one.
 
-`catalog_miss`, inactive descriptors, canonical-key mismatch, `never`,
-`energy_merge_only`, `unknown`, configuration state or configuration mismatch
+`catalog_miss`, inactive descriptor, canonical-key mismatch, `never`,
+`energy_merge_only`, `unknown`, configuration state, and configuration mismatch
 remain observability-only. They may be retained as bounded evidence and exposed
 for diagnostics, but cannot update passive shadow state or become typed passive
 facts.

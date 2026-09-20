@@ -86,10 +86,10 @@ the same key, whose state class is `state`, correlation is
 `request_response`, and normalized policy is `state_default`. The active
 descriptor is the authority; the observed request shape is not a selector.
 
-`catalog_miss`, inactive keys, canonical-key mismatch, `never`,
-`energy_merge_only`, `unknown`, configuration state, configuration mismatch,
-and write/timer forms stay observability-only. They cannot update passive
-shadow state.
+`catalog_miss`, inactive descriptor, canonical-key mismatch, `never`,
+`energy_merge_only`, `unknown`, configuration state, and configuration mismatch
+stay observability-only. Write/timer forms also remain observability-only. None
+of these cases can update passive shadow state.
 
 Retained-active fallback is bounded to active fingerprints that already carry
 the same compatible normalized descriptor evidence. It cannot create,

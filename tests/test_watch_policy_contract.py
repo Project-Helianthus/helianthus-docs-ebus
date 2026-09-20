@@ -13,9 +13,12 @@ DOCUMENTS = (
 )
 EXCLUDED_VALUE_BEARING_PATHS = (
     "`catalog_miss`",
+    "inactive descriptor",
+    "canonical-key mismatch",
     "`never`",
     "`energy_merge_only`",
     "`unknown`",
+    "configuration state",
     "configuration mismatch",
 )
 
@@ -50,9 +53,11 @@ def test_policy_excludes_each_non_default_value_bearing_path() -> None:
     require_exclusions(texts())
 
 
-def test_policy_rejects_an_exclusion_omitted_from_one_document() -> None:
+@pytest.mark.parametrize("token", EXCLUDED_VALUE_BEARING_PATHS)
+def test_policy_rejects_an_exclusion_omitted_from_one_document(token: str) -> None:
     current = list(texts())
-    current[0] = current[0].replace("`energy_merge_only`", "`omitted_path`", 1)
+    assert token in current[0]
+    current[0] = current[0].replace(token, "omitted path", 1)
     with pytest.raises(AssertionError, match="watch-summary.md omits excluded path"):
         require_exclusions(tuple(current))
 
