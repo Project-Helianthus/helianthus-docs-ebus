@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from validate_vaillant_regulator_capability_api_v1 import (  # noqa: E402
     ValidationError,
     SDL,
+    resolve_catalog_classifier,
     resolve,
     validate,
     validate_sdl,
@@ -44,6 +45,24 @@ def test_resolve_rejects_unknown_catalog_tokens_before_precedence() -> None:
         except ValidationError:
             continue
         raise AssertionError(f"unsupported states accepted: {states!r}")
+
+
+def test_catalog_classifier_is_metadata_independent_and_has_closed_roles() -> None:
+    assert resolve_catalog_classifier(
+        "PN-REG",
+        {"part_number": "PN-REG", "role": "regulator", "brand": "", "family": "", "product_model": ""},
+    ) == "PRESENT"
+    assert resolve_catalog_classifier(
+        "PN-THERM",
+        {"part_number": "PN-THERM", "role": "THERMOSTAT", "brand": "", "family": "", "product_model": ""},
+    ) == "PRESENT"
+    assert resolve_catalog_classifier(
+        "PN-BOILER",
+        {"part_number": "PN-BOILER", "role": "Boiler", "brand": "", "family": "", "product_model": ""},
+    ) == "NONE"
+    assert resolve_catalog_classifier("PN-ROLELESS", {"part_number": "PN-ROLELESS", "role": ""}) == "UNKNOWN"
+    assert resolve_catalog_classifier("PN-MISSING", None) == "UNKNOWN"
+    assert resolve_catalog_classifier(" ", {"part_number": "PN-REG", "role": "Regulator"}) == "UNKNOWN"
 
 
 def test_validator_rejects_missing_field_compatibility_or_heuristic_reintroduction() -> None:
@@ -102,6 +121,19 @@ def test_validator_rejects_deleted_or_replaced_precedence() -> None:
     replaced = copy.deepcopy(manifest)
     replaced["precedence"] = {"present": "any_identity", "none": "empty_inventory", "unknown": []}
     assert "precedence" in validate(replaced, cases)
+
+
+def test_validator_rejects_catalog_classifier_admission_or_role_drift() -> None:
+    manifest, cases = load(MANIFEST), load(CASES)
+    admission = copy.deepcopy(manifest)
+    admission["catalog_classifier"]["does_not_admit"] = ["profile", "b524", "routing"]
+    assert "catalog_classifier" in validate(admission, cases)
+    roles = copy.deepcopy(manifest)
+    roles["catalog_classifier"]["controller_roles"] = ["Regulator"]
+    assert "catalog_classifier" in validate(roles, cases)
+    fixture = copy.deepcopy(cases)
+    fixture["catalog_classifier"][0]["catalog_record"]["brand"] = "Unexpected"
+    assert "catalog_classifier_cases" in validate(manifest, fixture)
 
 
 def test_validator_rejects_gateway_wide_or_cross_protocol_scope() -> None:

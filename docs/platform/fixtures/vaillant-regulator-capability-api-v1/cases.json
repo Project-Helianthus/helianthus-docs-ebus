@@ -14,5 +14,13 @@
     {"name": "no_identity_is_not_none", "catalog_states": [], "forbidden_result": "NONE"},
     {"name": "catalog_lookup_miss_is_not_none", "catalog_states": ["NONE", "UNKNOWN"], "forbidden_result": "NONE"},
     {"name": "name_or_role_is_not_input", "forbidden_inputs": ["basv_prefix", "vrc_prefix", "display_name", "per_device_role"]}
+  ],
+  "catalog_classifier": [
+    {"name": "incomplete_enrichment_regulator_is_present", "part_number": "PN-REG", "catalog_record": {"part_number": "PN-REG", "role": "rEgUlAtOr", "brand": "", "family": "", "product_model": ""}, "result": "PRESENT"},
+    {"name": "thermostat_is_present_case_insensitively", "part_number": "PN-THERM", "catalog_record": {"part_number": "PN-THERM", "role": "THERMOSTAT", "brand": "", "family": "", "product_model": ""}, "result": "PRESENT"},
+    {"name": "known_other_role_is_none", "part_number": "PN-BOILER", "catalog_record": {"part_number": "PN-BOILER", "role": "Boiler", "brand": "", "family": "", "product_model": ""}, "result": "NONE"},
+    {"name": "roleless_row_is_unknown", "part_number": "PN-ROLELESS", "catalog_record": {"part_number": "PN-ROLELESS", "role": "  ", "brand": "", "family": "", "product_model": ""}, "result": "UNKNOWN"},
+    {"name": "missing_catalog_row_is_unknown", "part_number": "PN-MISSING", "catalog_record": null, "result": "UNKNOWN"},
+    {"name": "missing_part_number_is_unknown", "part_number": "  ", "catalog_record": {"part_number": "PN-REG", "role": "Regulator", "brand": "", "family": "", "product_model": ""}, "result": "UNKNOWN"}
   ]
 }

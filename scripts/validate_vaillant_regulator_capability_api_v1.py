@@ -24,10 +24,11 @@ EXPECTED_MANIFEST_KEYS = {
     "precedence",
     "defaults",
     "consumer_constraints",
+    "catalog_classifier",
     "scope",
     "sources",
 }
-EXPECTED_CASES_KEYS = {"schema_version", "positive", "negative"}
+EXPECTED_CASES_KEYS = {"schema_version", "positive", "negative", "catalog_classifier"}
 EXPECTED_CONSUMER_CONSTRAINT_KEYS = {
     "forbidden_inference_inputs",
     "absence_grace_part_of_field",
@@ -51,6 +52,20 @@ EXPECTED_SCOPE = {
     "gateway_wide": False,
     "cross_protocol": False,
 }
+EXPECTED_CATALOG_CLASSIFIER = {
+    "contract_status": "target_ebusreg_169",
+    "evidence_status": "unknown_pending_implementation",
+    "capability_index_row": "nonempty_normalized_part_number_and_role",
+    "enrichment_index": "distinct_richer_metadata_index",
+    "controller_roles": ["Regulator", "Thermostat"],
+    "role_match": "case_insensitive",
+    "present": "known_capability_index_row_with_controller_role",
+    "none": "known_capability_index_row_with_other_nonempty_role",
+    "unknown": ["missing_part_number", "missing_catalog_row", "roleless_catalog_row"],
+    "classification": "read_only",
+    "does_not_admit": ["profile", "b524", "routing", "control"],
+    "does_not_bypass_issue": 167,
+}
 EXPECTED_PRECEDENCE = {
     "present": "any_vaillant_identity_catalog_classified_regulator",
     "none": "at_least_one_detected_vaillant_identity_and_every_detected_identity_catalog_known_non_regulator",
@@ -73,8 +88,9 @@ EXPECTED_SOURCES = {
         "historical_controller_capability_merge": "ad503214d698ee5a0c58da2ce637a54dd714409b",
         "issue": 97,
         "pull_request": 98,
+        "capability_role_policy_issue": 169,
     },
-    "documentation_issue": 511,
+    "documentation_issue": 532,
     "consumer": {
         "repository": "Project-Helianthus/helianthus-ha-integration",
         "issue": 101,
@@ -94,6 +110,14 @@ EXPECTED_NEGATIVE_CASES = [
     {"name": "no_identity_is_not_none", "catalog_states": [], "forbidden_result": "NONE"},
     {"name": "catalog_lookup_miss_is_not_none", "catalog_states": ["NONE", "UNKNOWN"], "forbidden_result": "NONE"},
     {"name": "name_or_role_is_not_input", "forbidden_inputs": ["basv_prefix", "vrc_prefix", "display_name", "per_device_role"]},
+]
+EXPECTED_CATALOG_CLASSIFIER_CASES = [
+    {"name": "incomplete_enrichment_regulator_is_present", "part_number": "PN-REG", "catalog_record": {"part_number": "PN-REG", "role": "rEgUlAtOr", "brand": "", "family": "", "product_model": ""}, "result": "PRESENT"},
+    {"name": "thermostat_is_present_case_insensitively", "part_number": "PN-THERM", "catalog_record": {"part_number": "PN-THERM", "role": "THERMOSTAT", "brand": "", "family": "", "product_model": ""}, "result": "PRESENT"},
+    {"name": "known_other_role_is_none", "part_number": "PN-BOILER", "catalog_record": {"part_number": "PN-BOILER", "role": "Boiler", "brand": "", "family": "", "product_model": ""}, "result": "NONE"},
+    {"name": "roleless_row_is_unknown", "part_number": "PN-ROLELESS", "catalog_record": {"part_number": "PN-ROLELESS", "role": "  ", "brand": "", "family": "", "product_model": ""}, "result": "UNKNOWN"},
+    {"name": "missing_catalog_row_is_unknown", "part_number": "PN-MISSING", "catalog_record": None, "result": "UNKNOWN"},
+    {"name": "missing_part_number_is_unknown", "part_number": "  ", "catalog_record": {"part_number": "PN-REG", "role": "Regulator", "brand": "", "family": "", "product_model": ""}, "result": "UNKNOWN"},
 ]
 
 
@@ -131,6 +155,25 @@ def resolve(states: list[str]) -> str:
     raise ValidationError(f"unsupported catalog state sequence: {states!r}")
 
 
+def resolve_catalog_classifier(part_number: str, record: object) -> str:
+    if not isinstance(part_number, str):
+        raise ValidationError(f"invalid part number: {part_number!r}")
+    normalized_part_number = part_number.strip()
+    if not normalized_part_number or record is None:
+        return "UNKNOWN"
+    if not isinstance(record, dict):
+        raise ValidationError(f"invalid catalog record: {record!r}")
+    record_part_number = record.get("part_number")
+    role = record.get("role")
+    if not isinstance(record_part_number, str) or not isinstance(role, str):
+        raise ValidationError(f"invalid catalog record: {record!r}")
+    if record_part_number.strip() != normalized_part_number or not role.strip():
+        return "UNKNOWN"
+    if role.strip().casefold() in {"regulator", "thermostat"}:
+        return "PRESENT"
+    return "NONE"
+
+
 def validate(manifest: dict, cases: dict) -> list[str]:
     errors: list[str] = []
     if set(manifest) != EXPECTED_MANIFEST_KEYS:
@@ -155,6 +198,8 @@ def validate(manifest: dict, cases: dict) -> list[str]:
         errors.append("precedence")
     if manifest.get("scope") != EXPECTED_SCOPE:
         errors.append("scope")
+    if manifest.get("catalog_classifier") != EXPECTED_CATALOG_CLASSIFIER:
+        errors.append("catalog_classifier")
     defaults = manifest.get("defaults")
     if not isinstance(defaults, dict) or set(defaults.values()) != {"UNKNOWN"} or set(defaults) != {"provider_unwired", "provider_failure", "missing_or_older_gateway_field"}:
         errors.append("defaults")
@@ -188,6 +233,19 @@ def validate(manifest: dict, cases: dict) -> list[str]:
         for case in negative:
             if "forbidden_result" in case and resolve(case.get("catalog_states", [])) == case["forbidden_result"]:
                 errors.append("negative_case_result")
+                break
+    catalog_classifier_cases = cases.get("catalog_classifier")
+    if catalog_classifier_cases != EXPECTED_CATALOG_CLASSIFIER_CASES:
+        errors.append("catalog_classifier_cases")
+    else:
+        for case in catalog_classifier_cases:
+            try:
+                result = resolve_catalog_classifier(case["part_number"], case["catalog_record"])
+            except (KeyError, ValidationError):
+                errors.append("catalog_classifier_case_result")
+                break
+            if result != case["result"]:
+                errors.append("catalog_classifier_case_result")
                 break
     return errors
 
