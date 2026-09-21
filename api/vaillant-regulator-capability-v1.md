@@ -1,10 +1,10 @@
 # Vaillant Regulator Capability API V1
 
-**Status:** Target additive public contract. The reviewed implementation
-candidate is [helianthus-ebusgateway#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947),
+**Status:** Accepted additive public contract. The implementation merged through
+[helianthus-ebusgateway#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947),
 which owns [gateway issue #946](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/946).
-PR #947 remains open; this page is not a claim that the implementation is
-merged or deployed.
+Merge status is repository evidence only; this page makes no deployment or live
+qualification claim.
 
 This contract publishes one Vaillant catalog-derived eBUS capability for consumers. It
 does not expose product catalog rows, device roles, native frames, or a
@@ -68,20 +68,48 @@ The separate regulator absence-grace lifecycle from gateway #194/#212 is not
 part of this field. Consumers that handle `NONE` and `UNKNOWN` identically do
 not need a settled-removal signal.
 
+## Catalog capability classification
+
+**Contract status:** Normative target for `helianthus-ebusreg` issue #169.
+**Evidence status:** `Unknown` until an accepted implementation of #169 provides
+matching repository evidence. This section does not claim that current accepted
+registry code already satisfies the target.
+
+`ControllerCapability` MUST remain a read-only catalog classification owned by
+`helianthus-ebusreg`. Its capability index MUST include every catalog row whose
+normalized `part_number` and `role` are both nonempty. It does not require
+`brand`, `family`, `product_model`, notes, or any other enrichment metadata.
+That capability index MUST remain distinct from the enrichment index, which may
+require richer metadata for identity presentation and product enrichment.
+
+The controller-role vocabulary is closed and case-insensitive:
+
+- `Regulator` and `Thermostat` classify as `PRESENT`.
+- A known row with another nonempty role classifies as `NONE`.
+- A missing part number, no matching catalog row, or a roleless row classifies
+  as `UNKNOWN`.
+
+This classification MUST remain read-only. It neither admits a profile nor proves B524
+capability, routing eligibility, or control authority. In particular, it does
+not bypass the direct controller-qualification evidence required by
+[ebusreg#167](https://github.com/Project-Helianthus/helianthus-ebusreg/issues/167).
+
 ## Evidence and ownership
 
 The defining gateway revision is
 [`76d66a60b2895b3392bba798a5f690a1d73daa1f`](https://github.com/Project-Helianthus/helianthus-ebusgateway/commit/76d66a60b2895b3392bba798a5f690a1d73daa1f),
-the independently reviewed head of open gateway
+the independently reviewed source head of merged gateway
 [#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947).
-Its review returned `NO_BLOCKING_FINDINGS`; #947 remains open and the
-coordinated documentation gate must be accepted before it merges.
+Its review returned `NO_BLOCKING_FINDINGS`; the original coordinated
+documentation gate was accepted through closed issue
+[#511](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/511).
 It uses accepted `helianthus-ebusreg`
 [`e24532a50caa00c113751b98b88239e045d731e8`](https://github.com/Project-Helianthus/helianthus-ebusreg/commit/e24532a50caa00c113751b98b88239e045d731e8)
 and retains the historical `ControllerCapability` dependency introduced by
 [ebusreg#97](https://github.com/Project-Helianthus/helianthus-ebusreg/issues/97)
 through [#98](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/98)
-at `ad503214d698ee5a0c58da2ce637a54dd714409b`.
+at `ad503214d698ee5a0c58da2ce637a54dd714409b`. The catalog role-policy
+clarification is owned by [ebusreg#169](https://github.com/Project-Helianthus/helianthus-ebusreg/issues/169).
 
 Gateway [#193](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/193)
 through [#211](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/211)
@@ -90,7 +118,7 @@ established catalog-only derivation. Gateway
 through [#212](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/212)
 owns re-detection and absence grace; gateway [#947](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/947)
 implements this additive public projection. This documentation issue is
-[#511](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/511);
+[#532](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/532);
 the first consumer is Home Assistant
 [#101](https://github.com/Project-Helianthus/helianthus-ha-integration/issues/101).
 

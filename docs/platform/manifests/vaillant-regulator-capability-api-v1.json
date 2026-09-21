@@ -33,6 +33,20 @@
     "absence_grace_part_of_field": false,
     "none_and_unknown_need_settled_removal_signal": false
   },
+  "catalog_classifier": {
+    "contract_status": "target_ebusreg_169",
+    "evidence_status": "unknown_pending_implementation",
+    "capability_index_row": "nonempty_normalized_part_number_and_role",
+    "enrichment_index": "distinct_richer_metadata_index",
+    "controller_roles": ["Regulator", "Thermostat"],
+    "role_match": "case_insensitive",
+    "present": "known_capability_index_row_with_controller_role",
+    "none": "known_capability_index_row_with_other_nonempty_role",
+    "unknown": ["missing_part_number", "missing_catalog_row", "roleless_catalog_row"],
+    "classification": "read_only",
+    "does_not_admit": ["profile", "b524", "routing", "control"],
+    "does_not_bypass_issue": 167
+  },
   "scope": {
     "protocol_vendor": "vaillant",
     "gateway_wide": false,
@@ -50,9 +64,10 @@
       "revision": "e24532a50caa00c113751b98b88239e045d731e8",
       "historical_controller_capability_merge": "ad503214d698ee5a0c58da2ce637a54dd714409b",
       "issue": 97,
-      "pull_request": 98
+      "pull_request": 98,
+      "capability_role_policy_issue": 169
     },
-    "documentation_issue": 511,
+    "documentation_issue": 532,
     "consumer": {
       "repository": "Project-Helianthus/helianthus-ha-integration",
       "issue": 101
