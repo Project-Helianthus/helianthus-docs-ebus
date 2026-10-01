@@ -134,9 +134,9 @@ away from B509.
 | `state.dhwTemperatureC` | `GG=0x01, RR=0x0005` | `f32` | Mirrored from DHW group on BASV2 |
 | `state.dhwTargetTemperatureC` | `GG=0x01, RR=0x0004` | `f32` | Mirrored from DHW group on BASV2 |
 | `config.dhwOperatingMode` | `GG=0x01, RR=0x0003` | `u16 -> enum string` | Published as decoded GraphQL string |
-| `state.flowTemperatureC` | `OP=0x06, GG=0x00, RR=0x0015` | `f32` | **Hypothesis:** independent protocol evidence is required for this interpretation. |
-| `diagnostics.activeErrors` | `OP=0x06, GG=0x00, RR=0x0012` | `u8 raw` | **Hypothesis:** independent protocol evidence is required for this interpretation. |
 | `diagnostics.heatingStatusRaw` | `GG=0x02, II=0x00, RR=0x001B` | `u16` | Controller mirror of circuit/heating status |
+
+**Hypothesis:** independent protocol evidence is required for this interpretation.
 
 Fields currently present in the GraphQL/MCP schema but not populated from a validated direct B509 mapping:
 - `state.returnTemperatureC`

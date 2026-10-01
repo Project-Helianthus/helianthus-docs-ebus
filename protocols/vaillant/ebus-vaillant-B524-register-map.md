@@ -86,9 +86,9 @@ Source: BASV2 constraint probe + live scan corpus.
 | Group | Opcode | Instance Max | Register Max | Scan Observed Max | Notes |
 |-------|--------|-------------|-------------|-------------------|-------|
 | 0x00 | 0x02 (local) | 0x00 | 0x00A2 | **0x00FF** | System/Regulator. Singleton. **Note**: scan shows 179 registers extending to 0x00FF.stale profile |
-| 0x00 | 0x06 (controller-side remote) | slot-scoped (`II`) | 0x0015 | documented `0x0012`, `0x0015` | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x01 | 0x06 (controller-side remote) | slot-scoped (`II`) | 0x0015 | **Hypothesis:** independent protocol evidence is required for this interpretation. | **Hypothesis:** independent protocol evidence is required for this interpretation. |
 | 0x01 | 0x02 (local) | 0x00 | 0x0011 | **0x0013** | DHW. Singleton. 4 undocumented registers 0x0007-0x0013. stale profile |
-| 0x01 | 0x06 (controller-side remote) | slot-scoped (`II`) | model pending | selector set identified | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x02 | 0x06 (controller-side remote) | slot-scoped (`II`) | model pending | **Hypothesis:** independent protocol evidence is required for this interpretation. | **Hypothesis:** independent protocol evidence is required for this interpretation. |
 | 0x02 | 0x02 (local) | 0x0A | 0x0025 | 0x0025 | Heating circuits. **Note**: scan confirms 26 regs/instance extending to 0x0025.stale profile |
 | 0x03 | 0x02 (local) | 0x0A | 0x002F | **0x002E** | Zones. Scan confirms 38 regs/instance. Profile accurate |
 | 0x04 | 0x02 (local) | 0x00 | 0x000B | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
@@ -174,7 +174,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0045 | esco_block_function | C | u16 | enum | — | — | values unknown | — | |
 | 0x0046 | hwc_max_flow_temp_desired | C | f32 | °C | HwcMaxFlowTempDesired | — | — | — | 15..80 per TSP |
 | 0x0048 | energy_manager_state | S | u16 | enum | — | — | `0=standby 1=heating 2=cooling 3=dhw` | — | **Hypothesis:** independent protocol evidence is required for this interpretation. |
-| 0x004B | system_flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | Read-only. Do not conflate with B509 boiler flow temperature or the controller-side `OP=0x06 GG=0x00 RR=0x0015` mirror |
+| 0x004B | system_flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | Read-only. Do not conflate with B509 boiler flow temperature or the controller-side `OP=0x06 GG=0x01 RR=0x0015` heat-source status selector |
 | 0x004D | multi_relay_setting | C | u16 | enum | MultiRelaySetting | — | →mamode | — | |
 | 0x004E | fuel_consumption_heating_this_month | E | u32 | kWh | PrFuelSumHcThisMonth | — | — | — | |
 | 0x004F | energy_consumption_heating_this_month | E | u32 | kWh | PrEnergySumHcThisMonth | — | — | — | |
@@ -343,10 +343,10 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_stat
 
 ---
 
-## GG=0x00 — Primary Heat Sources (opcode 0x06)
+## GG=0x01 — Primary Heat Sources (opcode 0x06)
 
 All registers in this section use opcode `0x06`. `II` selects the heat-generator
-slot, so the meaningful selector is `(0x06, 0x00, II, RR)`, not `GG=0x00`
+slot, so the meaningful selector is `(0x06, 0x01, II, RR)`, not `GG=0x01`
 alone. Slot availability/probing is a precondition for interpreting this
 selector set: empty or unresolved slots must not be decoded as live primary
 heat-source data.
@@ -355,12 +355,12 @@ heat-source data.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0012 | active_errors | S | u8 | raw | — | — | `0=no active error` | available primary heat-source slot | **Hypothesis:** independent protocol evidence is required for this interpretation. |
-| 0x0015 | flow_temperature | S | f32 | °C | — | — | — | available primary heat-source slot | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x0012 | heatgen_error | S | unknown | unknown | — | — | unknown | available primary heat-source slot | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x0015 | heatgen_status | S | unknown | unknown | — | — | unknown | available primary heat-source slot | **Hypothesis:** independent protocol evidence is required for this interpretation. |
 
 ---
 
-## GG=0x01 — Secondary Heat Sources (opcode 0x06)
+## GG=0x02 — Secondary Heat Sources (opcode 0x06)
 
 All registers in this selector set use opcode `0x06`, with `II` selecting the
 secondary heat-source slot. This selector set is documented separately from local DHW
@@ -370,8 +370,7 @@ path for secondary sources such as solar-facing contributors.
 Current canon status:
 
 - **Hypothesis:** independent protocol evidence is required for this interpretation.
-- slot count is controller-model dependent (2 or 8 in the current analysis
-  corpus)
+- **Hypothesis:** independent protocol evidence is required for this interpretation.
 - detailed register canon remains pending live validation
 - no additional raw enum/bitmask semantics are inferred here
 

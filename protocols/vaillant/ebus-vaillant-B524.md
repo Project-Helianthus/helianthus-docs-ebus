@@ -467,9 +467,9 @@ Directory probe descriptor values observed on VRC720-class targets:
 
 ```text
 GG   Descriptor(s)  Typical opcode  Notes
-0x00 3.0            0x02            singleton local system selector set; OP=0x06 GG=0x00 does NOT exist
+0x00 3.0            0x02            singleton local system selector set ; unqualified interpretation
 0x01 3.0            0x02            singleton local DHW selector set ; unqualified interpretation
-0x02 1.0            0x02            instanced
+0x02 1.0            0x02            instanced local selector set ; unqualified interpretation
 0x03 1.0            0x02            instanced
 0x04 6.0 / 5.0      0x02            model-dependent
 0x05 1.0 / absent   0x02            model-/system-dependent
