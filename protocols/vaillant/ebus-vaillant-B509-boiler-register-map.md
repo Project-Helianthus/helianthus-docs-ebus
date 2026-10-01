@@ -134,9 +134,15 @@ away from B509.
 | `state.dhwTemperatureC` | `GG=0x01, RR=0x0005` | `f32` | Mirrored from DHW group on BASV2 |
 | `state.dhwTargetTemperatureC` | `GG=0x01, RR=0x0004` | `f32` | Mirrored from DHW group on BASV2 |
 | `config.dhwOperatingMode` | `GG=0x01, RR=0x0003` | `u16 -> enum string` | Published as decoded GraphQL string |
-| `state.flowTemperatureC` | `OP=0x06, GG=0x00, RR=0x0015` | `f32` | Controller-side primary heat-source mirror / fallback candidate, corroborated by analiza ISC Smartconnect KNX. B509 `0x1800` remains authoritative |
-| `diagnostics.activeErrors` | `OP=0x06, GG=0x00, RR=0x0012` | `u8 raw` | Controller-side primary heat-source provenance. `0=no active error`; non-zero semantics remain pending validation. Corroborated by analiza ISC Smartconnect KNX |
 | `diagnostics.heatingStatusRaw` | `GG=0x02, II=0x00, RR=0x001B` | `u16` | Controller mirror of circuit/heating status |
+
+Static ISC smartConnect KNX firmware also identifies B524 `OP=0x06`,
+`GG=0x01/0x02`, `RR=0x0015` as HeatgenStatus and `RR=0x0012` as HeatgenError.
+Neither is a qualified boiler-flow fallback or raw error value in the current
+Helianthus runtime; the B524 reply codecs are unknown. Direct B509 `0x1800`
+remains the flow-temperature source. See the
+[B524 register map](./ebus-vaillant-B524-register-map.md#gg0x01--primary-heat-sources-opcode-0x06)
+for the pinned firmware source and evidence limits.
 
 Fields currently present in the GraphQL/MCP schema but not populated from a validated direct B509 mapping:
 - `state.returnTemperatureC`
