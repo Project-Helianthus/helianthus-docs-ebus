@@ -84,9 +84,10 @@ vector deliberately has distinct receipt and evaluation values (`R != E`).
 
 ### Native boundaries and non-claims
 
-- `OP=0x06, GG=0x00, RR=0x0015` is a different controller-side primary
-  heat-source mirror and is not a substitute for `OP=0x02, GG=0x00,
-  RR=0x004B`.
+- `OP=0x06, GG=0x01, RR=0x0015` is a separate controller-side primary
+  heat-generator status selector. Its value layout and flow-temperature
+  interpretation remain unverified; it is not a substitute for
+  `OP=0x02, GG=0x00, RR=0x004B`.
 - B509 is a different `PB/SB` service family and is not evidence for either
   B524 row. The B509 boiler flow-temperature path remains separately owned.
 - The rows do not establish a write route, operation authority, topology,
@@ -187,9 +188,17 @@ The B524 contribution that still feeds the current boiler semantic contract is:
 | `state.dhwTemperatureC` | GG=0x01, RR=0x0005 | f32 | Controller mirror from DHW group |
 | `state.dhwTargetTemperatureC` | GG=0x01, RR=0x0004 | f32 | Controller mirror from DHW group |
 | `config.dhwOperatingMode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
-| `state.flowTemperatureC` | OP=0x06, GG=0x00, RR=0x0015 | f32 | Controller-side primary heat-source mirror. B509 remains authoritative |
-| `diagnostics.activeErrors` | OP=0x06, GG=0x00, RR=0x0012 | u8 (raw) | Controller-side primary heat-source error mirror. `0=no active error`; non-zero semantics remain pending validation |
 | `diagnostics.heatingStatusRaw` | GG=0x02, II=0x00, RR=0x001B | u16 | Controller-side raw heating status |
+
+The static ISC smartConnect KNX heat-generator path additionally constructs
+`OP=0x06, GG=0x01/0x02, RR=0x0015` (HeatgenStatus) and `RR=0x0012`
+(HeatgenError), selecting the group per available slot. Their native reply
+layouts remain unknown. They are **withheld from this boiler semantic mapping**:
+the current `refreshBoilerStatus()` does not read these selectors, and the KNX
+firmware does not qualify either as `state.flowTemperatureC` or a raw
+`diagnostics.activeErrors` value. See the
+[B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x01--primary-heat-sources-opcode-0x06)
+for the pinned firmware source and static-only evidence boundary.
 
 Fields currently present in the schema but not populated from a validated source:
 - `state.returnTemperatureC`

@@ -112,7 +112,7 @@ Register responses are classified into four wire-level states:
 
 These notes are scanner/register-map behaviors implemented in the VRC Explorer repository only. They are observational and do not replace the operation-first identity contract above.
 
-1. **OP `0x06` generic device-header registers** (`RR=0x0001..0x0004`) are mapped experimentally. Group-specific rows (e.g., GG `0x09`/`0x0A` radio fields) remain authoritative when present; wildcard header rows are fallback only. On BASV2, the remote heat-source groups are 1-indexed (`GG=0x01` = primary, `GG=0x02` = secondary). `GG=0x00` remains local-only on BASV2 and should not be scanned as a remote operation.
+1. **OP `0x06` generic device-header registers** (`RR=0x0001..0x0004`) are mapped experimentally. Group-specific rows (e.g., GG `0x09`/`0x0A` radio fields) remain authoritative when present; wildcard header rows are fallback only. Static ISC smartConnect KNX firmware probes heat-generator slots under `GG=0x01` (primary), then `GG=0x02` (secondary) if unavailable. It does not probe `GG=0x00` on that path. This is not evidence that all `OP=0x06, GG=0x00` selectors are absent; treat that namespace as uncharacterized when deciding a device-specific scan profile.
 
 2. **GG=0x09 is dual-use by operation.** OP `0x02`: local control/write-path registers (e.g., quick-mode write target). OP `0x06`: remote radio-device inventory/status registers. GG identity must never be merged across operations.
 
@@ -143,7 +143,7 @@ Per-(OP, GG) rules determine scanning behavior:
 
 Known characterized groups per operation:
 - **OP=0x02:** GG=0x00 through 0x05, 0x08, 0x09 (all characterized).
-- **OP=0x06:** GG=0x00, 0x01, 0x08, 0x09, 0x0A, 0x0C (device slot registers).
+- **OP=0x06:** GG=0x01, 0x02, 0x08, 0x09, 0x0A, 0x0C (characterized device slot registers); GG=0x00 remains uncharacterized outside the KNX heat-generator path.
 
 ### `full`
 

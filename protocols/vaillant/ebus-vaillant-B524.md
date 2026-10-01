@@ -205,7 +205,7 @@ Rules:
 | Opcode | Selector family | Documented selector sets | Notes |
 |--------|-----------------|-------------------------------|-------|
 | `0x02` | Local controller selector family | `GG=0x00..0x05`, `GG=0x08`, `GG=0x09`, `GG=0x0A` | Controller-local registers and per-slot configuration |
-| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | Opcode-scoped selector sets used for live remote data, controller-mediated slot data, and instanced heat-source paths corroborated by analiza ISC Smartconnect KNX. `GG=0x00` does not exist under OP=0x06 |
+| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | Opcode-scoped selector sets. Static ISC smartConnect KNX firmware corroborates the `GG=0x01/0x02` heat-generator path; `GG=0x00` remains uncharacterized outside that path |
 
 **Selector rule:** `GG` labels are local to the opcode-selected selector set. A
 shared `GG` byte value across different opcodes has no standalone semantic
@@ -216,11 +216,10 @@ Explicit examples:
 - `GG=0x00 + OP=0x02` = local system/settings selector set.
 - `GG=0x01 + OP=0x02` = local DHW selector set.
 - `GG=0x01 + OP=0x06` = controller-side primary heating source slots
-  (gas burners, heat pumps, and similar primary generators), corroborated by
-  analiza ISC Smartconnect KNX. Note: `GG=0x00 + OP=0x06` does not exist.
-- `GG=0x02 + OP=0x06` = controller-side secondary heating source slots
-  (for example solar-facing secondary sources), corroborated by analiza ISC
-  Smartconnect KNX.
+  in the static ISC smartConnect KNX heat-generator path. That path does not
+  select `GG=0x00`; no global absence claim follows.
+- `GG=0x02 + OP=0x06` = controller-side secondary heating source fallback
+  for an unavailable primary slot in the static ISC smartConnect KNX path.
 - `OP=0x02, GG=0x08/0x09/0x0A` and `OP=0x06, GG=0x08/0x09/0x0A` are distinct
   documented selector spaces with different meanings and register layouts.
 
@@ -392,7 +391,8 @@ Addressing notes:
 - `0x06` is a separate opcode-scoped controller-mediated selector family. It is used
   for several remote families, including device slot data, controller-side
   primary heating source slots (`GG=0x01`), and controller-side secondary
-  heating source slots (`GG=0x02`), corroborated by analiza ISC Smartconnect KNX.
+  heating source slots (`GG=0x02`) in the
+  [pinned static ISC smartConnect KNX firmware](./ebus-vaillant-B524-register-map.md#sources).
 - The selector meaning is always keyed on `(opcode, GG, II, RR)`, not on `GG`
   alone.
 
@@ -474,9 +474,9 @@ Directory probe descriptor values observed on VRC720-class targets:
 
 ```text
 GG   Descriptor(s)  Typical opcode  Notes
-0x00 3.0            0x02            singleton local system selector set; OP=0x06 GG=0x00 does NOT exist
-0x01 3.0            0x02            singleton local DHW selector set; OP=0x06 GG=0x01 is primary heating sources (ISC KNX)
-0x02 1.0            0x02            instanced
+0x00 3.0            0x02            singleton local system selector set; GG=0x00 is absent from the static KNX OP=0x06 heat-generator path
+0x01 3.0            0x02            singleton local DHW selector set; OP=0x06 GG=0x01 is primary heating sources (static ISC KNX)
+0x02 1.0            0x02            instanced local selector set; OP=0x06 GG=0x02 is secondary heating sources (static ISC KNX)
 0x03 1.0            0x02            instanced
 0x04 6.0 / 5.0      0x02            model-dependent
 0x05 1.0 / absent   0x02            model-/system-dependent

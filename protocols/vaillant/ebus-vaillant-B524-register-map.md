@@ -61,9 +61,10 @@ This is the register catalog for B524. For the protocol specification (wire form
 `OP=0x02, GG=0x01` are the singleton local selector sets for system/settings
 and DHW. Separately, `OP=0x06, GG=0x01` and `OP=0x06, GG=0x02` are instanced
 controller-side selector sets for primary and secondary heating sources
-respectively. `OP=0x06, GG=0x00` does not exist. Slot count is
-controller-model dependent: some systems cap at 2, newer ones at 8,
-corroborated by analiza ISC Smartconnect KNX.
+respectively. `GG=0x00` is absent from the static KNX heat-generator path;
+this does not establish its universal absence under `OP=0x06`. The pinned
+ISC smartConnect KNX firmware constructs eight heat-generator slot objects;
+that does not establish the populated slots or other models' limits.
 
 **GG=0x08 — Buffer/Solar Cylinder 2:** The documented selector spaces are
 `OP=0x02, GG=0x08` for 7 local singleton registers and `OP=0x06, GG=0x08` for
@@ -92,9 +93,9 @@ Source: BASV2 constraint probe + live scan corpus.
 | Group | Opcode | Instance Max | Register Max | Scan Observed Max | Notes |
 |-------|--------|-------------|-------------|-------------------|-------|
 | 0x00 | 0x02 (local) | 0x00 | 0x00A2 | **0x00FF** | System/Regulator. Singleton. **Note**: scan shows 179 registers extending to 0x00FF.stale profile |
-| 0x00 | 0x06 (controller-side remote) | slot-scoped (`II`) | 0x0015 | documented `0x0012`, `0x0015` | Primary heat-source path. Slot count is model-dependent (2 or 8 in the current analysis corpus). Availability probing is a precondition for meaningful interpretation. Corroborated by analiza ISC Smartconnect KNX |
+| 0x01 | 0x06 (controller-side remote) | slot-scoped (`II`) | 0x0015 | static KNX `0x0001`, `0x0012`, `0x0015` | Primary heat-source path in the pinned KNX firmware. Availability probing is a precondition for meaningful interpretation; no live SensoNET response established |
 | 0x01 | 0x02 (local) | 0x00 | 0x0011 | **0x0013** | DHW. Singleton. 4 undocumented registers 0x0007-0x0013. stale profile |
-| 0x01 | 0x06 (controller-side remote) | slot-scoped (`II`) | model pending | selector set identified | Secondary heat-source path. Slot count is model-dependent (2 or 8 in the current analysis corpus). Detailed register canon remains pending live validation. Corroborated by analiza ISC Smartconnect KNX |
+| 0x02 | 0x06 (controller-side remote) | slot-scoped (`II`) | model pending | static KNX `0x0001`, `0x0012`, `0x0015` | Secondary heat-source fallback in the pinned KNX firmware. Detailed register canon and live SensoNET response remain unverified |
 | 0x02 | 0x02 (local) | 0x0A | 0x0025 | 0x0025 | Heating circuits. **Note**: scan confirms 26 regs/instance extending to 0x0025.stale profile |
 | 0x03 | 0x02 (local) | 0x0A | 0x002F | **0x002E** | Zones. Scan confirms 38 regs/instance. Profile accurate |
 | 0x04 | 0x02 (local) | 0x00 | 0x000B | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
@@ -180,7 +181,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0045 | esco_block_function | C | u16 | enum | — | — | values unknown | — | |
 | 0x0046 | hwc_max_flow_temp_desired | C | f32 | °C | HwcMaxFlowTempDesired | — | — | — | 15..80 per TSP |
 | 0x0048 | energy_manager_state | S | u16 | enum | — | — | `0=standby 1=heating 2=cooling 3=dhw` | — | Single raw enum projected into multiple system-status views. `heating+cooling` is only a possible combined state presentation; its raw numeric encoding remains pending validation. ISC KNX Smart maps 5 COs to this register via application-level bitfield extraction (outdoor temp, flow temp, return temp, pressure, energy mgr state as boolean sub-fields); those values are commonly read from dedicated registers instead |
-| 0x004B | system_flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | Read-only. Do not conflate with B509 boiler flow temperature or the controller-side `OP=0x06 GG=0x00 RR=0x0015` mirror |
+| 0x004B | system_flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | Read-only. Do not conflate with B509 boiler flow temperature or the controller-side `OP=0x06 GG=0x01 RR=0x0015` heat-source status selector |
 | 0x004D | multi_relay_setting | C | u16 | enum | MultiRelaySetting | — | →mamode | — | |
 | 0x004E | fuel_consumption_heating_this_month | E | u32 | kWh | PrFuelSumHcThisMonth | — | — | — | |
 | 0x004F | energy_consumption_heating_this_month | E | u32 | kWh | PrEnergySumHcThisMonth | — | — | — | |
@@ -349,28 +350,32 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_stat
 
 ---
 
-## GG=0x00 — Primary Heat Sources (opcode 0x06)
+## GG=0x01 — Primary Heat Sources (opcode 0x06)
 
 All registers in this section use opcode `0x06`. `II` selects the heat-generator
-slot, so the meaningful selector is `(0x06, 0x00, II, RR)`, not `GG=0x00`
+slot, so the meaningful selector is `(0x06, 0x01, II, RR)`, not `GG=0x01`
 alone. Slot availability/probing is a precondition for interpreting this
 selector set: empty or unresolved slots must not be decoded as live primary
 heat-source data.
 
-This controller-side primary heat-source path is documented conservatively and is
-corroborated by analiza ISC Smartconnect KNX. That analysis indicates a
-controller-model-dependent slot count: some systems expose up to 2 primary
-sources, newer ones up to 8. The full slot matrix remains pending live
-validation and is not canonized here.
+Static ISC smartConnect KNX firmware selects `GG=0x01` for an available
+heat-generator slot and tries `GG=0x02` if the first probe is unavailable.
+Both availability probes use `RR=0x0001`. The firmware stores the selected
+group (`1`, `2`, or `0`) per slot and reuses it for HeatgenStatus (`RR=0x0015`)
+and HeatgenError (`RR=0x0012`). Its read constructor serializes
+`B5 24 06 00 GG II RRlo RRhi`. This is a static constructor and selection
+path, not a captured eBUS reply or observed SensoNET behavior. `GG=0x00`
+does not appear on this path. The full slot matrix and returned value layouts
+remain pending live validation.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0012 | active_errors | S | u8 | raw | — | — | `0=no active error` | available primary heat-source slot | Observed value `0` means no active error. Exact semantics for non-zero values remain unvalidated. Do not infer enum or bitmask from the current corpus. Controller-side primary heat-source path, corroborated by analiza ISC Smartconnect KNX |
-| 0x0015 | flow_temperature | S | f32 | °C | — | — | — | available primary heat-source slot | Controller-side primary heat-source flow temperature mirror. Availability probing on the selected slot is a precondition for meaningful reads. Corroborated by analiza ISC Smartconnect KNX; broader slot coverage remains pending live validation |
+| 0x0012 | heatgen_error | S | unknown | unknown | — | — | unknown | available primary heat-source slot | The static KNX code consumes this object through a boolean reader (`first payload byte != 0`); it does not establish the native reply layout, `0=no active error`, or non-zero error details. Do not infer an enum or bitmask |
+| 0x0015 | heatgen_status | S | unknown | unknown | — | — | unknown | available primary heat-source slot | The static KNX code identifies a status object, not a proven scalar flow-temperature mirror. Availability probing is a precondition for a meaningful read |
 
 ---
 
-## GG=0x01 — Secondary Heat Sources (opcode 0x06)
+## GG=0x02 — Secondary Heat Sources (opcode 0x06)
 
 All registers in this selector set use opcode `0x06`, with `II` selecting the
 secondary heat-source slot. This selector set is documented separately from local DHW
@@ -379,9 +384,9 @@ path for secondary sources such as solar-facing contributors.
 
 Current canon status:
 
-- selector-set identity is corroborated by analiza ISC Smartconnect KNX
-- slot count is controller-model dependent (2 or 8 in the current analysis
-  corpus)
+- selector-set identity is corroborated by static ISC smartConnect KNX firmware analysis
+- the pinned KNX firmware constructs eight slot objects; populated slots and
+  other models' limits are unqualified
 - detailed register canon remains pending live validation
 - no additional raw enum/bitmask semantics are inferred here
 
@@ -1083,4 +1088,14 @@ Asymmetric read/write paths:
 - **ebusd community TSP** (`15.ctlv2.tsp`) — Community-maintained register definitions. Highest authority for register-to-name mapping where coverage exists.
 - **myVaillant register map** — Value-matched mapping against myPyllant cloud API. NOT a Vaillant-published source — carries false-positive risk where multiple registers share the same value (see [Mapping Conflicts](#mapping-conflicts)).
 - **VRC Explorer full group scans** — FLAGS byte verification for all groups.
-- **ISC KNX Smart analysis** — Firmware-level register identification (CO IDs, CSD classes).
+- **ISC smartConnect KNX firmware analysis** — [ise's published SMART CONNECT KNX
+  Vaillant firmware 2.1.50 archive](https://www.ise.de/fileadmin/content/files/produkte/SMART-CONNECT-KNX-Serie/Vaillant/other/1-0006-007_firmware_iseSmartConnectKNX_Vaillant_2.1.50.zip),
+  SHA-256 `842fd7b2443dd6a5548734cd0fe3a97bc222713af079ffa3c215caa051a21050`.
+  The ZIP member `opt/fwu/system_offline/opt/gira/lib/libiscvaillantapp.so.2.1.274a051c`
+  has SHA-256 `73c821db3cda7f299d97a92a7cb1313e075d65c17bdabb7daf8f0e4fdcc4f003`.
+  Static analysis follows `EBusProtocolPort01Read::InitReadValue`,
+  `ControllerSpecificDataDeviceAvailability::GetValue`, and
+  `ControllerSpecificDataHeatgen::GetValue` and its error counterpart. The
+  [vendor download page](https://www.ise.de/en/service/downloads) identifies
+  firmware version 2.1.50. This is static implementation evidence, not a
+  SensoNET capture or a validated device response.
