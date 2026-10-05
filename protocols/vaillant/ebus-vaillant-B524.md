@@ -64,22 +64,23 @@ WD      Weekday (u8, 0x00..0x06)
 FLAGS GG RR_LO RR_HI [value...]
 ```
 
-`FLAGS` is an access/writability byte:
+`FLAGS` is an observed two-bit reply attribute. The following bit interpretation
+comes from private static analysis and is a profile-specific inference; it is not
+a universal B524 wire contract or proof of live writability.
 
-| FLAGS | Bit 1 (writable) | Bit 0 (sub-cat) | Access | Category | Description |
-|-------|-------------------|------------------|--------|----------|-------------|
-| `0x00` | 0 | 0 | RO | State (volatile) | Changes frequently -- external pushes, counters |
-| `0x01` | 0 | 1 | RO | State (stable) | Computed outputs, sensor readings, properties |
-| `0x02` | 1 | 0 | RW | Config (technical) | Offsets, thresholds, numeric ranges |
-| `0x03` | 1 | 1 | RW | Config (user-facing) | Modes, schedules, names, setpoints |
+| Bit | Inferred meaning | Limit |
+|-----|------------------|-------|
+| 0 | visibility/category discriminator | It does not establish volatile or stable behavior. |
+| 1 | writable capability | A set bit does not authorize a write or establish that a target accepts one. |
 
-**Opcode-specific behavior:** Opcode 0x06 remote read (`OC=0x06, OT=0x00`) is heavily RO -- across all groups, remote access exposes far fewer writable registers. When it does allow writes, they are always FLAGS=0x02 (technical), never 0x03 (user-facing). All user-configurable settings are exclusively on the opcode 0x02 local path.
+The numeric value and the raw response must be retained. Do not assign public
+`volatile`, `stable`, `technical`, or `user-facing` semantics from `FLAGS` alone.
 
 Notes:
 - `II` is not echoed in the response.
 - **Short responses** (payload < 4 bytes) are **not** successful register reads. A single-byte `0x00` indicates wrong route, unsupported opcode, or group default -- ebusd reports `invalid position ... / 00`. Write operations may return short acknowledgements. Treat as not-a-register-value.
 - Correlation must retain request context (`GG/II/RR/opcode`).
-- Exception: the `0x01` constraint dictionary request is `01 GG RR` (no `II`), so correlation there is `GG/RR`.
+- Parameter descriptions retain their request identifier and full 16-bit register. The historical short `01 GG RR` probe is incomplete and must not provide input-validation authority.
 
 ### 2.3 Register response states
 
@@ -87,20 +88,20 @@ B524 register reads produce one of three distinct response states:
 
 | State | Wire manifestation | Meaning |
 |-------|-------------------|---------|
-| **Active** | ACK + FLAGS+GG+RR+VALUE (4+ bytes) | Register is functional, value bytes contain valid data |
-| **Dormant** | ACK + 0 bytes payload (NN=0) | Register exists on the device but is currently inactive -- the associated feature is not configured or not engaged |
-| **Absent** | NACK or timeout | Register does not exist on this device |
+| **Value reply** | ACK + FLAGS+GG+RR+VALUE (4+ bytes) | A correlated value-shaped reply; its semantic validity still needs a qualified codec. |
+| **Empty reply** | ACK + 0 bytes payload (NN=0) | An observed empty response. It may be feature-gated, unsupported, or otherwise profile-specific. |
+| **Negative/timeout** | NACK, transport error, or timeout | No qualifying value reply; this does not prove global register absence. |
 
-**NACK-or-CRC ambiguity:** When accessing B524 via transport-layer adapters (ebusd TCP `hex`, ENH), the adapter reports negative outcomes as a single error class. A true protocol-level NACK (the device explicitly rejected the request) and a CRC failure (corrupt frame on the wire) are indistinguishable in transport traces. Both present as "absent" in scan results. Scanners and analysis tools should classify these uniformly as `nack_or_crc` rather than asserting either cause. Only direct bus-level observation (raw frame capture with CRC verification) can disambiguate. For scanning purposes, the distinction is immaterial: the register is treated as absent regardless of the underlying cause.
+**NACK-or-CRC ambiguity:** When accessing B524 via transport-layer adapters (ebusd TCP `hex`, ENH), the adapter reports negative outcomes as a single error class. A true protocol-level NACK (the device explicitly rejected the request) and a CRC failure (corrupt frame on the wire) are indistinguishable in transport traces. Scanners and analysis tools should classify these uniformly as `nack_or_crc` rather than asserting either cause. Only direct bus-level observation (raw frame capture with CRC verification) can disambiguate. A scanner may use the outcome to bound a profile-local scan, but must retain it as non-qualification rather than proof of absence.
 
-The **dormant** state is feature-gated: the controller knows the register address but returns an empty payload because the prerequisite feature is off. Examples observed on BASV2:
+Some BASV2 observations correlate empty replies with a feature being inactive. They do not make an empty reply a universal feature-gated state:
 
 - `GG=0x00, RR=0x0006` (manual cooling days): dormant when VRC720 cooling is not configured
 - `GG=0x00, RR=0x0016` (system quick mode active flag): dormant when no system quick mode is engaged
 - `GG=0x00, RR=0x0074` (system quick mode value): dormant when no system quick mode is engaged
 - `GG=0x00, RR=0x00DA/0x00DB` (manual cooling dates): responsive with BCD defaults in one scan, dormant in another after configuration change
 
-A compliant reader must distinguish dormant from absent: dormant registers may become active when the corresponding feature is enabled (e.g., activating a quick mode on the thermostat, configuring cooling). Scanners should classify 0-byte replies as `dormant`, not as hard errors.
+A reader must preserve empty replies separately from value replies and negative/timeout outcomes. A profile may label an empty reply `dormant` only where correlated evidence supports that interpretation.
 
 ### 2.4 Sentinel and no-data patterns
 
@@ -108,7 +109,7 @@ Four distinct "no real data" signaling mechanisms exist in B524 responses:
 
 | Pattern | Wire bytes | When used | Detection |
 |---------|-----------|-----------|-----------|
-| **Empty reply** | ACK + 0 data bytes | Register dormant (feature inactive) | `len(payload) < 4` |
+| **Empty reply** | ACK + 0 data bytes | Empty response; cause is profile-specific | `len(payload) < 4` |
 | **NaN sentinel** | FLAGS+GG+RR+`00 00 C0 7F` | Float register where sensor is disconnected or reading unavailable | `math.isnan(f32_value)` |
 | **0x7FFFFFFF sentinel** | FLAGS+GG+RR+`FF FF FF 7F` | Integer register with uninitialized or out-of-range value | `u32_value == 0x7FFFFFFF` |
 | **Zero** | FLAGS+GG+RR+`00 00` | Legitimate value = 0 | Context-dependent; not a sentinel |
@@ -129,7 +130,12 @@ Some B524 control registers use different GG/RR addresses for reading vs writing
 | Write active flag | `OP=0x02, GG=0x09, RR=0x0002` | Write target for mode on/off |
 | Read-back from write group | `OP=0x02, GG=0x09, RR=0x0004` | Mirrors the written mode value |
 
-The GG=0x09 local namespace shows zero instances on passive scan because these are **write-triggered registers** -- they only become meaningfully readable after a value has been written. This pattern cannot be discovered through read-only scanning; it requires third-party device analysis (e.g., ISC Smartconnect KNX) or write experimentation.
+On the controller/profile behind this reconstruction, the local GG=0x09 path
+returned no instances in a passive scan and the cited static analysis associates
+these selectors with the asymmetric quick-mode path. That observation does not
+make all OP=02h/GG=09h registers write-triggered, unavailable to passive reads,
+or irrelevant to another profile; ventilation candidates remain separately
+profile-scoped and capture-required.
 
 ### 2.6 Wire type encoding
 
@@ -143,36 +149,55 @@ The GG=0x09 local namespace shows zero instances on passive scan because these a
 > **Device-dependent f32 byte order:** Controllers at address `0x15` (BASV2, CTLV2, VRC720 family) use **little-endian** f32 encoding. The HMU (Heat Management Unit) at address `0x08` on heat pump systems uses **big-endian** f32 encoding -- implementations reading f32 from HMU via B524 must reverse the 4 bytes before IEEE 754 decoding. This is confirmed by the OpenHAB community's use of the `reverseByteOrder` ebusd configuration flag for HMU B524 reads. All Helianthus scan data is from BASV2 (`0x15`) and is internally consistent little-endian. (Source: FINAL-B524-B555-B507-B508.md A1; confidence HIGH.)
 | `string` | Null-terminated C string | Variable | Zone names, installer info |
 | `bytes` | Raw byte sequence | Variable | Opaque payload, not decoded as numeric |
-| `date` | BCD-encoded `DD MM YY` | 3 bytes | Year = 2000 + YY. See constraint type `0x0C` |
+| `date` | Profile-qualified date codec | Variable | BCD `DD MM YY` is observed for some scalar fields; it does not follow from a description-response length. |
 | `time` | BCD-encoded `HH MM [SS]` | 2-3 bytes | 2 bytes (HH:MM) for timers, 3 bytes (HH:MM:SS) for system clock |
 
-### 2.7 Directory descriptor semantics
+### 2.7 System-information identifiers
 
-Directory probe returns a 4-byte `float32le` descriptor value per group. NaN terminates enumeration (observed on all tested VRC720-class targets). Descriptor values are small non-negative integers ({0, 1, 2, 3, 5, 6}) whose semantic meaning is not yet established.
+OP=00h is `ReadSystemInformation`. Its 16-bit identifier selects a system
+quantity; it is independent of the `GG` used by OP=02h or OP=06h. For example,
+ID=0000h describes circuits, while OP=02h/GG=00h contains system parameters.
+The earlier interpretation of finite results as opaque group-descriptor classes
+is superseded by the [published identifier interpretation](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53#discussioncomment-18748372).
 
-Key confirmed facts:
-- Descriptor=0 does NOT mean "group absent" -- groups with descriptor 0 can contain real register data.
-- NaN is the only reliable end-of-table signal.
-- Descriptor is deterministic per firmware build but varies across firmware versions.
-
-For the full cross-installation analysis, falsified hypotheses, and active working hypotheses, see [ebus-vaillant-b524-research.md](./ebus-vaillant-b524-research.md).
+Keep the raw float and its interpreted count separate. Accept a count only when
+it is finite, non-negative, integral, within the profile's bound, and the identifier
+has a documented count meaning. API version/revision are not instance counts.
+NaN was an enumeration terminator in the published BASV2/BASV3 observations;
+this is not a universal rule for every product or identifier range. Implementations
+continue only through their configured bounded identifier set and retain NaN as
+an observation rather than using it as an unbounded scan-control signal.
 
 ## 3. Opcode Family Map
 
-```text
-Opcode  Name                 Request shape                     Status
-0x00    Directory probe      00 <GG> 00                        Confirmed
-0x01    Constraint dictionary 01 <GG> <RR>                     Confirmed
-0x02    Local register I/O   02 <RW> <GG> <II> <RR_LO> <RR_HI> Confirmed
-0x03    Timer read           03 <SEL1> <SEL2> <SEL3> <WD>      Non-functional on VRC720/BASV2 (VRC700 only)
-0x04    Timer write          04 <SEL1> <SEL2> <SEL3> <WD> ...  Confirmed (VRC700 only)
-0x06    Remote register I/O  06 <RW> <GG> <II> <RR_LO> <RR_HI> Confirmed
-0x0B    Array/table read     Shape unresolved (non-scalar)     Observed/partial
-```
+These are Helianthus operation names from the public discussion, with spelling
+normalized for `GetParameter` and `GetDeviceParameter`. They are not proprietary
+service identifiers. A listed operation is not proof that every target supports it.
 
-> **Note on opcodes 0x03/0x04:** These timer opcodes are functional on **VRC700 (device ID 70000) only**. VRC720-family controllers (BASV2/BASV3/CTLV2/CTLV3/CTLS2) return empty responses to these opcodes and use B555 for timer operations instead. See [Section 4.4](#44-0x03--0x04-timer-schedules) for the full device-binding note and channel map.
+| OP / OT | Helianthus name | Selector / purpose |
+| --- | --- | --- |
+| 00h | `ReadSystemInformation` | `00 IDlo IDhi` |
+| 01h | `DescribeParameter` | `01 GG II RRlo RRhi`; describes a system parameter |
+| 02h / 00h | `GetParameter` | `02 00 GG II RRlo RRhi` |
+| 02h / 01h | `SetParameter` | `02 01 GG II RRlo RRhi VALUE...` |
+| 03h | `ReadTimer` | VRC700 timer selectors |
+| 04h | `WriteTimer` | VRC700 timer selectors and values |
+| 06h / 00h | `GetDeviceParameter` | `06 00 GG II RRlo RRhi` |
+| 06h / 01h | `SetDeviceParameter` | `06 01 GG II RRlo RRhi VALUE...` |
+| 07h | `DescribeDeviceParameter` | `07 GG II RRlo RRhi`; device parameter description |
+| 08h | `ReadVR91` | VRC700 zone status for an assigned VR91 |
+| 09h / 0Ah | `GetEvent` / `SetEvent` | Event selectors / values |
+| 0Bh / 0Ch | `GetEventSetPoint` / `SetEventSetPoint` | Event-setpoint selectors / values |
 
-`RW` is `0x00` for read and `0x01` for write.
+OP=01h and OP=07h use separate selector domains. Their complete forms are the
+corrected reconstruction adopted for profile-qualified implementations. The
+identifier byte is retained as `II` in Helianthus terminology; its exact meaning
+and any special identifier (including FFh) must be qualified per profile.
+Physical support and response codecs require correlated target evidence.
+
+OP=03h/04h timer support remains product-specific: VRC700 uses this family;
+VRC720-family controllers use B555. All write variants are mutative and excluded
+from discovery and read-only scans.
 
 ### 3.1 Selector semantics are opcode-scoped
 
@@ -230,98 +255,101 @@ combinations until they are fully mapped.
 
 ## 4. Family Details
 
-### 4.1 `0x00` Directory Probe
-
-The directory probe (`0x00`) enumerates group availability. It is distinct from the register I/O opcodes: OP=0x02 (instance directory / local register I/O) reads or writes individual registers within a group, while OP=0x06 (register directory / remote register I/O) accesses a separate opcode-scoped selector family. The directory probe itself is opcode-independent -- it discovers groups that may then be accessed via either OP=0x02 or OP=0x06 depending on the group's documented opcode binding.
+### 4.1 `0x00` ReadSystemInformation
 
 ```text
-Request payload (3 bytes):
-  0: 0x00
-  1: GG
-  2: 0x00
-
-Response payload (4 bytes):
-  0..3: descriptor float32le
+Request payload:  00 IDlo IDhi
+Response body:   four float32 little-endian bytes on the documented controller profile
 ```
 
-Discovery rules:
-- Iterate GG upward.
-- Treat only 4-byte responses as candidate directory descriptors.
-- For transport-level compatibility detection, any valid 4-byte directory
-  response is sufficient evidence that B524 directory probing is supported
-  on that address, even if the descriptor value is `0.0`.
-- NaN terminates enumeration (observed on all tested devices).
-- Do not suppress known groups solely because `descriptor == 0.0`.
-- Core structural groups `GG=0x02` (circuits) and `GG=0x03` (zones)
-  remain scan candidates even when the descriptor is `0.0`.
-- For unknown groups, the descriptor may be used only as a conservative hint,
-  never as a universal proof of absence.
-- Treat transport/timeouts as non-terminating errors.
+The identifier table below follows the public BASV2/SW0507, BASV3/SW0760 and
+BASV0/SW0217 report. It is a profile interpretation, not a global register-group
+list or a claim that all counts are physically verified on every system.
 
-Rationale:
+| ID | snake_case semantic name | Meaning |
+| --- | --- | --- |
+| 0000h | `circuit_count` | Circuits; guides OP=02h/GG=02h instance discovery |
+| 0001h | `zone_count` | Zones; guides OP=02h/GG=03h instance discovery |
+| 0002h | `solar_circuit_count` | Solar circuits |
+| 0003h | `solar_loaded_tank_count` | Solar-loaded tanks |
+| 0004h | `device_count` | Devices |
+| 0005h | `generator_count` | Generators |
+| 0006h | `api_version` | API version; not a count |
+| 0007h | `api_revision` | API revision; not a count |
+| 0008h / 0009h | `vr70_count` / `vr71_count` | Functional module counts |
+| 000Ah | `remote_control_count` | Remote controls |
+| 000Bh | `delta_t_count` | Published deltaT label; physical class remains unknown |
+| 000Ch / 000Dh | `boiler_count` / `heat_pump_count` | Generator classes |
+| 000Eh / 000Fh | `vpm_w_count` / `vpm_s_count` | Module classes |
+| 0010h | `recovair_count` | recoVair ventilation units |
+| 0011h | `cooling_heat_pump_count` | Cooling-capable heat pumps |
 
-- B524 is the controller-side aggregation surface for system structure.
-- The current evidence does not justify treating descriptor class `0.0`
-  as equivalent to "group absent".
-- Single-circuit/no-functional-module installations are a known counterexample.
+A count selects how many active instances are expected, not their identities.
+In non-exhaustive scans, probe profile-bounded II slots in order until the expected
+number of present instances is found. Do not assume the first N slots are occupied.
+A missing, non-integral, non-finite, out-of-bound or conflicting count falls back
+to bounded presence discovery. A zero count is retained as evidence and does not
+silently delete independently observed instances. Record expected and observed
+counts and their mismatch. `research` scans keep the full configured II range.
 
-### 4.2 `0x01` Constraint Dictionary (min/max/step)
+Only an explicit profile mapping connects an information identifier to `(OP,GG)`.
+In particular, ID=0010h does not imply GG=10h. Known groups remain scan candidates
+even when their same-numbered information identifier returns zero.
 
-This family exposes an undocumented constraint dictionary for configuration parameters.
-
-Canonical request form:
+### 4.2 `0x01` DescribeParameter and `0x07` DescribeDeviceParameter
 
 ```text
-Request payload (3 bytes):
-  0: 0x01
-  1: GG
-  2: RR
+System parameter:  01 GG II RRlo RRhi
+Device parameter:  07 GG II RRlo RRhi
 ```
 
-**Note:** RR is u8 here (low byte only), unlike register read where RR is u16 LE.
+The historical `01 GG RR` request omitted the identifier and high address byte.
+Its changing/misaligned replies do not prove a sliding-window dictionary or a
+BASV2 buffer bug. Preserve them as historical observations, with the returned
+selector independent from the intended selector. See the
+[original public short-probe report](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53#discussioncomment-15839146).
 
-Example ebusd `hex` command for `GG=0x03`, `RR=0x01`:
+Descriptions apply to numeric ranges, booleans, enum domains and other supported
+writable parameter formats. They are not restricted to enums and do not establish
+register presence, instance count, permission to write, or persistence.
+
+#### 4.2.1 Description response and validation
+
+After transport normalization, a description reply has this shape:
 
 ```text
-hex 15B52403010301
+GG RRlo RRhi MIN MAX STEP
 ```
 
-#### 4.2.1 Type tags and decoding
+The bytes formerly labelled `TT` (`06`, `09`, and `0F` in the observed samples)
+are eBUS response lengths, not datatype tags. The three spans have equal width;
+the observed scalar codec determines whether their values are unsigned, signed,
+float, date, or another format. A response length alone does not qualify that
+codec. Malformed length, mismatched `GG`/`RR16`, unequal spans, an unknown scalar
+codec, or inconsistent/non-finite limits remain unqualified. Retain request
+context because `II` is not echoed. Never assign a description across OP=02h/06h
+or across instances merely because `GG`/`RR` match.
 
-The first byte of the constraint response is a **type tag (TT)** (distinct from the FLAGS byte in register read responses) that defines the constraint value encoding. Constraint decoding is TT-driven: the TT byte fully determines the wire format of the min/max/step triplet that follows.
+#### 4.2.2 Targeted acquisition
 
-```text
-0x06: u8 range
-  06 GG RR 00 MIN MAX STEP
+Read the parameter first. The default acquisition set contains at most 256
+deduplicated, observed writable candidates for which the profile-scoped static
+`FLAGS & 0x02` inference is present, across every supported scalar format.
+That inference selects candidates only: it neither proves live writability nor
+authorizes a write. For each selected candidate, send its complete
+profile-qualified description selector: OP=01h for the system family and OP=07h
+for the device family. Keep the raw request and reply, decoder revision and
+qualification outcome in the artifact. Unsupported descriptions are explicit
+missing data; no short-probe fallback is allowed.
 
-0x09: u16le range
-  09 GG RR 00 MIN MAX STEP
-  where MIN/MAX/STEP are u16 little-endian
+#### 4.2.3 Offline value changes
 
-0x0F: float32le range
-  0F GG RR 00 MIN MAX STEP
-  where MIN/MAX/STEP are IEEE754 float32 little-endian
-
-0x0C: date range (HDA3-like)
-  0C GG RR 00 MIN(d,m,y) MAX(d,m,y) STEP(u16le) 00
-  year is interpreted as 2000 + y
-```
-
-#### 4.2.2 Discovery method (practical)
-
-To discover constraints for a group:
-
-1. For each discovered group, iterate `RR=0x00..min(rr_max,0xFF)`.
-2. Probe optional shared IDs above the window (e.g., `RR=0x80`).
-3. Send `15 b5 24 03 01 GG RR`.
-4. Keep responses where:
-   - type tag `in {0x06,0x09,0x0C,0x0F}`
-   - response echoes request `GG RR`.
-5. Filter stdout noise/non-hex lines before decode.
-
-#### 4.2.3 Constraint catalog
-
-For the full decoded constraint catalog with register names, types, enum values, and ebusd cross-references, see [`ebus-vaillant-B524-register-map.md` Constraint Catalog](./ebus-vaillant-B524-register-map.md#constraint-catalog-ebusreg).
+A matching qualified description validates encoding/type/width, min/max and step
+for every edit, including non-enum numeric values. A contradicted value is rejected.
+When no qualified description is available, VRC Explorer warns that the edit is
+unvalidated and permits its existing explicit confirmation. Offline editing does
+not send a device write. Historical static ranges remain hints, not validation
+authority. See the [historical constraint catalog](./ebus-vaillant-B524-register-map.md#constraint-catalog-ebusreg).
 
 #### 4.2.4 Circuit type interpretation (`GG=0x02 RR=0x02`)
 
@@ -441,17 +469,15 @@ The WD byte (0x00-0x06 = Monday-Sunday) selects the weekday within the addressed
 
 (Source: FINAL-B524-B555-B507-B508.md A2; confidence HIGH.)
 
-### 4.5 `0x0B` Array/Table Read (Schedules)
+### 4.5 `0x0B` GetEventSetPoint
 
-`0x0B` is observed for schedule/program-style groups (`GG=0x06`, `GG=0x07`) where simple register loops are insufficient.
-
-Current status:
-- family observed on wire
-- full selector/body schema still under consolidation
-- practical recommendation: treat as array/table transport, not scalar RR scan
-
-Implication:
-- sparse `0x01` constraints do not imply scalar coverage for schedule groups.
+The public operation name is `GetEventSetPoint`, paired with mutative
+`SetEventSetPoint` (OP=0Ch). The previous generic Array/Table Read label and the
+claim that GG=06h/07h prove timetable domains are withdrawn. Preserve event
+selectors and setpoint data independently from scalar register I/O. A correlated
+request/reply and product-specific codec are required before promoting an event
+setpoint to a decoded schedule. OP=09h/0Ah similarly form the separate GetEvent /
+SetEvent pair. These families are not included in scalar discovery.
 
 ## 5. Topology-Significant Registers
 
@@ -462,71 +488,37 @@ Two registers in `OP=0x02, GG=0x00` carry system-level topology information that
 | `0x0036` | `system_scheme` | u16 | Hydraulic scheme number (1..16). Defines the physical piping topology of the heating system (number/type of heat sources, mixing circuits, buffer tanks, solar integration). Different scheme numbers imply different valid group/register combinations. |
 | `0x002F` | `module_configuration_vr71` | u16 | VR71 functional module configuration (1..11). Encodes which mixing/direct circuits the VR71 hardware module manages. Combined with `system_scheme`, determines circuit ownership and whether FM5-backed families (solar, cylinders) are structurally valid. |
 
-These are property registers (FLAGS=0x01, read-only, stable). Their values are set during system commissioning and do not change during normal operation. They are the primary structural inputs for determining which semantic families and circuit assignments are valid on a given installation.
+These are candidate topology inputs. Their observed values and the inferred
+`FLAGS` attributes do not by themselves prove read-only, stable, commissioning,
+or universal installation semantics. A qualified profile may use them when its
+source evidence supports the mapping.
 
 For the full register catalog including per-register constraints and enum values, see [`ebus-vaillant-B524-register-map.md`](./ebus-vaillant-B524-register-map.md).
 
-## 6. Group Taxonomy and Descriptor Classes
+## 6. Group Taxonomy and System Information
 
-For the authoritative group topology (names, instance ranges, opcodes), see [`ebus-vaillant-B524-register-map.md` Group Topology](./ebus-vaillant-B524-register-map.md#group-topology).
-
-Directory probe descriptor values observed on VRC720-class targets:
-
-```text
-GG   Descriptor(s)  Typical opcode  Notes
-0x00 3.0            0x02            singleton local system selector set; GG=0x00 is absent from the static KNX OP=0x06 heat-generator path
-0x01 3.0            0x02            singleton local DHW selector set; OP=0x06 GG=0x01 is primary heating sources (static ISC KNX)
-0x02 1.0            0x02            instanced local selector set; OP=0x06 GG=0x02 is secondary heating sources (static ISC KNX)
-0x03 1.0            0x02            instanced
-0x04 6.0 / 5.0      0x02            model-dependent
-0x05 1.0 / absent   0x02            model-/system-dependent
-0x06 (varies)       0x0B            program/timetable domain
-0x07 (varies)       0x0B            program/timetable domain
-0x08 1.0 / absent   0x02 / 0x06    OP=0x02 GG=0x08 = local singleton config; OP=0x06 GG=0x08 = remote instanced data
-0x09 1.0            0x02 / 0x06    OP=0x02 GG=0x09 = local slot config; OP=0x06 GG=0x09 = remote live radio data
-0x0A 1.0            0x02 / 0x06    OP=0x02 GG=0x0A = local slot config; OP=0x06 GG=0x0A = remote live radio data
-0x0C 1.0 / absent   0x06           model-/system-dependent controller-mediated slot selector set
-```
-
-Descriptor class values behave like coarse enum tags, not physical numeric quantities.
+The [register map](./ebus-vaillant-B524-register-map.md#group-topology) owns
+operation-scoped group names and bounds. OP=00h identifiers are a separate axis;
+their numerical values must not be joined to same-numbered groups. Keep an explicit
+profile mapping for count-guided discovery, initially ID0→OP02/GG02 and
+ID1→OP02/GG03. Other mappings require their own evidence.
 
 ## 7. Discovery and Scan Strategy
 
-### 7.1 Phase A: group discovery
+1. Read bounded, known OP00 information identifiers and retain each raw result.
+2. Select groups from operation-scoped profiles, not from successful OP00 IDs.
+3. In `recommended`/`full`, use a valid mapped count to guide bounded presence
+   probes. Keep sparse slots, zero/conflicting observations and mismatches visible.
+   `research` remains exhaustive; `custom` selections take precedence.
+4. Read selected registers and acquire descriptions only for observed parameters
+   that are eligible under the profile, within the default 256-request budget.
+5. Persist complete operation-aware identities, profile/provenance, raw replies,
+   expected/observed counts and description qualification.
 
-- probe `0x00` directory sequentially
-- stop on first `NaN` (observed as reliable end-of-table on all tested devices)
-- record unknown groups and unknown descriptor classes for follow-up
-
-### 7.2 Phase B: constraint dictionary sampling (`0x01`)
-
-- probe `0x01 GG RR` over bounded per-group RR windows
-- decode and persist `min/max/step` domains (`u8`, `u16le`, `f32le`, `date`)
-- constraints are advisory metadata (they provide value ranges but do not define register presence)
-
-### 7.3 Phase C: instance detection (instanced groups)
-
-- evaluate all `II=0x00..II_max` (no early stop on holes)
-- `II_max` comes from static profile and observed valid instances, not from `0x01`.
-- mark present slots based on group-specific heuristics
-
-### 7.4 Phase D: register scan
-
-- scan selected groups/instances/ranges
-- for unknown groups, scanners may probe both `0x02` and `0x06` and keep best response
-
-### 7.5 Static fallback profile (when dynamic evidence is missing)
-
-```text
-GG   Opcode  InstanceMax  RegisterMax
-0x02 0x02    0x0A         0x0025
-0x03 0x02    0x0A         0x002F
-0x09 0x06    0x0A         0x0030
-0x0A 0x06    0x0A         0x003F
-0x0C 0x06    0x0A         0x003F
-```
-
-This profile is a baseline planner bound source; dynamic evidence (`0x01` constraints and successful read probes) should be persisted as advisory metadata to refine scan ranges over time.
+Timeout, NACK, CRC/transport failure, empty response, malformed description and
+unsupported operation are distinct evidence states. None alone proves that a
+register is absent from every product. A failed description keeps the successful
+value observation and any independently qualified earlier description.
 
 ## 8. ebusd TCP Interop Notes
 

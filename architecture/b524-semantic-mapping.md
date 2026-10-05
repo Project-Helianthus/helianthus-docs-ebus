@@ -278,29 +278,39 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 
 ## Discovery & Scan Strategy
 
-### Phase A: group discovery
+### Phase A: system information and group selection
 
-- probe `0x00` directory sequentially
-- stop on first `NaN`
-- record unknown groups and unknown descriptor classes for follow-up
+- read bounded, known OP00 system-information identifiers and preserve each raw
+  float separately from any profile interpretation
+- use only explicit mappings for count-guided presence probing: ID0 can guide
+  OP02/GG02 circuits and ID1 can guide OP02/GG03 zones
+- retain zero, invalid, conflicting, and sparse results; those observations
+  fall back to the configured bounded presence range rather than redefining a
+  group or instance identity
 
-### Phase B: constraint dictionary sampling (`0x01`)
+### Phase B: targeted parameter descriptions (`0x01` / `0x07`)
 
-- probe `0x01 GG RR` over bounded per-group RR windows
-- decode and persist `min/max/step` domains (`u8`, `u16le`, `f32le`, `date`)
-- persist decoded entries under artifact metadata (`meta.constraint_dictionary`)
-- current implementation keeps constraints advisory (they do not resize planner ranges yet)
+- use complete selectors: `01 GG II RRlo RRhi` for OP02 parameters and
+  `07 GG II RRlo RRhi` for OP06 parameters
+- acquire at most 256 deduplicated observed writable candidates, selected by
+  the profile-scoped static `FLAGS & 0x02` inference across supported formats
+- retain raw request/reply and scalar-codec qualification; the inference does
+  not prove live writability or authorize a write
+- historical short-probe ranges are unqualified hints and are not persisted as
+  input-validation metadata
 
 ### Phase C: instance detection (instanced groups)
 
 - evaluate all `II=0x00..II_max` (no early stop on holes)
-- `II_max` comes from planner/static profile and observed valid instances, not from `0x01`.
+- `II_max` comes from the planner/static profile, a valid explicit OP00 count
+  mapping, and observed valid instances; it does not come from a short OP01 probe.
 - mark present slots based on group-specific heuristics
 
 ### Phase D: register scan
 
-- scan selected groups/instances/ranges from planner
-- for unknown groups, scanners may probe both `0x02` and `0x06` and keep best response
+- scan selected operation-scoped groups, instances, and ranges from the planner
+- retain unsupported/empty/negative outcomes as evidence states; do not probe
+  unknown operations or merge OP02 and OP06 by a shared GG value
 
 ### Static fallback profile (when dynamic evidence is missing)
 
@@ -317,7 +327,10 @@ GG   Opcode  InstanceMax  RegisterMax
 
 ## Sources & FLAGS Verification
 
-- **BASV2 constraint catalog** (`b524_constraints.go`) — Downloaded from hardware via constraint probe. Authoritative for value ranges.
+- **Historical BASV2 short-probe catalog** (`b524_constraints.go`) —
+  range-shaped samples from incomplete OP01 requests. It is unqualified
+  historical evidence only, not authority for register mapping, value
+  validation, or scalar-codec selection.
 - **ebusd community TSP** (`15.ctlv2.tsp`) — Community register definitions. Highest authority for name mapping.
 - **myVaillant register map CSV** (`myvaillant_register_map.csv`) — Helianthus-curated mapping by value-matching live B524 reads against myPyllant API fields. NOT a Vaillant-published source.
 - **Gateway production code** (`semantic_vaillant.go`) — Authoritative for which registers are actively polled.
