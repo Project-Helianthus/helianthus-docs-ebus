@@ -334,13 +334,17 @@ or across instances merely because `GG`/`RR` match.
 
 Read the parameter first. The default acquisition set contains at most 256
 deduplicated, observed writable candidates for which the profile-scoped static
-`FLAGS & 0x02` inference is present, across every supported scalar format.
-That inference selects candidates only: it neither proves live writability nor
-authorizes a write. For each selected candidate, send its complete
+`FLAGS & 0x02` inference is present, including candidates whose scalar codec is
+not yet known. An unknown codec is retained raw and remains unqualified; it is
+not a reason to omit an otherwise eligible description request. That inference
+selects candidates only: it neither proves live writability nor authorizes a
+write. For each selected candidate, send its complete
 profile-qualified description selector: OP=01h for the system family and OP=07h
 for the device family. Keep the raw request and reply, decoder revision and
 qualification outcome in the artifact. Unsupported descriptions are explicit
-missing data; no short-probe fallback is allowed.
+missing data; no short-probe fallback is allowed. The implementation records
+`eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and
+`budget_skipped` counters per description family.
 
 #### 4.2.3 Offline value changes
 
@@ -505,11 +509,18 @@ ID1→OP02/GG03. Other mappings require their own evidence.
 
 ## 7. Discovery and Scan Strategy
 
+The four scan presets and JSON planning interface below are VRC Explorer
+scanner-policy contracts. They constrain the planned implementation; they are
+not universal B524 wire proof, a product support matrix, or authorization to
+write a device.
+
 1. Read bounded, known OP00 information identifiers and retain each raw result.
 2. Select groups from operation-scoped profiles, not from successful OP00 IDs.
-3. In `recommended`/`full`, use a valid mapped count to guide bounded presence
-   probes. Keep sparse slots, zero/conflicting observations and mismatches visible.
-   `research` remains exhaustive; `custom` selections take precedence.
+3. In `recommended`, use a valid mapped count to guide bounded presence probes.
+   Keep sparse slots, zero/conflicting observations and mismatches visible.
+   `full` audits every declared II slot regardless of OP00 counts; `research`
+   is expanded but bounded rather than exhaustive; `custom` selections take
+   precedence.
 4. Read selected registers and acquire descriptions only for observed parameters
    that are eligible under the profile, within the default 256-request budget.
 5. Persist complete operation-aware identities, profile/provenance, raw replies,
@@ -519,6 +530,38 @@ Timeout, NACK, CRC/transport failure, empty response, malformed description and
 unsupported operation are distinct evidence states. None alone proves that a
 register is absent from every product. A failed description keeps the successful
 value observation and any independently qualified earlier description.
+
+### 7.1 Deterministic plans, budgets, and description scheduling
+
+The same pure candidate-policy/planner serves the UI and CLI. The planned CLI
+form is `--scan-plan <path.json>`. Its version-1 document has this shape:
+
+```json
+{
+  "schema_version": 1,
+  "groups": [
+    {"opcode": "0x02", "group": "0x00", "instances": [0], "registers": [0, 1]}
+  ]
+}
+```
+
+`groups` is a list; each selector is exact, and `instances` and `registers`
+contain explicit values or bounded ranges expanded by the planner. The parser
+accepts only OP=02h and OP=06h read selectors and enforces the applicable wire
+bounds. It rejects a plan above 100000 planned scalar requests before a queue is
+created. A UI and CLI custom scan pass the same normalized plan to the same pure
+planner, so neither surface presence-prunes explicitly selected selectors.
+
+Description acquisition is a second phase. `--description-budget` is finite and
+defaults to 256. Half of its slots are initially reserved for each family
+(OP01h/OP02h and OP07h/OP06h); unused slots may be borrowed by the other family.
+Within a family it schedules eligible `(GG,II)` candidates round-robin. The
+artifact retains the six counters listed in section 4.2.2, including candidates
+skipped by budget.
+
+`--request-budget` is an optional finite cap on actual B524 sends, including
+retries. Research defaults to 10000 sends. Budget exhaustion emits a partial
+artifact marked `incomplete`; it is not converted into an absence claim.
 
 ## 8. ebusd TCP Interop Notes
 
