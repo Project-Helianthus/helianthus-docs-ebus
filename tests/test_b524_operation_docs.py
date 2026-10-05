@@ -1,5 +1,6 @@
 """Regression checks for the corrected public B524 operation contract."""
 
+import json
 from pathlib import Path
 
 
@@ -51,6 +52,19 @@ def test_scan_plan_and_budgets_remain_partial_read_only_contracts() -> None:
     assert "100000 planned scalar requests" in text
     assert "`--request-budget`" in text
     assert "partial\nartifact marked `incomplete`" in text
+
+
+def test_custom_plan_grammar_and_synthetic_boundary_vectors_are_documented() -> None:
+    text = B524.read_text(encoding="utf-8")
+    assert "Both endpoints are included" in text
+    assert "Identical normalized duplicate rows" in text
+    assert "len(unique_instances) * len(unique_registers)" in text
+    assert "Booleans and floating-point" in text
+    cases = json.loads((ROOT / "tests" / "fixtures" / "b524_scan_plan_v1_cases.json").read_text())
+    assert cases["source"] == "synthetic_contract_vectors"
+    assert cases["accepted"][0]["normalized"] == cases["accepted"][1]["normalized"]
+    assert cases["accepted"][2]["expected_requests"] == 100000
+    assert cases["rejected"][0]["name"] == "request_limit_exceeded"
 
 
 def test_semantic_scan_policy_uses_complete_descriptions_and_unqualified_history() -> None:

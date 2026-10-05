@@ -552,6 +552,36 @@ bounds. It rejects a plan above 100000 planned scalar requests before a queue is
 created. A UI and CLI custom scan pass the same normalized plan to the same pure
 planner, so neither surface presence-prunes explicitly selected selectors.
 
+#### Version-1 JSON grammar and normalization
+
+- The root contains exactly `schema_version` and `groups`. The version is the
+  integer `1` or string `"1"`; `groups` is a non-empty array of objects.
+- Every group row contains exactly `opcode`, `group`, `instances`, and
+  `registers`. Unknown or missing fields are rejected. `opcode` is only 2 or 6;
+  `group` is an unsigned 8-bit value.
+- Scalar values are JSON integers, decimal strings, `0x`-prefixed hexadecimal
+  strings, or bare hexadecimal strings containing A-F. Digit-only strings are
+  decimal: `"10"` is ten and `"0x10"` is sixteen. Booleans and floating-point
+  numbers are rejected, even if numerically integral.
+- `instances` and `registers` are non-empty arrays. Each element is one scalar
+  or one string range `start..end` or `start-end`, using the scalar token syntax.
+  Both endpoints are included. Reversed endpoints are reordered. For example,
+  `"0x0004..0x0002"` expands to 2, 3, 4. Commas inside one element are rejected;
+  use separate array elements.
+- Every expanded instance is in `0..255`; every expanded register is in
+  `0..65535`. Negative or out-of-bound values are rejected. Each list is
+  deduplicated and sorted ascending before planning.
+- Rows are keyed by `(opcode, group)`. Identical normalized duplicate rows
+  collapse into one row; differing selectors for a duplicate key are rejected.
+- The scalar request count is the sum of
+  `len(unique_instances) * len(unique_registers)` over unique rows. Exactly
+  100000 is accepted; 100001 or more is rejected before queuing. Discovery,
+  descriptions and retries are additional sends governed by the send budget.
+
+[Synthetic accepted/rejected contract vectors](../../tests/fixtures/b524_scan_plan_v1_cases.json)
+include equivalent selector representations and the 100000/100002 boundary.
+They are parser fixtures, not device or wire qualification evidence.
+
 Description acquisition is a second phase. `--description-budget` is finite and
 defaults to 256. Half of its slots are initially reserved for each family
 (OP01h/OP02h and OP07h/OP06h); unused slots may be borrowed by the other family.
