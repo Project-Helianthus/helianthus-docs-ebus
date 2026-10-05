@@ -189,6 +189,7 @@ python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
 
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
+python3 -m pytest -q tests/test_b524_operation_docs.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py

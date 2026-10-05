@@ -332,11 +332,13 @@ or across instances merely because `GG`/`RR` match.
 
 #### 4.2.2 Targeted acquisition
 
-Read the parameter first. For an observed parameter whose profile permits
-description acquisition, send its complete
+Read the parameter first. The default acquisition set contains at most 256
+deduplicated, observed writable candidates for which the profile-scoped static
+`FLAGS & 0x02` inference is present, across every supported scalar format.
+That inference selects candidates only: it neither proves live writability nor
+authorizes a write. For each selected candidate, send its complete
 profile-qualified description selector: OP=01h for the system family and OP=07h
-for the device family. Deduplicate by target/profile/operation/GG/II/RR and bound
-the additional traffic to 256 targeted descriptions by default. Keep the raw request and reply, decoder revision and
+for the device family. Keep the raw request and reply, decoder revision and
 qualification outcome in the artifact. Unsupported descriptions are explicit
 missing data; no short-probe fallback is allowed.
 

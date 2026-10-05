@@ -1053,7 +1053,7 @@ One pending:
 
 ### `energy_manager_state` (GG=0x00 RR=0x0048)
 
-Register `OP=0x01/0x02, GG=0x00, RR=0x0048` — system-level energy manager state. Wire type: `u16` enum.
+Register `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0048` — system-level energy manager state. Wire type: `u16` enum.
 
 | Value | State | myPyllant | Description |
 |-------|-------|-----------|-------------|
@@ -1070,7 +1070,7 @@ Register `OP=0x01/0x02, GG=0x00, RR=0x0048` — system-level energy manager stat
 
 ### `circuit_state` (GG=0x02 RR=0x001B)
 
-Register `OP=0x01, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit state. Wire type: `u16` enum.
+Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit state. Wire type: `u16` enum.
 
 | Value | State | myPyllant | Description |
 |-------|-------|-----------|-------------|
@@ -1087,8 +1087,8 @@ Register `OP=0x01, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit state. Wire
 ### `system_quick_mode` (GG=0x00 RR=0x0016 + 0x0074)
 
 Asymmetric read/write paths:
-- **Read active flag:** `OP=0x01, GG=0x00, RR=0x0016` (u8 bool)
-- **Read mode value:** `OP=0x01, GG=0x00, RR=0x0074` (u8 enum)
+- **Read active flag:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0016` (u8 bool)
+- **Read mode value:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0074` (u8 enum)
 - **Write:** `OP=0x02, GG=0x09, RR=0x0001` (value) + `RR=0x0002` (active flag) -- asymmetric path
 
 | Value (RR=0x0074) | State | Description |
@@ -1109,7 +1109,9 @@ Asymmetric read/write paths:
 
 ## Sources
 
-- **BASV2 constraint catalog** — Downloaded from hardware via `0x01` constraint probe. Authoritative for value ranges.
+- **Historical BASV2 short-probe catalog** — Range-shaped samples from incomplete
+  `0x01` requests. It is unqualified historical evidence only: it does not
+  authoritatively map a register, validate a value, or establish a scalar codec.
 - **ebusd community TSP** (`15.ctlv2.tsp`) — Community-maintained register definitions. Highest authority for register-to-name mapping where coverage exists.
 - **myVaillant register map** — Value-matched mapping against myPyllant cloud API. NOT a Vaillant-published source — carries false-positive risk where multiple registers share the same value (see [Mapping Conflicts](#mapping-conflicts)).
 - **VRC Explorer full group scans** — FLAGS byte verification for all groups.
