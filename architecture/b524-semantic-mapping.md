@@ -279,23 +279,20 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 - retain zero, invalid, conflicting, and sparse results; those observations
   fall back to the configured bounded presence range rather than redefining a
   group or instance identity
+- treat `api_version` and `api_revision` as profile context only; do not use
+  either as an instance count or topology route
 
-### Phase B: targeted parameter descriptions (`0x01` / `0x07`)
+### Phase B: profile candidate selection
 
-- use complete selectors: `01 GG II RRlo RRhi` for OP02 parameters and
-  `07 GG II RRlo RRhi` for OP06 parameters
-- acquire at most 256 deduplicated observed writable candidates, selected by
-  the profile-scoped static `FLAGS & 0x02` inference across supported formats
-- retain raw request/reply and scalar-codec qualification; the inference does
-  not prove live writability or authorize a write
-- historical short-probe ranges are unqualified hints and are not persisted as
-  input-validation metadata
+- derive the same characterized `(OP,GG)` candidates for CLI and interactive UI
+- retain explicit custom selectors even if presence discovery fails
 
 ### Phase C: instance detection (instanced groups)
 
-- evaluate all `II=0x00..II_max` (no early stop on holes)
-- `II_max` comes from the planner/static profile, a valid explicit OP00 count
-  mapping, and observed valid instances; it does not come from a short OP01 probe.
+- in `full`, evaluate every declared `II=0x00..II_max`; in `recommended`,
+  a qualified positive count may stop probing after the expected number of successes
+- `II_max` comes from the profile or explicit custom selection. A count does not
+  identify II indices or redefine the slot bound; short OP01 probes supply neither.
 - mark present slots based on group-specific heuristics
 
 ### Phase D: register scan
@@ -303,15 +300,32 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 - scan selected operation-scoped groups, instances, and ranges from the planner
 - retain unsupported/empty/negative outcomes as evidence states; do not probe
   unknown operations or merge OP02 and OP06 by a shared GG value
+- apply an optional finite actual-send budget including retries; exhaustion
+  produces a partial `incomplete` artifact, never an absence conclusion
+
+### Phase E: targeted parameter descriptions after value reads (`0x01` / `0x07`)
+
+- use complete selectors: `01 GG II RRlo RRhi` for OP02 parameters and
+  `07 GG II RRlo RRhi` for OP06 parameters
+- use a finite configurable budget (default 256) for deduplicated observed writable candidates, selected by
+  the profile-scoped static `FLAGS & 0x02` inference including unknown codecs
+- retain raw request/reply and scalar-codec qualification; the inference does
+  not prove live writability or authorize a write
+- schedule OP01/OP02 and OP07/OP06 families fairly: reserve half of the finite
+  budget for each, borrow unused capacity, then round-robin `(GG,II)` candidates
+- record `eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and
+  `budget_skipped`; retain unknown-codec replies raw and unqualified
+- historical short-probe ranges are unqualified hints and are not persisted as
+  input-validation metadata
 
 ### Static fallback profile (when dynamic evidence is missing)
 
 ```text
 GG   Opcode  InstanceMax  RegisterMax
 0x02 0x02    0x0A         0x0025
-0x03 0x02    0x0A         0x002F
-0x09 0x06    0x0A         0x0030
-0x0A 0x06    0x0A         0x003F
+0x03 0x02    0x0A         0x002E
+0x09 0x06    0x0A         0x0035
+0x0A 0x06    0x0A         0x0035
 0x0C 0x06    0x0A         0x003F
 ```
 

@@ -136,34 +136,60 @@ These notes are scanner/register-map behaviors implemented in the VRC Explorer r
 ## Scan Presets (v0.2.1)
 
 The scanner supports 4 presets. The previous 6-preset model (which included `conservative` and `exhaustive`) is retired.
+They use one deterministic candidate policy and pure planner for UI and CLI.
+This is an implementation-facing scanner contract, not universal B524 wire proof
+or a claim that an unprobed selector is absent.
 
 ### `recommended` (default)
 
-Per-(OP, GG) rules determine scanning behavior:
-
-- **always_on:** Groups `0x00`-`0x01` (system, DHW) in OP=0x02; groups `0x04`-`0x05` (solar, cylinders) in OP=0x02. These are always scanned regardless of directory probe results.
-- **present_gated:** Groups with independently probed presence. Valid profile-mapped OP00 counts guide II probing until the expected number is found; sparse indices are retained. Missing/conflicting counts use the full bounded presence range.
-- **OFF:** Unknown or uncharacterized groups. Not scanned in recommended mode.
-
-Known characterized groups per operation:
-- **OP=0x02:** GG=0x00 through 0x05, 0x08, 0x09 (all characterized).
-- **Hypothesis:** independent protocol evidence is required for this interpretation.
+This preset scans characterized OP=02/GG `00..05,08,09` and OP=06/GG
+`01,02,08,09,0A,0C` consistently. A valid explicit profile mapping lets OP00
+counts guide only qualified circuit/zone discovery. It probes sparse II indices
+until the mapped number of present instances is observed. A zero, missing,
+invalid, conflicting, or otherwise unmet count falls back to the configured
+bounded presence range and remains artifact evidence. It does not infer a
+solar, tank, or recoVair route from same-numbered OP00 identifiers. Other
+families remain `research` or `custom` until independently characterized.
 
 ### `full`
 
-All groups from both operations. Normal `rr_max` bounds from the discovery profile. Count-guided bounded instance discovery as in `recommended`; without a valid mapped count, probe the complete configured II range.
+Audit every declared II slot in all characterized profile OP02/OP06 groups using the normal
+profile `rr_max` bounds, regardless of OP00 counts. Counts are comparison
+evidence only in this preset; they neither suppress selector generation nor
+provide topology identity.
 
 ### `research`
 
-All groups from both operations. Expanded `rr_max` bounds:
-- Default: `0xFF` (256 registers per group).
-- OP=0x02, GG=0x00: `0x1FF` (512 registers) -- this group is known to extend beyond 0xFF on BASV2.
-
-Research mode is intended for register discovery and protocol analysis, not routine scanning.
+Use configured expanded but finite coverage for research; record configured,
+skipped, and unknown coverage in the manifest. It uses multiple anchor probes
+per family and does not let a failed first II=00/RR=0000 probe veto the rest of that group.
+Research retains known higher RR ceilings: default `0xFF`, and OP02/GG00 at
+least `0x1FF`. It is intended for register discovery and protocol analysis, not
+routine scanning.
 
 ### `custom`
 
-Operator-defined group/operation/register selections. No preset rules applied.
+An exact normalized plan of OP02/OP06 `(GG,II,RR16)` lists or bounded ranges.
+The UI and CLI send the same plan to the planner; explicit selectors are never
+presence-pruned. The CLI accepts a `--scan-plan` JSON file with
+`schema_version: 1` and `groups: [{opcode, group, instances, registers}]`.
+Only read selectors and wire-bounded values are accepted. Plans exceeding
+100000 scalar requests fail before queuing.
+
+## Description Scheduler and Send Budget
+
+Descriptions are a second phase after value reads. `--description-budget` is a
+finite, configurable value with default 256. Half is initially reserved for
+each description/read family (OP01/OP02 and OP07/OP06), borrowing unused share;
+each family schedules eligible `(GG,II)` candidates round-robin. Eligibility
+comes from profile-scoped writable-format inference and includes unknown codecs,
+which are retained raw and reported unqualified. It does not prove a live write
+or authorize one. Artifacts count `eligible`, `attempted`, `matched`,
+`unavailable`, `unqualified`, and `budget_skipped`.
+
+`--request-budget` optionally caps actual B524 sends, including retries;
+research defaults to 10000. Exhaustion returns a partial artifact marked
+`incomplete`, never an absence verdict.
 
 ## Historical Context
 
