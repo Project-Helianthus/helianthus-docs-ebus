@@ -1,5 +1,6 @@
 """Regression checks for the corrected public B524 operation contract."""
 
+import json
 from pathlib import Path
 
 
@@ -29,6 +30,41 @@ def test_description_budget_is_writable_candidate_scoped_without_write_authority
     assert "at most 256" in text
     assert "observed writable candidates" in text
     assert "neither proves live writability nor" in text
+    assert "unknown codec is retained raw" in text
+    assert "`eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and" in text
+
+
+def test_scan_presets_are_deterministic_bounded_and_operation_scoped() -> None:
+    text = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
+    assert "OP=02/GG `00..05,08,09`" in text
+    assert "OP=06/GG\n`01,02,08,09,0A,0C`" in text
+    assert "every declared II slot" in text
+    assert "default `0xFF`, and OP02/GG00 at\nleast `0x1FF`" in text
+    assert "failed first II=00/RR=0000 probe veto the rest of that group" in text
+    assert "100000 scalar requests fail before queuing" in text
+
+
+def test_scan_plan_and_budgets_remain_partial_read_only_contracts() -> None:
+    text = B524.read_text(encoding="utf-8")
+    assert "`--scan-plan <path.json>`" in text
+    assert '"schema_version": 1' in text
+    assert "only OP=02h and OP=06h read selectors" in text
+    assert "100000 planned scalar requests" in text
+    assert "`--request-budget`" in text
+    assert "partial\nartifact marked `incomplete`" in text
+
+
+def test_custom_plan_grammar_and_synthetic_boundary_vectors_are_documented() -> None:
+    text = B524.read_text(encoding="utf-8")
+    assert "Both endpoints are included" in text
+    assert "Identical normalized duplicate rows" in text
+    assert "len(unique_instances) * len(unique_registers)" in text
+    assert "Booleans and floating-point" in text
+    cases = json.loads((ROOT / "tests" / "fixtures" / "b524_scan_plan_v1_cases.json").read_text())
+    assert cases["source"] == "synthetic_contract_vectors"
+    assert cases["accepted"][0]["normalized"] == cases["accepted"][1]["normalized"]
+    assert cases["accepted"][2]["expected_requests"] == 100000
+    assert cases["rejected"][0]["name"] == "request_limit_exceeded"
 
 
 def test_semantic_scan_policy_uses_complete_descriptions_and_unqualified_history() -> None:
