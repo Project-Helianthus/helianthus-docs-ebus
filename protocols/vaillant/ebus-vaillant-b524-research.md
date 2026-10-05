@@ -1,3 +1,25 @@
+# B524 Research: corrected interpretation and historical observations
+
+**Correction 2026-10-05.** The active contract is
+[B524](./ebus-vaillant-B524.md). The historical material below records earlier
+hypotheses; its directory classes, sliding-window OP01 model, generic OP0B table
+label and suggested probing of unknown operations are superseded.
+
+- OP00 is ReadSystemInformation. Identifier 0 counts circuits, 1 counts zones;
+  its IDs are independent of register GG. Public interpretation and profiles:
+  [discussion #53](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53#discussioncomment-18748372).
+- Complete descriptions use OP01/OP07 with identifier and RR16. Short `01 GG RR`
+  probes are incomplete; their replies do not prove a BASV2 bug or a sliding window.
+  The [historical public report](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53#discussioncomment-15839146)
+  preserves those observations, not input-validation authority.
+- NaN termination, product eligibility, description formats and instance indexing
+  remain profile-scoped. Unknown replies are retained without cross-register
+  attribution. OP07 describes device parameters; it is separate from OP01.
+- recoVair count and ventilation candidates require their own correlated evidence.
+  Read-only implementation fixtures do not establish physical support.
+
+## Historical observations and superseded hypotheses
+
 # B524 Research & Working Hypotheses
 
 > **License:** CC0-1.0 (public domain). This documents protocol-level observations and hypotheses, not implementation-specific behavior.
@@ -78,7 +100,7 @@ Observed descriptor values (always clean non-negative integers encoded as float3
 - **NaN terminator is the only reliable end-of-table signal.**
 - **BASV0 FW 0217 NaN terminator bug:** never emits NaN, causing scanners to enumerate 249 groups. Defensive ceiling of ~0x20 recommended for unknown devices.
 
-### 1.5 Active Hypotheses (Unverified)
+### 1.5 Superseded hypotheses (Unverified)
 
 **Hypothesis A — Register Schema Variant Identifier:**
 The descriptor encodes a firmware-specific register schema variant for each group. The `int(float)` value, treated as a 3-bit field, indicates which register sub-schema the controller uses internally. bit2 (0x04) is exclusive to GG=0x04 across all devices. The 5->6 transition represents a schema mode switch (2 bits flip), not a simple increment. Evidence: deterministic per FW build, varies across FW versions non-monotonically (BASV3/newest has LOWER values for GG=0x00/0x01 than older FW).
@@ -93,7 +115,7 @@ Problem: direct bit-to-namespace correlation has mismatches at GG=0x08-0x0C wher
 **Hypothesis C — Firmware fingerprint vector:**
 The vector `[desc_0x00, desc_0x01, ..., desc_0x11]` may serve as a firmware revision fingerprint. Observed vectors are unique per FW build. Potential use: cache invalidation (re-scan group when descriptor changes).
 
-### 1.6 Open Questions
+### 1.6 Historical questions
 
 - Value 4 (100) and 7 (111) never observed — architectural constraint or insufficient sample?
 - Could undiscovered opcodes (0x01 constraint is known; 0x03/0x04 timer is known; but 0x05, 0x07+ are unknown) correspond to descriptor bits?
@@ -104,7 +126,7 @@ The vector `[desc_0x00, desc_0x01, ..., desc_0x11]` may serve as a firmware revi
 
 ## 2. Register Discovery Notes
 
-### 2.1 Dormant Registers
+### 2.1 Historical dormant-register observations
 
 Certain registers return an empty payload (0 bytes after ACK) when their associated feature is not configured or not engaged. This "dormant" state is distinct from absent (NACK/timeout). See the protocol spec's "Register Response States" section for the wire-level definition.
 
@@ -118,7 +140,8 @@ Known dormant registers (BASV2, confirmed across 2 scan generations):
 | 0x00 | 0x00DA | manual_cooling_date_start | Cooling dates not set (was responsive in Feb 2026, dormant in Apr 2026) |
 | 0x00 | 0x00DB | manual_cooling_date_end | Same as above |
 
-Verification needed: activate quick mode (party/ventilation/away) on thermostat, then read 0x0016 and 0x0074 to confirm they become non-dormant.
+Capture-required: correlate a naturally occurring quick-mode transition with
+0x0016 and 0x0074. Do not activate a mode merely to test this hypothesis.
 
 ### 2.2 Compound Register Observation (GG=0x00, RR=0x0048)
 
@@ -136,7 +159,11 @@ ISC KNX Smart analysis reveals GG=0x09 local config registers 1-4 are also used 
 | 0x0002 | System quick mode active write target | sensor_type (value=1) |
 | 0x0004 | System quick mode read-back | (unknown, value=0) |
 
-The local namespace (opcode 0x02) shows zero instances on passive scan — these are write-triggered registers. The remote namespace (opcode 0x06) contains unrelated radio sensor data (54 registers per instance). This confirms absolute namespace isolation by opcode.
+For the observed controller/profile, the local opcode 0x02 path returned zero
+instances in a passive scan and the static analysis associates these selectors
+with quick-mode control. It does not establish a universal write-triggered
+property for OP02/GG09. The remote opcode 0x06 path contains a separate radio
+sensor layout, preserving opcode-scoped identity.
 
 ### 2.4 Asymmetric Read/Write Path Evidence
 
@@ -148,11 +175,12 @@ This pattern cannot be discovered through read-only scanning.
 
 ---
 
-## 3. Open Items / Validation Queue
+## 3. Historical follow-up boundaries
 
-- Finalize complete selector schema for opcode `0x0B` array/table read.
-- Expand response exemplars per family (`0x01` and `0x0B` especially).
-- Track descriptor-class transitions (e.g., GG=0x04 class 6 vs 5) against system topology changes.
-- Probe system quick mode registers (0x0016/0x0074) during active quick mode to confirm non-dormant response.
-- Probe undiscovered opcodes (0x05, 0x07+) on groups with bit2 set in descriptor.
-- Investigate 0x7FFFFFFF sentinel in integer registers — confirm conditions under which it appears.
+- OP0B is `GetEventSetPoint`; obtain correlated request/reply evidence before
+  assigning a selector or scalar codec.
+- Preserve any new description samples with their normalized response length,
+  complete request selector, and scalar-codec evidence.
+- Compare naturally observed quick-mode transitions with 0x0016/0x0074 only
+  under an authorized capture plan.
+- Investigate the `0x7FFFFFFF` sentinel only from captured integer responses.

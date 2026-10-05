@@ -6,7 +6,7 @@
 
 > **Status:** Authoritative reference. Single source of truth for B524 register semantics.
 >
-> **Last updated:** 2026-04-06 (v5)
+> **Last updated:** 2026-10-05 (operation and evidence correction)
 >
 > **Device:** BASV2 (VRC720-compatible, HW 1704)
 
@@ -20,11 +20,11 @@ This is the register catalog for B524. For the protocol specification (wire form
 |--------|---------|
 | **RR** | Register address (hex) |
 | **Name** | Our leaf name (from myVaillant/myPyllant API path) |
-| **Cat** | **S**=state (RO), **C**=config (RW), **P**=property (RO, stable), **E**=energy (RO, counter), **—**=unknown/unclassified. Verified against observed FLAGS where scan data exists |
+| **Cat** | Documentation category: **S**=state, **C**=configuration candidate, **P**=property candidate, **E**=energy/counter candidate, **—**=unknown/unclassified. It is not derived from `FLAGS` alone and does not authorize a write. |
 | **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian. **f32 byte order is device-dependent:** all values in this map assume address `0x15` (BASV2/VRC720) = little-endian. HMU at `0x08` (heat pump systems) uses big-endian f32 -- see [B524 protocol doc section 2.6](./ebus-vaillant-B524.md#26-wire-type-encoding) |
 | **Decode** | Semantic interpretation: `bool`, `°C`, `K`, `bar`, `%`, `kWh`, `hrs`, `min`, `count`, `enum`, `text`, `date`, `time`, `state`, `raw`, `—` (unknown) |
 | **ebusd** | ebusd community TSP name. `—` = not in TSP |
-| **Constraint** | From BASV2 constraint catalog (authoritative, downloaded from hardware). `—` = no catalog entry |
+| **Constraint** | Historical short-probe range hint. It requires a matching complete OP01/OP07 description before validating edits. `—` = no catalog entry |
 | **Values** | Enum mapping. Inline for ≤3 values, otherwise `→enum_name` referencing [Enum Reference](#enum-reference) |
 | **Gates** | Condition for register to be present/meaningful. `—` = always available |
 
@@ -32,6 +32,12 @@ This is the register catalog for B524. For the protocol specification (wire form
 - No annotation = confirmed by multiple independent sources (ebusd + live scan + value match)
 - `†` = CSV value-matched only, not independently confirmed (false-positive risk)
 - `ebusd: "..."` = ebusd community note about this register (e.g., special value meanings)
+
+Historic row notes may contain labels such as `stable RO`, `volatile RO`,
+`technical RW`, or `user RW`. Those labels are withdrawn as public B524
+semantics: retain the printed `FLAGS` value as an observation, but treat the
+labels as profile-specific static interpretation until corroborated by public,
+correlated evidence. They do not establish writability or authorize a write.
 
 ---
 
@@ -54,8 +60,6 @@ This is the register catalog for B524. For the protocol specification (wire form
 | 0x06 | 0x0C | Functional Modules | Yes | 0x0A | 0x2F | `device_connected` (RR=0x0001) | 165 (15/inst) |
 | 0x06 | 0x0E | Clock | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
 | 0x06 | 0x0F | Base Stations | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
-| 0x0B | 0x06 | Programs/Timetables | — | — | — | — | — |
-| 0x0B | 0x07 | Programs/Timetables | — | — | — | — | — |
 
 **GG values are opcode-scoped, not global:** `OP=0x02, GG=0x00` and
 `OP=0x02, GG=0x01` are the singleton local selector sets for system/settings
@@ -84,7 +88,11 @@ In the current lab, `II=0x01` with
 at target address `0x26`, but that family identification comes from eBUS
 identity correlation rather than from B524 alone.
 
-**Discovery:** Directory probe (`opcode=0x00`) is not a reliable presence indicator. Descriptor=0 does NOT mean the group is absent (see [ebus-vaillant-b524-research.md](./ebus-vaillant-b524-research.md) for directory descriptor analysis). Use static topology for group enumeration. Multi-instance groups: scan all instances up to II=0x0A, expose only active ones.
+**Discovery:** OP00 information identifiers are distinct from GG. Use only
+explicit profile mappings (initially circuit_count→OP02/GG02 and
+zone_count→OP02/GG03) to guide presence probes. Keep sparse II slots and
+expected/observed counts. The full configured range remains the fallback and
+research bound. See [the corrected protocol contract](./ebus-vaillant-B524.md).
 
 ### Discovery Profiles
 
@@ -589,7 +597,12 @@ Instanced (II=0x00-0x0A). 4 registers per instance. All 11 instances respond.
 >
 > Your **VRC720f/2** appears at **II=0x01 OP=0x06** (software version 08.05, room humidity 40%, room temp 12.5°C).
 
-> **Dual-use discovery (ISC KNX Smart analysis, 2026-04-06):** GG=0x09 local config registers 1-4 (opcode 0x02) are also used as system-level quick mode control registers. The ISC KNX Smart firmware writes to GG=0x09 Reg 1 (mode value) and Reg 2 (active flag) via opcode 0x02 to activate/deactivate system quick modes (party, ventilation, away, one-day-at-home). Read-back of the active mode uses GG=0x00 Reg 0x0074 and 0x0016 instead (asymmetric path — see [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths)). The local namespace (opcode 0x02) shows zero instances on passive scan because these are write-triggered registers. This confirms namespace isolation: the same GG=0x09 byte refers to completely different data depending on the opcode (0x02 = system control writes, 0x06 = radio sensor live data).
+> **Dual-use discovery (ISC KNX Smart static analysis, 2026-04-06):** This
+> controller/profile associates OP02/GG09 registers 1-4 with system quick-mode
+> control and reads back from OP02/GG00 registers 0x0074 and 0x0016. The local
+> path returned zero instances in a passive scan, but that does not establish a
+> universal write-triggered or non-readable property for OP02/GG09. It does
+> establish that OP02/GG09 and OP06/GG09 must remain separate identities.
 
 ### GG=0x09 Local Config (opcode 0x02)
 
@@ -748,22 +761,6 @@ For each slot, read `device_connected` (0x0001). If =1, read:
 
 ---
 
-## GG=0x06 — Programs/Timetables
-
-Uses opcode `0x0B` (array/table transport). Scalar register scanning is not applicable — this group uses a different selector schema than `0x02`/`0x06` register reads. See [GetExtendedRegisters §4.5](./ebus-vaillant-B524.md#45-0x0b-arraytable-read-schedules) for wire protocol details.
-
-No register table. Schema under investigation.
-
----
-
-## GG=0x07 — Programs/Timetables
-
-Uses opcode `0x0B` (array/table transport). Same transport as GG=0x06.
-
-No register table. Schema under investigation.
-
----
-
 ## GG=0x0C — Remote Accessories / functional-module slots (multi-instance, remote only)
 
 > **Verified 2026-03-05:** Responds only to opcode 0x06 (no local config selector set documented; opcode 0x02 returns 0 valid registers). 15 registers per instance, 165 total valid. Uses the same remote-device slot schema as GG=0x09/0x0A.
@@ -792,11 +789,39 @@ Architectural note: Functional-module semantics (FM3/FM5/VR66 families) are docu
 
 ---
 
+## Profile-scoped ventilation / recoVair candidates
+
+The published OP00 interpretation includes ID0010h `recovair_count`. It does
+not prove GG10h or device presence; the public reported samples all return zero.
+The following corrected reconstruction is **Hypothesis** for a TLI controller
+profile, awaiting publishable correlated replies. It does not replace other
+GG09 meanings or establish writable capability. Keep `(OP02,GG09,II,RR)` and
+profile provenance; no data from these rows is promoted into a universal mapping.
+
+| RR | snake_case name | Candidate format |
+| --- | --- | --- |
+| 0002h | `operating_mode_for_air_ventilation` | enum; numeric domain unknown |
+| 0004h | `status_special_function_ventilation` | u16; candidate 0=regular, 1=boost, 7=holiday, 10=system_off |
+| 0007h / 0008h | `holiday_end` / `holiday_end_time` | date / time; codec qualification pending |
+| 0009h / 000Ah | `holiday_start` / `holiday_start_time` | date / time; codec qualification pending |
+| 000Dh / 000Eh | `day_maximum_fan_stage` / `night_maximum_fan_stage` | u16; range unknown |
+
+Existing scalar names remain unchanged. The status/availability of a local probe
+and a decoded physical ventilation state are distinct. OP02/GG00/RR0016 remains
+`system_quick_mode_active` in its existing profile; a ventilation-labelled local
+consumer is insufficient to globally rename it or change its codec.
+
 ## Constraint Catalog
+
+> Historical range hints from incomplete OP01 probes; not qualified input-validation metadata. Keep the returned selector independent from the intended request.
 
 Source: BASV2 hardware constraint probe (`0x01` opcode).
 
-The constraint catalog was **downloaded from the BASV2 hardware** and is authoritative for value ranges. It uses a `(Group, Record)` selector where `Record` is a byte-swapped register address (endianness convention). Mapping: Register `0x00RR` → Record `0xRR00`.
+The historic short probes produced range-shaped samples, but the incomplete
+selector and length/codec ambiguity prevent them from authoritatively mapping a
+record to a register or from validating a value. Retain the rows as historical
+hints only; a complete OP01/OP07 response with a qualified scalar codec is
+required for validation.
 
 | Group | Record | → RR | Type | Min | Max | Step |
 |-------|--------|------|------|-----|-----|------|

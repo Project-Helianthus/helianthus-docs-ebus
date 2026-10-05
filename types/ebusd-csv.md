@@ -43,21 +43,24 @@ Where `<PAYLOAD_HEX>` is the raw B524 request payload bytes (no eBUS framing, no
 Detailed semantics and response layouts are documented in:
 - [`protocols/vaillant/ebus-vaillant-B524.md`](../protocols/vaillant/ebus-vaillant-B524.md)
 
-### Directory Probe (opcode 0x00)
+### ReadSystemInformation (opcode 0x00)
 
 ```text
-00 GG 00
+00 IDlo IDhi
 ```
 
-### Constraint Dictionary (opcode 0x01)
+ID is a 16-bit information identifier, not a register group. Use the qualified
+identifier-to-count mapping from the B524 protocol reference.
+
+### Parameter descriptions (opcode 0x01 / 0x07)
 
 ```text
-01 GG RR
+01 GG II RRlo RRhi    DescribeParameter
+07 GG II RRlo RRhi    DescribeDeviceParameter
 ```
 
-Notes:
-- `RR` is the constraint-record selector byte for the `(GG, RR)` dictionary entry.
-- Instance-selector form is not supported/documented in Helianthus (no programmatic evidence on observed buses).
+Use complete profile-qualified selectors. Historical `01 GG RR` probe entries
+are incomplete and must not supply input-validation authority.
 
 ### Register Read/Write (opcode 0x02 / 0x06)
 
@@ -86,9 +89,9 @@ opcode: 0x03 (read timer) or 0x04 (write timer)
 WD    : weekday 0x00..0x06 (Monday..Sunday)
 ```
 
-### Array/Table Read (opcode 0x0B)
+### GetEventSetPoint (opcode 0x0B)
 
-`0x0B` has been observed on B524 schedule/program domains (notably groups `0x06`/`0x07`), but a stable selector schema for CSV use is still under consolidation.
-
-Current recommendation:
-- keep `0x0B` mappings in dedicated experimental CSVs until selector/index semantics are finalized.
+This is a separate event-setpoint family paired with mutative opcode 0x0C.
+Retain the product-specific selectors and raw replies in experimental definitions
+until a correlated request/reply qualifies their codec. Do not treat GG=06h/07h
+as a proven generic table namespace.
