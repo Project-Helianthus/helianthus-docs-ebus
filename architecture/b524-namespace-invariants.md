@@ -30,15 +30,18 @@ The word "namespace" may still appear in protocol-level documentation (where it 
    - Canonical register identity tuple: `(operation, group, instance, register)`.
    - Any GG-first layout that can merge or obscure operation boundaries is invalid.
 
-2. **Discovery is advisory, not semantic authority.**
-   - GG directory probe (`opcode 0x00`) results are evidence for discovery flow only.
-   - Semantic identity, operation topology, and row identity are not derived from descriptor values.
-   - **Ban:** GG discovery MUST NOT be used as semantic authority.
+2. **System information guides qualified instance discovery.**
+   - OP=00h uses an information identifier, independent of register GG.
+   - Explicit profile mappings may supply expected instance counts for bounded
+     presence probing in non-exhaustive presets; they never invent II identities.
+   - Preserve expected/observed counts, raw float, source and mismatch.
 
-3. **Constraint scope is explicitly `operation_0x02_default`.**
-   - Decision: `operation_0x02_default`.
-   - Rationale: the bundled static catalog is seeded from `0x01` probe evidence, but it is only trusted for operation `0x02` by default.
-   - Outcome: operation `0x06` does not inherit seeded static constraints unless a constraint entry explicitly scopes into that operation or a live probe confirms it.
+3. **Descriptions are operation- and instance-scoped.**
+   - OP=01h DescribeParameter describes the OP=02h system family.
+   - OP=07h DescribeDeviceParameter describes the OP=06h device family.
+   - Match the target/profile and complete `(operation,GG,II,RR16)` identity.
+   - The historical short OP01 catalog is unqualified advisory data. It must not
+     validate edits or be inherited across operations/instances.
 
 4. **Artifact identity keys are operation-aware.**
    - Persisted topology authority: per-operation structure under `b524_operations`.
@@ -84,16 +87,14 @@ Key structural properties:
 - `GG=0x09` under operation `0x02` and `GG=0x09` under operation `0x06` are entirely separate entities with different register layouts, instance counts, and semantics.
 - No cross-operation inheritance or merging is permitted.
 
-## DT Byte (Reply Kind) Semantics
+## FLAGS Reply Attribute
 
-The DT byte (RK) is an effective 2-bit reply-kind field (`0..3`). The numeric domain is shared across operations, but bit0 semantics are operation-specific:
-
-- **OP 0x02:** bit1=config, bit0=volatile/stable.
-  - `0`: `simple_volatile`, `1`: `simple_stable`, `2`: `config_volatile`, `3`: `config_stable`
-- **OP 0x06:** bit1=config, bit0=invalid/valid data.
-  - `0`: `simple_invalid`, `1`: `simple_valid`, `2`: `config_invalid`, `3`: `config_valid`
-
-Scanner artifacts expose `reply_kind` while preserving legacy `flags_access` labels for compatibility.
+The leading byte in an OP=02h/06h read response is retained as raw `FLAGS`.
+Private static analysis suggests bit 0 is a visibility/category discriminator and
+bit 1 marks writable capability. This is profile-scoped inference, not a
+universal wire meaning, live writability proof, or volatile/stable classification.
+Scanner artifacts may expose a numeric `reply_kind` for compatibility, but they
+must preserve the raw byte and must not derive semantic labels from it alone.
 
 ## Register Response State Classification
 
@@ -101,9 +102,9 @@ Register responses are classified into four wire-level states:
 
 | State | Description |
 |-------|-------------|
-| `active` | ACK + FLAGS+GG+RR+VALUE (4+ bytes). Register is functional. |
-| `empty_reply` | ACK + NN=0. Feature dormant. Rendered as "empty reply / dormant". |
-| `nack_or_crc` | Transport-level negative outcome. NACK and CRC failure are indistinguishable via adapter transports. |
+| `active` | ACK + FLAGS+GG+RR+VALUE (4+ bytes). Value-shaped reply pending codec qualification. |
+| `empty_reply` | ACK + NN=0. Empty response; a profile may classify it as dormant only with correlated evidence. |
+| `nack_or_crc` | Transport-level negative outcome. NACK and CRC failure are indistinguishable via adapter transports and do not prove absence. |
 | `timeout` | No response within transport window. |
 
 `error` is reserved for genuine transport/decode failures outside those four states.
@@ -119,15 +120,18 @@ These notes are scanner/register-map behaviors implemented in the VRC Explorer r
 3. **Sentinel `0x7FFFFFFF`** is annotated when decoded as integer payload. This is scanner-layer annotation only; semantic/runtime policy belongs to gateway/poller repos.
 
 4. **Canonical operation labels** are opcode-first:
-   - `0x00`: `QueryGroupDirectory`
-   - `0x01`: `QueryRegisterConstraints`
-   - `0x02/0x00`: `ReadControllerRegister`
-   - `0x02/0x01`: `WriteControllerRegister`
-   - `0x03`: `ReadTimerProgram`
-   - `0x04`: `WriteTimerProgram`
-   - `0x06/0x00`: `ReadDeviceSlotRegister`
-   - `0x06/0x01`: `WriteDeviceSlotRegister`
-   - `0x0B`: `ReadRegisterTable`
+   - `0x00`: `ReadSystemInformation`
+   - `0x01`: `DescribeParameter`
+   - `0x02/0x00`: `GetParameter`
+   - `0x02/0x01`: `SetParameter`
+   - `0x03`: `ReadTimer`
+   - `0x04`: `WriteTimer`
+   - `0x06/0x00`: `GetDeviceParameter`
+   - `0x06/0x01`: `SetDeviceParameter`
+   - `0x07`: `DescribeDeviceParameter`
+   - `0x08`: `ReadVR91`
+   - `0x09/0x0A`: `GetEvent` / `SetEvent`
+   - `0x0B/0x0C`: `GetEventSetPoint` / `SetEventSetPoint`
 
 ## Scan Presets (v0.2.1)
 
@@ -138,7 +142,7 @@ The scanner supports 4 presets. The previous 6-preset model (which included `con
 Per-(OP, GG) rules determine scanning behavior:
 
 - **always_on:** Groups `0x00`-`0x01` (system, DHW) in OP=0x02; groups `0x04`-`0x05` (solar, cylinders) in OP=0x02. These are always scanned regardless of directory probe results.
-- **present_gated:** Groups where directory probe or static topology indicates presence. Scanned at profile-defined register ranges and instance limits.
+- **present_gated:** Groups with independently probed presence. Valid profile-mapped OP00 counts guide II probing until the expected number is found; sparse indices are retained. Missing/conflicting counts use the full bounded presence range.
 - **OFF:** Unknown or uncharacterized groups. Not scanned in recommended mode.
 
 Known characterized groups per operation:
@@ -147,7 +151,7 @@ Known characterized groups per operation:
 
 ### `full`
 
-All groups from both operations. Normal `rr_max` bounds from the discovery profile. Full instance enumeration (II=0x00 through II=0x0A for instanced groups).
+All groups from both operations. Normal `rr_max` bounds from the discovery profile. Count-guided bounded instance discovery as in `recommended`; without a valid mapped count, probe the complete configured II range.
 
 ### `research`
 
