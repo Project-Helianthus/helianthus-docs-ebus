@@ -741,17 +741,16 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are i
 | 0x0033 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
 | 0x0035 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x02. All: 0 |
 
-**Device slot enumeration:** To enumerate all OP=0x06 device slots, scan **seven groups** with opcode 0x06:
+**Device slot enumeration:** Follow the
+[profile-qualified discovery contract](b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
+For the characterized profile, recommended discovery starts at **II=0x01**:
+GG01/02 use bounds 01..08; GG09/0A/0C/0E/0F use bounds 01..0A.
+Stop only on a complete, correlated, profile-qualified `not_connected` Boolean
+from RR0001. Unknown results do not stop the next probe. Full/research audit every
+slot in the declared bound, including slots after a negative result.
 
-1. **GG=0x01** (Primary Heating Sources) — II=0x00 through II max (model-dependent)
-2. **GG=0x02** (Secondary Heating Sources) — II=0x00 through II max (model-dependent)
-3. **GG=0x09** (Regulators) — II=0x00 through II=0x0A
-4. **GG=0x0A** (Thermostats) — II=0x00 through II=0x0A
-5. **GG=0x0C** (Functional Modules) — II=0x00 through II=0x0A
-6. **GG=0x0E** (Clock) — II=0x00 through II=0x0A
-7. **GG=0x0F** (Base Stations) — II=0x00 through II=0x0A
-
-For each slot, read `device_connected` (0x0001). If =1, read:
+`device_connected=false` does not establish physical absence and must not suppress
+retained inventory evidence. Identity and telemetry reads can include:
 - `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in the current lab, `0x26` correlates with the eBUS-identified `VR_71`
 - `device_firmware_version` (0x0004) — byte-decimal triplet
 - `reception_strength` (0x001F) — 0-10 scale (4=acceptable, <4=unstable)
@@ -779,7 +778,7 @@ universal empty-slot or physical-liveness rule.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
+| 0x0001 | device_connected | P | u8 | bool | — | — | `0=not_connected 1=connected` | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean; false does not erase retained identity |
 | 0x0002 | device_class_address | S | u8 | enum | — | — | `0x26` in current lab | — | FLAGS=0x00. II=1: 0x26 (38). In the current lab, this matches the eBUS-identified `VR_71` hardware at target address `0x26`; treat as correlation, not standalone B524 proof. |
 | 0x0003 | device_error_code | S | u8 | — | — | — | — | — | FLAGS=0x00. All empty: 0xFF |
 | 0x0004 | device_firmware_version | S | time | version | — | — | — | — | FLAGS=0x00. II=1: 01.00.00 (byte-decimal). Empty: FF/FF/FF |

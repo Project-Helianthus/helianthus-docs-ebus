@@ -14,7 +14,7 @@ include the extra slot.
 
 The user-facing designation is `virtual_dhw`. Its inferred protocol role remains
 **Unknown**: selecting or reading this slot does not confirm an active physical
-circuit. Preserve the native selector0A; historical display `Heating Circuit11`
+circuit. Preserve the native selector 0A; historical display `Heating Circuit 11`
 was index-plus-one presentation. Do not alias this selector to the separately
 documented II09 DHW pseudo-circuit rule.
 
@@ -76,9 +76,9 @@ attribute selects a description candidate; it does not authorize a device write.
 Descriptions cover numeric, Boolean, enum, date, time, and other eligible formats,
 including unknown codecs whose responses remain raw and unqualified.
 
-Recommended/custom retain a default logical description budget256. Extended
-`full`/`research` plan every eligible parameter, with a finite100000 logical cap
-and a default10000 actual B524-send cap including retries. Explicit smaller budgets
+Recommended/custom retain a default logical description budget 256. Extended
+`full`/`research` plan every eligible parameter, with a finite 100000 logical cap
+and a default 10000 actual B524-send cap including retries. Explicit smaller budgets
 remain available. Fair family reservations protect OP07 first attempts from OP01
 retries and vice versa. Report eligible, planned, attempted, received, interpreted,
 unavailable, unqualified, and omitted descriptions separately. Omission or unknown
@@ -111,6 +111,9 @@ HTML and offline browse show `Bundled` separately from current-target descriptio
 | `unavailable` | Recheck failed or remained unqualified; retain baseline as prior evidence |
 | `profile_mismatch` | Relevant profile changed/unknown; baseline is not applicable verification |
 
+The profile also retains the observed controller-slot class and firmware when
+available. OP06 rows require the selected slot's own class and firmware bytes;
+missing or changed device identity cannot qualify that slot's prior baseline.
 Recompute annotations on model, firmware or relevant API-profile changes. Never
 reuse a row across operations or instances or promote another profile's limits
 to confirmed validation for device writes. Bundled observations remain prior
