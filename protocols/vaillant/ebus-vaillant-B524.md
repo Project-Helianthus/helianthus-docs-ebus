@@ -332,7 +332,7 @@ or across instances merely because `GG`/`RR` match.
 
 #### 4.2.2 Targeted acquisition
 
-Read the parameter first. The default acquisition set contains at most 256
+Read the parameter first. Recommended/custom acquisition contains at most 256
 deduplicated, observed writable candidates for which the profile-scoped static
 `FLAGS & 0x02` inference is present, including candidates whose scalar codec is
 not yet known. An unknown codec is retained raw and remains unqualified; it is
@@ -522,7 +522,8 @@ write a device.
    is expanded but bounded rather than exhaustive; `custom` selections take
    precedence.
 4. Read selected registers and acquire descriptions only for observed parameters
-   that are eligible under the profile, within the default 256-request budget.
+   that are eligible under the profile. Full/research plan all eligible descriptions
+   within finite logical and actual-send budgets.
 5. Persist complete operation-aware identities, profile/provenance, raw replies,
    expected/observed counts and description qualification.
 
@@ -545,7 +546,8 @@ form is `--scan-plan <path.json>`. Its version-1 document has this shape:
 }
 ```
 
-`groups` is a list; each selector is exact, and `instances` and `registers`
+`groups` is a list; selectors are explicit, with the mandatory OP02/GG02/II0A
+addition described below. `instances` and `registers`
 contain explicit values or bounded ranges expanded by the planner. The parser
 accepts only OP=02h and OP=06h read selectors and enforces the applicable wire
 bounds. It rejects a plan above 100000 planned scalar requests before a queue is
@@ -583,15 +585,25 @@ include equivalent selector representations and the 100000/100002 boundary.
 They are parser fixtures, not device or wire qualification evidence.
 
 Description acquisition is a second phase. `--description-budget` is finite and
-defaults to 256. Half of its slots are initially reserved for each family
+defaults to 256 for recommended/custom and 100000 for full/research. Extended
+profiles therefore plan every eligible description within the actual-send cap.
+Half of its slots are initially reserved for each family
 (OP01h/OP02h and OP07h/OP06h); unused slots may be borrowed by the other family.
 Within a family it schedules eligible `(GG,II)` candidates round-robin. The
 artifact retains the six counters listed in section 4.2.2, including candidates
 skipped by budget.
 
 `--request-budget` is an optional finite cap on actual B524 sends, including
-retries. Research defaults to 10000 sends. Budget exhaustion emits a partial
+retries. Full and research default to 10000 sends. Budget exhaustion emits a partial
 artifact marked `incomplete`; it is not converted into an absence claim.
+
+### 7.2 Profile-qualified release contract
+
+[Device discovery and bundled descriptions](b524-profile-discovery-and-descriptions.md)
+defines mandatory OP02/GG02/II0A coverage, OP06 first-instance and connection
+predicates, calendar/time STEP unknowns, extended description acquisition, and
+profile-scoped offline baselines. The scalar request limit applies **after** the
+mandatory II0A addition and deduplication, including custom plans.
 
 ## 8. ebusd TCP Interop Notes
 
