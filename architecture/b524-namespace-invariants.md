@@ -143,7 +143,9 @@ or a claim that an unprobed selector is absent.
 ### `recommended` (default)
 
 This preset scans characterized OP=02/GG `00..05,08,09` and OP=06/GG
-`01,02,08,09,0A,0C` consistently. A valid explicit profile mapping lets OP00
+`01,02,08,09,0A,0C,0E,0F` consistently. Connected-device enumeration follows the
+[profile-qualified II01 policy](../protocols/vaillant/b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
+A valid explicit profile mapping lets OP00
 counts guide only qualified circuit/zone discovery. It probes sparse II indices
 until the mapped number of present instances is observed. A zero, missing,
 invalid, conflicting, or otherwise unmet count falls back to the configured

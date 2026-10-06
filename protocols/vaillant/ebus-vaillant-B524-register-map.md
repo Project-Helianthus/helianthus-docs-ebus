@@ -54,7 +54,7 @@ correlated evidence. They do not establish writability or authorize a write.
 | 0x02 | 0x08 | Buffer/Solar Cylinder 2 (local) | No | 0x00 | — | — | 7 local |
 | 0x06 | 0x01 | Primary Heating Sources | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
 | 0x06 | 0x02 | Secondary Heating Sources | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
-| 0x06 | 0x08 | Buffer/Solar Cylinder 2 (remote) | Yes | 0x0A | — | `device_connected` (RR=0x0001) | 44 remote |
+| 0x06 | 0x08 | Buffer/Solar Cylinder 2 (remote) | Yes | 0x0A | — | unknown status; no connected-device predicate | 44 remote |
 | 0x06 | 0x09 | Regulators | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 352 remote |
 | 0x06 | 0x0A | Thermostats | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 338 remote |
 | 0x06 | 0x0C | Functional Modules | Yes | 0x0A | 0x2F | `device_connected` (RR=0x0001) | 165 (15/inst) |
@@ -71,7 +71,11 @@ separately and must not be merged by `GG` alone.
 **OP=0x06 device slot categories (0x09, 0x0A, 0x0C, 0x0E, 0x0F):** All OP=0x06
 groups are device slot namespaces. `GG=0x09` = Regulators, `GG=0x0A` = Thermostats,
 `GG=0x0C` = Functional Modules, `GG=0x0E` = Clock, `GG=0x0F` = Base Stations.
-All MUST gate on `device_connected` (RR=0x0001). Instance `II` selects the slot.
+Connected-device discovery uses profile-qualified `device_connected` (RR=0x0001),
+starting at II01 for the characterized profile. Readable headers do not override
+a false connection Boolean; retained inventory is distinct. See the
+[qualified policy and bounds](b524-profile-discovery-and-descriptions.md).
+Instance `II` selects the slot.
 `OP=0x02, GG=0x09/0x0A` stores per-slot local configuration (separate namespace).
 
 **GG=0x0C — Functional Modules:** Responds only to opcode `0x06`. No local config
@@ -671,13 +675,13 @@ Instanced (II=0x00-0x0A). 69 registers per instance. **All 11 instances are byte
 | 0x000E | (unknown) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN |
 | 0x000F | (unknown) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN |
 | 0x0010-0x001A | (unknown, 8 regs) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN. Large NaN block |
-| 0x001B | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. All: 0 |
+| 0x001B | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
 | 0x001D | basv2_serial_part1 | P | string | text | — | — | — | — | FLAGS=0x01. First 6 chars of BASV2 serial number (redacted in public docs) |
 | 0x001E | basv2_serial_part2 | P | string | text | — | — | — | — | FLAGS=0x01. Chars 7-12 of BASV2 serial number (redacted in public docs) |
 | 0x0020 | (unknown) | C | f32 | — | — | — | — | — | FLAGS=0x03. All: 0.0 |
 | 0x0021 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
 | 0x0022-0x003E | temperature_schedule | C | u8 | °C/2 | — | — | — | — | FLAGS=0x03. 29 u8 values: hourly temperature profile. Pattern: 25→45 day, 45→10 night, 10→45→25 evening. Values are degrees × 2 (e.g. 45 = 22.5°C, 10 = 5°C) |
-| 0x003F | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. All: 0 |
+| 0x003F | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
 | 0x0040 | (unknown) | P | time | time | — | — | — | — | FLAGS=0x01. All: 00:00:00 |
 | 0x0042-0x004A | (unknown, 9 regs) | C | u16 | — | — | — | — | — | FLAGS=0x03. All: 0. Config block |
 | 0x004B | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
@@ -713,20 +717,19 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are i
 | 0x002F | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. All: 5 |
 | 0x0030 | max_time_periods_per_day | S | u8 | count | — | — | — | — | FLAGS=0x01. All: 12 (constant). VR92f/3 manual: "Up to 12 time periods can be set per day". Schema capability constant |
 | 0x0032 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. II=empty: 0xFF, II=1: 0 |
-| 0x0033 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. All: 0 |
+| 0x0033 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
 | 0x0035 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x02. All: 0 |
 
-**Device slot enumeration:** To enumerate all OP=0x06 device slots, scan **seven groups** with opcode 0x06:
+**Device slot enumeration:** Follow the
+[profile-qualified discovery contract](b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
+For the characterized profile, recommended discovery starts at **II=0x01**:
+GG01/02 use bounds 01..08; GG09/0A/0C/0E/0F use bounds 01..0A.
+Stop only on a complete, correlated, profile-qualified `not_connected` Boolean
+from RR0001. Unknown results do not stop the next probe. Full/research audit every
+slot in the declared bound, including slots after a negative result.
 
-1. **GG=0x01** (Primary Heating Sources) — II=0x00 through II max (model-dependent)
-2. **GG=0x02** (Secondary Heating Sources) — II=0x00 through II max (model-dependent)
-3. **GG=0x09** (Regulators) — II=0x00 through II=0x0A
-4. **GG=0x0A** (Thermostats) — II=0x00 through II=0x0A
-5. **GG=0x0C** (Functional Modules) — II=0x00 through II=0x0A
-6. **GG=0x0E** (Clock) — II=0x00 through II=0x0A
-7. **GG=0x0F** (Base Stations) — II=0x00 through II=0x0A
-
-For each slot, read `device_connected` (0x0001). If =1, read:
+`device_connected=false` does not establish physical absence and must not suppress
+retained inventory evidence. Identity and telemetry reads can include:
 - `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in the current lab, `0x26` correlates with the eBUS-identified `VR_71`
 - `device_firmware_version` (0x0004) — byte-decimal triplet
 - `reception_strength` (0x001F) — 0-10 scale (4=acceptable, <4=unstable)
@@ -748,11 +751,13 @@ For each slot, read `device_connected` (0x0001). If =1, read:
 
 ### GG=0x0C Remote Data (opcode 0x06)
 
-Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. In the current lab, **II=0x01 has `device_class_address=0x26`**, matching the eBUS-identified hardware at target address `0x26`, but `device_connected=0` — the slot is recognized but currently not reporting as "live" (wired module, not radio — may use a different liveness mechanism).
+Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. In the current lab, **II=0x01 has `device_class_address=0x26`**, matching the eBUS-identified hardware at target address `0x26`, while historical observations contain both `device_connected=0` and `1`.
+Connection state and retained identity are distinct; neither observation is a
+universal empty-slot or physical-liveness rule.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | FLAGS=0x01. All: 0 |
+| 0x0001 | device_connected | P | u8 | bool | — | — | `0=not_connected 1=connected` | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean; false does not erase retained identity |
 | 0x0002 | device_class_address | S | u8 | enum | — | — | `0x26` in current lab | — | FLAGS=0x00. II=1: 0x26 (38). In the current lab, this matches the eBUS-identified `VR_71` hardware at target address `0x26`; treat as correlation, not standalone B524 proof. |
 | 0x0003 | device_error_code | S | u8 | — | — | — | — | — | FLAGS=0x00. All empty: 0xFF |
 | 0x0004 | device_firmware_version | S | time | version | — | — | — | — | FLAGS=0x00. II=1: 01.00.00 (byte-decimal). Empty: FF/FF/FF |
