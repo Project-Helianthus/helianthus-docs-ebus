@@ -37,7 +37,7 @@ def test_description_budget_is_writable_candidate_scoped_without_write_authority
 def test_scan_presets_are_deterministic_bounded_and_operation_scoped() -> None:
     text = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
     assert "OP=02/GG `00..05,08,09`" in text
-    assert "OP=06/GG\n`01,02,08,09,0A,0C`" in text
+    assert "OP=06/GG\n`01,02,08,09,0A,0C,0E,0F`" in text
     assert "every declared II slot" in text
     assert "default `0xFF`, and OP02/GG00 at\nleast `0x1FF`" in text
     assert "failed first II=00/RR=0000 probe veto the rest of that group" in text
@@ -75,3 +75,14 @@ def test_semantic_scan_policy_uses_complete_descriptions_and_unqualified_history
     assert "01 GG II RRlo RRhi" in text
     assert "07 GG II RRlo RRhi" in text
     assert "historical evidence only, not authority" in text
+
+
+def test_device_enumeration_preserves_ii01_and_retained_inventory_contract() -> None:
+    text = REGISTER_MAP.read_text(encoding="utf-8")
+    section = text.split("**Device slot enumeration:**", 1)[1].split("**ebusd baseline:**", 1)[0]
+    assert "II=0x00 through" not in section
+    assert "If =1, read" not in section
+    assert "starts at **II=0x01**" in section
+    assert "Unknown results do not stop" in section
+    assert "Full/research audit every" in section
+    assert "must not suppress\nretained inventory evidence" in section
