@@ -92,7 +92,8 @@ starting at II01 for the characterized profile. Readable headers do not override
 a false connection Boolean; retained inventory is distinct. See the
 [qualified policy and bounds](b524-profile-discovery-and-descriptions.md).
 Instance `II` selects the slot.
-`OP=0x02, GG=0x09/0x0A` stores per-slot local configuration (separate namespace).
+`OP=0x02, GG=0x09/0x0A` identifies separate local selector sets;
+remote device labels do not establish their physical identity or topology.
 
 ### Unqualified functional-module presentation candidate
 
@@ -140,7 +141,7 @@ Source: BASV2 constraint probe + live scan corpus.
 | 0x08 | 0x06 (remote) | 0x0A | — | **0x0004** | Modul Solar (VMS) auroSTEP display hypothesis. 4 regs/instance; no connected-device predicate. **NEW** |
 | 0x09 | 0x02 (local) | 0x0A | — | **0x000F** | Radio sensors VRC7xx. 15 regs/instance. **NEW** |
 | 0x09 | 0x06 (remote) | 0x0A | 0x002F | **0x0030** | Radio sensors VRC7xx. 32 regs/instance |
-| 0x0A | 0x02 (local) | 0x0A | — | **0x004D** | Radio sensors VR92. 69 regs/instance. **NEW** |
+| 0x0A | 0x02 (local) | 0x0A | — | **0x004D** | Observed local selector set; role and physical identity unknown. Historical coverage: 69 registers per requested II. |
 | 0x0A | 0x06 (remote) | 0x0A | 0x003F | **0x0035** | Radio sensors VR92. 32 regs/instance |
 | 0x0C | 0x06 (remote) | 0x0A | 0x003F | **0x002F** | Functional Modules (VR71) FM5. 15 regs/instance. No local `OP=0x02` selector set documented |
 
@@ -836,7 +837,7 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active devices are identi
 
 ### GG=0x0A — Remote Control Thermostats (VR9x)
 
-`OP=0x06, GG=0x0A` is remote device data and is distinct from OP02/GG0A local configuration.
+`OP=0x06, GG=0x0A` is remote device data and is distinct from the OP02/GG0A local selector set.
 
 
 

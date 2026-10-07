@@ -218,3 +218,4 @@ def test_op02_gg0a_observation_does_not_establish_template_or_device_topology() 
     assert "Repetition does not establish a physical" in section
     assert "template/default purpose" in section
     assert "this is a template/default configuration" not in section
+    assert "| Radio sensors VR92. 69 regs/instance." not in REGISTER_MAP.read_text(encoding="utf-8")
