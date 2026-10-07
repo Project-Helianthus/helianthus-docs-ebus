@@ -219,3 +219,12 @@ def test_op02_gg0a_observation_does_not_establish_template_or_device_topology() 
     assert "template/default purpose" in section
     assert "this is a template/default configuration" not in section
     assert "| Radio sensors VR92. 69 regs/instance." not in REGISTER_MAP.read_text(encoding="utf-8")
+
+
+
+def test_protocol_overview_preserves_unknown_role_and_topology_for_op02_gg0a() -> None:
+    text = B524.read_text(encoding="utf-8")
+    selector_row = next(line for line in text.splitlines() if line.startswith("| `0x02` | Local controller selector family |"))
+    assert "`GG=0x0A`" in selector_row
+    assert "OP02/GG0A remain Unknown" in selector_row
+    assert "per-slot configuration" not in selector_row

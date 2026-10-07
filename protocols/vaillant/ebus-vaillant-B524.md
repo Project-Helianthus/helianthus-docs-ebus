@@ -233,7 +233,7 @@ Rules:
 
 | Opcode | Selector family | Documented selector sets | Notes |
 |--------|-----------------|-------------------------------|-------|
-| `0x02` | Local controller selector family | `GG=0x00..0x05`, `GG=0x08`, `GG=0x09`, `GG=0x0A` | Controller-local registers and per-slot configuration |
+| `0x02` | Local controller selector family | `GG=0x00..0x05`, `GG=0x08`, `GG=0x09`, `GG=0x0A` | Observed local selector sets; the role, physical identity and topology of OP02/GG0A remain Unknown |
 | `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | Opcode-scoped selector sets. `GG=0x01/0x02` heat-generator labels remain profile-qualified hypotheses; `GG=0x00` is uncharacterized. |
 
 **Unqualified presentation candidate:** The operator-provided display designation
