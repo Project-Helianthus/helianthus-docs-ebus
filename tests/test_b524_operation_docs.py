@@ -164,3 +164,45 @@ def test_register_catalog_is_strictly_partitioned_by_opcode() -> None:
     assert "### GG=0x08 — Modul Solar (VMS) auroSTEP" in op06
     assert "### GG=0x09 — Remote Control Regulators (VRC7xx, VRT38x)" in op06
     assert "### GG=0x0A — Remote Control Thermostats (VR9x)" in op06
+
+
+def test_op02_naming_catalog_matches_exact_operation_group_register_rows() -> None:
+    import csv
+    import re
+
+    source = ROOT / "protocols" / "vaillant" / "fixtures" / "b524-op02-register-names.csv"
+    names = list(csv.DictReader(source.open(encoding="utf-8")))
+    assert len({(row["opcode"], row["group"], row["register"]) for row in names}) == len(names)
+    text = REGISTER_MAP.read_text(encoding="utf-8").split(
+        "## OP=0x02 — Local Parameter Registers", 1
+    )[1].split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[0]
+    observed: dict[tuple[int, int], str] = {}
+    group = None
+    for line in text.splitlines():
+        header = re.match(r"### GG=0x([0-9A-F]{2})", line)
+        if header:
+            group = int(header[1], 16)
+        row = re.match(r"\| 0x([0-9A-F]{4}) \| ([a-z][a-z0-9_]*) \|", line)
+        if row and group is not None:
+            observed[group, int(row[1], 16)] = row[2]
+    for row in names:
+        assert row["opcode"] == "0x02"
+        assert re.fullmatch(r"[a-z][a-z0-9_]*", row["name"])
+        assert observed[int(row["group"], 0), int(row["register"], 0)] == row["name"]
+
+
+def test_op06_common_names_are_universal_and_do_not_relabel_op02() -> None:
+    import re
+
+    names = {1: "device_connected", 2: "device_class_address", 3: "device_error_code", 4: "device_firmware_version"}
+    text = REGISTER_MAP.read_text(encoding="utf-8")
+    remote = text.split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[1].split("## Constraint Catalog", 1)[0]
+    assert "**every GG**" in remote
+    assert "It does not establish register presence" in remote
+    for row in re.finditer(r"^\| 0x([0-9A-F]{4}) \| ([^|]+) \|", remote, flags=re.M):
+        register = int(row[1], 16)
+        if register in names:
+            assert row[2].strip() == names[register]
+    protocol = B524.read_text(encoding="utf-8")
+    for register, name in names.items():
+        assert f"| 0x{register:04X} | `{name}` |" in protocol

@@ -121,18 +121,21 @@ capture establishes the behavior.
 
 Some B524 control registers use different GG/RR addresses for reading vs writing. The **write address** (used in `OT=0x01` frames) can differ from the **read address** (used in `OT=0x00` frames). This is a controller implementation pattern, not a general B524 feature.
 
-**Known asymmetric path -- System Quick Mode:**
+**Historical asymmetric-path hypothesis -- System Quick Mode:**
+
+The historical role labels below remain unqualified. The current register names
+alone do not demonstrate that these selectors form one control path.
 
 | Operation | Path | Register |
 |-----------|------|----------|
-| Read active flag | `OP=0x02, GG=0x00, RR=0x0016` | `system_quick_mode_active` (dormant when no mode active) |
-| Read mode value | `OP=0x02, GG=0x00, RR=0x0074` | `system_quick_mode_value` (dormant when no mode active) |
+| Read active flag | `OP=0x02, GG=0x00, RR=0x0016` | `system_ventilation_operating_mode` (dormant when no mode active) |
+| Read mode value | `OP=0x02, GG=0x00, RR=0x0074` | `system_quick_mode` (dormant when no mode active) |
 | Write mode value | `OP=0x02, GG=0x09, RR=0x0001` | Write target for mode activation |
 | Write active flag | `OP=0x02, GG=0x09, RR=0x0002` | Write target for mode on/off |
 | Read-back from write group | `OP=0x02, GG=0x09, RR=0x0004` | Mirrors the written mode value |
 
 On the controller/profile behind this reconstruction, the local GG=0x09 path
-returned no instances in a passive scan and the cited static analysis associates
+returned no instances in a passive scan and the historical reconstruction associates
 these selectors with the asymmetric quick-mode path. That observation does not
 make all OP=02h/GG=09h registers write-triggered, unavailable to passive reads,
 or irrelevant to another profile; ventilation candidates remain separately
@@ -295,6 +298,20 @@ This rule also applies to `GG=0x00`: even where only one selector set is
 currently documented on wire, `GG` still does not carry a single global meaning
 outside its opcode context. Apply the same caution to other opcode/GG
 combinations until they are fully mapped.
+
+### 3.4 Common OP06 register names
+
+For every GG under `OP=0x06`, the common names are:
+
+| RR | Name |
+| --- | --- |
+| 0x0001 | `device_connected` |
+| 0x0002 | `device_class_address` |
+| 0x0003 | `device_error_code` |
+| 0x0004 | `device_firmware_version` |
+
+These names do not qualify a common codec, successful response, physical device
+identity or scan range. OP02 names remain independently keyed by opcode.
 
 ## 4. Family Details
 
