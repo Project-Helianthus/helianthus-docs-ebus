@@ -264,7 +264,7 @@ publishable correlated wire and identity evidence for that complete selector.
 | 09 | Remote Control Regulators (VRC7xx, VRT38x) | `remote_control_regulator` | Hypothesis for the family name; the `regulator_slot` route and its profile qualification remain separate. |
 | 0A | Remote Control Thermostats (VR9x) | `remote_control_thermostat` | Hypothesis for the family name; the `thermostat_slot` route and its profile qualification remain separate. |
 | 0B | Functional Modules (VR70) FM3 | `functional_modules_vr70` | Hypothesis. No public slot schema, bounds, or `RR=0001` predicate is documented. |
-| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Profile-qualified presentation. The published slot schema applies only to the documented OP06/GG0C profile. |
+| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Hypothesis for the family/FM5 display name. The separately published slot schema remains profile-qualified to OP06/GG0C. |
 | 0D | Relay Module (VR41) | `relay_module_vr41` | Hypothesis; no public OP06 route or bounds are documented. |
 | 0E | Clock Module | `clock_module` | Hypothesis for the family name; the `clock_slot` route and its profile qualification remain separate. |
 | 0F | Base Station | `base_station` | Hypothesis for the family name; the `base_station_slot` route and its profile qualification remain separate. |

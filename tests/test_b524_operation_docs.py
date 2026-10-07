@@ -146,5 +146,7 @@ def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> 
     assert "| 0x06 | 0x0A | Remote Control Thermostats (VR9x) |" in register_map
     assert "| 0x06 | 0x0E | Clock Module |" in register_map
     assert "| 0x06 | 0x0F | Base Station |" in register_map
+    assert "| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Hypothesis" in text
+    assert "## GG=0x0C — Functional Modules (VR71) FM5 (multi-instance, remote only)" in register_map
     assert "GG0B\nmust not receive GG0C's scan policy or `device_connected` predicate" in text
     assert "`unused` for GG04 does not justify suppressing a probe" in profile

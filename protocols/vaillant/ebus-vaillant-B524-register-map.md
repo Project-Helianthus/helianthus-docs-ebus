@@ -74,7 +74,7 @@ group is unused on all profiles.
 auroSTEP:** The documented selector spaces are `OP=0x02, GG=0x08` for 7 local
 singleton registers and `OP=0x06, GG=0x08` for 4 remote registers per instance
 across all 11 instances. The OP06 display name is a family hypothesis from the
-catalog; the verified local OP02 label, routing, and register layout remain
+catalog; the existing local OP02 label, routing, and register layout remain
 unchanged. These namespaces must not be merged by `GG` alone.
 
 **Characterized OP=0x06 device slot categories (0x09, 0x0A, 0x0C, 0x0E, 0x0F):**
@@ -768,13 +768,13 @@ retained inventory evidence. Identity and telemetry reads can include:
 
 ---
 
-## GG=0x0C — Functional Modules (VR71) (multi-instance, remote only)
+## GG=0x0C — Functional Modules (VR71) FM5 (multi-instance, remote only)
 
 > **Verified 2026-03-05:** Responds only to opcode 0x06 (no local config selector set documented; opcode 0x02 returns 0 valid registers). 15 registers per instance, 165 total valid. Uses the same remote-device slot schema as GG=0x09/0x0A.
 >
 > In the current lab, the slot at **II=0x01** has `device_class_address=0x26` and firmware 01.00.00. This correlates with the eBUS-identified `VR_71` hardware at target address `0x26`. The family/product identification comes from eBUS identity, not from B524 alone.
 
-### GG=0x0C Functional Modules (VR71) data (opcode 0x06)
+### GG=0x0C Functional Modules (VR71) FM5 data (opcode 0x06)
 
 Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. In the current lab, **II=0x01 has `device_class_address=0x26`**, matching the eBUS-identified hardware at target address `0x26`, while historical observations contain both `device_connected=0` and `1`.
 Connection state and retained identity are distinct; neither observation is a
