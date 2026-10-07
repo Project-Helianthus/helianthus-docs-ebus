@@ -230,7 +230,7 @@ Rules:
 | Opcode | Selector family | Documented selector sets | Notes |
 |--------|-----------------|-------------------------------|-------|
 | `0x02` | Local controller selector family | `GG=0x00..0x05`, `GG=0x08`, `GG=0x09`, `GG=0x0A` | Controller-local registers and per-slot configuration |
-| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | Opcode-scoped selector sets. Static ISC smartConnect KNX firmware corroborates the `GG=0x01/0x02` heat-generator path; `GG=0x00` remains uncharacterized outside that path |
+| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0B`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | Opcode-scoped selector sets. The operator-provided presentation names `GG=0x0B` as Functional Modules (VR70) and `GG=0x0C` as Functional Modules (VR71); the former has no published capture, bounds, or schema here. Static ISC smartConnect KNX firmware corroborates the `GG=0x01/0x02` heat-generator path; `GG=0x00` remains uncharacterized outside that path |
 
 **Selector rule:** `GG` labels are local to the opcode-selected selector set. A
 shared `GG` byte value across different opcodes has no standalone semantic

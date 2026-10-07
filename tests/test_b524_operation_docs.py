@@ -86,3 +86,17 @@ def test_device_enumeration_preserves_ii01_and_retained_inventory_contract() -> 
     assert "Unknown results do not stop" in section
     assert "Full/research audit every" in section
     assert "must not suppress\nretained inventory evidence" in section
+
+
+def test_functional_module_presentation_names_preserve_the_evidence_boundary() -> None:
+    register_map = REGISTER_MAP.read_text(encoding="utf-8")
+    profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(encoding="utf-8")
+    architecture = (ROOT / "architecture" / "functional-modules.md").read_text(encoding="utf-8")
+
+    assert "`OP=0x06, GG=0x0B` = **Functional Modules (VR70)**" in register_map
+    assert "`OP=0x06, GG=0x0C` =\n**Functional Modules (VR71)**" in register_map
+    assert "no captured wire contract, slot bounds, `RR=0x0001`\npredicate, or register layout" in register_map
+    assert "| 0B | `functional_modules_vr70` | Unknown |" in profile
+    assert "the `GG=0x0C` policy must not be applied to `GG=0x0B`" in profile
+    assert "`OP=0x06, GG=0x0B`" in architecture
+    assert "`OP=0x06, GG=0x0C`" in architecture
