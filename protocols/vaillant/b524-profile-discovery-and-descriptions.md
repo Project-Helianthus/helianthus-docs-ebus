@@ -29,6 +29,8 @@ of the semantic labels assigned by an older mapper.
 OP00 information identifiers do not enumerate OP06 groups. Counts and same-numbered
 identifiers never suppress an independently configured device class. The following
 table describes the characterized controller profile; names are operation-scoped.
+The wider [OP06 presentation-name catalog](ebus-vaillant-B524.md#33-op06-family-presentation-name-catalog)
+is a hypothesis catalog, not an expansion of this discovery policy.
 
 | OP06 GG | Public class | Discovery II bounds | RR0001 interpretation |
 | --- | --- | --- | --- |
@@ -51,6 +53,11 @@ mapping does not establish additional qualified scan targets or bounds; explorat
 probing remains separately qualified. Do not apply the `GG=0x0C` policy until a
 profile-qualified contract supports it. The `functional_modules_vr71` class remains
 specific to `GG=0x0C`.
+
+The other names in the OP06 presentation-name catalog are subject to the same
+boundary unless a row already appears in the table above with its own qualified
+route. In particular, `unused` for GG04 does not justify suppressing a probe
+that an independently qualified profile requires.
 
 Sanitized BASV2 observations for GG09/0A/0C/0E/0F have RR0001 raw `00` at II00,
 `01` at II01, and `00` at II02 through II0A. Starting a first-empty scan at II00

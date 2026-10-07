@@ -240,6 +240,40 @@ separately documented `OP=0x06, GG=0x0C` presentation name is **Functional
 Modules (VR71)**; neither display name establishes a universal product-identity
 rule.
 
+### 3.3 OP06 family presentation-name catalog
+
+The following is an operator-provided **hypothesis catalog** for the OP06 family.
+It gives a stable human label and a `snake_case` presentation semantic name for
+use only after the exact `(OP=0x06, GG)` selector has been retained. It does not
+add a documented selector route, scan target, instance range, register layout,
+identity rule, liveness predicate, or write capability. The catalog is public as
+an operator-supplied designation in [issue #544]; its restricted static-analysis
+corroboration is not published evidence. Promote an individual row only with
+publishable correlated wire and identity evidence for that complete selector.
+
+| GG | Human label | Presentation semantic name | Public qualification |
+| --- | --- | --- | --- |
+| 01 | Boiler | `boiler` | Hypothesis. The existing profile-qualified `primary_heating_source` route remains the documented route. |
+| 02 | Heat Pump | `heat_pump` | Hypothesis. The existing profile-qualified `secondary_heating_source` route remains the documented route. |
+| 03 | Air Recovery (VAR) recoVair | `air_recovery_recovair` | Hypothesis; no public OP06 route or bounds are documented. |
+| 04 | unused | `unused` | Unknown. This recorded presentation state does not establish universal absence or reservation. |
+| 05 | Wärmepumpe Zubehör Appliance Interface (VWZ-AI) | `heat_pump_accessory_vwz_ai` | Hypothesis; no public OP06 route or bounds are documented. |
+| 06 | Pumpen Module - Solar (VPM-S) auroFLOW | `solar_pump_module_auroflow` | Hypothesis; no public OP06 route or bounds are documented. |
+| 07 | Pumpen Module - Wasser (VPM-W) aguaFLOW | `water_pump_module_aguaflow` | Hypothesis; no public OP06 route or bounds are documented. |
+| 08 | Modul Solar (VMS) auroSTEP | `solar_module_aurostep` | Hypothesis. It does not replace the separately documented profile-specific `buffer_solar_cylinder_2_remote` route. |
+| 09 | Remote Control Regulators (VRC7xx, VRT38x) | `remote_control_regulator` | Hypothesis for the family name; the `regulator_slot` route and its profile qualification remain separate. |
+| 0A | Remote Control Thermostats (VR9x) | `remote_control_thermostat` | Hypothesis for the family name; the `thermostat_slot` route and its profile qualification remain separate. |
+| 0B | Functional Modules (VR70) FM3 | `functional_modules_vr70` | Hypothesis. No public slot schema, bounds, or `RR=0001` predicate is documented. |
+| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Profile-qualified presentation. The published slot schema applies only to the documented OP06/GG0C profile. |
+| 0D | Relay Module (VR41) | `relay_module_vr41` | Hypothesis; no public OP06 route or bounds are documented. |
+| 0E | Clock Module | `clock_module` | Hypothesis for the family name; the `clock_slot` route and its profile qualification remain separate. |
+| 0F | Base Station | `base_station` | Hypothesis for the family name; the `base_station_slot` route and its profile qualification remain separate. |
+
+The `unused` label for GG04 is deliberately not an exclusion rule. Likewise,
+similar human names do not authorize inheritance from a sibling group: GG0B
+must not receive GG0C's scan policy or `device_connected` predicate, and none of
+these OP06 names changes OP02 semantics or its parameter-description boundary.
+
 **Selector rule:** `GG` labels are local to the opcode-selected selector set. A
 shared `GG` byte value across different opcodes has no standalone semantic
 meaning by itself.

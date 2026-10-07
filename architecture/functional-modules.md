@@ -75,8 +75,8 @@ mapping is:
 
 | Selector | Presentation name | Evidence boundary |
 | --- | --- | --- |
-| `OP=0x06, GG=0x0B` | Functional Modules (VR70) | Name only. No published capture, slot bounds, register layout, or physical-product identity is established here. |
-| `OP=0x06, GG=0x0C` | Functional Modules (VR71) | Presentation name plus the separately documented, profile/lab-scoped VR71 correlation. |
+| `OP=0x06, GG=0x0B` | Functional Modules (VR70) FM3 | Name only. No published capture, slot bounds, register layout, or physical-product identity is established here. |
+| `OP=0x06, GG=0x0C` | Functional Modules (VR71) FM5 | Presentation name plus the separately documented, profile/lab-scoped VR71 correlation. |
 
 These labels distinguish two native namespaces. Neither label makes the family
 association a universal wire rule, and the qualified `GG=0x0C` discovery contract

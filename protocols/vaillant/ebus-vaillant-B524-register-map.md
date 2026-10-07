@@ -57,11 +57,18 @@ correlated evidence. They do not establish writability or authorize a write.
 | 0x06 | 0x08 | Buffer/Solar Cylinder 2 (remote) | Yes | 0x0A | — | unknown status; no connected-device predicate | 44 remote |
 | 0x06 | 0x09 | Regulators | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 352 remote |
 | 0x06 | 0x0A | Thermostats | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 338 remote |
-| 0x06 | 0x0C | Functional Modules (VR71) | Yes | 0x0A | 0x2F | `device_connected` (RR=0x0001) | 165 (15/inst) |
+| 0x06 | 0x0C | Functional Modules (VR71) FM5 | Yes | 0x0A | 0x2F | `device_connected` (RR=0x0001) | 165 (15/inst) |
 | 0x06 | 0x0E | Clock | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
 | 0x06 | 0x0F | Base Stations | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
 
 **Hypothesis:** independent protocol evidence is required for this interpretation.
+
+The [OP06 family presentation-name catalog](ebus-vaillant-B524.md#33-op06-family-presentation-name-catalog)
+records operator-provided human names and `snake_case` semantic names for GG01
+through GG0F. Except where this map already supplies an explicitly qualified
+route, they are hypotheses only. A corrected presentation name does not change
+the selector's wire identity or layout, expand the scan, or establish that a
+group is unused on all profiles.
 
 **GG=0x08 — Buffer/Solar Cylinder 2:** The documented selector spaces are
 `OP=0x02, GG=0x08` for 7 local singleton registers and `OP=0x06, GG=0x08` for
@@ -70,7 +77,7 @@ separately and must not be merged by `GG` alone.
 
 **Characterized OP=0x06 device slot categories (0x09, 0x0A, 0x0C, 0x0E, 0x0F):**
 `GG=0x09` = Regulators, `GG=0x0A` = Thermostats, `GG=0x0C` = Functional Modules
-(VR71), `GG=0x0E` = Clock, and `GG=0x0F` = Base Stations. Connected-device discovery
+(VR71) FM5, `GG=0x0E` = Clock, and `GG=0x0F` = Base Stations. Connected-device discovery
 uses profile-qualified `device_connected` (RR=0x0001),
 starting at II01 for the characterized profile. Readable headers do not override
 a false connection Boolean; retained inventory is distinct. See the
@@ -81,18 +88,18 @@ Instance `II` selects the slot.
 ### Unqualified functional-module presentation candidate
 
 The operator-provided display designation is `OP=0x06, GG=0x0B` = **Functional
-Modules (VR70)**. It is retained here for presentation, but is not a documented
+Modules (VR70) FM3**. It is retained here for presentation, but is not a documented
 B524 selector route: no published capture, slot bounds, `RR=0x0001` predicate,
 or register layout supports it. Those facts remain **Unknown**, and this
 display mapping does not establish additional qualified scan targets or bounds;
 exploratory probing remains separately qualified. It must not be inferred to share
 the `GG=0x0C` schema.
 
-`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71)** in the
+`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71) FM5** in the
 documented map below. That presentation name does not turn the profile/lab
 correlation into universal protocol identity.
 
-**GG=0x0C — Functional Modules (VR71):** Responds only to opcode `0x06`. No local
+**GG=0x0C — Functional Modules (VR71) FM5:** Responds only to opcode `0x06`. No local
 config selector set is documented. Uses the same remote-device slot schema as
 `GG=0x09/0x0A`.
 In the current lab, `II=0x01` with
@@ -126,7 +133,7 @@ Source: BASV2 constraint probe + live scan corpus.
 | 0x09 | 0x06 (remote) | 0x0A | 0x002F | **0x0030** | Radio sensors VRC7xx. 32 regs/instance |
 | 0x0A | 0x02 (local) | 0x0A | — | **0x004D** | Radio sensors VR92. 69 regs/instance. **NEW** |
 | 0x0A | 0x06 (remote) | 0x0A | 0x003F | **0x0035** | Radio sensors VR92. 32 regs/instance |
-| 0x0C | 0x06 (remote) | 0x0A | 0x003F | **0x002F** | Functional Modules (VR71). 15 regs/instance. No local `OP=0x02` selector set documented |
+| 0x0C | 0x06 (remote) | 0x0A | 0x003F | **0x002F** | Functional Modules (VR71) FM5. 15 regs/instance. No local `OP=0x02` selector set documented |
 
 ---
 

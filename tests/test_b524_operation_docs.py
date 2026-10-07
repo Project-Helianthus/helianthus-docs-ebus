@@ -93,10 +93,10 @@ def test_functional_module_presentation_names_preserve_the_evidence_boundary() -
     profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(encoding="utf-8")
     architecture = (ROOT / "architecture" / "functional-modules.md").read_text(encoding="utf-8")
 
-    assert "`OP=0x06, GG=0x0B` = **Functional\nModules (VR70)**" in register_map
+    assert "`OP=0x06, GG=0x0B` = **Functional\nModules (VR70) FM3**" in register_map
     assert "is not a documented\nB524 selector route" in register_map
     assert "does not establish additional qualified scan targets or bounds;\nexploratory probing remains separately qualified" in register_map
-    assert "`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71)**" in register_map
+    assert "`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71) FM5**" in register_map
     assert "outside this characterized discovery profile" in profile
     assert "exploratory\nprobing remains separately qualified. Do not apply the `GG=0x0C` policy" in profile
     assert "`OP=0x06, GG=0x0B`" in architecture
@@ -105,3 +105,37 @@ def test_functional_module_presentation_names_preserve_the_evidence_boundary() -
         "**Unqualified presentation candidate:**", 1
     )[0]
     assert "GG=0x0B" not in routing
+
+
+def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> None:
+    text = B524.read_text(encoding="utf-8")
+    profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "operator-provided **hypothesis catalog**" in text
+    for semantic_name in (
+        "boiler",
+        "heat_pump",
+        "air_recovery_recovair",
+        "unused",
+        "heat_pump_accessory_vwz_ai",
+        "solar_pump_module_auroflow",
+        "water_pump_module_aguaflow",
+        "solar_module_aurostep",
+        "remote_control_regulator",
+        "remote_control_thermostat",
+        "functional_modules_vr70",
+        "functional_modules_vr71",
+        "relay_module_vr41",
+        "clock_module",
+        "base_station",
+    ):
+        assert f"`{semantic_name}`" in text
+    assert "does not establish universal absence or reservation" in text
+    assert "| 05 | Wärmepumpe Zubehör Appliance Interface (VWZ-AI) |" in text
+    assert "| 06 | Pumpen Module - Solar (VPM-S) auroFLOW |" in text
+    assert "| 07 | Pumpen Module - Wasser (VPM-W) aguaFLOW |" in text
+    assert "| 08 | Modul Solar (VMS) auroSTEP |" in text
+    assert "GG0B\nmust not receive GG0C's scan policy or `device_connected` predicate" in text
+    assert "`unused` for GG04 does not justify suppressing a probe" in profile
