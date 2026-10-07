@@ -159,7 +159,7 @@ def test_register_catalog_is_strictly_partitioned_by_opcode() -> None:
 
     assert op02.index("### GG=0x09 — Local Configuration") < op02.index(
         "### GG=0x09 — Ventilation / recoVair Candidates"
-    ) < op02.index("### GG=0x0A — Local Configuration")
+    ) < op02.index("### GG=0x0A — Local Parameters")
     assert "(opcode 0x06)" not in op02
     assert "### GG=0x08 — Modul Solar (VMS) auroSTEP" in op06
     assert "### GG=0x09 — Remote Control Regulators (VRC7xx, VRT38x)" in op06
@@ -206,3 +206,15 @@ def test_op06_common_names_are_universal_and_do_not_relabel_op02() -> None:
     protocol = B524.read_text(encoding="utf-8")
     for register, name in names.items():
         assert f"| 0x{register:04X} | `{name}` |" in protocol
+
+
+
+def test_op02_gg0a_observation_does_not_establish_template_or_device_topology() -> None:
+    section = REGISTER_MAP.read_text(encoding="utf-8").split(
+        "### GG=0x0A — Local Parameters", 1
+    )[1].split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[0]
+    assert "physical-device identity, role and topology remain" in section
+    assert "**Unknown**" in section
+    assert "Repetition does not establish a physical" in section
+    assert "template/default purpose" in section
+    assert "this is a template/default configuration" not in section

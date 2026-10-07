@@ -679,13 +679,19 @@ alias of OP02/GG09 or change the codec or meaning of its stored value.
 
 ---
 
-### GG=0x0A — Local Configuration
+### GG=0x0A — Local Parameters
 
-`OP=0x02, GG=0x0A` is local template/default configuration; it is distinct from the remote OP06 selector set.
+`OP=0x02, GG=0x0A` is an observed local selector set, separate from
+`OP=0x06, GG=0x0A`. Its physical-device identity, role and topology remain
+**Unknown**. The namespace must not be labelled as a thermostat or a
+controller template solely from the outer group name or repeated values.
 
-
-
-Instanced (II=0x00-0x0A). 69 registers per instance. **All 11 instances are byte-for-byte identical** — this is a template/default configuration from the BASV2, not per-VR92 data. Constraint catalog entries (0x0001-0x0006) define the writable config subset.
+Retained observations cover requested II=0x00..0x0A and contain repeated
+register values across selectors. Repetition does not establish a physical
+instance count, ignored II selectors, template/default purpose, or a per-VR92
+relationship. Keep each native request identity and its reply independently.
+Historical row names and short-probe constraints are unqualified annotations;
+they do not establish writability, discovery predicates or device identity.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
