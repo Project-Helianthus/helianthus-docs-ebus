@@ -228,3 +228,11 @@ def test_protocol_overview_preserves_unknown_role_and_topology_for_op02_gg0a() -
     assert "`GG=0x0A`" in selector_row
     assert "OP02/GG0A remain Unknown" in selector_row
     assert "per-slot configuration" not in selector_row
+
+
+def test_op02_gg08_uses_deltat_without_relabelling_remote_family() -> None:
+    text = REGISTER_MAP.read_text(encoding="utf-8")
+    assert "### GG=0x08 — DeltaT" in text
+    assert "| 0x02 | 0x08 | DeltaT (local) |" in text
+    assert "### GG=0x08 — Modul Solar (VMS) auroSTEP" in text
+    assert "Buffer/Solar Cylinder 2" not in text
