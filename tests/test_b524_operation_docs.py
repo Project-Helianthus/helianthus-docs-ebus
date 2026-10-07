@@ -93,10 +93,15 @@ def test_functional_module_presentation_names_preserve_the_evidence_boundary() -
     profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(encoding="utf-8")
     architecture = (ROOT / "architecture" / "functional-modules.md").read_text(encoding="utf-8")
 
-    assert "`OP=0x06, GG=0x0B` = **Functional Modules (VR70)**" in register_map
-    assert "`OP=0x06, GG=0x0C` =\n**Functional Modules (VR71)**" in register_map
-    assert "no captured wire contract, slot bounds, `RR=0x0001`\npredicate, or register layout" in register_map
-    assert "| 0B | `functional_modules_vr70` | Unknown |" in profile
-    assert "the `GG=0x0C` policy must not be applied to `GG=0x0B`" in profile
+    assert "`OP=0x06, GG=0x0B` = **Functional\nModules (VR70)**" in register_map
+    assert "is not a documented\nB524 selector route" in register_map
+    assert "must not be added to a scan plan" in register_map
+    assert "`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71)**" in register_map
+    assert "outside this characterized discovery profile" in profile
+    assert "Do not add\nit to a scan plan or apply the `GG=0x0C` policy" in profile
     assert "`OP=0x06, GG=0x0B`" in architecture
     assert "`OP=0x06, GG=0x0C`" in architecture
+    routing = B524.read_text(encoding="utf-8").split("### 3.2 Opcode routing", 1)[1].split(
+        "**Unqualified presentation candidate:**", 1
+    )[0]
+    assert "GG=0x0B" not in routing

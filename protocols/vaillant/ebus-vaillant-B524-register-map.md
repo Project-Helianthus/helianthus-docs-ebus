@@ -57,7 +57,6 @@ correlated evidence. They do not establish writability or authorize a write.
 | 0x06 | 0x08 | Buffer/Solar Cylinder 2 (remote) | Yes | 0x0A | — | unknown status; no connected-device predicate | 44 remote |
 | 0x06 | 0x09 | Regulators | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 352 remote |
 | 0x06 | 0x0A | Thermostats | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 338 remote |
-| 0x06 | 0x0B | Functional Modules (VR70) | Unknown | Unknown | Unknown | Unknown | Operator-provided presentation name; no published capture, slot bound, or register map in this catalog |
 | 0x06 | 0x0C | Functional Modules (VR71) | Yes | 0x0A | 0x2F | `device_connected` (RR=0x0001) | 165 (15/inst) |
 | 0x06 | 0x0E | Clock | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
 | 0x06 | 0x0F | Base Stations | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
@@ -86,13 +85,18 @@ a false connection Boolean; retained inventory is distinct. See the
 Instance `II` selects the slot.
 `OP=0x02, GG=0x09/0x0A` stores per-slot local configuration (separate namespace).
 
-**Functional-module presentation names:** The operator-supplied display mapping is
-`OP=0x06, GG=0x0B` = **Functional Modules (VR70)** and `OP=0x06, GG=0x0C` =
-**Functional Modules (VR71)**. It names distinct opcode-scoped namespaces. The
-VR70 mapping supplies no captured wire contract, slot bounds, `RR=0x0001`
-predicate, or register layout; those remain **Unknown**. The VR71 presentation
-name does not turn the following profile/lab correlation into universal protocol
-identity.
+### Unqualified functional-module presentation candidate
+
+The operator-provided display designation is `OP=0x06, GG=0x0B` = **Functional
+Modules (VR70)**. It is retained here for presentation, but is not a documented
+B524 selector route: no published capture, slot bounds, `RR=0x0001` predicate,
+or register layout supports it. Those facts remain **Unknown**, and this
+designation must not be added to a scan plan or inferred to share the `GG=0x0C`
+schema.
+
+`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71)** in the
+documented map below. That presentation name does not turn the profile/lab
+correlation into universal protocol identity.
 
 **GG=0x0C — Functional Modules (VR71):** Responds only to opcode `0x06`. No local
 config selector set is documented. Uses the same remote-device slot schema as
@@ -128,7 +132,6 @@ Source: BASV2 constraint probe + live scan corpus.
 | 0x09 | 0x06 (remote) | 0x0A | 0x002F | **0x0030** | Radio sensors VRC7xx. 32 regs/instance |
 | 0x0A | 0x02 (local) | 0x0A | — | **0x004D** | Radio sensors VR92. 69 regs/instance. **NEW** |
 | 0x0A | 0x06 (remote) | 0x0A | 0x003F | **0x0035** | Radio sensors VR92. 32 regs/instance |
-| 0x0B | 0x06 (remote) | Unknown | Unknown | none | Functional Modules (VR70): operator-provided presentation name only; no scan evidence or bounds are published here |
 | 0x0C | 0x06 (remote) | 0x0A | 0x003F | **0x002F** | Functional Modules (VR71). 15 regs/instance. No local `OP=0x02` selector set documented |
 
 ---
