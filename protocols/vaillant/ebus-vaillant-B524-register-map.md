@@ -52,14 +52,14 @@ correlated evidence. They do not establish writability or authorize a write.
 | 0x02 | 0x04 | Solar Circuit | Yes (spec) | 0x02 | 0x0B | hydraulic scheme + VR_71 config; current lab: singleton (II=0x00) | 10 (0x0001–0x000B) |
 | 0x02 | 0x05 | Hot Water Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
 | 0x02 | 0x08 | Buffer/Solar Cylinder 2 (local) | No | 0x00 | — | — | 7 local |
-| 0x06 | 0x01 | Primary Heating Sources | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
-| 0x06 | 0x02 | Secondary Heating Sources | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
-| 0x06 | 0x08 | Buffer/Solar Cylinder 2 (remote) | Yes | 0x0A | — | unknown status; no connected-device predicate | 44 remote |
-| 0x06 | 0x09 | Regulators | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 352 remote |
-| 0x06 | 0x0A | Thermostats | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 338 remote |
+| 0x06 | 0x01 | Boiler | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
+| 0x06 | 0x02 | Heat Pump | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
+| 0x06 | 0x08 | Modul Solar (VMS) auroSTEP | Yes | 0x0A | — | unknown status; no connected-device predicate | 44 remote |
+| 0x06 | 0x09 | Remote Control Regulators (VRC7xx, VRT38x) | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 352 remote |
+| 0x06 | 0x0A | Remote Control Thermostats (VR9x) | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 338 remote |
 | 0x06 | 0x0C | Functional Modules (VR71) FM5 | Yes | 0x0A | 0x2F | `device_connected` (RR=0x0001) | 165 (15/inst) |
-| 0x06 | 0x0E | Clock | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
-| 0x06 | 0x0F | Base Stations | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
+| 0x06 | 0x0E | Clock Module | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
+| 0x06 | 0x0F | Base Station | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
 
 **Hypothesis:** independent protocol evidence is required for this interpretation.
 
@@ -70,14 +70,17 @@ route, they are hypotheses only. A corrected presentation name does not change
 the selector's wire identity or layout, expand the scan, or establish that a
 group is unused on all profiles.
 
-**GG=0x08 — Buffer/Solar Cylinder 2:** The documented selector spaces are
-`OP=0x02, GG=0x08` for 7 local singleton registers and `OP=0x06, GG=0x08` for
-4 remote registers per instance across all 11 instances. These are documented
-separately and must not be merged by `GG` alone.
+**GG=0x08 — OP02 local Buffer/Solar Cylinder 2; OP06 Modul Solar (VMS)
+auroSTEP:** The documented selector spaces are `OP=0x02, GG=0x08` for 7 local
+singleton registers and `OP=0x06, GG=0x08` for 4 remote registers per instance
+across all 11 instances. The OP06 display name is a family hypothesis from the
+catalog; the verified local OP02 label, routing, and register layout remain
+unchanged. These namespaces must not be merged by `GG` alone.
 
 **Characterized OP=0x06 device slot categories (0x09, 0x0A, 0x0C, 0x0E, 0x0F):**
-`GG=0x09` = Regulators, `GG=0x0A` = Thermostats, `GG=0x0C` = Functional Modules
-(VR71) FM5, `GG=0x0E` = Clock, and `GG=0x0F` = Base Stations. Connected-device discovery
+`GG=0x09` = Remote Control Regulators (VRC7xx, VRT38x), `GG=0x0A` = Remote
+Control Thermostats (VR9x), `GG=0x0C` = Functional Modules (VR71) FM5,
+`GG=0x0E` = Clock Module, and `GG=0x0F` = Base Station. Connected-device discovery
 uses profile-qualified `device_connected` (RR=0x0001),
 starting at II01 for the characterized profile. Readable headers do not override
 a false connection Boolean; retained inventory is distinct. See the
@@ -128,7 +131,7 @@ Source: BASV2 constraint probe + live scan corpus.
 | 0x04 | 0x02 (local) | 0x00 | 0x000B | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
 | 0x05 | 0x02 (local) | 0x01 | 0x0004 | 0x0004 | Cylinders. **Only 2 instances** (0x00-0x01), not 0x0A. Gated by fm5_config≤2 |
 | 0x08 | 0x02 (local) | 0x00 | — | **0x0007** | Buffer/Solar Cylinder 2. Singleton config. **NEW** |
-| 0x08 | 0x06 (remote) | 0x0A | — | **0x0004** | Buffer/Solar Cylinder 2. 4 regs/instance. **NEW** |
+| 0x08 | 0x06 (remote) | 0x0A | — | **0x0004** | Modul Solar (VMS) auroSTEP display hypothesis. 4 regs/instance; no connected-device predicate. **NEW** |
 | 0x09 | 0x02 (local) | 0x0A | — | **0x000F** | Radio sensors VRC7xx. 15 regs/instance. **NEW** |
 | 0x09 | 0x06 (remote) | 0x0A | 0x002F | **0x0030** | Radio sensors VRC7xx. 32 regs/instance |
 | 0x0A | 0x02 (local) | 0x0A | — | **0x004D** | Radio sensors VR92. 69 regs/instance. **NEW** |
@@ -570,7 +573,7 @@ Cylinder presence detection:
 
 ---
 
-## GG=0x08 — Buffer/Solar Cylinder 2
+## GG=0x08 — OP02 local Buffer/Solar Cylinder 2; OP06 Modul Solar (VMS) auroSTEP
 
 > **Verified 2026-03-05:** Responds to BOTH opcodes with different data.
 

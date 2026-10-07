@@ -233,11 +233,11 @@ Rules:
 | `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | **Hypothesis:** independent protocol evidence is required for this interpretation. |
 
 **Unqualified presentation candidate:** The operator-provided display designation
-`OP=0x06, GG=0x0B` = **Functional Modules (VR70)** is retained as a name only. It
+`OP=0x06, GG=0x0B` = **Functional Modules (VR70) FM3** is retained as a name only. It
 is not included in the documented selector sets because this repository has no
 published capture, bounds, liveness predicate, or schema for that route. The
 separately documented `OP=0x06, GG=0x0C` presentation name is **Functional
-Modules (VR71)**; neither display name establishes a universal product-identity
+Modules (VR71) FM5**; neither display name establishes a universal product-identity
 rule.
 
 ### 3.3 OP06 family presentation-name catalog
@@ -247,7 +247,7 @@ It gives a stable human label and a `snake_case` presentation semantic name for
 use only after the exact `(OP=0x06, GG)` selector has been retained. It does not
 add a documented selector route, scan target, instance range, register layout,
 identity rule, liveness predicate, or write capability. The catalog is public as
-an operator-supplied designation in [issue #544]; its restricted static-analysis
+an operator-supplied designation in [issue #544](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/544); its restricted static-analysis
 corroboration is not published evidence. Promote an individual row only with
 publishable correlated wire and identity evidence for that complete selector.
 

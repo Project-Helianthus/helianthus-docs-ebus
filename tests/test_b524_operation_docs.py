@@ -109,6 +109,7 @@ def test_functional_module_presentation_names_preserve_the_evidence_boundary() -
 
 def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> None:
     text = B524.read_text(encoding="utf-8")
+    register_map = REGISTER_MAP.read_text(encoding="utf-8")
     profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(
         encoding="utf-8"
     )
@@ -133,9 +134,17 @@ def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> 
     ):
         assert f"`{semantic_name}`" in text
     assert "does not establish universal absence or reservation" in text
+    assert "[issue #544](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/544)" in text
     assert "| 05 | Wärmepumpe Zubehör Appliance Interface (VWZ-AI) |" in text
     assert "| 06 | Pumpen Module - Solar (VPM-S) auroFLOW |" in text
     assert "| 07 | Pumpen Module - Wasser (VPM-W) aguaFLOW |" in text
     assert "| 08 | Modul Solar (VMS) auroSTEP |" in text
+    assert "| 0x06 | 0x01 | Boiler |" in register_map
+    assert "| 0x06 | 0x02 | Heat Pump |" in register_map
+    assert "| 0x06 | 0x08 | Modul Solar (VMS) auroSTEP |" in register_map
+    assert "| 0x06 | 0x09 | Remote Control Regulators (VRC7xx, VRT38x) |" in register_map
+    assert "| 0x06 | 0x0A | Remote Control Thermostats (VR9x) |" in register_map
+    assert "| 0x06 | 0x0E | Clock Module |" in register_map
+    assert "| 0x06 | 0x0F | Base Station |" in register_map
     assert "GG0B\nmust not receive GG0C's scan policy or `device_connected` predicate" in text
     assert "`unused` for GG04 does not justify suppressing a probe" in profile
