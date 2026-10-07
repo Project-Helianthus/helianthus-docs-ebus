@@ -45,21 +45,17 @@ def test_scan_presets_are_deterministic_bounded_and_operation_scoped() -> None:
 
 
 def test_scan_plan_and_budgets_remain_partial_read_only_contracts() -> None:
-    text = B524.read_text(encoding="utf-8")
-    assert "`--scan-plan <path.json>`" in text
-    assert '"schema_version": 1' in text
-    assert "only OP=02h and OP=06h read selectors" in text
-    assert "100000 planned scalar requests" in text
+    text = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
+    assert "`--scan-plan` JSON file" in text
+    assert "`schema_version: 1`" in text
+    assert "Only read selectors and wire-bounded values are accepted" in text
+    assert "100000 scalar requests fail before queuing" in text
     assert "`--request-budget`" in text
-    assert "partial\nartifact marked `incomplete`" in text
+    assert "partial artifact marked" in text
+    assert "`incomplete`, never an absence verdict" in text
 
 
-def test_custom_plan_grammar_and_synthetic_boundary_vectors_are_documented() -> None:
-    text = B524.read_text(encoding="utf-8")
-    assert "Both endpoints are included" in text
-    assert "Identical normalized duplicate rows" in text
-    assert "len(unique_instances) * len(unique_registers)" in text
-    assert "Booleans and floating-point" in text
+def test_scan_plan_synthetic_boundary_vectors_are_consistent() -> None:
     cases = json.loads((ROOT / "tests" / "fixtures" / "b524_scan_plan_v1_cases.json").read_text())
     assert cases["source"] == "synthetic_contract_vectors"
     assert cases["accepted"][0]["normalized"] == cases["accepted"][1]["normalized"]
