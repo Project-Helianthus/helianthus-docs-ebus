@@ -246,3 +246,5 @@ def test_local_deltat_does_not_claim_singleton_topology() -> None:
     assert "not a qualified device count" in local
     assert "OP06/GG08 remains a separate instanced selector set" in local
     assert "| 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent |" in text
+    assert "| 0x08 | 0x02 (local) | profile-dependent |" in text
+    assert "| 0x08 | 0x02 (local) | 0x00 |" not in text

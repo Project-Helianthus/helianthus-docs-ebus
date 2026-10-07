@@ -137,7 +137,7 @@ Source: BASV2 constraint probe + live scan corpus.
 | 0x03 | 0x02 (local) | 0x0A | 0x002F | **0x002E** | Zones. Scan confirms 38 regs/instance. Profile accurate |
 | 0x04 | 0x02 (local) | 0x00 | 0x000B | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
 | 0x05 | 0x02 (local) | 0x01 | 0x0004 | 0x0004 | Cylinders. **Only 2 instances** (0x00-0x01), not 0x0A. Gated by fm5_config≤2 |
-| 0x08 | 0x02 (local) | 0x00 | — | **0x0007** | DeltaT. Local II scope remains profile-dependent; physical topology Unknown. |
+| 0x08 | 0x02 (local) | profile-dependent | — | **0x0007** | DeltaT. Local II scope remains profile-dependent; physical topology Unknown. |
 | 0x08 | 0x06 (remote) | 0x0A | — | **0x0004** | Modul Solar (VMS) auroSTEP display hypothesis. 4 regs/instance; no connected-device predicate. **NEW** |
 | 0x09 | 0x02 (local) | 0x0A | — | **0x000F** | Radio sensors VRC7xx. 15 regs/instance. **NEW** |
 | 0x09 | 0x06 (remote) | 0x0A | 0x002F | **0x0030** | Radio sensors VRC7xx. 32 regs/instance |
