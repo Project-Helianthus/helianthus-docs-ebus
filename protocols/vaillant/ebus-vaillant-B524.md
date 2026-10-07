@@ -13,7 +13,6 @@ It is structured by:
 
 **Related documents:**
 - Register catalog: [ebus-vaillant-B524-register-map.md](./ebus-vaillant-B524-register-map.md)
-- Research & working hypotheses: archived observations
 
 ## 1. Scope and Framing
 
@@ -114,7 +113,9 @@ Four distinct "no real data" signaling mechanisms exist in B524 responses:
 | **0x7FFFFFFF sentinel** | FLAGS+GG+RR+`FF FF FF 7F` | Integer register with uninitialized or out-of-range value | `u32_value == 0x7FFFFFFF` |
 | **Zero** | FLAGS+GG+RR+`00 00` | Legitimate value = 0 | Context-dependent; not a sentinel |
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
+`0x7FFFFFFF` is a candidate no-data value in integer replies. Preserve it raw
+and keep any no-data treatment profile-qualified until a correlated public
+capture establishes the behavior.
 
 ### 2.5 Asymmetric read/write paths
 
@@ -230,7 +231,7 @@ Rules:
 | Opcode | Selector family | Documented selector sets | Notes |
 |--------|-----------------|-------------------------------|-------|
 | `0x02` | Local controller selector family | `GG=0x00..0x05`, `GG=0x08`, `GG=0x09`, `GG=0x0A` | Controller-local registers and per-slot configuration |
-| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | Opcode-scoped selector sets. `GG=0x01/0x02` heat-generator labels remain profile-qualified hypotheses; `GG=0x00` is uncharacterized. |
 
 **Unqualified presentation candidate:** The operator-provided display designation
 `OP=0x06, GG=0x0B` = **Functional Modules (VR70) FM3** is retained as a name only. It
@@ -282,8 +283,11 @@ Explicit examples:
 
 - `GG=0x00 + OP=0x02` = local system/settings selector set.
 - `GG=0x01 + OP=0x02` = local DHW selector set.
-- **Hypothesis:** independent protocol evidence is required for this interpretation.
-- **Hypothesis:** independent protocol evidence is required for this interpretation.
+- `GG=0x01 + OP=0x06` = profile-qualified controller-side primary
+  heating-source candidate. It does not establish any global rule for
+  `GG=0x00`.
+- `GG=0x02 + OP=0x06` = profile-qualified controller-side secondary
+  heating-source candidate.
 - `OP=0x02, GG=0x08/0x09/0x0A` and `OP=0x06, GG=0x08/0x09/0x0A` are distinct
   documented selector spaces with different meanings and register layouts.
 
@@ -459,7 +463,9 @@ Read response:
 
 Addressing notes:
 - `0x02` is the local controller selector family.
-- **Hypothesis:** independent protocol evidence is required for this interpretation.
+- `0x06` is a separate opcode-scoped controller-mediated selector family. It is
+  used for several remote families. The primary and secondary heat-source
+  labels (`GG=0x01` and `GG=0x02`) remain profile-qualified hypotheses.
 - The selector meaning is always keyed on `(opcode, GG, II, RR)`, not on `GG`
   alone.
 
@@ -651,4 +657,5 @@ For `hex` command integration (`protocols/ebusd-tcp.md`):
 
 ## 9. Open Items
 
-Open protocol questions and validation items are tracked in archived observations.
+Open protocol questions remain marked inline as **Hypothesis** or **Unknown**
+until publishable correlated evidence qualifies them.

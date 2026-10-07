@@ -113,7 +113,7 @@ Register responses are classified into four wire-level states:
 
 These notes are scanner/register-map behaviors implemented in the VRC Explorer repository only. They are observational and do not replace the operation-first identity contract above.
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
+1. **OP `0x06` generic device-header registers** (`RR=0x0001..0x0004`) are mapped experimentally. Group-specific rows (e.g., GG `0x09`/`0x0A` radio fields) remain authoritative when present; wildcard header rows are fallback only. The available public evidence does not qualify `GG=0x00` as a heat-generator route or establish its absence. Treat that namespace as uncharacterized when deciding a device-specific scan profile.
 
 2. **GG=0x09 is dual-use by operation.** OP `0x02`: local control/write-path registers (e.g., quick-mode write target). OP `0x06`: remote radio-device inventory/status registers. GG identity must never be merged across operations.
 

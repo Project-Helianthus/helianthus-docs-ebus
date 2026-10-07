@@ -147,6 +147,24 @@ def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> 
     assert "| 0x06 | 0x0E | Clock Module |" in register_map
     assert "| 0x06 | 0x0F | Base Station |" in register_map
     assert "| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Hypothesis" in text
-    assert "## GG=0x0C — Functional Modules (VR71) FM5 (multi-instance, remote only)" in register_map
+    assert "### GG=0x0C — Functional Modules (VR71) FM5" in register_map
     assert "GG0B\nmust not receive GG0C's scan policy or `device_connected` predicate" in text
     assert "`unused` for GG04 does not justify suppressing a probe" in profile
+
+
+def test_register_catalog_is_strictly_partitioned_by_opcode() -> None:
+    text = REGISTER_MAP.read_text(encoding="utf-8")
+    op02 = text.split("## OP=0x02 — Local Parameter Registers", 1)[1].split(
+        "## OP=0x06 — Controller-Mediated Device Parameters", 1
+    )[0]
+    op06 = text.split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[1].split(
+        "## Constraint Catalog", 1
+    )[0]
+
+    assert op02.index("### GG=0x09 — Local Configuration") < op02.index(
+        "### GG=0x09 — Ventilation / recoVair Candidates"
+    ) < op02.index("### GG=0x0A — Local Configuration")
+    assert "(opcode 0x06)" not in op02
+    assert "### GG=0x08 — Modul Solar (VMS) auroSTEP" in op06
+    assert "### GG=0x09 — Remote Control Regulators (VRC7xx, VRT38x)" in op06
+    assert "### GG=0x0A — Remote Control Thermostats (VR9x)" in op06

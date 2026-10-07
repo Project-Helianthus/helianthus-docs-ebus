@@ -10,7 +10,7 @@
 >
 > **Device:** BASV2 (VRC720-compatible, HW 1704)
 
-This is the register catalog for B524. For the protocol specification (wire format, opcodes, FLAGS encoding, response states), see [ebus-vaillant-B524.md](./ebus-vaillant-B524.md). For research and working hypotheses, see archived observations.
+This is the register catalog for B524. For the protocol specification (wire format, opcodes, FLAGS encoding, response states), see [ebus-vaillant-B524.md](./ebus-vaillant-B524.md). Each unresolved mapping remains marked inline as **Hypothesis** or **Unknown**.
 
 ---
 
@@ -61,7 +61,13 @@ correlated evidence. They do not establish writability or authorize a write.
 | 0x06 | 0x0E | Clock Module | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
 | 0x06 | 0x0F | Base Station | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
+**GG values are opcode-scoped, not global:** `OP=0x02, GG=0x00` and
+`OP=0x02, GG=0x01` are the singleton local selector sets for system/settings
+and DHW. Separately, `OP=0x06, GG=0x01` and `OP=0x06, GG=0x02` are instanced
+controller-side selector sets for primary and secondary heating sources
+respectively. `GG=0x00` has no qualified heat-generator route; this does not
+establish its universal absence under `OP=0x06`, populated slots, or other
+models' limits.
 
 The [OP06 family presentation-name catalog](ebus-vaillant-B524.md#33-op06-family-presentation-name-catalog)
 records operator-provided human names and `snake_case` semantic names for GG01
@@ -123,9 +129,9 @@ Source: BASV2 constraint probe + live scan corpus.
 | Group | Opcode | Instance Max | Register Max | Scan Observed Max | Notes |
 |-------|--------|-------------|-------------|-------------------|-------|
 | 0x00 | 0x02 (local) | 0x00 | 0x00A2 | **0x00FF** | System/Regulator. Singleton. **Note**: scan shows 179 registers extending to 0x00FF.stale profile |
-| 0x01 | 0x06 (controller-side remote) | slot-scoped (`II`) | 0x0015 | **Hypothesis:** independent protocol evidence is required for this interpretation. | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x01 | 0x06 (controller-side remote) | slot-scoped (`II`) | 0x0015 | `0x0001`, `0x0012`, `0x0015` are hypotheses | Primary heat-source candidate. Availability probing is a precondition for meaningful interpretation; no live SensoNET response established |
 | 0x01 | 0x02 (local) | 0x00 | 0x0011 | **0x0013** | DHW. Singleton. 4 undocumented registers 0x0007-0x0013. stale profile |
-| 0x02 | 0x06 (controller-side remote) | slot-scoped (`II`) | model pending | **Hypothesis:** independent protocol evidence is required for this interpretation. | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x02 | 0x06 (controller-side remote) | slot-scoped (`II`) | model pending | `0x0001`, `0x0012`, `0x0015` are hypotheses | Secondary heat-source candidate. Detailed register canon and live SensoNET response remain unverified |
 | 0x02 | 0x02 (local) | 0x0A | 0x0025 | 0x0025 | Heating circuits. **Note**: scan confirms 26 regs/instance extending to 0x0025.stale profile |
 | 0x03 | 0x02 (local) | 0x0A | 0x002F | **0x002E** | Zones. Scan confirms 38 regs/instance. Profile accurate |
 | 0x04 | 0x02 (local) | 0x00 | 0x000B | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
@@ -157,7 +163,9 @@ Several registers are conditionally available based on system configuration. Gat
 
 ---
 
-## GG=0x00 — System/Regulator
+## OP=0x02 — Local Parameter Registers
+
+### GG=0x00 — System/Regulator
 
 All registers use opcode `0x02`, instance `0x00`.
 
@@ -167,7 +175,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0002 | continuous_heating_start_setpoint | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | FLAGS=0x03. ebusd: `-26=off` disables function |
 | 0x0003 | frost_override_time | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | FLAGS=0x03 |
 | 0x0004 | maximum_preheating_time | C | u16 | min | — | 0..300 step 10 | — | — | FLAGS=0x03. † |
-| 0x0006 | manual_cooling_days | C | u8 | days | — | — | — | cooling_enabled? | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x0006 | manual_cooling_days | C | u8 | days | — | — | — | cooling_enabled? | **Dormant** when cooling not configured. VRC720 manual cooling days count. † |
 | 0x0007 | system_off | C | u8 | bool | — | — | `0=off 1=on` | — | FLAGS=0x03 (user RW). System on/off switch, not a sensor reading |
 | 0x0008 | temporary_allow_backup_heater | C | u8 | bool | — | — | — | — | † |
 | 0x0009 | external_energy_management_activation | C | u8 | bool | — | — | `0=off 1=on` | — | FLAGS=0x02 (technical RW). Scan: 1 byte. † |
@@ -180,7 +188,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0012 | continuous_heating_room_setpoint | C | u16 | °C | — | — | — | — | Confirmed exact, value=20 |
 | 0x0014 | adaptive_heating_curve | C | u8 | bool | AdaptHeatCurve | — | →yesno | — | FLAGS=0x03 (user RW). Scan validated 1-byte |
 | 0x0015 | (unknown) | — | u16 | — | — | — | — | — | False positive in CSV (was `parallel_tank_loading`; actual is at 0x000A) |
-| 0x0016 | system_quick_mode_active | S | u8 | bool | — | — | `0=off 1=on` | — | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x0016 | system_quick_mode_active | S | u8 | bool | — | — | `0=off 1=on` | — | **Dormant** when no system quick mode active. Write path is a hypothesis: `OP=0x02, GG=0x09, RR=0x0002`. See [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths) |
 | 0x0017 | dhw_maximum_loading_time | C | u16 | min | MaxCylinderChargeTime | — | — | hwc_enabled | |
 | 0x0018 | hwc_lock_time | C | u16 | min | HwcLockTime | — | — | hwc_enabled | |
 | 0x0019 | solar_flow_rate_quantity | C | f32 | — | — | — | — | fm5_config≤2 | See [Mapping Conflicts](#mapping-conflicts) |
@@ -210,7 +218,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x003E | environmental_yield_total | E | u32 | kWh | YieldTotal | — | — | — | |
 | 0x0045 | esco_block_function | C | u16 | enum | — | — | values unknown | — | |
 | 0x0046 | hwc_max_flow_temp_desired | C | f32 | °C | HwcMaxFlowTempDesired | — | — | — | 15..80 per TSP |
-| 0x0048 | energy_manager_state | S | u16 | enum | — | — | `0=standby 1=heating 2=cooling 3=dhw` | — | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x0048 | energy_manager_state | S | u16 | enum | — | — | `0=standby 1=heating 2=cooling 3=dhw` | — | Single raw enum projected into multiple system-status views. `heating+cooling` is only a possible combined state presentation; its raw numeric encoding remains pending validation. |
 | 0x004B | system_flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | Read-only. Do not conflate with B509 boiler flow temperature or the controller-side `OP=0x06 GG=0x01 RR=0x0015` heat-source status selector |
 | 0x004D | multi_relay_setting | C | u16 | enum | MultiRelaySetting | — | →mamode | — | |
 | 0x004E | fuel_consumption_heating_this_month | E | u32 | kWh | PrFuelSumHcThisMonth | — | — | — | |
@@ -232,7 +240,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x006F | installer_phone_1 | C | string | text | PhoneNumber1 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
 | 0x0070 | installer_phone_2 | C | string | text | PhoneNumber2 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
 | 0x0073 | outdoor_temperature | S | f32 | °C | DisplayedOutsideTemp | — | — | — | Read-only |
-| 0x0074 | system_quick_mode_value | S | u8 | enum | — | — | — | — | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x0074 | system_quick_mode_value | S | u8 | enum | — | — | — | — | **Dormant** when no system quick mode active. Mode enumeration and write path `OP=0x02, GG=0x09, RR=0x0001` remain hypotheses. See [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths) |
 | 0x0076 | installer_menu_code | C | u16 | count | KeyCodeforConfigMenu | — | — | — | FLAGS=0x02 (technical RW). Range 0..999. Writable via B524 OT=0x01 |
 | 0x0081 | smart_photovoltaic_buffer_offset | P | f32 | K | — | — | — | — | † |
 | 0x0086 | (unknown) | — | u16 | — | — | — | — | — | Scan value: 60. PV/smart cluster |
@@ -313,8 +321,8 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x00D7 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
 | 0x00D8 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
 | 0x00D9 | (unknown) | C | u16 | — | — | — | — | — | FLAGS=0x02. Scan value: 0 |
-| 0x00DA | manual_cooling_date_start | C | date | date | — | — | — | cooling_enabled? | **Hypothesis:** independent protocol evidence is required for this interpretation. |
-| 0x00DB | manual_cooling_date_end | C | date | date | — | — | — | cooling_enabled? | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| 0x00DA | manual_cooling_date_start | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 (RW config). VRC700 manual cooling start date. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. |
+| 0x00DB | manual_cooling_date_end | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 (RW config). VRC700 manual cooling end date. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. |
 | 0x00DD | heating_curve_day_1 | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 10 bytes: [25,30,35,40,45,45,45,45,45,45] — hourly temp profile (°C/2) |
 | 0x00DE | heating_curve_day_2 | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 10 bytes: [45,45,40,35,30,25,10,10,10,10] — hourly temp profile continued |
 | 0x00DF | heating_curve_day_3 | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 9 bytes: [10,10,10,30,35,40,45,35,25] — hourly temp profile end. 29 values total across DD-DF |
@@ -352,7 +360,7 @@ All registers use opcode `0x02`, instance `0x00`.
 
 ---
 
-## GG=0x01 — Local DHW (opcode 0x02)
+### GG=0x01 — Local DHW
 
 All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_status` (0x000F) are gated by `hwc_enabled` (0x0001).
 
@@ -380,40 +388,7 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `hwc_stat
 
 ---
 
-## GG=0x01 — Primary Heat Sources (opcode 0x06)
-
-All registers in this section use opcode `0x06`. `II` selects the heat-generator
-slot, so the meaningful selector is `(0x06, 0x01, II, RR)`, not `GG=0x01`
-alone. Slot availability/probing is a precondition for interpreting this
-selector set: empty or unresolved slots must not be decoded as live primary
-heat-source data.
-
-**Hypothesis:** independent protocol evidence is required for this interpretation.
-
-| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
-|----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0012 | heatgen_error | S | unknown | unknown | — | — | unknown | available primary heat-source slot | **Hypothesis:** independent protocol evidence is required for this interpretation. |
-| 0x0015 | heatgen_status | S | unknown | unknown | — | — | unknown | available primary heat-source slot | **Hypothesis:** independent protocol evidence is required for this interpretation. |
-
----
-
-## GG=0x02 — Secondary Heat Sources (opcode 0x06)
-
-All registers in this selector set use opcode `0x06`, with `II` selecting the
-secondary heat-source slot. This selector set is documented separately from local DHW
-(`OP=0x02, GG=0x01`). It is documented as an instanced controller-side
-path for secondary sources such as solar-facing contributors.
-
-Current canon status:
-
-- **Hypothesis:** independent protocol evidence is required for this interpretation.
-- **Hypothesis:** independent protocol evidence is required for this interpretation.
-- detailed register canon remains pending live validation
-- no additional raw enum/bitmask semantics are inferred here
-
----
-
-## GG=0x02 — Heating Circuits (multi-instance)
+### GG=0x02 — Heating Circuits
 
 All registers use opcode `0x02`. Instances 0x00-0x0A; active heating
 circuits are normally discovered by probing `heating_circuit_type`
@@ -476,7 +451,7 @@ the type selector alone.
 
 ---
 
-## GG=0x03 — Zones (multi-instance)
+### GG=0x03 — Zones
 
 All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by probing `zone_index` (RR=0x001C).
 
@@ -523,7 +498,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 | 0x002D | (unknown) | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
 | 0x002E | (unknown) | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
 
-### Zone Mode Derivation
+#### Zone Mode Derivation
 
 The zone operating mode is typically derived from:
 - `heating_operation_mode` (0x0006): opmode enum (0=off, 1=auto, 2=manual)
@@ -532,7 +507,7 @@ The zone operating mode is typically derived from:
 
 ---
 
-## GG=0x04 — Solar Circuit
+### GG=0x04 — Solar Circuit
 
 Entire group gated by `fm5_config ≤ 2`. All registers use opcode `0x02`, instance `0x00`.
 
@@ -553,7 +528,7 @@ Entire group gated by `fm5_config ≤ 2`. All registers use opcode `0x02`, insta
 
 ---
 
-## GG=0x05 — Cylinders (multi-instance)
+### GG=0x05 — Cylinders
 
 Entire group gated by `fm5_config ≤ 2`. These are solar charging parameters per cylinder. General cylinder config (max temp, charge hysteresis) is in GG=0x00 system config.
 
@@ -573,11 +548,7 @@ Cylinder presence detection:
 
 ---
 
-## GG=0x08 — OP02 local Buffer/Solar Cylinder 2; OP06 Modul Solar (VMS) auroSTEP
-
-> **Verified 2026-03-05:** Responds to BOTH opcodes with different data.
-
-### GG=0x08 Local Config (opcode 0x02)
+### GG=0x08 — Buffer/Solar Cylinder 2
 
 Singleton (II=0x00 only). 7 registers. Structure mirrors GG=0x05 (Solar Cylinder 1) — same constraint catalog layout.
 
@@ -591,28 +562,13 @@ Singleton (II=0x00 only). 7 registers. Structure mirrors GG=0x05 (Solar Cylinder
 | 0x0006 | cylinder2_bottom_temperature | S | f32 | °C | — | -10..110 | — | fm5_config≤2? | FLAGS=0x01. NaN (no sensor) |
 | 0x0007 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x00. Scan value: 0. Possibly pump status |
 
-### GG=0x08 Remote Data (opcode 0x06)
-
-Instanced (II=0x00-0x0A). 4 registers per instance. All 11 instances respond.
-
-| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
-|----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0. Status byte |
-| 0x0002 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x00. Scan value: 0 |
-| 0x0003 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00. NaN on all instances |
-| 0x0004 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00. NaN on all instances |
-
 ---
 
-## GG=0x09 — Radio Sensors, VRC7xx (multi-instance)
+### GG=0x09 — Local Configuration
 
-> **Verified 2026-03-05:** `OP=0x02, GG=0x09` = local configuration (15 regs/inst). `OP=0x06, GG=0x09` = live sensor data (32 regs/inst).
->
-> Your **VRC720f/2** appears at **II=0x01 OP=0x06** (software version 08.05, room humidity 40%, room temp 12.5°C).
+OP02/GG09 is a local selector set. Its zero-instance passive observation does not establish a universal write-triggered or non-readable property. Any association between RR=0x0001..0x0004 and system quick-mode control remains a **Hypothesis** pending publishable correlated evidence.
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
 
-### GG=0x09 Local Config (opcode 0x02)
 
 Instanced (II=0x00-0x0A). 15 registers per instance. All identical — template config.
 
@@ -634,7 +590,125 @@ Instanced (II=0x00-0x0A). 15 registers per instance. All identical — template 
 | 0x000E | (unknown) | C | u16 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
 | 0x000F | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
 
-### GG=0x09 Remote Data (opcode 0x06)
+---
+
+### GG=0x09 — Ventilation / recoVair Candidates
+
+The published OP00 interpretation includes ID0010h `recovair_count`. It does
+not prove GG10h or device presence; the public reported samples all return zero.
+The following corrected reconstruction is **Hypothesis** for a TLI controller
+profile, awaiting publishable correlated replies. It does not replace other
+GG09 meanings or establish writable capability. Keep `(OP02,GG09,II,RR)` and
+profile provenance; no data from these rows is promoted into a universal mapping.
+
+| RR | snake_case name | Candidate format |
+| --- | --- | --- |
+| 0002h | `operating_mode_for_air_ventilation` | enum; numeric domain unknown |
+| 0004h | `status_special_function_ventilation` | u16; candidate 0=regular, 1=boost, 7=holiday, 10=system_off |
+| 0007h / 0008h | `holiday_end` / `holiday_end_time` | date / time; codec qualification pending |
+| 0009h / 000Ah | `holiday_start` / `holiday_start_time` | date / time; codec qualification pending |
+| 000Dh / 000Eh | `day_maximum_fan_stage` / `night_maximum_fan_stage` | u16; range unknown |
+
+Existing scalar names remain unchanged. The status/availability of a local probe
+and a decoded physical ventilation state are distinct. OP02/GG00/RR0016 remains
+`system_quick_mode_active` in its existing profile; a ventilation-labelled local
+consumer is insufficient to globally rename it or change its codec.
+
+---
+
+### GG=0x0A — Local Configuration
+
+`OP=0x02, GG=0x0A` is local template/default configuration; it is distinct from the remote OP06 selector set.
+
+
+
+Instanced (II=0x00-0x0A). 69 registers per instance. **All 11 instances are byte-for-byte identical** — this is a template/default configuration from the BASV2, not per-VR92 data. Constraint catalog entries (0x0001-0x0006) define the writable config subset.
+
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|-------|
+| 0x0001 | sensor_mode | C | u8 | enum | — | 0..3 | — | — | FLAGS=0x03. All: 0 |
+| 0x0002 | protocol_type | C | u8 | enum | — | 1..2 | — | — | FLAGS=0x03. All: 1 |
+| 0x0003 | communication_mode | C | u8 | enum | — | 1..2 | — | — | FLAGS=0x03. All: 1 |
+| 0x0005 | (unknown) | C | u8 | — | — | 0..3 | — | — | FLAGS=0x03. All: 1 |
+| 0x0006 | sensor_enabled | C | u8 | bool | — | 0..1 | `0=off 1=on` | — | FLAGS=0x03. All: 0 |
+| 0x0007 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 1 |
+| 0x0008 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 1 |
+| 0x000C | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
+| 0x000D | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
+| 0x000E | (unknown) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN |
+| 0x000F | (unknown) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN |
+| 0x0010-0x001A | (unknown, 8 regs) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN. Large NaN block |
+| 0x001B | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
+| 0x001D | basv2_serial_part1 | P | string | text | — | — | — | — | FLAGS=0x01. First 6 chars of BASV2 serial number (redacted in public docs) |
+| 0x001E | basv2_serial_part2 | P | string | text | — | — | — | — | FLAGS=0x01. Chars 7-12 of BASV2 serial number (redacted in public docs) |
+| 0x0020 | (unknown) | C | f32 | — | — | — | — | — | FLAGS=0x03. All: 0.0 |
+| 0x0021 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
+| 0x0022-0x003E | temperature_schedule | C | u8 | °C/2 | — | — | — | — | FLAGS=0x03. 29 u8 values: hourly temperature profile. Pattern: 25→45 day, 45→10 night, 10→45→25 evening. Values are degrees × 2 (e.g. 45 = 22.5°C, 10 = 5°C) |
+| 0x003F | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
+| 0x0040 | (unknown) | P | time | time | — | — | — | — | FLAGS=0x01. All: 00:00:00 |
+| 0x0042-0x004A | (unknown, 9 regs) | C | u16 | — | — | — | — | — | FLAGS=0x03. All: 0. Config block |
+| 0x004B | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
+| 0x004D | (unknown) | C | u16 | — | — | — | — | — | FLAGS=0x03. All: 0 |
+
+---
+
+
+## OP=0x06 — Controller-Mediated Device Parameters
+
+### GG=0x01 — Primary Heat Sources
+
+All registers in this section use opcode `0x06`. `II` selects the heat-generator
+slot, so the meaningful selector is `(0x06, 0x01, II, RR)`, not `GG=0x01`
+alone. Slot availability/probing is a precondition for interpreting this
+selector set: empty or unresolved slots must not be decoded as live primary
+heat-source data.
+
+The primary heat-source route is a profile-qualified hypothesis. The selector
+set is `(0x06, 0x01, II, RR)`; no published correlated reply qualifies a slot
+matrix, availability predicate, or returned value layout. `GG=0x00` remains
+uncharacterized rather than absent.
+
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|-------|
+| 0x0012 | heatgen_error | S | unknown | unknown | — | — | unknown | unknown | **Hypothesis.** The native reply layout, any Boolean convention, and error detail semantics are unqualified. Do not infer an enum or bitmask. |
+| 0x0015 | heatgen_status | S | unknown | unknown | — | — | unknown | unknown | **Hypothesis.** It is not a proven scalar flow-temperature mirror. |
+
+---
+
+### GG=0x02 — Secondary Heat Sources
+
+All registers in this selector set use opcode `0x06`, with `II` selecting the
+secondary heat-source slot. This selector set is documented separately from local DHW
+(`OP=0x02, GG=0x01`). It is documented as an instanced controller-side
+path for secondary sources such as solar-facing contributors.
+
+Current canon status:
+
+- selector-set identity is a profile-qualified hypothesis
+- populated slots and other models' limits are unqualified
+- detailed register canon remains pending live validation
+- no additional raw enum/bitmask semantics are inferred here
+
+---
+
+### GG=0x08 — Modul Solar (VMS) auroSTEP
+
+Instanced (II=0x00-0x0A). 4 registers per instance. All 11 instances respond.
+
+| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
+|----|------|-----|------|--------|-------|------------|--------|-------|-------|
+| 0x0001 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0. Status byte |
+| 0x0002 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x00. Scan value: 0 |
+| 0x0003 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00. NaN on all instances |
+| 0x0004 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00. NaN on all instances |
+
+---
+
+### GG=0x09 — Remote Control Regulators (VRC7xx, VRT38x)
+
+`OP=0x06, GG=0x09` is remote device data and is distinct from OP02/GG09 local configuration.
+
+
 
 Instanced (II=0x00-0x0A). 32 registers per instance. **Active devices are identified by non-default values.** Empty slots have all NaN/0xFF/0x8000.
 
@@ -676,43 +750,11 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active devices are identi
 
 ---
 
-## GG=0x0A — Radio Sensors, VR92 (multi-instance)
+### GG=0x0A — Remote Control Thermostats (VR9x)
 
-> **Verified 2026-03-05:** `OP=0x02, GG=0x0A` = local configuration (69 regs/inst, all instances identical). `OP=0x06, GG=0x0A` = live sensor data (32 regs/inst, per-device variation).
->
-> Your **VR92f** appears at **II=0x01 OP=0x06** (firmware 02.17, room humidity 39%, room temp 13.625°C).
+`OP=0x06, GG=0x0A` is remote device data and is distinct from OP02/GG0A local configuration.
 
-### GG=0x0A Local Config (opcode 0x02)
 
-Instanced (II=0x00-0x0A). 69 registers per instance. **All 11 instances are byte-for-byte identical** — this is a template/default configuration from the BASV2, not per-VR92 data. Constraint catalog entries (0x0001-0x0006) define the writable config subset.
-
-| RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
-|----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | sensor_mode | C | u8 | enum | — | 0..3 | — | — | FLAGS=0x03. All: 0 |
-| 0x0002 | protocol_type | C | u8 | enum | — | 1..2 | — | — | FLAGS=0x03. All: 1 |
-| 0x0003 | communication_mode | C | u8 | enum | — | 1..2 | — | — | FLAGS=0x03. All: 1 |
-| 0x0005 | (unknown) | C | u8 | — | — | 0..3 | — | — | FLAGS=0x03. All: 1 |
-| 0x0006 | sensor_enabled | C | u8 | bool | — | 0..1 | `0=off 1=on` | — | FLAGS=0x03. All: 0 |
-| 0x0007 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 1 |
-| 0x0008 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 1 |
-| 0x000C | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
-| 0x000D | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
-| 0x000E | (unknown) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN |
-| 0x000F | (unknown) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN |
-| 0x0010-0x001A | (unknown, 8 regs) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN. Large NaN block |
-| 0x001B | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
-| 0x001D | basv2_serial_part1 | P | string | text | — | — | — | — | FLAGS=0x01. First 6 chars of BASV2 serial number (redacted in public docs) |
-| 0x001E | basv2_serial_part2 | P | string | text | — | — | — | — | FLAGS=0x01. Chars 7-12 of BASV2 serial number (redacted in public docs) |
-| 0x0020 | (unknown) | C | f32 | — | — | — | — | — | FLAGS=0x03. All: 0.0 |
-| 0x0021 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
-| 0x0022-0x003E | temperature_schedule | C | u8 | °C/2 | — | — | — | — | FLAGS=0x03. 29 u8 values: hourly temperature profile. Pattern: 25→45 day, 45→10 night, 10→45→25 evening. Values are degrees × 2 (e.g. 45 = 22.5°C, 10 = 5°C) |
-| 0x003F | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
-| 0x0040 | (unknown) | P | time | time | — | — | — | — | FLAGS=0x01. All: 00:00:00 |
-| 0x0042-0x004A | (unknown, 9 regs) | C | u16 | — | — | — | — | — | FLAGS=0x03. All: 0. Config block |
-| 0x004B | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
-| 0x004D | (unknown) | C | u16 | — | — | — | — | — | FLAGS=0x03. All: 0 |
-
-### GG=0x0A Remote Data (opcode 0x06)
 
 Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are identified by non-default values.** Empty slots have NaN/0xFF.
 
@@ -768,13 +810,13 @@ retained inventory evidence. Identity and telemetry reads can include:
 
 ---
 
-## GG=0x0C — Functional Modules (VR71) FM5 (multi-instance, remote only)
+### GG=0x0C — Functional Modules (VR71) FM5
 
 > **Verified 2026-03-05:** Responds only to opcode 0x06 (no local config selector set documented; opcode 0x02 returns 0 valid registers). 15 registers per instance, 165 total valid. Uses the same remote-device slot schema as GG=0x09/0x0A.
 >
 > In the current lab, the slot at **II=0x01** has `device_class_address=0x26` and firmware 01.00.00. This correlates with the eBUS-identified `VR_71` hardware at target address `0x26`. The family/product identification comes from eBUS identity, not from B524 alone.
 
-### GG=0x0C Functional Modules (VR71) FM5 data (opcode 0x06)
+#### Functional Modules (VR71) FM5 Data
 
 Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. In the current lab, **II=0x01 has `device_class_address=0x26`**, matching the eBUS-identified hardware at target address `0x26`, while historical observations contain both `device_connected=0` and `1`.
 Connection state and retained identity are distinct; neither observation is a
@@ -797,28 +839,6 @@ universal empty-slot or physical-liveness rule.
 Architectural note: Functional-module semantics (FM3/FM5/VR66 families) are documented separately in [`../../architecture/functional-modules.md`](../../architecture/functional-modules.md).
 
 ---
-
-## Profile-scoped ventilation / recoVair candidates
-
-The published OP00 interpretation includes ID0010h `recovair_count`. It does
-not prove GG10h or device presence; the public reported samples all return zero.
-The following corrected reconstruction is **Hypothesis** for a TLI controller
-profile, awaiting publishable correlated replies. It does not replace other
-GG09 meanings or establish writable capability. Keep `(OP02,GG09,II,RR)` and
-profile provenance; no data from these rows is promoted into a universal mapping.
-
-| RR | snake_case name | Candidate format |
-| --- | --- | --- |
-| 0002h | `operating_mode_for_air_ventilation` | enum; numeric domain unknown |
-| 0004h | `status_special_function_ventilation` | u16; candidate 0=regular, 1=boost, 7=holiday, 10=system_off |
-| 0007h / 0008h | `holiday_end` / `holiday_end_time` | date / time; codec qualification pending |
-| 0009h / 000Ah | `holiday_start` / `holiday_start_time` | date / time; codec qualification pending |
-| 000Dh / 000Eh | `day_maximum_fan_stage` / `night_maximum_fan_stage` | u16; range unknown |
-
-Existing scalar names remain unchanged. The status/availability of a local probe
-and a decoded physical ventilation state are distinct. OP02/GG00/RR0016 remains
-`system_quick_mode_active` in its existing profile; a ventilation-labelled local
-consumer is insufficient to globally rename it or change its codec.
 
 ## Constraint Catalog
 
@@ -1012,7 +1032,7 @@ Used by: GG=0x03 RR=0x0013 (`room_temperature_zone_mapping`)
 | Numeric value | ebusd | Human alias only | Notes |
 |-------------------------------|-------|------------------|-------|
 | 0 | none | none | No room sensor assigned |
-| 1 | VRC700 | regulator | Built-in sensor of the /f split regulator (wireless UI + base station). Same hardware class as VR91 with added UI firmware |
+| 1 | VRC700 | regulator | Built-in sensor of the /f split regulator (wireless UI + base station). Same hardware class as VR91 with added UI capabilities |
 | 2 | VR91_1 | thermostat_1 | External RF temperature/humidity sensor + UI endpoint |
 | 3 | VR91_2 | thermostat_2 | Second VR91 sensor |
 | 4 | VR91_3 | thermostat_3 | Third VR91 sensor |
@@ -1060,7 +1080,7 @@ One pending:
 
 > Source: `GATES-semantic-fsms.md` Sections 3.1-3.3.
 
-### `energy_manager_state` (GG=0x00 RR=0x0048)
+### `energy_manager_state` (OP=0x02, GG=0x00, RR=0x0048)
 
 Register `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0048` — system-level energy manager state. Wire type: `u16` enum.
 
@@ -1075,9 +1095,9 @@ Register `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0048` — system-level energy
 
 **Related registers:** GG=0x02 RR=0x001B `circuit_state` (per-circuit sub-state aggregated here), GG=0x02 RR=0x001E `pump_status`, GG=0x00 RR=0x004B `system_flow_temperature`.
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
+**Confidence:** MEDIUM for states 0-2 (live scan + myPyllant enum correlation); `dhw` remains a hypothesis pending correlated evidence.
 
-### `circuit_state` (GG=0x02 RR=0x001B)
+### `circuit_state` (OP=0x02, GG=0x02, RR=0x001B)
 
 Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit state. Wire type: `u16` enum.
 
@@ -1093,7 +1113,7 @@ Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit st
 
 **Confidence:** HIGH for 0/1 (live confirmed + myPyllant); MEDIUM for 2 (no cooling hardware in lab).
 
-### `system_quick_mode` (GG=0x00 RR=0x0016 + 0x0074)
+### `system_quick_mode` (OP=0x02, GG=0x00, RR=0x0016 + 0x0074)
 
 Asymmetric read/write paths:
 - **Read active flag:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0016` (u8 bool)
@@ -1112,7 +1132,7 @@ Asymmetric read/write paths:
 
 **Related registers:** GG=0x09 RR=0x0001/0x0002 (write targets), GG=0x00 RR=0x0048 `energy_manager_state` (downstream effect: quick mode changes demand), B524 GG=0x03 zone schedules (quick mode overrides scheduled time programs).
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
+**Confidence:** Hypothesis. The register addresses, asymmetric path, and exact enum labels require publishable correlated evidence.
 
 ---
 
@@ -1124,4 +1144,3 @@ Asymmetric read/write paths:
 - **ebusd community TSP** (`15.ctlv2.tsp`) — Community-maintained register definitions. Highest authority for register-to-name mapping where coverage exists.
 - **myVaillant register map** — Value-matched mapping against myPyllant cloud API. NOT a Vaillant-published source — carries false-positive risk where multiple registers share the same value (see [Mapping Conflicts](#mapping-conflicts)).
 - **VRC Explorer full group scans** — FLAGS byte verification for all groups.
-- **Hypothesis:** independent protocol evidence is required for this interpretation.

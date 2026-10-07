@@ -190,7 +190,13 @@ The B524 contribution that still feeds the current boiler semantic contract is:
 | `config.dhwOperatingMode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
 | `diagnostics.heatingStatusRaw` | GG=0x02, II=0x00, RR=0x001B | u16 | Controller-side raw heating status |
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
+The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
+`RR=0x0012` have unknown native reply layouts. They are **withheld from this
+boiler semantic mapping**: the current `refreshBoilerStatus()` does not read
+these selectors, and no publishable correlated evidence qualifies either as
+`state.flowTemperatureC` or a raw `diagnostics.activeErrors` value. See the
+[B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#op0x06-controller-mediated-device-parameters)
+for the evidence boundary.
 
 Fields currently present in the schema but not populated from a validated source:
 - `state.returnTemperatureC`
