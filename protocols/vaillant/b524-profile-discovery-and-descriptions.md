@@ -51,9 +51,11 @@ independent identity evidence; no radio stack is implemented by this policy.
 
 The operator-provided display designation `OP=0x06, GG=0x0B` = **Functional
 Modules (VR70)** is outside this characterized discovery profile. It supplies no
-slot schema, product identity, discovery limit, or liveness predicate. Do not add
-it to a scan plan or apply the `GG=0x0C` policy until a profile-qualified contract
-supports it. The `functional_modules_vr71` class remains specific to `GG=0x0C`.
+slot schema, product identity, discovery limit, or liveness predicate. This display
+mapping does not establish additional qualified scan targets or bounds; exploratory
+probing remains separately qualified. Do not apply the `GG=0x0C` policy until a
+profile-qualified contract supports it. The `functional_modules_vr71` class remains
+specific to `GG=0x0C`.
 
 Sanitized BASV2 observations for GG09/0A/0C/0E/0F have RR0001 raw `00` at II00,
 `01` at II01, and `00` at II02 through II0A. Starting a first-empty scan at II00

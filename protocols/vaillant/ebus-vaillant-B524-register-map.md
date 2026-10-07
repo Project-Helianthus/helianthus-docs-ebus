@@ -91,8 +91,9 @@ The operator-provided display designation is `OP=0x06, GG=0x0B` = **Functional
 Modules (VR70)**. It is retained here for presentation, but is not a documented
 B524 selector route: no published capture, slot bounds, `RR=0x0001` predicate,
 or register layout supports it. Those facts remain **Unknown**, and this
-designation must not be added to a scan plan or inferred to share the `GG=0x0C`
-schema.
+display mapping does not establish additional qualified scan targets or bounds;
+exploratory probing remains separately qualified. It must not be inferred to share
+the `GG=0x0C` schema.
 
 `OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71)** in the
 documented map below. That presentation name does not turn the profile/lab
