@@ -244,7 +244,28 @@ separately documented `OP=0x06, GG=0x0C` presentation name is **Functional
 Modules (VR71) FM5**; neither display name establishes a universal product-identity
 rule.
 
-### 3.3 OP06 family presentation-name catalog
+### 3.3 OP02 family presentation-name catalog
+
+The following operation-scoped labels are used by the scan planner, Browser,
+HTML, and saved-artifact views. They retain the complete `(OP=0x02, GG)`
+identity. A label does not add a selector route, instance range, register
+layout, or physical-device claim.
+
+| GG | Human label | Presentation semantic name | Qualification |
+| --- | --- | --- | --- |
+| 00 | System | `system` | Observed singleton local selector set. |
+| 01 | Native Domestic Hot Water | `native_domestic_hot_water` | Observed singleton local selector set. |
+| 02 | Circuits | `circuits` | Current profile: II01..08 heating candidates and II09 virtual native water. |
+| 03 | Zones | `zones` | Observed local selector set. |
+| 04 | Solar Circuit | `solar_circuit` | Observed local selector set. |
+| 05 | Solar Loaded Cylinder | `solar_loaded_cylinder` | Observed local selector set. |
+| 06 | Device | `device` | Presentation only; no public selector/profile contract. |
+| 07 | Generator | `generator` | Presentation only; no public selector/profile contract. |
+| 08 | DeltaT | `delta_t` | Observed local selector set; II topology Unknown. |
+| 09 | Ventilation | `ventilation` | Observed local selector set; II topology Unknown. |
+| 0A | Local Parameters | `local_parameters` | Observed selector set; role, physical identity, and topology Unknown. |
+
+### 3.4 OP06 family presentation-name catalog
 
 The following is an operator-provided **hypothesis catalog** for the OP06 family.
 It gives a stable human label and a `snake_case` presentation semantic name for
@@ -299,7 +320,7 @@ currently documented on wire, `GG` still does not carry a single global meaning
 outside its opcode context. Apply the same caution to other opcode/GG
 combinations until they are fully mapped.
 
-### 3.4 Common OP06 register names
+### 3.5 Common OP06 register names
 
 For every GG under `OP=0x06`, the common names are:
 

@@ -157,7 +157,7 @@ def test_register_catalog_is_strictly_partitioned_by_opcode() -> None:
         "## Constraint Catalog", 1
     )[0]
 
-    assert op02.index("### GG=0x09 — Local Configuration") < op02.index(
+    assert op02.index("### GG=0x09 — Ventilation") < op02.index(
         "### GG=0x09 — Ventilation / recoVair Candidates"
     ) < op02.index("### GG=0x0A — Local Parameters")
     assert "(opcode 0x06)" not in op02
@@ -243,8 +243,50 @@ def test_local_deltat_does_not_claim_singleton_topology() -> None:
     local = text.split("### GG=0x08 — DeltaT", 1)[1].split("### GG=0x09", 1)[0]
     assert "II=0x00 only" not in local
     assert "profile-dependent" in local
-    assert "not a qualified device count" in local
+    assert "not as a current\nprofile bound or a qualified device count" in local
     assert "OP06/GG08 remains a separate instanced selector set" in local
     assert "| 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent |" in text
     assert "| 0x08 | 0x02 (local) | profile-dependent |" in text
     assert "| 0x08 | 0x02 (local) | 0x00 |" not in text
+
+
+def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() -> None:
+    register_map = REGISTER_MAP.read_text(encoding="utf-8")
+    protocol = B524.read_text(encoding="utf-8")
+    profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(
+        encoding="utf-8"
+    )
+    namespace = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
+    semantic = SEMANTIC_MAPPING.read_text(encoding="utf-8")
+
+    for group, label, name in (
+        ("00", "System", "system"),
+        ("01", "Native Domestic Hot Water", "native_domestic_hot_water"),
+        ("02", "Circuits", "circuits"),
+        ("03", "Zones", "zones"),
+        ("04", "Solar Circuit", "solar_circuit"),
+        ("05", "Solar Loaded Cylinder", "solar_loaded_cylinder"),
+        ("06", "Device", "device"),
+        ("07", "Generator", "generator"),
+        ("08", "DeltaT", "delta_t"),
+        ("09", "Ventilation", "ventilation"),
+    ):
+        assert f"| {group} | {label} | `{name}` |" in protocol
+
+    assert "| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 |" in register_map
+    assert "II01..II08 for\nordinary heating circuits and II09 for the virtual native-water circuit" in register_map
+    assert "II00 and II0A probes" in register_map
+    assert "over II01..II08 for the characterized profile. `II=0x00`, `II=0x09`, and\n`II=0x0A` are outside its current OP06 slot interval" in register_map
+    assert "every OP06 GG admitted by a scan plan uses the common candidate\nslot interval II01..II08" in profile
+    assert "does not create a group route" in profile
+    assert "Browser tree is a present-instance view" in profile
+    assert "`present=true`; a legacy artifact without that field may retain a successful\nobserved raw reply" in profile
+    assert "not_connected`, empty, timeout, decode failure, and\nunprobed/unknown selectors remain" in profile
+    assert "does not alter the artifact or create a\nsynthetic slot" in profile
+    assert "instanced group remains a navigation node when it has no\npresent child instances" in profile
+    assert "Custom scan plans enforce the same selector intervals before transport I/O" in profile
+    assert "OP06 permits II01..II08 and OP02/GG02 permits II01..II09" in profile
+    assert "OP06 candidates use II01..II08; OP02/GG02 uses II01..II08\nfor heating candidates plus II09" in namespace
+    assert "0x02 0x02    0x09         0x0025" in semantic
+    assert "0x09 0x06    0x08         0x0035" in semantic
+    assert "scan planner, Browser,\nHTML, and saved-artifact views" in protocol

@@ -295,10 +295,11 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 
 ### Phase C: instance detection (instanced groups)
 
-- in `full`, evaluate every declared `II=0x00..II_max`; in `recommended`,
+- in `full`, evaluate every declared II in the profile interval; in `recommended`,
   a qualified positive count may stop probing after the expected number of successes
-- `II_max` comes from the profile or explicit custom selection. A count does not
-  identify II indices or redefine the slot bound; short OP01 probes supply neither.
+- `II_max` and the lower II boundary come from the profile. Custom RR selection
+  does not widen an II interval. A count does not identify II indices or redefine
+  the slot bound; short OP01 probes supply neither.
 - mark present slots based on group-specific heuristics
 
 ### Phase D: register scan
@@ -328,11 +329,11 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 
 ```text
 GG   Opcode  InstanceMax  RegisterMax
-0x02 0x02    0x0A         0x0025
+0x02 0x02    0x09         0x0025
 0x03 0x02    0x0A         0x002E
-0x09 0x06    0x0A         0x0035
-0x0A 0x06    0x0A         0x0035
-0x0C 0x06    0x0A         0x003F
+0x09 0x06    0x08         0x0035
+0x0A 0x06    0x08         0x0035
+0x0C 0x06    0x08         0x003F
 ```
 
 ---

@@ -140,6 +140,13 @@ They use one deterministic candidate policy and pure planner for UI and CLI.
 This is an implementation-facing scanner contract, not universal B524 wire proof
 or a claim that an unprobed selector is absent.
 
+The Browser tree is a present-instance projection, not the candidate scan plan.
+For the current profile, OP06 candidates use II01..II08; OP02/GG02 uses II01..II08
+for heating candidates plus II09 for virtual native water. Do not render an
+absent, unknown, or unprobed selector as a tree node. Preserve those outcomes in
+the artifact so that the UI does not convert lack of a node into a claim of
+physical absence.
+
 ### `recommended` (default)
 
 This preset scans characterized OP=02/GG `00..05,08,09` and OP=06/GG
@@ -173,6 +180,9 @@ routine scanning.
 
 An exact normalized plan of OP02/OP06 `(GG,II,RR16)` lists or bounded ranges.
 The UI and CLI send the same plan to the planner; explicit selectors are never
+allowed to widen the current profile II intervals: OP06 is II01..II08 and
+OP02/GG02 is II01..II09. RR16 remains an exact scalar selector within the
+normal request contract.
 presence-pruned. The CLI accepts a `--scan-plan` JSON file with
 `schema_version: 1` and `groups: [{opcode, group, instances, registers}]`.
 Only read selectors and wire-bounded values are accepted. Plans exceeding

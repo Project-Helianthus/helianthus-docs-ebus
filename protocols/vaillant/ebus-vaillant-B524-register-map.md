@@ -45,21 +45,27 @@ correlated evidence. They do not establish writability or authorize a write.
 
 | Opcode | GG | Group label | Instanced | II_MAX | RR_MAX | Instance gate | Regs (scan/doc) |
 |--------|----|-------------|-----------|--------|--------|---------------|-----------------|
-| 0x02 | 0x00 | Regulator Parameters | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
-| 0x02 | 0x01 | Hot Water Circuit | No | 0x00 | 0x13 | SystemScheme + VR_71 config | 17 (0x0001–0x0013) |
-| 0x02 | 0x02 | Heating Circuits | Yes | 0x0A | 0x20 | `circuit_mixer_type_external != 0` (RR=0x0002) | 291 (26/inst, 11 inst) |
+| 0x02 | 0x00 | System | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
+| 0x02 | 0x01 | Native Domestic Hot Water | No | 0x00 | 0x13 | SystemScheme + VR_71 config | 17 (0x0001–0x0013) |
+| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | `circuit_mixer_type_external != 0` (RR=0x0002) for II01..08; II09 is virtual native water | profile bound: 8 heating + 1 virtual native-water circuit |
 | 0x02 | 0x03 | Zones | Yes | 0x08 | 0x2E | `index != 0xFF` (RR=0x001C) | 342 (38/inst, 9 inst max) |
 | 0x02 | 0x04 | Solar Circuit | Yes (spec) | 0x02 | 0x0B | hydraulic scheme + VR_71 config; current lab: singleton (II=0x00) | 10 (0x0001–0x000B) |
-| 0x02 | 0x05 | Hot Water Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
+| 0x02 | 0x05 | Solar Loaded Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
+| 0x02 | 0x06 | Device | Unknown | — | — | no public selector/profile contract | Unknown |
+| 0x02 | 0x07 | Generator | Unknown | — | — | no public selector/profile contract | Unknown |
 | 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent | 0x0007 | not qualified | 7 local |
+| 0x02 | 0x09 | Ventilation | Unknown | profile-dependent | 0x000F | not qualified | 15 local |
 | 0x06 | 0x01 | Boiler | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
 | 0x06 | 0x02 | Heat Pump | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
-| 0x06 | 0x08 | Modul Solar (VMS) auroSTEP | Yes | 0x0A | — | unknown status; no connected-device predicate | 44 remote |
-| 0x06 | 0x09 | Remote Control Regulators (VRC7xx, VRT38x) | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 352 remote |
-| 0x06 | 0x0A | Remote Control Thermostats (VR9x) | Yes | 0x0A | 0x35 | `device_connected` (RR=0x0001) | 338 remote |
-| 0x06 | 0x0C | Functional Modules (VR71) FM5 | Yes | 0x0A | 0x2F | `device_connected` (RR=0x0001) | 165 (15/inst) |
-| 0x06 | 0x0E | Clock Module | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
-| 0x06 | 0x0F | Base Station | Yes | 0x0A | 0x10 | `device_connected` (RR=0x0001) | 17 remote |
+| 0x06 | 0x03..0x07 | See OP06 catalog | Yes | 0x08 | — | group layout/presence Unknown | profile slot bound only |
+| 0x06 | 0x08 | Modul Solar (VMS) auroSTEP | Yes | 0x08 | — | unknown status; no connected-device predicate | profile slot bound only |
+| 0x06 | 0x09 | Remote Control Regulators (VRC7xx, VRT38x) | Yes | 0x08 | 0x35 | `device_connected` (RR=0x0001) | profile slot bound only |
+| 0x06 | 0x0A | Remote Control Thermostats (VR9x) | Yes | 0x08 | 0x35 | `device_connected` (RR=0x0001) | profile slot bound only |
+| 0x06 | 0x0B | Functional Modules (VR70) FM3 | Yes | 0x08 | — | group layout/presence Unknown | profile slot bound only |
+| 0x06 | 0x0C | Functional Modules (VR71) FM5 | Yes | 0x08 | 0x2F | `device_connected` (RR=0x0001) | profile slot bound only |
+| 0x06 | 0x0D | Relay Module (VR41) | Yes | 0x08 | — | group layout/presence Unknown | profile slot bound only |
+| 0x06 | 0x0E | Clock Module | Yes | 0x08 | 0x10 | `device_connected` (RR=0x0001) | profile slot bound only |
+| 0x06 | 0x0F | Base Station | Yes | 0x08 | 0x10 | `device_connected` (RR=0x0001) | profile slot bound only |
 
 **GG values are opcode-scoped, not global:** `OP=0x02, GG=0x00` and
 `OP=0x02, GG=0x01` are the singleton local selector sets for system/settings
@@ -69,7 +75,7 @@ respectively. `GG=0x00` has no qualified heat-generator route; this does not
 establish its universal absence under `OP=0x06`, populated slots, or other
 models' limits.
 
-The [OP06 family presentation-name catalog](ebus-vaillant-B524.md#33-op06-family-presentation-name-catalog)
+The [OP06 family presentation-name catalog](ebus-vaillant-B524.md#34-op06-family-presentation-name-catalog)
 records operator-provided human names and `snake_case` semantic names for GG01
 through GG0F. Except where this map already supplies an explicitly qualified
 route, they are hypotheses only. A corrected presentation name does not change
@@ -88,7 +94,8 @@ physical-device identity or change routing and register layout. These namespaces
 Control Thermostats (VR9x), `GG=0x0C` = Functional Modules (VR71) FM5,
 `GG=0x0E` = Clock Module, and `GG=0x0F` = Base Station. Connected-device discovery
 uses profile-qualified `device_connected` (RR=0x0001),
-starting at II01 for the characterized profile. Readable headers do not override
+over II01..II08 for the characterized profile. `II=0x00`, `II=0x09`, and
+`II=0x0A` are outside its current OP06 slot interval. Readable headers do not override
 a false connection Boolean; retained inventory is distinct. See the
 [qualified policy and bounds](b524-profile-discovery-and-descriptions.md).
 Instance `II` selects the slot.
@@ -133,17 +140,17 @@ Source: BASV2 constraint probe + live scan corpus.
 | 0x01 | 0x06 (controller-side remote) | slot-scoped (`II`) | 0x0015 | `0x0001`, `0x0012`, `0x0015` are hypotheses | Primary heat-source candidate. Availability probing is a precondition for meaningful interpretation; no live SensoNET response established |
 | 0x01 | 0x02 (local) | 0x00 | 0x0011 | **0x0013** | DHW. Singleton. 4 undocumented registers 0x0007-0x0013. stale profile |
 | 0x02 | 0x06 (controller-side remote) | slot-scoped (`II`) | model pending | `0x0001`, `0x0012`, `0x0015` are hypotheses | Secondary heat-source candidate. Detailed register canon and live SensoNET response remain unverified |
-| 0x02 | 0x02 (local) | 0x0A | 0x0025 | 0x0025 | Heating circuits. **Note**: scan confirms 26 regs/instance extending to 0x0025.stale profile |
+| 0x02 | 0x02 (local) | 0x09 | 0x0025 | 0x0025 | Current profile: II01..08 are heating circuits; II09 is virtual native water. Historical II00..0A probes remain observations, not current coverage. |
 | 0x03 | 0x02 (local) | 0x0A | 0x002F | **0x002E** | Zones. Scan confirms 38 regs/instance. Profile accurate |
 | 0x04 | 0x02 (local) | 0x00 | 0x000B | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
 | 0x05 | 0x02 (local) | 0x01 | 0x0004 | 0x0004 | Cylinders. **Only 2 instances** (0x00-0x01), not 0x0A. Gated by fm5_config≤2 |
 | 0x08 | 0x02 (local) | profile-dependent | — | **0x0007** | DeltaT. Local II scope remains profile-dependent; physical topology Unknown. |
-| 0x08 | 0x06 (remote) | 0x0A | — | **0x0004** | Modul Solar (VMS) auroSTEP display hypothesis. 4 regs/instance; no connected-device predicate. **NEW** |
-| 0x09 | 0x02 (local) | 0x0A | — | **0x000F** | Radio sensors VRC7xx. 15 regs/instance. **NEW** |
-| 0x09 | 0x06 (remote) | 0x0A | 0x002F | **0x0030** | Radio sensors VRC7xx. 32 regs/instance |
-| 0x0A | 0x02 (local) | 0x0A | — | **0x004D** | Observed local selector set; role and physical identity unknown. Historical coverage: 69 registers per requested II. |
-| 0x0A | 0x06 (remote) | 0x0A | 0x003F | **0x0035** | Radio sensors VR92. 32 regs/instance |
-| 0x0C | 0x06 (remote) | 0x0A | 0x003F | **0x002F** | Functional Modules (VR71) FM5. 15 regs/instance. No local `OP=0x02` selector set documented |
+| 0x08 | 0x06 (remote) | 0x08 | — | **0x0004** | Modul Solar (VMS) auroSTEP display hypothesis. Current OP06 slot interval II01..08; no connected-device predicate. |
+| 0x09 | 0x02 (local) | profile-dependent | — | **0x000F** | Ventilation. Local II scope/physical topology unknown. |
+| 0x09 | 0x06 (remote) | 0x08 | 0x0030 | **0x0030** | Remote Control Regulators (VRC7xx, VRT38x). Current OP06 slot interval II01..08. |
+| 0x0A | 0x02 (local) | profile-dependent | — | **0x004D** | Observed local selector set; role and physical identity unknown. Historical coverage is not a current topology bound. |
+| 0x0A | 0x06 (remote) | 0x08 | 0x0035 | **0x0035** | Remote Control Thermostats (VR9x). Current OP06 slot interval II01..08. |
+| 0x0C | 0x06 (remote) | 0x08 | 0x002F | **0x002F** | Functional Modules (VR71) FM5. Current OP06 slot interval II01..08. No local `OP=0x02` selector set documented |
 
 ---
 
@@ -173,7 +180,7 @@ physical identity or scan bound. Existing raw observations and profile limits
 remain separately qualified. Newly named entries without a characterized layout
 are marked **Hypothesis**.
 
-### GG=0x00 — System/Regulator
+### GG=0x00 — System
 
 All registers use opcode `0x02`, instance `0x00`.
 
@@ -414,7 +421,7 @@ All registers use opcode `0x02`, instance `0x00`.
 
 ---
 
-### GG=0x01 — Local DHW
+### GG=0x01 — Native Domestic Hot Water
 
 All registers use opcode `0x02`, instance `0x00`. All registers except `native_dhw_status` (0x000F) are gated by `native_dhw_circuit_type` (0x0001).
 
@@ -445,26 +452,25 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `native_d
 
 ---
 
-### GG=0x02 — Heating Circuits
+### GG=0x02 — Circuits
 
-All registers use opcode `0x02`. Instances 0x00-0x0A; active heating
-circuits are normally discovered by probing `circuit_mixer_type_external`
-(RR=0x0002). Value `0` (`mctype=inactive`) indicates an unused circuit slot
-for ordinary heating-circuit instances, while absent instances beyond the
-highest configured slot return empty/null response (no valid payload from bus).
+All registers use opcode `0x02`. The current profile selects II01..II08 for
+ordinary heating circuits and II09 for the virtual native-water circuit. Active
+heating circuits are discovered by probing `circuit_mixer_type_external`
+(RR=0x0002). Value `0` (`mctype=inactive`) indicates an unused ordinary
+heating-circuit slot. An absent selector returns an empty/null response (no
+valid payload from bus). The Browser tree contains only confirmed-present
+instances; inactive, absent, and unknown probes remain in the scan artifact.
 
-Observed exception: instance `II=0x09` can represent a DHW/additional-cylinder
-pseudo-circuit even when `circuit_mixer_type_external` reports `0`. Treat this slot as
-active DHW (`mctype=3`) only when it has plausible live temperature evidence
+`II=0x09` is the virtual native-water circuit. Its selector does not identify a
+physical heating circuit. Treat it as present only when it has plausible live temperature evidence
 from `circuit_current_flow_temperature` (RR=0x0008) or
 `circuit_status_automatic_heating_cooling` (RR=0x0020). This preserves inactive handling for
 all other `mctype=0` circuit slots. Community evidence:
 [`helianthus-vrc-explorer#53`](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53).
 
-Older scan baseline: II=0,1 return mctype=1 (heating), II=2-9 return mctype=0
-(inactive), II=10 returns null (absent). That baseline does not disprove the
-`II=0x09` pseudo-circuit because its discriminator is temperature evidence, not
-the type selector alone.
+Historical scan records include II00 and II0A probes. They remain retained raw
+observations, but do not extend the current profile's II01..09 coverage.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -592,7 +598,7 @@ Entire group gated by `fm5_config ≤ 2`. All registers use opcode `0x02`, insta
 
 ---
 
-### GG=0x05 — Cylinders
+### GG=0x05 — Solar Loaded Cylinder
 
 Entire group gated by `fm5_config ≤ 2`. These are solar charging parameters per cylinder. General cylinder config (max temp, charge hysteresis) is in GG=0x00 system config.
 
@@ -616,8 +622,8 @@ Cylinder presence detection:
 
 7 named registers. The local II scope is observed and profile-dependent;
 responses on multiple II selectors do not establish physical instance topology.
-VRC Explorer retains the characterized local selector bound II=0x00..0x0A;
-this is an exploration bound, not a qualified device count or universal limit.
+Historical II00..0A exploration is retained as evidence, not as a current
+profile bound or a qualified device count.
 OP06/GG08 remains a separate instanced selector set with its own RR limit.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
@@ -632,13 +638,16 @@ OP06/GG08 remains a separate instanced selector set with its own RR limit.
 
 ---
 
-### GG=0x09 — Local Configuration
+### GG=0x09 — Ventilation
 
 OP02/GG09 is a local selector set. Its zero-instance passive observation does not establish a universal write-triggered or non-readable property. Any association between RR=0x0001..0x0004 and system quick-mode control remains a **Hypothesis** pending publishable correlated evidence.
 
 
 
-Instanced (II=0x00-0x0A). 15 registers per instance. All identical — template config.
+The local II scope is profile-dependent. Repeated historical values do not
+establish a template/default role or physical topology. The Browser tree shows
+only confirmed-present instances; absent and unknown selector outcomes stay in
+the artifact diagnostics.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -782,7 +791,8 @@ Current canon status:
 
 ### GG=0x08 — Modul Solar (VMS) auroSTEP
 
-Instanced (II=0x00-0x0A). 4 registers per instance. All 11 instances respond.
+Current profile slot interval: II01..II08. Historical II00..0A reads are
+retained observations and do not expand this profile bound or prove presence.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -799,7 +809,11 @@ Instanced (II=0x00-0x0A). 4 registers per instance. All 11 instances respond.
 
 
 
-Instanced (II=0x00-0x0A). 32 registers per instance. **Active devices are identified by non-default values.** Empty slots have all NaN/0xFF/0x8000.
+Current profile slot interval: II01..II08. Show only slots confirmed present
+by the group predicate in the Browser tree. Historical II00..0A reads remain
+artifact observations; they do not establish current slot bounds. **Active
+devices are identified by non-default values.** Empty slots have all
+NaN/0xFF/0x8000.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -845,7 +859,10 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active devices are identi
 
 
 
-Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are identified by non-default values.** Empty slots have NaN/0xFF.
+Current profile slot interval: II01..II08. Show only slots confirmed present
+by the group predicate in the Browser tree. Historical II00..0A reads remain
+artifact observations; they do not establish current slot bounds. **Active VR92
+devices are identified by non-default values.** Empty slots have NaN/0xFF.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -879,7 +896,7 @@ Instanced (II=0x00-0x0A). 32 registers per instance. **Active VR92 devices are i
 **Device slot enumeration:** Follow the
 [profile-qualified discovery contract](b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
 For the characterized profile, recommended discovery starts at **II=0x01**:
-GG01/02 use bounds 01..08; GG09/0A/0C/0E/0F use bounds 01..0A.
+all OP06 groups use the current profile bounds II01..II08.
 Stop only on a complete, correlated, profile-qualified `not_connected` Boolean
 from RR0001. Unknown results do not stop the next probe. Full/research audit every
 slot in the declared bound, including slots after a negative result.
@@ -907,7 +924,10 @@ retained inventory evidence. Identity and telemetry reads can include:
 
 #### Functional Modules (VR71) FM5 Data
 
-Instanced (II=0x00-0x0A). 15 registers per instance. Uses the shared remote-device slot schema. In the current lab, **II=0x01 has `device_class_address=0x26`**, matching the eBUS-identified hardware at target address `0x26`, while historical observations contain both `device_connected=0` and `1`.
+Current profile slot interval: II01..II08. Uses the shared remote-device slot
+schema. In the current lab, **II=0x01 has `device_class_address=0x26`**,
+matching the eBUS-identified hardware at target address `0x26`, while
+historical observations contain both `device_connected=0` and `1`.
 Connection state and retained identity are distinct; neither observation is a
 universal empty-slot or physical-liveness rule.
 

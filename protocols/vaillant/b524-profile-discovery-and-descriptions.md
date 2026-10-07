@@ -6,41 +6,55 @@ profile-qualified interpretations, and scanner policy. It adds no device writes.
 
 ## Local circuit coverage
 
-When OP02/GG02 is selected, include II0A independently of OP00 `circuit_count`.
-For example, three discovered ordinary slots `00,01,02` produce the scan selection
-`00,01,02,0A`. Deduplicate II0A if it is already selected. This applies to CLI,
-interactive planning, replanning, and custom plans; estimates and safety limits
-include the extra slot.
+For OP02/GG02, the current profile is II01..II09: II01..II08 are ordinary
+heating-circuit candidates and II09 is the virtual native-water circuit. The
+OP00 `circuit_count` can guide which of II01..II08 are probed, but does not add
+II00 or II0A. II09 remains a separately selected candidate. This applies to
+CLI, interactive planning, replanning, and custom plans; estimates and safety
+limits include II09.
 
-The user-facing designation is `virtual_dhw`. Its inferred protocol role remains
-**Unknown**: selecting or reading this slot does not confirm an active physical
-circuit. Preserve the native selector 0A; historical display `Heating Circuit 11`
-was index-plus-one presentation. Do not alias this selector to the separately
-documented II09 DHW pseudo-circuit rule.
+`virtual_native_water` is a presentation label, not a physical-circuit claim.
+The selector is shown only after positive presence evidence. A historical trace
+contains responsive II0A reads; retain that raw evidence in its artifact, but
+do not turn it into the current profile's circuit range or Browser tree.
 
-Sanitized selector evidence on BASV2/SW0507: `0200020a0900` receives
-`0202090000007042`, with RR0009 value bytes `00007042` (binary32 60.0);
-`0200020a1300` receives `020213000100`, with RR0013 value bytes `0100` (u16 1).
-These echoed read responses prove a sparse responsive selector, independently
-of the semantic labels assigned by an older mapper.
+The Browser tree is a present-instance view: it contains only selectors with
+group-qualified positive evidence. For current artifacts this is
+`present=true`; a legacy artifact without that field may retain a successful
+observed raw reply. `not_connected`, empty, timeout, decode failure, and
+unprobed/unknown selectors remain in the scan artifact diagnostics; none becomes
+a placeholder node. Tree projection does not alter the artifact or create a
+synthetic slot. An instanced group remains a navigation node when it has no
+present child instances; only its instance children are filtered.
+
+Custom scan plans enforce the same selector intervals before transport I/O:
+OP06 permits II01..II08 and OP02/GG02 permits II01..II09. Custom RR selectors
+remain exact and are validated by the scalar request contract; they do not widen
+an II interval. Historical records outside these intervals remain raw artifact
+diagnostics and never become Browser nodes.
 
 ## OP06 connected-device discovery
 
 OP00 information identifiers do not enumerate OP06 groups. Counts and same-numbered
 identifiers never suppress an independently configured device class. The following
 table describes the characterized controller profile; names are operation-scoped.
-The wider [OP06 presentation-name catalog](ebus-vaillant-B524.md#33-op06-family-presentation-name-catalog)
+The wider [OP06 presentation-name catalog](ebus-vaillant-B524.md#34-op06-family-presentation-name-catalog)
 is a hypothesis catalog, not an expansion of this discovery policy.
 
 | OP06 GG | Public class | Discovery II bounds | RR0001 interpretation |
 | --- | --- | --- | --- |
 | 01 | `primary_heating_source` | 01..08 | Profile-qualified native slot availability |
 | 02 | `secondary_heating_source` | 01..08 | Profile-qualified fallback-slot availability |
-| 09 | `regulator_slot` | 01..0A | Profile-qualified connected/paired Boolean |
-| 0A | `thermostat_slot` | 01..0A | Profile-qualified connected/paired Boolean |
-| 0C | `functional_modules_vr71` | 01..0A | Connection state, distinct from retained inventory |
-| 0E | `clock_slot` | 01..0A | Observed Boolean connection candidate |
-| 0F | `base_station_slot` | 01..0A | Observed Boolean connection candidate |
+| 09 | `regulator_slot` | 01..08 | Profile-qualified connected/paired Boolean |
+| 0A | `thermostat_slot` | 01..08 | Profile-qualified connected/paired Boolean |
+| 0C | `functional_modules_vr71` | 01..08 | Connection state, distinct from retained inventory |
+| 0E | `clock_slot` | 01..08 | Observed Boolean connection candidate |
+| 0F | `base_station_slot` | 01..08 | Observed Boolean connection candidate |
+
+For this profile, every OP06 GG admitted by a scan plan uses the common candidate
+slot interval II01..II08. II00, II09, and II0A are outside that interval. This
+does not create a group route, a device-presence claim, or an RR0001 predicate
+for groups whose semantics remain unknown.
 
 **Hypothesis:** independent protocol evidence is required for this interpretation.
 
@@ -59,10 +73,11 @@ boundary unless a row already appears in the table above with its own qualified
 route. In particular, `unused` for GG04 does not justify suppressing a probe
 that an independently qualified profile requires.
 
-Sanitized BASV2 observations for GG09/0A/0C/0E/0F have RR0001 raw `00` at II00,
-`01` at II01, and `00` at II02 through II0A. Starting a first-empty scan at II00
-would miss II01. The captured RR1 result is independent from an older artifact's
-generic `present=true`, which also appeared on disconnected slots.
+Historical BASV2 observations for GG09/0A/0C/0E/0F include RR0001 raw `00` at
+II00, `01` at II01, and `00` at later historical selectors. They explain why
+the current profile begins at II01; they do not expand its upper bound beyond
+II08. The captured RR1 result is independent from an older artifact's generic
+`present=true`, which also appeared on disconnected slots.
 
 For `recommended`, begin at II01 and probe sequentially to the first complete,
 correlated Boolean false: `first_confirmed_absence` means **not connected at that
