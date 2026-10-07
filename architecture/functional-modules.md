@@ -68,6 +68,20 @@ For functional modules, the most important distinction is:
 
 The target contract must preserve that distinction rather than flatten it.
 
+### B524 presentation mapping
+
+For the B524 controller-mediated namespace, the operator-provided presentation
+mapping is:
+
+| Selector | Presentation name | Evidence boundary |
+| --- | --- | --- |
+| `OP=0x06, GG=0x0B` | Functional Modules (VR70) | Name only. No published capture, slot bounds, register layout, or physical-product identity is established here. |
+| `OP=0x06, GG=0x0C` | Functional Modules (VR71) | Presentation name plus the separately documented, profile/lab-scoped VR71 correlation. |
+
+These labels distinguish two native namespaces. Neither label makes the family
+association a universal wire rule, and the qualified `GG=0x0C` discovery contract
+does not apply to `GG=0x0B`.
+
 ## Why the Current FM5-Centered Model Is Not Enough
 
 The current model does not scale cleanly because:

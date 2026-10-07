@@ -86,3 +86,22 @@ def test_device_enumeration_preserves_ii01_and_retained_inventory_contract() -> 
     assert "Unknown results do not stop" in section
     assert "Full/research audit every" in section
     assert "must not suppress\nretained inventory evidence" in section
+
+
+def test_functional_module_presentation_names_preserve_the_evidence_boundary() -> None:
+    register_map = REGISTER_MAP.read_text(encoding="utf-8")
+    profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(encoding="utf-8")
+    architecture = (ROOT / "architecture" / "functional-modules.md").read_text(encoding="utf-8")
+
+    assert "`OP=0x06, GG=0x0B` = **Functional\nModules (VR70)**" in register_map
+    assert "is not a documented\nB524 selector route" in register_map
+    assert "does not establish additional qualified scan targets or bounds;\nexploratory probing remains separately qualified" in register_map
+    assert "`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71)**" in register_map
+    assert "outside this characterized discovery profile" in profile
+    assert "exploratory\nprobing remains separately qualified. Do not apply the `GG=0x0C` policy" in profile
+    assert "`OP=0x06, GG=0x0B`" in architecture
+    assert "`OP=0x06, GG=0x0C`" in architecture
+    routing = B524.read_text(encoding="utf-8").split("### 3.2 Opcode routing", 1)[1].split(
+        "**Unqualified presentation candidate:**", 1
+    )[0]
+    assert "GG=0x0B" not in routing

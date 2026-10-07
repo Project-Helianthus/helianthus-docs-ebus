@@ -36,11 +36,21 @@ table describes the characterized controller profile; names are operation-scoped
 | 02 | `secondary_heating_source` | 01..08 | Profile-qualified fallback-slot availability |
 | 09 | `regulator_slot` | 01..0A | Profile-qualified connected/paired Boolean |
 | 0A | `thermostat_slot` | 01..0A | Profile-qualified connected/paired Boolean |
-| 0C | `functional_module_slot` | 01..0A | Connection state, distinct from retained inventory |
+| 0C | `functional_modules_vr71` | 01..0A | Connection state, distinct from retained inventory |
 | 0E | `clock_slot` | 01..0A | Observed Boolean connection candidate |
 | 0F | `base_station_slot` | 01..0A | Observed Boolean connection candidate |
 
 **Hypothesis:** independent protocol evidence is required for this interpretation.
+
+### Unqualified VR70 presentation candidate
+
+The operator-provided display designation `OP=0x06, GG=0x0B` = **Functional
+Modules (VR70)** is outside this characterized discovery profile. It supplies no
+slot schema, product identity, discovery limit, or liveness predicate. This display
+mapping does not establish additional qualified scan targets or bounds; exploratory
+probing remains separately qualified. Do not apply the `GG=0x0C` policy until a
+profile-qualified contract supports it. The `functional_modules_vr71` class remains
+specific to `GG=0x0C`.
 
 Sanitized BASV2 observations for GG09/0A/0C/0E/0F have RR0001 raw `00` at II00,
 `01` at II01, and `00` at II02 through II0A. Starting a first-empty scan at II00
