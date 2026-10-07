@@ -51,7 +51,7 @@ correlated evidence. They do not establish writability or authorize a write.
 | 0x02 | 0x03 | Zones | Yes | 0x08 | 0x2E | `index != 0xFF` (RR=0x001C) | 342 (38/inst, 9 inst max) |
 | 0x02 | 0x04 | Solar Circuit | Yes (spec) | 0x02 | 0x0B | hydraulic scheme + VR_71 config; current lab: singleton (II=0x00) | 10 (0x0001–0x000B) |
 | 0x02 | 0x05 | Hot Water Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
-| 0x02 | 0x08 | DeltaT (local) | No | 0x00 | — | — | 7 local |
+| 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent | 0x0007 | not qualified | 7 local |
 | 0x06 | 0x01 | Boiler | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
 | 0x06 | 0x02 | Heat Pump | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
 | 0x06 | 0x08 | Modul Solar (VMS) auroSTEP | Yes | 0x0A | — | unknown status; no connected-device predicate | 44 remote |
@@ -78,7 +78,7 @@ group is unused on all profiles.
 
 **GG=0x08 — OP02 local DeltaT; OP06 Modul Solar (VMS)
 auroSTEP:** The documented selector spaces are `OP=0x02, GG=0x08` for 7 local
-singleton registers and `OP=0x06, GG=0x08` for 4 remote registers per instance
+registers and `OP=0x06, GG=0x08` for 4 remote registers per instance
 across all 11 instances. The OP06 display name is a family hypothesis from the
 catalog; the local OP02 presentation name is DeltaT. Naming does not establish
 physical-device identity or change routing and register layout. These namespaces must not be merged by `GG` alone.
@@ -137,7 +137,7 @@ Source: BASV2 constraint probe + live scan corpus.
 | 0x03 | 0x02 (local) | 0x0A | 0x002F | **0x002E** | Zones. Scan confirms 38 regs/instance. Profile accurate |
 | 0x04 | 0x02 (local) | 0x00 | 0x000B | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
 | 0x05 | 0x02 (local) | 0x01 | 0x0004 | 0x0004 | Cylinders. **Only 2 instances** (0x00-0x01), not 0x0A. Gated by fm5_config≤2 |
-| 0x08 | 0x02 (local) | 0x00 | — | **0x0007** | DeltaT. Singleton config. **NEW** |
+| 0x08 | 0x02 (local) | 0x00 | — | **0x0007** | DeltaT. Local II scope remains profile-dependent; physical topology Unknown. |
 | 0x08 | 0x06 (remote) | 0x0A | — | **0x0004** | Modul Solar (VMS) auroSTEP display hypothesis. 4 regs/instance; no connected-device predicate. **NEW** |
 | 0x09 | 0x02 (local) | 0x0A | — | **0x000F** | Radio sensors VRC7xx. 15 regs/instance. **NEW** |
 | 0x09 | 0x06 (remote) | 0x0A | 0x002F | **0x0030** | Radio sensors VRC7xx. 32 regs/instance |
@@ -614,7 +614,11 @@ Cylinder presence detection:
 
 ### GG=0x08 — DeltaT
 
-Singleton (II=0x00 only). 7 registers. Structure mirrors GG=0x05 (Solar Cylinder 1) — same constraint catalog layout.
+7 named registers. The local II scope is observed and profile-dependent;
+responses on multiple II selectors do not establish physical instance topology.
+VRC Explorer retains the characterized local selector bound II=0x00..0x0A;
+this is an exploration bound, not a qualified device count or universal limit.
+OP06/GG08 remains a separate instanced selector set with its own RR limit.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|

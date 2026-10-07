@@ -236,3 +236,13 @@ def test_op02_gg08_uses_deltat_without_relabelling_remote_family() -> None:
     assert "| 0x02 | 0x08 | DeltaT (local) |" in text
     assert "### GG=0x08 — Modul Solar (VMS) auroSTEP" in text
     assert "Buffer/Solar Cylinder 2" not in text
+
+
+def test_local_deltat_does_not_claim_singleton_topology() -> None:
+    text = REGISTER_MAP.read_text(encoding="utf-8")
+    local = text.split("### GG=0x08 — DeltaT", 1)[1].split("### GG=0x09", 1)[0]
+    assert "II=0x00 only" not in local
+    assert "profile-dependent" in local
+    assert "not a qualified device count" in local
+    assert "OP06/GG08 remains a separate instanced selector set" in local
+    assert "| 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent |" in text
