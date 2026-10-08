@@ -45,6 +45,20 @@
       "empty_reply": 0,
       "description_correlated_raw": 0,
       "high_group_empty_reply": 0
+    },
+    "actual_attempts": 0,
+    "reused_completed_exchanges": 0,
+    "phases": {
+      "discovery": {
+        "planned_jobs": 0,
+        "completed_jobs": 0,
+        "actual_attempts": 0
+      },
+      "extension": {
+        "planned_jobs": 0,
+        "completed_jobs": 0,
+        "actual_attempts": 0
+      }
     }
   },
   "catalog_reference": {

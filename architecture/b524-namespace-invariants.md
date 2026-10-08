@@ -90,7 +90,7 @@ Key structural properties:
 ## FLAGS Reply Attribute
 
 The leading byte in an OP=02h/06h read response is retained as raw `FLAGS`.
-Private static analysis suggests bit 0 is a visibility/category discriminator and
+The profile-scoped attribute interpretation uses bit 0 as a visibility/category discriminator and
 bit 1 marks writable capability. This is profile-scoped inference, not a
 universal wire meaning, live writability proof, or volatile/stable classification.
 Scanner artifacts may expose a numeric `reply_kind` for compatibility, but they

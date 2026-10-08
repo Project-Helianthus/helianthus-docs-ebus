@@ -125,7 +125,10 @@
         "planned_jobs",
         "completed_jobs",
         "final_transport_failures",
-        "response_categories"
+        "response_categories",
+        "actual_attempts",
+        "reused_completed_exchanges",
+        "phases"
       ],
       "properties": {
         "planned_jobs": {
@@ -152,6 +155,30 @@
             "type": "integer",
             "minimum": 0
           }
+        },
+        "actual_attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reused_completed_exchanges": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "phases": {
+          "type": "object",
+          "required": [
+            "discovery",
+            "extension"
+          ],
+          "properties": {
+            "discovery": {
+              "$ref": "#/$defs/phase"
+            },
+            "extension": {
+              "$ref": "#/$defs/phase"
+            }
+          },
+          "additionalProperties": false
         }
       }
     },
@@ -252,6 +279,29 @@
         },
         "additionalProperties": false
       }
+    },
+    "phase": {
+      "type": "object",
+      "required": [
+        "planned_jobs",
+        "completed_jobs",
+        "actual_attempts"
+      ],
+      "properties": {
+        "planned_jobs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completed_jobs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "actual_attempts": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

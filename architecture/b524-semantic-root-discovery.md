@@ -115,7 +115,7 @@ The same principle applies to:
 
 - older generations;
 - alternative branding;
-- catalog-unknown devices that still expose the private regulator API.
+- catalog-unknown devices that still expose the extended regulator API.
 
 ## Current Implementation Divergence
 

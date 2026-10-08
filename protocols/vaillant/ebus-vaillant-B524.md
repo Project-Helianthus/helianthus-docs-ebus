@@ -64,8 +64,8 @@ FLAGS GG RR_LO RR_HI [value...]
 ```
 
 `FLAGS` is an observed two-bit reply attribute. The following bit interpretation
-comes from private static analysis and is a profile-specific inference; it is not
-a universal B524 wire contract or proof of live writability.
+is a profile-specific inference, not a universal B524 wire contract or proof of
+live writability.
 
 | Bit | Inferred meaning | Limit |
 |-----|------------------|-------|
@@ -150,7 +150,7 @@ profile-scoped and capture-required.
 | `u32` | Little-endian uint32 | 4 bytes | Energy counters, pump hours/starts |
 | `f32` | IEEE 754 float32 (see note below) | 4 bytes | Primary numeric type for temperatures, pressures, percentages |
 
-> **Device-dependent f32 byte order:** Controllers at address `0x15` (BASV2, CTLV2, VRC720 family) use **little-endian** f32 encoding. The HMU (Heat Management Unit) at address `0x08` on heat pump systems uses **big-endian** f32 encoding -- implementations reading f32 from HMU via B524 must reverse the 4 bytes before IEEE 754 decoding. This is confirmed by the OpenHAB community's use of the `reverseByteOrder` ebusd configuration flag for HMU B524 reads. All Helianthus scan data is from BASV2 (`0x15`) and is internally consistent little-endian. (Source: FINAL-B524-B555-B507-B508.md A1; confidence HIGH.)
+> **Profile-dependent f32 byte order:** The characterized BASV2 controller uses little-endian float32. A heat-pump HMU profile may use big-endian float32; qualify that codec independently before reversing bytes. The BASV2 survey does not establish the HMU layout, and a destination address alone never selects byte order.
 | `string` | Null-terminated C string | Variable | Zone names, installer info |
 | `bytes` | Raw byte sequence | Variable | Opaque payload, not decoded as numeric |
 | `date` | Profile-qualified date codec | Variable | BCD `DD MM YY` is observed for some scalar fields; it does not follow from a description-response length. |
@@ -271,10 +271,9 @@ The following is an operator-provided **hypothesis catalog** for the OP06 family
 It gives a stable human label and a `snake_case` presentation semantic name for
 use only after the exact `(OP=0x06, GG)` selector has been retained. It does not
 add a documented selector route, scan target, instance range, register layout,
-identity rule, liveness predicate, or write capability. The catalog is public as
-an operator-supplied designation in [issue #544](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/544); its restricted static-analysis
-corroboration is not published evidence. Promote an individual row only with
-publishable correlated wire and identity evidence for that complete selector.
+identity rule, liveness predicate, or write capability. Promote an individual row
+only with publishable correlated wire and identity evidence for that complete
+selector.
 
 | GG | Human label | Presentation semantic name | Public qualification |
 | --- | --- | --- | --- |

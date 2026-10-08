@@ -1,6 +1,7 @@
 """Regression checks for the corrected public B524 operation contract."""
 
 import json
+import re
 from pathlib import Path
 
 
@@ -159,7 +160,7 @@ def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> 
     ):
         assert f"`{semantic_name}`" in text
     assert "does not establish universal absence or reservation" in text
-    assert "[issue #544](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/544)" in text
+    assert "publishable correlated wire and identity evidence" in text
     assert "| 05 | Wärmepumpe Zubehör Appliance Interface (VWZ-AI) |" in text
     assert "| 06 | Pumpen Module - Solar (VPM-S) auroFLOW |" in text
     assert "| 07 | Pumpen Module - Wasser (VPM-W) aguaFLOW |" in text
@@ -386,3 +387,14 @@ def test_event_and_timer_operations_have_separate_selectors_and_write_boundary()
     assert "No live\nsetter is exposed" in events
     assert "Neither `II` nor the request selector is echoed" in events
     assert "VALUE1 remains raw" in events
+
+
+def test_public_b524_specifications_do_not_name_unpublished_source_material() -> None:
+    forbidden = re.compile(
+        r"private(?:-context)?/|private static analysis|restricted static.analysis|FINAL-B524-",
+        re.IGNORECASE,
+    )
+    documents = list((ROOT / "protocols/vaillant").glob("*[bB]524*.md"))
+    documents += list((ROOT / "architecture").glob("b524*.md"))
+    for document in documents:
+        assert not forbidden.search(document.read_text()), document.relative_to(ROOT)

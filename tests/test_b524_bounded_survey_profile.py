@@ -1,5 +1,8 @@
 import json
+import subprocess
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -40,7 +43,38 @@ def test_effective_windows_are_separate_from_survey_coverage_and_partial_describ
     counts = profile["execution"]
     assert sum(counts["response_categories"][k] for k in ("value_reply", "empty_reply", "description_correlated_raw")) == counts["completed_jobs"]
     assert sum(phase["actual_attempts"] for phase in counts["phases"].values()) == counts["actual_attempts"]
+    assert sum(phase["planned_jobs"] for phase in counts["phases"].values()) == counts["planned_jobs"]
+    assert sum(phase["completed_jobs"] for phase in counts["phases"].values()) == counts["completed_jobs"]
     assert "unqualified" in profile["description_high_water_qualification"]
     text = (ROOT / "protocols/vaillant/b524-survey-methodology.md").read_text()
     assert "OP 00 GG II RRlo RRhi" in text
     assert "reserved CRC bytes `A9` and `AA`" in text
+
+
+@pytest.mark.parametrize("field", ["actual_attempts", "reused_completed_exchanges", "phases"])
+def test_profile_schema_rejects_missing_execution_accounting(tmp_path: Path, field: str) -> None:
+    fixtures = ROOT / "protocols/vaillant/fixtures"
+    profile = json.loads((fixtures / "b524-bounded-survey-basv2-v1.json").read_text())
+    del profile["execution"][field]
+    candidate = tmp_path / "missing-accounting.json"
+    candidate.write_text(json.dumps(profile))
+    result = subprocess.run(
+        ["jv", str(fixtures / "b524-bounded-survey-profile-schema-v1.json"), str(candidate)],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode != 0
+    assert field in result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    "profile_path",
+    sorted(path for path in (ROOT / "protocols/vaillant/fixtures").glob("b524-bounded-survey-*-v1.json")
+           if not path.name.startswith("b524-bounded-survey-profile-")),
+    ids=lambda path: path.stem,
+)
+def test_all_contributed_profiles_have_consistent_phase_totals(profile_path: Path) -> None:
+    counts = json.loads(profile_path.read_text())["execution"]
+    for key in ("planned_jobs", "completed_jobs", "actual_attempts"):
+        assert sum(phase[key] for phase in counts["phases"].values()) == counts[key]
+    assert counts["completed_jobs"] <= counts["planned_jobs"]
+    assert counts["actual_attempts"] >= counts["completed_jobs"]
