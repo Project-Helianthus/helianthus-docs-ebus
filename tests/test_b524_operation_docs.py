@@ -305,6 +305,16 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
     assert windows[("0x0e", "0x0f")] == "0x0033"
     assert windows[("0x04", "0x0d")] is None
 
+    raw_ceiling_selectors = {
+        (sample["selector"]["gg"], sample["selector"]["rr"])
+        for sample in fixture["samples"]
+        if sample.get("request_payload_hex") and sample.get("reply_payload_hex")
+    }
+    for window in fixture["observed_scheduling_windows"]:
+        if window["rr_through"] is not None:
+            for group in window["groups"]:
+                assert (group, window["rr_through"]) in raw_ceiling_selectors
+
     generic = next(sample for sample in fixture["samples"] if sample["kind"] == "generic_description")
     assert generic["selector"]["ii"] == "0xff"
     assert generic["device_identity_verified"] is False
@@ -316,7 +326,16 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
         and sample["selector"]["rr"] == "0x002f"
         and sample["qualification"] == "unqualified"
     }
-    assert raw_rr002f == {"0x01", "0x02", "0x03", "0x05", "0x06", "0x07", "0x08", "0x0b"}
+    assert raw_rr002f == {"0x01", "0x02", "0x03", "0x05", "0x06", "0x07", "0x08", "0x0b", "0x0c"}
+    raw_rr0035 = {
+        sample["selector"]["gg"]
+        for sample in fixture["samples"]
+        if sample["kind"] == "generic_description_raw"
+        and sample["selector"]["ii"] == "0xff"
+        and sample["selector"]["rr"] == "0x0035"
+        and sample["qualification"] == "unqualified"
+    }
+    assert raw_rr0035 == {"0x09", "0x0a"}
     tails = [
         sample
         for sample in fixture["samples"]
@@ -390,7 +409,7 @@ def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> N
         "### `full`", 1
     )[0]
     assert "OP06/GG0D II01..II08/RR0001" in recommended
-    assert "availability-only probe using `device_present`" in recommended
+    assert "availability-only probe using `device_connected`" in recommended
     assert "II09 is independent" in profile
     assert "supported meaning is capacity, not configured or\npresent-instance cardinality" in profile
     assert "| 0 | 0 | 1 | 1 |" in profile
@@ -404,7 +423,7 @@ def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> N
     assert "OP02/GG01 uses only II00" in profile
     assert "exact two-byte UIN value\nthat is nonzero" in profile
     assert "GG0D relay-module predicate" in profile
-    assert "there is no header\nfallback" in profile
+    assert "uses the common `device_connected` name" in profile
     assert "RR maximum is Unknown" in profile
 
 

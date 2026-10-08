@@ -16,16 +16,32 @@ Record each request as `value_reply`, `empty_reply`, `transport_error`, `decode_
 
 Record FLAGS classes as `0=read_only_hidden`, `1=read_only_visible`, `2=writable_hidden`, and `3=writable_visible` when the response permits that interpretation. A writable FLAGS class selects a description candidate; it never authorizes a write.
 
+An explicit class-discovery survey may also issue bounded generic IIFF Describe
+probes where no scalar value has been observed. Record those separately from
+the normal scanner's writable-only description acquisition. An empty generic
+reply provides no format, writability, or presence evidence.
+
 ## BASV2 sample profile
 
-The published BASV2 profile is a sanitized observation for VRC720f/2, software `0507`, hardware `1704`. It schedules OP02 GG `00..2F` and OP06 GG `01..2F`; unknown groups use `RR=0000..0005`, and positive groups use `RR=0000..0050`. Reads use a concrete representative `II`; descriptions use `II=FF`.
+The published BASV2 profile is a sanitized observation for VRC720f/2, software `0507`, hardware `1704`. It schedules OP02 GG `00..2F` and OP06 GG `01..2F`; unknown groups use `RR=0000..0005`, and positive groups use `RR=0000..0050`. Positive groups use a profile-selected concrete representative `II`; generic descriptions use `II=FF`. The high-group discovery jobs used OP02/II00 and both OP06/II00 and OP06/II01. These are recorded exploratory selectors; they do not change the current OP06 discovery interval II01..08.
 
 The fixture separates `effective_scan_windows` (the integrated scheduling limits)
 from `group_windows` (the survey coverage). A null limit stays unknown. A correlated
 Describe high-water mark may contain an unqualified body and is not automatically
 a decoded parameter limit. Read-only tails can exceed decoded Describe coverage.
 
-Its completed execution comprised 3,274 planned jobs (1,054 discovery and 2,220 extension), with zero final transport failures. It sampled higher OP02 GG `0B..2F` and OP06 GG `10..2F`; it found no new positive GG there. That negative observation is not nonexistence. The 69 high groups produced 1,020 valid empty replies.
+Its completed execution comprised 3,274 planned jobs (1,054 discovery and 2,220 extension), with zero final transport failures. It sampled higher OP02 GG `0B..2F` and OP06 GG `10..2F`; it found no new positive GG there. That negative observation is not nonexistence. All 1,020 high-group jobs belonged to discovery and returned empty replies:
+
+| Family | Groups | RR per group | Read instances | Read jobs | Generic Describe jobs | Empty replies |
+| --- | ---: | ---: | --- | ---: | ---: | ---: |
+| OP02 GG0B..2F / OP01 | 37 | 6 (`0000..0005`) | II00 | 222 | 222 at IIFF | 444 |
+| OP06 GG10..2F / OP07 | 32 | 6 (`0000..0005`) | II00 and II01 | 384 | 192 at IIFF | 576 |
+| Total | 69 | — | — | 606 | 414 | 1,020 |
+
+The extension phase added no high-group jobs. Retry attempts are recorded
+separately and are not included in these logical-job totals. The profile's
+`high_group_jobs` breakdown retains this accounting explicitly; generic
+Describe probes with empty replies are not qualified parameter descriptions.
 
 The profile and reusable [template](fixtures/b524-bounded-survey-profile-template-v1.json) are versioned data. Add BASV0, BASV3, or CTLv3 only from their own sanitized observations; do not copy BASV2 results into another model family.
 

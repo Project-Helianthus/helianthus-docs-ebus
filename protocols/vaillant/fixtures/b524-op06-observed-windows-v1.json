@@ -76,6 +76,27 @@
       "qualification": "unqualified"
     },
     {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x0c", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "070cff2f00",
+      "reply_payload_hex": "0c2f00000601",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x09", "ii": "0xff", "rr": "0x0035"},
+      "request_payload_hex": "0709ff3500",
+      "reply_payload_hex": "093500000201",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x0a", "ii": "0xff", "rr": "0x0035"},
+      "request_payload_hex": "070aff3500",
+      "reply_payload_hex": "0a3500000201",
+      "qualification": "unqualified"
+    },
+    {
       "kind": "concrete_read",
       "selector": {"op": "0x06", "gg": "0x0e", "ii": "0x01", "rr": "0x0033"},
       "request_payload_hex": "06000e013300",

@@ -51,6 +51,27 @@ def test_effective_windows_are_separate_from_survey_coverage_and_partial_describ
     assert "reserved CRC bytes `A9` and `AA`" in text
 
 
+def test_basv2_high_group_discovery_accounting_is_reconcilable() -> None:
+    profile = json.loads((ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text())
+    execution = profile["execution"]
+    high_groups = execution["high_group_jobs"]
+    op02 = high_groups["OP02"]
+    op06 = high_groups["OP06"]
+
+    assert high_groups["phase"] == "discovery"
+    assert op02["read_jobs"] == op02["group_count"] * 6
+    assert op02["describe_jobs"] == op02["group_count"] * 6
+    assert op02["empty_replies"] == op02["read_jobs"] + op02["describe_jobs"]
+    assert op06["read_jobs"] == op06["group_count"] * 6 * len(op06["read_instances"])
+    assert op06["describe_jobs"] == op06["group_count"] * 6
+    assert op06["empty_replies"] == op06["read_jobs"] + op06["describe_jobs"]
+    assert high_groups["read_jobs"] == op02["read_jobs"] + op06["read_jobs"] == 606
+    assert high_groups["describe_jobs"] == op02["describe_jobs"] + op06["describe_jobs"] == 414
+    assert high_groups["empty_replies"] == op02["empty_replies"] + op06["empty_replies"] == 1020
+    assert execution["response_categories"]["high_group_empty_reply"] == high_groups["empty_replies"]
+    assert high_groups["extension_jobs"] == 0
+
+
 @pytest.mark.parametrize("field", ["actual_attempts", "reused_completed_exchanges", "phases"])
 def test_profile_schema_rejects_missing_execution_accounting(tmp_path: Path, field: str) -> None:
     fixtures = ROOT / "protocols/vaillant/fixtures"
@@ -78,3 +99,33 @@ def test_all_contributed_profiles_have_consistent_phase_totals(profile_path: Pat
         assert sum(phase[key] for phase in counts["phases"].values()) == counts[key]
     assert counts["completed_jobs"] <= counts["planned_jobs"]
     assert counts["actual_attempts"] >= counts["completed_jobs"]
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected"),
+    [
+        (lambda profile: profile["tool_identity"]["acquisition"].update({"commit": 1}), "commit"),
+        (lambda profile: profile["samples"][0]["selector"].update({"gg": "0a"}), "gg"),
+        (lambda profile: profile["samples"][0].update({"request_payload_hex": "0G"}), "request_payload_hex"),
+        (lambda profile: profile["samples"][0].update({"reply_payload_hex": "0"}), "reply_payload_hex"),
+        (lambda profile: profile["samples"][0]["selector"].update({"op": "06"}), "op"),
+    ],
+)
+def test_profile_schema_rejects_invalid_identity_and_payload_fields(
+    tmp_path: Path, mutation, expected: str
+) -> None:
+    fixtures = ROOT / "protocols/vaillant/fixtures"
+    profile = json.loads((fixtures / "b524-bounded-survey-basv2-v1.json").read_text())
+    mutation(profile)
+    candidate = tmp_path / "invalid-profile.json"
+    candidate.write_text(json.dumps(profile))
+
+    result = subprocess.run(
+        ["jv", str(fixtures / "b524-bounded-survey-profile-schema-v1.json"), str(candidate)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert expected in result.stdout + result.stderr

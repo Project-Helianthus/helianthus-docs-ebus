@@ -74,7 +74,7 @@ they do not establish physical product identity, presence, or a device layout.
 | 0x06 | 0x0A | Remote Control Thermostats (VR9x) | Yes | 0x08 | 0x35 | `device_connected` (RR=0x0001) | profile slot bound only |
 | 0x06 | 0x0B | Functional Modules (VR70) FM3 | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
 | 0x06 | 0x0C | Functional Modules (VR71) FM5 | Yes | 0x08 | 0x2F | `device_connected` (RR=0x0001) | profile slot bound only |
-| 0x06 | 0x0D | Relay Module (VR41) | Yes | 0x08 | — | `device_present` RR0001 exact one-byte BOOL | RR maximum Unknown |
+| 0x06 | 0x0D | Relay Module (VR41) | Yes | 0x08 | — | `device_connected` RR0001 exact one-byte BOOL | RR maximum Unknown; availability-only |
 | 0x06 | 0x0E | Clock Module | Yes | 0x08 | 0x0033 | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 | 0x06 | 0x0F | Base Station | Yes | 0x08 | 0x0033 | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 
@@ -173,7 +173,7 @@ registers above it.
 | 0x06 | 0x0A Remote Control Thermostats (VR9x) | 01..08 | 0x0035 | known scope | concrete-II predicate required |
 | 0x06 | 0x0B Functional Modules (VR70) FM3 | 01..08 | 0x002F | known scope | concrete-II predicate required |
 | 0x06 | 0x0C Functional Modules (VR71) FM5 | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x0D Relay Module (VR41) | 01..08 | — | RR0001 predicate; other RR require custom scope | `device_present`: exact one-byte BOOL; RR maximum Unknown |
+| 0x06 | 0x0D Relay Module (VR41) | 01..08 | — | RR0001 predicate; other RR require custom scope | `device_connected`: exact one-byte BOOL; RR maximum Unknown; availability-only |
 | 0x06 | 0x0E Clock Module | 01..08 | 0x0033 | known scope | concrete-II predicate required |
 | 0x06 | 0x0F Base Station | 01..08 | 0x0033 | known scope | concrete-II predicate required |
 
@@ -489,8 +489,9 @@ All registers use opcode `0x02`. The current profile selects II01..II08 for
 ordinary heating circuits and II09 for the virtual native-water circuit. Active
 heating circuits are discovered by probing `circuit_mixer_type_external`
 (RR=0x0002). Value `0` (`mctype=inactive`) indicates an unused ordinary
-heating-circuit slot. An absent selector returns an empty/null response (no
-valid payload from bus). The Browser tree contains only confirmed-present
+heating-circuit slot unless a correlated active, visible zero supplies the
+profile-qualified exception. An absent selector returns an empty/null response
+(no valid payload from bus). The Browser tree contains only confirmed-present
 instances; inactive, absent, and unknown probes remain in the scan artifact.
 
 `II=0x09` is the virtual native-water circuit. Its selector does not identify a

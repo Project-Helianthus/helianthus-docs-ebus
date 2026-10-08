@@ -314,12 +314,14 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 
 - use complete selectors: `01 GG II RRlo RRhi` for OP02 parameters and
   `07 GG II RRlo RRhi` for OP06 parameters
-- use a finite configurable budget (default 256) for deduplicated observed writable candidates, selected by
-  the profile-scoped static `FLAGS & 0x02` inference including unknown codecs
+- accept an optional finite caller budget for deduplicated observed writable
+  candidates, selected by the profile-scoped static `FLAGS & 0x02` inference
+  including unknown codecs; no default budget exists
 - retain raw request/reply and scalar-codec qualification; the inference does
   not prove live writability or authorize a write
-- schedule OP01/OP02 and OP07/OP06 families fairly: reserve half of the finite
-  budget for each, borrow unused capacity, then round-robin `(GG,II)` candidates
+- when a caller supplies a finite budget, schedule OP01/OP02 and OP07/OP06
+  families fairly: reserve half for each, borrow unused capacity, then
+  round-robin `(GG,II)` candidates
 - record `eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and
   `budget_skipped`; retain unknown-codec replies raw and unqualified
 - historical short-probe ranges are unqualified hints and are not persisted as

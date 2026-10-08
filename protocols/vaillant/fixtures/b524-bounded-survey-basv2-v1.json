@@ -21,7 +21,7 @@
   "survey_scope": {
     "read_request_layout": "OP 00 GG II RRlo RRhi",
     "describe_request_layout": "OP GG FF RRlo RRhi",
-    "read_instance_scope": "one profile-selected concrete II per group; it is a survey sample, not the configured discovery interval",
+    "read_instance_scope": "positive groups: one profile-selected concrete II per group; high OP02 GG0B..2F: II00; high OP06 GG10..2F: II00 and II01; exploratory historical samples do not define current discovery intervals",
     "describe_instance_scope": "II=FF generic class description; reply correlation is GG/RR only and does not establish II identity",
     "configured_discovery_intervals": "outside this survey profile; do not infer interval bounds from the representative II"
   },
@@ -86,7 +86,7 @@
       ],
       "rr_window": "0000..0005",
       "status": "unknown_group_empty_reply_only",
-      "description_coverage": "none"
+      "description_coverage": "attempted_empty_only; no correlated generic description"
     },
     {
       "operation": "OP06",
@@ -157,7 +157,7 @@
       ],
       "rr_window": "0000..0005",
       "status": "unknown_group_empty_reply_only",
-      "description_coverage": "none"
+      "description_coverage": "attempted_empty_only; no correlated generic description"
     }
   ],
   "observed_describe_high_water_marks": {
@@ -213,6 +213,37 @@
         "completed_jobs": 2220,
         "actual_attempts": 2502
       }
+    },
+    "high_group_jobs": {
+      "phase": "discovery",
+      "rr_window": "0000..0005",
+      "OP02": {
+        "groups": "0B..2F",
+        "group_count": 37,
+        "read_instances": [
+          "00"
+        ],
+        "describe_instance": "FF",
+        "read_jobs": 222,
+        "describe_jobs": 222,
+        "empty_replies": 444
+      },
+      "OP06": {
+        "groups": "10..2F",
+        "group_count": 32,
+        "read_instances": [
+          "00",
+          "01"
+        ],
+        "describe_instance": "FF",
+        "read_jobs": 384,
+        "describe_jobs": 192,
+        "empty_replies": 576
+      },
+      "read_jobs": 606,
+      "describe_jobs": 414,
+      "empty_replies": 1020,
+      "extension_jobs": 0
     }
   },
   "catalog_reference": {

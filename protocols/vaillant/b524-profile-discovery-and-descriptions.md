@@ -16,8 +16,9 @@ estimates and safety limits include II09.
 
 `virtual_native_water` is a presentation label, not a physical-circuit claim.
 The selector is shown only after positive presence evidence. A historical trace
-contains responsive II0A reads; retain that raw evidence in its artifact, but
-do not turn it into the current profile's circuit range or Browser tree.
+contains responsive II0A reads; retain that raw evidence only in JSON/trace
+artifacts, never the Browser or HTML, and do not turn it into the current
+profile's circuit range.
 
 The Browser tree is a present-instance view: it contains only selectors with
 group-qualified positive evidence. For current artifacts this is
@@ -36,7 +37,7 @@ OP06 permits II01..II08 and OP02/GG02 permits II01..II09. Custom RR selectors
 remain exact and are validated by the scalar request contract; they do not widen
 an II interval. A group without an observed RR scheduling ceiling is selectable
 only with an explicit custom RR ceiling, list, or range. Historical records outside these
-intervals remain raw artifact diagnostics and never become Browser nodes.
+intervals remain only in JSON/trace artifacts and never become Browser or HTML content.
 
 ## Explicit instance intervals
 
@@ -172,7 +173,7 @@ is a hypothesis catalog, not an expansion of this discovery policy.
 | 0A | `thermostat_slot` | 01..08 | Profile-qualified connected/paired Boolean |
 | 0B | `functional_modules_vr70` | 01..08 | Candidate only; concrete Boolean required per slot |
 | 0C | `functional_modules_vr71` | 01..08 | Connection state, distinct from retained inventory |
-| 0D | `relay_module_slot` | 01..08 | `device_present`: exact one-byte BOOL at RR0001 |
+| 0D | `relay_module_slot` | 01..08 | `device_connected`: exact one-byte BOOL at RR0001 |
 | 0E | `clock_slot` | 01..08 | Observed Boolean connection candidate |
 | 0F | `base_station_slot` | 01..08 | Observed Boolean connection candidate |
 
@@ -199,12 +200,15 @@ the current profile begins at II01; they do not expand its upper bound beyond
 II08. The captured RR1 result is independent from an older artifact's generic
 `present=true`, which also appeared on disconnected slots.
 
-For `recommended`, begin at II01 and probe sequentially to the first complete,
-correlated Boolean false: `first_confirmed_absence` means **not connected at that
-slot**, not absence of physical hardware or retained identity. Record the stopping
-frontier. This is a bounded coverage policy, not proof of packed physical topology.
-`full` and `research` retain the complete configured audit interval. A missing
-terminal negative at the bound leaves discovery incomplete.
+For `recommended`, a positive OP00 count-guided candidate plan continues through
+the profile II bound so sparse candidates remain eligible after a concrete
+Boolean false. Only when no positive count-guided plan exists, begin at II01 and
+stop at the first complete, correlated Boolean false:
+`first_confirmed_absence` means **not connected at that slot**, not absence of
+physical hardware or retained identity. Record the stopping frontier. This is a
+bounded coverage policy, not proof of packed physical topology. `full` and
+`research` retain the complete configured audit interval. A missing terminal
+negative at the bound leaves discovery incomplete.
 
 Keep `connected`, `not_connected`, `unknown`, and unprobed slots distinct.
 Timeout, NACK, empty/status-only response, decode/echo failure, unsupported format,
@@ -217,13 +221,11 @@ For GG08, a correlated RR0001 BOOL false means not connected. Readable identity 
 ### GG0D relay-module predicate
 
 For OP06/GG0D (VR41 presentation family), probe II01..II08 at RR0001 even
-though its RR maximum is Unknown. Its group-specific name is `device_present`,
-which overrides the generic `device_connected` header name: there is no header
-fallback. An exact one-byte BOOL `00` is `not_present` and `01` is `present`.
+though its RR maximum is Unknown. It uses the common `device_connected` name:
+an exact one-byte BOOL `00` is `not_connected` and `01` is `connected`.
 Values `02..FF`, wrong-width bodies, empty replies, NACK, decode failure, and
-unmatched replies are `unknown`. Keep `present`, `not_present`, and `unknown`
-separate from `connected`; this predicate does not establish a connection
-state, identity, or an RR limit.
+unmatched replies are `unknown`. These outcomes do not infer physical absence,
+identity, a new supported RR range, or an RR limit.
 
 ## Descriptions for every eligible parameter
 

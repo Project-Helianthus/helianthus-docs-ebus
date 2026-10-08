@@ -279,17 +279,17 @@ selector.
 | --- | --- | --- | --- |
 | 01 | Boiler | `boiler` | Hypothesis. The existing profile-qualified `primary_heating_source` route remains the documented route. |
 | 02 | Heat Pump | `heat_pump` | Hypothesis. The existing profile-qualified `secondary_heating_source` route remains the documented route. |
-| 03 | Air Recovery (VAR) recoVair | `air_recovery_recovair` | Hypothesis; no public OP06 route or bounds are documented. |
+| 03 | Air Recovery (VAR) recoVair | `air_recovery_recovair` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
 | 04 | unused | `unused` | Unknown. This recorded presentation state does not establish universal absence or reservation. |
-| 05 | Wärmepumpe Zubehör Appliance Interface (VWZ-AI) | `heat_pump_accessory_vwz_ai` | Hypothesis; no public OP06 route or bounds are documented. |
-| 06 | Pumpen Module - Solar (VPM-S) auroFLOW | `solar_pump_module_auroflow` | Hypothesis; no public OP06 route or bounds are documented. |
-| 07 | Pumpen Module - Wasser (VPM-W) aguaFLOW | `water_pump_module_aguaflow` | Hypothesis; no public OP06 route or bounds are documented. |
+| 05 | Wärmepumpe Zubehör Appliance Interface (VWZ-AI) | `heat_pump_accessory_vwz_ai` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
+| 06 | Pumpen Module - Solar (VPM-S) auroFLOW | `solar_pump_module_auroflow` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
+| 07 | Pumpen Module - Wasser (VPM-W) aguaFLOW | `water_pump_module_aguaflow` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
 | 08 | Modul Solar (VMS) auroSTEP | `solar_module_aurostep` | Hypothesis. It does not replace the separately documented profile-specific `buffer_solar_cylinder_2_remote` route. |
 | 09 | Remote Control Regulators (VRC7xx, VRT38x) | `remote_control_regulator` | Hypothesis for the family name; the `regulator_slot` route and its profile qualification remain separate. |
 | 0A | Remote Control Thermostats (VR9x) | `remote_control_thermostat` | Hypothesis for the family name; the `thermostat_slot` route and its profile qualification remain separate. |
-| 0B | Functional Modules (VR70) FM3 | `functional_modules_vr70` | Hypothesis. No public slot schema, bounds, or `RR=0001` predicate is documented. |
+| 0B | Functional Modules (VR70) FM3 | `functional_modules_vr70` | Hypothesis for the family name; the characterized profile has II01..II08 candidates and requires a concrete Boolean predicate. |
 | 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Hypothesis for the family/FM5 display name. The separately published slot schema remains profile-qualified to OP06/GG0C. |
-| 0D | Relay Module (VR41) | `relay_module_vr41` | Hypothesis; no public OP06 route or bounds are documented. |
+| 0D | Relay Module (VR41) | `relay_module_vr41` | Hypothesis for the family name; the characterized profile bounds RR0001 to II01..II08 as availability-only, with `device_connected` BOOL and Unknown RR maximum. |
 | 0E | Clock Module | `clock_module` | Hypothesis for the family name; the `clock_slot` route and its profile qualification remain separate. |
 | 0F | Base Station | `base_station` | Hypothesis for the family name; the `base_station_slot` route and its profile qualification remain separate. |
 
@@ -439,7 +439,7 @@ or across instances merely because `GG`/`RR` match.
 
 Read the parameter first. Acquisition includes all deduplicated, observed
 writable candidates in the selected scope by default. An explicit caller budget
-may limit acquisition. Candidates use the profile-scoped static
+may limit acquisition; no default budget exists. Candidates use the profile-scoped static
 `FLAGS & 0x02` inference is present, including candidates whose scalar codec is
 not yet known. An unknown codec is retained raw and remains unqualified; it is
 not a reason to omit an otherwise eligible description request. That inference
@@ -569,6 +569,14 @@ VRC Explorer exposes `b524 read-timer` and the offline-only
 transport or writing to a regulator.
 
 ### 4.5 `0x09` / `0x0A` Events and `0x0B` / `0x0C` Event Setpoints
+
+**Hypothesis — experimental schema:** The layouts below define the explicit
+Event/EventSetPoint command schema. Native wire qualification remains Unknown
+for a model/version until a sanitized, correlated request/reply observation
+qualifies the selectors, response length, and byte interpretation. An
+implementation or a deterministic fixture does not establish that qualification.
+Retain the complete request context and raw reply when contributing an
+observation; a successful value decode alone is insufficient.
 
 These operations are separate from OP02/OP06 scalar register discovery.
 `ADDRESS` is an event selector, not an RR16 scalar address.

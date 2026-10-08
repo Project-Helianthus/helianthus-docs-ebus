@@ -37,10 +37,20 @@
             "commit"
           ],
           "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
             "commit": {
+              "type": "string",
               "pattern": "^[0-9a-f]{40}$"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "catalog": {
           "type": "object",
@@ -49,10 +59,16 @@
             "commit"
           ],
           "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
             "commit": {
+              "type": "string",
               "pattern": "^[0-9a-f]{40}$"
             }
-          }
+          },
+          "additionalProperties": false
         }
       }
     },
@@ -63,7 +79,14 @@
         "model",
         "software_version",
         "hardware_version"
-      ]
+      ],
+      "properties": {
+        "family": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "software_version": { "type": "string", "minLength": 1 },
+        "hardware_version": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
     },
     "survey_scope": {
       "type": "object",
@@ -72,7 +95,15 @@
         "describe_request_layout",
         "read_instance_scope",
         "describe_instance_scope"
-      ]
+      ],
+      "properties": {
+        "read_request_layout": { "type": "string", "minLength": 1 },
+        "describe_request_layout": { "type": "string", "minLength": 1 },
+        "read_instance_scope": { "type": "string", "minLength": 1 },
+        "describe_instance_scope": { "type": "string", "minLength": 1 },
+        "configured_discovery_intervals": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
     },
     "group_windows": {
       "type": "array",
@@ -88,6 +119,7 @@
         ],
         "properties": {
           "operation": {
+            "type": "string",
             "enum": [
               "OP02",
               "OP06"
@@ -97,11 +129,17 @@
             "type": "array",
             "minItems": 1,
             "items": {
+              "type": "string",
               "pattern": "^[0-9A-F]{2}$"
             }
           },
           "rr_window": {
+            "type": "string",
             "pattern": "^[0-9A-F]{4}\\.\\.[0-9A-F]{4}$"
+          },
+          "description_coverage": {
+            "type": "string",
+            "minLength": 1
           },
           "status": {
             "enum": [
@@ -110,7 +148,8 @@
               "unknown_group_empty_reply_only"
             ]
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "observed_describe_high_water_marks": {
@@ -207,6 +246,21 @@
           "outcome"
         ],
         "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "selector": {
+            "$ref": "#/$defs/selector"
+          },
+          "request_payload_hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9A-Fa-f]{2})*$"
+          },
+          "reply_payload_hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9A-Fa-f]{2})*$"
+          },
           "outcome": {
             "enum": [
               "value_reply",
@@ -223,8 +277,27 @@
               "writable_hidden",
               "writable_visible"
             ]
+          },
+          "qualification": {
+            "type": "string",
+            "minLength": 1
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "kind": { "const": "op02_read" } } },
+            "then": { "properties": { "selector": { "properties": { "op": { "const": "02" } } } } }
+          },
+          {
+            "if": { "properties": { "kind": { "const": "op06_read" } } },
+            "then": { "properties": { "selector": { "properties": { "op": { "const": "06" } } } } }
+          },
+          {
+            "if": { "properties": { "kind": { "const": "op07_generic_description" } } },
+            "then": { "properties": { "selector": { "properties": { "op": { "const": "07" }, "ii": { "const": "FF" } } } } }
+          }
+        ],
+        "additionalProperties": false
       }
     },
     "effective_scan_windows": {
@@ -254,6 +327,17 @@
   },
   "additionalProperties": false,
   "$defs": {
+    "selector": {
+      "type": "object",
+      "required": ["op", "gg", "ii", "rr"],
+      "properties": {
+        "op": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
+        "gg": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
+        "ii": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
+        "rr": { "type": "string", "pattern": "^[0-9A-F]{4}$" }
+      },
+      "additionalProperties": false
+    },
     "operationWindows": {
       "type": "object",
       "propertyNames": {
