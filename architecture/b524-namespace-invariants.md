@@ -172,8 +172,9 @@ provide topology identity.
 Use configured expanded but finite coverage for research; record configured,
 skipped, and unknown coverage in the manifest. It uses multiple anchor probes
 per family and does not let a failed first II=00/RR=0000 probe veto the rest of that group.
-Research retains known higher RR ceilings: default `0xFF`, and OP02/GG00 at
-least `0x1FF`. It is intended for register discovery and protocol analysis, not
+Research uses an explicit finite RR ceiling, default `0xFF`. OP02/GG00 also
+uses `0xFF`; no default scan above it is justified by current observations. It
+is intended for register discovery and protocol analysis, not
 routine scanning.
 
 ### `custom`
@@ -183,24 +184,26 @@ The UI and CLI send the same plan to the planner; explicit selectors are never
 allowed to widen the current profile II intervals: OP06 is II01..II08 and
 OP02/GG02 is II01..II09. RR16 remains an exact scalar selector within the
 normal request contract.
-presence-pruned. The CLI accepts a `--scan-plan` JSON file with
+Explicit selectors are never presence-pruned. The CLI accepts a `--scan-plan` JSON file with
 `schema_version: 1` and `groups: [{opcode, group, instances, registers}]`.
 Only read selectors and wire-bounded values are accepted. Plans exceeding
 100000 scalar requests fail before queuing.
 
 ## Description Scheduler and Send Budget
 
-Descriptions are a second phase after value reads. `--description-budget` is a
-finite, configurable value with default 256. Half is initially reserved for
-each description/read family (OP01/OP02 and OP07/OP06), borrowing unused share;
+Descriptions are a second phase after value reads. By default every eligible
+writable candidate in the selected scope is scheduled. `--description-budget`
+is an optional, explicit caller limit. When supplied, half is initially reserved
+for each description/read family (OP01/OP02 and OP07/OP06), borrowing unused share;
 each family schedules eligible `(GG,II)` candidates round-robin. Eligibility
 comes from profile-scoped writable-format inference and includes unknown codecs,
 which are retained raw and reported unqualified. It does not prove a live write
 or authorize one. Artifacts count `eligible`, `attempted`, `matched`,
 `unavailable`, `unqualified`, and `budget_skipped`.
 
-`--request-budget` optionally caps actual B524 sends, including retries;
-research defaults to 10000. Exhaustion returns a partial artifact marked
+`--request-budget` optionally caps actual B524 sends, including retries. No
+preset supplies a default send budget. Explicit budget exhaustion returns a
+partial artifact marked
 `incomplete`, never an absence verdict.
 
 ## Historical Context

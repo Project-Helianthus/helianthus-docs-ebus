@@ -53,14 +53,15 @@ they do not establish physical product identity, presence, or a device layout.
 |--------|----|-------------|-----------|--------|-------------------------------|---------------|-----------------|
 | 0x02 | 0x00 | System | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
 | 0x02 | 0x01 | Native Domestic Hot Water | No | 0x00 | 0x13 | SystemScheme + VR_71 config | 17 (0x0001–0x0013) |
-| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | `circuit_mixer_type_external != 0` (RR=0x0002) for II01..08; II09 is virtual native water | profile bound: 8 heating + 1 virtual native-water circuit |
-| 0x02 | 0x03 | Zones | Yes | 0x08 | 0x2E | `index != 0xFF` (RR=0x001C) | 342 (38/inst, 9 inst max) |
-| 0x02 | 0x04 | Solar Circuit | Yes (spec) | 0x02 | 0x0B | hydraulic scheme + VR_71 config; current lab: singleton (II=0x00) | 10 (0x0001–0x000B) |
+| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | non-sentinel RR0002: nonzero, or visible active zero (FLAGS=03); II09 is virtual native water | profile bound: 8 heating + 1 virtual native-water circuit |
+| 0x02 | 0x03 | Zones | Yes | 0x0A | 0x2E | `index != 0xFF` (RR=0x001C) | current profile interval II00..0A; presence probed separately |
+| 0x02 | 0x04 | Solar Circuit | Yes (profile) | 0x01 | 0x0B | decodable, non-null RR0004 EXP value | current profile interval II00..01; presence probed separately |
 | 0x02 | 0x05 | Solar Loaded Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
 | 0x02 | 0x06 | Device | Unknown | — | — | no public selector/profile contract | Unknown |
 | 0x02 | 0x07 | Generator | Unknown | — | — | no public selector/profile contract | Unknown |
 | 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent | 0x0007 | not qualified | 7 local |
 | 0x02 | 0x09 | Ventilation | Unknown | profile-dependent | 0x000F | not qualified | 15 local |
+| 0x02 | 0x0A | Unknown | Unknown | 0x0A | 0x004D | local selector evidence; physical topology Unknown | current profile interval II00..0A |
 | 0x06 | 0x01 | Boiler | Yes | 0x08 | 0x002F | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 | 0x06 | 0x02 | Heat Pump | Yes | 0x08 | 0x002F | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 | 0x06 | 0x03 | Air Recovery (VAR) recoVair | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |

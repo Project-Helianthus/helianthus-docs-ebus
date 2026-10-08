@@ -413,8 +413,9 @@ or across instances merely because `GG`/`RR` match.
 
 #### 4.2.2 Targeted acquisition
 
-Read the parameter first. Recommended/custom acquisition contains at most 256
-deduplicated, observed writable candidates for which the profile-scoped static
+Read the parameter first. Acquisition includes all deduplicated, observed
+writable candidates in the selected scope by default. An explicit caller budget
+may limit acquisition. Candidates use the profile-scoped static
 `FLAGS & 0x02` inference is present, including candidates whose scalar codec is
 not yet known. An unknown codec is retained raw and remains unqualified; it is
 not a reason to omit an otherwise eligible description request. That inference

@@ -10,6 +10,27 @@ REGISTER_MAP = ROOT / "protocols" / "vaillant" / "ebus-vaillant-B524-register-ma
 SEMANTIC_MAPPING = ROOT / "architecture" / "b524-semantic-mapping.md"
 
 
+def test_current_topology_and_discovery_profile_instance_bounds_agree() -> None:
+    text = REGISTER_MAP.read_text(encoding="utf-8")
+    topology = text.split("## Group Topology", 1)[1].split("**GG values", 1)[0]
+    # Split on the next section, not the Markdown table's separator row.
+    profiles = text.split("### Discovery Profiles", 1)[1].split("## Gate Conditions", 1)[0]
+
+    def rows(section: str) -> dict[tuple[int, int], list[str]]:
+        result = {}
+        for line in section.splitlines():
+            columns = [column.strip() for column in line.strip().strip("|").split("|")]
+            if len(columns) > 4 and columns[0] in {"0x02", "0x06"}:
+                result[(int(columns[0], 16), int(columns[1].split()[0], 16))] = columns
+        return result
+
+    top, profile = rows(topology), rows(profiles)
+    for key in ((0x02, 0x03), (0x02, 0x04), (0x02, 0x0A)):
+        expected_max = int(profile[key][2].split("..")[-1], 16)
+        assert int(top[key][4], 16) == expected_max
+    assert top[(0x02, 0x0A)][2] == "Unknown"
+
+
 def test_register_map_uses_op02_read_selectors_not_op01_descriptions() -> None:
     text = REGISTER_MAP.read_text(encoding="utf-8")
     assert "`OP=0x01/0x02" not in text
@@ -27,8 +48,9 @@ def test_historical_short_probe_catalog_is_not_validation_authority() -> None:
 
 def test_description_budget_is_writable_candidate_scoped_without_write_authority() -> None:
     text = B524.read_text(encoding="utf-8")
-    assert "at most 256" in text
-    assert "observed writable candidates" in text
+    assert "all deduplicated, observed" in text
+    assert "at most 256" not in text
+    assert "observed writable candidates" in " ".join(text.split())
     assert "neither proves live writability nor" in text
     assert "unknown codec is retained raw" in text
     assert "`eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and" in text
@@ -39,7 +61,10 @@ def test_scan_presets_are_deterministic_bounded_and_operation_scoped() -> None:
     assert "OP=02/GG `00..05,08,09`" in text
     assert "OP=06/GG\n`01,02,08,09,0A,0C,0E,0F`" in text
     assert "every declared II slot" in text
-    assert "default `0xFF`, and OP02/GG00 at\nleast `0x1FF`" in text
+    assert "default `0xFF`. OP02/GG00 also\nuses `0xFF`" in text
+    assert "`0x1FF`" not in text
+    assert "default 256" not in text
+    assert "defaults to 10000" not in text
     assert "failed first II=00/RR=0000 probe veto the rest of that group" in text
     assert "100000 scalar requests fail before queuing" in text
 
