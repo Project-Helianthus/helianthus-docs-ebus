@@ -111,9 +111,11 @@ This invariant ensures that an adapter which does not implement RESETTED (e.g., 
 
 For `data < 0x80`, the short-form (unframed) byte is also allowed.
 
-> **Escape responsibility (SEND / TX path only):** The adapter is responsible for eBUS wire escape **encoding** (`0xA9` substitution) on `SEND` data: the host provides logical frame bytes without escape encoding, and the adapter applies escape substitution before placing bytes on the bus.
+> **Framing and escape responsibility:** The host owns eBUS telegram framing, data CRC calculation, and TX escaping. Each `SEND` supplies one **physical wire byte**; ENH does not define an adapter feature that expands an unescaped logical data byte before transmission. The upstream ENH definition describes `SEND` as sending its specified data byte to eBUS, while ebusd's direct handler expands escaped data before it calls the device `send` operation. See [`enhanced_proto.md`](https://github.com/john30/ebusd/blob/main/docs/enhanced_proto.md#command-requestresponse-symbols) and [`protocol_direct.cpp`](https://github.com/john30/ebusd/blob/main/src/lib/ebus/protocol_direct.cpp#L213-L224).
 >
-> **Receive path (RX) is different:** The adapter does NOT decode wire escapes on the receive path. Raw eBUS wire bytes are forwarded to the host as `RECEIVED` events without transformation (verified against PIC firmware `runtime.c:1835-1841`). The host-side escape decoder reassembles `RECEIVED(0xA9) RECEIVED(0x00)` into logical `0xA9` and `RECEIVED(0xA9) RECEIVED(0x01)` into logical `0xAA`. `RECEIVED(0xAA)` is always a raw-wire SYN boundary, not a data byte.
+> Inside a framed data or CRC sequence, the host emits `0xA9` as `SEND(0xA9)`, then `SEND(0x00)`, and emits `0xAA` as `SEND(0xA9)`, then `SEND(0x01)`. The final SYN is outside that escaped sequence: the host emits one raw `SEND(0xAA)`. ebusd keeps `bs_sendSyn` outside its escape branch, while its normal send states expand `ESC` and `SYN` before transmission. See [`protocol_direct.cpp`](https://github.com/john30/ebusd/blob/main/src/lib/ebus/protocol_direct.cpp#L255-L271).
+>
+> **Receive path:** `RECEIVED` events carry physical wire bytes. The host unescapes `RECEIVED(0xA9) RECEIVED(0x00)` to framed logical `0xA9` and `RECEIVED(0xA9) RECEIVED(0x01)` to framed logical `0xAA` while decoding data or CRC. An unescaped `RECEIVED(0xAA)` is a raw SYN boundary. ebusd's receive path performs this pair decoding after reading symbols. See [`protocol_direct.cpp`](https://github.com/john30/ebusd/blob/main/src/lib/ebus/protocol_direct.cpp#L431-L447).
 
 ## START / STARTED / FAILED
 
@@ -138,22 +140,17 @@ During arbitration initiated by the host, adapters **must not** emit `RECEIVED` 
 
 ### Post-arbitration byte echo (F-18 contract)
 
-For every byte the host writes **after** the arbitration byte — i.e., every `SEND` byte that traverses `DST PB SB LEN DATA... CRC` and any subsequent response-phase bytes the host writes — the adapter (or proxy) **MUST** emit a corresponding `RECEIVED` notification that reflects the byte observed on the bus.
+For every physical byte the host writes **after** the arbitration byte — i.e., every `SEND` byte that traverses `DST PB SB LEN DATA... CRC`, including both bytes of an escape pair, and any subsequent response-phase byte — the adapter (or proxy) **MUST** emit a corresponding `RECEIVED` notification for that same wire byte.
 
 This follows directly from john30/ebusd's [`docs/enhanced_proto.md`](https://github.com/john30/ebusd/blob/main/docs/enhanced_proto.md), which says ENH_RES_RECEIVED "shall not be sent when the byte received was part of an arbitration request initiated by ebusd." The converse is implied: ENH_RES_RECEIVED MUST be sent for every other host-written byte.
 
-Why this matters: ebusd's [`DirectProtocolHandler` at `protocol_direct.cpp:412-414`](https://github.com/john30/ebusd/blob/main/src/lib/ebus/protocol_direct.cpp) compares `recvSymbol != sentSymbol` after each send and collapses the bus state to `bs_skip` on mismatch or `SEND_TIMEOUT` (~10 ms). Without the echo, ebusd cannot advance `bs_sendCmd` past the arbitration byte — the entire post-arbitration phase abandons silently, no frame ever lands on the bus, and the next retry cycle re-enters arbitration to repeat the failure indefinitely.
+Why this matters: ebusd's [`DirectProtocolHandler`](https://github.com/john30/ebusd/blob/main/src/lib/ebus/protocol_direct.cpp#L261-L279) records the physical byte it sent, then compares the received symbol with that byte before its RX unescape step. A missing or altered echo causes the direct handler to enter `bs_skip`. See [`protocol_direct.cpp`](https://github.com/john30/ebusd/blob/main/src/lib/ebus/protocol_direct.cpp#L412-L447).
 
 Proxy and adapter implementations:
 
-- Adapters that observe the bus directly (e.g., a microcontroller speaking ENH over UART) MUST emit `ENH_RES_RECEIVED(byte)` for every non-arbitration byte they observe on the wire while the host owns the bus.
-- Proxies that multiplex multiple ENH client sessions over a single adapter MUST forward each received byte to **every** session, including the session that owns the bus. Suppressing the echo for the owner — a tempting "optimization" because the owner already knows what it sent — violates the contract and breaks any downstream client (ebusd, third-party tooling) that gates `bs_sendCmd` advancement on the round-trip.
-- The arbitration byte itself is handled separately: clients receive it via `ENH_RES_STARTED(initiator)` on a successful win, not as `ENH_RES_RECEIVED`. Proxies that emit a synthesized `ENH_RES_RECEIVED(arbitration_byte)` to the winning session violate the "shall not be sent" half of the contract.
-
-Implementations:
-
-- ebusd-adapter-proxy (standalone): a single shared `ownerObserverSeen []byte` is forwarded to whichever session owns the bus. Correct.
-- helianthus-ebusgateway adaptermux (embedded mux): every external session — owner and non-owner alike — receives every post-arbitration byte. The arbitration byte is delivered via `deliverWinnerByteToOtherSessions` to non-winners and via `ENH_RES_STARTED` to the winner. See `internal/adaptermux/mux.go` `deliverToSessions` and `_work_adaptermux_audit/EBUSD-VERIFICATION-2026-05-12-batch13.md` (F-18).
+- Adapters that observe the bus directly MUST emit `ENH_RES_RECEIVED(byte)` for every non-arbitration byte they observe on the wire while the host owns the bus.
+- A forwarding layer MUST preserve each physical received byte for the host session that sent it; suppressing this echo prevents a direct client from matching its sent byte.
+- The arbitration byte is handled separately: clients receive it via `ENH_RES_STARTED(initiator)` on a successful win, not as `ENH_RES_RECEIVED`. This matches the upstream ENH rule that a received arbitration byte initiated by ebusd is not notified as `RECEIVED`.
 
 Symptoms of a non-conformant proxy that suppresses the owner echo:
 
