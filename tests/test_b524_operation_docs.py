@@ -362,10 +362,27 @@ def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() 
     assert "`present=true`; a legacy artifact without that field may retain a successful\nobserved raw reply" in profile
     assert "not_connected`, empty, timeout, decode failure, and\nunprobed/unknown selectors remain" in profile
     assert "does not alter the artifact or create a\nsynthetic slot" in profile
-    assert "instanced group remains a navigation node when it has no\npresent child instances" in profile
+    assert "deselected groups are omitted" in profile
+    assert "explicitly selected\nempty group may remain" in profile
     assert "Custom scan plans enforce the same selector intervals before transport I/O" in profile
     assert "OP06 permits II01..II08 and OP02/GG02 permits II01..II09" in profile
     assert "OP06 candidates use II01..II08; OP02/GG02 uses II01..II08\nfor heating candidates plus II09" in namespace
     assert "0x02 0x02    0x09         0x0025" in semantic
     assert "0x09 0x06    0x08         0x0035" in semantic
     assert "scan planner, Browser,\nHTML, and saved-artifact views" in protocol
+
+
+def test_event_and_timer_operations_have_separate_selectors_and_write_boundary() -> None:
+    text = B524.read_text(encoding="utf-8")
+    timer = text.split("### 4.4", 1)[1].split("### 4.5", 1)[0]
+    events = text.split("### 4.5", 1)[1].split("### 4.6", 1)[0]
+    assert "03 GG II ADDRESS WEEKDAY" in timer
+    assert "START1 STOP1 START2 STOP2 START3 STOP3" in timer
+    assert "`70000` or `B7S00`" in timer
+    assert "90 90" in timer
+    for operation in ("GetEvent", "SetEvent", "GetEventSetPoint", "SetEventSetPoint"):
+        assert operation in events
+    assert "do not inherit the VRC700-only timer gate" in events
+    assert "No live\nsetter is exposed" in events
+    assert "Neither `II` nor the request selector is echoed" in events
+    assert "VALUE1 remains raw" in events

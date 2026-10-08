@@ -351,15 +351,15 @@ list or a claim that all counts are physically verified on every system.
 | --- | --- | --- |
 | 0000h | `circuit_count` | Circuits; guides OP=02h/GG=02h instance discovery |
 | 0001h | `zone_count` | Zones; guides OP=02h/GG=03h instance discovery |
-| 0002h | `solar_circuit_count` | Solar circuits |
-| 0003h | `solar_loaded_tank_count` | Solar-loaded tanks |
+| 0002h | `solar_circuit_count` | Solar circuits; guides OP=02h/GG=04h discovery |
+| 0003h | `solar_loaded_tank_count` | Solar-loaded tanks; guides OP=02h/GG=05h discovery |
 | 0004h | `device_count` | Devices |
 | 0005h | `generator_count` | Generators |
 | 0006h | `api_version` | API version; not a count |
 | 0007h | `api_revision` | API revision; not a count |
 | 0008h / 0009h | `vr70_count` / `vr71_count` | Functional module counts |
 | 000Ah | `remote_control_count` | Remote controls |
-| 000Bh | `delta_t_count` | Published deltaT label; physical class remains unknown |
+| 000Bh | `delta_t_count` | Guides OP=02h/GG=08h discovery; physical class remains unknown |
 | 000Ch / 000Dh | `boiler_count` / `heat_pump_count` | Generator classes |
 | 000Eh / 000Fh | `vpm_w_count` / `vpm_s_count` | Module classes |
 | 0010h | `recovair_count` | recoVair ventilation units |
@@ -369,9 +369,10 @@ A count selects how many active instances are expected, not their identities.
 In non-exhaustive scans, probe profile-bounded II slots in order until the expected
 number of present instances is found. Do not assume the first N slots are occupied.
 A missing, non-integral, non-finite, out-of-bound or conflicting count falls back
-to bounded presence discovery. A zero count is retained as evidence and does not
-silently delete independently observed instances. Record expected and observed
-counts and their mismatch. `research` scans keep the full configured II range.
+to bounded presence discovery. In the recommended profile, a qualified zero count
+avoids probing default local slots for the mapped group. Previously observed data
+remains evidence in its original artifact. Full and `research` scans retain the
+configured II range. Record expected and observed counts and their mismatch.
 
 Only an explicit profile mapping connects an information identifier to `(OP,GG)`.
 In particular, ID=0010h does not imply GG=10h. Known groups remain scan candidates
@@ -510,58 +511,96 @@ Addressing notes:
 
 ### 4.4 `0x03` / `0x04` Timer Schedules
 
-> **Device binding:** Opcodes 0x03/0x04 are available on **VRC700 (device ID 70000, including Saunier Duval B7S00) only**. VRC720-family controllers (BASV2, BASV3, CTLV2, CTLV3, CTLS2, CTLV0, BASV0) do NOT respond to B524 timer opcodes -- they use the [B555 protocol](./ebus-vaillant-b555-timer-protocol.md) for all timer/schedule operations. Both device families share eBUS target address `0x15` but are different device classes. A scanner or schedule writer that does not check device identity before choosing transport will send the wrong protocol. (Source: FINAL-B524-B555-B507-B508.md A2/A3; confidence HIGH.)
+`ReadTimer` and `WriteTimer` use the VRC700 schedule profile, identified by
+`70000` or `B7S00`. Verify that identity before a live read. VRC720-family
+controllers use the [B555 timer protocol](ebus-vaillant-b555-timer-protocol.md);
+sharing a destination address does not qualify the B524 schedule profile.
 
 ```text
-Timer read request (5 bytes):
-  0: 0x03
-  1: SEL1
-  2: SEL2
-  3: SEL3
-  4: WD (0x00..0x06)
-
-Timer write request (5+ bytes):
-  0: 0x04
-  1: SEL1
-  2: SEL2
-  3: SEL3
-  4: WD
-  5..: timer blocks (model-specific)
+ReadTimer:  03 GG II ADDRESS WEEKDAY
+WriteTimer: 04 GG II ADDRESS WEEKDAY START1 STOP1 START2 STOP2 START3 STOP3
+Reply:      PARAM_CONFIG START1 STOP1 START2 STOP2 START3 STOP3
 ```
 
-These families do not use `RW` byte.
+The read request is five bytes, the write request eleven bytes, and the read
+reply seven bytes after transport normalization. These operations do not contain
+an `RW` byte. `WEEKDAY=00..06` means Monday through Sunday. Retain
+`PARAM_CONFIG` as a raw byte; do not infer writable access from it.
 
-#### 4.4.1 Timer channel map (SEL1/SEL2/SEL3)
+Time codes `00..90` represent ten-minute units. An unused slot is `90 90`.
+A stop code `90` paired with a lower start code means 24:00. Retain unknown
+codes as raw evidence; they do not become valid time values.
 
-The three selector bytes address a specific timer channel. The complete channel map from VRC700 ebusd CSV (`15.700.csv`):
+| GG | II | ADDRESS | Channel |
+| --- | --- | --- | --- |
+| 00 | 00 | 01 | Ventilation |
+| 00 | 00 | 02 | Noise reduction |
+| 00 | 00 | 03 | Tariff |
+| 01 | 00 | 01 | Domestic hot water |
+| 01 | 00 | 02 | Circulation |
+| 03 | Selected zone | 01 | Zone cooling |
+| 03 | Selected zone | 02 | Zone heating |
 
-| SEL1 | SEL2 | SEL3 | Channel |
-|------|------|------|---------|
-| `0x00` | `0x00` | `0x01` | Ventilation timer |
-| `0x00` | `0x00` | `0x02` | Noise reduction timer |
-| `0x00` | `0x00` | `0x03` | Tariff timer |
-| `0x01` | `0x00` | `0x01` | DHW (HWC) timer |
-| `0x01` | `0x00` | `0x02` | Circulation pump timer |
-| `0x03` | `0x00` | `0x01` | Zone cooling timer |
-| `0x03` | `0x00` | `0x02` | Zone heating timer |
+VRC Explorer exposes `b524 read-timer` and the offline-only
+`b524 preview-write-timer`. Preview creates a payload without opening a
+transport or writing to a regulator.
 
-The WD byte (0x00-0x06 = Monday-Sunday) selects the weekday within the addressed channel.
+### 4.5 `0x09` / `0x0A` Events and `0x0B` / `0x0C` Event Setpoints
 
-**Response format:** ebusd reports `slotCountWeek` / `slotCountDay` time-pair sequences. Full per-opcode wire layout is pending complete documentation from community sources.
+These operations are separate from OP02/OP06 scalar register discovery.
+`ADDRESS` is an event selector, not an RR16 scalar address.
 
-**Channel mapping correspondence:** The SEL-addressed channels correspond to the B555 HC-addressed channels on VRC720-family devices. For example, B524 SEL1=`0x01`/SEL2=`0x00`/SEL3=`0x01` (DHW timer) on VRC700 is functionally equivalent to B555 HC=`0x02` (HWC) on BASV2.
+```text
+GetEvent:         09 GG II ADDRESS WEEKDAY_CODE
+SetEvent:         0A GG II ADDRESS WEEKDAY_CODE VALUE1..VALUE7
+GetEventSetPoint: 0B GG II ADDRESS WEEKDAY_CODE
+SetEventSetPoint: 0C GG II ADDRESS WEEKDAY_CODE VALUE1..VALUE7
+Read replies:    PARAM_CONFIG VALUE1..VALUE7
+```
 
-(Source: FINAL-B524-B555-B507-B508.md A2; confidence HIGH.)
+Each read request is five bytes, each setter request twelve bytes, and each
+read reply eight bytes after transport normalization. Retain the weekday-code
+byte exactly as requested; the Event profile does not assign it the ReadTimer
+weekday interpretation. Neither `II` nor the request selector is echoed in
+these replies, so correlation depends on the outstanding request context.
 
-### 4.5 `0x0B` GetEventSetPoint
+| Selected profile | GG | Permitted ADDRESS | Setpoint codec |
+| --- | --- | --- | --- |
+| `system` | 00 | 01, 02, 03 | Numeric code divided by two, degrees Celsius |
+| `dhw` | 01 | 01, 02 | FD=enable, FE=disable, FF=replacement; other codes unknown |
+| `zone` | 03 | 01, 02 | Numeric code divided by two, degrees Celsius |
 
-The public operation name is `GetEventSetPoint`, paired with mutative
-`SetEventSetPoint` (OP=0Ch). The previous generic Array/Table Read label and the
-claim that GG=06h/07h prove timetable domains are withdrawn. Preserve event
-selectors and setpoint data independently from scalar register I/O. A correlated
-request/reply and product-specific codec are required before promoting an event
-setpoint to a decoded schedule. OP=09h/0Ah similarly form the separate GetEvent /
-SetEvent pair. These families are not included in scalar discovery.
+For `GetEvent`, VALUE1 remains raw. VALUE2..VALUE7 codes `00..90` may be
+interpreted as ten-minute units; larger codes remain raw and unqualified.
+For `GetEventSetPoint`, decoding requires the explicitly selected profile above.
+Always retain all seven original codes and the raw `PARAM_CONFIG` byte.
+A successful decode does not establish installed equipment or authorize a write.
+
+The Event families do not inherit the VRC700-only timer gate. Support is
+qualified by each target's actual response; this specification does not claim
+that every BASV2 or VRC700 implements them. Undocumented profile/address
+combinations remain rejected rather than receiving an invented codec.
+
+VRC Explorer provides live read-only `b524 read-event` and
+`b524 read-event-setpoint`. `b524 preview-set-event` and
+`b524 preview-set-event-setpoint` construct offline payloads only. No live
+setter is exposed by these commands. Retries apply at the transport layer to
+exact read requests; setters are excluded from automatic replay.
+
+### 4.6 `0x08` ReadVR91
+
+The VRC700 profile (`70000` or `B7S00`) uses a one-byte request `08` and an
+eight-byte response:
+
+```text
+BINDING_ZONE SPECIAL_FUNCTION_STATUS HEATING_MODE COOLING_MODE
+STATUS_INFO FROST_PROTECTION HEATING_TEMPERATURE_RAW COOLING_TEMPERATURE_RAW
+```
+
+These field names describe the response structure. Bit meanings, temperature
+scaling and special-value semantics remain unqualified, so the Explorer retains
+each byte without turning it into a physical measurement. `b524 read-vr91`
+checks the controller identity before sending this request.
 
 ## 5. Topology-Significant Registers
 

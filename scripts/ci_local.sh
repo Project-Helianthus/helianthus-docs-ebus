@@ -190,6 +190,10 @@ python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
+python3 -m pytest -q tests/test_b524_bounded_survey_profile.py
+for profile in protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json protocols/vaillant/fixtures/b524-bounded-survey-profile-template-v1.json; do
+  jv protocols/vaillant/fixtures/b524-bounded-survey-profile-schema-v1.json "$profile"
+done
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py

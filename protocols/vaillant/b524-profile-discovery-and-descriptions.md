@@ -24,8 +24,11 @@ group-qualified positive evidence. For current artifacts this is
 observed raw reply. `not_connected`, empty, timeout, decode failure, and
 unprobed/unknown selectors remain in the scan artifact diagnostics; none becomes
 a placeholder node. Tree projection does not alter the artifact or create a
-synthetic slot. An instanced group remains a navigation node when it has no
-present child instances; only its instance children are filtered.
+synthetic slot. The final scan plan controls Browser group visibility independently
+for each operation: deselected groups are omitted, while an explicitly selected
+empty group may remain a navigation node without instance children. Discovery
+results outside that plan remain in the artifact. Artifacts predating scan-plan
+metadata retain their legacy group visibility.
 
 Custom scan plans enforce the same selector intervals before transport I/O:
 OP06 permits II01..II08 and OP02/GG02 permits II01..II09. Custom RR selectors
@@ -64,6 +67,14 @@ zero: the visible attribute supplies additional positive profile evidence.
 This is an implementation qualification rule, not a universal physical
 presence predicate. Existing nonzero candidates and the separate II09 probe
 are retained; errors and invalid sentinel values remain non-positive.
+
+The recommended profile also maps OP00 ID0002 to OP02/GG04, ID0003 to OP02/GG05,
+and ID000B to OP02/GG08. A qualified zero count avoids probing default slots;
+otherwise discovery stops after the expected number of positive instances.
+Counts do not impose this shortcut on full/research scans or erase prior evidence.
+Solar discovery requires a visible, finite EXP value at RR0004. A hidden default
+temperature is retained as an unknown slot observation, not positive presence.
+Empty responses and failed local probes likewise remain unknown, never present.
 
 ## OP06 connected-device discovery
 
@@ -234,7 +245,8 @@ Describe progress bar starts with the scheduled request count and increases its
 total for actual retries; interrupted or exhausted acquisition does not report
 successful completion.
 
-The CLI Browser exposes only Config and State. Writable OP06 parameters belong
-in Config, as do the retained description/limit records. Native addresses remain
+Config and State tabs apply only to OP02/OP06 scalar register selections.
+OP00 shows system information directly, without those tabs. Writable OP06
+parameters belong in Config, as do the retained description/limit records. Native addresses remain
 in artifacts and row models; the table displays `semantic_name (0xNNNN)` or
 `0xNNNN` when no semantic name exists, without a separate Address column.

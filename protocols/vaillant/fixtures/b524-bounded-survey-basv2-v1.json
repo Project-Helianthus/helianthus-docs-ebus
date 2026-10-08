@@ -1,0 +1,398 @@
+{
+  "schema_version": "b524-bounded-survey-profile/v1",
+  "evidence_class": "sanitized_read_only_observation",
+  "tool_identity": {
+    "acquisition": {
+      "name": "helianthus-vrc-explorer",
+      "version": "0.6.0",
+      "commit": "c1c87294989ff15b52c3a629146e56b9871e5b1f"
+    },
+    "catalog": {
+      "name": "integrated_b524_catalog",
+      "commit": "f15ac183b9f345afce72852ec1fbbb8291fbdd14"
+    }
+  },
+  "model_scope": {
+    "family": "BASV2",
+    "model": "VRC720f/2",
+    "software_version": "0507",
+    "hardware_version": "1704"
+  },
+  "survey_scope": {
+    "read_request_layout": "OP 00 GG II RRlo RRhi",
+    "describe_request_layout": "OP GG FF RRlo RRhi",
+    "read_instance_scope": "one profile-selected concrete II per group; it is a survey sample, not the configured discovery interval",
+    "describe_instance_scope": "II=FF generic class description; reply correlation is GG/RR only and does not establish II identity",
+    "configured_discovery_intervals": "outside this survey profile; do not infer interval bounds from the representative II"
+  },
+  "group_windows": [
+    {
+      "operation": "OP02",
+      "groups": [
+        "00",
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "08",
+        "09",
+        "0A"
+      ],
+      "rr_window": "0000..0050",
+      "status": "positive_observed",
+      "description_coverage": "writable_only_partial; highest observed Describe differs per group"
+    },
+    {
+      "operation": "OP02",
+      "groups": [
+        "0B",
+        "0C",
+        "0D",
+        "0E",
+        "0F",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "1A",
+        "1B",
+        "1C",
+        "1D",
+        "1E",
+        "1F",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "2A",
+        "2B",
+        "2C",
+        "2D",
+        "2E",
+        "2F"
+      ],
+      "rr_window": "0000..0005",
+      "status": "unknown_group_empty_reply_only",
+      "description_coverage": "none"
+    },
+    {
+      "operation": "OP06",
+      "groups": [
+        "01",
+        "02",
+        "08",
+        "09",
+        "0A",
+        "0C",
+        "0E",
+        "0F"
+      ],
+      "rr_window": "0000..0050",
+      "status": "positive_observed",
+      "description_coverage": "writable_only_partial; generic IIFF is not concrete-instance evidence"
+    },
+    {
+      "operation": "OP06",
+      "groups": [
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "0B",
+        "0D"
+      ],
+      "rr_window": "0000..0005",
+      "status": "known_family_no_positive_in_this_survey",
+      "description_coverage": "none"
+    },
+    {
+      "operation": "OP06",
+      "groups": [
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "1A",
+        "1B",
+        "1C",
+        "1D",
+        "1E",
+        "1F",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "2A",
+        "2B",
+        "2C",
+        "2D",
+        "2E",
+        "2F"
+      ],
+      "rr_window": "0000..0005",
+      "status": "unknown_group_empty_reply_only",
+      "description_coverage": "none"
+    }
+  ],
+  "observed_describe_high_water_marks": {
+    "OP02": {
+      "00": "0050",
+      "01": "0013",
+      "02": "0020",
+      "03": "002E",
+      "04": "000B",
+      "05": "0004",
+      "08": "0007",
+      "09": "000F",
+      "0A": "004D"
+    },
+    "OP06": {
+      "01": "002F",
+      "02": "002F",
+      "08": "002F",
+      "09": "0035",
+      "0A": "0035",
+      "0C": "002F",
+      "0E": "0033",
+      "0F": "0033"
+    }
+  },
+  "read_only_tails": {
+    "OP06": {
+      "0E": "0033",
+      "0F": "0033"
+    },
+    "qualification": "read-only observations; not covered by writable-only Describe acquisition"
+  },
+  "execution": {
+    "planned_jobs": 3274,
+    "completed_jobs": 3274,
+    "final_transport_failures": 0,
+    "response_categories": {
+      "value_reply": 82,
+      "empty_reply": 2771,
+      "description_correlated_raw": 421,
+      "high_group_empty_reply": 1020
+    },
+    "reused_completed_exchanges": 1348,
+    "actual_attempts": 3673,
+    "phases": {
+      "discovery": {
+        "planned_jobs": 1054,
+        "completed_jobs": 1054,
+        "actual_attempts": 1171
+      },
+      "extension": {
+        "planned_jobs": 2220,
+        "completed_jobs": 2220,
+        "actual_attempts": 2502
+      }
+    }
+  },
+  "catalog_reference": {
+    "path": "b524-op02-register-names.csv",
+    "scope": "static OP02 semantic names only; values and bounds remain profile-qualified",
+    "qualified_description_limits": [
+      {
+        "selector": {
+          "op": "07",
+          "gg": "0C",
+          "ii": "FF",
+          "rr": "0001"
+        },
+        "semantic_name": "device_connected",
+        "codec": "BOOL",
+        "min": false,
+        "max": true,
+        "step": true,
+        "qualification": "generic_class_observation_not_concrete_identity"
+      }
+    ]
+  },
+  "nonclaims": [
+    "Empty replies do not prove absence.",
+    "Observed scheduling windows are not exhaustive terminal RR maxima.",
+    "Generic IIFF descriptions do not prove installed equipment or concrete identity.",
+    "Descriptions cover only writable candidates and do not establish writable behavior or authorize writes.",
+    "No discovery interval is established by this survey's representative II."
+  ],
+  "samples": [
+    {
+      "kind": "op02_read",
+      "selector": {
+        "op": "02",
+        "gg": "0A",
+        "ii": "00",
+        "rr": "0001"
+      },
+      "request_payload_hex": "02000a000100",
+      "reply_payload_hex": "030a010000",
+      "outcome": "value_reply",
+      "flags_class": "writable_visible"
+    },
+    {
+      "kind": "op06_read",
+      "selector": {
+        "op": "06",
+        "gg": "0C",
+        "ii": "01",
+        "rr": "0001"
+      },
+      "request_payload_hex": "06000c010100",
+      "reply_payload_hex": "010c010001",
+      "outcome": "value_reply",
+      "flags_class": "read_only_visible"
+    },
+    {
+      "kind": "op07_generic_description",
+      "selector": {
+        "op": "07",
+        "gg": "0C",
+        "ii": "FF",
+        "rr": "0001"
+      },
+      "request_payload_hex": "070cff0100",
+      "reply_payload_hex": "0c0100000101",
+      "outcome": "value_reply",
+      "qualification": "generic_class_observation"
+    }
+  ],
+  "effective_scan_windows": {
+    "OP02": {
+      "00": {
+        "rr_max": "00FF",
+        "terminal_max_established": false
+      },
+      "01": {
+        "rr_max": "0013",
+        "terminal_max_established": false
+      },
+      "02": {
+        "rr_max": "0025",
+        "terminal_max_established": false
+      },
+      "03": {
+        "rr_max": "002E",
+        "terminal_max_established": false
+      },
+      "04": {
+        "rr_max": "000B",
+        "terminal_max_established": false
+      },
+      "05": {
+        "rr_max": "0004",
+        "terminal_max_established": false
+      },
+      "06": {
+        "rr_max": null,
+        "terminal_max_established": false
+      },
+      "07": {
+        "rr_max": null,
+        "terminal_max_established": false
+      },
+      "08": {
+        "rr_max": "0007",
+        "terminal_max_established": false
+      },
+      "09": {
+        "rr_max": "000F",
+        "terminal_max_established": false
+      },
+      "0A": {
+        "rr_max": "004D",
+        "terminal_max_established": false
+      }
+    },
+    "OP06": {
+      "01": {
+        "rr_max": "002F",
+        "terminal_max_established": false
+      },
+      "02": {
+        "rr_max": "002F",
+        "terminal_max_established": false
+      },
+      "03": {
+        "rr_max": "002F",
+        "terminal_max_established": false
+      },
+      "04": {
+        "rr_max": null,
+        "terminal_max_established": false
+      },
+      "05": {
+        "rr_max": "002F",
+        "terminal_max_established": false
+      },
+      "06": {
+        "rr_max": "002F",
+        "terminal_max_established": false
+      },
+      "07": {
+        "rr_max": "002F",
+        "terminal_max_established": false
+      },
+      "08": {
+        "rr_max": "002F",
+        "terminal_max_established": false
+      },
+      "09": {
+        "rr_max": "0035",
+        "terminal_max_established": false
+      },
+      "0A": {
+        "rr_max": "0035",
+        "terminal_max_established": false
+      },
+      "0B": {
+        "rr_max": "002F",
+        "terminal_max_established": false
+      },
+      "0C": {
+        "rr_max": "002F",
+        "terminal_max_established": false
+      },
+      "0D": {
+        "rr_max": null,
+        "terminal_max_established": false
+      },
+      "0E": {
+        "rr_max": "0033",
+        "terminal_max_established": false
+      },
+      "0F": {
+        "rr_max": "0033",
+        "terminal_max_established": false
+      }
+    },
+    "qualification": "observed scheduling windows combining this survey and prior read observations; not exhaustively established maxima"
+  },
+  "description_high_water_qualification": "GG/RR-correlated response, including raw unqualified descriptions; not necessarily decoded MIN/MAX/STEP"
+}
