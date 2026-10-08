@@ -14,7 +14,7 @@
 
 This document specifies the eBUS B555 protocol used by **VRC720-family controllers only** for reading and writing weekly heating, DHW, and other timer/schedule programs.
 
-> **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID 70000, including Saunier Duval B7S00) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for all timer operations. Both device families share eBUS target address `0x15` but are different device classes with different timer transports. (Source: FINAL-B524-B555-B507-B508.md B1, CROSSCHECK-B555-misc.md; confidence HIGH.)
+> **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID 70000, including Saunier Duval B7S00) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for all timer operations. Both device families share eBUS target address `0x15` but are different device classes with different timer transports.
 
 ### 1.0 Timer Transport Device Binding
 
@@ -1283,14 +1283,12 @@ the wire response includes it (see Section 5.3 examples).
 | 2.12 | 2026-03-08 | **P1 hex command audit + error code correction.** Mechanical scrub of every `hex -n` example against declared opcode byte counts. (1) Three A6 commands (Sections 12.7, 12.14) had 16 bytes instead of 15 — extra `00` byte shifted field positions within the A6 frame (distinct from the 2.5 NN-inclusion bug which shifted the opcode itself). Fixed to 30 hex chars (15 bytes). (2) Eighteen A5 commands (Sections 7, 12.13, 12.14, 12.15) had trailing `00` byte(s) — controller ignored extra for reads but format was inconsistent. Fixed to 16 hex chars (8 bytes). (3) **Section 12.14 error code changed from 0x06 to 0x01**: re-running the Heating 0xFFFF test with correctly-formatted hex revealed the controller returns error 0x01 (parameter out of range), not 0x06. The conclusion (0xFFFF rejected) remains valid but the classification differs — 0x01 indicates the controller treats 0xFFFF as an invalid parameter, not a temperature range violation. Updated in Sections 5.3, 5.4, 8.2, 12.14. (4) Canonical filename normalized to `ebus-vaillant-b555-timer-protocol.md` for naming consistency. |
 | 2.13 | 2026-03-08 | **Final wording pass (P2×1, P3×1).** (1) Section 5.1 min/max enforcement rule narrowed: numeric temp violations yield 0x06, but not all temp-field rejections use 0x06 — Heating 0xFFFF is rejected with 0x01 (Section 12.14). (2) Rev 2.12 changelog clarified: A6 field-shift bug described as "shifted field positions within the A6 frame" with explicit note distinguishing it from the 2.5 NN-inclusion bug that shifted the opcode itself. |
 | 2.14 | 2026-03-08 | **Straggler hex audit (P2×1).** Two `hex` (with-NN) A5 commands in Section 12.5 had 6 data bytes after NN=0x05 (trailing `00`). ebusd used NN to bound the read so results were correct, but format was inconsistent. Fixed to 9 bytes (ZZ+PB+SB+NN+5 data). Full audit of all 19 `hex` commands now passes alongside the 76 `hex -n` commands. |
-| 2.15 | 2026-04-14 | **Scope correction + enrichment integration.** (1) VRC700 removed from §1 scope -- B555 is VRC720-family only (BASV0/BASV2/BASV3/CTLV0/CTLV2/CTLV3/CTLS2). VRC700 uses B524 opcodes 0x03/0x04 for timers. New §1.0 device-binding table added. (2) HC=0x04 renamed from "Silent" to "NoiseReduction (Silent)" with dual-name note and B508 cross-reference. (3) §9 rewritten to explain B524 timer opcodes are VRC700-only (not "different subsystem"), with cross-reference to B524 §4.4 channel map. Source: FINAL-B524-B555-B507-B508.md, CROSSCHECK-B555-misc.md. |
-| 2.16 | 2026-04-14 | **FSM appendix + cross-protocol gate.** Added Appendix A: noise_reduction FSM (B555 HC=0x04 -> B508 broadcast -> B509 EHP 0xA901) and B555<->B524 DHW temperature coupling gate. Source: GATES-semantic-fsms.md, GATES-protocol-level.md. |
+| 2.15 | 2026-04-14 | **Scope correction + enrichment integration.** (1) VRC700 removed from §1 scope -- B555 is VRC720-family only (BASV0/BASV2/BASV3/CTLV0/CTLV2/CTLV3/CTLS2). VRC700 uses B524 opcodes 0x03/0x04 for timers. New §1.0 device-binding table added. (2) HC=0x04 renamed from "Silent" to "NoiseReduction (Silent)" with dual-name note and B508 cross-reference. (3) §9 rewritten to explain B524 timer opcodes are VRC700-only (not "different subsystem"), with cross-reference to B524 §4.4 channel map.|
+| 2.16 | 2026-04-14 | **FSM appendix + cross-protocol gate.** Added Appendix A: noise_reduction FSM (B555 HC=0x04 -> B508 broadcast -> B509 EHP 0xA901) and B555<->B524 DHW temperature coupling gate.|
 
 ---
 
 ## Appendix A: Semantic FSMs and Cross-Protocol Gates
-
-> Source: `GATES-semantic-fsms.md` Section 1.7, `GATES-protocol-level.md` Sections 5-6.
 
 ### A.1 `noise_reduction` FSM (HC=0x04 -> B508 -> B509)
 

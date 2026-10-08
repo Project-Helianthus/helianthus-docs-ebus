@@ -1214,8 +1214,6 @@ One pending:
 
 ## Appendix: Semantic FSMs (Controller)
 
-> Source: `GATES-semantic-fsms.md` Sections 3.1-3.3.
-
 ### `energy_manager_state` (OP=0x02, GG=0x00, RR=0x0048)
 
 Register `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0048` — system-level energy manager state. Wire type: `u16` enum.

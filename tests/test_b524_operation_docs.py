@@ -389,12 +389,22 @@ def test_event_and_timer_operations_have_separate_selectors_and_write_boundary()
     assert "VALUE1 remains raw" in events
 
 
+_UNPUBLISHED_ATTRIBUTION = re.compile(
+    r"private(?:-context)?/|private static analysis|restricted static.analysis|FINAL-B524-|CROSSCHECK-B555-|GATES-semantic-|GATES-protocol-",
+    re.IGNORECASE,
+)
+
+
 def test_public_b524_specifications_do_not_name_unpublished_source_material() -> None:
-    forbidden = re.compile(
-        r"private(?:-context)?/|private static analysis|restricted static.analysis|FINAL-B524-",
-        re.IGNORECASE,
-    )
     documents = list((ROOT / "protocols/vaillant").glob("*[bB]524*.md"))
     documents += list((ROOT / "architecture").glob("b524*.md"))
+    documents.append(ROOT / "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md")
     for document in documents:
-        assert not forbidden.search(document.read_text()), document.relative_to(ROOT)
+        assert not _UNPUBLISHED_ATTRIBUTION.search(document.read_text()), document.relative_to(ROOT)
+
+
+def test_unpublished_attribution_check_rejects_each_source_marker() -> None:
+    for marker in ("private/", "private-context/", "private static analysis",
+                   "restricted static-analysis", "FINAL-B524-example.md",
+                   "CROSSCHECK-B555-example.md", "GATES-semantic-example.md", "GATES-protocol-example.md"):
+        assert _UNPUBLISHED_ATTRIBUTION.search(marker)
