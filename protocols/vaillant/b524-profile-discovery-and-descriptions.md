@@ -8,10 +8,11 @@ profile-qualified interpretations, and scanner policy. It adds no device writes.
 
 For OP02/GG02, the current profile is II01..II09: II01..II08 are ordinary
 heating-circuit candidates and II09 is the virtual native-water circuit. The
-OP00 `circuit_count` can guide which of II01..II08 are probed, but does not add
-II00 or II0A. II09 remains a separately selected candidate. This applies to
-CLI, interactive planning, replanning, and custom plans; estimates and safety
-limits include II09.
+legacy public name `circuit_count` for OP00/ID00 is a supported-capacity value
+under the bounded contract below; it does not select or allocate II identities.
+It does not add II00 or II0A, and II09 remains a separately selected candidate.
+This applies to CLI, interactive planning, replanning, and custom plans;
+estimates and safety limits include II09.
 
 `virtual_native_water` is a presentation label, not a physical-circuit claim.
 The selector is shown only after positive presence evidence. A historical trace
@@ -74,17 +75,47 @@ are retained; errors and invalid sentinel values remain non-positive.
 ### Recommended OP00 count guidance
 
 The following are **profile-qualified planner mappings**, not wire-level group
-identity. They apply only to `recommended`: a valid count guides candidate
-generation, and a concrete presence predicate still confirms every instance.
-A zero suppresses only derived default candidates. It cannot erase an explicit
-positive observation. A missing, malformed, conflicting, or otherwise unknown
-count falls back to the group's qualified predicate and leaves coverage
-incomplete. `full`, `research`, and `custom` retain their own selector policy.
+identity. They apply only to `recommended`. A concrete presence predicate still
+confirms every instance. `full`, `research`, and `custom` retain their own
+selector policy.
+
+For OP00/ID00 `circuit_count` and ID01 `zone_count`, the legacy public names
+are retained, but their supported meaning is capacity, not configured or
+present-instance cardinality. The following six combinations are the complete
+supported contract:
+
+| VR70 count | VR71 count | Circuit capacity | Zone capacity |
+| --- | --- | --- | --- |
+| 0 | 0 | 1 | 1 |
+| 1 | 0 | 2 | 2 |
+| 0 | 1 | 3 | 3 |
+| 1 | 1 | 5 | 5 |
+| 2 | 1 | 7 | 7 |
+| 3 | 1 | 8 | 8 |
+
+Do not extrapolate this table to another hardware mix or treat it as a global
+capacity model. In particular, two configured or confirmed circuits with
+circuit capacity `3`, and two configured or confirmed zones with zone capacity
+`3`, are normal and are not mismatches. Capacity never creates, removes,
+orders, or makes II slots contiguous; each candidate must pass its concrete
+group predicate. II09 remains independent of `circuit_count`.
+
+The two capacity values are recommendations for bounded candidate planning
+only. They never construct instances. A missing, malformed, conflicting, or
+otherwise unknown capacity remains separately recorded and uses the group's
+qualified predicate. It does not by itself make concrete presence qualification
+incomplete.
+
+Every other mapped OP00 count retains count-guided cardinality semantics: a
+valid count guides candidate generation, and a valid zero suppresses only
+derived default candidates. It never erases an explicit positive observation.
+A missing, malformed, conflicting, or otherwise unknown count falls back to
+the group's qualified predicate and leaves count-guided coverage incomplete.
 
 | OP/GG | OP00 ID | Count name | Scope of the hint |
 | --- | --- | --- | --- |
-| OP02/GG02 | 00 | `circuit_count` | II01..II08 ordinary heating candidates only; II09 is independent. |
-| OP02/GG03 | 01 | `zone_count` | Local zone candidates. |
+| OP02/GG02 | 00 | `circuit_count` | Supported circuit capacity; candidate guidance only. II01..II08 retain their concrete predicate, and II09 is independent. |
+| OP02/GG03 | 01 | `zone_count` | Supported zone capacity; candidate guidance only. II00..II0A retain their concrete predicate. |
 | OP02/GG04 | 02 | `solar_circuit_count` | Local solar-circuit candidates. |
 | OP02/GG05 | 03 | `solar_loaded_tank_count` | Local cylinder candidates. |
 | OP02/GG08 | 0B | `delta_t_count` | Local DeltaT candidates. |

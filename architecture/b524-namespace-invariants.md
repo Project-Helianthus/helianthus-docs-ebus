@@ -32,9 +32,12 @@ The word "namespace" may still appear in protocol-level documentation (where it 
 
 2. **System information guides qualified instance discovery.**
    - OP=00h uses an information identifier, independent of register GG.
-   - Explicit profile mappings may supply expected instance counts for bounded
-     presence probing in non-exhaustive presets; they never invent II identities.
-   - Preserve expected/observed counts, raw float, source and mismatch.
+   - Explicit profile mappings may supply bounded candidate guidance for
+     non-exhaustive presets; they never invent II identities.
+   - OP00/ID00 `circuit_count` and ID01 `zone_count` retain their legacy public
+     names but are supported capacities, not configured or present-instance
+     counts. Preserve raw float, capacity interpretation, presence results, and
+     any unmet planning guidance separately.
 
 3. **Descriptions are operation- and instance-scoped.**
    - OP=01h DescribeParameter describes the OP=02h system family.
@@ -158,12 +161,16 @@ GG0D scalar range: other relay-module registers require an explicit manual RR sc
 OP02/GG00 System is mandatory at II00, RR0000..00FF. Native DHW (OP02/GG01)
 is admitted at II00 after its RR0001 gate succeeds with a nonzero UIN value.
 The virtual native-water II09 remains a separate circuit candidate.
-OP00 count mappings guide candidate generation only when the profile declares
-one; every resulting slot still needs its own presence predicate. A zero only
-suppresses derived defaults and never erases a positive observation. Missing,
-invalid, conflicting, or unmet counts fall back to that predicate. Remote count
-hints provide cardinality rather than identity. ID04 `device_count` compares all
-confirmed OP06 slots and is never GG06, group membership, or a cutoff. GG03,
+OP00 mappings guide candidates only when the profile declares one; every
+resulting slot still needs its own presence predicate. ID00 `circuit_count` and
+ID01 `zone_count` are supported capacities, never configured-instance counts or
+II allocation. They do not make slots contiguous, and II09 remains independent.
+Missing, invalid, conflicting, or unmet capacity uses that predicate without
+itself making concrete presence qualification incomplete. Other OP00 count
+mappings retain count-guided cardinality semantics: a valid zero suppresses
+only derived defaults and never erases a positive observation; invalid counts
+fall back to their group predicate. ID04 `device_count` compares all confirmed
+OP06 slots and is never GG06, group membership, or a cutoff. GG03,
 GG05, GG08, GG0A, GG0D, GG0E, and GG0F have no count mapping; neither do ID05
 for a generator nor ID17 for a cooling group. Local ventilation uses ID16 only
 for OP02/GG09 II00 in `recommended`.

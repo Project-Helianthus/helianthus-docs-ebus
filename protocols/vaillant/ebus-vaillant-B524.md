@@ -348,8 +348,8 @@ list or a claim that all counts are physically verified on every system.
 
 | ID | snake_case semantic name | Meaning |
 | --- | --- | --- |
-| 0000h | `circuit_count` | Circuits; guides OP=02h/GG=02h instance discovery |
-| 0001h | `zone_count` | Zones; guides OP=02h/GG=03h instance discovery |
+| 0000h | `circuit_count` | Legacy public name; profile-qualified supported circuit capacity for bounded OP=02h/GG=02h candidate guidance |
+| 0001h | `zone_count` | Legacy public name; profile-qualified supported zone capacity for bounded OP=02h/GG=03h candidate guidance |
 | 0002h | `solar_circuit_count` | Solar circuits; guides OP=02h/GG=04h discovery |
 | 0003h | `solar_loaded_tank_count` | Solar-loaded tanks; guides OP=02h/GG=05h discovery |
 | 0004h | `device_count` | Devices |
@@ -364,14 +364,38 @@ list or a claim that all counts are physically verified on every system.
 | 0010h | `recovair_count` | recoVair ventilation units |
 | 0011h | `cooling_heat_pump_count` | Cooling-capable heat pumps |
 
-A count selects how many active instances are expected, not their identities.
-In non-exhaustive scans, probe profile-bounded II slots in order until the expected
-number of present instances is found. Do not assume the first N slots are occupied.
-A missing, non-integral, non-finite, out-of-bound or conflicting count falls back
-to bounded presence discovery. In the recommended profile, a qualified zero count
-avoids probing default local slots for the mapped group. Previously observed data
-remains evidence in its original artifact. Full and `research` scans retain the
-configured II range. Record expected and observed counts and their mismatch.
+For ID=0000h `circuit_count` and ID=0001h `zone_count`, the retained legacy
+public names denote supported capacity, not configured or present-instance
+cardinality. The bounded profile supports exactly these combinations:
+
+| VR70 count | VR71 count | Circuit capacity | Zone capacity |
+| --- | --- | --- | --- |
+| 0 | 0 | 1 | 1 |
+| 1 | 0 | 2 | 2 |
+| 0 | 1 | 3 | 3 |
+| 1 | 1 | 5 | 5 |
+| 2 | 1 | 7 | 7 |
+| 3 | 1 | 8 | 8 |
+
+This is not a global hardware-capacity model and must not be extrapolated to
+another mix. Two configured or confirmed circuits with circuit capacity `3`,
+and two configured or confirmed zones with zone capacity `3`, are normal and
+are not mismatches.
+
+Those capacities only recommend bounded candidate planning. They never create
+instances, select identities, require contiguous II slots, or replace a concrete
+presence predicate. Circuit II09 remains independently considered. A missing,
+non-integral, non-finite, out-of-bound, or conflicting capacity falls back to
+the concrete group predicate without itself making presence qualification
+incomplete. Full and `research` scans retain the declared II range. Preserve
+the raw value, capacity interpretation, concrete presence results, and any
+unmet planning guidance separately.
+
+Other OP00 count fields retain count-guided cardinality semantics. A valid
+count guides candidate generation; a valid zero suppresses only derived default
+candidates and never erases an explicit positive observation. A missing,
+non-integral, non-finite, out-of-bound, or conflicting count falls back to its
+group's qualified predicate and leaves count-guided coverage incomplete.
 
 Only an explicit profile mapping connects an information identifier to `(OP,GG)`.
 In particular, ID=0010h does not imply GG=10h. Known groups remain scan candidates

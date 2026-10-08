@@ -381,7 +381,7 @@ def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> N
 
     assert "OP02/GG00 is mandatory" in architecture
     assert "RR0000..00FF" in architecture
-    assert "ID04 `device_count` compares all\nconfirmed OP06 slots" in architecture
+    assert "ID04 `device_count` compares all confirmed\nOP06 slots" in architecture
     assert "GG03,\nGG05, GG08, GG0A, GG0D, GG0E, and GG0F have no count mapping" in architecture
     assert "OP02/GG09 II00 in `recommended`" in architecture
     assert "OP06/GG04 and OP06/GG0D have Unknown RR maxima" in architecture
@@ -392,6 +392,14 @@ def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> N
     assert "OP06/GG0D II01..II08/RR0001" in recommended
     assert "availability-only probe using `device_present`" in recommended
     assert "II09 is independent" in profile
+    assert "supported meaning is capacity, not configured or\npresent-instance cardinality" in profile
+    assert "| 0 | 0 | 1 | 1 |" in profile
+    assert "| 3 | 1 | 8 | 8 |" in profile
+    assert "two configured or confirmed circuits with\ncircuit capacity `3`" in profile
+    assert "They never construct instances" in profile
+    assert "does not by itself make concrete presence qualification\nincomplete" in profile
+    assert "Every other mapped OP00 count retains count-guided cardinality semantics" in profile
+    assert "valid zero suppresses only\nderived default candidates" in profile
     assert "OP00 ID05\ngenerator mapping and no ID17 cooling-group mapping" in profile
     assert "OP02/GG01 uses only II00" in profile
     assert "exact two-byte UIN value\nthat is nonzero" in profile

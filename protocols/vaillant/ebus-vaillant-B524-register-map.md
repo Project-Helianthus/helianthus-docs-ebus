@@ -133,10 +133,13 @@ identity correlation rather than from B524 alone.
 
 **Discovery:** OP00 information identifiers are distinct from GG. The
 [profile-qualified mapping table](b524-profile-discovery-and-descriptions.md#recommended-op00-count-guidance)
-defines the limited `recommended` count guidance. It is candidate cardinality,
-not identity: keep sparse II slots and expected/observed counts, then apply the
-group predicate. The full configured range remains the fallback and research
-bound. See [the corrected protocol contract](./ebus-vaillant-B524.md).
+defines the limited `recommended` guidance. For ID00 `circuit_count` and ID01
+`zone_count`, the legacy public names mean supported capacity under the bounded
+profile contract, not configured or present-instance cardinality. They do not
+identify, allocate, or make II slots contiguous: keep sparse II slots and apply
+the group predicate to every candidate. II09 remains an independent virtual
+native-water candidate. The full configured range remains the fallback and
+research bound. See [the corrected protocol contract](./ebus-vaillant-B524.md).
 
 ### Discovery Profiles
 
