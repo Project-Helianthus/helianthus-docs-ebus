@@ -33,6 +33,33 @@ remain exact and are validated by the scalar request contract; they do not widen
 an II interval. Historical records outside these intervals remain raw artifact
 diagnostics and never become Browser nodes.
 
+## Explicit instance intervals
+
+The following are current scanner profile bounds, not a claim that every
+candidate exists. Artifacts record `ii_min` and `ii_max` separately from
+positive presence observations; planner and discovery output expose the same
+interval. A count from OP00 never changes the numbering origin.
+
+| OP | GG | II_min | II_max | Scope |
+| --- | --- | --- | --- | --- |
+| 02 | 00, 01 | 00 | 00 | Singleton selectors |
+| 02 | 02 | 01 | 09 | Heating candidates 01..08, virtual native water 09 |
+| 02 | 03 | 00 | 0A | Current zone profile bound |
+| 02 | 04, 05 | 00 | 01 | Current solar/cylinder profile bound |
+| 02 | 08, 09, 0A | 00 | 0A | Current configured bounds; GG0A remains semantically unknown |
+| 06 | Every admitted GG | 01 | 08 | Independent remote-device candidate interval |
+
+OP02/GG06 and GG07 presentation names do not establish additional
+characterized local scan routes. Other research routes retain their separately
+configured bounds rather than inheriting the same-numbered OP06 identity.
+
+The current circuit availability heuristic uses OP02/GG02/RR0002. A
+correlated active, visible numeric zero is not rejected solely because it is
+zero: the visible attribute supplies additional positive profile evidence.
+This is an implementation qualification rule, not a universal physical
+presence predicate. Existing nonzero candidates and the separate II09 probe
+are retained; errors and invalid sentinel values remain non-positive.
+
 ## OP06 connected-device discovery
 
 OP00 information identifiers do not enumerate OP06 groups. Counts and same-numbered
