@@ -99,6 +99,19 @@ def test_semantic_scan_policy_uses_complete_descriptions_and_unqualified_history
     assert "historical evidence only, not authority" in text
 
 
+def test_semantic_fallback_and_b509_evidence_links_match_the_op06_catalog() -> None:
+    semantic = SEMANTIC_MAPPING.read_text(encoding="utf-8")
+    boiler_map = (
+        ROOT / "protocols" / "vaillant" / "ebus-vaillant-B509-boiler-register-map.md"
+    ).read_text(encoding="utf-8")
+    anchor = "#op0x06--controller-mediated-device-parameters"
+
+    assert "0x0C 0x06    0x08         0x002F" in semantic
+    assert "0x0C 0x06    0x08         0x003F" not in semantic
+    assert anchor in semantic
+    assert anchor in boiler_map
+
+
 def test_device_enumeration_preserves_ii01_and_retained_inventory_contract() -> None:
     text = REGISTER_MAP.read_text(encoding="utf-8")
     section = text.split("**Device slot enumeration:**", 1)[1].split("**ebusd baseline:**", 1)[0]
@@ -108,6 +121,21 @@ def test_device_enumeration_preserves_ii01_and_retained_inventory_contract() -> 
     assert "Unknown results do not stop" in section
     assert "Full/research audit every" in section
     assert "must not suppress\nretained inventory evidence" in section
+
+
+def test_relay_connection_candidate_preserves_unknown_native_qualification() -> None:
+    text = (
+        ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md"
+    ).read_text(encoding="utf-8")
+    section = text.split("### GG0D relay-module predicate", 1)[1].split(
+        "## Descriptions for every eligible parameter", 1
+    )[0]
+    assert "common `device_connected` name" in section
+    assert "**Hypothesis; native qualification Unknown:**" in section
+    assert "no positive, correlated\nGG0D/RR0001 observation is published" in section
+    assert "`source=heuristic_probe`" in section
+    assert "not qualified\nnative connection evidence or physical inventory proof" in section
+    assert "qualified RR0001 predicate" not in text
 
 
 def test_functional_module_presentation_names_preserve_the_evidence_boundary() -> None:

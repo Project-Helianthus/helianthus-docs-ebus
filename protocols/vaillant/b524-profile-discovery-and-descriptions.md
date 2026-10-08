@@ -173,7 +173,7 @@ is a hypothesis catalog, not an expansion of this discovery policy.
 | 0A | `thermostat_slot` | 01..08 | Profile-qualified connected/paired Boolean |
 | 0B | `functional_modules_vr70` | 01..08 | Candidate only; concrete Boolean required per slot |
 | 0C | `functional_modules_vr71` | 01..08 | Connection state, distinct from retained inventory |
-| 0D | `relay_module_slot` | 01..08 | `device_connected`: exact one-byte BOOL at RR0001 |
+| 0D | `relay_module_slot` | 01..08 | Common `device_connected` BOOL candidate; native qualification Unknown |
 | 0E | `clock_slot` | 01..08 | Observed Boolean connection candidate |
 | 0F | `base_station_slot` | 01..08 | Observed Boolean connection candidate |
 
@@ -191,8 +191,8 @@ conservative recommended admission.
 
 `unused` for GG04 does not justify suppressing a probe that an independently
 qualified profile requires. GG04 retains Unknown RR layout and presence
-semantics. GG0D retains Unknown RR maximum, but its qualified RR0001 predicate
-must be probed.
+semantics. GG0D retains Unknown RR maximum, but its common RR0001 candidate
+probe remains eligible.
 
 Historical BASV2 observations for GG09/0A/0C/0E/0F include RR0001 raw `00` at
 II00, `01` at II01, and `00` at later historical selectors. They explain why
@@ -221,8 +221,16 @@ For GG08, a correlated RR0001 BOOL false means not connected. Readable identity 
 ### GG0D relay-module predicate
 
 For OP06/GG0D (VR41 presentation family), probe II01..II08 at RR0001 even
-though its RR maximum is Unknown. It uses the common `device_connected` name:
-an exact one-byte BOOL `00` is `not_connected` and `01` is `connected`.
+though its RR maximum is Unknown. It uses the common `device_connected` name.
+
+**Hypothesis; native qualification Unknown:** no positive, correlated
+GG0D/RR0001 observation is published for this model profile. The scanner applies
+the common exact one-byte BOOL candidate interpretation, recording
+`source=heuristic_probe`: `00` yields a heuristic `not_connected` candidate state
+and `01` a heuristic `connected` candidate state. These states are not qualified
+native connection evidence or physical inventory proof. A positive, correlated
+native observation is required to qualify this interpretation for GG0D.
+
 Values `02..FF`, wrong-width bodies, empty replies, NACK, decode failure, and
 unmatched replies are `unknown`. These outcomes do not infer physical absence,
 identity, a new supported RR range, or an RR limit.

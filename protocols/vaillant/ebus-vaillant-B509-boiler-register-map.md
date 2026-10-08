@@ -140,7 +140,7 @@ The controller-mediated B524 candidates `OP=0x06, GG=0x01/0x02,
 RR=0x0015` and `RR=0x0012` remain unqualified. They are neither a
 boiler-flow fallback nor a raw error value in the current Helianthus runtime;
 their reply codecs are unknown. Direct B509 `0x1800` remains the
-flow-temperature source. See the [B524 register map](./ebus-vaillant-B524-register-map.md#op0x06-controller-mediated-device-parameters)
+flow-temperature source. See the [B524 register map](./ebus-vaillant-B524-register-map.md#op0x06--controller-mediated-device-parameters)
 for their evidence limits.
 
 Fields currently present in the GraphQL/MCP schema but not populated from a validated direct B509 mapping:

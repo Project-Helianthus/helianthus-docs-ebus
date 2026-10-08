@@ -101,6 +101,13 @@ def test_all_contributed_profiles_have_consistent_phase_totals(profile_path: Pat
     assert counts["actual_attempts"] >= counts["completed_jobs"]
 
 
+def test_local_ci_validates_every_contributed_bounded_survey_profile() -> None:
+    ci = (ROOT / "scripts/ci_local.sh").read_text()
+    assert "protocols/vaillant/fixtures/b524-bounded-survey-*-v1.json" in ci
+    assert "*-profile-schema-v1.json|*-profile-template-v1.json) continue" in ci
+    assert 'jv protocols/vaillant/fixtures/b524-bounded-survey-profile-schema-v1.json "$profile"' in ci
+
+
 @pytest.mark.parametrize(
     ("mutation", "expected"),
     [

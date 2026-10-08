@@ -195,7 +195,7 @@ The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
 boiler semantic mapping**: the current `refreshBoilerStatus()` does not read
 these selectors, and no publishable correlated evidence qualifies either as
 `state.flowTemperatureC` or a raw `diagnostics.activeErrors` value. See the
-[B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#op0x06-controller-mediated-device-parameters)
+[B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#op0x06--controller-mediated-device-parameters)
 for the evidence boundary.
 
 Fields currently present in the schema but not populated from a validated source:
@@ -335,7 +335,7 @@ GG   Opcode  InstanceMax  RegisterMax
 0x03 0x02    0x0A         0x002E
 0x09 0x06    0x08         0x0035
 0x0A 0x06    0x08         0x0035
-0x0C 0x06    0x08         0x003F
+0x0C 0x06    0x08         0x002F
 ```
 
 ---
