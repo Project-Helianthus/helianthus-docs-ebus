@@ -43,8 +43,14 @@ correlated evidence. They do not establish writability or authorize a write.
 
 ## Group Topology
 
-| Opcode | GG | Group label | Instanced | II_MAX | RR_MAX | Instance gate | Regs (scan/doc) |
-|--------|----|-------------|-----------|--------|--------|---------------|-----------------|
+The OP06 product-family labels in this table are **Hypotheses** from the
+operation-scoped presentation catalog unless a separate row supplies its own
+publishable identity evidence. They identify a candidate family for navigation;
+they do not establish physical product identity, presence, or a device layout.
+`unused` and the RR layout for GG04 and GG0D remain **Unknown**.
+
+| Opcode | GG | Group label | Instanced | II_MAX | Observed scheduling RR ceiling | Instance gate | Regs (scan/doc) |
+|--------|----|-------------|-----------|--------|-------------------------------|---------------|-----------------|
 | 0x02 | 0x00 | System | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
 | 0x02 | 0x01 | Native Domestic Hot Water | No | 0x00 | 0x13 | SystemScheme + VR_71 config | 17 (0x0001–0x0013) |
 | 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | `circuit_mixer_type_external != 0` (RR=0x0002) for II01..08; II09 is virtual native water | profile bound: 8 heating + 1 virtual native-water circuit |
@@ -55,17 +61,21 @@ correlated evidence. They do not establish writability or authorize a write.
 | 0x02 | 0x07 | Generator | Unknown | — | — | no public selector/profile contract | Unknown |
 | 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent | 0x0007 | not qualified | 7 local |
 | 0x02 | 0x09 | Ventilation | Unknown | profile-dependent | 0x000F | not qualified | 15 local |
-| 0x06 | 0x01 | Boiler | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
-| 0x06 | 0x02 | Heat Pump | Yes | model-dep. | — | `device_connected` (RR=0x0001) | pending live validation |
-| 0x06 | 0x03..0x07 | See OP06 catalog | Yes | 0x08 | — | group layout/presence Unknown | profile slot bound only |
-| 0x06 | 0x08 | Modul Solar (VMS) auroSTEP | Yes | 0x08 | — | unknown status; no connected-device predicate | profile slot bound only |
+| 0x06 | 0x01 | Boiler | Yes | 0x08 | 0x002F | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
+| 0x06 | 0x02 | Heat Pump | Yes | 0x08 | 0x002F | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
+| 0x06 | 0x03 | Air Recovery (VAR) recoVair | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
+| 0x06 | 0x04 | unused | Yes | 0x08 | — | Unknown | Unknown |
+| 0x06 | 0x05 | Appliance Interface (VWZ-AI) | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
+| 0x06 | 0x06 | Pumpen Module – Solar (VPM-S) auroFLOW | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
+| 0x06 | 0x07 | Pumpen Module – Wasser (VPM-W) aguaFLOW | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
+| 0x06 | 0x08 | Modul Solar (VMS) auroSTEP | Yes | 0x08 | 0x002F | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 | 0x06 | 0x09 | Remote Control Regulators (VRC7xx, VRT38x) | Yes | 0x08 | 0x35 | `device_connected` (RR=0x0001) | profile slot bound only |
 | 0x06 | 0x0A | Remote Control Thermostats (VR9x) | Yes | 0x08 | 0x35 | `device_connected` (RR=0x0001) | profile slot bound only |
-| 0x06 | 0x0B | Functional Modules (VR70) FM3 | Yes | 0x08 | — | group layout/presence Unknown | profile slot bound only |
+| 0x06 | 0x0B | Functional Modules (VR70) FM3 | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
 | 0x06 | 0x0C | Functional Modules (VR71) FM5 | Yes | 0x08 | 0x2F | `device_connected` (RR=0x0001) | profile slot bound only |
-| 0x06 | 0x0D | Relay Module (VR41) | Yes | 0x08 | — | group layout/presence Unknown | profile slot bound only |
-| 0x06 | 0x0E | Clock Module | Yes | 0x08 | 0x10 | `device_connected` (RR=0x0001) | profile slot bound only |
-| 0x06 | 0x0F | Base Station | Yes | 0x08 | 0x10 | `device_connected` (RR=0x0001) | profile slot bound only |
+| 0x06 | 0x0D | Relay Module (VR41) | Yes | 0x08 | — | Unknown | Unknown |
+| 0x06 | 0x0E | Clock Module | Yes | 0x08 | 0x0033 | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
+| 0x06 | 0x0F | Base Station | Yes | 0x08 | 0x0033 | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 
 **GG values are opcode-scoped, not global:** `OP=0x02, GG=0x00` and
 `OP=0x02, GG=0x01` are the singleton local selector sets for system/settings
@@ -84,10 +94,11 @@ group is unused on all profiles.
 
 **GG=0x08 — OP02 local DeltaT; OP06 Modul Solar (VMS)
 auroSTEP:** The documented selector spaces are `OP=0x02, GG=0x08` for 7 local
-registers and `OP=0x06, GG=0x08` for 4 remote registers per instance
-across all 11 instances. The OP06 display name is a family hypothesis from the
-catalog; the local OP02 presentation name is DeltaT. Naming does not establish
-physical-device identity or change routing and register layout. These namespaces must not be merged by `GG` alone.
+registers and `OP=0x06, GG=0x08` through the observed scheduling ceiling
+RR002F, over candidate slots II01..II08. The OP06 display name is a family
+hypothesis from the catalog; the local OP02 presentation name is DeltaT. Naming
+does not establish physical-device identity or change routing and register
+layout. These namespaces must not be merged by `GG` alone.
 
 **Characterized OP=0x06 device slot categories (0x09, 0x0A, 0x0C, 0x0E, 0x0F):**
 `GG=0x09` = Remote Control Regulators (VRC7xx, VRT38x), `GG=0x0A` = Remote
@@ -102,15 +113,10 @@ Instance `II` selects the slot.
 `OP=0x02, GG=0x09/0x0A` identifies separate local selector sets;
 remote device labels do not establish their physical identity or topology.
 
-### Unqualified functional-module presentation candidate
-
-The operator-provided display designation is `OP=0x06, GG=0x0B` = **Functional
-Modules (VR70) FM3**. It is retained here for presentation, but is not a documented
-B524 selector route: no published capture, slot bounds, `RR=0x0001` predicate,
-or register layout supports it. Those facts remain **Unknown**, and this
-display mapping does not establish additional qualified scan targets or bounds;
-exploratory probing remains separately qualified. It must not be inferred to share
-the `GG=0x0C` schema.
+`OP=0x06, GG=0x0B` = **Functional
+Modules (VR70) FM3** is a named OP06 family with an observed scheduling ceiling.
+Its class-level observations do not transfer a concrete instance, identity, or
+presence result to GG0C.
 
 `OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71) FM5** in the
 documented map below. That presentation name does not turn the profile/lab
@@ -132,25 +138,39 @@ research bound. See [the corrected protocol contract](./ebus-vaillant-B524.md).
 
 ### Discovery Profiles
 
-Source: BASV2 constraint probe + live scan corpus.
+Source: sanitized BASV2 observations and constraint-probe corpus. “Observed
+scheduling ceiling” is the highest RR in the current bounded scheduling
+evidence; it is not a terminal maximum and does not exclude read-only state
+registers above it.
 
-| Group | Opcode | Instance Max | Register Max | Scan Observed Max | Notes |
-|-------|--------|-------------|-------------|-------------------|-------|
-| 0x00 | 0x02 (local) | 0x00 | 0x00A2 | **0x00FF** | System/Regulator. Singleton. **Note**: scan shows 179 registers extending to 0x00FF.stale profile |
-| 0x01 | 0x06 (controller-side remote) | slot-scoped (`II`) | 0x0015 | `0x0001`, `0x0012`, `0x0015` are hypotheses | Primary heat-source candidate. Availability probing is a precondition for meaningful interpretation; no live SensoNET response established |
-| 0x01 | 0x02 (local) | 0x00 | 0x0011 | **0x0013** | DHW. Singleton. 4 undocumented registers 0x0007-0x0013. stale profile |
-| 0x02 | 0x06 (controller-side remote) | slot-scoped (`II`) | model pending | `0x0001`, `0x0012`, `0x0015` are hypotheses | Secondary heat-source candidate. Detailed register canon and live SensoNET response remain unverified |
-| 0x02 | 0x02 (local) | 0x09 | 0x0025 | 0x0025 | Current profile: II01..08 are heating circuits; II09 is virtual native water. Historical II00..0A probes remain observations, not current coverage. |
-| 0x03 | 0x02 (local) | 0x0A | 0x002F | **0x002E** | Zones. Scan confirms 38 regs/instance. Profile accurate |
-| 0x04 | 0x02 (local) | 0x00 | 0x000B | 0x000B | Solar circuit. Singleton, gated by fm5_config≤2 |
-| 0x05 | 0x02 (local) | 0x01 | 0x0004 | 0x0004 | Cylinders. **Only 2 instances** (0x00-0x01), not 0x0A. Gated by fm5_config≤2 |
-| 0x08 | 0x02 (local) | profile-dependent | — | **0x0007** | DeltaT. Local II scope remains profile-dependent; physical topology Unknown. |
-| 0x08 | 0x06 (remote) | 0x08 | — | **0x0004** | Modul Solar (VMS) auroSTEP display hypothesis. Current OP06 slot interval II01..08; no connected-device predicate. |
-| 0x09 | 0x02 (local) | profile-dependent | — | **0x000F** | Ventilation. Local II scope/physical topology unknown. |
-| 0x09 | 0x06 (remote) | 0x08 | 0x0030 | **0x0030** | Remote Control Regulators (VRC7xx, VRT38x). Current OP06 slot interval II01..08. |
-| 0x0A | 0x02 (local) | profile-dependent | — | **0x004D** | Observed local selector set; role and physical identity unknown. Historical coverage is not a current topology bound. |
-| 0x0A | 0x06 (remote) | 0x08 | 0x0035 | **0x0035** | Remote Control Thermostats (VR9x). Current OP06 slot interval II01..08. |
-| 0x0C | 0x06 (remote) | 0x08 | 0x002F | **0x002F** | Functional Modules (VR71) FM5. Current OP06 slot interval II01..08. No local `OP=0x02` selector set documented |
+| Opcode | Group | Instance interval | Observed scheduling ceiling | Planner treatment | Notes |
+|--------|-------|-------------------|-----------------------------|-------------------|-------|
+| 0x02 | 0x00 System | 00 | 0x00FF | known scope | Singleton |
+| 0x02 | 0x01 Native Domestic Hot Water | 00 | 0x0013 | known scope | Singleton |
+| 0x02 | 0x02 Circuits | 01..09 | 0x0025 | known scope | II01..08 heating candidates; II09 virtual native water |
+| 0x02 | 0x03 Zones | 00..0A | 0x002E | known scope | profile bound |
+| 0x02 | 0x04 Solar Circuit | 00..01 | 0x000B | known scope | profile bound |
+| 0x02 | 0x05 Solar Loaded Cylinder | 00..01 | 0x0004 | known scope | profile bound |
+| 0x02 | 0x06 Device | Unknown | — | explicit custom RR scope | layout Unknown |
+| 0x02 | 0x07 Generator | Unknown | — | explicit custom RR scope | layout Unknown |
+| 0x02 | 0x08 DeltaT | profile-dependent | 0x0007 | known scope | topology Unknown |
+| 0x02 | 0x09 Ventilation | profile-dependent | 0x000F | known scope | topology Unknown |
+| 0x02 | 0x0A Unknown | 00..0A | 0x004D | known scope | role and physical identity Unknown |
+| 0x06 | 0x01 Boiler | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x02 Heat Pump | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x03 Air Recovery (VAR) recoVair | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x04 unused | 01..08 | — | explicit custom RR scope | RR layout and predicate Unknown |
+| 0x06 | 0x05 Appliance Interface (VWZ-AI) | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x06 Pumpen Module – Solar (VPM-S) auroFLOW | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x07 Pumpen Module – Wasser (VPM-W) aguaFLOW | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x08 Modul Solar (VMS) auroSTEP | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x09 Remote Control Regulators (VRC7xx, VRT38x) | 01..08 | 0x0035 | known scope | concrete-II predicate required |
+| 0x06 | 0x0A Remote Control Thermostats (VR9x) | 01..08 | 0x0035 | known scope | concrete-II predicate required |
+| 0x06 | 0x0B Functional Modules (VR70) FM3 | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x0C Functional Modules (VR71) FM5 | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x0D Relay Module (VR41) | 01..08 | — | explicit custom RR scope | RR layout and predicate Unknown |
+| 0x06 | 0x0E Clock Module | 01..08 | 0x0033 | known scope | concrete-II predicate required |
+| 0x06 | 0x0F Base Station | 01..08 | 0x0033 | known scope | concrete-II predicate required |
 
 ---
 
@@ -378,8 +398,8 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x00D7 | system_yield_environmental_previous_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
 | 0x00D8 | system_yield_environmental_current_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
 | 0x00D9 | electricity_tariff_type | C | u16 | — | — | — | — | — | FLAGS=0x02. Scan value: 0 |
-| 0x00DA | manual_cooling_date_start | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 (RW config). VRC700 manual cooling start date. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. |
-| 0x00DB | manual_cooling_date_end | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 (RW config). VRC700 manual cooling end date. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. |
+| 0x00DA | manual_cooling_date_start | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 observed. VRC700 manual cooling start-date interpretation and writability are **Hypotheses**; no correlated write evidence is published. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. |
+| 0x00DB | manual_cooling_date_end | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 observed. VRC700 manual cooling end-date interpretation and writability are **Hypotheses**; no correlated write evidence is published. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. |
 | 0x00DC | room_temperature_control_strategy_type | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x00DD | screed_drying_profile_day_01_10 | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 10 bytes: [25,30,35,40,45,45,45,45,45,45] — hourly temp profile (°C/2) |
 | 0x00DE | screed_drying_profile_day_11_20 | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 10 bytes: [45,45,40,35,30,25,10,10,10,10] — hourly temp profile continued |
@@ -452,6 +472,7 @@ All registers use opcode `0x02`, instance `0x00`. All registers except `native_d
 
 ---
 
+<a id="gg0x02--heating-circuits-multi-instance"></a>
 ### GG=0x02 — Circuits
 
 All registers use opcode `0x02`. The current profile selects II01..II08 for
@@ -514,6 +535,7 @@ observations, but do not extend the current profile's II01..09 coverage.
 
 ---
 
+<a id="gg0x03--zones-multi-instance"></a>
 ### GG=0x03 — Zones
 
 All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by probing `zone_circuit_for_zone` (RR=0x001C).
@@ -598,6 +620,7 @@ Entire group gated by `fm5_config ≤ 2`. All registers use opcode `0x02`, insta
 
 ---
 
+<a id="gg0x05--cylinders-multi-instance"></a>
 ### GG=0x05 — Solar Loaded Cylinder
 
 Entire group gated by `fm5_config ≤ 2`. These are solar charging parameters per cylinder. General cylinder config (max temp, charge hysteresis) is in GG=0x00 system config.
@@ -803,6 +826,7 @@ retained observations and do not expand this profile bound or prove presence.
 
 ---
 
+<a id="gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode"></a>
 ### GG=0x09 — Remote Control Regulators (VRC7xx, VRT38x)
 
 `OP=0x06, GG=0x09` is remote device data and is distinct from OP02/GG09 local configuration.
@@ -853,6 +877,7 @@ NaN/0xFF/0x8000.
 
 ---
 
+<a id="gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode"></a>
 ### GG=0x0A — Remote Control Thermostats (VR9x)
 
 `OP=0x06, GG=0x0A` is remote device data and is distinct from the OP02/GG0A local selector set.
@@ -916,6 +941,7 @@ retained inventory evidence. Identity and telemetry reads can include:
 
 ---
 
+<a id="gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only"></a>
 ### GG=0x0C — Functional Modules (VR71) FM5
 
 > **Verified 2026-03-05:** Responds only to opcode 0x06 (no local config selector set documented; opcode 0x02 returns 0 valid registers). 15 registers per instance, 165 total valid. Uses the same remote-device slot schema as GG=0x09/0x0A.

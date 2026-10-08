@@ -30,8 +30,9 @@ present child instances; only its instance children are filtered.
 Custom scan plans enforce the same selector intervals before transport I/O:
 OP06 permits II01..II08 and OP02/GG02 permits II01..II09. Custom RR selectors
 remain exact and are validated by the scalar request contract; they do not widen
-an II interval. Historical records outside these intervals remain raw artifact
-diagnostics and never become Browser nodes.
+an II interval. A group without an observed RR scheduling ceiling is selectable
+only with an explicit custom RR ceiling, list, or range. Historical records outside these
+intervals remain raw artifact diagnostics and never become Browser nodes.
 
 ## Explicit instance intervals
 
@@ -49,9 +50,13 @@ interval. A count from OP00 never changes the numbering origin.
 | 02 | 08, 09, 0A | 00 | 0A | Current configured bounds; GG0A remains semantically unknown |
 | 06 | Every admitted GG | 01 | 08 | Independent remote-device candidate interval |
 
-OP02/GG06 and GG07 presentation names do not establish additional
-characterized local scan routes. Other research routes retain their separately
-configured bounds rather than inheriting the same-numbered OP06 identity.
+The planner inventories every known local group (including OP02/GG0A, whose
+semantic role remains Unknown) and every named OP06 family. It shows an
+unprobed group separately from a group with zero confirmed-present instances.
+Neither state suppresses selection in a custom plan. OP02/GG06 and GG07 retain
+their presentation names, but their instance and RR layout remain Unknown and
+require an explicit custom RR scope. Same-numbered OP06 groups never supply
+their local selector contract.
 
 The current circuit availability heuristic uses OP02/GG02/RR0002. A
 correlated active, visible numeric zero is not rejected solely because it is
@@ -72,34 +77,35 @@ is a hypothesis catalog, not an expansion of this discovery policy.
 | --- | --- | --- | --- |
 | 01 | `primary_heating_source` | 01..08 | Profile-qualified native slot availability |
 | 02 | `secondary_heating_source` | 01..08 | Profile-qualified fallback-slot availability |
+| 03 | `air_recovery_slot` | 01..08 | Candidate only; concrete Boolean required per slot |
+| 04 | `unused` | 01..08 | Unknown; no predicate is established |
+| 05 | `appliance_interface_slot` | 01..08 | Candidate only; concrete Boolean required per slot |
+| 06 | `solar_pump_module_slot` | 01..08 | Candidate only; concrete Boolean required per slot |
+| 07 | `water_pump_module_slot` | 01..08 | Candidate only; concrete Boolean required per slot |
 | 08 | `solar_module_slot` | 01..08 | Profile-qualified device-connected Boolean |
 | 09 | `regulator_slot` | 01..08 | Profile-qualified connected/paired Boolean |
 | 0A | `thermostat_slot` | 01..08 | Profile-qualified connected/paired Boolean |
+| 0B | `functional_modules_vr70` | 01..08 | Candidate only; concrete Boolean required per slot |
 | 0C | `functional_modules_vr71` | 01..08 | Connection state, distinct from retained inventory |
+| 0D | `relay_module_slot` | 01..08 | Unknown; no predicate is established |
 | 0E | `clock_slot` | 01..08 | Observed Boolean connection candidate |
 | 0F | `base_station_slot` | 01..08 | Observed Boolean connection candidate |
 
 For this profile, every OP06 GG admitted by a scan plan uses the common candidate
-slot interval II01..II08. II00, II09, and II0A are outside that interval. This
-does not create a group route, a device-presence claim, or an RR0001 predicate
-for groups whose semantics remain unknown.
+slot interval II01..II08. II00, II09, and II0A are outside that interval. A
+generic IIFFh DescribeDeviceParameter response for RR0001 supports the Boolean
+format for the named candidate classes, but does not identify a concrete slot.
+Only a complete, correlated concrete-II Boolean result can mark that slot
+present or not connected. In particular, `false` does not create eight device
+instances and does not erase retained identity evidence. Catalog visibility
+does not create a group route, a device-presence claim, or a change to
+conservative recommended admission.
 
 **Hypothesis:** independent protocol evidence is required for this interpretation.
 
-### Unqualified VR70 presentation candidate
-
-The operator-provided display designation `OP=0x06, GG=0x0B` = **Functional
-Modules (VR70)** is outside this characterized discovery profile. It supplies no
-slot schema, product identity, discovery limit, or liveness predicate. This display
-mapping does not establish additional qualified scan targets or bounds; exploratory
-probing remains separately qualified. Do not apply the `GG=0x0C` policy until a
-profile-qualified contract supports it. The `functional_modules_vr71` class remains
-specific to `GG=0x0C`.
-
-The other names in the OP06 presentation-name catalog are subject to the same
-boundary unless a row already appears in the table above with its own qualified
-route. In particular, `unused` for GG04 does not justify suppressing a probe
-that an independently qualified profile requires.
+`unused` for GG04 does not justify suppressing a probe that an independently
+qualified profile requires. GG04 and GG0D retain Unknown RR layout and presence
+semantics.
 
 Historical BASV2 observations for GG09/0A/0C/0E/0F include RR0001 raw `00` at
 II00, `01` at II01, and `00` at later historical selectors. They explain why
@@ -131,13 +137,11 @@ attribute selects a description candidate; it does not authorize a device write.
 Descriptions cover numeric, Boolean, enum, date, time, and other eligible formats,
 including unknown codecs whose responses remain raw and unqualified.
 
-Recommended/custom retain a default logical description budget 256. Extended
-`full`/`research` plan every eligible parameter, with a finite 100000 logical cap
-and a default 10000 actual B524-send cap including retries. Explicit smaller budgets
-remain available. Fair family reservations protect OP07 first attempts from OP01
-retries and vice versa. Report eligible, planned, attempted, received, interpreted,
-unavailable, unqualified, and omitted descriptions separately. Omission or unknown
-results do not establish exhaustive coverage.
+The scan plans every eligible writable parameter in its selected scope. Callers
+may apply an explicit request limit, but a limit, retry, omission, or unknown
+result must be reported separately and never establishes exhaustive coverage.
+Report eligible, planned, attempted, received, interpreted, unavailable,
+unqualified, and omitted descriptions separately.
 
 The normalized response is `GG RRlo RRhi MIN MAX STEP`, with three equal-width
 spans. Decode it using the correlated parameter codec, never a response-length
@@ -174,6 +178,53 @@ reuse a row across operations or instances or promote another profile's limits
 to confirmed validation for device writes. Bundled observations remain prior
 evidence even when their profile matches. Current read-only scans provide the
 optional recheck; offline viewing sends no eBUS requests.
+
+## Generic IIFFh description catalog
+
+`DescribeParameter` and `DescribeDeviceParameter` replies echo GG and RR16 but
+do not echo II. A response requested with II=FFh is therefore a generic class
+observation, not a concrete-instance verification. Keep this catalog separate
+from the concrete bundled baseline and never use it for device identity,
+presence, or edit validation.
+
+The Explorer stores qualified generic rows with
+`qualification=generic_class_observation`,
+`scope=generic_instance_class`, and
+`device_identity_verified=false`. The catalog keeps controller-profile context
+only; it does not carry a selected device identity. It is deliberately excluded
+from the concrete baseline attachment and from edit validation. Raw responses
+whose codec cannot be qualified are excluded from this public catalog.
+
+The sanitized remote common-header samples use selectors
+`(OP06, GG, IIFF, RR0001..0003)` and return the following OP07 bodies after the
+echoed `GG RRlo RRhi`: `00 01 01` for `device_connected` (BOOL), `00 FF 01`
+for `device_class_address` (UCH), and `00 01 01` for `device_error_code`
+(UCH). They establish decoded class-level format/range evidence only. A
+description for a named parameter beyond the common header has the same
+limitation unless a concrete-II request independently verifies it.
+
+The generic catalog contains 223 decoded IIFFh class descriptions. It neither
+establishes a terminal RR maximum nor includes the 198 correlated raw responses
+whose codec remains unqualified.
+
+## Observed OP06 scan windows
+
+The planner's scheduling windows combine correlated read and Describe evidence;
+they are not properties of the generic IIFFh catalog alone. The sanitized
+[OP06 observed-window fixture](fixtures/b524-op06-observed-windows-v1.json)
+preserves representative payload-only requests and replies without endpoint,
+serial, or capture metadata.
+
+| OP06 groups | Observed scheduling window | Evidence boundary |
+| --- | --- | --- |
+| 01, 02, 03, 05, 06, 07, 08, 0B, 0C | RR0000..002F | bounded correlated read/Describe observations |
+| 09, 0A | RR0000..0035 | bounded correlated read/Describe observations |
+| 0E, 0F | RR0000..0033 | bounded correlated reads; RR0033 is a read-only observation, while the matching generic Describe body remains unqualified |
+| 04, 0D | Unknown | explicit custom RR scope only |
+
+These windows are observed scheduling ceilings, never terminal maxima. In
+particular, a read-only state register can exist above the highest qualified
+Describe response.
 
 ## Explorer description progress and browser presentation
 

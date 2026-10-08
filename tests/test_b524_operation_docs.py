@@ -86,15 +86,19 @@ def test_device_enumeration_preserves_ii01_and_retained_inventory_contract() -> 
 
 def test_functional_module_presentation_names_preserve_the_evidence_boundary() -> None:
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
-    profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(encoding="utf-8")
+    profile = (
+        ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md"
+    ).read_text(encoding="utf-8")
     architecture = (ROOT / "architecture" / "functional-modules.md").read_text(encoding="utf-8")
 
     assert "`OP=0x06, GG=0x0B` = **Functional\nModules (VR70) FM3**" in register_map
-    assert "is not a documented\nB524 selector route" in register_map
-    assert "does not establish additional qualified scan targets or bounds;\nexploratory probing remains separately qualified" in register_map
+    assert "observed scheduling ceiling" in register_map
+    assert "| 0x06 | 0x0B | Functional Modules (VR70) FM3 | Yes | 0x08 | 0x002F |" in register_map
+    assert "is not a documented\nB524 selector route" not in register_map
     assert "`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71) FM5**" in register_map
-    assert "outside this characterized discovery profile" in profile
-    assert "exploratory\nprobing remains separately qualified. Do not apply the `GG=0x0C` policy" in profile
+    assert "`functional_modules_vr70`" in profile
+    assert "concrete Boolean required per slot" in profile
+    assert "Catalog visibility\ndoes not create a group route" in profile
     assert "`OP=0x06, GG=0x0B`" in architecture
     assert "`OP=0x06, GG=0x0C`" in architecture
     routing = B524.read_text(encoding="utf-8").split("### 3.2 Opcode routing", 1)[1].split(
@@ -246,8 +250,58 @@ def test_local_deltat_does_not_claim_singleton_topology() -> None:
     assert "not as a current\nprofile bound or a qualified device count" in local
     assert "OP06/GG08 remains a separate instanced selector set" in local
     assert "| 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent |" in text
-    assert "| 0x08 | 0x02 (local) | profile-dependent |" in text
+    assert "| 0x02 | 0x08 DeltaT | profile-dependent | 0x0007 | known scope |" in text
+    profiles = text.split("### Discovery Profiles", 1)[1]
+    assert profiles.index("| 0x02 | 0x08 DeltaT |") < profiles.index(
+        "| 0x06 | 0x08 Modul Solar (VMS) auroSTEP |"
+    )
     assert "| 0x08 | 0x02 (local) | 0x00 |" not in text
+
+
+def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries() -> None:
+    fixture = json.loads(
+        (
+            ROOT
+            / "protocols"
+            / "vaillant"
+            / "fixtures"
+            / "b524-op06-observed-windows-v1.json"
+        ).read_text(encoding="utf-8")
+    )
+    profile = (
+        ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md"
+    ).read_text(encoding="utf-8")
+
+    assert fixture["schema_version"] == "b524-op06-observed-windows/v1"
+    windows = {tuple(row["groups"]): row["rr_through"] for row in fixture["observed_scheduling_windows"]}
+    assert windows[("0x01", "0x02", "0x03", "0x05", "0x06", "0x07", "0x08", "0x0b", "0x0c")] == "0x002f"
+    assert windows[("0x09", "0x0a")] == "0x0035"
+    assert windows[("0x0e", "0x0f")] == "0x0033"
+    assert windows[("0x04", "0x0d")] is None
+
+    generic = next(sample for sample in fixture["samples"] if sample["kind"] == "generic_description")
+    assert generic["selector"]["ii"] == "0xff"
+    assert generic["device_identity_verified"] is False
+    raw_rr002f = {
+        sample["selector"]["gg"]
+        for sample in fixture["samples"]
+        if sample["kind"] == "generic_description_raw"
+        and sample["selector"]["ii"] == "0xff"
+        and sample["selector"]["rr"] == "0x002f"
+        and sample["qualification"] == "unqualified"
+    }
+    assert raw_rr002f == {"0x01", "0x02", "0x03", "0x05", "0x06", "0x07", "0x08", "0x0b"}
+    tails = [
+        sample
+        for sample in fixture["samples"]
+        if sample["kind"] == "concrete_read" and sample["selector"]["rr"] == "0x0033"
+    ]
+    assert {(sample["selector"]["gg"], sample["flags"], sample["classification"]) for sample in tails} == {
+        ("0x0e", "0x01", "read_only_visible"),
+        ("0x0f", "0x00", "read_only_not_visible"),
+    }
+    assert "not properties of the generic IIFFh catalog alone" in profile
+    assert "never terminal maxima" in profile
 
 
 def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() -> None:
