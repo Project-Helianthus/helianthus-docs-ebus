@@ -72,6 +72,7 @@ is a hypothesis catalog, not an expansion of this discovery policy.
 | --- | --- | --- | --- |
 | 01 | `primary_heating_source` | 01..08 | Profile-qualified native slot availability |
 | 02 | `secondary_heating_source` | 01..08 | Profile-qualified fallback-slot availability |
+| 08 | `solar_module_slot` | 01..08 | Profile-qualified device-connected Boolean |
 | 09 | `regulator_slot` | 01..08 | Profile-qualified connected/paired Boolean |
 | 0A | `thermostat_slot` | 01..08 | Profile-qualified connected/paired Boolean |
 | 0C | `functional_modules_vr71` | 01..08 | Connection state, distinct from retained inventory |
@@ -119,7 +120,7 @@ or exhausted budget never supplies a false Boolean. Unknown results do not stop
 the next probe and leave discovery incomplete. Readable RR0002..0004 can establish
 inventory evidence, but do not override RR0001 false to mean connected. Historical
 GG0C observations include both connection states while retaining module identity.
-GG08's RR1 is an unknown status byte; it has no qualified connected-device predicate.
+For GG08, a correlated RR0001 BOOL false means not connected. Readable identity or header registers do not override that result. A non-Boolean payload or failed decode remains unknown and cannot establish a present device.
 
 ## Descriptions for every eligible parameter
 
@@ -173,3 +174,16 @@ reuse a row across operations or instances or promote another profile's limits
 to confirmed validation for device writes. Bundled observations remain prior
 evidence even when their profile matches. Current read-only scans provide the
 optional recheck; offline viewing sends no eBUS requests.
+
+## Explorer description progress and browser presentation
+
+Describe acquisition selects only active writable scalar parameters, in both
+OP02 and OP06. Read-only parameters do not generate OP01/OP07 requests. The
+Describe progress bar starts with the scheduled request count and increases its
+total for actual retries; interrupted or exhausted acquisition does not report
+successful completion.
+
+The CLI Browser exposes only Config and State. Writable OP06 parameters belong
+in Config, as do the retained description/limit records. Native addresses remain
+in artifacts and row models; the table displays `semantic_name (0xNNNN)` or
+`0xNNNN` when no semantic name exists, without a separate Address column.
