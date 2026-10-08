@@ -52,7 +52,7 @@ they do not establish physical product identity, presence, or a device layout.
 | Opcode | GG | Group label | Instanced | II_MAX | Observed scheduling RR ceiling | Instance gate | Regs (scan/doc) |
 |--------|----|-------------|-----------|--------|-------------------------------|---------------|-----------------|
 | 0x02 | 0x00 | System | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
-| 0x02 | 0x01 | Native Domestic Hot Water | No | 0x00 | 0x13 | SystemScheme + VR_71 config | 17 (0x0001–0x0013) |
+| 0x02 | 0x01 | Native Domestic Hot Water | No | 0x00 | 0x13 | RR0001 exact two-byte nonzero UIN; zero is not present | 17 (0x0001–0x0013) |
 | 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | non-sentinel RR0002: nonzero, or visible active zero (FLAGS=03); II09 is virtual native water | profile bound: 8 heating + 1 virtual native-water circuit |
 | 0x02 | 0x03 | Zones | Yes | 0x0A | 0x2E | `index != 0xFF` (RR=0x001C) | current profile interval II00..0A; presence probed separately |
 | 0x02 | 0x04 | Solar Circuit | Yes (profile) | 0x01 | 0x0B | decodable, non-null RR0004 EXP value | current profile interval II00..01; presence probed separately |
@@ -74,7 +74,7 @@ they do not establish physical product identity, presence, or a device layout.
 | 0x06 | 0x0A | Remote Control Thermostats (VR9x) | Yes | 0x08 | 0x35 | `device_connected` (RR=0x0001) | profile slot bound only |
 | 0x06 | 0x0B | Functional Modules (VR70) FM3 | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
 | 0x06 | 0x0C | Functional Modules (VR71) FM5 | Yes | 0x08 | 0x2F | `device_connected` (RR=0x0001) | profile slot bound only |
-| 0x06 | 0x0D | Relay Module (VR41) | Yes | 0x08 | — | Unknown | Unknown |
+| 0x06 | 0x0D | Relay Module (VR41) | Yes | 0x08 | — | `device_present` RR0001 exact one-byte BOOL | RR maximum Unknown |
 | 0x06 | 0x0E | Clock Module | Yes | 0x08 | 0x0033 | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 | 0x06 | 0x0F | Base Station | Yes | 0x08 | 0x0033 | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 
@@ -131,11 +131,12 @@ In the current lab, `II=0x01` with
 at target address `0x26`, but that family identification comes from eBUS
 identity correlation rather than from B524 alone.
 
-**Discovery:** OP00 information identifiers are distinct from GG. Use only
-explicit profile mappings (initially circuit_count→OP02/GG02 and
-zone_count→OP02/GG03) to guide presence probes. Keep sparse II slots and
-expected/observed counts. The full configured range remains the fallback and
-research bound. See [the corrected protocol contract](./ebus-vaillant-B524.md).
+**Discovery:** OP00 information identifiers are distinct from GG. The
+[profile-qualified mapping table](b524-profile-discovery-and-descriptions.md#recommended-op00-count-guidance)
+defines the limited `recommended` count guidance. It is candidate cardinality,
+not identity: keep sparse II slots and expected/observed counts, then apply the
+group predicate. The full configured range remains the fallback and research
+bound. See [the corrected protocol contract](./ebus-vaillant-B524.md).
 
 ### Discovery Profiles
 
@@ -147,7 +148,7 @@ registers above it.
 | Opcode | Group | Instance interval | Observed scheduling ceiling | Planner treatment | Notes |
 |--------|-------|-------------------|-----------------------------|-------------------|-------|
 | 0x02 | 0x00 System | 00 | 0x00FF | known scope | Singleton |
-| 0x02 | 0x01 Native Domestic Hot Water | 00 | 0x0013 | known scope | Singleton |
+| 0x02 | 0x01 Native Domestic Hot Water | 00 | 0x0013 | known scope | RR0001 exact two-byte nonzero UIN predicate; OP01 RR0000..0013 independent |
 | 0x02 | 0x02 Circuits | 01..09 | 0x0025 | known scope | II01..08 heating candidates; II09 virtual native water |
 | 0x02 | 0x03 Zones | 00..0A | 0x002E | known scope | profile bound |
 | 0x02 | 0x04 Solar Circuit | 00..01 | 0x000B | known scope | profile bound |
@@ -169,7 +170,7 @@ registers above it.
 | 0x06 | 0x0A Remote Control Thermostats (VR9x) | 01..08 | 0x0035 | known scope | concrete-II predicate required |
 | 0x06 | 0x0B Functional Modules (VR70) FM3 | 01..08 | 0x002F | known scope | concrete-II predicate required |
 | 0x06 | 0x0C Functional Modules (VR71) FM5 | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x0D Relay Module (VR41) | 01..08 | — | explicit custom RR scope | RR layout and predicate Unknown |
+| 0x06 | 0x0D Relay Module (VR41) | 01..08 | — | RR0001 predicate; other RR require custom scope | `device_present`: exact one-byte BOOL; RR maximum Unknown |
 | 0x06 | 0x0E Clock Module | 01..08 | 0x0033 | known scope | concrete-II predicate required |
 | 0x06 | 0x0F Base Station | 01..08 | 0x0033 | known scope | concrete-II predicate required |
 
@@ -444,7 +445,12 @@ All registers use opcode `0x02`, instance `0x00`.
 
 ### GG=0x01 — Native Domestic Hot Water
 
-All registers use opcode `0x02`, instance `0x00`. All registers except `native_dhw_status` (0x000F) are gated by `native_dhw_circuit_type` (0x0001).
+All registers use opcode `0x02`, instance `0x00`. `native_dhw_circuit_type`
+(RR0001) is also the profile-qualified discovery predicate only when its reply
+is an exact two-byte UIN decoded nonzero; zero is `not_present`, and an empty,
+wrong-width, NACK, decode-failed, or unmatched result is `unknown`. This is
+independent of OP01 descriptions for RR0000..0013. All registers except
+`native_dhw_status` (0x000F) are gated by `native_dhw_circuit_type` (0x0001).
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|

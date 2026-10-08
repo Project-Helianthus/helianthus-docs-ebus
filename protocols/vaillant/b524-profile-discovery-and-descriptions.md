@@ -54,12 +54,15 @@ interval. A count from OP00 never changes the numbering origin.
 | 06 | Every admitted GG | 01 | 08 | Independent remote-device candidate interval |
 
 The planner inventories every known local group (including OP02/GG0A, whose
-semantic role remains Unknown) and every named OP06 family. It shows an
-unprobed group separately from a group with zero confirmed-present instances.
-Neither state suppresses selection in a custom plan. OP02/GG06 and GG07 retain
-their presentation names, but their instance and RR layout remain Unknown and
-require an explicit custom RR scope. Same-numbered OP06 groups never supply
-their local selector contract.
+semantic role remains Unknown) and every named OP06 family. All known rows
+remain visible and manually selectable even with zero confirmed instances. It
+shows an unprobed group separately from a group with zero confirmed-present
+instances. Neither state suppresses selection in a custom plan. OP02/GG06 and
+GG07 retain their presentation names, but their instance and RR layout remain
+Unknown and require an explicit custom RR scope. OP06/GG04 and OP06/GG0D likewise require
+a manual RR scope because their RR maxima are Unknown. `recommended`, `full`,
+`research`, and `custom` retain their own selector policies. Same-numbered OP06
+groups never supply their local selector contract.
 
 The current circuit availability heuristic uses OP02/GG02/RR0002. A
 correlated active, visible numeric zero is not rejected solely because it is
@@ -68,13 +71,53 @@ This is an implementation qualification rule, not a universal physical
 presence predicate. Existing nonzero candidates and the separate II09 probe
 are retained; errors and invalid sentinel values remain non-positive.
 
-The recommended profile also maps OP00 ID0002 to OP02/GG04, ID0003 to OP02/GG05,
-and ID000B to OP02/GG08. A qualified zero count avoids probing default slots;
-otherwise discovery stops after the expected number of positive instances.
-Counts do not impose this shortcut on full/research scans or erase prior evidence.
-Solar discovery requires a visible, finite EXP value at RR0004. A hidden default
-temperature is retained as an unknown slot observation, not positive presence.
-Empty responses and failed local probes likewise remain unknown, never present.
+### Recommended OP00 count guidance
+
+The following are **profile-qualified planner mappings**, not wire-level group
+identity. They apply only to `recommended`: a valid count guides candidate
+generation, and a concrete presence predicate still confirms every instance.
+A zero suppresses only derived default candidates. It cannot erase an explicit
+positive observation. A missing, malformed, conflicting, or otherwise unknown
+count falls back to the group's qualified predicate and leaves coverage
+incomplete. `full`, `research`, and `custom` retain their own selector policy.
+
+| OP/GG | OP00 ID | Count name | Scope of the hint |
+| --- | --- | --- | --- |
+| OP02/GG02 | 00 | `circuit_count` | II01..II08 ordinary heating candidates only; II09 is independent. |
+| OP02/GG03 | 01 | `zone_count` | Local zone candidates. |
+| OP02/GG04 | 02 | `solar_circuit_count` | Local solar-circuit candidates. |
+| OP02/GG05 | 03 | `solar_loaded_tank_count` | Local cylinder candidates. |
+| OP02/GG08 | 0B | `delta_t_count` | Local DeltaT candidates. |
+| OP02/GG09 | 10 | `recovair_count` | II00 only in `recommended`; zero avoids derived default slots. |
+| OP06/all confirmed slots | 04 | `device_count` | Aggregate comparison; never GG06, membership, or a cutoff. |
+| OP06/GG01 | 0C | `boiler_count` | Cardinality only. |
+| OP06/GG02 | 0D | `heat_pump_count` | Cardinality only. |
+| OP06/GG06 | 0F | `vpm_s_count` | Cardinality only. |
+| OP06/GG07 | 0E | `vpm_w_count` | Cardinality only. |
+| OP06/GG09 | 0A | `remote_control_count` | Cardinality only. |
+| OP06/GG0B | 08 | `vr70_count` | Cardinality only. |
+| OP06/GG0C | 09 | `vr71_count` | Cardinality only. |
+
+There is no count mapping for OP06/GG03, GG05, GG08, GG0A, GG0D, GG0E, or
+GG0F: use their qualified presence predicate. There is also no OP00 ID05
+generator mapping and no ID17 cooling-group mapping. Remote hints are neither
+device identities nor a reason to stop on an unconfirmed count. Solar discovery
+requires a visible, finite EXP value at RR0004. A hidden default temperature is
+an unknown slot observation, not positive presence. Empty responses and failed
+local probes are likewise unknown, never present.
+
+## Native DHW discovery
+
+The complete OP02/GG00 System scope (II00, RR0000..00FF) is mandatory in
+`recommended`. Native DHW admission always probes its gate and includes the
+complete GG01 RR0000..0013 scope after a positive result.
+
+OP02/GG01 uses only II00. For this profile, `RR0001` qualifies native DHW
+presence only when a correlated read decodes as an exact two-byte UIN value
+that is nonzero. Zero is `not_present`; an empty, wrong-width, NACK, decode
+failure, or unmatched result is `unknown`. This predicate is independent of
+the OP01 descriptions scheduled for RR0000..RR0013 and does not make a
+description response a presence result.
 
 ## OP06 connected-device discovery
 
@@ -98,7 +141,7 @@ is a hypothesis catalog, not an expansion of this discovery policy.
 | 0A | `thermostat_slot` | 01..08 | Profile-qualified connected/paired Boolean |
 | 0B | `functional_modules_vr70` | 01..08 | Candidate only; concrete Boolean required per slot |
 | 0C | `functional_modules_vr71` | 01..08 | Connection state, distinct from retained inventory |
-| 0D | `relay_module_slot` | 01..08 | Unknown; no predicate is established |
+| 0D | `relay_module_slot` | 01..08 | `device_present`: exact one-byte BOOL at RR0001 |
 | 0E | `clock_slot` | 01..08 | Observed Boolean connection candidate |
 | 0F | `base_station_slot` | 01..08 | Observed Boolean connection candidate |
 
@@ -115,8 +158,9 @@ conservative recommended admission.
 **Hypothesis:** independent protocol evidence is required for this interpretation.
 
 `unused` for GG04 does not justify suppressing a probe that an independently
-qualified profile requires. GG04 and GG0D retain Unknown RR layout and presence
-semantics.
+qualified profile requires. GG04 retains Unknown RR layout and presence
+semantics. GG0D retains Unknown RR maximum, but its qualified RR0001 predicate
+must be probed.
 
 Historical BASV2 observations for GG09/0A/0C/0E/0F include RR0001 raw `00` at
 II00, `01` at II01, and `00` at later historical selectors. They explain why
@@ -138,6 +182,17 @@ the next probe and leave discovery incomplete. Readable RR0002..0004 can establi
 inventory evidence, but do not override RR0001 false to mean connected. Historical
 GG0C observations include both connection states while retaining module identity.
 For GG08, a correlated RR0001 BOOL false means not connected. Readable identity or header registers do not override that result. A non-Boolean payload or failed decode remains unknown and cannot establish a present device.
+
+### GG0D relay-module predicate
+
+For OP06/GG0D (VR41 presentation family), probe II01..II08 at RR0001 even
+though its RR maximum is Unknown. Its group-specific name is `device_present`,
+which overrides the generic `device_connected` header name: there is no header
+fallback. An exact one-byte BOOL `00` is `not_present` and `01` is `present`.
+Values `02..FF`, wrong-width bodies, empty replies, NACK, decode failure, and
+unmatched replies are `unknown`. Keep `present`, `not_present`, and `unknown`
+separate from `connected`; this predicate does not establish a connection
+state, identity, or an RR limit.
 
 ## Descriptions for every eligible parameter
 

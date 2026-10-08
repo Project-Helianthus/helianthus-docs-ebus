@@ -150,22 +150,30 @@ physical absence.
 ### `recommended` (default)
 
 This preset scans characterized OP=02/GG `00..05,08,09` and OP=06/GG
-`01,02,08,09,0A,0C,0E,0F` consistently. Connected-device enumeration follows the
+`01,02,03,05,06,07,08,09,0A,0B,0C,0E,0F` consistently. Connected-device enumeration follows the
 [profile-qualified II01 policy](../protocols/vaillant/b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
-A valid explicit profile mapping lets OP00
-counts guide only qualified circuit/zone discovery. It probes sparse II indices
-until the mapped number of present instances is observed. A zero, missing,
-invalid, conflicting, or otherwise unmet count falls back to the configured
-bounded presence range and remains artifact evidence. It does not infer a
-solar, tank, or recoVair route from same-numbered OP00 identifiers. Other
-families remain `research` or `custom` until independently characterized.
+OP02/GG00 System is mandatory at II00, RR0000..00FF. Native DHW (OP02/GG01)
+is admitted at II00 after its RR0001 gate succeeds with a nonzero UIN value.
+The virtual native-water II09 remains a separate circuit candidate.
+OP00 count mappings guide candidate generation only when the profile declares
+one; every resulting slot still needs its own presence predicate. A zero only
+suppresses derived defaults and never erases a positive observation. Missing,
+invalid, conflicting, or unmet counts fall back to that predicate. Remote count
+hints provide cardinality rather than identity. ID04 `device_count` compares all
+confirmed OP06 slots and is never GG06, group membership, or a cutoff. GG03,
+GG05, GG08, GG0A, GG0D, GG0E, and GG0F have no count mapping; neither do ID05
+for a generator nor ID17 for a cooling group. Local ventilation uses ID16 only
+for OP02/GG09 II00 in `recommended`.
 
 ### `full`
 
-Audit every declared II slot in all characterized profile OP02/OP06 groups using the normal
-profile `rr_max` bounds, regardless of OP00 counts. Counts are comparison
-evidence only in this preset; they neither suppress selector generation nor
-provide topology identity.
+Audit every declared II slot in the characterized OP02 groups and OP06/GG
+`01,02,03,05,06,07,08,09,0A,0B,0C,0E,0F` using normal profile `rr_max` bounds,
+regardless of OP00 counts. OP02/GG00 is mandatory in this preset for II00 and
+RR0000..00FF. OP06/GG04 and OP06/GG0D have Unknown RR maxima and receive no automatic
+scalar scope. GG0D still receives its dedicated RR0001 presence probe; scanning
+other registers requires a manual RR scope. GG04 has no qualified presence predicate. Counts are comparison evidence only; they neither suppress
+selector generation nor provide topology identity.
 
 ### `research`
 

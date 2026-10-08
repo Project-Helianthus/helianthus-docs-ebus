@@ -60,7 +60,7 @@ def test_description_budget_is_writable_candidate_scoped_without_write_authority
 def test_scan_presets_are_deterministic_bounded_and_operation_scoped() -> None:
     text = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
     assert "OP=02/GG `00..05,08,09`" in text
-    assert "OP=06/GG\n`01,02,08,09,0A,0C,0E,0F`" in text
+    assert "OP=06/GG\n`01,02,03,05,06,07,08,09,0A,0B,0C,0E,0F`" in text
     assert "every declared II slot" in text
     assert "default `0xFF`. OP02/GG00 also\nuses `0xFF`" in text
     assert "`0x1FF`" not in text
@@ -371,6 +371,28 @@ def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() 
     assert "0x02 0x02    0x09         0x0025" in semantic
     assert "0x09 0x06    0x08         0x0035" in semantic
     assert "scan planner, Browser,\nHTML, and saved-artifact views" in protocol
+
+
+def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> None:
+    profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(
+        encoding="utf-8"
+    )
+    architecture = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
+
+    assert "OP02/GG00 is mandatory" in architecture
+    assert "RR0000..00FF" in architecture
+    assert "ID04 `device_count` compares all\nconfirmed OP06 slots" in architecture
+    assert "GG03,\nGG05, GG08, GG0A, GG0D, GG0E, and GG0F have no count mapping" in architecture
+    assert "OP02/GG09 II00 in `recommended`" in architecture
+    assert "OP06/GG04 and OP06/GG0D have Unknown RR maxima" in architecture
+    assert "GG0D still receives its dedicated RR0001 presence probe" in architecture
+    assert "II09 is independent" in profile
+    assert "OP00 ID05\ngenerator mapping and no ID17 cooling-group mapping" in profile
+    assert "OP02/GG01 uses only II00" in profile
+    assert "exact two-byte UIN value\nthat is nonzero" in profile
+    assert "GG0D relay-module predicate" in profile
+    assert "there is no header\nfallback" in profile
+    assert "RR maximum is Unknown" in profile
 
 
 def test_event_and_timer_operations_have_separate_selectors_and_write_boundary() -> None:
