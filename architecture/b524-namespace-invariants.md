@@ -152,6 +152,9 @@ physical absence.
 This preset scans characterized OP=02/GG `00..05,08,09` and OP=06/GG
 `01,02,03,05,06,07,08,09,0A,0B,0C,0E,0F` consistently. Connected-device enumeration follows the
 [profile-qualified II01 policy](../protocols/vaillant/b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
+`recommended` also performs the dedicated OP06/GG0D II01..II08/RR0001
+availability-only probe using `device_present`. This does not admit an automatic
+GG0D scalar range: other relay-module registers require an explicit manual RR scope.
 OP02/GG00 System is mandatory at II00, RR0000..00FF. Native DHW (OP02/GG01)
 is admitted at II00 after its RR0001 gate succeeds with a nonzero UIN value.
 The virtual native-water II09 remains a separate circuit candidate.

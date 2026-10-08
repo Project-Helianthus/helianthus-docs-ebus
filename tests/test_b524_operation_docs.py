@@ -386,6 +386,11 @@ def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> N
     assert "OP02/GG09 II00 in `recommended`" in architecture
     assert "OP06/GG04 and OP06/GG0D have Unknown RR maxima" in architecture
     assert "GG0D still receives its dedicated RR0001 presence probe" in architecture
+    recommended = architecture.split("### `recommended` (default)", 1)[1].split(
+        "### `full`", 1
+    )[0]
+    assert "OP06/GG0D II01..II08/RR0001" in recommended
+    assert "availability-only probe using `device_present`" in recommended
     assert "II09 is independent" in profile
     assert "OP00 ID05\ngenerator mapping and no ID17 cooling-group mapping" in profile
     assert "OP02/GG01 uses only II00" in profile
