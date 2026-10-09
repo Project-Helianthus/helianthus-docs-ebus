@@ -8,5 +8,5 @@
   "software_raw_hex": "0417",
   "selector": {"channel": "ventilation", "instance": 0, "weekday": 0},
   "evidence_reference": "synthetic-contract-fixture",
-  "native_qualified": true
+  "native_qualified": false
 }

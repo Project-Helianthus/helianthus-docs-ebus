@@ -42,8 +42,6 @@ def test_plan_rejects_boolean_and_redundant_opcode(tmp_path: Path) -> None:
         capture_output=True, text=True, check=False,
     )
     assert result.returncode != 0
-
-
 def test_read_plan_enforces_operation_specific_selector_ranges(tmp_path: Path) -> None:
     source = json.loads((FIXTURES / "b524-operation-read-plan-synthetic-v1.json").read_text())
     rejected = (
@@ -418,6 +416,33 @@ def test_native_write_qualification_rejects_scope_selector_mismatch_and_boolean(
     assert result.returncode != 0
 
 
+def test_bundled_synthetic_qualification_is_structural_and_fail_closed(tmp_path: Path) -> None:
+    fixture = json.loads(
+        (FIXTURES / "b524-native-write-qualification-synthetic-v1.json").read_text()
+    )
+    schema_path = FIXTURES / "b524-native-write-qualification-schema-v1.json"
+    schema = json.loads(schema_path.read_text())
+    assert fixture["native_qualified"] is False
+    assert fixture["evidence_reference"] == "synthetic-contract-fixture"
+    assert schema["properties"]["native_qualified"] == {"type": "boolean"}
+    assert subprocess.run(
+        ["jv", str(schema_path), str(FIXTURES / "b524-native-write-qualification-synthetic-v1.json")],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).returncode == 0
+
+    structurally_positive = {**fixture, "native_qualified": True}
+    candidate = tmp_path / "structurally-positive.json"
+    candidate.write_text(json.dumps(structurally_positive))
+    assert subprocess.run(
+        ["jv", str(schema_path), str(candidate)],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).returncode == 0
+
+
 def test_edit_and_qualification_schemas_share_selector_and_timer_value_bounds(
     tmp_path: Path,
 ) -> None:
@@ -602,6 +627,8 @@ def test_write_edit_plan_is_preview_first_and_native_qualification_is_scoped() -
         "timer_write_op04", "event_write_op0a", "event_setpoint_write_op0c"
     ]
     assert "does not prove native support or authorize execution" in qualification["description"]
+    assert "literal `true`" in text
+    assert "bundled synthetic qualification" in text
     slot = edit_schema["oneOf"][0]["properties"]["values"]["items"]["anyOf"][1]
     assert [item["maximum"] for item in slot["prefixItems"]] == [143, 144]
     assert "strictly less than its stop code" in edit_schema["description"]

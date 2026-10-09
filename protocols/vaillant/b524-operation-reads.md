@@ -103,11 +103,16 @@ profile-specific address catalogs as reads. UI exports use the same plan shape.
 and exact confirmation text are supplied. Before a native write it verifies raw
 EID and SW through `0x07/0x04`; the qualification supplies `profile` and two
 raw SW bytes as `software_raw_hex`, alongside scope, manufacturer, EID, model,
-selector, evidence reference, and `native_qualified: true`. Qualification
+selector, evidence reference, and a Boolean `native_qualified`. The schema
+accepts both values so negative fixtures and templates remain structurally
+checkable. Runtime admission requires literal `true`, and that value is valid
+only when the cited native evidence supports the exact target and selector.
+The bundled synthetic qualification uses `false` and cannot admit a write.
+Qualification
 selectors are exact: OP04 uses `channel`, `instance`, and `weekday`; OP0A/OP0C
 use `profile`, `instance`, `address`, and `weekday_code`. Qualification evidence
-remains separate from operator consent. Schema validation checks document shape;
-it neither proves native support nor authorizes execution. An unchanged edit is
+remains separate from operator consent. Schema validation and a literal `true`
+claim neither prove native support nor authorize execution. An unchanged edit is
 still valid for offline preview and export, but execution validation rejects it
 before transport opens. A permitted execution is one send without automatic retry,
 with retained raw feedback and separate readback of the exact selector. A

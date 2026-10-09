@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "B524 native write qualification v1",
-  "description": "This schema validates evidence metadata shape. Validation does not prove native support or authorize execution.",
+  "description": "This schema validates evidence metadata shape, including positive and negative documents. Validation does not prove native support or authorize execution; runtime admission separately requires literal true backed by native evidence.",
   "type": "object",
   "required": ["schema_version", "scope", "manufacturer", "device_id", "profile", "model", "software_raw_hex", "selector", "evidence_reference", "native_qualified"],
   "properties": {
@@ -14,7 +14,7 @@
     "software_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{4}$"},
     "selector": {},
     "evidence_reference": {"type": "string", "minLength": 1},
-    "native_qualified": {"const": true}
+    "native_qualified": {"type": "boolean"}
   },
   "allOf": [
     {
