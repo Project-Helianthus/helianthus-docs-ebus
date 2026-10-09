@@ -228,7 +228,24 @@
         "path",
         "scope",
         "qualified_description_limits"
-      ]
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "qualified_description_limits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/qualifiedDescriptionLimit"
+          }
+        }
+      },
+      "additionalProperties": false
     },
     "nonclaims": {
       "type": "array",
@@ -336,6 +353,65 @@
         "ii": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
         "rr": { "type": "string", "pattern": "^[0-9A-F]{4}$" }
       },
+      "additionalProperties": false
+    },
+    "qualifiedDescriptionLimit": {
+      "type": "object",
+      "required": [
+        "selector",
+        "semantic_name",
+        "codec",
+        "min",
+        "max",
+        "step",
+        "qualification"
+      ],
+      "properties": {
+        "selector": {
+          "allOf": [
+            {"$ref": "#/$defs/selector"},
+            {
+              "properties": {
+                "op": {"const": "07"},
+                "ii": {"const": "FF"}
+              }
+            }
+          ]
+        },
+        "semantic_name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "codec": {
+          "type": "string",
+          "minLength": 1
+        },
+        "min": {
+          "type": ["boolean", "number", "string"]
+        },
+        "max": {
+          "type": ["boolean", "number", "string"]
+        },
+        "step": {
+          "type": ["boolean", "number", "string"]
+        },
+        "qualification": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"codec": {"const": "BOOL"}}, "required": ["codec"]},
+          "then": {
+            "properties": {
+              "min": {"type": "boolean"},
+              "max": {"type": "boolean"},
+              "step": {"type": "boolean"}
+            }
+          }
+        }
+      ],
       "additionalProperties": false
     },
     "operationWindows": {

@@ -131,6 +131,108 @@
       },
       "additionalProperties": false
     },
+    "timer_slot": {
+      "type": "object",
+      "required": ["start_raw", "stop_raw", "start_minutes", "stop_minutes", "unused"],
+      "properties": {
+        "start_raw": {"$ref": "#/$defs/u8"},
+        "stop_raw": {"$ref": "#/$defs/u8"},
+        "start_minutes": {
+          "anyOf": [
+            {"type": "integer", "minimum": 0, "maximum": 1440},
+            {"type": "null"}
+          ]
+        },
+        "stop_minutes": {
+          "anyOf": [
+            {"type": "integer", "minimum": 0, "maximum": 1440},
+            {"type": "null"}
+          ]
+        },
+        "unused": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "timer_decoded": {
+      "type": "object",
+      "required": ["parameter_config", "slots", "raw_hex"],
+      "properties": {
+        "parameter_config": {"$ref": "#/$defs/u8"},
+        "slots": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"$ref": "#/$defs/timer_slot"}
+        },
+        "raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{14}$"}
+      },
+      "additionalProperties": false
+    },
+    "event_time": {
+      "type": "object",
+      "required": ["raw", "minutes"],
+      "properties": {
+        "raw": {"$ref": "#/$defs/u8"},
+        "minutes": {
+          "anyOf": [
+            {"type": "integer", "minimum": 0, "maximum": 1440},
+            {"type": "null"}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "event_decoded": {
+      "type": "object",
+      "required": ["parameter_config", "start1_raw", "starts", "raw_hex"],
+      "properties": {
+        "parameter_config": {"$ref": "#/$defs/u8"},
+        "start1_raw": {"$ref": "#/$defs/u8"},
+        "starts": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {"$ref": "#/$defs/event_time"}
+        },
+        "raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}
+      },
+      "additionalProperties": false
+    },
+    "event_setpoint_value": {
+      "type": "object",
+      "required": ["raw", "temperature_c", "state"],
+      "properties": {
+        "raw": {"$ref": "#/$defs/u8"},
+        "temperature_c": {
+          "anyOf": [
+            {"type": "number", "minimum": 0, "maximum": 127.5},
+            {"type": "null"}
+          ]
+        },
+        "state": {
+          "anyOf": [
+            {"enum": ["enable", "disable", "replacement"]},
+            {"type": "null"}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "event_setpoint_decoded": {
+      "type": "object",
+      "required": ["parameter_config", "values", "raw_hex"],
+      "properties": {
+        "parameter_config": {"$ref": "#/$defs/u8"},
+        "values": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {"$ref": "#/$defs/event_setpoint_value"}
+        },
+        "raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}
+      },
+      "additionalProperties": false
+    },
     "vr91_decoded": {
       "type": "object",
       "required": ["binding_zone", "special_function_status", "heating_operating_mode", "cooling_operating_mode", "status_info", "frost_protection", "heating_temperature_raw", "cooling_temperature_raw", "raw_hex"],
@@ -143,7 +245,7 @@
         "frost_protection": {"$ref": "#/$defs/u8"},
         "heating_temperature_raw": {"$ref": "#/$defs/u8"},
         "cooling_temperature_raw": {"$ref": "#/$defs/u8"},
-        "raw_hex": {"$ref": "#/$defs/hex"}
+        "raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}
       },
       "additionalProperties": false
     },
@@ -165,7 +267,7 @@
                 },
                 "decoded": {
                   "anyOf": [
-                    {"type": "object", "required": ["parameter_config"]},
+                    {"$ref": "#/$defs/timer_decoded"},
                     {"type": "null"}
                   ]
                 }
@@ -177,7 +279,19 @@
                 },
                 {
                   "if": {"properties": {"response_state": {"const": "value"}}, "required": ["response_state"]},
-                  "then": {"properties": {"response_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{14}$"}}}
+                  "then": {
+                    "properties": {"response_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{14}$"}}
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "response_state": {"const": "value"},
+                      "selector": {"type": "object", "minProperties": 1}
+                    },
+                    "required": ["response_state", "selector"]
+                  },
+                  "then": {"properties": {"decoded": {"$ref": "#/$defs/timer_decoded"}}}
                 },
                 {
                   "if": {"properties": {"response_state": {"const": "malformed"}}, "required": ["response_state"]},
@@ -208,7 +322,12 @@
               "allOf": [
                 {
                   "if": {"properties": {"response_state": {"const": "value"}}, "required": ["response_state"]},
-                  "then": {"properties": {"response_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}}}
+                  "then": {
+                    "properties": {
+                      "response_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"},
+                      "decoded": {"$ref": "#/$defs/vr91_decoded"}
+                    }
+                  }
                 },
                 {
                   "if": {"properties": {"response_state": {"const": "malformed"}}, "required": ["response_state"]},
@@ -233,16 +352,43 @@
                     {"$ref": "#/$defs/event_selector"},
                     {"type": "object", "maxProperties": 0}
                   ]
+                },
+                "decoded": {
+                  "anyOf": [
+                    {"$ref": "#/$defs/event_decoded"},
+                    {"$ref": "#/$defs/event_setpoint_decoded"},
+                    {"type": "null"}
+                  ]
                 }
               },
               "allOf": [
                 {
                   "if": {"properties": {"operation": {"const": "GetEvent"}}, "required": ["operation"]},
-                  "then": {"properties": {"opcode_hex": {"const": "0x09"}}}
+                  "then": {
+                    "properties": {
+                      "opcode_hex": {"const": "0x09"},
+                      "decoded": {
+                        "anyOf": [
+                          {"$ref": "#/$defs/event_decoded"},
+                          {"type": "null"}
+                        ]
+                      }
+                    }
+                  }
                 },
                 {
                   "if": {"properties": {"operation": {"const": "GetEventSetPoint"}}, "required": ["operation"]},
-                  "then": {"properties": {"opcode_hex": {"const": "0x0B"}}}
+                  "then": {
+                    "properties": {
+                      "opcode_hex": {"const": "0x0B"},
+                      "decoded": {
+                        "anyOf": [
+                          {"$ref": "#/$defs/event_setpoint_decoded"},
+                          {"type": "null"}
+                        ]
+                      }
+                    }
+                  }
                 },
                 {
                   "if": {"properties": {"selector": {"type": "object", "maxProperties": 0}}, "required": ["selector"]},
@@ -261,6 +407,99 @@
                 {
                   "if": {"properties": {"response_state": {"const": "value"}}, "required": ["response_state"]},
                   "then": {"properties": {"response_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}}}
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "operation": {"const": "GetEvent"},
+                      "response_state": {"const": "value"},
+                      "selector": {"type": "object", "minProperties": 1}
+                    },
+                    "required": ["operation", "response_state", "selector"]
+                  },
+                  "then": {"properties": {"decoded": {"$ref": "#/$defs/event_decoded"}}}
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "operation": {"const": "GetEventSetPoint"},
+                      "response_state": {"const": "value"},
+                      "selector": {"type": "object", "minProperties": 1}
+                    },
+                    "required": ["operation", "response_state", "selector"]
+                  },
+                  "then": {"properties": {"decoded": {"$ref": "#/$defs/event_setpoint_decoded"}}}
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "operation": {"const": "GetEventSetPoint"},
+                      "response_state": {"const": "value"},
+                      "selector": {
+                        "type": "object",
+                        "properties": {"profile": {"enum": ["system", "zone"]}},
+                        "required": ["profile"]
+                      }
+                    },
+                    "required": ["operation", "response_state", "selector"]
+                  },
+                  "then": {
+                    "properties": {
+                      "decoded": {
+                        "type": "object",
+                        "properties": {
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "temperature_c": {"type": "number"},
+                                "state": {"const": null}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "operation": {"const": "GetEventSetPoint"},
+                      "response_state": {"const": "value"},
+                      "selector": {
+                        "type": "object",
+                        "properties": {"profile": {"const": "dhw"}},
+                        "required": ["profile"]
+                      }
+                    },
+                    "required": ["operation", "response_state", "selector"]
+                  },
+                  "then": {
+                    "properties": {
+                      "decoded": {
+                        "type": "object",
+                        "properties": {
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "temperature_c": {"const": null},
+                                "state": {
+                                  "anyOf": [
+                                    {"enum": ["enable", "disable", "replacement"]},
+                                    {"type": "null"}
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 },
                 {
                   "if": {"properties": {"response_state": {"const": "malformed"}}, "required": ["response_state"]},

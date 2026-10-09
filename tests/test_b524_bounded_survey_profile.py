@@ -202,3 +202,55 @@ def test_profile_schema_rejects_invalid_identity_and_payload_fields(
 
     assert result.returncode != 0
     assert expected in result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected"),
+    [
+        (lambda profile: profile["catalog_reference"].update({"path": None}), "path"),
+        (lambda profile: profile["catalog_reference"].update({"scope": 7}), "scope"),
+        (
+            lambda profile: profile["catalog_reference"].update(
+                {"qualified_description_limits": "not-an-array"}
+            ),
+            "qualified_description_limits",
+        ),
+        (
+            lambda profile: profile["catalog_reference"]["qualified_description_limits"][0][
+                "selector"
+            ].update({"op": "7"}),
+            "op",
+        ),
+    ],
+)
+def test_catalog_reference_schema_enforces_types_and_limit_selector(
+    tmp_path: Path, mutation, expected: str
+) -> None:
+    fixtures = ROOT / "protocols/vaillant/fixtures"
+    profile = json.loads((fixtures / "b524-bounded-survey-basv2-v1.json").read_text())
+    mutation(profile)
+    candidate = tmp_path / "invalid-catalog-reference.json"
+    candidate.write_text(json.dumps(profile))
+    result = subprocess.run(
+        ["jv", str(fixtures / "b524-bounded-survey-profile-schema-v1.json"), str(candidate)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert expected in result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("path", ["missing.csv", "../b524-op02-register-names.csv"])
+def test_profile_validator_rejects_missing_or_unsafe_local_catalog_reference(
+    tmp_path: Path, path: str
+) -> None:
+    profile = json.loads(
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+    )
+    profile["catalog_reference"]["path"] = path
+    candidate = tmp_path / "invalid-catalog-path.json"
+    candidate.write_text(json.dumps(profile))
+    result = _run_profile_validator(candidate)
+    assert result.returncode != 0
+    assert "catalog_reference.path" in result.stderr

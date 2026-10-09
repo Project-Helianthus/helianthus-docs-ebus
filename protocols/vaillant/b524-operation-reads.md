@@ -73,6 +73,16 @@ the existing target/profile qualification is satisfied. `ReadVR91` has its
 own eight-field decoded shape and does not contain `parameter_config`. Events
 remain `schema_unqualified` until native confirmation.
 
+For a known selector with `response_state: value`, the decoded object uses the
+complete operation-specific shape and is mechanically correlated to every
+retained reply byte. Timer slot `start_raw`, `stop_raw`, minute projections,
+`unused`, `parameter_config`, and `raw_hex` must all agree with the seven-byte
+reply. Invalid Timer pairs remain raw with both minute fields `null`; only
+`0x90 0x90` is marked unused. VR91 and both Event decoded shapes follow the
+same raw-correlation rule. This proves internal format consistency only. It
+does not qualify target support, Event semantics, writable behavior, or any
+physical device state.
+
 ## Editors and writes
 
 `WriteTimer`, `SetEvent`, and `SetEventSetPoint` use an

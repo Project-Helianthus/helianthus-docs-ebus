@@ -49,7 +49,7 @@ def _expect_payload(entry: dict[str, Any], expected: bytes, context: str) -> Non
         raise ValidationError(f"{context}.request_payload_hex does not match operation and selector")
 
 
-def _response_evidence(entry: dict[str, Any], operation: str, context: str) -> None:
+def _response_evidence(entry: dict[str, Any], operation: str, context: str) -> bytes | None:
     state = entry.get("response_state")
     attempts = entry.get("request_attempts")
     if isinstance(attempts, bool) or not isinstance(attempts, int) or attempts < 0:
@@ -64,7 +64,7 @@ def _response_evidence(entry: dict[str, Any], operation: str, context: str) -> N
             raise ValidationError(
                 f"{context} unattempted evidence requires zero attempts and null raw/decoded values"
             )
-        return
+        return None
     if attempts < 1:
         raise ValidationError(f"{context}.{state} requires at least one attempted exchange")
     if state == "value":
@@ -72,24 +72,145 @@ def _response_evidence(entry: dict[str, Any], operation: str, context: str) -> N
             raise ValidationError(
                 f"{context}.response_raw_hex must contain {expected_length} bytes for {operation} value"
             )
-        return
+        return raw
     if decoded is not None:
         raise ValidationError(f"{context}.decoded must be null for response_state {state}")
     if state == "empty":
         if raw != b"":
             raise ValidationError(f"{context}.response_raw_hex must be empty for response_state empty")
-        return
+        return raw
     if state == "malformed":
         if raw is None or not raw or len(raw) == expected_length:
             raise ValidationError(
                 f"{context}.response_raw_hex must retain a nonempty wrong-length {operation} reply"
             )
-        return
+        return raw
     if state in {"nack", "timeout", "transport_error"}:
         if raw is not None:
             raise ValidationError(f"{context}.response_raw_hex must be null for response_state {state}")
-        return
+        return None
     raise ValidationError(f"{context}.response_state is unsupported")
+
+
+def _exact_object(value: Any, fields: set[str], context: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ValidationError(f"{context} must be an object")
+    if set(value) != fields:
+        raise ValidationError(f"{context} fields do not match the decoded contract")
+    return value
+
+
+def _exact_list(value: Any, length: int, context: str) -> list[Any]:
+    if not isinstance(value, list) or len(value) != length:
+        raise ValidationError(f"{context} must contain exactly {length} items")
+    return value
+
+
+def _decoded_raw_hex(decoded: dict[str, Any], raw: bytes, context: str) -> None:
+    if _payload(decoded.get("raw_hex"), f"{context}.raw_hex") != raw:
+        raise ValidationError(f"{context}.raw_hex must equal response_raw_hex")
+
+
+def _timer_decoded(decoded_value: Any, raw: bytes, context: str) -> None:
+    decoded = _exact_object(decoded_value, {"parameter_config", "slots", "raw_hex"}, context)
+    if _u8(decoded["parameter_config"], f"{context}.parameter_config") != raw[0]:
+        raise ValidationError(f"{context}.parameter_config does not match the first reply byte")
+    slots = _exact_list(decoded["slots"], 3, f"{context}.slots")
+    for index, (slot_value, start, stop) in enumerate(
+        zip(slots, raw[1::2], raw[2::2], strict=True)
+    ):
+        slot_context = f"{context}.slots[{index}]"
+        slot = _exact_object(
+            slot_value,
+            {"start_raw", "stop_raw", "start_minutes", "stop_minutes", "unused"},
+            slot_context,
+        )
+        if _u8(slot["start_raw"], f"{slot_context}.start_raw") != start:
+            raise ValidationError(f"{slot_context}.start_raw does not match response_raw_hex")
+        if _u8(slot["stop_raw"], f"{slot_context}.stop_raw") != stop:
+            raise ValidationError(f"{slot_context}.stop_raw does not match response_raw_hex")
+        unused = start == stop == 0x90
+        qualified = start < stop <= 0x90
+        expected_start = start * 10 if qualified else None
+        expected_stop = stop * 10 if qualified else None
+        if slot["unused"] is not unused:
+            raise ValidationError(f"{slot_context}.unused does not match the raw pair")
+        if slot["start_minutes"] != expected_start or slot["stop_minutes"] != expected_stop:
+            raise ValidationError(f"{slot_context} minutes do not match the raw pair")
+    _decoded_raw_hex(decoded, raw, context)
+
+
+def _vr91_decoded(decoded_value: Any, raw: bytes, context: str) -> None:
+    fields = (
+        "binding_zone",
+        "special_function_status",
+        "heating_operating_mode",
+        "cooling_operating_mode",
+        "status_info",
+        "frost_protection",
+        "heating_temperature_raw",
+        "cooling_temperature_raw",
+    )
+    decoded = _exact_object(decoded_value, {*fields, "raw_hex"}, context)
+    for field, expected in zip(fields, raw, strict=True):
+        if _u8(decoded[field], f"{context}.{field}") != expected:
+            raise ValidationError(f"{context}.{field} does not match response_raw_hex")
+    _decoded_raw_hex(decoded, raw, context)
+
+
+def _event_decoded(decoded_value: Any, raw: bytes, context: str) -> None:
+    decoded = _exact_object(
+        decoded_value, {"parameter_config", "start1_raw", "starts", "raw_hex"}, context
+    )
+    if _u8(decoded["parameter_config"], f"{context}.parameter_config") != raw[0]:
+        raise ValidationError(f"{context}.parameter_config does not match response_raw_hex")
+    if _u8(decoded["start1_raw"], f"{context}.start1_raw") != raw[1]:
+        raise ValidationError(f"{context}.start1_raw does not match response_raw_hex")
+    starts = _exact_list(decoded["starts"], 6, f"{context}.starts")
+    for index, (value, expected_raw) in enumerate(zip(starts, raw[2:], strict=True)):
+        item_context = f"{context}.starts[{index}]"
+        item = _exact_object(value, {"raw", "minutes"}, item_context)
+        if _u8(item["raw"], f"{item_context}.raw") != expected_raw:
+            raise ValidationError(f"{item_context}.raw does not match response_raw_hex")
+        expected_minutes = expected_raw * 10 if expected_raw <= 0x90 else None
+        if item["minutes"] != expected_minutes:
+            raise ValidationError(f"{item_context}.minutes does not match the raw byte")
+    _decoded_raw_hex(decoded, raw, context)
+
+
+def _event_setpoint_decoded(
+    decoded_value: Any, raw: bytes, profile: str, context: str
+) -> None:
+    decoded = _exact_object(decoded_value, {"parameter_config", "values", "raw_hex"}, context)
+    if _u8(decoded["parameter_config"], f"{context}.parameter_config") != raw[0]:
+        raise ValidationError(f"{context}.parameter_config does not match response_raw_hex")
+    values = _exact_list(decoded["values"], 7, f"{context}.values")
+    states = {253: "enable", 254: "disable", 255: "replacement"}
+    for index, (value, expected_raw) in enumerate(zip(values, raw[1:], strict=True)):
+        item_context = f"{context}.values[{index}]"
+        item = _exact_object(value, {"raw", "temperature_c", "state"}, item_context)
+        if _u8(item["raw"], f"{item_context}.raw") != expected_raw:
+            raise ValidationError(f"{item_context}.raw does not match response_raw_hex")
+        expected_temperature = None if profile == "dhw" else expected_raw / 2.0
+        expected_state = states.get(expected_raw) if profile == "dhw" else None
+        if item["temperature_c"] != expected_temperature or item["state"] != expected_state:
+            raise ValidationError(f"{item_context} interpretation does not match profile and raw byte")
+    _decoded_raw_hex(decoded, raw, context)
+
+
+def _known_decoded(entry: dict[str, Any], selector: dict[str, Any], raw: bytes, context: str) -> None:
+    decoded_context = f"{context}.decoded"
+    operation = entry["operation"]
+    if operation == "ReadTimer":
+        _timer_decoded(entry.get("decoded"), raw, decoded_context)
+    elif operation == "ReadVR91":
+        _vr91_decoded(entry.get("decoded"), raw, decoded_context)
+    elif operation == "GetEvent":
+        _event_decoded(entry.get("decoded"), raw, decoded_context)
+    else:
+        _event_setpoint_decoded(
+            entry.get("decoded"), raw, str(selector.get("profile")), decoded_context
+        )
 
 
 def _known_timer(entry: dict[str, Any], selector: dict[str, Any], context: str) -> None:
@@ -161,7 +282,7 @@ def validate_artifact(path: Path) -> None:
             raise ValidationError(f"{context}.operation is unsupported")
         if entry.get("opcode_hex") != f"0x{OPCODES[operation]:02X}":
             raise ValidationError(f"{context}.opcode_hex does not match operation")
-        _response_evidence(entry, operation, context)
+        response = _response_evidence(entry, operation, context)
         selector = entry.get("selector")
         if not isinstance(selector, dict):
             raise ValidationError(f"{context}.selector must be an object")
@@ -169,6 +290,9 @@ def validate_artifact(path: Path) -> None:
             if selector or entry.get("raw_selector") is not None:
                 raise ValidationError(f"{context} ReadVR91 has no selector")
             _expect_payload(entry, b"\x08", context)
+            if entry.get("response_state") == "value":
+                assert response is not None
+                _known_decoded(entry, selector, response, context)
             continue
         if selector:
             if entry.get("raw_selector") is not None:
@@ -177,6 +301,9 @@ def validate_artifact(path: Path) -> None:
                 _known_timer(entry, selector, context)
             else:
                 _known_event(entry, selector, context)
+            if entry.get("response_state") == "value":
+                assert response is not None
+                _known_decoded(entry, selector, response, context)
         else:
             _raw(entry, context)
 

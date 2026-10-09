@@ -81,6 +81,33 @@ def test_artifact_keeps_raw_event_boundary() -> None:
     first, vr91, event, unattempted = artifact["b524_operation_reads"]
     assert artifact["schema_version"] == "2.3"
     assert first["selector_correlation"] == "request_context"
+    assert first["decoded"] == {
+        "parameter_config": 0,
+        "slots": [
+            {
+                "start_raw": 0,
+                "stop_raw": 0,
+                "start_minutes": None,
+                "stop_minutes": None,
+                "unused": False,
+            },
+            {
+                "start_raw": 0,
+                "stop_raw": 0,
+                "start_minutes": None,
+                "stop_minutes": None,
+                "unused": False,
+            },
+            {
+                "start_raw": 0,
+                "stop_raw": 0,
+                "start_minutes": None,
+                "stop_minutes": None,
+                "unused": False,
+            },
+        ],
+        "raw_hex": "00000000000000",
+    }
     assert vr91["decoded"]["binding_zone"] == 0
     assert "parameter_config" not in vr91["decoded"]
     assert vr91["trace_seq"] == 12
@@ -220,6 +247,145 @@ def test_artifact_enforces_backend_response_lengths_and_preserves_raw_only_repla
         text=True,
         check=False,
     ).returncode == 0
+
+
+def _event_setpoint_record(profile: str, raw_hex: str) -> dict:
+    raw = bytes.fromhex(raw_hex)
+    if profile == "dhw":
+        values = [
+            {
+                "raw": value,
+                "temperature_c": None,
+                "state": {253: "enable", 254: "disable", 255: "replacement"}.get(value),
+            }
+            for value in raw[1:]
+        ]
+        system_type = 1
+    else:
+        values = [
+            {"raw": value, "temperature_c": value / 2.0, "state": None}
+            for value in raw[1:]
+        ]
+        system_type = 0 if profile == "system" else 3
+    selector = {"profile": profile, "instance": 255, "address": 1, "weekday_code": 255}
+    return {
+        "operation": "GetEventSetPoint",
+        "opcode_hex": "0x0B",
+        "selector": selector,
+        "pair_context": dict(selector),
+        "request_payload_hex": f"0b{system_type:02x}ff01ff",
+        "response_raw_hex": raw_hex,
+        "response_state": "value",
+        "decoded": {"parameter_config": raw[0], "values": values, "raw_hex": raw_hex},
+        "decode_qualification": "schema_unqualified",
+        "selector_correlation": "request_context",
+        "request_attempts": 1,
+    }
+
+
+def test_decoded_value_schema_requires_complete_backend_shapes(tmp_path: Path) -> None:
+    source = json.loads((FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text())
+    cases = []
+
+    timer = json.loads(json.dumps(source))
+    timer["b524_operation_reads"][0]["decoded"]["parameter_config"] = "invalid"
+    cases.append(("timer", timer))
+
+    event = json.loads(json.dumps(source))
+    event["b524_operation_reads"][2]["decoded"]["starts"][0]["minutes"] = "20"
+    cases.append(("event", event))
+
+    setpoint = json.loads(json.dumps(source))
+    setpoint["b524_operation_reads"][2] = _event_setpoint_record(
+        "system", "0001020304050607"
+    )
+    setpoint["b524_operation_reads"][2]["decoded"]["values"][0]["state"] = "enable"
+    cases.append(("event-setpoint", setpoint))
+
+    for name, artifact in cases:
+        candidate = tmp_path / f"invalid-{name}-shape.json"
+        candidate.write_text(json.dumps(artifact))
+        assert subprocess.run(
+            ["jv", str(FIXTURES / "b524-operation-reads-artifact-schema-v1.json"), str(candidate)],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).returncode != 0, name
+
+
+def test_semantic_validator_correlates_known_decodes_to_retained_raw_bytes(
+    tmp_path: Path,
+) -> None:
+    source = json.loads((FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text())
+    mutations = (
+        (0, lambda decoded: decoded.update({"parameter_config": 1})),
+        (0, lambda decoded: decoded["slots"][0].update({"start_raw": 1})),
+        (0, lambda decoded: decoded["slots"][0].update({"start_minutes": 0})),
+        (0, lambda decoded: decoded["slots"][0].update({"unused": True})),
+        (0, lambda decoded: decoded.update({"raw_hex": "01000000000000"})),
+        (1, lambda decoded: decoded.update({"binding_zone": 1})),
+        (1, lambda decoded: decoded.update({"raw_hex": "0101020304050607"})),
+        (2, lambda decoded: decoded.update({"parameter_config": 1})),
+        (2, lambda decoded: decoded.update({"start1_raw": 2})),
+        (2, lambda decoded: decoded["starts"][0].update({"raw": 3})),
+        (2, lambda decoded: decoded["starts"][0].update({"minutes": None})),
+        (2, lambda decoded: decoded.update({"raw_hex": "0101020304050607"})),
+    )
+    for case, (index, mutation) in enumerate(mutations):
+        artifact = json.loads(json.dumps(source))
+        mutation(artifact["b524_operation_reads"][index]["decoded"])
+        candidate = tmp_path / f"decoded-raw-mismatch-{case}.json"
+        candidate.write_text(json.dumps(artifact))
+        result = subprocess.run(
+            ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode != 0, case
+
+
+def test_event_setpoint_decodes_follow_profile_without_claiming_native_qualification(
+    tmp_path: Path,
+) -> None:
+    source = json.loads((FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text())
+    cases = (
+        ("system", "0001020304050607"),
+        ("zone", "0001020304050607"),
+        ("dhw", "00fdfeff00010203"),
+    )
+    for profile, raw_hex in cases:
+        artifact = json.loads(json.dumps(source))
+        artifact["b524_operation_reads"][2] = _event_setpoint_record(profile, raw_hex)
+        candidate = tmp_path / f"{profile}-event-setpoint.json"
+        candidate.write_text(json.dumps(artifact))
+        assert subprocess.run(
+            ["jv", str(FIXTURES / "b524-operation-reads-artifact-schema-v1.json"), str(candidate)],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).returncode == 0
+        result = subprocess.run(
+            ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, result.stderr
+        record = artifact["b524_operation_reads"][2]
+        assert record["decode_qualification"] == "schema_unqualified"
+
+        record["decoded"]["values"][0]["temperature_c"] = 99
+        candidate.write_text(json.dumps(artifact))
+        assert subprocess.run(
+            ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        ).returncode != 0
 
 
 def test_native_write_qualification_rejects_scope_selector_mismatch_and_boolean(tmp_path: Path) -> None:

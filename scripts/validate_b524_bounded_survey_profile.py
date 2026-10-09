@@ -14,6 +14,9 @@ class ValidationError(ValueError):
     """A profile has a selector, payload, or outcome inconsistency."""
 
 
+FIXTURES = Path(__file__).resolve().parents[1] / "protocols" / "vaillant" / "fixtures"
+
+
 def _hex(value: Any, context: str) -> bytes:
     if not isinstance(value, str):
         raise ValidationError(f"{context} must be a hexadecimal string")
@@ -78,11 +81,63 @@ def _expected_reply_echo(selector: dict[str, Any]) -> bytes:
     return bytes((_selector_byte(selector, "gg", "reply"),)) + _selector_register(selector, "reply")
 
 
+def _validate_catalog_reference(profile: dict[str, Any], profile_path: Path) -> None:
+    reference = profile.get("catalog_reference")
+    if not isinstance(reference, dict):
+        raise ValidationError(f"{profile_path}: catalog_reference must be an object")
+    path_value = reference.get("path")
+    if not isinstance(path_value, str) or not path_value:
+        raise ValidationError(f"{profile_path}: catalog_reference.path must be nonempty text")
+    reference_path = Path(path_value)
+    if reference_path.is_absolute() or ".." in reference_path.parts:
+        raise ValidationError(f"{profile_path}: catalog_reference.path must be a safe relative path")
+    candidates = (profile_path.parent / reference_path, FIXTURES / reference_path)
+    if not any(candidate.is_file() for candidate in candidates):
+        raise ValidationError(f"{profile_path}: catalog_reference.path does not identify a local file")
+
+    scope = reference.get("scope")
+    if not isinstance(scope, str) or not scope:
+        raise ValidationError(f"{profile_path}: catalog_reference.scope must be nonempty text")
+    limits = reference.get("qualified_description_limits")
+    if not isinstance(limits, list):
+        raise ValidationError(
+            f"{profile_path}: catalog_reference.qualified_description_limits must be an array"
+        )
+    required = {"selector", "semantic_name", "codec", "min", "max", "step", "qualification"}
+    for index, limit in enumerate(limits):
+        context = f"{profile_path}: catalog_reference.qualified_description_limits[{index}]"
+        if not isinstance(limit, dict) or set(limit) != required:
+            raise ValidationError(f"{context} fields do not match the qualified-limit contract")
+        selector = limit.get("selector")
+        if not isinstance(selector, dict) or set(selector) != {"op", "gg", "ii", "rr"}:
+            raise ValidationError(f"{context}.selector must contain exactly OP/GG/II/RR")
+        if _selector_byte(selector, "op", context) != 0x07:
+            raise ValidationError(f"{context}.selector.op must be 07")
+        _selector_byte(selector, "gg", context)
+        if _selector_byte(selector, "ii", context) != 0xFF:
+            raise ValidationError(f"{context}.selector.ii must be FF")
+        _selector_register(selector, context)
+        for field in ("semantic_name", "codec", "qualification"):
+            if not isinstance(limit[field], str) or not limit[field]:
+                raise ValidationError(f"{context}.{field} must be nonempty text")
+        scalar_types = (bool, int, float, str)
+        for field in ("min", "max", "step"):
+            if not isinstance(limit[field], scalar_types):
+                raise ValidationError(f"{context}.{field} must be a scalar value")
+        if limit["codec"] == "BOOL" and not all(
+            isinstance(limit[field], bool) for field in ("min", "max", "step")
+        ):
+            raise ValidationError(f"{context} BOOL limits must use boolean min/max/step")
+
+
 def validate_profile(profile_path: Path) -> None:
     try:
         profile = json.loads(profile_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValidationError(f"{profile_path}: cannot read JSON profile") from exc
+    if not isinstance(profile, dict):
+        raise ValidationError(f"{profile_path}: profile must be an object")
+    _validate_catalog_reference(profile, profile_path)
     samples = profile.get("samples") if isinstance(profile, dict) else None
     if not isinstance(samples, list) or not samples:
         raise ValidationError(f"{profile_path}: samples must be a nonempty array")
