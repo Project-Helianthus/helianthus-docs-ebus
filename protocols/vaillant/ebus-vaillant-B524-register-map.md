@@ -933,8 +933,11 @@ devices are identified by non-default values.** Empty slots have NaN/0xFF.
 [profile-qualified discovery contract](ebus-vaillant-b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
 For the characterized profile, recommended discovery starts at **II=0x01**:
 all OP06 groups use the current profile bounds II01..II08.
-Stop only on a complete, correlated, profile-qualified `not_connected` Boolean
-from RR0001. Unknown results do not stop the next probe. Full/research audit every
+With a positive mapped OP00 count, continue after disconnected slots until the
+confirmed positive quota or II08 bound is reached. A qualified zero mapped count
+omits ordinary recommended candidates. When no usable count is available, stop
+only on a complete, correlated, profile-qualified `not_connected` Boolean from
+RR0001. Unknown results do not stop the next probe. Full/research audit every
 slot in the declared bound, including slots after a negative result.
 
 `device_connected=false` does not establish physical absence and must not suppress
