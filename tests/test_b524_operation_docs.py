@@ -82,6 +82,13 @@ def test_exact_basv2_circuit_interval_is_consistent_across_b524_docs() -> None:
         assert "separate qualification" in normalized
 
     map_text = REGISTER_MAP.read_text(encoding="utf-8")
+    topology_row = next(
+        line
+        for line in map_text.splitlines()
+        if line.startswith("| 0x02 | 0x02 | Circuits |")
+    )
+    assert profile in topology_row
+    assert "II00..II08 heating + II09" in topology_row
     discovery_row = next(
         line
         for line in map_text.splitlines()

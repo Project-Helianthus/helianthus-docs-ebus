@@ -53,7 +53,7 @@ they do not establish physical product identity, presence, or a device layout.
 |--------|----|-------------|-----------|--------|-------------------------------|---------------|-----------------|
 | 0x02 | 0x00 | System | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
 | 0x02 | 0x01 | Native Domestic Hot Water | No | 0x00 | 0x13 | RR0001 exact two-byte nonzero UIN; zero is not present | 17 (0x0001–0x0013) |
-| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | BASV2/SW0507: RR0002 raw `0100`, FLAGS=03 at II00/II01 is active; raw `0000`, FLAGS=03 at II02 is inactive; II09 is virtual native water | profile candidate bound: II00..II08 heating + II09 virtual native-water |
+| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | Exact `BASV2/rawSW0507/HW1704/API1`: RR0002 raw `0100`, FLAGS=03 at II00/II01 is active; raw `0000`, FLAGS=03 at II02 is inactive; II09 is virtual native water | profile candidate bound: II00..II08 heating + II09 virtual native-water; nonmatching or unknown profiles require separate qualification |
 | 0x02 | 0x03 | Zones | Yes | 0x0A | 0x2E | `index != 0xFF` (RR=0x001C) | current profile interval II00..0A; presence probed separately |
 | 0x02 | 0x04 | Solar Circuit | Yes (profile) | 0x01 | 0x0B | decodable, non-null RR0004 EXP value | current profile interval II00..01; presence probed separately |
 | 0x02 | 0x05 | Solar Loaded Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
