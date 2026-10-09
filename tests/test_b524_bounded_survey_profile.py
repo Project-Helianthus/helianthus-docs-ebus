@@ -1,5 +1,6 @@
 import json
 import subprocess
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -106,6 +107,70 @@ def test_local_ci_validates_every_contributed_bounded_survey_profile() -> None:
     assert "protocols/vaillant/fixtures/b524-bounded-survey-*-v1.json" in ci
     assert "*-profile-schema-v1.json|*-profile-template-v1.json) continue" in ci
     assert 'jv protocols/vaillant/fixtures/b524-bounded-survey-profile-schema-v1.json "$profile"' in ci
+    assert 'python3 scripts/validate_b524_bounded_survey_profile.py "$profile"' in ci
+
+
+def _run_profile_validator(profile_path: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["python3", "scripts/validate_b524_bounded_survey_profile.py", str(profile_path)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_profile_validator_checks_every_profile_and_rejects_second_selector_payload_mismatch(
+    tmp_path: Path,
+) -> None:
+    source = json.loads(
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+    )
+    first = tmp_path / "b524-bounded-survey-first-v1.json"
+    second = tmp_path / "b524-bounded-survey-second-v1.json"
+    first.write_text(json.dumps(source))
+    mismatched = deepcopy(source)
+    mismatched["samples"][1]["selector"]["rr"] = "0002"
+    second.write_text(json.dumps(mismatched))
+
+    result = subprocess.run(
+        ["python3", "scripts/validate_b524_bounded_survey_profile.py", str(first), str(second)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "request_payload_hex does not match OP/GG/II/RR selector" in result.stderr
+
+
+@pytest.mark.parametrize("outcome", ["empty_reply", "transport_error"])
+def test_profile_validator_rejects_payload_for_empty_or_transport_error(
+    tmp_path: Path, outcome: str
+) -> None:
+    profile = json.loads(
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+    )
+    profile["samples"][0]["outcome"] = outcome
+    candidate = tmp_path / f"{outcome}.json"
+    candidate.write_text(json.dumps(profile))
+
+    result = _run_profile_validator(candidate)
+    assert result.returncode != 0
+    assert f"must be empty for {outcome}" in result.stderr
+
+
+def test_profile_validator_allows_short_raw_decode_error_without_false_echo_claim(tmp_path: Path) -> None:
+    profile = json.loads(
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+    )
+    profile["samples"][0]["outcome"] = "decode_error"
+    profile["samples"][0]["reply_payload_hex"] = "03"
+    candidate = tmp_path / "malformed.json"
+    candidate.write_text(json.dumps(profile))
+
+    result = _run_profile_validator(candidate)
+    assert result.returncode == 0, result.stderr
 
 
 @pytest.mark.parametrize(

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "B524 native write qualification v1",
+  "type": "object",
+  "required": ["schema_version", "scope", "manufacturer", "device_id", "profile", "model", "software_raw_hex", "selector", "evidence_reference", "native_qualified"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "scope": {"enum": ["timer_write_op04", "event_write_op0a", "event_setpoint_write_op0c"]},
+    "manufacturer": {"const": 181},
+    "device_id": {"type": "string", "minLength": 1},
+    "profile": {"type": "string", "minLength": 1},
+    "model": {"type": "string", "minLength": 1},
+    "software_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{4}$"},
+    "selector": {"type": "object", "minProperties": 1},
+    "evidence_reference": {"type": "string", "minLength": 1},
+    "native_qualified": {"const": true}
+  },
+  "additionalProperties": false
+}

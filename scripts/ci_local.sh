@@ -196,7 +196,18 @@ for profile in protocols/vaillant/fixtures/b524-bounded-survey-*-v1.json; do
     *-profile-schema-v1.json|*-profile-template-v1.json) continue ;;
   esac
   jv protocols/vaillant/fixtures/b524-bounded-survey-profile-schema-v1.json "$profile"
+  python3 scripts/validate_b524_bounded_survey_profile.py "$profile"
 done
+for plan in protocols/vaillant/fixtures/b524-operation-read-plan-*-v1.json; do
+  case "$plan" in *-schema-v1.json) continue ;; esac
+  jv protocols/vaillant/fixtures/b524-operation-read-plan-schema-v1.json "$plan"
+done
+for artifact in protocols/vaillant/fixtures/b524-operation-reads-artifact-*-v1.json; do
+  case "$artifact" in *-schema-v1.json) continue ;; esac
+  jv protocols/vaillant/fixtures/b524-operation-reads-artifact-schema-v1.json "$artifact"
+done
+jv protocols/vaillant/fixtures/b524-operation-edit-plan-schema-v1.json protocols/vaillant/fixtures/b524-operation-edit-plan-synthetic-v1.json
+python3 -m pytest -q tests/test_b524_operation_reads.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py

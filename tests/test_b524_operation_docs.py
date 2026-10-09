@@ -504,6 +504,8 @@ def test_regulator_crosswalk_is_exact_pair_based_and_keeps_raw_sw_distinct() -> 
     assert rows == expected
     assert len(expected) == 38
     assert "EID\nand decoded SW/SPN value match as a pair" in text
+    assert "Project-assigned catalog; Hypothesis as native-model evidence pending\nobservations." in text
+    assert "`identity.model_assignment_qualification` to `project_catalog`" in text
     assert "Do not interpret raw `04 17` as `0x0417`" in text
     assert "`B7V00` / `0163` VRC700 R4 row" in text
     assert "B7S00" not in text

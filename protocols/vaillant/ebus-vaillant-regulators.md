@@ -56,6 +56,13 @@ and [ebusd `PIN` datatype implementation](https://github.com/john30/ebusd/blob/3
 
 ## Exact EID and SW/SPN Crosswalk
 
+**Project-assigned catalog; Hypothesis as native-model evidence pending
+observations.** These 38 exact pairs are a bounded naming and family catalog
+for this project. They do not independently establish a device model, native
+protocol support, or the availability of any operation on a connected target.
+Treat an unlisted or malformed pair as unknown rather than extending this table
+by inference.
+
 | EID | SW (SPN hex `u16`) | Model row | Protocol family |
 | --- | --- | --- | --- |
 | `70000` | `0141` | VRC700 R1 | VRC700 |
@@ -115,6 +122,11 @@ Retain at least:
 - raw SW bytes;
 - decoded SW/SPN value and decoding state; and
 - crosswalk result (`matched`, `unlisted`, or `invalid`).
+
+For a matched row, retain the native `0x07/0x04` EID, SW, and decoded raw SPN
+separately from `assigned_model`. Set
+`identity.model_assignment_qualification` to `project_catalog`; this identifies
+the assignment as catalog material rather than a native model observation.
 
 An empty, malformed, or unavailable SW field leaves the crosswalk result
 unknown. It must not be replaced with a guessed model or protocol family.

@@ -568,7 +568,8 @@ codes as raw evidence; they do not become valid time values.
 
 VRC Explorer exposes `b524 read-timer` and the offline-only
 `b524 preview-write-timer`. Preview creates a payload without opening a
-transport or writing to a regulator.
+transport or writing to a regulator. The explicit read-plan contract is
+documented in [B524 explicit operation reads](b524-operation-reads.md).
 
 ### 4.5 `0x09` / `0x0A` Events and `0x0B` / `0x0C` Event Setpoints
 
@@ -597,7 +598,7 @@ byte exactly as requested; the Event profile does not assign it the ReadTimer
 weekday interpretation. Neither `II` nor the request selector is echoed in
 these replies, so correlation depends on the outstanding request context.
 
-| Selected profile | GG | Permitted ADDRESS | Setpoint codec |
+| Selected profile | GG | Candidate ADDRESS catalog | Candidate setpoint codec |
 | --- | --- | --- | --- |
 | `system` | 00 | 01, 02, 03 | Numeric code divided by two, degrees Celsius |
 | `dhw` | 01 | 01, 02 | FD=enable, FE=disable, FF=replacement; other codes unknown |
@@ -614,11 +615,16 @@ qualified by each target's actual response; this specification does not claim
 that every BASV2 or VRC700 implements them. Undocumented profile/address
 combinations remain rejected rather than receiving an invented codec.
 
-VRC Explorer provides live read-only `b524 read-event` and
-`b524 read-event-setpoint`. `b524 preview-set-event` and
+Explicit Event reads use the read-plan contract. Their outcomes remain raw or
+schema-unqualified until target-qualified evidence exists. Event reads are not
+scalar scan candidates and do not create typed Browser or HTML inventory.
+Browser and HTML may show a candidate interpretation beside raw values only
+when explicitly marked experimental and schema-unqualified.
+`b524 preview-set-event` and
 `b524 preview-set-event-setpoint` construct offline payloads only. No live
 setter is exposed by these commands. Retries apply at the transport layer to
 exact read requests; setters are excluded from automatic replay.
+See [B524 explicit operation reads](b524-operation-reads.md).
 
 ### 4.6 `0x08` ReadVR91
 
@@ -634,7 +640,9 @@ STATUS_INFO FROST_PROTECTION HEATING_TEMPERATURE_RAW COOLING_TEMPERATURE_RAW
 These field names describe the response structure. Bit meanings, temperature
 scaling and special-value semantics remain unqualified, so the Explorer retains
 each byte without turning it into a physical measurement. `b524 read-vr91`
-checks the controller identity before sending this request.
+checks the controller identity before sending this request. It is also available
+as an opcode-only explicit operation read; see
+[B524 explicit operation reads](b524-operation-reads.md).
 
 ## 5. Topology-Significant Registers
 
