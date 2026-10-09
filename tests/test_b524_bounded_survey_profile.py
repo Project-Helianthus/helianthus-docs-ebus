@@ -315,3 +315,23 @@ def test_profile_validator_correlates_catalog_scope_and_description_limits(
 
     assert result.returncode != 0
     assert expected in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("sample_index", "flags_class"),
+    [(0, "read_only_visible"), (1, "writable_visible")],
+)
+def test_profile_validator_correlates_read_flags_class_to_reply(
+    tmp_path: Path, sample_index: int, flags_class: str
+) -> None:
+    profile = json.loads(
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+    )
+    profile["samples"][sample_index]["flags_class"] = flags_class
+    candidate = tmp_path / f"mismatched-flags-class-{sample_index}.json"
+    candidate.write_text(json.dumps(profile))
+
+    result = _run_profile_validator(candidate)
+
+    assert result.returncode != 0
+    assert "flags_class" in result.stderr

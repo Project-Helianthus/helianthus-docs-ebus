@@ -190,6 +190,8 @@ python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
+python3 scripts/validate_b524_op06_observed_windows.py \
+  protocols/vaillant/fixtures/b524-op06-observed-windows-v1.json
 python3 -m pytest -q tests/test_b524_bounded_survey_profile.py
 for profile in protocols/vaillant/fixtures/b524-bounded-survey-*-v1.json; do
   case "$profile" in

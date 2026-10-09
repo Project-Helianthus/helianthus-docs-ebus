@@ -279,6 +279,17 @@ def validate_profile(profile_path: Path) -> None:
 
         if outcome == "value_reply" and not reply:
             raise ValidationError(f"{context}.value_reply requires a reply payload")
+        if kind in {"op02_read", "op06_read"} and outcome == "value_reply":
+            expected_flags_class = {
+                0x00: "read_only_hidden",
+                0x01: "read_only_visible",
+                0x02: "writable_hidden",
+                0x03: "writable_visible",
+            }.get(reply[0])
+            if expected_flags_class is None or sample.get("flags_class") != expected_flags_class:
+                raise ValidationError(
+                    f"{context}.flags_class does not match reply_payload_hex byte 0"
+                )
         observed_echo = _reply_echo(kind, reply, selector)
         if observed_echo is not None and observed_echo != _expected_reply_echo(selector):
             raise ValidationError(

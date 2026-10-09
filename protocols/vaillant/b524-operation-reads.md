@@ -68,10 +68,19 @@ has started, budget/recovery/interruption failure is `transport_error` with an
 error reason. `selector_correlation` is always
 `request_context`: these replies do not provide enough selector echo to infer
 the selector from a reply. `decoded.parameter_config`, when present, is raw and
-does not prove writability. Timer decoding may use `profile_vrc700` only when
-the existing target/profile qualification is satisfied. `ReadVR91` has its
-own eight-field decoded shape and does not contain `parameter_config`. Events
-remain `schema_unqualified` until native confirmation.
+does not prove writability. Timer or VR91 decoding may use `profile_vrc700` only
+when `meta.resolved_identity` retains the target probe's `manufacturer: 0xB5`
+and matching `device_id`/`eid` of `70000` or `B7S00`. Records without that
+evidence remain `schema_unqualified`, including decoded synthetic fixtures and
+conservative replay. `ReadVR91` has its own eight-field decoded shape and does
+not contain `parameter_config`. Events remain `schema_unqualified` until native
+confirmation.
+
+Standalone `b524 read-timer` and `b524 read-vr91` output retains the same guard
+as `target_qualification`: `service: 07/04`, destination address, manufacturer,
+matching EID/device ID, raw software and hardware bytes, and the complete raw
+identity payload. This object contains no serial or private transport endpoint.
+Its absence keeps the direct decode `schema_unqualified`.
 
 For a known selector with `response_state: value`, the decoded object uses the
 complete operation-specific shape and is mechanically correlated to every

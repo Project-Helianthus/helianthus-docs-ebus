@@ -26,6 +26,7 @@ CHANNELS = {
 PROFILES = {"system": 0, "dhw": 1, "zone": 3}
 OPCODES = {"ReadTimer": 0x03, "ReadVR91": 0x08, "GetEvent": 0x09, "GetEventSetPoint": 0x0B}
 RESPONSE_LENGTHS = {"ReadTimer": 7, "ReadVR91": 8, "GetEvent": 8, "GetEventSetPoint": 8}
+VRC700_DEVICE_IDS = {"70000", "B7S00"}
 
 
 def _u8(value: Any, context: str) -> int:
@@ -269,6 +270,28 @@ def _raw(entry: dict[str, Any], context: str) -> None:
     _expect_payload(entry, bytes((OPCODES[entry["operation"]], system_type, instance, address, day)), context)
 
 
+def _validate_profile_qualified_target(artifact: dict[str, Any], path: Path) -> None:
+    meta = artifact.get("meta")
+    identity = meta.get("resolved_identity") if isinstance(meta, dict) else None
+    if not isinstance(identity, dict):
+        raise ValidationError(
+            f"{path}: profile_vrc700 requires meta.resolved_identity from the target probe"
+        )
+    manufacturer = identity.get("manufacturer")
+    device_id = identity.get("device_id")
+    eid = identity.get("eid")
+    if (
+        manufacturer != "0xB5"
+        or not isinstance(device_id, str)
+        or not isinstance(eid, str)
+        or device_id.strip().upper() != eid.strip().upper()
+        or device_id.strip().upper() not in VRC700_DEVICE_IDS
+    ):
+        raise ValidationError(
+            f"{path}: profile_vrc700 requires matching Vaillant VRC700 device_id and EID"
+        )
+
+
 def validate_artifact(path: Path) -> None:
     try:
         artifact = json.loads(path.read_text(encoding="utf-8"))
@@ -277,6 +300,11 @@ def validate_artifact(path: Path) -> None:
     records = artifact.get("b524_operation_reads") if isinstance(artifact, dict) else None
     if not isinstance(records, list):
         raise ValidationError(f"{path}: b524_operation_reads must be an array")
+    if any(
+        isinstance(entry, dict) and entry.get("decode_qualification") == "profile_vrc700"
+        for entry in records
+    ):
+        _validate_profile_qualified_target(artifact, path)
     for index, entry in enumerate(records):
         context = f"{path}: b524_operation_reads[{index}]"
         if not isinstance(entry, dict):
@@ -284,6 +312,13 @@ def validate_artifact(path: Path) -> None:
         operation = entry.get("operation")
         if operation not in OPCODES:
             raise ValidationError(f"{context}.operation is unsupported")
+        if entry.get("decode_qualification") == "profile_vrc700" and operation not in {
+            "ReadTimer",
+            "ReadVR91",
+        }:
+            raise ValidationError(
+                f"{context}.decode_qualification profile_vrc700 is only for Timer and VR91"
+            )
         if entry.get("opcode_hex") != f"0x{OPCODES[operation]:02X}":
             raise ValidationError(f"{context}.opcode_hex does not match operation")
         response = _response_evidence(entry, operation, context)

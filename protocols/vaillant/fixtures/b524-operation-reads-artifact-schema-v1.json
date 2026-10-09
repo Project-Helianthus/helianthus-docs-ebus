@@ -9,10 +9,56 @@
     "b524_operation_reads": {"type": "array", "items": {"$ref": "#/$defs/observation"}}
   },
   "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "b524_operation_reads": {
+            "contains": {
+              "type": "object",
+              "required": ["decode_qualification"],
+              "properties": {"decode_qualification": {"const": "profile_vrc700"}}
+            }
+          }
+        },
+        "required": ["b524_operation_reads"]
+      },
+      "then": {
+        "required": ["meta"],
+        "properties": {"meta": {"$ref": "#/$defs/profile_qualified_meta"}}
+      }
+    }
+  ],
   "$defs": {
     "u8": {"type": "integer", "minimum": 0, "maximum": 255},
     "hex": {"type": "string", "pattern": "^(?:[0-9A-Fa-f]{2})*$"},
     "nonempty_hex": {"type": "string", "pattern": "^(?:[0-9A-Fa-f]{2})+$"},
+    "vrc700_identity": {
+      "type": "object",
+      "required": ["manufacturer", "device_id", "eid"],
+      "properties": {"manufacturer": {"const": "0xB5"}},
+      "oneOf": [
+        {
+          "properties": {
+            "device_id": {"const": "70000"},
+            "eid": {"const": "70000"}
+          }
+        },
+        {
+          "properties": {
+            "device_id": {"const": "B7S00"},
+            "eid": {"const": "B7S00"}
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "profile_qualified_meta": {
+      "type": "object",
+      "required": ["resolved_identity"],
+      "properties": {"resolved_identity": {"$ref": "#/$defs/vrc700_identity"}},
+      "additionalProperties": true
+    },
     "raw_selector": {
       "oneOf": [
         {"$ref": "#/$defs/raw_timer_selector"},

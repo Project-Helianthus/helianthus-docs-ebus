@@ -2,6 +2,7 @@
 
 import json
 import re
+import subprocess
 from pathlib import Path
 
 
@@ -376,6 +377,51 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
     }
     assert "not properties of the generic IIFFh catalog alone" in profile
     assert "never terminal maxima" in profile
+
+
+def test_op06_observed_window_validator_correlates_every_request_and_reply(
+    tmp_path: Path,
+) -> None:
+    source_path = (
+        ROOT
+        / "protocols"
+        / "vaillant"
+        / "fixtures"
+        / "b524-op06-observed-windows-v1.json"
+    )
+    source = json.loads(source_path.read_text(encoding="utf-8"))
+    ci = (ROOT / "scripts" / "ci_local.sh").read_text(encoding="utf-8")
+    assert "validate_b524_op06_observed_windows.py" in ci
+
+    baseline = subprocess.run(
+        ["python3", "scripts/validate_b524_op06_observed_windows.py", str(source_path)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert baseline.returncode == 0, baseline.stderr
+
+    mutations = (
+        (0, "request_payload_hex", "0709ff0100"),
+        (1, "reply_payload_hex", "022f00000601"),
+        (12, "request_payload_hex", "06000f013300"),
+        (13, "reply_payload_hex", "000e330000"),
+        (12, "flags", "0x00"),
+    )
+    for case, (index, field, value) in enumerate(mutations):
+        fixture = json.loads(json.dumps(source))
+        fixture["samples"][index][field] = value
+        candidate = tmp_path / f"mismatched-observed-window-{case}.json"
+        candidate.write_text(json.dumps(fixture))
+        result = subprocess.run(
+            ["python3", "scripts/validate_b524_op06_observed_windows.py", str(candidate)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode != 0, case
 
 
 def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() -> None:

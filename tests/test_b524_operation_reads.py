@@ -108,6 +108,7 @@ def test_artifact_keeps_raw_event_boundary() -> None:
     }
     assert vr91["decoded"]["binding_zone"] == 0
     assert "parameter_config" not in vr91["decoded"]
+    assert vr91["decode_qualification"] == "schema_unqualified"
     assert vr91["trace_seq"] == 12
     assert event["pair_context"] == event["selector"]
     assert event["response_state"] == "value"
@@ -119,6 +120,82 @@ def test_artifact_keeps_raw_event_boundary() -> None:
     assert unattempted["selector"] == {}
     assert unattempted["raw_selector"]["weekday_code"] == 0
     assert unattempted["trace_seq"] == 14
+
+
+def test_profile_vrc700_decode_requires_matching_resolved_target_identity(
+    tmp_path: Path,
+) -> None:
+    source = json.loads(
+        (FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text()
+    )
+
+    for index in (0, 1):
+        artifact = json.loads(json.dumps(source))
+        artifact["b524_operation_reads"][index]["decode_qualification"] = "profile_vrc700"
+        candidate = tmp_path / f"profile-without-identity-{index}.json"
+        candidate.write_text(json.dumps(artifact))
+        assert subprocess.run(
+            ["jv", str(FIXTURES / "b524-operation-reads-artifact-schema-v1.json"), str(candidate)],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).returncode != 0
+        assert subprocess.run(
+            ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        ).returncode != 0
+
+    qualified = json.loads(json.dumps(source))
+    qualified["b524_operation_reads"][1]["decode_qualification"] = "profile_vrc700"
+    qualified["meta"] = {
+        "resolved_identity": {
+            "manufacturer": "0xB5",
+            "device_id": "70000",
+            "eid": "70000",
+        }
+    }
+    candidate = tmp_path / "qualified-profile.json"
+    candidate.write_text(json.dumps(qualified))
+    assert subprocess.run(
+        ["jv", str(FIXTURES / "b524-operation-reads-artifact-schema-v1.json"), str(candidate)],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).returncode == 0
+    assert subprocess.run(
+        ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    ).returncode == 0
+
+    for case, identity in enumerate(
+        (
+            {"manufacturer": "0x50", "device_id": "70000", "eid": "70000"},
+            {"manufacturer": "0xB5", "device_id": "70000", "eid": "B7S00"},
+        )
+    ):
+        mismatched = json.loads(json.dumps(qualified))
+        mismatched["meta"]["resolved_identity"] = identity
+        candidate = tmp_path / f"mismatched-profile-identity-{case}.json"
+        candidate.write_text(json.dumps(mismatched))
+        assert subprocess.run(
+            ["jv", str(FIXTURES / "b524-operation-reads-artifact-schema-v1.json"), str(candidate)],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).returncode != 0
+        assert subprocess.run(
+            ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        ).returncode != 0
 
 
 def test_raw_selectors_enforce_operation_specific_day_fields_and_exclude_vr91(

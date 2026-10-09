@@ -322,6 +322,12 @@ they are not properties of the generic IIFFh catalog alone. The sanitized
 preserves representative payload-only requests and replies without endpoint,
 serial, or capture metadata.
 
+Its validator reconstructs each OP07 or OP06 request from the declared
+operation, group, instance, and register, then checks the operation-specific
+reply echo. Qualified decoded limits and concrete-read flags must also match the
+retained reply bytes. This internal correlation does not add device identity or
+presence evidence.
+
 | OP06 groups | Observed scheduling window | Evidence boundary |
 | --- | --- | --- |
 | 01, 02, 03, 05, 06, 07, 08, 0B, 0C | RR0000..002F | bounded correlated read/Describe observations |
