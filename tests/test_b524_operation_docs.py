@@ -632,7 +632,13 @@ def test_browser_write_contract_preserves_confirmation_and_native_boundaries() -
         "manually share JSON",
     ):
         assert required in text
-    assert "--" not in text
+    assert "every known min/max/STEP violation is rejected" in text
+    assert "separate confirmations, in order" in text
+    assert "One combined acknowledgement cannot authorize this path" in text
+    assert "invalidates both confirmations" in text
+    assert "`--transport`, `--host`, `--port`, `--source-address`, and optional `--preset`" in text
+    assert "`browse` accepts no configuration argv" in text
+    assert "There are no hidden\nglobal request or description budgets" in text
 
 
 def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> None:

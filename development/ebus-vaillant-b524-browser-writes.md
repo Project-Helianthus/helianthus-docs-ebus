@@ -4,6 +4,25 @@ This is an AGPL application contract for VRC Explorer. It describes offline
 editing and explicitly confirmed native scalar writes. It does not establish a
 native writable register, codec, range, or device effect.
 
+## Visual configuration
+
+The visual `scan` command accepts only adapter connection options
+`--transport`, `--host`, `--port`, `--source-address`, and optional `--preset`,
+besides help. There is no replacement adapter flag. Omit `--preset` to choose it
+in the startup dropdown with its description. Destination, output, trace,
+fixture replay, auxiliary reads and enrichment are configured in the startup
+UI; coverage and description acquisition belong to the planner. A non-TTY scan
+requires an explicit preset before transport creation.
+
+`browse` accepts no configuration argv; its visual file picker opens JSON
+offline. Connect and per-parameter editing are Browser actions. Technical
+`discover`, `replay-trace`, and `b524` commands remain scriptable.
+
+The retired scan-plan, operation-plan, preview-plan, description-budget,
+request-budget and probe-constraint options are rejected. There are no hidden
+global request or description budgets. Finite profile coverage, explicit visual
+scope, bounded transport retries and actual request accounting remain in effect.
+
 ## Sessions and identity
 
 Opening JSON starts an offline Browser session. Offline edits change only the
@@ -25,7 +44,10 @@ successful live result.
 The Browser can offer a scalar editor only for a concrete OP02 or OP06 selector
 with a known codec, fresh writable/access and identity evidence, and an
 unambiguous write address. An effective exact-profile description supplies limits
-when present; its absence or incomplete limit does not prevent the user-confirmed
+when present. Encoding, codec, width, minimum, maximum and STEP are validated
+before confirmation; every known min/max/STEP violation is rejected. Missing
+limits never permit bypassing a known constraint. An absence or incomplete limit
+does not prevent the user-confirmed
 exception. It displays the
 native target `(destination, OP, GG, II, RR)`, baseline and proposed raw/value
 forms, and numeric enum code. Enum editors are dropdowns that retain numeric/raw
@@ -44,7 +66,17 @@ contradictory qualified description.
 Before a write, the Browser performs fresh identity, access, and baseline reads.
 If the baseline changed, it presents the new baseline and requires another
 confirmation. The confirmation names the exact target, old and new value, and
-numeric enum codes where applicable. A no-op sends zero writes.
+numeric enum codes where applicable. For incomplete limits there are two
+separate confirmations, in order:
+
+1. A dedicated exception acknowledgement names the missing min/max/STEP fields,
+   known codec, concrete target and proposed raw value.
+2. A distinct final write confirmation shows the parameter, exact target and
+   old → new value after the fresh context reads.
+
+One combined acknowledgement cannot authorize this path. A changed baseline or
+effective description invalidates both confirmations; the user must edit and
+confirm again. A no-op sends zero writes.
 
 All Browser transport operations share one serialized session queue. The final
 pre-read, one native OT01 write, and readback are serialized as one operation.
