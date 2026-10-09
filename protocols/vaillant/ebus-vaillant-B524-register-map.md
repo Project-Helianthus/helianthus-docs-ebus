@@ -527,7 +527,7 @@ observations, but do not extend the current profile's II00..09 coverage.
 | 0x0011 | circuit_cooling_flow_temperature_min_setpoint | C | f32 | °C | Hc{hc}MinCoolingTempDesired | — | — | cooling_enabled | |
 | 0x0012 | circuit_flow_temperature_min_setpoint | C | f32 | °C | Hc{hc}MinFlowTempDesired | — | — | — | |
 | 0x0013 | circuit_dhw_operating_mode | C | u16 | enum | — | — | values unknown | ext_hwc_active | |
-| 0x0014 | circuit_outside_temperature_limit_summer_detection | C | f32 | °C | Hc{hc}SummerTempLimit | — | — | — | Installer-field candidate; the summer-cutoff interpretation requires physical corroboration. |
+| 0x0014 | circuit_maximum_outside_temperature_heating | C | f32 | °C | Hc{hc}SummerTempLimit | — | — | — | Installer-field candidate; the summer-cutoff interpretation requires physical corroboration. |
 | 0x0015 | circuit_room_temperature_influence | C | u16 | enum | Hc{hc}RoomTempSwitchOn | — | →rcmode | — | Gate for dew point |
 | 0x0016 | circuit_screed_drying_day | C | u16 | count | Hc{hc}ScreedDryingDay | — | — | — | Screed drying program |
 | 0x0017 | circuit_screed_drying_setpoint | S | f32 | °C | Hc{hc}ScreedDryingTempDesired | — | — | — | FLAGS=0x01 (stable RO) — computed setpoint, not user-configurable |
