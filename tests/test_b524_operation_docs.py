@@ -542,19 +542,10 @@ def test_event_and_timer_operations_have_separate_selectors_and_write_boundary()
     assert "VALUE1 remains raw" in events
 
 
-_UNPUBLISHED_ATTRIBUTION = re.compile(
-    r"private(?:-context)?/|private static analysis|restricted static.analysis|FINAL-B524-|CROSSCHECK-B555-|GATES-semantic-|GATES-protocol-",
-    re.IGNORECASE,
-)
+def test_all_public_documents_have_publishable_attribution() -> None:
+    from scripts.check_public_domain_boundary import unpublishable_attribution
 
-
-def test_public_b524_specifications_do_not_name_unpublished_source_material() -> None:
-    documents = list((ROOT / "protocols/vaillant").glob("*[bB]524*.md"))
-    documents += list((ROOT / "architecture").glob("b524*.md"))
-    documents.append(ROOT / "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md")
-    documents.append(REGULATORS)
-    for document in documents:
-        assert not _UNPUBLISHED_ATTRIBUTION.search(document.read_text()), document.relative_to(ROOT)
+    assert unpublishable_attribution(ROOT) == []
 
 
 def test_regulator_crosswalk_is_exact_pair_based_and_keeps_raw_sw_distinct() -> None:
@@ -603,8 +594,8 @@ def test_regulator_and_b524_renames_have_no_stale_paths_or_vrc700_alias() -> Non
         assert "ebus-vaillant-regulators.md" in text
 
 
-def test_unpublished_attribution_check_rejects_each_source_marker() -> None:
-    for marker in ("private/", "private-context/", "private static analysis",
-                   "restricted static-analysis", "FINAL-B524-example.md",
-                   "CROSSCHECK-B555-example.md", "GATES-semantic-example.md", "GATES-protocol-example.md"):
-        assert _UNPUBLISHED_ATTRIBUTION.search(marker)
+def test_attribution_check_rejects_nonpublic_citations() -> None:
+    from scripts.check_public_domain_boundary import UNPUBLISHABLE
+
+    for marker in ("private/", "restricted static-analysis", "UNPUBLISHED-semantic-example.md"):
+        assert UNPUBLISHABLE.search(marker)

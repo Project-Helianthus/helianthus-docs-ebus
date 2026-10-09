@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.check_public_domain_boundary import violations
+from scripts.check_public_domain_boundary import unpublishable_attribution, violations
 
 
 def document(root: Path, text: str) -> None:
@@ -63,3 +63,10 @@ def test_checks_types_as_well_as_protocols(tmp_path: Path) -> None:
     path.parent.mkdir()
     path.write_text("Use the VRC Explorer Browser")
     assert violations(tmp_path)
+
+
+def test_attribution_guard_covers_agpl_documents_too(tmp_path: Path) -> None:
+    path = tmp_path / "architecture" / "contract.md"
+    path.parent.mkdir()
+    path.write_text("Source: UNPUBLISHED-semantic-notes.md")
+    assert unpublishable_attribution(tmp_path)

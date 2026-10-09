@@ -16,6 +16,24 @@ LINK = re.compile(r"\]\(([^\s)]+)\)")
 EVIDENCE_HEADING = re.compile(
     r"^#{1,6}\s+(?:Sources?|References?|Provenance|Evidence)\b", re.I
 )
+UNPUBLISHABLE = re.compile(
+    r"private(?:-context)?/|private static analysis|restricted static.analysis|_work_[\w-]+/|"
+    r"(?-i:\b[A-Z]{2,})-(?:B[0-9A-F]{3}|corrections|semantic|protocol|timer)[\w-]*(?:\.md|-)",
+    re.IGNORECASE,
+)
+
+
+def unpublishable_attribution(root: Path) -> list[str]:
+    errors = []
+    for path in root.rglob("*.md"):
+        if any(
+            part in {".git", ".venv", ".pytest_cache", ".ruff_cache"}
+            for part in path.relative_to(root).parts
+        ):
+            continue
+        if UNPUBLISHABLE.search(path.read_text()):
+            errors.append(f"{path.relative_to(root)}: nonpublishable attribution")
+    return errors
 
 
 def violations(root: Path) -> list[str]:
@@ -71,7 +89,8 @@ def violations(root: Path) -> list[str]:
 
 
 def main() -> int:
-    errors = violations(Path(__file__).resolve().parents[1])
+    root = Path(__file__).resolve().parents[1]
+    errors = violations(root) + unpublishable_attribution(root)
     for error in errors:
         print(error, file=sys.stderr)
     if errors:

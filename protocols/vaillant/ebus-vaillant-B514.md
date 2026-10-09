@@ -263,7 +263,7 @@ is unknown (NAK, zero, or stale value).
 
 ## Appendix: Semantic FSM — `four_way_valve_position` (REG 0x14)
 
-> Source: `GATES-semantic-fsms.md` Section 1.5.
+> **Hypothesis:** Register encoding is described above; the state-transition interpretation below requires correlated native observations.
 
 B514 REG `0x14` (T.0.20, wire: `05 14 03 FF FF`) on HMU at `0x08` encodes the four-way valve position as a `uchar` with `onoff` encoding.
 
@@ -279,7 +279,3 @@ B514 REG `0x14` (T.0.20, wire: `05 14 03 FF FF`) on HMU at `0x08` encodes the fo
 **Confidence:** HIGH (P1 cyberthom42 + P5 OpenHAB both confirm live read).
 
 ### Enrichment sources
-
-- Enrichment report: `_work_enrichment/final/FINAL-B514.md`
-- Cross-check: `_work_enrichment/final/CROSSCHECK-B514.md`
-- Deep analysis: `_work_enrichment/phase2/D2-B514-deep.md`

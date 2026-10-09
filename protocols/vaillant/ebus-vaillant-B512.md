@@ -34,7 +34,7 @@ The following B512 shapes are observed on heat pump installations only and are a
 | Request payload | Name/context | Target | Response shape | Evidence | Notes |
 |---|---|---|---|---|---|
 | `0f 00 01` | `StatusHydraulics` | VWZ/VWZIO (`0x76`) | 7 bytes raw (undecoded) | 4 independent forks — MEDIUM-HIGH confidence | 10-second poll from CTLV2 (`0x15`) to VWZ; hydraulic status. HP-system-specific. |
-| `13 00` | `StatusHydraulics` (HMU variant) | HMU (`0x08`) | system pressure (UCH/10, bar) + flow (UIN, l/h) — field byte offsets TBD | FINAL-corrections-and-devices summary table — MEDIUM confidence | Wire decode (field byte offsets, types) not available in enrichment corpus; requires further research. |
+| `13 00` | `StatusHydraulics` (HMU variant) | HMU (`0x08`) | system pressure (UCH/10, bar) + flow (UIN, l/h) — field byte offsets TBD | Hypothesis; native field layout remains Unknown | Wire field offsets and types require correlated native observations. |
 
 **Device scope:** These shapes gate on heat pump device type. ID `0f0001` requires CTLV2 + VWZ/VWZIO at `0x76`. ID `1300` requires HMU at `0x08`.
 

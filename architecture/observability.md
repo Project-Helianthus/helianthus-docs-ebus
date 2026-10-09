@@ -215,8 +215,7 @@ adaptermux: session <ID> frame delivery slow: kind=<K> latency=<USES>us
 ```
 
 These log markers exist so operators can pinpoint concrete slow samples
-without needing histogram tooling. (F-10 diagnostic — see
-`_work_adaptermux_audit/EBUSD-VERIFICATION-2026-05-10.md`.)
+without needing histogram tooling.
 
 ## Structured Log Markers
 

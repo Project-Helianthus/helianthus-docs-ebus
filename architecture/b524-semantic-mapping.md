@@ -381,7 +381,6 @@ Wire type corrections from MCP validation (2026-03-05):
 
 ### Related Files
 
-- `_work_register_mapping/mypyllant_b524_system_mapping.json` — Original mapping analysis (historical)
-- `_work_register_mapping/B524/` — Raw VRC Explorer scan data per group
+- [BASV2 bounded survey profile](../protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json) — Sanitized selector-correlated observations; coverage and qualification remain profile-specific.
 - `helianthus-ebusreg/vaillant/system/b524_profile.go` — Discovery profiles
 - `helianthus-ebus-vaillant-productids/repos/john30-ebusd-configuration/src/vaillant/15.ctlv2.tsp` — ebusd TSP source

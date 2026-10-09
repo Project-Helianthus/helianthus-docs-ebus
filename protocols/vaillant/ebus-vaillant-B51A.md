@@ -261,10 +261,3 @@ No publishable capture is included in this reference.
 
 - Public TypeSpec: [08.hmu.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/08.hmu.tsp)
 - Public TypeSpec: [08.hmu.HW5103.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/08.hmu.HW5103.tsp)
-
-### Enrichment sources
-
-- Enrichment report: `_work_enrichment/final/FINAL-B51A.md`
-- Cross-check: `_work_enrichment/final/CROSSCHECK-B51A.md`
-- Deep analysis: `_work_enrichment/phase2/D3-B51A-deep.md`
-- Fork cross-validation: `_work_enrichment/phase2/D11-fork-B509-B51A.md`
