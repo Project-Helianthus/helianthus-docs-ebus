@@ -66,7 +66,7 @@ they do not establish physical product identity, presence, or a device layout.
 | 0x06 | 0x02 | Heat Pump | Yes | 0x08 | 0x002F | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 | 0x06 | 0x03 | Air Recovery (VAR) recoVair | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
 | 0x06 | 0x04 | unused | Yes | 0x08 | — | Unknown | Unknown |
-| 0x06 | 0x05 | Appliance Interface (VWZ-AI) | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
+| 0x06 | 0x05 | Wärmepumpe Zubehör Appliance Interface (VWZ-AI) | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
 | 0x06 | 0x06 | Pumpen Module – Solar (VPM-S) auroFLOW | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
 | 0x06 | 0x07 | Pumpen Module – Wasser (VPM-W) aguaFLOW | Yes | 0x08 | 0x002F | `device_connected` candidate; concrete-II verification required | class-level evidence only |
 | 0x06 | 0x08 | Modul Solar (VMS) auroSTEP | Yes | 0x08 | 0x002F | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
@@ -165,7 +165,7 @@ registers above it.
 | 0x06 | 0x02 Heat Pump | 01..08 | 0x002F | known scope | concrete-II predicate required |
 | 0x06 | 0x03 Air Recovery (VAR) recoVair | 01..08 | 0x002F | known scope | concrete-II predicate required |
 | 0x06 | 0x04 unused | 01..08 | — | explicit custom RR scope | RR layout and predicate Unknown |
-| 0x06 | 0x05 Appliance Interface (VWZ-AI) | 01..08 | 0x002F | known scope | concrete-II predicate required |
+| 0x06 | 0x05 Wärmepumpe Zubehör Appliance Interface (VWZ-AI) | 01..08 | 0x002F | known scope | concrete-II predicate required |
 | 0x06 | 0x06 Pumpen Module – Solar (VPM-S) auroFLOW | 01..08 | 0x002F | known scope | concrete-II predicate required |
 | 0x06 | 0x07 Pumpen Module – Wasser (VPM-W) aguaFLOW | 01..08 | 0x002F | known scope | concrete-II predicate required |
 | 0x06 | 0x08 Modul Solar (VMS) auroSTEP | 01..08 | 0x002F | known scope | concrete-II predicate required |
@@ -676,7 +676,9 @@ OP06/GG08 remains a separate instanced selector set with its own RR limit.
 
 OP02/GG09 is a local selector set. Its zero-instance passive observation does not establish a universal write-triggered or non-readable property. Any association between RR=0x0001..0x0004 and system quick-mode control remains a **Hypothesis** pending publishable correlated evidence.
 
-
+The RR0002 and RR0004 labels below are operator-selected presentation
+annotations. They are not independently native-verified and do not establish
+target support or writability. Unknown values remain numeric/unknown.
 
 The local II scope is profile-dependent. Repeated historical values do not
 establish a template/default role or physical topology. The Browser tree shows
@@ -686,9 +688,9 @@ the artifact diagnostics.
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
 | 0x0001 | ventilation_quick_mode | C | u16 | — | — | 0..255 | — | — | FLAGS=0x02. All instances: 0 |
-| 0x0002 | ventilation_operating_mode | C | u16 | enum | — | 1..3 | — | — | FLAGS=0x02. All instances: 1 |
+| 0x0002 | ventilation_operating_mode | C | u16 | enum | — | 1..3 | `1=TIME_CONTROLLED 2=NORMAL 3=REDUCED` | — | FLAGS=0x02. All instances: 1. Operator-selected presentation annotation; not independently native-verified |
 | 0x0003 | ventilation_status_period | S | u8 | bool | — | 0..1 | `0=off 1=on` | — | FLAGS=0x00. All instances: 1 |
-| 0x0004 | ventilation_status_special_operating_mode | S | u16 | — | — | 0..10 | — | — | FLAGS=0x00. All instances: 0 |
+| 0x0004 | ventilation_status_special_operating_mode | S | u16 | — | — | 0..10 | `0=REGULAR 1=BOOST 7=HOLIDAY 10=SYSTEM_OFF` | — | FLAGS=0x00. All instances: 0. Operator-selected presentation annotation; not independently native-verified |
 | 0x0005 | ventilation_voc_sensor_1 | S | u16 | — | — | 0..32768 | — | — | FLAGS=0x00. All instances: 0x8000 (32768) |
 | 0x0006 | ventilation_voc_sensor_2 | S | u16 | — | — | 0..32768 | — | — | FLAGS=0x00. All instances: 0x8000 (32768) |
 | 0x0007 | ventilation_holiday_end | C | date | date | — | — | — | — | FLAGS=0x02. 01.01.2015 (BCD default) |
@@ -707,15 +709,15 @@ the artifact diagnostics.
 
 The published OP00 interpretation includes ID0010h `recovair_count`. It does
 not prove GG10h or device presence; the public reported samples all return zero.
-The following corrected reconstruction is **Hypothesis** for a TLI controller
+The following corrected reconstruction is **Hypothesis** for a VRC720 controller
 profile, awaiting publishable correlated replies. It does not replace other
 GG09 meanings or establish writable capability. Keep `(OP02,GG09,II,RR)` and
 profile provenance; no data from these rows is promoted into a universal mapping.
 
 | RR | snake_case name | Candidate format |
 | --- | --- | --- |
-| 0002h | `ventilation_operating_mode` | enum; numeric domain unknown |
-| 0004h | `ventilation_status_special_operating_mode` | u16; candidate 0=regular, 1=boost, 7=holiday, 10=system_off |
+| 0002h | `ventilation_operating_mode` | enum; presentation values `1=TIME_CONTROLLED 2=NORMAL 3=REDUCED` |
+| 0004h | `ventilation_status_special_operating_mode` | u16; presentation values `0=REGULAR 1=BOOST 7=HOLIDAY 10=SYSTEM_OFF` |
 | 0007h / 0008h | `ventilation_holiday_end` / `ventilation_holiday_end_time` | date / time; codec qualification pending |
 | 0009h / 000Ah | `ventilation_holiday_start` / `ventilation_holiday_start_time` | date / time; codec qualification pending |
 | 000Dh / 000Eh | `ventilation_day_max_fan_stage` / `ventilation_night_max_fan_stage` | u16; range unknown |

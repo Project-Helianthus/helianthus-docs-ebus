@@ -208,6 +208,28 @@ def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> 
     assert "`unused` for GG04 does not justify suppressing a probe" in profile
 
 
+def test_register_map_preserves_exact_gg05_and_ventilation_presentation_annotations() -> None:
+    text = REGISTER_MAP.read_text(encoding="utf-8")
+    ventilation = text.split("### GG=0x09 — Ventilation", 1)[1].split(
+        "### GG=0x0A — Local Parameters", 1
+    )[0]
+    normalized_ventilation = " ".join(ventilation.split())
+
+    assert text.count("Wärmepumpe Zubehör Appliance Interface (VWZ-AI)") == 2
+    assert "Appliance Interface (VWZ-AI)" not in text.replace(
+        "Wärmepumpe Zubehör Appliance Interface (VWZ-AI)", ""
+    )
+    assert "TLI controller" not in text
+    assert "**Hypothesis** for a VRC720 controller" in ventilation
+    assert ventilation.count("`1=TIME_CONTROLLED 2=NORMAL 3=REDUCED`") == 2
+    assert ventilation.count("`0=REGULAR 1=BOOST 7=HOLIDAY 10=SYSTEM_OFF`") == 2
+    assert "ventilation_status_special_operating_mode | S | u16 | — | — | 0..10" in ventilation
+    assert "numeric domain unknown" not in ventilation
+    assert "operator-selected presentation annotations" in normalized_ventilation
+    assert "not independently native-verified" in normalized_ventilation
+    assert "Unknown values remain numeric/unknown" in normalized_ventilation
+
+
 def test_register_catalog_is_strictly_partitioned_by_opcode() -> None:
     text = REGISTER_MAP.read_text(encoding="utf-8")
     op02 = text.split("## OP=0x02 — Local Parameter Registers", 1)[1].split(
