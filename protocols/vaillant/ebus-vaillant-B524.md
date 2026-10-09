@@ -254,7 +254,7 @@ layout, or physical-device claim.
 | --- | --- | --- | --- |
 | 00 | System | `system` | Observed singleton local selector set. |
 | 01 | Native Domestic Hot Water | `native_domestic_hot_water` | Observed singleton local selector set. |
-| 02 | Circuits | `circuits` | Current profile: II01..08 heating candidates and II09 virtual native water. |
+| 02 | Circuits | `circuits` | Exact `BASV2/rawSW0507/HW1704/API1` profile: II00..08 heating candidates and independent II09 virtual native water; nonmatching or unknown profiles require separate qualification. |
 | 03 | Zones | `zones` | Observed local selector set. |
 | 04 | Solar Circuit | `solar_circuit` | Observed local selector set. |
 | 05 | Solar Loaded Cylinder | `solar_loaded_cylinder` | Observed local selector set. |

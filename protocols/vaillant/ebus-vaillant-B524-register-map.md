@@ -142,16 +142,17 @@ native-water candidate. These counts do not establish a terminal instance interv
 
 ### Discovery Profiles
 
-Source: sanitized BASV2 observations and constraint-probe corpus. “Observed
-scheduling ceiling” is the highest RR in the current bounded scheduling
-evidence; it is not a terminal maximum and does not exclude read-only state
-registers above it.
+Source: sanitized observations and constraint-probe corpus for the exact
+`BASV2/rawSW0507/HW1704/API1` profile. “Observed scheduling ceiling” is the
+highest RR in the current bounded scheduling evidence; it is not a terminal
+maximum and does not exclude read-only state registers above it. A nonmatching
+or unknown profile requires separate qualification.
 
 | Opcode | Group | Instance interval | Observed scheduling ceiling | Evidence scope | Notes |
 |--------|-------|-------------------|-----------------------------|-------------------|-------|
 | 0x02 | 0x00 System | 00 | 0x00FF | observed scope | Singleton |
 | 0x02 | 0x01 Native Domestic Hot Water | 00 | 0x0013 | observed scope | RR0001 exact two-byte nonzero UIN predicate; OP01 RR0000..0013 independent |
-| 0x02 | 0x02 Circuits | 01..09 | 0x0025 | observed scope | II01..08 heating candidates; II09 virtual native water |
+| 0x02 | 0x02 Circuits | 00..09 | 0x0025 | exact BASV2/rawSW0507/HW1704/API1 scope | II00..08 heating candidates; II09 independent virtual native water |
 | 0x02 | 0x03 Zones | 00..0A | 0x002E | observed scope | profile bound |
 | 0x02 | 0x04 Solar Circuit | 00..01 | 0x000B | observed scope | profile bound |
 | 0x02 | 0x05 Solar Loaded Cylinder | 00..01 | 0x0004 | observed scope | profile bound |
@@ -484,9 +485,10 @@ independent of OP01 descriptions for RR0000..0013. All registers except
 <a id="gg0x02--heating-circuits-multi-instance"></a>
 ### GG=0x02 — Circuits
 
-All registers use opcode `0x02`. The BASV2/SW0507 scoped profile admits
-II00..II08 as ordinary heating-circuit candidates and II09 as the virtual
-native-water circuit. Active heating circuits are discovered by probing
+All registers use opcode `0x02`. The exact `BASV2/rawSW0507/HW1704/API1` profile
+admits II00..II08 as ordinary heating-circuit candidates and II09 as the virtual
+native-water circuit. A nonmatching or unknown profile requires separate
+qualification. Active heating circuits are discovered by probing
 `circuit_mixer_type_external` (RR=0x0002). In sanitized observations, II00 and
 II01 return raw `0100` with FLAGS=03; II02 returns raw `0000` with FLAGS=03 and
 is inactive. These are profile-scoped selector observations, not a global

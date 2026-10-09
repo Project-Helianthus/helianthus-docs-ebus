@@ -145,11 +145,11 @@ This is an implementation-facing scanner contract, not universal B524 wire proof
 or a claim that an unprobed selector is absent.
 
 The Browser tree is a present-instance projection, not the candidate scan plan.
-For the BASV2 scoped profile, OP06 candidates use II01..II08; OP02/GG02 uses
-II00..II08 for heating candidates plus II09 for virtual native water. Do not render an
-absent, unknown, or unprobed selector as a tree node. Preserve those outcomes in
-the artifact so that the UI does not convert lack of a node into a claim of
-physical absence.
+For the exact `BASV2/rawSW0507/HW1704/API1` profile, OP06 candidates use II01..II08; OP02/GG02 uses
+II00..II08 for heating candidates plus II09 as independent virtual native water. A nonmatching or unknown
+profile requires separate qualification. Do not render an absent, unknown, or unprobed selector as a tree
+node. Preserve those outcomes in the artifact so that the UI does not convert lack of a node into a claim
+of physical absence.
 
 ### `recommended` (default)
 

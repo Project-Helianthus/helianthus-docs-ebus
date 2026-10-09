@@ -66,6 +66,38 @@ def test_circuit_register_prose_preserves_b524_evidence_boundaries() -> None:
     assert "calculated_flow_temperature" not in circuit_fsm
 
 
+def test_exact_basv2_circuit_interval_is_consistent_across_b524_docs() -> None:
+    profile = "BASV2/rawSW0507/HW1704/API1"
+    documents = (
+        REGISTER_MAP,
+        B524,
+        ROOT / "protocols/vaillant/ebus-vaillant-b524-profile-discovery-and-descriptions.md",
+        ROOT / "development/ebus-vaillant-b524-explorer-discovery.md",
+        ROOT / "architecture/b524-namespace-invariants.md",
+    )
+    for path in documents:
+        normalized = " ".join(path.read_text(encoding="utf-8").split())
+        assert profile in normalized
+        assert "nonmatching or unknown profile" in normalized
+        assert "separate qualification" in normalized
+
+    map_text = REGISTER_MAP.read_text(encoding="utf-8")
+    discovery_row = next(
+        line
+        for line in map_text.splitlines()
+        if line.startswith("| 0x02 | 0x02 Circuits |")
+    )
+    assert "| 00..09 |" in discovery_row
+    assert "II00..08 heating candidates; II09 independent virtual native water" in discovery_row
+
+    protocol_row = next(
+        line
+        for line in B524.read_text(encoding="utf-8").splitlines()
+        if line.startswith("| 02 | Circuits |")
+    )
+    assert "II00..08 heating candidates and independent II09" in protocol_row
+
+
 def test_historical_short_probe_catalog_is_not_validation_authority() -> None:
     text = REGISTER_MAP.read_text(encoding="utf-8")
     assert "Authoritative for value ranges" not in text

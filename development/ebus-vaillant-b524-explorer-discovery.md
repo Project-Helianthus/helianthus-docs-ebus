@@ -6,11 +6,13 @@ profile-qualified interpretations, and scanner policy. It adds no device writes.
 
 ## Local circuit coverage
 
-For OP02/GG02, the BASV2 scoped profile is II00..II09: II00..II08 are ordinary
-heating-circuit candidates and II09 is the virtual native-water circuit. The
-legacy public name `circuit_count` for OP00/ID00 is a supported-capacity value
-under the bounded contract below; it does not select or allocate II identities.
-It does not add II0A, and II09 remains a separately selected candidate.
+For OP02/GG02, the exact `BASV2/rawSW0507/HW1704/API1` profile is II00..II09:
+II00..II08 are ordinary heating-circuit candidates and II09 is the virtual
+native-water circuit. A nonmatching or unknown profile requires separate
+qualification. The legacy public name `circuit_count` for OP00/ID00 is a
+supported-capacity value under the bounded contract below; it does not select
+or allocate II identities. It does not add II0A, and II09 remains a separately
+selected candidate.
 This applies to Browser planning, replanning, and custom selections;
 estimates and safety limits include II09.
 
@@ -66,12 +68,13 @@ a manual RR scope because their RR maxima are Unknown. `recommended`, `full`,
 `research`, and `custom` retain their own selector policies. Same-numbered OP06
 groups never supply their local selector contract.
 
-The BASV2/SW0507 circuit predicate uses OP02/GG02/RR0002. Correlated raw
-`0100` with FLAGS=03 qualifies II00 and II01 as active in this profile. Raw
-`0000` with FLAGS=03 qualifies II02 as inactive; visibility alone does not make
-a zero active. This is an implementation qualification rule, not a universal
-physical presence predicate. The separate II09 probe remains independent; errors
-and invalid sentinel values remain non-positive.
+The exact `BASV2/rawSW0507/HW1704/API1` circuit predicate uses
+OP02/GG02/RR0002. Correlated raw `0100` with FLAGS=03 qualifies II00 and II01
+as active in this profile. Raw `0000` with FLAGS=03 qualifies II02 as inactive;
+visibility alone does not make a zero active. This is an implementation
+qualification rule, not a universal physical presence predicate. The separate
+II09 probe remains independent; errors and invalid sentinel values remain
+non-positive.
 
 For OP02/GG03/RR001C, preserve the native zone value without a +1 remap. The
 same scoped observation maps zone II00 to `00` and II01 to `01`; II02+ is `FF`
