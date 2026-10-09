@@ -615,8 +615,13 @@ qualified by each target's actual response; this specification does not claim
 that every BASV2 or VRC700 implements them. Undocumented profile/address
 combinations remain rejected rather than receiving an invented codec.
 
-Explicit Event reads use the read-plan contract. Their outcomes remain raw or
-schema-unqualified until target-qualified evidence exists. Event reads are not
+Normal scans construct Event program candidates from discovered scalar
+System/DHW/zone anchors using the [operation-read contract](b524-operation-reads.md).
+The initial raw-code window `00..07` is editable in the planner and does not
+assign weekday meanings or claim exhaustive support. Matching setpoints are
+read conditionally after usable Event replies. An explicit read plan remains
+an optional override. Outcomes remain raw or schema-unqualified until
+target-qualified evidence exists. Event reads are not
 scalar scan candidates and do not create typed Browser or HTML inventory.
 Browser and HTML may show a candidate interpretation beside raw values only
 when explicitly marked experimental and schema-unqualified.

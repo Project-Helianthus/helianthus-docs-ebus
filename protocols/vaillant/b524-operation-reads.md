@@ -1,15 +1,53 @@
-# B524 Explicit Operation Reads
+# B524 Schedule and Event Reads
 
 This contract covers B524 operations outside the OP02/OP06 scalar scan. It
-preserves explicit request identity and raw response evidence. It does not
+preserves exact request identity and raw response evidence. It does not
 qualify target support, native Event semantics, a setter, or a scalar RR
 namespace.
 
-## Explicit read plan
+## Automatic Event programs
+
+Normal scans offer Event programs without an additional command-line option or
+external plan file. After scalar instance discovery, candidates come from
+System, availability-confirmed native DHW, and concrete present zones. The
+documented profile/address catalogs below supply the program selectors. OP00
+capacity alone does not create zone instances, and a scalar anchor does not
+prove that its instance byte supports Event.
+
+Each program initially probes the raw selector window **`0x00..0x07`
+inclusive**. This is a visible, editable candidate window, not a protocol
+maximum or a qualified Monday-to-Sunday encoding. No weekday names are assigned.
+Every selected code is attempted: an empty response at `0x00` does not suppress
+later codes, addresses, instances, or profiles. A completed window with no value
+means only **not observed in the candidate window**, never unsupported, absent,
+or no events. Codes outside the selected window remain unscanned.
+
+The visual planner groups all codes and their paired setpoint reads into one
+program row. Tab and Shift+Tab cycle through nonempty Local, Remote, and Event
+panes. Space toggles the complete program; Enter or `d` edits its raw-code set
+within `0x00..0xFF`. The classic planner also groups programs and accepts
+`codes N <raw range>` for an automatic program. Worst-case request counts include
+both reads for every selected code; there is no new implicit request budget.
+
+An automatic `GetEventSetPoint` runs only after a matching `GetEvent` produces
+a structurally valid eight-byte, raw-correlated value for the exact same
+`(profile, instance, address, weekday_code)`. Empty, negative, malformed, failed,
+or unattempted Event reads retain their evidence, and the conditional setpoint
+record remains unattempted with its precondition reason. No meaning is invented
+for `PARAM_CONFIG`, all-zero replies, or all-`FF` replies. A structurally valid
+reply remains schema-unqualified; it does not establish native support.
+
+Automatic candidates require a known target EID and manufacturer from the
+identity probe. Missing identity or missing scalar anchors leave automatic
+Event work unscheduled, not unsupported. Existing interruption, recovery, and
+caller-specified budget boundaries preserve all unsent selected requests.
+
+## Explicit read-plan override
 
 `--b524-read-plan` accepts a JSON object conforming to
 [the version 1 schema](fixtures/b524-operation-read-plan-schema-v1.json).
-Every request is explicit. The plan does not enumerate channels, instances,
+This optional advanced override retains exactly its supplied selectors instead
+of constructing automatic Event candidates. The plan does not enumerate channels, instances,
 event addresses, or weekday codes. Operation determines the wire opcode, so an
 item never supplies a redundant opcode field. `--preview-read-plan` validates
 and displays normalized selectors without transport I/O.
@@ -18,8 +56,10 @@ Standalone Event commands require an explicit `--weekday-code`; there is no
 implicit value of zero and no assigned weekday meaning for this selector.
 
 There is no new implicit request cap. The shared scanner budget counts actual
-attempts for selected operation reads with the normal scan work. Ordinary scalar
-presets do not expand this plan or construct Event selectors.
+attempts for selected operation reads with the normal scan work. Scalar presets
+do not expand an explicit override. Explicit setpoint requests retain their
+independent acquisition behavior; the automatic OP09 precondition applies only
+to automatically constructed pairs.
 
 | Operation | Required selector fields | Boundary |
 | --- | --- | --- |
@@ -28,7 +68,7 @@ presets do not expand this plan or construct Event selectors.
 | `GetEvent` | `profile`, `instance`, `address`, `weekday_code` | `system` admits addresses `1..3`; `dhw` and `zone` admit `1..2`. The instance stays an explicit `u8`; Event support and weekday-code semantics remain experimental and unqualified. |
 | `GetEventSetPoint` | `profile`, `instance`, `address`, `weekday_code` | `system` admits addresses `1..3`; `dhw` and `zone` admit `1..2`. The instance stays an explicit `u8`; Event support and weekday-code semantics remain experimental and unqualified. |
 
-The planner lists only selected requests and their progress. Replay preserves
+The planner retains every selected program's exact requests and their progress. Replay preserves
 the same operation records without transport I/O. Browser and HTML show Event
 candidate interpretations beside raw values with an explicit experimental,
 `schema_unqualified` marker. A response of the expected length does not qualify
