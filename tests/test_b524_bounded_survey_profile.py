@@ -116,6 +116,7 @@ def test_local_ci_validates_every_contributed_bounded_survey_profile() -> None:
         (lambda profile: profile["samples"][0].update({"request_payload_hex": "0G"}), "request_payload_hex"),
         (lambda profile: profile["samples"][0].update({"reply_payload_hex": "0"}), "reply_payload_hex"),
         (lambda profile: profile["samples"][0]["selector"].update({"op": "06"}), "op"),
+        (lambda profile: profile["samples"][0].update({"kind": "op02_reed"}), "kind"),
     ],
 )
 def test_profile_schema_rejects_invalid_identity_and_payload_fields(

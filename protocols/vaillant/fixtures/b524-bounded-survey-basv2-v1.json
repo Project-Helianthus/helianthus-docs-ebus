@@ -23,7 +23,8 @@
     "describe_request_layout": "OP GG FF RRlo RRhi",
     "read_instance_scope": "positive groups: one profile-selected concrete II per group; high OP02 GG0B..2F: II00; high OP06 GG10..2F: II00 and II01; exploratory historical samples do not define current discovery intervals",
     "describe_instance_scope": "II=FF generic class description; reply correlation is GG/RR only and does not establish II identity",
-    "configured_discovery_intervals": "outside this survey profile; do not infer interval bounds from the representative II"
+    "configured_discovery_intervals": "outside this survey profile; do not infer interval bounds from the representative II",
+    "exchange_context": "Selector-correlated read-only payloads: Explorer initiator requests regulator target; target replies to initiator. Native endpoint addresses, raw framing, raw-capture provenance and capture conditions are Unknown in this payload-only profile. Roles and direction describe request/reply correlation, not independently observed full frames."
   },
   "group_windows": [
     {

@@ -101,7 +101,8 @@
         "describe_request_layout": { "type": "string", "minLength": 1 },
         "read_instance_scope": { "type": "string", "minLength": 1 },
         "describe_instance_scope": { "type": "string", "minLength": 1 },
-        "configured_discovery_intervals": { "type": "string", "minLength": 1 }
+        "configured_discovery_intervals": { "type": "string", "minLength": 1 },
+        "exchange_context": { "type": "string", "minLength": 1 }
       },
       "additionalProperties": false
     },
@@ -247,8 +248,7 @@
         ],
         "properties": {
           "kind": {
-            "type": "string",
-            "minLength": 1
+            "enum": ["op02_read", "op06_read", "op07_generic_description"]
           },
           "selector": {
             "$ref": "#/$defs/selector"

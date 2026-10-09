@@ -47,7 +47,18 @@ The profile and reusable [template](fixtures/b524-bounded-survey-profile-templat
 
 ## Publishable artifacts
 
-Publish the schema, a sanitized profile, and payload-only samples sufficient to check operation/selector handling. Exclude serials, endpoints, addresses, network coordinates, and raw captures. A profile states its coverage, model scope, response totals, and nonclaims.
+Publish the schema, a sanitized profile, and payload-only samples sufficient to check operation/selector handling. Exclude serials, private host endpoints, network coordinates, and identifying raw captures. A profile states its coverage, model scope, response totals, and nonclaims.
+
+Record sanitized native eBUS endpoint roles and request/reply direction in
+`survey_scope.exchange_context`. Include native addresses and capture context
+only when recorded and publishable; otherwise mark them `Unknown`. Payload-only
+correlation does not establish framing, independently observed direction,
+raw-capture provenance, or capture conditions.
+
+The BASV2 samples correlate read-only Explorer-initiator requests to regulator-target
+replies. Native endpoint addresses, raw framing, raw-capture provenance and capture
+conditions are `Unknown` in this profile. The model and acquisition revisions
+identify the scope; they do not replace missing exchange context.
 
 The [BASV2 profile](fixtures/b524-bounded-survey-basv2-v1.json) includes representative OP02/OP06 read and description entries. Its generic `II=FF` description is explicitly not concrete-instance evidence.
 

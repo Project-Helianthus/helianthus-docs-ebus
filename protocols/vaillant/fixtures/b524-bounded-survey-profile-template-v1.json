@@ -23,7 +23,8 @@
     "describe_request_layout": "OP GG FF RRlo RRhi",
     "read_instance_scope": "replace",
     "describe_instance_scope": "II=FF generic",
-    "configured_discovery_intervals": "state separately"
+    "configured_discovery_intervals": "state separately",
+    "exchange_context": "State sanitized native endpoint roles and request/reply direction. Record native addresses, framing, capture provenance and capture conditions only when available and publishable; otherwise mark Unknown. Do not infer full-frame evidence from payload-only correlation."
   },
   "group_windows": [
     {
