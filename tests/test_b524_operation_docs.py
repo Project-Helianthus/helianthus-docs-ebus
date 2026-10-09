@@ -44,6 +44,28 @@ def test_register_map_uses_op02_read_selectors_not_op01_descriptions() -> None:
     assert "OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B" in text
 
 
+def test_circuit_register_prose_preserves_b524_evidence_boundaries() -> None:
+    text = REGISTER_MAP.read_text(encoding="utf-8")
+    circuits = text.split("### GG=0x02 — Circuits", 1)[1].split(
+        "### GG=0x03 — Zones", 1
+    )[0]
+    circuit_fsm = text.split("### `circuit_state`", 1)[1].split(
+        "### `system_quick_mode`", 1
+    )[0]
+
+    assert "no presence predicate for this virtual identity" in circuits
+    assert "RR0008 and RR0020 must not be\nused to infer it" in circuits
+    assert "Observed UCH one-byte raw status (`00`)" in circuits
+    assert "It is not a temperature value" in circuits
+    for register in ("0x0007", "0x000E", "0x0014", "0x001E"):
+        row = next(line for line in circuits.splitlines() if line.startswith(f"| {register} |"))
+        assert "Installer-field candidate" in row
+    assert "plausible live temperature evidence" not in text
+    assert "Values_hcpumpmode" not in text
+    assert "tracks circuit_state" not in circuit_fsm
+    assert "calculated_flow_temperature" not in circuit_fsm
+
+
 def test_historical_short_probe_catalog_is_not_validation_authority() -> None:
     text = REGISTER_MAP.read_text(encoding="utf-8")
     assert "Authoritative for value ranges" not in text

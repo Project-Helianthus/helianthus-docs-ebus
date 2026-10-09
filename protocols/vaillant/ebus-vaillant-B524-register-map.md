@@ -494,11 +494,11 @@ indexing rule or a physical-topology claim. An empty/null response contains no
 valid register value; it does not by itself distinguish absence, inactivity or
 unsupported addressing.
 
-`II=0x09` is the virtual native-water circuit. Its selector does not identify a
-physical heating circuit. Treat it as present only when it has plausible live temperature evidence
-from `circuit_current_flow_temperature` (RR=0x0008) or
-`circuit_status_automatic_heating_cooling` (RR=0x0020). This preserves inactive handling for
-all other `mctype=0` circuit slots. Community evidence:
+`II=0x09` is retained as the virtual native-water circuit. Its selector does
+not identify a physical heating circuit. The current public evidence supplies
+no presence predicate for this virtual identity: RR0008 and RR0020 must not be
+used to infer it from a temperature or status value. This leaves the inactive
+handling of other `mctype=0` circuit slots unchanged. Community evidence:
 [public register observations](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53).
 
 Historical scan records include II0A probes. They remain retained raw
@@ -512,20 +512,20 @@ observations, but do not extend the current profile's II00..09 coverage.
 | 0x0004 | circuit_backflow_temperature_setpoint | C | f32 | °C | Hc{hc}ReturnTempDesired | 15..80 | — | circuit_type=4 (return_increase) | Factory setting 30°C. jonesPD CTLV2 confirmed. Only meaningful for "Increase in return" circuits |
 | 0x0005 | circuit_condensate_sensitive_emitter | C | u8 | bool | — | 0..1 | `0=off 1=on` | cooling_enabled | Constraint tag u8. ebusd onoff=UCH. † |
 | 0x0006 | circuit_cooling_allowed | C | u8 | bool | Hc{hc}CoolingEnabled | 0..1 | `0=off 1=on` | — | Gate register. Constraint tag u8. ebusd onoff=UCH |
-| 0x0007 | circuit_current_target_flow_temperature | S | f32 | °C | Hc{hc}FlowTempDesired | — | — | — | Read-only |
+| 0x0007 | circuit_current_target_flow_temperature | S | f32 | °C | Hc{hc}FlowTempDesired | — | — | — | Installer-field candidate; physical menu correspondence requires corroboration. |
 | 0x0008 | circuit_current_flow_temperature | S | f32 | °C | Hc{hc}FlowTemp | — | — | — | Read-only. Circuit flow sensor VF[x], NOT boiler return temperature |
 | 0x0009 | circuit_dhw_tapping_setpoint | C | f32 | °C | — | — | — | ext_hwc_active | † |
 | 0x000A | circuit_epsilon | C | f32 | K | — | — | — | cooling_enabled | † |
 | 0x000B | circuit_flow_temperature_setpoint_correction_heating | C | f32 | K | Hc{hc}ExcessTemp | — | — | circuit_type=1 (heating) | Flow temp increased by this value to keep mixing valve in control range |
 | 0x000C | circuit_flow_temperature_setpoint_high | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | Fixed-value circuit target flow temp. † |
 | 0x000D | circuit_flow_temperature_setpoint_low | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | Fixed-value circuit setback temp. † |
-| 0x000E | circuit_frost_protection_mode | C | u16 | enum | Hc{hc}SetbackMode | — | →offmode | circuit_type=1 (heating) | Candidate mapping; do not infer a separate setback field from this label. |
+| 0x000E | circuit_frost_protection_mode | C | u16 | enum | Hc{hc}SetbackMode | — | →offmode | circuit_type=1 (heating) | Installer-field candidate; do not infer a separate setback field from this label or physical menu correspondence. |
 | 0x000F | circuit_heating_curve | C | f32 | — | Hc{hc}HeatCurve | — | — | — | Dimensionless ratio |
 | 0x0010 | circuit_heating_flow_temperature_max_setpoint | C | f32 | °C | Hc{hc}MaxFlowTempDesired | — | — | — | 15..80 per ebusd |
 | 0x0011 | circuit_cooling_flow_temperature_min_setpoint | C | f32 | °C | Hc{hc}MinCoolingTempDesired | — | — | cooling_enabled | |
 | 0x0012 | circuit_flow_temperature_min_setpoint | C | f32 | °C | Hc{hc}MinFlowTempDesired | — | — | — | |
 | 0x0013 | circuit_dhw_operating_mode | C | u16 | enum | — | — | values unknown | ext_hwc_active | |
-| 0x0014 | circuit_outside_temperature_limit_summer_detection | C | f32 | °C | Hc{hc}SummerTempLimit | — | — | — | Summer cutoff |
+| 0x0014 | circuit_outside_temperature_limit_summer_detection | C | f32 | °C | Hc{hc}SummerTempLimit | — | — | — | Installer-field candidate; the summer-cutoff interpretation requires physical corroboration. |
 | 0x0015 | circuit_room_temperature_influence | C | u16 | enum | Hc{hc}RoomTempSwitchOn | — | →rcmode | — | Gate for dew point |
 | 0x0016 | circuit_screed_drying_day | C | u16 | count | Hc{hc}ScreedDryingDay | — | — | — | Screed drying program |
 | 0x0017 | circuit_screed_drying_setpoint | S | f32 | °C | Hc{hc}ScreedDryingTempDesired | — | — | — | FLAGS=0x01 (stable RO) — computed setpoint, not user-configurable |
@@ -535,9 +535,9 @@ observations, but do not extend the current profile's II00..09 coverage.
 | 0x001B | circuit_pump_status | S | u16 | enum | Hc{hc}Status | — | — | — | Enum: 0=STANDBY, 1=HEATING, 2=COOLING. See [Circuit State Enum](#circuit-state-enum) |
 | 0x001C | circuit_adaptive_heating_curve_offset | S | f32 | — | Hc{hc}HeatCurveAdaption | — | — | — | Heat curve adaption factor. Dimensionless. Read-only |
 | 0x001D | circuit_dhw_quick_mode | C | f32 | °C | Hc{hc}FrostProtThreshold | — | — | — | FLAGS=0x02 (technical RW) — writable config, not property |
-| 0x001E | circuit_status_circuit | S | u16 | raw | Hc{hc}PumpStatus | — | — | — | Candidate distinct from RR001B and RR0020; semantic status interpretation needs separate evidence. |
+| 0x001E | circuit_status_circuit | S | u16 | raw | Hc{hc}PumpStatus | — | — | — | Installer-field candidate, distinct from RR001B and RR0020; its semantic status interpretation needs separate physical corroboration. |
 | 0x001F | circuit_minimum_outside_temperature_cooling | C | f32 | °C | Hc{hc}RoomSetpoint | — | — | — | |
-| 0x0020 | circuit_status_automatic_heating_cooling | S | u8 | raw | Hc{hc}FlowTempCalc | — | — | — | Relevant raw observation is one byte. Earlier f32 prose is unqualified and must not override a correlated raw width. |
+| 0x0020 | circuit_status_automatic_heating_cooling | S | u8 | raw | Hc{hc}FlowTempCalc | — | — | — | Observed UCH one-byte raw status (`00`) at the relevant circuit selectors. It is not a temperature value; earlier f32 prose is unqualified. |
 | 0x0021 | circuit_mixer_position_percentage | S | f32 | % | Hc{hc}MixerPosition | — | — | — | |
 | 0x0022 | circuit_current_room_humidity | S | f32 | % | Hc{hc}Humidity | — | — | — | From room sensor |
 | 0x0023 | circuit_dew_point_temperature | S | f32 | °C | Hc{hc}DewPointTemp | — | — | — | |
@@ -1096,7 +1096,7 @@ Used by: GG=0x02 RR=0x0002
 | 0 | inactive | inactive | Inactive | Circuit unused |
 | 1 | mixer | heating | Heating | Weather-compensated heating. Mixing or direct depending on basic system diagram. |
 | 2 | fixed | fixed_value | Fixed value | Circuit held at a fixed target flow temperature. Applications: swimming pool heating, door air curtain heating. |
-| 3 | hwc | dhw | DHW | Heating circuit used as DHW circuit for an additional cylinder. Instance `II=0x09` may need to be inferred as this role from live temperature evidence when RR=0x0002 reports inactive. |
+| 3 | hwc | dhw | DHW | Heating circuit used as DHW circuit for an additional cylinder. II09 remains a virtual native-water candidate; current public evidence provides no temperature-based predicate to infer this role when RR0002 is inactive. |
 | 4 | returnincr | return_increase | Increase in return | Return temperature raise circuit. Target return temperature at RR=0x0004 (factory setting 30°C). |
 
 **Naming note:** ebusd templates label value 1 as "mixer" — this is a community naming convention; the Vaillant VRC720 operating & installation manual calls it "Heating" (Heizen). The mixing valve is an implementation detail of the hydraulic system, not the circuit type itself.
@@ -1116,17 +1116,15 @@ Used by: GG=0x02 RR=0x001B (`circuit_state`, ebusd `Hc{hc}Status`)
 | Value | Common name | myPyllant | Evidence |
 |-------|-------------|-----------|----------|
 | 0 | standby | STANDBY | Live scan confirmed: 3 circuits idle, pumps off, flow setpoint=0 |
-| 1 | heating | HEATING | Inferred from pump status analogy (`Values_hcpumpmode` heat=1) + myPyllant `CircuitState` enum |
-| 2 | cooling | COOLING | Inferred from pump status analogy (`Values_hcpumpmode` cool=2) + myPyllant `CircuitState` enum |
+| 1 | heating | HEATING | Inferred from the `CircuitState` enum correlation; physical corroboration remains required. |
+| 2 | cooling | COOLING | Inferred from the `CircuitState` enum correlation; physical corroboration remains required. |
 | N | unknown_N | — | Safety fallback for unmapped values |
 
 **ebusd type:** Plain `UCH` — no enum type annotation in ebusd `Hc1Status` model (`15.700.tsp`).
 
-**Pump status analogy:** The pump status register (GG=0x02 RR=0x001E) uses `Values_hcpumpmode` with `off=0, heat=1, cool=2, exthwc=3`. The circuit state enum follows the same numeric ordering for the first three values.
-
 **myPyllant:** `CircuitState` enum in `myPyllant/enums.py` defines `HEATING`, `COOLING`, `STANDBY` as string values. The cloud API performs the numeric-to-string conversion server-side. Test fixtures contain only HEATING and STANDBY observations.
 
-Sources: Live scan observation (2026-03-08), ebusd `_templates.tsp` `Values_hcpumpmode`, myPyllant `enums.py` `CircuitState`, VRC720 register mapping.
+Sources: Live scan observation (2026-03-08), myPyllant `enums.py` `CircuitState`, VRC720 register mapping.
 
 ### offmode — Auto-off behavior
 
@@ -1253,7 +1251,7 @@ Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit st
 
 **Transitions:** standby -> heating (room temp below setpoint AND schedule slot active). heating -> standby (setpoint reached OR schedule inactive). standby -> cooling (room temp above cooling setpoint AND cooling enabled).
 
-**Related registers:** GG=0x02 RR=0x001E `pump_status` (tracks circuit_state: 0->off, 1->heat, 2->cool), GG=0x02 RR=0x001A `mixer_movement`, GG=0x02 RR=0x0020 `calculated_flow_temperature`.
+**Related registers:** GG=0x02 RR=0x001E is an installer-field candidate with unknown semantic status interpretation; GG=0x02 RR=0x001A is `mixer_movement`; GG=0x02 RR=0x0020 is an observed UCH one-byte raw status, not a calculated flow temperature.
 
 **Confidence:** HIGH for 0/1 (live confirmed + myPyllant); MEDIUM for 2 (no cooling hardware in lab).
 
