@@ -926,20 +926,15 @@ devices are identified by non-default values.** Empty slots have NaN/0xFF.
 | 0x0033 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
 | 0x0035 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x02. All: 0 |
 
-**Device slot enumeration:** Follow the
-[profile-qualified discovery contract](ebus-vaillant-b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
-For the characterized profile, recommended discovery starts at **II=0x01**:
-all OP06 groups use the current profile bounds II01..II08.
-With a positive mapped OP00 count, continue after disconnected slots until the
-confirmed positive quota or II08 bound is reached. A qualified zero mapped count
-omits ordinary recommended candidates. When no usable count is available, stop
-only on a complete, correlated, profile-qualified `not_connected` Boolean from
-RR0001. Unknown results do not stop the next probe. Full/research audit every
-slot in the declared bound, including slots after a negative result.
+**Device slot observations:** The characterized OP06 profile uses II01..II08.
+The [availability observations](ebus-vaillant-b524-profile-discovery-and-descriptions.md#availability-observations)
+separate correlated concrete-II Boolean results from generic class descriptions
+and unknown replies. This interval is profile-specific, not a bound on the
+one-byte instance field.
 
 `device_connected=false` does not establish physical absence and must not suppress
 retained inventory evidence. Identity and telemetry reads can include:
-- `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in the current lab, `0x26` correlates with the eBUS-identified `VR_71`
+- `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in a BASV2 observation, `0x26` correlates with the eBUS-identified `VR_71`
 - `device_firmware_version` (0x0004) — byte-decimal triplet
 - `reception_strength` (0x001F) — 0-10 scale (4=acceptable, <4=unstable)
 - `remote_control_address` (0x0019) — unique per remote (1..N), 0 for initiator

@@ -17,7 +17,9 @@ def test_current_topology_and_discovery_profile_instance_bounds_agree() -> None:
     text = REGISTER_MAP.read_text(encoding="utf-8")
     topology = text.split("## Group Topology", 1)[1].split("**GG values", 1)[0]
     # Split on the next section, not the Markdown table's separator row.
-    profiles = text.split("### Discovery Profiles", 1)[1].split("## Gate Conditions", 1)[0]
+    profiles = text.split("### Discovery Profiles", 1)[1].split(
+        "## Gate Conditions", 1
+    )[0]
 
     def rows(section: str) -> dict[tuple[int, int], list[str]]:
         result = {}
@@ -49,18 +51,26 @@ def test_historical_short_probe_catalog_is_not_validation_authority() -> None:
     assert "authoritatively map a register, validate a value" in text
 
 
-def test_description_budget_is_writable_candidate_scoped_without_write_authority() -> None:
-    text = (ROOT / "development/ebus-vaillant-b524-description-acquisition.md").read_text(encoding="utf-8")
+def test_description_budget_is_writable_candidate_scoped_without_write_authority() -> (
+    None
+):
+    text = (
+        ROOT / "development/ebus-vaillant-b524-description-acquisition.md"
+    ).read_text(encoding="utf-8")
     assert "all deduplicated, observed" in text
     assert "at most 256" not in text
     assert "observed writable candidates" in " ".join(text.split())
     assert "neither proves live writability nor" in text
     assert "unknown codec is retained raw" in text
-    assert "`eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and" in text
+    assert (
+        "`eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and" in text
+    )
 
 
 def test_scan_presets_are_deterministic_bounded_and_operation_scoped() -> None:
-    text = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
+    text = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(
+        encoding="utf-8"
+    )
     assert "OP=02/GG `00..05,08,09`" in text
     assert "OP=06/GG\n`01,02,03,05,06,07,08,09,0A,0B,0C,0E,0F`" in text
     assert "every declared II slot" in text
@@ -73,7 +83,9 @@ def test_scan_presets_are_deterministic_bounded_and_operation_scoped() -> None:
 
 
 def test_scan_plan_and_budgets_remain_partial_read_only_contracts() -> None:
-    text = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
+    text = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(
+        encoding="utf-8"
+    )
     assert "`--scan-plan` JSON file" in text
     assert "`schema_version: 1`" in text
     assert "Only read selectors and wire-bounded values are accepted" in text
@@ -84,14 +96,18 @@ def test_scan_plan_and_budgets_remain_partial_read_only_contracts() -> None:
 
 
 def test_scan_plan_synthetic_boundary_vectors_are_consistent() -> None:
-    cases = json.loads((ROOT / "tests" / "fixtures" / "b524_scan_plan_v1_cases.json").read_text())
+    cases = json.loads(
+        (ROOT / "tests" / "fixtures" / "b524_scan_plan_v1_cases.json").read_text()
+    )
     assert cases["source"] == "synthetic_contract_vectors"
     assert cases["accepted"][0]["normalized"] == cases["accepted"][1]["normalized"]
     assert cases["accepted"][2]["expected_requests"] == 100000
     assert cases["rejected"][0]["name"] == "request_limit_exceeded"
 
 
-def test_semantic_scan_policy_uses_complete_descriptions_and_unqualified_history() -> None:
+def test_semantic_scan_policy_uses_complete_descriptions_and_unqualified_history() -> (
+    None
+):
     text = SEMANTIC_MAPPING.read_text(encoding="utf-8")
     assert "probe `0x00` directory sequentially" not in text
     assert "probe `0x01 GG RR`" not in text
@@ -115,14 +131,21 @@ def test_semantic_fallback_and_b509_evidence_links_match_the_op06_catalog() -> N
 
 
 def test_device_enumeration_preserves_ii01_and_retained_inventory_contract() -> None:
-    text = REGISTER_MAP.read_text(encoding="utf-8")
-    section = text.split("**Device slot enumeration:**", 1)[1].split("**ebusd baseline:**", 1)[0]
-    assert "II=0x00 through" not in section
-    assert "If =1, read" not in section
-    assert "starts at **II=0x01**" in section
-    assert "Unknown results do not stop" in section
-    assert "Full/research audit every" in section
-    assert "must not suppress\nretained inventory evidence" in section
+    text = (ROOT / "development/ebus-vaillant-b524-explorer-discovery.md").read_text()
+    section = text.split("## OP06 connected-device discovery", 1)[1].split(
+        "### GG0D relay-module predicate", 1
+    )[0]
+    normalized = " ".join(section.split())
+    assert "begin at II01" in normalized
+    assert "Unknown results do not stop the next probe" in normalized
+    assert (
+        "`full` and `research` retain the complete configured audit interval"
+        in normalized
+    )
+    assert "does not erase retained identity evidence" in normalized
+    neutral = REGISTER_MAP.read_text()
+    assert "**Device slot observations:**" in neutral
+    assert "**Device slot enumeration:**" not in neutral
 
 
 def test_relay_connection_candidate_preserves_unknown_native_qualification() -> None:
@@ -136,7 +159,10 @@ def test_relay_connection_candidate_preserves_unknown_native_qualification() -> 
     assert "**Hypothesis; native qualification Unknown:**" in section
     assert "no positive, correlated\nGG0D/RR0001 observation is published" in section
     assert "`source=heuristic_probe`" in section
-    assert "not qualified\nnative connection evidence or physical inventory proof" in section
+    assert (
+        "not qualified\nnative connection evidence or physical inventory proof"
+        in section
+    )
     assert "qualified RR0001 predicate" not in text
 
 
@@ -145,30 +171,40 @@ def test_functional_module_presentation_names_preserve_the_evidence_boundary() -
     profile = (
         ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md"
     ).read_text(encoding="utf-8")
-    architecture = (ROOT / "architecture" / "functional-modules.md").read_text(encoding="utf-8")
+    architecture = (ROOT / "architecture" / "functional-modules.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "`OP=0x06, GG=0x0B` = **Functional\nModules (VR70) FM3**" in register_map
     assert "observed scheduling ceiling" in register_map
-    assert "| 0x06 | 0x0B | Functional Modules (VR70) FM3 | Yes | 0x08 | 0x002F |" in register_map
+    assert (
+        "| 0x06 | 0x0B | Functional Modules (VR70) FM3 | Yes | 0x08 | 0x002F |"
+        in register_map
+    )
     assert "is not a documented\nB524 selector route" not in register_map
-    assert "`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71) FM5**" in register_map
+    assert (
+        "`OP=0x06, GG=0x0C` is presented as **Functional Modules (VR71) FM5**"
+        in register_map
+    )
     assert "`functional_modules_vr70`" in profile
     assert "concrete Boolean required per slot" in profile
     assert "Catalog visibility\ndoes not create a group route" in profile
     assert "`OP=0x06, GG=0x0B`" in architecture
     assert "`OP=0x06, GG=0x0C`" in architecture
-    routing = B524.read_text(encoding="utf-8").split("### 3.2 Opcode routing", 1)[1].split(
-        "**Unqualified presentation candidate:**", 1
-    )[0]
+    routing = (
+        B524.read_text(encoding="utf-8")
+        .split("### 3.2 Opcode routing", 1)[1]
+        .split("**Unqualified presentation candidate:**", 1)[0]
+    )
     assert "GG=0x0B" not in routing
 
 
 def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> None:
     text = B524.read_text(encoding="utf-8")
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
-    profile = (ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md").read_text(
-        encoding="utf-8"
-    )
+    profile = (
+        ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md"
+    ).read_text(encoding="utf-8")
 
     assert "operator-provided **hypothesis catalog**" in text
     for semantic_name in (
@@ -198,17 +234,27 @@ def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> 
     assert "| 0x06 | 0x01 | Boiler |" in register_map
     assert "| 0x06 | 0x02 | Heat Pump |" in register_map
     assert "| 0x06 | 0x08 | Modul Solar (VMS) auroSTEP |" in register_map
-    assert "| 0x06 | 0x09 | Remote Control Regulators (VRC7xx, VRT38x) |" in register_map
+    assert (
+        "| 0x06 | 0x09 | Remote Control Regulators (VRC7xx, VRT38x) |" in register_map
+    )
     assert "| 0x06 | 0x0A | Remote Control Thermostats (VR9x) |" in register_map
     assert "| 0x06 | 0x0E | Clock Module |" in register_map
     assert "| 0x06 | 0x0F | Base Station |" in register_map
-    assert "| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Hypothesis" in text
+    assert (
+        "| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Hypothesis"
+        in text
+    )
     assert "### GG=0x0C — Functional Modules (VR71) FM5" in register_map
-    assert "GG0B\nmust not receive GG0C's scan policy or `device_connected` predicate" in text
+    assert (
+        "GG0B\nmust not receive GG0C's scan policy or `device_connected` predicate"
+        in text
+    )
     assert "`unused` for GG04 does not justify suppressing a probe" in profile
 
 
-def test_register_map_preserves_exact_gg05_and_ventilation_presentation_annotations() -> None:
+def test_register_map_preserves_exact_gg05_and_ventilation_presentation_annotations() -> (
+    None
+):
     text = REGISTER_MAP.read_text(encoding="utf-8")
     ventilation = text.split("### GG=0x09 — Ventilation", 1)[1].split(
         "### GG=0x0A — Local Parameters", 1
@@ -223,7 +269,10 @@ def test_register_map_preserves_exact_gg05_and_ventilation_presentation_annotati
     assert "**Hypothesis** for a VRC720 controller" in ventilation
     assert ventilation.count("`1=TIME_CONTROLLED 2=NORMAL 3=REDUCED`") == 2
     assert ventilation.count("`0=REGULAR 1=BOOST 7=HOLIDAY 10=SYSTEM_OFF`") == 2
-    assert "ventilation_status_special_operating_mode | S | u16 | — | — | 0..10" in ventilation
+    assert (
+        "ventilation_status_special_operating_mode | S | u16 | — | — | 0..10"
+        in ventilation
+    )
     assert "numeric domain unknown" not in ventilation
     assert "operator-selected presentation annotations" in normalized_ventilation
     assert "not independently native-verified" in normalized_ventilation
@@ -239,9 +288,11 @@ def test_register_catalog_is_strictly_partitioned_by_opcode() -> None:
         "## Constraint Catalog", 1
     )[0]
 
-    assert op02.index("### GG=0x09 — Ventilation") < op02.index(
-        "### GG=0x09 — Ventilation / recoVair Candidates"
-    ) < op02.index("### GG=0x0A — Local Parameters")
+    assert (
+        op02.index("### GG=0x09 — Ventilation")
+        < op02.index("### GG=0x09 — Ventilation / recoVair Candidates")
+        < op02.index("### GG=0x0A — Local Parameters")
+    )
     assert "(opcode 0x06)" not in op02
     assert "### GG=0x08 — Modul Solar (VMS) auroSTEP" in op06
     assert "### GG=0x09 — Remote Control Regulators (VRC7xx, VRT38x)" in op06
@@ -252,12 +303,18 @@ def test_op02_naming_catalog_matches_exact_operation_group_register_rows() -> No
     import csv
     import re
 
-    source = ROOT / "protocols" / "vaillant" / "fixtures" / "b524-op02-register-names.csv"
+    source = (
+        ROOT / "protocols" / "vaillant" / "fixtures" / "b524-op02-register-names.csv"
+    )
     names = list(csv.DictReader(source.open(encoding="utf-8")))
-    assert len({(row["opcode"], row["group"], row["register"]) for row in names}) == len(names)
-    text = REGISTER_MAP.read_text(encoding="utf-8").split(
-        "## OP=0x02 — Local Parameter Registers", 1
-    )[1].split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[0]
+    assert len(
+        {(row["opcode"], row["group"], row["register"]) for row in names}
+    ) == len(names)
+    text = (
+        REGISTER_MAP.read_text(encoding="utf-8")
+        .split("## OP=0x02 — Local Parameter Registers", 1)[1]
+        .split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[0]
+    )
     observed: dict[tuple[int, int], str] = {}
     group = None
     for line in text.splitlines():
@@ -276,9 +333,16 @@ def test_op02_naming_catalog_matches_exact_operation_group_register_rows() -> No
 def test_op06_common_names_are_universal_and_do_not_relabel_op02() -> None:
     import re
 
-    names = {1: "device_connected", 2: "device_class_address", 3: "device_error_code", 4: "device_firmware_version"}
+    names = {
+        1: "device_connected",
+        2: "device_class_address",
+        3: "device_error_code",
+        4: "device_firmware_version",
+    }
     text = REGISTER_MAP.read_text(encoding="utf-8")
-    remote = text.split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[1].split("## Constraint Catalog", 1)[0]
+    remote = text.split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[
+        1
+    ].split("## Constraint Catalog", 1)[0]
     assert "**every GG**" in remote
     assert "It does not establish register presence" in remote
     for row in re.finditer(r"^\| 0x([0-9A-F]{4}) \| ([^|]+) \|", remote, flags=re.M):
@@ -290,23 +354,29 @@ def test_op06_common_names_are_universal_and_do_not_relabel_op02() -> None:
         assert f"| 0x{register:04X} | `{name}` |" in protocol
 
 
-
 def test_op02_gg0a_observation_does_not_establish_template_or_device_topology() -> None:
-    section = REGISTER_MAP.read_text(encoding="utf-8").split(
-        "### GG=0x0A — Local Parameters", 1
-    )[1].split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[0]
+    section = (
+        REGISTER_MAP.read_text(encoding="utf-8")
+        .split("### GG=0x0A — Local Parameters", 1)[1]
+        .split("## OP=0x06 — Controller-Mediated Device Parameters", 1)[0]
+    )
     assert "physical-device identity, role and topology remain" in section
     assert "**Unknown**" in section
     assert "Repetition does not establish a physical" in section
     assert "template/default purpose" in section
     assert "this is a template/default configuration" not in section
-    assert "| Radio sensors VR92. 69 regs/instance." not in REGISTER_MAP.read_text(encoding="utf-8")
-
+    assert "| Radio sensors VR92. 69 regs/instance." not in REGISTER_MAP.read_text(
+        encoding="utf-8"
+    )
 
 
 def test_protocol_overview_preserves_unknown_role_and_topology_for_op02_gg0a() -> None:
     text = B524.read_text(encoding="utf-8")
-    selector_row = next(line for line in text.splitlines() if line.startswith("| `0x02` | Local controller selector family |"))
+    selector_row = next(
+        line
+        for line in text.splitlines()
+        if line.startswith("| `0x02` | Local controller selector family |")
+    )
     assert "`GG=0x0A`" in selector_row
     assert "OP02/GG0A remain Unknown" in selector_row
     assert "per-slot configuration" not in selector_row
@@ -328,7 +398,9 @@ def test_local_deltat_does_not_claim_singleton_topology() -> None:
     assert "not as a current\nprofile bound or a qualified device count" in local
     assert "OP06/GG08 remains a separate instanced selector set" in local
     assert "| 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent |" in text
-    assert "| 0x02 | 0x08 DeltaT | profile-dependent | 0x0007 | observed scope |" in text
+    assert (
+        "| 0x02 | 0x08 DeltaT | profile-dependent | 0x0007 | observed scope |" in text
+    )
     profiles = text.split("### Discovery Profiles", 1)[1]
     assert profiles.index("| 0x02 | 0x08 DeltaT |") < profiles.index(
         "| 0x06 | 0x08 Modul Solar (VMS) auroSTEP |"
@@ -336,7 +408,9 @@ def test_local_deltat_does_not_claim_singleton_topology() -> None:
     assert "| 0x08 | 0x02 (local) | 0x00 |" not in text
 
 
-def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries() -> None:
+def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries() -> (
+    None
+):
     fixture = json.loads(
         (
             ROOT
@@ -351,8 +425,16 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
     ).read_text(encoding="utf-8")
 
     assert fixture["schema_version"] == "b524-op06-observed-windows/v1"
-    windows = {tuple(row["groups"]): row["rr_through"] for row in fixture["observed_scheduling_windows"]}
-    assert windows[("0x01", "0x02", "0x03", "0x05", "0x06", "0x07", "0x08", "0x0b", "0x0c")] == "0x002f"
+    windows = {
+        tuple(row["groups"]): row["rr_through"]
+        for row in fixture["observed_scheduling_windows"]
+    }
+    assert (
+        windows[
+            ("0x01", "0x02", "0x03", "0x05", "0x06", "0x07", "0x08", "0x0b", "0x0c")
+        ]
+        == "0x002f"
+    )
     assert windows[("0x09", "0x0a")] == "0x0035"
     assert windows[("0x0e", "0x0f")] == "0x0033"
     assert windows[("0x04", "0x0d")] is None
@@ -367,7 +449,11 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
             for group in window["groups"]:
                 assert (group, window["rr_through"]) in raw_ceiling_selectors
 
-    generic = next(sample for sample in fixture["samples"] if sample["kind"] == "generic_description")
+    generic = next(
+        sample
+        for sample in fixture["samples"]
+        if sample["kind"] == "generic_description"
+    )
     assert generic["selector"]["ii"] == "0xff"
     assert generic["device_identity_verified"] is False
     raw_rr002f = {
@@ -378,7 +464,17 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
         and sample["selector"]["rr"] == "0x002f"
         and sample["qualification"] == "unqualified"
     }
-    assert raw_rr002f == {"0x01", "0x02", "0x03", "0x05", "0x06", "0x07", "0x08", "0x0b", "0x0c"}
+    assert raw_rr002f == {
+        "0x01",
+        "0x02",
+        "0x03",
+        "0x05",
+        "0x06",
+        "0x07",
+        "0x08",
+        "0x0b",
+        "0x0c",
+    }
     raw_rr0035 = {
         sample["selector"]["gg"]
         for sample in fixture["samples"]
@@ -393,7 +489,10 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
         for sample in fixture["samples"]
         if sample["kind"] == "concrete_read" and sample["selector"]["rr"] == "0x0033"
     ]
-    assert {(sample["selector"]["gg"], sample["flags"], sample["classification"]) for sample in tails} == {
+    assert {
+        (sample["selector"]["gg"], sample["flags"], sample["classification"])
+        for sample in tails
+    } == {
         ("0x0e", "0x01", "read_only_visible"),
         ("0x0f", "0x00", "read_only_not_visible"),
     }
@@ -437,7 +536,11 @@ def test_op06_observed_window_validator_correlates_every_request_and_reply(
         candidate = tmp_path / f"mismatched-observed-window-{case}.json"
         candidate.write_text(json.dumps(fixture))
         result = subprocess.run(
-            ["python3", "scripts/validate_b524_op06_observed_windows.py", str(candidate)],
+            [
+                "python3",
+                "scripts/validate_b524_op06_observed_windows.py",
+                str(candidate),
+            ],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -449,10 +552,12 @@ def test_op06_observed_window_validator_correlates_every_request_and_reply(
 def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() -> None:
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
     protocol = B524.read_text(encoding="utf-8")
-    profile = (ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md").read_text(
+    profile = (
+        ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md"
+    ).read_text(encoding="utf-8")
+    namespace = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(
         encoding="utf-8"
     )
-    namespace = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
     semantic = SEMANTIC_MAPPING.read_text(encoding="utf-8")
 
     for group, label, name in (
@@ -470,20 +575,41 @@ def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() 
         assert f"| {group} | {label} | `{name}` |" in protocol
 
     assert "| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 |" in register_map
-    assert "II01..II08 for\nordinary heating circuits and II09 for the virtual native-water circuit" in register_map
+    assert (
+        "II01..II08 for\nordinary heating circuits and II09 for the virtual native-water circuit"
+        in register_map
+    )
     assert "II00 and II0A probes" in register_map
-    assert "over II01..II08 for the characterized profile. `II=0x00`, `II=0x09`, and\n`II=0x0A` are outside its current OP06 slot interval" in register_map
-    assert "every OP06 GG admitted by a scan plan uses the common candidate\nslot interval II01..II08" in profile
+    assert (
+        "over II01..II08 for the characterized profile. `II=0x00`, `II=0x09`, and\n`II=0x0A` are outside its current OP06 slot interval"
+        in register_map
+    )
+    assert (
+        "every OP06 GG admitted by a scan plan uses the common candidate\nslot interval II01..II08"
+        in profile
+    )
     assert "does not create a group route" in profile
     assert "Browser tree is a present-instance view" in profile
-    assert "`present=true`; a legacy artifact without that field may retain a successful\nobserved raw reply" in profile
-    assert "not_connected`, empty, timeout, decode failure, and\nunprobed/unknown selectors remain" in profile
+    assert (
+        "`present=true`; a legacy artifact without that field may retain a successful\nobserved raw reply"
+        in profile
+    )
+    assert (
+        "not_connected`, empty, timeout, decode failure, and\nunprobed/unknown selectors remain"
+        in profile
+    )
     assert "does not alter the artifact or create a\nsynthetic slot" in profile
     assert "deselected groups are omitted" in profile
     assert "explicitly selected\nempty group may remain" in profile
-    assert "Custom scan plans enforce the same selector intervals before transport I/O" in profile
+    assert (
+        "Custom scan plans enforce the same selector intervals before transport I/O"
+        in profile
+    )
     assert "OP06 permits II01..II08 and OP02/GG02 permits II01..II09" in profile
-    assert "OP06 candidates use II01..II08; OP02/GG02 uses II01..II08\nfor heating candidates plus II09" in namespace
+    assert (
+        "OP06 candidates use II01..II08; OP02/GG02 uses II01..II08\nfor heating candidates plus II09"
+        in namespace
+    )
     assert "0x02 0x02    0x09         0x0025" in semantic
     assert "0x09 0x06    0x08         0x0035" in semantic
     assert "scan planner" not in protocol
@@ -491,15 +617,20 @@ def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() 
 
 
 def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> None:
-    profile = (ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md").read_text(
+    profile = (
+        ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md"
+    ).read_text(encoding="utf-8")
+    architecture = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(
         encoding="utf-8"
     )
-    architecture = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
 
     assert "OP02/GG00 is mandatory" in architecture
     assert "RR0000..00FF" in architecture
     assert "ID04 `device_count` compares all confirmed\nOP06 slots" in architecture
-    assert "GG03,\nGG05, GG08, GG0A, GG0D, GG0E, and GG0F have no count mapping" in architecture
+    assert (
+        "GG03,\nGG05, GG08, GG0A, GG0D, GG0E, and GG0F have no count mapping"
+        in architecture
+    )
     assert "OP02/GG09 II00 in `recommended`" in architecture
     assert "OP06/GG04 and OP06/GG0D have Unknown RR maxima" in architecture
     assert "GG0D still receives its dedicated RR0001 presence probe" in architecture
@@ -509,13 +640,21 @@ def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> N
     assert "OP06/GG0D II01..II08/RR0001" in recommended
     assert "availability-only probe using `device_connected`" in recommended
     assert "II09 is independent" in profile
-    assert "supported meaning is capacity, not configured or\npresent-instance cardinality" in profile
+    assert (
+        "supported meaning is capacity, not configured or\npresent-instance cardinality"
+        in profile
+    )
     assert "| 0 | 0 | 1 | 1 |" in profile
     assert "| 3 | 1 | 8 | 8 |" in profile
     assert "two configured or confirmed circuits with\ncircuit capacity `3`" in profile
     assert "They never construct instances" in profile
-    assert "does not by itself make concrete presence qualification\nincomplete" in profile
-    assert "Every other mapped OP00 count retains count-guided cardinality semantics" in profile
+    assert (
+        "does not by itself make concrete presence qualification\nincomplete" in profile
+    )
+    assert (
+        "Every other mapped OP00 count retains count-guided cardinality semantics"
+        in profile
+    )
     assert "valid zero suppresses only\nderived default candidates" in profile
     assert "OP00 ID05\ngenerator mapping and no ID17 cooling-group mapping" in profile
     assert "OP02/GG01 uses only II00" in profile
@@ -525,7 +664,9 @@ def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> N
     assert "RR maximum is Unknown" in profile
 
 
-def test_event_and_timer_operations_have_separate_selectors_and_write_boundary() -> None:
+def test_event_and_timer_operations_have_separate_selectors_and_write_boundary() -> (
+    None
+):
     text = B524.read_text(encoding="utf-8")
     timer = text.split("### 4.4", 1)[1].split("### 4.5", 1)[0]
     events = text.split("### 4.5", 1)[1].split("### 4.6", 1)[0]
@@ -537,7 +678,10 @@ def test_event_and_timer_operations_have_separate_selectors_and_write_boundary()
     for operation in ("GetEvent", "SetEvent", "GetEventSetPoint", "SetEventSetPoint"):
         assert operation in events
     assert "do not inherit the VRC700-only timer gate" in events
-    assert "Event execution stays disabled" in (ROOT / "development/ebus-vaillant-b524-operation-reads.md").read_text()
+    assert (
+        "Event execution stays disabled"
+        in (ROOT / "development/ebus-vaillant-b524-operation-reads.md").read_text()
+    )
     assert "Neither `II` nor the request selector is echoed" in events
     assert "VALUE1 remains raw" in events
 
@@ -556,7 +700,12 @@ def test_regulator_crosswalk_is_exact_pair_based_and_keeps_raw_sw_distinct() -> 
         if line.startswith("| `")
     }
     fixture = json.loads(
-        (ROOT / "tests" / "fixtures" / "vaillant_regulator_identity_crosswalk_v1.json").read_text()
+        (
+            ROOT
+            / "tests"
+            / "fixtures"
+            / "vaillant_regulator_identity_crosswalk_v1.json"
+        ).read_text()
     )
     assert fixture["schema_version"] == 1
     expected = {tuple(row) for row in fixture["rows"]}
@@ -566,7 +715,10 @@ def test_regulator_crosswalk_is_exact_pair_based_and_keeps_raw_sw_distinct() -> 
     assert "EID\nand decoded SW/SPN value match as a pair" in text
     assert "Hypothesis" in text
     assert "native-model evidence pending" in text
-    assert "`identity.model_assignment_qualification` to `project_catalog`" in (ROOT / "development/ebus-vaillant-regulator-identification.md").read_text()
+    assert (
+        "`identity.model_assignment_qualification` to `project_catalog`"
+        in (ROOT / "development/ebus-vaillant-regulator-identification.md").read_text()
+    )
     assert "Do not interpret raw `04 17` as `0x0417`" in text
     assert "`B7V00` / `0163` VRC700 R4 row" in text
     assert "B7S00" not in text
@@ -597,5 +749,39 @@ def test_regulator_and_b524_renames_have_no_stale_paths_or_vrc700_alias() -> Non
 def test_attribution_check_rejects_nonpublic_citations() -> None:
     from scripts.check_public_domain_boundary import UNPUBLISHABLE
 
-    for marker in ("private/", "restricted static-analysis", "UNPUBLISHED-semantic-example.md"):
+    for marker in (
+        "private/",
+        "restricted static-analysis",
+        "UNPUBLISHED-semantic-example.md",
+    ):
         assert UNPUBLISHABLE.search(marker)
+
+
+def test_b524_split_fragment_links_resolve_to_the_owning_contract() -> None:
+    references = [
+        (
+            REGISTER_MAP,
+            "ebus-vaillant-b524-profile-discovery-and-descriptions.md",
+            "availability-observations",
+        ),
+        (
+            ROOT / "architecture/b524-namespace-invariants.md",
+            "../development/ebus-vaillant-b524-explorer-discovery.md",
+            "op06-connected-device-discovery",
+        ),
+        (
+            ROOT / "development/ebus-vaillant-b524-description-acquisition.md",
+            "../protocols/vaillant/ebus-vaillant-B524-register-map.md",
+            "constraint-catalog",
+        ),
+    ]
+    for source, target, fragment in references:
+        assert f"]({target}#{fragment})" in source.read_text()
+        headings = re.findall(
+            r"^#{1,6} (.+)$", (source.parent / target).read_text(), re.M
+        )
+        anchors = {
+            re.sub(r"[^\w -]", "", heading.lower()).replace(" ", "-")
+            for heading in headings
+        }
+        assert fragment in anchors

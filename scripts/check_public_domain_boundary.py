@@ -18,6 +18,7 @@ EVIDENCE_HEADING = re.compile(
 )
 UNPUBLISHABLE = re.compile(
     r"private(?:-context)?/|private static analysis|restricted static.analysis|_work_[\w-]+/|"
+    r"(?<![\w/-])(?-i:[A-Z][A-Z0-9]*\d[A-Z0-9]*[-_](?:[\w-]*\.md|(?:DEEP|ANALYSIS|NOTES)\b))|"
     r"(?-i:\b[A-Z]{2,})-(?:B[0-9A-F]{3}|corrections|semantic|protocol|timer)[\w-]*(?:\.md|-)",
     re.IGNORECASE,
 )

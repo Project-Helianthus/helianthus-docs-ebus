@@ -70,3 +70,9 @@ def test_attribution_guard_covers_agpl_documents_too(tmp_path: Path) -> None:
     path.parent.mkdir()
     path.write_text("Source: UNPUBLISHED-semantic-notes.md")
     assert unpublishable_attribution(tmp_path)
+
+
+@pytest.mark.parametrize("citation", ["R7_DEEP", "R7-analysis-notes.md"])
+def test_rejects_bare_local_analysis_citations(tmp_path: Path, citation: str) -> None:
+    document(tmp_path, f"## Evidence\n- {citation}: local analysis\n")
+    assert unpublishable_attribution(tmp_path)
