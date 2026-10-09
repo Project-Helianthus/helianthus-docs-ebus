@@ -109,7 +109,7 @@ uses profile-qualified `device_connected` (RR=0x0001),
 over II01..II08 for the characterized profile. `II=0x00`, `II=0x09`, and
 `II=0x0A` are outside its current OP06 slot interval. Readable headers do not override
 a false connection Boolean; retained inventory is distinct. See the
-[qualified policy and bounds](b524-profile-discovery-and-descriptions.md).
+[qualified policy and bounds](ebus-vaillant-b524-profile-discovery-and-descriptions.md).
 Instance `II` selects the slot.
 `OP=0x02, GG=0x09/0x0A` identifies separate local selector sets;
 remote device labels do not establish their physical identity or topology.
@@ -132,7 +132,7 @@ at target address `0x26`, but that family identification comes from eBUS
 identity correlation rather than from B524 alone.
 
 **Discovery:** OP00 information identifiers are distinct from GG. The
-[profile-qualified mapping table](b524-profile-discovery-and-descriptions.md#recommended-op00-count-guidance)
+[profile-qualified mapping table](ebus-vaillant-b524-profile-discovery-and-descriptions.md#recommended-op00-count-guidance)
 defines the limited `recommended` guidance. For ID00 `circuit_count` and ID01
 `zone_count`, the legacy public names mean supported capacity under the bounded
 profile contract, not configured or present-instance cardinality. They do not
@@ -930,7 +930,7 @@ devices are identified by non-default values.** Empty slots have NaN/0xFF.
 | 0x0035 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x02. All: 0 |
 
 **Device slot enumeration:** Follow the
-[profile-qualified discovery contract](b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
+[profile-qualified discovery contract](ebus-vaillant-b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
 For the characterized profile, recommended discovery starts at **II=0x01**:
 all OP06 groups use the current profile bounds II01..II08.
 Stop only on a complete, correlated, profile-qualified `not_connected` Boolean

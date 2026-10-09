@@ -26,7 +26,7 @@ def test_basv2_profile_keeps_coverage_and_nonclaim_boundaries() -> None:
     assert "terminal RR maxima" in " ".join(profile["nonclaims"])
 
 def test_methodology_preserves_read_only_boundary() -> None:
-    text = (ROOT / "protocols/vaillant/b524-survey-methodology.md").read_text()
+    text = (ROOT / "protocols/vaillant/ebus-vaillant-b524-survey-methodology.md").read_text()
     assert "not evidence that a group" in text
     assert "does not write" in text
     assert "BASV0, BASV3, or CTLv3" in text
@@ -46,7 +46,7 @@ def test_effective_windows_are_separate_from_survey_coverage_and_partial_describ
     assert sum(phase["planned_jobs"] for phase in counts["phases"].values()) == counts["planned_jobs"]
     assert sum(phase["completed_jobs"] for phase in counts["phases"].values()) == counts["completed_jobs"]
     assert "unqualified" in profile["description_high_water_qualification"]
-    text = (ROOT / "protocols/vaillant/b524-survey-methodology.md").read_text()
+    text = (ROOT / "protocols/vaillant/ebus-vaillant-b524-survey-methodology.md").read_text()
     assert "OP 00 GG II RRlo RRhi" in text
     assert "reserved CRC bytes `A9` and `AA`" in text
 

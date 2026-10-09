@@ -302,6 +302,10 @@ Separate older family. eBUS address `0x15`. B524 (OP=0x02 shared, OP=0x03/0x04 V
 | 70000 | Vaillant multiMATIC VRC700 |
 | B7S00 | Saunier Duval alias of VRC700 |
 
+The [Vaillant regulator identity crosswalk](ebus-vaillant-regulators.md)
+provides bounded model-row context. It does not change this operation family's
+existing identity guard.
+
 ### Device-Type Protocol Support Matrix
 
 | Device Type | eBUS Addr | Key Protocols | Timer Transport |

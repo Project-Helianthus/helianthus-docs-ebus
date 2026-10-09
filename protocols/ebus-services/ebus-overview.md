@@ -310,4 +310,4 @@ Notes:
 
 - [`../ebusd-tcp.md`](../ebusd-tcp.md) -- ebusd daemon TCP command protocol (for tooling that sends direct-mode telegrams via ebusd).
 - [`../vaillant/ebus-vaillant.md#vaillant-scanid-chunks-qq0x240x27`](../vaillant/ebus-vaillant.md#vaillant-scanid-chunks-qq0x240x27) -- Vaillant extended discovery (`0xB5 0x09`) details.
-- [`../vaillant/basv.md`](../vaillant/basv.md) -- BASV discovery orchestration flow (observed).
+- [`../vaillant/ebus-vaillant-regulators.md`](../vaillant/ebus-vaillant-regulators.md) -- Vaillant regulator identity crosswalk.

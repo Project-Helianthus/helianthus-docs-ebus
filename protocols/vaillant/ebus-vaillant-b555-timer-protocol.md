@@ -14,14 +14,14 @@
 
 This document specifies the eBUS B555 protocol used by **VRC720-family controllers only** for reading and writing weekly heating, DHW, and other timer/schedule programs.
 
-> **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID 70000, including Saunier Duval B7S00) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for all timer operations. Both device families share eBUS target address `0x15` but are different device classes with different timer transports.
+> **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID `70000`, including Saunier Duval `B7S00`) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for timer operations. The [VRC700 crosswalk](./ebus-vaillant-regulators.md#vrc700-operation-profile) adds model-row context without changing that command identity guard. Both device families share eBUS target address `0x15` but are different device classes with different timer transports.
 
 ### 1.0 Timer Transport Device Binding
 
 | Device class | Device IDs | Timer transport | Reference |
 |---|---|---|---|
 | VRC720 family | BASV0, BASV2, BASV3, CTLV0, CTLV2, CTLV3, CTLS2 | **B555** (this document) | Validated on BASV2 |
-| VRC700 | 70000 (including Saunier Duval B7S00) | **B524 opcodes 0x03/0x04** | [B524 section 4.4](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) |
+| VRC700 | `70000` (including Saunier Duval `B7S00`) | **B524 opcodes 0x03/0x04** | [B524 section 4.4](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) |
 
 A scanner or schedule writer that does not check device identity before choosing transport will send B555 to a VRC700 (no response or error) or send B524 timer frames to a BASV2 (empty response). Device identity can be determined from the eBUS device ID returned during identification.
 

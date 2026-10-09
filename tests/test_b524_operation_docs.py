@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 B524 = ROOT / "protocols" / "vaillant" / "ebus-vaillant-B524.md"
 REGISTER_MAP = ROOT / "protocols" / "vaillant" / "ebus-vaillant-B524-register-map.md"
 SEMANTIC_MAPPING = ROOT / "architecture" / "b524-semantic-mapping.md"
+REGULATORS = ROOT / "protocols" / "vaillant" / "ebus-vaillant-regulators.md"
 
 
 def test_current_topology_and_discovery_profile_instance_bounds_agree() -> None:
@@ -125,7 +126,7 @@ def test_device_enumeration_preserves_ii01_and_retained_inventory_contract() -> 
 
 def test_relay_connection_candidate_preserves_unknown_native_qualification() -> None:
     text = (
-        ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md"
+        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md"
     ).read_text(encoding="utf-8")
     section = text.split("### GG0D relay-module predicate", 1)[1].split(
         "## Descriptions for every eligible parameter", 1
@@ -141,7 +142,7 @@ def test_relay_connection_candidate_preserves_unknown_native_qualification() -> 
 def test_functional_module_presentation_names_preserve_the_evidence_boundary() -> None:
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
     profile = (
-        ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md"
+        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md"
     ).read_text(encoding="utf-8")
     architecture = (ROOT / "architecture" / "functional-modules.md").read_text(encoding="utf-8")
 
@@ -164,7 +165,7 @@ def test_functional_module_presentation_names_preserve_the_evidence_boundary() -
 def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> None:
     text = B524.read_text(encoding="utf-8")
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
-    profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(
+    profile = (ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md").read_text(
         encoding="utf-8"
     )
 
@@ -323,7 +324,7 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
         ).read_text(encoding="utf-8")
     )
     profile = (
-        ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md"
+        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md"
     ).read_text(encoding="utf-8")
 
     assert fixture["schema_version"] == "b524-op06-observed-windows/v1"
@@ -380,7 +381,7 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
 def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() -> None:
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
     protocol = B524.read_text(encoding="utf-8")
-    profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(
+    profile = (ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md").read_text(
         encoding="utf-8"
     )
     namespace = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
@@ -421,7 +422,7 @@ def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() 
 
 
 def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> None:
-    profile = (ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md").read_text(
+    profile = (ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md").read_text(
         encoding="utf-8"
     )
     architecture = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
@@ -462,6 +463,7 @@ def test_event_and_timer_operations_have_separate_selectors_and_write_boundary()
     assert "03 GG II ADDRESS WEEKDAY" in timer
     assert "START1 STOP1 START2 STOP2 START3 STOP3" in timer
     assert "`70000` or `B7S00`" in timer
+    assert "crosswalk" in timer
     assert "90 90" in timer
     for operation in ("GetEvent", "SetEvent", "GetEventSetPoint", "SetEventSetPoint"):
         assert operation in events
@@ -481,8 +483,52 @@ def test_public_b524_specifications_do_not_name_unpublished_source_material() ->
     documents = list((ROOT / "protocols/vaillant").glob("*[bB]524*.md"))
     documents += list((ROOT / "architecture").glob("b524*.md"))
     documents.append(ROOT / "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md")
+    documents.append(REGULATORS)
     for document in documents:
         assert not _UNPUBLISHED_ATTRIBUTION.search(document.read_text()), document.relative_to(ROOT)
+
+
+def test_regulator_crosswalk_is_exact_pair_based_and_keeps_raw_sw_distinct() -> None:
+    text = REGULATORS.read_text(encoding="utf-8")
+    rows = {
+        tuple(cell.strip().strip("`") for cell in line.strip().strip("|").split("|"))
+        for line in text.splitlines()
+        if line.startswith("| `")
+    }
+    fixture = json.loads(
+        (ROOT / "tests" / "fixtures" / "vaillant_regulator_identity_crosswalk_v1.json").read_text()
+    )
+    assert fixture["schema_version"] == 1
+    expected = {tuple(row) for row in fixture["rows"]}
+
+    assert rows == expected
+    assert len(expected) == 38
+    assert "EID\nand decoded SW/SPN value match as a pair" in text
+    assert "Do not interpret raw `04 17` as `0x0417`" in text
+    assert "`B7V00` / `0163` VRC700 R4 row" in text
+    assert "B7S00" not in text
+
+
+def test_regulator_and_b524_renames_have_no_stale_paths_or_vrc700_alias() -> None:
+    old_paths = (
+        ROOT / "protocols" / "vaillant" / "basv.md",
+        ROOT / "protocols" / "vaillant" / "b524-profile-discovery-and-descriptions.md",
+        ROOT / "protocols" / "vaillant" / "b524-survey-methodology.md",
+    )
+    assert not any(path.exists() for path in old_paths)
+    for path in (
+        REGULATORS,
+        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md",
+        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-survey-methodology.md",
+    ):
+        assert path.exists()
+    for path in (
+        B524,
+        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b555-timer-protocol.md",
+        ROOT / "protocols" / "vaillant" / "ebus-vaillant.md",
+    ):
+        text = path.read_text(encoding="utf-8")
+        assert "ebus-vaillant-regulators.md" in text
 
 
 def test_unpublished_attribution_check_rejects_each_source_marker() -> None:

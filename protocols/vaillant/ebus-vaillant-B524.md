@@ -535,8 +535,10 @@ Addressing notes:
 ### 4.4 `0x03` / `0x04` Timer Schedules
 
 `ReadTimer` and `WriteTimer` use the VRC700 schedule profile, identified by
-`70000` or `B7S00`. Verify that identity before a live read. VRC720-family
-controllers use the [B555 timer protocol](ebus-vaillant-b555-timer-protocol.md);
+`70000` or `B7S00`. Verify that identity before a live read. The
+[VRC700 crosswalk](ebus-vaillant-regulators.md#vrc700-operation-profile)
+supplies model-row context but does not replace that command guard.
+VRC720-family controllers use the [B555 timer protocol](ebus-vaillant-b555-timer-protocol.md);
 sharing a destination address does not qualify the B524 schedule profile.
 
 ```text
@@ -621,7 +623,8 @@ exact read requests; setters are excluded from automatic replay.
 ### 4.6 `0x08` ReadVR91
 
 The VRC700 profile (`70000` or `B7S00`) uses a one-byte request `08` and an
-eight-byte response:
+eight-byte response. The [VRC700 crosswalk](ebus-vaillant-regulators.md#vrc700-operation-profile)
+adds model-row context without changing that command guard:
 
 ```text
 BINDING_ZONE SPECIAL_FUNCTION_STATUS HEATING_MODE COOLING_MODE
