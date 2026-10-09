@@ -9,7 +9,7 @@ Service `0x0F` provides a structured test framework for factory and service test
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
 <!-- legacy-role-mapping:end -->
 
 - **Test system:** Software or hardware that controls and verifies the test run.

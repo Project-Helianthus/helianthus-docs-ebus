@@ -29,6 +29,15 @@ Gateway HTTP entrypoints are split by role: `/ui` is the read-only projection br
 | Development | [development/contributing.md](development/contributing.md), [development/conventions.md](development/conventions.md), [development/ha-integration.md](development/ha-integration.md) |
 | Firmware | [firmware/pic16f15356-overview.md](firmware/pic16f15356-overview.md), [firmware/pic16f15356-pinout.md](firmware/pic16f15356-pinout.md), [firmware/pic16f15356-fsm.md](firmware/pic16f15356-fsm.md), [firmware/pic16f15356-timing.md](firmware/pic16f15356-timing.md), [firmware/pic16f15356-registers.md](firmware/pic16f15356-registers.md) |
 
+## Application contracts (AGPL-3.0)
+
+- [VRC Explorer B524 operation reads](development/ebus-vaillant-b524-operation-reads.md)
+- [VRC Explorer discovery and descriptions](development/ebus-vaillant-b524-explorer-discovery.md)
+- [B524 survey contribution checks](development/ebus-vaillant-b524-survey-contributions.md)
+- [B503 gateway contract](architecture/protocol-routing-vaillant-b503.md)
+- [Modbus application contracts](architecture/protocol-routing-vendor-modbus-overview.md)
+- [SunSpec application contracts](architecture/protocol-routing-vendor-sunspec-overview.md)
+
 ## Contribution Workflow (Doc-Gate)
 
 - **Tier 1 (merge-blocking):** changes to architecture, API surface, or runtime behavior must update docs in the same PR; see [Trigger Matrix](development/contributing.md#trigger-matrix).
@@ -53,7 +62,9 @@ This repository contains documentation under two licenses:
   These describe implementation-neutral wire protocols and data formats,
   including eBUS and Modbus. The path is the license boundary; a neutral wire
   reference outside these directories fails documentation review. Anyone can
-  use, modify, or republish this material without restriction.
+  use, modify, or republish this material without restriction. Application CLI
+  arguments, planner/UI behavior, APIs and application artifact schemas belong
+  outside these CC0 directories, even when they operate on the same protocol.
 
 - Everything else – **AGPL-3.0**.
   This documents the Helianthus implementation specifically.

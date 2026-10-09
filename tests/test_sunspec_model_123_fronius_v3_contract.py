@@ -6,11 +6,11 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CHAIN = ROOT / "protocols/sunspec/sunspec-model-chain-v1.md"
-FLAVOR_V1 = ROOT / "protocols/sunspec/fronius-observed-flavor-v1.md"
-FLAVOR_V11 = ROOT / "protocols/sunspec/fronius-observed-flavor-v1-1.md"
+CHAIN = ROOT / "architecture/protocol-routing-vendor-sunspec-model-chain-v1.md"
+FLAVOR_V1 = ROOT / "architecture/protocol-routing-vendor-fronius-observed-flavor-v1.md"
+FLAVOR_V11 = ROOT / "architecture/protocol-routing-vendor-fronius-observed-flavor-v1-1.md"
 RUNTIME = ROOT / "api/modbus-v1-addon-runtime.md"
-README = ROOT / "protocols/sunspec/README.md"
+README = ROOT / "architecture/protocol-routing-vendor-sunspec-overview.md"
 
 FLAVOR_V1_ID = "sunspec.flavor.fronius.gen24.float.observed@1.0.0"
 FLAVOR_V11_ID = "sunspec.flavor.fronius.gen24.float.observed@1.1.0"

@@ -807,7 +807,7 @@ def test_fixture_data_is_sanitized_and_modbus_indexes_cross_link_packet() -> Non
     required_links = {
         REPO_ROOT / "docs/platform/README.md": "fronius-sunspec-evidence-v1.md",
         REPO_ROOT / "docs/platform/modbus-multivendor-boundaries.md": "fronius-sunspec-evidence-v1.md",
-        REPO_ROOT / "protocols/modbus/README.md": "fronius-sunspec-evidence-v1.md",
+        REPO_ROOT / "architecture/protocol-routing-vendor-modbus-overview.md": "fronius-sunspec-evidence-v1.md",
     }
     for path, fragment in required_links.items():
         assert fragment in path.read_text(encoding="utf-8"), path

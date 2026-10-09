@@ -1,16 +1,16 @@
 # Vaillant B508 NoiseReduction Broadcast Protocol
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This document uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 `PB=0xB5`, `SB=0x08`.
 
 ## Status
 
-**Enrichment research** -- not yet live-validated on a Helianthus bus.
+**Enrichment research** -- not yet live-validated on a a tested bus.
 B508 is a broadcast protocol (`ZZ=0xFE`) emitted when the NoiseReduction
-timer activates or deactivates. It was absent from helianthus-docs-ebus
+timer activates or deactivates. No independent capture is included here
 prior to this document.
 
 Evidence labels:

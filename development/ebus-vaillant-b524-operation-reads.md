@@ -1,4 +1,4 @@
-# B524 Schedule and Event Reads
+# VRC Explorer: B524 Schedule and Event Reads
 
 This contract covers B524 operations outside the OP02/OP06 scalar scan. It
 preserves exact request identity and raw response evidence. It does not

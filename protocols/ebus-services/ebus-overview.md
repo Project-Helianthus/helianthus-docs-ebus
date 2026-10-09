@@ -10,7 +10,7 @@ This documentation uses role terms that align with modern, inclusive terminology
 - **Target**: the addressed node that ACK/NACKs the command and (for initiator/target transactions) may return a response payload.
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
 <!-- legacy-role-mapping:end -->
 
 ## Frame Layout
@@ -41,42 +41,12 @@ This inference determines whether an ACK-only exchange is expected (initiator/in
 
 ### Initiator Address Pattern
 
-In direct-mode eBUS implementations (including Helianthus), initiator addresses are typically recognized by a nibble pattern:
+In direct-mode eBUS, initiator addresses are typically recognized by a nibble pattern:
 
 - A destination is treated as an **initiator address** if **both** the high and low nibbles are one of: `0x0`, `0x1`, `0x3`, `0x7`, `0xF`.
 - Examples: `0x10`, `0x31`, `0xF1`, `0x33`.
 
 Addresses equal to `0xA9` (escape) or `0xAA` (SYN) are invalid in address positions.
-
-### Helianthus Source Address Selection
-
-When Helianthus must choose an initiator address on a live bus, it performs
-source address selection plus gateway active-probe validation. It does not
-perform a protocol membership operation.
-
-The standard source-address table is frozen in
-[`architecture/ebus_standard/12-source-address-table.md`](../../architecture/ebus_standard/12-source-address-table.md).
-The default gateway candidate order is:
-
-```text
-0xFF, 0x7F, 0x3F, 0x1F,
-0xF7, 0x77, 0x37, 0x17, 0x07,
-0x11, 0x31,
-0x00
-```
-
-This order is Helianthus policy. It is not the eBUS arbitration rank. On the
-wire, p0 / `0x0` outranks p1 / `0x1`, then p2 / `0x3`, p3 / `0x7`, and p4 /
-`0xF`; lower source byte wins only within otherwise equal contention.
-
-`0xFF` is a valid source address and maps to companion `0x04`. The `0xFF`
-NACK meaning applies only in ACK/NACK byte context.
-
-Before startup scan or any normal gateway-owned bus-reaching operation, gateway
-source-selection validation must actively validate the selected source and
-companion. A failed active probe quarantines/excludes that source and either
-tries the next candidate or enters `DEGRADED_SOURCE_SELECTION`, which emits no
-Helianthus-originated eBUS traffic.
 
 ## ACK/NACK Symbols
 
@@ -89,17 +59,15 @@ NACK = 0xFF
 
 Broadcast frames do not receive ACK/NACK or responses.
 
-**SYN during active waits:** If a `SYN` (`0xAA`) byte is received while waiting for an `ACK`/`NACK` or a target response, it signals end-of-transaction (timeout). All known implementations (ebusgo, ebusd, VRC Explorer) treat SYN during ACK/response wait as a timeout indicator and abort the current transaction. Ignoring SYN and continuing to wait is incorrect -- it causes the receiver to stall past the end of the transaction.
+**SYN during active waits:** If a `SYN` (`0xAA`) byte is received while waiting for an `ACK`/`NACK` or a target response, it signals end-of-transaction (timeout). A SYN during an ACK/response wait is a timeout indicator and ends the current transaction. Ignoring SYN and continuing to wait is incorrect -- it causes the receiver to stall past the end of the transaction.
 
-**ENH transport caveat:** On ENH-based transports, the adapter forwards raw eBUS wire bytes via `RECEIVED` events **without decoding wire escapes** (verified against PIC firmware `runtime.c:1835-1841`). Therefore `RECEIVED(0xAA)` is always a SYN boundary (raw wire `0xAA` = SYN). A logical data byte `0xAA` arrives as two separate events: `RECEIVED(0xA9)` followed by `RECEIVED(0x01)`, and the host-side escape decoder reassembles them into the logical `0xAA`. Host SYN guards apply to the `RECEIVED` event stream — `RECEIVED(0xAA)` signals bus idle; the escape-expanded `RECEIVED(0xA9) RECEIVED(0x01)` pair does not.
+**ENH transport:** ENH endpoints forward raw eBUS wire bytes via `RECEIVED` events without decoding wire escapes. `RECEIVED(0xAA)` is therefore a SYN boundary. Logical data `0xAA` arrives as `RECEIVED(0xA9)` followed by `RECEIVED(0x01)` and must be reassembled before logical frame decoding.
 
 **Escape-aware SYN counting:** On raw bus transports, the escape sequence `0xA9 0x01` represents the data byte 0xAA and must NOT be counted as SYN. Only a standalone, unescaped `0xAA` outside of an active frame's data region indicates bus idle.
 
 **0xAA data vs boundary scoping:** The byte `0xAA` serves as SYN (bus idle marker / frame boundary) ONLY at the raw eBUS wire layer and within raw byte-stream transports. At the logical protocol layer (inside frame payloads, register values, or ENH-decoded data), `0xAA` has no wire-boundary or idle meaning — it is a valid data byte. Implementations MUST NOT interpret a logical `0xAA` in payload data as a frame boundary or bus idle signal.
 
 Exception: in ENH `START` requests, a logical `0xAA` in the initiator-address field is a protocol-level cancel sentinel for a running arbitration (see [enh.md §START](../enh.md#start--started--failed)). This is a command-level convention, not a wire-boundary meaning.
-
-**Invariant name:** `XR_ENH_0xAA_DataNotSYN`
 
 **Early SYN during request collection:** If SYN arrives when only 0 or 1 request bytes have been collected (`requestBytesSeen <= 1`), it indicates a new arbitration cycle rather than a framing error. Implementations should reset collection state and treat the next byte as the start of a new transaction.
 
@@ -130,7 +98,7 @@ Key points:
 
 - **Per-byte echo**: When an initiator drives a symbol onto the bus it will also observe the same symbol (“echo”). An echo mismatch indicates arbitration loss or a collision.
 - **ACK/NAK timing**: `ACK`/`NACK` is exchanged **once per command**, after the initiator sends the command CRC (not after each byte).
-- **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses. CRC is computed over `LEN DATA...` only (not including any address bytes). Implementors must **not** attempt to read header bytes (SRC/DST/PB/SB) from the target response -- they are inferred from the initiator telegram. See ebusgo#104 for a regression where phantom header reads caused all initiator-target transactions to fail.
+- **Response shape**: In initiator/target transactions the target response begins with a **length byte** and does not repeat source/destination addresses. CRC is computed over `LEN DATA...` only (not including any address bytes). Header bytes are inferred from the initiator telegram.
 - **SYN** (`0xAA`) is used as an **end-of-message** delimiter and may also appear during idle.
 
 > **NACK retry semantics (per eBUS specification SS7.4):**
@@ -138,7 +106,7 @@ Key points:
 > - **ResponseNACK**: If the initiator NACKs the target's response, the target retransmits the response once. If the second response also receives NACK, the transaction fails.
 > - The NACK byte is specifically `0xFF`. Any other non-ACK byte indicates a bus error, not a deliberate NACK.
 
-> **Note:** ENH-based adapters forward raw wire bytes (including SYN `0xAA`) as `RECEIVED` events — they do NOT abstract SYN detection away from the host (verified against PIC firmware `runtime.c:1835-1841`; see the ENH transport caveat in the SYN handling section above). Arbitration is signalled separately via ENH control frames (`STARTED`, `FAILED`) that are distinct from the `RECEIVED` byte stream, but raw SYN bytes remain visible to the host on the `RECEIVED` channel.
+> **Note:** ENH endpoints forward raw wire bytes, including SYN `0xAA`, as `RECEIVED` events. Arbitration is signalled separately by `STARTED` and `FAILED` control frames.
 
 ### Initiator-to-Initiator (i2i) Transactions
 
@@ -147,18 +115,6 @@ When the destination is an initiator-capable address, the eBUS transaction has *
 This is distinct from initiator/target transactions where the target returns a response payload (LEN DATA... CRC) after ACK.
 
 Implementations must detect i2i frame type from the destination address pattern before entering the response-read phase. Entering WaitResponseLen for an i2i transaction causes an indefinite hang because no response bytes will arrive.
-
-### Collision Detection Model (Helianthus)
-
-For multi-client/proxy setups, Helianthus collision handling uses a receive-vs-transmit check:
-
-- Maintain a bounded history of locally transmitted frames with timestamps.
-- On receive, when `SRC == active initiator`:
-  - if frame matches a recent local transmit inside the echo window (`200ms` default), treat as local echo,
-  - otherwise classify as foreign same-source collision.
-- In muted/listen-only mode, any `SRC == active initiator` receive frame is classified as collision.
-- After initiator source changes, frames with the previous initiator source are ignored during a grace window (`750ms` default).
-- While collision is active, write attempts fail fast with an arbitration-failed classification.
 
 ## CRC8 and Escaping
 
@@ -172,7 +128,7 @@ The CRC8 function accepts **logical frame bytes** (the bytes the application lay
 
 - **CRC8 polynomial:** `0x9B` (init `0x00`).
 
-> **Important:** The CRC function's API accepts logical bytes, but the polynomial is applied to the **wire-expanded form**. This means `CRC([0x01, 0xAA])` internally computes `CRC_update(0x01) → CRC_update(0xA9) → CRC_update(0x01)`, NOT `CRC_update(0x01) → CRC_update(0xAA)`. All three Helianthus implementations (ebusgo `protocol.CRC`, VRC Explorer `_crc()`, ebusd) implement this expansion. Omitting the expansion was the root cause of CRC bugs VE16, VE25, and EG47. This supersedes ADR-006.
+> **Important:** The CRC accepts logical bytes, but applies its polynomial to the wire-expanded form. Thus `CRC([0x01, 0xAA])` updates with `0x01`, `0xA9`, and `0x01`, rather than `0x01` and `0xAA`.
 
 CRC8 coverage depends on the direct-mode phase:
 
@@ -222,10 +178,6 @@ Notes:
   refresh internal address state that can later be queried (e.g. via the ebusd
   TCP `info` command).
 
-Helianthus source-selection validation does not use `0x07/0xFE` as its first
-startup validation probe. The active probe is bounded addressed
-Identification (`0x07/0x04`) only.
-
 ### Identification Scan (0x07 0x04)
 
 Identification (often “scan” in ebusd terminology) reads a device’s manufacturer, device id, and software/hardware versions.
@@ -263,7 +215,7 @@ For deterministic “identify-only” target emulation, a practical profile can 
 - `device_id` (ASCII token),
 - `software_version` (2 bytes, opaque),
 - `hardware_version` (2 bytes, opaque),
-- response-delay bounds (timing envelope; transport/runtime dependent).
+- response-delay bounds (timing envelope; transport dependent).
 
 For minimal compatibility, many emulators normalize `device_id` to a 5-byte ASCII field before generating the payload:
 

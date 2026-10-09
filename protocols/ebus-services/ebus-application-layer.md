@@ -9,7 +9,7 @@ For wire-level framing (SRC/DST, CRC8, escaping, ACK/NACK, transaction flow), se
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
 <!-- legacy-role-mapping:end -->
 
 ## Primary Command (PB) Allocation
@@ -39,7 +39,7 @@ These secondary data types are used across all Application Layer services.
 
 All 16-bit types are transmitted **low-byte first**.
 
-For detailed type definitions including encoding formulas and Go codec implementations, see [`../../types/primitives.md`](../../types/primitives.md).
+For detailed type definitions and encoding formulas, see [`../../types/primitives.md`](../../types/primitives.md).
 
 ## Communication Rules
 
@@ -61,4 +61,3 @@ Manufacturer-specific PB families (e.g., Vaillant `0xB5`) are not part of the st
 - [`ebus-overview.md`](./ebus-overview.md) — wire-level framing, CRC8, ACK/NACK, transaction flow
 - [`ebus-vaillant.md`](../vaillant/ebus-vaillant.md) — Vaillant proprietary (`0xB5`) message index
 - [`../../types/overview.md`](../../types/overview.md) — type system model
-- [`../../architecture/nm-model.md`](../../architecture/nm-model.md) — Helianthus NM implementation model

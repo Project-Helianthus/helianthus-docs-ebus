@@ -1,7 +1,7 @@
 # Vaillant Regulators
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This document uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 This is the entry point for Vaillant regulator identities and related protocol
@@ -56,9 +56,8 @@ and [ebusd `PIN` datatype implementation](https://github.com/john30/ebusd/blob/3
 
 ## Exact EID and SW/SPN Crosswalk
 
-**Project-assigned catalog; Hypothesis as native-model evidence pending
-observations.** These 38 exact pairs are a bounded naming and family catalog
-for this project. They do not independently establish a device model, native
+**Hypothesis as native-model evidence pending observations.** These 38 exact
+pairs are a bounded naming and family catalog. They do not independently establish a device model, native
 protocol support, or the availability of any operation on a connected target.
 Treat an unlisted or malformed pair as unknown rather than extending this table
 by inference.
@@ -125,7 +124,6 @@ Retain at least:
 
 For a matched row, retain the native `0x07/0x04` EID, SW, and decoded raw SPN
 separately from `assigned_model`. Set
-`identity.model_assignment_qualification` to `project_catalog`; this identifies
 the assignment as catalog material rather than a native model observation.
 
 An empty, malformed, or unavailable SW field leaves the crosswalk result

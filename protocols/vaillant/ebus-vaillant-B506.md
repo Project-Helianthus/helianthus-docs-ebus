@@ -10,7 +10,6 @@ systems.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `INFERENCE`: falsifiable interpretation from the evidence above.
 
@@ -32,8 +31,8 @@ The `value` byte is target/profile-specific.
 
 | Request payload | Name | Response shape | Evidence | Falsification test |
 |---|---|---|---|---|
-| `01` | stop I/O test | ACK/status | `LOCAL_TYPESPEC` | On isolated hardware, start a documented test and show `B506 01` does not stop it after ACK. |
-| `02 <value>` | select/start I/O test | ACK/status plus physical side effect | `LOCAL_TYPESPEC` | On isolated hardware, send a documented value and show no actuator/log/test-mode effect. |
+| `01` | stop I/O test | ACK/status | | On isolated hardware, start a documented test and show `B506 01` does not stop it after ACK. |
+| `02 <value>` | select/start I/O test | ACK/status plus physical side effect | | On isolated hardware, send a documented value and show no actuator/log/test-mode effect. |
 
 ## Safety Rule
 

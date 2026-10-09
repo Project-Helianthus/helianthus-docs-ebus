@@ -1,7 +1,7 @@
 # Brink 40xx Protocol Family (Heat Recovery Ventilation)
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This document uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 `PB=0x40`, `SB=0xFF/0x91/0x90/0xA1/0xCB/0x22/0x50/0x80`.

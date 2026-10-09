@@ -6,13 +6,11 @@
 
 `B511` is modeled by john30 TypeSpec as a read/status family. Historical
 Vaillant notes describe it as boiler/burner operational data back to the
-room/controller. Helianthus has also observed topology-dependent triangular
+room/controller. Observed topology-dependent topology-dependent triangular
 source/target roles involving BAI00, BASV2, and NETX3.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `PUBLIC_CAPTURE`: public Pittnerovi eBUS trace examples.
 
@@ -20,15 +18,15 @@ Evidence labels:
 
 | Selector | TypeSpec name | Response shape | Evidence | Falsification test |
 |---:|---|---|---|---|
-| `0x01` | `Status01` | flow temp, return temp, outside temp, DHW temp, storage temp, pump state | `LOCAL_TYPESPEC`, `PUBLIC_CAPTURE` | Capture `B511 01` and prove it does not return the modeled temperatures/pump state on a target claiming this profile. |
-| `0x02` | `Status02` | DHW mode, max/current temperature pairs | `LOCAL_TYPESPEC`, `PUBLIC_CAPTURE` | Change DHW mode or target temperatures and show `B511 02` bytes do not track the changes. |
-| `0x03` | `Status` | temperature, pressures, mode, hex/status byte | `LOCAL_TYPESPEC` | Capture `B511 03` and show it cannot decode to the modeled fields. |
-| `0x07` | HMU `State` in `08.hmu.tsp` | 6-field payload including `State` UCH enum (see state table below) | `LOCAL_TYPESPEC`, `PUBLIC_CONFIG` (P4, issue #335) | Query HMU target and show the selector is unsupported or maps to a different field set. |
-| `0x18 0x01/0x02` | compressor runtime/cycles on HW5103+ | runtime and cycles | `LOCAL_TYPESPEC` | Query matching firmware and show payload does not contain runtime/cycle counters. |
+| `0x01` | `Status01` | flow temp, return temp, outside temp, DHW temp, storage temp, pump state | `PUBLIC_CAPTURE` | Capture `B511 01` and prove it does not return the modeled temperatures/pump state on a target claiming this profile. |
+| `0x02` | `Status02` | DHW mode, max/current temperature pairs | `PUBLIC_CAPTURE` | Change DHW mode or target temperatures and show `B511 02` bytes do not track the changes. |
+| `0x03` | `Status` | temperature, pressures, mode, hex/status byte | | Capture `B511 03` and show it cannot decode to the modeled fields. |
+| `0x07` | HMU `State` in `08.hmu.tsp` | 6-field payload including `State` UCH enum (see state table below) | `PUBLIC_CONFIG` (P4, issue #335) | Query HMU target and show the selector is unsupported or maps to a different field set. |
+| `0x18 0x01/0x02` | compressor runtime/cycles on HW5103+ | runtime and cycles | | Query matching firmware and show payload does not contain runtime/cycle counters. |
 
 ### Selector 0x07 State Enum (HMU Only)
 
-> Source: `CROSSCHECK-B555-misc.md` B511 section; P4 (john30/ebusd issue #335, joergensen70 live HMU).
+> Hypothesis from public community sources; no publishable capture is included here.
 
 Selector `0x07` returns a 6-field response payload when targeting HMU at address `0x08`. The `State` field is a UCH enum with the following values. This selector and enum are **HMU/heat-pump-specific** — BAI00 at address `0x08` does NOT use selector `0x07` for this purpose.
 
@@ -48,7 +46,7 @@ Selector `0x07` returns a 6-field response payload when targeting HMU at address
 
 ## Local Captures
 
-Operator-provided traffic included:
+No publishable capture is included; the following shape was reported as:
 
 ```text
 REQ:  10 08 b5 11 01 00
@@ -73,7 +71,7 @@ The top-level Vaillant overview records these observed roles:
 - BASV2 can initiate related control/status traffic toward BAI00.
 - BAI00 can also respond as a target.
 
-Additionally, on heat pump systems with VWZIO (indoor hydraulic station at address `0x76`), B511 traffic has been observed involving that device. (Source: `CROSSCHECK-B555-misc.md` B511 section; 4 independent community forks. Confidence: MEDIUM-HIGH — no Helianthus live VWZIO hardware.)
+VWZIO involvement at address `0x76` remains a hypothesis pending a publishable capture.
 
 Therefore, do not infer semantics from `PB/SB` alone. Keep source, target,
 selector, and response length in every specimen.

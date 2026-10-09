@@ -50,7 +50,7 @@ def test_historical_short_probe_catalog_is_not_validation_authority() -> None:
 
 
 def test_description_budget_is_writable_candidate_scoped_without_write_authority() -> None:
-    text = B524.read_text(encoding="utf-8")
+    text = (ROOT / "development/ebus-vaillant-b524-description-acquisition.md").read_text(encoding="utf-8")
     assert "all deduplicated, observed" in text
     assert "at most 256" not in text
     assert "observed writable candidates" in " ".join(text.split())
@@ -127,7 +127,7 @@ def test_device_enumeration_preserves_ii01_and_retained_inventory_contract() -> 
 
 def test_relay_connection_candidate_preserves_unknown_native_qualification() -> None:
     text = (
-        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md"
+        ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md"
     ).read_text(encoding="utf-8")
     section = text.split("### GG0D relay-module predicate", 1)[1].split(
         "## Descriptions for every eligible parameter", 1
@@ -143,7 +143,7 @@ def test_relay_connection_candidate_preserves_unknown_native_qualification() -> 
 def test_functional_module_presentation_names_preserve_the_evidence_boundary() -> None:
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
     profile = (
-        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md"
+        ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md"
     ).read_text(encoding="utf-8")
     architecture = (ROOT / "architecture" / "functional-modules.md").read_text(encoding="utf-8")
 
@@ -166,7 +166,7 @@ def test_functional_module_presentation_names_preserve_the_evidence_boundary() -
 def test_op06_presentation_catalog_is_complete_and_cannot_expand_discovery() -> None:
     text = B524.read_text(encoding="utf-8")
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
-    profile = (ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md").read_text(
+    profile = (ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md").read_text(
         encoding="utf-8"
     )
 
@@ -328,7 +328,7 @@ def test_local_deltat_does_not_claim_singleton_topology() -> None:
     assert "not as a current\nprofile bound or a qualified device count" in local
     assert "OP06/GG08 remains a separate instanced selector set" in local
     assert "| 0x02 | 0x08 | DeltaT (local) | Unknown | profile-dependent |" in text
-    assert "| 0x02 | 0x08 DeltaT | profile-dependent | 0x0007 | known scope |" in text
+    assert "| 0x02 | 0x08 DeltaT | profile-dependent | 0x0007 | observed scope |" in text
     profiles = text.split("### Discovery Profiles", 1)[1]
     assert profiles.index("| 0x02 | 0x08 DeltaT |") < profiles.index(
         "| 0x06 | 0x08 Modul Solar (VMS) auroSTEP |"
@@ -347,7 +347,7 @@ def test_op06_observed_windows_fixture_preserves_generic_and_concrete_boundaries
         ).read_text(encoding="utf-8")
     )
     profile = (
-        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md"
+        ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md"
     ).read_text(encoding="utf-8")
 
     assert fixture["schema_version"] == "b524-op06-observed-windows/v1"
@@ -449,7 +449,7 @@ def test_op06_observed_window_validator_correlates_every_request_and_reply(
 def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() -> None:
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
     protocol = B524.read_text(encoding="utf-8")
-    profile = (ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md").read_text(
+    profile = (ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md").read_text(
         encoding="utf-8"
     )
     namespace = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
@@ -486,11 +486,12 @@ def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() 
     assert "OP06 candidates use II01..II08; OP02/GG02 uses II01..II08\nfor heating candidates plus II09" in namespace
     assert "0x02 0x02    0x09         0x0025" in semantic
     assert "0x09 0x06    0x08         0x0035" in semantic
-    assert "scan planner, Browser,\nHTML, and saved-artifact views" in protocol
+    assert "scan planner" not in protocol
+    assert "Browser" not in protocol
 
 
 def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> None:
-    profile = (ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md").read_text(
+    profile = (ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md").read_text(
         encoding="utf-8"
     )
     architecture = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(encoding="utf-8")
@@ -536,7 +537,7 @@ def test_event_and_timer_operations_have_separate_selectors_and_write_boundary()
     for operation in ("GetEvent", "SetEvent", "GetEventSetPoint", "SetEventSetPoint"):
         assert operation in events
     assert "do not inherit the VRC700-only timer gate" in events
-    assert "No live\nsetter is exposed" in events
+    assert "Event execution stays disabled" in (ROOT / "development/ebus-vaillant-b524-operation-reads.md").read_text()
     assert "Neither `II` nor the request selector is echoed" in events
     assert "VALUE1 remains raw" in events
 
@@ -572,8 +573,9 @@ def test_regulator_crosswalk_is_exact_pair_based_and_keeps_raw_sw_distinct() -> 
     assert rows == expected
     assert len(expected) == 38
     assert "EID\nand decoded SW/SPN value match as a pair" in text
-    assert "Project-assigned catalog; Hypothesis as native-model evidence pending\nobservations." in text
-    assert "`identity.model_assignment_qualification` to `project_catalog`" in text
+    assert "Hypothesis" in text
+    assert "native-model evidence pending" in text
+    assert "`identity.model_assignment_qualification` to `project_catalog`" in (ROOT / "development/ebus-vaillant-regulator-identification.md").read_text()
     assert "Do not interpret raw `04 17` as `0x0417`" in text
     assert "`B7V00` / `0163` VRC700 R4 row" in text
     assert "B7S00" not in text
@@ -588,7 +590,7 @@ def test_regulator_and_b524_renames_have_no_stale_paths_or_vrc700_alias() -> Non
     assert not any(path.exists() for path in old_paths)
     for path in (
         REGULATORS,
-        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-profile-discovery-and-descriptions.md",
+        ROOT / "development" / "ebus-vaillant-b524-explorer-discovery.md",
         ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-survey-methodology.md",
     ):
         assert path.exists()

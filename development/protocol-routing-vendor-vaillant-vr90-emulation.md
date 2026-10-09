@@ -1,6 +1,6 @@
 # VR90 Room Controller — Emulation Reference
 
-This document covers the eBUS protocol details needed to emulate a Vaillant VR90 room controller (RCC) on the bus, as implemented in `helianthus-ebus-vdev`.
+This document describes observed eBUS behavior for a Vaillant VR90 room controller.
 
 ## Device Identity
 

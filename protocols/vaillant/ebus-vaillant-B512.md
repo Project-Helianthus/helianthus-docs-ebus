@@ -4,16 +4,11 @@
 
 ## Status
 
-Earlier Helianthus notes labeled `B512` as "Modulation/Fan" because it was
-observed from BAI00 to target `0x64` and the payload was not decoded. Local
-TypeSpec and historical notes provide a stronger, falsifiable hypothesis:
+The payload has been described as `Modulation/Fan`; public TypeSpec and historical notes provide a stronger, falsifiable hypothesis:
 `B512` is at least partly a circulation-pump or VR65-style state family.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
-- `LOCAL_MCP`: current Helianthus MCP runtime observations.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `PUBLIC_CAPTURE`: public Pittnerovi eBUS trace examples.
 
@@ -21,29 +16,18 @@ Evidence labels:
 
 | Request payload | Name/context | Response shape | Evidence | Falsification test |
 |---|---|---|---|---|
-| `00 <value>` | `StatusCirPump` in `hcmode_inc` | ACK/status | `LOCAL_TYPESPEC` | Change circulation pump state and show `<value>` does not correlate with off/on values. |
-| `02 <value>` | target `0x64`/VR65-style state | ACK/status | `LOCAL_TYPESPEC`, `LOCAL_MCP`, `PUBLIC_CAPTURE` | Capture target `0x64` while pump/valve states change and prove `B512 02 xx` is unrelated. |
+| `00 <value>` | `StatusCirPump` in `hcmode_inc` | ACK/status | | Change circulation pump state and show `<value>` does not correlate with off/on values. |
+| `02 <value>` | target `0x64`/VR65-style state | ACK/status | `PUBLIC_CAPTURE` | Capture target `0x64` while pump/valve states change and prove `B512 02 xx` is unrelated. |
 
 In `hcmode_inc`, `StatusCirPump` enumerates `off=0` and `on=100`.
 
-## Local MCP Evidence
+## Observation status
 
-Current Helianthus MCP passive protocol specimens showed:
-
-```text
-family:      B512
-source:      0x03
-target:      0x64
-request_hex: 02fe
-outcome:     abandoned_partial
-```
-
-This proves recent local passive observation of `B512 02 fe` from BAI00 source
-`0x03` to target `0x64`. It does not prove the semantic meaning of `0xfe`.
+No publishable local capture is included in this reference.
 
 ### Heat Pump System Shapes (Enrichment Research)
 
-> Source: `CROSSCHECK-B555-misc.md` B512 section; 4 independent community forks (pulquero, morphZ, jonesPD, xerion3800). NOT live-validated on Helianthus bus.
+> Hypothesis from public community sources; no publishable capture is included here.
 
 The following B512 shapes are observed on heat pump installations only and are absent from gas-boiler-only systems.
 

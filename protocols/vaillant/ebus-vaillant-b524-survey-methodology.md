@@ -9,7 +9,7 @@ Record each request as `value_reply`, `empty_reply`, `transport_error`, `decode_
 ## Bounded read recipe
 
 1. Declare exact OP/GG candidates, read instances, Describe instance, and inclusive RR ranges before transport I/O.
-2. Issue only read operations: OP02 for local values and OP06 for remote values. Their public payload layout is `OP 00 GG II RRlo RRhi`; descriptions use `OP01/OP07 GG FF RRlo RRhi`. A public transport client may implement these normal B524 reads; current VRC Explorer CLI does not provide this whole survey recipe as a single command.
+2. Issue only read operations: OP02 for local values and OP06 for remote values. Their public payload layout is `OP 00 GG II RRlo RRhi`; descriptions use `OP01/OP07 GG FF RRlo RRhi`.
 3. Extend a positive group's RR window only to the declared ceiling. Unknown groups retain their smaller declared window. These are coverage choices, not protocol bounds.
 4. Use OP01 for eligible writable OP02 values and OP07 for eligible writable OP06 values. Correlate replies by GG/RR, never II: response II is not echoed. Decode a value only with a qualified current-read or static matching codec, never from reply length. A description is metadata acquisition only: it does not write, prove current writability, prove a concrete installed device, or establish the highest valid RR.
 5. Insert positive control requests between batches. Preserve retry accounting and ensure transport escaping for reserved CRC bytes `A9` and `AA` before classifying an outcome as empty. Persist planned/completed jobs, actual attempts, response categories, and terminal transport failures independently. Retries increase attempts, not planned-job coverage.
@@ -55,7 +55,7 @@ only when recorded and publishable; otherwise mark them `Unknown`. Payload-only
 correlation does not establish framing, independently observed direction,
 raw-capture provenance, or capture conditions.
 
-The BASV2 samples correlate read-only Explorer-initiator requests to regulator-target
+The BASV2 samples correlate read-only initiator requests to regulator-target
 replies. Native endpoint addresses, raw framing, raw-capture provenance and capture
 conditions are `Unknown` in this profile. The model and acquisition revisions
 identify the scope; they do not replace missing exchange context.
@@ -75,15 +75,6 @@ description sample and its raw limit bytes. These checks do not upgrade the
 recorded qualification or establish a concrete device identity or writable
 permission.
 
-Validate the public artifact before proposing it:
-
-```sh
-jv protocols/vaillant/fixtures/b524-bounded-survey-profile-schema-v1.json \
-  protocols/vaillant/fixtures/b524-bounded-survey-<profile>-v1.json
-pytest -q tests/test_b524_bounded_survey_profile.py
-```
-
-The tests automatically check phase totals for every contributed
-`b524-bounded-survey-<profile>-v1.json` fixture. Discovery and extension retain
-separate planned, completed and attempt counts; reused exchanges are recorded
-separately and are not added to this execution's completed-job total.
+Contributed profiles retain separate discovery and extension totals, actual
+attempt counts and reused-exchange counts. Reused exchanges are not new
+completed jobs. Each profile must be structurally valid and internally consistent.

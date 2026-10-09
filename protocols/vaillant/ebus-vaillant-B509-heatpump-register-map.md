@@ -28,8 +28,8 @@ Known address collisions with the BAI00 boiler register map:
 ## Status
 
 All registers in this document are from enrichment analysis (2026-04-14). None
-are currently mapped into the Helianthus semantic plane. They are documented
-for future integration and live validation.
+are currently mapped into the native field catalog. They are documented
+for future interpretation and validation.
 
 Evidence labels:
 
@@ -225,7 +225,7 @@ diverge on a live scan, the discrepancy points to a firmware variant difference.
 
 ### Naming note (HWC/DHW)
 
-Canonical Helianthus naming uses `dhw_*` (snake_case) for domestic hot water.
+Canonical naming uses `dhw_*` (snake_case) for domestic hot water.
 The ebusd source uses `Hwc*` (camelCase). Both refer to the same thing. Entries
 above preserve the ebusd-style `Hwc` names as extracted from the TypeSpec source.
 

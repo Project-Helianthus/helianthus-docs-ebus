@@ -1,7 +1,7 @@
 # Vaillant B524 Extended Register Map
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This reference uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 > **Status:** Authoritative reference. Single source of truth for B524 register semantics.
@@ -19,7 +19,7 @@ This is the register catalog for B524. For the protocol specification (wire form
 | Column | Meaning |
 |--------|---------|
 | **RR** | Register address (hex) |
-| **Name** | Our leaf name (from myVaillant/myPyllant API path) |
+| **Name** | Descriptive semantic name |
 | **Cat** | Documentation category: **S**=state, **C**=configuration candidate, **P**=property candidate, **E**=energy/counter candidate, **—**=unknown/unclassified. It is not derived from `FLAGS` alone and does not authorize a write. |
 | **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian. **f32 byte order is device-dependent:** all values in this map assume address `0x15` (BASV2/VRC720) = little-endian. HMU at `0x08` (heat pump systems) uses big-endian f32 -- see [B524 protocol doc section 2.6](./ebus-vaillant-B524.md#26-wire-type-encoding) |
 | **Decode** | Semantic interpretation: `bool`, `°C`, `K`, `bar`, `%`, `kWh`, `hrs`, `min`, `count`, `enum`, `text`, `date`, `time`, `state`, `raw`, `—` (unknown) |
@@ -132,14 +132,13 @@ at target address `0x26`, but that family identification comes from eBUS
 identity correlation rather than from B524 alone.
 
 **Discovery:** OP00 information identifiers are distinct from GG. The
-[profile-qualified mapping table](ebus-vaillant-b524-profile-discovery-and-descriptions.md#recommended-op00-count-guidance)
-defines the limited `recommended` guidance. For ID00 `circuit_count` and ID01
+[profile-qualified mapping table](ebus-vaillant-b524-profile-discovery-and-descriptions.md#system-information-and-concrete-instances)
+records profile-qualified count interpretation. For ID00 `circuit_count` and ID01
 `zone_count`, the legacy public names mean supported capacity under the bounded
 profile contract, not configured or present-instance cardinality. They do not
 identify, allocate, or make II slots contiguous: keep sparse II slots and apply
 the group predicate to every candidate. II09 remains an independent virtual
-native-water candidate. The full configured range remains the fallback and
-research bound. See [the corrected protocol contract](./ebus-vaillant-B524.md).
+native-water candidate. These counts do not establish a terminal instance interval. See [the corrected protocol contract](./ebus-vaillant-B524.md).
 
 ### Discovery Profiles
 
@@ -148,34 +147,34 @@ scheduling ceiling” is the highest RR in the current bounded scheduling
 evidence; it is not a terminal maximum and does not exclude read-only state
 registers above it.
 
-| Opcode | Group | Instance interval | Observed scheduling ceiling | Planner treatment | Notes |
+| Opcode | Group | Instance interval | Observed scheduling ceiling | Evidence scope | Notes |
 |--------|-------|-------------------|-----------------------------|-------------------|-------|
-| 0x02 | 0x00 System | 00 | 0x00FF | known scope | Singleton |
-| 0x02 | 0x01 Native Domestic Hot Water | 00 | 0x0013 | known scope | RR0001 exact two-byte nonzero UIN predicate; OP01 RR0000..0013 independent |
-| 0x02 | 0x02 Circuits | 01..09 | 0x0025 | known scope | II01..08 heating candidates; II09 virtual native water |
-| 0x02 | 0x03 Zones | 00..0A | 0x002E | known scope | profile bound |
-| 0x02 | 0x04 Solar Circuit | 00..01 | 0x000B | known scope | profile bound |
-| 0x02 | 0x05 Solar Loaded Cylinder | 00..01 | 0x0004 | known scope | profile bound |
-| 0x02 | 0x06 Device | Unknown | — | explicit custom RR scope | layout Unknown |
-| 0x02 | 0x07 Generator | Unknown | — | explicit custom RR scope | layout Unknown |
-| 0x02 | 0x08 DeltaT | profile-dependent | 0x0007 | known scope | topology Unknown |
-| 0x02 | 0x09 Ventilation | profile-dependent | 0x000F | known scope | topology Unknown |
-| 0x02 | 0x0A Unknown | 00..0A | 0x004D | known scope | role and physical identity Unknown |
-| 0x06 | 0x01 Boiler | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x02 Heat Pump | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x03 Air Recovery (VAR) recoVair | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x04 unused | 01..08 | — | explicit custom RR scope | RR layout and predicate Unknown |
-| 0x06 | 0x05 Wärmepumpe Zubehör Appliance Interface (VWZ-AI) | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x06 Pumpen Module – Solar (VPM-S) auroFLOW | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x07 Pumpen Module – Wasser (VPM-W) aguaFLOW | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x08 Modul Solar (VMS) auroSTEP | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x09 Remote Control Regulators (VRC7xx, VRT38x) | 01..08 | 0x0035 | known scope | concrete-II predicate required |
-| 0x06 | 0x0A Remote Control Thermostats (VR9x) | 01..08 | 0x0035 | known scope | concrete-II predicate required |
-| 0x06 | 0x0B Functional Modules (VR70) FM3 | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x0C Functional Modules (VR71) FM5 | 01..08 | 0x002F | known scope | concrete-II predicate required |
-| 0x06 | 0x0D Relay Module (VR41) | 01..08 | — | RR0001 predicate; other RR require custom scope | `device_connected`: exact one-byte BOOL; RR maximum Unknown; availability-only |
-| 0x06 | 0x0E Clock Module | 01..08 | 0x0033 | known scope | concrete-II predicate required |
-| 0x06 | 0x0F Base Station | 01..08 | 0x0033 | known scope | concrete-II predicate required |
+| 0x02 | 0x00 System | 00 | 0x00FF | observed scope | Singleton |
+| 0x02 | 0x01 Native Domestic Hot Water | 00 | 0x0013 | observed scope | RR0001 exact two-byte nonzero UIN predicate; OP01 RR0000..0013 independent |
+| 0x02 | 0x02 Circuits | 01..09 | 0x0025 | observed scope | II01..08 heating candidates; II09 virtual native water |
+| 0x02 | 0x03 Zones | 00..0A | 0x002E | observed scope | profile bound |
+| 0x02 | 0x04 Solar Circuit | 00..01 | 0x000B | observed scope | profile bound |
+| 0x02 | 0x05 Solar Loaded Cylinder | 00..01 | 0x0004 | observed scope | profile bound |
+| 0x02 | 0x06 Device | Unknown | — | RR scope Unknown | layout Unknown |
+| 0x02 | 0x07 Generator | Unknown | — | RR scope Unknown | layout Unknown |
+| 0x02 | 0x08 DeltaT | profile-dependent | 0x0007 | observed scope | topology Unknown |
+| 0x02 | 0x09 Ventilation | profile-dependent | 0x000F | observed scope | topology Unknown |
+| 0x02 | 0x0A Unknown | 00..0A | 0x004D | observed scope | role and physical identity Unknown |
+| 0x06 | 0x01 Boiler | 01..08 | 0x002F | observed scope | concrete-II predicate required |
+| 0x06 | 0x02 Heat Pump | 01..08 | 0x002F | observed scope | concrete-II predicate required |
+| 0x06 | 0x03 Air Recovery (VAR) recoVair | 01..08 | 0x002F | observed scope | concrete-II predicate required |
+| 0x06 | 0x04 unused | 01..08 | — | RR scope Unknown | RR layout and predicate Unknown |
+| 0x06 | 0x05 Wärmepumpe Zubehör Appliance Interface (VWZ-AI) | 01..08 | 0x002F | observed scope | concrete-II predicate required |
+| 0x06 | 0x06 Pumpen Module – Solar (VPM-S) auroFLOW | 01..08 | 0x002F | observed scope | concrete-II predicate required |
+| 0x06 | 0x07 Pumpen Module – Wasser (VPM-W) aguaFLOW | 01..08 | 0x002F | observed scope | concrete-II predicate required |
+| 0x06 | 0x08 Modul Solar (VMS) auroSTEP | 01..08 | 0x002F | observed scope | concrete-II predicate required |
+| 0x06 | 0x09 Remote Control Regulators (VRC7xx, VRT38x) | 01..08 | 0x0035 | observed scope | concrete-II predicate required |
+| 0x06 | 0x0A Remote Control Thermostats (VR9x) | 01..08 | 0x0035 | observed scope | concrete-II predicate required |
+| 0x06 | 0x0B Functional Modules (VR70) FM3 | 01..08 | 0x002F | observed scope | concrete-II predicate required |
+| 0x06 | 0x0C Functional Modules (VR71) FM5 | 01..08 | 0x002F | observed scope | concrete-II predicate required |
+| 0x06 | 0x0D Relay Module (VR41) | 01..08 | — | RR0001 predicate; other RR Unknown | `device_connected`: exact one-byte BOOL; RR maximum Unknown; availability-only |
+| 0x06 | 0x0E Clock Module | 01..08 | 0x0033 | observed scope | concrete-II predicate required |
+| 0x06 | 0x0F Base Station | 01..08 | 0x0033 | observed scope | concrete-II predicate required |
 
 ---
 
@@ -490,16 +489,15 @@ ordinary heating circuits and II09 for the virtual native-water circuit. Active
 heating circuits are discovered by probing `circuit_mixer_type_external`
 (RR=0x0002). Value `0` (`mctype=inactive`) indicates an unused ordinary
 heating-circuit slot unless a correlated active, visible zero supplies the
-profile-qualified exception. An absent selector returns an empty/null response
-(no valid payload from bus). The Browser tree contains only confirmed-present
-instances; inactive, absent, and unknown probes remain in the scan artifact.
+profile-qualified exception. An empty/null response contains no valid register value; it does not by itself
+distinguish absence, inactivity or unsupported addressing.
 
 `II=0x09` is the virtual native-water circuit. Its selector does not identify a
 physical heating circuit. Treat it as present only when it has plausible live temperature evidence
 from `circuit_current_flow_temperature` (RR=0x0008) or
 `circuit_status_automatic_heating_cooling` (RR=0x0020). This preserves inactive handling for
 all other `mctype=0` circuit slots. Community evidence:
-[`helianthus-vrc-explorer#53`](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53).
+[public register observations](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53).
 
 Historical scan records include II00 and II0A probes. They remain retained raw
 observations, but do not extend the current profile's II01..09 coverage.
@@ -508,7 +506,7 @@ observations, but do not extend the current profile's II01..09 coverage.
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
 | 0x0001 | circuit_circuit_type | — | u16 | — | — | 1..2 | — | — | CSV says `circuit_mixer_type_external` but commonly mapped to 0x0002. Purpose unverified. † |
 | 0x0002 | circuit_mixer_type_external | P | u16 | enum | Hc{hc}CircuitType | 0..4 | →mctype | — | Discovery probe. Also `mixer_circuit_type_external` |
-| 0x0003 | circuit_influence_type | C | u8 | enum | Hc{hc}RoomInfluenceType | — | `0=inactive 1=active 2=extended` | — | Controls room sensor influence on heating curve. Not responsive on II=0x00 in VRC Explorer scan. See GetExtendedRegisters §4.2.5 for behavioral semantics |
+| 0x0003 | circuit_influence_type | C | u8 | enum | Hc{hc}RoomInfluenceType | — | `0=inactive 1=active 2=extended` | — | Controls room sensor influence on heating curve. No value reply observed at II=0x00. See GetExtendedRegisters §4.2.5 for behavioral semantics |
 | 0x0004 | circuit_backflow_temperature_setpoint | C | f32 | °C | Hc{hc}ReturnTempDesired | 15..80 | — | circuit_type=4 (return_increase) | Factory setting 30°C. jonesPD CTLV2 confirmed. Only meaningful for "Increase in return" circuits |
 | 0x0005 | circuit_condensate_sensitive_emitter | C | u8 | bool | — | 0..1 | `0=off 1=on` | cooling_enabled | Constraint tag u8. ebusd onoff=UCH. † |
 | 0x0006 | circuit_cooling_allowed | C | u8 | bool | Hc{hc}CoolingEnabled | 0..1 | `0=off 1=on` | — | Gate register. Constraint tag u8. ebusd onoff=UCH |
@@ -568,8 +566,8 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 | 0x000D | zone_bank_holiday_end | C | date | date | Zone{z}BankHolidayEndPeriod | — | — | — | ebusd confirmed |
 | 0x000E | zone_quick_mode | C | u8 | enum | Zone{z}SFMode | — | →sfmode | — | FLAGS=0x03 (user RW). Scan validated 1-byte. Writable to set quickveto/away |
 | 0x000F | zone_current_measured_temperature | S | f32 | °C | Zone{z}RoomTemp | — | — | — | FLAGS=0x01 (stable RO). From room sensor |
-| 0x0010 | zone_schedule_reset_to_default | C | u16 | — | — | — | — | — | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
-| 0x0011 | zone_is_active | C | u16 | — | — | — | — | — | FLAGS=0x03 (user RW). Discovered in VRC Explorer scan, not in ebusd/CSV |
+| 0x0010 | zone_schedule_reset_to_default | C | u16 | — | — | — | — | — | FLAGS=0x03 (user RW). Observed in a register survey, not in earlier catalogs |
+| 0x0011 | zone_is_active | C | u16 | — | — | — | — | — | FLAGS=0x03 (user RW). Observed in a register survey, not in earlier catalogs |
 | 0x0012 | zone_valve_status | S | u16 | bool | Zone{z}ValveStatus | — | `0=closed 1=open` | — | FLAGS=0x01 (stable RO). Used for hvac_action derivation |
 | 0x0013 | zone_binding_of_zone | C | u16 | enum | Zone{z}RoomZoneMapping | — | →zmapping | — | Maps zone to room temperature sensor source. The raw numeric B524 enum (`0`, `1`, `2`, ...) is the authoritative value |
 | 0x0014 | zone_heating_setpoint | S | f32 | °C | Zone{z}ActualRoomTempDesired | — | — | — | FLAGS=0x01 (stable RO) — computed output, not user-settable. Current setpoint considering all conditions |
@@ -590,14 +588,14 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 | 0x0024 | zone_quick_veto_end_date | C | date | date | Zone{z}QuickVetoEndDate | — | — | — | FLAGS=0x03 (user RW) — writable, can extend/set veto end date |
 | 0x0025 | zone_holiday_abort | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x0026 | zone_quick_veto_duration | C | f32 | hrs | Zone{z}QuickVetoDuration | — | — | — | 0.5..12 step 0.5. Writing enables quick veto mode. |
-| 0x0027 | zone_manual_cooling_is_active_for_zone | S | u16 | — | — | — | — | — | FLAGS=0x00 (volatile RO). Discovered in VRC Explorer scan |
+| 0x0027 | zone_manual_cooling_is_active_for_zone | S | u16 | — | — | — | — | — | FLAGS=0x00 (volatile RO). Observed in a register survey |
 | 0x0028 | zone_current_humidity | S | f32 | % | — | — | — | — | FLAGS=0x01 (stable RO). From room sensor |
-| 0x0029 | zone_cooling_allowed | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002A | zone_summer_cutoff_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002B | zone_continuous_heating_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002C | zone_frost_protection_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002D | zone_heating_roomthermostat_status | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
-| 0x002E | zone_cooling_roomthermostat_status | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Discovered in VRC Explorer scan |
+| 0x0029 | zone_cooling_allowed | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
+| 0x002A | zone_summer_cutoff_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
+| 0x002B | zone_continuous_heating_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
+| 0x002C | zone_frost_protection_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
+| 0x002D | zone_heating_roomthermostat_status | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
+| 0x002E | zone_cooling_roomthermostat_status | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
 
 #### Zone Mode Derivation
 
@@ -681,9 +679,8 @@ annotations. They are not independently native-verified and do not establish
 target support or writability. Unknown values remain numeric/unknown.
 
 The local II scope is profile-dependent. Repeated historical values do not
-establish a template/default role or physical topology. The Browser tree shows
-only confirmed-present instances; absent and unknown selector outcomes stay in
-the artifact diagnostics.
+establish a template/default role or physical topology. Empty and failed reads
+remain distinct observations, not confirmed absence.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -846,9 +843,8 @@ retained observations and do not expand this profile bound or prove presence.
 
 
 
-Current profile slot interval: II01..II08. Show only slots confirmed present
-by the group predicate in the Browser tree. Historical II00..0A reads remain
-artifact observations; they do not establish current slot bounds. **Active
+Characterized profile slot interval: II01..II08. Historical II00..0A reads
+are separate observations; they do not establish a terminal instance bound. **Active
 devices are identified by non-default values.** Empty slots have all
 NaN/0xFF/0x8000.
 
@@ -897,9 +893,8 @@ NaN/0xFF/0x8000.
 
 
 
-Current profile slot interval: II01..II08. Show only slots confirmed present
-by the group predicate in the Browser tree. Historical II00..0A reads remain
-artifact observations; they do not establish current slot bounds. **Active VR92
+Characterized profile slot interval: II01..II08. Historical II00..0A reads
+are separate observations; they do not establish a terminal instance bound. **Active VR92
 devices are identified by non-default values.** Empty slots have NaN/0xFF.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
@@ -987,7 +982,6 @@ universal empty-slot or physical-liveness rule.
 
 **Current-lab VR_71 correlation:** B524 yields `device_class_address=0x26` at `II=0x01`. The conclusion that this slot corresponds to `VR_71` comes from correlating that hint with eBUS identity data, where target address `0x26` identifies itself as `VR_71`. Vaillant controller documentation then constrains the profile interpretation by describing `FM5` as "instead of VR 71". This is useful and strong for the current lab/profile, but it is not standalone protocol proof that `GG=0x0C` universally means `VR71/FM5`.
 
-Architectural note: Functional-module semantics (FM3/FM5/VR66 families) are documented separately in [`../../architecture/functional-modules.md`](../../architecture/functional-modules.md).
 
 ---
 

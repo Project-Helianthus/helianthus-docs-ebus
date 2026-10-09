@@ -18,8 +18,6 @@ not fully explained.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `INFERENCE`: falsifiable interpretation from the evidence above.
 - `P4`: Live session, issue #335 author, IDX=0xFF scan (partial coverage).
@@ -45,13 +43,13 @@ Known configured `@base(MF, 0x1a, ...)` forms include:
 
 | Static suffix after `1a` | IDX | Context | Evidence | Falsification test |
 |---|---|---|---|---|
-| `05 [IDX] 32` | varies (0xFF, 0x4D, 0x15) | heat-pump daily/month/year yield/COP/consumption statistics + live data | `LOCAL_TYPESPEC` + P4 + P5 | Query HMU devices and show selectors under `[IDX] 32` do not return energy/COP-style payloads. |
-| `05 [IDX] 34` | varies (contested — see Section 3.2) | compressor runtime/statistics group (lifecycle counters) | `LOCAL_TYPESPEC` + P5 + D11/forks | Query HMU devices and show selectors under `[IDX] 34` are unsupported or map to unrelated fields. |
-| `05 e5 34` | 0xE5 | passive alternate for compressor runtime/statistics group | `LOCAL_TYPESPEC` | Capture matching firmware and show `e5 34` traffic is unrelated to the `ff 34` group. |
-| `05 00 32` | 0x00 | live-monitor desired/current supply, current power, compressor utilization, air intake temp | `LOCAL_TYPESPEC` | Enable live monitor and show selectors under `00 32` do not track live values. |
+| `05 [IDX] 32` | varies (0xFF, 0x4D, 0x15) | heat-pump daily/month/year yield/COP/consumption statistics + live data | + P4 + P5 | Query HMU devices and show selectors under `[IDX] 32` do not return energy/COP-style payloads. |
+| `05 [IDX] 34` | varies (contested — see Section 3.2) | compressor runtime/statistics group (lifecycle counters) | + P5 + D11/forks | Query HMU devices and show selectors under `[IDX] 34` are unsupported or map to unrelated fields. |
+| `05 e5 34` | 0xE5 | passive alternate for compressor runtime/statistics group | | Capture matching firmware and show `e5 34` traffic is unrelated to the `ff 34` group. |
+| `05 00 32` | 0x00 | live-monitor desired/current supply, current power, compressor utilization, air intake temp | | Enable live monitor and show selectors under `00 32` do not track live values. |
 | `05 FF 33` | 0xFF | backup heater config (VWZIO) | P1 | Query VWZIO and show `FF 33` does not return backup heater data. |
 | `04 05` | -- | compressor modulation live monitor | P1 | Query HMU and show `04 05` does not return compressor modulation data. |
-| `05` | -- | installer statistics with selector-defined subgroups | `LOCAL_TYPESPEC` | Query installer-level stats on isolated hardware and show selector identity is not prefix-tuple dependent. |
+| `05` | -- | installer statistics with selector-defined subgroups | | Query installer-level stats on isolated hardware and show selector identity is not prefix-tuple dependent. |
 
 ## IDX Byte Pattern (CRITICAL for Implementation)
 
@@ -128,12 +126,12 @@ response. This caused P4's scan to miss all energy/COP registers entirely.
 
 Frame format: `B51A 05 [IDX] 32 [REG]`
 
-> **Naming note:** Canonical Helianthus naming uses `dhw_*` (snake_case). ebusd
+> **Naming note:** Canonical naming uses `dhw_*` (snake_case). ebusd
 > source naming uses `Hwc*` (camelCase). Both refer to domestic hot water.
 
 | REG | IDX | `snake_case` name | ebusd `camelCase` | Type | Div | Unit | Confidence | Evidence | Falsifiable claim |
 |-----|-----|-------------------|-------------------|------|-----|------|------------|----------|-------------------|
-| 0x00 | 0xFF | `yield_hc_day` | `YieldHcDay` | energy(4) | 1 | kWh | HIGH | LOCAL_TYPESPEC + P4 | Query at day-end; must match controller daily heating yield. |
+| 0x00 | 0xFF | `yield_hc_day` | `YieldHcDay` | energy(4) | 1 | kWh | HIGH | + P4 | Query at day-end; must match controller daily heating yield. |
 | 0x01 | 0xFF | `yield_cooling_day` | `YieldCoolingDay` | energy(4) | 1 | kWh | LOW | D11/burmistrzak (B524 `020002 0001`) | Query during active cooling; non-zero. Zero in heating-only season. |
 | 0x02 | 0xFF | `yield_hwc_day` | `YieldHwcDay` | energy(4) | 1 | kWh | LOW | D11/burmistrzak (B524 `020002 0002`) | Query during active DHW production; must increment over 24h. |
 | 0x0E | **0x4D** | `yield_hc_month` | `YieldHcMonth` | word | /10 | kWh | HIGH | P4+P5+doc | Must match monthly heating energy on controller / 10. |
@@ -145,15 +143,15 @@ Frame format: `B51A 05 [IDX] 32 [REG]`
 | 0x16 | **0x4D** | `yield_hwc` | `YieldHwc` | energy | 1 | kWh | HIGH | P4+P5 | Lifetime DHW yield; monotonically increasing. |
 | 0x17 | **0x4D** | `cop_hwc` | `CopHwc` | word | **/10** | ratio | HIGH | P4+P5 (corrected) | COP range 1.0-4.0. **CORRECTION 2 applied.** |
 | 0x1E | 0xFF | `compressor_blocktime` | `CompressorBlocktime` | word | ? | ? | LOW | D11/burmistrzak (B524 `020002 001E`) | Non-zero during defrost lockout; zero during normal operation. |
-| 0x1F | 0x00 | `live_monitor_desired_supply_temp` | `LiveMonitorDesiredSupplyTemp` | temperature | -- | C | confirmed | LOCAL_TYPESPEC | Must track desired supply temperature in live-monitor. |
+| 0x1F | 0x00 | `live_monitor_desired_supply_temp` | `LiveMonitorDesiredSupplyTemp` | temperature | -- | C | confirmed | | Must track desired supply temperature in live-monitor. |
 | 0x20 | 0xFF | `flow_temp` | `FlowTemp` | D2C | /16 | C | MEDIUM | P4 | Must match flow temp sensor +/-0.5C. |
-| 0x20 | 0x00 | `live_monitor_current_supply_temp` | `LiveMonitorCurrentSupplyTemp` | temperature | -- | C | confirmed | LOCAL_TYPESPEC | Must track current supply temperature in live-monitor. |
+| 0x20 | 0x00 | `live_monitor_current_supply_temp` | `LiveMonitorCurrentSupplyTemp` | temperature | -- | C | confirmed | | Must track current supply temperature in live-monitor. |
 | 0x21 | **0x4D** | `energy_integral` | `EnergyIntegral` | int16 | 1 | min | MEDIUM | P4+P5 | Sign-aware; negative during defrost. |
 | 0x22 | 0xFF | `source_temp_input` | `SourceTempInput` | D2C | /16 | C | HIGH | P4+doc(live) | Must match outdoor/source temperature sensor +/-1C. |
 | 0x23 | 0xFF | `current_yield_power` | `CurrentYieldPower` | **D1B** | /10 | kW | HIGH | P4+P5+doc (type corrected) | **CORRECTION 3 applied.** See Correction 3 falsifiable claim. |
 | 0x24 | 0xFF | `current_consumed_power` | `CurrentConsumedPower` | **D1B** | /10 | kW | HIGH | P4+P5+doc (type corrected) | **CORRECTION 3 applied.** Must be >= 0 during normal operation. |
 | 0x25 | **0x15** | `current_compressor_util` | `CurrentCompressorUtil` | D2C | /16 | % | HIGH | P4+P5+doc | Must be 0 when compressor off; 20-100% during active heating. |
-| 0x26 | 0x00 | `live_monitor_air_intake_temp` | `LiveMonitorAirIntakeTemp` | temperature | -- | C | confirmed | LOCAL_TYPESPEC | Must track air intake temperature in live-monitor. |
+| 0x26 | 0x00 | `live_monitor_air_intake_temp` | `LiveMonitorAirIntakeTemp` | temperature | -- | C | confirmed | | Must track air intake temperature in live-monitor. |
 | 0x27 | 0xFF | `source_temp_output` | `SourceTempOutput` | D2C | /16 | C | HIGH | P4+doc(live) | Air-source: equals SourceTempInput. Brine: lower due to heat extraction. |
 | 0x2A | **0x4D** | `yield_cooling_month` | `YieldCoolingMonth` | word | /10 | kWh | LOW | D11/burmistrzak (B524 `020002 002A`) | Non-zero only in cooling season. |
 | 0x2B | **0x4D** | `cop_cooling_month` | `CopCoolingMonth` | word | /10 | ratio | MEDIUM | D11/burmistrzak (B524 `020002 002B`) | COP range 2.0-8.0. /10 factor assumed by analogy — see Q6. |
@@ -234,71 +232,7 @@ in forks). MEDIUM confidence (two independent forks; no data).
 
 ## Local Captures
 
-Operator-provided traffic included several `B51A` frames such as:
-
-```text
-REQ:  f1 08 b5 1a 04 05 00 0c 00
-RESP: 0a 00 02 46 ff 00 25 00 ff 00 0a
-
-REQ:  f1 08 b5 1a 04 05 00 0c 4d
-RESP: 0a 00 02 47 46 01 25 00 46 01 0a
-```
-
-These use prefix `00 0c`, not the HMU `00 32` live-monitor prefix documented
-above. Treat the `00 0c` group as observed but not decoded here.
-
-## Open Questions
-
-### Q1 — 05FF32/0x40 (Hours) vs 05FF34/0x00 (CompressorHours): Same counter?
-
-D3 notes 05FF32/0x40 as `Hours` (IDX=0xFF) and 05FF34/0x00 as `CompressorHours`
-(contested IDX). The B509 parallel `540200 C2` is also named CompressorHours. Whether
-all three read the same counter or 05FF32/0x40 counts total HP uptime (including
-standby) while 05FF34/0x00 counts compressor-only uptime is unresolved. Compare
-values live.
-
-### Q2 — `05 00 32` vs `05 FF 32`: Firmware-variant-specific path?
-
-Whether IDX=0x00 exists as a firmware-variant path to the same 05FF32 sub-group
-is unresolved. Probe: send `B51A 05 00 32 00` and compare to `B51A 05 FF 32 00`.
-
-### Q3 — Config menu `8F352D`-style encoding
-
-D3 documents a structural encoding pattern; no community forks implement it.
-Requires TypeSpec deep-dive (P2 source).
-
-### Q4 — B51A `04` selector on HMU: Content unknown
-
-Two forks (jonesPD, xerion3800) confirm `B51A 04 *r` on HMU with `:IGN:*`. Distinct
-from `04 05` sub-command. Content and structure TBD.
-
-### Q5 — VWZ (0x76) B51A scope vs VWZIO
-
-D3 attributed 05FF33 to VWZIO only. D11 shows both VWZ and VWZIO carry `05`/`06`
-selectors. Whether VWZ maps to the same register is unresolved.
-
-### Q6 — COP divisor confirmation for cooling registers (0x2B, 0x2D)
-
-/10 assumed by analogy with heating COP. Requires live confirmation on a system with
-reversible heat pump (VWZ series with cooling enabled).
-
-### Q7 — TotalEnergyUsage (0x4D) divisor and unit
-
-Unit may be Wh (not kWh), requiring /1000. Cross-check against sum of yield counters.
-
-### Q8 — 05FF34 REG=0x04 (`stat5`): Identity of unnamed counter
-
-bumaas documents as `stat5` (UIN, IDX=0xB4). Between BuildingPumpStarts (0x03) and
-FourWayValveHours (0x06). Candidates: total system starts, backup heater starts,
-source pump starts.
-
-## Unknowns
-
-- Meaning of response prefix bytes and whether they echo request selectors,
-  encode status, or identify data groups.
-- Whether prefix tuples are firmware-specific, hardware-specific, or both.
-- Mapping for the locally observed `05 00 0c xx` request group.
-- IDX discrepancy resolution for 05FF34 lifecycle counters (see Sub-Group 05xx34).
+No publishable capture is included in this reference.
 
 ## References
 

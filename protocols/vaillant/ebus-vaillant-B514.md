@@ -18,9 +18,6 @@ indoor hydraulic stations (address 0x76). Not applicable to BAI boiler devices.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
-- `LOCAL_MCP`: current Helianthus MCP runtime observations.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `INFERENCE`: falsifiable interpretation from the evidence above.
 - `P1`: cyberthom42/vaillant-arotherm-plus GitHub repo — `08.hmu.csv` (live-install).

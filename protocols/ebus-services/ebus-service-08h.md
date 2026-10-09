@@ -9,7 +9,7 @@ Service `0x08` handles communication between heating controllers and mixer modul
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
 <!-- legacy-role-mapping:end -->
 
 - **Controller 0 (heater controller):** The primary controller that aggregates demands and distributes parameters.

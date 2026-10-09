@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURES = ROOT / "protocols" / "vaillant" / "fixtures"
+FIXTURES = ROOT / "development" / "fixtures"
 
 
 def validate(schema: str, instance: str) -> subprocess.CompletedProcess[str]:
@@ -763,7 +763,7 @@ def test_write_edit_plan_is_preview_first_and_native_qualification_is_scoped() -
     plan = FIXTURES / "b524-operation-edit-plan-synthetic-v1.json"
     schema = FIXTURES / "b524-operation-edit-plan-schema-v1.json"
     assert subprocess.run(["jv", str(schema), str(plan)], capture_output=True, text=True).returncode == 0
-    text = (ROOT / "protocols" / "vaillant" / "b524-operation-reads.md").read_text()
+    text = (ROOT / "development" / "ebus-vaillant-b524-operation-reads.md").read_text()
     assert "defaults to an offline preview and diff" in text
     assert "Event execution stays disabled pending a qualified native Event contract" in text
     qualification = json.loads((FIXTURES / "b524-native-write-qualification-schema-v1.json").read_text())

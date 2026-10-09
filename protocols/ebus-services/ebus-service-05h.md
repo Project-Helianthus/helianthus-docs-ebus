@@ -9,7 +9,7 @@ Service `0x05` is the primary communication protocol between burner control unit
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
 <!-- legacy-role-mapping:end -->
 
 - **FA (Feuerungsautomat):** Burner control unit / burner automat.
@@ -346,5 +346,5 @@ sequenceDiagram
 
 - [`ebus-application-layer.md`](./ebus-application-layer.md) — service index
 - [`ebus-overview.md`](./ebus-overview.md) — wire-level framing
-- [`ebus-service-03h.md`](./ebus-service-03h.md) — burner service data (diagnostic complement to runtime control)
+- [`ebus-service-03h.md`](./ebus-service-03h.md) — burner service data (diagnostic complement to control)
 - [`ebus-service-08h.md`](./ebus-service-08h.md) — controller-to-controller (distributes aggregated data)

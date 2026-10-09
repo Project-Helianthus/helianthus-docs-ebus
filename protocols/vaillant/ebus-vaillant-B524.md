@@ -1,7 +1,7 @@
 # Vaillant GetExtendedRegisters (`0xB5 0x24`, B524)
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This reference uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 This document is the canonical wire-protocol reference for Vaillant `GetExtendedRegisters` (`PB=0xB5`, `SB=0x24`).
@@ -174,11 +174,11 @@ an observation rather than using it as an unbounded scan-control signal.
 
 ## 3. Opcode Family Map
 
-These are Helianthus operation names from the public discussion, with spelling
+These are descriptive operation names from the public discussion, with spelling
 normalized for `GetParameter` and `GetDeviceParameter`. They are not proprietary
 service identifiers. A listed operation is not proof that every target supports it.
 
-| OP / OT | Helianthus name | Selector / purpose |
+| OP / OT | Descriptive name | Selector / purpose |
 | --- | --- | --- |
 | 00h | `ReadSystemInformation` | `00 IDlo IDhi` |
 | 01h | `DescribeParameter` | `01 GG II RRlo RRhi`; describes a system parameter |
@@ -195,7 +195,7 @@ service identifiers. A listed operation is not proof that every target supports 
 
 OP=01h and OP=07h use separate selector domains. Their complete forms are the
 corrected reconstruction adopted for profile-qualified implementations. The
-identifier byte is retained as `II` in Helianthus terminology; its exact meaning
+identifier byte is retained as `II` in this notation; its exact meaning
 and any special identifier (including FFh) must be qualified per profile.
 Physical support and response codecs require correlated target evidence.
 
@@ -246,8 +246,7 @@ rule.
 
 ### 3.3 OP02 family presentation-name catalog
 
-The following operation-scoped labels are used by the scan planner, Browser,
-HTML, and saved-artifact views. They retain the complete `(OP=0x02, GG)`
+The following descriptive labels retain the complete `(OP=0x02, GG)`
 identity. A label does not add a selector route, instance range, register
 layout, or physical-device claim.
 
@@ -435,31 +434,20 @@ codec, or inconsistent/non-finite limits remain unqualified. Retain request
 context because `II` is not echoed. Never assign a description across OP=02h/06h
 or across instances merely because `GG`/`RR` match.
 
-#### 4.2.2 Targeted acquisition
+#### 4.2.2 Description applicability
 
-Read the parameter first. Acquisition includes all deduplicated, observed
-writable candidates in the selected scope by default. An explicit caller budget
-may limit acquisition; no default budget exists. Candidates use the profile-scoped static
-`FLAGS & 0x02` inference is present, including candidates whose scalar codec is
-not yet known. An unknown codec is retained raw and remains unqualified; it is
-not a reason to omit an otherwise eligible description request. That inference
-selects candidates only: it neither proves live writability nor authorizes a
-write. For each selected candidate, send its complete
-profile-qualified description selector: OP=01h for the system family and OP=07h
-for the device family. Keep the raw request and reply, decoder revision and
-qualification outcome in the artifact. Unsupported descriptions are explicit
-missing data; no short-probe fallback is allowed. The implementation records
-`eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and
-`budget_skipped` counters per description family.
+OP01 and OP07 metadata are meaningful only with a correlated selector and a
+matching parameter codec. The static `FLAGS & 0x02` interpretation can identify
+a writable candidate, but neither proves live writability nor authorizes a
+write. An unknown codec leaves the response raw and unqualified. Empty or
+unsupported descriptions provide no replacement validation evidence.
 
-#### 4.2.3 Offline value changes
+#### 4.2.3 Value constraints
 
-A matching qualified description validates encoding/type/width, min/max and step
-for every edit, including non-enum numeric values. A contradicted value is rejected.
-When no qualified description is available, VRC Explorer warns that the edit is
-unvalidated and permits its existing explicit confirmation. Offline editing does
-not send a device write. Historical static ranges remain hints, not validation
-authority. See the [historical constraint catalog](./ebus-vaillant-B524-register-map.md#constraint-catalog-ebusreg).
+A qualified matching description can constrain type, width, minimum, maximum
+and step for numeric and non-enum values as well as enumerations. Missing or
+unqualified metadata leaves those constraints Unknown. Historical short probes
+do not replace a complete correlated OP01/OP07 description.
 
 #### 4.2.4 Circuit type interpretation (`GG=0x02 RR=0x02`)
 
@@ -566,11 +554,6 @@ codes as raw evidence; they do not become valid time values.
 | 03 | Selected zone | 01 | Zone cooling |
 | 03 | Selected zone | 02 | Zone heating |
 
-VRC Explorer exposes `b524 read-timer` and the offline-only
-`b524 preview-write-timer`. Preview creates a payload without opening a
-transport or writing to a regulator. The explicit read-plan contract is
-documented in [B524 explicit operation reads](b524-operation-reads.md).
-
 ### 4.5 `0x09` / `0x0A` Events and `0x0B` / `0x0C` Event Setpoints
 
 **Hypothesis — experimental schema:** The layouts below define the explicit
@@ -615,21 +598,11 @@ qualified by each target's actual response; this specification does not claim
 that every BASV2 or VRC700 implements them. Undocumented profile/address
 combinations remain rejected rather than receiving an invented codec.
 
-Normal scans construct Event program candidates from discovered scalar
-System/DHW/zone anchors using the [operation-read contract](b524-operation-reads.md).
-The initial raw-code window `00..07` is editable in the planner and does not
-assign weekday meanings or claim exhaustive support. Matching setpoints are
-read conditionally after usable Event replies. An explicit read plan remains
-an optional override. Outcomes remain raw or schema-unqualified until
-target-qualified evidence exists. Event reads are not
-scalar scan candidates and do not create typed Browser or HTML inventory.
-Browser and HTML may show a candidate interpretation beside raw values only
-when explicitly marked experimental and schema-unqualified.
-`b524 preview-set-event` and
-`b524 preview-set-event-setpoint` construct offline payloads only. No live
-setter is exposed by these commands. Retries apply at the transport layer to
-exact read requests; setters are excluded from automatic replay.
-See [B524 explicit operation reads](b524-operation-reads.md).
+Event-code semantics and supported selector ranges remain profile-qualified.
+A response of the expected length does not establish those semantics, physical
+presence, writable behavior or support outside the observed selector. A read
+retry must preserve the exact selector; write repetition has distinct effects
+and cannot be inferred from read behavior.
 
 ### 4.6 `0x08` ReadVR91
 
@@ -643,11 +616,8 @@ STATUS_INFO FROST_PROTECTION HEATING_TEMPERATURE_RAW COOLING_TEMPERATURE_RAW
 ```
 
 These field names describe the response structure. Bit meanings, temperature
-scaling and special-value semantics remain unqualified, so the Explorer retains
-each byte without turning it into a physical measurement. `b524 read-vr91`
-checks the controller identity before sending this request. It is also available
-as an opcode-only explicit operation read; see
-[B524 explicit operation reads](b524-operation-reads.md).
+scaling and special-value semantics remain unqualified. Raw bytes alone do not
+establish a physical measurement or support on another controller profile.
 
 ## 5. Topology-Significant Registers
 

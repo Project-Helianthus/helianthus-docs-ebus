@@ -4,15 +4,8 @@ ENH is the “enhanced” host↔adapter protocol used by ebusd-style interfaces
 
 See also:
 
-- `protocols/ens.md` for ebusd’s `ens:` prefix semantics (serial speed selector; equivalent to `enh:` on network transports). Note: in this document and its conformance tests, `ENH`/`ENS` refer to the ebusd transport prefixes, NOT the firmware data-only ENS codec (`codec_ens.c`) described in [ens.md §Disambiguation](ens.md#disambiguation).
+- [ENS](ens.md) for `ens:` prefix semantics (serial speed selector; equivalent to `enh:` on network transports). ENH/ENS here refer to transport prefixes, not a data-only serial escape codec.
 - `protocols/udp-plain.md` for raw eBUS bytes over UDP without ENH framing.
-
-Observe-first caveat: direct adapter-class ENH/ENS listeners on the adapter port
-(for example `tcp/:9999`) are not the passive-capable observe-first path. The
-current transport contract and troubleshooting signals are documented in
-[`deployment/full-stack.md#passive-observe-first-transport-contract`](../deployment/full-stack.md#passive-observe-first-transport-contract)
-and
-[`architecture/observability.md#troubleshooting-mapping`](../architecture/observability.md#troubleshooting-mapping).
 
 It is a byte-stream protocol where:
 
@@ -38,7 +31,6 @@ Encoded sequences are 2 bytes:
 byte1: 1 1 C C C C D D
 byte2: 1 0 D D D D D D
 ```
-
 - `C` = 4-bit command
 - `D` = 8-bit data payload (split across the two bytes)
 
@@ -132,41 +124,37 @@ Outcomes:
 - `<STARTED> <initiator>`: arbitration won
 - `<FAILED> <winner>`: arbitration lost (the data byte indicates the winning initiator address)
 
-> **Implementation recommendation:** If the adapter sends repeated STARTED frames with an initiator address that does not match the host's arbitration request, the host should abort arbitration after a configurable threshold (typically 3 mismatches). This prevents infinite arbitration loops when the bus is congested with competing initiators. All three Helianthus implementations (ebusgo, VRC Explorer, adaptermux) enforce this pattern.
+> A client can bound repeated `STARTED` frames whose initiator differs from its request to avoid an indefinite arbitration loop on a congested bus.
 
 ### Arbitration byte visibility
 
 During arbitration initiated by the host, adapters **must not** emit `RECEIVED` notifications for the arbitration bytes they put on the bus. Clients should not rely on echo notifications for those bytes.
 
-### Post-arbitration byte echo (F-18 contract)
+### Post-arbitration byte echo
 
-For every physical byte the host writes **after** the arbitration byte — i.e., every `SEND` byte that traverses `DST PB SB LEN DATA... CRC`, including both bytes of an escape pair, and any subsequent response-phase byte — the adapter (or proxy) **MUST** emit a corresponding `RECEIVED` notification for that same wire byte.
+For every physical byte the host writes **after** the arbitration byte — i.e., every `SEND` byte that traverses `DST PB SB LEN DATA... CRC`, including both bytes of an escape pair, and any subsequent response-phase byte — an ENH endpoint must emit a corresponding `RECEIVED` notification for that same wire byte.
 
 This follows directly from john30/ebusd's [`docs/enhanced_proto.md`](https://github.com/john30/ebusd/blob/38db2d28bd5622cadb6078c1662c6f7da5cef891/docs/enhanced_proto.md), which says ENH_RES_RECEIVED "shall not be sent when the byte received was part of an arbitration request initiated by ebusd." The converse is implied: ENH_RES_RECEIVED MUST be sent for every other host-written byte.
 
 Why this matters: ebusd's [`DirectProtocolHandler`](https://github.com/john30/ebusd/blob/38db2d28bd5622cadb6078c1662c6f7da5cef891/src/lib/ebus/protocol_direct.cpp#L261-L279) records the physical byte it sent, then compares the received symbol with that byte before its RX unescape step. A missing or altered echo causes the direct handler to enter `bs_skip`. See [`protocol_direct.cpp`](https://github.com/john30/ebusd/blob/38db2d28bd5622cadb6078c1662c6f7da5cef891/src/lib/ebus/protocol_direct.cpp#L412-L447).
 
-Proxy and adapter implementations:
+Endpoint requirements:
 
 - Adapters that observe the bus directly MUST emit `ENH_RES_RECEIVED(byte)` for every non-arbitration byte they observe on the wire while the host owns the bus.
 - A forwarding layer MUST preserve each physical received byte for the host session that sent it; suppressing this echo prevents a direct client from matching its sent byte.
 - The arbitration byte is handled separately: clients receive it via `ENH_RES_STARTED(initiator)` on a successful win, not as `ENH_RES_RECEIVED`. This matches the upstream ENH rule that a received arbitration byte initiated by ebusd is not notified as `RECEIVED`.
 
-Symptoms of a non-conformant proxy that suppresses the owner echo:
-
-- The owner client (e.g., ebusd) issues one `ENH_REQ_SEND(0xFE)` per scan attempt and never advances to `ENH_REQ_SEND(LEN)` or subsequent bytes.
-- `passive_reconstructor` logs `abandon reason=corrupted_request phase=1 src=<owner_byte>` at a high rate.
-- ebusd's local FSM collapses to `bs_skip` ~10 ms after each `SEND`, retries arbitration, wins again (`STARTED` arrives), and repeats — visible as multiple consecutive `STARTED` frames with no completed transactions in between (`ebusctl info` shows the `messages` counter stuck at a low value).
+Suppressing the echo prevents a direct client from matching the transmitted byte and can cause repeated arbitration without a completed transaction.
 
 ### Why ebusd sends `DST` first after STARTED
 
 In ebusd “direct” mode, the initiator address byte is emitted as part of arbitration. After a successful `STARTED`, the host continues the telegram by sending `DST`, then `PB SB LEN ...` (i.e., it does not re-send `SRC`).
 
-> **Implementation note — ENS and ENH share arbitration semantics.** Both ENS and ENH adapters transmit the source byte on the wire during START arbitration. Callers must NOT include the source byte in the outgoing telegram payload for either mode. Setting `arbitrationSendsSource=false` for ENS is incorrect and causes a double source byte on the wire. See ebusgo#113. Default: `arbitrationSendsSource` is `false` (adapter does not automatically include source address in arbitration); both ENH and ENS override this to `true`.
+> ENS and ENH share arbitration semantics. Both transmit the source byte during START arbitration. A caller must not include that source byte again in the outgoing telegram payload.
 
 ### Parser state after arbitration
 
-Implementations that use a stateful parser for ENH framing (e.g., two-byte command decoding) **must reset parser state** after arbitration completes (STARTED or FAILED). TCP fragmentation can deliver extra bytes alongside the arbitration response, leaving the parser with a partially-decoded frame. Without a reset, the stale parser state corrupts subsequent echo matching. See ebusgo#113, adapter-proxy#78.
+An ENH parser must reset partial command state after arbitration completes (`STARTED` or `FAILED`). TCP fragmentation can otherwise leave a partial frame that corrupts later echo matching.
 
 ### Parser Reset After Read Timeout
 
@@ -177,7 +165,6 @@ The reset clears:
 - Any accumulated multi-byte response buffer
 - The current command context
 
-**Invariant name:** `XR_ENH_ParserReset_AfterReadTimeout`
 
 ## INFO
 
@@ -253,7 +240,3 @@ SEND data byte `0x5A` (encoded form):
 byte1 = 0xC0 | (0x1 << 2) | (0x5A >> 6) = 0xC5
 byte2 = 0x80 | (0x5A & 0x3F)           = 0x9A
 ```
-
-## See Also
-
-- [`architecture/enh-ens-conformance-tests.md`](../architecture/enh-ens-conformance-tests.md) -- ENH/ENS shared conformance test catalog (canonical XR test names and falsifiable invariants) — Helianthus architecture document, not public-domain protocol spec.
