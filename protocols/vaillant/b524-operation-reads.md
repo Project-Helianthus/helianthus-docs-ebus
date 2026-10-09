@@ -36,6 +36,10 @@ native Event semantics.
 
 ## Additive artifact records
 
+Events retain the explicit instance byte. The fixed system/DHW `II=00` rule
+of the Timer profile is not projected onto Event selectors; native Event
+instance support remains unqualified.
+
 Operation reads are additive to an artifact with outer `schema_version: "2.3"`.
 They use `b524_operation_reads_schema_version: 1` and
 `b524_operation_reads`, validated by the
@@ -46,7 +50,9 @@ request-context correlation, attempt count, and optional error. Replay records
 may also retain `trace_seq`. Known Timer and Event selectors use their
 canonical selector shapes; unknown OP03/09/0B replay selectors use
 `selector: {}` with a raw `raw_selector` and remain raw-only. Known Event
-records retain the same canonical `pair_context`.
+records may retain the same canonical `pair_context`; when present it must
+match the selector. Raw-only records retain `decoded: null` and
+`schema_unqualified`.
 
 `response_state` is one of `value`, `empty`, `nack`, `timeout`,
 `transport_error`, `malformed`, or `unattempted`. An `unattempted` record
@@ -76,7 +82,9 @@ and exact confirmation text are supplied. Before a native write it verifies raw
 EID and SW through `0x07/0x04`; the qualification supplies `profile` and two
 raw SW bytes as `software_raw_hex`, alongside scope, manufacturer, EID, model,
 selector, evidence reference, and `native_qualified: true`. Qualification
-evidence remains separate from operator consent. A permitted execution is one send without automatic retry,
+selectors are exact: OP04 uses `channel`, `instance`, and `weekday`; OP0A/OP0C
+use `profile`, `instance`, `address`, and `weekday_code`. Qualification evidence
+remains separate from operator consent. A permitted execution is one send without automatic retry,
 with retained raw feedback and separate readback of the exact selector. A
 timeout, ambiguous feedback, or partial result remains unknown and must not
 trigger an automatic repeat or rollback.

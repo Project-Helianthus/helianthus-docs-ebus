@@ -11,9 +11,24 @@
     "profile": {"type": "string", "minLength": 1},
     "model": {"type": "string", "minLength": 1},
     "software_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{4}$"},
-    "selector": {"type": "object", "minProperties": 1},
+    "selector": {},
     "evidence_reference": {"type": "string", "minLength": 1},
     "native_qualified": {"const": true}
   },
-  "additionalProperties": false
+  "allOf": [
+    {
+      "if": {"properties": {"scope": {"const": "timer_write_op04"}}},
+      "then": {"properties": {"selector": {"$ref": "#/$defs/timer_selector"}}}
+    },
+    {
+      "if": {"properties": {"scope": {"enum": ["event_write_op0a", "event_setpoint_write_op0c"]}}},
+      "then": {"properties": {"selector": {"$ref": "#/$defs/event_selector"}}}
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "u8": {"type": "integer", "minimum": 0, "maximum": 255},
+    "timer_selector": {"type": "object", "required": ["channel", "instance", "weekday"], "properties": {"channel": {"enum": ["ventilation", "noise-reduction", "tariff", "dhw", "circulation", "zone-cooling", "zone-heating"]}, "instance": {"$ref": "#/$defs/u8"}, "weekday": {"type": "integer", "minimum": 0, "maximum": 6}}, "additionalProperties": false},
+    "event_selector": {"type": "object", "required": ["profile", "instance", "address", "weekday_code"], "properties": {"profile": {"enum": ["system", "dhw", "zone"]}, "instance": {"$ref": "#/$defs/u8"}, "address": {"$ref": "#/$defs/u8"}, "weekday_code": {"$ref": "#/$defs/u8"}}, "additionalProperties": false}
+  }
 }

@@ -78,6 +78,95 @@ def test_unattempted_cannot_claim_an_attempt(tmp_path: Path) -> None:
     assert result.returncode != 0
 
 
+def test_native_write_qualification_rejects_scope_selector_mismatch_and_boolean(tmp_path: Path) -> None:
+    assert validate(
+        "b524-native-write-qualification-schema-v1.json",
+        "b524-native-write-qualification-synthetic-v1.json",
+    ).returncode == 0
+    qualification = {
+        "schema_version": 1, "scope": "timer_write_op04", "manufacturer": 181,
+        "device_id": "70000", "profile": "vrc700", "model": "VRC700",
+        "software_raw_hex": "0417", "selector": {
+            "channel": "ventilation", "instance": True, "weekday": 0
+        },
+        "evidence_reference": "synthetic", "native_qualified": True,
+    }
+    candidate = tmp_path / "invalid-qualification.json"
+    candidate.write_text(json.dumps(qualification))
+    result = subprocess.run(
+        ["jv", str(FIXTURES / "b524-native-write-qualification-schema-v1.json"), str(candidate)],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode != 0
+    qualification["scope"] = "event_write_op0a"
+    qualification["selector"] = {"channel": "ventilation", "instance": 0, "weekday": 0}
+    candidate.write_text(json.dumps(qualification))
+    result = subprocess.run(
+        ["jv", str(FIXTURES / "b524-native-write-qualification-schema-v1.json"), str(candidate)],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode != 0
+
+
+def test_artifact_semantic_validator_rejects_wrong_payload_and_event_qualification(
+    tmp_path: Path,
+) -> None:
+    artifact = json.loads((FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text())
+    artifact["b524_operation_reads"][0]["request_payload_hex"] = "0300000200"
+    artifact["b524_operation_reads"][2]["decode_qualification"] = "profile_vrc700"
+    candidate = tmp_path / "invalid-artifact.json"
+    candidate.write_text(json.dumps(artifact))
+    result = subprocess.run(
+        ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+        cwd=ROOT, capture_output=True, text=True, check=False,
+    )
+    assert result.returncode != 0
+
+
+def test_artifact_semantic_validator_rejects_unsupported_canonical_selectors_and_raw_decode(
+    tmp_path: Path,
+) -> None:
+    source = json.loads((FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text())
+    cases = (
+        ("timer-instance", 0, {"selector": {"channel": "ventilation", "instance": 1, "weekday": 0}, "request_payload_hex": "0300010100"}),
+        ("event-address", 2, {"selector": {"profile": "system", "instance": 0, "address": 4, "weekday_code": 255}, "pair_context": {"profile": "system", "instance": 0, "address": 4, "weekday_code": 255}, "request_payload_hex": "09000004ff"}),
+        ("raw-decode", 3, {"decoded": {}}),
+    )
+    for name, index, mutation in cases:
+        artifact = json.loads(json.dumps(source))
+        artifact["b524_operation_reads"][index].update(mutation)
+        candidate = tmp_path / f"{name}.json"
+        candidate.write_text(json.dumps(artifact))
+        result = subprocess.run(
+            ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+            cwd=ROOT, capture_output=True, text=True, check=False,
+        )
+        assert result.returncode != 0, name
+
+
+def test_artifact_semantic_validator_allows_explicit_event_instance_without_pair_context(tmp_path: Path) -> None:
+    artifact = json.loads((FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text())
+    del artifact["b524_operation_reads"][2]["pair_context"]
+    artifact["b524_operation_reads"][2].update({"selector": {"profile": "dhw", "instance": 1, "address": 1, "weekday_code": 255}, "request_payload_hex": "09010101ff"})
+    candidate = tmp_path / "event-without-pair-context.json"
+    candidate.write_text(json.dumps(artifact))
+    result = subprocess.run(
+        ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+        cwd=ROOT, capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_event_artifact_cannot_claim_profile_qualification(tmp_path: Path) -> None:
+    artifact = json.loads((FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text())
+    artifact["b524_operation_reads"][2]["decode_qualification"] = "profile_vrc700"
+    candidate = tmp_path / "invalid-event-qualification.json"
+    candidate.write_text(json.dumps(artifact))
+    assert validate(
+        "b524-operation-reads-artifact-schema-v1.json", str(candidate)
+    ).returncode != 0
+
+
 def test_write_edit_plan_is_preview_first_and_native_qualification_is_scoped() -> None:
     plan = FIXTURES / "b524-operation-edit-plan-synthetic-v1.json"
     schema = FIXTURES / "b524-operation-edit-plan-schema-v1.json"
