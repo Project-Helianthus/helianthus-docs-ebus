@@ -40,7 +40,7 @@ def violations(root: Path) -> list[str]:
                 source = evidence or bool(re.match(r"^> ?Source:|^Source:", line, re.I))
                 # A negative scope statement excludes product policy rather
                 # than describing it; the pinned Modbus reference uses this form.
-                exclusion = previous.endswith("It contains no") and line == (
+                exclusion = previous.endswith("contains no") and line == (
                     "Helianthus scheduler, profile, qualification, gateway, or semantic policy."
                 )
                 prose = URL.sub("", line)
