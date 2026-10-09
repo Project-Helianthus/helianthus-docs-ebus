@@ -6,12 +6,12 @@ profile-qualified interpretations, and scanner policy. It adds no device writes.
 
 ## Local circuit coverage
 
-For OP02/GG02, the current profile is II01..II09: II01..II08 are ordinary
+For OP02/GG02, the BASV2 scoped profile is II00..II09: II00..II08 are ordinary
 heating-circuit candidates and II09 is the virtual native-water circuit. The
 legacy public name `circuit_count` for OP00/ID00 is a supported-capacity value
 under the bounded contract below; it does not select or allocate II identities.
-It does not add II00 or II0A, and II09 remains a separately selected candidate.
-This applies to CLI, interactive planning, replanning, and custom plans;
+It does not add II0A, and II09 remains a separately selected candidate.
+This applies to Browser planning, replanning, and custom selections;
 estimates and safety limits include II09.
 
 `virtual_native_water` is a presentation label, not a physical-circuit claim.
@@ -26,14 +26,14 @@ group-qualified positive evidence. For current artifacts this is
 observed raw reply. `not_connected`, empty, timeout, decode failure, and
 unprobed/unknown selectors remain in the scan artifact diagnostics; none becomes
 a placeholder node. Tree projection does not alter the artifact or create a
-synthetic slot. The final scan plan controls Browser group visibility independently
+synthetic slot. The final selected scope controls Browser group visibility independently
 for each operation: deselected groups are omitted, while an explicitly selected
 empty group may remain a navigation node without instance children. Discovery
 results outside that plan remain in the artifact. Artifacts predating scan-plan
 metadata retain their legacy group visibility.
 
-Custom scan plans enforce the same selector intervals before transport I/O:
-OP06 permits II01..II08 and OP02/GG02 permits II01..II09. Custom RR selectors
+Custom selections enforce the same selector intervals before transport I/O:
+OP06 permits II01..II08 and OP02/GG02 permits II00..II09. Custom RR selectors
 remain exact and are validated by the scalar request contract; they do not widen
 an II interval. A group without an observed RR scheduling ceiling is selectable
 only with an explicit custom RR ceiling, list, or range. Historical records outside these
@@ -49,7 +49,7 @@ interval. A count from OP00 never changes the numbering origin.
 | OP | GG | II_min | II_max | Scope |
 | --- | --- | --- | --- | --- |
 | 02 | 00, 01 | 00 | 00 | Singleton selectors |
-| 02 | 02 | 01 | 09 | Heating candidates 01..08, virtual native water 09 |
+| 02 | 02 | 00 | 09 | Heating candidates 00..08, virtual native water 09 |
 | 02 | 03 | 00 | 0A | Current zone profile bound |
 | 02 | 04, 05 | 00 | 01 | Current solar/cylinder profile bound |
 | 02 | 08, 09, 0A | 00 | 0A | Current configured bounds; GG0A remains semantically unknown |
@@ -66,12 +66,17 @@ a manual RR scope because their RR maxima are Unknown. `recommended`, `full`,
 `research`, and `custom` retain their own selector policies. Same-numbered OP06
 groups never supply their local selector contract.
 
-The current circuit availability heuristic uses OP02/GG02/RR0002. A
-correlated active, visible numeric zero is not rejected solely because it is
-zero: the visible attribute supplies additional positive profile evidence.
-This is an implementation qualification rule, not a universal physical
-presence predicate. Existing nonzero candidates and the separate II09 probe
-are retained; errors and invalid sentinel values remain non-positive.
+The BASV2/SW0507 circuit predicate uses OP02/GG02/RR0002. Correlated raw
+`0100` with FLAGS=03 qualifies II00 and II01 as active in this profile. Raw
+`0000` with FLAGS=03 qualifies II02 as inactive; visibility alone does not make
+a zero active. This is an implementation qualification rule, not a universal
+physical presence predicate. The separate II09 probe remains independent; errors
+and invalid sentinel values remain non-positive.
+
+For OP02/GG03/RR001C, preserve the native zone value without a +1 remap. The
+same scoped observation maps zone II00 to `00` and II01 to `01`; II02+ is `FF`
+and is not active. This does not turn the value into a general circuit topology
+rule for another profile.
 
 ### Recommended OP00 count guidance
 
@@ -115,7 +120,7 @@ the group's qualified predicate and leaves count-guided coverage incomplete.
 
 | OP/GG | OP00 ID | Count name | Scope of the hint |
 | --- | --- | --- | --- |
-| OP02/GG02 | 00 | `circuit_count` | Supported circuit capacity; candidate guidance only. II01..II08 retain their concrete predicate, and II09 is independent. |
+| OP02/GG02 | 00 | `circuit_count` | Supported circuit capacity; candidate guidance only. II00..II08 retain their concrete predicate, and II09 is independent. |
 | OP02/GG03 | 01 | `zone_count` | Supported zone capacity; candidate guidance only. II00..II0A retain their concrete predicate. |
 | OP02/GG04 | 02 | `solar_circuit_count` | Local solar-circuit candidates. |
 | OP02/GG05 | 03 | `solar_loaded_tank_count` | Local cylinder candidates. |

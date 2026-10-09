@@ -7,8 +7,8 @@ namespace.
 
 ## Automatic Event programs
 
-Normal scans offer Event programs without an additional command-line option or
-external plan file. After scalar instance discovery, candidates come from
+Normal scans offer Event programs through selected planner configuration. After
+scalar instance discovery, candidates come from
 System, availability-confirmed native DHW, and concrete present zones. The
 documented profile/address catalogs below supply the program selectors. OP00
 capacity alone does not create zone instances, and a scalar anchor does not
@@ -27,7 +27,7 @@ program row. Tab and Shift+Tab cycle through nonempty Local, Remote, and Event
 panes. Space toggles the complete program; Enter or `d` edits its raw-code set
 within `0x00..0xFF`. The classic planner also groups programs and accepts
 `codes N <raw range>` for an automatic program. Worst-case request counts include
-both reads for every selected code; there is no new implicit request budget.
+both reads for every selected code; the planner records actual requests.
 
 An automatic `GetEventSetPoint` runs only after a matching `GetEvent` produces
 a structurally valid eight-byte, raw-correlated value for the exact same
@@ -39,27 +39,23 @@ reply remains schema-unqualified; it does not establish native support.
 
 Automatic candidates require a known target EID and manufacturer from the
 identity probe. Missing identity or missing scalar anchors leave automatic
-Event work unscheduled, not unsupported. Existing interruption, recovery, and
-caller-specified budget boundaries preserve all unsent selected requests.
+Event work unscheduled, not unsupported. Existing interruption and recovery
+boundaries preserve all unsent selected requests.
 
-## Explicit read-plan override
+## Selected operation scope
 
-`--b524-read-plan` accepts a JSON object conforming to
-[the version 1 schema](fixtures/b524-operation-read-plan-schema-v1.json).
-This optional advanced override retains exactly its supplied selectors instead
-of constructing automatic Event candidates. The plan does not enumerate channels, instances,
-event addresses, or weekday codes. Operation determines the wire opcode, so an
-item never supplies a redundant opcode field. `--preview-read-plan` validates
-and displays normalized selectors without transport I/O.
+The planner may retain an internal JSON operation-selection shape conforming to
+[the version 1 schema](fixtures/b524-operation-read-plan-schema-v1.json) for
+runtime compatibility and offline replay. It is not a public command-driven
+plan or preview interface. Operation derives the wire opcode, so a selected item never
+supplies a redundant opcode field. Scope, finite selection, and actual request
+accounting are planner configuration. Historical plan artifacts remain readable
+without reactivating their former public policy.
 
-Standalone Event commands require an explicit `--weekday-code`; there is no
-implicit value of zero and no assigned weekday meaning for this selector.
-
-There is no new implicit request cap. The shared scanner budget counts actual
-attempts for selected operation reads with the normal scan work. Scalar presets
-do not expand an explicit override. Explicit setpoint requests retain their
-independent acquisition behavior; the automatic OP09 precondition applies only
-to automatically constructed pairs.
+There is no implicit weekday meaning. A selected Event request carries an
+explicit raw `weekday_code`. Explicit setpoint requests retain their independent
+acquisition behavior; the automatic OP09 precondition applies only to
+automatically constructed pairs.
 
 | Operation | Required selector fields | Boundary |
 | --- | --- | --- |
@@ -147,11 +143,10 @@ ordering. Non-zone Timer selectors require `instance: 0`. Event plans have seven
 baselines. Their selectors retain an explicit `u8` instance and the same
 profile-specific address catalogs as reads. UI exports use the same plan shape.
 
-`b524 apply-operation --plan FILE` defaults to an offline preview and diff.
-It derives the target from the required plan `destination_address`; an explicit
-`--dst` must identify the same byte or the command fails before transport opens.
-Missing or invalid targets fail closed rather than falling back to `0x15`.
-`--execute` fails closed unless a matching
+An internal operation-edit artifact can default to an offline preview and diff.
+It derives the target from its required `destination_address`. Missing or invalid
+targets fail closed rather than falling back to a target. A live Browser action
+fails closed unless a matching
 [native-write qualification](fixtures/b524-native-write-qualification-schema-v1.json)
 and exact confirmation text are supplied. Before a native write it verifies raw
 EID and SW through `0x07/0x04`; the qualification supplies `profile` and two

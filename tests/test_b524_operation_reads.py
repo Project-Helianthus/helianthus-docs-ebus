@@ -764,7 +764,7 @@ def test_write_edit_plan_is_preview_first_and_native_qualification_is_scoped() -
     schema = FIXTURES / "b524-operation-edit-plan-schema-v1.json"
     assert subprocess.run(["jv", str(schema), str(plan)], capture_output=True, text=True).returncode == 0
     text = (ROOT / "development" / "ebus-vaillant-b524-operation-reads.md").read_text()
-    assert "defaults to an offline preview and diff" in text
+    assert "offline preview and diff" in text
     assert "Event execution stays disabled pending a qualified native Event contract" in text
     qualification = json.loads((FIXTURES / "b524-native-write-qualification-schema-v1.json").read_text())
     edit_schema = json.loads(schema.read_text())

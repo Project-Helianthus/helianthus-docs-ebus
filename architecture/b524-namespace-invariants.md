@@ -139,13 +139,14 @@ These notes are scanner/register-map behaviors implemented in the VRC Explorer r
 ## Scan Presets (v0.2.1)
 
 The scanner supports 4 presets. The previous 6-preset model (which included `conservative` and `exhaustive`) is retired.
-They use one deterministic candidate policy and pure planner for UI and CLI.
+They use one deterministic candidate policy and pure planner for interactive
+and noninteractive surfaces.
 This is an implementation-facing scanner contract, not universal B524 wire proof
 or a claim that an unprobed selector is absent.
 
 The Browser tree is a present-instance projection, not the candidate scan plan.
-For the current profile, OP06 candidates use II01..II08; OP02/GG02 uses II01..II08
-for heating candidates plus II09 for virtual native water. Do not render an
+For the BASV2 scoped profile, OP06 candidates use II01..II08; OP02/GG02 uses
+II00..II08 for heating candidates plus II09 for virtual native water. Do not render an
 absent, unknown, or unprobed selector as a tree node. Preserve those outcomes in
 the artifact so that the UI does not convert lack of a node into a claim of
 physical absence.
@@ -199,31 +200,25 @@ routine scanning.
 ### `custom`
 
 An exact normalized plan of OP02/OP06 `(GG,II,RR16)` lists or bounded ranges.
-The UI and CLI send the same plan to the planner; explicit selectors are never
-allowed to widen the current profile II intervals: OP06 is II01..II08 and
-OP02/GG02 is II01..II09. RR16 remains an exact scalar selector within the
-normal request contract.
-Explicit selectors are never presence-pruned. The CLI accepts a `--scan-plan` JSON file with
-`schema_version: 1` and `groups: [{opcode, group, instances, registers}]`.
-Only read selectors and wire-bounded values are accepted. Plans exceeding
-100000 scalar requests fail before queuing.
+The Browser and noninteractive surfaces submit that selection to the planner.
+Explicit selectors are never presence-pruned and do not widen the profile
+intervals. Planner configuration owns finite selected scope, request accounting,
+transport retry limits, and how an interrupted scan is represented. There is no
+public command-line scan-plan, request-budget, description-budget, or probe
+constraint policy. A partial result remains `incomplete`, never an absence
+verdict.
 
-## Description Scheduler and Send Budget
+## Description scheduling
 
-Descriptions are a second phase after value reads. By default every eligible
-writable candidate in the selected scope is scheduled. `--description-budget`
-is an optional, explicit caller limit. When supplied, half is initially reserved
-for each description/read family (OP01/OP02 and OP07/OP06), borrowing unused share;
-each family schedules eligible `(GG,II)` candidates round-robin. Eligibility
-comes from profile-scoped writable-format inference and includes unknown codecs,
-which are retained raw and reported unqualified. It does not prove a live write
-or authorize one. Artifacts count `eligible`, `attempted`, `matched`,
-`unavailable`, `unqualified`, and `budget_skipped`.
-
-`--request-budget` optionally caps actual B524 sends, including retries. No
-preset supplies a default send budget. Explicit budget exhaustion returns a
-partial artifact marked
-`incomplete`, never an absence verdict.
+Descriptions are a second phase after value reads. Acquisition policy is chosen
+by the selected profile and planner: recommended known BASV2/SW0507 local scope
+performs no implicit descriptions; `full` and `research` acquire eligible
+writable descriptions; an unknown profile/type or explicit per-class override
+also acquires them. Read-only rows never request descriptions. A generic IIFF
+description is class metadata only and never validates a concrete writable row.
+Missing known descriptions remain missing. Eligibility can include an unknown
+codec, which remains raw and unqualified. Description scheduling does not prove
+live writability or authorize a write.
 
 ## Historical Context
 

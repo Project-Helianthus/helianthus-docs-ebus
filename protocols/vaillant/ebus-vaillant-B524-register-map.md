@@ -53,7 +53,7 @@ they do not establish physical product identity, presence, or a device layout.
 |--------|----|-------------|-----------|--------|-------------------------------|---------------|-----------------|
 | 0x02 | 0x00 | System | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
 | 0x02 | 0x01 | Native Domestic Hot Water | No | 0x00 | 0x13 | RR0001 exact two-byte nonzero UIN; zero is not present | 17 (0x0001–0x0013) |
-| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | non-sentinel RR0002: nonzero, or visible active zero (FLAGS=03); II09 is virtual native water | profile bound: 8 heating + 1 virtual native-water circuit |
+| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | BASV2/SW0507: RR0002 raw `0100`, FLAGS=03 at II00/II01 is active; raw `0000`, FLAGS=03 at II02 is inactive; II09 is virtual native water | profile candidate bound: II00..II08 heating + II09 virtual native-water |
 | 0x02 | 0x03 | Zones | Yes | 0x0A | 0x2E | `index != 0xFF` (RR=0x001C) | current profile interval II00..0A; presence probed separately |
 | 0x02 | 0x04 | Solar Circuit | Yes (profile) | 0x01 | 0x0B | decodable, non-null RR0004 EXP value | current profile interval II00..01; presence probed separately |
 | 0x02 | 0x05 | Solar Loaded Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
@@ -484,13 +484,15 @@ independent of OP01 descriptions for RR0000..0013. All registers except
 <a id="gg0x02--heating-circuits-multi-instance"></a>
 ### GG=0x02 — Circuits
 
-All registers use opcode `0x02`. The current profile selects II01..II08 for
-ordinary heating circuits and II09 for the virtual native-water circuit. Active
-heating circuits are discovered by probing `circuit_mixer_type_external`
-(RR=0x0002). Value `0` (`mctype=inactive`) indicates an unused ordinary
-heating-circuit slot unless a correlated active, visible zero supplies the
-profile-qualified exception. An empty/null response contains no valid register value; it does not by itself
-distinguish absence, inactivity or unsupported addressing.
+All registers use opcode `0x02`. The BASV2/SW0507 scoped profile admits
+II00..II08 as ordinary heating-circuit candidates and II09 as the virtual
+native-water circuit. Active heating circuits are discovered by probing
+`circuit_mixer_type_external` (RR=0x0002). In sanitized observations, II00 and
+II01 return raw `0100` with FLAGS=03; II02 returns raw `0000` with FLAGS=03 and
+is inactive. These are profile-scoped selector observations, not a global
+indexing rule or a physical-topology claim. An empty/null response contains no
+valid register value; it does not by itself distinguish absence, inactivity or
+unsupported addressing.
 
 `II=0x09` is the virtual native-water circuit. Its selector does not identify a
 physical heating circuit. Treat it as present only when it has plausible live temperature evidence
@@ -499,8 +501,8 @@ from `circuit_current_flow_temperature` (RR=0x0008) or
 all other `mctype=0` circuit slots. Community evidence:
 [public register observations](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53).
 
-Historical scan records include II00 and II0A probes. They remain retained raw
-observations, but do not extend the current profile's II01..09 coverage.
+Historical scan records include II0A probes. They remain retained raw
+observations, but do not extend the current profile's II00..09 coverage.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -517,7 +519,7 @@ observations, but do not extend the current profile's II01..09 coverage.
 | 0x000B | circuit_flow_temperature_setpoint_correction_heating | C | f32 | K | Hc{hc}ExcessTemp | — | — | circuit_type=1 (heating) | Flow temp increased by this value to keep mixing valve in control range |
 | 0x000C | circuit_flow_temperature_setpoint_high | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | Fixed-value circuit target flow temp. † |
 | 0x000D | circuit_flow_temperature_setpoint_low | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | Fixed-value circuit setback temp. † |
-| 0x000E | circuit_frost_protection_mode | C | u16 | enum | Hc{hc}SetbackMode | — | →offmode | circuit_type=1 (heating) | |
+| 0x000E | circuit_frost_protection_mode | C | u16 | enum | Hc{hc}SetbackMode | — | →offmode | circuit_type=1 (heating) | Candidate mapping; do not infer a separate setback field from this label. |
 | 0x000F | circuit_heating_curve | C | f32 | — | Hc{hc}HeatCurve | — | — | — | Dimensionless ratio |
 | 0x0010 | circuit_heating_flow_temperature_max_setpoint | C | f32 | °C | Hc{hc}MaxFlowTempDesired | — | — | — | 15..80 per ebusd |
 | 0x0011 | circuit_cooling_flow_temperature_min_setpoint | C | f32 | °C | Hc{hc}MinCoolingTempDesired | — | — | cooling_enabled | |
@@ -533,9 +535,9 @@ observations, but do not extend the current profile's II01..09 coverage.
 | 0x001B | circuit_pump_status | S | u16 | enum | Hc{hc}Status | — | — | — | Enum: 0=STANDBY, 1=HEATING, 2=COOLING. See [Circuit State Enum](#circuit-state-enum) |
 | 0x001C | circuit_adaptive_heating_curve_offset | S | f32 | — | Hc{hc}HeatCurveAdaption | — | — | — | Heat curve adaption factor. Dimensionless. Read-only |
 | 0x001D | circuit_dhw_quick_mode | C | f32 | °C | Hc{hc}FrostProtThreshold | — | — | — | FLAGS=0x02 (technical RW) — writable config, not property |
-| 0x001E | circuit_status_circuit | S | u16 | bool | Hc{hc}PumpStatus | — | — | — | II=0 commonly used as system pump running indicator |
+| 0x001E | circuit_status_circuit | S | u16 | raw | Hc{hc}PumpStatus | — | — | — | Candidate distinct from RR001B and RR0020; semantic status interpretation needs separate evidence. |
 | 0x001F | circuit_minimum_outside_temperature_cooling | C | f32 | °C | Hc{hc}RoomSetpoint | — | — | — | |
-| 0x0020 | circuit_status_automatic_heating_cooling | S | f32 | °C | Hc{hc}FlowTempCalc | — | — | — | |
+| 0x0020 | circuit_status_automatic_heating_cooling | S | u8 | raw | Hc{hc}FlowTempCalc | — | — | — | Relevant raw observation is one byte. Earlier f32 prose is unqualified and must not override a correlated raw width. |
 | 0x0021 | circuit_mixer_position_percentage | S | f32 | % | Hc{hc}MixerPosition | — | — | — | |
 | 0x0022 | circuit_current_room_humidity | S | f32 | % | Hc{hc}Humidity | — | — | — | From room sensor |
 | 0x0023 | circuit_dew_point_temperature | S | f32 | °C | Hc{hc}DewPointTemp | — | — | — | |
@@ -547,7 +549,11 @@ observations, but do not extend the current profile's II01..09 coverage.
 <a id="gg0x03--zones-multi-instance"></a>
 ### GG=0x03 — Zones
 
-All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by probing `zone_circuit_for_zone` (RR=0x001C).
+All registers use opcode `0x02`. Instances 0x00-0x0A; active zones are
+discovered by probing `zone_circuit_for_zone` (RR=0x001C). In the BASV2/SW0507
+scoped observation, zone II00 maps to raw `00` and zone II01 to raw `01`; II02+
+returns `FF`. These are native values, with no +1 remapping. They are
+profile-scoped observations, not a universal zone/circuit contract.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -578,7 +584,7 @@ All registers use opcode `0x02`. Instances 0x00-0x0A; active zones discovered by
 | 0x0019 | zone_heating_schedule_status | S | u16 | bool | — | — | `0=off 1=on` | — | Timer schedule flag |
 | 0x001A | zone_cooling_schedule_status | S | u16 | bool | — | — | `0=off 1=on` | cooling_enabled | Timer schedule flag |
 | 0x001B | zone_special_function_status | S | u16 | state | — | — | — | — | Raw zone status code |
-| 0x001C | zone_circuit_for_zone | P | bytes | raw | Zone{z}Index | — | — | — | Presence marker |
+| 0x001C | zone_circuit_for_zone | P | bytes | raw | Zone{z}Index | — | — | — | BASV2/SW0507: II00=`00`, II01=`01`, II02+=`FF`; preserve raw index, no +1 remap. |
 | 0x001D | zone_heating_event_end_time | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x001E | zone_quick_veto_end_time | C | time | time | Zone{z}QuickVetoEndTime | — | — | — | FLAGS=0x03 (user RW) — writable, can extend/set veto end time |
 | 0x0020 | zone_holiday_end_time | C | time | time | — | — | — | — | |

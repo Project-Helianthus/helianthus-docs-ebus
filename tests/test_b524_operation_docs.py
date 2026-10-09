@@ -51,20 +51,18 @@ def test_historical_short_probe_catalog_is_not_validation_authority() -> None:
     assert "authoritatively map a register, validate a value" in text
 
 
-def test_description_budget_is_writable_candidate_scoped_without_write_authority() -> (
+def test_description_acquisition_is_planner_owned_without_write_authority() -> (
     None
 ):
     text = (
         ROOT / "development/ebus-vaillant-b524-description-acquisition.md"
     ).read_text(encoding="utf-8")
-    assert "all deduplicated, observed" in text
-    assert "at most 256" not in text
-    assert "observed writable candidates" in " ".join(text.split())
+    assert "zero implicit" in text
+    assert "`full` and `research` acquire eligible writable descriptions" in text
+    assert "--description-budget" not in text
     assert "neither proves live writability nor" in text
     assert "unknown codec is retained raw" in text
-    assert (
-        "`eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and" in text
-    )
+    assert "Generic IIFF descriptions remain class\nmetadata" in text
 
 
 def test_scan_presets_are_deterministic_bounded_and_operation_scoped() -> None:
@@ -79,23 +77,28 @@ def test_scan_presets_are_deterministic_bounded_and_operation_scoped() -> None:
     assert "default 256" not in text
     assert "defaults to 10000" not in text
     assert "failed first II=00/RR=0000 probe veto the rest of that group" in text
-    assert "100000 scalar requests fail before queuing" in text
+    assert "100000 scalar requests fail before queuing" not in text
 
 
-def test_scan_plan_and_budgets_remain_partial_read_only_contracts() -> None:
+def test_planner_owned_scope_replaces_public_cli_plan_and_budget_contracts() -> None:
     text = (ROOT / "architecture" / "b524-namespace-invariants.md").read_text(
         encoding="utf-8"
     )
-    assert "`--scan-plan` JSON file" in text
-    assert "`schema_version: 1`" in text
-    assert "Only read selectors and wire-bounded values are accepted" in text
-    assert "100000 scalar requests fail before queuing" in text
-    assert "`--request-budget`" in text
-    assert "partial artifact marked" in text
-    assert "`incomplete`, never an absence verdict" in text
+    for removed in (
+        "--scan-plan",
+        "--b524-read-plan",
+        "--preview-read-plan",
+        "--description-budget",
+        "--request-budget",
+        "--probe-constraints",
+        "100000 scalar requests fail before queuing",
+    ):
+        assert removed not in text
+    assert "Planner configuration owns finite selected scope" in text
+    assert "`incomplete`, never an absence" in text
 
 
-def test_scan_plan_synthetic_boundary_vectors_are_consistent() -> None:
+def test_historical_scan_plan_synthetic_vectors_remain_readable() -> None:
     cases = json.loads(
         (ROOT / "tests" / "fixtures" / "b524_scan_plan_v1_cases.json").read_text()
     )
@@ -575,11 +578,8 @@ def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() 
         assert f"| {group} | {label} | `{name}` |" in protocol
 
     assert "| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 |" in register_map
-    assert (
-        "II01..II08 for\nordinary heating circuits and II09 for the virtual native-water circuit"
-        in register_map
-    )
-    assert "II00 and II0A probes" in register_map
+    assert "II00..II08 as ordinary heating-circuit candidates and II09 as the virtual" in register_map
+    assert "Historical scan records include II0A probes" in register_map
     assert (
         "over II01..II08 for the characterized profile. `II=0x00`, `II=0x09`, and\n`II=0x0A` are outside its current OP06 slot interval"
         in register_map
@@ -602,18 +602,37 @@ def test_current_profile_uses_opcode_scoped_names_and_present_instance_bounds() 
     assert "deselected groups are omitted" in profile
     assert "explicitly selected\nempty group may remain" in profile
     assert (
-        "Custom scan plans enforce the same selector intervals before transport I/O"
+        "Custom selections enforce the same selector intervals before transport I/O"
         in profile
     )
-    assert "OP06 permits II01..II08 and OP02/GG02 permits II01..II09" in profile
+    assert "OP06 permits II01..II08 and OP02/GG02 permits II00..II09" in profile
     assert (
-        "OP06 candidates use II01..II08; OP02/GG02 uses II01..II08\nfor heating candidates plus II09"
+        "OP06 candidates use II01..II08; OP02/GG02 uses\nII00..II08 for heating candidates plus II09"
         in namespace
     )
+    assert "II00 and\nII01 return raw `0100`" in register_map
+    assert "zone II00 maps to raw `00` and zone II01 to raw `01`; II02+" in register_map
     assert "0x02 0x02    0x09         0x0025" in semantic
     assert "0x09 0x06    0x08         0x0035" in semantic
     assert "scan planner" not in protocol
     assert "Browser" not in protocol
+
+
+def test_browser_write_contract_preserves_confirmation_and_native_boundaries() -> None:
+    text = (ROOT / "development" / "ebus-vaillant-b524-browser-writes.md").read_text(
+        encoding="utf-8"
+    )
+    for required in (
+        "Opening JSON starts an offline Browser session",
+        "explicitly confirm the limited exception for an absent or incomplete limit",
+        "one write attempt only",
+        "Only readback of the exact selector confirms the desired value",
+        "Native Event\nwrites remain disabled",
+        "zero implicit descriptions",
+        "manually share JSON",
+    ):
+        assert required in text
+    assert "--" not in text
 
 
 def test_count_guidance_and_gg0d_predicate_preserve_identity_and_unknowns() -> None:
@@ -711,7 +730,7 @@ def test_regulator_crosswalk_is_exact_pair_based_and_keeps_raw_sw_distinct() -> 
     expected = {tuple(row) for row in fixture["rows"]}
 
     assert rows == expected
-    assert len(expected) == 38
+    assert len(expected) == 39
     assert "EID\nand decoded SW/SPN value match as a pair" in text
     assert "Hypothesis" in text
     assert "native-model evidence pending" in text

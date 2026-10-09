@@ -56,7 +56,7 @@ and [ebusd `PIN` datatype implementation](https://github.com/john30/ebusd/blob/3
 
 ## Exact EID and SW/SPN Crosswalk
 
-**Hypothesis as native-model evidence pending observations.** These 38 exact
+**Hypothesis as native-model evidence pending observations.** These 39 exact
 pairs are a bounded naming and family catalog. They do not independently establish a device model, native
 protocol support, or the availability of any operation on a connected target.
 Treat an unlisted or malformed pair as unknown rather than extending this table
@@ -100,8 +100,15 @@ by inference.
 | `CTLV3` | `01B5` | VRC720 | VRC720 |
 | `CTLV3` | `01DC` | VRC720 | VRC720 |
 | `CTLV3` | `01E0` | VRC720 | VRC720 |
+| `CTLX0` | `007F` | VRC720 | VRC720 |
 | `CTLX0` | `0194` | VR940 | VRC720 |
 | `EMM00` | `0181` | VRC710 | VRC720 |
+
+The reported native identity `Vaillant;CTLX0;0127;0404` assigns VRC720:
+raw SW `01 27` is decimal PIN `127`, hence SPN `007F`; raw HW `04 04`
+is retained separately. This is a reported naming association, not evidence of
+protocol support or compatibility with another controller's parameter limits.
+The `CTLX0/0194` VR940 row remains independent.
 
 ## VRC700 Operation Profile
 

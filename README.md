@@ -33,6 +33,7 @@ Gateway HTTP entrypoints are split by role: `/ui` is the read-only projection br
 
 - [VRC Explorer B524 operation reads](development/ebus-vaillant-b524-operation-reads.md)
 - [VRC Explorer discovery and descriptions](development/ebus-vaillant-b524-explorer-discovery.md)
+- [VRC Explorer Browser scalar writes](development/ebus-vaillant-b524-browser-writes.md)
 - [B524 survey contribution checks](development/ebus-vaillant-b524-survey-contributions.md)
 - [B503 gateway contract](architecture/protocol-routing-vaillant-b503.md)
 - [Modbus application contracts](architecture/protocol-routing-vendor-modbus-overview.md)
