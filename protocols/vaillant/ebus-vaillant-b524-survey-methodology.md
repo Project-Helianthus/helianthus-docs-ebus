@@ -66,12 +66,14 @@ The [BASV2 profile](fixtures/b524-bounded-survey-basv2-v1.json) includes represe
 
 Copy the template, assign a new profile filename, and replace every placeholder with sanitized observations from one model and software-version scope. Include the acquisition and catalog revisions, actual read-instance scope, separately declared discovery intervals, each operation/group scheduling window, response tallies, and nonclaims. Do not combine results across model families.
 
-`catalog_reference.path` is a safe relative path to a locally supplied catalog,
-and `scope` states what that catalog covers. Each
-`qualified_description_limits` item identifies one OP07/IIFF selector and its
-typed limit fields. A structurally valid reference only makes the cited local
-artifact and selector checkable; it does not upgrade the recorded qualification
-or establish a concrete device identity, native limit, or writable permission.
+`catalog_reference.path` is a safe relative path to a locally supplied OP02
+semantic-name catalog, and `scope` states that catalog's name-only coverage. The
+validator checks its exact CSV columns, OP02 selector rows, and semantic names.
+The separate `qualified_description_limits` array identifies OP07/IIFF selectors
+and typed limit fields; every item must correlate with one retained qualified
+description sample and its raw limit bytes. These checks do not upgrade the
+recorded qualification or establish a concrete device identity or writable
+permission.
 
 Validate the public artifact before proposing it:
 

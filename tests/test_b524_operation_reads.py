@@ -121,6 +121,63 @@ def test_artifact_keeps_raw_event_boundary() -> None:
     assert unattempted["trace_seq"] == 14
 
 
+def test_raw_selectors_enforce_operation_specific_day_fields_and_exclude_vr91(
+    tmp_path: Path,
+) -> None:
+    source = json.loads(
+        (FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text()
+    )
+    cases = []
+
+    event_conflict = json.loads(json.dumps(source))
+    event_conflict["b524_operation_reads"][-1]["raw_selector"]["weekday"] = 1
+    cases.append(event_conflict)
+
+    event_wrong_field = json.loads(json.dumps(source))
+    event_raw = event_wrong_field["b524_operation_reads"][-1]["raw_selector"]
+    event_raw["weekday"] = event_raw.pop("weekday_code")
+    cases.append(event_wrong_field)
+
+    for timer_raw in (
+        {"system_type": 0, "instance": 0, "address": 1, "weekday": 0, "weekday_code": 1},
+        {"system_type": 0, "instance": 0, "address": 1, "weekday_code": 0},
+    ):
+        timer = json.loads(json.dumps(source))
+        timer_record = timer["b524_operation_reads"][0]
+        timer_record["selector"] = {}
+        timer_record["raw_selector"] = timer_raw
+        timer_record["decoded"] = None
+        cases.append(timer)
+
+    vr91 = json.loads(json.dumps(source))
+    vr91["b524_operation_reads"][1]["raw_selector"] = {
+        "system_type": 0,
+        "instance": 0,
+        "address": 1,
+        "weekday": 0,
+    }
+    cases.append(vr91)
+
+    for case, artifact in enumerate(cases):
+        candidate = tmp_path / f"invalid-operation-raw-selector-{case}.json"
+        candidate.write_text(json.dumps(artifact))
+        schema_result = subprocess.run(
+            ["jv", str(FIXTURES / "b524-operation-reads-artifact-schema-v1.json"), str(candidate)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        semantic_result = subprocess.run(
+            ["python3", "scripts/validate_b524_operation_reads_artifact.py", str(candidate)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert schema_result.returncode != 0, case
+        assert semantic_result.returncode != 0, case
+
+
 def test_unattempted_cannot_claim_an_attempt(tmp_path: Path) -> None:
     artifact = json.loads((FIXTURES / "b524-operation-reads-artifact-synthetic-v1.json").read_text())
     artifact["b524_operation_reads"][-1]["request_attempts"] = 1

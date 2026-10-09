@@ -255,13 +255,17 @@ def _raw(entry: dict[str, Any], context: str) -> None:
     raw = entry.get("raw_selector")
     if not isinstance(raw, dict):
         raise ValidationError(f"{context}.raw_selector is required for an empty selector")
+    day_field = "weekday" if entry["operation"] == "ReadTimer" else "weekday_code"
+    expected_fields = {"system_type", "instance", "address", day_field}
+    if set(raw) != expected_fields:
+        raise ValidationError(
+            f"{context}.raw_selector must contain exactly system_type, instance, address, "
+            f"and {day_field} for {entry['operation']}"
+        )
     system_type = _u8(raw.get("system_type"), f"{context}.raw_selector.system_type")
     instance = _u8(raw.get("instance"), f"{context}.raw_selector.instance")
     address = _u8(raw.get("address"), f"{context}.raw_selector.address")
-    if entry["operation"] == "ReadTimer":
-        day = _u8(raw.get("weekday"), f"{context}.raw_selector.weekday")
-    else:
-        day = _u8(raw.get("weekday_code", raw.get("weekday")), f"{context}.raw_selector.weekday_code")
+    day = _u8(raw.get(day_field), f"{context}.raw_selector.{day_field}")
     _expect_payload(entry, bytes((OPCODES[entry["operation"]], system_type, instance, address, day)), context)
 
 

@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -15,6 +17,10 @@ class ValidationError(ValueError):
 
 
 FIXTURES = Path(__file__).resolve().parents[1] / "protocols" / "vaillant" / "fixtures"
+OP02_SEMANTIC_CATALOG_SCOPE = (
+    "static OP02 semantic names only; values and bounds remain profile-qualified"
+)
+OP02_SEMANTIC_CATALOG_FIELDS = ["opcode", "group", "register", "name"]
 
 
 def _hex(value: Any, context: str) -> bytes:
@@ -64,8 +70,8 @@ def _expected_request(kind: str, selector: dict[str, Any], context: str) -> byte
 
 
 def _reply_echo(kind: str, reply: bytes, selector: dict[str, Any]) -> bytes | None:
-    gg = _selector_byte(selector, "gg", "reply")
-    register = _selector_register(selector, "reply")
+    _selector_byte(selector, "gg", "reply")
+    _selector_register(selector, "reply")
     if kind in {"op02_read", "op06_read"}:
         if len(reply) < 4:
             return None
@@ -81,6 +87,109 @@ def _expected_reply_echo(selector: dict[str, Any]) -> bytes:
     return bytes((_selector_byte(selector, "gg", "reply"),)) + _selector_register(selector, "reply")
 
 
+def _catalog_path(path_value: str, profile_path: Path) -> Path:
+    candidates = (profile_path.parent / path_value, FIXTURES / path_value)
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    raise ValidationError(f"{profile_path}: catalog_reference.path does not identify a local file")
+
+
+def _validate_op02_semantic_catalog(catalog_path: Path, profile_path: Path) -> None:
+    context = f"{profile_path}: catalog_reference.path"
+    if catalog_path.suffix.lower() != ".csv":
+        raise ValidationError(f"{context} must identify an OP02 semantic catalog CSV")
+    try:
+        with catalog_path.open(encoding="utf-8", newline="") as stream:
+            reader = csv.DictReader(stream)
+            if reader.fieldnames != OP02_SEMANTIC_CATALOG_FIELDS:
+                raise ValidationError(
+                    f"{context} must use the opcode,group,register,name catalog columns"
+                )
+            rows = list(reader)
+    except (OSError, csv.Error) as exc:
+        raise ValidationError(f"{context} cannot be read as a semantic catalog CSV") from exc
+    if not rows:
+        raise ValidationError(f"{context} must contain at least one semantic catalog row")
+    identities: set[tuple[int, int, int]] = set()
+    for index, row in enumerate(rows, start=2):
+        row_context = f"{context} row {index}"
+        if None in row:
+            raise ValidationError(f"{row_context} has fields outside the catalog columns")
+        try:
+            opcode_text = row["opcode"]
+            group_text = row["group"]
+            register_text = row["register"]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValidationError(f"{row_context} has invalid hexadecimal identity fields") from exc
+        if (
+            not all(isinstance(value, str) for value in (opcode_text, group_text, register_text))
+            or re.fullmatch(r"0x[0-9A-Fa-f]{2}", opcode_text) is None
+            or re.fullmatch(r"0x[0-9A-Fa-f]{2}", group_text) is None
+            or re.fullmatch(r"0x[0-9A-Fa-f]{4}", register_text) is None
+        ):
+            raise ValidationError(f"{row_context} has invalid hexadecimal identity fields")
+        opcode = int(opcode_text, 16)
+        group = int(group_text, 16)
+        register = int(register_text, 16)
+        if opcode != 0x02 or not 0 <= group <= 0xFF or not 0 <= register <= 0xFFFF:
+            raise ValidationError(f"{row_context} is outside the declared OP02 catalog scope")
+        name = row.get("name")
+        if not isinstance(name, str) or re.fullmatch(r"[a-z][a-z0-9_]*", name) is None:
+            raise ValidationError(f"{row_context}.name must be a snake_case semantic name")
+        identity = (opcode, group, register)
+        if identity in identities:
+            raise ValidationError(f"{row_context} duplicates an OP02 selector")
+        identities.add(identity)
+
+
+def _selector_identity(selector: dict[str, Any], context: str) -> tuple[int, int, int, int]:
+    return (
+        _selector_byte(selector, "op", context),
+        _selector_byte(selector, "gg", context),
+        _selector_byte(selector, "ii", context),
+        int.from_bytes(_selector_register(selector, context), "little"),
+    )
+
+
+def _correlate_qualified_limit(
+    limit: dict[str, Any], samples: Any, context: str
+) -> None:
+    if not isinstance(samples, list):
+        raise ValidationError(f"{context} cannot be correlated without profile samples")
+    selector = limit["selector"]
+    identity = _selector_identity(selector, context)
+    matches = [
+        sample
+        for sample in samples
+        if isinstance(sample, dict)
+        and sample.get("kind") == "op07_generic_description"
+        and isinstance(sample.get("selector"), dict)
+        and _selector_identity(sample["selector"], f"{context}.sample") == identity
+    ]
+    if len(matches) != 1:
+        raise ValidationError(
+            f"{context}.selector must identify exactly one OP07 generic-description sample"
+        )
+    sample = matches[0]
+    if (
+        sample.get("outcome") != "value_reply"
+        or sample.get("qualification") != "generic_class_observation"
+    ):
+        raise ValidationError(f"{context} requires a qualified OP07 value-reply sample")
+    reply = _hex(sample.get("reply_payload_hex"), f"{context}.sample.reply_payload_hex")
+    if len(reply) != 6:
+        raise ValidationError(f"{context}.sample reply must contain GG/RR and three limit bytes")
+    if limit["codec"] != "BOOL":
+        raise ValidationError(f"{context}.codec is not supported for qualified limit correlation")
+    if limit["qualification"] != "generic_class_observation_not_concrete_identity":
+        raise ValidationError(f"{context}.qualification does not match the retained sample boundary")
+    observed_limits = tuple(bool(value) for value in reply[3:])
+    declared_limits = (limit["min"], limit["max"], limit["step"])
+    if any(value not in (0, 1) for value in reply[3:]) or declared_limits != observed_limits:
+        raise ValidationError(f"{context} min/max/step do not match the retained BOOL reply")
+
+
 def _validate_catalog_reference(profile: dict[str, Any], profile_path: Path) -> None:
     reference = profile.get("catalog_reference")
     if not isinstance(reference, dict):
@@ -91,13 +200,14 @@ def _validate_catalog_reference(profile: dict[str, Any], profile_path: Path) -> 
     reference_path = Path(path_value)
     if reference_path.is_absolute() or ".." in reference_path.parts:
         raise ValidationError(f"{profile_path}: catalog_reference.path must be a safe relative path")
-    candidates = (profile_path.parent / reference_path, FIXTURES / reference_path)
-    if not any(candidate.is_file() for candidate in candidates):
-        raise ValidationError(f"{profile_path}: catalog_reference.path does not identify a local file")
+    catalog_path = _catalog_path(path_value, profile_path)
+    _validate_op02_semantic_catalog(catalog_path, profile_path)
 
     scope = reference.get("scope")
-    if not isinstance(scope, str) or not scope:
-        raise ValidationError(f"{profile_path}: catalog_reference.scope must be nonempty text")
+    if scope != OP02_SEMANTIC_CATALOG_SCOPE:
+        raise ValidationError(
+            f"{profile_path}: catalog_reference.scope does not match the supported OP02 catalog"
+        )
     limits = reference.get("qualified_description_limits")
     if not isinstance(limits, list):
         raise ValidationError(
@@ -128,6 +238,7 @@ def _validate_catalog_reference(profile: dict[str, Any], profile_path: Path) -> 
             isinstance(limit[field], bool) for field in ("min", "max", "step")
         ):
             raise ValidationError(f"{context} BOOL limits must use boolean min/max/step")
+        _correlate_qualified_limit(limit, profile.get("samples"), context)
 
 
 def validate_profile(profile_path: Path) -> None:

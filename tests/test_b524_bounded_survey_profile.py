@@ -254,3 +254,64 @@ def test_profile_validator_rejects_missing_or_unsafe_local_catalog_reference(
     result = _run_profile_validator(candidate)
     assert result.returncode != 0
     assert "catalog_reference.path" in result.stderr
+
+
+@pytest.mark.parametrize("reference_kind", ["self", "unrelated"])
+def test_profile_validator_rejects_non_catalog_reference(
+    tmp_path: Path, reference_kind: str
+) -> None:
+    profile = json.loads(
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+    )
+    candidate = tmp_path / "candidate.json"
+    if reference_kind == "self":
+        profile["catalog_reference"]["path"] = candidate.name
+    else:
+        unrelated = tmp_path / "unrelated.csv"
+        unrelated.write_text("message\nirrelevant\n")
+        profile["catalog_reference"]["path"] = unrelated.name
+    candidate.write_text(json.dumps(profile))
+
+    result = _run_profile_validator(candidate)
+
+    assert result.returncode != 0
+    assert "catalog_reference.path" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected"),
+    [
+        (
+            lambda profile: profile["catalog_reference"].update(
+                {"scope": "unrelated catalog scope"}
+            ),
+            "catalog_reference.scope",
+        ),
+        (
+            lambda profile: profile["catalog_reference"]["qualified_description_limits"][0][
+                "selector"
+            ].update({"rr": "0002"}),
+            "qualified_description_limits[0].selector",
+        ),
+        (
+            lambda profile: profile["catalog_reference"]["qualified_description_limits"][0].update(
+                {"max": False}
+            ),
+            "qualified_description_limits[0]",
+        ),
+    ],
+)
+def test_profile_validator_correlates_catalog_scope_and_description_limits(
+    tmp_path: Path, mutation, expected: str
+) -> None:
+    profile = json.loads(
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+    )
+    mutation(profile)
+    candidate = tmp_path / "mismatched-catalog-contract.json"
+    candidate.write_text(json.dumps(profile))
+
+    result = _run_profile_validator(candidate)
+
+    assert result.returncode != 0
+    assert expected in result.stderr

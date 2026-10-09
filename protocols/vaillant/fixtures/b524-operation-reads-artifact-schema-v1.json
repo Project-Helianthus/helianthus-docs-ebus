@@ -14,13 +14,29 @@
     "hex": {"type": "string", "pattern": "^(?:[0-9A-Fa-f]{2})*$"},
     "nonempty_hex": {"type": "string", "pattern": "^(?:[0-9A-Fa-f]{2})+$"},
     "raw_selector": {
+      "oneOf": [
+        {"$ref": "#/$defs/raw_timer_selector"},
+        {"$ref": "#/$defs/raw_event_selector"}
+      ]
+    },
+    "raw_timer_selector": {
       "type": "object",
-      "required": ["system_type", "instance", "address"],
+      "required": ["system_type", "instance", "address", "weekday"],
       "properties": {
         "system_type": {"$ref": "#/$defs/u8"},
         "instance": {"$ref": "#/$defs/u8"},
         "address": {"$ref": "#/$defs/u8"},
-        "weekday": {"$ref": "#/$defs/u8"},
+        "weekday": {"$ref": "#/$defs/u8"}
+      },
+      "additionalProperties": false
+    },
+    "raw_event_selector": {
+      "type": "object",
+      "required": ["system_type", "instance", "address", "weekday_code"],
+      "properties": {
+        "system_type": {"$ref": "#/$defs/u8"},
+        "instance": {"$ref": "#/$defs/u8"},
+        "address": {"$ref": "#/$defs/u8"},
         "weekday_code": {"$ref": "#/$defs/u8"}
       },
       "additionalProperties": false
@@ -275,7 +291,10 @@
               "allOf": [
                 {
                   "if": {"properties": {"selector": {"type": "object", "maxProperties": 0}}, "required": ["selector"]},
-                  "then": {"required": ["raw_selector"], "properties": {"raw_selector": {"required": ["weekday"]}}}
+                  "then": {
+                    "required": ["raw_selector"],
+                    "properties": {"raw_selector": {"$ref": "#/$defs/raw_timer_selector"}}
+                  }
                 },
                 {
                   "if": {"properties": {"response_state": {"const": "value"}}, "required": ["response_state"]},
@@ -395,12 +414,7 @@
                   "then": {
                     "required": ["raw_selector"],
                     "properties": {
-                      "raw_selector": {
-                        "anyOf": [
-                          {"required": ["weekday"]},
-                          {"required": ["weekday_code"]}
-                        ]
-                      }
+                      "raw_selector": {"$ref": "#/$defs/raw_event_selector"}
                     }
                   }
                 },

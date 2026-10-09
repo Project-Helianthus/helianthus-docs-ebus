@@ -1262,7 +1262,10 @@ Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit st
 
 ### `system_quick_mode` (OP=0x02, GG=0x00, RR=0x0016 + 0x0074)
 
-Asymmetric read/write paths:
+<a id="asymmetric-readwrite-paths"></a>
+
+#### Asymmetric read/write paths
+
 - **Read active flag:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0016` (u8 bool)
 - **Read mode value:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0074` (u8 enum)
 - **Write:** `OP=0x02, GG=0x09, RR=0x0001` (value) + `RR=0x0002` (active flag) -- asymmetric path
