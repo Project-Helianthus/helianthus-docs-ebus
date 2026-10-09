@@ -96,7 +96,8 @@ physical device state.
 
 `WriteTimer`, `SetEvent`, and `SetEventSetPoint` use an
 [edit-plan schema](fixtures/b524-operation-edit-plan-schema-v1.json). A timer
-plan has three raw `[start, stop]` pairs or `null` slots and one seven-byte OP03
+plan requires the artifact target as an integer `destination_address` byte, has
+three raw `[start, stop]` pairs or `null` slots, and retains one seven-byte OP03
 baseline. Timer slots use time codes `0x00..0x90`; `null` is the editor
 representation of an unused `0x90 0x90` slot. For an explicit pair, start is
 `0x00..0x8F`, stop is `0x00..0x90`, and the operation parser requires start to
@@ -107,6 +108,9 @@ baselines. Their selectors retain an explicit `u8` instance and the same
 profile-specific address catalogs as reads. UI exports use the same plan shape.
 
 `b524 apply-operation --plan FILE` defaults to an offline preview and diff.
+It derives the target from the required plan `destination_address`; an explicit
+`--dst` must identify the same byte or the command fails before transport opens.
+Missing or invalid targets fail closed rather than falling back to `0x15`.
 `--execute` fails closed unless a matching
 [native-write qualification](fixtures/b524-native-write-qualification-schema-v1.json)
 and exact confirmation text are supplied. Before a native write it verifies raw
@@ -123,10 +127,12 @@ use `profile`, `instance`, `address`, and `weekday_code`. Qualification evidence
 remains separate from operator consent. Schema validation and a literal `true`
 claim neither prove native support nor authorize execution. An unchanged edit is
 still valid for offline preview and export, but execution validation rejects it
-before transport opens. A permitted execution is one send without automatic retry,
-with retained raw feedback and separate readback of the exact selector. A
-timeout, ambiguous feedback, or partial result remains unknown and must not
-trigger an automatic repeat or rollback.
+before transport opens. Every returned execution outcome retains the integer
+`destination_address` and `verified_confirmation`, the exact confirmation text
+that passed equality validation before I/O. A permitted execution is one send
+without automatic retry, with retained raw feedback and separate readback of
+the exact selector. A timeout, ambiguous feedback, or partial result remains
+unknown and must not trigger an automatic repeat or rollback.
 
 Event execution stays disabled pending a qualified native Event contract, even
 though its offline editor and backend payload builders are available.

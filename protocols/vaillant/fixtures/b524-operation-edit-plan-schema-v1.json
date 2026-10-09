@@ -3,12 +3,16 @@
   "title": "B524 operation edit plan v1",
   "description": "Structural validation of this offline edit shape does not prove native support or authorize execution. A Timer consumer must also require each explicit start code to be strictly less than its stop code.",
   "type": "object",
-  "required": ["schema_version", "operation", "selector", "values", "expected_before_raw_hex"],
-  "properties": {"schema_version": {"const": 1}},
+  "required": ["schema_version", "destination_address", "operation", "selector", "values", "expected_before_raw_hex"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "destination_address": {"$ref": "#/$defs/u8"}
+  },
   "oneOf": [
     {
       "properties": {
         "schema_version": {"const": 1},
+        "destination_address": {"$ref": "#/$defs/u8"},
         "operation": {"const": "WriteTimer"},
         "selector": {"$ref": "#/$defs/timer_selector"},
         "values": {
@@ -38,12 +42,13 @@
           "items": {"type": "string", "pattern": "^[0-9A-Fa-f]{14}$"}
         }
       },
-      "required": ["operation", "selector", "values", "expected_before_raw_hex"],
+      "required": ["destination_address", "operation", "selector", "values", "expected_before_raw_hex"],
       "additionalProperties": false
     },
     {
       "properties": {
         "schema_version": {"const": 1},
+        "destination_address": {"$ref": "#/$defs/u8"},
         "operation": {"enum": ["SetEvent", "SetEventSetPoint"]},
         "selector": {"$ref": "#/$defs/event_selector"},
         "values": {
@@ -59,7 +64,7 @@
           "items": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}
         }
       },
-      "required": ["operation", "selector", "values", "expected_before_raw_hex"],
+      "required": ["destination_address", "operation", "selector", "values", "expected_before_raw_hex"],
       "additionalProperties": false
     }
   ],

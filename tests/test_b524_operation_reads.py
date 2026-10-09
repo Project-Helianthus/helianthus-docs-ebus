@@ -582,6 +582,8 @@ def test_edit_and_qualification_schemas_share_selector_and_timer_value_bounds(
 ) -> None:
     edit = json.loads((FIXTURES / "b524-operation-edit-plan-synthetic-v1.json").read_text())
     invalid_edits = (
+        {"destination_address": True},
+        {"destination_address": 256},
         {"selector": {**edit["selector"], "instance": 1}},
         {"values": [[0, 145], None, None]},
         {"values": [[144, 144], None, None]},
@@ -622,6 +624,7 @@ def test_edit_and_qualification_schemas_share_selector_and_timer_value_bounds(
 
     event_edit = {
         "schema_version": 1,
+        "destination_address": 0x26,
         "operation": "SetEvent",
         "selector": {
             "profile": "system",
@@ -642,6 +645,17 @@ def test_edit_and_qualification_schemas_share_selector_and_timer_value_bounds(
     ).returncode == 0
     event_edit["selector"]["address"] = 4
     candidate.write_text(json.dumps(event_edit))
+    assert subprocess.run(
+        ["jv", str(FIXTURES / "b524-operation-edit-plan-schema-v1.json"), str(candidate)],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).returncode != 0
+
+    missing_target = dict(edit)
+    del missing_target["destination_address"]
+    candidate = tmp_path / "missing-edit-target.json"
+    candidate.write_text(json.dumps(missing_target))
     assert subprocess.run(
         ["jv", str(FIXTURES / "b524-operation-edit-plan-schema-v1.json"), str(candidate)],
         capture_output=True,
