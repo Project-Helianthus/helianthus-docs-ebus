@@ -66,7 +66,7 @@ contradictory qualified description.
 Before a write, the Browser performs fresh identity, access, and baseline reads.
 If the baseline changed, it presents the new baseline and requires another
 confirmation. The confirmation names the exact target, old and new value, and
-numeric enum codes where applicable. For incomplete limits there are two
+numeric enum codes where applicable. For absent or incomplete limits there are two
 separate confirmations, in order:
 
 1. A dedicated exception acknowledgement names the missing min/max/STEP fields,

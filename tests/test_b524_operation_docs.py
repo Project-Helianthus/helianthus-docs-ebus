@@ -633,7 +633,7 @@ def test_browser_write_contract_preserves_confirmation_and_native_boundaries() -
     ):
         assert required in text
     assert "every known min/max/STEP violation is rejected" in text
-    assert "separate confirmations, in order" in text
+    assert "For absent or incomplete limits there are two\nseparate confirmations, in order" in text
     assert "One combined acknowledgement cannot authorize this path" in text
     assert "invalidates both confirmations" in text
     assert "`--transport`, `--host`, `--port`, `--source-address`, and optional `--preset`" in text
