@@ -25,6 +25,7 @@ CHANNELS = {
 }
 PROFILES = {"system": 0, "dhw": 1, "zone": 3}
 OPCODES = {"ReadTimer": 0x03, "ReadVR91": 0x08, "GetEvent": 0x09, "GetEventSetPoint": 0x0B}
+RESPONSE_LENGTHS = {"ReadTimer": 7, "ReadVR91": 8, "GetEvent": 8, "GetEventSetPoint": 8}
 
 
 def _u8(value: Any, context: str) -> int:
@@ -46,6 +47,49 @@ def _expect_payload(entry: dict[str, Any], expected: bytes, context: str) -> Non
     payload = _payload(entry.get("request_payload_hex"), f"{context}.request_payload_hex")
     if payload != expected:
         raise ValidationError(f"{context}.request_payload_hex does not match operation and selector")
+
+
+def _response_evidence(entry: dict[str, Any], operation: str, context: str) -> None:
+    state = entry.get("response_state")
+    attempts = entry.get("request_attempts")
+    if isinstance(attempts, bool) or not isinstance(attempts, int) or attempts < 0:
+        raise ValidationError(f"{context}.request_attempts must be a non-negative integer")
+    raw_value = entry.get("response_raw_hex")
+    raw = None if raw_value is None else _payload(raw_value, f"{context}.response_raw_hex")
+    decoded = entry.get("decoded")
+    expected_length = RESPONSE_LENGTHS[operation]
+
+    if state == "unattempted":
+        if attempts != 0 or raw is not None or decoded is not None:
+            raise ValidationError(
+                f"{context} unattempted evidence requires zero attempts and null raw/decoded values"
+            )
+        return
+    if attempts < 1:
+        raise ValidationError(f"{context}.{state} requires at least one attempted exchange")
+    if state == "value":
+        if raw is None or len(raw) != expected_length:
+            raise ValidationError(
+                f"{context}.response_raw_hex must contain {expected_length} bytes for {operation} value"
+            )
+        return
+    if decoded is not None:
+        raise ValidationError(f"{context}.decoded must be null for response_state {state}")
+    if state == "empty":
+        if raw != b"":
+            raise ValidationError(f"{context}.response_raw_hex must be empty for response_state empty")
+        return
+    if state == "malformed":
+        if raw is None or not raw or len(raw) == expected_length:
+            raise ValidationError(
+                f"{context}.response_raw_hex must retain a nonempty wrong-length {operation} reply"
+            )
+        return
+    if state in {"nack", "timeout", "transport_error"}:
+        if raw is not None:
+            raise ValidationError(f"{context}.response_raw_hex must be null for response_state {state}")
+        return
+    raise ValidationError(f"{context}.response_state is unsupported")
 
 
 def _known_timer(entry: dict[str, Any], selector: dict[str, Any], context: str) -> None:
@@ -117,6 +161,7 @@ def validate_artifact(path: Path) -> None:
             raise ValidationError(f"{context}.operation is unsupported")
         if entry.get("opcode_hex") != f"0x{OPCODES[operation]:02X}":
             raise ValidationError(f"{context}.opcode_hex does not match operation")
+        _response_evidence(entry, operation, context)
         selector = entry.get("selector")
         if not isinstance(selector, dict):
             raise ValidationError(f"{context}.selector must be an object")

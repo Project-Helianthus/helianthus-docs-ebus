@@ -1,11 +1,109 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "B524 operation edit plan v1",
+  "description": "Structural validation of this offline edit shape does not prove native support or authorize execution. A Timer consumer must also require each explicit start code to be strictly less than its stop code.",
   "type": "object",
   "required": ["schema_version", "operation", "selector", "values", "expected_before_raw_hex"],
   "properties": {"schema_version": {"const": 1}},
   "oneOf": [
-    {"properties": {"schema_version": {"const": 1}, "operation": {"const": "WriteTimer"}, "selector": {"type": "object", "required": ["channel", "instance", "weekday"], "properties": {"channel": {"enum": ["ventilation", "noise-reduction", "tariff", "dhw", "circulation", "zone-cooling", "zone-heating"]}, "instance": {"type": "integer", "minimum": 0, "maximum": 255}, "weekday": {"type": "integer", "minimum": 0, "maximum": 6}}, "additionalProperties": false}, "values": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"anyOf": [{"type": "null"}, {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer", "minimum": 0, "maximum": 255}}]}}, "expected_before_raw_hex": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string", "pattern": "^[0-9A-Fa-f]{14}$"}}}, "required": ["operation", "selector", "values", "expected_before_raw_hex"], "additionalProperties": false},
-    {"properties": {"schema_version": {"const": 1}, "operation": {"enum": ["SetEvent", "SetEventSetPoint"]}, "selector": {"type": "object", "required": ["profile", "instance", "address", "weekday_code"], "properties": {"profile": {"enum": ["system", "dhw", "zone"]}, "instance": {"type": "integer", "minimum": 0, "maximum": 255}, "address": {"type": "integer", "minimum": 0, "maximum": 255}, "weekday_code": {"type": "integer", "minimum": 0, "maximum": 255}}, "additionalProperties": false}, "values": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"type": "integer", "minimum": 0, "maximum": 255}}, "expected_before_raw_hex": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}}}, "required": ["operation", "selector", "values", "expected_before_raw_hex"], "additionalProperties": false}
-  ]
+    {
+      "properties": {
+        "schema_version": {"const": 1},
+        "operation": {"const": "WriteTimer"},
+        "selector": {"$ref": "#/$defs/timer_selector"},
+        "values": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "anyOf": [
+              {"type": "null"},
+              {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "prefixItems": [
+                  {"type": "integer", "minimum": 0, "maximum": 143},
+                  {"type": "integer", "minimum": 0, "maximum": 144}
+                ],
+                "items": false
+              }
+            ]
+          }
+        },
+        "expected_before_raw_hex": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {"type": "string", "pattern": "^[0-9A-Fa-f]{14}$"}
+        }
+      },
+      "required": ["operation", "selector", "values", "expected_before_raw_hex"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "schema_version": {"const": 1},
+        "operation": {"enum": ["SetEvent", "SetEventSetPoint"]},
+        "selector": {"$ref": "#/$defs/event_selector"},
+        "values": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {"type": "integer", "minimum": 0, "maximum": 255}
+        },
+        "expected_before_raw_hex": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}
+        }
+      },
+      "required": ["operation", "selector", "values", "expected_before_raw_hex"],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "u8": {"type": "integer", "minimum": 0, "maximum": 255},
+    "timer_selector": {
+      "type": "object",
+      "required": ["channel", "instance", "weekday"],
+      "properties": {
+        "channel": {"enum": ["ventilation", "noise-reduction", "tariff", "dhw", "circulation", "zone-cooling", "zone-heating"]},
+        "instance": {"$ref": "#/$defs/u8"},
+        "weekday": {"type": "integer", "minimum": 0, "maximum": 6}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"channel": {"enum": ["ventilation", "noise-reduction", "tariff", "dhw", "circulation"]}},
+            "required": ["channel"]
+          },
+          "then": {"properties": {"instance": {"const": 0}}}
+        }
+      ],
+      "additionalProperties": false
+    },
+    "event_selector": {
+      "type": "object",
+      "required": ["profile", "instance", "address", "weekday_code"],
+      "properties": {
+        "profile": {"enum": ["system", "dhw", "zone"]},
+        "instance": {"$ref": "#/$defs/u8"},
+        "address": {"$ref": "#/$defs/u8"},
+        "weekday_code": {"$ref": "#/$defs/u8"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"profile": {"const": "system"}}, "required": ["profile"]},
+          "then": {"properties": {"address": {"type": "integer", "minimum": 1, "maximum": 3}}}
+        },
+        {
+          "if": {"properties": {"profile": {"enum": ["dhw", "zone"]}}, "required": ["profile"]},
+          "then": {"properties": {"address": {"type": "integer", "minimum": 1, "maximum": 2}}}
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
 }

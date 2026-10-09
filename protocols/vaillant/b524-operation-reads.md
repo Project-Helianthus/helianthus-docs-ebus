@@ -23,10 +23,10 @@ presets do not expand this plan or construct Event selectors.
 
 | Operation | Required selector fields | Boundary |
 | --- | --- | --- |
-| `ReadTimer` | `channel`, `instance`, `weekday` | The seven channel names are `ventilation`, `noise-reduction`, `tariff`, `dhw`, `circulation`, `zone-cooling`, and `zone-heating`; VRC700 profile handling applies. |
+| `ReadTimer` | `channel`, `instance`, `weekday` | The seven channel names are `ventilation`, `noise-reduction`, `tariff`, `dhw`, `circulation`, `zone-cooling`, and `zone-heating`. Non-zone channels require `instance: 0`; zone instances remain explicit `u8` values. VRC700 profile handling applies. |
 | `ReadVR91` | none | Opcode-only VRC700 operation. |
-| `GetEvent` | `profile`, `instance`, `address`, `weekday_code` | Event support and weekday-code semantics remain experimental and unqualified. |
-| `GetEventSetPoint` | `profile`, `instance`, `address`, `weekday_code` | Event support and weekday-code semantics remain experimental and unqualified. |
+| `GetEvent` | `profile`, `instance`, `address`, `weekday_code` | `system` admits addresses `1..3`; `dhw` and `zone` admit `1..2`. The instance stays an explicit `u8`; Event support and weekday-code semantics remain experimental and unqualified. |
+| `GetEventSetPoint` | `profile`, `instance`, `address`, `weekday_code` | `system` admits addresses `1..3`; `dhw` and `zone` admit `1..2`. The instance stays an explicit `u8`; Event support and weekday-code semantics remain experimental and unqualified. |
 
 The planner lists only selected requests and their progress. Replay preserves
 the same operation records without transport I/O. Browser and HTML show Event
@@ -55,7 +55,13 @@ match the selector. Raw-only records retain `decoded: null` and
 `schema_unqualified`.
 
 `response_state` is one of `value`, `empty`, `nack`, `timeout`,
-`transport_error`, `malformed`, or `unattempted`. An `unattempted` record
+`transport_error`, `malformed`, or `unattempted`. A `value` record has at least
+one attempt and retains the operation-specific raw reply: seven bytes for
+`ReadTimer`, and eight bytes for `ReadVR91`, `GetEvent`, or
+`GetEventSetPoint`. Raw-only replay records may therefore be `value` while
+keeping `decoded: null`. A `malformed` record retains its nonempty wrong-length
+raw reply and keeps `decoded: null`; states without a decodable reply also keep
+`decoded: null`. An `unattempted` record
 has zero attempts and retains an `error` reason when budget exhaustion,
 recovery, or interruption leaves a selector unsent. Once an admitted attempt
 has started, budget/recovery/interruption failure is `transport_error` with an
@@ -72,8 +78,14 @@ remain `schema_unqualified` until native confirmation.
 `WriteTimer`, `SetEvent`, and `SetEventSetPoint` use an
 [edit-plan schema](fixtures/b524-operation-edit-plan-schema-v1.json). A timer
 plan has three raw `[start, stop]` pairs or `null` slots and one seven-byte OP03
-baseline. Event plans have seven raw bytes and both eight-byte OP09 and OP0B
-baselines. UI exports use the same plan shape.
+baseline. Timer slots use time codes `0x00..0x90`; `null` is the editor
+representation of an unused `0x90 0x90` slot. For an explicit pair, start is
+`0x00..0x8F`, stop is `0x00..0x90`, and the operation parser requires start to
+be strictly lower than stop before constructing a payload. The JSON Schema
+enforces the structural byte bounds; the parser enforces that sibling-value
+ordering. Non-zone Timer selectors require `instance: 0`. Event plans have seven raw bytes and both eight-byte OP09 and OP0B
+baselines. Their selectors retain an explicit `u8` instance and the same
+profile-specific address catalogs as reads. UI exports use the same plan shape.
 
 `b524 apply-operation --plan FILE` defaults to an offline preview and diff.
 `--execute` fails closed unless a matching
@@ -84,7 +96,10 @@ raw SW bytes as `software_raw_hex`, alongside scope, manufacturer, EID, model,
 selector, evidence reference, and `native_qualified: true`. Qualification
 selectors are exact: OP04 uses `channel`, `instance`, and `weekday`; OP0A/OP0C
 use `profile`, `instance`, `address`, and `weekday_code`. Qualification evidence
-remains separate from operator consent. A permitted execution is one send without automatic retry,
+remains separate from operator consent. Schema validation checks document shape;
+it neither proves native support nor authorizes execution. An unchanged edit is
+still valid for offline preview and export, but execution validation rejects it
+before transport opens. A permitted execution is one send without automatic retry,
 with retained raw feedback and separate readback of the exact selector. A
 timeout, ambiguous feedback, or partial result remains unknown and must not
 trigger an automatic repeat or rollback.
