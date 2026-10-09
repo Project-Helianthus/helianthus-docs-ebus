@@ -1,26 +1,24 @@
 # Vaillant B508 NoiseReduction Broadcast Protocol
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This document uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 `PB=0xB5`, `SB=0x08`.
 
 ## Status
 
-**Enrichment research** -- not yet live-validated on a Helianthus bus.
-B508 is a broadcast protocol (`ZZ=0xFE`) emitted when the NoiseReduction
-timer activates or deactivates. It was absent from helianthus-docs-ebus
-prior to this document.
+**Hypothesis** -- not live-validated on a tested bus.
+The candidate B508 broadcast (`ZZ=0xFE`) is associated with NoiseReduction
+timer activation or deactivation. No independent capture is included here.
 
 Evidence labels:
 
 - `P1_COMMUNITY`: ebusd community fork CSV for BASV2/VRC700 system timer
   configurations.
-- `D5_DEEP`: D5-B555-B500-B508-deep.md cross-protocol analysis.
 
-**Confidence:** MEDIUM-HIGH (wire format clear from ebusd CSV; purpose clear
-from cross-protocol analysis; no live capture confirmation).
+**Qualification:** candidate CSV layout; the purpose and causal chain below
+remain hypotheses without independently inspectable capture confirmation.
 
 ## Wire Format
 
@@ -45,8 +43,8 @@ QQ = source initiator (address unconfirmed from live capture)
 
 ## Purpose
 
-Broadcasts the noise reduction active/inactive state to all bus devices
-when the NoiseReduction timer activates or deactivates.
+**Hypothesis:** broadcasts the noise reduction active/inactive state when
+the NoiseReduction timer activates or deactivates.
 
 ## Cross-Protocol Stack
 
@@ -83,7 +81,7 @@ inferred from device function, not observed.
 
 | ID (hex) | Name | Data fields | Direction | Confidence |
 |----------|------|-------------|-----------|------------|
-| `02` | noise_reduction_broadcast (`NoiseReductionBroadcast`) | IGN:1, State1:onoff, State2:onoff | initiator (`0x15`?) -> broadcast (`0xFE`) | MEDIUM-HIGH |
+| `02` | noise_reduction_broadcast (`NoiseReductionBroadcast`) | IGN:1, State1:onoff, State2:onoff | initiator (`0x15`?) -> broadcast (`0xFE`) | Candidate; not capture-verified |
 
 ## Open Questions
 
@@ -114,5 +112,4 @@ inferred from device function, not observed.
 
 ## Evidence
 
-- D5-B555-B500-B508-deep.md (cross-protocol analysis, B508 section)
 - ebusd community fork CSV: `*BRC,BRC,B5,08,02,...` definition

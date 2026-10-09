@@ -1,0 +1,1 @@
+{"schema_version":1,"destination_address":21,"operation":"WriteTimer","selector":{"channel":"ventilation","instance":0,"weekday":0},"values":[[0,90],null,[30,60]],"expected_before_raw_hex":["00000000000000"]}

@@ -118,9 +118,9 @@ The hard stop is before `FMV3-M4-01`.
 The immutable companion manifest and its `allowed_current_vendor_logic: []`
 field remain the exact historical M3-03 completion record; they are not a
 current inventory of later R3 code. The R3 contracts
-[`sunspec-model-chain-v1.md`](../../protocols/sunspec/sunspec-model-chain-v1.md)
+[`sunspec-model-chain-v1.md`](../../architecture/protocol-routing-vendor-sunspec-model-chain-v1.md)
 and
-[`fronius-observed-flavor-v1.md`](../../protocols/sunspec/fronius-observed-flavor-v1.md)
+[`fronius-observed-flavor-v1.md`](../../architecture/protocol-routing-vendor-fronius-observed-flavor-v1.md)
 supersede only that historical empty-vendor-logic boundary. They admit one
 experimental, read-only, exact post-capability classification evaluator backed
 by the sanitized observation in `Project-Helianthus/helianthus-ebusgateway#807`.

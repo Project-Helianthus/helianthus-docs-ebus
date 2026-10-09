@@ -11,6 +11,11 @@ behavior, eBUS device and vendor knowledge, and the Helianthus components that
 implement or expose eBUS behavior. Keep implementation-neutral wire and data
 type material under `protocols/` and `types/`; keep Helianthus architecture,
 API, deployment, and development material in their corresponding directories.
+`protocols/` and `types/` are CC0-1.0; all other paths are AGPL-3.0. Do not
+place application commands, CLI arguments, planner/UI behavior, API contracts,
+or application artifact schemas in the CC0 trees. Source citations may name an
+evidence-producing tool; they must not become application instructions.
+Validate this boundary with `python3 scripts/check_public_domain_boundary.py`.
 
 Do not use this repository as the default home for unrelated protocols. Put
 protocol-native knowledge in that protocol's corresponding public docs

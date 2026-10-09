@@ -43,7 +43,7 @@ Examples already documented in the repo include:
 
 See:
 
-- [`../protocols/vaillant/basv.md`](../protocols/vaillant/basv.md)
+- [`../protocols/vaillant/ebus-vaillant-regulators.md`](../protocols/vaillant/ebus-vaillant-regulators.md)
 
 ## Product-IDs Catalog
 
@@ -271,5 +271,5 @@ This records one registry admission decision. It does not prove wire identity, c
 - Semantic root discovery: [`b524-semantic-root-discovery.md`](./b524-semantic-root-discovery.md)
 - Vaillant regulator model: [`vaillant.md`](./vaillant.md)
 - Functional-module target: [`functional-modules.md`](./functional-modules.md)
-- Family naming reference: [`../protocols/vaillant/basv.md`](../protocols/vaillant/basv.md)
+- Family naming reference: [`../protocols/vaillant/ebus-vaillant-regulators.md`](../protocols/vaillant/ebus-vaillant-regulators.md)
 - Product IDs catalog: [`helianthus-ebus-vaillant-productids`](https://github.com/Project-Helianthus/helianthus-ebus-vaillant-productids)

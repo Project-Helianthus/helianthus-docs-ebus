@@ -5,10 +5,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CHAIN = ROOT / "protocols/sunspec/sunspec-model-chain-v1.md"
-FLAVOR = ROOT / "protocols/sunspec/fronius-observed-flavor-v1.md"
-SUNSPEC_README = ROOT / "protocols/sunspec/README.md"
-MODBUS_README = ROOT / "protocols/modbus/README.md"
+CHAIN = ROOT / "architecture/protocol-routing-vendor-sunspec-model-chain-v1.md"
+FLAVOR = ROOT / "architecture/protocol-routing-vendor-fronius-observed-flavor-v1.md"
+SUNSPEC_README = ROOT / "architecture/protocol-routing-vendor-sunspec-overview.md"
+MODBUS_README = ROOT / "architecture/protocol-routing-vendor-modbus-overview.md"
 
 CAPABILITY_ID = "sunspec.inverter.three_phase.monitoring@1.0.0"
 FLAVOR_ID = "sunspec.flavor.fronius.gen24.float.observed@1.0.0"

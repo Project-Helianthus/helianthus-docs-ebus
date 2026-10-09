@@ -190,7 +190,13 @@ The B524 contribution that still feeds the current boiler semantic contract is:
 | `config.dhwOperatingMode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
 | `diagnostics.heatingStatusRaw` | GG=0x02, II=0x00, RR=0x001B | u16 | Controller-side raw heating status |
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
+The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
+`RR=0x0012` have unknown native reply layouts. They are **withheld from this
+boiler semantic mapping**: the current `refreshBoilerStatus()` does not read
+these selectors, and no publishable correlated evidence qualifies either as
+`state.flowTemperatureC` or a raw `diagnostics.activeErrors` value. See the
+[B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#op0x06--controller-mediated-device-parameters)
+for the evidence boundary.
 
 Fields currently present in the schema but not populated from a validated source:
 - `state.returnTemperatureC`
@@ -289,10 +295,11 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 
 ### Phase C: instance detection (instanced groups)
 
-- in `full`, evaluate every declared `II=0x00..II_max`; in `recommended`,
+- in `full`, evaluate every declared II in the profile interval; in `recommended`,
   a qualified positive count may stop probing after the expected number of successes
-- `II_max` comes from the profile or explicit custom selection. A count does not
-  identify II indices or redefine the slot bound; short OP01 probes supply neither.
+- `II_max` and the lower II boundary come from the profile. Custom RR selection
+  does not widen an II interval. A count does not identify II indices or redefine
+  the slot bound; short OP01 probes supply neither.
 - mark present slots based on group-specific heuristics
 
 ### Phase D: register scan
@@ -307,12 +314,14 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 
 - use complete selectors: `01 GG II RRlo RRhi` for OP02 parameters and
   `07 GG II RRlo RRhi` for OP06 parameters
-- use a finite configurable budget (default 256) for deduplicated observed writable candidates, selected by
-  the profile-scoped static `FLAGS & 0x02` inference including unknown codecs
+- accept an optional finite caller budget for deduplicated observed writable
+  candidates, selected by the profile-scoped static `FLAGS & 0x02` inference
+  including unknown codecs; no default budget exists
 - retain raw request/reply and scalar-codec qualification; the inference does
   not prove live writability or authorize a write
-- schedule OP01/OP02 and OP07/OP06 families fairly: reserve half of the finite
-  budget for each, borrow unused capacity, then round-robin `(GG,II)` candidates
+- when a caller supplies a finite budget, schedule OP01/OP02 and OP07/OP06
+  families fairly: reserve half for each, borrow unused capacity, then
+  round-robin `(GG,II)` candidates
 - record `eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and
   `budget_skipped`; retain unknown-codec replies raw and unqualified
 - historical short-probe ranges are unqualified hints and are not persisted as
@@ -322,11 +331,11 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 
 ```text
 GG   Opcode  InstanceMax  RegisterMax
-0x02 0x02    0x0A         0x0025
+0x02 0x02    0x09         0x0025
 0x03 0x02    0x0A         0x002E
-0x09 0x06    0x0A         0x0035
-0x0A 0x06    0x0A         0x0035
-0x0C 0x06    0x0A         0x003F
+0x09 0x06    0x08         0x0035
+0x0A 0x06    0x08         0x0035
+0x0C 0x06    0x08         0x002F
 ```
 
 ---
@@ -372,7 +381,6 @@ Wire type corrections from MCP validation (2026-03-05):
 
 ### Related Files
 
-- `_work_register_mapping/mypyllant_b524_system_mapping.json` — Original mapping analysis (historical)
-- `_work_register_mapping/B524/` — Raw VRC Explorer scan data per group
+- [BASV2 bounded survey profile](../protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json) — Sanitized selector-correlated observations; coverage and qualification remain profile-specific.
 - `helianthus-ebusreg/vaillant/system/b524_profile.go` — Discovery profiles
 - `helianthus-ebus-vaillant-productids/repos/john30-ebusd-configuration/src/vaillant/15.ctlv2.tsp` — ebusd TSP source

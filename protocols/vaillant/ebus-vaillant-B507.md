@@ -1,19 +1,19 @@
 # Vaillant B507 Heat Pump Load/Poll Protocol
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This document uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 `PB=0xB5`, `SB=0x07`.
 
 ## Status
 
-**Enrichment research** -- not yet live-validated on a Helianthus bus.
+**Enrichment research** -- not yet live-validated on a a tested bus.
 B507 is heat-pump specific (CTLV2 + HMU topology). It is absent from
-john30/ebusd-configuration <!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> and was absent from helianthus-docs-ebus
+john30/ebusd-configuration <!-- legacy-role-mapping:begin -->master<!-- legacy-role-mapping:end --> and has no independent capture in this reference
 prior to this document.
 
-Helianthus live bus runs BAI00 + BASV2 (gas boiler topology). B507 frames
+a tested bus runs BAI00 + BASV2 (gas boiler topology). B507 frames
 do NOT appear on this bus type. All information below is derived from
 community ebusd-configuration forks.
 

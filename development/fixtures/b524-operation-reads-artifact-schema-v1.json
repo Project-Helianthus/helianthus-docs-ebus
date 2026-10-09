@@ -1,0 +1,576 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "B524 operation-read additions to artifact schema 2.3",
+  "type": "object",
+  "required": ["schema_version", "b524_operation_reads_schema_version", "b524_operation_reads"],
+  "properties": {
+    "schema_version": {"const": "2.3"},
+    "b524_operation_reads_schema_version": {"const": 1},
+    "b524_operation_reads": {"type": "array", "items": {"$ref": "#/$defs/observation"}}
+  },
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "b524_operation_reads": {
+            "contains": {
+              "type": "object",
+              "required": ["decode_qualification"],
+              "properties": {"decode_qualification": {"const": "profile_vrc700"}}
+            }
+          }
+        },
+        "required": ["b524_operation_reads"]
+      },
+      "then": {
+        "required": ["meta"],
+        "properties": {"meta": {"$ref": "#/$defs/profile_qualified_meta"}}
+      }
+    }
+  ],
+  "$defs": {
+    "u8": {"type": "integer", "minimum": 0, "maximum": 255},
+    "hex": {"type": "string", "pattern": "^(?:[0-9A-Fa-f]{2})*$"},
+    "nonempty_hex": {"type": "string", "pattern": "^(?:[0-9A-Fa-f]{2})+$"},
+    "vrc700_identity": {
+      "type": "object",
+      "required": ["manufacturer", "device_id", "eid"],
+      "properties": {"manufacturer": {"const": "0xB5"}},
+      "oneOf": [
+        {
+          "properties": {
+            "device_id": {"const": "70000"},
+            "eid": {"const": "70000"}
+          }
+        },
+        {
+          "properties": {
+            "device_id": {"const": "B7S00"},
+            "eid": {"const": "B7S00"}
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "profile_qualified_meta": {
+      "type": "object",
+      "required": ["resolved_identity"],
+      "properties": {"resolved_identity": {"$ref": "#/$defs/vrc700_identity"}},
+      "additionalProperties": true
+    },
+    "raw_selector": {
+      "oneOf": [
+        {"$ref": "#/$defs/raw_timer_selector"},
+        {"$ref": "#/$defs/raw_event_selector"}
+      ]
+    },
+    "raw_timer_selector": {
+      "type": "object",
+      "required": ["system_type", "instance", "address", "weekday"],
+      "properties": {
+        "system_type": {"$ref": "#/$defs/u8"},
+        "instance": {"$ref": "#/$defs/u8"},
+        "address": {"$ref": "#/$defs/u8"},
+        "weekday": {"$ref": "#/$defs/u8"}
+      },
+      "additionalProperties": false
+    },
+    "raw_event_selector": {
+      "type": "object",
+      "required": ["system_type", "instance", "address", "weekday_code"],
+      "properties": {
+        "system_type": {"$ref": "#/$defs/u8"},
+        "instance": {"$ref": "#/$defs/u8"},
+        "address": {"$ref": "#/$defs/u8"},
+        "weekday_code": {"$ref": "#/$defs/u8"}
+      },
+      "additionalProperties": false
+    },
+    "pair_context": {
+      "type": "object",
+      "required": ["profile", "instance", "address", "weekday_code"],
+      "properties": {
+        "profile": {"enum": ["system", "dhw", "zone"]},
+        "instance": {"$ref": "#/$defs/u8"},
+        "address": {"$ref": "#/$defs/u8"},
+        "weekday_code": {"$ref": "#/$defs/u8"}
+      },
+      "additionalProperties": false
+    },
+    "common": {
+      "type": "object",
+      "required": ["operation", "opcode_hex", "selector", "request_payload_hex", "response_raw_hex", "response_state", "decoded", "decode_qualification", "selector_correlation", "request_attempts"],
+      "properties": {
+        "request_payload_hex": {"$ref": "#/$defs/hex"},
+        "response_raw_hex": {"anyOf": [{"$ref": "#/$defs/hex"}, {"type": "null"}]},
+        "response_state": {"enum": ["value", "empty", "nack", "timeout", "transport_error", "malformed", "unattempted"]},
+        "decoded": {"anyOf": [{"type": "object"}, {"type": "null"}]},
+        "decode_qualification": {"enum": ["profile_vrc700", "schema_unqualified"]},
+        "selector_correlation": {"const": "request_context"},
+        "request_attempts": {"type": "integer", "minimum": 0},
+        "error": {"type": "string", "minLength": 1},
+        "raw_selector": {"$ref": "#/$defs/raw_selector"},
+        "pair_context": {"$ref": "#/$defs/pair_context"},
+        "trace_seq": {"type": "integer", "minimum": 0}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"response_state": {"const": "unattempted"}}, "required": ["response_state"]},
+          "then": {
+            "required": ["error"],
+            "properties": {
+              "request_attempts": {"const": 0},
+              "response_raw_hex": {"const": null},
+              "decoded": {"const": null}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"response_state": {"not": {"const": "unattempted"}}},
+            "required": ["response_state"]
+          },
+          "then": {"properties": {"request_attempts": {"minimum": 1}}}
+        },
+        {
+          "if": {"properties": {"response_state": {"const": "value"}}, "required": ["response_state"]},
+          "then": {"properties": {"response_raw_hex": {"$ref": "#/$defs/nonempty_hex"}}}
+        },
+        {
+          "if": {"properties": {"response_state": {"const": "empty"}}, "required": ["response_state"]},
+          "then": {"properties": {"response_raw_hex": {"const": ""}, "decoded": {"const": null}}}
+        },
+        {
+          "if": {
+            "properties": {"response_state": {"enum": ["nack", "timeout", "transport_error"]}},
+            "required": ["response_state"]
+          },
+          "then": {
+            "required": ["error"],
+            "properties": {"response_raw_hex": {"const": null}, "decoded": {"const": null}}
+          }
+        },
+        {
+          "if": {"properties": {"response_state": {"const": "malformed"}}, "required": ["response_state"]},
+          "then": {
+            "required": ["error"],
+            "properties": {
+              "response_raw_hex": {"$ref": "#/$defs/nonempty_hex"},
+              "decoded": {"const": null}
+            }
+          }
+        },
+        {
+          "if": {"required": ["raw_selector"]},
+          "then": {
+            "properties": {
+              "decoded": {"const": null},
+              "decode_qualification": {"const": "schema_unqualified"}
+            }
+          }
+        }
+      ]
+    },
+    "timer_selector": {
+      "type": "object",
+      "required": ["channel", "instance", "weekday"],
+      "properties": {
+        "channel": {"enum": ["ventilation", "noise-reduction", "tariff", "dhw", "circulation", "zone-cooling", "zone-heating"]},
+        "instance": {"$ref": "#/$defs/u8"},
+        "weekday": {"type": "integer", "minimum": 0, "maximum": 6}
+      },
+      "additionalProperties": false
+    },
+    "event_selector": {
+      "type": "object",
+      "required": ["profile", "instance", "address", "weekday_code"],
+      "properties": {
+        "profile": {"enum": ["system", "dhw", "zone"]},
+        "instance": {"$ref": "#/$defs/u8"},
+        "address": {"$ref": "#/$defs/u8"},
+        "weekday_code": {"$ref": "#/$defs/u8"}
+      },
+      "additionalProperties": false
+    },
+    "timer_slot": {
+      "type": "object",
+      "required": ["start_raw", "stop_raw", "start_minutes", "stop_minutes", "unused"],
+      "properties": {
+        "start_raw": {"$ref": "#/$defs/u8"},
+        "stop_raw": {"$ref": "#/$defs/u8"},
+        "start_minutes": {
+          "anyOf": [
+            {"type": "integer", "minimum": 0, "maximum": 1440},
+            {"type": "null"}
+          ]
+        },
+        "stop_minutes": {
+          "anyOf": [
+            {"type": "integer", "minimum": 0, "maximum": 1440},
+            {"type": "null"}
+          ]
+        },
+        "unused": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "timer_decoded": {
+      "type": "object",
+      "required": ["parameter_config", "slots", "raw_hex"],
+      "properties": {
+        "parameter_config": {"$ref": "#/$defs/u8"},
+        "slots": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"$ref": "#/$defs/timer_slot"}
+        },
+        "raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{14}$"}
+      },
+      "additionalProperties": false
+    },
+    "event_time": {
+      "type": "object",
+      "required": ["raw", "minutes"],
+      "properties": {
+        "raw": {"$ref": "#/$defs/u8"},
+        "minutes": {
+          "anyOf": [
+            {"type": "integer", "minimum": 0, "maximum": 1440},
+            {"type": "null"}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "event_decoded": {
+      "type": "object",
+      "required": ["parameter_config", "start1_raw", "starts", "raw_hex"],
+      "properties": {
+        "parameter_config": {"$ref": "#/$defs/u8"},
+        "start1_raw": {"$ref": "#/$defs/u8"},
+        "starts": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {"$ref": "#/$defs/event_time"}
+        },
+        "raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}
+      },
+      "additionalProperties": false
+    },
+    "event_setpoint_value": {
+      "type": "object",
+      "required": ["raw", "temperature_c", "state"],
+      "properties": {
+        "raw": {"$ref": "#/$defs/u8"},
+        "temperature_c": {
+          "anyOf": [
+            {"type": "number", "minimum": 0, "maximum": 127.5},
+            {"type": "null"}
+          ]
+        },
+        "state": {
+          "anyOf": [
+            {"enum": ["enable", "disable", "replacement"]},
+            {"type": "null"}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "event_setpoint_decoded": {
+      "type": "object",
+      "required": ["parameter_config", "values", "raw_hex"],
+      "properties": {
+        "parameter_config": {"$ref": "#/$defs/u8"},
+        "values": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {"$ref": "#/$defs/event_setpoint_value"}
+        },
+        "raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}
+      },
+      "additionalProperties": false
+    },
+    "vr91_decoded": {
+      "type": "object",
+      "required": ["binding_zone", "special_function_status", "heating_operating_mode", "cooling_operating_mode", "status_info", "frost_protection", "heating_temperature_raw", "cooling_temperature_raw", "raw_hex"],
+      "properties": {
+        "binding_zone": {"$ref": "#/$defs/u8"},
+        "special_function_status": {"$ref": "#/$defs/u8"},
+        "heating_operating_mode": {"$ref": "#/$defs/u8"},
+        "cooling_operating_mode": {"$ref": "#/$defs/u8"},
+        "status_info": {"$ref": "#/$defs/u8"},
+        "frost_protection": {"$ref": "#/$defs/u8"},
+        "heating_temperature_raw": {"$ref": "#/$defs/u8"},
+        "cooling_temperature_raw": {"$ref": "#/$defs/u8"},
+        "raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}
+      },
+      "additionalProperties": false
+    },
+    "observation": {
+      "oneOf": [
+        {
+          "allOf": [
+            {"$ref": "#/$defs/common"},
+            {
+              "properties": {
+                "operation": {"const": "ReadTimer"},
+                "opcode_hex": {"const": "0x03"},
+                "request_payload_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{10}$"},
+                "selector": {
+                  "oneOf": [
+                    {"$ref": "#/$defs/timer_selector"},
+                    {"type": "object", "maxProperties": 0}
+                  ]
+                },
+                "decoded": {
+                  "anyOf": [
+                    {"$ref": "#/$defs/timer_decoded"},
+                    {"type": "null"}
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {"properties": {"selector": {"type": "object", "maxProperties": 0}}, "required": ["selector"]},
+                  "then": {
+                    "required": ["raw_selector"],
+                    "properties": {"raw_selector": {"$ref": "#/$defs/raw_timer_selector"}}
+                  }
+                },
+                {
+                  "if": {"properties": {"response_state": {"const": "value"}}, "required": ["response_state"]},
+                  "then": {
+                    "properties": {"response_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{14}$"}}
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "response_state": {"const": "value"},
+                      "selector": {"type": "object", "minProperties": 1}
+                    },
+                    "required": ["response_state", "selector"]
+                  },
+                  "then": {"properties": {"decoded": {"$ref": "#/$defs/timer_decoded"}}}
+                },
+                {
+                  "if": {"properties": {"response_state": {"const": "malformed"}}, "required": ["response_state"]},
+                  "then": {"properties": {"response_raw_hex": {"not": {"pattern": "^[0-9A-Fa-f]{14}$"}}}}
+                }
+              ]
+            }
+          ],
+          "unevaluatedProperties": false
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/common"},
+            {
+              "properties": {
+                "operation": {"const": "ReadVR91"},
+                "opcode_hex": {"const": "0x08"},
+                "request_payload_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{2}$"},
+                "selector": {"type": "object", "maxProperties": 0},
+                "decoded": {
+                  "anyOf": [
+                    {"$ref": "#/$defs/vr91_decoded"},
+                    {"type": "null"}
+                  ]
+                }
+              },
+              "not": {"required": ["raw_selector"]},
+              "allOf": [
+                {
+                  "if": {"properties": {"response_state": {"const": "value"}}, "required": ["response_state"]},
+                  "then": {
+                    "properties": {
+                      "response_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"},
+                      "decoded": {"$ref": "#/$defs/vr91_decoded"}
+                    }
+                  }
+                },
+                {
+                  "if": {"properties": {"response_state": {"const": "malformed"}}, "required": ["response_state"]},
+                  "then": {"properties": {"response_raw_hex": {"not": {"pattern": "^[0-9A-Fa-f]{16}$"}}}}
+                }
+              ]
+            }
+          ],
+          "unevaluatedProperties": false
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/common"},
+            {
+              "properties": {
+                "operation": {"enum": ["GetEvent", "GetEventSetPoint"]},
+                "opcode_hex": {"enum": ["0x09", "0x0B"]},
+                "request_payload_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{10}$"},
+                "decode_qualification": {"const": "schema_unqualified"},
+                "selector": {
+                  "oneOf": [
+                    {"$ref": "#/$defs/event_selector"},
+                    {"type": "object", "maxProperties": 0}
+                  ]
+                },
+                "decoded": {
+                  "anyOf": [
+                    {"$ref": "#/$defs/event_decoded"},
+                    {"$ref": "#/$defs/event_setpoint_decoded"},
+                    {"type": "null"}
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {"properties": {"operation": {"const": "GetEvent"}}, "required": ["operation"]},
+                  "then": {
+                    "properties": {
+                      "opcode_hex": {"const": "0x09"},
+                      "decoded": {
+                        "anyOf": [
+                          {"$ref": "#/$defs/event_decoded"},
+                          {"type": "null"}
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {"properties": {"operation": {"const": "GetEventSetPoint"}}, "required": ["operation"]},
+                  "then": {
+                    "properties": {
+                      "opcode_hex": {"const": "0x0B"},
+                      "decoded": {
+                        "anyOf": [
+                          {"$ref": "#/$defs/event_setpoint_decoded"},
+                          {"type": "null"}
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {"properties": {"selector": {"type": "object", "maxProperties": 0}}, "required": ["selector"]},
+                  "then": {
+                    "required": ["raw_selector"],
+                    "properties": {
+                      "raw_selector": {"$ref": "#/$defs/raw_event_selector"}
+                    }
+                  }
+                },
+                {
+                  "if": {"properties": {"response_state": {"const": "value"}}, "required": ["response_state"]},
+                  "then": {"properties": {"response_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{16}$"}}}
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "operation": {"const": "GetEvent"},
+                      "response_state": {"const": "value"},
+                      "selector": {"type": "object", "minProperties": 1}
+                    },
+                    "required": ["operation", "response_state", "selector"]
+                  },
+                  "then": {"properties": {"decoded": {"$ref": "#/$defs/event_decoded"}}}
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "operation": {"const": "GetEventSetPoint"},
+                      "response_state": {"const": "value"},
+                      "selector": {"type": "object", "minProperties": 1}
+                    },
+                    "required": ["operation", "response_state", "selector"]
+                  },
+                  "then": {"properties": {"decoded": {"$ref": "#/$defs/event_setpoint_decoded"}}}
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "operation": {"const": "GetEventSetPoint"},
+                      "response_state": {"const": "value"},
+                      "selector": {
+                        "type": "object",
+                        "properties": {"profile": {"enum": ["system", "zone"]}},
+                        "required": ["profile"]
+                      }
+                    },
+                    "required": ["operation", "response_state", "selector"]
+                  },
+                  "then": {
+                    "properties": {
+                      "decoded": {
+                        "type": "object",
+                        "properties": {
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "temperature_c": {"type": "number"},
+                                "state": {"const": null}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "operation": {"const": "GetEventSetPoint"},
+                      "response_state": {"const": "value"},
+                      "selector": {
+                        "type": "object",
+                        "properties": {"profile": {"const": "dhw"}},
+                        "required": ["profile"]
+                      }
+                    },
+                    "required": ["operation", "response_state", "selector"]
+                  },
+                  "then": {
+                    "properties": {
+                      "decoded": {
+                        "type": "object",
+                        "properties": {
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "temperature_c": {"const": null},
+                                "state": {
+                                  "anyOf": [
+                                    {"enum": ["enable", "disable", "replacement"]},
+                                    {"type": "null"}
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {"properties": {"response_state": {"const": "malformed"}}, "required": ["response_state"]},
+                  "then": {"properties": {"response_raw_hex": {"not": {"pattern": "^[0-9A-Fa-f]{16}$"}}}}
+                }
+              ]
+            }
+          ],
+          "unevaluatedProperties": false
+        }
+      ]
+    }
+  }
+}

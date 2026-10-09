@@ -10,9 +10,6 @@ for VRC700/VRC720-style controllers.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
-- `LOCAL_MCP`: current Helianthus MCP runtime observations.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `INFERENCE`: falsifiable interpretation from the evidence above.
 
@@ -39,11 +36,11 @@ Concrete timer include files add two selector bytes via `@ext(day, group)`.
 
 | Include file | Group byte | TypeSpec names | Evidence | Falsification test |
 |---|---|---|---|---|
-| `timerhc_inc.tsp` | `00` | `HcTimer_Monday`..`HcTimer_Sunday` | `LOCAL_TYPESPEC` | Read `B515 <day> 00` from a legacy controller and show it cannot decode as a heating timer. |
-| `timerhwc_inc.tsp` | `01` | `HwcTimer_Monday`..`HwcTimer_Sunday` | `LOCAL_TYPESPEC` | Same test for DHW timer windows. |
-| `timercc_inc.tsp` | `02` | `CcTimer_Monday`..`CcTimer_Sunday` | `LOCAL_TYPESPEC` | Same test for circulation timer windows. |
-| `timercool_inc.tsp` | `03` | `CoolingTimer_Monday`..`CoolingTimer_Sunday` | `LOCAL_TYPESPEC` | Same test for cooling timer windows. |
-| `timertariff_inc.tsp` | `04` | `TariffTimer_Monday`..`TariffTimer_Sunday` | `LOCAL_TYPESPEC` | Capture a tariff timer read and show no B515 timer composite is used. |
+| `timerhc_inc.tsp` | `00` | `HcTimer_Monday`..`HcTimer_Sunday` | | Read `B515 <day> 00` from a legacy controller and show it cannot decode as a heating timer. |
+| `timerhwc_inc.tsp` | `01` | `HwcTimer_Monday`..`HwcTimer_Sunday` | | Same test for DHW timer windows. |
+| `timercc_inc.tsp` | `02` | `CcTimer_Monday`..`CcTimer_Sunday` | | Same test for circulation timer windows. |
+| `timercool_inc.tsp` | `03` | `CoolingTimer_Monday`..`CoolingTimer_Sunday` | | Same test for cooling timer windows. |
+| `timertariff_inc.tsp` | `04` | `TariffTimer_Monday`..`TariffTimer_Sunday` | | Capture a tariff timer read and show no B515 timer composite is used. |
 
 ## Relationship to B555
 

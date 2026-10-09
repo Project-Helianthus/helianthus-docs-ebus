@@ -1,7 +1,7 @@
 # Vaillant GetExtendedRegisters (`0xB5 0x24`, B524)
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This reference uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 This document is the canonical wire-protocol reference for Vaillant `GetExtendedRegisters` (`PB=0xB5`, `SB=0x24`).
@@ -13,7 +13,6 @@ It is structured by:
 
 **Related documents:**
 - Register catalog: [ebus-vaillant-B524-register-map.md](./ebus-vaillant-B524-register-map.md)
-- Research & working hypotheses: archived observations
 
 ## 1. Scope and Framing
 
@@ -65,8 +64,8 @@ FLAGS GG RR_LO RR_HI [value...]
 ```
 
 `FLAGS` is an observed two-bit reply attribute. The following bit interpretation
-comes from private static analysis and is a profile-specific inference; it is not
-a universal B524 wire contract or proof of live writability.
+is a profile-specific inference, not a universal B524 wire contract or proof of
+live writability.
 
 | Bit | Inferred meaning | Limit |
 |-----|------------------|-------|
@@ -114,24 +113,29 @@ Four distinct "no real data" signaling mechanisms exist in B524 responses:
 | **0x7FFFFFFF sentinel** | FLAGS+GG+RR+`FF FF FF 7F` | Integer register with uninitialized or out-of-range value | `u32_value == 0x7FFFFFFF` |
 | **Zero** | FLAGS+GG+RR+`00 00` | Legitimate value = 0 | Context-dependent; not a sentinel |
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
+`0x7FFFFFFF` is a candidate no-data value in integer replies. Preserve it raw
+and keep any no-data treatment profile-qualified until a correlated public
+capture establishes the behavior.
 
 ### 2.5 Asymmetric read/write paths
 
 Some B524 control registers use different GG/RR addresses for reading vs writing. The **write address** (used in `OT=0x01` frames) can differ from the **read address** (used in `OT=0x00` frames). This is a controller implementation pattern, not a general B524 feature.
 
-**Known asymmetric path -- System Quick Mode:**
+**Historical asymmetric-path hypothesis -- System Quick Mode:**
+
+The historical role labels below remain unqualified. The current register names
+alone do not demonstrate that these selectors form one control path.
 
 | Operation | Path | Register |
 |-----------|------|----------|
-| Read active flag | `OP=0x02, GG=0x00, RR=0x0016` | `system_quick_mode_active` (dormant when no mode active) |
-| Read mode value | `OP=0x02, GG=0x00, RR=0x0074` | `system_quick_mode_value` (dormant when no mode active) |
+| Read active flag | `OP=0x02, GG=0x00, RR=0x0016` | `system_ventilation_operating_mode` (dormant when no mode active) |
+| Read mode value | `OP=0x02, GG=0x00, RR=0x0074` | `system_quick_mode` (dormant when no mode active) |
 | Write mode value | `OP=0x02, GG=0x09, RR=0x0001` | Write target for mode activation |
 | Write active flag | `OP=0x02, GG=0x09, RR=0x0002` | Write target for mode on/off |
 | Read-back from write group | `OP=0x02, GG=0x09, RR=0x0004` | Mirrors the written mode value |
 
 On the controller/profile behind this reconstruction, the local GG=0x09 path
-returned no instances in a passive scan and the cited static analysis associates
+returned no instances in a passive scan and the historical reconstruction associates
 these selectors with the asymmetric quick-mode path. That observation does not
 make all OP=02h/GG=09h registers write-triggered, unavailable to passive reads,
 or irrelevant to another profile; ventilation candidates remain separately
@@ -146,7 +150,7 @@ profile-scoped and capture-required.
 | `u32` | Little-endian uint32 | 4 bytes | Energy counters, pump hours/starts |
 | `f32` | IEEE 754 float32 (see note below) | 4 bytes | Primary numeric type for temperatures, pressures, percentages |
 
-> **Device-dependent f32 byte order:** Controllers at address `0x15` (BASV2, CTLV2, VRC720 family) use **little-endian** f32 encoding. The HMU (Heat Management Unit) at address `0x08` on heat pump systems uses **big-endian** f32 encoding -- implementations reading f32 from HMU via B524 must reverse the 4 bytes before IEEE 754 decoding. This is confirmed by the OpenHAB community's use of the `reverseByteOrder` ebusd configuration flag for HMU B524 reads. All Helianthus scan data is from BASV2 (`0x15`) and is internally consistent little-endian. (Source: FINAL-B524-B555-B507-B508.md A1; confidence HIGH.)
+> **Profile-dependent f32 byte order:** The characterized BASV2 controller uses little-endian float32. A heat-pump HMU profile may use big-endian float32; qualify that codec independently before reversing bytes. The BASV2 survey does not establish the HMU layout, and a destination address alone never selects byte order.
 | `string` | Null-terminated C string | Variable | Zone names, installer info |
 | `bytes` | Raw byte sequence | Variable | Opaque payload, not decoded as numeric |
 | `date` | Profile-qualified date codec | Variable | BCD `DD MM YY` is observed for some scalar fields; it does not follow from a description-response length. |
@@ -170,11 +174,11 @@ an observation rather than using it as an unbounded scan-control signal.
 
 ## 3. Opcode Family Map
 
-These are Helianthus operation names from the public discussion, with spelling
+These are descriptive operation names from the public discussion, with spelling
 normalized for `GetParameter` and `GetDeviceParameter`. They are not proprietary
 service identifiers. A listed operation is not proof that every target supports it.
 
-| OP / OT | Helianthus name | Selector / purpose |
+| OP / OT | Descriptive name | Selector / purpose |
 | --- | --- | --- |
 | 00h | `ReadSystemInformation` | `00 IDlo IDhi` |
 | 01h | `DescribeParameter` | `01 GG II RRlo RRhi`; describes a system parameter |
@@ -191,7 +195,7 @@ service identifiers. A listed operation is not proof that every target supports 
 
 OP=01h and OP=07h use separate selector domains. Their complete forms are the
 corrected reconstruction adopted for profile-qualified implementations. The
-identifier byte is retained as `II` in Helianthus terminology; its exact meaning
+identifier byte is retained as `II` in this notation; its exact meaning
 and any special identifier (including FFh) must be qualified per profile.
 Physical support and response codecs require correlated target evidence.
 
@@ -229,16 +233,69 @@ Rules:
 
 | Opcode | Selector family | Documented selector sets | Notes |
 |--------|-----------------|-------------------------------|-------|
-| `0x02` | Local controller selector family | `GG=0x00..0x05`, `GG=0x08`, `GG=0x09`, `GG=0x0A` | Controller-local registers and per-slot configuration |
-| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | **Hypothesis:** independent protocol evidence is required for this interpretation. |
+| `0x02` | Local controller selector family | `GG=0x00..0x05`, `GG=0x08`, `GG=0x09`, `GG=0x0A` | Observed local selector sets; the role, physical identity and topology of OP02/GG0A remain Unknown |
+| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | Opcode-scoped selector sets. `GG=0x01/0x02` heat-generator labels remain profile-qualified hypotheses; `GG=0x00` is uncharacterized. |
 
 **Unqualified presentation candidate:** The operator-provided display designation
-`OP=0x06, GG=0x0B` = **Functional Modules (VR70)** is retained as a name only. It
+`OP=0x06, GG=0x0B` = **Functional Modules (VR70) FM3** is retained as a name only. It
 is not included in the documented selector sets because this repository has no
 published capture, bounds, liveness predicate, or schema for that route. The
 separately documented `OP=0x06, GG=0x0C` presentation name is **Functional
-Modules (VR71)**; neither display name establishes a universal product-identity
+Modules (VR71) FM5**; neither display name establishes a universal product-identity
 rule.
+
+### 3.3 OP02 family presentation-name catalog
+
+The following descriptive labels retain the complete `(OP=0x02, GG)`
+identity. A label does not add a selector route, instance range, register
+layout, or physical-device claim.
+
+| GG | Human label | Presentation semantic name | Qualification |
+| --- | --- | --- | --- |
+| 00 | System | `system` | Observed singleton local selector set. |
+| 01 | Native Domestic Hot Water | `native_domestic_hot_water` | Observed singleton local selector set. |
+| 02 | Circuits | `circuits` | Exact `BASV2/rawSW0507/HW1704/API1` profile: II00..08 heating candidates and independent II09 virtual native water; nonmatching or unknown profiles require separate qualification. |
+| 03 | Zones | `zones` | Observed local selector set. |
+| 04 | Solar Circuit | `solar_circuit` | Observed local selector set. |
+| 05 | Solar Loaded Cylinder | `solar_loaded_cylinder` | Observed local selector set. |
+| 06 | Device | `device` | Presentation only; no public selector/profile contract. |
+| 07 | Generator | `generator` | Presentation only; no public selector/profile contract. |
+| 08 | DeltaT | `delta_t` | Observed local selector set; II topology Unknown. |
+| 09 | Ventilation | `ventilation` | Observed local selector set; II topology Unknown. |
+| 0A | Local Parameters | `local_parameters` | Observed selector set; role, physical identity, and topology Unknown. |
+
+### 3.4 OP06 family presentation-name catalog
+
+The following is an operator-provided **hypothesis catalog** for the OP06 family.
+It gives a stable human label and a `snake_case` presentation semantic name for
+use only after the exact `(OP=0x06, GG)` selector has been retained. It does not
+add a documented selector route, scan target, instance range, register layout,
+identity rule, liveness predicate, or write capability. Promote an individual row
+only with publishable correlated wire and identity evidence for that complete
+selector.
+
+| GG | Human label | Presentation semantic name | Public qualification |
+| --- | --- | --- | --- |
+| 01 | Boiler | `boiler` | Hypothesis. The existing profile-qualified `primary_heating_source` route remains the documented route. |
+| 02 | Heat Pump | `heat_pump` | Hypothesis. The existing profile-qualified `secondary_heating_source` route remains the documented route. |
+| 03 | Air Recovery (VAR) recoVair | `air_recovery_recovair` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
+| 04 | unused | `unused` | Unknown. This recorded presentation state does not establish universal absence or reservation. |
+| 05 | Wärmepumpe Zubehör Appliance Interface (VWZ-AI) | `heat_pump_accessory_vwz_ai` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
+| 06 | Pumpen Module - Solar (VPM-S) auroFLOW | `solar_pump_module_auroflow` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
+| 07 | Pumpen Module - Wasser (VPM-W) aguaFLOW | `water_pump_module_aguaflow` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
+| 08 | Modul Solar (VMS) auroSTEP | `solar_module_aurostep` | Hypothesis. It does not replace the separately documented profile-specific `buffer_solar_cylinder_2_remote` route. |
+| 09 | Remote Control Regulators (VRC7xx, VRT38x) | `remote_control_regulator` | Hypothesis for the family name; the `regulator_slot` route and its profile qualification remain separate. |
+| 0A | Remote Control Thermostats (VR9x) | `remote_control_thermostat` | Hypothesis for the family name; the `thermostat_slot` route and its profile qualification remain separate. |
+| 0B | Functional Modules (VR70) FM3 | `functional_modules_vr70` | Hypothesis for the family name; the characterized profile has II01..II08 candidates and requires a concrete Boolean predicate. |
+| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Hypothesis for the family/FM5 display name. The separately published slot schema remains profile-qualified to OP06/GG0C. |
+| 0D | Relay Module (VR41) | `relay_module_vr41` | Hypothesis for the family name; the characterized profile bounds RR0001 to II01..II08 as availability-only, with `device_connected` BOOL and Unknown RR maximum. |
+| 0E | Clock Module | `clock_module` | Hypothesis for the family name; the `clock_slot` route and its profile qualification remain separate. |
+| 0F | Base Station | `base_station` | Hypothesis for the family name; the `base_station_slot` route and its profile qualification remain separate. |
+
+The `unused` label for GG04 is deliberately not an exclusion rule. Likewise,
+similar human names do not authorize inheritance from a sibling group: GG0B
+must not receive GG0C's scan policy or `device_connected` predicate, and none of
+these OP06 names changes OP02 semantics or its parameter-description boundary.
 
 **Selector rule:** `GG` labels are local to the opcode-selected selector set. A
 shared `GG` byte value across different opcodes has no standalone semantic
@@ -248,8 +305,11 @@ Explicit examples:
 
 - `GG=0x00 + OP=0x02` = local system/settings selector set.
 - `GG=0x01 + OP=0x02` = local DHW selector set.
-- **Hypothesis:** independent protocol evidence is required for this interpretation.
-- **Hypothesis:** independent protocol evidence is required for this interpretation.
+- `GG=0x01 + OP=0x06` = profile-qualified controller-side primary
+  heating-source candidate. It does not establish any global rule for
+  `GG=0x00`.
+- `GG=0x02 + OP=0x06` = profile-qualified controller-side secondary
+  heating-source candidate.
 - `OP=0x02, GG=0x08/0x09/0x0A` and `OP=0x06, GG=0x08/0x09/0x0A` are distinct
   documented selector spaces with different meanings and register layouts.
 
@@ -257,6 +317,20 @@ This rule also applies to `GG=0x00`: even where only one selector set is
 currently documented on wire, `GG` still does not carry a single global meaning
 outside its opcode context. Apply the same caution to other opcode/GG
 combinations until they are fully mapped.
+
+### 3.5 Common OP06 register names
+
+For every GG under `OP=0x06`, the common names are:
+
+| RR | Name |
+| --- | --- |
+| 0x0001 | `device_connected` |
+| 0x0002 | `device_class_address` |
+| 0x0003 | `device_error_code` |
+| 0x0004 | `device_firmware_version` |
+
+These names do not qualify a common codec, successful response, physical device
+identity or scan range. OP02 names remain independently keyed by opcode.
 
 ## 4. Family Details
 
@@ -273,29 +347,54 @@ list or a claim that all counts are physically verified on every system.
 
 | ID | snake_case semantic name | Meaning |
 | --- | --- | --- |
-| 0000h | `circuit_count` | Circuits; guides OP=02h/GG=02h instance discovery |
-| 0001h | `zone_count` | Zones; guides OP=02h/GG=03h instance discovery |
-| 0002h | `solar_circuit_count` | Solar circuits |
-| 0003h | `solar_loaded_tank_count` | Solar-loaded tanks |
+| 0000h | `circuit_count` | Legacy public name; profile-qualified supported circuit capacity for bounded OP=02h/GG=02h candidate guidance |
+| 0001h | `zone_count` | Legacy public name; profile-qualified supported zone capacity for bounded OP=02h/GG=03h candidate guidance |
+| 0002h | `solar_circuit_count` | Solar circuits; guides OP=02h/GG=04h discovery |
+| 0003h | `solar_loaded_tank_count` | Solar-loaded tanks; guides OP=02h/GG=05h discovery |
 | 0004h | `device_count` | Devices |
 | 0005h | `generator_count` | Generators |
 | 0006h | `api_version` | API version; not a count |
 | 0007h | `api_revision` | API revision; not a count |
 | 0008h / 0009h | `vr70_count` / `vr71_count` | Functional module counts |
 | 000Ah | `remote_control_count` | Remote controls |
-| 000Bh | `delta_t_count` | Published deltaT label; physical class remains unknown |
+| 000Bh | `delta_t_count` | Guides OP=02h/GG=08h discovery; physical class remains unknown |
 | 000Ch / 000Dh | `boiler_count` / `heat_pump_count` | Generator classes |
 | 000Eh / 000Fh | `vpm_w_count` / `vpm_s_count` | Module classes |
 | 0010h | `recovair_count` | recoVair ventilation units |
 | 0011h | `cooling_heat_pump_count` | Cooling-capable heat pumps |
 
-A count selects how many active instances are expected, not their identities.
-In non-exhaustive scans, probe profile-bounded II slots in order until the expected
-number of present instances is found. Do not assume the first N slots are occupied.
-A missing, non-integral, non-finite, out-of-bound or conflicting count falls back
-to bounded presence discovery. A zero count is retained as evidence and does not
-silently delete independently observed instances. Record expected and observed
-counts and their mismatch. `research` scans keep the full configured II range.
+For ID=0000h `circuit_count` and ID=0001h `zone_count`, the retained legacy
+public names denote supported capacity, not configured or present-instance
+cardinality. The bounded profile supports exactly these combinations:
+
+| VR70 count | VR71 count | Circuit capacity | Zone capacity |
+| --- | --- | --- | --- |
+| 0 | 0 | 1 | 1 |
+| 1 | 0 | 2 | 2 |
+| 0 | 1 | 3 | 3 |
+| 1 | 1 | 5 | 5 |
+| 2 | 1 | 7 | 7 |
+| 3 | 1 | 8 | 8 |
+
+This is not a global hardware-capacity model and must not be extrapolated to
+another mix. Two configured or confirmed circuits with circuit capacity `3`,
+and two configured or confirmed zones with zone capacity `3`, are normal and
+are not mismatches.
+
+Those capacities only recommend bounded candidate planning. They never create
+instances, select identities, require contiguous II slots, or replace a concrete
+presence predicate. Circuit II09 remains independently considered. A missing,
+non-integral, non-finite, out-of-bound, or conflicting capacity falls back to
+the concrete group predicate without itself making presence qualification
+incomplete. Full and `research` scans retain the declared II range. Preserve
+the raw value, capacity interpretation, concrete presence results, and any
+unmet planning guidance separately.
+
+Other OP00 count fields retain count-guided cardinality semantics. A valid
+count guides candidate generation; a valid zero suppresses only derived default
+candidates and never erases an explicit positive observation. A missing,
+non-integral, non-finite, out-of-bound, or conflicting count falls back to its
+group's qualified predicate and leaves count-guided coverage incomplete.
 
 Only an explicit profile mapping connects an information identifier to `(OP,GG)`.
 In particular, ID=0010h does not imply GG=10h. Known groups remain scan candidates
@@ -335,30 +434,20 @@ codec, or inconsistent/non-finite limits remain unqualified. Retain request
 context because `II` is not echoed. Never assign a description across OP=02h/06h
 or across instances merely because `GG`/`RR` match.
 
-#### 4.2.2 Targeted acquisition
+#### 4.2.2 Description applicability
 
-Read the parameter first. Recommended/custom acquisition contains at most 256
-deduplicated, observed writable candidates for which the profile-scoped static
-`FLAGS & 0x02` inference is present, including candidates whose scalar codec is
-not yet known. An unknown codec is retained raw and remains unqualified; it is
-not a reason to omit an otherwise eligible description request. That inference
-selects candidates only: it neither proves live writability nor authorizes a
-write. For each selected candidate, send its complete
-profile-qualified description selector: OP=01h for the system family and OP=07h
-for the device family. Keep the raw request and reply, decoder revision and
-qualification outcome in the artifact. Unsupported descriptions are explicit
-missing data; no short-probe fallback is allowed. The implementation records
-`eligible`, `attempted`, `matched`, `unavailable`, `unqualified`, and
-`budget_skipped` counters per description family.
+OP01 and OP07 metadata are meaningful only with a correlated selector and a
+matching parameter codec. The static `FLAGS & 0x02` interpretation can identify
+a writable candidate, but neither proves live writability nor authorizes a
+write. An unknown codec leaves the response raw and unqualified. Empty or
+unsupported descriptions provide no replacement validation evidence.
 
-#### 4.2.3 Offline value changes
+#### 4.2.3 Value constraints
 
-A matching qualified description validates encoding/type/width, min/max and step
-for every edit, including non-enum numeric values. A contradicted value is rejected.
-When no qualified description is available, VRC Explorer warns that the edit is
-unvalidated and permits its existing explicit confirmation. Offline editing does
-not send a device write. Historical static ranges remain hints, not validation
-authority. See the [historical constraint catalog](./ebus-vaillant-B524-register-map.md#constraint-catalog-ebusreg).
+A qualified matching description can constrain type, width, minimum, maximum
+and step for numeric and non-enum values as well as enumerations. Missing or
+unqualified metadata leaves those constraints Unknown. Historical short probes
+do not replace a complete correlated OP01/OP07 description.
 
 #### 4.2.4 Circuit type interpretation (`GG=0x02 RR=0x02`)
 
@@ -425,64 +514,110 @@ Read response:
 
 Addressing notes:
 - `0x02` is the local controller selector family.
-- **Hypothesis:** independent protocol evidence is required for this interpretation.
+- `0x06` is a separate opcode-scoped controller-mediated selector family. It is
+  used for several remote families. The primary and secondary heat-source
+  labels (`GG=0x01` and `GG=0x02`) remain profile-qualified hypotheses.
 - The selector meaning is always keyed on `(opcode, GG, II, RR)`, not on `GG`
   alone.
 
 ### 4.4 `0x03` / `0x04` Timer Schedules
 
-> **Device binding:** Opcodes 0x03/0x04 are available on **VRC700 (device ID 70000, including Saunier Duval B7S00) only**. VRC720-family controllers (BASV2, BASV3, CTLV2, CTLV3, CTLS2, CTLV0, BASV0) do NOT respond to B524 timer opcodes -- they use the [B555 protocol](./ebus-vaillant-b555-timer-protocol.md) for all timer/schedule operations. Both device families share eBUS target address `0x15` but are different device classes. A scanner or schedule writer that does not check device identity before choosing transport will send the wrong protocol. (Source: FINAL-B524-B555-B507-B508.md A2/A3; confidence HIGH.)
+`ReadTimer` and `WriteTimer` use the VRC700 schedule profile, identified by
+`70000` or `B7S00`. Verify that identity before a live read. The
+[VRC700 crosswalk](ebus-vaillant-regulators.md#vrc700-operation-profile)
+supplies model-row context but does not replace that command guard.
+VRC720-family controllers use the [B555 timer protocol](ebus-vaillant-b555-timer-protocol.md);
+sharing a destination address does not qualify the B524 schedule profile.
 
 ```text
-Timer read request (5 bytes):
-  0: 0x03
-  1: SEL1
-  2: SEL2
-  3: SEL3
-  4: WD (0x00..0x06)
-
-Timer write request (5+ bytes):
-  0: 0x04
-  1: SEL1
-  2: SEL2
-  3: SEL3
-  4: WD
-  5..: timer blocks (model-specific)
+ReadTimer:  03 GG II ADDRESS WEEKDAY
+WriteTimer: 04 GG II ADDRESS WEEKDAY START1 STOP1 START2 STOP2 START3 STOP3
+Reply:      PARAM_CONFIG START1 STOP1 START2 STOP2 START3 STOP3
 ```
 
-These families do not use `RW` byte.
+The read request is five bytes, the write request eleven bytes, and the read
+reply seven bytes after transport normalization. These operations do not contain
+an `RW` byte. `WEEKDAY=00..06` means Monday through Sunday. Retain
+`PARAM_CONFIG` as a raw byte; do not infer writable access from it.
 
-#### 4.4.1 Timer channel map (SEL1/SEL2/SEL3)
+Time codes `00..90` represent ten-minute units. An unused slot is `90 90`.
+A stop code `90` paired with a lower start code means 24:00. Retain unknown
+codes as raw evidence; they do not become valid time values.
 
-The three selector bytes address a specific timer channel. The complete channel map from VRC700 ebusd CSV (`15.700.csv`):
+| GG | II | ADDRESS | Channel |
+| --- | --- | --- | --- |
+| 00 | 00 | 01 | Ventilation |
+| 00 | 00 | 02 | Noise reduction |
+| 00 | 00 | 03 | Tariff |
+| 01 | 00 | 01 | Domestic hot water |
+| 01 | 00 | 02 | Circulation |
+| 03 | Selected zone | 01 | Zone cooling |
+| 03 | Selected zone | 02 | Zone heating |
 
-| SEL1 | SEL2 | SEL3 | Channel |
-|------|------|------|---------|
-| `0x00` | `0x00` | `0x01` | Ventilation timer |
-| `0x00` | `0x00` | `0x02` | Noise reduction timer |
-| `0x00` | `0x00` | `0x03` | Tariff timer |
-| `0x01` | `0x00` | `0x01` | DHW (HWC) timer |
-| `0x01` | `0x00` | `0x02` | Circulation pump timer |
-| `0x03` | `0x00` | `0x01` | Zone cooling timer |
-| `0x03` | `0x00` | `0x02` | Zone heating timer |
+### 4.5 `0x09` / `0x0A` Events and `0x0B` / `0x0C` Event Setpoints
 
-The WD byte (0x00-0x06 = Monday-Sunday) selects the weekday within the addressed channel.
+**Hypothesis — experimental schema:** The layouts below define the explicit
+Event/EventSetPoint command schema. Native wire qualification remains Unknown
+for a model/version until a sanitized, correlated request/reply observation
+qualifies the selectors, response length, and byte interpretation. An
+implementation or a deterministic fixture does not establish that qualification.
+Retain the complete request context and raw reply when contributing an
+observation; a successful value decode alone is insufficient.
 
-**Response format:** ebusd reports `slotCountWeek` / `slotCountDay` time-pair sequences. Full per-opcode wire layout is pending complete documentation from community sources.
+These operations are separate from OP02/OP06 scalar register discovery.
+`ADDRESS` is an event selector, not an RR16 scalar address.
 
-**Channel mapping correspondence:** The SEL-addressed channels correspond to the B555 HC-addressed channels on VRC720-family devices. For example, B524 SEL1=`0x01`/SEL2=`0x00`/SEL3=`0x01` (DHW timer) on VRC700 is functionally equivalent to B555 HC=`0x02` (HWC) on BASV2.
+```text
+GetEvent:         09 GG II ADDRESS WEEKDAY_CODE
+SetEvent:         0A GG II ADDRESS WEEKDAY_CODE VALUE1..VALUE7
+GetEventSetPoint: 0B GG II ADDRESS WEEKDAY_CODE
+SetEventSetPoint: 0C GG II ADDRESS WEEKDAY_CODE VALUE1..VALUE7
+Read replies:    PARAM_CONFIG VALUE1..VALUE7
+```
 
-(Source: FINAL-B524-B555-B507-B508.md A2; confidence HIGH.)
+Each read request is five bytes, each setter request twelve bytes, and each
+read reply eight bytes after transport normalization. Retain the weekday-code
+byte exactly as requested; the Event profile does not assign it the ReadTimer
+weekday interpretation. Neither `II` nor the request selector is echoed in
+these replies, so correlation depends on the outstanding request context.
 
-### 4.5 `0x0B` GetEventSetPoint
+| Selected profile | GG | Candidate ADDRESS catalog | Candidate setpoint codec |
+| --- | --- | --- | --- |
+| `system` | 00 | 01, 02, 03 | Numeric code divided by two, degrees Celsius |
+| `dhw` | 01 | 01, 02 | FD=enable, FE=disable, FF=replacement; other codes unknown |
+| `zone` | 03 | 01, 02 | Numeric code divided by two, degrees Celsius |
 
-The public operation name is `GetEventSetPoint`, paired with mutative
-`SetEventSetPoint` (OP=0Ch). The previous generic Array/Table Read label and the
-claim that GG=06h/07h prove timetable domains are withdrawn. Preserve event
-selectors and setpoint data independently from scalar register I/O. A correlated
-request/reply and product-specific codec are required before promoting an event
-setpoint to a decoded schedule. OP=09h/0Ah similarly form the separate GetEvent /
-SetEvent pair. These families are not included in scalar discovery.
+For `GetEvent`, VALUE1 remains raw. VALUE2..VALUE7 codes `00..90` may be
+interpreted as ten-minute units; larger codes remain raw and unqualified.
+For `GetEventSetPoint`, decoding requires the explicitly selected profile above.
+Always retain all seven original codes and the raw `PARAM_CONFIG` byte.
+A successful decode does not establish installed equipment or authorize a write.
+
+The Event families do not inherit the VRC700-only timer gate. Support is
+qualified by each target's actual response; this specification does not claim
+that every BASV2 or VRC700 implements them. Undocumented profile/address
+combinations remain rejected rather than receiving an invented codec.
+
+Event-code semantics and supported selector ranges remain profile-qualified.
+A response of the expected length does not establish those semantics, physical
+presence, writable behavior or support outside the observed selector. A read
+retry must preserve the exact selector; write repetition has distinct effects
+and cannot be inferred from read behavior.
+
+### 4.6 `0x08` ReadVR91
+
+The VRC700 profile (`70000` or `B7S00`) uses a one-byte request `08` and an
+eight-byte response. The [VRC700 crosswalk](ebus-vaillant-regulators.md#vrc700-operation-profile)
+adds model-row context without changing that command guard:
+
+```text
+BINDING_ZONE SPECIAL_FUNCTION_STATUS HEATING_MODE COOLING_MODE
+STATUS_INFO FROST_PROTECTION HEATING_TEMPERATURE_RAW COOLING_TEMPERATURE_RAW
+```
+
+These field names describe the response structure. Bit meanings, temperature
+scaling and special-value semantics remain unqualified. Raw bytes alone do not
+establish a physical measurement or support on another controller profile.
 
 ## 5. Topology-Significant Registers
 
@@ -508,113 +643,7 @@ their numerical values must not be joined to same-numbered groups. Keep an expli
 profile mapping for count-guided discovery, initially ID0→OP02/GG02 and
 ID1→OP02/GG03. Other mappings require their own evidence.
 
-## 7. Discovery and Scan Strategy
+## 7. Open Items
 
-The four scan presets and JSON planning interface below are VRC Explorer
-scanner-policy contracts. They constrain the planned implementation; they are
-not universal B524 wire proof, a product support matrix, or authorization to
-write a device.
-
-1. Read bounded, known OP00 information identifiers and retain each raw result.
-2. Select groups from operation-scoped profiles, not from successful OP00 IDs.
-3. In `recommended`, use a valid mapped count to guide bounded presence probes.
-   Keep sparse slots, zero/conflicting observations and mismatches visible.
-   `full` audits every declared II slot regardless of OP00 counts; `research`
-   is expanded but bounded rather than exhaustive; `custom` selections take
-   precedence.
-4. Read selected registers and acquire descriptions only for observed parameters
-   that are eligible under the profile. Full/research plan all eligible descriptions
-   within finite logical and actual-send budgets.
-5. Persist complete operation-aware identities, profile/provenance, raw replies,
-   expected/observed counts and description qualification.
-
-Timeout, NACK, CRC/transport failure, empty response, malformed description and
-unsupported operation are distinct evidence states. None alone proves that a
-register is absent from every product. A failed description keeps the successful
-value observation and any independently qualified earlier description.
-
-### 7.1 Deterministic plans, budgets, and description scheduling
-
-The same pure candidate-policy/planner serves the UI and CLI. The planned CLI
-form is `--scan-plan <path.json>`. Its version-1 document has this shape:
-
-```json
-{
-  "schema_version": 1,
-  "groups": [
-    {"opcode": "0x02", "group": "0x00", "instances": [0], "registers": [0, 1]}
-  ]
-}
-```
-
-`groups` is a list; selectors are explicit, with the mandatory OP02/GG02/II0A
-addition described below. `instances` and `registers`
-contain explicit values or bounded ranges expanded by the planner. The parser
-accepts only OP=02h and OP=06h read selectors and enforces the applicable wire
-bounds. It rejects a plan above 100000 planned scalar requests before a queue is
-created. A UI and CLI custom scan pass the same normalized plan to the same pure
-planner, so neither surface presence-prunes explicitly selected selectors.
-
-#### Version-1 JSON grammar and normalization
-
-- The root contains exactly `schema_version` and `groups`. The version is the
-  integer `1` or string `"1"`; `groups` is a non-empty array of objects.
-- Every group row contains exactly `opcode`, `group`, `instances`, and
-  `registers`. Unknown or missing fields are rejected. `opcode` is only 2 or 6;
-  `group` is an unsigned 8-bit value.
-- Scalar values are JSON integers, decimal strings, `0x`-prefixed hexadecimal
-  strings, or bare hexadecimal strings containing A-F. Digit-only strings are
-  decimal: `"10"` is ten and `"0x10"` is sixteen. Booleans and floating-point
-  numbers are rejected, even if numerically integral.
-- `instances` and `registers` are non-empty arrays. Each element is one scalar
-  or one string range `start..end` or `start-end`, using the scalar token syntax.
-  Both endpoints are included. Reversed endpoints are reordered. For example,
-  `"0x0004..0x0002"` expands to 2, 3, 4. Commas inside one element are rejected;
-  use separate array elements.
-- Every expanded instance is in `0..255`; every expanded register is in
-  `0..65535`. Negative or out-of-bound values are rejected. Each list is
-  deduplicated and sorted ascending before planning.
-- Rows are keyed by `(opcode, group)`. Identical normalized duplicate rows
-  collapse into one row; differing selectors for a duplicate key are rejected.
-- The scalar request count is the sum of
-  `len(unique_instances) * len(unique_registers)` over unique rows. Exactly
-  100000 is accepted; 100001 or more is rejected before queuing. Discovery,
-  descriptions and retries are additional sends governed by the send budget.
-
-[Synthetic accepted/rejected contract vectors](../../tests/fixtures/b524_scan_plan_v1_cases.json)
-include equivalent selector representations and the 100000/100002 boundary.
-They are parser fixtures, not device or wire qualification evidence.
-
-Description acquisition is a second phase. `--description-budget` is finite and
-defaults to 256 for recommended/custom and 100000 for full/research. Extended
-profiles therefore plan every eligible description within the actual-send cap.
-Half of its slots are initially reserved for each family
-(OP01h/OP02h and OP07h/OP06h); unused slots may be borrowed by the other family.
-Within a family it schedules eligible `(GG,II)` candidates round-robin. The
-artifact retains the six counters listed in section 4.2.2, including candidates
-skipped by budget.
-
-`--request-budget` is an optional finite cap on actual B524 sends, including
-retries. Full and research default to 10000 sends. Budget exhaustion emits a partial
-artifact marked `incomplete`; it is not converted into an absence claim.
-
-### 7.2 Profile-qualified release contract
-
-[Device discovery and bundled descriptions](b524-profile-discovery-and-descriptions.md)
-defines mandatory OP02/GG02/II0A coverage, OP06 first-instance and connection
-predicates, calendar/time STEP unknowns, extended description acquisition, and
-profile-scoped offline baselines. The scalar request limit applies **after** the
-mandatory II0A addition and deduplication, including custom plans.
-
-## 8. ebusd TCP Interop Notes
-
-For `hex` command integration (`protocols/ebusd-tcp.md`):
-- send `DST PB SB LEN DATA...`
-- parse first valid hex response line
-- strip leading ebusd length prefix when present
-- accept short status-only payloads
-- ignore trailing noisy lines after a valid parsed payload
-
-## 9. Open Items
-
-Open protocol questions and validation items are tracked in archived observations.
+Open protocol questions remain marked inline as **Hypothesis** or **Unknown**
+until publishable correlated evidence qualifies them.

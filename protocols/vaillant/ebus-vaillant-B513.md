@@ -5,13 +5,10 @@
 ## Status
 
 `B513` appears in the john30 TypeSpec `General` namespace as a read-only
-value-range query. It is not yet proven by current Helianthus MCP captures.
+value-range query. It is not yet proven by a publishable capture.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
-- `LOCAL_MCP`: current Helianthus MCP runtime observations.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `INFERENCE`: falsifiable interpretation from the evidence above.
 
@@ -39,7 +36,7 @@ encoding as unconfirmed until captured against real hardware.
 
 | Request selector | TypeSpec name | Direction | Shape | Evidence | Falsification test |
 |---|---|---|---|---|---|
-| `04` | `Valuerange` | read | register id plus current/min/max/default unsigned 16-bit values | `LOCAL_TYPESPEC` | Query `B513 04` for a known configurable value and show the response cannot decode as id/current/min/max/default. |
+| `04` | `Valuerange` | read | register id plus current/min/max/default unsigned 16-bit values | | Query `B513 04` for a known configurable value and show the response cannot decode as id/current/min/max/default. |
 
 ## Unknowns
 

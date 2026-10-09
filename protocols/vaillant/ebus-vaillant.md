@@ -1,6 +1,6 @@
 # Vaillant Message Identifiers (Observed)
 
-This document is the top-level reference for Vaillant message identifiers (`PB/SB`) observed by Helianthus tooling.
+This document is the top-level reference for observed Vaillant message identifiers (`PB/SB`).
 
 For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x03` (B503, diagnostic / service / HMU live-monitor — **normative L7 spec**): [`ebus-vaillant-B503.md`](ebus-vaillant-B503.md)
@@ -23,7 +23,7 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x23` (B523, functional-module actor/sensor data): [`ebus-vaillant-B523.md`](ebus-vaillant-B523.md)
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
-- VR90 room controller emulation: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
+- VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
 
 ## Scope
 
@@ -51,8 +51,8 @@ results and mapping a physical target to its product family:
 
 Notes:
 - These are identity hints from scan payloads, not semantic proof by
-  themselves. Runtime code still needs device-specific register evidence before
-  publishing protocol semantics.
+  themselves. Device-specific register evidence remains necessary before
+  assigning protocol semantics.
 - `VWL`, `VWS`, and `VWZ` are German product-family abbreviations. The ASCII
   spellings above normalize `Waermepumpe` for repository-wide portability.
 
@@ -67,7 +67,7 @@ Notes:
 0xB5 0x08  NoiseReduction broadcast (B508; ZZ=FE broadcast — enrichment research, not live-validated)
 0xB5 0x09  Register access / scan-id chunk discovery (selector-dependent payload forms)
 0xB5 0x10  SetMode (B510; regulator->boiler mode and setpoint commands)
-0xB5 0x11  Remote Control (B511; triangular control loop between regulator, boiler, and gateway)
+0xB5 0x11  Remote Control (B511; triangular control loop between regulator, boiler, and NETX3)
 0xB5 0x12  Circulation Pump / VR65-Style State (B512; pump state and VR65 control data)
 0xB5 0x13  Value-range query
 0xB5 0x14  Service test-menu values
@@ -195,7 +195,6 @@ Assembly rule:
 
 The resulting string is often parsed into model/product and serial-like fields; exact formatting varies by Vaillant generation.
 
-See `development/target-emulation.md` for Helianthus implementation details.
 
 ## GetExtendedRegisters (0xB5 0x24, B524)
 
@@ -280,7 +279,7 @@ Encoding of `W/V/QQ` is regulator-dependent; observations indicate:
 
 ## Device-Type Reference
 
-> Source: `GATES-protocol-level.md` Section 1, `FINAL-corrections-and-devices.md` Part B.
+> **Hypothesis:** Family/model associations below require model-qualified native observations. The [regulator crosswalk](ebus-vaillant-regulators.md) records exact observed identifier pairs separately.
 
 ### VRC720 Family (720-Series Controllers)
 
@@ -302,6 +301,10 @@ Separate older family. eBUS address `0x15`. B524 (OP=0x02 shared, OP=0x03/0x04 V
 | 70000 | Vaillant multiMATIC VRC700 |
 | B7S00 | Saunier Duval alias of VRC700 |
 
+The [Vaillant regulator identity crosswalk](ebus-vaillant-regulators.md)
+provides bounded model-row context. It does not change this operation family's
+existing identity guard.
+
 ### Device-Type Protocol Support Matrix
 
 | Device Type | eBUS Addr | Key Protocols | Timer Transport |
@@ -313,7 +316,7 @@ Separate older family. eBUS address `0x15`. B524 (OP=0x02 shared, OP=0x03/0x04 V
 | VRC700 | 0x15 | B524 (OP=0x02/0x03/0x04) | B524 0x03/0x04 |
 | VRC Legacy (VRT 350/370/430/470) | 0x15 | B509 only (7 regs) | None |
 | VR_71 (functional module) | 0x26 | B504, B505, B509, B523, B524 (stub) | N/A |
-| NETX3 / VR921 (gateway) | 0xF6 | B504, B505, B509, B511, B524 initiator, B555 initiator | N/A |
+| NETX3 / VR921 | 0xF6 | B504, B505, B509, B511, B524 initiator, B555 initiator | N/A |
 | SOL00 (solar/FM5 module) | 0xEC | Same MCU as BASV2 (secondary target). Protocol support on 0xEC is uncharacterized beyond memory server (0x0900/0x0902). | N/A |
 | VWZIO (indoor hydraulic station) | 0x76 | B511, B512, B514 (T.1), B516, B51A | N/A |
 
@@ -338,7 +341,7 @@ B524 f32 registers have device-dependent byte order:
 
 ## Protocol Support Matrix (Observed per Device)
 
-> **Added 2026-04-06** — observed via gateway 0x71 active probing + passive bus capture. Counts from current gateway session bus summary.
+> **Observation status:** address and role claims require a publishable capture.
 
 ### Devices Tested
 
@@ -381,11 +384,10 @@ B524 f32 registers have device-dependent byte order:
 
 ### Legend
 
-- **target** — device responds to queries on its target address (tested actively by gateway 0x71)
+- **target** — device responds to queries on its target address
 - **initiator** — device initiates communication from its initiator address (observed passively on bus)
 - **stub** — transport-level ACK, response `0x00`, no real data
 - **—** — not observed on this device
-- **tx/rx counts** — from gateway bus summary (current session)
 
 ---
 
@@ -400,11 +402,11 @@ B524 f32 registers have device-dependent byte order:
 
 B511 implements a triangular multi-role communication pattern:
 
-1. **BAI00 -> NETX3**: The boiler initiator (0x03) sends remote control data to the internet gateway target (0xF6). This is how the boiler reports state to the cloud.
+1. **BAI00 -> NETX3**: The boiler initiator (0x03) sends remote control data to the NETX3 target (0xF6).
 2. **BASV2 -> BAI00**: The regulator initiator (0x10) sends control commands to the boiler target (0x08). This is how heating demand and setpoints are communicated.
 3. **BAI00 receives from BASV2**: The boiler also acts as target, receiving commands from the regulator.
 
-Together with B510, these two protocols form the primary control loop between regulator, boiler, and internet gateway.
+Together with B510, these protocols form a control loop between regulator, boiler, and NETX3.
 
 On heat pump systems with VWZIO (0x76), B511 traffic involving that device has also been observed.
 

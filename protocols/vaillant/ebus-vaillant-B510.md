@@ -13,9 +13,6 @@ This document supersedes the weaker older label "Status/Diagnostic" for
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
-- `LOCAL_MCP`: current Helianthus MCP runtime observations.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `PUBLIC_CAPTURE`: public Pittnerovi eBUS trace examples.
 
@@ -40,25 +37,9 @@ The exact byte widths and scaling come from ebusd data types (`hcmode`,
 `temp1`, `temp0`, `IGN`, and bit fields). Do not decode bytes without the
 request context and target profile.
 
-## Local and Public Captures
+## Public evidence
 
-Operator-provided traffic included:
-
-```text
-REQ:  10 08 b5 10 09 00 00 00 ff ff ff 01 00 00
-RESP: 01 01
-
-REQ:  10 08 b5 10 09 00 03 ff ff a0 ff 01 c8 00
-RESP: 01 01
-```
-
-Current Helianthus MCP passive specimens also showed `B510` from source `0x10`
-to target `0x08` with request payload `0003ffffa0ff01c800`, and broadcast
-`B510` from `0x10` to `0xfe` with payload `0600`.
-
-The Pittnerovi public page includes periodic `B5 10` frames between controller
-and boiler. Treat that page as public capture corroboration, not as a complete
-modern schema.
+The public references below provide corroborating capture examples; they do not establish a complete schema.
 
 ## Falsification Tests
 

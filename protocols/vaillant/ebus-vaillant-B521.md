@@ -10,9 +10,6 @@ offsets, deicing parameters, fan/speed parameters, and related OMU values.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
-- `LOCAL_MCP`: current Helianthus MCP runtime observations.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `INFERENCE`: falsifiable interpretation from the evidence above.
 
@@ -31,18 +28,18 @@ Request payload:
 ```
 
 The exact read/write byte order is inherited from shared register templates and
-must be verified with captures before implementing a Helianthus writer.
+must be verified with captures before implementing a a writer.
 
 ## Known Selector Examples
 
 | Selector | TypeSpec name | Shape | Evidence | Falsification test |
 |---|---|---|---|---|
-| `4a 00` | `SourceInputSensorOffset` | install register, temperature | `LOCAL_TYPESPEC` | Change the offset on isolated hardware and show no `B521 00 4a 00` correlation. |
-| `4b 00` | `SourceInputSensorOffsetBrine` | install register, temperature | `LOCAL_TYPESPEC` | Same test for brine sensor offset. |
-| `45 00` | `DeiceTimeMax` | install register, minutes | `LOCAL_TYPESPEC` | Change max deicing time and show no matching B521 selector. |
-| `46 00` | `DeicePeriodMin` | install register, minutes | `LOCAL_TYPESPEC` | Change minimum deicing period and show no matching B521 selector. |
-| `29 00` | `DeicefinishTemp` | install register, temperature | `LOCAL_TYPESPEC` | Change finish temperature and show no matching B521 selector. |
-| `3f 00` | `FanSpeedMax` | install register, percent | `LOCAL_TYPESPEC` | Change max fan speed and show no matching B521 selector. |
+| `4a 00` | `SourceInputSensorOffset` | install register, temperature | | Change the offset on isolated hardware and show no `B521 00 4a 00` correlation. |
+| `4b 00` | `SourceInputSensorOffsetBrine` | install register, temperature | | Same test for brine sensor offset. |
+| `45 00` | `DeiceTimeMax` | install register, minutes | | Change max deicing time and show no matching B521 selector. |
+| `46 00` | `DeicePeriodMin` | install register, minutes | | Change minimum deicing period and show no matching B521 selector. |
+| `29 00` | `DeicefinishTemp` | install register, temperature | | Change finish temperature and show no matching B521 selector. |
+| `3f 00` | `FanSpeedMax` | install register, percent | | Change max fan speed and show no matching B521 selector. |
 
 ## Safety
 

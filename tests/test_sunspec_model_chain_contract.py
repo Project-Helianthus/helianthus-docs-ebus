@@ -6,9 +6,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SUNSPEC_README = ROOT / "protocols/sunspec/README.md"
-CHAIN_CONTRACT = ROOT / "protocols/sunspec/sunspec-model-chain-v1.md"
-MODBUS_README = ROOT / "protocols/modbus/README.md"
+SUNSPEC_README = ROOT / "architecture/protocol-routing-vendor-sunspec-overview.md"
+CHAIN_CONTRACT = ROOT / "architecture/protocol-routing-vendor-sunspec-model-chain-v1.md"
+MODBUS_README = ROOT / "architecture/protocol-routing-vendor-modbus-overview.md"
 EVIDENCE = ROOT / "docs/platform/fronius-sunspec-evidence-v1.md"
 MANIFEST = ROOT / "docs/platform/manifests/fronius-sunspec-phase1-v1.json"
 BOUNDARIES = ROOT / "docs/platform/modbus-multivendor-boundaries.md"
@@ -24,12 +24,13 @@ def text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def test_sunspec_protocol_pages_define_the_model_chain_contract() -> None:
+def test_application_contract_keeps_neutral_protocol_sources_separate() -> None:
     readme = text(SUNSPEC_README)
     contract = text(CHAIN_CONTRACT)
 
-    assert "CC0-1.0" in readme
-    assert "implementation-neutral" in readme
+    assert "AGPL-3.0" in readme
+    assert "CC0" in (ROOT / "protocols/sunspec/README.md").read_text()
+    assert "implementation-neutral" in (ROOT / "protocols/sunspec/README.md").read_text()
     assert "independent summary" in contract.lower()
     assert "must not copy" in contract.lower()
     assert MODELS_PIN in contract

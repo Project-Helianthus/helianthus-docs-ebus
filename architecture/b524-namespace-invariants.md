@@ -32,9 +32,12 @@ The word "namespace" may still appear in protocol-level documentation (where it 
 
 2. **System information guides qualified instance discovery.**
    - OP=00h uses an information identifier, independent of register GG.
-   - Explicit profile mappings may supply expected instance counts for bounded
-     presence probing in non-exhaustive presets; they never invent II identities.
-   - Preserve expected/observed counts, raw float, source and mismatch.
+   - Explicit profile mappings may supply bounded candidate guidance for
+     non-exhaustive presets; they never invent II identities.
+   - OP00/ID00 `circuit_count` and ID01 `zone_count` retain their legacy public
+     names but are supported capacities, not configured or present-instance
+     counts. Preserve raw float, capacity interpretation, presence results, and
+     any unmet planning guidance separately.
 
 3. **Descriptions are operation- and instance-scoped.**
    - OP=01h DescribeParameter describes the OP=02h system family.
@@ -90,7 +93,7 @@ Key structural properties:
 ## FLAGS Reply Attribute
 
 The leading byte in an OP=02h/06h read response is retained as raw `FLAGS`.
-Private static analysis suggests bit 0 is a visibility/category discriminator and
+The profile-scoped attribute interpretation uses bit 0 as a visibility/category discriminator and
 bit 1 marks writable capability. This is profile-scoped inference, not a
 universal wire meaning, live writability proof, or volatile/stable classification.
 Scanner artifacts may expose a numeric `reply_kind` for compatibility, but they
@@ -113,7 +116,7 @@ Register responses are classified into four wire-level states:
 
 These notes are scanner/register-map behaviors implemented in the VRC Explorer repository only. They are observational and do not replace the operation-first identity contract above.
 
-**Hypothesis:** independent protocol evidence is required for this interpretation.
+1. **OP `0x06` generic device-header registers** (`RR=0x0001..0x0004`) are mapped experimentally. Group-specific rows (e.g., GG `0x09`/`0x0A` radio fields) remain authoritative when present; wildcard header rows are fallback only. The available public evidence does not qualify `GG=0x00` as a heat-generator route or establish its absence. Treat that namespace as uncharacterized when deciding a device-specific scan profile.
 
 2. **GG=0x09 is dual-use by operation.** OP `0x02`: local control/write-path registers (e.g., quick-mode write target). OP `0x06`: remote radio-device inventory/status registers. GG identity must never be merged across operations.
 
@@ -136,62 +139,86 @@ These notes are scanner/register-map behaviors implemented in the VRC Explorer r
 ## Scan Presets (v0.2.1)
 
 The scanner supports 4 presets. The previous 6-preset model (which included `conservative` and `exhaustive`) is retired.
-They use one deterministic candidate policy and pure planner for UI and CLI.
+They use one deterministic candidate policy and pure planner for interactive
+and noninteractive surfaces.
 This is an implementation-facing scanner contract, not universal B524 wire proof
 or a claim that an unprobed selector is absent.
+
+The Browser tree is a present-instance projection, not the candidate scan plan.
+For the exact `BASV2/rawSW0507/HW1704/API1` profile, OP06 candidates use II01..II08; OP02/GG02 uses
+II00..II08 for heating candidates plus II09 as independent virtual native water. A nonmatching or unknown
+profile requires separate qualification. Do not render an absent, unknown, or unprobed selector as a tree
+node. Preserve those outcomes in the artifact so that the UI does not convert lack of a node into a claim
+of physical absence.
 
 ### `recommended` (default)
 
 This preset scans characterized OP=02/GG `00..05,08,09` and OP=06/GG
-`01,02,08,09,0A,0C,0E,0F` consistently. Connected-device enumeration follows the
-[profile-qualified II01 policy](../protocols/vaillant/b524-profile-discovery-and-descriptions.md#op06-connected-device-discovery).
-A valid explicit profile mapping lets OP00
-counts guide only qualified circuit/zone discovery. It probes sparse II indices
-until the mapped number of present instances is observed. A zero, missing,
-invalid, conflicting, or otherwise unmet count falls back to the configured
-bounded presence range and remains artifact evidence. It does not infer a
-solar, tank, or recoVair route from same-numbered OP00 identifiers. Other
-families remain `research` or `custom` until independently characterized.
+`01,02,03,05,06,07,08,09,0A,0B,0C,0E,0F` consistently. Connected-device enumeration follows the
+[profile-qualified II01 policy](../development/ebus-vaillant-b524-explorer-discovery.md#op06-connected-device-discovery).
+`recommended` also performs the dedicated OP06/GG0D II01..II08/RR0001
+availability-only probe using `device_connected`. This does not admit an automatic
+GG0D scalar range: other relay-module registers require an explicit manual RR scope,
+and empty, malformed, or failed RR0001 replies remain unknown.
+OP02/GG00 System is mandatory at II00, RR0000..00FF. Native DHW (OP02/GG01)
+is admitted at II00 after its RR0001 gate succeeds with a nonzero UIN value.
+The virtual native-water II09 remains a separate circuit candidate.
+OP00 mappings guide candidates only when the profile declares one; every
+resulting slot still needs its own presence predicate. ID00 `circuit_count` and
+ID01 `zone_count` are supported capacities, never configured-instance counts or
+II allocation. They do not make slots contiguous, and II09 remains independent.
+Missing, invalid, conflicting, or unmet capacity uses that predicate without
+itself making concrete presence qualification incomplete. Other OP00 count
+mappings retain count-guided cardinality semantics: a valid zero suppresses
+only derived defaults and never erases a positive observation; invalid counts
+fall back to their group predicate. ID04 `device_count` compares all confirmed
+OP06 slots and is never GG06, group membership, or a cutoff. GG03,
+GG05, GG08, GG0A, GG0D, GG0E, and GG0F have no count mapping; neither do ID05
+for a generator nor ID17 for a cooling group. Local ventilation uses ID16 only
+for OP02/GG09 II00 in `recommended`.
 
 ### `full`
 
-Audit every declared II slot in all characterized profile OP02/OP06 groups using the normal
-profile `rr_max` bounds, regardless of OP00 counts. Counts are comparison
-evidence only in this preset; they neither suppress selector generation nor
-provide topology identity.
+Audit every declared II slot in the characterized OP02 groups and OP06/GG
+`01,02,03,05,06,07,08,09,0A,0B,0C,0E,0F` using normal profile `rr_max` bounds,
+regardless of OP00 counts. OP02/GG00 is mandatory in this preset for II00 and
+RR0000..00FF. OP06/GG04 and OP06/GG0D have Unknown RR maxima and receive no automatic
+scalar scope. GG0D still receives its dedicated RR0001 presence probe; scanning
+other registers requires a manual RR scope. GG04 has no qualified presence predicate. Counts are comparison evidence only; they neither suppress
+selector generation nor provide topology identity.
 
 ### `research`
 
 Use configured expanded but finite coverage for research; record configured,
 skipped, and unknown coverage in the manifest. It uses multiple anchor probes
 per family and does not let a failed first II=00/RR=0000 probe veto the rest of that group.
-Research retains known higher RR ceilings: default `0xFF`, and OP02/GG00 at
-least `0x1FF`. It is intended for register discovery and protocol analysis, not
+Research uses an explicit finite RR ceiling, default `0xFF`. OP02/GG00 also
+uses `0xFF`; no default scan above it is justified by current observations. It
+is intended for register discovery and protocol analysis, not
 routine scanning.
 
 ### `custom`
 
 An exact normalized plan of OP02/OP06 `(GG,II,RR16)` lists or bounded ranges.
-The UI and CLI send the same plan to the planner; explicit selectors are never
-presence-pruned. The CLI accepts a `--scan-plan` JSON file with
-`schema_version: 1` and `groups: [{opcode, group, instances, registers}]`.
-Only read selectors and wire-bounded values are accepted. Plans exceeding
-100000 scalar requests fail before queuing.
+The Browser and noninteractive surfaces submit that selection to the planner.
+Explicit selectors are never presence-pruned and do not widen the profile
+intervals. Planner configuration owns finite selected scope, request accounting,
+transport retry limits, and how an interrupted scan is represented. There is no
+public command-line scan-plan, request-budget, description-budget, or probe
+constraint policy. A partial result remains `incomplete`, never an absence
+verdict.
 
-## Description Scheduler and Send Budget
+## Description scheduling
 
-Descriptions are a second phase after value reads. `--description-budget` is a
-finite, configurable value with default 256. Half is initially reserved for
-each description/read family (OP01/OP02 and OP07/OP06), borrowing unused share;
-each family schedules eligible `(GG,II)` candidates round-robin. Eligibility
-comes from profile-scoped writable-format inference and includes unknown codecs,
-which are retained raw and reported unqualified. It does not prove a live write
-or authorize one. Artifacts count `eligible`, `attempted`, `matched`,
-`unavailable`, `unqualified`, and `budget_skipped`.
-
-`--request-budget` optionally caps actual B524 sends, including retries;
-research defaults to 10000. Exhaustion returns a partial artifact marked
-`incomplete`, never an absence verdict.
+Descriptions are a second phase after value reads. Acquisition policy is chosen
+by the selected profile and planner: recommended known BASV2/SW0507 local scope
+performs no implicit descriptions; `full` and `research` acquire eligible
+writable descriptions; an unknown profile/type or explicit per-class override
+also acquires them. Read-only rows never request descriptions. A generic IIFF
+description is class metadata only and never validates a concrete writable row.
+Missing known descriptions remain missing. Eligibility can include an unknown
+codec, which remains raw and unqualified. Description scheduling does not prove
+live writability or authorize a write.
 
 ## Historical Context
 

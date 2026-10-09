@@ -16,7 +16,7 @@ SPEC.loader.exec_module(CHECKER)
 
 
 def contract() -> str:
-    return (ROOT / "protocols/vaillant/ebus-vaillant-B503.md").read_text(encoding="utf-8")
+    return (ROOT / "architecture/protocol-routing-vaillant-b503.md").read_text(encoding="utf-8")
 
 
 def table_row(cells: tuple[str, ...]) -> str:

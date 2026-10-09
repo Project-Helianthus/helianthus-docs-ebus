@@ -10,15 +10,12 @@ fixture proves otherwise.
 
 Evidence labels:
 
-- `LOCAL_CODE`: Helianthus registry/gateway code.
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `INFERENCE`: falsifiable interpretation from the evidence above.
 
 ## Wire Shape
 
-The Helianthus generic method builds:
+The The request shape builds:
 
 ```text
 Request payload:
@@ -34,14 +31,14 @@ or persisted the requested state.
 
 | Selector bytes | Name/context | Request data | Evidence | Falsification test |
 |---|---|---|---|---|
-| `09 01..09 07` | Timer periods Monday..Sunday | `timer` composite | `LOCAL_TYPESPEC` | Write on isolated hardware, then read back with the matching `B504 02..08` selector and show no matching change. |
-| `2E 01..2E 07` | Daily temperature setpoints | three `temp1` values | `LOCAL_TYPESPEC` | Write setpoints, read back with matching `B504 19 <day>` selector, and show no match. |
-| `2D` | Room temperature offset | `temp` | `LOCAL_TYPESPEC` | Write a harmless test offset on non-production hardware and show no matching room-offset change. |
+| `09 01..09 07` | Timer periods Monday..Sunday | `timer` composite | | Write on isolated hardware, then read back with the matching `B504 02..08` selector and show no matching change. |
+| `2E 01..2E 07` | Daily temperature setpoints | three `temp1` values | | Write setpoints, read back with matching `B504 19 <day>` selector, and show no match. |
+| `2D` | Room temperature offset | `temp` | | Write a harmless test offset on non-production hardware and show no matching room-offset change. |
 | `05`, `06`, `07` | archived quick commands | command-specific | archived john30 config | Prove that the selector is read-only or that the target never ACKs it on devices that claim support. |
 
 ## Local Validation Rule
 
-For Helianthus writes, protocol-level ACK is not sufficient. A safe write must
+For writes, protocol-level ACK is not sufficient. A safe write must
 be followed by a read-back through the authoritative read path for that field.
 This is the same rule used by the existing B509 boiler config write path.
 

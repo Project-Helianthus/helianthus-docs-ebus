@@ -9,7 +9,7 @@ Service `0x03` provides diagnostic and service data collection from burner contr
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
 <!-- legacy-role-mapping:end -->
 
 Secondary commands `0x00`–`0x03` are barred for historical reasons.
@@ -149,4 +149,4 @@ sequenceDiagram
 
 - [`ebus-application-layer.md`](./ebus-application-layer.md) — service index
 - [`ebus-overview.md`](./ebus-overview.md) — wire-level framing and transaction flow
-- [`ebus-service-05h.md`](./ebus-service-05h.md) — burner control (runtime operational data, complements service data)
+- [`ebus-service-05h.md`](./ebus-service-05h.md) — burner control (operational data, complements service data)

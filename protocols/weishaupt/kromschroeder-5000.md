@@ -1,10 +1,10 @@
 # Kromschroeder/Weishaupt eBUS Protocols (MF=0x50/0xC5)
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This document uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
-> **Confidence:** LOW -- TypeSpec-only source (`aghulas/ebusd-configuration`), no eBUS wire data, no live validation. Archive-quality research document; no Helianthus action items arise from this protocol family.
+> **Confidence:** LOW -- TypeSpec-only source (`aghulas/ebusd-configuration`), no eBUS wire data, no live validation. Archive-quality research document; no no action items arise from this protocol family.
 >
 > **Source fork:** `aghulas/ebusd-configuration` (commit `90c509d`, last push 2026-03-13)
 > **Source files:** `src/kromschroeder/*.tsp` (TypeSpec source), `tsp-output/@ebusd/ebus-typespec/` (compiled CSV)
@@ -24,7 +24,7 @@
 - [4. Secondary Channel (0902/0903)](#4-secondary-channel-09020903)
 - [5. PBSB 500A (Unknown Role)](#5-pbsb-500a-unknown-role)
 - [6. PB=0x50 Disambiguation](#6-pb0x50-disambiguation)
-- [7. Helianthus Relevance](#7-helianthus-relevance)
+- [7. Protocol relevance](#7-protocol-relevance)
 
 ---
 
@@ -238,21 +238,18 @@ PB=0x50 is shared between Wolf (MF=0x19) and Kromschroeder (MF=0x50). The opcode
 
 1. **No physical overlap in practice.** Wolf's solar MC at 0x50 and Kromschroeder's em1 at 0x50 cannot co-exist on the same eBUS ring. ebusd disambiguates by ident (PBSB 0704) manufacturer byte.
 2. **Opcode space is non-overlapping.** Wolf uses SB=0x14/0x17/0x18/0x22/0x23; Kromschroeder uses SB=0x00/0x01/0x0A. No collisions.
-3. **Access model is fundamentally different.** Kromschroeder 5000/5001 = raw memory map (address-based, CRC-obfuscated, 20K+ registers). Wolf 5022/5023 = named parameter table (25 indexed service registers). A gateway parsing one as the other will get garbage.
+3. **Access model is fundamentally different.** Kromschroeder 5000/5001 = raw memory map (address-based, CRC-obfuscated, 20K+ registers). Wolf 5022/5023 = named parameter table (25 indexed service registers). A client parsing one as the other will get garbage.
 
 See also: [`wolf-protocols.md`](../wolf/wolf-protocols.md) for the Wolf side of this disambiguation.
 
 ---
 
-## 7. Helianthus Relevance
+## 7. Protocol relevance
 
-**Architectural feasibility: theoretical. Near-term priority: none.**
-
-- Kromschroeder produces industrial/commercial burner management systems. Weishaupt produces residential and commercial burners. Neither is the residential HVAC gateway target.
+- Kromschroeder produces industrial/commercial burner management systems. Weishaupt produces residential and commercial burners.
 - The 5000/5001 RAM access protocol with 20K+ registers is powerful but device-specific: register semantics differ per firmware version and are obfuscated behind a CRC ID scheme whose algorithm is not publicly documented.
 - Multiple address conflicts with Vaillant devices (0x08, 0x15, 0x50) make physical co-existence impossible on a Vaillant installation.
 - The TypeSpec toolchain used by aghulas is the most technically sophisticated ebusd contribution in the fork survey -- it is the correct model for any future large-scale manufacturer support.
-- **Recommendation:** No action. Note TypeSpec approach as a reference if Helianthus ever contributes back to the ebusd-configuration upstream.
 
 ---
 

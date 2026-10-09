@@ -1,0 +1,97 @@
+{
+  "schema_version": "b524-bounded-survey-profile/v1",
+  "evidence_class": "sanitized_read_only_observation",
+  "tool_identity": {
+    "acquisition": {
+      "name": "replace",
+      "version": "replace",
+      "commit": "0000000000000000000000000000000000000000"
+    },
+    "catalog": {
+      "name": "replace",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  },
+  "model_scope": {
+    "family": "replace_with_family",
+    "model": "replace_with_model",
+    "software_version": "unknown",
+    "hardware_version": "unknown"
+  },
+  "survey_scope": {
+    "read_request_layout": "OP 00 GG II RRlo RRhi",
+    "describe_request_layout": "OP GG FF RRlo RRhi",
+    "read_instance_scope": "replace",
+    "describe_instance_scope": "II=FF generic",
+    "configured_discovery_intervals": "state separately",
+    "exchange_context": "State sanitized native endpoint roles and request/reply direction. Record native addresses, framing, capture provenance and capture conditions only when available and publishable; otherwise mark Unknown. Do not infer full-frame evidence from payload-only correlation."
+  },
+  "group_windows": [
+    {
+      "operation": "OP02",
+      "groups": [
+        "00"
+      ],
+      "rr_window": "0000..0005",
+      "status": "unknown_group_empty_reply_only",
+      "description_coverage": "replace"
+    }
+  ],
+  "execution": {
+    "planned_jobs": 0,
+    "completed_jobs": 0,
+    "final_transport_failures": 0,
+    "response_categories": {
+      "value_reply": 0,
+      "empty_reply": 0,
+      "description_correlated_raw": 0,
+      "high_group_empty_reply": 0
+    },
+    "actual_attempts": 0,
+    "reused_completed_exchanges": 0,
+    "phases": {
+      "discovery": {
+        "planned_jobs": 0,
+        "completed_jobs": 0,
+        "actual_attempts": 0
+      },
+      "extension": {
+        "planned_jobs": 0,
+        "completed_jobs": 0,
+        "actual_attempts": 0
+      }
+    }
+  },
+  "catalog_reference": {
+    "path": "replace",
+    "scope": "replace",
+    "qualified_description_limits": []
+  },
+  "nonclaims": [
+    "Replace this template with profile-specific observations; no data is implied."
+  ],
+  "samples": [
+    {
+      "kind": "replace_with_sanitized_sample",
+      "selector": {
+        "op": "00",
+        "gg": "00",
+        "ii": "00",
+        "rr": "0000"
+      },
+      "request_payload_hex": "",
+      "reply_payload_hex": "",
+      "outcome": "unknown"
+    }
+  ],
+  "effective_scan_windows": {
+    "OP02": {
+      "00": {
+        "rr_max": null,
+        "terminal_max_established": false
+      }
+    },
+    "OP06": {},
+    "qualification": "replace with model-specific observations; leave unknown windows null"
+  }
+}

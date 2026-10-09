@@ -358,13 +358,13 @@ def test_public_pages_link_packets_and_preserve_safety_boundary():
         (ROOT / "docs/platform/modbus-vendor-evidence-v1.md").read_text().split()
     )
     growatt = " ".join(
-        (ROOT / "protocols/modbus/growatt-candidate-evidence-v1.md").read_text().split()
+        (ROOT / "architecture/protocol-routing-vendor-growatt-candidate-evidence-v1.md").read_text().split()
     )
     huawei = " ".join(
-        (ROOT / "protocols/modbus/huawei-gateway-candidate-evidence-v1.md").read_text().split()
+        (ROOT / "architecture/protocol-routing-vendor-huawei-candidate-evidence-v1.md").read_text().split()
     )
     sunspec = " ".join(
-        (ROOT / "protocols/sunspec/additional-model-evidence-v1.md").read_text().split()
+        (ROOT / "architecture/protocol-routing-vendor-sunspec-additional-model-evidence-v1.md").read_text().split()
     )
     assert "does not publish support" in platform
     assert "must not be labeled or decoded as SunSpec" in growatt

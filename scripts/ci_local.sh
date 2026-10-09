@@ -183,6 +183,10 @@ echo "==> check contribution-driven Portal UX contract"
 python3 scripts/check_portal_ux_contract.py
 python3 -m pytest -q tests/test_portal_ux_contract_checker.py
 
+echo "==> check CC0 and AGPL documentation boundary"
+python3 scripts/check_public_domain_boundary.py
+python3 -m pytest -q tests/test_public_domain_boundary.py
+
 echo "==> check Vaillant B503 milestone contract"
 python3 scripts/check_vaillant_b503_milestones.py
 python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
@@ -190,6 +194,28 @@ python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
+python3 scripts/validate_b524_op06_observed_windows.py \
+  protocols/vaillant/fixtures/b524-op06-observed-windows-v1.json
+python3 -m pytest -q tests/test_b524_bounded_survey_profile.py
+for profile in protocols/vaillant/fixtures/b524-bounded-survey-*-v1.json; do
+  case "$profile" in
+    *-profile-schema-v1.json|*-profile-template-v1.json) continue ;;
+  esac
+  jv protocols/vaillant/fixtures/b524-bounded-survey-profile-schema-v1.json "$profile"
+  python3 scripts/validate_b524_bounded_survey_profile.py "$profile"
+done
+for plan in development/fixtures/b524-operation-read-plan-*-v1.json; do
+  case "$plan" in *-schema-v1.json) continue ;; esac
+  jv development/fixtures/b524-operation-read-plan-schema-v1.json "$plan"
+done
+for artifact in development/fixtures/b524-operation-reads-artifact-*-v1.json; do
+  case "$artifact" in *-schema-v1.json) continue ;; esac
+  jv development/fixtures/b524-operation-reads-artifact-schema-v1.json "$artifact"
+  python3 scripts/validate_b524_operation_reads_artifact.py "$artifact"
+done
+jv development/fixtures/b524-operation-edit-plan-schema-v1.json development/fixtures/b524-operation-edit-plan-synthetic-v1.json
+jv development/fixtures/b524-native-write-qualification-schema-v1.json development/fixtures/b524-native-write-qualification-synthetic-v1.json
+python3 -m pytest -q tests/test_b524_operation_reads.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py

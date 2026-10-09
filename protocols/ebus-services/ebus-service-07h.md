@@ -11,7 +11,7 @@ Several commands in this service are also documented (from the implementation pe
 ## Terminology
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
 <!-- legacy-role-mapping:end -->
 
 ## Command Summary
@@ -207,4 +207,4 @@ sequenceDiagram
 
 - [`ebus-application-layer.md`](./ebus-application-layer.md) — service index
 - [`ebus-overview.md`](./ebus-overview.md) — wire-level framing, QueryExistence and Identification Scan from the implementation perspective
-- [`basv.md`](../vaillant/basv.md) — BASV discovery orchestration (uses `0x07 0x04` and `0x07 0xFE` as building blocks)
+- [`ebus-vaillant-regulators.md`](../vaillant/ebus-vaillant-regulators.md) — Vaillant regulator identity crosswalk (uses `0x07 0x04` and `0x07 0xFE` as inputs)

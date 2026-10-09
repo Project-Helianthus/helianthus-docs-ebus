@@ -92,7 +92,7 @@ create separate repositories.
 the M3-01 Fronius documentary boundary. Its historical terminal M3-03
 disposition is `STANDARD_ONLY`; the retained general detector claim remains a
 research `HYPOTHESIS`, not an activation or support claim. The generic
-[`SunSpec model-chain contract`](../../protocols/sunspec/sunspec-model-chain-v1.md)
+[`SunSpec model-chain contract`](../../architecture/protocol-routing-vendor-sunspec-model-chain-v1.md)
 separates ordered model occurrences, capability profiles, and vendor flavors.
 Its initial `sunspec.inverter.three_phase.monitoring@1.0.0` profile has no write authority. R3 permits the exact experimental Fronius observed flavor only after
 that capability is admitted from the same verified snapshot; the result cannot

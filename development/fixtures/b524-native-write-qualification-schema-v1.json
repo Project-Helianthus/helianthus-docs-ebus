@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "B524 native write qualification v1",
+  "description": "This schema validates evidence metadata shape, including positive and negative documents. Validation does not prove native support or authorize execution; runtime admission separately requires literal true backed by native evidence.",
+  "type": "object",
+  "required": ["schema_version", "scope", "manufacturer", "device_id", "profile", "model", "software_raw_hex", "selector", "evidence_reference", "native_qualified"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "scope": {"enum": ["timer_write_op04", "event_write_op0a", "event_setpoint_write_op0c"]},
+    "manufacturer": {"const": 181},
+    "device_id": {"type": "string", "minLength": 1},
+    "profile": {"type": "string", "minLength": 1},
+    "model": {"type": "string", "minLength": 1},
+    "software_raw_hex": {"type": "string", "pattern": "^[0-9A-Fa-f]{4}$"},
+    "selector": {},
+    "evidence_reference": {"type": "string", "minLength": 1},
+    "native_qualified": {"type": "boolean"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"scope": {"const": "timer_write_op04"}}, "required": ["scope"]},
+      "then": {"properties": {"selector": {"$ref": "#/$defs/timer_selector"}}}
+    },
+    {
+      "if": {
+        "properties": {"scope": {"enum": ["event_write_op0a", "event_setpoint_write_op0c"]}},
+        "required": ["scope"]
+      },
+      "then": {"properties": {"selector": {"$ref": "#/$defs/event_selector"}}}
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "u8": {"type": "integer", "minimum": 0, "maximum": 255},
+    "timer_selector": {
+      "type": "object",
+      "required": ["channel", "instance", "weekday"],
+      "properties": {
+        "channel": {"enum": ["ventilation", "noise-reduction", "tariff", "dhw", "circulation", "zone-cooling", "zone-heating"]},
+        "instance": {"$ref": "#/$defs/u8"},
+        "weekday": {"type": "integer", "minimum": 0, "maximum": 6}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"channel": {"enum": ["ventilation", "noise-reduction", "tariff", "dhw", "circulation"]}},
+            "required": ["channel"]
+          },
+          "then": {"properties": {"instance": {"const": 0}}}
+        }
+      ],
+      "additionalProperties": false
+    },
+    "event_selector": {
+      "type": "object",
+      "required": ["profile", "instance", "address", "weekday_code"],
+      "properties": {
+        "profile": {"enum": ["system", "dhw", "zone"]},
+        "instance": {"$ref": "#/$defs/u8"},
+        "address": {"$ref": "#/$defs/u8"},
+        "weekday_code": {"$ref": "#/$defs/u8"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"profile": {"const": "system"}}, "required": ["profile"]},
+          "then": {"properties": {"address": {"type": "integer", "minimum": 1, "maximum": 3}}}
+        },
+        {
+          "if": {"properties": {"profile": {"enum": ["dhw", "zone"]}}, "required": ["profile"]},
+          "then": {"properties": {"address": {"type": "integer", "minimum": 1, "maximum": 2}}}
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

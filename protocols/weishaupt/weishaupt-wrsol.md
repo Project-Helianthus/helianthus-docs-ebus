@@ -1,7 +1,7 @@
 # WRSol -- Implemented eBUS Commands of the Weishaupt Devices (Implementierte eBUS-Befehle der Weishaupt-Gerate)
 
 <!-- legacy-role-mapping:begin -->
-> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
+> Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. This document uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
 > **Source:** Weishaupt Technique -- Implemented eBUS Commands of the Weishaupt Devices (Implementierte eBUS-Befehle der Weishaupt-Gerate), Version 8\_16

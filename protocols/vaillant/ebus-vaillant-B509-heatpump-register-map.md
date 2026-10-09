@@ -28,14 +28,11 @@ Known address collisions with the BAI00 boiler register map:
 ## Status
 
 All registers in this document are from enrichment analysis (2026-04-14). None
-are currently mapped into the Helianthus semantic plane. They are documented
-for future integration and live validation.
+are currently mapped into the native field catalog. They are documented
+for future interpretation and validation.
 
 Evidence labels:
 
-- `ENRICHMENT_D1`: `_work_enrichment/phase2/D1-B509-deep.md` -- EHP deep analysis
-- `ENRICHMENT_D10`: `_work_enrichment/phase2/D10-new-devices-deep.md` -- HMU HW5103 analysis
-- `ENRICHMENT_D11`: `_work_enrichment/phase2/D11-fork-B509-B51A-enrichment.md` -- cross-fork delta
 - `P1`: community fork primary source (single fork)
 - `P1+P2`: confirmed by two independent forks
 
@@ -225,7 +222,7 @@ diverge on a live scan, the discrepancy points to a firmware variant difference.
 
 ### Naming note (HWC/DHW)
 
-Canonical Helianthus naming uses `dhw_*` (snake_case) for domestic hot water.
+Canonical naming uses `dhw_*` (snake_case) for domestic hot water.
 The ebusd source uses `Hwc*` (camelCase). Both refer to the same thing. Entries
 above preserve the ebusd-style `Hwc` names as extracted from the TypeSpec source.
 
@@ -250,7 +247,7 @@ above preserve the ebusd-style `Hwc` names as extracted from the TypeSpec source
 
 ## Appendix: Semantic FSMs (Heat Pump)
 
-> Source: `GATES-semantic-fsms.md` Sections 1.1-1.3, 1.6. These FSMs document the state machines implicit in EHP00/HMU registers.
+> **Hypothesis:** The following state-machine interpretations derive from register meanings; transitions require correlated native observations before qualification.
 
 ### `heat_pump_status` (0xD000)
 
@@ -300,6 +297,4 @@ Transitions: normal -> defrost_active when evaporator icing sensor threshold exc
 
 - Protocol spec: [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md)
 - Boiler register map: [`ebus-vaillant-B509-boiler-register-map.md`](ebus-vaillant-B509-boiler-register-map.md)
-- Enrichment report: `_work_enrichment/final/FINAL-B509.md`
-- Cross-check: `_work_enrichment/final/CROSSCHECK-B509.md`
 - Public TypeSpec: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration)

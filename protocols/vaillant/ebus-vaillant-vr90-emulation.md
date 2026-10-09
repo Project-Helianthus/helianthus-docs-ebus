@@ -1,6 +1,6 @@
-# VR90 Room Controller — Emulation Reference
+# VR90 Room Controller — Wire Reference
 
-This document covers the eBUS protocol details needed to emulate a Vaillant VR90 room controller (RCC) on the bus, as implemented in `helianthus-ebus-vdev`.
+This document describes observed eBUS behavior for a Vaillant VR90 room controller.
 
 ## Device Identity
 
@@ -101,13 +101,3 @@ When an initiator polls the VR90's target address, the response sequence is:
 7. Escape response bytes for wire: `0xA9` → `[0xA9, 0x00]`, `0xAA` → `[0xA9, 0x01]`
 8. Send escaped response bytes
 9. Read initiator's ACK (best-effort)
-
-## Emulation Jitter
-
-To avoid the VRC700 detecting a perfectly stable synthetic temperature, the emulator applies slow-drift jitter:
-
-- **Random walk:** ±1 D2C tick (0.0625°C) per poll cycle
-- **Bounded:** total drift clamped to ±0.5°C from source temperature
-- **D2C-quantized:** final value is always an exact D2C tick (`math.Round(temp * 16) / 16`)
-
-This produces naturalistic temperature fluctuation that matches real sensor noise characteristics.

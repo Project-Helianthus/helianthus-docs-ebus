@@ -22,12 +22,22 @@ Gateway HTTP entrypoints are split by role: `/ui` is the read-only projection br
 |---|---|
 | Architecture | [architecture/overview.md](architecture/overview.md), [architecture/decisions.md](architecture/decisions.md), [architecture/mcp-first-development.md](architecture/mcp-first-development.md), [architecture/nm-model.md](architecture/nm-model.md), [architecture/nm-discovery.md](architecture/nm-discovery.md), [architecture/nm-participant-policy.md](architecture/nm-participant-policy.md) |
 | Platform contracts | [docs/platform/README.md](docs/platform/README.md), [docs/platform/ownership-and-doc-gates.md](docs/platform/ownership-and-doc-gates.md), [docs/platform/modbus-multivendor-boundaries.md](docs/platform/modbus-multivendor-boundaries.md), [docs/platform/modbus-foundation-profile-contract-v1.md](docs/platform/modbus-foundation-profile-contract-v1.md), [docs/platform/opaque-runtime-acquisition-v1.md](docs/platform/opaque-runtime-acquisition-v1.md), [docs/platform/manifests/opaque-runtime-acquisition-v1.json](docs/platform/manifests/opaque-runtime-acquisition-v1.json), [docs/platform/eebus-raw-first-contract.md](docs/platform/eebus-raw-first-contract.md), [docs/platform/eebus-ha-network-proof.md](docs/platform/eebus-ha-network-proof.md) |
-| Protocols | [protocols/modbus/README.md](protocols/modbus/README.md), [protocols/ebus-services/ebus-overview.md](protocols/ebus-services/ebus-overview.md), [protocols/ebusd-tcp.md](protocols/ebusd-tcp.md), [protocols/vaillant/ebus-vaillant.md](protocols/vaillant/ebus-vaillant.md), [protocols/vaillant/ebus-vaillant-B513.md](protocols/vaillant/ebus-vaillant-B513.md), [protocols/vaillant/ebus-vaillant-B514.md](protocols/vaillant/ebus-vaillant-B514.md), [protocols/vaillant/ebus-vaillant-B515.md](protocols/vaillant/ebus-vaillant-B515.md), [protocols/vaillant/ebus-vaillant-B521.md](protocols/vaillant/ebus-vaillant-B521.md), [protocols/vaillant/ebus-vaillant-B522.md](protocols/vaillant/ebus-vaillant-B522.md), [protocols/vaillant/ebus-vaillant-B523.md](protocols/vaillant/ebus-vaillant-B523.md), [protocols/vaillant/ebus-vaillant-B524.md](protocols/vaillant/ebus-vaillant-B524.md), [protocols/vaillant/ebus-vaillant-B524-register-map.md](protocols/vaillant/ebus-vaillant-B524-register-map.md), archived observations, [protocols/vaillant/ebus-vaillant-b555-timer-protocol.md](protocols/vaillant/ebus-vaillant-b555-timer-protocol.md), [protocols/brink/brink-40xx.md](protocols/brink/brink-40xx.md), [protocols/wolf/wolf-protocols.md](protocols/wolf/wolf-protocols.md), [protocols/weishaupt/weishaupt-wrsol.md](protocols/weishaupt/weishaupt-wrsol.md), [protocols/weishaupt/kromschroeder-5000.md](protocols/weishaupt/kromschroeder-5000.md) |
+| Protocols | [protocols/modbus/README.md](protocols/modbus/README.md), [protocols/ebus-services/ebus-overview.md](protocols/ebus-services/ebus-overview.md), [protocols/ebusd-tcp.md](protocols/ebusd-tcp.md), [protocols/vaillant/ebus-vaillant.md](protocols/vaillant/ebus-vaillant.md), [Vaillant regulators](protocols/vaillant/ebus-vaillant-regulators.md), [protocols/vaillant/ebus-vaillant-B513.md](protocols/vaillant/ebus-vaillant-B513.md), [protocols/vaillant/ebus-vaillant-B514.md](protocols/vaillant/ebus-vaillant-B514.md), [protocols/vaillant/ebus-vaillant-B515.md](protocols/vaillant/ebus-vaillant-B515.md), [protocols/vaillant/ebus-vaillant-B521.md](protocols/vaillant/ebus-vaillant-B521.md), [protocols/vaillant/ebus-vaillant-B522.md](protocols/vaillant/ebus-vaillant-B522.md), [protocols/vaillant/ebus-vaillant-B523.md](protocols/vaillant/ebus-vaillant-B523.md), [protocols/vaillant/ebus-vaillant-B524.md](protocols/vaillant/ebus-vaillant-B524.md), [B524 profile discovery](protocols/vaillant/ebus-vaillant-b524-profile-discovery-and-descriptions.md), [B524 bounded survey method](protocols/vaillant/ebus-vaillant-b524-survey-methodology.md), [protocols/vaillant/ebus-vaillant-B524-register-map.md](protocols/vaillant/ebus-vaillant-B524-register-map.md), [protocols/vaillant/ebus-vaillant-b555-timer-protocol.md](protocols/vaillant/ebus-vaillant-b555-timer-protocol.md), [protocols/brink/brink-40xx.md](protocols/brink/brink-40xx.md), [protocols/wolf/wolf-protocols.md](protocols/wolf/wolf-protocols.md), [protocols/weishaupt/weishaupt-wrsol.md](protocols/weishaupt/weishaupt-wrsol.md), [protocols/weishaupt/kromschroeder-5000.md](protocols/weishaupt/kromschroeder-5000.md) |
 | Types | [types/overview.md](types/overview.md), [types/primitives.md](types/primitives.md), [types/composite.md](types/composite.md) |
 | API | [api/graphql.md](api/graphql.md), [api/mcp.md](api/mcp.md), [api/portal.md](api/portal.md) |
 | Deployment | [deployment/full-stack.md](deployment/full-stack.md), [deployment/tinygo-esp32.md](deployment/tinygo-esp32.md) |
 | Development | [development/contributing.md](development/contributing.md), [development/conventions.md](development/conventions.md), [development/ha-integration.md](development/ha-integration.md) |
 | Firmware | [firmware/pic16f15356-overview.md](firmware/pic16f15356-overview.md), [firmware/pic16f15356-pinout.md](firmware/pic16f15356-pinout.md), [firmware/pic16f15356-fsm.md](firmware/pic16f15356-fsm.md), [firmware/pic16f15356-timing.md](firmware/pic16f15356-timing.md), [firmware/pic16f15356-registers.md](firmware/pic16f15356-registers.md) |
+
+## Application contracts (AGPL-3.0)
+
+- [VRC Explorer B524 operation reads](development/ebus-vaillant-b524-operation-reads.md)
+- [VRC Explorer discovery and descriptions](development/ebus-vaillant-b524-explorer-discovery.md)
+- [VRC Explorer Browser scalar writes](development/ebus-vaillant-b524-browser-writes.md)
+- [B524 survey contribution checks](development/ebus-vaillant-b524-survey-contributions.md)
+- [B503 gateway contract](architecture/protocol-routing-vaillant-b503.md)
+- [Modbus application contracts](architecture/protocol-routing-vendor-modbus-overview.md)
+- [SunSpec application contracts](architecture/protocol-routing-vendor-sunspec-overview.md)
 
 ## Contribution Workflow (Doc-Gate)
 
@@ -53,7 +63,9 @@ This repository contains documentation under two licenses:
   These describe implementation-neutral wire protocols and data formats,
   including eBUS and Modbus. The path is the license boundary; a neutral wire
   reference outside these directories fails documentation review. Anyone can
-  use, modify, or republish this material without restriction.
+  use, modify, or republish this material without restriction. Application CLI
+  arguments, planner/UI behavior, APIs and application artifact schemas belong
+  outside these CC0 directories, even when they operate on the same protocol.
 
 - Everything else – **AGPL-3.0**.
   This documents the Helianthus implementation specifically.

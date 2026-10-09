@@ -11,12 +11,12 @@ The closed machine-readable companion is
 
 ## Packets
 
-- [SunSpec additional models](../../protocols/sunspec/additional-model-evidence-v1.md)
+- [SunSpec additional models](../../architecture/protocol-routing-vendor-sunspec-additional-model-evidence-v1.md)
   uses the Apache-2.0 upstream model repository pinned to an immutable commit.
-- [Growatt candidate](../../protocols/modbus/growatt-candidate-evidence-v1.md)
+- [Growatt candidate](../../architecture/protocol-routing-vendor-growatt-candidate-evidence-v1.md)
   records an inspection-only proprietary map and explicitly rejects a SunSpec
   label.
-- [Huawei gateway candidates](../../protocols/modbus/huawei-gateway-candidate-evidence-v1.md)
+- [Huawei gateway candidates](../../architecture/protocol-routing-vendor-huawei-candidate-evidence-v1.md)
   separates SmartLogger, S-Dongle, and EMMA as three first-class but unadmitted
   candidate families.
 

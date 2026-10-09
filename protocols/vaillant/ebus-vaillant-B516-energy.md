@@ -1,7 +1,7 @@
 # Vaillant Energy Statistics (`0xB5 0x16`, B516)
 
 This document captures the reverse-engineered shape of the Vaillant energy statistics register (`PB=0xB5`, `SB=0x16`).
-It is used by Helianthus tooling when querying regulators such as the sensoCOMFORT VRC 720 for cumulative gas, electrical,
+It is used by observations when querying regulators such as the sensoCOMFORT VRC 720 for cumulative gas, electrical,
 and solar energy figures.
 
 ## 1. Scope and Framing
@@ -66,7 +66,7 @@ The selector nibble values (`W`, `V`, `Q`) are encoded differently per period an
   - `Q = 0` → previous year (`byte7 = 0x30`).
 - Historic windows beyond `Q=0` have not been observed; regulators tend to expose only current/previous years.
 
-> **Disambiguation:** The top-level Vaillant message reference (`ebus-vaillant.md`) describes `QQ` for yearly windows as "the number of half-years since year 2000" (e.g., `QQ=0x34` (52) = first half of 2026). That encoding applies to the raw `QQ` byte (byte 7) on the wire. This section describes the `Q` nibble (`QQ = 0x30 | Q`), where `Q=0` and `Q=2` select previous/current year respectively. In the absolute half-year scheme from the parent doc, `Q=2` yields `byte7 = 0x32` (50 decimal = 50 half-years = 25 years since 2000 = H1 2025). However, B516 does not use the absolute half-year encoding -- the controller interprets the `Q` nibble as a bank-relative selector where `Q=2` means "current year" and `Q=0` means "previous year". The bank-relative `Q` interpretation documented here is the authoritative encoding for B516 requests as used by Helianthus.
+> **Disambiguation:** The top-level Vaillant message reference (`ebus-vaillant.md`) describes `QQ` for yearly windows as "the number of half-years since year 2000" (e.g., `QQ=0x34` (52) = first half of 2026). That encoding applies to the raw `QQ` byte (byte 7) on the wire. This section describes the `Q` nibble (`QQ = 0x30 | Q`), where `Q=0` and `Q=2` select previous/current year respectively. In the absolute half-year scheme from the parent doc, `Q=2` yields `byte7 = 0x32` (50 decimal = 50 half-years = 25 years since 2000 = H1 2025). However, B516 does not use the absolute half-year encoding -- the controller interprets the `Q` nibble as a bank-relative selector where `Q=2` means "current year" and `Q=0` means "previous year". The bank-relative `Q` interpretation documented here is the authoritative encoding for B516 requests as observed.
 
 ### 4.4 Daily Windows (`X=1`)
 
@@ -91,7 +91,7 @@ The `Q` low nibble selects between current and previous year windows within each
 - **Bank 1 (months 1–7):** `Q=2` → current year, `Q=0` → previous year
 - **Bank 2 (months 8–12):** `Q=3` → current year, `Q=1` → previous year
 
-> **Note:** Helianthus currently queries only current-year daily totals. Previous-year daily queries (Q=0/Q=1) are structurally supported by the protocol but have not yet been validated on real hardware.
+> **Note:** current observations query only current-year daily totals. Previous-year daily queries (Q=0/Q=1) are structurally supported by the protocol but have not yet been validated on real hardware.
 
 Example encodings (gas heating, current year, shown for brevity):
 
@@ -104,7 +104,7 @@ Example encodings (gas heating, current year, shown for brevity):
 
 ### 4.5 Monthly Windows (`X=2`)
 
-Regulators encode months using the same `W/Q` banking concept as the daily variant (two banks of seven months). The `Q` nibble toggles between current and previous year within each bank, following the same pattern as §4.4. Detailed month-level validation is pending; Helianthus currently treats month queries as experimental.
+Regulators encode months using the same `W/Q` banking concept as the daily variant (two banks of seven months). The `Q` nibble toggles between current and previous year within each bank, following the same pattern as §4.4. Detailed month-level validation is pending; current observations treat month queries as experimental.
 
 ## 5. Source and Usage Selectors
 
@@ -153,7 +153,7 @@ Observed responses are typically 11 bytes (some regulators append padding). The 
 
 ## 8. VWZ/VWZIO Access Path (Heat Pump Systems)
 
-> Source: `CROSSCHECK-B555-misc.md` B516 section; P4 (john30/ebusd issue #335). NOT live-validated on Helianthus bus.
+> Hypothesis from a public issue reference; no publishable capture is included here.
 
 On heat pump systems with a VWZ/VWZIO indoor hydraulic station at address `0x76`, B516 supports an alternative, simpler access path distinct from the 8-byte selector described in Sections 3-7:
 
@@ -180,4 +180,4 @@ This is a distinct access path from the VRC720 8-byte selector. The `18` sub-ID 
 
 - `john30/ebusd-configuration` issue `#490` (public reverse-engineering notes)
 - Operator RE sessions with Vaillant sensoCOMFORT VRC 720
-- Helianthus Python reference implementation traces (energy register polling logic)
+- implementation reference traces (energy register polling logic)

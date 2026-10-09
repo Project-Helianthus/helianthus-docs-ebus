@@ -2,15 +2,6 @@
 
 This document describes the ASCII command protocol exposed by the `ebusd` daemon over TCP (often on port `8888`). It is intended for tooling that drives eBUS transactions through ebusd rather than talking to an adapter directly.
 
-For gateway transport selection examples using this backend, see `deployment/full-stack.md`.
-
-Observe-first caveat: when the gateway uses `ebusd-tcp`, passive observe-first
-is expected to remain unavailable. The current transport contract and
-troubleshooting signals are documented in
-[`deployment/full-stack.md#passive-observe-first-transport-contract`](../deployment/full-stack.md#passive-observe-first-transport-contract)
-and
-[`architecture/observability.md#troubleshooting-mapping`](../architecture/observability.md#troubleshooting-mapping).
-
 ## Transport
 
 - Connection: plain TCP.
@@ -105,7 +96,7 @@ Tooling can enumerate discovered target addresses by:
 - matching lines starting with `address XX:` (hex), and
 - excluding the `self` entry.
 
-## Backend Integration Checklist
+## Client behavior
 
 For deterministic request/response behavior when integrating ebusd TCP:
 

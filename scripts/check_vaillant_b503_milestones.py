@@ -10,9 +10,9 @@ from html.parser import HTMLParser
 from markdown_it import MarkdownIt
 
 
-DOC = pathlib.Path("protocols/vaillant/ebus-vaillant-B503.md")
+DOC = pathlib.Path("architecture/protocol-routing-vaillant-b503.md")
 STATUS_SECTION_START = "## 1. Status"
-STATUS_SECTION_END = "## 2. Wire Shape"
+STATUS_SECTION_END = "## 2. Native protocol reference"
 MILESTONE_HEADING = "## 14. Companion Links (downstream code milestones)"
 MILESTONE_TABLE_HEADER = ("Milestone", "Repo", "Artefact")
 MARKDOWN_TABLE_DELIMITER_CELL = re.compile(r"^:?-{3,}:?$")
@@ -55,7 +55,7 @@ IDLE_TIMEOUT_SECTION_END = "### 7.7 Concurrency with B524"
 NORMALIZATION_SECTION_START = "## 8. Public Normalization Rules"
 NORMALIZATION_SECTION_END = "## 9. Install-Writes Non-Exposure (v1 invariant)"
 INSTALL_WRITE_SECTION_START = "## 9. Install-Writes Non-Exposure (v1 invariant)"
-INSTALL_WRITE_SECTION_END = "## 10. F.xxx Decimal Caveat (LOCAL_CAPTURE only)"
+INSTALL_WRITE_SECTION_END = "## 11. GraphQL Capability Signal"
 CAPABILITY_TRUTH_TABLE_SECTION_START = "### 12.5 Capability-signal 8-state truth table (mirror of AD18)"
 CAPABILITY_TRUTH_TABLE_SECTION_END = "**Forbidden states** (M6 tests assert absence):"
 CAPABILITY_TRUTH_TABLE_HEADER = (

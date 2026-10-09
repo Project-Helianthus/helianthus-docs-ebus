@@ -10,9 +10,6 @@ selector after `SB=0x22`.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
-- `LOCAL_MCP`: current Helianthus MCP runtime observations.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `INFERENCE`: falsifiable interpretation from the evidence above.
 
@@ -35,9 +32,9 @@ known ventilation commands.
 
 | Request suffix | TypeSpec name | Direction | Meaning | Evidence | Falsification test |
 |---|---|---|---|---|---|
-| `02 00 ff ff` | `VentDay` | write | set ventilation day mode | `LOCAL_TYPESPEC` | Issue the command on isolated recoVAIR hardware and show day mode is not selected. |
-| `01 00 ff ff` | `VentNight` | write | set ventilation night mode | `LOCAL_TYPESPEC` | Issue the command on isolated recoVAIR hardware and show night mode is not selected. |
-| `03 00 ff ff` | `VentBoost` | write | activate boost ventilation | `LOCAL_TYPESPEC` | Issue the command on isolated recoVAIR hardware and show boost is not activated. |
+| `02 00 ff ff` | `VentDay` | write | set ventilation day mode | | Issue the command on isolated recoVAIR hardware and show day mode is not selected. |
+| `01 00 ff ff` | `VentNight` | write | set ventilation night mode | | Issue the command on isolated recoVAIR hardware and show night mode is not selected. |
+| `03 00 ff ff` | `VentBoost` | write | activate boost ventilation | | Issue the command on isolated recoVAIR hardware and show boost is not activated. |
 
 ## Relationship to B509 Registers
 

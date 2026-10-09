@@ -18,9 +18,6 @@ indoor hydraulic stations (address 0x76). Not applicable to BAI boiler devices.
 
 Evidence labels:
 
-- `LOCAL_TYPESPEC`: vendored john30 `ebusd-configuration` TypeSpec files.
-- `LOCAL_CAPTURE`: operator-provided or repository-local captures.
-- `LOCAL_MCP`: current Helianthus MCP runtime observations.
 - `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
 - `INFERENCE`: falsifiable interpretation from the evidence above.
 - `P1`: cyberthom42/vaillant-arotherm-plus GitHub repo — `08.hmu.csv` (live-install).
@@ -266,7 +263,7 @@ is unknown (NAK, zero, or stale value).
 
 ## Appendix: Semantic FSM — `four_way_valve_position` (REG 0x14)
 
-> Source: `GATES-semantic-fsms.md` Section 1.5.
+> **Hypothesis:** Register encoding is described above; the state-transition interpretation below requires correlated native observations.
 
 B514 REG `0x14` (T.0.20, wire: `05 14 03 FF FF`) on HMU at `0x08` encodes the four-way valve position as a `uchar` with `onoff` encoding.
 
@@ -282,7 +279,3 @@ B514 REG `0x14` (T.0.20, wire: `05 14 03 FF FF`) on HMU at `0x08` encodes the fo
 **Confidence:** HIGH (P1 cyberthom42 + P5 OpenHAB both confirm live read).
 
 ### Enrichment sources
-
-- Enrichment report: `_work_enrichment/final/FINAL-B514.md`
-- Cross-check: `_work_enrichment/final/CROSSCHECK-B514.md`
-- Deep analysis: `_work_enrichment/phase2/D2-B514-deep.md`

@@ -1,6 +1,6 @@
 # Wolf eBUS Protocols (MF=0x19)
 
-> **Confidence:** MEDIUM -- single fork (`ulda/ebusd-configuration`), no live validation against a Wolf device on the Helianthus bus. All findings are candidate mappings derived from ebusd CSV configuration files, not verified protocol specifications.
+> **Confidence:** MEDIUM -- single fork (`ulda/ebusd-configuration`), no live validation against a Wolf device on the a tested bus. All findings are candidate mappings derived from ebusd CSV configuration files, not verified protocol specifications.
 >
 > **Source fork:** `ulda/ebusd-configuration` (commit `6ef5eb6`, last push 2026-04-13)
 > **Source files:** `ebusd-22.4.x/de/wolf/all.csv`, `ebusd-22.4.x/de/wolf/_templates.csv`
@@ -23,7 +23,7 @@
   - [4.2 PBSB 5017 -- Solar Pump + Temperatures](#42-pbsb-5017----solar-pump--temperatures)
   - [4.3 PBSB 5018 -- Solar Power / Yield](#43-pbsb-5018----solar-power--yield)
 - [5. PB=0x50 Disambiguation](#5-pb0x50-disambiguation)
-- [6. Helianthus Relevance](#6-helianthus-relevance)
+- [6. Protocol relevance](#6-protocol-relevance)
 
 ---
 
@@ -376,17 +376,13 @@ See also: [`kromschroeder-5000.md`](../weishaupt/kromschroeder-5000.md) for the 
 
 ---
 
-## 6. Helianthus Relevance
-
-**Architectural feasibility: yes. Near-term priority: no.**
+## 6. Protocol relevance
 
 - Wolf boilers occupy the same eBUS address slots as Vaillant (0x08, 0x50) -- physically incompatible on the same bus.
-- The 5022/5023 service parameter set (25 reads, 14 writes) covers the same operational surface as Helianthus reads from Vaillant via B524/B555: temperatures, pump states, blower RPM, flow rate, burner hours/starts. This is the closest non-Vaillant analogue to the Helianthus semantic adapter.
+- The 5022/5023 service parameter set contains 25 reads and 14 writes spanning temperatures, pump states, blower RPM, flow rate, burner hours, and starts.
 - The `0503`/`0504`/`0507` messages use standard eBUS Burner Control PBSB
   allocations with Wolf-specific payload profiles and provide real-time burner
   status equivalent to the Vaillant BAI00 broadcasts.
-- **Blocker:** Wolf MF=0x19 requires a separate semantic adapter. No code path is shared with Vaillant MF=0xB5.
-- **Recommendation:** Document as "manufacturer expansion track candidate." No issues to open now.
 
 ---
 

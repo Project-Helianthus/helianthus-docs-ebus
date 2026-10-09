@@ -1,0 +1,124 @@
+{
+  "schema_version": "b524-op06-observed-windows/v1",
+  "evidence_class": "sanitized_read_only_observation",
+  "scope": "B524 OP06 bounded scheduling; no device identity or presence claim",
+  "invariants": [
+    "OP06 selector identity is opcode, group, instance, register.",
+    "IIFF DescribeDeviceParameter replies echo group and register, not instance.",
+    "A scheduling ceiling is not a terminal register maximum.",
+    "A generic class description is not concrete-instance validation."
+  ],
+  "samples": [
+    {
+      "kind": "generic_description",
+      "selector": {"op": "0x07", "gg": "0x08", "ii": "0xff", "rr": "0x0001"},
+      "request_payload_hex": "0708ff0100",
+      "reply_payload_hex": "080100000101",
+      "decoded": {"type": "BOOL", "min": false, "max": true, "step": true},
+      "qualification": "generic_class_observation",
+      "device_identity_verified": false
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x01", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "0701ff2f00",
+      "reply_payload_hex": "012f00000601",
+      "qualification": "unqualified",
+      "note": "Correlated GG/RR response; codec was not qualified."
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x02", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "0702ff2f00",
+      "reply_payload_hex": "022f00000601",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x03", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "0703ff2f00",
+      "reply_payload_hex": "032f00000601",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x05", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "0705ff2f00",
+      "reply_payload_hex": "052f00000601",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x06", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "0706ff2f00",
+      "reply_payload_hex": "062f00000601",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x07", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "0707ff2f00",
+      "reply_payload_hex": "072f00000601",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x08", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "0708ff2f00",
+      "reply_payload_hex": "082f00000601",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x0b", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "070bff2f00",
+      "reply_payload_hex": "0b2f00000601",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x0c", "ii": "0xff", "rr": "0x002f"},
+      "request_payload_hex": "070cff2f00",
+      "reply_payload_hex": "0c2f00000601",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x09", "ii": "0xff", "rr": "0x0035"},
+      "request_payload_hex": "0709ff3500",
+      "reply_payload_hex": "093500000201",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "generic_description_raw",
+      "selector": {"op": "0x07", "gg": "0x0a", "ii": "0xff", "rr": "0x0035"},
+      "request_payload_hex": "070aff3500",
+      "reply_payload_hex": "0a3500000201",
+      "qualification": "unqualified"
+    },
+    {
+      "kind": "concrete_read",
+      "selector": {"op": "0x06", "gg": "0x0e", "ii": "0x01", "rr": "0x0033"},
+      "request_payload_hex": "06000e013300",
+      "reply_payload_hex": "010e330000",
+      "flags": "0x01",
+      "response_state": "active",
+      "classification": "read_only_visible"
+    },
+    {
+      "kind": "concrete_read",
+      "selector": {"op": "0x06", "gg": "0x0f", "ii": "0x01", "rr": "0x0033"},
+      "request_payload_hex": "06000f013300",
+      "reply_payload_hex": "000f330000",
+      "flags": "0x00",
+      "response_state": "active",
+      "classification": "read_only_not_visible"
+    }
+  ],
+  "observed_scheduling_windows": [
+    {"groups": ["0x01", "0x02", "0x03", "0x05", "0x06", "0x07", "0x08", "0x0b", "0x0c"], "rr_through": "0x002f"},
+    {"groups": ["0x09", "0x0a"], "rr_through": "0x0035"},
+    {"groups": ["0x0e", "0x0f"], "rr_through": "0x0033"},
+    {"groups": ["0x04", "0x0d"], "rr_through": null, "status": "unknown"}
+  ]
+}
