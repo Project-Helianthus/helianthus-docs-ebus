@@ -96,7 +96,7 @@ B524 register reads produce one of three distinct response states:
 Some BASV2 observations correlate empty replies with a feature being inactive. They do not make an empty reply a universal feature-gated state:
 
 - `GG=0x00, RR=0x0006` (manual cooling days): dormant when VRC720 cooling is not configured
-- `GG=0x00, RR=0x0016` (system quick mode active flag): dormant when no system quick mode is engaged
+- `GG=0x00, RR=0x0016` (`system_ventilation_operating_mode`, u16 enum `1=AUTO 2=DAY 3=SET_BACK` as observed on the VRC700 family, hardware confirmation pending): behavior when no system quick mode is engaged is not established
 - `GG=0x00, RR=0x0074` (system quick mode value): dormant when no system quick mode is engaged
 - `GG=0x00, RR=0x00DA/0x00DB` (manual cooling dates): responsive with BCD defaults in one scan, dormant in another after configuration change
 
@@ -128,7 +128,7 @@ alone do not demonstrate that these selectors form one control path.
 
 | Operation | Path | Register |
 |-----------|------|----------|
-| Read active flag | `OP=0x02, GG=0x00, RR=0x0016` | `system_ventilation_operating_mode` (dormant when no mode active) |
+| Read operating mode | `OP=0x02, GG=0x00, RR=0x0016` | `system_ventilation_operating_mode` (enum, see register map) |
 | Read mode value | `OP=0x02, GG=0x00, RR=0x0074` | `system_quick_mode` (dormant when no mode active) |
 | Write mode value | `OP=0x02, GG=0x09, RR=0x0001` | Write target for mode activation |
 | Write active flag | `OP=0x02, GG=0x09, RR=0x0002` | Write target for mode on/off |

@@ -798,7 +798,7 @@ def test_regulator_crosswalk_is_exact_pair_based_and_keeps_raw_sw_distinct() -> 
 
     assert rows == expected
     assert len(expected) == 38
-    assert "EID\nand decoded HW/SPN value match as a pair" in text
+    assert "EID\nand decoded SPN value match as a pair" in text
     assert "Hypothesis" in text
     assert "native-model evidence pending" in text
     assert (

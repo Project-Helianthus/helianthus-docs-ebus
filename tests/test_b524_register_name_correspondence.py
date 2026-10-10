@@ -66,6 +66,38 @@ def test_correspondence_name_column_matches_canonical_op02_catalog() -> None:
         )
 
 
+def test_correspondence_ebusd_names_are_not_duplicated_within_an_opcode() -> None:
+    # A literal ebusd name is a claim that this project mapped that public
+    # ebusd configuration name onto a specific (group, register) selector.
+    # The same literal name must not be mapped onto more than one selector
+    # within the same opcode -- that pattern is exactly the false-positive
+    # shape found and removed from GG00 RR0015 (`HwcParallelLoading`,
+    # belongs only to RR000A) and GG02 RR0001 (`Hc{hc}CircuitType`, belongs
+    # only to RR0002).
+    rows = _rows(CORRESPONDENCE)
+    by_opcode: dict[str, dict[str, set[tuple[str, str]]]] = {}
+    for row in rows:
+        ebusd_name = row["ebusd_name"].strip()
+        if not ebusd_name:
+            continue
+        opcode_map = by_opcode.setdefault(row["opcode"], {})
+        for token in (part.strip() for part in ebusd_name.split("|")):
+            if not token:
+                continue
+            opcode_map.setdefault(token, set()).add((row["group"], row["register"]))
+
+    duplicates = [
+        (opcode, token, sorted(keys))
+        for opcode, names in by_opcode.items()
+        for token, keys in names.items()
+        if len(keys) > 1
+    ]
+    assert duplicates == [], (
+        "ebusd name(s) mapped onto more than one (group, register) within "
+        f"the same opcode: {duplicates}"
+    )
+
+
 def test_correspondence_fixture_is_data_only() -> None:
     # CC0 boundary: the fixture is plain observed-name data, not an
     # application instruction, command, or CLI argument.
