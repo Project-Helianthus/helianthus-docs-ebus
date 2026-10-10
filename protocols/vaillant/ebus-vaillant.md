@@ -216,64 +216,17 @@ heating, DHW, and circulation programs.
 
 ## Energy Statistics (0xB5 0x16)
 
-Energy statistics use selector-encoded requests with an `EXP` value response.
-The format is reverse engineered from observed traffic (see `john30/ebusd-configuration` issue `#490`).
+`0xB5 0x16` sub-command `0x10` is a selector-encoded energy statistics read
+returning a float32 watt-hour value. Bytes 6-7 of the request and bytes 5-6
+of the reply are a single little-endian packed date (day/month/year), not a
+separate month/day nibble pair and a half-year year-selector byte.
 
-```text
-Request payload (8 bytes):
-  0: 0x10          constant prefix
-  1: 0x0X          period selector (X in low nibble)
-  2: 0xFF
-  3: 0xFF
-  4: 0x0Y          source selector (Y in low nibble)
-  5: 0x0Z          usage selector (Z in low nibble)
-  6: 0xWV          month/day selector (W high nibble, V low nibble)
-  7: 0xQQ          year selector byte
-```
-
-```text
-Observed selectors:
-  period X:
-    0 = all (since installation)
-    1 = day
-    2 = month
-    3 = year
-
-  source Y:
-    1 = solar
-    2 = environmental
-    3 = electricity
-    4 = gas
-    9 = heat_pump (unconfirmed — observed on some heat pumps, not in dedicated B516 doc)
-
-  usage Z:
-    0 = all
-    3 = heating
-    4 = hot water
-    5 = cooling
-```
-
-VWZ/VWZIO at address 0x76 uses an alternative query form (sub-ID 0x18); see dedicated doc Section 8.
-
-```text
-Response payload (~11 bytes, variable):
-  0: 0x0X          period selector (X in low nibble)
-  1: (unknown)
-  2: (unknown)
-  3: 0x0Y          source selector (Y in low nibble)
-  4: 0x0Z          usage selector (Z in low nibble)
-  5: 0xWV          month/day selector (W high nibble, V low nibble)
-  6: 0xQQ          year selector byte
-  7..10: EXP       Wh value (IEEE 754 float32, little-endian)
-```
-
-Encoding of `W/V/QQ` is regulator-dependent; observations indicate:
-- For X=0 (all): `W/V/QQ` ignored.
-- For X=3 (year): `QQ` is the number of half-years since year 2000.
-  - `QQ = 0x34` (52) → first half of 2026 (`2000 + floor(52/2)`).
-  - `QQ = 0x35` (53) → second half of 2026.
-- For X=2 (month): month is still selected via `W`, while `QQ` provides the year context using the same half-year timeline.
-- For X=1 (day): only the last 16 days are available; `W` parity selects first/second half of month, `V` selects day within half, and `QQ+W` determine year/month context.
+- Dedicated reference:
+  [`ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
+- This includes the packed-date formula and worked, read-only decode
+  examples; the period/source/usage selector values; the `PERIOD_IDX` /
+  `ENERGY_IDX` reply fields; and the VWZ/VWZIO alternative access path
+  (sub-ID `0x18`) at address `0x76`.
 
 ---
 

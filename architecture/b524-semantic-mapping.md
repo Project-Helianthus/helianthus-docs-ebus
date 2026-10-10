@@ -138,6 +138,16 @@ Ownership note:
 | `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 |
 | `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 | **Stale path**: FLAGS=0x02 (RW) — should be `config.*`. Pending gateway migration |
 
+**Known discrepancy (`circuit_state` / `pump_status`):** the mapping above
+(`circuit_state` at RR=0x001B, `pump_status` at RR=0x001E) documents what the
+gateway's `refreshCircuits()` currently reads; it is left unchanged here. The
+protocol reference ([B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum))
+assigns the circuit state enumeration (STANDBY/HEATING/COOLING/DHW) to
+RR=0x001E and the pump status to RR=0x001B — the opposite of this table.
+This discrepancy between the gateway implementation and the protocol
+reference is tracked in
+[helianthus-ebusgateway#1004](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1004).
+
 Consumer note:
 - `[].config.cooling_enabled` remains a gateway-level raw semantic field derived from `GG=0x02 RR=0x0006`.
 - It is **not** yet a validated Home Assistant-facing configuration contract.

@@ -6,7 +6,7 @@
 
 This is the entry point for Vaillant regulator identities and related protocol
 families. Its bounded crosswalk identifies a catalog row only when the **EID
-and decoded SW/SPN value match as a pair**. An EID by itself does not classify
+and decoded SPN value match as a pair**. An EID by itself does not classify
 a regulator, prove model identity, or prove that a protocol is supported by the
 connected device.
 
@@ -36,33 +36,50 @@ Protocol details remain in their owning documents:
 - [B524 bounded survey methodology](ebus-vaillant-b524-survey-methodology.md)
 - [B555 timer/schedule protocol](ebus-vaillant-b555-timer-protocol.md)
 
-## SW to SPN Representation
+## SPN Field (`07 04` bytes 8-9) Representation
 
-`SW` is the software field (`0704`). The `SPN` column preserves its decoded
-PIN value as a four-digit hexadecimal `u16`; it is not derived from hardware
-version, a product code, serial number, or any other identity field.
+The `07 04` identification reply carries two distinct two-byte BCD fields:
+the software-version field (bytes 6-7) and the SPN field (bytes 8-9). The
+eBUS standard calls the second field the hardware version, but Vaillant
+regulators use it to carry the software product number. The `SPN` column
+preserves that field's decoded value as a four-digit hexadecimal `u16`; it
+is not derived from the software-version field, a product code, serial
+number, or any other identity field.
 
-The eBUS `PIN` codec is BCD: the wire order is most-significant BCD byte first.
-Therefore the wire bytes `04 17` decode as decimal `417`, represented here as `0x01A1`; `04 63`
-decodes as decimal `463`, represented as `0x01CF`. Raw wire SW and the decoded
-SPN must both be retained. Do not interpret raw `04 17` as `0x0417`, and do not
-invent a catalog row for an invalid BCD value or an unlisted decoded value. For
-example, raw `05 07` decodes to decimal `507` (`0x01FB`), which is unknown to
-this bounded crosswalk.
+The eBUS `PIN` codec is BCD: the wire order within this field is
+least-significant BCD byte first. Therefore the wire bytes `17 04` decode as
+decimal `417` (digits `04`+`17` with the second-transmitted byte holding the
+more significant digits), represented here as `0x01A1`; `63 04` decodes as
+decimal `463`, represented as `0x01CF`. Raw software version and the raw
+SPN field (bytes 8-9) must both be retained; do not interpret either field's raw bytes
+as a literal hex `u16`, and do not invent a catalog row for an invalid BCD
+value or an unlisted decoded value.
+
+A BASV2 reporting software version `05 07` and SPN field `17 04` is
+therefore the catalogued pair `BASV2` / `01A1`; a reader can reproduce this
+decoding from a read-only identification query against a BASV2 regulator
+reporting that pair. The software-version field (`0507` here) is retained
+alongside the identity but does not itself decode to a catalog `SPN`.
+
+Source: a packaged description profile recording software `0507` / hardware
+`1704` for the VRC 720f/2.
 
 The codec behavior is specified by the public
 [archived `broadcast.csv` software field](https://github.com/john30/ebusd-configuration/blob/9c3ed3a0d487dc5898c611ab18f8313792659020/archived/en/broadcast.csv)
-and [ebusd `PIN` datatype implementation](https://github.com/john30/ebusd/blob/38db2d28bd5622cadb6078c1662c6f7da5cef891/src/lib/ebus/datatype.cpp).
+and [ebusd `PIN` datatype implementation](https://github.com/john30/ebusd/blob/38db2d28bd5622cadb6078c1662c6f7da5cef891/src/lib/ebus/datatype.cpp)
+for how the standard names and encodes these two fields; the field selection
+and little-endian byte order above are specific to Vaillant regulators as
+observed, not restatements of the ebusd/eBUS citations.
 
-## Exact EID and SW/SPN Crosswalk
+## Exact EID and SPN Crosswalk
 
-**Hypothesis as native-model evidence pending observations.** These 39 exact
+**Hypothesis as native-model evidence pending observations.** These 38 exact
 pairs are a bounded naming and family catalog. They do not independently establish a device model, native
 protocol support, or the availability of any operation on a connected target.
 Treat an unlisted or malformed pair as unknown rather than extending this table
 by inference.
 
-| EID | SW (SPN hex `u16`) | Model row | Protocol family |
+| EID | SPN (hex `u16`) | Model row | Protocol family |
 | --- | --- | --- | --- |
 | `70000` | `0141` | VRC700 R1 | VRC700 |
 | `70000` | `0155` | VRC700 R2 | VRC700 |
@@ -100,15 +117,18 @@ by inference.
 | `CTLV3` | `01B5` | VRC720 | VRC720 |
 | `CTLV3` | `01DC` | VRC720 | VRC720 |
 | `CTLV3` | `01E0` | VRC720 | VRC720 |
-| `CTLX0` | `007F` | VRC720 | VRC720 |
 | `CTLX0` | `0194` | VR940 | VRC720 |
 | `EMM00` | `0181` | VRC710 | VRC720 |
 
-The reported native identity `Vaillant;CTLX0;0127;0404` assigns VRC720:
-raw SW `01 27` is decimal PIN `127`, hence SPN `007F`; raw HW `04 04`
-is retained separately. This is a reported naming association, not evidence of
-protocol support or compatibility with another controller's parameter limits.
-The `CTLX0/0194` VR940 row remains independent.
+The reported native identity `Vaillant;CTLX0;0127;0404` resolves to the
+existing `CTLX0` / `0194` row: the SPN field is `04 04`, which
+decodes as decimal `404` (`0x0194`), the same catalog `SPN` already listed
+above. Raw software version `01 27` is retained separately and does not
+itself decode to a catalog `SPN` — an earlier version of this crosswalk
+incorrectly decoded that software-version field and added a spurious
+`CTLX0` / `007F` row, which has been removed. This is a reported naming
+association, not evidence of protocol support or compatibility with another
+controller's parameter limits.
 
 ## VRC700 Operation Profile
 
@@ -125,13 +145,15 @@ Retain at least:
 
 - target address;
 - EID as received;
-- raw SW bytes;
-- decoded SW/SPN value and decoding state; and
+- raw bytes 6-7 (software version) and raw bytes 8-9 (the product-number
+  field), separately;
+- decoded SPN value and decoding state; and
 - crosswalk result (`matched`, `unlisted`, or `invalid`).
 
-For a matched row, retain the native `0x07/0x04` EID, SW, and decoded raw SPN
-separately from `assigned_model`. Set
-the assignment as catalog material rather than a native model observation.
+For a matched row, retain the native `0x07/0x04` EID, raw software version,
+and decoded raw SPN separately from `assigned_model`. Set the assignment as
+catalog material rather than a native model observation.
 
-An empty, malformed, or unavailable SW field leaves the crosswalk result
-unknown. It must not be replaced with a guessed model or protocol family.
+An empty, malformed, or unavailable SPN field leaves the crosswalk result
+unknown; the software-version field alone never selects a row. It must not
+be replaced with a guessed model or protocol family.

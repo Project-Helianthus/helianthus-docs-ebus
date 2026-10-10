@@ -8,8 +8,13 @@ and solar energy figures.
 
 - Transport: standard eBUS telegram (`DST PB SB LEN DATA...`) with the payload detailed below.
 - CRC/escaping follow normal eBUS rules and are omitted in this document.
-- Requests are 8 bytes long and contain embedded selectors for period, source, usage, and time window.
-- Responses typically carry ~11 bytes and end with an IEEE 754 float32 little-endian value expressed in watt-hours.
+- This document covers sub-command `0x10` (energy statistics read) only. For
+  sub-command `0x10` requests are 8 bytes long and contain embedded selectors
+  for period, source, usage, and time window.
+- For sub-command `0x10`, responses typically carry ~11 bytes and end with an
+  IEEE 754 float32 little-endian value expressed in watt-hours.
+- Other B516 sub-commands exist with different request and reply layouts and
+  are not covered by this page.
 
 ## 2. Register Identification
 
@@ -25,21 +30,34 @@ and solar energy figures.
 Canonical 8-byte selector payload:
 
 ```text
-[0x10, 0x0X, 0xFF, 0xFF, 0x0Y, 0x0Z, (W << 4) | V, 0x30 | Q]
+[0x10, 0x0X, PERIOD_IDX, ENERGY_IDX, 0x0Y, 0x0Z, DATE_LO, DATE_HI]
 ```
 
 | Byte | Meaning |
 | --- | --- |
-| 0 | `0x10` — constant prefix observed on all requests |
-| 1 | `0x0X` — period selector (`X` in the low nibble) |
-| 2 | `0xFF` — constant |
-| 3 | `0xFF` — constant |
+| 0 | `0x10` — the sub-command byte of the energy-statistics read documented on this page; constant for every request on this page. Other B516 sub-commands use a different one-byte sub-ID and are not covered here. |
+| 1 | `0x0X` — period selector (`X` in the low nibble): `0`=total, `1`=daily, `2`=monthly, `3`=yearly |
+| 2 | `PERIOD_IDX` — raw one-byte field, sent as `0xFF` in every request observed (`0xFF` = select by date rather than by an explicit period index); hardware confirmation of its semantics pending (see §6.1) |
+| 3 | `ENERGY_IDX` — raw one-byte field, sent as `0xFF` in every request observed (`0xFF` = select by energy type and operation mode rather than by an explicit energy index); hardware confirmation of its semantics pending (see §6.1) |
 | 4 | `0x0Y` — energy source selector (`Y` in the low nibble) |
 | 5 | `0x0Z` — usage selector (`Z` in the low nibble) |
-| 6 | `(W << 4) | V` — time specifier nibble pair (depends on period) |
-| 7 | `0x30 | Q` — qualifier nibble; combines with byte 6 to pinpoint the requested window |
+| 6-7 | `DATE_LO, DATE_HI` — one little-endian packed date word |
 
-The selector nibble values (`W`, `V`, `Q`) are encoded differently per period and are detailed in Section 4.
+Bytes 6-7 form a little-endian 16-bit word (`word = DATE_LO | (DATE_HI << 8)`) packing a calendar date:
+
+```text
+day   = word & 0x1F
+month = (word >> 5) & 0x0F
+year  = 2000 + (word >> 9)
+```
+
+`day` and `month` are `0` when the requested time base does not use them
+(yearly and total requests). The date field is ignored entirely for total
+requests. This is the same packing the top-level Vaillant message reference
+(`ebus-vaillant.md`) describes one byte at a time as "the number of
+half-years since year 2000" for the `QQ` byte alone — see the disambiguation
+note in §4.3. See §6.1 for a worked, read-only example decoding this formula
+against a live reply.
 
 ## 4. Period Selectors and Time Encoding
 
@@ -48,63 +66,80 @@ The selector nibble values (`W`, `V`, `Q`) are encoded differently per period an
 | `X` | Period | Notes |
 | --- | --- | --- |
 | `0` | System / since installation | All-time totals. No additional window encoding required. |
-| `1` | Day | Requires month/day packing as described in §4.4. |
-| `2` | Month | Uses regulator-defined nibble packing (not yet fully verified). |
-| `3` | Year | Uses qualifier offsets described in §4.3. |
+| `1` | Day | Packed date (day, month, year) as described in §4.4. |
+| `2` | Month | Packed date with `day=0` as described in §4.5 (experimental beyond the packing itself). |
+| `3` | Year | Packed date with `day=month=0` as described in §4.3. |
 
 ### 4.2 System Totals (`X=0`)
 
-- `W = 0`, `V = 0` ⇒ byte 6 = `0x00`.
-- `Q = 0` ⇒ byte 7 = `0x30`.
+- Bytes 6-7 (the packed date) are ignored by the regulator for total requests;
+  byte 6 = `0x00`, byte 7 = `0x00` is the canonical form observed.
 - Use this form when requesting cumulative totals since installation for a given source/usage pair.
 
 ### 4.3 Yearly Windows (`X=3`)
 
-- `W = 0`, `V = 0` (nibbles unused by current firmware).
-- `Q` selects the year:
-  - `Q = 2` → current year (`byte7 = 0x32`).
-  - `Q = 0` → previous year (`byte7 = 0x30`).
-- Historic windows beyond `Q=0` have not been observed; regulators tend to expose only current/previous years.
+Day and month are `0` for a yearly request; only the year component of the
+packed date (bits 9-15 of the word, i.e. byte 7) varies:
 
-> **Disambiguation:** The top-level Vaillant message reference (`ebus-vaillant.md`) describes `QQ` for yearly windows as "the number of half-years since year 2000" (e.g., `QQ=0x34` (52) = first half of 2026). That encoding applies to the raw `QQ` byte (byte 7) on the wire. This section describes the `Q` nibble (`QQ = 0x30 | Q`), where `Q=0` and `Q=2` select previous/current year respectively. In the absolute half-year scheme from the parent doc, `Q=2` yields `byte7 = 0x32` (50 decimal = 50 half-years = 25 years since 2000 = H1 2025). However, B516 does not use the absolute half-year encoding -- the controller interprets the `Q` nibble as a bank-relative selector where `Q=2` means "current year" and `Q=0` means "previous year". The bank-relative `Q` interpretation documented here is the authoritative encoding for B516 requests as observed.
+```text
+word  = (year - 2000) << 9
+byte6 = word & 0xFF        (always 0x00 for a pure year request)
+byte7 = (word >> 8) & 0xFF
+```
+
+- Year 2024 → `word = 0x3000` → `byte6 = 0x00`, `byte7 = 0x30`.
+- Year 2025 → `word = 0x3200` → `byte6 = 0x00`, `byte7 = 0x32`.
+- Year 2026 → `word = 0x3400` → `byte6 = 0x00`, `byte7 = 0x34`.
+
+"Current year" and "previous year" are not wire selectors — they are
+descriptions of whichever absolute year the caller encodes relative to
+today's date. A caller can request any year this way, not only the two
+years adjacent to the current date. Which years a given regulator actually
+answers for (versus returning a non-zero return code; see §6) is
+device-dependent and has not been exhaustively observed.
+
+> **Disambiguation:** The top-level Vaillant message reference (`ebus-vaillant.md`) describes `QQ` for yearly windows as "the number of half-years since year 2000" (e.g., `QQ=0x34` (52) = first half of 2026). That wording describes the same packed-date byte 7 seen here: with day/month both `0`, byte 7 equals `(year - 2000) << 1`, i.e. twice the year offset — which reads as "half-years since 2000" when the month's top bit (which also lands in byte 7) is zero. This equivalence holds specifically for the **yearly case** (`day = month = 0`), where byte 7 alone carries the year offset doubled; it does not extend to the daily (§4.4) or monthly (§4.5) cases, where day and month occupy bits that the half-year wording does not account for. For the yearly case, the packed-date model in this document and the half-year wording in the parent reference describe the same bytes; they are not two competing encodings.
 
 ### 4.4 Daily Windows (`X=1`)
 
-Day-level reads require packing the month, half-month, and day within half-month into `W`, `V`, and `Q`:
+Day-level reads pack the full calendar date (year, month, day) into the
+little-endian word described in §3:
 
 ```text
-Month 1–7:   w_base = month × 2,       q_base_current = 2,  q_base_previous = 0
-Month 8–12:  w_base = (month − 8) × 2, q_base_current = 3,  q_base_previous = 1
-Day 1–15:    v = day,      d_offset = 0
-Day 16–31:   v = day − 16, d_offset = 1
-W = w_base + d_offset
-V = v
-Q = q_base_current   (for current-year daily data)
-Q = q_base_previous  (for previous-year daily data — see note below)
+word  = ((year - 2000) << 9) | (month << 5) | day
+byte6 = word & 0xFF
+byte7 = (word >> 8) & 0xFF
 ```
 
-Finally:
-- byte 6 = `(W << 4) | V`
-- byte 7 = `0x30 | Q`
-
-The `Q` low nibble selects between current and previous year windows within each bank:
-- **Bank 1 (months 1–7):** `Q=2` → current year, `Q=0` → previous year
-- **Bank 2 (months 8–12):** `Q=3` → current year, `Q=1` → previous year
-
-> **Note:** current observations query only current-year daily totals. Previous-year daily queries (Q=0/Q=1) are structurally supported by the protocol but have not yet been validated on real hardware.
-
-Example encodings (gas heating, current year, shown for brevity):
+Example encodings (gas heating, shown for brevity):
 
 | Date | Byte 6 | Byte 7 | Request tail |
 | --- | --- | --- | --- |
-| 1 January (current year) | `0x21` | `0x32` | `... 0x21 0x32` |
-| 1 January (previous year) | `0x21` | `0x30` | `... 0x21 0x30` |
-| 31 December (current year) | `0x9F` | `0x33` | `... 0x9F 0x33` |
-| 31 December (previous year) | `0x9F` | `0x31` | `... 0x9F 0x31` |
+| 1 January 2025 | `0x21` | `0x32` | `... 0x21 0x32` |
+| 1 January 2024 | `0x21` | `0x30` | `... 0x21 0x30` |
+| 31 December 2025 | `0x9F` | `0x33` | `... 0x9F 0x33` |
+| 31 December 2024 | `0x9F` | `0x31` | `... 0x9F 0x31` |
+
+These four encodings decode cleanly under the packed-date formula in §3:
+`21 32` → 2025-01-01, `9F 33` → 2025-12-31, `21 30` → 2024-01-01, `9F 31` →
+2024-12-31. As in §4.3, "current year" and "previous year" are descriptive
+terms for whichever absolute year the caller encodes relative to today's
+date, not separate wire selectors. Daily queries for years other than the
+two adjacent to today's date are structurally supported by the packed-date
+encoding but have not yet been validated on real hardware.
 
 ### 4.5 Monthly Windows (`X=2`)
 
-Regulators encode months using the same `W/Q` banking concept as the daily variant (two banks of seven months). The `Q` nibble toggles between current and previous year within each bank, following the same pattern as §4.4. Detailed month-level validation is pending; current observations treat month queries as experimental.
+Monthly reads use the same packed-date word as §4.4 with `day = 0` and the
+target month and year set:
+
+```text
+word  = ((year - 2000) << 9) | (month << 5)
+byte6 = word & 0xFF
+byte7 = (word >> 8) & 0xFF
+```
+
+For example, March 2025 (`month=3`, `year=2025`) → `word = (25 << 9) | (3 << 5) = 0x3260` → `byte6 = 0x60`, `byte7 = 0x32`. Detailed month-level validation beyond this packing is pending; current observations treat month queries as experimental.
 
 ## 5. Source and Usage Selectors
 
@@ -132,24 +167,99 @@ Commonly queried combinations:
 
 ## 6. Response Format
 
-Observed responses are typically 11 bytes (some regulators append padding). The final 4 bytes always form a float32 little-endian value representing watt-hours.
+For sub-command `0x10`, observed responses are typically 11 bytes (some regulators append padding). In this form the final 4 bytes are a float32 little-endian value representing watt-hours.
 
 ```text
-[0x0X, ?, ?, 0x0Y, 0x0Z, (W << 4) | V, 0x30 | Q, value_0, value_1, value_2, value_3]
+[FLAGS, PERIOD_IDX, ENERGY_IDX, 0x0Y, 0x0Z, DATE_LO, DATE_HI, value_0, value_1, value_2, value_3]
 ```
 
-- The period/source/usage/time fields echo the request so that callers can correlate responses.
+| Byte | Meaning |
+| --- | --- |
+| 0 | `FLAGS` — low bits 0-1: time base (matches request byte 1's low nibble); bit 2: access (0 = read); bit 3: reserved/unknown; high nibble: return code (`0x0` = value present, non-zero = not OK — no value follows that can be trusted) |
+| 1 | `PERIOD_IDX` — raw one-byte field, the same position as request byte 2. Observed as `0x00` or `0xFF`; hardware confirmation of its semantics pending (see §6.1). |
+| 2 | `ENERGY_IDX` — raw one-byte field, the same position as request byte 3. Observed as `0x00` or `0xFF`; hardware confirmation of its semantics pending (see §6.1). |
+| 3 | `0x0Y` — echoes the energy source selector |
+| 4 | `0x0Z` — echoes the usage selector |
+| 5-6 | `DATE_LO, DATE_HI` — packed date, decoded with the formula in §3 |
+| 7-10 | `value_0..value_3` — IEEE 754 float32 little-endian watt-hours |
+
 - `value_*` is an IEEE 754 float32 little-endian number. Divide by `1000` to convert Wh to kWh.
 - Example: bytes `0x00 0xE8 0x03 0x00` → `100000.0 Wh` → `100 kWh`.
+- **Read-only verification step:** a reply to a total request (§4.2) echoes
+  the regulator's own current date in bytes 5-6, rather than the all-zero
+  date sent in the request. Decoding that echoed date with the §3 formula
+  yields the day the read was made — a reproducible, read-only check that
+  does not depend on any write or on wall-clock assumptions baked into the
+  request. See §6.1 for a worked example.
+
+### 6.1 Worked Evidence (Read-Only)
+
+Three read-only identification-style queries against a VRC 720f/2 regulator
+(EID `BASV2`, SW `0507`) at address `0x15`, service `B5 16`, on 2026-04-07.
+Any reader can reproduce the decode below with only the packed-date formula
+in §3 and a standard IEEE 754 float32 little-endian decoder.
+
+**Query 1 — total, electrical heating:**
+
+```text
+Request: 10 00 FF FF 03 03 00 30
+Reply:   00 00 00 03 03 87 34 00 54 5D 46
+```
+
+| Reply byte(s) | Raw | Decoded |
+| --- | --- | --- |
+| 0 (`FLAGS`) | `0x00` | time base `0` (total); access `0` (read); return code `0` (value present) |
+| 1 (`PERIOD_IDX`) | `0x00` | — |
+| 2 (`ENERGY_IDX`) | `0x00` | — |
+| 3 (`0x0Y`) | `0x03` | energy type `3` (electrical) |
+| 4 (`0x0Z`) | `0x03` | operation mode `3` (heating) |
+| 5-6 (date) | `87 34` | word `0x3487`; day `7`, month `4`, year `2026` — the day the query was made |
+| 7-10 (value) | `00 54 5D 46` | float32 LE = `14165.0` Wh |
+
+**Query 2 — total, electrical DHW (not available):**
+
+```text
+Request: 10 00 FF FF 03 04 00 30
+Reply:   10 00 FF 03 04 87 34 00 00 00 00
+```
+
+| Reply byte(s) | Raw | Decoded |
+| --- | --- | --- |
+| 0 (`FLAGS`) | `0x10` | time base `0` (total); access `0` (read); return code `1` (**not OK** — no value follows that can be trusted) |
+| 1 (`PERIOD_IDX`) | `0x00` | — |
+| 2 (`ENERGY_IDX`) | `0xFF` | — |
+| 3-4 | `03 04` | energy type `3` (electrical), operation mode `4` (DHW) |
+| 5-6 (date) | `87 34` | same echoed date as Query 1: `2026-04-07` |
+| 7-10 (value) | `00 00 00 00` | no value — return code is non-zero |
+
+**Query 3 — yearly, electrical heating, year 2025 (not available):**
+
+```text
+Request: 10 03 FF FF 03 03 00 32
+Reply:   13 FF FF 03 03 00 32 00 00 00 00
+```
+
+| Reply byte(s) | Raw | Decoded |
+| --- | --- | --- |
+| 0 (`FLAGS`) | `0x13` | time base `3` (yearly); access `0` (read); return code `1` (**not OK**) |
+| 1 (`PERIOD_IDX`) | `0xFF` | — |
+| 2 (`ENERGY_IDX`) | `0xFF` | — |
+| 3-4 | `03 03` | energy type `3` (electrical), operation mode `3` (heating) |
+| 5-6 (date) | `00 32` | word `0x3200`; day `0`, month `0`, year `2025` — the requested year is echoed back, not today's date, because this is a yearly (not total) request |
+| 7-10 (value) | `00 00 00 00` | no value — return code is non-zero |
+
+Queries 2 and 3 show `PERIOD_IDX`/`ENERGY_IDX` (reply bytes 1-2) taking both
+`0x00` and `0xFF` across replies from the same regulator, which is why §3
+and §6 describe their semantics as pending rather than settled.
 
 ## 7. Example Payloads
 
 | Scenario | Hex payload |
 | --- | --- |
-| Gas heating, current year | `10 03 FF FF 04 03 00 32` |
-| Gas hot water, previous year | `10 03 FF FF 04 04 00 30` |
-| Gas heating, 1 January | `10 01 FF FF 04 03 21 32` |
-| Gas heating, 31 December | `10 01 FF FF 04 03 9F 33` |
+| Gas heating, year 2025 | `10 03 FF FF 04 03 00 32` |
+| Gas hot water, year 2024 | `10 03 FF FF 04 04 00 30` |
+| Gas heating, 1 January 2025 | `10 01 FF FF 04 03 21 32` |
+| Gas heating, 31 December 2025 | `10 01 FF FF 04 03 9F 33` |
 
 ## 8. VWZ/VWZIO Access Path (Heat Pump Systems)
 
@@ -179,5 +289,7 @@ This is a distinct access path from the VRC720 8-byte selector. The `18` sub-ID 
 ## 9. References
 
 - `john30/ebusd-configuration` issue `#490` (public reverse-engineering notes)
-- Operator RE sessions with Vaillant sensoCOMFORT VRC 720
-- implementation reference traces (energy register polling logic)
+- §6.1 Worked Evidence: three read-only identification-style queries against
+  a VRC 720f/2 regulator, with full request/reply bytes and decode — the
+  primary evidence for the packed-date model and the response byte layout
+  in this document

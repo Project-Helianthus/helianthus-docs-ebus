@@ -199,11 +199,50 @@ Several registers are conditionally available based on system configuration. Gat
 ## OP=0x02 — Local Parameter Registers
 
 The semantic names below form an operator-curated, operation-scoped naming
-catalog ([issue #544](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/544)).
+catalog ([issue #544](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/544)),
+machine-checked against
+[`fixtures/b524-op02-register-names.csv`](fixtures/b524-op02-register-names.csv).
 Naming does not independently qualify a codec, value range, write capability,
 physical identity or scan bound. Existing raw observations and profile limits
 remain separately qualified. Newly named entries without a characterized layout
 are marked **Hypothesis**.
+
+### Register name correspondence fixture
+
+[`fixtures/b524-register-name-correspondence.csv`](fixtures/b524-register-name-correspondence.csv)
+maps each `(opcode, group, register)` key to this catalog's canonical `name`
+and, where known, a set of annotation columns:
+
+| Column | Meaning |
+| --- | --- |
+| `name` | The canonical, presentation name from this catalog. Identical to `b524-op02-register-names.csv` for every OP02 key; this is the only column that names a register in this document. |
+| `vaillant_friendly_name` | An observed Vaillant friendly name for the register. |
+| `vaillant_name_vrc720` / `vaillant_name_vrc700` | Observed Vaillant names, where known, for the VRC720 and VRC700 regulator families respectively. An empty cell means no name has been observed for that family; it does not imply the register is absent on that family. |
+| `myvaillant_name_vrc720` / `myvaillant_name_vrc700` | Observed myVaillant app/cloud names, where known, per family. |
+| `ebusd_name` | The name used by the community `ebusd` configuration. May contain `{hc}` / `{zone}` placeholders for per-circuit or per-zone instances. |
+
+Multiple observed values in one cell are separated by `` | ``. These
+annotation columns are observed names only: they establish neither codec,
+value range, nor write access, and they do not widen or narrow this
+document's own register-level claims. Where a name has been observed for
+only one regulator family, treat that as what was observed, not as proof
+that the register is absent on the other family.
+
+**Column-level provenance:** `name` is this document's own canonical catalog
+([`fixtures/b524-op02-register-names.csv`](fixtures/b524-op02-register-names.csv)).
+`ebusd_name` is a name from the public `ebusd` configuration, as mapped onto
+each `(group, register)` selector by this project; that mapping can itself
+be wrong — two such mapping errors (`HwcParallelLoading` on GG=0x00 RR=0x0015,
+and `Hc{hc}CircuitType` on GG=0x02 RR=0x0001) were found and removed in this
+change. `vaillant_friendly_name`, `vaillant_name_vrc720`,
+`vaillant_name_vrc700`, `myvaillant_name_vrc720`, and `myvaillant_name_vrc700`
+are observed names whose source is not published with this fixture. None of
+the six annotation columns (`vaillant_friendly_name`,
+`vaillant_name_vrc720`, `vaillant_name_vrc700`, `myvaillant_name_vrc720`,
+`myvaillant_name_vrc700`, and `ebusd_name`) is itself a wire observation;
+each is at `Hypothesis` grade as an identification, and none establishes a
+codec, a value range, or write access on its own. This document does not
+invent a per-row source beyond what is stated here.
 
 ### GG=0x00 — System
 
@@ -215,7 +254,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0002 | continuous_heating_limit | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | FLAGS=0x03. ebusd: `-26=off` disables function |
 | 0x0003 | frost_protection_delay | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | FLAGS=0x03 |
 | 0x0004 | max_preheating_time | C | u16 | min | — | 0..300 step 10 | — | — | FLAGS=0x03. † |
-| 0x0006 | manual_cooling_days | C | u8 | days | — | — | — | cooling_enabled? | **Dormant** when cooling not configured. VRC720 manual cooling days count. † |
+| 0x0006 | manual_cooling_days | C | u16 | days | — | — | — | cooling_enabled? | **Dormant** when cooling not configured. Two-byte register where present. Vaillant name observed for the VRC700 family only; hardware confirmation pending. † |
 | 0x0007 | system_off | C | u8 | bool | — | — | `0=off 1=on` | — | FLAGS=0x03 (user RW). System on/off switch, not a sensor reading |
 | 0x0008 | cooling_while_holiday | C | u8 | bool | — | — | — | — | † |
 | 0x0009 | automatic_cooling_enabled | C | u8 | bool | — | — | `0=off 1=on` | — | FLAGS=0x02 (technical RW). Scan: 1 byte. † |
@@ -230,7 +269,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0013 | backup_heater_type | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x0014 | adaptive_heating_curve | C | u8 | bool | AdaptHeatCurve | — | →yesno | — | FLAGS=0x03 (user RW). Scan validated 1-byte |
 | 0x0015 | automatic_daylight_saving_time | — | u16 | — | — | — | — | — | False positive in CSV (was `parallel_tank_loading`; actual is at 0x000A) |
-| 0x0016 | system_ventilation_operating_mode | S | u8 | bool | — | — | `0=off 1=on` | — | **Dormant** when no system quick mode active. Write path is a hypothesis: `OP=0x02, GG=0x09, RR=0x0002`. See [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths) |
+| 0x0016 | system_ventilation_operating_mode | S | u16 | enum | — | — | `1=AUTO 2=DAY 3=SET_BACK` | — | Operating mode for air ventilation, not a boolean: observed Vaillant behavior on the VRC700 family, hardware confirmation pending. Other codes are not documented and stay raw. Distinct from OP02 GG09 RR0002 (`TIME_CONTROLLED`/`NORMAL`/`REDUCED`). **Dormant** when no system quick mode active. Two-byte register where present. Vaillant name observed for the VRC700 family only; hardware confirmation pending. Write path is a hypothesis: `OP=0x02, GG=0x09, RR=0x0002`. See [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths) |
 | 0x0017 | system_dhw_max_loading_time | C | u16 | min | MaxCylinderChargeTime | — | — | hwc_enabled | |
 | 0x0018 | system_dhw_blocking_time | C | u16 | min | HwcLockTime | — | — | hwc_enabled | |
 | 0x0019 | system_solar_flow_rate_setpoint | C | f32 | — | — | — | — | fm5_config≤2 | See [Mapping Conflicts](#mapping-conflicts) |
@@ -427,10 +466,10 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x00EF | continuous_heating_room_setpoint | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 20.0. Temperature setpoint |
 | 0x00F0 | error_number_priority | P | u16 | — | — | — | — | — | FLAGS=0x01. Scan value: 0xFFFF (65535) — sentinel/unset |
 | 0x00F1 | maintenance_number_priority | P | u16 | — | — | — | — | — | FLAGS=0x01. Scan value: 0xFFFF (65535) — sentinel/unset |
-| 0x00F2 | system_holiday_start_date | C | date | date | — | — | — | — | FLAGS=0x03. Scan: 01.01.2015 (BCD) |
-| 0x00F3 | system_holiday_end_date | C | date | date | — | — | — | — | FLAGS=0x03. Scan: 01.01.2015 (BCD) |
-| 0x00F4 | system_holiday_start_time | C | date | date | — | — | — | — | FLAGS=0x03. Scan: 00.00.2000 (BCD reset) |
-| 0x00F5 | system_holiday_end_time | C | date | date | — | — | — | — | FLAGS=0x03. Scan: 00.00.2000 (BCD reset) |
+| 0x00F2 | system_holiday_start_date | C | date | date | — | — | — | — | System holiday start date (3-byte date). FLAGS=0x03. Scan: 01.01.2015 (BCD) |
+| 0x00F3 | system_holiday_end_date | C | date | date | — | — | — | — | System holiday end date (3-byte date). FLAGS=0x03. Scan: 01.01.2015 (BCD) |
+| 0x00F4 | system_holiday_start_time | C | time | time | — | — | — | — | System holiday start time (3-byte time), not a date. FLAGS=0x03. Scan: 00:00:00 (reset) |
+| 0x00F5 | system_holiday_end_time | C | time | time | — | — | — | — | System holiday end time (3-byte time), not a date. FLAGS=0x03. Scan: 00:00:00 (reset) |
 | 0x00F6 | room_temperature_setpoint_for_holiday | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 10.0 |
 | 0x00F7 | system_holiday_abort | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
 | 0x00F8 | manual_cooling_abort | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. ebusd TSP hinted 5-byte — scan sees 1 byte |
@@ -442,7 +481,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x00FE | (unknown_temp_config) | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 13.0 |
 | 0x00FF | (unknown_temp_config) | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 25.0 |
 
-**Note:** 100 new registers discovered in the 0x003C-0x00FF range by proof scan 2026-03-05. The 0x00C1-0x00CD cluster contains u32 energy counters (decode as u32, NOT f32 — the tiny float values like 6.586e-43 are mis-decoded u32 integers). The 0x00DD-0x00DF cluster contains packed hourly temperature schedule bytes. The 0x00E3-0x00EE cluster (13 consecutive f32=0.0 with FLAGS=0x01) may be per-month energy statistics. The 0x00F2-0x00F5 cluster contains holiday date pairs.
+**Note:** 100 new registers discovered in the 0x003C-0x00FF range by proof scan 2026-03-05. The 0x00C1-0x00CD cluster contains u32 energy counters (decode as u32, NOT f32 — the tiny float values like 6.586e-43 are mis-decoded u32 integers). The 0x00DD-0x00DF cluster contains packed hourly temperature schedule bytes. The 0x00E3-0x00EE cluster (13 consecutive f32=0.0 with FLAGS=0x01) may be per-month energy statistics. The 0x00F2-0x00F5 cluster contains the system holiday start/end dates (0x00F2/0x00F3) and start/end times (0x00F4/0x00F5).
 
 ---
 
@@ -534,10 +573,10 @@ observations, but do not extend the current profile's II00..09 coverage.
 | 0x0018 | circuit_dhw_circulation_pump_status | S | u16 | bool | Hc{hc}ExternalHWCActive | — | — | — | Gate register for ext HWC. FLAGS=0x00 (volatile RO) — status, not config |
 | 0x0019 | circuit_external_heat_demand | S | u16 | state | Hc{hc}ExternalHeatDemand | — | — | — | External heat source. FLAGS=0x00 (volatile RO) — status, not config |
 | 0x001A | circuit_status_heating_circuit_mixer | S | f32 | % | Hc{hc}MixerMovement | — | — | — | Signed float: `<0`=closing, `>0`=opening. Scan verified: -100.0 when fully closing. Read-only |
-| 0x001B | circuit_pump_status | S | u16 | enum | Hc{hc}Status | — | — | — | Enum: 0=STANDBY, 1=HEATING, 2=COOLING. See [Circuit State Enum](#circuit-state-enum) |
+| 0x001B | circuit_pump_status | S | u16 | raw | Hc{hc}Status | — | — | — | Pump status per observed Vaillant naming ("Status Pump"). Earlier documented here as carrying the circuit state enumeration (STANDBY/HEATING/COOLING/DHW), on the strength of a single 2026-03-08 idle observation and a name correlation; that observation is equally consistent with a pump status and does not discriminate between the two readings. See [Circuit State Enum](#circuit-state-enum) |
 | 0x001C | circuit_adaptive_heating_curve_offset | S | f32 | — | Hc{hc}HeatCurveAdaption | — | — | — | Heat curve adaption factor. Dimensionless. Read-only |
 | 0x001D | circuit_dhw_quick_mode | C | f32 | °C | Hc{hc}FrostProtThreshold | — | — | — | FLAGS=0x02 (technical RW) — writable config, not property |
-| 0x001E | circuit_status_circuit | S | u16 | raw | Hc{hc}PumpStatus | — | — | — | Installer-field candidate, distinct from RR001B and RR0020; its semantic status interpretation needs separate physical corroboration. |
+| 0x001E | circuit_status_circuit | S | u16 | enum | Hc{hc}PumpStatus | — | — | — | Hypothesis: carries the circuit state enumeration (0=STANDBY, 1=HEATING, 2=COOLING, 3=DHW), based on observed Vaillant naming ("Status circuit", myVaillant `circuitState`); hardware confirmation pending. Installer-field candidate, distinct from RR001B and RR0020. See [Circuit State Enum](#circuit-state-enum) |
 | 0x001F | circuit_minimum_outside_temperature_cooling | C | f32 | °C | Hc{hc}RoomSetpoint | — | — | — | |
 | 0x0020 | circuit_status_automatic_heating_cooling | S | u8 | raw | Hc{hc}FlowTempCalc | — | — | — | Observed UCH one-byte raw status (`00`) at the relevant circuit selectors. It is not a temperature value; earlier f32 prose is unqualified. |
 | 0x0021 | circuit_mixer_position_percentage | S | f32 | % | Hc{hc}MixerPosition | — | — | — | |
@@ -1100,12 +1139,13 @@ Used by: GG=0x02 RR=0x0002
 | 2 | fixed | fixed_value | Fixed value | Circuit held at a fixed target flow temperature. Applications: swimming pool heating, door air curtain heating. |
 | 3 | hwc | dhw | DHW | Heating circuit used as DHW circuit for an additional cylinder. II09 remains a virtual native-water candidate; current public evidence provides no temperature-based predicate to infer this role when RR0002 is inactive. |
 | 4 | returnincr | return_increase | Increase in return | Return temperature raise circuit. Target return temperature at RR=0x0004 (factory setting 30°C). |
+| 5 | pool | pool | Pool | Observed Vaillant behavior on the VRC700 family only; hardware confirmation pending. Not within the BASV2/VRC720/CTLV2 constraint range (0..4) — see below. |
 
 **Naming note:** ebusd templates label value 1 as "mixer" — this is a community naming convention; the Vaillant VRC720 operating & installation manual calls it "Heating" (Heizen). The mixing valve is an implementation detail of the hydraulic system, not the circuit type itself.
 
 **Pool is a derived application, not a raw enum value.** The Vaillant manual describes "fixed value control" as suitable for "swimming pool heating" — so pool heating is an _application_ of `fixed_value` (mctype=2) when the system topology includes swimming pool hydraulics (sensor, circulation pump). It is NOT a separate enum value on VRC720/CTLV2/BASV2 systems. Constraint catalog confirms range 0..4.
 
-**ebusd extended enums:** ebusd `mctype` defines 0-5 (adding `pool=5`), and `mctype7` defines 0-6 (adding `circulation=6`; see ebusd-config issue #182 and PR #174). Neither value 5 nor 6 is within the BASV2 constraint range (0..4). These values may be valid on other Vaillant controller platforms.
+**ebusd extended enums:** ebusd `mctype` defines 0-5 (adding `pool=5`), and `mctype7` defines 0-6 (adding `circulation=6`; see ebusd-config issue #182 and PR #174). Value 5 is observed Vaillant behavior on the VRC700 family (hardware confirmation pending); value 6 remains unconfirmed on any family. Neither is within the BASV2/VRC720/CTLV2 constraint range (0..4).
 
 **Zone capabilities** depend on (a) circuit type supporting heating, and (b) `cooling_enabled` flag (RR=0x0006) for cooling capability. Cooling is a separate function/mode, not derived from circuit type.
 
@@ -1113,20 +1153,39 @@ Sources: VRC720 operating & installation instructions (circuit type table, fixed
 
 ### Circuit State Enum
 
-Used by: GG=0x02 RR=0x001B (`circuit_state`, ebusd `Hc{hc}Status`)
+Used by: GG=0x02 RR=0x001E (`circuit_status_circuit`, ebusd `Hc{hc}PumpStatus`)
+
+**Hypothesis.** Assigning this enumeration to RR=0x001E rests on observed
+Vaillant naming only: RR=0x001E's observed Vaillant friendly name is
+"Status circuit" and its myVaillant name is `circuitState`, while RR=0x001B's
+observed Vaillant friendly name is "Status Pump". No live observation has
+been made against RR=0x001E itself; hardware confirmation is pending.
 
 | Value | Common name | myPyllant | Evidence |
 |-------|-------------|-----------|----------|
-| 0 | standby | STANDBY | Live scan confirmed: 3 circuits idle, pumps off, flow setpoint=0 |
+| 0 | standby | STANDBY | See the RR=0x001B observation below — it does not discriminate between RR=0x001B and RR=0x001E. |
 | 1 | heating | HEATING | Inferred from the `CircuitState` enum correlation; physical corroboration remains required. |
 | 2 | cooling | COOLING | Inferred from the `CircuitState` enum correlation; physical corroboration remains required. |
+| 3 | dhw | — | Hypothesis: register-map correction (see RR001E above); physical corroboration remains required. |
 | N | unknown_N | — | Safety fallback for unmapped values |
 
-**ebusd type:** Plain `UCH` — no enum type annotation in ebusd `Hc1Status` model (`15.700.tsp`).
+**The 2026-03-08 live observation was made on RR=0x001B, not RR=0x001E:**
+three circuits simultaneously read value `0` on RR=0x001B, idle, pumps off,
+flow setpoint=0. That observation supports "value 0 means idle/standby" on
+whichever of RR=0x001B or RR=0x001E actually carries the circuit state
+enumeration — it is equally consistent with RR=0x001B being a raw pump
+status (pump off) and RR=0x001E carrying the state enum, or with RR=0x001B
+itself carrying the enum. It does not discriminate between the two
+readings. The naming evidence above (not this observation) is what is
+being used to assign the enumeration to RR=0x001E.
 
-**myPyllant:** `CircuitState` enum in `myPyllant/enums.py` defines `HEATING`, `COOLING`, `STANDBY` as string values. The cloud API performs the numeric-to-string conversion server-side. Test fixtures contain only HEATING and STANDBY observations.
+**ebusd type:** Plain `UCH` — no enum type annotation in ebusd `Hc1PumpStatus` model (`15.700.tsp`).
 
-Sources: Live scan observation (2026-03-08), myPyllant `enums.py` `CircuitState`, VRC720 register mapping.
+**myPyllant:** `CircuitState` enum in `myPyllant/enums.py` defines `HEATING`, `COOLING`, `STANDBY` as string values; the fixture's own `myvaillant_name_vrc700` column names RR=0x001E `circuitState`. The cloud API performs the numeric-to-string conversion server-side. Test fixtures contain only HEATING and STANDBY observations, and do not themselves identify which register the cloud API reads.
+
+**GG=0x02 RR=0x001B (`circuit_pump_status`, register selector `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B`)** is, per observed Vaillant naming ("Status Pump"), a raw pump-status register. It was earlier documented here as carrying the circuit state enumeration, on the strength of the single 2026-03-08 idle observation above plus a name correlation with myPyllant's `CircuitState`; that attribution has been moved to RR=0x001E as a Hypothesis, per the naming evidence above. The conflict between the two readings is not resolved by either the observation or the naming alone.
+
+Sources: Live scan observation (2026-03-08, on RR=0x001B), myPyllant `enums.py` `CircuitState`, VRC720 register mapping.
 
 ### offmode — Auto-off behavior
 
@@ -1237,25 +1296,26 @@ Register `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0048` — system-level energy
 
 **Transitions:** standby -> heating/dhw/cooling (demand). Active states -> standby (demand satisfied). heating <-> dhw (DHW priority override / DHW complete with pending heating demand).
 
-**Related registers:** GG=0x02 RR=0x001B `circuit_state` (per-circuit sub-state aggregated here), GG=0x02 RR=0x001E `pump_status`, GG=0x00 RR=0x004B `system_flow_temperature`.
+**Related registers:** GG=0x02 RR=0x001E `circuit_status_circuit` (per-circuit sub-state aggregated here), GG=0x02 RR=0x001B `circuit_pump_status`, GG=0x00 RR=0x004B `system_flow_temperature`.
 
 **Confidence:** MEDIUM for states 0-2 (live scan + myPyllant enum correlation); `dhw` remains a hypothesis pending correlated evidence.
 
-### `circuit_state` (OP=0x02, GG=0x02, RR=0x001B)
+### `circuit_state` (OP=0x02, GG=0x02, RR=0x001E)
 
-Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit state. Wire type: `u16` enum.
+Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001E` — per-circuit state (`circuit_status_circuit`). Wire type: `u16` enum. **Hypothesis:** this enumeration's assignment to RR=0x001E rests on observed Vaillant naming (see [Circuit State Enum](#circuit-state-enum)), not on a live observation against RR=0x001E itself.
 
 | Value | State | myPyllant | Description |
 |-------|-------|-----------|-------------|
-| 0 | `standby` | `STANDBY` | Circuit idle (live confirmed: 3 circuits simultaneously standby) |
+| 0 | `standby` | `STANDBY` | The 2026-03-08 live observation (3 circuits simultaneously idle, pumps off) was made on RR=0x001B, not RR=0x001E — see [Circuit State Enum](#circuit-state-enum). It is equally consistent with a pump status and does not discriminate between RR=0x001B and RR=0x001E. |
 | 1 | `heating` | `HEATING` | Circuit active in heating mode |
 | 2 | `cooling` | `COOLING` | Circuit active in cooling mode |
+| 3 | `dhw` | — | Circuit active as a DHW circuit (Hypothesis: register-map correction; physical corroboration remains required) |
 
 **Transitions:** standby -> heating (room temp below setpoint AND schedule slot active). heating -> standby (setpoint reached OR schedule inactive). standby -> cooling (room temp above cooling setpoint AND cooling enabled).
 
-**Related registers:** GG=0x02 RR=0x001E is an installer-field candidate with unknown semantic status interpretation; GG=0x02 RR=0x001A is `mixer_movement`; GG=0x02 RR=0x0020 is an observed UCH one-byte raw status, not a calculated flow temperature.
+**Related registers:** GG=0x02 RR=0x001B (`circuit_pump_status`, register selector `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B`) is, per observed Vaillant naming, a distinct raw pump-status register; it was earlier documented as carrying this enumeration (see [Circuit State Enum](#circuit-state-enum) for why that attribution moved). GG=0x02 RR=0x001A is `mixer_movement`; GG=0x02 RR=0x0020 is an observed UCH one-byte raw status, not a calculated flow temperature.
 
-**Confidence:** HIGH for 0/1 (live confirmed + myPyllant); MEDIUM for 2 (no cooling hardware in lab).
+**Confidence:** Hypothesis for 0/1/2 (naming-based assignment to RR=0x001E; the only live observation was made on RR=0x001B and does not discriminate between the two registers; myPyllant correlation for 1/2 remains uncorroborated); Hypothesis for 3 (DHW), pending physical corroboration.
 
 ### `system_quick_mode` (OP=0x02, GG=0x00, RR=0x0016 + 0x0074)
 
@@ -1263,13 +1323,13 @@ Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B` — per-circuit st
 
 #### Asymmetric read/write paths
 
-- **Read active flag:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0016` (u8 bool)
+- **Read ventilation operating mode:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0016` (u16 enum `1=AUTO 2=DAY 3=SET_BACK` as observed on the VRC700 family; see `system_ventilation_operating_mode` above) — an operating mode, not a flag
 - **Read mode value:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0074` (u8 enum)
 - **Write:** `OP=0x02, GG=0x09, RR=0x0001` (value) + `RR=0x0002` (active flag) -- asymmetric path
 
 | Value (RR=0x0074) | State | Description |
 |--------------------|-------|-------------|
-| 0x00 | `dormant` | No quick mode active; RR=0x0016 returns `off` or dormant |
+| 0x00 | `dormant` | No quick mode active; RR=0x0016 carries the ventilation operating mode enum on the VRC700 family, other codes are not documented |
 | 0x01 | `ventilation` | Ventilation-only mode |
 | 0x02 | `party` | Party mode -- enhanced heating |
 | 0x03 | `away` | Away mode -- reduced heating |

@@ -96,7 +96,7 @@ B524 register reads produce one of three distinct response states:
 Some BASV2 observations correlate empty replies with a feature being inactive. They do not make an empty reply a universal feature-gated state:
 
 - `GG=0x00, RR=0x0006` (manual cooling days): dormant when VRC720 cooling is not configured
-- `GG=0x00, RR=0x0016` (system quick mode active flag): dormant when no system quick mode is engaged
+- `GG=0x00, RR=0x0016` (`system_ventilation_operating_mode`, u16 enum `1=AUTO 2=DAY 3=SET_BACK` as observed on the VRC700 family, hardware confirmation pending): behavior when no system quick mode is engaged is not established
 - `GG=0x00, RR=0x0074` (system quick mode value): dormant when no system quick mode is engaged
 - `GG=0x00, RR=0x00DA/0x00DB` (manual cooling dates): responsive with BCD defaults in one scan, dormant in another after configuration change
 
@@ -128,7 +128,7 @@ alone do not demonstrate that these selectors form one control path.
 
 | Operation | Path | Register |
 |-----------|------|----------|
-| Read active flag | `OP=0x02, GG=0x00, RR=0x0016` | `system_ventilation_operating_mode` (dormant when no mode active) |
+| Read operating mode | `OP=0x02, GG=0x00, RR=0x0016` | `system_ventilation_operating_mode` (enum, see register map) |
 | Read mode value | `OP=0x02, GG=0x00, RR=0x0074` | `system_quick_mode` (dormant when no mode active) |
 | Write mode value | `OP=0x02, GG=0x09, RR=0x0001` | Write target for mode activation |
 | Write active flag | `OP=0x02, GG=0x09, RR=0x0002` | Write target for mode on/off |
@@ -546,13 +546,21 @@ codes as raw evidence; they do not become valid time values.
 
 | GG | II | ADDRESS | Channel |
 | --- | --- | --- | --- |
-| 00 | 00 | 01 | Ventilation |
-| 00 | 00 | 02 | Noise reduction |
-| 00 | 00 | 03 | Tariff |
+| 00 | 00 | 01 | Noise reduction |
+| 00 | 00 | 02 | Ventilation |
+| 00 | 00 | 03 | Tariff (electricity high-tariff period) |
 | 01 | 00 | 01 | Domestic hot water |
 | 01 | 00 | 02 | Circulation |
 | 03 | Selected zone | 01 | Zone cooling |
 | 03 | Selected zone | 02 | Zone heating |
+
+**System row addressing (`GG=00`):** observed Vaillant addressing assigns
+`0x01` to noise reduction and `0x02` to ventilation. This conflicts with the
+VRC700 ebusd configuration (`15.700.csv`), which assigns the system timer
+channel map the other way round — `0x01` ventilation, `0x02` noise
+reduction. Both assignments are kept visible here; hardware confirmation by
+VRC700 owners is pending. The DHW, circulation, and zone rows are unaffected
+by this conflict.
 
 ### 4.5 `0x09` / `0x0A` Events and `0x0B` / `0x0C` Event Setpoints
 
