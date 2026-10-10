@@ -546,13 +546,21 @@ codes as raw evidence; they do not become valid time values.
 
 | GG | II | ADDRESS | Channel |
 | --- | --- | --- | --- |
-| 00 | 00 | 01 | Ventilation |
-| 00 | 00 | 02 | Noise reduction |
-| 00 | 00 | 03 | Tariff |
+| 00 | 00 | 01 | Noise reduction |
+| 00 | 00 | 02 | Ventilation |
+| 00 | 00 | 03 | Tariff (electricity high-tariff period) |
 | 01 | 00 | 01 | Domestic hot water |
 | 01 | 00 | 02 | Circulation |
 | 03 | Selected zone | 01 | Zone cooling |
 | 03 | Selected zone | 02 | Zone heating |
+
+**System row addressing (`GG=00`):** observed Vaillant addressing assigns
+`0x01` to noise reduction and `0x02` to ventilation. This conflicts with the
+VRC700 ebusd configuration (`15.700.csv`), which assigns the system timer
+channel map the other way round — `0x01` ventilation, `0x02` noise
+reduction. Both assignments are kept visible here; hardware confirmation by
+VRC700 owners is pending. The DHW, circulation, and zone rows are unaffected
+by this conflict.
 
 ### 4.5 `0x09` / `0x0A` Events and `0x0B` / `0x0C` Event Setpoints
 

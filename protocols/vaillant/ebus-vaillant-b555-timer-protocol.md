@@ -142,7 +142,7 @@ A3 [ZONE] [HC]
 **Response (9 bytes):**
 
 ```
-[status] [max_slots] [time_res] [min_dur] [has_temp] [temp_slots] [min_temp] [max_temp] [pad]
+[status] [max_slots] [time_res] [setpoint_step] [setpoint_unit] [num_setpoints] [min_temp] [max_temp] [time_program_mode]
 ```
 
 | Byte | Name | Type | Description |
@@ -150,12 +150,12 @@ A3 [ZONE] [HC]
 | [0] | status | UCH | 0x00 = available, 0x03 = unavailable |
 | [1] | max_slots | UCH | Maximum time slots per day |
 | [2] | time_resolution | UCH | Suggested time resolution in minutes (advisory) |
-| [3] | min_duration | UCH | Suggested minimum slot duration in minutes (advisory) |
-| [4] | has_temperature | UCH | 0x01 = slots carry a temperature setpoint, 0x00 = no |
-| [5] | temp_slots | UCH | Number of independent temperature values. See Section 5.1.1. |
+| [3] | setpoint_step | UCH | Setpoint step, raw value. Not a minimum duration; its enforcement has not been separately established in this capture. |
+| [4] | setpoint_unit | UCH | Setpoint unit code: 0x00 = none, 0x01 = °C, 0x02 = fan stage |
+| [5] | num_setpoints | UCH | Number of independent setpoint values. See Section 5.1.1. |
 | [6] | min_temp_c | UCH | Minimum temperature in whole °C (0xFF = N/A). **Enforced.** |
 | [7] | max_temp_c | UCH | Maximum temperature in whole °C (0xFF = N/A). **Enforced.** |
-| [8] | padding | UCH | Always 0x00 |
+| [8] | time_program_mode | UCH | Time-program mode: 0x00 = weekly, 0x01 = 24-hour |
 
 **Enforcement rules (validated by boundary testing):**
 
@@ -168,11 +168,15 @@ A3 [ZONE] [HC]
   34°C on DHW (min=35) → 0x06; 66°C on DHW (max=65) → 0x06; exact boundary
   values (35°C, 65°C) → ACK. Note: not all temp-field rejections use 0x06 —
   Heating rejects 0xFFFF with 0x01 (parameter out of range; Section 12.14).
-- `time_resolution` and `min_duration` are **advisory only**. The controller
-  accepts any minute value (0-59) regardless of these fields. These constraints
-  are advisory timing metadata
-  for all 4 visible schedule types (Heating Z1, Heating Z2, DHW, CC/circulation
-  pump), matching the config `time_resolution=10` value.
+- `time_resolution` is **advisory only**. The controller accepts any minute
+  value (0-59) regardless of this field. This advisory timing metadata
+  applies for all 4 visible schedule types (Heating Z1, Heating Z2, DHW,
+  CC/circulation pump), matching the config `time_resolution=10` value.
+  `setpoint_step` is a separate raw field (see above) and is not covered by
+  this advisory-only observation; all observed configs carry `setpoint_step`
+  values of `0`, `5`, or `10`.
+  `time_program_mode` is `0x00` (weekly) in every configuration observed so
+  far; `0x01` (24-hour) has not been observed on this hardware.
 
 **Observed configs across all timer types:**
 
@@ -188,10 +192,14 @@ A3 [ZONE] [HC]
 | Z3 Cooling | 0x03 | 1 | 1 | 0 | 0 | 0 | 0xFF | 0xFF | 0 |
 | Silent | 0x03 | 1 | 1 | 0 | 0 | 0 | 0xFF | 0xFF | 0 |
 
-#### 5.1.1 Byte [5] (temp_slots) — temperature cardinality
+#### 5.1.1 Byte [5] (num_setpoints, formerly `temp_slots`) — temperature cardinality
 
-This field indicates how many independent temperature setpoints can exist
-across the timer's slots. Three distinct values are observed:
+This field (the number of setpoints) indicates how many independent
+temperature setpoints can exist across the timer's slots. Three distinct
+values are observed. The remainder of this section retains the `temp_slots`
+and `has_temp` shorthand used in the original capture notes below to refer
+to this byte and to byte [4] (`setpoint_unit`); the concrete observed values
+(0, 1, 12) are unchanged by the renaming:
 
 | Value | Meaning | Observed for | Validated |
 |-------|---------|--------------|-----------|
@@ -252,14 +260,14 @@ A4 [ZONE] [HC]
 **Response (9 bytes):**
 
 ```
-[status] [Mon] [Tue] [Wed] [Thu] [Fri] [Sat] [Sun] [pad]
+[status] [Mon] [Tue] [Wed] [Thu] [Fri] [Sat] [Sun] [slot_count_24h]
 ```
 
 | Field | Size | Description |
 |-------|------|-------------|
 | status | 1 | Timer status: 0x00 = active, 0x03 = unavailable (matches A3 byte[0]). See A5 status for comparison. |
 | Mon..Sun | 7 | Slot count per day (UCH, 0x00-0x0C) |
-| pad | 1 | Trailing padding (always 0x00) |
+| slot_count_24h | 1 | 24-hour slot count, not padding. `0x00` in every weekly-mode configuration observed so far (see A3 byte [8], `time_program_mode`); not yet observed non-zero. |
 
 > **Cross-reference:** The first byte of A4 (status/slot-count context) and A5 (status/timer-entry context) responses share the same byte position but have different semantics. A4 byte[0] gates the validity of the per-weekday slot counts; A5 byte[0] gates the validity of a single timer slot entry. See the respective section for details.
 
