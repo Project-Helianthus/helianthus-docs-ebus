@@ -8,8 +8,13 @@ and solar energy figures.
 
 - Transport: standard eBUS telegram (`DST PB SB LEN DATA...`) with the payload detailed below.
 - CRC/escaping follow normal eBUS rules and are omitted in this document.
-- Requests are 8 bytes long and contain embedded selectors for period, source, usage, and time window.
-- Responses typically carry ~11 bytes and end with an IEEE 754 float32 little-endian value expressed in watt-hours.
+- This document covers sub-command `0x10` (energy statistics read) only. For
+  sub-command `0x10` requests are 8 bytes long and contain embedded selectors
+  for period, source, usage, and time window.
+- For sub-command `0x10`, responses typically carry ~11 bytes and end with an
+  IEEE 754 float32 little-endian value expressed in watt-hours.
+- Other B516 sub-commands exist with different request and reply layouts and
+  are not covered by this page.
 
 ## 2. Register Identification
 
@@ -169,7 +174,7 @@ Observed responses are typically 11 bytes (some regulators append padding). The 
 
 | Byte | Meaning |
 | --- | --- |
-| 0 | `FLAGS` — low bits 0-1: time base (matches request byte 1's low nibble); bit 2: access (0 = read); high nibble: return code (`0x0` = value present, non-zero = not OK — no value follows that can be trusted) |
+| 0 | `FLAGS` — low bits 0-1: time base (matches request byte 1's low nibble); bit 2: access (0 = read); bit 3: reserved/unknown; high nibble: return code (`0x0` = value present, non-zero = not OK — no value follows that can be trusted) |
 | 1-2 | `PERIOD_LO, PERIOD_HI` — echo of the period/energy index selector |
 | 3 | `0x0Y` — echoes the energy source selector |
 | 4 | `0x0Z` — echoes the usage selector |

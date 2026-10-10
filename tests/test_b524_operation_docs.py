@@ -797,17 +797,18 @@ def test_regulator_crosswalk_is_exact_pair_based_and_keeps_raw_sw_distinct() -> 
     expected = {tuple(row) for row in fixture["rows"]}
 
     assert rows == expected
-    assert len(expected) == 39
-    assert "EID\nand decoded SW/SPN value match as a pair" in text
+    assert len(expected) == 38
+    assert "EID\nand decoded HW/SPN value match as a pair" in text
     assert "Hypothesis" in text
     assert "native-model evidence pending" in text
     assert (
         "`identity.model_assignment_qualification` to `project_catalog`"
         in (ROOT / "development/ebus-vaillant-regulator-identification.md").read_text()
     )
-    assert "Do not interpret raw `04 17` as `0x0417`" in text
+    assert "do not interpret either field's raw bytes" in text
     assert "`B7V00` / `0163` VRC700 R4 row" in text
     assert "B7S00" not in text
+    assert "| `CTLX0` | `007F` |" not in text
 
 
 def test_regulator_and_b524_renames_have_no_stale_paths_or_vrc700_alias() -> None:

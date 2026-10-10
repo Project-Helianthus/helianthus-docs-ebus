@@ -253,7 +253,7 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x0013 | backup_heater_type | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x0014 | adaptive_heating_curve | C | u8 | bool | AdaptHeatCurve | — | →yesno | — | FLAGS=0x03 (user RW). Scan validated 1-byte |
 | 0x0015 | automatic_daylight_saving_time | — | u16 | — | — | — | — | — | False positive in CSV (was `parallel_tank_loading`; actual is at 0x000A) |
-| 0x0016 | system_ventilation_operating_mode | S | u16 | bool | — | — | `0=off 1=on` | — | **Dormant** when no system quick mode active. Two-byte register where present. Vaillant name observed for the VRC700 family only; hardware confirmation pending. Write path is a hypothesis: `OP=0x02, GG=0x09, RR=0x0002`. See [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths) |
+| 0x0016 | system_ventilation_operating_mode | S | u16 | unknown | — | — | Unknown | — | An operating mode, not a boolean; the value set is not yet documented. **Dormant** when no system quick mode active. Two-byte register where present. Vaillant name observed for the VRC700 family only; hardware confirmation pending. Write path is a hypothesis: `OP=0x02, GG=0x09, RR=0x0002`. See [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths) |
 | 0x0017 | system_dhw_max_loading_time | C | u16 | min | MaxCylinderChargeTime | — | — | hwc_enabled | |
 | 0x0018 | system_dhw_blocking_time | C | u16 | min | HwcLockTime | — | — | hwc_enabled | |
 | 0x0019 | system_solar_flow_rate_setpoint | C | f32 | — | — | — | — | fm5_config≤2 | See [Mapping Conflicts](#mapping-conflicts) |
@@ -1291,13 +1291,13 @@ Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001E` — per-circuit st
 
 #### Asymmetric read/write paths
 
-- **Read active flag:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0016` (u8 bool)
+- **Read active flag:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0016` (u16; value set not yet documented, see `system_ventilation_operating_mode` above)
 - **Read mode value:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0074` (u8 enum)
 - **Write:** `OP=0x02, GG=0x09, RR=0x0001` (value) + `RR=0x0002` (active flag) -- asymmetric path
 
 | Value (RR=0x0074) | State | Description |
 |--------------------|-------|-------------|
-| 0x00 | `dormant` | No quick mode active; RR=0x0016 returns `off` or dormant |
+| 0x00 | `dormant` | No quick mode active; RR=0x0016's value set is not yet documented |
 | 0x01 | `ventilation` | Ventilation-only mode |
 | 0x02 | `party` | Party mode -- enhanced heating |
 | 0x03 | `away` | Away mode -- reduced heating |
