@@ -221,7 +221,18 @@ and, where known, a set of annotation columns:
 | `myvaillant_name_vrc720` / `myvaillant_name_vrc700` | Observed myVaillant app/cloud names, where known, per family. |
 | `ebusd_name` | The name used by the community `ebusd` configuration. May contain `{hc}` / `{zone}` placeholders for per-circuit or per-zone instances. |
 
-Multiple observed values in one cell are separated by `` | ``. These
+Multiple observed values in one cell are separated by `` | ``. A cell lists
+more than one value only when each of them is an observed name of that same
+register for that column. Names of values that are merely derived from a
+register (an activity or visibility flag, an aggregate over all instances, or
+a composite field the register is one component of) are not names of the
+register and are not listed. Each name is recorded once, in one spelling:
+values that differ only in letter case, spacing or punctuation are the same
+name, not separate values. `vaillant_friendly_name` is not split by
+regulator family, so it carries two labels where the label differs between
+families or releases. The multi-valued cells are GG=0x02 RR=0x0002 (both
+Vaillant name columns: two names for the same value), GG=0x00 RR=0x008B and
+GG=0x01 RR=0x0008 (friendly name). These
 annotation columns are observed names only: they establish neither codec,
 value range, nor write access, and they do not widen or narrow this
 document's own register-level claims. Where a name has been observed for
