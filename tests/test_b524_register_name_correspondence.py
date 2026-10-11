@@ -98,6 +98,67 @@ def test_correspondence_ebusd_names_are_not_duplicated_within_an_opcode() -> Non
     )
 
 
+ANNOTATION_COLUMNS = EXPECTED_COLUMNS[4:]
+
+# A cell lists more than one value only when each value is an observed name
+# of that same register for that column. Every such cell is pinned here, so
+# a regenerated fixture cannot quietly attach the name of a derived value,
+# an aggregate or a composite field to a register again.
+MULTI_VALUED_CELLS = {
+    ("0x02", "0x00", "0x008B", "vaillant_friendly_name"): (
+        "Max Flow Set Point Heat Pump",
+        "Max Flow Set Point Heat Pump CH",
+    ),
+    ("0x02", "0x01", "0x0008", "vaillant_friendly_name"): (
+        "Current target flow temperature",
+        "Current target flow temperature heating",
+    ),
+    ("0x02", "0x02", "0x0002", "vaillant_name_vrc720"): (
+        "circuit_type",
+        "circuit_type_of_mixed_circuit_external",
+    ),
+    ("0x02", "0x02", "0x0002", "vaillant_name_vrc700"): (
+        "circuit_type",
+        "circuit_type_of_mixed_circuit_external",
+    ),
+}
+
+
+def test_correspondence_multi_valued_cells_are_exactly_the_pinned_set() -> None:
+    found = {}
+    for row in _rows(CORRESPONDENCE):
+        for column in ANNOTATION_COLUMNS:
+            values = tuple(part.strip() for part in row[column].split(" | "))
+            if len(values) > 1:
+                key = (row["opcode"], row["group"], row["register"], column)
+                found[key] = values
+    assert found == MULTI_VALUED_CELLS
+
+
+def test_correspondence_values_are_not_repeated_within_a_cell() -> None:
+    for row in _rows(CORRESPONDENCE):
+        for column in ANNOTATION_COLUMNS:
+            values = [part.strip() for part in row[column].split(" | ") if part.strip()]
+            folded = ["".join(ch for ch in value.lower() if ch.isalnum()) for value in values]
+            assert len(set(folded)) == len(folded), (
+                f"{row['opcode']}/{row['group']}/{row['register']} {column}: "
+                f"spelling variants of one name listed as separate values: {values}"
+            )
+
+
+def test_correspondence_vaillant_names_are_attached_to_one_register_per_family() -> None:
+    for column in ("vaillant_name_vrc720", "vaillant_name_vrc700"):
+        seen: dict[str, tuple[str, str, str]] = {}
+        for row in _rows(CORRESPONDENCE):
+            key = (row["opcode"], row["group"], row["register"])
+            for value in (part.strip() for part in row[column].split(" | ")):
+                if not value:
+                    continue
+                assert seen.setdefault(value, key) == key, (
+                    f"{column}: {value!r} is attached to both {seen[value]} and {key}"
+                )
+
+
 def test_correspondence_fixture_is_data_only() -> None:
     # CC0 boundary: the fixture is plain observed-name data, not an
     # application instruction, command, or CLI argument.
