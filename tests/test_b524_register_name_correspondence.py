@@ -124,11 +124,27 @@ MULTI_VALUED_CELLS = {
 }
 
 
+def _cell_values(row: dict[str, str], column: str) -> tuple[str, ...]:
+    return tuple(row[column].split(" | ")) if row[column] else ()
+
+
+def test_correspondence_cells_use_only_the_canonical_separator() -> None:
+    # Values are separated by exactly " | ". Any other use of the pipe
+    # character would make a multi-valued cell look single-valued and slip
+    # past the checks below, so it is rejected outright.
+    for row in _rows(CORRESPONDENCE):
+        for column in ANNOTATION_COLUMNS:
+            for value in _cell_values(row, column):
+                where = f"{row['opcode']}/{row['group']}/{row['register']} {column}"
+                assert "|" not in value, f"{where}: non-canonical separator in {row[column]!r}"
+                assert value and value == value.strip(), f"{where}: malformed value in {row[column]!r}"
+
+
 def test_correspondence_multi_valued_cells_are_exactly_the_pinned_set() -> None:
     found = {}
     for row in _rows(CORRESPONDENCE):
         for column in ANNOTATION_COLUMNS:
-            values = tuple(part.strip() for part in row[column].split(" | "))
+            values = _cell_values(row, column)
             if len(values) > 1:
                 key = (row["opcode"], row["group"], row["register"], column)
                 found[key] = values
@@ -136,9 +152,12 @@ def test_correspondence_multi_valued_cells_are_exactly_the_pinned_set() -> None:
 
 
 def test_correspondence_values_are_not_repeated_within_a_cell() -> None:
+    # The fixture records each name once, in one spelling: values that differ
+    # only in letter case, spacing or punctuation are the same name (see the
+    # "Register name correspondence fixture" section of the register map).
     for row in _rows(CORRESPONDENCE):
         for column in ANNOTATION_COLUMNS:
-            values = [part.strip() for part in row[column].split(" | ") if part.strip()]
+            values = list(_cell_values(row, column))
             folded = ["".join(ch for ch in value.lower() if ch.isalnum()) for value in values]
             assert len(set(folded)) == len(folded), (
                 f"{row['opcode']}/{row['group']}/{row['register']} {column}: "
@@ -148,14 +167,16 @@ def test_correspondence_values_are_not_repeated_within_a_cell() -> None:
 
 def test_correspondence_vaillant_names_are_attached_to_one_register_per_family() -> None:
     for column in ("vaillant_name_vrc720", "vaillant_name_vrc700"):
-        seen: dict[str, tuple[str, str, str]] = {}
+        # Partitioned by opcode: OP=0x02 and OP=0x06 are independent
+        # namespaces, so the same name may be recorded once in each.
+        seen: dict[tuple[str, str], tuple[str, str]] = {}
         for row in _rows(CORRESPONDENCE):
-            key = (row["opcode"], row["group"], row["register"])
-            for value in (part.strip() for part in row[column].split(" | ")):
-                if not value:
-                    continue
-                assert seen.setdefault(value, key) == key, (
-                    f"{column}: {value!r} is attached to both {seen[value]} and {key}"
+            here = (row["group"], row["register"])
+            for value in _cell_values(row, column):
+                key = (row["opcode"], value)
+                assert seen.setdefault(key, here) == here, (
+                    f"{column}: {value!r} (opcode {row['opcode']}) is attached to both "
+                    f"{seen[key]} and {here}"
                 )
 
 

@@ -226,7 +226,9 @@ more than one value only when each of them is an observed name of that same
 register for that column. Names of values that are merely derived from a
 register (an activity or visibility flag, an aggregate over all instances, or
 a composite field the register is one component of) are not names of the
-register and are not listed. `vaillant_friendly_name` is not split by
+register and are not listed. Each name is recorded once, in one spelling:
+values that differ only in letter case, spacing or punctuation are the same
+name, not separate values. `vaillant_friendly_name` is not split by
 regulator family, so it carries two labels where the label differs between
 families or releases. The multi-valued cells are GG=0x02 RR=0x0002 (both
 Vaillant name columns: two names for the same value), GG=0x00 RR=0x008B and
