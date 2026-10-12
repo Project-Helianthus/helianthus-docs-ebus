@@ -94,7 +94,7 @@ command-driven write plans or event execution.
 ## Profile acquisition and reminders
 
 The planner shows each description source and per-class override with finite
-selected scope and actual request accounting. The known BASV2/SW0507 local
+selected scope and actual request accounting. The known VRC720 local
 profile defaults to zero implicit descriptions. `full` and `research` acquire
 eligible writable descriptions; unknown profile/type and explicit override also
 acquire them. Readonly rows never Describe, generic IIFF metadata never qualifies

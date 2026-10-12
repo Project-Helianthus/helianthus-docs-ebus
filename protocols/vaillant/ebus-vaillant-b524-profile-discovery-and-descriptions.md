@@ -7,11 +7,10 @@ records observed classes and register addresses.
 
 ## System information and concrete instances
 
-OP00 `circuit_count` and `zone_count` describe supported capacity for the exact
-`BASV2/rawSW0507/HW1704/API1` profile, not the number of configured or
+OP00 `circuit_count` and `zone_count` describe supported capacity for the VRC720 family, not the number of configured or
 connected instances. OP02/GG02 has heating selectors II00..08 and an
-independent virtual DHW selector II09 in that profile. A nonmatching or unknown
-profile requires separate qualification. A capacity does not assign instance
+independent virtual DHW selector II09 in that profile. A other or unknown
+family requires separate qualification. A capacity does not assign instance
 numbers, make sparse instances contiguous, or prove physical presence.
 
 The characterized OP06 slot interval is II01..08. These are profile observations,

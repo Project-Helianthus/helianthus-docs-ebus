@@ -8,7 +8,7 @@
 >
 > **Last updated:** 2026-10-07 (operation-scoped naming catalog)
 >
-> **Device:** BASV2 (VRC720-compatible, HW 1704)
+> **Controller families:** VRC700 and VRC720.
 
 This is the register catalog for B524. For the protocol specification (wire format, opcodes, FLAGS encoding, response states), see [ebus-vaillant-B524.md](./ebus-vaillant-B524.md). Each unresolved mapping remains marked inline as **Hypothesis** or **Unknown**.
 
@@ -21,12 +21,12 @@ This is the register catalog for B524. For the protocol specification (wire form
 | **RR** | Register address (hex) |
 | **Name** | Descriptive semantic name |
 | **Cat** | Documentation category: **S**=state, **C**=configuration candidate, **P**=property candidate, **E**=energy/counter candidate, **—**=unknown/unclassified. It is not derived from `FLAGS` alone and does not authorize a write. |
-| **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian. **f32 byte order is device-dependent:** all values in this map assume address `0x15` (BASV2/VRC720) = little-endian. HMU at `0x08` (heat pump systems) uses big-endian f32 -- see [B524 protocol doc section 2.6](./ebus-vaillant-B524.md#26-wire-type-encoding) |
+| **Wire** | On-wire encoding: `u8`, `u16`, `u32`, `f32`, `string`, `date`, `time`, `bytes`. All multi-byte integers are little-endian. **f32 byte order is profile-dependent:** the characterized VRC720 values are little-endian. A destination address alone does not select byte order; qualify other profiles independently — see [B524 protocol doc section 2.6](./ebus-vaillant-B524.md#26-wire-type-encoding) |
 | **Decode** | Semantic interpretation: `bool`, `°C`, `K`, `bar`, `%`, `kWh`, `hrs`, `min`, `count`, `enum`, `text`, `date`, `time`, `state`, `raw`, `—` (unknown) |
 | **ebusd** | ebusd community TSP name. `—` = not in TSP |
 | **Constraint** | Historical short-probe range hint. It requires a matching complete OP01/OP07 description before validating edits. `—` = no catalog entry |
 | **Values** | Enum mapping. Inline for ≤3 values, otherwise `→enum_name` referencing [Enum Reference](#enum-reference) |
-| **Gates** | Condition for register to be present/meaningful. `—` = always available |
+| **Gates** | Condition for register to be present/meaningful. `—` = no gate documented here; presence remains family-qualified. |
 
 **Source annotations** (in Notes):
 - No annotation = confirmed by multiple independent sources (ebusd + live scan + value match)
@@ -36,7 +36,7 @@ This is the register catalog for B524. For the protocol specification (wire form
 Historic row notes may contain labels such as `stable RO`, `volatile RO`,
 `technical RW`, or `user RW`. Those labels are withdrawn as public B524
 semantics: retain the printed `FLAGS` value as an observation, but treat the
-labels as profile-specific static interpretation until corroborated by public,
+labels as family-specific static interpretation until corroborated by public,
 correlated evidence. They do not establish writability or authorize a write.
 
 ---
@@ -49,11 +49,18 @@ publishable identity evidence. They identify a candidate family for navigation;
 they do not establish physical product identity, presence, or a device layout.
 `unused` and the RR layout for GG04 and GG0D remain **Unknown**.
 
+The family layout distinguishes singleton `OP=0x02, GG=0x00` system
+selectors in VRC720 from the VRC700 ventilation selectors in the same group.
+The register counts and raw observations below remain specific to VRC720.
+See the [VRC700 ventilation reads](#gg0x00--system) for the separately scoped
+selector encoding. Parameterized syntax establishes neither a supported
+nonzero index nor an `II_MAX` for VRC700; those bounds remain open.
+
 | Opcode | GG | Group label | Instanced | II_MAX | Observed scheduling RR ceiling | Instance gate | Regs (scan/doc) |
 |--------|----|-------------|-----------|--------|-------------------------------|---------------|-----------------|
-| 0x02 | 0x00 | System | No | 0x00 | 0xFF | — | 179 (0x0001–0x00FF) |
+| 0x02 | 0x00 | System | No (VRC720 family) | 0x00 (VRC720 family) | 0xFF | VRC720-family singleton; VRC700 ventilation indexing differs, see below | 179 (0x0001–0x00FF) |
 | 0x02 | 0x01 | Native Domestic Hot Water | No | 0x00 | 0x13 | RR0001 exact two-byte nonzero UIN; zero is not present | 17 (0x0001–0x0013) |
-| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | Exact `BASV2/rawSW0507/HW1704/API1`: RR0002 raw `0100`, FLAGS=03 at II00/II01 is active; raw `0000`, FLAGS=03 at II02 is inactive; II09 is virtual native water | profile candidate bound: II00..II08 heating + II09 virtual native-water; nonmatching or unknown profiles require separate qualification |
+| 0x02 | 0x02 | Circuits | Yes | 0x09 | 0x25 | VRC720: RR0002 raw `0100`, FLAGS=03 at II00/II01 is active; raw `0000`, FLAGS=03 at II02 is inactive; II09 is virtual native water | profile candidate bound: II00..II08 heating + II09 virtual native-water; other or unknown families require separate qualification |
 | 0x02 | 0x03 | Zones | Yes | 0x0A | 0x2E | `index != 0xFF` (RR=0x001C) | current profile interval II00..0A; presence probed separately |
 | 0x02 | 0x04 | Solar Circuit | Yes (profile) | 0x01 | 0x0B | decodable, non-null RR0004 EXP value | current profile interval II00..01; presence probed separately |
 | 0x02 | 0x05 | Solar Loaded Cylinder | Yes | 0x01 | 0x04 | SystemScheme + VR_71 config | 8 (4/inst, 2 inst) |
@@ -78,9 +85,11 @@ they do not establish physical product identity, presence, or a device layout.
 | 0x06 | 0x0E | Clock Module | Yes | 0x08 | 0x0033 | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 | 0x06 | 0x0F | Base Station | Yes | 0x08 | 0x0033 | `device_connected` requires a concrete-II correlated Boolean | class-level evidence only |
 
-**GG values are opcode-scoped, not global:** `OP=0x02, GG=0x00` and
-`OP=0x02, GG=0x01` are the singleton local selector sets for system/settings
-and DHW. Separately, `OP=0x06, GG=0x01` and `OP=0x06, GG=0x02` are instanced
+**GG values are opcode-scoped, not global:** for the VRC720 family,
+`OP=0x02, GG=0x00` and `OP=0x02, GG=0x01` are the singleton local selector
+sets for system/settings and DHW. The VRC700 ventilation case is scoped
+separately above; it does not inherit the VRC720-family instance bound.
+Separately, `OP=0x06, GG=0x01` and `OP=0x06, GG=0x02` are instanced
 controller-side selector sets for primary and secondary heating sources
 respectively. `GG=0x00` has no qualified heat-generator route; this does not
 establish its universal absence under `OP=0x06`, populated slots, or other
@@ -105,7 +114,7 @@ layout. These namespaces must not be merged by `GG` alone.
 `GG=0x09` = Remote Control Regulators (VRC7xx, VRT38x), `GG=0x0A` = Remote
 Control Thermostats (VR9x), `GG=0x0C` = Functional Modules (VR71) FM5,
 `GG=0x0E` = Clock Module, and `GG=0x0F` = Base Station. Connected-device discovery
-uses profile-qualified `device_connected` (RR=0x0001),
+uses family-qualified `device_connected` (RR=0x0001),
 over II01..II08 for the characterized profile. `II=0x00`, `II=0x09`, and
 `II=0x0A` are outside its current OP06 slot interval. Readable headers do not override
 a false connection Boolean; retained inventory is distinct. See the
@@ -132,8 +141,8 @@ at target address `0x26`, but that family identification comes from eBUS
 identity correlation rather than from B524 alone.
 
 **Discovery:** OP00 information identifiers are distinct from GG. The
-[profile-qualified mapping table](ebus-vaillant-b524-profile-discovery-and-descriptions.md#system-information-and-concrete-instances)
-records profile-qualified count interpretation. For ID00 `circuit_count` and ID01
+[family-qualified mapping table](ebus-vaillant-b524-profile-discovery-and-descriptions.md#system-information-and-concrete-instances)
+records family-qualified count interpretation. For ID00 `circuit_count` and ID01
 `zone_count`, the legacy public names mean supported capacity under the bounded
 profile contract, not configured or present-instance cardinality. They do not
 identify, allocate, or make II slots contiguous: keep sparse II slots and apply
@@ -142,17 +151,16 @@ native-water candidate. These counts do not establish a terminal instance interv
 
 ### Discovery Profiles
 
-Source: sanitized observations and constraint-probe corpus for the exact
-`BASV2/rawSW0507/HW1704/API1` profile. “Observed scheduling ceiling” is the
+The following discovery intervals apply to the VRC720 family. “Observed scheduling ceiling” is the
 highest RR in the current bounded scheduling evidence; it is not a terminal
-maximum and does not exclude read-only state registers above it. A nonmatching
-or unknown profile requires separate qualification.
+maximum and does not exclude read-only state registers above it. A other
+or unknown family requires separate qualification.
 
 | Opcode | Group | Instance interval | Observed scheduling ceiling | Evidence scope | Notes |
 |--------|-------|-------------------|-----------------------------|-------------------|-------|
 | 0x02 | 0x00 System | 00 | 0x00FF | observed scope | Singleton |
 | 0x02 | 0x01 Native Domestic Hot Water | 00 | 0x0013 | observed scope | RR0001 exact two-byte nonzero UIN predicate; OP01 RR0000..0013 independent |
-| 0x02 | 0x02 Circuits | 00..09 | 0x0025 | exact BASV2/rawSW0507/HW1704/API1 scope | II00..08 heating candidates; II09 independent virtual native water |
+| 0x02 | 0x02 Circuits | 00..09 | 0x0025 | VRC720-family scope | II00..08 heating candidates; II09 independent virtual native water |
 | 0x02 | 0x03 Zones | 00..0A | 0x002E | observed scope | profile bound |
 | 0x02 | 0x04 Solar Circuit | 00..01 | 0x000B | observed scope | profile bound |
 | 0x02 | 0x05 Solar Loaded Cylinder | 00..01 | 0x0004 | observed scope | profile bound |
@@ -257,7 +265,10 @@ invent a per-row source beyond what is stated here.
 
 ### GG=0x00 — System
 
-All registers use opcode `0x02`, instance `0x00`.
+The VRC720-family system selectors use opcode `0x02`, instance `0x00`.
+For the VRC700 ventilation selectors RR0016, RR0042, RR0043 and RR00A4,
+the instance domain remains unconfirmed. The notation
+`II=<ventilation_index>` does not establish a supported index or range.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -273,14 +284,14 @@ All registers use opcode `0x02`, instance `0x00`.
 | 0x000B | system_solar_circuit_bleeding_time | — | u16 | — | — | — | — | — | Scan value: 0. Near boolean cluster |
 | 0x000D | system_solar_frost_protection_limit | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x000E | max_room_humidity | C | u16 | % | MaxRoomHumidity | — | — | — | |
-| 0x000F | hybrid_control_strategy | — | u16 | — | HybridManager | — | — | — | Name confirmed by BASV3 TypeSpec (`burmistrzak/ebusd-configuration 15.basv3.tsp`). Access: `ri/wi` (installer). Hybrid system manager (HP + boiler). Wire semantics pending live validation |
-| 0x0010 | backup_heater_tariff | — | u16 | — | TariffAuxHeater | — | — | — | Name confirmed by BASV3 TypeSpec (`burmistrzak/ebusd-configuration 15.basv3.tsp`). Access: `ri` (installer read). Tariff for auxiliary heater |
+| 0x000F | hybrid_control_strategy | — | u16 | — | HybridManager | — | — | — | Access: `ri/wi` (installer). Hybrid system manager (HP + boiler). Wire semantics pending live validation |
+| 0x0010 | backup_heater_tariff | — | u16 | — | TariffAuxHeater | — | — | — | Access: `ri` (installer read). Tariff for auxiliary heater |
 | 0x0011 | energy_rate_low_tariff | — | u16 | — | — | — | — | — | Scan value: 16. Possible temp threshold |
 | 0x0012 | energy_rate_high_tariff | C | u16 | °C | — | — | — | — | Confirmed exact, value=20 |
 | 0x0013 | backup_heater_type | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x0014 | adaptive_heating_curve | C | u8 | bool | AdaptHeatCurve | — | →yesno | — | FLAGS=0x03 (user RW). Scan validated 1-byte |
 | 0x0015 | automatic_daylight_saving_time | — | u16 | — | — | — | — | — | False positive in CSV (was `parallel_tank_loading`; actual is at 0x000A) |
-| 0x0016 | system_ventilation_operating_mode | S | u16 | enum | — | — | `1=AUTO 2=DAY 3=SET_BACK` | — | Operating mode for air ventilation, not a boolean: observed Vaillant behavior on the VRC700 family, hardware confirmation pending. Other codes are not documented and stay raw. Distinct from OP02 GG09 RR0002 (`TIME_CONTROLLED`/`NORMAL`/`REDUCED`). **Dormant** when no system quick mode active. Two-byte register where present. Vaillant name observed for the VRC700 family only; hardware confirmation pending. Write path is a hypothesis: `OP=0x02, GG=0x09, RR=0x0002`. See [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths) |
+| 0x0016 | system_ventilation_operating_mode | S | u16 | enum | — | — | `1=AUTO 2=DAY 3=SET_BACK` | — | Candidate VRC700 uint16 interpretation: `1=Auto 2=Day 3=Setback`, unconfirmed on the wire. The VRC720-family ventilation-mode selector is OP02/GG09/RR0002; the VRC700 selector does not replace it. Other codes remain raw. This is distinct from OP02 GG09 RR0002. Behaviour without an active quick mode and the proposed GG09/RR0002 write correspondence remain open; see [Open questions](#open-questions--family-specific-register-interpretation). |
 | 0x0017 | system_dhw_max_loading_time | C | u16 | min | MaxCylinderChargeTime | — | — | hwc_enabled | |
 | 0x0018 | system_dhw_blocking_time | C | u16 | min | HwcLockTime | — | — | hwc_enabled | |
 | 0x0019 | system_solar_flow_rate_setpoint | C | f32 | — | — | — | — | fm5_config≤2 | See [Mapping Conflicts](#mapping-conflicts) |
@@ -499,7 +510,7 @@ All registers use opcode `0x02`, instance `0x00`.
 ### GG=0x01 — Native Domestic Hot Water
 
 All registers use opcode `0x02`, instance `0x00`. `native_dhw_circuit_type`
-(RR0001) is also the profile-qualified discovery predicate only when its reply
+(RR0001) is also the family-qualified discovery predicate only when its reply
 is an exact two-byte UIN decoded nonzero; zero is `not_present`, and an empty,
 wrong-width, NACK, decode-failed, or unmatched result is `unknown`. This is
 independent of OP01 descriptions for RR0000..0013. All registers except
@@ -507,7 +518,7 @@ independent of OP01 descriptions for RR0000..0013. All registers except
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | native_dhw_circuit_type | C | u16 | bool | — | 0..1 | `0=off 1=on` | — | Gate register for GG=0x01. Constraint tag u16, Scan verified 2-byte |
+| 0x0001 | native_dhw_circuit_type | C | u16 | bool | — | 0..1 | `0=off 1=on` | — | Gate register for GG=0x01. Constraint tag u16, Scan verified 2-byte. The candidate raw LE16 interpretation `0=Deactivated`, `1=DHWCircuit` remains unconfirmed on the wire. The availability test and a circuit-type interpretation remain distinct. |
 | 0x0002 | native_dhw_circulation_pump_status | S | u8 | bool | — | 0..1 | `0=off 1=on` | hwc_enabled | Constraint tag u8 |
 | 0x0003 | native_dhw_operation_mode | C | u16 | enum | HwcOpMode | 0..2 | →opmode | hwc_enabled | |
 | 0x0004 | native_dhw_tapping_temperature_setpoint | C | f32 | °C | HwcTempDesired | 35..70 | — | hwc_enabled | |
@@ -535,9 +546,9 @@ independent of OP01 descriptions for RR0000..0013. All registers except
 <a id="gg0x02--heating-circuits-multi-instance"></a>
 ### GG=0x02 — Circuits
 
-All registers use opcode `0x02`. The exact `BASV2/rawSW0507/HW1704/API1` profile
+All registers use opcode `0x02`. The VRC720 family
 admits II00..II08 as ordinary heating-circuit candidates and II09 as the virtual
-native-water circuit. A nonmatching or unknown profile requires separate
+native-water circuit. A other or unknown family requires separate
 qualification. Active heating circuits are discovered by probing
 `circuit_mixer_type_external` (RR=0x0002). In sanitized observations, II00 and
 II01 return raw `0100` with FLAGS=03; II02 returns raw `0000` with FLAGS=03 and
@@ -561,7 +572,7 @@ observations, but do not extend the current profile's II00..09 coverage.
 | 0x0001 | circuit_circuit_type | — | u16 | — | — | 1..2 | — | — | CSV says `circuit_mixer_type_external` but commonly mapped to 0x0002. Purpose unverified. † |
 | 0x0002 | circuit_mixer_type_external | P | u16 | enum | Hc{hc}CircuitType | 0..4 | →mctype | — | Discovery probe. Also `mixer_circuit_type_external` |
 | 0x0003 | circuit_influence_type | C | u8 | enum | Hc{hc}RoomInfluenceType | — | `0=inactive 1=active 2=extended` | — | Controls room sensor influence on heating curve. No value reply observed at II=0x00. See GetExtendedRegisters §4.2.5 for behavioral semantics |
-| 0x0004 | circuit_backflow_temperature_setpoint | C | f32 | °C | Hc{hc}ReturnTempDesired | 15..80 | — | circuit_type=4 (return_increase) | Factory setting 30°C. jonesPD CTLV2 confirmed. Only meaningful for "Increase in return" circuits |
+| 0x0004 | circuit_backflow_temperature_setpoint | C | f32 | °C | Hc{hc}ReturnTempDesired | 15..80 | — | circuit_type=4 (return_increase) | Factory setting 30°C. Only meaningful for "Increase in return" circuits |
 | 0x0005 | circuit_condensate_sensitive_emitter | C | u8 | bool | — | 0..1 | `0=off 1=on` | cooling_enabled | Constraint tag u8. ebusd onoff=UCH. † |
 | 0x0006 | circuit_cooling_allowed | C | u8 | bool | Hc{hc}CoolingEnabled | 0..1 | `0=off 1=on` | — | Gate register. Constraint tag u8. ebusd onoff=UCH |
 | 0x0007 | circuit_current_target_flow_temperature | S | f32 | °C | Hc{hc}FlowTempDesired | — | — | — | Installer-field candidate; physical menu correspondence requires corroboration. |
@@ -602,7 +613,7 @@ observations, but do not extend the current profile's II00..09 coverage.
 ### GG=0x03 — Zones
 
 All registers use opcode `0x02`. Instances 0x00-0x0A; active zones are
-discovered by probing `zone_circuit_for_zone` (RR=0x001C). In the BASV2/SW0507
+discovered by probing `zone_circuit_for_zone` (RR=0x001C). In the VRC720
 scoped observation, zone II00 maps to raw `00` and zone II01 to raw `01`; II02+
 returns `FF`. These are native values, with no +1 remapping. They are
 profile-scoped observations, not a universal zone/circuit contract.
@@ -635,8 +646,8 @@ profile-scoped observations, not a universal zone/circuit contract.
 | 0x0018 | zone_name_suffix | C | string | text | Zone{z}Name2 | — | — | — | maxLength 5. Part 2 |
 | 0x0019 | zone_heating_schedule_status | S | u16 | bool | — | — | `0=off 1=on` | — | Timer schedule flag |
 | 0x001A | zone_cooling_schedule_status | S | u16 | bool | — | — | `0=off 1=on` | cooling_enabled | Timer schedule flag |
-| 0x001B | zone_special_function_status | S | u16 | state | — | — | — | — | Raw zone status code |
-| 0x001C | zone_circuit_for_zone | P | bytes | raw | Zone{z}Index | — | — | — | BASV2/SW0507: II00=`00`, II01=`01`, II02+=`FF`; preserve raw index, no +1 remap. |
+| 0x001B | zone_special_function_status | S | u16 | state | — | — | — | — | Raw zone status code. See the [unresolved response width](ebus-vaillant-B524.md#zone-special-function-response-width); retain this u16 catalog entry separately from the one-byte candidate format. |
+| 0x001C | zone_circuit_for_zone | P | bytes | raw | Zone{z}Index | — | — | — | Example VRC720 replies: II00=`00`, II01=`01`, II02+=`FF`; preserve raw index, no +1 remap. The signed int8 interpretation with `-1=notBound` remains unconfirmed; see [numeric formats](ebus-vaillant-B524.md#vaillant-numeric-formats) for profile ranges and the limit of that interpretation. |
 | 0x001D | zone_heating_event_end_time | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x001E | zone_quick_veto_end_time | C | time | time | Zone{z}QuickVetoEndTime | — | — | — | FLAGS=0x03 (user RW) — writable, can extend/set veto end time |
 | 0x0020 | zone_holiday_end_time | C | time | time | — | — | — | — | |
@@ -813,8 +824,8 @@ they do not establish writability, discovery predicates or device identity.
 | 0x000F | (unknown) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN |
 | 0x0010-0x001A | (unknown, 8 regs) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN. Large NaN block |
 | 0x001B | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
-| 0x001D | basv2_serial_part1 | P | string | text | — | — | — | — | FLAGS=0x01. First 6 chars of BASV2 serial number (redacted in public docs) |
-| 0x001E | basv2_serial_part2 | P | string | text | — | — | — | — | FLAGS=0x01. Chars 7-12 of BASV2 serial number (redacted in public docs) |
+| 0x001D | vrc720_serial_part1 | P | string | text | — | — | — | — | FLAGS=0x01. First 6 chars of VRC720 serial number (redacted in public docs) |
+| 0x001E | vrc720_serial_part2 | P | string | text | — | — | — | — | FLAGS=0x01. Chars 7-12 of VRC720 serial number (redacted in public docs) |
 | 0x0020 | (unknown) | C | f32 | — | — | — | — | — | FLAGS=0x03. All: 0.0 |
 | 0x0021 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
 | 0x0022-0x003E | temperature_schedule | C | u8 | °C/2 | — | — | — | — | FLAGS=0x03. 29 u8 values: hourly temperature profile. Pattern: 25→45 day, 45→10 night, 10→45→25 evening. Values are degrees × 2 (e.g. 45 = 22.5°C, 10 = 5°C) |
@@ -852,7 +863,7 @@ alone. Slot availability/probing is a precondition for interpreting this
 selector set: empty or unresolved slots must not be decoded as live primary
 heat-source data.
 
-The primary heat-source route is a profile-qualified hypothesis. The selector
+The primary heat-source route is a family-qualified hypothesis. The selector
 set is `(0x06, 0x01, II, RR)`; no published correlated reply qualifies a slot
 matrix, availability predicate, or returned value layout. `GG=0x00` remains
 uncharacterized rather than absent.
@@ -873,7 +884,7 @@ path for secondary sources such as solar-facing contributors.
 
 Current canon status:
 
-- selector-set identity is a profile-qualified hypothesis
+- selector-set identity is a family-qualified hypothesis
 - populated slots and other models' limits are unqualified
 - detailed register canon remains pending live validation
 - no additional raw enum/bitmask semantics are inferred here
@@ -908,10 +919,10 @@ NaN/0xFF/0x8000.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | FLAGS=0x01. II=1: 1 (VRC720f/2 paired) |
-| 0x0002 | device_class_address | P | u8 | enum | — | — | `0x15=VRC720 0x35=VR92 0x26=VR71` | — | FLAGS=0x01. Canonical Vaillant eBUS address for device family (ebusd: 0x15→CTLV2, 0x35→VR_92, 0x26→VR_71) |
+| 0x0001 | device_connected | P | u8 | bool | — | — | `0=empty 1=paired` | — | FLAGS=0x01. II=1: 1 (VRC720 paired) |
+| 0x0002 | device_class_address | P | u8 | enum | — | — | `0x15=VRC720 0x35=VR92 0x26=VR71` | — | FLAGS=0x01. Canonical Vaillant eBUS address for device family |
 | 0x0003 | device_error_code | S | u8 | — | — | — | — | — | FLAGS=0x01. II=1: 0 (OK). Empty: 0xFF. 0=no error |
-| 0x0004 | device_firmware_version | P | time | version | — | — | — | — | FLAGS=0x01. 3 bytes: major.minor.patch (byte-decimal, NOT BCD). II=1: 08.05.00 → VRC720f/2 sw 08.05 |
+| 0x0004 | device_firmware_version | P | time | version | — | — | — | — | FLAGS=0x01. 3 bytes: major.minor.patch (byte-decimal, NOT BCD). II=1: 08.05.00 → VRC720 sw 08.05 |
 | 0x0005 | (unknown) | S | u16 | — | — | — | — | — | FLAGS=0x00. II=empty: 0x8000, II=1: 0 |
 | 0x0006 | (unknown) | S | u16 | — | — | — | — | — | FLAGS=0x00. II=empty: 0x8000, II=1: 0 |
 | 0x0007 | current_room_air_humidity | S | f32 | % | — | — | — | — | FLAGS=0x01. II=1: 40.0%. VR92f/3 manual: "Current room air humidity, measured using the installed humidity sensor". NaN if no sensor |
@@ -987,19 +998,19 @@ devices are identified by non-default values.** Empty slots have NaN/0xFF.
 **Device slot observations:** The characterized OP06 profile uses II01..II08.
 The [availability observations](ebus-vaillant-b524-profile-discovery-and-descriptions.md#availability-observations)
 separate correlated concrete-II Boolean results from generic class descriptions
-and unknown replies. This interval is profile-specific, not a bound on the
+and unknown replies. This interval is family-specific, not a bound on the
 one-byte instance field.
 
 `device_connected=false` does not establish physical absence and must not suppress
 retained inventory evidence. Identity and telemetry reads can include:
-- `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in a BASV2 observation, `0x26` correlates with the eBUS-identified `VR_71`
+- `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in a VRC720 observation, `0x26` correlates with the eBUS-identified `VR_71`
 - `device_firmware_version` (0x0004) — byte-decimal triplet
 - `reception_strength` (0x001F) — 0-10 scale (4=acceptable, <4=unstable)
 - `remote_control_address` (0x0019) — unique per remote (1..N), 0 for initiator
 - `current_room_air_humidity` (0x0007) — f32 %, NaN if no sensor
 - `current_room_temperature` (0x000F) — f32 °C, NaN if no sensor
 
-**ebusd baseline:** ebusd `15.ctlv2.csv` defines only RR=0x0007 (RoomHumidity, EXP decode) and RR=0x000F (RoomTemp, EXP decode) for VR92 addresses 1-8, routed via `B524,06000a..`.
+**ebusd baseline:** The ebusd community definitions include only RR=0x0007 (RoomHumidity, EXP decode) and RR=0x000F (RoomTemp, EXP decode) for VR92 addresses 1-8, routed via `B524,06000a..`.
 
 **ebusd decode note:** B524 remote responses carry a 4-byte header before the register value. When defining ebusd message templates, skip 4 bytes then decode the payload (e.g., for humidity: `B524,060009010700` → skip 4B → IEEE-754 LE float).
 
@@ -1042,7 +1053,7 @@ universal empty-slot or physical-liveness rule.
 
 > Historical range hints from incomplete OP01 probes; not qualified input-validation metadata. Keep the returned selector independent from the intended request.
 
-Source: BASV2 hardware constraint probe (`0x01` opcode).
+Source: VRC720 hardware constraint probe (`0x01` opcode).
 
 The historic short probes produced range-shaped samples, but the incomplete
 selector and length/codec ambiguity prevent them from authoritatively mapping a
@@ -1150,13 +1161,13 @@ Used by: GG=0x02 RR=0x0002
 | 2 | fixed | fixed_value | Fixed value | Circuit held at a fixed target flow temperature. Applications: swimming pool heating, door air curtain heating. |
 | 3 | hwc | dhw | DHW | Heating circuit used as DHW circuit for an additional cylinder. II09 remains a virtual native-water candidate; current public evidence provides no temperature-based predicate to infer this role when RR0002 is inactive. |
 | 4 | returnincr | return_increase | Increase in return | Return temperature raise circuit. Target return temperature at RR=0x0004 (factory setting 30°C). |
-| 5 | pool | pool | Pool | Observed Vaillant behavior on the VRC700 family only; hardware confirmation pending. Not within the BASV2/VRC720/CTLV2 constraint range (0..4) — see below. |
+| 5 | pool | pool | Pool | Observed Vaillant behavior on the VRC700 family only; hardware confirmation pending. Not within the VRC720-family constraint range (0..4) — see below. |
 
 **Naming note:** ebusd templates label value 1 as "mixer" — this is a community naming convention; the Vaillant VRC720 operating & installation manual calls it "Heating" (Heizen). The mixing valve is an implementation detail of the hydraulic system, not the circuit type itself.
 
-**Pool is a derived application, not a raw enum value.** The Vaillant manual describes "fixed value control" as suitable for "swimming pool heating" — so pool heating is an _application_ of `fixed_value` (mctype=2) when the system topology includes swimming pool hydraulics (sensor, circulation pump). It is NOT a separate enum value on VRC720/CTLV2/BASV2 systems. Constraint catalog confirms range 0..4.
+**Pool is a derived application, not a raw enum value.** The Vaillant manual describes "fixed value control" as suitable for "swimming pool heating" — so pool heating is an _application_ of `fixed_value` (mctype=2) when the system topology includes swimming pool hydraulics (sensor, circulation pump). It is NOT a separate enum value on VRC720-family controllers. Constraint catalog confirms range 0..4.
 
-**ebusd extended enums:** ebusd `mctype` defines 0-5 (adding `pool=5`), and `mctype7` defines 0-6 (adding `circulation=6`; see ebusd-config issue #182 and PR #174). Value 5 is observed Vaillant behavior on the VRC700 family (hardware confirmation pending); value 6 remains unconfirmed on any family. Neither is within the BASV2/VRC720/CTLV2 constraint range (0..4).
+**ebusd extended enums:** ebusd `mctype` defines 0-5 (adding `pool=5`), and `mctype7` defines 0-6 (adding `circulation=6`; see ebusd-config issue #182 and PR #174). Value 5 is observed Vaillant behavior on the VRC700 family (hardware confirmation pending); value 6 remains unconfirmed on any family. Neither is within the VRC720-family constraint range (0..4).
 
 **Zone capabilities** depend on (a) circuit type supporting heating, and (b) `cooling_enabled` flag (RR=0x0006) for cooling capability. Cooling is a separate function/mode, not derived from circuit type.
 
@@ -1334,13 +1345,13 @@ Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001E` — per-circuit st
 
 #### Asymmetric read/write paths
 
-- **Read ventilation operating mode:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0016` (u16 enum `1=AUTO 2=DAY 3=SET_BACK` as observed on the VRC700 family; see `system_ventilation_operating_mode` above) — an operating mode, not a flag
+- **Read ventilation operating mode:** `OP=0x02, OT=0x00, GG=0x00, II=<ventilation_index>, RR=0x0016`. The candidate VRC700 enum is listed in the [register entry](#gg0x00--system); the on-wire response remains unconfirmed.
 - **Read mode value:** `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0074` (u8 enum)
 - **Write:** `OP=0x02, GG=0x09, RR=0x0001` (value) + `RR=0x0002` (active flag) -- asymmetric path
 
 | Value (RR=0x0074) | State | Description |
 |--------------------|-------|-------------|
-| 0x00 | `dormant` | No quick mode active; RR=0x0016 carries the ventilation operating mode enum on the VRC700 family, other codes are not documented |
+| 0x00 | `dormant` | Historical interpretation: no quick mode active. The behaviour of VRC700 `OP=0x02, GG=0x00, II=<ventilation_index>, RR=0x0016` under that condition remains unresolved. |
 | 0x01 | `ventilation` | Ventilation-only mode |
 | 0x02 | `party` | Party mode -- enhanced heating |
 | 0x03 | `away` | Away mode -- reduced heating |
@@ -1354,11 +1365,30 @@ Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001E` — per-circuit st
 
 ---
 
+## Open questions — family-specific register interpretation
+
+- The VRC700 ventilation mode `OP=0x02, GG=0x00, II=<ventilation_index>, RR=0x0016` and its accepted setting
+  values remain unconfirmed on the wire; its behaviour
+  when no quick mode is engaged and the proposed asymmetric write selector
+  remain unresolved.
+- The raw circuit-type meaning of `OP=0x02, GG=0x01, II=0x00, RR=0x0001` is not
+  confirmed on the wire. The same selector is used for
+  an availability test; this does not make availability and circuit type
+  interchangeable.
+- The physical meaning of the signed value `-1` at
+  `OP=0x02, GG=0x03, II=<zone>, RR=0x001C` remains unestablished;
+  `notBound` remains a candidate interpretation.
+
+- The supported instance domain for the VRC700 ventilation reads
+  `OP=0x02, GG=0x00, II=<ventilation_index>, RR=0x0016/0x0042/0x0043/0x00A4`
+  is not established. A variable instance field does not establish support for
+  nonzero indices or multiple ventilation units.
+
 ## Sources
 
-- **Historical BASV2 short-probe catalog** — Range-shaped samples from incomplete
+- **Historical VRC720 short-probe catalog** — Range-shaped samples from incomplete
   `0x01` requests. It is unqualified historical evidence only: it does not
   authoritatively map a register, validate a value, or establish a scalar codec.
-- **ebusd community TSP** (`15.ctlv2.tsp`) — Community-maintained register definitions. Highest authority for register-to-name mapping where coverage exists.
+- **ebusd community definitions** — Community-maintained register-name correspondences. Published Vaillant specifications remain authoritative.
 - **myVaillant register map** — Value-matched mapping against myPyllant cloud API. NOT a Vaillant-published source — carries false-positive risk where multiple registers share the same value (see [Mapping Conflicts](#mapping-conflicts)).
 - **VRC Explorer full group scans** — FLAGS byte verification for all groups.

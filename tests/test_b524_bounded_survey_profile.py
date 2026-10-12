@@ -7,8 +7,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
-def test_basv2_profile_keeps_coverage_and_nonclaim_boundaries() -> None:
-    profile = json.loads((ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text())
+def test_vrc720_profile_keeps_coverage_and_nonclaim_boundaries() -> None:
+    profile = json.loads((ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text())
     assert profile["schema_version"] == "b524-bounded-survey-profile/v1"
     assert profile["tool_identity"]["acquisition"]["commit"] == "c1c87294989ff15b52c3a629146e56b9871e5b1f"
     assert profile["tool_identity"]["catalog"]["commit"] == "f15ac183b9f345afce72852ec1fbbb8291fbdd14"
@@ -30,11 +30,11 @@ def test_methodology_preserves_read_only_boundary() -> None:
     text = (ROOT / "protocols/vaillant/ebus-vaillant-b524-survey-methodology.md").read_text()
     assert "not evidence that a group" in text
     assert "does not write" in text
-    assert "BASV0, BASV3, or CTLv3" in text
+    assert "Other controller families" in text
 
 
 def test_effective_windows_are_separate_from_survey_coverage_and_partial_describe() -> None:
-    profile = json.loads((ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text())
+    profile = json.loads((ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text())
     windows = profile["effective_scan_windows"]
     assert windows["OP02"]["00"]["rr_max"] == "00FF"
     assert windows["OP02"]["04"]["rr_max"] == "000B"
@@ -52,8 +52,8 @@ def test_effective_windows_are_separate_from_survey_coverage_and_partial_describ
     assert "reserved CRC bytes `A9` and `AA`" in text
 
 
-def test_basv2_high_group_discovery_accounting_is_reconcilable() -> None:
-    profile = json.loads((ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text())
+def test_vrc720_high_group_discovery_accounting_is_reconcilable() -> None:
+    profile = json.loads((ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text())
     execution = profile["execution"]
     high_groups = execution["high_group_jobs"]
     op02 = high_groups["OP02"]
@@ -76,7 +76,7 @@ def test_basv2_high_group_discovery_accounting_is_reconcilable() -> None:
 @pytest.mark.parametrize("field", ["actual_attempts", "reused_completed_exchanges", "phases"])
 def test_profile_schema_rejects_missing_execution_accounting(tmp_path: Path, field: str) -> None:
     fixtures = ROOT / "protocols/vaillant/fixtures"
-    profile = json.loads((fixtures / "b524-bounded-survey-basv2-v1.json").read_text())
+    profile = json.loads((fixtures / "b524-bounded-survey-vrc720-v1.json").read_text())
     del profile["execution"][field]
     candidate = tmp_path / "missing-accounting.json"
     candidate.write_text(json.dumps(profile))
@@ -124,7 +124,7 @@ def test_profile_validator_checks_every_profile_and_rejects_second_selector_payl
     tmp_path: Path,
 ) -> None:
     source = json.loads(
-        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text()
     )
     first = tmp_path / "b524-bounded-survey-first-v1.json"
     second = tmp_path / "b524-bounded-survey-second-v1.json"
@@ -149,7 +149,7 @@ def test_profile_validator_rejects_payload_for_empty_or_transport_error(
     tmp_path: Path, outcome: str
 ) -> None:
     profile = json.loads(
-        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text()
     )
     profile["samples"][0]["outcome"] = outcome
     candidate = tmp_path / f"{outcome}.json"
@@ -162,7 +162,7 @@ def test_profile_validator_rejects_payload_for_empty_or_transport_error(
 
 def test_profile_validator_allows_short_raw_decode_error_without_false_echo_claim(tmp_path: Path) -> None:
     profile = json.loads(
-        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text()
     )
     profile["samples"][0]["outcome"] = "decode_error"
     profile["samples"][0]["reply_payload_hex"] = "03"
@@ -188,7 +188,7 @@ def test_profile_schema_rejects_invalid_identity_and_payload_fields(
     tmp_path: Path, mutation, expected: str
 ) -> None:
     fixtures = ROOT / "protocols/vaillant/fixtures"
-    profile = json.loads((fixtures / "b524-bounded-survey-basv2-v1.json").read_text())
+    profile = json.loads((fixtures / "b524-bounded-survey-vrc720-v1.json").read_text())
     mutation(profile)
     candidate = tmp_path / "invalid-profile.json"
     candidate.write_text(json.dumps(profile))
@@ -227,7 +227,7 @@ def test_catalog_reference_schema_enforces_types_and_limit_selector(
     tmp_path: Path, mutation, expected: str
 ) -> None:
     fixtures = ROOT / "protocols/vaillant/fixtures"
-    profile = json.loads((fixtures / "b524-bounded-survey-basv2-v1.json").read_text())
+    profile = json.loads((fixtures / "b524-bounded-survey-vrc720-v1.json").read_text())
     mutation(profile)
     candidate = tmp_path / "invalid-catalog-reference.json"
     candidate.write_text(json.dumps(profile))
@@ -246,7 +246,7 @@ def test_profile_validator_rejects_missing_or_unsafe_local_catalog_reference(
     tmp_path: Path, path: str
 ) -> None:
     profile = json.loads(
-        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text()
     )
     profile["catalog_reference"]["path"] = path
     candidate = tmp_path / "invalid-catalog-path.json"
@@ -261,7 +261,7 @@ def test_profile_validator_rejects_non_catalog_reference(
     tmp_path: Path, reference_kind: str
 ) -> None:
     profile = json.loads(
-        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text()
     )
     candidate = tmp_path / "candidate.json"
     if reference_kind == "self":
@@ -305,7 +305,7 @@ def test_profile_validator_correlates_catalog_scope_and_description_limits(
     tmp_path: Path, mutation, expected: str
 ) -> None:
     profile = json.loads(
-        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text()
     )
     mutation(profile)
     candidate = tmp_path / "mismatched-catalog-contract.json"
@@ -325,7 +325,7 @@ def test_profile_validator_correlates_read_flags_class_to_reply(
     tmp_path: Path, sample_index: int, flags_class: str
 ) -> None:
     profile = json.loads(
-        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json").read_text()
+        (ROOT / "protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json").read_text()
     )
     profile["samples"][sample_index]["flags_class"] = flags_class
     candidate = tmp_path / f"mismatched-flags-class-{sample_index}.json"

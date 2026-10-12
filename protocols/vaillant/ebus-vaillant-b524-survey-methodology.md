@@ -21,9 +21,9 @@ probes where no scalar value has been observed. Record those separately from
 the normal scanner's writable-only description acquisition. An empty generic
 reply provides no format, writability, or presence evidence.
 
-## BASV2 sample profile
+## VRC720 sample profile
 
-The published BASV2 profile is a sanitized observation for VRC720f/2, software `0507`, hardware `1704`. It schedules OP02 GG `00..2F` and OP06 GG `01..2F`; unknown groups use `RR=0000..0005`, and positive groups use `RR=0000..0050`. Positive groups use a profile-selected concrete representative `II`; generic descriptions use `II=FF`. The high-group discovery jobs used OP02/II00 and both OP06/II00 and OP06/II01. These are recorded exploratory selectors; they do not change the current OP06 discovery interval II01..08.
+The published VRC720 profile records a read-only survey. It schedules OP02 GG `00..2F` and OP06 GG `01..2F`; unknown groups use `RR=0000..0005`, and positive groups use `RR=0000..0050`. Positive groups use a profile-selected concrete representative `II`; generic descriptions use `II=FF`. The high-group discovery jobs used OP02/II00 and both OP06/II00 and OP06/II01. These are recorded exploratory selectors; they do not change the current OP06 discovery interval II01..08.
 
 The fixture separates `effective_scan_windows` (the integrated scheduling limits)
 from `group_windows` (the survey coverage). A null limit stays unknown. A correlated
@@ -43,7 +43,7 @@ separately and are not included in these logical-job totals. The profile's
 `high_group_jobs` breakdown retains this accounting explicitly; generic
 Describe probes with empty replies are not qualified parameter descriptions.
 
-The profile and reusable [template](fixtures/b524-bounded-survey-profile-template-v1.json) are versioned data. Add BASV0, BASV3, or CTLv3 only from their own sanitized observations; do not copy BASV2 results into another model family.
+The profile and reusable [template](fixtures/b524-bounded-survey-profile-template-v1.json) are versioned data. Other controller families require their own observations; do not copy VRC720 results into another family.
 
 ## Publishable artifacts
 
@@ -55,12 +55,12 @@ only when recorded and publishable; otherwise mark them `Unknown`. Payload-only
 correlation does not establish framing, independently observed direction,
 raw-capture provenance, or capture conditions.
 
-The BASV2 samples correlate read-only initiator requests to regulator-target
+The VRC720 samples correlate read-only initiator requests to regulator-target
 replies. Native endpoint addresses, raw framing, raw-capture provenance and capture
 conditions are `Unknown` in this profile. The model and acquisition revisions
 identify the scope; they do not replace missing exchange context.
 
-The [BASV2 profile](fixtures/b524-bounded-survey-basv2-v1.json) includes representative OP02/OP06 read and description entries. Its generic `II=FF` description is explicitly not concrete-instance evidence.
+The [VRC720 profile](fixtures/b524-bounded-survey-vrc720-v1.json) includes representative OP02/OP06 read and description entries. Its generic `II=FF` description is explicitly not concrete-instance evidence.
 
 ## Adding a profile
 
