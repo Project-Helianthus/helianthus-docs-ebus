@@ -66,8 +66,8 @@ def test_circuit_register_prose_preserves_b524_evidence_boundaries() -> None:
     assert "calculated_flow_temperature" not in circuit_fsm
 
 
-def test_exact_basv2_circuit_interval_is_consistent_across_b524_docs() -> None:
-    profile = "BASV2/rawSW0507/HW1704/API1"
+def test_vrc720_family_circuit_interval_is_consistent_across_b524_docs() -> None:
+    profile = "VRC720"
     documents = (
         REGISTER_MAP,
         B524,
@@ -78,7 +78,7 @@ def test_exact_basv2_circuit_interval_is_consistent_across_b524_docs() -> None:
     for path in documents:
         normalized = " ".join(path.read_text(encoding="utf-8").split())
         assert profile in normalized
-        assert "nonmatching or unknown profile" in normalized
+        assert re.search(r"other or unknown famil(?:y|ies)", normalized)
         assert "separate qualification" in normalized
 
     map_text = REGISTER_MAP.read_text(encoding="utf-8")

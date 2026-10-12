@@ -13,8 +13,8 @@
     }
   },
   "model_scope": {
-    "family": "BASV2",
-    "model": "VRC720f/2",
+    "family": "VRC720",
+    "model": "VRC720",
     "software_version": "0507",
     "hardware_version": "1704"
   },

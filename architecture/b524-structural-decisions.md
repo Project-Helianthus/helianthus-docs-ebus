@@ -35,7 +35,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Scope | Meaning |
 | --- | --- |
 | `PROTOCOL` | Intended as protocol-level behavior, not tied to one regulator family or one lab topology |
-| `PROFILE` | Constrained by regulator-family documentation or profile-specific behavior; not protocol-wide by default |
+| `PROFILE` | Constrained by regulator-family documentation or family-specific behavior; not protocol-wide by default |
 | `LAB` | Confirmed on the current live lab tuple/topology only |
 | `GATEWAY_POLICY` | Local gateway policy or publication rule, even when motivated by protocol/profile evidence |
 
@@ -64,9 +64,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Fallback / unknown behavior | If no candidate target proves B524 capability, B524-backed families remain unavailable. Unknown identity does not block discovery once capability is proven. |
 | Published effect | `zones`, `circuits`, `radioDevices`, `fm5SemanticMode`, `solar`, and `cylinders` are eligible for structural evaluation once a B524 semantic root is available. |
 | Evidence status | `PROVEN` for the capability gate; candidate ordering remains `GATEWAY_POLICY` |
-| Code anchors | Canonical contract: `refreshDiscovery()` root-discovery phase. Current implementation still uses `findDeviceAddressByPrefix()` and therefore diverges from this contract. |
 
-Current implementation note: the gateway still uses `findDeviceAddressByPrefix("BASV")` in `refreshDiscovery()`. This is documented as code debt and must not be read as the semantic contract.
 
 ## B524-SD-02 — Zone Instance Discovery
 
@@ -188,7 +186,7 @@ Current implementation note: the gateway still uses `findDeviceAddressByPrefix("
 | Supporting statement | In `6.2.2 Settings in the Installation Wizard`, the VRC 720 training documents "Enter the number of heating circuits" as `0-3` with VR 71 and up to `0-9` with VR 71 plus VR 70 expansion. In `Distribucion de zonas y circuitos de calefaccion`, the multiMATIC training states "Hasta 9 circuitos de calefaccion de mezcla y 9 zonas". This constrains expected circuit cardinality, while the gateway still relies on direct `circuit_type` probes for actual publication. |
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `PROTOCOL` |
-| Evaluation rule | `refreshCircuits()` probes instances `0x00..0x0A`; readable `0x00FF` and `0xFFFF` are treated as inactive, and any non-zero/non-invalid value creates/keeps an active circuit snapshot. A readable ordinary-circuit `0x0000` is inactive unless a correlated active, visible zero supplies the profile-qualified exception. `II=0x09` is promoted to active DHW (`mctype=3`) only when plausible live temperature evidence exists at `RR=0x0008` or `RR=0x0020`. |
+| Evaluation rule | `refreshCircuits()` probes instances `0x00..0x0A`; readable `0x00FF` and `0xFFFF` are treated as inactive, and any non-zero/non-invalid value creates/keeps an active circuit snapshot. A readable ordinary-circuit `0x0000` is inactive unless a correlated active, visible zero supplies the family-qualified exception. `II=0x09` is promoted to active DHW (`mctype=3`) only when plausible live temperature evidence exists at `RR=0x0008` or `RR=0x0020`. |
 | Fallback / unknown behavior | No synthetic circuit count is invented if type reads never succeed. Helianthus intentionally does **not** derive primary circuit inventory from functional-module topology or hydraulic-scheme inference, because B524 is treated as the authoritative aggregation surface for this structure. The inactive markers `0x00FF` and `0xFFFF` align with common invalid/uninitialized conventions. Ordinary `0x0000` circuit instances remain inactive without the active-visible-zero exception; the `II=0x09` exception is evidence-gated so empty inactive slots are not published. |
 | Published effect | `circuits[]` contains active discovered instances, including the `II=0x09` DHW pseudo-circuit when live evidence exists |
 | Evidence status | `PROVEN` |

@@ -58,7 +58,7 @@ identities are separate from the FactKey dimensions below.
 
 The `f32` little-endian decoding in this contract is limited to a request from
 the qualified initiator to controller destination `0x15`, followed by a value
-from target to initiator, for the BASV2/CTLV2/VRC720 family. The initiator QQ
+from target to initiator, for the VRC720 family. The initiator QQ
 is binding evidence and is not a hard-coded address in this public mapping. It
 does not generalize B524 float byte order: HMU destination `0x08` is
 big-endian and is not a substitute for these rows.
@@ -277,7 +277,7 @@ Publication gate:
 Higher-level semantic projections combine the raw circuit type (GG=0x02 RR=0x0002) with other registers:
 
 - **Cooling capability**: derived from `cooling_enabled` (GG=0x02 RR=0x0006), NOT from circuit type. A heating circuit (type=1) with `cooling_enabled=1` supports both heating and cooling modes.
-- **Pool heating**: an APPLICATION of `fixed_value` (type=2) when the system topology includes pool hydraulics (sensor, circulation pump). NOT a separate raw enum value on VRC720/BASV2.
+- **Pool heating**: an APPLICATION of `fixed_value` (type=2) when the system topology includes pool hydraulics (sensor, circulation pump). NOT a separate raw enum value on VRC720.
 - **Cylinder charging**: `type=3` (DHW) combined with GG=0x05 group presence indicates a cylinder-charging circuit.
 
 These projections are Helianthus runtime logic and are NOT part of the B524 wire protocol. For the raw Layer A register definition, see the register map's circuit type enum.
@@ -352,14 +352,14 @@ GG   Opcode  InstanceMax  RegisterMax
 
 ## Sources & FLAGS Verification
 
-- **Historical BASV2 short-probe catalog** (`b524_constraints.go`) —
+- **Historical VRC720 short-probe catalog** (`b524_constraints.go`) —
   range-shaped samples from incomplete OP01 requests. It is unqualified
   historical evidence only, not authority for register mapping, value
   validation, or scalar-codec selection.
 - **ebusd community TSP** (`15.ctlv2.tsp`) — Community register definitions. Highest authority for name mapping.
 - **myVaillant register map CSV** (`myvaillant_register_map.csv`) — Helianthus-curated mapping by value-matching live B524 reads against myPyllant API fields. NOT a Vaillant-published source.
 - **Gateway production code** (`semantic_vaillant.go`) — Authoritative for which registers are actively polled.
-- **Live B524 scan** (2026-03-04) — MCP RPC reads from BASV2 via Helianthus gateway.
+- **Live B524 scan** (2026-03-04) — MCP RPC reads from VRC720 via Helianthus gateway.
 - **VRC Explorer full group scan** — Raw register data, FLAGS byte verification.
 
 ### FLAGS Corrections
@@ -391,6 +391,6 @@ Wire type corrections from MCP validation (2026-03-05):
 
 ### Related Files
 
-- [BASV2 bounded survey profile](../protocols/vaillant/fixtures/b524-bounded-survey-basv2-v1.json) — Sanitized selector-correlated observations; coverage and qualification remain profile-specific.
+- [VRC720 bounded survey profile](../protocols/vaillant/fixtures/b524-bounded-survey-vrc720-v1.json) — Sanitized selector-correlated observations; coverage and qualification remain family-specific.
 - `helianthus-ebusreg/vaillant/system/b524_profile.go` — Discovery profiles
 - `helianthus-ebus-vaillant-productids/repos/john30-ebusd-configuration/src/vaillant/15.ctlv2.tsp` — ebusd TSP source

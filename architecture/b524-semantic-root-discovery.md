@@ -102,14 +102,8 @@ See:
 
 ## Why This Matters
 
-The semantic root must not be coupled to a single family such as:
-
-- `BASV2`
-- `BASS2`
-- `CTLV2`
-- `CTLS2`
-
-Those are identity families, not the definition of B524 capability.
+The semantic root must not be coupled to a single controller family such as
+VRC700 or VRC720. Family identity does not define B524 capability.
 
 The same principle applies to:
 

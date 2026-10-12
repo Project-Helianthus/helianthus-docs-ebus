@@ -145,9 +145,9 @@ This is an implementation-facing scanner contract, not universal B524 wire proof
 or a claim that an unprobed selector is absent.
 
 The Browser tree is a present-instance projection, not the candidate scan plan.
-For the exact `BASV2/rawSW0507/HW1704/API1` profile, OP06 candidates use II01..II08; OP02/GG02 uses
-II00..II08 for heating candidates plus II09 as independent virtual native water. A nonmatching or unknown
-profile requires separate qualification. Do not render an absent, unknown, or unprobed selector as a tree
+For the VRC720 family, OP06 candidates use II01..II08; OP02/GG02 uses
+II00..II08 for heating candidates plus II09 as independent virtual native water. A other or unknown
+family requires separate qualification. Do not render an absent, unknown, or unprobed selector as a tree
 node. Preserve those outcomes in the artifact so that the UI does not convert lack of a node into a claim
 of physical absence.
 
@@ -155,7 +155,7 @@ of physical absence.
 
 This preset scans characterized OP=02/GG `00..05,08,09` and OP=06/GG
 `01,02,03,05,06,07,08,09,0A,0B,0C,0E,0F` consistently. Connected-device enumeration follows the
-[profile-qualified II01 policy](../development/ebus-vaillant-b524-explorer-discovery.md#op06-connected-device-discovery).
+[family-qualified II01 policy](../development/ebus-vaillant-b524-explorer-discovery.md#op06-connected-device-discovery).
 `recommended` also performs the dedicated OP06/GG0D II01..II08/RR0001
 availability-only probe using `device_connected`. This does not admit an automatic
 GG0D scalar range: other relay-module registers require an explicit manual RR scope,
@@ -211,7 +211,7 @@ verdict.
 ## Description scheduling
 
 Descriptions are a second phase after value reads. Acquisition policy is chosen
-by the selected profile and planner: recommended known BASV2/SW0507 local scope
+by the selected profile and planner: recommended known VRC720 local scope
 performs no implicit descriptions; `full` and `research` acquire eligible
 writable descriptions; an unknown profile/type or explicit per-class override
 also acquires them. Read-only rows never request descriptions. A generic IIFF

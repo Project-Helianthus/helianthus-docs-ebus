@@ -2,13 +2,13 @@
 
 This is the public contract for VRC Explorer's bounded scan policy. It preserves
 the native `(OP, GG, II, RR)` identity and distinguishes observed response bytes,
-profile-qualified interpretations, and scanner policy. It adds no device writes.
+family-qualified interpretations, and scanner policy. It adds no device writes.
 
 ## Local circuit coverage
 
-For OP02/GG02, the exact `BASV2/rawSW0507/HW1704/API1` profile is II00..II09:
+For OP02/GG02, the VRC720 family is II00..II09:
 II00..II08 are ordinary heating-circuit candidates and II09 is the virtual
-native-water circuit. A nonmatching or unknown profile requires separate
+native-water circuit. A other or unknown family requires separate
 qualification. The legacy public name `circuit_count` for OP00/ID00 is a
 supported-capacity value under the bounded contract below; it does not select
 or allocate II identities. It does not add II0A, and II09 remains a separately
@@ -68,7 +68,7 @@ a manual RR scope because their RR maxima are Unknown. `recommended`, `full`,
 `research`, and `custom` retain their own selector policies. Same-numbered OP06
 groups never supply their local selector contract.
 
-The exact `BASV2/rawSW0507/HW1704/API1` circuit predicate uses
+The VRC720-family circuit predicate uses
 OP02/GG02/RR0002. Correlated raw `0100` with FLAGS=03 qualifies II00 and II01
 as active in this profile. Raw `0000` with FLAGS=03 qualifies II02 as inactive;
 visibility alone does not make a zero active. This is an implementation
@@ -83,7 +83,7 @@ rule for another profile.
 
 ### Recommended OP00 count guidance
 
-The following are **profile-qualified planner mappings**, not wire-level group
+The following are **family-qualified planner mappings**, not wire-level group
 identity. They apply only to `recommended`. A concrete presence predicate still
 confirms every instance. `full`, `research`, and `custom` retain their own
 selector policy.
@@ -202,7 +202,7 @@ qualified profile requires. GG04 retains Unknown RR layout and presence
 semantics. GG0D retains Unknown RR maximum, but its common RR0001 candidate
 probe remains eligible.
 
-Historical BASV2 observations for GG09/0A/0C/0E/0F include RR0001 raw `00` at
+Historical VRC720 observations for GG09/0A/0C/0E/0F include RR0001 raw `00` at
 II00, `01` at II01, and `00` at later historical selectors. They explain why
 the current profile begins at II01; they do not expand its upper bound beyond
 II08. The captured RR1 result is independent from an older artifact's generic

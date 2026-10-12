@@ -141,7 +141,7 @@ be strictly lower than stop before constructing a payload. The JSON Schema
 enforces the structural byte bounds; the parser enforces that sibling-value
 ordering. Non-zone Timer selectors require `instance: 0`. Event plans have seven raw bytes and both eight-byte OP09 and OP0B
 baselines. Their selectors retain an explicit `u8` instance and the same
-profile-specific address catalogs as reads. UI exports use the same plan shape.
+family-specific address catalogs as reads. UI exports use the same plan shape.
 
 An internal operation-edit artifact can default to an offline preview and diff.
 It derives the target from its required `destination_address`. Missing or invalid

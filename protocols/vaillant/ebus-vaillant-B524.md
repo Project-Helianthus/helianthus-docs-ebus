@@ -35,7 +35,7 @@ QQ ZZ PB SB NN OC OT GG II RR_lo RR_hi
 ```
 
 - `QQ` = source address
-- `ZZ` = destination (e.g., `0x15` for BASV2)
+- `ZZ` = destination (e.g., `0x15` for VRC720)
 - `PB` = `0xB5` (primary), `SB` = `0x24` (secondary)
 - `NN` = payload length (6 for a read: OC + OT + GG + II + RR_lo + RR_hi)
 - `OC` = opcode: `0x02` (local) or `0x06` (remote)
@@ -59,12 +59,15 @@ WD      Weekday (u8, 0x00..0x06)
 
 ### 2.2 Common read-response header (`0x02` / `0x06`)
 
+The characterized VRC720 register catalog uses this value-reply layout;
+it does not establish the reply layout of other controller families.
+
 ```text
 FLAGS GG RR_LO RR_HI [value...]
 ```
 
 `FLAGS` is an observed two-bit reply attribute. The following bit interpretation
-is a profile-specific inference, not a universal B524 wire contract or proof of
+is a family-specific inference, not a universal B524 wire contract or proof of
 live writability.
 
 | Bit | Inferred meaning | Limit |
@@ -72,11 +75,18 @@ live writability.
 | 0 | visibility/category discriminator | It does not establish volatile or stable behavior. |
 | 1 | writable capability | A set bit does not authorize a write or establish that a target accepts one. |
 
+The candidate bit names are `Visible` for bit 0 and `Read/Write` for bit 1
+(`0=False`, `1=True`), with bits 2–7 reserved. These names do not establish
+whether a particular target accepts writes. The candidate OP06 write-feedback
+codes are `0=no error`, `1=read-only error`, `2=range error`; their on-wire
+interpretation remains unconfirmed.
+
 The numeric value and the raw response must be retained. Do not assign public
 `volatile`, `stable`, `technical`, or `user-facing` semantics from `FLAGS` alone.
 
 Notes:
-- `II` is not echoed in the response.
+- `II` is absent from this four-byte header. Retain it from the request;
+  do not assume an unqualified controller profile uses this layout.
 - **Short responses** (payload < 4 bytes) are **not** successful register reads. A single-byte `0x00` indicates wrong route, unsupported opcode, or group default -- ebusd reports `invalid position ... / 00`. Write operations may return short acknowledgements. Treat as not-a-register-value.
 - Correlation must retain request context (`GG/II/RR/opcode`).
 - Parameter descriptions retain their request identifier and full 16-bit register. The historical short `01 GG RR` probe is incomplete and must not provide input-validation authority.
@@ -88,17 +98,21 @@ B524 register reads produce one of three distinct response states:
 | State | Wire manifestation | Meaning |
 |-------|-------------------|---------|
 | **Value reply** | ACK + FLAGS+GG+RR+VALUE (4+ bytes) | A correlated value-shaped reply; its semantic validity still needs a qualified codec. |
-| **Empty reply** | ACK + 0 bytes payload (NN=0) | An observed empty response. It may be feature-gated, unsupported, or otherwise profile-specific. |
+| **Empty reply** | ACK + 0 bytes payload (NN=0) | An observed empty response. It may be feature-gated, unsupported, or otherwise family-specific. |
 | **Negative/timeout** | NACK, transport error, or timeout | No qualifying value reply; this does not prove global register absence. |
 
 **NACK-or-CRC ambiguity:** When accessing B524 via transport-layer adapters (ebusd TCP `hex`, ENH), the adapter reports negative outcomes as a single error class. A true protocol-level NACK (the device explicitly rejected the request) and a CRC failure (corrupt frame on the wire) are indistinguishable in transport traces. Scanners and analysis tools should classify these uniformly as `nack_or_crc` rather than asserting either cause. Only direct bus-level observation (raw frame capture with CRC verification) can disambiguate. A scanner may use the outcome to bound a profile-local scan, but must retain it as non-qualification rather than proof of absence.
 
-Some BASV2 observations correlate empty replies with a feature being inactive. They do not make an empty reply a universal feature-gated state:
+Some VRC720 observations correlate empty replies with a feature being inactive. They do not make an empty reply a universal feature-gated state:
 
 - `GG=0x00, RR=0x0006` (manual cooling days): dormant when VRC720 cooling is not configured
-- `GG=0x00, RR=0x0016` (`system_ventilation_operating_mode`, u16 enum `1=AUTO 2=DAY 3=SET_BACK` as observed on the VRC700 family, hardware confirmation pending): behavior when no system quick mode is engaged is not established
 - `GG=0x00, RR=0x0074` (system quick mode value): dormant when no system quick mode is engaged
 - `GG=0x00, RR=0x00DA/0x00DB` (manual cooling dates): responsive with BCD defaults in one scan, dormant in another after configuration change
+
+The VRC700 ventilation-mode selector is separate from these VRC720
+observations; see the [register-map entry](ebus-vaillant-B524-register-map.md#gg0x00--system)
+for its candidate enum and profile scope. It does not establish a VRC720
+empty reply or the selector's behaviour when no system quick mode is engaged.
 
 A reader must preserve empty replies separately from value replies and negative/timeout outcomes. A profile may label an empty reply `dormant` only where correlated evidence supports that interpretation.
 
@@ -108,13 +122,13 @@ Four distinct "no real data" signaling mechanisms exist in B524 responses:
 
 | Pattern | Wire bytes | When used | Detection |
 |---------|-----------|-----------|-----------|
-| **Empty reply** | ACK + 0 data bytes | Empty response; cause is profile-specific | `len(payload) < 4` |
+| **Empty reply** | ACK + 0 data bytes | Empty response; cause is family-specific | `len(payload) < 4` |
 | **NaN sentinel** | FLAGS+GG+RR+`00 00 C0 7F` | Float register where sensor is disconnected or reading unavailable | `math.isnan(f32_value)` |
 | **0x7FFFFFFF sentinel** | FLAGS+GG+RR+`FF FF FF 7F` | Integer register with uninitialized or out-of-range value | `u32_value == 0x7FFFFFFF` |
 | **Zero** | FLAGS+GG+RR+`00 00` | Legitimate value = 0 | Context-dependent; not a sentinel |
 
 `0x7FFFFFFF` is a candidate no-data value in integer replies. Preserve it raw
-and keep any no-data treatment profile-qualified until a correlated public
+and keep any no-data treatment family-qualified until a correlated public
 capture establishes the behavior.
 
 ### 2.5 Asymmetric read/write paths
@@ -128,7 +142,7 @@ alone do not demonstrate that these selectors form one control path.
 
 | Operation | Path | Register |
 |-----------|------|----------|
-| Read operating mode | `OP=0x02, GG=0x00, RR=0x0016` | `system_ventilation_operating_mode` (enum, see register map) |
+| Read operating mode | `OP=0x02, OT=0x00, GG=0x00, II=<ventilation_index>, RR=0x0016` | `system_ventilation_operating_mode` (enum, see register map) |
 | Read mode value | `OP=0x02, GG=0x00, RR=0x0074` | `system_quick_mode` (dormant when no mode active) |
 | Write mode value | `OP=0x02, GG=0x09, RR=0x0001` | Write target for mode activation |
 | Write active flag | `OP=0x02, GG=0x09, RR=0x0002` | Write target for mode on/off |
@@ -146,15 +160,45 @@ profile-scoped and capture-required.
 | Wire | Encoding | Size | Notes |
 |------|----------|------|-------|
 | `u8` | Unsigned byte | 1 byte | Boolean-range values and small enums. ebusd `onoff`/`yesno` (UCH) |
+| `i8` | Signed 8-bit integer | 1 byte | Profile-specific index values; see the Vaillant decoder notes below. |
 | `u16` | Little-endian uint16 | 2 bytes | Primary integer type. ebusd may decode only low byte for some enums |
 | `u32` | Little-endian uint32 | 4 bytes | Energy counters, pump hours/starts |
 | `f32` | IEEE 754 float32 (see note below) | 4 bytes | Primary numeric type for temperatures, pressures, percentages |
-
-> **Profile-dependent f32 byte order:** The characterized BASV2 controller uses little-endian float32. A heat-pump HMU profile may use big-endian float32; qualify that codec independently before reversing bytes. The BASV2 survey does not establish the HMU layout, and a destination address alone never selects byte order.
 | `string` | Null-terminated C string | Variable | Zone names, installer info |
 | `bytes` | Raw byte sequence | Variable | Opaque payload, not decoded as numeric |
 | `date` | Profile-qualified date codec | Variable | BCD `DD MM YY` is observed for some scalar fields; it does not follow from a description-response length. |
 | `time` | BCD-encoded `HH MM [SS]` | 2-3 bytes | 2 bytes (HH:MM) for timers, 3 bytes (HH:MM:SS) for system clock |
+
+> **Profile-dependent f32 byte order:** The characterized VRC720 controller uses little-endian float32. A heat-pump HMU profile may use big-endian float32; qualify that codec independently before reversing bytes. The VRC720 survey does not establish the HMU layout, and a destination address alone never selects byte order.
+
+#### Vaillant numeric formats
+
+The following additional numeric interpretations remain unconfirmed on the
+wire for the stated controller families.
+
+- Float format: IEEE-754 binary32, little-endian, with an identity mapping
+  (no wire scale or offset). `Precision 1` denotes presentation precision,
+  not a multiplier.
+- Unit metadata: °C has factor 1 and SI offset 273.15, K has offset 0, and
+  bar has factor 100000. These unit conversions do not change the numeric
+  value transmitted in the register's own unit.
+- Float bounds: finite binary32 extrema, with no reserved bit pattern
+  established. The NaN example in section 2.4 is one binary32 NaN
+  representation; handling of other NaN encodings and infinity remains open.
+
+For `OP=0x02, GG=0x03, II=<zone>, RR=0x001C` (`zone_circuit_for_zone`),
+the candidate signed-byte interpretation is `-1=notBound`, with `0..8` for
+the VRC720 family and `0..2` for the VRC700 family. It does not establish which
+zone instances are present. Preserve the existing VRC720 raw values in the
+register map; the physical meaning of `FF` remains unconfirmed.
+
+#### Zone special-function response width
+
+For `OP=0x02, GG=0x03, II=<zone>, RR=0x001B`
+(`zone_special_function_status`), a one-byte format remains a candidate
+alongside the two-byte catalog entry. The response width remains unconfirmed
+for the VRC700 and VRC720 families. The ordinary read request contains six selector
+bytes and does not request a value width.
 
 ### 2.7 System-information identifiers
 
@@ -167,7 +211,7 @@ is superseded by the [published identifier interpretation](https://github.com/Pr
 Keep the raw float and its interpreted count separate. Accept a count only when
 it is finite, non-negative, integral, within the profile's bound, and the identifier
 has a documented count meaning. API version/revision are not instance counts.
-NaN was an enumeration terminator in the published BASV2/BASV3 observations;
+NaN was an enumeration terminator in the VRC720 observations;
 this is not a universal rule for every product or identifier range. Implementations
 continue only through their configured bounded identifier set and retain NaN as
 an observation rather than using it as an unbounded scan-control signal.
@@ -194,7 +238,7 @@ service identifiers. A listed operation is not proof that every target supports 
 | 0Bh / 0Ch | `GetEventSetPoint` / `SetEventSetPoint` | Event-setpoint selectors / values |
 
 OP=01h and OP=07h use separate selector domains. Their complete forms are the
-corrected reconstruction adopted for profile-qualified implementations. The
+corrected reconstruction adopted for family-qualified implementations. The
 identifier byte is retained as `II` in this notation; its exact meaning
 and any special identifier (including FFh) must be qualified per profile.
 Physical support and response codecs require correlated target evidence.
@@ -213,7 +257,8 @@ is determined by the full tuple:
 ```
 
 `II=0x00` may be omitted as shorthand for singleton groups, but the canonical
-selector remains `(opcode, GG, II, RR)`.
+selector remains `(opcode, GG, II, RR)`. A group's singleton status must be
+qualified for the controller profile; `GG` alone does not establish it.
 
 Rules:
 
@@ -234,7 +279,7 @@ Rules:
 | Opcode | Selector family | Documented selector sets | Notes |
 |--------|-----------------|-------------------------------|-------|
 | `0x02` | Local controller selector family | `GG=0x00..0x05`, `GG=0x08`, `GG=0x09`, `GG=0x0A` | Observed local selector sets; the role, physical identity and topology of OP02/GG0A remain Unknown |
-| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | Opcode-scoped selector sets. `GG=0x01/0x02` heat-generator labels remain profile-qualified hypotheses; `GG=0x00` is uncharacterized. |
+| `0x06` | Controller-mediated selector family | `GG=0x01`, `GG=0x02`, `GG=0x08`, `GG=0x09`, `GG=0x0A`, `GG=0x0C`, `GG=0x0E`, `GG=0x0F` | Opcode-scoped selector sets. `GG=0x01/0x02` heat-generator labels remain family-qualified hypotheses; `GG=0x00` is uncharacterized. |
 
 **Unqualified presentation candidate:** The operator-provided display designation
 `OP=0x06, GG=0x0B` = **Functional Modules (VR70) FM3** is retained as a name only. It
@@ -252,9 +297,9 @@ layout, or physical-device claim.
 
 | GG | Human label | Presentation semantic name | Qualification |
 | --- | --- | --- | --- |
-| 00 | System | `system` | Observed singleton local selector set. |
+| 00 | System | `system` | VRC720-family singleton local selector set; see the [register-map topology](ebus-vaillant-B524-register-map.md#group-topology) for the separately scoped VRC700 ventilation indexing. |
 | 01 | Native Domestic Hot Water | `native_domestic_hot_water` | Observed singleton local selector set. |
-| 02 | Circuits | `circuits` | Exact `BASV2/rawSW0507/HW1704/API1` profile: II00..08 heating candidates and independent II09 virtual native water; nonmatching or unknown profiles require separate qualification. |
+| 02 | Circuits | `circuits` | VRC720 family: II00..08 heating candidates and independent II09 virtual native water; other or unknown families require separate qualification. |
 | 03 | Zones | `zones` | Observed local selector set. |
 | 04 | Solar Circuit | `solar_circuit` | Observed local selector set. |
 | 05 | Solar Loaded Cylinder | `solar_loaded_cylinder` | Observed local selector set. |
@@ -276,18 +321,18 @@ selector.
 
 | GG | Human label | Presentation semantic name | Public qualification |
 | --- | --- | --- | --- |
-| 01 | Boiler | `boiler` | Hypothesis. The existing profile-qualified `primary_heating_source` route remains the documented route. |
-| 02 | Heat Pump | `heat_pump` | Hypothesis. The existing profile-qualified `secondary_heating_source` route remains the documented route. |
+| 01 | Boiler | `boiler` | Hypothesis. The existing family-qualified `primary_heating_source` route remains the documented route. |
+| 02 | Heat Pump | `heat_pump` | Hypothesis. The existing family-qualified `secondary_heating_source` route remains the documented route. |
 | 03 | Air Recovery (VAR) recoVair | `air_recovery_recovair` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
 | 04 | unused | `unused` | Unknown. This recorded presentation state does not establish universal absence or reservation. |
 | 05 | Wärmepumpe Zubehör Appliance Interface (VWZ-AI) | `heat_pump_accessory_vwz_ai` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
 | 06 | Pumpen Module - Solar (VPM-S) auroFLOW | `solar_pump_module_auroflow` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
 | 07 | Pumpen Module - Wasser (VPM-W) aguaFLOW | `water_pump_module_aguaflow` | Hypothesis for the family name; the characterized profile has a candidate route and II01..II08 bound. |
-| 08 | Modul Solar (VMS) auroSTEP | `solar_module_aurostep` | Hypothesis. It does not replace the separately documented profile-specific `buffer_solar_cylinder_2_remote` route. |
+| 08 | Modul Solar (VMS) auroSTEP | `solar_module_aurostep` | Hypothesis. It does not replace the separately documented family-specific `buffer_solar_cylinder_2_remote` route. |
 | 09 | Remote Control Regulators (VRC7xx, VRT38x) | `remote_control_regulator` | Hypothesis for the family name; the `regulator_slot` route and its profile qualification remain separate. |
 | 0A | Remote Control Thermostats (VR9x) | `remote_control_thermostat` | Hypothesis for the family name; the `thermostat_slot` route and its profile qualification remain separate. |
 | 0B | Functional Modules (VR70) FM3 | `functional_modules_vr70` | Hypothesis for the family name; the characterized profile has II01..II08 candidates and requires a concrete Boolean predicate. |
-| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Hypothesis for the family/FM5 display name. The separately published slot schema remains profile-qualified to OP06/GG0C. |
+| 0C | Functional Modules (VR71) FM5 | `functional_modules_vr71` | Hypothesis for the family/FM5 display name. The separately published slot schema remains family-qualified to OP06/GG0C. |
 | 0D | Relay Module (VR41) | `relay_module_vr41` | Hypothesis for the family name; the characterized profile bounds RR0001 to II01..II08 as availability-only, with `device_connected` BOOL and Unknown RR maximum. |
 | 0E | Clock Module | `clock_module` | Hypothesis for the family name; the `clock_slot` route and its profile qualification remain separate. |
 | 0F | Base Station | `base_station` | Hypothesis for the family name; the `base_station_slot` route and its profile qualification remain separate. |
@@ -305,10 +350,10 @@ Explicit examples:
 
 - `GG=0x00 + OP=0x02` = local system/settings selector set.
 - `GG=0x01 + OP=0x02` = local DHW selector set.
-- `GG=0x01 + OP=0x06` = profile-qualified controller-side primary
+- `GG=0x01 + OP=0x06` = family-qualified controller-side primary
   heating-source candidate. It does not establish any global rule for
   `GG=0x00`.
-- `GG=0x02 + OP=0x06` = profile-qualified controller-side secondary
+- `GG=0x02 + OP=0x06` = family-qualified controller-side secondary
   heating-source candidate.
 - `OP=0x02, GG=0x08/0x09/0x0A` and `OP=0x06, GG=0x08/0x09/0x0A` are distinct
   documented selector spaces with different meanings and register layouts.
@@ -341,14 +386,13 @@ Request payload:  00 IDlo IDhi
 Response body:   four float32 little-endian bytes on the documented controller profile
 ```
 
-The identifier table below follows the public BASV2/SW0507, BASV3/SW0760 and
-BASV0/SW0217 report. It is a profile interpretation, not a global register-group
+The identifier table below describes the VRC720 family. It is not a global register-group
 list or a claim that all counts are physically verified on every system.
 
 | ID | snake_case semantic name | Meaning |
 | --- | --- | --- |
-| 0000h | `circuit_count` | Legacy public name; profile-qualified supported circuit capacity for bounded OP=02h/GG=02h candidate guidance |
-| 0001h | `zone_count` | Legacy public name; profile-qualified supported zone capacity for bounded OP=02h/GG=03h candidate guidance |
+| 0000h | `circuit_count` | Legacy public name; family-qualified supported circuit capacity for bounded OP=02h/GG=02h candidate guidance |
+| 0001h | `zone_count` | Legacy public name; family-qualified supported zone capacity for bounded OP=02h/GG=03h candidate guidance |
 | 0002h | `solar_circuit_count` | Solar circuits; guides OP=02h/GG=04h discovery |
 | 0003h | `solar_loaded_tank_count` | Solar-loaded tanks; guides OP=02h/GG=05h discovery |
 | 0004h | `device_count` | Devices |
@@ -409,7 +453,7 @@ Device parameter:  07 GG II RRlo RRhi
 
 The historical `01 GG RR` request omitted the identifier and high address byte.
 Its changing/misaligned replies do not prove a sliding-window dictionary or a
-BASV2 buffer bug. Preserve them as historical observations, with the returned
+VRC720 buffer bug. Preserve them as historical observations, with the returned
 selector independent from the intended selector. See the
 [original public short-probe report](https://github.com/Project-Helianthus/helianthus-vrc-explorer/discussions/53#discussioncomment-15839146).
 
@@ -516,7 +560,7 @@ Addressing notes:
 - `0x02` is the local controller selector family.
 - `0x06` is a separate opcode-scoped controller-mediated selector family. It is
   used for several remote families. The primary and secondary heat-source
-  labels (`GG=0x01` and `GG=0x02`) remain profile-qualified hypotheses.
+  labels (`GG=0x01` and `GG=0x02`) remain family-qualified hypotheses.
 - The selector meaning is always keyed on `(opcode, GG, II, RR)`, not on `GG`
   alone.
 
@@ -603,10 +647,10 @@ A successful decode does not establish installed equipment or authorize a write.
 
 The Event families do not inherit the VRC700-only timer gate. Support is
 qualified by each target's actual response; this specification does not claim
-that every BASV2 or VRC700 implements them. Undocumented profile/address
+that every VRC720- or VRC700-family controller implements them. Undocumented profile/address
 combinations remain rejected rather than receiving an invented codec.
 
-Event-code semantics and supported selector ranges remain profile-qualified.
+Event-code semantics and supported selector ranges remain family-qualified.
 A response of the expected length does not establish those semantics, physical
 presence, writable behavior or support outside the observed selector. A read
 retry must preserve the exact selector; write repetition has distinct effects
@@ -655,3 +699,19 @@ ID1→OP02/GG03. Other mappings require their own evidence.
 
 Open protocol questions remain marked inline as **Hypothesis** or **Unknown**
 until publishable correlated evidence qualifies them.
+
+### Open questions — numeric formats and reply attributes
+
+- The reply layout and attribute interpretation outside the characterized
+  VRC720 profile remain unconfirmed, including whether `II` is echoed.
+- The value width of `OP=0x02, GG=0x03, II=<zone>, RR=0x001B` remains
+  unresolved between the one-byte candidate format and two-byte catalog
+  entry.
+- The volatility, persistence and time-to-live of B524 parameters are not defined
+  here; visibility and role information do not classify a parameter as configuration or state.
+- No wire observation establishes `0x7FFFFFFF` as an inactive integer-style
+  float pattern; the NaN example does not establish that interpretation.
+- Which numeric and enum definitions apply to an installed controller remains
+  open; controller families require separate qualification.
+- The interpretation of OP00 replies containing NaN, infinity or out-of-range
+  values is not established.
