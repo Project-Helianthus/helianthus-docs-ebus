@@ -61,6 +61,8 @@ Broadcast frames do not receive ACK/NACK or responses.
 
 **SYN during active waits:** If a `SYN` (`0xAA`) byte is received while waiting for an `ACK`/`NACK` or a target response, it signals end-of-transaction (timeout). A SYN during an ACK/response wait is a timeout indicator and ends the current transaction. Ignoring SYN and continuing to wait is incorrect -- it causes the receiver to stall past the end of the transaction.
 
+> **Note (#261):** a SYN received while waiting for an ACK/NACK or a target response is not an idle byte to be ignored. It marks the end of the frame (timeout). Only a standalone SYN outside an active wait indicates bus idle.
+
 **ENH transport:** ENH endpoints forward raw eBUS wire bytes via `RECEIVED` events without decoding wire escapes. `RECEIVED(0xAA)` is therefore a SYN boundary. Logical data `0xAA` arrives as `RECEIVED(0xA9)` followed by `RECEIVED(0x01)` and must be reassembled before logical frame decoding.
 
 **Escape-aware SYN counting:** On raw bus transports, the escape sequence `0xA9 0x01` represents the data byte 0xAA and must NOT be counted as SYN. Only a standalone, unescaped `0xAA` outside of an active frame's data region indicates bus idle.
@@ -203,6 +205,8 @@ Observed target response payload layout:
 Notes:
 - The response length varies by device because the device id field is variable-length.
 - Many tools treat `sw`/`hw` as opaque hex.
+- The eBUS standard fixes this payload at `NN=0x0A`: manufacturer, a 5-byte ASCII `device_id`, software version and revision (two BCD bytes) and hardware version and revision (two BCD bytes); see [`ebus-service-07h.md`](./ebus-service-07h.md). The variable-length observation above is a discrepancy with the standard; which devices return a payload other than 10 bytes is unresolved (see [Open questions](#open-questions)).
+- Candidate interpretation, unconfirmed on the wire (**Hypothesis**): for Vaillant regulators (manufacturer `0xB5`), bytes 8–9 (for `NN=0x0A`) are one software product number (SPN), a four-digit BCD number sent least-significant byte first (wire `17 04` is SPN 417); bytes 6–7 keep the standard's meaning (software version and revision). For every other Vaillant device class the meaning of bytes 8–9 is **Unknown**; manufacturer `0xB5` alone does not establish the SPN reading. The standard's hardware version/revision reading remains authoritative for other manufacturers; see [`ebus-service-07h.md`](./ebus-service-07h.md#service-0x07-0x04--identification).
 - Vaillant device IDs and prefixes observed through this scan are expanded in
   [`../vaillant/ebus-vaillant.md#device-id-prefix-glossary`](../vaillant/ebus-vaillant.md#device-id-prefix-glossary).
 
@@ -213,8 +217,8 @@ For deterministic “identify-only” target emulation, a practical profile can 
 - `address` (target address that receives the `0x07 0x04` query),
 - `manufacturer` (1 byte),
 - `device_id` (ASCII token),
-- `software_version` (2 bytes, opaque),
-- `hardware_version` (2 bytes, opaque),
+- `software_version` (2 BCD bytes, opaque to generic tools),
+- `hardware_version` (second 2-byte BCD pair, opaque to generic tools; a software product number for Vaillant regulators, candidate, unconfirmed on the wire),
 - response-delay bounds (timing envelope; transport dependent).
 
 For minimal compatibility, many emulators normalize `device_id` to a 5-byte ASCII field before generating the payload:
@@ -235,8 +239,8 @@ Given this normalization, the generated identify payload layout is:
 ```
 
 Notes:
-- This 10-byte shape is a minimal interoperability layout for identify-only emulation.
-- Real devices may still return longer `device_id` fields and therefore larger identify payloads.
+- This 10-byte shape is a minimal interoperability layout for identify-only emulation; it is also the standard's fixed layout.
+- Real devices may still return longer `device_id` fields and therefore larger identify payloads (a discrepancy with the standard's fixed 10 bytes; see above).
 
 ### Minimal VR90 Recognition Query Set (Observed)
 
@@ -256,7 +260,13 @@ Minimal response payload shape used in practice:
 
 Notes:
 - This is a practical minimum profile for VR90 recognition behavior; it is not a full thermostat command set.
-- Other targets may return longer device identifiers and therefore a different overall response length.
+- Other targets may return longer device identifiers and therefore a different overall response length (the standard fixes 10 bytes; see above).
+
+## Open questions
+
+- The observed variable-length `07 04` payload and the standard's fixed `NN=0x0A` are a discrepancy; which devices return a payload other than 10 bytes, and with which identifier length, is unresolved.
+- The reading of `07 04` bytes 8–9 as a software product number is a candidate, unconfirmed on the wire, for Vaillant regulators; for every other Vaillant (`0xB5`) device class the meaning of bytes 8–9 is unresolved; whether a Vaillant `07 04` broadcast form exists and the other open points of the Vaillant identification variant are listed in [`ebus-service-07h.md`](./ebus-service-07h.md#open-questions).
+- Whether Vaillant bus participants emit `07 FE` or `07 FF`, and the cadence, bandwidth and conformance of any Vaillant sign-of-life behaviour, are undetermined (see the same page).
 
 ## See Also
 

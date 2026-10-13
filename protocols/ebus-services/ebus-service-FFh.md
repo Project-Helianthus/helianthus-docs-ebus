@@ -334,6 +334,14 @@ Per-node memory cost for NM (static target configuration, default cycle time):
 
 Formula: `19 + (monitored_nodes × 17)` bits.
 
+## Vaillant variants
+
+The standard definitions above stay authoritative. No Vaillant definition of any `0xFF` service (`0xFF 0x00`–`0xFF 0x06`) is known; implementation **Unknown**. This is not proof that a device lacks the service.
+
+## Open questions
+
+- Whether Vaillant bus participants implement the network-management services, and the cadence, bandwidth and conformance of their `0xFF 0x00` and `0xFF 0x02` traffic and of any `0x07 0xFF` sign of life, are undetermined (see also [`ebus-service-07h.md`](./ebus-service-07h.md#open-questions)).
+
 ## See Also
 
 - [`ebus-application-layer.md`](./ebus-application-layer.md) — service index

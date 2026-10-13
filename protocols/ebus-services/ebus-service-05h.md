@@ -81,6 +81,8 @@ The service defines two parallel channel groups with symmetric structure:
 
 **Bus load:** 0.36% at 1/15s.
 
+> **Vaillant variant (candidate, unconfirmed on the wire):** the heat-request values are `0x00`, `0x55`, `0xAA`, `0xCC` and `0xEE`, and `0xDD` (the QC service in the standard; an STB check in the Vaillant variant) is not supported. Boiler and DHW targets have the range 0–90 degC (standard 0–100), the outside temperature as signed 8-bit −128 to 127 degC (standard −50 to +50 degC with replacement `0x3F`) and the setting degree as unsigned 8-bit 0–255 % (standard 0–100 %). Order, width and signedness of the five bytes match the table. These candidate value ranges are not observed device limits; the standard's ranges above stay authoritative. See [Vaillant variants](#vaillant-variants).
+
 ---
 
 ### Service 0x05 0x02 — Operational Data Request (Controller → Burner)
@@ -311,6 +313,22 @@ This secondary command is barred for compatibility reasons.
 | 9 | reserved_4 | — | — | `0xFF` | Reserved |
 
 **Bus load:** 0.75% at 1/10s.
+
+## Vaillant variants
+
+The standard layouts above stay authoritative. The statements below are candidate interpretations, unconfirmed on the wire; no Vaillant device or capture observation of any `0x05` service is known.
+
+| SB | Standard service | Vaillant layout | Result |
+|---:|---|---|---|
+| `0x01` | Operational Data (controller to burner) | Five bytes as above, with the candidate value sets and value ranges given under `0x05 0x01` | Differs (candidate) |
+| `0x00`, `0x02`–`0x0D` | All other `0x05` services | No definition known | No Vaillant definition known; implementation **Unknown** |
+
+- A missing Vaillant definition is not proof that a device lacks the service.
+
+## Open questions
+
+- The `0x05 0x01` value sets and value ranges (heat-request values without `0xDD`, targets 0–90 degC, signed 8-bit outside temperature, unsigned 8-bit setting degree) are candidates, unconfirmed on the wire; no device or capture observation is known.
+- No Vaillant definition of `0x05 0x00` or `0x05 0x02`–`0x0D` is known; whether Vaillant devices send or answer them is not established.
 
 ## Communication Flow
 

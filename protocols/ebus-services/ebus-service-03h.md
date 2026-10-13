@@ -126,6 +126,28 @@ Secondary commands `0x00`–`0x03` are barred for historical reasons.
 
 When the target is an initiator address, the response is sent as a separate initiator telegram (same payload layout) rather than a target response.
 
+## Vaillant variants
+
+The standard layouts above stay authoritative. The statements below are candidate interpretations, unconfirmed on the wire; no Vaillant device or capture observation of any `0x03` service is known.
+
+| SB | Standard service | Vaillant layout | Result |
+|---:|---|---|---|
+| `0x04` | Start Counts | Three u8 decimal chunks, each 0–99, matching the standard. Two readings conflict: the Vaillant layout carries them on the request side with a positive target response that has no data (candidate), while the standard carries them in the target response | Request/reply placement unresolved |
+| `0x05` | Operating Time Level 1 | Three u8 components (minutes, 100s hours, 10000s hours), each with the candidate range 0–59, and no 1s-hour component | Differs (candidate); request/reply direction unresolved |
+| `0x06` | Operating Time Level 2 | Four u8 components matching the standard layout of `0x03 0x05`. Two readings conflict: the Vaillant layout carries them on the request side with a positive target response that has no data (candidate), while the standard carries them in the target response | Request/reply placement unresolved |
+| `0x07` | Operating Time Level 3 | No definition known | No Vaillant definition known; implementation **Unknown** |
+| `0x08` | Fuel Quantity Counter | No definition known | No Vaillant definition known; implementation **Unknown** |
+| `0x10` | Meter Reading | No definition known | No Vaillant definition known; implementation **Unknown** |
+
+- The `0x03 0x05` difference concerns the field set and the candidate range of the hour chunks (the standard has a 1s-hour byte and 0–99 hour chunks). Which side of the exchange carries the counter bytes is unresolved for `0x03 0x04`, `0x03 0x05` and `0x03 0x06`.
+- A missing Vaillant definition is not proof that a device lacks the service.
+
+## Open questions
+
+- Request/reply placement of the counter bytes of `0x03 0x04`, `0x03 0x05` and `0x03 0x06` in the Vaillant layouts is unresolved.
+- The Vaillant `0x03 0x05` layout (three components, each with the candidate range 0–59, no 1s-hour component) is a candidate, unconfirmed on the wire; no device or capture observation is known.
+- No Vaillant definition of `0x03 0x07`, `0x03 0x08` or `0x03 0x10` is known; whether Vaillant devices send or answer any `0x03` service is not established.
+
 ## Communication Flow
 
 ```mermaid

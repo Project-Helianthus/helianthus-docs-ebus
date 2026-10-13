@@ -107,6 +107,14 @@ stateDiagram-v2
 
 For initiator-device functions (`0x01`–`0x14`), the test device sends End of Test (`0x0F 0x03`). For target-device functions (`0x22`/`0x25`), the sequence repeats until an End of Test is received as an initiator-target telegram.
 
+## Vaillant variants
+
+The standard layouts above stay authoritative. Candidate interpretation, unconfirmed on the wire: the Vaillant layout for `0x0F` gives the primary byte `0x0F` with no known secondary byte and no body; an eBUS request always carries a secondary byte, so its value on the wire is unknown, and the positive target response carries no data. It does not encode the Start of Test, Ready, Test Message or End of Test services above (`0x0F 0x01`–`0x0F 0x03`).
+
+## Open questions
+
+- Whether Vaillant devices implement the `0x0F 0x01`–`0x0F 0x03` test lifecycle is not established; the Vaillant layout gives no secondary byte (candidate), and no capture of a `0x0F` exchange is known.
+
 ## Communication Flow
 
 ```mermaid

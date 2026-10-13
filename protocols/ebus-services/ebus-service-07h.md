@@ -48,6 +48,8 @@ Several commands in this service are also documented (from the implementation pe
 
 **Bus load:** 0.11% at 1/60s cycle.
 
+> **Vaillant variant (candidate, unconfirmed on the wire):** the Vaillant layout of this telegram has `NN=0x09` with the field order above. Its weekday byte (byte 7) is an unsigned enumeration `0` = Monday ... `6` = Sunday (default Monday), not BCD 1–7. The other seven fields match the table: outside temperature as signed 16-bit little-endian divided by 256 (−50 to +50 degC), and seconds, minutes, hours, day, month and year as BCD. The standard's BCD 1–7 weekday above stays the authoritative description. No Vaillant emission of `0x07 0x00` is known. See [Vaillant variants](#vaillant-variants).
+
 ---
 
 ### Service 0x07 0x01 — Set Date/Time
@@ -66,6 +68,8 @@ Several commands in this service are also documented (from the implementation pe
 | 5 | weekday | BCD | 1–7 | Weekday |
 | 6 | year | BCD | 0–99 | Year |
 | 7–8 | outside_temp | DATA2b | -50.0 to +50.0 degC | Outside temperature |
+
+> **Vaillant variant:** no Vaillant definition of `0x07 0x01` is known. Candidate, unconfirmed on the wire: a Vaillant controller clock is set by other means; see [Vaillant variants](#vaillant-variants).
 
 ---
 
@@ -132,9 +136,13 @@ Request payload: Empty (`NN=0x00`).
 | 8 | hw_version | BCD | 0–99 | Hardware version |
 | 9 | hw_revision | BCD | 0–99 | Hardware revision |
 
+> **Vaillant variant (candidate, unconfirmed on the wire; manufacturer `0xB5`):** for Vaillant regulators, bytes 8–9 carry one software product number (SPN), not a hardware version and revision; the regulator identity crosswalk linked below uses this reading (**Hypothesis**). For every other Vaillant device class (for example boilers and heat-pump units) the meaning of bytes 8–9 is **Unknown**; manufacturer `0xB5` alone does not establish the SPN reading. The SPN is a four-digit BCD number (0000–9999) sent least-significant byte first: `SPN = BCD(byte 8) + 100 × BCD(byte 9)`, where `BCD(x) = (x >> 4) × 10 + (x & 0x0F)`. Examples: the wire bytes `17 04` are SPN 417, `11 04` are SPN 411, and `04 04` are SPN 404. Bytes 6–7 keep the standard's meaning (software version and software revision), and the standard's byte layout and BCD encoding apply unchanged (`NN=0x0A`; candidate, unconfirmed on the wire); only the meaning of bytes 8–9 differs from the standard, and the standard's hardware version/revision reading above stays authoritative for other manufacturers. Candidate, unconfirmed on the wire: the same SPN occurs under different five-character identity strings, so a product lookup uses the pair (identity string, SPN); see the [Vaillant regulator identity crosswalk](../vaillant/ebus-vaillant-regulators.md#spn-field-07-04-bytes-8-9-representation). The standard fixes `NN=0x0A`; the variable-length payload recorded as observed in [`ebus-overview.md`](./ebus-overview.md#open-questions) is a discrepancy with it (unresolved).
+
 **Broadcast (self-identification):**
 
 Payload (`NN=0x0A`): Same fields as the response above, carried in the initiator telegram data with `DST=0xFE`.
+
+> **Vaillant variant:** no Vaillant broadcast form of `0x07 0x04` is known.
 
 ---
 
@@ -165,7 +173,7 @@ Unlike `0x07 0x03` (which has fixed PB mapping `0x05`–`0x0C`), the PB-per-byte
 
 **Description:** Triggers all ready-to-send initiators to transmit at the earliest opportunity. Typically sent as broadcast, but the spec notes it does not have to be. Should be used infrequently due to significant bus load impact.
 
-> **Cross-reference:** The implementation perspective is documented in [`ebus-overview.md` § QueryExistence](./ebus-overview.md#queryexistence-0x07-0xfe).
+> **Cross-reference:** The implementation perspective is documented in [`ebus-overview.md` § Inquiry of Existence](./ebus-overview.md#inquiry-of-existence-0x07-0xfe).
 
 **Payload:** Empty (`NN=0x00`). No response frame — initiators respond by sending their next scheduled telegram or a Sign of Life (`0x07 0xFF`).
 
@@ -176,6 +184,50 @@ Unlike `0x07 0x03` (which has fixed PB mapping `0x05`–`0x0C`), the PB-per-byte
 **Description:** Broadcast response to an Inquiry of Existence (`0x07 0xFE`). Sent by initiators that have no other pending telegram.
 
 **Payload (broadcast):** Empty (`NN=0x00`).
+
+> **Vaillant variant (candidate, unconfirmed on the wire):** the Vaillant layouts define `0x07 0xFF` as the PB/SB pair only; whether Vaillant bus participants emit it is not established here. See [Vaillant variants](#vaillant-variants).
+
+## Vaillant variants
+
+This section adds the Vaillant variants of the services above. Each statement keeps the standard's claim authoritative. Every Vaillant layout in this section, including the `07 04` software product number, is a candidate interpretation, unconfirmed on the wire, and each statement carries its own marker; the open points are collected under [Open questions](#open-questions). Vaillant requesters and controllers are named only by class; no product model is implied by any SPN value.
+
+| SB | Standard service | Vaillant layout | Result |
+|---:|---|---|---|
+| `0x00` | Date/Time Broadcast | `NN=0x09`, weekday as unsigned enumeration `0`–`6` (Monday–Sunday) | Differs (candidate, unconfirmed on the wire) |
+| `0x01` | Set Date/Time | No definition known | No Vaillant definition known; implementation **Unknown** |
+| `0x02` | Set Outside Temperature | Request: outside temperature (signed 16-bit little-endian divided by 256, degC) and duration (u8 minutes, default 0); the positive target response has no data | Follows the standard shape (candidate) |
+| `0x03` | Query Supported Commands | Request: one u8 SB block; reply: version (BCD), revision (BCD) and eight u8 bitmaps for PB `0x05`–`0x0C` | Follows the standard layout (candidate) |
+| `0x04` | Identification | For Vaillant regulators (byte 0 `0xB5`): bytes 8–9 are one SPN (BCD, least-significant byte first). Manufacturer `0xB5` alone does not select this reading; for every other Vaillant device class the meaning of bytes 8–9 is **Unknown** | Differs for regulators (candidate, unconfirmed on the wire); other classes unresolved |
+| `0x04` (broadcast) | Identification self-broadcast | No broadcast form defined or emission known | No Vaillant definition known; implementation **Unknown** |
+| `0x05` | Query Supported Commands (extended) | Request: SB block (u8) and PB block (u8); reply: two BCD bytes and eight u8 bitmaps for the selected PB block | Follows the standard layout (candidate) |
+| `0xFE` | Inquiry of Existence | Only PB/SB and an empty request are defined (candidate) | Emission by Vaillant participants **Unknown** |
+| `0xFF` | Sign of Life | Only PB/SB and an empty request are defined (candidate) | Emission by Vaillant participants **Unknown** |
+
+### Clock setting
+
+- Candidate interpretation, unconfirmed on the wire: a Vaillant requester sends a `07 00`-shaped request (the same service identifier as the date/time broadcast) as a clock-setting command to a controller that advertises the `07 00` service. Whether that request is directed or broadcast is not established, and no Vaillant definition of `07 01` is known.
+- Candidate interpretation, unconfirmed on the wire: a Vaillant requester sets the clock of VRC700-family and VRC720-family controllers with two B524 register writes instead of `07 00` or `07 01`: first `OP=0x02, OT=0x01, GG=0x00, II=0x00, RR=0x0035` (time: hour, minute, second), then `RR=0x0034` (date: day, month, year minus 2000), three data bytes each. The register rows are `system_time` and `system_date` in the [B524 register map](../vaillant/ebus-vaillant-B524-register-map.md). Write access to these two registers is not established on the wire; this is not a qualified write procedure, and these writes are not documented as safe to send.
+
+### Capability queries
+
+- The Vaillant layouts of `07 03` and `07 05` match the standard shapes above (candidate, unconfirmed on the wire). The bit-selection algorithm and the meaning of a selected block are not encoded in them (candidate).
+- The Vaillant layout of `07 02` matches the standard shape (candidate, unconfirmed on the wire); the standard's `0` = permanent meaning and the `0x8000` replacement value are absent from it (candidate).
+- The Vaillant layout of `07 05` codes SB `0x05` in the request (candidate, unconfirmed on the wire), consistent with treating the standard document's `SB = 03h` request row as an erratum (see the `07 05` description above).
+
+### Existence and sign of life
+
+- The Vaillant layouts define `07 FE` and `07 FF` as the PB/SB pair with an empty request only (candidate, unconfirmed on the wire). Whether Vaillant bus participants emit either is not established here. The standard needs no direct response to an Inquiry of Existence, so the absence of a direct reply is not a deviation.
+- The cadence, bandwidth and conformance of any Vaillant sign-of-life behaviour are undetermined.
+
+## Open questions
+
+- Whether a Vaillant controller emits `07 00` is unknown; the weekday enumeration `0` = Monday ... `6` = Sunday is a candidate, unconfirmed on the wire, with no device or capture observation.
+- Whether the `07 00`-shaped clock-setting request is directed or broadcast is unresolved, and no Vaillant definition of `07 01` is known.
+- The controller clock write by B524 registers `0x0035` and `0x0034` has not been observed on the wire, and write access to these registers is not established.
+- No Vaillant broadcast (self-identification) form of `07 04` is known; whether a Vaillant device emits one is not established.
+- The SPN reading of `07 04` bytes 8–9 is a candidate, unconfirmed on the wire, for Vaillant regulators; whether Vaillant units of every other device class carry an SPN there is unresolved.
+- The cadence, bandwidth and conformance of any Vaillant `07 FF` sign-of-life behaviour, and the network-management conformance of Vaillant bus participants (see [`ebus-service-FFh.md`](./ebus-service-FFh.md)), are undetermined.
+- A `07 03`/`07 05` bit-selection rule and the `0` = permanent override duration of `07 02` are not encoded in the Vaillant layouts; their behaviour at a Vaillant target was not observed.
 
 ## Communication Flow
 

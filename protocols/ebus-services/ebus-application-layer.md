@@ -56,6 +56,33 @@ The official spec expresses cycle rates as `1/x[unit]` (e.g., `1/10s`, `1/15min`
 
 Manufacturer-specific PB families (e.g., Vaillant `0xB5`) are not part of the standard Application Layer and are documented separately in [`ebus-vaillant.md`](../vaillant/ebus-vaillant.md).
 
+## Vaillant variants
+
+Each service page adds a "Vaillant variants" section with the Vaillant layouts for that service. The standard text stays authoritative everywhere; every Vaillant layout is stated as a candidate interpretation, unconfirmed on the wire. The 49 standard service identifiers (`03 04`–`03 08`, `03 10`, `05 00`–`05 0D`, `07 00`–`07 05` including the `07 04` broadcast form, `07 FE`, `07 FF`, `08 00`–`08 04`, `09 00`–`09 03`, `0F 01`–`0F 03`, `FE 01`, `FF 00`–`FF 06`) fall into these groups:
+
+| Result | Services |
+|---|---|
+| Follows the standard layout (candidate) | `07 02`, `07 03`, `07 05`, `09 00`, `09 01`, `09 02`; `09 03` for the request (whether its reply is always empty is unresolved) |
+| Differs from the standard (candidate) | `07 04` (bytes 8–9 are a software product number for Vaillant regulators; for every other Vaillant device class their meaning is **Unknown**), `07 00`, `05 01`, `03 05` |
+| Defined with unresolved request/reply placement | `03 04`, `03 06` |
+| Only PB/SB defined, no body (candidate) | `07 FE`, `07 FF`, `FE 01` |
+| No Vaillant definition known (implementation **Unknown**) | `03 07`, `03 08`, `03 10`, `05 00`, `05 02`–`05 0D`, `07 01`, the `07 04` broadcast form, `08 00`–`08 04`, `0F 01`–`0F 03`, `FF 00`–`FF 06` |
+
+Service `0F`: a Vaillant layout gives the primary byte `0x0F` with no known secondary byte and no body (candidate; the secondary byte of the request on the wire is unknown, see [`ebus-service-0Fh.md`](./ebus-service-0Fh.md#vaillant-variants)). That layout does not encode any of the three standard identities `0F 01`–`0F 03`, which are therefore counted under "No Vaillant definition known".
+
+A missing Vaillant definition is not proof that a device lacks the service.
+
+Evidence labels in these sections, in the terms of the repository's evidence rules: a Vaillant layout marked candidate, unconfirmed on the wire, is **Hypothesis**; for a service marked "No Vaillant definition known", whether Vaillant devices implement it is **Unknown**; the `07 04` software product number reading is a **Hypothesis** as well, used by the [Vaillant regulator identity crosswalk](../vaillant/ebus-vaillant-regulators.md#spn-field-07-04-bytes-8-9-representation). No statement in these sections is **Proven**.
+
+Protocol profiles: no standard service in this index is known to be available only on PeBUS (candidate, unconfirmed on the wire). Which of the standard services with a Vaillant layout (`03 04`–`03 06`, `05 01`, `07 00`, `07 02`–`07 05`, `07 FE`, `07 FF`, `09 00`–`09 03`, `FE 01`, and the `0F` layout without a known secondary byte) are available under each profile is **Unknown**.
+
+## Open questions
+
+- Every difference listed above, including the `07 04` software product number, is a candidate, unconfirmed on the wire; no device or capture observation is known.
+- The services with no Vaillant definition may still be implemented by Vaillant devices; this is neither shown nor excluded.
+- No capture of a Vaillant exchange of `03`, `05`, `08`, `0F`, `FE` or `FF` standard services is known.
+- The availability of each standard service under the eBUS and the PeBUS profiles is not established; only the absence of a known PeBUS-only service is stated.
+
 ## See Also
 
 - [`ebus-overview.md`](./ebus-overview.md) — wire-level framing, CRC8, ACK/NACK, transaction flow
