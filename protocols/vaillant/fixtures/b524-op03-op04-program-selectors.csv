@@ -1,0 +1,7 @@
+family,program,group,instance,address,candidate_address_label
+VRC700 family,heating,0x03,zone index,0x02,Zone period heating
+VRC700 family,cooling,0x03,zone index,0x01,Zone period cooling
+VRC700 family,DHW,0x01,0x00,0x01,Circuit period DHW
+VRC700 family,circulation pump,0x01,0x00,0x02,Circuit period DHW circulation pump
+VRC700 family,ventilation,0x00,0x00,0x02,Period ventilation (conflicting candidate; the other assignment is 0x01; see section 4.4)
+VRC700 family,ventilation,0x00,0x00,0x01,Period ventilation (conflicting candidate; the other assignment is 0x02; see section 4.4)

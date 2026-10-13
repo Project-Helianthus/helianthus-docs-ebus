@@ -1,0 +1,197 @@
+family,opcode,group,instance,register,name,candidate_reply_value_bytes,candidate_value_type,candidate_unit,candidate_enumeration
+VRC720 family,0x02,0x00,00,0x0001,system_dhw_bivalence_point,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x0002,continuous_heating_limit,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x0004,max_preheating_time,2,uint16 LE,min,
+VRC720 family,0x02,0x00,00,0x0007,system_off,1,uint8,,0=False; 1=True
+VRC720 family,0x02,0x00,00,0x0009,automatic_cooling_enabled,1,uint8,,0=no; 1=yes
+VRC720 family,0x02,0x00,00,0x000A,system_cylinder_parallel_loading_allowed,1 or 2,uint8 or uint16 LE,,0=no; 1=yes
+VRC720 family,0x02,0x00,00,0x000F,hybrid_control_strategy,2,uint16 LE,,0=triVAI; 1=BivalencePoint
+VRC720 family,0x02,0x00,00,0x0013,backup_heater_type,2,uint16 LE,,0=Condensing; 1=NonCondensing; 2=Electrical
+VRC720 family,0x02,0x00,00,0x0014,adaptive_heating_curve,1,uint8,,0=Disabled; 1=Enabled
+VRC720 family,0x02,0x00,00,0x0017,system_dhw_max_loading_time,2,uint16 LE,min,
+VRC720 family,0x02,0x00,00,0x0018,system_dhw_blocking_time,2,uint16 LE,min,
+VRC720 family,0x02,0x00,00,0x0022,alternative_point_for_central_heating,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x0023,heating_circuit_bivalence_point,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x0024,backup_heater_allowed_for,2,uint16 LE,,0=Disabled; 1=Heating; 2=DHW; 3=DHWandHeating
+VRC720 family,0x02,0x00,00,0x0025,backup_heater_allow_temporary,2,uint16 LE,,0=Disabled; 1=Heating; 2=DHW; 3=DHWandHeating
+VRC720 family,0x02,0x00,00,0x0026,heating_circuit_emergency_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x0027,system_cylinder_start_loading_hysteresis,4,float32 LE,K,
+VRC720 family,0x02,0x00,00,0x0029,system_cylinder_loading_offset,4,float32 LE,K,
+VRC720 family,0x02,0x00,00,0x002B,system_cylinder_dhw_legionella_protection_start_weekday,2,uint16 LE,,0=Off; 1=Monday; 2=Tuesday; 3=Wednesday; 4=Thursday; 5=Friday; 6=Saturday; 7=Sunday; 8=Daily
+VRC720 family,0x02,0x00,00,0x002F,module_configuration_vr71,2,uint16 LE,,
+VRC720 family,0x02,0x00,00,0x0034,system_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x00,00,0x0035,system_time,3,3 x uint8,,time: hour; minute; second
+VRC720 family,0x02,0x00,00,0x0036,system_scheme,2,uint16 LE,,
+VRC720 family,0x02,0x00,00,0x0038,system_cooling_start_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x0039,system_water_pressure,4,float32 LE,bar,
+VRC720 family,0x02,0x00,00,0x0045,power_cut_function_evu,2,uint16 LE,,0=Disable heatpump; 1=Disable backup heater; 2=Disable Heatpump and Backup heater; 3=Disable heating; 4=Disable cooling; 5=Disable heating and cooling
+VRC720 family,0x02,0x00,00,0x0046,system_cylinder_mss_dhw_max_flow_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x0048,energy_manager_state,2,uint16 LE,,0=StandBy; 1=Heating; 2=Cooling; 3=DHW
+VRC720 family,0x02,0x00,00,0x004B,system_flow_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x004D,vwz_ai_configuration_ma2,2,uint16 LE,,0=CirculationPump; 1=Dehumidifier; 2=Zone; 3=LegionellaPump; 4=NoFunction
+VRC720 family,0x02,0x00,00,0x0067,system_cylinder_low_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x0068,system_cylinder_top_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x0073,outside_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x008F,system_cylinder_available,2,uint16 LE,,0=Disabled; 1=Heating; 2=DHW; 3=DHWandHeating
+VRC720 family,0x02,0x00,00,0x0095,outside_temperature_average_24h,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x009D,system_cylinder_mss_dhw_top_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x009E,system_cylinder_mss_dhw_bottom_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x009F,system_cylinder_mss_heating_top_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x00A0,system_cylinder_mss_heating_bottom_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x00,00,0x00A2,system_cylinder_smart_pv_ch_offset,4,float32 LE,K,
+VRC720 family,0x02,0x00,00,0x00AB,isolation_switch,1,uint8,,0=off; 1=on
+VRC720 family,0x02,0x00,00,0x00B5,outside_temperature_sensor_visibility,1,uint8,,0=False; 1=True
+VRC720 family,0x02,0x00,00,0x00B6,ext_energy_management_activation,1,uint8,,0=False; 1=True
+VRC720 family,0x02,0x00,00,0x00DA,manual_cooling_date_start,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x00,00,0x00DB,manual_cooling_date_end,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x00,00,0x00DC,room_temperature_control_strategy_type,1,uint8,,0=Two Point; 1=Analoge
+VRC720 family,0x02,0x00,00,0x00EF,continuous_heating_room_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x01,00,0x0001,native_dhw_circuit_type,2,uint16 LE,,0=Deactivated; 1=DHWCircuit
+VRC720 family,0x02,0x01,00,0x0003,native_dhw_operation_mode,2,uint16 LE,,0=Off; 1=TimeControlled; 2=Manual
+VRC720 family,0x02,0x01,00,0x0004,native_dhw_tapping_temperature_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x01,00,0x0005,native_dhw_current_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x01,00,0x0009,native_dhw_holiday_start_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x01,00,0x000A,native_dhw_holiday_end_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x01,00,0x000F,native_dhw_status,2,uint16 LE,,0=NoSpecialFunctionActive; 3=Party; 5=One day holiday; 6=One day bank holiday; 7=Holiday; 8=BankHoliday; 9=OneTimeTankloading; 10=SystemOff
+VRC720 family,0x02,0x01,00,0x0010,native_dhw_holiday_start_time,3,3 x uint8,,time: hour; minute; second
+VRC720 family,0x02,0x01,00,0x0011,native_dhw_holiday_end_time,3,3 x uint8,,time: hour; minute; second
+VRC720 family,0x02,0x01,00,0x0014,native_dhw_preference,1,,,
+VRC720 family,0x02,0x01,00,0x0015,native_dhw_recharge_tapping_setpoint,4,,,
+VRC720 family,0x02,0x01,00,0x0019,native_dhw_loading_efficiency_state,1,,,
+VRC720 family,0x02,0x02,dynamic,0x0001,circuit_circuit_type,2,uint16 LE,,1=DirectHeatingCircuit; 2=MixerCircuitExternal
+VRC720 family,0x02,0x02,dynamic,0x0002,circuit_mixer_type_external,2,uint16 LE,,0=Deactivated; 1=HeatingCircuit; 2=FixValueCircuit; 3=DHWCircuit; 4=BackFlowCircuit
+VRC720 family,0x02,0x02,dynamic,0x0005,circuit_condensate_sensitive_emitter,1,uint8,,0=False; 1=True
+VRC720 family,0x02,0x02,dynamic,0x0006,circuit_cooling_allowed,1,uint8,,0=False; 1=True
+VRC720 family,0x02,0x02,dynamic,0x0007,circuit_current_target_flow_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x02,dynamic,0x0008,circuit_current_flow_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x02,dynamic,0x000A,circuit_epsilon,4,float32 LE,K,
+VRC720 family,0x02,0x02,dynamic,0x000B,circuit_flow_temperature_setpoint_correction_heating,4,float32 LE,K,
+VRC720 family,0x02,0x02,dynamic,0x000E,circuit_frost_protection_mode,2,uint16 LE,,0=Eco; 1=SetBack
+VRC720 family,0x02,0x02,dynamic,0x000F,circuit_heating_curve,4,float32 LE,,
+VRC720 family,0x02,0x02,dynamic,0x0010,circuit_heating_flow_temperature_max_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x02,dynamic,0x0011,circuit_cooling_flow_temperature_min_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x02,dynamic,0x0012,circuit_flow_temperature_min_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x02,dynamic,0x0014,circuit_maximum_outside_temperature_heating,4,float32 LE,°C,
+VRC720 family,0x02,0x02,dynamic,0x0015,circuit_room_temperature_influence,2,uint16 LE,,0=Non; 1=SwitchOn; 2=ThermostatFunction
+VRC720 family,0x02,0x02,dynamic,0x001A,circuit_status_heating_circuit_mixer,4,float32 LE,%,
+VRC720 family,0x02,0x02,dynamic,0x001C,circuit_adaptive_heating_curve_offset,4,float32 LE,,
+VRC720 family,0x02,0x02,dynamic,0x001E,circuit_status_circuit,2,uint16 LE,,0=StandBy; 1=Heating; 2=Cooling; 3=DHW
+VRC720 family,0x02,0x02,dynamic,0x001F,circuit_minimum_outside_temperature_cooling,4,float32 LE,°C,
+VRC720 family,0x02,0x03,dynamic,0x0001,zone_cooling_operation_mode,2,uint16 LE,,0=Off; 1=TimeControlled; 2=Manual
+VRC720 family,0x02,0x03,dynamic,0x0002,zone_room_temperature_setpoint_cooling,4,float32 LE,°C,
+VRC720 family,0x02,0x03,dynamic,0x0003,zone_holiday_start_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x03,dynamic,0x0004,zone_holiday_end_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x03,dynamic,0x0005,zone_holiday_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x03,dynamic,0x0006,zone_heating_operation_mode,2,uint16 LE,,0=Off; 1=TimeControlled; 2=Manual
+VRC720 family,0x02,0x03,dynamic,0x0009,zone_setback_room_temperature_setpoint_heating,4,float32 LE,°C,
+VRC720 family,0x02,0x03,dynamic,0x000F,zone_current_measured_temperature,4,float32 LE,°C,
+VRC720 family,0x02,0x03,dynamic,0x0011,zone_is_active,1 or 2,uint8 or uint16 LE,,0=False; 1=True
+VRC720 family,0x02,0x03,dynamic,0x0013,zone_binding_of_zone,2,uint16 LE,,0=Non; 1=CentralControl; 2=RemoteControl1; 3=RemoteControl2; 4=RemoteControl3; 5=RemoteControl4
+VRC720 family,0x02,0x03,dynamic,0x0014,zone_heating_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x03,dynamic,0x0015,zone_cooling_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x03,dynamic,0x001B,zone_special_function_status,1 or 2,uint8 or uint16 LE,,0=NoSpecialFunctionActive; 1=VentilationBoost; 4=QuickVeto; 7=Holiday; 10=SystemOff
+VRC720 family,0x02,0x03,dynamic,0x001C,zone_circuit_for_zone,1,int8,,0=Control_CC1; 1=Control_CC2; 2=Control_CC3; 3=Control_CC4; 4=Control_CC5; 5=Control_CC6; 6=Control_CC7; 7=Control_CC8; 8=Control_CC9; -1=notBound
+VRC720 family,0x02,0x03,dynamic,0x001E,zone_quick_veto_end_time,3,3 x uint8,,time: hour; minute; second
+VRC720 family,0x02,0x03,dynamic,0x0020,zone_holiday_end_time,3,3 x uint8,,time: hour; minute; second
+VRC720 family,0x02,0x03,dynamic,0x0021,zone_holiday_start_time,3,3 x uint8,,time: hour; minute; second
+VRC720 family,0x02,0x03,dynamic,0x0022,zone_heating_manual_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x03,dynamic,0x0023,zone_cooling_manual_setpoint,4,float32 LE,°C,
+VRC720 family,0x02,0x03,dynamic,0x0024,zone_quick_veto_end_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x03,dynamic,0x0027,zone_manual_cooling_is_active_for_zone,1 or 2,uint8 or uint16 LE,,0=False; 1=True
+VRC720 family,0x02,0x03,dynamic,0x0028,zone_current_humidity,4,float32 LE,%,
+VRC720 family,0x02,0x03,dynamic,0x002C,zone_frost_protection_active,1 or 2,uint8 or uint16 LE,,0=False; 1=True
+VRC720 family,0x02,0x09,00,0x0002,ventilation_operating_mode,2,uint16 LE,,1=TimeControlled; 2=Normal; 3=Reduced
+VRC720 family,0x02,0x09,00,0x0004,ventilation_status_special_operating_mode,2,uint16 LE,,0=NoSpecialFunctionActive; 1=VentilationBoost; 7=Holiday; 10=SystemOff
+VRC720 family,0x02,0x09,00,0x0007,ventilation_holiday_end,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x09,00,0x0008,ventilation_holiday_end_time,3,3 x uint8,,time: hour; minute; second
+VRC720 family,0x02,0x09,00,0x0009,ventilation_holiday_start,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC720 family,0x02,0x09,00,0x000A,ventilation_holiday_start_time,3,3 x uint8,,time: hour; minute; second
+VRC720 family,0x02,0x09,00,0x000D,ventilation_day_max_fan_stage,2,uint16 LE,,
+VRC720 family,0x02,0x09,00,0x000E,ventilation_night_max_fan_stage,2,uint16 LE,,
+VRC700 family,0x02,0x00,00,0x0001,system_dhw_bivalence_point,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0002,continuous_heating_limit,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0006,manual_cooling_days,2,uint16 LE,,
+VRC700 family,0x02,0x00,00,0x0007,system_off,1,uint8,,0=False; 1=True
+VRC700 family,0x02,0x00,00,0x0009,automatic_cooling_enabled,1,uint8,,0=no; 1=yes
+VRC700 family,0x02,0x00,00,0x000A,system_cylinder_parallel_loading_allowed,1 or 2,uint8 or uint16 LE,,0=no; 1=yes
+VRC700 family,0x02,0x00,00,0x000F,hybrid_control_strategy,2,uint16 LE,,0=triVAI; 1=BivalencePoint
+VRC700 family,0x02,0x00,00,0x0013,backup_heater_type,2,uint16 LE,,0=Condensing; 1=NonCondensing; 2=Electrical
+VRC700 family,0x02,0x00,00,0x0014,adaptive_heating_curve,1,uint8,,0=Disabled; 1=Enabled
+VRC700 family,0x02,0x00,dynamic,0x0016,system_ventilation_operating_mode,2,uint16 LE,,1=Auto; 2=Day; 3=Setback
+VRC700 family,0x02,0x00,00,0x0017,system_dhw_max_loading_time,2,uint16 LE,min,
+VRC700 family,0x02,0x00,00,0x0022,alternative_point_for_central_heating,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0023,heating_circuit_bivalence_point,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0024,backup_heater_allowed_for,2,uint16 LE,,0=Disabled; 1=Heating; 2=DHW; 3=DHWandHeating
+VRC700 family,0x02,0x00,00,0x0025,backup_heater_allow_temporary,2,uint16 LE,,0=Disabled; 1=Heating; 2=DHW; 3=DHWandHeating
+VRC700 family,0x02,0x00,00,0x0026,heating_circuit_emergency_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0027,system_cylinder_start_loading_hysteresis,4,float32 LE,K,
+VRC700 family,0x02,0x00,00,0x0029,system_cylinder_loading_offset,4,float32 LE,K,
+VRC700 family,0x02,0x00,00,0x002B,system_cylinder_dhw_legionella_protection_start_weekday,2,uint16 LE,,0=Off; 1=Monday; 2=Tuesday; 3=Wednesday; 4=Thursday; 5=Friday; 6=Saturday; 7=Sunday; 8=Daily
+VRC700 family,0x02,0x00,00,0x002F,module_configuration_vr71,2,uint16 LE,,
+VRC700 family,0x02,0x00,00,0x0034,system_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC700 family,0x02,0x00,00,0x0035,system_time,3,3 x uint8,,time: hour; minute; second
+VRC700 family,0x02,0x00,00,0x0036,system_scheme,2,uint16 LE,,
+VRC700 family,0x02,0x00,00,0x0038,system_cooling_start_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0039,system_water_pressure,4,float32 LE,bar,
+VRC700 family,0x02,0x00,dynamic,0x0042,system_ventilation_day_max_fan_stage,2,uint16 LE,,
+VRC700 family,0x02,0x00,dynamic,0x0043,system_ventilation_night_max_fan_stage,2,uint16 LE,,
+VRC700 family,0x02,0x00,00,0x0045,power_cut_function_evu,2,uint16 LE,,0=Disable heatpump; 1=Disable backup heater; 2=Disable Heatpump and Backup heater; 3=Disable heating; 4=Disable cooling; 5=Disable heating and cooling
+VRC700 family,0x02,0x00,00,0x0046,system_cylinder_mss_dhw_max_flow_setpoint,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0048,energy_manager_state,2,uint16 LE,,0=StandBy; 1=Heating; 2=Cooling; 3=DHW
+VRC700 family,0x02,0x00,00,0x004B,system_flow_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0067,system_cylinder_low_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0068,system_cylinder_top_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x0069,operation_mode_effect,2,uint16 LE,,candidate labels: 0=regulator; 1=Zone_1; 2=Zone_2; 3=Zone_3
+VRC700 family,0x02,0x00,00,0x0071,system_holiday_start,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC700 family,0x02,0x00,00,0x0072,system_holiday_end,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC700 family,0x02,0x00,00,0x0073,outside_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x008F,system_cylinder_available,2,uint16 LE,,0=Disabled; 1=Heating; 2=DHW; 3=DHWandHeating
+VRC700 family,0x02,0x00,00,0x0095,outside_temperature_average_24h,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x009D,system_cylinder_mss_dhw_top_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x009E,system_cylinder_mss_dhw_bottom_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x009F,system_cylinder_mss_heating_top_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x00A0,system_cylinder_mss_heating_bottom_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x00,00,0x00A2,system_cylinder_smart_pv_ch_offset,4,float32 LE,K,
+VRC700 family,0x02,0x00,dynamic,0x00A4,system_ventilation_special_function_status,2,uint16 LE,,0=No special function active; 1=Ventilation boost; 3=Party; 5=One day holiday; 6=One day bank holiday; 7=Holiday; 8=BankHoliday; 10=SystemOff
+VRC700 family,0x02,0x00,00,0x00AB,isolation_switch,1,uint8,,0=off; 1=on
+VRC700 family,0x02,0x00,00,0x00B5,outside_temperature_sensor_visibility,1,uint8,,0=False; 1=True
+VRC700 family,0x02,0x00,00,0x00B6,ext_energy_management_activation,1,uint8,,0=False; 1=True
+VRC700 family,0x02,0x01,00,0x0001,native_dhw_circuit_type,2,uint16 LE,,0=Deactivated; 1=DHWCircuit
+VRC700 family,0x02,0x01,00,0x0003,native_dhw_operation_mode,2,uint16 LE,,0=Off; 1=Auto; 2=Day
+VRC700 family,0x02,0x01,00,0x0004,native_dhw_tapping_temperature_setpoint,4,float32 LE,°C,
+VRC700 family,0x02,0x01,00,0x0005,native_dhw_current_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x01,00,0x0009,native_dhw_holiday_start_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC700 family,0x02,0x01,00,0x000A,native_dhw_holiday_end_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC700 family,0x02,0x01,00,0x000F,native_dhw_status,2,uint16 LE,,0=NoSpecialFunctionActive; 3=Party; 5=One day holiday; 6=One day bank holiday; 7=Holiday; 8=BankHoliday; 9=OneTimeTankloading; 10=SystemOff
+VRC700 family,0x02,0x02,dynamic,0x0001,circuit_circuit_type,2,uint16 LE,,1=DirectHeatingCircuit; 2=MixerCircuitExternal
+VRC700 family,0x02,0x02,dynamic,0x0002,circuit_mixer_type_external,2,uint16 LE,,0=Deactivated; 1=HeatingCircuit; 2=FixValueCircuit; 3=DHWCircuit; 4=BackFlowCircuit; 5=PoolCircuit
+VRC700 family,0x02,0x02,dynamic,0x0006,circuit_cooling_allowed,1,uint8,,0=False; 1=True
+VRC700 family,0x02,0x02,dynamic,0x0007,circuit_current_target_flow_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x02,dynamic,0x0008,circuit_current_flow_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x02,dynamic,0x000A,circuit_epsilon,4,float32 LE,K,
+VRC700 family,0x02,0x02,dynamic,0x000B,circuit_flow_temperature_setpoint_correction_heating,4,float32 LE,K,
+VRC700 family,0x02,0x02,dynamic,0x000E,circuit_frost_protection_mode,2,uint16 LE,,0=Eco; 1=SetBack
+VRC700 family,0x02,0x02,dynamic,0x000F,circuit_heating_curve,4,float32 LE,,
+VRC700 family,0x02,0x02,dynamic,0x0010,circuit_heating_flow_temperature_max_setpoint,4,float32 LE,°C,
+VRC700 family,0x02,0x02,dynamic,0x0011,circuit_cooling_flow_temperature_min_setpoint,4,float32 LE,°C,
+VRC700 family,0x02,0x02,dynamic,0x0012,circuit_flow_temperature_min_setpoint,4,float32 LE,°C,
+VRC700 family,0x02,0x02,dynamic,0x0014,circuit_maximum_outside_temperature_heating,4,float32 LE,°C,
+VRC700 family,0x02,0x02,dynamic,0x0015,circuit_room_temperature_influence,2,uint16 LE,,0=Non; 1=SwitchOn; 2=ThermostatFunction
+VRC700 family,0x02,0x02,dynamic,0x001E,circuit_status_circuit,2,uint16 LE,,0=StandBy; 1=Heating; 2=Cooling; 3=DHW
+VRC700 family,0x02,0x02,dynamic,0x001F,circuit_minimum_outside_temperature_cooling,4,float32 LE,°C,
+VRC700 family,0x02,0x03,dynamic,0x0001,zone_cooling_operation_mode,2,uint16 LE,,0=Off; 1=Auto; 2=Day
+VRC700 family,0x02,0x03,dynamic,0x0002,zone_room_temperature_setpoint_cooling,4,float32 LE,°C,
+VRC700 family,0x02,0x03,dynamic,0x0003,zone_holiday_start_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC700 family,0x02,0x03,dynamic,0x0004,zone_holiday_end_date,3,3 x uint8,,date: day 1..31; month 1..12; year 0..99
+VRC700 family,0x02,0x03,dynamic,0x0005,zone_holiday_setpoint,4,float32 LE,°C,
+VRC700 family,0x02,0x03,dynamic,0x0006,zone_heating_operation_mode,2,uint16 LE,,0=Off; 1=Auto; 2=Day; 3=Setback
+VRC700 family,0x02,0x03,dynamic,0x0007,zone_comfort_room_temperature_setpoint_heating,4,float32 LE,°C,
+VRC700 family,0x02,0x03,dynamic,0x0009,zone_setback_room_temperature_setpoint_heating,4,float32 LE,°C,
+VRC700 family,0x02,0x03,dynamic,0x000F,zone_current_measured_temperature,4,float32 LE,°C,
+VRC700 family,0x02,0x03,dynamic,0x0011,zone_is_active,1 or 2,uint8 or uint16 LE,,0=False; 1=True
+VRC700 family,0x02,0x03,dynamic,0x0013,zone_binding_of_zone,2,uint16 LE,,0=Non; 1=CentralControl; 2=RemoteControl1; 3=RemoteControl2; 4=RemoteControl3; 5=RemoteControl4; 6=RemoteControl5; 7=RemoteControl6; 8=RemoteControl7; 9=RemoteControl8
+VRC700 family,0x02,0x03,dynamic,0x0014,zone_heating_setpoint,4,float32 LE,°C,
+VRC700 family,0x02,0x03,dynamic,0x0015,zone_cooling_setpoint,4,float32 LE,°C,
+VRC700 family,0x02,0x03,dynamic,0x001B,zone_special_function_status,1 or 2,uint8 or uint16 LE,,0=NoQuickMode; 1=VentilationBoost; 3=Party; 4=QuickVeto; 5=OneDayHoliday; 6=OneDayBankHoliday; 7=Holiday; 8=BankHoliday; 10=SystemOff
+VRC700 family,0x02,0x03,dynamic,0x001C,zone_circuit_for_zone,1,int8,,0=Control_CC1; 1=Control_CC2; 2=Control_CC3; -1=notBound
+VRC700 family,0x02,0x03,dynamic,0x0028,zone_current_humidity,4,float32 LE,%,
