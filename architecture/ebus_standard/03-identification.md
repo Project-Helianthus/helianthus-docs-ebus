@@ -112,6 +112,24 @@ provenance metadata is mandatory for storage or registry projection.
 4. `0xFF` is a replacement value for a BCD component. A replacement in
    either component makes the corresponding version object
    `valid=false`, `replacement=true`.
+5. Provider note (non-normative). **Hypothesis**, candidate interpretation
+   unconfirmed on the wire: for Vaillant regulators (manufacturer `0xB5`),
+   bytes 8-9 are one software product number (SPN), a four-digit BCD number
+   sent least-significant byte first
+   (`SPN = BCD(byte 8) + 100 x BCD(byte 9)`; the wire bytes `17 04` are
+   SPN 417), and not a hardware version and revision; the regulator identity
+   crosswalk linked below uses this reading. Bytes 6-7 keep the standard's
+   meaning (software version and revision). For every other Vaillant device
+   class (for example boilers and heat-pump units) the meaning of bytes 8-9 is
+   **Unknown**. Manufacturer `0xB5` alone is not established as sufficient for
+   the SPN reading. This method keeps decoding bytes 8-9 as
+   `hardware_version.version` and `hardware_version.revision` with the
+   standard meaning for every manufacturer, including `0xB5`, and keeps the
+   raw bytes; the Vaillant interpretation belongs to the provider outside
+   `ebus_standard`, consistent with the source-label retention rule. See
+   [`ebus-service-07h.md`](../../protocols/ebus-services/ebus-service-07h.md#service-0x07-0x04--identification)
+   and the
+   [Vaillant regulator identity crosswalk](../../protocols/vaillant/ebus-vaillant-regulators.md#spn-field-07-04-bytes-8-9-representation).
 
 ## Length and Error Handling
 
@@ -123,3 +141,6 @@ provenance metadata is mandatory for storage or registry projection.
 6. Raw bytes and field diagnostics MUST remain available to decode
    clients when the method identity is known.
 
+## Open questions
+
+- No Vaillant `07 04` broadcast (self-identification) form is known, and the Vaillant software product number reading of bytes 8-9 is a candidate, unconfirmed on the wire, for Vaillant regulators; for every other Vaillant device class the meaning of bytes 8-9 is unresolved; see the open questions of [`ebus-service-07h.md`](../../protocols/ebus-services/ebus-service-07h.md#open-questions).

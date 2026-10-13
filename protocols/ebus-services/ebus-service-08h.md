@@ -112,6 +112,24 @@ Service `0x08` handles communication between heating controllers and mixer modul
 | 4 | reserved_1 | — | — | `0xFF` | Reserved |
 | 5 | reserved_2 | — | — | `0xFF` | Reserved |
 
+## Vaillant variants
+
+The standard layouts above stay authoritative.
+
+| SB | Standard service | Result |
+|---:|---|---|
+| `0x00` | Target Values | No Vaillant definition known; implementation **Unknown** |
+| `0x01` | Operational Data | No Vaillant definition known; implementation **Unknown** |
+| `0x02` | Control Commands | No Vaillant definition known; implementation **Unknown** |
+| `0x03` | Boiler Parameters | No Vaillant definition known; implementation **Unknown** |
+| `0x04` | System Remote Control | No Vaillant definition known; implementation **Unknown** |
+
+- No Vaillant definition of any `0x08` service is known. This is not proof that a device lacks the service.
+
+## Open questions
+
+- Whether Vaillant devices send, answer or consume any `0x08` service is not established; no Vaillant layout is known.
+
 ## Communication Flow
 
 ```mermaid

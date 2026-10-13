@@ -87,6 +87,28 @@ Both RAM and EEPROM use a flat 16-bit address space (little-endian: low byte tra
 
 Memory server access bypasses all application-level validation. The specification explicitly restricts this service to service/maintenance mode. Devices that expose `0x09` during normal operation create a risk of uncontrolled state modification.
 
+## Vaillant variants
+
+The standard layouts above stay authoritative. The layouts in the first table are candidate interpretations, unconfirmed on the wire; the usage in the second list is a Vaillant requester behaviour that is likewise unconfirmed on the wire.
+
+| SB | Standard service | Vaillant layout | Result |
+|---:|---|---|---|
+| `0x00` | Read RAM | Request: address (u16 little-endian) and count (u8); reply: opaque data | Follows the standard layout (candidate) |
+| `0x01` | Write RAM | Request: address (u16 little-endian) and data | Follows the standard layout (candidate) |
+| `0x02` | Read EEPROM | Request: address low (u8), address high (u8), count (u8); reply: data starting at reply byte 0 | Follows the standard layout (candidate) |
+| `0x03` | Write EEPROM | Request: address low (u8), address high (u8), data; the positive reply is an opaque data field that may be empty | Request follows the standard layout (candidate); whether the reply is always empty, as the standard requires, is unresolved |
+
+- The empty `0x09 0x03` reply the standard prescribes is consistent with the Vaillant layout; no data-bearing reply is evidenced (candidate).
+- The count of `0x09 0x02` has the formal range 0–255 in the Vaillant layout; the standard's nominal limit of 10 and its service-mode extension are not encoded in it (candidate, unconfirmed on the wire).
+- Candidate interpretation, unconfirmed on the wire: a Vaillant requester issues `0x09 0x02` as `NN=3` with address `0x0000` (little-endian) and count 9 toward a remote room-control unit, and `0x09 0x03` as `NN=3` (16-bit little-endian address and one data byte) toward a system-control unit, with no service-mode step before them, although the standard restricts `0x09` to service mode; whether a target accepts them outside service mode is unknown.
+- No Vaillant requester use of `0x09 0x00` or `0x09 0x01` is known.
+
+## Open questions
+
+- Whether a target accepts `0x09 0x02` and `0x09 0x03` outside service mode is unknown.
+- The effect of the `0x09 0x02` read on the target was not observed, and the target replies to `0x09 0x02` and `0x09 0x03` were not observed.
+- The Vaillant `0x09` layouts and requester use are candidates, unconfirmed on the wire; no capture of a `0x09` exchange is known.
+
 ## See Also
 
 - [`ebus-application-layer.md`](./ebus-application-layer.md) — service index

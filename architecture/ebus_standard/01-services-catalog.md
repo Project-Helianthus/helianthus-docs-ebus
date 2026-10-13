@@ -172,3 +172,32 @@ The NM runtime state machine remains owned by the gateway runtime. The
 wire services above are catalog entries consumed by that runtime. The
 exact `system_nm_runtime` whitelist for first delivery is defined in
 [`05-execution-safety.md`](./05-execution-safety.md).
+
+## Vaillant variants
+
+Non-normative. These notes do not change any catalog method, selector or
+`safety_class` above; the standard text stays authoritative. Vaillant
+layouts, including the `0x07 0x04` software product number, are candidate
+interpretations, unconfirmed on the wire.
+
+| Service | Vaillant result | Details |
+|---|---|---|
+| `0x03` | `0x03 0x04` and `0x03 0x06` are defined with unresolved request/reply placement; `0x03 0x05` differs (candidate); no Vaillant definition of `0x03 0x07`, `0x03 0x08` or `0x03 0x10` is known | [`ebus-service-03h.md`](../../protocols/ebus-services/ebus-service-03h.md#vaillant-variants) |
+| `0x05` | `0x05 0x01` differs in value set and value ranges (candidate); no Vaillant definition of `0x05 0x00` or `0x05 0x02`-`0x05 0x0D` is known | [`ebus-service-05h.md`](../../protocols/ebus-services/ebus-service-05h.md#vaillant-variants) |
+| `0x07` | `0x07 0x04` differs (candidate: bytes 8-9 are a software product number for Vaillant regulators; for every other Vaillant device class their meaning is **Unknown**, see [`03-identification.md`](./03-identification.md)); `0x07 0x00` differs (candidate: weekday enumeration); `0x07 0x02`, `0x07 0x03` and `0x07 0x05` follow the standard layout (candidate); no Vaillant definition of `0x07 0x01` or of the `0x07 0x04` broadcast form is known; no Vaillant emission of `0x07 0xFE` or `0x07 0xFF` is known | [`ebus-service-07h.md`](../../protocols/ebus-services/ebus-service-07h.md#vaillant-variants) |
+| `0x08` | No Vaillant definition of `0x08 0x00`-`0x08 0x04` is known (implementation **Unknown**) | [`ebus-service-08h.md`](../../protocols/ebus-services/ebus-service-08h.md#vaillant-variants) |
+| `0x09` | `0x09 0x00`-`0x09 0x02` and the `0x09 0x03` request follow the standard layout (candidate); whether the `0x09 0x03` reply is always empty is unresolved; a Vaillant requester issues `0x09 0x02` and `0x09 0x03` with no service-mode step before them (candidate, unconfirmed on the wire) | [`ebus-service-09h.md`](../../protocols/ebus-services/ebus-service-09h.md#vaillant-variants) |
+| `0x0F` | A layout with the primary byte `0x0F`, no known secondary byte and no body (candidate; the request's secondary byte on the wire is unknown); no Vaillant definition of `0x0F 0x01`-`0x0F 0x03` is known | [`ebus-service-0Fh.md`](../../protocols/ebus-services/ebus-service-0Fh.md#vaillant-variants) |
+| `0xFE` | `0xFE 0x01` is defined as PB/SB only, with no error text field (candidate) | [`ebus-service-FEh.md`](../../protocols/ebus-services/ebus-service-FEh.md#vaillant-variants) |
+| `0xFF` | No Vaillant definition of `0xFF 0x00`-`0xFF 0x06` is known (implementation **Unknown**) | [`ebus-service-FFh.md`](../../protocols/ebus-services/ebus-service-FFh.md#vaillant-variants) |
+
+No standard service of this catalog is known to be available only on PeBUS (candidate;
+see
+[`ebus-application-layer.md`](../../protocols/ebus-services/ebus-application-layer.md#vaillant-variants)).
+
+## Open questions
+
+- Whether Vaillant devices implement the services with no Vaillant definition is not established, and whether a target accepts `0x09 0x02` and `0x09 0x03` outside service mode is unknown.
+- The cadence, bandwidth and conformance of any Vaillant `0x07 0xFF` sign of life and `0xFF` network-management traffic are undetermined.
+- The request/reply placement of the Vaillant `0x03 0x04`, `0x03 0x05` and `0x03 0x06` layouts is unresolved.
+- The per-page open questions of the linked service pages apply.

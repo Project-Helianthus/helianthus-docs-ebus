@@ -34,6 +34,14 @@ Service `0xFE` carries general-purpose broadcast messages. Currently only one se
 
 **Bus load:** `0.0%` (one-time only, on error event).
 
+## Vaillant variants
+
+The standard layout above stays authoritative. Candidate interpretation, unconfirmed on the wire: the Vaillant layout for `0xFE 0x01` defines the PB/SB pair only, with no 10-character error text field.
+
+## Open questions
+
+- Whether Vaillant devices broadcast `0xFE 0x01` error messages, and with which text, is not established; the Vaillant layout has no text field (candidate) and no capture of the service is known.
+
 ## See Also
 
 - [`ebus-application-layer.md`](./ebus-application-layer.md) — service index
