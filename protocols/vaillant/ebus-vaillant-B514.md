@@ -25,6 +25,8 @@ Evidence labels:
 - `BOTH`: present in P1 AND P5 (HIGH confidence).
 - `P1-ONLY`: present in P1 only (MEDIUM confidence).
 - `TYPESPEC`: john30 TypeSpec only (LOW confidence for live use).
+- `CANDIDATE`: a layout that is not confirmed on the wire. Every
+  `CANDIDATE` statement is **Hypothesis**, unconfirmed on the wire.
 
 ## Wire Shape
 
@@ -137,6 +139,77 @@ both P1 and P5 live-install sources.
 | 0x3B | 59 | `EnableTestEEVTemp` | read/write | TYPESPEC | Same REG as T.0.59 `CondenserOutTemp` — see Correction C4 |
 | 0x45 | 69 | `TestOutdoorTemp` | read | TYPESPEC | **ABSENT from P1 and P5 — UNRESOLVED (OQ-3)**. Possibly firmware-variant specific or alias for AirInTemp (0x30). |
 
+## Candidate sub-commands
+
+> **Hypothesis**, unconfirmed on the wire. The table lists the B514 sub-commands
+> (the first payload byte, `OP`) with a candidate layout. Quoted names are
+> Vaillant names, kept as correspondence names only. Only `OP=05` has a
+> live-read form documented on this page.
+
+| `OP` | Candidate name | Request (candidate) | Reply (candidate) |
+|---:|---|---|---|
+| `00` | STB test | flow-temperature setpoint (u8 °C), power-test code, absolute degree of modulation (u8 percent) | feedback to the current test mode (`1` OFF, `2` ENABLED, `3` ON, `4` FINISHED_OK, `5` FINISHED_NOK, `6` FINISHED_GOOD, further values), feedback (`1` accepted) |
+| `01` | self-test mode | mode | answer, feedback |
+| `02` | function menu | function ID (u16 LE), value | current function ID (u16 LE), value |
+| `03` | test-mode activation flags | none | flag bytes |
+| `04` | function-menu activation flags | none | flag bytes |
+| `05` | toolbox menu | toolbox ID (u8), activation flags (u8), value | actual toolbox ID, feedback flags, value |
+| `06` | execution of self-test | activation flag (`0` query, `1` start), self-test type (u8) | self-test type, self-test state (`0` idle, `1` in progress, `2` passed, `3` not passed, `4` not possible, `255` request not supported; the state list depends on the profile) |
+| `07` | execution of gas-family check | data | data |
+| `08` | hydraulic check | command (`0` set pressure level, `1` start, `2` stop), pressure level | feedback, pressure level, minimum and maximum pressure level, pressure-level step size, flow rate |
+| `09` | function-menu activation flags 2 | header only | header only |
+
+Candidate interpretation, unconfirmed on the wire: the value field of `OP=02`
+and `OP=05` is selected by the row ID, not by the list position; the decoders
+differ per row (u8 percent, u16 LE rpm, u16 °C /16, raw `0`/`100`/`FFFF` actor
+values and others).
+
+### Toolbox menu (`OP=05`) and the live-read form
+
+Reply feedback flags (candidate, unconfirmed on the wire): bit 0 unknown
+toolbox index, 1 toolbox off, 2 toolbox blocked, 3 remote control of this
+toolbox ID is active, 4 writeable, 5..7 reserved. Toolbox ID `0` has the
+candidate name "deactivate all actors" and `255` the candidate name
+"deactivate toolbox" (candidate, unconfirmed on the wire). The candidate
+toolbox names are in the fixture
+[`fixtures/hem-b514-toolbox-ids.csv`](fixtures/hem-b514-toolbox-ids.csv)
+(columns `toolbox_id`, `toolbox_id_decimal`, `vaillant_name`, `bus_profile`,
+`status`; the `status` of every row is `candidate, unconfirmed on the wire`).
+Candidate units differ per row (degrees Celsius, percent, per minute, ppm,
+l/h or raw; some values scaled by /10 or /16); the unit of each row is not in
+the fixture.
+
+Candidate relation to the live-read form `05 [REG] 03 FF FF` above
+(**Hypothesis**): the five bytes fit the candidate `OP=05` request exactly -
+`OP` `05`, toolbox ID = `[REG]`, activation flags `03`, value `FFFF`. The
+toolbox IDs also coincide with the `REG` indices of the register map for the
+indices below (candidate, unconfirmed on the wire), which supports reading
+`REG` as the toolbox ID:
+
+| Candidate toolbox name | `REG` of the register map |
+|---|---|
+| internal pump, Fan1 / Fan2 normalized speed, condensate tray heater, four-way valve, electronic expansion valve normalized position, crank case heater | `0x01`, `0x11`, `0x12`, `0x13`, `0x14`, `0x15`, `0x17` |
+| flow / return building circuit temperature, water building circuit pressure and flow rate, air inlet temperature, compressor outlet / inlet temperature | `0x28`, `0x29`, `0x2A`, `0x2B`, `0x30`, `0x37`, `0x38` |
+| high discharge / low suction pressure, high-pressure safety switch, current evaporation / condensation temperature, target and current superheating, target and current subcooling, compressor speed, compressor outlet high-temperature switch | `0x3F`, `0x40`, `0x43`, `0x55`, `0x56`, `0x57`..`0x5A`, `0x5D`, `0x7B` |
+| diverter valve (three-way valve), tank temperature, system temperature, multiple-purpose input / output 2 | `0x02`, `0x2C`, `0x46`, `0x7D`, `0x7E` |
+
+Where the candidate toolbox name and the community register name differ in
+meaning (candidate, unconfirmed on the wire): `0x2E` (toolbox "State of
+Appliance Off input" versus `lock_contact_s20`), `0x48` ("Energy supplier
+contact" versus `lock_contact_s21`) and `0x77` ("leginella bypass" versus
+`ma1_output`). No candidate toolbox name is known for `0x7F` and `0x82`. The
+community names above are unchanged. `REG 0x45` has the candidate toolbox name
+"Outdoor temperature" (compare OQ-3).
+
+The candidate activation-flags byte and the feedback flags "toolbox off" and
+"toolbox blocked" are a candidate mechanism for the service gate asked about
+in OQ-2; whether they are one is unresolved.
+
+Candidate, unconfirmed on the wire: every sub-command of this family with a
+candidate layout (`OP` `00` to `08`) is available under both the eBUS and the
+PeBUS profiles; none is known to be available only on PeBUS. The profile
+availability of the header-only entry (B514 `09`) is not established.
+
 ## Corrections Log (2026-04-14 Enrichment)
 
 ### C1 — Wire format: read payload is 5 bytes, not 2
@@ -232,6 +305,24 @@ unknown.
 
 P1 annotates 0x12 as "dual-fan VWLS only". Behavior on single-fan arotherm plus
 is unknown (NAK, zero, or stale value).
+
+### OQ-6 — Candidate sub-commands
+
+No B514 exchange other than the live-read form of `OP=05` is described on this
+page.
+The acknowledgement and reply lengths of `OP=00`..`04` and `06`..`09`, the
+targets that implement each `OP`, and whether a Vaillant requester sends any
+of them are unconfirmed on the wire; no sender or responder implementation is
+known either way. The profile availability (eBUS or PeBUS) of the header-only
+`OP=09` is not established.
+
+### OQ-7 — Whether the toolbox ID equals `REG`
+
+Whether `[REG]` of the live-read form is the toolbox ID of the candidate
+`OP=05` request, the meaning of the activation-flags byte `03`, the unit of
+each toolbox row (candidate units differ per row and are not in the fixture),
+and the three indices where the candidate name and the community register name
+differ (`0x2E`, `0x48`, `0x77`) are unresolved.
 
 ## Enrichment Summary (2026-04-14)
 
