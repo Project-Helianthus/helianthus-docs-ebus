@@ -140,7 +140,7 @@ opcode,group,register,name,vaillant_friendly_name,vaillant_name_vrc720,vaillant_
 0x02,0x00,0x009F,system_cylinder_mss_heating_top_temperature,MSS Buffer Top CH,system_mss_buffer_top_ch,system_mss_buffer_top_ch,,cylinderTemperatureSensorTopCentralHeating,HcStorageTempTop
 0x02,0x00,0x00A0,system_cylinder_mss_heating_bottom_temperature,MSS Buffer Bottom CH,system_mss_buffer_bottom_ch,system_mss_buffer_bottom_ch,,cylinderTemperatureSensorBottomCentralHeating,HcStorageTempBottom
 0x02,0x00,0x00A1,smart_pv_activation,Smart PV activation,,,,,
-0x02,0x00,0x00A2,system_cylinder_smart_pv_ch_offset,Smart PV CH buffer offset,system_smart_pv_ch_buffer_offset,system_smart_pv_ch_buffer_offset,,smartPhotovoltaicBufferOffset,
+0x02,0x00,0x00A2,system_cylinder_smart_pv_ch_offset,Smart PV CH buffer offset,system_smart_pv_ch_buffer_offset,system_smart_pv_ch_buffer_offset,smartPhotovoltaicBufferOffset,smartPhotovoltaicBufferOffset,
 0x02,0x00,0x00A3,system_ventilation_status_period,Status Period Ventilation,,,,,
 0x02,0x00,0x00A4,system_ventilation_special_function_status,Status Special Function Ventilation,,system_vrc700_status_special_function_ventilation,,currentSpecialFunction,
 0x02,0x00,0x00A5,cascade_client_sequence,Cascade client sequence,,,,,

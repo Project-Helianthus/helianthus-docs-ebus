@@ -1,0 +1,13 @@
+family,name,opcode,operation_type,group,instance,register,payload_bytes,status
+VRC700 family,native_dhw_holiday_start_date,0x02,0x00,0x01,0x00,0x0009,3,"candidate, unconfirmed on the wire"
+VRC700 family,native_dhw_holiday_end_date,0x02,0x00,0x01,0x00,0x000A,3,"candidate, unconfirmed on the wire"
+VRC700 family,system_holiday_start,0x02,0x00,0x00,0x00,0x0071,3,"candidate, unconfirmed on the wire"
+VRC700 family,system_holiday_end,0x02,0x00,0x00,0x00,0x0072,3,"candidate, unconfirmed on the wire"
+VRC720 family,manual_cooling_date_start,0x02,0x00,0x00,0x00,0x00DA,3,"candidate, unconfirmed on the wire"
+VRC720 family,manual_cooling_date_end,0x02,0x00,0x00,0x00,0x00DB,3,"candidate, unconfirmed on the wire"
+VRC720 family,system_time,0x02,0x00,0x00,0x00,0x0035,3,"candidate, unconfirmed on the wire"
+VRC720 family,system_date,0x02,0x00,0x00,0x00,0x0034,3,"candidate, unconfirmed on the wire"
+VRC700 family,system_time,0x02,0x00,0x00,0x00,0x0035,3,"candidate, unconfirmed on the wire"
+VRC700 family,system_date,0x02,0x00,0x00,0x00,0x0034,3,"candidate, unconfirmed on the wire"
+VRC720 family and VRC700 family,system_time,0x02,0x01,0x00,0x00,0x0035,3,"candidate, unconfirmed on the wire"
+VRC720 family and VRC700 family,system_date,0x02,0x01,0x00,0x00,0x0034,3,"candidate, unconfirmed on the wire"
