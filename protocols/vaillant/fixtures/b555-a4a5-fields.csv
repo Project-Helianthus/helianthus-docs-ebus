@@ -1,0 +1,28 @@
+sub_command,part,offset_basis,offset,width_bytes,encoding,field,value_or_meaning,acceptance_by_requester
+A4,request,frame from the source byte,0,1,u8,source,F1,
+A4,request,frame from the source byte,1,1,u8,destination,ZZ: controller address,
+A4,request,frame from the source byte,2,1,u8,primary command,B5,
+A4,request,frame from the source byte,3,1,u8,secondary command,55,
+A4,request,frame from the source byte,4,1,u8,NN,03,
+A4,request,frame from the source byte,5,1,u8,command,A4,
+A4,request,frame from the source byte,6,1,u8,module index,0 on the ventilation query,
+A4,request,frame from the source byte,7,1,u8,time-window type,5 on the ventilation query,
+A4,reply,eBUS reply data with the status byte first,0,1,u8,status,"0 OK, 3 NotAvailable (candidate labels)",accepted only with status 0
+A4,reply,eBUS reply data with the status byte first,1..7,7,u8 each,slot counts Monday..Sunday,number of slots of the day,every count must be <= 12
+A4,reply,eBUS reply data with the status byte first,8,1,u8,eighth count,count for the 24-hour timer,not interpreted; minimum reply length 8
+A5,request,frame from the source byte,0,1,u8,source,F1,
+A5,request,frame from the source byte,1,1,u8,destination,ZZ: controller address,
+A5,request,frame from the source byte,2,1,u8,primary command,B5,
+A5,request,frame from the source byte,3,1,u8,secondary command,55,
+A5,request,frame from the source byte,4,1,u8,NN,05,
+A5,request,frame from the source byte,5,1,u8,command,A5,
+A5,request,frame from the source byte,6,1,u8,module index,0 on the ventilation query,
+A5,request,frame from the source byte,7,1,u8,time-window type,5 on the ventilation query,
+A5,request,frame from the source byte,8,1,u8,day,"0..6 (Monday..Sunday, query order)",
+A5,request,frame from the source byte,9,1,u8,slot,0..count-1 for that day,
+A5,reply,eBUS reply data with the status byte first,0,1,u8,status,"0 OK, 1 InvalidRequest, 2 Unused, 3 NotAvailable (candidate labels)",not evaluated
+A5,reply,eBUS reply data with the status byte first,1,1,u8,start hour,hour,no range check
+A5,reply,eBUS reply data with the status byte first,2,1,u8,start minute,minute,no range check
+A5,reply,eBUS reply data with the status byte first,3,1,u8,end hour,hour,no range check
+A5,reply,eBUS reply data with the status byte first,4,1,u8,end minute,minute,no range check
+A5,reply,eBUS reply data with the status byte first,5..6,2,u16 little-endian,setpoint,"raw value; /10 is the candidate scale; 0xFFFF has no established invalid meaning for this program type; unit not established",minimum reply length 7

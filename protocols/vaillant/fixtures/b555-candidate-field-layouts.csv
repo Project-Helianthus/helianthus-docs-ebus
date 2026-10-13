@@ -1,0 +1,70 @@
+sub_command,side,offset_after_command,bit_position,bit_width,field,vaillant_name,encoding_or_unit,values_or_note
+A0,request,,,,none,,,"no parameters after the command byte"
+A0,reply,0,0,1,DHW,DHW,flag,available function
+A0,reply,0,1,1,DHW circulation pump,DHW_circulation_pump,flag,available function
+A0,reply,0,2,1,noise reduction,Noise_reduction,flag,available function
+A0,reply,0,3,1,ventilation,Ventilation,flag,available function
+A0,reply,0,4,1,high tariff,High_tariff,flag,available function
+A0,reply,0,5,11,reserved,PA_FuturTimeWindo,,bits 5..7 of byte 0 and all of byte 1
+A0,reply,2..7,"channel n (1..12): bits 4*((n-1) mod 2)+0..3 of byte 2+floor((n-1)/2)",4 per channel,zone heating / zone cooling / external DHW circuit / external fixed-flow circuit per channel,Zone_heating_<n> / Zone_cooling_<n> / External_DHW_circuit_<n> / External_fix_flow_circuit_<n>,"flags: bit 0 zone heating, bit 1 zone cooling, bit 2 external DHW circuit, bit 3 external fixed-flow circuit","12 channels; meaning is availability"
+A1,request,,,,none,,,"no parameters after the command byte"
+A1,reply,0,0,48,reserved,PA_FuturTimeWindo,,6 bytes
+A2,request,,,,none,,,"no parameters after the command byte"
+A2,reply,0,0,48,reserved,PA_FuturTimeWindo,,6 bytes
+A3,request,0,0,8,module index,PA_ModulIndex,u8,default 0
+A3,request,1,0,8,time-window type,PA_TimeWindoType,u8,enumeration time-window type
+A3,reply,0,0,8,status,PA_Statu,u8,"0 OK, 3 NotAvailable"
+A3,reply,1,0,8,maximum number of slots,PA_MaximNumbeOfSlots,u8,
+A3,reply,2,0,8,step size for time window,PA_StepSizeForTimeWindo,u8 minutes,
+A3,reply,3,0,8,step size for setpoint,PA_StepSizeForSetpo,u8,raw; no /10
+A3,reply,4,0,8,unit of setpoint,PA_UnitOfSetpo,u8,"0 unused, 1 degC, 2 fan stage"
+A3,reply,5,0,8,amount of setpoints,PA_AmounOfSetpo,u8,
+A3,reply,6,0,8,minimum setpoint,PA_MinimSetpo,u8,raw
+A3,reply,7,0,8,maximum setpoint,PA_MaximSetpo,u8,raw
+A3,reply,8,0,8,time program mode,PA_TimeProgrMode,u8,"0 weekly, 1 24-hour"
+A4,request,0,0,8,module index,PA_ModulIndex,u8,default 0
+A4,request,1,0,8,time-window type,PA_TimeWindoType,u8,enumeration time-window type
+A4,reply,0,0,8,status,PA_Statu,u8,"0 OK, 3 NotAvailable"
+A4,reply,1..7,0,8 each,number of slots Monday..Sunday,PA_NumbeOfSlotsMonda .. PA_NumbeOfSlotsSunda,u8,
+A4,reply,8,0,8,number of slots 24-hour timer,PA_NrOfSlots24HourTimer,u8,
+A5,request,0,0,8,module index,PA_ModulIndex,u8,default 0
+A5,request,1,0,8,time-window type,PA_TimeWindoType,u8,enumeration time-window type
+A5,request,2,0,8,weekday,PA_WeekdIndex,u8,0 Monday .. 6 Sunday
+A5,request,3,0,8,slot,PA_Slot,u8,
+A5,reply,0,0,8,status,PA_Statu,u8,"0 OK, 1 InvalidRequest, 2 Unused, 3 NotAvailable"
+A5,reply,1,0,8,start hour,PA_StartHour,u8,0..24
+A5,reply,2,0,8,start minute,PA_StartMinut,u8,0..59
+A5,reply,3,0,8,end hour,PA_EndHour,u8,0..24
+A5,reply,4,0,8,end minute,PA_EndMinut,u8,0..59
+A5,reply,5..6,0,16,setpoint,PA_Setpo,u16 little-endian,raw; /10 degC is observed for heating and DHW; other types unresolved
+A6,request,0,0,8,module index,PA_ModulIndex,u8,default 0
+A6,request,1,0,8,time-window type,PA_TimeWindoType,u8,enumeration time-window type
+A6,request,2,0,8,weekday,PA_WeekdIndex,u8,"0 Monday .. 6 Sunday; 7 Monday-Sunday, 8 Monday-Friday, 9 Saturday-Sunday"
+A6,request,3,0,8,current slot,PA_SlotCurre,u8,
+A6,request,4,0,8,total number of slots to be written,PA_TotalNumbeOfSlotsToBeWritt,u8,
+A6,request,5,0,8,start hour,PA_StartHour,u8,0..24
+A6,request,6,0,8,start minute,PA_StartMinut,u8,0..59
+A6,request,7,0,8,end hour,PA_EndHour,u8,0..24
+A6,request,8,0,8,end minute,PA_EndMinut,u8,0..59
+A6,request,9..10,0,16,setpoint,PA_Setpo,u16 little-endian,raw
+A6,reply,0,0,8,status,PA_Statu,u8,"0 OK, 1 InvalidRequest, 3 NotAvailable, 4 Skipped slot, 5 Slots not ascending, 6 Setpoint out of range"
+A7,request,,,,none,,,"no parameters after the command byte"
+A7,reply,0,0,1,DHW,PA_DHW,flag,visible function
+A7,reply,0,1,1,DHW circulation pump,PA_DHWCircuPump,flag,visible function
+A7,reply,0,2,1,noise reduction,PA_NoiseReduc,flag,visible function
+A7,reply,0,3,1,ventilation,PA_Venti,flag,visible function
+A7,reply,0,4,1,high tariff,PA_HighTarif,flag,visible function
+A7,reply,0,5,11,reserved,PA_FuturTimeWindo,,bits 5..7 of byte 0 and all of byte 1
+A7,reply,2..7,"channel n (1..12): bits 4*((n-1) mod 2)+0..3 of byte 2+floor((n-1)/2)",4 per channel,zone heating / zone cooling / external DHW circuit / external fixed-flow circuit per channel,PA_ZoneHeati<n> / PA_ZoneCooli<n> / PA_ExterDHWCircu<n> / PA_ExterFixFlowCircu<n>,"flags: bit 0 zone heating, bit 1 zone cooling, bit 2 external DHW circuit, bit 3 external fixed-flow circuit","12 channels; meaning is visibility"
+A8,request,,,,none,,,"no parameters after the command byte"
+A8,reply,0,0,48,reserved,PA_FuturTimeWindo,,6 bytes
+A9,request,,,,none,,,"no parameters after the command byte"
+A9,reply,0,0,48,reserved,PA_FuturTimeWindo,,6 bytes
+00,request,,,,none,,,"no parameters after the command byte"
+00,reply,0,0,1,EM found,PA_EMFound,flag,
+00,reply,0,1,1,EM authorised,PA_EMAutho,flag,
+00,reply,0,2,6,future discovery flags,PA_FuturDiscoFlags,,
+04,request,unknown,,8,service identifier,PA_ServiID,u8,B5 (byte position unknown)
+04,reply,unknown,,8,service identifier,PA_ServiID,u8,F5 (byte position unknown)
+06,request,unknown,,8,service identifier,PA_ServiID,u8,B5 (byte position unknown)
+06,reply,unknown,,8,service identifier,PA_ServiID,u8,F5 (byte position unknown)

@@ -1,0 +1,9 @@
+value,label,candidate_label,effect_on_sequence
+0,frame accepted (persistence unknown until an A5 read-back),OK,next slot of the day is sent
+1,illegal request,InvalidRequest,remaining slots of that day are skipped; the next day is sent
+2,write response unknown,,remaining slots of that day are skipped; the next day is sent
+3,module index and/or window type not supported,NotAvailable,remaining slots of that day are skipped; the next day is sent
+4,slot preceded by an empty slot,Skipped slot,remaining slots of that day are skipped; the next day is sent
+5,slot not in time ascendance,Slots not ascending,remaining slots of that day are skipped; the next day is sent
+6,validation failure,Setpoint out of range,remaining slots of that day are skipped; the next day is sent
+7,different initiator within a sequence,,remaining slots of that day are skipped; the next day is sent

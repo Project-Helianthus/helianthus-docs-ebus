@@ -7,7 +7,7 @@
 **Protocol:** eBUS B555 (PB=0xB5, SB=0x55)
 **Status:** Reverse-engineered, validated on live hardware
 **Date:** 2026-03-08
-**Revision:** 2.15
+**Revision:** 2.16
 
 ## 1. Scope
 
@@ -75,6 +75,31 @@ All "Response:" lines in Sections 5 and 12 (except 12.1) use the ebusd
 output format. An implementation decoding raw eBUS frames must parse the
 full wire format from Section 2.1/2.2 instead.
 
+### 2.4 Reply framing and outcomes (candidate)
+
+In the candidate subsections and paragraphs of this document (Sections 2.4,
+3.1, the candidate paragraphs of 4.1 and 4.2, 4.3.1, 5.2.1, 5.3.1, 5.4.1 to
+5.4.4, 5.5, 5.6, 10 and 11) a *requester* is an
+initiator that sends the B555 requests described there (source address `F1` in
+the examples). Statements about a requester are candidate interpretation,
+unconfirmed on the wire, and are not promoted to **Proven** by being listed
+here. The Open questions section at the end of this document collects the
+unresolved points.
+
+- The validated exchanges of Section 5 carry no echoed `B5 55 <command>`
+  prefix in the reply: a reply is `NN` followed by the status and data bytes
+  (A3 `NN=0x09`, A4 `NN=0x09`, A5 `NN=0x07`, A6 `NN=0x01`). The command byte
+  is not part of the reply data in those exchanges.
+- For the status-bearing replies of A3 to A6, a bridge keeps three outcomes of
+  a B555 exchange apart: the transport result, the service status (the first
+  payload byte of the reply) and the physical ACK/CRC. A transport success is
+  not a service status of 0, and neither establishes that a written program
+  persisted (Section 6). A Vaillant requester evaluates the status byte of the
+  A4 and A6 replies (not that of A5) and does not check a command, day or slot
+  echo (candidate). The replies of 0x00 (EM flags), A0 and A7 (bit fields), A1,
+  A2, A8 and A9 (reserved bits) and 0x04 and 0x06 (the service-identifier byte
+  `F5`, reply layout otherwise unknown) carry no service status byte (candidate).
+
 ## 3. Opcodes
 
 The first byte of the data field is the opcode.
@@ -85,6 +110,48 @@ The first byte of the data field is the opcode.
 | 0xA4 | SLOTS_READ | Read | 3 | Read slots-per-weekday counts |
 | 0xA5 | TIMER_READ | Read | 5 | Read one day/slot timer entry |
 | 0xA6 | TIMER_WRITE | Write | 12 (0x0C) | Write one day/slot timer entry |
+
+### 3.1 Sub-command inventory (candidate)
+
+Candidate interpretation, unconfirmed on the wire: the B555 sub-commands
+below form one time-window family. Only A3 to A6 are documented as validated
+exchanges (Section 5). `NN` of a request counts the command byte; the reply
+data length excludes `NN`. For A3 to A6 the lengths equal the validated
+lengths of Section 5. The reply lengths in the table are eBUS lengths; on
+PeBUS, the A3 to A6 and 0x00 replies would be three bytes longer if they
+carry the candidate prefix fields described below, and the PeBUS reply
+lengths are unresolved.
+
+| Sub-command | Candidate name | Request `NN` | Reply data bytes (eBUS) | Profiles | Sent by a Vaillant requester (candidate) |
+|---|---|---|---|---|---|
+| 0x00 | EM status request (Section 5.6) | 1 | 1 | eBUS and PeBUS | yes, to destination `08` |
+| 0x04 | Simple heating control entry (Section 5.6) | unresolved | unresolved | eBUS and PeBUS | not known |
+| 0x06 | EMM activation broadcast entry (Section 5.6) | unresolved | unresolved | eBUS and PeBUS | not known |
+| 0xA0 | Available functions and channels (Section 5.5) | 1 | 8 | eBUS and PeBUS | not known |
+| 0xA1, 0xA2 | Reserved (48 bits) | 1 | 6 | eBUS and PeBUS | not known |
+| 0xA3 | CONFIG_READ (Section 5.1) | 3 | 9 | eBUS and PeBUS | not known |
+| 0xA4 | SLOTS_READ (Sections 5.2, 5.2.1) | 3 | 9 | eBUS and PeBUS | yes, ventilation program only |
+| 0xA5 | TIMER_READ (Sections 5.3, 5.3.1) | 5 | 7 | eBUS and PeBUS | yes, ventilation program only |
+| 0xA6 | TIMER_WRITE (Sections 5.4, 5.4.1 to 5.4.4) | 12 | 1 | eBUS and PeBUS | yes, types 0, 1, 2, 3 and 5 |
+| 0xA7 | Visible functions and channels (Section 5.5) | 1 | 8 | eBUS and PeBUS | not known |
+| 0xA8, 0xA9 | Reserved (48 bits) | 1 | 6 | eBUS and PeBUS | not known |
+
+- A Vaillant requester issues A4, A5 and A6 to the controller and the EM
+  status request 0x00 to destination `08` (candidate, unconfirmed on the
+  wire); whether another initiator sends A0, A3 or A7 is not established.
+- Candidate: B555 time-program requests are sent to VRC720-family
+  controllers; VRC700-family controllers carry their time programs over B524
+  `0x03`/`0x04` instead (Section 9).
+- **PeBUS:** no B555 sub-command is available only on PeBUS (candidate,
+  unconfirmed on the wire); every sub-command above is available under both
+  profiles with the same field layouts. Candidate interpretation, unconfirmed
+  on the wire: the three leading prefix fields of an A3, A4, A5, A6 or 0x00
+  reply (`B5`, `55` and the command byte) are present only on PeBUS, which is
+  consistent with the prefix-free replies of Section 5 on eBUS; for the other
+  sub-commands the profile of these fields is not established. The reply
+  offsets of the fixtures of Section 11 are eBUS offsets (status or flags at
+  offset 0); on PeBUS, if the prefix fields are present, every reply offset
+  would shift by three, which is unresolved.
 
 ## 4. Selector Bytes
 
@@ -104,6 +171,13 @@ services not bound to a specific heating zone. Heating timers use the actual
 zone index (0x00-0x02). Validated by VR940 capture: CC writes carry ZONE=0xFF,
 DHW writes carry ZONE=0xFF, Z1 Heating writes carry ZONE=0x00.
 
+Candidate correspondence, unconfirmed on the wire: the ZONE byte is the
+Vaillant *module index* (u8, default 0) and the HC byte of Section 4.2 is the
+Vaillant *time-window type*. The range of module indices a controller accepts
+is not established. The validated ZONE values (`0xFF` for the DHW and CC writes,
+`0x00` to `0x02` for the zone heating writes; Sections 4.1 and 7) are not
+reconciled with this correspondence (Open questions).
+
 ### 4.2 HC (Schedule Type / Heating Circuit Type)
 
 | Value | Type | Temperature Field |
@@ -112,7 +186,17 @@ DHW writes carry ZONE=0xFF, Z1 Heating writes carry ZONE=0x00.
 | 0x01 | Cooling | Not observed (unavailable on test system) |
 | 0x02 | HWC (Domestic Hot Water) | Yes (DHW target temp) |
 | 0x03 | CC (DHW recirculation pump schedule) | No — time-only schedule, temp field carries 0xFFFF |
-| 0x04 | NoiseReduction (Silent) | Not observed (unavailable on test system). VRC720 CSV uses `Silent`; BASV2 CSV uses `NoiseReduction`. Both describe the same function: a quiet-hours schedule. Name aligns with B508 broadcast field `NoiseReduction`. See also [B524 section 4.4.1](./ebus-vaillant-B524.md#441-timer-channel-map-sel1sel2sel3) SEL=0x00/0x00/0x02 (VRC700 equivalent). |
+| 0x04 | NoiseReduction (Silent) | Not observed (answered as not available). One VRC720-family CSV uses `Silent`; another uses `NoiseReduction`. Both describe the same function: a quiet-hours schedule. Name aligns with B508 broadcast field `NoiseReduction`. See also [B524 section 4.4](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules), where ADDRESS `02` under GG `0x00` is Ventilation, with a conflict noted against the VRC700 community configuration; the VRC700 equivalent of this channel is unresolved. |
+| 0x05 | Ventilation (candidate) | Unknown. The setpoint unit and scale of this type are unresolved (Sections 5.3.1 and 10). |
+| 0x06 | High tariff (candidate) | Not observed |
+| 0x07 | External DHW circuit (candidate) | Not observed |
+| 0x08 | External fixed-flow circuit (candidate) | Not observed |
+
+Candidate interpretation, unconfirmed on the wire: the HC byte values 0x00 to
+0x08 above are the Vaillant time-window types; rows 0x05 to 0x08 are not
+validated exchanges. A Vaillant requester sends the type values 0,
+1, 2, 3 and 5 (candidate). The full enumeration is in
+[b555-candidate-enumerations.csv](./fixtures/b555-candidate-enumerations.csv).
 
 ### 4.3 DD (Day of Week)
 
@@ -125,6 +209,20 @@ DHW writes carry ZONE=0xFF, Z1 Heating writes carry ZONE=0x00.
 | 0x04 | Friday |
 | 0x05 | Saturday |
 | 0x06 | Sunday |
+
+#### 4.3.1 Group-day values in A6 (candidate)
+
+Candidate interpretation, unconfirmed on the wire: the weekday byte of A6 also
+has the group values 7 = Monday-Sunday, 8 = Monday-Friday and
+9 = Saturday-Sunday; the weekday byte of A5 has only 0 to 6. A requester
+issues the weekday values 0 to 6 only (candidate); no request carrying a
+group value is known. Whether a controller accepts a group value is not
+established.
+
+The B524 timer transport (Section 9) uses a different candidate group-day
+numbering, not yet documented on the
+[B524 page](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules); a bridge
+must not carry a group-day value from one transport to the other.
 
 ## 5. Opcode Details
 
@@ -278,6 +376,23 @@ Initiator: 31 15 B5 55 03 A4 00 00
 Target:  09 00 01 01 01 01 01 01 01 00
 ```
 
+#### 5.2.1 A4 reply: acceptance by a requester (candidate)
+
+The nine-byte layout above (status, seven daily counts, 24-hour count) is the
+validated wire layout. The following gives the request and the acceptance
+rules of a Vaillant requester; it is unconfirmed on the wire. The
+field table is [b555-a4a5-fields.csv](./fixtures/b555-a4a5-fields.csv).
+
+- Request for the ventilation program: `F1 ZZ B5 55 03 A4 00 05` (`NN=03`,
+  module index 0, time-window type 5); `ZZ` is the controller address.
+- Minimum accepted reply length: 8 bytes (status and seven counts); a ninth
+  byte (the 24-hour count) is not interpreted.
+- The requester accepts the reply only with status 0 and only if every daily
+  count is at most 12; 12 is also the `max_slots` value observed for heating
+  timers in Section 5.1. The ceiling is the requester's, not announced by the
+  controller. Any other status, or a count above 12, ends the read and no A5
+  request follows.
+
 ### 5.3 TIMER_READ (0xA5)
 
 Reads a single timer slot for a specific day.
@@ -291,8 +406,8 @@ A5 [ZONE] [HC] [DD] [SS]
 | Field | Size | Description |
 |-------|------|-------------|
 | ZONE | 1 | Zone index (0x00-0x02, or 0xFF for system-wide schedules — see Section 7) |
-| HC | 1 | Schedule type (0x00-0x04) |
-| DD | 1 | Day of week (0x00-0x06) |
+| HC | 1 | Schedule type (0x00-0x04; candidate rows 0x05 to 0x08 in Section 4.2) |
+| DD | 1 | Day of week (0x00-0x06; A5 carries no group-day value, Section 4.3.1) |
 | SS | 1 | Slot index (0-based) |
 
 **Response (7 bytes):**
@@ -314,7 +429,7 @@ A5 [ZONE] [HC] [DD] [SS]
 **Temperature encoding:**
 
 - Little-endian unsigned 16-bit integer
-- Value = raw / 10.0 (unit: degrees Celsius)
+- Value = raw / 10.0 (unit: degrees Celsius) for the validated heating and DHW programs; for the other types, including the candidate types 0x05 to 0x08, unit and scale are **Unknown** (Section 5.3.1)
 - `0xFFFF` semantics depend on `has_temp`:
   - **has_temp=0** (CC, Silent): literal "no temperature" — time-only schedule,
     no temp field validation (min/max = 0xFF)
@@ -371,6 +486,29 @@ Initiator: 31 15 B5 55 05 A5 00 03 00 00
 Target:  07 00 00 00 18 00 FF FF
 ```
 
+#### 5.3.1 A5 reply: acceptance by a requester (candidate)
+
+The seven-byte layout above (status, start hour and minute, end hour and
+minute, little-endian setpoint; HTM and UIN in Section 8) is the validated
+wire layout. The following gives the request and the acceptance rules of
+a Vaillant requester; it is unconfirmed on the wire. The field table is
+[b555-a4a5-fields.csv](./fixtures/b555-a4a5-fields.csv).
+
+- Request for the ventilation program: `F1 ZZ B5 55 05 A5 00 05 dd ss`
+  (`NN=05`, module index 0, time-window type 5), with `dd` the day 0 to 6 in
+  query order Monday to Sunday and `ss` the slot 0 to count-1 of that day.
+- Minimum accepted reply length: 7 bytes. The status byte is not evaluated by
+  the requester (candidate).
+- Start and end are read as hour and minute (hour 0..24, minute 0..59 as
+  separate bytes, so 24:00 is representable, Section 8.1); the
+  requester applies no range check.
+- The setpoint is read as the u16 value divided by 10 (observed for heating
+  and DHW, Section 5.3); for the ventilation program its unit is not
+  established (candidate unit for the A3 setpoint-unit code 2: fan stage,
+  unconfirmed on the wire) and `0xFFFF` has no established invalid meaning.
+- A failed or undecodable A5 exchange (a reply shorter than 7 bytes) ends
+  the read.
+
 ### 5.4 TIMER_WRITE (0xA6)
 
 Writes a single timer slot for a specific day.
@@ -384,8 +522,8 @@ A6 [ZONE] [HC] [DD] [SI] [SC] [Sh] [Sm] [Eh] [Em] [Tlo] [Thi]
 | Field | Size | Encoding | Description |
 |-------|------|----------|-------------|
 | ZONE | 1 | UCH | Zone index (0x00-0x02, or 0xFF for system-wide schedules — see Section 7) |
-| HC | 1 | UCH | Schedule type (0x00-0x04) |
-| DD | 1 | UCH | Day of week (0x00-0x06) |
+| HC | 1 | UCH | Schedule type (0x00-0x04; candidate rows 0x05 to 0x08 in Section 4.2) |
+| DD | 1 | UCH | Day of week (0x00-0x06; candidate group-day values 7 to 9, unconfirmed on the wire, Section 4.3.1) |
 | SI | 1 | UCH | Slot index (0-based) |
 | SC | 1 | UCH | Total slot count for this day (**enforced** ≤ max_slots; exceeding → error 0x01) |
 | Sh | 1 | UCH | Start hour (0x00-0x18, **enforced**; 0x19+ → error 0x01) |
@@ -443,6 +581,125 @@ Response: 0100 (ACK)
 # Read-back confirms:
 read Z1HeatingTimer_Monday -> 00:00;24:00;22.5
 ```
+
+#### 5.4.1 A6 request as built by a requester (candidate)
+
+The twelve-byte request above is the validated wire layout. The following
+describes the requests a Vaillant requester sends and is unconfirmed on the
+wire. The field table (with the Vaillant field names as a correspondence
+column) is
+[b555-a6-request-fields.csv](./fixtures/b555-a6-request-fields.csv).
+
+- Frame: `F1 ZZ B5 55 0C A6 module type day currentSlot totalSlots startHour
+  startMinute endHour endMinute setpointLo setpointHi`; `ZZ` is the controller
+  address.
+- Time: start hour, start minute, end hour and end minute as four separate
+  bytes (hour 0..24, minute 0..59); the requester applies no ordering,
+  overlap or range check to the times before sending, so the controller
+  statuses 4 (slot preceded by an empty slot) and 5 (not ascending) of
+  Section 5.4.3 are the candidate controller-side checks of the times; status
+  6 (validation failure; candidate meaning: setpoint out of range) is the
+  candidate check of the setpoint, which the
+  requester sends without a clamp (next item).
+- Setpoint: the value multiplied by 10 as a u16 little-endian; a heating write
+  carries an explicit setpoint, the other program kinds (cooling, DHW,
+  circulation pump, ventilation) carry `FF FF`. For DHW and the circulation
+  pump the meaning of `FF FF` is in Section 5.3; the controller response to
+  `FF FF` in a cooling or ventilation write is not documented here. The
+  scaled setpoint is truncated toward zero and only its low 16 bits are
+  sent, with no clamp (candidate).
+- Slots per day: at most 12 for heating, cooling and ventilation programs and
+  at most 3 for DHW and circulation-pump programs are written (candidate).
+
+#### 5.4.2 A6 write sequence (candidate)
+
+Unconfirmed on the wire. A week write by a requester is a series of
+single-slot requests:
+
+1. Days 0 to 6 (Monday to Sunday) are written in order.
+2. Within a day the slots are written in ascending order from slot 0, one
+   request per slot, with `currentSlot` the slot index and `totalSlots` the
+   count of that day. A request is not retried per slot.
+3. A day with a count of 0 still sends one request, with slot 0 and total 0,
+   carrying the bytes of the first slot. The clear or delete meaning of that
+   request is not established.
+4. A transport failure or a nonzero status stops the remaining slots of that
+   day; later days are still sent, and no request reverts already-sent
+   slots.
+5. The group-day values 7 to 9 (Section 4.3.1) are not sent (candidate).
+
+#### 5.4.3 A6 status labels (candidate)
+
+Candidate interpretation, unconfirmed on the wire; it does not replace the
+validated meanings in the response table of Section 5.4. On the validated
+eBUS exchanges, which carry no echoed command (Section 2.4), a requester reads
+the A6 status from the first byte of the reply data, the first byte after `NN`
+(`NN=0x01`, status). Which byte a requester takes as the
+status when a reply carries an echoed command byte or the PeBUS prefix fields
+is unresolved. The table has
+a neutral label for each value a requester distinguishes and a candidate
+Vaillant label where one exists (full table with the effect on the sequence:
+[b555-a6-status-codes.csv](./fixtures/b555-a6-status-codes.csv)).
+
+| Value | Neutral label | Candidate Vaillant label | Relation to the response table above |
+|---|---|---|---|
+| 0 | frame accepted (persistence unknown until an A5 read-back) | OK | validated: ACK |
+| 1 | illegal request | InvalidRequest | validated: parameter out of range |
+| 2 | write response unknown | — | not in the validated table |
+| 3 | module index and/or window type not supported | NotAvailable | validated: timer type unavailable |
+| 4 | slot preceded by an empty slot | Skipped slot | the validated semantics stay unknown; this is a candidate label only |
+| 5 | slot not in time ascendance | Slots not ascending | the validated semantics stay unknown; this is a candidate label only |
+| 6 | validation failure | Setpoint out of range | validated: validation failure |
+| 7 | different initiator within a sequence | — | not in the validated table |
+
+The requester treats values above 7 as unknown failures. Every nonzero value
+stops the remaining slots of that day (Section 5.4.2). The status values that
+a controller actually returns are not established beyond Section 5.4.
+
+#### 5.4.4 No read-back after a write (candidate)
+
+After a write in which every day succeeded, no A4 or A5 read-back follows from
+a Vaillant requester (candidate); the requester does not perform the A5
+read-back that Section 5.4 describes as the only confirmation of
+persistence.
+
+### 5.5 Availability and visibility reads (candidate)
+
+Candidate interpretation, unconfirmed on the wire; no Vaillant requester use
+is known (Section 3.1). A0 and A7 have one reply layout and two
+meanings: A0 is *available* and A7 is *visible*. The reply data is 8 bytes:
+
+- Byte 0 bits 0 to 4: DHW, DHW circulation pump, noise reduction, ventilation,
+  high tariff. Bits 5 to 7 of byte 0 and all of byte 1 are reserved.
+- Bytes 2 to 7: channels 1 to 12, four bits per channel, two channels per
+  byte with the lower channel in the low nibble. Within a channel, bit 0 is
+  zone heating, bit 1 zone cooling, bit 2 external DHW circuit and bit 3
+  external fixed-flow circuit.
+
+A1 and A2 (available) and A8 and A9 (visible) carry 48 reserved bits. The
+field tables are in
+[b555-candidate-field-layouts.csv](./fixtures/b555-candidate-field-layouts.csv).
+
+### 5.6 EM status request and EM control entries (candidate)
+
+Candidate interpretation, unconfirmed on the wire:
+
+- Sub-command 0x00 is an EM status request. The request carries the command
+  byte only (`B5 55 01 00`); a requester sends it to destination `08` (the
+  heat generator, not a VRC720-family controller), and only when the unit at
+  address `0x15` identifies as an energy manager (candidate). The
+  reply is one data byte: bit 0 = EM found, bit 1 = EM authorised, bits 2 to 7
+  = future discovery flags. Candidate: bits 0 and 1 are the relevant flags.
+  Candidate, unconfirmed on the wire: on eBUS the flags are the first data byte
+  after `NN` (Section 3.1); which byte carries them in a reply with an echoed
+  prefix or the PeBUS prefix fields is unresolved.
+- Sub-commands 0x04 and 0x06 (Vaillant names `SimplHeatiContr` and
+  `EMMActivBroad`, correspondence only) each have one candidate
+  service-identifier byte (request `B5`, reply `F5`); its position, any further
+  parameters and the request and reply lengths are not established. Candidate
+  meaning, unconfirmed on the wire: a simple heating control entry and an
+  energy-manager activation broadcast entry. Their meaning is not
+  established.
 
 ## 6. Multi-slot write qualification
 
@@ -507,7 +764,10 @@ Two consecutive UCH bytes: `[hour] [minute]`.
 
 Two bytes: `[low] [high]`. Value = `(high << 8) | low`.
 
-For temperature fields: physical value = raw / 10.0, unit = degrees Celsius.
+For temperature fields of the validated heating and DHW programs: physical
+value = raw / 10.0, unit = degrees Celsius. For the other program types,
+including the candidate types 0x05 to 0x08, unit and scale are **Unknown**
+(Section 5.3.1).
 
 Special value: `0xFFFF` (65535) = context-dependent. For `has_temp=0`
 types (CC, Silent): no temperature. For DHW (`has_temp=1`, `temp_slots=1`):
@@ -522,3 +782,110 @@ Single byte, 0x00-0xFF. Used for slot counts, indices, hours, minutes.
 ## 9. B524 timer relation
 
 B524 opcodes `0x03` and `0x04` are a distinct timer transport for VRC700-family controllers. B555 is the documented timer transport for the VRC720-family controllers listed in [Timer Transport Device Binding](#10-timer-transport-device-binding). The same eBUS target address does not establish interchangeability.
+
+## 10. Ventilation program read (candidate)
+
+Candidate interpretation, unconfirmed on the wire. The ventilation program
+(time-window type 5, module index 0) is the only program a Vaillant requester
+reads through B555 (Section 3.1). The read has this shape:
+
+1. One A4 request (Section 5.2.1) returns the seven daily slot counts.
+2. For each day 0 to 6 in order, and for each slot 0 to count-1 of that day,
+   one A5 request (Section 5.3.1) returns the start time, the end time and a
+   setpoint.
+3. A failed exchange, an A4 reply rejected as described in Section 5.2.1, or
+   an undecodable A5 exchange ends the read.
+4. Per day at most 12 slots are accepted. The requester does not evaluate the
+   A5 setpoint for the ventilation program.
+5. A requester sends the read only when ventilation is indicated as
+   available (candidate); what indicates it and what triggers the read are
+   unresolved.
+
+## 11. Candidate field layouts and enumerations
+
+Fixtures for this page, in the `fixtures` directory next to it. All are
+candidate interpretation, unconfirmed on the wire, except where Section 5 states a
+validated layout. The field layouts and enumerations are the same under the
+eBUS and PeBUS profiles (Section 3.1).
+
+| Fixture | Content |
+|---|---|
+| [b555-a4a5-fields.csv](./fixtures/b555-a4a5-fields.csv) | A4 and A5 request frames and reply fields with the acceptance rules (Sections 5.2.1, 5.3.1) |
+| [b555-a6-request-fields.csv](./fixtures/b555-a6-request-fields.csv) | The 16 fields of the A6 request frame (Section 5.4.1) |
+| [b555-a6-status-codes.csv](./fixtures/b555-a6-status-codes.csv) | The A6 status values a requester distinguishes, with neutral label, candidate Vaillant label and effect on the sequence (Section 5.4.3) |
+| [b555-candidate-field-layouts.csv](./fixtures/b555-candidate-field-layouts.csv) | Request and reply field layouts of every B555 sub-command in Section 3.1 |
+| [b555-candidate-enumerations.csv](./fixtures/b555-candidate-enumerations.csv) | Enumerations for the sub-commands documented here |
+
+In [b555-candidate-field-layouts.csv](./fixtures/b555-candidate-field-layouts.csv)
+`offset_after_command` of a request row counts from the first byte after the
+sub-command byte, and the Vaillant PDU offset is that value plus 3. For a reply
+row it is an eBUS reply-data offset: an eBUS reply carries no sub-command byte
+(Section 2.4), so the status or flags are at offset 0 and the plus-3 rule does
+not apply; on PeBUS, if the prefix fields are present, every reply offset would
+shift by three, which is unresolved (Section 3.1). The `vaillant_name` column and
+the labels of the enumeration file are Vaillant names, kept as
+correspondence values.
+
+## Open questions
+
+Every item below is unresolved. None is promoted by the candidate text above.
+
+- Reply `NN` and framing: the reply lengths for A0, A1, A2, A7, A8, A9, 00, 04
+  and 06 are not observed, nor for any sub-command on the ventilation program.
+- No raw capture of a B555 exchange with its ACK and CRC bytes is included;
+  Sections 2.1 to 2.3 give the generic eBUS framing applied to B555.
+- The reply lengths of the B555 sub-commands under the PeBUS profile are not
+  established.
+- How the requester selects the controller address `ZZ` at run time is not
+  established.
+- The status values a controller returns beyond Section 5.4 are not
+  established: candidate values 2 and 7 of A6, value 2 of A5, and values above
+  7.
+- The polarity of the A5 status (whether 0 is the accepted value) for the
+  ventilation program is not observed; the requester does not test it.
+- The unit and scale of the A5 and A6 setpoint for the ventilation program are
+  unresolved (candidate unit for the A3 unit code 2: fan stage, unconfirmed
+  on the wire), and
+  `0xFFFF` has no established invalid meaning for that program. The scale of
+  the A5 times for that program is also not observed.
+- The clear or delete meaning of an A6 request with total 0 and slot 0
+  carrying the first slot's bytes is not established.
+- Whether a week write is atomic, whether a status of 0 means the slot
+  persisted (multi-slot persistence is also **Unknown**, Section 6), and
+  whether a partial failure leaves a partial program are not established; no
+  request reverts already-sent slots.
+- Whether a controller accepts the group-day values 7 to 9 of A6 is not
+  established; no request carrying them is known.
+- The range of accepted module indices, and the behaviour for time-window
+  types 4 and 6 to 8, are not observed.
+- The cadence of the ventilation read is not established, and neither is
+  what indicates ventilation as available to the requester or what triggers
+  the read.
+- No A4 or A5 read of a heating or cooling program by the Vaillant requester
+  is known, so its handling of such results is not established. No cooling
+  A4 or A5 result is documented here: cooling timers were not observed (they
+  answered as not available, Section 5.1); other installations of the
+  VRC720 family were not observed.
+- The position of the flags byte in the 00 reply (candidate: the first data
+  byte after `NN` on eBUS; unresolved with an echoed or PeBUS prefix), the
+  meaning of its future discovery flags and whether the target at destination `08` returns the reply
+  as described in Section 5.6 are not observed.
+- Which byte a requester takes as the status of A4 and A6 replies that carry
+  an echoed command byte or the PeBUS prefix fields is unresolved (the A5
+  status is not evaluated; candidate); the validated eBUS replies carry no
+  echo, and their status is the first byte after `NN`.
+- The A0 and A7 bit and channel layouts (Section 5.5) are candidates; no
+  Vaillant requester use of A0, A1, A2, A7, A8 or A9 is known.
+- The candidate enumerations and field layouts of Section 11 are unconfirmed
+  on the wire for every value not covered by Section 5.
+- The meaning of sub-commands 0x04 and 0x06 is not established.
+- Which identification result of the unit at `0x15` makes a requester send the
+  EM status request is not established beyond the candidate "energy manager"
+  reading.
+- The validated ZONE values (`0xFF` for the DHW and CC writes, `0x00` to
+  `0x02` for the zone heating writes; Sections 4.1 and 7) are not reconciled
+  with the candidate correspondence ZONE = module index.
+- The B524 OP04 aggregate-day numbering (candidate: 8 = Saturday-Sunday,
+  9 = Monday-Friday) is **Unknown** until documented on the B524 page.
+- Other installations of the VRC720 family have not been observed for any
+  candidate statement in this document.
