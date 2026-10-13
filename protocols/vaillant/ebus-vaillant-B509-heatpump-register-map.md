@@ -9,32 +9,57 @@ type**. See the
 [Device-Type Gate section](ebus-vaillant-B509.md#device-type-gate-register-address-collision)
 in the protocol doc.
 
+Each register carries a canonical `Name`: `snake_case`, describing the quantity,
+with unit, codec, scaling and access kept in separate fields and no API prefix.
+The `Legacy API path (candidate)` column keeps the earlier API path as
+correspondence only; it is not a name. Vaillant and community ebusd names for
+every register are in the
+[register name correspondence fixture](fixtures/b509-register-name-correspondence.csv),
+described in the
+[protocol page](ebus-vaillant-B509.md#register-name-correspondence-fixture).
+Register ids are written as the two address bytes in wire order (see
+[Address byte order](ebus-vaillant-B509.md#address-byte-order)). The two-byte
+registers of section 1 belong to the `heat_pump` class and the five-byte
+selectors of section 2 to the `heat_pump_interface_unit` class. A register is
+identified by target class, operation and complete selector; equal names never
+merge entries.
+
 ## Device-Type Gate
 
-All registers in this document apply ONLY to EHP00 and HMU heat pump devices at
-address `0x08`. They MUST NOT be read from a BAI00 boiler at the same address.
+The registers of section 1 are documented for devices with the identity
+string `EHP00`, and those of section 2 for heat-pump interface units (identity
+strings starting `HMU`), at address `0x08` (candidate; whether other classes
+answer these ids is not established). They MUST NOT be read from a BAI00
+boiler at the same address.
 Product identification must be established first via B514 identity frame or
-B509 `0x9A00` (DSN) before interpreting any register in this map.
+B509 `0x9A00` (DSN, a device-specific number that is a device-type or
+configuration code and not a serial number; candidate interpretation,
+unconfirmed on the wire) before interpreting any register in this map.
 
 Known address collisions with the BAI00 boiler register map:
 
-| Register ID | BAI00 (boiler) meaning | EHP00/HMU (heat pump) meaning |
+| Register ID | BAI00 (boiler) meaning | EHP00 (heat pump) meaning |
 |------------:|------------------------|-------------------------------|
 | `0x3F00` | `externalPumpActive` (on/off) | `ICLOut` -- inrush current limiter (on/off) |
 | `0xBB00` | `gasValveActive` (UCH 0x0F/0xF0) | `ActualEnvPowerPercentage` (percent0, %) |
 | `0x1400` | `pumpHours` (Hoursum2, hours) | `CompPressHigh` -- high-side compressor pressure (sensor, bar) |
 | `0xE400` | `externGasvalve` (on/off) | `compressorState` (UCH enum) |
 
+The heat-pump meanings in this table belong to the `EHP00` identity of section
+1; the meaning of these ids on an `HMU` identity is unresolved (see Open
+Questions item 5).
+
 ## Status
 
-All registers in this document are from enrichment analysis (2026-04-14). None
-are currently mapped into the native field catalog. They are documented
-for future interpretation and validation.
+All registers in this document are from public community configurations. They
+are candidates for interpretation and validation.
 
 Evidence labels:
 
-- `P1`: community fork primary source (single fork)
-- `P1+P2`: confirmed by two independent forks
+- `FORK1`: community fork primary source (single fork)
+- `FORK2`: confirmed by two independent forks
+
+The Confidence column rates the public configuration evidence for the register and its codec; it does not confirm the meaning on the wire.
 
 ---
 
@@ -44,66 +69,66 @@ These use the standard 2-byte B509 ID format, identical to BAI00 wire shape.
 
 ### Operating state and yield
 
-| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
-|---------------------------|---------------|---------------|-----|------------|----------|-------|
-| `state.heatPumpStatus` | `0xD000` | `hpstatus` enum | R | HIGH | ENRICHMENT_D1 -> P1+P2 | Heat pump operating state (heating, cooling, defrost, standby, etc.) |
-| `energy.yieldTotal` | `0xBC00` | `energy4` (kWh) | R | HIGH | ENRICHMENT_D1 -> P1+P2 | Total lifetime heat yield in kWh (4-byte value) |
-| `state.actualEnvironmentPower` | `0xBA00` | `power` (kW) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Actual environmental (source) power in kW |
-| `state.actualEnvPowerPercentage` | `0xBB00` | `percent0` (%) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Environmental power as percentage (0-100). **Collision**: same address as BAI00 `gasValveActive` |
+| Name | Legacy API path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|------|-----------------------------|---------------|---------------|-----|------------|----------|-------|
+| `heat_pump_status` | `state.heatPumpStatus` | `0xD000` | `hpstatus` enum | R | HIGH | FORK2 | Heat pump operating state (heating, cooling, defrost, standby, etc.) |
+| `environmental_energy_yield_total` | `energy.yieldTotal` | `0xBC00` | `energy4` (kWh) | R | HIGH | FORK2 | Lifetime energy in kWh (4-byte value). Candidate: energy taken from the environment; another reading is the delivered heat yield; unresolved (see Open questions) |
+| `environmental_power` | `state.actualEnvironmentPower` | `0xBA00` | `power` (kW) | R | MEDIUM | FORK1 | Actual environmental (source) power in kW |
+| `environmental_power_ratio` | `state.actualEnvPowerPercentage` | `0xBB00` | `percent0` (%) | R | MEDIUM | FORK1 | Environmental power as percentage (0-100). **Collision**: same address as BAI00 `gasValveActive` |
 
 ### Refrigerant circuit
 
-| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
-|---------------------------|---------------|---------------|-----|------------|----------|-------|
-| `state.superheat` | `0x8D00` | `temp` (K delta) | R | HIGH | ENRICHMENT_D1 -> P1+P2 | Refrigerant superheat at compressor inlet (signed temperature delta in Kelvin) |
-| `state.subcooling` | `0x8E00` | `temp` (K delta) | R | HIGH | ENRICHMENT_D1 -> P1+P2 | Refrigerant subcooling at condenser outlet (signed temperature delta in Kelvin) |
-| `state.sourceTempInput` | `0x0F00` | `tempsensor` (C) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Source-side (air or ground) inlet temperature |
-| `state.compressorPressureHigh` | `0x1400` | `sensor` (bar) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | High-side compressor pressure. **Collision**: same address as BAI00 `pumpHours` |
-| `state.compressorPressureLow` | `0x1500` | `sensor` (bar) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Low-side compressor pressure |
+| Name | Legacy API path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|------|-----------------------------|---------------|---------------|-----|------------|----------|-------|
+| `refrigerant_superheat` | `state.superheat` | `0x8D00` | `temp` (K delta) | R | HIGH | FORK2 | Refrigerant superheat at compressor inlet (signed temperature delta in Kelvin) |
+| `refrigerant_subcooling` | `state.subcooling` | `0x8E00` | `temp` (K delta) | R | HIGH | FORK2 | Refrigerant subcooling at condenser outlet (signed temperature delta in Kelvin) |
+| `source_inlet_temperature` | `state.sourceTempInput` | `0x0F00` | `tempsensor` (C) | R | MEDIUM | FORK1 | Source-side (air or ground) inlet temperature |
+| `refrigerant_high_pressure` | `state.compressorPressureHigh` | `0x1400` | `sensor` (bar) | R | MEDIUM | FORK1 | High-side compressor pressure. **Collision**: same address as BAI00 `pumpHours` |
+| `refrigerant_low_pressure` | `state.compressorPressureLow` | `0x1500` | `sensor` (bar) | R | MEDIUM | FORK1 | Low-side compressor pressure |
 
 ### Compressor control and timing
 
-| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
-|---------------------------|---------------|---------------|-----|------------|----------|-------|
-| `state.compressorState` | `0xE400` | `UCH` enum | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Compressor state machine position. **Collision**: same address as BAI00 `externGasvalve` |
-| `state.compressorControlState` | `0xE900` | `UCH` enum | R | MEDIUM | ENRICHMENT_D1 -> single source | Compressor control algorithm state |
-| `config.timeCompOnMin` | `0xE600` | `seconds` (s) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Minimum compressor-on time |
-| `config.timeCompOffMin` | `0xE700` | `seconds` (s) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Minimum compressor-off time |
-| `config.timeBetweenTwoCompStartsMin` | `0xE800` | `seconds` (s) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Minimum required interval between two compressor start events |
-| `diagnostics.compressorStartsHwc` | `0xA800` | `counter` (count) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Compressor starts attributed to DHW operation |
-| `diagnostics.compressorCutPressHighCount` | `0xB400` | `counter` (count) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | High-pressure cut-out event counter |
+| Name | Legacy API path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|------|-----------------------------|---------------|---------------|-----|------------|----------|-------|
+| `compressor_state` | `state.compressorState` | `0xE400` | `UCH` enum | R | MEDIUM | FORK1 | Compressor state machine position. **Collision**: same address as BAI00 `externGasvalve` |
+| `compressor_control_state` | `state.compressorControlState` | `0xE900` | `UCH` enum | R | MEDIUM | single source | Compressor control algorithm state |
+| `compressor_minimum_on_duration` | `config.timeCompOnMin` | `0xE600` | `seconds` (s) | R | MEDIUM | FORK1 | Minimum compressor-on time |
+| `compressor_minimum_off_duration` | `config.timeCompOffMin` | `0xE700` | `seconds` (s) | R | MEDIUM | FORK1 | Minimum compressor-off time |
+| `compressor_minimum_start_interval` | `config.timeBetweenTwoCompStartsMin` | `0xE800` | `seconds` (s) | R | MEDIUM | FORK1 | Minimum required interval between two compressor start events |
+| `compressor_dhw_start_count` | `diagnostics.compressorStartsHwc` | `0xA800` | `counter` (count) | R | MEDIUM | FORK1 | Compressor starts attributed to DHW operation |
+| `compressor_high_pressure_cutout_count` | `diagnostics.compressorCutPressHighCount` | `0xB400` | `counter` (count) | R | MEDIUM | FORK1 | High-pressure cut-out event counter |
 
 ### Defrost
 
-| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
-|---------------------------|---------------|---------------|-----|------------|----------|-------|
-| `state.deicingActive` | `0xCE01` | `yesno` (bool) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Defrost/de-icing cycle active. The `01` suffix may indicate register page/bank |
+| Name | Legacy API path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|------|-----------------------------|---------------|---------------|-----|------------|----------|-------|
+| `defrost_active` | `state.deicingActive` | `0xCE01` | `yesno` (bool) | R | MEDIUM | FORK1 | Defrost/de-icing cycle active. The `01` suffix may indicate register page/bank |
 
 ### Electrical / phase
 
-| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
-|---------------------------|---------------|---------------|-----|------------|----------|-------|
-| `state.phaseOrder` | `0x5701` | `phaseok` enum | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Phase-order check result (correct L1-L2-L3 sequence) |
-| `state.phaseStatus` | `0x8800` | `phase flags` (bitmask) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Phase status flags (phase loss, undervoltage, etc.) |
-| `state.iclOut` | `0x3F00` | `on/off` | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Inrush current limiter bypass output state. **Collision**: same address as BAI00 `externalPumpActive` |
+| Name | Legacy API path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|------|-----------------------------|---------------|---------------|-----|------------|----------|-------|
+| `phase_order_status` | `state.phaseOrder` | `0x5701` | `phaseok` enum | R | MEDIUM | FORK1 | Phase-order check result (correct L1-L2-L3 sequence) |
+| `phase_status_flags` | `state.phaseStatus` | `0x8800` | `phase flags` (bitmask) | R | MEDIUM | FORK1 | Phase status flags (phase loss, undervoltage, etc.) |
+| `inrush_current_limiter_output_active` | `state.iclOut` | `0x3F00` | `on/off` | R | MEDIUM | FORK1 | Inrush current limiter output state. **Collision**: same address as BAI00 `externalPumpActive`. Candidate interpretation, unconfirmed on the wire: an inrush current limiter output; whether it is a bypass output is unresolved (see Open questions) |
 
 ### Noise reduction (VWLS)
 
-| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
-|---------------------------|---------------|---------------|-----|------------|----------|-------|
-| `state.noiseReduction` | `0xA901` | `yesno` (bool) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Night/noise reduction mode active |
-| `config.noiseReductionFactor` | `0x2401` | `percent0` (%) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Active noise reduction factor (0-100%) |
+| Name | Legacy API path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|------|-----------------------------|---------------|---------------|-----|------------|----------|-------|
+| `noise_reduction_active` | `state.noiseReduction` | `0xA901` | `yesno` (bool) | R | MEDIUM | FORK1 | Night/noise reduction mode active |
+| `noise_reduction_factor` | `config.noiseReductionFactor` | `0x2401` | `percent0` (unit unresolved) | R | MEDIUM | FORK1 | Candidate: active noise reduction factor (candidate range 0-100%). Another meaning is possible on some devices of the class, and the name is provisional; see Open questions |
 
 ### Other
 
-| Semantic Path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
-|---------------------------|---------------|---------------|-----|------------|----------|-------|
-| `state.actualEnvPowerFine` | `0xE201` | `UCH` (100W units) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Actual environmental power in units of 100 W (multiply byte by 100) |
-| `state.bivalentMode` | `0xE301` | `UCH` enum | R | MEDIUM | ENRICHMENT_D1 -> single source | Bivalence operating mode (heat pump only, backup boiler active, etc.) |
-| `config.sourceLimitAtMaxFlow` | `0xE401` | `SCH` (C, signed) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Signed source temperature limit at maximum flow |
-| `config.sourceLimitSlope` | `0xE501` | `UCH` (slope) | R | MEDIUM | ENRICHMENT_D1 -> slope unit not fully decoded | Source temperature limit slope characteristic |
-| `state.maxNdPressure` | `0xE901` | `ULG` (Pa) | R | MEDIUM | ENRICHMENT_D1 -> P1 only | Maximum ND (fan duct) pressure in Pascal (4-byte ULG). Unusual type for pressure |
-| `state.integral` | `0x8000` | `value` (unknown) | R | LOW | ENRICHMENT_D1 -> P1 only | Control algorithm integral value. Type and unit unconfirmed |
+| Name | Legacy API path (candidate) | B509 register | Codec / scale | R/W | Confidence | Evidence | Notes |
+|------|-----------------------------|---------------|---------------|-----|------------|----------|-------|
+| `environmental_power` | `state.actualEnvPowerFine` | `0xE201` | `UCH` (100W units) | R | MEDIUM | FORK1 | Actual environmental power in units of 100 W (multiply byte by 100). Separate native selector with its own scale; the name equals that of `0xBA00` but the entries stay separate |
+| `bivalent_mode` | `state.bivalentMode` | `0xE301` | `UCH` enum | R | MEDIUM | single source | Bivalence operating mode (heat pump only, backup boiler active, etc.) |
+| `source_temperature_limit_at_maximum_flow` | `config.sourceLimitAtMaxFlow` | `0xE401` | `SCH` (C, signed) | R | MEDIUM | FORK1 | Signed source temperature limit at maximum flow |
+| `source_temperature_limit_slope` | `config.sourceLimitSlope` | `0xE501` | `UCH` (slope) | R | MEDIUM | community comment | Source temperature limit slope characteristic. The unit is unresolved |
+| `refrigerant_low_pressure_maximum` | `state.maxNdPressure` | `0xE901` | `ULG` (unit unresolved) | R | MEDIUM | FORK1 | Maximum ND pressure (unit unresolved; Pa is a candidate) (4-byte ULG). Candidate interpretation, unconfirmed on the wire: ND is the refrigerant low-pressure side (Niederdruck). Unusual type for pressure |
+| `compressor_energy_integral` | `state.integral` | `0x8000` | `value` (unknown) | R | LOW | FORK1 | Control algorithm integral value. Type and unit unconfirmed; candidate: an energy integral in degree-minutes |
 
 ### Note on `01`-suffix EHP registers
 
@@ -113,17 +138,37 @@ second register page/bank or instance selector. A live scan comparing `XX00`
 vs `XX01` is needed to confirm the semantics. The pattern is consistent:
 `XX01` where `XX` is the primary register byte.
 
+Under the little-endian hypothesis for the address bytes (see
+[Address byte order](ebus-vaillant-B509.md#address-byte-order)) the second byte
+is the high byte of the number, so a `01` suffix is a number above 255 and
+`XX00` and `XX01` are different numbers; this reading does not support a
+separate page/bank selector, but it is unconfirmed on the wire.
+
 ---
 
-## 2. HMU HW5103 TypeSpec Registers (`540200xx` sub-addressing)
+## 2. Heat pump interface unit registers (`54 02 00 REG TYPE` selectors)
 
-The HMU HW5103 hardware variant uses a **5-byte B509 selector**: `54 02 00
+The selectors of this section are documented for the heat pump interface units
+covered by the community configuration named in the Evidence paragraph below;
+whether other heat pump interface units use the same selectors is not
+established (candidate). The heat pump interface unit uses a **5-byte B509 selector**: `54 02 00
 [REG] [TYPE]`. This is an HP-specific extension of B509, not a separate
 protocol. The `54 02 00` prefix is the key. The fifth byte (TYPE) is **part of
 the register address** and encodes the expected data type. Sending the wrong
 type byte will read a different register or cause a protocol error.
 
 Wire format: `B509 54 02 00 [REG] [TYPE]` sent to HMU at address `0x08`.
+
+**Hypothesis** (unconfirmed on the wire): the selector has the shape of the
+data-point read `54` described in the
+[protocol page](ebus-vaillant-B509.md#configuration-and-data-point-read-54):
+`02` is the PeBUS address byte, `00` the configuration byte (read), and `REG`
+and `TYPE` are the low and high byte of a 16-bit data-point address. On that
+reading the "type byte" is the high byte of the address, which is consistent
+with the same `REG` under different type bytes being different selectors (for
+example `C5 09` and `C5 0B`). Each entry in the tables below carries its
+canonical `Name`; the operation byte of every entry is `54` and the
+correspondence fixture records the complete five-byte selector.
 
 ### Type byte encoding
 
@@ -138,7 +183,7 @@ Wire format: `B509 54 02 00 [REG] [TYPE]` sent to HMU at address `0x08`.
 
 ### Evidence
 
-All HMU HW5103 registers: ENRICHMENT_D10 S2 + ENRICHMENT_D11 S1.3 ->
+All heat pump interface unit registers:
 burmistrzak/ebusd-configuration `src/vaillant/08.hmu.HW5103.tsp` [L14-L400].
 Corroborated structurally by pulquero `08.hmu.HW5103.SW0607.csv`,
 morphZ `08.hmu00.HW5103.csv`, jonesPD `08.hmu.csv`, xerion3800 `08.hmu.csv`.
@@ -148,67 +193,69 @@ corroboration).
 
 ### Operational sensors
 
-| Full selector (hex) | REG | snake_case name (ebusd camelCase) | Type | Unit | Notes |
-|---------------------|-----|-----------------------------------|------|------|-------|
-| `54 02 00 0D 0A` | `0D` | `compressor_speed` (`CompressorSpeed`) | EXP | RPM | Zero when compressor is stopped |
-| `54 02 00 28 0A` | `28` | `eev_position_abs` (`EevPositionAbs`) | EXP | steps | Absolute EEV (electronic expansion valve) position |
-| `54 02 00 47 0A` | `47` | `fan1_speed` (`Fan1Speed`) | EXP | RPM | Fan 1 speed |
-| `54 02 00 49 0A` | `49` | `fan2_speed` (`Fan2Speed`) | EXP | RPM | Fan 2 speed; 0 if fan 2 absent on single-fan models |
-| `54 02 00 5B 09` | `5B` | `electric_power_consumption` (`ElectricPowerConsumption`) | EXP | W | Current electrical power in Watts. Distinct from B51A `CurrentConsumedPower` (kW) |
-| `54 02 00 BD 09` | `BD` | `diag_water_throughput` (`DiagWaterThroughput`) | EXP | l/h | Water flow rate; complements B512 StatusHydraulics flow |
-| `54 02 00 C5 09` | `C5` | `building_pump_power` (`BuildingPumpPower`) | EXP | W | Building pump electrical power. No B51A equivalent -- only source for this metric |
+The earlier map names are kept for cross-reference only; the canonical name is the `Name` column.
+
+| Full selector (hex) | Name | REG | Earlier map name (community ebusd name) | Type | Unit | Notes |
+|---------------------|------|-----|-----------------------------------|------|------|-------|
+| `54 02 00 0D 0A` | `compressor_speed` | `0D` | `compressor_speed` (`CompressorSpeed`) | EXP | -- | Zero when compressor is stopped. The unit is unresolved: another community configuration gives rps; see Open questions |
+| `54 02 00 28 0A` | `electronic_expansion_valve_absolute_position` | `28` | `eev_position_abs` (`EevPositionAbs`) | EXP | steps | Absolute EEV (electronic expansion valve) position |
+| `54 02 00 47 0A` | `fan_1_speed` | `47` | `fan1_speed` (`Fan1Speed`) | EXP | RPM | Fan 1 speed |
+| `54 02 00 49 0A` | `fan_2_speed` | `49` | `fan2_speed` (`Fan2Speed`) | EXP | RPM | Fan 2 speed; 0 if fan 2 absent on units with a single fan |
+| `54 02 00 5B 09` | `electrical_input_power` | `5B` | `electric_power_consumption` (`ElectricPowerConsumption`) | EXP | -- | Current electrical power; the unit is unresolved. Distinct from B51A `CurrentConsumedPower` (kW). Other community configurations give type byte `0D` for the same register; see Open questions |
+| `54 02 00 BD 09` | `water_flow_rate` | `BD` | `diag_water_throughput` (`DiagWaterThroughput`) | EXP | l/h | Water flow rate; complements B512 StatusHydraulics flow |
+| `54 02 00 C5 09` | `building_pump_output_level` | `C5` | `building_pump_power` (`BuildingPumpPower`) | EXP | -- | Building pump output level. No B51A equivalent -- only source for this metric. The unit is unresolved (community configurations give W or %; see Open questions) |
 
 ### Status and diagnostics
 
-| Full selector (hex) | REG | snake_case name (ebusd camelCase) | Type | Unit | Notes |
-|---------------------|-----|-----------------------------------|------|------|-------|
-| `54 02 00 53 0D` | `53` | `statuscode` (`Statuscode`) | enum | -- | Diagnostic status code; non-zero indicates active fault |
+| Full selector (hex) | Name | REG | Earlier map name (community ebusd name) | Type | Unit | Notes |
+|---------------------|------|-----|-----------------------------------|------|------|-------|
+| `54 02 00 53 0D` | `operating_status_code` | `53` | `statuscode` (`Statuscode`) | enum | -- | Diagnostic status code; non-zero indicates active fault. Another community configuration enumerates operating states for this selector; see Open questions |
 
 ### Pressures
 
-| Full selector (hex) | REG | snake_case name (ebusd camelCase) | Type | Unit | Notes |
-|---------------------|-----|-----------------------------------|------|------|-------|
-| `54 02 00 6A 09` | `6A` | `high_pressure` (`HighPressure`) | EXP | bar | High-side refrigerant pressure; may be higher precision than generic EHP `0x1400` |
+| Full selector (hex) | Name | REG | Earlier map name (community ebusd name) | Type | Unit | Notes |
+|---------------------|------|-----|-----------------------------------|------|------|-------|
+| `54 02 00 6A 09` | `refrigerant_high_pressure` | `6A` | `high_pressure` (`HighPressure`) | EXP | bar | High-side refrigerant pressure; may be higher precision than generic EHP `0x1400` |
 
 ### Temperatures
 
-| Full selector (hex) | REG | snake_case name (ebusd camelCase) | Type | Unit | Notes |
-|---------------------|-----|-----------------------------------|------|------|-------|
-| `54 02 00 98 08` | `98` | `compressor_inlet_temp` (`CompressorInletTemp`) | tempv | C | Compressor inlet refrigerant temperature (absolute); distinct from generic `0x8D00` Superheat (delta) |
-| `54 02 00 A2 08` | `A2` | `compressor_outlet_temp` (`CompressorOutletTemp`) | tempv | C | Compressor outlet refrigerant temperature |
-| `54 02 00 AC 08` | `AC` | `eev_outlet_temp` (`EevOutletTemp`) | tempv | C | EEV outlet refrigerant temperature |
-| `54 02 00 DE 08` | `DE` | `air_inlet_temp` (`AirInletTemp`) | tempv | C | Outdoor air temperature at heat pump inlet; important for COP estimation and defrost control |
+| Full selector (hex) | Name | REG | Earlier map name (community ebusd name) | Type | Unit | Notes |
+|---------------------|------|-----|-----------------------------------|------|------|-------|
+| `54 02 00 98 08` | `compressor_inlet_temperature` | `98` | `compressor_inlet_temp` (`CompressorInletTemp`) | tempv | C | Compressor inlet refrigerant temperature (absolute); distinct from generic `0x8D00` Superheat (delta) |
+| `54 02 00 A2 08` | `compressor_outlet_temperature` | `A2` | `compressor_outlet_temp` (`CompressorOutletTemp`) | tempv | C | Compressor outlet refrigerant temperature |
+| `54 02 00 AC 08` | `electronic_expansion_valve_outlet_temperature` | `AC` | `eev_outlet_temp` (`EevOutletTemp`) | tempv | C | EEV outlet refrigerant temperature. Whether this sensor is the expansion valve outlet is unresolved; see Open questions |
+| `54 02 00 DE 08` | `air_inlet_temperature` | `DE` | `air_inlet_temp` (`AirInletTemp`) | tempv | C | Outdoor air temperature at heat pump inlet; important for COP estimation and defrost control |
 
 ### Diagnostic temperatures
 
-| Full selector (hex) | REG | snake_case name (ebusd camelCase) | Type | Unit | Notes |
-|---------------------|-----|-----------------------------------|------|------|-------|
-| `54 02 00 A6 0E` | `A6` | `diag_flow_temp` (`DiagFlowTemp`) | tempv | C | Diagnostic flow temperature; may differ from B524 FlowTemp under fault conditions |
-| `54 02 00 A7 0E` | `A7` | `diag_evaporation_temp` (`DiagEvaporationTemp`) | tempv | C | Diagnostic evaporator temperature |
-| `54 02 00 A9 0E` | `A9` | `diag_overheating_actual_value` (`DiagOverheatingActualValue`) | tempv | K (delta) | Diagnostic overheating value; should correlate with generic EHP `0x8D00` Superheat |
+| Full selector (hex) | Name | REG | Earlier map name (community ebusd name) | Type | Unit | Notes |
+|---------------------|------|-----|-----------------------------------|------|------|-------|
+| `54 02 00 A6 0E` | `refrigerant_condensation_temperature` | `A6` | `diag_flow_temp` (`DiagFlowTemp`) | tempv | C | Diagnostic flow temperature; may differ from B524 FlowTemp under fault conditions. Whether this is a refrigerant condensation temperature is unresolved; see Open questions |
+| `54 02 00 A7 0E` | `refrigerant_evaporation_temperature` | `A7` | `diag_evaporation_temp` (`DiagEvaporationTemp`) | tempv | C | Diagnostic evaporator temperature |
+| `54 02 00 A9 0E` | `refrigerant_superheat` | `A9` | `diag_overheating_actual_value` (`DiagOverheatingActualValue`) | tempv | K (delta) | Diagnostic overheating value; should correlate with generic EHP `0x8D00` Superheat. The name equals that of `0x8D00` but the entries stay separate |
 
 ### Lifecycle counters
 
-| Full selector (hex) | REG | snake_case name (ebusd camelCase) | Type | Unit | B51A parallel | Notes |
-|---------------------|-----|-----------------------------------|------|------|---------------|-------|
-| `54 02 00 B8 0B` | `B8` | `hours_total` (`HoursTotal`) | word | h | -- | Total HMU operating hours |
-| `54 02 00 B9 0B` | `B9` | `hours_heating` (`HoursHeating`) | word | h | -- | Heating-mode hours |
-| `54 02 00 BC 0B` | `BC` | `hours_hwc` (`HoursHwc`) | word | h | -- | DHW-mode hours |
-| `54 02 00 C2 0B` | `C2` | `compressor_hours` (`CompressorHours`) | word | h | `05FF34` REG 0x00 | Parallel to B51A lifecycle counter |
-| `54 02 00 C3 0B` | `C3` | `compressor_starts` (`CompressorStarts`) | word | count | `05FF34` REG 0x01 | Parallel to B51A lifecycle counter |
-| `54 02 00 C4 0B` | `C4` | `building_pump_hours` (`BuildingPumpHours`) | word | h | `05FF34` REG 0x02 | Parallel to B51A lifecycle counter |
-| `54 02 00 C5 0B` | `C5` | `building_pump_starts` (`BuildingPumpStarts`) | word | count | -- | Note: sub-ID `C5` dual-use with type byte `09`=power vs `0B`=starts |
-| `54 02 00 C8 0B` | `C8` | `four_way_valve_hours` (`FourWayValveHours`) | word | h | `05FF34` REG 0x06 | Also known as Umschaltventil (4-way valve) |
-| `54 02 00 C9 0B` | `C9` | `four_way_valve_switches` (`FourWayValveSwitches`) | word | count | `05FF34` REG 0x07 | 4-way valve switch count |
-| `54 02 00 D7 0B` | `D7` | `fan1_hours` (`Fan1Hours`) | word | h | `05FF34` REG 0x51 | Fan 1 total operating hours |
-| `54 02 00 D8 0B` | `D8` | `fan1_starts` (`Fan1Starts`) | word | count | `05FF34` REG 0x52 | Fan 1 start count |
-| `54 02 00 D9 0B` | `D9` | `fan2_hours` (`Fan2Hours`) | word | h | `05FF34` REG 0x5E | Fan 2 total operating hours; 0 on single-fan models |
-| `54 02 00 DA 0B` | `DA` | `fan2_starts` (`Fan2Starts`) | word | count | `05FF34` REG 0x5F | Fan 2 start count |
+| Full selector (hex) | Name | REG | Earlier map name (community ebusd name) | Type | Unit | B51A parallel | Notes |
+|---------------------|------|-----|-----------------------------------|------|------|---------------|-------|
+| `54 02 00 B8 0B` | `total_operating_time` | `B8` | `hours_total` (`HoursTotal`) | word | h | -- | Total HMU operating hours |
+| `54 02 00 B9 0B` | `heating_operating_time` | `B9` | `hours_heating` (`HoursHeating`) | word | h | -- | Heating-mode hours |
+| `54 02 00 BC 0B` | `dhw_operating_time` | `BC` | `hours_hwc` (`HoursHwc`) | word | h | -- | DHW-mode hours |
+| `54 02 00 C2 0B` | `compressor_operating_time` | `C2` | `compressor_hours` (`CompressorHours`) | word | h | `05FF34` REG 0x00 | Parallel to B51A lifecycle counter |
+| `54 02 00 C3 0B` | `compressor_start_count` | `C3` | `compressor_starts` (`CompressorStarts`) | word | count | `05FF34` REG 0x01 | Parallel to B51A lifecycle counter |
+| `54 02 00 C4 0B` | `building_pump_operating_time` | `C4` | `building_pump_hours` (`BuildingPumpHours`) | word | h | `05FF34` REG 0x02 | Parallel to B51A lifecycle counter |
+| `54 02 00 C5 0B` | `building_pump_start_count` | `C5` | `building_pump_starts` (`BuildingPumpStarts`) | word | count | -- | Note: sub-ID `C5` dual-use with type byte `09`=output level vs `0B`=starts |
+| `54 02 00 C8 0B` | `four_way_valve_operating_time` | `C8` | `four_way_valve_hours` (`FourWayValveHours`) | word | h | `05FF34` REG 0x06 | Also known as Umschaltventil (4-way valve) |
+| `54 02 00 C9 0B` | `four_way_valve_switch_count` | `C9` | `four_way_valve_switches` (`FourWayValveSwitches`) | word | count | `05FF34` REG 0x07 | 4-way valve switch count |
+| `54 02 00 D7 0B` | `fan_1_operating_time` | `D7` | `fan1_hours` (`Fan1Hours`) | word | h | `05FF34` REG 0x51 | Fan 1 total operating hours |
+| `54 02 00 D8 0B` | `fan_1_start_count` | `D8` | `fan1_starts` (`Fan1Starts`) | word | count | `05FF34` REG 0x52 | Fan 1 start count |
+| `54 02 00 D9 0B` | `fan_2_operating_time` | `D9` | `fan2_hours` (`Fan2Hours`) | word | h | `05FF34` REG 0x5E | Fan 2 total operating hours; 0 on units with a single fan |
+| `54 02 00 DA 0B` | `fan_2_start_count` | `DA` | `fan2_starts` (`Fan2Starts`) | word | count | `05FF34` REG 0x5F | Fan 2 start count |
 
 ### Note on `C5` dual-use
 
 Sub-ID `0xC5` appears twice with different type bytes: `0x09` (EXP =
-`building_pump_power` in Watts) and `0x0B` (word = `building_pump_starts`
+`building_pump_output_level`) and `0x0B` (word = `building_pump_starts`
 count). The full 5-byte selector differs, and the HMU distinguishes them by
 type byte. Both must be sent as independent requests.
 
@@ -223,17 +270,17 @@ diverge on a live scan, the discrepancy points to a firmware variant difference.
 ### Naming note (HWC/DHW)
 
 Canonical naming uses `dhw_*` (snake_case) for domestic hot water.
-The ebusd source uses `Hwc*` (camelCase). Both refer to the same thing. Entries
-above preserve the ebusd-style `Hwc` names as extracted from the TypeSpec source.
+The community ebusd names use `Hwc*` (camelCase). Both refer to the same thing.
+The earlier map name column keeps the ebusd-style `Hwc` names.
 
 ---
 
 ## Open Questions
 
-1. **HMU HW5103 TypeSpec single-fork risk:** All 29 registers come from
-   burmistrzak's TSP alone. Priority for live validation: `CompressorSpeed`
-   (`0D`), `Fan1Speed` (`47`), `ElectricPowerConsumption` (`5B`),
-   `AirInletTemp` (`DE`).
+1. **Heat pump interface unit TypeSpec single-fork risk:** The public evidence
+   for all 29 registers is a single community TypeSpec file (burmistrzak).
+   Priority for live validation: `CompressorSpeed` (`0D`), `Fan1Speed` (`47`),
+   `ElectricPowerConsumption` (`5B`), `AirInletTemp` (`DE`).
 
 2. **C5 type byte disambiguation:** Does the HMU accept both `C5 09`
    (BuildingPumpPower) and `C5 0B` (BuildingPumpStarts) in a single polling
@@ -245,13 +292,59 @@ above preserve the ebusd-style `Hwc` names as extracted from the TypeSpec source
 4. **DSN availability on EHP:** Can B509 `0x9A00` (DSN) reliably identify
    EHP00/HMU before attempting any other register, or must B514 be used?
 
+5. **Two-byte ids on HMU-class units:** the section 1 ids are known only for
+   the EHP00 identity (candidate). For the HMU product families the same
+   numbers carry other meanings or none (candidate). Whether an HMU-class unit
+   answers these ids is not established.
+
+6. **`0x2401`:** candidate: noise reduction factor for air-to-brine-water heat
+   pumps (community configuration). Another candidate meaning, unconfirmed on
+   the wire, is a short error entry; which meaning applies to which devices of
+   the class is unresolved, and so is the canonical name, which is provisional.
+
+7. **`0xBC00`:** candidate: energy taken from the environment; another reading is
+   the delivered heat yield (the earlier API path describes total heat yield).
+   Which is correct is unresolved.
+
+8. **`0xE901`, `0xE501` and `0x8000`:** the unit of `0xE901` is unresolved, and
+   whether it is a limit or a recorded maximum is unresolved (the community
+   comment reads maximum allowed low pressure for compressor protection). The
+   unit of `0xE501` is unresolved. For `0x8000` the community comment is actual
+   energy balancing integral; the degree-minute interpretation, the unit and the
+   compressor qualifier are unconfirmed.
+
+9. **`0x3F00`:** candidate interpretation, unconfirmed on the wire: an inrush
+   current limiter output. Whether it is a bypass output is unresolved.
+
+10. **HMU unit and type-byte conflicts:** `54 02 00 0D 0A` is given in rps by
+    another community configuration and the map lists RPM; the unit is unresolved. `54 02 00 C5 09` is given in
+    W by some community configurations and in % by others; the unit is
+    unresolved. `54 02 00 5B 09`: other community configurations give type byte
+    `0D` for the same register; which type byte is correct is unresolved.
+
+11. **HMU naming conflicts:** the map's table text calls
+    `54 02 00 A6 0E` a diagnostic flow temperature; another candidate meaning,
+    unconfirmed on the wire, is a refrigerant condensation temperature (the
+    canonical name follows that candidate); which reading is correct is
+    unresolved. Whether `54 02 00 AC 08` is the expansion valve outlet sensor is
+    unresolved; another candidate meaning, unconfirmed on the wire, is an
+    environment-circuit heat-exchanger inlet temperature. Whether
+    `54 02 00 A9 0E` equals `0x8D00` is unresolved.
+    `54 02 00 53 0D` is described here as a fault code while another community
+    configuration enumerates operating states for it. A community comment
+    questions the scale of `54 02 00 28 0A`.
+
+12. **HMU selector shape:** the equivalence of `54 02 00 REG TYPE` with the
+    `54` data-point read (PeBUS address byte `02`, configuration byte `00`,
+    address `REG` `TYPE`) is unconfirmed on the wire.
+
 ## Appendix: Semantic FSMs (Heat Pump)
 
 > **Hypothesis:** The following state-machine interpretations derive from register meanings; transitions require correlated native observations before qualification.
 
 ### `heat_pump_status` (0xD000)
 
-Register `0xD000` encodes the top-level heat pump operating mode as a `hpstatus` UCH enum. The register is confirmed on EHP00 and HMU at address `0x08`.
+Register `0xD000` encodes the top-level heat pump operating mode as a `hpstatus` UCH enum. Public community configurations list the register for EHP00 and HMU at address `0x08` (candidate; whether HMU-class units answer the section 1 ids is not established, see Open questions).
 
 | Value | State | Description |
 |-------|-------|-------------|
@@ -297,4 +390,5 @@ Transitions: normal -> defrost_active when evaporator icing sensor threshold exc
 
 - Protocol spec: [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md)
 - Boiler register map: [`ebus-vaillant-B509-boiler-register-map.md`](ebus-vaillant-B509-boiler-register-map.md)
+- Register name correspondence fixture: [`fixtures/b509-register-name-correspondence.csv`](fixtures/b509-register-name-correspondence.csv)
 - Public TypeSpec: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration)

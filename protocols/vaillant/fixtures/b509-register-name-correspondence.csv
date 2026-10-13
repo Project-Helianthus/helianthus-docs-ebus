@@ -1,0 +1,109 @@
+device_class,operation,selector,name,unit,vaillant_friendly_name,vaillant_name,ebusd_name,legacy_api_path,open_question
+any,0D,,read_symbolic_address,,read symbolic address,DS_B5090DReadSymboAddre,,energy.yieldRead,"This is the register read operation, not an energy register; the legacy API path describes the operation and which energy quantities, if any, are reached through this operation is unresolved. Class-neutral operation row; which targets implement this operation is target-specific and not established."
+any,0E,,write_symbolic_address,,write symbolic address,DS_B5090EWriteSymboAddre,,energy.yieldWrite,"This is the register write operation, not an energy register; the legacy API path describes the operation and which energy quantities, if any, are reached through this operation is unresolved. Class-neutral operation row; which targets implement this operation is target-specific and not established."
+boiler,0D,0x1800,flow_temperature,°C,d.40 Supply temperature,FlowTemperatureSensor,FlowTemp,state.flowTemperatureC,
+boiler,0D,0x4400,central_heating_pump_active,,d.10 Central heating pump,CentralHeatingWaterPump,WP,state.centralHeatingPumpActive,
+boiler,0D,0x0200,water_pressure,bar,,WaterPressureSensor,WaterPressure,state.waterPressureBar,
+boiler,0D,0x0500,flame_active,,,Flame,Flame,state.flameActive,
+boiler,0D,0xBB00,gas_valve_active,,d.30 Gasvalve,FuelValve,Gasvalve,state.gasValveActive,
+boiler,0D,0x8300,fan_speed,rpm,d.34 Current fan speed,FanSpeedRpm,FanSpeed,state.fanSpeedRpm,
+boiler,0D,0x2E00,modulation_setpoint,%,,ModulationSetpoint,ModulationTempDesired,state.modulationPct,Candidate: a modulation set point; another reading is the current modulation in percent (the legacy API path describes a modulation percentage); unresolved. The canonical name is provisional until this is resolved.
+boiler,0D,0xAB00,boiler_state_code,,,StateNumber,Statenumber,state.stateNumber,The meaning of the individual codes is not established.
+boiler,0D,0x5400,diverter_valve_position,,d.35 Position TWV,ThreeWayValveSetPosition,PositionValveSet,state.diverterValvePositionPct,"Candidate interpretation, unconfirmed on the wire: an enumerated position code (community comment: 100 domestic hot water, 0 heating, 40 middle position) rather than a percentage. Whether the value is the commanded or the measured position is unresolved."
+boiler,0D,0x5800,dhw_demand_active,,d.22 DHW demand,DomesticHotWaterDemandTapping,HwcDemand,state.dhwDemandActive,
+boiler,0D,0x5500,dhw_water_flow_rate,L/min,d.36 DHW waterflow,DomesticHotWaterFlow,HwcWaterflow,state.dhwWaterFlowLpm,
+boiler,0D,0x0E04,maximum_heating_flow_temperature_setpoint,°C,d.71 CH max flow temperature,MaximumCentralHeatingFlowSetpoint,FlowsetHcMax,config.flowsetHcMaxC,Separate selector with the same community name; which devices of the class use which id is unresolved.
+boiler,0D,0xA500,maximum_heating_flow_temperature_setpoint,°C,d.71 Max value flow temp,MaximumCentralHeatingFlowSetpoint,FlowsetHcMax,config.flowsetHcMaxC,Separate selector with the same community name; which devices of the class use which id is unresolved.
+boiler,0D,0x0F04,maximum_dhw_flow_temperature_setpoint,°C,d.78 Max value flow temp storage,MaximumDomestcHotWaterTankFlowSetpoint,FlowsetHwcMax,config.flowsetHwcMaxC,
+boiler,0D,0x0704,heating_partial_load_power,,d.00 heating partload,CentralHeatingPartloadInKw,PartloadHcKW,config.partloadHcKW,One community configuration lists the unit as kW or %; the unit is unresolved.
+boiler,0D,0x0804,dhw_partial_load_power,,d.77 hot water partload,DomesticHotWaterPartloadInKw,PartloadHwcKW,config.partloadHwcKW,One community configuration lists the unit as kW or %; the unit is unresolved.
+boiler,0D,0x9E00,storage_loading_pump_level,%,d.12 storage load pump,DomesticHotWaterTankLoadPump,Storageloadpump,state.storageLoadPumpPct,
+boiler,0D,0x3900,flow_temperature_setpoint,°C,d.05 Flow/return set point,CentralHeatingFlowSetpoint,FlowTempDesired,state.flowTempDesiredC,Community comment: the target is the return temperature when return regulation is set.
+boiler,0D,0xEA03,dhw_temperature_setpoint,°C,d.06 DHW setpoint,DomesticHotWaterSetpoint,HwcTempDesired,state.dhwTempDesiredC,
+boiler,0D,0x7B00,circulation_pump_active,,d.13 Circulation pump,DomesticHotWaterCirculationPump,CirPump,state.circulationPumpActive,
+boiler,0D,0x3F00,external_pump_active,,d.11 External heating pump,ExternalCentralHeatingWaterPump,extWP,state.externalPumpActive,
+boiler,0D,0xF203,heating_switch_active,,d.23 Heating on/off switch,CentralHeatingSwitch,HeatingSwitch,state.heatingSwitchActive,
+boiler,0D,0x2400,fan_speed_setpoint,rpm,d.33 Target fan speed,FanTargetSpeed,TargetFanSpeed,state.targetFanSpeedRpm,
+boiler,0D,0xA400,flame_ionization_current,,d.44 Ionisation voltage,IonisationCurrent,IonisationVoltageLevel,state.ionisationVoltageUa,The unit µA is a candidate; it is not confirmed on the wire. Another reading is a voltage level.
+boiler,0D,0xFB00,primary_circuit_flow_rate,,d.29 Primary circuit flow rate,PrimaryCircuitWaterFlowRate,PrimaryCircuitFlowRate,state.primaryCircuitFlowLpm,One community configuration lists the unit as l/h with a plain unsigned codec; the unit is unresolved.
+boiler,0D,0x2800,central_heating_operating_time,h,d.80 operating hours CH,CentralHeatingOperatingHours,HcHours,diagnostics.centralHeatingHours,
+boiler,0D,0x2200,dhw_operating_time,h,d.81 Hours in DHW mode,DomesticHotWaterOperatingHours,HwcHours,diagnostics.dhwHours,
+boiler,0D,0x2900,central_heating_start_count,count,d.82 CH mode starts,CentralHeatingCounter,HcStarts,diagnostics.centralHeatingStarts,"Candidate interpretation, unconfirmed on the wire: the raw value is scaled by 100; the map lists UIN without a factor."
+boiler,0D,0x2300,dhw_start_count,count,d.83 DHW mode starts,DomesticHotWatersCounter,HwcStarts,diagnostics.dhwStarts,"Candidate interpretation, unconfirmed on the wire: the raw value is scaled by 100; the map lists UIN without a factor."
+boiler,0D,0x1400,pump_operating_time,h,,PumpOperatingHours,PumpHours,diagnostics.pumpHours,
+boiler,0D,0x1B00,fan_operating_time,h,,FanOperationgHours,FanHours,diagnostics.fanHours,
+boiler,0D,0x1F00,fire_control_deactivation_count,count,d.61 Ignition failures,DeactivationsInternalFireControlSystem,DeactivationsIFC,diagnostics.deactivationsIFC,"Candidate expansion of IFC: internal fire control system, unconfirmed on the wire. Community comments describe ignition-device cut-offs or ignition failures; the exact event counted is unresolved."
+boiler,0D,0x2000,temperature_limiter_deactivation_count,count,d.60 Shutdowns by the temp limiter,DeactivationsTemperatureLimiter,DeactivationsTemplimiter,diagnostics.deactivationsTemplimiter,
+boiler,0D,0x4904,central_heating_pump_mode,,d.18 CH pump mode,CentralHeatingWaterPumpMode,HcPumpMode | Password,config.installerMenuCode,"Candidate interpretation, unconfirmed on the wire: central heating pump mode (0 post-run, 1 permanent, 2 winter). Another reading is an installer access code (the legacy API path describes one); see the Open questions of the boiler map. Which devices of the class use which meaning is unresolved. The canonical name is provisional until this is resolved."
+boiler,0D,0x8104,installer_phone_number,,,InstallerPhoneNumber,PhoneNumber,config.phoneNumber,
+boiler,0D,0x2004,service_time_remaining,h,d.84 Hours till next service,HoursTillService,HoursTillService,config.hoursTillService,
+boiler,0D,0x0300,air_control_ok,,,AirControlOk,AircontrolOk,diagnostics.airControlOk,
+boiler,0D,0x2F00,flame_sensing_asic_output,,,FlameSensingAsic,FlameSensingASIC,diagnostics.flameSensingAsic,
+boiler,0D,0x3C00,flue_gas_valve_active,,,FlueGasValve,Fluegasvalve,state.flueGasValve,
+boiler,0D,0x4700,gas_valve_asic_feedback,,,FuelValveFeedbackAsic,GasvalveASICFeedback | RueckmeldungBrennstoffventil1,diagnostics.gasValveAsicFeedback,
+boiler,0D,0x4800,gas_valve_microcontroller_feedback,,,FuelValveFeedbackUc,GasvalveUCFeedback | RueckmeldungBrennstoffventil2,diagnostics.gasValveUcFeedback,
+boiler,0D,0xE400,external_gas_valve_active,,,ExternalFuelValve,ExternGasvalve,state.externGasValve,
+boiler,0D,0xF200,predictive_air_pressure_switch_event_count,count,,PredictiveAirPressureSwitchCounter,PrAPSCounter,diagnostics.prApsCounter,"Candidate interpretation, unconfirmed on the wire: a counter of predictive air pressure switch events; the event counted is unresolved."
+boiler,0D,0xF300,predictive_air_pressure_switch_accumulated_time,s,,PredictiveAirPressureSwitchSummary,PrAPSSum,diagnostics.prApsSum,"Candidate interpretation, unconfirmed on the wire: an accumulated value related to the predictive air pressure switch; the accumulated interval is unresolved."
+boiler,0D,0x9A00,device_specific_number,,,DeviceSpecificNumber,DSN,identity.dsn,"Device-type or configuration code, not a serial number (candidate interpretation, unconfirmed on the wire). Also a candidate interpretation, unconfirmed on the wire: a 16-bit value followed by a 16-bit inverse field (4 bytes); the community codec reads 2 bytes."
+boiler,0D,0xDA00,display_mode,,,DisplayMode,DisplayMode,config.displayMode,
+boiler,0D,0xDF00,minimum_operating_fan_speed,rpm,,MinimumFanSpeedDuringOperation,FanMinSpeedOperation,config.fanMinSpeedOperation,
+boiler,0D,0xE000,maximum_operating_fan_speed,rpm,,MaximumFanSpeedDuringOperation,FanMaxSpeedOperation,config.fanMaxSpeedOperation,
+boiler,0D,0xE500,dcf_time_date,,,DcfTimeDate,DCFTimeDate,state.dcfTimeDate,Community configurations give 8 bytes (HEX:8); a 7-byte layout is also a candidate; the time format is unresolved.
+heat_pump,0D,0xD000,heat_pump_status,,,HeatPumpStatus,HeatPumpStatus,state.heatPumpStatus,
+heat_pump,0D,0xBC00,environmental_energy_yield_total,kWh,,EarnedEnvironmentEnergy,YieldTotal,energy.yieldTotal,Candidate: energy taken from the environment; another reading is the delivered heat yield (the legacy API path describes total heat yield); unresolved. The canonical name is provisional until this is resolved.
+heat_pump,0D,0xBA00,environmental_power,kW,,ActualEnvironmentPower,ActualEnvironmentPower,state.actualEnvironmentPower,
+heat_pump,0D,0xBB00,environmental_power_ratio,%,,ActualEnvironmentPowerPercentage,ActualEnvironmentPowerPercentage,state.actualEnvPowerPercentage,
+heat_pump,0D,0x8D00,refrigerant_superheat,K,,Superheat,Superheat,state.superheat,
+heat_pump,0D,0x8E00,refrigerant_subcooling,K,,Subcooling,Subcooling,state.subcooling,
+heat_pump,0D,0x0F00,source_inlet_temperature,°C,,BrineInletTemperatureSensor,SourceTempInput,state.sourceTempInput,
+heat_pump,0D,0x1400,refrigerant_high_pressure,bar,,PressureCompressorHigh,CompPressHigh,state.compressorPressureHigh,
+heat_pump,0D,0x1500,refrigerant_low_pressure,bar,,PressureCompressorLow,CompPressLow,state.compressorPressureLow,
+heat_pump,0D,0xE400,compressor_state,,,CompressorState,CompState,state.compressorState,
+heat_pump,0D,0xE900,compressor_control_state,,,CompressorControlState,CompControlState,state.compressorControlState,
+heat_pump,0D,0xE600,compressor_minimum_on_duration,s,,MinTimeCompressorOn,TimeCompOnMin,config.timeCompOnMin,
+heat_pump,0D,0xE700,compressor_minimum_off_duration,s,,MinTimeCompressorOff,TimeCompOffMin,config.timeCompOffMin,
+heat_pump,0D,0xE800,compressor_minimum_start_interval,s,,MinTimeBetweenTwoCompressorStarts,TimeBetweenTwoCompStartsMin,config.timeBetweenTwoCompStartsMin,
+heat_pump,0D,0xA800,compressor_dhw_start_count,count,,DomesticHotWaterCompressorCommutations,CompStartsHwc,diagnostics.compressorStartsHwc,
+heat_pump,0D,0xB400,compressor_high_pressure_cutout_count,count,,CompressorStopsDueHighPressure,CompCutPressHighCount,diagnostics.compressorCutPressHighCount,
+heat_pump,0D,0xCE01,defrost_active,,,DeicingActive,DeicingActive,state.deicingActive,
+heat_pump,0D,0x5701,phase_order_status,,,PhaseOrder,PhaseOrder,state.phaseOrder,
+heat_pump,0D,0x8800,phase_status_flags,,,PowerStatusOfPhases,PhaseStatus,state.phaseStatus,
+heat_pump,0D,0x3F00,inrush_current_limiter_output_active,,,ICL_Out,ICLOut,state.iclOut,"Candidate interpretation, unconfirmed on the wire: an inrush current limiter output. Whether it is a bypass output is unresolved. The canonical name is provisional until this is resolved."
+heat_pump,0D,0xA901,noise_reduction_active,,,NoiseReductionActive,NoiseReduction,state.noiseReduction,
+heat_pump,0D,0x2401,noise_reduction_factor,,,Short_Error_Entry1,NoiseReductionFactor,config.noiseReductionFactor,"Candidate: noise reduction factor for air-to-brine-water heat pumps (community configuration). Another candidate meaning, unconfirmed on the wire, is a short error entry; which meaning applies to which devices of the class is unresolved; the canonical name is provisional until it is resolved."
+heat_pump,0D,0xE201,environmental_power,W,,ActualEnvironmentPowerFine,ActualEnvironmentPowerFine,state.actualEnvPowerFine,Separate native selector with its own scale (units of 100 W); the name equals that of 0xBA00 but the entries stay separate.
+heat_pump,0D,0xE301,bivalent_mode,,,BivalentMode,BivalentMode,state.bivalentMode,
+heat_pump,0D,0xE401,source_temperature_limit_at_maximum_flow,°C,,BrineLimitAtMaxFlow,SourceLimitAtMaxFlow,config.sourceLimitAtMaxFlow,
+heat_pump,0D,0xE501,source_temperature_limit_slope,,,BrineLimitSlope,SourceLimitSlope,config.sourceLimitSlope,The unit is unresolved; the community comment describes a slope used to calculate a pressure switch point below the lowest brine temperature.
+heat_pump,0D,0xE901,refrigerant_low_pressure_maximum,,,maxNDPressure,maxNDPressure,state.maxNdPressure,The map lists Pa as a candidate unit for a 4-byte value; the unit is unresolved. The community comment describes a maximum allowed low pressure for compressor protection; whether the value is a limit or a recorded maximum remains unresolved.
+heat_pump,0D,0x8000,compressor_energy_integral,,,EnergyIntegralSum,Integral,state.integral,"Candidate interpretation, unconfirmed on the wire: an energy integral in degree-minutes. The community comment is actual energy balancing integral; the unit, codec and the compressor qualifier are unresolved."
+heat_pump_interface_unit,54,54 02 00 0D 0A,compressor_speed,,,CompressorFrequencySignal,RunDataCompressorSpeed | CompressorSpeed,,The unit is unresolved: the community main configuration gives rps and the map gives RPM.
+heat_pump_interface_unit,54,54 02 00 28 0A,electronic_expansion_valve_absolute_position,steps,,ElectronicExpansionValvePosition,RunDataEEVPositionAbs | EevPositionAbs,,A community comment questions whether the scale differs from other position values.
+heat_pump_interface_unit,54,54 02 00 47 0A,fan_1_speed,rpm,,FanUintFanSpeed,RunDataFan1Speed | Fan1Speed,,
+heat_pump_interface_unit,54,54 02 00 49 0A,fan_2_speed,rpm,,Fan2UintFanSpeed,RunDataFan2Speed | Fan2Speed,,
+heat_pump_interface_unit,54,54 02 00 5B 09,electrical_input_power,,,,ElectricPowerConsumption,,Other community configurations give type byte 0D for the same register; which type byte is correct is unresolved.
+heat_pump_interface_unit,54,54 02 00 BD 09,water_flow_rate,L/h,,VortexFlowDN20_lph,DiagWaterThroughput,,
+heat_pump_interface_unit,54,54 02 00 C5 09,building_pump_output_level,,,BuildPumpPWM,RunDataBuildingCPumpPower | BuildingPumpPower,,The unit is unresolved (community configurations give W or %).
+heat_pump_interface_unit,54,54 02 00 53 0D,operating_status_code,,,StatusList,RunDataStatuscode | Statuscode,,"The map describes non-zero values as faults while the community configuration enumerates operating states (for example 100 standby, 104 heating with compressor active); which reading is correct is unresolved. The canonical name is provisional until this is resolved."
+heat_pump_interface_unit,54,54 02 00 6A 09,refrigerant_high_pressure,bar,,RefrigerantCircuitHighPressureSensor,RunDataHighPressure | HighPressure,,
+heat_pump_interface_unit,54,54 02 00 98 08,compressor_inlet_temperature,°C,,CompressorInletTemperature,RunDataCompressorInletTemp | CompressorInletTemp,,
+heat_pump_interface_unit,54,54 02 00 A2 08,compressor_outlet_temperature,°C,,CompressorOutletTemperature,RunDataCompressorOutletTemp | CompressorOutletTemp,,
+heat_pump_interface_unit,54,54 02 00 AC 08,electronic_expansion_valve_outlet_temperature,°C,,EnvironmentCircuitHeatExchangerInletTemperature,RunDataEEVOutletTemp | EevOutletTemp,,"Whether this sensor is the expansion valve outlet is unresolved; another candidate meaning, unconfirmed on the wire, is an environment-circuit heat-exchanger inlet temperature. The canonical name is provisional until this is resolved."
+heat_pump_interface_unit,54,54 02 00 DE 08,air_inlet_temperature,°C,,FanUnitAirInletTemperature,RunDataAirInletTemp | AirInletTemp,,
+heat_pump_interface_unit,54,54 02 00 A6 0E,refrigerant_condensation_temperature,°C,,RefrigerantCircuitCondensationTemperature,DiagFlowTemp,,"The map's table text calls this selector a diagnostic flow temperature; another candidate meaning, unconfirmed on the wire, is a refrigerant condensation temperature, which the canonical name follows; which reading is correct is unresolved. The canonical name is provisional until this is resolved."
+heat_pump_interface_unit,54,54 02 00 A7 0E,refrigerant_evaporation_temperature,°C,,RefrigerantCircuitEvaporationTemperature,DiagEvaporationTemp,,
+heat_pump_interface_unit,54,54 02 00 A9 0E,refrigerant_superheat,K,,RefrigerantCircuitCurrentSuperheating,DiagOverheatingActualValue,,"The name equals that of heat-pump 0x8D00 but the entries stay separate, and whether both denote the same measurement is unresolved."
+heat_pump_interface_unit,54,54 02 00 B8 0B,total_operating_time,h,,ApplianceOperatingHoursPowered,RunStatsHMUHours | HoursTotal,,
+heat_pump_interface_unit,54,54 02 00 B9 0B,heating_operating_time,h,,ApplianceOperatingHoursCentralHeating,RunStatsHcHours | HoursHeating,,
+heat_pump_interface_unit,54,54 02 00 BC 0B,dhw_operating_time,h,,ApplianceOperatingHoursDomesticHotWater,RunStatsHwcHours | HoursHwc,,
+heat_pump_interface_unit,54,54 02 00 C2 0B,compressor_operating_time,h,,CompOperatingHours,RunStatsCompressorHours | CompressorHours,,
+heat_pump_interface_unit,54,54 02 00 C3 0B,compressor_start_count,count,,CompressorCommutations,RunStatsCompressorStarts | CompressorStarts,,
+heat_pump_interface_unit,54,54 02 00 C4 0B,building_pump_operating_time,h,,WaterPumpOperatingHours,RunStatsBuildingPumpHours | BuildingPumpHours,,
+heat_pump_interface_unit,54,54 02 00 C5 0B,building_pump_start_count,count,,WaterPumpCommutations,RunStatsBuildingCPumpStarts | BuildingPumpStarts,,
+heat_pump_interface_unit,54,54 02 00 C8 0B,four_way_valve_operating_time,h,,FourWayValveOperatingHours,RunStats4PortValveHours | FourWayValveHours,,
+heat_pump_interface_unit,54,54 02 00 C9 0B,four_way_valve_switch_count,count,,FourWayValveCommutations,RunStats4PortValveSwitches | FourWayValveSwitches,,
+heat_pump_interface_unit,54,54 02 00 D7 0B,fan_1_operating_time,h,,FanOperationgHours,RunStatsFan1Hours | Fan1Hours,,
+heat_pump_interface_unit,54,54 02 00 D8 0B,fan_1_start_count,count,,FanCounter,RunStatsFan1Starts | Fan1Starts,,
+heat_pump_interface_unit,54,54 02 00 D9 0B,fan_2_operating_time,h,,Fan2OperatingHours,RunStatsFan2Hours | Fan2Hours,,
+heat_pump_interface_unit,54,54 02 00 DA 0B,fan_2_start_count,count,,Fan2Commutations,RunStatsFan2Starts | Fan2Starts,,
