@@ -1,0 +1,50 @@
+sub_command,side,field,lower,upper,candidate_label
+A3/A4/A5/A6,request,time-window type,0,0,Zone heating
+A3/A4/A5/A6,request,time-window type,1,1,Zone cooling
+A3/A4/A5/A6,request,time-window type,2,2,DHW
+A3/A4/A5/A6,request,time-window type,3,3,DHW circulation pump
+A3/A4/A5/A6,request,time-window type,4,4,Noise reduction
+A3/A4/A5/A6,request,time-window type,5,5,Ventilation
+A3/A4/A5/A6,request,time-window type,6,6,High tariff
+A3/A4/A5/A6,request,time-window type,7,7,External DHW circuit
+A3/A4/A5/A6,request,time-window type,8,8,External fix flow circuit
+A5,request,weekday,0,0,Monday
+A5,request,weekday,1,1,Tuesday
+A5,request,weekday,2,2,Wednesday
+A5,request,weekday,3,3,Thursday
+A5,request,weekday,4,4,Friday
+A5,request,weekday,5,5,Saturday
+A5,request,weekday,6,6,Sunday
+A6,request,weekday,0,0,Monday
+A6,request,weekday,1,1,Tuesday
+A6,request,weekday,2,2,Wednesday
+A6,request,weekday,3,3,Thursday
+A6,request,weekday,4,4,Friday
+A6,request,weekday,5,5,Saturday
+A6,request,weekday,6,6,Sunday
+A6,request,weekday,7,7,Monday-Sunday
+A6,request,weekday,8,8,Monday-Friday
+A6,request,weekday,9,9,Saturday-Sunday
+A3,reply,status,0,0,OK
+A3,reply,status,3,3,NotAvailable
+A3,reply,unit of setpoint,0,0,unused
+A3,reply,unit of setpoint,1,1,degC
+A3,reply,unit of setpoint,2,2,fan stage
+A3,reply,time program mode,0,0,Weekly time programs
+A3,reply,time program mode,1,1,24h time programs
+A4,reply,status,0,0,OK
+A4,reply,status,3,3,NotAvailable
+A5,reply,status,0,0,OK
+A5,reply,status,1,1,InvalidRequest
+A5,reply,status,2,2,Unused
+A5,reply,status,3,3,NotAvailable
+A5,reply,start hour and end hour,0,24,hour (two-digit labels 00..24)
+A5,reply,start minute and end minute,0,59,minute (two-digit labels 00..59)
+A6,request,start hour and end hour,0,24,hour (two-digit labels 00..24)
+A6,request,start minute and end minute,0,59,minute (two-digit labels 00..59)
+A6,reply,status,0,0,OK
+A6,reply,status,1,1,InvalidRequest
+A6,reply,status,3,3,NotAvailable
+A6,reply,status,4,4,Skipped slot
+A6,reply,status,5,5,Slots not ascending
+A6,reply,status,6,6,Setpoint out of range
