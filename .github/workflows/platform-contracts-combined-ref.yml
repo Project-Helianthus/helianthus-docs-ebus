@@ -73,7 +73,8 @@ permissions:
 jobs:
   validate:
     name: Validate Explicit Combined Refs
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, synology]
+    timeout-minutes: 20
     steps:
       - name: Reject moving refs
         env:

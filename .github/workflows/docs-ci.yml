@@ -32,10 +32,15 @@ on:
       - "requirements-ci.txt"
       - "Makefile"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   markdown-checks:
     name: Docs Checks
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, synology]
+    timeout-minutes: 30
     steps:
       - name: Checkout PR head
         if: github.event_name == 'pull_request'
