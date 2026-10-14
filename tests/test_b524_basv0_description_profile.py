@@ -626,3 +626,16 @@ def test_moving_a_record_to_another_instance_stays_valid_when_the_family_is_inva
         if row["selector"] == old:
             row["selector"]["instance"] = "FF"
     validator.validate_documents(document, rows, CATALOG)
+
+
+@pytest.mark.parametrize("field", ["group", "address_raw", "firmware_raw"])
+def test_observed_remote_header_requires_each_retained_header_field(field: str, tmp_path: Path) -> None:
+    document = descriptions()
+    index = next(i for i, r in enumerate(document["records"])
+                 if r["remote_identity"] and r["remote_identity"]["qualification"] == "observed_remote_header")
+    del document["records"][index]["remote_identity"][field]
+    rejects(f"records[{index}].remote_identity.{field} is required for an observed remote header", document)
+    path = tmp_path / "bad-header.json"
+    path.write_text(json.dumps(document))
+    result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode != 0

@@ -175,7 +175,9 @@ for this profile.
 establish ventilation equipment; there is no positive-presence predicate in this
 evidence.
 
-Remote entries retain their native group and optional remote-header metadata.
+Remote entries retain their native group and optional remote-header metadata;
+an `observed_remote_header` entry must retain its group, address and firmware
+fields, which the schema and validator require.
 A disconnected or identity-unqualified remote entry is metadata evidence, not
 proof that a device function exists. Unknown names are represented by JSON
 `null`; a missing description or limit is represented by `null`, never by a

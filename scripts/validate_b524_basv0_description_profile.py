@@ -202,6 +202,12 @@ def _validate_record(record: Any, index: int) -> None:
                  f"{context} must retain remote identity qualification")
         if "group" in remote_identity:
             _require(remote_identity["group"] == group, f"{context}.remote_identity.group disagrees with selector")
+        if remote_identity.get("qualification") == "observed_remote_header":
+            for name, length in (("group", 2), ("address_raw", 2), ("firmware_raw", None)):
+                value = remote_identity.get(name)
+                _require(isinstance(value, str) and value and HEX.fullmatch(value) is not None
+                         and (length is None or len(value) == length),
+                         f"{context}.remote_identity.{name} is required for an observed remote header")
     raw = record.get("raw_description_hex")
     lengths = record.get("description_payload_length")
     limits = record.get("raw_limits")
