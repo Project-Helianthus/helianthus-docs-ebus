@@ -158,8 +158,9 @@ circuit-level `pump_status` observation; it is not a source for any boiler
 field. Its value is raw, and only the idle value 0 has been observed; the
 Boolean decoding (nonzero = active) is a candidate interpretation, and the
 register map does not distinguish a pump status from a competing state
-enumeration reading. The qualification path is an on-state correlation (pump
-running observed on the regulator or boiler) in the planned smoke session. The correction is tracked in
+enumeration reading. The qualification path is an on-state correlation against the circuit's own
+pump (the functional-module-managed circuit pump) and its native telegram in
+the planned smoke session; a boiler pump observation cannot qualify it. The correction is tracked in
 [helianthus-ebusgateway#1004](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1004)
 and the boiler-side follow-up in
 [helianthus-ebusgateway#1012](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1012).
