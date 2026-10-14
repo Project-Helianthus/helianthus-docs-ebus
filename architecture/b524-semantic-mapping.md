@@ -115,38 +115,55 @@ Ownership note:
 - Unproven topologies are emitted as `UNKNOWN`; the gateway does not synthesize a replacement threshold heuristic.
 - Broader architectural treatment of FM3/FM5/VR66 as functional-module families is documented in [`./functional-modules.md`](./functional-modules.md).
 
-| Semantic Path | B524 | Type |
-|---------------|------|------|
-| `[].state.heating_circuit_flow_setpoint` | GG=0x02, RR=0x0007 | f32 |
-| `[].state.current_circuit_flow_temperature` | GG=0x02, RR=0x0008 | f32 |
-| `[].state.circuit_state` | GG=0x02, RR=0x001B | enum (u16): STANDBY/HEATING/COOLING |
-| `[].state.pump_status` | GG=0x02, RR=0x001E | bool (u16) |
-| `[].state.calculated_flow_temperature` | GG=0x02, RR=0x0020 | f32 |
-| `[].state.mixer_position_percentage` | GG=0x02, RR=0x0021 | f32 |
-| `[].state.current_humidity_pct` | GG=0x02, RR=0x0022 | f32 |
-| `[].state.dew_point_temperature` | GG=0x02, RR=0x0023 | f32 |
-| `[].state.pump_operating_hours` | GG=0x02, RR=0x0024 | u32 |
-| `[].state.pump_starts_count` | GG=0x02, RR=0x0025 | u32 |
-| `[].config.heating_curve` | GG=0x02, RR=0x000F | f32 |
-| `[].config.heating_flow_temperature_maximum_setpoint` | GG=0x02, RR=0x0010 | f32 |
-| `[].config.heating_flow_temperature_minimum_setpoint` | GG=0x02, RR=0x0012 | f32 |
-| `[].config.heat_demand_limited_by_outside_temp` | GG=0x02, RR=0x0014 | f32 |
-| `[].config.room_temperature_control_mode` | GG=0x02, RR=0x0015 | u16 |
-| `[].managing_device` | derived semantic ownership | object |
-| `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u8) |
-| `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 |
-| `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 |
+| Semantic Path | B524 | Type | Notes |
+|---------------|------|------|-------|
+| `[].state.heating_circuit_flow_setpoint` | GG=0x02, RR=0x0007 | f32 | |
+| `[].state.current_circuit_flow_temperature` | GG=0x02, RR=0x0008 | f32 | |
+| `[].state.circuit_state` | GG=0x02, RR=0x001E | enum (u16): STANDBY/HEATING/COOLING/DHW | **Candidate (Hypothesis)**: naming-based, not hardware-correlated; see the selector assignment note |
+| `[].state.pump_status` | GG=0x02, RR=0x001B | u16 (raw) | **Candidate (Hypothesis)**: raw value; Boolean reading (nonzero = active) is the gateway's current interpretation, not hardware-correlated. Circuit-level observation only; not a source for any boiler field |
+| `[].state.calculated_flow_temperature` | GG=0x02, RR=0x0020 | f32 | |
+| `[].state.mixer_position_percentage` | GG=0x02, RR=0x0021 | f32 | |
+| `[].state.current_humidity_pct` | GG=0x02, RR=0x0022 | f32 | |
+| `[].state.dew_point_temperature` | GG=0x02, RR=0x0023 | f32 | |
+| `[].state.pump_operating_hours` | GG=0x02, RR=0x0024 | u32 | |
+| `[].state.pump_starts_count` | GG=0x02, RR=0x0025 | u32 | |
+| `[].config.heating_curve` | GG=0x02, RR=0x000F | f32 | |
+| `[].config.heating_flow_temperature_maximum_setpoint` | GG=0x02, RR=0x0010 | f32 | |
+| `[].config.heating_flow_temperature_minimum_setpoint` | GG=0x02, RR=0x0012 | f32 | |
+| `[].config.heat_demand_limited_by_outside_temp` | GG=0x02, RR=0x0014 | f32 | |
+| `[].config.room_temperature_control_mode` | GG=0x02, RR=0x0015 | u16 | |
+| `[].managing_device` | derived semantic ownership | object | |
+| `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u8) | |
+| `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 | |
+| `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 | |
 | `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 | **Stale path**: FLAGS=0x02 (RW) — should be `config.*`. Pending gateway migration |
 
-**Known discrepancy (`circuit_state` / `pump_status`):** the mapping above
-(`circuit_state` at RR=0x001B, `pump_status` at RR=0x001E) documents what the
-gateway's `refreshCircuits()` currently reads; it is left unchanged here. The
-protocol reference ([B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum))
-assigns the circuit state enumeration (STANDBY/HEATING/COOLING/DHW) to
-RR=0x001E and the pump status to RR=0x001B — the opposite of this table.
-This discrepancy between the gateway implementation and the protocol
-reference is tracked in
-[helianthus-ebusgateway#1004](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1004).
+**Selector assignment (`circuit_state` / `pump_status`):** the circuit state
+enumeration (raw 0 = STANDBY, 1 = HEATING, 2 = COOLING, 3 = DHW) is read from
+RR=0x001E (`circuit_status_circuit`) and the pump status from RR=0x001B
+(`circuit_pump_status`), as assigned in the
+[B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum).
+Earlier revisions of this table had the two selectors swapped.
+
+Evidence status: the `circuit_state` mapping at RR=0x001E is a **candidate**
+(Hypothesis). It derives from observed Vaillant naming (`circuit_status_circuit`,
+"Status circuit") and the myVaillant `circuitState` correspondence; naming does
+not establish the register's value layout, and no native observation has been
+correlated against RR=0x001E. The qualification path is a live correlation of
+the four states (standby, heating, cooling, DHW) against the regulator display
+on an existing site during the planned gateway smoke session. Until then,
+consumers must treat the enumeration as a candidate. A raw state value outside
+0–3 is published as `unknown_<raw>`. RR=0x001B is recorded strictly as the
+circuit-level `pump_status` observation; it is not a source for any boiler
+field. Its value is raw, and only the idle value 0 has been observed; the
+Boolean decoding (nonzero = active) is a candidate interpretation, and the
+register map does not distinguish a pump status from a competing state
+enumeration reading. The qualification path is an on-state correlation against the circuit's own
+pump (the functional-module-managed circuit pump) and its native telegram in
+the planned smoke session; a boiler pump observation cannot qualify it. The correction is tracked in
+[helianthus-ebusgateway#1004](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1004)
+and the boiler-side follow-up in
+[helianthus-ebusgateway#1012](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1012).
 
 Consumer note:
 - `[].config.cooling_enabled` remains a gateway-level raw semantic field derived from `GG=0x02 RR=0x0006`.
@@ -198,7 +215,13 @@ The B524 contribution that still feeds the current boiler semantic contract is:
 | `state.dhwTemperatureC` | GG=0x01, RR=0x0005 | f32 | Controller mirror from DHW group |
 | `state.dhwTargetTemperatureC` | GG=0x01, RR=0x0004 | f32 | Controller mirror from DHW group |
 | `config.dhwOperatingMode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
-| `diagnostics.heatingStatusRaw` | GG=0x02, II=0x00, RR=0x001B | u16 | Controller-side raw heating status |
+
+The gateway currently mirrors the circuit 0 state (RR=0x001E) into
+`diagnostics.heatingStatusRaw`; that mirror is not part of this mapping, because
+circuit 0 is managed by the functional module and can report
+heating/cooling/DHW independently of the boiler. RR=0x001E belongs to the
+circuit surface only, and the removal of the mirror is tracked in
+[helianthus-ebusgateway#1012](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1012).
 
 The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
 `RR=0x0012` have unknown native reply layouts. They are **withheld from this

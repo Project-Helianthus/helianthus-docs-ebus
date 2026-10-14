@@ -54,7 +54,8 @@ EXPECTED_SCOPE = {
 }
 EXPECTED_CATALOG_CLASSIFIER = {
     "contract_status": "target_ebusreg_169",
-    "evidence_status": "unknown_pending_implementation",
+    # evidence_status records implementation state, not a Proven/Hypothesis/Unknown label.
+    "evidence_status": "implemented_ebusreg_170",
     "capability_index_row": "nonempty_normalized_part_number_and_role",
     "enrichment_index": "distinct_richer_metadata_index",
     "controller_roles": ["Regulator", "Thermostat"],
@@ -89,6 +90,9 @@ EXPECTED_SOURCES = {
         "issue": 97,
         "pull_request": 98,
         "capability_role_policy_issue": 169,
+        "classifier_pull_request": 170,
+        "date_decoder_pull_request": 172,
+        "gateway_pinned_revision": "2342a8d80c2b",
     },
     "documentation_issue": 532,
     "consumer": {
