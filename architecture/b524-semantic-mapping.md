@@ -33,11 +33,20 @@ Source: `refreshSystem()` in `semantic_vaillant.go`
 | `config.alternative_point` | GG=0x00, RR=0x0022 | f32 |
 | `config.heating_circuit_bivalence_point` | GG=0x00, RR=0x0023 | f32 |
 | `config.dhw_bivalence_point` | GG=0x00, RR=0x0001 | f32 |
+| `config.dhw_bivalence_point_bound` | derived (controller-profile lookup; no register) | object: `min_c`, `max_c`, `source`, `reason`, `profile` |
 | `config.hc_emergency_temperature` | GG=0x00, RR=0x0026 | f32 |
 | `config.hwc_max_flow_temp_desired` | GG=0x00, RR=0x0046 | f32 |
 | `config.max_room_humidity` | GG=0x00, RR=0x000E | u16 |
 | `properties.system_scheme` | GG=0x00, RR=0x0036 | u16 |
 | `properties.module_configuration_vr71` | GG=0x00, RR=0x002F | u16 |
+
+`config.dhw_bivalence_point_bound` is the active write bound of
+`dhwBivalencePointC`, not a register value. It is resolved from the exact
+controller identity (device identifier, raw software, raw hardware, API
+version and revision from OP=00h `0006h`/`0007h`); an identity with no matching
+profile publishes the conservative `-20..20` with `source: unmatched_policy`.
+The rules are in [`../api/graphql.md`](../api/graphql.md) under "System Config
+Write Bounds".
 
 ## SemReg thermal v1 read-only Vaillant mapping
 

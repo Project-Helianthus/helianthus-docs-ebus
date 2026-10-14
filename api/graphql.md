@@ -504,9 +504,18 @@ type SystemConfig {
   alternativePoint: Float
   heatingCircuitBivalencePoint: Float
   dhwBivalencePoint: Float
+  dhwBivalencePointBound: SystemConfigBound
   hcEmergencyTemperature: Float
   hwcMaxFlowTempDesired: Float
   maxRoomHumidity: Int
+}
+# Active write bound of dhwBivalencePointC (see "System Config Write Bounds").
+type SystemConfigBound {
+  minC: Float!
+  maxC: Float!
+  source: String!   # "controller_profile" | "unmatched_policy"
+  reason: String    # set only for "unmatched_policy"
+  profile: String   # set only for "controller_profile"
 }
 type SystemProperties {
   systemScheme: Int
@@ -1047,6 +1056,62 @@ type BoilerConfigMutationResult {
 - **Result normalization**: `types.Value{Valid:false}` fields are returned as `null` in the JSON result map.
 - **Boiler writes**: `setBoilerConfig` supports `flowsetHcMaxC`, `flowsetHwcMaxC`, `partloadHcKW`, and `partloadHwcKW`. The mutation accepts the value as a string, rejects non-finite input, enforces server-side ranges, and only reports success after B509 ack + read-back confirmation.
 - **Boiler write normalization**: `DATA2c` boiler temperature writes publish the normalized wire value, not the raw input string. `UCH` power-limit writes require whole-number kW.
+
+### System Config Write Bounds
+
+The `setSystemConfig(field, value)` mutation, the MCP tool
+`ebus.v1.semantic.system.set_config`, and the registry/invoker mutation path
+share one validation rule for the `dhwBivalencePointC` field (register
+`GG=0x00`, `RR=0x0001`): the accepted range is not fixed, it is resolved per
+controller.
+
+- **Profile bound.** The range comes from the controller-profile lookup of the
+  register library, keyed by the complete selector (opcode, group, instance
+  byte, register) under one controller identity. A profile applies only when
+  the whole identity matches exactly: device identifier, raw software value,
+  raw hardware value, API version and API revision. The API version and
+  revision are the OP=00h system-information identifiers `0006h` and `0007h`
+  ([`api_version` / `api_revision`](../protocols/vaillant/ebus-vaillant-B524.md));
+  the gateway reads them from the controller once per identity because the
+  device identification (software/hardware) does not carry them. An identity
+  missing any of the five values never matches a profile that recorded it.
+  The register is `dhw_outdoor_bivalence_temperature_limit`
+  (`OP=02h`, `GG=00h`, `II=00h`, `RR=0001h`); a profile seeded for `II=00h`
+  answers no bound for any other instance. The only seeded profile is the
+  VRC720 family controller `BASV0` with software `0217`, hardware `8803`,
+  API `1.1`, range `-20..20`
+  ([profile page](../protocols/vaillant/ebus-vaillant-b524-basv0-profile-v1.md)).
+  Only the retained description bytes are **Proven**; the decoded `-20..20`
+  range rests on the codec reading and is a **Hypothesis**. The register map's
+  `-20..50` is an unqualified historical observation that names no controller
+  identity, so it is not used.
+- **Unmatched policy.** When no profile matches (unknown identity, a controller
+  without a seeded profile, an API qualifier that could not be read, or a
+  profile without a bound for this selector), the conservative range `-20..20`
+  applies. A controller family whose profile is not seeded therefore falls
+  under this policy until a profile is added, even when other documentation
+  lists a wider catalog range for it.
+- **Before any bus write.** A value outside the active bound is rejected
+  before the first bus frame of the write is sent, with `success: false`. The
+  error text names the active bound: `controller profile <identity> allows
+  [min, max]` or `controller identity unmatched (<reason>): conservative policy
+  bound [min, max] applies`. A value inside the bound is written and still
+  reported as success only after the read-back matches the written value.
+- **Other system numbers.** `maxRoomHumidityPct`, `hcBivalencePointC`,
+  `hcEmergencyTempC`, `hwcMaxFlowTempC` and `installerMenuCode` keep their fixed
+  ranges and carry no bound.
+
+`SystemConfig.dhwBivalencePointBound` (snake_case alias
+`dhw_bivalence_point_bound`) publishes the bound that is active right now, so
+a consumer can limit its input control to it. `source` is `controller_profile`
+(with `profile` naming the matched identity as
+`<id>/SW<software>/HW<hardware>/API<version>.<revision>`) or `unmatched_policy`
+(with `reason` one of `unknown_profile`, `unknown_register`,
+`unqualified_bound`, `invalid_bound`). The MCP tool
+`ebus.v1.semantic.system.get` returns the same value as
+`config.dhw_bivalence_point_bound` with `min_c`, `max_c`, `source`, `reason`
+and `profile`. A controller whose profile later changes publishes the new
+bound with the next system update.
 
 ### Handler Construction
 

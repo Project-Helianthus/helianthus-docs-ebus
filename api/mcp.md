@@ -435,6 +435,7 @@ shape and is not a substitute for the degradation verdict.
 - `ebus.v1.semantic.circuits.get` exposes explicit per-circuit ownership as `managing_device`.
 - `managing_device.role` is always present and is one of `REGULATOR`, `FUNCTION_MODULE`, or `UNKNOWN`.
 - `managing_device.device_id` and `managing_device.address` are populated only when the gateway has ownership evidence for the current topology.
+- `ebus.v1.semantic.system.get` exposes `config.dhw_bivalence_point_bound` (`min_c`, `max_c`, `source`, optional `reason` and `profile`): the range `ebus.v1.semantic.system.set_config` currently accepts for `dhwBivalencePointC`. A value outside it is rejected before any bus write. See [`graphql.md`](./graphql.md) "System Config Write Bounds" for the profile and unmatched-policy rules.
 - `ebus.v1.semantic.system.get` no longer exposes `vr71_circuit_start_index`; that threshold was a gateway heuristic and is not part of the canonical contract.
 
 ## RPC Method Reference - Vaillant System Plane
