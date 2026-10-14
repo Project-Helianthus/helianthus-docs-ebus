@@ -283,6 +283,31 @@ def _find(records: list[Any], operation: str, group: str, instance: str, registe
     return [record for record in records if record.get("selector") == wanted]
 
 
+def _validate_family_invariance(records: list[dict[str, Any]]) -> None:
+    """Reject a qualified decoded claim in an instance-divergent selector family.
+
+    The description response echoes GG and RR but not the instance byte, and the
+    fixture retains no request, so the retained material cannot prove which
+    instance a response answers. A qualified range is therefore accepted only where
+    every retained described instance of (operation, group, register) carries
+    byte-identical raw limits and description length; records without a
+    description are absent evidence and take no part in the comparison.
+    """
+    families: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    for record in records:
+        selector = record["selector"]
+        families.setdefault((selector["operation"], selector["group"], selector["register"]), []).append(record)
+    for (operation, group, register), members in families.items():
+        described = [record for record in members if record.get("raw_description_hex") is not None]
+        spans = {json.dumps([record.get("raw_limits"), record.get("description_payload_length")], sort_keys=True)
+                 for record in described}
+        qualified = any(isinstance(record.get("decoded"), dict) and record["decoded"].get("qualification") == "qualified"
+                        for record in members)
+        _require(not (len(spans) > 1 and qualified),
+                 f"OP{operation}/GG{group}/RR{register} qualifies a decoded range although its described instances differ; "
+                 "the instance byte is not echoed, so a qualified range must be identical across every retained instance")
+
+
 def validate_fixture(path: Path, observations: Path | None = None) -> None:
     try:
         fixture = json.loads(path.read_text(encoding="utf-8"))
@@ -310,6 +335,7 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
         key = _key(record["selector"])
         _require(key not in seen, f"records[{index}] duplicates a description selector")
         seen.add(key)
+    _validate_family_invariance(records)
     dhw = _find(records, "02", "00", "00", "0001")
     _require(len(dhw) == 1, "fixture must retain exactly one local DHW bivalence record")
     _require(dhw[0].get("raw_limits", {}).get("max_hex") == "0000A041", "BASV0 DHW maximum must retain raw 20")
@@ -381,6 +407,12 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
             _require(described.get("raw_description_hex") is None and described.get("response_state") == "describe_unavailable", f"observation records[{index}] unavailable description has raw metadata")
         else:
             _require(described.get("raw_description_hex") is not None and described.get("response_state") == "describe_matched", f"observation records[{index}] available description lacks raw metadata")
+
+
+    for record in records:
+        if record.get("raw_description_hex") is not None:
+            _require(_key(record["selector"]) in seen,
+                     f"description selector {_key(record['selector'])} has no register-observation record")
 
 
 def main() -> int:

@@ -572,3 +572,57 @@ def test_plain_byte_clock_candidates_stay_display_only_even_for_bcd_looking_span
     record["validation_scope"] = "raw_evidence_only"
     index, _ = find(document, "02", "00", "00", "0035")
     rejects(f"records[{index}].validation_scope must be display_only for this record", document)
+
+
+def test_duplicate_selectors_are_rejected_in_both_fixtures() -> None:
+    document = descriptions()
+    document["records"].append(deepcopy(document["records"][0]))
+    index = len(document["records"]) - 1
+    rejects(f"records[{index}] duplicates a description selector", document)
+
+    rows = observations()
+    rows["records"].append(deepcopy(rows["records"][0]))
+    index = len(rows["records"]) - 1
+    rejects(f"observation records[{index}] duplicates an observation selector", descriptions(), rows)
+
+
+def test_qualified_range_in_an_instance_divergent_family_is_rejected() -> None:
+    document = descriptions()
+    _, record = find(document, "02", "03", "01", "0002")  # EXP 15..30 step 0.5, qualified in every instance
+    set_spans(record, "0000A040", "0000F041", "0000003F")
+    record["decoded"].update(min=5.0, max=30.0, step=0.5)
+    rejects("OP02/GG03/RR0002 qualifies a decoded range although its described instances differ; "
+            "the instance byte is not echoed, so a qualified range must be identical across every retained instance", document)
+
+
+def test_missing_description_does_not_make_a_family_divergent() -> None:
+    """GG03/RR0002 II04 has no description; that absent evidence must not disqualify its siblings."""
+    _, record = find(descriptions(), "02", "03", "04", "0002")
+    assert record["raw_description_hex"] is None
+    validator.validate_documents(descriptions(), observations(), CATALOG)
+
+
+def test_description_without_observation_record_is_rejected() -> None:
+    rows = observations()
+    selector = descriptions()["records"][0]["selector"]
+    rows["records"] = [row for row in rows["records"] if row["selector"] != selector]
+    with pytest.raises(validator.ValidationError, match="has no register-observation record"):
+        validator.validate_documents(descriptions(), rows, CATALOG)
+
+
+def test_moving_a_record_to_another_instance_stays_valid_when_the_family_is_invariant() -> None:
+    """Moving GG03/RR0002 II00 to IIFF in both fixtures still validates.
+
+    This is harmless under the invariance rule: a qualified range is accepted only
+    where every retained described instance of the selector carries identical
+    spans, so the instance byte can never carry a decoded claim and reassigning
+    it cannot change what the fixture asserts.
+    """
+    document, rows = descriptions(), observations()
+    _, record = find(document, "02", "03", "00", "0002")
+    old = deepcopy(record["selector"])
+    record["selector"]["instance"] = "FF"
+    for row in rows["records"]:
+        if row["selector"] == old:
+            row["selector"]["instance"] = "FF"
+    validator.validate_documents(document, rows, CATALOG)

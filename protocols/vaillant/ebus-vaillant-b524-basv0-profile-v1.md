@@ -18,7 +18,7 @@ numbers, capture time, contributor identity, or acquisition fingerprint.
 
 **Proven:** the two committed, sanitized fixtures are publishable primary
 evidence for the bytes they retain. Their stable SHA-256 values are
-`030cbb4fb5cb37dc443e39bb081e5aeff45419e5faf4085fa1da6d2cfe455210`
+`5bbfb6fc4012e499a6fa56bac4a5f395308f9b2b82eeaeb782ea3284a5043436`
 (descriptions) and
 `f54b0802e97bc8baaad3f899f132e633af2fa39c6a99835ad89feb2ee4a22533`
 (register observations). Acquisition context is limited to B524
@@ -45,6 +45,20 @@ RRlo, RRhi`; the remaining bytes split into equal-width `MIN`, `MAX`, and
 `STEP` spans. The echoed fields and equal spans establish response structure.
 They do not select a codec, prove the requested instance, prove a present
 device, or authorize a write.
+
+The response does not echo the instance byte `II`, and the fixture retains no
+request, so the retained material cannot prove which instance a description
+answers; the semantic selector is the only link. A qualified decoded range is
+therefore accepted only where it is identical across every retained described
+instance of the selector `(OP, GG, RR)`: the raw limits and description length
+must be byte-identical for all instances that retain a description. An
+instance without a description is absent evidence and takes no part in the
+comparison. The validator rejects a qualified claim in an instance-divergent
+family, so a qualified range never depends on the instance byte. The retained
+fixture has no such family (all 340 are instance-invariant over their
+described instances). Divergent spans, if a later profile retains any, are
+raw evidence only. The validator also requires every retained description to
+have a register-observation record for its selector.
 
 The fixture records the raw three spans even when no codec is qualified. A
 decoded record with `codec_provenance: selector_qualified` can be marked

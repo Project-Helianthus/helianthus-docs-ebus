@@ -69427,6 +69427,7 @@
     "The records do not identify an installation, contributor, acquisition release, or capture time.",
     "Remote templates do not prove a device function or establish a reusable remote identity.",
     "Presence states are observations for the recorded selectors and are not universal topology.",
-    "Metadata does not authorize a write or prove that a write is accepted or persistent."
+    "Metadata does not authorize a write or prove that a write is accepted or persistent.",
+    "A description response does not echo the instance byte and no request is retained, so the retained material cannot prove which instance a description answers; a decoded range is qualified only where it is identical across every retained described instance of its selector."
   ]
 }
