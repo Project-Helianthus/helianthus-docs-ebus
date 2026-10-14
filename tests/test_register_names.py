@@ -429,7 +429,7 @@ def _write_encoding_cells() -> list[str]:
     ):
         match = names.WRITE_ENCODING_ROW.match(line)
         if match and match[1].strip() != names.NO_CATALOG_NAME:
-            cells.extend(part.strip().strip("`") for part in match[1].split(", "))
+            cells.extend(names._strip_code_span(part) for part in match[1].split(", "))
     return cells
 
 
@@ -450,7 +450,7 @@ def test_malformed_candidate_write_encoding_name_is_rejected(
 ) -> None:
     line = "| `GG=0x00`, `RR=0x0001` | `Dhw-outdoor-bivalence-temperature-limit` | float32 |"
     match = names.WRITE_ENCODING_ROW.match(line)
-    (cell,) = [part.strip().strip("`") for part in match[1].split(", ")]
+    (cell,) = [names._strip_code_span(part) for part in match[1].split(", ")]
     with pytest.raises(names.NameError_):
         names.decompose(cell, vocabulary)
 
@@ -462,7 +462,7 @@ def test_unquoted_malformed_catalog_cell_is_rejected_and_prose_is_skipped(
     match = names.WRITE_ENCODING_ROW.match(line)
     assert match[1].strip() != names.NO_CATALOG_NAME
     with pytest.raises(names.NameError_):
-        names.decompose(match[1].strip().strip("`"), vocabulary)
+        names.decompose(names._strip_code_span(match[1]), vocabulary)
     prose = names.WRITE_ENCODING_ROW.match(
         "| `GG=0x00`, `II=0xFF`, `RR=0x0103` | none in the catalog | bytes `01 00` |"
     )
@@ -482,3 +482,24 @@ def test_command_with_structurally_invalid_target_is_rejected(
                  "temperature_time_reset_command"):
         with pytest.raises(names.NameError_):
             names.decompose(name, vocabulary)
+
+
+@pytest.mark.parametrize(
+    ("cell", "valid"),
+    [("`zone_enabled`", True), ("zone_enabled", True),
+     ("`zone_enabled``", False), ("``zone_enabled``", False)],
+)
+def test_column_cells_strip_one_code_span_only(
+    vocabulary: names.Vocabulary, cell: str, valid: bool
+) -> None:
+    line = f"| `GG=0x03`, `RR=0x0011` | {cell} | one byte 00 or 01 |"
+    match = names.WRITE_ENCODING_ROW.match(line)
+    (name,) = [names._strip_code_span(part) for part in match[1].split(", ")]
+    if valid:
+        names.decompose(name, vocabulary)
+    else:
+        with pytest.raises(names.NameError_):
+            names.decompose(name, vocabulary)
+    summary = names.SUMMARY_REGISTER_ROW.match(f"| `0x001D` | {cell} | `old` |")
+    (summary_name,) = names._cell_names(summary[1])
+    assert summary_name == name

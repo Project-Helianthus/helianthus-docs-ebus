@@ -461,14 +461,21 @@ PROTOCOL_ROW = re.compile(rf"^\| `?0x[0-9A-F]{{4}}`? \| {CELL} \|")
 UNNAMED = re.compile(r"\(unknown(?:, [1-9][0-9]* regs)?\)|\(unknown_temp_config\)")
 
 
+def _strip_code_span(part: str) -> str:
+    """Remove exactly one complete outer code span; any other backtick stays, so
+    unbalanced or repeated delimiters reach decompose() and fail there."""
+    part = part.strip()
+    if len(part) >= 2 and part.startswith("`") and part.endswith("`"):
+        return part[1:-1]
+    return part
+
+
 def _cell_names(cell: str, *, paired: bool = False) -> list[str]:
     """Names in a table cell: strip one complete outer code span per name, keep
     the rest as written, and leave out only the explicit unnamed notes."""
     names = []
     for part in cell.strip().split(" / ") if paired else [cell.strip()]:
-        part = part.strip()
-        if len(part) >= 2 and part.startswith("`") and part.endswith("`"):
-            part = part[1:-1]
+        part = _strip_code_span(part)
         if not UNNAMED.fullmatch(part):
             names.append(part)
     return names
@@ -560,7 +567,7 @@ def covered_names() -> list[tuple[str, str]]:
         match = WRITE_ENCODING_ROW.match(line)
         if match and match[1].strip() != NO_CATALOG_NAME:
             names.extend(
-                (f"{where}:{number}", part.strip().strip("`"))
+                (f"{where}:{number}", _strip_code_span(part))
                 for part in match[1].split(", ")
             )
 
