@@ -19,6 +19,10 @@ class ValidationError(ValueError):
 
 HEX = re.compile(r"^(?:[0-9A-F]{2})*$")
 NUMERIC_CODECS = {"UCH", "UIN", "U32", "EXP"}
+# Bytes per MIN/MAX/STEP span for each codec this fixture can name.
+CODEC_WIDTH = {"UCH": 1, "UIN": 2, "U32": 4, "EXP": 4, "HDA:3": 3, "HTI": 3}
+CLOCK_CODECS = {"HDA:3", "HTI"}
+VENTILATION_INSTANCES = tuple(f"{index:02X}" for index in range(0x0B))
 
 
 def _require(condition: bool, message: str) -> None:
@@ -32,13 +36,53 @@ def _description_operation(operation: str) -> int:
 
 def _decode_limit(codec: str, raw: str) -> Any:
     value = bytes.fromhex(raw)
-    if codec == "UCH": return value[0]
-    if codec == "UIN": return int.from_bytes(value, "little")
-    if codec == "U32": return int.from_bytes(value, "little")
-    if codec == "EXP": return struct.unpack("<f", value)[0]
-    if codec == "HDA:3": return f"{2000 + value[2]:04d}-{value[1]:02d}-{value[0]:02d}"
-    if codec == "HTI": return f"{value[0]:02d}:{value[1]:02d}:{value[2]:02d}"
+    try:
+        if codec == "UCH": return value[0]
+        if codec == "UIN": return int.from_bytes(value, "little")
+        if codec == "U32": return int.from_bytes(value, "little")
+        if codec == "EXP": return struct.unpack("<f", value)[0]
+        if codec == "HDA:3": return f"{2000 + value[2]:04d}-{value[1]:02d}-{value[0]:02d}"
+        if codec == "HTI": return f"{value[0]:02d}:{value[1]:02d}:{value[2]:02d}"
+    except (struct.error, IndexError, ValueError) as exc:
+        raise ValidationError(f"cannot decode {codec} limit {raw}: {exc}") from exc
     raise ValidationError(f"unsupported qualified codec {codec}")
+
+
+def _expected_validation_scope(record: dict[str, Any]) -> str:
+    """The documented derivation of the source installation's validation_scope."""
+    decoded = record.get("decoded")
+    if not (isinstance(decoded, dict) and decoded.get("qualification") == "qualified"
+            and decoded.get("codec_provenance") == "selector_qualified"):
+        return "raw_evidence_only"
+    if record.get("presence_state") == "observed_present" and decoded.get("codec_basis") == "public_local_constraint_codec":
+        return "format_range_and_step"
+    return "display_only"
+
+
+def _validate_validation_scope(record: dict[str, Any], context: str) -> None:
+    scope = record.get("validation_scope")
+    decoded = record.get("decoded")
+    if scope == "format_range_and_step":
+        _require(isinstance(decoded, dict) and decoded.get("qualification") == "qualified"
+                 and decoded.get("codec_provenance") == "selector_qualified",
+                 f"{context} grants range validation without a qualified selector codec")
+        _require(record.get("presence_state") == "observed_present",
+                 f"{context} grants range validation without observed presence")
+        _require(decoded.get("codec_basis") == "public_local_constraint_codec",
+                 f"{context} grants range validation on a codec basis that is not a local constraint codec")
+    expected = _expected_validation_scope(record)
+    _require(scope == expected, f"{context}.validation_scope must be {expected} for this record")
+
+
+def _validate_remote_presence(record: dict[str, Any], context: str) -> None:
+    remote_identity = record.get("remote_identity")
+    unqualified = isinstance(remote_identity, dict) and remote_identity.get("qualification") == "unqualified"
+    _require(unqualified == (record.get("presence_state") == "remote_identity_unqualified"),
+             f"{context} unqualified remote identity and remote_identity_unqualified presence must agree")
+    if unqualified:
+        decoded = record.get("decoded")
+        _require(decoded is None or decoded.get("qualification") == "unqualified",
+                 f"{context} unqualified remote identity must not carry a qualified codec")
 
 
 def _validate_record(record: Any, index: int) -> None:
@@ -64,6 +108,7 @@ def _validate_record(record: Any, index: int) -> None:
                  f"{context} must retain remote identity qualification")
         if "group" in remote_identity:
             _require(remote_identity["group"] == group, f"{context}.remote_identity.group disagrees with selector")
+    _validate_remote_presence(record, context)
     raw = record.get("raw_description_hex")
     lengths = record.get("description_payload_length")
     limits = record.get("raw_limits")
@@ -72,6 +117,7 @@ def _validate_record(record: Any, index: int) -> None:
         _require(lengths is None and limits is None and decoded is None,
                  f"{context} cannot decode or bound a missing description")
         _require(record.get("response_state") == "describe_unavailable", f"{context} missing description has wrong response state")
+        _validate_validation_scope(record, context)
         return
     _require(isinstance(raw, str) and HEX.fullmatch(raw) is not None, f"{context}.raw_description_hex is invalid")
     response = bytes.fromhex(raw)
@@ -98,12 +144,17 @@ def _validate_record(record: Any, index: int) -> None:
         _require(provenance in {"selector_qualified", "length_inferred"}, f"{context}.decoded.codec_provenance is invalid")
         _require(basis in {"public_exact_selector_schema", "public_local_constraint_codec", "payload_length_inferred"}, f"{context}.decoded.codec_basis is invalid")
         _require(qualification in {"qualified", "unqualified"}, f"{context}.decoded.qualification is invalid")
+        codec = decoded.get("codec")
+        _require(codec in CODEC_WIDTH, f"{context}.decoded.codec is unsupported")
+        _require(CODEC_WIDTH[codec] == lengths // 3,
+                 f"{context}.decoded.codec {codec} width disagrees with description span width")
         _require(not (provenance == "length_inferred" and qualification == "qualified"),
                  f"{context} promotes a length-inferred codec")
         _require((provenance == "length_inferred") == (basis == "payload_length_inferred"),
                  f"{context}.decoded codec basis disagrees with provenance")
         if qualification == "qualified":
-            codec = decoded.get("codec")
+            _require(codec not in CLOCK_CODECS or basis == "public_exact_selector_schema",
+                     f"{context}.decoded HDA:3/HTI must use the exact-selector-schema basis, a Hypothesis")
             for field in ("min", "max"):
                 _require(decoded.get(field) == _decode_limit(codec, limits[f"{field}_hex"]),
                          f"{context}.decoded.{field} disagrees with raw limits")
@@ -119,10 +170,16 @@ def _validate_record(record: Any, index: int) -> None:
                          f"{context}.decoded numeric range must be finite")
                 _require(minimum <= maximum, f"{context}.decoded numeric range must be ordered")
                 _require(step > 0, f"{context}.decoded numeric range step must be positive")
-    if record.get("validation_scope") == "format_range_and_step":
-        _require(decoded is not None and decoded.get("qualification") == "qualified"
-                 and decoded.get("codec_provenance") == "selector_qualified",
-                 f"{context} grants range validation without a qualified selector codec")
+    _validate_validation_scope(record, context)
+
+
+def _key(selector: Any) -> str:
+    return json.dumps(selector, sort_keys=True)
+
+
+def _find(records: list[Any], operation: str, group: str, instance: str, register: str) -> list[dict[str, Any]]:
+    wanted = {"operation": operation, "group": group, "instance": instance, "register": register}
+    return [record for record in records if record.get("selector") == wanted]
 
 
 def validate_fixture(path: Path, observations: Path | None = None) -> None:
@@ -130,6 +187,16 @@ def validate_fixture(path: Path, observations: Path | None = None) -> None:
         fixture = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValidationError(f"{path}: cannot read JSON") from exc
+    observed = None
+    if observations is not None:
+        try:
+            observed = json.loads(observations.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValidationError(f"{observations}: cannot read JSON") from exc
+    validate_documents(fixture, observed, path.name)
+
+
+def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | None = None) -> None:
     _require(isinstance(fixture, dict), "fixture must be an object")
     _require(fixture.get("schema_version") == "b524-basv0-description-profile/v1", "unexpected schema version")
     _require(fixture.get("observation_id") == "basv0_sw0217_hw8803_api1", "unexpected observation identity")
@@ -137,54 +204,77 @@ def validate_fixture(path: Path, observations: Path | None = None) -> None:
     _require(isinstance(records, list) and records, "fixture must contain records")
     for index, record in enumerate(records):
         _validate_record(record, index)
-    dhw = [record for record in records if record.get("selector") == {"operation": "02", "group": "00", "instance": "00", "register": "0001"}]
+    seen: set[str] = set()
+    for index, record in enumerate(records):
+        key = _key(record["selector"])
+        _require(key not in seen, f"records[{index}] duplicates a description selector")
+        seen.add(key)
+    dhw = _find(records, "02", "00", "00", "0001")
     _require(len(dhw) == 1, "fixture must retain exactly one local DHW bivalence record")
     _require(dhw[0].get("raw_limits", {}).get("max_hex") == "0000A041", "BASV0 DHW maximum must retain raw 20")
-    solar = [record for record in records if record.get("selector") == {"operation": "02", "group": "04", "instance": "01", "register": "000B"}]
+    solar = _find(records, "02", "04", "01", "000B")
     _require(len(solar) == 1 and (solar[0].get("decoded") is None or solar[0]["decoded"].get("qualification") == "unqualified"),
              "solar II01 must not gain a qualified codec")
     for register in ("006C", "006D", "006F", "0070"):
-        matches = [record for record in records if record.get("selector") == {"operation": "02", "group": "00", "instance": "00", "register": register}]
+        matches = _find(records, "02", "00", "00", register)
         _require(len(matches) == 1 and matches[0].get("decoded") is None, f"installer selector {register} must remain raw")
-    ventilation = [record for record in records if record.get("selector") == {"operation": "02", "group": "09", "instance": "00", "register": "0001"}]
-    _require(len(ventilation) == 1 and ventilation[0].get("observed_read_payload_width") == 2
-             and ventilation[0].get("presence_state") == "unknown", "ventilation RR0001 must retain unknown two-byte evidence")
-    if observations is not None:
-        observed = json.loads(observations.read_text(encoding="utf-8"))
-        _require(observed.get("observation_id") == fixture.get("observation_id"), "cross-fixture identity mismatch")
-        _require(observed.get("description_catalog") == path.name, "cross-fixture catalog mismatch")
-        for index, row in enumerate(observed.get("records", [])):
-            selector = row.get("selector", {})
-            _require(row.get("identity_scope") == ("local" if selector.get("operation") == "02" else "remote"), f"observation records[{index}] identity scope disagrees with selector")
-            state = row.get("response_state")
-            flags = row.get("access_flags")
-            width = row.get("observed_payload_width")
-            error = row.get("error_state")
-            if state == "echo_payload":
-                _require(isinstance(flags, str) and flags in {"00", "01", "02", "03"} and isinstance(width, int) and width > 0 and error in {None, "parse_error"},
-                         f"observation records[{index}] echo_payload fields are inconsistent")
-            elif state == "status_only":
-                _require(flags == "00" and width is None and error is None,
-                         f"observation records[{index}] status_only fields are inconsistent")
-            elif state == "transport_error":
-                _require(flags is None and width is None and error == "transport_error",
-                         f"observation records[{index}] transport_error fields are inconsistent")
-            else:
-                raise ValidationError(f"observation records[{index}] response state is unsupported")
-            reference = row.get("description")
-            if reference is None:
-                continue
-            record_index = reference.get("record_index")
-            _require(isinstance(record_index, int) and 0 <= record_index < len(records), f"observation records[{index}] description index out of bounds")
-            _require(row.get("selector") == records[record_index].get("selector"), f"observation records[{index}] description selector mismatch")
-            described = records[record_index]
-            _require(row.get("access_flags") == described.get("access_flags"), f"observation records[{index}] access flags disagree with description")
-            _require(row.get("observed_payload_width") == described.get("observed_read_payload_width"),
-                     f"observation records[{index}] payload width disagrees with description")
-            if reference.get("acquisition_state") == "unavailable":
-                _require(described.get("raw_description_hex") is None and described.get("response_state") == "describe_unavailable", f"observation records[{index}] unavailable description has raw metadata")
-            else:
-                _require(described.get("raw_description_hex") is not None and described.get("response_state") == "describe_matched", f"observation records[{index}] available description lacks raw metadata")
+    for instance in VENTILATION_INSTANCES:
+        ventilation = _find(records, "02", "09", instance, "0001")
+        _require(len(ventilation) == 1 and ventilation[0].get("observed_read_payload_width") == 2
+                 and ventilation[0].get("presence_state") == "unknown",
+                 f"ventilation II{instance} RR0001 must retain unknown two-byte evidence")
+        decoded = ventilation[0].get("decoded")
+        _require(isinstance(decoded, dict) and decoded.get("codec") == "UIN"
+                 and ventilation[0].get("description_payload_length") == 6,
+                 f"ventilation II{instance} RR0001 codec must remain UIN with width 2")
+    if observed is None:
+        return
+    _require(isinstance(observed, dict), "observations must be an object")
+    _require(observed.get("observation_id") == fixture.get("observation_id"), "cross-fixture identity mismatch")
+    _require(observed.get("description_catalog") == catalog_name, "cross-fixture catalog mismatch")
+    rows = observed.get("records")
+    _require(isinstance(rows, list) and rows, "observations must contain records")
+    seen = set()
+    descriptions = {_key(record["selector"]): record for record in records}
+    for index, row in enumerate(rows):
+        selector = row.get("selector", {})
+        key = _key(selector)
+        _require(key not in seen, f"observation records[{index}] duplicates an observation selector")
+        seen.add(key)
+        _require(row.get("identity_scope") == ("local" if selector.get("operation") == "02" else "remote"), f"observation records[{index}] identity scope disagrees with selector")
+        state = row.get("response_state")
+        flags = row.get("access_flags")
+        width = row.get("observed_payload_width")
+        error = row.get("error_state")
+        if state == "echo_payload":
+            _require(isinstance(flags, str) and flags in {"00", "01", "02", "03"} and isinstance(width, int) and width > 0 and error in {None, "parse_error"},
+                     f"observation records[{index}] echo_payload fields are inconsistent")
+        elif state == "status_only":
+            _require(flags == "00" and width is None and error is None,
+                     f"observation records[{index}] status_only fields are inconsistent")
+        elif state == "transport_error":
+            _require(flags is None and width is None and error == "transport_error",
+                     f"observation records[{index}] transport_error fields are inconsistent")
+        else:
+            raise ValidationError(f"observation records[{index}] response state is unsupported")
+        reference = row.get("description")
+        if reference is None:
+            _require(key not in descriptions, f"observation records[{index}] drops its description link")
+            continue
+        record_index = reference.get("record_index")
+        _require(isinstance(record_index, int) and 0 <= record_index < len(records), f"observation records[{index}] description index out of bounds")
+        _require(row.get("selector") == records[record_index].get("selector"), f"observation records[{index}] description selector mismatch")
+        described = records[record_index]
+        _require(row.get("access_flags") == described.get("access_flags"), f"observation records[{index}] access flags disagree with description")
+        _require(row.get("observed_payload_width") == described.get("observed_read_payload_width"),
+                 f"observation records[{index}] payload width disagrees with description")
+        _require(row.get("presence_state") == described.get("presence_state"),
+                 f"observation records[{index}] presence state disagrees with description")
+        _require(row.get("name") == described.get("name"), f"observation records[{index}] name disagrees with description")
+        if reference.get("acquisition_state") == "unavailable":
+            _require(described.get("raw_description_hex") is None and described.get("response_state") == "describe_unavailable", f"observation records[{index}] unavailable description has raw metadata")
+        else:
+            _require(described.get("raw_description_hex") is not None and described.get("response_state") == "describe_matched", f"observation records[{index}] available description lacks raw metadata")
 
 
 def main() -> int:
