@@ -44,7 +44,7 @@ Known configured `@base(MF, 0x1a, ...)` forms include:
 | Static suffix after `1a` | IDX | Context | Evidence | Falsification test |
 |---|---|---|---|---|
 | `05 [IDX] 32` | varies (0xFF, 0x4D, 0x15) | heat-pump daily/month/year yield/COP/consumption statistics + live data | + P4 + P5 | Query HMU devices and show selectors under `[IDX] 32` do not return energy/COP-style payloads. |
-| `05 [IDX] 34` | varies (contested — see Section 3.2) | compressor runtime/statistics group (lifecycle counters) | + P5 + D11/forks | Query HMU devices and show selectors under `[IDX] 34` are unsupported or map to unrelated fields. |
+| `05 [IDX] 34` | varies (contested — see Q2) | compressor runtime/statistics group (lifecycle counters) | + P5 + D11/forks | Query HMU devices and show selectors under `[IDX] 34` are unsupported or map to unrelated fields. |
 | `05 e5 34` | 0xE5 | passive alternate for compressor runtime/statistics group | | Capture matching firmware and show `e5 34` traffic is unrelated to the `ff 34` group. |
 | `05 00 32` | 0x00 | live-monitor desired/current supply, current power, compressor utilization, air intake temp | | Enable live monitor and show selectors under `00 32` do not track live values. |
 | `05 FF 33` | 0xFF | backup heater config (VWZIO) | P1 | Query VWZIO and show `FF 33` does not return backup heater data. |
@@ -229,6 +229,91 @@ independently confirmed by jonesPD and xerion3800 on HMU. Content unknown (`:IGN
 in forks). MEDIUM confidence (two independent forks; no data).
 
 **Confidence:** LOW-MEDIUM. No content decoding available.
+
+## Candidate mirror and diagnosis layouts
+
+The candidate layouts of B51A cover the ops `B5 1A 00` to `B5 1A 08`, for a
+parameter mirror and its diagnosis; none of them has been confirmed on the wire.
+Every request of this candidate layout is `B5 1A <OP> <sequence u8 @3>` and the sequence of the reply is
+its own field (candidate, unconfirmed on the wire). Offsets count from the first
+byte of the service prefix (PB, SB and the op byte): offset 0 = `B5`, 1 = `1A`,
+2 = op byte. A target response on the bus carries no such prefix (eBUS framing:
+`NN`, data, CRC); how the candidate response offsets map onto the bytes of a bus
+response is unconfirmed on the wire.
+
+| Op | Candidate meaning |
+|---|---|
+| `00` | application-interface reset request; the reply carries acknowledge flags @4 (bit 0: reset denied) |
+| `01` | device-specific-number (DSN) validation request; fields flags @4, DSN `u16` LE @5, start `u16` LE @7, offset `u8` @9, mirror CRC `u16` LE @10, whose direction (request or reply) is not established |
+| `02` | read parameter request |
+| `03` | write parameter request |
+| `04` | diagnostic-level configuration query (enable flags in a 13-byte static field) |
+| `05` | diagnostic point configuration query |
+| `06` | diagnostic value save request |
+| `07` | parameter mirror state query |
+| `08` | parameter mirror configuration query |
+
+The algorithm and coverage of the mirror CRC are unknown.
+
+The configured `05 [IDX] [SUBGROUP] [REG]` form above uses op `05`, which a
+candidate layout gives as the diagnostic point configuration query; its byte
+after the op is the per-register IDX byte (`FF`, `4D`, `15` and others), whereas
+the candidate layout gives that byte as a sequence number. Whether they are the
+same byte is unresolved.
+
+The backup-heater write `B51A 06 FF 33` (sub-group `05FF33` above) uses op `06`,
+which the candidate layout gives as the diagnostic value save request; its byte
+after the op is `FF`, which the candidate layout gives as a sequence number.
+Whether the backup-heater write and the candidate op `06` are the same layout or
+competing meanings is unresolved; the backup-heater form is kept as documented
+above.
+
+The single-byte `B51A 04` request of the sub-group section above carries no
+byte after the op, whereas the candidate layout gives op `04` (diagnostic-level
+configuration query) a sequence byte at offset 3. The one-byte form is kept as
+documented; whether the two are the same request is unresolved. The
+`B51A 04 05 [??]` form of sub-group `0405` above carries `05` at offset 3, where
+the candidate layout puts the sequence byte; whether that `05` is a sub-group
+byte or the candidate sequence byte, and whether the `04 05` form and the
+candidate op `04` are the same request, is unresolved. The `04 05` form is also
+kept as documented.
+
+No op on this page is documented as safe to send; a state-changing op needs a separately established safety procedure and target qualification, and an ACK does not show the resulting device state.
+
+## Profiles
+
+No op of this service is known to be available only on PeBUS (candidate);
+whether the service is available under the PeBUS profile is not established (see
+[EBUS and PeBUS protocol profiles](ebus-vaillant.md#ebus-and-pebus-protocol-profiles)).
+
+## Open questions
+
+- **Q1.** Whether the `hours` register (`0x40`) is an alias of `compressor_hours`
+  is unresolved.
+- **Q2.** The IDX bytes of the `05xx34` lifecycle counters have two conflicting
+  sets of values (see the sub-group table); unresolved.
+- **Q3.** The IDX of `current_yield_power` and `current_consumed_power` is both
+  `0x00` and `0xFF` in different candidate readings; whether both work or one is
+  wrong is unresolved.
+- **Q4.** The candidate mirror and diagnosis ops (`00`..`08`) are known only as
+  candidate layouts; no exchange of them was observed beyond the configured
+  selectors on this page, whether any device implements them is not
+  established, and the mirror CRC algorithm and coverage are not established.
+- **Q5.** The relation between the candidate sequence byte and the observed IDX
+  byte is unresolved.
+- **Q6.** The cooling COP registers (`0x2B`, `0x2D`) assume the same divisor of 10
+  as the heating COP registers by analogy; this is not independently confirmed.
+- **Q7.** The semantics and unit of `total_energy_usage` (`0x4D`) are unresolved.
+- **Q8.** How the candidate response offsets map onto the data bytes of a bus
+  response is unconfirmed on the wire.
+- **Q9.** Whether the single-byte `B51A 04` request and the candidate op `04`
+  with a sequence byte are the same request is unresolved. For the
+  `B51A 04 05 [??]` form, whether its `05` at offset 3 is a sub-group byte or
+  the candidate sequence byte, and whether that form and the candidate op `04`
+  are the same request, is unresolved.
+- **Q10.** Whether the backup-heater write `B51A 06 FF 33` and the candidate op
+  `06` (diagnostic value save request with a sequence byte) are the same layout
+  or competing meanings is unresolved.
 
 ## Local Captures
 
