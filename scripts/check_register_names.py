@@ -407,7 +407,10 @@ def decompose(name: str, vocabulary: Vocabulary, *, nested: bool = False) -> lis
 
     counted = [word for word in words if not INDEX.fullmatch(word)]
     word_count = len(counted) + (1 if condition else 0) + (1 if placeholder else 0)
-    if word_count > MAX_WORDS:
+    # A command target counts as one word of the command name (naming.md,
+    # "Operations and commands"), so the six-word limit applies to the whole
+    # command name, which has three words, and not to the nested target.
+    if word_count > MAX_WORDS and not nested:
         raise NameError_(f"{name}: {word_count} words, more than {MAX_WORDS}")
 
     parts = [(word, slot.split("_")[0]) for word, slot in zip(words, slots)]
@@ -442,8 +445,11 @@ SUMMARY_SELECTOR_ROW = re.compile(
 )
 # A row of the `Candidate write encodings` table after the constraint catalog:
 # a backticked selector, then the catalog names of the written registers, each in
-# a code span and separated by `, `. A cell without a code span is prose.
+# a code span and separated by `, `. Every cell of the column is validated by
+# position, except the documented prose value `none in the catalog`.
 WRITE_ENCODING_ROW = re.compile(rf"^\| `GG=[^|]*\| {CELL} \|")
+# The one prose value of the catalog-name column.
+NO_CATALOG_NAME = "none in the catalog"
 # A register row of a table keyed by group and register.
 GROUP_REGISTER_ROW = re.compile(rf"^\| 0x[0-9A-F]{{2}} \| 0x[0-9A-F]{{4}} \| {CELL} \|")
 # A register row of the protocol page: `| 0x0036 | `name` |`.
@@ -552,7 +558,7 @@ def covered_names() -> list[tuple[str, str]]:
         register_map, "### Candidate write encodings", "## Open questions"
     ):
         match = WRITE_ENCODING_ROW.match(line)
-        if match and "`" in match[1]:
+        if match and match[1].strip() != NO_CATALOG_NAME:
             names.extend(
                 (f"{where}:{number}", part.strip().strip("`"))
                 for part in match[1].split(", ")

@@ -428,7 +428,7 @@ def _write_encoding_cells() -> list[str]:
         REGISTER_MAP_TEXT, "### Candidate write encodings", "## Open questions"
     ):
         match = names.WRITE_ENCODING_ROW.match(line)
-        if match and "`" in match[1]:
+        if match and match[1].strip() != names.NO_CATALOG_NAME:
             cells.extend(part.strip().strip("`") for part in match[1].split(", "))
     return cells
 
@@ -453,3 +453,32 @@ def test_malformed_candidate_write_encoding_name_is_rejected(
     (cell,) = [part.strip().strip("`") for part in match[1].split(", ")]
     with pytest.raises(names.NameError_):
         names.decompose(cell, vocabulary)
+
+
+def test_unquoted_malformed_catalog_cell_is_rejected_and_prose_is_skipped(
+    vocabulary: names.Vocabulary,
+) -> None:
+    line = "| `GG=0x03`, `RR=0x0011` | Zone-enabled | one byte 00 or 01 |"
+    match = names.WRITE_ENCODING_ROW.match(line)
+    assert match[1].strip() != names.NO_CATALOG_NAME
+    with pytest.raises(names.NameError_):
+        names.decompose(match[1].strip().strip("`"), vocabulary)
+    prose = names.WRITE_ENCODING_ROW.match(
+        "| `GG=0x00`, `II=0xFF`, `RR=0x0103` | none in the catalog | bytes `01 00` |"
+    )
+    assert prose[1].strip() == names.NO_CATALOG_NAME
+    assert "none in the catalog" not in [n for _, n in names.covered_names()]
+
+
+def test_command_target_counts_as_one_word(vocabulary: names.Vocabulary) -> None:
+    name = "heating_zone_room_comfort_temperature_setpoint_maximum_reset_command"
+    assert names.decompose(name, vocabulary)[0][1] == "target"
+
+
+def test_command_with_structurally_invalid_target_is_rejected(
+    vocabulary: names.Vocabulary,
+) -> None:
+    for name in ("pump_maximum_reset_command", "Zone-enabled_reset_command",
+                 "temperature_time_reset_command"):
+        with pytest.raises(names.NameError_):
+            names.decompose(name, vocabulary)
