@@ -282,7 +282,7 @@ def test_validation_scope_is_derived_both_ways() -> None:
                     if r["presence_state"] == "observed_inactive" and r["validation_scope"] == "display_only")
     document, index = mutated(tuple(inactive.values()), lambda r: r.update(validation_scope="format_range_and_step"))
     rejects(f"records[{index}] grants range validation without observed presence", document)
-    document, index = mutated(("02", "00", "00", "002C"), lambda r: r.update(validation_scope="format_range_and_step"))
+    document, index = mutated(("02", "04", "00", "000B"), lambda r: r.update(validation_scope="format_range_and_step", presence_state="observed_present"))
     rejects(f"records[{index}] grants range validation on a codec basis that is not a local constraint codec", document)
     document, index = mutated(dhw, lambda r: r.update(validation_scope="display_only"))
     rejects(f"records[{index}].validation_scope must be format_range_and_step for this record", document)
@@ -531,3 +531,44 @@ def test_same_width_relabel_of_record_94_is_rejected() -> None:
     for field in ("min", "max", "step"):
         record["decoded"][field] = int.from_bytes(bytes.fromhex(record["raw_limits"][f"{field}_hex"]), "little")
     rejects("records[94].decoded.codec U32 disagrees with the register-map Wire codec EXP for OP02/GG02/II01/RR0004", document)
+
+
+def test_unqualified_decoded_values_are_compared_with_raw_spans() -> None:
+    document = descriptions()
+    record = document["records"][2]
+    # Record 2 stays a candidate decoding: relabel it unqualified so only the generic comparison applies.
+    record["decoded"].update(codec_provenance="length_inferred", codec_basis="payload_length_inferred",
+                             qualification="unqualified")
+    record["validation_scope"] = "raw_evidence_only"
+    validator.validate_documents(document)
+    record["decoded"]["max"] = 999
+    rejects("records[2].decoded.max disagrees with raw limits", document)
+
+    document = descriptions()
+    unqualified = next(i for i, r in enumerate(_DESCRIPTIONS["records"])
+                       if r["decoded"] and r["decoded"]["qualification"] == "unqualified" and r["decoded"]["codec"] == "UIN")
+    document["records"][unqualified]["decoded"]["min"] = 999
+    rejects(f"records[{unqualified}].decoded.min disagrees with raw limits", document)
+
+
+def test_plain_byte_clock_candidates_stay_display_only_even_for_bcd_looking_spans() -> None:
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "002C")
+    set_spans(record, "010101", "150625", "010000")  # valid packed BCD 15.06.25
+    record["decoded"].update(min="2001-01-01", max="2037-06-21")  # plain-byte decoding, not BCD
+    assert record["validation_scope"] == "display_only"
+    validator.validate_documents(document)
+
+    record["validation_scope"] = "format_range_and_step"
+    rejects(f"records[{index}] grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only", document)
+
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "0035")
+    record["validation_scope"] = "format_range_and_step"
+    rejects(f"records[{index}] grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only", document)
+
+    document = descriptions()
+    _, record = find(document, "02", "00", "00", "0035")
+    record["validation_scope"] = "raw_evidence_only"
+    index, _ = find(document, "02", "00", "00", "0035")
+    rejects(f"records[{index}].validation_scope must be display_only for this record", document)

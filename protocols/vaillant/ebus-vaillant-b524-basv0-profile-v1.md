@@ -75,6 +75,17 @@ register map's Wire column is the pin. A calendar value must be a valid date
 (year offset 0-99 from 2000) and a clock value a valid time (hour 0-23, minute and
 second 0-59) before `qualified` is kept.
 
+**Codec label deviation (Hypothesis).** In this fixture the `HDA:3` and `HTI`
+labels denote the application's plain-byte candidate decoding of the three-byte
+spans (each byte read as a plain unsigned integer; for example the date maximum
+`1F0C63` reads as 2099-12-31 and the time maximum `173B3B` as 23:59:59). They do
+not denote the packed-BCD codec that [types/ebusd-csv.md](../../types/ebusd-csv.md)
+defines under the same names, and `1F0C63` or `173B3B` are not valid packed BCD.
+The 13 records are therefore **Hypothesis** and `display_only`; a consumer must
+not decode them as BCD, and the validator rejects any such record that claims
+`format_range_and_step`. Aligning the codec label with the documented codec is
+tracked in an external issue (#297 of the evidence-producing tool's repository).
+
 For the 13 HDA:3/HTI records `qualified` therefore means only that the spans
 parse under the candidate codec; it is **Hypothesis**, not **Proven**. STEP stays
 unknown (`step: null`). The validator requires the exact-selector-schema basis

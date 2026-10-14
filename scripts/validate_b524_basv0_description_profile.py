@@ -23,7 +23,12 @@ HEX = re.compile(r"^(?:[0-9A-F]{2})*$")
 NUMERIC_CODECS = {"UCH", "UIN", "U32", "EXP"}
 # Bytes per MIN/MAX/STEP span for each codec this fixture can name.
 CODEC_WIDTH = {"UCH": 1, "UIN": 2, "U32": 4, "EXP": 4, "HDA:3": 3, "HTI": 3}
-CLOCK_CODECS = {"HDA:3", "HTI"}
+# The fixture's HDA:3/HTI labels denote a plain-byte candidate decoding of the
+# 3-byte spans (each byte a plain unsigned integer), NOT the packed-BCD codec that
+# types/ebusd-csv.md defines under the same names. Records using it stay
+# display_only on the exact-selector-schema Hypothesis basis.
+PLAIN_BYTE_CLOCK_CODECS = {"HDA:3", "HTI"}
+CLOCK_CODECS = PLAIN_BYTE_CLOCK_CODECS
 ROOT = Path(__file__).resolve().parents[1]
 REGISTER_MAP = ROOT / "protocols/vaillant/ebus-vaillant-B524-register-map.md"
 CALENDAR_CLOCK_CSV = ROOT / "protocols/vaillant/fixtures/b524-op02-calendar-clock-selectors.csv"
@@ -148,6 +153,9 @@ def _expected_validation_scope(record: dict[str, Any]) -> str:
 def _validate_validation_scope(record: dict[str, Any], context: str) -> None:
     scope = record.get("validation_scope")
     decoded = record.get("decoded")
+    _require(not (scope == "format_range_and_step" and isinstance(decoded, dict)
+                  and decoded.get("codec") in PLAIN_BYTE_CLOCK_CODECS),
+             f"{context} grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only")
     if scope == "format_range_and_step":
         _require(isinstance(decoded, dict) and decoded.get("qualification") == "qualified"
                  and decoded.get("codec_provenance") == "selector_qualified",
@@ -240,19 +248,22 @@ def _validate_record(record: Any, index: int) -> None:
         _require((provenance == "length_inferred") == (basis == "payload_length_inferred"),
                  f"{context}.decoded codec basis disagrees with provenance")
         if qualification == "qualified":
+            _validate_selector_codec(codec, basis, selector, context)
+        for field in ("min", "max", "step"):
+            if field == "step" and codec in CLOCK_CODECS and (decoded.get("step") is None or qualification == "qualified"):
+                continue
+            expected = _decode_limit(codec, limits[f"{field}_hex"])
+            actual = decoded.get(field)
+            same = actual == expected or (isinstance(actual, float) and isinstance(expected, float)
+                                          and math.isnan(actual) and math.isnan(expected))
+            _require(same, f"{context}.decoded.{field} disagrees with raw limits")
+        if qualification == "qualified":
             _require(codec not in CLOCK_CODECS or basis == "public_exact_selector_schema",
                      f"{context}.decoded HDA:3/HTI must use the exact-selector-schema basis, a Hypothesis")
-            _validate_selector_codec(codec, basis, selector, context)
-            for field in ("min", "max"):
-                if codec in CLOCK_CODECS:
+            if codec in CLOCK_CODECS:
+                for field in ("min", "max"):
                     _validate_clock_value(codec, limits[f"{field}_hex"], field, context)
-                _require(decoded.get(field) == _decode_limit(codec, limits[f"{field}_hex"]),
-                         f"{context}.decoded.{field} disagrees with raw limits")
-            if codec in {"HDA:3", "HTI"}:
                 _require(decoded.get("step") is None, f"{context}.decoded.step must remain unknown")
-            else:
-                _require(decoded.get("step") == _decode_limit(codec, limits["step_hex"]),
-                         f"{context}.decoded.step disagrees with raw limits")
             if codec in NUMERIC_CODECS:
                 minimum, maximum, step = (decoded.get(field) for field in ("min", "max", "step"))
                 _require(all(isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
