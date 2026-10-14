@@ -181,3 +181,12 @@ def test_register_observation_schema_rejects_sensitive_or_unknown_fields(tmp_pat
         path.write_text(json.dumps(candidate))
         result = subprocess.run(["jv", str(REGISTER_SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
         assert result.returncode != 0, name
+
+
+def test_profile_page_cites_current_fixture_digests() -> None:
+    import hashlib
+
+    page = (ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-basv0-profile-v1.md").read_text()
+    for fixture in (FIXTURE, REGISTER_FIXTURE):
+        digest = hashlib.sha256(fixture.read_bytes()).hexdigest()
+        assert digest in page, f"{fixture.name} digest {digest[:12]}… is not cited by the profile page"
