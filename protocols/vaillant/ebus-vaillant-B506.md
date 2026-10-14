@@ -49,11 +49,156 @@ prepared for actuator testing. A reasonable safe sequence is:
 Do not use this sequence on production hardware unless the operator has
 explicitly accepted the risk.
 
-## Unknowns
+## Candidate op catalogue
+
+The candidate layouts of B506 cover the ops `B5 06 00` to `B5 06 21` (no
+candidate layout is known for `03`), unconfirmed on the wire. They cover remote
+control of outputs, input and sensor tests, ROM and EEPROM check requests, an
+end-of-line test mode, radio test services and a button test. Candidate
+interpretation, unconfirmed on the wire: most of them are installer or factory
+test services and many are mutative. The field-level layout of every op is in
+[`fixtures/b506-b508-candidate-fields.csv`](fixtures/b506-b508-candidate-fields.csv);
+`vaillant_name` in that file is a correspondence column (Vaillant name,
+correspondence only), not a canonical name. The column `candidate_variant`
+separates the two alternative layouts of the `B5 06 02` request (output bits,
+or backlight only on some controllers).
+
+Offsets count from the first byte of the service prefix (PB, SB and the op
+byte): offset 0 = `B5`, 1 = `06`, 2 = op byte. A target response on the bus
+carries no such prefix (eBUS framing: `NN`, data, CRC); how the candidate
+response offsets map onto the bytes of a bus response is unconfirmed on the
+wire. The request length NN counts the op byte plus its data bytes, and "≥"
+marks a variable-length field (only `11`: the parameter set of its request, and
+its reply, which carries a length byte). **Hypothesis**: response offset 3 is the first
+data byte of a bus response (see
+[`ebus-vaillant.md`](ebus-vaillant.md#other-b5-services-candidate-layouts)).
+The descriptions are plain-language and are not canonical names.
+
+| Op | Candidate description | Request NN | Reply bytes |
+|---|---|---:|---:|
+| `B5 06 00` | remote control of all outputs | 2 | 0 |
+| `B5 06 01` | disable remote control of all outputs | 1 | 0 |
+| `B5 06 02` | testing outputs | 2 | 0 |
+| `B5 06 04` | testing controller inputs 1 | 1 | 10 |
+| `B5 06 05` | testing controller inputs 2 | 1 | 10 |
+| `B5 06 06` | testing controller inputs 3 | 1 | 8 |
+| `B5 06 07` | testing module inputs | 1 | 9 |
+| `B5 06 08` | ROM checksum or CRC request | 2 | 3 |
+| `B5 06 09` | ROM check response (carried in the request) | 4 | 0 |
+| `B5 06 0A` | testing heat-pump inputs 1 | 1 | 10 |
+| `B5 06 0B` | testing heat-pump inputs 2 | 1 | 10 |
+| `B5 06 0C` | testing heat-pump inputs 3 | 1 | 10 |
+| `B5 06 0D` | testing heat-pump inputs 4 | 1 | 10 |
+| `B5 06 0E` | testing heat-pump inputs 5 | 1 | 10 |
+| `B5 06 0F` | EEPROM checksum or CRC request | 2 | 3 |
+| `B5 06 10` | EEPROM check response (carried in the request) | 4 | 0 |
+| `B5 06 11` | test mode for hardware validation | ≥2 | ≥1 |
+| `B5 06 12` | radio test: send continuous wave | 2 | 0 |
+| `B5 06 13` | radio test: configure test telegram | 5 | 0 |
+| `B5 06 14` | radio test: start or stop sending test telegrams | 2 | 0 |
+| `B5 06 15` | radio test: set operation mode | 2 | 0 |
+| `B5 06 16` | radio test: write one transceiver register | 3 | 0 |
+| `B5 06 17` | radio test: read one transceiver register | 2 | 1 |
+| `B5 06 18` | radio test: transceiver configuration | 2 | 0 |
+| `B5 06 19` | radio test: trigger teach-in | 2 | 1 |
+| `B5 06 1A` | radio test: check transceiver connection | 1 | 1 |
+| `B5 06 1B` | radio test: detection of a radio device | 2 | 2 |
+| `B5 06 1C` | read outdoor-unit sensor values 1 | 1 | 10 |
+| `B5 06 1D` | read outdoor-unit sensor values 2 | 1 | 10 |
+| `B5 06 1E` | read indoor-unit sensor values | 1 | 6 |
+| `B5 06 1F` | testing sensor-module inputs 1 | 1 | 10 |
+| `B5 06 20` | testing sensor-module inputs 2 | 1 | 4 |
+| `B5 06 21` | button testing | 4 | 0 |
+
+The `01` (stop test) and `02 <value>` (select or start test) forms above are
+consistent with the candidate ops `01` (disable remote control of all outputs)
+and `02` (outputs, one bit per output).
+
+## Candidate encodings and enumerations
+
+Every item in this section is a candidate layout, unconfirmed on the wire.
+
+- **Outputs** (`B5 06 02`): candidate, unconfirmed on the wire: bit 0 is output
+  1, bit 1 output 2, bit 2 output 3 at offset 3; on some controllers only bit 0
+  (backlight) is a candidate, unresolved. `B5 06 00` sets all outputs (candidate):
+  `1` on, any other value off.
+- **Inputs and sensors** (`04`..`07`, `0A`..`0E`, `1C`..`20`): candidate,
+  unconfirmed on the wire: temperatures are mostly `i16` LE ÷16 °C. Several
+  fields in the heat-pump input services may be non-temperature quantities (for
+  example a brine pressure, a power or a switch) but are carried as `u16` raw or
+  as a temperature value; the unit of these fields is unresolved. The unit of the
+  water-pressure field of `1F` is bar (`u16` LE ÷16) and the frequency inputs of
+  `20` are in l/min (candidate).
+- **ROM and EEPROM check** (`08`, `0F`): candidate, unconfirmed on the wire: the
+  check-type byte in the request is `0` send back the supported types, `2` 16-bit
+  checksum for the whole ROM (the relevant EEPROM for `0F`), `4` 16-bit CRC, `8`
+  8-bit CRC, `16` 8-bit CRC with the eBUS polynomial, `255` read the CRC. The
+  reply is two byte fields (check type, check) even for the 8-bit modes. No
+  polynomial, initial value or covered range is known for these numbers. `09` and
+  `10` carry the same two fields in the request.
+- **Radio details**: candidate, unconfirmed on the wire: `13` wait time between
+  two test telegrams at offset 5 is a raw `u8` × 100 ms (1..255); `15` selects
+  the transceiver mode `0` sleep, `1` wake and idle, `2` standby, `3` receive, `4`
+  calibrate, `5` flush the receive buffer, `6` idle, flush and receive; `1A`
+  reports the connection as OK only for the raw value 181 (`B5`), any other value
+  is not OK; `1B` returns the detection state at offset 3 (`0` nothing received,
+  `1` received) and an RSSI at offset 4 as a raw `u8` (a second candidate reading
+  is a signed value in half-dB steps, valid only when the detection state is 1);
+  `19` teach-in `0` stop, `1` start, `2` status, with a reply of `0` running or
+  `1` not running.
+- **Button testing** (`21`): candidate, unconfirmed on the wire: button bits
+  1..4, 12, 34, ALL at offset 3, an `i8` increment at offset 4 and buttons 5..8
+  at offset 5.
+
+## B5 06 11: end-of-line test (service shape)
+
+Candidate, unconfirmed on the wire: `B5 06 11` is an end-of-line test service
+whose request is a one-byte test mode at offset 3 followed by a variable
+parameter set, and whose reply carries a length byte. Candidate interpretation,
+unconfirmed on the wire: the test-mode values are factory test and programming
+controls that change device state; none of them is classified as safe to send,
+and a separately established safety procedure is needed before any of them is
+sent. Do not run them on a production bus. The candidate test-mode byte values,
+unconfirmed on the wire, are: `0` stop active test modes; `1` and `2` transmit
+the character `0xAA` or `0x00` continuously on the bus; `3` transmit the request
+`07 04` continuously to the configured target address; `4` stop generating the
+automatic SYN character; `5` generate no initiator request telegrams; `6`
+combine modes 3 and 4; `7`, `8` and `9` product-specific EMC, long-term and
+external flash-ROM test modes; `10` enter low-power mode; `32`..`37` radio tests
+(unmodulated carrier; pseudo-random sequence with modulation, continuous or not;
+with listen-before-talk; listening with a statistical counter). The parameter
+sets, reply bodies and framing beyond this byte are unknown.
+
+## Profiles
+
+No op of this service is known to be available only on PeBUS (candidate);
+whether the service is available under the PeBUS profile is not established (see
+[EBUS and PeBUS protocol profiles](ebus-vaillant.md#ebus-and-pebus-protocol-profiles)).
+
+## Open questions
 
 - Complete actuator enum per target class.
 - Whether non-HMU, solar, or mixer modules share any selector values.
 - Whether some devices require a separate service/installer unlock before ACK.
+- The candidate ops are known only as candidate layouts; no exchange of them was
+  observed beyond the examples on this page, and whether any device implements
+  them is not established.
+- The check-byte algorithms and coverage of the ROM and EEPROM check requests
+  (`08`, `09`, `0F`, `10`) are not established.
+- The units of the heat-pump input fields that may be non-temperature quantities
+  but are carried as temperatures (`0B`, `0C`) are unresolved.
+- The parameter sets, reply body lengths and framing of the `B5 06 11` test modes
+  beyond the candidate test-mode byte are unknown; the values given for that
+  byte are unconfirmed on the wire.
+- Several candidate default values lie outside their candidate intervals (see the
+  fixture; for example the `13` wait time default 0 against 1..255 and the `18`
+  configuration default 0 against 1..6); the intended defaults are unresolved.
+- How the candidate response offsets map onto the data bytes of a bus response is
+  unconfirmed on the wire.
+- Whether `B5 06 02` carries the output bits 0..2 or, on some controllers, only
+  bit 0 (backlight) is unresolved.
+- Whether the RSSI of `B5 06 1B` at offset 4 is a raw `u8` or a signed value in
+  half-dB steps that is valid only when the detection state is 1 is unresolved.
 
 ## References
 

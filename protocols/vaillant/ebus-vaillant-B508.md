@@ -14,8 +14,8 @@ timer activation or deactivation. No independent capture is included here.
 
 Evidence labels:
 
-- `P1_COMMUNITY`: ebusd community fork CSV for BASV2/VRC700 system timer
-  configurations.
+- `P1_COMMUNITY`: ebusd community fork CSV for VRC720-family and VRC700-family
+  system timer configurations.
 
 **Qualification:** candidate CSV layout; the purpose and causal chain below
 remain hypotheses without independently inspectable capture confirmation.
@@ -50,17 +50,17 @@ the NoiseReduction timer activates or deactivates.
 
 ```
 Timer channel activates/deactivates
-  (B555 HC=0x04 on BASV2/VRC720)
-  OR (B524 opcode 0x03 SEL1=0x00, SEL2=0x00, SEL3=0x02 on VRC700)
+  (B555 HC=0x04 on VRC720-family controllers)
+  OR (B524 opcode 0x03 SEL1=0x00, SEL2=0x00, SEL3=0x02 on VRC700-family controllers)
       |
       v
 B508 broadcast (ZZ=FE, State1/State2 = on/off)
       |
-      +---> EHP00 (0x08) -- updates B509 registers:
+      +---> heat pump (0x08) -- updates B509 registers:
       |       A901 NoiseReduction (yesno)
       |       2401 NoiseReductionFactor (percent)
       |
-      +---> OMU00 (0xE0) -- fan / compressor speed adjustment (inferred)
+      +---> outdoor unit (0xE0) -- fan / compressor speed adjustment (inferred)
 ```
 
 **Inferred -- not live-verified.** The causal chain (B508 broadcast -> EHP
@@ -73,15 +73,85 @@ inferred from device function, not observed.
 
 | Device | Address | Role | Evidence |
 |--------|---------|------|----------|
-| BASV2 / VRC700 | `0x15` | Emitter | P1_COMMUNITY: timer configs for HC=0x04 / SEL 0x02 |
-| EHP00 | `0x08` | Receiver | P1_COMMUNITY: B509 registers A901, 2401 documented -- register existence documented, B508->register update causal link not live-verified |
-| OMU00 | `0xE0` | Receiver | **Inferred** from fan/compressor control function -- no live capture |
+| VRC720-family / VRC700-family controller | `0x15` | Emitter | P1_COMMUNITY: timer configs for HC=0x04 / SEL 0x02 |
+| Heat pump | `0x08` | Receiver | P1_COMMUNITY: B509 registers A901, 2401 documented -- register existence documented, B508->register update causal link not live-verified |
+| Outdoor unit | `0xE0` | Receiver | **Inferred** from fan/compressor control function -- no live capture |
 
 ## Message Table
 
 | ID (hex) | Name | Data fields | Direction | Confidence |
 |----------|------|-------------|-----------|------------|
 | `02` | noise_reduction_broadcast (`NoiseReductionBroadcast`) | IGN:1, State1:onoff, State2:onoff | initiator (`0x15`?) -> broadcast (`0xFE`) | Candidate; not capture-verified |
+
+## Candidate layouts
+
+The candidate layouts of B508 cover the ops `B5 08 01` to `B5 08 0B`,
+unconfirmed on the wire. They carry control values from a controller to a heat
+generator or boiler (configuration, set flow temperatures, DHW, pump release,
+heat demand, noise reduction demand, storage temperatures, solar cascading).
+None of it has been confirmed on the wire. The field-level layout of every op
+is in
+[`fixtures/b506-b508-candidate-fields.csv`](fixtures/b506-b508-candidate-fields.csv);
+`vaillant_name` in that file is a correspondence column (Vaillant name,
+correspondence only), not a canonical name.
+
+Offsets count from the first byte of the service prefix (PB, SB and the op
+byte): offset 0 = `B5`, 1 = `08`, 2 = op byte. A target response on the bus
+carries no such prefix (eBUS framing: `NN`, data, CRC); how the candidate
+response offsets map onto the bytes of a bus response is unconfirmed on the
+wire. The request length NN counts the op byte plus its data bytes.
+**Hypothesis**: response offset 3 is the first data byte of a bus response (see
+[`ebus-vaillant.md`](ebus-vaillant.md#other-b5-services-candidate-layouts)).
+
+| Op | Candidate description | Request NN | Reply bytes |
+|---|---|---:|---:|
+| `B5 08 01` | boiler configuration (write) | 2 | 0 |
+| `B5 08 02` | boiler 1 set flow temperature (`u8` °C, 0..90) | 2 | 0 |
+| `B5 08 03` | boiler 2 set flow temperature (`u8` °C, 0..90) | 2 | 0 |
+| `B5 08 04` | boiler DHW | 2 | 0 |
+| `B5 08 05` | boiler pump (KP) release | 2 | 0 |
+| `B5 08 06` | heat demand for the solar circuit | 2 | 0 |
+| `B5 08 07` | heat demand for the ASC | 7 | 0 |
+| `B5 08 08` | KP / AV | 2 | 0 |
+| `B5 08 09` | noise reduction demand | 2 | 0 |
+| `B5 08 0A` | set storage temperatures | 5 | 1 |
+| `B5 08 0B` | solar cascading | 4 | 1 |
+
+- `01`: candidate, unconfirmed on the wire: a `u8` where `0` is false and `1` is
+  true; `04` and `08` carry `u8` where `1` is on and any other value is off.
+- `05`: candidate, unconfirmed on the wire: bit 0 of the data byte is `0` blocked
+  or `1` released (the other 7 bits are reserved).
+- `06`: candidate, unconfirmed on the wire: heat demand `1` no heat demand, `2`
+  heat demand; raw `0` has no known meaning.
+- `07`: candidate, unconfirmed on the wire: DHW request `u8` @3 and CH request
+  `u8` @4 (`0` no request, `1` request), DHW flow setpoint `i16` LE ÷16 °C @5 and
+  CH flow setpoint `i16` LE ÷16 °C @7.
+- `09`: candidate, unconfirmed on the wire: bit 0 of the data byte is `0`
+  disabled or `1` enabled; the other 7 bits are reserved.
+- `0A`: candidate, unconfirmed on the wire: storage sensor SP2 `i16` LE ÷16 °C @3
+  and sensor T6 `i16` LE ÷16 °C @5; the reply is a `u8` feedback @3 (`1`
+  accepted, any other value not accepted).
+- `0B`: candidate, unconfirmed on the wire: three flags in separate bytes (cycle
+  pause @3, solar temperature reached @4 and @5); the reply is a `u8` feedback @3
+  (`1` accepted, otherwise not accepted).
+
+Candidate, unconfirmed on the wire: the noise reduction demand is at op `09` (one
+bit), while the community configuration above places a broadcast at op `02` with
+an ignored byte and two states; the relation is unresolved.
+
+Candidate, unconfirmed on the wire: op `02` itself has two layouts. The
+candidate layout gives `02` as the boiler 1 set flow temperature (one `u8` °C
+data byte, NN=2), whereas the community configuration above gives `02` as the
+broadcast with NN=04, an ignored byte, State1 and State2; which layout op `02`
+carries is unresolved.
+
+No op on this page is documented as safe to send; a state-changing op needs a separately established safety procedure and target qualification, and an ACK does not show the resulting device state.
+
+## Profiles
+
+No op of this service is known to be available only on PeBUS (candidate);
+whether the service is available under the PeBUS profile is not established (see
+[EBUS and PeBUS protocol profiles](ebus-vaillant.md#ebus-and-pebus-protocol-profiles)).
 
 ## Open Questions
 
@@ -91,23 +161,36 @@ inferred from device function, not observed.
 - **QQ source address:** Which initiator emits the broadcast is unconfirmed.
 - **IGN byte content:** Purpose of the ignored byte between the ID and
   State1 is unknown.
+- **Candidate versus community layout:** the candidate noise reduction demand
+  (op `09`, one bit) and the community broadcast (op `02`, three data bytes)
+  are not reconciled.
+- **Op `02` collision:** the candidate op `02` (boiler 1 set flow temperature,
+  NN=2) and the community broadcast at op `02` (NN=04, IGN, State1, State2) are
+  not reconciled; which layout op `02` carries is unresolved.
+- **Candidate ops:** known only as candidate layouts; no exchange of them was
+  observed beyond the examples on this page, and whether any device implements
+  them is not established.
+- **Feedback semantics:** whether a reply value other than `1` for `0A` and
+  `0B` distinguishes refusal reasons is unknown.
+- **Response offsets:** how the candidate response offsets map onto the data
+  bytes of a bus response is unconfirmed on the wire.
 
 ## Cross-References
 
-- **B555 HC=0x04:** NoiseReduction timer channel on BASV2/VRC720 systems.
-  The B555 channel HC=0x04 is named "NoiseReduction" (BASV2 CSV) or
-  "Silent" (VRC720 CSV). See
+- **B555 HC=0x04:** NoiseReduction timer channel on VRC720-family systems.
+  The B555 channel HC=0x04 is named "NoiseReduction" in one community CSV and
+  "Silent" in another. See
   [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md).
 - **B524 opcode 0x03:** Timer channel SEL1=0x00, SEL2=0x00, SEL3=0x02 on
-  VRC700 systems. See [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md).
+  VRC700-family systems. See [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md).
 
 ## Falsifiable Claims
 
-1. On a BASV2 system with an active NoiseReduction timer schedule
+1. On a VRC720-family system with an active NoiseReduction timer schedule
    (HC=0x04), a bus sniffer captures a frame with PBSB=`B508`, ZZ=`FE`,
    NN=`0x04`, ID=`0x02`, State=`0x01` at the start of the quiet window
    and State=`0x00` at the end.
-2. EHP00 B509 register A901 (NoiseReduction) changes value in sync with
+2. Heat-pump B509 register A901 (NoiseReduction) changes value in sync with
    the B508 broadcast.
 
 ## Evidence

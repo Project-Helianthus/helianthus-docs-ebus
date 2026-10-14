@@ -20,10 +20,12 @@ record.
 
 The crosswalk distinguishes model rows from protocol-family labels:
 
-- `VRC720` is a protocol-family label for the listed VRC720, VRT380, VRC710,
-  and VR940 model rows. B524 scalar/discovery operations and B555 schedules
-  remain candidate capabilities subject to their own qualification. A matching
-  pair does not establish support for either one.
+- `VRC720` is a protocol-family label for the VRC720, VRT380 and VRC710 model
+  rows below and for the `CTLX0` / `0194` row, whose model-row cell `VR940` is
+  a label that the Vaillant internet gateway emits for the pair (see
+  [the `CTLX0` / `0194` row](#the-ctlx0--0194-row)). B524 scalar/discovery
+  operations and B555 schedules remain candidate capabilities subject to their
+  own qualification. A matching pair does not establish support for either one.
 - `VRC700` is a separate family. A matching VRC700 row selects a candidate
   family description; B524 `ReadTimer`, `WriteTimer`, and `ReadVR91` remain
   subject to an operation's existing identity and response checks.
@@ -55,14 +57,15 @@ SPN field (bytes 8-9) must both be retained; do not interpret either field's raw
 as a literal hex `u16`, and do not invent a catalog row for an invalid BCD
 value or an unlisted decoded value.
 
-A BASV2 reporting software version `05 07` and SPN field `17 04` is
-therefore the catalogued pair `BASV2` / `01A1`; a reader can reproduce this
-decoding from a read-only identification query against a BASV2 regulator
-reporting that pair. The software-version field (`0507` here) is retained
-alongside the identity but does not itself decode to a catalog `SPN`.
+A controller reporting software version `05 07` and SPN field `17 04`
+therefore has the decoded SPN `01A1`. The crosswalk lists that value under two
+identity strings, so the pair, not the number alone, selects a row. A reader
+can reproduce this decoding from a read-only identification query against a
+regulator reporting those fields. The software-version field (`0507` here) is
+retained alongside the identity but does not itself decode to a catalog `SPN`.
 
-Source: a packaged description profile recording software `0507` / hardware
-`1704` for the VRC 720f/2.
+Candidate, unconfirmed on the wire: a VRC720-family controller reports software
+`0507` and product-number field `1704`.
 
 The codec behavior is specified by the public
 [archived `broadcast.csv` software field](https://github.com/john30/ebusd-configuration/blob/9c3ed3a0d487dc5898c611ab18f8313792659020/archived/en/broadcast.csv)
@@ -121,14 +124,29 @@ by inference.
 | `EMM00` | `0181` | VRC710 | VRC720 |
 
 The reported native identity `Vaillant;CTLX0;0127;0404` resolves to the
-existing `CTLX0` / `0194` row: the SPN field is `04 04`, which
-decodes as decimal `404` (`0x0194`), the same catalog `SPN` already listed
-above. Raw software version `01 27` is retained separately and does not
-itself decode to a catalog `SPN` — an earlier version of this crosswalk
-incorrectly decoded that software-version field and added a spurious
-`CTLX0` / `007F` row, which has been removed. This is a reported naming
-association, not evidence of protocol support or compatibility with another
-controller's parameter limits.
+`CTLX0` / `0194` row: the SPN field is `04 04`, which decodes as decimal `404`
+(`0x0194`), the catalog `SPN` in the table above. Raw software version `01 27` is
+retained separately and does not itself decode to a catalog `SPN`. In
+particular, there is no `CTLX0` row for SPN `007F` (decimal 127): that value
+appears only if the software-version field is misread as the SPN field. This is
+a reported naming association, not evidence of protocol support or
+compatibility with another controller's parameter limits.
+
+### The `CTLX0` / `0194` row
+
+The pair (`CTLX0`, SPN 404 = `0x0194`) is bound as a VRC720-family controller
+(candidate): its protocol-family cell is `VRC720`. Its model-row cell `VR940` is a
+label that the Vaillant internet gateway emits for the pair. The physical
+product behind that label is **Unknown**, and the association of the string
+`VR940` with any product is not established. No row gives `VRC720` as the model
+for SPN 404; the family cell of this row reflects the VRC720-family binding only
+(candidate), not a model statement.
+
+The pair (`CTLX0`, SPN 196 = `0x00C4`) has no row in the crosswalk, and the
+product behind it is **Unknown**; the same holds for the pair that combines SPN
+196 with a second `CTL`-series identity string (candidate). SPN 196 also occurs
+under the identity strings `05000` and `_E100` (candidate); a lookup is keyed by
+the pair and never by the SPN alone.
 
 ## VRC700 Operation Profile
 
@@ -157,3 +175,16 @@ catalog material rather than a native model observation.
 An empty, malformed, or unavailable SPN field leaves the crosswalk result
 unknown; the software-version field alone never selects a row. It must not
 be replaced with a guessed model or protocol family.
+
+## Open questions
+
+- The physical product behind the `CTLX0` / `0194` pair (emitted by the
+  Vaillant internet gateway under the label `VR940`) is **Unknown**; the pair is
+  bound as a VRC720-family controller (candidate), and the family cell of that
+  row reflects this binding only.
+- The physical product behind the pair (`CTLX0`, SPN 196), and behind the pair
+  that combines SPN 196 with a second `CTL`-series identity string, is
+  **Unknown**; no article number is known for the pair, and which product the
+  identity strings `05000` and `_E100` denote for SPN 196 is not established.
+- The family cell of every row is a candidate family name. Which operations a
+  matching device supports is not established by the crosswalk.

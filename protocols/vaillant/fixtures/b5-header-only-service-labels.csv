@@ -1,0 +1,36 @@
+vaillant_name,description
+B50938MarkECUAsSparePart,meaning Unknown; wire layout not established
+B5095ARequeRemotReset,meaning Unknown; wire layout not established
+B5095BResetRequeValid,meaning Unknown; wire layout not established
+B5095CResetTimeWindo,meaning Unknown; wire layout not established
+B51110ServiForCommuBetwePEECBMUAndAI,meaning Unknown; wire layout not established
+B51111RetriSetpo,meaning Unknown; wire layout not established
+B51214ContrVR66IOModul,meaning Unknown; wire layout not established
+B51409FunctMenuActivFlags2,meaning Unknown; wire layout not established
+B51613ReadEMFAccur,meaning Unknown; wire layout not established
+B518RespoFromEBUSSubne,meaning Unknown; wire layout not established; a second candidate reading gives B5 18 as the positive of the B517 sub-eBUS tunnel and the two readings are not reconciled (unresolved)
+B51C00TestModeCategList,meaning Unknown; wire layout not established
+B51C01TestModeConfiQueryTestProgr,meaning Unknown; wire layout not established
+B51C02TestModeStatuTestProgr,meaning Unknown; wire layout not established
+B51C03TestModeCategActivTestProgr,meaning Unknown; wire layout not established
+B51C10BMUTestProgrChimnSweep,meaning Unknown; wire layout not established
+B51C13BMUTestProgrAirVenti,meaning Unknown; wire layout not established
+B51C14BMUTestProgrWaterFilli,meaning Unknown; wire layout not established
+B51C19BMUTestProgrHydraBalan,meaning Unknown; wire layout not established
+B51C1BBMUTestProgrAdjusPowerLoad,meaning Unknown; wire layout not established
+B51C1CBMUTestProgrHeatiPartLoad,meaning Unknown; wire layout not established
+B51C1DBMUTestProgrEndOfLineTest,meaning Unknown; wire layout not established
+B51D00ActuaTestHeatPumpTestModeCategList,meaning Unknown; wire layout not established
+B51D01TestModeConfiQueryActuaTest,meaning Unknown; wire layout not established
+B51D02TestModeStatuActuaTest,meaning Unknown; wire layout not established
+B51D03TestModeCategActivActuaTest,meaning Unknown; wire layout not established
+B51D10BMUActuaTestCHLinPump,meaning Unknown; wire layout not established
+B51D11BMUActuaTestThreeWayValve,meaning Unknown; wire layout not established
+B51D12BMUActuaTestFan,meaning Unknown; wire layout not established
+B51D13BMUActuaTestTankLoadPump,meaning Unknown; wire layout not established
+B51D14BMUActuaTestCircuPump,meaning Unknown; wire layout not established
+B51D15BMUActuaTestExterPump,meaning Unknown; wire layout not established
+B51D16BMUActuaTestMinimModul,meaning Unknown; wire layout not established
+B51D17BMUActuaTestCHPump,meaning Unknown; wire layout not established
+B55504SimplHeatiContr,meaning Unknown; wire layout not established
+B55506EMMActivBroad,meaning Unknown; wire layout not established

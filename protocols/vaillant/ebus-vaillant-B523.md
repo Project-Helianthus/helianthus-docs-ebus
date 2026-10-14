@@ -57,10 +57,78 @@ direct module traffic for actor commands and sensor snapshots on VR70/VR71-like
 targets. Do not use B523 alone to infer the whole hydraulic scheme; correlate it
 with device identity, B524 functional-module inventory, and physical wiring.
 
+## Candidate layouts
+
+The candidate layouts of B523 cover the ops `B5 23 00` to `B5 23 07`; none of it
+has been confirmed on the wire. Offsets count from the first byte of the service
+prefix (PB, SB and the op byte): offset 0 = `B5`, 1 = `23`, 2 = op byte. A target
+response on the bus carries no such prefix (eBUS framing: `NN`, data, CRC); how
+the candidate response offsets map onto the bytes of a bus response is
+unconfirmed on the wire. **Hypothesis**: response offset 3 is the first data byte
+of a bus response (see
+[`ebus-vaillant.md`](ebus-vaillant.md#other-b5-services-candidate-layouts)).
+
+| Op | Candidate meaning |
+|---|---|
+| `00` | configuration of the relay groups and inputs |
+| `01` | output control |
+| `02` | mixer circuit control |
+| `03` | read sensor values |
+| `04` | configuration |
+| `05` | output control |
+| `06` | read sensor values, part 1 |
+| `07` | read sensor values, part 2 |
+
+- **Output control** (`01`, `05`): candidate, unconfirmed on the wire: relay
+  value `u8` where `0` is off, `1..253` is on for that many seconds, `254` is on
+  and `255` is not influenced; PWM `0..200` is 0 to 100 %, `201..255` is not
+  influenced. The reply is a feedback byte where `1` means accepted.
+- **Mixer circuit control** (`02`): candidate, unconfirmed on the wire: circuit
+  number `u8` at offset 3, control mode from `0` stop to `5` pump on and open, and
+  a setpoint at offset 5, `i8` × 0.5 °C in one candidate reading (its range and
+  signedness are unresolved; see Open questions). The reply carries a feedback
+  byte and the speed and direction of the mixer movement. This is consistent with
+  the `02 00`..`02 02` circuit operation writes above; the reply bytes `02 01 9c` in
+  the open questions are not explained by it.
+- **Sensor reads** (`03`, `06`, `07`): candidate, unconfirmed on the wire: six or
+  more multiplexed values in which raw `32768` (`8000`) is a reserved value whose
+  meaning is unresolved; otherwise the value is `i16` LE ÷16 °C. Each input also
+  has a 2-bit status.
+- **Configuration** (`00`, `04`): candidate, unconfirmed on the wire: relay-group
+  and input configuration bytes; the reply is a feedback byte where `1` means
+  accepted.
+
+**Hypothesis**, unconfirmed on the wire: candidate op `02` (mixer circuit
+control) corresponds to the `02 xx` selectors of both target shapes above; the
+candidate ops `01` and `03` correspond to the selectors `01` and `03` of the
+second shape, and the candidate ops `05`, `06` and `07` to the selectors `05`,
+`06` and `07` of the first shape.
+
+No op on this page is documented as safe to send; a state-changing op needs a separately established safety procedure and target qualification, and an ACK does not show the resulting device state.
+
+## Profiles
+
+No op of this service is known to be available only on PeBUS (candidate);
+whether the service is available under the PeBUS profile is not established (see
+[EBUS and PeBUS protocol profiles](ebus-vaillant.md#ebus-and-pebus-protocol-profiles)).
+
 ## Observation status
 
-## Unknowns
+## Open questions
 
+- The candidate ops are known only as candidate layouts; no exchange of them was
+  observed beyond the reply bytes on this page, and whether any device
+  implements them is not established.
+- The candidate mixer setpoint of `02` (offset 5) is a signed byte × 0.5 °C
+  (range -64 to 63.5 °C); a second candidate range of 190 to 95 for the same
+  setpoint conflicts with it, and the intended range and the signedness of this
+  field are unresolved.
+- The coding of the feedback value of `00`, `04` and the speed and direction
+  field of the `02` reply beyond "1 = accepted" is unknown.
+- How the candidate response offsets map onto the data bytes of a bus response is
+  unconfirmed on the wire.
+- The meaning of the reserved raw value `32768` (`8000`) of the sensor reads
+  (`03`, `06`, `07`) is unresolved.
 - Exact physical terminal mapping for every relay/sensor byte across all VR70
   and VR71 configurations.
 - Whether `VR_70` at target `0x52` is the only FM3 address form; Vaillant
