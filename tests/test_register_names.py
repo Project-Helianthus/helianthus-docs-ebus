@@ -515,3 +515,10 @@ def test_subject_only_count_takes_only_the_maximum_bound(vocabulary: names.Vocab
     # the event-object form keeps its rules
     names.decompose("time_program_day_period_count_maximum", vocabulary)
     names.decompose("circuit_pump_start_count_total", vocabulary)
+
+
+def test_remaining_period_follows_time_only(vocabulary: names.Vocabulary) -> None:
+    names.decompose("defrost_time_remaining", vocabulary)
+    for name in ("temperature_remaining", "pump_start_count_remaining"):
+        with pytest.raises(names.NameError_):
+            names.decompose(name, vocabulary)

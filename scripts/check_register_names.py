@@ -280,6 +280,10 @@ def _assign(
             object_word is None and predicate is None
         ):
             return False
+        # `remaining` is the time until the next occurrence or the end
+        # (architecture/naming.md, `time` row), so it only follows `time`.
+        if "remaining" in words and predicate != "time":
+            return False
         if "average" in words and "period" not in chosen:
             return False
         for slot, admitted in (
