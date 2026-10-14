@@ -119,8 +119,8 @@ Ownership note:
 |---------------|------|------|
 | `[].state.heating_circuit_flow_setpoint` | GG=0x02, RR=0x0007 | f32 |
 | `[].state.current_circuit_flow_temperature` | GG=0x02, RR=0x0008 | f32 |
-| `[].state.circuit_state` | GG=0x02, RR=0x001E | enum (u16): STANDBY/HEATING/COOLING/DHW |
-| `[].state.pump_status` | GG=0x02, RR=0x001B | bool (u16) |
+| `[].state.circuit_state` | GG=0x02, RR=0x001E | enum (u16): STANDBY/HEATING/COOLING/DHW | **Candidate (Hypothesis)**: naming-based, not hardware-correlated; see the selector assignment note |
+| `[].state.pump_status` | GG=0x02, RR=0x001B | bool (u16) | Circuit-level observation only; not a source for any boiler field |
 | `[].state.calculated_flow_temperature` | GG=0x02, RR=0x0020 | f32 |
 | `[].state.mixer_position_percentage` | GG=0x02, RR=0x0021 | f32 |
 | `[].state.current_humidity_pct` | GG=0x02, RR=0x0022 | f32 |
@@ -143,12 +143,22 @@ enumeration (raw 0 = STANDBY, 1 = HEATING, 2 = COOLING, 3 = DHW) is read from
 RR=0x001E (`circuit_status_circuit`) and the pump status from RR=0x001B
 (`circuit_pump_status`), as assigned in the
 [B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum).
-Earlier revisions of this table had the two selectors swapped. The assignment
-rests on observed Vaillant naming ("Status circuit" for RR=0x001E, "Status
-Pump" for RR=0x001B); it is a **Hypothesis** and has not been confirmed
-against a hardware comparison of the two registers. A raw state value outside
-0–3 is published as `unknown_<raw>`. The correction is tracked in
-[helianthus-ebusgateway#1004](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1004).
+Earlier revisions of this table had the two selectors swapped.
+
+Evidence status: the `circuit_state` mapping at RR=0x001E is a **candidate**
+(Hypothesis). It derives from observed Vaillant naming (`circuit_status_circuit`,
+"Status circuit") and the myVaillant `circuitState` correspondence; naming does
+not establish the register's value layout, and no native observation has been
+correlated against RR=0x001E. The qualification path is a live correlation of
+the four states (standby, heating, cooling, DHW) against the regulator display
+on an existing site during the planned gateway smoke session. Until then,
+consumers must treat the enumeration as a candidate. A raw state value outside
+0–3 is published as `unknown_<raw>`. RR=0x001B is recorded strictly as the
+circuit-level `pump_status` observation; it is not a source for any boiler
+field. The correction is tracked in
+[helianthus-ebusgateway#1004](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1004)
+and the boiler-side follow-up in
+[helianthus-ebusgateway#1012](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1012).
 
 Consumer note:
 - `[].config.cooling_enabled` remains a gateway-level raw semantic field derived from `GG=0x02 RR=0x0006`.
@@ -200,8 +210,7 @@ The B524 contribution that still feeds the current boiler semantic contract is:
 | `state.dhwTemperatureC` | GG=0x01, RR=0x0005 | f32 | Controller mirror from DHW group |
 | `state.dhwTargetTemperatureC` | GG=0x01, RR=0x0004 | f32 | Controller mirror from DHW group |
 | `config.dhwOperatingMode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
-| `diagnostics.heatingStatusRaw` | GG=0x02, II=0x00, RR=0x001E | u16 | Controller-side raw heating status; the circuit state enumeration of circuit 0 (see the selector assignment note under `ebus.v1.semantic.circuits.get`). Hypothesis (naming-based) |
-| `state.central_heating_pump_active` | GG=0x02, II=0x00, RR=0x001B | u16 (non-zero = active) | Controller mirror of the circuit 0 pump status; the direct boiler read of the pump is preferred when available. Hypothesis (naming-based) |
+| `diagnostics.heatingStatusRaw` | GG=0x02, II=0x00, RR=0x001E | u16 | Controller-side raw heating status; the circuit 0 state enumeration (see the selector assignment note under `ebus.v1.semantic.circuits.get`). Candidate (Hypothesis), naming-based |
 
 The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
 `RR=0x0012` have unknown native reply layouts. They are **withheld from this
