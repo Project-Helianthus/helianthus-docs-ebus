@@ -432,6 +432,14 @@ ROW = re.compile(rf"^\| 0x[0-9A-F]{{4}}(?:-0x[0-9A-F]{{4}})? \| {CELL} \|")
 # An identifier or register row written `| 0000h | `name` |`, optionally paired
 # (`| 0000h / 0001h | `a` / `b` |`).
 HEX_H_ROW = re.compile(rf"^\| [0-9A-F]{{4}}h(?: / [0-9A-F]{{4}}h)? \| {CELL} \|")
+# The changed-name summary tables of the register map: a backticked register or
+# range (`| `0x001D` | `name` | `previous_name` |`) and a backticked selector
+# (`| `GG=0x01, RR=0x0012` | `name` | ... |`, groups and registers may be listed
+# with `/`). Only the raw Name cell is a name.
+SUMMARY_REGISTER_ROW = re.compile(rf"^\| `0x[0-9A-F]{{4}}(?:-0x[0-9A-F]{{4}})?` \| {CELL} \|")
+SUMMARY_SELECTOR_ROW = re.compile(
+    rf"^\| `GG=0x[0-9A-F]{{2}}(?:/0x[0-9A-F]{{2}})*, RR=0x[0-9A-F]{{4}}` \| {CELL} \|"
+)
 # A register row of a table keyed by group and register.
 GROUP_REGISTER_ROW = re.compile(rf"^\| 0x[0-9A-F]{{2}} \| 0x[0-9A-F]{{4}} \| {CELL} \|")
 # A register row of the protocol page: `| 0x0036 | `name` |`.
@@ -522,7 +530,12 @@ def covered_names() -> list[tuple[str, str]]:
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
     where = REGISTER_MAP.relative_to(ROOT)
     for number, line in _section(register_map, "## OP=0x02", "## Constraint Catalog"):
-        for pattern, paired in ((ROW, False), (HEX_H_ROW, True)):
+        for pattern, paired in (
+            (ROW, False),
+            (HEX_H_ROW, True),
+            (SUMMARY_REGISTER_ROW, False),
+            (SUMMARY_SELECTOR_ROW, False),
+        ):
             match = pattern.match(line)
             if match:
                 names.extend((f"{where}:{number}", name) for name in _cell_names(match[1], paired=paired))

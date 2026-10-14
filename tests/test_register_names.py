@@ -366,3 +366,52 @@ def test_end_slots_need_their_prerequisites(vocabulary: names.Vocabulary, name: 
 )
 def test_end_slots_accept_legitimate_names(vocabulary: names.Vocabulary, name: str) -> None:
     names.decompose(name, vocabulary)
+
+
+# ---------------------------------------------------------------------------
+# Changed-name summary tables of the register map
+# ---------------------------------------------------------------------------
+
+REGISTER_MAP_TEXT = names.REGISTER_MAP.read_text(encoding="utf-8")
+
+
+def _summary_cells(pattern) -> list[str]:
+    cells = []
+    for _, line in names._section(REGISTER_MAP_TEXT, "## OP=0x02", "## Constraint Catalog"):
+        match = pattern.match(line)
+        if match:
+            cells.extend(names._cell_names(match[1]))
+    return cells
+
+
+@pytest.mark.parametrize(
+    "pattern", [names.SUMMARY_REGISTER_ROW, names.SUMMARY_SELECTOR_ROW]
+)
+def test_current_summary_tables_are_covered_and_pass(
+    vocabulary: names.Vocabulary, pattern
+) -> None:
+    cells = _summary_cells(pattern)
+    assert cells
+    covered = {name for _, name in names.covered_names()}
+    for cell in cells:
+        names.decompose(cell, vocabulary)
+        assert cell in covered
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "| `0x001D` | `serial_numbr_prefix` | `vrc720_serial_part1` |",
+        "| `GG=0x09/0x0A, RR=0x000F` | `room_temprature` | `current_room_temperature` |",
+    ],
+)
+def test_misspelled_name_in_a_summary_table_is_rejected(
+    vocabulary: names.Vocabulary, line: str
+) -> None:
+    match = next(
+        m for p in (names.SUMMARY_REGISTER_ROW, names.SUMMARY_SELECTOR_ROW)
+        if (m := p.match(line))
+    )
+    (cell,) = names._cell_names(match[1])
+    with pytest.raises(names.NameError_):
+        names.decompose(cell, vocabulary)
