@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import csv
+import datetime
 import json
 import math
 import re
@@ -22,6 +24,12 @@ NUMERIC_CODECS = {"UCH", "UIN", "U32", "EXP"}
 # Bytes per MIN/MAX/STEP span for each codec this fixture can name.
 CODEC_WIDTH = {"UCH": 1, "UIN": 2, "U32": 4, "EXP": 4, "HDA:3": 3, "HTI": 3}
 CLOCK_CODECS = {"HDA:3", "HTI"}
+ROOT = Path(__file__).resolve().parents[1]
+REGISTER_MAP = ROOT / "protocols/vaillant/ebus-vaillant-B524-register-map.md"
+CALENDAR_CLOCK_CSV = ROOT / "protocols/vaillant/fixtures/b524-op02-calendar-clock-selectors.csv"
+WIRE_CODEC = {"u8": "UCH", "u16": "UIN", "u32": "U32", "f32": "EXP", "date": "HDA:3", "time": "HTI"}
+_WIRE_CACHE: dict[tuple[str, str, str], set[str]] | None = None
+_CLOCK_CACHE: dict[tuple[str, str, str], str] | None = None
 VENTILATION_INSTANCES = tuple(f"{index:02X}" for index in range(0x0B))
 
 
@@ -46,6 +54,84 @@ def _decode_limit(codec: str, raw: str) -> Any:
     except (struct.error, IndexError, ValueError) as exc:
         raise ValidationError(f"cannot decode {codec} limit {raw}: {exc}") from exc
     raise ValidationError(f"unsupported qualified codec {codec}")
+
+
+def register_map_wire() -> dict[tuple[str, str, str], set[str]]:
+    """(operation, group, register) -> Wire-column codecs from the register map tables."""
+    global _WIRE_CACHE
+    if _WIRE_CACHE is not None:
+        return _WIRE_CACHE
+    wire: dict[tuple[str, str, str], set[str]] = {}
+    operation = group = None
+    column = None
+    for line in REGISTER_MAP.read_text(encoding="utf-8").splitlines():
+        heading = re.match(r"^(#{2,4}) (.*)", line)
+        if heading:
+            column = None
+            if heading.group(1) == "##":
+                operation = "02" if "OP=0x02" in heading.group(2) else "06" if "OP=0x06" in heading.group(2) else None
+                group = None
+            found = re.match(r"GG=0x([0-9A-Fa-f]{2})\b", heading.group(2))
+            if found and heading.group(1) == "###":
+                group = found.group(1).upper()
+            continue
+        if not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if cells and cells[0] == "RR":
+            column = cells.index("Wire") if "Wire" in cells else None
+            continue
+        row = re.match(r"^0x([0-9A-Fa-f]{4})$", cells[0]) if cells else None
+        if row and operation and group and column is not None and column < len(cells):
+            codec = WIRE_CODEC.get(cells[column].strip("`").split()[0].lower()) if cells[column].strip("`") else None
+            if codec:
+                wire.setdefault((operation, group, row.group(1).upper()), set()).add(codec)
+    _WIRE_CACHE = wire
+    return wire
+
+
+def calendar_clock_codecs() -> dict[tuple[str, str, str], str]:
+    """(group, instance, register) -> codec implied by the calendar/clock candidate list."""
+    global _CLOCK_CACHE
+    if _CLOCK_CACHE is None:
+        listed: dict[tuple[str, str, str], str] = {}
+        with CALENDAR_CLOCK_CSV.open(encoding="utf-8", newline="") as handle:
+            for row in csv.DictReader(handle):
+                if row["opcode"] == "0x02" and row["payload_bytes"] == "3":
+                    key = (row["group"][2:].upper().zfill(2), row["instance"][2:].upper().zfill(2), row["register"][2:].upper().zfill(4))
+                    listed[key] = "HTI" if "time" in row["name"] else "HDA:3"
+        _CLOCK_CACHE = listed
+    return _CLOCK_CACHE
+
+
+def _validate_selector_codec(codec: str, basis: str, selector: dict[str, str], context: str) -> None:
+    where = f"OP{selector['operation']}/GG{selector['group']}/II{selector['instance']}/RR{selector['register']}"
+    mapped = register_map_wire().get((selector["operation"], selector["group"], selector["register"]))
+    if basis == "public_local_constraint_codec":
+        _require(mapped is not None, f"{context}.decoded has no register-map Wire entry for {where}")
+        _require(mapped == {codec}, f"{context}.decoded.codec {codec} disagrees with the register-map Wire codec {'/'.join(sorted(mapped))} for {where}")
+        return
+    listed = calendar_clock_codecs().get((selector["group"], selector["instance"], selector["register"])) if selector["operation"] == "02" else None
+    if listed is not None:
+        _require(codec == listed, f"{context}.decoded.codec {codec} disagrees with the calendar/clock selector list ({listed}) for {where}")
+    else:
+        _require(mapped is not None, f"{context}.decoded has neither a calendar/clock list entry nor a register-map Wire entry for {where}")
+        _require(mapped == {codec}, f"{context}.decoded.codec {codec} disagrees with the register-map Wire codec {'/'.join(sorted(mapped))} for {where}")
+
+
+def _validate_clock_value(codec: str, raw: str, field: str, context: str) -> None:
+    value = bytes.fromhex(raw)
+    if codec == "HTI":
+        valid = value[0] <= 23 and value[1] <= 59 and value[2] <= 59
+        kind = "time (hour 0-23, minute 0-59, second 0-59)"
+    else:
+        try:
+            datetime.date(2000 + value[2], value[1], value[0])
+            valid = value[2] <= 99
+        except ValueError:
+            valid = False
+        kind = "date (day, month, year offset 0-99 from 2000)"
+    _require(valid, f"{context}.decoded.{field} is not a valid {kind}")
 
 
 def _expected_validation_scope(record: dict[str, Any]) -> str:
@@ -156,7 +242,10 @@ def _validate_record(record: Any, index: int) -> None:
         if qualification == "qualified":
             _require(codec not in CLOCK_CODECS or basis == "public_exact_selector_schema",
                      f"{context}.decoded HDA:3/HTI must use the exact-selector-schema basis, a Hypothesis")
+            _validate_selector_codec(codec, basis, selector, context)
             for field in ("min", "max"):
+                if codec in CLOCK_CODECS:
+                    _validate_clock_value(codec, limits[f"{field}_hex"], field, context)
                 _require(decoded.get(field) == _decode_limit(codec, limits[f"{field}_hex"]),
                          f"{context}.decoded.{field} disagrees with raw limits")
             if codec in {"HDA:3", "HTI"}:
@@ -274,6 +363,9 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
         _require(row.get("presence_state") == described.get("presence_state"),
                  f"observation records[{index}] presence state disagrees with description")
         _require(row.get("name") == described.get("name"), f"observation records[{index}] name disagrees with description")
+        if reference.get("acquisition_state") == "unqualified":
+            _require(described.get("decoded") is None,
+                     f"observation records[{index}] unqualified description must not carry a decoded codec")
         if reference.get("acquisition_state") == "unavailable":
             _require(described.get("raw_description_hex") is None and described.get("response_state") == "describe_unavailable", f"observation records[{index}] unavailable description has raw metadata")
         else:

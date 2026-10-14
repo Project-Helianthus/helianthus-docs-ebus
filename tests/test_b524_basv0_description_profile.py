@@ -460,3 +460,72 @@ def test_remaining_record_checks_and_non_object_inputs() -> None:
     rows = observations()
     rows["records"][3] = "not-an-object"
     rejects("observation records[3] must be an object with a selector object", descriptions(), rows)
+
+
+def test_qualified_codec_is_pinned_to_the_selector() -> None:
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "0001")
+    assert index == 0 and record["decoded"]["codec"] == "EXP"
+    record["decoded"].update(codec="U32", min=0xC1A00000, max=0x41A00000, step=0x3F800000)
+    rejects("records[0].decoded.codec U32 disagrees with the register-map Wire codec EXP for OP02/GG00/II00/RR0001", document)
+
+    # Same-width relabelling of a record that is not the first one.
+    index = next(i for i, r in enumerate(_DESCRIPTIONS["records"])
+                 if r["decoded"] and r["decoded"]["codec"] == "EXP" and r["decoded"]["qualification"] == "qualified")
+    document = descriptions()
+    selector = document["records"][index]["selector"]
+    document["records"][index]["decoded"]["codec"] = "U32"
+    assert selector["operation"] == "02"
+    with pytest.raises(validator.ValidationError, match="disagrees with the register-map Wire codec EXP"):
+        validator.validate_documents(document)
+
+    document = descriptions()
+    document["records"][0]["selector"]["register"] = "FFFF"
+    document["records"][0]["raw_description_hex"] = "00FFFF" + document["records"][0]["raw_description_hex"][6:]
+    rejects("records[0].decoded has no register-map Wire entry for OP02/GG00/II00/RRFFFF", document)
+
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "0034")
+    record["decoded"].update(codec="HTI", min="01:01:01", max="31:12:99", step=None)
+    rejects(f"records[{index}].decoded.codec HTI disagrees with the calendar/clock selector list (HDA:3) for OP02/GG00/II00/RR0034", document)
+
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "002C")
+    record["decoded"]["codec"] = "HTI"
+    rejects(f"records[{index}].decoded.codec HTI disagrees with the register-map Wire codec HDA:3 for OP02/GG00/II00/RR002C", document)
+
+
+def test_unqualified_acquisition_state_implies_no_decoded_codec() -> None:
+    rows = observations()
+    rows["records"][1]["description"]["acquisition_state"] = "unqualified"
+    rejects("observation records[1] unqualified description must not carry a decoded codec", descriptions(), rows)
+
+
+def test_clock_values_must_be_valid_before_qualification() -> None:
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "0035")
+    set_spans(record, "000000", "FFFFFF", "010000")
+    record["decoded"].update(min="00:00:00", max="255:255:255")
+    rejects(f"records[{index}].decoded.max is not a valid time (hour 0-23, minute 0-59, second 0-59)", document)
+
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "002C")
+    set_spans(record, "010101", "010D63", "010000")
+    record["decoded"].update(min="2001-01-01", max="2099-13-01")
+    rejects(f"records[{index}].decoded.max is not a valid date (day, month, year offset 0-99 from 2000)", document)
+
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "002C")
+    set_spans(record, "010101", "01016E", "010000")
+    record["decoded"].update(max="2110-01-01")
+    rejects(f"records[{index}].decoded.max is not a valid date (day, month, year offset 0-99 from 2000)", document)
+
+
+def test_same_width_relabel_of_record_94_is_rejected() -> None:
+    document = descriptions()
+    record = document["records"][94]
+    assert record["decoded"]["codec"] == "EXP"
+    record["decoded"]["codec"] = "U32"
+    for field in ("min", "max", "step"):
+        record["decoded"][field] = int.from_bytes(bytes.fromhex(record["raw_limits"][f"{field}_hex"]), "little")
+    rejects("records[94].decoded.codec U32 disagrees with the register-map Wire codec EXP for OP02/GG02/II01/RR0004", document)

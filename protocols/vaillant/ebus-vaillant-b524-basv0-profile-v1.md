@@ -64,6 +64,17 @@ rejected.
 | `public_exact_selector_schema` | Used for the 13 HDA:3/HTI records and one U32 record. The date and time spans read as plain day, month, year-offset and hour, minute, second bytes. | **Hypothesis** (candidate). [ebus-vaillant-B524.md](ebus-vaillant-B524.md) says which codec applies to which date or time register is "not established" and notes BCD for some scalar date fields; [b524-op02-calendar-clock-selectors.csv](fixtures/b524-op02-calendar-clock-selectors.csv) lists the selectors as "candidate, unconfirmed on the wire". |
 | `payload_length_inferred` | The codec was guessed from the span width only. | **Unknown**; always `unqualified` |
 
+The validator pins each qualified codec to its selector: a
+`public_local_constraint_codec` must equal the register map's Wire column for
+that `(OP, GG, RR)` (u8 UCH, u16 UIN, u32 U32, f32 EXP) and a selector with no
+Wire entry is rejected; an exact-selector-schema codec must equal the codec the
+calendar/clock selector list implies (date HDA:3, time HTI). Eight of the
+fourteen exact-schema selectors (`GG00 RR002C`, `RR00F2..RR00F5`, `GG01
+RR0010/RR0011`, and the U32 `GG04 RR000B`) are not in that list; for them the
+register map's Wire column is the pin. A calendar value must be a valid date
+(year offset 0-99 from 2000) and a clock value a valid time (hour 0-23, minute and
+second 0-59) before `qualified` is kept.
+
 For the 13 HDA:3/HTI records `qualified` therefore means only that the spans
 parse under the candidate codec; it is **Hypothesis**, not **Proven**. STEP stays
 unknown (`step: null`). The validator requires the exact-selector-schema basis
@@ -83,7 +94,7 @@ validation.
   description: `matched` (the retained description answers the selector),
   `unavailable` (no description was returned) and `unqualified` (a description
   is retained but the source acquisition did not qualify it; in the retained
-  fixture all 36 such rows have `decoded: null`). `unqualified` is retained
+  fixture all 36 such rows have `decoded: null`, and the validator requires that). `unqualified` is retained
   raw evidence, not a failed read; it grants no codec or range. This is
   **Proven** for the retained rows only.
 - `validation_scope` records the source installation's interpretation of how far
