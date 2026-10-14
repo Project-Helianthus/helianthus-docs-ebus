@@ -38,11 +38,11 @@ The value of a register reads as "[subject] [predicate] [object], [in these circ
 
 | Part | Question | Content |
 |---|---|---|
-| Subject | About what? | The component, medium or sub-entity: `compressor`, `fan`, `pump`, `burner`, `valve`, `refrigerant`, `zone`, `circuit`, `cylinder`. Implicit when it is the device itself: a device never names itself, so no device class and no `system_` appear on a controller's own registers. |
+| Subject | About what? | The component, medium or sub-entity: `compressor`, `fan`, `pump`, `burner`, `valve`, `refrigerant`, `zone`, `circuit`, `cylinder`. Implicit when it is the device itself: a device never names itself, so no device class and no `system_` appear on a controller's own registers. An attached heat generator is a subject on a controller's registers: `heat_generator`, or its kind `boiler` or `heat_pump` when the register is specific to that kind. |
 | Predicate | What is stated? | The value class, from the closed list in [Predicates](#predicates). A measured value has no predicate word. |
-| Object | What is measured, counted, timed or regulated? | A quantity (`temperature`, `pressure`, `speed`, `power`, `energy`, `current`, `flow_rate`), an event (`start`, `switch`) or an activity (`operating`, `on`, `off`). |
-| Attribute | Which one? | Instance index (`fan_1`), kind (`external_pump`, `circulation_pump`, `environmental_power`), side (`low_pressure`, `high_pressure`; a side term that contains the object word supplies the object, as in `refrigerant_low_pressure`), bound (`minimum`, `maximum`; always in the bound slot at the end of the name). |
-| Circumstance | In which context? | Purpose (`heating`, `cooling`, `dhw`, `ventilation`, `solar`); place (`flow`, `return`, `inlet`, `outlet`, `room`, `outdoor`, `source`, `building`, `top`, `bottom`); period (`total`, `remaining`, `current_month`, `previous_month`, `current_year`, `previous_year`); manner (`fine`); condition (`at_…`). |
+| Object | What is measured, counted, timed or regulated? | A quantity (`temperature`, `pressure`, `speed`, `power`, `energy`, `current`, `flow_rate`), an event (`start`, `switch`), an activity (`operating`, `on`, `off`), a point in time (`date`, `clock_time`, `weekday`) or what a text holds (`name`, `phone_number`). |
+| Attribute | Which one? | Instance index (`fan_1`), kind (`external_pump`, `circulation_pump`, `environmental_power`), side (`low_pressure`, `high_pressure`; a side term that contains the object word supplies the object, as in `refrigerant_low_pressure`), bound (`minimum`, `maximum`; always in the bound slot at the end of the name), span boundary (`start`, `end`, before `date`, `clock_time` or `weekday`). |
+| Circumstance | In which context? | Purpose (`heating`, `cooling`, `dhw`, `ventilation`, `solar`); place (`flow`, `return`, `inlet`, `outlet`, `room`, `outdoor`, `source`, `building`, `top`, `bottom`); period (`total`, `remaining`, `daily`, `current_month`, `previous_month`, `current_year`, `previous_year`); manner (`fine`, `average`); condition (`at_…`). |
 
 ### Order of the parts
 
@@ -52,16 +52,21 @@ The value of a register reads as "[subject] [predicate] [object], [in these circ
 - Bounds, periods and manner go at the end, in that order; a condition `at_…` closes the name, and only vocabulary terms may follow `at_`. Inside `at_…` a bound precedes its object (`at_maximum_flow_rate`).
 - A word is one vocabulary term. A compound term is exactly a multi-token entry of the vocabulary file (`flow_rate`, `diverter_valve`, `current_month`), matched longest first; it and a whole `at_…` condition each count as one word. A name has at most six words.
 - An index is an unpadded decimal number directly after the subject, or after the object when there is no subject; it does not count as a word. Elements of an array field are told apart by the field path, not by an index.
+- A part of a date or a clock time (`year`, `month`, `day`, `hour`, `minute`, `second`) follows its object directly, before any predicate (`holiday_end_clock_time_hour`).
 - A name with the placeholder `unknown` follows the form given in [Unknown meaning](#unknown-meaning).
+- A command name follows the form given in [Operations and commands](#operations-and-commands); its nested target counts as one word, and the six-word limit applies to the whole name.
 
 | Name | Subject | Place | Attribute and object | Predicate | End |
 |---|---|---|---|---|---|
 | `heating_flow_temperature_setpoint_maximum` | (implicit) | `flow` | `temperature` | `setpoint` | `maximum` |
-| `compressor_start_count` | `compressor` | | `start` | `count` | |
+| `compressor_start_count_total` | `compressor` | | `start` | `count` | `total` |
 | `compressor_on_time_minimum` | `compressor` | | `on` | `time` | `minimum` |
 | `compressor_inlet_temperature` | `compressor` | `inlet` | `temperature` | (none) | |
 | `environmental_power_fine` | (implicit) | | `environmental` `power` | (none) | `fine` |
 | `source_temperature_limit_at_maximum_flow_rate` | (implicit) | `source` | `temperature` | `limit` | `at_maximum_flow_rate` |
+| `heat_pump_flow_temperature_setpoint_maximum` | `heat_pump` | `flow` | `temperature` | `setpoint` | `maximum` |
+| `outdoor_temperature_daily_average` | (implicit) | `outdoor` | `temperature` | (none) | `daily` `average` |
+| `holiday_start_date` | (implicit) | | `holiday` `start` `date` | (none) | |
 
 ### Predicates
 
@@ -69,12 +74,15 @@ The value of a register reads as "[subject] [predicate] [object], [in these circ
 |---|---|---|
 | (none) | The measured or computed current value of a physical quantity. | the device |
 | `setpoint` | The value the device regulates towards. | user, installer or controller |
-| `limit` | A boundary the device enforces without regulating towards it. | configuration |
+| `limit` | A boundary the device enforces without regulating towards it. It takes a bound when its direction is established (`flow_temperature_limit_maximum`); `limit` alone states that the direction is not established. | configuration |
 | `offset` | A value added to a reference. | configuration |
 | `hysteresis` | A switching band. | configuration |
 | `active` | Boolean: the subject performs its function now. | the device |
 | `enabled` | Boolean: the function is permitted or configured on. | user or installer |
 | `demand` | Boolean: the function is requested. | device or controller |
+| `connected` | Boolean: the communication link to the subject is up. | the device |
+| `ready` | Boolean: the subject can perform its function as soon as it is requested. | the device |
+| `available` | Boolean: the function or component is present and usable in this installation; distinct from `enabled` (permitted) and from `status` (an enumeration). | the device |
 | `ok`, `fault` | Health booleans; see [Booleans](#booleans). | the device |
 | `state` | Closed enumeration: the position of the subject in its own operating sequence; it changes by itself. | the device |
 | `status` | Enumeration of health or availability (for example ok, warning, fault, unavailable); distinct from `state`. | the device |
@@ -83,10 +91,13 @@ The value of a register reads as "[subject] [predicate] [object], [in these circ
 | `code` | A number whose meaning comes from an external code list (error codes, state numbers). | the device |
 | `bitfield` | The value class, not the wire data type: several booleans in one value; each bit has its own boolean name in the per-bit description of the register. | the device |
 | `count` | Number of occurrences of the object event. | the device |
-| `time` | How long the object activity lasts, accumulated or configured. | device or configuration |
+| `time` | After an activity, how long it lasts, accumulated or configured; after an event, the time between two occurrences; with the period `remaining`, the time until the next occurrence or the end (`service_time_remaining`). | device or configuration |
 | `level`, `position`, `ratio`, `factor` | A graded amount without its own physical quantity; an actuator position; dimensionless quantities. | |
+| `command` | Writing the register triggers the action named before it; see [Operations and commands](#operations-and-commands). | user, installer or controller |
 
 The list is closed. A predicate is added to this table by explicit agreement before any name uses it.
+
+A bound after `setpoint`, `time`, `count`, `offset` or `hysteresis` is the allowed range of that configured value. A bound after a measured value (no predicate word) is a measured extreme. Every lifetime accumulation (energy, a count, an accumulated time) carries the period `total`; a configured time or count does not.
 
 ### Booleans
 
@@ -95,8 +106,8 @@ Value 1 (true) always means the name is true. The predicate word is chosen from 
 ### Vocabulary
 
 - `snake_case`, lowercase ASCII, English words, singular.
-- Abbreviations only from a closed list of standard hydronic and HVAC terms: `dhw`. Additions require explicit agreement.
-- Durations always use the noun `time`, with the kind of activity before it (`operating_time`, `on_time`).
+- Abbreviations only from a closed list of standard terms: `dhw` (domestic hot water), `pv` (photovoltaic), `rtc` (real-time clock) and `eeprom` (electrically erasable non-volatile memory). Additions require explicit agreement.
+- Durations always use the noun `time`, with the kind of activity before it (`operating_time_total`, `on_time_minimum`).
 - One concept, one word:
 
 | Use | Never |
@@ -111,11 +122,14 @@ Value 1 (true) always means the name is true. The predicate word is chosen from 
 | `operating_mode` | operation mode |
 | `enabled` (permission), `active` (run time) | allowed, activation |
 | `maximum`, `minimum` | max, min |
-| `time` | duration, hours, interval |
+| `time` | duration, hours (as a duration), interval |
 | `external` | ext |
 
 - A table entry names the general concept. A narrower meaning, once established, is kept through a purpose (`heating`, `dhw`, `solar`), an attribute (index, kind) or a place (`top`, `bottom`), never through the forbidden word. Where two registers of one device with different meanings would get the same name and no vocabulary term separates them, both names stay provisional (see [Unknown meaning](#unknown-meaning)) and each `open_question` states the narrower meaning.
-- No metadata in a name: unit, scale, data type, access, device class, vendor, model, product name, service-menu code, operation, selector, API prefix. Units are documented outside the name, in the register documentation.
+- A calendar date is the object `date`, a time of day `clock_time` and a day of the week `weekday`; the start and end of a span are attributes before them (`holiday_start_date`, `holiday_end_clock_time`). When a date or a clock time is split across fields, each field adds its part after the object: `year`, `month`, `day`, `hour`, `minute` or `second` (`holiday_end_clock_time_hour`). These parts are components of a date or a time of day, not units.
+- A text value is named by what it holds (`zone_name`, `installer_phone_number`) with no predicate word; that it is text is metadata. An access code is the compound term `access_code` (`installer_access_code`), not the predicate `code`.
+- An average is the manner `average` after its period (`outdoor_temperature_daily_average`); `daily` is a rolling period of 24 hours, and the calendar periods are `current_month`, `previous_month`, `current_year` and `previous_year`.
+- No metadata in a name: unit, scale, data type, access, the device's own class, vendor, model, product name, service-menu code, operation, selector, API prefix. Units are documented outside the name, in the register documentation.
 - No redundancy: nothing the purpose or subject already implies (`dhw_flow_rate`, not `dhw_water_flow_rate`).
 
 ### Unknown meaning
@@ -131,9 +145,18 @@ Identity consists of the parts below; a name never merges entries with different
 - the operation and the selector, where the service has them; a telegram whose payload carries the values directly after `PB SB` (for example the `07 00` date and time broadcast) has neither;
 - for a decoded value field, also its message role: the request part of a telegram, the reply part of the same telegram, a broadcast, or a separate telegram that answers an earlier one;
 - for a decoded value field, also its position in the payload: the byte offset and, for a packed field, the bit position and width, or a field path that encodes all of them;
-- where a conditional schema applies, the schema variant (its `target` and hardware-version bounds).
+- where a conditional schema applies, the schema variant (its `target` and hardware-version bounds);
+- where another field of the same telegram selects which quantity a field carries, the selecting value; each reading then carries the name of its own quantity.
 
 The same quantity always has the same name across device classes and on alternative addresses. Variants that coexist on the same device get distinct names through an attribute or a circumstance; the manner `fine`, for example, marks a finer-resolution variant of a quantity (an illustrative pair, not an established one: `environmental_power` and `environmental_power_fine`).
+
+### Operations and commands
+
+A row that describes an operation rather than a value (for example a symbolic read or write) is named `[verb]_[object]` (`read_symbolic_address`, `write_symbolic_address`), like a method string, and is outside the value grammar. A register whose written value triggers an action (for example a reset or an abort) is named `[target]_[action]_command`: `[target]` is the canonical name of the value or function acted on and counts as one word, and `[action]` is a vocabulary verb such as `reset`, `abort`, `start` or `stop` (`compressor_start_count_total_reset_command`).
+
+### Correspondence annotations
+
+When correspondence annotations disagree on a meaning, confirmation on the wire prevails over all of them; among the annotations, a Vaillant name prevails over an application name, and an application name over a community name. A disagreement that confirmation on the wire does not settle keeps the name provisional, and its `open_question` records the disagreement. Each annotation keeps its source's spelling in its own correspondence column. A service-menu code (for example `d.40`) is an annotation in its own column, `service_menu_code`, and never part of a name.
 
 ### Migration and enforcement
 
@@ -141,16 +164,4 @@ Every renamed fixture carries a `previous_name` column with the earlier canonica
 
 ### Open questions
 
-- Which further abbreviations are admitted, including candidates from outside hydronics such as `pv`, `rtc` and `eeprom`.
-- Which correspondence annotation prevails when annotations disagree on a meaning.
-- How rows that describe an operation rather than a register (for example a symbolic read or write), and registers whose written value triggers an action (for example a reset or an abort), are named; until this is resolved such names stay provisional.
-- Whether service-menu codes get their own correspondence column.
-- Which boolean predicates are added for conditions that are neither run time, permission, demand nor health, such as `connected`, `ready` and `available`.
-- How clock and calendar values are named (a date, a clock time, a weekday, an hour or minute part); `time` stays reserved for durations and units stay out of names.
-- How the time between two occurrences of an event and a countdown to the next occurrence are named.
-- Whether `limit` always takes a bound, and whether a bound after `setpoint`, `time` or `count` names the allowed range of that value while a bound without a predicate names a measured extreme.
-- How a field whose quantity is selected by another field of the same telegram is named, for example one entry per reading closed by an `at_…` condition on the selecting value.
-- How text values and access codes are named; `code` denotes a number from an external code list.
-- How averages over a rolling period are named (for example a 24-hour outdoor temperature average).
-- Whether every lifetime count and accumulated time carries the period `total`, or only when another period of the same quantity exists.
-- Whether the kind of an attached heat generator (for example a boiler or a heat pump) may appear as a subject on a controller's registers, given that no device class appears in a name, or whether such pairs stay provisional.
+No questions are open. A change to these rules goes through explicit agreement and is recorded in Project-Helianthus/helianthus-docs-ebus#560.
