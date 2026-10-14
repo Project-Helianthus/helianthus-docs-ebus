@@ -70,10 +70,15 @@ not need a settled-removal signal.
 
 ## Catalog capability classification
 
-**Contract status:** Normative target for `helianthus-ebusreg` issue #169.
-**Evidence status:** `Unknown` until an accepted implementation of #169 provides
-matching repository evidence. This section does not claim that current accepted
-registry code already satisfies the target.
+**Contract status:** Normative; owned by `helianthus-ebusreg` issue #169.
+**Implementation status:** Implemented by the ebusreg full-catalog classifier change
+[ebusreg#170](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/170)
+(merged), computed over the full catalog. The registry revision that the gateway
+pins also carries it, and that revision also includes
+[ebusreg#172](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/172).
+The machine-readable key `evidence_status` in the companion manifest records
+this implementation state; it is not a Proven/Hypothesis/Unknown label.
+Repository evidence only; no deployment or live qualification claim.
 
 `ControllerCapability` MUST remain a read-only catalog classification owned by
 `helianthus-ebusreg`. Its capability index MUST include every catalog row whose
