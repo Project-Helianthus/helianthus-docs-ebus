@@ -364,14 +364,21 @@ def _validate_remote_slot_identity(records: list[dict[str, Any]]) -> None:
 
 
 def _validate_exact_schema_pins(records: list[dict[str, Any]]) -> None:
-    """public_exact_selector_schema is accepted only for the documented selector set."""
+    """The exact-schema basis belongs to exactly the documented selector set, in both directions."""
     for index, record in enumerate(records):
         decoded = record.get("decoded")
-        if isinstance(decoded, dict) and decoded.get("codec_basis") == "public_exact_selector_schema":
-            selector = record["selector"]
-            _require((selector["operation"], selector["group"], selector["instance"], selector["register"]) in EXACT_SCHEMA_SELECTORS,
-                     f"records[{index}].decoded.codec_basis public_exact_selector_schema is not documented for "
-                     f"OP{selector['operation']}/GG{selector['group']}/II{selector['instance']}/RR{selector['register']}")
+        if not isinstance(decoded, dict):
+            continue
+        selector = record["selector"]
+        documented = (selector["operation"], selector["group"], selector["instance"], selector["register"]) in EXACT_SCHEMA_SELECTORS
+        where = f"OP{selector['operation']}/GG{selector['group']}/II{selector['instance']}/RR{selector['register']}"
+        if decoded.get("codec_basis") == "public_exact_selector_schema":
+            _require(documented,
+                     f"records[{index}].decoded.codec_basis public_exact_selector_schema is not documented for {where}")
+        elif documented:
+            _require(False,
+                     f"records[{index}].decoded.codec_basis must be public_exact_selector_schema for the documented "
+                     f"exact-schema selector {where}")
 
 
 def _validate_codec_read_widths(records: list[dict[str, Any]]) -> None:

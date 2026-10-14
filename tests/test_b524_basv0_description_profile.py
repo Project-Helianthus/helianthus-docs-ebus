@@ -737,3 +737,13 @@ def test_claimed_selector_provenance_is_validated_even_when_unqualified() -> Non
     rejects(f"records[{index}].decoded has no register-map Wire entry for OP02/GG03/II00/RR0025", document)
     assert not [r for r in _DESCRIPTIONS["records"] if r["decoded"] and r["decoded"]["qualification"] == "unqualified"
                 and r["decoded"]["codec_provenance"] == "selector_qualified"]
+
+
+def test_documented_exact_schema_selectors_must_keep_their_basis() -> None:
+    document = descriptions()
+    index, record = find(document, "02", "04", "00", "000B")
+    assert record["decoded"]["codec"] == "U32" and record["decoded"]["codec_basis"] == "public_exact_selector_schema"
+    record["decoded"]["codec_basis"] = "public_local_constraint_codec"
+    rejects(f"records[{index}].decoded.codec_basis must be public_exact_selector_schema for the documented "
+            "exact-schema selector OP02/GG04/II00/RR000B", document)
+    validator.validate_documents(descriptions(), observations(), CATALOG)
