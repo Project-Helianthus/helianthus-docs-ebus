@@ -60,3 +60,20 @@ def test_register_observations_preserve_nonvalue_outcomes() -> None:
     assert sum(record["description"] is None for record in profile["records"]) == 4492
     result = subprocess.run(["jv", str(REGISTER_SCHEMA), str(REGISTER_FIXTURE)], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
+
+
+def test_register_observation_schema_rejects_sensitive_or_unknown_fields(tmp_path: Path) -> None:
+    profile = json.loads(REGISTER_FIXTURE.read_text())
+    mutations = [
+        ("root-private", lambda candidate: candidate.update({"private_capture_reference": "forbidden"})),
+        ("record-current", lambda candidate: candidate["records"][0].update({"current_value_hex": "00"})),
+        ("nested-extra", lambda candidate: candidate["records"][0]["selector"].update({"device_serial": "forbidden"})),
+        ("description-extra", lambda candidate: candidate["records"][1]["description"].update({"raw_payload_hex": "0001"})),
+    ]
+    for name, mutate in mutations:
+        candidate = deepcopy(profile)
+        mutate(candidate)
+        path = tmp_path / f"{name}.json"
+        path.write_text(json.dumps(candidate))
+        result = subprocess.run(["jv", str(REGISTER_SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+        assert result.returncode != 0, name
