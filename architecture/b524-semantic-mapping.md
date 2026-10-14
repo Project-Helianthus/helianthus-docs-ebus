@@ -119,8 +119,8 @@ Ownership note:
 |---------------|------|------|
 | `[].state.heating_circuit_flow_setpoint` | GG=0x02, RR=0x0007 | f32 |
 | `[].state.current_circuit_flow_temperature` | GG=0x02, RR=0x0008 | f32 |
-| `[].state.circuit_state` | GG=0x02, RR=0x001B | enum (u16): STANDBY/HEATING/COOLING |
-| `[].state.pump_status` | GG=0x02, RR=0x001E | bool (u16) |
+| `[].state.circuit_state` | GG=0x02, RR=0x001E | enum (u16): STANDBY/HEATING/COOLING/DHW |
+| `[].state.pump_status` | GG=0x02, RR=0x001B | bool (u16) |
 | `[].state.calculated_flow_temperature` | GG=0x02, RR=0x0020 | f32 |
 | `[].state.mixer_position_percentage` | GG=0x02, RR=0x0021 | f32 |
 | `[].state.current_humidity_pct` | GG=0x02, RR=0x0022 | f32 |
@@ -138,14 +138,16 @@ Ownership note:
 | `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 |
 | `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 | **Stale path**: FLAGS=0x02 (RW) — should be `config.*`. Pending gateway migration |
 
-**Known discrepancy (`circuit_state` / `pump_status`):** the mapping above
-(`circuit_state` at RR=0x001B, `pump_status` at RR=0x001E) documents what the
-gateway's `refreshCircuits()` currently reads; it is left unchanged here. The
-protocol reference ([B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum))
-assigns the circuit state enumeration (STANDBY/HEATING/COOLING/DHW) to
-RR=0x001E and the pump status to RR=0x001B — the opposite of this table.
-This discrepancy between the gateway implementation and the protocol
-reference is tracked in
+**Selector assignment (`circuit_state` / `pump_status`):** the circuit state
+enumeration (raw 0 = STANDBY, 1 = HEATING, 2 = COOLING, 3 = DHW) is read from
+RR=0x001E (`circuit_status_circuit`) and the pump status from RR=0x001B
+(`circuit_pump_status`), as assigned in the
+[B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum).
+Earlier revisions of this table had the two selectors swapped. The assignment
+rests on observed Vaillant naming ("Status circuit" for RR=0x001E, "Status
+Pump" for RR=0x001B); it is a **Hypothesis** and has not been confirmed
+against a hardware comparison of the two registers. A raw state value outside
+0–3 is published as `unknown_<raw>`. The correction is tracked in
 [helianthus-ebusgateway#1004](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1004).
 
 Consumer note:
@@ -198,7 +200,8 @@ The B524 contribution that still feeds the current boiler semantic contract is:
 | `state.dhwTemperatureC` | GG=0x01, RR=0x0005 | f32 | Controller mirror from DHW group |
 | `state.dhwTargetTemperatureC` | GG=0x01, RR=0x0004 | f32 | Controller mirror from DHW group |
 | `config.dhwOperatingMode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
-| `diagnostics.heatingStatusRaw` | GG=0x02, II=0x00, RR=0x001B | u16 | Controller-side raw heating status |
+| `diagnostics.heatingStatusRaw` | GG=0x02, II=0x00, RR=0x001E | u16 | Controller-side raw heating status; the circuit state enumeration of circuit 0 (see the selector assignment note under `ebus.v1.semantic.circuits.get`). Hypothesis (naming-based) |
+| `state.central_heating_pump_active` | GG=0x02, II=0x00, RR=0x001B | u16 (non-zero = active) | Controller mirror of the circuit 0 pump status; the direct boiler read of the pump is preferred when available. Hypothesis (naming-based) |
 
 The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
 `RR=0x0012` have unknown native reply layouts. They are **withheld from this
