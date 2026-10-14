@@ -339,6 +339,17 @@ def _validate_remote_slot_identity(records: list[dict[str, Any]]) -> None:
                  f"records[{first[0]}] in {where}; one slot retains one identity")
 
 
+def _validate_codec_read_widths(records: list[dict[str, Any]]) -> None:
+    """A qualified codec width must agree with the observed read payload width."""
+    for index, record in enumerate(records):
+        decoded = record.get("decoded")
+        width = record.get("observed_read_payload_width")
+        if isinstance(decoded, dict) and decoded.get("qualification") == "qualified" and width is not None:
+            _require(width == CODEC_WIDTH[decoded["codec"]],
+                     f"records[{index}].decoded.codec {decoded['codec']} width {CODEC_WIDTH[decoded['codec']]} "
+                     f"contradicts observed_read_payload_width {width}")
+
+
 def validate_fixture(path: Path, observations: Path | None = None) -> None:
     try:
         fixture = json.loads(path.read_text(encoding="utf-8"))
@@ -386,6 +397,7 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
         _require(isinstance(decoded, dict) and decoded.get("codec") == "UIN"
                  and ventilation[0].get("description_payload_length") == 6,
                  f"ventilation II{instance} RR0001 codec must remain UIN with width 2")
+    _validate_codec_read_widths(records)
     if observed is None:
         return
     _require(isinstance(observed, dict), "observations must be an object")
@@ -394,6 +406,7 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
     rows = observed.get("records")
     _require(isinstance(rows, list) and rows, "observations must contain records")
     seen = set()
+    slot_presence: dict[tuple[Any, Any], tuple[int, Any]] = {}
     descriptions = {_key(record["selector"]): record for record in records}
     for index, row in enumerate(rows):
         _require(isinstance(row, dict) and isinstance(row.get("selector"), dict),
@@ -418,6 +431,13 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
                      f"observation records[{index}] transport_error fields are inconsistent")
         else:
             raise ValidationError(f"observation records[{index}] response state is unsupported")
+        if selector.get("operation") == "06":
+            slot = (selector.get("group"), selector.get("instance"))
+            first = slot_presence.setdefault(slot, (index, row.get("presence_state")))
+            _require(first[1] == row.get("presence_state"),
+                     f"observation records[{index}] presence state {row.get('presence_state')} differs from "
+                     f"observation records[{first[0]}] {first[1]} in slot OP06/GG{slot[0]}/II{slot[1]}; "
+                     "one remote slot retains one presence state")
         reference = row.get("description")
         if reference is None:
             _require(key not in descriptions, f"observation records[{index}] drops its description link")
@@ -429,6 +449,10 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
         _require(row.get("access_flags") == described.get("access_flags"), f"observation records[{index}] access flags disagree with description")
         _require(row.get("observed_payload_width") == described.get("observed_read_payload_width"),
                  f"observation records[{index}] payload width disagrees with description")
+        decoded = described.get("decoded")
+        if isinstance(decoded, dict) and decoded.get("qualification") == "qualified" and row.get("observed_payload_width") is not None:
+            _require(row["observed_payload_width"] == CODEC_WIDTH.get(decoded.get("codec")),
+                     f"observation records[{index}] observed width contradicts the qualified codec width")
         _require(row.get("presence_state") == described.get("presence_state"),
                  f"observation records[{index}] presence state disagrees with description")
         _require(row.get("name") == described.get("name"), f"observation records[{index}] name disagrees with description")

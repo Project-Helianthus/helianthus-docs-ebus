@@ -179,7 +179,10 @@ Remote entries retain their native group and optional remote-header metadata;
 an `observed_remote_header` entry must retain its group, address and firmware
 fields, which the schema and validator require, and all entries of one remote
 (OP, GG, II) slot must retain the same identity qualification and, when observed,
-the same address and firmware, which the validator checks. The retained fixture is homogeneous in all slots (six observed-header slots, the rest unqualified).
+the same address and firmware, which the validator checks. The retained fixture is homogeneous in all slots (six observed-header slots, the rest unqualified). The register-observation fixture likewise retains one
+presence state per remote slot, and a qualified codec width must equal the
+observed read payload width in both fixtures; the validator rejects either
+contradiction.
 A disconnected or identity-unqualified remote entry is metadata evidence, not
 proof that a device function exists. Unknown names are represented by JSON
 `null`; a missing description or limit is represented by `null`, never by a

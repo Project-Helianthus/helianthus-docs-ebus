@@ -676,3 +676,30 @@ def test_one_remote_slot_retains_one_identity_qualification() -> None:
     rejects(f"records[{index}] remote identity qualification unqualified differs from records[{members[0]}] "
             f"observed_remote_header in slot OP{selector['operation']}/GG{selector['group']}/II{selector['instance']}; "
             "one slot retains one qualification", document, rows)
+
+
+def test_qualified_codec_width_must_match_observed_read_widths() -> None:
+    document, rows = descriptions(), observations()
+    record = document["records"][0]
+    assert record["decoded"]["qualification"] == "qualified" and record["observed_read_payload_width"] == 4
+    record["observed_read_payload_width"] = 5
+    for row in rows["records"]:
+        if row["selector"] == record["selector"]:
+            row["observed_payload_width"] = 5
+    rejects("records[0].decoded.codec EXP width 4 contradicts observed_read_payload_width 5", document, rows)
+
+
+def test_one_remote_slot_retains_one_observation_presence_state() -> None:
+    document, rows = descriptions(), observations()
+    index = [i for i, row in enumerate(rows["records"])
+             if row["selector"]["operation"] == "06" and row["description"] is None
+             and row["presence_state"] == "remote_identity_unqualified"][-1]
+    slot = (rows["records"][index]["selector"]["group"], rows["records"][index]["selector"]["instance"])
+    first = next(i for i, row in enumerate(rows["records"])
+                 if row["selector"]["operation"] == "06" and (row["selector"]["group"], row["selector"]["instance"]) == slot)
+    assert first < index
+    rows["records"][index]["presence_state"] = "observed_present"
+    selector = rows["records"][index]["selector"]
+    rejects(f"observation records[{index}] presence state observed_present differs from observation records[{first}] "
+            f"remote_identity_unqualified in slot OP06/GG{selector['group']}/II{selector['instance']}; "
+            "one remote slot retains one presence state", document, rows)
