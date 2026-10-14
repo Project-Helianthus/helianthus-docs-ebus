@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import struct
 import sys
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,17 @@ def _require(condition: bool, message: str) -> None:
 
 def _description_operation(operation: str) -> int:
     return {"02": 0x01, "06": 0x07}[operation]
+
+
+def _decode_limit(codec: str, raw: str) -> Any:
+    value = bytes.fromhex(raw)
+    if codec == "UCH": return value[0]
+    if codec == "UIN": return int.from_bytes(value, "little")
+    if codec == "U32": return int.from_bytes(value, "little")
+    if codec == "EXP": return struct.unpack("<f", value)[0]
+    if codec == "HDA:3": return f"{2000 + value[2]:04d}-{value[1]:02d}-{value[0]:02d}"
+    if codec == "HTI": return f"{value[0]:02d}:{value[1]:02d}:{value[2]:02d}"
+    raise ValidationError(f"unsupported qualified codec {codec}")
 
 
 def _validate_record(record: Any, index: int) -> None:
@@ -84,13 +96,23 @@ def _validate_record(record: Any, index: int) -> None:
                  f"{context} promotes a length-inferred codec")
         _require((provenance == "length_inferred") == (basis == "payload_length_inferred"),
                  f"{context}.decoded codec basis disagrees with provenance")
+        if qualification == "qualified":
+            codec = decoded.get("codec")
+            for field in ("min", "max"):
+                _require(decoded.get(field) == _decode_limit(codec, limits[f"{field}_hex"]),
+                         f"{context}.decoded.{field} disagrees with raw limits")
+            if codec in {"HDA:3", "HTI"}:
+                _require(decoded.get("step") is None, f"{context}.decoded.step must remain unknown")
+            else:
+                _require(decoded.get("step") == _decode_limit(codec, limits["step_hex"]),
+                         f"{context}.decoded.step disagrees with raw limits")
     if record.get("validation_scope") == "format_range_and_step":
         _require(decoded is not None and decoded.get("qualification") == "qualified"
                  and decoded.get("codec_provenance") == "selector_qualified",
                  f"{context} grants range validation without a qualified selector codec")
 
 
-def validate_fixture(path: Path) -> None:
+def validate_fixture(path: Path, observations: Path | None = None) -> None:
     try:
         fixture = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -114,14 +136,26 @@ def validate_fixture(path: Path) -> None:
     ventilation = [record for record in records if record.get("selector") == {"operation": "02", "group": "09", "instance": "00", "register": "0001"}]
     _require(len(ventilation) == 1 and ventilation[0].get("observed_read_payload_width") == 2
              and ventilation[0].get("presence_state") == "unknown", "ventilation RR0001 must retain unknown two-byte evidence")
+    if observations is not None:
+        observed = json.loads(observations.read_text(encoding="utf-8"))
+        _require(observed.get("observation_id") == fixture.get("observation_id"), "cross-fixture identity mismatch")
+        _require(observed.get("description_catalog") == path.name, "cross-fixture catalog mismatch")
+        for index, row in enumerate(observed.get("records", [])):
+            reference = row.get("description")
+            if reference is None:
+                continue
+            record_index = reference.get("record_index")
+            _require(isinstance(record_index, int) and 0 <= record_index < len(records), f"observation records[{index}] description index out of bounds")
+            _require(row.get("selector") == records[record_index].get("selector"), f"observation records[{index}] description selector mismatch")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("fixture", type=Path)
+    parser.add_argument("--observations", type=Path)
     args = parser.parse_args()
     try:
-        validate_fixture(args.fixture)
+        validate_fixture(args.fixture, args.observations)
     except ValidationError as exc:
         print(exc, file=sys.stderr)
         return 1

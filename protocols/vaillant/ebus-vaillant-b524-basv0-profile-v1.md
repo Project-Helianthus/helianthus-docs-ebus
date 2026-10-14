@@ -14,6 +14,22 @@ bytes, access flags when observed, and the explicit qualification of any codec
 or limits. It contains no current register values, network endpoints, serial
 numbers, capture time, contributor identity, or acquisition fingerprint.
 
+## Provenance and evidence status
+
+**Proven:** the two committed, sanitized fixtures are publishable primary
+evidence for the bytes they retain. Their stable SHA-256 values are
+`030cbb4fb5cb37dc443e39bb081e5aeff45419e5faf4085fa1da6d2cfe455210`
+(descriptions) and
+`f54b0802e97bc8baaad3f899f132e633af2fa39c6a99835ad89feb2ee4a22533`
+(register observations). Acquisition context is limited to B524
+request/response metadata and the exact local controller profile recorded in
+the fixture. Export software version and timestamp are **Unknown**.
+
+**Hypothesis:** semantic names, device roles, and installation topology require
+separate evidence. **Unknown:** any unretained current value, capture context,
+or identity detail. The sanitized raw records are publishable evidence because
+they retain only protocol-native metadata and exclude those details.
+
 [b524-basv0-register-observations-v1.json](fixtures/b524-basv0-register-observations-v1.json)
 separately retains every bounded scalar selector without retaining its current
 value. `echo_payload`, `status_only`, and `transport_error` remain distinct;
@@ -37,7 +53,7 @@ decoded record with `codec_provenance: selector_qualified` can be marked
 
 ## Observed local bound
 
-The local selector `(02, 00, 00, 0001)` has raw description
+**Proven (within the retained bytes):** the local selector `(02, 00, 00, 0001)` has raw description
 `0001000000A0C10000A0410000803F`. Under its selector-qualified EXP codec, the
 observed bounds are `-20`, `20`, and `1`. This is a BASV0 profile observation.
 The separate BASV2 observation has `-20`, `50`, and `1`; neither value applies
@@ -53,9 +69,9 @@ system selectors `006C`, `006D`, `006F`, and `0070` likewise remain raw
 metadata; their zero-valued UCH interpretation does not establish a numeric
 parameter or a text codec.
 
-For local ventilation `OP02/GG09/RR0001`, the observed read body has width two.
+**Proven (within the retained bytes):** for local ventilation `OP02/GG09/RR0001`, the observed read body has width two.
 The profile-qualified UIN decoding is supported for that numeric response. The
-observed unknown instance state still does not establish ventilation equipment;
+**Unknown:** the observed instance state does not establish ventilation equipment;
 there is no positive-presence predicate in this evidence. A UCH-sized
 interpretation is rejected for this profile.
 

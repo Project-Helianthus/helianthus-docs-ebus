@@ -203,7 +203,8 @@ echo "==> check BASV0 parameter-description profile"
 jv protocols/vaillant/fixtures/b524-basv0-description-profile-schema-v1.json \
   protocols/vaillant/fixtures/b524-basv0-description-profile-v1.json
 python3 scripts/validate_b524_basv0_description_profile.py \
-  protocols/vaillant/fixtures/b524-basv0-description-profile-v1.json
+  protocols/vaillant/fixtures/b524-basv0-description-profile-v1.json \
+  --observations protocols/vaillant/fixtures/b524-basv0-register-observations-v1.json
 jv protocols/vaillant/fixtures/b524-basv0-register-observations-schema-v1.json \
   protocols/vaillant/fixtures/b524-basv0-register-observations-v1.json
 python3 -m pytest -q tests/test_b524_basv0_description_profile.py
