@@ -639,3 +639,19 @@ def test_observed_remote_header_requires_each_retained_header_field(field: str, 
     path.write_text(json.dumps(document))
     result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode != 0
+
+
+@pytest.mark.parametrize("field,value", [("firmware_raw", "FFFFFF"), ("address_raw", "09")])
+def test_one_remote_slot_retains_one_identity(field: str, value: str) -> None:
+    document = descriptions()
+    slots: dict[tuple, list[int]] = {}
+    for i, r in enumerate(document["records"]):
+        if r["remote_identity"] and r["remote_identity"]["qualification"] == "observed_remote_header":
+            s = r["selector"]
+            slots.setdefault((s["operation"], s["group"], s["instance"]), []).append(i)
+    members = next(v for v in slots.values() if len(v) > 1)
+    document["records"][members[-1]]["remote_identity"][field] = value
+    rejects(f"records[{members[-1]}] remote identity (address {document['records'][members[-1]]['remote_identity']['address_raw']}, "
+            f"firmware {document['records'][members[-1]]['remote_identity']['firmware_raw']}) differs from records[{members[0]}] in slot "
+            f"OP{document['records'][members[0]]['selector']['operation']}/GG{document['records'][members[0]]['selector']['group']}"
+            f"/II{document['records'][members[0]]['selector']['instance']}; one slot retains one identity", document)

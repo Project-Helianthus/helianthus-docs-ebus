@@ -314,6 +314,24 @@ def _validate_family_invariance(records: list[dict[str, Any]]) -> None:
                  "the instance byte is not echoed, so a qualified range must be identical across every retained instance")
 
 
+def _validate_remote_slot_identity(records: list[dict[str, Any]]) -> None:
+    """All observed-header records of one remote (OP, GG, II) slot share one identity."""
+    slots: dict[tuple[str, str, str], tuple[int, tuple[str, str]]] = {}
+    for index, record in enumerate(records):
+        identity = record.get("remote_identity")
+        if not (isinstance(identity, dict) and identity.get("qualification") == "observed_remote_header"):
+            continue
+        selector = record["selector"]
+        slot = (selector["operation"], selector["group"], selector["instance"])
+        _require(identity.get("group") == selector["group"],
+                 f"records[{index}].remote_identity.group disagrees with selector")
+        value = (identity.get("address_raw"), identity.get("firmware_raw"))
+        first = slots.setdefault(slot, (index, value))
+        _require(first[1] == value,
+                 f"records[{index}] remote identity (address {value[0]}, firmware {value[1]}) differs from "
+                 f"records[{first[0]}] in slot OP{slot[0]}/GG{slot[1]}/II{slot[2]}; one slot retains one identity")
+
+
 def validate_fixture(path: Path, observations: Path | None = None) -> None:
     try:
         fixture = json.loads(path.read_text(encoding="utf-8"))
@@ -342,6 +360,7 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
         _require(key not in seen, f"records[{index}] duplicates a description selector")
         seen.add(key)
     _validate_family_invariance(records)
+    _validate_remote_slot_identity(records)
     dhw = _find(records, "02", "00", "00", "0001")
     _require(len(dhw) == 1, "fixture must retain exactly one local DHW bivalence record")
     _require(dhw[0].get("raw_limits", {}).get("max_hex") == "0000A041", "BASV0 DHW maximum must retain raw 20")
