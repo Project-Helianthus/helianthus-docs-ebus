@@ -32,10 +32,16 @@ on:
       - "requirements-ci.txt"
       - "Makefile"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   markdown-checks:
     name: Docs Checks
-    runs-on: ubuntu-latest
+    # fork pull requests never run on the persistent runners
+    runs-on: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) && 'ubuntu-latest' || 'synology' }}
+    timeout-minutes: 30
     steps:
       - name: Checkout PR head
         if: github.event_name == 'pull_request'
@@ -179,6 +185,16 @@ jobs:
           PIP_NO_INDEX: "1"
         with:
           python-version: "3.12.10"
+
+      - name: Create job-local virtualenv with hash-locked pip
+        run: |
+          set -euo pipefail
+          wheel="${RUNNER_TEMP}/helianthus-pip-bootstrap/pip-25.0.1-py3-none-any.whl"
+          rm -rf "${RUNNER_TEMP}/venv"
+          python -m venv --without-pip "${RUNNER_TEMP}/venv"
+          "${RUNNER_TEMP}/venv/bin/python" "${wheel}/pip" install \
+            --no-index --no-deps --disable-pip-version-check "${wheel}"
+          echo "${RUNNER_TEMP}/venv/bin" >> "${GITHUB_PATH}"
 
       - name: Verify pinned Python and pip
         run: |
