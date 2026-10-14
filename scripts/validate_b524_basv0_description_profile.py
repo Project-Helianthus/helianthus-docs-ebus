@@ -315,21 +315,28 @@ def _validate_family_invariance(records: list[dict[str, Any]]) -> None:
 
 
 def _validate_remote_slot_identity(records: list[dict[str, Any]]) -> None:
-    """All observed-header records of one remote (OP, GG, II) slot share one identity."""
-    slots: dict[tuple[str, str, str], tuple[int, tuple[str, str]]] = {}
+    """One remote (OP, GG, II) slot retains one identity qualification and one identity."""
+    slots: dict[tuple[str, str, str], tuple[int, str, tuple[Any, Any]]] = {}
     for index, record in enumerate(records):
         identity = record.get("remote_identity")
-        if not (isinstance(identity, dict) and identity.get("qualification") == "observed_remote_header"):
+        if not isinstance(identity, dict):
             continue
         selector = record["selector"]
         slot = (selector["operation"], selector["group"], selector["instance"])
+        qualification = identity.get("qualification")
+        value = (identity.get("address_raw"), identity.get("firmware_raw"))
+        first = slots.setdefault(slot, (index, qualification, value))
+        where = f"slot OP{slot[0]}/GG{slot[1]}/II{slot[2]}"
+        _require(first[1] == qualification,
+                 f"records[{index}] remote identity qualification {qualification} differs from "
+                 f"records[{first[0]}] {first[1]} in {where}; one slot retains one qualification")
+        if qualification != "observed_remote_header":
+            continue
         _require(identity.get("group") == selector["group"],
                  f"records[{index}].remote_identity.group disagrees with selector")
-        value = (identity.get("address_raw"), identity.get("firmware_raw"))
-        first = slots.setdefault(slot, (index, value))
-        _require(first[1] == value,
+        _require(first[2] == value,
                  f"records[{index}] remote identity (address {value[0]}, firmware {value[1]}) differs from "
-                 f"records[{first[0]}] in slot OP{slot[0]}/GG{slot[1]}/II{slot[2]}; one slot retains one identity")
+                 f"records[{first[0]}] in {where}; one slot retains one identity")
 
 
 def validate_fixture(path: Path, observations: Path | None = None) -> None:

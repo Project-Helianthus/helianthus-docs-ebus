@@ -655,3 +655,24 @@ def test_one_remote_slot_retains_one_identity(field: str, value: str) -> None:
             f"firmware {document['records'][members[-1]]['remote_identity']['firmware_raw']}) differs from records[{members[0]}] in slot "
             f"OP{document['records'][members[0]]['selector']['operation']}/GG{document['records'][members[0]]['selector']['group']}"
             f"/II{document['records'][members[0]]['selector']['instance']}; one slot retains one identity", document)
+
+
+def test_one_remote_slot_retains_one_identity_qualification() -> None:
+    document, rows = descriptions(), observations()
+    slots: dict[tuple, list[int]] = {}
+    for i, r in enumerate(document["records"]):
+        if r["remote_identity"] and r["remote_identity"]["qualification"] == "observed_remote_header":
+            s = r["selector"]
+            slots.setdefault((s["operation"], s["group"], s["instance"]), []).append(i)
+    members = next(v for v in slots.values() if len(v) > 2)
+    index = members[1]
+    record = document["records"][index]
+    record["remote_identity"] = {"qualification": "unqualified"}
+    record["presence_state"] = "remote_identity_unqualified"
+    for row in rows["records"]:
+        if row["selector"] == record["selector"]:
+            row["presence_state"] = "remote_identity_unqualified"
+    selector = record["selector"]
+    rejects(f"records[{index}] remote identity qualification unqualified differs from records[{members[0]}] "
+            f"observed_remote_header in slot OP{selector['operation']}/GG{selector['group']}/II{selector['instance']}; "
+            "one slot retains one qualification", document, rows)
