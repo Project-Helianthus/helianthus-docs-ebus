@@ -74,7 +74,8 @@ jobs:
   validate:
     name: Validate Explicit Combined Refs
     # fork pull requests never run on the persistent runners
-    runs-on: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) && 'ubuntu-latest' || 'synology' }}
+    # dispatch inputs may name an arbitrary repository; never on the persistent runners
+    runs-on: ${{ (github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository)) && 'ubuntu-latest' || 'synology' }}
     timeout-minutes: 20
     steps:
       - name: Reject moving refs
