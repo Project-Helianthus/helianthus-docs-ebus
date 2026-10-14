@@ -1,4 +1,5 @@
 import json
+import struct
 import subprocess
 from copy import deepcopy
 from pathlib import Path
@@ -65,6 +66,31 @@ def test_validator_rejects_qualified_raw_limit_mismatch(tmp_path: Path) -> None:
     assert "decoded.max disagrees" in result.stderr
 
 
+def test_validator_rejects_invalid_qualified_numeric_ranges_even_when_raw_limits_agree(tmp_path: Path) -> None:
+    profile = json.loads(FIXTURE.read_text())
+
+    def update_exp_limit(record: dict, field: str, value: float) -> None:
+        raw_limits = record["raw_limits"]
+        raw_limits[f"{field}_hex"] = struct.pack("<f", value).hex().upper()
+        record["raw_description_hex"] = record["raw_description_hex"][:6] + "".join(
+            raw_limits[name] for name in ("min_hex", "max_hex", "step_hex")
+        )
+        record["decoded"][field] = value
+
+    for name, field, value, message in [
+        ("nonfinite", "max", float("inf"), "must be finite"),
+        ("unordered", "min", 21.0, "must be ordered"),
+        ("zero-step", "step", 0.0, "step must be positive"),
+    ]:
+        candidate = deepcopy(profile)
+        update_exp_limit(candidate["records"][0], field, value)
+        path = tmp_path / f"{name}.json"
+        path.write_text(json.dumps(candidate))
+        result = validate(path)
+        assert result.returncode != 0, name
+        assert message in result.stderr
+
+
 def test_register_observations_preserve_nonvalue_outcomes() -> None:
     profile = json.loads(REGISTER_FIXTURE.read_text())
     assert profile["current_values"] == "omitted"
@@ -123,9 +149,21 @@ def test_cross_fixture_validator_rejects_linked_metadata_contradictions(tmp_path
         mutate(candidate_rows["records"], candidate_descriptions["records"])
         row_path = tmp_path / f"{name}-rows.json"
         description_path = tmp_path / f"{name}-descriptions.json"
+        candidate_rows["description_catalog"] = description_path.name
         row_path.write_text(json.dumps(candidate_rows))
         description_path.write_text(json.dumps(candidate_descriptions))
         assert validate_cross(description_path, row_path).returncode != 0, name
+
+
+def test_cross_fixture_validator_rejects_linked_payload_width_mismatch(tmp_path: Path) -> None:
+    observations = json.loads(REGISTER_FIXTURE.read_text())
+    candidate = deepcopy(observations)
+    candidate["records"][1]["observed_payload_width"] = 99
+    path = tmp_path / "payload-width-mismatch.json"
+    path.write_text(json.dumps(candidate))
+    result = validate_cross(FIXTURE, path)
+    assert result.returncode != 0
+    assert "payload width disagrees with description" in result.stderr
 
 
 def test_register_observation_schema_rejects_sensitive_or_unknown_fields(tmp_path: Path) -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import struct
 import sys
@@ -17,6 +18,7 @@ class ValidationError(ValueError):
 
 
 HEX = re.compile(r"^(?:[0-9A-F]{2})*$")
+NUMERIC_CODECS = {"UCH", "UIN", "U32", "EXP"}
 
 
 def _require(condition: bool, message: str) -> None:
@@ -110,6 +112,13 @@ def _validate_record(record: Any, index: int) -> None:
             else:
                 _require(decoded.get("step") == _decode_limit(codec, limits["step_hex"]),
                          f"{context}.decoded.step disagrees with raw limits")
+            if codec in NUMERIC_CODECS:
+                minimum, maximum, step = (decoded.get(field) for field in ("min", "max", "step"))
+                _require(all(isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+                             for value in (minimum, maximum, step)),
+                         f"{context}.decoded numeric range must be finite")
+                _require(minimum <= maximum, f"{context}.decoded numeric range must be ordered")
+                _require(step > 0, f"{context}.decoded numeric range step must be positive")
     if record.get("validation_scope") == "format_range_and_step":
         _require(decoded is not None and decoded.get("qualification") == "qualified"
                  and decoded.get("codec_provenance") == "selector_qualified",
@@ -170,6 +179,8 @@ def validate_fixture(path: Path, observations: Path | None = None) -> None:
             _require(row.get("selector") == records[record_index].get("selector"), f"observation records[{index}] description selector mismatch")
             described = records[record_index]
             _require(row.get("access_flags") == described.get("access_flags"), f"observation records[{index}] access flags disagree with description")
+            _require(row.get("observed_payload_width") == described.get("observed_read_payload_width"),
+                     f"observation records[{index}] payload width disagrees with description")
             if reference.get("acquisition_state") == "unavailable":
                 _require(described.get("raw_description_hex") is None and described.get("response_state") == "describe_unavailable", f"observation records[{index}] unavailable description has raw metadata")
             else:
