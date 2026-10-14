@@ -108,11 +108,12 @@ def _validate_record(record: Any, index: int) -> None:
                  f"{context} must retain remote identity qualification")
         if "group" in remote_identity:
             _require(remote_identity["group"] == group, f"{context}.remote_identity.group disagrees with selector")
-    _validate_remote_presence(record, context)
     raw = record.get("raw_description_hex")
     lengths = record.get("description_payload_length")
     limits = record.get("raw_limits")
     decoded = record.get("decoded")
+    _require(decoded is None or isinstance(decoded, dict), f"{context}.decoded must be an object or null")
+    _validate_remote_presence(record, context)
     if raw is None:
         _require(lengths is None and limits is None and decoded is None,
                  f"{context} cannot decode or bound a missing description")
@@ -237,7 +238,9 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
     seen = set()
     descriptions = {_key(record["selector"]): record for record in records}
     for index, row in enumerate(rows):
-        selector = row.get("selector", {})
+        _require(isinstance(row, dict) and isinstance(row.get("selector"), dict),
+                 f"observation records[{index}] must be an object with a selector object")
+        selector = row["selector"]
         key = _key(selector)
         _require(key not in seen, f"observation records[{index}] duplicates an observation selector")
         seen.add(key)

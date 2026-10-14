@@ -88,7 +88,7 @@ validation.
   **Proven** for the retained rows only.
 - `validation_scope` records the source installation's interpretation of how far
   a description could be used. It defines no display behavior and no edit
-  validation for any consumer. The derivation is, **Proven** against the
+  validation for any consumer. The derivation is **Proven** against the
   retained records: `format_range_and_step` if and only if the record is
   `observed_present` and has a qualified, selector-qualified
   `public_local_constraint_codec`; `display_only` for the other qualified
@@ -112,9 +112,11 @@ observation reports `-20`, `50`, and `1` for the same selector on a BASV2
 controller. No BASV2 bytes, software or hardware identity, or raw description
 are retained here, so this is not a profile observation and cannot be falsified
 from this repository. It resembles the register map's historical short-probe
-range hint (`-20..50`, see
-[ebus-vaillant-B524-register-map.md](ebus-vaillant-B524-register-map.md)),
-which "must not provide input-validation authority". Neither the BASV2 figure
+range hint (`-20..50`; its legend in
+[ebus-vaillant-B524-register-map.md](ebus-vaillant-B524-register-map.md) says
+the hint "requires a matching complete OP01/OP07 description before validating
+edits"). [ebus-vaillant-B524.md](ebus-vaillant-B524.md) says the historical short
+probe "must not provide input-validation authority". Neither the BASV2 figure
 nor the hint qualifies a range for BASV0 or any other profile.
 
 ## Explicitly retained uncertainty

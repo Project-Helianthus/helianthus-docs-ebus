@@ -15,13 +15,18 @@ and apply unchanged to this fixture; this page does not restate them.
 have equal-width limit spans. That proves response structure, not the value
 codec. The consumer may use a decoded range only when the fixture labels it
 `selector_qualified` and `qualified`; otherwise it must preserve the raw bytes
-and expose no range-based validation authority.
+and expose no range-based validation authority. The `public_local_constraint_codec`
+basis is itself a **Hypothesis** (a VRC720-family register-map correspondence), so a
+consumer that uses a decoded range on a `selector_qualified`, `qualified` record relies
+on that hypothesis.
 
 **Proven (within the retained bytes):** the observed BASV0 DHW bivalence maximum
 is 20. **Hypothesis (corroborating implementation evidence):** an application
 bundle observation reports a maximum of 50 for a BASV2 controller; no BASV2
 bytes or identity are published, and it resembles the register map's historical
-short-probe range hint (`-20..50`), which "must not provide input-validation
+short-probe range hint (`-20..50`), which the register map's legend says
+"requires a matching complete OP01/OP07 description before validating edits"
+and which the B524 protocol page says "must not provide input-validation
 authority". Selection must not substitute either value across profiles, software
 versions, or installation configurations.
 
@@ -29,8 +34,7 @@ versions, or installation configurations.
 `OP02/GG09/II00..II0A/RR0001` observations, the profile-qualified UIN decoder
 uses a two-byte response while presence remains unknown. Treating that response
 as one-byte UCH, or treating an unknown slot as installed ventilation, is unsupported.
-Remote descriptions whose identity is unqualified remain display-only or raw
-evidence. They do not admit a device function or write path.
+Remote descriptions whose identity is unqualified are `raw_evidence_only`. They do not admit a device function or write path.
 
 The profile itself has no current values and no write evidence. A consumer must
 keep access flags distinct from write acceptance and use an independently

@@ -427,3 +427,36 @@ def test_cross_fixture_rejects_duplicates_dropped_links_and_disagreements() -> N
     rows = observations()
     rows["records"] = []
     rejects("observations must contain records", descriptions(), rows)
+
+
+def test_remaining_record_checks_and_non_object_inputs() -> None:
+    missing_index = next(i for i, r in enumerate(_DESCRIPTIONS["records"]) if r["raw_description_hex"] is None)
+    document = descriptions()
+    document["records"][missing_index]["decoded"] = deepcopy(_DESCRIPTIONS["records"][0]["decoded"])
+    rejects(f"records[{missing_index}] cannot decode or bound a missing description", document)
+
+    document = descriptions()
+    document["records"][missing_index]["response_state"] = "describe_matched"
+    rejects(f"records[{missing_index}] missing description has wrong response state", document)
+
+    document = descriptions()
+    document["records"][0]["response_state"] = "describe_unavailable"
+    rejects("records[0] retained description has wrong response state", document)
+
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "002C")
+    record["decoded"]["step"] = "P1D"
+    rejects(f"records[{index}].decoded.step must remain unknown", document)
+
+    document = descriptions()
+    document["records"][0]["decoded"] = "EXP"
+    rejects("records[0].decoded must be an object or null", document)
+
+    remote = next(i for i, r in enumerate(_DESCRIPTIONS["records"]) if r["presence_state"] == "remote_identity_unqualified")
+    document = descriptions()
+    document["records"][remote]["decoded"] = []
+    rejects(f"records[{remote}].decoded must be an object or null", document)
+
+    rows = observations()
+    rows["records"][3] = "not-an-object"
+    rejects("observation records[3] must be an object with a selector object", descriptions(), rows)
