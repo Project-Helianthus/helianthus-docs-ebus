@@ -268,7 +268,9 @@ def _validate_record(record: Any, index: int) -> None:
                  f"{context} promotes a length-inferred codec")
         _require((provenance == "length_inferred") == (basis == "payload_length_inferred"),
                  f"{context}.decoded codec basis disagrees with provenance")
-        if qualification == "qualified":
+        if provenance == "selector_qualified":
+            # Claimed selector provenance is checked whatever the qualification: it asserts
+            # that the named source maps this selector to this codec.
             _validate_selector_codec(codec, basis, selector, context)
         for field in ("min", "max", "step"):
             if field == "step" and codec in CLOCK_CODECS and (decoded.get("step") is None or qualification == "qualified"):
@@ -284,9 +286,10 @@ def _validate_record(record: Any, index: int) -> None:
             same = actual == expected or (isinstance(actual, float) and isinstance(expected, float)
                                           and math.isnan(actual) and math.isnan(expected))
             _require(same, f"{context}.decoded.{field} disagrees with raw limits")
-        if qualification == "qualified":
+        if provenance == "selector_qualified":
             _require(codec not in CLOCK_CODECS or basis == "public_exact_selector_schema",
                      f"{context}.decoded HDA:3/HTI must use the exact-selector-schema basis, a Hypothesis")
+        if qualification == "qualified":
             if codec in CLOCK_CODECS:
                 for field in ("min", "max"):
                     _validate_clock_value(codec, limits[f"{field}_hex"], field, context)

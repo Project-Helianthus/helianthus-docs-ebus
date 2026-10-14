@@ -78,7 +78,10 @@ rejected.
 | `public_exact_selector_schema` | Used for the 13 HDA:3/HTI records and one U32 record. The date and time spans read as plain day, month, year-offset and hour, minute, second bytes. | **Hypothesis** (candidate). [ebus-vaillant-B524.md](ebus-vaillant-B524.md) says which codec applies to which date or time register is "not established" and notes BCD for some scalar date fields; [b524-op02-calendar-clock-selectors.csv](fixtures/b524-op02-calendar-clock-selectors.csv) lists the selectors as "candidate, unconfirmed on the wire". |
 | `payload_length_inferred` | The codec was guessed from the span width only. | **Unknown**; always `unqualified` |
 
-The validator pins each qualified codec to its selector: a
+The validator pins every codec that claims selector provenance to its selector,
+whether or not the record is qualified (qualification governs only reuse
+authority, not what the cited source contains); a retained fixture has no
+unqualified record that claims selector provenance. A
 `public_local_constraint_codec` must equal the register map's Wire column for
 that `(OP, GG, RR)` (u8 UCH, u16 UIN, u32 U32, f32 EXP) and a selector with no
 Wire entry is rejected; an exact-selector-schema codec must equal the codec the
