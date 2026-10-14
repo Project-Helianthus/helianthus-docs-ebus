@@ -292,3 +292,77 @@ def test_word_limit_is_the_only_failure_of_a_seven_word_name(
     ]
     with pytest.raises(names.NameError_, match="7 words, more than 6"):
         names.decompose(SEVEN_WORD_NAME, vocabulary)
+
+
+# ---------------------------------------------------------------------------
+# Gate gaps: canonical write-template rows, `time` objects, end slots
+# ---------------------------------------------------------------------------
+
+CATALOG = [
+    {"group": "0x03", "register": "0x0006", "name": "heating_zone_operating_mode",
+     "previous_name": "zone_heating_operation_mode"},
+    {"group": "0x01", "register": "0x0004", "name": "dhw_temperature_setpoint",
+     "previous_name": "native_dhw_tapping_temperature_setpoint"},
+]
+
+
+def _template(label: str, previous: str, group: str, register: str) -> dict[str, str]:
+    return {"write": label, "previous_name": previous, "group": group, "register": register}
+
+
+def test_prose_template_label_is_not_canonical_when_it_differs_from_previous_name() -> None:
+    rows = [_template("room control zone mode", "room-control zone mode", "0x03", "0x0006")]
+    assert names.canonical_template_labels(rows, CATALOG) == []
+
+
+def test_canonical_template_label_is_validated(vocabulary: names.Vocabulary) -> None:
+    rows = [
+        _template("dhw_temperature_setpoint", "native_dhw_tapping_temperature_setpoint", "0x01", "0x0004"),
+        # a canonical row whose label drifted from the catalog is still validated
+        _template("dhw_temperature_set_point", "native_dhw_tapping_temperature_setpoint", "0x01", "0x0004"),
+        # a selector outside the catalog never yields a canonical label
+        _template("system configuration floats", "system configuration floats", "0x00", "0x0001 / 0x0023"),
+    ]
+    labels = names.canonical_template_labels(rows, CATALOG)
+    assert labels == [(2, "dhw_temperature_setpoint"), (3, "dhw_temperature_set_point")]
+    names.decompose(labels[0][1], vocabulary)
+    with pytest.raises(names.NameError_):
+        names.decompose(labels[1][1], vocabulary)
+
+
+def test_fixture_write_templates_yield_only_catalog_labels() -> None:
+    catalog_rows = _rows(FIXTURES / "b524-op02-register-names.csv")
+    labels = names.canonical_template_labels(_rows(FIXTURES / "b524-op02-write-templates.csv"), catalog_rows)
+    assert labels
+    assert {label for _, label in labels} <= {row["name"] for row in catalog_rows}
+
+
+@pytest.mark.parametrize("name", ["temperature_time", "name_time", "date_time", "pump_time"])
+def test_time_needs_an_activity_or_event_object(vocabulary: names.Vocabulary, name: str) -> None:
+    with pytest.raises(names.NameError_):
+        names.decompose(name, vocabulary)
+
+
+@pytest.mark.parametrize(
+    "name",
+    ["dhw_loading_time_maximum", "backlight_on_time", "circuit_pump_operating_time_total",
+     "drainback_start_time", "manual_cooling_time", "frost_protection_delay_time"],
+)
+def test_time_accepts_activity_and_event_objects(vocabulary: names.Vocabulary, name: str) -> None:
+    names.decompose(name, vocabulary)
+
+
+@pytest.mark.parametrize("name", ["pump_maximum", "pump_daily", "outdoor_temperature_average"])
+def test_end_slots_need_their_prerequisites(vocabulary: names.Vocabulary, name: str) -> None:
+    with pytest.raises(names.NameError_):
+        names.decompose(name, vocabulary)
+
+
+@pytest.mark.parametrize(
+    "name",
+    ["outdoor_temperature_daily_average", "boiler_flow_temperature_setpoint_maximum",
+     "circuit_count_maximum", "cooling_electricity_consumption_current_month",
+     "circuit_pump_operating_time_total"],
+)
+def test_end_slots_accept_legitimate_names(vocabulary: names.Vocabulary, name: str) -> None:
+    names.decompose(name, vocabulary)

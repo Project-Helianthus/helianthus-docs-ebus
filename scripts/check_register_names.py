@@ -11,9 +11,12 @@ in the order of the parts:
 
 A name fails when a token has no vocabulary entry, when a word is a forbidden
 synonym, when no role assignment follows that order, or when it has more than
-six words. A command name `[target]_[action]_command` is checked with its
-target decomposed as a name of its own; a name with the placeholder `unknown`
-ends with it and an optional index.
+six words; the object of `time` has to carry the vocabulary role `activity` or
+`event`, a bound, period or manner needs an object or a predicate to qualify,
+and `average` needs a period before it. A command name
+`[target]_[action]_command` is checked with its target decomposed as a name of
+its own; a name with the placeholder `unknown` ends with it and an optional
+index.
 
 Covered surfaces: the B524 service (OP=0x00 identifiers, OP=0x02 and OP=0x06
 registers) in the B524 fixtures (including the write-template labels that are
@@ -53,6 +56,9 @@ ROLES = {
     "action",
     "placeholder",
     "marker",
+    # Class markers of an object: what a `time` can last or separate.
+    "activity",
+    "event",
 }
 # The closed predicate list of architecture/naming.md.
 PREDICATES = {
@@ -115,6 +121,8 @@ MANNER_PREDICATES = {None}
 # and the time-programme `period`. Without an object, `count` is the number of
 # subjects and needs an explicit subject.
 COUNTED_OBJECTS = {"start", "stop", "switch", "period"}
+# Classes of the object that `time` measures (vocabulary role markers).
+TIMED_ROLES = frozenset({"activity", "event"})
 INDEX = re.compile(r"[1-9][0-9]*")
 # A part follows its object directly: date and clock-time parts
 # (architecture/naming.md) and the two halves of a text split across fields.
@@ -252,8 +260,20 @@ def _assign(
                     return False
             elif object_word not in COUNTED_OBJECTS:
                 return False
-        if predicate == "time" and object_word is None:
-            return False  # a duration of the object activity
+        if predicate == "time":
+            # `time` is the duration of an activity, the interval between
+            # occurrences of an event, or a remaining time: its object is a
+            # vocabulary word marked `activity` or `event`.
+            if object_word is None or not TIMED_ROLES & vocabulary.roles[object_word]:
+                return False
+        # A bound or a period qualifies a quantity or a predicate, never a bare
+        # subject; the manner `average` follows its period.
+        if ("bound" in chosen or "period" in chosen or "manner" in chosen) and (
+            object_word is None and predicate is None
+        ):
+            return False
+        if "average" in words and "period" not in chosen:
+            return False
         for slot, admitted in (
             ("bound", BOUND_PREDICATES),
             ("period", PERIOD_PREDICATES),
@@ -457,6 +477,32 @@ def _section(text: str, start: str, end: str) -> list[tuple[int, str]]:
     return list(enumerate(lines[begin:finish], begin + 1))
 
 
+def canonical_template_labels(
+    templates: list[dict[str, str]], catalog_rows: list[dict[str, str]]
+) -> list[tuple[int, str]]:
+    """Write-template labels that are canonical register names, with row numbers.
+
+    The other labels describe a write in words. A row is canonical when the
+    catalog of its selector says so, never by comparing the label with the old
+    label: the label is the catalog name of the selector, or the row's
+    `previous_name` is the `previous_name` of the catalog row of the selector
+    (the label is then a canonical name that has drifted from the catalog). The
+    raw label of a canonical row is validated.
+    """
+    catalog = {(row["group"], row["register"]): row for row in catalog_rows}
+    labels = []
+    for number, row in enumerate(templates, 2):
+        entry = catalog.get((row["group"], row["register"]))
+        if entry is None:
+            continue
+        label = row["write"]
+        if label == entry["name"] or (
+            entry["previous_name"] and row["previous_name"] == entry["previous_name"]
+        ):
+            labels.append((number, label))
+    return labels
+
+
 def covered_names() -> list[tuple[str, str]]:
     names: list[tuple[str, str]] = []
     for fixture in (
@@ -467,20 +513,11 @@ def covered_names() -> list[tuple[str, str]]:
         "b524-op00-system-information-ids.csv",
     ):
         names.extend(_csv_names(FIXTURES / fixture))
-    # Write-template labels that are canonical register names (the other labels
-    # describe a write in words). A canonical row is identified without looking
-    # at the syntax of its label: its label differs from `previous_name`, or it
-    # equals the catalog name of its selector. The raw label is validated.
-    catalog = {
-        (row["group"], row["register"]): row["name"]
-        for row in _read_rows(FIXTURES / "b524-op02-register-names.csv")
-    }
     templates = FIXTURES / "b524-op02-write-templates.csv"
-    for number, row in enumerate(_read_rows(templates), 2):
-        label = row["write"]
-        selector = (row["group"], row["register"])
-        if label != row["previous_name"] or catalog.get(selector) == label:
-            names.append((f"{templates.relative_to(ROOT)}:{number}", label))
+    for number, label in canonical_template_labels(
+        _read_rows(templates), _read_rows(FIXTURES / "b524-op02-register-names.csv")
+    ):
+        names.append((f"{templates.relative_to(ROOT)}:{number}", label))
 
     register_map = REGISTER_MAP.read_text(encoding="utf-8")
     where = REGISTER_MAP.relative_to(ROOT)

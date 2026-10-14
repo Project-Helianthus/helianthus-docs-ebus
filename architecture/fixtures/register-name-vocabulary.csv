@@ -19,10 +19,10 @@ bank_holiday,attribute,A bank holiday period.,
 binding,object,The assignment of a sensor.,
 bitfield,predicate,Several booleans in one value; each bit has its own boolean name.,flags
 bivalence,attribute,The bivalence point at which a second heat generator supplements the heat pump.,
-bleeding,object,Bleeding air from a circuit.,
-blocking,object,Blocking.,lock
+bleeding,object|activity,Bleeding air from a circuit.,
+blocking,object|activity,Blocking.,lock
 boiler,subject,An attached boiler.,
-boost,object,A temporary increase.,
+boost,object|activity,A temporary increase.,
 bottom,place,The bottom of a cylinder.,
 building,place,The building side.,
 burner,subject,The burner.,
@@ -45,9 +45,9 @@ configuration,object,A configuration.,
 confirm,attribute,Confirm.,
 connected,predicate,Boolean: the communication link to the subject is up.,
 consumption,object,Consumed energy.,
-continuous_heating,purpose|object,Heating kept on without setback below an outdoor temperature limit.,
+continuous_heating,purpose|object|activity,Heating kept on without setback below an outdoor temperature limit.,
 control,object,Control.,
-cooling,purpose|object,"Space cooling; as an object, the cooling activity.",
+cooling,purpose|object|activity,"Space cooling; as an object, the cooling activity.",
 count,predicate,"Number of occurrences of the object event; with a subject and no object, the number of such subjects.",
 crystal,subject,A clock crystal.,
 current,object,Electric current.,
@@ -58,8 +58,8 @@ daily,period,A rolling period of 24 hours.,24h
 date,object,A calendar date.,
 day,part,"Day part of a date; inside a condition, the day period of a time programme.",
 daylight_saving_time,object,Daylight saving time.,
-defrost,object,Defrosting.,deicing
-delay,object,Delaying the start of a function.,
+defrost,object|activity,Defrosting.,deicing
+delay,object|activity,Delaying the start of a function.,
 demand,predicate,Boolean: the function is requested.,
 demand_input,subject,An input that signals a demand.,
 device,subject,The device addressed in a controller-mediated slot.,
@@ -74,7 +74,7 @@ eeprom,subject,Abbreviation: electrically erasable non-volatile memory.,
 effective,attribute,The value in effect after all conditions are applied.,displayed
 efficiency,object,Efficiency.,
 electricity,attribute,Electricity.,electrical
-emergency_operation,object,Operation in the failure mode of the device.,failure_mode
+emergency_operation,object|activity,Operation in the failure mode of the device.,failure_mode
 enabled,predicate,Boolean: the function is permitted or configured on.,allowed|allow
 encoder,subject,The rotary encoder of the user interface.,
 end,attribute,The end of a span.,
@@ -92,7 +92,7 @@ fine,manner,A finer-resolution variant of a quantity.,
 firmware_version,object,A firmware version.,
 flow,place,The flow side.,
 flow_rate,object,Flow rate.,
-frost_protection,purpose|object|attribute,Protection against frost.,
+frost_protection,purpose|object|attribute|activity,Protection against frost.,
 fuel,attribute,Fuel.,gas|oil
 functional_module,subject,A functional extension module.,
 gradient,object,A rate of change.,
@@ -100,12 +100,12 @@ hardware,attribute,Hardware.,
 headline,object,A headline text.,
 heat_generator,subject,An attached heat generator of any kind.,generator|heatgen
 heat_pump,subject,An attached heat pump.,heatpump|hp
-heat_recovery,object|attribute,Heat recovery.,heatrecovery
-heating,purpose|object,"Space heating; as an object, the heating activity.",central_heating|ch
+heat_recovery,object|attribute|activity,Heat recovery.,heatrecovery
+heating,purpose|object|activity,"Space heating; as an object, the heating activity.",central_heating|ch
 heating_curve,object,The heating curve.,heat_curve
 help,attribute,Help.,question
 high,attribute,High.,
-holiday,attribute|object,A holiday period.,
+holiday,attribute|object|activity,A holiday period.,
 home_screen,subject,The home screen of the user interface.,
 hour,part,Hour part of a clock time.,
 humidity,object,Relative humidity.,
@@ -119,17 +119,17 @@ installation_assistant,subject,The installation assistant of the controller.,
 installer,attribute|subject,The installer of the installation.,
 interface,subject,The register interface of the controller.,api
 isolation_switch,subject,An isolation switch.,
-kick,object|attribute,A short pump start.,
+kick,object|attribute|activity,A short pump start.,
 language,object,The user-interface language.,
 left,attribute,Left.,
-legionella_protection,purpose|attribute|object,Thermal disinfection against legionella.,
+legionella_protection,purpose|attribute|object|activity,Thermal disinfection against legionella.,
 level,predicate,A graded amount without its own physical quantity.,
 limit,predicate,A boundary the device enforces without regulating towards it; with a bound when its direction is established.,
-loading,object|attribute,Loading of a cylinder.,charge|charging
+loading,object|attribute|activity,Loading of a cylinder.,charge|charging
 low,attribute,Low.,
-maintenance,attribute|object,Maintenance.,
+maintenance,attribute|object|activity,Maintenance.,
 manual,attribute,Manual.,
-manual_cooling,object|attribute,Cooling started by hand for a set time.,
+manual_cooling,object|attribute|activity,Cooling started by hand for a set time.,
 maximum,bound,Upper bound; inside a condition it precedes its object.,max
 menu,attribute,Menu.,
 minimum,bound,Lower bound; inside a condition it precedes its object.,min
@@ -143,17 +143,17 @@ multifunction_output,subject,A configurable multifunction output.,
 name,object,A name.,
 network,attribute,Network.,net
 night,attribute,The night period of a time programme.,
-off,object,Being switched off.,
+off,object|activity,Being switched off.,
 offset,predicate,A value added to a reference.,correction
 ok,predicate,Health boolean: 1 means normal.,
-on,object,Being switched on.,
-operating,object,Operating.,operation|runtime|run
+on,object|activity,Being switched on.,
+operating,object|activity,Operating.,operation|runtime|run
 operating_mode,predicate,The mode of operation chosen for the subject or purpose.,operation_mode
 outdoor,place|attribute,Outdoors.,outside
 outlet,place,The outlet.,
 output,subject,An output.,
-overrun,object,Running on after the demand ends.,additional_time
-pairing,object,The radio pairing.,
+overrun,object|activity,Running on after the demand ends.,additional_time
+pairing,object|activity,The radio pairing.,
 parallel,attribute,Parallel.,
 period,object,A time-programme period.,
 phone_number,object,A phone number.,phone
@@ -161,7 +161,7 @@ position,predicate,An actuator position.,
 power,object,Power.,
 preference,object,A preference.,
 prefix,part,The first part of a text split across fields.,part1
-preheating,object,Preheating.,pre_heating
+preheating,object|activity,Preheating.,pre_heating
 pressure,object,Pressure.,
 previous_month,period,The previous calendar month.,last_month
 previous_year,period,The previous calendar year.,last_year
@@ -173,13 +173,13 @@ protocol,object,A communication protocol.,
 pump,subject,A pump.,
 pump_module,subject,A pump module.,
 pv,attribute,Abbreviation: photovoltaic.,
-pv_surplus,object|attribute,Use of a photovoltaic surplus.,
-quick_veto,attribute|object,A temporary override of the room temperature setpoint.,
+pv_surplus,object|attribute|activity,Use of a photovoltaic surplus.,
+quick_veto,attribute|object|activity,A temporary override of the room temperature setpoint.,
 ratio,predicate,A dimensionless quantity.,
 reading,object,The reading of the subject.,value|raw_value
 ready,predicate,Boolean: the subject can perform its function as soon as it is requested.,
 reception,object,Radio reception.,strength
-recharge,object,Recharging of hot water.,
+recharge,object|activity,Recharging of hot water.,
 refrigerant,subject,The refrigerant.,
 remaining,period,Time until the next occurrence or the end.,
 remote,attribute,Remote.,
@@ -191,7 +191,7 @@ right,attribute,Right.,
 room,place,The room.,
 rtc,attribute,Abbreviation: real-time clock.,
 scheme,object,An installation scheme.,
-screed_drying,purpose|object,The screed drying programme.,
+screed_drying,purpose|object|activity,The screed drying programme.,
 second,part,Second part of a clock time.,
 sensor,subject|attribute,A sensor.,
 sequence,object,A position in a sequence.,
@@ -203,23 +203,23 @@ settings,object,Settings.,
 slider,attribute,Slider.,
 solar,purpose|attribute,Solar thermal.,
 source,place,The heat source side.,brine
-special_function,object,A temporary special function overriding the normal operation.,quick_mode
+special_function,object|activity,A temporary special function overriding the normal operation.,quick_mode
 speed,object,Rotational or stage speed.,stage
-start,object|attribute|action,"The start event; as an attribute, the start of a span; as an action, starting the target.",
+start,object|attribute|action|event,"The start event; as an attribute, the start of a span; as an action, starting the target.",
 state,predicate,Closed enumeration: the position of the subject in its own operating sequence.,
 station,subject,A station assembly.,
 status,predicate,Enumeration of health or availability.,
-stop,object|attribute|action,"The stop event; as an action, stopping the target.",
+stop,object|attribute|action|event,"The stop event; as an action, stopping the target.",
 suffix,part,The second part of a text split across fields.,part2
-summer_cutoff,object,Switching heating off in summer conditions.,
-switch,object,A switching event.,
+summer_cutoff,object|activity,Switching heating off in summer conditions.,
+switch,object|event,A switching event.,
 tariff,object,An energy tariff.,
 teleswitch,attribute,A radio teleswitch tariff signal.,
 temperature,object|attribute,Temperature.,temp
 temperature_difference,object,A temperature difference.,delta_temperature
 temporary,attribute,Temporary.,
 test_pattern,object,A display test pattern.,
-thermostat_cutoff,object,Switching off by the room thermostat function.,roomthermostat
+thermostat_cutoff,object|activity,Switching off by the room thermostat function.,roomthermostat
 time,predicate,"A duration of the object activity; after an event, the time between two occurrences; with remaining, the time until the next occurrence.",duration|hours|interval
 time_program,object|attribute,A time programme.,schedule|program
 time_program_day,attribute,One day of a time programme; not the rolling 24-hour period `daily`.,
