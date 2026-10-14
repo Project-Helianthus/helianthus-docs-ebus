@@ -115,27 +115,27 @@ Ownership note:
 - Unproven topologies are emitted as `UNKNOWN`; the gateway does not synthesize a replacement threshold heuristic.
 - Broader architectural treatment of FM3/FM5/VR66 as functional-module families is documented in [`./functional-modules.md`](./functional-modules.md).
 
-| Semantic Path | B524 | Type |
-|---------------|------|------|
-| `[].state.heating_circuit_flow_setpoint` | GG=0x02, RR=0x0007 | f32 |
-| `[].state.current_circuit_flow_temperature` | GG=0x02, RR=0x0008 | f32 |
+| Semantic Path | B524 | Type | Notes |
+|---------------|------|------|-------|
+| `[].state.heating_circuit_flow_setpoint` | GG=0x02, RR=0x0007 | f32 | |
+| `[].state.current_circuit_flow_temperature` | GG=0x02, RR=0x0008 | f32 | |
 | `[].state.circuit_state` | GG=0x02, RR=0x001E | enum (u16): STANDBY/HEATING/COOLING/DHW | **Candidate (Hypothesis)**: naming-based, not hardware-correlated; see the selector assignment note |
 | `[].state.pump_status` | GG=0x02, RR=0x001B | bool (u16) | Circuit-level observation only; not a source for any boiler field |
-| `[].state.calculated_flow_temperature` | GG=0x02, RR=0x0020 | f32 |
-| `[].state.mixer_position_percentage` | GG=0x02, RR=0x0021 | f32 |
-| `[].state.current_humidity_pct` | GG=0x02, RR=0x0022 | f32 |
-| `[].state.dew_point_temperature` | GG=0x02, RR=0x0023 | f32 |
-| `[].state.pump_operating_hours` | GG=0x02, RR=0x0024 | u32 |
-| `[].state.pump_starts_count` | GG=0x02, RR=0x0025 | u32 |
-| `[].config.heating_curve` | GG=0x02, RR=0x000F | f32 |
-| `[].config.heating_flow_temperature_maximum_setpoint` | GG=0x02, RR=0x0010 | f32 |
-| `[].config.heating_flow_temperature_minimum_setpoint` | GG=0x02, RR=0x0012 | f32 |
-| `[].config.heat_demand_limited_by_outside_temp` | GG=0x02, RR=0x0014 | f32 |
-| `[].config.room_temperature_control_mode` | GG=0x02, RR=0x0015 | u16 |
-| `[].managing_device` | derived semantic ownership | object |
-| `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u8) |
-| `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 |
-| `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 |
+| `[].state.calculated_flow_temperature` | GG=0x02, RR=0x0020 | f32 | |
+| `[].state.mixer_position_percentage` | GG=0x02, RR=0x0021 | f32 | |
+| `[].state.current_humidity_pct` | GG=0x02, RR=0x0022 | f32 | |
+| `[].state.dew_point_temperature` | GG=0x02, RR=0x0023 | f32 | |
+| `[].state.pump_operating_hours` | GG=0x02, RR=0x0024 | u32 | |
+| `[].state.pump_starts_count` | GG=0x02, RR=0x0025 | u32 | |
+| `[].config.heating_curve` | GG=0x02, RR=0x000F | f32 | |
+| `[].config.heating_flow_temperature_maximum_setpoint` | GG=0x02, RR=0x0010 | f32 | |
+| `[].config.heating_flow_temperature_minimum_setpoint` | GG=0x02, RR=0x0012 | f32 | |
+| `[].config.heat_demand_limited_by_outside_temp` | GG=0x02, RR=0x0014 | f32 | |
+| `[].config.room_temperature_control_mode` | GG=0x02, RR=0x0015 | u16 | |
+| `[].managing_device` | derived semantic ownership | object | |
+| `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u8) | |
+| `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 | |
+| `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 | |
 | `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 | **Stale path**: FLAGS=0x02 (RW) — should be `config.*`. Pending gateway migration |
 
 **Selector assignment (`circuit_state` / `pump_status`):** the circuit state
