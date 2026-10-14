@@ -92,6 +92,42 @@ def test_cross_fixture_validator_rejects_out_of_bounds_and_swapped_selector(tmp_
         assert result.returncode != 0, name
 
 
+def test_cross_fixture_validator_rejects_inconsistent_response_states(tmp_path: Path) -> None:
+    profile = json.loads(REGISTER_FIXTURE.read_text())
+    for name, mutate in [
+        ("status-as-echo", lambda candidate: candidate["records"][0].update({"response_state": "echo_payload"})),
+        ("echo-missing-width", lambda candidate: candidate["records"][1].update({"observed_payload_width": None})),
+        ("transport-has-flags", lambda candidate: candidate["records"][2].update({"access_flags": "00"})),
+    ]:
+        candidate = deepcopy(profile)
+        mutate(candidate)
+        path = tmp_path / f"{name}.json"
+        path.write_text(json.dumps(candidate))
+        assert validate_cross(FIXTURE, path).returncode != 0, name
+
+
+def test_cross_fixture_validator_rejects_linked_metadata_contradictions(tmp_path: Path) -> None:
+    profile = json.loads(REGISTER_FIXTURE.read_text())
+    descriptions = json.loads(FIXTURE.read_text())
+    unavailable = next(index for index, row in enumerate(profile["records"]) if row["description"] and row["description"]["acquisition_state"] == "unavailable")
+    remote = next(index for index, row in enumerate(descriptions["records"]) if row["remote_identity"] and "group" in row["remote_identity"])
+    cases = [
+        ("flags", lambda rows, descriptions: rows[1].update({"access_flags": "02"})),
+        ("scope", lambda rows, descriptions: rows[1].update({"identity_scope": "remote"})),
+        ("index-state", lambda rows, descriptions: rows[unavailable]["description"].update({"acquisition_state": "matched"})),
+        ("header-group", lambda rows, descriptions: descriptions[remote]["remote_identity"].update({"group": "FF"})),
+    ]
+    for name, mutate in cases:
+        candidate_rows = deepcopy(profile)
+        candidate_descriptions = deepcopy(descriptions)
+        mutate(candidate_rows["records"], candidate_descriptions["records"])
+        row_path = tmp_path / f"{name}-rows.json"
+        description_path = tmp_path / f"{name}-descriptions.json"
+        row_path.write_text(json.dumps(candidate_rows))
+        description_path.write_text(json.dumps(candidate_descriptions))
+        assert validate_cross(description_path, row_path).returncode != 0, name
+
+
 def test_register_observation_schema_rejects_sensitive_or_unknown_fields(tmp_path: Path) -> None:
     profile = json.loads(REGISTER_FIXTURE.read_text())
     mutations = [

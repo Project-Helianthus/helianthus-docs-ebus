@@ -60,6 +60,8 @@ def _validate_record(record: Any, index: int) -> None:
     else:
         _require(isinstance(remote_identity, dict) and remote_identity.get("qualification") in {"observed_remote_header", "unqualified"},
                  f"{context} must retain remote identity qualification")
+        if "group" in remote_identity:
+            _require(remote_identity["group"] == group, f"{context}.remote_identity.group disagrees with selector")
     raw = record.get("raw_description_hex")
     lengths = record.get("description_payload_length")
     limits = record.get("raw_limits")
@@ -67,9 +69,11 @@ def _validate_record(record: Any, index: int) -> None:
     if raw is None:
         _require(lengths is None and limits is None and decoded is None,
                  f"{context} cannot decode or bound a missing description")
+        _require(record.get("response_state") == "describe_unavailable", f"{context} missing description has wrong response state")
         return
     _require(isinstance(raw, str) and HEX.fullmatch(raw) is not None, f"{context}.raw_description_hex is invalid")
     response = bytes.fromhex(raw)
+    _require(record.get("response_state") == "describe_matched", f"{context} retained description has wrong response state")
     _require(len(response) >= 3 and response[0] == int(group, 16)
              and response[1:3] == int(register, 16).to_bytes(2, "little"),
              f"{context}.raw_description_hex does not echo GG/RR")
@@ -141,12 +145,35 @@ def validate_fixture(path: Path, observations: Path | None = None) -> None:
         _require(observed.get("observation_id") == fixture.get("observation_id"), "cross-fixture identity mismatch")
         _require(observed.get("description_catalog") == path.name, "cross-fixture catalog mismatch")
         for index, row in enumerate(observed.get("records", [])):
+            selector = row.get("selector", {})
+            _require(row.get("identity_scope") == ("local" if selector.get("operation") == "02" else "remote"), f"observation records[{index}] identity scope disagrees with selector")
+            state = row.get("response_state")
+            flags = row.get("access_flags")
+            width = row.get("observed_payload_width")
+            error = row.get("error_state")
+            if state == "echo_payload":
+                _require(isinstance(flags, str) and flags in {"00", "01", "02", "03"} and isinstance(width, int) and width > 0 and error in {None, "parse_error"},
+                         f"observation records[{index}] echo_payload fields are inconsistent")
+            elif state == "status_only":
+                _require(flags == "00" and width is None and error is None,
+                         f"observation records[{index}] status_only fields are inconsistent")
+            elif state == "transport_error":
+                _require(flags is None and width is None and error == "transport_error",
+                         f"observation records[{index}] transport_error fields are inconsistent")
+            else:
+                raise ValidationError(f"observation records[{index}] response state is unsupported")
             reference = row.get("description")
             if reference is None:
                 continue
             record_index = reference.get("record_index")
             _require(isinstance(record_index, int) and 0 <= record_index < len(records), f"observation records[{index}] description index out of bounds")
             _require(row.get("selector") == records[record_index].get("selector"), f"observation records[{index}] description selector mismatch")
+            described = records[record_index]
+            _require(row.get("access_flags") == described.get("access_flags"), f"observation records[{index}] access flags disagree with description")
+            if reference.get("acquisition_state") == "unavailable":
+                _require(described.get("raw_description_hex") is None and described.get("response_state") == "describe_unavailable", f"observation records[{index}] unavailable description has raw metadata")
+            else:
+                _require(described.get("raw_description_hex") is not None and described.get("response_state") == "describe_matched", f"observation records[{index}] available description lacks raw metadata")
 
 
 def main() -> int:
