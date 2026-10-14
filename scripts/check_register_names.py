@@ -258,6 +258,14 @@ def _assign(
             if object_word is None:
                 if "subject" not in chosen:
                     return False
+                # The number of subjects takes only the bound `maximum`, the
+                # supported number of them (naming.md, `count` row and "A bound
+                # after ..."), and no period or manner.
+                if "period" in chosen or "manner" in chosen:
+                    return False
+                bound = next((words[i] for i, slot in enumerate(chosen) if slot == "bound"), None)
+                if bound is not None and bound != "maximum":
+                    return False
             elif object_word not in COUNTED_OBJECTS:
                 return False
         if predicate == "time":

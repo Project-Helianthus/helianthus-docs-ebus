@@ -503,3 +503,15 @@ def test_column_cells_strip_one_code_span_only(
     summary = names.SUMMARY_REGISTER_ROW.match(f"| `0x001D` | {cell} | `old` |")
     (summary_name,) = names._cell_names(summary[1])
     assert summary_name == name
+
+
+def test_subject_only_count_takes_only_the_maximum_bound(vocabulary: names.Vocabulary) -> None:
+    names.decompose("circuit_count_maximum", vocabulary)
+    names.decompose("zone_count_maximum", vocabulary)
+    names.decompose("boiler_count", vocabulary)
+    for name in ("circuit_count_minimum", "circuit_count_total"):
+        with pytest.raises(names.NameError_):
+            names.decompose(name, vocabulary)
+    # the event-object form keeps its rules
+    names.decompose("time_program_day_period_count_maximum", vocabulary)
+    names.decompose("circuit_pump_start_count_total", vocabulary)
