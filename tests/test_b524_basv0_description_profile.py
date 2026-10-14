@@ -466,7 +466,9 @@ def test_qualified_codec_is_pinned_to_the_selector() -> None:
     document = descriptions()
     index, record = find(document, "02", "00", "00", "0001")
     assert index == 0 and record["decoded"]["codec"] == "EXP"
-    record["decoded"].update(codec="U32", min=0xC1A00000, max=0x41A00000, step=0x3F800000)
+    for field in ("min", "max", "step"):
+        record["decoded"][field] = int.from_bytes(bytes.fromhex(record["raw_limits"][f"{field}_hex"]), "little")
+    record["decoded"]["codec"] = "U32"
     rejects("records[0].decoded.codec U32 disagrees with the register-map Wire codec EXP for OP02/GG00/II00/RR0001", document)
 
     # Same-width relabelling of a record that is not the first one.
