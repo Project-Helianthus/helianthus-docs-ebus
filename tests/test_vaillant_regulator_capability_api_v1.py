@@ -131,6 +131,9 @@ def test_validator_rejects_catalog_classifier_admission_or_role_drift() -> None:
     roles = copy.deepcopy(manifest)
     roles["catalog_classifier"]["controller_roles"] = ["Regulator"]
     assert "catalog_classifier" in validate(roles, cases)
+    stale = copy.deepcopy(manifest)
+    stale["catalog_classifier"]["evidence_status"] = "unknown_pending_implementation"
+    assert "catalog_classifier" in validate(stale, cases)
     fixture = copy.deepcopy(cases)
     fixture["catalog_classifier"][0]["catalog_record"]["brand"] = "Unexpected"
     assert "catalog_classifier_cases" in validate(manifest, fixture)
@@ -155,6 +158,9 @@ def test_validator_rejects_source_coordinate_mutations() -> None:
         ("gateway", "issues", [193]),
         ("gateway", "pull_requests", [211]),
         ("ebusreg", "historical_controller_capability_merge", "0" * 40),
+        ("ebusreg", "classifier_pull_request", 169),
+        ("ebusreg", "date_decoder_pull_request", 171),
+        ("ebusreg", "gateway_pinned_revision", "0" * 40),
         ("consumer", "repository", "other/consumer"),
     )
     for section, key, value in mutations:
