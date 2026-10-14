@@ -440,6 +440,10 @@ SUMMARY_REGISTER_ROW = re.compile(rf"^\| `0x[0-9A-F]{{4}}(?:-0x[0-9A-F]{{4}})?` 
 SUMMARY_SELECTOR_ROW = re.compile(
     rf"^\| `GG=0x[0-9A-F]{{2}}(?:/0x[0-9A-F]{{2}})*, RR=0x[0-9A-F]{{4}}` \| {CELL} \|"
 )
+# A row of the `Candidate write encodings` table after the constraint catalog:
+# a backticked selector, then the catalog names of the written registers, each in
+# a code span and separated by `, `. A cell without a code span is prose.
+WRITE_ENCODING_ROW = re.compile(rf"^\| `GG=[^|]*\| {CELL} \|")
 # A register row of a table keyed by group and register.
 GROUP_REGISTER_ROW = re.compile(rf"^\| 0x[0-9A-F]{{2}} \| 0x[0-9A-F]{{4}} \| {CELL} \|")
 # A register row of the protocol page: `| 0x0036 | `name` |`.
@@ -539,6 +543,20 @@ def covered_names() -> list[tuple[str, str]]:
             match = pattern.match(line)
             if match:
                 names.extend((f"{where}:{number}", name) for name in _cell_names(match[1], paired=paired))
+
+    # The register map after the constraint catalog carries canonical names in one
+    # table only: the catalog names of `Candidate write encodings`. The enum
+    # tables, the mapping conflicts (myPyllant and TSP leaf names), the state
+    # machines (state values) and the other tables of that part name no register.
+    for number, line in _section(
+        register_map, "### Candidate write encodings", "## Open questions"
+    ):
+        match = WRITE_ENCODING_ROW.match(line)
+        if match and "`" in match[1]:
+            names.extend(
+                (f"{where}:{number}", part.strip().strip("`"))
+                for part in match[1].split(", ")
+            )
 
     protocol = PROTOCOL.read_text(encoding="utf-8")
     where = PROTOCOL.relative_to(ROOT)

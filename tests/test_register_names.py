@@ -415,3 +415,41 @@ def test_misspelled_name_in_a_summary_table_is_rejected(
     (cell,) = names._cell_names(match[1])
     with pytest.raises(names.NameError_):
         names.decompose(cell, vocabulary)
+
+
+# ---------------------------------------------------------------------------
+# `Candidate write encodings` table (after the constraint catalog)
+# ---------------------------------------------------------------------------
+
+
+def _write_encoding_cells() -> list[str]:
+    cells = []
+    for _, line in names._section(
+        REGISTER_MAP_TEXT, "### Candidate write encodings", "## Open questions"
+    ):
+        match = names.WRITE_ENCODING_ROW.match(line)
+        if match and "`" in match[1]:
+            cells.extend(part.strip().strip("`") for part in match[1].split(", "))
+    return cells
+
+
+def test_candidate_write_encoding_names_are_covered_and_pass(
+    vocabulary: names.Vocabulary,
+) -> None:
+    cells = _write_encoding_cells()
+    assert "dhw_outdoor_bivalence_temperature_limit" in cells
+    assert "none in the catalog" not in " ".join(cells)
+    covered = [name for _, name in names.covered_names()]
+    for cell in cells:
+        names.decompose(cell, vocabulary)
+        assert cell in covered
+
+
+def test_malformed_candidate_write_encoding_name_is_rejected(
+    vocabulary: names.Vocabulary,
+) -> None:
+    line = "| `GG=0x00`, `RR=0x0001` | `Dhw-outdoor-bivalence-temperature-limit` | float32 |"
+    match = names.WRITE_ENCODING_ROW.match(line)
+    (cell,) = [part.strip().strip("`") for part in match[1].split(", ")]
+    with pytest.raises(names.NameError_):
+        names.decompose(cell, vocabulary)
