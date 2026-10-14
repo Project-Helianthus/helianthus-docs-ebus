@@ -133,7 +133,7 @@ This page does not restate the root-discovery or identity-enrichment rationale. 
 ## FM5 Gate
 
 - Primary inputs:
-  - `GG=0x00 RR=0x002F` (`module_configuration_vr71`)
+  - `GG=0x00 RR=0x002F` (`functional_module_configuration_code`)
   - radio/FM5 inventory evidence
   - solar readability
   - cylinder readability

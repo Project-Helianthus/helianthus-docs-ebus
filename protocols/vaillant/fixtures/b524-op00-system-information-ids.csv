@@ -1,21 +1,21 @@
-id,id_hex,name,vaillant_name,candidate_meaning
-0,0x0000,circuit_count,Circuit,"expected circuit count (a supported capacity, not an installed count); circuit indexes 0..8 used by a requester"
-1,0x0001,zone_count,Zone,"expected zone count (a supported capacity, not an installed count); zone indexes 0..8 used by a requester"
-2,0x0002,solar_circuit_count,Solar Circuit,
-3,0x0003,solar_loaded_tank_count,Solar loaded tank,
-4,0x0004,device_count,Devices,
-5,0x0005,generator_count,Generators,
-6,0x0006,api_version,API_Version,
-7,0x0007,api_revision,API_Revision,
-8,0x0008,vr70_count,VR70,VR70 module count
-9,0x0009,vr71_count,VR71,
-10,0x000A,remote_control_count,Remote Control,
-11,0x000B,delta_t_count,deltaT,
-12,0x000C,boiler_count,AmountOfBoiler,
-13,0x000D,heat_pump_count,AmountOfHeatpump,heat pump count (candidate); competing candidate: a reply above 1.0 means that no supported heat pump is available; which reading applies to which controllers is unresolved
-14,0x000E,vpm_w_count,AmountOfVPM-W,
-15,0x000F,vpm_s_count,AmountOfVPM-S,
-16,0x0010,recovair_count,AmountOfRecoVair,ventilation present when the value is 1 (VRC720 family; candidate); the value does not prove GG10h or device presence
-17,0x0011,cooling_heat_pump_count,AmountOfHeatpumpsForCooling,cooling-capable heat pump count (candidate)
-18,0x0012,,,
-153,0x0099,,RTC Crystle,
+id,id_hex,name,previous_name,vaillant_name,candidate_meaning,open_question
+0,0x0000,circuit_count_maximum,circuit_count,Circuit,"expected circuit count (a supported capacity, not an installed count); circuit indexes 0..8 used by a requester",
+1,0x0001,zone_count_maximum,zone_count,Zone,"expected zone count (a supported capacity, not an installed count); zone indexes 0..8 used by a requester",
+2,0x0002,solar_circuit_count,solar_circuit_count,Solar Circuit,,
+3,0x0003,solar_cylinder_count,solar_loaded_tank_count,Solar loaded tank,,
+4,0x0004,device_count,device_count,Devices,,
+5,0x0005,heat_generator_count,generator_count,Generators,,
+6,0x0006,interface_version,api_version,API_Version,,
+7,0x0007,interface_revision,api_revision,API_Revision,,
+8,0x0008,functional_module_1_count,vr70_count,VR70,VR70 module count,Which functional module kind each of ID 0008h and 0009h counts (the VR70 module or the VR71 module) is not expressed by a vendor-neutral term; the index only keeps the two apart.
+9,0x0009,functional_module_2_count,vr71_count,VR71,,Which functional module kind each of ID 0008h and 0009h counts (the VR70 module or the VR71 module) is not expressed by a vendor-neutral term; the index only keeps the two apart.
+10,0x000A,remote_control_count,remote_control_count,Remote Control,,
+11,0x000B,differential_control_count,delta_t_count,deltaT,,The physical class behind this count is unknown.
+12,0x000C,boiler_count,boiler_count,AmountOfBoiler,,
+13,0x000D,heat_pump_count,heat_pump_count,AmountOfHeatpump,heat pump count (candidate); competing candidate: a reply above 1.0 means that no supported heat pump is available; which reading applies to which controllers is unresolved,Competing candidate: a reply above 1.0 means that no supported heat pump is available; unresolved.
+14,0x000E,water_pump_module_count,vpm_w_count,AmountOfVPM-W,,
+15,0x000F,solar_pump_module_count,vpm_s_count,AmountOfVPM-S,,
+16,0x0010,ventilation_unit_count,recovair_count,AmountOfRecoVair,ventilation present when the value is 1 (VRC720 family; candidate); the value does not prove GG10h or device presence,Candidate: ventilation present when the value is 1; the value does not prove GG10h or device presence.
+17,0x0011,cooling_heat_pump_count,cooling_heat_pump_count,AmountOfHeatpumpsForCooling,cooling-capable heat pump count (candidate),
+18,0x0012,,,,,
+153,0x0099,,,RTC Crystle,,

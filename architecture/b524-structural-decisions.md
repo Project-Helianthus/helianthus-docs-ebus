@@ -197,7 +197,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Field | Value |
 | --- | --- |
 | Semantic effect | Defines `circuits[].managingDevice` instead of using a global FM5 threshold |
-| Source registers | `GG=0x00 RR=0x0036` (`system_scheme`), `GG=0x00 RR=0x002F` (`module_configuration_vr71`) plus the evaluated `fm5SemanticMode` |
+| Source registers | `GG=0x00 RR=0x0036` (`hydraulic_scheme_code`), `GG=0x00 RR=0x002F` (`functional_module_configuration_code`) plus the evaluated `fm5SemanticMode` |
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x00--systemregulator`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x00--systemregulator), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcircuitsget`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#ebusv1semanticcircuitsget) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `4.3.1 VR 71 Main Connection Center`; `5.2 System Requirements` |
@@ -233,7 +233,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Field | Value |
 | --- | --- |
 | Semantic effect | Determines whether FM5-backed families are absent, partially evidenced, or fully interpretable |
-| Source registers | `GG=0x00 RR=0x002F` (`module_configuration_vr71`), radio inventory/evidence from `GG=0x09/0x0A/0x0C`, plus solar/cylinder readability checks in `GG=0x04` and `GG=0x05` |
+| Source registers | `GG=0x00 RR=0x002F` (`functional_module_configuration_code`), radio inventory/evidence from `GG=0x09/0x0A/0x0C`, plus solar/cylinder readability checks in `GG=0x04` and `GG=0x05` |
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x00--systemregulator`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x00--systemregulator), [`ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit), [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](../protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `4.3.1 VR 71 Main Connection Center`; `Installer Level -- Solar Circuit` |

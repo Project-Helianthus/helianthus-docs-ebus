@@ -111,7 +111,7 @@ Source: `refreshCircuits()` in `semantic_vaillant.go`
 Ownership note:
 - `circuits[].managing_device` is a semantic contract, not a direct single-register read.
 - The gateway now emits explicit ownership only for proven topologies.
-- For the currently proven live topology (`system_scheme=1`, `module_configuration_vr71=2`, FM5 interpreted), all discovered circuits are marked as managed by `VR_71` (`FUNCTION_MODULE`, address `0x26`).
+- For the currently proven live topology (`hydraulic_scheme_code=1`, `functional_module_configuration_code=2`, FM5 interpreted), all discovered circuits are marked as managed by `VR_71` (`FUNCTION_MODULE`, address `0x26`).
 - Unproven topologies are emitted as `UNKNOWN`; the gateway does not synthesize a replacement threshold heuristic.
 - Broader architectural treatment of FM3/FM5/VR66 as functional-module families is documented in [`./functional-modules.md`](./functional-modules.md).
 
@@ -140,8 +140,9 @@ Ownership note:
 
 **Selector assignment (`circuit_state` / `pump_status`):** the circuit state
 enumeration (raw 0 = STANDBY, 1 = HEATING, 2 = COOLING, 3 = DHW) is read from
-RR=0x001E (`circuit_status_circuit`) and the pump status from RR=0x001B
-(`circuit_pump_status`), as assigned in the
+RR=0x001E (`circuit_state`) and the pump status from RR=0x001B
+(`circuit_pump_unknown_8`; the meaning of that register is a **candidate
+(Hypothesis)**, see the evidence status below), as assigned in the
 [B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum).
 Earlier revisions of this table had the two selectors swapped.
 
@@ -318,7 +319,7 @@ These projections are Helianthus runtime logic and are NOT part of the B524 wire
 - retain zero, invalid, conflicting, and sparse results; those observations
   fall back to the configured bounded presence range rather than redefining a
   group or instance identity
-- treat `api_version` and `api_revision` as profile context only; do not use
+- treat `interface_version` and `interface_revision` as profile context only; do not use
   either as an instance count or topology route
 
 ### Phase B: profile candidate selection
@@ -391,26 +392,26 @@ Category corrections applied from VRC Explorer FLAGS analysis and MCP validation
 
 | Group | RR | Name | Old Cat | New Cat | FLAGS | Rationale |
 |-------|-----|------|---------|---------|-------|-----------|
-| 0x02 | 0x0017 | screed_drying_desired_temperature | C | S | 0x01 | Computed setpoint, read-only |
-| 0x02 | 0x0018 | ext_hwc_active | C | S | 0x00 | Status register, not config |
-| 0x02 | 0x0019 | external_heat_demand | C | S | 0x00 | External demand status |
-| 0x02 | 0x001D | frost_protection_threshold | P | C | 0x02 | Technical config, writable |
-| 0x03 | 0x000E | current_special_function | S | C | 0x03 | User-writable (set quickveto/away) |
-| 0x03 | 0x0014 | heating_manual_mode_setpoint | C | S | 0x01 | Computed output, read-only |
-| 0x03 | 0x0015 | cooling_manual_mode_setpoint | C | S | 0x01 | Computed output, read-only |
-| 0x03 | 0x001E | quick_veto_end_time | S | C | 0x03 | Writable (extend/set veto) |
-| 0x03 | 0x0024 | quick_veto_end_date | S | C | 0x03 | Writable (extend/set veto) |
-| 0x00 | 0x0007 | system_off | S | C | 0x03 | User-writable on/off switch |
+| 0x02 | 0x0017 | screed_drying_circuit_temperature_setpoint | C | S | 0x01 | Computed setpoint, read-only |
+| 0x02 | 0x0018 | dhw_circuit_circulation_pump_active | C | S | 0x00 | Status register, not config |
+| 0x02 | 0x0019 | circuit_external_demand_input | C | S | 0x00 | External demand status |
+| 0x02 | 0x001D | circuit_unknown_9 | P | C | 0x02 | Technical config, writable |
+| 0x03 | 0x000E | zone_special_function_mode | S | C | 0x03 | User-writable (set quickveto/away) |
+| 0x03 | 0x0014 | heating_zone_room_effective_temperature_setpoint | C | S | 0x01 | Computed output, read-only |
+| 0x03 | 0x0015 | cooling_zone_room_effective_temperature_setpoint | C | S | 0x01 | Computed output, read-only |
+| 0x03 | 0x001E | zone_quick_veto_end_clock_time | S | C | 0x03 | Writable (extend/set veto) |
+| 0x03 | 0x0024 | zone_quick_veto_end_date | S | C | 0x03 | Writable (extend/set veto) |
+| 0x00 | 0x0007 | unknown_11 | S | C | 0x03 | User-writable on/off switch |
 
 Wire type corrections from MCP validation (2026-03-05):
 
 | Group | RR | Name | Old Wire | New Wire | Evidence |
 |-------|-----|------|----------|----------|----------|
-| 0x00 | 0x0007 | system_off | u16 | u8 | 1-byte response, FLAGS=0x03 |
-| 0x00 | 0x0014 | adaptive_heating_curve | u16 | u8 | 1-byte response, FLAGS=0x03 |
-| 0x00 | 0x0096 | maintenance_due | u16 | u8 | 1-byte response, FLAGS=0x01 |
-| 0x01 | 0x000D | hwc_special_function_mode | u16 | u8 | 1-byte response, FLAGS=0x03 |
-| 0x03 | 0x000E | current_special_function | u16 | u8 | 1-byte response, FLAGS=0x03 |
+| 0x00 | 0x0007 | unknown_11 | u16 | u8 | 1-byte response, FLAGS=0x03 |
+| 0x00 | 0x0014 | adaptive_heating_curve_enabled | u16 | u8 | 1-byte response, FLAGS=0x03 |
+| 0x00 | 0x0096 | maintenance_active | u16 | u8 | 1-byte response, FLAGS=0x01 |
+| 0x01 | 0x000D | dhw_special_function_mode | u16 | u8 | 1-byte response, FLAGS=0x03 |
+| 0x03 | 0x000E | zone_special_function_mode | u16 | u8 | 1-byte response, FLAGS=0x03 |
 
 ### Related Files
 

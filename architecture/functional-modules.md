@@ -113,7 +113,7 @@ Current evidence level:
 What we already have:
 
 - B524 raw/system evidence:
-  - `GG=0x00 RR=0x002F` (`module_configuration_vr71`)
+  - `GG=0x00 RR=0x002F` (`functional_module_configuration_code`)
   - `GG=0x0C` remote-accessory slot evidence currently correlated with `VR71/FM5`
 - semantic contract:
   - `fm5SemanticMode`
