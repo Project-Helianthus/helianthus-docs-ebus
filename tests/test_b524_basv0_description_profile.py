@@ -703,3 +703,27 @@ def test_one_remote_slot_retains_one_observation_presence_state() -> None:
     rejects(f"observation records[{index}] presence state observed_present differs from observation records[{first}] "
             f"remote_identity_unqualified in slot OP06/GG{selector['group']}/II{selector['instance']}; "
             "one remote slot retains one presence state", document, rows)
+
+
+def test_boolean_numeric_limit_is_rejected_by_validator_and_schema(tmp_path: Path) -> None:
+    document = descriptions()
+    assert document["records"][2]["decoded"]["codec"] == "UCH" and document["records"][2]["decoded"]["max"] == 1
+    document["records"][2]["decoded"]["max"] = True
+    rejects("records[2].decoded.max must be a number for codec UCH, not bool", document)
+    path = tmp_path / "bool-limit.json"
+    path.write_text(json.dumps(document))
+    result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode != 0
+
+
+def test_exact_schema_basis_is_pinned_to_its_documented_selectors() -> None:
+    document = descriptions()
+    document["records"][0]["decoded"]["codec_basis"] = "public_exact_selector_schema"
+    document["records"][0]["validation_scope"] = "display_only"
+    rejects("records[0].decoded.codec_basis public_exact_selector_schema is not documented for OP02/GG00/II00/RR0001", document)
+
+    exact = [r for r in descriptions()["records"] if r["decoded"] and r["decoded"]["codec_basis"] == "public_exact_selector_schema"]
+    assert len(exact) == 14
+    assert {(r["selector"]["operation"], r["selector"]["group"], r["selector"]["instance"], r["selector"]["register"]) for r in exact} \
+        == validator.EXACT_SCHEMA_SELECTORS
+    validator.validate_documents(descriptions(), observations(), CATALOG)

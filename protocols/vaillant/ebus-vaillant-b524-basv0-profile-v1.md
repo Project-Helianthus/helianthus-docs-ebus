@@ -85,7 +85,9 @@ Wire entry is rejected; an exact-selector-schema codec must equal the codec the
 calendar/clock selector list implies (date HDA:3, time HTI). Eight of the
 fourteen exact-schema selectors (`GG00 RR002C`, `RR00F2..RR00F5`, `GG01
 RR0010/RR0011`, and the U32 `GG04 RR000B`) are not in that list; for them the
-register map's Wire column is the pin. A calendar value must be a valid date
+register map's Wire column is the pin. The validator accepts the exact-selector-schema basis only for these
+fourteen selectors and rejects it anywhere else; decoded numeric limits must be
+numbers, never booleans. A calendar value must be a valid date
 (year offset 0-99 from 2000) and a clock value a valid time (hour 0-23, minute and
 second 0-59) before `qualified` is kept.
 

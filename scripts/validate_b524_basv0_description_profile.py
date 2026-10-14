@@ -109,6 +109,21 @@ def calendar_clock_codecs() -> dict[tuple[str, str, str], str]:
     return _CLOCK_CACHE
 
 
+# The 14 documented exact-selector-schema selectors (OP, GG, II, RR): the 13 date/time
+# candidates and the U32 GG04 RR000B record, named in the "Basis of the codec labels"
+# section of protocols/vaillant/ebus-vaillant-b524-basv0-profile-v1.md. Eight of them
+# (GG00 RR002C, RR00F2..RR00F5, GG01 RR0010/RR0011, GG04 RR000B) are absent from the
+# calendar/clock candidate list and are pinned by the register map Wire column instead.
+EXACT_SCHEMA_SELECTORS = frozenset(
+    ("02", group, "00", register) for group, register in (
+        ("00", "002C"), ("00", "0034"), ("00", "0035"), ("00", "00DA"), ("00", "00DB"),
+        ("00", "00F2"), ("00", "00F3"), ("00", "00F4"), ("00", "00F5"),
+        ("01", "0009"), ("01", "000A"), ("01", "0010"), ("01", "0011"),
+        ("04", "000B"),
+    )
+)
+
+
 def _validate_selector_codec(codec: str, basis: str, selector: dict[str, str], context: str) -> None:
     where = f"OP{selector['operation']}/GG{selector['group']}/II{selector['instance']}/RR{selector['register']}"
     mapped = register_map_wire().get((selector["operation"], selector["group"], selector["register"]))
@@ -260,6 +275,12 @@ def _validate_record(record: Any, index: int) -> None:
                 continue
             expected = _decode_limit(codec, limits[f"{field}_hex"])
             actual = decoded.get(field)
+            if codec in NUMERIC_CODECS:
+                # bool is an int subclass: True == 1 would otherwise pass the comparison below.
+                _require(isinstance(actual, (int, float)) and not isinstance(actual, bool),
+                         f"{context}.decoded.{field} must be a number for codec {codec}, not {type(actual).__name__}")
+            else:
+                _require(not isinstance(actual, bool), f"{context}.decoded.{field} must not be a boolean")
             same = actual == expected or (isinstance(actual, float) and isinstance(expected, float)
                                           and math.isnan(actual) and math.isnan(expected))
             _require(same, f"{context}.decoded.{field} disagrees with raw limits")
@@ -339,6 +360,17 @@ def _validate_remote_slot_identity(records: list[dict[str, Any]]) -> None:
                  f"records[{first[0]}] in {where}; one slot retains one identity")
 
 
+def _validate_exact_schema_pins(records: list[dict[str, Any]]) -> None:
+    """public_exact_selector_schema is accepted only for the documented selector set."""
+    for index, record in enumerate(records):
+        decoded = record.get("decoded")
+        if isinstance(decoded, dict) and decoded.get("codec_basis") == "public_exact_selector_schema":
+            selector = record["selector"]
+            _require((selector["operation"], selector["group"], selector["instance"], selector["register"]) in EXACT_SCHEMA_SELECTORS,
+                     f"records[{index}].decoded.codec_basis public_exact_selector_schema is not documented for "
+                     f"OP{selector['operation']}/GG{selector['group']}/II{selector['instance']}/RR{selector['register']}")
+
+
 def _validate_codec_read_widths(records: list[dict[str, Any]]) -> None:
     """A qualified codec width must agree with the observed read payload width."""
     for index, record in enumerate(records):
@@ -397,6 +429,7 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
         _require(isinstance(decoded, dict) and decoded.get("codec") == "UIN"
                  and ventilation[0].get("description_payload_length") == 6,
                  f"ventilation II{instance} RR0001 codec must remain UIN with width 2")
+    _validate_exact_schema_pins(records)
     _validate_codec_read_widths(records)
     if observed is None:
         return
