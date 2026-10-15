@@ -1015,6 +1015,12 @@ Accept: application/json
 }
 ```
 
+[basv0-profile]:
+  ../protocols/vaillant/ebus-vaillant-b524-basv0-profile-v1.md
+
+[gateway-bound-discovery]:
+  https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1034
+
 ### Handler Construction
 
 `NewHandler(builder)` returns an `http.Handler` backed by the query schema. `cmd/gateway` uses `NewInvokeHandler(builder, registry, invoker)` for `/graphql` and `NewSubscriptionHandler(builder, registry, invoker, hub)` for `/graphql/subscriptions`.
@@ -1070,48 +1076,67 @@ controller.
   byte, register) under one controller identity. A profile applies only when
   the whole identity matches exactly: device identifier, raw software value,
   raw hardware value, API version and API revision. The API version and
-  revision are the OP=00h system-information identifiers `0006h` and `0007h`
-  ([`api_version` / `api_revision`](../protocols/vaillant/ebus-vaillant-B524.md));
-  the gateway reads them from the controller once per identity because the
-  device identification (software/hardware) does not carry them. An identity
+  revision correspond to the OP=00h system-information identifiers
+  `0006h` `interface_version` and `0007h` `interface_revision`
+  ([B524 system information](../protocols/vaillant/ebus-vaillant-B524.md)).
+  The lookup uses only registry discovery/import metadata, including the
+  device identifier (EID), raw software and raw hardware. Bound resolution
+  performs no bus I/O or on-demand system-information identifier reads.
+  Existing polling does not acquire these two identifiers. An identity
   missing any of the five values never matches a profile that recorded it.
   The register is `dhw_outdoor_bivalence_temperature_limit`
   (`OP=02h`, `GG=00h`, `II=00h`, `RR=0001h`); a profile seeded for `II=00h`
   answers no bound for any other instance. The only seeded profile is the
-  VRC720 family controller `BASV0` with software `0217`, hardware `8803`,
+  `BASV0` controller family with software `0217`, hardware `8803`,
   API `1.1`, range `-20..20`
-  ([profile page](../protocols/vaillant/ebus-vaillant-b524-basv0-profile-v1.md)).
+  ([profile page][basv0-profile]).
   Only the retained description bytes are **Proven**; the decoded `-20..20`
-  range rests on the codec reading and is a **Hypothesis**. The register map's
+  range rests on the EXP decoding and is a **Hypothesis**. The register map's
   `-20..50` is an unqualified historical observation that names no controller
-  identity, so it is not used.
+  identity, so it is not used. Today even the seeded BASV0 identity resolves
+  to `unknown_profile`: every bound is the conservative `-20..20` with
+  `source: unmatched_policy`. The `controller_profile` source can appear
+  only after gateway issue
+  [#1034][gateway-bound-discovery]
+  acquires both identifiers in the discovery path.
 - **Unmatched policy.** When no profile matches (unknown identity, a controller
-  without a seeded profile, an API qualifier that could not be read, or a
+  without a seeded profile, an API qualifier missing from metadata, or a
   profile without a bound for this selector), the conservative range `-20..20`
   applies. A controller family whose profile is not seeded therefore falls
   under this policy until a profile is added, even when other documentation
-  lists a wider catalog range for it.
+  lists a wider catalog range for it. The registry/invoker write path
+  (`ebus.v1.rpc.invoke`-style writes through the registry) has no API qualifier
+  and therefore always applies the unmatched policy.
 - **Before any bus write.** A value outside the active bound is rejected
   before the first bus frame of the write is sent, with `success: false`. The
   error text names the active bound: `controller profile <identity> allows
   [min, max]` or `controller identity unmatched (<reason>): conservative policy
   bound [min, max] applies`. A value inside the bound is written and still
   reported as success only after the read-back matches the written value.
+- **Non-finite input.** Every numeric configuration write rejects `NaN` and
+  positive or negative infinity before encoding, with `success: false` and
+  no bus request.
 - **Other system numbers.** `maxRoomHumidityPct`, `hcBivalencePointC`,
   `hcEmergencyTempC`, `hwcMaxFlowTempC` and `installerMenuCode` keep their fixed
   ranges and carry no bound.
 
 `SystemConfig.dhwBivalencePointBound` (snake_case alias
-`dhw_bivalence_point_bound`) publishes the bound that is active right now, so
-a consumer can limit its input control to it. `source` is `controller_profile`
+`dhw_bivalence_point_bound`) publishes the resolved bound so a consumer can
+limit its input control to it. The bound is resolved from current registry
+metadata at validation and at publication; published bounds update on the
+next system publication. A controller swap at the same address keeps the
+registry identity until the registry metadata changes, so that identity can
+be stale. `source` is `controller_profile`
 (with `profile` naming the matched identity as
-`<id>/SW<software>/HW<hardware>/API<version>.<revision>`) or `unmatched_policy`
+`<EID>/SW<sw>/HW<hw>/API<v>.<r>`) or `unmatched_policy`
 (with `reason` one of `unknown_profile`, `unknown_register`,
 `unqualified_bound`, `invalid_bound`). The MCP tool
 `ebus.v1.semantic.system.get` returns the same value as
 `config.dhw_bivalence_point_bound` with `min_c`, `max_c`, `source`, `reason`
-and `profile`. A controller whose profile later changes publishes the new
-bound with the next system update.
+and `profile`. Before the first resolution, GraphQL returns `null` for
+`dhwBivalencePointBound` and MCP omits `config.dhw_bivalence_point_bound`
+entirely. Empty optional `reason` and `profile` strings are `null` in GraphQL
+and omitted in MCP.
 
 ### Handler Construction
 

@@ -435,8 +435,34 @@ shape and is not a substitute for the degradation verdict.
 - `ebus.v1.semantic.circuits.get` exposes explicit per-circuit ownership as `managing_device`.
 - `managing_device.role` is always present and is one of `REGULATOR`, `FUNCTION_MODULE`, or `UNKNOWN`.
 - `managing_device.device_id` and `managing_device.address` are populated only when the gateway has ownership evidence for the current topology.
-- `ebus.v1.semantic.system.get` exposes `config.dhw_bivalence_point_bound` (`min_c`, `max_c`, `source`, optional `reason` and `profile`): the range `ebus.v1.semantic.system.set_config` currently accepts for `dhwBivalencePointC`. A value outside it is rejected before any bus write. See [`graphql.md`](./graphql.md) "System Config Write Bounds" for the profile and unmatched-policy rules.
+- `ebus.v1.semantic.system.get` exposes `config.dhw_bivalence_point_bound`
+  (`min_c`, `max_c`, `source`, optional `reason` and `profile`): the range
+  `ebus.v1.semantic.system.set_config` accepts for `dhwBivalencePointC`.
+  A value outside it is rejected before any bus write. Before the first
+  resolution, MCP omits the bound entirely; GraphQL returns `null`.
+  Empty optional `reason` and `profile` strings are omitted in MCP and
+  `null` in GraphQL. Resolution uses only registry discovery/import metadata,
+  with no bus I/O or on-demand system-information identifier reads. Existing
+  polling does not acquire `0006h` `interface_version` or `0007h`
+  `interface_revision` (the registry identity's API version and revision).
+  Today even the seeded BASV0 identity resolves to `unknown_profile`, so every
+  bound is the conservative `-20..20` with `source: unmatched_policy`.
+  `controller_profile` can appear only after gateway issue
+  [#1034][gateway-bound-discovery]
+  acquires both identifiers in discovery. The bound is resolved from current
+  registry metadata at validation and at publication, and published bounds
+  update on the next system publication. A controller swap at the same
+  address retains the registry identity until that metadata changes, so the
+  identity can be stale. Registry/invoker writes through
+  `ebus.v1.rpc.invoke` have no API qualifier and always apply the unmatched
+  policy. Every numeric configuration write rejects `NaN` and positive or
+  negative infinity before encoding, with `success: false` and no bus request.
+  See [`graphql.md`](./graphql.md) "System Config Write Bounds" for the
+  profile and unmatched-policy rules.
 - `ebus.v1.semantic.system.get` no longer exposes `vr71_circuit_start_index`; that threshold was a gateway heuristic and is not part of the canonical contract.
+
+[gateway-bound-discovery]:
+  https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1034
 
 ## RPC Method Reference - Vaillant System Plane
 
