@@ -229,17 +229,19 @@ def _validate_record(record: Any, index: int) -> None:
     else:
         _require(isinstance(remote_identity, dict) and remote_identity.get("qualification") in {"observed_remote_header", "unqualified"},
                  f"{context} must retain remote identity qualification")
-        if "group" in remote_identity:
-            _require(remote_identity["group"] == group, f"{context}.remote_identity.group disagrees with selector")
         if remote_identity.get("qualification") == "observed_remote_header":
             # Widths: group and address are one byte; firmware is major.minor.patch, three
             # byte-decimal bytes (register map RR0004 device_firmware_version).
             for name, length in (("group", 2), ("address_raw", 2), ("firmware_raw", 6)):
                 value = remote_identity.get(name)
-                _require(isinstance(value, str) and value and HEX.fullmatch(value) is not None,
+                _require(value is not None,
                          f"{context}.remote_identity.{name} is required for an observed remote header")
+                _require(isinstance(value, str) and re.fullmatch(r"[0-9A-F]*", value) is not None,
+                         f"{context}.remote_identity.{name} must be uppercase hexadecimal")
                 _require(len(value) == length,
                          f"{context}.remote_identity.{name} must be {length // 2} bytes ({length} hex digits), not {len(value) // 2}")
+        if "group" in remote_identity:
+            _require(remote_identity["group"] == group, f"{context}.remote_identity.group disagrees with selector")
     raw = record.get("raw_description_hex")
     lengths = record.get("description_payload_length")
     limits = record.get("raw_limits")
@@ -344,8 +346,9 @@ def _validate_family_invariance(records: list[dict[str, Any]]) -> None:
     fixture retains no request bytes, so the retained material cannot prove which
     instance a response answers. A qualified range is therefore accepted only where
     every retained described instance of (operation, group, register) carries
-    byte-identical raw limits and description length; records without a
-    description are absent evidence and take no part in the comparison.
+    byte-identical raw limits and description length, with matching qualified
+    codecs; records without a description are absent evidence and take no part
+    in the comparison.
     """
     # Keep the recorded operation: OP02 and OP06 are distinct native namespaces.
     # Consistent scope/observation edits cannot establish it; see module docstring.
@@ -362,6 +365,11 @@ def _validate_family_invariance(records: list[dict[str, Any]]) -> None:
         _require(not (len(spans) > 1 and qualified),
                  f"OP{operation}/GG{group}/RR{register} qualifies a decoded range although its described instances differ; "
                  "the instance byte is not echoed, so a qualified range must be identical across every retained instance")
+        codecs = {record["decoded"]["codec"] for record in described
+                  if isinstance(record.get("decoded"), dict) and record["decoded"].get("qualification") == "qualified"}
+        _require(len(codecs) <= 1,
+                 f"OP{operation}/GG{group}/RR{register} has conflicting qualified codecs across retained instances: "
+                 f"{'/'.join(sorted(codecs))}; a qualified range must use the same codec")
 
 
 def _validate_remote_slot_identity(records: list[dict[str, Any]]) -> None:
@@ -471,6 +479,7 @@ def validate_fixture(path: Path, observations: Path | None = None, scopes: Path 
             overlay = json.loads(scopes.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise ValidationError(f"{scopes}: cannot read JSON") from exc
+        _require(isinstance(overlay, dict), "validation-scope overlay must be an object")
     validate_documents(fixture, observed, path.name, overlay)
 
 

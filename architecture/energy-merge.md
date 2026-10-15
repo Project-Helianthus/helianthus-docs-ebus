@@ -62,15 +62,27 @@ Lifetime projection truth table (reference date 2027-01-01). Slots: `Yearly[1]` 
 
 Monthly rollover: when the reference month advances, the key that was the current month becomes the previous month and the key that was the previous month leaves the projection. A month key stays stored under its own `(year, month)` and is never relabelled.
 
-A stored dated window outside these positions is not part of the snapshot. A value for an old year that is received again updates its own dated key and appears in the projection only while that year is still the reference year or the year before it.
+A stored dated window outside these positions is not part of the snapshot. A value for an old year that is received again updates its own dated key only while that year remains eligible under the retention rule below.
+
+### Dated Month/Year Retention (Pending Companion)
+
+The following application behavior is **Proven in the supplied implementation/test artifact** for [gateway retention PR #1047](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1047), the implementation companion to [gateway #1019](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1019). Merge status and an immutable accepted implementation revision are **Unknown** here; this note does not claim deployed or merged behavior.
+
+For month and year points, retention uses the ingest reference date and the absolute window key within the same canonical channel, usage and period. An incoming month older than the previous calendar month, or a year older than the previous calendar year, is rejected without changing retained points or the revision, whether its source is register or broadcast. A late previous-window update still targets its own key; register-over-broadcast precedence continues to apply, including an older register ingest overriding a broadcast and a newer broadcast being unable to override a register.
+
+After an accepted month/year write, obsolete points of that same canonical channel, usage and period are removed. Other channels, usages and periods, including day points and lifetime totals, are preserved by this pruning. Existing older-day pruning still applies when a day point is accepted. Snapshots project retained state without pruning it; inactive selectors await their next accepted write, and a rejected source downgrade does not trigger pruning.
+
+Across two month rollovers and New Year, refreshed selectors retain the current and previous absolute windows with the same public projection. Future-dated retained points survive clock rollback and become projectable again when the reference clock catches up. An accepted catch-up write prunes obsolete rollback history. Pruned history is no longer in the store and would require re-observation after a later rollback.
+
+This retention rule uses the existing process-calendar assumption described under [Broadcast Date Mapping](#broadcast-date-mapping). Calendar-zone resolution remains **Unknown**, tracked separately in [gateway #1022](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1022); this companion selects no calendar zone.
 
 ### Freshness and Persistence
 
 Calendar projection and freshness are separate. A lifetime total persists when register refreshes fail, including across a year rollover: its value stays in the current position, while its freshness metadata turns stale once the point is 45 minutes old. A stale register value still takes precedence over broadcasts for the same window. Consumers must read the calendar projection and the freshness metadata separately and must not treat a stale value as absent or a fresh value as belonging to a different window.
 
-Structural capacity: up to **30 dated points** (3 channels x 2 usages x 5 slots: day, previous year, current year, previous month, current month) plus up to **6 lifetime points** (3 channels x 2 usages).
+Projected structural capacity: up to **30 dated points** (3 channels x 2 usages x 5 slots: day, previous year, current year, previous month, current month) plus up to **6 lifetime points** (3 channels x 2 usages).
 
-Reachable maxima under the documented query coverage (no solar register queries; monthly broadcasts are not consumed): **26 dated points**, being 18 broadcast day and yearly points (3 channels x 2 usages x day, previous year, current year) plus 8 register monthly points (2 channels x 2 usages x 2 months), and **4 lifetime points** (2 channels x 2 usages). Fixtures should use the reachable bounds.
+Reachable projected maxima under the documented query coverage (no solar register queries; monthly broadcasts are not consumed): **26 dated points**, being 18 broadcast day and yearly points (3 channels x 2 usages x day, previous year, current year) plus 8 register monthly points (2 channels x 2 usages x 2 months), and **4 lifetime points** (2 channels x 2 usages). Fixtures for the projected set should use the reachable bounds. These figures are not unconditional store-size bounds: in the pending retention companion, normally refreshed selectors retain two windows per month/year period, while inactive selectors await an accepted write and clock rollback can retain additional future windows.
 
 ## Broadcast Date Mapping
 
@@ -183,7 +195,7 @@ The eight monthly queries (this month and last month) are not lifetime totals: e
 
 ### Source Precedence
 
-Once a register value has been written for a given merge key, broadcast updates for the same key are permanently rejected (until the merge store is reset). This ensures register-primary data integrity even when broadcast traffic is available.
+While a register-sourced point remains stored for a given merge key, broadcast updates for that key are rejected. This ensures register-primary data integrity even when broadcast traffic is available.
 
 ### Historical Note
 

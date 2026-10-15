@@ -721,6 +721,41 @@ def test_missing_description_does_not_make_a_family_divergent() -> None:
     validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
 
 
+@pytest.mark.parametrize("codec", ["EXP", "U32"])
+def test_family_invariance_compares_qualified_codecs_with_identical_bytes(codec: str) -> None:
+    """Exercise the family gate independently of the selector-to-codec pin."""
+    first = {
+        "selector": {"operation": "02", "group": "00", "instance": "00", "register": "FFFF"},
+        "raw_description_hex": "00000000" * 3,
+        "raw_limits": {f"{field}_hex": "00000000" for field in ("min", "max", "step")},
+        "description_payload_length": 12,
+        "decoded": {"qualification": "qualified", "codec": "EXP"},
+    }
+    second = deepcopy(first)
+    second["selector"]["instance"] = "01"
+    second["decoded"]["codec"] = codec
+    if codec == "EXP":
+        validator._validate_family_invariance([first, second])
+    else:
+        with pytest.raises(validator.ValidationError, match="OP02/GG00/RRFFFF has conflicting qualified codecs.*EXP/U32"):
+            validator._validate_family_invariance([first, second])
+
+
+@pytest.mark.parametrize(("field", "value"), [("operation", "06"), ("group", "01"), ("register", "FFFE")])
+def test_family_codec_comparison_preserves_native_namespaces(field: str, value: str) -> None:
+    first = {
+        "selector": {"operation": "02", "group": "00", "instance": "00", "register": "FFFF"},
+        "raw_description_hex": "00000000" * 3,
+        "raw_limits": {f"{name}_hex": "00000000" for name in ("min", "max", "step")},
+        "description_payload_length": 12,
+        "decoded": {"qualification": "qualified", "codec": "EXP"},
+    }
+    second = deepcopy(first)
+    second["selector"][field] = value
+    second["decoded"]["codec"] = "U32"
+    validator._validate_family_invariance([first, second])
+
+
 def test_description_without_observation_record_is_rejected() -> None:
     rows = observations()
     selector = descriptions()["records"][0]["selector"]
@@ -734,8 +769,9 @@ def test_moving_a_record_to_another_instance_stays_valid_when_the_family_is_inva
 
     This is harmless under the invariance rule: a qualified range is accepted only
     where every retained described instance of the selector carries identical
-    spans, so the instance byte can never carry a decoded claim and reassigning
-    it cannot change what the fixture asserts.
+    spans and matching qualified codecs, so reassigning the instance cannot
+    change any qualified decoded range. Presence state still follows the instance
+    as a source-installation interpretation.
     """
     document, rows = descriptions(), observations()
     _, record = find(document, "02", "03", "00", "0002")
@@ -1150,3 +1186,95 @@ def test_plain_byte_candidates_reject_bcd_codec_names(
         text=True, capture_output=True, check=False,
     )
     assert result.returncode != 0, result.stdout
+
+
+@pytest.mark.parametrize("field,length", [("group", 2), ("address_raw", 2), ("firmware_raw", 6)])
+@pytest.mark.parametrize("mutation", ["missing", "null", "nonhex", "nonstring", "short", "long", "odd", "empty"])
+def test_remote_header_input_diagnostics(field: str, length: int, mutation: str, tmp_path: Path) -> None:
+    document = descriptions()
+    index, record = next((i, r) for i, r in enumerate(document["records"])
+                         if r["remote_identity"] and r["remote_identity"]["qualification"] == "observed_remote_header")
+    header = record["remote_identity"]
+    prefix = f"records[{index}].remote_identity.{field}"
+    if mutation == "missing":
+        del header[field]
+    else:
+        header[field] = {
+            "null": None, "nonhex": "ZZ", "nonstring": 12,
+            "short": "00" * (length // 2 - 1), "long": "00" * (length // 2 + 1),
+            "odd": "0" * (length - 1), "empty": "",
+        }[mutation]
+    if mutation in {"missing", "null"}:
+        expected = f"{prefix} is required for an observed remote header"
+    elif mutation in {"nonhex", "nonstring"}:
+        expected = f"{prefix} must be uppercase hexadecimal"
+    else:
+        expected = f"{prefix} must be {length // 2} bytes ({length} hex digits), not {len(header[field]) // 2}"
+    rejects(expected, document)
+    path = tmp_path / "header.json"
+    path.write_text(json.dumps(document))
+    result = validate(path)
+    assert result.returncode == 1
+    assert result.stderr.strip() == expected
+    assert "Traceback" not in result.stderr
+
+
+def test_remote_header_group_must_match_selector() -> None:
+    document = descriptions()
+    index, record = next((i, r) for i, r in enumerate(document["records"])
+                         if r["remote_identity"] and r["remote_identity"]["qualification"] == "observed_remote_header")
+    record["remote_identity"]["group"] = "FF"
+    rejects(f"records[{index}].remote_identity.group disagrees with selector", document)
+
+
+@pytest.mark.parametrize("content,message", [
+    (None, "cannot read JSON"),
+    ("{", "cannot read JSON"),
+    ("null", "validation-scope overlay must be an object"),
+    ("[]", "validation-scope overlay must be an object"),
+    ('{}', "unexpected validation-scope overlay schema version"),
+])
+def test_explicit_bad_overlay_fails_without_traceback(content: str | None, message: str, tmp_path: Path) -> None:
+    overlay = tmp_path / "overlay.json"
+    if content is not None:
+        overlay.write_text(content)
+    result = subprocess.run(
+        ["python3", "scripts/validate_b524_basv0_description_profile.py", str(FIXTURE), "--scopes", str(overlay)],
+        cwd=ROOT, text=True, capture_output=True, check=False, timeout=30,
+    )
+    assert result.returncode == 1
+    assert message in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_default_overlay_is_loaded_when_present(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    overlay = tmp_path / "default-overlay.json"
+    monkeypatch.setattr(validator, "SCOPE_OVERLAY", overlay)
+    overlay.write_text(json.dumps(scopes()))
+    validator.validate_fixture(FIXTURE, REGISTER_FIXTURE)
+    candidate = scopes()
+    candidate["records"][0]["validation_scope"] = "raw_evidence_only"
+    overlay.write_text(json.dumps(candidate))
+    with pytest.raises(validator.ValidationError, match="validation_scope must be format_range_and_step"):
+        validator.validate_fixture(FIXTURE)
+    overlay.write_text("{")
+    with pytest.raises(validator.ValidationError, match="cannot read JSON"):
+        validator.validate_fixture(FIXTURE)
+
+
+def test_missing_default_overlay_and_in_process_omission_remain_optional(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(validator, "SCOPE_OVERLAY", tmp_path / "absent.json")
+    validator.validate_fixture(FIXTURE, REGISTER_FIXTURE)
+    validator.validate_documents(descriptions(), observations(), CATALOG)
+    # Omitting the application overlay cannot admit missing qualified read evidence.
+    document = descriptions()
+    document["records"][0]["observed_read_payload_width"] = None
+    with pytest.raises(validator.ValidationError, match="missing observed_read_payload_width"):
+        validator.validate_documents(document)
+
+
+def test_explicit_overlay_takes_precedence_over_default(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    default = tmp_path / "default.json"
+    default.write_text("{")
+    monkeypatch.setattr(validator, "SCOPE_OVERLAY", default)
+    validator.validate_fixture(FIXTURE, REGISTER_FIXTURE, SCOPE_OVERLAY)
