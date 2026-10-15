@@ -297,7 +297,7 @@ the instance domain remains unconfirmed. The notation
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | dhw_outdoor_bivalence_temperature_limit | C | f32 | °C | — | profile-scoped: BASV2 -20..50 step 1; BASV0 -20..20 step 1 | — | — | FLAGS=0x02 (historical scan value, controller profile not recorded); BASV0 observes flags 03. See the DHW bivalence note in the [Constraint Catalog](#constraint-catalog) |
+| 0x0001 | dhw_outdoor_bivalence_temperature_limit | C | f32 | °C | — | profile-scoped: BASV0 -20..20 step 1 (retained description record; EXP decoding **Hypothesis**); BASV2 -20..50 step 1 (unqualified historical observation, **Hypothesis**) | — | — | FLAGS=0x02 (historical scan value, controller profile not recorded); BASV0 observes flags 03. See the DHW bivalence note in the [Constraint Catalog](#constraint-catalog) |
 | 0x0002 | continuous_heating_outdoor_temperature_limit | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | FLAGS=0x03. ebusd: `-26=off` disables function |
 | 0x0003 | frost_protection_delay_time | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | FLAGS=0x03 |
 | 0x0004 | preheating_time_maximum | C | u16 | min | — | 0..300 step 10 | — | — | FLAGS=0x03. † |
