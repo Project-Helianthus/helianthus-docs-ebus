@@ -707,6 +707,36 @@ def test_qualified_codec_width_must_match_observed_read_widths() -> None:
     rejects("records[0].decoded.codec EXP width 4 contradicts observed_read_payload_width 5", document, rows)
 
 
+@pytest.mark.parametrize("missing", ["both", "record", "observation"])
+def test_qualified_codec_requires_nonnull_read_widths(missing: str, tmp_path: Path) -> None:
+    document, rows = descriptions(), observations()
+    record = document["records"][0]
+    row_index, row = next((i, row) for i, row in enumerate(rows["records"])
+                          if row["description"] and row["description"]["record_index"] == 0)
+    assert record["decoded"]["qualification"] == "qualified"
+    assert record["decoded"]["codec"] == "EXP"
+    assert record["observed_read_payload_width"] == row["observed_payload_width"] == 4
+    record["access_flags"] = row["access_flags"] = "00"
+    if missing in {"both", "record"}:
+        record["observed_read_payload_width"] = None
+    if missing in {"both", "observation"}:
+        row.update(response_state="status_only", observed_payload_width=None)
+    field = "observed_payload_width" if missing == "observation" else "observed_read_payload_width"
+    rejects(f"records[0] linked observation records[{row_index}] missing {field} for qualified codec EXP",
+            document, rows)
+    if missing != "observation":
+        with pytest.raises(validator.ValidationError, match="missing observed_read_payload_width"):
+            validator.validate_documents(document)
+    path = tmp_path / "missing-read-width.json"
+    path.write_text(json.dumps(document))
+    result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert (result.returncode == 0) == (missing == "observation"), result.stderr
+    path.write_text(json.dumps(rows))
+    result = subprocess.run(["jv", str(REGISTER_SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 0, result.stderr  # Cross-document qualification is enforced by the validator.
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
+
+
 def test_one_remote_slot_retains_one_observation_presence_state() -> None:
     document, rows = descriptions(), observations()
     index = [i for i, row in enumerate(rows["records"])

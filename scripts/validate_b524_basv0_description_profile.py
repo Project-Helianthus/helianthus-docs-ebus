@@ -412,12 +412,22 @@ def _validate_exact_schema_pins(records: list[dict[str, Any]]) -> None:
                      f"exact-schema selector {where}")
 
 
-def _validate_codec_read_widths(records: list[dict[str, Any]]) -> None:
+def _validate_codec_read_widths(records: list[dict[str, Any]], observed: Any = None) -> None:
     """A qualified codec width must agree with the observed read payload width."""
     for index, record in enumerate(records):
         decoded = record.get("decoded")
         width = record.get("observed_read_payload_width")
-        if isinstance(decoded, dict) and decoded.get("qualification") == "qualified" and width is not None:
+        if isinstance(decoded, dict) and decoded.get("qualification") == "qualified":
+            if width is None:
+                linked = ""
+                if isinstance(observed, dict) and isinstance(observed.get("records"), list):
+                    for row_index, row in enumerate(observed["records"]):
+                        if (isinstance(row, dict) and isinstance(row.get("description"), dict)
+                                and row["description"].get("record_index") == index):
+                            linked = f" linked observation records[{row_index}]"
+                            break
+                raise ValidationError(
+                    f"records[{index}]{linked} missing observed_read_payload_width for qualified codec {decoded['codec']}")
             _require(width == CODEC_WIDTH[decoded["codec"]],
                      f"records[{index}].decoded.codec {decoded['codec']} width {CODEC_WIDTH[decoded['codec']]} "
                      f"contradicts observed_read_payload_width {width}")
@@ -481,7 +491,7 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
                  and ventilation[0].get("description_payload_length") == 6,
                  f"ventilation II{instance} RR0001 codec must remain UIN with width 2")
     _validate_exact_schema_pins(records)
-    _validate_codec_read_widths(records)
+    _validate_codec_read_widths(records, observed)
     if observed is None:
         return
     _require(isinstance(observed, dict), "observations must be an object")
@@ -531,11 +541,15 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
         _require(row.get("selector") == records[record_index].get("selector"), f"observation records[{index}] description selector mismatch")
         described = records[record_index]
         _require(row.get("access_flags") == described.get("access_flags"), f"observation records[{index}] access flags disagree with description")
+        decoded = described.get("decoded")
+        if isinstance(decoded, dict) and decoded.get("qualification") == "qualified":
+            _require(width is not None,
+                     f"records[{record_index}] linked observation records[{index}] missing observed_payload_width "
+                     f"for qualified codec {decoded['codec']}")
         _require(row.get("observed_payload_width") == described.get("observed_read_payload_width"),
                  f"observation records[{index}] payload width disagrees with description")
-        decoded = described.get("decoded")
-        if isinstance(decoded, dict) and decoded.get("qualification") == "qualified" and row.get("observed_payload_width") is not None:
-            _require(row["observed_payload_width"] == CODEC_WIDTH.get(decoded.get("codec")),
+        if isinstance(decoded, dict) and decoded.get("qualification") == "qualified":
+            _require(width == CODEC_WIDTH.get(decoded.get("codec")),
                      f"observation records[{index}] observed width contradicts the qualified codec width")
         _require(row.get("presence_state") == described.get("presence_state"),
                  f"observation records[{index}] presence state disagrees with description")

@@ -123,6 +123,20 @@
           ]
         }
       },
+      "if": {
+        "required": ["decoded"],
+        "properties": {
+          "decoded": {
+            "type": "object",
+            "required": ["qualification"],
+            "properties": { "qualification": { "const": "qualified" } }
+          }
+        }
+      },
+      "then": {
+        "required": ["observed_read_payload_width"],
+        "properties": { "observed_read_payload_width": { "type": "integer", "minimum": 1 } }
+      },
       "additionalProperties": false
     }
   }
