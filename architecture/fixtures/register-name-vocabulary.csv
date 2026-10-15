@@ -1,0 +1,242 @@
+token,roles,definition,forbidden_synonyms
+abort,action,Ending the target early.,
+access_code,object,An access code.,menu_code|password
+active,predicate,Boolean: the subject performs its function now.,activation|is_active
+actuator,subject,An actuator.,actor
+actuator_sensor_test,purpose,The diagnostic test of actuators and sensors.,
+adaptive,attribute,Adaptive.,
+address,object,A bus or unit address.,
+alternative,attribute,The alternative point at which only the second heat generator runs.,
+assignment,object,An assignment to another entity.,
+at,marker,Opens a condition; only vocabulary terms follow it.,
+automatic,attribute,Automatic.,
+available,predicate,Boolean: the function or component is present and usable in this installation.,
+average,manner,The mean over the preceding period.,avg|mean
+back,attribute,Back.,
+backlight,subject,The display backlight.,
+backup_heater,subject,A backup heater.,auxiliary_heater
+bank_holiday,attribute,A bank holiday period.,
+binding,object,The assignment of a sensor.,
+bitfield,predicate,Several booleans in one value; each bit has its own boolean name.,flags
+bivalence,attribute,The bivalence point at which a second heat generator supplements the heat pump.,
+bleeding,object|activity,Bleeding air from a circuit.,
+blocking,object|activity,Blocking.,lock
+boiler,subject,An attached boiler.,
+boost,object|activity,A temporary increase.,
+bottom,place,The bottom of a cylinder.,
+building,place,The building side.,
+burner,subject,The burner.,
+button,subject,A key of the user interface.,
+cascade,attribute,A cascade of heat generators.,
+central,attribute,Central control by the system controller.,
+circuit,subject|attribute,"A circuit of the installation; as an attribute, the circuit the following subject belongs to.",
+circulation,attribute,Circulation.,
+class_address,object,The bus address identifying the device class.,
+client,subject,A subordinate member of a group.,
+clock_time,object,A time of day.,
+code,predicate,A number whose meaning comes from an external code list.,
+collector,subject,A solar collector.,
+comfort,attribute,The comfort level of a setpoint.,
+command,predicate,Writing the register triggers the action named before it.,
+communication,object,Communication.,
+compressor,subject,The compressor.,
+condensate_sensitive_emitter,object,A heat emitter sensitive to condensate.,
+configuration,object,A configuration.,
+confirm,attribute,Confirm.,
+connected,predicate,Boolean: the communication link to the subject is up.,
+consumption,object,Consumed energy.,
+continuous_heating,purpose|object|activity,Heating kept on without setback below an outdoor temperature limit.,
+control,object,Control.,
+cooling,purpose|object|activity,"Space cooling; as an object, the cooling activity.",
+count,predicate,"Number of occurrences of the object event; with a subject and no object, the number of such subjects.",
+crystal,subject,A clock crystal.,
+current,object,Electric current.,
+current_month,period,The current calendar month.,this_month
+current_year,period,The current calendar year.,this_year
+cylinder,subject,A hot-water or buffer cylinder.,buffer|tank|storage
+daily,period,A rolling period of 24 hours.,24h
+date,object,A calendar date.,
+day,part,"Day part of a date; inside a condition, the day period of a time programme.",
+daylight_saving_time,object,Daylight saving time.,
+defrost,object|activity,Defrosting.,deicing
+delay,object|activity,Delaying the start of a function.,
+demand,predicate,Boolean: the function is requested.,
+demand_input,subject,An input that signals a demand.,
+device,subject,The device addressed in a controller-mediated slot.,
+dew_point,attribute,The dew point.,
+dhw,purpose|attribute,Abbreviation: domestic hot water.,hwc|hot_water
+differential_control,purpose|subject,Control on a temperature difference between two sensors.,
+display,subject,The display.,
+diverter_valve,subject,A diverter valve.,three_way_valve|3wv
+down,attribute,Down.,
+drainback,attribute,A drainback solar installation.,
+eeprom,subject,Abbreviation: electrically erasable non-volatile memory.,
+effective,attribute,The value in effect after all conditions are applied.,displayed
+efficiency,object,Efficiency.,
+electricity,attribute,Electricity.,electrical
+emergency_operation,object|activity,Operation in the failure mode of the device.,failure_mode
+enabled,predicate,Boolean: the function is permitted or configured on.,allowed|allow
+encoder,subject,The rotary encoder of the user interface.,
+end,attribute,The end of a span.,
+energy,object,Energy.,
+energy_management,object,Energy management.,
+energy_manager,subject,The energy manager function of the controller.,
+environmental,attribute,Environmental energy of a heat pump.,environment
+error,object,An error.,
+event,attribute,A time-programme event.,
+external,attribute,External.,ext
+factor,predicate,A dimensionless quantity applied as a multiplier or slope.,
+fan,subject,A fan.,
+fault,predicate,Health boolean: 1 means a problem.,
+fine,manner,A finer-resolution variant of a quantity.,
+firmware_version,object,A firmware version.,
+flow,place,The flow side.,
+flow_rate,object,Flow rate.,
+frost_protection,purpose|object|attribute|activity,Protection against frost.,
+fuel,attribute,Fuel.,gas|oil
+functional_module,subject,A functional extension module.,
+gradient,object,A rate of change.,
+hardware,attribute,Hardware.,
+headline,object,A headline text.,
+heat_generator,subject,An attached heat generator of any kind.,generator|heatgen
+heat_pump,subject,An attached heat pump.,heatpump|hp
+heat_recovery,object|attribute|activity,Heat recovery.,heatrecovery
+heating,purpose|object|activity,"Space heating; as an object, the heating activity.",central_heating|ch
+heating_curve,object,The heating curve.,heat_curve
+help,attribute,Help.,question
+high,attribute,High.,
+holiday,attribute|object|activity,A holiday period.,
+home_screen,subject,The home screen of the user interface.,
+hour,part,Hour part of a clock time.,
+humidity,object,Relative humidity.,
+hybrid,purpose|attribute,Joint operation of a heat pump and a second heat generator.,
+hydraulic,attribute,Hydraulic.,
+hysteresis,predicate,A switching band.,
+identifier,object,An identifier.,id
+influence,object,The influence of a measured quantity on control.,
+inlet,place,The inlet.,
+installation_assistant,subject,The installation assistant of the controller.,
+installer,attribute|subject,The installer of the installation.,
+interface,subject,The register interface of the controller.,api
+isolation_switch,subject,An isolation switch.,
+kick,object|attribute|activity,A short pump start.,
+language,object,The user-interface language.,
+left,attribute,Left.,
+legionella_protection,purpose|attribute|object|activity,Thermal disinfection against legionella.,
+level,predicate,A graded amount without its own physical quantity.,
+limit,predicate,A boundary the device enforces without regulating towards it; with a bound when its direction is established.,
+loading,object|attribute|activity,Loading of a cylinder.,charge|charging
+low,attribute,Low.,
+maintenance,attribute|object|activity,Maintenance.,
+manual,attribute,Manual.,
+manual_cooling,object|attribute|activity,Cooling started by hand for a set time.,
+maximum,bound,Upper bound; inside a condition it precedes its object.,max
+menu,attribute,Menu.,
+minimum,bound,Lower bound; inside a condition it precedes its object.,min
+minute,part,Minute part of a clock time.,
+mixer,subject,A mixing valve and its actuator.,
+mode,predicate,"Enumeration: a choice among fixed alternatives, kept until it is changed.",
+month,part,Month part of a date.,
+movement,object,The movement of an actuator.,
+multifunction_input,subject,A configurable multifunction input.,
+multifunction_output,subject,A configurable multifunction output.,
+name,object,A name.,
+network,attribute,Network.,net
+night,attribute,The night period of a time programme.,
+off,object|activity,Being switched off.,
+offset,predicate,A value added to a reference.,correction
+ok,predicate,Health boolean: 1 means normal.,
+on,object|activity,Being switched on.,
+operating,object|activity,Operating.,operation|runtime|run
+operating_mode,predicate,The mode of operation chosen for the subject or purpose.,operation_mode
+outdoor,place|attribute,Outdoors.,outside
+outlet,place,The outlet.,
+output,subject,An output.,
+overrun,object|activity,Running on after the demand ends.,additional_time
+pairing,object|activity,The radio pairing.,
+parallel,attribute,Parallel.,
+period,object,A time-programme period.,
+phone_number,object,A phone number.,phone
+position,predicate,An actuator position.,
+power,object,Power.,
+preference,object,A preference.,
+prefix,part,The first part of a text split across fields.,part1
+preheating,object|activity,Preheating.,pre_heating
+pressure,object,Pressure.,
+previous_month,period,The previous calendar month.,last_month
+previous_year,period,The previous calendar year.,last_year
+price,object,A price per unit of energy.,
+priority,attribute,Highest priority.,
+profile,subject,A stored profile.,
+protection,attribute,Protection.,
+protocol,object,A communication protocol.,
+pump,subject,A pump.,
+pump_module,subject,A pump module.,
+pv,attribute,Abbreviation: photovoltaic.,
+pv_surplus,object|attribute|activity,Use of a photovoltaic surplus.,
+quick_veto,attribute|object|activity,A temporary override of the room temperature setpoint.,
+ratio,predicate,A dimensionless quantity.,
+reading,object,The reading of the subject.,value|raw_value
+ready,predicate,Boolean: the subject can perform its function as soon as it is requested.,
+reception,object,Radio reception.,strength
+recharge,object|activity,Recharging of hot water.,
+refrigerant,subject,The refrigerant.,
+remaining,period,Time until the next occurrence or the end.,
+remote,attribute,Remote.,
+remote_control,subject,A remote control unit.,
+reset,object|action,"A reset; as an action, resetting the target.",
+return,place,The return side.,backflow
+revision,object,A revision number.,
+right,attribute,Right.,
+room,place,The room.,
+rtc,attribute,Abbreviation: real-time clock.,
+scheme,object,An installation scheme.,
+screed_drying,purpose|object|activity,The screed drying programme.,
+second,part,Second part of a clock time.,
+sensor,subject|attribute,A sensor.,
+sequence,object,A position in a sequence.,
+sequence_reversal,object,Reversal of the operating sequence of several generators.,
+serial_number,object,A serial number.,serial
+setback,attribute,The setback level of a setpoint.,
+setpoint,predicate,The value the device regulates towards.,desired|target|set
+settings,object,Settings.,
+slider,attribute,Slider.,
+solar,purpose|attribute,Solar thermal.,
+source,place,The heat source side.,brine
+special_function,object|activity,A temporary special function overriding the normal operation.,quick_mode
+speed,object,Rotational or stage speed.,stage
+start,object|attribute|action|event,"The start event; as an attribute, the start of a span; as an action, starting the target.",
+state,predicate,Closed enumeration: the position of the subject in its own operating sequence.,
+station,subject,A station assembly.,
+status,predicate,Enumeration of health or availability.,
+stop,object|attribute|action|event,"The stop event; as an action, stopping the target.",
+suffix,part,The second part of a text split across fields.,part2
+summer_cutoff,object|activity,Switching heating off in summer conditions.,
+switch,object|event,A switching event.,
+tariff,object,An energy tariff.,
+teleswitch,attribute,A radio teleswitch tariff signal.,
+temperature,object|attribute,Temperature.,temp
+temperature_difference,object,A temperature difference.,delta_temperature
+temporary,attribute,Temporary.,
+test_pattern,object,A display test pattern.,
+thermostat_cutoff,object|activity,Switching off by the room thermostat function.,roomthermostat
+time,predicate,"A duration of the object activity; after an event, the time between two occurrences; with remaining, the time until the next occurrence.",duration|hours|interval
+time_program,object|attribute,A time programme.,schedule|program
+time_program_day,attribute,One day of a time programme; not the rolling 24-hour period `daily`.,
+top,place,The top of a cylinder.,
+total,period,Lifetime accumulation.,sum|history
+type,predicate,Static enumeration: what kind of thing the subject is.,
+unknown,placeholder,Placeholder for a missing object and predicate.,
+up,attribute,Up.,
+update,object,Updating stored data.,
+utility_lockout,object,Lockout by the energy utility.,evu|power_cut
+valve,subject,A valve.,
+ventilation,purpose,Ventilation.,
+ventilation_unit,subject,A ventilation unit.,
+version,object,A version number.,
+volatile_organic_compound,attribute|object,Volatile organic compounds in the air.,voc
+water,subject|attribute,The water of the hydraulic installation.,
+weekday,object,A day of the week.,
+year,part,Year part of a date.,
+yield,object|attribute,Energy gained.,
+zone,subject|attribute,"A zone of the installation; as an attribute, the zone the following subject belongs to.",

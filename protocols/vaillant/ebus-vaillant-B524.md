@@ -155,8 +155,8 @@ alone do not demonstrate that these selectors form one control path.
 
 | Operation | Path | Register |
 |-----------|------|----------|
-| Read operating mode | `OP=0x02, OT=0x00, GG=0x00, II=<ventilation_index>, RR=0x0016` | `system_ventilation_operating_mode` (enum, see register map) |
-| Read mode value | `OP=0x02, GG=0x00, RR=0x0074` | `system_quick_mode` (dormant when no mode active) |
+| Read operating mode | `OP=0x02, OT=0x00, GG=0x00, II=<ventilation_index>, RR=0x0016` | `ventilation_operating_mode` (enum, see register map) |
+| Read mode value | `OP=0x02, GG=0x00, RR=0x0074` | `special_function_mode` (dormant when no mode active) |
 | Write mode value | `OP=0x02, GG=0x09, RR=0x0001` | Write target for mode activation |
 | Write active flag | `OP=0x02, GG=0x09, RR=0x0002` | Write target for mode on/off |
 | Read-back from write group | `OP=0x02, GG=0x09, RR=0x0004` | Mirrors the written mode value |
@@ -199,7 +199,7 @@ wire for the stated controller families.
   established. The NaN example in section 2.4 is one binary32 NaN
   representation; handling of other NaN encodings and infinity remains open.
 
-For `OP=0x02, GG=0x03, II=<zone>, RR=0x001C` (`zone_circuit_for_zone`),
+For `OP=0x02, GG=0x03, II=<zone>, RR=0x001C` (`zone_circuit_assignment`),
 the candidate signed-byte interpretation is `-1=notBound`, with `0..8` for
 the VRC720 family and `0..2` for the VRC700 family. It does not establish which
 zone instances are present. Preserve the existing VRC720 raw values in the
@@ -208,7 +208,7 @@ register map; the physical meaning of `FF` remains unconfirmed.
 #### Zone special-function response width
 
 For `OP=0x02, GG=0x03, II=<zone>, RR=0x001B`
-(`zone_special_function_status`), a one-byte format remains a candidate
+(`zone_special_function_state`), a one-byte format remains a candidate
 alongside the two-byte catalog entry. The response width remains unconfirmed
 for the VRC700 and VRC720 families. The ordinary read request contains six selector
 bytes and does not request a value width. The
@@ -514,26 +514,26 @@ list or a claim that all counts are physically verified on every system.
 
 | ID | snake_case semantic name | Meaning |
 | --- | --- | --- |
-| 0000h | `circuit_count` | Legacy public name; family-qualified supported circuit capacity for bounded OP=02h/GG=02h candidate guidance |
-| 0001h | `zone_count` | Legacy public name; family-qualified supported zone capacity for bounded OP=02h/GG=03h candidate guidance |
+| 0000h | `circuit_count_maximum` | Family-qualified supported circuit capacity for bounded OP=02h/GG=02h candidate guidance |
+| 0001h | `zone_count_maximum` | Family-qualified supported zone capacity for bounded OP=02h/GG=03h candidate guidance |
 | 0002h | `solar_circuit_count` | Solar circuits; guides OP=02h/GG=04h discovery |
-| 0003h | `solar_loaded_tank_count` | Solar-loaded tanks; guides OP=02h/GG=05h discovery |
+| 0003h | `solar_cylinder_count` | Solar-loaded tanks; guides OP=02h/GG=05h discovery |
 | 0004h | `device_count` | Devices |
-| 0005h | `generator_count` | Generators |
-| 0006h | `api_version` | API version; not a count |
-| 0007h | `api_revision` | API revision; not a count |
-| 0008h / 0009h | `vr70_count` / `vr71_count` | Functional module counts |
+| 0005h | `heat_generator_count` | Generators |
+| 0006h | `interface_version` | API version; not a count |
+| 0007h | `interface_revision` | API revision; not a count |
+| 0008h / 0009h | `functional_module_1_count` / `functional_module_2_count` | Functional module counts (VR70 and VR71 modules); provisional names, the index only keeps the two apart |
 | 000Ah | `remote_control_count` | Remote controls |
-| 000Bh | `delta_t_count` | Guides OP=02h/GG=08h discovery; physical class remains unknown |
+| 000Bh | `differential_control_count` | Guides OP=02h/GG=08h discovery; physical class remains unknown |
 | 000Ch / 000Dh | `boiler_count` / `heat_pump_count` | Generator classes |
-| 000Eh / 000Fh | `vpm_w_count` / `vpm_s_count` | Module classes |
-| 0010h | `recovair_count` | recoVair ventilation units |
+| 000Eh / 000Fh | `water_pump_module_count` / `solar_pump_module_count` | Module classes |
+| 0010h | `ventilation_unit_count` | recoVair ventilation units |
 | 0011h | `cooling_heat_pump_count` | Cooling-capable heat pumps |
 | 0012h | (unknown) | no name known; meaning unknown |
 | 0099h | (unknown) | Vaillant name `RTC Crystle` (spelled as shown); meaning unknown |
 
-For ID=0000h `circuit_count` and ID=0001h `zone_count`, the retained legacy
-public names denote supported capacity, not configured or present-instance
+ID=0000h `circuit_count_maximum` and ID=0001h `zone_count_maximum`
+denote supported capacity, not configured or present-instance
 cardinality. The bounded profile supports exactly these combinations:
 
 | VR70 count | VR71 count | Circuit capacity | Zone capacity |
@@ -647,7 +647,7 @@ do not replace a complete correlated OP01/OP07 description.
 
 #### 4.2.4 Circuit type interpretation (`GG=0x02 RR=0x02`)
 
-`GG=0x02 RR=0x02` (`heating_circuit_type` / `mctype`) is a configuration register with raw values 0..4 on the VRC720 family. The register map names this register `circuit_mixer_type_external`; the naming difference is unresolved (see Open questions). See [`ebus-vaillant-B524-register-map.md` mctype](./ebus-vaillant-B524-register-map.md#mctype--circuit-type) for the authoritative enum definition.
+`GG=0x02 RR=0x02` (`circuit_type` / `mctype`) is a configuration register with raw values 0..4 on the VRC720 family. See [`ebus-vaillant-B524-register-map.md` mctype](./ebus-vaillant-B524-register-map.md#mctype--circuit-type) for the authoritative enum definition.
 
 **Raw register meaning (Vaillant VRC720 manual):**
 
@@ -1193,7 +1193,7 @@ to every write in this section:
 | DHW tapping set point (`RR=0x0004`) | `02 01 01 FF 04 00 <f32 LE>` | float32 little-endian |
 | Tank start-loading hysteresis (`RR=0x0027`) | `02 01 00 FF 27 00 <f32 LE>` | float32 little-endian |
 | CH buffer offset (`RR=0x00A2`) | `02 01 00 FF A2 00 <f32 LE>` | float32 little-endian |
-| `ext_energy_management_activation` (`RR=0x00B6`) | `02 01 00 FF B6 00 <u8 0\|1>` | one byte, 0 or 1 |
+| `external_energy_management_enabled` (`RR=0x00B6`) | `02 01 00 FF B6 00 <u8 0\|1>` | one byte, 0 or 1 |
 | One-time DHW load (`RR=0x000D`) | `02 01 01 FF 0D 00 06` / `02 01 01 FF 0D 00 00` | one byte, 6 start or 0 cancel |
 
 - The units are not established (candidate: °C for the tapping set point, K for
@@ -1207,8 +1207,8 @@ Two registers in `OP=0x02, GG=0x00` carry system-level topology information that
 
 | RR | Name | Wire | Semantics |
 |----|------|------|-----------|
-| `0x0036` | `system_scheme` | u16 | Hydraulic scheme number (1..16). Defines the physical piping topology of the heating system (number/type of heat sources, mixing circuits, buffer tanks, solar integration). Different scheme numbers imply different valid group/register combinations. |
-| `0x002F` | `module_configuration_vr71` | u16 | VR71 functional module configuration (1..11). Encodes which mixing/direct circuits the VR71 hardware module manages. Combined with `system_scheme`, determines circuit ownership and whether FM5-backed families (solar, cylinders) are structurally valid. |
+| `0x0036` | `hydraulic_scheme_code` | u16 | Hydraulic scheme number (1..16). Defines the physical piping topology of the heating system (number/type of heat sources, mixing circuits, buffer tanks, solar integration). Different scheme numbers imply different valid group/register combinations. |
+| `0x002F` | `functional_module_configuration_code` | u16 | VR71 functional module configuration (1..11). Encodes which mixing/direct circuits the VR71 hardware module manages. Combined with `hydraulic_scheme_code`, determines circuit ownership and whether FM5-backed families (solar, cylinders) are structurally valid. |
 
 These are candidate topology inputs. Their observed values and the inferred
 `FLAGS` attributes do not by themselves prove read-only, stable, commissioning,
@@ -1294,9 +1294,9 @@ until publishable correlated evidence qualifies them.
   two bytes `uint16`): the register matrix carries `1 or 2`, the register map
   lists `u16`, and the candidate zone-enable write body for `RR=0x0011` is one
   byte.
-- This page names `OP=0x02, GG=0x02, RR=0x0002` `heating_circuit_type`
-  (section 4.2.4), while the register map names it
-  `circuit_mixer_type_external`; the naming difference is unresolved.
+- Which of the two Vaillant names `circuit_type` and
+  `circuit_type_of_mixed_circuit_external` describes the value of
+  `OP=0x02, GG=0x02, RR=0x0002` (section 4.2.4) is unresolved.
 - The VRC700 ventilation mode (`GG=0x00, RR=0x0016`) as a 16-bit text table
   1 AUTO, 2 DAY, 3 SET_BACK is unconfirmed on the wire; the write selector is not
   established.
