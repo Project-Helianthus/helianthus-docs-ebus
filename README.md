@@ -56,6 +56,10 @@ Run:
 ./scripts/ci_local.sh
 ```
 
+The local gate runs actionlint v1.7.7 with `-shellcheck=`, then checks workflow
+`run:` scripts separately with ShellCheck. Each lint pass has a 60-second limit;
+findings or timeouts fail the gate. See [local gate details](development/contributing.md#local-gate).
+
 ## Licensing
 
 This repository contains documentation under two licenses:

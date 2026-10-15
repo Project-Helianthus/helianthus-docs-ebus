@@ -1502,6 +1502,10 @@ No ACK, response correlation or persistence is established for any of them, and
 none is documented as safe to send (see the
 [protocol page, section 4.3.2](ebus-vaillant-B524.md#432-write-encodings-candidate)).
 
+The templates' `write_role` field classifies only the `write` label as a
+canonical register name (`canonical`) or a descriptive phrase (`prose`), as
+defined in that section; neither value qualifies native write behavior.
+
 | Selector | Catalog name | Write |
 | --- | --- | --- |
 | `GG=0x00`, `RR=0x0001`, `0x0023`, `0x0026`, `0x0046` | `dhw_outdoor_bivalence_temperature_limit`, `heating_outdoor_bivalence_temperature_limit`, `heating_flow_temperature_setpoint_maximum_at_heat_pump_fault`, `dhw_flow_temperature_setpoint_maximum` | float32 little-endian |

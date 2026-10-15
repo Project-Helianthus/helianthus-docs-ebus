@@ -59,7 +59,10 @@ and ownership visible.
 3. Documentation-only work does not require RED-first TDD. Add or update
    validators when a mechanically enforceable contract changes.
 4. Run `./scripts/ci_local.sh` and `git diff --check` before pushing. Report the
-   exact commands, outputs, commit SHA, and PR state.
+   exact commands, outputs, commit SHA, and PR state. The local gate runs bounded
+   actionlint with `-shellcheck=` followed by bounded, separate ShellCheck on
+   workflow run scripts; findings and timeouts fail the gate. See
+   [local gate details](development/contributing.md#local-gate).
 5. Review material claims against the evidence rules above. Resolve P0-P2
    findings and rerun review against the exact current HEAD; triage lower
    severities without misreporting them as blockers.
