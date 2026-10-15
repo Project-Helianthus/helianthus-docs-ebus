@@ -58,7 +58,8 @@ def sanitize_expressions(source: str) -> str:
 
 def scripts(workflows: list[Path]):
     for workflow in workflows:
-        data = yaml.safe_load(workflow.read_text(encoding="utf-8"))
+        # Match actionlint: workflow scalars are text, including booleans and numbers.
+        data = yaml.load(workflow.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
         workflow_shell = data.get("defaults", {}).get("run", {}).get("shell")
         for job_id, job in data.get("jobs", {}).items():
             job_shell = job.get("defaults", {}).get("run", {}).get("shell")

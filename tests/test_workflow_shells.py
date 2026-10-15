@@ -30,6 +30,27 @@ def test_broken_workflow_snippet_fails(tmp_path):
     assert lint.shellcheck([workflow], tmp_path) == 1  # SC2086, despite SC2154 exclusion
 
 
+@pytest.mark.parametrize("scalar", ["false", "yes", "TRUE", "0123", "1.20", "null",
+                                   "~", "2026-10-15", ""])
+def test_run_scalars_reach_shellcheck_as_original_text(tmp_path, monkeypatch, scalar):
+    workflow = tmp_path / "scalar.yml"
+    workflow.write_text(f"jobs:\n  check:\n    steps:\n      - run: {scalar}\n")
+    expected = f"set -eo pipefail\n{scalar}\n"
+    [(_, dialect, source)] = lint.scripts([workflow])
+    assert dialect == "bash"
+    assert source == expected
+
+    checked = []
+
+    def check_script(command, timeout):
+        checked.append(Path(command[-1]).read_text(encoding="utf-8"))
+        return 0
+
+    monkeypatch.setattr(lint, "bounded", check_script)
+    assert lint.shellcheck([workflow], tmp_path) == 0
+    assert checked == [expected]
+
+
 @pytest.mark.parametrize("expression", [
     "${{ format('{{Hello {0}!}}', github.actor) }}",
     "${{ format('it''s }} {0}', github.actor) }}",
