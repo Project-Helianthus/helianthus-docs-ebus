@@ -279,8 +279,9 @@ II context stays separate rather than merging instances or inventing them.
 
 When either source CSV changes, recompute rather than carrying forward a count.
 Run this read-only check from the repository root to compare selector/name
-coverage, unresolved evidence text, candidate family/instance context and group
-totals. It normalizes whitespace and inline-code markup, and applies only the
+coverage, unresolved evidence text, candidate family/instance context and published
+inventory totals (selected, total, retained terms, placeholders and each group).
+It normalizes whitespace and inline-code markup, and applies only the
 documented module-family generalization to the source evidence text. The
 correspondence tests separately protect the
 annotation/name boundary. Parent issue additions/removals still need the full
@@ -295,7 +296,8 @@ import re
 root = pathlib.Path(".")
 fixture = root / "protocols/vaillant/fixtures/b524-op02-register-names.csv"
 with fixture.open(encoding="utf-8") as handle:
-    rows = [r for r in csv.DictReader(handle) if r["open_question"].strip()]
+    catalog = list(csv.DictReader(handle))
+rows = [r for r in catalog if r["open_question"].strip()]
 
 def normalized(text):
     return " ".join(text.replace("`", "").split())
@@ -320,9 +322,24 @@ for row in rows:
     ii = tuple(sorted(instances[key])) or ("Unknown",)
     expected.append((*key, row["name"], ii, normalized(evidence)))
 index = root / "development/b524-provisional-name-evidence.md"
+text = index.read_text(encoding="utf-8")
+summary = text.split("## Scope and computed inventory\n", 1)[1].split("\n## ", 1)[0]
+headline = re.findall(r"\*\*(\d+) of (\d+) rows\*\*", summary)
+assert headline == [(str(len(rows)), str(len(catalog)))], "published inventory totals differ"
+placeholders = sum(bool(re.search(r"(?:^|_)unknown_\d+$", r["name"])) for r in rows)
+subsets = re.findall(
+    r"(\d+) retain documented terms and (\d+) use pre-existing `unknown` placeholders\.",
+    summary,
+)
+assert subsets == [(str(len(rows) - placeholders), str(placeholders))], "published subsets differ"
+group_rows = re.findall(r"^\| (0x[0-9A-F]+) \| (0x[0-9A-F]+) \| (\d+) \|$", summary, re.M)
+group_totals = collections.Counter((r["opcode"], r["group"]) for r in rows)
+assert collections.Counter((op, gg, int(n)) for op, gg, n in group_rows) == collections.Counter(
+    (op, gg, n) for (op, gg), n in group_totals.items()
+), "published group totals differ"
 actual = []
 opcode = group = None
-for line in index.read_text(encoding="utf-8").splitlines():
+for line in text.splitlines():
     heading = re.fullmatch(r"### OP=(0x[0-9A-F]+), GG=(0x[0-9A-F]+)", line)
     if heading:
         opcode, group = heading.groups()

@@ -81,6 +81,27 @@ def test_b524_provisional_name_evidence_rejects_index_drift(checkout, before, af
         run_check()
 
 
+@pytest.mark.parametrize(
+    ("before", "after"),
+    [
+        ("142 of 368", "143 of 368"),
+        ("142 of 368", "142 of 369"),
+        ("131 retain documented terms", "132 retain documented terms"),
+        ("11 use pre-existing", "12 use pre-existing"),
+        ("| 0x02 | 0x00 | 108 |", "| 0x02 | 0x00 | 999 |"),
+        ("| 0x02 | 0x09 | 5 |\n", ""),
+        ("| 0x02 | 0x09 | 5 |", "| 0x02 | 0x0A | 5 |"),
+        ("| 0x02 | 0x09 | 5 |", "| 0x02 | 0x09 | 5 |\n| 0x02 | 0x09 | 5 |"),
+    ],
+)
+def test_b524_provisional_name_evidence_rejects_summary_drift(checkout, before, after):
+    text = INDEX.read_text(encoding="utf-8")
+    assert before in text
+    INDEX.write_text(text.replace(before, after, 1), encoding="utf-8")
+    with pytest.raises(AssertionError, match="published"):
+        run_check()
+
+
 def test_b524_provisional_name_evidence_allows_presentation_changes(checkout):
     text = INDEX.read_text(encoding="utf-8")
     text = text.replace("`0=off 1=on`", "0=off   1=on", 1)
