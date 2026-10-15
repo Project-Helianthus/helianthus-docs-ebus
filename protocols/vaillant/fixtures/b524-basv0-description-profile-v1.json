@@ -6,7 +6,8 @@
     "eid": "BASV0",
     "software_raw": "0217",
     "hardware_raw": "8803",
-    "api_revision": "API1"
+    "api_version_raw": "1",
+    "api_revision_raw": "1"
   },
   "records": [
     {

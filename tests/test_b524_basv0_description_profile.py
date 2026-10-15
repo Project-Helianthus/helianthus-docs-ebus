@@ -45,12 +45,37 @@ def test_profile_retains_bounded_native_evidence() -> None:
     profile = json.loads(FIXTURE.read_text())
     assert profile["observation_id"] == "basv0_sw0217_hw8803_api1"
     assert profile["local_profile"] == {
-        "eid": "BASV0", "software_raw": "0217", "hardware_raw": "8803", "api_revision": "API1"
+        "eid": "BASV0", "software_raw": "0217", "hardware_raw": "8803",
+        "api_version_raw": "1", "api_revision_raw": "1",
     }
     assert len(profile["records"]) == 2093
     assert any(record["name"] is None for record in profile["records"])
     assert sum(record["raw_description_hex"] is None for record in profile["records"]) == 29
     assert validate(FIXTURE).returncode == 0
+
+
+@pytest.mark.parametrize("field", ["api_version_raw", "api_revision_raw"])
+@pytest.mark.parametrize("mutation", ["missing", "different", "nonstring"])
+def test_separate_api_identity_fields_are_required(
+    tmp_path: Path, field: str, mutation: str,
+) -> None:
+    # The catalog expects independent raw strings for registers 0006h/0007h.
+    assert _DESCRIPTIONS["local_profile"][field] == "1"
+    candidate = deepcopy(_DESCRIPTIONS)
+    if mutation == "missing":
+        del candidate["local_profile"][field]
+    else:
+        candidate["local_profile"][field] = "2" if mutation == "different" else 1
+    path = tmp_path / "api-identity.json"
+    path.write_text(json.dumps(candidate))
+    result = subprocess.run(
+        ["jv", str(SCHEMA), str(path)], cwd=ROOT,
+        text=True, capture_output=True, check=False,
+    )
+    assert result.returncode != 0, result.stdout
+    result = validate(path)
+    assert result.returncode != 0
+    assert "separate raw identity fields" in result.stderr
 
 
 def test_validator_rejects_length_inferred_codec_promotion(tmp_path: Path) -> None:
@@ -109,6 +134,8 @@ def test_validator_rejects_invalid_qualified_numeric_ranges_even_when_raw_limits
 def test_register_observations_preserve_nonvalue_outcomes() -> None:
     profile = json.loads(REGISTER_FIXTURE.read_text())
     assert profile["current_values"] == "omitted"
+    assert profile["native_headers"] == "omitted"
+    assert profile["response_payloads"] == "omitted"
     assert len(profile["records"]) == 6585
     assert sum(record["response_state"] == "echo_payload" for record in profile["records"]) == 5335
     assert sum(record["response_state"] == "status_only" for record in profile["records"]) == 1155
@@ -117,6 +144,25 @@ def test_register_observations_preserve_nonvalue_outcomes() -> None:
     result = subprocess.run(["jv", str(REGISTER_SCHEMA), str(REGISTER_FIXTURE)], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
     assert validate_cross(FIXTURE, REGISTER_FIXTURE).returncode == 0
+
+
+@pytest.mark.parametrize("field", ["native_headers", "response_payloads"])
+@pytest.mark.parametrize("mutation", ["missing", "different"])
+def test_register_schema_requires_evidence_omissions(
+    tmp_path: Path, field: str, mutation: str,
+) -> None:
+    candidate = deepcopy(_OBSERVATIONS)
+    if mutation == "missing":
+        del candidate[field]
+    else:
+        candidate[field] = "retained"
+    path = tmp_path / "evidence-limit.json"
+    path.write_text(json.dumps(candidate))
+    result = subprocess.run(
+        ["jv", str(REGISTER_SCHEMA), str(path)], cwd=ROOT,
+        text=True, capture_output=True, check=False,
+    )
+    assert result.returncode != 0, result.stdout
 
 
 def test_cross_fixture_validator_rejects_out_of_bounds_and_swapped_selector(tmp_path: Path) -> None:

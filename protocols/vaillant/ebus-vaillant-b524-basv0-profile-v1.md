@@ -2,10 +2,11 @@
 
 This profile is a sanitized, read-only metadata observation for the native B524
 selector namespace. It is identified as `basv0_sw0217_hw8803_api1`; its local
-identity is EID `BASV0`, software raw value `0217`, hardware raw value `8803`,
-API version `1` and revision `1` (encoded together as raw `API1`). These fields identify the observation context. They do
-not identify a product article, installation, or every controller carrying an
-EID `BASV0`.
+identity is EID `BASV0`, software raw `0217`, hardware raw `8803`, API version
+raw `1` and API revision raw `1`. The API values are retained separately as read
+from system-information registers `0006h` and `0007h`, respectively. These
+fields identify the observation context. They do not identify a product article,
+installation, or every controller carrying an EID `BASV0`.
 
 The machine-readable record is
 [b524-basv0-description-profile-v1.json](fixtures/b524-basv0-description-profile-v1.json).
@@ -16,14 +17,17 @@ numbers, capture time, contributor identity, or acquisition fingerprint.
 
 ## Provenance and evidence status
 
-**Proven:** the two committed, sanitized fixtures are publishable primary
-evidence for the bytes they retain. Their stable SHA-256 values are
-`7b8fc0cef11f4eb6f48592f30a4da90afe501dc9ef851dbf81f29beb882617a4`
+The SHA-256 values authenticate the two derived JSON artifacts only:
+`3e8a7963aaca6d5eb8ec5af3502a5c07da832311c9512e22a217037fb4448c2c`
 (descriptions) and
-`f54b0802e97bc8baaad3f899f132e633af2fa39c6a99835ad89feb2ee4a22533`
-(register observations). Acquisition context is limited to B524
-request/response metadata and the exact local controller profile recorded in
-the fixture. Export software version and timestamp are **Unknown**.
+`70a9194788779a7d1e47ef05a83e1d583b83b72cc8643b744b44ee5f5570db86`
+(register observations). **Proven** applies only to facts within the retained description
+bytes. Native headers (source, destination, direction) and response payloads
+were not retained by the sanitized export. Consequently,
+`observed_payload_width`, `response_state`, and `presence_state` are
+**Observed (derived)** facts of the acquisition session; falsifying them
+requires a new acquisition. The description fixture's `observed_read_payload_width` has the
+same evidence limit.
 
 **Hypothesis:** semantic names, device roles, and installation topology require
 separate evidence. **Unknown:** any unretained current value, capture context,
@@ -51,21 +55,21 @@ request, so the retained material cannot prove which instance a description
 answers; the semantic selector is the only link. A qualified decoded range is
 therefore accepted only where it is identical across every retained described
 instance of the selector `(OP, GG, RR)`: the raw limits and description length
-must be byte-identical for all instances that retain a description. An
-instance without a description is absent evidence and takes no part in the
-comparison. The validator rejects a qualified claim in an instance-divergent
-family, so a qualified range never depends on the instance byte. The retained
-fixture has no such family (all 340 are instance-invariant over their
-described instances). Divergent spans, if a later profile retains any, are
-raw evidence only. The validator also requires every catalog record, with or without description
-bytes, to have a register-observation record for its selector.
+must be byte-identical for all instances that retain a description. An instance
+without a description is absent evidence and takes no part in the comparison.
+The validator rejects a qualified claim in an instance-divergent family, so a
+qualified range never depends on the instance byte. The retained fixture has no
+such family (all 340 are instance-invariant over their described instances).
+Divergent spans, if a later profile retains any, are raw evidence only. The
+validator also requires every catalog record, with or without description bytes,
+to have a register-observation record for its selector.
 
 The fixture records the raw three spans even when no codec is qualified. A
 decoded record with `codec_provenance: selector_qualified` can be marked
-`qualified`; a length-inferred codec remains `unqualified`. Each codec has a fixed span width
-(UCH 1, UIN 2, U32 4, EXP 4, HDA:3 3, HTI 3 bytes) that must equal the
-description payload length divided by three; a decoded record that disagrees is
-rejected.
+`qualified`; a length-inferred codec remains `unqualified`. Each codec has a
+fixed span width (UCH 1, UIN 2, U32 4, EXP 4, HDA:3 3, HTI 3 bytes) that must
+equal the description payload length divided by three; a decoded record that
+disagrees is rejected.
 
 ### Basis of the codec labels
 
@@ -87,51 +91,57 @@ Wire entry is rejected; an exact-selector-schema codec must equal the codec the
 calendar/clock selector list implies (date HDA:3, time HTI). Eight of the
 fourteen exact-schema selectors (`GG00 RR002C`, `RR00F2..RR00F5`, `GG01
 RR0010/RR0011`, and the U32 `GG04 RR000B`) are not in that list; for them the
-register map's Wire column is the pin. The validator accepts the exact-selector-schema basis only for these
-fourteen selectors, requires every one of them to keep it, and rejects it
-anywhere else; decoded numeric limits must be
-numbers, never booleans. A calendar value must be a valid date
-(year offset 0-99 from 2000) and a clock value a valid time (hour 0-23, minute and
+register map's Wire column is the pin. The validator accepts the
+exact-selector-schema basis only for these fourteen selectors, requires every
+one of them to keep it, and rejects it anywhere else; decoded numeric limits
+must be numbers, never booleans. A calendar value must be a valid date (year
+offset 0-99 from 2000) and a clock value a valid time (hour 0-23, minute and
 second 0-59) before `qualified` is kept.
 
 **Codec label deviation (Hypothesis).** In this fixture the `HDA:3` and `HTI`
 labels denote the application's plain-byte candidate decoding of the three-byte
 spans (each byte read as a plain unsigned integer; for example the date maximum
 `1F0C63` reads as 2099-12-31 and the time maximum `173B3B` as 23:59:59). They do
-not denote the packed-BCD codec that [types/ebusd-csv.md](../../types/ebusd-csv.md)
-defines under the same names, and `1F0C63` or `173B3B` are not valid packed BCD.
-The 13 records are therefore **Hypothesis**; a consumer must not decode them as
-BCD, and the application-side classification may never grant them range
-validation. Aligning the codec label with the documented codec is
-tracked in an external issue (#297 of the evidence-producing tool's repository).
+not denote the packed-BCD codec that
+[types/ebusd-csv.md](../../types/ebusd-csv.md) defines under the same names, and
+`1F0C63` or `173B3B` are not valid packed BCD. The 13 records are therefore
+**Hypothesis**; a consumer must not decode them as BCD, and the application-side
+classification may never grant them range validation. Aligning the codec label
+with the documented codec is tracked in an external issue (#297 of the
+evidence-producing tool's repository).
 
 For the 13 HDA:3/HTI records `qualified` therefore means only that the spans
-parse under the candidate codec; it is **Hypothesis**, not **Proven**. STEP stays
-unknown (`step: null`). The validator requires the exact-selector-schema basis
-for every qualified HDA:3/HTI record and never grants those records range
+parse under the candidate codec; it is **Hypothesis**, not **Proven**. STEP
+stays unknown (`step: null`). The validator requires the exact-selector-schema
+basis for every qualified HDA:3/HTI record and never grants those records range
 validation.
 
 ### Basis of the other state fields
 
 - `presence_state` (`observed_present`, `observed_inactive`, `unknown`,
-  `remote_identity_unqualified`) is the installation topology at acquisition,
-  as interpreted for the source installation. Current values are omitted, so it
-  cannot be re-derived from the fixture and is **Hypothesis** for any other
-  installation. `remote_identity.qualification: unqualified` holds exactly for
+  `remote_identity_unqualified`) is the installation topology at acquisition, as
+  interpreted for the source installation: **Observed (derived)**. Native
+  headers and response payloads were not retained, so falsifying this state
+  requires a new acquisition. Current values are omitted, so it cannot be
+  re-derived from the fixture and is **Hypothesis** for any other installation.
+  `remote_identity.qualification: unqualified` holds exactly for
   `presence_state: remote_identity_unqualified`, and such a record never carries
   a qualified codec.
 - `acquisition_state` in the register-observation fixture links a row to its
   description: `matched` (the retained description answers the selector),
   `unavailable` (no description was returned) and `unqualified` (a description
   is retained but the source acquisition did not qualify it; in the retained
-  fixture all 36 such rows have `decoded: null`, and the validator requires that). `unqualified` is retained
-  raw evidence, not a failed read; it grants no codec or range. This is
-  **Proven** for the retained rows only.
+  fixture all 36 such rows have `decoded: null`, and the validator requires
+  that). `unqualified` is retained raw evidence, not a failed read; it grants no
+  codec or range. This is **Observed (derived)** for the acquisition session.
+  Native headers and response payloads were not retained, so falsifying the
+  acquisition outcome requires a new acquisition; the retained links alone do
+  not prove it.
 - This fixture carries no validation-scope field. How far a description may be
   used is an application decision, not wire evidence, so the classification the
-  source installation applied is kept outside this CC0 tree, in an overlay
-  under the repository's AGPL development tree that the validator loads when
-  present. A consumer derives presence from its own current evidence, not from
+  source installation applied is kept outside this CC0 tree, in an overlay under
+  the repository's AGPL development tree that the validator loads when present.
+  A consumer derives presence from its own current evidence, not from
   `presence_state`. The application-side reuse contract lives in the same AGPL
   tree and is linked from the repository README; the CC0 tree does not link into
   it.
@@ -153,9 +163,9 @@ from this repository. It resembles the register map's historical short-probe
 range hint (`-20..50`; its legend in
 [ebus-vaillant-B524-register-map.md](ebus-vaillant-B524-register-map.md) says
 the hint "requires a matching complete OP01/OP07 description before validating
-edits"). [ebus-vaillant-B524.md](ebus-vaillant-B524.md) says the historical short
-probe "must not provide input-validation authority". Neither the BASV2 figure
-nor the hint qualifies a range for BASV0 or any other profile.
+edits"). [ebus-vaillant-B524.md](ebus-vaillant-B524.md) says the historical
+short probe "must not provide input-validation authority". Neither the BASV2
+figure nor the hint qualifies a range for BASV0 or any other profile.
 
 ## Explicitly retained uncertainty
 
@@ -166,33 +176,36 @@ system selectors `006C`, `006D`, `006F`, and `0070` likewise remain raw
 metadata; their zero-valued UCH interpretation does not establish a numeric
 parameter or a text codec.
 
-**Proven (within the retained bytes):** for local ventilation
-`OP02/GG09/II00..II0A/RR0001`, the observed read body has width two for all
-eleven instances, and the description spans are two bytes wide. The
-profile-qualified UIN decoding is consistent with that numeric response
-(**Hypothesis** codec basis, see above). A UCH-sized interpretation is rejected
-for this profile.
+**Observed (derived):** for local ventilation `OP02/GG09/II00..II0A/RR0001`, the
+observed read body has width two for all eleven instances. Native headers and
+response payloads were not retained, so falsifying that width requires a new
+acquisition. **Proven (within the retained description bytes):** the description
+spans are two bytes wide. The profile-qualified UIN decoding is consistent with
+the derived response width (**Hypothesis** codec basis, see above). A UCH-sized
+interpretation is rejected for this profile.
 
 **Unknown:** the observed instance state (`presence_state: unknown`) does not
 establish ventilation equipment; there is no positive-presence predicate in this
 evidence.
 
-Remote entries retain their native group and optional remote-header metadata;
-an `observed_remote_header` entry must retain its group, address and firmware
+Remote entries retain their native group and optional remote-header metadata; an
+`observed_remote_header` entry must retain its group, address and firmware
 fields, which the schema and validator require, and all entries of one remote
-(OP, GG, II) slot must retain the same identity qualification and, when observed,
-the same address and firmware, which the validator checks. The retained fixture is homogeneous in all slots (six observed-header slots, the rest unqualified). The register-observation fixture likewise retains one
+(OP, GG, II) slot must retain the same identity qualification and, when
+observed, the same address and firmware, which the validator checks. The
+retained fixture is homogeneous in all slots (six observed-header slots, the
+rest unqualified). The register-observation fixture likewise retains one
 presence state per remote slot, and a qualified codec width must equal the
 observed read payload width in both fixtures; the validator rejects either
-contradiction.
-A disconnected or identity-unqualified remote entry is metadata evidence, not
-proof that a device function exists. Unknown names are represented by JSON
-`null`; a missing description or limit is represented by `null`, never by a
-substituted default.
+contradiction. A disconnected or identity-unqualified remote entry is metadata
+evidence, not proof that a device function exists. Unknown names are represented
+by JSON `null`; a missing description or limit is represented by `null`, never
+by a substituted default.
 
 ## Scope
 
 This is a reusable native evidence record. It does not define application
 profile selection, display behavior, edit validation, write behavior, or a
-universal B524 topology. Consumers must apply their own explicit qualification contract; the AGPL
-development tree holds one such contract, linked from the repository README.
+universal B524 topology. Consumers must apply their own explicit qualification
+contract; the AGPL development tree holds one such contract, linked from the
+repository README.

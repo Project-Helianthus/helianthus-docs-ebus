@@ -16,12 +16,13 @@
     "observation_id": { "const": "basv0_sw0217_hw8803_api1" },
     "local_profile": {
       "type": "object",
-      "required": ["eid", "software_raw", "hardware_raw", "api_revision"],
+      "required": ["eid", "software_raw", "hardware_raw", "api_version_raw", "api_revision_raw"],
       "properties": {
         "eid": { "const": "BASV0" },
         "software_raw": { "const": "0217" },
         "hardware_raw": { "const": "8803" },
-        "api_revision": { "const": "API1" }
+        "api_version_raw": { "type": "string", "const": "1" },
+        "api_revision_raw": { "type": "string", "const": "1" }
       },
       "additionalProperties": false
     },

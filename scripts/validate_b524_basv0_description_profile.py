@@ -459,6 +459,10 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
     _require(isinstance(fixture, dict), "fixture must be an object")
     _require(fixture.get("schema_version") == "b524-basv0-description-profile/v1", "unexpected schema version")
     _require(fixture.get("observation_id") == "basv0_sw0217_hw8803_api1", "unexpected observation identity")
+    _require(fixture.get("local_profile") == {
+        "eid": "BASV0", "software_raw": "0217", "hardware_raw": "8803",
+        "api_version_raw": "1", "api_revision_raw": "1",
+    }, "local_profile must retain the separate raw identity fields")
     records = fixture.get("records")
     _require(isinstance(records, list) and records, "fixture must contain records")
     for index, record in enumerate(records):

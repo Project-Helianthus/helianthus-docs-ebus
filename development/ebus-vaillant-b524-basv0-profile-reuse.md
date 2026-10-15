@@ -30,10 +30,12 @@ and which the B524 protocol page says "must not provide input-validation
 authority". Selection must not substitute either value across profiles, software
 versions, or installation configurations.
 
-**Proven (within the retained bytes):** for the BASV0 ventilation
+**Observed (derived):** for the BASV0 ventilation
 `OP02/GG09/II00..II0A/RR0001` observations, the profile-qualified UIN decoder
-uses a two-byte response while presence remains unknown. Treating that response
-as one-byte UCH, or treating an unknown slot as installed ventilation, is unsupported.
+uses a two-byte response while presence remains unknown. Native headers and
+response payloads were not retained, so falsifying the width or presence state
+requires a new acquisition. Treating that response as one-byte UCH, or treating
+an unknown slot as installed ventilation, is unsupported.
 Remote descriptions whose identity is unqualified are `raw_evidence_only`. They do not admit a device function or write path.
 
 The profile itself has no current values and no write evidence. A consumer must

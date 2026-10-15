@@ -2,12 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "B524 BASV0 register observations v1",
   "type": "object",
-  "required": ["schema_version", "evidence_class", "observation_id", "current_values", "description_catalog", "records", "nonclaims"],
+  "required": ["schema_version", "evidence_class", "observation_id", "current_values", "native_headers", "response_payloads", "description_catalog", "records", "nonclaims"],
   "properties": {
     "schema_version": { "const": "b524-basv0-register-observations/v1" },
     "evidence_class": { "const": "sanitized_read_only_register_observation" },
     "observation_id": { "const": "basv0_sw0217_hw8803_api1" },
     "current_values": { "const": "omitted" },
+    "native_headers": { "const": "omitted" },
+    "response_payloads": { "const": "omitted" },
     "description_catalog": { "const": "b524-basv0-description-profile-v1.json" },
     "records": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/record" } },
     "nonclaims": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
