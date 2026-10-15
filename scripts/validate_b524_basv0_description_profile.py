@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Validate native B524 BASV0 description-profile evidence."""
+"""Validate native B524 BASV0 description-profile evidence.
+
+For selectors carried in both register-map namespaces, the retained fields alone
+cannot distinguish the request opcode. The page-cited SHA-256 pins the published
+fixture bytes, so a reassignment cannot be published silently. Codec qualification
+is local-only in this profile: no retained evidence ties a remote description to
+a codec, and a qualified remote claim is rejected.
+"""
 
 from __future__ import annotations
 
@@ -162,7 +169,8 @@ def _validate_clock_value(codec: str, raw: str, field: str, context: str) -> Non
 def _expected_validation_scope(record: dict[str, Any]) -> str:
     """The documented derivation of the source installation's validation_scope."""
     decoded = record.get("decoded")
-    if not (isinstance(decoded, dict) and decoded.get("qualification") == "qualified"
+    if not (record.get("selector", {}).get("operation") == "02"
+            and isinstance(decoded, dict) and decoded.get("qualification") == "qualified"
             and decoded.get("codec_provenance") == "selector_qualified"):
         return "raw_evidence_only"
     if record.get("presence_state") == "observed_present" and decoded.get("codec_basis") == "public_local_constraint_codec":
@@ -176,6 +184,8 @@ def _validate_validation_scope(record: dict[str, Any], scope: Any, context: str)
                   and decoded.get("codec") in PLAIN_BYTE_CLOCK_CODECS),
              f"{context} grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only")
     if scope == "format_range_and_step":
+        _require(record.get("selector", {}).get("operation") == "02",
+                 f"{context} grants range validation to a remote record")
         _require(isinstance(decoded, dict) and decoded.get("qualification") == "qualified"
                  and decoded.get("codec_provenance") == "selector_qualified",
                  f"{context} grants range validation without a qualified selector codec")
@@ -281,6 +291,9 @@ def _validate_record(record: Any, index: int) -> None:
             # Claimed selector provenance is checked whatever the qualification: it asserts
             # that the named source maps this selector to this codec.
             _validate_selector_codec(codec, basis, selector, context)
+        _require(qualification != "qualified" or operation == "02",
+                 f"{context} codec qualification is local-only in this profile "
+                 "(qualified requires OP02; no retained remote codec evidence)")
         for field in ("min", "max", "step"):
             if field == "step" and codec in CLOCK_CODECS and (decoded.get("step") is None or qualification == "qualified"):
                 continue
@@ -337,7 +350,7 @@ def _validate_family_invariance(records: list[dict[str, Any]]) -> None:
     description are absent evidence and take no part in the comparison.
     """
     # Keep the recorded operation: OP02 and OP06 are distinct native namespaces.
-    # Scope and linked observation checks corroborate it; response bytes do not.
+    # Consistent scope/observation edits cannot establish it; see module docstring.
     families: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
     for record in records:
         selector = record["selector"]

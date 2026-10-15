@@ -154,6 +154,11 @@
               },
               "remote_identity": {
                 "type": "object"
+              },
+              "decoded": {
+                "properties": {
+                  "qualification": { "not": { "const": "qualified" } }
+                }
               }
             }
           }

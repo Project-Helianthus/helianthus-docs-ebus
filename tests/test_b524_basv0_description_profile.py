@@ -1015,3 +1015,63 @@ def test_exact_schema_basis_corroborates_op02_before_codec_lookup() -> None:
         "(exact-selector-schema basis requires OP02)",
         document, overlay=overlay,
     )
+
+
+def reassign_qualified_record_to_remote(index: int) -> tuple[dict, dict, dict]:
+    # Reuse .reviewer-mut.py's FULL mutation: move every corroborating field.
+    document, rows, overlay = descriptions(), observations(), scopes()
+    record = document["records"][index]
+    original = deepcopy(record["selector"])
+    assert original["operation"] == "02"
+    assert record["decoded"]["qualification"] == "qualified"
+    record["selector"]["operation"] = "06"
+    record["identity_scope"] = "remote"
+    record["remote_identity"] = {
+        "qualification": "observed_remote_header", "group": original["group"],
+        "address_raw": "10", "firmware_raw": "010203",
+    }
+    for entry in overlay["records"]:
+        if entry["selector"] == original:
+            entry["selector"] = deepcopy(record["selector"])
+    for row in rows["records"]:
+        if row["selector"] == original:
+            row["selector"] = deepcopy(record["selector"])
+            row["identity_scope"] = record["identity_scope"]
+    return document, rows, overlay
+
+
+def test_fully_consistent_record_544_reassignment_is_local_only(
+    tmp_path: Path,
+) -> None:
+    document, rows, overlay = reassign_qualified_record_to_remote(544)
+    # This selector has EXP Wire entries in both namespaces.
+    assert validator.register_map_wire()[("02", "08", "0003")] == {"EXP"}
+    assert validator.register_map_wire()[("06", "08", "0003")] == {"EXP"}
+    rejects(
+        "records[544] codec qualification is local-only in this profile "
+        "(qualified requires OP02; no retained remote codec evidence)",
+        document, rows, overlay,
+    )
+    path = tmp_path / "qualified-remote.json"
+    path.write_text(json.dumps(document))
+    result = subprocess.run(
+        ["jv", str(SCHEMA), str(path)], cwd=ROOT,
+        text=True, capture_output=True, check=False,
+    )
+    assert result.returncode != 0, result.stdout
+    record = document["records"][544]
+    assert validator._expected_validation_scope(record) == "raw_evidence_only"
+    with pytest.raises(validator.ValidationError, match="remote record"):
+        validator._validate_validation_scope(record, "format_range_and_step", "records[544]")
+
+
+def test_every_qualified_record_rejects_fully_consistent_remote_reassignment() -> None:
+    qualified = [
+        i for i, record in enumerate(_DESCRIPTIONS["records"])
+        if record["decoded"] and record["decoded"]["qualification"] == "qualified"
+    ]
+    assert len(qualified) == 139
+    for index in qualified:
+        document, rows, overlay = reassign_qualified_record_to_remote(index)
+        with pytest.raises(validator.ValidationError, match=rf"records\[{index}\]"):
+            validator.validate_documents(document, rows, CATALOG, overlay)

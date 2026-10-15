@@ -50,23 +50,26 @@ RRlo, RRhi`; the remaining bytes split into equal-width `MIN`, `MAX`, and
 They do not select a codec, prove the requested instance, prove a present
 device, or authorize a write.
 
-**Observed (derived):** the request opcode is retained as a recorded selector
-field corroborated by local (OP02) or remote (OP06) scope and linked observation
-rows, rather than by response bytes, which echo only `GG/RR`.
+**Observed (derived):** for a selector carried in both register-map namespaces,
+the retained fields alone cannot distinguish the request opcode; the published
+fixture bytes are pinned by the page-cited SHA-256, so a reassignment cannot be
+published silently, and the local-only qualification rule rejects a qualified
+remote claim because no retained evidence ties a remote description to a codec.
 
 The response does not echo the instance byte `II`, and the fixture retains no
-request bytes, so the retained material cannot prove which instance a description
-answers; the semantic selector is the only link. A qualified decoded range is
-therefore accepted only where it is identical across every retained described
-instance of the selector `(OP, GG, RR)`: the raw limits and description length
-must be byte-identical for all instances that retain a description. An instance
-without a description is absent evidence and takes no part in the comparison.
-The validator rejects a qualified claim in an instance-divergent family, so a
-qualified range never depends on the instance byte. The retained fixture has no
-such family (all 340 are instance-invariant over their described instances).
-Divergent spans, if a later profile retains any, are raw evidence only. The
-validator also requires every catalog record, with or without description bytes,
-to have a register-observation record for its selector.
+request bytes, so the retained material cannot prove which instance a
+description answers; the semantic selector is the only link. A qualified
+decoded range is therefore accepted only where it is identical across every
+retained described instance of the selector `(OP, GG, RR)`: the raw limits and
+description length must be byte-identical for all instances that retain a
+description. An instance without a description is absent evidence and takes no
+part in the comparison. The validator rejects a qualified claim in an instance-
+divergent family, so a qualified range never depends on the instance byte. The
+retained fixture has no such family (all 340 are instance-invariant over their
+described instances). Divergent spans, if a later profile retains any, are raw
+evidence only. The validator also requires every catalog record, with or
+without description bytes, to have a register-observation record for its
+selector.
 
 The fixture records the raw three spans even when no codec is qualified. A
 decoded record with `codec_provenance: selector_qualified` can be marked
