@@ -193,6 +193,7 @@ python3 -m pytest -q tests/test_vaillant_regulator_capability_api_v1.py
 echo "==> check GraphQL device-face provenance contract"
 python3 scripts/check_graphql_face_provenance.py
 python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
+python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract.py
 
 echo "==> check contribution-driven Portal UX contract"
 python3 scripts/check_portal_ux_contract.py
