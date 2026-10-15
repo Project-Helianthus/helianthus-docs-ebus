@@ -382,6 +382,19 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
   - `ebus.v1.semantic.energy_totals.get`
   - `ebus.v1.semantic.boiler_status.get`
   - `ebus.v1.semantic.system.get`
+  - `ebus.v1.semantic.system.set_config`
+    - Required arguments: `field` and `value`, both strings; `field` uses
+      camelCase names such as `dhwBivalencePointC`.
+    - Returns the standard `meta`, `data`, `error` envelope, with
+      `meta.contract`, `meta.consistency`, `meta.data_timestamp` and
+      `meta.data_hash`. The setter uses `LIVE` consistency.
+    - Success returns `data.success: true`, omits `data.error`, and leaves
+      top-level `error: null`. A bound rejection returns `data.success: false`
+      and `data.error` naming the active bound, with top-level `error: null`
+      and MCP `isError: true`, before any bus write. Error text includes
+      `controller profile <identity> allows [min, max]` or
+      `controller identity unmatched (<reason>): conservative policy bound
+      [min, max] applies`.
   - `ebus.v1.semantic.circuits.get`
   - `ebus.v1.semantic.radio_devices.get`
     - `data: []` means the startup radio inventory probe completed without
@@ -409,6 +422,47 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
 - Legacy aliases
   - `ebus.devices`
   - `ebus.invoke`
+
+## System Bound Payload Contract
+
+`ebus.v1.semantic.system.get` publishes `config.dhw_bivalence_point_bound`.
+Its `source` is `controller_profile` with `profile`, or `unmatched_policy`
+with `reason`. The reason values are `unknown_profile`, `unknown_register`,
+`unqualified_bound` and `invalid_bound`. Empty optional `reason` and `profile`
+strings are omitted in MCP and `null` in GraphQL.
+
+The following response `data` fragments pin the two resolved shapes. The
+profile fragment illustrates a qualified identity; current discovery still
+uses the unmatched policy as described below.
+
+```json
+{
+  "config": {
+    "dhw_bivalence_point_bound": {
+      "min_c": -20,
+      "max_c": 20,
+      "source": "controller_profile",
+      "profile": "BASV0/SW0217/HW8803/API1.1"
+    }
+  }
+}
+```
+
+```json
+{
+  "config": {
+    "dhw_bivalence_point_bound": {
+      "min_c": -20,
+      "max_c": 20,
+      "source": "unmatched_policy",
+      "reason": "unknown_profile"
+    }
+  }
+}
+```
+
+Before the first resolution, MCP omits `config.dhw_bivalence_point_bound`
+entirely. GraphQL returns `null` for `dhwBivalencePointBound`.
 
 ## Semantic Payload Notes
 

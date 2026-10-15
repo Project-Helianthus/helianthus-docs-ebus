@@ -1033,6 +1033,7 @@ The `invoke` mutation validates parameters against the method signature and rout
 type Mutation {
   invoke(address: Int!, plane: String!, method: String!, params: JSON): InvokeResult!
   setBoilerConfig(field: String!, value: String!): BoilerConfigMutationResult!
+  setSystemConfig(field: String!, value: String!): ConfigMutationResult
 }
 
 type InvokeResult {
@@ -1048,6 +1049,11 @@ type InvokeError {
 }
 
 type BoilerConfigMutationResult {
+  success: Boolean!
+  error: String
+}
+
+type ConfigMutationResult {
   success: Boolean!
   error: String
 }
