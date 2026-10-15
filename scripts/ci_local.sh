@@ -19,7 +19,8 @@ if ! command -v actionlint >/dev/null 2>&1; then
   echo "actionlint v1.7.7 is required: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7" >&2
   exit 2
 fi
-if [ "$(actionlint -version | sed -n '1p')" != "v1.7.7" ]; then
+actionlint_version="$(python3 scripts/check_workflow_shells.py actionlint-version)"
+if [ "$(printf '%s\n' "$actionlint_version" | sed -n '1p')" != "v1.7.7" ]; then
   echo "actionlint must report v1.7.7." >&2
   exit 2
 fi
@@ -31,7 +32,21 @@ if [ "$(jv --version | sed -n '1p')" != "github.com/santhosh-tekuri/jsonschema/c
   echo "jv must report v0.7.0." >&2
   exit 2
 fi
-actionlint .github/workflows/*.yml
+if ! command -v shellcheck >/dev/null 2>&1; then
+  echo "ShellCheck is required for the separate workflow run-step check." >&2
+  exit 2
+fi
+gate_temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/docs-ebus-ci.XXXXXXXX")"
+echo "Workflow lint artifacts: ${gate_temp_dir} (retained for diagnosis)"
+workflow_lint_status=0
+echo "==> actionlint (60-second limit; embedded ShellCheck disabled)"
+python3 scripts/check_workflow_shells.py actionlint || workflow_lint_status=$?
+echo "==> separate ShellCheck (60-second pass limit; all severities)"
+python3 scripts/check_workflow_shells.py shellcheck --temp-dir "$gate_temp_dir" || workflow_lint_status=$?
+if [ "$workflow_lint_status" -ne 0 ]; then
+  exit "$workflow_lint_status"
+fi
+python3 -m pytest -q tests/test_workflow_shells.py
 echo "Pinned workflow/schema gate tools passed."
 
 echo "==> verify markdown files are present"
@@ -178,6 +193,7 @@ python3 -m pytest -q tests/test_vaillant_regulator_capability_api_v1.py
 echo "==> check GraphQL device-face provenance contract"
 python3 scripts/check_graphql_face_provenance.py
 python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
+python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract.py
 
 echo "==> check contribution-driven Portal UX contract"
 python3 scripts/check_portal_ux_contract.py
@@ -195,6 +211,7 @@ echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
+python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
 echo "==> check canonical register names against the register naming rules"
 python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
@@ -211,6 +228,7 @@ python3 scripts/validate_b524_basv0_description_profile.py \
 jv protocols/vaillant/fixtures/b524-basv0-register-observations-schema-v1.json \
   protocols/vaillant/fixtures/b524-basv0-register-observations-v1.json
 python3 -m pytest -q tests/test_b524_basv0_description_profile.py
+python3 -m pytest -q tests/test_b524_external_bundle_cli.py
 python3 -m pytest -q tests/test_b524_bounded_survey_profile.py
 for profile in protocols/vaillant/fixtures/b524-bounded-survey-*-v1.json; do
   case "$profile" in

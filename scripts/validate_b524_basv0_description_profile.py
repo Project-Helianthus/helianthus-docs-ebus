@@ -229,17 +229,19 @@ def _validate_record(record: Any, index: int) -> None:
     else:
         _require(isinstance(remote_identity, dict) and remote_identity.get("qualification") in {"observed_remote_header", "unqualified"},
                  f"{context} must retain remote identity qualification")
-        if "group" in remote_identity:
-            _require(remote_identity["group"] == group, f"{context}.remote_identity.group disagrees with selector")
         if remote_identity.get("qualification") == "observed_remote_header":
             # Widths: group and address are one byte; firmware is major.minor.patch, three
             # byte-decimal bytes (register map RR0004 device_firmware_version).
             for name, length in (("group", 2), ("address_raw", 2), ("firmware_raw", 6)):
                 value = remote_identity.get(name)
-                _require(isinstance(value, str) and value and HEX.fullmatch(value) is not None,
+                _require(value is not None,
                          f"{context}.remote_identity.{name} is required for an observed remote header")
+                _require(isinstance(value, str) and re.fullmatch(r"[0-9A-F]*", value) is not None,
+                         f"{context}.remote_identity.{name} must be uppercase hexadecimal")
                 _require(len(value) == length,
                          f"{context}.remote_identity.{name} must be {length // 2} bytes ({length} hex digits), not {len(value) // 2}")
+        if "group" in remote_identity:
+            _require(remote_identity["group"] == group, f"{context}.remote_identity.group disagrees with selector")
     raw = record.get("raw_description_hex")
     lengths = record.get("description_payload_length")
     limits = record.get("raw_limits")
@@ -477,6 +479,7 @@ def validate_fixture(path: Path, observations: Path | None = None, scopes: Path 
             overlay = json.loads(scopes.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise ValidationError(f"{scopes}: cannot read JSON") from exc
+        _require(isinstance(overlay, dict), "validation-scope overlay must be an object")
     validate_documents(fixture, observed, path.name, overlay)
 
 
