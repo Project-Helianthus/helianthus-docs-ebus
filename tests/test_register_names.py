@@ -141,12 +141,12 @@ def test_examples_of_the_rules_decompose(vocabulary: names.Vocabulary, name: str
         ("Zone_Name", "snake_case"),
         ("pump_command", "only closes a name"),
         ("holiday_command", "only closes a name"),
-        ("flow_temperature_limit_at_flow_rate_maximum", "bound precedes its object"),
-        ("room_temperature_setpoint_at_holiday_minimum", "bound precedes its object"),
+        ("flow_temperature_limit_at_flow_rate_maximum", "is not followed by its object"),
+        ("room_temperature_setpoint_at_holiday_minimum", "is not followed by its object"),
         ("zone_name_year", "order of the parts"),
         ("holiday_start_date_hour", "order of the parts"),
         ("date_year_1", "order of the parts"),
-        ("source_temperature_limit_at_flow_rate_maximum", "bound precedes its object"),
+        ("source_temperature_limit_at_flow_rate_maximum", "is not followed by its object"),
         ("heating_cooling_temperature", "order of the parts"),
         ("compressor_inlet_outlet_temperature", "order of the parts"),
         ("external_ok", "order of the parts"),
@@ -520,5 +520,16 @@ def test_subject_only_count_takes_only_the_maximum_bound(vocabulary: names.Vocab
 def test_remaining_period_follows_time_only(vocabulary: names.Vocabulary) -> None:
     names.decompose("defrost_time_remaining", vocabulary)
     for name in ("temperature_remaining", "pump_start_count_remaining"):
+        with pytest.raises(names.NameError_):
+            names.decompose(name, vocabulary)
+
+
+def test_condition_bound_needs_the_object_it_precedes(vocabulary: names.Vocabulary) -> None:
+    names.decompose("pump_active_at_heating_maximum_flow_temperature", vocabulary)
+    names.decompose("heating_flow_temperature_setpoint_maximum_at_heat_pump_fault", vocabulary)
+    for name in (
+        "pump_active_at_heating_maximum",
+        "pump_active_at_flow_temperature_maximum",
+    ):
         with pytest.raises(names.NameError_):
             names.decompose(name, vocabulary)

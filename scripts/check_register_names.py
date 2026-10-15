@@ -361,20 +361,15 @@ def decompose(name: str, vocabulary: Vocabulary, *, nested: bool = False) -> lis
         words = words[:at]
         if not condition:
             raise NameError_(f"{name}: empty condition after 'at'")
-        seen_object = False
         seen_term = False
         for word in condition:
             roles = vocabulary.roles.get(word, frozenset())
             if not roles or roles & {"marker", "placeholder"} or word == "command":
                 raise NameError_(f"{name}: {word!r} is not a vocabulary term for a condition")
-            if roles == {"bound"}:
-                if seen_object:
-                    raise NameError_(f"{name}: inside a condition a bound precedes its object")
-            else:
+            if roles != {"bound"}:
                 seen_term = True
-                if "object" in roles:
-                    seen_object = True
-        # a bound precedes the object it qualifies: only attributes, places and further
+        # a bound precedes the object it qualifies (an earlier term that can also
+        # be an object only supplies context): only attributes, places and further
         # bounds may stand between them, and an object has to follow
         for position, word in enumerate(condition):
             if vocabulary.roles[word] != {"bound"}:
