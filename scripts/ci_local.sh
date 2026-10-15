@@ -37,7 +37,35 @@ if ! command -v shellcheck >/dev/null 2>&1; then
   exit 2
 fi
 gate_temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/docs-ebus-ci.XXXXXXXX")"
-echo "Workflow lint artifacts: ${gate_temp_dir} (retained for diagnosis)"
+cleanup_workflow_lint() {
+  local status=$?
+  rm -rf -- "$gate_temp_dir" || :
+  return "$status"
+}
+install_workflow_cleanup_trap() {
+  local signal="$1" handler="$2" previous
+  previous="$(trap -p "$signal")"
+  if [ -n "$previous" ]; then
+    # Decode Bash's quoted trap declaration without changing the caller's arguments.
+    eval "set -- ${previous#trap -- }"
+    previous="$1"
+  else
+    previous=:
+  fi
+  if [ "$signal" = EXIT ]; then
+    # Both branches preserve the incoming status for the previous handler.
+    printf -v handler 'if cleanup_workflow_lint; then\n%s\nelse\n%s\nfi' "$previous" "$previous"
+  else
+    printf -v handler '%s\n%s' "$previous" "$handler"
+  fi
+  # Quote the composed handler as data before installing it.
+  printf -v handler 'trap -- %q %q' "$handler" "$signal"
+  eval "$handler"
+}
+install_workflow_cleanup_trap EXIT ''
+install_workflow_cleanup_trap INT 'exit 130'
+install_workflow_cleanup_trap TERM 'exit 143'
+echo "Workflow lint artifacts: ${gate_temp_dir} (removed on exit)"
 workflow_lint_status=0
 echo "==> actionlint (60-second limit; embedded ShellCheck disabled)"
 python3 scripts/check_workflow_shells.py actionlint || workflow_lint_status=$?
