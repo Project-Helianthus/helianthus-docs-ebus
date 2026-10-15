@@ -40,7 +40,7 @@ not claim to reconcile the unseen parent rows.
 This is not a census of all unknown B524 semantics: unnamed catalog entries,
 OP00 questions and section-level provisional OP02/GG0A or OP06 claims are not
 silently added to the parent naming-row inventory. The correspondence CSV has
-368 OP02 entries and two OP06 entries, but no `open_question` column. Those two
+368 OP02 entries and 2 OP06 entries, but no `open_question` column. These
 OP06 entries do not add unresolved naming rows under this inclusion rule.
 OP02/GG0A and OP06/GG0A remain independent namespaces; neither is inferred from
 the other. Their existing catalog caveats remain authoritative.
@@ -277,17 +277,18 @@ II context stays separate rather than merging instances or inventing them.
 
 ## Maintenance check
 
-When either source CSV changes, recompute rather than carrying forward a count.
+When a source CSV changes, recompute rather than carrying forward a count.
 Run this read-only check from the repository root to compare selector/name
 coverage, gap classifications, unresolved evidence text, candidate family/instance
 context and published inventory totals (selected, total, retained terms,
-placeholders and each group).
+placeholders and each group), plus correspondence counts by opcode.
 It normalizes whitespace and inline-code markup, and applies only the
 documented module-family generalization to the source evidence text. The
 reviewed question-to-gap mappings in
 [b524-provisional-name-gap-classifications.json](b524-provisional-name-gap-classifications.json)
 are maintenance expectations, not native evidence. Review these mappings when
 an unresolved question changes; unknown questions fail the check until reviewed.
+Every classification must be a nonempty subset of M, P, V and W.
 The correspondence tests separately protect the
 annotation/name boundary. Parent issue additions/removals still need the full
 parent list, not a comparison of headline counts.
@@ -314,7 +315,9 @@ def context(text):
 
 
 def gaps(text):
-    return tuple(sorted(normalized(part) for part in text.split(",")))
+    codes = tuple(sorted(normalized(part) for part in text.split(",")))
+    assert set(codes) <= {"M", "P", "V", "W"}, "invalid gap classification"
+    return codes
 
 
 classification_file = root / "development/b524-provisional-name-gap-classifications.json"
@@ -357,6 +360,13 @@ group_totals = collections.Counter((r["opcode"], r["group"]) for r in rows)
 assert collections.Counter((op, gg, int(n)) for op, gg, n in group_rows) == collections.Counter(
     (op, gg, n) for (op, gg), n in group_totals.items()
 ), "published group totals differ"
+correspondence = root / "protocols/vaillant/fixtures/b524-register-name-correspondence.csv"
+with correspondence.open(encoding="utf-8") as handle:
+    correspondence_totals = collections.Counter(r["opcode"] for r in csv.DictReader(handle))
+published_correspondence = re.findall(r"(\d+) OP02 entries and (\d+) OP06 entries", summary)
+assert published_correspondence == [
+    (str(correspondence_totals["0x02"]), str(correspondence_totals["0x06"]))
+], "published correspondence totals differ"
 actual = []
 opcode = group = None
 for line in text.splitlines():

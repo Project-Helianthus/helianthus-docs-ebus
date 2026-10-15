@@ -1,6 +1,7 @@
 """Exercise the published maintenance check against source-fixture drift."""
 
 import csv
+import json
 import shutil
 from pathlib import Path
 
@@ -11,12 +12,13 @@ INDEX = Path("development/b524-provisional-name-evidence.md")
 CLASSIFICATIONS = Path("development/b524-provisional-name-gap-classifications.json")
 FIXTURES = Path("protocols/vaillant/fixtures")
 CANONICAL = FIXTURES / "b524-op02-register-names.csv"
+CORRESPONDENCE = FIXTURES / "b524-register-name-correspondence.csv"
 MATRIX = FIXTURES / "b524-op02-requester-register-matrix.csv"
 
 
 @pytest.fixture
 def checkout(tmp_path, monkeypatch):
-    for relative in (INDEX, CLASSIFICATIONS, CANONICAL, MATRIX):
+    for relative in (INDEX, CLASSIFICATIONS, CANONICAL, MATRIX, CORRESPONDENCE):
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)
@@ -100,6 +102,17 @@ def test_b524_provisional_name_evidence_rejects_gap_drift(checkout, before, afte
         run_check()
 
 
+@pytest.mark.parametrize("gap", ["X", "", "P, X", "P, "])
+def test_b524_provisional_name_evidence_rejects_invalid_taxonomy(checkout, gap):
+    classifications = json.loads(CLASSIFICATIONS.read_text(encoding="utf-8"))
+    classifications[gap] = classifications.pop("P")
+    CLASSIFICATIONS.write_text(json.dumps(classifications), encoding="utf-8")
+    text = INDEX.read_text(encoding="utf-8")
+    INDEX.write_text(text.replace("| P |", f"| {gap} |", 1), encoding="utf-8")
+    with pytest.raises(AssertionError, match="invalid gap classification"):
+        run_check()
+
+
 @pytest.mark.parametrize(
     "question",
     ["Value class and encoding are not established.", "Meaning is not established."],
@@ -124,6 +137,8 @@ def test_b524_provisional_name_evidence_rejects_stale_gap(checkout, question):
 @pytest.mark.parametrize(
     ("before", "after"),
     [
+        ("368 OP02 entries and 2 OP06 entries", "369 OP02 entries and 2 OP06 entries"),
+        ("368 OP02 entries and 2 OP06 entries", "368 OP02 entries and 3 OP06 entries"),
         ("142 of 368", "143 of 368"),
         ("142 of 368", "142 of 369"),
         ("131 retain documented terms", "132 retain documented terms"),
@@ -149,3 +164,23 @@ def test_b524_provisional_name_evidence_allows_presentation_changes(checkout):
     text = text.replace("VRC700 family: 00; VRC720 family: 00", "VRC720 family: 00; VRC700 family: 00", 1)
     INDEX.write_text(text, encoding="utf-8")
     run_check()
+
+
+@pytest.mark.parametrize("opcode", ["0x02", "0x06"])
+@pytest.mark.parametrize("mutation", ["add", "remove"])
+def test_b524_provisional_name_evidence_rejects_correspondence_drift(checkout, opcode, mutation):
+    with CORRESPONDENCE.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        columns = reader.fieldnames
+        rows = list(reader)
+    row = next(row for row in rows if row["opcode"] == opcode)
+    if mutation == "add":
+        rows.append(dict(row))
+    else:
+        rows.remove(row)
+    with CORRESPONDENCE.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(rows)
+    with pytest.raises(AssertionError, match="published correspondence totals differ"):
+        run_check()
