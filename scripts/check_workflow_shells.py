@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-import re
 import subprocess
 import sys
 import time
@@ -29,6 +28,32 @@ def bounded(command: list[str], timeout: float = TIMEOUT) -> int:
     except OSError as error:
         print(f"FAIL: {command[0]}: {error}", file=sys.stderr)
         return 2
+
+
+def sanitize_expressions(source: str) -> str:
+    """Replace complete expression spans, respecting single-quoted strings."""
+    parts = []
+    offset = 0
+    while (start := source.find("${{", offset)) != -1:
+        parts.append(source[offset:start])
+        index = start + 3
+        quoted = False
+        while index < len(source):
+            if source[index] == "'":
+                if quoted and source.startswith("''", index):
+                    index += 2  # GitHub expression strings escape quotes by doubling.
+                    continue
+                quoted = not quoted
+            elif not quoted and source.startswith("}}", index):
+                index += 2
+                break
+            index += 1
+        else:
+            raise ValueError("unterminated GitHub expression in run script")
+        parts.append("_" * len(source[start:index].encode("utf-8")))
+        offset = index
+    parts.append(source[offset:])
+    return "".join(parts)
 
 
 def scripts(workflows: list[Path]):
@@ -52,9 +77,7 @@ def scripts(workflows: list[Path]):
                 shell = step.get("shell") or job_shell or workflow_shell or runner_shell
                 dialect = next((sh for sh in ("bash", "sh")
                                 if shell == sh or shell.startswith(sh + " ")), None)
-                source = re.sub(r"\$\{\{.*?\}\}",
-                                lambda match: "_" * len(match[0].encode("utf-8")),
-                                step["run"], flags=re.DOTALL)
+                source = sanitize_expressions(step["run"])
                 setup = "set -eo pipefail" if dialect == "bash" else "set -e"
                 yield f"{workflow}:{job_id}:step {index}", dialect, f"{setup}\n{source}\n"
 

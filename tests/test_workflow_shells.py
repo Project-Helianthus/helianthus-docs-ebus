@@ -30,6 +30,29 @@ def test_broken_workflow_snippet_fails(tmp_path):
     assert lint.shellcheck([workflow], tmp_path) == 1  # SC2086, despite SC2154 exclusion
 
 
+@pytest.mark.parametrize("expression", [
+    "${{ format('{{Hello {0}!}}', github.actor) }}",
+    "${{ format('it''s }} {0}', github.actor) }}",
+    "${{ format('backslash\\''}} {0}', github.actor) }}",
+    "${{ format('é }} {0}', github.actor) }}",
+    "${{ format(\n  '}} {0}', github.actor\n) }}",
+    "${{ github.actor }}${{ format('}} {0}', github.actor) }}",
+])
+def test_complete_expression_spans_are_sanitized(tmp_path, expression):
+    workflow = tmp_path / "expressions.yml"
+    workflow.write_text(lint.yaml.safe_dump({
+        "jobs": {"check": {"steps": [{"run": f"echo {expression} # retained"}]}},
+    }))
+    [(_, _, source)] = lint.scripts([workflow])
+    assert source == f"set -eo pipefail\necho {'_' * len(expression.encode('utf-8'))} # retained\n"
+    assert lint.shellcheck([workflow], tmp_path) == 0
+
+
+def test_unterminated_expression_fails_extraction():
+    with pytest.raises(ValueError, match="unterminated GitHub expression"):
+        lint.sanitize_expressions("echo ${{ 'inner }}'")
+
+
 @pytest.mark.parametrize(("step_shell", "job_shell", "workflow_shell", "runner", "expected"), [
     ("sh -e {0}", "bash", "bash", "ubuntu-latest", "sh"),
     ("", "sh", "bash", "ubuntu-latest", "sh"),
