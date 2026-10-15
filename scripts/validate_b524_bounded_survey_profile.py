@@ -20,7 +20,7 @@ FIXTURES = Path(__file__).resolve().parents[1] / "protocols" / "vaillant" / "fix
 OP02_SEMANTIC_CATALOG_SCOPE = (
     "static OP02 semantic names only; values and bounds remain profile-qualified"
 )
-OP02_SEMANTIC_CATALOG_FIELDS = ["opcode", "group", "register", "name"]
+OP02_SEMANTIC_CATALOG_FIELDS = ["opcode", "group", "register", "name", "previous_name", "open_question"]
 
 
 def _hex(value: Any, context: str) -> bytes:
@@ -104,7 +104,7 @@ def _validate_op02_semantic_catalog(catalog_path: Path, profile_path: Path) -> N
             reader = csv.DictReader(stream)
             if reader.fieldnames != OP02_SEMANTIC_CATALOG_FIELDS:
                 raise ValidationError(
-                    f"{context} must use the opcode,group,register,name catalog columns"
+                    f"{context} must use the opcode,group,register,name,previous_name,open_question catalog columns"
                 )
             rows = list(reader)
     except (OSError, csv.Error) as exc:

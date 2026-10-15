@@ -34,8 +34,8 @@ The word "namespace" may still appear in protocol-level documentation (where it 
    - OP=00h uses an information identifier, independent of register GG.
    - Explicit profile mappings may supply bounded candidate guidance for
      non-exhaustive presets; they never invent II identities.
-   - OP00/ID00 `circuit_count` and ID01 `zone_count` retain their legacy public
-     names but are supported capacities, not configured or present-instance
+   - OP00/ID00 `circuit_count_maximum` and ID01 `zone_count_maximum` are
+     supported capacities, not configured or present-instance
      counts. Preserve raw float, capacity interpretation, presence results, and
      any unmet planning guidance separately.
 
@@ -164,8 +164,8 @@ OP02/GG00 System is mandatory at II00, RR0000..00FF. Native DHW (OP02/GG01)
 is admitted at II00 after its RR0001 gate succeeds with a nonzero UIN value.
 The virtual native-water II09 remains a separate circuit candidate.
 OP00 mappings guide candidates only when the profile declares one; every
-resulting slot still needs its own presence predicate. ID00 `circuit_count` and
-ID01 `zone_count` are supported capacities, never configured-instance counts or
+resulting slot still needs its own presence predicate. ID00 `circuit_count_maximum` and
+ID01 `zone_count_maximum` are supported capacities, never configured-instance counts or
 II allocation. They do not make slots contiguous, and II09 remains independent.
 Missing, invalid, conflicting, or unmet capacity uses that predicate without
 itself making concrete presence qualification incomplete. Other OP00 count
