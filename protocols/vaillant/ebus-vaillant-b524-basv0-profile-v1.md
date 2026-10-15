@@ -18,7 +18,7 @@ numbers, capture time, contributor identity, or acquisition fingerprint.
 
 **Proven:** the two committed, sanitized fixtures are publishable primary
 evidence for the bytes they retain. Their stable SHA-256 values are
-`5bbfb6fc4012e499a6fa56bac4a5f395308f9b2b82eeaeb782ea3284a5043436`
+`7b8fc0cef11f4eb6f48592f30a4da90afe501dc9ef851dbf81f29beb882617a4`
 (descriptions) and
 `f54b0802e97bc8baaad3f899f132e633af2fa39c6a99835ad89feb2ee4a22533`
 (register observations). Acquisition context is limited to B524
@@ -57,13 +57,12 @@ comparison. The validator rejects a qualified claim in an instance-divergent
 family, so a qualified range never depends on the instance byte. The retained
 fixture has no such family (all 340 are instance-invariant over their
 described instances). Divergent spans, if a later profile retains any, are
-raw evidence only. The validator also requires every retained description to
-have a register-observation record for its selector.
+raw evidence only. The validator also requires every catalog record, with or without description
+bytes, to have a register-observation record for its selector.
 
 The fixture records the raw three spans even when no codec is qualified. A
 decoded record with `codec_provenance: selector_qualified` can be marked
-`qualified`; a length-inferred codec remains `unqualified` and has
-`validation_scope: raw_evidence_only`. Each codec has a fixed span width
+`qualified`; a length-inferred codec remains `unqualified`. Each codec has a fixed span width
 (UCH 1, UIN 2, U32 4, EXP 4, HDA:3 3, HTI 3 bytes) that must equal the
 description payload length divided by three; a decoded record that disagrees is
 rejected.
@@ -101,9 +100,9 @@ spans (each byte read as a plain unsigned integer; for example the date maximum
 `1F0C63` reads as 2099-12-31 and the time maximum `173B3B` as 23:59:59). They do
 not denote the packed-BCD codec that [types/ebusd-csv.md](../../types/ebusd-csv.md)
 defines under the same names, and `1F0C63` or `173B3B` are not valid packed BCD.
-The 13 records are therefore **Hypothesis** and `display_only`; a consumer must
-not decode them as BCD, and the validator rejects any such record that claims
-`format_range_and_step`. Aligning the codec label with the documented codec is
+The 13 records are therefore **Hypothesis**; a consumer must not decode them as
+BCD, and the application-side classification may never grant them range
+validation. Aligning the codec label with the documented codec is
 tracked in an external issue (#297 of the evidence-producing tool's repository).
 
 For the 13 HDA:3/HTI records `qualified` therefore means only that the spans
@@ -128,17 +127,14 @@ validation.
   fixture all 36 such rows have `decoded: null`, and the validator requires that). `unqualified` is retained
   raw evidence, not a failed read; it grants no codec or range. This is
   **Proven** for the retained rows only.
-- `validation_scope` records the source installation's interpretation of how far
-  a description could be used. It defines no display behavior and no edit
-  validation for any consumer. The derivation is **Proven** against the
-  retained records: `format_range_and_step` if and only if the record is
-  `observed_present` and has a qualified, selector-qualified
-  `public_local_constraint_codec`; `display_only` for the other qualified
-  selector-qualified codecs (inactive or unknown instances, and every HDA:3/HTI
-  record); `raw_evidence_only` otherwise. A consumer derives presence from its
-  own current evidence, not from this field. An application-side reuse contract
-  lives in the repository's AGPL development tree and is linked from the
-  repository README; the CC0 tree does not link into it.
+- This fixture carries no validation-scope field. How far a description may be
+  used is an application decision, not wire evidence, so the classification the
+  source installation applied is kept outside this CC0 tree, in an overlay
+  under the repository's AGPL development tree that the validator loads when
+  present. A consumer derives presence from its own current evidence, not from
+  `presence_state`. The application-side reuse contract lives in the same AGPL
+  tree and is linked from the repository README; the CC0 tree does not link into
+  it.
 
 ## Observed local bound
 
@@ -198,7 +194,5 @@ substituted default.
 
 This is a reusable native evidence record. It does not define application
 profile selection, display behavior, edit validation, write behavior, or a
-universal B524 topology. The `validation_scope` field records only the source
-installation's interpretation and defines no display behavior; consumers must
-apply their own explicit qualification contract; the AGPL development tree
-holds one such contract, linked from the repository README.
+universal B524 topology. Consumers must apply their own explicit qualification contract; the AGPL
+development tree holds one such contract, linked from the repository README.

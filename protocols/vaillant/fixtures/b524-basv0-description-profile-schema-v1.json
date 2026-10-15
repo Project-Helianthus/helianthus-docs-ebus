@@ -86,7 +86,6 @@
         "description_payload_length",
         "raw_limits",
         "decoded",
-        "validation_scope",
         "observed_read_payload_width",
         "remote_identity"
       ],
@@ -101,7 +100,6 @@
         "description_payload_length": { "type": ["integer", "null"], "minimum": 0 },
         "raw_limits": { "oneOf": [{ "$ref": "#/$defs/rawLimits" }, { "type": "null" }] },
         "decoded": { "oneOf": [{ "$ref": "#/$defs/decoded" }, { "type": "null" }] },
-        "validation_scope": { "enum": ["format_range_and_step", "display_only", "raw_evidence_only"] },
         "observed_read_payload_width": { "type": ["integer", "null"], "minimum": 0 },
         "remote_identity": {
           "oneOf": [

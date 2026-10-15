@@ -31,6 +31,7 @@ PLAIN_BYTE_CLOCK_CODECS = {"HDA:3", "HTI"}
 CLOCK_CODECS = PLAIN_BYTE_CLOCK_CODECS
 ROOT = Path(__file__).resolve().parents[1]
 REGISTER_MAP = ROOT / "protocols/vaillant/ebus-vaillant-B524-register-map.md"
+SCOPE_OVERLAY = ROOT / "development/fixtures/b524-basv0-validation-scope-v1.json"
 CALENDAR_CLOCK_CSV = ROOT / "protocols/vaillant/fixtures/b524-op02-calendar-clock-selectors.csv"
 WIRE_CODEC = {"u8": "UCH", "u16": "UIN", "u32": "U32", "f32": "EXP", "date": "HDA:3", "time": "HTI"}
 _WIRE_CACHE: dict[tuple[str, str, str], set[str]] | None = None
@@ -165,8 +166,7 @@ def _expected_validation_scope(record: dict[str, Any]) -> str:
     return "display_only"
 
 
-def _validate_validation_scope(record: dict[str, Any], context: str) -> None:
-    scope = record.get("validation_scope")
+def _validate_validation_scope(record: dict[str, Any], scope: Any, context: str) -> None:
     decoded = record.get("decoded")
     _require(not (scope == "format_range_and_step" and isinstance(decoded, dict)
                   and decoded.get("codec") in PLAIN_BYTE_CLOCK_CODECS),
@@ -233,7 +233,6 @@ def _validate_record(record: Any, index: int) -> None:
         _require(lengths is None and limits is None and decoded is None,
                  f"{context} cannot decode or bound a missing description")
         _require(record.get("response_state") == "describe_unavailable", f"{context} missing description has wrong response state")
-        _validate_validation_scope(record, context)
         return
     _require(isinstance(raw, str) and HEX.fullmatch(raw) is not None, f"{context}.raw_description_hex is invalid")
     response = bytes.fromhex(raw)
@@ -301,7 +300,6 @@ def _validate_record(record: Any, index: int) -> None:
                          f"{context}.decoded numeric range must be finite")
                 _require(minimum <= maximum, f"{context}.decoded numeric range must be ordered")
                 _require(step > 0, f"{context}.decoded numeric range step must be positive")
-    _validate_validation_scope(record, context)
 
 
 def _key(selector: Any) -> str:
@@ -363,6 +361,30 @@ def _validate_remote_slot_identity(records: list[dict[str, Any]]) -> None:
                  f"records[{first[0]}] in {where}; one slot retains one identity")
 
 
+def _validate_validation_scopes(records: list[dict[str, Any]], overlay: Any) -> None:
+    """Check the application overlay against the CC0 description records it classifies."""
+    _require(isinstance(overlay, dict), "validation-scope overlay must be an object")
+    _require(overlay.get("schema_version") == "b524-basv0-validation-scope/v1", "unexpected validation-scope overlay schema version")
+    _require(overlay.get("observation_id") == "basv0_sw0217_hw8803_api1", "validation-scope overlay observation identity mismatch")
+    _require(overlay.get("description_catalog") == "b524-basv0-description-profile-v1.json", "validation-scope overlay catalog mismatch")
+    entries = overlay.get("records")
+    _require(isinstance(entries, list) and entries, "validation-scope overlay must contain records")
+    scopes: dict[str, str] = {}
+    for index, entry in enumerate(entries):
+        _require(isinstance(entry, dict) and isinstance(entry.get("selector"), dict),
+                 f"validation-scope overlay records[{index}] must be an object with a selector object")
+        key = _key(entry["selector"])
+        _require(key not in scopes, f"validation-scope overlay records[{index}] duplicates a selector")
+        scopes[key] = entry.get("validation_scope")
+    known = {_key(record["selector"]) for record in records}
+    for index, entry in enumerate(entries):
+        _require(_key(entry["selector"]) in known, f"validation-scope overlay records[{index}] matches no description record")
+    for index, record in enumerate(records):
+        key = _key(record["selector"])
+        _require(key in scopes, f"records[{index}] has no validation-scope overlay entry")
+        _validate_validation_scope(record, scopes[key], f"records[{index}]")
+
+
 def _validate_exact_schema_pins(records: list[dict[str, Any]]) -> None:
     """The exact-schema basis belongs to exactly the documented selector set, in both directions."""
     for index, record in enumerate(records):
@@ -392,7 +414,7 @@ def _validate_codec_read_widths(records: list[dict[str, Any]]) -> None:
                      f"contradicts observed_read_payload_width {width}")
 
 
-def validate_fixture(path: Path, observations: Path | None = None) -> None:
+def validate_fixture(path: Path, observations: Path | None = None, scopes: Path | None = None) -> None:
     try:
         fixture = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -403,10 +425,18 @@ def validate_fixture(path: Path, observations: Path | None = None) -> None:
             observed = json.loads(observations.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise ValidationError(f"{observations}: cannot read JSON") from exc
-    validate_documents(fixture, observed, path.name)
+    overlay = None
+    if scopes is None and SCOPE_OVERLAY.exists():
+        scopes = SCOPE_OVERLAY
+    if scopes is not None:
+        try:
+            overlay = json.loads(scopes.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValidationError(f"{scopes}: cannot read JSON") from exc
+    validate_documents(fixture, observed, path.name, overlay)
 
 
-def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | None = None) -> None:
+def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | None = None, scopes: Any = None) -> None:
     _require(isinstance(fixture, dict), "fixture must be an object")
     _require(fixture.get("schema_version") == "b524-basv0-description-profile/v1", "unexpected schema version")
     _require(fixture.get("observation_id") == "basv0_sw0217_hw8803_api1", "unexpected observation identity")
@@ -414,6 +444,8 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
     _require(isinstance(records, list) and records, "fixture must contain records")
     for index, record in enumerate(records):
         _validate_record(record, index)
+    if scopes is not None:
+        _validate_validation_scopes(records, scopes)
     seen: set[str] = set()
     for index, record in enumerate(records):
         key = _key(record["selector"])
@@ -509,18 +541,18 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
 
 
     for record in records:
-        if record.get("raw_description_hex") is not None:
-            _require(_key(record["selector"]) in seen,
-                     f"description selector {_key(record['selector'])} has no register-observation record")
+        _require(_key(record["selector"]) in seen,
+                 f"description selector {_key(record['selector'])} has no register-observation record")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("fixture", type=Path)
     parser.add_argument("--observations", type=Path)
+    parser.add_argument("--scopes", type=Path, help="validation-scope overlay (default: the repository overlay when present)")
     args = parser.parse_args()
     try:
-        validate_fixture(args.fixture, args.observations)
+        validate_fixture(args.fixture, args.observations, args.scopes)
     except ValidationError as exc:
         print(exc, file=sys.stderr)
         return 1

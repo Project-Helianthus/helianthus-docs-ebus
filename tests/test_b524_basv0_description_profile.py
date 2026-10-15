@@ -22,6 +22,9 @@ _SPEC.loader.exec_module(validator)
 CATALOG = "b524-basv0-description-profile-v1.json"
 _DESCRIPTIONS = json.loads(FIXTURE.read_text())
 _OBSERVATIONS = json.loads(REGISTER_FIXTURE.read_text())
+SCOPE_OVERLAY = ROOT / "development/fixtures/b524-basv0-validation-scope-v1.json"
+SCOPE_SCHEMA = ROOT / "development/fixtures/b524-basv0-validation-scope-schema-v1.json"
+_SCOPES = json.loads(SCOPE_OVERLAY.read_text())
 
 
 def validate(path: Path) -> subprocess.CompletedProcess[str]:
@@ -229,14 +232,23 @@ def set_spans(record: dict, min_hex: str, max_hex: str, step_hex: str) -> None:
     record["raw_limits"] = {"min_hex": min_hex, "max_hex": max_hex, "step_hex": step_hex}
 
 
-def rejects(message: str, document: dict, observed: dict | None = None) -> None:
+def scopes() -> dict:
+    return deepcopy(_SCOPES)
+
+
+def set_scope(overlay: dict, selector: dict, value: str) -> None:
+    entry = next(e for e in overlay["records"] if e["selector"] == selector)
+    entry["validation_scope"] = value
+
+
+def rejects(message: str, document: dict, observed: dict | None = None, overlay: dict | None = None) -> None:
     with pytest.raises(validator.ValidationError) as caught:
-        validator.validate_documents(document, observed, CATALOG)
+        validator.validate_documents(document, observed, CATALOG, scopes() if overlay is None else overlay)
     assert str(caught.value) == message
 
 
 def test_unmutated_documents_pass_in_process() -> None:
-    validator.validate_documents(descriptions(), observations(), CATALOG)
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
 
 
 def test_record_structure_checks_report_their_own_messages() -> None:
@@ -269,30 +281,32 @@ def test_record_structure_checks_report_their_own_messages() -> None:
 
 
 def test_validation_scope_is_derived_both_ways() -> None:
-    def mutated(selector: tuple[str, str, str, str], mutate) -> dict:
-        document = descriptions()
+    def mutated(selector: tuple[str, str, str, str], value: str, mutate=lambda r: None) -> tuple[dict, dict, int]:
+        document, overlay = descriptions(), scopes()
         index, record = find(document, *selector)
         mutate(record)
-        return document, index
+        set_scope(overlay, record["selector"], value)
+        return document, overlay, index
 
     dhw = ("02", "00", "00", "0001")
-    document, index = mutated(("02", "04", "01", "000B"), lambda r: r.update(validation_scope="format_range_and_step"))
-    rejects(f"records[{index}] grants range validation without a qualified selector codec", document)
+    document, overlay, index = mutated(("02", "04", "01", "000B"), "format_range_and_step")
+    rejects(f"records[{index}] grants range validation without a qualified selector codec", document, overlay=overlay)
     inactive = next(r["selector"] for r in _DESCRIPTIONS["records"]
-                    if r["presence_state"] == "observed_inactive" and r["validation_scope"] == "display_only")
-    document, index = mutated(tuple(inactive.values()), lambda r: r.update(validation_scope="format_range_and_step"))
-    rejects(f"records[{index}] grants range validation without observed presence", document)
-    document, index = mutated(("02", "04", "00", "000B"), lambda r: r.update(validation_scope="format_range_and_step", presence_state="observed_present"))
-    rejects(f"records[{index}] grants range validation on a codec basis that is not a local constraint codec", document)
-    document, index = mutated(dhw, lambda r: r.update(validation_scope="display_only"))
-    rejects(f"records[{index}].validation_scope must be format_range_and_step for this record", document)
-    document, index = mutated(tuple(inactive.values()), lambda r: r.update(validation_scope="raw_evidence_only"))
-    rejects(f"records[{index}].validation_scope must be display_only for this record", document)
-    document, index = mutated(("02", "04", "01", "000B"), lambda r: r.update(validation_scope="display_only"))
-    rejects(f"records[{index}].validation_scope must be raw_evidence_only for this record", document)
+                    if r["presence_state"] == "observed_inactive"
+                    and next(e for e in _SCOPES["records"] if e["selector"] == r["selector"])["validation_scope"] == "display_only")
+    document, overlay, index = mutated(tuple(inactive.values()), "format_range_and_step")
+    rejects(f"records[{index}] grants range validation without observed presence", document, overlay=overlay)
+    document, overlay, index = mutated(("02", "04", "00", "000B"), "format_range_and_step", lambda r: r.update(presence_state="observed_present"))
+    rejects(f"records[{index}] grants range validation on a codec basis that is not a local constraint codec", document, overlay=overlay)
+    document, overlay, index = mutated(dhw, "display_only")
+    rejects(f"records[{index}].validation_scope must be format_range_and_step for this record", document, overlay=overlay)
+    document, overlay, index = mutated(tuple(inactive.values()), "raw_evidence_only")
+    rejects(f"records[{index}].validation_scope must be display_only for this record", document, overlay=overlay)
+    document, overlay, index = mutated(("02", "04", "01", "000B"), "display_only")
+    rejects(f"records[{index}].validation_scope must be raw_evidence_only for this record", document, overlay=overlay)
     missing = next(r["selector"] for r in _DESCRIPTIONS["records"] if r["raw_description_hex"] is None)
-    document, index = mutated(tuple(missing.values()), lambda r: r.update(validation_scope="display_only"))
-    rejects(f"records[{index}].validation_scope must be raw_evidence_only for this record", document)
+    document, overlay, index = mutated(tuple(missing.values()), "display_only")
+    rejects(f"records[{index}].validation_scope must be raw_evidence_only for this record", document, overlay=overlay)
 
 
 def test_codec_width_and_decode_failures_are_validation_errors() -> None:
@@ -336,8 +350,10 @@ def test_remote_identity_and_presence_must_agree() -> None:
 def test_dhw_solar_installer_and_ventilation_pins() -> None:
     document = descriptions()
     index, _ = find(document, "02", "00", "00", "0001")
+    overlay = scopes()
+    overlay["records"] = [e for e in overlay["records"] if e["selector"] != document["records"][index]["selector"]]
     del document["records"][index]
-    rejects("fixture must retain exactly one local DHW bivalence record", document)
+    rejects("fixture must retain exactly one local DHW bivalence record", document, overlay=overlay)
 
     document = descriptions()
     _, record = find(document, "02", "00", "00", "0001")
@@ -349,8 +365,9 @@ def test_dhw_solar_installer_and_ventilation_pins() -> None:
     _, source = find(document, "02", "04", "00", "000B")
     _, solar = find(document, "02", "04", "01", "000B")
     solar["decoded"] = deepcopy(source["decoded"])
-    solar["validation_scope"] = "display_only"
-    rejects("solar II01 must not gain a qualified codec", document)
+    overlay = scopes()
+    set_scope(overlay, solar["selector"], "display_only")
+    rejects("solar II01 must not gain a qualified codec", document, overlay=overlay)
 
     document = descriptions()
     _, installer = find(document, "02", "00", "00", "006C")
@@ -366,8 +383,9 @@ def test_dhw_solar_installer_and_ventilation_pins() -> None:
     document = descriptions()
     _, ventilation = find(document, "02", "09", "0A", "0001")
     ventilation["decoded"] = None
-    ventilation["validation_scope"] = "raw_evidence_only"
-    rejects("ventilation II0A RR0001 codec must remain UIN with width 2", document)
+    overlay = scopes()
+    set_scope(overlay, ventilation["selector"], "raw_evidence_only")
+    rejects("ventilation II0A RR0001 codec must remain UIN with width 2", document, overlay=overlay)
 
     document = descriptions()
     index, ventilation = find(document, "02", "09", "00", "0001")
@@ -556,22 +574,22 @@ def test_plain_byte_clock_candidates_stay_display_only_even_for_bcd_looking_span
     index, record = find(document, "02", "00", "00", "002C")
     set_spans(record, "010101", "150625", "010000")  # valid packed BCD 15.06.25
     record["decoded"].update(min="2001-01-01", max="2037-06-21")  # plain-byte decoding, not BCD
-    assert record["validation_scope"] == "display_only"
-    validator.validate_documents(document)
+    overlay = scopes()
+    assert next(e for e in overlay["records"] if e["selector"] == record["selector"])["validation_scope"] == "display_only"
+    validator.validate_documents(document, None, None, overlay)
 
-    record["validation_scope"] = "format_range_and_step"
-    rejects(f"records[{index}] grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only", document)
+    set_scope(overlay, record["selector"], "format_range_and_step")
+    rejects(f"records[{index}] grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only", document, overlay=overlay)
 
-    document = descriptions()
+    document, overlay = descriptions(), scopes()
     index, record = find(document, "02", "00", "00", "0035")
-    record["validation_scope"] = "format_range_and_step"
-    rejects(f"records[{index}] grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only", document)
+    set_scope(overlay, record["selector"], "format_range_and_step")
+    rejects(f"records[{index}] grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only", document, overlay=overlay)
 
-    document = descriptions()
-    _, record = find(document, "02", "00", "00", "0035")
-    record["validation_scope"] = "raw_evidence_only"
-    index, _ = find(document, "02", "00", "00", "0035")
-    rejects(f"records[{index}].validation_scope must be display_only for this record", document)
+    document, overlay = descriptions(), scopes()
+    index, record = find(document, "02", "00", "00", "0035")
+    set_scope(overlay, record["selector"], "raw_evidence_only")
+    rejects(f"records[{index}].validation_scope must be display_only for this record", document, overlay=overlay)
 
 
 def test_duplicate_selectors_are_rejected_in_both_fixtures() -> None:
@@ -599,7 +617,7 @@ def test_missing_description_does_not_make_a_family_divergent() -> None:
     """GG03/RR0002 II04 has no description; that absent evidence must not disqualify its siblings."""
     _, record = find(descriptions(), "02", "03", "04", "0002")
     assert record["raw_description_hex"] is None
-    validator.validate_documents(descriptions(), observations(), CATALOG)
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
 
 
 def test_description_without_observation_record_is_rejected() -> None:
@@ -719,14 +737,15 @@ def test_boolean_numeric_limit_is_rejected_by_validator_and_schema(tmp_path: Pat
 def test_exact_schema_basis_is_pinned_to_its_documented_selectors() -> None:
     document = descriptions()
     document["records"][0]["decoded"]["codec_basis"] = "public_exact_selector_schema"
-    document["records"][0]["validation_scope"] = "display_only"
-    rejects("records[0].decoded.codec_basis public_exact_selector_schema is not documented for OP02/GG00/II00/RR0001", document)
+    overlay = scopes()
+    set_scope(overlay, document["records"][0]["selector"], "display_only")
+    rejects("records[0].decoded.codec_basis public_exact_selector_schema is not documented for OP02/GG00/II00/RR0001", document, overlay=overlay)
 
     exact = [r for r in descriptions()["records"] if r["decoded"] and r["decoded"]["codec_basis"] == "public_exact_selector_schema"]
     assert len(exact) == 14
     assert {(r["selector"]["operation"], r["selector"]["group"], r["selector"]["instance"], r["selector"]["register"]) for r in exact} \
         == validator.EXACT_SCHEMA_SELECTORS
-    validator.validate_documents(descriptions(), observations(), CATALOG)
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
 
 
 def test_claimed_selector_provenance_is_validated_even_when_unqualified() -> None:
@@ -746,4 +765,33 @@ def test_documented_exact_schema_selectors_must_keep_their_basis() -> None:
     record["decoded"]["codec_basis"] = "public_local_constraint_codec"
     rejects(f"records[{index}].decoded.codec_basis must be public_exact_selector_schema for the documented "
             "exact-schema selector OP02/GG04/II00/RR000B", document)
-    validator.validate_documents(descriptions(), observations(), CATALOG)
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
+
+
+def test_application_overlay_matches_the_cc0_records_and_its_schema() -> None:
+    result = subprocess.run(["jv", str(SCOPE_SCHEMA), str(SCOPE_OVERLAY)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode == 0, result.stderr
+    assert len(_SCOPES["records"]) == len(_DESCRIPTIONS["records"]) == 2093
+    assert all("validation_scope" not in record for record in _DESCRIPTIONS["records"])
+    assert "validation_scope" not in SCHEMA.read_text()
+
+    overlay = scopes()
+    overlay["records"].append(deepcopy(overlay["records"][0]))
+    rejects(f"validation-scope overlay records[{len(overlay['records']) - 1}] duplicates a selector", descriptions(), overlay=overlay)
+
+    overlay = scopes()
+    overlay["records"][0]["selector"]["instance"] = "FF"
+    rejects("validation-scope overlay records[0] matches no description record", descriptions(), overlay=overlay)
+
+    overlay = scopes()
+    del overlay["records"][5]
+    rejects("records[5] has no validation-scope overlay entry", descriptions(), overlay=overlay)
+
+
+def test_every_catalog_record_needs_an_observation_row_including_unavailable_ones() -> None:
+    document, rows = descriptions(), observations()
+    index, record = next((i, r) for i, r in enumerate(document["records"]) if r["response_state"] == "describe_unavailable")
+    rows["records"] = [row for row in rows["records"] if row["selector"] != record["selector"]]
+    with pytest.raises(validator.ValidationError, match="has no register-observation record"):
+        validator.validate_documents(document, rows, CATALOG, scopes())
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())

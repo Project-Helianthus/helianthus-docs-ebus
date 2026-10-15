@@ -44,8 +44,13 @@ qualified, current interaction before attempting a write.
 
 **Proven** (against the retained fixture, and enforced by the validator in both
 directions): `validation_scope` is a field of the source installation's
-interpretation, and it is kept only so the fixture stays identical to the copy
-bundled with VRC Explorer 0.6.2. It is specific to that installation's presence
+interpretation, kept only so the classification stays identical to the copy
+bundled with VRC Explorer 0.6.2. It lives in the application overlay
+[b524-basv0-validation-scope-v1.json](fixtures/b524-basv0-validation-scope-v1.json)
+(schema [b524-basv0-validation-scope-schema-v1.json](fixtures/b524-basv0-validation-scope-schema-v1.json)),
+keyed by selector, and no longer in the CC0 description fixture. The validator
+loads the overlay when present, requires one entry per description record and no
+entry without a record, and enforces the derivation below. It is specific to that installation's presence
 interpretation and is not reusable authority. Its derivation is:
 
 | `validation_scope` | Holds exactly when |
@@ -55,7 +60,7 @@ interpretation and is not reusable authority. Its derivation is:
 | `raw_evidence_only` | otherwise: no description, no decoded codec, or an unqualified codec |
 
 A consumer must derive presence from its own current evidence, never from the
-fixture's `presence_state` or `validation_scope`, and must recompute the
+fixture's `presence_state` or the overlay's `validation_scope`, and must recompute the
 equivalent decision itself. A field value of `format_range_and_step` therefore
 never admits an edit by itself. HDA:3/HTI records stay candidate (**Hypothesis**)
 and their STEP stays **Unknown**, so they never receive range-and-step
