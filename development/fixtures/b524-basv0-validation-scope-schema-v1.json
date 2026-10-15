@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "B524 BASV0 validation-scope overlay v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "evidence_class",
+    "observation_id",
+    "description_catalog",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "b524-basv0-validation-scope/v1"
+    },
+    "evidence_class": {
+      "const": "application_classification_overlay"
+    },
+    "observation_id": {
+      "const": "basv0_sw0217_hw8803_api1"
+    },
+    "description_catalog": {
+      "const": "b524-basv0-description-profile-v1.json"
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/record"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "record": {
+      "type": "object",
+      "required": [
+        "selector",
+        "validation_scope"
+      ],
+      "properties": {
+        "selector": {
+          "type": "object",
+          "required": [
+            "operation",
+            "group",
+            "instance",
+            "register"
+          ],
+          "properties": {
+            "operation": {
+              "enum": [
+                "02",
+                "06"
+              ]
+            },
+            "group": {
+              "type": "string",
+              "pattern": "^[0-9A-F]{2}$"
+            },
+            "instance": {
+              "type": "string",
+              "pattern": "^[0-9A-F]{2}$"
+            },
+            "register": {
+              "type": "string",
+              "pattern": "^[0-9A-F]{4}$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "validation_scope": {
+          "enum": [
+            "format_range_and_step",
+            "display_only",
+            "raw_evidence_only"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
