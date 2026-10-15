@@ -611,6 +611,26 @@ def test_header_register_selectors_are_not_names(cell: str) -> None:
     assert names.header_column_names(table.splitlines()) == [(4, "ventilation_operating_mode")]
 
 
+@pytest.mark.parametrize("header", ["Name", "Write"])
+@pytest.mark.parametrize("cell", ["0x0016", "`0x0016`", "0x00AF", "`0x00AF`"])
+def test_header_selector_exemption_is_limited_to_register_columns(
+    vocabulary: names.Vocabulary, header: str, cell: str
+) -> None:
+    table = f"| Path | {header} |\n| --- | --- |\n| Read | {cell} |"
+    found = names.header_column_names(table.splitlines())
+    assert found == [(3, names._strip_code_span(cell))]
+    with pytest.raises(names.NameError_):
+        names.decompose(found[0][1], vocabulary)
+
+
+def test_header_selector_exemption_preserves_names_in_the_same_row() -> None:
+    table = (
+        "| Path | Register | Name | Write |\n| --- | --- | --- | --- |\n"
+        "| Read | `0x0016` | `0x0016` | `0x0016` |"
+    )
+    assert names.header_column_names(table.splitlines()) == [(3, "0x0016"), (3, "0x0016")]
+
+
 @pytest.mark.parametrize(
     "cell",
     [

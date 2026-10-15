@@ -537,9 +537,9 @@ def _row_selector(cells: list[str]) -> tuple[str, str] | None:
     return None
 
 
-def _raw_name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None]]:
+def _raw_name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None, str]]:
     """Raw name cells of tables whose rows do not begin with a register."""
-    found: list[tuple[int, str, tuple[str, str] | None]] = []
+    found: list[tuple[int, str, tuple[str, str] | None, str]] = []
     header: list[str] | None = None
     for number, line in enumerate(lines, 1):
         if not line.startswith("|"):
@@ -556,11 +556,11 @@ def _raw_name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, 
         selector = _row_selector(cells)
         for cell, title in zip(cells, header):
             if title in NAME_COLUMN_HEADERS:
-                found.append((number, cell, selector))
+                found.append((number, cell, selector, title))
     return found
 
 
-def name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None]]:
+def _name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None, str]]:
     """Name cells of tables whose rows do not begin with a register.
 
     Strip one trailing parenthesised note, then classify a cell as canonical
@@ -573,12 +573,16 @@ def name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] 
     prose that does not normalize to that name remains exempt.
     """
     found = []
-    for number, cell, selector in _raw_name_column_cells(lines):
+    for number, cell, selector, title in _raw_name_column_cells(lines):
         remainder = TRAILING_NOTE.sub("", cell)
         token = _strip_code_span(remainder)
         if "`" in remainder or (token and not any(ch.isspace() for ch in token)):
-            found.append((number, token, selector))
+            found.append((number, token, selector, title))
     return found
+
+
+def name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None]]:
+    return [(number, token, selector) for number, token, selector, _ in _name_column_cells(lines)]
 
 
 def mangled_canonical_names(
@@ -588,7 +592,7 @@ def mangled_canonical_names(
     catalog = {(row["group"], row["register"]): row["name"] for row in catalog_rows if row["name"]}
     canonical = set(name_column_cells(lines))
     found = []
-    for number, cell, selector in _raw_name_column_cells(lines):
+    for number, cell, selector, _ in _raw_name_column_cells(lines):
         token = _strip_code_span(TRAILING_NOTE.sub("", cell))
         if selector not in catalog or (number, token, selector) in canonical:
             continue
@@ -602,8 +606,8 @@ def mangled_canonical_names(
 def header_column_names(lines: list[str]) -> list[tuple[int, str]]:
     return [
         (number, token)
-        for number, token, _ in name_column_cells(lines)
-        if not re.fullmatch(r"0x[0-9A-F]{4}", token)
+        for number, token, _, title in _name_column_cells(lines)
+        if title != "Register" or not re.fullmatch(r"0x[0-9A-F]{4}", token)
     ]
 
 
