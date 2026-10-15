@@ -1072,6 +1072,15 @@ type ConfigMutationResult {
 
 ### System Config Write Bounds
 
+This contract is implemented by the gateway's GraphQL system-bounds resolver
+(`graphql/system_bounds.go`), the `setSystemConfig` mutation path
+(`graphql/mutations.go`), and the MCP tool `ebus.v1.semantic.system.set_config`
+handler in companion gateway [pull request #1033](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1033),
+which is merged after this page per the documentation gate; this page describes
+the behaviour of that change, the reviewed source artifact.
+The contract test [`tests/test_system_config_bound_contract.py`](../tests/test_system_config_bound_contract.py)
+in this repository pins the documented members and examples.
+
 The `setSystemConfig(field, value)` mutation, the MCP tool
 `ebus.v1.semantic.system.set_config`, and the registry/invoker mutation path
 share one validation rule for the `dhwBivalencePointC` field (register

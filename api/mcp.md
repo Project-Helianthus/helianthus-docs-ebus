@@ -425,6 +425,15 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
 
 ## System Bound Payload Contract
 
+This contract is implemented by the gateway's GraphQL system-bounds resolver
+(`graphql/system_bounds.go`), the `setSystemConfig` mutation path
+(`graphql/mutations.go`), and the MCP tool `ebus.v1.semantic.system.set_config`
+handler in companion gateway [pull request #1033](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1033),
+which is merged after this page per the documentation gate; this page describes
+the behaviour of that change, the reviewed source artifact.
+The contract test [`tests/test_system_config_bound_contract.py`](../tests/test_system_config_bound_contract.py)
+in this repository pins the documented members and examples.
+
 `ebus.v1.semantic.system.get` publishes `config.dhw_bivalence_point_bound`.
 Its `source` is `controller_profile` with `profile`, or `unmatched_policy`
 with `reason`. The reason values are `unknown_profile`, `unknown_register`,
