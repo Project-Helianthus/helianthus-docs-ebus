@@ -513,6 +513,7 @@ type SystemConfig {
 type SystemConfigBound {
   minC: Float!
   maxC: Float!
+  narrowedOnly: Boolean!
   source: String!   # "controller_profile" | "unmatched_policy"
   reason: String    # set only for "unmatched_policy"
   profile: String   # set only for "controller_profile"
@@ -1079,7 +1080,7 @@ controller.
 
 - **Profile bound.** The range comes from the controller-profile lookup of the
   register library, keyed by the complete selector (opcode, group, instance
-  byte, register) under one controller identity. A profile applies only when
+  byte, register) under one controller identity. A profile matches only when
   the whole identity matches exactly: device identifier, raw software value,
   raw hardware value, API version and API revision. The API version and
   revision correspond to the OP=00h system-information identifiers
@@ -1097,7 +1098,18 @@ controller.
   API `1.1`, range `-20..20`
   ([profile page][basv0-profile]).
   Only the retained description bytes are **Proven**; the decoded `-20..20`
-  range rests on the EXP decoding and is a **Hypothesis**. The register map's
+  range rests on the EXP decoding and is a **Hypothesis**. A matching
+  identity identifies an observation context, not the target installation.
+  Its bound remains a **Hypothesis** for that installation and may narrow
+  but never widen the conservative policy window `-20..20`. The effective
+  bound is the intersection: `min = max(profile min, -20)` and
+  `max = min(profile max, 20)`. An empty intersection falls back to
+  `unmatched_policy` with reason `invalid_bound`. A nonempty intersection
+  retains `source: controller_profile` and the matched profile identity.
+  Widening beyond the window requires installation-qualified evidence, such
+  as a description of the target installation's own selector (future work);
+  no seeded profile provides it. The only seeded bound coincides with the
+  window, so numeric behaviour is unchanged. The register map's
   `-20..50` is an unqualified historical observation that names no controller
   identity, so it is not used. Today even the seeded BASV0 identity resolves
   to `unknown_profile`: every bound is the conservative `-20..20` with
@@ -1136,10 +1148,14 @@ be stale. `source` is `controller_profile`
 (with `profile` naming the matched identity as
 `<EID>/SW<sw>/HW<hw>/API<v>.<r>`) or `unmatched_policy`
 (with `reason` one of `unknown_profile`, `unknown_register`,
-`unqualified_bound`, `invalid_bound`). The MCP tool
+`unqualified_bound`, `invalid_bound`). `narrowedOnly: Boolean!` is true for
+every profile-sourced bound and false for `unmatched_policy`; it describes
+the restriction even when the numeric bound equals the policy window. The
+MCP tool
 `ebus.v1.semantic.system.get` returns the same value as
-`config.dhw_bivalence_point_bound` with `min_c`, `max_c`, `source`, `reason`
-and `profile`. Before the first resolution, GraphQL returns `null` for
+`config.dhw_bivalence_point_bound` with `min_c`, `max_c`, `source`, `reason`,
+`profile` and boolean `narrowed_only` (the same value as `narrowedOnly`).
+Before the first resolution, GraphQL returns `null` for
 `dhwBivalencePointBound` and MCP omits `config.dhw_bivalence_point_bound`
 entirely. Empty optional `reason` and `profile` strings are `null` in GraphQL
 and omitted in MCP.

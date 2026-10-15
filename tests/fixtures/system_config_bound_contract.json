@@ -3,6 +3,7 @@
   "graphql_fields": {
     "minC": "Float!",
     "maxC": "Float!",
+    "narrowedOnly": "Boolean!",
     "source": "String!",
     "reason": "String",
     "profile": "String"
@@ -12,15 +13,18 @@
     "unknown_profile", "unknown_register", "unqualified_bound", "invalid_bound"
   ],
   "mcp_member": "config.dhw_bivalence_point_bound",
-  "mcp_fields": ["min_c", "max_c", "source", "reason", "profile"],
+  "mcp_fields": [
+    "min_c", "max_c", "source", "reason", "profile", "narrowed_only"
+  ],
+  "mcp_field_types": {"narrowed_only": "boolean"},
   "mcp_examples": [
     {"config": {"dhw_bivalence_point_bound": {
       "min_c": -20, "max_c": 20, "source": "controller_profile",
-      "profile": "BASV0/SW0217/HW8803/API1.1"
+      "profile": "BASV0/SW0217/HW8803/API1.1", "narrowed_only": true
     }}},
     {"config": {"dhw_bivalence_point_bound": {
       "min_c": -20, "max_c": 20, "source": "unmatched_policy",
-      "reason": "unknown_profile"
+      "reason": "unknown_profile", "narrowed_only": false
     }}}
   ]
 }

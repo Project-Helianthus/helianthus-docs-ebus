@@ -1,8 +1,6 @@
 """Pin the documented bound contract without a sibling checkout dependency.
 
-The fixture's MCP data fragments match config bound objects in the gateway's
-mcp/testdata/semantic_system_dhw_bivalence_bound.golden.json at 1883d3d3.
-The mutation signature and result fields match graphql/mutations.go there.
+The fixture pins the documented GraphQL and MCP bound members and examples.
 """
 
 import json
@@ -63,7 +61,10 @@ def validate(graphql, mcp):
         CONTRACT["mcp_fields"]
     )
     for obj in objects:
-        assert {"min_c", "max_c", "source"} <= obj.keys()
+        assert {"min_c", "max_c", "source", "narrowed_only"} <= obj.keys()
+        assert CONTRACT["mcp_field_types"] == {"narrowed_only": "boolean"}
+        assert type(obj["narrowed_only"]) is bool
+        assert obj["narrowed_only"] == (obj["source"] == "controller_profile")
         assert ("profile" in obj) == (obj["source"] == "controller_profile")
         assert ("reason" in obj) == (obj["source"] == "unmatched_policy")
     normalized_bound = " ".join(bound.split())
@@ -98,7 +99,8 @@ def test_documented_bound_contract():
 
 
 @pytest.mark.parametrize("old", (
-    "minC", "maxC", "SystemConfigBound", "setSystemConfig",
+    "minC", "maxC", "narrowedOnly", "Boolean!", "SystemConfigBound",
+    "setSystemConfig",
     "unknown_register", "unqualified_bound", "invalid_bound",
     "GraphQL returns `null`", "(with `reason` one of",
 ))
@@ -109,8 +111,8 @@ def test_rejects_graphql_contract_drift(old):
 
 
 @pytest.mark.parametrize("old", (
-    "dhw_bivalence_point_bound", "min_c", "max_c", "source", "reason",
-    "profile", "controller_profile", "unmatched_policy", "unknown_register",
+    "dhw_bivalence_point_bound", "narrowed_only", "min_c", "max_c",
+    "source", "reason", "profile", "controller_profile", "unmatched_policy", "unknown_register",
     "unqualified_bound", "invalid_bound", "MCP omits", "isError: true",
     "ebus.v1.semantic.system.set_config",
 ))
@@ -118,3 +120,12 @@ def test_rejects_mcp_contract_drift(old):
     graphql, mcp = pages()
     with pytest.raises((AssertionError, IndexError)):
         validate(graphql, mcp.replace(old, "renamed"))
+
+
+@pytest.mark.parametrize("replacement", (0, 1, "true", None))
+def test_rejects_mcp_boolean_type_drift(replacement):
+    graphql, mcp = pages()
+    mcp = mcp.replace('"narrowed_only": true',
+                      '"narrowed_only": ' + json.dumps(replacement))
+    with pytest.raises(AssertionError):
+        validate(graphql, mcp)

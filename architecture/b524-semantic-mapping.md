@@ -33,7 +33,7 @@ Source: `refreshSystem()` in `semantic_vaillant.go`
 | `config.alternative_point` | GG=0x00, RR=0x0022 | f32 |
 | `config.heating_circuit_bivalence_point` | GG=0x00, RR=0x0023 | f32 |
 | `config.dhw_bivalence_point` | GG=0x00, RR=0x0001 | f32 |
-| `config.dhw_bivalence_point_bound` | derived (controller-profile lookup; no register) | object: `min_c`, `max_c`, `source`, `reason`, `profile` |
+| `config.dhw_bivalence_point_bound` | derived (controller-profile lookup; no register) | object: `min_c`, `max_c`, `source`, `reason`, `profile`, boolean `narrowed_only` |
 | `config.hc_emergency_temperature` | GG=0x00, RR=0x0026 | f32 |
 | `config.hwc_max_flow_temp_desired` | GG=0x00, RR=0x0046 | f32 |
 | `config.max_room_humidity` | GG=0x00, RR=0x000E | u16 |
@@ -52,7 +52,19 @@ two identifiers. Today even the seeded BASV0 identity resolves to
 `source: unmatched_policy`. The `controller_profile` source can appear only
 after gateway issue
 [#1034][gateway-bound-discovery]
-acquires both identifiers in discovery.
+acquires both identifiers in discovery. A match identifies an observation
+context, not the target installation: the profile bound remains a
+**Hypothesis** there. It may narrow but never widen the conservative window
+`-20..20`, using `min = max(profile min, -20)` and
+`max = min(profile max, 20)`. An empty intersection falls back to
+`unmatched_policy` with reason `invalid_bound`; otherwise the source remains
+`controller_profile` with the matched profile identity. The required boolean
+`narrowed_only` (GraphQL `narrowedOnly: Boolean!`) is true for every
+profile-sourced bound and false for `unmatched_policy`, including when the
+profile equals the window. Widening requires installation-qualified evidence
+(for example, a description of the target installation's own selector,
+future work); no seeded profile provides it. The sole seeded BASV0 bound
+equals the window, so numeric behaviour is unchanged.
 
 Resolution uses current registry metadata at validation and at publication;
 published bounds update on the next system publication. A controller swap at
