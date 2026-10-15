@@ -279,17 +279,23 @@ II context stays separate rather than merging instances or inventing them.
 
 When either source CSV changes, recompute rather than carrying forward a count.
 Run this read-only check from the repository root to compare selector/name
-coverage, unresolved evidence text, candidate family/instance context and published
-inventory totals (selected, total, retained terms, placeholders and each group).
+coverage, gap classifications, unresolved evidence text, candidate family/instance
+context and published inventory totals (selected, total, retained terms,
+placeholders and each group).
 It normalizes whitespace and inline-code markup, and applies only the
 documented module-family generalization to the source evidence text. The
-correspondence tests separately protect the
+reviewed question-to-gap mappings in
+[b524-provisional-name-gap-classifications.json](b524-provisional-name-gap-classifications.json)
+are maintenance expectations, not native evidence. Review these mappings when
+an unresolved question changes; unknown questions fail the check until reviewed.
+The correspondence tests separately protect the
 annotation/name boundary. Parent issue additions/removals still need the full
 parent list, not a comparison of headline counts.
 
 ```python
 import collections
 import csv
+import json
 import pathlib
 import re
 
@@ -307,6 +313,18 @@ def context(text):
     return tuple(sorted(normalized(part) for part in text.split(";")))
 
 
+def gaps(text):
+    return tuple(sorted(normalized(part) for part in text.split(",")))
+
+
+classification_file = root / "development/b524-provisional-name-gap-classifications.json"
+classifications = {}
+for gap, questions in json.loads(classification_file.read_text(encoding="utf-8")).items():
+    for question in questions:
+        question = normalized(question)
+        assert question not in classifications, "duplicate classified question"
+        classifications[question] = gaps(gap)
+
 instances = collections.defaultdict(set)
 matrix = root / "protocols/vaillant/fixtures/b524-op02-requester-register-matrix.csv"
 with matrix.open(encoding="utf-8") as handle:
@@ -320,7 +338,9 @@ for row in rows:
         "(the VR71 module)", "(functional-module family)"
     )
     ii = tuple(sorted(instances[key])) or ("Unknown",)
-    expected.append((*key, row["name"], ii, normalized(evidence)))
+    evidence = normalized(evidence)
+    assert evidence in classifications, "unreviewed gap classification for question"
+    expected.append((*key, row["name"], ii, classifications[evidence], evidence))
 index = root / "development/b524-provisional-name-evidence.md"
 text = index.read_text(encoding="utf-8")
 summary = text.split("## Scope and computed inventory\n", 1)[1].split("\n## ", 1)[0]
@@ -344,12 +364,12 @@ for line in text.splitlines():
     if heading:
         opcode, group = heading.groups()
     row = re.fullmatch(
-        r"\| (0x[0-9A-F]+) \| `([^`]+)` \| ([^|]+) \| [^|]+ \| ([^|]+) \|",
+        r"\| (0x[0-9A-F]+) \| `([^`]+)` \| ([^|]+) \| ([^|]*) \| ([^|]+) \|",
         line,
     )
     if row:
-        register, name, ii, evidence = row.groups()
-        actual.append((opcode, group, register, name, context(ii), normalized(evidence)))
+        register, name, ii, gap, evidence = row.groups()
+        actual.append((opcode, group, register, name, context(ii), gaps(gap), normalized(evidence)))
 keys = [row[:3] for row in actual]
 assert len(keys) == len(set(keys)), "duplicate selector row"
 assert collections.Counter(actual) == collections.Counter(expected)

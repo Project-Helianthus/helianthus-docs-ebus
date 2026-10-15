@@ -8,6 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = Path("development/b524-provisional-name-evidence.md")
+CLASSIFICATIONS = Path("development/b524-provisional-name-gap-classifications.json")
 FIXTURES = Path("protocols/vaillant/fixtures")
 CANONICAL = FIXTURES / "b524-op02-register-names.csv"
 MATRIX = FIXTURES / "b524-op02-requester-register-matrix.csv"
@@ -15,7 +16,7 @@ MATRIX = FIXTURES / "b524-op02-requester-register-matrix.csv"
 
 @pytest.fixture
 def checkout(tmp_path, monkeypatch):
-    for relative in (INDEX, CANONICAL, MATRIX):
+    for relative in (INDEX, CLASSIFICATIONS, CANONICAL, MATRIX):
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)
@@ -84,6 +85,45 @@ def test_b524_provisional_name_evidence_rejects_index_drift(checkout, before, af
 @pytest.mark.parametrize(
     ("before", "after"),
     [
+        ("| P |", "| M |"),
+        ("| M, P, V |", "| M, V |"),
+        ("| M, V, W |", "| M, V |"),
+        ("| P |", "| P, X |"),
+        ("| P |", "|  |"),
+    ],
+)
+def test_b524_provisional_name_evidence_rejects_gap_drift(checkout, before, after):
+    text = INDEX.read_text(encoding="utf-8")
+    assert before in text
+    INDEX.write_text(text.replace(before, after, 1), encoding="utf-8")
+    with pytest.raises(AssertionError):
+        run_check()
+
+
+@pytest.mark.parametrize(
+    "question",
+    ["Value class and encoding are not established.", "Meaning is not established."],
+)
+def test_b524_provisional_name_evidence_rejects_stale_gap(checkout, question):
+    change_cell(CANONICAL, "open_question", question)
+    text = INDEX.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+    for i, line in enumerate(lines):
+        if line.startswith("| 0x0007 | `unknown_11` |"):
+            cells = line.split("|")
+            cells[-2] = f" {question} "
+            lines[i] = "|".join(cells)
+            break
+    else:
+        pytest.fail("target row missing")
+    INDEX.write_text("".join(lines), encoding="utf-8")
+    with pytest.raises(AssertionError):
+        run_check()
+
+
+@pytest.mark.parametrize(
+    ("before", "after"),
+    [
         ("142 of 368", "143 of 368"),
         ("142 of 368", "142 of 369"),
         ("131 retain documented terms", "132 retain documented terms"),
@@ -105,6 +145,7 @@ def test_b524_provisional_name_evidence_rejects_summary_drift(checkout, before, 
 def test_b524_provisional_name_evidence_allows_presentation_changes(checkout):
     text = INDEX.read_text(encoding="utf-8")
     text = text.replace("`0=off 1=on`", "0=off   1=on", 1)
+    text = text.replace("| M, P, V |", "| `V`,  M, P |", 1)
     text = text.replace("VRC700 family: 00; VRC720 family: 00", "VRC720 family: 00; VRC700 family: 00", 1)
     INDEX.write_text(text, encoding="utf-8")
     run_check()
