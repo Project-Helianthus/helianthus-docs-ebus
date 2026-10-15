@@ -795,3 +795,21 @@ def test_every_catalog_record_needs_an_observation_row_including_unavailable_one
     with pytest.raises(validator.ValidationError, match="has no register-observation record"):
         validator.validate_documents(document, rows, CATALOG, scopes())
     validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
+
+
+def test_reversed_temporal_ranges_are_rejected() -> None:
+    document = descriptions()
+    _, record = find(document, "02", "00", "00", "002C")
+    assert document["records"][27] is record and record["decoded"]["codec"] == "HDA:3"
+    set_spans(record, "1F0C63", "010101", "010000")
+    record["decoded"].update(min="2099-12-31", max="2001-01-01")
+    rejects("records[27].decoded HDA:3 min 2099-12-31 is later than max 2001-01-01", document)
+
+    document = descriptions()
+    index, record = find(document, "02", "00", "00", "0035")
+    assert record["decoded"]["codec"] == "HTI"
+    set_spans(record, "173B3B", "000000", "010000")
+    record["decoded"].update(min="23:59:59", max="00:00:00")
+    rejects(f"records[{index}].decoded HTI min 23:59:59 is later than max 00:00:00", document)
+
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())

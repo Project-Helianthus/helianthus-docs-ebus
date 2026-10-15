@@ -292,6 +292,11 @@ def _validate_record(record: Any, index: int) -> None:
             if codec in CLOCK_CODECS:
                 for field in ("min", "max"):
                     _validate_clock_value(codec, limits[f"{field}_hex"], field, context)
+                low, high = (bytes.fromhex(limits[f"{field}_hex"]) for field in ("min", "max"))
+                # Most significant component first: date = year, month, day; time = hour, minute, second.
+                key = (lambda v: (v[0], v[1], v[2])) if codec == "HTI" else (lambda v: (v[2], v[1], v[0]))
+                _require(key(low) <= key(high),
+                         f"{context}.decoded {codec} min {decoded.get('min')} is later than max {decoded.get('max')}")
                 _require(decoded.get("step") is None, f"{context}.decoded.step must remain unknown")
             if codec in NUMERIC_CODECS:
                 minimum, maximum, step = (decoded.get(field) for field in ("min", "max", "step"))
