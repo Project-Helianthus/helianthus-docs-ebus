@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import csv
 import re
+import string
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -562,17 +563,8 @@ def _row_selector(cells: list[str]) -> tuple[str, str] | None:
     return None
 
 
-def name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None]]:
-    """Name cells of tables whose rows do not begin with a register.
-
-    Strip one trailing parenthesised note, then classify a cell as canonical
-    when it contains a code span or is a single whitespace-free token. Strip
-    exactly one outer code span and preserve the raw remainder for validation
-    and comparison with the catalog name of the row's selector. Unquoted cells
-    with inner whitespace are prose; register-leading rows are read by the
-    register-row matchers instead. An unquoted multi-word mangled name is
-    indistinguishable from a prose description and is not caught.
-    """
+def _raw_name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None]]:
+    """Raw name cells of tables whose rows do not begin with a register."""
     found: list[tuple[int, str, tuple[str, str] | None]] = []
     header: list[str] | None = None
     for number, line in enumerate(lines, 1):
@@ -590,10 +582,46 @@ def name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] 
         selector = _row_selector(cells)
         for cell, title in zip(cells, header):
             if title in NAME_COLUMN_HEADERS:
-                remainder = TRAILING_NOTE.sub("", cell)
-                token = _strip_code_span(remainder)
-                if "`" in remainder or (token and not any(ch.isspace() for ch in token)):
-                    found.append((number, token, selector))
+                found.append((number, cell, selector))
+    return found
+
+
+def name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None]]:
+    """Name cells of tables whose rows do not begin with a register.
+
+    Strip one trailing parenthesised note, then classify a cell as canonical
+    when it contains a code span or is a single whitespace-free token. Strip
+    exactly one outer code span and preserve the raw remainder for validation
+    and comparison with the catalog name of the row's selector. Unquoted cells
+    with inner whitespace are prose; register-leading rows are read by the
+    register-row matchers instead. For catalog-named selectors, the additional
+    mangled-name check catches prose that normalizes to the catalog name; only
+    prose that does not normalize to that name remains exempt.
+    """
+    found = []
+    for number, cell, selector in _raw_name_column_cells(lines):
+        remainder = TRAILING_NOTE.sub("", cell)
+        token = _strip_code_span(remainder)
+        if "`" in remainder or (token and not any(ch.isspace() for ch in token)):
+            found.append((number, token, selector))
+    return found
+
+
+def mangled_canonical_names(
+    lines: list[str], catalog_rows: list[dict[str, str]]
+) -> list[tuple[int, str, str]]:
+    """Skipped prose cells whose normalized form is their selector's name."""
+    catalog = {(row["group"], row["register"]): row["name"] for row in catalog_rows if row["name"]}
+    canonical = set(name_column_cells(lines))
+    found = []
+    for number, cell, selector in _raw_name_column_cells(lines):
+        token = _strip_code_span(TRAILING_NOTE.sub("", cell))
+        if selector not in catalog or (number, token, selector) in canonical:
+            continue
+        normalized = re.sub(r"[\s-]+", "_", token.lower()).strip(string.punctuation)
+        expected = catalog[selector]
+        if normalized == expected and token != expected:
+            found.append((number, token, expected))
     return found
 
 
@@ -722,14 +750,22 @@ def main() -> int:
         except NameError_ as error:
             failures.append(f"{where}: {error}")
     protocol_lines = PROTOCOL.read_text(encoding="utf-8").splitlines()
+    catalog_rows = _read_rows(FIXTURES / "b524-op02-register-names.csv")
     for number, token, expected in selector_name_mismatches(
-        protocol_lines, _read_rows(FIXTURES / "b524-op02-register-names.csv")
+        protocol_lines, catalog_rows
     ):
         selector = _row_selector([cell.strip() for cell in protocol_lines[number - 1].split("|")])
         group, register = selector
         failures.append(
             f"{PROTOCOL.relative_to(ROOT)}:{number}: selector GG={group}, RR={register}: "
             f"expected {expected!r}, found {token!r}"
+        )
+    for number, token, expected in mangled_canonical_names(protocol_lines, catalog_rows):
+        selector = _row_selector([cell.strip() for cell in protocol_lines[number - 1].split("|")])
+        group, register = selector
+        failures.append(
+            f"{PROTOCOL.relative_to(ROOT)}:{number}: selector GG={group}, RR={register}: "
+            f"mangled canonical name: expected {expected!r}, found {token!r}"
         )
     for failure in failures:
         print(failure, file=sys.stderr)

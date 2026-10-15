@@ -702,3 +702,73 @@ def test_real_page_prose_cells_are_skipped_even_with_catalog_selectors() -> None
         cells = [cell.strip() for cell in lines[number - 1].split("|")]
         assert names._row_selector(cells) in catalog
     assert prose_lines.isdisjoint(number for number, _, _ in names.name_column_cells(lines))
+    assert names.mangled_canonical_names(
+        lines, _rows(FIXTURES / "b524-op02-register-names.csv")
+    ) == []
+
+
+@pytest.mark.parametrize(
+    ("number", "cell", "expected", "selector"),
+    [
+        (158, "Ventilation operating mode (enum, see register map)",
+         "ventilation_operating_mode", ("0x00", "0x0016")),
+        (1196, "External energy management enabled (`RR=0x00B6`)",
+         "external_energy_management_enabled", ("0x00", "0x00B6")),
+        (158, "Ventilation-operating mode (enum, see register map)",
+         "ventilation_operating_mode", ("0x00", "0x0016")),
+        (158, "!Ventilation  operating--mode! (enum, see register map)",
+         "ventilation_operating_mode", ("0x00", "0x0016")),
+    ],
+)
+def test_unquoted_mangled_canonical_name_fails_the_gate(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+    number: int, cell: str, expected: str, selector: tuple[str, str]
+) -> None:
+    lines = names.PROTOCOL.read_text(encoding="utf-8").splitlines()
+    column = 3 if number == 158 else 1
+    cells = lines[number - 1].split("|")
+    cells[column] = f" {cell} "
+    lines[number - 1] = "|".join(cells)
+    catalog = _rows(FIXTURES / "b524-op02-register-names.csv")
+    token = names._strip_code_span(names.TRAILING_NOTE.sub("", cell))
+    # The original classification and selector checks still skip this prose.
+    assert number not in {n for n, _, _ in names.name_column_cells(lines)}
+    assert names.selector_name_mismatches(lines, catalog) == []
+    assert names.mangled_canonical_names(lines, catalog) == [(number, token, expected)]
+
+    original_read_text = Path.read_text
+
+    def read_text(path: Path, *args, **kwargs) -> str:
+        if path == names.PROTOCOL:
+            return "\n".join(lines)
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+    assert names.main() == 1
+    error = capsys.readouterr().err
+    assert error == (
+        f"{names.PROTOCOL.relative_to(names.ROOT)}:{number}: "
+        f"selector GG={selector[0]}, RR={selector[1]}: "
+        f"mangled canonical name: expected {expected!r}, found {token!r}\n"
+    )
+
+
+@pytest.mark.parametrize("selector", ["no selector", "GG=0xFE, RR=0xFFFF"])
+def test_normalized_prose_needs_a_catalog_named_selector(selector: str) -> None:
+    table = (
+        "| Path | Name |\n| --- | --- |\n"
+        f"| {selector} | Heating zone operating mode (note) |"
+    )
+    assert names.mangled_canonical_names(table.splitlines(), CATALOG) == []
+
+
+def test_already_canonical_cells_are_left_to_existing_selector_checks() -> None:
+    lines = names.PROTOCOL.read_text(encoding="utf-8").replace(
+        "`ventilation_operating_mode` (enum, see register map)",
+        "Ventilation-operating-mode (enum, see register map)", 1,
+    ).splitlines()
+    catalog = _rows(FIXTURES / "b524-op02-register-names.csv")
+    assert names.mangled_canonical_names(lines, catalog) == []
+    assert names.selector_name_mismatches(lines, catalog) == [
+        (158, "Ventilation-operating-mode", "ventilation_operating_mode")
+    ]
