@@ -374,6 +374,65 @@ GG   Opcode  InstanceMax  RegisterMax
 
 ---
 
+## Registry contract: B524 extended register access
+
+Contract of the registry method `get_ext_register` (B5/24, OP=0x02 and
+OP=0x06 requests) as changed by
+[helianthus-ebusreg#175](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/175).
+The historical short-probe catalog it consults is the
+[Constraint Catalog](../protocols/vaillant/ebus-vaillant-B524-register-map.md#constraint-catalog).
+
+- **Keying.** Catalog entries are keyed by `(opcode, group, register)`, where
+  `register` is the little-endian register number (`RRlo | RRhi<<8`), the same
+  value the request builder and the response decoder use. Earlier revisions
+  keyed on the byte-swapped value (register `0x0001` stored as `0x0100`) and
+  ignored the opcode, so a lookup at the real register number missed and a
+  lookup at the swapped number matched a different register.
+- **Opcode scope.** Constraint enrichment applies to OP=0x02 selectors only.
+  OP=0x06 requests do not inherit the local ranges; no evidence ties them to
+  the remote namespace.
+- **DHW bivalence bound.** `(OP=0x02, GG=0x00, RR=0x0001)` is not in the static
+  catalog, because its maximum differs per controller profile. BASV0 retains
+  a description record whose bytes are **Proven**; its EXP decoding to `20`
+  is a **Hypothesis** (codec basis, see the profile page). The historical
+  observation of `50` attributed to BASV2 (next to the BASV0 value) is a
+  **Hypothesis**: it is unqualified, no description record is retained, and the
+  API version and revision were not recorded. Unlike BASV0, no BASV2 profile
+  is seeded, so that identity yields `unknown_profile` and the gateway
+  applies its conservative policy. The bound comes from a lookup by exact
+  controller identity (controller identifier, software, hardware, API version,
+  revision) that returns one of `unknown_profile`, `unknown_register` or
+  `found`. Matching is exact on every one of those fields (controller
+  identifier alone never matches). Only `found` carries a bound; the other two
+  carry none and there is no default bound on an unknown result. The
+  profile lookup selector is opcode, group, instance and register; the
+  BASV0 record is `OP02/GG00/II00/RR0001`, and any other instance is
+  `unknown_register`.
+- **Output.** `get_ext_register` returns the decoded reply fields and, when
+  the static catalog has an entry for the resolved selector, the catalog
+  bound under `constraints` and the flat `constraint_*` keys together with
+  the qualification markers `constraint_qualified` and `constraint_scope`.
+  Since that change `constraint_record` and `constraint_record_hex` carry
+  the real little-endian register number (register `0x0004` reports
+  `0x0004`, not `0x0400`).
+- **Qualification marker.** The static catalog is not scoped to a controller
+  identity. Whenever `constraints` is emitted, the reply also carries
+  `constraint_qualified` (boolean) and `constraint_scope` (string). For
+  catalog entries they are always `false` and `"unscoped_catalog"`: the
+  bound is a historical observation from one controller family, not a
+  profile-scoped or universal bound, and not authority for validating
+  writes. Both keys are absent exactly when `constraints` is absent. The
+  keys are additive; existing keys are unchanged. Profile-scoped bounds come
+  from the controller-profile lookup, never from the catalog.
+
+**Migration note.** A consumer that matched `constraint_record` against swapped
+values (`0x0100`..`0x0600`, `0x8000`) must compare against the register
+number instead. A consumer that read the DHW bivalence range from the catalog
+or from `constraints` must use the profile lookup and treat `unknown_profile`
+and `unknown_register` as "no bound known", not as a default.
+
+---
+
 ## Sources & FLAGS Verification
 
 - **Historical VRC720 short-probe catalog** (`b524_constraints.go`) —

@@ -297,7 +297,7 @@ the instance domain remains unconfirmed. The notation
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | dhw_outdoor_bivalence_temperature_limit | C | f32 | °C | — | -20..50 step 1 | — | — | FLAGS=0x02 |
+| 0x0001 | dhw_outdoor_bivalence_temperature_limit | C | f32 | °C | — | profile-scoped: BASV0 -20..20 step 1 (retained description record; EXP decoding **Hypothesis**); BASV2 -20..50 step 1 (unqualified historical observation, **Hypothesis**) | — | — | FLAGS=0x02 (historical scan value, controller profile not recorded); BASV0 observes flags 03. See the DHW bivalence note in the [Constraint Catalog](#constraint-catalog) |
 | 0x0002 | continuous_heating_outdoor_temperature_limit | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | FLAGS=0x03. ebusd: `-26=off` disables function |
 | 0x0003 | frost_protection_delay_time | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | FLAGS=0x03 |
 | 0x0004 | preheating_time_maximum | C | u16 | min | — | 0..300 step 10 | — | — | FLAGS=0x03. † |
@@ -1104,15 +1104,26 @@ universal empty-slot or physical-liveness rule.
 
 Source: VRC720 hardware constraint probe (`0x01` opcode).
 
+**Record columns:** `Observed record word` is the value exactly as the
+historical short probes returned it (kept as raw evidence). `Register (RR)` is
+the little-endian register number of the same group (`RRlo | RRhi<<8`, the
+register order used on the wire everywhere else on this page). The observed
+word is the byte-swap of the register (register `0x0004` appears as
+`0x0400`); earlier revisions of this page showed the swapped word in a single
+`Record` column and read it as the register, which named a different register.
+That reading was an error in this page, not a wire difference. Every register
+in the second column is checked mechanically to be a register of the same group
+in the OP=0x02 catalog above, and every observed word to be its byte-swap.
+
 The historic short probes produced range-shaped samples, but the incomplete
 selector and length/codec ambiguity prevent them from authoritatively mapping a
 record to a register or from validating a value. Retain the rows as historical
 hints only; a complete OP01/OP07 response with a qualified scalar codec is
 required for validation.
 
-| Group | Record | → RR | Type | Min | Max | Step |
-|-------|--------|------|------|-----|-----|------|
-| 0x00 | 0x0100 | 0x0001 | f32 | -20 | 50 | 1 |
+| Group | Observed record word | Register (RR) | Type | Min | Max | Step |
+|-------|----------------------|---------------|------|-----|-----|------|
+| 0x00 | 0x0100 | 0x0001 | f32 | -20 | 50 (profile-scoped) | 1 |
 | 0x00 | 0x0200 | 0x0002 | f32 | -26 | 10 | 1 |
 | 0x00 | 0x0300 | 0x0003 | u16 | 0 | 12 | 1 |
 | 0x00 | 0x0400 | 0x0004 | u16 | 0 | 300 | 10 |
@@ -1161,8 +1172,9 @@ required for validation.
 | 0x0A | 0x0600 | 0x0006 | u8 | 0 | 1 | 1 |
 
 **Notes:**
-- TSP-style registers (`0x0100+`) are listed in the constraint catalog but are NOT accessible via standard B524 read operations — only standard registers (`0x0001-0x00FF`) work through B524 register reads.
-- GG=0x00 Record 0x8000 → RR=0x0080 is now confirmed responsive (FLAGS=0x03, f32=0.0, constraint: -10..10 step 1). Adjacent to `smart_photovoltaic_buffer_offset` (0x0081). Possibly PV-related offset config.
+- Earlier revisions read the observed record words (for example `0x0100`..`0x0600`) as TSP-style registers `0x0100+`; that reading is withdrawn. TSP registers (`0x0100+`) remain outside standard B524 register reads (only `0x0001-0x00FF` work through them).
+- **DHW bivalence row (GG=0x00, RR=0x0001), scoped per controller profile.** The `-20..50 step 1` range is a historical observation attributed to the BASV2 controller profile. It is a **Hypothesis** supported by corroborating implementation evidence: no description record is retained, and the API version and revision were not recorded, so the bound is unqualified. The BASV0 profile observes `-20..20 step 1` with access flags `03` for the same selector `(OP=0x02, GG=0x00, II=0x00, RR=0x0001)`, from a retained selector-qualified description record whose bytes are **Proven** and whose EXP decoding to this range is a **Hypothesis** (codec basis; see [issue #563](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/563) and the BASV0 profile page published by [#564](https://github.com/Project-Helianthus/helianthus-docs-ebus/pull/564)). Neither value is evidence for another software revision, hardware revision or installation configuration (**Unknown**). Consumers resolve bounds per controller profile (see the application contract), never from this unscoped table. The maximum shown in the table is the value of one profile only (the BASV2 observation above).
+- GG=0x00 observed record word 0x8000 → RR=0x0080 is now confirmed responsive (FLAGS=0x03, f32=0.0, constraint: -10..10 step 1). Adjacent to `smart_photovoltaic_buffer_offset` (0x0081). Possibly PV-related offset config.
 
 ---
 

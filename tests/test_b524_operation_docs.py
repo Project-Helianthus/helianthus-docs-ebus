@@ -872,3 +872,76 @@ def test_b524_split_fragment_links_resolve_to_the_owning_contract() -> None:
             for heading in headings
         }
         assert fragment in anchors
+
+
+def test_constraint_records_are_registers_of_the_same_group() -> None:
+    """Constraint `Record` values are little-endian register numbers (RR).
+
+    Earlier revisions printed the byte-swapped value (0x0100 for RR 0x0001).
+    Every record must be a register row of the same group in the OP=0x02
+    catalog, and the DHW bivalence bound must stay profile-scoped.
+    """
+    import re
+
+    text = REGISTER_MAP.read_text(encoding="utf-8")
+    op02 = text.split("## OP=0x02 — Local Parameter Registers", 1)[1].split(
+        "## OP=0x06 — Controller-Mediated Device Parameters", 1
+    )[0]
+    registers: dict[int, set[int]] = {}
+    group = None
+    for line in op02.splitlines():
+        header = re.match(r"### GG=0x([0-9A-F]{2})", line)
+        if header:
+            group = int(header[1], 16)
+        row = re.match(r"\| 0x([0-9A-F]{4}) \| ", line)
+        if row and group is not None:
+            registers.setdefault(group, set()).add(int(row[1], 16))
+
+    catalog = text.split("## Constraint Catalog", 1)[1].split("## Enum Reference", 1)[0]
+    assert (
+        "| Group | Observed record word | Register (RR) | Type | Min | Max | Step |"
+        in catalog
+    )
+    records = [
+        (int(m[1], 16), int(m[2], 16), int(m[3], 16))
+        for m in re.finditer(
+            r"^\| 0x([0-9A-F]{2}) \| 0x([0-9A-F]{4}) \| 0x([0-9A-F]{4}) \|",
+            catalog,
+            re.M,
+        )
+    ]
+    assert records
+    assert len(records) == len({(g, r) for g, _, r in records})
+    for group, word, record in records:
+        assert record in registers.get(group, set()), (group, record)
+        assert word == ((record & 0xFF) << 8) | (record >> 8), (group, word, record)
+    assert (0x00, 0x0100, 0x0001) in records
+    assert "| 0x00 | 0x0100 | 0x0001 | f32 | -20 | 50 (profile-scoped) | 1 |" in catalog
+    assert "never from this unscoped table" in catalog
+
+
+def test_registry_contract_note_states_keying_scope_and_profile_lookup() -> None:
+    text = SEMANTIC_MAPPING.read_text(encoding="utf-8")
+    note = text.split("## Registry contract: B524 extended register access", 1)[1]
+    note = " ".join(note.split("## Sources & FLAGS Verification", 1)[0].split())
+    for required in (
+        "`(opcode, group, register)`",
+        "little-endian register number",
+        "OP=0x02 selectors only",
+        "`unknown_profile`",
+        "`unknown_register`",
+        "`found`",
+        "`constraint_record`",
+        "**Migration note.**",
+        # Each sentence below excludes one regression.
+        "there is no default bound on an unknown result",
+        "Constraint enrichment applies to OP=0x02 selectors only.",
+        "OP=0x06 requests do not inherit the local ranges",
+        "Matching is exact on every one of those fields",
+        "controller identifier alone never matches",
+        "(controller identifier, software, hardware, API version, revision)",
+        "`constraint_record` and `constraint_record_hex` carry the real little-endian register number",
+        "(register `0x0004` reports `0x0004`, not `0x0400`)",
+        "that identity yields `unknown_profile` and the gateway applies its conservative policy",
+    ):
+        assert required in note, required
