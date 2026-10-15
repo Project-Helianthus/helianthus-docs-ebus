@@ -382,6 +382,19 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
   - `ebus.v1.semantic.energy_totals.get`
   - `ebus.v1.semantic.boiler_status.get`
   - `ebus.v1.semantic.system.get`
+  - `ebus.v1.semantic.system.set_config`
+    - Required arguments: `field` and `value`, both strings; `field` uses
+      camelCase names such as `dhwBivalencePointC`.
+    - Returns the standard `meta`, `data`, `error` envelope, with
+      `meta.contract`, `meta.consistency`, `meta.data_timestamp` and
+      `meta.data_hash`. The setter uses `LIVE` consistency.
+    - Success returns `data.success: true`, omits `data.error`, and leaves
+      top-level `error: null`. A bound rejection returns `data.success: false`
+      and `data.error` naming the active bound, with top-level `error: null`
+      and MCP `isError: true`, before any bus write. Error text includes
+      `controller profile <identity> allows [min, max]` or
+      `controller identity unmatched (<reason>): conservative policy bound
+      [min, max] applies`.
   - `ebus.v1.semantic.circuits.get`
   - `ebus.v1.semantic.radio_devices.get`
     - `data: []` means the startup radio inventory probe completed without
@@ -410,6 +423,69 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
   - `ebus.devices`
   - `ebus.invoke`
 
+## System Bound Payload Contract
+
+This contract is implemented by the gateway's GraphQL system-bounds resolver
+(`graphql/system_bounds.go`), the `setSystemConfig` mutation path
+(`graphql/mutations.go`), and the MCP tool `ebus.v1.semantic.system.set_config`
+handler in companion gateway [pull request #1033](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1033),
+which is merged after this page per the documentation gate; this page describes
+the behaviour of that change, the reviewed source artifact.
+The contract test [`tests/test_system_config_bound_contract.py`](../tests/test_system_config_bound_contract.py)
+in this repository pins the documented members and examples.
+
+`ebus.v1.semantic.system.get` publishes `config.dhw_bivalence_point_bound`.
+Its `source` is `controller_profile` with `profile`, or `unmatched_policy`
+with `reason`. The reason values are `unknown_profile`, `unknown_register`,
+`unqualified_bound` and `invalid_bound`. Empty optional `reason` and `profile`
+strings are omitted in MCP and `null` in GraphQL. The required boolean
+`narrowed_only` is true for every `controller_profile` bound and false for
+`unmatched_policy` (GraphQL: `narrowedOnly: Boolean!`). A profile identifies
+an observation context, not an installation. Its bound is a **Hypothesis**
+for the target installation and can only narrow the policy window `-20..20`:
+`min = max(profile min, -20)`, `max = min(profile max, 20)`. An empty
+intersection uses `unmatched_policy` with reason `invalid_bound`; otherwise
+the source and profile identity remain `controller_profile`.
+The empty-intersection fallback bound is the policy window `-20..20`.
+Widening needs installation-qualified evidence, which no seeded profile
+provides. The sole seeded bound equals the window, so numeric behaviour is
+unchanged.
+
+The following response `data` fragments pin the two resolved shapes. The
+profile fragment illustrates a matched observation context; current discovery
+still uses the unmatched policy as described below.
+
+```json
+{
+  "config": {
+    "dhw_bivalence_point_bound": {
+      "min_c": -20,
+      "max_c": 20,
+      "narrowed_only": true,
+      "source": "controller_profile",
+      "profile": "BASV0/SW0217/HW8803/API1.1"
+    }
+  }
+}
+```
+
+```json
+{
+  "config": {
+    "dhw_bivalence_point_bound": {
+      "min_c": -20,
+      "max_c": 20,
+      "narrowed_only": false,
+      "source": "unmatched_policy",
+      "reason": "unknown_profile"
+    }
+  }
+}
+```
+
+Before the first resolution, MCP omits `config.dhw_bivalence_point_bound`
+entirely. GraphQL returns `null` for `dhwBivalencePointBound`.
+
 ## Semantic Payload Notes
 
 ### Post-M9 Pending FM5 Contract
@@ -435,7 +511,34 @@ shape and is not a substitute for the degradation verdict.
 - `ebus.v1.semantic.circuits.get` exposes explicit per-circuit ownership as `managing_device`.
 - `managing_device.role` is always present and is one of `REGULATOR`, `FUNCTION_MODULE`, or `UNKNOWN`.
 - `managing_device.device_id` and `managing_device.address` are populated only when the gateway has ownership evidence for the current topology.
+- `ebus.v1.semantic.system.get` exposes `config.dhw_bivalence_point_bound`
+  (`min_c`, `max_c`, `source`, optional `reason` and `profile`): the range
+  `ebus.v1.semantic.system.set_config` accepts for `dhwBivalencePointC`.
+  A value outside it is rejected before any bus write. Before the first
+  resolution, MCP omits the bound entirely; GraphQL returns `null`.
+  Empty optional `reason` and `profile` strings are omitted in MCP and
+  `null` in GraphQL. Resolution uses only registry discovery/import metadata,
+  with no bus I/O or on-demand system-information identifier reads. Existing
+  polling does not acquire `0006h` `interface_version` or `0007h`
+  `interface_revision` (the registry identity's API version and revision).
+  Today even the seeded BASV0 identity resolves to `unknown_profile`, so every
+  bound is the conservative `-20..20` with `source: unmatched_policy`.
+  `controller_profile` can appear only after gateway issue
+  [#1034][gateway-bound-discovery]
+  acquires both identifiers in discovery. The bound is resolved from current
+  registry metadata at validation and at publication, and published bounds
+  update on the next system publication. A controller swap at the same
+  address retains the registry identity until that metadata changes, so the
+  identity can be stale. Registry/invoker writes through
+  `ebus.v1.rpc.invoke` have no API qualifier and always apply the unmatched
+  policy. Every numeric configuration write rejects `NaN` and positive or
+  negative infinity before encoding, with `success: false` and no bus request.
+  See [`graphql.md`](./graphql.md) "System Config Write Bounds" for the
+  profile and unmatched-policy rules.
 - `ebus.v1.semantic.system.get` no longer exposes `vr71_circuit_start_index`; that threshold was a gateway heuristic and is not part of the canonical contract.
+
+[gateway-bound-discovery]:
+  https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1034
 
 ## RPC Method Reference - Vaillant System Plane
 

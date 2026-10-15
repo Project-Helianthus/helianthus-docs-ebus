@@ -33,11 +33,53 @@ Source: `refreshSystem()` in `semantic_vaillant.go`
 | `config.alternative_point` | GG=0x00, RR=0x0022 | f32 |
 | `config.heating_circuit_bivalence_point` | GG=0x00, RR=0x0023 | f32 |
 | `config.dhw_bivalence_point` | GG=0x00, RR=0x0001 | f32 |
+| `config.dhw_bivalence_point_bound` | derived (controller-profile lookup; no register) | object: `min_c`, `max_c`, `source`, `reason`, `profile`, boolean `narrowed_only` |
 | `config.hc_emergency_temperature` | GG=0x00, RR=0x0026 | f32 |
 | `config.hwc_max_flow_temp_desired` | GG=0x00, RR=0x0046 | f32 |
 | `config.max_room_humidity` | GG=0x00, RR=0x000E | u16 |
 | `properties.system_scheme` | GG=0x00, RR=0x0036 | u16 |
 | `properties.module_configuration_vr71` | GG=0x00, RR=0x002F | u16 |
+
+`config.dhw_bivalence_point_bound` is the active write bound of
+`dhwBivalencePointC`, not a register value. It is resolved from the exact
+controller identity (device identifier, raw software, raw hardware, API
+version and revision) in registry discovery/import metadata. The API fields
+correspond to OP=00h `0006h` `interface_version` and `0007h`
+`interface_revision`. Bound resolution performs no bus I/O or on-demand
+system-information identifier reads; existing polling does not acquire those
+two identifiers. Today even the seeded BASV0 identity resolves to
+`unknown_profile`, so every bound is the conservative `-20..20` with
+`source: unmatched_policy`. The `controller_profile` source can appear only
+after gateway issue
+[#1034][gateway-bound-discovery]
+acquires both identifiers in discovery. A match identifies an observation
+context, not the target installation: the profile bound remains a
+**Hypothesis** there. It may narrow but never widen the conservative window
+`-20..20`, using `min = max(profile min, -20)` and
+`max = min(profile max, 20)`. An empty intersection falls back to
+`unmatched_policy` with reason `invalid_bound`; otherwise the source remains
+`controller_profile` with the matched profile identity. The required boolean
+`narrowed_only` (GraphQL `narrowedOnly: Boolean!`) is true for every
+profile-sourced bound and false for `unmatched_policy`, including when the
+profile equals the window. Widening requires installation-qualified evidence
+(for example, a description of the target installation's own selector,
+future work); no seeded profile provides it. The sole seeded BASV0 bound
+equals the window, so numeric behaviour is unchanged.
+
+Resolution uses current registry metadata at validation and at publication;
+published bounds update on the next system publication. A controller swap at
+the same address retains the registry identity until the metadata changes,
+so the identity can be stale. Before the first resolution, MCP omits the
+bound entirely and GraphQL returns `null`. Empty optional `reason` and
+`profile` strings are omitted in MCP and `null` in GraphQL. Registry/invoker
+writes through `ebus.v1.rpc.invoke` have no API qualifier and always apply the
+unmatched policy. Every numeric configuration write rejects `NaN` and
+positive or negative infinity before encoding, with `success: false` and no
+bus request. The rules are in [`../api/graphql.md`](../api/graphql.md) under
+"System Config Write Bounds".
+
+[gateway-bound-discovery]:
+  https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1034
 
 ## SemReg thermal v1 read-only Vaillant mapping
 

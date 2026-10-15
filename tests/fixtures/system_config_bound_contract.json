@@ -1,0 +1,69 @@
+{
+  "graphql_type": "SystemConfigBound",
+  "graphql_fields": {
+    "minC": "Float!",
+    "maxC": "Float!",
+    "narrowedOnly": "Boolean!",
+    "source": "String!",
+    "reason": "String",
+    "profile": "String"
+  },
+  "sources": ["controller_profile", "unmatched_policy"],
+  "reasons": [
+    "unknown_profile", "unknown_register", "unqualified_bound", "invalid_bound"
+  ],
+  "mcp_member": "config.dhw_bivalence_point_bound",
+  "mcp_fields": [
+    "min_c", "max_c", "source", "reason", "profile", "narrowed_only"
+  ],
+  "mcp_field_types": {"narrowed_only": "boolean"},
+  "mcp_examples": [
+    {"config": {"dhw_bivalence_point_bound": {
+      "min_c": -20, "max_c": 20, "source": "controller_profile",
+      "profile": "BASV0/SW0217/HW8803/API1.1", "narrowed_only": true
+    }}},
+    {"config": {"dhw_bivalence_point_bound": {
+      "min_c": -20, "max_c": 20, "source": "unmatched_policy",
+      "reason": "unknown_profile", "narrowed_only": false
+    }}}
+  ],
+  "policy_window": {"min_c": -20, "max_c": 20},
+  "intersection_cases": [
+    {
+      "profile_window": {"min_c": -20, "max_c": 20},
+      "expected": {"min_c": -20, "max_c": 20, "source": "controller_profile", "narrowed_only": true}
+    },
+    {
+      "profile_window": {"min_c": -30, "max_c": 30},
+      "expected": {"min_c": -20, "max_c": 20, "source": "controller_profile", "narrowed_only": true}
+    },
+    {
+      "profile_window": {"min_c": -10, "max_c": 10},
+      "expected": {"min_c": -10, "max_c": 10, "source": "controller_profile", "narrowed_only": true}
+    },
+    {
+      "profile_window": {"min_c": -30, "max_c": 5},
+      "expected": {"min_c": -20, "max_c": 5, "source": "controller_profile", "narrowed_only": true}
+    },
+    {
+      "profile_window": {"min_c": -5, "max_c": 30},
+      "expected": {"min_c": -5, "max_c": 20, "source": "controller_profile", "narrowed_only": true}
+    },
+    {
+      "profile_window": {"min_c": -30, "max_c": -20},
+      "expected": {"min_c": -20, "max_c": -20, "source": "controller_profile", "narrowed_only": true}
+    },
+    {
+      "profile_window": {"min_c": 20, "max_c": 30},
+      "expected": {"min_c": 20, "max_c": 20, "source": "controller_profile", "narrowed_only": true}
+    },
+    {
+      "profile_window": {"min_c": -30, "max_c": -21},
+      "expected": {"min_c": -20, "max_c": 20, "source": "unmatched_policy", "narrowed_only": false, "reason": "invalid_bound"}
+    },
+    {
+      "profile_window": {"min_c": 21, "max_c": 30},
+      "expected": {"min_c": -20, "max_c": 20, "source": "unmatched_policy", "narrowed_only": false, "reason": "invalid_bound"}
+    }
+  ]
+}
