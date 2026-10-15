@@ -116,7 +116,7 @@
               "if": { "properties": { "qualification": { "const": "observed_remote_header" } }, "required": ["qualification"] },
               "then": {
                 "required": ["group", "address_raw", "firmware_raw"],
-                "properties": { "firmware_raw": { "pattern": "^(?:[0-9A-F]{2})+$" } }
+                "properties": { "firmware_raw": { "pattern": "^[0-9A-F]{6}$" } }
               },
               "additionalProperties": false
             }

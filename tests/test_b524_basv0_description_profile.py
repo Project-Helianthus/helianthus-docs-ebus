@@ -813,3 +813,20 @@ def test_reversed_temporal_ranges_are_rejected() -> None:
     rejects(f"records[{index}].decoded HTI min 23:59:59 is later than max 00:00:00", document)
 
     validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
+
+
+@pytest.mark.parametrize("value,got", [("00", 1), ("06070000", 4)])
+def test_observed_remote_firmware_must_be_three_bytes(value: str, got: int, tmp_path: Path) -> None:
+    document = descriptions()
+    members = [i for i, r in enumerate(document["records"])
+               if r["remote_identity"] and r["remote_identity"]["qualification"] == "observed_remote_header"
+               and (r["selector"]["group"], r["selector"]["instance"]) == ("02", "01")]
+    assert len(members) > 1
+    for i in members:
+        document["records"][i]["remote_identity"]["firmware_raw"] = value
+    rejects(f"records[{members[0]}].remote_identity.firmware_raw must be 3 bytes (6 hex digits), not {got}", document)
+    path = tmp_path / "firmware-width.json"
+    path.write_text(json.dumps(document))
+    result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode != 0
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
