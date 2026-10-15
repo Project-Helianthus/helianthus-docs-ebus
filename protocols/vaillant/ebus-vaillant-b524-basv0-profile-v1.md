@@ -64,11 +64,21 @@ described instance of the selector `(OP, GG, RR)`: the raw limits and
 description length must be byte-identical for all instances that retain a
 description. An instance without a description is absent evidence and takes no
 part in the comparison. The validator rejects a qualified claim in an instance-
-divergent family, so a qualified range never depends on the instance byte. The
-retained fixture has no such family (all 340 are instance-invariant over their
-described instances). Divergent spans, if a later profile retains any, are raw
-evidence only. The validator also requires every catalog record, with or without
-description bytes, to have a register-observation record for its selector.
+divergent family. The retained fixture has no such family (all 340 are
+instance-invariant over their described instances). Divergent spans, if a later
+profile retains any, are raw evidence only. The validator also requires every
+catalog record, with or without description bytes, to have a
+register-observation record for its selector.
+
+Of the 40 selector families with qualified records, 21 retain only one
+described instance. Those 21 satisfy cross-instance invariance trivially
+(vacuously): there is no second described instance to compare. Neither a
+single-instance pass nor agreement across multiple retained instances recovers
+the omitted request bytes or proves the request-to-instance association.
+Selector qualification does not establish those missing bytes or prove the
+codec; its evidence basis remains separate, as described below. The comparison
+concerns retained description ranges within each `(OP, GG, RR)` family, not
+instance presence or behavior at unobserved instances.
 
 The fixture records the raw three spans even when no codec is qualified. A
 decoded record with `codec_provenance: selector_qualified` can be marked
@@ -152,8 +162,11 @@ record and never grants those records range validation.
   interpreted for the source installation: **Hypothesis** (derived,
   non-reproducible from the retained artifact). Native headers and response
   payloads were not retained, so falsifying this state requires a new
-  acquisition. Current values are omitted, so it cannot be re-derived from the
-  fixture and is **Hypothesis** for any other installation.
+  acquisition. Current values and request bytes are omitted, so the sanitized
+  fixtures cannot independently establish instance presence. This source-
+  installation interpretation follows the recorded instance; description-range
+  invariance does not qualify it. It cannot be re-derived from the fixture and
+  is **Hypothesis** for any other installation.
   `remote_identity.qualification: unqualified` holds exactly for
   `presence_state: remote_identity_unqualified`, and such a record never carries
   a qualified codec.
