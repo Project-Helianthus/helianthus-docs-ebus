@@ -277,9 +277,12 @@ II context stays separate rather than merging instances or inventing them.
 
 ## Maintenance check
 
-When the canonical CSV changes, recompute rather than carrying forward a count.
-Run this read-only check from the repository root to compare exact selector/name
-coverage and group totals; the correspondence tests separately protect the
+When either source CSV changes, recompute rather than carrying forward a count.
+Run this read-only check from the repository root to compare selector/name
+coverage, unresolved evidence text, candidate family/instance context and group
+totals. It normalizes whitespace and inline-code markup, and applies only the
+documented module-family generalization to the source evidence text. The
+correspondence tests separately protect the
 annotation/name boundary. Parent issue additions/removals still need the full
 parent list, not a comparison of headline counts.
 
@@ -293,7 +296,29 @@ root = pathlib.Path(".")
 fixture = root / "protocols/vaillant/fixtures/b524-op02-register-names.csv"
 with fixture.open(encoding="utf-8") as handle:
     rows = [r for r in csv.DictReader(handle) if r["open_question"].strip()]
-expected = [(r["opcode"], r["group"], r["register"], r["name"]) for r in rows]
+
+def normalized(text):
+    return " ".join(text.replace("`", "").split())
+
+
+def context(text):
+    return tuple(sorted(normalized(part) for part in text.split(";")))
+
+
+instances = collections.defaultdict(set)
+matrix = root / "protocols/vaillant/fixtures/b524-op02-requester-register-matrix.csv"
+with matrix.open(encoding="utf-8") as handle:
+    for row in csv.DictReader(handle):
+        key = (row["opcode"], row["group"], row["register"])
+        instances[key].add(normalized(f'{row["family"]}: {row["instance"]}'))
+expected = []
+for row in rows:
+    key = (row["opcode"], row["group"], row["register"])
+    evidence = row["open_question"].replace(
+        "(the VR71 module)", "(functional-module family)"
+    )
+    ii = tuple(sorted(instances[key])) or ("Unknown",)
+    expected.append((*key, row["name"], ii, normalized(evidence)))
 index = root / "development/b524-provisional-name-evidence.md"
 actual = []
 opcode = group = None
@@ -301,10 +326,15 @@ for line in index.read_text(encoding="utf-8").splitlines():
     heading = re.fullmatch(r"### OP=(0x[0-9A-F]+), GG=(0x[0-9A-F]+)", line)
     if heading:
         opcode, group = heading.groups()
-    row = re.match(r"\| (0x[0-9A-F]+) \| `([^`]+)` \|", line)
+    row = re.fullmatch(
+        r"\| (0x[0-9A-F]+) \| `([^`]+)` \| ([^|]+) \| [^|]+ \| ([^|]+) \|",
+        line,
+    )
     if row:
-        actual.append((opcode, group, *row.groups()))
-assert len(actual) == len(set(actual)), "duplicate selector/name row"
+        register, name, ii, evidence = row.groups()
+        actual.append((opcode, group, register, name, context(ii), normalized(evidence)))
+keys = [row[:3] for row in actual]
+assert len(keys) == len(set(keys)), "duplicate selector row"
 assert collections.Counter(actual) == collections.Counter(expected)
 print("Open rows:", len(rows))
 print("By opcode/group:", sorted(collections.Counter(k[:2] for k in expected).items()))

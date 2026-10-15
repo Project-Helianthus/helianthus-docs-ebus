@@ -1,0 +1,89 @@
+"""Exercise the published maintenance check against source-fixture drift."""
+
+import csv
+import shutil
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+INDEX = Path("development/b524-provisional-name-evidence.md")
+FIXTURES = Path("protocols/vaillant/fixtures")
+CANONICAL = FIXTURES / "b524-op02-register-names.csv"
+MATRIX = FIXTURES / "b524-op02-requester-register-matrix.csv"
+
+
+@pytest.fixture
+def checkout(tmp_path, monkeypatch):
+    for relative in (INDEX, CANONICAL, MATRIX):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / relative, target)
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
+
+
+def run_check():
+    snippet = INDEX.read_text(encoding="utf-8").split("```python\n", 1)[1].split("```", 1)[0]
+    exec(compile(snippet, str(INDEX), "exec"), {})
+
+
+def change_cell(path, field, value):
+    with path.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        columns = reader.fieldnames
+        rows = list(reader)
+    row = next(
+        row for row in rows
+        if (row["opcode"], row["group"], row["register"])
+        == ("0x02", "0x00", "0x0007")
+    )
+    row[field] = value
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def test_b524_provisional_name_evidence_current_sources(checkout, capsys):
+    run_check()
+    output = capsys.readouterr().out
+    assert "Open rows: 142" in output
+    assert "Missing: []" in output
+    assert "Extra: []" in output
+
+
+@pytest.mark.parametrize(
+    ("path", "field", "value"),
+    [
+        (CANONICAL, "open_question", "Meaning is not established."),
+        (MATRIX, "family", "Other family"),
+        (MATRIX, "instance", "dynamic"),
+    ],
+)
+def test_b524_provisional_name_evidence_rejects_source_drift(checkout, path, field, value):
+    change_cell(path, field, value)
+    with pytest.raises(AssertionError):
+        run_check()
+
+
+@pytest.mark.parametrize(
+    ("before", "after"),
+    [
+        ("VRC700 family: 00; VRC720 family: 00", "Unknown"),
+        ("Polarity unresolved, so no Boolean name is given:", "Meaning is not established:"),
+        ("(functional-module family)", "(different family)"),
+    ],
+)
+def test_b524_provisional_name_evidence_rejects_index_drift(checkout, before, after):
+    INDEX.write_text(INDEX.read_text(encoding="utf-8").replace(before, after, 1), encoding="utf-8")
+    with pytest.raises(AssertionError):
+        run_check()
+
+
+def test_b524_provisional_name_evidence_allows_presentation_changes(checkout):
+    text = INDEX.read_text(encoding="utf-8")
+    text = text.replace("`0=off 1=on`", "0=off   1=on", 1)
+    text = text.replace("VRC700 family: 00; VRC720 family: 00", "VRC720 family: 00; VRC700 family: 00", 1)
+    INDEX.write_text(text, encoding="utf-8")
+    run_check()
