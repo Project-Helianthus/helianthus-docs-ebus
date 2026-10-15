@@ -615,7 +615,7 @@ def test_header_register_selectors_are_not_names(cell: str) -> None:
     "cell",
     [
         "InvalidName", "`InvalidName`", "``0x0016``", "`0x0016", "0x0016`",
-        "0x00af", "0X0016", "0x016", "0x00160",
+        "0x00af", "0X0016", "0x016", "0x0016" + "0",  # valid selector plus an extra digit
     ],
 )
 def test_header_selector_exclusion_preserves_invalid_names(
