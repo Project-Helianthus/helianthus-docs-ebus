@@ -510,32 +510,6 @@ def _section(text: str, start: str, end: str) -> list[tuple[int, str]]:
     return list(enumerate(lines[begin:finish], begin + 1))
 
 
-def canonical_template_labels(
-    templates: list[dict[str, str]], catalog_rows: list[dict[str, str]]
-) -> list[tuple[int, str]]:
-    """Write-template labels that are canonical register names, with row numbers.
-
-    The other labels describe a write in words. A row is canonical when the
-    catalog of its selector says so, never by comparing the label with the old
-    label: the label is the catalog name of the selector, or the row's
-    `previous_name` is the `previous_name` of the catalog row of the selector
-    (the label is then a canonical name that has drifted from the catalog). The
-    raw label of a canonical row is validated.
-    """
-    catalog = {(row["group"], row["register"]): row for row in catalog_rows}
-    labels = []
-    for number, row in enumerate(templates, 2):
-        entry = catalog.get((row["group"], row["register"]))
-        if entry is None:
-            continue
-        label = row["write"]
-        if label == entry["name"] or (
-            entry["previous_name"] and row["previous_name"] == entry["previous_name"]
-        ):
-            labels.append((number, label))
-    return labels
-
-
 # Columns of the protocol page's tables that carry a register name when the row
 # does not begin with a register: located by the header cell of the table.
 NAME_COLUMN_HEADERS = {"Register", "Write", "Name"}
@@ -647,28 +621,24 @@ def selector_name_mismatches(
 
 
 def canonical_template_labels(
-    templates: list[dict[str, str]], catalog_rows: list[dict[str, str]]
+    templates: list[dict[str, str]],
 ) -> list[tuple[int, str]]:
-    """Write-template labels that are canonical register names, with row numbers.
+    """Return raw canonical labels using the explicit canonical/prose row role.
 
-    The other labels describe a write in words. A row is canonical when the
-    catalog of its selector says so, never by comparing the label with the old
-    label: the label is the catalog name of the selector, or the row's
-    `previous_name` is the `previous_name` of the catalog row of the selector
-    (the label is then a canonical name that has drifted from the catalog). The
-    raw label of a canonical row is validated.
+    The role is independent of the editable label, provenance and selector.
+    Missing or invalid roles fail closed rather than silently omitting a row.
+    This designation concerns naming only, not native write qualification.
     """
-    catalog = {(row["group"], row["register"]): row for row in catalog_rows}
     labels = []
     for number, row in enumerate(templates, 2):
-        entry = catalog.get((row["group"], row["register"]))
-        if entry is None:
-            continue
-        label = row["write"]
-        if label == entry["name"] or (
-            entry["previous_name"] and row["previous_name"] == entry["previous_name"]
-        ):
-            labels.append((number, label))
+        role = row.get("write_role")
+        if role not in {"canonical", "prose"}:
+            raise ValueError(
+                f"b524-op02-write-templates.csv:{number}: "
+                f"write_role must be 'canonical' or 'prose', found {role!r}"
+            )
+        if role == "canonical":
+            labels.append((number, row["write"]))
     return labels
 
 
@@ -684,7 +654,7 @@ def covered_names() -> list[tuple[str, str]]:
         names.extend(_csv_names(FIXTURES / fixture))
     templates = FIXTURES / "b524-op02-write-templates.csv"
     for number, label in canonical_template_labels(
-        _read_rows(templates), _read_rows(FIXTURES / "b524-op02-register-names.csv")
+        _read_rows(templates)
     ):
         names.append((f"{templates.relative_to(ROOT)}:{number}", label))
 
@@ -743,7 +713,11 @@ def covered_names() -> list[tuple[str, str]]:
 def main() -> int:
     vocabulary = load_vocabulary()
     failures = []
-    names = covered_names()
+    try:
+        names = covered_names()
+    except ValueError as error:
+        print(error, file=sys.stderr)
+        return 1
     for where, name in names:
         try:
             decompose(name, vocabulary)
