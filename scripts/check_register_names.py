@@ -538,18 +538,130 @@ def canonical_template_labels(
 # Columns of the protocol page's tables that carry a register name when the row
 # does not begin with a register: located by the header cell of the table.
 NAME_COLUMN_HEADERS = {"Register", "Write", "Name"}
-LEADING_CODE_SPAN = re.compile(r"(`.*?)(?: \(|$)")
+TRAILING_NOTE = re.compile(r" \(.*$")
+
+
+GROUP_REGISTER_SELECTOR = re.compile(r"GG=0x([0-9A-Fa-f]{2})\b.*?RR=0x([0-9A-Fa-f]{4})\b")
+# The body cell may be cut at an escaped pipe (`<u8 0\\|1>`), so its closing
+# backtick is not required.
+WRITE_BODY = re.compile(r"`02 01 ([0-9A-F]{2}) [0-9A-F]{2} ([0-9A-F]{2}) ([0-9A-F]{2})(?: |`|$)")
+
+
+def _row_selector(cells: list[str]) -> tuple[str, str] | None:
+    """The (group, register) of a row: `GG=..., RR=...` in a cell, else the
+    selector bytes of a write body (`02 01 GG II RR_low RR_high ...`)."""
+    for cell in cells:
+        match = GROUP_REGISTER_SELECTOR.search(cell)
+        if match:
+            return f"0x{match[1].upper()}", f"0x{match[2].upper()}"
+    for cell in cells:
+        match = WRITE_BODY.match(cell)
+        if match:
+            register = int(match[3] + match[2], 16)
+            return f"0x{match[1]}", f"0x{register:04X}"
+    return None
+
+
+def name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None]]:
+    """Name cells of tables whose rows do not begin with a register.
+
+    A table's name columns are the columns whose header is in
+    NAME_COLUMN_HEADERS. In such a cell one parenthesised note is removed from the
+    end, then exactly one outer code span; what remains is a name when it is a
+    single token without whitespace, quoted or not, and it is validated as
+    written (so a hyphenated or capitalised token and unbalanced delimiters
+    fail in decompose()). A cell with whitespace inside is prose. Each cell comes
+    with the (group, register) selector of its row when the row carries one. Rows
+    that begin with a register are scanned by the register-row matchers and are
+    not read again.
+    """
+    found: list[tuple[int, str, tuple[str, str] | None]] = []
+    header: list[str] | None = None
+    for number, line in enumerate(lines, 1):
+        if not line.startswith("|"):
+            header = None
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if header is None:
+            header = cells
+            continue
+        if set("".join(cells)) <= set("-: "):
+            continue
+        if PROTOCOL_ROW.match(line) or HEX_H_ROW.match(line):
+            continue
+        selector = _row_selector(cells)
+        for cell, title in zip(cells, header):
+            if title in NAME_COLUMN_HEADERS:
+                token = _strip_code_span(TRAILING_NOTE.sub("", cell))
+                if token and not any(ch.isspace() for ch in token):
+                    found.append((number, token, selector))
+    return found
+
+
+def header_column_names(lines: list[str]) -> list[tuple[int, str]]:
+    return [(number, token) for number, token, _ in name_column_cells(lines)]
+
+
+def selector_name_mismatches(
+    lines: list[str], catalog_rows: list[dict[str, str]]
+) -> list[tuple[int, str, str]]:
+    """Name cells that differ from the catalog name of the selector of their row.
+
+    Where the row carries a selector and the catalog names it, the raw name cell
+    must equal that name; the single-token rule of `name_column_cells` is the
+    fallback for rows without a selector.
+    """
+    catalog = {(row["group"], row["register"]): row["name"] for row in catalog_rows}
+    return [
+        (number, token, catalog[selector])
+        for number, token, selector in name_column_cells(lines)
+        if selector in catalog and token != catalog[selector]
+    ]
+
+
+def canonical_template_labels(
+    templates: list[dict[str, str]], catalog_rows: list[dict[str, str]]
+) -> list[tuple[int, str]]:
+    """Write-template labels that are canonical register names, with row numbers.
+
+    The other labels describe a write in words. A row is canonical when the
+    catalog of its selector says so, never by comparing the label with the old
+    label: the label is the catalog name of the selector, or the row's
+    `previous_name` is the `previous_name` of the catalog row of the selector
+    (the label is then a canonical name that has drifted from the catalog). The
+    raw label of a canonical row is validated.
+    """
+    catalog = {(row["group"], row["register"]): row for row in catalog_rows}
+    labels = []
+    for number, row in enumerate(templates, 2):
+        entry = catalog.get((row["group"], row["register"]))
+        if entry is None:
+            continue
+        label = row["write"]
+        if label == entry["name"] or (
+            entry["previous_name"] and row["previous_name"] == entry["previous_name"]
+        ):
+            labels.append((number, label))
+    return labels
+
+
+# Columns of the protocol page's tables that carry a register name when the row
+# does not begin with a register: located by the header cell of the table.
+NAME_COLUMN_HEADERS = {"Register", "Write", "Name"}
+TRAILING_NOTE = re.compile(r" \(.*$")
 
 
 def header_column_names(lines: list[str]) -> list[tuple[int, str]]:
     """Names in the name columns of tables whose rows do not begin with a register.
 
     A table's name columns are the columns whose header is in
-    NAME_COLUMN_HEADERS. A cell that opens with a backtick holds a name: the text
-    up to a parenthesised note (or the whole cell), from which exactly one outer
-    code span is removed, so unbalanced delimiters fail in decompose(). A cell
-    that does not open with a backtick is prose. Rows that begin with a register are scanned
-    by the register-row matchers and are not read again.
+    NAME_COLUMN_HEADERS. In such a cell one parenthesised note is removed from the
+    end, then exactly one outer code span; what remains is a name when it is a
+    single token without whitespace, quoted or not, and it is validated as
+    written (so a hyphenated or capitalised token and unbalanced delimiters
+    fail in decompose()). A cell with whitespace inside is prose. Rows that
+    begin with a register are scanned by the register-row matchers and are not
+    read again.
     """
     found: list[tuple[int, str]] = []
     header: list[str] | None = None
@@ -567,9 +679,9 @@ def header_column_names(lines: list[str]) -> list[tuple[int, str]]:
             continue
         for cell, title in zip(cells, header):
             if title in NAME_COLUMN_HEADERS:
-                match = LEADING_CODE_SPAN.match(cell)
-                if match:
-                    found.append((number, _strip_code_span(match[1])))
+                token = _strip_code_span(TRAILING_NOTE.sub("", cell))
+                if token and not any(ch.isspace() for ch in token):
+                    found.append((number, token))
     return found
 
 
@@ -650,6 +762,14 @@ def main() -> int:
             decompose(name, vocabulary)
         except NameError_ as error:
             failures.append(f"{where}: {error}")
+    protocol_lines = PROTOCOL.read_text(encoding="utf-8").splitlines()
+    for number, token, expected in selector_name_mismatches(
+        protocol_lines, _read_rows(FIXTURES / "b524-op02-register-names.csv")
+    ):
+        failures.append(
+            f"{PROTOCOL.relative_to(ROOT)}:{number}: {token!r} is not the catalog name "
+            f"{expected!r} of the selector of its row"
+        )
     for failure in failures:
         print(failure, file=sys.stderr)
     if failures:

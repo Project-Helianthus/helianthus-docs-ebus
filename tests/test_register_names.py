@@ -582,3 +582,74 @@ def test_prose_cells_and_register_leading_rows_are_not_read_twice() -> None:
         "| RR | Name |\n| --- | --- |\n| `0x0001` | `device_connected` |"
     )
     assert names.header_column_names(table.splitlines()) == []
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        "| Operation | Path | Register |\n| --- | --- | --- |\n"
+        "| Read | `OP=0x02` | Ventilation-operating-mode (enum, see register map) |",
+        "| Write | Body | Value |\n| --- | --- | --- |\n"
+        "| External-energy-management-enabled (`RR=0x00B6`) | `02 01` | one byte |",
+    ],
+)
+def test_unquoted_malformed_token_in_a_name_column_is_rejected(
+    vocabulary: names.Vocabulary, table: str
+) -> None:
+    found = names.header_column_names(table.splitlines())
+    assert len(found) == 1
+    with pytest.raises(names.NameError_):
+        names.decompose(found[0][1], vocabulary)
+
+
+def test_unquoted_canonical_name_is_accepted_and_prose_is_skipped(
+    vocabulary: names.Vocabulary,
+) -> None:
+    table = (
+        "| Operation | Path | Register |\n| --- | --- | --- |\n"
+        "| Read | `OP=0x02` | ventilation_operating_mode (enum, see register map) |\n"
+        "| Write | `OP=0x02` | Write target for mode activation |\n"
+        "| Write | `OP=0x02` | `special_function_mode` (dormant) |"
+    )
+    found = names.header_column_names(table.splitlines())
+    assert [name for _, name in found] == ["ventilation_operating_mode", "special_function_mode"]
+    for _, name in found:
+        names.decompose(name, vocabulary)
+
+
+def test_name_cells_equal_the_catalog_name_of_their_row_selector() -> None:
+    lines = names.PROTOCOL.read_text(encoding="utf-8").splitlines()
+    catalog = _rows(FIXTURES / "b524-op02-register-names.csv")
+    assert names.selector_name_mismatches(lines, catalog) == []
+    with_selector = {n: s for n, _, s in names.name_column_cells(lines) if s}
+    assert len(with_selector) == 3
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        ("`ventilation_operating_mode` (enum, see register map)",
+         "Ventilation-operating-mode (enum, see register map)"),
+        ("`external_energy_management_enabled` (`RR=0x00B6`)",
+         "External-energy-management-enabled (`RR=0x00B6`)"),
+        # a valid name of another register is not the catalog name of the selector
+        ("`special_function_mode` (dormant when no mode active)",
+         "`ventilation_operating_mode` (dormant when no mode active)"),
+    ],
+)
+def test_mutated_name_cell_of_the_real_page_is_rejected(
+    vocabulary: names.Vocabulary, old: str, new: str
+) -> None:
+    text = names.PROTOCOL.read_text(encoding="utf-8")
+    assert old in text
+    lines = text.replace(old, new, 1).splitlines()
+    catalog = _rows(FIXTURES / "b524-op02-register-names.csv")
+    mismatches = names.selector_name_mismatches(lines, catalog)
+    assert len(mismatches) == 1
+    token = mismatches[0][1]
+    try:
+        names.decompose(token, vocabulary)
+    except names.NameError_:
+        pass
+    else:
+        assert token != mismatches[0][2]
