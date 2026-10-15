@@ -64,7 +64,8 @@
       "type": "object",
       "required": ["codec", "codec_provenance", "codec_basis", "qualification", "min", "max", "step"],
       "properties": {
-        "codec": { "type": "string", "minLength": 1 },
+        "codec": { "enum": ["UCH", "UIN", "U32", "EXP",
+          "DATE_DMY_U8X3", "TIME_HMS_U8X3"] },
         "codec_provenance": { "enum": ["selector_qualified", "length_inferred"] },
         "codec_basis": { "enum": ["public_exact_selector_schema", "public_local_constraint_codec", "payload_length_inferred"] },
         "qualification": { "enum": ["qualified", "unqualified"] },

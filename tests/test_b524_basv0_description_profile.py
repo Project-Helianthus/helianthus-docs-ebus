@@ -366,8 +366,8 @@ def test_codec_width_and_decode_failures_are_validation_errors() -> None:
     rejects("records[0].decoded.codec is unsupported", document)
     with pytest.raises(validator.ValidationError, match=re.escape("cannot decode EXP limit 00")):
         validator._decode_limit("EXP", "00")
-    with pytest.raises(validator.ValidationError, match=re.escape("cannot decode HDA:3 limit 0102")):
-        validator._decode_limit("HDA:3", "0102")
+    with pytest.raises(validator.ValidationError, match=re.escape("cannot decode DATE_DMY_U8X3 limit 0102")):
+        validator._decode_limit("DATE_DMY_U8X3", "0102")
     with pytest.raises(validator.ValidationError, match="unsupported qualified codec XYZ"):
         validator._decode_limit("XYZ", "00")
 
@@ -377,7 +377,7 @@ def test_clock_codecs_stay_on_the_hypothesis_basis() -> None:
     _, record = find(document, "02", "00", "00", "002C")
     record["decoded"]["codec_basis"] = "public_local_constraint_codec"
     index, _ = find(document, "02", "00", "00", "002C")
-    rejects(f"records[{index}].decoded HDA:3/HTI must use the exact-selector-schema basis, a Hypothesis", document)
+    rejects(f"records[{index}].decoded DATE_DMY_U8X3/TIME_HMS_U8X3 must use the exact-selector-schema basis, a Hypothesis", document)
 
 
 def test_remote_identity_and_presence_must_agree() -> None:
@@ -556,13 +556,13 @@ def test_qualified_codec_is_pinned_to_the_selector() -> None:
 
     document = descriptions()
     index, record = find(document, "02", "00", "00", "0034")
-    record["decoded"].update(codec="HTI", min="01:01:01", max="31:12:99", step=None)
-    rejects(f"records[{index}].decoded.codec HTI disagrees with the calendar/clock selector list (HDA:3) for OP02/GG00/II00/RR0034", document)
+    record["decoded"].update(codec="TIME_HMS_U8X3", min="01:01:01", max="31:12:99", step=None)
+    rejects(f"records[{index}].decoded.codec TIME_HMS_U8X3 disagrees with the calendar/clock selector list (DATE_DMY_U8X3) for OP02/GG00/II00/RR0034", document)
 
     document = descriptions()
     index, record = find(document, "02", "00", "00", "002C")
-    record["decoded"]["codec"] = "HTI"
-    rejects(f"records[{index}].decoded.codec HTI disagrees with the register-map Wire codec HDA:3 for OP02/GG00/II00/RR002C", document)
+    record["decoded"]["codec"] = "TIME_HMS_U8X3"
+    rejects(f"records[{index}].decoded.codec TIME_HMS_U8X3 disagrees with the register-map Wire codec DATE_DMY_U8X3 for OP02/GG00/II00/RR002C", document)
 
 
 def test_unqualified_acquisition_state_implies_no_decoded_codec() -> None:
@@ -629,12 +629,12 @@ def test_plain_byte_clock_candidates_stay_display_only_even_for_bcd_looking_span
     validator.validate_documents(document, None, None, overlay)
 
     set_scope(overlay, record["selector"], "format_range_and_step")
-    rejects(f"records[{index}] grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only", document, overlay=overlay)
+    rejects(f"records[{index}] grants range validation to a plain-byte DATE_DMY_U8X3/TIME_HMS_U8X3 candidate decoding, which must stay display_only", document, overlay=overlay)
 
     document, overlay = descriptions(), scopes()
     index, record = find(document, "02", "00", "00", "0035")
     set_scope(overlay, record["selector"], "format_range_and_step")
-    rejects(f"records[{index}] grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only", document, overlay=overlay)
+    rejects(f"records[{index}] grants range validation to a plain-byte DATE_DMY_U8X3/TIME_HMS_U8X3 candidate decoding, which must stay display_only", document, overlay=overlay)
 
     document, overlay = descriptions(), scopes()
     index, record = find(document, "02", "00", "00", "0035")
@@ -880,17 +880,17 @@ def test_every_catalog_record_needs_an_observation_row_including_unavailable_one
 def test_reversed_temporal_ranges_are_rejected() -> None:
     document = descriptions()
     _, record = find(document, "02", "00", "00", "002C")
-    assert document["records"][27] is record and record["decoded"]["codec"] == "HDA:3"
+    assert document["records"][27] is record and record["decoded"]["codec"] == "DATE_DMY_U8X3"
     set_spans(record, "1F0C63", "010101", "010000")
     record["decoded"].update(min="2099-12-31", max="2001-01-01")
-    rejects("records[27].decoded HDA:3 min 2099-12-31 is later than max 2001-01-01", document)
+    rejects("records[27].decoded DATE_DMY_U8X3 min 2099-12-31 is later than max 2001-01-01", document)
 
     document = descriptions()
     index, record = find(document, "02", "00", "00", "0035")
-    assert record["decoded"]["codec"] == "HTI"
+    assert record["decoded"]["codec"] == "TIME_HMS_U8X3"
     set_spans(record, "173B3B", "000000", "010000")
     record["decoded"].update(min="23:59:59", max="00:00:00")
-    rejects(f"records[{index}].decoded HTI min 23:59:59 is later than max 00:00:00", document)
+    rejects(f"records[{index}].decoded TIME_HMS_U8X3 min 23:59:59 is later than max 00:00:00", document)
 
     validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
 
@@ -1075,3 +1075,24 @@ def test_every_qualified_record_rejects_fully_consistent_remote_reassignment() -
         document, rows, overlay = reassign_qualified_record_to_remote(index)
         with pytest.raises(validator.ValidationError, match=rf"records\[{index}\]"):
             validator.validate_documents(document, rows, CATALOG, overlay)
+
+
+@pytest.mark.parametrize("codec", ["HDA:3", "HTI"])
+def test_plain_byte_candidates_reject_bcd_codec_names(
+    tmp_path: Path, codec: str,
+) -> None:
+    document = descriptions()
+    index, record = next(
+        (i, r) for i, r in enumerate(document["records"])
+        if r["decoded"] and r["decoded"]["codec"] in
+        {"DATE_DMY_U8X3", "TIME_HMS_U8X3"}
+    )
+    record["decoded"]["codec"] = codec
+    rejects(f"records[{index}].decoded.codec is unsupported", document)
+    path = tmp_path / "bcd-codec-name.json"
+    path.write_text(json.dumps(document))
+    result = subprocess.run(
+        ["jv", str(SCHEMA), str(path)], cwd=ROOT,
+        text=True, capture_output=True, check=False,
+    )
+    assert result.returncode != 0, result.stdout

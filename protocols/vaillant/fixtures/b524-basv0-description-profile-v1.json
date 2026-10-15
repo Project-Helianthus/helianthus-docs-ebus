@@ -855,7 +855,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "2001-01-01",
@@ -979,7 +979,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "2001-01-01",
@@ -1010,7 +1010,7 @@
         "step_hex": "000001"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "00:00:00",
@@ -2113,7 +2113,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "2001-01-01",
@@ -2144,7 +2144,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "2001-01-01",
@@ -2275,7 +2275,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "2001-01-01",
@@ -2306,7 +2306,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "2001-01-01",
@@ -2337,7 +2337,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "00:00:00",
@@ -2368,7 +2368,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "00:00:00",
@@ -2635,7 +2635,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "2001-01-01",
@@ -2666,7 +2666,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "2001-01-01",
@@ -2728,7 +2728,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "00:00:00",
@@ -2759,7 +2759,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "selector_qualified",
         "qualification": "qualified",
         "min": "00:00:00",
@@ -8439,7 +8439,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -8470,7 +8470,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -8818,7 +8818,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -8849,7 +8849,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -8880,7 +8880,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -8973,7 +8973,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -9128,7 +9128,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -9159,7 +9159,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -9507,7 +9507,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -9538,7 +9538,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -9569,7 +9569,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -9662,7 +9662,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -9817,7 +9817,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -9848,7 +9848,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -10196,7 +10196,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -10227,7 +10227,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -10258,7 +10258,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -10320,7 +10320,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -10475,7 +10475,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -10506,7 +10506,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -10854,7 +10854,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -10885,7 +10885,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -10978,7 +10978,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -11121,7 +11121,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -11152,7 +11152,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -11500,7 +11500,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -11531,7 +11531,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -11562,7 +11562,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -11655,7 +11655,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -11810,7 +11810,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -11841,7 +11841,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -12189,7 +12189,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -12220,7 +12220,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -12251,7 +12251,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -12344,7 +12344,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -12499,7 +12499,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -12530,7 +12530,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -12866,7 +12866,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -12897,7 +12897,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -12928,7 +12928,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -13021,7 +13021,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -13176,7 +13176,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -13207,7 +13207,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -13555,7 +13555,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -13586,7 +13586,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -13617,7 +13617,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -13710,7 +13710,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -13865,7 +13865,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -13896,7 +13896,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -14244,7 +14244,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -14275,7 +14275,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -14306,7 +14306,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -14399,7 +14399,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -14554,7 +14554,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -14585,7 +14585,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -14933,7 +14933,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -14964,7 +14964,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -14995,7 +14995,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -15088,7 +15088,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -15243,7 +15243,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -15274,7 +15274,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -15622,7 +15622,7 @@
         "step_hex": "000A00"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -15653,7 +15653,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -15684,7 +15684,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -15777,7 +15777,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -16583,7 +16583,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -16614,7 +16614,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -16645,7 +16645,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -16676,7 +16676,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -16924,7 +16924,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -16955,7 +16955,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -16986,7 +16986,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -17017,7 +17017,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -17265,7 +17265,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -17296,7 +17296,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -17327,7 +17327,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -17358,7 +17358,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -17606,7 +17606,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -17637,7 +17637,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -17668,7 +17668,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -17699,7 +17699,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -17947,7 +17947,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -17978,7 +17978,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -18009,7 +18009,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -18040,7 +18040,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -18288,7 +18288,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -18319,7 +18319,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -18350,7 +18350,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -18381,7 +18381,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -18629,7 +18629,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -18660,7 +18660,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -18691,7 +18691,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -18722,7 +18722,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -18970,7 +18970,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -19001,7 +19001,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -19032,7 +19032,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -19063,7 +19063,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -19299,7 +19299,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -19330,7 +19330,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -19361,7 +19361,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -19392,7 +19392,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -19609,7 +19609,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -19640,7 +19640,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -19671,7 +19671,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -19702,7 +19702,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -19950,7 +19950,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -19981,7 +19981,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",
@@ -20012,7 +20012,7 @@
         "step_hex": "010000"
       },
       "decoded": {
-        "codec": "HDA:3",
+        "codec": "DATE_DMY_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "2001-01-01",
@@ -20043,7 +20043,7 @@
         "step_hex": "000100"
       },
       "decoded": {
-        "codec": "HTI",
+        "codec": "TIME_HMS_U8X3",
         "codec_provenance": "length_inferred",
         "qualification": "unqualified",
         "min": "00:00:00",

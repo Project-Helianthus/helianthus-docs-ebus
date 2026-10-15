@@ -29,18 +29,16 @@ class ValidationError(ValueError):
 HEX = re.compile(r"^(?:[0-9A-F]{2})*$")
 NUMERIC_CODECS = {"UCH", "UIN", "U32", "EXP"}
 # Bytes per MIN/MAX/STEP span for each codec this fixture can name.
-CODEC_WIDTH = {"UCH": 1, "UIN": 2, "U32": 4, "EXP": 4, "HDA:3": 3, "HTI": 3}
-# The fixture's HDA:3/HTI labels denote a plain-byte candidate decoding of the
-# 3-byte spans (each byte a plain unsigned integer), NOT the packed-BCD codec that
-# types/ebusd-csv.md defines under the same names. Records using it stay
-# display_only on the exact-selector-schema Hypothesis basis.
-PLAIN_BYTE_CLOCK_CODECS = {"HDA:3", "HTI"}
+CODEC_WIDTH = {"UCH": 1, "UIN": 2, "U32": 4, "EXP": 4, "DATE_DMY_U8X3": 3, "TIME_HMS_U8X3": 3}
+# Neutral plain-byte candidate layouts, distinct from the packed-BCD types in
+# types/ebusd-csv.md. Records stay display_only on a Hypothesis codec basis.
+PLAIN_BYTE_CLOCK_CODECS = {"DATE_DMY_U8X3", "TIME_HMS_U8X3"}
 CLOCK_CODECS = PLAIN_BYTE_CLOCK_CODECS
 ROOT = Path(__file__).resolve().parents[1]
 REGISTER_MAP = ROOT / "protocols/vaillant/ebus-vaillant-B524-register-map.md"
 SCOPE_OVERLAY = ROOT / "development/fixtures/b524-basv0-validation-scope-v1.json"
 CALENDAR_CLOCK_CSV = ROOT / "protocols/vaillant/fixtures/b524-op02-calendar-clock-selectors.csv"
-WIRE_CODEC = {"u8": "UCH", "u16": "UIN", "u32": "U32", "f32": "EXP", "date": "HDA:3", "time": "HTI"}
+WIRE_CODEC = {"u8": "UCH", "u16": "UIN", "u32": "U32", "f32": "EXP", "date": "DATE_DMY_U8X3", "time": "TIME_HMS_U8X3"}
 _WIRE_CACHE: dict[tuple[str, str, str], set[str]] | None = None
 _CLOCK_CACHE: dict[tuple[str, str, str], str] | None = None
 VENTILATION_INSTANCES = tuple(f"{index:02X}" for index in range(0x0B))
@@ -62,8 +60,8 @@ def _decode_limit(codec: str, raw: str) -> Any:
         if codec == "UIN": return int.from_bytes(value, "little")
         if codec == "U32": return int.from_bytes(value, "little")
         if codec == "EXP": return struct.unpack("<f", value)[0]
-        if codec == "HDA:3": return f"{2000 + value[2]:04d}-{value[1]:02d}-{value[0]:02d}"
-        if codec == "HTI": return f"{value[0]:02d}:{value[1]:02d}:{value[2]:02d}"
+        if codec == "DATE_DMY_U8X3": return f"{2000 + value[2]:04d}-{value[1]:02d}-{value[0]:02d}"
+        if codec == "TIME_HMS_U8X3": return f"{value[0]:02d}:{value[1]:02d}:{value[2]:02d}"
     except (struct.error, IndexError, ValueError) as exc:
         raise ValidationError(f"cannot decode {codec} limit {raw}: {exc}") from exc
     raise ValidationError(f"unsupported qualified codec {codec}")
@@ -112,7 +110,7 @@ def calendar_clock_codecs() -> dict[tuple[str, str, str], str]:
             for row in csv.DictReader(handle):
                 if row["opcode"] == "0x02" and row["payload_bytes"] == "3":
                     key = (row["group"][2:].upper().zfill(2), row["instance"][2:].upper().zfill(2), row["register"][2:].upper().zfill(4))
-                    listed[key] = "HTI" if "time" in row["name"] else "HDA:3"
+                    listed[key] = "TIME_HMS_U8X3" if "time" in row["name"] else "DATE_DMY_U8X3"
         _CLOCK_CACHE = listed
     return _CLOCK_CACHE
 
@@ -153,7 +151,7 @@ def _validate_selector_codec(codec: str, basis: str, selector: dict[str, str], c
 
 def _validate_clock_value(codec: str, raw: str, field: str, context: str) -> None:
     value = bytes.fromhex(raw)
-    if codec == "HTI":
+    if codec == "TIME_HMS_U8X3":
         valid = value[0] <= 23 and value[1] <= 59 and value[2] <= 59
         kind = "time (hour 0-23, minute 0-59, second 0-59)"
     else:
@@ -182,7 +180,7 @@ def _validate_validation_scope(record: dict[str, Any], scope: Any, context: str)
     decoded = record.get("decoded")
     _require(not (scope == "format_range_and_step" and isinstance(decoded, dict)
                   and decoded.get("codec") in PLAIN_BYTE_CLOCK_CODECS),
-             f"{context} grants range validation to a plain-byte HDA:3/HTI candidate decoding, which must stay display_only")
+             f"{context} grants range validation to a plain-byte DATE_DMY_U8X3/TIME_HMS_U8X3 candidate decoding, which must stay display_only")
     if scope == "format_range_and_step":
         _require(record.get("selector", {}).get("operation") == "02",
                  f"{context} grants range validation to a remote record")
@@ -310,14 +308,14 @@ def _validate_record(record: Any, index: int) -> None:
             _require(same, f"{context}.decoded.{field} disagrees with raw limits")
         if provenance == "selector_qualified":
             _require(codec not in CLOCK_CODECS or basis == "public_exact_selector_schema",
-                     f"{context}.decoded HDA:3/HTI must use the exact-selector-schema basis, a Hypothesis")
+                     f"{context}.decoded DATE_DMY_U8X3/TIME_HMS_U8X3 must use the exact-selector-schema basis, a Hypothesis")
         if qualification == "qualified":
             if codec in CLOCK_CODECS:
                 for field in ("min", "max"):
                     _validate_clock_value(codec, limits[f"{field}_hex"], field, context)
                 low, high = (bytes.fromhex(limits[f"{field}_hex"]) for field in ("min", "max"))
                 # Most significant component first: date = year, month, day; time = hour, minute, second.
-                key = (lambda v: (v[0], v[1], v[2])) if codec == "HTI" else (lambda v: (v[2], v[1], v[0]))
+                key = (lambda v: (v[0], v[1], v[2])) if codec == "TIME_HMS_U8X3" else (lambda v: (v[2], v[1], v[0]))
                 _require(key(low) <= key(high),
                          f"{context}.decoded {codec} min {decoded.get('min')} is later than max {decoded.get('max')}")
                 _require(decoded.get("step") is None, f"{context}.decoded.step must remain unknown")
