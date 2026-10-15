@@ -1018,7 +1018,7 @@ def test_exact_schema_basis_corroborates_op02_before_codec_lookup() -> None:
 
 
 def reassign_qualified_record_to_remote(index: int) -> tuple[dict, dict, dict]:
-    # Reuse .reviewer-mut.py's FULL mutation: move every corroborating field.
+    # Apply the fully consistent reassignment (scope, remote header, observation row and overlay moved together): move every corroborating field.
     document, rows, overlay = descriptions(), observations(), scopes()
     record = document["records"][index]
     original = deepcopy(record["selector"])
