@@ -52,6 +52,16 @@ application-side classification never grants those candidates range validation.
 Aligning the application codec labels with the documented types is tracked in
 external issue #297 of the evidence-producing tool's repository.
 
+Under the [shared evidence contract][source-6], docs-ebus owns the CC0
+schemas and publishes the evidence; the explorer exports to those schemas,
+and its packaged fixtures must be byte-identical to the published copies and
+cite the same SHA-256. Backward-incompatible shape changes bump the schema
+suffix and versioned filenames in both repositories together (for example,
+`/v1` to `/v2`); backward-compatible additive fields stay `/v1`, with the
+docs-ebus schema updated first. Digests are refreshed in the same coordinated
+change. Explorer `/v1` exports must pass
+`scripts/validate_b524_basv0_description_profile.py`.
+
 ## `validation_scope` and presence
 
 **Proven** (against the retained fixture, and enforced by the validator in both
@@ -63,8 +73,11 @@ bundled with the source application. It lives in the application overlay
 no longer in the CC0 description fixture. The validator loads the overlay when
 present, requires one entry per description record and no entry without a
 record, and enforces the derivation below. It is specific to that installation's
-presence interpretation and is not reusable authority. Its derivation uses these
-rules:
+presence interpretation and is not reusable authority.
+
+The validation-scope overlay lives in this development tree; an application
+may package its own copy as application policy, never as reusable evidence.
+Its derivation uses these rules:
 
 - `format_range_and_step`: `presence_state` is `observed_present`, and the codec
   is `qualified`, `selector_qualified`, with basis
@@ -93,3 +106,6 @@ this fixture.
   fixtures/b524-basv0-validation-scope-v1.json
 [source-5]:
   fixtures/b524-basv0-validation-scope-schema-v1.json
+
+[source-6]:
+  https://github.com/Project-Helianthus/helianthus-vrc-explorer/blob/main/docs/shared-evidence-contract.md
