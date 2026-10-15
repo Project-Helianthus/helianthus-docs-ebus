@@ -632,13 +632,18 @@ def test_name_cells_equal_the_catalog_name_of_their_row_selector() -> None:
          "Ventilation-operating-mode (enum, see register map)"),
         ("`external_energy_management_enabled` (`RR=0x00B6`)",
          "External-energy-management-enabled (`RR=0x00B6`)"),
+        ("`ventilation_operating_mode` (enum, see register map)",
+         "`Ventilation operating mode` (enum, see register map)"),
+        ("`external_energy_management_enabled` (`RR=0x00B6`)",
+         "`External energy management enabled` (`RR=0x00B6`)"),
         # a valid name of another register is not the catalog name of the selector
         ("`special_function_mode` (dormant when no mode active)",
          "`ventilation_operating_mode` (dormant when no mode active)"),
     ],
 )
 def test_mutated_name_cell_of_the_real_page_is_rejected(
-    vocabulary: names.Vocabulary, old: str, new: str
+    vocabulary: names.Vocabulary, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str], old: str, new: str
 ) -> None:
     text = names.PROTOCOL.read_text(encoding="utf-8")
     assert old in text
@@ -653,3 +658,47 @@ def test_mutated_name_cell_of_the_real_page_is_rejected(
         pass
     else:
         assert token != mismatches[0][2]
+
+    original_read_text = Path.read_text
+
+    def read_text(path: Path, *args, **kwargs) -> str:
+        if path == names.PROTOCOL:
+            return "\n".join(lines)
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+    assert names.main() == 1
+    error = capsys.readouterr().err
+    number, found, expected = mismatches[0]
+    selector = names._row_selector([cell.strip() for cell in lines[number - 1].split("|")])
+    assert f"{names.PROTOCOL.relative_to(names.ROOT)}:{number}: selector" in error
+    assert f"GG={selector[0]}, RR={selector[1]}" in error
+    assert f"expected {expected!r}, found {found!r}" in error
+
+
+@pytest.mark.parametrize("selector", ["no selector", "GG=0xFE, RR=0xFFFF"])
+def test_backticked_whitespace_is_validated_without_a_catalog_name(
+    vocabulary: names.Vocabulary, selector: str
+) -> None:
+    table = (
+        "| Path | Name |\n| --- | --- |\n"
+        f"| {selector} | `flow temperature` (note) |\n"
+        f"| {selector} | flow temperature (note) |"
+    )
+    found = names.header_column_names(table.splitlines())
+    assert found == [(3, "flow temperature")]
+    with pytest.raises(names.NameError_, match="snake_case"):
+        names.decompose(found[0][1], vocabulary)
+
+
+def test_real_page_prose_cells_are_skipped_even_with_catalog_selectors() -> None:
+    lines = names.PROTOCOL.read_text(encoding="utf-8").splitlines()
+    prose_lines = {160, 161, 162, 1193, 1194, 1195, 1197}
+    catalog = {
+        (row["group"], row["register"]) for row in
+        _rows(FIXTURES / "b524-op02-register-names.csv") if row["name"]
+    }
+    for number in prose_lines:
+        cells = [cell.strip() for cell in lines[number - 1].split("|")]
+        assert names._row_selector(cells) in catalog
+    assert prose_lines.isdisjoint(number for number, _, _ in names.name_column_cells(lines))

@@ -538,7 +538,7 @@ def canonical_template_labels(
 # Columns of the protocol page's tables that carry a register name when the row
 # does not begin with a register: located by the header cell of the table.
 NAME_COLUMN_HEADERS = {"Register", "Write", "Name"}
-TRAILING_NOTE = re.compile(r" \(.*$")
+TRAILING_NOTE = re.compile(r" \([^()]*\)$")
 
 
 GROUP_REGISTER_SELECTOR = re.compile(r"GG=0x([0-9A-Fa-f]{2})\b.*?RR=0x([0-9A-Fa-f]{4})\b")
@@ -565,15 +565,13 @@ def _row_selector(cells: list[str]) -> tuple[str, str] | None:
 def name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] | None]]:
     """Name cells of tables whose rows do not begin with a register.
 
-    A table's name columns are the columns whose header is in
-    NAME_COLUMN_HEADERS. In such a cell one parenthesised note is removed from the
-    end, then exactly one outer code span; what remains is a name when it is a
-    single token without whitespace, quoted or not, and it is validated as
-    written (so a hyphenated or capitalised token and unbalanced delimiters
-    fail in decompose()). A cell with whitespace inside is prose. Each cell comes
-    with the (group, register) selector of its row when the row carries one. Rows
-    that begin with a register are scanned by the register-row matchers and are
-    not read again.
+    Strip one trailing parenthesised note, then classify a cell as canonical
+    when it contains a code span or is a single whitespace-free token. Strip
+    exactly one outer code span and preserve the raw remainder for validation
+    and comparison with the catalog name of the row's selector. Unquoted cells
+    with inner whitespace are prose; register-leading rows are read by the
+    register-row matchers instead. An unquoted multi-word mangled name is
+    indistinguishable from a prose description and is not caught.
     """
     found: list[tuple[int, str, tuple[str, str] | None]] = []
     header: list[str] | None = None
@@ -592,8 +590,9 @@ def name_column_cells(lines: list[str]) -> list[tuple[int, str, tuple[str, str] 
         selector = _row_selector(cells)
         for cell, title in zip(cells, header):
             if title in NAME_COLUMN_HEADERS:
-                token = _strip_code_span(TRAILING_NOTE.sub("", cell))
-                if token and not any(ch.isspace() for ch in token):
+                remainder = TRAILING_NOTE.sub("", cell)
+                token = _strip_code_span(remainder)
+                if "`" in remainder or (token and not any(ch.isspace() for ch in token)):
                     found.append((number, token, selector))
     return found
 
@@ -608,10 +607,10 @@ def selector_name_mismatches(
     """Name cells that differ from the catalog name of the selector of their row.
 
     Where the row carries a selector and the catalog names it, the raw name cell
-    must equal that name; the single-token rule of `name_column_cells` is the
-    fallback for rows without a selector.
+    must equal that name, including whitespace; backtick and single-token
+    validation are fallbacks when the catalog does not name the selector.
     """
-    catalog = {(row["group"], row["register"]): row["name"] for row in catalog_rows}
+    catalog = {(row["group"], row["register"]): row["name"] for row in catalog_rows if row["name"]}
     return [
         (number, token, catalog[selector])
         for number, token, selector in name_column_cells(lines)
@@ -643,46 +642,6 @@ def canonical_template_labels(
         ):
             labels.append((number, label))
     return labels
-
-
-# Columns of the protocol page's tables that carry a register name when the row
-# does not begin with a register: located by the header cell of the table.
-NAME_COLUMN_HEADERS = {"Register", "Write", "Name"}
-TRAILING_NOTE = re.compile(r" \(.*$")
-
-
-def header_column_names(lines: list[str]) -> list[tuple[int, str]]:
-    """Names in the name columns of tables whose rows do not begin with a register.
-
-    A table's name columns are the columns whose header is in
-    NAME_COLUMN_HEADERS. In such a cell one parenthesised note is removed from the
-    end, then exactly one outer code span; what remains is a name when it is a
-    single token without whitespace, quoted or not, and it is validated as
-    written (so a hyphenated or capitalised token and unbalanced delimiters
-    fail in decompose()). A cell with whitespace inside is prose. Rows that
-    begin with a register are scanned by the register-row matchers and are not
-    read again.
-    """
-    found: list[tuple[int, str]] = []
-    header: list[str] | None = None
-    for number, line in enumerate(lines, 1):
-        if not line.startswith("|"):
-            header = None
-            continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if header is None:
-            header = cells
-            continue
-        if set("".join(cells)) <= set("-: "):
-            continue
-        if PROTOCOL_ROW.match(line) or HEX_H_ROW.match(line):
-            continue
-        for cell, title in zip(cells, header):
-            if title in NAME_COLUMN_HEADERS:
-                token = _strip_code_span(TRAILING_NOTE.sub("", cell))
-                if token and not any(ch.isspace() for ch in token):
-                    found.append((number, token))
-    return found
 
 
 def covered_names() -> list[tuple[str, str]]:
@@ -766,9 +725,11 @@ def main() -> int:
     for number, token, expected in selector_name_mismatches(
         protocol_lines, _read_rows(FIXTURES / "b524-op02-register-names.csv")
     ):
+        selector = _row_selector([cell.strip() for cell in protocol_lines[number - 1].split("|")])
+        group, register = selector
         failures.append(
-            f"{PROTOCOL.relative_to(ROOT)}:{number}: {token!r} is not the catalog name "
-            f"{expected!r} of the selector of its row"
+            f"{PROTOCOL.relative_to(ROOT)}:{number}: selector GG={group}, RR={register}: "
+            f"expected {expected!r}, found {token!r}"
         )
     for failure in failures:
         print(failure, file=sys.stderr)
