@@ -830,3 +830,18 @@ def test_observed_remote_firmware_must_be_three_bytes(value: str, got: int, tmp_
     result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode != 0
     validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
+
+
+def test_described_record_without_limit_spans_is_rejected(tmp_path: Path) -> None:
+    document = descriptions()
+    index, record = next((i, r) for i, r in enumerate(document["records"]) if r["raw_description_hex"] is not None)
+    record["raw_description_hex"] = record["raw_description_hex"][:6]
+    record["description_payload_length"] = 0
+    record["raw_limits"] = {"min_hex": "", "max_hex": "", "step_hex": ""}
+    record["decoded"] = None
+    rejects(f"records[{index}].raw_description_hex retains no MIN/MAX/STEP spans; an absent description must be describe_unavailable with null fields", document)
+    path = tmp_path / "zero-width.json"
+    path.write_text(json.dumps(document))
+    result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
+    assert result.returncode != 0
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())

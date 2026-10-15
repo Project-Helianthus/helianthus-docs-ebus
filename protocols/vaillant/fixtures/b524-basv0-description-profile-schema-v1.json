@@ -53,9 +53,9 @@
       "type": "object",
       "required": ["min_hex", "max_hex", "step_hex"],
       "properties": {
-        "min_hex": { "type": "string", "pattern": "^(?:[0-9A-F]{2})*$" },
-        "max_hex": { "type": "string", "pattern": "^(?:[0-9A-F]{2})*$" },
-        "step_hex": { "type": "string", "pattern": "^(?:[0-9A-F]{2})*$" }
+        "min_hex": { "type": "string", "pattern": "^(?:[0-9A-F]{2})+$" },
+        "max_hex": { "type": "string", "pattern": "^(?:[0-9A-F]{2})+$" },
+        "step_hex": { "type": "string", "pattern": "^(?:[0-9A-F]{2})+$" }
       },
       "additionalProperties": false
     },
@@ -96,8 +96,8 @@
         "access_flags": { "type": ["string", "null"], "pattern": "^[0-9A-F]{2}$" },
         "presence_state": { "enum": ["observed_present", "observed_inactive", "unknown", "remote_identity_unqualified", "error"] },
         "response_state": { "enum": ["describe_matched", "describe_unavailable", "read_observed", "transport_error"] },
-        "raw_description_hex": { "type": ["string", "null"], "pattern": "^(?:[0-9A-F]{2})*$" },
-        "description_payload_length": { "type": ["integer", "null"], "minimum": 0 },
+        "raw_description_hex": { "type": ["string", "null"], "pattern": "^(?:[0-9A-F]{2})*$", "minLength": 12 },
+        "description_payload_length": { "type": ["integer", "null"], "minimum": 3 },
         "raw_limits": { "oneOf": [{ "$ref": "#/$defs/rawLimits" }, { "type": "null" }] },
         "decoded": { "oneOf": [{ "$ref": "#/$defs/decoded" }, { "type": "null" }] },
         "observed_read_payload_width": { "type": ["integer", "null"], "minimum": 0 },

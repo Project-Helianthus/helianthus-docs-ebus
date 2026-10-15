@@ -244,6 +244,7 @@ def _validate_record(record: Any, index: int) -> None:
              and response[1:3] == int(register, 16).to_bytes(2, "little"),
              f"{context}.raw_description_hex does not echo GG/RR")
     body = response[3:]
+    _require(len(body) > 0, f"{context}.raw_description_hex retains no MIN/MAX/STEP spans; an absent description must be describe_unavailable with null fields")
     _require(len(body) % 3 == 0, f"{context}.raw_description_hex has unequal limit spans")
     _require(lengths == len(body), f"{context}.description_payload_length does not match raw description")
     _require(isinstance(limits, dict), f"{context}.raw_limits is required with a description")
