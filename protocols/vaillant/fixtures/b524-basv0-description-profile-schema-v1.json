@@ -127,6 +127,32 @@
       },
       "allOf": [
         {
+          "$comment": "Published DHW pin: ebus-vaillant-b524-basv0-profile-v1.md, Observed local bound.",
+          "if": {
+            "properties": {
+              "selector": {
+                "const": { "operation": "02", "group": "00", "instance": "00", "register": "0001" }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "raw_description_hex": { "const": "0001000000A0C10000A0410000803F" },
+              "access_flags": { "const": "03" },
+              "raw_limits": {
+                "const": { "min_hex": "0000A0C1", "max_hex": "0000A041", "step_hex": "0000803F" }
+              },
+              "decoded": {
+                "const": {
+                  "codec": "EXP", "codec_provenance": "selector_qualified",
+                  "codec_basis": "public_local_constraint_codec", "qualification": "qualified",
+                  "min": -20, "max": 20, "step": 1
+                }
+              }
+            }
+          }
+        },
+        {
           "if": {
             "properties": {
               "selector": {

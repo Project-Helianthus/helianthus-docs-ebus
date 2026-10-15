@@ -497,7 +497,24 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
     _validate_remote_slot_identity(records)
     dhw = _find(records, "02", "00", "00", "0001")
     _require(len(dhw) == 1, "fixture must retain exactly one local DHW bivalence record")
-    _require(dhw[0].get("raw_limits", {}).get("max_hex") == "0000A041", "BASV0 DHW maximum must retain raw 20")
+    # Published pin source: protocols/vaillant/ebus-vaillant-b524-basv0-profile-v1.md
+    # "Observed local bound"; the EXP interpretation retains its stated codec basis.
+    context = "OP02/GG00/II00/RR0001"
+    for field, expected in (
+        ("raw_description_hex", "0001000000A0C10000A0410000803F"),
+        ("access_flags", "03"),
+    ):
+        _require(dhw[0].get(field) == expected,
+                 f"{context}.{field} must retain published DHW value {expected}")
+    decoded = dhw[0].get("decoded")
+    _require(isinstance(decoded, dict), f"{context}.decoded must retain published DHW EXP decoding")
+    for field, expected in (
+        ("codec", "EXP"), ("codec_provenance", "selector_qualified"),
+        ("codec_basis", "public_local_constraint_codec"), ("qualification", "qualified"),
+        ("min", -20), ("max", 20), ("step", 1),
+    ):
+        _require(decoded.get(field) == expected,
+                 f"{context}.decoded.{field} must retain published DHW value {expected}")
     solar = _find(records, "02", "04", "01", "000B")
     _require(len(solar) == 1 and (solar[0].get("decoded") is None or solar[0]["decoded"].get("qualification") == "unqualified"),
              "solar II01 must not gain a qualified codec")

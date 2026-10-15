@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import json
 import re
@@ -245,7 +246,6 @@ def test_register_observation_schema_rejects_sensitive_or_unknown_fields(tmp_pat
 
 
 def test_profile_page_cites_current_fixture_digests() -> None:
-    import hashlib
 
     page = (ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-basv0-profile-v1.md").read_text()
     for fixture in (FIXTURE, REGISTER_FIXTURE):
@@ -395,6 +395,57 @@ def test_remote_identity_and_presence_must_agree() -> None:
     rejects(f"records[{index}] unqualified remote identity must not carry a qualified codec", document)
 
 
+@pytest.mark.parametrize("changes", [
+    {"min": -100, "step": 2},
+    {"min": -100}, {"max": 21}, {"step": 2},
+    {"access_flags": "01"},
+])
+def test_published_dhw_pin_rejects_consistent_mutations(changes: dict, tmp_path: Path) -> None:
+    document = descriptions()
+    _, record = find(document, "02", "00", "00", "0001")
+    if "access_flags" in changes:
+        record["access_flags"] = changes["access_flags"]
+        field, expected = "access_flags", "03"
+    else:
+        limits = {name: record["decoded"][name] for name in ("min", "max", "step")}
+        limits.update(changes)
+        set_spans(record, *(struct.pack("<f", limits[name]).hex().upper()
+                            for name in ("min", "max", "step")))
+        record["decoded"].update(limits)
+        field, expected = "raw_description_hex", "0001000000A0C10000A0410000803F"
+    # Even refreshing the page's digest in memory cannot admit contradictory bytes.
+    encoded = json.dumps(document).encode()
+    digest = hashlib.sha256(encoded).hexdigest()
+    page = (ROOT / "protocols/vaillant/ebus-vaillant-b524-basv0-profile-v1.md").read_text()
+    refreshed_page = page.replace(hashlib.sha256(FIXTURE.read_bytes()).hexdigest(), digest)
+    assert digest in refreshed_page
+    rejects(f"OP02/GG00/II00/RR0001.{field} must retain published DHW value {expected}", document)
+    path = tmp_path / "dhw-mutation.json"
+    path.write_bytes(encoded)
+    result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT,
+                            text=True, capture_output=True, check=False)
+    assert result.returncode != 0, result.stdout
+
+
+@pytest.mark.parametrize("mutation", ["missing", "unqualified"])
+def test_published_dhw_pin_requires_qualified_exp_decoding(mutation: str, tmp_path: Path) -> None:
+    document = descriptions()
+    _, record = find(document, "02", "00", "00", "0001")
+    if mutation == "missing":
+        record["decoded"] = None
+        message = "OP02/GG00/II00/RR0001.decoded must retain published DHW EXP decoding"
+    else:
+        record["decoded"]["qualification"] = "unqualified"
+        message = "OP02/GG00/II00/RR0001.decoded.qualification must retain published DHW value qualified"
+    with pytest.raises(validator.ValidationError, match=re.escape(message)):
+        validator.validate_documents(document)
+    path = tmp_path / "dhw-decoding.json"
+    path.write_text(json.dumps(document))
+    result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT,
+                            text=True, capture_output=True, check=False)
+    assert result.returncode != 0, result.stdout
+
+
 def test_dhw_solar_installer_and_ventilation_pins() -> None:
     document = descriptions()
     index, _ = find(document, "02", "00", "00", "0001")
@@ -407,7 +458,7 @@ def test_dhw_solar_installer_and_ventilation_pins() -> None:
     _, record = find(document, "02", "00", "00", "0001")
     set_spans(record, "0000A0C1", "0000A841", "0000803F")
     record["decoded"]["max"] = 21.0
-    rejects("BASV0 DHW maximum must retain raw 20", document)
+    rejects("OP02/GG00/II00/RR0001.raw_description_hex must retain published DHW value 0001000000A0C10000A0410000803F", document)
 
     document = descriptions()
     _, source = find(document, "02", "04", "00", "000B")
@@ -760,9 +811,12 @@ def test_qualified_codec_width_must_match_observed_read_widths() -> None:
 @pytest.mark.parametrize("missing", ["both", "record", "observation"])
 def test_qualified_codec_requires_nonnull_read_widths(missing: str, tmp_path: Path) -> None:
     document, rows = descriptions(), observations()
-    record = document["records"][0]
+    record_index, record = next((i, r) for i, r in enumerate(document["records"])
+                                if i != 0 and r["decoded"]
+                                and r["decoded"]["qualification"] == "qualified"
+                                and r["decoded"]["codec"] == "EXP")
     row_index, row = next((i, row) for i, row in enumerate(rows["records"])
-                          if row["description"] and row["description"]["record_index"] == 0)
+                          if row["description"] and row["description"]["record_index"] == record_index)
     assert record["decoded"]["qualification"] == "qualified"
     assert record["decoded"]["codec"] == "EXP"
     assert record["observed_read_payload_width"] == row["observed_payload_width"] == 4
@@ -772,7 +826,7 @@ def test_qualified_codec_requires_nonnull_read_widths(missing: str, tmp_path: Pa
     if missing in {"both", "observation"}:
         row.update(response_state="status_only", observed_payload_width=None)
     field = "observed_payload_width" if missing == "observation" else "observed_read_payload_width"
-    rejects(f"records[0] linked observation records[{row_index}] missing {field} for qualified codec EXP",
+    rejects(f"records[{record_index}] linked observation records[{row_index}] missing {field} for qualified codec EXP",
             document, rows)
     if missing != "observation":
         with pytest.raises(validator.ValidationError, match="missing observed_read_payload_width"):
@@ -819,7 +873,7 @@ def test_exact_schema_basis_is_pinned_to_its_documented_selectors() -> None:
     document["records"][0]["decoded"]["codec_basis"] = "public_exact_selector_schema"
     overlay = scopes()
     set_scope(overlay, document["records"][0]["selector"], "display_only")
-    rejects("records[0].decoded.codec_basis public_exact_selector_schema is not documented for OP02/GG00/II00/RR0001", document, overlay=overlay)
+    rejects("OP02/GG00/II00/RR0001.decoded.codec_basis must retain published DHW value public_local_constraint_codec", document, overlay=overlay)
 
     exact = [r for r in descriptions()["records"] if r["decoded"] and r["decoded"]["codec_basis"] == "public_exact_selector_schema"]
     assert len(exact) == 14
