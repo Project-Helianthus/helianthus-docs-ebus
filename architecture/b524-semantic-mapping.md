@@ -392,8 +392,9 @@ The historical short-probe catalog it consults is the
   OP=0x06 requests do not inherit the local ranges; no evidence ties them to
   the remote namespace.
 - **DHW bivalence bound.** `(OP=0x02, GG=0x00, RR=0x0001)` is not in the static
-  catalog, because its maximum differs per controller profile. BASV0 observes
-  `20` (**Proven** within its retained description bytes). The historical
+  catalog, because its maximum differs per controller profile. BASV0 retains
+  a description record whose bytes are **Proven**; its EXP decoding to `20`
+  is a **Hypothesis** (codec basis, see the profile page). The historical
   observation of `50` attributed to BASV2 (next to the BASV0 value) is a
   **Hypothesis**: it is unqualified, no description record is retained, and the
   API version and revision were not recorded. Unlike BASV0, no BASV2 profile
