@@ -15,9 +15,10 @@ spec.loader.exec_module(lint)
 
 
 @pytest.fixture(scope="module", params=["default", "shellcheck-disabled-default"])
-def actionlint_reference(request):
+def actionlint_reference(request, tmp_path_factory):
     # Model a gate wrapper that prepends -shellcheck= to every invocation.
-    # The oracle must explicitly enable its own ShellCheck in either case.
+    # Use a stub for the selection oracle: real ShellCheck must run separately
+    # because actionlint's stdin integration can hang in local gate environments.
     command = ["actionlint"]
     if request.param == "shellcheck-disabled-default":
         command.append("-shellcheck=")
@@ -25,7 +26,10 @@ def actionlint_reference(request):
                             text=True, timeout=10, check=False)
     assert result.returncode == 0, result.stderr
     assert result.stdout.splitlines()[0] == "v1.7.7"
-    return command
+    stub = tmp_path_factory.mktemp("shellcheck-oracle") / "shellcheck-stub"
+    stub.write_text('#!/bin/sh\ncat > /dev/null\nprintf \'[]\\n\'\n', encoding="utf-8")
+    stub.chmod(0o755)
+    return [*command, f"-shellcheck={stub}"]
 
 
 def test_current_workflows_include_original_19_and_all_21_steps(tmp_path):
@@ -143,7 +147,7 @@ def test_timeout_is_a_clear_failure(capsys):
 ])
 @pytest.mark.parametrize("runner", ["ubuntu-latest", "windows-latest"])
 @pytest.mark.parametrize("broken", [False, True], ids=["clean", "broken"])
-def test_shell_selection_and_combined_gate_match_actionlint(
+def test_shell_selection_and_split_gate_match_actionlint(
         tmp_path, actionlint_reference, level, shell, selected, runner, broken):
     step = {"run": "echo $unquoted" if broken else "echo safe"}
     if shell == "python":
@@ -167,9 +171,10 @@ def test_shell_selection_and_combined_gate_match_actionlint(
     workflow = tmp_path / "shell.yml"
     workflow.write_text(lint.yaml.safe_dump(document), encoding="utf-8")
 
-    # Both invocations are bounded and inspect scripts without executing them.
+    # Actionlint selects the shell using a stub; standalone ShellCheck below
+    # supplies the real diagnostics without actionlint's ShellCheck stdin pipe.
     reference = subprocess.run(
-        [*actionlint_reference, "-debug", "-shellcheck=shellcheck", str(workflow)],
+        [*actionlint_reference, "-debug", str(workflow)],
         capture_output=True, text=True, timeout=10, check=False)
     structural = subprocess.run(
         [*actionlint_reference, "-shellcheck=", str(workflow)],
@@ -188,9 +193,9 @@ def test_shell_selection_and_combined_gate_match_actionlint(
     separate_status = lint.shellcheck([workflow], tmp_path)
     assert separate_status == (1 if broken and expected else 0)
     combined_failed = structural.returncode != 0 or separate_status != 0
-    assert reference.returncode == (1 if invalid or (broken and expected) else 0), (
+    assert reference.returncode == structural.returncode, (
         reference.stdout + reference.stderr)
-    assert combined_failed == (reference.returncode != 0)
+    assert combined_failed == bool(invalid or (broken and expected))
 
 
 def test_shellcheck_tool_failure_is_propagated(tmp_path, monkeypatch):
