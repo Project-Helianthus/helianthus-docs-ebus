@@ -303,9 +303,11 @@ def test_record_structure_checks_report_their_own_messages() -> None:
         mutate(document["records"][index])
         return document
 
-    rejects("records[0].identity_scope does not match native operation",
+    rejects("records[0].identity_scope does not match native operation; "
+            "request opcode corroboration failed (identity scope)",
             mutated(lambda r: r.update(identity_scope="remote")))
-    rejects("records[0] must not attach remote identity to a local selector",
+    rejects("records[0] must not attach remote identity to a local selector; "
+            "request opcode corroboration failed (remote header requires OP06)",
             mutated(lambda r: r.update(remote_identity={"qualification": "unqualified"})))
     remote_index = next(i for i, r in enumerate(_DESCRIPTIONS["records"]) if r["selector"]["operation"] == "06")
     rejects(f"records[{remote_index}] must retain remote identity qualification",
@@ -453,7 +455,9 @@ def test_cross_fixture_checks_report_their_own_messages() -> None:
     rejects("cross-fixture catalog mismatch", descriptions(), rows)
     rejects("observation records[1] description index out of bounds", descriptions(),
             mutated_rows(lambda r: r[1]["description"].update(record_index=99999)))
-    rejects("observation records[1] description selector mismatch", descriptions(),
+    rejects("observation records[1] description selector mismatch; "
+            "records[1] request opcode corroboration failed "
+            "(linked observation must match operation, group, instance and register)", descriptions(),
             mutated_rows(lambda r: r[1]["description"].update(record_index=1)))
     rejects("observation records[0] status_only fields are inconsistent", descriptions(),
             mutated_rows(lambda r: r[0].update(observed_payload_width=1)))
@@ -921,3 +925,93 @@ def test_described_record_without_limit_spans_is_rejected(tmp_path: Path) -> Non
     result = subprocess.run(["jv", str(SCHEMA), str(path)], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode != 0
     validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
+
+
+@pytest.mark.parametrize("update_observation", [False, True])
+def test_recorded_scope_rejects_qualified_opcode_reassignment(
+    update_observation: bool,
+) -> None:
+    document, rows, overlay = descriptions(), observations(), scopes()
+    record = document["records"][544]
+    original = deepcopy(record["selector"])
+    assert original["operation"] == "02"
+    assert record["decoded"]["qualification"] == "qualified"
+    record["selector"]["operation"] = "06"
+    record["remote_identity"] = {
+        "qualification": "observed_remote_header", "group": original["group"],
+        "address_raw": "10", "firmware_raw": "010203",
+    }
+    entry = next(e for e in overlay["records"] if e["selector"] == original)
+    entry["selector"] = deepcopy(record["selector"])
+    if update_observation:
+        row = next(r for r in rows["records"] if r["selector"] == original)
+        row["selector"] = deepcopy(record["selector"])
+    rejects(
+        "records[544].identity_scope does not match native operation; "
+        "request opcode corroboration failed (identity scope)",
+        document, rows, overlay,
+    )
+    validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
+
+
+@pytest.mark.parametrize("field", ["operation", "group", "instance", "register"])
+def test_observation_link_corroborates_every_selector_field(field: str) -> None:
+    rows = observations()
+    row_index, row = next(
+        (i, r) for i, r in enumerate(rows["records"])
+        if r["description"] and r["description"]["record_index"] == 544
+    )
+    row["selector"][field] = "06" if field == "operation" else (
+        "FFFF" if field == "register" else "FE"
+    )
+    if field == "operation":
+        row["identity_scope"] = "remote"
+    rejects(
+        f"observation records[{row_index}] description selector mismatch; "
+        "records[544] request opcode corroboration failed "
+        "(linked observation must match operation, group, instance and register)",
+        descriptions(), rows,
+    )
+
+
+@pytest.mark.parametrize("schema,fixture", [
+    (SCHEMA, FIXTURE), (REGISTER_SCHEMA, REGISTER_FIXTURE),
+])
+@pytest.mark.parametrize("operation,scope", [("02", "remote"), ("06", "local")])
+def test_schemas_reject_scope_opcode_disagreement(
+    tmp_path: Path, schema: Path, fixture: Path, operation: str, scope: str,
+) -> None:
+    document = json.loads(fixture.read_text())
+    record = next(r for r in document["records"]
+                  if r["selector"]["operation"] == operation)
+    record["identity_scope"] = scope
+    path = tmp_path / "scope-opcode.json"
+    path.write_text(json.dumps(document))
+    result = subprocess.run(
+        ["jv", str(schema), str(path)], cwd=ROOT,
+        text=True, capture_output=True, check=False,
+    )
+    assert result.returncode != 0, result.stdout
+
+
+def test_exact_schema_basis_corroborates_op02_before_codec_lookup() -> None:
+    document, overlay = descriptions(), scopes()
+    index, record = next(
+        (i, r) for i, r in enumerate(document["records"])
+        if r["decoded"] and
+        r["decoded"]["codec_basis"] == "public_exact_selector_schema"
+    )
+    original = deepcopy(record["selector"])
+    record["selector"]["operation"] = "06"
+    record["identity_scope"] = "remote"
+    record["remote_identity"] = {
+        "qualification": "observed_remote_header", "group": original["group"],
+        "address_raw": "10", "firmware_raw": "010203",
+    }
+    entry = next(e for e in overlay["records"] if e["selector"] == original)
+    entry["selector"] = deepcopy(record["selector"])
+    rejects(
+        f"records[{index}] request opcode corroboration failed "
+        "(exact-selector-schema basis requires OP02)",
+        document, overlay=overlay,
+    )

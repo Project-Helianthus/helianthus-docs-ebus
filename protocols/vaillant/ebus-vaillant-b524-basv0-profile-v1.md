@@ -50,8 +50,12 @@ RRlo, RRhi`; the remaining bytes split into equal-width `MIN`, `MAX`, and
 They do not select a codec, prove the requested instance, prove a present
 device, or authorize a write.
 
+**Observed (derived):** the request opcode is retained as a recorded selector
+field corroborated by local (OP02) or remote (OP06) scope and linked observation
+rows, rather than by response bytes, which echo only `GG/RR`.
+
 The response does not echo the instance byte `II`, and the fixture retains no
-request, so the retained material cannot prove which instance a description
+request bytes, so the retained material cannot prove which instance a description
 answers; the semantic selector is the only link. A qualified decoded range is
 therefore accepted only where it is identical across every retained described
 instance of the selector `(OP, GG, RR)`: the raw limits and description length

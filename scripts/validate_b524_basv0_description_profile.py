@@ -127,6 +127,10 @@ EXACT_SCHEMA_SELECTORS = frozenset(
 
 def _validate_selector_codec(codec: str, basis: str, selector: dict[str, str], context: str) -> None:
     where = f"OP{selector['operation']}/GG{selector['group']}/II{selector['instance']}/RR{selector['register']}"
+    if basis == "public_exact_selector_schema":
+        _require(selector["operation"] == "02",
+                 f"{context} request opcode corroboration failed "
+                 "(exact-selector-schema basis requires OP02)")
     mapped = register_map_wire().get((selector["operation"], selector["group"], selector["register"]))
     if basis == "public_local_constraint_codec":
         _require(mapped is not None, f"{context}.decoded has no register-map Wire entry for {where}")
@@ -208,10 +212,12 @@ def _validate_record(record: Any, index: int) -> None:
         _require(isinstance(value, str) and len(value) == length and HEX.fullmatch(value) is not None,
                  f"{context}.selector.{name} is not uppercase hexadecimal")
     _require(record.get("identity_scope") == ("local" if operation == "02" else "remote"),
-             f"{context}.identity_scope does not match native operation")
+             f"{context}.identity_scope does not match native operation; "
+             "request opcode corroboration failed (identity scope)")
     remote_identity = record.get("remote_identity")
     if operation == "02":
-        _require(remote_identity is None, f"{context} must not attach remote identity to a local selector")
+        _require(remote_identity is None, f"{context} must not attach remote identity to a local selector; "
+                 "request opcode corroboration failed (remote header requires OP06)")
     else:
         _require(isinstance(remote_identity, dict) and remote_identity.get("qualification") in {"observed_remote_header", "unqualified"},
                  f"{context} must retain remote identity qualification")
@@ -324,12 +330,14 @@ def _validate_family_invariance(records: list[dict[str, Any]]) -> None:
     """Reject a qualified decoded claim in an instance-divergent selector family.
 
     The description response echoes GG and RR but not the instance byte, and the
-    fixture retains no request, so the retained material cannot prove which
+    fixture retains no request bytes, so the retained material cannot prove which
     instance a response answers. A qualified range is therefore accepted only where
     every retained described instance of (operation, group, register) carries
     byte-identical raw limits and description length; records without a
     description are absent evidence and take no part in the comparison.
     """
+    # Keep the recorded operation: OP02 and OP06 are distinct native namespaces.
+    # Scope and linked observation checks corroborate it; response bytes do not.
     families: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
     for record in records:
         selector = record["selector"]
@@ -513,7 +521,8 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
         key = _key(selector)
         _require(key not in seen, f"observation records[{index}] duplicates an observation selector")
         seen.add(key)
-        _require(row.get("identity_scope") == ("local" if selector.get("operation") == "02" else "remote"), f"observation records[{index}] identity scope disagrees with selector")
+        _require(row.get("identity_scope") == ("local" if selector.get("operation") == "02" else "remote"), f"observation records[{index}] identity scope disagrees with selector; "
+                 "request opcode corroboration failed (observation identity scope)")
         state = row.get("response_state")
         flags = row.get("access_flags")
         width = row.get("observed_payload_width")
@@ -542,7 +551,9 @@ def validate_documents(fixture: Any, observed: Any = None, catalog_name: str | N
             continue
         record_index = reference.get("record_index")
         _require(isinstance(record_index, int) and 0 <= record_index < len(records), f"observation records[{index}] description index out of bounds")
-        _require(row.get("selector") == records[record_index].get("selector"), f"observation records[{index}] description selector mismatch")
+        _require(row.get("selector") == records[record_index].get("selector"), f"observation records[{index}] description selector mismatch; "
+                 f"records[{record_index}] request opcode corroboration failed "
+                 "(linked observation must match operation, group, instance and register)")
         described = records[record_index]
         _require(row.get("access_flags") == described.get("access_flags"), f"observation records[{index}] access flags disagree with description")
         decoded = described.get("decoded")

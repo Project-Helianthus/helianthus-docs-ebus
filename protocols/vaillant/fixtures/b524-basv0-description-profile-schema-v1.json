@@ -124,6 +124,41 @@
           ]
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "selector": {
+                "properties": {
+                  "operation": {
+                    "const": "02"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "identity_scope": {
+                "const": "local"
+              },
+              "remote_identity": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "identity_scope": {
+                "const": "remote"
+              },
+              "remote_identity": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ],
       "if": {
         "required": ["decoded"],
         "properties": {
