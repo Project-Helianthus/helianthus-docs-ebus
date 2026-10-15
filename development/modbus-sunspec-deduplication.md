@@ -7,12 +7,9 @@ has merged and both repositories validate.
 
 ## Pinned comparison and evidence status
 
-All nine source pages were read at the then-current main of docs-ebus (HEAD
-and local `origin/main`). Counterparts were read with
-`git show origin/main:<path>` at the then-current main of docs-modbus.
-The exact revisions are recorded by this change's git history. These are
-locally available remote-tracking snapshots; no remote freshness or merge
-state was checked.
+All nine source pages and their docs-modbus counterparts were read from the
+main branch of each repository at the time of writing; this change's history
+records when. Later changes on either main branch are not reflected here.
 
 The destination [native-owner statement](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/README.md) selects docs-modbus as
 the canonical home for Modbus-family knowledge. The source
