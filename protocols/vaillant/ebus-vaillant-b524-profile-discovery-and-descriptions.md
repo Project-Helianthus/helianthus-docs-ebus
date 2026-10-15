@@ -44,9 +44,12 @@ request and interpret it with the parameter's matching codec, never by guessing
 a datatype from reply length alone.
 
 A writable attribute identifies a description candidate. Description bytes do
-not authorize a write or independently prove current writability. For HDA:3
-and numeric-byte HTI, format and range may be decoded while STEP remains
-**Unknown**; raw STEP bytes must not be converted into an invented duration.
+not authorize a write or independently prove current writability.
+**Hypothesis (candidate layouts):** `DATE_DMY_U8X3` (day, month, year offset
+from 2000) and `TIME_HMS_U8X3` (hour, minute, second) each use three plain
+unsigned bytes, not the packed-BCD `HDA:3`/`HTI` types. Under these candidate
+layouts, format and range may be decoded while STEP remains **Unknown**;
+raw STEP bytes must not be converted into an invented duration.
 
 ## Generic IIFF class observations
 
