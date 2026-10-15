@@ -71,8 +71,14 @@ def validate(graphql, mcp):
     normalized_bound = " ".join(bound.split())
     normalized_payload = " ".join(payload.split())
     policy = CONTRACT["policy_window"]
+    assert policy == {"min_c": -20, "max_c": 50}
     policy_min, policy_max = policy["min_c"], policy["max_c"]
     for text in (normalized_bound, normalized_payload):
+        assert ('The policy window equals the range the gateway accepted before '
+                'profiles existed, so v1 clients see no change, and narrowing '
+                'applies only on a qualified profile match (none is reachable '
+                'until identities are acquired at discovery, gateway '
+                '[#1034][gateway-bound-discovery]).') in text
         assert f'policy window `{policy_min}..{policy_max}`' in text
         assert f'`min = max(profile min, {policy_min})`' in text
         assert f'`max = min(profile max, {policy_max})`' in text
@@ -138,6 +144,9 @@ def validate(graphql, mcp):
         'controller identity unmatched (<reason>): conservative policy bound',
     ):
         assert required in inventory, required
+    for text in (normalized_bound, " ".join(inventory.split())):
+        assert ('controller identity unmatched (<reason>): conservative policy '
+                'bound [-20, 50] applies') in text
 
 
 def test_documented_bound_contract():
@@ -149,10 +158,11 @@ def test_documented_bound_contract():
     "setSystemConfig",
     "unknown_register", "unqualified_bound", "invalid_bound",
     "GraphQL returns `null`", "(with `reason` one of",
-    "policy window `-20..20`", "max(profile min, -20)",
-    "min(profile max, 20)",
+    "v1 clients see no change", "qualified profile", "[-20, 50] applies",
+    "policy window `-20..50`", "max(profile min, -20)",
+    "min(profile max, 50)",
     "An empty intersection falls back to\n  `unmatched_policy` with reason `invalid_bound`.",
-    "The empty-intersection fallback bound is the policy window `-20..20`.",
+    "The empty-intersection fallback bound is the policy window `-20..50`.",
 ))
 def test_rejects_graphql_contract_drift(old):
     graphql, mcp = pages()
@@ -165,10 +175,11 @@ def test_rejects_graphql_contract_drift(old):
     "source", "reason", "profile", "controller_profile", "unmatched_policy", "unknown_register",
     "unqualified_bound", "invalid_bound", "MCP omits", "isError: true",
     "ebus.v1.semantic.system.set_config",
-    "policy window `-20..20`", "max(profile min, -20)",
-    "min(profile max, 20)",
+    "v1 clients see no change", "qualified profile", "[-20, 50] applies",
+    "policy window `-20..50`", "max(profile min, -20)",
+    "min(profile max, 50)",
     "An empty\nintersection uses `unmatched_policy` with reason `invalid_bound`;",
-    "The empty-intersection fallback bound is the policy window `-20..20`.",
+    "The empty-intersection fallback bound is the policy window `-20..50`.",
 ))
 def test_rejects_mcp_contract_drift(old):
     graphql, mcp = pages()
@@ -187,10 +198,10 @@ def test_rejects_mcp_boolean_type_drift(replacement):
 
 @pytest.mark.parametrize("page", (0, 1), ids=("graphql", "mcp"))
 @pytest.mark.parametrize("old,new", (
-    ("-20..20", "-21..20"),
+    ("-20..50", "-20..20"),
     ("max(profile min, -20)", "max(profile min, -21)"),
-    ("min(profile max, 20)", "min(profile max, 21)"),
-    ("The empty-intersection fallback bound is the policy window `-20..20`.", ""),
+    ("min(profile max, 50)", "min(profile max, 20)"),
+    ("The empty-intersection fallback bound is the policy window `-20..50`.", ""),
 ))
 def test_rejects_intersection_sentence_drift(page, old, new):
     documents = list(pages())
