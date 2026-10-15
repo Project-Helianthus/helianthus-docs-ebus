@@ -344,8 +344,9 @@ def _validate_family_invariance(records: list[dict[str, Any]]) -> None:
     fixture retains no request bytes, so the retained material cannot prove which
     instance a response answers. A qualified range is therefore accepted only where
     every retained described instance of (operation, group, register) carries
-    byte-identical raw limits and description length; records without a
-    description are absent evidence and take no part in the comparison.
+    byte-identical raw limits and description length, with matching qualified
+    codecs; records without a description are absent evidence and take no part
+    in the comparison.
     """
     # Keep the recorded operation: OP02 and OP06 are distinct native namespaces.
     # Consistent scope/observation edits cannot establish it; see module docstring.
@@ -362,6 +363,11 @@ def _validate_family_invariance(records: list[dict[str, Any]]) -> None:
         _require(not (len(spans) > 1 and qualified),
                  f"OP{operation}/GG{group}/RR{register} qualifies a decoded range although its described instances differ; "
                  "the instance byte is not echoed, so a qualified range must be identical across every retained instance")
+        codecs = {record["decoded"]["codec"] for record in described
+                  if isinstance(record.get("decoded"), dict) and record["decoded"].get("qualification") == "qualified"}
+        _require(len(codecs) <= 1,
+                 f"OP{operation}/GG{group}/RR{register} has conflicting qualified codecs across retained instances: "
+                 f"{'/'.join(sorted(codecs))}; a qualified range must use the same codec")
 
 
 def _validate_remote_slot_identity(records: list[dict[str, Any]]) -> None:

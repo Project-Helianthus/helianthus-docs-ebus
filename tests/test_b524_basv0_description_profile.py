@@ -721,6 +721,41 @@ def test_missing_description_does_not_make_a_family_divergent() -> None:
     validator.validate_documents(descriptions(), observations(), CATALOG, scopes())
 
 
+@pytest.mark.parametrize("codec", ["EXP", "U32"])
+def test_family_invariance_compares_qualified_codecs_with_identical_bytes(codec: str) -> None:
+    """Exercise the family gate independently of the selector-to-codec pin."""
+    first = {
+        "selector": {"operation": "02", "group": "00", "instance": "00", "register": "FFFF"},
+        "raw_description_hex": "00000000" * 3,
+        "raw_limits": {f"{field}_hex": "00000000" for field in ("min", "max", "step")},
+        "description_payload_length": 12,
+        "decoded": {"qualification": "qualified", "codec": "EXP"},
+    }
+    second = deepcopy(first)
+    second["selector"]["instance"] = "01"
+    second["decoded"]["codec"] = codec
+    if codec == "EXP":
+        validator._validate_family_invariance([first, second])
+    else:
+        with pytest.raises(validator.ValidationError, match="OP02/GG00/RRFFFF has conflicting qualified codecs.*EXP/U32"):
+            validator._validate_family_invariance([first, second])
+
+
+@pytest.mark.parametrize(("field", "value"), [("operation", "06"), ("group", "01"), ("register", "FFFE")])
+def test_family_codec_comparison_preserves_native_namespaces(field: str, value: str) -> None:
+    first = {
+        "selector": {"operation": "02", "group": "00", "instance": "00", "register": "FFFF"},
+        "raw_description_hex": "00000000" * 3,
+        "raw_limits": {f"{name}_hex": "00000000" for name in ("min", "max", "step")},
+        "description_payload_length": 12,
+        "decoded": {"qualification": "qualified", "codec": "EXP"},
+    }
+    second = deepcopy(first)
+    second["selector"][field] = value
+    second["decoded"]["codec"] = "U32"
+    validator._validate_family_invariance([first, second])
+
+
 def test_description_without_observation_record_is_rejected() -> None:
     rows = observations()
     selector = descriptions()["records"][0]["selector"]
@@ -734,8 +769,9 @@ def test_moving_a_record_to_another_instance_stays_valid_when_the_family_is_inva
 
     This is harmless under the invariance rule: a qualified range is accepted only
     where every retained described instance of the selector carries identical
-    spans, so the instance byte can never carry a decoded claim and reassigning
-    it cannot change what the fixture asserts.
+    spans and matching qualified codecs, so reassigning the instance cannot
+    change any qualified decoded range. Presence state still follows the instance
+    as a source-installation interpretation.
     """
     document, rows = descriptions(), observations()
     _, record = find(document, "02", "03", "00", "0002")
