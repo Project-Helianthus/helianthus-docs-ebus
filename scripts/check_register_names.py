@@ -623,7 +623,8 @@ def selector_name_mismatches(
     catalog = {(row["group"], row["register"]): row["name"] for row in catalog_rows if row["name"]}
     return [
         (number, token, catalog[selector])
-        for number, token, selector in name_column_cells(lines)
+        for number, token, selector, title in _name_column_cells(lines)
+        if title != "Register" or not re.fullmatch(r"0x[0-9A-F]{4}", token)
         if selector in catalog and token != catalog[selector]
     ]
 

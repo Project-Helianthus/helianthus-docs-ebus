@@ -611,6 +611,38 @@ def test_header_register_selectors_are_not_names(cell: str) -> None:
     assert names.header_column_names(table.splitlines()) == [(4, "ventilation_operating_mode")]
 
 
+@pytest.mark.parametrize("cell", ["0x0016", "`0x0016`", "0x00AF", "`0x00AF`"])
+def test_catalog_named_register_selector_passes_main(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], cell: str
+) -> None:
+    text = names.PROTOCOL.read_text(encoding="utf-8")
+    table = (
+        "\n\n| Operation | Path | Register |\n| --- | --- | --- |\n"
+        f"| Read | GG=0x00, RR={names._strip_code_span(cell)} | {cell} |\n"
+    )
+    original_read_text = Path.read_text
+
+    def read_text(path: Path, *args, **kwargs) -> str:
+        if path == names.PROTOCOL:
+            return text + table
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+    assert names.main() == 0
+    assert capsys.readouterr().err == ""
+
+
+@pytest.mark.parametrize("header", ["Name", "Write"])
+def test_selector_mismatch_exemption_is_limited_to_register_columns(header: str) -> None:
+    lines = (
+        f"| Operation | Path | Register | {header} |\n| --- | --- | --- | --- |\n"
+        "| Read | GG=0x00, RR=0x0016 | `0x0016` | `0x0016` |"
+    ).splitlines()
+    assert names.selector_name_mismatches(lines, _rows(FIXTURES / "b524-op02-register-names.csv")) == [
+        (3, "0x0016", "ventilation_operating_mode")
+    ]
+
+
 @pytest.mark.parametrize("header", ["Name", "Write"])
 @pytest.mark.parametrize("cell", ["0x0016", "`0x0016`", "0x00AF", "`0x00AF`"])
 def test_header_selector_exemption_is_limited_to_register_columns(
