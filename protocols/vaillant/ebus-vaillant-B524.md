@@ -798,6 +798,11 @@ body, with its family where one is stated; the multi-step sequences are in the
 [write sequences](fixtures/b524-op02-write-sequences.csv). Every row of both
 tables carries the status `candidate, unconfirmed on the wire`.
 
+In the write templates, `write_role` classifies only the `write` label:
+`canonical` identifies a canonical register name, while `prose` identifies a
+descriptive phrase. Neither value qualifies the write itself or changes its
+evidence status; native write behavior remains a Hypothesis for both roles.
+
 No write template or write sequence on this page or in
 `b524-op02-write-templates.csv` / `b524-op02-write-sequences.csv` is documented
 as safe to send; an ACK does not show the resulting device state, and a
