@@ -261,7 +261,7 @@ def test_unnamed_note_and_code_span_name_pass_the_gate(
 def test_malformed_write_template_label_fails_the_gate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], label: str
 ) -> None:
-    """A canonical write-template row is found by its selector, not by its label syntax."""
+    """A canonical write-template row is found by its role, not by its label syntax."""
     fixtures = tmp_path / "fixtures"
     fixtures.mkdir()
     for source in names.FIXTURES.glob("*.csv"):
@@ -306,35 +306,96 @@ CATALOG = [
 ]
 
 
-def _template(label: str, previous: str, group: str, register: str) -> dict[str, str]:
-    return {"write": label, "previous_name": previous, "group": group, "register": register}
+def _template(label: str, previous: str, group: str, register: str,
+              role: str = "canonical") -> dict[str, str]:
+    return {"write": label, "previous_name": previous, "group": group,
+            "register": register, "write_role": role}
 
 
-def test_prose_template_label_is_not_canonical_when_it_differs_from_previous_name() -> None:
-    rows = [_template("room control zone mode", "room-control zone mode", "0x03", "0x0006")]
-    assert names.canonical_template_labels(rows, CATALOG) == []
+@pytest.mark.parametrize("label,previous", [
+    ("room control zone mode", "room-control zone mode"),
+    ("heating_zone_operating_mode", "zone_heating_operation_mode"),
+])
+def test_prose_template_role_is_independent_of_catalog_strings(label: str, previous: str) -> None:
+    rows = [_template(label, previous, "0x03", "0x0006", "prose")]
+    assert names.canonical_template_labels(rows) == []
 
 
 def test_canonical_template_label_is_validated(vocabulary: names.Vocabulary) -> None:
     rows = [
         _template("dhw_temperature_setpoint", "native_dhw_tapping_temperature_setpoint", "0x01", "0x0004"),
-        # a canonical row whose label drifted from the catalog is still validated
-        _template("dhw_temperature_set_point", "native_dhw_tapping_temperature_setpoint", "0x01", "0x0004"),
-        # a selector outside the catalog never yields a canonical label
-        _template("system configuration floats", "system configuration floats", "0x00", "0x0001 / 0x0023"),
+        # Both editable strings drift; the role still admits the raw label for validation.
+        _template("dhw_temperature_set_point", "changed provenance", "0x01", "0x0004"),
+        # Canonical labels cannot disappear through a selector change either.
+        _template("dhw_temperature_set_point", "changed provenance", "0xFF", "0xFFFF"),
+        _template("system configuration floats", "system configuration floats", "0x00", "0x0001 / 0x0023", "prose"),
     ]
-    labels = names.canonical_template_labels(rows, CATALOG)
-    assert labels == [(2, "dhw_temperature_setpoint"), (3, "dhw_temperature_set_point")]
+    labels = names.canonical_template_labels(rows)
+    assert labels == [(2, "dhw_temperature_setpoint"), (3, "dhw_temperature_set_point"),
+                      (4, "dhw_temperature_set_point")]
     names.decompose(labels[0][1], vocabulary)
-    with pytest.raises(names.NameError_):
-        names.decompose(labels[1][1], vocabulary)
+    for _, label in labels[1:]:
+        with pytest.raises(names.NameError_):
+            names.decompose(label, vocabulary)
+
+
+@pytest.mark.parametrize("role", [None, "", "Canonical", "unknown", "canonical "])
+def test_missing_or_invalid_template_role_fails(role: str | None) -> None:
+    row = _template("dhw_temperature_setpoint", "changed provenance", "0x01", "0x0004")
+    if role is None:
+        del row["write_role"]
+    else:
+        row["write_role"] = role
+    with pytest.raises(ValueError, match="write-templates.csv:2: write_role must be"):
+        names.canonical_template_labels([row])
 
 
 def test_fixture_write_templates_yield_only_catalog_labels() -> None:
     catalog_rows = _rows(FIXTURES / "b524-op02-register-names.csv")
-    labels = names.canonical_template_labels(_rows(FIXTURES / "b524-op02-write-templates.csv"), catalog_rows)
-    assert labels
+    labels = names.canonical_template_labels(_rows(FIXTURES / "b524-op02-write-templates.csv"))
+    assert len(labels) == 5
     assert {label for _, label in labels} <= {row["name"] for row in catalog_rows}
+
+
+@pytest.mark.parametrize("mutation", ["drift", "missing", "invalid", "prose"])
+def test_template_role_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str], mutation: str,
+) -> None:
+    fixtures = tmp_path / "fixtures"
+    fixtures.mkdir()
+    for source in names.FIXTURES.glob("*.csv"):
+        rows = _rows(source)
+        fields = list(rows[0])
+        if source.name == "b524-op02-write-templates.csv":
+            row = next(row for row in rows if row["write"] == "dhw_temperature_setpoint")
+            if mutation == "drift":
+                row["write"] = "dhw_temperature_set_point"
+                row["previous_name"] = "changed provenance"
+            elif mutation == "missing":
+                fields.remove("write_role")
+                for item in rows:
+                    del item["write_role"]
+            elif mutation == "invalid":
+                row["write_role"] = "unknown"
+            else:
+                row["write"] = "synthetic prose label"
+                row["previous_name"] = "changed provenance"
+                row["write_role"] = "prose"
+        with (fixtures / source.name).open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(rows)
+    monkeypatch.setattr(names, "FIXTURES", fixtures)
+    monkeypatch.setattr(names, "ROOT", Path("/"))
+    assert names.main() == (0 if mutation == "prose" else 1)
+    error = capsys.readouterr().err
+    if mutation == "drift":
+        assert "set_point" in error
+    elif mutation in {"missing", "invalid"}:
+        assert "write_role must be 'canonical' or 'prose'" in error
+    else:
+        assert not error
 
 
 @pytest.mark.parametrize("name", ["temperature_time", "name_time", "date_time", "pump_time"])
@@ -693,7 +754,7 @@ def test_backticked_whitespace_is_validated_without_a_catalog_name(
 
 def test_real_page_prose_cells_are_skipped_even_with_catalog_selectors() -> None:
     lines = names.PROTOCOL.read_text(encoding="utf-8").splitlines()
-    prose_lines = {160, 161, 162, 1193, 1194, 1195, 1197}
+    prose_lines = {160, 161, 162, 1198, 1199, 1200, 1202}
     catalog = {
         (row["group"], row["register"]) for row in
         _rows(FIXTURES / "b524-op02-register-names.csv") if row["name"]
@@ -712,7 +773,7 @@ def test_real_page_prose_cells_are_skipped_even_with_catalog_selectors() -> None
     [
         (158, "Ventilation operating mode (enum, see register map)",
          "ventilation_operating_mode", ("0x00", "0x0016")),
-        (1196, "External energy management enabled (`RR=0x00B6`)",
+        (1201, "External energy management enabled (`RR=0x00B6`)",
          "external_energy_management_enabled", ("0x00", "0x00B6")),
         (158, "Ventilation-operating mode (enum, see register map)",
          "ventilation_operating_mode", ("0x00", "0x0016")),
