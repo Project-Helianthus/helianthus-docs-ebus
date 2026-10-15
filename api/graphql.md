@@ -1106,6 +1106,7 @@ controller.
   `max = min(profile max, 20)`. An empty intersection falls back to
   `unmatched_policy` with reason `invalid_bound`. A nonempty intersection
   retains `source: controller_profile` and the matched profile identity.
+  The empty-intersection fallback bound is the policy window `-20..20`.
   Widening beyond the window requires installation-qualified evidence, such
   as a description of the target installation's own selector (future work);
   no seeded profile provides it. The only seeded bound coincides with the

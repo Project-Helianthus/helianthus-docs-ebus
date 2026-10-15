@@ -436,9 +436,11 @@ an observation context, not an installation. Its bound is a **Hypothesis**
 for the target installation and can only narrow the policy window `-20..20`:
 `min = max(profile min, -20)`, `max = min(profile max, 20)`. An empty
 intersection uses `unmatched_policy` with reason `invalid_bound`; otherwise
-the source and profile identity remain `controller_profile`. Widening needs
-installation-qualified evidence, which no seeded profile provides. The sole
-seeded bound equals the window, so numeric behaviour is unchanged.
+the source and profile identity remain `controller_profile`.
+The empty-intersection fallback bound is the policy window `-20..20`.
+Widening needs installation-qualified evidence, which no seeded profile
+provides. The sole seeded bound equals the window, so numeric behaviour is
+unchanged.
 
 The following response `data` fragments pin the two resolved shapes. The
 profile fragment illustrates a matched observation context; current discovery

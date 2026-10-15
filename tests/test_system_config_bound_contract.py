@@ -3,6 +3,7 @@
 The fixture pins the documented GraphQL and MCP bound members and examples.
 """
 
+from copy import deepcopy
 import json
 from pathlib import Path
 import re
@@ -69,6 +70,51 @@ def validate(graphql, mcp):
         assert ("reason" in obj) == (obj["source"] == "unmatched_policy")
     normalized_bound = " ".join(bound.split())
     normalized_payload = " ".join(payload.split())
+    policy = CONTRACT["policy_window"]
+    policy_min, policy_max = policy["min_c"], policy["max_c"]
+    for text in (normalized_bound, normalized_payload):
+        assert f'policy window `{policy_min}..{policy_max}`' in text
+        assert f'`min = max(profile min, {policy_min})`' in text
+        assert f'`max = min(profile max, {policy_max})`' in text
+        assert (
+            'The empty-intersection fallback bound is the policy window '
+            f'`{policy_min}..{policy_max}`.'
+        ) in text
+    assert (
+        'The effective bound is the intersection: '
+        f'`min = max(profile min, {policy_min})` and '
+        f'`max = min(profile max, {policy_max})`.'
+    ) in normalized_bound
+    assert ('An empty intersection falls back to `unmatched_policy` with '
+            'reason `invalid_bound`.') in normalized_bound
+    assert (
+        'Its bound is a **Hypothesis** for the target installation and can '
+        f'only narrow the policy window `{policy_min}..{policy_max}`: '
+        f'`min = max(profile min, {policy_min})`, '
+        f'`max = min(profile max, {policy_max})`.'
+    ) in normalized_payload
+    assert ('An empty intersection uses `unmatched_policy` with reason '
+            '`invalid_bound`; otherwise the source and profile identity '
+            'remain `controller_profile`.') in normalized_payload
+    for obj in objects:
+        if obj["source"] == "controller_profile":
+            assert policy_min <= obj["min_c"] <= obj["max_c"] <= policy_max
+            assert obj["narrowed_only"] is True
+        else:
+            assert obj["source"] == "unmatched_policy"
+            assert obj["reason"] in CONTRACT["reasons"]
+            assert {key: obj[key] for key in policy} == policy
+    for case in CONTRACT["intersection_cases"]:
+        profile = case["profile_window"]
+        low = max(profile["min_c"], policy_min)
+        high = min(profile["max_c"], policy_max)
+        if low <= high:
+            outcome = {"min_c": low, "max_c": high,
+                       "source": "controller_profile", "narrowed_only": True}
+        else:
+            outcome = {**policy, "source": "unmatched_policy",
+                       "reason": "invalid_bound", "narrowed_only": False}
+        assert outcome == case["expected"], case
     assert '(with `profile` naming the matched identity' in normalized_bound
     assert '(with `reason` one of' in normalized_bound
     assert ('Before the first resolution, GraphQL returns `null` for '
@@ -103,6 +149,10 @@ def test_documented_bound_contract():
     "setSystemConfig",
     "unknown_register", "unqualified_bound", "invalid_bound",
     "GraphQL returns `null`", "(with `reason` one of",
+    "policy window `-20..20`", "max(profile min, -20)",
+    "min(profile max, 20)",
+    "An empty intersection falls back to\n  `unmatched_policy` with reason `invalid_bound`.",
+    "The empty-intersection fallback bound is the policy window `-20..20`.",
 ))
 def test_rejects_graphql_contract_drift(old):
     graphql, mcp = pages()
@@ -115,6 +165,10 @@ def test_rejects_graphql_contract_drift(old):
     "source", "reason", "profile", "controller_profile", "unmatched_policy", "unknown_register",
     "unqualified_bound", "invalid_bound", "MCP omits", "isError: true",
     "ebus.v1.semantic.system.set_config",
+    "policy window `-20..20`", "max(profile min, -20)",
+    "min(profile max, 20)",
+    "An empty\nintersection uses `unmatched_policy` with reason `invalid_bound`;",
+    "The empty-intersection fallback bound is the policy window `-20..20`.",
 ))
 def test_rejects_mcp_contract_drift(old):
     graphql, mcp = pages()
@@ -129,3 +183,39 @@ def test_rejects_mcp_boolean_type_drift(replacement):
                       '"narrowed_only": ' + json.dumps(replacement))
     with pytest.raises(AssertionError):
         validate(graphql, mcp)
+
+
+@pytest.mark.parametrize("page", (0, 1), ids=("graphql", "mcp"))
+@pytest.mark.parametrize("old,new", (
+    ("-20..20", "-21..20"),
+    ("max(profile min, -20)", "max(profile min, -21)"),
+    ("min(profile max, 20)", "min(profile max, 21)"),
+    ("The empty-intersection fallback bound is the policy window `-20..20`.", ""),
+))
+def test_rejects_intersection_sentence_drift(page, old, new):
+    documents = list(pages())
+    assert old in documents[page]
+    documents[page] = documents[page].replace(old, new)
+    with pytest.raises(AssertionError):
+        validate(*documents)
+
+
+@pytest.mark.parametrize("row", range(len(CONTRACT["intersection_cases"])))
+@pytest.mark.parametrize("field", ("min_c", "max_c", "source", "narrowed_only", "reason"))
+def test_rejects_intersection_outcome_drift(monkeypatch, row, field):
+    cases = deepcopy(CONTRACT["intersection_cases"])
+    expected = cases[row]["expected"]
+    if field in ("min_c", "max_c"):
+        expected[field] += 1
+    elif field == "narrowed_only":
+        expected[field] = not expected[field]
+    elif field == "source":
+        expected[field] = ("unmatched_policy" if expected[field] ==
+                           "controller_profile" else "controller_profile")
+    elif field in expected:
+        expected[field] = "unknown_profile"
+    else:
+        expected[field] = "invalid_bound"
+    monkeypatch.setitem(CONTRACT, "intersection_cases", cases)
+    with pytest.raises(AssertionError):
+        validate(*pages())
