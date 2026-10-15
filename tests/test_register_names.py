@@ -601,6 +601,33 @@ def test_condition_bound_needs_the_object_it_precedes(vocabulary: names.Vocabula
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize("cell", ["0x0016", "`0x0016`", "0x00AF", "`0x00AF`"])
+def test_header_register_selectors_are_not_names(cell: str) -> None:
+    table = (
+        "| Operation | Register |\n| --- | --- |\n"
+        f"| Read | {cell} |\n"
+        "| Read | `ventilation_operating_mode` |"
+    )
+    assert names.header_column_names(table.splitlines()) == [(4, "ventilation_operating_mode")]
+
+
+@pytest.mark.parametrize(
+    "cell",
+    [
+        "InvalidName", "`InvalidName`", "``0x0016``", "`0x0016", "0x0016`",
+        "0x00af", "0X0016", "0x016", "0x00160",
+    ],
+)
+def test_header_selector_exclusion_preserves_invalid_names(
+    vocabulary: names.Vocabulary, cell: str
+) -> None:
+    table = "| Operation | Register |\n| --- | --- |\n" f"| Read | {cell} |"
+    found = names.header_column_names(table.splitlines())
+    assert found == [(3, names._strip_code_span(cell))]
+    with pytest.raises(names.NameError_):
+        names.decompose(found[0][1], vocabulary)
+
+
 def test_protocol_header_column_names_are_covered_and_pass(
     vocabulary: names.Vocabulary,
 ) -> None:

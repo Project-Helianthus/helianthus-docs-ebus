@@ -600,7 +600,11 @@ def mangled_canonical_names(
 
 
 def header_column_names(lines: list[str]) -> list[tuple[int, str]]:
-    return [(number, token) for number, token, _ in name_column_cells(lines)]
+    return [
+        (number, token)
+        for number, token, _ in name_column_cells(lines)
+        if not re.fullmatch(r"0x[0-9A-F]{4}", token)
+    ]
 
 
 def selector_name_mismatches(
