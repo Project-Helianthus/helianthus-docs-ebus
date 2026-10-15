@@ -533,3 +533,52 @@ def test_condition_bound_needs_the_object_it_precedes(vocabulary: names.Vocabula
     ):
         with pytest.raises(names.NameError_):
             names.decompose(name, vocabulary)
+
+
+# ---------------------------------------------------------------------------
+# Protocol-page tables whose rows do not begin with a register
+# ---------------------------------------------------------------------------
+
+
+def test_protocol_header_column_names_are_covered_and_pass(
+    vocabulary: names.Vocabulary,
+) -> None:
+    found = names.header_column_names(names.PROTOCOL.read_text(encoding="utf-8").splitlines())
+    assert {name for _, name in found} >= {
+        "ventilation_operating_mode",
+        "special_function_mode",
+        "external_energy_management_enabled",
+    }
+    covered = [name for _, name in names.covered_names()]
+    for _, name in found:
+        names.decompose(name, vocabulary)
+        assert name in covered
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        "| Operation | Path | Register |\n| --- | --- | --- |\n"
+        "| Read | `OP=0x02` | `Ventilation-operating-mode` (enum) |",
+        "| Write | Body | Value |\n| --- | --- | --- |\n"
+        "| `External-energy-management-enabled` (`RR=0x00B6`) | `02 01` | one byte |",
+        "| Write | Body | Value |\n| --- | --- | --- |\n"
+        "| `external_energy_management_enabled`` (`RR=0x00B6`) | `02 01` | one byte |",
+    ],
+)
+def test_malformed_name_in_a_non_register_leading_table_is_rejected(
+    vocabulary: names.Vocabulary, table: str
+) -> None:
+    found = names.header_column_names(table.splitlines())
+    assert len(found) == 1
+    with pytest.raises(names.NameError_):
+        names.decompose(found[0][1], vocabulary)
+
+
+def test_prose_cells_and_register_leading_rows_are_not_read_twice() -> None:
+    table = (
+        "| Operation | Path | Register |\n| --- | --- | --- |\n"
+        "| Write | `OP=0x02` | Write target for mode activation |\n"
+        "| RR | Name |\n| --- | --- |\n| `0x0001` | `device_connected` |"
+    )
+    assert names.header_column_names(table.splitlines()) == []

@@ -535,6 +535,44 @@ def canonical_template_labels(
     return labels
 
 
+# Columns of the protocol page's tables that carry a register name when the row
+# does not begin with a register: located by the header cell of the table.
+NAME_COLUMN_HEADERS = {"Register", "Write", "Name"}
+LEADING_CODE_SPAN = re.compile(r"(`.*?)(?: \(|$)")
+
+
+def header_column_names(lines: list[str]) -> list[tuple[int, str]]:
+    """Names in the name columns of tables whose rows do not begin with a register.
+
+    A table's name columns are the columns whose header is in
+    NAME_COLUMN_HEADERS. A cell that opens with a backtick holds a name: the text
+    up to a parenthesised note (or the whole cell), from which exactly one outer
+    code span is removed, so unbalanced delimiters fail in decompose(). A cell
+    that does not open with a backtick is prose. Rows that begin with a register are scanned
+    by the register-row matchers and are not read again.
+    """
+    found: list[tuple[int, str]] = []
+    header: list[str] | None = None
+    for number, line in enumerate(lines, 1):
+        if not line.startswith("|"):
+            header = None
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if header is None:
+            header = cells
+            continue
+        if set("".join(cells)) <= set("-: "):
+            continue
+        if PROTOCOL_ROW.match(line) or HEX_H_ROW.match(line):
+            continue
+        for cell, title in zip(cells, header):
+            if title in NAME_COLUMN_HEADERS:
+                match = LEADING_CODE_SPAN.match(cell)
+                if match:
+                    found.append((number, _strip_code_span(match[1])))
+    return found
+
+
 def covered_names() -> list[tuple[str, str]]:
     names: list[tuple[str, str]] = []
     for fixture in (
@@ -584,6 +622,10 @@ def covered_names() -> list[tuple[str, str]]:
         match = HEX_H_ROW.match(line)
         if match:
             names.extend((f"{where}:{number}", name) for name in _cell_names(match[1], paired=True))
+    names.extend(
+        (f"{where}:{number}", name)
+        for number, name in header_column_names(protocol.splitlines())
+    )
     for number, line in enumerate(protocol.splitlines(), 1):
         match = PROTOCOL_ROW.match(line)
         if match:
