@@ -754,7 +754,7 @@ def test_backticked_whitespace_is_validated_without_a_catalog_name(
 
 def test_real_page_prose_cells_are_skipped_even_with_catalog_selectors() -> None:
     lines = names.PROTOCOL.read_text(encoding="utf-8").splitlines()
-    prose_lines = {160, 161, 162, 1193, 1194, 1195, 1197}
+    prose_lines = {160, 161, 162, 1198, 1199, 1200, 1202}
     catalog = {
         (row["group"], row["register"]) for row in
         _rows(FIXTURES / "b524-op02-register-names.csv") if row["name"]
@@ -773,7 +773,7 @@ def test_real_page_prose_cells_are_skipped_even_with_catalog_selectors() -> None
     [
         (158, "Ventilation operating mode (enum, see register map)",
          "ventilation_operating_mode", ("0x00", "0x0016")),
-        (1196, "External energy management enabled (`RR=0x00B6`)",
+        (1201, "External energy management enabled (`RR=0x00B6`)",
          "external_energy_management_enabled", ("0x00", "0x00B6")),
         (158, "Ventilation-operating mode (enum, see register map)",
          "ventilation_operating_mode", ("0x00", "0x0016")),
