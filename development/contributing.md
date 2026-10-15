@@ -57,6 +57,35 @@ Doc-gate is mandatory for changes that affect implemented architecture, APIs, or
 - [ ] PR description includes clear evidence of doc updates (or valid non-trigger rationale).
 - [ ] I will withhold approval if doc-gate requirements are incomplete.
 
+## Local Gate
+
+Run `./scripts/ci_local.sh` before pushing. The gate requires the locked Python
+dependencies in `requirements-ci.txt`, actionlint v1.7.7, jv v0.7.0, ShellCheck,
+and the existing provenance inputs required by the platform validators.
+
+Workflow validation runs actionlint with `-shellcheck=` and a separate
+ShellCheck pass over every `.yml` and `.yaml` workflow's `run:` steps. This
+avoids actionlint v1.7.7's blocking stdin write to its embedded ShellCheck
+process. Both passes print results and have a 60-second limit; findings or
+timeouts return a nonzero gate status. The actionlint version probe is also
+bounded to 60 seconds. Missing required tools retain exit status 2.
+
+The helper uses bash by default, honors step, job and workflow shell settings
+in that order, and recognizes Windows runner labels as actionlint does.
+ShellCheck checks bash/sh scripts, including custom bash/sh command templates;
+other shells are explicitly reported as skipped, matching actionlint's scope.
+GitHub expressions become equal-byte-length underscores before inspection.
+Shell setup and the six diagnostic exclusions match actionlint v1.7.7;
+all severities, including style, remain enabled. Extracted scripts are never
+executed. The gate retains them in its printed temporary directory for
+diagnosis; reported script line numbers include one prepended setup line.
+
+`python3 -m pytest -q tests/test_workflow_shells.py` checks the original 19-step
+inventory in the two investigated workflows and all 21 steps across the current
+three workflows, a deliberately broken snippet, shell selection and timeout failure.
+The local gate also runs this check. GitHub workflow files and configuration
+are unchanged; the shared gate retains workflow syntax and shell lint coverage.
+
 ## Transport Runtime Gate (Merge Blocking)
 
 For eBUS transport/protocol changes, merge readiness requires an additional runtime gate:
