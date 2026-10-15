@@ -195,6 +195,7 @@ echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
+python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
 echo "==> check canonical register names against the register naming rules"
 python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
