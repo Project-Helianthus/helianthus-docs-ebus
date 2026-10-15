@@ -197,7 +197,7 @@ frame:
   offset or encoding for it is known.
 - Grid-connection-point, photovoltaic and battery measurement values are not
   known to be carried in any B5xx or B524 frame. The B524 register
-  `system_cylinder_smart_pv_ch_offset` (B524 OP `0x02`, GG `0x00`, RR `0x00A2`,
+  `heating_cylinder_offset_at_pv_surplus` (B524 OP `0x02`, GG `0x00`, RR `0x00A2`,
   see the [B524 register map](ebus-vaillant-B524-register-map.md)) is not known
   to carry these values.
 

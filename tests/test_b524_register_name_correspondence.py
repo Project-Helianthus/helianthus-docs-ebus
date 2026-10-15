@@ -19,6 +19,7 @@ EXPECTED_COLUMNS = [
     "group",
     "register",
     "name",
+    "previous_name",
     "vaillant_friendly_name",
     "vaillant_name_vrc720",
     "vaillant_name_vrc700",
@@ -50,6 +51,10 @@ def test_correspondence_name_column_matches_canonical_op02_catalog() -> None:
         (row["opcode"], row["group"], row["register"]): row["name"]
         for row in _rows(CANONICAL)
     }
+    previous = {
+        (row["opcode"], row["group"], row["register"]): row["previous_name"]
+        for row in _rows(CANONICAL)
+    }
     correspondence = _rows(CORRESPONDENCE)
     op02_rows = [row for row in correspondence if row["opcode"] == "0x02"]
 
@@ -63,6 +68,10 @@ def test_correspondence_name_column_matches_canonical_op02_catalog() -> None:
         assert row["name"] == canonical[key], (
             f"{key}: correspondence name {row['name']!r} != "
             f"canonical name {canonical[key]!r}"
+        )
+        assert row["previous_name"] == previous[key], (
+            f"{key}: correspondence previous_name {row['previous_name']!r} != "
+            f"catalog previous_name {previous[key]!r}"
         )
 
 
@@ -98,7 +107,7 @@ def test_correspondence_ebusd_names_are_not_duplicated_within_an_opcode() -> Non
     )
 
 
-ANNOTATION_COLUMNS = EXPECTED_COLUMNS[4:]
+ANNOTATION_COLUMNS = EXPECTED_COLUMNS[5:]
 
 # A cell lists more than one value only when each value is an observed name
 # of that same register for that column. Every such cell is pinned here, so

@@ -9,7 +9,7 @@ family-qualified interpretations, and scanner policy. It adds no device writes.
 For OP02/GG02, the VRC720 family is II00..II09:
 II00..II08 are ordinary heating-circuit candidates and II09 is the virtual
 native-water circuit. A other or unknown family requires separate
-qualification. The legacy public name `circuit_count` for OP00/ID00 is a
+qualification. OP00/ID00 `circuit_count_maximum` is a
 supported-capacity value under the bounded contract below; it does not select
 or allocate II identities. It does not add II0A, and II09 remains a separately
 selected candidate.
@@ -88,8 +88,8 @@ identity. They apply only to `recommended`. A concrete presence predicate still
 confirms every instance. `full`, `research`, and `custom` retain their own
 selector policy.
 
-For OP00/ID00 `circuit_count` and ID01 `zone_count`, the legacy public names
-are retained, but their supported meaning is capacity, not configured or
+For OP00/ID00 `circuit_count_maximum` and ID01 `zone_count_maximum`, the
+supported meaning is capacity, not configured or
 present-instance cardinality. The following six combinations are the complete
 supported contract:
 
@@ -107,7 +107,7 @@ capacity model. In particular, two configured or confirmed circuits with
 circuit capacity `3`, and two configured or confirmed zones with zone capacity
 `3`, are normal and are not mismatches. Capacity never creates, removes,
 orders, or makes II slots contiguous; each candidate must pass its concrete
-group predicate. II09 remains independent of `circuit_count`.
+group predicate. II09 remains independent of `circuit_count_maximum`.
 
 The two capacity values are recommendations for bounded candidate planning
 only. They never construct instances. A missing, malformed, conflicting, or
@@ -123,20 +123,20 @@ the group's qualified predicate and leaves count-guided coverage incomplete.
 
 | OP/GG | OP00 ID | Count name | Scope of the hint |
 | --- | --- | --- | --- |
-| OP02/GG02 | 00 | `circuit_count` | Supported circuit capacity; candidate guidance only. II00..II08 retain their concrete predicate, and II09 is independent. |
-| OP02/GG03 | 01 | `zone_count` | Supported zone capacity; candidate guidance only. II00..II0A retain their concrete predicate. |
+| OP02/GG02 | 00 | `circuit_count_maximum` | Supported circuit capacity; candidate guidance only. II00..II08 retain their concrete predicate, and II09 is independent. |
+| OP02/GG03 | 01 | `zone_count_maximum` | Supported zone capacity; candidate guidance only. II00..II0A retain their concrete predicate. |
 | OP02/GG04 | 02 | `solar_circuit_count` | Local solar-circuit candidates. |
-| OP02/GG05 | 03 | `solar_loaded_tank_count` | Local cylinder candidates. |
-| OP02/GG08 | 0B | `delta_t_count` | Local DeltaT candidates. |
-| OP02/GG09 | 10 | `recovair_count` | II00 only in `recommended`; zero avoids derived default slots. |
+| OP02/GG05 | 03 | `solar_cylinder_count` | Local cylinder candidates. |
+| OP02/GG08 | 0B | `differential_control_count` | Local DeltaT candidates. |
+| OP02/GG09 | 10 | `ventilation_unit_count` | II00 only in `recommended`; zero avoids derived default slots. |
 | OP06/all confirmed slots | 04 | `device_count` | Aggregate comparison; never GG06, membership, or a cutoff. |
 | OP06/GG01 | 0C | `boiler_count` | Cardinality only. |
 | OP06/GG02 | 0D | `heat_pump_count` | Cardinality only. |
-| OP06/GG06 | 0F | `vpm_s_count` | Cardinality only. |
-| OP06/GG07 | 0E | `vpm_w_count` | Cardinality only. |
+| OP06/GG06 | 0F | `solar_pump_module_count` | Cardinality only. |
+| OP06/GG07 | 0E | `water_pump_module_count` | Cardinality only. |
 | OP06/GG09 | 0A | `remote_control_count` | Cardinality only. |
-| OP06/GG0B | 08 | `vr70_count` | Cardinality only. |
-| OP06/GG0C | 09 | `vr71_count` | Cardinality only. |
+| OP06/GG0B | 08 | `functional_module_1_count` | Cardinality only. |
+| OP06/GG0C | 09 | `functional_module_2_count` | Cardinality only. |
 
 There is no count mapping for OP06/GG03, GG05, GG08, GG0A, GG0D, GG0E, or
 GG0F: use their qualified presence predicate. There is also no OP00 ID05

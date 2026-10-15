@@ -50,7 +50,7 @@ def test_circuit_register_prose_preserves_b524_evidence_boundaries() -> None:
         "### GG=0x03 — Zones", 1
     )[0]
     circuit_fsm = text.split("### `circuit_state`", 1)[1].split(
-        "### `system_quick_mode`", 1
+        "### `special_function_mode`", 1
     )[0]
 
     assert "no presence predicate for this virtual identity" in circuits
@@ -334,7 +334,7 @@ def test_register_map_preserves_exact_gg05_and_ventilation_presentation_annotati
     assert ventilation.count("`1=TIME_CONTROLLED 2=NORMAL 3=REDUCED`") == 2
     assert ventilation.count("`0=REGULAR 1=BOOST 7=HOLIDAY 10=SYSTEM_OFF`") == 2
     assert (
-        "ventilation_status_special_operating_mode | S | u16 | — | — | 0..10"
+        "ventilation_special_function_state | S | u16 | — | — | 0..10"
         in ventilation
     )
     assert "numeric domain unknown" not in ventilation

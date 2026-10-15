@@ -6,7 +6,7 @@
 
 > **Status:** Authoritative reference. Single source of truth for B524 register semantics.
 >
-> **Last updated:** 2026-10-07 (operation-scoped naming catalog)
+> **Last updated:** 2026-10-14 (register names renamed to the register naming rules)
 >
 > **Controller families:** VRC700 and VRC720.
 
@@ -152,8 +152,8 @@ identity correlation rather than from B524 alone.
 
 **Discovery:** OP00 information identifiers are distinct from GG. The
 [family-qualified mapping table](ebus-vaillant-b524-profile-discovery-and-descriptions.md#system-information-and-concrete-instances)
-records family-qualified count interpretation. For ID00 `circuit_count` and ID01
-`zone_count`, the legacy public names mean supported capacity under the bounded
+records family-qualified count interpretation. ID00 `circuit_count_maximum` and ID01
+`zone_count_maximum` denote supported capacity under the bounded
 profile contract, not configured or present-instance cardinality. They do not
 identify, allocate, or make II slots contiguous: keep sparse II slots and apply
 the group predicate to every candidate. II09 remains an independent virtual
@@ -216,10 +216,19 @@ Several registers are conditionally available based on system configuration. Gat
 
 ## OP=0x02 — Local Parameter Registers
 
-The semantic names below form an operator-curated, operation-scoped naming
+The semantic names below form an operation-scoped naming
 catalog ([issue #544](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/544)),
 machine-checked against
 [`fixtures/b524-op02-register-names.csv`](fixtures/b524-op02-register-names.csv).
+The names follow the register naming rules of this repository
+([issue #560](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/560)):
+a name reads as a sentence of subject, predicate, object and circumstances,
+and every token comes from the register name vocabulary. The catalog keeps the
+earlier name of each register in its `previous_name` column; a provisional
+name, whose meaning is not established, states the unresolved point in its
+`open_question` column. The OP=0x06 and `OP=0x02, GG=0x0A` names of this
+document follow the same rules; the earlier names that changed are listed in the
+`previous_name` tables of their sections.
 Naming does not independently qualify a codec, value range, write capability,
 physical identity or scan bound. Existing raw observations and profile limits
 remain separately qualified. Newly named entries without a characterized layout
@@ -234,6 +243,7 @@ and, where known, a set of annotation columns:
 | Column | Meaning |
 | --- | --- |
 | `name` | The canonical, presentation name from this catalog. Identical to `b524-op02-register-names.csv` for every OP02 key; this is the only column that names a register in this document. |
+| `previous_name` | The earlier canonical name of the register, before the register naming rules applied; identical to the `previous_name` column of `b524-op02-register-names.csv`. It is a migration aid, not a name of the register. |
 | `vaillant_friendly_name` | An observed Vaillant friendly name for the register. |
 | `vaillant_name_vrc720` / `vaillant_name_vrc700` | Observed Vaillant names, where known, for the VRC720 and VRC700 regulator families respectively. An empty cell means no name has been observed for that family; it does not imply the register is absent on that family. |
 | `myvaillant_name_vrc720` / `myvaillant_name_vrc700` | Observed myVaillant app/cloud names, where known, per family. |
@@ -287,234 +297,234 @@ the instance domain remains unconfirmed. The notation
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | system_dhw_bivalence_point | C | f32 | °C | — | profile-scoped: BASV2 -20..50 step 1; BASV0 -20..20 step 1 | — | — | FLAGS=0x02 (historical scan value, controller profile not recorded); BASV0 observes flags 03. See the DHW bivalence note in the [Constraint Catalog](#constraint-catalog) |
-| 0x0002 | continuous_heating_limit | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | FLAGS=0x03. ebusd: `-26=off` disables function |
-| 0x0003 | frost_protection_delay | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | FLAGS=0x03 |
-| 0x0004 | max_preheating_time | C | u16 | min | — | 0..300 step 10 | — | — | FLAGS=0x03. † |
-| 0x0006 | manual_cooling_days | C | u16 | days | — | — | — | cooling_enabled? | **Dormant** when cooling not configured. Two-byte register where present. Vaillant name observed for the VRC700 family only; hardware confirmation pending. Candidate, unconfirmed on the wire: on the VRC700 family the count is written as `02 01 00 00 06 00 Vlo Vhi` (cancel `00 00`); the unit of the count is not established. † |
-| 0x0007 | system_off | C | u8 | bool | — | — | `0=off 1=on` | — | FLAGS=0x03 (user RW). System on/off switch, not a sensor reading |
-| 0x0008 | cooling_while_holiday | C | u8 | bool | — | — | — | — | † |
+| 0x0001 | dhw_outdoor_bivalence_temperature_limit | C | f32 | °C | — | profile-scoped: BASV2 -20..50 step 1; BASV0 -20..20 step 1 | — | — | FLAGS=0x02 (historical scan value, controller profile not recorded); BASV0 observes flags 03. See the DHW bivalence note in the [Constraint Catalog](#constraint-catalog) |
+| 0x0002 | continuous_heating_outdoor_temperature_limit | C | f32 | °C | ContinuousHeating | -26..10 step 1 | — | — | FLAGS=0x03. ebusd: `-26=off` disables function |
+| 0x0003 | frost_protection_delay_time | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | FLAGS=0x03 |
+| 0x0004 | preheating_time_maximum | C | u16 | min | — | 0..300 step 10 | — | — | FLAGS=0x03. † |
+| 0x0006 | manual_cooling_time | C | u16 | days | — | — | — | cooling_enabled? | **Dormant** when cooling not configured. Two-byte register where present. Vaillant name observed for the VRC700 family only; hardware confirmation pending. Candidate, unconfirmed on the wire: on the VRC700 family the count is written as `02 01 00 00 06 00 Vlo Vhi` (cancel `00 00`); the unit of the count is not established. † |
+| 0x0007 | unknown_11 | C | u8 | bool | — | — | `0=off 1=on` | — | FLAGS=0x03 (user RW). System on/off switch, not a sensor reading. Provisional name: the polarity is unresolved between this value table and the candidate write (01 sets the switch-off) |
+| 0x0008 | cooling_enabled_at_holiday | C | u8 | bool | — | — | — | — | † |
 | 0x0009 | automatic_cooling_enabled | C | u8 | bool | — | — | `0=off 1=on` | — | FLAGS=0x02 (technical RW). Scan: 1 byte. † |
-| 0x000A | system_cylinder_parallel_loading_allowed | C | u16 | bool | HwcParallelLoading | — | →onoff | — | ebusd confirmed at `@ext(0xa,0)` |
-| 0x000B | system_solar_circuit_bleeding_time | — | u16 | — | — | — | — | — | Scan value: 0. Near boolean cluster |
-| 0x000D | system_solar_frost_protection_limit | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x000E | max_room_humidity | C | u16 | % | MaxRoomHumidity | — | — | — | |
-| 0x000F | hybrid_control_strategy | — | u16 | — | HybridManager | — | — | — | Access: `ri/wi` (installer). Hybrid system manager (HP + boiler). Wire semantics pending live validation |
+| 0x000A | cylinder_parallel_loading_enabled | C | u16 | bool | HwcParallelLoading | — | →onoff | — | ebusd confirmed at `@ext(0xa,0)` |
+| 0x000B | solar_circuit_bleeding_time | — | u16 | — | — | — | — | — | Scan value: 0. Near boolean cluster |
+| 0x000D | solar_frost_protection_limit | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x000E | room_humidity_limit_maximum | C | u16 | % | MaxRoomHumidity | — | — | — | |
+| 0x000F | hybrid_control_mode | — | u16 | — | HybridManager | — | — | — | Access: `ri/wi` (installer). Hybrid system manager (HP + boiler). Wire semantics pending live validation |
 | 0x0010 | backup_heater_tariff | — | u16 | — | TariffAuxHeater | — | — | — | Access: `ri` (installer read). Tariff for auxiliary heater |
-| 0x0011 | energy_rate_low_tariff | — | u16 | — | — | — | — | — | Scan value: 16. Possible temp threshold |
-| 0x0012 | energy_rate_high_tariff | C | u16 | °C | — | — | — | — | Confirmed exact, value=20 |
+| 0x0011 | electricity_price_at_low_tariff | — | u16 | — | — | — | — | — | Scan value: 16. Possible temp threshold |
+| 0x0012 | electricity_price_at_high_tariff | C | u16 | °C | — | — | — | — | Confirmed exact, value=20 |
 | 0x0013 | backup_heater_type | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for both families, a two-byte `uint16 LE` value with the enumeration `0=Condensing; 1=NonCondensing; 2=Electrical`. |
-| 0x0014 | adaptive_heating_curve | C | u8 | bool | AdaptHeatCurve | — | →yesno | — | FLAGS=0x03 (user RW). Scan validated 1-byte |
+| 0x0014 | adaptive_heating_curve_enabled | C | u8 | bool | AdaptHeatCurve | — | →yesno | — | FLAGS=0x03 (user RW). Scan validated 1-byte |
 | 0x0015 | automatic_daylight_saving_time | — | u16 | — | — | — | — | — | False positive in CSV (was `parallel_tank_loading`; actual is at 0x000A) |
-| 0x0016 | system_ventilation_operating_mode | S | u16 | enum | — | — | `1=AUTO 2=DAY 3=SET_BACK` | — | Candidate VRC700 uint16 interpretation: `1=Auto 2=Day 3=Setback`, unconfirmed on the wire. The VRC720-family ventilation-mode selector is OP02/GG09/RR0002; the VRC700 selector does not replace it. Other codes remain raw. This is distinct from OP02 GG09 RR0002. Behaviour without an active quick mode and the proposed GG09/RR0002 write correspondence remain open; see [Open questions](#open-questions--family-specific-register-interpretation). The write selector and the write encoding are not established. Candidate: present on the VRC700 family only. |
-| 0x0017 | system_dhw_max_loading_time | C | u16 | min | MaxCylinderChargeTime | — | — | hwc_enabled | |
-| 0x0018 | system_dhw_blocking_time | C | u16 | min | HwcLockTime | — | — | hwc_enabled | |
-| 0x0019 | system_solar_flow_rate_setpoint | C | f32 | — | — | — | — | fm5_config≤2 | See [Mapping Conflicts](#mapping-conflicts) |
-| 0x001B | pump_overrun_time | C | u16 | min | PumpAdditionalTime | — | — | — | |
-| 0x001C | generator_max_flow_temperature | C | f32 | °C | — | — | — | — | † |
+| 0x0016 | ventilation_operating_mode | S | u16 | enum | — | — | `1=AUTO 2=DAY 3=SET_BACK` | — | Candidate VRC700 uint16 interpretation: `1=Auto 2=Day 3=Setback`, unconfirmed on the wire. The VRC720-family ventilation-mode selector is OP02/GG09/RR0002; the VRC700 selector does not replace it. Other codes remain raw. This is distinct from OP02 GG09 RR0002. Behaviour without an active quick mode and the proposed GG09/RR0002 write correspondence remain open; see [Open questions](#open-questions--family-specific-register-interpretation). The write selector and the write encoding are not established. Candidate: present on the VRC700 family only. |
+| 0x0017 | dhw_loading_time_maximum | C | u16 | min | MaxCylinderChargeTime | — | — | hwc_enabled | |
+| 0x0018 | dhw_blocking_time | C | u16 | min | HwcLockTime | — | — | hwc_enabled | |
+| 0x0019 | solar_flow_rate_setpoint | C | f32 | — | — | — | — | fm5_config≤2 | See [Mapping Conflicts](#mapping-conflicts) |
+| 0x001B | dhw_pump_overrun_time | C | u16 | min | PumpAdditionalTime | — | — | — | |
+| 0x001C | heat_generator_flow_temperature_limit_maximum | C | f32 | °C | — | — | — | — | † |
 | 0x001E | automatic_sequence_reversal | — | u8 | — | — | — | — | — | Scan value: 1. Possible pump/flag |
-| 0x0022 | alternative_point_for_central_heating | C | f32 | °C | — | — | — | — | -21..40 per TSP |
-| 0x0023 | heating_circuit_bivalence_point | C | f32 | °C | — | — | — | — | -20..30 per TSP |
-| 0x0024 | backup_heater_allowed_for | C | u16 | enum | — | — | values unknown | — | See [Mapping Conflicts](#mapping-conflicts). Candidate, unconfirmed on the wire: the requester matrix gives, for both families, the enumeration `0=Disabled; 1=Heating; 2=DHW; 3=DHWandHeating`. |
-| 0x0025 | backup_heater_allow_temporary | — | u16 | — | — | — | — | — | Scan value: 0 |
-| 0x0026 | heating_circuit_emergency_temperature | C | f32 | °C | — | — | — | — | 20..80 per TSP |
-| 0x0027 | system_cylinder_start_loading_hysteresis | C | f32 | K | CylinderChargeHyst | — | — | hwc_enabled | 3..20 step 0.5 per TSP. Candidate, unconfirmed on the wire: written as `02 01 00 FF 27 00 <float32 LE>` (`OT=0x01, GG=0x00, II=0xFF`), identical on both families. Candidate, unconfirmed on the wire: a write of 1.0 K, a value below the range documented here, is a candidate write; whether the controller accepts, clamps or refuses 1.0 K is not established; the documented range is unchanged. |
-| 0x0029 | system_cylinder_loading_offset | C | f32 | K | CylinderChargeOffset | — | — | hwc_enabled | 0..40 per TSP |
-| 0x002A | system_cylinder_dhw_legionella_protection_start_time | C | time | time | — | — | — | hwc_enabled | HH:MM |
-| 0x002B | system_cylinder_dhw_legionella_protection_start_weekday | C | u16 | enum | — | — | `0=off 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat 7=Sun` | hwc_enabled | Day-of-week selector. 0=disabled. Candidate, unconfirmed on the wire: the requester matrix gives, for both families, the additional code `8=Daily`, outside the enumeration of this row. |
+| 0x0022 | heating_outdoor_alternative_temperature_limit | C | f32 | °C | — | — | — | — | -21..40 per TSP |
+| 0x0023 | heating_outdoor_bivalence_temperature_limit | C | f32 | °C | — | — | — | — | -20..30 per TSP |
+| 0x0024 | backup_heater_mode | C | u16 | enum | — | — | values unknown | — | See [Mapping Conflicts](#mapping-conflicts). Candidate, unconfirmed on the wire: the requester matrix gives, for both families, the enumeration `0=Disabled; 1=Heating; 2=DHW; 3=DHWandHeating`. |
+| 0x0025 | temporary_backup_heater_mode | — | u16 | — | — | — | — | — | Scan value: 0 |
+| 0x0026 | heating_flow_temperature_setpoint_maximum_at_heat_pump_fault | C | f32 | °C | — | — | — | — | 20..80 per TSP |
+| 0x0027 | cylinder_loading_start_hysteresis | C | f32 | K | CylinderChargeHyst | — | — | hwc_enabled | 3..20 step 0.5 per TSP. Candidate, unconfirmed on the wire: written as `02 01 00 FF 27 00 <float32 LE>` (`OT=0x01, GG=0x00, II=0xFF`), identical on both families. Candidate, unconfirmed on the wire: a write of 1.0 K, a value below the range documented here, is a candidate write; whether the controller accepts, clamps or refuses 1.0 K is not established; the documented range is unchanged. |
+| 0x0029 | cylinder_loading_offset | C | f32 | K | CylinderChargeOffset | — | — | hwc_enabled | 0..40 per TSP |
+| 0x002A | dhw_legionella_protection_start_clock_time | C | time | time | — | — | — | hwc_enabled | HH:MM |
+| 0x002B | dhw_legionella_protection_start_weekday | C | u16 | enum | — | — | `0=off 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat 7=Sun` | hwc_enabled | Day-of-week selector. 0=disabled. Candidate, unconfirmed on the wire: the requester matrix gives, for both families, the additional code `8=Daily`, outside the enumeration of this row. |
 | 0x002C | maintenance_date | C | date | date | MaintenanceDate | — | — | — | FLAGS=0x03 (user-facing RW). HDA:3 encoding [DD,MM,YY]. Sentinel 2015-01-01 = factory default. Writable via B524 OT=0x01 |
-| 0x002D | outside_temperature_correction | C | f32 | K | — | — | — | — | -3..3 step 0.5 per TSP |
-| 0x002F | module_configuration_vr71 | P | u16 | count | — | — | — | — | 1..11 |
+| 0x002D | outdoor_temperature_offset | C | f32 | K | — | — | — | — | -3..3 step 0.5 per TSP |
+| 0x002F | functional_module_configuration_code | P | u16 | count | — | — | — | — | 1..11 |
 | 0x0031 | language | — | u16 | — | — | — | — | — | Scan value: 0 |
-| 0x0034 | system_date | S | date | date | Date | — | — | — | BCD in the scalar observation. Candidate, unconfirmed on the wire: also written (time first, then date): `02 01 00 00 34 00 dd mm yy` with `yy` the year minus 2000, identical on both families, with no BCD step in that encoding; the codec the controller itself uses is not established. See [protocol section 4.7](./ebus-vaillant-B524.md#47-date-and-time-triples-and-system-clock). |
-| 0x0035 | system_time | S | time | time | Time | — | — | — | HH:MM:SS. Candidate, unconfirmed on the wire: written before the date: `02 01 00 00 35 00 hh mm ss` (hour in 24 h form, minute, second), identical on both families. |
-| 0x0036 | system_scheme | P | u16 | count | HydraulicScheme | — | — | — | 1..16 |
-| 0x0038 | system_cooling_start_temperature | C | f32 | °C | — | — | — | — | 10..30 per TSP |
-| 0x0039 | system_water_pressure | S | f32 | bar | WaterPressure | — | — | — | Read-only |
-| 0x003A | tri_vai_calculation_result | C | f32 | K | — | — | — | — | -10..10 per TSP |
-| 0x003C | system_yield_solar_reset | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x003D | system_yield_solar_total | E | u32 | kWh | SolarYieldTotal | — | — | fm5_config≤2 | |
-| 0x003E | system_yield_environmental_total | E | u32 | kWh | YieldTotal | — | — | — | |
-| 0x003F | system_yield_environmental_reset | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0040 | system_ventilation_voc_sensor_1 | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0041 | system_ventilation_voc_sensor_2 | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0042 | system_ventilation_day_max_fan_stage | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC700 family, a two-byte `uint16 LE` value. |
-| 0x0043 | system_ventilation_night_max_fan_stage | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC700 family, a two-byte `uint16 LE` value. |
-| 0x0044 | system_ventilation_heat_recovery | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0045 | power_cut_function_evu | C | u16 | enum | — | — | values unknown | — | Candidate, unconfirmed on the wire: the requester matrix gives, for both families, the enumeration `0=Disable heatpump; 1=Disable backup heater; 2=Disable Heatpump and Backup heater; 3=Disable heating; 4=Disable cooling; 5=Disable heating and cooling`. |
-| 0x0046 | system_cylinder_mss_dhw_max_flow_setpoint | C | f32 | °C | HwcMaxFlowTempDesired | — | — | — | 15..80 per TSP |
-| 0x0047 | system_in_failure_mode | P | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0 |
+| 0x0034 | date | S | date | date | Date | — | — | — | BCD in the scalar observation. Candidate, unconfirmed on the wire: also written (time first, then date): `02 01 00 00 34 00 dd mm yy` with `yy` the year minus 2000, identical on both families, with no BCD step in that encoding; the codec the controller itself uses is not established. See [protocol section 4.7](./ebus-vaillant-B524.md#47-date-and-time-triples-and-system-clock). |
+| 0x0035 | clock_time | S | time | time | Time | — | — | — | HH:MM:SS. Candidate, unconfirmed on the wire: written before the date: `02 01 00 00 35 00 hh mm ss` (hour in 24 h form, minute, second), identical on both families. |
+| 0x0036 | hydraulic_scheme_code | P | u16 | count | HydraulicScheme | — | — | — | 1..16 |
+| 0x0038 | cooling_start_temperature_limit | C | f32 | °C | — | — | — | — | 10..30 per TSP |
+| 0x0039 | water_pressure | S | f32 | bar | WaterPressure | — | — | — | Read-only |
+| 0x003A | hybrid_unknown_2 | C | f32 | K | — | — | — | — | -10..10 per TSP |
+| 0x003C | solar_yield_total_reset_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
+| 0x003D | solar_yield_total | E | u32 | kWh | SolarYieldTotal | — | — | fm5_config≤2 | |
+| 0x003E | environmental_yield_total | E | u32 | kWh | YieldTotal | — | — | — | |
+| 0x003F | environmental_yield_total_reset_command | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0040 | ventilation_volatile_organic_compound_sensor_1 | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0041 | ventilation_volatile_organic_compound_sensor_2 | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0042 | ventilation_fan_speed_limit_maximum_at_day | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC700 family, a two-byte `uint16 LE` value. |
+| 0x0043 | ventilation_fan_speed_limit_maximum_at_night | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC700 family, a two-byte `uint16 LE` value. |
+| 0x0044 | ventilation_heat_recovery | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0045 | utility_lockout_mode | C | u16 | enum | — | — | values unknown | — | Candidate, unconfirmed on the wire: the requester matrix gives, for both families, the enumeration `0=Disable heatpump; 1=Disable backup heater; 2=Disable Heatpump and Backup heater; 3=Disable heating; 4=Disable cooling; 5=Disable heating and cooling`. |
+| 0x0046 | dhw_flow_temperature_setpoint_maximum | C | f32 | °C | HwcMaxFlowTempDesired | — | — | — | 15..80 per TSP |
+| 0x0047 | emergency_operation_active | P | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0 |
 | 0x0048 | energy_manager_state | S | u16 | enum | — | — | `0=standby 1=heating 2=cooling 3=dhw` | — | Single raw enum projected into multiple system-status views. `heating+cooling` is only a possible combined state presentation; its raw numeric encoding remains pending validation. |
-| 0x0049 | system_consumption_electricity_reset | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x004A | reset_to_default | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x004B | system_flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | Read-only. Do not conflate with B509 boiler flow temperature or the controller-side `OP=0x06 GG=0x01 RR=0x0015` heat-source status selector |
-| 0x004C | vwz_ai_backup_heater_max_power | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x004D | vwz_ai_configuration_ma2 | C | u16 | enum | MultiRelaySetting | — | →mamode | — | |
-| 0x004E | system_consumption_fuel_heating_current_month | E | u32 | kWh | PrFuelSumHcThisMonth | — | — | — | |
-| 0x004F | system_consumption_electricity_heating_current_month | E | u32 | kWh | PrEnergySumHcThisMonth | — | — | — | |
-| 0x0050 | system_consumption_electricity_dhw_current_month | E | u32 | kWh | PrEnergySumHwcThisMonth | — | — | — | |
-| 0x0051 | system_consumption_fuel_dhw_current_month | E | u32 | kWh | PrFuelSumHwcThisMonth | — | — | — | |
-| 0x0052 | system_consumption_fuel_heating_previous_month | E | u32 | kWh | PrFuelSumHcLastMonth | — | — | — | |
-| 0x0053 | system_consumption_electricity_heating_previous_month | E | u32 | kWh | PrEnergySumHcLastMonth | — | — | — | |
-| 0x0054 | system_consumption_electricity_dhw_previous_month | E | u32 | kWh | PrEnergySumHwcLastMonth | — | — | — | |
-| 0x0055 | system_consumption_fuel_dhw_previous_month | E | u32 | kWh | PrFuelSumHwcLastMonth | — | — | — | |
-| 0x0056 | system_consumption_fuel_heating_total | E | u32 | kWh | PrFuelSumHc | — | — | — | |
-| 0x0057 | system_consumption_electricity_heating_total | E | u32 | kWh | PrEnergySumHc | — | — | — | |
-| 0x0058 | system_consumption_electricity_dhw_total | E | u32 | kWh | PrEnergySumHwc | — | — | — | |
-| 0x0059 | system_consumption_fuel_dhw_total | E | u32 | kWh | PrFuelSumHwc | — | — | — | |
-| 0x005C | system_consumption_electricity_total | E | u32 | kWh | PrEnergySum | — | — | — | |
-| 0x005D | system_consumption_fuel_total | E | u32 | kWh | PrFuelSum | — | — | — | |
-| 0x005E | system_yield_heatrecovery_total | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0. Near energy counters |
-| 0x005F | actor_sensor_test_device | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x0060 | actor_sensor_test_sensor | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 2 |
-| 0x0061 | actor_sensor_test_actor | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x0062 | system_ventilation_voc_sensor_3 | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0063 | system_ventilation_max_voc | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0065 | system_ventilation_displayed_wish_fan_stage | C | u16 | — | — | — | — | — | FLAGS=0x02. Scan value: 0 |
-| 0x0066 | home_screen_status | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0067 | system_cylinder_low_temperature | S | f32 | — | — | — | — | — | FLAGS=0x00. NaN = no VR70 module. ebusd TSP: "VR70 Konfig 1" |
-| 0x0068 | system_cylinder_top_temperature | S | f32 | — | — | — | — | — | FLAGS=0x00. NaN = no VR70 module. ebusd TSP: "VR70 Konfig 2" |
-| 0x0069 | operation_mode_effect | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC700 family, a two-byte `uint16 LE` value with the candidate labels `0=regulator; 1=Zone_1; 2=Zone_2; 3=Zone_3`. |
-| 0x006A | vwz_ai_configuration_me | C | u16 | — | — | — | — | — | FLAGS=0x02. Scan value: 1 |
-| 0x006C | installer_name_1 | C | string | text | Installer1 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
-| 0x006D | installer_name_2 | C | string | text | Installer2 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
-| 0x006F | installer_phone_1 | C | string | text | PhoneNumber1 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
-| 0x0070 | installer_phone_2 | C | string | text | PhoneNumber2 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
-| 0x0071 | system_holiday_start | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: on the VRC700 family it is a three-byte date triple written in the system holiday sequence (set: after `RR=0x0082`; cancel: first step, `01 01 0F`); see [protocol section 4.8](./ebus-vaillant-B524.md#48-system-holiday-zone-holiday-and-cooling-for-days). |
-| 0x0072 | system_holiday_end | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: read and written like `RR=0x0071` on the VRC700 family (last step; cancel `01 01 0F`). |
-| 0x0073 | outside_temperature | S | f32 | °C | DisplayedOutsideTemp | — | — | — | Read-only |
-| 0x0074 | system_quick_mode | S | u8 | enum | — | — | — | — | **Dormant** when no system quick mode active. Mode enumeration and write path `OP=0x02, GG=0x09, RR=0x0001` remain hypotheses. See [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths). Candidate, unconfirmed on the wire: on the VRC700 family this register is also written as a ventilation boost (`02 01 00 00 74 00 val`, 01 or 00); the relation of that write to the GG09 write path stays open. |
-| 0x0075 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. Near installer_menu_code cluster |
-| 0x0076 | installer_menu_code | C | u16 | count | KeyCodeforConfigMenu | — | — | — | FLAGS=0x02 (technical RW). Range 0..999. Writable via B524 OT=0x01 |
-| 0x0077 | install_assistant_ready | C | u8 | bool | — | — | — | — | FLAGS=0x03. Scan value: 1 |
+| 0x0049 | electricity_consumption_total_reset_command | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x004A | settings_reset_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
+| 0x004B | flow_temperature | S | f32 | °C | SystemFlowTemp | — | — | — | Read-only. Do not conflate with B509 boiler flow temperature or the controller-side `OP=0x06 GG=0x01 RR=0x0015` heat-source status selector |
+| 0x004C | backup_heater_power_limit_maximum | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x004D | multifunction_output_2_mode | C | u16 | enum | MultiRelaySetting | — | →mamode | — | |
+| 0x004E | heating_fuel_consumption_current_month | E | u32 | kWh | PrFuelSumHcThisMonth | — | — | — | |
+| 0x004F | heating_electricity_consumption_current_month | E | u32 | kWh | PrEnergySumHcThisMonth | — | — | — | |
+| 0x0050 | dhw_electricity_consumption_current_month | E | u32 | kWh | PrEnergySumHwcThisMonth | — | — | — | |
+| 0x0051 | dhw_fuel_consumption_current_month | E | u32 | kWh | PrFuelSumHwcThisMonth | — | — | — | |
+| 0x0052 | heating_fuel_consumption_previous_month | E | u32 | kWh | PrFuelSumHcLastMonth | — | — | — | |
+| 0x0053 | heating_electricity_consumption_previous_month | E | u32 | kWh | PrEnergySumHcLastMonth | — | — | — | |
+| 0x0054 | dhw_electricity_consumption_previous_month | E | u32 | kWh | PrEnergySumHwcLastMonth | — | — | — | |
+| 0x0055 | dhw_fuel_consumption_previous_month | E | u32 | kWh | PrFuelSumHwcLastMonth | — | — | — | |
+| 0x0056 | heating_fuel_consumption_total | E | u32 | kWh | PrFuelSumHc | — | — | — | |
+| 0x0057 | heating_electricity_consumption_total | E | u32 | kWh | PrEnergySumHc | — | — | — | |
+| 0x0058 | dhw_electricity_consumption_total | E | u32 | kWh | PrEnergySumHwc | — | — | — | |
+| 0x0059 | dhw_fuel_consumption_total | E | u32 | kWh | PrFuelSumHwc | — | — | — | |
+| 0x005C | electricity_consumption_1_total | E | u32 | kWh | PrEnergySum | — | — | — | |
+| 0x005D | fuel_consumption_1_total | E | u32 | kWh | PrFuelSum | — | — | — | |
+| 0x005E | heat_recovery_yield_total | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0. Near energy counters |
+| 0x005F | actuator_sensor_test_device_code | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
+| 0x0060 | actuator_sensor_test_sensor_code | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 2 |
+| 0x0061 | actuator_sensor_test_actuator_code | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
+| 0x0062 | ventilation_volatile_organic_compound_sensor_3 | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0063 | ventilation_volatile_organic_compound_limit_maximum | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0065 | ventilation_fan_speed_setpoint | C | u16 | — | — | — | — | — | FLAGS=0x02. Scan value: 0 |
+| 0x0066 | home_screen_unknown_6 | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0067 | cylinder_bottom_temperature | S | f32 | — | — | — | — | — | FLAGS=0x00. NaN = no VR70 module. ebusd TSP: "VR70 Konfig 1" |
+| 0x0068 | cylinder_top_temperature | S | f32 | — | — | — | — | — | FLAGS=0x00. NaN = no VR70 module. ebusd TSP: "VR70 Konfig 2" |
+| 0x0069 | unknown_1 | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC700 family, a two-byte `uint16 LE` value with the candidate labels `0=regulator; 1=Zone_1; 2=Zone_2; 3=Zone_3`. |
+| 0x006A | multifunction_input_mode | C | u16 | — | — | — | — | — | FLAGS=0x02. Scan value: 1 |
+| 0x006C | installer_name_prefix | C | string | text | Installer1 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
+| 0x006D | installer_name_suffix | C | string | text | Installer2 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
+| 0x006F | installer_phone_number_prefix | C | string | text | PhoneNumber1 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
+| 0x0070 | installer_phone_number_suffix | C | string | text | PhoneNumber2 | — | — | — | FLAGS=0x03 (user-facing RW). CString, maxLength 6. Writable via B524 OT=0x01 |
+| 0x0071 | holiday_start_date | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: on the VRC700 family it is a three-byte date triple written in the system holiday sequence (set: after `RR=0x0082`; cancel: first step, `01 01 0F`); see [protocol section 4.8](./ebus-vaillant-B524.md#48-system-holiday-zone-holiday-and-cooling-for-days). |
+| 0x0072 | holiday_end_date | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: read and written like `RR=0x0071` on the VRC700 family (last step; cancel `01 01 0F`). |
+| 0x0073 | outdoor_temperature | S | f32 | °C | DisplayedOutsideTemp | — | — | — | Read-only |
+| 0x0074 | special_function_mode | S | u8 | enum | — | — | — | — | **Dormant** when no system quick mode active. Mode enumeration and write path `OP=0x02, GG=0x09, RR=0x0001` remain hypotheses. See [Asymmetric Read/Write Paths](#asymmetric-readwrite-paths). Candidate, unconfirmed on the wire: on the VRC700 family this register is also written as a ventilation boost (`02 01 00 00 74 00 val`, 01 or 00); the relation of that write to the GG09 write path stays open. |
+| 0x0075 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. Near installer_access_code cluster |
+| 0x0076 | installer_access_code | C | u16 | count | KeyCodeforConfigMenu | — | — | — | FLAGS=0x02 (technical RW). Range 0..999. Writable via B524 OT=0x01 |
+| 0x0077 | installation_assistant_ready | C | u8 | bool | — | — | — | — | FLAGS=0x03. Scan value: 1 |
 | 0x0078 | home_screen_special_function | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0079 | status_zone_period_heating | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x007A | status_zone_period_cooling | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x007B | operating_mode_heating_for_zone | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x007C | operating_mode_cooling_for_zone | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x007D | home_screen_operation_mode | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x007E | fair_mode | C | f32 | — | — | — | — | — | FLAGS=0x03. Scan value: 0.0 |
-| 0x007F | screed_drying_day | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0080 | system_cylinder_loading_start_offset | C | f32 | — | — | — | — | — | FLAGS=0x03. Scan value: 0.0. Constraint: -10..10 step 1. Possibly PV offset |
-| 0x0081 | system_cylinder_loading_stop_offset | P | f32 | K | — | — | — | — | † |
-| 0x0082 | room_temperature_setpoint_for_holiday | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: on the VRC700 family a float32 is written here as the first step of the system holiday set sequence; the unit and any persistence in the controller are not established. |
+| 0x0079 | heating_zone_time_program_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x007A | cooling_zone_time_program_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x007B | heating_zone_operating_mode | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x007C | cooling_zone_operating_mode | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x007D | home_screen_operating_mode | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x007E | unknown_3 | C | f32 | — | — | — | — | — | FLAGS=0x03. Scan value: 0.0 |
+| 0x007F | screed_drying_time | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0080 | cylinder_loading_start_offset | C | f32 | — | — | — | — | — | FLAGS=0x03. Scan value: 0.0. Constraint: -10..10 step 1. Possibly PV offset |
+| 0x0081 | cylinder_loading_stop_offset | P | f32 | K | — | — | — | — | † |
+| 0x0082 | room_temperature_setpoint_at_holiday | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: on the VRC700 family a float32 is written here as the first step of the system holiday set sequence; the unit and any persistence in the controller are not established. |
 | 0x0083 | bank_holiday_start_date | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x0084 | bank_holiday_end_date | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0085 | actor_sensor_test_sensor_value | P | f32 | — | — | — | — | — | FLAGS=0x01. NaN |
-| 0x0086 | backlight_switch_off_time | — | u16 | — | — | — | — | — | Scan value: 60. PV/smart cluster |
+| 0x0085 | actuator_sensor_test_sensor_reading | P | f32 | — | — | — | — | — | FLAGS=0x01. NaN |
+| 0x0086 | backlight_on_time | — | u16 | — | — | — | — | — | Scan value: 60. PV/smart cluster |
 | 0x0087 | drainback_start_time | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x0088 | drainback_station | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0089 | collector_pump_kick_time | — | u16 | — | — | — | — | — | Scan value: 15. PV/smart cluster |
-| 0x008A | collector_min_kick_gradient | — | f32 | — | — | — | — | — | Scan value: 1.0. PV/smart cluster |
-| 0x008B | heatpump_max_flow_setpoint | — | f32 | — | — | — | — | — | Scan value: 90.0. PV/smart cluster, possible max flow temp |
-| 0x008C | boiler_with_remote_reset | P | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0. Near PV/smart cluster |
+| 0x0089 | solar_pump_kick_time | — | u16 | — | — | — | — | — | Scan value: 15. PV/smart cluster |
+| 0x008A | solar_pump_kick_gradient_limit_minimum | — | f32 | — | — | — | — | — | Scan value: 1.0. PV/smart cluster |
+| 0x008B | heat_pump_flow_temperature_setpoint_maximum | — | f32 | — | — | — | — | — | Scan value: 90.0. PV/smart cluster, possible max flow temp |
+| 0x008C | boiler_remote_reset_available | P | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0. Near PV/smart cluster |
 | 0x008D | display_test_pattern | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
 | 0x008E | backlight_mode | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x008F | system_cylinder_available | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x0090 | plugged_in | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0091 | button_pressed_left | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0092 | button_pressed_right | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0093 | encoder_rotated | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0094 | external_crystal_state | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0095 | outside_temperature_average_24h | S | f32 | °C | OutsideTempAvg | — | — | — | Rounded avg updated every 3h |
-| 0x0096 | maintenance_mode | S | u8 | bool | MaintenanceDue | — | →yesno | — | FLAGS=0x01 (stable RO). Scan validated 1-byte |
-| 0x0097 | eeprom_update_in_progress | P | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0. Near maintenance cluster |
-| 0x0098 | boiler_remote_reset | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x0099 | rtc_crystal_state | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x009A | green_iq | S | u16 | bool | — | — | — | — | |
-| 0x009B | reset_to_default_time_program | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. Near green_iq |
+| 0x008F | cylinder_type | C | u16 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
+| 0x0090 | unknown_4 | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0091 | left_button_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0092 | right_button_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0093 | encoder_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0094 | external_crystal_status | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0095 | outdoor_temperature_daily_average | S | f32 | °C | OutsideTempAvg | — | — | — | Rounded avg updated every 3h |
+| 0x0096 | maintenance_active | S | u8 | bool | MaintenanceDue | — | →yesno | — | FLAGS=0x01 (stable RO). Scan validated 1-byte |
+| 0x0097 | eeprom_update_active | P | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0. Near maintenance cluster |
+| 0x0098 | boiler_reset_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
+| 0x0099 | rtc_crystal_ok | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x009A | unknown_5 | S | u16 | bool | — | — | — | — | |
+| 0x009B | time_program_reset_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. Near unknown_5 |
 | 0x009C | home_screen_headline | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x009D | system_cylinder_mss_dhw_top_temperature | S | f32 | °C | HwcStorageTempTop | — | — | — | Read-only |
-| 0x009E | system_cylinder_mss_dhw_bottom_temperature | S | f32 | °C | HwcStorageTempBottom | — | — | — | Read-only |
-| 0x009F | system_cylinder_mss_heating_top_temperature | S | f32 | °C | HcStorageTempTop | — | — | — | Read-only |
-| 0x00A0 | system_cylinder_mss_heating_bottom_temperature | S | f32 | °C | HcStorageTempBottom | — | — | — | Read-only |
-| 0x00A1 | smart_pv_activation | P | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0. Between cylinder temps and buffer_charge_offset |
-| 0x00A2 | system_cylinder_smart_pv_ch_offset | C | f32 | K | — | — | — | — | 0..15 per TSP. Candidate, unconfirmed on the wire: written as `02 01 00 FF A2 00 <float32 LE>` (`OT=0x01, GG=0x00, II=0xFF`), identical on both families: a float32 (unit not established; candidate K). Not established: the controller's reaction. Correspondence: `smartPhotovoltaicBufferOffset` (`myvaillant_name_vrc720` and `myvaillant_name_vrc700`). |
-| 0x00A3 | system_ventilation_status_period | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x00A4 | system_ventilation_special_function_status | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC700 family, a two-byte `uint16 LE` value with the enumeration listed under [Enumerations that differ by family](#enumerations-that-differ-by-family). |
+| 0x009D | dhw_cylinder_top_temperature | S | f32 | °C | HwcStorageTempTop | — | — | — | Read-only |
+| 0x009E | dhw_cylinder_bottom_temperature | S | f32 | °C | HwcStorageTempBottom | — | — | — | Read-only |
+| 0x009F | heating_cylinder_top_temperature | S | f32 | °C | HcStorageTempTop | — | — | — | Read-only |
+| 0x00A0 | heating_cylinder_bottom_temperature | S | f32 | °C | HcStorageTempBottom | — | — | — | Read-only |
+| 0x00A1 | pv_surplus_enabled | P | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0. Between cylinder temps and buffer_charge_offset |
+| 0x00A2 | heating_cylinder_offset_at_pv_surplus | C | f32 | K | — | — | — | — | 0..15 per TSP. Candidate, unconfirmed on the wire: written as `02 01 00 FF A2 00 <float32 LE>` (`OT=0x01, GG=0x00, II=0xFF`), identical on both families: a float32 (unit not established; candidate K). Not established: the controller's reaction. Correspondence: `smartPhotovoltaicBufferOffset` (`myvaillant_name_vrc720` and `myvaillant_name_vrc700`). |
+| 0x00A3 | ventilation_time_program_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x00A4 | ventilation_special_function_state | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC700 family, a two-byte `uint16 LE` value with the enumeration listed under [Enumerations that differ by family](#enumerations-that-differ-by-family). |
 | 0x00A5 | cascade_client_sequence | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00A6 | button_pressed_menu | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x00A7 | button_pressed_ok | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x00A8 | button_pressed_back | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x00A9 | button_pressed_up | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x00AA | button_pressed_down | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x00AB | isolation_switch | C | u8 | bool | — | — | — | — | FLAGS=0x02. Scan value: 1 |
-| 0x00AF | system_consumption_electricity_cooling_current_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00B0 | system_consumption_electricity_cooling_previous_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00B1 | system_consumption_electricity_cooling_total | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00B2 | net_id | C | u16 | raw | — | — | — | — | FLAGS=0x02. Scan value: 0xBDA9 (48553). Semantics unknown |
-| 0x00B3 | vwz_ai_configuration_ma1 | C | u8 | — | — | — | — | — | FLAGS=0x02. Scan value: 0 |
-| 0x00B5 | outside_temperature_sensor_visibility | P | u8 | bool | — | — | — | — | FLAGS=0x01. Scan value: 1 |
-| 0x00B6 | ext_energy_management_activation | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. Candidate, unconfirmed on the wire: written as `02 01 00 FF B6 00 <u8>` (value 0 or 1). It is also read as `02 00 00 00 B6 00`; see [protocol section 4.11](./ebus-vaillant-B524.md#411-writes-with-iiff-dhw-cylinder-and-buffer-registers). Not established: the controller's reaction and the meaning of 0 and 1 on the controller. |
-| 0x00B8 | system_solar_3wv | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x00B9 | system_consumption_electricity_cooling_current_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0. Energy/counter region start |
-| 0x00BA | system_consumption_electricity_cooling_previous_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00BB | system_consumption_electricity_dhw_current_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00BC | system_consumption_electricity_dhw_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00BD | system_consumption_fuel_heating_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00BF | system_consumption_fuel_dhw_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00C0 | system_consumption_electricity_heating_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00C1 | system_consumption_electricity_heating_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. Unknown sub-counter (slowly incrementing, value=7). No standard register equivalent |
-| 0x00C2 | system_consumption_electricity_system_current_month | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x004F** (PrEnergySumHcThisMonth). Verified 2026-03-08 |
-| 0x00C3 | system_consumption_electricity_system_previous_month | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0053** (PrEnergySumHcLastMonth). Verified 2026-03-08 |
-| 0x00C4 | system_consumption_electricity_system_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. Unknown sub-counter (slowly incrementing, value=7). Same as 0x00C1 |
-| 0x00C5 | system_consumption_electricity_system_previous_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0058** (PrEnergySumHwc). Verified 2026-03-08 |
-| 0x00C6 | system_consumption_electricity_system_total | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0057** (PrEnergySumHc). Verified 2026-03-08 |
-| 0x00C7 | system_consumption_fuel_dhw_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0059** (PrFuelSumHwc). Verified 2026-03-08 |
-| 0x00C8 | system_consumption_fuel_heating_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0056** (PrFuelSumHc). Verified 2026-03-08 |
-| 0x00C9 | system_consumption_fuel_system_current_month | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Near-mirror of 0x004E** (PrFuelSumHcThisMonth). Off-by-1 delta |
-| 0x00CA | system_consumption_fuel_system_previous_month | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Near-mirror of 0x0052** (PrFuelSumHcLastMonth). Off-by-1 delta |
-| 0x00CB | system_consumption_fuel_system_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. gas.climate + gas.dhw (all-time). Verified 2026-03-08 |
-| 0x00CC | system_consumption_fuel_system_previous_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. Always 0 |
-| 0x00CD | system_consumption_fuel_system_total | P | u32 | kWh | — | — | — | — | FLAGS=0x01. Duplicate of 0x00CB. Verified 2026-03-08 |
-| 0x00CE | system_yield_heatrecovery_previous_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00CF | system_yield_heatrecovery_current_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00D0 | system_yield_heatrecovery_current_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00D1 | system_yield_heatrecovery_previous_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00D2 | system_yield_solar_previous_month | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00D3 | system_yield_solar_current_month | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00D4 | system_yield_solar_current_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00D5 | system_yield_solar_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00D6 | system_yield_environmental_previous_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00D7 | system_yield_environmental_previous_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00D8 | system_yield_environmental_current_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00A6 | menu_button_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x00A7 | confirm_button_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x00A8 | back_button_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x00A9 | up_button_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x00AA | down_button_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x00AB | isolation_switch_active | C | u8 | bool | — | — | — | — | FLAGS=0x02. Scan value: 1 |
+| 0x00AF | cooling_electricity_consumption_current_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00B0 | cooling_electricity_consumption_previous_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00B1 | cooling_electricity_consumption_total | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00B2 | network_identifier | C | u16 | raw | — | — | — | — | FLAGS=0x02. Scan value: 0xBDA9 (48553). Semantics unknown |
+| 0x00B3 | multifunction_output_1_mode | C | u8 | — | — | — | — | — | FLAGS=0x02. Scan value: 0 |
+| 0x00B5 | outdoor_temperature_sensor_ok | P | u8 | bool | — | — | — | — | FLAGS=0x01. Scan value: 1 |
+| 0x00B6 | external_energy_management_enabled | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. Candidate, unconfirmed on the wire: written as `02 01 00 FF B6 00 <u8>` (value 0 or 1). It is also read as `02 00 00 00 B6 00`; see [protocol section 4.11](./ebus-vaillant-B524.md#411-writes-with-iiff-dhw-cylinder-and-buffer-registers). Not established: the controller's reaction and the meaning of 0 and 1 on the controller. |
+| 0x00B8 | solar_diverter_valve | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
+| 0x00B9 | cooling_electricity_consumption_current_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0. Energy/counter region start |
+| 0x00BA | cooling_electricity_consumption_previous_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00BB | dhw_electricity_consumption_current_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00BC | dhw_electricity_consumption_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00BD | heating_fuel_consumption_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00BF | dhw_fuel_consumption_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00C0 | heating_electricity_consumption_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00C1 | heating_electricity_consumption_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. Unknown sub-counter (slowly incrementing, value=7). No standard register equivalent |
+| 0x00C2 | electricity_consumption_current_month | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x004F** (PrEnergySumHcThisMonth). Verified 2026-03-08 |
+| 0x00C3 | electricity_consumption_previous_month | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0053** (PrEnergySumHcLastMonth). Verified 2026-03-08 |
+| 0x00C4 | electricity_consumption_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. Unknown sub-counter (slowly incrementing, value=7). Same as 0x00C1 |
+| 0x00C5 | electricity_consumption_previous_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0058** (PrEnergySumHwc). Verified 2026-03-08 |
+| 0x00C6 | electricity_consumption_total | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0057** (PrEnergySumHc). Verified 2026-03-08 |
+| 0x00C7 | dhw_fuel_consumption_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0059** (PrFuelSumHwc). Verified 2026-03-08 |
+| 0x00C8 | heating_fuel_consumption_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Mirror of 0x0056** (PrFuelSumHc). Verified 2026-03-08 |
+| 0x00C9 | fuel_consumption_current_month | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Near-mirror of 0x004E** (PrFuelSumHcThisMonth). Off-by-1 delta |
+| 0x00CA | fuel_consumption_previous_month | P | u32 | kWh | — | — | — | — | FLAGS=0x01. **Near-mirror of 0x0052** (PrFuelSumHcLastMonth). Off-by-1 delta |
+| 0x00CB | fuel_consumption_current_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. gas.climate + gas.dhw (all-time). Verified 2026-03-08 |
+| 0x00CC | fuel_consumption_previous_year | P | u32 | kWh | — | — | — | — | FLAGS=0x01. Always 0 |
+| 0x00CD | fuel_consumption_total | P | u32 | kWh | — | — | — | — | FLAGS=0x01. Duplicate of 0x00CB. Verified 2026-03-08 |
+| 0x00CE | heat_recovery_yield_previous_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00CF | heat_recovery_yield_current_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D0 | heat_recovery_yield_current_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D1 | heat_recovery_yield_previous_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D2 | solar_yield_previous_month | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00D3 | solar_yield_current_month | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00D4 | solar_yield_current_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00D5 | solar_yield_previous_year | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00D6 | environmental_yield_previous_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D7 | environmental_yield_previous_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00D8 | environmental_yield_current_year | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
 | 0x00D9 | electricity_tariff_type | C | u16 | — | — | — | — | — | FLAGS=0x02. Scan value: 0 |
-| 0x00DA | manual_cooling_date_start | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 observed. VRC700 manual cooling start-date interpretation and writability are **Hypotheses**; no correlated write evidence is published. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. Candidate, unconfirmed on the wire: on the VRC720 family this register is a three-byte date; for cooling for a number of days the start date is written here and the stop date to `RR=0x00DB` (cancel triple `01 01 13`; the start date is written before the stop date). The family scope of this register is unresolved: the VRC700-family interpretation above and the VRC720-family scope of the candidate read and write are both candidates (see Open questions). |
-| 0x00DB | manual_cooling_date_end | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 observed. VRC700 manual cooling end-date interpretation and writability are **Hypotheses**; no correlated write evidence is published. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. Candidate, unconfirmed on the wire: on the VRC720 family the stop date of cooling for a number of days is written here. The family scope of this register is unresolved: the VRC700-family interpretation above and the VRC720-family scope of the candidate read and write are both candidates (see Open questions). |
-| 0x00DC | room_temperature_control_strategy_type | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC720 family, a one-byte `uint8` value with the enumeration `0=Two Point; 1=Analoge` (spelled as shown). |
-| 0x00DD | screed_drying_profile_day_01_10 | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 10 bytes: [25,30,35,40,45,45,45,45,45,45] — hourly temp profile (°C/2) |
-| 0x00DE | screed_drying_profile_day_11_20 | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 10 bytes: [45,45,40,35,30,25,10,10,10,10] — hourly temp profile continued |
-| 0x00DF | screed_drying_profile_day_21_29 | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 9 bytes: [10,10,10,30,35,40,45,35,25] — hourly temp profile end. 29 values total across DD-DF |
-| 0x00E0 | system_yield_environmental_current_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
-| 0x00E1 | circuit_control_strategy | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x00E2 | automatic_mode_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x00E3 | button_raw_value_up | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00E4 | button_raw_value_down | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00E5 | button_raw_value_question | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00E6 | button_raw_value_ok | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00E7 | button_raw_value_menu | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00E8 | button_raw_value_back | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00E9 | button_raw_value_slider_1 | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00EA | button_raw_value_slider_2 | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00EB | button_raw_value_slider_3 | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00EC | button_raw_value_slider_4 | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00ED | button_raw_value_slider_5 | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00EE | button_raw_value_slider_6 | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
-| 0x00EF | continuous_heating_room_setpoint | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 20.0. Temperature setpoint |
-| 0x00F0 | error_number_priority | P | u16 | — | — | — | — | — | FLAGS=0x01. Scan value: 0xFFFF (65535) — sentinel/unset |
-| 0x00F1 | maintenance_number_priority | P | u16 | — | — | — | — | — | FLAGS=0x01. Scan value: 0xFFFF (65535) — sentinel/unset |
-| 0x00F2 | system_holiday_start_date | C | date | date | — | — | — | — | System holiday start date (3-byte date). FLAGS=0x03. Scan: 01.01.2015 (BCD) |
-| 0x00F3 | system_holiday_end_date | C | date | date | — | — | — | — | System holiday end date (3-byte date). FLAGS=0x03. Scan: 01.01.2015 (BCD). Candidate, unconfirmed on the wire: the VRC720-family set sequence writes a start time here; its cancel sequence writes the date-shaped `01 01 0F`. The disagreement is unresolved. |
-| 0x00F4 | system_holiday_start_time | C | time | time | — | — | — | — | System holiday start time (3-byte time), not a date. FLAGS=0x03. Scan: 00:00:00 (reset). Candidate, unconfirmed on the wire: the VRC720-family set sequence writes an end date here; its cancel sequence writes the time-shaped `00 00 00`. The disagreement is unresolved. |
-| 0x00F5 | system_holiday_end_time | C | time | time | — | — | — | — | System holiday end time (3-byte time), not a date. FLAGS=0x03. Scan: 00:00:00 (reset) |
-| 0x00F6 | room_temperature_setpoint_for_holiday | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 10.0 |
-| 0x00F7 | system_holiday_abort | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x00F8 | manual_cooling_abort | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. ebusd TSP hinted 5-byte — scan sees 1 byte |
-| 0x00F9 | system_ventilation_boost | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
-| 0x00FA | external_heat_demand_input_configuration | C | u8 | — | — | — | — | — | FLAGS=0x02. Scan value: 0 |
-| 0x00FB | heatpump_mss_min_difference | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 10.0 |
-| 0x00FC | heatpump_max_flow_dhw_setpoint | P | f32 | °C | — | — | — | — | FLAGS=0x01. Scan value: 90.0. Likely max flow temperature |
-| 0x00FD | boiler_max_flow_setpoint | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x00DA | manual_cooling_start_date | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 observed. VRC700 manual cooling start-date interpretation and writability are **Hypotheses**; no correlated write evidence is published. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. Candidate, unconfirmed on the wire: on the VRC720 family this register is a three-byte date; for cooling for a number of days the start date is written here and the stop date to `RR=0x00DB` (cancel triple `01 01 13`; the start date is written before the stop date). The family scope of this register is unresolved: the VRC700-family interpretation above and the VRC720-family scope of the candidate read and write are both candidates (see Open questions). |
+| 0x00DB | manual_cooling_end_date | C | date | date | — | — | — | cooling_enabled? | FLAGS=0x02 observed. VRC700 manual cooling end-date interpretation and writability are **Hypotheses**; no correlated write evidence is published. BCD HDA:3. Default: 01.01.2013. **Dormant** when cooling not configured. Candidate, unconfirmed on the wire: on the VRC720 family the stop date of cooling for a number of days is written here. The family scope of this register is unresolved: the VRC700-family interpretation above and the VRC720-family scope of the candidate read and write are both candidates (see Open questions). |
+| 0x00DC | room_temperature_control_mode | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: the requester matrix gives, for the VRC720 family, a one-byte `uint8` value with the enumeration `0=Two Point; 1=Analoge` (spelled as shown). |
+| 0x00DD | screed_drying_profile_1_temperature_setpoint | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 10 bytes: [25,30,35,40,45,45,45,45,45,45] — hourly temp profile (°C/2) |
+| 0x00DE | screed_drying_profile_2_temperature_setpoint | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 10 bytes: [45,45,40,35,30,25,10,10,10,10] — hourly temp profile continued |
+| 0x00DF | screed_drying_profile_3_temperature_setpoint | C | bytes | schedule | — | — | — | — | FLAGS=0x03. 9 bytes: [10,10,10,30,35,40,45,35,25] — hourly temp profile end. 29 values total across DD-DF |
+| 0x00E0 | environmental_yield_current_month | S | f32 | — | — | — | — | — | FLAGS=0x00. Scan value: 0.0 |
+| 0x00E1 | circuit_control_mode | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x00E2 | automatic_control_active | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x00E3 | up_button_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E4 | down_button_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E5 | help_button_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E6 | confirm_button_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E7 | menu_button_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E8 | back_button_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00E9 | slider_button_1_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EA | slider_button_2_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EB | slider_button_3_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EC | slider_button_4_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00ED | slider_button_5_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EE | slider_button_6_level | P | f32 | — | — | — | — | — | FLAGS=0x01. Scan value: 0.0 |
+| 0x00EF | continuous_heating_room_temperature_setpoint | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 20.0. Temperature setpoint |
+| 0x00F0 | priority_error_code | P | u16 | — | — | — | — | — | FLAGS=0x01. Scan value: 0xFFFF (65535) — sentinel/unset |
+| 0x00F1 | priority_maintenance_code | P | u16 | — | — | — | — | — | FLAGS=0x01. Scan value: 0xFFFF (65535) — sentinel/unset |
+| 0x00F2 | holiday_start_date | C | date | date | — | — | — | — | System holiday start date (3-byte date). FLAGS=0x03. Scan: 01.01.2015 (BCD) |
+| 0x00F3 | holiday_end_date | C | date | date | — | — | — | — | System holiday end date (3-byte date). FLAGS=0x03. Scan: 01.01.2015 (BCD). Candidate, unconfirmed on the wire: the VRC720-family set sequence writes a start time here; its cancel sequence writes the date-shaped `01 01 0F`. The disagreement is unresolved. |
+| 0x00F4 | holiday_start_clock_time | C | time | time | — | — | — | — | System holiday start time (3-byte time), not a date. FLAGS=0x03. Scan: 00:00:00 (reset). Candidate, unconfirmed on the wire: the VRC720-family set sequence writes an end date here; its cancel sequence writes the time-shaped `00 00 00`. The disagreement is unresolved. |
+| 0x00F5 | holiday_end_clock_time | C | time | time | — | — | — | — | System holiday end time (3-byte time), not a date. FLAGS=0x03. Scan: 00:00:00 (reset) |
+| 0x00F6 | room_temperature_setpoint_at_holiday | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 10.0 |
+| 0x00F7 | holiday_abort_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
+| 0x00F8 | manual_cooling_abort_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. ebusd TSP hinted 5-byte — scan sees 1 byte |
+| 0x00F9 | ventilation_boost_active | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
+| 0x00FA | external_demand_input_mode | C | u8 | — | — | — | — | — | FLAGS=0x02. Scan value: 0 |
+| 0x00FB | heat_pump_temperature_difference_limit_minimum | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 10.0 |
+| 0x00FC | dhw_heat_pump_flow_temperature_setpoint_maximum | P | f32 | °C | — | — | — | — | FLAGS=0x01. Scan value: 90.0. Likely max flow temperature |
+| 0x00FD | boiler_flow_temperature_setpoint_maximum | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x00FE | (unknown_temp_config) | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 13.0 |
 | 0x00FF | (unknown_temp_config) | C | f32 | °C | — | — | — | — | FLAGS=0x03. Scan value: 25.0 |
 
@@ -524,37 +534,37 @@ the instance domain remains unconfirmed. The notation
 
 ### GG=0x01 — Native Domestic Hot Water
 
-All registers use opcode `0x02`, instance `0x00`. `native_dhw_circuit_type`
+All registers use opcode `0x02`, instance `0x00`. `dhw_circuit_type`
 (RR0001) is also the family-qualified discovery predicate only when its reply
 is an exact two-byte UIN decoded nonzero; zero is `not_present`, and an empty,
 wrong-width, NACK, decode-failed, or unmatched result is `unknown`. This is
 independent of OP01 descriptions for RR0000..0013. All registers except
-`native_dhw_status` (0x000F) are gated by `native_dhw_circuit_type` (0x0001).
+`dhw_special_function_state` (0x000F) are gated by `dhw_circuit_type` (0x0001).
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | native_dhw_circuit_type | C | u16 | bool | — | 0..1 | `0=off 1=on` | — | Gate register for GG=0x01. Constraint tag u16, Scan verified 2-byte. The candidate raw LE16 interpretation `0=Deactivated`, `1=DHWCircuit` remains unconfirmed on the wire. The availability test and a circuit-type interpretation remain distinct. |
-| 0x0002 | native_dhw_circulation_pump_status | S | u8 | bool | — | 0..1 | `0=off 1=on` | hwc_enabled | Constraint tag u8 |
-| 0x0003 | native_dhw_operation_mode | C | u16 | enum | HwcOpMode | 0..2 | →opmode | hwc_enabled | |
-| 0x0004 | native_dhw_tapping_temperature_setpoint | C | f32 | °C | HwcTempDesired | 35..70 | — | hwc_enabled | Candidate, unconfirmed on the wire: written as `02 01 01 FF 04 00 <float32 LE>` (`OT=0x01, GG=0x01, II=0xFF`; a float32 little-endian value), identical on both families. Not established: the controller's reaction. |
-| 0x0005 | native_dhw_current_temperature | S | f32 | °C | HwcStorageTemp | 0..99 | — | hwc_enabled | Read-only |
-| 0x0006 | native_dhw_pump_status | S | u8 | bool | — | 0..1 | `0=off 1=on` | hwc_enabled | Constraint tag u8 |
-| 0x0007 | native_dhw_program_reset_to_default | C | u8 | — | — | — | — | hwc_enabled | FLAGS=0x03. Scan value: 0 |
-| 0x0008 | native_dhw_current_target_flow_temperature | S | f32 | °C | HwcFlowTemp | — | — | hwc_enabled | Read-only |
-| 0x0009 | native_dhw_holiday_start_date | C | date | date | HwcHolidayStartPeriod | — | — | hwc_enabled | |
-| 0x000A | native_dhw_holiday_end_date | C | date | date | HwcHolidayEndPeriod | — | — | hwc_enabled | |
-| 0x000B | native_dhw_bank_holiday_start | C | date | date | HwcBankHolidayStartPeriod | — | — | hwc_enabled | ebusd confirmed |
-| 0x000C | native_dhw_bank_holiday_end | C | date | date | HwcBankHolidayEndPeriod | — | — | hwc_enabled | ebusd confirmed |
-| 0x000D | native_dhw_special_function_mode | C | u8 | enum | HwcSFMode | — | →sfmode | hwc_enabled | FLAGS=0x03 (user RW). Scan validated 1-byte. Candidate, unconfirmed on the wire: written as `OP=0x02, OT=0x01, GG=0x01, II=0xFF, RR=0x000D` with one value byte, 6 = start a one-time DHW load and 0 = cancel it (bodies `02 01 01 FF 0D 00 06` and `02 01 01 FF 0D 00 00`), identical on both families. Reflected in (candidate): `GG=0x01, II=0x00, RR=0x000F`, where 9 denotes one-time tank loading (candidate). Not established: the controller's reaction to the write. |
-| 0x000E | native_dhw_controlled_by_system | P | u8 | bool | — | — | — | — | FLAGS=0x01. Scan value: 1. Near hwc_status, possibly active flag |
-| 0x000F | native_dhw_status | S | u16 | state | — | — | — | — | Not gated |
-| 0x0010 | native_dhw_holiday_start_time | C | time | time | — | — | — | hwc_enabled | |
-| 0x0011 | native_dhw_holiday_end_time | C | time | time | — | — | — | hwc_enabled | |
-| 0x0012 | native_dhw_holiday_abort | C | u8 | — | — | — | — | hwc_enabled | FLAGS=0x03. Scan value: 0 |
+| 0x0001 | dhw_circuit_type | C | u16 | bool | — | 0..1 | `0=off 1=on` | — | Gate register for GG=0x01. Constraint tag u16, Scan verified 2-byte. The candidate raw LE16 interpretation `0=Deactivated`, `1=DHWCircuit` remains unconfirmed on the wire. The availability test and a circuit-type interpretation remain distinct. |
+| 0x0002 | dhw_circulation_pump_active | S | u8 | bool | — | 0..1 | `0=off 1=on` | hwc_enabled | Constraint tag u8 |
+| 0x0003 | dhw_operating_mode | C | u16 | enum | HwcOpMode | 0..2 | →opmode | hwc_enabled | |
+| 0x0004 | dhw_temperature_setpoint | C | f32 | °C | HwcTempDesired | 35..70 | — | hwc_enabled | Candidate, unconfirmed on the wire: written as `02 01 01 FF 04 00 <float32 LE>` (`OT=0x01, GG=0x01, II=0xFF`; a float32 little-endian value), identical on both families. Not established: the controller's reaction. |
+| 0x0005 | dhw_temperature | S | f32 | °C | HwcStorageTemp | 0..99 | — | hwc_enabled | Read-only |
+| 0x0006 | dhw_pump_active | S | u8 | bool | — | 0..1 | `0=off 1=on` | hwc_enabled | Constraint tag u8 |
+| 0x0007 | dhw_time_program_reset_command | C | u8 | — | — | — | — | hwc_enabled | FLAGS=0x03. Scan value: 0 |
+| 0x0008 | dhw_flow_temperature_setpoint | S | f32 | °C | HwcFlowTemp | — | — | hwc_enabled | Read-only |
+| 0x0009 | dhw_holiday_start_date | C | date | date | HwcHolidayStartPeriod | — | — | hwc_enabled | |
+| 0x000A | dhw_holiday_end_date | C | date | date | HwcHolidayEndPeriod | — | — | hwc_enabled | |
+| 0x000B | dhw_bank_holiday_start_date | C | date | date | HwcBankHolidayStartPeriod | — | — | hwc_enabled | ebusd confirmed |
+| 0x000C | dhw_bank_holiday_end_date | C | date | date | HwcBankHolidayEndPeriod | — | — | hwc_enabled | ebusd confirmed |
+| 0x000D | dhw_special_function_mode | C | u8 | enum | HwcSFMode | — | →sfmode | hwc_enabled | FLAGS=0x03 (user RW). Scan validated 1-byte. Candidate, unconfirmed on the wire: written as `OP=0x02, OT=0x01, GG=0x01, II=0xFF, RR=0x000D` with one value byte, 6 = start a one-time DHW load and 0 = cancel it (bodies `02 01 01 FF 0D 00 06` and `02 01 01 FF 0D 00 00`), identical on both families. Reflected in (candidate): `GG=0x01, II=0x00, RR=0x000F`, where 9 denotes one-time tank loading (candidate). Not established: the controller's reaction to the write. |
+| 0x000E | dhw_central_control_active | P | u8 | bool | — | — | — | — | FLAGS=0x01. Scan value: 1. Near hwc_status, possibly active flag |
+| 0x000F | dhw_special_function_state | S | u16 | state | — | — | — | — | Not gated |
+| 0x0010 | dhw_holiday_start_clock_time | C | time | time | — | — | — | hwc_enabled | |
+| 0x0011 | dhw_holiday_end_clock_time | C | time | time | — | — | — | hwc_enabled | |
+| 0x0012 | dhw_holiday_abort_command | C | u8 | — | — | — | — | hwc_enabled | FLAGS=0x03. Scan value: 0 |
 | 0x0013 | (unknown) | C | u8 | — | — | — | — | hwc_enabled | FLAGS=0x03. Scan value: 0 |
-| 0x0014 | native_dhw_preference | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0015 | native_dhw_recharge_tapping_setpoint | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0019 | native_dhw_loading_efficiency_state | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0014 | dhw_preference | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0015 | dhw_recharge_setpoint | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0019 | dhw_loading_efficiency_state | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 
 ---
 
@@ -565,7 +575,7 @@ All registers use opcode `0x02`. The VRC720 family
 admits II00..II08 as ordinary heating-circuit candidates and II09 as the virtual
 native-water circuit. A other or unknown family requires separate
 qualification. Active heating circuits are discovered by probing
-`circuit_mixer_type_external` (RR=0x0002). In sanitized observations, II00 and
+`circuit_type` (RR=0x0002). In sanitized observations, II00 and
 II01 return raw `0100` with FLAGS=03; II02 returns raw `0000` with FLAGS=03 and
 is inactive. These are profile-scoped selector observations, not a global
 indexing rule or a physical-topology claim. An empty/null response contains no
@@ -584,43 +594,43 @@ observations, but do not extend the current profile's II00..09 coverage.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | circuit_circuit_type | — | u16 | — | — | 1..2 | — | — | CSV says `circuit_mixer_type_external` but commonly mapped to 0x0002. Purpose unverified. † |
-| 0x0002 | circuit_mixer_type_external | P | u16 | enum | Hc{hc}CircuitType | 0..4 | →mctype | — | Discovery probe. Also `mixer_circuit_type_external` |
-| 0x0003 | circuit_influence_type | C | u8 | enum | Hc{hc}RoomInfluenceType | — | `0=inactive 1=active 2=extended` | — | Controls room sensor influence on heating curve. No value reply observed at II=0x00. See GetExtendedRegisters §4.2.5 for behavioral semantics |
-| 0x0004 | circuit_backflow_temperature_setpoint | C | f32 | °C | Hc{hc}ReturnTempDesired | 15..80 | — | circuit_type=4 (return_increase) | Factory setting 30°C. Only meaningful for "Increase in return" circuits |
-| 0x0005 | circuit_condensate_sensitive_emitter | C | u8 | bool | — | 0..1 | `0=off 1=on` | cooling_enabled | Constraint tag u8. ebusd onoff=UCH. † |
-| 0x0006 | circuit_cooling_allowed | C | u8 | bool | Hc{hc}CoolingEnabled | 0..1 | `0=off 1=on` | — | Gate register. Constraint tag u8. ebusd onoff=UCH |
-| 0x0007 | circuit_current_target_flow_temperature | S | f32 | °C | Hc{hc}FlowTempDesired | — | — | — | Installer-field candidate; physical menu correspondence requires corroboration. |
-| 0x0008 | circuit_current_flow_temperature | S | f32 | °C | Hc{hc}FlowTemp | — | — | — | Read-only. Circuit flow sensor VF[x], NOT boiler return temperature |
-| 0x0009 | circuit_dhw_tapping_setpoint | C | f32 | °C | — | — | — | ext_hwc_active | † |
-| 0x000A | circuit_epsilon | C | f32 | K | — | — | — | cooling_enabled | † |
-| 0x000B | circuit_flow_temperature_setpoint_correction_heating | C | f32 | K | Hc{hc}ExcessTemp | — | — | circuit_type=1 (heating) | Flow temp increased by this value to keep mixing valve in control range |
-| 0x000C | circuit_flow_temperature_setpoint_high | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | Fixed-value circuit target flow temp. † |
-| 0x000D | circuit_flow_temperature_setpoint_low | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | Fixed-value circuit setback temp. † |
+| 0x0001 | hydraulic_circuit_type | — | u16 | — | — | 1..2 | — | — | CSV says `circuit_type` but commonly mapped to 0x0002. Purpose unverified. † |
+| 0x0002 | circuit_type | P | u16 | enum | Hc{hc}CircuitType | 0..4 | →mctype | — | Discovery probe. Also `mixer_circuit_type_external` |
+| 0x0003 | circuit_room_influence_mode | C | u8 | enum | Hc{hc}RoomInfluenceType | — | `0=inactive 1=active 2=extended` | — | Controls room sensor influence on heating curve. No value reply observed at II=0x00. See GetExtendedRegisters §4.2.5 for behavioral semantics |
+| 0x0004 | circuit_return_temperature_setpoint | C | f32 | °C | Hc{hc}ReturnTempDesired | 15..80 | — | circuit_type=4 (return_increase) | Factory setting 30°C. Only meaningful for "Increase in return" circuits |
+| 0x0005 | circuit_condensate_sensitive_emitter_available | C | u8 | bool | — | 0..1 | `0=off 1=on` | cooling_enabled | Constraint tag u8. ebusd onoff=UCH. † |
+| 0x0006 | circuit_cooling_enabled | C | u8 | bool | Hc{hc}CoolingEnabled | 0..1 | `0=off 1=on` | — | Gate register. Constraint tag u8. ebusd onoff=UCH |
+| 0x0007 | circuit_flow_temperature_setpoint | S | f32 | °C | Hc{hc}FlowTempDesired | — | — | — | Installer-field candidate; physical menu correspondence requires corroboration. |
+| 0x0008 | circuit_flow_temperature | S | f32 | °C | Hc{hc}FlowTemp | — | — | — | Read-only. Circuit flow sensor VF[x], NOT boiler return temperature |
+| 0x0009 | dhw_circuit_temperature_setpoint | C | f32 | °C | — | — | — | ext_hwc_active | † |
+| 0x000A | circuit_unknown_7 | C | f32 | K | — | — | — | cooling_enabled | † |
+| 0x000B | heating_circuit_flow_temperature_offset | C | f32 | K | Hc{hc}ExcessTemp | — | — | circuit_type=1 (heating) | Flow temp increased by this value to keep mixing valve in control range |
+| 0x000C | circuit_flow_high_temperature_setpoint | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | Fixed-value circuit target flow temp. † |
+| 0x000D | circuit_flow_low_temperature_setpoint | C | f32 | °C | — | — | — | circuit_type=2 (fixed_value) | Fixed-value circuit setback temp. † |
 | 0x000E | circuit_frost_protection_mode | C | u16 | enum | Hc{hc}SetbackMode | — | →offmode | circuit_type=1 (heating) | Installer-field candidate; do not infer a separate setback field from this label or physical menu correspondence. |
-| 0x000F | circuit_heating_curve | C | f32 | — | Hc{hc}HeatCurve | — | — | — | Dimensionless ratio |
-| 0x0010 | circuit_heating_flow_temperature_max_setpoint | C | f32 | °C | Hc{hc}MaxFlowTempDesired | — | — | — | 15..80 per ebusd |
-| 0x0011 | circuit_cooling_flow_temperature_min_setpoint | C | f32 | °C | Hc{hc}MinCoolingTempDesired | — | — | cooling_enabled | |
-| 0x0012 | circuit_flow_temperature_min_setpoint | C | f32 | °C | Hc{hc}MinFlowTempDesired | — | — | — | |
-| 0x0013 | circuit_dhw_operating_mode | C | u16 | enum | — | — | values unknown | ext_hwc_active | |
-| 0x0014 | circuit_maximum_outside_temperature_heating | C | f32 | °C | Hc{hc}SummerTempLimit | — | — | — | Installer-field candidate; the summer-cutoff interpretation requires physical corroboration. |
-| 0x0015 | circuit_room_temperature_influence | C | u16 | enum | Hc{hc}RoomTempSwitchOn | — | →rcmode | — | Gate for dew point |
-| 0x0016 | circuit_screed_drying_day | C | u16 | count | Hc{hc}ScreedDryingDay | — | — | — | Screed drying program |
-| 0x0017 | circuit_screed_drying_setpoint | S | f32 | °C | Hc{hc}ScreedDryingTempDesired | — | — | — | FLAGS=0x01 (stable RO) — computed setpoint, not user-configurable |
-| 0x0018 | circuit_dhw_circulation_pump_status | S | u16 | bool | Hc{hc}ExternalHWCActive | — | — | — | Gate register for ext HWC. FLAGS=0x00 (volatile RO) — status, not config |
-| 0x0019 | circuit_external_heat_demand | S | u16 | state | Hc{hc}ExternalHeatDemand | — | — | — | External heat source. FLAGS=0x00 (volatile RO) — status, not config |
-| 0x001A | circuit_status_heating_circuit_mixer | S | f32 | % | Hc{hc}MixerMovement | — | — | — | Signed float: `<0`=closing, `>0`=opening. Scan verified: -100.0 when fully closing. Read-only |
-| 0x001B | circuit_pump_status | S | u16 | raw | Hc{hc}Status | — | — | — | Pump status per observed Vaillant naming ("Status Pump"). Earlier documented here as carrying the circuit state enumeration (STANDBY/HEATING/COOLING/DHW), on the strength of a single 2026-03-08 idle observation and a name correlation; that observation is equally consistent with a pump status and does not discriminate between the two readings. See [Circuit State Enum](#circuit-state-enum) |
+| 0x000F | circuit_heating_curve_factor | C | f32 | — | Hc{hc}HeatCurve | — | — | — | Dimensionless ratio |
+| 0x0010 | heating_circuit_flow_temperature_setpoint_maximum | C | f32 | °C | Hc{hc}MaxFlowTempDesired | — | — | — | 15..80 per ebusd |
+| 0x0011 | cooling_circuit_flow_temperature_setpoint_minimum | C | f32 | °C | Hc{hc}MinCoolingTempDesired | — | — | cooling_enabled | |
+| 0x0012 | circuit_flow_temperature_setpoint_minimum | C | f32 | °C | Hc{hc}MinFlowTempDesired | — | — | — | |
+| 0x0013 | dhw_circuit_operating_mode | C | u16 | enum | — | — | values unknown | ext_hwc_active | |
+| 0x0014 | heating_circuit_outdoor_temperature_limit_maximum | C | f32 | °C | Hc{hc}SummerTempLimit | — | — | — | Installer-field candidate; the summer-cutoff interpretation requires physical corroboration. |
+| 0x0015 | circuit_room_temperature_influence_mode | C | u16 | enum | Hc{hc}RoomTempSwitchOn | — | →rcmode | — | Gate for dew point |
+| 0x0016 | circuit_screed_drying_time | C | u16 | count | Hc{hc}ScreedDryingDay | — | — | — | Screed drying program |
+| 0x0017 | screed_drying_circuit_temperature_setpoint | S | f32 | °C | Hc{hc}ScreedDryingTempDesired | — | — | — | FLAGS=0x01 (stable RO) — computed setpoint, not user-configurable |
+| 0x0018 | dhw_circuit_circulation_pump_active | S | u16 | bool | Hc{hc}ExternalHWCActive | — | — | — | Gate register for ext HWC. FLAGS=0x00 (volatile RO) — status, not config |
+| 0x0019 | circuit_external_demand_input | S | u16 | state | Hc{hc}ExternalHeatDemand | — | — | — | External heat source. FLAGS=0x00 (volatile RO) — status, not config |
+| 0x001A | circuit_mixer_movement | S | f32 | % | Hc{hc}MixerMovement | — | — | — | Signed float: `<0`=closing, `>0`=opening. Scan verified: -100.0 when fully closing. Read-only |
+| 0x001B | circuit_pump_unknown_8 | S | u16 | raw | Hc{hc}Status | — | — | — | Pump status per observed Vaillant naming ("Status Pump"). Earlier documented here as carrying the circuit state enumeration (STANDBY/HEATING/COOLING/DHW), on the strength of a single 2026-03-08 idle observation and a name correlation; that observation is equally consistent with a pump status and does not discriminate between the two readings. See [Circuit State Enum](#circuit-state-enum) |
 | 0x001C | circuit_adaptive_heating_curve_offset | S | f32 | — | Hc{hc}HeatCurveAdaption | — | — | — | Heat curve adaption factor. Dimensionless. Read-only |
-| 0x001D | circuit_dhw_quick_mode | C | f32 | °C | Hc{hc}FrostProtThreshold | — | — | — | FLAGS=0x02 (technical RW) — writable config, not property |
-| 0x001E | circuit_status_circuit | S | u16 | enum | Hc{hc}PumpStatus | — | — | — | Hypothesis: carries the circuit state enumeration (0=STANDBY, 1=HEATING, 2=COOLING, 3=DHW), based on observed Vaillant naming ("Status circuit", myVaillant `circuitState`); hardware confirmation pending. Installer-field candidate, distinct from RR001B and RR0020. See [Circuit State Enum](#circuit-state-enum) |
-| 0x001F | circuit_minimum_outside_temperature_cooling | C | f32 | °C | Hc{hc}RoomSetpoint | — | — | — | |
-| 0x0020 | circuit_status_automatic_heating_cooling | S | u8 | raw | Hc{hc}FlowTempCalc | — | — | — | Observed UCH one-byte raw status (`00`) at the relevant circuit selectors. It is not a temperature value; earlier f32 prose is unqualified. |
-| 0x0021 | circuit_mixer_position_percentage | S | f32 | % | Hc{hc}MixerPosition | — | — | — | |
-| 0x0022 | circuit_current_room_humidity | S | f32 | % | Hc{hc}Humidity | — | — | — | From room sensor |
+| 0x001D | circuit_unknown_9 | C | f32 | °C | Hc{hc}FrostProtThreshold | — | — | — | FLAGS=0x02 (technical RW) — writable config, not property |
+| 0x001E | circuit_state | S | u16 | enum | Hc{hc}PumpStatus | — | — | — | Hypothesis: carries the circuit state enumeration (0=STANDBY, 1=HEATING, 2=COOLING, 3=DHW), based on observed Vaillant naming ("Status circuit", myVaillant `circuitState`); hardware confirmation pending. Installer-field candidate, distinct from RR001B and RR0020. See [Circuit State Enum](#circuit-state-enum) |
+| 0x001F | cooling_circuit_outdoor_temperature_limit_minimum | C | f32 | °C | Hc{hc}RoomSetpoint | — | — | — | |
+| 0x0020 | circuit_unknown_10 | S | u8 | raw | Hc{hc}FlowTempCalc | — | — | — | Observed UCH one-byte raw status (`00`) at the relevant circuit selectors. It is not a temperature value; earlier f32 prose is unqualified. |
+| 0x0021 | circuit_mixer_position | S | f32 | % | Hc{hc}MixerPosition | — | — | — | |
+| 0x0022 | circuit_room_humidity | S | f32 | % | Hc{hc}Humidity | — | — | — | From room sensor |
 | 0x0023 | circuit_dew_point_temperature | S | f32 | °C | Hc{hc}DewPointTemp | — | — | — | |
-| 0x0024 | circuit_pump_operating_hours | S | u32 | hrs | Hc{hc}PumpHours | — | — | — | |
-| 0x0025 | circuit_pump_starts_count | S | u32 | count | Hc{hc}PumpStarts | — | — | — | |
+| 0x0024 | circuit_pump_operating_time_total | S | u32 | hrs | Hc{hc}PumpHours | — | — | — | |
+| 0x0025 | circuit_pump_start_count_total | S | u32 | count | Hc{hc}PumpStarts | — | — | — | |
 
 ---
 
@@ -628,65 +638,65 @@ observations, but do not extend the current profile's II00..09 coverage.
 ### GG=0x03 — Zones
 
 All registers use opcode `0x02`. Instances 0x00-0x0A; active zones are
-discovered by probing `zone_circuit_for_zone` (RR=0x001C). In the VRC720
+discovered by probing `zone_circuit_assignment` (RR=0x001C). In the VRC720
 scoped observation, zone II00 maps to raw `00` and zone II01 to raw `01`; II02+
 returns `FF`. These are native values, with no +1 remapping. They are
 profile-scoped observations, not a universal zone/circuit contract.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | zone_cooling_operation_mode | C | u16 | enum | — | 0..2 | →opmode | cooling_enabled | Same enum as heating_operation_mode |
-| 0x0002 | zone_room_temperature_setpoint_cooling | C | f32 | °C | Zone{z}CoolingTemp | 15..30 step 0.5 | — | cooling_enabled | |
+| 0x0001 | cooling_zone_operating_mode | C | u16 | enum | — | 0..2 | →opmode | cooling_enabled | Same enum as heating_operation_mode |
+| 0x0002 | cooling_zone_room_temperature_setpoint | C | f32 | °C | Zone{z}CoolingTemp | 15..30 step 0.5 | — | cooling_enabled | |
 | 0x0003 | zone_holiday_start_date | C | date | date | Zone{z}HolidayStartPeriod | — | — | — | |
 | 0x0004 | zone_holiday_end_date | C | date | date | Zone{z}HolidayEndPeriod | — | — | — | |
-| 0x0005 | zone_holiday_setpoint | C | f32 | °C | Zone{z}HolidayTemp | 5..30 | — | — | |
-| 0x0006 | zone_heating_operation_mode | C | u16 | enum | Zone{z}OpMode | 0..2 | →opmode | — | Candidate, unconfirmed on the wire: VRC720-family labels 0 Off, 1 TimeControlled, 2 Manual; VRC700-family labels 0 Off, 1 Auto, 2 Day, 3 Setback; the VRC700-family value 3 lies outside the catalog range 0..2 of this row, and the conflict is unresolved. Candidate, unconfirmed on the wire: the room-control write on both families is `02 01 03 II 06 00 V0 V1` (a 16-bit little-endian mode code; candidate values 0 and 2), with no controller acceptance of the value known; whether the zone number denotes a circuit is not established. See [protocol section 4.10](./ebus-vaillant-B524.md#410-room-control-writes-and-zone-mapping-reads). |
-| 0x0007 | zone_comfort_room_temperature_setpoint_heating | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: on the VRC700 family it is a float32 (°C candidate); the room-control set point write is `02 01 03 II 07 00 V0 V1 V2 V3` (float32 little-endian). |
-| 0x0008 | zone_quick_veto_setpoint | C | f32 | °C | Zone{z}QuickVetoTemp | — | — | — | Veto override target. Candidate, unconfirmed on the wire: written as `02 01 03 II 08 00 <float32>` as the first step of a quick veto set or modify; the unit is not established. See [protocol section 4.9](./ebus-vaillant-B524.md#49-quick-veto-away-mode-and-switching-back-to-time-control). |
-| 0x0009 | zone_setback_room_temperature_setpoint_heating | C | f32 | °C | Zone{z}NightTemp | — | — | — | Night setpoint |
-| 0x000A | zone_operating_mode_heating_teleswitch | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x000B | zone_operating_mode_cooling_teleswitch | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x000C | zone_bank_holiday_start | C | date | date | Zone{z}BankHolidayStartPeriod | — | — | — | ebusd confirmed |
-| 0x000D | zone_bank_holiday_end | C | date | date | Zone{z}BankHolidayEndPeriod | — | — | — | ebusd confirmed |
-| 0x000E | zone_quick_mode | C | u8 | enum | Zone{z}SFMode | — | →sfmode | — | FLAGS=0x03 (user RW). Scan validated 1-byte. Writable to set quickveto/away. Candidate, unconfirmed on the wire: the values written are 03 to set a quick veto on the VRC700 family, 00 to cancel a quick veto or to switch back to time control, and 01 for a zone ventilation boost (`02 01 03 II 0E 00 xx`). |
-| 0x000F | zone_current_measured_temperature | S | f32 | °C | Zone{z}RoomTemp | — | — | — | FLAGS=0x01 (stable RO). From room sensor |
-| 0x0010 | zone_schedule_reset_to_default | C | u16 | — | — | — | — | — | FLAGS=0x03 (user RW). Observed in a register survey, not in earlier catalogs |
-| 0x0011 | zone_is_active | C | u16 | — | — | — | — | — | FLAGS=0x03 (user RW). Observed in a register survey, not in earlier catalogs |
-| 0x0012 | zone_valve_status | S | u16 | bool | Zone{z}ValveStatus | — | `0=closed 1=open` | — | FLAGS=0x01 (stable RO). Used for hvac_action derivation |
-| 0x0013 | zone_binding_of_zone | C | u16 | enum | Zone{z}RoomZoneMapping | — | →zmapping | — | Maps zone to room temperature sensor source. The raw numeric B524 enum (`0`, `1`, `2`, ...) is the authoritative value. Candidate, unconfirmed on the wire: the reply is two bytes (uint16 little-endian). Candidate labels beyond the `zmapping` table: VRC720 family 2..5 REMOTE_CONTROL1..4; VRC700 family 1 CENTRAL_CONTROL and 2..9 REMOTE_CONTROL1..8. |
-| 0x0014 | zone_heating_setpoint | S | f32 | °C | Zone{z}ActualRoomTempDesired | — | — | — | FLAGS=0x01 (stable RO) — computed output, not user-settable. Current setpoint considering all conditions |
-| 0x0015 | zone_cooling_setpoint | S | f32 | °C | — | — | — | cooling_enabled | FLAGS=0x01 (stable RO) — computed output, not user-settable |
+| 0x0005 | zone_room_temperature_setpoint_at_holiday | C | f32 | °C | Zone{z}HolidayTemp | 5..30 | — | — | |
+| 0x0006 | heating_zone_operating_mode | C | u16 | enum | Zone{z}OpMode | 0..2 | →opmode | — | Candidate, unconfirmed on the wire: VRC720-family labels 0 Off, 1 TimeControlled, 2 Manual; VRC700-family labels 0 Off, 1 Auto, 2 Day, 3 Setback; the VRC700-family value 3 lies outside the catalog range 0..2 of this row, and the conflict is unresolved. Candidate, unconfirmed on the wire: the room-control write on both families is `02 01 03 II 06 00 V0 V1` (a 16-bit little-endian mode code; candidate values 0 and 2), with no controller acceptance of the value known; whether the zone number denotes a circuit is not established. See [protocol section 4.10](./ebus-vaillant-B524.md#410-room-control-writes-and-zone-mapping-reads). |
+| 0x0007 | heating_zone_room_comfort_temperature_setpoint | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. Candidate, unconfirmed on the wire: on the VRC700 family it is a float32 (°C candidate); the room-control set point write is `02 01 03 II 07 00 V0 V1 V2 V3` (float32 little-endian). |
+| 0x0008 | zone_room_temperature_setpoint_at_quick_veto | C | f32 | °C | Zone{z}QuickVetoTemp | — | — | — | Veto override target. Candidate, unconfirmed on the wire: written as `02 01 03 II 08 00 <float32>` as the first step of a quick veto set or modify; the unit is not established. See [protocol section 4.9](./ebus-vaillant-B524.md#49-quick-veto-away-mode-and-switching-back-to-time-control). |
+| 0x0009 | heating_zone_room_setback_temperature_setpoint | C | f32 | °C | Zone{z}NightTemp | — | — | — | Night setpoint |
+| 0x000A | heating_zone_operating_mode_at_teleswitch | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x000B | cooling_zone_operating_mode_at_teleswitch | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x000C | zone_bank_holiday_start_date | C | date | date | Zone{z}BankHolidayStartPeriod | — | — | — | ebusd confirmed |
+| 0x000D | zone_bank_holiday_end_date | C | date | date | Zone{z}BankHolidayEndPeriod | — | — | — | ebusd confirmed |
+| 0x000E | zone_special_function_mode | C | u8 | enum | Zone{z}SFMode | — | →sfmode | — | FLAGS=0x03 (user RW). Scan validated 1-byte. Writable to set quickveto/away. Candidate, unconfirmed on the wire: the values written are 03 to set a quick veto on the VRC700 family, 00 to cancel a quick veto or to switch back to time control, and 01 for a zone ventilation boost (`02 01 03 II 0E 00 xx`). |
+| 0x000F | zone_room_temperature | S | f32 | °C | Zone{z}RoomTemp | — | — | — | FLAGS=0x01 (stable RO). From room sensor |
+| 0x0010 | zone_time_program_reset_command | C | u16 | — | — | — | — | — | FLAGS=0x03 (user RW). Observed in a register survey, not in earlier catalogs |
+| 0x0011 | zone_enabled | C | u16 | — | — | — | — | — | FLAGS=0x03 (user RW). Observed in a register survey, not in earlier catalogs |
+| 0x0012 | zone_valve_position | S | u16 | bool | Zone{z}ValveStatus | — | `0=closed 1=open` | — | FLAGS=0x01 (stable RO). Used for hvac_action derivation |
+| 0x0013 | zone_room_sensor_binding_mode | C | u16 | enum | Zone{z}RoomZoneMapping | — | →zmapping | — | Maps zone to room temperature sensor source. The raw numeric B524 enum (`0`, `1`, `2`, ...) is the authoritative value. Candidate, unconfirmed on the wire: the reply is two bytes (uint16 little-endian). Candidate labels beyond the `zmapping` table: VRC720 family 2..5 REMOTE_CONTROL1..4; VRC700 family 1 CENTRAL_CONTROL and 2..9 REMOTE_CONTROL1..8. |
+| 0x0014 | heating_zone_room_effective_temperature_setpoint | S | f32 | °C | Zone{z}ActualRoomTempDesired | — | — | — | FLAGS=0x01 (stable RO) — computed output, not user-settable. Current setpoint considering all conditions |
+| 0x0015 | cooling_zone_room_effective_temperature_setpoint | S | f32 | °C | — | — | — | cooling_enabled | FLAGS=0x01 (stable RO) — computed output, not user-settable |
 | 0x0016 | zone_name | C | string | text | Zone{z}Shortname | — | — | — | maxLength 6 |
 | 0x0017 | zone_name_prefix | C | string | text | Zone{z}Name1 | — | — | — | maxLength 5. Part 1 |
 | 0x0018 | zone_name_suffix | C | string | text | Zone{z}Name2 | — | — | — | maxLength 5. Part 2 |
-| 0x0019 | zone_heating_schedule_status | S | u16 | bool | — | — | `0=off 1=on` | — | Timer schedule flag |
-| 0x001A | zone_cooling_schedule_status | S | u16 | bool | — | — | `0=off 1=on` | cooling_enabled | Timer schedule flag |
-| 0x001B | zone_special_function_status | S | u16 | state | — | — | — | — | Raw zone status code. See the [unresolved response width](ebus-vaillant-B524.md#zone-special-function-response-width); retain this u16 catalog entry separately from the one-byte candidate format. |
-| 0x001C | zone_circuit_for_zone | P | bytes | raw | Zone{z}Index | — | — | — | Example VRC720 replies: II00=`00`, II01=`01`, II02+=`FF`; preserve raw index, no +1 remap. The signed int8 interpretation with `-1=notBound` remains unconfirmed; see [numeric formats](ebus-vaillant-B524.md#vaillant-numeric-formats) for profile ranges and the limit of that interpretation. Candidate, unconfirmed on the wire: the reply is one byte, a signed 8-bit value; it is not renumbered. |
-| 0x001D | zone_heating_event_end_time | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x001E | zone_quick_veto_end_time | C | time | time | Zone{z}QuickVetoEndTime | — | — | — | FLAGS=0x03 (user RW) — writable, can extend/set veto end time |
-| 0x0020 | zone_holiday_end_time | C | time | time | — | — | — | — | |
-| 0x0021 | zone_holiday_start_time | C | time | time | — | — | — | — | |
-| 0x0022 | zone_heating_manual_setpoint | C | f32 | °C | Zone{z}DayTemp | — | — | — | 15..30 step 0.5 per ebusd. Candidate, unconfirmed on the wire: the VRC720-family room-control set point write is `02 01 03 II 22 00 V0 V1 V2 V3` (float32 little-endian). |
-| 0x0023 | zone_cooling_manual_setpoint | C | f32 | °C | — | — | — | cooling_enabled | |
+| 0x0019 | heating_zone_time_program_active | S | u16 | bool | — | — | `0=off 1=on` | — | Timer schedule flag |
+| 0x001A | cooling_zone_time_program_active | S | u16 | bool | — | — | `0=off 1=on` | cooling_enabled | Timer schedule flag |
+| 0x001B | zone_special_function_state | S | u16 | state | — | — | — | — | Raw zone status code. See the [unresolved response width](ebus-vaillant-B524.md#zone-special-function-response-width); retain this u16 catalog entry separately from the one-byte candidate format. |
+| 0x001C | zone_circuit_assignment | P | bytes | raw | Zone{z}Index | — | — | — | Example VRC720 replies: II00=`00`, II01=`01`, II02+=`FF`; preserve raw index, no +1 remap. The signed int8 interpretation with `-1=notBound` remains unconfirmed; see [numeric formats](ebus-vaillant-B524.md#vaillant-numeric-formats) for profile ranges and the limit of that interpretation. Candidate, unconfirmed on the wire: the reply is one byte, a signed 8-bit value; it is not renumbered. |
+| 0x001D | heating_zone_event_end_clock_time | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x001E | zone_quick_veto_end_clock_time | C | time | time | Zone{z}QuickVetoEndTime | — | — | — | FLAGS=0x03 (user RW) — writable, can extend/set veto end time |
+| 0x0020 | zone_holiday_end_clock_time | C | time | time | — | — | — | — | |
+| 0x0021 | zone_holiday_start_clock_time | C | time | time | — | — | — | — | |
+| 0x0022 | heating_zone_room_manual_temperature_setpoint | C | f32 | °C | Zone{z}DayTemp | — | — | — | 15..30 step 0.5 per ebusd. Candidate, unconfirmed on the wire: the VRC720-family room-control set point write is `02 01 03 II 22 00 V0 V1 V2 V3` (float32 little-endian). |
+| 0x0023 | cooling_zone_room_manual_temperature_setpoint | C | f32 | °C | — | — | — | cooling_enabled | |
 | 0x0024 | zone_quick_veto_end_date | C | date | date | Zone{z}QuickVetoEndDate | — | — | — | FLAGS=0x03 (user RW) — writable, can extend/set veto end date |
-| 0x0025 | zone_holiday_abort | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x0026 | zone_quick_veto_duration | C | f32 | hrs | Zone{z}QuickVetoDuration | — | — | — | 0.5..12 step 0.5. Writing enables quick veto mode. Candidate, unconfirmed on the wire: on the VRC720 family it is written as `02 01 03 II 26 00 <float32>` after the set point; the unit is not established. |
-| 0x0027 | zone_manual_cooling_is_active_for_zone | S | u16 | — | — | — | — | — | FLAGS=0x00 (volatile RO). Observed in a register survey |
-| 0x0028 | zone_current_humidity | S | f32 | % | — | — | — | — | FLAGS=0x01 (stable RO). From room sensor |
-| 0x0029 | zone_cooling_allowed | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
+| 0x0025 | zone_holiday_abort_command | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0026 | zone_quick_veto_time | C | f32 | hrs | Zone{z}QuickVetoDuration | — | — | — | 0.5..12 step 0.5. Writing enables quick veto mode. Candidate, unconfirmed on the wire: on the VRC720 family it is written as `02 01 03 II 26 00 <float32>` after the set point; the unit is not established. |
+| 0x0027 | zone_manual_cooling_active | S | u16 | — | — | — | — | — | FLAGS=0x00 (volatile RO). Observed in a register survey |
+| 0x0028 | zone_room_humidity | S | f32 | % | — | — | — | — | FLAGS=0x01 (stable RO). From room sensor |
+| 0x0029 | zone_cooling_enabled | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
 | 0x002A | zone_summer_cutoff_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
 | 0x002B | zone_continuous_heating_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
 | 0x002C | zone_frost_protection_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
-| 0x002D | zone_heating_roomthermostat_status | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
-| 0x002E | zone_cooling_roomthermostat_status | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
+| 0x002D | heating_zone_thermostat_cutoff_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
+| 0x002E | cooling_zone_thermostat_cutoff_active | S | u16 | — | — | — | — | — | FLAGS=0x01 (stable RO). Observed in a register survey |
 
 #### Zone Mode Derivation
 
 The zone operating mode is typically derived from:
-- `zone_heating_operation_mode` (0x0006): opmode enum (0=off, 1=auto, 2=manual)
-- `zone_quick_mode` (0x000E): sfmode enum (2=quickveto, 3/4=away)
-- Associated circuit's `circuit_cooling_allowed` (GG=0x02 RR=0x0006): determines heat vs cool capability
+- `heating_zone_operating_mode` (0x0006): opmode enum (0=off, 1=auto, 2=manual)
+- `zone_special_function_mode` (0x000E): sfmode enum (2=quickveto, 3/4=away)
+- Associated circuit's `circuit_cooling_enabled` (GG=0x02 RR=0x0006): determines heat vs cool capability
 
 ---
 
@@ -698,18 +708,18 @@ Entire group gated by `fm5_config ≤ 2`. All registers use opcode `0x02`, insta
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | solar_collector_runtime_reset | C | u8 | bool | — | 0..1 | `0=off 1=on` | fm5_config≤2 | † |
-| 0x0002 | solar_collector_kick_function | C | u8 | bool | — | 0..1 | `0=off 1=on` | fm5_config≤2 | Not pump status (pump is at 0x0008). † |
+| 0x0001 | solar_pump_operating_time_total_reset_command | C | u8 | bool | — | 0..1 | `0=off 1=on` | fm5_config≤2 | † |
+| 0x0002 | solar_pump_kick_enabled | C | u8 | bool | — | 0..1 | `0=off 1=on` | fm5_config≤2 | Not pump status (pump is at 0x0008). † |
 | 0x0003 | solar_collector_temperature | S | f32 | °C | — | -40..155 | — | fm5_config≤2 | † |
-| 0x0004 | solar_collector_min_temperature | C | f32 | K | — | 0..99 | — | fm5_config≤2 | Not storage temp. † |
-| 0x0005 | solar_circuit_protection_function | C | f32 | °C | — | 110..150 | — | fm5_config≤2 | † |
-| 0x0006 | solar_circuit_protection_function_setpoint | C | f32 | °C | — | 75..115 | — | fm5_config≤2 | Not collector shutdown. † |
-| 0x0007 | yield_solar_temperature | S | f32 | °C | — | — | — | fm5_config≤2 | † |
+| 0x0004 | solar_collector_temperature_limit_minimum | C | f32 | K | — | 0..99 | — | fm5_config≤2 | Not storage temp. † |
+| 0x0005 | solar_circuit_protection_temperature_limit | C | f32 | °C | — | 110..150 | — | fm5_config≤2 | † |
+| 0x0006 | solar_circuit_protection_stop_temperature_limit | C | f32 | °C | — | 75..115 | — | fm5_config≤2 | Not collector shutdown. † |
+| 0x0007 | solar_yield_temperature | S | f32 | °C | — | — | — | fm5_config≤2 | † |
 | 0x0008 | solar_pump_active | S | u8 | bool | — | — | `0=off 1=on` | fm5_config≤2 | † |
-| 0x0009 | solar_flow_rate_current | S | f32 | raw | — | — | — | fm5_config≤2 | Current yield. † |
-| 0x000A | solar_flow_rate_setpoint | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x000B | solar_pump_hours | S | u32 | hrs | — | — | — | fm5_config≤2 | Cumulative runtime. † |
-| 0x000C | solar_pump_min_power | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x0009 | solar_circuit_flow_rate | S | f32 | raw | — | — | — | fm5_config≤2 | Current yield. † |
+| 0x000A | solar_circuit_flow_rate_setpoint | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
+| 0x000B | solar_pump_operating_time_total | S | u32 | hrs | — | — | — | fm5_config≤2 | Cumulative runtime. † |
+| 0x000C | solar_pump_power_limit_minimum | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 
 ---
 
@@ -727,9 +737,9 @@ Cylinder presence detection:
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | solar_cylinder_max_temperature_setpoint | C | f32 | °C | — | 0..99 | — | fm5_config≤2 | † |
-| 0x0002 | solar_cylinder_start_temperature_difference | C | f32 | K | — | 2..25 | — | fm5_config≤2 | † |
-| 0x0003 | solar_cylinder_stop_temperature_difference | C | f32 | K | — | 1..20 | — | fm5_config≤2 | † |
+| 0x0001 | solar_cylinder_temperature_limit_maximum | C | f32 | °C | — | 0..99 | — | fm5_config≤2 | † |
+| 0x0002 | solar_cylinder_start_temperature_difference_limit | C | f32 | K | — | 2..25 | — | fm5_config≤2 | † |
+| 0x0003 | solar_cylinder_stop_temperature_difference_limit | C | f32 | K | — | 1..20 | — | fm5_config≤2 | † |
 | 0x0004 | solar_cylinder_bottom_temperature | S | f32 | °C | — | -10..110 | — | fm5_config≤2 | † |
 
 ---
@@ -744,13 +754,13 @@ OP06/GG08 remains a separate instanced selector set with its own RR limit.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | delta_temperature_control_max_temperature | C | f32 | °C | — | 0..99 | — | fm5_config≤2? | FLAGS=0x03. Scan value: 99.0 |
-| 0x0002 | delta_temperature_control_min_temperature | C | f32 | K | — | 0..99 | — | fm5_config≤2? | FLAGS=0x03. Scan value: 0.0 |
-| 0x0003 | delta_temperature_control_start_temperature_difference | C | f32 | K | — | 2..25 | — | fm5_config≤2? | FLAGS=0x03. Scan value: 12.0 |
-| 0x0004 | delta_temperature_control_stop_temperature_difference | C | f32 | K | — | 1..20 | — | fm5_config≤2? | FLAGS=0x03. Scan value: 5.0 |
-| 0x0005 | delta_temperature_td1_temperature | S | f32 | °C | — | -10..110 | — | fm5_config≤2? | FLAGS=0x01. NaN (no sensor) |
-| 0x0006 | delta_temperature_td2_temperature | S | f32 | °C | — | -10..110 | — | fm5_config≤2? | FLAGS=0x01. NaN (no sensor) |
-| 0x0007 | delta_temperature_td_output | S | u8 | — | — | — | — | — | FLAGS=0x00. Scan value: 0. Possibly pump status |
+| 0x0001 | differential_control_temperature_limit_maximum | C | f32 | °C | — | 0..99 | — | fm5_config≤2? | FLAGS=0x03. Scan value: 99.0 |
+| 0x0002 | differential_control_temperature_limit_minimum | C | f32 | K | — | 0..99 | — | fm5_config≤2? | FLAGS=0x03. Scan value: 0.0 |
+| 0x0003 | differential_control_start_temperature_difference_limit | C | f32 | K | — | 2..25 | — | fm5_config≤2? | FLAGS=0x03. Scan value: 12.0 |
+| 0x0004 | differential_control_stop_temperature_difference_limit | C | f32 | K | — | 1..20 | — | fm5_config≤2? | FLAGS=0x03. Scan value: 5.0 |
+| 0x0005 | differential_control_sensor_1_temperature | S | f32 | °C | — | -10..110 | — | fm5_config≤2? | FLAGS=0x01. NaN (no sensor) |
+| 0x0006 | differential_control_sensor_2_temperature | S | f32 | °C | — | -10..110 | — | fm5_config≤2? | FLAGS=0x01. NaN (no sensor) |
+| 0x0007 | differential_control_output | S | u8 | — | — | — | — | — | FLAGS=0x00. Scan value: 0. Possibly pump status |
 
 ---
 
@@ -768,27 +778,27 @@ remain distinct observations, not confirmed absence.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0001 | ventilation_quick_mode | C | u16 | — | — | 0..255 | — | — | FLAGS=0x02. All instances: 0 |
+| 0x0001 | ventilation_special_function_mode | C | u16 | — | — | 0..255 | — | — | FLAGS=0x02. All instances: 0 |
 | 0x0002 | ventilation_operating_mode | C | u16 | enum | — | 1..3 | `1=TIME_CONTROLLED 2=NORMAL 3=REDUCED` | — | FLAGS=0x02. All instances: 1. Operator-selected presentation annotation; not independently native-verified |
-| 0x0003 | ventilation_status_period | S | u8 | bool | — | 0..1 | `0=off 1=on` | — | FLAGS=0x00. All instances: 1 |
-| 0x0004 | ventilation_status_special_operating_mode | S | u16 | — | — | 0..10 | `0=REGULAR 1=BOOST 7=HOLIDAY 10=SYSTEM_OFF` | — | FLAGS=0x00. All instances: 0. Operator-selected presentation annotation; not independently native-verified |
-| 0x0005 | ventilation_voc_sensor_1 | S | u16 | — | — | 0..32768 | — | — | FLAGS=0x00. All instances: 0x8000 (32768) |
-| 0x0006 | ventilation_voc_sensor_2 | S | u16 | — | — | 0..32768 | — | — | FLAGS=0x00. All instances: 0x8000 (32768) |
-| 0x0007 | ventilation_holiday_end | C | date | date | — | — | — | — | FLAGS=0x02. 01.01.2015 (BCD default) |
-| 0x0008 | ventilation_holiday_end_time | C | time | time | — | — | — | — | FLAGS=0x02. 00:00:00 |
-| 0x0009 | ventilation_holiday_start | C | date | date | — | — | — | — | FLAGS=0x02. 01.01.2015 (BCD default) |
-| 0x000A | ventilation_holiday_start_time | C | time | time | — | — | — | — | FLAGS=0x02. 00:00:00 |
-| 0x000B | ventilation_heat_recovery_ventilation | C | u16 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
-| 0x000C | ventilation_max_voc | C | u16 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
-| 0x000D | ventilation_day_max_fan_stage | C | u16 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
-| 0x000E | ventilation_night_max_fan_stage | C | u16 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
-| 0x000F | ventilation_holiday_abort | C | u8 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
+| 0x0003 | ventilation_time_program_active | S | u8 | bool | — | 0..1 | `0=off 1=on` | — | FLAGS=0x00. All instances: 1 |
+| 0x0004 | ventilation_special_function_state | S | u16 | — | — | 0..10 | `0=REGULAR 1=BOOST 7=HOLIDAY 10=SYSTEM_OFF` | — | FLAGS=0x00. All instances: 0. Operator-selected presentation annotation; not independently native-verified |
+| 0x0005 | ventilation_volatile_organic_compound_sensor_1 | S | u16 | — | — | 0..32768 | — | — | FLAGS=0x00. All instances: 0x8000 (32768) |
+| 0x0006 | ventilation_volatile_organic_compound_sensor_2 | S | u16 | — | — | 0..32768 | — | — | FLAGS=0x00. All instances: 0x8000 (32768) |
+| 0x0007 | ventilation_holiday_end_date | C | date | date | — | — | — | — | FLAGS=0x02. 01.01.2015 (BCD default) |
+| 0x0008 | ventilation_holiday_end_clock_time | C | time | time | — | — | — | — | FLAGS=0x02. 00:00:00 |
+| 0x0009 | ventilation_holiday_start_date | C | date | date | — | — | — | — | FLAGS=0x02. 01.01.2015 (BCD default) |
+| 0x000A | ventilation_holiday_start_clock_time | C | time | time | — | — | — | — | FLAGS=0x02. 00:00:00 |
+| 0x000B | ventilation_heat_recovery | C | u16 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
+| 0x000C | ventilation_volatile_organic_compound_limit_maximum | C | u16 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
+| 0x000D | ventilation_fan_speed_limit_maximum_at_day | C | u16 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
+| 0x000E | ventilation_fan_speed_limit_maximum_at_night | C | u16 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
+| 0x000F | ventilation_holiday_abort_command | C | u8 | — | — | — | — | — | FLAGS=0x02. All instances: 0 |
 
 ---
 
 ### GG=0x09 — Ventilation / recoVair Candidates
 
-The published OP00 interpretation includes ID0010h `recovair_count`. It does
+The published OP00 interpretation includes ID0010h `ventilation_unit_count`. It does
 not prove GG10h or device presence; the public reported samples all return zero.
 The following corrected reconstruction is **Hypothesis** for a VRC720 controller
 profile, awaiting publishable correlated replies. It does not replace other
@@ -798,14 +808,14 @@ profile provenance; no data from these rows is promoted into a universal mapping
 | RR | snake_case name | Candidate format |
 | --- | --- | --- |
 | 0002h | `ventilation_operating_mode` | enum; presentation values `1=TIME_CONTROLLED 2=NORMAL 3=REDUCED` |
-| 0004h | `ventilation_status_special_operating_mode` | u16; presentation values `0=REGULAR 1=BOOST 7=HOLIDAY 10=SYSTEM_OFF` |
-| 0007h / 0008h | `ventilation_holiday_end` / `ventilation_holiday_end_time` | date / time; codec qualification pending |
-| 0009h / 000Ah | `ventilation_holiday_start` / `ventilation_holiday_start_time` | date / time; codec qualification pending |
-| 000Dh / 000Eh | `ventilation_day_max_fan_stage` / `ventilation_night_max_fan_stage` | u16; range unknown |
+| 0004h | `ventilation_special_function_state` | u16; presentation values `0=REGULAR 1=BOOST 7=HOLIDAY 10=SYSTEM_OFF` |
+| 0007h / 0008h | `ventilation_holiday_end_date` / `ventilation_holiday_end_clock_time` | date / time; codec qualification pending |
+| 0009h / 000Ah | `ventilation_holiday_start_date` / `ventilation_holiday_start_clock_time` | date / time; codec qualification pending |
+| 000Dh / 000Eh | `ventilation_fan_speed_limit_maximum_at_day` / `ventilation_fan_speed_limit_maximum_at_night` | u16; range unknown |
 
 These candidate names are shared with the OP02 scalar catalog. The status/availability of a local probe
-and a decoded physical ventilation state are distinct. OP02/GG00/RR0016 is catalogued separately as
-`system_ventilation_operating_mode`; shared vocabulary does not establish an
+and a decoded physical ventilation state are distinct. OP02/GG00/RR0016 (VRC700 family) is catalogued separately under the same name
+`ventilation_operating_mode`; the equal name does not establish an
 alias of OP02/GG09 or change the codec or meaning of its stored value.
 
 ---
@@ -822,7 +832,8 @@ register values across selectors. Repetition does not establish a physical
 instance count, ignored II selectors, template/default purpose, or a per-VR92
 relationship. Keep each native request identity and its reply independently.
 Historical row names and short-probe constraints are unqualified annotations;
-they do not establish writability, discovery predicates or device identity.
+the row names are provisional, and their meanings are not established; the row
+names do not establish writability, discovery predicates or device identity.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
@@ -839,16 +850,25 @@ they do not establish writability, discovery predicates or device identity.
 | 0x000F | (unknown) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN |
 | 0x0010-0x001A | (unknown, 8 regs) | P | f32 | — | — | — | — | — | FLAGS=0x01. All: NaN. Large NaN block |
 | 0x001B | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
-| 0x001D | vrc720_serial_part1 | P | string | text | — | — | — | — | FLAGS=0x01. First 6 chars of VRC720 serial number (redacted in public docs) |
-| 0x001E | vrc720_serial_part2 | P | string | text | — | — | — | — | FLAGS=0x01. Chars 7-12 of VRC720 serial number (redacted in public docs) |
+| 0x001D | serial_number_prefix | P | string | text | — | — | — | — | FLAGS=0x01. First 6 chars of VRC720 serial number (redacted in public docs) |
+| 0x001E | serial_number_suffix | P | string | text | — | — | — | — | FLAGS=0x01. Chars 7-12 of VRC720 serial number (redacted in public docs) |
 | 0x0020 | (unknown) | C | f32 | — | — | — | — | — | FLAGS=0x03. All: 0.0 |
 | 0x0021 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
-| 0x0022-0x003E | temperature_schedule | C | u8 | °C/2 | — | — | — | — | FLAGS=0x03. 29 u8 values: hourly temperature profile. Pattern: 25→45 day, 45→10 night, 10→45→25 evening. Values are degrees × 2 (e.g. 45 = 22.5°C, 10 = 5°C) |
+| 0x0022-0x003E | time_program_temperature_setpoint | C | u8 | °C/2 | — | — | — | — | FLAGS=0x03. 29 u8 values: hourly temperature profile. Pattern: 25→45 day, 45→10 night, 10→45→25 evening. Values are degrees × 2 (e.g. 45 = 22.5°C, 10 = 5°C) |
 | 0x003F | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
 | 0x0040 | (unknown) | P | time | time | — | — | — | — | FLAGS=0x01. All: 00:00:00 |
 | 0x0042-0x004A | (unknown, 9 regs) | C | u16 | — | — | — | — | — | FLAGS=0x03. All: 0. Config block |
 | 0x004B | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0 |
 | 0x004D | (unknown) | C | u16 | — | — | — | — | — | FLAGS=0x03. All: 0 |
+
+The GG=0x0A names that changed under the register naming rules keep their
+earlier names here:
+
+| RR | Name | `previous_name` |
+| --- | --- | --- |
+| `0x001D` | `serial_number_prefix` | `vrc720_serial_part1` |
+| `0x001E` | `serial_number_suffix` | `vrc720_serial_part2` |
+| `0x0022-0x003E` | `time_program_temperature_setpoint` | `temperature_schedule` |
 
 ---
 
@@ -869,6 +889,20 @@ This is a naming rule. It does not establish register presence, a universal
 value layout, slot identity or new discovery coverage. Group-specific raw
 observations, codecs and qualification remain independent of the name.
 
+The OP06 names below that changed under the register naming rules keep their
+earlier names here:
+
+| Selector | Name | `previous_name` |
+| --- | --- | --- |
+| `GG=0x01, RR=0x0012` | `heat_generator_error` | `heatgen_error` |
+| `GG=0x01, RR=0x0015` | `heat_generator_status` | `heatgen_status` |
+| `GG=0x09/0x0A, RR=0x0007` | `room_humidity` | `current_room_air_humidity` |
+| `GG=0x09/0x0A, RR=0x000E` | `room_temperature_offset` | `room_temp_offset` |
+| `GG=0x09/0x0A, RR=0x000F` | `room_temperature` | `current_room_temperature` |
+| `GG=0x09/0x0A, RR=0x001E` | `device_pairing_active` | `device_paired` |
+| `GG=0x09/0x0A, RR=0x001F` | `reception_level` | `reception_strength` |
+| `GG=0x09/0x0A, RR=0x0030` | `time_program_day_period_count_maximum` | `max_time_periods_per_day` |
+
 
 ### GG=0x01 — Primary Heat Sources
 
@@ -885,8 +919,8 @@ uncharacterized rather than absent.
 
 | RR | Name | Cat | Wire | Decode | ebusd | Constraint | Values | Gates | Notes |
 |----|------|-----|------|--------|-------|------------|--------|-------|-------|
-| 0x0012 | heatgen_error | S | unknown | unknown | — | — | unknown | unknown | **Hypothesis.** The native reply layout, any Boolean convention, and error detail semantics are unqualified. Do not infer an enum or bitmask. |
-| 0x0015 | heatgen_status | S | unknown | unknown | — | — | unknown | unknown | **Hypothesis.** It is not a proven scalar flow-temperature mirror. |
+| 0x0012 | heat_generator_error | S | unknown | unknown | — | — | unknown | unknown | **Hypothesis.** Provisional name. The native reply layout, any Boolean convention, and error detail semantics are unqualified. Do not infer an enum or bitmask. |
+| 0x0015 | heat_generator_status | S | unknown | unknown | — | — | unknown | unknown | **Hypothesis.** Provisional name; the reply layout and value class are not established. It is not a proven scalar flow-temperature mirror. |
 
 ---
 
@@ -940,15 +974,15 @@ NaN/0xFF/0x8000.
 | 0x0004 | device_firmware_version | P | time | version | — | — | — | — | FLAGS=0x01. 3 bytes: major.minor.patch (byte-decimal, NOT BCD). II=1: 08.05.00 → VRC720 sw 08.05 |
 | 0x0005 | (unknown) | S | u16 | — | — | — | — | — | FLAGS=0x00. II=empty: 0x8000, II=1: 0 |
 | 0x0006 | (unknown) | S | u16 | — | — | — | — | — | FLAGS=0x00. II=empty: 0x8000, II=1: 0 |
-| 0x0007 | current_room_air_humidity | S | f32 | % | — | — | — | — | FLAGS=0x01. II=1: 40.0%. VR92f/3 manual: "Current room air humidity, measured using the installed humidity sensor". NaN if no sensor |
+| 0x0007 | room_humidity | S | f32 | % | — | — | — | — | FLAGS=0x01. II=1: 40.0%. VR92f/3 manual: "Current room air humidity, measured using the installed humidity sensor". NaN if no sensor |
 | 0x0008 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00 |
 | 0x0009 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00 |
 | 0x000A | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00 |
 | 0x000B | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x00. Empty: 0xFF, II=1: 0 |
 | 0x000C | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00 |
 | 0x000D | (unknown) | C | u16 | — | — | — | — | — | FLAGS=0x03. All: 1 |
-| 0x000E | room_temp_offset | C | f32 | °C | — | — | — | — | FLAGS=0x03 (user RW). II=1: 0.0. Calibration offset for measured temperature |
-| 0x000F | current_room_temperature | S | f32 | °C | — | — | — | — | FLAGS=0x01. II=1: 12.5°C. VR92f/3 manual: "Current room temperature in the zone". NaN if no sensor |
+| 0x000E | room_temperature_offset | C | f32 | °C | — | — | — | — | FLAGS=0x03 (user RW). II=1: 0.0. Calibration offset for measured temperature |
+| 0x000F | room_temperature | S | f32 | °C | — | — | — | — | FLAGS=0x01. II=1: 12.5°C. VR92f/3 manual: "Current room temperature in the zone". NaN if no sensor |
 | 0x0010 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00 |
 | 0x0011 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00 |
 | 0x0012 | device_status | S | u8 | — | — | — | — | — | FLAGS=0x01. Empty: 0xFF, II=1: 0 (OK) |
@@ -959,14 +993,14 @@ NaN/0xFF/0x8000.
 | 0x0017 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. Empty: 0xFF, II=1: 0 |
 | 0x0019 | remote_control_address | S | u8 | count | — | — | — | — | FLAGS=0x01. VR92f/3 manual: "each remote control has a unique address starting at 1". VRC720=0 (initiator), VR92=1. Installer-settable per zone assignment |
 | 0x001B | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00 |
-| 0x001E | device_paired | P | u8 | bool | — | — | `0=no 1=yes` | — | FLAGS=0x01. II=1: 1. Confirms active pairing. Empty: 0xFF |
-| 0x001F | reception_strength | P | u8 | count | — | — | `4=acceptable <4=unstable 10=max` | — | FLAGS=0x01. VR92f/3 manual: "System control reception strength". Scale 0-10: 4=acceptable, <4=not stable, 10=highly stable. II=1: 7 |
+| 0x001E | device_pairing_active | P | u8 | bool | — | — | `0=no 1=yes` | — | FLAGS=0x01. II=1: 1. Confirms active pairing. Empty: 0xFF. Provisional name: whether 1 denotes an established pairing or a pairing in progress is not established |
+| 0x001F | reception_level | P | u8 | count | — | — | `4=acceptable <4=unstable 10=max` | — | FLAGS=0x01. VR92f/3 manual: "System control reception strength". Scale 0-10: 4=acceptable, <4=not stable, 10=highly stable. II=1: 7 |
 | 0x0020 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 3 |
 | 0x0023 | hardware_identifier | P | u16 | raw | — | — | — | — | FLAGS=0x01. II=1: 0x1504. Byte 0 = device_class_address on VRC720 (0x15) |
 | 0x0025 | zone_assignment | P | u8 | count | — | — | — | — | FLAGS=0x01. II=1: 2 |
 | 0x0026 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. II=1: 10. May be reception strength ceiling (constant) |
 | 0x002F | (unknown) | P | u8 | — | — | — | — | — | FLAGS=0x01. All: 5 |
-| 0x0030 | max_time_periods_per_day | P | u8 | count | — | — | — | — | FLAGS=0x01. All: 12 (constant). VR92f/3 manual: "Up to 12 time periods can be set per day". Schema capability constant |
+| 0x0030 | time_program_day_period_count_maximum | P | u8 | count | — | — | — | — | FLAGS=0x01. All: 12 (constant). VR92f/3 manual: "Up to 12 time periods can be set per day". Schema capability constant |
 
 ---
 
@@ -988,24 +1022,24 @@ devices are identified by non-default values.** Empty slots have NaN/0xFF.
 | 0x0003 | device_error_code | S | u8 | — | — | — | — | — | FLAGS=0x01. II=empty: 0xFF, II=1: 0 (OK) |
 | 0x0004 | device_firmware_version | S | time | version | — | — | — | — | FLAGS=0x01. 3 bytes: major.minor.patch (byte-decimal, NOT BCD). II=1: 02.17.00 → VR92f sw 02.17 |
 | 0x0006 | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x01. II=1: 0.0, empty: NaN |
-| 0x0007 | current_room_air_humidity | S | f32 | % | RoomHumidity | — | — | — | FLAGS=0x01. II=1: 39.0%. VR92f/3 manual: "Current room air humidity, measured using the installed humidity sensor". ebusd confirmed. NaN if no sensor |
+| 0x0007 | room_humidity | S | f32 | % | RoomHumidity | — | — | — | FLAGS=0x01. II=1: 39.0%. VR92f/3 manual: "Current room air humidity, measured using the installed humidity sensor". ebusd confirmed. NaN if no sensor |
 | 0x000B | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x00. II=empty: 0xFF, II=1: 0 |
 | 0x000D | (unknown) | C | u16 | — | — | — | — | — | FLAGS=0x03. All: 1 |
-| 0x000E | room_temp_offset | C | f32 | °C | — | — | — | — | FLAGS=0x03 (user RW). II=1: 0.0, empty: NaN. Calibration offset for measured temperature |
-| 0x000F | current_room_temperature | S | f32 | °C | RoomTemp | — | — | — | FLAGS=0x01. II=1: 13.625°C. VR92f/3 manual: "Current room temperature in the zone". ebusd confirmed. NaN if no sensor |
+| 0x000E | room_temperature_offset | C | f32 | °C | — | — | — | — | FLAGS=0x03 (user RW). II=1: 0.0, empty: NaN. Calibration offset for measured temperature |
+| 0x000F | room_temperature | S | f32 | °C | RoomTemp | — | — | — | FLAGS=0x01. II=1: 13.625°C. VR92f/3 manual: "Current room temperature in the zone". ebusd confirmed. NaN if no sensor |
 | 0x0012 | device_status | S | u8 | — | — | — | — | — | FLAGS=0x01. II=empty: 0xFF, II=1: 0 (OK) |
 | 0x0017 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. II=empty: 0xFF, II=1: 0 |
 | 0x0019 | remote_control_address | S | u8 | count | — | — | — | — | FLAGS=0x01. VR92f/3 manual: "each remote control has a unique address starting at 1". II=1: 1. Installer-settable per zone assignment |
 | 0x001B | (unknown) | S | f32 | — | — | — | — | — | FLAGS=0x00. All: NaN |
-| 0x001E | device_paired | S | u8 | bool | — | — | `0=no 1=yes` | — | FLAGS=0x01. II=1: 1. Empty: 0xFF |
-| 0x001F | reception_strength | P | u8 | count | — | — | `4=acceptable <4=unstable 10=max` | — | FLAGS=0x01. VR92f/3 manual: "System control reception strength". Scale 0-10: 4=acceptable, <4=not stable, 10=highly stable. II=1: 10 |
+| 0x001E | device_pairing_active | S | u8 | bool | — | — | `0=no 1=yes` | — | FLAGS=0x01. II=1: 1. Empty: 0xFF. Provisional name: whether 1 denotes an established pairing or a pairing in progress is not established |
+| 0x001F | reception_level | P | u8 | count | — | — | `4=acceptable <4=unstable 10=max` | — | FLAGS=0x01. VR92f/3 manual: "System control reception strength". Scale 0-10: 4=acceptable, <4=not stable, 10=highly stable. II=1: 10 |
 | 0x0020 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 3 |
 | 0x0023 | hardware_identifier | S | u16 | raw | — | — | — | — | FLAGS=0x01. II=1: 0x8201. Byte 0 = 0x82 (purpose unclear, does NOT match device_class_address 0x35) |
 | 0x0025 | zone_assignment | S | u8 | count | — | — | — | — | FLAGS=0x01. II=1: 2 |
 | 0x0026 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x03. II=1: 10. May be reception strength ceiling (constant) |
 | 0x0028-0x002E | (unknown, 7 regs) | C | u8 | — | — | — | — | — | FLAGS=0x03. All: 0. User RW config block |
 | 0x002F | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. All: 5 |
-| 0x0030 | max_time_periods_per_day | S | u8 | count | — | — | — | — | FLAGS=0x01. All: 12 (constant). VR92f/3 manual: "Up to 12 time periods can be set per day". Schema capability constant |
+| 0x0030 | time_program_day_period_count_maximum | S | u8 | count | — | — | — | — | FLAGS=0x01. All: 12 (constant). VR92f/3 manual: "Up to 12 time periods can be set per day". Schema capability constant |
 | 0x0032 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. II=empty: 0xFF, II=1: 0 |
 | 0x0033 | (unknown) | S | u8 | — | — | — | — | — | FLAGS=0x01. Historical connection state varies; preserve raw Boolean |
 | 0x0035 | (unknown) | C | u8 | — | — | — | — | — | FLAGS=0x02. All: 0 |
@@ -1020,10 +1054,10 @@ one-byte instance field.
 retained inventory evidence. Identity and telemetry reads can include:
 - `device_class_address` (0x0002) — resolve to a controller-ecosystem family hint; in a VRC720 observation, `0x26` correlates with the eBUS-identified `VR_71`
 - `device_firmware_version` (0x0004) — byte-decimal triplet
-- `reception_strength` (0x001F) — 0-10 scale (4=acceptable, <4=unstable)
+- `reception_level` (0x001F) — 0-10 scale (4=acceptable, <4=unstable)
 - `remote_control_address` (0x0019) — unique per remote (1..N), 0 for initiator
-- `current_room_air_humidity` (0x0007) — f32 %, NaN if no sensor
-- `current_room_temperature` (0x000F) — f32 °C, NaN if no sensor
+- `room_humidity` (0x0007) — f32 %, NaN if no sensor
+- `room_temperature` (0x000F) — f32 °C, NaN if no sensor
 
 **ebusd baseline:** The ebusd community definitions include only RR=0x0007 (RoomHumidity, EXP decode) and RR=0x000F (RoomTemp, EXP decode) for VR92 addresses 1-8, routed via `B524,06000a..`.
 
@@ -1217,7 +1251,7 @@ Sources: VRC720 operating & installation instructions (circuit type table, fixed
 
 ### Circuit State Enum
 
-Used by: GG=0x02 RR=0x001E (`circuit_status_circuit`, ebusd `Hc{hc}PumpStatus`)
+Used by: GG=0x02 RR=0x001E (`circuit_state`, ebusd `Hc{hc}PumpStatus`)
 
 **Hypothesis.** Assigning this enumeration to RR=0x001E rests on observed
 Vaillant naming only: RR=0x001E's observed Vaillant friendly name is
@@ -1247,7 +1281,7 @@ being used to assign the enumeration to RR=0x001E.
 
 **myPyllant:** `CircuitState` enum in `myPyllant/enums.py` defines `HEATING`, `COOLING`, `STANDBY` as string values; the fixture's own `myvaillant_name_vrc700` column names RR=0x001E `circuitState`. The cloud API performs the numeric-to-string conversion server-side. Test fixtures contain only HEATING and STANDBY observations, and do not themselves identify which register the cloud API reads.
 
-**GG=0x02 RR=0x001B (`circuit_pump_status`, register selector `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B`)** is, per observed Vaillant naming ("Status Pump"), a raw pump-status register. It was earlier documented here as carrying the circuit state enumeration, on the strength of the single 2026-03-08 idle observation above plus a name correlation with myPyllant's `CircuitState`; that attribution has been moved to RR=0x001E as a Hypothesis, per the naming evidence above. The conflict between the two readings is not resolved by either the observation or the naming alone.
+**GG=0x02 RR=0x001B (`circuit_pump_unknown_8`, register selector `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B`)** is, per observed Vaillant naming ("Status Pump"), a raw pump-status register. It was earlier documented here as carrying the circuit state enumeration, on the strength of the single 2026-03-08 idle observation above plus a name correlation with myPyllant's `CircuitState`; that attribution has been moved to RR=0x001E as a Hypothesis, per the naming evidence above. The conflict between the two readings is not resolved by either the observation or the naming alone.
 
 Sources: Live scan observation (2026-03-08, on RR=0x001B), myPyllant `enums.py` `CircuitState`, VRC720 register mapping.
 
@@ -1360,13 +1394,13 @@ Register `OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0048` — system-level energy
 
 **Transitions:** standby -> heating/dhw/cooling (demand). Active states -> standby (demand satisfied). heating <-> dhw (DHW priority override / DHW complete with pending heating demand).
 
-**Related registers:** GG=0x02 RR=0x001E `circuit_status_circuit` (per-circuit sub-state aggregated here), GG=0x02 RR=0x001B `circuit_pump_status`, GG=0x00 RR=0x004B `system_flow_temperature`.
+**Related registers:** GG=0x02 RR=0x001E `circuit_state` (per-circuit sub-state aggregated here), GG=0x02 RR=0x001B `circuit_pump_unknown_8`, GG=0x00 RR=0x004B `flow_temperature`.
 
 **Confidence:** MEDIUM for states 0-2 (live scan + myPyllant enum correlation); `dhw` remains a hypothesis pending correlated evidence.
 
 ### `circuit_state` (OP=0x02, GG=0x02, RR=0x001E)
 
-Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001E` — per-circuit state (`circuit_status_circuit`). Wire type: `u16` enum. **Hypothesis:** this enumeration's assignment to RR=0x001E rests on observed Vaillant naming (see [Circuit State Enum](#circuit-state-enum)), not on a live observation against RR=0x001E itself.
+Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001E` — per-circuit state (`circuit_state`). Wire type: `u16` enum. **Hypothesis:** this enumeration's assignment to RR=0x001E rests on observed Vaillant naming (see [Circuit State Enum](#circuit-state-enum)), not on a live observation against RR=0x001E itself.
 
 | Value | State | myPyllant | Description |
 |-------|-------|-----------|-------------|
@@ -1377,11 +1411,11 @@ Register `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001E` — per-circuit st
 
 **Transitions:** standby -> heating (room temp below setpoint AND schedule slot active). heating -> standby (setpoint reached OR schedule inactive). standby -> cooling (room temp above cooling setpoint AND cooling enabled).
 
-**Related registers:** GG=0x02 RR=0x001B (`circuit_pump_status`, register selector `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B`) is, per observed Vaillant naming, a distinct raw pump-status register; it was earlier documented as carrying this enumeration (see [Circuit State Enum](#circuit-state-enum) for why that attribution moved). GG=0x02 RR=0x001A is `mixer_movement`; GG=0x02 RR=0x0020 is an observed UCH one-byte raw status, not a calculated flow temperature.
+**Related registers:** GG=0x02 RR=0x001B (`circuit_pump_unknown_8`, register selector `OP=0x02, OT=0x00, GG=0x02, II=<circuit>, RR=0x001B`) is, per observed Vaillant naming, a distinct raw pump-status register; it was earlier documented as carrying this enumeration (see [Circuit State Enum](#circuit-state-enum) for why that attribution moved). GG=0x02 RR=0x001A is `mixer_movement`; GG=0x02 RR=0x0020 is an observed UCH one-byte raw status, not a calculated flow temperature.
 
 **Confidence:** Hypothesis for 0/1/2 (naming-based assignment to RR=0x001E; the only live observation was made on RR=0x001B and does not discriminate between the two registers; myPyllant correlation for 1/2 remains uncorroborated); Hypothesis for 3 (DHW), pending physical corroboration.
 
-### `system_quick_mode` (OP=0x02, GG=0x00, RR=0x0016 + 0x0074)
+### `special_function_mode` (OP=0x02, GG=0x00, RR=0x0016 + 0x0074)
 
 <a id="asymmetric-readwrite-paths"></a>
 
@@ -1470,13 +1504,13 @@ none is documented as safe to send (see the
 
 | Selector | Catalog name | Write |
 | --- | --- | --- |
-| `GG=0x00`, `RR=0x0001`, `0x0023`, `0x0026`, `0x0046` | `system_dhw_bivalence_point`, `heating_circuit_bivalence_point`, `heating_circuit_emergency_temperature`, `system_cylinder_mss_dhw_max_flow_setpoint` | float32 little-endian |
-| `GG=0x00`, `RR=0x0007`, `0x0009`, `0x000A`, `0x0014` | `system_off`, `automatic_cooling_enabled`, `system_cylinder_parallel_loading_allowed`, `adaptive_heating_curve` | one byte (system off: 01 set, 00 cancel; the others 00 or 01); the width of `RR=0x000A` is unresolved (one or two bytes) |
-| `GG=0x00`, `RR=0x0036`, `0x002F` | `system_scheme`, `module_configuration_vr71` | uint16 little-endian |
-| `GG=0x00`, `RR=0x00F9` (VRC720 family), `RR=0x0074` (VRC700 family) | `system_ventilation_boost`, `system_quick_mode` | one byte 01 or 00 (ventilation boost) |
-| `GG=0x03`, `RR=0x0011` | `zone_is_active` | one byte 00 or 01 |
-| `GG=0x02`, `RR=0x000E`, `RR=0x0002`, `RR=0x000F` (VRC720 family) | `circuit_frost_protection_mode`, `circuit_mixer_type_external`, `circuit_heating_curve` | 00 or 01 followed by 00; enumeration low byte followed by 00; float32 |
-| `GG=0x09`, `RR=0x0001` | `ventilation_quick_mode` | bytes `01 00` |
+| `GG=0x00`, `RR=0x0001`, `0x0023`, `0x0026`, `0x0046` | `dhw_outdoor_bivalence_temperature_limit`, `heating_outdoor_bivalence_temperature_limit`, `heating_flow_temperature_setpoint_maximum_at_heat_pump_fault`, `dhw_flow_temperature_setpoint_maximum` | float32 little-endian |
+| `GG=0x00`, `RR=0x0007`, `0x0009`, `0x000A`, `0x0014` | `unknown_11`, `automatic_cooling_enabled`, `cylinder_parallel_loading_enabled`, `adaptive_heating_curve_enabled` | one byte (system off: 01 set, 00 cancel; the others 00 or 01); the width of `RR=0x000A` is unresolved (one or two bytes) |
+| `GG=0x00`, `RR=0x0036`, `0x002F` | `hydraulic_scheme_code`, `functional_module_configuration_code` | uint16 little-endian |
+| `GG=0x00`, `RR=0x00F9` (VRC720 family), `RR=0x0074` (VRC700 family) | `ventilation_boost_active`, `special_function_mode` | one byte 01 or 00 (ventilation boost) |
+| `GG=0x03`, `RR=0x0011` | `zone_enabled` | one byte 00 or 01 |
+| `GG=0x02`, `RR=0x000E`, `RR=0x0002`, `RR=0x000F` (VRC720 family) | `circuit_frost_protection_mode`, `circuit_type`, `circuit_heating_curve_factor` | 00 or 01 followed by 00; enumeration low byte followed by 00; float32 |
+| `GG=0x09`, `RR=0x0001` | `ventilation_special_function_mode` | bytes `01 00` |
 | `GG=0x00`, `II=0xFF`, `RR=0x0103` | none in the catalog | bytes `01 00` (commissioning complete); the register is above the range documented here |
 
 The label of value 3 in the quick-veto set and the position of `RR=0x0103`
@@ -1495,9 +1529,7 @@ below).
   interchangeable.
 - Which of the two Vaillant names `circuit_type` and
   `circuit_type_of_mixed_circuit_external` describes the value of
-  `OP=0x02, GG=0x02, RR=0x0002` is unresolved. The protocol page calls this
-  register `heating_circuit_type`, while this catalog names it
-  `circuit_mixer_type_external`; the naming difference is unresolved.
+  `OP=0x02, GG=0x02, RR=0x0002` is unresolved.
 - The physical meaning of the signed value `-1` at
   `OP=0x02, GG=0x03, II=<zone>, RR=0x001C` remains unestablished;
   `notBound` remains a candidate interpretation.
