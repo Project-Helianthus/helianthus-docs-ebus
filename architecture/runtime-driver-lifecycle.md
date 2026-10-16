@@ -82,10 +82,16 @@ A crash between those steps leaves an uncertain pending intent. It is not an
 accepted batch merely because submission may have happened. A failed durable
 transaction must expose no rejected staging through a later cache flush.
 
-For concurrent service-routed calls, intent order and durable outcome order can
-differ. Before replaying a recorded outcome, resolve all pending entries of its
-source with lower WAL sequences. A dependent call follows its predecessor's
-returned hub call and therefore has a higher WAL sequence. Recorded outcomes
+For each source, serialize WAL sequence assignment, durable intent persistence
+and hub submission through completion of the hub call. A later WAL sequence must
+not enter the hub before the preceding call completes; an ambiguous completion
+blocks further submissions for that source until resolved. This serialization
+uses a service-side per-source gate, never a hub or manager lock across disk
+I/O. Different sources remain independent. Outcome persistence may overlap a
+later call, so durable outcome order can still differ. Before replaying a
+recorded outcome, resolve all pending entries of its source with lower WAL
+sequences. A dependent call follows its predecessor's returned hub call and
+therefore has a higher WAL sequence. Recorded outcomes
 carry hub commit positions so restoration preserves actual commit order,
 including per-asset order. An unresolved source WAL gap fails that source
 closed; a later recorded activation cannot bypass an uncertain admission.
@@ -171,6 +177,7 @@ satisfy this proof.
 | Unfinished control: one asset accepts and the other rejects | Both affected read gates stay closed initially; the accepted asset opens only after reprojection against its restored snapshot |
 | Rejected publication envelope and rejected control attempt | Neither is applied as accepted; each cursor stays at its pre-rejection value and the original error identifier survives |
 | WAL gap: A accepted without durable outcome, dependent B accepted and recorded | Resolve A before B; never replay B alone. Removing A's intent must fail the source closed |
+| Concurrent same-source callers: A holds the lower WAL sequence and is paused before hub completion while B is ready | B cannot enter the hub until A completes; delay A's outcome persistence until after B's, then lose memory and verify recovery resolves A before replaying B with matching snapshots |
 | Corrupt replay or incompatible validator, snapshot, revision or cursor | Fail the affected asset closed without damaging an unaffected asset |
 
 For each successful reconstruction, compare `Inspect` snapshot identity,
