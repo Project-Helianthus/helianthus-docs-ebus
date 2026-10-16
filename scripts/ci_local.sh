@@ -240,6 +240,8 @@ echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
+python3 -m pytest -q tests/test_b524_name_bridge_contract.py
+python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
 echo "==> check canonical register names against the register naming rules"
 python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
@@ -256,6 +258,12 @@ python3 scripts/validate_b524_basv0_description_profile.py \
 jv protocols/vaillant/fixtures/b524-basv0-register-observations-schema-v1.json \
   protocols/vaillant/fixtures/b524-basv0-register-observations-v1.json
 python3 -m pytest -q tests/test_b524_basv0_description_profile.py
+python3 -m pytest -q tests/test_b524_calendar_edge_vectors.py
+python3 -m pytest -q tests/test_b524_description_schema_privacy.py
+python3 -m pytest -q tests/test_b524_exp_nonfinite_limits.py
+python3 -m pytest -q tests/test_b524_evidence_join_permutations.py
+python3 -m pytest -q tests/test_b524_external_bundle_cli.py
+python3 -m pytest -q tests/test_b524_overlay_cli_rejection.py
 python3 -m pytest -q tests/test_b524_bounded_survey_profile.py
 for profile in protocols/vaillant/fixtures/b524-bounded-survey-*-v1.json; do
   case "$profile" in

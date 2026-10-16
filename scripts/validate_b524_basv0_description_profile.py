@@ -465,12 +465,14 @@ def validate_fixture(path: Path, observations: Path | None = None, scopes: Path 
         fixture = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValidationError(f"{path}: cannot read JSON") from exc
+    _require(isinstance(fixture, dict), f"{path}: description must be an object")
     observed = None
     if observations is not None:
         try:
             observed = json.loads(observations.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise ValidationError(f"{observations}: cannot read JSON") from exc
+        _require(isinstance(observed, dict), f"{observations}: observations must be an object")
     overlay = None
     if scopes is None and SCOPE_OVERLAY.exists():
         scopes = SCOPE_OVERLAY

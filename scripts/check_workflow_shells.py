@@ -75,7 +75,9 @@ def scripts(workflows: list[Path]):
             for index, step in enumerate(job.get("steps", []), 1):
                 if "run" not in step:
                     continue
-                shell = step.get("shell") or job_shell or workflow_shell or runner_shell
+                # actionlint preserves an explicit step shell, even when empty;
+                # empty defaults fall through. Its parser rejects either empty field.
+                shell = step.get("shell", job_shell or workflow_shell or runner_shell)
                 dialect = next((sh for sh in ("bash", "sh")
                                 if shell == sh or shell.startswith(sh + " ")), None)
                 source = sanitize_expressions(step["run"])
