@@ -10,12 +10,21 @@ It also centralizes the architecture decisions that were previously duplicated a
 New capability rollout order is mandatory:
 
 1. MCP-first prototype and stabilization
-2. GraphQL parity on top of stable MCP contracts
+2. GraphQL parity on top of MCP contracts whose determinism, contract, and golden tests are green
 3. Consumer rollout (Home Assistant and other clients) only after GraphQL parity gates are green
 
 ## MCP Contract Baseline
 
-Core MCP tools (`ebus.v1.*`) use a stable envelope:
+Until the Helianthus 1.0 release, all MCP namespaces, including `ebus.v1.*`,
+are pre-stable; the namespace version alone is not a stability promise. A
+contract version declared by an individual surface, such as `1.0`, does not
+end this period. Schema or behaviour
+may change with updated goldens, documentation, and a note in the pull request.
+There is no experimental namespace or core-stable graduation before 1.0;
+both will be discussed after 1.0. Existing envelope, determinism, golden-test,
+and documentation-gate requirements remain in force.
+
+MCP tools (`ebus.v1.*`) use the required envelope:
 
 - `meta`:
   - `contract`
@@ -25,7 +34,8 @@ Core MCP tools (`ebus.v1.*`) use a stable envelope:
 - `data`
 - `error` (null or structured error)
 
-Breaking contract changes require a new major namespace (`ebus.v2.*`).
+The rule for breaking contract changes after 1.0, including whether they need a
+new major namespace such as `ebus.v2.*`, will be decided after 1.0.
 
 ## Determinism Rules
 
@@ -50,18 +60,17 @@ Unknown mutability defaults to safe denial unless explicitly allowed.
 
 A capability may graduate to GraphQL only when:
 
-1. It is implemented as core stable MCP (`ebus.v1.*`)
+1. It is implemented in MCP (`ebus.v1.*`); no core-stable graduation is required before 1.0
 2. Determinism + contract + golden tests are green
 3. MCP <-> GraphQL parity tests are green
+4. The documentation gate is satisfied
 
-## Experimental Surface and Cleanup
+## Surface Cleanup
 
-Experimental tools live under `ebus.experimental.*` and are not consumer-facing.
-At cycle end, each experimental tool must be:
-
-- promoted to core stable, or
-- removed, or
-- moved to internal-only with written justification
+Before 1.0, tools use the pre-stable MCP namespaces without mandatory
+`ebus.experimental.*` segregation or promotion to core stable. At cycle end,
+each prototype tool must be retained with updated goldens and documentation,
+removed, or moved to internal-only with written justification.
 
 No temporary/junk tools remain in the showroom MCP surface.
 
