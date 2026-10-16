@@ -53,7 +53,7 @@ point makes it unnecessary:
 | Accepted results | Each batch's accepted result, `SnapshotID`, semantic revision, digest and per-key publication cursor; hub commit position including incarnation and `HubSeq` |
 | Hub-only history | Admissions, withdrawal rollbacks, activations, asset-less retirements and `RevokedUnpublished` revocations, including results even when no kernel batch exists |
 | Control state | Per-asset semantic outcomes and reprojection settled history; source-publication index; epoch and generation reservations with exact per-asset next cursors; withdrawal correlation; retry/deadline budgets and independent native-close obligations |
-| Pending work | Complete pending publication envelopes and staged control attempts as exact bytes, their per-source WAL sequences, asset/source ownership, per-asset keys/sequences and monotonic points; no invented accepted result |
+| Pending work | Complete pending publication envelopes and staged control attempts as exact bytes, their per-source WAL sequences and per-asset intent ordinals, asset/source ownership, per-asset keys/sequences and monotonic points; no invented accepted result |
 
 Fences, source retirements, withdrawals and generation-transition fences that
 reach a kernel are accepted `PublicationBatch` inputs too. Exporting only
@@ -70,9 +70,10 @@ results after the hub call. Copying must not expose mutable aliases. The
 service consumes those copies outside hub and manager locks; export itself
 does no persistence and does not turn staging into an accepted result.
 
-1. **Intent:** assign the service's per-source WAL sequence before the hub call
-   and durably persist the exact pending envelope or control attempt in the
-   service transaction. Only then submit it to the hub.
+1. **Intent:** assign the service's per-source WAL sequence and, for each affected
+   asset, a per-asset intent ordinal before the hub call. Durably persist them
+   with the exact pending envelope or control attempt in the service transaction.
+   Only then submit it to the hub.
 2. **Outcome:** after the hub call returns, durably persist its accepted result,
    commit position, monotonic point, semantic outcome and settled history in a
    second transaction. A rejected operation retains the SemReg error identifier
@@ -87,7 +88,8 @@ and hub submission through completion of the hub call. A later WAL sequence must
 not enter the hub before the preceding call completes; an ambiguous completion
 blocks further submissions for that source until resolved. This serialization
 uses a service-side per-source gate, never a hub or manager lock across disk
-I/O. Different sources remain independent. Outcome persistence may overlap a
+I/O. Sources that share an asset also obey the per-asset rule below; unrelated
+sources remain independent. Outcome persistence may overlap a
 later call, so durable outcome order can still differ. Before replaying a
 recorded outcome, resolve all pending entries of its source with lower WAL
 sequences. A dependent call follows its predecessor's returned hub call and
@@ -95,6 +97,19 @@ therefore has a higher WAL sequence. Recorded outcomes
 carry hub commit positions so restoration preserves actual commit order,
 including per-asset order. An unresolved source WAL gap fails that source
 closed; a later recorded activation cannot bypass an uncertain admission.
+
+For each asset, serialize intent ordinal assignment, durable intent persistence
+and hub submission through completion of the hub call across **all** sources,
+including control mutations. Use a service-side per-asset gate, never a hub or
+manager lock across disk I/O. An ambiguous completion blocks further submissions
+to that asset until resolved. The durable ordinal therefore orders uncertain
+intents relative to later outcomes from any source, even when the earlier
+outcome was never persisted. It is not a publication cursor or `HubSeq`, and a
+rejected intent consumes its ordinal without becoming an accepted batch.
+Outcome persistence may overlap later calls, but restoration must resolve every
+earlier uncertain ordinal before applying a later outcome on that asset. Missing
+or incompatible ordering material fails the affected asset closed. Multi-asset
+operations retain an ordinal for each asset; this adds no cross-asset atomicity.
 
 ## Restore before admission
 
@@ -119,7 +134,8 @@ changes replay acceptance, has no supported migration here and fails closed.
    merely because it survived on disk. A persisted settled flag never opens
    reads. Reprojection against the restored exact snapshot must acknowledge
    settlement before an affected read gate can reopen.
-4. Resolve pending exact bytes under the WAL rule before dependent outcomes.
+4. Resolve pending exact bytes under both the source WAL and per-asset ordinal
+   rules before dependent outcomes, including outcomes from another source.
    Compare the exact asset/key cursor: a matching accepted sequence and digest
    permits exact replay/readback; an unchanged cursor permits exact-byte
    resubmission; an incompatible cursor fails closed. Never rebuild uncertain
@@ -177,6 +193,7 @@ satisfy this proof.
 | Unfinished control: one asset accepts and the other rejects | Both affected read gates stay closed initially; the accepted asset opens only after reprojection against its restored snapshot |
 | Rejected publication envelope and rejected control attempt | Neither is applied as accepted; each cursor stays at its pre-rejection value and the original error identifier survives |
 | WAL gap: A accepted without durable outcome, dependent B accepted and recorded | Resolve A before B; never replay B alone. Removing A's intent must fail the source closed |
+| Cross-source asset gap: source A commits to an asset without a durable outcome; source B then commits to the same asset and persists its outcome | After memory loss, use durable per-asset ordinals to resolve A before replaying B and reproduce the pre-loss snapshot, retained history and both source cursors. Missing A's intent or ordering material fails that asset closed; an unrelated asset remains recoverable |
 | Concurrent same-source callers: A holds the lower WAL sequence and is paused before hub completion while B is ready | B cannot enter the hub until A completes; delay A's outcome persistence until after B's, then lose memory and verify recovery resolves A before replaying B with matching snapshots |
 | Corrupt replay or incompatible validator, snapshot, revision or cursor | Fail the affected asset closed without damaging an unaffected asset |
 
