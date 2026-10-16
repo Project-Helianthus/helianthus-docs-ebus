@@ -64,7 +64,11 @@ if name == "python3":
         sys.exit(17 if mode == "actionlint" else 0)
     if args[:2] == ["scripts/check_workflow_shells.py", "shellcheck"]:
         directory = Path(args[3])
-        (directory / "synthetic-step.bash").write_text("echo synthetic\n")
+        source = directory / "synthetic-step.bash"
+        source.write_text("echo synthetic\n\necho final")
+        (directory / "synthetic-step.sh").write_text("echo other\n")
+        if mode == "shellcheck":
+            print(f"{source}:3:1: synthetic lint finding", file=sys.stderr)
         if mode in ("TERM", "INT"):
             os.kill(os.getppid(), getattr(signal, "SIG" + mode))
         sys.exit(23 if mode == "shellcheck" else 0)
@@ -103,6 +107,16 @@ if name == "python3":
     assert owned.parent == caller
     assert owned.name.startswith("docs-ebus-ci.")
     assert not owned.exists()
+    evidence = f"Extracted workflow source: {owned / 'synthetic-step.bash'}\n"
+    other_evidence = f"Extracted workflow source: {owned / 'synthetic-step.sh'}\n"
+    if mode == "shellcheck":
+        assert result.stderr.count(evidence) == 1
+        assert result.stderr.count(other_evidence) == 1
+        assert f"{owned / 'synthetic-step.bash'}:3:1: synthetic lint finding" in result.stderr
+        assert evidence + "     1\techo synthetic\n     2\t\n     3\techo final" in result.stderr
+        assert other_evidence + "     1\techo other\n" in result.stderr
+    else:
+        assert "Extracted workflow source:" not in result.stderr
     assert sentinel.read_text() == "caller owned"
     assert (other / "sentinel").read_text() == "other invocation"
     assert outside.read_text() == "unrelated"
