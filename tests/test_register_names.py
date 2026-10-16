@@ -601,6 +601,85 @@ def test_condition_bound_needs_the_object_it_precedes(vocabulary: names.Vocabula
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize("cell", ["0x0016", "`0x0016`", "0x00AF", "`0x00AF`"])
+def test_header_register_selectors_are_not_names(cell: str) -> None:
+    table = (
+        "| Operation | Register |\n| --- | --- |\n"
+        f"| Read | {cell} |\n"
+        "| Read | `ventilation_operating_mode` |"
+    )
+    assert names.header_column_names(table.splitlines()) == [(4, "ventilation_operating_mode")]
+
+
+@pytest.mark.parametrize("cell", ["0x0016", "`0x0016`", "0x00AF", "`0x00AF`"])
+def test_catalog_named_register_selector_passes_main(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], cell: str
+) -> None:
+    text = names.PROTOCOL.read_text(encoding="utf-8")
+    table = (
+        "\n\n| Operation | Path | Register |\n| --- | --- | --- |\n"
+        f"| Read | GG=0x00, RR={names._strip_code_span(cell)} | {cell} |\n"
+    )
+    original_read_text = Path.read_text
+
+    def read_text(path: Path, *args, **kwargs) -> str:
+        if path == names.PROTOCOL:
+            return text + table
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+    assert names.main() == 0
+    assert capsys.readouterr().err == ""
+
+
+@pytest.mark.parametrize("header", ["Name", "Write"])
+def test_selector_mismatch_exemption_is_limited_to_register_columns(header: str) -> None:
+    lines = (
+        f"| Operation | Path | Register | {header} |\n| --- | --- | --- | --- |\n"
+        "| Read | GG=0x00, RR=0x0016 | `0x0016` | `0x0016` |"
+    ).splitlines()
+    assert names.selector_name_mismatches(lines, _rows(FIXTURES / "b524-op02-register-names.csv")) == [
+        (3, "0x0016", "ventilation_operating_mode")
+    ]
+
+
+@pytest.mark.parametrize("header", ["Name", "Write"])
+@pytest.mark.parametrize("cell", ["0x0016", "`0x0016`", "0x00AF", "`0x00AF`"])
+def test_header_selector_exemption_is_limited_to_register_columns(
+    vocabulary: names.Vocabulary, header: str, cell: str
+) -> None:
+    table = f"| Path | {header} |\n| --- | --- |\n| Read | {cell} |"
+    found = names.header_column_names(table.splitlines())
+    assert found == [(3, names._strip_code_span(cell))]
+    with pytest.raises(names.NameError_):
+        names.decompose(found[0][1], vocabulary)
+
+
+def test_header_selector_exemption_preserves_names_in_the_same_row() -> None:
+    table = (
+        "| Path | Register | Name | Write |\n| --- | --- | --- | --- |\n"
+        "| Read | `0x0016` | `0x0016` | `0x0016` |"
+    )
+    assert names.header_column_names(table.splitlines()) == [(3, "0x0016"), (3, "0x0016")]
+
+
+@pytest.mark.parametrize(
+    "cell",
+    [
+        "InvalidName", "`InvalidName`", "``0x0016``", "`0x0016", "0x0016`",
+        "0x00af", "0X0016", "0x016", "0x0016" + "0",  # valid selector plus an extra digit
+    ],
+)
+def test_header_selector_exclusion_preserves_invalid_names(
+    vocabulary: names.Vocabulary, cell: str
+) -> None:
+    table = "| Operation | Register |\n| --- | --- |\n" f"| Read | {cell} |"
+    found = names.header_column_names(table.splitlines())
+    assert found == [(3, names._strip_code_span(cell))]
+    with pytest.raises(names.NameError_):
+        names.decompose(found[0][1], vocabulary)
+
+
 def test_protocol_header_column_names_are_covered_and_pass(
     vocabulary: names.Vocabulary,
 ) -> None:
