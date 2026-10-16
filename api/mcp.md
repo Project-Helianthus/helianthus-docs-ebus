@@ -394,7 +394,7 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
       and MCP `isError: true`, before any bus write. Error text includes
       `controller profile <identity> allows [min, max]` or
       `controller identity unmatched (<reason>): conservative policy bound
-      [min, max] applies`.
+      [-20, 50] applies`.
   - `ebus.v1.semantic.circuits.get`
   - `ebus.v1.semantic.radio_devices.get`
     - `data: []` means the startup radio inventory probe completed without
@@ -442,14 +442,23 @@ strings are omitted in MCP and `null` in GraphQL. The required boolean
 `narrowed_only` is true for every `controller_profile` bound and false for
 `unmatched_policy` (GraphQL: `narrowedOnly: Boolean!`). A profile identifies
 an observation context, not an installation. Its bound is a **Hypothesis**
-for the target installation and can only narrow the policy window `-20..20`:
-`min = max(profile min, -20)`, `max = min(profile max, 20)`. An empty
+for the target installation and can only narrow the policy window `-20..50`:
+`min = max(profile min, -20)`, `max = min(profile max, 50)`. An empty
 intersection uses `unmatched_policy` with reason `invalid_bound`; otherwise
 the source and profile identity remain `controller_profile`.
-The empty-intersection fallback bound is the policy window `-20..20`.
+The empty-intersection fallback bound is the policy window `-20..50`.
 Widening needs installation-qualified evidence, which no seeded profile
-provides. The sole seeded bound equals the window, so numeric behaviour is
-unchanged.
+provides. The BASV0 profile bound `-20..20` narrows the window on a qualified
+match.
+
+The policy window equals the range the gateway accepted before profiles existed,
+so v1 clients see no change, and narrowing applies only on a qualified profile
+match (none is reachable until identities are acquired at discovery, gateway
+[#1034][gateway-bound-discovery]).
+Unmatched controllers (unknown identity, unseeded family, missing API qualifier,
+profile without this selector, or an unqualified or invalid profile bound) use
+`min_c: -20`, `max_c: 50` and `source: unmatched_policy` with the reason codes
+above.
 
 The following response `data` fragments pin the two resolved shapes. The
 profile fragment illustrates a matched observation context; current discovery
@@ -474,7 +483,7 @@ still uses the unmatched policy as described below.
   "config": {
     "dhw_bivalence_point_bound": {
       "min_c": -20,
-      "max_c": 20,
+      "max_c": 50,
       "narrowed_only": false,
       "source": "unmatched_policy",
       "reason": "unknown_profile"
@@ -522,7 +531,7 @@ shape and is not a substitute for the degradation verdict.
   polling does not acquire `0006h` `interface_version` or `0007h`
   `interface_revision` (the registry identity's API version and revision).
   Today even the seeded BASV0 identity resolves to `unknown_profile`, so every
-  bound is the conservative `-20..20` with `source: unmatched_policy`.
+  bound is the policy window `-20..50` with `source: unmatched_policy`.
   `controller_profile` can appear only after gateway issue
   [#1034][gateway-bound-discovery]
   acquires both identifiers in discovery. The bound is resolved from current

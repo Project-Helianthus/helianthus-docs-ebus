@@ -512,8 +512,11 @@ type SystemConfig {
 # Active write bound of dhwBivalencePointC (see "System Config Write Bounds").
 type SystemConfigBound {
   minC: Float!
+  min_c: Float!
   maxC: Float!
+  max_c: Float!
   narrowedOnly: Boolean!
+  narrowed_only: Boolean!
   source: String!   # "controller_profile" | "unmatched_policy"
   reason: String    # set only for "unmatched_policy"
   profile: String   # set only for "controller_profile"
@@ -1087,6 +1090,11 @@ share one validation rule for the `dhwBivalencePointC` field (register
 `GG=0x00`, `RR=0x0001`): the accepted range is not fixed, it is resolved per
 controller.
 
+The policy window equals the range the gateway accepted before profiles existed,
+so v1 clients see no change, and narrowing applies only on a qualified profile
+match (none is reachable until identities are acquired at discovery, gateway
+[#1034][gateway-bound-discovery]).
+
 - **Profile bound.** The range comes from the controller-profile lookup of the
   register library, keyed by the complete selector (opcode, group, instance
   byte, register) under one controller identity. A profile matches only when
@@ -1110,28 +1118,28 @@ controller.
   range rests on the EXP decoding and is a **Hypothesis**. A matching
   identity identifies an observation context, not the target installation.
   Its bound remains a **Hypothesis** for that installation and may narrow
-  but never widen the conservative policy window `-20..20`. The effective
+  but never widen the policy window `-20..50`. The effective
   bound is the intersection: `min = max(profile min, -20)` and
-  `max = min(profile max, 20)`. An empty intersection falls back to
+  `max = min(profile max, 50)`. An empty intersection falls back to
   `unmatched_policy` with reason `invalid_bound`. A nonempty intersection
   retains `source: controller_profile` and the matched profile identity.
-  The empty-intersection fallback bound is the policy window `-20..20`.
+  The empty-intersection fallback bound is the policy window `-20..50`.
   Widening beyond the window requires installation-qualified evidence, such
   as a description of the target installation's own selector (future work);
-  no seeded profile provides it. The only seeded bound coincides with the
-  window, so numeric behaviour is unchanged. The register map's
+  no seeded profile provides it. The BASV0 profile bound `-20..20` narrows
+  the window on a qualified match. The register map's
   `-20..50` is an unqualified historical observation that names no controller
-  identity, so it is not used. Today even the seeded BASV0 identity resolves
-  to `unknown_profile`: every bound is the conservative `-20..20` with
+  identity, so it is not used as a profile bound. Today even the seeded
+  BASV0 identity resolves to `unknown_profile`: every bound is the policy window `-20..50` with
   `source: unmatched_policy`. The `controller_profile` source can appear
   only after gateway issue
   [#1034][gateway-bound-discovery]
   acquires both identifiers in the discovery path.
 - **Unmatched policy.** When no profile matches (unknown identity, a controller
   without a seeded profile, an API qualifier missing from metadata, or a
-  profile without a bound for this selector), the conservative range `-20..20`
-  applies. A controller family whose profile is not seeded therefore falls
-  under this policy until a profile is added, even when other documentation
+  profile without a bound for this selector, or an unqualified or invalid
+  profile bound), the range `-20..50` applies. A controller family whose
+  profile is not seeded therefore falls under this policy until a profile is added, even when other documentation
   lists a wider catalog range for it. The registry/invoker write path
   (`ebus.v1.rpc.invoke`-style writes through the registry) has no API qualifier
   and therefore always applies the unmatched policy.
@@ -1139,7 +1147,7 @@ controller.
   before the first bus frame of the write is sent, with `success: false`. The
   error text names the active bound: `controller profile <identity> allows
   [min, max]` or `controller identity unmatched (<reason>): conservative policy
-  bound [min, max] applies`. A value inside the bound is written and still
+  bound [-20, 50] applies`. A value inside the bound is written and still
   reported as success only after the read-back matches the written value.
 - **Non-finite input.** Every numeric configuration write rejects `NaN` and
   positive or negative infinity before encoding, with `success: false` and
@@ -1147,6 +1155,9 @@ controller.
 - **Other system numbers.** `maxRoomHumidityPct`, `hcBivalencePointC`,
   `hcEmergencyTempC`, `hwcMaxFlowTempC` and `installerMenuCode` keep their fixed
   ranges and carry no bound.
+
+`SystemConfigBound.min_c`, `max_c`, and `narrowed_only` are aliases of
+`minC`, `maxC`, and `narrowedOnly`, respectively, with identical values.
 
 `SystemConfig.dhwBivalencePointBound` (snake_case alias
 `dhw_bivalence_point_bound`) publishes the resolved bound so a consumer can
