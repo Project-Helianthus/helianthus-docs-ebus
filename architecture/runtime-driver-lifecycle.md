@@ -12,8 +12,8 @@ owns the provider SPI and CTL/LIFE vectors. The final G5 operator decisions
 select service-side write-ahead persistence and gateway-owned hub export/restore
 hooks, using SemReg's existing public `NewPublicationKernel` constructor and
 `Apply`. No SemReg API, dependency change or snapshot-import prerequisite is
-introduced. Older receipt/idempotency-ledger and lifecycle authorization
-proposals in that contract must be read with the final D3/D4 decisions below.
+introduced. Earlier proposals for client command tracking and lifecycle
+authorization in that contract must be read with the final D3/D4 decisions below.
 
 ## Ownership and durable scope
 
@@ -133,7 +133,7 @@ source. Healthy unrelated paths remain available with unchanged provenance.
 ## D3 retention and D4/public surface boundary
 
 Final D3 removes client-visible command receipts, idempotency keys,
-per-principal key spaces and the completed-command ledger. START and STOP are
+per-principal key spaces and stored completed-command records. START and STOP are
 idempotent by desired state; RESTART executes. Requests return accepted desired
 state and revision; completion is read from observed state. Durable lifecycle
 scope is desired state, the in-flight operation and D5 recovery material;
