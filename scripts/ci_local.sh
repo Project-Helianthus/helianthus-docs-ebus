@@ -228,6 +228,7 @@ python3 scripts/validate_b524_basv0_description_profile.py \
 jv protocols/vaillant/fixtures/b524-basv0-register-observations-schema-v1.json \
   protocols/vaillant/fixtures/b524-basv0-register-observations-v1.json
 python3 -m pytest -q tests/test_b524_basv0_description_profile.py
+python3 -m pytest -q tests/test_b524_description_schema_privacy.py
 python3 -m pytest -q tests/test_b524_external_bundle_cli.py
 python3 -m pytest -q tests/test_b524_bounded_survey_profile.py
 for profile in protocols/vaillant/fixtures/b524-bounded-survey-*-v1.json; do
