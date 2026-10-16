@@ -1,5 +1,10 @@
 {
   "graphql_type": "SystemConfigBound",
+  "graphql_aliases": {
+    "min_c": "minC",
+    "max_c": "maxC",
+    "narrowed_only": "narrowedOnly"
+  },
   "graphql_fields": {
     "minC": "Float!",
     "min_c": "Float!",
