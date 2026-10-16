@@ -50,34 +50,37 @@ traffic or changing a live setup, retain Not run and refer it to the parents.
 | Planned maximum duration and byte/event bound; relative time origin | Unknown | Not run |
 | Stop conditions: bound reached, data loss, unexpected transmission, uncertain isolation | Unknown | Not run |
 | Passive-only configuration and absence of observer-originated traffic established | Unknown | Not run |
-| Publication review of sanitized raw and decoded artifacts | Unknown | Not run |
+| Publication review: synthetic excerpts only; observed captures excluded | Unknown | Not run |
 
 Private coordinates, credentials, hostnames, addresses of network endpoints,
 serials, contributor identities, absolute capture times, and installation
-details stay outside this public package. No private lookup key is required in
-the worksheet. Public byte excerpts must contain no identifying payloads;
-withhold such excerpts and leave the dependent claim Unknown if they cannot be
-sanitized without changing the claimed evidence. A synthetic replacement is
-labelled synthetic and never presented as an observed capture.
+details stay outside this public package. Observed captures and their raw or
+decoded excerpts stay outside it too, even when sanitized. No private lookup
+key or link to excluded evidence belongs in the worksheet. Public byte and
+decoded excerpts must be synthetic, labelled synthetic, and never presented
+as observed evidence. Leave a dependent claim Unknown when public evidence
+cannot support it; synthetic replay establishes no hardware observation.
 
 ## Required public-safe artifact fields
 
 Use repository-relative artifact links and family wording. This is a worksheet,
 not a new application artifact schema. Keep unavailable fields explicitly
-Unknown and unexecuted observations Not run.
+Unknown and unexecuted observations Not run. The excerpt rows below accept
+synthetic offline replay only; they do not request publication of captures.
 
 | Artifact | Required fields to fill | Artifact link | Result |
 |---|---|---|---|
-| Boundary and provenance note | Synthetic replay or sanitized observation; family and public firmware context; topology/layer; passive constraints; duration and byte bounds; omission/redaction reasons | Unknown | Not run |
-| Capability record | Confirmed response bytes if already observed; direction; negotiated features versus unknown features; application passive-capability state and reason kept separate | Unknown | Not run |
-| Raw receipt excerpt | Ordered adapter-to-host bytes/events; offsets and relative elapsed durations; layer; frame boundaries; gaps, truncation, drops and errors; no invented missing bytes | Unknown | Not run |
-| Decoded observation | Raw-offset references; decoder/version context; direction; source and destination eBUS bus addresses; PB/SB or service; payload/register bytes; CRC/frame validity when determinable; decoded type/unit or Unknown | Unknown | Not run |
+| Boundary and provenance note | Synthetic replay provenance; family and public firmware context; topology/layer; passive constraints; duration and byte bounds; omission/redaction reasons | Unknown | Not run |
+| Capability record | Synthetic response bytes labelled as replay; direction; negotiated features versus unknown features; application passive-capability state and reason kept separate | Unknown | Not run |
+| Synthetic receipt excerpt | Ordered synthetic adapter-to-host bytes/events; offsets and relative elapsed durations; layer; frame boundaries; gaps, truncation, drops and errors; no invented missing bytes | Unknown | Not run |
+| Synthetic decoded example | Synthetic receipt-offset references; decoder/version context; direction; source and destination eBUS bus addresses; PB/SB or service; payload/register bytes; CRC/frame validity when determinable; decoded type/unit or Unknown | Unknown | Not run |
 | Claim and admission record | Native source link; family scope; evidence grade; independent codec/profile qualification; admitted/withheld reason; last-known-good lineage and freshness where already available | Unknown | Not run |
 | Negative-control record | Synthetic input link and exact transformation; referenced XR row or application boundary; expected rejection/withholding; actual output/error and retained state | Unknown | Not run |
 
-Retain sanitized raw evidence beside its interpretation. Preserve physical
-wire bytes, transport control events, logical bytes and semantic values as
-separate representations with traceable offsets. For a B524 observation retain
+Retain observed raw evidence beside its interpretation outside the public
+package. In public synthetic examples, preserve physical wire bytes, transport
+control events, logical bytes and semantic values as separate representations
+with traceable offsets. For a B524 interpretation retain
 the full `(opcode, group, instance, register)` identity; never merge OP=0x02
 and OP=0x06. A UI label, decoded value or successful read proves no writability.
 
@@ -86,7 +89,9 @@ and OP=0x06. A UI label, decoded value or successful read proves no writability.
 Fill these separately for each bounded family/topology and artifact set. The
 evidence grade is Proven, Hypothesis, or Unknown; qualification and admission
 are separate decisions. A Proven bounded receipt would not qualify a codec,
-profile, family-wide support, or semantic mapping automatically.
+profile, family-wide support, or semantic mapping automatically. Observed
+evidence needed below remains outside this public package; synthetic examples
+cannot satisfy hardware evidence decisions.
 
 | Decision | Evidence needed | Evidence grade | Qualification/admission | Result |
 |---|---|---|---|---|
