@@ -70,7 +70,16 @@ workflow_lint_status=0
 echo "==> actionlint (60-second limit; embedded ShellCheck disabled)"
 python3 scripts/check_workflow_shells.py actionlint || workflow_lint_status=$?
 echo "==> separate ShellCheck (60-second pass limit; all severities)"
-python3 scripts/check_workflow_shells.py shellcheck --temp-dir "$gate_temp_dir" || workflow_lint_status=$?
+python3 scripts/check_workflow_shells.py shellcheck --temp-dir "$gate_temp_dir" || {
+  workflow_lint_status=$?
+  # Preserve numbered source while the extracted files still exist. The pass
+  # returns one status, so include every extracted script for diagnostic context.
+  for workflow_script in "$gate_temp_dir"/*.bash "$gate_temp_dir"/*.sh; do
+    [ -f "$workflow_script" ] || continue
+    printf '\nExtracted workflow source: %s\n' "$workflow_script" >&2
+    nl -ba "$workflow_script" >&2 || :
+  done
+}
 if [ "$workflow_lint_status" -ne 0 ]; then
   exit "$workflow_lint_status"
 fi
