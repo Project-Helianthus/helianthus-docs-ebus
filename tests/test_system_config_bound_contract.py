@@ -70,6 +70,16 @@ def validate(graphql, mcp, architecture):
         assert ("profile" in obj) == (obj["source"] == "controller_profile")
         assert ("reason" in obj) == (obj["source"] == "unmatched_policy")
     normalized_bound = " ".join(bound.split())
+    aliases = list(CONTRACT["graphql_aliases"])
+    targets = list(CONTRACT["graphql_aliases"].values())
+    aliases[0] = f'{CONTRACT["graphql_type"]}.{aliases[0]}'
+    alias_names = [f"`{name}`" for name in aliases]
+    target_names = [f"`{name}`" for name in targets]
+    assert (
+        f"{', '.join(alias_names[:-1])}, and {alias_names[-1]} are aliases of "
+        f"{', '.join(target_names[:-1])}, and {target_names[-1]}, "
+        "respectively, with identical values."
+    ) in normalized_bound
     normalized_payload = " ".join(payload.split())
     policy = CONTRACT["policy_window"]
     assert policy == {"min_c": -20, "max_c": 50}
@@ -168,8 +178,41 @@ def test_documented_bound_contract():
     validate(*pages())
 
 
+@pytest.mark.parametrize("field", (
+    "minC", "min_c", "maxC", "max_c", "narrowedOnly", "narrowed_only",
+))
+def test_rejects_removing_either_graphql_spelling(field):
+    graphql, mcp, architecture = pages()
+    graphql, count = re.subn(
+        r"^  " + re.escape(field) + r": (?:Float|Boolean)!\n",
+        "", graphql, count=1, flags=re.M,
+    )
+    assert count == 1
+    with pytest.raises(AssertionError):
+        validate(graphql, mcp, architecture)
+
+
+@pytest.mark.parametrize("replacement", (
+    "",
+    "`SystemConfigBound.min_c`, `max_c`, and `narrowed_only` are aliases of\n"
+    "`maxC`, `minC`, and `narrowedOnly`, respectively, with identical values.",
+    "`SystemConfigBound.min_c`, `max_c`, and `narrowed_only` are aliases of\n"
+    "`minC`, `maxC`, and `narrowedOnly`, respectively, with different values.",
+))
+def test_rejects_graphql_alias_relationship_drift(replacement):
+    graphql, mcp, architecture = pages()
+    paragraph = (
+        "`SystemConfigBound.min_c`, `max_c`, and `narrowed_only` are aliases of\n"
+        "`minC`, `maxC`, and `narrowedOnly`, respectively, with identical values."
+    )
+    assert paragraph in graphql
+    with pytest.raises(AssertionError):
+        validate(graphql.replace(paragraph, replacement), mcp, architecture)
+
+
 @pytest.mark.parametrize("old", (
-    "minC", "maxC", "narrowedOnly", "Boolean!", "SystemConfigBound",
+    "minC", "min_c", "maxC", "max_c", "narrowedOnly", "narrowed_only",
+    "Boolean!", "SystemConfigBound",
     "setSystemConfig",
     "unknown_register", "unqualified_bound", "invalid_bound",
     "GraphQL returns `null`", "(with `reason` one of",
