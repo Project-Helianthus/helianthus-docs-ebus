@@ -48,23 +48,27 @@ correspond to OP=00h `0006h` `interface_version` and `0007h`
 `interface_revision`. Bound resolution performs no bus I/O or on-demand
 system-information identifier reads; existing polling does not acquire those
 two identifiers. Today even the seeded BASV0 identity resolves to
-`unknown_profile`, so every bound is the conservative `-20..20` with
+`unknown_profile`, so every bound is the policy window `-20..50` with
 `source: unmatched_policy`. The `controller_profile` source can appear only
 after gateway issue
 [#1034][gateway-bound-discovery]
 acquires both identifiers in discovery. A match identifies an observation
 context, not the target installation: the profile bound remains a
-**Hypothesis** there. It may narrow but never widen the conservative window
-`-20..20`, using `min = max(profile min, -20)` and
-`max = min(profile max, 20)`. An empty intersection falls back to
+**Hypothesis** there. It may narrow but never widen the policy window
+`-20..50`, using `min = max(profile min, -20)` and
+`max = min(profile max, 50)`. An empty intersection falls back to
 `unmatched_policy` with reason `invalid_bound`; otherwise the source remains
-`controller_profile` with the matched profile identity. The required boolean
+`controller_profile` with the matched profile identity.
+The empty-intersection fallback bound is the policy window `-20..50`.
+The policy window equals the range the gateway accepted before profiles
+existed, so v1 clients see no change; narrowing applies only on a qualified
+profile match. The required boolean
 `narrowed_only` (GraphQL `narrowedOnly: Boolean!`) is true for every
 profile-sourced bound and false for `unmatched_policy`, including when the
 profile equals the window. Widening requires installation-qualified evidence
 (for example, a description of the target installation's own selector,
 future work); no seeded profile provides it. The sole seeded BASV0 bound
-equals the window, so numeric behaviour is unchanged.
+`-20..20` narrows the policy window on a qualified match.
 
 Resolution uses current registry metadata at validation and at publication;
 published bounds update on the next system publication. A controller swap at
