@@ -25,16 +25,17 @@ Core MCP tools (`ebus.v1.*`) use the following envelope:
 - `data`
 - `error` (null or structured error)
 
-Until 1.0, eBUS MCP tools (`ebus.v1.*`) are experimental and pre-stable.
-For this namespace, the `v1` name is historical, not a stability promise. A
-pre-1.0 schema or behaviour change must update golden snapshots and its
-documentation companion, pass the documentation gate, and be announced in the
-pull request. The eBUS major-namespace rule and any separate experimental
+Until 1.0, every MCP namespace, including `ebus.v1.*` and `eebus.v1.*`,
+is experimental and pre-stable. The `v1` name is historical, not a stability
+promise. A pre-1.0 schema or behaviour change must update golden snapshots
+and its documentation companion, pass the documentation gate, and be announced
+in the pull request. The major-namespace rule and any separate experimental
 namespace will be decided after 1.0.
 
-This policy does not change the stable `eebus.v1.*` contract defined by the
+This pre-1.0 policy also applies to the `eebus.v1.*` contract defined by the
 [eeBUS raw-first contract](../docs/platform/eebus-raw-first-contract.md) or the
-[protected coexistence inventory and gates](../docs/platform/multi-runtime-coexistence-no-drift-v1.md).
+[protected coexistence inventory and gates](../docs/platform/multi-runtime-coexistence-no-drift-v1.md),
+superseding their stability labels until 1.0.
 
 ## Determinism Rules
 
