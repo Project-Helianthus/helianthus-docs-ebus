@@ -11,8 +11,10 @@ qualify a live device or extend the MCP schema.
 
 ## Current Status
 
-Until 1.0, all MCP namespaces, including `ebus.v1.*`, are pre-stable;
-the namespace version alone is not a stability promise. Schema or behaviour
+Until the Helianthus 1.0 release, all MCP namespaces, including `ebus.v1.*`,
+are pre-stable; the namespace version alone is not a stability promise. A
+contract version declared by an individual surface, such as `1.0`, does not
+end this period. Schema or behaviour
 may change with updated goldens, documentation, and a note in the pull request.
 There is no experimental namespace or core-stable graduation before 1.0;
 both will be discussed after 1.0. Existing envelope, determinism, golden-test,
