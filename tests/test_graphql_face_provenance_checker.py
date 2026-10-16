@@ -131,9 +131,12 @@ def test_rejects_graphql_pins_hidden_in_html_comment() -> None:
         CHECKER.validate_text(hide_pin_paragraph(doc), atr)
 
 
-def test_rejects_mcp_pins_hidden_in_html_comment() -> None:
+def test_rejects_mcp_reference_hidden_in_html_comment() -> None:
+    text = mcp_text()
+    reference = "[static-seed provenance ATR](../architecture/atr/05-static-seed-provenance.md)"
+    assert reference in text
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(hide_pin_paragraph(mcp_text()))
+        CHECKER.validate_mcp_text(text.replace(reference, "<!--" + reference + "-->", 1))
 
 
 def test_rejects_mcp_rule_hidden_in_html_comment() -> None:
@@ -469,19 +472,34 @@ def test_rejects_whitespace_variant_mcp_source_rewrite() -> None:
 
 
 @pytest.mark.parametrize(
-    "pin",
+    "replacement",
     (
-        CHECKER.GATEWAY_REVIEWED_HEAD,
-        CHECKER.GATEWAY_REVIEWED_MERGE_TREE,
-        CHECKER.GATEWAY_MAIN_MERGE,
-        CHECKER.REGISTRY_DEPENDENCY,
+        "",
+        "[static-seed provenance ATR](../architecture/atr/07-live-validation-acceptance.md)",
+        "[unrelated contract](../architecture/atr/05-static-seed-provenance.md)",
+        "`[static-seed provenance ATR](../architecture/atr/05-static-seed-provenance.md)`",
+        "[static-seed provenance ATR](../architecture/atr/05-static-seed-provenance.md) " * 2,
     ),
 )
-def test_rejects_wrong_mcp_runtime_or_dependency_pin(pin: str) -> None:
+def test_rejects_missing_or_altered_mcp_provenance_reference(replacement: str) -> None:
     text = mcp_text()
-    mutated = text.replace(pin, "f" * 40, 1)
+    reference = "[static-seed provenance ATR](../architecture/atr/05-static-seed-provenance.md)"
+    assert reference in text
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(mutated)
+        CHECKER.validate_mcp_text(text.replace(reference, replacement, 1))
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    ("Core stable (`ebus.v1.*`)", "Core pre-stable (`ebus.v2.*`)"),
+)
+def test_rejects_obsolete_or_wrong_mcp_core_label(replacement: str) -> None:
+    text = mcp_text()
+    label = "Core pre-stable (`ebus.v1.*`)"
+    assert label in text
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_mcp_text(text.replace(label, replacement, 1))
+
 
 def test_ignores_historical_device_outside_current_sdl_fence() -> None:
     doc, atr = texts()
@@ -799,8 +817,8 @@ def test_rejects_four_space_core_devices_get_duplicate() -> None:
     text = mcp_text()
     duplicate = "    - `ebus.v1.registry.devices.get`\n"
     mutated = text.replace(
-        "- Core stable (`ebus.v1.*`)\n",
-        "- Core stable (`ebus.v1.*`)\n" + duplicate,
+        "- Core pre-stable (`ebus.v1.*`)\n",
+        "- Core pre-stable (`ebus.v1.*`)\n" + duplicate,
         1,
     )
     with pytest.raises(CHECKER.CheckError):

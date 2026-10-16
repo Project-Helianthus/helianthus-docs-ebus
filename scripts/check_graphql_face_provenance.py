@@ -378,19 +378,19 @@ def _mcp_device_section(text: str) -> str:
     # Raw HTML has no stable Markdown token identity. Reject it in the tool
     # inventory so code-styled aliases cannot evade whole-inventory uniqueness.
     _visible_markdown_text(inventory, reject_html=True)
-    core = _list_item(inventory, "Core stable (`ebus.v1.*`)", level=1)
+    core = _list_item(inventory, "Core pre-stable (`ebus.v1.*`)", level=1)
     list_label = "`ebus.v1.registry.devices.list`"
     if len(_list_items(inventory, list_label, level=None)) != 1:
         raise CheckError("MCP registry devices.list must appear once in Implemented Surface")
     list_entries = _list_items(core, list_label, level=3)
     if len(list_entries) != 1 or _first_list_label(list_entries[0]) != list_label:
-        raise CheckError("MCP registry devices.list must appear once under Core stable")
+        raise CheckError("MCP registry devices.list must appear once under Core pre-stable")
     get_label = "`ebus.v1.registry.devices.get`"
     if len(_list_items(inventory, get_label, level=None)) != 1:
         raise CheckError("MCP registry devices.get must appear once in Implemented Surface")
     entries = _list_items(core, get_label, level=3)
     if len(entries) != 1 or _first_list_label(entries[0]) != get_label:
-        raise CheckError("MCP registry devices.get must appear once under Core stable")
+        raise CheckError("MCP registry devices.get must appear once under Core pre-stable")
     return entries[0]
 
 
@@ -679,13 +679,31 @@ def validate_text(text: str, atr: str) -> None:
 
 def validate_mcp_text(text: str) -> None:
     _visible_markdown_text(text, reject_html=True)
+    raw_section = _mcp_device_section(text)
     section = _visible_markdown_text(
-        _mcp_device_section(text),
+        raw_section,
         include_inline_code=True,
         reject_html=True,
     )
     _validate_proven_conclusion(section, surface="MCP")
-    _validate_pins(section, surface="MCP")
+    references = []
+    for token in MARKDOWN.parse(raw_section):
+        if token.type == "inline" and token.children:
+            children = token.children
+            for index, child in enumerate(children):
+                if child.type == "link_open":
+                    label = children[index + 1]
+                    if label.type == "text" and label.content == "static-seed provenance ATR":
+                        references.append((
+                            child.attrGet("href"),
+                            tuple((part.type, part.content) for part in children[index + 1 : index + 3]),
+                        ))
+    expected_reference = (
+        "../architecture/atr/05-static-seed-provenance.md",
+        (("text", "static-seed provenance ATR"), ("link_close", "")),
+    )
+    if references != [expected_reference]:
+        raise CheckError("MCP provenance must cite exactly one static-seed provenance ATR")
     required = (
         "JSON response items carry `discovery_source` and\n      `verification_state` fields",
         "`passive_observed | static_seed | active_confirmed`",

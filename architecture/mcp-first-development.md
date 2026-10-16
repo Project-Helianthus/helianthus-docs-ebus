@@ -10,12 +10,12 @@ It also centralizes the architecture decisions that were previously duplicated a
 New capability rollout order is mandatory:
 
 1. MCP-first prototype and stabilization
-2. GraphQL parity on top of stable MCP contracts
+2. GraphQL parity on top of documented MCP contracts
 3. Consumer rollout (Home Assistant and other clients) only after GraphQL parity gates are green
 
 ## MCP Contract Baseline
 
-Core MCP tools (`ebus.v1.*`) use a stable envelope:
+Core MCP tools (`ebus.v1.*`) use the following envelope:
 
 - `meta`:
   - `contract`
@@ -25,12 +25,17 @@ Core MCP tools (`ebus.v1.*`) use a stable envelope:
 - `data`
 - `error` (null or structured error)
 
-Breaking contract changes require a new major namespace (`ebus.v2.*`).
+Until 1.0, every MCP namespace is experimental and pre-stable, including
+`ebus.v1.*`. The `v1` name is historical, not a stability promise. A pre-1.0
+schema or behaviour change must update golden snapshots and its documentation
+companion, pass the documentation gate, and be announced in the pull request.
+The major-namespace rule and any separate experimental namespace will be decided
+after 1.0.
 
 ## Determinism Rules
 
 - Stable ordering for list-like outputs
-- Stable schema and field naming for `ebus.v1.*`
+- Schema and field names for `ebus.v1.*` match the documented contract and goldens
 - Snapshot mode must produce stable `data_hash` for identical input
 - Golden snapshots are required for schemas and representative outputs
 
@@ -50,16 +55,16 @@ Unknown mutability defaults to safe denial unless explicitly allowed.
 
 A capability may graduate to GraphQL only when:
 
-1. It is implemented as core stable MCP (`ebus.v1.*`)
+1. It is implemented as core pre-stable MCP (`ebus.v1.*`)
 2. Determinism + contract + golden tests are green
 3. MCP <-> GraphQL parity tests are green
 
 ## Experimental Surface and Cleanup
 
-Experimental tools live under `ebus.experimental.*` and are not consumer-facing.
-At cycle end, each experimental tool must be:
+All MCP tools are experimental before 1.0. A separate experimental namespace
+and its policy will be decided after 1.0. At cycle end, each prototype must be:
 
-- promoted to core stable, or
+- retained in the documented core surface with the required gates, or
 - removed, or
 - moved to internal-only with written justification
 
