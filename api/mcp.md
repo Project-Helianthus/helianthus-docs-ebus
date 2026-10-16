@@ -11,17 +11,29 @@ qualify a live device or extend the MCP schema.
 
 ## Current Status
 
-Until 1.0, every MCP namespace, including `ebus.v1.*` and `eebus.v1.*`,
-is experimental and pre-stable. The `v1` name is historical, not a stability
-promise. A pre-1.0 schema or behaviour change must update golden snapshots
-and its documentation companion, pass the documentation gate, and be announced
-in the pull request. The major-namespace rule and any separate experimental
-namespace will be decided after 1.0.
+### Pre-1.0 Stability Policy
 
-This pre-1.0 policy also applies to the `eebus.v1.*` contract defined by the
-[eeBUS raw-first contract](../docs/platform/eebus-raw-first-contract.md) or the
-[protected coexistence inventory and gates](../docs/platform/multi-runtime-coexistence-no-drift-v1.md),
-superseding their stability labels until 1.0.
+Until 1.0, MCP tools without a stronger owning contract are experimental and
+pre-stable. The `v1` name alone is not a stability promise. A pre-1.0 schema or
+behaviour change must update golden snapshots and its documentation companion,
+pass the documentation gate, and be announced in the pull request. The
+major-namespace rule and any separate experimental namespace will be decided
+after 1.0.
+
+Existing freezes, semantic locks, and protected inventories take precedence;
+this policy does not authorize breaking them. In particular, the
+[eeBUS raw-first contract](../docs/platform/eebus-raw-first-contract.md) and
+[protected coexistence inventory and gates](../docs/platform/multi-runtime-coexistence-no-drift-v1.md)
+retain their stable V1 requirements. The
+[eBUS standard semantic lock](../architecture/ebus_standard/11-m4b-semantic-lock.md)
+requires a locked-plan amendment for breaking changes to its four
+`ebus.v1.ebus_standard.*` tools. The
+[watch-summary contract](../api/watch-summary.md) retains the freeze on
+`ebus.v1.watch.summary.get`. The `DOC-06` freeze on `ebus.v1.bus.*` also remains
+in force.
+
+### Implementation Status
+
 The documented envelope, deterministic ordering and `data_hash` requirements
 continue to apply.
 
@@ -351,7 +363,7 @@ Periodicity response fragment:
 
 Note: This inventory reflects the current known tool surface. The gateway may expose additional tools discovered via the MCP `tools/list` endpoint.
 
-- Core pre-stable (`ebus.v1.*`)
+- Core pre-stable (`ebus.v1.*`; existing locks take precedence)
   - `ebus.v1.runtime.status.get`
   - `ebus.v1.adapter_info.get`
   - `ebus.v1.registry.devices.list`

@@ -2,6 +2,7 @@
 """Validate the current GraphQL and MCP device-face provenance contract."""
 from __future__ import annotations
 
+import hashlib
 import pathlib
 import re
 import sys
@@ -21,16 +22,9 @@ INITIAL = (
     ("passive_observed", "corroborated_pending"),
     ("active_confirmed", "identity_confirmed"),
 )
-GATEWAY_REVIEWED_HEAD = "77b898633672e123a05d39a3cf46398cce2d72ab"
-GATEWAY_REVIEWED_MERGE_TREE = "bb8f59fed4be68104d8ab206f55f7f32ea33e031"
-GATEWAY_MAIN_MERGE = "f5cd9c51c60bdf422e8fc1b5690fbde52a393be3"
-REGISTRY_DEPENDENCY = "e24532a50caa00c113751b98b88239e045d731e8"
-PINS = (
-    GATEWAY_REVIEWED_HEAD,
-    GATEWAY_REVIEWED_MERGE_TREE,
-    GATEWAY_MAIN_MERGE,
-    REGISTRY_DEPENDENCY,
-)
+# Content checksum of the ordered historical references, not a Git revision.
+# Keep the exact GraphQL evidence check without publishing revision literals.
+PIN_CONTENT_SHA256 = "63b303a25968c7edd645afa1278dc980a571d520acab572b346301a3c6c3db77"
 PROVEN_CONCLUSION = "Conclusion: Proven."
 MARKDOWN = MarkdownIt("commonmark")
 TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
@@ -378,7 +372,7 @@ def _mcp_device_section(text: str) -> str:
     # Raw HTML has no stable Markdown token identity. Reject it in the tool
     # inventory so code-styled aliases cannot evade whole-inventory uniqueness.
     _visible_markdown_text(inventory, reject_html=True)
-    core = _list_item(inventory, "Core pre-stable (`ebus.v1.*`)", level=1)
+    core = _list_item(inventory, "Core pre-stable (`ebus.v1.*`; existing locks take precedence)", level=1)
     list_label = "`ebus.v1.registry.devices.list`"
     if len(_list_items(inventory, list_label, level=None)) != 1:
         raise CheckError("MCP registry devices.list must appear once in Implemented Surface")
@@ -438,19 +432,19 @@ def _list_item(text: str, label: str, *, level: int) -> str:
 
 
 def _validate_pins(section: str, *, surface: str) -> None:
-    visible = section
-    if tuple(re.findall(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", visible)) != PINS:
+    pins = tuple(re.findall(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", section))
+    if hashlib.sha256("\n".join(pins).encode()).hexdigest() != PIN_CONTENT_SHA256:
         raise CheckError(f"{surface} provenance pins differ")
-    normalized = re.sub(r"\s+", " ", visible)
-    required = (
-        f"reviewed gateway HEAD `{GATEWAY_REVIEWED_HEAD}`",
-        f"reviewed and merge tree is identical at `{GATEWAY_REVIEWED_MERGE_TREE}`",
-        f"gateway `main` is `{GATEWAY_MAIN_MERGE}`",
-        f"accepted registry dependency is `{REGISTRY_DEPENDENCY}`",
+    normalized = re.sub(r"\s+", " ", section)
+    roles = (
+        "reviewed gateway HEAD",
+        "reviewed and merge tree is identical at",
+        "gateway `main` is",
+        "accepted registry dependency is",
     )
-    for fragment in required:
-        if fragment not in normalized:
-            raise CheckError(f"{surface} provenance pin meaning missing: {fragment!r}")
+    for role, pin in zip(roles, pins):
+        if f"{role} `{pin}`" not in normalized:
+            raise CheckError(f"{surface} provenance pin meaning missing: {role!r}")
 
 
 def _contains_fragment(section: str, fragment: str) -> bool:
@@ -722,10 +716,53 @@ def validate_mcp_text(text: str) -> None:
         raise CheckError("MCP source-rewrite rule remains")
 
 
+POLICY_HEADING = "### Pre-1.0 Stability Policy"
+POLICY_REQUIREMENTS = (
+    "Until 1.0, MCP tools without a stronger owning contract are experimental and pre-stable.",
+    "The `v1` name alone is not a stability promise.",
+    "A pre-1.0 schema or behaviour change must update golden snapshots and its documentation companion, "
+    "pass the documentation gate, and be announced in the pull request.",
+    "The major-namespace rule and any separate experimental namespace will be decided after 1.0.",
+    "Existing freezes, semantic locks, and protected inventories take precedence; "
+    "this policy does not authorize breaking them.",
+    "retain their stable V1 requirements.",
+    "requires a locked-plan amendment for breaking changes to its four `ebus.v1.ebus_standard.*` tools.",
+    "retains the freeze on `ebus.v1.watch.summary.get`.",
+    "The `DOC-06` freeze on `ebus.v1.bus.*` also remains in force.",
+)
+POLICY_OWNERS = (
+    "[eeBUS raw-first contract](../docs/platform/eebus-raw-first-contract.md)",
+    "[protected coexistence inventory and gates](../docs/platform/multi-runtime-coexistence-no-drift-v1.md)",
+    "[eBUS standard semantic lock](../architecture/ebus_standard/11-m4b-semantic-lock.md)",
+    "[watch-summary contract](../api/watch-summary.md)",
+)
+
+
+def validate_stability_policy(mcp: str, architecture: str) -> None:
+    """Keep the canonical API policy and its architecture companion aligned."""
+    blocks = []
+    for text in (mcp, architecture):
+        block = _heading_section(text, POLICY_HEADING, "MCP stability policy").strip()
+        visible = _visible_markdown_text(block, include_inline_code=True, reject_html=True)
+        for clause in POLICY_REQUIREMENTS:
+            if not _contains_fragment(visible, clause):
+                raise CheckError(f"MCP stability policy requirement missing: {clause}")
+        for owner in POLICY_OWNERS:
+            if owner not in block:
+                raise CheckError(f"MCP stability policy owner missing: {owner}")
+        blocks.append(block)
+    if blocks[0] != blocks[1]:
+        raise CheckError("MCP stability policy copies differ")
+
+
 def main() -> int:
     try:
         validate_text(DOC.read_text(encoding="utf-8"), ATR.read_text(encoding="utf-8"))
-        validate_mcp_text(MCP.read_text(encoding="utf-8"))
+        mcp = MCP.read_text(encoding="utf-8")
+        validate_mcp_text(mcp)
+        validate_stability_policy(
+            mcp, pathlib.Path("architecture/mcp-first-development.md").read_text(encoding="utf-8")
+        )
     except CheckError as error:
         print(f"graphql_face_provenance_error: {error}", file=sys.stderr)
         return 1
