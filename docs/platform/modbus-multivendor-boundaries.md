@@ -217,6 +217,43 @@ There is no generic write escape hatch. FC05, FC06, FC0F, FC10, FC16, FC17,
 vendor write operations, and profile-authored arbitrary function codes are
 outside phase one.
 
+## RTU Host Receipt And Wire Timing
+
+The [native RTU framing rule](../../protocols/modbus/modbus-phase-one-wire-v1.md#modbus-rtu-adu)
+requires a continuous character stream, a minimum t3.5 separation between
+frames, and rejection of a frame with an inter-character gap greater than
+t1.5 on the serial wire.
+
+Host receipt timestamps can include buffered transfers and scheduling delays;
+they do not by themselves measure inter-character silence on the serial wire.
+Tolerating such receipt gaps does not change the native t1.5 rule above or prove
+wire-timing conformance.
+
+**Proven (implementation/tests only):** the FC03/FC04 length-delimited assembly
+in [Modbus #40](https://github.com/Project-Helianthus/helianthus-modbus/pull/40)
+handles normal FC03 and FC04 responses and their matching exception responses
+(`0x83` and `0x84`). The public
+[`rtu_production.go`](https://github.com/Project-Helianthus/helianthus-modbus/blob/main/rtu_production.go)
+(`receive`, `rtuReadResponseLength`) and
+[`rtu_timing.go`](https://github.com/Project-Helianthus/helianthus-modbus/blob/main/rtu_timing.go)
+distinguish the bounded host receipt-gap allowance from native serial timing.
+Normal response length follows the byte count, which must equal twice the
+requested register quantity; exception ADUs are exactly five bytes. CRC, unit
+and function correlation, exact length, the request deadline, and the final
+t3.5 idle guard remain required. Incomplete, corrupt, trailing, or concatenated
+frames are rejected. This allowance does not apply to FC100 or other opaque
+private-function responses; generic frame decoding and opaque sessions retain
+their separate timing behavior.
+
+The synthetic cases in
+[`rtu_production_test.go`](https://github.com/Project-Helianthus/helianthus-modbus/blob/main/rtu_production_test.go)
+are `TestRTUProductionLengthFramingAcceptsHostTransferGaps`,
+`TestRTUProductionLengthFramingRejectsCorruptionAndTruncation`,
+`TestRTUProductionLengthFramingHonorsConfiguredGap`, and
+`TestRTUProductionReadResponseHeaderLengths`.
+**Unknown:** physical wire timing from these host-delivery fixtures; they are
+neither live timing evidence nor device qualification.
+
 ## Write Deferral
 
 Writes require a separate safety plan and authorization. That plan must define,
