@@ -2,8 +2,11 @@
   "graphql_type": "SystemConfigBound",
   "graphql_fields": {
     "minC": "Float!",
+    "min_c": "Float!",
     "maxC": "Float!",
+    "max_c": "Float!",
     "narrowedOnly": "Boolean!",
+    "narrowed_only": "Boolean!",
     "source": "String!",
     "reason": "String",
     "profile": "String"

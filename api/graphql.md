@@ -512,8 +512,11 @@ type SystemConfig {
 # Active write bound of dhwBivalencePointC (see "System Config Write Bounds").
 type SystemConfigBound {
   minC: Float!
+  min_c: Float!
   maxC: Float!
+  max_c: Float!
   narrowedOnly: Boolean!
+  narrowed_only: Boolean!
   source: String!   # "controller_profile" | "unmatched_policy"
   reason: String    # set only for "unmatched_policy"
   profile: String   # set only for "controller_profile"
@@ -1152,6 +1155,9 @@ match (none is reachable until identities are acquired at discovery, gateway
 - **Other system numbers.** `maxRoomHumidityPct`, `hcBivalencePointC`,
   `hcEmergencyTempC`, `hwcMaxFlowTempC` and `installerMenuCode` keep their fixed
   ranges and carry no bound.
+
+`SystemConfigBound.min_c`, `max_c`, and `narrowed_only` are aliases of
+`minC`, `maxC`, and `narrowedOnly`, respectively, with identical values.
 
 `SystemConfig.dhwBivalencePointBound` (snake_case alias
 `dhw_bivalence_point_bound`) publishes the resolved bound so a consumer can

@@ -168,8 +168,23 @@ def test_documented_bound_contract():
     validate(*pages())
 
 
+@pytest.mark.parametrize("field", (
+    "minC", "min_c", "maxC", "max_c", "narrowedOnly", "narrowed_only",
+))
+def test_rejects_removing_either_graphql_spelling(field):
+    graphql, mcp, architecture = pages()
+    graphql, count = re.subn(
+        r"^  " + re.escape(field) + r": (?:Float|Boolean)!\n",
+        "", graphql, count=1, flags=re.M,
+    )
+    assert count == 1
+    with pytest.raises(AssertionError):
+        validate(graphql, mcp, architecture)
+
+
 @pytest.mark.parametrize("old", (
-    "minC", "maxC", "narrowedOnly", "Boolean!", "SystemConfigBound",
+    "minC", "min_c", "maxC", "max_c", "narrowedOnly", "narrowed_only",
+    "Boolean!", "SystemConfigBound",
     "setSystemConfig",
     "unknown_register", "unqualified_bound", "invalid_bound",
     "GraphQL returns `null`", "(with `reason` one of",
