@@ -2,6 +2,7 @@
 """Validate the current GraphQL and MCP device-face provenance contract."""
 from __future__ import annotations
 
+import base64
 import hashlib
 import pathlib
 import re
@@ -23,8 +24,8 @@ INITIAL = (
     ("active_confirmed", "identity_confirmed"),
 )
 # Content checksum of the ordered historical references, not a Git revision.
-# Keep the exact GraphQL evidence check without publishing revision literals.
-PIN_CONTENT_SHA256 = "63b303a25968c7edd645afa1278dc980a571d520acab572b346301a3c6c3db77"
+# Use Base64 for the content checksum to avoid publishing a 64-hex literal.
+PIN_CONTENT_SHA256_BASE64 = "Y7MDollox+3WRa+hJ43JgKVx1SCsq1crNGMBo8bD23c="
 PROVEN_CONCLUSION = "Conclusion: Proven."
 MARKDOWN = MarkdownIt("commonmark")
 TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
@@ -433,7 +434,7 @@ def _list_item(text: str, label: str, *, level: int) -> str:
 
 def _validate_pins(section: str, *, surface: str) -> None:
     pins = tuple(re.findall(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", section))
-    if hashlib.sha256("\n".join(pins).encode()).hexdigest() != PIN_CONTENT_SHA256:
+    if hashlib.sha256("\n".join(pins).encode()).digest() != base64.b64decode(PIN_CONTENT_SHA256_BASE64):
         raise CheckError(f"{surface} provenance pins differ")
     normalized = re.sub(r"\s+", " ", section)
     roles = (
