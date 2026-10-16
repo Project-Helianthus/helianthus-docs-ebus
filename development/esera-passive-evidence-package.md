@@ -43,7 +43,7 @@ traffic or changing a live setup, retain Not run and refer it to the parents.
 | Boundary field | Operator entry | Review result |
 |---|---|---|
 | Adapter family; public firmware/version context (or unavailable) | Unknown | Not run |
-| Bus participant families; no model or uniquely identifying labels | Unknown | Not run |
+| Bus participant families; public participant firmware context when known (otherwise Unknown); no model or uniquely identifying labels | Unknown | Not run |
 | Topology family; direct/proxy; transport and codec layer | Unknown | Not run |
 | Existing matrix case selected from its manifest; selection rationale | Unknown | Not run |
 | Passive source and direction; any pre-existing active traffic distinguished | Unknown | Not run |
@@ -55,11 +55,17 @@ traffic or changing a live setup, retain Not run and refer it to the parents.
 Private coordinates, credentials, hostnames, addresses of network endpoints,
 serials, contributor identities, absolute capture times, and installation
 details stay outside this public package. Observed captures and their raw or
-decoded excerpts stay outside it too, even when sanitized. No private lookup
-key or link to excluded evidence belongs in the worksheet. Public byte and
+decoded excerpts stay outside it too, even when sanitized. A public-safe
+observation report may be referenced by repository-relative link and section,
+with family/firmware context, source direction, layer, relative observation
+bounds and the basis and limits of each conclusion. It must contain no raw or
+decoded capture excerpts, private lookup keys, links to excluded evidence,
+Git revision identifiers or pinned-revision links. Public byte and
 decoded excerpts must be synthetic, labelled synthetic, and never presented
 as observed evidence. Leave a dependent claim Unknown when public evidence
 cannot support it; synthetic replay establishes no hardware observation.
+Do not generalize a participant observation across a family when the permitted
+family/firmware context cannot establish its applicability; retain Unknown.
 
 ## Required public-safe artifact fields
 
@@ -70,12 +76,15 @@ synthetic offline replay only; they do not request publication of captures.
 
 | Artifact | Required fields to fill | Artifact link | Result |
 |---|---|---|---|
-| Boundary and provenance note | Synthetic replay provenance; family and public firmware context; topology/layer; passive constraints; duration and byte bounds; omission/redaction reasons | Unknown | Not run |
+| Boundary and provenance note | Synthetic replay provenance or public-safe observation report link and section, clearly distinguished; adapter and participant families and public firmware context; topology/layer; passive constraints; duration and byte bounds; omission/redaction reasons | Unknown | Not run |
 | Capability record | Synthetic response bytes labelled as replay; direction; negotiated features versus unknown features; application passive-capability state and reason kept separate | Unknown | Not run |
 | Synthetic receipt excerpt | Ordered synthetic adapter-to-host bytes/events; offsets and relative elapsed durations; layer; frame boundaries; gaps, truncation, drops and errors; no invented missing bytes | Unknown | Not run |
 | Synthetic decoded example | Synthetic receipt-offset references; decoder/version context; direction; source and destination eBUS bus addresses; PB/SB or service; payload/register bytes; CRC/frame validity when determinable; decoded type/unit or Unknown | Unknown | Not run |
 | Claim and admission record | Native source link; family scope; evidence grade; independent codec/profile qualification; admitted/withheld reason; last-known-good lineage and freshness where already available | Unknown | Not run |
-| Negative-control record | Synthetic input link and exact transformation; referenced XR row or application boundary; expected rejection/withholding; actual output/error and retained state | Unknown | Not run |
+| Negative-control record | System-under-test component and public release/version (or Unknown; no Git pins); replay tool and version; synthetic input link and exact transformation; referenced XR row or application boundary; expected rejection/withholding; actual output/error and retained state | Unknown | Not run |
+
+An unidentified implementation build or replay tool cannot support a
+reproducible replay claim; record that limitation explicitly.
 
 Retain observed raw evidence beside its interpretation outside the public
 package. In public synthetic examples, preserve physical wire bytes, transport
@@ -90,8 +99,11 @@ Fill these separately for each bounded family/topology and artifact set. The
 evidence grade is Proven, Hypothesis, or Unknown; qualification and admission
 are separate decisions. A Proven bounded receipt would not qualify a codec,
 profile, family-wide support, or semantic mapping automatically. Observed
-evidence needed below remains outside this public package; synthetic examples
-cannot satisfy hardware evidence decisions.
+captures needed below remain outside this public package. Link each recorded
+hardware decision to its public-safe observation report and section; retain
+Unknown and withhold acceptance when the public report cannot substantiate
+the decision independently. Synthetic examples cannot satisfy hardware
+evidence decisions.
 
 | Decision | Evidence needed | Evidence grade | Qualification/admission | Result |
 |---|---|---|---|---|
