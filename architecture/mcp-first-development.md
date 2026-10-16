@@ -10,16 +10,19 @@ It also centralizes the architecture decisions that were previously duplicated a
 New capability rollout order is mandatory:
 
 1. MCP-first prototype and stabilization
-2. GraphQL parity on top of stable MCP contracts
+2. GraphQL parity on top of MCP contracts that pass the gates below
 3. Consumer rollout (Home Assistant and other clients) only after GraphQL parity gates are green
 
 ## MCP Contract Baseline
 
 Until 1.0, all MCP namespaces, including `ebus.v1.*`, are pre-stable;
-the namespace version alone is not a stability promise. Existing freezes,
-semantic locks, and protected inventories remain in force.
+the namespace version alone is not a stability promise. Schema or behaviour
+may change with updated goldens, documentation, and a note in the pull request.
+There is no experimental namespace or core-stable graduation before 1.0;
+both will be discussed after 1.0. Existing envelope, determinism, golden-test,
+and documentation-gate requirements remain in force.
 
-Core MCP tools (`ebus.v1.*`) use a stable envelope:
+MCP tools (`ebus.v1.*`) use the required envelope:
 
 - `meta`:
   - `contract`
@@ -54,18 +57,17 @@ Unknown mutability defaults to safe denial unless explicitly allowed.
 
 A capability may graduate to GraphQL only when:
 
-1. It is implemented as core stable MCP (`ebus.v1.*`)
+1. It is implemented in MCP (`ebus.v1.*`); no core-stable graduation is required before 1.0
 2. Determinism + contract + golden tests are green
 3. MCP <-> GraphQL parity tests are green
+4. The documentation gate is satisfied
 
-## Experimental Surface and Cleanup
+## Surface Cleanup
 
-Experimental tools live under `ebus.experimental.*` and are not consumer-facing.
-At cycle end, each experimental tool must be:
-
-- promoted to core stable, or
-- removed, or
-- moved to internal-only with written justification
+Before 1.0, tools use the pre-stable MCP namespaces without mandatory
+`ebus.experimental.*` segregation or promotion to core stable. At cycle end,
+each prototype tool must be retained with updated goldens and documentation,
+removed, or moved to internal-only with written justification.
 
 No temporary/junk tools remain in the showroom MCP surface.
 

@@ -12,8 +12,11 @@ qualify a live device or extend the MCP schema.
 ## Current Status
 
 Until 1.0, all MCP namespaces, including `ebus.v1.*`, are pre-stable;
-the namespace version alone is not a stability promise. Existing freezes,
-semantic locks, and protected inventories remain in force.
+the namespace version alone is not a stability promise. Schema or behaviour
+may change with updated goldens, documentation, and a note in the pull request.
+There is no experimental namespace or core-stable graduation before 1.0;
+both will be discussed after 1.0. Existing envelope, determinism, golden-test,
+and documentation-gate requirements remain in force.
 
 The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
 
@@ -342,6 +345,9 @@ Periodicity response fragment:
 ```
 
 ## Implemented Surface
+
+The legacy "Core stable" inventory label below does not confer stability
+before 1.0; all listed namespaces remain pre-stable.
 
 Note: This inventory reflects the current known tool surface. The gateway may expose additional tools discovered via the MCP `tools/list` endpoint.
 
