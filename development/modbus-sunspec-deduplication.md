@@ -5,11 +5,15 @@ parent #550. It authorizes no move, deletion, redirect, runtime change or live
 qualification. The parent remains open until the companion and redirect work
 has merged and both repositories validate.
 
-## Pinned comparison and evidence status
+## Recorded comparison snapshot and evidence status
 
 All nine source pages and their docs-modbus counterparts were read from the
 main branch of each repository at the time of writing; this change's history
-records when. Later changes on either main branch are not reflected here.
+records when. Links below are moving branch or repository-relative references,
+not immutable historical content. Subsequent drift in either repository is
+unverified; this recorded comparison snapshot does not establish current parity.
+Exact private comparison coordinates may support orchestration but are not
+publishable in this artifact.
 
 The destination [native-owner statement](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/README.md) selects docs-modbus as
 the canonical home for Modbus-family knowledge. The source
@@ -17,7 +21,7 @@ the canonical home for Modbus-family knowledge. The source
 that statement and its protocol-map link need a later, coordinated update.
 
 `Proven` here means the stated text, overlap or absence is established in
-these pinned repository trees. `Hypothesis` means a proposed merge destination
+the repository content inspected for this recorded snapshot. `Hypothesis` means a proposed merge destination
 or resolution still requiring companion review. `Unknown` covers native
 claims not independently established by these repository snapshots and future
 merge/qualification state. Documentary evidence and observed structure do not
@@ -32,17 +36,17 @@ firmware fingerprints here.
 
 ## Nine-page section comparison and destinations
 
-Each row is a Proven comparison of text at the pins. Proposed new paths and
+Each row is a Proven comparison of text in the recorded snapshot. Proposed new paths and
 merge actions are Hypothesis until reviewed and merged in docs-modbus. A
 missing counterpart requires preservation and migration, never dropping facts.
-No source page has an identical same-path destination in the pinned tree.
+No source page has an identical same-path destination in the inspected destination snapshot.
 
 | Source page | Existing counterpart / canonical merge target | Section-level duplicate, unique and conflicting disposition |
 | --- | --- | --- |
 | [protocols/modbus/README.md](../protocols/modbus/README.md) | [README.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/README.md) | Entire index: duplicate purpose and CC0 scope; source uniquely groups the phase-one wire and four local references. Destination index has broader vendor coverage and an explicit native-owner statement. Merge navigation after the missing wire page exists; do not import application contracts. |
 | [protocols/modbus/growatt-candidate-evidence-v1.md](../protocols/modbus/growatt-candidate-evidence-v1.md) | [protocols/growatt/protocol-ii-readonly-v1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/growatt/protocol-ii-readonly-v1.md) | Unheaded vendor-source paragraph: source uniquely contrasts incompatible product ranges; preserve that warning and inspection-only attribution. FC03 candidate paragraph: offsets/quantities duplicate destination Identity tuple, which additionally requires a coherent complete tuple. Final paragraph: proprietary-map/non-SunSpec disclaimer duplicates Scope. Destination uniquely defines encoding, serial slice, fail-closed admission, native/MCP identity, synthetic FC04 schema, and collision rules. Never broaden the narrow candidate to all source families. |
 | [protocols/modbus/huawei-gateway-candidate-evidence-v1.md](../protocols/modbus/huawei-gateway-candidate-evidence-v1.md) | [protocols/huawei/gateway-readonly-v1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/huawei/gateway-readonly-v1.md) | Opening family distinction duplicates Scope. Address, numeric and string paragraphs duplicate Shared encoding. Candidate offsets and child request duplicate SmartLogger candidate, S-Dongle candidate, EMMA candidate and Child inventory. Preserve the source documentary-only/no-probing qualification. Destination uniquely adds exact applicability branches, complete tuples, stable inventory, pagination bounds, no fallback and default-denied private operations. A documentary offset is not a qualified operation. |
-| [protocols/modbus/modbus-phase-one-wire-v1.md](../protocols/modbus/modbus-phase-one-wire-v1.md) | Missing complete counterpart; create the proposed native wire destination | License And Scope and its three official citations must migrate intact. Common PDU, FC03 And FC04, FC2B/MEI0E Request/Objects/Response, Modbus TCP ADU, and Modbus RTU ADU have no complete counterpart. Private Function Code Transport overlaps only bounded reads, exception correlation, extent checks and RTU integrity/timing; it uniquely defines transport admission/lifecycle policy and is not a replacement. Preserve the full neutral summary, including object limits, restart/progress behavior, TCP framing, CRC and serial timing. Proposed destination: `protocols/modbus/modbus-phase-one-wire-v1.md` (absent at the pinned destination). |
+| [protocols/modbus/modbus-phase-one-wire-v1.md](../protocols/modbus/modbus-phase-one-wire-v1.md) | Missing complete counterpart; create the proposed native wire destination | License And Scope and its three official citations must migrate intact. Common PDU, FC03 And FC04, FC2B/MEI0E Request/Objects/Response, Modbus TCP ADU, and Modbus RTU ADU have no complete counterpart. Private Function Code Transport overlaps only bounded reads, exception correlation, extent checks and RTU integrity/timing; it uniquely defines transport admission/lifecycle policy and is not a replacement. Preserve the full neutral summary, including object limits, restart/progress behavior, TCP framing, CRC and serial timing. Proposed destination: `protocols/modbus/modbus-phase-one-wire-v1.md` (absent in the inspected destination snapshot). |
 | [protocols/sunspec/README.md](../protocols/sunspec/README.md) | [README.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/README.md) | Entire index: duplicate reference-index purpose. Source uniquely exposes the two observation revisions and documentary catalog note. Destination index uniquely enumerates V1, V2, nested-layout, vendor and applicability contracts. Add links to preserved historical evidence before replacing this index. |
 | [protocols/sunspec/additional-model-evidence-v1.md](../protocols/sunspec/additional-model-evidence-v1.md) | [protocols/sunspec/read-only-core-v1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/sunspec/read-only-core-v1.md) | Unheaded catalog paragraph: meter and environmental groups and upstream pin duplicate Initial model catalog; documentary grid/control range 125–145 is unique and must remain separate from executable admission. Signature paragraph uniquely specifies FC03, offset and quantity; model-header/extent statements duplicate Chain structure. Destination uniquely gives exact decoder tuples, sentinels, value rules and rejection rules. Preserve the source no-device/no-control/no-write disclaimer. Proposed additional destination: `protocols/sunspec/additional-model-evidence-v1.md` for unique documentary facts, not an extension of the core catalog. |
 | [protocols/sunspec/fronius-observed-flavor-v1.md](../protocols/sunspec/fronius-observed-flavor-v1.md) | [protocols/fronius/sunspec-float-v1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/fronius/sunspec-float-v1.md) | Entire observation: source uniquely records the earlier ordered chain without Model 123 and its FC03/unit/signature context; the exact applicability tuple is shared evidence but is not republished here. Destination Exact chain geometry describes V1.1 with Model 123; Applicability and Read-only result uniquely add exact-match and downstream qualification constraints. These are distinct observations, not interchangeable duplicates. Proposed historical destination: `protocols/fronius/observed-chain-v1.md`; preserve original public evidence and provenance by citation without widening family support. |
@@ -81,16 +85,16 @@ No source page has an identical same-path destination in the pinned tree.
   overlap does not replace the standard wire reference. This inventory makes no
   new transport claim.
 
-## Every inbound-link location at the source pin
+## Every inbound-link location in the recorded source snapshot
 
 The following exhausts tracked repository Markdown inline links resolving to
 one of the nine pages, including links inside those pages. Locations use the
-source pin; anchors are part of the migration obligation. Labels mentioning a
+recorded source snapshot; anchors are part of the migration obligation. Labels mentioning a
 source filename but resolving to an `architecture/` contract are not inbound
 links to the nine pages and must keep that AGPL target.
 External consumers and untracked material are Unknown; they need a companion
-consumer audit before redirects. New citations in this inventory deliberately
-retain immutable historical targets and need no retargeting.
+consumer audit before redirects. Citations in this inventory use moving branch or repository-relative references;
+their destinations and anchors also require verification during migration.
 
 | Inbound location | Source target and anchor | Later action |
 | --- | --- | --- |
@@ -148,14 +152,17 @@ This inventory establishes no runtime or smoke-test evidence.
 ## Ordered companion work and completion gates
 
 1. **Native companion preparation (docs-modbus):** review all nine rows against
-   the pinned originals and native public sources. Create the missing wire
+   the source facts recorded above and native public sources, accounting for
+   subsequent drift without losing retained facts. Create the missing wire
    reference, preserve documentary-only catalog facts and the earlier Fronius
    observation; merge overlapping vendor/core text without widening admission.
    Record each section's retained destination and resolve the addressing
    conflict explicitly. Keep old public provenance links and distinct revisions.
 2. **Native companion validation and merge:** validate docs-modbus with its
    declared documentation checks and license boundary. Review exact companion
-   HEAD, then merge. Record the resulting immutable commit and section anchors.
+   HEAD, then merge. Verify the merged destinations and section anchors; record
+   public branch or repository-relative links and the verification outcome,
+   without publishing commit identifiers or pinned blob links.
    This companion has no assigned issue/PR in the supplied snapshot; its identity
    and merge status are Unknown. Nothing in this inventory claims it exists.
 3. **Consumer and contract coordination:** after that merge, update native
@@ -172,7 +179,7 @@ This inventory establishes no runtime or smoke-test evidence.
    unmerged facts or turn implementation guidance into CC0 content.
 5. **Joint closure:** run both repositories' full declared documentation gates,
    including docs-ebus companion validation, public-domain boundary and diff
-   checks. Verify immutable destination links and anchors, all nine disposition
+   checks. Verify merged destination content, links and anchors, all nine disposition
    rows and no lost unique sections. Close #550 only when the migration,
    redirects, consumer dependencies and both repositories' validation are done.
    #586 delivers this inventory only and uses Refs for the parent slice.
