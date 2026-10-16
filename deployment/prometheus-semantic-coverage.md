@@ -241,7 +241,10 @@ groups:
 
 Collector absence requires a separately configured expected-target inventory
 and scrape-health alert; these rules intentionally do not equate an absent
-collector with a healthy field. YAML parsing checks structure only. PromQL
+collector with a healthy field. The local CI gate runs
+`python3 scripts/validate_prometheus_semantic_coverage.py` and its mutation
+tests to check the closed field/name/unit tables, bounded labels, series
+budget and example selectors. These static checks do not evaluate PromQL. PromQL
 evaluation, exporter tests, candidate revalidation and physical acquisition
 evidence are separate acceptance work. Existing
 [adaptermux alert rules](prometheus-alerts.md) retain their source contracts.
