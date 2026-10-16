@@ -2,6 +2,8 @@
 
 import importlib.util
 from pathlib import Path
+import re
+import subprocess
 import sys
 
 import pytest
@@ -10,6 +12,24 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("workflow_shells", ROOT / "scripts/check_workflow_shells.py")
 lint = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(lint)
+
+
+@pytest.fixture(scope="module", params=["default", "shellcheck-disabled-default"])
+def actionlint_reference(request, tmp_path_factory):
+    # Model a gate wrapper that prepends -shellcheck= to every invocation.
+    # Use a stub for the selection oracle: real ShellCheck must run separately
+    # because actionlint's stdin integration can hang in local gate environments.
+    command = ["actionlint"]
+    if request.param == "shellcheck-disabled-default":
+        command.append("-shellcheck=")
+    result = subprocess.run([*command, "-version"], capture_output=True,
+                            text=True, timeout=10, check=False)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines()[0] == "v1.7.7"
+    stub = tmp_path_factory.mktemp("shellcheck-oracle") / "shellcheck-stub"
+    stub.write_text('#!/bin/sh\ncat > /dev/null\nprintf \'[]\\n\'\n', encoding="utf-8")
+    stub.chmod(0o755)
+    return [*command, f"-shellcheck={stub}"]
 
 
 def test_current_workflows_include_original_19_and_all_21_steps(tmp_path):
@@ -76,20 +96,23 @@ def test_unterminated_expression_fails_extraction():
 
 @pytest.mark.parametrize(("step_shell", "job_shell", "workflow_shell", "runner", "expected"), [
     ("sh -e {0}", "bash", "bash", "ubuntu-latest", "sh"),
-    ("", "sh", "bash", "ubuntu-latest", "sh"),
-    ("", "", "sh", "ubuntu-latest", "sh"),
-    ("", "", "", "ubuntu-latest", "bash"),
-    ("", "", "", "windows-latest", None),
-    ("python", "", "", "ubuntu-latest", None),
+    (None, "sh", "bash", "ubuntu-latest", "sh"),
+    (None, None, "sh", "ubuntu-latest", "sh"),
+    (None, None, None, "ubuntu-latest", "bash"),
+    (None, None, None, "windows-latest", None),
+    ("python", None, None, "ubuntu-latest", None),
 ])
 def test_shell_precedence(tmp_path, step_shell, job_shell, workflow_shell, runner, expected):
     workflow = tmp_path / "shell.yml"
     workflow.write_text(lint.yaml.safe_dump({
-        "defaults": {"run": {"shell": workflow_shell}},
+        "defaults": {"run": {"working-directory": "."} if workflow_shell is None
+                     else {"shell": workflow_shell}},
         "jobs": {"check": {
             "runs-on": runner,
-            "defaults": {"run": {"shell": job_shell}},
-            "steps": [{"shell": step_shell, "run": "echo '${{ env.VALUE }}'"}],
+            "defaults": {"run": {"working-directory": "."} if job_shell is None
+                         else {"shell": job_shell}},
+            "steps": [{**({} if step_shell is None else {"shell": step_shell}),
+                       "run": "echo '${{ env.VALUE }}'"}],
         }},
     }))
     [(label, dialect, source)] = lint.scripts([workflow])
@@ -100,3 +123,88 @@ def test_shell_precedence(tmp_path, step_shell, job_shell, workflow_shell, runne
 def test_timeout_is_a_clear_failure(capsys):
     assert lint.bounded([sys.executable, "-c", "import time; time.sleep(5)"], 0.05) == 1
     assert "timed out" in capsys.readouterr().err
+
+
+# Offline oracle: installed actionlint v1.7.7, parse.go (parseString,
+# parseDefaults, parseStep) and rule_shellcheck.go (getShellName/runShellcheck).
+# None means an absent key; "" is an explicit empty scalar and INVALID workflow.
+@pytest.mark.parametrize(("level", "shell", "selected"), [
+    ("step", None, "fallback"),
+    ("step", "", None),
+    ("step", "bash", "bash"),
+    ("step", "sh", "sh"),
+    ("step", "python", None),
+    ("job", None, "fallback"),
+    ("job", "", "fallback"),
+    ("job", "bash", "bash"),
+    ("job", "sh", "sh"),
+    ("job", "python", None),
+    ("workflow", None, "runner"),
+    ("workflow", "", "runner"),
+    ("workflow", "bash", "bash"),
+    ("workflow", "sh", "sh"),
+    ("workflow", "python", None),
+])
+@pytest.mark.parametrize("runner", ["ubuntu-latest", "windows-latest"])
+@pytest.mark.parametrize("broken", [False, True], ids=["clean", "broken"])
+def test_shell_selection_and_split_gate_match_actionlint(
+        tmp_path, actionlint_reference, level, shell, selected, runner, broken):
+    step = {"run": "echo $unquoted" if broken else "echo safe"}
+    if shell == "python":
+        step["run"] = "# " + step["run"] + "\npass"
+    job = {"runs-on": runner, "steps": [step]}
+    document = {"on": "push", "jobs": {"check": job}}
+    fallback = "sh" if runner == "ubuntu-latest" else "bash"
+    if level == "step":
+        document["defaults"] = {"run": {"shell": "bash"}}
+        job["defaults"] = {"run": {"shell": fallback}}
+        target = step
+    elif level == "job":
+        document["defaults"] = {"run": {"shell": fallback}}
+        job["defaults"] = {"run": {"working-directory": "."}}
+        target = job["defaults"]["run"]
+    else:
+        document["defaults"] = {"run": {"working-directory": "."}}
+        target = document["defaults"]["run"]
+    if shell is not None:
+        target["shell"] = shell
+    workflow = tmp_path / "shell.yml"
+    workflow.write_text(lint.yaml.safe_dump(document), encoding="utf-8")
+
+    # Actionlint selects the shell using a stub; standalone ShellCheck below
+    # supplies the real diagnostics without actionlint's ShellCheck stdin pipe.
+    reference = subprocess.run(
+        [*actionlint_reference, "-debug", str(workflow)],
+        capture_output=True, text=True, timeout=10, check=False)
+    structural = subprocess.run(
+        [*actionlint_reference, "-shellcheck=", str(workflow)],
+        capture_output=True, text=True, timeout=10, check=False)
+    expected = ("bash" if runner == "ubuntu-latest" else None) if selected == "runner" else selected
+    if selected == "fallback":
+        expected = fallback
+    assert re.findall(r"Run shellcheck for (bash|sh) script:", reference.stderr) == (
+        [] if expected is None else [expected])
+    assert list(lint.scripts([workflow]))[0][1] == expected
+    invalid_windows_shell = runner == "windows-latest" and shell == "sh" and level != "workflow"
+    invalid = shell == "" or invalid_windows_shell
+    assert ("string should not be empty" in structural.stdout) == (shell == "")
+    assert ('shell name "sh" is invalid on Windows' in structural.stdout) == invalid_windows_shell
+    assert structural.returncode == (1 if invalid else 0), structural.stdout + structural.stderr
+    separate_status = lint.shellcheck([workflow], tmp_path)
+    assert separate_status == (1 if broken and expected else 0)
+    combined_failed = structural.returncode != 0 or separate_status != 0
+    assert reference.returncode == structural.returncode, (
+        reference.stdout + reference.stderr)
+    assert combined_failed == bool(invalid or (broken and expected))
+
+
+def test_shellcheck_tool_failure_is_propagated(tmp_path, monkeypatch):
+    workflow = tmp_path / "tool-failure.yml"
+    workflow.write_text("jobs:\n  check:\n    steps:\n      - run: echo safe\n")
+    monkeypatch.setattr(lint, "bounded", lambda command, timeout: 2)
+    assert lint.shellcheck([workflow], tmp_path) == 2
+
+
+def test_missing_tool_is_a_clear_failure(tmp_path, capsys):
+    assert lint.bounded([str(tmp_path / "missing-shellcheck")]) == 2
+    assert "FAIL:" in capsys.readouterr().err
