@@ -111,6 +111,13 @@ earlier uncertain ordinal before applying a later outcome on that asset. Missing
 or incompatible ordering material fails the affected asset closed. Multi-asset
 operations retain an ordinal for each asset; this adds no cross-asset atomicity.
 
+Acquire the per-source gate first, then all affected per-asset gates in one
+canonical total order by stable asset identity, independent of caller enumeration
+order. Acquire the complete asset gate set before assigning any intent ordinal,
+persisting intent or entering the hub; never acquire a source gate while holding
+an asset gate. Hold the gates through hub completion and release them in reverse
+order, preserving the source and asset blocks for ambiguous completion above.
+
 ## Restore before admission
 
 Restoration runs before any source admission in the new incarnation and refuses
@@ -195,6 +202,7 @@ satisfy this proof.
 | WAL gap: A accepted without durable outcome, dependent B accepted and recorded | Resolve A before B; never replay B alone. Removing A's intent must fail the source closed |
 | Cross-source asset gap: source A commits to an asset without a durable outcome; source B then commits to the same asset and persists its outcome | After memory loss, use durable per-asset ordinals to resolve A before replaying B and reproduce the pre-loss snapshot, retained history and both source cursors. Missing A's intent or ordering material fails that asset closed; an unrelated asset remains recoverable |
 | Concurrent same-source callers: A holds the lower WAL sequence and is paused before hub completion while B is ready | B cannot enter the hub until A completes; delay A's outcome persistence until after B's, then lose memory and verify recovery resolves A before replaying B with matching snapshots |
+| Concurrent different-source operations enumerate the same assets as A then B and B then A; pause the first after acquiring the first canonical asset gate and start the second | The second cannot hold B while waiting for A; neither assigns ordinals, persists intent or enters the hub before acquiring both asset gates. Release the pause and require both calls to complete within a stated bound; then lose memory and verify restoration preserves per-asset commit order and both source cursors |
 | Corrupt replay or incompatible validator, snapshot, revision or cursor | Fail the affected asset closed without damaging an unaffected asset |
 
 For each successful reconstruction, compare `Inspect` snapshot identity,
