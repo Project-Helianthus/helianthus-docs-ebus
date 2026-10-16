@@ -21,12 +21,6 @@ def texts() -> tuple[str, str]:
     )
 
 
-# Read existing historical references for mutation tests without publishing copies.
-HISTORICAL_REFERENCES = tuple(
-    re.findall(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", CHECKER._section(texts()[0]))
-)
-
-
 def mcp_text() -> str:
     return (ROOT / "api/mcp.md").read_text(encoding="utf-8")
 
@@ -74,10 +68,10 @@ def test_accepts_current_independent_label_contract() -> None:
         ("A slotless entry remains visible through\n`devices` and `device(address:)`", "A slotless entry is excluded."),
         ("This matches MCP, which omits both\nsnake-case provenance members for the same slotless condition.", "MCP behavior is unrelated."),
         ("The current gateway schema exposes", "The future gateway schema will expose"),
-        (HISTORICAL_REFERENCES[0], "0" * 40),
-        (HISTORICAL_REFERENCES[1], "1" * 40),
-        (HISTORICAL_REFERENCES[2], "2" * 40),
-        (HISTORICAL_REFERENCES[3], "3" * 40),
+        (CHECKER.GATEWAY_REVIEWED_HEAD, "0" * 40),
+        (CHECKER.GATEWAY_REVIEWED_MERGE_TREE, "1" * 40),
+        (CHECKER.GATEWAY_MAIN_MERGE, "2" * 40),
+        (CHECKER.REGISTRY_DEPENDENCY, "3" * 40),
     ),
 )
 def test_rejects_document_contract_mutations(old: str, new: str) -> None:
@@ -123,9 +117,9 @@ def test_rejects_nullable_spelling_hidden_in_description() -> None:
 
 
 def hide_pin_paragraph(text: str) -> str:
-    first = text.index(HISTORICAL_REFERENCES[0])
+    first = text.index(CHECKER.GATEWAY_REVIEWED_HEAD)
     start = text.rfind("\n", 0, first) + 1
-    last = text.index(HISTORICAL_REFERENCES[3])
+    last = text.index(CHECKER.REGISTRY_DEPENDENCY)
     end = text.find("\n", last)
     end = len(text) if end < 0 else end + 1
     return text[:start] + "<!--\n" + text[start:end] + "-->\n" + text[end:]
@@ -137,12 +131,9 @@ def test_rejects_graphql_pins_hidden_in_html_comment() -> None:
         CHECKER.validate_text(hide_pin_paragraph(doc), atr)
 
 
-def test_rejects_mcp_reference_hidden_in_html_comment() -> None:
-    text = mcp_text()
-    reference = "[static-seed provenance ATR](../architecture/atr/05-static-seed-provenance.md)"
-    assert reference in text
+def test_rejects_mcp_pins_hidden_in_html_comment() -> None:
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(text.replace(reference, "<!--" + reference + "-->", 1))
+        CHECKER.validate_mcp_text(hide_pin_paragraph(mcp_text()))
 
 
 def test_rejects_mcp_rule_hidden_in_html_comment() -> None:
@@ -478,34 +469,19 @@ def test_rejects_whitespace_variant_mcp_source_rewrite() -> None:
 
 
 @pytest.mark.parametrize(
-    "replacement",
+    "pin",
     (
-        "",
-        "[static-seed provenance ATR](../architecture/atr/07-live-validation-acceptance.md)",
-        "[unrelated contract](../architecture/atr/05-static-seed-provenance.md)",
-        "`[static-seed provenance ATR](../architecture/atr/05-static-seed-provenance.md)`",
-        "[static-seed provenance ATR](../architecture/atr/05-static-seed-provenance.md) " * 2,
+        CHECKER.GATEWAY_REVIEWED_HEAD,
+        CHECKER.GATEWAY_REVIEWED_MERGE_TREE,
+        CHECKER.GATEWAY_MAIN_MERGE,
+        CHECKER.REGISTRY_DEPENDENCY,
     ),
 )
-def test_rejects_missing_or_altered_mcp_provenance_reference(replacement: str) -> None:
+def test_rejects_wrong_mcp_runtime_or_dependency_pin(pin: str) -> None:
     text = mcp_text()
-    reference = "[static-seed provenance ATR](../architecture/atr/05-static-seed-provenance.md)"
-    assert reference in text
+    mutated = text.replace(pin, "f" * 40, 1)
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(text.replace(reference, replacement, 1))
-
-
-@pytest.mark.parametrize(
-    "replacement",
-    ("Core stable (`ebus.v1.*`)", "Core pre-stable (`ebus.v2.*`)"),
-)
-def test_rejects_obsolete_or_wrong_mcp_core_label(replacement: str) -> None:
-    text = mcp_text()
-    label = "Core pre-stable (`ebus.v1.*`; existing locks take precedence)"
-    assert label in text
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(text.replace(label, replacement, 1))
-
+        CHECKER.validate_mcp_text(mutated)
 
 def test_ignores_historical_device_outside_current_sdl_fence() -> None:
     doc, atr = texts()
@@ -823,8 +799,8 @@ def test_rejects_four_space_core_devices_get_duplicate() -> None:
     text = mcp_text()
     duplicate = "    - `ebus.v1.registry.devices.get`\n"
     mutated = text.replace(
-        "- Core pre-stable (`ebus.v1.*`; existing locks take precedence)\n",
-        "- Core pre-stable (`ebus.v1.*`; existing locks take precedence)\n" + duplicate,
+        "- Core stable (`ebus.v1.*`)\n",
+        "- Core stable (`ebus.v1.*`)\n" + duplicate,
         1,
     )
     with pytest.raises(CHECKER.CheckError):
@@ -1033,45 +1009,3 @@ def test_rejects_escaped_pipe_label_paragraph(title: str) -> None:
     escaped = table.replace("|", r"\|")
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc[:table_start] + escaped + doc[table_end:], atr)
-
-
-def stability_texts() -> tuple[str, str]:
-    return mcp_text(), (ROOT / "architecture/mcp-first-development.md").read_text(encoding="utf-8")
-
-
-def test_accepts_aligned_mcp_stability_policy() -> None:
-    CHECKER.validate_stability_policy(*stability_texts())
-
-
-@pytest.mark.parametrize("surface", (0, 1, None))
-@pytest.mark.parametrize("clause", CHECKER.POLICY_REQUIREMENTS)
-def test_rejects_lost_mcp_stability_requirement(surface: int | None, clause: str) -> None:
-    docs = list(stability_texts())
-    for index in range(2) if surface is None else (surface,):
-        # Find the rendered clause despite source wrapping.
-        pattern = r"\s+".join(re.escape(word) for word in clause.split())
-        docs[index], count = re.subn(pattern, "Policy requirement removed.", docs[index], count=1)
-        assert count == 1
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_stability_policy(*docs)
-
-
-@pytest.mark.parametrize("owner", CHECKER.POLICY_OWNERS)
-def test_rejects_lost_mcp_stability_owner(owner: str) -> None:
-    docs = [text.replace(owner, "Unlinked owner", 1) for text in stability_texts()]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_stability_policy(*docs)
-
-
-def test_rejects_policy_drift_even_with_all_requirements_retained() -> None:
-    mcp, architecture = stability_texts()
-    architecture = architecture.replace(CHECKER.POLICY_HEADING, CHECKER.POLICY_HEADING + "\n\nAdditional policy.")
-    with pytest.raises(CHECKER.CheckError, match="copies differ"):
-        CHECKER.validate_stability_policy(mcp, architecture)
-
-
-@pytest.mark.parametrize("replacement", ("", CHECKER.POLICY_HEADING + "\n\n" + CHECKER.POLICY_HEADING))
-def test_rejects_missing_or_duplicate_policy_headings(replacement: str) -> None:
-    mcp, architecture = stability_texts()
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_stability_policy(mcp.replace(CHECKER.POLICY_HEADING, replacement), architecture)

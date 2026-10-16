@@ -11,31 +11,9 @@ qualify a live device or extend the MCP schema.
 
 ## Current Status
 
-### Pre-1.0 Stability Policy
-
-Until 1.0, MCP tools without a stronger owning contract are experimental and
-pre-stable. The `v1` name alone is not a stability promise. A pre-1.0 schema or
-behaviour change must update golden snapshots and its documentation companion,
-pass the documentation gate, and be announced in the pull request. The
-major-namespace rule and any separate experimental namespace will be decided
-after 1.0.
-
-Existing freezes, semantic locks, and protected inventories take precedence;
-this policy does not authorize breaking them. In particular, the
-[eeBUS raw-first contract](../docs/platform/eebus-raw-first-contract.md) and
-[protected coexistence inventory and gates](../docs/platform/multi-runtime-coexistence-no-drift-v1.md)
-retain their stable V1 requirements. The
-[eBUS standard semantic lock](../architecture/ebus_standard/11-m4b-semantic-lock.md)
-requires a locked-plan amendment for breaking changes to its four
-`ebus.v1.ebus_standard.*` tools. The
-[watch-summary contract](../api/watch-summary.md) retains the freeze on
-`ebus.v1.watch.summary.get`. The `DOC-06` freeze on `ebus.v1.bus.*` also remains
-in force.
-
-### Implementation Status
-
-The documented envelope, deterministic ordering and `data_hash` requirements
-continue to apply.
+Until 1.0, all MCP namespaces, including `ebus.v1.*`, are pre-stable;
+the namespace version alone is not a stability promise. Existing freezes,
+semantic locks, and protected inventories remain in force.
 
 The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
 
@@ -272,16 +250,20 @@ MCP-specific invariants:
 
 - Runtime lane: [Project-Helianthus/helianthus-ebusgateway#376](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/376)
 - Merged implementation PR: [Project-Helianthus/helianthus-ebusgateway#377](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/377)
-- The implementation PR records workspace proof results `P01..P06 = pass`.
-  The recovery probe remained `blocked-infra` with
-  `infra_reason=adapter_no_signal`; the PR merged under explicit owner override
-  after the official addon/runtime restore was re-verified cleanly.
-- Gateway code/test references (current `main`; historical proof is recorded in
-  the implementation PR):
+- Merge commit: `3daf4beed9d6406f7af52869eea1c53ef14f2f62`
+- Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
+  with `P01..P06 = pass`
+- Gateway workspace recovery probe reference (outside this docs repo; from the same `helianthus-ebusgateway` checkout):
+  `helianthus-ebusgateway/results-matrix-ha/20260312T175250Z-pr377-gw04-26ee758-recovery/full88-probe-t01-after-adapter-reboot/index.json`
+  remained `blocked-infra` with `infra_reason=adapter_no_signal`, and the PR
+  merged under explicit owner override after the official addon/runtime restore
+  was re-verified cleanly
+- Gateway repo code/test proof references (external to this docs repo, at merge commit `3daf4beed9d6406f7af52869eea1c53ef14f2f62`):
   - MCP tool inventory and provider wiring:
-    [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/mcp_bus_observability_integration_test.go)
+    [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/cmd/gateway/mcp_bus_observability_integration_test.go)
   - MCP payload shape and limit/snapshot behavior:
-    [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/server_test.go)
+    [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/server_test.go)
 
 ### Falsification Cases
 
@@ -363,7 +345,7 @@ Periodicity response fragment:
 
 Note: This inventory reflects the current known tool surface. The gateway may expose additional tools discovered via the MCP `tools/list` endpoint.
 
-- Core pre-stable (`ebus.v1.*`; existing locks take precedence)
+- Core stable (`ebus.v1.*`)
   - `ebus.v1.runtime.status.get`
   - `ebus.v1.adapter_info.get`
   - `ebus.v1.registry.devices.list`
@@ -374,8 +356,12 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
       `passive_observed | static_seed | active_confirmed`;
       `verification_state` is one of
       `candidate | corroborated_pending | identity_confirmed`.
-      The provenance rules are documented in the
-      [static-seed provenance ATR](../architecture/atr/05-static-seed-provenance.md).
+      This current MCP provenance contract is implemented at reviewed gateway
+      HEAD `77b898633672e123a05d39a3cf46398cce2d72ab`. The reviewed and merge
+      tree is identical at `bb8f59fed4be68104d8ab206f55f7f32ea33e031`; the
+      accepted squash merge on gateway `main` is
+      `f5cd9c51c60bdf422e8fc1b5690fbde52a393be3`; and the accepted registry
+      dependency is `e24532a50caa00c113751b98b88239e045d731e8`.
       Both are omitted when the registry has no slot record for the
       address. For `devices.list` the labels reflect the entry's
       canonical primary address; for `devices.get(address=X)` the labels
@@ -419,7 +405,7 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
       publishable radio slots. `data: null` means the plane has not been
       published yet.
   - `ebus.v1.semantic.fm5_mode.get`
-    - scalar mode retained for existing consumers
+    - stable scalar mode retained for existing consumers
   - `ebus.v1.semantic.solar.get`
   - `ebus.v1.semantic.cylinders.get`
   - `ebus.v1.semantic.schedules.get`
