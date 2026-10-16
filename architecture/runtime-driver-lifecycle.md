@@ -50,6 +50,7 @@ point makes it unnecessary:
 | Material | Required contents |
 |---|---|
 | Kernel inputs | Compatible asset identity and validator set; complete accepted publication **and control** batches as exact canonical bytes, in per-asset commit order, with each original monotonic point and publication instant |
+| Clock continuity | Per-asset durable monotonic high-water mark, clock unit and mapping, and a restart-comparable elapsed-time anchor for that mark; cover every reserved point, including pending and rejected attempts |
 | Accepted results | Each batch's accepted result, `SnapshotID`, semantic revision, digest and per-key publication cursor; hub commit position including incarnation and `HubSeq` |
 | Hub-only history | Admissions, withdrawal rollbacks, activations, asset-less retirements and `RevokedUnpublished` revocations, including results even when no kernel batch exists |
 | Control state | Per-asset semantic outcomes and reprojection settled history; source-publication index; epoch and generation reservations with exact per-asset next cursors; withdrawal correlation; retry/deadline budgets and independent native-close obligations |
@@ -73,6 +74,8 @@ does no persistence and does not turn staging into an accepted result.
 1. **Intent:** assign the service's per-source WAL sequence and, for each affected
    asset, a per-asset intent ordinal before the hub call. Durably persist them
    with the exact pending envelope or control attempt in the service transaction.
+   Reserve its monotonic point under the same asset gate and atomically persist
+   the advanced clock high-water mark and elapsed-time anchor with the intent.
    Only then submit it to the hub.
 2. **Outcome:** after the hub call returns, durably persist its accepted result,
    commit position, monotonic point, semantic outcome and settled history in a
@@ -129,7 +132,9 @@ changes replay acceptance, has no supported migration here and fails closed.
 1. Construct each empty asset kernel with `NewPublicationKernel`. Replay every
    accepted publication and control batch through `Apply` in commit order,
    using its persisted monotonic point. Current-process time can change
-   retained-observation expiry and must not replace that point.
+   retained-observation expiry and must not replace that point. Restore the
+   durable clock mapping below before allocating any new point, including for
+   the new epoch barrier; pending exact-byte resubmission keeps its original point.
 2. Verify every replayed result against its stored snapshot identity, semantic
    revision, digest and cursor. Any mismatch fails the affected asset closed:
    its reads remain closed and the affected driver reports `FAILED`. Preserve
@@ -158,6 +163,29 @@ Steps 1–4 obey dependency order together: step 4's gap resolution precedes any
 dependent accepted result, even when that result is listed in step 1. A corrupt
 asset record closes that asset; a source-level unresolved gap closes that
 source. Healthy unrelated paths remain available with unchanged provenance.
+
+### Clock continuity after replay
+
+Persisted points belong to an asset's durable logical timeline, not directly to
+one process's clock origin. Let `H` be its durable high-water mark, `m0` the new
+process's monotonic sample at restore, and `d` the verified elapsed duration from
+the persisted anchor for `H` to `m0`, in the same unit. After historical replay
+and pending gap resolution, allocate each new point as
+`max(H + d + (m - m0), last + tick)`, where `m` is the current process sample,
+`last` initially equals `H`, and `tick` is one representable clock unit. Keep
+`H`, `d` and `m0` fixed for this process mapping. Advance `last` and durably reserve the new high-water mark with its corresponding anchor
+before submission. Include pending and rejected reservations when recovering
+`H`; never lower it on rejection, compaction or a second restart.
+
+The elapsed-time anchor must remain comparable across the relevant restart,
+including host restart if supported. Do not subtract samples from different
+process clock origins or infer elapsed duration from an unverified wall clock.
+Missing continuity, a backward clock, incompatible units or arithmetic overflow
+fails the affected asset closed before new operations or reads resume. Downtime
+therefore counts toward retained-observation age; restore never renews retention
+or changes original publication instants. Historical replay still reproduces the
+pre-loss state; the first new `Apply`, including the epoch barrier, evaluates
+expiry at the advanced point using the existing kernel rules.
 
 ## D3 retention and D4/public surface boundary
 
@@ -188,8 +216,9 @@ no lifecycle GraphQL surface and no new public tool payload.
 
 These are implementation acceptance obligations, not passing test claims for
 this documentation slice. Use a synthetic two-asset publisher with fixed
-clocks, IDs and schedules. Destroy both service and hub memory and reconstruct
-fresh instances with no shared state. A lifecycle-only empty barrier cannot
+clock inputs, IDs and schedules, with a reset process clock on restart rather
+than one continuous process-clock schedule. Destroy both service and hub memory
+and reconstruct fresh instances with no shared state. A lifecycle-only empty barrier cannot
 satisfy this proof.
 
 | S3.9 case | Required observation after restoration |
@@ -203,6 +232,7 @@ satisfy this proof.
 | Cross-source asset gap: source A commits to an asset without a durable outcome; source B then commits to the same asset and persists its outcome | After memory loss, use durable per-asset ordinals to resolve A before replaying B and reproduce the pre-loss snapshot, retained history and both source cursors. Missing A's intent or ordering material fails that asset closed; an unrelated asset remains recoverable |
 | Concurrent same-source callers: A holds the lower WAL sequence and is paused before hub completion while B is ready | B cannot enter the hub until A completes; delay A's outcome persistence until after B's, then lose memory and verify recovery resolves A before replaying B with matching snapshots |
 | Concurrent different-source operations enumerate the same assets as A then B and B then A; pause the first after acquiring the first canonical asset gate and start the second | The second cannot hold B while waiting for A; neither assigns ordinals, persists intent or enters the hub before acquiring both asset gates. Release the pause and require both calls to complete within a stated bound; then lose memory and verify restoration preserves per-asset commit order and both source cursors |
+| Reset process clock below all persisted points, including an uncertain intent above the last accepted point; repeat restart after a new operation | Replay at original points; each new publication and control point exceeds all prior reservations. Verify remaining retention with known downtime both shorter and longer than the expiry interval; missing or backward elapsed-time continuity fails only the affected asset closed |
 | Corrupt replay or incompatible validator, snapshot, revision or cursor | Fail the affected asset closed without damaging an unaffected asset |
 
 For each successful reconstruction, compare `Inspect` snapshot identity,
