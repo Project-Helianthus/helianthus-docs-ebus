@@ -25,12 +25,16 @@ Core MCP tools (`ebus.v1.*`) use the following envelope:
 - `data`
 - `error` (null or structured error)
 
-Until 1.0, every MCP namespace is experimental and pre-stable, including
-`ebus.v1.*`. The `v1` name is historical, not a stability promise. A pre-1.0
-schema or behaviour change must update golden snapshots and its documentation
-companion, pass the documentation gate, and be announced in the pull request.
-The major-namespace rule and any separate experimental namespace will be decided
-after 1.0.
+Until 1.0, eBUS MCP tools (`ebus.v1.*`) are experimental and pre-stable.
+For this namespace, the `v1` name is historical, not a stability promise. A
+pre-1.0 schema or behaviour change must update golden snapshots and its
+documentation companion, pass the documentation gate, and be announced in the
+pull request. The eBUS major-namespace rule and any separate experimental
+namespace will be decided after 1.0.
+
+This policy does not change the stable `eebus.v1.*` contract defined by the
+[eeBUS raw-first contract](../docs/platform/eebus-raw-first-contract.md) or the
+[protected coexistence inventory and gates](../docs/platform/multi-runtime-coexistence-no-drift-v1.md).
 
 ## Determinism Rules
 
@@ -61,8 +65,9 @@ A capability may graduate to GraphQL only when:
 
 ## Experimental Surface and Cleanup
 
-All MCP tools are experimental before 1.0. A separate experimental namespace
-and its policy will be decided after 1.0. At cycle end, each prototype must be:
+eBUS MCP tools are experimental before 1.0. A separate eBUS experimental
+namespace and its policy will be decided after 1.0. At cycle end, each eBUS
+prototype must be:
 
 - retained in the documented core surface with the required gates, or
 - removed, or

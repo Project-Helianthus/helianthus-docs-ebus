@@ -11,13 +11,18 @@ qualify a live device or extend the MCP schema.
 
 ## Current Status
 
-Until 1.0, every MCP namespace is experimental and pre-stable, including
-`ebus.v1.*`. The `v1` name is historical, not a stability promise. A pre-1.0
-schema or behaviour change must update golden snapshots and its documentation
-companion, pass the documentation gate, and be announced in the pull request.
-The major-namespace rule and any separate experimental namespace will be decided
-after 1.0. The documented envelope, deterministic ordering and `data_hash`
-requirements continue to apply.
+Until 1.0, eBUS MCP tools (`ebus.v1.*`) are experimental and pre-stable.
+For this namespace, the `v1` name is historical, not a stability promise. A
+pre-1.0 schema or behaviour change must update golden snapshots and its
+documentation companion, pass the documentation gate, and be announced in the
+pull request. The eBUS major-namespace rule and any separate experimental
+namespace will be decided after 1.0.
+
+This policy does not change the stable `eebus.v1.*` contract defined by the
+[eeBUS raw-first contract](../docs/platform/eebus-raw-first-contract.md) or the
+[protected coexistence inventory and gates](../docs/platform/multi-runtime-coexistence-no-drift-v1.md).
+The documented envelope, deterministic ordering and `data_hash` requirements
+continue to apply.
 
 The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
 
