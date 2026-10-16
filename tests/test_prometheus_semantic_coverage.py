@@ -29,6 +29,19 @@ def test_prometheus_semantic_coverage_accepts_document() -> None:
     ("`0` through `15`", "`0` through `31`"),
     ("16 value and 16 availability", "16 value and 32 availability"),
     ("series have only `slot`", "series have only `slot`, `asset`"),
+    ("including collector restarts", "excluding collector restarts"),
+    ("durably persisted before publication", "persisted after publication"),
+    ("must never be reassigned", "may be reassigned"),
+    ("exhaustion makes the replacement unavailable", "exhaustion reuses a retired slot"),
+    ("omit all semantic values", "publish semantic values"),
+    ("until the original registry is restored and bindings are revalidated.", "until restart."),
+    ("Do not export raw asset IDs", "Export raw asset IDs"),
+    ("Do not turn arbitrary pack dimension text into labels.", "Allow arbitrary dimension labels."),
+    ("A slot must not silently aggregate different sources or dimensions.", "A slot may aggregate sources."),
+    ("replace an endpoint-valued `instance` before ingestion", "retain an endpoint-valued `instance`"),
+    ("must not copy native payloads or private identifiers", "may copy private identifiers"),
+    ("contributions fail closed", "contributions fail open"),
+    ("do not evict them to admit new series", "evict them to admit new series"),
     ("`thermal`, `infrastructure` and `field`", "`thermal`, `infrastructure`, `can` and `field`"),
     ("helianthus_thermal_power_watts", "helianthus_thermal_power_kilowatts"),
     ("thermal.measurement.power", "thermal.measurement.unreviewed"),
@@ -82,6 +95,25 @@ def test_prometheus_semantic_coverage_accepts_formatting_and_row_order() -> None
     text = text.replace('| `thermal.', '|  `thermal.')
     text = text.replace("and on(job, instance, slot)\n", "and   on(job, instance, slot)\n")
     CHECKER.validate(text)
+
+
+@pytest.mark.parametrize("operation", ["remove", "duplicate", "add"])
+def test_prometheus_semantic_coverage_rejects_admission_clause_drift(operation: str) -> None:
+    text = document()
+    heading = "## Bounded label and admission contract\n"
+    next_heading = "## Missing values, lifecycle and resets\n"
+    admission = CHECKER.section(text, heading, next_heading)
+    for clause in admission.strip().split("\n- "):
+        clause = clause if clause.startswith("- ") else "- " + clause
+        assert clause in admission
+        if operation == "remove":
+            changed = admission.replace(clause, "", 1)
+        elif operation == "duplicate":
+            changed = admission.replace(clause, clause + "\n" + clause, 1)
+        else:
+            changed = admission.replace(clause, clause + "\n- Allow arbitrary labels.", 1)
+        with pytest.raises(CHECKER.CheckError):
+            CHECKER.validate(text.replace(admission, changed, 1))
 
 
 def test_prometheus_semantic_coverage_registered_in_ci() -> None:

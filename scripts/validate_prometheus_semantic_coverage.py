@@ -64,15 +64,35 @@ LABEL_CONTRACT = """
 - Semantic quantity and status series have only `slot`, from the fixed set
   `0` through `15`. Each domain admits at most 16 concrete
   resource/service/dimension tuples. Assignment is explicit, collision-free
-  and fixed for a collector lifetime. Slots are local bounded selections,
-  never raw identifiers, hashes, fingerprints or encoded locators. A source
-  replacement invalidates its slot before any new value is published.
+  and durably persisted before publication for the lifetime of the scrape
+  target's `{job, instance}`, including collector restarts. Each binding
+  includes the exact source and resource/service/dimension tuple. Retired
+  slots remain reserved and must never be reassigned under that target,
+  including after source replacement. Admit a replacement only in a never-used
+  slot; exhaustion makes the replacement unavailable. If the binding registry
+  is missing or corrupt after prior publication, omit all semantic values
+  until the original registry is restored and bindings are revalidated.
+  Slots are local bounded selections, never raw identifiers, hashes,
+  fingerprints or encoded locators. Retire a replaced source's slot before
+  publishing replacement values; its availability remains 0. An availability
+  reset alone does not separate historical time series.
 - `helianthus_semantic_field_available` additionally has `domain` from
   `thermal`, `infrastructure` and `field` from exactly the corresponding
   field column below. Only configured tuples exist. Thus each of the 32
   fields has at most 16 value and 16 availability series: at most 1024
   semantic series, without a domain/field cross product. The two baud series
   add two. Existing bus series retain their own bounded source-owner budgets.
+- Do not export raw asset IDs, addresses, locators, request bytes, serials,
+  network endpoints, contributor identities, capture times or fingerprints
+  as labels. Do not turn arbitrary pack dimension text into labels. Internal
+  provenance retains the exact source binding and dimensions separately.
+  A slot must not silently aggregate different sources or dimensions.
+- Scrape configuration must use bounded, non-identifying target labels too;
+  replace an endpoint-valued `instance` before ingestion. Alert annotations
+  must not copy native payloads or private identifiers.
+- Overflow, ambiguous selection, unknown symbols, invalid units or conflicting
+  contributions fail closed for the affected selection. Retain valid siblings
+  and their last-known-good provenance; do not evict them to admit new series.
 """
 
 
@@ -167,7 +187,7 @@ def validate(text: str) -> None:
         raise CheckError("transport metric names, types or labels changed")
     admission = section(text, "## Bounded label and admission contract\n",
                         "## Missing values, lifecycle and resets\n")
-    if normalized(admission.split("- Do not export", 1)[0]) != normalized(LABEL_CONTRACT):
+    if normalized(admission) != normalized(LABEL_CONTRACT):
         raise CheckError("label admission or series budget changed")
     blocks = re.findall(r"^```yaml\n(.*?)^```$", text, re.MULTILINE | re.DOTALL)
     if len(blocks) != 1:

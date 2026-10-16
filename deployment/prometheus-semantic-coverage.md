@@ -41,9 +41,18 @@ An exact mapping disposition does not mean a qualified device.
 - Semantic quantity and status series have only `slot`, from the fixed set
   `0` through `15`. Each domain admits at most 16 concrete
   resource/service/dimension tuples. Assignment is explicit, collision-free
-  and fixed for a collector lifetime. Slots are local bounded selections,
-  never raw identifiers, hashes, fingerprints or encoded locators. A source
-  replacement invalidates its slot before any new value is published.
+  and durably persisted before publication for the lifetime of the scrape
+  target's `{job, instance}`, including collector restarts. Each binding
+  includes the exact source and resource/service/dimension tuple. Retired
+  slots remain reserved and must never be reassigned under that target,
+  including after source replacement. Admit a replacement only in a never-used
+  slot; exhaustion makes the replacement unavailable. If the binding registry
+  is missing or corrupt after prior publication, omit all semantic values
+  until the original registry is restored and bindings are revalidated.
+  Slots are local bounded selections, never raw identifiers, hashes,
+  fingerprints or encoded locators. Retire a replaced source's slot before
+  publishing replacement values; its availability remains 0. An availability
+  reset alone does not separate historical time series.
 - `helianthus_semantic_field_available` additionally has `domain` from
   `thermal`, `infrastructure` and `field` from exactly the corresponding
   field column below. Only configured tuples exist. Thus each of the 32
