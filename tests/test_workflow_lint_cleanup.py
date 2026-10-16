@@ -109,6 +109,8 @@ if name == "python3":
     assert set(caller.iterdir()) == {sentinel, other}
     later = ["python3", "-m", "pytest", "-q", "tests/test_workflow_shells.py"]
     assert (later in calls) == (mode in ("success", "later"))
+    cleanup_tests = ["python3", "-m", "pytest", "-q", "tests/test_workflow_lint_cleanup.py"]
+    assert (cleanup_tests in calls) == (mode == "success")
     if mode == "success":
         assert ["bash", "scripts/check_runtime_state_schema.sh"] in calls
         assert "NM 07FE/07FF service names" in result.stdout

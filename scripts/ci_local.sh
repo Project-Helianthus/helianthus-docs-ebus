@@ -75,6 +75,7 @@ if [ "$workflow_lint_status" -ne 0 ]; then
   exit "$workflow_lint_status"
 fi
 python3 -m pytest -q tests/test_workflow_shells.py
+python3 -m pytest -q tests/test_workflow_lint_cleanup.py
 echo "Pinned workflow/schema gate tools passed."
 
 echo "==> verify markdown files are present"
