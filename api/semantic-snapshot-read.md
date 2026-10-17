@@ -443,17 +443,16 @@ projection disposition; no pack-specific zero/false/empty fallback is allowed.
 
 ## eeBUS inbound and acceptance boundary
 
-The public native
-[eeBUS normative source ledger](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/main/protocols/eebus-normative-source-ledger.md)
-is the first authority for the unresolved normative boundary. Its unresolved
-STD-01 revisions do not establish native mappings. The semantic
+Native wire semantics belong to the
+[eeBUS protocol documentation](https://github.com/Project-Helianthus/helianthus-docs-eebus).
+Unresolved STD-01 revisions do not establish native mappings. The semantic
 [family catalog](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/family-catalog-v1.md)
 keeps `eebus-inbound` at `unknown` with reason `unknown_pending_std_01`.
 
 Affected inbound observations remain `candidate` or `unknown`, unpromoted and
 non-actionable, preserving that reason and native evidence references. Expose
 an `unknown` or `withheld` disposition as appropriate, never qualified support,
-a frozen mapping or a guessed scalar. Native ledger/catalog reason codes are
+a frozen mapping or a guessed scalar. Native and family reason codes are
 preserved verbatim; do not prefix or reinterpret `unknown_pending_std_01` as an
 API-owned reason. A readable candidate and a transport connection cannot
 establish capability admission or conformance. No eeBUS payload is decoded here.
