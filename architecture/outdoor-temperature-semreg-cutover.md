@@ -155,6 +155,7 @@ mutation tests or hardware evidence.
 
 Remaining gateway acceptance includes producer implementation, policy selection,
 qualified native evidence, cache/restart behavior, actual cross-surface parity
-and focused/full committed-head validation. G5 D1-D5/O8 remain J01-J17-owned;
-this slice adds no receipts, idempotency ledger, principal boundary or recovery
-redesign. It claims no transport, hardware, release or parent completion.
+and focused/full validation. G5 D1-D5/O8 remain separately owned under
+J01-J17. This read-only temperature contract leaves those wider gateway
+requirements unchanged. Transport, hardware, release and parent acceptance
+remain outstanding.
