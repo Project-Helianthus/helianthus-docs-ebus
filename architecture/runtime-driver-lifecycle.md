@@ -3,7 +3,7 @@
 Status: proposed software 0.7 contract. This page specifies the selected D5
 epoch policy D1/A2 and D5 recovery mechanism for gateway issue
 [#1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032),
-PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S1, S3, S4 and CTL-01–CTL-14. It does not claim
+PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S1, S3, S4 and CTL-01–CTL-15. It does not claim
 that the runtime control service or durable recovery is implemented. The G4 publication hub has
 an in-memory journal; that alone supplies no process-loss recovery.
 
@@ -464,16 +464,27 @@ a desired revision, and may regress on repair (reset sets it to 1). List/get
 return coherent cached views; historical observations grant no startup or
 native admission authority.
 
-In JSON, `ExpectedRevision` and every revision in responses (desired revision,
-catalog revision and the current view returned with a refusal) are canonical
-decimal strings: ASCII digits only, no sign, no leading zero except `"0"`, at
-most the unsigned 64-bit maximum. Internally they are unsigned 64-bit values;
-an increment that would exceed that maximum refuses with `COUNTER_EXHAUSTED`.
+In JSON, every revision in responses (desired revision, catalog revision and
+the current view returned with a refusal) is a canonical decimal string: ASCII
+digits only, no sign, no leading zero except `"0"`, at most the unsigned 64-bit
+maximum. `ExpectedRevision` in a request is stricter: a canonical decimal
+string of a nonzero unsigned 64-bit value, so `"0"`, leading zeros, signs,
+whitespace and non-digits fail shape validation with `INVALID_ARGUMENT` before
+any other check. Zero never needs to be sent: bootstrap seeds every configured
+driver as a decision at mark + 1, so the mark is at least 1 whenever any driver
+exists, and a driver with no record reads the nonzero mark, which is what its
+first decision must carry. Responses may show `"0"` only as the mark of a
+namespace in which nothing was ever decided (no driver configured), which no
+request can target. Internally revisions are unsigned 64-bit values; an
+increment that would exceed that maximum refuses with `COUNTER_EXHAUSTED`.
 
 ### Validate, decide and commit
 
 The request contains only `DriverID` and `ExpectedRevision`; the method
-selects START, STOP or RESTART. A finite caller deadline comes from the call
+selects START, STOP or RESTART. This page supersedes the request-member rules
+of `api/driver-runtime-v1.md`: `idempotency_key`, `request_id` and any receipt
+or completed-operation member are not accepted, and a request carrying them is
+refused as `INVALID_ARGUMENT` like any additional member. A finite caller deadline comes from the call
 context. Closed decoding rejects unknown/missing fields, duplicate members,
 malformed revisions and trailing JSON. No lifecycle principal, authority,
 idempotency key, canonical request digest, key lookup, receipt or completed-
@@ -517,7 +528,7 @@ unchanged. Checks run in this fixed order and the first failing check decides:
 
 | Order | Refusal | Code | Retryable |
 |---|---|---|---|
-| 1 | Unknown, missing or duplicate member, malformed revision string, trailing JSON | `INVALID_ARGUMENT` | No |
+| 1 | Unknown, missing or duplicate member, malformed revision string (including `"0"`, leading zeros, signs, whitespace, non-digits), trailing JSON | `INVALID_ARGUMENT` | No |
 | 2 | `DriverID` noncanonical or not registered | `NOT_FOUND` | No |
 | 3 | Driver record malformed or `runtime_control` failed to load; the driver reports `FAILED` | `FAILED_PRECONDITION` | No, until offline repair |
 | 3 | Readback after ambiguous persistence still pending | `UNAVAILABLE` | Yes |
@@ -745,6 +756,7 @@ Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
 | CTL-12 | Hold a pre-repair START with `ExpectedRevision=1`; offline-reset with verified bound `H >= 1`, restart and clear recovery gates. Read back STOPPED at its repaired revision (`H + 1` for a single configured ID); submit the held two-field request and require REVISION_CONFLICT with no mutation, reconciliation wake or native open. A fresh START using the read-back revision can proceed. Repeat repair after further decisions and with removed IDs in the revision coverage; all earlier revisions still conflict. An unvalidated mark, a D5 revision above the mark, an unverifiable D5 stream or `H + N` above the unsigned 64-bit maximum refuses reset without replacing any record; a successful reset leaves the D5 stream byte-identical |
 | CTL-13 | Two drivers A and B: accepted decisions interleave and each takes mark + 1, so no revision repeats across drivers. Remove B (record deleted, mark + 1 in the same transaction), then re-add B (mark + 1 again) with no decision for A in between: reads return STOPPED with `revision` equal to the current mark, and a request held before the removal, carrying B's old revision or the mark current at that time, is refused with REVISION_CONFLICT with no mutation. Second line: repeat with an accepted decision for A between removal and re-add; the held request is refused likewise. START with `ExpectedRevision` equal to the read-back mark is accepted at mark + 1, above every earlier revision; a first START for a driver with no record whose `ExpectedRevision` differs from the mark conflicts, and a STOP carrying the mark is a no-op. Remove the namespace, or only its mark, while other control records, D5 material or a quarantine copy exist: load fails closed and nothing is seeded; only a GUID with no control material bootstraps at mark 0. All revisions encode as canonical decimal strings |
 | CTL-14 | Drive one request per refusal row, plus requests failing several checks at once; each returns the code of the earliest failing check in the refusal table with no mutation. A malformed driver record returns FAILED_PRECONDITION with that driver FAILED while an independent driver stays usable; ambiguous persistence returns UNAVAILABLE for every driver until the service's readback completes |
+| CTL-15 | START carrying `ExpectedRevision` `"0"` is refused with INVALID_ARGUMENT; repeat with `"01"` (leading zero), `"+1"`, `" 1"` and `"1x"`. Each refusal is the first refusal-table row, with no mutation, no readback and no reconciliation wake |
 
 Also prove disabled/deadline/shape refusals, storage exhaustion, every counter's
 overflow refusal, quarantine retention, offline-reset refusal on an active writer

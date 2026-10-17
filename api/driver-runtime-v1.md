@@ -208,20 +208,22 @@ illustrates envelope shape only and is not a valid V1 catalog result.
 ## Mutating Tools
 
 `drivers.v1.start`, `drivers.v1.stop`, and `drivers.v1.restart` accept this
-closed request:
+closed two-field request:
 
 ```json
 {
-  "driver_id": "eebus.primary",
-  "idempotency_key": "client-generated-opaque-key",
-  "request_id": "optional-client-correlation"
+  "DriverID": "eebus.primary",
+  "ExpectedRevision": "7"
 }
 ```
 
-`driver_id` and `idempotency_key` are required. `request_id` is optional and
-has no idempotency or authorization meaning. The idempotency key is an opaque
-ASCII token of 16 through 128 characters, retained only for the current
-process epoch. It must not encode a secret, endpoint, or device identity.
+`DriverID` is the canonical registered driver ID. `ExpectedRevision` is a
+canonical decimal string of a nonzero unsigned 64-bit value. The request
+members, their validation, the refusal order and the revision rules are
+governed by [`runtime-driver-lifecycle.md`](../architecture/runtime-driver-lifecycle.md),
+which supersedes the former `idempotency_key` and `request_id` request members:
+neither is accepted, and a request carrying either is refused as
+`INVALID_ARGUMENT` like any additional member.
 
 Every tool returns a closed `DriverOperationV1` envelope:
 
@@ -249,6 +251,13 @@ The placeholder snapshot above represents the required `DriverSnapshotV1`
 object. An implementation never returns an open or empty snapshot object.
 
 ### Concurrency And Idempotency
+
+Superseded for lifecycle control by the D3 amendment in
+[architecture/runtime-driver-lifecycle.md](../architecture/runtime-driver-lifecycle.md):
+optimistic expected revisions replace idempotency keys and request identifiers,
+and the two-field request above is the governing contract. The text below
+describes the earlier envelope and stays until the MCP runtime-tool amendment
+updates this page.
 
 Exactly one operation is active per driver. Independent drivers may execute in
 parallel. A second different operation on a busy driver returns `CONFLICT` /
