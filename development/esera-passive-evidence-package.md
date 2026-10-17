@@ -128,7 +128,7 @@ none is an executed test or a request to inject traffic into hardware.
 
 | Existing XR row or boundary | Planned control and expected observation | Result | Evidence grade |
 |---|---|---|---|
-| `XR_INIT_TimeoutFailOpen_Bounded` | Replay no RESETTED within the catalog's INIT bound: unknown features, no optional-feature inference; connection continuation alone supplies no receipt proof | Not run | Unknown |
+| `XR_INIT_TimeoutFailOpen_Bounded` | Replay no RESETTED within the catalog's INIT bound: host must complete INIT within the configured INIT timeout with `init_confirmed=false` and unknown features, no optional-feature inference; record the configured timeout, completion deadline relative to INIT request sent, and measured INIT-completion elapsed time, explicitly checking elapsed time ≤ configured timeout; connection continuation alone supplies no receipt proof | Not run | Unknown |
 | `XR_UpstreamLoss_GracefulShutdown_NoHang` | End the synthetic stream mid-frame/session: every pending operation must return an error within 2× its configured timeout; record all pending operations, each configured timeout, the 2× completion deadline relative to stream loss, and each measured error-completion elapsed time against that deadline; no invented complete observation | Not run | Unknown |
 | `XR_ENH_UnknownCommand_ExplicitError_AdapterToHost` | Replay the catalog's undefined response command: explicit protocol error, not silent discard, timeout or collision | Not run | Unknown |
 | `XR_ENH_ParserReset_AfterReadTimeout` | Replay a partial encoded frame across the read timeout, then a valid RECEIVED frame: reset parser and decode the new frame independently | Not run | Unknown |
