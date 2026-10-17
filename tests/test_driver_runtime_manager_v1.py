@@ -162,9 +162,11 @@ def test_retry_stop_restart_and_runtime_override_semantics() -> None:
         "drain deadline",
         "adapter-owned close worker",
         "restart is one serialized stop-then-start operation",
-        "process-epoch-local",
+        "Superseded by the D3 amendment: durable desired state",
+        "survives a gateway process restart",
+        "configured-disabled driver is not startable",
+        "`FAILED_PRECONDITION` under the disabled-by-configuration row (order 4)",
         "does not rewrite add-on options",
-        "does not survive a gateway process restart",
     ):
         assert required in text
 
