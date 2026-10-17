@@ -1,9 +1,9 @@
-# Runtime driver lifecycle: G5 epoch and recovery contract
+# Runtime driver lifecycle: G5 registration, epoch and recovery contract
 
 Status: proposed software 0.7 contract. This page specifies the selected D5
 epoch policy D1/A2 and D5 recovery mechanism for gateway issue
 [#1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032),
-PRs 0a/0b and amendments A2/A6, covering S4 and S3.7–S3.9. It does not claim
+PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S4 and S3.7–S3.9. It does not claim
 that the runtime control service or durable recovery is implemented. The G4 publication hub has
 an in-memory journal; that alone supplies no process-loss recovery.
 
@@ -14,6 +14,117 @@ hooks, using SemReg's existing public `NewPublicationKernel` constructor and
 `Apply`. No SemReg API, dependency change or snapshot-import prerequisite is
 introduced. Earlier proposals for client command tracking and lifecycle
 authorization in that contract must be read with the final D3/D4 decisions below.
+
+## S0/A1: typed compiled-driver registration
+
+This registration companion is the partial slice tracked by
+[docs issue #652](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/652).
+It must merge before or with gateway PR 1. Compiled driver packages live in the
+gateway repository. The gateway owns descriptor format `v1`; DM-HOOKS owns
+future hook schemas and implementations. This is a gateway-internal typed
+registration boundary, not delivery of a universal public provider SPI.
+
+Every descriptor contains the following immutable registration material:
+
+| Field | Contract |
+|---|---|
+| `DriverID` | Canonical, unique, nonempty UTF-8 ID matching `^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$`, at most 128 bytes; stable across restart and gateway rename |
+| Direction | Exactly `southbound`, `northbound` or `both`, explicitly selected per instance |
+| Disposition | Explicit configured/enabled disposition; configuration eligibility is separate from durable desired state and current observed state |
+| `NativeContractRef` | Nonempty `Owner`, `Contract` and `Version`, naming the public native owner, owner-defined contract and exact supported version/revision; sanitized, with no endpoint, credential, raw payload or handle |
+| Lifecycle adapter | Typed factory plus Runtime binding over DriverManager; registration stores the adapter without invoking it |
+| Owned `SourceID` set | Stable configured source identities, each exclusively owned by one driver across the entire descriptor set and existing hub ownership |
+| Hook declarations | Optional versioned declarations; an empty set is required by this first host |
+
+Direction expresses supported roles. It grants no forwarding, native operation,
+publication, write permission, profile qualification or evidence grade.
+`DriverID`, `SourceID`, semantic asset/binding identity and lifecycle correlation
+remain distinct. A source derives from DriverID plus configured owner identity,
+never an endpoint, connection handle, path or discovery result. Reconnecting or
+changing an endpoint cannot silently change ownership.
+
+### Validate and freeze before effects
+
+Validate the **complete** descriptor set, including disabled entries, and freeze
+detached copies before any factory invocation, semantic declaration or endpoint
+call. Validate IDs, directions, dispositions, native references, adapters and
+source ownership against both all other descriptors and the hub. Duplicate or
+noncanonical driver IDs, duplicate source ownership and hub-source collisions
+refuse registration before effects. Failure installs no partial registry and
+mutates no hub ownership. Retain unaffected last-known-good state and provenance;
+rejected registration never grants admission.
+
+Recognize only hooks implemented by this host at their supported versions.
+Unknown hook names and unsupported versions fail explicitly. The reserved
+future names are `mcp`, `setup`, `portal`, `semantic` and `evidence`; **all hook
+declarations currently fail**, including these names, because none is
+implemented. Reserving a name is not accepting a nonfunctional control.
+Registration and common lifecycle control contain no protocol, vendor or family
+switch and perform no endpoint I/O or semantic declaration.
+
+List/get read only the frozen registry and cached lifecycle state. List returns
+all configured drivers sorted bytewise by `DriverID`, independent of registration
+order. Entries and catalog revision come from one coherent read transaction;
+get returns the corresponding coherent cached entry and `NOT_FOUND` for an
+unknown ID. Neither operation constructs a driver, probes an endpoint, refreshes
+native state or performs discovery.
+
+### First production registration and dispatch evidence
+
+`ebus.primary` is the only production registration in this slice. It is
+southbound, configured/enabled and lifecycle-only. It owns one stable configured
+source and declares no hooks, semantic assets, bindings, capability instances or
+semantic publications. Native invocation capabilities remain separate from
+semantic capability instances. The empty barrier and cleanup set are valid;
+never fabricate semantic material to satisfy a binding-bearing provider SPI.
+
+The native owner is
+[`github.com/Project-Helianthus/helianthus-ebusgo`](https://github.com/Project-Helianthus/helianthus-ebusgo),
+with the transport API exposed by
+[`transport/driver_runtime.go`](https://github.com/Project-Helianthus/helianthus-ebusgo/blob/main/transport/driver_runtime.go).
+These branch links identify the public owner and file, not a frozen dependency
+version or native eBUS wire proof. The dispatch-pinned source provides
+`transport.DriverRuntime`; the supplied material does not establish an
+owner-defined contract identifier/version or the exact configured `SourceID`.
+Those values are **Unknown** and remain dispatch acceptance blockers. Gateway
+descriptor `v1` must not substitute for a native contract version. Do not install
+a placeholder reference, derive identity from an endpoint or admit this driver
+until the exact supported native contract and configured source are supplied
+and validated. This page does not claim that production registration has passed.
+
+### S0/CTL-01 synthetic acceptance obligations
+
+Use synthetic southbound, northbound and both-role descriptors. Require zero
+factory calls, semantic declarations, endpoint calls and state mutation for
+noncanonical or duplicate DriverID, invalid direction/disposition, missing native
+reference fields or adapter, duplicate sources, hub ownership collision, unknown
+hook and unsupported hook version. Mutating caller-owned descriptors after freeze
+must not alter the registry. Permute registration order and assert sorted,
+coherent list/get views, including disabled entries, with no provider calls.
+Prove registration/control packages import no protocol package and that the
+production composition registers only `ebus.primary`. These are gateway test
+obligations, not executed tests or wire-evidence claims in this prose slice.
+
+## S5: deferred managed adapters and DM-HOOKS
+
+Later managed sidecars must use this same validated registration path with their
+own direction, native contract and exclusively owned sources. Each migration
+owns durable intent/recovery, exact lifecycle correlation, pre-open barrier and
+admission, activation proof, write-ahead publication/index, read-gated
+reprojection, independent native-close proof, restart non-overlap, one native
+retry owner and truthful status. Remove direct start/close ownership atomically
+when its managed adapter takes over; never create a dual-owner window or register
+a placeholder accepting controls it cannot execute. No family mutates another
+family's state. Synthetic isolation fixtures use separate assets under the
+current one-source-per-asset constraint.
+
+The existing Portal contribution key is `{DriverID, Generation}` with no source
+epoch, while driver generation restarts in each epoch. DM-HOOKS must supply a
+per-DriverID monotonic contribution generation or an epoch-aware key before
+contributions can safely span epoch succession. G5 registration does not solve
+that limitation or implement Portal, MCP, setup, semantic or evidence hooks.
+S5 sidecar migrations, shared-asset source isolation/LIFE-22 and the universal
+public SPI remain deferred; this slice closes none of them.
 
 ## A2: explicit restart and start after stop
 
