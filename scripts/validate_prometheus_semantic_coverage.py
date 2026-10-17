@@ -56,6 +56,23 @@ ebus_baud_observed_symbols_per_second | gauge / physical symbols per second | no
 ebus_baud_observation_available | gauge / boolean | none | **Target**, same owner; 0 when configured but no valid observation, 1 with current observation; absent if collector not implemented/configured
 CAN transport or semantic measurements | unavailable | none admitted | **Pending CAN acquisition**; no native acquisition seam established by this contract, no reserved fake value series
 """
+# Required verbatim policy clauses within the semantic section.
+SEMANTIC_POLICIES = (
+    "Enum numbers encode exactly the pack symbols with the corresponding field\n"
+    "prefix; they are categories, never ordinal severity or unknown sentinels.",
+    "No unlisted symbol maps to 0.",
+    "Setpoint visibility supplies no write authority.",
+    "Only the air-temperature and water-temperature rows have exact candidate\n"
+    "links in the local thermal mapping fixture, and both still require qualified\n"
+    "binding and export revalidation.",
+    "The rolling-average candidate remains\n"
+    "withheld: its time-window loss cannot become an instantaneous temperature.",
+    "Other pack fields have definitions, not native mapping evidence here.",
+    "Phase, meter and grid-connection dimensions remain distinct source keys;\n"
+    "never sum or substitute them to populate a missing field.",
+    "The pack does not\n"
+    "establish a native Infrastructure binding or a CAN measurement.",
+)
 # These clauses jointly define label admission and the series-budget arithmetic.
 LABEL_CONTRACT = """
 - The new baud series have no exporter labels: one observation source per
@@ -80,8 +97,14 @@ LABEL_CONTRACT = """
   `thermal`, `infrastructure` and `field` from exactly the corresponding
   field column below. Only configured tuples exist. Thus each of the 32
   fields has at most 16 value and 16 availability series: at most 1024
-  semantic series, without a domain/field cross product. The two baud series
-  add two. Existing bus series retain their own bounded source-owner budgets.
+  semantic series per scrape target for the exporter label set, without a
+  domain/field cross product. Deployment-wide, the semantic bound is
+  `T × 1024`, where `T` counts distinct retained target-label combinations,
+  including `job`, `instance` and any other relabeled target labels. Multiple
+  collectors and changes to those combinations multiply the budget; capacity
+  acceptance must bound `T` over the retention period. The two baud series
+  add two per target. Existing bus series retain their own bounded
+  source-owner budgets.
 - Do not export raw asset IDs, addresses, locators, request bytes, serials,
   network endpoints, contributor identities, capture times or fingerprints
   as labels. Do not turn arbitrary pack dimension text into labels. Internal
@@ -194,6 +217,9 @@ def expected_rules() -> dict:
 
 def validate(text: str) -> None:
     semantic = section(text, "## Semantic coverage and units\n", "## Offline alert examples\n")
+    for clause in SEMANTIC_POLICIES:
+        if clause not in semantic:
+            raise CheckError(f"missing semantic policy clause: {clause}")
     actual = rows(semantic)
     header = ("Pack field", "Target series", "Unit / conversion")
     separator = ("---", "---", "---")
@@ -211,7 +237,7 @@ def validate(text: str) -> None:
             or sum(field.startswith("thermal.") for field in fields) != 13
             or sum(field.startswith("infrastructure.") for field in fields) != 19
             or len(fields) * 16 * 2 != 1024):
-        raise CheckError("invalid reviewed field count or series budget")
+        raise CheckError("invalid reviewed field count or per-target series budget")
     transport = section(text, "## Transport coverage\n", "## Semantic coverage and units\n")
     actual_transport = rows(transport)
     expected_transport = rows("\n".join("| " + line for line in TRANSPORT_ROWS.strip().splitlines()))
@@ -224,7 +250,7 @@ def validate(text: str) -> None:
     admission = section(text, "## Bounded label and admission contract\n",
                         "## Missing values, lifecycle and resets\n")
     if normalized(admission) != normalized(LABEL_CONTRACT):
-        raise CheckError("label admission or series budget changed")
+        raise CheckError("label admission or per-target series budget changed")
     lifecycle = section(text, "## Missing values, lifecycle and resets\n",
                         "## Transport coverage\n")
     if normalized(lifecycle) != normalized(LIFECYCLE_CONTRACT):
@@ -249,7 +275,7 @@ def main() -> int:
     except (CheckError, OSError) as exc:
         print(f"Prometheus semantic coverage: {exc}")
         return 1
-    print("Prometheus semantic coverage passed: 32 fields, 1024 semantic series + 2 baud series.")
+    print("Prometheus semantic coverage passed: 32 fields, 1024 semantic series + 2 baud series per target.")
     return 0
 
 

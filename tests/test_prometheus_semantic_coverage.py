@@ -26,6 +26,11 @@ def test_prometheus_semantic_coverage_accepts_document() -> None:
 @pytest.mark.parametrize(("old", "new"), [
     ("32\n  fields", "33\n  fields"),
     ("1024", "2048"),
+    ("semantic series per scrape target", "semantic series deployment-wide"),
+    ("`T × 1024`", "`1024`"),
+    ("including `job`, `instance` and any other relabeled target labels",
+     "including only `job` and `instance`"),
+    ("must bound `T` over the retention period", "need not bound `T`"),
     ("`0` through `15`", "`0` through `31`"),
     ("16 value and 16 availability", "16 value and 32 availability"),
     ("series have only `slot`", "series have only `slot`, `asset`"),
@@ -160,3 +165,15 @@ def test_prometheus_semantic_coverage_registered_in_ci() -> None:
     gate = (ROOT / "scripts/ci_local.sh").read_text()
     assert "python3 scripts/validate_prometheus_semantic_coverage.py\n" in gate
     assert "python3 -m pytest -q tests/test_prometheus_semantic_coverage.py\n" in gate
+
+
+@pytest.mark.parametrize("clause", CHECKER.SEMANTIC_POLICIES)
+@pytest.mark.parametrize("operation", ["remove", "move"])
+def test_prometheus_semantic_coverage_rejects_missing_policy(clause: str, operation: str) -> None:
+    text = document()
+    assert text.count(clause) == 1
+    text = text.replace(clause, "", 1)
+    if operation == "move":
+        text += "\n" + clause + "\n"
+    with pytest.raises(CHECKER.CheckError, match="missing semantic policy clause"):
+        CHECKER.validate(text)

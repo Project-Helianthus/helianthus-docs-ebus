@@ -57,8 +57,14 @@ An exact mapping disposition does not mean a qualified device.
   `thermal`, `infrastructure` and `field` from exactly the corresponding
   field column below. Only configured tuples exist. Thus each of the 32
   fields has at most 16 value and 16 availability series: at most 1024
-  semantic series, without a domain/field cross product. The two baud series
-  add two. Existing bus series retain their own bounded source-owner budgets.
+  semantic series per scrape target for the exporter label set, without a
+  domain/field cross product. Deployment-wide, the semantic bound is
+  `T × 1024`, where `T` counts distinct retained target-label combinations,
+  including `job`, `instance` and any other relabeled target labels. Multiple
+  collectors and changes to those combinations multiply the budget; capacity
+  acceptance must bound `T` over the retention period. The two baud series
+  add two per target. Existing bus series retain their own bounded
+  source-owner budgets.
 - Do not export raw asset IDs, addresses, locators, request bytes, serials,
   network endpoints, contributor identities, capture times or fingerprints
   as labels. Do not turn arbitrary pack dimension text into labels. Internal
