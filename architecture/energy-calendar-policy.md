@@ -116,7 +116,7 @@ Captured artifacts stay frozen rather than being upgraded into live caches.
 
 ## Before/after truth table
 
-All instants below are synthetic calculation inputs, not capture times. Unless
+All instants below are synthetic UTC inputs for civil-date arithmetic. Unless
 stated otherwise, the controller-calendar scenario and the proposed location
 are `Europe/Berlin`, while the current process calendar is UTC. `D` is the valid
 controller daily date, `M` its current month and `P` its previous month.
