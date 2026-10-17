@@ -150,9 +150,12 @@ outcomes. Qualified valid flow can be numerically exact, but projecting only a
 scalar to a legacy surface drops native identity, provenance, time and policy
 unless conveyed separately: account for `identity`, `provenance`, `time` and
 `policy` loss explicitly. Do not call the whole projection exact merely because
-Celsius matches. Invalid/out-of-bounds data is withheld with its reason, never
-clamped (which would hide range loss). Return has projection outcome `withheld`
-with the missing-source reason above and qualification `unknown`: these are
+Celsius matches. Reject invalid/out-of-bounds samples with their reasons in
+raw/quality evidence, never clamp them (which would hide range loss). If an
+eligible retained fact is emitted, its projection determines the disposition;
+use `withheld` only when the requested fact is not projected. Return has
+projection outcome `withheld` with the missing-source reason above and
+qualification `unknown`: these are
 separate axes, not an `unknown` projection outcome. No return fact is emitted,
 including a zero-valued fact, and return must not reuse the flow role. These
 loss requirements do not introduce a new projection schema or erase retained
@@ -222,22 +225,26 @@ For rejection rows, assume a prior qualified `F` observation with value
 the rejected sample produces no fact or refresh. Freshness remains evaluated
 from that original receipt, never from this failed acquisition. If no eligible
 prior observation exists, the result is withheld; if its deadline has expired,
-the explicit expiry row applies. This separates the rejected sample's
-projection from projection of a retained prior fact.
+the explicit expiry row applies. The [snapshot projection accounting
+contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
+requires exactly one disposition per requested fact, with all matching complete
+FactKeys in `source_keys`. That disposition describes the emitted retained
+fact, including applicable scalar projection losses; a rejected sample has no
+separate projection disposition and remains only in raw/quality evidence.
 
 | Case / source and value bytes | Legacy value handling | New value / retention | Freshness | Projection outcome |
 | --- | --- | --- | --- | --- |
 | F, normal `20 03` | `50 °C` | Accept `50 °C`; replace prior F | Fresh from new receipt under assumed policy | Emit flow `50 °C` |
 | F, zero `00 00` | `0 °C` | Accept `0 °C`; replace prior F | Fresh from new receipt under assumed policy | Emit flow `0 °C`, never absence |
 | F, lower bound `C0 F9` | `-100 °C` | Accept inclusive `-100 °C`; replace prior F | Fresh from new receipt under assumed policy | Emit flow `-100 °C` |
-| F, below lower bound `BF F9` | `-100.0625 °C` can publish | Reject `bounds_exceeded`; retain F | Original F freshness; no refresh | Invalid sample withheld; retained flow `50 °C` |
+| F, below lower bound `BF F9` | `-100.0625 °C` can publish | Reject `bounds_exceeded`; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
 | F, upper bound `80 0C` | `200 °C` | Accept inclusive `200 °C`; replace prior F | Fresh from new receipt under assumed policy | Emit flow `200 °C` |
-| F, above upper bound `81 0C` | `200.0625 °C` can publish | Reject `bounds_exceeded`; retain F | Original F freshness; no refresh | Invalid sample withheld; retained flow `50 °C` |
-| F, replacement `00 80` | `-2048 °C` can publish | Reject replacement; retain F | Original F freshness; no refresh | Replacement withheld; retained flow `50 °C` |
-| F, empty value payload | Minimum width fails; no decoded update | Reject short shape; retain F | Original F freshness; no refresh | Short sample withheld; retained flow `50 °C` |
-| F, one value byte `20` | Minimum width fails; no decoded update | Reject short shape; retain F | Original F freshness; no refresh | Short sample withheld; retained flow `50 °C` |
-| F, three value bytes `20 03 00` | Minimum-width decoder yields `50 °C` from first two bytes if passed through the parser | Reject over-length shape; retain F | Original F freshness; no refresh | Over-length sample withheld; retained flow `50 °C`; intentional difference |
-| F, complete reply with mismatching selector or echoed operation, otherwise `20 03` | Selector/read parsing precedes decoding; no valid F update is established | Reject binding mismatch; retain F | Original F freshness; no refresh | Mismatched sample withheld; retained flow `50 °C` |
+| F, above upper bound `81 0C` | `200.0625 °C` can publish | Reject `bounds_exceeded`; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F, replacement `00 80` | `-2048 °C` can publish | Reject replacement; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F, empty value payload | Minimum width fails; no decoded update | Reject short shape; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F, one value byte `20` | Minimum width fails; no decoded update | Reject short shape; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F, three value bytes `20 03 00` | Minimum-width decoder yields `50 °C` from first two bytes if passed through the parser | Reject over-length shape; retain F | Original F freshness; no refresh | Emit retained flow `50 °C`; intentional difference |
+| F, complete reply with mismatching selector or echoed operation, otherwise `20 03` | Selector/read parsing precedes decoding; no valid F update is established | Reject binding mismatch; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
 | F read failure or omitted field in partial update | Old pointer can persist indefinitely | No new value; retain F independently of other fields | Original F freshness; no refresh | Retained flow `50 °C` |
 | F retention deadline expires after a failed read | Old pointer has no field expiry | Withdraw F; keep native evidence separately | Expired under original policy | Flow withheld; no scalar |
 | F loses qualification or conflicts with current target identity | Legacy family heuristic does not establish exact qualification | Withhold immediately; prior F cannot remain admitted | No fresh promotion; original receipt unchanged | Flow withheld despite an unexpired prior value |
