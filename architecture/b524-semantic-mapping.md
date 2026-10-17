@@ -269,10 +269,14 @@ defines the proposed two-field equivalence and withholding contract. Excluding
 RR=0x004B from the proposed boiler-flow mapping is an intentional difference:
 its native identity remains controller system flow, not qualified B509 boiler
 flow or boiler return. The legacy mirror's retention/removal is a downstream
-cutover decision. Return projection is `withheld` with no emitted fact,
-qualification `unknown` and a missing-source reason; no return source is
-established by this mirror. Existing MCP field names and GraphQL aliases remain
-the compatibility boundary.
+cutover decision. No return fact is emitted and no separate return projection
+disposition is added. Flow and return share
+`thermal.measurement.water_temperature`, with one disposition per requested
+`(kind,item_id)`; absent return cannot make that item `withheld` when flow is
+projected. Return qualification remains `unknown`, and its missing-source reason
+describes legacy-field absence outside projection accounting; no return source
+is established by this mirror. Existing MCP field names and GraphQL aliases
+remain the compatibility boundary.
 
 The gateway currently mirrors the circuit 0 state (RR=0x001E) into
 `diagnostics.heatingStatusRaw`; that mirror is not part of this mapping, because
