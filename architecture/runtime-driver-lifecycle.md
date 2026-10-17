@@ -467,6 +467,13 @@ from validated `C` to `C + 1`; it never regresses.
 List/get return coherent cached views; historical observations grant no startup or
 native admission authority.
 
+This durable write is not deferred to the periodic cadence of the
+[runtime state](runtime-state.md) page: every accepted decision with its mark
+advance, every mark-only write and every repair is written durably and
+atomically before the decision is acknowledged or its view exposed, and every
+catalog advance is written before its view is exposed, so a crash cannot lose
+an acknowledged intent or an issued revision.
+
 In JSON, every revision in responses (desired revision, catalog revision and
 the current view returned with a refusal) is a canonical decimal string: ASCII
 digits only, no sign, no leading zero except `"0"`, at most the unsigned 64-bit

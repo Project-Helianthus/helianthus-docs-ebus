@@ -261,6 +261,17 @@ The gateway writes the file:
 - Eagerly within the first second of startup, persisting `meta.instance_guid`
   to close the crash-before-first-periodic-persist window (AD08).
 
+- Control namespace (see the durable control decisions in
+  [Runtime driver lifecycle](runtime-driver-lifecycle.md)): every accepted
+  lifecycle decision, together with the issued-revision mark advance it
+  carries, every mark-only write (driver removal or registration) and every
+  offline repair is written durably and atomically before the decision is
+  acknowledged or its view exposed. Every externally visible observed-view
+  transaction that advances the catalog revision is likewise written before
+  the new view is exposed. The shutdown, ticker, source-address and startup
+  cadence above applies to the other namespaces only; the control namespace
+  never waits for the next periodic flush.
+
 ## Failure modes
 
 The gateway never blocks startup on cache state. The fail-closed rule below
