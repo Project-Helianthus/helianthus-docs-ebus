@@ -35,6 +35,17 @@ An exact mapping disposition does not mean a qualified device.
 
 ## Bounded label and admission contract
 
+The structured domains below apply to the semantic value rows and availability
+series. `domain_field_table` selects exactly the pack fields under the matching
+domain heading in the semantic tables; it does not form a cross product.
+
+| Series group | Label | Allowed domain |
+| --- | --- | --- |
+| `semantic_values` | `slot` | `0..15` |
+| `helianthus_semantic_field_available` | `slot` | `0..15` |
+| `helianthus_semantic_field_available` | `domain` | `thermal, infrastructure` |
+| `helianthus_semantic_field_available` | `field` | `domain_field_table` |
+
 - The new baud series have no exporter labels: one observation source per
   gateway collector. Never choose one of several physical buses implicitly;
   ambiguous source selection makes observation unavailable.
@@ -203,6 +214,25 @@ Phase, meter and grid-connection dimensions remain distinct source keys;
 never sum or substitute them to populate a missing field. The pack does not
 establish a native Infrastructure binding or a CAN measurement.
 
+## Thermal mapping dispositions
+
+These structured claims are compared to the [thermal fixture][thermal-fixture].
+They describe candidate dispositions, with qualification and export still
+requiring separate acceptance.
+
+### Exact fact IDs
+
+| semreg_fact |
+| --- |
+| `thermal.measurement.air_temperature` |
+| `thermal.measurement.water_temperature` |
+
+### Withheld associations
+
+| legacy_system_field | loss |
+| --- | --- |
+| `state.outdoor_temperature_avg24h` | `rolling_average_window_unrepresentable` |
+
 ## Offline alert examples
 
 These rules illustrate known-unavailable versus observed-fault alerts. Enable
@@ -262,9 +292,12 @@ Collector absence requires a separately configured expected-target inventory
 and scrape-health alert; these rules intentionally do not equate an absent
 collector with a healthy field. The local CI gate runs
 `python3 scripts/validate_prometheus_semantic_coverage.py` and its mutation
-tests to check the closed field/name/unit tables, bounded labels, series
-budget and example selectors. These static checks do not evaluate PromQL. PromQL
-evaluation, exporter tests, candidate revalidation and physical acquisition
+tests to check the structured field/name/unit tables, label domains, thermal
+dispositions against their source fixture, and example selectors. Explanatory
+prose, lifecycle rationale, transport ownership descriptions and alert
+annotations require human review under the
+[finite validation scope](../development/prometheus-validation-scope.md).
+These static checks do not evaluate PromQL. PromQL evaluation, exporter tests, candidate revalidation and physical acquisition
 evidence are separate acceptance work. Existing
 [adaptermux alert rules](prometheus-alerts.md) retain their source contracts.
 

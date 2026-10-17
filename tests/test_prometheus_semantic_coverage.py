@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -24,30 +25,10 @@ def test_prometheus_semantic_coverage_accepts_document() -> None:
 
 
 @pytest.mark.parametrize(("old", "new"), [
-    ("32\n  fields", "33\n  fields"),
-    ("1024", "2048"),
-    ("semantic series per scrape target", "semantic series deployment-wide"),
-    ("`T × 1024`", "`1024`"),
-    ("including `job`, `instance` and any other relabeled target labels",
-     "including only `job` and `instance`"),
-    ("must bound `T` over the retention period", "need not bound `T`"),
-    ("`0` through `15`", "`0` through `31`"),
-    ("16 value and 16 availability", "16 value and 32 availability"),
-    ("series have only `slot`", "series have only `slot`, `asset`"),
-    ("including collector restarts", "excluding collector restarts"),
-    ("durably persisted before publication", "persisted after publication"),
-    ("must never be reassigned", "may be reassigned"),
-    ("exhaustion makes the replacement unavailable", "exhaustion reuses a retired slot"),
-    ("omit all semantic values", "publish semantic values"),
-    ("until the original registry is restored and bindings are revalidated.", "until restart."),
-    ("Do not export raw asset IDs", "Export raw asset IDs"),
-    ("Do not turn arbitrary pack dimension text into labels.", "Allow arbitrary dimension labels."),
-    ("A slot must not silently aggregate different sources or dimensions.", "A slot may aggregate sources."),
-    ("replace an endpoint-valued `instance` before ingestion", "retain an endpoint-valued `instance`"),
-    ("must not copy native payloads or private identifiers", "may copy private identifiers"),
-    ("contributions fail closed", "contributions fail open"),
-    ("do not evict them to admit new series", "evict them to admit new series"),
-    ("`thermal`, `infrastructure` and `field`", "`thermal`, `infrastructure`, `can` and `field`"),
+    ("`0..15`", "`0..31`"),
+    ("`thermal, infrastructure`", "`thermal, infrastructure, can`"),
+    ("`domain_field_table`", "`arbitrary_fields`"),
+    ("`semantic_values` | `slot`", "`semantic_values` | `asset`"),
     ("helianthus_thermal_power_watts", "helianthus_thermal_power_kilowatts"),
     ("thermal.measurement.power", "thermal.measurement.unreviewed"),
     ("litre/minute / 60,000", "litre/minute / 60"),
@@ -55,15 +36,6 @@ def test_prometheus_semantic_coverage_accepts_document() -> None:
     ("ebus_passive_tap_connected` | gauge", "ebus_passive_tap_connected` | counter"),
     ("| `window`: `1m`, `5m`, `15m`, `1h` |", "| `window`: `1m`, `5m`, `15m`, `1h`, `1d` |"),
     ("| gauge / physical symbols per second | none |", "| gauge / physical symbols per second | `bus` |"),
-    ("**no value sample**", "a zero-filled value sample"),
-    ("original receipt and explicit non-current state", "current receipt and current state"),
-    ("reevaluation cannot refresh acquisition time", "reevaluation refreshes acquisition time"),
-    ("Do not compute `rate` on energy gauges", "Compute `rate` on energy gauges"),
-    ("They have no exporter reset-to-zero operation", "They reset to zero on reconnect"),
-    ("Reconnection does not mean a new counter epoch", "Reconnection starts a new counter epoch"),
-    ("**Target**, gateway transport timing owner", "Implemented, gateway transport timing owner"),
-    ("absent if collector not implemented/configured", "always emitted"),
-    ("**Pending CAN acquisition**", "Implemented CAN acquisition"),
     ("ebus_passive_tap_connected == 0", "ebus_passive_tap_connected == 1"),
     ("on(job, instance, slot)", "on(job, instance)"),
     ('field="thermal.status.fault"', 'field="thermal.status.operation"'),
@@ -104,7 +76,8 @@ def test_prometheus_semantic_coverage_rejects_table_drift(operation: str) -> Non
 
 def test_prometheus_semantic_coverage_accepts_formatting_and_row_order() -> None:
     text = document()
-    lines = [line for line in text.splitlines(keepends=True) if line.startswith('| `thermal.')]
+    lines = [line for line in text.splitlines(keepends=True)
+             if line.startswith('| `thermal.') and len(CHECKER.rows(line)[0]) == 3]
     text = text.replace("".join(lines), "".join(reversed(lines)))
     text = text.replace('| `thermal.', '|  `thermal.')
     text = text.replace("and on(job, instance, slot)\n", "and   on(job, instance, slot)\n")
@@ -114,90 +87,95 @@ def test_prometheus_semantic_coverage_accepts_formatting_and_row_order() -> None
     CHECKER.validate(text)
 
 
-@pytest.mark.parametrize("operation", ["remove", "duplicate", "add"])
-def test_prometheus_semantic_coverage_rejects_admission_clause_drift(operation: str) -> None:
-    text = document()
-    heading = "## Bounded label and admission contract\n"
-    next_heading = "## Missing values, lifecycle and resets\n"
-    admission = CHECKER.section(text, heading, next_heading)
-    for clause in admission.strip().split("\n- "):
-        clause = clause if clause.startswith("- ") else "- " + clause
-        assert clause in admission
-        if operation == "remove":
-            changed = admission.replace(clause, "", 1)
-        elif operation == "duplicate":
-            changed = admission.replace(clause, clause + "\n" + clause, 1)
-        else:
-            changed = admission.replace(clause, clause + "\n- Allow arbitrary labels.", 1)
-        with pytest.raises(CHECKER.CheckError):
-            CHECKER.validate(text.replace(admission, changed, 1))
-
-
-@pytest.mark.parametrize("operation", ["remove", "duplicate", "add"])
-def test_prometheus_semantic_coverage_rejects_lifecycle_clause_drift(operation: str) -> None:
-    text = document()
-    lifecycle = CHECKER.section(text, "## Missing values, lifecycle and resets\n",
-                              "## Transport coverage\n")
-    for clause in lifecycle.strip().split("\n\n"):
-        if operation == "remove":
-            changed = lifecycle.replace(clause, "", 1)
-        elif operation == "duplicate":
-            changed = lifecycle.replace(clause, clause + "\n\n" + clause, 1)
-        else:
-            changed = lifecycle.replace(clause, clause + "\n\nZero fill is allowed.", 1)
-        with pytest.raises(CHECKER.CheckError, match="missing values, lifecycle or resets"):
-            CHECKER.validate(text.replace(lifecycle, changed, 1))
-
-
-def test_prometheus_semantic_coverage_rejects_each_transport_coverage_change() -> None:
-    text = document()
-    transport = CHECKER.section(text, "## Transport coverage\n",
-                              "## Semantic coverage and units\n")
-    table_rows = [line for line in transport.splitlines() if line.startswith("|")][2:]
-    for row in table_rows:
-        cells = row.split("|")
-        cells[4] = " Always implemented and available "
-        with pytest.raises(CHECKER.CheckError, match="transport metric"):
-            CHECKER.validate(text.replace(row, "|".join(cells), 1))
-
-
-@pytest.mark.parametrize(("old", "new"), [
-    ("No row is\nclaimed implemented.", "Every row is\nclaimed implemented."),
-    ("cannot supply it", "can supply it"),
-    ("after expiry or reconnection omit it and mark\navailability 0",
-     "after expiry or reconnection publish it and mark\navailability 1"),
-])
-def test_prometheus_semantic_coverage_rejects_inverted_target_policies(old: str, new: str) -> None:
-    text = document()
-    assert text.count(old) == 1
-    with pytest.raises(CHECKER.CheckError, match="missing semantic policy clause|missing baud-source or expiry policy"):
-        CHECKER.validate(text.replace(old, new, 1))
-
-
-@pytest.mark.parametrize("operation", ["remove", "move"])
-def test_prometheus_semantic_coverage_rejects_missing_baud_policy(operation: str) -> None:
-    text = document()
-    assert text.count(CHECKER.BAUD_POLICY) == 1
-    text = text.replace(CHECKER.BAUD_POLICY, "", 1)
-    if operation == "move":
-        text += "\n" + CHECKER.BAUD_POLICY + "\n"
-    with pytest.raises(CHECKER.CheckError, match="missing baud-source or expiry policy"):
-        CHECKER.validate(text)
-
-
 def test_prometheus_semantic_coverage_registered_in_ci() -> None:
     gate = (ROOT / "scripts/ci_local.sh").read_text()
     assert "python3 scripts/validate_prometheus_semantic_coverage.py\n" in gate
     assert "python3 -m pytest -q tests/test_prometheus_semantic_coverage.py\n" in gate
 
 
-@pytest.mark.parametrize("clause", CHECKER.SEMANTIC_POLICIES)
-@pytest.mark.parametrize("operation", ["remove", "move"])
-def test_prometheus_semantic_coverage_rejects_missing_policy(clause: str, operation: str) -> None:
+@pytest.mark.parametrize(("old", "new"), [
+    ("Setpoint visibility supplies no write authority.",
+     "Observing a setpoint grants no permission to write."),
+    ("The rolling-average candidate remains\nwithheld:",
+     "The candidate for the rolling average is withheld:"),
+    ("The baud target measures physical signaling intervals over a completed,",
+     "Physical signaling intervals determine the baud target over a completed,"),
+    ("The new baud series have no exporter labels:",
+     "Exporter labels are absent from the new baud series:"),
+    ("They have no exporter reset-to-zero operation.",
+     "The exporter cannot reset these gauges to zero."),
+    ("Bus store; implemented in inspected source, known connection state 0/1; exact-candidate revalidation required",
+     "The bus store implements known connection state; revalidate the candidate"),
+    ("summary: Passive tap reports disconnected", "summary: Passive tap is disconnected"),
+])
+def test_prometheus_semantic_coverage_accepts_rewording(old: str, new: str) -> None:
     text = document()
-    assert text.count(clause) == 1
-    text = text.replace(clause, "", 1)
-    if operation == "move":
-        text += "\n" + clause + "\n"
-    with pytest.raises(CHECKER.CheckError, match="missing semantic policy clause"):
-        CHECKER.validate(text)
+    assert old in text
+    CHECKER.validate(text.replace(old, new))
+
+
+@pytest.mark.parametrize("operation", ["remove", "duplicate", "add"])
+def test_prometheus_semantic_coverage_rejects_label_rows(operation: str) -> None:
+    text = document()
+    row = "| `semantic_values` | `slot` | `0..15` |\n"
+    replacement = {"remove": "", "duplicate": row * 2,
+                   "add": row + row.replace("`slot`", "`asset`")}[operation]
+    with pytest.raises(CHECKER.CheckError, match="structured label domains"):
+        CHECKER.validate(text.replace(row, replacement))
+
+
+@pytest.mark.parametrize(("old", "new"), [
+    ("| `thermal.measurement.air_temperature` |\n",
+     "| `thermal.measurement.power` |\n"),
+    ("| `thermal.measurement.air_temperature` |\n", ""),
+    ("| `thermal.measurement.air_temperature` |\n",
+     "| `thermal.measurement.air_temperature` |\n" * 2),
+    ("| `state.outdoor_temperature_avg24h` | `rolling_average_window_unrepresentable` |\n", ""),
+    ("| `state.outdoor_temperature_avg24h` | `rolling_average_window_unrepresentable` |\n",
+     "| `state.outdoor_temperature_avg24h` |\n"),
+    ("| `state.outdoor_temperature_avg24h` | `rolling_average_window_unrepresentable` |\n",
+     "| `state.outdoor_temperature` | `rolling_average_window_unrepresentable` |\n"),
+    ("| `state.outdoor_temperature_avg24h` | `rolling_average_window_unrepresentable` |\n",
+     "| `state.outdoor_temperature_avg24h` | `other_loss` |\n"),
+])
+def test_prometheus_semantic_coverage_rejects_disposition_drift(old: str, new: str) -> None:
+    text = document()
+    assert text.count(old) == 1
+    with pytest.raises(CHECKER.CheckError, match="source fixture"):
+        CHECKER.validate(text.replace(old, new))
+
+
+@pytest.mark.parametrize("mutation", ["exact", "field", "loss", "add_withheld", "remove_withheld"])
+def test_prometheus_semantic_coverage_derives_dispositions_from_source(tmp_path: Path, mutation: str) -> None:
+    fixture = json.loads(CHECKER.THERMAL_FIXTURE.read_text())
+    mappings = fixture["mappings"]
+    assert mappings[2]["semreg_fact"] is None
+    if mutation == "exact":
+        mappings[0]["semreg_fact"] = "thermal.measurement.power"
+    elif mutation == "field":
+        mappings[2]["legacy_system_field"] = "state.other_average"
+    elif mutation == "loss":
+        mappings[2]["loss"] = "other_loss"
+    elif mutation == "add_withheld":
+        mappings.append(dict(mappings[2], legacy_system_field="state.other_average"))
+    else:
+        mappings.pop()
+    source = tmp_path / "thermal.json"
+    source.write_text(json.dumps(fixture))
+    with pytest.raises(CHECKER.CheckError, match="source fixture"):
+        CHECKER.validate(document(), thermal_fixture=source)
+    # Matching source and structured claim changes pass, proving there is no
+    # independent list of exact facts or withheld associations in the checker.
+    if mutation == "exact":
+        CHECKER.validate(document().replace("| `thermal.measurement.air_temperature` |\n",
+                                          "| `thermal.measurement.power` |\n"),
+                         thermal_fixture=source)
+
+
+def test_prometheus_semantic_coverage_accepts_source_order_and_shared_exact_fact(tmp_path: Path) -> None:
+    fixture = json.loads(CHECKER.THERMAL_FIXTURE.read_text())
+    fixture["mappings"].append(dict(fixture["mappings"][0], legacy_system_field="state.other_temperature"))
+    fixture["mappings"].reverse()
+    source = tmp_path / "thermal.json"
+    source.write_text(json.dumps(fixture))
+    CHECKER.validate(document(), thermal_fixture=source)
