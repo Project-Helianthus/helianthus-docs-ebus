@@ -93,9 +93,9 @@ separate from that role dimension, following the
 | Existing boiler field | Native source and evidence | Required qualification | Proposed Thermal mapping / current disposition |
 | --- | --- | --- | --- |
 | Flow: `FlowTemperatureC` | B509 `PB=0xB5, SB=0x09, OP=0x0D`, complete selector `18 00`; initiator-to-qualified-boiler-target request, target-to-initiator reply; `DATA2c`, °C. Native meaning **Hypothesis**; software source **Proven**. | Exact current boiler-class target identity through the native product-ID gate, bound to the actual routing target, service, operation, complete selector, response shape and codec. Family-prefix or bus-address matching alone is insufficient. No qualifying boiler-target artifact/rule exists today: runtime qualification `unknown`, field withheld. | Candidate `thermal.measurement.water_temperature`, quantity `unit.celsius`, dimension `thermal.dimension.temperature` with proposed text role `temperature:boiler_flow`. Exact numeric mapping only after qualification and validity/freshness admission; no fact emitted today. Missing qualification has proposed reason `reason.boiler_temperature.qualification_unknown`. |
-| Return: `ReturnTemperatureC` | No accepted native source, selector, codec or source unit; evidence **Unknown**. Legacy C suffix is not source evidence. | A future exact boiler-target product identity, native return selector, response shape, codec and unit must be evidenced and qualified independently. None exists: runtime qualification `unknown`, field withheld. | Projection outcome `withheld`; no fact emitted. `temperature:boiler_return` is reserved and unpublished, not an admitted FactKey. Proposed missing-source reason `reason.boiler_temperature.return_source_unknown`; it must not be replaced by a guessed temperature. |
+| Return: `ReturnTemperatureC` | No accepted native source, selector, codec or source unit; evidence **Unknown**. Legacy C suffix is not source evidence. | A future exact boiler-target product identity, native return selector, response shape, codec and unit must be evidenced and qualified independently. None exists: runtime qualification `unknown`, field withheld. | Legacy field absent; no fact emitted and no separate projection disposition. `temperature:boiler_return` is reserved and unpublished, not an admitted FactKey. Proposed missing-source reason `reason.boiler_temperature.return_source_unknown` describes this legacy-field absence outside projection accounting; it must not be replaced by a guessed temperature. |
 
-Reason codes here are proposed mapping dispositions for downstream adoption,
+Reason codes here are proposed mapping diagnostics for downstream adoption,
 not a claim that the producer or a reason registry already implements them.
 The [controller qualification evidence gap](vaillant-controller-qualification-v1.md)
 also has `qualified_use_permitted=false`; it cannot qualify a boiler target.
@@ -153,11 +153,15 @@ unless conveyed separately: account for `identity`, `provenance`, `time` and
 Celsius matches. Reject invalid/out-of-bounds samples with their reasons in
 raw/quality evidence, never clamp them (which would hide range loss). If an
 eligible retained fact is emitted, its projection determines the disposition;
-use `withheld` only when the requested fact is not projected. Return has
-projection outcome `withheld` with the missing-source reason above and
-qualification `unknown`: these are
-separate axes, not an `unknown` projection outcome. No return fact is emitted,
-including a zero-valued fact, and return must not reuse the flow role. These
+use `withheld` only when the requested item is not projected. The
+[snapshot projection accounting contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
+requires one disposition per `(kind,item_id)`, collecting all matching complete
+FactKeys in `source_keys`. Flow and the reserved return role share
+`thermal.measurement.water_temperature`; an absent return cannot add a separate
+disposition or make the shared item withheld when flow is projected. Return's
+qualification remains `unknown`; its missing-source reason describes only the
+legacy-field absence outside this report. No return fact is emitted, including
+a zero-valued fact, and return must not reuse the flow role. These
 loss requirements do not introduce a new projection schema or erase retained
 native bytes.
 
@@ -227,8 +231,8 @@ from that original receipt, never from this failed acquisition. If no eligible
 prior observation exists, the result is withheld; if its deadline has expired,
 the explicit expiry row applies. The [snapshot projection accounting
 contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
-requires exactly one disposition per requested fact, with all matching complete
-FactKeys in `source_keys`. That disposition describes the emitted retained
+requires exactly one disposition per requested `(kind,item_id)`, with all
+matching complete FactKeys in `source_keys`. That disposition describes the emitted retained
 fact, including applicable scalar projection losses; a rejected sample has no
 separate projection disposition and remains only in raw/quality evidence.
 
@@ -251,7 +255,7 @@ separate projection disposition and remains only in raw/quality evidence.
 | F `20 03`, no exact qualification or accepted policy (current situation) | Can decode `50 °C` | No admitted value; legacy value cannot seed retention | No admitted fresh observation; policy remains Unknown | Flow withheld; qualification `unknown` when exact qualification is missing |
 | B524 `(OP=0x02, GG=0x00, II=0x00, RR=0x004B)`, synthetic f32 `00 00 48 42` (`50 °C`), no eligible F | Age-bounded controller mirror can supply boiler flow | No F update or F retention seed; preserve distinct system-flow evidence | Mirror age does not refresh F | Boiler flow withheld; intentional mirror exclusion |
 | Value-only cache restore, flow `50 °C` and historical return `40 °C` | Can restore both pointers before merge clears return | Admit neither; no native proof or eligible retention seed | Unknown; restore cannot restamp receipt | Both fields withheld |
-| Return, no accepted source or bytes | Nil on live merge | No value and no last-known-good observation | Unknown; no native receipt | `withheld`, no emitted return fact; qualification `unknown`; reason `reason.boiler_temperature.return_source_unknown` |
+| Return, no accepted source or bytes | Nil on live merge | No value and no last-known-good observation | Unknown; no native receipt | No separate disposition or emitted return fact; qualification `unknown`; legacy-field absence reason `reason.boiler_temperature.return_source_unknown` outside projection accounting |
 
 Rejection and retention are independent: when a retained F becomes stale but
 is still within retention, retain its evidence and original age; publish a
