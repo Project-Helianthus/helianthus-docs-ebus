@@ -100,12 +100,14 @@ def validate(text: str) -> list[str]:
             start, end = token.map
             lines[start:end] = ["\n"] * (end - start)
     text = "".join(lines)
-    headings = list(re.finditer(r"^## .+$", text, re.MULTILINE))
-    starts = [i for i, heading in enumerate(headings) if heading.group() == START]
+    # CommonMark allows up to three leading spaces before an ATX heading.
+    headings = list(re.finditer(r"^ {0,3}## .+$", text, re.MULTILINE))
+    titles = [heading.group().lstrip(" ").rstrip() for heading in headings]
+    starts = [i for i, title in enumerate(titles) if title == START]
     if len(starts) != 1:
         return ["expected exactly one S0 registration section"]
     index = starts[0]
-    if index + 1 >= len(headings) or headings[index + 1].group() != END:
+    if index + 1 >= len(headings) or titles[index + 1] != END:
         return ["expected S5 immediately after S0 registration section"]
     section = text[headings[index].end() : headings[index + 1].start()]
     # Rows and paragraphs must stand alone, not survive as substrings in changed

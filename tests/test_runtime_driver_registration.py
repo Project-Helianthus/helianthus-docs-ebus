@@ -128,7 +128,13 @@ def test_runtime_driver_registration_ignores_raw_html_block_headings() -> None:
 
 
 @pytest.mark.parametrize(
-    "text", ["", TEXT + "\n" + checker.START, TEXT.replace(checker.END, "## Other")]
+    "text",
+    [
+        "",
+        TEXT + "\n" + checker.START,
+        TEXT + "\n   " + checker.START,
+        TEXT.replace(checker.END, "## Other"),
+    ],
 )
 def test_runtime_driver_registration_rejects_missing_or_duplicate_section(
     text: str,
