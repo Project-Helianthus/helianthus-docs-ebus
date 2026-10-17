@@ -3,7 +3,7 @@
 Status: proposed software 0.7 contract. This page specifies the selected D5
 epoch policy D1/A2 and D5 recovery mechanism for gateway issue
 [#1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032),
-PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S4 and S3.7–S3.9. It does not claim
+PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S1, S3, S4 and CTL-01–CTL-11. It does not claim
 that the runtime control service or durable recovery is implemented. The G4 publication hub has
 an in-memory journal; that alone supplies no process-loss recovery.
 
@@ -414,21 +414,249 @@ or changes original publication instants. Historical replay still reproduces the
 pre-loss state; the first new `Apply`, including the epoch barrier, evaluates
 expiry at the advanced point using the existing kernel rules.
 
-## D3 retention and D4/public surface boundary
+## S1/D3: minimal durable control decisions
 
-Final D3 removes client-visible command receipts, idempotency keys,
-per-principal key spaces and stored completed-command records. START and STOP are
-idempotent by desired state; RESTART executes. Requests return accepted desired
-state and revision; completion is read from observed state. Durable lifecycle
-scope is desired state, the in-flight operation and D5 recovery material;
-completed commands survive only in a short diagnostic log.
+This amendment is the partial slice tracked by
+[docs issue #660](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/660).
+It replaces the companion's unimplemented receipt and idempotency-record design,
+including its request/result types, S1/S3 rules and CTL-03–CTL-11 expectations.
+It is the public prerequisite for the durable store, service and MCP slices;
+it does not claim those implementations have shipped. The choices below are
+selected implementation bounds, with no remaining operator checkpoint.
 
-Accepted kernel results and cursor replay records above are recovery material,
-not the deleted client receipt design. D3 does not delete them. Compact only at
-a verified restore point that reproduces snapshots, retained history and
-cursors and preserves all reachable pending and cleanup work. No arbitrary
-retention duration or capacity is specified here; at a bound, refuse new work
-rather than evict material still required for restoration.
+Desired state has exactly two values: `RUNNING`, `STOPPED`. Observed state has
+exactly eight: `DISABLED`, `STOPPED`, `STARTING`, `RUNNING`, `DEGRADED`, `BACKOFF`,
+`STOPPING`, `FAILED`. Desired state is intent; observations are runtime facts.
+Desired revision starts at 1 and advances only on accepted changing requests.
+Catalog revision starts at 1, advances once per accepted decision and once per
+externally visible observed-view transaction, and is distinct from desired,
+native and semantic revisions, lifecycle sequence and publication cursors.
+List/get return coherent cached views; historical observations grant no startup
+or native admission authority.
+
+### Validate, decide and commit
+
+The request contains only `DriverID` and nonzero `ExpectedRevision`; the method
+selects START, STOP or RESTART. A finite caller deadline comes from the call
+context. Closed decoding rejects unknown/missing fields, duplicate members,
+malformed revisions and trailing JSON. No lifecycle principal, authority,
+idempotency key, canonical request digest, key lookup, receipt or completed-
+operation record exists. Semantic replay digests remain D5 recovery material.
+
+1. Validate shape, canonical ID and registered identity, configured/enabled
+   eligibility, then the finite unexpired deadline. Unknown IDs return
+   `NOT_FOUND`; disabled drivers return `FAILED_PRECONDITION` for mutations.
+   No validation invokes a factory or endpoint.
+2. Under the per-driver decision serializer, compare expected revision with
+   current durable desired revision. Mismatch returns `REVISION_CONFLICT` and
+   the current cached view without mutation, including for a would-be no-op.
+   Recheck deadline before commit. Expiry before the commit point refuses the
+   request; cancellation after commit cannot retract accepted intent.
+3. START while desired RUNNING and STOP while desired STOPPED return the current
+   desired state/revision without writing, waking reconciliation or allocating
+   correlation. They do not reset retries/backoff, heal degraded generations,
+   clear quarantine, change observations or bump either revision. This test
+   precedes capacity checks, so repeated same-desired requests remain no-ops
+   while bounded work or cleanup is outstanding.
+4. RESTART requires desired RUNNING. Every accepted RESTART keeps RUNNING and
+   increments desired revision, even if the observed driver is STARTING,
+   BACKOFF or FAILED. Quarantine or unresolved recovery blocks changing work
+   that would require unsafe admission; it is never cleared by a request.
+5. Check transition capacity, storage and all required counter increments.
+   Atomically persist desired/revision, typed in-flight work, its internal
+   sequence/correlation and reservation before exposing acceptance or waking
+   reconciliation. Pre-commit failure exposes no staged decision; periodic or
+   cache/meta writes cannot later flush rejected staging. Ambiguous persistence
+   fails admission closed until readback resolves the committed state.
+
+Both accepted and no-op responses contain **desired state and desired revision
+only**. They contain no operation ID, sequence, disposition or completion claim.
+The ordinary deterministic MCP envelope remains; completion and failure are
+observed through list/get. A lost response is resolved by readback. A repeated
+RESTART with an updated expected revision is another requested restart; it is
+never deduplicated by a fabricated key. Retrying the old revision conflicts.
+Readback can show later intervening decisions and does not promise attribution
+of a completion to a particular client call.
+
+### Bounded typed transition and truthful completion
+
+Each driver has at most two typed work slots: one current transition (including
+its outstanding cancellation/native close and semantic cleanup), and one reserved
+next transition. The reserved slot holds at most one replacement and never a
+queue. Store the exact kind, accepted desired revision, lifecycle sequence,
+phase, full lifecycle correlation, old attempt, cleanup obligations and budgets;
+a replacement also retains its exact successor reservation. Internal sequences
+are not client operation handles and survive only while recovery needs them.
+No wake or recovery infers work from desired state alone.
+
+From a stable driver, STOP or RESTART occupies the current slot. During STARTING
+or BACKOFF, accept STOP or RESTART only if the reserved slot is empty and no
+accepted RESTART is still executing. Acceptance immediately fences the old
+attempt's callbacks, publications and admission, cancels its preparation or
+scheduled retry, and retains the old correlation for late-result cleanup.
+The old START may terminate as canceled; its cleanup is never discarded. The
+reserved STOP completes only after cleanup and native close; reserved RESTART
+executes its own stop-then-start after those obligations settle. It cannot be
+replaced by a later STOP or RESTART. An accepted RESTART is never coalesced away.
+
+A changing request arriving during STOPPING, an executing RESTART, or with both
+slots occupied returns retryable `TRANSITION_BUSY`, with no revision or state
+change. The caller reads current state and retries with its current revision
+after work settles; there is no server retry queue. In particular, START after
+a pending STOP waits for completed STOP. This deliberately bounded refusal is
+separate from the same-desired no-op rule. Unrelated drivers and list/get remain
+responsive; decision serialization never holds hub or manager locks over disk
+I/O, native calls, cancellation or drain.
+
+Persist phase/observation updates before releasing the next slot. Native close
+and semantic cleanup are independent obligations. Publish STOPPED only when
+both complete; nil manager return alone proves neither. A proven drain timeout
+with subsequent close may be restartable; unconfirmed close reports
+`FAILED/CLOSE_UNCONFIRMED`, retains quarantine and blocks replacement. Semantic
+conflict/exhaustion preserves exact pending work and closed affected read gates
+regardless of native-close success. Late preparation/activation is never
+installed; independently bounded cleanup retains its original correlation.
+Retry ownership stays native; control no-ops cannot renew its budget.
+
+On component recovery resume exact work and reservations. After process loss,
+restore D5 first, fence historical correlations and reconcile each retained
+kind in order under the new incarnation. An unfinished RESTART still performs
+one replacement even though desired already says RUNNING; no old native-close
+proof authorizes current admission. Only after terminal obligations are durable
+may their operation slot be removed. Retain recovery-reachable correlation in
+D5, not in a completed-command record.
+
+## S3/D2: bootstrap, load failures and explicit repair
+
+Use the independently versioned `runtime_control` namespace, format version 1,
+under the sole runtime-state writer. Preserve GUID ownership, top-level/meta
+versions and unknown namespaces. Stage privately, serialize with all other
+runtime-state writes, use same-directory temporary output, required file fsync
+and atomic rename, then expose committed state; directory fsync is best effort.
+No cross-filesystem fallback and no GUID generation/replacement is allowed.
+
+A fresh, readable, valid base with a genuinely missing namespace gets exactly
+one atomic seed: enabled drivers RUNNING/revision 1, disabled drivers
+STOPPED/revision 1 and observed DISABLED. Bootstrap is not a user START; its
+RUNNING reconciliation happens despite subsequent START being a no-op. Once
+seeded, stored STOPPED survives restart with no endpoint opened. Disabled
+configuration always wins over stored RUNNING and prevents admission; it does
+not silently rewrite durable intent or permit START/RESTART to enable a driver.
+
+Missing, corrupt, unreadable and unsupported are distinct load dispositions.
+Corrupt/unreadable/unsupported control state starts the HTTP/API/health shell
+but withholds affected eBUS as FAILED; no empty-state or RUNNING fallback is
+allowed. Preserve bad bytes and quarantine before any repair. A malformed known
+driver record fails that driver closed while valid independent records remain
+usable. Whole-file corruption/unreadability withholds all dependent drivers and
+must never create a new GUID or overwrite the unreadable file as a fresh base.
+
+### Offline namespace-only reset
+
+The selected maintenance interface for the later store implementation is the
+standalone command below (a specified deliverable, not a shipped executable):
+
+```text
+gateway-runtime-control-reset --state-file <runtime-state-file> --namespace runtime_control --desired STOPPED
+```
+
+Run it only with the gateway process stopped. It takes the same exclusive store
+lock and refuses if a process/writer still owns the file. The namespace and
+STOPPED value are fixed accepted choices; there is no whole-file reset mode,
+gateway startup flag, MCP repair tool or online bypass.
+
+Validate readability, the entire base structure and the existing valid GUID
+before touching anything. Whole-file corruption/unreadability is refused until
+a valid GUID-preserving base is restored externally. Unsupported or malformed
+namespace bytes within an otherwise valid base may be reset, but first preserve
+an exclusive, non-overwriting quarantine copy of the exact original bytes and
+fsync it. Failure to preserve that copy aborts reset. Existing quarantine copies
+are never deleted or replaced. Copy GUID, meta and all other opaque namespaces
+unchanged; atomically replace only `runtime_control` with version-1 STOPPED
+records at revision 1 for the configured IDs, catalog revision 1, and no active
+operation. Resolve IDs from the installation’s existing read-only configuration;
+if that configuration cannot be validated, refuse rather than guess IDs. The stopped-process reset starts a new control history and cannot be
+mistaken for an online revision rollback; old client revisions are invalid
+across repair. A fresh process incarnation fences old callbacks and reservations.
+
+Reset deliberately discards the active namespace, including its D5 recovery
+stream; the quarantined original remains available for recovery investigation.
+It supplies no replay, semantic cleanup or native-close proof. A source with
+unresolved retained/indexed semantic state stays read-gated and FAILED until
+valid D5 recovery material is restored and verified; resetting cannot manufacture
+an empty successful snapshot. The lifecycle-only empty asset set may remain
+STOPPED after reset. No native start occurs as part of this command.
+
+## S3/D3: finite retention and D5 preservation
+
+Durable minimum is desired/revision, the bounded typed in-flight work and the
+complete D5 replay/recovery material specified above. Version 1 permits at most
+128 driver records and a 64 MiB encoded control namespace, including pending
+work and restore material. Reject registration beyond the driver limit before
+effects. Reserve space before accepting work for its bounded outcomes/cleanup;
+if the full reservation cannot fit, return retryable `RESOURCE_EXHAUSTED` before
+acceptance. Never evict reachable recovery material to admit a new request.
+Per-operation semantic attempts are limited to 8 and a 30-second overall budget;
+activation staging remains at most 128 unique-asset batches/8 MiB. Persist budgets
+and do not renew them on wakes, no-ops or component recovery. These service
+bounds do not change native retry, drain or close defaults, and expiry never
+asserts close or erases unfinished cleanup.
+
+Desired/catalog revision, internal lifecycle sequence, WAL sequence, asset
+ordinal, epoch ordinal and generation counters are unsigned 64-bit values,
+initially 1 when first allocated. Check every increment and clock arithmetic;
+refuse before mutation at overflow with `COUNTER_EXHAUSTED`, never wrap or reuse.
+No-ops allocate no counters. Counter exhaustion does not prevent already
+reserved cleanup or falsify its status; if its next required increment cannot
+be represented, retain work and fail the affected path closed.
+
+Completed operations have no durable record. Diagnostics keep only a sanitized
+in-memory ring of at most 32 terminal summaries per driver, at most 512 bytes
+each, dropped on process exit and never used for admission, deduplication or
+recovery. No principal, request digest, endpoint or raw error is logged.
+Accepted kernel results and cursor replay records are recovery material, not
+client receipts. Compact only at a verified restore point that reproduces
+snapshots, retained history, cursors, ordering and clock continuity and preserves
+all reachable pending/cleanup work. Verify the new restore point before atomic
+replacement; failed verification preserves the old recovery stream.
+
+Process shutdown preserves desired intent and recovery material. Cleaning native
+resources is not an accepted STOP, desired-revision change or deletion of pending
+work; never copy the manager's shutdown-local STOPPED back into durable intent.
+A downgrade preserves the namespace opaquely but ignores intent and may start
+eBUS even when stored desired is STOPPED. Re-upgrade restores intent and D5
+recovery, not receipts; test that round trip with an unknown namespace and an
+unchanged GUID. D5 exact-byte write-ahead, two-step outcomes, gap resolution,
+verified compaction and independent cleanup remain mandatory.
+
+### Amended CTL acceptance vectors
+
+These replace receipt-specific expectations, not passing implementation results.
+Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
+
+| Vector | Required D3 observation |
+|---|---|
+| CTL-01 / CTL-02 | Coherent sorted cached list/get; unknown ID returns NOT_FOUND with no factory calls |
+| CTL-03 | Stale expected revision conflicts even for a same-desired request; no mutation |
+| CTL-04 | Lose an accepted START response, restart the process and read back durable desired/revision; same-desired START is a no-op, without any key/receipt lookup |
+| CTL-05 | Accept only `DriverID` and nonzero `ExpectedRevision`; reject every additional request member as invalid shape; valid control uses only the validation and atomic decision steps defined above |
+| CTL-06 | START in desired RUNNING across DEGRADED/BACKOFF/FAILED and STOP in desired STOPPED with unconfirmed close preserve retry budget, quarantine, observations and both revisions |
+| CTL-07 | RESTART in desired STOPPED refuses; each accepted RESTART in RUNNING advances revision and executes one replacement |
+| CTL-08 | Pause STARTING and separately BACKOFF; STOP/RESTART fence/cancel the old attempt, retain cleanup correlation and reserve one exact next kind; another changing request gets TRANSITION_BUSY; no accepted RESTART disappears |
+| CTL-09 | Lose process memory during active RESTART; D5 restores pending work and the new incarnation performs its retained replacement before dropping the slot |
+| CTL-10 | Lost RESTART response is resolved by readback; old-revision retry conflicts and a fresh-revision retry after settlement executes another restart |
+| CTL-11 | Same-desired requests during occupied slots remain no-ops with only desired/revision returned; no new durable record, wake or counter allocation |
+
+Also prove disabled/deadline/shape refusals, storage exhaustion, every counter's
+overflow refusal, quarantine retention, offline-reset refusal on an active writer
+or invalid base, exact quarantine preservation, GUID/meta/opaque round trips,
+and corrupt/unsupported loads without empty fallback. Two-driver fixtures must
+show B and list/get remain responsive while A blocks in persistence or cleanup.
+These are service/store/MCP test obligations; this prose slice executes none of
+them and changes no schema/output golden. Later payload goldens must remove
+receipt/key fields and record only the amended desired/revision response.
+
+## D4/public surface boundary
 
 Final D4 removes G5 lifecycle principal/authorization checks and the proposed
 kernel operator boundary; lifecycle tools use ordinary MCP. It does not remove
@@ -470,8 +698,8 @@ current. Prove another family's admission reads remain responsive during a
 blocked durable write, using a stated bound.
 
 This covers S3.7–S3.9/A6 recovery obligations and the recovery aspects of
-LIFE-06, LIFE-19, LIFE-21, LIFE-23–LIFE-24 and LIFE-26–LIFE-30. Older
-receipt-specific CTL vectors require the D3 amendment; this page does not claim
+LIFE-06, LIFE-19, LIFE-21, LIFE-23–LIFE-24 and LIFE-26–LIFE-30. The amended
+CTL vectors above replace receipt-specific expectations; this page does not claim
 they pass. LIFE-22 source-isolation acceptance remains a separate prerequisite.
 PR 0a provides the prerequisite hooks and hub restoration proof without a
 production service caller; PR 1 supplies service persistence and end-to-end
