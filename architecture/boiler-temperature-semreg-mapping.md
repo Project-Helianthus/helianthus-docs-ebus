@@ -149,10 +149,13 @@ SemReg `semreg/v1/projection/types.go` defines loss kinds separately from
 outcomes. Qualified valid flow can be numerically exact, but projecting only a
 scalar to a legacy surface drops native identity, provenance, time and policy
 unless conveyed separately: account for `identity`, `provenance`, `time` and
-`policy` loss explicitly. Do not call the whole projection exact merely because
-Celsius matches. Reject invalid/out-of-bounds samples with their reasons in
-raw/quality evidence, never clamp them (which would hide range loss). If an
-eligible retained fact is emitted, its projection determines the disposition;
+`policy` loss explicitly in separate legacy-scalar accounting. These losses do
+not belong to the `target:semantic-snapshot-read` report, which copies source
+records intact without transformation. Do not call the legacy scalar projection
+exact merely because Celsius matches. Reject invalid/out-of-bounds samples with
+their reasons in raw/quality evidence, never clamp them (which would hide range
+loss). If an eligible retained fact is emitted, its projection determines the
+disposition;
 use `withheld` only when the requested item is not projected. The
 [snapshot projection accounting contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
 requires one disposition per `(kind,item_id)`, collecting all matching complete
@@ -232,8 +235,9 @@ prior observation exists, the result is withheld; if its deadline has expired,
 the explicit expiry row applies. The [snapshot projection accounting
 contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
 requires exactly one disposition per requested `(kind,item_id)`, with all
-matching complete FactKeys in `source_keys`. That disposition describes the emitted retained
-fact, including applicable scalar projection losses; a rejected sample has no
+matching complete FactKeys in `source_keys`. An emitted retained fact is copied
+intact on `target:semantic-snapshot-read`, with outcome `exact` and `loss: []`;
+legacy-scalar losses are accounted for separately. A rejected sample has no
 separate projection disposition and remains only in raw/quality evidence.
 
 | Case / source and value bytes | Legacy value handling | New value / retention | Freshness | Projection outcome |
