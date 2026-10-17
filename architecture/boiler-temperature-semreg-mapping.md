@@ -52,7 +52,8 @@ In the gateway repository, trace `cmd/gateway/semantic_vaillant.go` by function:
    `readB509ValueWithMaxAge` and `parseB509ReadPayload` handle the read/selector
    response path; scheduler reuse is not a new native observation.
 4. `decodeDATA2c` in `cmd/gateway/b509_decode.go` requires at least two bytes
-   and computes signed little-endian integer divided by 16. It currently
+   and computes signed little-endian integer divided by 16 from the first two
+   value bytes; trailing value bytes do not fail that decoder. It currently
    checks neither the replacement value nor the Thermal bounds. Thus `00 80`
    can become `-2048 °C` in the legacy flow field.
 5. `mergeBoilerSnapshotNonDestructive` retains an omitted flow value without a
@@ -92,9 +93,9 @@ separate from that role dimension, following the
 | Existing boiler field | Native source and evidence | Required qualification | Proposed Thermal mapping / current disposition |
 | --- | --- | --- | --- |
 | Flow: `FlowTemperatureC` | B509 `PB=0xB5, SB=0x09, OP=0x0D`, complete selector `18 00`; initiator-to-qualified-boiler-target request, target-to-initiator reply; `DATA2c`, °C. Native meaning **Hypothesis**; software source **Proven**. | Exact current boiler-class target identity through the native product-ID gate, bound to the actual routing target, service, operation, complete selector, response shape and codec. Family-prefix or bus-address matching alone is insufficient. No qualifying boiler-target artifact/rule exists today: runtime qualification `unknown`, field withheld. | Candidate `thermal.measurement.water_temperature`, quantity `unit.celsius`, dimension `thermal.dimension.temperature` with proposed text role `temperature:boiler_flow`. Exact numeric mapping only after qualification and validity/freshness admission; no fact emitted today. Missing qualification has proposed reason `reason.boiler_temperature.qualification_unknown`. |
-| Return: `ReturnTemperatureC` | No accepted native source, selector, codec or source unit; evidence **Unknown**. Legacy C suffix is not source evidence. | A future exact boiler-target product identity, native return selector, response shape, codec and unit must be evidenced and qualified independently. None exists: runtime qualification `unknown`, field withheld. | No fact emitted. `temperature:boiler_return` is reserved and unpublished, not an admitted FactKey. Proposed stable withholding reason `reason.boiler_temperature.return_source_unknown`; it must not be replaced by a guessed temperature. |
+| Return: `ReturnTemperatureC` | No accepted native source, selector, codec or source unit; evidence **Unknown**. Legacy C suffix is not source evidence. | A future exact boiler-target product identity, native return selector, response shape, codec and unit must be evidenced and qualified independently. None exists: runtime qualification `unknown`, field withheld. | Legacy field absent; no fact emitted and no separate projection disposition. `temperature:boiler_return` is reserved and unpublished, not an admitted FactKey. Proposed missing-source reason `reason.boiler_temperature.return_source_unknown` describes this legacy-field absence outside projection accounting; it must not be replaced by a guessed temperature. |
 
-Reason codes here are proposed mapping dispositions for downstream adoption,
+Reason codes here are proposed mapping diagnostics for downstream adoption,
 not a claim that the producer or a reason registry already implements them.
 The [controller qualification evidence gap](vaillant-controller-qualification-v1.md)
 also has `qualified_use_permitted=false`; it cannot qualify a boiler target.
@@ -105,10 +106,17 @@ qualification to a boiler, or invent an identity witness.
 
 These are cutover requirements; they do not describe implemented new behavior.
 Retain the native observation and selector/reply evidence separately from its
-semantic interpretation. A short or mismatched reply, read failure, `DATA2c`
-replacement bytes `00 80`, or out-of-bounds quantity supplies **no update**.
+semantic interpretation. A short, over-length or mismatched reply, read failure,
+`DATA2c` replacement bytes `00 80`, or out-of-bounds quantity supplies **no update**.
 Never synthesize zero or another default, or emit the replacement decoded as a
-measurement.
+measurement. The proposed exact shape requires exactly two DATA2c value bytes
+after validating and removing the qualified reply envelope. The public native
+contract describes both `0D 18 00 data...` and `18 00 data...` response forms;
+neither authorizes accepting extra value bytes as a boiler temperature. The
+actual form must be qualified for the exact target and binding, with a complete
+matching selector (and matching operation when echoed). This is a proposed
+admission restriction, distinct from the legacy decoder's minimum width; it
+does not assert that either reply form has been qualified on a boiler target.
 Valid `00 00` is `0 °C` and remains a value. DATA2c increments of `1/16 °C`
 can be represented exactly as canonical decimal quantities, without rounding.
 
@@ -141,12 +149,24 @@ SemReg `semreg/v1/projection/types.go` defines loss kinds separately from
 outcomes. Qualified valid flow can be numerically exact, but projecting only a
 scalar to a legacy surface drops native identity, provenance, time and policy
 unless conveyed separately: account for `identity`, `provenance`, `time` and
-`policy` loss explicitly. Do not call the whole projection exact merely because
-Celsius matches. Invalid/out-of-bounds data is withheld with its reason, never
-clamped (which would hide range loss). Return is withheld with the stable
-missing-source reason above; an unknown disposition contains no zero-valued
-fact and must not reuse the flow role. These loss requirements do not introduce
-a new projection schema or erase retained native bytes.
+`policy` loss explicitly in separate legacy-scalar accounting. These losses do
+not belong to the `target:semantic-snapshot-read` report, which copies source
+records intact without transformation. Do not call the legacy scalar projection
+exact merely because Celsius matches. Reject invalid/out-of-bounds samples with
+their reasons in raw/quality evidence, never clamp them (which would hide range
+loss). If an eligible retained fact is emitted, its projection determines the
+disposition;
+use `withheld` only when the requested item is not projected. The
+[snapshot projection accounting contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
+requires one disposition per `(kind,item_id)`, collecting all matching complete
+FactKeys in `source_keys`. Flow and the reserved return role share
+`thermal.measurement.water_temperature`; an absent return cannot add a separate
+disposition or make the shared item withheld when flow is projected. Return's
+qualification remains `unknown`; its missing-source reason describes only the
+legacy-field absence outside this report. No return fact is emitted, including
+a zero-valued fact, and return must not reuse the flow role. These
+loss requirements do not introduce a new projection schema or erase retained
+native bytes.
 
 ## Examined, not admitted
 
@@ -158,7 +178,9 @@ a new projection schema or erase retained native bytes.
   old boiler-flow mirror does not admit it here. The
   [existing typed map](fixtures/vaillant-semreg-thermal-map-v1.json) explicitly
   forbids substituting B509 for B524 rows; neither direction supplies identity
-  equivalence. Without a qualified B509 observation, new boiler flow is withheld.
+  equivalence. Excluding this mirror from the proposed boiler-flow mapping is
+  an **intentional difference**, not an unresolved source-equivalence claim.
+  Without an eligible qualified B509 observation, new boiler flow is withheld.
   Whether the legacy mirror remains on its existing surface or is removed is
   an open M15 / gateway #952 decision; this page does not resolve it.
 - [OP06 controller-mediated selectors](../protocols/vaillant/ebus-vaillant-B524-register-map.md#op0x06--controller-mediated-device-parameters)
@@ -189,9 +211,63 @@ producer test.
 | B509 failure, no usable mirror | Flow can remain last-known indefinitely. | No flow update; retain only eligible prior observation, then withdraw on expiry. No default or new source. |
 | Replacement `00 80` | Decoder can publish `-2048 °C`. | No update; withhold invalid sample, retain only eligible prior evidence until expiry. Intentional difference. |
 | No exact qualification | Prefix-selected target can supply legacy flow. | Qualification `unknown`; no flow or return fact. Intentional difference. |
-| B524 system-flow mirror | Age-bounded mirror can supply flow when B509 supplies no value; B509 wins within the tick. | No mirror admitted as boiler flow. No qualified B509 observation means withheld flow. Retain/remove disposition of the old mirror remains open for M15 / #952. |
+| B524 system-flow mirror | Age-bounded mirror can supply flow when B509 supplies no value; B509 wins within the tick. | Intentional difference: no mirror admitted as boiler flow. Only an eligible qualified B509 last-known-good observation may be retained; otherwise flow is withheld. Retain/remove disposition of the old mirror on the legacy surface remains open for M15 / #952. |
 | Cache restoration / restart | Flow and historical return can be restored without source proof; plane reports cache. | Value-only legacy cache cannot admit either field; never reset age or promote qualification/freshness. Proven retained observations require identity and clock/policy reevaluation. |
 | Return on live merge | Forced nil; no producer. | No accepted source, no fact, reserved role unpublished, explicit missing-source reason. Equivalent absence, with the cache difference above. |
+
+### Synthetic boundary and transition outcomes
+
+The following are reasoned contract vectors, not device captures or executed
+producer tests. `F` means the B509 flow binding above: exact boiler product
+identity and routing target, service B5/09, operation 0D, complete selector
+`18 00`, qualified response form and DATA2c codec. Bytes below are value bytes
+after envelope validation, not complete replies. For the conditional admission
+rows only, assume `F` is qualified, a downstream accepted FreshnessPolicy
+exists, and the new observation meets its freshness requirements. Those
+prerequisites do not exist today; without them, admission remains withheld.
+
+For rejection rows, assume a prior qualified `F` observation with value
+`50 °C` (`20 03`), still fresh and within its original retention deadline.
+`Retain F` means keep that value, raw evidence, original receipt and deadlines;
+the rejected sample produces no fact or refresh. Freshness remains evaluated
+from that original receipt, never from this failed acquisition. If no eligible
+prior observation exists, the result is withheld; if its deadline has expired,
+the explicit expiry row applies. The [snapshot projection accounting
+contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
+requires exactly one disposition per requested `(kind,item_id)`, with all
+matching complete FactKeys in `source_keys`. An emitted retained fact is copied
+intact on `target:semantic-snapshot-read`, with outcome `exact` and `loss: []`;
+legacy-scalar losses are accounted for separately. A rejected sample has no
+separate projection disposition and remains only in raw/quality evidence.
+
+| Case / source and value bytes | Legacy value handling | New value / retention | Freshness | Projection outcome |
+| --- | --- | --- | --- | --- |
+| F, normal `20 03` | `50 °C` | Accept `50 °C`; replace prior F | Fresh from new receipt under assumed policy | Emit flow `50 °C` |
+| F, zero `00 00` | `0 °C` | Accept `0 °C`; replace prior F | Fresh from new receipt under assumed policy | Emit flow `0 °C`, never absence |
+| F, lower bound `C0 F9` | `-100 °C` | Accept inclusive `-100 °C`; replace prior F | Fresh from new receipt under assumed policy | Emit flow `-100 °C` |
+| F, below lower bound `BF F9` | `-100.0625 °C` can publish | Reject `bounds_exceeded`; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F, upper bound `80 0C` | `200 °C` | Accept inclusive `200 °C`; replace prior F | Fresh from new receipt under assumed policy | Emit flow `200 °C` |
+| F, above upper bound `81 0C` | `200.0625 °C` can publish | Reject `bounds_exceeded`; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F, replacement `00 80` | `-2048 °C` can publish | Reject replacement; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F, empty value payload | Minimum width fails; no decoded update | Reject short shape; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F, one value byte `20` | Minimum width fails; no decoded update | Reject short shape; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F, three value bytes `20 03 00` | Minimum-width decoder yields `50 °C` from first two bytes if passed through the parser | Reject over-length shape; retain F | Original F freshness; no refresh | Emit retained flow `50 °C`; intentional difference |
+| F, complete reply with mismatching selector or echoed operation, otherwise `20 03` | Selector/read parsing precedes decoding; no valid F update is established | Reject binding mismatch; retain F | Original F freshness; no refresh | Emit retained flow `50 °C` |
+| F read failure or omitted field in partial update | Old pointer can persist indefinitely | No new value; retain F independently of other fields | Original F freshness; no refresh | Retained flow `50 °C` |
+| F retention deadline expires after a failed read | Old pointer has no field expiry | Withdraw F; keep native evidence separately | Expired under original policy | Flow withheld; no scalar |
+| F loses qualification or conflicts with current target identity | Legacy family heuristic does not establish exact qualification | Withhold immediately; prior F cannot remain admitted | No fresh promotion; original receipt unchanged | Flow withheld despite an unexpired prior value |
+| F `20 03`, no exact qualification or accepted policy (current situation) | Can decode `50 °C` | No admitted value; legacy value cannot seed retention | No admitted fresh observation; policy remains Unknown | Flow withheld; qualification `unknown` when exact qualification is missing |
+| B524 `(OP=0x02, GG=0x00, II=0x00, RR=0x004B)`, synthetic f32 `00 00 48 42` (`50 °C`), no eligible F | Age-bounded controller mirror can supply boiler flow | No F update or F retention seed; preserve distinct system-flow evidence | Mirror age does not refresh F | Boiler flow withheld; intentional mirror exclusion |
+| Value-only cache restore, flow `50 °C` and historical return `40 °C` | Can restore both pointers before merge clears return | Admit neither; no native proof or eligible retention seed | Unknown; restore cannot restamp receipt | Both fields withheld |
+| Return, no accepted source or bytes | Nil on live merge | No value and no last-known-good observation | Unknown; no native receipt | No separate disposition or emitted return fact; qualification `unknown`; legacy-field absence reason `reason.boiler_temperature.return_source_unknown` outside projection accounting |
+
+Rejection and retention are independent: when a retained F becomes stale but
+is still within retention, retain its evidence and original age; publish a
+scalar only if the accepted downstream policy permits that freshness state.
+Otherwise withhold it. No numeric stale or retention interval is established
+here. A valid new F observation replaces prior F only after all qualification,
+shape, validity and freshness prerequisites pass. All conditional emitted
+values above remain subject to the scalar projection losses already listed.
 
 The existing gateway tests `TestRefreshBoilerStatusFast*`,
 `TestBoilerStatusRegisterDefinitionsForTier_NoReturnTemperatureMapping`, and
