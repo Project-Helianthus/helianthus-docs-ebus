@@ -203,6 +203,10 @@ echo "==> check qualified identity documentation contract"
 python3 scripts/check_regulator_identity_contract.py
 python3 -m pytest -q tests/test_regulator_identity_contract_checker.py
 
+echo "==> check bounded Prometheus semantic coverage contract"
+python3 scripts/validate_prometheus_semantic_coverage.py
+python3 -m pytest -q tests/test_prometheus_semantic_coverage.py
+
 echo "==> check Vaillant SemReg thermal mapping contract"
 python3 scripts/validate_vaillant_semreg_thermal_map.py
 python3 -m pytest -q tests/test_vaillant_semreg_thermal_map.py
