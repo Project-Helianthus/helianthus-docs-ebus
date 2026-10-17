@@ -109,6 +109,21 @@ def test_intervening_visible_heading_rejected() -> None:
     assert checker.validate(TEXT.replace(checker.END, "## Other\n\n" + checker.END))
 
 
+@pytest.mark.parametrize("heading", [
+    "## Other <br>",
+    "## Other <br />",
+    "## Other <!-- comment -->",
+    "## Other <span>section</span>",
+])
+@pytest.mark.parametrize("name", NAMES)
+def test_inline_html_heading_cannot_admit_relocated_obligation(heading: str, name: str) -> None:
+    required = checker.REQUIREMENTS[name]
+    changed = TEXT.replace(required, "").replace(
+        checker.END, heading + "\n\n" + required + "\n\n" + checker.END
+    )
+    assert checker.validate(changed) == ["expected S5 immediately after S0 registration section"]
+
+
 def test_s5_before_s0_rejected() -> None:
     assert checker.validate(TEXT.replace(checker.START, "## Temporary").replace(
         checker.END, checker.START

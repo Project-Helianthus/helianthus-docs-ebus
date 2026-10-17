@@ -135,12 +135,12 @@ def visible_units(text: str) -> list[tuple[str, str]]:
                     if child.type == "html_inline"]
             for child in html:
                 visibility.feed(child.content)
-            if hidden or html or visibility.hidden:
+            if hidden or visibility.hidden:
                 continue
             opening = tokens[index - 1]
             if opening.type == "heading_open" and opening.tag == "h2" and opening.level == 0:
                 units.append(("heading", token.content))
-            elif opening.type == "paragraph_open" and opening.level == 0:
+            elif opening.type == "paragraph_open" and opening.level == 0 and not html:
                 units.append(("paragraph", token.content))
     return units
 
