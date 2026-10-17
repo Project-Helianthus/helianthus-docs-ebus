@@ -93,10 +93,10 @@ def normalize(text: str) -> str:
 def validate(text: str) -> list[str]:
     """Return missing/changed obligations in the bounded registration section."""
     # Parse before normalizing whitespace or locating headings: code examples
-    # cannot supply either normative obligations or section boundaries.
+    # and raw HTML cannot supply normative obligations or section boundaries.
     lines = text.splitlines(keepends=True)
     for token in MarkdownIt().parse(text):
-        if token.type in {"fence", "code_block"} and token.map is not None:
+        if token.type in {"fence", "code_block", "html_block"} and token.map is not None:
             start, end = token.map
             lines[start:end] = ["\n"] * (end - start)
     text = "".join(lines)

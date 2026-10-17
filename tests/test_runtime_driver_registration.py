@@ -111,6 +111,22 @@ def test_runtime_driver_registration_ignores_code_block_headings(fence: str) -> 
     assert checker.validate(TEXT + example) == []
 
 
+@pytest.mark.parametrize("name", checker.REQUIREMENTS)
+@pytest.mark.parametrize("tag", ["pre", "PRE", 'pre class="example"', "script"])
+def test_runtime_driver_registration_rejects_raw_html_blocks(
+    name: str, tag: str
+) -> None:
+    required = checker.REQUIREMENTS[name]
+    example = f"<{tag}>\n\n{required}\n\n</{tag.split()[0]}>"
+    changed = TEXT.replace(required, "\n\n" + example + "\n\n")
+    assert name in checker.validate(changed)
+
+
+def test_runtime_driver_registration_ignores_raw_html_block_headings() -> None:
+    example = f"\n\n<pre>\n\n{checker.START}\n\n{checker.END}\n\n</pre>\n"
+    assert checker.validate(TEXT + example) == []
+
+
 @pytest.mark.parametrize(
     "text", ["", TEXT + "\n" + checker.START, TEXT.replace(checker.END, "## Other")]
 )
