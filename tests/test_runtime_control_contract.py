@@ -30,8 +30,15 @@ def test_runtime_control_contract_missing_or_non_normative(path, clause, wrapper
     ("`H + 1` through", "`1` through"),
     ("a changing START occupies the current slot as typed START", "a changing START has no typed slot"),
     ("FAILED_PRECONDITION before TRANSITION_BUSY", "TRANSITION_BUSY before FAILED_PRECONDITION"),
-    ("never drop it or reinterpret it as missing", "drop it and reinterpret it as missing"),
-    ("Observation-only changes do not advance it", "Observation-only changes advance it"),
+    ("load it empty or reinterpret it as missing", "load it empty and reinterpret it as missing"),
+    ("START takes the reserved slot as a typed START replacement", "START returns TRANSITION_BUSY"),
+    ("is never used for optimistic control", "is used for optimistic control"),
+    ("| 6 | `ExpectedRevision` differs", "| 5 | `ExpectedRevision` differs"),
+    ("| `TRANSITION_BUSY` | Yes |", "| `PERMISSION_DENIED` | Yes |"),
+    ("| CTL-15 |", "| CTL-16 |"),
+    ("Final D4 removes G5 lifecycle principal/authorization checks", "Final D4 keeps lifecycle checks"),
+    ("carry no principal and no authorization", "carry a principal and an authorization"),
+    ("Observation-only changes do not", "Observation-only changes do"),
     ('"ExpectedRevision": "7"', '"ExpectedRevision": "0"'),
     ('"ExpectedRevision": "7"', '"ExpectedRevision": 7'),
     ('"ExpectedRevision": "7"', '"ExpectedRevision": "07"'),
@@ -39,11 +46,13 @@ def test_runtime_control_contract_missing_or_non_normative(path, clause, wrapper
     ('"ExpectedRevision": "7"', '"ExpectedRevision": "7", "request_id": "example"'),
     ('"ExpectedRevision": "7"', '"ExpectedRevision": "7", "idempotency_key": "example"'),
     ('"ExpectedRevision": "7"', '"ExpectedRevision": "7", "ExpectedRevision": "8"'),
-    ('"revision": "8"', '"revision": "8", "operation_id": "example"'),
-    ('"revision": "8"', '"revision": "8", "disposition": "ACCEPTED"'),
-    ('"revision": "8"', '"revision": "8", "completed": false'),
-    ('"revision": "7"', '"revision": 7'),
-    ('"catalog_revision": "29"', '"catalog_revision": 29'),
+    ('"desired_revision": "8"', '"desired_revision": "8", "operation_id": "example"'),
+    ('"desired_revision": "8"', '"desired_revision": "8", "disposition": "ACCEPTED"'),
+    ('"desired_revision": "8"', '"desired_revision": "8", "completed": false'),
+    ('"desired_revision": "8"', '"revision": "8"'),
+    ('"desired_revision": "7"', '"desired_revision": 7'),
+    ('"desired_revision": "7"', '"desired_revision": "7", "principal": "operator"'),
+    ('"revision": "29"', '"revision": 29'),
     ('"manager_revision": "29"', '"manager_revision": 29'),
 ])
 def test_runtime_control_contract_rejects_regressions(before, after) -> None:
@@ -74,7 +83,7 @@ def test_runtime_control_contract_cli(tmp_path: Path) -> None:
     assert valid.returncode == 0, valid.stderr
     assert "documentation only" in valid.stdout
     target = tmp_path / checker.API
-    target.write_text(DOCUMENTS[checker.API].replace('"revision": "8"', '"revision": 8'))
+    target.write_text(DOCUMENTS[checker.API].replace('"desired_revision": "8"', '"desired_revision": 8'))
     invalid = subprocess.run(command, capture_output=True, text=True)
     assert invalid.returncode == 1
     assert "invalid closed request/result examples" in invalid.stderr

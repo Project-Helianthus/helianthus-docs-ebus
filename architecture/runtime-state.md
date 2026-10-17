@@ -103,16 +103,18 @@ or `0xEC`, where `addr - 0x05` fails the initiator-capable nibble check),
 File-format compatibility version. Schema-enforced as `const: 1`. Any other
 value (including `2`, `0`, or strings) fails JSON Schema validation. Per
 AD11/AD12 the gateway treats schema-validation failure as a hard load
-failure under the control-safe Failure modes below; it must not fall back to
-empty state or generate a replacement GUID. v2 of this plan will change the
+failure (file renamed to `runtime_state.json.corrupt-<ISO8601>`, gateway
+starts with empty observational cache). The renamed file also makes the
+`runtime_control` namespace unreadable, never missing; see Failure modes.
+v2 of this plan will change the
 `const` to allow `1` AND `2` once a forward-compat migration policy lands.
 
 This is **distinct from** the per-plugin `<plugin>.schema_version` (e.g.,
 `ebus.schema_version`), which is permissively constrained as `minimum: 1`
-and whose mismatch may discard only observational cache in memory. The
-`runtime_control` namespace is safety-critical and must never be dropped or
-treated as missing on mismatch (see Failure modes). Preserve unknown namespaces
-opaquely on disk. The two-tier design lets a v2 gateway load a v1 file while
+and whose mismatch is **silently ignored** at load time (the namespace is
+dropped from the in-memory load; gateway proceeds normally with other
+namespaces). The single exception is the `runtime_control` namespace, which
+is never dropped or treated as missing (see Failure modes). The two-tier design lets a v2 gateway load a v1 file while
 gracefully ignoring future plugin additions it doesn't understand.
 
 #### `meta` (object, required)
@@ -261,25 +263,28 @@ The gateway writes the file:
 
 ## Failure modes
 
-The HTTP/API/health shell may start after a load failure; dependent driver
-admission must fail closed. The following rules supersede the earlier
-empty-cache fallback for corrupt files and namespace-drop behavior for control:
+The gateway never blocks startup on cache state. The fail-closed rule below
+applies to the `runtime_control` namespace only; every other namespace keeps
+the cache behaviour:
 
-- **Missing file**: do not infer fresh control state from absence. Bootstrap
-  requires a readable valid GUID-preserving base with no control material, mark,
-  D5 recovery material or quarantine copy for that GUID. Otherwise withhold
-  dependent drivers as FAILED pending offline repair.
-- **Corrupt or unreadable file** (including schema validation failure): preserve
-  the original bytes, withhold all dependent drivers as FAILED, and never load
-  empty state, overwrite the file as a fresh base or generate a new GUID.
-- **Unsupported or malformed runtime_control**: preserve the namespace and fail
-  affected drivers closed; never drop it or reinterpret it as missing. A missing
-  or malformed mark or catalog revision fails the whole control namespace closed.
-  A malformed known driver record fails only that driver when the shared bounds
+- **Missing file**: load with empty cache, log info, proceed normally. Control
+  bootstrap follows the lifecycle contract: it seeds only a GUID with no control
+  material, and otherwise withholds dependent drivers as FAILED.
+- **Corrupt file** (invalid JSON, schema validation failure): rename the
+  corrupt file to `runtime_state.json.corrupt-<ISO8601>`, load with empty
+  cache, log warning, proceed normally. The renamed file preserves the exact
+  original bytes and counts as a control quarantine copy: control state is
+  unreadable, not missing, so nothing is seeded, no GUID is generated and
+  every dependent driver is withheld as FAILED until a valid GUID-preserving
+  base is restored.
+- **Plugin namespace schema_version mismatch**: drop that namespace from the
+  in-memory load, load others normally, log warning.
+- **Unsupported or malformed `runtime_control`**: the one exception to the two
+  rules above. Preserve the namespace and fail affected drivers closed; never
+  drop it, load it empty or reinterpret it as missing. A missing or malformed
+  mark or catalog revision fails the whole control namespace closed. A
+  malformed known driver record fails only that driver when the shared bounds
   and independent records remain valid.
-- **Observational plugin schema_version mismatch**: ignore that plugin's cache
-  in memory only, preserve its bytes on disk, load independent namespaces and
-  log warning. This never supplies control intent or admission authority.
 
 The normative bootstrap, quarantine and offline namespace-only repair contract
 is [runtime-driver-lifecycle.md](runtime-driver-lifecycle.md#s3d2-bootstrap-load-failures-and-explicit-repair).
@@ -332,8 +337,10 @@ When AD09b case (2) or (5) triggers, the add-on:
 
    Operators who write a partial file (only `meta.instance_guid`, missing
    `schema_version` or `meta.written_at`) will pass the add-on read but
-   trigger a fail-closed load on the gateway side requiring GUID-preserving
-   offline repair. Following the template avoids that failure.
+   trigger a corrupt-file quarantine on the gateway side: a
+   `.corrupt-<ISO8601>` rename and an empty observational cache, while the
+   renamed copy keeps dependent drivers withheld until a valid
+   GUID-preserving base is restored. Following the template avoids that churn.
 
    The add-on emits the marker file with the actual file path of the legacy
    `/data/instance_guid` content interpolated when possible, so the

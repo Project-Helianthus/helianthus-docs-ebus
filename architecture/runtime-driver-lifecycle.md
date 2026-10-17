@@ -439,7 +439,7 @@ decision takes mark + 1 as its driver's new desired revision and stores that
 value as the new mark, so desired revisions are unique across all drivers and
 all time within the namespace, and a driver's current desired revision is
 simply the number of its last accepted decision. A driver with no record has
-never been decided: reads return desired `STOPPED` with `revision` equal to the
+never been decided: reads return desired `STOPPED` with `desired_revision` equal to the
 current mark, which a client echoes, and its first accepted decision must carry
 `ExpectedRevision` equal to that mark, compared exactly like any other
 optimistic comparison, and takes mark + 1. Revision 0 is not a sentinel for "no
@@ -460,9 +460,10 @@ Catalog revision starts at 1, advances once per accepted decision and once per
 externally visible observed-view transaction, and is distinct from desired,
 native and semantic revisions, lifecycle sequence and publication cursors. It
 is a view counter only: it orders cached list/get views, is never compared with
-a desired revision. Persist every catalog advance before exposing the new view;
+a desired revision and is never used for optimistic control. Persist every catalog advance before exposing the new view;
 the durable catalog revision bounds every view issued under this GUID, survives
-restart and is never reused. Repair advances it from validated `C` to `C + 1`.
+restart and is never reused. Repair preserves it and advances it exactly once,
+from validated `C` to `C + 1`; it never regresses.
 List/get return coherent cached views; historical observations grant no startup or
 native admission authority.
 
@@ -505,13 +506,18 @@ operation record exists. Semantic replay digests remain D5 recovery material.
    desired state/revision without writing, waking reconciliation or allocating
    correlation. They do not reset retries/backoff, heal degraded generations,
    clear quarantine, change observations or bump either revision or the mark.
-   A STOP for a driver with no record is such a no-op, returning STOPPED at the current mark. This test
+   A STOP for a driver with no record is such a no-op, returning STOPPED at the current mark.
+   START while desired RUNNING is a no-op even when the driver is observed
+   FAILED, quarantined or in BACKOFF: recovering a FAILED driver is the
+   reconciler's job under its native retry and recovery rules, and a manual
+   START is not a recovery path. This test
    precedes capacity checks, so repeated same-desired requests remain no-ops
    while bounded work or cleanup is outstanding.
 4. RESTART requires desired RUNNING. Every accepted RESTART keeps RUNNING and
    takes a new desired revision (mark + 1), even if the observed driver is STARTING,
-   BACKOFF or FAILED. Quarantine or unresolved recovery blocks changing work
-   that would require unsafe admission; it is never cleared by a request.
+   BACKOFF or FAILED. Quarantine or unresolved recovery refuses only a
+   changing request whose work would require unsafe admission (refusal-table
+   order 7); it is never cleared by a request.
 5. Check transition capacity, storage and all required counter increments.
    Atomically persist desired/revision, the advanced mark, typed in-flight work,
    its internal sequence/correlation and reservation before exposing acceptance
@@ -545,7 +551,7 @@ unchanged. Checks run in this fixed order and the first failing check decides:
 | 10 | A required counter or mark increment would exceed the unsigned 64-bit maximum | `COUNTER_EXHAUSTED` | No |
 
 Both accepted and no-op responses contain **desired state and desired revision
-only**. They contain no operation ID, sequence, disposition or completion claim.
+only**, as the two members `desired_state` and `desired_revision`. They contain no operation ID, sequence, disposition or completion claim.
 The ordinary deterministic MCP envelope remains; completion and failure are
 observed through list/get. A lost response is resolved by readback. A repeated
 RESTART with an updated expected revision is another requested restart; it is
@@ -565,7 +571,11 @@ are not client operation handles and survive only while recovery needs them.
 No wake or recovery infers work from desired state alone.
 
 From stable STOPPED, a changing START occupies the current slot as typed START
-work. From a stable driver, STOP or RESTART occupies the current slot. During
+work, and the reserved slot stays free; that typed START persists so recovery
+resumes it. From a stable driver, STOP or RESTART occupies the current slot.
+During STOPPING (desired STOPPED, typed STOP in the current slot), a changing
+START takes the reserved slot as a typed START replacement when that slot is
+empty; it executes only after the STOP's cleanup and native close settle. During
 STARTING or BACKOFF, accept STOP or RESTART only if the reserved slot is empty and no
 accepted RESTART is still executing. The new request always takes the reserved
 slot. When the STARTING or BACKOFF attempt has no typed current operation (bootstrap
@@ -579,14 +589,15 @@ reserved STOP completes only after cleanup and native close; reserved RESTART
 executes its own stop-then-start after those obligations settle. It cannot be
 replaced by a later STOP or RESTART. An accepted RESTART is never coalesced away.
 
-After all earlier refusal checks and the same-desired no-op test pass, a
-changing request arriving during STOPPING, an executing RESTART, or with both
-slots occupied returns retryable `TRANSITION_BUSY`, with no revision or state
+Precedence while a STOP is in flight: desired is already STOPPED, so STOP is a
+same-desired no-op, RESTART returns `FAILED_PRECONDITION` (desired RUNNING
+required) before capacity is checked, and START takes the reserved slot as
+above. After all earlier refusal checks and the same-desired no-op test pass,
+a changing request arriving during an executing RESTART or with both slots
+occupied returns retryable `TRANSITION_BUSY`, with no revision or state
 change. The caller reads current state and retries with its current revision
-after work settles; there is no server retry queue. In particular, START after
-a pending STOP waits for completed STOP. This deliberately bounded refusal is
-separate from the same-desired no-op rule. RESTART while desired STOPPED returns
-`FAILED_PRECONDITION` before capacity is checked, including during STOPPING.
+after work settles; there is no server retry queue. This deliberately bounded
+refusal is separate from the same-desired no-op rule.
 Unrelated drivers and list/get remain responsive; decision serialization never holds hub or manager locks over disk
 I/O, native calls, cancellation or drain.
 
@@ -634,14 +645,21 @@ configuration always wins over stored RUNNING and prevents admission; it does
 not silently rewrite durable intent or permit START/RESTART to enable a driver.
 
 Missing, corrupt, unreadable and unsupported are distinct load dispositions.
-Corrupt/unreadable/unsupported control state starts the HTTP/API/health shell
-but withholds affected eBUS as FAILED; no empty-state or RUNNING fallback is
-allowed. Preserve bad bytes and quarantine before any repair. A malformed known
+This fail-closed rule applies to the `runtime_control` namespace only; other
+namespaces keep the [runtime-state](runtime-state.md#failure-modes) cache
+behaviour (corrupt file renamed and loaded empty, unsupported plugin namespace
+dropped from the in-memory load). Corrupt/unreadable/unsupported control state
+starts the HTTP/API/health shell but withholds affected eBUS as FAILED; no
+empty-state or RUNNING fallback is allowed. Preserve bad bytes and quarantine
+before any repair. A malformed known
 driver record fails that driver closed while valid independent records remain
 usable. A malformed or missing mark or catalog revision fails the whole namespace
 closed, because decisions and coherent views depend on these durable bounds.
-Whole-file corruption/unreadability withholds all dependent drivers and must never create a new GUID or overwrite the unreadable
-file as a fresh base.
+Whole-file corruption/unreadability withholds all dependent drivers and must
+never create a new GUID or overwrite the unreadable bytes as a fresh base: the
+runtime-state `.corrupt-<ISO8601>` rename keeps the exact original bytes and
+counts as a quarantine copy, so control is unreadable, never missing, and no
+bootstrap seed follows.
 
 ### Offline namespace-only reset
 
@@ -753,14 +771,14 @@ Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
 | CTL-03 | Stale expected revision conflicts even for a same-desired request; no mutation |
 | CTL-04 | Lose an accepted START response, restart the process and read back durable desired/revision; same-desired START is a no-op, without any key/receipt lookup. A changing START from stable STOPPED persists typed START in the current slot, which recovery resumes |
 | CTL-05 | Accept only `DriverID` and `ExpectedRevision` (a canonical decimal string); reject every additional request member as invalid shape; valid control uses only the validation and atomic decision steps defined above |
-| CTL-06 | START in desired RUNNING across DEGRADED/BACKOFF/FAILED and STOP in desired STOPPED with unconfirmed close preserve retry budget, quarantine, observations and both revisions |
-| CTL-07 | RESTART in desired STOPPED refuses; each accepted RESTART in RUNNING advances revision and executes one replacement; RESTART during STOPPING with desired STOPPED returns FAILED_PRECONDITION before TRANSITION_BUSY |
+| CTL-06 | START in desired RUNNING across DEGRADED/BACKOFF/FAILED (including quarantined FAILED) is a no-op and not a recovery path, and STOP in desired STOPPED with unconfirmed close preserve retry budget, quarantine, observations and both revisions |
+| CTL-07 | RESTART in desired STOPPED refuses; each accepted RESTART in RUNNING advances revision and executes one replacement; RESTART during STOPPING with desired STOPPED returns FAILED_PRECONDITION before TRANSITION_BUSY; STOP during STOPPING is a no-op; START during STOPPING takes the reserved slot as a typed START replacement that executes after the STOP's cleanup and native close, and a further changing request then gets TRANSITION_BUSY |
 | CTL-08 | Pause STARTING and separately BACKOFF, each with a typed current START and with an untyped attempt (bootstrap reconciliation or manager retry); STOP/RESTART fence/cancel the old attempt, retain cleanup correlation and always take the reserved slot with one exact next kind, the untyped case synthesizing the cancellation as the current slot; another changing request that passes earlier refusal checks gets TRANSITION_BUSY; no accepted RESTART disappears |
 | CTL-09 | Lose process memory during active RESTART; D5 restores pending work and the new incarnation performs its retained replacement before dropping the slot |
 | CTL-10 | Lost RESTART response is resolved by readback; old-revision retry conflicts and a fresh-revision retry after settlement executes another restart |
 | CTL-11 | Same-desired requests during occupied slots remain no-ops with only desired/revision returned; no new durable record, wake or counter allocation |
 | CTL-12 | Hold a pre-repair START with `ExpectedRevision=1`; offline-reset with verified bound `H >= 1`, restart and clear recovery gates. Read back STOPPED at its repaired revision (`H + 1` for a single configured ID); submit the held two-field request and require REVISION_CONFLICT with no mutation, reconciliation wake or native open. A fresh START using the read-back revision can proceed. Repeat repair after further decisions and with removed IDs in the revision coverage; all earlier revisions still conflict. An unvalidated mark, a D5 revision above the mark, an unverifiable D5 stream or `H + N` above the unsigned 64-bit maximum refuses reset without replacing any record; a successful reset leaves the D5 stream byte-identical. After visible observations and decisions, repair advances validated durable catalog revision `C` to `C + 1`; an invalid `C` or overflowing `C + 1` refuses without replacement |
-| CTL-13 | Two drivers A and B: accepted decisions interleave and each takes mark + 1, so no revision repeats across drivers. Remove B (record deleted, mark + 1 in the same transaction), then re-add B (mark + 1 again) with no decision for A in between: reads return STOPPED with `revision` equal to the current mark, and a request held before the removal, carrying B's old revision or the mark current at that time, is refused with REVISION_CONFLICT with no mutation. Second line: repeat with an accepted decision for A between removal and re-add; the held request is refused likewise. START with `ExpectedRevision` equal to the read-back mark is accepted at mark + 1, above every earlier revision; a first START for a driver with no record whose `ExpectedRevision` differs from the mark conflicts, and a STOP carrying the mark is a no-op. Remove the namespace, or only its mark, while other control records, D5 material or a quarantine copy exist: load fails closed and nothing is seeded; only a GUID with no control material bootstraps at mark 0. All revisions encode as canonical decimal strings |
+| CTL-13 | Two drivers A and B: accepted decisions interleave and each takes mark + 1, so no revision repeats across drivers. Remove B (record deleted, mark + 1 in the same transaction), then re-add B (mark + 1 again) with no decision for A in between: reads return STOPPED with `desired_revision` equal to the current mark, and a request held before the removal, carrying B's old revision or the mark current at that time, is refused with REVISION_CONFLICT with no mutation. Second line: repeat with an accepted decision for A between removal and re-add; the held request is refused likewise. START with `ExpectedRevision` equal to the read-back mark is accepted at mark + 1, above every earlier revision; a first START for a driver with no record whose `ExpectedRevision` differs from the mark conflicts, and a STOP carrying the mark is a no-op. Remove the namespace, or only its mark, while other control records, D5 material or a quarantine copy exist: load fails closed and nothing is seeded; only a GUID with no control material bootstraps at mark 0. All revisions encode as canonical decimal strings |
 | CTL-14 | Drive one request per refusal row, plus requests failing several checks at once; each returns the code of the earliest failing check in the refusal table with no mutation. A malformed driver record returns FAILED_PRECONDITION with that driver FAILED while an independent driver stays usable; ambiguous persistence returns UNAVAILABLE for every driver until the service's readback completes |
 | CTL-15 | START carrying `ExpectedRevision` `"0"` is refused with INVALID_ARGUMENT; repeat with `"01"` (leading zero), `"+1"`, `" 1"` and `"1x"`. Each refusal is the first refusal-table row, with no mutation, no readback and no reconciliation wake |
 

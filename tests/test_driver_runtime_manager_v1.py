@@ -25,6 +25,7 @@ def test_closed_driver_snapshot_v1_vocabulary() -> None:
         "`reason`",
         "`retry`",
         "`generation`",
+        "`desired_revision`",
         "`revision`",
         "`attempt`",
         "`capabilities`",
@@ -76,7 +77,8 @@ def test_unproven_close_enters_process_epoch_safety_quarantine() -> None:
     for required in (
         '"safety_quarantined": true',
         "`CLOSE_UNCONFIRMED`",
-        "`SAFETY_QUARANTINED`",
+        "refused with `FAILED_PRECONDITION` at the lifecycle refusal-table quarantine row",
+        "START with the current revision and desired RUNNING is a no-op and is not a recovery path",
         "observed state is `FAILED`",
         "effective capabilities are empty",
         "manual start and restart",
@@ -126,6 +128,9 @@ def test_operation_concurrency_readback_and_diagnostics() -> None:
         "one current typed slot and at most one reserved successor",
         "A lost response is resolved through list/get readback",
         "No operation ID, request ID, disposition, completion field or receipt is returned",
+        "Superseded: the former `DriverOperationV1` response",
+        "echoes the snapshot's `desired_revision`, never the view `revision`",
+        "a START during STOPPING takes the reserved slot as a typed replacement",
         "never contains an endpoint, credential, raw error, or protocol payload",
     ):
         assert required in text

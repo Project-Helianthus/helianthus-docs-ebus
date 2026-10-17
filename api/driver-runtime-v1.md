@@ -15,9 +15,9 @@ The V1 MCP namespace contains exactly:
 - `drivers.v1.restart`
 
 Tools stay registered for the process lifetime. Missing, disabled, failed, or
-unavailable providers return typed snapshots or a stable `UNAVAILABLE`
-operation result; tool disappearance and protocol-specific ad-hoc errors are
-forbidden.
+unavailable providers return typed snapshots; a mutation returns either the
+desired-state result or a code from the lifecycle refusal table. Tool
+disappearance and protocol-specific ad-hoc errors are forbidden.
 
 ## Closed Driver Catalog
 
@@ -31,7 +31,7 @@ The desired-state vocabulary is exactly `RUNNING`, `STOPPED`. The
 observed-state vocabulary is exactly `DISABLED`, `STOPPED`, `STARTING`,
 `RUNNING`, `DEGRADED`, `BACKOFF`, `STOPPING`, `FAILED`.
 
-Unknown IDs are rejected with `DRIVER_NOT_FOUND`. IDs are ASCII lowercase
+Unknown IDs are rejected with `NOT_FOUND`. IDs are ASCII lowercase
 catalog tokens, not paths or caller-defined values. V1 never accepts an
 endpoint, address, certificate identifier, device identity, or transport name
 in place of a catalog ID.
@@ -41,8 +41,8 @@ in place of a catalog ID.
 Every list/get snapshot uses the following closed shape. Mutation results use
 the smaller desired-state result defined under Mutating Tools:
 
-The lifecycle evidence fields are `reason`, `retry`, `generation`, `revision`,
-`catalog_revision`, `attempt`, `capabilities`, `effective_capabilities`, and
+The lifecycle evidence fields are `reason`, `retry`, `generation`,
+`desired_revision`, `revision`, `attempt`, `capabilities`, `effective_capabilities`, and
 `safety_quarantined`.
 
 ```json
@@ -61,8 +61,8 @@ The lifecycle evidence fields are `reason`, `retry`, `generation`, `revision`,
     "not_before_utc": "2026-08-21T10:00:05Z"
   },
   "generation": 4,
-  "revision": "7",
-  "catalog_revision": "29",
+  "desired_revision": "7",
+  "revision": "29",
   "attempt": 2,
   "capabilities": ["DISCOVERY", "READ", "PAIRING", "TOPOLOGY"],
   "effective_capabilities": [],
@@ -83,17 +83,19 @@ rejected by conformance fixtures until a later version adds them.
   monotonically increases. The generation changes only when a new driver
   instance is admitted. It does not change for polling, retry scheduling, or a
   failed construction that never admitted an instance.
-- `revision` is the durable desired revision, encoded as a canonical decimal
-  string of an unsigned 64-bit value. Echo it unchanged as `ExpectedRevision`.
-  Observation-only changes do not advance it; accepted decisions advance the
-  namespace mark and assign the new mark to this driver. A driver without a
-  record returns STOPPED at the current mark. Repair assigns revisions above
-  the validated pre-repair mark.
-- `catalog_revision` is a separate canonical decimal string. It starts at one
-  and monotonically increases; the catalog revision changes on every externally
-  visible snapshot mutation and never changes for a byte-identical replay.
-  Every advance is durable before exposure, survives restart and is never reused,
-  including on repair. It is never used as `ExpectedRevision`.
+- `desired_revision` is the durable desired revision, encoded as a canonical
+  decimal string of an unsigned 64-bit value. It is the only value a client
+  echoes, unchanged, as `ExpectedRevision`. Observation-only changes do not
+  advance it; accepted decisions advance the namespace mark and assign the new
+  mark to this driver. A driver without a record returns STOPPED at the
+  current mark. Repair assigns revisions above the validated pre-repair mark.
+- `revision` is the view revision, equal to the lifecycle catalog revision and
+  encoded as a separate canonical decimal string. It starts at one and
+  monotonically increases; the revision changes on every externally visible
+  snapshot mutation and never changes for a byte-identical replay. Every
+  advance is durable before exposure, survives restart and is never reused;
+  repair preserves it and advances it once. It is a view counter only and is
+  never used as `ExpectedRevision` or for any optimistic control.
 - attempt is scoped to one generation. It counts admission/recovery attempts
   beginning at one and resets only when a new generation is admitted. Zero is
   used before the first attempt.
@@ -114,7 +116,7 @@ rejected by conformance fixtures until a later version adds them.
   A callback with stale correlation cannot mutate the snapshot; internal
   correlation is not a client operation handle.
 - timestamps are UTC RFC3339 values and are evidence, never ordering
-  authority. Catalog revision is the view ordering authority.
+  authority. The view `revision` is the view ordering authority.
 
 ### Closed Reason Codes
 
@@ -205,8 +207,8 @@ Example result envelope:
 ```
 
 `manager_revision` is the catalog revision, encoded as a canonical decimal
-string and equal to each returned snapshot's `catalog_revision`. List/get return
-`revision` and `catalog_revision` from one coherent cached transaction.
+string and equal to each returned snapshot's view `revision`. List/get return
+`desired_revision` and `revision` from one coherent cached transaction.
 
 The real V1 result contains exactly three driver entries. The empty array above
 illustrates envelope shape only and is not a valid V1 catalog result.
@@ -224,7 +226,8 @@ closed two-field request:
 ```
 
 `DriverID` is the canonical registered driver ID. `ExpectedRevision` is a
-canonical decimal string of a nonzero unsigned 64-bit value. The request
+canonical decimal string of a nonzero unsigned 64-bit value that echoes the
+snapshot's `desired_revision`, never the view `revision`. The request
 members, their validation, the refusal order and the revision rules are
 governed by [`runtime-driver-lifecycle.md`](../architecture/runtime-driver-lifecycle.md),
 which supersedes the former `idempotency_key` and `request_id` request members:
@@ -237,14 +240,16 @@ the ordinary deterministic MCP envelope:
 ```json
 {
   "desired_state": "RUNNING",
-  "revision": "8"
+  "desired_revision": "8"
 }
 ```
 
-`revision` is the durable desired revision, with the same encoding as the
-snapshot field. No operation ID, request ID, disposition, completion field or
-receipt is returned. This replaces the entire former `DriverOperationV1`
-response contract as well as its concurrency and idempotency rules. Refusals
+`desired_revision` is the durable desired revision, with the same encoding as
+the snapshot field. No operation ID, request ID, disposition, completion field or
+receipt is returned. Superseded: the former `DriverOperationV1` response
+(operation and request IDs, kind, disposition, completion, outcome and embedded
+snapshot) no longer exists for lifecycle mutations, together with its
+concurrency and idempotency rules. Refusals
 use the lifecycle contract's ordered codes; REVISION_CONFLICT includes the
 current cached view.
 
@@ -256,7 +261,8 @@ budget or observation changes. RESTART requires desired RUNNING; otherwise it
 returns FAILED_PRECONDITION before transition-capacity checks, even in STOPPING.
 Changing work uses one current typed slot and at most one reserved successor,
 with TRANSITION_BUSY when capacity is unavailable. A changing START from stable
-STOPPED persists typed START in the current slot.
+STOPPED persists typed START in the current slot; a START during STOPPING takes
+the reserved slot as a typed replacement.
 
 A lost response is resolved through list/get readback. An old-revision retry
 conflicts, and a fresh-revision RESTART after settlement is another restart.
@@ -289,16 +295,20 @@ contains:
 
 The complete snapshot retains every other required `DriverSnapshotV1` field;
 the fragment shows the quarantine-specific values. While quarantined, observed
-state is `FAILED`, effective capabilities are empty, and manual start and
-restart return `UNAVAILABLE` / `SAFETY_QUARANTINED`. Automatic retry, provider
-construction, capability admission, and generation advance are blocked until
-process restart. No API operation, configuration reload, callback, or elapsed
+state is `FAILED` and effective capabilities are empty. A manual start and
+restart cannot clear it: START while desired RUNNING is a no-op, and a START
+or RESTART that would change desired state or require admission is refused
+with `FAILED_PRECONDITION` at the lifecycle refusal-table quarantine row.
+Automatic retry, provider construction, capability admission, and generation
+advance are blocked until process restart. No API operation, configuration reload, callback, or elapsed
 time clears the flag in the current process epoch.
 
-An ordinary recoverable `FAILED` snapshot has `safety_quarantined=false` and
-may accept a later manual start under normal configuration and retry-budget
-rules. Consumers must use the flag and categorical reason; they must not treat
-every `FAILED` state as a safety quarantine.
+An ordinary recoverable `FAILED` snapshot has `safety_quarantined=false`.
+Recovering it is the reconciler's job under normal configuration and
+retry-budget rules; START with the current revision and desired RUNNING is a
+no-op and is not a recovery path. With desired STOPPED, a START is an ordinary
+changing decision. Consumers must use the flag and categorical reason; they
+must not treat every `FAILED` state as a safety quarantine.
 
 An actively executing admitted lease callback is active transport use. Its
 immediate `CLOSE_UNCONFIRMED` safety quarantine blocks replacement, so the
@@ -317,8 +327,9 @@ operation to a terminal categorical result.
 
 All four tools remain registered even if a driver provider cannot be built or
 started. `list` returns its stable catalog snapshot. A mutation against that
-entry returns `UNAVAILABLE` / `PROVIDER_UNAVAILABLE`, with the same driver ID
-and a current snapshot. It never returns a raw construction or transport error.
+entry follows the ordinary decision rules: an accepted decision returns only
+desired state and desired revision, and the snapshot reports the categorical
+reason `PROVIDER_UNAVAILABLE`. It never returns a raw construction or transport error.
 
 ## Audit Contract
 
@@ -331,8 +342,9 @@ protocol payload. Diagnostic publication cannot roll back durable intent.
 ## Error And Security Boundary
 
 Input errors use the closed result envelope and never invoke a provider.
-Authorization belongs to the host surface; this contract does not create a
-credential or make MCP publicly reachable. Portal and Home Assistant use their
+Per final D4 the lifecycle tools carry no principal and no authorization
+check; this contract does not create a credential or make MCP publicly
+reachable. Portal and Home Assistant use their
 normal authenticated gateway boundaries after their rollout gates.
 
 Provider-owned details remain in bounded local diagnostics. Public errors,
