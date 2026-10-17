@@ -342,6 +342,8 @@ python3 scripts/validate_canonical_pv_v1.py \
   --source-registry-schema docs/platform/schemas/canonical-pv-source-registry-bindings-v1.schema.json
 python3 -m pytest -q tests/test_eebus_operator_admin_contract.py
 python3 -m pytest -q tests/test_driver_runtime_manager_v1.py
+python3 scripts/check_runtime_driver_registration.py
+python3 -m pytest -q tests/test_runtime_driver_registration.py
 python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
 python3 -m pytest -q tests/test_sunspec_model_chain_contract.py
 python3 -m pytest -q tests/test_sunspec_model_123_fronius_v3_contract.py

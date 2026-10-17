@@ -105,6 +105,10 @@ Prove registration/control packages import no protocol package and that the
 production composition registers only `ebus.primary`. These are gateway test
 obligations, not executed tests or wire-evidence claims in this prose slice.
 
+The repository check `python3 scripts/check_runtime_driver_registration.py`
+guards the registration documentation clauses above. It does not execute the
+gateway acceptance obligations or establish native wire behavior.
+
 ## S5: deferred managed adapters and DM-HOOKS
 
 Later managed sidecars must use this same validated registration path with their
