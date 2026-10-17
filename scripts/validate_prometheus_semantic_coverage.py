@@ -46,15 +46,15 @@ infrastructure.status.interlock | helianthus_infrastructure_interlock_active | b
 infrastructure.status.readiness | helianthus_infrastructure_ready | boolean: not_ready=0, ready=1
 """
 TRANSPORT_ROWS = """
-ebus_passive_tap_connected | gauge / boolean | none
-ebus_bus_busy_seconds_total | counter / seconds | none
-ebus_bus_busy_ratio | gauge / ratio 0..1 | window: 1m, 5m, 15m, 1h
-ebus_passive_tap_reconnect_attempts_total | counter / attempts | none
-ebus_passive_tap_reconnect_successes_total | counter / connections | none
-ebus_passive_tap_reconnect_failures_total | counter / failures | none
-ebus_baud_observed_symbols_per_second | gauge / physical symbols per second | none
-ebus_baud_observation_available | gauge / boolean | none
-CAN transport or semantic measurements | unavailable | none admitted
+ebus_passive_tap_connected | gauge / boolean | none | Bus store; implemented in inspected source, known connection state 0/1; exact-candidate revalidation required
+ebus_bus_busy_seconds_total | counter / seconds | none | Bus store; implemented, emitted only when passive state is available and timing is available; revalidate candidate
+ebus_bus_busy_ratio | gauge / ratio 0..1 | window: 1m, 5m, 15m, 1h | Bus store; implemented with the same availability condition; recomputed rolling window, not a baud estimate; revalidate candidate
+ebus_passive_tap_reconnect_attempts_total | counter / attempts | none | Bus store; implemented, cumulative connection attempts; revalidate candidate
+ebus_passive_tap_reconnect_successes_total | counter / connections | none | Bus store; implemented, cumulative successful connections; revalidate candidate
+ebus_passive_tap_reconnect_failures_total | counter / failures | none | Bus store; implemented, cumulative failed connections; revalidate candidate
+ebus_baud_observed_symbols_per_second | gauge / physical symbols per second | none | **Target**, gateway transport timing owner; absent until a qualified native timing observation exists
+ebus_baud_observation_available | gauge / boolean | none | **Target**, same owner; 0 when configured but no valid observation, 1 with current observation; absent if collector not implemented/configured
+CAN transport or semantic measurements | unavailable | none admitted | **Pending CAN acquisition**; no native acquisition seam established by this contract, no reserved fake value series
 """
 # These clauses jointly define label admission and the series-budget arithmetic.
 LABEL_CONTRACT = """
@@ -93,6 +93,42 @@ LABEL_CONTRACT = """
 - Overflow, ambiguous selection, unknown symbols, invalid units or conflicting
   contributions fail closed for the affected selection. Retain valid siblings
   and their last-known-good provenance; do not evict them to admit new series.
+"""
+# Reviewed missing-value, freshness, gauge and transport-counter lifecycle clauses.
+LIFECYCLE_CONTRACT = """
+For every target numeric/status field, emit a value only from the current,
+admitted, qualified, valid and fresh source record, using the same semantic
+revision and evaluation as the public projection. Do not read native devices
+from a scrape, reconstruct from UI labels, or use raw MCP as a fallback.
+Preserve eBUS MCP compatibility and GraphQL parity: unavailable public facts
+cannot become current Prometheus measurements.
+
+Unknown, unsupported, withheld, stale, withdrawn, conflicting or invalid
+values have **no value sample**. The availability gauge is `0` for such a
+configured field and `1` only when its value is exportable. An unconfigured
+field has neither series. Zero availability describes a known export state,
+never a zero measurement. No `or vector(0)`, zero fill, carried-forward
+measurement, or fabricated CAN sample is allowed. Historical samples remain
+historical; dashboards and alerts must join availability to suppress old
+samples during Prometheus lookback. Retained last-known-good records keep
+their original receipt and explicit non-current state outside these gauges;
+reevaluation cannot refresh acquisition time. Partial updates preserve valid
+sibling fields.
+
+All target value and availability series are gauges, including cumulative
+energy readings. They have no exporter reset-to-zero operation. At startup,
+reconnect, source replacement or freshness/clock discontinuity, availability
+is `0` until revalidated; omit the value. A changed source reading can move a
+gauge in either direction. Do not compute `rate` on energy gauges or infer
+consumption across meter replacement/reset. Energy totals remain native
+readings, with kWh converted to joules by multiplying by 3,600,000.
+
+Existing transport counters reset on recreation of their owning in-memory
+store/process. Reconnection does not mean a new counter epoch; use
+`rate`/`increase`, never subtract unrelated absolute totals. Busy-time
+availability may disappear during warmup while retained counters survive.
+Connectivity is a state gauge, so a known disconnected state is legitimately
+`0`; it is not a measurement of traffic or baud.
 """
 
 
@@ -183,12 +219,16 @@ def validate(text: str) -> None:
             ("Series", "Type / unit", "Labels", "Owner, missing behavior and coverage"),
             ("---", "---", "---", "---")]
             or any(len(row) != 4 for row in actual_transport[2:])
-            or Counter(row[:3] for row in actual_transport[2:]) != Counter(expected_transport)):
-        raise CheckError("transport metric names, types or labels changed")
+            or Counter(actual_transport[2:]) != Counter(expected_transport)):
+        raise CheckError("transport metric names, types, labels or coverage changed")
     admission = section(text, "## Bounded label and admission contract\n",
                         "## Missing values, lifecycle and resets\n")
     if normalized(admission) != normalized(LABEL_CONTRACT):
         raise CheckError("label admission or series budget changed")
+    lifecycle = section(text, "## Missing values, lifecycle and resets\n",
+                        "## Transport coverage\n")
+    if normalized(lifecycle) != normalized(LIFECYCLE_CONTRACT):
+        raise CheckError("missing values, lifecycle or resets changed")
     blocks = re.findall(r"^```yaml\n(.*?)^```$", text, re.MULTILINE | re.DOTALL)
     if len(blocks) != 1:
         raise CheckError("expected one alert YAML block")

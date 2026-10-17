@@ -50,6 +50,15 @@ def test_prometheus_semantic_coverage_accepts_document() -> None:
     ("ebus_passive_tap_connected` | gauge", "ebus_passive_tap_connected` | counter"),
     ("| `window`: `1m`, `5m`, `15m`, `1h` |", "| `window`: `1m`, `5m`, `15m`, `1h`, `1d` |"),
     ("| gauge / physical symbols per second | none |", "| gauge / physical symbols per second | `bus` |"),
+    ("**no value sample**", "a zero-filled value sample"),
+    ("original receipt and explicit non-current state", "current receipt and current state"),
+    ("reevaluation cannot refresh acquisition time", "reevaluation refreshes acquisition time"),
+    ("Do not compute `rate` on energy gauges", "Compute `rate` on energy gauges"),
+    ("They have no exporter reset-to-zero operation", "They reset to zero on reconnect"),
+    ("Reconnection does not mean a new counter epoch", "Reconnection starts a new counter epoch"),
+    ("**Target**, gateway transport timing owner", "Implemented, gateway transport timing owner"),
+    ("absent if collector not implemented/configured", "always emitted"),
+    ("**Pending CAN acquisition**", "Implemented CAN acquisition"),
     ("ebus_passive_tap_connected == 0", "ebus_passive_tap_connected == 1"),
     ("on(job, instance, slot)", "on(job, instance)"),
     ('field="thermal.status.fault"', 'field="thermal.status.operation"'),
@@ -94,6 +103,9 @@ def test_prometheus_semantic_coverage_accepts_formatting_and_row_order() -> None
     text = text.replace("".join(lines), "".join(reversed(lines)))
     text = text.replace('| `thermal.', '|  `thermal.')
     text = text.replace("and on(job, instance, slot)\n", "and   on(job, instance, slot)\n")
+    text = text.replace("reevaluation cannot refresh acquisition time.",
+                        "reevaluation cannot\nrefresh acquisition time.")
+    text = text.replace("Bus store; implemented,", "Bus store;   implemented,")
     CHECKER.validate(text)
 
 
@@ -114,6 +126,34 @@ def test_prometheus_semantic_coverage_rejects_admission_clause_drift(operation: 
             changed = admission.replace(clause, clause + "\n- Allow arbitrary labels.", 1)
         with pytest.raises(CHECKER.CheckError):
             CHECKER.validate(text.replace(admission, changed, 1))
+
+
+@pytest.mark.parametrize("operation", ["remove", "duplicate", "add"])
+def test_prometheus_semantic_coverage_rejects_lifecycle_clause_drift(operation: str) -> None:
+    text = document()
+    lifecycle = CHECKER.section(text, "## Missing values, lifecycle and resets\n",
+                              "## Transport coverage\n")
+    for clause in lifecycle.strip().split("\n\n"):
+        if operation == "remove":
+            changed = lifecycle.replace(clause, "", 1)
+        elif operation == "duplicate":
+            changed = lifecycle.replace(clause, clause + "\n\n" + clause, 1)
+        else:
+            changed = lifecycle.replace(clause, clause + "\n\nZero fill is allowed.", 1)
+        with pytest.raises(CHECKER.CheckError, match="missing values, lifecycle or resets"):
+            CHECKER.validate(text.replace(lifecycle, changed, 1))
+
+
+def test_prometheus_semantic_coverage_rejects_each_transport_coverage_change() -> None:
+    text = document()
+    transport = CHECKER.section(text, "## Transport coverage\n",
+                              "## Semantic coverage and units\n")
+    table_rows = [line for line in transport.splitlines() if line.startswith("|")][2:]
+    for row in table_rows:
+        cells = row.split("|")
+        cells[4] = " Always implemented and available "
+        with pytest.raises(CHECKER.CheckError, match="transport metric"):
+            CHECKER.validate(text.replace(row, "|".join(cells), 1))
 
 
 def test_prometheus_semantic_coverage_registered_in_ci() -> None:
