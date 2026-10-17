@@ -427,7 +427,8 @@ selected implementation bounds, with no remaining operator checkpoint.
 Desired state has exactly two values: `RUNNING`, `STOPPED`. Observed state has
 exactly eight: `DISABLED`, `STOPPED`, `STARTING`, `RUNNING`, `DEGRADED`, `BACKOFF`,
 `STOPPING`, `FAILED`. Desired state is intent; observations are runtime facts.
-Desired revision starts at 1 and advances only on accepted changing requests.
+Desired revision starts at 1 on first bootstrap and advances on accepted changing
+requests; offline repair advances it as specified below, never back to 1.
 Catalog revision starts at 1, advances once per accepted decision and once per
 externally visible observed-view transaction, and is distinct from desired,
 native and semantic revisions, lifecycle sequence and publication cursors.
@@ -568,16 +569,30 @@ gateway startup flag, MCP repair tool or online bypass.
 Validate readability, the entire base structure and the existing valid GUID
 before touching anything. Whole-file corruption/unreadability is refused until
 a valid GUID-preserving base is restored externally. Unsupported or malformed
-namespace bytes within an otherwise valid base may be reset, but first preserve
+namespace bytes within an otherwise valid base may be reset only when the
+revision bound below can be verified. First preserve
 an exclusive, non-overwriting quarantine copy of the exact original bytes and
 fsync it. Failure to preserve that copy aborts reset. Existing quarantine copies
 are never deleted or replaced. Copy GUID, meta and all other opaque namespaces
-unchanged; atomically replace only `runtime_control` with version-1 STOPPED
-records at revision 1 for the configured IDs, catalog revision 1, and no active
-operation. Resolve IDs from the installation’s existing read-only configuration;
-if that configuration cannot be validated, refuse rather than guess IDs. The stopped-process reset starts a new control history and cannot be
-mistaken for an online revision rollback; old client revisions are invalid
-across repair. A fresh process incarnation fences old callbacks and reservations.
+unchanged. Before replacement, establish a trustworthy unsigned 64-bit upper
+bound `H` on every desired revision previously issued under this GUID, including
+removed driver IDs and earlier repairs. Use validated durable control state or
+verified GUID-matched recovery material with complete revision coverage; neither
+unvalidated bytes nor a stale backup alone establishes that bound. If coverage
+cannot be verified, refuse reset until adequate control recovery material is
+restored externally. If `H + 1` cannot be represented, refuse with
+`COUNTER_EXHAUSTED` before replacement; never wrap or choose a lower value.
+
+Atomically replace only `runtime_control` with version-1 STOPPED records at
+desired revision `H + 1` for every configured ID, catalog revision 1, and no
+active operation. Resolve IDs from the installation’s existing read-only
+configuration; if that configuration cannot be validated, refuse rather than
+guess IDs. Subsequent changing decisions increment from this repaired revision;
+subsequent repairs must cover it in their bound. `ExpectedRevision` remains the
+same single unsigned 64-bit value, with no additional request field. Every
+pre-repair expected revision therefore conflicts, including a stale START at
+revision 1 after all recovery gates clear. A fresh process incarnation separately
+fences old callbacks and reservations.
 
 Reset deliberately discards the active namespace, including its D5 recovery
 stream; the quarantined original remains available for recovery investigation.
@@ -646,6 +661,7 @@ Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
 | CTL-09 | Lose process memory during active RESTART; D5 restores pending work and the new incarnation performs its retained replacement before dropping the slot |
 | CTL-10 | Lost RESTART response is resolved by readback; old-revision retry conflicts and a fresh-revision retry after settlement executes another restart |
 | CTL-11 | Same-desired requests during occupied slots remain no-ops with only desired/revision returned; no new durable record, wake or counter allocation |
+| CTL-12 | Hold a pre-repair START with `ExpectedRevision=1`; offline-reset with verified bound `H >= 1`, restart and clear recovery gates. Read back STOPPED at `H + 1`; submit the held two-field request and require REVISION_CONFLICT with no mutation, reconciliation wake or native open. A fresh START using the read-back revision can proceed. Repeat repair after further decisions and with removed IDs in the revision coverage; all earlier revisions still conflict. Missing/unverifiable coverage or `H` at the unsigned 64-bit maximum refuses reset without replacing the namespace |
 
 Also prove disabled/deadline/shape refusals, storage exhaustion, every counter's
 overflow refusal, quarantine retention, offline-reset refusal on an active writer
