@@ -46,18 +46,22 @@ infrastructure.status.interlock | helianthus_infrastructure_interlock_active | b
 infrastructure.status.readiness | helianthus_infrastructure_ready | boolean: not_ready=0, ready=1
 """
 TRANSPORT_ROWS = """
-ebus_passive_tap_connected | gauge / boolean | none | Bus store; implemented in inspected source, known connection state 0/1; exact-candidate revalidation required
-ebus_bus_busy_seconds_total | counter / seconds | none | Bus store; implemented, emitted only when passive state is available and timing is available; revalidate candidate
-ebus_bus_busy_ratio | gauge / ratio 0..1 | window: 1m, 5m, 15m, 1h | Bus store; implemented with the same availability condition; recomputed rolling window, not a baud estimate; revalidate candidate
-ebus_passive_tap_reconnect_attempts_total | counter / attempts | none | Bus store; implemented, cumulative connection attempts; revalidate candidate
-ebus_passive_tap_reconnect_successes_total | counter / connections | none | Bus store; implemented, cumulative successful connections; revalidate candidate
-ebus_passive_tap_reconnect_failures_total | counter / failures | none | Bus store; implemented, cumulative failed connections; revalidate candidate
-ebus_baud_observed_symbols_per_second | gauge / physical symbols per second | none | **Target**, gateway transport timing owner; absent until a qualified native timing observation exists
-ebus_baud_observation_available | gauge / boolean | none | **Target**, same owner; 0 when configured but no valid observation, 1 with current observation; absent if collector not implemented/configured
-CAN transport or semantic measurements | unavailable | none admitted | **Pending CAN acquisition**; no native acquisition seam established by this contract, no reserved fake value series
+ebus_passive_tap_connected | gauge / boolean | none | Bus store; implemented in inspected source, known connection state 0/1; exact-candidate revalidation required | Proven
+ebus_bus_busy_seconds_total | counter / seconds | none | Bus store; implemented, emitted only when passive state is available and timing is available; revalidate candidate | Proven
+ebus_bus_busy_ratio | gauge / ratio 0..1 | window: 1m, 5m, 15m, 1h | Bus store; implemented with the same availability condition; recomputed rolling window, not a baud estimate; revalidate candidate | Proven
+ebus_passive_tap_reconnect_attempts_total | counter / attempts | none | Bus store; implemented, cumulative connection attempts; revalidate candidate | Proven
+ebus_passive_tap_reconnect_successes_total | counter / connections | none | Bus store; implemented, cumulative successful connections; revalidate candidate | Proven
+ebus_passive_tap_reconnect_failures_total | counter / failures | none | Bus store; implemented, cumulative failed connections; revalidate candidate | Proven
+ebus_baud_observed_symbols_per_second | gauge / physical symbols per second | none | **Target**, gateway transport timing owner; absent until a qualified native timing observation exists | Unknown
+ebus_baud_observation_available | gauge / boolean | none | **Target**, same owner; 0 when configured but no valid observation, 1 with current observation; absent if collector not implemented/configured | Unknown
+CAN transport or semantic measurements | unavailable | none admitted | **Pending CAN acquisition**; no native acquisition seam established by this contract, no reserved fake value series | Unknown
 """
 # Required verbatim policy clauses within the semantic section.
 SEMANTIC_POLICIES = (
+    "Every row below is **Target / exact-candidate revalidation required**, owned\n"
+    "by the named SemReg pack for meaning and the gateway for export. No row is\n"
+    "claimed implemented. The field identifiers are a closed allowlist, not\n"
+    "free-form labels. All rows use the gauge lifecycle and `slot` bound above.",
     "Enum numbers encode exactly the pack symbols with the corresponding field\n"
     "prefix; they are categories, never ordinal severity or unknown sentinels.",
     "No unlisted symbol maps to 0.",
@@ -73,6 +77,15 @@ SEMANTIC_POLICIES = (
     "The pack does not\n"
     "establish a native Infrastructure binding or a CAN measurement.",
 )
+BAUD_POLICY = """The baud target measures physical signaling intervals over a completed,
+source-owner-validated observation window, with window validity, expiry and
+timing uncertainty retained in provenance. Configured baud, retained frame
+byte rate, idle time and TCP arrival spacing cannot supply it. The transport
+owner must establish a qualified timing seam and its window/expiry policy
+before implementation acceptance. The latest valid completed estimate is a
+gauge, not a running counter; after expiry or reconnection omit it and mark
+availability 0. No numerical default baud is a measurement. These target
+names remain unimplemented in the inspected bus store."""
 # These clauses jointly define label admission and the series-budget arithmetic.
 LABEL_CONTRACT = """
 - The new baud series have no exporter labels: one observation source per
@@ -239,12 +252,14 @@ def validate(text: str) -> None:
             or len(fields) * 16 * 2 != 1024):
         raise CheckError("invalid reviewed field count or per-target series budget")
     transport = section(text, "## Transport coverage\n", "## Semantic coverage and units\n")
+    if BAUD_POLICY not in transport:
+        raise CheckError("missing baud-source or expiry policy")
     actual_transport = rows(transport)
     expected_transport = rows("\n".join("| " + line for line in TRANSPORT_ROWS.strip().splitlines()))
     if (actual_transport[:2] != [
-            ("Series", "Type / unit", "Labels", "Owner, missing behavior and coverage"),
-            ("---", "---", "---", "---")]
-            or any(len(row) != 4 for row in actual_transport[2:])
+            ("Series", "Type / unit", "Labels", "Owner, missing behavior and coverage", "Status"),
+            ("---", "---", "---", "---", "---")]
+            or any(len(row) != 5 for row in actual_transport[2:])
             or Counter(actual_transport[2:]) != Counter(expected_transport)):
         raise CheckError("transport metric names, types, labels or coverage changed")
     admission = section(text, "## Bounded label and admission contract\n",

@@ -161,6 +161,30 @@ def test_prometheus_semantic_coverage_rejects_each_transport_coverage_change() -
             CHECKER.validate(text.replace(row, "|".join(cells), 1))
 
 
+@pytest.mark.parametrize(("old", "new"), [
+    ("No row is\nclaimed implemented.", "Every row is\nclaimed implemented."),
+    ("cannot supply it", "can supply it"),
+    ("after expiry or reconnection omit it and mark\navailability 0",
+     "after expiry or reconnection publish it and mark\navailability 1"),
+])
+def test_prometheus_semantic_coverage_rejects_inverted_target_policies(old: str, new: str) -> None:
+    text = document()
+    assert text.count(old) == 1
+    with pytest.raises(CHECKER.CheckError, match="missing semantic policy clause|missing baud-source or expiry policy"):
+        CHECKER.validate(text.replace(old, new, 1))
+
+
+@pytest.mark.parametrize("operation", ["remove", "move"])
+def test_prometheus_semantic_coverage_rejects_missing_baud_policy(operation: str) -> None:
+    text = document()
+    assert text.count(CHECKER.BAUD_POLICY) == 1
+    text = text.replace(CHECKER.BAUD_POLICY, "", 1)
+    if operation == "move":
+        text += "\n" + CHECKER.BAUD_POLICY + "\n"
+    with pytest.raises(CHECKER.CheckError, match="missing baud-source or expiry policy"):
+        CHECKER.validate(text)
+
+
 def test_prometheus_semantic_coverage_registered_in_ci() -> None:
     gate = (ROOT / "scripts/ci_local.sh").read_text()
     assert "python3 scripts/validate_prometheus_semantic_coverage.py\n" in gate

@@ -115,17 +115,21 @@ Connectivity is a state gauge, so a known disconnected state is legitimately
 
 ## Transport coverage
 
-| Series | Type / unit | Labels | Owner, missing behavior and coverage |
-|---|---|---|---|
-| `ebus_passive_tap_connected` | gauge / boolean | none | Bus store; implemented in inspected source, known connection state 0/1; exact-candidate revalidation required |
-| `ebus_bus_busy_seconds_total` | counter / seconds | none | Bus store; implemented, emitted only when passive state is available and timing is available; revalidate candidate |
-| `ebus_bus_busy_ratio` | gauge / ratio 0..1 | `window`: `1m`, `5m`, `15m`, `1h` | Bus store; implemented with the same availability condition; recomputed rolling window, not a baud estimate; revalidate candidate |
-| `ebus_passive_tap_reconnect_attempts_total` | counter / attempts | none | Bus store; implemented, cumulative connection attempts; revalidate candidate |
-| `ebus_passive_tap_reconnect_successes_total` | counter / connections | none | Bus store; implemented, cumulative successful connections; revalidate candidate |
-| `ebus_passive_tap_reconnect_failures_total` | counter / failures | none | Bus store; implemented, cumulative failed connections; revalidate candidate |
-| `ebus_baud_observed_symbols_per_second` | gauge / physical symbols per second | none | **Target**, gateway transport timing owner; absent until a qualified native timing observation exists |
-| `ebus_baud_observation_available` | gauge / boolean | none | **Target**, same owner; 0 when configured but no valid observation, 1 with current observation; absent if collector not implemented/configured |
-| CAN transport or semantic measurements | unavailable | none admitted | **Pending CAN acquisition**; no native acquisition seam established by this contract, no reserved fake value series |
+`Proven` below applies only to the cited bus-store implementation observation,
+not native wire behavior or deployment acceptance. `Unknown` marks targets
+without qualified timing or acquisition evidence.
+
+| Series | Type / unit | Labels | Owner, missing behavior and coverage | Status |
+|---|---|---|---|---|
+| `ebus_passive_tap_connected` | gauge / boolean | none | Bus store; implemented in inspected source, known connection state 0/1; exact-candidate revalidation required | `Proven` |
+| `ebus_bus_busy_seconds_total` | counter / seconds | none | Bus store; implemented, emitted only when passive state is available and timing is available; revalidate candidate | `Proven` |
+| `ebus_bus_busy_ratio` | gauge / ratio 0..1 | `window`: `1m`, `5m`, `15m`, `1h` | Bus store; implemented with the same availability condition; recomputed rolling window, not a baud estimate; revalidate candidate | `Proven` |
+| `ebus_passive_tap_reconnect_attempts_total` | counter / attempts | none | Bus store; implemented, cumulative connection attempts; revalidate candidate | `Proven` |
+| `ebus_passive_tap_reconnect_successes_total` | counter / connections | none | Bus store; implemented, cumulative successful connections; revalidate candidate | `Proven` |
+| `ebus_passive_tap_reconnect_failures_total` | counter / failures | none | Bus store; implemented, cumulative failed connections; revalidate candidate | `Proven` |
+| `ebus_baud_observed_symbols_per_second` | gauge / physical symbols per second | none | **Target**, gateway transport timing owner; absent until a qualified native timing observation exists | `Unknown` |
+| `ebus_baud_observation_available` | gauge / boolean | none | **Target**, same owner; 0 when configured but no valid observation, 1 with current observation; absent if collector not implemented/configured | `Unknown` |
+| CAN transport or semantic measurements | unavailable | none admitted | **Pending CAN acquisition**; no native acquisition seam established by this contract, no reserved fake value series | `Unknown` |
 
 The baud target measures physical signaling intervals over a completed,
 source-owner-validated observation window, with window validity, expiry and
