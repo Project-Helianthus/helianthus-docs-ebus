@@ -113,7 +113,7 @@ def validate_contract(text: str) -> None:
     ))
     assert examples[3] == {
         "kind": "fact", "item_id": "thermal.measurement.humidity_relative",
-        "outcome": "unknown", "source_keys": [], "loss": [], "reason": "reason.value_unknown",
+        "outcome": "unknown", "source_keys": [], "loss": [], "reason": "semantic.read.reason.value_unknown",
     }
     assert examples[4] == {"assets": [{
         "asset_id": "asset:missing", "selections": [],

@@ -106,7 +106,12 @@ gate closed by source lifecycle controls uses
 `semantic.read.reason.source_unavailable`; do not bypass it using cached state.
 An unwired provider fails the whole request with `UNAVAILABLE`, rather than
 fabricating empty snapshots. These `semantic.read.reason.*` codes belong to
-this API wrapper, not to the native owner or SemReg family catalog.
+this API wrapper, not to the native owner or SemReg family catalog. The
+surface-owned codes are exactly: `asset_unknown`, `snapshot_unavailable`,
+`source_unavailable`, `publication_withheld`, `capability_unqualified`,
+`capability_unknown`, `capability_unavailable`, `fact_unavailable` and
+`value_unknown`; any other reason is the owning contract's code, preserved
+verbatim.
 
 Opaque `AssetID`, `NativeBindingID`, `SnapshotID`, candidate, source, epoch and
 instance IDs are references, not addresses or routing instructions. The view
@@ -202,7 +207,7 @@ dimensions or alternatives must never be collapsed into one chosen scalar.
 | `withheld` | Explicit reason for a target item intentionally not projected. Source candidate evidence may still be readable as audit state, never as the withheld capability. |
 | `unrepresentable` | Explicit reason why the target cannot represent the item. |
 | `unsupported` | Explicit supported evidence of non-support, not mere absence. |
-| `unknown` | Explicit reason; absence alone cannot prove non-support. Use `reason.value_unknown` for an absent fact with no stronger supported reason. |
+| `unknown` | Explicit reason; absence alone cannot prove non-support. Use `semantic.read.reason.value_unknown` for an absent fact with no stronger supported reason. |
 
 `LossDetail` uses `kind`, `source_items`, `description`, `reversible`; kinds are
 `unit`, `range`, `precision`, `time`, `symbol`, `provenance`, `identity`,
@@ -389,7 +394,7 @@ Thermal fact without fabricating a value or an unsupported-device claim:
   "outcome": "unknown",
   "source_keys": [],
   "loss": [],
-  "reason": "reason.value_unknown"
+  "reason": "semantic.read.reason.value_unknown"
 }
 ```
 
@@ -452,7 +457,7 @@ keeps `eebus-inbound` at `unknown` with reason `unknown_pending_std_01`.
 Affected inbound observations remain `candidate` or `unknown`, unpromoted and
 non-actionable, preserving that reason and native evidence references. Expose
 an `unknown` or `withheld` disposition as appropriate, never qualified support,
-a frozen mapping or a guessed scalar. Native and family reason codes are
+a normative mapping or an invented value. Native and family reason codes are
 preserved verbatim; do not prefix or reinterpret `unknown_pending_std_01` as an
 API-owned reason. A readable candidate and a transport connection cannot
 establish capability admission or conformance. No eeBUS payload is decoded here.
