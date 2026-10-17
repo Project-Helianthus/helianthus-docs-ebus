@@ -9,8 +9,8 @@ contract edits require a corresponding reviewed validator update.
 from __future__ import annotations
 
 import argparse
+from html.parser import HTMLParser
 from pathlib import Path
-import re
 import sys
 
 from markdown_it import MarkdownIt
@@ -90,31 +90,79 @@ def normalize(text: str) -> str:
     return " ".join(text.split())
 
 
+class HTMLVisibility(HTMLParser):
+    """Keep HTML containers excluded across Markdown block boundaries."""
+
+    VOID = frozenset({
+        "area", "base", "br", "col", "embed", "hr", "img", "input",
+        "link", "meta", "param", "source", "track", "wbr",
+    })
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self.containers: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list) -> None:
+        if tag not in self.VOID:
+            self.containers.append(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        # Mismatched closures do not establish that an enclosing span ended.
+        if self.containers and self.containers[-1] == tag:
+            self.containers.pop()
+
+    def handle_startendtag(self, tag: str, attrs: list) -> None:
+        # In HTML, a trailing slash does not close a non-void container.
+        self.handle_starttag(tag, attrs)
+
+    @property
+    def hidden(self) -> bool:
+        # rawdata also covers incomplete tags/comments split across blocks.
+        return bool(self.containers or self.rawdata)
+
+
+def visible_units(text: str) -> list[tuple[str, str]]:
+    """Select top-level headings/paragraphs, retaining exact obligation markup."""
+    tokens = MarkdownIt().parse(text)
+    visibility = HTMLVisibility()
+    units = []
+    for index, token in enumerate(tokens):
+        if token.type == "html_block":
+            visibility.feed(token.content)
+        elif token.type == "inline":
+            hidden = visibility.hidden
+            html = [child for child in token.children or []
+                    if child.type == "html_inline"]
+            for child in html:
+                visibility.feed(child.content)
+            if hidden or html or visibility.hidden:
+                continue
+            opening = tokens[index - 1]
+            if opening.type == "heading_open" and opening.tag == "h2" and opening.level == 0:
+                units.append(("heading", token.content))
+            elif opening.type == "paragraph_open" and opening.level == 0:
+                units.append(("paragraph", token.content))
+    return units
+
+
 def validate(text: str) -> list[str]:
     """Return missing/changed obligations in the bounded registration section."""
-    # Parse before normalizing whitespace or locating headings: code examples
-    # and raw HTML cannot supply normative obligations or section boundaries.
-    lines = text.splitlines(keepends=True)
-    for token in MarkdownIt().parse(text):
-        if token.type in {"fence", "code_block", "html_block"} and token.map is not None:
-            start, end = token.map
-            lines[start:end] = ["\n"] * (end - start)
-    text = "".join(lines)
-    # CommonMark allows up to three leading spaces before an ATX heading.
-    headings = list(re.finditer(r"^ {0,3}## .+$", text, re.MULTILINE))
-    titles = [heading.group().lstrip(" ").rstrip() for heading in headings]
-    starts = [i for i, title in enumerate(titles) if title == START]
+    rendered = visible_units(text)
+    headings = [(i, content) for i, (kind, content) in enumerate(rendered)
+                if kind == "heading"]
+    titles = [title for _, title in headings]
+    starts = [i for i, title in enumerate(titles) if title == START[3:]]
     if len(starts) != 1:
         return ["expected exactly one S0 registration section"]
     index = starts[0]
-    if index + 1 >= len(headings) or titles[index + 1] != END:
+    if (titles.count(END[3:]) != 1 or index + 1 >= len(headings)
+            or titles[index + 1] != END[3:]):
         return ["expected S5 immediately after S0 registration section"]
-    section = text[headings[index].end() : headings[index + 1].start()]
-    # Rows and paragraphs must stand alone, not survive as substrings in changed
-    # prose, comments, examples or other sections.
-    section = re.sub(r"<!--.*?-->", "", section, flags=re.DOTALL)
+    section = rendered[headings[index][0] + 1 : headings[index + 1][0]]
     units = set()
-    for block in re.split(r"\n\s*\n", section.strip()):
+    for kind, block in section:
+        if kind != "paragraph":
+            continue
         if block.lstrip().startswith("|"):
             units.update(normalize(row) for row in block.splitlines())
         else:
