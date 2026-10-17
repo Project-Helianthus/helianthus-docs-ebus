@@ -79,6 +79,38 @@ def test_runtime_driver_registration_rejects_decoys(wrapper: str) -> None:
     assert "validation and freeze" in checker.validate(changed)
 
 
+@pytest.mark.parametrize("name", checker.REQUIREMENTS)
+@pytest.mark.parametrize(
+    "wrapper",
+    [
+        "    {}",
+        "\t{}",
+        "~~~text\n\n{}\n\n~~~",
+        "   ~~~~text\n\n{}\n\n   ~~~~",
+        "   ````text\n\n{}\n\n   ````",
+        "~~~~text\n~~~\n\n{}\n\n~~~~",
+        "````text\n```\n\n{}\n\n````",
+        "~~~text\n```\n\n{}\n\n~~~",
+    ],
+)
+def test_runtime_driver_registration_rejects_code_blocks(
+    name: str, wrapper: str
+) -> None:
+    required = checker.REQUIREMENTS[name]
+    if wrapper in {"    {}", "\t{}"}:
+        example = "\n".join(wrapper.format(line) for line in required.splitlines())
+    else:
+        example = wrapper.format(required)
+    changed = TEXT.replace(required, "\n\n" + example + "\n\n")
+    assert name in checker.validate(changed)
+
+
+@pytest.mark.parametrize("fence", ["```", "~~~"])
+def test_runtime_driver_registration_ignores_code_block_headings(fence: str) -> None:
+    example = f"\n\n{fence}\n{checker.START}\n{checker.END}\n{fence}\n"
+    assert checker.validate(TEXT + example) == []
+
+
 @pytest.mark.parametrize(
     "text", ["", TEXT + "\n" + checker.START, TEXT.replace(checker.END, "## Other")]
 )

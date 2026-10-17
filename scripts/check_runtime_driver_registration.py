@@ -13,6 +13,8 @@ from pathlib import Path
 import re
 import sys
 
+from markdown_it import MarkdownIt
+
 
 DOCUMENT = Path("architecture/runtime-driver-lifecycle.md")
 START = "## S0/A1: typed compiled-driver registration"
@@ -90,6 +92,14 @@ def normalize(text: str) -> str:
 
 def validate(text: str) -> list[str]:
     """Return missing/changed obligations in the bounded registration section."""
+    # Parse before normalizing whitespace or locating headings: code examples
+    # cannot supply either normative obligations or section boundaries.
+    lines = text.splitlines(keepends=True)
+    for token in MarkdownIt().parse(text):
+        if token.type in {"fence", "code_block"} and token.map is not None:
+            start, end = token.map
+            lines[start:end] = ["\n"] * (end - start)
+    text = "".join(lines)
     headings = list(re.finditer(r"^## .+$", text, re.MULTILINE))
     starts = [i for i, heading in enumerate(headings) if heading.group() == START]
     if len(starts) != 1:
@@ -101,9 +111,6 @@ def validate(text: str) -> list[str]:
     # Rows and paragraphs must stand alone, not survive as substrings in changed
     # prose, comments, examples or other sections.
     section = re.sub(r"<!--.*?-->", "", section, flags=re.DOTALL)
-    section = re.sub(
-        r"^```[^\n]*\n.*?^```[^\n]*$", "", section, flags=re.MULTILINE | re.DOTALL
-    )
     units = set()
     for block in re.split(r"\n\s*\n", section.strip()):
         if block.lstrip().startswith("|"):
