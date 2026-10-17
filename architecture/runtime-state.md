@@ -62,7 +62,7 @@ Top-level structure:
   "meta": {
     "instance_guid": "8a3f2b9e-4d7c-4f1a-9b5e-2c1f3e7a9d5b",
     "written_at": "2026-05-10T19:42:11Z",
-    "gateway_build": "1.2.3-abc123",
+    "gateway_build": "development",
     "addon_version": "0.4.7"
   },
   "ebus": {
@@ -79,8 +79,7 @@ Top-level structure:
         "companion_addr": 3,
         "identity": {
           "manufacturer": "Vaillant",
-          "device_id": "BAI00",
-          "sn": "0x21000567"
+          "device_id": "synthetic-family"
         },
         "last_seen_at": "2026-05-10T19:39:55Z",
         "last_source": "passive_observed",
@@ -105,14 +104,17 @@ File-format compatibility version. Schema-enforced as `const: 1`. Any other
 value (including `2`, `0`, or strings) fails JSON Schema validation. Per
 AD11/AD12 the gateway treats schema-validation failure as a hard load
 failure (file renamed to `runtime_state.json.corrupt-<ISO8601>`, gateway
-starts with empty state). v2 of this plan will change the `const` to allow
-`1` AND `2` once a forward-compat migration policy lands.
+starts with empty observational cache). The renamed file also makes the
+`runtime_control` namespace unreadable, never missing; see Failure modes.
+v2 of this plan will change the
+`const` to allow `1` AND `2` once a forward-compat migration policy lands.
 
 This is **distinct from** the per-plugin `<plugin>.schema_version` (e.g.,
 `ebus.schema_version`), which is permissively constrained as `minimum: 1`
 and whose mismatch is **silently ignored** at load time (the namespace is
 dropped from the in-memory load; gateway proceeds normally with other
-namespaces). The two-tier design lets a v2 gateway load a v1 file while
+namespaces). The single exception is the `runtime_control` namespace, which
+is never dropped or treated as missing (see Failure modes). The two-tier design lets a v2 gateway load a v1 file while
 gracefully ignoring future plugin additions it doesn't understand.
 
 #### `meta` (object, required)
@@ -261,14 +263,33 @@ The gateway writes the file:
 
 ## Failure modes
 
-The gateway never blocks startup on cache state:
+The gateway never blocks startup on cache state. The fail-closed rule below
+applies to the `runtime_control` namespace only; every other namespace keeps
+the cache behaviour:
 
-- **Missing file**: load with empty cache, log info, proceed normally.
+- **Missing file**: load with empty cache, log info, proceed normally. Control
+  bootstrap follows the lifecycle contract: it seeds only a GUID with no control
+  material, and otherwise withholds dependent drivers as FAILED.
 - **Corrupt file** (invalid JSON, schema validation failure): rename the
   corrupt file to `runtime_state.json.corrupt-<ISO8601>`, load with empty
-  cache, log warning, proceed normally.
-- **Plugin namespace schema_version mismatch**: drop that namespace, load
-  others normally, log warning.
+  cache, log warning, proceed normally. The renamed file preserves the exact
+  original bytes and counts as a control quarantine copy: control state is
+  unreadable, not missing, so nothing is seeded, no GUID is generated and
+  every dependent driver is withheld as FAILED until a valid GUID-preserving
+  base is restored.
+- **Plugin namespace schema_version mismatch**: drop that namespace from the
+  in-memory load, load others normally, log warning.
+- **Unsupported or malformed `runtime_control`**: the one exception to the two
+  rules above. Preserve the namespace and fail affected drivers closed; never
+  drop it, load it empty or reinterpret it as missing. A missing or malformed
+  mark or catalog revision fails the whole control namespace closed. A
+  malformed known driver record fails only that driver when the shared bounds
+  and independent records remain valid.
+
+The normative bootstrap, quarantine and offline namespace-only repair contract
+is [runtime-driver-lifecycle.md](runtime-driver-lifecycle.md#s3d2-bootstrap-load-failures-and-explicit-repair).
+Unsupported control must remain distinguishable from missing control before any
+bootstrap decision; enabled configuration cannot seed RUNNING after a load failure.
 
 The HA add-on has its own failure-mode contract for the
 `meta.instance_guid` field. See the Add-on lifecycle section.
@@ -316,9 +337,10 @@ When AD09b case (2) or (5) triggers, the add-on:
 
    Operators who write a partial file (only `meta.instance_guid`, missing
    `schema_version` or `meta.written_at`) will pass the add-on read but
-   trigger a corrupt-file quarantine on the gateway side, which is
-   recoverable but adds a `.corrupt-<ISO8601>` rename and a quarantine log
-   line. Following the template avoids that churn.
+   trigger a corrupt-file quarantine on the gateway side: a
+   `.corrupt-<ISO8601>` rename and an empty observational cache, while the
+   renamed copy keeps dependent drivers withheld until a valid
+   GUID-preserving base is restored. Following the template avoids that churn.
 
    The add-on emits the marker file with the actual file path of the legacy
    `/data/instance_guid` content interpolated when possible, so the

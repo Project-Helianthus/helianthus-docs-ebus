@@ -25,6 +25,7 @@ def test_closed_driver_snapshot_v1_vocabulary() -> None:
         "`reason`",
         "`retry`",
         "`generation`",
+        "`desired_revision`",
         "`revision`",
         "`attempt`",
         "`capabilities`",
@@ -76,7 +77,8 @@ def test_unproven_close_enters_process_epoch_safety_quarantine() -> None:
     for required in (
         '"safety_quarantined": true',
         "`CLOSE_UNCONFIRMED`",
-        "`SAFETY_QUARANTINED`",
+        "refused with `FAILED_PRECONDITION` at the lifecycle refusal-table quarantine row",
+        "START with the current revision and desired RUNNING is a no-op and is not a recovery path",
         "observed state is `FAILED`",
         "effective capabilities are empty",
         "manual start and restart",
@@ -115,23 +117,20 @@ def test_active_callback_timeout_never_closes_beneath_raw_transport() -> None:
         assert required in architecture
 
 
-def test_operation_concurrency_idempotency_and_audit() -> None:
+def test_operation_concurrency_readback_and_diagnostics() -> None:
     text = _normalized(API)
     for required in (
         "`drivers.v1.list`",
         "`drivers.v1.start`",
         "`drivers.v1.stop`",
         "`drivers.v1.restart`",
-        "one operation is active per driver",
-        "same idempotency key",
-        "same operation result",
-        "different intent",
-        "`CONFLICT`",
-        "stable `UNAVAILABLE`",
-        "one audit record",
-        "request ID",
-        "operation ID",
-        "before and after revision",
+        "Expected-revision comparison precedes the same-desired no-op test",
+        "one current typed slot and at most one reserved successor",
+        "A lost response is resolved through list/get readback",
+        "No operation ID, request ID, disposition, completion field or receipt is returned",
+        "Superseded: the former `DriverOperationV1` response",
+        "echoes the snapshot's `desired_revision`, never the view `revision`",
+        "a START during STOPPING takes the reserved slot as a typed replacement",
         "never contains an endpoint, credential, raw error, or protocol payload",
     ):
         assert required in text
@@ -163,9 +162,11 @@ def test_retry_stop_restart_and_runtime_override_semantics() -> None:
         "drain deadline",
         "adapter-owned close worker",
         "restart is one serialized stop-then-start operation",
-        "process-epoch-local",
+        "Superseded by the D3 amendment: durable desired state",
+        "survives a gateway process restart",
+        "configured-disabled driver is not startable",
+        "`FAILED_PRECONDITION` under the disabled-by-configuration row (order 4)",
         "does not rewrite add-on options",
-        "does not survive a gateway process restart",
     ):
         assert required in text
 
