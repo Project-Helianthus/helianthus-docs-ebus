@@ -81,8 +81,9 @@ with dated register points, remains exactly the merge contract's lifetime truth
 table; a calendar change cannot turn it into a dated annual total.
 
 Register precedence over broadcast is unchanged even when the register point is
-stale. Within one source, only a strictly later monotonic ingest wins; equal
-ingests are rejected. Failed or rejected observations retain partial
+stale. Within one source and process epoch, only a strictly later monotonic
+ingest wins; equal ingests are rejected. Across restart, use the restored-evidence
+ordering rule below. Failed or rejected observations retain partial
 last-known-good state and its original age. Calendar projection, cache rebuild,
 rollover and configuration rejection never count as a new observation. Preserve
 the documented 45-minute freshness threshold; use monotonic elapsed duration,
@@ -106,7 +107,7 @@ recreated by a later clock change.
 | Captured MCP snapshot or GraphQL subscription event | Preserve the projection as of capture/event time. A captured MCP snapshot retains the documented five-minute TTL; a subscription event remains frozen. Do not reinterpret either under a later reference |
 | Location configuration or zone-rule update while running | Reject hot replacement; continue with the accepted immutable context. Changes to process zone settings cannot silently change energy policy. Applying a different context requires restart |
 | Restart with a different location or loaded rules | Stop old acquisitions; discard derived relative-window caches and cached live projections. Rebuild against the new context. Never relabel retained absolute points or reuse relative-month replies from the old context; preserve lifetime values and original provenance |
-| Evidence restored after restart | A process-local monotonic marker cannot be compared across processes. Preserve original UTC evidence and retained values, but mark age Unknown/stale unless a trusted existing persistence mechanism preserves elapsed age. Do not reset restored points to fresh or synthesize monotonic age from a corrected wall clock |
+| Evidence restored after restart | A process-local monotonic marker cannot be compared across processes. For the same key and source, treat the first otherwise admissible observation ingested in the new process epoch as causally newer than the restored point, regardless of either marker's numeric value. Once accepted, use the new observation's current-epoch marker for subsequent same-source ordering; restoring an older-epoch point cannot overwrite a current-epoch observation. Source precedence remains unchanged, so a broadcast cannot replace a restored register point. Preserve original UTC evidence and retained values, but mark age Unknown/stale unless a trusted existing persistence mechanism preserves elapsed age. Do not reset restored points to fresh or synthesize monotonic age from a corrected wall clock |
 
 Any derived cache is scoped to the calendar context and reference date; an old
 generation or date cannot satisfy a new live projection or relative acquisition.
