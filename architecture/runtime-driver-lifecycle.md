@@ -1,10 +1,10 @@
-# Runtime driver lifecycle: G5 recovery contract
+# Runtime driver lifecycle: G5 epoch and recovery contract
 
 Status: proposed software 0.7 contract. This page specifies the selected D5
-recovery mechanism for gateway issue
+epoch policy D1/A2 and D5 recovery mechanism for gateway issue
 [#1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032),
-PR 0a and amendment A6, covering S3.7–S3.9. It does not claim that the runtime
-control service or durable recovery is implemented. The G4 publication hub has
+PRs 0a/0b and amendments A2/A6, covering S4 and S3.7–S3.9. It does not claim
+that the runtime control service or durable recovery is implemented. The G4 publication hub has
 an in-memory journal; that alone supplies no process-loss recovery.
 
 The companion [gateway runtime/driver contract](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/docs/architecture/runtime-driver-provider-contract-v1.md)
@@ -14,6 +14,118 @@ hooks, using SemReg's existing public `NewPublicationKernel` constructor and
 `Apply`. No SemReg API, dependency change or snapshot-import prerequisite is
 introduced. Earlier proposals for client command tracking and lifecycle
 authorization in that contract must be read with the final D3/D4 decisions below.
+
+## A2: explicit restart and start after stop
+
+Final D1 selects a new source epoch for every accepted RESTART and START after
+a completed STOP, as well as on process start. Final N1 requires this public
+A2 companion to merge before or with gateway PR 0b; registration and service
+documentation is a separate prerequisite of PR 1. This is the partial slice
+tracked by [docs issue #650](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/650),
+not completion of gateway #1032.
+
+The stable `SourceID` derives from `DriverID` plus configured owner identity.
+It never derives from an endpoint, path, connection handle or discovery result.
+Changing a connection does not change source ownership. Keep source identity,
+process incarnation, source epoch, driver generation, native generation,
+lifecycle sequence and publication cursor distinct.
+
+| Trigger | Epoch and reservation rule |
+|---|---|
+| Process start, including desired STOPPED | Create a new epoch and its inert generation-1 barrier reservation before provider work; historical admission is never current |
+| First START from an initially STOPPED process, with no intervening completed STOP | Claim the existing inert generation-1 reservation at its persisted per-asset next cursors; do not allocate a second epoch |
+| STOP of a started driver | Fence callbacks and admission immediately; retire the current epoch and finish semantic cleanup independently of native cancellation/drain/close. Publish STOPPED only after both obligations complete; STOP does not admit a successor |
+| START after completed STOP | Allocate exactly one successor epoch/reservation after old-epoch retirement, settled control and proven native close; complete its barrier before preparation |
+| RESTART | Require desired RUNNING and keep it RUNNING throughout the serialized stop-then-start operation. Retire and close the predecessor before admitting exactly one successor epoch/reservation; intermediate observed STOPPING is not a durable desired STOPPED decision |
+| Manager-driven retry or failure replacement | Retain the epoch and advance driver generation through the existing Fence/Activate path; never turn an automatic retry into explicit epoch succession |
+| Native reconnect | Retain the epoch. A reconnect that admits a replacement driver instance advances driver generation; an internal connection retry without replacement stays under the existing driver generation and native retry owner |
+
+START and STOP remain idempotent by desired state under D3. A START while desired
+RUNNING neither resets backoff nor allocates an epoch. Repeated reconciler wakes
+for one accepted operation reuse its persisted successor and reservation; a new
+accepted RESTART is a new operation, not a client-key replay.
+
+### Publication-free hub-native succession
+
+The new hub-native succession seam is allowed only after the old epoch is
+retired and its control work, including reprojection, is settled. The service
+also requires independent native-close proof before replacement. A nil manager
+return or a semantic retirement alone is not that proof. Uncertain close retains
+quarantine and prevents successor preparation, activation and admission; changing
+epochs cannot clear it.
+
+Derive the successor epoch from `(process incarnation, SourceID, admission
+ordinal)`, with a strictly advancing per-source ordinal, and start its driver
+generation at 1. Journal the succession and ordinal/reservation transition as
+one all-or-none hub operation: journal failure exposes no successor handle,
+consumes no usable reservation and cannot permit a parallel admission. Preserve
+the predecessor's retirement history. Concurrent or repeated attempts for the
+same accepted lifecycle operation resolve to that one recorded successor; they
+must not allocate multiple ordinals, epochs or reservations. The service's
+durable intent/outcome protocol below records the hub-only transition outside
+hub and manager locks; an ambiguous result blocks replacement until resolved.
+
+This operation requires no asset declaration or publication. The lifecycle-only
+empty asset set remains valid and its generation-1 next cursor stays at 1.
+For a nonempty source, carry the indexed and incomplete-cleanup asset set into
+the successor barrier, retain old tombstones and history, and settle each
+affected asset before provider work or admission. Each cursor is scoped to
+`(asset, SourceID, epoch, driver generation)` as specified below; accepted
+barrier work advances only that asset's cursor. Never reset a consumed cursor
+or use a larger driver generation as a substitute for retiring an old epoch.
+
+Do not borrow legacy `BeginEpoch`, legacy successor admission or `Withdraw`
+rollback. `Withdraw` is a pre-publication rollback, not STOP or succession;
+`Activate` cannot revive a retired epoch. Existing legacy identity regimes and
+error behavior remain owned by their existing paths. A same-epoch cleanup
+generation used to retire old work is not the new epoch's provider reservation.
+
+Persist exactly one pending successor epoch and generation-1 reservation for
+the accepted replacement, then its barrier results and exact claim before
+`Prepare`. Claim, consume and activation retain their existing write-ahead and
+readiness rules. Component recovery resumes the same claim and per-asset next
+cursors, including uncertain exact bytes; process-loss recovery uses the new
+incarnation and restoration rules below, never an old live handle.
+
+### Generation mapping and late work
+
+Map each full driver `GenerationKey` (source, epoch, driver generation, with
+driver/operation correlation) explicitly to its process-monotonic native
+generation before accepting native callbacks or admission. Persist the mapping
+with the lifecycle correlation; after process loss it is historical only.
+Driver generation resets to 1 in a successor epoch, while native generation
+continues increasing within the process. Never compare a bare driver-generation
+counter to a native generation or route a callback by generation number alone.
+
+Fence old handles, staged publications, callbacks and late preparation/activation
+results at the admission/publication serialization boundary using incarnation,
+source, epoch, generation, admission identity and operation correlation. A late
+result is never installed or published; abort or fence/stop it on its independent
+bounded cleanup deadline, retaining quarantine without close proof. Native
+retry, reconnect, lease drain and close ownership and budgets do not change;
+the service supplies ordered intent, not a second native retry or drain owner.
+
+### Amended LIFE expectations
+
+These A2 expectations replace the companion's older same-epoch replacement
+wording for LIFE-05/25/31/32. They are synthetic implementation acceptance
+obligations, not claims that implementation tests have passed. A6's per-asset
+cursors apply rather than an older shared sequence across assets.
+
+| Vector | Required A2 observation |
+|---|---|
+| LIFE-05: successful close-before-Prepare RESTART | Desired stays RUNNING. Fence old callbacks/admission, retire and settle the old epoch, prove native close, then journal one ordinal-derived successor at generation 1. Complete its barrier and claim its exact persisted reservation before preparation/publication; no overlapping native owner |
+| LIFE-25: initially STOPPED process, two barrier assets, first START, then RESTART | First START uses the initial inert epoch's existing generation-1 reservation and each asset's next cursor after its own accepted barrier. RESTART retires that epoch and claims one new epoch at generation 1 after cleanup and close proof; it never claims an old same-epoch cleanup generation or carries an old cursor into the new epoch |
+| LIFE-31: START, completed STOP, second START with duplicate wakes and component recovery before Prepare | STOP permanently retires the first epoch. The second START and every wake/recovery reuse exactly one recorded successor epoch, generation-1 reservation and per-asset next cursors. No extra ordinal or epoch is allocated; old callbacks and handles stay rejected |
+| LIFE-32: RESTART has uncertain/conflicting semantic withdrawal but native close succeeds | Preserve exact pending semantic bytes, accepted prefix, budgets and independent close proof. Desired remains RUNNING; no successor admission or preparation until old retirement/control settles. Resolve uncertain work first, then journal and claim exactly one new epoch/reservation without resetting any accepted cursor |
+
+Also require synthetic negative cases for succession before retirement, pending
+control/reprojection, journal rejection, concurrent duplicate succession and
+unconfirmed native close. Assert zero replacement provider calls on refusal,
+unchanged last-known-good identity/provenance on unaffected assets, old-handle
+rejection after success, same-epoch manager retry with increasing native
+generation, and a generation-1 successor mapped to a strictly later native
+generation. LIFE-07–LIFE-10 late-result safeguards remain in force.
 
 ## Ownership and durable scope
 
