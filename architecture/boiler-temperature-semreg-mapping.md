@@ -107,7 +107,8 @@ These are cutover requirements; they do not describe implemented new behavior.
 Retain the native observation and selector/reply evidence separately from its
 semantic interpretation. A short or mismatched reply, read failure, `DATA2c`
 replacement bytes `00 80`, or out-of-bounds quantity supplies **no update**.
-Never emit zero, a default, or the replacement decoded as a measurement.
+Never synthesize zero or another default, or emit the replacement decoded as a
+measurement.
 Valid `00 00` is `0 °C` and remains a value. DATA2c increments of `1/16 °C`
 can be represented exactly as canonical decimal quantities, without rounding.
 
