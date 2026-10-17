@@ -35,22 +35,21 @@ by `semreg_fact`: the rolling-average row has a null fact but retains
 - Removing the withheld rolling-average row because its `semreg_fact` is null,
   or dropping or changing its `loss`, must fail the intended source comparison.
 
-These are manual review examples, not executable tests or evidence of current
-validator behavior. New mechanically checked invariants require an explicit
-amendment to this scope decision identifying the structured claim and its
-source; they must not accumulate as assertions about sentences.
+These examples are exercised by the registered validator mutation tests. New
+mechanically checked invariants require an explicit amendment to this scope
+decision identifying the structured claim and its source; they must not accumulate as assertions about sentences.
 
 ## Implementation and evidence boundary
 
-The supplied issue baseline describes #649 as open and pending, with its
-validator and coverage page absent from that main view. The provisioned source
-view instead contains the [coverage page](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/deployment/prometheus-semantic-coverage.md)
-and [validator](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/scripts/validate_prometheus_semantic_coverage.py),
-with registration in the [local gate](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/scripts/ci_local.sh).
-That validator includes prose assertions; its presence does not establish
-conformance to the intended policy above. The companion PR remains pending
-according to the supplied baseline; this decision does not certify its status
-or implementation acceptance.
+The [registered validator](../scripts/validate_prometheus_semantic_coverage.py)
+checks the [coverage page](../deployment/prometheus-semantic-coverage.md)
+using structured metric tables, label domains, fixture-derived thermal
+associations and alert selectors. Transport ownership descriptions and alert
+annotation wording remain human review material. Label-domain rows explicitly
+reference the matching semantic domain table for field membership. Alert rule
+names, expressions, durations and severity labels retain their structured
+checks; static validation does not evaluate PromQL or certify runtime behavior.
+The [local gate](../scripts/ci_local.sh) runs the checker and its mutation tests.
 
 For protocol facts, the public [native B524 contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524.md)
 must precede the [semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md)
