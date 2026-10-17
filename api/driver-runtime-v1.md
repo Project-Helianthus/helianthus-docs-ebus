@@ -38,10 +38,11 @@ in place of a catalog ID.
 
 ## `DriverSnapshotV1`
 
-Every list item and mutation response uses the following closed shape:
+Every list/get snapshot uses the following closed shape. Mutation results use
+the smaller desired-state result defined under Mutating Tools:
 
 The lifecycle evidence fields are `reason`, `retry`, `generation`, `revision`,
-`attempt`, `capabilities`, `effective_capabilities`, and
+`catalog_revision`, `attempt`, `capabilities`, `effective_capabilities`, and
 `safety_quarantined`.
 
 ```json
@@ -60,17 +61,12 @@ The lifecycle evidence fields are `reason`, `retry`, `generation`, `revision`,
     "not_before_utc": "2026-08-21T10:00:05Z"
   },
   "generation": 4,
-  "revision": 29,
+  "revision": "7",
+  "catalog_revision": "29",
   "attempt": 2,
   "capabilities": ["DISCOVERY", "READ", "PAIRING", "TOPOLOGY"],
   "effective_capabilities": [],
   "safety_quarantined": false,
-  "active_operation_id": null,
-  "last_operation": {
-    "operation_id": "drvop_01",
-    "kind": "RESTART",
-    "outcome": "RETRY_SCHEDULED"
-  },
   "changed_at_utc": "2026-08-21T10:00:00Z"
 }
 ```
@@ -87,9 +83,17 @@ rejected by conformance fixtures until a later version adds them.
   monotonically increases. The generation changes only when a new driver
   instance is admitted. It does not change for polling, retry scheduling, or a
   failed construction that never admitted an instance.
-- `revision` starts at one after catalog construction and monotonically
-  increases across the process epoch. The revision changes on every externally
+- `revision` is the durable desired revision, encoded as a canonical decimal
+  string of an unsigned 64-bit value. Echo it unchanged as `ExpectedRevision`.
+  Observation-only changes do not advance it; accepted decisions advance the
+  namespace mark and assign the new mark to this driver. A driver without a
+  record returns STOPPED at the current mark. Repair assigns revisions above
+  the validated pre-repair mark.
+- `catalog_revision` is a separate canonical decimal string. It starts at one
+  and monotonically increases; the catalog revision changes on every externally
   visible snapshot mutation and never changes for a byte-identical replay.
+  Every advance is durable before exposure, survives restart and is never reused,
+  including on repair. It is never used as `ExpectedRevision`.
 - attempt is scoped to one generation. It counts admission/recovery attempts
   beginning at one and resets only when a new generation is admitted. Zero is
   used before the first attempt.
@@ -106,13 +110,11 @@ rejected by conformance fixtures until a later version adds them.
   static set; `DEGRADED` exposes a documented non-empty proper subset.
 - `safety_quarantined` is true only after the manager cannot prove that an old
   provider instance closed. It is false for ordinary recoverable failures.
-- `active_operation_id` is non-null only while one operation owns the driver.
-- `last_operation` is null before the first terminal operation. It retains
-  only categorical correlation for the current process epoch.
-- Provider callbacks carry the generation and active operation ID captured at
-  admission. A callback with stale correlation cannot mutate the snapshot.
+- Provider callbacks carry internal lifecycle correlation captured at admission.
+  A callback with stale correlation cannot mutate the snapshot; internal
+  correlation is not a client operation handle.
 - timestamps are UTC RFC3339 values and are evidence, never ordering
-  authority. Revision is the ordering authority.
+  authority. Catalog revision is the view ordering authority.
 
 ### Closed Reason Codes
 
@@ -197,10 +199,14 @@ Example result envelope:
 ```json
 {
   "schema_version": 1,
-  "manager_revision": 29,
+  "manager_revision": "29",
   "drivers": []
 }
 ```
+
+`manager_revision` is the catalog revision, encoded as a canonical decimal
+string and equal to each returned snapshot's `catalog_revision`. List/get return
+`revision` and `catalog_revision` from one coherent cached transaction.
 
 The real V1 result contains exactly three driver entries. The empty array above
 illustrates envelope shape only and is not a valid V1 catalog result.
@@ -225,54 +231,36 @@ which supersedes the former `idempotency_key` and `request_id` request members:
 neither is accepted, and a request carrying either is refused as
 `INVALID_ARGUMENT` like any additional member.
 
-Every tool returns a closed `DriverOperationV1` envelope:
+Accepted and same-desired no-op results contain only this closed result inside
+the ordinary deterministic MCP envelope:
 
 ```json
 {
-  "schema_version": 1,
-  "operation_id": "drvop_01",
-  "request_id": "optional-client-correlation",
-  "driver_id": "eebus.primary",
-  "kind": "START",
-  "disposition": "ACCEPTED",
-  "completed": false,
-  "outcome": null,
-  "snapshot": {}
+  "desired_state": "RUNNING",
+  "revision": "8"
 }
 ```
 
-The closed dispositions are `ACCEPTED`, `REPLAYED`, `NOOP`, `CONFLICT`, and
-`UNAVAILABLE`. Terminal outcomes are `SUCCEEDED`, `ALREADY_IN_STATE`,
-`RETRY_SCHEDULED`, `STOP_TIMEOUT`, `DRIVER_NOT_FOUND`, `DRIVER_BUSY`,
-`PROVIDER_UNAVAILABLE`, `SAFETY_QUARANTINED`, `INVALID_REQUEST`, and
-`INTERNAL_ERROR`.
+`revision` is the durable desired revision, with the same encoding as the
+snapshot field. No operation ID, request ID, disposition, completion field or
+receipt is returned. This replaces the entire former `DriverOperationV1`
+response contract as well as its concurrency and idempotency rules. Refusals
+use the lifecycle contract's ordered codes; REVISION_CONFLICT includes the
+current cached view.
 
-The placeholder snapshot above represents the required `DriverSnapshotV1`
-object. An implementation never returns an open or empty snapshot object.
+### Concurrency And Readback
 
-### Concurrency And Idempotency
+Expected-revision comparison precedes the same-desired no-op test. START while
+desired RUNNING and STOP while desired STOPPED are no-ops without counter, retry
+budget or observation changes. RESTART requires desired RUNNING; otherwise it
+returns FAILED_PRECONDITION before transition-capacity checks, even in STOPPING.
+Changing work uses one current typed slot and at most one reserved successor,
+with TRANSITION_BUSY when capacity is unavailable. A changing START from stable
+STOPPED persists typed START in the current slot.
 
-Superseded for lifecycle control by the D3 amendment in
-[architecture/runtime-driver-lifecycle.md](../architecture/runtime-driver-lifecycle.md):
-optimistic expected revisions replace idempotency keys and request identifiers,
-and the two-field request above is the governing contract. The text below
-describes the earlier envelope and stays until the MCP runtime-tool amendment
-updates this page.
-
-Exactly one operation is active per driver. Independent drivers may execute in
-parallel. A second different operation on a busy driver returns `CONFLICT` /
-`DRIVER_BUSY` and is not queued.
-
-The manager binds each idempotency key to the normalized driver ID and kind.
-The same idempotency key with the same intent returns the same operation result
-and operation ID without a second lifecycle effect. The same key with a
-different intent returns `CONFLICT` / `INVALID_REQUEST`. Keys and cached
-results expire only with the process epoch.
-
-Start on an already running driver and stop on an already stopped/disabled
-driver return `NOOP` / `ALREADY_IN_STATE`; they do not advance generation.
-Restart is never reduced to that no-op and creates one new generation when it
-succeeds.
+A lost response is resolved through list/get readback. An old-revision retry
+conflicts, and a fresh-revision RESTART after settlement is another restart.
+There is no idempotency-key lookup or completed-operation record.
 
 ### Unproven-close Safety Quarantine
 
@@ -295,12 +283,7 @@ contains:
   "observed_state": "FAILED",
   "reason": {"code": "CLOSE_UNCONFIRMED", "retryable": false},
   "effective_capabilities": [],
-  "safety_quarantined": true,
-  "last_operation": {
-    "operation_id": "drvop_02",
-    "kind": "STOP",
-    "outcome": "SAFETY_QUARANTINED"
-  }
+  "safety_quarantined": true
 }
 ```
 
@@ -325,9 +308,9 @@ zero-callback drain expiry can take the second-phase proof path and yield a
 proven `STOP_TIMEOUT` outcome; that outcome is restartable.
 
 The initial response is admission-bounded. Consumers observe progress through
-`drivers.v1.list`, correlating `active_operation_id`, `last_operation`, and
-revision. Cancellation of the caller's request does not detach an unowned
-operation: the manager either rejects before admission or owns the admitted
+`drivers.v1.list`, using desired state/revision and observed state; readback
+does not attribute completion to a particular call. Cancellation of the caller's
+request does not detach an unowned operation: the manager either rejects before admission or owns the admitted
 operation to a terminal categorical result.
 
 ### Stable Unavailable Providers
@@ -339,15 +322,11 @@ and a current snapshot. It never returns a raw construction or transport error.
 
 ## Audit Contract
 
-Exactly one audit record is emitted for every mutation admission or rejection and one
-terminal record is emitted for an admitted asynchronous operation. Each record
-contains schema version, request ID, operation ID, driver ID, kind,
-disposition/outcome, before and after revision, and UTC timestamps. It never
-contains an endpoint, credential, raw error, or protocol payload.
-
-Audit publication failure cannot roll back a completed lifecycle transition,
-but it makes the operation outcome `INTERNAL_ERROR` and raises a process-level
-operator alert. The audit sink is bounded and must not block provider teardown.
+The D3 lifecycle amendment supersedes the former request ID, operation ID and
+receipt-based audit requirements. Diagnostics use only the bounded sanitized
+in-memory ring defined there; they never provide deduplication or admission
+authority. A diagnostic never contains an endpoint, credential, raw error, or
+protocol payload. Diagnostic publication cannot roll back durable intent.
 
 ## Error And Security Boundary
 

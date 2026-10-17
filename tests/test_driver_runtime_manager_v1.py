@@ -115,23 +115,17 @@ def test_active_callback_timeout_never_closes_beneath_raw_transport() -> None:
         assert required in architecture
 
 
-def test_operation_concurrency_idempotency_and_audit() -> None:
+def test_operation_concurrency_readback_and_diagnostics() -> None:
     text = _normalized(API)
     for required in (
         "`drivers.v1.list`",
         "`drivers.v1.start`",
         "`drivers.v1.stop`",
         "`drivers.v1.restart`",
-        "one operation is active per driver",
-        "same idempotency key",
-        "same operation result",
-        "different intent",
-        "`CONFLICT`",
-        "stable `UNAVAILABLE`",
-        "one audit record",
-        "request ID",
-        "operation ID",
-        "before and after revision",
+        "Expected-revision comparison precedes the same-desired no-op test",
+        "one current typed slot and at most one reserved successor",
+        "A lost response is resolved through list/get readback",
+        "No operation ID, request ID, disposition, completion field or receipt is returned",
         "never contains an endpoint, credential, raw error, or protocol payload",
     ):
         assert required in text

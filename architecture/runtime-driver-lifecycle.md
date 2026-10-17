@@ -460,8 +460,10 @@ Catalog revision starts at 1, advances once per accepted decision and once per
 externally visible observed-view transaction, and is distinct from desired,
 native and semantic revisions, lifecycle sequence and publication cursors. It
 is a view counter only: it orders cached list/get views, is never compared with
-a desired revision, and may regress on repair (reset sets it to 1). List/get
-return coherent cached views; historical observations grant no startup or
+a desired revision. Persist every catalog advance before exposing the new view;
+the durable catalog revision bounds every view issued under this GUID, survives
+restart and is never reused. Repair advances it from validated `C` to `C + 1`.
+List/get return coherent cached views; historical observations grant no startup or
 native admission authority.
 
 In JSON, every revision in responses (desired revision, catalog revision and
@@ -562,8 +564,9 @@ a replacement also retains its exact successor reservation. Internal sequences
 are not client operation handles and survive only while recovery needs them.
 No wake or recovery infers work from desired state alone.
 
-From a stable driver, STOP or RESTART occupies the current slot. During STARTING
-or BACKOFF, accept STOP or RESTART only if the reserved slot is empty and no
+From stable STOPPED, a changing START occupies the current slot as typed START
+work. From a stable driver, STOP or RESTART occupies the current slot. During
+STARTING or BACKOFF, accept STOP or RESTART only if the reserved slot is empty and no
 accepted RESTART is still executing. The new request always takes the reserved
 slot. When the STARTING or BACKOFF attempt has no typed current operation (bootstrap
 or process-start reconciliation of stored RUNNING, or a manager retry), the
@@ -576,13 +579,15 @@ reserved STOP completes only after cleanup and native close; reserved RESTART
 executes its own stop-then-start after those obligations settle. It cannot be
 replaced by a later STOP or RESTART. An accepted RESTART is never coalesced away.
 
-A changing request arriving during STOPPING, an executing RESTART, or with both
+After all earlier refusal checks and the same-desired no-op test pass, a
+changing request arriving during STOPPING, an executing RESTART, or with both
 slots occupied returns retryable `TRANSITION_BUSY`, with no revision or state
 change. The caller reads current state and retries with its current revision
 after work settles; there is no server retry queue. In particular, START after
 a pending STOP waits for completed STOP. This deliberately bounded refusal is
-separate from the same-desired no-op rule. Unrelated drivers and list/get remain
-responsive; decision serialization never holds hub or manager locks over disk
+separate from the same-desired no-op rule. RESTART while desired STOPPED returns
+`FAILED_PRECONDITION` before capacity is checked, including during STOPPING.
+Unrelated drivers and list/get remain responsive; decision serialization never holds hub or manager locks over disk
 I/O, native calls, cancellation or drain.
 
 Persist phase/observation updates before releasing the next slot. Native close
@@ -633,9 +638,9 @@ Corrupt/unreadable/unsupported control state starts the HTTP/API/health shell
 but withholds affected eBUS as FAILED; no empty-state or RUNNING fallback is
 allowed. Preserve bad bytes and quarantine before any repair. A malformed known
 driver record fails that driver closed while valid independent records remain
-usable. A malformed or missing mark fails the whole namespace closed, because
-every decision depends on it. Whole-file corruption/unreadability withholds all
-dependent drivers and must never create a new GUID or overwrite the unreadable
+usable. A malformed or missing mark or catalog revision fails the whole namespace
+closed, because decisions and coherent views depend on these durable bounds.
+Whole-file corruption/unreadability withholds all dependent drivers and must never create a new GUID or overwrite the unreadable
 file as a fresh base.
 
 ### Offline namespace-only reset
@@ -656,8 +661,8 @@ Validate readability, the entire base structure and the existing valid GUID
 before touching anything. Whole-file corruption/unreadability is refused until
 a valid GUID-preserving base is restored externally. Unsupported or malformed
 namespace records within an otherwise valid base may be reset only when the
-mark and the D5 recovery stream can be validated. First preserve
-an exclusive, non-overwriting quarantine copy of the exact original bytes and
+mark, durable catalog revision and the D5 recovery stream can be validated.
+First preserve an exclusive, non-overwriting quarantine copy of the exact original bytes and
 fsync it. Failure to preserve that copy aborts reset. Existing quarantine copies
 are never deleted or replaced. Copy GUID, meta and all other opaque namespaces
 unchanged. Quarantine copies are unvalidated diagnostics only; they never
@@ -666,17 +671,18 @@ supply a revision bound, records or recovery material. Before replacement, read
 under this GUID, including removed driver IDs and earlier repairs. Cross-check
 it against the verified D5 recovery stream; any desired revision recorded there
 above `H`, or a D5 stream that cannot be verified, refuses reset. If the mark
-cannot be validated, refuse. If `H + N` for `N` configured IDs cannot be
-represented, refuse with `COUNTER_EXHAUSTED` before replacement; never wrap or
-choose a lower value. Every reset refusal exits nonzero with its named reason
+cannot be validated, refuse. Read `C` from the validated durable catalog
+revision; if it cannot be validated, refuse. If `H + N` for `N` configured IDs
+or `C + 1` cannot be represented, refuse with `COUNTER_EXHAUSTED` before
+replacement; never wrap or choose a lower value. Every reset refusal exits nonzero with its named reason
 (`COUNTER_EXHAUSTED` for overflow, `FAILED_PRECONDITION` otherwise) and replaces
 nothing.
 
 Atomically replace only the desired, in-flight and catalog records: one
 version-1 STOPPED record per configured ID at desired revisions `H + 1` through
 `H + N` in bytewise `DriverID` order, the mark set to `H + N` in the same
-transaction, catalog revision 1, and no active operation. Resolve IDs from the
-installation’s existing read-only configuration; if that configuration cannot
+transaction, catalog revision `C + 1`, and no active operation. Resolve IDs
+from the installation’s existing read-only configuration; if that configuration cannot
 be validated, refuse rather than guess IDs. Subsequent changing decisions take
 mark + 1. `ExpectedRevision` remains the same single unsigned 64-bit value, with
 no additional request field. Every pre-repair expected revision therefore
@@ -694,8 +700,8 @@ No native start occurs as part of this command.
 
 ## S3/D3: finite retention and D5 preservation
 
-Durable minimum is desired/revision, the bounded typed in-flight work and the
-complete D5 replay/recovery material specified above. Version 1 permits at most
+Durable minimum is desired/revision, catalog revision, the bounded typed
+in-flight work and the complete D5 replay/recovery material specified above. Version 1 permits at most
 129 records (the one issued-revision mark plus at most 128 driver records) and a
 64 MiB encoded control namespace, including the mark, pending work and restore
 material. Mark-only writes count against these limits and follow the same readback rule as decisions. Reject registration beyond the driver limit before
@@ -745,15 +751,15 @@ Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
 |---|---|
 | CTL-01 / CTL-02 | Coherent sorted cached list/get; unknown ID returns NOT_FOUND with no factory calls |
 | CTL-03 | Stale expected revision conflicts even for a same-desired request; no mutation |
-| CTL-04 | Lose an accepted START response, restart the process and read back durable desired/revision; same-desired START is a no-op, without any key/receipt lookup |
+| CTL-04 | Lose an accepted START response, restart the process and read back durable desired/revision; same-desired START is a no-op, without any key/receipt lookup. A changing START from stable STOPPED persists typed START in the current slot, which recovery resumes |
 | CTL-05 | Accept only `DriverID` and `ExpectedRevision` (a canonical decimal string); reject every additional request member as invalid shape; valid control uses only the validation and atomic decision steps defined above |
 | CTL-06 | START in desired RUNNING across DEGRADED/BACKOFF/FAILED and STOP in desired STOPPED with unconfirmed close preserve retry budget, quarantine, observations and both revisions |
-| CTL-07 | RESTART in desired STOPPED refuses; each accepted RESTART in RUNNING advances revision and executes one replacement |
-| CTL-08 | Pause STARTING and separately BACKOFF, each with a typed current START and with an untyped attempt (bootstrap reconciliation or manager retry); STOP/RESTART fence/cancel the old attempt, retain cleanup correlation and always take the reserved slot with one exact next kind, the untyped case synthesizing the cancellation as the current slot; another changing request gets TRANSITION_BUSY; no accepted RESTART disappears |
+| CTL-07 | RESTART in desired STOPPED refuses; each accepted RESTART in RUNNING advances revision and executes one replacement; RESTART during STOPPING with desired STOPPED returns FAILED_PRECONDITION before TRANSITION_BUSY |
+| CTL-08 | Pause STARTING and separately BACKOFF, each with a typed current START and with an untyped attempt (bootstrap reconciliation or manager retry); STOP/RESTART fence/cancel the old attempt, retain cleanup correlation and always take the reserved slot with one exact next kind, the untyped case synthesizing the cancellation as the current slot; another changing request that passes earlier refusal checks gets TRANSITION_BUSY; no accepted RESTART disappears |
 | CTL-09 | Lose process memory during active RESTART; D5 restores pending work and the new incarnation performs its retained replacement before dropping the slot |
 | CTL-10 | Lost RESTART response is resolved by readback; old-revision retry conflicts and a fresh-revision retry after settlement executes another restart |
 | CTL-11 | Same-desired requests during occupied slots remain no-ops with only desired/revision returned; no new durable record, wake or counter allocation |
-| CTL-12 | Hold a pre-repair START with `ExpectedRevision=1`; offline-reset with verified bound `H >= 1`, restart and clear recovery gates. Read back STOPPED at its repaired revision (`H + 1` for a single configured ID); submit the held two-field request and require REVISION_CONFLICT with no mutation, reconciliation wake or native open. A fresh START using the read-back revision can proceed. Repeat repair after further decisions and with removed IDs in the revision coverage; all earlier revisions still conflict. An unvalidated mark, a D5 revision above the mark, an unverifiable D5 stream or `H + N` above the unsigned 64-bit maximum refuses reset without replacing any record; a successful reset leaves the D5 stream byte-identical |
+| CTL-12 | Hold a pre-repair START with `ExpectedRevision=1`; offline-reset with verified bound `H >= 1`, restart and clear recovery gates. Read back STOPPED at its repaired revision (`H + 1` for a single configured ID); submit the held two-field request and require REVISION_CONFLICT with no mutation, reconciliation wake or native open. A fresh START using the read-back revision can proceed. Repeat repair after further decisions and with removed IDs in the revision coverage; all earlier revisions still conflict. An unvalidated mark, a D5 revision above the mark, an unverifiable D5 stream or `H + N` above the unsigned 64-bit maximum refuses reset without replacing any record; a successful reset leaves the D5 stream byte-identical. After visible observations and decisions, repair advances validated durable catalog revision `C` to `C + 1`; an invalid `C` or overflowing `C + 1` refuses without replacement |
 | CTL-13 | Two drivers A and B: accepted decisions interleave and each takes mark + 1, so no revision repeats across drivers. Remove B (record deleted, mark + 1 in the same transaction), then re-add B (mark + 1 again) with no decision for A in between: reads return STOPPED with `revision` equal to the current mark, and a request held before the removal, carrying B's old revision or the mark current at that time, is refused with REVISION_CONFLICT with no mutation. Second line: repeat with an accepted decision for A between removal and re-add; the held request is refused likewise. START with `ExpectedRevision` equal to the read-back mark is accepted at mark + 1, above every earlier revision; a first START for a driver with no record whose `ExpectedRevision` differs from the mark conflicts, and a STOP carrying the mark is a no-op. Remove the namespace, or only its mark, while other control records, D5 material or a quarantine copy exist: load fails closed and nothing is seeded; only a GUID with no control material bootstraps at mark 0. All revisions encode as canonical decimal strings |
 | CTL-14 | Drive one request per refusal row, plus requests failing several checks at once; each returns the code of the earliest failing check in the refusal table with no mutation. A malformed driver record returns FAILED_PRECONDITION with that driver FAILED while an independent driver stays usable; ambiguous persistence returns UNAVAILABLE for every driver until the service's readback completes |
 | CTL-15 | START carrying `ExpectedRevision` `"0"` is refused with INVALID_ARGUMENT; repeat with `"01"` (leading zero), `"+1"`, `" 1"` and `"1x"`. Each refusal is the first refusal-table row, with no mutation, no readback and no reconciliation wake |
@@ -763,9 +769,10 @@ overflow refusal, quarantine retention, offline-reset refusal on an active write
 or invalid base, exact quarantine preservation, GUID/meta/opaque round trips,
 and corrupt/unsupported loads without empty fallback. Two-driver fixtures must
 show B and list/get remain responsive while A blocks in persistence or cleanup.
-These are service/store/MCP test obligations; this prose slice executes none of
-them and changes no schema/output golden. Later payload goldens must remove
-receipt/key fields and record only the amended desired/revision response.
+The committed `scripts/check_runtime_control_contract.py` gate and its mutation
+tests protect these documentation obligations and the closed API examples.
+They do not execute service/store/MCP behavior or prove recovery; implementation
+tests and payload goldens must independently meet the vectors above.
 
 ## D4/public surface boundary
 
