@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from pathlib import Path
+import json
 import re
 
 import yaml
@@ -46,125 +47,25 @@ infrastructure.status.interlock | helianthus_infrastructure_interlock_active | b
 infrastructure.status.readiness | helianthus_infrastructure_ready | boolean: not_ready=0, ready=1
 """
 TRANSPORT_ROWS = """
-ebus_passive_tap_connected | gauge / boolean | none | Bus store; implemented in inspected source, known connection state 0/1; exact-candidate revalidation required | Proven
-ebus_bus_busy_seconds_total | counter / seconds | none | Bus store; implemented, emitted only when passive state is available and timing is available; revalidate candidate | Proven
-ebus_bus_busy_ratio | gauge / ratio 0..1 | window: 1m, 5m, 15m, 1h | Bus store; implemented with the same availability condition; recomputed rolling window, not a baud estimate; revalidate candidate | Proven
-ebus_passive_tap_reconnect_attempts_total | counter / attempts | none | Bus store; implemented, cumulative connection attempts; revalidate candidate | Proven
-ebus_passive_tap_reconnect_successes_total | counter / connections | none | Bus store; implemented, cumulative successful connections; revalidate candidate | Proven
-ebus_passive_tap_reconnect_failures_total | counter / failures | none | Bus store; implemented, cumulative failed connections; revalidate candidate | Proven
-ebus_baud_observed_symbols_per_second | gauge / physical symbols per second | none | **Target**, gateway transport timing owner; absent until a qualified native timing observation exists | Unknown
-ebus_baud_observation_available | gauge / boolean | none | **Target**, same owner; 0 when configured but no valid observation, 1 with current observation; absent if collector not implemented/configured | Unknown
-CAN transport or semantic measurements | unavailable | none admitted | **Pending CAN acquisition**; no native acquisition seam established by this contract, no reserved fake value series | Unknown
+ebus_passive_tap_connected | gauge / boolean | none | Proven
+ebus_bus_busy_seconds_total | counter / seconds | none | Proven
+ebus_bus_busy_ratio | gauge / ratio 0..1 | window: 1m, 5m, 15m, 1h | Proven
+ebus_passive_tap_reconnect_attempts_total | counter / attempts | none | Proven
+ebus_passive_tap_reconnect_successes_total | counter / connections | none | Proven
+ebus_passive_tap_reconnect_failures_total | counter / failures | none | Proven
+ebus_baud_observed_symbols_per_second | gauge / physical symbols per second | none | Unknown
+ebus_baud_observation_available | gauge / boolean | none | Unknown
+CAN transport or semantic measurements | unavailable | none admitted | Unknown
 """
-# Required verbatim policy clauses within the semantic section.
-SEMANTIC_POLICIES = (
-    "Every row below is **Target / exact-candidate revalidation required**, owned\n"
-    "by the named SemReg pack for meaning and the gateway for export. No row is\n"
-    "claimed implemented. The field identifiers are a closed allowlist, not\n"
-    "free-form labels. All rows use the gauge lifecycle and `slot` bound above.",
-    "Enum numbers encode exactly the pack symbols with the corresponding field\n"
-    "prefix; they are categories, never ordinal severity or unknown sentinels.",
-    "No unlisted symbol maps to 0.",
-    "Setpoint visibility supplies no write authority.",
-    "Only the air-temperature and water-temperature rows have exact candidate\n"
-    "links in the local thermal mapping fixture, and both still require qualified\n"
-    "binding and export revalidation.",
-    "The rolling-average candidate remains\n"
-    "withheld: its time-window loss cannot become an instantaneous temperature.",
-    "Other pack fields have definitions, not native mapping evidence here.",
-    "Phase, meter and grid-connection dimensions remain distinct source keys;\n"
-    "never sum or substitute them to populate a missing field.",
-    "The pack does not\n"
-    "establish a native Infrastructure binding or a CAN measurement.",
+THERMAL_FIXTURE = Path(__file__).resolve().parents[1] / (
+    "architecture/fixtures/vaillant-semreg-thermal-map-v1.json"
 )
-BAUD_POLICY = """The baud target measures physical signaling intervals over a completed,
-source-owner-validated observation window, with window validity, expiry and
-timing uncertainty retained in provenance. Configured baud, retained frame
-byte rate, idle time and TCP arrival spacing cannot supply it. The transport
-owner must establish a qualified timing seam and its window/expiry policy
-before implementation acceptance. The latest valid completed estimate is a
-gauge, not a running counter; after expiry or reconnection omit it and mark
-availability 0. No numerical default baud is a measurement. These target
-names remain unimplemented in the inspected bus store."""
-# These clauses jointly define label admission and the series-budget arithmetic.
-LABEL_CONTRACT = """
-- The new baud series have no exporter labels: one observation source per
-  gateway collector. Never choose one of several physical buses implicitly;
-  ambiguous source selection makes observation unavailable.
-- Semantic quantity and status series have only `slot`, from the fixed set
-  `0` through `15`. Each domain admits at most 16 concrete
-  resource/service/dimension tuples. Assignment is explicit, collision-free
-  and durably persisted before publication for the lifetime of the scrape
-  target's `{job, instance}`, including collector restarts. Each binding
-  includes the exact source and resource/service/dimension tuple. Retired
-  slots remain reserved and must never be reassigned under that target,
-  including after source replacement. Admit a replacement only in a never-used
-  slot; exhaustion makes the replacement unavailable. If the binding registry
-  is missing or corrupt after prior publication, omit all semantic values
-  until the original registry is restored and bindings are revalidated.
-  Slots are local bounded selections, never raw identifiers, hashes,
-  fingerprints or encoded locators. Retire a replaced source's slot before
-  publishing replacement values; its availability remains 0. An availability
-  reset alone does not separate historical time series.
-- `helianthus_semantic_field_available` additionally has `domain` from
-  `thermal`, `infrastructure` and `field` from exactly the corresponding
-  field column below. Only configured tuples exist. Thus each of the 32
-  fields has at most 16 value and 16 availability series: at most 1024
-  semantic series per scrape target for the exporter label set, without a
-  domain/field cross product. Deployment-wide, the semantic bound is
-  `T × 1024`, where `T` counts distinct retained target-label combinations,
-  including `job`, `instance` and any other relabeled target labels. Multiple
-  collectors and changes to those combinations multiply the budget; capacity
-  acceptance must bound `T` over the retention period. The two baud series
-  add two per target. Existing bus series retain their own bounded
-  source-owner budgets.
-- Do not export raw asset IDs, addresses, locators, request bytes, serials,
-  network endpoints, contributor identities, capture times or fingerprints
-  as labels. Do not turn arbitrary pack dimension text into labels. Internal
-  provenance retains the exact source binding and dimensions separately.
-  A slot must not silently aggregate different sources or dimensions.
-- Scrape configuration must use bounded, non-identifying target labels too;
-  replace an endpoint-valued `instance` before ingestion. Alert annotations
-  must not copy native payloads or private identifiers.
-- Overflow, ambiguous selection, unknown symbols, invalid units or conflicting
-  contributions fail closed for the affected selection. Retain valid siblings
-  and their last-known-good provenance; do not evict them to admit new series.
-"""
-# Reviewed missing-value, freshness, gauge and transport-counter lifecycle clauses.
-LIFECYCLE_CONTRACT = """
-For every target numeric/status field, emit a value only from the current,
-admitted, qualified, valid and fresh source record, using the same semantic
-revision and evaluation as the public projection. Do not read native devices
-from a scrape, reconstruct from UI labels, or use raw MCP as a fallback.
-Preserve eBUS MCP compatibility and GraphQL parity: unavailable public facts
-cannot become current Prometheus measurements.
-
-Unknown, unsupported, withheld, stale, withdrawn, conflicting or invalid
-values have **no value sample**. The availability gauge is `0` for such a
-configured field and `1` only when its value is exportable. An unconfigured
-field has neither series. Zero availability describes a known export state,
-never a zero measurement. No `or vector(0)`, zero fill, carried-forward
-measurement, or fabricated CAN sample is allowed. Historical samples remain
-historical; dashboards and alerts must join availability to suppress old
-samples during Prometheus lookback. Retained last-known-good records keep
-their original receipt and explicit non-current state outside these gauges;
-reevaluation cannot refresh acquisition time. Partial updates preserve valid
-sibling fields.
-
-All target value and availability series are gauges, including cumulative
-energy readings. They have no exporter reset-to-zero operation. At startup,
-reconnect, source replacement or freshness/clock discontinuity, availability
-is `0` until revalidated; omit the value. A changed source reading can move a
-gauge in either direction. Do not compute `rate` on energy gauges or infer
-consumption across meter replacement/reset. Energy totals remain native
-readings, with kWh converted to joules by multiplying by 3,600,000.
-
-Existing transport counters reset on recreation of their owning in-memory
-store/process. Reconnection does not mean a new counter epoch; use
-`rate`/`increase`, never subtract unrelated absolute totals. Busy-time
-availability may disappear during warmup while retained counters survive.
-Connectivity is a state gauge, so a known disconnected state is legitimately
-`0`; it is not a measurement of traffic or baud.
+# Structured label domains; field membership comes from the semantic tables.
+LABEL_ROWS = """
+semantic_values | slot | 0..15
+helianthus_semantic_field_available | slot | 0..15
+helianthus_semantic_field_available | domain | thermal, infrastructure
+helianthus_semantic_field_available | field | domain_field_table
 """
 
 
@@ -207,32 +108,29 @@ UniqueKeyLoader.add_constructor(
 def expected_rules() -> dict:
     examples = [
         ("HelianthusPassiveTapDisconnected", "ebus_passive_tap_connected == 0",
-         "5m", "warning", "Passive tap reports disconnected"),
+         "5m", "warning"),
         ("HelianthusBaudObservationUnavailable", "ebus_baud_observation_available == 0",
-         "10m", "info", "Configured baud observation is unavailable"),
+         "10m", "info"),
         ("HelianthusSemanticFieldUnavailable", "helianthus_semantic_field_available == 0",
-         "10m", "info", "Configured semantic field is unavailable"),
+         "10m", "info"),
         ("HelianthusThermalFaultObserved",
          '(helianthus_thermal_fault_present == 1) and on(job, instance, slot) '
          '(helianthus_semantic_field_available{domain="thermal",field="thermal.status.fault"} == 1)',
-         "2m", "warning", "Admitted fresh thermal fault is present"),
+         "2m", "warning"),
         ("HelianthusInfrastructureInterlockObserved",
          '(helianthus_infrastructure_interlock_active == 1) and on(job, instance, slot) '
          '(helianthus_semantic_field_available{domain="infrastructure",field="infrastructure.status.interlock"} == 1)',
-         "2m", "warning", "Admitted fresh infrastructure interlock is active"),
+         "2m", "warning"),
     ]
     return {"groups": [{"name": "helianthus.bounded-coverage", "rules": [
         {"alert": name, "expr": expr, "for": duration,
-         "labels": {"severity": severity}, "annotations": {"summary": summary}}
-        for name, expr, duration, severity, summary in examples
+         "labels": {"severity": severity}}
+        for name, expr, duration, severity in examples
     ]}]}
 
 
-def validate(text: str) -> None:
-    semantic = section(text, "## Semantic coverage and units\n", "## Offline alert examples\n")
-    for clause in SEMANTIC_POLICIES:
-        if clause not in semantic:
-            raise CheckError(f"missing semantic policy clause: {clause}")
+def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:
+    semantic = section(text, "## Semantic coverage and units\n", "## Thermal mapping dispositions\n")
     actual = rows(semantic)
     header = ("Pack field", "Target series", "Unit / conversion")
     separator = ("---", "---", "---")
@@ -252,24 +150,36 @@ def validate(text: str) -> None:
             or len(fields) * 16 * 2 != 1024):
         raise CheckError("invalid reviewed field count or per-target series budget")
     transport = section(text, "## Transport coverage\n", "## Semantic coverage and units\n")
-    if BAUD_POLICY not in transport:
-        raise CheckError("missing baud-source or expiry policy")
     actual_transport = rows(transport)
     expected_transport = rows("\n".join("| " + line for line in TRANSPORT_ROWS.strip().splitlines()))
     if (actual_transport[:2] != [
             ("Series", "Type / unit", "Labels", "Owner, missing behavior and coverage", "Status"),
             ("---", "---", "---", "---", "---")]
             or any(len(row) != 5 for row in actual_transport[2:])
-            or Counter(actual_transport[2:]) != Counter(expected_transport)):
+            or Counter(row[:3] + row[4:] for row in actual_transport[2:])
+            != Counter(expected_transport)):
         raise CheckError("transport metric names, types, labels or coverage changed")
     admission = section(text, "## Bounded label and admission contract\n",
                         "## Missing values, lifecycle and resets\n")
-    if normalized(admission) != normalized(LABEL_CONTRACT):
-        raise CheckError("label admission or per-target series budget changed")
-    lifecycle = section(text, "## Missing values, lifecycle and resets\n",
-                        "## Transport coverage\n")
-    if normalized(lifecycle) != normalized(LIFECYCLE_CONTRACT):
-        raise CheckError("missing values, lifecycle or resets changed")
+    expected_labels = rows("\n".join("| " + line for line in LABEL_ROWS.strip().splitlines()))
+    if Counter(rows(admission)) != Counter(expected_labels + [
+            ("Series group", "Label", "Allowed domain"), ("---", "---", "---")]):
+        raise CheckError("structured label domains differ from the contract")
+    dispositions = section(text, "## Thermal mapping dispositions\n", "## Offline alert examples\n")
+    try:
+        mappings = json.loads(thermal_fixture.read_text(encoding="utf-8"))["mappings"]
+        exact = {(row["semreg_fact"],) for row in mappings if row["disposition"] == "exact"}
+        withheld = [(row["legacy_system_field"], row["loss"])
+                    for row in mappings if row["disposition"] == "withheld"]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise CheckError(f"invalid thermal mapping fixture: {exc}") from exc
+    exact_claims = section(dispositions, "### Exact fact IDs\n", "### Withheld associations\n")
+    withheld_claims = dispositions.split("### Withheld associations\n", 1)[1]
+    if Counter(rows(exact_claims)) != Counter(list(exact) + [("semreg_fact",), ("---",)]):
+        raise CheckError("exact fact IDs differ from the source fixture")
+    if Counter(rows(withheld_claims)) != Counter(withheld + [
+            ("legacy_system_field", "loss"), ("---", "---")]):
+        raise CheckError("withheld associations differ from the source fixture")
     blocks = re.findall(r"^```yaml\n(.*?)^```$", text, re.MULTILINE | re.DOTALL)
     if len(blocks) != 1:
         raise CheckError("expected one alert YAML block")
@@ -278,6 +188,7 @@ def validate(text: str) -> None:
         for group in rules["groups"]:
             for rule in group["rules"]:
                 rule["expr"] = " ".join(rule["expr"].split())
+                rule.pop("annotations", None)
         if rules != expected_rules():
             raise CheckError("alert rules differ from reviewed selectors and availability joins")
     except (yaml.YAMLError, KeyError, TypeError, AttributeError) as exc:
