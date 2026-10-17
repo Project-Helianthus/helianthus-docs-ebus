@@ -32,6 +32,23 @@ CTL_IDS = ["CTL-01 / CTL-02"] + [f"CTL-{n:02d}" for n in range(3, 16)]
 # Request/result members that would reintroduce receipts or a lifecycle principal.
 FORBIDDEN_MEMBERS = {"idempotency_key", "request_id", "operation_id", "disposition",
                      "completed", "outcome", "principal", "authorization", "receipt"}
+SNAPSHOT_MEMBERS = {
+    "schema_version", "driver_id", "desired_state", "observed_state", "reason",
+    "retry", "generation", "desired_revision", "revision", "attempt",
+    "capabilities", "effective_capabilities", "safety_quarantined", "changed_at_utc",
+}
+REASON_MEMBERS = {"code", "retryable"}
+RETRY_MEMBERS = {"eligible", "budget_remaining", "not_before_utc"}
+
+
+def snapshot_shape(value: object) -> bool:
+    return (
+        isinstance(value, dict) and value.keys() == SNAPSHOT_MEMBERS
+        and isinstance(value["reason"], dict) and value["reason"].keys() == REASON_MEMBERS
+        and (value["retry"] is None or (
+            isinstance(value["retry"], dict) and value["retry"].keys() == RETRY_MEMBERS
+        ))
+    )
 
 
 def normalize(text: str) -> str:
@@ -115,6 +132,9 @@ def validate(documents: dict[str, str]) -> list[str]:
         try:
             assert len(examples) == 1
             obj = json.loads(examples[0], object_pairs_hook=closed_object)
+            assert isinstance(obj, dict)
+            if heading == "## `DriverSnapshotV1`":
+                assert snapshot_shape(obj)
             assert all(revision(obj[f]) for f in fields)
             assert not {"active_operation_id", "last_operation"} & obj.keys()
             assert not FORBIDDEN_MEMBERS & obj.keys()

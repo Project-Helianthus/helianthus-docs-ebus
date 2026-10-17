@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -14,6 +15,68 @@ OBLIGATIONS = [(r["path"], clause) for r in checker.RULES for clause in r["requi
 
 def test_runtime_control_contract_repository() -> None:
     assert checker.validate(DOCUMENTS) == []
+
+
+SNAPSHOT_EXAMPLE = next(
+    t.content for t in checker.MarkdownIt().parse(
+        DOCUMENTS[checker.API].split("## `DriverSnapshotV1`", 1)[1].split("### Field Invariants", 1)[0]
+    ) if t.type == "fence" and t.info.strip() == "json"
+)
+# Independent expected sets ensure removing a member from the checker is caught.
+SNAPSHOT_FIELDS = (
+    "schema_version", "driver_id", "desired_state", "observed_state", "reason",
+    "retry", "generation", "desired_revision", "revision", "attempt",
+    "capabilities", "effective_capabilities", "safety_quarantined", "changed_at_utc",
+)
+SHAPE_FIELDS = [(None, SNAPSHOT_FIELDS), ("reason", ("code", "retryable")),
+                ("retry", ("eligible", "budget_remaining", "not_before_utc"))]
+
+
+def snapshot_documents(snapshot) -> dict[str, str]:
+    documents = dict(DOCUMENTS)
+    documents[checker.API] = documents[checker.API].replace(
+        SNAPSHOT_EXAMPLE, json.dumps(snapshot) + "\n", 1)
+    return documents
+
+
+@pytest.mark.parametrize(("parent", "field"), [
+    (parent, field) for parent, fields in SHAPE_FIELDS for field in fields
+])
+def test_runtime_control_contract_snapshot_requires_every_member(parent, field) -> None:
+    snapshot = json.loads(SNAPSHOT_EXAMPLE)
+    target = snapshot if parent is None else snapshot[parent]
+    del target[field]
+    assert checker.validate(snapshot_documents(snapshot))
+
+
+@pytest.mark.parametrize("parent", [None, "reason", "retry"])
+def test_runtime_control_contract_snapshot_rejects_unknown_members(parent) -> None:
+    snapshot = json.loads(SNAPSHOT_EXAMPLE)
+    target = snapshot if parent is None else snapshot[parent]
+    target["debug"] = True
+    assert checker.validate(snapshot_documents(snapshot))
+
+
+@pytest.mark.parametrize(("parent", "value"), [
+    (parent, value) for parent in [None, "reason", "retry"]
+    for value in [[], "invalid", 1, True, None]
+    if parent != "retry" or value is not None
+])
+def test_runtime_control_contract_snapshot_requires_objects(parent, value) -> None:
+    snapshot = json.loads(SNAPSHOT_EXAMPLE)
+    if parent is None:
+        snapshot = value
+    else:
+        snapshot[parent] = value
+    assert checker.validate(snapshot_documents(snapshot))
+
+
+def test_runtime_control_contract_snapshot_allows_null_retry_and_reordered_members() -> None:
+    snapshot = json.loads(SNAPSHOT_EXAMPLE)
+    snapshot["retry"] = None
+    snapshot["reason"] = dict(reversed(list(snapshot["reason"].items())))
+    snapshot = dict(reversed(list(snapshot.items())))
+    assert checker.validate(snapshot_documents(snapshot)) == []
 
 
 @pytest.mark.parametrize(("path", "clause"), OBLIGATIONS)
