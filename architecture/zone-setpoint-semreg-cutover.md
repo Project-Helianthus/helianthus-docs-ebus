@@ -212,6 +212,11 @@ Manual source/claim, transition, loss, synthetic-case and link-path review is
 the contract gate. Readability is not semantic validation, runtime proof or
 hardware acceptance. Downstream work must resolve owner representation choices,
 qualify family-specific native semantics and units, and demonstrate compatibility
-and MCP/GraphQL parity before replacing legacy projections. This prose introduces
-no fixture/schema/validator, no new transport behavior and no writable support.
+and MCP/GraphQL parity before replacing legacy projections. Cutover also requires
+a reviewed route, write-authority and compatibility decision for Home Assistant
+`set_temperature`: the [documented zone write path](../development/ha-integration.md#zone-writes-group-0x03)
+lists both RR=0x0022 and RR=0x0014. Resolve that consumer's behavior explicitly
+before cutover; RR=0x0014 remains a read-only effective value, and this contract
+qualifies neither selector for writes. This prose introduces no fixture, schema
+or validator, no new transport behavior and no writable support.
 Independent review, committed-head gates and hardware acceptance remain separate.
