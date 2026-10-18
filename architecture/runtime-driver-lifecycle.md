@@ -474,6 +474,13 @@ atomically before the decision is acknowledged or its view exposed, and every
 catalog advance is written before its view is exposed, so a crash cannot lose
 an acknowledged intent or an issued revision.
 
+Durability here includes the rename: the parent-directory fsync error
+tolerance of the generic runtime-state namespaces does not apply to control
+transactions. If parent-directory durability cannot be established, the
+transaction fails closed: it is refused with `UNAVAILABLE`, nothing is
+acknowledged and no mark or catalog revision is issued, so recovery can never
+load an older desired state while a revision believed issued is reused.
+
 In JSON, every revision in responses (desired revision, catalog revision and
 the current view returned with a refusal) is a canonical decimal string: ASCII
 digits only, no sign, no leading zero except `"0"`, at most the unsigned 64-bit
@@ -531,7 +538,13 @@ operation record exists. Semantic replay digests remain D5 recovery material.
    or waking reconciliation; a driver's first accepted decision creates its
    record in that transaction. Pre-commit failure exposes no staged decision;
    periodic or cache/meta writes cannot later flush rejected staging.
-   Ambiguous persistence fails admission closed: the control service itself
+   A control transaction that fails before the commit point (marshal, write,
+   file fsync, rename refused) is discarded rather than retried: staging is
+   dropped, the decision is refused with `UNAVAILABLE` (retryable by the
+   client) and the revision and mark are unchanged; the generic runtime-state
+   retry-on-next-trigger behaviour does not apply to this namespace.
+   Ambiguous persistence (a failure after the rename was issued but before
+   confirmation) fails admission closed: the control service itself
    reads back the committed namespace before admitting any further decision,
    for every driver because the mark is shared. Admission reopens only after
    readback establishes whether the transaction committed and the cached views
@@ -632,7 +645,7 @@ Use the independently versioned `runtime_control` namespace, format version 1,
 under the sole runtime-state writer. Preserve GUID ownership, top-level/meta
 versions and unknown namespaces. Stage privately, serialize with all other
 runtime-state writes, use same-directory temporary output, required file fsync
-and atomic rename, then expose committed state; directory fsync is best effort.
+and atomic rename, then expose committed state; for this namespace the parent-directory fsync must succeed (no tolerated errors) before acknowledgment.
 No cross-filesystem fallback and no GUID generation/replacement is allowed.
 
 A fresh, readable, valid base whose GUID has no control material at all gets
@@ -782,7 +795,7 @@ Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
 |---|---|
 | CTL-01 / CTL-02 | Coherent sorted cached list/get; unknown ID returns NOT_FOUND with no factory calls |
 | CTL-03 | Stale expected revision conflicts even for a same-desired request; no mutation |
-| CTL-04 | Lose an accepted START response, restart the process and read back durable desired/revision; same-desired START is a no-op, without any key/receipt lookup. A changing START from stable STOPPED persists typed START in the current slot, which recovery resumes |
+| CTL-04 | Lose an accepted START response, restart the process and read back durable desired/revision; same-desired START is a no-op, without any key/receipt lookup. A changing START from stable STOPPED persists typed START in the current slot, which recovery resumes. Fail the parent-directory fsync with a generic-tolerated error (for example ENOTSUP) and fail a rename before the commit point: the decision is refused with UNAVAILABLE, nothing is acknowledged, no mark or catalog revision is issued, staging is discarded and no later trigger flushes it; an unconfirmed rename never acknowledges and never issues a revision, and a failure after the rename was issued enters readback |
 | CTL-05 | Accept only `DriverID` and `ExpectedRevision` (a canonical decimal string); reject every additional request member as invalid shape; valid control uses only the validation and atomic decision steps defined above |
 | CTL-06 | START in desired RUNNING across DEGRADED/BACKOFF/FAILED (including quarantined FAILED) is a no-op and not a recovery path, and STOP in desired STOPPED with unconfirmed close preserve retry budget, quarantine, observations and both revisions |
 | CTL-07 | RESTART in desired STOPPED refuses; each accepted RESTART in RUNNING advances revision and executes one replacement; RESTART during STOPPING with desired STOPPED returns FAILED_PRECONDITION before TRANSITION_BUSY; STOP during STOPPING is a no-op; START during STOPPING takes the reserved slot as a typed START replacement that executes after the STOP's cleanup and native close, and a further changing request then gets TRANSITION_BUSY |

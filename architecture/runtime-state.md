@@ -227,13 +227,17 @@ following guarantees:
   EXDEV path under normal operation.
 - **`fsync(temp)` REQUIRED**: the temp file is fsynced before rename.
 - **`rename(temp → final)`**: atomic rename within the directory.
-- **`fsync(parent_dir)` BEST-EFFORT**: the parent directory is fsynced after
-  rename to flush the rename to disk. If the syscall returns `ENOTSUP`,
+- **`fsync(parent_dir)` BEST-EFFORT (generic namespaces only)**: the parent
+  directory is fsynced after rename to flush the rename to disk. If the syscall returns `ENOTSUP`,
   `EINVAL`, `EPERM`, or `ENOSYS` (e.g., on Docker overlayfs, non-POSIX
   filesystems, or stripped Alpine kernels), the error is swallowed silently,
   logged at debug level, and surfaced in metrics as
   `helianthus_runtime_state_write_total{reason="parent_fsync_unsupported"}`
   (distinct from real failures).
+  This tolerated-error list does not apply to a control-namespace
+  transaction: it requires established parent-directory durability, and if
+  that cannot be established the transaction fails closed (refused with
+  `UNAVAILABLE`, nothing acknowledged, no revision issued).
 - **EXDEV handling**: if `rename` returns EXDEV (cross-device link error;
   should not happen since the temp is in the target dir; indicates a
   filesystem misconfiguration), the write is treated as a failure. The OLD
@@ -241,9 +245,21 @@ following guarantees:
   `helianthus_runtime_state_write_total{reason="rename_exdev"}` is
   incremented. The gateway retries on the next write trigger.
 - **Other failure modes** (marshal error, write error, fsync_temp error,
-  rename error other than EXDEV): the in-memory state remains authoritative,
-  the metric is incremented with the appropriate `reason` label, and the
-  gateway retries on the next trigger.
+  rename error other than EXDEV): for the generic namespaces the in-memory
+  state remains authoritative, the metric is incremented with the appropriate
+  `reason` label, and the gateway retries on the next trigger.
+- **Control namespace failures (no retry)**: a control transaction that fails
+  before the commit point (marshal, write, fsync of the temp file, rename
+  refused, or parent-directory durability not established) is discarded: its
+  in-memory staging is dropped, the decision is refused with `UNAVAILABLE`
+  (retryable by the client), and the revision, the mark and the cached views
+  are unchanged. Nothing is retried on a later trigger, so a refused decision
+  can never be flushed afterwards. When commit status is genuinely unknown (a
+  failure after the rename was issued but before confirmation), the service
+  enters the ambiguous-readback state defined in
+  [Runtime driver lifecycle](runtime-driver-lifecycle.md): it reads back the
+  namespace before the next admission, and admission reopens when the stored
+  state and the cached view agree.
 
 The last valid file is preserved by rename atomicity. The gateway never
 truncates-in-place.
