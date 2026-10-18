@@ -253,8 +253,12 @@ Superseded by the D3 amendment: mutating requests carry only a driver ID and
 an expected revision and return `{desired_state, desired_revision}`. There are
 no caller idempotency keys, no `CONFLICT` replay, no request or operation IDs and
 no completed-operation record. Concurrency is one current typed slot plus at
-most one reserved successor per driver, with `TRANSITION_BUSY` when capacity is
-unavailable; a lost response is resolved by readback. The contract is owned by
+most one reserved successor per driver. `TRANSITION_BUSY` means the decision
+path is busy: the typed transition slot is full or the namespace-wide decision
+serialization point was held beyond the bounded wait; it never reports an
+outcome of the revision comparison. A request that acquires the serialization
+point after its deadline expired is refused with `DEADLINE_EXCEEDED` before the
+revision comparison and the same-desired no-op test. A lost response is resolved by readback. The contract is owned by
 [`../../architecture/runtime-driver-lifecycle.md`](../../architecture/runtime-driver-lifecycle.md).
 Drivers may progress in parallel with each other.
 

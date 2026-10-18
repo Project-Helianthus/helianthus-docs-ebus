@@ -525,19 +525,39 @@ operation record exists. Semantic replay digests remain D5 recovery material.
    invokes a factory or endpoint.
 2. Take the single namespace-wide serialization point (the sole writer of the
    control namespace, which is the shared-mark lock) for every request, never a
-   serializer scoped to one driver. Under it, read the mark, compare expected
+   serializer scoped to one driver. The checks that do not need the point
+   (refusal-table rows 1-5: request shape, driver existence, control state,
+   configuration eligibility and the deadline) are completed in step 1 before
+   and independently of the wait. The wait is bounded and never outlasts the
+   deadline; a request whose deadline expires during the wait is refused with
+   `DEADLINE_EXCEEDED` (row 5). Immediately after acquiring the point, a
+   request first confirms that admission is open (a readback after ambiguous
+   persistence still pending refuses with `UNAVAILABLE`, row 3) and then
+   rechecks the deadline: an expired deadline is refused with
+   `DEADLINE_EXCEEDED` (row 5) before the revision comparison and before the
+   same-desired no-op path, so neither `REVISION_CONFLICT` nor a no-op success
+   is returned past the deadline. Under it, read the mark, compare expected
    revision with the current durable desired revision (the mark itself for a
    driver with no record), allocate the next revision and durably write the
    decision with the advanced mark (steps 3-5), without releasing it. A request
    that waited for the point re-reads the mark after acquiring it and compares
    against the re-read value, never an earlier read. Two concurrent requests
    therefore cannot both observe the same mark: at most one allocates mark + 1
-   and the other receives `REVISION_CONFLICT`, or `TRANSITION_BUSY` in the
-   refusal-table order if the point is held beyond the bounded wait. Mismatch
+   and the other receives `REVISION_CONFLICT`, or the wait-timeout refusal
+   below if the point is held beyond the bounded wait. Mismatch
    returns `REVISION_CONFLICT` and the current cached view without mutation,
    including for a would-be no-op. Recheck deadline before commit. Expiry before the commit point refuses the
    request; cancellation after commit cannot retract accepted intent.
-3. START while desired RUNNING and STOP while desired STOPPED return the current
+   If the bounded wait ends without acquiring the point, the request makes no
+   durable change and, after the same admission confirmation, performs one
+   read-only load of the current desired revision of its driver (the mark
+   itself for a driver with no record). An `ExpectedRevision`
+   below that value is conclusively stale, because desired revisions and the
+   mark only advance, and is refused with `REVISION_CONFLICT` and the current
+   cached view; otherwise it is refused with `TRANSITION_BUSY`. `TRANSITION_BUSY`
+   never reports an outcome of the revision comparison.
+3. After the step 2 deadline recheck and revision comparison, START while
+   desired RUNNING and STOP while desired STOPPED return the current
    desired state/revision without writing, waking reconciliation or allocating
    correlation. They do not reset retries/backoff, heal degraded generations,
    clear quarantine, change observations or bump either revision or the mark.
@@ -587,13 +607,21 @@ unchanged. Checks run in this fixed order and the first failing check decides:
 | 3 | Readback after ambiguous persistence still pending | `UNAVAILABLE` | Yes |
 | 4 | Driver disabled by configuration | `FAILED_PRECONDITION` | No |
 | 5 | Call context has no finite deadline | `INVALID_ARGUMENT` | No |
-| 5 | Deadline expired, at validation or at the pre-commit recheck | `DEADLINE_EXCEEDED` | Yes, with a new deadline |
+| 5 | Deadline expired, at validation, during the bounded serialization wait, immediately after acquiring the serialization point or at the pre-commit recheck | `DEADLINE_EXCEEDED` | Yes, with a new deadline |
 | 6 | `ExpectedRevision` differs from the current desired revision | `REVISION_CONFLICT` with current view | Yes, after readback |
 | 6 | RESTART while desired `STOPPED` (checked after the same-desired no-op test) | `FAILED_PRECONDITION` | No |
 | 7 | Quarantine or unresolved recovery blocks work that would require admission | `FAILED_PRECONDITION` | No, until recovery resolves |
-| 8 | No free typed transition slot | `TRANSITION_BUSY` | Yes |
+| 8 | The decision path is busy: the typed transition slot is full or the namespace-wide decision serialization point was held beyond the bounded wait | `TRANSITION_BUSY` | Yes |
 | 9 | Record limit, byte limit or bounded-outcome reservation cannot fit | `RESOURCE_EXHAUSTED` | Yes |
 | 10 | A required counter or mark increment would exceed the unsigned 64-bit maximum | `COUNTER_EXHAUSTED` | No |
+
+Two outcomes sit outside the ordered checks. A pre-commit write failure
+(step 5) follows every row above and returns `UNAVAILABLE`, retryable, with the
+revision and mark unchanged. A bounded-wait timeout at the serialization point
+(step 2) follows rows 1-5, which are completed without the point, and returns
+`REVISION_CONFLICT` (row 6) when the expectation is conclusively stale and
+otherwise `TRANSITION_BUSY` (row 8); `TRANSITION_BUSY` never reports an outcome
+of the revision comparison, and the request made no durable change.
 
 Both accepted and no-op responses contain **desired state and desired revision
 only**, as the two members `desired_state` and `desired_revision`. They contain no operation ID, sequence, disposition or completion claim.
@@ -835,7 +863,7 @@ Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
 | CTL-16 | Fail the parent-directory fsync after a successful rename of an accepted START: no acknowledgment, no exposed view and admission closed with UNAVAILABLE for every driver. A readback that observes the new bytes matching the cached view does not reopen admission. After a simulated power loss that restores the previous mark, the revision first believed issued is issued again and a request holding it is not accepted on the strength of the earlier exposure. Admission reopens only after the directory fsync is retried to success or the namespace is rewritten durably (temporary file, file fsync, rename, directory fsync). A lost acknowledgment after a durable commit reopens by readback |
 | CTL-17 | Store desired STOPPED for a configured-enabled driver, restart the process: the driver starts in STOPPED with no endpoint opened and no provider call until a new START is accepted. A configured-enabled driver with stored desired RUNNING, or seeded RUNNING by first bootstrap, starts in STARTING. A driver added to configuration after bootstrap has no record and starts in STOPPED |
 | CTL-18 | START and RESTART for a configured-disabled driver are refused with FAILED_PRECONDITION under refusal-table order 4, with no mutation. The transition list has no start transition out of DISABLED; the driver leaves DISABLED only through a configuration change or reload
-| CTL-19 | Two drivers A and B, B without a record, concurrent requests each carrying `ExpectedRevision=H` (the mark, which is also B's current revision), with both requests past validation before either commits. Exactly one is accepted and takes `H + 1`; the other is refused with REVISION_CONFLICT and no mutation, never accepted against the stale `H` and never persisting an already-computed `H + 1`. The mark advances once and no revision repeats. Repeat with each request first and with the wait held beyond the bound (refused TRANSITION_BUSY in refusal order, no mutation). The comparison, mark read, allocation and durable write happen under one namespace-wide serialization point, never a per-driver serializer alone |
+| CTL-19 | Two drivers A and B, B without a record, concurrent requests each carrying `ExpectedRevision=H` (the mark, which is also B's current revision), with both requests past validation before either commits. Exactly one is accepted and takes `H + 1`; the other is refused with REVISION_CONFLICT and no mutation, never accepted against the stale `H` and never persisting an already-computed `H + 1`. The mark advances once and no revision repeats. Repeat with each request first. Hold the point beyond the bounded wait with the holder's write blocked before its commit: a waiting request whose expectation is below its driver's current desired revision (the mark for a driver with no record) is refused with REVISION_CONFLICT, and one whose expectation is current is refused with TRANSITION_BUSY, each with no durable change and no mark advance, TRANSITION_BUSY never reporting a revision-comparison outcome. A request that acquires the point only after its deadline expired is refused with DEADLINE_EXCEEDED, whether its expectation would have conflicted or matched and whether it would have been a same-desired no-op, with no mutation. The comparison, mark read, allocation and durable write happen under one namespace-wide serialization point, never a per-driver serializer alone |
 
 Also prove disabled/deadline/shape refusals, storage exhaustion, every counter's
 overflow refusal, quarantine retention, offline-reset refusal on an active writer

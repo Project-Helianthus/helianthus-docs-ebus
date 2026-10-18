@@ -260,7 +260,10 @@ desired RUNNING and STOP while desired STOPPED are no-ops without counter, retry
 budget or observation changes. RESTART requires desired RUNNING; otherwise it
 returns FAILED_PRECONDITION before transition-capacity checks, even in STOPPING.
 Changing work uses one current typed slot and at most one reserved successor,
-with TRANSITION_BUSY when capacity is unavailable. A changing START from stable
+with TRANSITION_BUSY when the decision path is busy (the typed slot is full or the
+namespace-wide serialization point was held beyond the bounded wait; it never
+reports a revision-comparison outcome). The deadline is rechecked after the
+serialization point is acquired, before the comparison and the no-op test. A changing START from stable
 STOPPED persists typed START in the current slot; a START during STOPPING takes
 the reserved slot as a typed replacement.
 
