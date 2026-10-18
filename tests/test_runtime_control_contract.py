@@ -11,10 +11,35 @@ from scripts import check_runtime_control_contract as checker
 DOCUMENTS = {r["path"]: (checker.ROOT / r["path"]).read_text(encoding="utf-8")
              for r in checker.RULES}
 OBLIGATIONS = [(r["path"], clause) for r in checker.RULES for clause in r["required"]]
+BRIDGE_START = "### S4/S6/S7 synthetic acceptance obligations"
+BRIDGE_RULE = next(r for r in checker.RULES if r["start"] == BRIDGE_START)
 
 
 def test_runtime_control_contract_repository() -> None:
     assert checker.validate(DOCUMENTS) == []
+
+
+@pytest.mark.parametrize("clause", BRIDGE_RULE["required"])
+@pytest.mark.parametrize("change", ["weakened", "before", "after"])
+def test_runtime_control_contract_bridge_obligation_scope(clause, change) -> None:
+    documents = dict(DOCUMENTS)
+    text = documents[checker.LIFECYCLE]
+    assert clause in text
+    if change == "weakened":
+        # Preserve every original keyword while making the obligation optional.
+        replacement = (clause[:-1] + " Optional. |" if clause.startswith("|")
+                       else clause + " Optional.")
+        text = text.replace(clause, replacement)
+    else:
+        text = text.replace(clause, "")
+        if change == "before":
+            text = text.replace(BRIDGE_START, clause + "\n\n" + BRIDGE_START)
+        else:
+            text += "\n\n" + clause
+    documents[checker.LIFECYCLE] = text
+    errors = checker.validate(documents)
+    assert any("changed obligation: " + checker.normalize(clause)[:100] in error
+               for error in errors)
 
 
 SNAPSHOT_EXAMPLE = next(

@@ -163,5 +163,20 @@
     "forbidden": [
       "TRANSITION_BUSY` when capacity is\\s+unavailable"
     ]
+  },
+  {
+    "path": "architecture/runtime-driver-lifecycle.md",
+    "start": "### S4/S6/S7 synthetic acceptance obligations",
+    "end": "## Ownership and durable scope",
+    "required": [
+      "These are gateway implementation vectors, not passing runtime tests from this\nprose-only slice. Use synthetic/public fixtures with fixed clocks and explicit\nbarriers; keep native wire facts under their public native documentation owner.",
+      "| Initially STOPPED; slow/failing START; corrupt/unreadable/unsupported control | HTTP/health/status and MCP/GraphQL reads stay responsive within a stated bound. Valid STOPPED prepares the inert source/barrier with zero endpoint construction; control failure stays FAILED without RUNNING fallback |",
+      "| Lifecycle-only activation | No invented asset, binding, semantic capability or binding-bearing ActivationProof; semantic capabilities empty and native gates separately reported; no native admission before readiness |",
+      "| STOP during STARTING, RUNNING or BACKOFF | Leases, B503, proxy and callbacks lose authority immediately; no stale-generation I/O. Block semantic cleanup and prove native cancellation progresses; then block close and prove semantic retirement progresses. STOPPED requires both |",
+      "| Close uncertainty and late results | FAILED/CLOSE_UNCONFIRMED blocks replacement even after semantic success; late provider/health/publication results never install; proven close alone does not bypass pending cleanup |",
+      "| STOP→START, RESTART and same-epoch manager replacement | All predecessor scan/poll/revalidate/promote tasks are cancelled and joined before replacement; current-session validation and configured tasks start once per admitted generation, with repeated wakes unable to duplicate them; manager remains sole native retry owner |",
+      "| Cached status and retained evidence | STOPPED/FAILED has no admitted address or proxy READY and retained firmware cannot imply running. MCP/GraphQL daemon/adapter unavailable cases agree; evidence stores retain identity/provenance/age and partial last-known-good values with capture paused while unadmitted |",
+      "Apply these alongside the amended A2 LIFE vectors, CTL-17/18 bootstrap/config\nvectors and the companion's applicable LIFE-01–LIFE-10 and LIFE-14–LIFE-32\nobligations. No close, replay, isolation or native-write safeguard is weakened.\nIntended output changes need characterization/goldens in the gateway slice;\nthis page changes no executable payload, schema or golden. The docs gate checks\ndocumentation only; protocol/transport execution and physical acceptance are\nnot supplied by this page."
+    ]
   }
 ]
